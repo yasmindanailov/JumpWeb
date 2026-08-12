@@ -34,17 +34,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] Exportar la base (árbol versionado + fix de aislamiento de la suite) SIN datos del
       cliente origen (deploy scripts con IP/SSH, docs, mockup) — verificado por grep.
 - [x] Doc fundacional propia (README · CLAUDE.md · este tracker · ESTADO · DECISIONES).
-- [ ] Repo GitHub privado `JumpWeb` creado y push del commit fundacional.
-- [ ] Entorno local propio levantado (puertos 8081/3308/8028, conviviendo con el stack origen).
-- [ ] **Suite completa en verde en el repo nuevo** (2132 esperados) + Pint + `npm run build`.
-- [ ] CI (GitHub Actions) corriendo la suite en cada push.
+- [x] Repo GitHub privado `JumpWeb` creado (`yasmindanailov/JumpWeb`) y push del commit fundacional.
+- [x] Entorno local propio levantado (web 8081 · MySQL 3308 · Mailpit 8028), conviviendo con el
+      stack origen (ambos responden 200 a la vez; verificado 2026-08-12).
+- [x] **Suite completa en verde en el repo nuevo** + Pint + `npm run build` (✓ built).
+      Único fallo del primer run: `MailThemeTest` asertaba el literal de la marca origen →
+      hecho brand-agnostic (aserta `config('app.name')`). 2132 esperados.
+- [ ] CI (GitHub Actions): `ci.yml` heredado en el repo; **no arranca sin facturación de
+      Actions en la cuenta** (mismo bloqueo conocido en el proyecto origen).
 
 ### Fase 1 — Desbranding y generalización superficial ⬜
 - [ ] Quitar «jumpingjump» del código (~161 apariciones: app 26 · resources 18 · lang 28 ·
       database 18 · tests 60 · public 7 · config 2 · package.json 1). La marca visible ya es
       data-driven (`business.name`); esto es limpieza de residuos.
-- [ ] Renombrar artefactos con marca: tema mail `resources/views/vendor/mail/html/themes/jumpingjump.css`,
-      comandos `jj:*` → `app:*`, `.env*.example` (`APP_NAME`), claves i18n con la marca.
+- [ ] Renombrar artefactos con marca: tema mail `resources/views/vendor/mail/html/themes/jumpingjump.css`
+      (+ `config('mail.markdown.theme')`), comandos `jj:*` → `app:*`, claves i18n con la marca
+      (`.env*.example` ya genericizado en Fase 0).
+- [ ] **Wordmark de los correos → data-driven:** el header usa `config('app.name')`; debe leer
+      `business.name` (BD) como el resto de la marca (hallazgo del run fundacional).
 - [ ] Semilla demo neutra (negocio de ejemplo) separada del fixture de tests; sin datos del cliente origen.
 - [ ] Decidir slugs de rutas públicas (hoy en español: `/mi-cuenta`, `/cumpleanos`…):
       ¿configurables por instalación o neutros + i18n? → `DECISIONES`.

@@ -35,7 +35,8 @@ class MailThemeTest extends TestCase
         $html = (new OrderConfirmation($order))->toMail($user)->render();
 
         // Wordmark del header con el punto en color de marca (sustituye al "block" del nav).
-        $this->assertStringContainsString('Jumpingjump', $html);
+        // Brand-agnostic: el header renderiza config('app.name'), no una marca concreta.
+        $this->assertStringContainsString(config('app.name'), $html);
         $this->assertStringContainsString('brand-dot', $html);
 
         // Color de acento (zona Jump, --zone-1 del mockup).
