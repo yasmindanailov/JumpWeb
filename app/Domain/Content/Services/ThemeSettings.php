@@ -2,8 +2,8 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Zone;
 
 /**
  * Fase 7.10 (iter. 2) — Color de marca white-label. Fuente ÚNICA y DEFENSIVA del color con el

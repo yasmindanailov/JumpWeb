@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\RateTypes\Schemas;
 
-use App\Models\RateType;
+use App\Domain\Booking\Models\RateType;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;

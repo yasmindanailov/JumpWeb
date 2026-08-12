@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\PackAvailability;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

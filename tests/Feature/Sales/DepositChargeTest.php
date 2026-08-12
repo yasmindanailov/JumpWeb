@@ -2,19 +2,19 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\ProductAddon;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\Redsys;
-use App\Models\Order;
-use App\Models\OrderAdjustment;
-use App\Models\OrderItem;
-use App\Models\ProductAddon;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\ManualOrderFulfiller;
-use App\Support\OrderCreator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;

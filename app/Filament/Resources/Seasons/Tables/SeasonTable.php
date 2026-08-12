@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Seasons\Tables;
 
+use App\Domain\Booking\Models\Season;
 use App\Filament\Resources\Seasons\SeasonResource;
-use App\Models\Season;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;

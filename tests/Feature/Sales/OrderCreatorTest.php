@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Exceptions\ReservationException;
 use App\Livewire\Tickets\Purchase;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\OrderCreator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;

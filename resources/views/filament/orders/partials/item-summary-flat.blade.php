@@ -1,6 +1,6 @@
 @php
     /**
-     * @var \App\Models\OrderItem $item
+     * @var \App\Domain\Booking\Models\OrderItem $item
      * @var bool $showChildren  Si true y el item tiene complementos, los
      *                          renderiza como lista intro debajo del card.
      *                          Default: false (compat retro con refund modal).

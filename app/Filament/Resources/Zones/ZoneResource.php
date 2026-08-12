@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Zones;
 
+use App\Domain\Booking\Models\Zone;
 use App\Filament\Resources\Zones\Pages\CreateZone;
 use App\Filament\Resources\Zones\Pages\EditZone;
 use App\Filament\Resources\Zones\Pages\ListZones;
 use App\Filament\Resources\Zones\Schemas\ZoneForm;
 use App\Filament\Resources\Zones\Tables\ZoneTable;
-use App\Models\Zone;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

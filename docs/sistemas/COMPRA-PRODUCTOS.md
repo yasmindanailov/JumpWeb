@@ -96,7 +96,7 @@ solo existen **dentro** del horario de cada día.
 - **`special_dates`** (excepciones): `date` · `is_closed` · `open_time` · `close_time` ·
   `rate_type_id` (festivos/vísperas con su horario **y** su tarifa).
 - **Horario efectivo de un día** = `special_dates` si existe; si no, el `opening_hours` de su
-  weekday. Servicio: **`ParkSchedule`**. `GenerateSlots` lo respeta: salta días cerrados y clipa
+  weekday. Servicio: **`OperatingSchedule`**. `GenerateSlots` lo respeta: salta días cerrados y clipa
   las franjas a `[apertura, cierre]`.
 
 ### 7.2 Ventana de disponibilidad por producto (entradas **y** packs)
@@ -138,8 +138,8 @@ la oferta de franjas está consolidada en **`SlotOffer`** como fuente única (ve
 ### 7.5 Piezas y ubicación (estado en la base heredada)
 | Pieza | Detalle |
 |---|---|
-| `special_dates` | Horario+tarifa por fecha; `GenerateSlots` la usa vía `ParkSchedule` (pisa al semanal) |
-| `opening_hours` | Tabla + modelo + servicio `ParkSchedule`; CRUD en el panel |
+| `special_dates` | Horario+tarifa por fecha; `GenerateSlots` la usa vía `OperatingSchedule` (pisa al semanal) |
+| `opening_hours` | Tabla + modelo + servicio `OperatingSchedule`; CRUD en el panel |
 | Ventana por producto | Columnas `available_*`/`prep_*` en el catálogo + servicio `ProductAvailability` |
 | `rooms` | Estructura para asignación opcional de mesas; el aforo no la usa |
 | Aforo de packs | `PackAvailability`: cupo por franja (nº eventos + nº plazas), pool propio, `lockForUpdate` |
@@ -168,7 +168,7 @@ catálogo es **pequeño por diseño** (techo realista ~10–15 ítems) → acord
   `dispatch('catalog-open-services')`.
 - `purchase.blade.php` paso 1: 2 secciones-acordeón **Alpine** (inline `x-data`, colapso CSS grid
   `0fr→1fr`), **buscador progresivo** (solo si total > umbral; umbral configurable desde el panel
-  vía el helper defensivo `App\Support\CatalogSettings::searchMinItems()`, default 12), filtrado
+  vía el helper defensivo `App\Domain\Booking\Services\CatalogSettings::searchMinItems()`, default 12), filtrado
   por `data-search` client-side. **Blade fino sin `@php`** (gotcha PCRE del fichero). a11y:
   `aria-expanded`/`aria-controls`/`aria-labelledby`, `prefers-reduced-motion`.
 - **Coherencia landing⟺catálogo:** los controladores de landing filtran los packs con el MISMO

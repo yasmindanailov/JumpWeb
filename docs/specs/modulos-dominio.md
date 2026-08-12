@@ -239,6 +239,43 @@ Redsys (efecto externo) y no hace falta para una mudanza — `PAY-08` lo cubre
 `OrderExecutePartialRefundTest::test_rest_refund_with_unsigned_response_is_rejected_not_accepted`.
 Queda a decisión del owner si quiere esa pasada extra.
 
+## 4.septies Paso 6 EJECUTADO (2026-08-12) — Booking: se acabó `app/Support`
+40 clases, el último renombre de vocabulario, y el ajuste de cuentas de todas las baselines.
+`app/Models` y `app/Support` **ya no existen**: el objetivo de §2 está cumplido. Lo relevante
+(`DECISIONES #19`):
+
+1. **El paso más grande fue el de menos sorpresas**, porque el paso 0 lo dijo antes de empezar:
+   todas las dependencias invisibles que quedaban eran Booking→Booking y **ninguna cruzaba** la
+   línea `Models/` ↔ `Services/`, así que la mudanza no rompió ni una. La herramienta del paso 3
+   se ganó el sueldo.
+2. **Dos flechas se ARREGLARON en vez de perdonarse.** La frontera las dejó al descubierto y
+   allowlistarlas habría bendecido dos inversiones reales:
+   · `ReservationException` vivía en `app/Exceptions` (capa de entrega) siendo una excepción de
+     DOMINIO → a `Booking/Exceptions/`, que es justo lo que el layout de §4 prevé.
+   · `OrderCreator` importaba `Livewire\Tickets\Purchase` **solo para leer
+     `MAX_LINES_PER_CART`** — el acoplamiento que §1 señalaba desde el principio. El cap es
+     invariante de SERVIDOR (`PAY-12`), así que la constante vuelve a `OrderCreator` y `Purchase`
+     la referencia desde allí: mismo valor (50), mismo sitio de enforcement, API pública intacta.
+3. **Ajuste de cuentas de las baselines**, cada flecha a su categoría real:
+   · `PENDING` y `LEGACY` **vacías** — ya no hay dominio fuera de `app/Domain`. Las 11 flechas
+     Booking→Payments no se perdonaron: pasaron a `SEAM`, que es lo que son desde que Booking es
+     un módulo.
+   · `ALLOWED` reconoce el canal sancionado: **Booking→`Payments\Contracts`** (y viceversa). La
+     llamada al gateway va por `RefundGateway` — el contrato del paso 1 haciendo su trabajo.
+   · Nace **`DEFERRED`**: las 5 flechas Content→Booking que el paso 3 aplazó. No son costura
+     aceptada ni deuda con código legacy: son una decisión de diseño con nombre y fecha, y la
+     resuelve el paso 7.
+4. **Se midió la opción (b) del paso 3 y NO es viable.** Reclasificar el calendario a Platform
+   está descartado: `SpecialDate` referencia `RateType` (tarifa) y Platform no puede depender de
+   nadie. Haría falta un módulo «recinto» nuevo, más de lo que el spec aprobó → la evidencia
+   empuja a **(a) contratos de lectura en Booking**, que es lo que decidirá el paso 7.
+
+⚠️ **CAMBIO DE CONTRATO OPERATIVO**: al desaparecer `App\Models\*`, el fallback de lectura de
+Laravel para filas morph con FQCN legacy **ya no funciona** (la clase no existe). La migración
+`convert_morph_types_to_aliases` pasa de cinturón a **REQUISITO DE DESPLIEGUE**: una instalación
+que actualice el código sin migrar reventará al leer un `payable`/`priceable`/`target` antiguo.
+`MorphMapTest` fija ahora exactamente eso.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
@@ -267,9 +304,10 @@ Queda a decisión del owner si quiere esa pasada extra.
    `RedsysCardCodes`, `RedsysResponseCode`, `RedsysReturnOutcome`, `PaymentSettings`,
    `IncidentSettings`) · `Concerns/`(`OrderRefundFlags`, `GuardsItemRefunds` ← mitad refund
    del trait partido).
-6. **Booking** (lo más referenciado, al final; `VERIFY_CONC=1` + verify-comandos):
-   `Order`/`OrderItem`/`Ticket`/`TicketType`/`Slot*`/`Price`/`RateType`…, `OrderCreator`,
-   `SlotOffer`, `*Availability`, `AddonResolver`, `TicketIssuer`, `OperatingSchedule`.
+6. ✅ **Booking** (2026-08-12, `VERIFY_CONC=1`, ver §4.septies): 40 clases —los 15 modelos,
+   los 2 concerns y los 23 servicios que quedaban— a `app/Domain/Booking/{Models,Services,
+   Concerns,Exceptions}` + renombre `ParkSchedule`→`OperatingSchedule`. **`app/Models` y
+   `app/Support` dejan de existir.**
 7. **Cierre**: retirar `app/Support`/`app/Models` vacíos, baseline final en la allowlist,
    reescribir `ARQUITECTURA.md` y rutas citadas en docs.
 

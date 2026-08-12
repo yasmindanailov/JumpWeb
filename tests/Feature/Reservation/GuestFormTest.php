@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Reservation;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;

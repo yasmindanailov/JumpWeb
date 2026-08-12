@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Theme;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
-use App\Models\Order;
-use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;

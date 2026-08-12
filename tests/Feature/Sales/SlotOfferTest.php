@@ -2,18 +2,18 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Pages\CreateManualOrderPage;
 use App\Livewire\Tickets\Purchase;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\SpecialDate;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\SlotOffer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;

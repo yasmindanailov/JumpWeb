@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
-use App\Models\Order;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;

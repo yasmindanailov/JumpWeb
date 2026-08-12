@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Order;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

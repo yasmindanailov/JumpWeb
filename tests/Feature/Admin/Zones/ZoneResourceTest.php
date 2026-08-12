@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Admin\Zones;
 
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Zones\Pages\CreateZone;
 use App\Filament\Resources\Zones\Pages\EditZone;
 use App\Filament\Resources\Zones\ZoneResource;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

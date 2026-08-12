@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Season;
+use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Content\Services\ScheduleDisplay;
-use App\Models\OpeningHour;
-use App\Models\Season;
-use App\Models\SpecialDate;
 use Carbon\Carbon;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -169,7 +169,7 @@ class ScheduleDisplayTest extends TestCase
     public function test_active_season_takes_over_today_from_the_weekly_schedule(): void
     {
         // #270-bis punto 2: si HOY cae dentro de una temporada, el horario semanal NO se marca como
-        // «actual»; se destaca la TEMPORADA vigente (es la que rige según ParkSchedule).
+        // «actual»; se destaca la TEMPORADA vigente (es la que rige según OperatingSchedule).
         $this->travelTo(Carbon::parse('2026-07-15 12:00:00'));           // dentro del rango de la temporada
         foreach ([1, 2, 3, 4, 5, 6, 0] as $weekday) {
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '16:00:00', 'close_time' => '22:00:00']);

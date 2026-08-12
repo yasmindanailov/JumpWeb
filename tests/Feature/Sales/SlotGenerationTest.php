@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\OpeningHour;
-use App\Models\Slot;
-use App\Models\SlotTemplate;
-use App\Models\SpecialDate;
-use App\Models\Zone;
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\SlotTemplate;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;

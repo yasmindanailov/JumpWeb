@@ -1,6 +1,6 @@
 @php
     /**
-     * @var \App\Models\Order $order
+     * @var \App\Domain\Booking\Models\Order $order
      * @var \Illuminate\Pagination\LengthAwarePaginator $paginator
      * @var array<int> $perPageOptions
      *
@@ -18,7 +18,7 @@
      * según el `action`: diff por clave para `event_data_updated`, razón
      * estructurada para `*_blocked`, transiciones de estado para los demás.
      */
-    use App\Models\Order;
+    use App\Domain\Booking\Models\Order;
     use App\Domain\Platform\Services\DisplayTime;
 
     // Eager load idempotente: garantiza que el lookup `$order->items->firstWhere(...)`

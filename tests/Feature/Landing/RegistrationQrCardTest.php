@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\QrCode;
-use App\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

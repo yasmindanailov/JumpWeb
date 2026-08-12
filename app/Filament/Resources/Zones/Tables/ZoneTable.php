@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Zones\Tables;
 
+use App\Domain\Booking\Models\Zone;
 use App\Filament\Resources\Zones\ZoneResource;
-use App\Models\Zone;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;

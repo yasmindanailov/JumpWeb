@@ -2,9 +2,9 @@
 
 namespace App\Filament\Concerns;
 
+use App\Domain\Booking\Services\SlotGenerator;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\AuditLogger;
-use App\Support\SlotGenerator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;

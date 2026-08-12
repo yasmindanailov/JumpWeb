@@ -2,7 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Models\TicketType;
+use App\Domain\Booking\Models\TicketType;
 
 /**
  * Presentación (solo lectura) de los COMPLEMENTOS aplicables a un producto para la LANDING.

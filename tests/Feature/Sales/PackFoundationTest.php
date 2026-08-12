@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\SalesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\SlotTemplates;
 
+use App\Domain\Booking\Models\SlotTemplate;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\SlotTemplates\Pages\ListSlotTemplates;
-use App\Models\SlotTemplate;
-use App\Models\Zone;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

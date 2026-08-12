@@ -62,40 +62,35 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
 
 ## 4. Estructura real del proyecto
 
-> ⚠️ **En migración (Fase 2, `docs/specs/modulos-dominio.md`)**: el destino es
-> `app/Domain/<Contexto>/{Contracts,Models,Services,…}` con 5 módulos (Booking · Content ·
-> Identity · Payments · Platform). Al 2026-08-12 están hechos el paso 1 (contratos), el
-> paso 2 (**Platform**) y el paso 3 (**Content**); Identity, Payments y Booking siguen en
-> `app/Support`/`app/Models` y mudan en los pasos 4–6. La frontera la impone
-> `tests/Feature/Architecture/ModuleBoundariesTest.php`. Este árbol se reescribe en el paso 7.
+> ✅ **Modularizado (Fase 2, `docs/specs/modulos-dominio.md`)**: `app/Models` y `app/Support`
+> **ya no existen**. El dominio vive en `app/Domain/<Contexto>/` con 5 módulos. La frontera la
+> impone `tests/Feature/Architecture/ModuleBoundariesTest.php` (grafo + baselines que solo
+> encogen). Queda el paso 7 (cierre): resolver las 5 flechas `DEFERRED` de Content→Booking.
 
 ```
 app/
-  Domain/
-    Platform/       ✅ MUDADO (paso 2). Base compartida: todos pueden depender de ella y ella
-                    de nadie. Models/ (Setting, AuditLog) · Services/ (AuditLogger, DisplayTime,
-                    Money, Duration, PhoneNormalizer, MaintenanceSettings, QrCode, Turnstile) ·
-                    Concerns/ (HasTranslations) · Enums/ (DashboardPeriod).
-    Content/        ✅ MUDADO (paso 3). CMS público. Models/ (Faq, Page, LandingService, Offer,
-                    Attraction, VenueRule ←ex ParkRule) · Services/ (LegalContent, LegalIdentity,
-                    CookiePolicyContent, ThemeSettings, HeroStatus, MapsEmbed, SocialEmbed,
-                    StructuredData, ScheduleDisplay, LandingAddonPresenter,
-                    LandingComplementResolver, ServicePriceTableBackfill).
-    Booking/        Contracts/ (CustomerReservations, PublishableCatalog + DTOs) + ServiceProvider.
-    Payments/       Contracts/ (RefundGateway, RefundResult) + ServiceProvider.
-                    Regla (afinada en el paso 3): la capa de ENTREGA (Filament, Http, Livewire,
-                    Providers…) usa la superficie pública de cualquier módulo — es el
-                    composition root; el código de dominio AÚN SIN MUDAR (`app/Support`,
-                    `app/Models`) solo entra por `Contracts` o por Platform.
-  Models/           modelos aún sin mudar (Order, OrderItem, Ticket, TicketType, Slot,
-                    SlotTemplate, Season, SpecialDate, Zone, Room, OpeningHour,
-                    Payment, PaymentRefund, Role, Permission, User, Consent…)
-                    + Models/Concerns/ (traits de Booking/Payments)
-  Support/          ⚠️ AQUÍ viven los SERVICIOS DE DOMINIO aún sin mudar (NO existe
-                    app/Services): directorio plano — OrderCreator, TicketIssuer,
-                    SlotGenerator, SlotAvailability, PackAvailability, RateResolver,
-                    AddonResolver, Cart, Redsys*, ParkSchedule, CookieConsent,
-                    PaymentSettings, PuertaSettings, etc.
+  Domain/           EL DOMINIO. Cada módulo: Models/ · Services/ · Concerns/ · Contracts/
+                    (solo si expone costura) · Exceptions/ · Enums/.
+    Platform/       Base compartida — todos dependen de ella, ella de nadie. Setting, AuditLog,
+                    AuditLogger, DisplayTime, Money, Duration, PhoneNormalizer,
+                    MaintenanceSettings, QrCode, Turnstile, HasTranslations, DashboardPeriod.
+    Content/        CMS público. Faq, Page, LandingService, Offer, Attraction, VenueRule ·
+                    LegalContent, LegalIdentity, CookiePolicyContent, ThemeSettings, HeroStatus,
+                    MapsEmbed, SocialEmbed, StructuredData, ScheduleDisplay, presenters.
+    Identity/       User (kernel compartido), Consent, CookieConsentLog, Role, Permission ·
+                    CookieConsent, CustomerRegistrar, CustomerAccountContext, PuertaSettings,
+                    PermissionCatalog.
+    Payments/       Payment, PaymentRefund · Redsys (+Vendor), RedsysReturnHandler,
+                    RedsysCardCodes/ResponseCode/ReturnOutcome, PaymentSettings,
+                    IncidentSettings · Concerns (OrderRefundFlags, GuardsItemRefunds) ·
+                    Contracts (RefundGateway, RefundResult).
+    Booking/        El núcleo: catálogo, aforo y pedidos. Order, OrderItem, OrderAdjustment,
+                    Ticket, TicketType, Slot, SlotTemplate, Price, RateType, ProductAddon,
+                    Season, SpecialDate, OpeningHour, Zone, Room · OrderCreator, SlotOffer,
+                    SlotGenerator, *Availability, AddonResolver, RateResolver, TicketIssuer,
+                    OperatingSchedule, Cart, ManualOrderFulfiller… · Contracts
+                    (CustomerReservations, PublishableCatalog + DTOs) · Exceptions.
+  ── capa de ENTREGA (composition root: puede usar la superficie pública de cualquier módulo) ──
   Livewire/         Site/ · Auth/ · Account/ · Admin/ · Tickets/ (Purchase) · Concerns/
   Filament/         Resources/ (Orders, Catalog, Slots, SlotTemplates, Seasons,
                     SpecialDates, Zones, Attractions, LandingServices, Offers, Pages,
@@ -117,7 +112,7 @@ public/css/         landing.css · site.css · spinner.css · filament/
 
 Vocabulario del dominio en el código: zonas, atracciones, cumpleaños, **puerta** (validar/
 canjear entradas), waiver (vocabulario del sector origen; su generalización se decide en
-`00-REFACTOR.md` Fase 1/2). P. ej. `PuertaSettings`, `ParkSchedule` (→ `OperatingSchedule` en el paso 6). `ParkRule` ya es `VenueRule` (paso 3).
+`00-REFACTOR.md` Fase 1/2). P. ej. `PuertaSettings`. Los renombres del spec de vocabulario ya están hechos: `ParkRule`→`VenueRule` (paso 3) y `ParkSchedule`→`OperatingSchedule` (paso 6).
 
 ## 5. White-label (3 capas)
 

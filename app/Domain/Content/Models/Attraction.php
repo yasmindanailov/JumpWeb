@@ -4,9 +4,9 @@ namespace App\Domain\Content\Models;
 
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\PublishableCatalog;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Concerns\HasTranslations;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

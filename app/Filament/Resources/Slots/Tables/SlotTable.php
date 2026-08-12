@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Slots\Tables;
 
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\Zone;
 use App\Filament\Resources\Slots\SlotResource;
-use App\Models\Slot;
-use App\Models\Zone;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;

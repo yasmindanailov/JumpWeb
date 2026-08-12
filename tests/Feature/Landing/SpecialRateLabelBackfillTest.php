@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\RateType;
-use App\Support\SpecialRateLabelBackfill;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Services\SpecialRateLabelBackfill;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

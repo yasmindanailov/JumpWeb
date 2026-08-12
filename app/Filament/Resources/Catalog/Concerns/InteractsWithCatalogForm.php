@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Catalog\Concerns;
 
-use App\Models\RateType;
-use App\Models\TicketType;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 

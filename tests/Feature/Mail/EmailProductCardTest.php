@@ -2,23 +2,23 @@
 
 namespace Tests\Feature\Mail;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\EmailProductCard;
 use App\Domain\Identity\Models\User;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderRefunded;
-use App\Support\EmailProductCard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
 /**
  * Mejora visual de los correos (#251): la SUBCARD de producto (icono emoji + meta + complementos
- * + color de la zona) que `App\Support\EmailProductCard` inyecta en los correos de producto, SIN
+ * + color de la zona) que `App\Domain\Booking\Services\EmailProductCard` inyecta en los correos de producto, SIN
  * tocar su lógica de textos condicionales. Email-safe (tablas + estilos inline; NO SVG).
  */
 class EmailProductCardTest extends TestCase

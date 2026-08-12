@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderFinancialSummary;
+use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\OrderFinancialSummary;
-use App\Support\ReservationFinancials;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

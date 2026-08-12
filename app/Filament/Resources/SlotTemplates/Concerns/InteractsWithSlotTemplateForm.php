@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\SlotTemplates\Concerns;
 
-use App\Models\SlotTemplate;
+use App\Domain\Booking\Models\SlotTemplate;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;

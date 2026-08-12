@@ -1,6 +1,6 @@
 @php
     /**
-     * @var \App\Models\Order $record
+     * @var \App\Domain\Booking\Models\Order $record
      *
      * Bloque "Totales del pedido" — REDISEÑO valor-primero (sesión 2026-06-06,
      * petición de la clienta). El bloque del pedido pasa a usar el MISMO vocabulario
@@ -12,8 +12,8 @@
      * devolución. Cada línea puede desplegar su detalle ↳ por reserva.
      *
      * Fuente ÚNICA: `Order::reservationFinancialsByPrincipal()` (Σ de las cards vía
-     * {@see \App\Support\ReservationFinancials}) para el detalle por reserva, y
-     * {@see \App\Support\OrderFinancialSummary} para los agregados autoritativos —
+     * {@see \App\Domain\Booking\Services\ReservationFinancials}) para el detalle por reserva, y
+     * {@see \App\Domain\Booking\Services\OrderFinancialSummary} para los agregados autoritativos —
      * ambos reconcilian por construcción (#196/#198).
      *
      * Caso SIMPLE (sin cambios ni devoluciones): solo "Total" (sin ruido).

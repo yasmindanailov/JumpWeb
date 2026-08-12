@@ -2,8 +2,8 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Platform\Services\DisplayTime;
-use App\Support\ParkSchedule;
 use Carbon\CarbonInterface;
 
 /**
@@ -11,14 +11,14 @@ use Carbon\CarbonInterface;
  * «{Día} · Abierto ahora» cuando realmente está abierto, o «{Día} · Abrimos en Xh» (o «mañana / el
  * {día} a las HH:MM») cuando está fuera de horario.
  *
- * Data-driven sobre la MISMA fuente que las reservas ({@see ParkSchedule}: special_dates > seasons >
+ * Data-driven sobre la MISMA fuente que las reservas ({@see OperatingSchedule}: special_dates > seasons >
  * opening_hours) y en la zona horaria del parque ({@see DisplayTime}). Devuelve `null` cuando NO hay
  * un horario concreto que anunciar, para no mostrar un «abierto» engañoso si el parque aún no ha
  * configurado sus horas. Asume ventanas dentro del mismo día (el parque no abre cruzando medianoche).
  */
 class HeroStatus
 {
-    public function __construct(private readonly ParkSchedule $schedule) {}
+    public function __construct(private readonly OperatingSchedule $schedule) {}
 
     /**
      * @return array{open_now: bool, day: string, status: string}|null

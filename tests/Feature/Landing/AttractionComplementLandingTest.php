@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
-use App\Models\RateType;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;

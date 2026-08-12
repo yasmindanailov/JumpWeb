@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  * semanal base (`opening_hours`) mientras están vigentes (p. ej. «Horario de verano»: del
  * 1-jul al 31-ago el parque abre todos los días 11:00–22:00).
  *
- * Orden de resolución del horario efectivo (`App\Support\ParkSchedule`):
+ * Orden de resolución del horario efectivo (`App\Domain\Booking\Services\OperatingSchedule`):
  *   fecha especial (día concreto) → TEMPORADA (rango activo) → horario semanal.
  *
  * Una temporada activa abre TODOS los días de su rango con su `open_time`/`close_time`

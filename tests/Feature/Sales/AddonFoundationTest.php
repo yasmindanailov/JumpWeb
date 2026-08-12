@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\TicketType;
+use App\Domain\Booking\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

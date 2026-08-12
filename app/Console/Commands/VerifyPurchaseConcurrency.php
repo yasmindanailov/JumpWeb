@@ -2,17 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\OrderCreator;
+use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\User;
-use App\Exceptions\ReservationException;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\OrderCreator;
-use App\Support\ParkSchedule;
-use App\Support\RateResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -108,7 +108,7 @@ class VerifyPurchaseConcurrency extends Command
             // La hora debe caer DENTRO del horario efectivo del parque ese día (si no, OrderCreator
             // rechaza con `outside_window_line`, que NO es lo que queremos probar). Buscamos el primer
             // día ABIERTO a partir de hoy+3 y elegimos una hora segura (apertura + 1 h).
-            $schedule = app(ParkSchedule::class);
+            $schedule = app(OperatingSchedule::class);
             [$date, $time] = $this->firstOpenSlotMoment($schedule);
             $end = Carbon::parse($time)->addHour()->format('H:i:s');
 
@@ -155,7 +155,7 @@ class VerifyPurchaseConcurrency extends Command
      *
      * @return array{0:string,1:string} [date, time]
      */
-    private function firstOpenSlotMoment(ParkSchedule $schedule): array
+    private function firstOpenSlotMoment(OperatingSchedule $schedule): array
     {
         for ($d = 3; $d <= 30; $d++) {
             $date = Carbon::today()->addDays($d);

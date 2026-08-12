@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\RedsysReturnHandler;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

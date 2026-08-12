@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\SpecialRateLabelBackfill;
+use App\Domain\Booking\Services\SpecialRateLabelBackfill;
 use Illuminate\Database\Migrations\Migration;
 
 /**
@@ -9,7 +9,7 @@ use Illuminate\Database\Migrations\Migration;
  * quedó con el default viejo «Festivo / finde / víspera». La landing lo muestra ahora en el chip de
  * suplemento («+X€ {label}»); queremos el copy nuevo «Findes y festivos».
  *
- * La lógica vive en `App\Support\SpecialRateLabelBackfill` (testeable, idempotente, QUIRÚRGICA: solo
+ * La lógica vive en `App\Domain\Booking\Services\SpecialRateLabelBackfill` (testeable, idempotente, QUIRÚRGICA: solo
  * la tarifa `special` y SOLO si su label sigue siendo el default viejo → no pisa ediciones del panel).
  * NO-OP en instalaciones nuevas/dev (`rate_types` aún vacía al migrar; el seeder pone el label nuevo).
  */

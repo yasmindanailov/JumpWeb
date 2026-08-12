@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Services\Duration;
 use App\Http\Controllers\Controller;
-use App\Models\OrderItem;
-use App\Models\TicketType;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

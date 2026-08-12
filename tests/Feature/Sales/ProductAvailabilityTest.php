@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\OpeningHour;
-use App\Models\SpecialDate;
-use App\Models\TicketType;
-use App\Support\ParkSchedule;
-use App\Support\ProductAvailability;
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\ProductAvailability;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -29,7 +29,7 @@ class ProductAvailabilityTest extends TestCase
     {
         parent::setUp();
 
-        $this->window = new ProductAvailability(new ParkSchedule);
+        $this->window = new ProductAvailability(new OperatingSchedule);
         $this->date = Carbon::parse('2026-06-10'); // miércoles
         OpeningHour::create(['weekday' => $this->date->dayOfWeek, 'open_time' => '10:00:00', 'close_time' => '21:00:00']);
     }

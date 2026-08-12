@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Support\CatalogSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

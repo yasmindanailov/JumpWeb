@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\TicketType;
 use Illuminate\Database\ClassMorphViolationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -79,16 +79,31 @@ class MorphMapTest extends TestCase
         $this->assertTrue($order->payments()->first()->is($payment));
     }
 
-    public function test_legacy_fqcn_rows_still_resolve_for_migration_safety(): void
+    /**
+     * ⚠️ **Cambio de contrato en el paso 6 de Fase 2** (2026-08-12).
+     *
+     * ANTES existía un cinturón: una fila con el FQCN legacy (`App\Models\Order`) seguía
+     * resolviendo su relación por el fallback de lectura de Laravel, aunque las consultas por
+     * alias no la vieran. Ese cinturón **ya no existe**: al mudar los modelos a
+     * `App\Domain\<Módulo>\Models`, las clases con el nombre viejo desaparecieron y el
+     * fallback lanza «Class not found».
+     *
+     * Consecuencia operativa, que este test fija: la migración `convert_morph_types_to_aliases`
+     * pasa de ser una comodidad a ser **OBLIGATORIA** antes de que la aplicación lea esas filas.
+     * Es un requisito de DESPLIEGUE, no un detalle: una instalación que actualice el código sin
+     * migrar reventará al tocar un `payable`/`priceable`/`target` antiguo.
+     *
+     * Lo que sí se garantiza —y es lo que de verdad importa— es que la conversión deja las filas
+     * legibles. Eso es lo que se comprueba aquí.
+     */
+    public function test_the_conversion_migration_makes_legacy_fqcn_rows_readable_again(): void
     {
-        // La migración convert_morph_types_to_aliases convierte los datos; este test documenta
-        // el cinturón: una fila legacy con FQCN (pre-migración) sigue RESOLVIENDO su relación
-        // (fallback de lectura de Laravel), aunque las queries por alias no la vean.
         $user = User::factory()->create();
         $order = Order::create([
             'user_id' => $user->id, 'code' => 'R-MORPH2',
             'status' => Order::STATUS_PENDING, 'subtotal' => 1000, 'total' => 1000, 'currency' => 'EUR',
         ]);
+        // Fila tal como la dejaría una instalación anterior al morphMap.
         DB::table('payments')->insert([
             'payable_type' => 'App\\Models\\Order', 'payable_id' => $order->id,
             'amount' => 1000, 'currency' => 'EUR', 'provider' => 'redsys',
@@ -96,8 +111,22 @@ class MorphMapTest extends TestCase
             'created_at' => now(), 'updated_at' => now(),
         ]);
 
+        // Sin convertir, el FQCN viejo ya NO resuelve: la clase no existe desde el paso 6.
         $legacy = Payment::where('gateway_order', '9990005678')->firstOrFail();
-        $this->assertTrue($legacy->payable->is($order));
+        try {
+            $legacy->payable;
+            $this->fail('el FQCN legacy no debería resolver: `App\Models\Order` ya no existe');
+        } catch (\Error $e) {
+            $this->assertStringContainsString('App\Models\Order', $e->getMessage());
+        }
+
+        // La migración es quien lo arregla (mismo UPDATE que ejecuta en producción).
+        DB::table('payments')
+            ->where('payable_type', 'App\\Models\\Order')
+            ->update(['payable_type' => (new Order)->getMorphClass()]);
+
+        $converted = Payment::where('gateway_order', '9990005678')->firstOrFail();
+        $this->assertTrue($converted->payable->is($order), 'tras convertir, la fila vuelve a ser legible');
     }
 
     /**

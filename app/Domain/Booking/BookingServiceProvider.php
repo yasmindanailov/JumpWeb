@@ -4,8 +4,8 @@ namespace App\Domain\Booking;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\PublishableCatalog;
-use App\Support\CustomerReservationsReader;
-use App\Support\PublishableCatalogReader;
+use App\Domain\Booking\Services\CustomerReservationsReader;
+use App\Domain\Booking\Services\PublishableCatalogReader;
 use Illuminate\Support\ServiceProvider;
 
 /**

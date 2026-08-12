@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Catalog;
 
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\RelationManagers\AddonsRelationManager;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Actions\DetachAction;

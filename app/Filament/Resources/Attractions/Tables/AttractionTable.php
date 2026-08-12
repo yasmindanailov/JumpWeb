@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Attractions\Tables;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Filament\Resources\Attractions\AttractionResource;
-use App\Models\Zone;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\VenueRule;
-use App\Models\TicketType;
 use Database\Seeders\LandingServicesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

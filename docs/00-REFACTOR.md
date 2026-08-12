@@ -157,11 +157,22 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       incluida la orquestación (`RedsysReturnHandler` conduce el ciclo de vida de la Order por
       `PAY-01`/`PAY-03`) → candidato nº1 a evento de dominio. La baseline **encogió** por primera
       vez. Suite 2191 verde + los dos verificadores de concurrencia en verde sobre MySQL real.
-- [ ] Paso 6 — mudar Booking (lo más referenciado, al final) + paso 7 de cierre.
+- [x] **Paso 6 — Booking mudado; `app/Support` y `app/Models` RETIRADOS** (2026-08-12,
+      `DECISIONES #19`; spec §4.septies): 40 clases a `app/Domain/Booking/{Models,Services,
+      Concerns,Exceptions}` + renombre `ParkSchedule`→`OperatingSchedule`. Dos inversiones se
+      ARREGLARON en vez de perdonarse (`ReservationException` a Booking; `MAX_LINES_PER_CART`
+      de vuelta a `OrderCreator`, donde `PAY-12` dice que vive). Baselines ajustadas:
+      `PENDING`/`LEGACY` vacías, `SEAM` con la costura del dinero en ambos sentidos, y nace
+      `DEFERRED` con las 5 flechas Content→Booking del paso 7. ⚠️ La migración del morphMap pasa
+      a **requisito de despliegue**. Suite 2190 verde + los 2 verificadores sobre MySQL real.
+- [ ] Paso 7 (cierre) — resolver las 5 flechas `DEFERRED` (contrato de lectura en Booking),
+      baseline final y barrido de rutas citadas en la doc.
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
-- [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de
-      aplicación, nunca con modelos de otro módulo directamente).
+- [x] **Contratos entre módulos explícitos** (pasos 1–6): `Booking\Contracts`
+      (`CustomerReservations`, `PublishableCatalog`) y `Payments\Contracts` (`RefundGateway`).
+      Matiz medido en el paso 3: la capa de ENTREGA es el composition root y sí usa modelos de
+      varios módulos — prohibírselo habría exigido reescribir el panel, fuera de alcance.
 
 ### Fase 3 — API v1 (API-first) ⬜
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).

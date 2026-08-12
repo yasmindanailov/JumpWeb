@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\VenueRule;
@@ -9,8 +11,6 @@ use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\LandingComplementResolver;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 

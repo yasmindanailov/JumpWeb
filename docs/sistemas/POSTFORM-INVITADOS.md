@@ -33,7 +33,7 @@ datos**. Pedirlo todo en la compra satura el flujo. Solución: **formulario post
 - No existe ningún estado «preparado» persistido que reutilizar: el origen **eliminó
   físicamente** `order_items.prepared_at/prepared_by`. El estado operativo (`active`/`finished`)
   es **derivado al vuelo** (`OrderItem::isFinishedInPractice()`,
-  `app/Models/Concerns/OrderOperativeStatus.php`).
+  `app/Domain/Booking/Concerns/OrderOperativeStatus.php`).
 - Patrón canónico de estado **persistido**: par `cancelled_at` + `cancelled_by` con método
   idempotente (`OrderItem::markCancelled()`).
 - La caja «Preparado» del PDF (`reservation-slip.blade.php`) es un **checkbox manual de
@@ -139,7 +139,7 @@ seed siempre incluye `guest_fields`).
   por reserva pendiente, disparado al quedar pagado (`RedsysReturnHandler` **y**
   `ManualOrderFulfiller`).
 - Avisos pendientes en la cuenta: contrato `CustomerReservations::pendingGuestFormsFor()` de
-  Booking (impl. `App\Support\CustomerReservationsReader`), que `CustomerAccountContext`
+  Booking (impl. `App\Domain\Booking\Services\CustomerReservationsReader`), que `CustomerAccountContext`
   (Identity) consume y convierte en URL — un aviso por reserva. Antes era una consulta directa
   dentro de `CustomerAccountContext`; se extrajo en Fase 2, paso 1 (`docs/specs/modulos-dominio.md`).
 

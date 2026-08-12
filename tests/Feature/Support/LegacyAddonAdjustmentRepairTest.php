@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LegacyAddonAdjustmentRepair;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
-use App\Models\Order;
-use App\Models\OrderAdjustment;
-use App\Models\OrderItem;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\LegacyAddonAdjustmentRepair;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

@@ -1,7 +1,7 @@
 @php
     use Illuminate\Support\Js;
 
-    /** @var \App\Models\Order $record */
+    /** @var \App\Domain\Booking\Models\Order $record */
     $code = $record->code;
     $status = $record->displayStatus();
     $statusLabel = __('admin.orders.status.'.$status);
@@ -10,11 +10,11 @@
     // Mantenemos la jerarquía visual: pagado = success / cancelado-refund-expired = danger /
     // pending o equivalentes = warning.
     $statusColorClasses = match ($status) {
-        \App\Models\Order::STATUS_PAID
+        \App\Domain\Booking\Models\Order::STATUS_PAID
             => 'bg-green-100 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-400/30',
-        \App\Models\Order::STATUS_REFUNDED,
-        \App\Models\Order::STATUS_CANCELLED,
-        \App\Models\Order::STATUS_EXPIRED
+        \App\Domain\Booking\Models\Order::STATUS_REFUNDED,
+        \App\Domain\Booking\Models\Order::STATUS_CANCELLED,
+        \App\Domain\Booking\Models\Order::STATUS_EXPIRED
             => 'bg-red-100 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-400/30',
         default
             => 'bg-amber-100 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/30',
@@ -25,9 +25,9 @@
     $operative = $record->displayOperativeStatus();
     $operativeLabel = __('admin.orders.operative.'.$operative);
     $operativeColorClasses = match ($operative) {
-        \App\Models\Order::OPERATIVE_STATUS_FINISHED
+        \App\Domain\Booking\Models\Order::OPERATIVE_STATUS_FINISHED
             => 'bg-gray-100 text-gray-600 ring-gray-500/20 dark:bg-gray-500/10 dark:text-gray-400 dark:ring-gray-400/30',
-        \App\Models\Order::OPERATIVE_STATUS_IN_PROGRESS
+        \App\Domain\Booking\Models\Order::OPERATIVE_STATUS_IN_PROGRESS
             => 'bg-amber-100 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/30',
         default
             => 'bg-blue-100 text-blue-700 ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-400/30',
@@ -90,7 +90,7 @@
          badge secundario "Reembolsado" si el badge de ESTADO no lo dice ya. En
          data legacy con status=refunded, displayStatus()='refunded' y su propio
          badge ya reza "Reembolsado" → sin este guard salía DOBLE. --}}
-    @if ($record->isFullyRefunded() && $record->displayStatus() !== \App\Models\Order::STATUS_REFUNDED)
+    @if ($record->isFullyRefunded() && $record->displayStatus() !== \App\Domain\Booking\Models\Order::STATUS_REFUNDED)
         <span class="inline-flex items-center rounded-md px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset bg-amber-100 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/30">
             {{ __('admin.orders.refunded_badge') }}
         </span>

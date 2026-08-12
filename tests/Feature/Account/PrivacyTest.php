@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Account;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Livewire\Account\DeleteAccount;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;

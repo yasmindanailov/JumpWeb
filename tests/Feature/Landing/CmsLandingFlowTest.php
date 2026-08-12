@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\VenueRule;
@@ -16,7 +17,6 @@ use App\Filament\Resources\Faqs\Pages\ListFaqs;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
-use App\Models\Zone;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

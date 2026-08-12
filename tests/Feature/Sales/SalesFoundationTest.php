@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Room;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
-use App\Models\Order;
-use App\Models\Price;
-use App\Models\RateType;
-use App\Models\Room;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;

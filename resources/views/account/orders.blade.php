@@ -55,7 +55,7 @@
                                      ya se ve en el resumen financiero de abajo. --}}
                                 @php($itemCancelled = $item->isCancelled())
                                 @php($itemRefunded = $order->itemRefundedCents($item) > 0)
-                                @php($itemFinished = ! $itemCancelled && $item->displayStatusForCustomer() === \App\Models\OrderItem::STATUS_FINISHED)
+                                @php($itemFinished = ! $itemCancelled && $item->displayStatusForCustomer() === \App\Domain\Booking\Models\OrderItem::STATUS_FINISHED)
                                 {{-- Subcard sutil POR PRODUCTO (#217 UX): separa visualmente cada reserva de un
                                      mismo pedido y agrupa producto + complementos + su propio formulario. --}}
                                 <div class="orders__product">
@@ -126,8 +126,8 @@
                                      exige pedido pagado— pero el botón permanece visible para no «desaparecer» el contexto
                                      de la reserva. El `<button disabled>` hereda el estilo apagado de `.btn` (landing.css). --}}
                                 @php($orderDisplayStatus = $order->displayStatus())
-                                @php($orderTerminated = in_array($orderDisplayStatus, [\App\Models\Order::STATUS_CANCELLED, \App\Models\Order::STATUS_REFUNDED], true))
-                                @if ($item->guestFormStatus() !== null && ($orderDisplayStatus === \App\Models\Order::STATUS_PAID || $orderTerminated))
+                                @php($orderTerminated = in_array($orderDisplayStatus, [\App\Domain\Booking\Models\Order::STATUS_CANCELLED, \App\Domain\Booking\Models\Order::STATUS_REFUNDED], true))
+                                @if ($item->guestFormStatus() !== null && ($orderDisplayStatus === \App\Domain\Booking\Models\Order::STATUS_PAID || $orderTerminated))
                                     <div class="orders__product-form">
                                         @if ($itemCancelled || $orderTerminated)
                                             <button type="button" class="btn btn--ghost orders__guestform-btn" disabled>{{ __('account.orders.guest_form_cancelled', ['product' => $item->ticketType?->tr('name')]) }}</button>
@@ -148,7 +148,7 @@
                                      evento (homenajeado, etc.), como pie financiero de la reserva — la señal real
                                      (no el agregado online mixto del pedido). Un item CANCELADO no la muestra
                                      (`ReservationFinancials` excluye cancelados → `aCobrarPuerta` 0). --}}
-                                @php($rfLine = \App\Support\ReservationFinancials::make($order, $item))
+                                @php($rfLine = \App\Domain\Booking\Services\ReservationFinancials::make($order, $item))
                                 @if (($item->ticketType?->hasDeposit() ?? false) && $rfLine->aCobrarPuerta > 0)
                                     <span class="orders__product-deposit">{{ __('tickets.deposit_card_note', ['deposit' => number_format($rfLine->pagadoOnline / 100, 2, ',', '.').' €', 'rest' => number_format($rfLine->aCobrarPuerta / 100, 2, ',', '.').' €']) }}</span>
                                 @endif
@@ -269,7 +269,7 @@
                              pueda copiar fácilmente y proporcionarlo al contactar. Reusa
                              las clases `.modal*` ya validadas por el modal de auth.
                              Estado Alpine LOCAL por Order: cada modal es independiente. --}}
-                        @if ($order->displayStatus() === \App\Models\Order::STATUS_PAID)
+                        @if ($order->displayStatus() === \App\Domain\Booking\Models\Order::STATUS_PAID)
                             <div class="orders__manage" x-data="{
                                 open: false,
                                 show() {

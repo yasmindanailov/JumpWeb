@@ -326,7 +326,7 @@ hace en `settings.redsys_environment`.
 | Controller HTTP (3 rutas) | `app/Http/Controllers/Payments/RedsysReturnController.php` |
 | Exclusión CSRF | `bootstrap/app.php` (`pago/redsys/*`) |
 | Settings defensivos | `app/Domain/Payments/Services/PaymentSettings.php` |
-| Refund: orquestador / registro | `app/Models/Order.php` (`executeFullRefund`) · `app/Domain/Payments/Models/PaymentRefund.php` |
+| Refund: orquestador / registro | `app/Domain/Booking/Models/Order.php` (`executeFullRefund`) · `app/Domain/Payments/Models/PaymentRefund.php` |
 | Caducidad de pedidos | `app/Console/Commands/ExpireOrders.php` (`orders:expire`) |
 | Verificación manual sandbox | `app/Console/Commands/VerifyRedsysSandbox.php` · `VerifyRedsysConcurrency.php` |
 | Tests | `tests/Feature/Sales/Redsys*.php` (firma bit a bit contra el ejemplo oficial, round-trip, handler, controller, notificación, gateway_order, secret key config) · `tests/Feature/Admin/Orders/*Refund*` |

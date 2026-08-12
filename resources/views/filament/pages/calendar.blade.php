@@ -1,5 +1,5 @@
 @php
-    use App\Models\Zone;
+    use App\Domain\Booking\Models\Zone;
 
     // Deep-link desde la card de un pedido (#179): `?date=YYYY-MM-DD` abre el
     // calendario en ESE día (vista de día). Validado (regex estricta) para no

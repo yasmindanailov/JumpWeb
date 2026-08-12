@@ -2,19 +2,19 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\ProductAddon;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderCreator;
+use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Livewire\Tickets\Purchase;
-use App\Models\Order;
-use App\Models\OrderAdjustment;
-use App\Models\ProductAddon;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
-use App\Support\OrderCreator;
-use App\Support\ReservationSlip;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;

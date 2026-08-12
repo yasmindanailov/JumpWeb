@@ -2,11 +2,11 @@
 
 namespace App\Domain\Payments\Concerns;
 
-use App\Models\OrderItem;
+use App\Domain\Booking\Models\OrderItem;
 
 /**
  * Guardas de «¿se puede REEMBOLSAR este item suelto?» — la mitad de dinero de lo que era
- * `App\Models\Concerns\HasItemActionGuards`, partida en el paso 5 de la modularización
+ * `App\Domain\Booking\Concerns\HasItemActionGuards`, partida en el paso 5 de la modularización
  * (`docs/specs/modulos-dominio.md` §4/§5.5). Métodos, firmas y orden de comprobaciones
  * IDÉNTICOS: es una mudanza, no un rediseño.
  *

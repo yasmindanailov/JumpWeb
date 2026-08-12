@@ -2,8 +2,8 @@
 
 namespace App\Domain\Payments\Models;
 
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Identity\Models\User;
-use App\Models\OrderItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

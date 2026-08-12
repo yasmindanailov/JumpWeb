@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Providers\AppServiceProvider;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

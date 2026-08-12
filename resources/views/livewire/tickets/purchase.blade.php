@@ -579,7 +579,7 @@
                      ahora = señal(es) + productos de pago completo); la señal por-producto se nombra en
                      su card (arriba). Solo si PAGADO y queda algo en el parque (en «verifica tu email»
                      la Order está PENDING → no se muestra). --}}
-                @if (($confirmation['status'] ?? null) === \App\Models\Order::STATUS_PAID && ($confirmation['pending_at_park'] ?? 0) > 0)
+                @if (($confirmation['status'] ?? null) === \App\Domain\Booking\Models\Order::STATUS_PAID && ($confirmation['pending_at_park'] ?? 0) > 0)
                     <div class="purchase__split">
                         <span>{{ __('tickets.paid_online_confirmed') }}</span>
                         <strong>{{ number_format(($confirmation['online'] ?? 0) / 100, 2, ',', '.') }} €</strong>
@@ -597,9 +597,9 @@
                  se llega PAGADO (vuelta OK de Redsys / notificación) o PENDIENTE (flujo de verificar
                  email). «Pendiente de pago» solo si de verdad está pendiente; si está pagado,
                  confirmamos el pago (antes se mostraba «pendiente» SIEMPRE → incoherente al pagar). --}}
-            @if (($confirmation['status'] ?? null) === \App\Models\Order::STATUS_PAID)
+            @if (($confirmation['status'] ?? null) === \App\Domain\Booking\Models\Order::STATUS_PAID)
                 <p class="purchase__note">{{ __('tickets.payment_confirmed_note') }}</p>
-            @elseif (($confirmation['status'] ?? null) === \App\Models\Order::STATUS_PENDING)
+            @elseif (($confirmation['status'] ?? null) === \App\Domain\Booking\Models\Order::STATUS_PENDING)
                 <p class="purchase__note">{{ __('tickets.pending_payment') }}</p>
             @endif
 

@@ -2,8 +2,8 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Content\Models\Faq;
-use App\Models\OpeningHour;
 use Illuminate\Support\Facades\Schema;
 
 /**

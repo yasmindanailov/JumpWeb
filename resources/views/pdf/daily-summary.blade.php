@@ -5,7 +5,7 @@
     cobro. Renderizado con dompdf (subset de CSS: layout por <table>). Se fuerza
     en español desde el controlador.
 
-    @var \App\Support\DailyReservationsSummary $summary
+    @var \App\Domain\Booking\Services\DailyReservationsSummary $summary
 --}}
 @php
     use App\Domain\Platform\Services\DisplayTime;

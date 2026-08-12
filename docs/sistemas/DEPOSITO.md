@@ -79,7 +79,7 @@ resto (`valor − señal`) se cobra presencialmente y vive fuera de Redsys.
 
 ### 3.1 Los dos niveles
 
-**Nivel PEDIDO — `App\Support\OrderFinancialSummary`** (fuente única del bloque «Totales del
+**Nivel PEDIDO — `App\Domain\Booking\Services\OrderFinancialSummary`** (fuente única del bloque «Totales del
 pedido»):
 
 | Campo | Fórmula |
@@ -94,7 +94,7 @@ pedido»):
 | `totalFinalNeto()` | `productsValue` |
 | `pendienteDevolucion()` | fórmula **DE CAJA**: `max(0, (Σ pagos pagados − reembolso efectivo) − onlineBacking)` — ver §5.9 |
 
-**Nivel PRODUCTO/RESERVA — `App\Support\ReservationFinancials`** (principal + complementos):
+**Nivel PRODUCTO/RESERVA — `App\Domain\Booking\Services\ReservationFinancials`** (principal + complementos):
 
 | Campo | Fórmula |
 |---|---|
@@ -105,7 +105,7 @@ pedido»):
 | `pendienteReembolso` | Σ `itemPendingRefundCents` |
 | **Reconcilia** | `valor = pagadoOnline + aCobrarPuerta + cobradoPuerta` |
 
-**Helpers por-línea — `App\Models\Order` (y `OrderItem`):**
+**Helpers por-línea — `App\Domain\Booking\Models\Order` (y `OrderItem`):**
 
 | Helper | Fórmula |
 |---|---|
@@ -209,7 +209,7 @@ local + Pagado en local» reconcilia (§7).
 - `app/Http/Controllers/Payments/RetryPaymentController.php` → íd.
 - `Redsys::buildPaymentFormData` — `DS_MERCHANT_AMOUNT => (string) $payment->amount` (usa el
   amount del `$payment` recibido = ancla única → blinda el canario). **Crítico de seguridad.**
-- `app/Support/ManualOrderFulfiller.php` — `amount = onlineDueCents()` (D3); los
+- `app/Domain/Booking/Services/ManualOrderFulfiller.php` — `amount = onlineDueCents()` (D3); los
   `deposit_remainder` los crea `OrderCreator`; status `PAID` (semántica: la parte upfront está
   cobrada; el resto pendiente en puerta).
 
@@ -405,20 +405,20 @@ o quedarse el depósito según T&C.
 
 ## 11. Ficheros load-bearing (mapa rápido)
 
-`app/Support/OrderCreator.php` (creación + `deposit_remainder`) · `app/Domain/Payments/Services/Redsys.php`
+`app/Domain/Booking/Services/OrderCreator.php` (creación + `deposit_remainder`) · `app/Domain/Payments/Services/Redsys.php`
 (`:302` ida, `:354-358` guard `gateway_order`, `:376` REST refund) ·
-`app/Models/TicketType.php` (`depositCents`/`hasDeposit`/`depositLabel`) ·
-`app/Models/Order.php` (`itemCollectedCents` — palanca; `itemExtraDueCents`;
+`app/Domain/Booking/Models/TicketType.php` (`depositCents`/`hasDeposit`/`depositLabel`) ·
+`app/Domain/Booking/Models/Order.php` (`itemCollectedCents` — palanca; `itemExtraDueCents`;
 `itemDepositRemainderCents`; `onlineDueCents`; `applyDepositRemainderCredit`;
 `recordReductionMarker`; `isRedsysRefundable`; `itemOriginalOnlineCents` deposit-aware;
 `itemRefundableRemainderCents`; `pendingAtGateLines`/`gateLineLabel`;
 `reservationGateLines`; `depositRemainderPendingByProduct`; `itemFinishedInPractice`) ·
-`app/Support/OrderFinancialSummary.php` · `app/Support/ReservationFinancials.php` ·
+`app/Domain/Booking/Services/OrderFinancialSummary.php` · `app/Domain/Booking/Services/ReservationFinancials.php` ·
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
 selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
-`app/Support/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
+`app/Domain/Booking/Services/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
 `app/Livewire/Tickets/Purchase.php` (`cartDepositCents`/`stepDepositHint`) ·
-`app/Models/OrderAdjustment.php` (tipos) · `app/Domain/Payments/Services/RedsysReturnHandler.php` (canario, NO
+`app/Domain/Booking/Models/OrderAdjustment.php` (tipos) · `app/Domain/Payments/Services/RedsysReturnHandler.php` (canario, NO
 tocar) · `resources/views/filament/orders/items-list.blade.php` (banner D9) ·
 `app/Domain/Content/Services/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`
 heredado).

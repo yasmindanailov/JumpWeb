@@ -2,6 +2,20 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\AddonResolver;
+use App\Domain\Booking\Services\Cart;
+use App\Domain\Booking\Services\CatalogSettings;
+use App\Domain\Booking\Services\OrderCreator;
+use App\Domain\Booking\Services\PackAvailability;
+use App\Domain\Booking\Services\ProductAvailability;
+use App\Domain\Booking\Services\RateResolver;
+use App\Domain\Booking\Services\ReservationFinancials;
+use App\Domain\Booking\Services\SlotAvailability;
+use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\PaymentSettings;
@@ -10,21 +24,7 @@ use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\MaintenanceSettings;
-use App\Exceptions\ReservationException;
-use App\Models\Order;
-use App\Models\Slot;
-use App\Models\TicketType;
 use App\Providers\AppServiceProvider;
-use App\Support\AddonResolver;
-use App\Support\Cart;
-use App\Support\CatalogSettings;
-use App\Support\OrderCreator;
-use App\Support\PackAvailability;
-use App\Support\ProductAvailability;
-use App\Support\RateResolver;
-use App\Support\ReservationFinancials;
-use App\Support\SlotAvailability;
-use App\Support\SlotOffer;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -55,7 +55,8 @@ class Purchase extends Component
      *  - 3 confirmReservation/min por usuario (RateLimiter).
      * Hay holgura suficiente para familias con varias compras legítimas, y bloquea el spam.
      */
-    public const MAX_LINES_PER_CART = 50;
+    /** @see OrderCreator::MAX_LINES_PER_CART — el cap es invariante de SERVIDOR (PAY-12); aquí solo se refleja para la UI. */
+    public const MAX_LINES_PER_CART = OrderCreator::MAX_LINES_PER_CART;
 
     public const MAX_PENDING_PER_USER = 5;
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\AuditLogs;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -9,7 +10,6 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\Order;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

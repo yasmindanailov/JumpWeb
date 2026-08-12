@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Concerns\RegeneratesSlots;
-use App\Models\OpeningHour;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Forms\Components\TimePicker;
@@ -18,7 +18,7 @@ use Filament\Support\Icons\Heroicon;
 
 /**
  * Fase 7.7 — Horario semanal general del parque (`opening_hours`): por día de la semana,
- * apertura/cierre o cerrado. Es la fuente única que usan las RESERVAS (vía `ParkSchedule` →
+ * apertura/cierre o cerrado. Es la fuente única que usan las RESERVAS (vía `OperatingSchedule` →
  * generador de franjas + compra) y la LANDING (card de «ubicación y horario»). Las
  * excepciones puntuales se hacen en «Fechas especiales»; los tramos estacionales en
  * «Temporadas» (#207).

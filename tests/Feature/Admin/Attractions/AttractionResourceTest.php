@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Attractions;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -9,7 +10,6 @@ use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
-use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

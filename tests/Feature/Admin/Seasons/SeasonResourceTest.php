@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Admin\Seasons;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Season;
+use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Seasons\Pages\CreateSeason;
 use App\Filament\Resources\Seasons\Pages\EditSeason;
 use App\Filament\Resources\Seasons\SeasonResource;
-use App\Models\OpeningHour;
-use App\Models\Season;
-use App\Support\ParkSchedule;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -19,7 +19,7 @@ use Tests\TestCase;
 
 /**
  * Fase 7.7 (#207) — Temporadas: gating por `slots.manage`, CRUD, validación
- * (fin≥inicio, cierre>apertura), borrado y que las reservas (vía `ParkSchedule`) aplican
+ * (fin≥inicio, cierre>apertura), borrado y que las reservas (vía `OperatingSchedule`) aplican
  * la temporada vigente.
  */
 class SeasonResourceTest extends TestCase
@@ -132,7 +132,7 @@ class SeasonResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $hours = (new ParkSchedule)->effectiveFor($date);
+        $hours = (new OperatingSchedule)->effectiveFor($date);
         $this->assertSame('11:00:00', $hours['open']); // gana la temporada sobre el semanal
         $this->assertSame('22:00:00', $hours['close']);
     }

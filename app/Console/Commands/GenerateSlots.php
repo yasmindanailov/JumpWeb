@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Support\SlotGenerator;
+use App\Domain\Booking\Services\SlotGenerator;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 /**
  * Genera las franjas concretas (`slots`) por zona a partir de las plantillas
  * (`slot_templates`) para un rango de fechas. Idempotente (no duplica). Respeta el
- * HORARIO EFECTIVO de cada día (`ParkSchedule`: `special_dates` → temporada → `opening_hours`):
+ * HORARIO EFECTIVO de cada día (`OperatingSchedule`: `special_dates` → temporada → `opening_hours`):
  * salta los días cerrados y solo crea franjas que caben dentro de [apertura, cierre]. Si un
  * día no tiene horario configurado, no se restringe (fallback no destructivo).
  *

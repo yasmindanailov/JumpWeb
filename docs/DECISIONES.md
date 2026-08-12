@@ -285,3 +285,31 @@ Redsys: es un efecto externo y no aporta a una mudanza. `PAY-08` (firma obligato
 REST) lo cubre `OrderExecutePartialRefundTest::test_rest_refund_with_unsigned_response_is_rejected_not_accepted`.
 Sí se corrieron los dos obligatorios (`redsys:verify-concurrency`, `purchase:verify-oversell`) sobre
 MySQL real. Queda a decisión del owner si quiere esa pasada extra contra el sandbox.
+
+## #19 · 2026-08-12 · Paso 6 (Booking): fin de `app/Support`, y el ajuste de cuentas
+Ejecutado `docs/specs/modulos-dominio.md` §5.6 (detalle en §4.septies). 40 clases mudadas;
+**`app/Models` y `app/Support` dejan de existir** — el objetivo de §2 cumplido. Decidido:
+**(a) Dos flechas se ARREGLAN, no se perdonan.** La frontera las destapó y meterlas en una
+allowlist habría bendecido dos inversiones reales: `ReservationException` vivía en
+`app/Exceptions` (entrega) siendo excepción de DOMINIO → a `Booking/Exceptions/`; y `OrderCreator`
+importaba `Livewire\Tickets\Purchase` **solo para leer `MAX_LINES_PER_CART`** —el acoplamiento que
+el spec §1 señalaba desde el principio—, así que la constante vuelve a `OrderCreator`, donde vive
+su enforcement (`PAY-12` la llama invariante de SERVIDOR), y `Purchase` la referencia desde allí:
+mismo valor (50), misma aplicación, API pública intacta. Es el único cambio no-mudanza del paso y
+va explicado en el commit.
+**(b) `ALLOWED` reconoce el canal sancionado**: Booking→`Payments\Contracts` (y viceversa). La
+llamada al gateway va por `RefundGateway`; el resto de Booking↔Payments sigue exigiendo entrada
+explícita en `SEAM`. El contrato del paso 1 pasa de «preparación» a ser la vía normal.
+**(c) Nace `DEFERRED`** para las 5 flechas Content→Booking que el paso 3 aplazó. No son costura
+aceptada (`SEAM`) ni deuda con código legacy (`LEGACY`): son una decisión de diseño pendiente, con
+nombre y fecha, que resuelve el paso 7. `PENDING` y `LEGACY` quedan **vacías**.
+**(d) La opción (b) del paso 3 queda DESCARTADA con medición**: reclasificar el calendario a
+Platform no es viable porque `SpecialDate` referencia `RateType` (tarifa) y Platform no puede
+depender de nadie; haría falta un módulo «recinto» nuevo, más de lo que el spec aprobó. La
+evidencia empuja a **contratos de lectura en Booking**, que es lo que decidirá el paso 7.
+**(e) ⚠️ CAMBIO DE CONTRATO OPERATIVO — la migración del morphMap pasa a OBLIGATORIA.** Al
+desaparecer `App\Models\*`, el fallback de lectura de Laravel para filas morph con FQCN legacy ya
+no funciona: la clase no existe. `convert_morph_types_to_aliases` deja de ser un cinturón y se
+convierte en **requisito de despliegue** — una instalación que actualice el código sin migrar
+reventará al leer un `payable`/`priceable`/`target` antiguo. `MorphMapTest` fija exactamente eso
+(antes aseveraba lo contrario, que era cierto hasta este paso).

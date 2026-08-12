@@ -6,7 +6,7 @@
     use App\Domain\Payments\Services\RedsysCardCodes;
     use App\Domain\Payments\Services\RedsysResponseCode;
 
-    /** @var \App\Models\Order $record */
+    /** @var \App\Domain\Booking\Models\Order $record */
     // Eager-load refunds + el operador que las lanzó para que la card de devolución
     // pueda mostrar el nombre sin N+1 (#143 + #144).
     // Sub-fase 7.2e.1bis5 (decisión #158, punto 6): añadido `refunds.orderItem.ticketType`

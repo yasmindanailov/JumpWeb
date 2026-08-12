@@ -1,9 +1,9 @@
 @php
-    use App\Models\OrderItem;
+    use App\Domain\Booking\Models\OrderItem;
     use App\Domain\Platform\Services\DisplayTime;
     use App\Domain\Platform\Services\Duration;
 
-    /** @var \App\Models\Order $record */
+    /** @var \App\Domain\Booking\Models\Order $record */
     // #F11: ocultamos también los PRINCIPALES voided-leftover (cancelados net-cero,
     // nunca cobrados online ni reembolsados): saldrían fantasma como 0,00 € ·
     // Cancelado. Mismo criterio que los complementos (autoridad única:
@@ -40,7 +40,7 @@
      El backend gatea cada action con `canCancelItem`/`canRefundItem`; este
      banner es solo la capa de UX explicativa. --}}
 @php
-    $orderCancelled = $record->status === \App\Models\Order::STATUS_CANCELLED;
+    $orderCancelled = $record->status === \App\Domain\Booking\Models\Order::STATUS_CANCELLED;
     $orderFullyRefunded = $record->isFullyRefunded();
     $showCoherenceBanner = $orderCancelled || $orderFullyRefunded;
 @endphp
@@ -206,7 +206,7 @@
                 $guestFormStatus = $item->guestFormStatus();
                 $guestFields = $guestFormStatus !== null ? ($ticketType?->guestFields() ?? []) : [];
                 $guestData = $item->guestData();
-                $guestOk = $guestFormStatus === \App\Models\OrderItem::GUEST_FORM_STATUS_OK;
+                $guestOk = $guestFormStatus === \App\Domain\Booking\Models\OrderItem::GUEST_FORM_STATUS_OK;
             @endphp
             @if (count($eventRows) > 0 || $guestFormStatus !== null)
                 <div x-data="{ open: false }" class="mt-3 rounded-lg bg-white/60 p-3 text-xs ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
@@ -329,7 +329,7 @@
                 // crudo a mano). Las líneas por producto/complemento siguen mostrando su
                 // subtotal individual; el TOTAL y el split (online/puerta/devuelto) los
                 // pinta el partial compartido `reservation-financials`.
-                $rf = \App\Support\ReservationFinancials::make($record, $item);
+                $rf = \App\Domain\Booking\Services\ReservationFinancials::make($record, $item);
                 $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
             @endphp
 
@@ -425,7 +425,7 @@
                      de cumpleaños con post-form (`isGuestFormReservation`) de un pedido PAGADO. Abre un
                      modal con el enlace firmado para copiarlo y enviarlo por WhatsApp/SMS (útil sobre
                      todo si el cliente no tiene email). El action revalida el gating (defensa). --}}
-                @if ($record->status === \App\Models\Order::STATUS_PAID && $item->isGuestFormReservation())
+                @if ($record->status === \App\Domain\Booking\Models\Order::STATUS_PAID && $item->isGuestFormReservation())
                     <x-filament::icon-button
                         wire:click="mountAction('copyGuestFormLink', { item: {{ $item->id }} })"
                         icon="heroicon-o-link"

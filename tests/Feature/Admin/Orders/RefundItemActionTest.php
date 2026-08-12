@@ -2,6 +2,12 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -10,12 +16,6 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Notifications\OrderItemRefunded;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

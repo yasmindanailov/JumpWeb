@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Seasons;
 
+use App\Domain\Booking\Models\Season;
 use App\Filament\Resources\Seasons\Pages\CreateSeason;
 use App\Filament\Resources\Seasons\Pages\EditSeason;
 use App\Filament\Resources\Seasons\Pages\ListSeasons;
 use App\Filament\Resources\Seasons\Schemas\SeasonForm;
 use App\Filament\Resources\Seasons\Tables\SeasonTable;
-use App\Models\Season;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -19,7 +19,7 @@ use Filament\Tables\Table;
  * al horario semanal mientras están vigentes (p. ej. «Horario de verano»). Una temporada
  * activa abre todos los días de su rango con su ventana (#207).
  *
- * Las consume en vivo `App\Support\ParkSchedule` (reservas + generador de franjas) y la
+ * Las consume en vivo `App\Domain\Booking\Services\OperatingSchedule` (reservas + generador de franjas) y la
  * landing. Orden de resolución: fecha especial → TEMPORADA → horario semanal.
  *
  * **Acceso solo admin** (`slots.manage`, igual que el horario semanal). Borrado siempre

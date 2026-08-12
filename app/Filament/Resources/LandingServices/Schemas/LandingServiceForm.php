@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\LandingServices\Schemas;
 
-use App\Models\TicketType;
+use App\Domain\Booking\Models\TicketType;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;

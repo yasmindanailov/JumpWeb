@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Slots\Schemas;
 
+use App\Domain\Booking\Models\Slot;
 use App\Filament\Resources\Slots\SlotResource;
-use App\Models\Slot;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;

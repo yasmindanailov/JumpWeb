@@ -2,14 +2,14 @@
     /**
      * Desglose financiero DETALLADO de una reserva (Totales del producto), fuente
      * de render compartida por la sub-card del pedido y el modal del calendario
-     * (panel). Recibe un value object {@see \App\Support\ReservationFinancials} →
+     * (panel). Recibe un value object {@see \App\Domain\Booking\Services\ReservationFinancials} →
      * mismos números en todas las superficies.
      *
-     * @var \App\Support\ReservationFinancials $rf
+     * @var \App\Domain\Booking\Services\ReservationFinancials $rf
      * @var bool $struck  tachar el total (item principal cancelado)
      * @var list<array{label:string, amount:int}> $gateLines  desglose ↳ de «A cobrar en el
      *      parque» de la reserva (#225 F2): cargos de edición + «Resto de la señal». Su Σ ==
-     *      `$rf->aCobrarPuerta` (ver {@see \App\Models\Order::reservationGateLines()}). Vacío =
+     *      `$rf->aCobrarPuerta` (ver {@see \App\Domain\Booking\Models\Order::reservationGateLines()}). Vacío =
      *      sin desglose (degrada a solo el agregado).
      */
     $struck = $struck ?? false;

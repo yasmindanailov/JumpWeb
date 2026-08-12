@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Platform\Models\Setting;
-use App\Models\OpeningHour;
-use App\Models\SpecialDate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
  * Chip de estado de apertura del hero (`App\Domain\Content\Services\HeroStatus`): data-driven sobre el horario real
- * del parque (`ParkSchedule`). Zona horaria forzada a UTC en tests → `now(tz)` == el instante fijado.
+ * del parque (`OperatingSchedule`). Zona horaria forzada a UTC en tests → `now(tz)` == el instante fijado.
  */
 class HeroStatusTest extends TestCase
 {

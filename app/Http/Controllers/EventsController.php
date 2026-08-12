@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TicketType;
+use App\Domain\Booking\Models\TicketType;
 
 class EventsController extends Controller
 {

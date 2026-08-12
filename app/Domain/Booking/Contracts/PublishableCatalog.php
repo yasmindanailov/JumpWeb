@@ -18,7 +18,7 @@ namespace App\Domain\Booking\Contracts;
  * (`$attraction->ticketType?->displayPriceCents()`), la costura de BD que el spec deja
  * exenta (§4).
  *
- * Implementación actual: `App\Support\PublishableCatalogReader` (bind en
+ * Implementación actual: `App\Domain\Booking\Services\PublishableCatalogReader` (bind en
  * `BookingServiceProvider`; viaja a `App\Domain\Booking` en el paso 6).
  */
 interface PublishableCatalog

@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\Ticket;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Filament\Pages\CreateManualOrderPage;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\Ticket;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

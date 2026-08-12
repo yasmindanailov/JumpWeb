@@ -33,7 +33,7 @@ trait InteractsWithSeasonForm
         }
 
         // Normaliza las horas a 'H:i:s' (el TimePicker entrega 'H:i'): datos consistentes con
-        // el horario semanal/seeder y con lo que consume ParkSchedule.
+        // el horario semanal/seeder y con lo que consume OperatingSchedule.
         foreach (['open_time', 'close_time'] as $field) {
             if (! empty($data[$field])) {
                 $data[$field] = Carbon::parse((string) $data[$field])->format('H:i:s');

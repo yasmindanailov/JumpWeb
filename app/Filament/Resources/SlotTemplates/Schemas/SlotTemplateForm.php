@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\SlotTemplates\Schemas;
 
-use App\Models\Zone;
+use App\Domain\Booking\Models\Zone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;

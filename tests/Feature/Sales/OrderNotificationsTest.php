@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Order;
-use App\Models\TicketType;
-use App\Models\Zone;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderExpiredWithoutPayment;

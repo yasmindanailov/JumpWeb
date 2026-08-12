@@ -4,7 +4,7 @@
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
 > encima (CONVENCIONES §7).
 
-> **Fuente:** REGENERADO desde el código real (`app/Models/*.php` + `database/migrations/`, 71
+> **Fuente:** REGENERADO desde el código real (`app/Domain/*/Models/*.php` + `database/migrations/`, 71
 > migraciones). El `04-MODELO-DATOS.md` del origen estaba desfasado y NO se portó.
 
 ## 0. Convenciones transversales
@@ -20,7 +20,7 @@
   `slot_templates`, `rate_types.weekdays`.
 - **Mass assignment:** la mayoría de modelos llevan `$guarded = []` (abierto; heredado).
   Solo tienen allowlist `$fillable` estos 6: `Order`, `Payment`, `Setting`, `Role`,
-  `Permission`, `AuditLog` (`grep -l fillable app/Models/*.php`). Rareza a vigilar al
+  `Permission`, `AuditLog` (`grep -rl fillable app/Domain/*/Models/`). Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
   `AppServiceProvider` con alias snake_case para los 30 modelos — las columnas polimórficas
@@ -42,7 +42,7 @@
 | `slug` | unique (`jump`, `kids` en seed origen) |
 | `name`,`subtitle`,`description`,`age_label`,`age_range` | JSON i18n |
 | `area_sqm`,`rides_count` | uint nullable (display) |
-| `max_per_slot`,`max_guests_per_slot`,`prep_blocks_cupo` | **override por zona del cupo de packs**; `null` = usa settings globales `packs.*` (resuelve `App\Support\PackAvailability`) |
+| `max_per_slot`,`max_guests_per_slot`,`prep_blocks_cupo` | **override por zona del cupo de packs**; `null` = usa settings globales `packs.*` (resuelve `App\Domain\Booking\Services\PackAvailability`) |
 | `image` | ruta relativa a `public/` nullable |
 | `accent` | string default `jump` (token de tema) · `color` char(7) hex nullable (panel/calendario) |
 | `is_active` | la zona OPERA (vende) · `show_in_landing` = se muestra en la landing (flags desacoplados) |
@@ -58,7 +58,7 @@ vendible** (`TYPE_ADDON`): si `Attraction::complementIsPurchasable()` (addon act
 con precio, enganchado como addon DE PAGO a ≥1 entrada vendible de la misma zona operativa),
 la landing muestra precio + CTA. Versión batch sin N+1: `App\Domain\Content\Services\LandingComplementResolver`.
 Desde Fase 2 (paso 1) la REGLA vive una sola vez, en el contrato de Booking
-`App\Domain\Booking\Contracts\PublishableCatalog` (impl. `App\Support\PublishableCatalogReader`);
+`App\Domain\Booking\Contracts\PublishableCatalog` (impl. `App\Domain\Booking\Services\PublishableCatalogReader`);
 las dos formas de preguntarla —una atracción o toda la página— comparten la misma consulta.
 
 ### `ticket_types` — producto vendible unificado (TicketType) ⭐ tabla central del catálogo
@@ -91,14 +91,14 @@ gratis en un pack y de pago en una entrada):
 - `choice_group` — grupo excluyente tipo radio (Menú A ⊻ Menú B); índice `(product_id, choice_group)`.
 - `max_qty` nullable — tope por reserva (solo `fixed`; cap duro global 20 aparte).
 - `requires_addon_id` FK → `ticket_types` `nullOnDelete` — dependencia «requiere» (2.ª tarta
-  requiere tarta). Autoridad de servidor: `App\Support\AddonResolver`.
+  requiere tarta). Autoridad de servidor: `App\Domain\Booking\Services\AddonResolver`.
 
 Unique `(product_id, addon_id)`.
 
 ### `rate_types` — tarifa por tipo de día (RateType)
 `key` unique (`normal` | `special`; constantes) · `label` JSON i18n · `is_special` ·
 `weekdays` JSON (días que la activan) · `priority` (mayor gana) · `is_active`.
-Qué tarifa aplica a una fecha: `App\Support\RateResolver`. La tarifa `normal` es fallback
+Qué tarifa aplica a una fecha: `App\Domain\Booking\Services\RateResolver`. La tarifa `normal` es fallback
 **imborrable** (`isFallback()`, `deleteBlockedReason()`: `fallback_normal` | `has_prices` |
 `referenced_by_special_dates` — OJO: `prices.rate_type_id` es cascade, borrar tarifa borraría precios).
 
@@ -120,14 +120,14 @@ TODOS los días de su rango.
 ### `opening_hours` — horario semanal base (OpeningHour)
 `weekday` unique · `open_time`/`close_time` · `is_closed`.
 
-**Resolución del horario efectivo** (`App\Support\ParkSchedule`):
+**Resolución del horario efectivo** (`App\Domain\Booking\Services\OperatingSchedule`):
 `special_dates` (día concreto) → `seasons` (rango activo, la de inicio más temprano si solapan)
 → `opening_hours` (semanal).
 
 ### `slot_templates` — plantilla recurrente de franjas (SlotTemplate)
 `zone_id` FK cascade · `weekday` · `start_time` · `duration_min` · `capacity` ·
 `online_capacity` (resto = puerta) · `is_active` · unique `(zone_id, weekday, start_time)`.
-Genera `slots` vía comando `slots:generate` (`App\Support\SlotGenerator`).
+Genera `slots` vía comando `slots:generate` (`App\Domain\Booking\Services\SlotGenerator`).
 
 ### `slots` — franja concreta vendible (Slot)
 `zone_id` FK cascade · `date` · `start_time`/`end_time` · `capacity` · `online_capacity` ·
@@ -136,7 +136,7 @@ Genera `slots` vía comando `slots:generate` (`App\Support\SlotGenerator`).
 unique `(zone_id, date, start_time)`.
 Predicado canónico de venta online: `scopeSellableOnline` (abierta + no cerrada; el filtro de
 fecha lo pone cada llamador). El aforo real se cuenta por OCUPACIÓN desde los pedidos
-(`App\Support\SlotAvailability`): una entrada ocupa plaza en cada franja que abarca su duración.
+(`App\Domain\Booking\Services\SlotAvailability`): una entrada ocupa plaza en cada franja que abarca su duración.
 
 ### `rooms` — mesas/salas para packs (Room) — **estructura sin uso** (ver §6)
 `name`/`note` JSON i18n · `capacity` nullable · `position` · `is_active`.
@@ -161,7 +161,7 @@ Traits: `OrderOperativeStatus` (estado operativo CALCULADO `active|in_progress|f
 persistido), `OrderRefundFlags` y `GuardsItemRefunds` (Payments), `HasItemActionGuards` (Booking:
 guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments en Fase 2 paso 5) +
 `*BlockedReason`). Métodos financieros clave: `financialSummary()`
-(`App\Support\OrderFinancialSummary`), `executeFullRefund`, `executePartialRefund[Batch]`,
+(`App\Domain\Booking\Services\OrderFinancialSummary`), `executeFullRefund`, `executePartialRefund[Batch]`,
 `applyExtraDue`/`applyGateCredit`/`applyDepositRemainderCredit`, `pendingAtGateLines`,
 `notifyCustomer()` (no notifica a clientes de agenda sin email).
 
@@ -184,7 +184,7 @@ Estado operativo calculado (NO persistido): `active` / `finished` (al pasar `slo
 
 ### `tickets` — entrada emitida, una por admisión (Ticket)
 `order_id`/`ticket_type_id`/`slot_id` FK cascade · `qr_token` unique (aleatorio impredecible) ·
-`status` (hoy **solo** `purchased`, escrito por `App\Support\TicketIssuer`).
+`status` (hoy **solo** `purchased`, escrito por `App\Domain\Booking\Services\TicketIssuer`).
 El ciclo `prepared/redeemed/void` y sus columnas (`prepared_at/by`, `redeemed_at/by`) **se
 retiraron** (sistema «preparado» eliminado); la constante `STATUS_PURCHASED` es la única viva.
 
@@ -338,14 +338,14 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 
 | Sistema | Autoridad |
 |---|---|
-| Tarifa por fecha | `App\Support\RateResolver` (special_dates → weekdays de rate_types → fallback `normal`) |
-| Horario efectivo | `App\Support\ParkSchedule` (special_dates → seasons → opening_hours) |
-| Generación de franjas | `App\Support\SlotGenerator` (comando `slots:generate`; respeta `capacity_overridden`) |
-| Aforo entradas | `App\Support\SlotAvailability` (ocupación por pedidos, no `seats_taken`) |
-| Cupo packs | `App\Support\PackAvailability` (override zona → settings `packs.*`) |
-| Disponibilidad producto | `App\Support\ProductAvailability` |
-| Creación de pedido | `App\Support\OrderCreator` (precio en servidor, retención `expires_at`, código único) |
-| Complementos | `App\Support\AddonResolver` (incluidos/obligatorios/grupos/requires, a punto fijo) |
+| Tarifa por fecha | `App\Domain\Booking\Services\RateResolver` (special_dates → weekdays de rate_types → fallback `normal`) |
+| Horario efectivo | `App\Domain\Booking\Services\OperatingSchedule` (special_dates → seasons → opening_hours) |
+| Generación de franjas | `App\Domain\Booking\Services\SlotGenerator` (comando `slots:generate`; respeta `capacity_overridden`) |
+| Aforo entradas | `App\Domain\Booking\Services\SlotAvailability` (ocupación por pedidos, no `seats_taken`) |
+| Cupo packs | `App\Domain\Booking\Services\PackAvailability` (override zona → settings `packs.*`) |
+| Disponibilidad producto | `App\Domain\Booking\Services\ProductAvailability` |
+| Creación de pedido | `App\Domain\Booking\Services\OrderCreator` (precio en servidor, retención `expires_at`, código único) |
+| Complementos | `App\Domain\Booking\Services\AddonResolver` (incluidos/obligatorios/grupos/requires, a punto fijo) |
 | Pago/retorno | `App\Domain\Payments\Services\Redsys*` + `RedsysReturnHandler` (firma, idempotencia, incidencias) |
-| Emisión de entradas | `App\Support\TicketIssuer` (al pasar a `paid`) |
+| Emisión de entradas | `App\Domain\Booking\Services\TicketIssuer` (al pasar a `paid`) |
 | Auditoría | `App\Domain\Platform\Services\AuditLogger::log()` |

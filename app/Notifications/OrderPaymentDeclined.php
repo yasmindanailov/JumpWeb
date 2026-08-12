@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Services\RedsysResponseCode;
-use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

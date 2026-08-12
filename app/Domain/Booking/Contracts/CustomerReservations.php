@@ -15,7 +15,7 @@ namespace App\Domain\Booking\Contracts;
  * (`ModuleBoundariesTest`). Las relaciones Eloquent cruzadas (`Order::belongsTo(User)`)
  * siguen exentas como costura de BD documentada (§4 del spec).
  *
- * Implementación actual: `App\Support\CustomerReservationsReader` (bind en
+ * Implementación actual: `App\Domain\Booking\Services\CustomerReservationsReader` (bind en
  * `BookingServiceProvider`; viaja a `App\Domain\Booking` en el paso 6).
  */
 interface CustomerReservations

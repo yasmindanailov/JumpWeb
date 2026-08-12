@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Season;
+use App\Domain\Booking\Models\SlotTemplate;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Platform\Models\Setting;
-use App\Models\OpeningHour;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\Season;
-use App\Models\SlotTemplate;
-use App\Models\SpecialDate;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;

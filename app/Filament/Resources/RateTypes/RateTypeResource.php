@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\RateTypes;
 
+use App\Domain\Booking\Models\RateType;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\Pages\ListRateTypes;
 use App\Filament\Resources\RateTypes\Schemas\RateTypeForm;
 use App\Filament\Resources\RateTypes\Tables\RateTypeTable;
-use App\Models\RateType;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
  * Completa la sub-fase 7.8: #189 hizo editable el PRECIO por tarifa en la ficha del
  * producto; aquí se gestionan las TARIFAS en sí (la dimensión "día" de la matriz de
  * precios): su etiqueta, los días de la semana que las activan, su prioridad y si están
- * activas. Qué tarifa aplica a una fecha lo resuelve `App\Support\RateResolver`
+ * activas. Qué tarifa aplica a una fecha lo resuelve `App\Domain\Booking\Services\RateResolver`
  * (festivo/víspera vía `special_dates` → día de la semana de mayor prioridad → `normal`).
  *
  * Alcance de esta entrega:

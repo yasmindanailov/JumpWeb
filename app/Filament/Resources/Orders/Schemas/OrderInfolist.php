@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Flex;

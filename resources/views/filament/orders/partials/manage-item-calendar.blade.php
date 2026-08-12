@@ -15,8 +15,8 @@
      *
      * Variables esperadas:
      *
-     * @var \App\Models\OrderItem $item
-     * @var \App\Models\Order $record
+     * @var \App\Domain\Booking\Models\OrderItem $item
+     * @var \App\Domain\Booking\Models\Order $record
      * @var bool $editable
      * @var string|null $blockedReason
      * @var array<int, array<int, array<string, mixed>>> $matrix  semanas × días

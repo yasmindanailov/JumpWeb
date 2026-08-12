@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\SpecialDates\Schemas;
 
-use App\Models\RateType;
-use App\Models\SpecialDate;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\SpecialDate;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;

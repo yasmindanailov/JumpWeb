@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
-use App\Models\RateType;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\CatalogSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;

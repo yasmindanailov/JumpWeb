@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\Order;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

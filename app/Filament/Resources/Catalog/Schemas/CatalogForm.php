@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Catalog\Schemas;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Filament\Resources\Catalog\CatalogResource;
-use App\Models\RateType;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;

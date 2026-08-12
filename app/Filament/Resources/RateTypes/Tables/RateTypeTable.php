@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\RateTypes\Tables;
 
+use App\Domain\Booking\Models\RateType;
 use App\Filament\Resources\RateTypes\RateTypeResource;
-use App\Models\RateType;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;

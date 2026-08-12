@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\SlotTemplates;
 
+use App\Domain\Booking\Models\SlotTemplate;
 use App\Filament\Resources\SlotTemplates\Pages\CreateSlotTemplate;
 use App\Filament\Resources\SlotTemplates\Pages\EditSlotTemplate;
 use App\Filament\Resources\SlotTemplates\Pages\ListSlotTemplates;
 use App\Filament\Resources\SlotTemplates\Schemas\SlotTemplateForm;
 use App\Filament\Resources\SlotTemplates\Tables\SlotTemplateTable;
-use App\Models\SlotTemplate;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

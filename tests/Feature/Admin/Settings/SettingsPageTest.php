@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Settings;
 
+use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
-use App\Support\CatalogSettings;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

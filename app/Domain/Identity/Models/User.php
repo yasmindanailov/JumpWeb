@@ -2,9 +2,9 @@
 
 namespace App\Domain\Identity\Models;
 
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Ticket;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Ticket;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;

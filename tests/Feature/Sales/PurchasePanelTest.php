@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
-use App\Models\OpeningHour;
-use App\Models\Order;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\RateResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;

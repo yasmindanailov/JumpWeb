@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
-use App\Models\Order;
-use App\Models\OrderAdjustment;
-use App\Models\OrderItem;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

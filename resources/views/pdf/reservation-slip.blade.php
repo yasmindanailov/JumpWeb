@@ -10,12 +10,12 @@
     Se fuerza en español desde el controlador; el presenter `$slip` trae todo
     formateado.
 
-    @var \App\Support\ReservationSlip $slip
+    @var \App\Domain\Booking\Services\ReservationSlip $slip
 --}}
 @php
-    use App\Models\Order;
+    use App\Domain\Booking\Models\Order;
     use App\Domain\Platform\Services\DisplayTime;
-    use App\Support\ReservationSlip;
+    use App\Domain\Booking\Services\ReservationSlip;
 
     // Badge de estado de pago: SOLO se muestra cuando el pedido NO está pagado
     // (pulido clienta: "Completado" no aporta). Para pending/cancelled/refunded/

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\SlotTemplates\Pages;
 
+use App\Domain\Booking\Models\SlotTemplate;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\SlotTemplates\Concerns\InteractsWithSlotTemplateForm;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
-use App\Models\SlotTemplate;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

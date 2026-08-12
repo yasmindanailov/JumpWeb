@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Attractions\Schemas;
 
-use App\Models\TicketType;
-use App\Models\Zone;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;

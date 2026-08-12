@@ -4,7 +4,7 @@
      no respetan CSS externo/`<style>` de forma fiable, y el slot del correo pasa por el parser
      Markdown — una tabla con estilos inline es lo único robusto en todas las bandejas. El badge
      usa el color de la ZONA del producto (data-driven). No usa SVG (Gmail/Outlook los eliminan):
-     el icono es un emoji dentro de un badge de color. La rinde `App\Support\EmailProductCard`,
+     el icono es un emoji dentro de un badge de color. La rinde `App\Domain\Booking\Services\EmailProductCard`,
      que cada notificación inyecta con UNA línea — sin reescribir el correo.
 
      Props: $emoji, $color (hex de zona), $title, $meta?, $sub?, $addons (string[]), $price? --}}

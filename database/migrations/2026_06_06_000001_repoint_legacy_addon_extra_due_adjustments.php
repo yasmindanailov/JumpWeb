@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\LegacyAddonAdjustmentRepair;
+use App\Domain\Booking\Services\LegacyAddonAdjustmentRepair;
 use Illuminate\Database\Migrations\Migration;
 
 /**

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\Order;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;

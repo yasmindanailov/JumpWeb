@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\SpecialDates;
 
+use App\Domain\Booking\Models\SpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\ListSpecialDates;
 use App\Filament\Resources\SpecialDates\Schemas\SpecialDateForm;
 use App\Filament\Resources\SpecialDates\Tables\SpecialDateTable;
-use App\Models\SpecialDate;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -22,12 +22,12 @@ use Illuminate\Database\Eloquent\Builder;
  * mantenimiento), un **horario especial** (abre distinto ese día) y/o una **tarifa
  * especial** (festivo que cobra como finde). El backend ya las consume en vivo (no hacía
  * falta UI hasta ahora):
- *  - `App\Support\ParkSchedule::effectiveFor()` (una excepción manda sobre `opening_hours`):
+ *  - `App\Domain\Booking\Services\OperatingSchedule::effectiveFor()` (una excepción manda sobre `opening_hours`):
  *    si `is_closed`, el día no se vende; si no, usa su ventana `open_time`/`close_time`.
  *    Lo consultan el generador de franjas (`slots:generate`), la compra pública
  *    (`ProductAvailability::allowsStart`) y la gestión de pedidos → marcar un día cerrado
  *    **bloquea reservas también en franjas ya generadas** (no hace falta regenerar).
- *  - `App\Support\RateResolver::for()` aplica su `rate_type_id` ese día (precio).
+ *  - `App\Domain\Booking\Services\RateResolver::for()` aplica su `rate_type_id` ese día (precio).
  *
  * Empareja con la gestión de tarifas (7.8, #203): aquí se asigna a un día concreto cuál de
  * esas tarifas aplica. Por eso comparte permiso y grupo.

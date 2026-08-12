@@ -2,10 +2,10 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\Season;
+use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Platform\Services\DisplayTime;
-use App\Models\OpeningHour;
-use App\Models\Season;
-use App\Models\SpecialDate;
 use Illuminate\Support\Collection;
 
 /**
@@ -21,7 +21,7 @@ use Illuminate\Support\Collection;
  *    propia o, si no la define, el semanal de ese día), no solo el nombre (#269bis punto 1).
  *
  * La prioridad del horario efectivo (fecha especial > temporada > semanal) es la MISMA que resuelve
- * {@see ParkSchedule::effectiveFor()} para las reservas: lo anunciado no diverge de lo aplicado.
+ * {@see OperatingSchedule::effectiveFor()} para las reservas: lo anunciado no diverge de lo aplicado.
  */
 class ScheduleDisplay
 {
@@ -179,7 +179,7 @@ class ScheduleDisplay
         }
 
         // Ventana EFECTIVA: la propia del día especial o, si no la define, el horario SEMANAL de ese
-        // día (igual que ParkSchedule::effectiveFor). Antes se mostraba solo la nota/«Abierto» y se
+        // día (igual que OperatingSchedule::effectiveFor). Antes se mostraba solo la nota/«Abierto» y se
         // perdía el horario cuando la fecha especial heredaba el semanal (#269bis punto 1).
         $day = $this->weekly()->get($special->date->dayOfWeek);
         $open = $special->open_time ?? $day?->open_time;
@@ -206,7 +206,7 @@ class ScheduleDisplay
 
     /**
      * Temporada vigente HOY (si varias solapan, la de inicio más temprano), o null. Misma regla que
-     * {@see ParkSchedule::seasonFor()}, para no divergir de lo que aplican las reservas.
+     * {@see OperatingSchedule::seasonFor()}, para no divergir de lo que aplican las reservas.
      */
     private function currentSeason(): ?Season
     {

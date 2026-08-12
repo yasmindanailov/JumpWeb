@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\Catalog;
 
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
 use App\Filament\Resources\Catalog\Pages\CreateCatalog;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
 use App\Filament\Resources\Catalog\RelationManagers\AddonsRelationManager;
 use App\Filament\Resources\Catalog\Schemas\CatalogForm;
 use App\Filament\Resources\Catalog\Tables\CatalogTable;
-use App\Models\OrderItem;
-use App\Models\TicketType;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

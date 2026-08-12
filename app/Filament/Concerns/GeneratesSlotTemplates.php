@@ -2,11 +2,11 @@
 
 namespace App\Filament\Concerns;
 
+use App\Domain\Booking\Models\SlotTemplate;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\SlotGenerator;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\AuditLogger;
-use App\Models\SlotTemplate;
-use App\Models\Zone;
-use App\Support\SlotGenerator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;

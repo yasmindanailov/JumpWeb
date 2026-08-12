@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\SpecialDates\Pages;
 
+use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\SpecialDates\Concerns\InteractsWithSpecialDateForm;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
-use App\Models\SpecialDate;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;

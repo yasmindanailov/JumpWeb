@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Booking\Services\DailyReservationsSummary;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Http\Controllers\Controller;
-use App\Support\DailyReservationsSummary;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;

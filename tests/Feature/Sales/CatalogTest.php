@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\TicketType;
-use App\Support\RateResolver;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\RateResolver;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;

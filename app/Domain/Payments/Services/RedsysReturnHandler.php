@@ -2,16 +2,16 @@
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\TicketIssuer;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Mail\PaymentIncidentMail;
-use App\Models\Order;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderProcessedAfterExpiration;
-use App\Support\TicketIssuer;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -2,9 +2,9 @@
 
 namespace App\Notifications;
 
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Support\EmailProductCard;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

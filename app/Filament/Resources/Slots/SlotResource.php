@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\Slots;
 
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\PackAvailability;
+use App\Domain\Booking\Services\SlotAvailability;
 use App\Filament\Resources\Slots\Pages\EditSlot;
 use App\Filament\Resources\Slots\Pages\ListSlots;
 use App\Filament\Resources\Slots\Schemas\SlotForm;
 use App\Filament\Resources\Slots\Tables\SlotTable;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Support\PackAvailability;
-use App\Support\SlotAvailability;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

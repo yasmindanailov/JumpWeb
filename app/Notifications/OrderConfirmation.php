@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailProductCard;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
-use App\Models\Order;
-use App\Support\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;

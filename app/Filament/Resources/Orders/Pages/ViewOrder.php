@@ -2,16 +2,22 @@
 
 namespace App\Filament\Resources\Orders\Pages;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\ProductAddon;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\AddonResolver;
+use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\PackAvailability;
+use App\Domain\Booking\Services\ProductAvailability;
+use App\Domain\Booking\Services\RateResolver;
+use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\ProductAddon;
-use App\Models\Slot;
-use App\Models\TicketType;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderConfirmation;
@@ -20,12 +26,6 @@ use App\Notifications\OrderItemModified;
 use App\Notifications\OrderItemRefunded;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderRefunded;
-use App\Support\AddonResolver;
-use App\Support\PackAvailability;
-use App\Support\ParkSchedule;
-use App\Support\ProductAvailability;
-use App\Support\RateResolver;
-use App\Support\SlotAvailability;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -620,7 +620,7 @@ class ViewOrder extends ViewRecord
      * se eliminó en #171 por ser redundante con el Tab 1):
      *   - Tab 1 "Producto y reserva" (PRIMERA y default): selector fecha +
      *     selector hora con aforo real (`SlotAvailability` para entradas,
-     *     `PackAvailability` para packs) y validación de `ParkSchedule` +
+     *     `PackAvailability` para packs) y validación de `OperatingSchedule` +
      *     `ProductAvailability` aplicada en la lista de opciones. Si el
      *     item es pack con `eventFields` definidos y el operador tiene
      *     `orders.edit_event_data`, el form de event_data se renderiza
@@ -1946,7 +1946,7 @@ class ViewOrder extends ViewRecord
         }
 
         $dateCarbon = Carbon::parse($date);
-        $isParkOpen = app(ParkSchedule::class)->isOpenOn($dateCarbon);
+        $isParkOpen = app(OperatingSchedule::class)->isOpenOn($dateCarbon);
         $productWindow = app(ProductAvailability::class);
         $currentSlot = $item->slot;
 
@@ -2334,14 +2334,14 @@ class ViewOrder extends ViewRecord
      * Opciones del selector de FECHA del modal Gestionar Tab 1.
      *
      * Reglas (decisión #159 + 4ª pregunta validada por la clienta — modo
-     * estricto: aforo + Pack + ParkSchedule + ProductAvailability):
+     * estricto: aforo + Pack + OperatingSchedule + ProductAvailability):
      *  - Solo mismo zone del item (cross-zone bloqueado, eso es cambio de
      *    producto → 7.2e.3).
      *  - Solo fechas FUTURAS (today + horas restantes del día → mañana
      *    siempre incluida; today con slots aún por venir → incluida).
      *  - `online_sales_open = true` + `status != closed` (defensa antes
      *    de pasar al cómputo de aforo).
-     *  - `ParkSchedule::isOpenOn` true ese día.
+     *  - `OperatingSchedule::isOpenOn` true ese día.
      *  - Al menos UN slot del día cumple `ProductAvailability::allowsStart`
      *    + tiene aforo suficiente para `item.seats` (entradas →
      *    `SlotAvailability::availableFor`; packs → `PackAvailability::
@@ -2365,7 +2365,7 @@ class ViewOrder extends ViewRecord
             return [];
         }
 
-        $schedule = app(ParkSchedule::class);
+        $schedule = app(OperatingSchedule::class);
         $productWindow = app(ProductAvailability::class);
         $today = Carbon::today();
         // Horizonte de compra/edición (sub-fase 7.2e.2bis6, decisión #160):
@@ -2449,7 +2449,7 @@ class ViewOrder extends ViewRecord
         }
 
         $dateCarbon = Carbon::parse($date);
-        if (! app(ParkSchedule::class)->isOpenOn($dateCarbon)) {
+        if (! app(OperatingSchedule::class)->isOpenOn($dateCarbon)) {
             // Sin park abierto → solo el slot actual si la fecha coincide.
             return $this->buildCurrentSlotOnlyTimeOption($item, $date);
         }
@@ -2687,7 +2687,7 @@ class ViewOrder extends ViewRecord
             return [];
         }
 
-        $schedule = app(ParkSchedule::class);
+        $schedule = app(OperatingSchedule::class);
         $productWindow = app(ProductAvailability::class);
 
         $slots = Slot::query()
@@ -2738,7 +2738,7 @@ class ViewOrder extends ViewRecord
         }
 
         $dateCarbon = Carbon::parse($date);
-        $isParkOpen = app(ParkSchedule::class)->isOpenOn($dateCarbon);
+        $isParkOpen = app(OperatingSchedule::class)->isOpenOn($dateCarbon);
         $productWindow = app(ProductAvailability::class);
         $currentSlot = $item->slot;
         $selectedTime = $this->calendarSelectedTime;
@@ -3953,7 +3953,7 @@ class ViewOrder extends ViewRecord
         if ($newDateCarbon->gt($horizon)) {
             return 'beyond_horizon';
         }
-        if (! app(ParkSchedule::class)->isOpenOn($newDateCarbon)) {
+        if (! app(OperatingSchedule::class)->isOpenOn($newDateCarbon)) {
             return 'park_closed';
         }
         if (! app(ProductAvailability::class)->allowsStart($ticketType, $newDateCarbon, $newSlot->start_time)) {

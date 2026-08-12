@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
-use App\Models\RateType;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

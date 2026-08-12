@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
-use App\Models\Order;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

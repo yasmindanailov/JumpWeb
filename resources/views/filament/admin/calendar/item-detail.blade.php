@@ -1,6 +1,6 @@
 @php
     /**
-     * @var \App\Models\OrderItem|null $item
+     * @var \App\Domain\Booking\Models\OrderItem|null $item
      * @var \Illuminate\Support\Collection|null $children
      * @var string|null $orderUrl
      * @var string|null $userUrl
@@ -46,7 +46,7 @@
     $customer = $item->order?->user;
     $userUrl = $userUrl ?? null;
     $slipUrl = $slipUrl ?? null;
-    $rf = $rf ?? null; // App\Support\ReservationFinancials — desglose detallado (#196)
+    $rf = $rf ?? null; // App\Domain\Booking\Services\ReservationFinancials — desglose detallado (#196)
 @endphp
 
 <div class="space-y-5">
@@ -98,7 +98,7 @@
          por-niño (misma tabla que la ficha del pedido). Si está pendiente, no hay nada que mostrar. --}}
     @if ($formStatus !== null)
         @php
-            $guestOk = $formStatus === \App\Models\OrderItem::GUEST_FORM_STATUS_OK;
+            $guestOk = $formStatus === \App\Domain\Booking\Models\OrderItem::GUEST_FORM_STATUS_OK;
             $guestFields = $type?->guestFields() ?? [];
             $guestData = $item->guestData();
         @endphp

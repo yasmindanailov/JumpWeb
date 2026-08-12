@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\RateType;
-use App\Models\TicketType;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

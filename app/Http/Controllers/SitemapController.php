@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;

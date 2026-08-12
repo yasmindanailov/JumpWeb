@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\LegacyGateAdjustmentReconciliation;
+use App\Domain\Booking\Services\LegacyGateAdjustmentReconciliation;
 use Illuminate\Database\Migrations\Migration;
 
 /**

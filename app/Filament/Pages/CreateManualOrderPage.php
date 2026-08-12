@@ -2,19 +2,19 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\AddonResolver;
+use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Booking\Services\PackAvailability;
+use App\Domain\Booking\Services\RateResolver;
+use App\Domain\Booking\Services\SlotAvailability;
+use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
-use App\Exceptions\ReservationException;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\TicketType;
-use App\Support\AddonResolver;
-use App\Support\ManualOrderFulfiller;
-use App\Support\PackAvailability;
-use App\Support\RateResolver;
-use App\Support\SlotAvailability;
-use App\Support\SlotOffer;
 use BackedEnum;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;

@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Admin\SpecialDates;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
-use App\Models\RateType;
-use App\Models\SpecialDate;
-use App\Support\ParkSchedule;
-use App\Support\RateResolver;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -23,7 +23,7 @@ use Tests\TestCase;
  * Fase 7.7 (iter. 1) — Fechas especiales (`special_dates`): gating por `prices.manage`,
  * CRUD, coherencia de un día cerrado (sin ventana ni tarifa), validación cierre>apertura,
  * fecha única, auditoría e **integración end-to-end** con los consumidores en vivo
- * (`ParkSchedule` para apertura/cierre, `RateResolver` para la tarifa).
+ * (`OperatingSchedule` para apertura/cierre, `RateResolver` para la tarifa).
  */
 class SpecialDateResourceTest extends TestCase
 {
@@ -252,7 +252,7 @@ class SpecialDateResourceTest extends TestCase
             ->assertHasNoFormErrors();
 
         // El parque queda cerrado ese día (lo que bloquea compra pública + generación de franjas).
-        $this->assertFalse(app(ParkSchedule::class)->isOpenOn(Carbon::parse('2026-12-25')));
+        $this->assertFalse(app(OperatingSchedule::class)->isOpenOn(Carbon::parse('2026-12-25')));
     }
 
     public function test_open_day_window_applies_via_park_schedule(): void
@@ -266,7 +266,7 @@ class SpecialDateResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $hours = app(ParkSchedule::class)->effectiveFor(Carbon::parse('2026-12-24'));
+        $hours = app(OperatingSchedule::class)->effectiveFor(Carbon::parse('2026-12-24'));
         $this->assertTrue($hours['is_open']);
         $this->assertSame('10:00', substr((string) $hours['open'], 0, 5));
         $this->assertSame('14:00', substr((string) $hours['close'], 0, 5));
@@ -307,7 +307,7 @@ class SpecialDateResourceTest extends TestCase
         $this->assertSame('11:00', substr((string) $sd->open_time, 0, 5));
         $this->assertNull($sd->close_time);
 
-        $hours = app(ParkSchedule::class)->effectiveFor(Carbon::parse('2026-07-10'));
+        $hours = app(OperatingSchedule::class)->effectiveFor(Carbon::parse('2026-07-10'));
         $this->assertTrue($hours['is_open']);
         $this->assertSame('11:00', substr((string) $hours['open'], 0, 5));
     }

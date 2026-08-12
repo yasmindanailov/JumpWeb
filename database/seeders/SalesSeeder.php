@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\OpeningHour;
-use App\Models\RateType;
-use App\Models\Room;
-use App\Models\SlotTemplate;
-use App\Models\SpecialDate;
-use App\Models\Zone;
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Room;
+use App\Domain\Booking\Models\SlotTemplate;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\Zone;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;

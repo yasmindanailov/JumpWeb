@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TicketType;
-use App\Models\Zone;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 
 class PricingController extends Controller
 {

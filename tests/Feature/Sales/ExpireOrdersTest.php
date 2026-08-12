@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
-use App\Models\Order;
 use App\Notifications\OrderExpiredWithoutPayment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;

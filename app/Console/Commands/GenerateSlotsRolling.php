@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Support\SlotGenerator;
+use App\Domain\Booking\Services\SlotGenerator;
 use Illuminate\Console\Command;
 
 /**

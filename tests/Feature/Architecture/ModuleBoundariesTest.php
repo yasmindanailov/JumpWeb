@@ -15,12 +15,16 @@ use Tests\TestCase;
  * las hace visibles Y las impone sobre lo que ya vive en `app/Domain`.
  *
  * Tres guardas:
- *  1. **Grafo permitido** entre módulos (`ALLOWED`): quién puede mirar a quién.
- *  2. **Baselines explícitas** (`SEAM` y `LEGACY`) para lo que aún no cumple el grafo, con el paso
- *     del spec que las retira. **Solo pueden ENCOGER**: una entrada que deja de usarse hace fallar
- *     el test, así que borrarla es obligatorio y nadie puede colar una flecha nueva ahí dentro.
- *  3. **Puerta de entrada**: desde fuera de `app/Domain` solo se puede tocar `Contracts` — nunca
- *     los `Services`/`Models` de un módulo.
+ *  1. **Grafo permitido** entre módulos (`ALLOWED`): quién puede mirar a quién, más dos
+ *     exenciones CON NOMBRE (`SHARED_KERNEL`, `OUTBOUND`) que son reglas, no deuda.
+ *  2. **Baselines explícitas** para lo que no cumple el grafo, cada una con su naturaleza:
+ *     `SEAM` (costura aceptada y documentada), `DEFERRED` (decisión de diseño pendiente),
+ *     `LEGACY`/`PENDING` (código sin modularizar — ambas VACÍAS desde el paso 6).
+ *     **Solo pueden ENCOGER**: una entrada que deja de usarse hace fallar el test, así que
+ *     borrarla es obligatorio y nadie puede colar una flecha nueva ahí dentro.
+ *  3. **Puerta de entrada** desde fuera de `app/Domain`: la capa de ENTREGA es el composition
+ *     root y usa la superficie pública de cualquier módulo; el dominio sin modularizar solo
+ *     entraba por `Contracts`/Platform (ya no queda ninguno).
  *
  * El escaneo usa el TOKENIZADOR de PHP, no expresiones regulares sobre el texto: los docblocks de
  * los contratos citan clases legacy a propósito y una regex las contaría como dependencias reales.
@@ -35,12 +39,18 @@ class ModuleBoundariesTest extends TestCase
      *
      * @var array<string, list<string>>
      */
+    /** Marca de «lista vacía» para los data-providers: PHPUnit trata un provider sin casos como error. */
+    private const EMPTY_SENTINEL = '(vacía)';
+
     private const ALLOWED = [
         'Platform' => [],
         'Content' => ['Platform', 'Booking\Contracts', 'Payments\Contracts'],
         'Identity' => ['Platform', 'Booking\Contracts', 'Payments\Contracts'],
-        'Booking' => ['Platform'],
-        'Payments' => ['Platform'],
+        // Booking habla con Payments por su CONTRATO (`RefundGateway`, creado en el paso 1
+        // justo para esto). Lo demás entre ambos sigue exigiendo entrada explícita en `SEAM`:
+        // el canal sancionado es el contrato, no un permiso general de módulo.
+        'Booking' => ['Platform', 'Payments\Contracts'],
+        'Payments' => ['Platform', 'Booking\Contracts'],
     ];
 
     /**
@@ -95,12 +105,12 @@ class ModuleBoundariesTest extends TestCase
         //    diseño limpio sería que Identity emitiera «usuario anonimizado» y cada contexto
         //    borrase lo suyo; eso es un refactor de eventos, fuera del alcance de Fase 2 (§2).
         //    Anotado aquí para que la decisión exista y no se pierda.
-        'Identity/Models/User.php' => ['App\Models\Order', 'App\Models\OrderItem', 'App\Models\Ticket'],
+        'Identity/Models/User.php' => ['App\Domain\Booking\Models\Order', 'App\Domain\Booking\Models\OrderItem', 'App\Domain\Booking\Models\Ticket'],
         // Relaciones Eloquent Content↔Booking: `attractions.zone_id`, `attractions.ticket_type_id`,
         // `landing_services.ticket_type_id`. Son FKs del esquema, no llamadas de dominio; el
         // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
-        'Content/Models/Attraction.php' => ['App\Models\TicketType', 'App\Models\Zone'],
-        'Content/Models/LandingService.php' => ['App\Models\TicketType'],
+        'Content/Models/Attraction.php' => ['App\Domain\Booking\Models\TicketType', 'App\Domain\Booking\Models\Zone'],
+        'Content/Models/LandingService.php' => ['App\Domain\Booking\Models\TicketType'],
 
         // ─── PAYMENTS → BOOKING: la costura del DINERO (paso 5, 2026-08-12) ───
         // Es LA costura que el spec §4 anticipó, y ahora es visible en el código en vez de
@@ -114,46 +124,90 @@ class ModuleBoundariesTest extends TestCase
         //    núcleo endurecido de dinero, exactamente lo que el paso 5 tiene PROHIBIDO hacer
         //    en el mismo commit que la mudanza (§2 + INVARIANTES §1). Queda anotado como el
         //    candidato nº1 a evento de dominio cuando haya un motivo real.
-        'Payments/Models/PaymentRefund.php' => ['App\Models\OrderItem'],
-        'Payments/Concerns/GuardsItemRefunds.php' => ['App\Models\OrderItem'],
-        'Payments/Services/Redsys.php' => ['App\Models\Order'],
-        'Payments/Services/RedsysReturnHandler.php' => ['App\Models\Order', 'App\Support\TicketIssuer'],
+        'Payments/Models/PaymentRefund.php' => ['App\Domain\Booking\Models\OrderItem'],
+        'Payments/Concerns/GuardsItemRefunds.php' => ['App\Domain\Booking\Models\OrderItem'],
+        'Payments/Services/Redsys.php' => ['App\Domain\Booking\Models\Order'],
+        'Payments/Services/RedsysReturnHandler.php' => ['App\Domain\Booking\Models\Order', 'App\Domain\Booking\Services\TicketIssuer'],
+
+        // ─── BOOKING → PAYMENTS: el otro lado del dinero (paso 6, 2026-08-12) ───
+        // `Order` es el punto de encuentro: los dos traits de reembolso se aplican SOBRE ÉL y
+        // navega a sus `Payment`/`PaymentRefund` (`payments.payable` morph, `payment_refunds`).
+        // Su llamada al gateway ya NO está aquí: va por `Payments\Contracts\RefundGateway`, que
+        // es canal sancionado en `ALLOWED` — el contrato del paso 1 haciendo su trabajo.
+        'Booking/Models/Order.php' => [
+            'App\Domain\Payments\Concerns\GuardsItemRefunds',
+            'App\Domain\Payments\Concerns\OrderRefundFlags',
+            'App\Domain\Payments\Models\Payment',
+            'App\Domain\Payments\Models\PaymentRefund',
+        ],
+        'Booking/Models/OrderItem.php' => ['App\Domain\Payments\Models\PaymentRefund'],
+        'Booking/Services/ManualOrderFulfiller.php' => ['App\Domain\Payments\Models\Payment'],
+        'Booking/Services/OrderFinancialSummary.php' => [
+            'App\Domain\Payments\Models\Payment',
+            'App\Domain\Payments\Models\PaymentRefund',
+        ],
+        // `PaymentSettings` guarda la VENTANA DE RETENCIÓN del pedido: config de pago que la
+        // oferta y el aforo necesitan para fijar `expires_at`. Candidata a contrato — es la
+        // única de estas flechas que no es una relación ni un trait, sino una lectura de config.
+        'Booking/Services/OrderCreator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+        'Booking/Services/SlotGenerator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+        'Booking/Services/SlotOffer.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+
+        // ─── BOOKING → CONTENT (paso 6) ───
+        // Relaciones Eloquent inversas (`landing_services.ticket_type_id`, `attractions.zone_id`)
+        // + la costura que la revisión del spec ya había previsto en §6.7: la tarjeta de producto
+        // del email pinta el color de la zona leyendo el tema. Muere cuando Content exponga el
+        // color por contrato o cuando la tarjeta deje de decidir su propio color.
+        'Booking/Models/TicketType.php' => ['App\Domain\Content\Models\LandingService'],
+        'Booking/Models/Zone.php' => ['App\Domain\Content\Models\Attraction'],
+        'Booking/Services/EmailProductCard.php' => ['App\Domain\Content\Services\ThemeSettings'],
     ];
 
     /**
-     * Baseline LEGACY: referencias desde `app/Domain` a código que aún no se ha modularizado
-     * (`App\Models\*`, `App\Support\*`). Cada entrada dice qué paso del spec la retira.
+     * Baseline LEGACY: referencias desde `app/Domain` a código SIN MODULARIZAR.
+     *
+     * ✅ **VACÍA desde el paso 6** (2026-08-12): `app/Models` y `app/Support` ya no existen, así
+     * que no queda código legacy al que apuntar. Se conserva la constante —y su guarda de
+     * «solo encoge»— porque es el sitio donde volvería a aparecer si alguien reintrodujera un
+     * cajón de sastre fuera de los módulos.
      *
      * @var array<string, list<string>>
      */
-    private const LEGACY = [
-        // ✅ RETIRADAS en el paso 5 (la baseline ENCOGIÓ, que es su único movimiento legal):
-        // `RefundGateway`→`Payment` y `PaymentsServiceProvider`→`Redsys` ya no son legacy —
-        // ambas clases viven ahora dentro de Payments y son referencias intra-módulo.
-        'Booking/BookingServiceProvider.php' => [
-            'App\Support\CustomerReservationsReader',
-            'App\Support\PublishableCatalogReader',
-        ],
+    private const LEGACY = [];
 
-        // ─── Content → Booking: LECTURAS de dominio, no relaciones (paso 3, 2026-08-12) ───
-        // Estas NO son costura de BD: son consultas de Content a datos de Booking. Hoy apuntan a
-        // `App\Models`/`App\Support` (legacy) y por eso caben aquí; cuando Booking mude (paso 6)
-        // el grafo NO las permitirá y habrá que decidir, con todo a la vista, entre:
-        //   (a) contratos de Booking para «calendario de operación», «identidad de zona» y
-        //       «precio de referencia del producto», o
-        //   (b) reclasificar el calendario (`OpeningHour`/`Season`/`SpecialDate`/`ParkSchedule`):
-        //       lo consumen la landing (horarios, SEO) y Booking (generación de franjas) por
-        //       igual, así que puede que no sea de Booking sino del recinto.
-        // Mientras tanto la lista solo puede ENCOGER.
-        'Content/Services/HeroStatus.php' => ['App\Support\ParkSchedule'],
+    /**
+     * **Flechas APLAZADAS**: las que el grafo NO permite y que el paso 7 (cierre) debe resolver.
+     * No son costura aceptada —por eso no están en `SEAM`— ni deuda con código legacy —por eso
+     * no están en `LEGACY`—: son una DECISIÓN DE DISEÑO pendiente, con nombre y fecha.
+     *
+     * Todas son Content leyendo datos de Booking para PINTARLOS (horarios en la landing y en el
+     * SEO, color de zona, precio de referencia del complemento). El grafo dice que Content solo
+     * entra a Booking por `Contracts`. Las dos salidas, ya con todos los datos delante:
+     *   (a) **contratos de lectura en Booking** — «calendario de operación», «identidad de zona»
+     *       y «precio de referencia», extraídos de estas llamadas reales (como se hizo en el
+     *       paso 1 con `PublishableCatalog` y `CustomerReservations`); o
+     *   (b) **reclasificar el calendario**. Medido en el paso 6: NO es viable llevarlo a
+     *       Platform, porque `SpecialDate` referencia `RateType` (tarifa) y Platform no puede
+     *       depender de nadie. Haría falta un módulo «recinto» nuevo — más de lo que el spec
+     *       aprobó.
+     * La evidencia empuja hacia (a). Se decide en el paso 7 y no antes: el paso 6 es una
+     * mudanza, y mezclar tres contratos nuevos con el movimiento de 40 clases sería justo el
+     * big-bang que el spec prohíbe (§2).
+     *
+     * Como el resto de baselines, **solo puede ENCOGER**.
+     *
+     * @var array<string, list<string>>
+     */
+    private const DEFERRED = [
+        'Content/Services/HeroStatus.php' => ['App\Domain\Booking\Services\OperatingSchedule'],
         'Content/Services/ScheduleDisplay.php' => [
-            'App\Models\OpeningHour',
-            'App\Models\Season',
-            'App\Models\SpecialDate',
+            'App\Domain\Booking\Models\OpeningHour',
+            'App\Domain\Booking\Models\Season',
+            'App\Domain\Booking\Models\SpecialDate',
         ],
-        'Content/Services/StructuredData.php' => ['App\Models\OpeningHour'],
-        'Content/Services/ThemeSettings.php' => ['App\Models\Zone'],
-        'Content/Services/LandingAddonPresenter.php' => ['App\Models\TicketType'],
+        'Content/Services/StructuredData.php' => ['App\Domain\Booking\Models\OpeningHour'],
+        'Content/Services/ThemeSettings.php' => ['App\Domain\Booking\Models\Zone'],
+        'Content/Services/LandingAddonPresenter.php' => ['App\Domain\Booking\Models\TicketType'],
     ];
 
     /** El escaneo nunca puede pasar en vacío (un glob roto lo volvería un test decorativo). */
@@ -208,6 +262,12 @@ class ModuleBoundariesTest extends TestCase
     #[DataProvider('baselineProvider')]
     public function test_baseline_entries_are_still_in_use(string $baseline, string $relative, string $reference): void
     {
+        if ($relative === self::EMPTY_SENTINEL) {
+            $this->assertSame([[], [], []], [self::SEAM, self::LEGACY, self::DEFERRED]);
+
+            return;
+        }
+
         $path = app_path('Domain/'.$relative);
 
         $this->assertFileExists($path, "{$baseline}: «{$relative}» ya no existe — quita su entrada");
@@ -221,7 +281,7 @@ class ModuleBoundariesTest extends TestCase
     /** @return iterable<string, array{string, string, string}> */
     public static function baselineProvider(): iterable
     {
-        foreach (['SEAM' => self::SEAM, 'LEGACY' => self::LEGACY] as $name => $entries) {
+        foreach (['SEAM' => self::SEAM, 'LEGACY' => self::LEGACY, 'DEFERRED' => self::DEFERRED] as $name => $entries) {
             foreach ($entries as $relative => $references) {
                 foreach ($references as $reference) {
                     yield "{$name}: {$relative} → {$reference}" => [$name, $relative, $reference];
@@ -231,8 +291,8 @@ class ModuleBoundariesTest extends TestCase
 
         // Con las dos baselines vacías el proveedor no puede quedarse sin casos (PHPUnit lo
         // trataría como error): un caso trivial mantiene el test verde y honesto.
-        if (self::SEAM === [] && self::LEGACY === []) {
-            yield 'baselines vacías' => ['-', '-', '-'];
+        if (self::SEAM === [] && self::LEGACY === [] && self::DEFERRED === []) {
+            yield 'baselines vacías' => ['-', self::EMPTY_SENTINEL, self::EMPTY_SENTINEL];
         }
     }
 
@@ -248,44 +308,16 @@ class ModuleBoundariesTest extends TestCase
     ];
 
     /**
-     * Código de DOMINIO aún sin modularizar que se salta la puerta de entrada. Cada entrada es
-     * acoplamiento real entre contextos, no ceremonia: se retira cuando su módulo mude.
+     * Código de DOMINIO aún sin modularizar que se salta la puerta de entrada.
+     *
+     * ✅ **VACÍA desde el paso 6** (2026-08-12): ya no hay dominio fuera de `app/Domain`
+     * —`app/Models` y `app/Support` dejaron de existir—, así que no queda nadie que pueda
+     * saltársela. Sus 11 entradas de Booking→Payments no se «perdonaron»: pasaron a `SEAM`
+     * como costura entre dos módulos, que es lo que son desde que Booking es un módulo.
      *
      * @var array<string, list<string>>
      */
-    private const PENDING = [
-        // Booking pinta el color de la zona en el email leyendo el tema (Content). Costura
-        // conocida y aceptada por la revisión (spec §6.7); muere cuando Content exponga el
-        // color por contrato o cuando la tarjeta de email deje de decidir su color.
-        'Support/EmailProductCard.php' => ['App\Domain\Content\Services\ThemeSettings'],
-        // Relaciones Eloquent inversas Booking→Content (`landing_services.ticket_type_id`,
-        // `attractions.zone_id`): FKs del esquema, costura de BD del §4.
-        'Models/TicketType.php' => ['App\Domain\Content\Models\LandingService'],
-        'Models/Zone.php' => ['App\Domain\Content\Models\Attraction'],
-
-        // ─── BOOKING (aún sin mudar) → PAYMENTS: el otro lado del dinero (paso 5) ───
-        // `Order` es el punto de encuentro: lleva los dos traits de reembolso (que se le
-        // aplican a ÉL) y navega a sus `Payment`/`PaymentRefund`. Cuando Booking mude (paso 6)
-        // estas flechas pasan de aquí a `SEAM`, ya como costura entre dos módulos.
-        // `PaymentSettings` lo consumen tres piezas de aforo/oferta porque de ahí sale la
-        // ventana de retención del pedido: es config de pago que Booking necesita para fijar
-        // `expires_at` — candidata a exponerse por contrato en el paso 6.
-        'Models/Order.php' => [
-            'App\Domain\Payments\Concerns\GuardsItemRefunds',
-            'App\Domain\Payments\Concerns\OrderRefundFlags',
-            'App\Domain\Payments\Models\Payment',
-            'App\Domain\Payments\Models\PaymentRefund',
-        ],
-        'Models/OrderItem.php' => ['App\Domain\Payments\Models\PaymentRefund'],
-        'Support/ManualOrderFulfiller.php' => ['App\Domain\Payments\Models\Payment'],
-        'Support/OrderFinancialSummary.php' => [
-            'App\Domain\Payments\Models\Payment',
-            'App\Domain\Payments\Models\PaymentRefund',
-        ],
-        'Support/OrderCreator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
-        'Support/SlotGenerator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
-        'Support/SlotOffer.php' => ['App\Domain\Payments\Services\PaymentSettings'],
-    ];
+    private const PENDING = [];
 
     /**
      * Puerta de entrada a los módulos desde fuera de `app/Domain`.
@@ -356,6 +388,12 @@ class ModuleBoundariesTest extends TestCase
     #[DataProvider('pendingProvider')]
     public function test_pending_entries_are_still_in_use(string $relative, string $reference): void
     {
+        if ($relative === self::EMPTY_SENTINEL) {
+            $this->assertSame([], self::PENDING);
+
+            return;
+        }
+
         $path = app_path($relative);
 
         $this->assertFileExists($path, "PENDING: «{$relative}» ya no existe — quita su entrada");
@@ -376,7 +414,7 @@ class ModuleBoundariesTest extends TestCase
         }
 
         if (self::PENDING === []) {
-            yield 'PENDING vacía' => ['-', '-'];
+            yield 'PENDING vacía' => [self::EMPTY_SENTINEL, self::EMPTY_SENTINEL];
         }
     }
 
@@ -386,6 +424,9 @@ class ModuleBoundariesTest extends TestCase
             return true;
         }
         if (in_array($reference, self::LEGACY[$relative] ?? [], true)) {
+            return true;
+        }
+        if (in_array($reference, self::DEFERRED[$relative] ?? [], true)) {
             return true;
         }
         if (in_array($reference, self::SHARED_KERNEL, true)) {

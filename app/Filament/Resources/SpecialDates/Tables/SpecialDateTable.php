@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\SpecialDates\Tables;
 
+use App\Domain\Booking\Models\SpecialDate;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
-use App\Models\SpecialDate;
 use Carbon\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -78,7 +78,7 @@ class SpecialDateTable
             return __('admin.special_dates.window_weekly');
         }
 
-        // Ventana parcial: el extremo no definido se hereda del horario semanal (ParkSchedule
+        // Ventana parcial: el extremo no definido se hereda del horario semanal (OperatingSchedule
         // hace `open ?? weekly`), así que se rotula "semanal" en lugar de un placeholder opaco.
         $weekly = __('admin.special_dates.window_weekly_short');
         $open = $record->open_time !== null ? substr((string) $record->open_time, 0, 5) : $weekly;

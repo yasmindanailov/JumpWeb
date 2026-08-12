@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Admin\RateTypes;
 
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\RateTypeResource;
-use App\Models\Price;
-use App\Models\RateType;
-use App\Models\SpecialDate;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\RateResolver;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

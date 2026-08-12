@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Services\AuditLogger;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\TicketType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;

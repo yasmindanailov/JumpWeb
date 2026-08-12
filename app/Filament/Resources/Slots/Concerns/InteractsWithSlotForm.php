@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Slots\Concerns;
 
+use App\Domain\Booking\Models\Slot;
 use App\Filament\Resources\Slots\SlotResource;
-use App\Models\Slot;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 

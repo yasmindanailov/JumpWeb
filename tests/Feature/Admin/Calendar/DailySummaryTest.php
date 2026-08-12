@@ -2,6 +2,14 @@
 
 namespace Tests\Feature\Admin\Calendar;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\DailyReservationsSummary;
+use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -10,14 +18,6 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Pages\CalendarPage;
 use App\Filament\Pages\Dashboard;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\RateType;
-use App\Models\Slot;
-use App\Models\TicketType;
-use App\Models\Zone;
-use App\Support\DailyReservationsSummary;
-use App\Support\ReservationSlip;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

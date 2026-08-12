@@ -2,6 +2,7 @@
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
@@ -9,7 +10,6 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys\Vendor\Signature;
 use App\Domain\Payments\Services\Redsys\Vendor\Utils;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

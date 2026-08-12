@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Schedule;
 
+use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Pages\WeeklySchedule;
-use App\Models\OpeningHour;
-use App\Support\ParkSchedule;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -18,7 +18,7 @@ use Tests\TestCase;
 /**
  * Fase 7.7 (#207) — Horario semanal (`opening_hours`) editable desde el panel: gating por
  * `slots.manage`, carga/guardado de los 7 días, validación cierre>apertura, y que las
- * reservas (vía `ParkSchedule`) respetan lo guardado.
+ * reservas (vía `OperatingSchedule`) respetan lo guardado.
  */
 class WeeklySchedulePageTest extends TestCase
 {
@@ -103,7 +103,7 @@ class WeeklySchedulePageTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $hours = (new ParkSchedule)->effectiveFor($wednesday);
+        $hours = (new OperatingSchedule)->effectiveFor($wednesday);
         $this->assertSame('16:00:00', $hours['open']);
         $this->assertSame('22:00:00', $hours['close']);
     }

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\RateTypes\Pages;
 
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\RateTypes\Concerns\InteractsWithRateTypeForm;
 use App\Filament\Resources\RateTypes\RateTypeResource;
-use App\Models\RateType;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

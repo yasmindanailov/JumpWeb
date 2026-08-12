@@ -2,16 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\Ticket;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\RedsysReturnHandler;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Slot;
-use App\Models\Ticket;
-use App\Models\TicketType;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;

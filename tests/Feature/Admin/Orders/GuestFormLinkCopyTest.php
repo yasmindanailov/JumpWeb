@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\TicketType;
-use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

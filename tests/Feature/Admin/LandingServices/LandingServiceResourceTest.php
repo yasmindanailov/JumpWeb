@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Admin\LandingServices;
 
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
 use App\Filament\Resources\LandingServices\Pages\CreateLandingService;
 use App\Filament\Resources\LandingServices\Pages\EditLandingService;
-use App\Models\TicketType;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
