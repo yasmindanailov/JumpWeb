@@ -54,3 +54,11 @@ verificar contra el código». NO se copian los trackers del ciclo de vida del c
 (00-PRODUCCION, handoffs, audits de copys…): doc desfasada en un repo 100% agentes es
 contexto que miente. `MODELO-DATOS.md` se REGENERA desde el código (el del origen estaba
 desfasado) y `AUDIT-FASE-1` + endurecimiento se destilan en `INVARIANTES.md`.
+
+## #9 · 2026-08-12 · Sin GitHub Actions: el CI es un gate local de pre-push
+El owner NO va a pagar facturación de GitHub (ni ahora ni más adelante) → GitHub Actions
+queda DESCARTADO y `ci.yml` se elimina (un workflow muerto es contexto que confunde a los
+agentes). Sustituto: **hook `pre-push` versionado en `.githooks/`** que corre Pint (repo
+completo) + la suite completa `--parallel` (~75 s) y bloquea el push si algo falla.
+Activación por clon (una vez): `git config core.hooksPath .githooks` (documentado en
+README y CLAUDE.md). Refuerza el protocolo `/cierre-sesion`; `main` no puede quedar rojo.

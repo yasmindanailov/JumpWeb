@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Gate local de push (DECISIONES #9): no hay CI en la nube (sin facturación de GitHub
+# Actions, decisión del owner) → NADA se empuja con la suite rota o Pint sucio.
+# Activación (una vez por clon): git config core.hooksPath .githooks
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+if ! docker compose ps --status running 2>/dev/null | grep -q 'laravel\.test'; then
+    echo '✗ pre-push: el stack no está arriba. Arranca con `docker compose up -d` y reintenta.' >&2
+    exit 1
+fi
+
+echo '→ pre-push: Pint (repo completo)…'
+docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
+
+echo '→ pre-push: suite completa (--parallel)…'
+docker compose exec -u sail -T laravel.test php artisan test --parallel
+
+echo '✓ pre-push: verde. Empujando.'

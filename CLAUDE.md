@@ -29,6 +29,8 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 - Estilo: `docker compose exec -u sail laravel.test ./vendor/bin/pint`
 - Assets: `docker compose exec -u sail laravel.test npm run build`
   > ⚠️ **Siempre `-u sail`** (como root deja ficheros de root en `storage/` → 500 por permisos).
+- **CI = gate local**: el hook `pre-push` (`.githooks/`) corre Pint + suite y bloquea el push
+  en rojo. Si no salta, actívalo: `git config core.hooksPath .githooks` (`DECISIONES #9`).
 
 ## Principios (NO romper)
 - **Data-driven:** todo configurable desde el panel; nada de negocio quemado en código.

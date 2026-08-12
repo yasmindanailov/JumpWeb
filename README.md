@@ -32,6 +32,7 @@ FORWARD_MAILPIT_DASHBOARD_PORT=8028
 # bootstrap sin vendor (una vez):
 docker run --rm -v $(pwd):/app -w /app laravelsail/php85-composer:latest composer install --ignore-platform-reqs
 cp .env.example .env   # + puertos de arriba y APP_KEY
+git config core.hooksPath .githooks   # gate local de push: Pint + suite (sustituye al CI en la nube)
 docker compose up -d
 docker compose exec -u sail laravel.test php artisan key:generate
 docker compose exec -u sail laravel.test php artisan migrate --seed

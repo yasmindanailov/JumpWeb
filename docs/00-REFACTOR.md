@@ -40,8 +40,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Suite completa en verde en el repo nuevo** + Pint + `npm run build` (✓ built).
       Único fallo del primer run: `MailThemeTest` asertaba el literal de la marca origen →
       hecho brand-agnostic (aserta `config('app.name')`). 2132 esperados.
-- [ ] CI (GitHub Actions): `ci.yml` heredado en el repo; **no arranca sin facturación de
-      Actions en la cuenta** (mismo bloqueo conocido en el proyecto origen).
+- [x] **CI = gate local de pre-push** (2026-08-12, `DECISIONES #9`): GitHub Actions
+      DESCARTADO (el owner no pagará facturación de GitHub); `ci.yml` eliminado. Hook
+      versionado `.githooks/pre-push` (Pint repo completo + suite `--parallel`); activación
+      por clon: `git config core.hooksPath .githooks`.
 - [x] **Capa agent-first** (2026-08-12, `DECISIONES #7`): el repo lo desarrollan al 100%
       agentes IA → `CLAUDE.md` enrutador con tabla de contexto, `CONVENCIONES.md` (protocolo
       de agentes: DoD, handoff, empirismo), skills `/cierre-sesion` y `/dod`

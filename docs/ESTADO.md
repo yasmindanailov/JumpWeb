@@ -4,7 +4,7 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 (fundación) COMPLETA salvo CI, y el repo ya es agent-first.**
+**Fase 0 (fundación) COMPLETA, y el repo ya es agent-first.**
 - Repo `yasmindanailov/JumpWeb` (privado); base exportada del origen sin datos del cliente;
   **suite 2132 en verde** (7931 aserciones, `--parallel` 1m13s) · Pint limpio.
 - Entorno local propio arriba (web **8081** · MySQL 3308 · Mailpit 8028), conviviendo con el
@@ -14,7 +14,9 @@
 - **Doc técnica portada** (`DECISIONES #8`): 16 docs adaptados del origen + `MODELO-DATOS.md`
   regenerado desde el código + **`INVARIANTES.md`** (leer antes de tocar dinero/aforo/RGPD).
   Índice: `docs/README.md`.
-- CI heredado pero bloqueado: falta habilitar la facturación de GitHub Actions (owner).
+- **CI = gate local**: hook `pre-push` (Pint + suite `--parallel`) — GitHub Actions
+  descartado por decisión del owner, `DECISIONES #9`. Activar por clon:
+  `git config core.hooksPath .githooks`.
 
 ## ▶ Próximo paso
 **Fase 1 — Desbranding y generalización superficial** (`00-REFACTOR.md` §Fase 1). Quedan:
