@@ -37,3 +37,20 @@ siendo data-driven (`business.name` en BD).
 ## #6 · 2026-08-12 · Entorno local dual
 El stack Sail de JumpWeb convive con el del cliente origen en la misma máquina WSL2:
 puertos propios (web 8081 · MySQL 3308 · Mailpit 8028) vía `.env` no versionado.
+
+## #7 · 2026-08-12 · JumpWeb se desarrolla al 100% por agentes IA (repo agent-first)
+Requisito del owner: en este proyecto trabajan exclusivamente agentes IA (Claude Fable 5 /
+Opus). El repo se optimiza para ellos: `CLAUDE.md` enrutador (leer solo lo necesario, ahorro
+de tokens), `CONVENCIONES.md` con el protocolo de agentes (DoD, handoff, empirismo, «nada vive
+solo en la conversación»), `INVARIANTES.md` (endurecimiento que no se puede regresar), skills
+de proyecto (`.claude/skills/`: `cierre-sesion`, `dod`) y permisos preconfigurados
+(`.claude/settings.json`). El handoff impecable es crítico: ningún humano rellena huecos.
+
+## #8 · 2026-08-12 · La doc técnica del origen se PORTA adaptada (no se copia en bloque)
+El corpus técnico del origen (arquitectura, seguridad, testing, flujos, panel, sistemas
+implementados) se porta a `docs/` **adaptado**: sin datos del cliente, sin narrativa de su
+ciclo de vida (validaciones/despliegues/handoffs), con cabecera «describe la base heredada,
+verificar contra el código». NO se copian los trackers del ciclo de vida del cliente
+(00-PRODUCCION, handoffs, audits de copys…): doc desfasada en un repo 100% agentes es
+contexto que miente. `MODELO-DATOS.md` se REGENERA desde el código (el del origen estaba
+desfasado) y `AUDIT-FASE-1` + endurecimiento se destilan en `INVARIANTES.md`.

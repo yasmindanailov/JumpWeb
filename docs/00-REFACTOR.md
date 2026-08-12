@@ -42,6 +42,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       hecho brand-agnostic (aserta `config('app.name')`). 2132 esperados.
 - [ ] CI (GitHub Actions): `ci.yml` heredado en el repo; **no arranca sin facturación de
       Actions en la cuenta** (mismo bloqueo conocido en el proyecto origen).
+- [x] **Capa agent-first** (2026-08-12, `DECISIONES #7`): el repo lo desarrollan al 100%
+      agentes IA → `CLAUDE.md` enrutador con tabla de contexto, `CONVENCIONES.md` (protocolo
+      de agentes: DoD, handoff, empirismo), skills `/cierre-sesion` y `/dod`
+      (`.claude/skills/`), permisos preconfigurados (`.claude/settings.json`).
 
 ### Fase 1 — Desbranding y generalización superficial ⬜
 - [ ] Quitar «jumpingjump» del código (~161 apariciones: app 26 · resources 18 · lang 28 ·
@@ -55,8 +59,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] Semilla demo neutra (negocio de ejemplo) separada del fixture de tests; sin datos del cliente origen.
 - [ ] Decidir slugs de rutas públicas (hoy en español: `/mi-cuenta`, `/cumpleanos`…):
       ¿configurables por instalación o neutros + i18n? → `DECISIONES`.
-- [ ] Portar ADAPTADA la doc técnica reutilizable del origen (TESTING · SEGURIDAD ·
-      ARQUITECTURA · integración Redsys · plan de cookies), sin historia del cliente.
+- [x] **Doc técnica portada y adaptada** (2026-08-12, `DECISIONES #8`; workflow de 14 agentes
+      + verificación por grep): ARQUITECTURA · SEGURIDAD · TESTING · FLUJOS · PANEL-ADMIN ·
+      REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
+      **`MODELO-DATOS.md` regenerado desde el código** (31 modelos · 70 migraciones) ·
+      **`INVARIANTES.md`** destilado (~45 invariantes de no-regresión). Sin datos del cliente
+      (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
+      `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
 - [ ] Revisar vocabulario de dominio específico del sector (park/attraction/birthday/puerta/waiver)
       y decidir qué se generaliza en BD/código y qué queda como config de sector → diseño en Fase 2.
 
