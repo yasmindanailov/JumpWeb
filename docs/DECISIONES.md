@@ -62,6 +62,10 @@ agentes). Sustituto: **hook `pre-push` versionado en `.githooks/`** que corre Pi
 completo) + la suite completa `--parallel` (~75 s) y bloquea el push si algo falla.
 Activación por clon (una vez): `git config core.hooksPath .githooks` (documentado en
 README y CLAUDE.md). Refuerza el protocolo `/cierre-sesion`; `main` no puede quedar rojo.
+**Ratificada por el owner el 2026-08-12 (preguntado explícitamente): SIN PRs — trunk +
+gate local.** Un PR sin CI en la nube sería un botón sin checks, con escritor único se
+auto-mergearía, y la revisión ya ocurre ANTES de cada commit (pasadas adversariales
+multi-agente). Revisable si algún día se activa Actions o entran más escritores.
 
 ## #10 · 2026-08-12 · Endurecimiento del sistema documental (auditoría multi-agente)
 Una auditoría adversarial (7 lentes, 51 hallazgos) demostró que la doc dependía al 100% de
