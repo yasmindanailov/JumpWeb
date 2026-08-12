@@ -216,7 +216,7 @@ class Redsys
             'secret_key' => $secret,
             // Hardening #113 (M2): defensivo. Si el setting está corrupto fallback a '978'.
             'currency' => PaymentSettings::redsysCurrency(),
-            'merchant_name' => (string) Setting::value('redsys_merchant_name', 'Jumpingjump'),
+            'merchant_name' => (string) Setting::value('redsys_merchant_name', (string) (Setting::value('business.name') ?: config('app.name'))),
         ];
     }
 
@@ -318,7 +318,11 @@ class Redsys
         // nombre del comercio editado en panel (Fase 7) podrían introducirlos. `Str::ascii()`
         // translitera caracteres latinos comunes (á → a, ñ → n) y descarta el resto. Aplicamos
         // ANTES de limitar la longitud para que el truncado no parta un código UTF-8 multi-byte.
-        $description = trim(__('tickets.redsys_product_description', ['code' => $order->code]));
+        $description = trim(__('tickets.redsys_product_description', [
+            'code' => $order->code,
+            // Marca de la instalación (data-driven, Fase 1): nunca una marca quemada.
+            'name' => (string) (Setting::value('business.name') ?: config('app.name')),
+        ]));
         $description = Str::limit(Str::ascii($description), 122, '...'); // 125 chars máx (manual Anexo 1).
 
         $merchantName = Str::limit(Str::ascii($cfg['merchant_name']), 57, '...');

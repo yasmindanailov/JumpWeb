@@ -47,6 +47,14 @@ class PaymentSettings
     public const PURCHASE_HORIZON_MONTHS_MAX = 24;
 
     /**
+     * Prefijo del código público de pedido (`R-XXXXXX`), por instalación (DECISIONES #12.b).
+     * Los códigos ya emitidos no se reescriben: el prefijo solo aplica a pedidos nuevos.
+     */
+    public const ORDER_PREFIX_DEFAULT = 'R-';
+
+    public const ORDER_PREFIX_MAX_LENGTH = 8;
+
+    /**
      * Minutos de retención de plaza durante el pago Redsys.
      *
      * Manual Redsys §2.3: el timeout del TPV es habitualmente 15 min en sandbox y puede
@@ -75,6 +83,24 @@ class PaymentSettings
         $raw = (string) Setting::value('redsys_currency', self::CURRENCY_DEFAULT);
 
         return (ctype_digit($raw) && strlen($raw) === 3) ? $raw : self::CURRENCY_DEFAULT;
+    }
+
+    /**
+     * Prefijo del código público de pedido (setting `sales.order_prefix`).
+     *
+     * Se normaliza a MAYÚSCULAS y se valida contra `[A-Z0-9-]{1,8}`: un valor corrupto
+     * (vacío, con espacios, demasiado largo) cae al default `R-` — el código de pedido
+     * viaja en emails y en la puerta, no puede romperse por un setting mal escrito.
+     */
+    public static function orderPrefix(): string
+    {
+        $raw = strtoupper(trim((string) Setting::value('sales.order_prefix', self::ORDER_PREFIX_DEFAULT)));
+
+        if ($raw === '' || strlen($raw) > self::ORDER_PREFIX_MAX_LENGTH || preg_match('/^[A-Z0-9-]+$/', $raw) !== 1) {
+            return self::ORDER_PREFIX_DEFAULT;
+        }
+
+        return $raw;
     }
 
     /**

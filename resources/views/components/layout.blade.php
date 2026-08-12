@@ -1,7 +1,7 @@
 @props(['title' => null, 'fullTitle' => null, 'description' => null, 'authModal' => null, 'hasHero' => false, 'noindex' => false])
 @php
     // `fullTitle` (si se pasa) es el <title> COMPLETO verbatim (lo usa la home con el «Título web»
-    // editable, #215, p. ej. «JUMPINGJUMP - Parque de saltos en Murcia»). Si no, se compone
+    // editable, #215, p. ej. «MI PARQUE - Parque de saltos»). Si no, se compone
     // «<title> · <nombre>» como siempre.
     $pageTitle = $fullTitle ?: ($title ? $title.' · '.config('app.name') : config('app.name'));
     $metaDescription = $description ?: __('landing.hero.tag');

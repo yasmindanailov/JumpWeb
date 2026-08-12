@@ -32,7 +32,7 @@ class AccountAlreadyExists extends Notification implements ShouldQueue
         // modal de login ya abierto (HomeController inyecta `authModal='login'`). Si el
         // usuario abandonó una compra a mitad, la cesta sigue en sesión: al iniciar
         // sesión vuelve directamente al sidebar (#75/#79).
-        $park = (string) Setting::value('business.name', 'Jumpingjump');
+        $park = (string) Setting::value('business.name', config('app.name'));
 
         return (new MailMessage)
             ->subject(__('account.exists_mail.subject', ['park' => $park]))

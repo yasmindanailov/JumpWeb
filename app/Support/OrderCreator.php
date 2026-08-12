@@ -414,7 +414,8 @@ class OrderCreator
     }
 
     /**
-     * Código de pedido legible y único (`JJ-XXXXXX`).
+     * Código de pedido legible y único (`<prefijo>XXXXXX`; prefijo por instalación vía
+     * `PaymentSettings::orderPrefix()`, DECISIONES #12.b).
      *
      * El espacio (36^6 ≈ 2 mil millones) hace la colisión extremadamente rara, pero la consulta
      * `exists()` + `INSERT` no es atómica: dos transacciones concurrentes pueden generar el mismo
@@ -423,8 +424,10 @@ class OrderCreator
      */
     private function uniqueCode(): string
     {
+        $prefix = PaymentSettings::orderPrefix();
+
         for ($i = 0; $i < 16; $i++) {
-            $code = 'JJ-'.Str::upper(Str::random(6));
+            $code = $prefix.Str::upper(Str::random(6));
             if (! Order::where('code', $code)->exists()) {
                 return $code;
             }

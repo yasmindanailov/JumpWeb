@@ -50,7 +50,7 @@ class DuplicateEmailEdgeCaseTest extends TestCase
             // Decisión #112: el CTA apunta a la ruta `login` (que abre el modal en la home),
             // no a la home raíz. Sin este cambio, el usuario llegaba a `/` sin saber qué hacer.
             $this->assertSame(route('login'), $data['actionUrl']);
-            // Texto del CTA traducido (no es "Ir a Jumpingjump" como antes).
+            // Texto del CTA traducido (no es un literal de marca como antes).
             $this->assertSame(__('account.exists_mail.action'), $data['actionText']);
 
             return true;

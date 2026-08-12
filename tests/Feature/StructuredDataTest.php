@@ -14,14 +14,14 @@ class StructuredDataTest extends TestCase
     public function test_business_graph_includes_real_fields(): void
     {
         $graph = StructuredData::businessGraph([
-            'name' => 'Jumpingjump',
+            'name' => 'SaltoPark',
             'phone' => '968 22 22 22',
             'phone_tel' => '+34968222222',
-            'email' => 'hola@jumpingjump.com',
+            'email' => 'hola@saltopark.example',
             'address1' => 'Avenida de los Saltos, 22',
             'address2' => '',
-            'city' => 'San Javier',
-            'instagram' => 'https://instagram.com/jumpingjump',
+            'city' => 'Villaparque',
+            'instagram' => 'https://instagram.com/saltopark',
             'tiktok' => '#',
             'og_image' => 'https://cdn.example.com/og.jpg',
         ]);
@@ -30,16 +30,16 @@ class StructuredDataTest extends TestCase
         [$org, $biz] = $graph['@graph'];
 
         $this->assertSame('Organization', $org['@type']);
-        $this->assertSame('Jumpingjump', $org['name']);
+        $this->assertSame('SaltoPark', $org['name']);
         // tiktok '#' (sentinela "sin configurar") se excluye; solo queda instagram.
-        $this->assertSame(['https://instagram.com/jumpingjump'], $org['sameAs']);
+        $this->assertSame(['https://instagram.com/saltopark'], $org['sameAs']);
 
         $this->assertSame('AmusementPark', $biz['@type']);
         $this->assertSame('+34968222222', $biz['telephone']);
-        $this->assertSame('hola@jumpingjump.com', $biz['email']);
+        $this->assertSame('hola@saltopark.example', $biz['email']);
         $this->assertSame('PostalAddress', $biz['address']['@type']);
         $this->assertSame('Avenida de los Saltos, 22', $biz['address']['streetAddress']);
-        $this->assertSame('San Javier', $biz['address']['addressLocality']);
+        $this->assertSame('Villaparque', $biz['address']['addressLocality']);
         $this->assertSame('https://cdn.example.com/og.jpg', $biz['image']);
         $this->assertSame(['@id' => url('/').'#organization'], $biz['parentOrganization']);
     }
@@ -47,7 +47,7 @@ class StructuredDataTest extends TestCase
     public function test_business_graph_omits_placeholders_and_empty_values(): void
     {
         $graph = StructuredData::businessGraph([
-            'name' => 'Jumpingjump',
+            'name' => 'SaltoPark',
             'phone' => '',
             'phone_tel' => '',
             'email' => '[PENDIENTE]',
@@ -69,7 +69,7 @@ class StructuredDataTest extends TestCase
         $this->assertArrayNotHasKey('sameAs', $org);
 
         // Pero SIEMPRE emite un grafo válido mínimo (nombre + url + imagen por defecto).
-        $this->assertSame('Jumpingjump', $biz['name']);
+        $this->assertSame('SaltoPark', $biz['name']);
         $this->assertArrayHasKey('url', $biz);
         $this->assertStringContainsString('og-image.jpg', $biz['image']);
     }

@@ -55,7 +55,7 @@ return [
             ['num' => '+1M', 'label' => 'Jumps / year'],
         ],
     ],
-    'marquee' => ['JUMP', 'FLY', 'LAUGH', 'REPEAT', 'JUMPINGJUMP'],
+    'marquee' => ['JUMP', 'FLY', 'LAUGH', 'REPEAT', 'ENJOY'],
     'zones' => [
         'eyebrow' => 'Two zones', 'title' => 'One park,', 'title_em' => 'two zones.',
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',
@@ -149,11 +149,11 @@ return [
             ['t' => 'Kids birthday', 's' => 'Private rooms'],
             ['t' => 'Groups & companies', 's' => 'Schools, companies, adults'],
             ['t' => 'Adults outing', 's' => '22:00–01:00 · min. 30'],
-            ['t' => 'Contact', 's' => 'hola@jumpingjump.es'],
+            ['t' => 'Contact', 's' => 'Write or call us'],
         ],
     ],
     'gallery' => [
-        'eyebrow' => 'Gallery', 'title' => '@jumpingjump', 'title_em' => 'live',
+        'eyebrow' => 'Gallery', 'title' => 'Follow us', 'title_em' => 'live',
         'intro' => "What's happening in the park, right now.",
     ],
     'info' => [

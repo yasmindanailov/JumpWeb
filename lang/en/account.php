@@ -121,7 +121,7 @@ return [
 
     'register' => [
         'cta' => 'Sign up',
-        'eyebrow' => 'Join Jumpingjump',
+        'eyebrow' => 'Join us',
         'title' => 'Create your account',
         'subtitle' => 'Needed to book tickets and birthdays.',
         'name' => 'Full name',

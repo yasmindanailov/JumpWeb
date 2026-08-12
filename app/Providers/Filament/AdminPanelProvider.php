@@ -7,6 +7,7 @@ use App\Filament\Support\InitialsAvatarProvider;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
+use App\Models\Setting;
 use App\Support\ThemeSettings;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -100,7 +101,7 @@ class AdminPanelProvider extends PanelProvider
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             // Mismo icono de marca que la web pública (favicon «J» sobre naranja).
             ->favicon(asset('favicon.svg'))
-            ->brandName('Jumpingjump')
+            ->brandName(fn () => (string) (Setting::value('business.name') ?: config('app.name')))
             // «Panel de Control» bajo el wordmark (#215): el brand del sidebar pasa de texto plano
             // a una vista propia (nombre + subtítulo). Filament la oculta al colapsar el sidebar.
             ->brandLogo(fn (): View => view('filament.admin.brand'))

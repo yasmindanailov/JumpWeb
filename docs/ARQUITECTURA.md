@@ -50,7 +50,7 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
 (ofertas activas del widget), y el ancla de precio del CTA.
 
 - El composer corre una vez por **cada** subvista renderizada (la home monta ~79). El payload
-  se **memoiza por petición** en `request()->attributes` (clave `jj.shared_view_data`). Sin
+  se **memoiza por petición** en `request()->attributes` (clave `app.shared_view_data`). Sin
   esta memoización un GET anónimo de la home dispara ~1.900 queries (~4 s de BD) — no la rompas.
 - Guardas: si la tabla `settings` no existe (CI/instalación limpia) devuelve payload vacío.
 - También en `AppServiceProvider`: singleton `CustomerAccountContext` (memoiza por petición la

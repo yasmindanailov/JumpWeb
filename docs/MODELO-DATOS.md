@@ -143,7 +143,7 @@ fecha lo pone cada llamador). El aforo real se cuenta por OCUPACIÓN desde los p
 | Campo | Notas |
 |---|---|
 | `user_id` | FK **RESTRICT** (RGPD/fiscal: usuario con pedidos no se borra, se ANONIMIZA) |
-| `code` | unique, legible (`OrderCreator`: prefijo `'JJ-'` + 6 random — **prefijo heredado hardcodeado**, ver §6). **Route model binding por `code`** (`getRouteKeyName`), anti-enumeración |
+| `code` | unique, legible (`OrderCreator`: prefijo del setting `sales.order_prefix` (default `R-`, DECISIONES #12) + 6 random). **Route model binding por `code`** (`getRouteKeyName`), anti-enumeración |
 | `status` | `pending` \| `paid` \| `cancelled` \| `expired` (+ `refunded` **legacy**, ya no se emite) |
 | `subtotal`,`tax`,`total` | céntimos, calculados en servidor |
 | `expires_at` | retención de plaza durante el pago; index `(status, expires_at)` (job `orders:expire`) |
@@ -308,9 +308,10 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
    prepared/redeemed/void y sus columnas se eliminaron. El QR existe pero no hay canje digital.
 4. **`Order::STATUS_REFUNDED` es legacy.** No se emite desde que el reembolso es dimensión
    ortogonal (`refunded_at`/`refund_amount_cents`); la constante sobrevive por datos antiguos.
-5. **Prefijo de código de pedido `'JJ-'` hardcodeado** en `App\Support\OrderCreator`
-   (linaje del origen). Generalizar (setting/config) en el refactor. También aparece en
-   comentarios como referencias a pedidos reales del origen (`JJ-XXXXXX`).
+5. **Prefijo de código de pedido**: configurable por instalación desde Fase 1
+   (`sales.order_prefix`, default `R-`, `DECISIONES #12`; `PaymentSettings::orderPrefix()`).
+   Los códigos ya emitidos no se reescriben; los comentarios forenses del código conservan
+   referencias `JJ-XXXXXX` a pedidos reales del origen (a propósito).
 6. **FKs ausentes a propósito:** `ticket_types.zone_id` (índice sin constraint; limitación
    histórica de ALTER en SQLite) y `order_items.parent_item_id` (integridad en app).
 7. **Sin morphMap** (ver §0): los morphs guardan FQCN → renombrar modelos rompe datos.

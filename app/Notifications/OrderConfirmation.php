@@ -38,7 +38,7 @@ class OrderConfirmation extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', 'Jumpingjump');
+        $park = (string) Setting::value('business.name', config('app.name'));
 
         $message = (new MailMessage)
             ->subject(__('emails.order_confirmation.subject', ['code' => $this->order->code, 'park' => $park]))

@@ -71,7 +71,7 @@ class RedsysNotificationEndpointTest extends TestCase
         Setting::create(['key' => 'redsys_terminal', 'value' => '001', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_secret_key', 'value' => self::SANDBOX_KEY, 'group' => 'payment']);
         Setting::create(['key' => 'redsys_currency', 'value' => '978', 'group' => 'payment']);
-        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'Jumpingjump', 'group' => 'payment']);
+        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'SaltoPark', 'group' => 'payment']);
     }
 
     protected function tearDown(): void

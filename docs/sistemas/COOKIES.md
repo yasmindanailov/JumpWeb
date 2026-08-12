@@ -72,12 +72,12 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 - **D3 — Fail-safe a privacidad:** sin cookie / corrupta / versión caducada ⇒ **NO** consentido ⇒
   no se cargan terceros + banner visible. (Opuesto a `MaintenanceSettings`, fail-safe a
   «disponible»: aquí el fallo seguro es **no** instalar cookies.)
-- **D4 — Cookie `jj_cookie_consent`:** first-party, **sin cifrar** (la leen el servidor —gate— y
+- **D4 — Cookie `cookie_consent`:** first-party, **sin cifrar** (la leen el servidor —gate— y
   Alpine —UI—) → en `encryptCookies(except:)` de [bootstrap/app.php](../../bootstrap/app.php).
   `SameSite=Lax`, `Max-Age=24 meses`, `Secure` según config, `httpOnly=false`. Valor =
   **base64(JSON)** `{"v":<versión>,"cats":{"maps":bool,"social":bool}}` (base64 evita `;`/comas
   en el valor). La **escribe siempre el servidor**; Alpine solo mantiene prefs en memoria.
-  ⚠️ El prefijo `jj_` viene de la marca del proyecto origen; su renombrado es decisión de
+  Renombrada de `jj_cookie_consent` a `cookie_consent` en Fase 1 (los navegadores con la cookie antigua re-consienten). Nota histórica de
   `00-REFACTOR.md` (renombrarla invalida consentimientos ya dados → re-pediría a todos).
 - **D5 — Versión de política como constante** (`CookieConsent::POLICY_VERSION`, patrón de
   `Consent::CURRENT_VERSION`): subirla fuerza re-consentir (el gate la ve caducada). v1 = `2026-06-08`.
@@ -97,7 +97,7 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 
 **Autoridad única — [`App\Support\CookieConsent`](../../app/Support/CookieConsent.php)**
 (helper estático, sin BD):
-- `COOKIE_NAME='jj_cookie_consent'` · `POLICY_VERSION='2026-06-08'` · `OPTIONAL=['maps','social']`
+- `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-06-08'` · `OPTIONAL=['maps','social']`
   · `LIFETIME_MINUTES` (24 meses).
 - `state(Request): array{maps:bool,social:bool,decided:bool}` — defensivo: base64/JSON inválido o
   versión distinta ⇒ todo `false`, `decided=false`. Nunca lanza (se invoca en cada render).
@@ -201,8 +201,9 @@ Los datos fiscales del responsable van como tokens `:legal_name/:legal_nif/...` 
   cookies reales; la validación jurídica corresponde a la asesoría de cada cliente del producto.
 - **Analítica**: no existe. Si se añade, cargarla condicionada al consentimiento por el mismo
   gate (`OPTIONAL` + composer + consent-frame/script gateado) + su origen en la CSP.
-- **Refactor de marca**: `jj_cookie_consent` (prefijo del origen) y las referencias «#219 /
-  PLAN-COOKIES.md» en comentarios del código → decidir en `00-REFACTOR.md`.
+- **Refactor de marca**: HECHO en Fase 1 (cookie renombrada a `cookie_consent`); quedan las
+  referencias históricas «#219 / PLAN-COOKIES.md» en comentarios (tabla de equivalencias en
+  `docs/README.md`).
 
 ## 7. Riesgos y mitigaciones
 

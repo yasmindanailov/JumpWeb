@@ -80,7 +80,7 @@ class SecurityHeaders
             'style-src '.implode(' ', $style),
             'script-src '.implode(' ', $script),
             // challenges.cloudflare.com → widget Turnstile; www.google.com → mapa embebido de la
-            // landing (#206); snapwidget/lightwidget → feed social «@jumpingjump en directo» (#215).
+            // landing (#206); snapwidget/lightwidget → feed social «en directo» (#215).
             "frame-src 'self' https://challenges.cloudflare.com https://www.google.com ".SocialEmbed::cspFrameSrc(),
             'connect-src '.implode(' ', $connect),
         ];

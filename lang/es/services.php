@@ -13,7 +13,7 @@
 return [
     'meta' => [
         'title' => 'Servicios',
-        'description' => 'Excursiones de colegio, empresas, sesiones para adultos y eventos privados en Jumpingjump.',
+        'description' => 'Excursiones de colegio, empresas, sesiones para adultos y eventos privados en nuestro parque.',
     ],
     'eyebrow' => 'Para grupos y eventos',
     'title' => 'Más allá del salto libre',

@@ -108,3 +108,17 @@ más `TESTING.md` §datos de prueba (el contrato de conteos del seeder-fixture, 
 la suite en silencio). **(j)** `AGENTS.md` = symlink a `CLAUDE.md` (estándar abierto de la
 Linux Foundation; coste cero, evita reabrir la pregunta). **(k)** Enrutado con granularidad
 de sección/ID y la fila Landing partida.
+
+## #12 · 2026-08-12 · Decisiones de Fase 1 del owner: slugs, prefijo de pedidos, semilla, sectores
+**(a) Slugs públicos**: se quedan en español AHORA; pasan a ser configurables por
+instalación en la Fase 4, cuando la SPA+API rehagan el routing (cero churn de SEO/tests hoy;
+el trabajo se haría dos veces). **(b) Prefijo de códigos de pedido**: deja de ser el literal
+`JJ-` y pasa a setting por instalación (`sales.order_prefix`, default neutro `R-`),
+data-driven puro; los códigos ya emitidos no se reescriben. **(c) Semilla neutra**:
+`ProductionSeeder` se transforma en la semilla de instalación del MISMO tipo de negocio
+(parque de trampolines de ejemplo) preservando catálogo y configuración — se retiran SOLO
+los datos personales/identificativos del cliente origen (dirección, mapa, URL de registro,
+SEO con ciudad real, festivos locales). **(d) Sectores objetivo del white-label**: ocio con
+aforo y franjas (parques, escape rooms, karting, bolos…) — la generalización de vocabulario
+de Fase 2 será CONSERVADORA: zona/atracción/franja encajan casi tal cual (spec en
+`docs/specs/`).

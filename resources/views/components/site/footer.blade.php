@@ -21,7 +21,7 @@
     @endphp
     <div class="foot__grid">
         <div>
-            <div class="foot__brand">{{ $site['name'] ?? 'Jumpingjump' }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></div>
+            <div class="foot__brand">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></div>
             <p>{{ $site['tagline'] ?? __('landing.footer.tag') }}</p>
         </div>
 
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            <span class="foot__copy">© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? 'Jumpingjump') }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
+            <span class="foot__copy">© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
         </div>
 
         <span class="foot__legal">

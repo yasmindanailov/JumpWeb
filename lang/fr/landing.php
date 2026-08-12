@@ -55,7 +55,7 @@ return [
             ['num' => '+1M', 'label' => 'Sauts / an'],
         ],
     ],
-    'marquee' => ['SAUTE', 'VOLE', 'RIS', 'RECOMMENCE', 'JUMPINGJUMP'],
+    'marquee' => ['SAUTE', 'VOLE', 'RIS', 'RECOMMENCE', 'PROFITE'],
     'zones' => [
         'eyebrow' => 'Les deux zones', 'title' => 'Un parc,', 'title_em' => 'deux zones.',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
@@ -149,11 +149,11 @@ return [
             ['t' => 'Anniversaire enfant', 's' => 'Salles privées'],
             ['t' => 'Groupes & entreprises', 's' => 'Écoles, entreprises, adultes'],
             ['t' => 'Sortie adultes', 's' => '22h00–01h00 · min. 30'],
-            ['t' => 'Contact', 's' => 'hola@jumpingjump.es'],
+            ['t' => 'Contact', 's' => 'Écris-nous ou appelle-nous'],
         ],
     ],
     'gallery' => [
-        'eyebrow' => 'Galerie', 'title' => '@jumpingjump', 'title_em' => 'en direct',
+        'eyebrow' => 'Galerie', 'title' => 'Suivez-nous', 'title_em' => 'en direct',
         'intro' => 'Ce qui se passe au parc, en temps réel.',
     ],
     'info' => [

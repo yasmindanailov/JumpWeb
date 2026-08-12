@@ -80,7 +80,7 @@ return [
     'pay_redirecting' => 'Te llevamos a la pasarela de pago segura. Si no se redirige en unos segundos, pulsa el botón.',
     'pay_redirecting_title' => 'Redirigiendo al pago',
     'pay_proceed_manual' => 'Continuar al pago',
-    'redsys_product_description' => 'Reserva Jumpingjump · pedido :code',
+    'redsys_product_description' => 'Reserva :name · pedido :code',
     'payment_failed_title' => 'El pago no se ha completado',
     'payment_failed_intro' => 'Tu banco no autorizó el cobro. No se ha cargado nada en tu tarjeta.',
     'payment_failed_retry' => 'Mantenemos tu reserva unos minutos más por si quieres reintentar el pago. Si no se completa, la plaza volverá a estar disponible.',

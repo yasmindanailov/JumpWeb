@@ -23,7 +23,7 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /** Clave de memoización del payload del composer en `request()->attributes` (Sistema 6 · W1). */
-    private const SHARED_VIEW_DATA_KEY = 'jj.shared_view_data';
+    private const SHARED_VIEW_DATA_KEY = 'app.shared_view_data';
 
     public function register(): void
     {
@@ -135,8 +135,8 @@ class AppServiceProvider extends ServiceProvider
         return $data + [
             'cookieBannerEnabled' => CookieConsent::bannerEnabled(),
             'site' => [
-                'name' => $get('business.name', 'Jumpingjump'),
-                'city' => $get('business.city', 'Murcia'),
+                'name' => $get('business.name', config('app.name')),
+                'city' => $get('business.city', ''),
                 'email' => $get('contact.email', ''),
                 'phone' => $get('contact.phone', ''),
                 'phone_tel' => $phoneTel,

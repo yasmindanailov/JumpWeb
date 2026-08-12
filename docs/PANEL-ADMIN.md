@@ -116,7 +116,7 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
 - **Tema visual:** colores, tipografías, logo (re-tematiza todo el sitio — white-label).
   - **Correos transaccionales** (decisión heredada del origen): replican el sistema visual de
     la web mediante el theme de mail heredado
-    (`resources/views/vendor/mail/html/themes/jumpingjump.css` — nombre con la marca origen;
+    (`resources/views/vendor/mail/html/themes/brand.css` — renombrado en Fase 1;
     su renombrado está previsto en `00-REFACTOR.md` Fase 1, junto con
     `config('mail.markdown.theme')`). La personalización de emails desde el panel se acota a
     **SOLO COLORES** (paleta primaria/acento); los textos de cada plantilla viven en

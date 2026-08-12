@@ -64,7 +64,7 @@ class PurchaseRetryAndPollingTest extends TestCase
         Setting::create(['key' => 'redsys_terminal', 'value' => '001', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_secret_key', 'value' => 'sq7HjrUOBfKmC576ILgskD5srU870gJ7', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_currency', 'value' => '978', 'group' => 'payment']);
-        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'Jumpingjump', 'group' => 'payment']);
+        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'SaltoPark', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_next_gateway_order', 'value' => '100000', 'group' => 'payment']);
     }
 

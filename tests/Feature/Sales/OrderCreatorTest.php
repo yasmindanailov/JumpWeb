@@ -6,11 +6,13 @@ use App\Exceptions\ReservationException;
 use App\Livewire\Tickets\Purchase;
 use App\Models\Order;
 use App\Models\RateType;
+use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;
 use App\Support\OrderCreator;
+use App\Support\PaymentSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -104,7 +106,7 @@ class OrderCreatorTest extends TestCase
 
         $this->assertSame(Order::STATUS_PENDING, $order->status);
         $this->assertNull($order->expires_at);                 // retiene plaza, no caduca sola
-        $this->assertStringStartsWith('JJ-', $order->code);
+        $this->assertStringStartsWith(PaymentSettings::ORDER_PREFIX_DEFAULT, $order->code);
         $this->assertSame(2000, $order->subtotal);
         $this->assertSame(2000, $order->total);
 
@@ -113,6 +115,29 @@ class OrderCreatorTest extends TestCase
         $this->assertSame(2, $item->quantity);
         $this->assertSame(1000, $item->unit_price);
         $this->assertSame(2, $item->seats);
+    }
+
+    public function test_order_code_uses_the_configurable_prefix_setting(): void
+    {
+        // DECISIONES #12.b: prefijo por instalación, data-driven; default R- sin fila.
+        Setting::create(['key' => 'sales.order_prefix', 'value' => 'acme-', 'group' => 'payment']);
+        Setting::flushMemo();
+
+        $order = $this->creator->createPendingOrder($this->user, [$this->line('10:00:00', 1)]);
+
+        // Se normaliza a mayúsculas y precede al sufijo aleatorio de 6.
+        $this->assertMatchesRegularExpression('/^ACME-[A-Z0-9]{6}$/', $order->code);
+    }
+
+    public function test_order_prefix_falls_back_to_default_when_the_setting_is_corrupt(): void
+    {
+        // Un setting roto (espacios, demasiado largo) NUNCA rompe la emisión de códigos.
+        Setting::create(['key' => 'sales.order_prefix', 'value' => 'con espacios y muy largo', 'group' => 'payment']);
+        Setting::flushMemo();
+
+        $order = $this->creator->createPendingOrder($this->user, [$this->line('11:00:00', 1)]);
+
+        $this->assertStringStartsWith(PaymentSettings::ORDER_PREFIX_DEFAULT, $order->code);
     }
 
     public function test_can_create_a_provisional_held_order(): void

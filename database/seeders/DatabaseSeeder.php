@@ -27,10 +27,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Usuarios de PRUEBA — solo fuera de producción (desarrollo local).
-        // Credenciales placeholder hasta que la clienta defina los reales.
+        // Credenciales de DESARROLLO (placeholder).
         if (! app()->isProduction()) {
             $admin = User::firstOrCreate(
-                ['email' => 'admin@jumpingjump.test'],
+                ['email' => 'admin@jumpweb.test'],
                 [
                     'name' => 'Admin (prueba)',
                     'password' => 'password',
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             );
 
             $staff = User::firstOrCreate(
-                ['email' => 'empleado@jumpingjump.test'],
+                ['email' => 'empleado@jumpweb.test'],
                 [
                     'name' => 'Empleado (prueba)',
                     'password' => 'password',

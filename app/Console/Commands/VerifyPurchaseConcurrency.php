@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Zone;
 use App\Support\OrderCreator;
 use App\Support\ParkSchedule;
+use App\Support\RateResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -121,7 +122,16 @@ class VerifyPurchaseConcurrency extends Command
                 'name' => ['es' => 'Entrada H2'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
                 'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
             ]);
-            $type->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 1000]);
+            // El precio debe existir para la tarifa REAL del día elegido: en una BD sembrada,
+            // `firstOpenSlotMoment` puede caer en festivo/finde con tarifa `special` y un precio
+            // solo-normal haría que OrderCreator rechace por «producto sin precio ese día»
+            // (falso negativo del verificador, no sobreventa — cazado 2026-08-12, primera
+            // ejecución de este comando en el repo JumpWeb).
+            $dayRateId = (int) app(RateResolver::class)->for(Carbon::parse($date))->id;
+            $type->prices()->create(['rate_type_id' => $dayRateId, 'amount_cents' => 1000]);
+            if ($dayRateId !== $rateId) {
+                $type->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 1000]);
+            }
 
             $users = [];
             for ($i = 0; $i < $workers; $i++) {

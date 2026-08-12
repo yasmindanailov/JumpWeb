@@ -23,25 +23,25 @@ class IncidentSettingsTest extends TestCase
 
     public function test_falls_back_to_contact_email(): void
     {
-        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpingjump.test', 'group' => 'contact']);
+        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpweb.test', 'group' => 'contact']);
 
-        $this->assertSame('negocio@jumpingjump.test', IncidentSettings::alertEmail());
+        $this->assertSame('negocio@jumpweb.test', IncidentSettings::alertEmail());
     }
 
     public function test_override_takes_precedence_over_contact_email(): void
     {
-        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpingjump.test', 'group' => 'contact']);
-        Setting::create(['key' => 'incidents.alert_email', 'value' => 'tecnico@jumpingjump.test', 'group' => 'payment']);
+        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpweb.test', 'group' => 'contact']);
+        Setting::create(['key' => 'incidents.alert_email', 'value' => 'tecnico@jumpweb.test', 'group' => 'payment']);
 
-        $this->assertSame('tecnico@jumpingjump.test', IncidentSettings::alertEmail());
+        $this->assertSame('tecnico@jumpweb.test', IncidentSettings::alertEmail());
     }
 
     public function test_invalid_override_falls_back_to_contact_email(): void
     {
-        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpingjump.test', 'group' => 'contact']);
+        Setting::create(['key' => 'contact.email', 'value' => 'negocio@jumpweb.test', 'group' => 'contact']);
         Setting::create(['key' => 'incidents.alert_email', 'value' => 'no-es-un-email', 'group' => 'payment']);
 
-        $this->assertSame('negocio@jumpingjump.test', IncidentSettings::alertEmail());
+        $this->assertSame('negocio@jumpweb.test', IncidentSettings::alertEmail());
     }
 
     public function test_returns_null_when_all_values_invalid(): void

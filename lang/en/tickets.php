@@ -79,7 +79,7 @@ return [
     'pay_redirecting' => 'Taking you to the secure payment page. If you are not redirected in a few seconds, tap the button.',
     'pay_redirecting_title' => 'Redirecting to payment',
     'pay_proceed_manual' => 'Continue to payment',
-    'redsys_product_description' => 'Jumpingjump booking · order :code',
+    'redsys_product_description' => ':name booking · order :code',
     'payment_failed_title' => 'The payment did not go through',
     'payment_failed_intro' => 'Your bank declined the charge. Nothing was billed to your card.',
     'payment_failed_retry' => 'We are holding your booking for a few more minutes in case you want to retry the payment. If it does not go through, the spot will become available again.',

@@ -30,7 +30,7 @@ class CustomerAccountCreated extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', 'Jumpingjump');
+        $park = (string) Setting::value('business.name', config('app.name'));
 
         return (new MailMessage)
             ->subject(__('emails.customer_account_created.subject', ['park' => $park]))

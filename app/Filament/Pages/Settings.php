@@ -101,7 +101,7 @@ class Settings extends Page
         'contact.instagram' => 'social',
         'contact.tiktok' => 'social',
         'contact.whatsapp' => 'contact',
-        // Feed social de la sección «@jumpingjump en directo» (#215): inserción (iframe) de un
+        // Feed social de la sección «en directo» (#215): inserción (iframe) de un
         // widget de Instagram/TikTok que muestra las últimas publicaciones (SnapWidget/LightWidget).
         'social.feed_embed_url' => 'social',
         // Registro «del parque» (#216): el CTA público «Registro» del header lleva al sistema externo
@@ -133,6 +133,7 @@ class Settings extends Page
         // Operativa
         'sales.hold_minutes' => 'payment',
         'sales.purchase_horizon_months' => 'payment',
+        'sales.order_prefix' => 'payment',
         'puerta.validate_rate_limit_per_minute' => 'puerta',
         // Comprobación de waiver en la puerta (#216): ON = 3 estados (con/sin waiver); OFF = 2
         // estados (registrado / no), para cuando el waiver lo gestiona el sistema externo.
@@ -290,7 +291,7 @@ class Settings extends Page
                 $value = $clean;
             }
 
-            // El feed social (sección «@jumpingjump en directo»): mismo trato que el mapa — extraer
+            // El feed social (sección «en directo»): mismo trato que el mapa — extraer
             // el `src` limpio del iframe del widget (SnapWidget/LightWidget). Si no se reconoce un
             // proveedor permitido, se preserva el valor actual y se avisa (no se rompe la sección).
             if ($key === 'social.feed_embed_url' && $value !== '') {
@@ -477,7 +478,7 @@ class Settings extends Page
             ]);
     }
 
-    /** Redes sociales + feed «@jumpingjump en directo». */
+    /** Redes sociales + feed «en directo». */
     private function socialSection(): Section
     {
         return Section::make(__('admin.settings.section_social'))
@@ -689,6 +690,12 @@ class Settings extends Page
                     ->minValue(PaymentSettings::PURCHASE_HORIZON_MONTHS_MIN)
                     ->maxValue(PaymentSettings::PURCHASE_HORIZON_MONTHS_MAX)
                     ->required(),
+                TextInput::make('sales.order_prefix')
+                    ->label(__('admin.settings.order_prefix'))
+                    ->helperText(__('admin.settings.order_prefix_hint'))
+                    ->maxLength(PaymentSettings::ORDER_PREFIX_MAX_LENGTH)
+                    ->regex('/^[A-Za-z0-9-]+$/')
+                    ->placeholder(PaymentSettings::ORDER_PREFIX_DEFAULT),
                 TextInput::make('incidents.alert_email')
                     ->label(__('admin.settings.incidents_alert_email'))
                     ->helperText(__('admin.settings.incidents_alert_email_hint'))

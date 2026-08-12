@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * #215 — Textos de la landing editables por idioma (eslogan, coletilla del copyright, título web)
- * + feed social de «@jumpingjump en directo». Cubre: guardado/saneo en el panel, override y
+ * + feed social de social «en directo». Cubre: guardado/saneo en el panel, override y
  * fallback en la web, render del iframe del feed, CSP y subtítulo «Panel de Control».
  */
 class LandingTextsAndSocialTest extends TestCase
@@ -29,8 +29,8 @@ class LandingTextsAndSocialTest extends TestCase
 
         // Baseline mínimo para los campos obligatorios del formulario de Settings.
         foreach ([
-            ['business.name', 'Jumpingjump', 'business'],
-            ['contact.email', 'hola@jumpingjump.es', 'contact'],
+            ['business.name', 'SaltoPark', 'business'],
+            ['contact.email', 'hola@saltopark.example', 'contact'],
             ['sales.hold_minutes', '15', 'payment'],
             ['sales.purchase_horizon_months', '6', 'payment'],
             ['puerta.validate_rate_limit_per_minute', '100', 'puerta'],
@@ -54,7 +54,7 @@ class LandingTextsAndSocialTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(Settings::class)
             ->fillForm([
-                'seo.title.es' => 'JUMPINGJUMP - Parque de saltos en Murcia',
+                'seo.title.es' => 'SALTOPARK - Parque de saltos',
                 'landing.tagline.es' => 'Eslogan a medida · Murcia',
                 'landing.footer_rights.es' => 'Hecho para botar.',
                 'landing.tagline.en' => 'Custom tagline · Murcia',
@@ -63,7 +63,7 @@ class LandingTextsAndSocialTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('JUMPINGJUMP - Parque de saltos en Murcia', Setting::value('seo.title.es'));
+        $this->assertSame('SALTOPARK - Parque de saltos', Setting::value('seo.title.es'));
         $this->assertSame('Eslogan a medida · Murcia', Setting::value('landing.tagline.es'));
         $this->assertSame('Hecho para botar.', Setting::value('landing.footer_rights.es'));
         $this->assertSame('Custom tagline · Murcia', Setting::value('landing.tagline.en'));
@@ -131,9 +131,9 @@ class LandingTextsAndSocialTest extends TestCase
 
     public function test_social_feed_renders_iframe_or_falls_back_to_gallery(): void
     {
-        // Sin feed → galería de polaroids (con fotos reales) por defecto. `#jumpingjump` es el tag
+        // Sin feed → galería de polaroids (con fotos reales) por defecto. `#salta` es el tag
         // de una polaroid de la galería (no aparece en ningún otro sitio de la home).
-        $this->get('/')->assertOk()->assertSee('#jumpingjump')->assertDontSee('snapwidget.com');
+        $this->get('/')->assertOk()->assertSee('#salta')->assertDontSee('snapwidget.com');
 
         // Con feed → iframe del widget (y desaparece la galería de fallback).
         Setting::updateOrCreate(['key' => 'social.feed_embed_url'], ['value' => 'https://snapwidget.com/embed/abc', 'group' => 'social']);
@@ -141,7 +141,7 @@ class LandingTextsAndSocialTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('https://snapwidget.com/embed/abc', false)
-            ->assertDontSee('#jumpingjump');
+            ->assertDontSee('#salta');
     }
 
     public function test_csp_allows_social_widget_hosts(): void

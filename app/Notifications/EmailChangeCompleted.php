@@ -38,7 +38,7 @@ class EmailChangeCompleted extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', 'Jumpingjump');
+        $park = (string) Setting::value('business.name', config('app.name'));
 
         return (new MailMessage)
             ->subject(__('emails.email_change_completed.subject'))

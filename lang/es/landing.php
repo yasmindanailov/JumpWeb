@@ -68,7 +68,7 @@ return [
             ['num' => '+1M', 'label' => 'Saltos al año'],
         ],
     ],
-    'marquee' => ['SALTA', 'VUELA', 'RÍETE', 'REPITE', 'JUMPINGJUMP'],
+    'marquee' => ['SALTA', 'VUELA', 'RÍETE', 'REPITE', 'DISFRUTA'],
     'zones' => [
         'eyebrow' => 'Las dos zonas', 'title' => 'Un parque,', 'title_em' => 'dos zonas.',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
@@ -162,11 +162,11 @@ return [
             ['t' => 'Cumple del peque', 's' => 'Salas privadas'],
             ['t' => 'Grupos & empresas', 's' => 'Colegios, empresas y mayores'],
             ['t' => 'Excursión mayores', 's' => '22:00–01:00 · mín 30'],
-            ['t' => 'Contacto', 's' => 'hola@jumpingjump.es'],
+            ['t' => 'Contacto', 's' => 'Escríbenos o llámanos'],
         ],
     ],
     'gallery' => [
-        'eyebrow' => 'Galería', 'title' => '@jumpingjump', 'title_em' => 'en directo',
+        'eyebrow' => 'Galería', 'title' => 'Síguenos', 'title_em' => 'en directo',
         'intro' => 'Lo que pasa en el parque, en tiempo real.',
     ],
     'info' => [

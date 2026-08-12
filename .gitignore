@@ -42,7 +42,7 @@ Thumbs.db
 # repo sea un clon COMPLETO y desplegable (repositorio canónico). Ver docs/AUDIT-RENDIMIENTO.md §6.
 /public/videos/*
 !/public/videos/.gitkeep
-!/public/videos/header_jumpingjump.mp4
+!/public/videos/header_hero.mp4
 !/public/videos/header_poster.jpg
 
 # Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan.

@@ -40,19 +40,19 @@ class LandingContentSeeder extends Seeder
     private function seedSettings(): void
     {
         $settings = [
-            ['key' => 'business.name', 'value' => 'Jumpingjump', 'group' => 'business'],
-            ['key' => 'business.city', 'value' => 'Murcia', 'group' => 'business'],
-            // Datos fiscales (Fase 7.0, decisión #118/#120). [PENDIENTE] por la clienta;
+            ['key' => 'business.name', 'value' => 'SaltoPark', 'group' => 'business'],
+            ['key' => 'business.city', 'value' => 'Villaparque', 'group' => 'business'],
+            // Datos fiscales (Fase 7.0, decisión #118/#120). [PENDIENTE] por la instalación;
             // los rellena desde el panel cuando los aporte. No bloquean Fase 7 pero sí Fase 9.
             ['key' => 'business.legal_name', 'value' => '[PENDIENTE]', 'group' => 'business'],
             ['key' => 'business.nif', 'value' => '[PENDIENTE]', 'group' => 'business'],
             ['key' => 'business.address', 'value' => '[PENDIENTE]', 'group' => 'business'],
             // Dominio para los textos legales (token `:site_domain`, #220). Vacío → host de la petición.
             ['key' => 'business.domain', 'value' => '', 'group' => 'business'],
-            ['key' => 'contact.email', 'value' => 'hola@jumpingjump.es', 'group' => 'contact'],
+            ['key' => 'contact.email', 'value' => 'hola@saltopark.example', 'group' => 'contact'],
             ['key' => 'contact.phone', 'value' => '968 22 22 22', 'group' => 'contact'],
-            ['key' => 'contact.instagram', 'value' => 'https://instagram.com/jumpingjump', 'group' => 'social'],
-            ['key' => 'contact.tiktok', 'value' => 'https://tiktok.com/@jumpingjump', 'group' => 'social'],
+            ['key' => 'contact.instagram', 'value' => 'https://instagram.com/saltopark', 'group' => 'social'],
+            ['key' => 'contact.tiktok', 'value' => 'https://tiktok.com/@saltopark', 'group' => 'social'],
             ['key' => 'address.line1', 'value' => 'Avenida de los Saltos, 22', 'group' => 'contact'],
             ['key' => 'address.line2', 'value' => '30009 Murcia', 'group' => 'contact'],
             ['key' => 'address.maps_url', 'value' => '#', 'group' => 'contact'],
@@ -84,7 +84,7 @@ class LandingContentSeeder extends Seeder
             ['key' => 'redsys_terminal', 'value' => '001', 'group' => 'payment'],
             ['key' => 'redsys_secret_key', 'value' => 'sq7HjrUOBfKmC576ILgskD5srU870gJ7', 'group' => 'payment'], // clave sandbox pública
             ['key' => 'redsys_currency', 'value' => '978', 'group' => 'payment'],             // ISO-4217 EUR
-            ['key' => 'redsys_merchant_name', 'value' => 'Jumpingjump', 'group' => 'payment'],
+            ['key' => 'redsys_merchant_name', 'value' => 'SaltoPark', 'group' => 'payment'],
             // NOTA: `redsys_next_gateway_order` NO va en este array — es estado
             // OPERATIVO (contador vivo), no config. Se siembra abajo con
             // `firstOrCreate` para NO resetearlo en cada `db:seed` (#169).
@@ -199,7 +199,7 @@ class LandingContentSeeder extends Seeder
             'position' => 2,
         ]);
 
-        // Atracciones REALES (fotos de la clienta, 2026-06-11). Una card por foto, deduplicando
+        // Atracciones REALES (fotos reales del sector origen, 2026-06-11). Una card por foto, deduplicando
         // ángulos repetidos (los sobrantes van a la galería). Nombre/edad/descripción i18n son
         // PLACEHOLDER editables desde el panel (CMS #211). Formato: [name[3], age[3], desc[3],
         // archivo de imagen (en images/attractions/), badge opcional [3]].
@@ -565,7 +565,7 @@ class LandingContentSeeder extends Seeder
     {
         $rules = [
             [['Registro', 'Registration', 'Inscription'], ['Si es tu primera visita, antes de hacer cola para entrar debes registrarte en nuestra web para aprobar las normas del parque y el contenido legal. En el caso de menores de 16 años, el registro lo realiza el/la tutor/a legal.', "If it's your first visit, before queueing to enter you must register on our website to approve the park rules and legal terms. For under-16s, the legal guardian completes the registration.", "Lors de ta première visite, avant de faire la queue, tu dois t'inscrire sur notre site pour approuver le règlement du parc et les mentions légales. Pour les moins de 16 ans, l'inscription est faite par le tuteur légal."]],
-            [['Zona Kids', 'Kids zone', 'Zone Kids'], ['Consulta las condiciones del centro JUMPINGJUMP.', 'Check the conditions of the JUMPINGJUMP centre.', 'Consulte les conditions du centre JUMPINGJUMP.']],
+            [['Zona Kids', 'Kids zone', 'Zone Kids'], ['Consulta las condiciones del centro.', 'Check the conditions of the centre.', 'Consulte les conditions du centre.']],
             [['Zona Jump', 'Jump zone', 'Zone Jump'], ['Entrada desde los 6 años y 1,30 m de estatura. Si se supera la edad mínima y la estatura está comprendida entre 1 m y 1,30 m, la entrada deberá ser con el/la tutor/a.', 'Entry from age 6 and 1.30 m tall. If the minimum age is met and height is between 1 m and 1.30 m, entry must be with a guardian.', "Entrée dès 6 ans et 1,30 m. Si l'âge minimum est atteint et la taille est entre 1 m et 1,30 m, l'entrée doit se faire avec un tuteur."]],
             [['Conducta', 'Conduct', 'Conduite'], ['Un uso inadecuado de las instalaciones, hacer caso omiso a las indicaciones del Staff o generar altercados con otros usuarios puede ser motivo de expulsión.', 'Improper use of the facilities, ignoring staff instructions or causing altercations with other users may result in expulsion.', "Un usage inapproprié des installations, le non-respect des consignes du Staff ou des altercations avec d'autres usagers peuvent entraîner l'expulsion."]],
             [['Información', 'Information', 'Information'], ['No dudes en consultar con nuestro Staff cualquier término o condición sobre tarifas, promociones, cumpleaños o de otra índole.', 'Feel free to ask our staff about any term or condition regarding rates, promotions, birthdays or anything else.', "N'hésite pas à demander à notre Staff toute information sur les tarifs, promotions, anniversaires ou autre."]],
@@ -585,10 +585,10 @@ class LandingContentSeeder extends Seeder
     /**
      * Secciones editoriales de /servicios (#256, modelo A). Migradas desde `lang/services.php`.
      * Hoy son SOLO-CONTACTO (`ticket_type_id` null): líneas comerciales que no se venden online
-     * (colegios, empresas, sesión de adultos). La clienta puede vincularles un pack desde el panel
+     * (colegios, empresas, sesión de adultos). El negocio puede vincularles un pack desde el panel
      * para volverlas comprables. Los `slug` son los ANCHORS estables (el nav enlaza /servicios#slug;
      * los tests los verifican). `updateOrCreate` por slug = idempotente y NO pisa los servicios que
-     * la clienta añada aparte (a diferencia de FAQs/normas, que sí podan).
+     * el negocio añada aparte (a diferencia de FAQs/normas, que sí podan).
      *
      * PÚBLICO: lo reutiliza el seeder dedicado `LandingServicesSeeder` (fuente única, sin duplicar
      * datos) para sembrar SOLO los servicios en una instalación ya en marcha (p. ej. producción tras
@@ -617,7 +617,7 @@ class LandingContentSeeder extends Seeder
                 ],
                 // Tarifas de grupo INFORMATIVAS (precio por niño, en CÉNTIMOS): por zona → duración →
                 // tramo de cantidad, con precio L–V (`weekday`) y finde/festivo (`weekend`). Solo se
-                // MUESTRAN (#256); la reserva es por teléfono. Datos reales San Javier (clienta, 2026-06-16).
+                // MUESTRAN (#256); la reserva es por teléfono. Datos FICTICIOS de ejemplo del sector.
                 // `unit` = clave i18n de la fila/nota (`kids` → «X niños»; `people` → «X personas»).
                 'price_table' => [
                     'unit' => 'kids',
@@ -675,7 +675,7 @@ class LandingContentSeeder extends Seeder
                     'fr' => [['label' => 'Groupe', 'value' => 'Minimum 30 personnes'], ['label' => 'Horaires', 'value' => 'Hors ouverture']],
                 ],
                 // Tarifas de grupo INFORMATIVAS (céntimos) — SOLO zona Jump (2h/3h), MISMOS precios que el
-                // colegio (clienta 2026-06-16): una sola zona → la card se pinta SIN pestañas. `unit=people`
+                // colegio (config del sector origen): una sola zona → la card se pinta SIN pestañas. `unit=people`
                 // → filas/nota en «personas» (no «niños»): es un servicio de empresas/adultos.
                 'price_table' => [
                     'unit' => 'people',
@@ -734,7 +734,7 @@ class LandingContentSeeder extends Seeder
 
     /**
      * Páginas de texto legal. BORRADOR propio [PENDIENTE de revisión legal]: redacción
-     * genérica estándar (RGPD/LSSI) adaptada a Jumpingjump, con los datos del titular
+     * genérica estándar (RGPD/LSSI) adaptada al negocio, con los datos del titular
      * marcados [PENDIENTE]. NO se copian textos de terceros (validez legal + copyright).
      * Editable desde el panel (Fase 7). Cuerpo = lista de secciones {h, p} por idioma.
      */
@@ -753,7 +753,7 @@ class LandingContentSeeder extends Seeder
         // Las 3 legales (privacidad/condiciones/aviso-legal) vienen redactadas y ancladas al código
         // desde la fuente única `LegalContent` (#220); cookies desde `CookiePolicyContent` (#219).
         // Ambas se comparten con sus migraciones de reparación. El waiver sigue en borrador (su
-        // gestión es el sistema externo de la clienta, #216).
+        // gestión es el sistema externo del negocio, #216).
         $legal = LegalContent::pages();
 
         return [

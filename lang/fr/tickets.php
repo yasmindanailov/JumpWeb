@@ -79,7 +79,7 @@ return [
     'pay_redirecting' => 'Nous t’emmenons vers la page de paiement sécurisée. Si la redirection ne se fait pas dans quelques secondes, appuie sur le bouton.',
     'pay_redirecting_title' => 'Redirection vers le paiement',
     'pay_proceed_manual' => 'Continuer vers le paiement',
-    'redsys_product_description' => 'Réservation Jumpingjump · commande :code',
+    'redsys_product_description' => 'Réservation :name · commande :code',
     'payment_failed_title' => 'Le paiement n’a pas abouti',
     'payment_failed_intro' => 'Ta banque n’a pas autorisé le paiement. Rien n’a été débité de ta carte.',
     'payment_failed_retry' => 'Nous gardons ta réservation encore quelques minutes au cas où tu voudrais réessayer le paiement. Si cela n’aboutit pas, la place redeviendra disponible.',

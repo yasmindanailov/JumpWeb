@@ -5,7 +5,7 @@ Plataforma **white-label de reservas online** para negocios con aforo por franja
 pago online, panel de administración y —en el roadmap— app móvil sobre la misma API.
 
 > **Estado:** en refactor de generalización a partir de una base en producción
-> probada (suite de 2132 tests al 2026-08-12 — recuento vivo en `docs/ESTADO.md` —,
+> probada (suite de 2136 tests (2026-08-12; recuento vivo en `docs/ESTADO.md`),
 > flujos de dinero/aforo endurecidos). Tracker vivo: [`docs/00-REFACTOR.md`](docs/00-REFACTOR.md).
 
 ## Stack
@@ -34,11 +34,10 @@ docker compose exec -u sail laravel.test php artisan migrate
 docker compose exec -u sail laravel.test npm ci && docker compose exec -u sail laravel.test npm run build
 ```
 
-> La BD queda migrada y **sin sembrar**: la semilla demo neutra es tarea de Fase 1
-> (`docs/00-REFACTOR.md`). El seeder heredado (`php artisan db:seed`) siembra contenido del
-> sector origen y crea (solo fuera de producción) `admin@jumpingjump.test` /
-> `empleado@jumpingjump.test`, contraseña `password` — úsalo a sabiendas si necesitas un
-> panel operativo en local.
+> La BD queda migrada y sin sembrar. Para un entorno operativo: `php artisan db:seed`
+> siembra el negocio de EJEMPLO «SaltoPark» (semilla neutra, `DECISIONES #12`) y crea,
+> solo fuera de producción, `admin@jumpweb.test` / `empleado@jumpweb.test` (contraseña
+> `password`). Instalación real de un cliente: `docs/INSTALACION-CLIENTE.md`.
 
 - Web: `http://localhost:8081` · Mailpit: `http://localhost:8028` · MySQL: `localhost:3308`
 - Tests: `docker compose exec -u sail laravel.test php artisan test --parallel`

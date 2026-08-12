@@ -41,21 +41,21 @@ frío) siembra: settings · zonas (con cupos) · atracciones · tarifas `normal`
 productos+precios+addons · FAQs · normas · landing services · páginas legales · horario
 semanal · temporadas · festivos · plantillas de franja. **Las franjas NO**: después,
 `php artisan slots:generate-rolling` (idempotente, horizonte = `sales.purchase_horizon_months`).
-- `[DECISION-PENDIENTE]` ⚠️ Hoy `ProductionSeeder` lleva los DATOS DEL CLIENTE ORIGEN
-  (dirección, mapa, festivos de Murcia, tarifas reales) y `LegalContent` su jurisdicción:
-  la **semilla neutra de instalación es el ítem de Fase 1** — hasta entonces, este runbook
-  siembra otro negocio.
+- ✅ Semilla NEUTRA desde Fase 1 (`DECISIONES #12.c`): `ProductionSeeder` siembra el negocio
+  FICTICIO «SaltoPark» (mismo sector, catálogo realista) sin ningún dato identificativo de
+  cliente; la jurisdicción legal es el setting `legal.jurisdiction` (token `:jurisdiction`,
+  se publica como «[pendiente]» hasta configurarla).
 
 ## 3 · Settings (tabla `settings`, editables en `/admin/settings`)
 Por grupos (fuentes: `Settings::MANAGED`, seeds):
 
 | Grupo | Claves | Estado |
 |---|---|---|
-| `business` | `business.name` (required) · `legal_name` · `nif` · `address` · `city` · `domain` (vacío = host) | **Imprescindible** (identidad fiscal → legales) |
+| `business` | `business.name` (required) · `legal_name` · `nif` · `address` · `city` · `domain` (vacío = host) · `legal.jurisdiction` (fuero de los textos legales) | **Imprescindible** (identidad fiscal → legales) |
 | `contact` | `contact.email` · `phone` (CTA «Llamar») · `whatsapp` · `address.*` · `maps_embed_url` (saneada por `MapsEmbed`) | **Imprescindible** |
 | `seo` | `seo.title.{es,en,fr}` · `og_image` (vacío → `public/og-image.jpg`) | **Imprescindible** para marca nueva |
 | `theme` | `theme.brand` (hex; inválido → default) + `zones.color` por zona | **Imprescindible** para marca nueva |
-| pagos | `redsys_merchant_code` · `redsys_terminal` · `redsys_merchant_name` · `redsys_merchant_url` · `redsys_environment` · `redsys_currency` (978) | **Imprescindibles para live** (§6) |
+| pagos | `redsys_merchant_code` · `redsys_terminal` · `redsys_merchant_name` · `redsys_merchant_url` · `redsys_environment` · `redsys_currency` (978) · `sales.order_prefix` (prefijo de códigos de pedido, default `R-`) | **Imprescindibles para live** (§6) |
 | `packs` | `packs.max_per_slot` · `max_guests_per_slot` · `prep_blocks_cupo` (+ override por zona) | Decisión de negocio por cliente |
 | resto | `sales.hold_minutes` (seed 15; fallback de código sin fila: 20) · `purchase_horizon_months` (6) · `payment.tax_rate` (21) · `incidents.alert_email` (→ `contact.email`) · `puerta.*` · `display_timezone` · `maintenance.*` · `cookies.banner_enabled` · `registration.*` (waiver externo) · `social.*` · `landing.tagline/footer_rights` · `catalog.search_min_items` | Default sano. Fuente de verdad exhaustiva: `Settings::MANAGED` |
 | **no tocar** | `redsys_next_gateway_order` (contador vivo) · `sales.manual_hold_minutes` (no expuesto) | — |
@@ -72,9 +72,10 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
   `og-image.jpg` · vídeo del hero (+ póster) · `images/attractions/*.webp` (27 usados por
   el seed; 40 en disco — 4 sin referencia alguna, candidatos a borrar en Fase 1) ·
   `images/historia-seguridad.png`.
-- `[DECISION-PENDIENTE]` (Fase 1) Marca aún quemada en código: `brandName('Jumpingjump')`
-  del panel + vista del wordmark · tema mail `jumpingjump.css` · wordmark de emails vía
-  `config('app.name')` (debe leer `business.name`) · tokens estáticos de `public/css/*.css`.
+- Marca en código: RESUELTO en Fase 1 — panel, wordmark de emails, PDFs y título de puerta
+  leen `business.name` (BD) con fallback al nombre de producto; tema mail = `brand.css`.
+  Los tokens estáticos de `public/css/*.css` (paleta/tipografías por defecto) siguen siendo
+  el design system base del producto.
 
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de

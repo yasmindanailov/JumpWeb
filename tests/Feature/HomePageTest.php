@@ -59,7 +59,7 @@ class HomePageTest extends TestCase
 
         $response->assertSee('Mesa reservada para el grupo'); // feature del producto pack (ES, #87/3c)
         $response->assertSee('Jump · 2 horas');          // entrada destacada (ES)
-        $response->assertSee('hola@jumpingjump.es');    // setting de contacto
+        $response->assertSee('hola@saltopark.example');    // setting de contacto
     }
 
     public function test_landing_hides_a_non_sellable_pack_from_its_cta_section(): void

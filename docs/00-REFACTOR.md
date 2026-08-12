@@ -53,35 +53,36 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       de agentes: DoD, handoff, empirismo), skills `/cierre-sesion` y `/dod`
       (`.claude/skills/`), permisos preconfigurados (`.claude/settings.json`).
 
-### Fase 1 — Desbranding y generalización superficial 🟦
-- [ ] Quitar «jumpingjump» del código — recuento canónico (no fotos):
-      `git grep -i jumpingjump -- ':!docs' ':!.claude' | wc -l` → **167 líneas al 2026-08-12**
-      (se excluye `.claude/`: sus menciones son los deny del protocolo que BLOQUEAN el repo
-      origen, no residuo de marca)
-      (app 26 · lang 28 · resources 18 · database 18 · tests 59 · raíz 9 · public 6 ·
-      config 2 · routes 1; 2 de raíz son las credenciales del seeder documentadas a
-      propósito en el README — al limpiarlas, actualizar también esa nota).
-      ⚠️ Usar `git grep`: un `grep --exclude-dir=vendor` excluye
-      también `resources/views/vendor` (tema mail versionado) y descuadra. La marca visible
-      ya es data-driven (`business.name`); esto es limpieza de residuos. La mención de
-      `CLAUDE.md` regla 7 (ruta del repo origen) es intencional y se queda.
-- [ ] Renombrar artefactos con marca: tema mail `resources/views/vendor/mail/html/themes/jumpingjump.css`
-      (+ `config('mail.markdown.theme')` + `MailThemeTest`, que asertan el literal del tema),
-      comando `jj:purge-customers` → `app:purge-customers`, prefijos de pedido `JJ-`
-      (`OrderCreator`) y `JJ-CONC` (`VerifyRedsysConcurrency`), cookie `jj_*`, claves i18n
-      con la marca, `.env*.example` (`DB_DATABASE` y cabecera de producción), y los 2
-      ficheros cuyo **nombre** lleva la marca: `public/videos/header_jumpingjump.mp4`
-      (+ su regla en `.gitignore`) y el propio tema mail.
-- [ ] **Datos de NEGOCIO del cliente origen fuera del producto** (Fase 0 solo verificó
-      infraestructura): destino de `database/seeders/ProductionSeeder.php` (seed real del
-      cliente: dirección, mapa, SEO, tarifas, festivos locales), jurisdicción quemada en
-      `app/Support/LegalContent.php` → setting/BD, y barrido de datos no-marca
-      (`git grep -i 'san javier\|mirador\|hipos'`).
-- [ ] **Wordmark de los correos → data-driven:** el header usa `config('app.name')`; debe leer
-      `business.name` (BD) como el resto de la marca (hallazgo del run fundacional).
-- [ ] Semilla demo neutra (negocio de ejemplo) separada del fixture de tests; sin datos del cliente origen.
-- [ ] Decidir slugs de rutas públicas (hoy en español: `/mi-cuenta`, `/cumpleanos`…):
-      ¿configurables por instalación o neutros + i18n? → `DECISIONES`.
+### Fase 1 — Desbranding y generalización superficial ✅
+- [x] **Marca retirada del código** (2026-08-12): `git grep -i jumpingjump -- ':!docs' ':!.claude'
+      | wc -l` → **6 líneas, todas intencionales** (regla 7 de CLAUDE.md, guard-bash ×2, cron
+      de ejemplo neutro, y el `assertDontSee('jumpingjump.com')` que actúa de GUARD contra
+      regresiones). Los fixtures `JJ-…` autoconsistentes de tests y los códigos forenses en
+      comentarios se conservan a propósito (sin valor de marca).
+- [x] **Artefactos renombrados** (2026-08-12): tema mail → `themes/brand.css` (+ config +
+      `MailThemeTest`) · `jj:purge-customers` → `app:purge-customers` · **prefijo de pedidos
+      → setting `sales.order_prefix`** (default `R-`, editable en panel, `PaymentSettings::orderPrefix()`
+      con fallback defensivo; `JJ-CONC` → `CONC-`) · cookie → `cookie_consent` (re-consent de
+      navegadores antiguos, asumido) · memo → `app.shared_view_data` · `.env*.example`
+      genericizados · vídeo del hero → `header_hero.mp4` (+ `.gitignore` + vista).
+      Verificado: `purchase:verify-oversell` y `redsys:verify-concurrency` EN VERDE sobre
+      MySQL real tras tocar `OrderCreator` (primera ejecución de ambos en este repo; de paso
+      se arregló un falso negativo del verificador: su producto-sonda no tenía precio para la
+      tarifa del día elegido si caía en festivo).
+- [x] **Datos de NEGOCIO del cliente origen fuera del producto** (2026-08-12): `ProductionSeeder`
+      = semilla neutra «SaltoPark» (ficticio, mismo sector; sin dirección/mapa/URL de
+      registro/SEO con ciudad/festivos locales reales — incluida la URL de maps embed con
+      coordenadas que el grep de marca no veía); jurisdicción → setting `legal.jurisdiction`
+      vía token `:jurisdiction` (+ `:business_name`) de `LegalIdentity`; barrido
+      `git grep -i 'san javier\|mirador\|hipos'` → 0 fuera de docs.
+- [x] **Wordmark de los correos → data-driven** (2026-08-12): header de mail, marca del panel,
+      título de puerta y wordmark de los 2 PDFs leen `business.name` (BD) con fallback
+      `config('app.name')`; descripción del TPV con `:name` data-driven.
+- [x] **Semilla demo neutra separada del fixture** (2026-08-12, `DECISIONES #12.c`):
+      `ProductionSeeder` (SaltoPark, instalación en frío) ≠ `LandingContentSeeder` (fixture
+      de la suite, contrato de conteos 8/2/4/14 INTACTO — ver `TESTING.md` §datos).
+- [x] **Slugs de rutas públicas decididos** (`DECISIONES #12.a`): español ahora; configurables
+      por instalación en Fase 4 con la SPA.
 - [x] **Doc técnica portada y adaptada** (2026-08-12, `DECISIONES #8`; workflow de 14 agentes
       + verificación por grep): ARQUITECTURA · SEGURIDAD · TESTING · FLUJOS · PANEL-ADMIN ·
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
@@ -89,8 +90,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       **`INVARIANTES.md`** destilado (54 invariantes de no-regresión). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
-- [ ] Revisar vocabulario de dominio específico del sector (park/attraction/birthday/puerta/waiver)
-      y decidir qué se generaliza en BD/código y qué queda como config de sector → diseño en Fase 2.
+- [x] **Vocabulario de dominio: diseño entregado** (2026-08-12): spec en
+      `docs/specs/vocabulario-dominio.md` (estreno de la convención de specs) — enfoque
+      CONSERVADOR para el sector «ocio con aforo» (`DECISIONES #12.d`); la decisión final
+      viaja con el diseño de módulos de Fase 2 (morphMap como prerequisito).
 
 ### Fase 2 — Modularización del dominio ⬜
 - [ ] Diseño de contextos (con revisión multi-agente): **Catalog&Booking** (productos, tarifas,

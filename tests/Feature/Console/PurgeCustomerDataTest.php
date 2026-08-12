@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * `jj:purge-customers` — pizarra limpia para go-live: borra TODOS los pedidos/usuarios salvo `--keep`,
+ * `app:purge-customers` — pizarra limpia para go-live: borra TODOS los pedidos/usuarios salvo `--keep`,
  * conservando el contenido. Cubre el orden FK-seguro (reembolsos→pagos→pedidos→usuarios), la
  * conservación de contenido y cuentas, el dry-run y las guardas (typo en --keep, sin admin, sin --keep).
  */
@@ -108,7 +108,7 @@ class PurgeCustomerDataTest extends TestCase
         DB::table('password_reset_tokens')->insert(['email' => 'del1@x.test', 'token' => Str::random(40), 'created_at' => now()]);
         DB::table('sessions')->insert(['id' => Str::random(40), 'user_id' => $del1->id, 'ip_address' => '127.0.0.1', 'user_agent' => 't', 'payload' => 'x', 'last_activity' => time()]);
 
-        $this->artisan('jj:purge-customers', ['--keep' => ['admin-keep@x.test', 'cust-keep@x.test'], '--force' => true])
+        $this->artisan('app:purge-customers', ['--keep' => ['admin-keep@x.test', 'cust-keep@x.test'], '--force' => true])
             ->assertExitCode(0);
 
         // Cuentas: solo las 2 conservadas.
@@ -147,7 +147,7 @@ class PurgeCustomerDataTest extends TestCase
         $del = $this->user('del@x.test', 'customer');
         $this->orderFor($del, 'JJ-DRY');
 
-        $this->artisan('jj:purge-customers', ['--keep' => ['admin-keep@x.test']]) // sin --force
+        $this->artisan('app:purge-customers', ['--keep' => ['admin-keep@x.test']]) // sin --force
             ->expectsOutputToContain('DRY-RUN')
             ->assertExitCode(0);
 
@@ -162,7 +162,7 @@ class PurgeCustomerDataTest extends TestCase
         $this->orderFor($del, 'JJ-AB1');
 
         // 'no-existe@x.test' no está en la BD → aborto, nada se borra.
-        $this->artisan('jj:purge-customers', ['--keep' => ['admin-keep@x.test', 'no-existe@x.test'], '--force' => true])
+        $this->artisan('app:purge-customers', ['--keep' => ['admin-keep@x.test', 'no-existe@x.test'], '--force' => true])
             ->assertExitCode(1);
 
         $this->assertSame(1, Order::count());
@@ -175,7 +175,7 @@ class PurgeCustomerDataTest extends TestCase
         $cust = $this->user('cust@x.test', 'customer');
 
         // Conservar solo un customer → te quedarías sin admin → aborto.
-        $this->artisan('jj:purge-customers', ['--keep' => ['cust@x.test'], '--force' => true])
+        $this->artisan('app:purge-customers', ['--keep' => ['cust@x.test'], '--force' => true])
             ->assertExitCode(1);
 
         $this->assertSame(2, User::count());
@@ -185,7 +185,7 @@ class PurgeCustomerDataTest extends TestCase
     {
         $this->user('admin-keep@x.test', 'admin');
 
-        $this->artisan('jj:purge-customers', ['--force' => true])->assertExitCode(1);
+        $this->artisan('app:purge-customers', ['--force' => true])->assertExitCode(1);
 
         $this->assertSame(1, User::count());
     }

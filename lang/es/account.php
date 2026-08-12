@@ -121,7 +121,7 @@ return [
 
     'register' => [
         'cta' => 'Crear cuenta',
-        'eyebrow' => 'Únete a Jumpingjump',
+        'eyebrow' => 'Únete',
         'title' => 'Crea tu cuenta',
         'subtitle' => 'Necesaria para reservar entradas y cumpleaños.',
         'name' => 'Nombre y apellidos',

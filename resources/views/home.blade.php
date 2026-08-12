@@ -25,7 +25,7 @@
                  = primer fotograma para pintado inmediato mientras carga. --}}
             <video class="hero__video" autoplay muted loop playsinline preload="auto"
                    poster="{{ asset('videos/header_poster.jpg') }}?v={{ @filemtime(public_path('videos/header_poster.jpg')) }}" aria-hidden="true">
-                <source src="{{ asset('videos/header_jumpingjump.mp4') }}?v={{ @filemtime(public_path('videos/header_jumpingjump.mp4')) }}" type="video/mp4">
+                <source src="{{ asset('videos/header_hero.mp4') }}?v={{ @filemtime(public_path('videos/header_hero.mp4')) }}" type="video/mp4">
             </video>
             <div class="hero__stage-scrim" aria-hidden="true"></div>
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
@@ -324,7 +324,7 @@
             ['src' => 'images/attractions/cumple_2.webp', 'tag' => '#cumpleaños'],
             ['src' => 'images/attractions/kids_toboganes.webp', 'tag' => '#kids'],
             ['src' => 'images/attractions/jump_circuito.webp', 'tag' => '#jump'],
-            ['src' => 'images/attractions/park_jump.webp', 'tag' => '#jumpingjump'],
+            ['src' => 'images/attractions/park_jump.webp', 'tag' => '#salta'],
             ['src' => 'images/attractions/cumple_3.webp', 'tag' => '#cumpleaños'],
             ['src' => 'images/attractions/kids_obstaculos.webp', 'tag' => '#kids'],
             ['src' => 'images/attractions/jump_obstaculos.webp', 'tag' => '#jump'],

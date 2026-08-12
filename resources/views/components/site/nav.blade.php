@@ -34,7 +34,7 @@
     <div class="nav__left">
         <a href="{{ url('/') }}" class="nav__brand">
             <span class="nav__brand-row">
-                {{ $site['name'] ?? 'Jumpingjump' }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span>
+                {{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span>
             </span>
         </a>
         <div class="nav__links">
@@ -194,7 +194,7 @@
     <aside class="mob-menu__panel" role="dialog" aria-modal="true" x-ref="mobPanel">
         <div class="mob-menu__head">
             <span class="nav__brand">
-                <span class="nav__brand-row">{{ $site['name'] ?? 'Jumpingjump' }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
+                <span class="nav__brand-row">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
             </span>
             <button class="mob-menu__close" @click="mobileOpen = false" aria-label="{{ __('landing.nav.menu_close') }}">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>

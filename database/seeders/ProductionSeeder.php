@@ -17,8 +17,10 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Seed de PRODUCCIÓN (Fase 2) — datos reales del negocio Jumpingjump (San Javier, Murcia),
- * aportados por la clienta el 2026-06-12.
+ * Seed de INSTALACIÓN (semilla neutra de Fase 1, DECISIONES #12.c) — negocio FICTICIO de
+ * ejemplo del mismo sector («SaltoPark», parque de trampolines): estructura y catálogo
+ * completos y realistas, SIN datos identificativos de ningún cliente. Cada instalación
+ * sustituye identidad/contacto/legales desde el panel ([PENDIENTE] donde aplica).
  *
  * SEPARADO de `LandingContentSeeder` a propósito: ese sigue siendo el FIXTURE de los tests
  * (catálogo demo con entradas vendibles que ejercita todos los caminos), mientras que este
@@ -32,14 +34,14 @@ use RuntimeException;
  * verano, festivos y plantillas de franja de cumpleaños.
  *
  * Idempotente. NO genera franjas materializadas: eso lo hace el comando
- * `slots:generate-rolling` (paso del runbook `docs/10-DESPLIEGUE.md`), reproducible y sin
+ * `slots:generate-rolling` (paso del runbook `docs/INSTALACION-CLIENTE.md`), reproducible y sin
  * dependencia de "hoy" dentro del seed.
  *
  * Uso en despliegue: `php artisan db:seed --class=Database\\Seeders\\ProductionSeeder --force`.
- * El usuario admin real se crea aparte (ver runbook) — este seed NO crea usuarios.
+ * El usuario admin real se crea aparte (ver `docs/INSTALACION-CLIENTE.md` §5) — este seed NO crea usuarios.
  *
  * ⚠️ Marcadores [PENDIENTE]: identidad fiscal (razón social, NIF, dominio) y contacto
- * (email/teléfono/redes) son PLACEHOLDERS — la clienta los fija desde el panel antes del
+ * (email/teléfono/redes) son PLACEHOLDERS — cada instalación los fija desde el panel antes del
  * go-live. El teléfono alimenta el CTA «Llamar» de las entradas no vendibles.
  */
 class ProductionSeeder extends Seeder
@@ -82,35 +84,40 @@ class ProductionSeeder extends Seeder
     private function realSettings(): void
     {
         $settings = [
-            // Identidad — PLACEHOLDER (la clienta aporta los reales antes del go-live).
-            ['key' => 'business.name', 'value' => 'Jumpingjump', 'group' => 'business'],
-            ['key' => 'business.city', 'value' => 'San Javier', 'group' => 'business'],
-            ['key' => 'business.legal_name', 'value' => 'Jumpingjump S.L.', 'group' => 'business'],      // [PENDIENTE: razón social real]
+            // Identidad — PLACEHOLDER ficticio (cada instalación pone la suya antes del go-live).
+            ['key' => 'business.name', 'value' => 'SaltoPark', 'group' => 'business'],
+            ['key' => 'business.city', 'value' => 'Villaparque', 'group' => 'business'],
+            ['key' => 'business.legal_name', 'value' => 'SaltoPark S.L.', 'group' => 'business'],      // [PENDIENTE: razón social real]
             ['key' => 'business.nif', 'value' => 'B-12345678', 'group' => 'business'],                   // [PENDIENTE: NIF/CIF real]
-            ['key' => 'business.address', 'value' => 'Av. de el Mirador, s/n · 30730 San Javier, Murcia', 'group' => 'business'], // [PENDIENTE: confirmar domicilio FISCAL]
-            ['key' => 'business.domain', 'value' => 'jumpingjump.es', 'group' => 'business'],            // [PENDIENTE: dominio real]
+            ['key' => 'business.address', 'value' => 'Calle del Salto, 1 · 00000 Villaparque (España)', 'group' => 'business'], // [PENDIENTE: confirmar domicilio FISCAL]
+            ['key' => 'business.domain', 'value' => 'saltopark.example', 'group' => 'business'],            // [PENDIENTE: dominio real]
 
             // Contacto público — teléfono/email PLACEHOLDER (el teléfono alimenta el CTA «Llamar»).
-            ['key' => 'contact.email', 'value' => 'hola@jumpingjump.es', 'group' => 'contact'],          // [PENDIENTE]
+            ['key' => 'contact.email', 'value' => 'hola@saltopark.example', 'group' => 'contact'],          // [PENDIENTE]
             ['key' => 'contact.phone', 'value' => '+34 600 000 000', 'group' => 'contact'],              // [PENDIENTE]
             ['key' => 'contact.whatsapp', 'value' => '', 'group' => 'social'],                            // [PENDIENTE]
             ['key' => 'contact.instagram', 'value' => '', 'group' => 'social'],                           // [PENDIENTE: redes]
             ['key' => 'contact.tiktok', 'value' => '', 'group' => 'social'],                              // [PENDIENTE: redes]
             ['key' => 'social.feed_embed_url', 'value' => '', 'group' => 'social'],                       // [PENDIENTE: widget feed]
 
-            // Ubicación REAL del parque (San Javier) + mapa (compartir + iframe embebido).
-            ['key' => 'address.line1', 'value' => 'Av. de el Mirador, s/n', 'group' => 'contact'],
-            ['key' => 'address.line2', 'value' => '30730 San Javier, Murcia', 'group' => 'contact'],
-            ['key' => 'address.maps_url', 'value' => 'https://maps.app.goo.gl/Ssda4MBheK4ag3ap6', 'group' => 'contact'],
-            ['key' => 'address.maps_embed_url', 'value' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4168.283120741084!2d-0.8157946312775141!3d37.82032902485791!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd630f6802309c01%3A0xb6ebf745e3820ac1!2sJUMPING%20JUMP!5e0!3m2!1ses!2ses!4v1781275763302!5m2!1ses!2ses', 'group' => 'contact'],
+            // Ubicación FICTICIA de ejemplo + mapa vacío (la instalación pone el suyo desde el
+            // panel; la landing degrada con gracia sin mapa — [PENDIENTE: ubicación y maps reales]).
+            ['key' => 'address.line1', 'value' => 'Calle del Salto, 1', 'group' => 'contact'],
+            ['key' => 'address.line2', 'value' => '00000 Villaparque (España)', 'group' => 'contact'],
+            ['key' => 'address.maps_url', 'value' => '', 'group' => 'contact'],
+            ['key' => 'address.maps_embed_url', 'value' => '', 'group' => 'contact'],
 
-            // Registro/waiver EXTERNO (#216): el botón «Registro» lleva al sistema de la clienta.
-            ['key' => 'registration.url', 'value' => 'https://jumpingjump.web.hipos.es', 'group' => 'business'],
+            // Registro/waiver EXTERNO (#216): vacío = modal interno. [PENDIENTE: URL del
+            // sistema externo de registro/waiver, si la instalación usa uno].
+            ['key' => 'registration.url', 'value' => '', 'group' => 'business'],
 
-            // SEO — GENÉRICO por ahora (se pule en la fase de copys). Ciudad SEO = San Javier.
-            ['key' => 'seo.title.es', 'value' => 'Jumpingjump · Parque de saltos en San Javier', 'group' => 'seo'],
-            ['key' => 'seo.title.en', 'value' => 'Jumpingjump · Trampoline park in San Javier', 'group' => 'seo'],
-            ['key' => 'seo.title.fr', 'value' => 'Jumpingjump · Parc de trampolines à San Javier', 'group' => 'seo'],
+            // Fuero de los textos legales (token :jurisdiction de LegalIdentity, Fase 1).
+            ['key' => 'legal.jurisdiction', 'value' => '[PENDIENTE: partido judicial]', 'group' => 'business'],
+
+            // SEO genérico de ejemplo (cada instalación pule el suyo en el panel).
+            ['key' => 'seo.title.es', 'value' => 'SaltoPark · Parque de saltos', 'group' => 'seo'],
+            ['key' => 'seo.title.en', 'value' => 'SaltoPark · Trampoline park', 'group' => 'seo'],
+            ['key' => 'seo.title.fr', 'value' => 'SaltoPark · Parc de trampolines', 'group' => 'seo'],
 
             // IVA general de ocio (parques recreativos) — confirmar con el gestor.
             ['key' => 'payment.tax_rate', 'value' => '21', 'group' => 'payment'],
@@ -119,7 +126,7 @@ class ProductionSeeder extends Seeder
             // (solo el tope de fiestas), cada fiesta máx. 20 niños (en el propio pack `max_qty`).
             ['key' => 'packs.max_per_slot', 'value' => '5', 'group' => 'packs'],
             ['key' => 'packs.max_guests_per_slot', 'value' => '0', 'group' => 'packs'], // 0 = sin tope total de niños
-            // Sin montaje/limpieza (la clienta: «montaje y limpieza no hay») → la prep no bloquea cupo.
+            // Sin montaje/limpieza (valor tipo del sector origen: sin montaje/limpieza) → la prep no bloquea cupo.
             ['key' => 'packs.prep_blocks_cupo', 'value' => '0', 'group' => 'packs'],
 
             ['key' => 'display_timezone', 'value' => 'Europe/Madrid', 'group' => 'display'],
@@ -214,7 +221,7 @@ class ProductionSeeder extends Seeder
                         'seats_per_unit' => 1,
                         'min_advance_value' => 1,         // 1 día de antelación (irrelevante mientras no se vendan online)
                         'min_advance_unit' => 'days',
-                        // ⚠️ Hoy las entradas NO se venden online (decisión clienta): se muestran con CTA «Llamar».
+                        // ⚠️ Hoy las entradas NO se venden online (configuración de ejemplo del sector): se muestran con CTA «Llamar».
                         'is_sellable' => false,
                         'is_active' => true,              // visibles en la landing/precios
                     ],
@@ -277,7 +284,7 @@ class ProductionSeeder extends Seeder
                     'type' => TicketType::TYPE_PACK,
                     'zone_id' => $zoneId,
                     'duration_min' => $mins,
-                    'prep_before_min' => 0,            // sin montaje (decisión clienta)
+                    'prep_before_min' => 0,            // sin montaje (config de ejemplo)
                     'prep_after_min' => 0,             // sin limpieza
                     'available_after_open_min' => 60,  // empezar ≥ 1h tras abrir
                     'available_before_close_min' => 60, // y ≤ 1h antes de cerrar
@@ -405,7 +412,7 @@ class ProductionSeeder extends Seeder
         };
 
         // Calcetines: cantidad LIBRE (fixed + stepper) tanto en entradas como en packs — el cliente
-        // elige cuántos pares. La norma «obligatorios» se muestra como condición; la clienta puede
+        // elige cuántos pares. La norma «obligatorios» se muestra como condición; el negocio puede
         // marcarlo obligatorio o por-invitado desde el panel (Catálogo → complementos → Configurar).
         $link($calcetines, $allEntries, ['quantity_mode' => 'fixed', 'allow_extra' => true]);
         $link($calcetines, $packs, ['quantity_mode' => 'fixed', 'allow_extra' => true]);
@@ -422,7 +429,7 @@ class ProductionSeeder extends Seeder
 
     /**
      * Horarios reales: L–V 16:00–22:00 · finde 11:00–22:00 · verano (jul–ago) 11:00–22:00 todos los
-     * días · festivos 2026 (nacionales + Región de Murcia + locales de San Javier) abiertos 11:00–22:00
+     * días · festivos 2026 (nacionales + autonómicos + locales de EJEMPLO) abiertos 11:00–22:00
      * con tarifa especial (+3€). Plantillas de franja SOLO para cumpleaños (lo único vendible online).
      */
     private function realSchedule(): void
@@ -443,14 +450,14 @@ class ProductionSeeder extends Seeder
             ['start_date' => '2026-07-01', 'end_date' => '2026-08-31', 'open_time' => '11:00:00', 'close_time' => '22:00:00', 'is_active' => true],
         );
 
-        // Festivos 2026 de San Javier (fuente: calendario laboral oficial). Abiertos 11:00–22:00 con
-        // tarifa especial (+3€), como un finde. La clienta puede marcar cierres concretos (p. ej.
+        // Festivos 2026 de EJEMPLO (calendario tipo de la Región de Murcia). Abiertos 11:00–22:00 con
+        // tarifa especial (+3€), como un finde. El negocio puede marcar cierres concretos (p. ej.
         // 1-ene / 25-dic) desde el panel si decide no abrir esos días.
         $specialRateId = RateType::where('key', RateType::KEY_SPECIAL)->value('id');
         $holidays = [
             ['2026-01-01', 'Año Nuevo', "New Year's Day", "Jour de l'An"],
             ['2026-01-06', 'Reyes (Epifanía)', 'Epiphany', 'Épiphanie'],
-            ['2026-02-03', 'Fiesta local (San Javier)', 'Local holiday (San Javier)', 'Fête locale (San Javier)'],
+            ['2026-02-03', 'Fiesta local (ejemplo)', 'Local holiday (example)', 'Fête locale (exemple)'],
             ['2026-03-19', 'San José', "Saint Joseph's Day", 'Saint-Joseph'],
             ['2026-04-02', 'Jueves Santo', 'Maundy Thursday', 'Jeudi saint'],
             ['2026-04-03', 'Viernes Santo', 'Good Friday', 'Vendredi saint'],
@@ -458,7 +465,7 @@ class ProductionSeeder extends Seeder
             ['2026-06-09', 'Día de la Región de Murcia', 'Day of the Region of Murcia', 'Jour de la Région de Murcie'],
             ['2026-08-15', 'Asunción de la Virgen', 'Assumption Day', 'Assomption'],
             ['2026-10-12', 'Fiesta Nacional de España', 'National Day of Spain', "Fête nationale de l'Espagne"],
-            ['2026-12-03', 'Fiesta local (San Javier)', 'Local holiday (San Javier)', 'Fête locale (San Javier)'],
+            ['2026-12-03', 'Fiesta local (ejemplo)', 'Local holiday (example)', 'Fête locale (exemple)'],
             ['2026-12-07', 'Día de la Constitución (traslado)', 'Constitution Day (in lieu)', 'Jour de la Constitution (report)'],
             ['2026-12-08', 'Inmaculada Concepción', 'Immaculate Conception', 'Immaculée Conception'],
             ['2026-12-25', 'Navidad', 'Christmas Day', 'Noël'],

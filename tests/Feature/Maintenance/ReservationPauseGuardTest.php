@@ -63,7 +63,7 @@ class ReservationPauseGuardTest extends TestCase
         foreach ([
             ['redsys_environment', 'test'], ['redsys_merchant_code', '999008881'], ['redsys_terminal', '001'],
             ['redsys_secret_key', 'sq7HjrUOBfKmC576ILgskD5srU870gJ7'], ['redsys_currency', '978'],
-            ['redsys_merchant_name', 'Jumpingjump'], ['redsys_next_gateway_order', '100000'],
+            ['redsys_merchant_name', 'SaltoPark'], ['redsys_next_gateway_order', '100000'],
         ] as [$k, $v]) {
             Setting::create(['key' => $k, 'value' => $v, 'group' => 'payment']);
         }

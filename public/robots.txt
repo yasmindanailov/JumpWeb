@@ -1,4 +1,3 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://jumpingjump.com/sitemap.xml

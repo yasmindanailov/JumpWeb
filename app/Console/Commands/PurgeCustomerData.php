@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  */
 class PurgeCustomerData extends Command
 {
-    protected $signature = 'jj:purge-customers
+    protected $signature = 'app:purge-customers
         {--keep=* : Email(s) de las cuentas a CONSERVAR (obligatorio). Repetir --keep por cada uno.}
         {--force : Ejecutar el borrado de verdad. Sin esta opción es DRY-RUN.}';
 

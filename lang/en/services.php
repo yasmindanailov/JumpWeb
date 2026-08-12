@@ -8,7 +8,7 @@
 return [
     'meta' => [
         'title' => 'Services',
-        'description' => 'School trips, companies, adults sessions and private events at Jumpingjump.',
+        'description' => 'School trips, companies, adults sessions and private events at our park.',
     ],
     'eyebrow' => 'For groups and events',
     'title' => 'Beyond open jump',

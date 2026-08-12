@@ -52,6 +52,11 @@ class LegalIdentity
             ':legal_phone' => self::value('contact.phone'),
             ':tax_rate' => self::taxRate(),
             ':site_domain' => self::siteDomain(),
+            // Marca visible del negocio (Fase 1, DECISIONES #12): los textos legales nunca
+            // nombran una marca concreta — leen la de la instalación, con fallback al producto.
+            ':business_name' => (string) (Setting::value('business.name') ?: config('app.name')),
+            // Fuero/partido judicial (Fase 1): '[pendiente]' hasta que la instalación lo fije.
+            ':jurisdiction' => self::value('legal.jurisdiction'),
 
             // Literales heredados — ES.
             '[PENDIENTE: razón social]' => $name,

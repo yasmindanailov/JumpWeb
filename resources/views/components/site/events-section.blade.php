@@ -21,7 +21,7 @@
     $firstPack = $packages->first();
     // Foto de la zona cumpleaños (#231): todos los packs comparten la zona operativa «cumpleanos».
     $cumpleImage = $firstPack?->zone?->image;
-    $parkName = $site['name'] ?? 'Jumpingjump';
+    $parkName = $site['name'] ?? config('app.name');
 
     // Depósito (€) para la sección Proceso. Representativo: los packs comparten la misma señal.
     $processDeposit = $firstPack ? intdiv((int) $firstPack->deposit_value, 100) : 30;

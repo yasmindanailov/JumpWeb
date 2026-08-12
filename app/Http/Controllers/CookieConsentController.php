@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
  *
  * Controlador PLANO (no Livewire) → funciona para visitantes ANÓNIMOS sin fricción. Lo llama el
  * banner por `fetch` (CSRF por cabecera `X-CSRF-TOKEN` desde el `<meta>`). Hace dos cosas:
- *   1) Escribe la cookie canónica `jj_cookie_consent` (sin cifrar; la lee el servidor y Alpine).
+ *   1) Escribe la cookie canónica `cookie_consent` (sin cifrar; la lee el servidor y Alpine).
  *   2) Deja una fila de PRUEBA en `cookie_consent_logs` (acreditación, RGPD art. 5.2/7.1).
  */
 class CookieConsentController extends Controller

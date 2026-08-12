@@ -83,7 +83,7 @@ class RedsysIdaTest extends TestCase
         Setting::create(['key' => 'redsys_terminal', 'value' => '001', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_secret_key', 'value' => 'sq7HjrUOBfKmC576ILgskD5srU870gJ7', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_currency', 'value' => '978', 'group' => 'payment']);
-        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'Jumpingjump', 'group' => 'payment']);
+        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'SaltoPark', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_next_gateway_order', 'value' => '100000', 'group' => 'payment']);
     }
 
@@ -176,7 +176,7 @@ class RedsysIdaTest extends TestCase
         $this->assertSame('999008881', $data['DS_MERCHANT_MERCHANTCODE']);
         $this->assertSame('001', $data['DS_MERCHANT_TERMINAL']);
         $this->assertSame($order->code, $data['DS_MERCHANT_MERCHANTDATA']); // reconciliación cruzada
-        $this->assertSame('Jumpingjump', $data['DS_MERCHANT_MERCHANTNAME']);
+        $this->assertSame('SaltoPark', $data['DS_MERCHANT_MERCHANTNAME']);
         $this->assertNotEmpty($data['DS_MERCHANT_PRODUCTDESCRIPTION']);
         $this->assertLessThanOrEqual(125, mb_strlen($data['DS_MERCHANT_PRODUCTDESCRIPTION'])); // manual Anexo 1
     }

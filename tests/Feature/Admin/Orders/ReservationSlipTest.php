@@ -20,6 +20,7 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -414,7 +415,8 @@ class ReservationSlipTest extends TestCase
         // Identificación + cabecera.
         $this->assertStringContainsString('Hoja de reserva', $html);
         $this->assertStringContainsString($order->code, $html);
-        $this->assertStringContainsString('JUMPINGJUMP', $html);
+        // Wordmark data-driven (Fase 1): sin `business.name` sembrado cae al nombre de producto.
+        $this->assertStringContainsString(Str::upper(config('app.name')), $html);
         // Producto (el nombre ya incluye la zona; el chip de zona se quitó).
         $this->assertStringContainsString('Cumpleaños Jump', $html);
         // Datos de la reserva: cumpleañero + padre/tutor (cliente) + teléfono.

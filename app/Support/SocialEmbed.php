@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Normaliza el ajuste «feed social» de la sección «@jumpingjump en directo» (#215). La clienta
+ * Normaliza el ajuste «feed social» de la sección «en directo» (#215). La clienta
  * quiere mostrar ahí sus ÚLTIMAS publicaciones de Instagram/TikTok. Las APIs oficiales exigen
  * OAuth + tokens que caducan (frágil); la vía robusta y fácil de mantener es un **widget de
  * feed** de un servicio (SnapWidget / LightWidget): la clienta conecta su cuenta y obtiene un

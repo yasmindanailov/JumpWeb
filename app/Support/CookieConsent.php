@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 /**
  * Autoridad única del consentimiento de cookies (decisión #219, `docs/PLAN-COOKIES.md`).
  *
- * Resuelve, a partir de la cookie `jj_cookie_consent`, qué categorías NO necesarias ha aceptado
+ * Resuelve, a partir de la cookie `cookie_consent`, qué categorías NO necesarias ha aceptado
  * el visitante. La consume el composer (`AppServiceProvider`) para gobernar el **bloqueo previo**
  * de los iframes de tercero (mapa de Google, feed social) y el banner.
  *
@@ -23,7 +23,7 @@ use Illuminate\Http\Request;
  */
 class CookieConsent
 {
-    public const COOKIE_NAME = 'jj_cookie_consent';
+    public const COOKIE_NAME = 'cookie_consent';
 
     /**
      * Versión de la política de cookies (patrón `Consent::CURRENT_VERSION`). Subirla cuando cambie

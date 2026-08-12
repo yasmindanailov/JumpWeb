@@ -118,7 +118,7 @@ class VerifyRedsysConcurrency extends Command
 
             $order = Order::create([
                 'user_id' => $user->id,
-                'code' => 'JJ-CONC'.Str::upper(Str::random(4)),
+                'code' => 'CONC-'.Str::upper(Str::random(4)),
                 'status' => Order::STATUS_PENDING,
                 'subtotal' => 1000,
                 'total' => 1000,

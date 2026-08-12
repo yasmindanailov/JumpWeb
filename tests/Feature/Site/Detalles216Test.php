@@ -28,12 +28,12 @@ class Detalles216Test extends TestCase
     {
         $this->set('contact.phone', '600 11 22 33');
         $this->set('contact.whatsapp', '34600112233');
-        $this->set('address.maps_url', 'https://maps.google.com/?q=jumpingjump', 'contact');
+        $this->set('address.maps_url', 'https://maps.google.com/?q=saltopark', 'contact');
 
         $res = $this->get('/contacto')->assertOk();
         $res->assertSee('tel:600112233', false);            // teléfono saneado a dígitos
         $res->assertSee('https://wa.me/34600112233', false); // WhatsApp
-        $res->assertSee('https://maps.google.com/?q=jumpingjump', false); // ubicación
+        $res->assertSee('https://maps.google.com/?q=saltopark', false); // ubicación
     }
 
     public function test_contact_hides_quick_ctas_when_no_data(): void
@@ -158,12 +158,12 @@ class Detalles216Test extends TestCase
         // (paridad con maps/registration) → un esquema peligroso inyectado (p. ej. por BD directa) NO
         // llega al `href` del footer; cae a '#'. Una URL http(s) legítima sí se conserva.
         $this->set('contact.instagram', 'javascript:alert(document.cookie)', 'contact');
-        $this->set('contact.tiktok', 'https://www.tiktok.com/@jumpingjump', 'contact');
+        $this->set('contact.tiktok', 'https://www.tiktok.com/@saltopark', 'contact');
 
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertStringNotContainsString('javascript:alert', $html);
-        $this->assertStringContainsString('https://www.tiktok.com/@jumpingjump', $html);
+        $this->assertStringContainsString('https://www.tiktok.com/@saltopark', $html);
     }
 
     // ── (5) Página 404 ──────────────────────────────────────────────────────

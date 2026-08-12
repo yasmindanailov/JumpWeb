@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex,nofollow">
-    <title>Jumpingjump · {{ __('admin.puerta.validar.title') }}</title>
+    <title>{{ \App\Models\Setting::value('business.name') ?: config('app.name') }} · {{ __('admin.puerta.validar.title') }}</title>
 
     {{-- Reusa el theme custom del panel (decisión #124): mismo bundle Tailwind 4
          con `@source` que escanea `resources/views/livewire/admin/**/*`. Sin esto

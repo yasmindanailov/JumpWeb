@@ -1,5 +1,5 @@
 /* ====================================================================
-   JUMPINGJUMP — Design system reference
+   JUMPWEB — Design system reference
    --------------------------------------------------------------------
    COLORS
      --bg, --bg-soft, --bg-card   light cream surfaces
@@ -42,7 +42,7 @@
      ≤420   tiny    (extra-tight wrap padding)
    ==================================================================== */
 
-/* ----- Jumpingjump landing — light theme only ----- */
+/* ----- JumpWeb landing — light theme only ----- */
 
 :root {
   /* base: warm cream + ink black */

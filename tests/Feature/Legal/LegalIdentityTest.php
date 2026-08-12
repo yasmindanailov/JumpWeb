@@ -23,7 +23,7 @@ class LegalIdentityTest extends TestCase
             'business.legal_name' => 'Saltos de Murcia S.L.',
             'business.nif' => 'B12345678',
             'business.address' => 'Avenida de los Saltos 22, Murcia',
-            'contact.email' => 'legal@jumpingjump.es',
+            'contact.email' => 'legal@saltopark.example',
         ] as $key => $value) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => 'business']);
         }
@@ -40,7 +40,7 @@ class LegalIdentityTest extends TestCase
         $this->assertStringContainsString('Saltos de Murcia S.L.', $out);
         $this->assertStringContainsString('NIF B12345678', $out);
         $this->assertStringContainsString('domicilio en Avenida de los Saltos 22, Murcia', $out);
-        $this->assertStringContainsString('legal@jumpingjump.es', $out);
+        $this->assertStringContainsString('legal@saltopark.example', $out);
         $this->assertStringNotContainsString('[PENDIENTE', $out);
     }
 
@@ -64,9 +64,23 @@ class LegalIdentityTest extends TestCase
         $this->setFiscal();
 
         $this->assertSame(
-            'Titular: Saltos de Murcia S.L., NIF B12345678, contacto legal@jumpingjump.es.',
+            'Titular: Saltos de Murcia S.L., NIF B12345678, contacto legal@saltopark.example.',
             LegalIdentity::interpolate('Titular: :legal_name, NIF :legal_nif, contacto :legal_email.')
         );
+    }
+
+    public function test_interpolates_business_name_token_with_product_fallback(): void
+    {
+        // Fase 1 (DECISIONES #12): los textos legales nombran :business_name, nunca una marca quemada.
+        $this->assertSame(
+            'Eventos de '.config('app.name').'.',
+            LegalIdentity::interpolate('Eventos de :business_name.')
+        );
+
+        Setting::updateOrCreate(['key' => 'business.name'], ['value' => 'SaltoPark', 'group' => 'business']);
+        Setting::flushMemo();
+
+        $this->assertSame('Eventos de SaltoPark.', LegalIdentity::interpolate('Eventos de :business_name.'));
     }
 
     public function test_falls_back_to_pendiente_when_fiscal_data_empty(): void

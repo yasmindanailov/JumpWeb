@@ -70,7 +70,7 @@ class LegalPagesContentTest extends TestCase
     public function test_extended_tokens_are_interpolated_from_settings(): void
     {
         // IVA, teléfono y dominio se rellenan solos desde Ajustes (#220).
-        Setting::updateOrCreate(['key' => 'business.domain'], ['value' => 'jumpingjump.es', 'group' => 'business']);
+        Setting::updateOrCreate(['key' => 'business.domain'], ['value' => 'saltopark.example', 'group' => 'business']);
         Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '900 123 456', 'group' => 'contact']);
         Setting::updateOrCreate(['key' => 'payment.tax_rate'], ['value' => '10', 'group' => 'payment']);
 
@@ -81,7 +81,7 @@ class LegalPagesContentTest extends TestCase
             ->assertDontSee(':legal_phone');
 
         $this->get('/aviso-legal')->assertOk()
-            ->assertSee('jumpingjump.es')        // :site_domain (ajuste)
+            ->assertSee('saltopark.example')        // :site_domain (ajuste)
             ->assertSee('900 123 456')
             ->assertDontSee(':site_domain');
     }

@@ -311,7 +311,7 @@ document.addEventListener('alpine:init', () => {
         // El blade lo lee para fijar --inv/--inv2 de la `.bd-card`.
         invZone: cfg.invZone || 'jump',
         busy: false,
-        park: cfg.park || 'Jumpingjump',
+        park: cfg.park || '',
         labels: cfg.labels || {},
 
         // —— previsualización (getters reactivos) ——

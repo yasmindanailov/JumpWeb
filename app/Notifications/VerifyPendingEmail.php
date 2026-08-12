@@ -41,7 +41,7 @@ class VerifyPendingEmail extends Notification implements ShouldQueue
             ['id' => $notifiable->getKey(), 'hash' => sha1((string) $notifiable->pending_email)],
         );
 
-        $park = (string) Setting::value('business.name', 'Jumpingjump');
+        $park = (string) Setting::value('business.name', config('app.name'));
 
         return (new MailMessage)
             ->subject(__('emails.verify_pending_email.subject', ['park' => $park]))

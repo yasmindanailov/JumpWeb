@@ -1,6 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
-    "name": "jumpingjump",
+    "name": "jumpweb",
     "private": true,
     "type": "module",
     "scripts": {

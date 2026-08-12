@@ -19,7 +19,7 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * Fase 2 — Verifica el seed de PRODUCCIÓN (datos reales de Jumpingjump · San Javier, 2026-06-12).
+ * Fase 2 — Verifica el seed de PRODUCCIÓN (semilla neutra SaltoPark, DECISIONES #12.c).
  * Reproducible en BD limpia. Distinto del fixture de tests (`LandingContentSeeder`): aquí las
  * ENTRADAS NO se venden online (solo se muestran) y la venta online es solo de CUMPLEAÑOS con señal.
  */
@@ -126,14 +126,14 @@ class ProductionSeederTest extends TestCase
         $this->assertSame('2026-07-01', $summer->start_date->toDateString());
         $this->assertSame('2026-08-31', $summer->end_date->toDateString());
 
-        // 14 festivos 2026 (San Javier), todos abiertos 11–22 con tarifa especial.
+        // 14 festivos 2026 (calendario de ejemplo), todos abiertos 11–22 con tarifa especial.
         $specialId = RateType::where('key', RateType::KEY_SPECIAL)->value('id');
         $holidays = SpecialDate::all();
         $this->assertCount(14, $holidays);
         $this->assertSame(0, $holidays->where('is_closed', true)->count(), 'ninguno cerrado por defecto');
         $this->assertTrue($holidays->every(fn (SpecialDate $d) => (int) $d->rate_type_id === (int) $specialId));
         $dates = $holidays->map(fn (SpecialDate $d) => $d->date->toDateString());
-        $this->assertTrue($dates->contains('2026-02-03'));  // fiesta local San Javier
+        $this->assertTrue($dates->contains('2026-02-03'));  // fiesta local (ejemplo)
         $this->assertTrue($dates->contains('2026-06-09'));  // Día de la Región de Murcia
     }
 
@@ -150,13 +150,13 @@ class ProductionSeederTest extends TestCase
 
     public function test_business_settings_reflect_san_javier(): void
     {
-        $this->assertSame('San Javier', Setting::value('business.city'));
+        $this->assertSame('Villaparque', Setting::value('business.city'));
         $this->assertSame('21', Setting::value('payment.tax_rate'));
         $this->assertSame('5', Setting::value('packs.max_per_slot'), '5 cumpleaños por franja');
         $this->assertSame('0', Setting::value('packs.max_guests_per_slot'), 'sin tope total de niños');
-        $this->assertSame('https://jumpingjump.web.hipos.es', Setting::value('registration.url'), 'waiver externo');
-        $this->assertStringStartsWith('https://maps.app.goo.gl/', Setting::value('address.maps_url'));
-        $this->assertStringContainsString('San Javier', Setting::value('address.line2'));
+        $this->assertSame('', Setting::value('registration.url'), 'sin sistema externo: modal interno');
+        $this->assertSame('', Setting::value('address.maps_url'), 'mapa vacío hasta configurar');
+        $this->assertStringContainsString('Villaparque', Setting::value('address.line2'));
     }
 
     public function test_birthday_cancellation_policy_and_jurisdiction_are_published(): void
@@ -168,13 +168,21 @@ class ProductionSeederTest extends TestCase
         $terms->assertSee('hasta 3 días naturales antes');
         $terms->assertDontSee('detallar plazos, condiciones de no-show');
 
-        // Fuero/jurisdicción = San Javier (Murcia); sin marcador pendiente.
-        $terms->assertSee('los juzgados y tribunales de San Javier (Murcia)');
+        // Fuero/jurisdicción: token :jurisdiction (Fase 1, DECISIONES #12) — la semilla neutra
+        // lo deja [PENDIENTE], que LegalIdentity interpola como «[pendiente]» (patrón fiscal).
+        $terms->assertSee('los juzgados y tribunales de [pendiente]');
         $terms->assertDontSee('fuero/población');
+        $terms->assertDontSee(':jurisdiction'); // el token NUNCA llega crudo a la página
 
         $notice = $this->get('/aviso-legal')->assertOk();
-        $notice->assertSee('San Javier (Murcia)');
-        $notice->assertDontSee('fuero/jurisdicción');
+        $notice->assertSee('los juzgados y tribunales de [pendiente]');
+        $notice->assertDontSee(':jurisdiction');
+
+        // Y con el setting configurado, el fuero real se publica en ambas páginas.
+        Setting::updateOrCreate(['key' => 'legal.jurisdiction'], ['value' => 'Villaparque (España)', 'group' => 'business']);
+        Setting::flushMemo();
+        $this->get('/condiciones')->assertOk()->assertSee('los juzgados y tribunales de Villaparque (España)');
+        $this->get('/aviso-legal')->assertOk()->assertSee('Villaparque (España)');
     }
 
     public function test_reseeding_aborts_when_orders_exist_to_prevent_data_loss(): void

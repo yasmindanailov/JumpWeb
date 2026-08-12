@@ -109,7 +109,7 @@ class AccountController extends Controller
         ];
 
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $filename = 'jumpingjump-mis-datos-'.now()->format('Y-m-d').'.json';
+        $filename = 'mis-datos-'.now()->format('Y-m-d').'.json';
 
         return response($json, 200, [
             'Content-Type' => 'application/json',

@@ -24,7 +24,7 @@ Artisan::command('inspire', function () {
  *
  * En PRODUCCIÓN (Fase 9): para que esto se ejecute, el servidor debe tener un cron que
  * llame a `php artisan schedule:run` cada minuto. En Enhance, configurar:
- *   `* * * * * cd /var/www/jumpingjump && php artisan schedule:run >> /dev/null 2>&1`
+ *   `* * * * * cd /var/www/<instalacion> && php artisan schedule:run >> /dev/null 2>&1`
  * Documentado en `docs/PLAN-REDSYS.md §14` y en `docs/ESTADO.md`.
  *
  * `withoutOverlapping()`: si una ejecución tarda más de 5 min (caso patológico, BD muy

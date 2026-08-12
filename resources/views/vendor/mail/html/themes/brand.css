@@ -1,5 +1,5 @@
 /* ====================================================================
-   Tema de email Jumpingjump — coherente con el sistema visual de la web.
+   Tema de email del producto (brand) — coherente con el sistema visual de la web.
    Sigue los tokens del mockup (landing.css :root): bg crema, fg casi negro,
    acento naranja (zona Jump). Tipografía: Space Grotesk (web) con fallback
    a system-ui — los webfonts no son fiables en muchos clientes de email
@@ -122,7 +122,7 @@ img {
     width: 100%;
 }
 
-/* Header — wordmark "JUMPINGJUMP." (replica del nav, sin imagen para que renderice igual
+/* Header — wordmark del negocio (replica del nav, sin imagen para que renderice igual
    en clientes que bloquean imágenes — convención de email transaccional). El punto final
    y el "block" visual del nav los simplificamos a un punto sólido en el color de marca. */
 

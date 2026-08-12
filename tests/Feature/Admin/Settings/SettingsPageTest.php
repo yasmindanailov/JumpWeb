@@ -31,9 +31,9 @@ class SettingsPageTest extends TestCase
 
         // Baseline válido para los campos obligatorios + los secretos/contador a proteger.
         $seed = [
-            ['business.name', 'Jumpingjump', 'business'],
+            ['business.name', 'SaltoPark', 'business'],
             ['business.legal_name', '[PENDIENTE]', 'business'],
-            ['contact.email', 'hola@jumpingjump.es', 'contact'],
+            ['contact.email', 'hola@saltopark.example', 'contact'],
             ['sales.hold_minutes', '15', 'payment'],
             ['sales.purchase_horizon_months', '6', 'payment'],
             ['puerta.validate_rate_limit_per_minute', '100', 'puerta'],
@@ -113,8 +113,8 @@ class SettingsPageTest extends TestCase
     {
         Livewire::actingAs($this->admin())
             ->test(Settings::class)
-            ->assertSet('data.business.name', 'Jumpingjump')
-            ->assertSet('data.contact.email', 'hola@jumpingjump.es')
+            ->assertSet('data.business.name', 'SaltoPark')
+            ->assertSet('data.contact.email', 'hola@saltopark.example')
             ->assertSet('data.sales.hold_minutes', '15')
             ->assertSet('data.redsys_environment', 'test') // clave plana (sin punto) → estado plano
             ->assertSet('data.packs.prep_blocks_cupo', true); // '1' → bool
@@ -127,14 +127,14 @@ class SettingsPageTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(Settings::class)
             ->fillForm([
-                'business.name' => 'Jumpingjump Murcia',
-                'contact.email' => 'info@jumpingjump.es',
+                'business.name' => 'SaltoPark Villaparque',
+                'contact.email' => 'info@saltopark.example',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('Jumpingjump Murcia', Setting::value('business.name'));
-        $this->assertSame('info@jumpingjump.es', Setting::value('contact.email'));
+        $this->assertSame('SaltoPark Villaparque', Setting::value('business.name'));
+        $this->assertSame('info@saltopark.example', Setting::value('contact.email'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'settings.updated']);
     }
 
@@ -412,7 +412,7 @@ class SettingsPageTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(Settings::class)
             ->fillForm([
-                'business.name' => 'JJ San Javier',   // pestaña «Tu negocio» (Identidad)
+                'business.name' => 'SaltoPark Centro',   // pestaña «Tu negocio» (Identidad)
                 'business.nif' => 'B12345678',         // pestaña «Datos fiscales»
                 'payment.tax_rate' => 10,              // pestaña «Datos fiscales» (IVA)
                 'catalog.search_min_items' => 8,       // pestaña «Textos y aspecto web» (Aspecto)
@@ -421,7 +421,7 @@ class SettingsPageTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('JJ San Javier', Setting::value('business.name'));
+        $this->assertSame('SaltoPark Centro', Setting::value('business.name'));
         $this->assertSame('B12345678', Setting::value('business.nif'));
         $this->assertSame('10', Setting::value('payment.tax_rate'));
         $this->assertSame('8', Setting::value('catalog.search_min_items'));

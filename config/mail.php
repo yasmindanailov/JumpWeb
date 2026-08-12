@@ -121,7 +121,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Tema CSS de los correos generados por `MailMessage` / Markdown mail.
-    | `jumpingjump` (en `resources/views/vendor/mail/html/themes/`) replica
+    | `brand` (en `resources/views/vendor/mail/html/themes/`) replica
     | los tokens del sistema visual de la web: bg crema, fg casi negro,
     | acento naranja (zona Jump). Coherente con la marca, sin dependencias.
     | Personalización futura desde el panel admin: paleta editable
@@ -130,7 +130,7 @@ return [
     */
 
     'markdown' => [
-        'theme' => 'jumpingjump',
+        'theme' => 'brand',
 
         'paths' => [
             resource_path('views/vendor/mail'),

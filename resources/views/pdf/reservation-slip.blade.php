@@ -216,7 +216,7 @@
     <table>
         <tr>
             <td style="width: 55%;">
-                <div class="wordmark">JUMPINGJUMP<span class="dot">.</span></div>
+                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
                 <div class="doc-title">{{ __('admin.orders.slip.title') }}</div>
             </td>
             <td style="width: 45%; text-align: right;">

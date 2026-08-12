@@ -56,7 +56,7 @@ class RedsysReturnHandlerTest extends TestCase
         Setting::create(['key' => 'redsys_terminal', 'value' => '001', 'group' => 'payment']);
         Setting::create(['key' => 'redsys_secret_key', 'value' => self::SANDBOX_KEY, 'group' => 'payment']);
         Setting::create(['key' => 'redsys_currency', 'value' => '978', 'group' => 'payment']);
-        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'Jumpingjump', 'group' => 'payment']);
+        Setting::create(['key' => 'redsys_merchant_name', 'value' => 'SaltoPark', 'group' => 'payment']);
 
         $this->redsys = new Redsys;
         $this->handler = new RedsysReturnHandler($this->redsys);
@@ -547,7 +547,7 @@ class RedsysReturnHandlerTest extends TestCase
         // avisa por email al operador (al contact.email por fallback).
         Notification::fake();
         Mail::fake();
-        Setting::create(['key' => 'contact.email', 'value' => 'operador@jumpingjump.test', 'group' => 'contact']);
+        Setting::create(['key' => 'contact.email', 'value' => 'operador@jumpweb.test', 'group' => 'contact']);
 
         [$p1, $user] = $this->setupPaidableOrder();
         $order = $p1->payable;
@@ -583,7 +583,7 @@ class RedsysReturnHandlerTest extends TestCase
         // de la petición de notificación de Redsys → assertQueued.
         Mail::assertQueued(
             PaymentIncidentMail::class,
-            fn (PaymentIncidentMail $mail): bool => $mail->hasTo('operador@jumpingjump.test')
+            fn (PaymentIncidentMail $mail): bool => $mail->hasTo('operador@jumpweb.test')
         );
     }
 
