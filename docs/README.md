@@ -14,6 +14,8 @@
 | `DEUDA.md` | Registro único de deuda técnica con severidad, medida y fase que la retira. |
 | `INSTALACION-CLIENTE.md` | Checklist de instanciar un cliente white-label (settings, tema, contenido, Redsys, cron). |
 | `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
+| `specs/vocabulario-dominio.md` | 🟦 Diseño de generalización del vocabulario (entrada de Fase 2; decisión final con los módulos). |
+| `specs/modulos-dominio.md` | ✅ Arquitectura de módulos de Fase 2 APROBADA (revisión multi-agente) — orden, contratos y checklists de mudanza. |
 
 ## Base heredada (adaptada del proyecto origen el 2026-08-12)
 > Describen la base tal como se heredó; el refactor puede haberlas cambiado.

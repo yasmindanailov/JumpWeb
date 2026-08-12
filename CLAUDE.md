@@ -46,7 +46,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 ## ⚡ Enrutado de contexto — LEE SOLO LO QUE NECESITES
 | Si trabajas en… | Lee solo |
 |---|---|
-| Refactor (fases, alcance, arquitectura objetivo) | `docs/00-REFACTOR.md` · `docs/DECISIONES.md` (busca por tema; #1–#4 = fundacionales) |
+| Refactor (fases, alcance, arquitectura objetivo) | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` (Fase 2) · `docs/DECISIONES.md` (busca por tema) |
 | Dinero / pagos / Redsys / reembolsos | **`docs/INVARIANTES.md` §1 (PAY) + §6 (SUITE)** · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
 | Aforo / franjas / disponibilidad / calendario | **`docs/INVARIANTES.md` §2 (AFORO)** · `docs/MODELO-DATOS.md` §1 · `docs/FLUJOS.md` (flujos 3–4) |
