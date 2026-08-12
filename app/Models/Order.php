@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Concerns\GuardsItemRefunds;
+use App\Domain\Payments\Concerns\OrderRefundFlags;
 use App\Domain\Payments\Contracts\RefundGateway;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Models\Concerns\HasItemActionGuards;
 use App\Models\Concerns\OrderOperativeStatus;
-use App\Models\Concerns\OrderRefundFlags;
 use App\Support\OrderFinancialSummary;
 use App\Support\ReservationFinancials;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +29,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Order extends Model
 {
+    use GuardsItemRefunds;
     use HasItemActionGuards;
     use OrderOperativeStatus;
     use OrderRefundFlags;

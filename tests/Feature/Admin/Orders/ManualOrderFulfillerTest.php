@@ -3,10 +3,10 @@
 namespace Tests\Feature\Admin\Orders;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\Ticket;

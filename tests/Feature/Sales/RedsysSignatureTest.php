@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\Redsys\Vendor\Utils;
 use App\Domain\Platform\Models\Setting;
-use App\Support\Redsys;
-use App\Support\Redsys\Vendor\Utils;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
  * Fase 5.5a — Cimientos cripto Redsys (HMAC_SHA512_V2 + AES-128-CBC).
  *
- * Verifica empíricamente que el envoltorio `App\Support\Redsys` reproduce la firma de la
+ * Verifica empíricamente que el envoltorio `App\Domain\Payments\Services\Redsys` reproduce la firma de la
  * librería oficial PHP v2.0 (clase `Signature` vendorizada bajo `app/Support/Redsys/Vendor/`),
  * que la cripto va por OpenSSL (no mcrypt, no 3DES) y que el contador atómico de
  * `gateway_order` no reusa valores. Ver `docs/PLAN-REDSYS.md` §13 (capa 5.5a) y

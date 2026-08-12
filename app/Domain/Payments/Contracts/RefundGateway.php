@@ -2,7 +2,7 @@
 
 namespace App\Domain\Payments\Contracts;
 
-use App\Models\Payment;
+use App\Domain\Payments\Models\Payment;
 
 /**
  * Devolución de dinero al cliente a través de la pasarela — la ÚNICA superficie de
@@ -20,7 +20,7 @@ use App\Models\Payment;
  * banco) se normaliza en un `RefundResult` con `success=false`. El orquestador de
  * Booking es un flujo lineal sin try/catch y esa garantía es parte del contrato.
  *
- * Implementación actual: `App\Support\Redsys` (bind en `PaymentsServiceProvider`;
+ * Implementación actual: `App\Domain\Payments\Services\Redsys` (bind en `PaymentsServiceProvider`;
  * viaja a `App\Domain\Payments` en el paso 5). La abstracción multi-proveedor
  * (`PaymentProvider`, Stripe y otros) es de Fase 3 — este contrato es su semilla.
  *

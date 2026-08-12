@@ -202,6 +202,43 @@ mover la factory o registrar un resolver antes de tocar `User`.
    naturaleza. El diseño limpio sería que Identity emitiera «usuario anonimizado» y cada
    contexto borrase lo suyo. Anotado en `SEAM` con su porqué para que la decisión exista.
 
+## 4.sexies Paso 5 EJECUTADO (2026-08-12) — Payments: el dinero, sin tocar el dinero
+12 clases + la partición del trait de guardas. Regla que gobernó el paso: **es una MUDANZA**;
+ni una línea de lógica de cobro o reembolso podía cambiar en el mismo commit (§2 + `INVARIANTES`
+§1). Lo relevante (`DECISIONES #18`):
+
+1. **El trait se partió limpio porque las dos mitades no compartían nada.** `HasItemActionGuards`
+   mezclaba editar/cancelar item (BOOKING: liberan plaza y NO tocan la pasarela, #157/#172) con
+   reembolsar item (PAYMENTS). Se comprobó ANTES de cortar: `refundItemBlockedReason` **no**
+   llama a `editItemBlockedReason` —repite a propósito sus dos comprobaciones— y el único helper
+   privado, `hasAnyRefundableItemOrChild`, lo usa solo la mitad de refund. Corte sin solapes:
+   `App\Domain\Payments\Concerns\GuardsItemRefunds` (3 métodos) y el resto se queda en
+   Booking. `Order` compone los dos traits; su superficie pública se verificó por reflexión.
+2. **La costura del dinero ya no se esconde: se lee en el test.** Antes, con todo en un
+   namespace plano, Payments↔Booking era invisible. Ahora está enumerada en las dos direcciones
+   y con su naturaleza:
+   · **Payments→Booking** (`SEAM`): FKs y tipos (`payment_refunds.order_item_id`, las firmas de
+     las guardas) **y ORQUESTACIÓN** — `RedsysReturnHandler` es por `PAY-01` el único autorizado
+     a pasar una Order a `paid`, y por `PAY-03` dispara `TicketIssuer`. Es decir, hoy Payments
+     conduce el ciclo de vida de la reserva. El diseño limpio sería «pago confirmado» como
+     evento y Booking reaccionando — pero eso es reestructurar el núcleo endurecido, prohibido
+     en este paso. **Candidato nº1 a evento de dominio** cuando haya motivo real.
+   · **Booking→Payments** (`PENDING`, 11 flechas): `Order` es el punto de encuentro (lleva los
+     dos traits y navega a sus `Payment`/`PaymentRefund`), y `PaymentSettings` lo consumen
+     `OrderCreator`, `SlotOffer` y `SlotGenerator` porque de ahí sale la ventana de retención
+     del pedido — config de pago que Booking necesita para fijar `expires_at`; candidata a
+     contrato en el paso 6.
+3. **La baseline ENCOGIÓ por primera vez**, que es su único movimiento legal: `RefundGateway`→
+   `Payment` y `PaymentsServiceProvider`→`Redsys` dejaron de ser legacy (ambas clases viven ya
+   dentro de Payments) y el guard «solo encoge» habría fallado de no borrarlas.
+
+**Verificación de dinero** (además de la suite): `redsys:verify-concurrency` y
+`purchase:verify-oversell` en verde sobre MySQL real, y los 382 tests de refund/pago/Redsys.
+NO se corrió `redsys:verify-sandbox`: ejecuta una devolución REAL contra el TPV de sandbox de
+Redsys (efecto externo) y no hace falta para una mudanza — `PAY-08` lo cubre
+`OrderExecutePartialRefundTest::test_rest_refund_with_unsigned_response_is_rejected_not_accepted`.
+Queda a decisión del owner si quiere esa pasada extra.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
@@ -225,8 +262,11 @@ mover la factory o registrar un resolver antes de tocar `User`.
    `CustomerAccountContext`, `PuertaSettings`, `PermissionCatalog`). `User` es kernel
    compartido: vive en Identity y es exención con nombre en el arch-test (`SHARED_KERNEL`). La
    «puerta» es capa de entrega (`Livewire\Admin\Puerta`) y se queda donde está.
-5. **Payments** (`VERIFY_CONC=1`): `Redsys*`, `RedsysReturnHandler`, `PaymentRefund`,
-   `IncidentSettings`, `OrderRefundFlags` + split del trait de guards.
+5. ✅ **Payments** (2026-08-12, `VERIFY_CONC=1`, ver §4.sexies): `Models/`(`Payment`,
+   `PaymentRefund`) · `Services/`(`Redsys` + `Redsys/Vendor/*`, `RedsysReturnHandler`,
+   `RedsysCardCodes`, `RedsysResponseCode`, `RedsysReturnOutcome`, `PaymentSettings`,
+   `IncidentSettings`) · `Concerns/`(`OrderRefundFlags`, `GuardsItemRefunds` ← mitad refund
+   del trait partido).
 6. **Booking** (lo más referenciado, al final; `VERIFY_CONC=1` + verify-comandos):
    `Order`/`OrderItem`/`Ticket`/`TicketType`/`Slot*`/`Price`/`RateType`…, `OrderCreator`,
    `SlotOffer`, `*Availability`, `AddonResolver`, `TicketIssuer`, `OperatingSchedule`.

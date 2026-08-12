@@ -31,7 +31,7 @@
      * Lectura sin N+1: eager-load de items.children.ticketType + slot + adjustments
      * + payments.refunds (abajo, defensivo).
      */
-    use App\Models\PaymentRefund;
+    use App\Domain\Payments\Models\PaymentRefund;
 
     $s = $record->financialSummary();
 
@@ -64,7 +64,7 @@
     // Bruto realmente pagado por web (ancla de conciliación con el banco). Deposit-aware (#225):
     // es lo COBRADO ONLINE (Σ payments pagados), NO `Order.total` (que con señal es el valor
     // pleno, no lo que entró por web → el caption decía «pagó 180» cuando solo se cobró la señal).
-    $brutoOnline = (int) $record->payments->where('status', \App\Models\Payment::STATUS_PAID)->sum('amount');
+    $brutoOnline = (int) $record->payments->where('status', \App\Domain\Payments\Models\Payment::STATUS_PAID)->sum('amount');
 
     // Incluye el pendiente en puerta de la SEÑAL (#225): un pedido de solo-señal también
     // tiene desglose (Pagado online / A cobrar en el parque), no «solo Total».
@@ -113,7 +113,7 @@
     // ── P4 (display): ¿cómo se pagó? online (Redsys) o manualmente (efectivo/datáfono) + fecha ──
     // Online → fecha del cobro (`paid_at`); manual → fecha de creación del pedido (no hay timestamp
     // fiable del cobro presencial). Si no hay pago confirmado → pendiente.
-    $paidPayment = $record->payments->firstWhere('status', \App\Models\Payment::STATUS_PAID);
+    $paidPayment = $record->payments->firstWhere('status', \App\Domain\Payments\Models\Payment::STATUS_PAID);
     $isPaidOnline = $paidPayment && $paidPayment->provider === 'redsys';
     $paymentDate = $paidPayment
         ? ($isPaidOnline ? ($paidPayment->paid_at ?? $paidPayment->created_at) : $record->created_at)

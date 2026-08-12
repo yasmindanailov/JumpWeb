@@ -4,8 +4,8 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1–4 hechos; quedan Payments y Booking (el dinero, al final).**
-- Suite **2177 en verde** (8162 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1–5 hechos; queda BOOKING (paso 6) y el cierre (paso 7).**
+- Suite **2191 en verde** (8190 aserciones, `--parallel` ~1m12s) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
   dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
@@ -77,6 +77,18 @@
      - **La supresión RGPD cruza contextos** (`User::purge…` vacía PII de terceros en
        `order_items`): anotado en `SEAM`; el diseño limpio (evento «usuario anonimizado») queda
        para más adelante.
+  8. **PASO 5 — Payments MUDADO** (`DECISIONES #18`, spec §4.sexies): 12 clases en
+     `app/Domain/Payments/{Models,Services,Concerns}` + la **partición** de
+     `HasItemActionGuards` (mitad refund → `GuardsItemRefunds`). **MUDANZA PURA**: ni una línea
+     de lógica de dinero cambió; `INVARIANTES §1` y `§6` leídas antes de tocar.
+     - **La costura del dinero ya no se esconde**: enumerada en el arch-test en las DOS
+       direcciones. Payments→Booking incluye ORQUESTACIÓN — `RedsysReturnHandler` es por
+       `PAY-01` el único que pasa una Order a `paid` y por `PAY-03` dispara `TicketIssuer`:
+       hoy Payments conduce el ciclo de vida de la reserva. **Candidato nº1 a evento de
+       dominio**, cuando haya motivo (reestructurar el núcleo estaba prohibido aquí).
+     - **La baseline ENCOGIÓ por primera vez** (su único movimiento legal): las 2 entradas de
+       `RefundGateway`/`PaymentsServiceProvider` dejaron de ser legacy. El mecanismo del paso 1
+       funcionó tal cual se diseñó.
 - Fase 1 cerrada esta misma sesión: marca a 6 líneas intencionales, prefijo de pedidos =
   setting `sales.order_prefix` (default `R-`), semilla neutra «SaltoPark», jurisdicción
   legal por token, wordmark data-driven (`DECISIONES #12`).
@@ -88,27 +100,35 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**Spec de módulos, PASO 5 — mudar Payments** (leer `docs/specs/modulos-dominio.md` §5.5 y el
-**checklist mecánico** del final de §5): `Redsys` + `Redsys/Vendor/*`, `RedsysReturnHandler`,
-`RedsysCardCodes`, `RedsysResponseCode`, `RedsysReturnOutcome`, `PaymentSettings`,
-`IncidentSettings`, modelos `Payment` y `PaymentRefund`, y el trait `OrderRefundFlags` + la
-mitad «refund» de `HasItemActionGuards` (el trait se PARTE aquí, spec §4).
+**Spec de módulos, PASO 6 — mudar BOOKING** (leer `docs/specs/modulos-dominio.md` §5.6 y el
+**checklist mecánico** del final de §5). Es el paso más grande y el último de mudanza: todo lo
+que queda en `app/Models` y `app/Support` es Booking.
 
-**Es el primer paso que toca DINERO.** Reglas duras:
-- `RedsysReturnHandler` está en `CRITICAL_RE` → el push exigirá **`VERIFY_CONC=1`** tras correr
-  `redsys:verify-concurrency` y `purchase:verify-oversell` sobre MySQL real (`INVARIANTES §6`).
-- Antes de tocar nada, lee **`INVARIANTES.md` §1 (PAY)** y **§6 (SUITE)**.
-- Es una MUDANZA: ni una línea de lógica de cobro/reembolso debe cambiar en el mismo commit.
+**Reglas duras** (toca dinero Y aforo):
+- Tocará `OrderCreator` y `SlotGenerator` (ambos en `CRITICAL_RE`) → push con **`VERIFY_CONC=1`**
+  tras `redsys:verify-concurrency` y `purchase:verify-oversell` sobre MySQL real.
+- Lee **`INVARIANTES.md` §1 (PAY) y §2 (AFORO)** antes de tocar. `AFORO-01` (el lock con
+  `zone_id` LITERAL como primera sentencia de la txn) es el invariante más sutil del repo:
+  **no reordenes nada dentro de `OrderCreator::lockSlots`**, solo su namespace/imports.
+- MUDANZA PURA, como el paso 5.
+- Renombre pendiente del spec: `ParkSchedule` → `OperatingSchedule` (la CLASE; comprueba si hay
+  tabla/alias que congelar, como se hizo con `ParkRule`→`VenueRule`).
 
-**Paso 0 primero** (comando):
-`docker compose exec -u sail laravel.test php scripts/module-deps.php Redsys RedsysReturnHandler PaymentSettings IncidentSettings Payment PaymentRefund`
-Ya se sabe de estas INVISIBLES: `Redsys`→`PaymentSettings`; `RedsysReturnHandler`→`Redsys`,
-`RedsysReturnOutcome`, `TicketIssuer`(Booking), `IncidentSettings`; `Signature`→`Utils`;
-`Payment`→`PaymentRefund`; `PaymentRefund`→`Payment`, `OrderItem`(Booking), `User`.
+**Paso 0 primero**: `php scripts/module-deps.php` (sin argumentos) lista TODO lo que queda con
+sus dependencias invisibles. Ya se sabe que `OrderCreator` arrastra 8 invisibles y `SlotOffer` 4.
 
-Al terminar, dos entradas de baseline deben ENCOGER (el test lo exige):
-`Payments/Contracts/RefundGateway.php`→`App\Models\Payment` y
-`Payments/PaymentsServiceProvider.php`→`App\Support\Redsys`.
+**Al terminar, TRES cosas deben ENCOGER o desaparecer** (el test lo exige):
+1. `PENDING` entera: cuando Booking mude, sus 11 flechas hacia Payments pasan a `SEAM` como
+   costura entre módulos, y las 3 de Content/Booking se resuelven.
+2. `LEGACY`: las 5 entradas de Content→Booking obligan a la decisión que se aplazó en el paso 3 —
+   **contrato de Booking** para calendario/zona/precio, **o reclasificar el calendario**
+   (`OpeningHour`/`Season`/`SpecialDate`/`ParkSchedule`): lo consumen la landing (horarios, SEO)
+   y Booking (franjas) por igual, así que puede que sea del RECINTO y no de Booking. Ahora sí
+   están todos los datos para decidirlo.
+3. `Booking/BookingServiceProvider.php` → sus dos readers legacy en `app/Support`.
+
+Después queda el **paso 7 (cierre)**: retirar `app/Support`/`app/Models` vacíos, baseline final,
+y reescribir `ARQUITECTURA.md` §4 y las rutas citadas en la doc.
 
 Cada paso del spec = una unidad de sesión con suite verde.
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer

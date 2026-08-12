@@ -2,10 +2,10 @@
 
 namespace App\Support;
 
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentRefund;
 use App\Models\Order;
 use App\Models\OrderAdjustment;
-use App\Models\Payment;
-use App\Models\PaymentRefund;
 
 /**
  * Resumen financiero canónico de un Order (sub-fase 7.2e cimientos).

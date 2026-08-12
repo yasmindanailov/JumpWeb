@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Payments\Services;
 
 /**
  * Traduce el código `Ds_Response` de Redsys (Anexo 2 del manual oficial, verificado en

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Payments\Services;
 
 /**
  * Resultado tipado del procesamiento de una vuelta o notificación de Redsys

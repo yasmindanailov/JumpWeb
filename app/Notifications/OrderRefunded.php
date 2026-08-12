@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Domain\Payments\Models\Payment;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Support\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
-use App\Support\Redsys;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

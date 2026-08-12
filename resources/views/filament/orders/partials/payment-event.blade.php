@@ -1,8 +1,8 @@
 @php
-    use App\Models\Payment;
+    use App\Domain\Payments\Models\Payment;
     use App\Domain\Platform\Services\DisplayTime;
-    use App\Support\RedsysCardCodes;
-    use App\Support\RedsysResponseCode;
+    use App\Domain\Payments\Services\RedsysCardCodes;
+    use App\Domain\Payments\Services\RedsysResponseCode;
 
     /** @var Payment $payment */
     /** @var \Closure $fmtAmount */

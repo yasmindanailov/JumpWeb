@@ -254,3 +254,34 @@ Ambas verificadas por mutación: `Identity\Models\Role` (que NO es kernel) sigue
 relación Eloquent sino una operación transversal por naturaleza; el diseño limpio sería que
 Identity emitiera «usuario anonimizado» y cada contexto borrase lo suyo. Anotado en `SEAM` con su
 porqué para que la decisión exista y no se pierda en el paso 6.
+
+## #18 · 2026-08-12 · Paso 5 (Payments): mudar el dinero sin tocarlo, y la costura al descubierto
+Ejecutado `docs/specs/modulos-dominio.md` §5.5 (detalle en §4.sexies). Regla que gobernó el paso:
+**es una MUDANZA** — ni una línea de lógica de cobro o reembolso podía cambiar en el mismo commit
+(§2 + `INVARIANTES` §1, leídas antes de tocar nada). Decidido:
+**(a) El trait `HasItemActionGuards` se parte, y se comprobó que el corte era limpio ANTES de
+cortar.** Mezclaba editar/cancelar item (BOOKING: liberan plaza y NO tocan la pasarela, #157/#172)
+con reembolsar item (PAYMENTS). Verificado: `refundItemBlockedReason` **no** llama a
+`editItemBlockedReason` (repite a propósito sus dos comprobaciones con distinto criterio) y el
+único helper privado lo usa solo la mitad de refund → sin solapes. Resultado:
+`App\Domain\Payments\Concerns\GuardsItemRefunds` (3 métodos) + el resto en Booking; `Order`
+compone ambos traits y su superficie pública se verificó por reflexión (9 métodos presentes).
+**(b) La costura del dinero queda ENUMERADA, no escondida.** Con todo en un namespace plano,
+Payments↔Booking era invisible; ahora está en el arch-test con su naturaleza:
+· **Payments→Booking** (`SEAM`): FKs/tipos **y ORQUESTACIÓN** — `RedsysReturnHandler` es por
+`PAY-01` el ÚNICO autorizado a pasar una Order a `paid` y por `PAY-03` dispara `TicketIssuer`.
+Hoy Payments conduce el ciclo de vida de la reserva. El diseño limpio sería «pago confirmado»
+como evento de dominio y Booking reaccionando; reestructurar el núcleo endurecido está prohibido
+en este paso, así que queda anotado como **candidato nº1 a evento** cuando haya motivo real.
+· **Booking→Payments** (`PENDING`, 11 flechas): `Order` es el punto de encuentro, y
+`PaymentSettings` lo consumen `OrderCreator`/`SlotOffer`/`SlotGenerator` porque de ahí sale la
+ventana de retención del pedido — candidata a contrato en el paso 6.
+**(c) La baseline ENCOGIÓ por primera vez**, su único movimiento legal: `RefundGateway`→`Payment`
+y `PaymentsServiceProvider`→`Redsys` dejaron de ser legacy al mudar sus clases dentro de Payments,
+y el guard «solo encoge» habría fallado de no borrarlas. El mecanismo del paso 1 funcionó tal cual
+se diseñó.
+**(d) NO se corrió `redsys:verify-sandbox`.** Ejecuta una devolución REAL contra el TPV sandbox de
+Redsys: es un efecto externo y no aporta a una mudanza. `PAY-08` (firma obligatoria en la respuesta
+REST) lo cubre `OrderExecutePartialRefundTest::test_rest_refund_with_unsigned_response_is_rejected_not_accepted`.
+Sí se corrieron los dos obligatorios (`redsys:verify-concurrency`, `purchase:verify-oversell`) sobre
+MySQL real. Queda a decisión del owner si quiere esa pasada extra contra el sandbox.

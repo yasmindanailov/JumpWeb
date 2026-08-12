@@ -147,8 +147,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       guardado por `FactoryResolutionTest`. El arch-test ganó dos exenciones **con nombre**:
       `SHARED_KERNEL` (`User`, ya declarado kernel compartido en el spec §4) y `OUTBOUND`
       (`Notifications`/`Mail`, el canal de salida del framework). Suite 2177 verde.
-- [ ] Pasos 5–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
-      como red (sin big-bang: Payments → Booking; el dinero, EL ÚLTIMO).
+- [x] **Paso 5 — Payments mudado** (2026-08-12, `DECISIONES #18`; spec §4.sexies): 12 clases a
+      `app/Domain/Payments/{Models,Services,Concerns}` (`Payment`, `PaymentRefund`, `Redsys` +
+      `Redsys/Vendor/*`, `RedsysReturnHandler`, `RedsysCardCodes`, `RedsysResponseCode`,
+      `RedsysReturnOutcome`, `PaymentSettings`, `IncidentSettings`, `OrderRefundFlags`) + la
+      **partición del trait** `HasItemActionGuards` (mitad refund → `GuardsItemRefunds`; corte
+      verificado sin solapes antes de cortar). MUDANZA PURA: ni una línea de lógica de dinero.
+      La **costura Payments↔Booking** queda enumerada en el arch-test en las dos direcciones,
+      incluida la orquestación (`RedsysReturnHandler` conduce el ciclo de vida de la Order por
+      `PAY-01`/`PAY-03`) → candidato nº1 a evento de dominio. La baseline **encogió** por primera
+      vez. Suite 2191 verde + los dos verificadores de concurrencia en verde sobre MySQL real.
+- [ ] Paso 6 — mudar Booking (lo más referenciado, al final) + paso 7 de cierre.
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

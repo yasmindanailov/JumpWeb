@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerRegistrar;
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Exceptions\ReservationException;
 use App\Filament\Resources\Orders\OrderResource;
@@ -11,7 +12,6 @@ use App\Models\TicketType;
 use App\Support\AddonResolver;
 use App\Support\ManualOrderFulfiller;
 use App\Support\PackAvailability;
-use App\Support\PaymentSettings;
 use App\Support\RateResolver;
 use App\Support\SlotAvailability;
 use App\Support\SlotOffer;

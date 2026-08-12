@@ -158,7 +158,8 @@ fecha lo pone cada llamador). El aforo real se cuenta por OCUPACIÓN desde los p
 
 Relaciones: `hasMany OrderItem/Ticket/OrderAdjustment` · `morphMany Payment` · `belongsTo User`.
 Traits: `OrderOperativeStatus` (estado operativo CALCULADO `active|in_progress|finished`, no
-persistido), `OrderRefundFlags`, `HasItemActionGuards` (guardas `can{Edit,Cancel,Refund}Item` +
+persistido), `OrderRefundFlags` y `GuardsItemRefunds` (Payments), `HasItemActionGuards` (Booking:
+guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments en Fase 2 paso 5) +
 `*BlockedReason`). Métodos financieros clave: `financialSummary()`
 (`App\Support\OrderFinancialSummary`), `executeFullRefund`, `executePartialRefund[Batch]`,
 `applyExtraDue`/`applyGateCredit`/`applyDepositRemainderCredit`, `pendingAtGateLines`,
@@ -345,6 +346,6 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 | Disponibilidad producto | `App\Support\ProductAvailability` |
 | Creación de pedido | `App\Support\OrderCreator` (precio en servidor, retención `expires_at`, código único) |
 | Complementos | `App\Support\AddonResolver` (incluidos/obligatorios/grupos/requires, a punto fijo) |
-| Pago/retorno | `App\Support\Redsys*` + `RedsysReturnHandler` (firma, idempotencia, incidencias) |
+| Pago/retorno | `App\Domain\Payments\Services\Redsys*` + `RedsysReturnHandler` (firma, idempotencia, incidencias) |
 | Emisión de entradas | `App\Support\TicketIssuer` (al pasar a `paid`) |
 | Auditoría | `App\Domain\Platform\Services\AuditLogger::log()` |

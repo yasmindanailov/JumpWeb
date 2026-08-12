@@ -82,9 +82,9 @@ Códigos frecuentes: `0900` devolución autorizada · `0101` caducada · `0129` 
 `0180` tarjeta ajena · `0184` fallo 3DS · `0190` denegación del emisor · `0913` **pedido
 repetido** (reutilización de `gateway_order` — bug nuestro) · `9915` cancelado por el usuario ·
 `9998/9999` transitorios. El mapeo código → categoría → clave i18n para el cliente vive en
-`App\Support\RedsysResponseCode` (traducciones en `lang/{es,en,fr}/tickets.php` →
+`App\Domain\Payments\Services\RedsysResponseCode` (traducciones en `lang/{es,en,fr}/tickets.php` →
 `payment_failed.reasons.*`; códigos no mapeados caen a `default`, nunca se muestra el número
-crudo). Marca/país de tarjeta para el panel: `App\Support\RedsysCardCodes`.
+crudo). Marca/país de tarjeta para el panel: `App\Domain\Payments\Services\RedsysCardCodes`.
 
 ## 5. ⚠️ `DS_MERCHANT_ORDER` (`payments.gateway_order`) — punto crítico
 Formato Redsys: **máx 12 chars, los 4 primeros NUMÉRICOS**, resto `[0-9A-Za-z]`, **único por
@@ -103,8 +103,8 @@ comercio+terminal, para siempre** (reutilizar → `0913`). El código legible de
   CAST). Autorrepara cualquier desincronización.
 
 ## 6. Firma (librería oficial v2.0 vendorizada)
-**Vendor:** `app/Support/Redsys/Vendor/Signature.php` + `Utils.php` (copiados de la librería
-oficial Redsys v2.0, con licencia). **Envoltorio único con la cripto: `App\Support\Redsys`.**
+**Vendor:** `app/Domain/Payments/Services/Redsys/Vendor/Signature.php` + `Utils.php` (copiados de la librería
+oficial Redsys v2.0, con licencia). **Envoltorio único con la cripto: `App\Domain\Payments\Services\Redsys`.**
 
 Derivación (tal cual el código oficial):
 1. Clave por operación = AES-128-CBC(`Ds_Merchant_Order`, clave del comercio truncada/rellenada
@@ -123,7 +123,7 @@ Métodos del envoltorio:
 - `gatewayUrl()` / `restUrl()` / `adminPanelUrl()` / `isLive()` / `config()` /
   `consumerLanguageCode()` / `nextGatewayOrder()` / `buildPaymentFormData()` / `executeRefund()`.
 
-## 7. Confirmación: `App\Support\RedsysReturnHandler` (procesador único)
+## 7. Confirmación: `App\Domain\Payments\Services\RedsysReturnHandler` (procesador único)
 **ÚNICO punto del sistema autorizado** a transicionar `Payment → paid` y `Order → paid`.
 Sirve a las dos vías (vuelta del navegador y notificación); `$source` (`browser_return` |
 `notification`) solo etiqueta logs/auditoría.
@@ -172,7 +172,7 @@ Orden de validación (`process(array $payload, string $source)`):
 `Ds_Card_Brand`, `Ds_Card_Country`, `Ds_Order`, `Ds_MerchantData`. Nunca `Ds_Card_Number`
 (PAN truncado) ni campos nuevos no listados.
 
-Outcomes tipados: enum `App\Support\RedsysReturnOutcome` (`Authorized`, `Denied`,
+Outcomes tipados: enum `App\Domain\Payments\Services\RedsysReturnOutcome` (`Authorized`, `Denied`,
 `IdempotentPaid`, `AuthorizedAfterExpiration`, `InvalidSignature`, `UnknownOrder`,
 `AmountMismatch`, `CurrencyMismatch`, `MalformedPayload`) con helpers `isSuccess()`,
 `isOverbooked()`, `isClientFailure()`, `isServerReject()`.
@@ -316,17 +316,17 @@ hace en `settings.redsys_environment`.
 ## 13. Mapa de código
 | Pieza | Ruta |
 |---|---|
-| Envoltorio cripto + ida + refund REST | `app/Support/Redsys.php` |
-| Librería oficial vendorizada | `app/Support/Redsys/Vendor/{Signature,Utils}.php` |
-| Procesador de confirmaciones | `app/Support/RedsysReturnHandler.php` |
-| Outcomes tipados | `app/Support/RedsysReturnOutcome.php` |
+| Envoltorio cripto + ida + refund REST | `app/Domain/Payments/Services/Redsys.php` |
+| Librería oficial vendorizada | `app/Domain/Payments/Services/Redsys/Vendor/{Signature,Utils}.php` |
+| Procesador de confirmaciones | `app/Domain/Payments/Services/RedsysReturnHandler.php` |
+| Outcomes tipados | `app/Domain/Payments/Services/RedsysReturnOutcome.php` |
 | Contrato de reembolso (interfaz + DTO) | `app/Domain/Payments/Contracts/{RefundGateway,RefundResult}.php` |
-| `Ds_Response` → i18n cliente | `app/Support/RedsysResponseCode.php` |
-| Marca/país de tarjeta (panel) | `app/Support/RedsysCardCodes.php` |
+| `Ds_Response` → i18n cliente | `app/Domain/Payments/Services/RedsysResponseCode.php` |
+| Marca/país de tarjeta (panel) | `app/Domain/Payments/Services/RedsysCardCodes.php` |
 | Controller HTTP (3 rutas) | `app/Http/Controllers/Payments/RedsysReturnController.php` |
 | Exclusión CSRF | `bootstrap/app.php` (`pago/redsys/*`) |
-| Settings defensivos | `app/Support/PaymentSettings.php` |
-| Refund: orquestador / registro | `app/Models/Order.php` (`executeFullRefund`) · `app/Models/PaymentRefund.php` |
+| Settings defensivos | `app/Domain/Payments/Services/PaymentSettings.php` |
+| Refund: orquestador / registro | `app/Models/Order.php` (`executeFullRefund`) · `app/Domain/Payments/Models/PaymentRefund.php` |
 | Caducidad de pedidos | `app/Console/Commands/ExpireOrders.php` (`orders:expire`) |
 | Verificación manual sandbox | `app/Console/Commands/VerifyRedsysSandbox.php` · `VerifyRedsysConcurrency.php` |
 | Tests | `tests/Feature/Sales/Redsys*.php` (firma bit a bit contra el ejemplo oficial, round-trip, handler, controller, notificación, gateway_order, secret key config) · `tests/Feature/Admin/Orders/*Refund*` |
@@ -341,7 +341,7 @@ hace en `settings.redsys_environment`.
 4. **Secreto** — nunca en repo/logs/BD; leer vía `config()`, no `env()` (§10).
 5. **Timeouts coordinados** — `hold_minutes` ≥ timeout del TPV.
 6. **Cambio de versión de firma** — `Ds_SignatureVersion` explícito y cripto encapsulada en un
-   punto; una v3 se absorbe en `App\Support\Redsys`.
+   punto; una v3 se absorbe en `App\Domain\Payments\Services\Redsys`.
 7. **Fiabilidad de la notificación** — si el server está caído Redsys reintenta; un **job de
    reconciliación** (consulta de operaciones) para `pending` antiguos NO está implementado
    (mejora futura).

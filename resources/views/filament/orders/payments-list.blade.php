@@ -1,10 +1,10 @@
 @php
-    use App\Models\Payment;
-    use App\Models\PaymentRefund;
+    use App\Domain\Payments\Models\Payment;
+    use App\Domain\Payments\Models\PaymentRefund;
     use App\Domain\Platform\Services\DisplayTime;
-    use App\Support\Redsys;
-    use App\Support\RedsysCardCodes;
-    use App\Support\RedsysResponseCode;
+    use App\Domain\Payments\Services\Redsys;
+    use App\Domain\Payments\Services\RedsysCardCodes;
+    use App\Domain\Payments\Services\RedsysResponseCode;
 
     /** @var \App\Models\Order $record */
     // Eager-load refunds + el operador que las lanzó para que la card de devolución

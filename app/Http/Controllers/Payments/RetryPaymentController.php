@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\PaymentSettings;
+use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Payment;
-use App\Support\PaymentSettings;
-use App\Support\Redsys;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

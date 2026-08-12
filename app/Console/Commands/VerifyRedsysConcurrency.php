@@ -3,15 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\RedsysReturnHandler;
+use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Payment;
 use App\Models\Slot;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Support\Redsys;
-use App\Support\RedsysReturnHandler;
-use App\Support\RedsysReturnOutcome;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;

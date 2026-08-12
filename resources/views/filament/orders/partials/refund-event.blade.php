@@ -1,7 +1,7 @@
 @php
-    use App\Models\PaymentRefund;
+    use App\Domain\Payments\Models\PaymentRefund;
     use App\Domain\Platform\Services\DisplayTime;
-    use App\Support\RedsysResponseCode;
+    use App\Domain\Payments\Services\RedsysResponseCode;
 
     /** @var PaymentRefund $refund */
     /** @var \Closure $fmtAmount */

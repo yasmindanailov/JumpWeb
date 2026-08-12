@@ -3,12 +3,15 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\RedsysReturnHandler;
+use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Mail\PaymentIncidentMail;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\Ticket;
@@ -16,9 +19,6 @@ use App\Models\TicketType;
 use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;
-use App\Support\Redsys;
-use App\Support\RedsysReturnHandler;
-use App\Support\RedsysReturnOutcome;
 use App\Support\TicketIssuer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * Fase 5.5c — `App\Support\RedsysReturnHandler` (procesador de la vuelta firmada).
+ * Fase 5.5c — `App\Domain\Payments\Services\RedsysReturnHandler` (procesador de la vuelta firmada).
  *
  * El handler es el ÚNICO punto autorizado a transicionar `Payment.status` a `paid` y
  * `Order.status` a `paid`. Es seguridad crítica: si un atacante logra que `process()`

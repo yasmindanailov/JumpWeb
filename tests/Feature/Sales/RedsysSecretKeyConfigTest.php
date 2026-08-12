@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
-use App\Support\Redsys;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

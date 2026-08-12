@@ -2,10 +2,10 @@
 
 namespace App\Filament\Concerns;
 
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Models\SlotTemplate;
 use App\Models\Zone;
-use App\Support\PaymentSettings;
 use App\Support\SlotGenerator;
 use Carbon\Carbon;
 use Filament\Actions\Action;

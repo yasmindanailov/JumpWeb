@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models\Concerns;
+namespace App\Domain\Payments\Concerns;
 
-use App\Models\PaymentRefund;
+use App\Domain\Payments\Models\PaymentRefund;
 use Illuminate\Database\Eloquent\Builder;
 
 /**

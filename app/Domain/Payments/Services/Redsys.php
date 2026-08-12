@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Payments\Services;
 
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentRefund;
+use App\Domain\Payments\Services\Redsys\Vendor\Signature;
+use App\Domain\Payments\Services\Redsys\Vendor\Utils;
 use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
-use App\Models\Payment;
-use App\Models\PaymentRefund;
-use App\Support\Redsys\Vendor\Signature;
-use App\Support\Redsys\Vendor\Utils;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

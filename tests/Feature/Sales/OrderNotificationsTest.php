@@ -3,9 +3,9 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\TicketType;
 use App\Models\Zone;
 use App\Notifications\OrderCancelled;

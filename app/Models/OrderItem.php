@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\PaymentRefund;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

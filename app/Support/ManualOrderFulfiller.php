@@ -3,10 +3,10 @@
 namespace App\Support;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Support\Facades\DB;

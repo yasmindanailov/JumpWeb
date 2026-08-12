@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\TicketType;
 use Illuminate\Database\ClassMorphViolationException;

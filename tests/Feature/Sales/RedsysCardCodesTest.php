@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Support\RedsysCardCodes;
+use App\Domain\Payments\Services\RedsysCardCodes;
 use PHPUnit\Framework\TestCase;
 
 /**

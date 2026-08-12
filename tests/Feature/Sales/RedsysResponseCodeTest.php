@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Support\RedsysResponseCode;
+use App\Domain\Payments\Services\RedsysResponseCode;
 use Tests\TestCase;
 
 /**

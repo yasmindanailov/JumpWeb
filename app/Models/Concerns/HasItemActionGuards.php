@@ -5,14 +5,18 @@ namespace App\Models\Concerns;
 use App\Models\OrderItem;
 
 /**
- * Guardas de "¿se puede editar / cancelar / reembolsar ESTE item suelto?" (sub-fases 7.2e,
+ * Guardas de "¿se puede editar / cancelar ESTE item suelto?" (sub-fases 7.2e,
  * decisiones #127/#141/#157/#172/#193). Separan la RAZÓN estructurada del bloqueo (string)
  * de la decisión booleana — la UI/handler revalidan en capas independientes (defense in depth).
  *
  * Extraído de Order como concern cohesivo (auditoría de organización): mismas firmas, sin
  * cambio de comportamiento. Sigue apoyándose, vía `$this->`, en métodos que permanecen en
- * Order (`paidPayment`, `refundableCapacityCents`, `itemRefundableRemainderCents`,
- * `isOperationalForItemActions`, `displayStatus`) y en las constantes de estado (`self::`).
+ * Order (`paidPayment`, `isOperationalForItemActions`) y en las constantes de estado (`self::`).
+ *
+ * ⚠️ **PARTIDO en el paso 5 de la modularización** (`docs/specs/modulos-dominio.md` §5.5): la
+ * mitad de REEMBOLSO se fue a `App\Domain\Payments\Concerns\GuardsItemRefunds`. Aquí queda
+ * lo de BOOKING: editar y cancelar un item liberan plaza y NO tocan la pasarela (#157/#172).
+ * El corte fue limpio porque las dos mitades no compartían ningún helper.
  */
 trait HasItemActionGuards
 {
@@ -102,79 +106,5 @@ trait HasItemActionGuards
     public function canCancelItem(OrderItem $item): bool
     {
         return $this->cancelItemBlockedReason($item) === null;
-    }
-
-    /**
-     * ¿Razón por la que el item NO se puede reembolsar suelto? `null` = sí puede.
-     *
-     * Reembolsar item (icono ↩️) = refund parcial REST por un importe libre que
-     * elige el operador (free-form hasta el remanente del item), con opción
-     * "También cancelar este item" (réplica del flujo #142 aplicado a item).
-     *
-     * Bloqueos similares a `cancelItemBlockedReason` pero sin requerir que el
-     * item NO esté finalizado: un refund "de cortesía" tras el servicio es
-     * caso legítimo (algo falló durante la sesión).
-     */
-    public function refundItemBlockedReason(OrderItem $item): ?string
-    {
-        if ((int) $item->order_id !== (int) $this->id) {
-            return 'not_in_order';
-        }
-        // Sub-fase 7.2e.1bis: items cancelados SÍ pueden refundarse — el flujo
-        // operativo es "cancelar item (libera plaza) + refundar después
-        // cuando el operador lo decide" (decisión clienta tras feedback 7.2e.1).
-        // Sin embargo, items que ya tienen TODO su importe refundado quedan
-        // bloqueados (no se puede devolver más de lo cobrado del item).
-        if ($item->parent_item_id !== null) {
-            return 'item_is_addon';
-        }
-        if ($this->status !== self::STATUS_PAID) {
-            return 'order_not_paid';
-        }
-        if ($this->displayStatus() === self::STATUS_EXPIRED) {
-            return 'expired';
-        }
-        if ($this->paidPayment() === null) {
-            return 'no_paid_payment';
-        }
-        if ($this->refundableCapacityCents() <= 0) {
-            return 'already_fully_refunded';
-        }
-        // Si NI el item principal NI ninguno de sus children tienen importe
-        // refundable restante, no hay nada que ofrecer en el modal de refund
-        // → ocultamos el botón. Sub-fase 7.2e.1bis fix tras feedback empírico:
-        // un pack con principal full-refunded pero children vivos DEBE
-        // mantener el botón ↩️ para permitir refund de los complementos
-        // sueltos. El check anterior (solo mirando principal) ocultaba el
-        // botón erróneamente en ese caso (los children podían quedar sin vía
-        // operativa de refund desde el panel).
-        if (! $this->hasAnyRefundableItemOrChild($item)) {
-            return 'item_already_fully_refunded';
-        }
-
-        return null;
-    }
-
-    /**
-     * ¿El item o cualquiera de sus children tiene importe refundable restante?
-     * Helper de visibilidad del icono ↩️ Reembolsar en sub-card.
-     */
-    private function hasAnyRefundableItemOrChild(OrderItem $item): bool
-    {
-        if ($this->itemRefundableRemainderCents($item) > 0) {
-            return true;
-        }
-        foreach ($item->children as $child) {
-            if ($this->itemRefundableRemainderCents($child) > 0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function canRefundItem(OrderItem $item): bool
-    {
-        return $this->refundItemBlockedReason($item) === null;
     }
 }

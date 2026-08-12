@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Payments\Services;
 
 /**
  * Traduce los códigos numéricos que Redsys devuelve para la **marca de la tarjeta**

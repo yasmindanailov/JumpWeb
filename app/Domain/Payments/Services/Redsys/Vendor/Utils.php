@@ -11,7 +11,7 @@
  *     construimos vía Laravel).
  */
 
-namespace App\Support\Redsys\Vendor;
+namespace App\Domain\Payments\Services\Redsys\Vendor;
 
 class Utils
 {

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -11,7 +12,6 @@ use App\Models\SlotTemplate;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\PaymentSettings;
 use App\Support\SlotGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;

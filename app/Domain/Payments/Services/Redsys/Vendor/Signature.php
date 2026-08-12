@@ -7,7 +7,7 @@
  * (HMAC_SHA512_V2 + AES-128-CBC), publicada por Redsys Servicios de Procesamiento, S.L.
  * (CIF B85955367). Se incluye aquí *vendorizada* (decisión #104, ver `docs/DECISIONES.md`),
  * con cambios mínimos y deliberados respecto al original:
- *   - Espacio de nombres `App\Support\Redsys\Vendor` (en lugar de global) para encajar con
+ *   - Espacio de nombres `App\Domain\Payments\Services\Redsys\Vendor` (en lugar de global) para encajar con
  *     PSR-4 y evitar colisiones.
  *   - `Utils` se incluye por el namespace, no por `include`.
  *
@@ -18,7 +18,7 @@
  * El uso está limitado a la integración con la pasarela Redsys.
  */
 
-namespace App\Support\Redsys\Vendor;
+namespace App\Domain\Payments\Services\Redsys\Vendor;
 
 class Signature
 {

@@ -3,12 +3,15 @@
 namespace App\Livewire\Tickets;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\PaymentSettings;
+use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Providers\AppServiceProvider;
@@ -17,11 +20,8 @@ use App\Support\Cart;
 use App\Support\CatalogSettings;
 use App\Support\OrderCreator;
 use App\Support\PackAvailability;
-use App\Support\PaymentSettings;
 use App\Support\ProductAvailability;
 use App\Support\RateResolver;
-use App\Support\Redsys;
-use App\Support\RedsysResponseCode;
 use App\Support\ReservationFinancials;
 use App\Support\SlotAvailability;
 use App\Support\SlotOffer;

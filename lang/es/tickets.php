@@ -89,7 +89,7 @@ return [
     'payment_failed_reason_label' => 'Motivo',
     'payment_failed' => [
         // Mensajes al cliente cuando un pago Redsys es denegado (#114, mapeo `Ds_Response`
-        // en `App\Support\RedsysResponseCode`). Tono: claro, sin tecnicismos, accionable.
+        // en `App\Domain\Payments\Services\RedsysResponseCode`). Tono: claro, sin tecnicismos, accionable.
         'reasons' => [
             'card_expired' => 'Tu tarjeta está caducada (o la fecha introducida no es correcta).',
             'card_invalid' => 'La tarjeta no es válida o no se puede usar para este pago.',

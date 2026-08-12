@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Pages\CreateManualOrderPage;
 use App\Livewire\Tickets\Purchase;
@@ -12,7 +13,6 @@ use App\Models\Slot;
 use App\Models\SpecialDate;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\PaymentSettings;
 use App\Support\SlotOffer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;

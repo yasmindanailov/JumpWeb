@@ -101,6 +101,23 @@ class ModuleBoundariesTest extends TestCase
         // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
         'Content/Models/Attraction.php' => ['App\Models\TicketType', 'App\Models\Zone'],
         'Content/Models/LandingService.php' => ['App\Models\TicketType'],
+
+        // ─── PAYMENTS → BOOKING: la costura del DINERO (paso 5, 2026-08-12) ───
+        // Es LA costura que el spec §4 anticipó, y ahora es visible en el código en vez de
+        // esconderse en un namespace plano. Dos naturalezas:
+        //  · FK y tipos: `payment_refunds.order_item_id` (reembolso parcial por item) y las
+        //    firmas de las guardas de reembolso, que deciden sobre un item de Booking.
+        //  · ORQUESTACIÓN: `RedsysReturnHandler` es, por `PAY-01`, el ÚNICO autorizado a pasar
+        //    una Order a `paid`, y por `PAY-03` dispara `TicketIssuer`. Es decir: Payments
+        //    conduce el ciclo de vida de la reserva. El diseño limpio sería que Payments
+        //    emitiera «pago confirmado» y Booking reaccionara — pero eso es reestructurar el
+        //    núcleo endurecido de dinero, exactamente lo que el paso 5 tiene PROHIBIDO hacer
+        //    en el mismo commit que la mudanza (§2 + INVARIANTES §1). Queda anotado como el
+        //    candidato nº1 a evento de dominio cuando haya un motivo real.
+        'Payments/Models/PaymentRefund.php' => ['App\Models\OrderItem'],
+        'Payments/Concerns/GuardsItemRefunds.php' => ['App\Models\OrderItem'],
+        'Payments/Services/Redsys.php' => ['App\Models\Order'],
+        'Payments/Services/RedsysReturnHandler.php' => ['App\Models\Order', 'App\Support\TicketIssuer'],
     ];
 
     /**
@@ -110,10 +127,9 @@ class ModuleBoundariesTest extends TestCase
      * @var array<string, list<string>>
      */
     private const LEGACY = [
-        // El contrato tipa contra el modelo del PROPIO módulo Payments; muere en el paso 5.
-        'Payments/Contracts/RefundGateway.php' => ['App\Models\Payment'],
-        // Bindings a las implementaciones legacy: es exactamente su razón de ser hasta que muden.
-        'Payments/PaymentsServiceProvider.php' => ['App\Support\Redsys'],
+        // ✅ RETIRADAS en el paso 5 (la baseline ENCOGIÓ, que es su único movimiento legal):
+        // `RefundGateway`→`Payment` y `PaymentsServiceProvider`→`Redsys` ya no son legacy —
+        // ambas clases viven ahora dentro de Payments y son referencias intra-módulo.
         'Booking/BookingServiceProvider.php' => [
             'App\Support\CustomerReservationsReader',
             'App\Support\PublishableCatalogReader',
@@ -246,6 +262,29 @@ class ModuleBoundariesTest extends TestCase
         // `attractions.zone_id`): FKs del esquema, costura de BD del §4.
         'Models/TicketType.php' => ['App\Domain\Content\Models\LandingService'],
         'Models/Zone.php' => ['App\Domain\Content\Models\Attraction'],
+
+        // ─── BOOKING (aún sin mudar) → PAYMENTS: el otro lado del dinero (paso 5) ───
+        // `Order` es el punto de encuentro: lleva los dos traits de reembolso (que se le
+        // aplican a ÉL) y navega a sus `Payment`/`PaymentRefund`. Cuando Booking mude (paso 6)
+        // estas flechas pasan de aquí a `SEAM`, ya como costura entre dos módulos.
+        // `PaymentSettings` lo consumen tres piezas de aforo/oferta porque de ahí sale la
+        // ventana de retención del pedido: es config de pago que Booking necesita para fijar
+        // `expires_at` — candidata a exponerse por contrato en el paso 6.
+        'Models/Order.php' => [
+            'App\Domain\Payments\Concerns\GuardsItemRefunds',
+            'App\Domain\Payments\Concerns\OrderRefundFlags',
+            'App\Domain\Payments\Models\Payment',
+            'App\Domain\Payments\Models\PaymentRefund',
+        ],
+        'Models/OrderItem.php' => ['App\Domain\Payments\Models\PaymentRefund'],
+        'Support/ManualOrderFulfiller.php' => ['App\Domain\Payments\Models\Payment'],
+        'Support/OrderFinancialSummary.php' => [
+            'App\Domain\Payments\Models\Payment',
+            'App\Domain\Payments\Models\PaymentRefund',
+        ],
+        'Support/OrderCreator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+        'Support/SlotGenerator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+        'Support/SlotOffer.php' => ['App\Domain\Payments\Services\PaymentSettings'],
     ];
 
     /**

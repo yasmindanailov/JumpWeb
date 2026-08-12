@@ -3,18 +3,18 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\Redsys\Vendor\Utils;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
-use App\Support\Redsys;
-use App\Support\Redsys\Vendor\Utils;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -32,7 +32,7 @@ use Tests\TestCase;
  *   2. Reservar un `gateway_order` ÚNICO (atómico).
  *   3. Crear `Payment` `pending` que ata `gateway_order → Order` ANTES de redirigir
  *      (clave para reconciliar la vuelta sin sesión).
- *   4. Firmar el payload con `App\Support\Redsys` (server-side, regla 12 SEGURIDAD).
+ *   4. Firmar el payload con `App\Domain\Payments\Services\Redsys` (server-side, regla 12 SEGURIDAD).
  *   5. Pasar al paso 9 y exponer `redsysFormData` para que la vista renderice el auto-POST.
  *
  * El email de confirmación de pedido (OrderConfirmation) NO se envía en esta capa: se

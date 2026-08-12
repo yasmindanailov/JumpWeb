@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Support\PaymentSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

@@ -3,7 +3,7 @@
 namespace App\Domain\Payments;
 
 use App\Domain\Payments\Contracts\RefundGateway;
-use App\Support\Redsys;
+use App\Domain\Payments\Services\Redsys;
 use Illuminate\Support\ServiceProvider;
 
 /**

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Payments\Services\IncidentSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Support\IncidentSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

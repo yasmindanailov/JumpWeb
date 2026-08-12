@@ -241,7 +241,7 @@ $gateCredit  = max(0, min($reduction, $pendingGate));  // créditos firmados: ex
 **Techo de reembolso por-producto ENSANCHADO** para poder devolver el sobre-cobro de una
 reducción: `refundableItemCents = max(0, itemOriginalOnlineCents − itemRefundedCents)` (base
 online ORIGINAL, no collected actual). `refundItemBlockedReason` y
-`hasAnyRefundableItemOrChild` (`app/Models/Concerns/HasItemActionGuards.php`) usan la nueva
+`hasAnyRefundableItemOrChild` (`app/Domain/Payments/Concerns/GuardsItemRefunds.php`) usan la nueva
 base. Legacy sin reducción: `itemOriginalOnlineCents == itemCollectedCents` → techo idéntico.
 
 ### 5.9 «Pendiente de devolución» de nivel pedido = fórmula DE CAJA
@@ -405,7 +405,7 @@ o quedarse el depósito según T&C.
 
 ## 11. Ficheros load-bearing (mapa rápido)
 
-`app/Support/OrderCreator.php` (creación + `deposit_remainder`) · `app/Support/Redsys.php`
+`app/Support/OrderCreator.php` (creación + `deposit_remainder`) · `app/Domain/Payments/Services/Redsys.php`
 (`:302` ida, `:354-358` guard `gateway_order`, `:376` REST refund) ·
 `app/Models/TicketType.php` (`depositCents`/`hasDeposit`/`depositLabel`) ·
 `app/Models/Order.php` (`itemCollectedCents` — palanca; `itemExtraDueCents`;
@@ -415,10 +415,10 @@ o quedarse el depósito según T&C.
 `reservationGateLines`; `depositRemainderPendingByProduct`; `itemFinishedInPractice`) ·
 `app/Support/OrderFinancialSummary.php` · `app/Support/ReservationFinancials.php` ·
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
-selector de modo) · `app/Models/Concerns/HasItemActionGuards.php` ·
+selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
 `app/Support/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
 `app/Livewire/Tickets/Purchase.php` (`cartDepositCents`/`stepDepositHint`) ·
-`app/Models/OrderAdjustment.php` (tipos) · `app/Support/RedsysReturnHandler.php` (canario, NO
+`app/Models/OrderAdjustment.php` (tipos) · `app/Domain/Payments/Services/RedsysReturnHandler.php` (canario, NO
 tocar) · `resources/views/filament/orders/items-list.blade.php` (banner D9) ·
 `app/Domain/Content/Services/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`
 heredado).

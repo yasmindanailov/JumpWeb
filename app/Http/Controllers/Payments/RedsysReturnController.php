@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\RedsysReturnHandler;
+use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Payment;
-use App\Support\RedsysReturnHandler;
-use App\Support\RedsysReturnOutcome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,7 +19,7 @@ use Throwable;
 /**
  * Recepción de pagos Redsys (capas 5.5c/5.5d, decisiones #104/#106).
  *
- * Tres entradas, una sola lógica de transición (`App\Support\RedsysReturnHandler`):
+ * Tres entradas, una sola lógica de transición (`App\Domain\Payments\Services\RedsysReturnHandler`):
  *   - `return.ok` / `return.ko` — vuelta del NAVEGADOR del cliente. El método (GET o
  *     POST) y la presencia de datos firmados depende de la **configuración del terminal**
  *     en el portal admin Redsys (#106, verificado empíricamente 2026-05-26):

@@ -22,7 +22,7 @@
 | **Vite** | build de JS (`resources/js/app.js`, `resources/js/admin/`) y CSS del panel |
 | PDFs | `barryvdh/laravel-dompdf` (`^3.1`) |
 | QR | `chillerlan/php-qrcode` v5 (ya venía como dependencia de Filament) vía `app/Domain/Platform/Services/QrCode.php` — SVG inline server-side, sin GD/imagick, color por CSS |
-| Pagos | **Redsys** con **conector propio**: `app/Support/Redsys.php` (único punto que conoce la criptografía) + clases vendorizadas `app/Support/Redsys/Vendor/{Signature,Utils}.php`. Sin paquete externo |
+| Pagos | **Redsys** con **conector propio**: `app/Domain/Payments/Services/Redsys.php` (único punto que conoce la criptografía) + clases vendorizadas `app/Domain/Payments/Services/Redsys/Vendor/{Signature,Utils}.php`. Sin paquete externo |
 | Anti-bot | Cloudflare Turnstile (`app/Domain/Platform/Services/Turnstile.php`) |
 
 **CSS — dos mundos separados:**
