@@ -1,7 +1,7 @@
 # Estado del proyecto — foto viva
 
 > Documento corto (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
-> Última actualización: **2026-08-12**.
+> Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño v2 revisado y SIN bloqueantes; árbol saneado; listo para implementar el paso 0.**
@@ -10,117 +10,28 @@
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
   dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
   runner, no del código (ver `TESTING.md`).
-- **Fase 2 — hecho** (detalle en el tracker):
-  1. **morphMap FORZADO** (`AppServiceProvider`, alias para los 30 modelos) + migración
-     `convert_morph_types_to_aliases` verificada en MySQL dev (0 FQCN restantes) + barrido
-     `::class`→`getMorphClass()` en app y tests + `MorphMapTest` (5 guardas).
-  2. **Spec de módulos APROBADO** con revisión multi-agente: `docs/specs/modulos-dominio.md`
-     (`DECISIONES #13`) — layout `app/Domain/<Contexto>/`, contratos en namespace de destino,
-     orden contratos→Platform→Content→Identity→Payments→Booking (dinero al final), checklist
-     mecánico por paso (blades FQCN, migraciones Legacy*, colas, docs).
-  3. **Cimientos de gates**: `VERIFY_CONC` del pre-push por basename; `docs-check` y
-     `MorphMapTest` cuentan modelos también en `app/Domain/*/Models`.
-  4. **PASO 1 — contratos en destino** (`DECISIONES #14`, spec §4.bis). Existe
-     `app/Domain/{Booking,Payments}/` con las **tres costuras reales** (medidas contra el
-     código, no supuestas):
-     - Booking→Payments: `RefundGateway` + `RefundResult` — `Order` ya **no** importa `Redsys`.
-       Solo REEMBOLSO: el cobro no lo consume Booking, sino la capa de entrega.
-     - Identity→Booking: `CustomerReservations` + `UpcomingReservation`/`PendingGuestForm` —
-       `CustomerAccountContext` ya **no** consulta `Order`/`OrderItem`/`TicketType`.
-     - Content→Booking: `PublishableCatalog` + `ComplementPlacement` — la regla #226, que
-       estaba DUPLICADA en dos consultas SQL que podían divergir, ahora es una sola.
-     Implementaciones legacy bindeadas en `Booking/PaymentsServiceProvider` (registrados en
-     `bootstrap/providers.php`); `CustomerReservationsReader` y `PublishableCatalogReader` son
-     de Booking y se quedan en `app/Support` hasta el paso 6.
-     Frontera EJECUTABLE: `ModuleBoundariesTest` (grafo · baselines `SEAM`/`LEGACY` que **solo
-     encogen** · «desde fuera solo se tocan `Contracts`»; las 3 guardas verificadas por
-     MUTACIÓN) + `ModuleContractsTest` (cada contrato sustituido por un doble).
-  5. **PASO 2 — Platform MUDADO** (`DECISIONES #15`, spec §4.ter): 12 clases en
-     `app/Domain/Platform/{Models,Services,Concerns,Enums}` (`Setting`, `AuditLog`,
-     `AuditLogger`, `DisplayTime`, `Money`, `Duration`, `PhoneNormalizer`,
-     `MaintenanceSettings`, `QrCode`, `Turnstile`, `HasTranslations`, `DashboardPeriod`).
-     236 ficheros tocados, 26 blades con FQCN inline. **Sin `Contracts` a propósito**: Platform
-     es la base común («todos→Platform»), no una costura sustituible.
-     Dos trampas encontradas que MANDAN en los pasos 3–6:
-     - **dependencias invisibles**: 30+ llamadas a clases hermanas del mismo namespace no
-       llevan `use` → al mover, «class not found». Se miden con el tokenizador ANTES de mover
-       (paso 0 del checklist del spec); 9 ficheros ganaron el `use` explícito.
-     - **FQCN que son DATOS**: la migración `convert_morph_types_to_aliases` guarda los FQCN
-       que la BD tenía en 2026-08-12. Un `sed` global la rompe EN SILENCIO. ⛔ Congelada, con
-       guard en `MorphMapTest` verificado por mutación.
-  6. **PASO 3 — Content MUDADO** (`DECISIONES #16`, spec §4.quater): 18 clases en
-     `app/Domain/Content/{Models,Services}` + primer renombre de vocabulario
-     **`ParkRule`→`VenueRule`** (la CLASE; tabla `park_rules`, alias morph `park_rule` y
-     nombres del panel se CONGELAN — verificado en MySQL dev: el alias resuelve a la clase
-     nueva y las 5 filas se leen igual).
-     - **Puerta de entrada decidida CON DATOS** (lo que el paso 2 dejó abierto): la capa de
-       entrega (`Filament`, `Http`, `Livewire`, `Providers`, `Mail`, `Notifications`,
-       `Console`, `Exceptions`) es el *composition root* y usa la superficie pública de
-       cualquier módulo; el código de dominio AÚN SIN MUDAR (`app/Support`, `app/Models`) solo
-       entra por `Contracts` o Platform → baseline `PENDING` (3 entradas), que solo encoge.
-     - **Content NO es autosuficiente**: el arch-test destapó 3 dependencias reales hacia
-       Booking (calendario de operación · identidad de zona · precio de referencia), anotadas
-       en la baseline `LEGACY` para decidir en el paso 6.
-     - Herramienta nueva: **`scripts/module-deps.php`** — el «paso 0» del checklist (medir las
-       dependencias INVISIBLES) ya no es artesanal.
-  7. **PASO 4 — Identity MUDADO** (`DECISIONES #17`, spec §4.quinquies): 10 clases en
-     `app/Domain/Identity/{Models,Services}` (`User`, `Consent`, `CookieConsentLog`, `Role`,
-     `Permission`, `CookieConsent`, `CustomerRegistrar`, `CustomerAccountContext`,
-     `PuertaSettings`, `PermissionCatalog`). La «puerta» es capa de entrega y no se movió.
-     - **Trampa de las factories DESACTIVADA antes de mover**: rompe en los DOS sentidos
-       (modelo→factory y factory→modelo) y `UserFactory` es la única del repo. Resolver por
-       nombre corto en `AppServiceProvider` + `$model` explícito en la factory + `composer
-       dump-autoload`. Lo vigila `FactoryResolutionTest`.
-     - **Dos exenciones CON NOMBRE** en el arch-test (no entradas anónimas de baseline, porque
-       son reglas y no deuda): `SHARED_KERNEL` = `User` (spec §4) y `OUTBOUND` =
-       `Notifications`/`Mail` (canal de salida del framework). Verificadas por mutación.
-     - **La supresión RGPD cruza contextos** (`User::purge…` vacía PII de terceros en
-       `order_items`): anotado en `SEAM`; el diseño limpio (evento «usuario anonimizado») queda
-       para más adelante.
-  8. **PASO 5 — Payments MUDADO** (`DECISIONES #18`, spec §4.sexies): 12 clases en
-     `app/Domain/Payments/{Models,Services,Concerns}` + la **partición** de
-     `HasItemActionGuards` (mitad refund → `GuardsItemRefunds`). **MUDANZA PURA**: ni una línea
-     de lógica de dinero cambió; `INVARIANTES §1` y `§6` leídas antes de tocar.
-     - **La costura del dinero ya no se esconde**: enumerada en el arch-test en las DOS
-       direcciones. Payments→Booking incluye ORQUESTACIÓN — `RedsysReturnHandler` es por
-       `PAY-01` el único que pasa una Order a `paid` y por `PAY-03` dispara `TicketIssuer`:
-       hoy Payments conduce el ciclo de vida de la reserva. **Candidato nº1 a evento de
-       dominio**, cuando haya motivo (reestructurar el núcleo estaba prohibido aquí).
-     - **La baseline ENCOGIÓ por primera vez** (su único movimiento legal): las 2 entradas de
-       `RefundGateway`/`PaymentsServiceProvider` dejaron de ser legacy. El mecanismo del paso 1
-       funcionó tal cual se diseñó.
-  9. **PASO 6 — Booking MUDADO; `app/Models` y `app/Support` RETIRADOS** (`DECISIONES #19`,
-     spec §4.septies): 40 clases a `app/Domain/Booking/{Models,Services,Concerns,Exceptions}`
-     + último renombre de vocabulario `ParkSchedule`→`OperatingSchedule`.
-     - **Dos inversiones se ARREGLARON en vez de perdonarse**: `ReservationException` (vivía en
-       `app/Exceptions`, capa de entrega, siendo excepción de dominio) y
-       `OrderCreator`→`Purchase` (importaba la god-class de UI solo por `MAX_LINES_PER_CART`;
-       la constante vuelve a `OrderCreator`, donde `PAY-12` dice que vive; valor y enforcement
-       idénticos, API pública de `Purchase` intacta).
-     - **Baselines ajustadas**: `PENDING` y `LEGACY` **vacías**; `SEAM` recoge la costura del
-       dinero en los dos sentidos; `ALLOWED` reconoce Booking↔`Payments\Contracts` como canal
-       sancionado; nace **`DEFERRED`** con las 5 flechas Content→Booking del paso 7.
-     - ⚠️ **La migración `convert_morph_types_to_aliases` pasa a REQUISITO DE DESPLIEGUE**: al
-       desaparecer `App\Models\*`, el fallback de FQCN legacy ya no resuelve. Actualizar código
-       sin migrar revienta al leer un `payable`/`priceable`/`target` antiguo. `MorphMapTest` lo
-       fija (antes aseveraba lo contrario, cierto hasta este paso).
-  10. **PASO 7 — CIERRE de Fase 2** (`DECISIONES #20`, spec §4.octies): resueltas las 5 flechas
-     `DEFERRED` con dos contratos de LECTURA extraídos de llamadas reales —
-     `Booking\Contracts\OperatingCalendar` (+ DTOs `OperatingWindow`, `WeeklyOpening`,
-     `SeasonWindow`, `SpecialDay`) y `ZonePalette`—.
-     - **De regalo murieron dos reglas duplicadas**: Content reimplementaba «temporada vigente»
-       y «ventana efectiva de una fecha especial» con comentarios que decían «para no divergir
-       de lo que aplican las reservas». Misma trampa que la coherencia #226 del paso 1.
-     - **Coste cero en consultas**: `OperatingSchedule` ya memoizaba esos datos; el contrato se
-       compone sobre lo que había y retira las consultas que Content hacía aparte.
-     - **`effectiveFor()` NO cambia de firma**: la consumen `SlotGenerator` y
-       `ProductAvailability` (aforo, `AFORO-01`/`AFORO-03`). El contrato tipa la FRONTERA
-       (`windowFor()`), no obliga a reescribir el núcleo.
-     - **Criterio fijado** para la próxima flecha: *recibir* una entidad de otro módulo es
-       costura de BD; *consultar* sus datos o *repetir* sus reglas exige contrato.
-     - Baselines finales: `LEGACY`/`PENDING`/`DEFERRED` **vacías**; `SEAM` solo con costura
-       documentada. Barrido `App\Support\`/`App\Models\` en código: **cero**.
-- Fase 1 cerrada esta misma sesión: marca a 6 líneas intencionales, prefijo de pedidos =
+- **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12. Resumen: `app/Models` y
+  `app/Support` **ya no existen**; el dominio vive en `app/Domain/<Contexto>/` con 5 módulos
+  (Platform · Content · Identity · Payments · Booking) y frontera EJECUTABLE
+  (`ModuleBoundariesTest` + `ModuleContractsTest`, guardas verificadas por mutación).
+  **No repitas esta lectura**: el detalle paso a paso está en `00-REFACTOR.md` (checkboxes),
+  `DECISIONES #13`–`#20` (el porqué de cada decisión) y `docs/specs/modulos-dominio.md`
+  §4.bis–§4.octies («lo que el código enseñó» en cada paso).
+  Lo que SÍ necesitas saber al tocar código hoy:
+  · **Herramienta**: `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES
+    (llamadas a clases del mismo namespace, sin `use`). Fueron la única causa real de rotura.
+  · **Criterio de frontera**: *recibir* una entidad de otro módulo es costura de BD; *consultar*
+    sus datos o *repetir* sus reglas exige contrato.
+  · **Baselines del arch-test**: `LEGACY`/`PENDING`/`DEFERRED` vacías; `SEAM` solo con costura
+    documentada. Todas **solo encogen**: añadir una entrada es señal de que algo está mal hecho.
+  · **Deuda anotada, no resuelta**: `RedsysReturnHandler` conduce el ciclo de vida de la Order
+    (`PAY-01`/`PAY-03`) y la supresión RGPD cruza contextos — ambos candidatos a evento de
+    dominio, en `SEAM` con su porqué.
+- ⚠️ **NOTA DE DESPLIEGUE permanente (Fase 2)**: las migraciones deben correr **ANTES** de servir
+  tráfico —la conversión del morphMap dejó de ser comodidad y es **requisito**: sin ella, leer un
+  `payable`/`priceable`/`target` antiguo revienta— y hay que **drenar la cola + `queue:restart`**
+  (los payloads serializados llevaban los FQCN viejos).
+- **Fase 1 cerrada** (2026-08-12): marca a 6 líneas intencionales, prefijo de pedidos =
   setting `sales.order_prefix` (default `R-`), semilla neutra «SaltoPark», jurisdicción
   legal por token, wordmark data-driven (`DECISIONES #12`).
 - Sistema documental y protocolo completos (`DECISIONES #10`/`#11`): gate en pre-push (solo
@@ -179,6 +90,8 @@ admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fa
   `VERIFY_CONC=1` tras correr los comandos de INVARIANTES §6.
 
 ## Herencia
-Base: Laravel 13 · 30 modelos · 71 migraciones · 17 Filament Resources · Livewire v4 ·
-Redsys (sandbox) · suite 2132 verde heredada del origen (2026-08-12; hoy 2141 con los
-tests de Fases 1–2).
+Base heredada del origen: 30 modelos · 71 migraciones · 17 Filament Resources · Redsys
+(sandbox) · suite **2132** verde al importarla (2026-08-12). Hoy: **2186** tests, con los de
+Fases 1–2 (contratos, frontera de módulos, factories, morphMap).
+Stack al día tras el saneado del 2026-08-13: Laravel **13.25** · Filament **5.7** · Livewire
+**4.4** · PHPUnit 12.5 · 0 avisos de seguridad (`composer audit` y `npm audit`).
