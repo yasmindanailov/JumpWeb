@@ -85,13 +85,13 @@ class RetryPaymentController extends Controller
                 // marca `superseded` (NO `failed`): si ese intento viejo se autorizase tarde, el
                 // handler lo capturará como cobro real y su guarda de incidencia evitará emitir
                 // tickets duplicados (la Order ya estará PAID por este reintento).
-                Payment::where('payable_type', Order::class)
+                Payment::where('payable_type', (new Order)->getMorphClass())
                     ->where('payable_id', $order->id)
                     ->where('status', Payment::STATUS_PENDING)
                     ->update(['status' => Payment::STATUS_SUPERSEDED]);
 
                 return Payment::create([
-                    'payable_type' => Order::class,
+                    'payable_type' => (new Order)->getMorphClass(),
                     'payable_id' => $order->id,
                     'provider' => 'redsys',
                     'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total

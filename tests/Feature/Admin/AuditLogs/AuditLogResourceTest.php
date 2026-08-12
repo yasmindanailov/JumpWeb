@@ -113,7 +113,7 @@ class AuditLogResourceTest extends TestCase
         ]);
         AuditLog::create([
             'action' => AuditLog::ACTION_DUPLICATE_CAPTURE,
-            'target_type' => Order::class,
+            'target_type' => (new Order)->getMorphClass(),
             'target_id' => $order->id,
             'payload_hash' => hash('sha256', 'x'),
             'created_at' => now(),

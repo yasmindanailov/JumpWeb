@@ -224,7 +224,7 @@ class DepositRefundCoherenceTest extends TestCase
     private function attachPayment(Order $order, int $amount, string $provider, ?string $gateway): Payment
     {
         return Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => $provider, 'amount' => $amount, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'paid_at' => now(), 'gateway_order' => $gateway,
         ]);

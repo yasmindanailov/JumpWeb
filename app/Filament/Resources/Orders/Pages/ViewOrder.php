@@ -2976,8 +2976,9 @@ class ViewOrder extends ViewRecord
     {
         /** @var Order $order */
         $order = $this->record;
-        $orderClass = Order::class;
-        $itemClass = OrderItem::class;
+        // Alias del morphMap (Fase 2): audit_logs.target_type guarda 'order'/'order_item'.
+        $orderClass = (new Order)->getMorphClass();
+        $itemClass = (new OrderItem)->getMorphClass();
         $orderId = $order->id;
         $itemIds = $order->items->pluck('id')->all();
 

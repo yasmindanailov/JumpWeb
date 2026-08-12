@@ -175,7 +175,7 @@ class RedsysGatewayOrderTest extends TestCase
     private function insertPayment(string $gatewayOrder): void
     {
         DB::table('payments')->insert([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => 1,
             'provider' => 'redsys',
             'amount' => 1000,

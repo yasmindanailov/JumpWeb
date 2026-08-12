@@ -136,7 +136,7 @@ class VerifyRedsysConcurrency extends Command
             ]);
 
             $payment = Payment::create([
-                'payable_type' => Order::class,
+                'payable_type' => (new Order)->getMorphClass(),
                 'payable_id' => $order->id,
                 'provider' => 'redsys',
                 'amount' => 1000,
@@ -283,7 +283,7 @@ class VerifyRedsysConcurrency extends Command
     private function cleanup(array $seed): void
     {
         Ticket::where('order_id', $seed['order']->id)->delete();
-        Payment::where('payable_type', Order::class)->where('payable_id', $seed['order']->id)->delete();
+        Payment::where('payable_type', (new Order)->getMorphClass())->where('payable_id', $seed['order']->id)->delete();
         OrderItem::where('order_id', $seed['order']->id)->delete();
         Order::where('id', $seed['order']->id)->delete();
         Slot::where('id', $seed['slot']->id)->delete();

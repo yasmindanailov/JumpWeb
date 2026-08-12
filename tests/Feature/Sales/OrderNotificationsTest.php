@@ -135,7 +135,7 @@ class OrderNotificationsTest extends TestCase
     {
         $order = $this->makeOrder('JJ-REF01');
         $payment = Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => 1750, // distinto del total para verificar que se usa este

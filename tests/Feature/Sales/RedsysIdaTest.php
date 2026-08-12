@@ -192,7 +192,7 @@ class RedsysIdaTest extends TestCase
             'status' => Order::STATUS_PENDING, 'subtotal' => 0, 'total' => 0, 'currency' => 'EUR',
         ]);
         $payment = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id, 'provider' => 'redsys',
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id, 'provider' => 'redsys',
             'amount' => 0, 'currency' => 'EUR', 'status' => Payment::STATUS_PENDING,
             'gateway_order' => '0000100000',
         ]);

@@ -78,7 +78,7 @@ class PaymentRetryFromOrdersTest extends TestCase
             'slot_id' => $this->slot->id, 'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
         ]);
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1000, 'currency' => 'EUR',
             'status' => $paymentStatus,
             'gateway_order' => '0000'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),

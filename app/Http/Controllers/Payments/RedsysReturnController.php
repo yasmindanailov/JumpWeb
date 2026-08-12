@@ -162,7 +162,7 @@ class RedsysReturnController extends Controller
             return redirect()->route('home');
         }
 
-        $latest = Payment::where('payable_type', Order::class)
+        $latest = Payment::where('payable_type', (new Order)->getMorphClass())
             ->where('provider', 'redsys')
             ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
             ->whereHas('payable', fn ($q) => $q->where('user_id', $user->id))

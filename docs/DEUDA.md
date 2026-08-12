@@ -13,7 +13,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 |---|---|---|---|
 | God-class `ViewOrder` | `app/Filament/Resources/Orders/Pages/ViewOrder.php`, 5.028 líneas; concentra edición de pedido, reembolsos y `lockZoneDaySlots` | Toda operación de dinero/aforo del panel roza INVARIANTES §1/§2 | Fase 2 |
 | God-class `Purchase` + puente Alpine | `app/Livewire/Tickets/Purchase.php`, 2.049 líneas; `Alpine.store('purchase')` sincronizado a mano con `$wire.step` | Todo el checkout web; el puente depende de sincronía manual JS↔Livewire | Fase 4 (muere con la SPA) |
-| **Sin morphMap** | 0 usos de `enforceMorphMap`; los morphs (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan FQCN | **Prerequisito de Fase 2 no listado**: mover/renombrar modelos ROMPE datos de precios/pagos/auditoría | ⚠️ ahora sí: checkbox en Fase 2 |
+| ~~Sin morphMap~~ | **RETIRADA en Fase 2** (2026-08-12): `enforceMorphMap` con alias para los 30 modelos + migración de datos + barrido de `::class` en columnas morph + `MorphMapTest` (verificado también en MySQL dev: 0 FQCN restantes) | — | ✅ hecha |
 | Datos de negocio del cliente origen | `LegalContent` (jurisdicción quemada ES/EN/FR) + `ProductionSeeder` (seed real: dirección, mapa, tarifas) | Riesgo legal directo: una instalación nueva hereda textos legales de otro negocio | Fase 1 |
 
 ## Media

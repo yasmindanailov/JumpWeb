@@ -374,7 +374,7 @@ class RateTypeResourceTest extends TestCase
             'key' => 'finde', 'label' => ['es' => 'Finde'], 'priority' => 5, 'is_active' => true,
         ]);
         Price::create([
-            'priceable_type' => TicketType::class, 'priceable_id' => $product->id,
+            'priceable_type' => (new TicketType)->getMorphClass(), 'priceable_id' => $product->id,
             'rate_type_id' => $finde->id, 'amount_cents' => 1500, 'currency' => 'EUR',
         ]);
 
@@ -443,7 +443,7 @@ class RateTypeResourceTest extends TestCase
             'zone_id' => $zone->id, 'is_active' => true, 'is_sellable' => true, 'position' => 1,
         ]);
         Price::create([
-            'priceable_type' => TicketType::class, 'priceable_id' => $product->id,
+            'priceable_type' => (new TicketType)->getMorphClass(), 'priceable_id' => $product->id,
             'rate_type_id' => $this->normal->id, 'amount_cents' => 1000, 'currency' => 'EUR',
         ]);
 

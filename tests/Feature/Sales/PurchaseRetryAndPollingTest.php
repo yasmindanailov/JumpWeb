@@ -89,7 +89,7 @@ class PurchaseRetryAndPollingTest extends TestCase
             'slot_id' => Slot::first()->id, 'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
         ]);
         $payment = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1000, 'currency' => 'EUR',
             'status' => Payment::STATUS_FAILED,
             'gateway_order' => '0000000'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),

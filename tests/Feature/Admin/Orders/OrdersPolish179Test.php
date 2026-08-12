@@ -69,7 +69,7 @@ class OrdersPolish179Test extends TestCase
     private function payment(Order $order, int $amount, string $status = Payment::STATUS_PAID): Payment
     {
         return Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => $amount, 'currency' => 'EUR',
             'status' => $status, 'gateway_order' => '0000'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
         ]);

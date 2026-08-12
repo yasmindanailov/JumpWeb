@@ -101,7 +101,7 @@ class RedsysNotificationEndpointTest extends TestCase
         ]);
         OrderItem::create(['order_id' => $order->id, 'ticket_type_id' => $type->id, 'slot_id' => $slot->id, 'quantity' => 1, 'seats' => 1, 'unit_price' => 1000]);
         $payment = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1000, 'currency' => 'EUR',
             'status' => Payment::STATUS_PENDING, 'gateway_order' => '0000'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
         ]);

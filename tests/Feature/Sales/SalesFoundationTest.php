@@ -99,7 +99,7 @@ class SalesFoundationTest extends TestCase
         $this->assertCount(1, $order->items);
         $this->assertCount(1, $order->tickets);
         $this->assertCount(1, $order->payments);
-        $this->assertSame(Order::class, $order->payments->first()->payable_type);
+        $this->assertSame((new Order)->getMorphClass(), $order->payments->first()->payable_type);
     }
 
     public function test_user_has_orders_and_tickets(): void

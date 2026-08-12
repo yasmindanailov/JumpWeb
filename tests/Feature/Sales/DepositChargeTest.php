@@ -219,7 +219,7 @@ class DepositChargeTest extends TestCase
             'subtotal' => 18000, 'tax' => 0, 'total' => 18000, 'currency' => 'EUR',
         ]);
         $payment = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 3000, 'currency' => 'EUR',
             'status' => Payment::STATUS_PENDING, 'gateway_order' => '1234567890',
         ]);

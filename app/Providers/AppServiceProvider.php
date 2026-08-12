@@ -2,16 +2,42 @@
 
 namespace App\Providers;
 
+use App\Models\Attraction;
+use App\Models\AuditLog;
+use App\Models\Consent;
+use App\Models\CookieConsentLog;
+use App\Models\Faq;
 use App\Models\LandingService;
 use App\Models\Offer;
+use App\Models\OpeningHour;
+use App\Models\Order;
+use App\Models\OrderAdjustment;
+use App\Models\OrderItem;
+use App\Models\Page;
+use App\Models\ParkRule;
+use App\Models\Payment;
+use App\Models\PaymentRefund;
+use App\Models\Permission;
+use App\Models\Price;
+use App\Models\ProductAddon;
+use App\Models\RateType;
+use App\Models\Role;
+use App\Models\Room;
+use App\Models\Season;
 use App\Models\Setting;
+use App\Models\Slot;
+use App\Models\SlotTemplate;
+use App\Models\SpecialDate;
+use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
+use App\Models\Zone;
 use App\Support\CookieConsent;
 use App\Support\CustomerAccountContext;
 use App\Support\MapsEmbed;
 use App\Support\SocialEmbed;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +64,46 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // morphMap FORZADO (Fase 2, prerequisito de la modularización — DEUDA §Alta): las columnas
+        // polimórficas (`payments.payable_type`, `prices.priceable_type`, `audit_logs.target_type`)
+        // guardan ALIAS estables, no FQCN → renombrar/mover un modelo ya no rompe datos. `enforce`
+        // hace que morfar un modelo SIN alias lance (ningún FQCN nuevo puede colarse en BD).
+        // Los datos pre-existentes con FQCN los convirtió la migración 2026_08_12 (convert_morph_
+        // types_to_aliases); el fallback de lectura de Laravel resuelve FQCN legacy igualmente.
+        // ⚠️ Modelo NUEVO ⇒ añadir aquí su alias (lo exige `MorphMapTest`).
+        Relation::enforceMorphMap([
+            'attraction' => Attraction::class,
+            'audit_log' => AuditLog::class,
+            'consent' => Consent::class,
+            'cookie_consent_log' => CookieConsentLog::class,
+            'faq' => Faq::class,
+            'landing_service' => LandingService::class,
+            'offer' => Offer::class,
+            'opening_hour' => OpeningHour::class,
+            'order' => Order::class,
+            'order_adjustment' => OrderAdjustment::class,
+            'order_item' => OrderItem::class,
+            'page' => Page::class,
+            'park_rule' => ParkRule::class,
+            'payment' => Payment::class,
+            'payment_refund' => PaymentRefund::class,
+            'permission' => Permission::class,
+            'price' => Price::class,
+            'product_addon' => ProductAddon::class,
+            'rate_type' => RateType::class,
+            'role' => Role::class,
+            'room' => Room::class,
+            'season' => Season::class,
+            'setting' => Setting::class,
+            'slot' => Slot::class,
+            'slot_template' => SlotTemplate::class,
+            'special_date' => SpecialDate::class,
+            'ticket' => Ticket::class,
+            'ticket_type' => TicketType::class,
+            'user' => User::class,
+            'zone' => Zone::class,
+        ]);
+
         // Guard estricto de asignación masiva (recomendación B, 2026-06-15): fuera de producción,
         // cualquier `create()/update()/fill()` con una clave fuera del `$fillable` del modelo LANZA
         // en vez de descartarla en silencio. Caza allowlists incompletos en la suite (el mayor

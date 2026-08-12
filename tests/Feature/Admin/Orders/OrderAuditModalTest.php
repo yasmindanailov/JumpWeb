@@ -318,7 +318,7 @@ class OrderAuditModalTest extends TestCase
         $entry = $paginator->getCollection()->first();
 
         $this->assertSame($item->id, $entry->target_id);
-        $this->assertSame(OrderItem::class, $entry->target_type);
+        $this->assertSame((new OrderItem)->getMorphClass(), $entry->target_type);
 
         // El blade busca el item en el record con `$order->items->firstWhere('id', target_id)`.
         // Verificamos que el lookup resuelve.

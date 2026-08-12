@@ -4,7 +4,7 @@
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
 > encima (CONVENCIONES §7).
 
-> **Fuente:** REGENERADO desde el código real (`app/Models/*.php` + `database/migrations/`, 70
+> **Fuente:** REGENERADO desde el código real (`app/Models/*.php` + `database/migrations/`, 71
 > migraciones). El `04-MODELO-DATOS.md` del origen estaba desfasado y NO se portó.
 
 ## 0. Convenciones transversales
@@ -22,10 +22,13 @@
   Solo tienen allowlist `$fillable` estos 6: `Order`, `Payment`, `Setting`, `Role`,
   `Permission`, `AuditLog` (`grep -l fillable app/Models/*.php`). Rareza a vigilar al
   escribir código nuevo.
-- **⚠️ Sin morphMap:** no hay `Relation::enforceMorphMap()` — las columnas polimórficas
-  (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan el
-  **FQCN** (`App\Models\Order`…). Renombrar/mover una clase de modelo en el refactor
-  **rompe datos existentes** si no se añade morphMap o se migran los valores.
+- **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
+  `AppServiceProvider` con alias snake_case para los 30 modelos — las columnas polimórficas
+  (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan
+  ALIAS (`order`, `ticket_type`…), nunca FQCN; los datos legacy los convirtió la migración
+  `convert_morph_types_to_aliases`. Renombrar/mover modelos ya NO rompe datos. Regla:
+  modelo nuevo ⇒ alias en el mapa (lo exige `MorphMapTest`); comparaciones SIEMPRE con
+  `getMorphClass()`, jamás `::class` contra esas columnas.
 - Vocabulario: zonas, atracciones, packs de cumpleaños, waiver, puerta, pulsera
   (vocabulario del sector origen; su generalización se decide en `00-REFACTOR.md` Fase 1/2).
 
@@ -314,7 +317,7 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
    referencias `JJ-XXXXXX` a pedidos reales del origen (a propósito).
 6. **FKs ausentes a propósito:** `ticket_types.zone_id` (índice sin constraint; limitación
    histórica de ALTER en SQLite) y `order_items.parent_item_id` (integridad en app).
-7. **Sin morphMap** (ver §0): los morphs guardan FQCN → renombrar modelos rompe datos.
+7. **morphMap forzado desde Fase 2** (ver §0): alias estables en los morphs; deuda retirada.
 8. **`$guarded = []`** en la mayoría de modelos (ver §0); solo 6 modelos con `$fillable`.
 9. **Migraciones con lógica de datos del origen:** backfills/repairs quirúrgicos
    (`ServicePriceTableBackfill`, `SpecialRateLabelBackfill`, `LegacyAddonAdjustmentRepair`,

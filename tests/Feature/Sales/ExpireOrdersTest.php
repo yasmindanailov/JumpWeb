@@ -103,7 +103,7 @@ class ExpireOrdersTest extends TestCase
             'expires_at' => now()->subMinutes(5),
         ]);
         Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => 1000,
@@ -152,7 +152,7 @@ class ExpireOrdersTest extends TestCase
             'expires_at' => now()->subMinutes(5),
         ]);
         Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => 1000,

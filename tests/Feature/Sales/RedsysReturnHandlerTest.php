@@ -110,7 +110,7 @@ class RedsysReturnHandlerTest extends TestCase
         ]);
 
         $payment = Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => $amount,
@@ -449,7 +449,7 @@ class RedsysReturnHandlerTest extends TestCase
 
         // 2.º Payment (otro gateway_order) sobre la MISMA Order, autorizado 5 min después.
         $p2 = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id, 'provider' => 'redsys',
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id, 'provider' => 'redsys',
             'amount' => $p1->amount, 'currency' => 'EUR', 'status' => Payment::STATUS_PENDING,
             'gateway_order' => '0000'.str_pad((string) ($order->id + 500000), 6, '0', STR_PAD_LEFT),
         ]);
@@ -554,7 +554,7 @@ class RedsysReturnHandlerTest extends TestCase
         $this->handler->process($this->makeSignedReturnPayload($p1, '0000')); // 1.er pago OK
 
         $p2 = Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id, 'provider' => 'redsys',
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id, 'provider' => 'redsys',
             'amount' => $p1->amount, 'currency' => 'EUR', 'status' => Payment::STATUS_PENDING,
             'gateway_order' => '0000'.str_pad((string) ($order->id + 500000), 6, '0', STR_PAD_LEFT),
         ]);
@@ -567,7 +567,7 @@ class RedsysReturnHandlerTest extends TestCase
 
         $incident = AuditLog::where('action', AuditLog::ACTION_DUPLICATE_CAPTURE)->first();
         $this->assertNotNull($incident, 'el cobro duplicado se registra en audit_logs');
-        $this->assertSame(Order::class, $incident->target_type);
+        $this->assertSame((new Order)->getMorphClass(), $incident->target_type);
         $this->assertSame($order->id, $incident->target_id);
         $this->assertSame($order->code, $incident->payload['order_code']);
         $this->assertSame($p2->gateway_order, $incident->payload['gateway_order']);

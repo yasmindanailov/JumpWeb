@@ -951,7 +951,7 @@ class Purchase extends Component
                 $gatewayOrder = $redsys->nextGatewayOrder();
 
                 return Payment::create([
-                    'payable_type' => Order::class,
+                    'payable_type' => (new Order)->getMorphClass(),
                     'payable_id' => $order->id,
                     'provider' => 'redsys',
                     'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total
@@ -1084,13 +1084,13 @@ class Purchase extends Component
 
                 // Descarta los intentos `pending` previos (auditoría Fase 1, complemento C1):
                 // ver `RetryPaymentController` y `Payment::STATUS_SUPERSEDED`.
-                Payment::where('payable_type', Order::class)
+                Payment::where('payable_type', (new Order)->getMorphClass())
                     ->where('payable_id', $order->id)
                     ->where('status', Payment::STATUS_PENDING)
                     ->update(['status' => Payment::STATUS_SUPERSEDED]);
 
                 return Payment::create([
-                    'payable_type' => Order::class,
+                    'payable_type' => (new Order)->getMorphClass(),
                     'payable_id' => $order->id,
                     'provider' => 'redsys',
                     'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total
@@ -1143,7 +1143,7 @@ class Purchase extends Component
             return null;
         }
 
-        $payment = Payment::where('payable_type', Order::class)
+        $payment = Payment::where('payable_type', (new Order)->getMorphClass())
             ->whereHas('payable', fn ($q) => $q->where('code', $orderCode)->where('user_id', $user->id))
             ->where('status', Payment::STATUS_FAILED)
             ->latest('id')

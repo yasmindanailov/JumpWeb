@@ -86,7 +86,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Doc técnica portada y adaptada** (2026-08-12, `DECISIONES #8`; workflow de 14 agentes
       + verificación por grep): ARQUITECTURA · SEGURIDAD · TESTING · FLUJOS · PANEL-ADMIN ·
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
-      **`MODELO-DATOS.md` regenerado desde el código** (30 modelos · 70 migraciones) ·
+      **`MODELO-DATOS.md` regenerado desde el código** (30 modelos · 71 migraciones) ·
       **`INVARIANTES.md`** destilado (54 invariantes de no-regresión). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
@@ -95,14 +95,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       CONSERVADOR para el sector «ocio con aforo» (`DECISIONES #12.d`); la decisión final
       viaja con el diseño de módulos de Fase 2 (morphMap como prerequisito).
 
-### Fase 2 — Modularización del dominio ⬜
+### Fase 2 — Modularización del dominio 🟦
 - [ ] Diseño de contextos (con revisión multi-agente): **Catalog&Booking** (productos, tarifas,
       franjas/aforo, pedidos, tickets) · **Content/CMS** (páginas, secciones, servicios, ofertas,
       FAQs, normas, tema) · **Identity** (auth, cuentas, RGPD/consents) · **Payments** (proveedores,
       pagos, reembolsos, señal) · **Platform** (settings, i18n, auditoría, mantenimiento).
-- [ ] **Prerequisito — morphMap**: los morphs (`prices.priceable_type`, `payments.payable_type`,
-      `audit_logs.target_type`) guardan FQCN → registrar `enforceMorphMap` (o migrar valores)
-      ANTES de mover/renombrar ningún modelo, o se rompen datos (ver `DEUDA.md` §Alta).
+- [x] **Prerequisito — morphMap** (2026-08-12): `Relation::enforceMorphMap` con alias
+      snake_case para los 30 modelos (`AppServiceProvider`) + migración
+      `convert_morph_types_to_aliases` (idempotente y reversible; verificada en MySQL dev:
+      31 filas convertidas, 0 FQCN restantes) + barrido de TODAS las comparaciones `::class`
+      contra columnas morph (app y tests → `getMorphClass()`) + `MorphMapTest` (alias para
+      todo modelo, round-trip, fila legacy FQCN sigue resolviendo, clase sin alias lanza).
+      Mover/renombrar modelos ya NO rompe datos.
 - [ ] Migrar `app/Support/` (57 ficheros al 2026-08-12) a los módulos, con la suite como red
       (sin big-bang: módulo a módulo, imports actualizados por fases).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere

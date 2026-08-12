@@ -42,6 +42,6 @@ producto de Fase 6.
   `OrderCreator` — los comandos verify YA se corrieron en verde).
 
 ## Herencia
-Base: Laravel 13 · 30 modelos · 70 migraciones · 17 Filament Resources · Livewire v4 ·
+Base: Laravel 13 · 30 modelos · 71 migraciones · 17 Filament Resources · Livewire v4 ·
 Redsys (sandbox) · suite 2132 verde heredada del origen (2026-08-12; hoy 2136 con los
 tests de Fase 1).

@@ -582,7 +582,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $order = $this->makeOrderForCustomer($customer);
 
         Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => 1815,
@@ -627,7 +627,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $order = $this->makeOrderForCustomer($customer);
 
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1815, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'gateway_order' => '0000000778',
             'raw_response' => [
@@ -654,7 +654,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $order = $this->makeOrderForCustomer($customer);
 
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1815, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'gateway_order' => '0000000779',
             'raw_response' => [
@@ -681,7 +681,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $order = $this->makeOrderForCustomer($customer);
 
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1815, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'gateway_order' => '0000000780',
             'raw_response' => ['Ds_Response' => '0000', 'Ds_Date' => '01/01/2026'],
@@ -705,7 +705,7 @@ class OrderInfolistEnrichedTest extends TestCase
         ]);
 
         Payment::create([
-            'payable_type' => Order::class,
+            'payable_type' => (new Order)->getMorphClass(),
             'payable_id' => $order->id,
             'provider' => 'redsys',
             'amount' => 1815,
@@ -768,13 +768,13 @@ class OrderInfolistEnrichedTest extends TestCase
         $order = $this->makeOrderForCustomer($customer);
 
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1815, 'currency' => 'EUR',
             'status' => Payment::STATUS_FAILED, 'gateway_order' => '0000000001',
             'raw_response' => ['Ds_Response' => '0125'],
         ]);
         Payment::create([
-            'payable_type' => Order::class, 'payable_id' => $order->id,
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id,
             'provider' => 'redsys', 'amount' => 1815, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'gateway_order' => '0000000002',
             'auth_code' => '111111',

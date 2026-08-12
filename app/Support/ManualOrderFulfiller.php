@@ -67,7 +67,7 @@ class ManualOrderFulfiller
             $order = $this->orderCreator->createPendingOrder($customer, $cart, null);
 
             Payment::create([
-                'payable_type' => Order::class,
+                'payable_type' => (new Order)->getMorphClass(),
                 'payable_id' => $order->id,
                 'provider' => $method,
                 // #225 (D3): el pedido manual cobra solo la SEÑAL si el producto la tiene

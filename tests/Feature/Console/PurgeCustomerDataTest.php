@@ -67,7 +67,7 @@ class PurgeCustomerDataTest extends TestCase
             'qr_token' => Str::random(32), 'status' => 'purchased', 'created_at' => now(), 'updated_at' => now(),
         ]);
         DB::table('payments')->insert([
-            'payable_type' => Order::class, 'payable_id' => $order->id, 'provider' => 'cash',
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $order->id, 'provider' => 'cash',
             'amount' => 1000, 'currency' => 'EUR', 'status' => 'paid', 'paid_at' => now(),
             'created_at' => now(), 'updated_at' => now(),
         ]);
