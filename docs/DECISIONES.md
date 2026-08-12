@@ -313,3 +313,31 @@ no funciona: la clase no existe. `convert_morph_types_to_aliases` deja de ser un
 convierte en **requisito de despliegue** — una instalación que actualice el código sin migrar
 reventará al leer un `payable`/`priceable`/`target` antiguo. `MorphMapTest` fija exactamente eso
 (antes aseveraba lo contrario, que era cierto hasta este paso).
+
+## #20 · 2026-08-12 · Paso 7 (cierre de Fase 2): las 5 flechas aplazadas, resueltas
+Ejecutado `docs/specs/modulos-dominio.md` §5.7 (detalle en §4.octies). **Fase 2 CERRADA.**
+Decidido:
+**(a) Vía (a) — contratos de lectura en Booking**, que era adonde apuntaba la evidencia del paso 6
+(la vía (b), reclasificar el calendario a Platform, quedó descartada porque `SpecialDate`
+referencia `RateType`). Nacen `Booking\Contracts\OperatingCalendar` (+ DTOs `OperatingWindow`,
+`WeeklyOpening`, `SeasonWindow`, `SpecialDay`) y `Booking\Contracts\ZonePalette`, extraídos de lo
+que la landing YA hacía: el hero, el horario de la landing, el JSON-LD de buscadores y el color de
+zona. Ni un método más.
+**(b) De regalo murieron DOS reglas duplicadas.** Content reimplementaba «cuál es la temporada
+vigente» y «cuál es la ventana efectiva de una fecha especial», con comentarios que decían
+literalmente *«para no divergir de lo que aplican las reservas»*. Es exactamente la trampa que el
+paso 1 encontró en la coherencia #226 (dos consultas SQL con la misma regla): dos copias acaban
+separándose. Ahora la regla la aplica su dueño y Content solo formatea. Coste en consultas: CERO
+—`OperatingSchedule` ya memoizaba horarios, temporadas y excepciones—, y de hecho retira las que
+Content hacía por su cuenta.
+**(c) La línea entre costura y acoplamiento, fijada**: `LandingAddonPresenter` conserva su
+`TicketType` en `SEAM` y no pasa a contrato, porque **recibir** una entidad de otro módulo es
+costura de BD (§4), mientras que **consultar** sus datos o **repetir** sus reglas exige contrato.
+Es el criterio con el que se decidieron las cinco, y el que debe aplicarse a la siguiente.
+**(d) `effectiveFor()` NO cambia de firma.** La consumen `SlotGenerator` y `ProductAvailability`
+—código de aforo protegido por `AFORO-01`/`AFORO-03`— así que el contrato añade `windowFor()`
+tipado y el interior de Booking se queda como estaba. El contrato tipa la FRONTERA, no obliga a
+reescribir el núcleo.
+**Estado final**: `LEGACY`, `PENDING` y `DEFERRED` vacías; `SEAM` solo con costura documentada
+(relaciones Eloquent, el dinero Booking↔Payments con su orquestación, y el `User` kernel). El
+barrido de `App\Support\`/`App\Models\` en código da **cero**.

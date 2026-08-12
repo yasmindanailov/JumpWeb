@@ -2,11 +2,12 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Domain\Booking\Models\OpeningHour;
-use App\Domain\Booking\Models\Season;
-use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\SeasonWindow;
+use App\Domain\Booking\Contracts\SpecialDay;
+use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Platform\Services\DisplayTime;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 
 /**
  * Fase 7.7 (#207) — Presenta el horario del parque para la LANDING, data-driven desde la
@@ -21,21 +22,24 @@ use Illuminate\Support\Collection;
  *    propia o, si no la define, el semanal de ese día), no solo el nombre (#269bis punto 1).
  *
  * La prioridad del horario efectivo (fecha especial > temporada > semanal) es la MISMA que resuelve
- * {@see OperatingSchedule::effectiveFor()} para las reservas: lo anunciado no diverge de lo aplicado.
+ * {@see OperatingCalendar} para las reservas: lo anunciado no PUEDE divergir de lo aplicado,
+ * porque desde el paso 7 de Fase 2 ya no se calcula aquí — se pide resuelto.
  */
 class ScheduleDisplay
 {
     /** Orden de presentación: lunes→domingo (el valor es el weekday de Carbon). */
     private const ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-    /** @var Collection<int, OpeningHour>|null horario semanal memoizado por weekday */
-    private ?Collection $weekly = null;
+    /** @var array<int, WeeklyOpening>|null horario semanal memoizado por weekday */
+    private ?array $weekly = null;
 
-    /** @var Collection<int, Season>|null temporadas activas memoizadas (ordenadas por inicio) */
-    private ?Collection $activeSeasons = null;
+    /** @var list<SeasonWindow>|null temporadas activas memoizadas (ordenadas por inicio) */
+    private ?array $activeSeasons = null;
 
     /** @var bool|null ¿hay una fecha especial para HOY? (memoizado) */
     private ?bool $todaySpecial = null;
+
+    public function __construct(private readonly OperatingCalendar $calendar) {}
 
     /**
      * Filas del horario semanal, agrupando días consecutivos con el mismo horario.
@@ -45,7 +49,7 @@ class ScheduleDisplay
     public function weeklyRows(): array
     {
         $rows = $this->weekly();
-        if ($rows->isEmpty()) {
+        if ($rows === []) {
             return [];
         }
 
@@ -56,7 +60,7 @@ class ScheduleDisplay
         $groups = [];
         $current = null;
         foreach (self::ORDER as $weekday) {
-            $row = $rows->get($weekday);
+            $row = $rows[$weekday] ?? null;
             $signature = $this->signature($row);
 
             if ($current !== null && $current['signature'] === $signature) {
@@ -91,19 +95,18 @@ class ScheduleDisplay
     public function seasons(): array
     {
         $today = now(DisplayTime::timezone())->toDateString();
-        $current = $this->currentSeason();
 
-        return $this->activeSeasons()
-            ->filter(fn (Season $season): bool => $season->end_date->toDateString() >= $today)
-            ->map(fn (Season $season): array => [
+        return array_values(array_map(
+            fn (SeasonWindow $season): array => [
                 'name' => $season->name,
-                'range' => $season->start_date->isoFormat('D MMM').' – '.$season->end_date->isoFormat('D MMM'),
-                'time' => substr((string) $season->open_time, 0, 5).' – '.substr((string) $season->close_time, 0, 5),
-                // ¿Es la temporada vigente HOY? Se destaca como horario actual (#269bis punto 2).
-                'is_current' => $current !== null && (int) $season->id === (int) $current->id,
-            ])
-            ->values()
-            ->all();
+                'range' => Carbon::parse($season->startsOn)->isoFormat('D MMM')
+                    .' – '.Carbon::parse($season->endsOn)->isoFormat('D MMM'),
+                'time' => substr((string) $season->opensAt, 0, 5).' – '.substr((string) $season->closesAt, 0, 5),
+                // ¿Es la temporada vigente HOY? Lo decide Booking (#269bis punto 2).
+                'is_current' => $season->isCurrent,
+            ],
+            array_filter($this->activeSeasons(), fn (SeasonWindow $s): bool => $s->endsOn >= $today)
+        ));
     }
 
     /**
@@ -113,42 +116,37 @@ class ScheduleDisplay
      */
     public function upcomingSpecialDates(int $limit = 4): array
     {
-        return SpecialDate::whereDate('date', '>=', now(DisplayTime::timezone())->toDateString())
-            ->orderBy('date')
-            ->limit(max(1, $limit))
-            ->get()
-            ->map(fn (SpecialDate $special): array => [
-                'date' => $special->date->isoFormat('ddd D MMM'),
-                'detail' => $this->specialDetail($special),
-                'is_closed' => (bool) $special->is_closed,
-            ])
-            ->all();
+        return array_map(fn (SpecialDay $special): array => [
+            'date' => Carbon::parse($special->date)->isoFormat('ddd D MMM'),
+            'detail' => $this->specialDetail($special),
+            'is_closed' => $special->isClosed,
+        ], $this->calendar->upcomingSpecialDays($limit));
     }
 
     /** Firma de un día para agrupar (cerrado / ventana / abierto-sin-ventana / sin-config). */
-    private function signature(?OpeningHour $row): string
+    private function signature(?WeeklyOpening $row): string
     {
         if ($row === null) {
             return 'unset';
         }
-        if ($row->is_closed) {
+        if ($row->isClosed) {
             return 'closed';
         }
 
-        return 'open:'.substr((string) $row->open_time, 0, 5).'-'.substr((string) $row->close_time, 0, 5);
+        return 'open:'.substr((string) $row->opensAt, 0, 5).'-'.substr((string) $row->closesAt, 0, 5);
     }
 
     /** Texto del horario de un día/grupo. */
-    private function timeLabel(?OpeningHour $row): string
+    private function timeLabel(?WeeklyOpening $row): string
     {
-        if ($row !== null && $row->is_closed) {
+        if ($row !== null && $row->isClosed) {
             return __('landing.info.closed');
         }
-        if ($row === null || $row->open_time === null || $row->close_time === null) {
+        if ($row === null || $row->opensAt === null || $row->closesAt === null) {
             return __('landing.info.open_generic');
         }
 
-        return substr((string) $row->open_time, 0, 5).' – '.substr((string) $row->close_time, 0, 5);
+        return substr((string) $row->opensAt, 0, 5).' – '.substr((string) $row->closesAt, 0, 5);
     }
 
     /**
@@ -172,63 +170,57 @@ class ScheduleDisplay
         ]);
     }
 
-    private function specialDetail(SpecialDate $special): string
+    /**
+     * Detalle de una excepción. Ya NO resuelve la ventana efectiva: la trae el contrato
+     * calculada por Booking con la misma regla que aplican las reservas (#269bis punto 1).
+     * Aquí solo queda el formato.
+     */
+    private function specialDetail(SpecialDay $special): string
     {
-        if ($special->is_closed) {
+        if ($special->isClosed) {
             return __('landing.info.closed');
         }
-
-        // Ventana EFECTIVA: la propia del día especial o, si no la define, el horario SEMANAL de ese
-        // día (igual que OperatingSchedule::effectiveFor). Antes se mostraba solo la nota/«Abierto» y se
-        // perdía el horario cuando la fecha especial heredaba el semanal (#269bis punto 1).
-        $day = $this->weekly()->get($special->date->dayOfWeek);
-        $open = $special->open_time ?? $day?->open_time;
-        $close = $special->close_time ?? $day?->close_time;
-        if ($open !== null && $close !== null) {
-            return substr((string) $open, 0, 5).' – '.substr((string) $close, 0, 5);
+        if ($special->hasHours()) {
+            return substr((string) $special->opensAt, 0, 5).' – '.substr((string) $special->closesAt, 0, 5);
         }
 
         // Sin ventana en ningún nivel (p. ej. día abierto sin horario configurado): nota o «Abierto».
-        return (string) ($special->tr('note') ?? __('landing.info.open_generic'));
+        return (string) ($special->note ?? __('landing.info.open_generic'));
     }
 
-    /** @return Collection<int, OpeningHour> horario semanal por weekday (memoizado). */
-    private function weekly(): Collection
+    /** @return array<int, WeeklyOpening> horario semanal por weekday (memoizado). */
+    private function weekly(): array
     {
-        return $this->weekly ??= OpeningHour::all()->keyBy('weekday');
+        return $this->weekly ??= $this->calendar->weeklyOpenings();
     }
 
-    /** @return Collection<int, Season> temporadas activas ordenadas por inicio (memoizado). */
-    private function activeSeasons(): Collection
+    /** @return list<SeasonWindow> temporadas activas ordenadas por inicio (memoizado). */
+    private function activeSeasons(): array
     {
-        return $this->activeSeasons ??= Season::where('is_active', true)->orderBy('start_date')->get();
+        return $this->activeSeasons ??= $this->calendar->activeSeasons();
     }
 
-    /**
-     * Temporada vigente HOY (si varias solapan, la de inicio más temprano), o null. Misma regla que
-     * {@see OperatingSchedule::seasonFor()}, para no divergir de lo que aplican las reservas.
-     */
-    private function currentSeason(): ?Season
+    /** ¿Hay una temporada vigente HOY? La regla la aplica Booking; aquí solo se lee el flag. */
+    private function hasCurrentSeason(): bool
     {
-        $day = now(DisplayTime::timezone())->toDateString();
+        foreach ($this->activeSeasons() as $season) {
+            if ($season->isCurrent) {
+                return true;
+            }
+        }
 
-        return $this->activeSeasons()->first(
-            fn (Season $season): bool => $season->start_date->toDateString() <= $day
-                && $day <= $season->end_date->toDateString()
-        );
+        return false;
     }
 
     /** ¿Hay una fecha especial configurada para HOY? (memoizado) */
     private function todayHasSpecial(): bool
     {
-        return $this->todaySpecial ??= SpecialDate::query()
-            ->whereDate('date', now(DisplayTime::timezone())->toDateString())
-            ->exists();
+        return $this->todaySpecial ??= $this->calendar->hasSpecialDay(now(DisplayTime::timezone()));
     }
 
     /** ¿El horario de HOY lo gobierna una fecha especial o una temporada (no el semanal)? */
     private function todayOverridden(): bool
     {
-        return $this->todayHasSpecial() || $this->currentSeason() !== null;
+        return $this->todayHasSpecial() || $this->hasCurrentSeason();
     }
 }

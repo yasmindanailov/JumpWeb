@@ -161,6 +161,15 @@ class ModuleBoundariesTest extends TestCase
         'Booking/Models/TicketType.php' => ['App\Domain\Content\Models\LandingService'],
         'Booking/Models/Zone.php' => ['App\Domain\Content\Models\Attraction'],
         'Booking/Services/EmailProductCard.php' => ['App\Domain\Content\Services\ThemeSettings'],
+
+        // ─── CONTENT → BOOKING: recibir una entidad NO es consultar otro módulo (paso 7) ───
+        // `LandingAddonPresenter::rows(TicketType $product, …)` solo TIPA lo que le pasa la capa
+        // de entrega; la regla de qué complementos se anuncian la aplica Booking en la relación
+        // `addons()`. La línea que separa costura de acoplamiento, y que el paso 7 fija:
+        // **recibir una entidad de otro módulo es costura de BD (§4); CONSULTAR sus datos o
+        // repetir sus reglas exige contrato** — que es justo lo que se hizo con el calendario
+        // (`OperatingCalendar`) y el color de zona (`ZonePalette`).
+        'Content/Services/LandingAddonPresenter.php' => ['App\Domain\Booking\Models\TicketType'],
     ];
 
     /**
@@ -190,25 +199,19 @@ class ModuleBoundariesTest extends TestCase
      *       Platform, porque `SpecialDate` referencia `RateType` (tarifa) y Platform no puede
      *       depender de nadie. Haría falta un módulo «recinto» nuevo — más de lo que el spec
      *       aprobó.
-     * La evidencia empuja hacia (a). Se decide en el paso 7 y no antes: el paso 6 es una
-     * mudanza, y mezclar tres contratos nuevos con el movimiento de 40 clases sería justo el
-     * big-bang que el spec prohíbe (§2).
+     * ✅ **RESUELTA y VACÍA en el paso 7** (2026-08-12) por la vía (a): nacieron
+     * `Booking\Contracts\OperatingCalendar` (+ 4 DTOs) y `Booking\Contracts\ZonePalette`,
+     * extraídos de esas llamadas. De regalo murieron dos reglas duplicadas que Content
+     * mantenía «para no divergir» de las reservas: cuál es la temporada vigente y cuál la
+     * ventana efectiva de una fecha especial.
      *
-     * Como el resto de baselines, **solo puede ENCOGER**.
+     * Se conserva la constante —y su guarda de «solo encoge»— como el sitio donde declarar la
+     * próxima flecha que el grafo no permita, en vez de colarla en `SEAM` como si fuera
+     * costura aceptada.
      *
      * @var array<string, list<string>>
      */
-    private const DEFERRED = [
-        'Content/Services/HeroStatus.php' => ['App\Domain\Booking\Services\OperatingSchedule'],
-        'Content/Services/ScheduleDisplay.php' => [
-            'App\Domain\Booking\Models\OpeningHour',
-            'App\Domain\Booking\Models\Season',
-            'App\Domain\Booking\Models\SpecialDate',
-        ],
-        'Content/Services/StructuredData.php' => ['App\Domain\Booking\Models\OpeningHour'],
-        'Content/Services/ThemeSettings.php' => ['App\Domain\Booking\Models\Zone'],
-        'Content/Services/LandingAddonPresenter.php' => ['App\Domain\Booking\Models\TicketType'],
-    ];
+    private const DEFERRED = [];
 
     /** El escaneo nunca puede pasar en vacío (un glob roto lo volvería un test decorativo). */
     public function test_the_scan_actually_sees_the_domain_modules(): void

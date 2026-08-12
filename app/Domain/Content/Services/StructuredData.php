@@ -2,7 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Content\Models\Faq;
 use Illuminate\Support\Facades\Schema;
 
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Schema;
  */
 class StructuredData
 {
-    /** schema.org day name por `weekday` de Carbon (0=domingo .. 6=sábado, igual que OpeningHour). */
+    /** schema.org day name por `weekday` de Carbon (0=domingo .. 6=sábado, igual que el contrato del calendario). */
     private const SCHEMA_DAYS = [
         0 => 'https://schema.org/Sunday',
         1 => 'https://schema.org/Monday',
@@ -121,18 +121,18 @@ class StructuredData
 
         // Agrupa por ventana [open,close]; conserva qué días la comparten (índice = weekday).
         $byWindow = [];
-        foreach (OpeningHour::all() as $hour) {
-            if ($hour->is_closed || empty($hour->open_time) || empty($hour->close_time)) {
+        foreach (app(OperatingCalendar::class)->weeklyOpenings() as $hour) {
+            if ($hour->isClosed || empty($hour->opensAt) || empty($hour->closesAt)) {
                 continue;
             }
-            if (! array_key_exists((int) $hour->weekday, self::SCHEMA_DAYS)) {
+            if (! array_key_exists($hour->weekday, self::SCHEMA_DAYS)) {
                 continue;
             }
 
-            $key = $hour->open_time.'|'.$hour->close_time;
-            $byWindow[$key]['opens'] = substr((string) $hour->open_time, 0, 5);
-            $byWindow[$key]['closes'] = substr((string) $hour->close_time, 0, 5);
-            $byWindow[$key]['days'][(int) $hour->weekday] = self::SCHEMA_DAYS[(int) $hour->weekday];
+            $key = $hour->opensAt.'|'.$hour->closesAt;
+            $byWindow[$key]['opens'] = substr((string) $hour->opensAt, 0, 5);
+            $byWindow[$key]['closes'] = substr((string) $hour->closesAt, 0, 5);
+            $byWindow[$key]['days'][$hour->weekday] = self::SCHEMA_DAYS[$hour->weekday];
         }
 
         ksort($byWindow); // orden determinista (por hora de apertura)

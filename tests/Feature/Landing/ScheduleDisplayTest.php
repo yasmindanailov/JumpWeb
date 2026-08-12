@@ -35,7 +35,7 @@ class ScheduleDisplayTest extends TestCase
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '11:00:00', 'close_time' => '22:00:00']);
         }
 
-        $rows = (new ScheduleDisplay)->weeklyRows();
+        $rows = app(ScheduleDisplay::class)->weeklyRows();
 
         $this->assertCount(2, $rows);
         $this->assertSame('Lunes a viernes', $rows[0]['label']);
@@ -52,7 +52,7 @@ class ScheduleDisplayTest extends TestCase
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '10:00:00', 'close_time' => '21:00:00']);
         }
 
-        $rows = (new ScheduleDisplay)->weeklyRows();
+        $rows = app(ScheduleDisplay::class)->weeklyRows();
 
         $this->assertSame('Lunes', $rows[0]['label']);
         $this->assertSame('Cerrado', $rows[0]['time']);
@@ -64,7 +64,7 @@ class ScheduleDisplayTest extends TestCase
         Season::create(['name' => 'Pasada', 'start_date' => '2020-01-01', 'end_date' => '2020-02-01', 'open_time' => '10:00:00', 'close_time' => '20:00:00', 'is_active' => true]);
         Season::create(['name' => 'Inactiva', 'start_date' => '2026-07-01', 'end_date' => '2099-08-31', 'open_time' => '10:00:00', 'close_time' => '20:00:00', 'is_active' => false]);
 
-        $seasons = (new ScheduleDisplay)->seasons();
+        $seasons = app(ScheduleDisplay::class)->seasons();
 
         $this->assertCount(1, $seasons);
         $this->assertSame('Verano', $seasons[0]['name']);
@@ -77,7 +77,7 @@ class ScheduleDisplayTest extends TestCase
         SpecialDate::create(['date' => Carbon::tomorrow()->toDateString(), 'is_closed' => true]);
         SpecialDate::create(['date' => Carbon::tomorrow()->addDay()->toDateString(), 'is_closed' => false, 'open_time' => '12:00:00', 'close_time' => '16:00:00']);
 
-        $dates = (new ScheduleDisplay)->upcomingSpecialDates(4);
+        $dates = app(ScheduleDisplay::class)->upcomingSpecialDates(4);
 
         $this->assertCount(2, $dates); // solo las futuras
         $this->assertTrue($dates[0]['is_closed']);
@@ -97,7 +97,7 @@ class ScheduleDisplayTest extends TestCase
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '16:00:00', 'close_time' => '22:00:00']);
         }
 
-        $rows = (new ScheduleDisplay)->weeklyRows();
+        $rows = app(ScheduleDisplay::class)->weeklyRows();
 
         $this->assertCount(3, $rows); // patrón fragmentado: 3 grupos
         $this->assertSame('Lunes a miércoles', $rows[0]['label']);
@@ -117,7 +117,7 @@ class ScheduleDisplayTest extends TestCase
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '10:00:00', 'close_time' => '21:00:00']);
         }
 
-        $todayRow = collect((new ScheduleDisplay)->weeklyRows())->firstWhere('is_today', true);
+        $todayRow = collect(app(ScheduleDisplay::class)->weeklyRows())->firstWhere('is_today', true);
 
         $this->assertNotNull($todayRow);
         $this->assertSame('Miércoles', $todayRow['label']);
@@ -156,7 +156,7 @@ class ScheduleDisplayTest extends TestCase
             'date' => '2026-06-17', 'is_closed' => false, 'note' => ['es' => 'Tarifa especial'],
         ]);
 
-        $special = collect((new ScheduleDisplay)->upcomingSpecialDates())->first();
+        $special = collect(app(ScheduleDisplay::class)->upcomingSpecialDates())->first();
 
         $this->assertNotNull($special);
         $this->assertFalse($special['is_closed']);
@@ -176,7 +176,7 @@ class ScheduleDisplayTest extends TestCase
         }
         Season::create(['name' => 'Verano', 'start_date' => '2026-07-01', 'end_date' => '2026-08-31', 'open_time' => '11:00:00', 'close_time' => '23:00:00', 'is_active' => true]);
 
-        $schedule = new ScheduleDisplay;
+        $schedule = app(ScheduleDisplay::class);
         $rows = $schedule->weeklyRows();
         $seasons = $schedule->seasons();
 
@@ -197,7 +197,7 @@ class ScheduleDisplayTest extends TestCase
             OpeningHour::create(['weekday' => $weekday, 'open_time' => '16:00:00', 'close_time' => '22:00:00']);
         }
 
-        $rows = (new ScheduleDisplay)->weeklyRows();
+        $rows = app(ScheduleDisplay::class)->weeklyRows();
 
         $this->assertSame(1, count(array_filter($rows, fn (array $r): bool => $r['is_today'])));
 

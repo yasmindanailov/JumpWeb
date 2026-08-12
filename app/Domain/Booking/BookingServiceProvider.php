@@ -3,9 +3,13 @@
 namespace App\Domain\Booking;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\PublishableCatalog;
+use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Services\CustomerReservationsReader;
+use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
+use App\Domain\Booking\Services\ZonePaletteReader;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -22,5 +26,9 @@ class BookingServiceProvider extends ServiceProvider
     {
         $this->app->bind(CustomerReservations::class, CustomerReservationsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
+        $this->app->bind(ZonePalette::class, ZonePaletteReader::class);
+        // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
+        // petición para no repetir esas lecturas entre la landing, el SEO y el hero.
+        $this->app->bind(OperatingCalendar::class, OperatingSchedule::class);
     }
 }

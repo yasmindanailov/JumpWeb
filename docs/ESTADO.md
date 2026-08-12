@@ -4,8 +4,8 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — MUDANZA COMPLETA (pasos 1–6). `app/Models` y `app/Support` ya no existen. Queda el paso 7 (cierre).**
-- Suite **2190 en verde** (8188 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) ✅ CERRADA — los 7 pasos hechos. Siguiente: Fase 3 (API v1).**
+- Suite **2184 en verde** (8176 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
   dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
@@ -104,6 +104,22 @@
        desaparecer `App\Models\*`, el fallback de FQCN legacy ya no resuelve. Actualizar código
        sin migrar revienta al leer un `payable`/`priceable`/`target` antiguo. `MorphMapTest` lo
        fija (antes aseveraba lo contrario, cierto hasta este paso).
+  10. **PASO 7 — CIERRE de Fase 2** (`DECISIONES #20`, spec §4.octies): resueltas las 5 flechas
+     `DEFERRED` con dos contratos de LECTURA extraídos de llamadas reales —
+     `Booking\Contracts\OperatingCalendar` (+ DTOs `OperatingWindow`, `WeeklyOpening`,
+     `SeasonWindow`, `SpecialDay`) y `ZonePalette`—.
+     - **De regalo murieron dos reglas duplicadas**: Content reimplementaba «temporada vigente»
+       y «ventana efectiva de una fecha especial» con comentarios que decían «para no divergir
+       de lo que aplican las reservas». Misma trampa que la coherencia #226 del paso 1.
+     - **Coste cero en consultas**: `OperatingSchedule` ya memoizaba esos datos; el contrato se
+       compone sobre lo que había y retira las consultas que Content hacía aparte.
+     - **`effectiveFor()` NO cambia de firma**: la consumen `SlotGenerator` y
+       `ProductAvailability` (aforo, `AFORO-01`/`AFORO-03`). El contrato tipa la FRONTERA
+       (`windowFor()`), no obliga a reescribir el núcleo.
+     - **Criterio fijado** para la próxima flecha: *recibir* una entidad de otro módulo es
+       costura de BD; *consultar* sus datos o *repetir* sus reglas exige contrato.
+     - Baselines finales: `LEGACY`/`PENDING`/`DEFERRED` **vacías**; `SEAM` solo con costura
+       documentada. Barrido `App\Support\`/`App\Models\` en código: **cero**.
 - Fase 1 cerrada esta misma sesión: marca a 6 líneas intencionales, prefijo de pedidos =
   setting `sales.order_prefix` (default `R-`), semilla neutra «SaltoPark», jurisdicción
   legal por token, wordmark data-driven (`DECISIONES #12`).
@@ -115,29 +131,23 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**Spec de módulos, PASO 7 — CIERRE de Fase 2** (leer `docs/specs/modulos-dominio.md` §5.7 y
-§4.septies). La mudanza está hecha; queda una decisión de diseño y un barrido.
+**FASE 2 CERRADA.** Toca **Fase 3 — API v1** (`docs/00-REFACTOR.md`, y `DECISIONES #3`/`#4`).
 
-**1. Resolver las 5 flechas `DEFERRED`** (`ModuleBoundariesTest`) — la decisión que el paso 3
-aplazó y el paso 6 acotó. Son Content leyendo Booking para PINTARLO:
-`HeroStatus`→`OperatingSchedule` · `ScheduleDisplay`→`OpeningHour`/`Season`/`SpecialDate` ·
-`StructuredData`→`OpeningHour` · `ThemeSettings`→`Zone` · `LandingAddonPresenter`→`TicketType`.
-- La salida (b) «reclasificar el calendario a Platform» está **descartada con medición**:
-  `SpecialDate` referencia `RateType` (tarifa) y Platform no puede depender de nadie.
-- Queda (a): **contratos de LECTURA en Booking**, extraídos de estas llamadas reales —
-  «calendario de operación», «identidad de zona», «precio de referencia»—, igual que se hizo en
-  el paso 1 con `PublishableCatalog` y `CustomerReservations`. NO inventar superficie: mirar qué
-  usan exactamente esos 5 ficheros y exponer eso.
+Antes de empezar, dos cosas que Fase 2 deja preparadas y conviene aprovechar:
+- **La abstracción `PaymentProvider`** que pide Fase 3 tiene ya su semilla: el contrato
+  `Payments\Contracts\RefundGateway` (paso 1) es el reembolso; falta el cobro, que hoy consume
+  solo la capa de entrega (`Purchase`, `RetryPaymentController`).
+- **Los contratos de lectura existentes** (`CustomerReservations`, `PublishableCatalog`,
+  `OperatingCalendar`, `ZonePalette`) son el material natural de los endpoints v1: ya devuelven
+  DTOs serializables, que fue una decisión deliberada del paso 1.
 
-**2. Barrido final**: `git grep -n 'App\\Support\\\|App\\Models\\'` debe dar solo prosa
-histórica (docblocks que explican por qué la migración del morphMap está congelada) y la propia
-migración. Revisar rutas citadas en la doc (`docs-check` cubre las rutas, NO los namespaces en
-prosa: eso hay que barrerlo a mano, como en cada paso).
+⚠️ **Recomendado antes de Fase 3**: aplicar el protocolo de spec (`CONVENCIONES §5`) como se hizo
+con `modulos-dominio.md`. Los 7 pasos salieron sin sustos porque el diseño estaba escrito y
+revisado ANTES, y cada paso empezaba midiendo en vez de suponiendo.
 
-**3. `ARQUITECTURA.md` §4 ya está reescrito** con el árbol final (se hizo en el paso 6 para no
-dejar el doc mintiendo). Repasar que sigue fiel al cerrar.
-
-Con eso, **Fase 2 cerrada** y el tracker pasa a Fase 3 (API v1).
+**Nota de despliegue heredada de Fase 2** (⚠️ no la pierdas): las migraciones deben correr ANTES
+de servir tráfico —la conversión del morphMap es ahora requisito, no comodidad— y hay que drenar
+la cola + `queue:restart` (los payloads serializados llevaban los FQCN viejos).
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer
 admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.

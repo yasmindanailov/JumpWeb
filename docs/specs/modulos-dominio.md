@@ -308,8 +308,10 @@ que actualice el código sin migrar reventará al leer un `payable`/`priceable`/
    los 2 concerns y los 23 servicios que quedaban— a `app/Domain/Booking/{Models,Services,
    Concerns,Exceptions}` + renombre `ParkSchedule`→`OperatingSchedule`. **`app/Models` y
    `app/Support` dejan de existir.**
-7. **Cierre**: retirar `app/Support`/`app/Models` vacíos, baseline final en la allowlist,
-   reescribir `ARQUITECTURA.md` y rutas citadas en docs.
+7. ✅ **Cierre** (2026-08-12, ver §4.octies): resueltas las 5 flechas `DEFERRED` con dos
+   contratos de lectura (`OperatingCalendar` + 4 DTOs, `ZonePalette`), baseline final, barrido
+   de `App\Support`/`App\Models` a cero y `ARQUITECTURA.md` §4 con el árbol definitivo.
+   **Fase 2 CERRADA.**
 
 **Checklist mecánico de CADA paso de movimiento** (afinado tras el paso 2 — §4.ter):
 0. **Medir las dependencias INVISIBLES** de lo que se mueve y de lo que se queda: referencias a
@@ -326,6 +328,35 @@ que actualice el código sin migrar reventará al leer un `payable`/`priceable`/
    `SlotGenerator` —aunque sea solo para añadir un `use`— el gate exige `VERIFY_CONC=1`.
 6. Si toca modelos: nota de deploy «cola drenada + `queue:restart`» (payloads serializados con
    FQCN; `failed_jobs` legacy se reintenta o vacía ANTES).
+
+## 4.octies Paso 7 EJECUTADO (2026-08-12) — cierre: la frontera, entera
+Última pieza: las 5 flechas que el paso 3 aplazó y el paso 6 acotó. Se resolvieron por la vía
+(a) —contratos de lectura en Booking—, que era adonde apuntaba la evidencia (`DECISIONES #20`):
+
+1. **`Booking\Contracts\OperatingCalendar`** (+ DTOs `OperatingWindow`, `WeeklyOpening`,
+   `SeasonWindow`, `SpecialDay`), extraído de lo que la landing ya hacía: `HeroStatus`
+   («¿abrimos ahora?»), `ScheduleDisplay` (semanal, temporadas, próximas excepciones) y
+   `StructuredData` (JSON-LD para buscadores). Ni un método más.
+   **De regalo murieron DOS reglas duplicadas.** Content reimplementaba «cuál es la temporada
+   vigente» y «cuál es la ventana efectiva de una fecha especial», con comentarios que decían
+   literalmente *«para no divergir de lo que aplican las reservas»*. Es la misma trampa que el
+   paso 1 encontró en la coherencia #226: dos copias de una regla acaban separándose. Ahora la
+   regla la aplica su dueño y Content solo formatea.
+2. **`Booking\Contracts\ZonePalette`** (un método): el color de la zona, que `ThemeSettings`
+   leía con una consulta directa a `zones`.
+3. **La línea que separa costura de acoplamiento, fijada**: `LandingAddonPresenter` se queda
+   con su `TicketType` en `SEAM`, no en contrato, porque **recibir** una entidad de otro módulo
+   es costura de BD (§4); **consultar** sus datos o **repetir** sus reglas exige contrato. Es el
+   criterio con el que se decidieron las cinco.
+4. **Coste cero en consultas**: `OperatingSchedule` ya memoizaba horarios, temporadas y
+   excepciones, así que el contrato se compone sobre lo que había — y retira las consultas que
+   Content hacía por su cuenta.
+
+**Estado final de las baselines**: `LEGACY`, `PENDING` y `DEFERRED` **vacías**; `SEAM` conserva
+solo costura documentada (relaciones Eloquent, el dinero Booking↔Payments con su orquestación, y
+el `User` kernel). El barrido `App\Support\`/`App\Models\` en código da **cero**: lo único que
+queda son docblocks que explican por qué la migración del morphMap está congelada, y sus propias
+cadenas de datos.
 
 ## 6. Riesgos (de la revisión adversarial, con mitigación)
 1. Gate `VERIFY_CONC` moría al mover el núcleo (ancla por ruta) → resuelto en paso 0.

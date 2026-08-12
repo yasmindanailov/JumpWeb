@@ -2,9 +2,15 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\OperatingWindow;
+use App\Domain\Booking\Contracts\SeasonWindow;
+use App\Domain\Booking\Contracts\SpecialDay;
+use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Season;
 use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
@@ -19,7 +25,7 @@ use Illuminate\Support\Collection;
  * sin restricción de ventana (open/close = null), para no bloquear cuando el parque aún no
  * ha definido sus horarios reales [PENDIENTE]. El precio del día lo resuelve RateResolver.
  */
-class OperatingSchedule
+class OperatingSchedule implements OperatingCalendar
 {
     /** @var Collection<int, OpeningHour>|null horario semanal memoizado por weekday */
     private ?Collection $weekly = null;
@@ -116,5 +122,86 @@ class OperatingSchedule
     private function seasons(): Collection
     {
         return $this->seasons ??= Season::where('is_active', true)->orderBy('start_date')->get();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────────
+    // Contrato `OperatingCalendar` (Fase 2, paso 7): la cara del calendario para fuera de
+    // Booking. Todo se compone sobre los datos que esta clase YA memoiza, así que no añade
+    // ni una consulta: de hecho retira las que Content hacía por su cuenta.
+    // ─────────────────────────────────────────────────────────────────────────────────────
+
+    public function windowFor(CarbonInterface $date): OperatingWindow
+    {
+        $effective = $this->effectiveFor($date);
+
+        return new OperatingWindow(
+            isOpen: $effective['is_open'],
+            opensAt: $effective['open'],
+            closesAt: $effective['close'],
+        );
+    }
+
+    /** @return array<int, WeeklyOpening> */
+    public function weeklyOpenings(): array
+    {
+        return $this->weekly()
+            ->map(fn (OpeningHour $row): WeeklyOpening => new WeeklyOpening(
+                weekday: (int) $row->weekday,
+                isClosed: (bool) $row->is_closed,
+                opensAt: $row->open_time,
+                closesAt: $row->close_time,
+            ))
+            ->all();
+    }
+
+    /** @return list<SeasonWindow> */
+    public function activeSeasons(): array
+    {
+        $current = $this->seasonFor(now(DisplayTime::timezone()));
+
+        return $this->seasons()
+            ->map(fn (Season $season): SeasonWindow => new SeasonWindow(
+                id: (int) $season->id,
+                name: (string) $season->name,
+                startsOn: $season->start_date->toDateString(),
+                endsOn: $season->end_date->toDateString(),
+                opensAt: $season->open_time,
+                closesAt: $season->close_time,
+                isCurrent: $current !== null && (int) $current->id === (int) $season->id,
+            ))
+            ->values()
+            ->all();
+    }
+
+    /** @return list<SpecialDay> */
+    public function upcomingSpecialDays(int $limit): array
+    {
+        $today = now(DisplayTime::timezone())->toDateString();
+
+        return $this->special()
+            ->filter(fn (SpecialDate $special): bool => $special->date->toDateString() >= $today)
+            ->sortBy(fn (SpecialDate $special): string => $special->date->toDateString())
+            ->take(max(1, $limit))
+            ->map(function (SpecialDate $special): SpecialDay {
+                // La ventana que viaja es la EFECTIVA: la propia del día o, si no la define, la
+                // del semanal. La resuelve la MISMA `effectiveFor` que aplican las reservas, no
+                // una copia — era la regla que Content repetía a mano.
+                $window = $this->windowFor($special->date);
+
+                return new SpecialDay(
+                    date: $special->date->toDateString(),
+                    isClosed: ! $window->isOpen,
+                    note: $special->tr('note'),
+                    opensAt: $window->opensAt,
+                    closesAt: $window->closesAt,
+                );
+            })
+            ->values()
+            ->all();
+    }
+
+    public function hasSpecialDay(CarbonInterface $date): bool
+    {
+        return $this->special()->has($date->toDateString());
     }
 }

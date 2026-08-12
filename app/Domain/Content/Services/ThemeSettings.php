@@ -2,7 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Platform\Models\Setting;
 
 /**
@@ -37,7 +37,7 @@ class ThemeSettings
     public static function zoneColor(string $accent): string
     {
         return self::colorForAccent(
-            rescue(fn (): ?string => Zone::query()->where('accent', $accent)->value('color'), null, false),
+            rescue(fn (): ?string => app(ZonePalette::class)->colorFor($accent), null, false),
             $accent,
         );
     }

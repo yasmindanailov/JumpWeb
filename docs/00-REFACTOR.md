@@ -95,7 +95,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       CONSERVADOR para el sector «ocio con aforo» (`DECISIONES #12.d`); la decisión final
       viaja con el diseño de módulos de Fase 2 (morphMap como prerequisito).
 
-### Fase 2 — Modularización del dominio 🟦
+### Fase 2 — Modularización del dominio ✅
 - [x] **Diseño de contextos con revisión multi-agente** (2026-08-12, `DECISIONES #13`):
       spec aprobado en `docs/specs/modulos-dominio.md` — 4 inventariadores (278 clases) +
       3 arquitecturas rivales + 3 revisores adversariales. Layout `app/Domain/<Contexto>/`,
@@ -165,10 +165,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `PENDING`/`LEGACY` vacías, `SEAM` con la costura del dinero en ambos sentidos, y nace
       `DEFERRED` con las 5 flechas Content→Booking del paso 7. ⚠️ La migración del morphMap pasa
       a **requisito de despliegue**. Suite 2190 verde + los 2 verificadores sobre MySQL real.
-- [ ] Paso 7 (cierre) — resolver las 5 flechas `DEFERRED` (contrato de lectura en Booking),
-      baseline final y barrido de rutas citadas en la doc.
-- [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
-      con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
+- [x] **Paso 7 — CIERRE** (2026-08-12, `DECISIONES #20`; spec §4.octies): resueltas las 5
+      flechas `DEFERRED` con dos contratos de lectura extraídos de llamadas reales —
+      `OperatingCalendar` (+4 DTOs) y `ZonePalette`—. De regalo murieron **dos reglas
+      duplicadas** que Content mantenía «para no divergir» de las reservas. Baselines finales:
+      `LEGACY`/`PENDING`/`DEFERRED` vacías, `SEAM` solo con costura documentada; barrido de
+      `App\Support`/`App\Models` a **cero**. Suite 2184 verde.
+- [x] **God-class: fuera del alcance de Fase 2, y así estaba spec'ado** (`modulos-dominio.md`
+      §2). `Livewire/Tickets/Purchase.php` (2.049 líneas) muere con la SPA en **Fase 4** (ya
+      listado allí); `Filament/.../ViewOrder.php` (5.028 líneas) es capa de entrega y no se tocó
+      — Fase 2 solo documentó sus costuras. Lo que SÍ hizo Fase 2 con `Purchase`: cortar la
+      dependencia INVERSA (`OrderCreator` ya no lo importa, paso 6). Sigue vivo en `DEUDA.md`.
 - [x] **Contratos entre módulos explícitos** (pasos 1–6): `Booking\Contracts`
       (`CustomerReservations`, `PublishableCatalog`) y `Payments\Contracts` (`RefundGateway`).
       Matiz medido en el paso 3: la capa de ENTREGA es el composition root y sí usa modelos de

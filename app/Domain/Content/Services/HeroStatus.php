@@ -2,7 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonInterface;
 
@@ -11,14 +11,14 @@ use Carbon\CarbonInterface;
  * «{Día} · Abierto ahora» cuando realmente está abierto, o «{Día} · Abrimos en Xh» (o «mañana / el
  * {día} a las HH:MM») cuando está fuera de horario.
  *
- * Data-driven sobre la MISMA fuente que las reservas ({@see OperatingSchedule}: special_dates > seasons >
+ * Data-driven sobre la MISMA fuente que las reservas ({@see OperatingCalendar}: special_dates > seasons >
  * opening_hours) y en la zona horaria del parque ({@see DisplayTime}). Devuelve `null` cuando NO hay
  * un horario concreto que anunciar, para no mostrar un «abierto» engañoso si el parque aún no ha
  * configurado sus horas. Asume ventanas dentro del mismo día (el parque no abre cruzando medianoche).
  */
 class HeroStatus
 {
-    public function __construct(private readonly OperatingSchedule $schedule) {}
+    public function __construct(private readonly OperatingCalendar $schedule) {}
 
     /**
      * @return array{open_now: bool, day: string, status: string}|null
@@ -27,10 +27,10 @@ class HeroStatus
     {
         $now = now(DisplayTime::timezone());
         $day = (string) __('landing.info.weekdays.'.$now->dayOfWeek);
-        $today = $this->schedule->effectiveFor($now);
+        $today = $this->schedule->windowFor($now);
 
         // Abierto AHORA: hoy abierto, con ventana concreta que cubre la hora actual.
-        if ($today['is_open'] && $this->withinWindow($now, $today['open'], $today['close'])) {
+        if ($today->isOpen && $this->withinWindow($now, $today->opensAt, $today->closesAt)) {
             return ['open_now' => true, 'day' => $day, 'status' => (string) __('landing.hero.status_open')];
         }
 
@@ -60,9 +60,9 @@ class HeroStatus
     private function nextOpening(CarbonInterface $now): ?CarbonInterface
     {
         // Hoy, si el parque abre MÁS TARDE.
-        $today = $this->schedule->effectiveFor($now);
-        if ($today['is_open'] && $today['open'] !== null) {
-            $openAt = $now->copy()->setTimeFromTimeString($today['open']);
+        $today = $this->schedule->windowFor($now);
+        if ($today->isOpen && $today->opensAt !== null) {
+            $openAt = $now->copy()->setTimeFromTimeString($today->opensAt);
             if ($now->lessThan($openAt)) {
                 return $openAt;
             }
@@ -71,9 +71,9 @@ class HeroStatus
         // Próximos 7 días: el primer día abierto con hora de apertura concreta.
         for ($i = 1; $i <= 7; $i++) {
             $day = $now->copy()->addDays($i)->startOfDay();
-            $eff = $this->schedule->effectiveFor($day);
-            if ($eff['is_open'] && $eff['open'] !== null) {
-                return $day->setTimeFromTimeString($eff['open']);
+            $eff = $this->schedule->windowFor($day);
+            if ($eff->isOpen && $eff->opensAt !== null) {
+                return $day->setTimeFromTimeString($eff->opensAt);
             }
         }
 

@@ -4,16 +4,26 @@ namespace Tests\Feature\Architecture;
 
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\OperatingWindow;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\PublishableCatalog;
+use App\Domain\Booking\Contracts\SeasonWindow;
+use App\Domain\Booking\Contracts\SpecialDay;
 use App\Domain\Booking\Contracts\UpcomingReservation;
+use App\Domain\Booking\Contracts\WeeklyOpening;
+use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\CustomerReservationsReader;
+use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
+use App\Domain\Booking\Services\ZonePaletteReader;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Services\LandingComplementResolver;
+use App\Domain\Content\Services\ScheduleDisplay;
+use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerAccountContext;
@@ -22,6 +32,7 @@ use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
+use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,6 +61,8 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(Redsys::class, app(RefundGateway::class));
         $this->assertInstanceOf(CustomerReservationsReader::class, app(CustomerReservations::class));
         $this->assertInstanceOf(PublishableCatalogReader::class, app(PublishableCatalog::class));
+        $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
+        $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
     }
 
     /**
@@ -262,5 +275,81 @@ class ModuleContractsTest extends TestCase
         $this->assertSame([], $reader->purchasableComplements([]));
         // Sin datos en la BD ningún par es comprable (y la query no revienta con IDs inexistentes).
         $this->assertSame([], $reader->purchasableComplements([new ComplementPlacement(1, 2)]));
+    }
+
+    /**
+     * CONTENT → BOOKING: el calendario de operación (paso 7). El doble no toca la base de datos:
+     * si `ScheduleDisplay` siguiera consultando `OpeningHour`/`Season`/`SpecialDate` por su
+     * cuenta, con la BD vacía no pintaría nada.
+     */
+    public function test_content_gets_the_operating_calendar_through_the_contract(): void
+    {
+        $this->app->instance(OperatingCalendar::class, new class implements OperatingCalendar
+        {
+            public function windowFor(CarbonInterface $date): OperatingWindow
+            {
+                return new OperatingWindow(true, '10:00:00', '20:00:00');
+            }
+
+            public function weeklyOpenings(): array
+            {
+                // Todos los días con la MISMA ventana → el agrupador debe dar UNA sola fila.
+                $rows = [];
+                foreach ([0, 1, 2, 3, 4, 5, 6] as $weekday) {
+                    $rows[$weekday] = new WeeklyOpening($weekday, false, '11:00:00', '21:00:00');
+                }
+
+                return $rows;
+            }
+
+            public function activeSeasons(): array
+            {
+                return [new SeasonWindow(7, 'Verano', '2026-07-01', '2026-08-31', '12:00:00', '23:00:00', true)];
+            }
+
+            public function upcomingSpecialDays(int $limit): array
+            {
+                return [new SpecialDay('2026-12-25', true, null, null, null)];
+            }
+
+            public function hasSpecialDay(CarbonInterface $date): bool
+            {
+                return false;
+            }
+        });
+
+        $schedule = app(ScheduleDisplay::class);
+
+        $rows = $schedule->weeklyRows();
+        $this->assertCount(1, $rows, 'siete días con la misma ventana se agrupan en una fila');
+        $this->assertSame('11:00 – 21:00', $rows[0]['time']);
+
+        $seasons = $schedule->seasons();
+        $this->assertSame('Verano', $seasons[0]['name']);
+        $this->assertSame('12:00 – 23:00', $seasons[0]['time']);
+        $this->assertTrue($seasons[0]['is_current'], 'la temporada vigente la decide Booking, no Content');
+
+        $specials = $schedule->upcomingSpecialDates();
+        $this->assertTrue($specials[0]['is_closed']);
+    }
+
+    /** CONTENT → BOOKING: el color de zona (paso 7). */
+    public function test_content_asks_booking_for_the_zone_colour(): void
+    {
+        $palette = new class implements ZonePalette
+        {
+            public int $calls = 0;
+
+            public function colorFor(string $accent): ?string
+            {
+                $this->calls++;
+
+                return '#123456';
+            }
+        };
+        $this->app->instance(ZonePalette::class, $palette);
+
+        $this->assertSame('#123456', ThemeSettings::zoneColor('jump'));
+        $this->assertSame(1, $palette->calls, 'ThemeSettings no debe consultar `zones` por su cuenta');
     }
 }
