@@ -181,7 +181,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       Matiz medido en el paso 3: la capa de ENTREGA es el composition root y sí usa modelos de
       varios módulos — prohibírselo habría exigido reescribir el panel, fuera de alcance.
 
-### Fase 3 — API v1 (API-first) ⬜
+### Fase 3 — API v1 (API-first) 🟦
+- [x] **Diseño escrito**: `docs/specs/api-v1.md` (2026-08-13) — inventario empírico de la
+      superficie real, endpoints derivados de ella, formato de error, `PaymentProvider` sobre la
+      semilla `RefundGateway`, e impacto en 10 invariantes. **En revisión.**
+- [ ] ❗ **[PENDIENTE: owner]** dos dependencias nuevas que bloquean la implementación
+      (`CONVENCIONES §9.3`): `laravel/sanctum` (sin ella no hay auth de API) y el tooling de
+      OpenAPI (a mano vs generada). Detalle y alternativas en el spec §7.
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

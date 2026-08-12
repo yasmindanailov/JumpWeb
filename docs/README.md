@@ -16,6 +16,7 @@
 | `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
 | `specs/vocabulario-dominio.md` | 🟦 Diseño de generalización del vocabulario (entrada de Fase 2; decisión final con los módulos). |
 | `specs/modulos-dominio.md` | ✅ Arquitectura de módulos de Fase 2 APROBADA (revisión multi-agente) — orden, contratos y checklists de mudanza. |
+| `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3) EN REVISIÓN — bloqueado por 2 decisiones de dependencia del owner. |
 
 ## Base heredada (adaptada del proyecto origen el 2026-08-12)
 > Describen la base tal como se heredó; el refactor puede haberlas cambiado.

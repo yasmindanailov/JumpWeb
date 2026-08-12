@@ -4,7 +4,7 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) ✅ CERRADA — los 7 pasos hechos. Siguiente: Fase 3 (API v1).**
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño escrito, BLOQUEADO por 2 decisiones del owner.**
 - Suite **2184 en verde** (8176 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
@@ -131,23 +131,29 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**FASE 2 CERRADA.** Toca **Fase 3 — API v1** (`docs/00-REFACTOR.md`, y `DECISIONES #3`/`#4`).
+**Fase 3 — API v1. El diseño ya está escrito: `docs/specs/api-v1.md` (🟦 en revisión).**
+NO empieces a implementar sin cerrar antes estas dos cosas:
 
-Antes de empezar, dos cosas que Fase 2 deja preparadas y conviene aprovechar:
-- **La abstracción `PaymentProvider`** que pide Fase 3 tiene ya su semilla: el contrato
-  `Payments\Contracts\RefundGateway` (paso 1) es el reembolso; falta el cobro, que hoy consume
-  solo la capa de entrega (`Purchase`, `RetryPaymentController`).
-- **Los contratos de lectura existentes** (`CustomerReservations`, `PublishableCatalog`,
-  `OperatingCalendar`, `ZonePalette`) son el material natural de los endpoints v1: ya devuelven
-  DTOs serializables, que fue una decisión deliberada del paso 1.
+**1. ❗ Dos decisiones del OWNER (bloqueantes, `CONVENCIONES §9.3` = dependencia nueva):**
+- **`laravel/sanctum`** — sin ella no hay autenticación de API. Verificado: hoy `composer.json`
+  tiene 7 dependencias y ninguna es Sanctum. Passport (OAuth2) y tokens propios se descartaron
+  con su porqué en el spec §3.a.
+- **Tooling de OpenAPI** — especificación a mano (sin dependencia, más disciplina) o generada
+  desde el código (una dependencia más). El diseño funciona con cualquiera de las dos.
 
-⚠️ **Recomendado antes de Fase 3**: aplicar el protocolo de spec (`CONVENCIONES §5`) como se hizo
-con `modulos-dominio.md`. Los 7 pasos salieron sin sustos porque el diseño estaba escrito y
-revisado ANTES, y cada paso empezaba midiendo en vez de suponiendo.
+**2. Revisión del spec por otro agente** antes de escribir código (`CONVENCIONES §5`), como se
+hizo con `modulos-dominio.md`. Los 7 pasos de Fase 2 salieron sin sustos por eso.
 
-**Nota de despliegue heredada de Fase 2** (⚠️ no la pierdas): las migraciones deben correr ANTES
-de servir tráfico —la conversión del morphMap es ahora requisito, no comodidad— y hay que drenar
-la cola + `queue:restart` (los payloads serializados llevaban los FQCN viejos).
+**Lo que el spec ya deja resuelto** (no lo re-decidas, léelo):
+- **No hay endpoints de carrito, y es deliberado**: el carrito es estado del CLIENTE (`PAY-12` lo
+  dice), y su forma ya tiene fuente única en `Cart::sanitize()`. Se manda entero a `POST /orders`.
+- **Disponibilidad SOLO por `SlotOffer`** (`AFORO-02`): reimplementarla en la API la convertiría
+  en una tercera fuente de oferta.
+- **El retorno de pago NO se duplica en la API**: sigue siendo ruta web, porque `PAY-01` fija que
+  `RedsysReturnHandler` es el único que pasa una Order a `paid`.
+- **Primer consumidor real dentro de Fase 3**: el post-form de invitados (pequeño, autocontenido,
+  y NO se tira en Fase 4 como sí se tiraría re-cablear `Purchase`). Así se honra `DECISIONES #4`
+  sin construir superficie sin lector.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer
 admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
