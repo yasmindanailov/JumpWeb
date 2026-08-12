@@ -4,7 +4,7 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño escrito, BLOQUEADO por 2 decisiones del owner.**
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño v2 revisado adversarialmente; dependencias decididas; 1 bloqueante del owner.**
 - Suite **2184 en verde** (8176 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
@@ -131,29 +131,40 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**Fase 3 — API v1. El diseño ya está escrito: `docs/specs/api-v1.md` (🟦 en revisión).**
-NO empieces a implementar sin cerrar antes estas dos cosas:
+**Fase 3 — API v1. El diseño está en `docs/specs/api-v1.md` (v2, 🟦), ya revisado.**
 
-**1. ❗ Dos decisiones del OWNER (bloqueantes, `CONVENCIONES §9.3` = dependencia nueva):**
-- **`laravel/sanctum`** — sin ella no hay autenticación de API. Verificado: hoy `composer.json`
-  tiene 7 dependencias y ninguna es Sanctum. Passport (OAuth2) y tokens propios se descartaron
-  con su porqué en el spec §3.a.
-- **Tooling de OpenAPI** — especificación a mano (sin dependencia, más disciplina) o generada
-  desde el código (una dependencia más). El diseño funciona con cualquiera de las dos.
+**Lo que pasó con la v1**: 3 revisores adversariales independientes la devolvieron con
+**15 hallazgos GRAVE** (2 veredictos «insuficiente»). Tenía cuatro afirmaciones falsas y una
+premisa errónea. La v2 los incorpora todos; **§8 del spec dice qué cambió y por qué** — léelo
+antes que nada, porque varios hallazgos cambian el diseño, no el texto.
 
-**2. Revisión del spec por otro agente** antes de escribir código (`CONVENCIONES §5`), como se
-hizo con `modulos-dominio.md`. Los 7 pasos de Fase 2 salieron sin sustos por eso.
+**Los tres que más cambian el trabajo:**
+1. **Hay reglas de servidor FUERA del dominio**: la pausa de reservas (#218) y los topes
+   anti-abuso (`MAX_PENDING_PER_USER`, `RESERVATIONS_PER_MINUTE`, que cierran el hallazgo E del
+   origen: *agotar el aforo del día sin pagar*) viven en `Purchase.php`, no en `OrderCreator`.
+   Exponer `POST /orders` sin extraerlas primero reabre las dos. Mismo patrón que
+   `MAX_LINES_PER_CART` en Fase 2.
+2. **La disponibilidad depende de la CESTA** (`SlotOffer::offerableTimes` descuenta tus propios
+   ocupantes provisionales) → el endpoint la lleva, y el test de paridad debe usar cesta NO vacía:
+   con cesta vacía pasaba por construcción.
+3. **Falta el endpoint de presupuesto**: sin él el cliente no puede mostrar total ni señal sin
+   crear un pedido que ya bloquea aforo.
 
-**Lo que el spec ya deja resuelto** (no lo re-decidas, léelo):
-- **No hay endpoints de carrito, y es deliberado**: el carrito es estado del CLIENTE (`PAY-12` lo
-  dice), y su forma ya tiene fuente única en `Cart::sanitize()`. Se manda entero a `POST /orders`.
-- **Disponibilidad SOLO por `SlotOffer`** (`AFORO-02`): reimplementarla en la API la convertiría
-  en una tercera fuente de oferta.
-- **El retorno de pago NO se duplica en la API**: sigue siendo ruta web, porque `PAY-01` fija que
-  `RedsysReturnHandler` es el único que pasa una Order a `paid`.
-- **Primer consumidor real dentro de Fase 3**: el post-form de invitados (pequeño, autocontenido,
-  y NO se tira en Fase 4 como sí se tiraría re-cablear `Purchase`). Así se honra `DECISIONES #4`
-  sin construir superficie sin lector.
+**La fase va PARTIDA en 6 pasos** (spec §9), como se hizo con la modularización. El paso 0 son
+cimientos sin negocio y cierra la instalación de dependencias.
+
+**Decidido y listo:** las dependencias (`DECISIONES #21`) — Sanctum ^4.3 runtime, Spectator ^3.0 y
+`symfony/yaml` en dev; Scramble descartado.
+
+**❗ Bloqueante del owner (solo el paso 3):** `SEC-06` exige Turnstile en el registro y una app
+NATIVA no resuelve un widget de navegador. Salidas: challenge en webview · otro anti-abuso para
+nativo · relajar `SEC-06` para ese cliente (eso último es decisión del owner, `CONVENCIONES §9.1`).
+
+**⚠️ Antes de instalar nada**: `composer update`. `composer audit` (2026-08-13) da **26 avisos en
+5 paquetes**, 4 de ellos ALTOS en `league/commonmark` (DoS y bypass del filtro de enlaces), y las
+tres superficies afectadas —HTTP saliente, Markdown, PDFs— están en uso. Verificado con `--dry-run`
+que un update normal los cierra **sin tocar restricciones ni añadir nada**; sube también Filament
+5.6→5.7 y Livewire 4.3→4.4, así que merece su propio paso verificado. Detalle en `DEUDA.md §Alta`.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer
 admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.

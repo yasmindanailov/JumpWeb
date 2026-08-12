@@ -182,12 +182,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       varios módulos — prohibírselo habría exigido reescribir el panel, fuera de alcance.
 
 ### Fase 3 — API v1 (API-first) 🟦
-- [x] **Diseño escrito**: `docs/specs/api-v1.md` (2026-08-13) — inventario empírico de la
-      superficie real, endpoints derivados de ella, formato de error, `PaymentProvider` sobre la
-      semilla `RefundGateway`, e impacto en 10 invariantes. **En revisión.**
-- [ ] ❗ **[PENDIENTE: owner]** dos dependencias nuevas que bloquean la implementación
-      (`CONVENCIONES §9.3`): `laravel/sanctum` (sin ella no hay auth de API) y el tooling de
-      OpenAPI (a mano vs generada). Detalle y alternativas en el spec §7.
+- [x] **Diseño escrito y REVISADO adversarialmente**: `docs/specs/api-v1.md` **v2** (2026-08-13).
+      3 revisores independientes (invariantes/seguridad · arquitectura · riesgo de implementación):
+      veredictos sólida-con-cambios · insuficiente · insuficiente, **15 hallazgos GRAVE**, todos
+      incorporados. La v1 tenía cuatro afirmaciones falsas y una premisa errónea; el spec §8 lista
+      qué cambió y por qué, y §9 parte la fase en 6 pasos.
+- [x] **Dependencias DECIDIDAS** (`DECISIONES #21`, el owner delegó la elección): `laravel/sanctum`
+      ^4.3 runtime + `hotmeteor/spectator` ^3.0 y `symfony/yaml` en dev. Scramble descartado
+      (generar la doc desde el código invierte la relación de contrato).
+- [ ] ❗ **[PENDIENTE: owner]** anti-bot del registro en cliente NATIVO: `SEC-06` exige Turnstile y
+      una app nativa no resuelve un widget de navegador. Relajar el invariante es del owner
+      (`CONVENCIONES §9.1`). Bloquea el paso 3 (auth); los pasos 0–2 no dependen de ello.
+- [ ] ⚠️ **Antes de instalar nada**: `composer update` para cerrar los 26 avisos de seguridad
+      medidos el 2026-08-13 (`DEUDA.md §Alta`).
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

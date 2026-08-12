@@ -341,3 +341,30 @@ reescribir el núcleo.
 **Estado final**: `LEGACY`, `PENDING` y `DEFERRED` vacías; `SEAM` solo con costura documentada
 (relaciones Eloquent, el dinero Booking↔Payments con su orquestación, y el `User` kernel). El
 barrido de `App\Support\`/`App\Models\` en código da **cero**.
+
+## #21 · 2026-08-13 · Dependencias de la API v1: Sanctum (runtime) + Spectator (dev)
+El owner delegó explícitamente la elección (`CONVENCIONES §9.3` la reserva a él; la delegación
+queda registrada aquí). Decidido, con verificación empírica:
+**(a) `laravel/sanctum` ^4.3 — runtime.** Comprobado por resolución real contra las restricciones
+de este repo: instala **v4.3.3** sin conflictos. La doc oficial de Laravel 13 describe exactamente
+los dos modos que el spec diseña —SPA de primera parte por cookie de sesión con CSRF, móvil por
+Bearer— y **desaconseja expresamente** usar tokens para la propia SPA. Descartados: Passport
+(OAuth2 completo para dos clientes propios: servidor de autorización, scopes y llaves que nadie
+usaría) y tokens a mano (reescribir emisión, rotación, hashing y revocación es superficie de
+seguridad escrita a mano justo donde no conviene).
+**(b) OpenAPI: especificación A MANO + `hotmeteor/spectator` ^3.0 en `require-dev`.** Comprobado
+que resuelve limpio (v3.0.0, 7 paquetes, todos de desarrollo). Descartado **Scramble**
+(generación desde el código) por una razón de contrato, no de ergonomía: `DECISIONES #4` hace de
+la especificación el artefacto contra el que se construye la app móvil, y con generación el
+documento es un REFLEJO del código — cualquier refactor cambiaría el contrato en silencio, que es
+justo lo que un contrato con un cliente que despliega aparte no puede hacer. Spectator invierte la
+relación (el spec manda, el test cae si el código se desvía), es el mismo patrón de gates que ya
+usa el repo (`docs-check`, `ModuleBoundariesTest`, el guard del morphMap) y **no viaja a
+producción**. Se declarará además `symfony/yaml` como dependencia de desarrollo explícita: hoy
+está solo como transitiva de `packages-dev` y depender de ella sin declararla es frágil.
+**(c) Sin dependencia de OpenAPI en runtime**: la especificación se sirve como fichero estático
+versionado, no por un paquete que registre rutas.
+Coste total: **1 dependencia de runtime + 2 de desarrollo**.
+⚠️ Condición previa registrada en `DEUDA.md §Alta`: el árbol arrastra **26 avisos de seguridad**
+(4 altas en `league/commonmark`) que un `composer update` normal resuelve dentro de las
+restricciones actuales. No se instala nada nuevo sobre un árbol sin sanear.
