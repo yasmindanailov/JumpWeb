@@ -190,11 +190,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Dependencias DECIDIDAS** (`DECISIONES #21`, el owner delegó la elección): `laravel/sanctum`
       ^4.3 runtime + `hotmeteor/spectator` ^3.0 y `symfony/yaml` en dev. Scramble descartado
       (generar la doc desde el código invierte la relación de contrato).
-- [ ] ❗ **[PENDIENTE: owner]** anti-bot del registro en cliente NATIVO: `SEC-06` exige Turnstile y
-      una app nativa no resuelve un widget de navegador. Relajar el invariante es del owner
-      (`CONVENCIONES §9.1`). Bloquea el paso 3 (auth); los pasos 0–2 no dependen de ello.
-- [ ] ⚠️ **Antes de instalar nada**: `composer update` para cerrar los 26 avisos de seguridad
-      medidos el 2026-08-13 (`DEUDA.md §Alta`).
+- [x] **Anti-bot en cliente nativo RESUELTO sin relajar nada** (2026-08-13, `DECISIONES #23`): el
+      Turnstile del registro es `SEGURIDAD` regla 5 (no `SEC-06`) y es data-driven; el consumidor
+      de Fase 3/4 es la SPA, que ES un navegador. La app nativa es Fase 6 y allí se decide, con
+      las tres salidas ya escritas. **Sin bloqueantes: el paso 3 queda desbloqueado.**
+- [x] **Árbol de dependencias SANEADO** (2026-08-13, `DECISIONES #22`): 26 avisos → 0
+      (`composer audit` y `npm audit`), sin tocar restricciones ni añadir paquetes. Suite 2186
+      verde, Pint sin churn, verificadores sobre MySQL, PDF real generado con dompdf 3.1.6.
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

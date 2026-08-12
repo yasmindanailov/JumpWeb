@@ -1,7 +1,8 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2, reescrito tras revisión adversarial** (2026-08-13) · Bloqueado por **1**
-> decisión del owner (§7) · Última actualización: 2026-08-13 ·
+> Estado: 🟦 **v2, reescrito tras revisión adversarial** (2026-08-13) · **SIN bloqueantes**:
+> dependencias decididas (`#21`), árbol saneado (`#22`) y el anti-bot resuelto sin relajar nada
+> (`#23`) · Listo para implementar por el corte de §9 · Última actualización: 2026-08-13 ·
 > Decisión asociada: `DECISIONES #21` (dependencias) + «#N» al aprobarse el diseño.
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8**.
@@ -236,16 +237,17 @@ insuficiente. **15 hallazgos GRAVE**, varios convergentes. Todos incorporados en
 
 **Dependencias: DECIDIDAS** (el owner delegó la elección) → `DECISIONES #21`.
 
-❗ **BLOQUEANTE que la revisión destapó — decisión del owner (`CONVENCIONES §9.1`, relajar un
-invariante): anti-bot del registro en cliente NATIVO.** `SEC-06` exige Turnstile en el registro;
-una app móvil nativa no resuelve un widget de navegador. Las salidas son (a) challenge en webview,
-(b) otro mecanismo anti-abuso para nativo, o (c) relajar `SEC-06` para ese cliente. **(c) es
-relajar un invariante y eso es del owner, no del agente.** Hasta que se decida, el paso 3 (auth)
-no puede cerrarse; los pasos 0–2 no dependen de ello.
+✅ **RESUELTO — anti-bot del registro en cliente nativo (`DECISIONES #23`).** La revisión lo marcó
+como bloqueante por relajar un invariante, pero al comprobarlo: el Turnstile del REGISTRO no es
+`SEC-06` (que cubre el 2.º limitador del login, la no-enumeración del reset y `/contacto`) sino
+`SEGURIDAD` regla 5, y es data-driven. Y sobre todo: **el consumidor de Fase 3/4 es la SPA, que ES
+un navegador** — `POST auth/register` exigirá el token igual que la web. La app nativa es Fase 6;
+decidir hoy su anti-bot sería diseñar seguridad para un lector que no existe. **No se relaja nada
+y el paso 3 queda desbloqueado**; la pregunta viaja a Fase 6 con sus tres salidas ya escritas.
 
-⚠️ **Recomendado antes de instalar nada**: `composer update` para cerrar los **26 avisos de
-seguridad** medidos el 2026-08-13 (ver `DEUDA.md §Alta`). No se añade una dependencia a un árbol
-con avisos altos sin sanearlo antes.
+✅ **HECHO — árbol saneado antes de instalar nada (`DECISIONES #22`).** Los 26 avisos de seguridad
+están cerrados (`composer audit` y `npm audit` → 0), con suite, Pint, docs-check, los dos
+verificadores sobre MySQL, superficies y generación real de PDF verificados.
 
 ## 8. Qué cambió de la v1 a la v2 (y por qué)
 

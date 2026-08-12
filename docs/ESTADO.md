@@ -4,8 +4,8 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño v2 revisado adversarialmente; dependencias decididas; 1 bloqueante del owner.**
-- Suite **2184 en verde** (8176 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ CERRADA · Fase 3 (API v1) 🟦 — diseño v2 revisado y SIN bloqueantes; árbol saneado; listo para implementar el paso 0.**
+- Suite **2186 en verde** (8186 aserciones, `--parallel` ~58s tras el saneado de dependencias) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
   dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
@@ -153,18 +153,21 @@ antes que nada, porque varios hallazgos cambian el diseño, no el texto.
 **La fase va PARTIDA en 6 pasos** (spec §9), como se hizo con la modularización. El paso 0 son
 cimientos sin negocio y cierra la instalación de dependencias.
 
-**Decidido y listo:** las dependencias (`DECISIONES #21`) — Sanctum ^4.3 runtime, Spectator ^3.0 y
-`symfony/yaml` en dev; Scramble descartado.
+**Decidido y listo (nada bloquea ya):**
+- **Dependencias** (`DECISIONES #21`): Sanctum ^4.3 runtime + Spectator ^3.0 y `symfony/yaml` en
+  dev. Scramble descartado (generar la doc desde el código invierte la relación de contrato).
+- **Árbol saneado** (`DECISIONES #22`): los 26 avisos de seguridad → **0** (`composer audit` y
+  `npm audit`), sin tocar restricciones ni añadir paquetes. Framework 13.25.0 · Filament 5.7.6 ·
+  Livewire 4.4.0. Verificado con suite, Pint (sin churn), docs-check, los dos verificadores sobre
+  MySQL, superficies y **generación real de PDF** con dompdf 3.1.6.
+- **Anti-bot en cliente nativo** (`DECISIONES #23`): NO se relaja nada. El Turnstile del registro
+  es `SEGURIDAD` regla 5 (no `SEC-06`) y es data-driven; el consumidor de Fase 3/4 es la SPA, que
+  ES un navegador. La app nativa es Fase 6 y allí se decide, con las tres salidas ya escritas.
 
-**❗ Bloqueante del owner (solo el paso 3):** `SEC-06` exige Turnstile en el registro y una app
-NATIVA no resuelve un widget de navegador. Salidas: challenge en webview · otro anti-abuso para
-nativo · relajar `SEC-06` para ese cliente (eso último es decisión del owner, `CONVENCIONES §9.1`).
-
-**⚠️ Antes de instalar nada**: `composer update`. `composer audit` (2026-08-13) da **26 avisos en
-5 paquetes**, 4 de ellos ALTOS en `league/commonmark` (DoS y bypass del filtro de enlaces), y las
-tres superficies afectadas —HTTP saliente, Markdown, PDFs— están en uso. Verificado con `--dry-run`
-que un update normal los cierra **sin tocar restricciones ni añadir nada**; sube también Filament
-5.6→5.7 y Livewire 4.3→4.4, así que merece su propio paso verificado. Detalle en `DEUDA.md §Alta`.
+**Empieza por el PASO 0 del spec §9** (cimientos sin negocio): `api:` en `withRouting`, grupo de
+middleware (§4.7, incluida la decisión escrita sobre el kill-switch de mantenimiento), Sanctum,
+sobre de error, `GET me`, esqueleto OpenAPI + su test verificado por mutación, y **ampliar
+`CRITICAL_RE` del pre-push** para que los controladores de checkout de API disparen `VERIFY_CONC`.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer
 admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.

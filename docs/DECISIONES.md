@@ -368,3 +368,42 @@ Coste total: **1 dependencia de runtime + 2 de desarrollo**.
 ⚠️ Condición previa registrada en `DEUDA.md §Alta`: el árbol arrastra **26 avisos de seguridad**
 (4 altas en `league/commonmark`) que un `composer update` normal resuelve dentro de las
 restricciones actuales. No se instala nada nuevo sobre un árbol sin sanear.
+
+## #22 · 2026-08-13 · Saneado de dependencias antes de tocar la API
+`composer audit` (2026-08-13) daba **26 avisos en 5 paquetes**: `league/commonmark` (4 ALTAS: DoS
+cuadrático y bypass del filtro de enlaces), `guzzlehttp/guzzle` (9, 1 alta), `dompdf/dompdf` (6),
+`guzzlehttp/psr7` (4) y `laravel/framework` (1). No era teórico: guzzle es el cliente HTTP del
+reembolso REST de Redsys, dompdf genera los 2 PDFs y commonmark renderiza Markdown. Decidido
+ejecutar el saneado **como paso propio y verificado, ANTES de instalar nada nuevo** — no se añade
+una dependencia a un árbol con avisos altos, y menos en la fase que abre el dominio al exterior.
+Un `composer update` **sin tocar ninguna restricción de `composer.json` ni añadir paquetes** los
+cerró: framework 13.11.2→13.25.0 · Filament 5.6.6→5.7.6 · Livewire 4.3.0→4.4.0 · guzzle
+7.10.4→7.15.3 · psr7 2.10.1→2.13.0 · commonmark 2.8.2→2.10.0 · dompdf 3.1.5→3.1.6 · phpunit
+12.5.26→12.5.33 · Pint 1.29.1→1.30.5.
+Verificación empírica: `composer audit` y `npm audit` → **0 avisos** · suite **2186 verde** (y más
+rápida: 58 s vs 71 s) · **Pint 1.30.5 pasa los 654 ficheros sin reformatear** (no hay churn de
+estilo) · `docs-check` OK · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre
+MySQL real —con el guzzle nuevo en el camino de Redsys— · superficies `/`, `/normas`, `/servicios`,
+`/sitemap.xml`, `/admin/login` → 200 · **PDF generado de verdad con dompdf 3.1.6** (cabecera
+`%PDF-`, con acentos y €) · `npm run build` OK. Los 18 ficheros de `public/js|css/filament/*` del
+diff son los assets que Filament republica al actualizar.
+
+## #23 · 2026-08-13 · Anti-bot del registro en cliente nativo: NO se relaja nada, se aplaza a Fase 6
+La revisión adversarial del spec de la API lo marcó como bloqueante de owner por relajar un
+invariante (`CONVENCIONES §9.1`); el owner delegó la decisión. Al comprobarlo contra la doc, el
+planteamiento se disuelve, y por dos motivos:
+**(a) Precisión**: el Turnstile del REGISTRO no es `SEC-06` —cuyo texto cubre el 2.º limitador del
+login, la no-enumeración del reset y el `throttle`+Turnstile de `/contacto`— sino `SEGURIDAD`
+regla 5. El revisor lo atribuyó a `SEC-06`; es regla de seguridad, no invariante numerado. Además
+es **data-driven**: sin clave configurada se desactiva solo, que es el principio white-label.
+**(b) El consumidor de Fase 3/4 es la SPA, que ES un navegador.** `POST auth/register` exigirá el
+token de Turnstile exactamente igual que la web. La app nativa es **Fase 6**: decidir hoy cómo
+resuelve el anti-bot un cliente que no existe sería inventar diseño de seguridad para un lector
+inexistente — el error que Fase 2 prohibió en sus contratos, cometido en el peor dominio posible.
+Decidido: **no se relaja nada, no hay bloqueante y el paso 3 del spec queda desbloqueado.** La
+pregunta se traslada a Fase 6 con las salidas ya escritas para que no haya que redescubrirlas:
+(i) challenge en webview durante el alta, (ii) attestation de plataforma (Play Integrity / App
+Attest) como anti-abuso equivalente, (iii) exigir alta por web y dejar la app solo para iniciar
+sesión — que es legítimo y común, y hoy ya funcionaría: el login (`auth/tokens`) nunca dependió de
+Turnstile, solo de los dos limitadores. Si en Fase 6 se eligiera relajar la regla, ESO sí vuelve a
+ser decisión del owner.
