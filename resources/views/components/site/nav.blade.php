@@ -136,7 +136,7 @@
                  avisa si hay un formulario de reserva pendiente (#217). El saludo se mantiene también
                  en móvil (compactado). El texto visible «Hola, nombre» ES el nombre accesible del
                  botón (sin aria-label que lo tape, WCAG 2.5.3); el aviso se anuncia con texto sr-only. --}}
-            @php($acct = app(\App\Support\CustomerAccountContext::class)->for(auth()->user()))
+            @php($acct = app(\App\Domain\Identity\Services\CustomerAccountContext::class)->for(auth()->user()))
             {{-- #231 p7: en móvil el chip queda solo con el icono (el saludo se oculta por CSS). El
                  nombre accesible lo da el `aria-label` (incluye el aviso de formulario pendiente);
                  el saludo visible es un PREFIJO del aria-label → cumple WCAG 2.5.3 (label in name). --}}

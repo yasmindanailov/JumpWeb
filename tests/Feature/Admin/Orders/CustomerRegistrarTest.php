@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Platform\Models\AuditLog;
-use App\Models\Role;
-use App\Models\User;
 use App\Notifications\CustomerAccountCreated;
-use App\Support\CustomerRegistrar;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Admin\Slots;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Pages\WeeklySchedule;
 use App\Filament\Resources\Slots\Pages\ListSlots;
 use App\Models\Order;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\SlotTemplate;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;

@@ -10,7 +10,7 @@
         $legalLabels = (array) __('landing.footer.legal');
         // Si el waiver está DESACTIVADO (no se usa, #216 pto.3), se retira del pie. Se localiza por la
         // URL (controlada por código), no por posición, para no depender del orden de las etiquetas i18n.
-        if (! \App\Support\PuertaSettings::waiverCheckEnabled()) {
+        if (! \App\Domain\Identity\Services\PuertaSettings::waiverCheckEnabled()) {
             $waiverIdx = array_search(route('legal.waiver'), $legalUrls, true);
             if ($waiverIdx !== false) {
                 unset($legalUrls[$waiverIdx], $legalLabels[$waiverIdx]);

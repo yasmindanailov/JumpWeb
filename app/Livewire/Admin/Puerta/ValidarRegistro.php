@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Admin\Puerta;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PhoneNormalizer;
-use App\Models\User;
-use App\Support\PuertaSettings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;

@@ -2,19 +2,19 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
-use App\Models\Permission;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\SpecialDate;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\OrderItemModified;
 use App\Support\PaymentSettings;

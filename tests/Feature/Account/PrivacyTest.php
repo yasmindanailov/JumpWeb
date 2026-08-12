@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Account;
 
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Livewire\Account\DeleteAccount;
-use App\Models\Consent;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Role;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

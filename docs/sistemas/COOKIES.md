@@ -83,7 +83,7 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
   `Consent::CURRENT_VERSION`): subirla fuerza re-consentir (el gate la ve caducada). v1 = `2026-06-08`.
 - **D6 — Acreditación en tabla propia `cookie_consent_logs`** (NO reutiliza `consents`: su
   `user_id` es FK NOT NULL y no tiene `user_agent` → no cubre al visitante anónimo). Modelo
-  `App\Models\CookieConsentLog` (nombre distinto del helper `App\Support\CookieConsent` para no
+  `App\Domain\Identity\Models\CookieConsentLog` (nombre distinto del helper `App\Domain\Identity\Services\CookieConsent` para no
   colisionar). Se registra **solo en decisiones explícitas**, no en cada visita (proporcionalidad).
 - **D7 — Textos del banner en i18n** (`lang/{es,en,fr}/cookies.php`), no en settings: muchas
   cadenas, y los lang files son traducibles y white-label. Único ajuste data-driven:
@@ -95,7 +95,7 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 
 ## 4. Arquitectura (artefactos reales en este repo)
 
-**Autoridad única — [`App\Support\CookieConsent`](../../app/Support/CookieConsent.php)**
+**Autoridad única — [`App\Domain\Identity\Services\CookieConsent`](../../app/Domain/Identity/Services/CookieConsent.php)**
 (helper estático, sin BD):
 - `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-06-08'` · `OPTIONAL=['maps','social']`
   · `LIFETIME_MINUTES` (24 meses).
@@ -152,7 +152,7 @@ rama sin tabla `settings` (CI/instalación limpia): no decidido + banner off.
 - Migración `2026_06_08_000001_create_cookie_consent_logs_table` — `user_id` nullable
   (`nullOnDelete`), `categories` json, `version`, `ip` string(45) nullable, `user_agent`
   string(512) nullable, `accepted_at`, timestamps.
-- [CookieConsentLog](../../app/Models/CookieConsentLog.php): casts categories→array,
+- [CookieConsentLog](../../app/Domain/Identity/Models/CookieConsentLog.php): casts categories→array,
   accepted_at→datetime; `belongsTo(User)`. **Es `Prunable`**: borra filas más antiguas que
   `LIFETIME_MINUTES` (24 meses), con `model:prune` programado en
   [routes/console.php](../../routes/console.php). *(El plan origen lo listaba como «futuro»;

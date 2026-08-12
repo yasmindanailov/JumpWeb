@@ -2,19 +2,19 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Filament\Pages\CreateManualOrderPage;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\CustomerAccountCreated;
 use App\Notifications\OrderCancelled;
-use App\Support\CustomerRegistrar;
 use App\Support\ManualOrderFulfiller;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Exceptions\ReservationException;
 use App\Livewire\Tickets\Purchase;
@@ -10,7 +11,6 @@ use App\Models\OrderAdjustment;
 use App\Models\OrderItem;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

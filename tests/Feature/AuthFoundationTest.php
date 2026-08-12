@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Consent;
-use App\Models\Permission;
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;

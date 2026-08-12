@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Domain\Identity\Models\User;
 use App\Http\Controllers\Controller;
 use App\Livewire\Account\UpdateProfile;
-use App\Models\User;
 use App\Notifications\EmailChangeCompleted;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

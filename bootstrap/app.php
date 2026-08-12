@@ -1,11 +1,11 @@
 <?php
 
+use App\Domain\Identity\Services\CookieConsent;
 use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
-use App\Support\CookieConsent;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

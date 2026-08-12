@@ -10,21 +10,24 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Consent;
-use App\Models\CookieConsentLog;
 use App\Models\OpeningHour;
 use App\Models\Order;
 use App\Models\OrderAdjustment;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
-use App\Models\Permission;
 use App\Models\Price;
 use App\Models\ProductAddon;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\Room;
 use App\Models\Season;
 use App\Models\Slot;
@@ -32,10 +35,8 @@ use App\Models\SlotTemplate;
 use App\Models\SpecialDate;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
-use App\Support\CookieConsent;
-use App\Support\CustomerAccountContext;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -45,6 +46,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -56,6 +58,21 @@ class AppServiceProvider extends ServiceProvider
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        // Las factories siguen VIVIENDO PLANAS en `database/factories/`, aunque los modelos se
+        // repartan por módulos (Fase 2). Por defecto Laravel adivina el nombre a partir del
+        // namespace COMPLETO, así que `App\Domain\Identity\Models\User` buscaría
+        // `Database\Factories\Domain\Identity\Models\UserFactory` y reventaría media suite.
+        // Resolvemos por NOMBRE CORTO del modelo: espejar el árbol de módulos dentro de
+        // `database/factories/` no aporta nada y multiplicaría el churn de cada mudanza.
+        // Lo cubre `FactoryResolutionTest`.
+        Factory::guessFactoryNamesUsing(static function (string $model): string {
+            $name = str_contains($model, '\\Models\\')
+                ? Str::afterLast($model, '\\Models\\')
+                : Str::after($model, 'App\\');
+
+            return 'Database\\Factories\\'.$name.'Factory';
+        });
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Seeders;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Models\OpeningHour;
 use App\Models\Order;
@@ -10,7 +11,6 @@ use App\Models\Season;
 use App\Models\SlotTemplate;
 use App\Models\SpecialDate;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\ProductionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

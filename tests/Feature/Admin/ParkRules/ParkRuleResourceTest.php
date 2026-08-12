@@ -3,12 +3,12 @@
 namespace Tests\Feature\Admin\ParkRules;
 
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
-use App\Models\Role;
-use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

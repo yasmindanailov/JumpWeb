@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Models\Concerns\HasItemActionGuards;

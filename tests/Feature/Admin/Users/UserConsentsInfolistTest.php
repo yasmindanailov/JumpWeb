@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Users\Pages\ViewUser;
-use App\Models\Consent;
-use App\Models\Role;
-use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

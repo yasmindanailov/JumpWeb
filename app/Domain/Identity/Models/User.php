@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Identity\Models;
 
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Ticket;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;

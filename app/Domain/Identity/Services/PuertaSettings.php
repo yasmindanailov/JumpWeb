@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Identity\Services;
 
 use App\Domain\Platform\Models\Setting;
 

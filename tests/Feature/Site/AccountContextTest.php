@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Site\AccountContext;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;

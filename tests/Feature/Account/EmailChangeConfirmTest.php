@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Account;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use App\Notifications\EmailChangeCompleted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;

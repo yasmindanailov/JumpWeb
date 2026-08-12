@@ -14,7 +14,7 @@
 --}}
 <div class="acct @guest acct--guest @endguest">
     @auth
-        @php($acct = app(\App\Support\CustomerAccountContext::class)->for(auth()->user()))
+        @php($acct = app(\App\Domain\Identity\Services\CustomerAccountContext::class)->for(auth()->user()))
         @php($initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($acct['firstName'], 0, 1)))
         <div class="acct__row">
             <span class="acct__avatar" aria-hidden="true">{{ $initial !== '' ? $initial : '·' }}</span>

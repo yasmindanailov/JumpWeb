@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\DisplayTime;
-use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Group;

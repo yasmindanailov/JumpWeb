@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Roles;
 
+use App\Domain\Identity\Models\Role;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Roles\Schemas\RoleForm;
 use App\Filament\Resources\Roles\Tables\RoleTable;
-use App\Models\Role;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

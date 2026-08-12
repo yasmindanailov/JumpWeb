@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Cookies;
 
-use App\Support\CookieConsent;
+use App\Domain\Identity\Services\CookieConsent;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;

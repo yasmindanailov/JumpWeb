@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Auth\ResetPassword;
-use App\Models\User;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Admin\Zones;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Zones\Pages\CreateZone;
 use App\Filament\Resources\Zones\Pages\EditZone;
 use App\Filament\Resources\Zones\ZoneResource;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;

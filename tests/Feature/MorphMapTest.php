@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\TicketType;
-use App\Models\User;
 use Illuminate\Database\ClassMorphViolationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;

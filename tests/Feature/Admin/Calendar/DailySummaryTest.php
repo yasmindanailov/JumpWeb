@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Admin\Calendar;
 
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Pages\CalendarPage;
@@ -9,12 +12,9 @@ use App\Filament\Pages\Dashboard;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
-use App\Models\Permission;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\DailyReservationsSummary;
 use App\Support\ReservationSlip;

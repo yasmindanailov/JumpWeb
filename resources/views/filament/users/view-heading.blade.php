@@ -1,5 +1,5 @@
 @php
-    /** @var \App\Models\User $record */
+    /** @var \App\Domain\Identity\Models\User $record */
 @endphp
 <span class="flex flex-wrap items-center gap-2">
     <span>{{ $record->name }}</span>

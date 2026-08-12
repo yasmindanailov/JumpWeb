@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CookieConsentLog;
-use App\Support\CookieConsent;
+use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Services\CookieConsent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

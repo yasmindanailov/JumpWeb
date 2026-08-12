@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
  * Read-model de BOOKING: las reservas de un cliente, para consumidores de otros módulos.
  *
  * Implementa `CustomerReservations`. El código es el que vivía en
- * `App\Support\CustomerAccountContext` (Identity), movido tal cual al módulo dueño de
+ * `App\Domain\Identity\Services\CustomerAccountContext` (Identity), movido tal cual al módulo dueño de
  * los datos en el paso 1 de la modularización — Identity ya no consulta `Order`,
  * `OrderItem` ni `TicketType` (Fase 2, `docs/specs/modulos-dominio.md`).
  *

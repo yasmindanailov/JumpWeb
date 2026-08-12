@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Identity\Models\User;
 use App\Models\Order;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\SlotAvailability;
 use Illuminate\Foundation\Testing\RefreshDatabase;

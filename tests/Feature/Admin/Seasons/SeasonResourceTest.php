@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Admin\Seasons;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Seasons\Pages\CreateSeason;
 use App\Filament\Resources\Seasons\Pages\EditSeason;
 use App\Filament\Resources\Seasons\SeasonResource;
 use App\Models\OpeningHour;
-use App\Models\Role;
 use App\Models\Season;
-use App\Models\User;
 use App\Support\ParkSchedule;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;

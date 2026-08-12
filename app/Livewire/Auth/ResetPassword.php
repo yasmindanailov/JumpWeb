@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Auth;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

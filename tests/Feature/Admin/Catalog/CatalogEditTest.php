@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Admin\Catalog;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
 use App\Models\Order;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

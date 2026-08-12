@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Puerta;
 
+use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Support\PuertaSettings;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

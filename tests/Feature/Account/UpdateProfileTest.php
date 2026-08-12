@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Account;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Account\UpdateProfile;
-use App\Models\User;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyPendingEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;

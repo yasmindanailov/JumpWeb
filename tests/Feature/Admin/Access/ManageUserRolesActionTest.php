@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Access;
 
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Permission;
-use App\Models\Role;
-use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;

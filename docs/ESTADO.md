@@ -4,14 +4,12 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1, 2 y 3 hechos; quedan Identity, Payments y Booking.**
-- Suite **2170 en verde** (8149 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1–4 hechos; quedan Payments y Booking (el dinero, al final).**
+- Suite **2177 en verde** (8162 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
   verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
   La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
   dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
   runner, no del código (ver `TESTING.md`).
-  Detalle sin consecuencias: el contador «PHPUnit Notices: 1» aparece **solo** en la corrida
-  paralela completa; la secuencial da 0 y ningún test falla. Es del runner, no del código.
 - **Fase 2 — hecho** (detalle en el tracker):
   1. **morphMap FORZADO** (`AppServiceProvider`, alias para los 30 modelos) + migración
      `convert_morph_types_to_aliases` verificada en MySQL dev (0 FQCN restantes) + barrido
@@ -65,6 +63,20 @@
        en la baseline `LEGACY` para decidir en el paso 6.
      - Herramienta nueva: **`scripts/module-deps.php`** — el «paso 0» del checklist (medir las
        dependencias INVISIBLES) ya no es artesanal.
+  7. **PASO 4 — Identity MUDADO** (`DECISIONES #17`, spec §4.quinquies): 10 clases en
+     `app/Domain/Identity/{Models,Services}` (`User`, `Consent`, `CookieConsentLog`, `Role`,
+     `Permission`, `CookieConsent`, `CustomerRegistrar`, `CustomerAccountContext`,
+     `PuertaSettings`, `PermissionCatalog`). La «puerta» es capa de entrega y no se movió.
+     - **Trampa de las factories DESACTIVADA antes de mover**: rompe en los DOS sentidos
+       (modelo→factory y factory→modelo) y `UserFactory` es la única del repo. Resolver por
+       nombre corto en `AppServiceProvider` + `$model` explícito en la factory + `composer
+       dump-autoload`. Lo vigila `FactoryResolutionTest`.
+     - **Dos exenciones CON NOMBRE** en el arch-test (no entradas anónimas de baseline, porque
+       son reglas y no deuda): `SHARED_KERNEL` = `User` (spec §4) y `OUTBOUND` =
+       `Notifications`/`Mail` (canal de salida del framework). Verificadas por mutación.
+     - **La supresión RGPD cruza contextos** (`User::purge…` vacía PII de terceros en
+       `order_items`): anotado en `SEAM`; el diseño limpio (evento «usuario anonimizado») queda
+       para más adelante.
 - Fase 1 cerrada esta misma sesión: marca a 6 líneas intencionales, prefijo de pedidos =
   setting `sales.order_prefix` (default `R-`), semilla neutra «SaltoPark», jurisdicción
   legal por token, wordmark data-driven (`DECISIONES #12`).
@@ -76,26 +88,27 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**Spec de módulos, PASO 4 — mudar Identity** (leer `docs/specs/modulos-dominio.md` §5.4 y el
-**checklist mecánico** del final de §5): `User`, `Consent`, `CookieConsent`+`CookieConsentLog`,
-`Role`, `Permission`, `PermissionCatalog`, `CustomerRegistrar`, `CustomerAccountContext`,
-`PuertaSettings` y la puerta.
+**Spec de módulos, PASO 5 — mudar Payments** (leer `docs/specs/modulos-dominio.md` §5.5 y el
+**checklist mecánico** del final de §5): `Redsys` + `Redsys/Vendor/*`, `RedsysReturnHandler`,
+`RedsysCardCodes`, `RedsysResponseCode`, `RedsysReturnOutcome`, `PaymentSettings`,
+`IncidentSettings`, modelos `Payment` y `PaymentRefund`, y el trait `OrderRefundFlags` + la
+mitad «refund» de `HasItemActionGuards` (el trait se PARTE aquí, spec §4).
 
-**Paso 0 primero** (ya es un comando):
-`docker compose exec -u sail laravel.test php scripts/module-deps.php User Consent Role Permission …`
-— lista qué arrastra cada clase y quién la referencia, marcando las INVISIBLES (las que no
-llevan `use` por ser del mismo namespace; en el paso 2 fueron la única causa real de rotura).
+**Es el primer paso que toca DINERO.** Reglas duras:
+- `RedsysReturnHandler` está en `CRITICAL_RE` → el push exigirá **`VERIFY_CONC=1`** tras correr
+  `redsys:verify-concurrency` y `purchase:verify-oversell` sobre MySQL real (`INVARIANTES §6`).
+- Antes de tocar nada, lee **`INVARIANTES.md` §1 (PAY)** y **§6 (SUITE)**.
+- Es una MUDANZA: ni una línea de lógica de cobro/reembolso debe cambiar en el mismo commit.
 
-⚠️ **Trampa conocida que muerde en ESTE paso**: `Model::factory()` resuelve la factory por la
-convención `App\Models\X` → `Database\Factories\XFactory`. Al mover `User` a
-`App\Domain\Identity\Models` esa resolución se rompe — y `UserFactory` es la ÚNICA factory del
-repo, usada por media suite. Hay que mover la factory al namespace espejo o registrar un
-resolver ANTES de tocar `User`. (Los pasos 2 y 3 no la tocaron: ningún modelo mudado usaba
-`HasFactory`.)
+**Paso 0 primero** (comando):
+`docker compose exec -u sail laravel.test php scripts/module-deps.php Redsys RedsysReturnHandler PaymentSettings IncidentSettings Payment PaymentRefund`
+Ya se sabe de estas INVISIBLES: `Redsys`→`PaymentSettings`; `RedsysReturnHandler`→`Redsys`,
+`RedsysReturnOutcome`, `TicketIssuer`(Booking), `IncidentSettings`; `Signature`→`Utils`;
+`Payment`→`PaymentRefund`; `PaymentRefund`→`Payment`, `OrderItem`(Booking), `User`.
 
-`User` es **kernel compartido**: vive en Identity y sus relaciones cruzadas quedan exentas como
-costura de BD (spec §4). Ya hay una entrada suya en la allowlist `SEAM`
-(`Platform/Models/AuditLog.php` → `App\Models\User`) que habrá que reapuntar al namespace nuevo.
+Al terminar, dos entradas de baseline deben ENCOGER (el test lo exige):
+`Payments/Contracts/RefundGateway.php`→`App\Models\Payment` y
+`Payments/PaymentsServiceProvider.php`→`App\Support\Redsys`.
 
 Cada paso del spec = una unidad de sesión con suite verde.
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer

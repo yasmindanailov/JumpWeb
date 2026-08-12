@@ -6,7 +6,7 @@ namespace App\Domain\Booking\Contracts;
  * Las reservas de un cliente, para quien vive FUERA de Booking (Fase 2, paso 1:
  * `docs/specs/modulos-dominio.md` §5.1 — «reservas del cliente para Identity»).
  *
- * Extraído de las dos consultas que `App\Support\CustomerAccountContext` (Identity)
+ * Extraído de las dos consultas que `App\Domain\Identity\Services\CustomerAccountContext` (Identity)
  * hacía a mano sobre `Order`/`OrderItem`/`TicketType`: mismo filtrado, mismo orden,
  * mismos datos. Sin superficie nueva.
  *

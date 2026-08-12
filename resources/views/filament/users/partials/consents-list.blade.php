@@ -1,6 +1,6 @@
 @php
     /**
-     * @var \App\Models\User $record
+     * @var \App\Domain\Identity\Models\User $record
      *
      * Fase 7.5 (decisión #180): consentimientos del usuario, solo lectura. Trazas
      * de auditoría legal, no editables. Una cuenta anonimizada los pierde

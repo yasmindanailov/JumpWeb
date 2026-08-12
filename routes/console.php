@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\CookieConsentLog;
+use App\Domain\Identity\Models\CookieConsentLog;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;

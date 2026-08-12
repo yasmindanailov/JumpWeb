@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Identity\Models\User;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\OrderCreator;
 use App\Support\ParkSchedule;

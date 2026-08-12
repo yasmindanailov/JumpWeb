@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Identity\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

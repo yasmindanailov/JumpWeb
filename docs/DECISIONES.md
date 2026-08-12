@@ -224,3 +224,33 @@ el calendario**: lo consumen la landing (horarios, SEO) y Booking (franjas) por 
 puede que no pertenezca a Booking sino al recinto. No se decide antes de tener el dato.
 **(d)** El «paso 0» del checklist (medir dependencias INVISIBLES) deja de ser artesanal:
 `scripts/module-deps.php`, con el mismo tokenizador que el arch-test.
+
+## #17 · 2026-08-12 · Paso 4 (Identity): la trampa de las factories y dos reglas con nombre
+Ejecutado `docs/specs/modulos-dominio.md` §5.4 (detalle en §4.quinquies). Decidido:
+**(a) Las factories se quedan PLANAS en `database/factories/`.** Mover `User` rompía la
+resolución por los DOS sentidos: modelo→factory (Laravel adivina a partir del namespace
+completo) y factory→modelo (adivina `App\Models\{Basename}`). Se resuelve con un
+`Factory::guessFactoryNamesUsing` por nombre CORTO en `AppServiceProvider` + `protected $model`
+explícito en `UserFactory`. La alternativa —espejar el árbol de módulos dentro de
+`database/factories/`— se descartó: no aporta nada y multiplicaría el churn de cada mudanza.
+Lo cubre `FactoryResolutionTest`, que vigila los dos sentidos y que la factory CONSTRUYE.
+Aprendizaje de método: la trampa se verificó y desactivó ANTES de mover (estaba anotada desde el
+paso 3), pero el guard inicial solo cubría un sentido y el otro lo destapó la suite — un guard
+escrito «de memoria» sobre una API ajena hay que contrastarlo contra la API, no contra la idea
+que uno tiene de ella. Hizo falta además `composer dump-autoload`: con el classmap viejo,
+`class_exists()` intentaba incluir el fichero borrado y el fallo ni siquiera era limpio.
+**(b) Dos exenciones con NOMBRE en el arch-test, no entradas anónimas en una baseline.** Las 10
+flechas nuevas que destapó el paso no son deuda, son reglas ya decididas; meterlas en una
+allowlist habría escondido el porqué y sugerido que hay que retirarlas:
+· `SHARED_KERNEL` = `User` — el §4 del spec ya lo declaró kernel compartido (auth, autoría,
+`belongsTo` de pedidos y reembolsos);
+· `OUTBOUND` = `App\Notifications\*` + `App\Mail\*` — un servicio de dominio que avisa al cliente
+construye un `Notification`/`Mailable`: es el canal de salida del framework, no una llamada a
+otro contexto. Invertirlo (evento de dominio + listener) es reestructurar, y Fase 2 es mudanza.
+Ambas verificadas por mutación: `Identity\Models\Role` (que NO es kernel) sigue siendo rojo desde
+`app/Support`, y un módulo importando `App\Http\Controllers\*` también.
+**(c) La supresión RGPD cruza contextos, y queda escrito.** `User::purge…` (art. 17) vacía
+`order_items.guest_data`/`event_data` — PII de TERCEROS (alergias de menores, art. 9). No es una
+relación Eloquent sino una operación transversal por naturaleza; el diseño limpio sería que
+Identity emitiera «usuario anonimizado» y cada contexto borrase lo suyo. Anotado en `SEAM` con su
+porqué para que la decisión exista y no se pierda en el paso 6.

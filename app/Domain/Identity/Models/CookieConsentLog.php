@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Identity\Models;
 
-use App\Support\CookieConsent;
+use App\Domain\Identity\Services\CookieConsent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Registro-prueba de un consentimiento de cookies (#219). Distinto de `consents` (legales, de
  * usuario): aquí el sujeto puede ser anónimo (`user_id` nullable). Nombre distinto del helper
- * `App\Support\CookieConsent` (autoridad/gate) para no colisionar.
+ * `App\Domain\Identity\Services\CookieConsent` (autoridad/gate) para no colisionar.
  *
  * **Prunable** (RGPD: minimización + limitación del plazo): se borran las filas más antiguas que la
  * vida del consentimiento (24 meses). Lo ejecuta `model:prune` programado en `routes/console.php`.

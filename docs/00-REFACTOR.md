@@ -138,8 +138,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       entra por `Contracts`/Platform (baseline `PENDING`, 3 entradas). El arch-test destapó que
       **Content depende de Booking** en 3 frentes (calendario, zona, precio de referencia):
       anotados en `LEGACY` para decidir en el paso 6. Suite 2170 verde.
-- [ ] Pasos 4–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
-      como red (sin big-bang: Identity → Payments → Booking).
+- [x] **Paso 4 — Identity mudado** (2026-08-12, `DECISIONES #17`; spec §4.quinquies): 10 clases a
+      `app/Domain/Identity/{Models,Services}` (`User`, `Consent`, `CookieConsentLog`, `Role`,
+      `Permission`, `CookieConsent`, `CustomerRegistrar`, `CustomerAccountContext`,
+      `PuertaSettings`, `PermissionCatalog`). Se desactivó ANTES de mover la **trampa de las
+      factories** (rompe en los DOS sentidos: modelo→factory y factory→modelo; `UserFactory` es
+      la única del repo y la usa media suite) con resolver por nombre corto + `$model` explícito,
+      guardado por `FactoryResolutionTest`. El arch-test ganó dos exenciones **con nombre**:
+      `SHARED_KERNEL` (`User`, ya declarado kernel compartido en el spec §4) y `OUTBOUND`
+      (`Notifications`/`Mail`, el canal de salida del framework). Suite 2177 verde.
+- [ ] Pasos 5–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
+      como red (sin big-bang: Payments → Booking; el dinero, EL ÚLTIMO).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

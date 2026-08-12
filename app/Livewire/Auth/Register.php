@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Auth;
 
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\Turnstile;
 use App\Livewire\Concerns\ResetsOnModalClose;
-use App\Models\Consent;
-use App\Models\Role;
-use App\Models\User;
 use App\Notifications\AccountAlreadyExists;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

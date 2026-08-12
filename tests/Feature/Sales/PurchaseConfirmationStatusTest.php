@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Tickets\Purchase;
 use App\Models\Order;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;

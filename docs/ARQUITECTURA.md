@@ -37,7 +37,7 @@
 - **Auth:** a medida sobre Livewire con modales (`app/Livewire/Auth/`). NO Breeze/Fortify.
   Reglas en `SEGURIDAD.md`.
 - **Roles/permisos:** tablas propias `roles`/`permissions` (modelos `Role`, `Permission`;
-  catálogo en `app/Support/PermissionCatalog.php`) + Gates/Policies. En
+  catálogo en `app/Domain/Identity/Services/PermissionCatalog.php`) + Gates/Policies. En
   `AppServiceProvider::boot()` hay un `Gate::before` que hace del rol `admin` un super-admin
   (pasa cualquier Gate; devolver `null` deja seguir la cadena para el resto).
 - **i18n de interfaz:** `lang/{es,en,fr}/*.php` + middleware `SetLocale` (público) y

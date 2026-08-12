@@ -44,6 +44,33 @@ class ModuleBoundariesTest extends TestCase
     ];
 
     /**
+     * **Kernel compartido.** `User` vive en Identity pero lo referencia todo el sistema (auth,
+     * autoría de acciones, `belongsTo` de pedidos y reembolsos). El spec §4 ya lo decidió así:
+     * «`User` es kernel compartido: vive en Identity, las relaciones cruzadas quedan exentas».
+     *
+     * Es una REGLA, no una deuda: por eso es una exención con nombre y no seis entradas
+     * anónimas en una baseline, que esconderían el porqué y darían la falsa idea de que hay
+     * que retirarlas.
+     *
+     * @var list<string>
+     */
+    private const SHARED_KERNEL = ['App\Domain\Identity\Models\User'];
+
+    /**
+     * Canal de SALIDA del dominio: notificaciones y mailables. Un servicio de dominio que avisa
+     * al cliente construye un `Notification`/`Mailable` — es el idioma del framework para emitir
+     * un efecto hacia fuera, no una llamada a otro contexto.
+     *
+     * Invertirlo (evento de dominio + listener que notifica) es un refactor de verdad y Fase 2
+     * está declarada como mudanza, no reestructuración (§2). Queda anotado como candidato para
+     * cuando exista un motivo real; hoy lo usan `CustomerRegistrar`, `ManualOrderFulfiller` y
+     * `RedsysReturnHandler`.
+     *
+     * @var list<string>
+     */
+    private const OUTBOUND = ['App\Notifications\\', 'App\Mail\\'];
+
+    /**
      * Costura Booking↔Payments: el dinero. Explícita fichero a fichero — no es un permiso de
      * módulo, es una lista de flechas concretas que la revisión aceptó (spec §4 y §6).
      *
@@ -59,7 +86,16 @@ class ModuleBoundariesTest extends TestCase
     private const SEAM = [
         // `audit_logs.user_id` → quién hizo la acción. Relación Eloquent, costura de BD (§4).
         // Platform no depende de Identity: solo declara la FK que ya existe en el esquema.
-        'Platform/Models/AuditLog.php' => ['App\Models\User'],
+        'Platform/Models/AuditLog.php' => ['App\Domain\Identity\Models\User'],
+        // `User` mira a Booking por DOS motivos distintos (paso 4, 2026-08-12):
+        //  · relaciones Eloquent `orders()` / `tickets()` → costura de BD del §4;
+        //  · la SUPRESIÓN RGPD (art. 17) vacía `order_items.guest_data`/`event_data`, que es PII
+        //    de TERCEROS (alergias de menores, art. 9). Eso no es una relación: es una operación
+        //    que cruza contextos por naturaleza —el derecho de supresión alcanza a todos—. El
+        //    diseño limpio sería que Identity emitiera «usuario anonimizado» y cada contexto
+        //    borrase lo suyo; eso es un refactor de eventos, fuera del alcance de Fase 2 (§2).
+        //    Anotado aquí para que la decisión exista y no se pierda.
+        'Identity/Models/User.php' => ['App\Models\Order', 'App\Models\OrderItem', 'App\Models\Ticket'],
         // Relaciones Eloquent Content↔Booking: `attractions.zone_id`, `attractions.ticket_type_id`,
         // `landing_services.ticket_type_id`. Son FKs del esquema, no llamadas de dominio; el
         // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
@@ -253,6 +289,10 @@ class ModuleBoundariesTest extends TestCase
                 if (str_starts_with($reference, 'App\\Domain\\Platform\\')) {
                     continue;
                 }
+                // `User`: kernel compartido (spec §4). Regla, no deuda — ver SHARED_KERNEL.
+                if (in_array($reference, self::SHARED_KERNEL, true)) {
+                    continue;
+                }
                 // App\Domain\<Módulo>\Contracts\<Símbolo>
                 if (preg_match('/^App\\\\Domain\\\\[A-Za-z]+\\\\Contracts\\\\/', $reference) === 1) {
                     continue;
@@ -308,6 +348,14 @@ class ModuleBoundariesTest extends TestCase
         }
         if (in_array($reference, self::LEGACY[$relative] ?? [], true)) {
             return true;
+        }
+        if (in_array($reference, self::SHARED_KERNEL, true)) {
+            return true;
+        }
+        foreach (self::OUTBOUND as $prefix) {
+            if (str_starts_with($reference, $prefix)) {
+                return true;
+            }
         }
         if (! str_starts_with($reference, 'App\\Domain\\')) {
             return false;   // legacy sin baseline explícita

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\CookieConsent;
+use App\Domain\Identity\Services\CookieConsent;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\TestCase;
 

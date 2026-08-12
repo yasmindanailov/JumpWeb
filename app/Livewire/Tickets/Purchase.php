@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\MaintenanceSettings;
@@ -10,7 +11,6 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Support\AddonResolver;
 use App\Support\Cart;

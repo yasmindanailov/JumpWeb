@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Cookies;
 
+use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Platform\Models\Setting;
-use App\Support\CookieConsent;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;

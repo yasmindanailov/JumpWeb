@@ -122,7 +122,7 @@ class LandingContentSeeder extends Seeder
             ['key' => 'maintenance.page.contacto', 'value' => '0', 'group' => 'maintenance'],
             // Cookies (#219): mostrar el banner de consentimiento. Default ON ('1'). Apagarlo solo
             // oculta el banner; el bloqueo previo de los iframes de tercero sigue activo (gateado por
-            // la cookie de consentimiento). Ver App\Support\CookieConsent y docs/PLAN-COOKIES.md.
+            // la cookie de consentimiento). Ver App\Domain\Identity\Services\CookieConsent y docs/PLAN-COOKIES.md.
             ['key' => 'cookies.banner_enabled', 'value' => '1', 'group' => 'cookies'],
         ];
 

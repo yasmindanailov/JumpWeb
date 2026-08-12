@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Roles\Concerns;
 
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Services\PermissionCatalog;
 use App\Domain\Platform\Services\AuditLogger;
-use App\Models\Permission;
-use App\Models\Role;
-use App\Support\PermissionCatalog;
 
 /**
  * Fase 7.11 — Mecánica compartida de la matriz de permisos de un rol.

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Exceptions\ReservationException;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Support\AddonResolver;
-use App\Support\CustomerRegistrar;
 use App\Support\ManualOrderFulfiller;
 use App\Support\PackAvailability;
 use App\Support\PaymentSettings;

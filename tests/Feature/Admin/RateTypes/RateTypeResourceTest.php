@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Admin\RateTypes;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\RateTypeResource;
 use App\Models\Price;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\SpecialDate;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\RateResolver;
 use Carbon\Carbon;

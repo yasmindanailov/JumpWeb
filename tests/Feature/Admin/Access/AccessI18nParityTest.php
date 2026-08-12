@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Access;
 
-use App\Support\PermissionCatalog;
+use App\Domain\Identity\Services\PermissionCatalog;
 use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 

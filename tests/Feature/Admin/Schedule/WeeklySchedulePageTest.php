@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Schedule;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Pages\WeeklySchedule;
 use App\Models\OpeningHour;
-use App\Models\Role;
-use App\Models\User;
 use App\Support\ParkSchedule;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;

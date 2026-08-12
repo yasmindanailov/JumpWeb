@@ -13,7 +13,7 @@ use Livewire\Component;
  * `Auth\Login` y `Auth\Register` embebidos) y se RE-RENDERIZA en vivo con la sesión nueva, sin recarga
  * — imprescindible para el flujo pay-first (recargar perdería el paso de pago del sidebar).
  *
- * Los datos los provee `App\Support\CustomerAccountContext` (memoizado, defensivo); la vista los lee.
+ * Los datos los provee `App\Domain\Identity\Services\CustomerAccountContext` (memoizado, defensivo); la vista los lee.
  */
 class AccountContext extends Component
 {

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Order;
-use App\Models\Role;
-use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

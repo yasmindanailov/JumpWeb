@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Identity\Models\User;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Slot;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Support\Redsys;
 use App\Support\RedsysReturnHandler;
 use App\Support\RedsysReturnOutcome;

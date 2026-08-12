@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Console;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Models\Order;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

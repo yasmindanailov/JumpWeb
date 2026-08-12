@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\AuditLogger;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;

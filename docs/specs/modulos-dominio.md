@@ -167,6 +167,41 @@ convención `App\Models\X` → `Database\Factories\XFactory`. Un modelo en `App\
 rompe esa resolución. Hoy solo existe `UserFactory` y `User` es de **Identity** → el paso 4 debe
 mover la factory o registrar un resolver antes de tocar `User`.
 
+## 4.quinquies Paso 4 EJECUTADO (2026-08-12) — Identity, y dos reglas con nombre
+10 clases (5 modelos + 5 servicios). Lo relevante (`DECISIONES #17`):
+
+1. **La trampa de las factories se desactivó ANTES de mover, no después.** Verificada primero:
+   `Factory::resolveFactoryName('App\Domain\Identity\Models\User')` daba
+   `Database\Factories\Domain\Identity\Models\UserFactory`. Con `UserFactory` como única factory
+   del repo, mover `User` a ciegas tumbaba media suite. Solución en dos sentidos, porque se
+   rompe por los dos:
+   · **modelo → factory**: resolver por nombre CORTO en `AppServiceProvider`
+     (`Factory::guessFactoryNamesUsing`), para que las factories sigan planas en
+     `database/factories/` por muchos módulos que haya;
+   · **factory → modelo**: `protected $model` explícito en `UserFactory` — Laravel adivinaba
+     `App\Models\User`. Este segundo sentido se me escapó en el primer guard y lo destapó la
+     suite; el test ahora cubre los dos.
+   ⚠️ Además hizo falta `composer dump-autoload`: con el classmap viejo, `class_exists()`
+   intentaba incluir el fichero borrado y el fallo no era limpio.
+2. **Dos exenciones con NOMBRE, no entradas anónimas en una baseline.** El arch-test destapó 10
+   flechas nuevas que no son deuda sino reglas ya decididas, y ponerlas en una allowlist habría
+   escondido el porqué y sugerido que hay que retirarlas:
+   · `SHARED_KERNEL` = `User`. El spec §4 ya lo dice: «kernel compartido, vive en Identity, las
+     relaciones cruzadas quedan exentas». Lo referencian `Order`, `OrderItem`,
+     `OrderAdjustment`, `PaymentRefund`, `OrderCreator`, `ManualOrderFulfiller`.
+   · `OUTBOUND` = `App\Notifications\*`, `App\Mail\*`. Un servicio de dominio que avisa al
+     cliente construye un `Notification`/`Mailable`: es el canal de SALIDA del framework, no una
+     llamada a otro contexto. Invertirlo (evento de dominio + listener) es reestructurar, y
+     Fase 2 es mudanza (§2). Hoy lo hacen `CustomerRegistrar`, `ManualOrderFulfiller` y
+     `RedsysReturnHandler`; queda anotado como candidato para más adelante.
+   Ambas se verificaron por mutación: `Identity\Models\Role` (que NO es kernel) sigue siendo
+   rojo desde `app/Support`, y un módulo importando `App\Http\Controllers\*` también.
+3. **La supresión RGPD cruza contextos, y ahora está escrito.** `User::purge…` (art. 17) vacía
+   `order_items.guest_data`/`event_data` —PII de TERCEROS, alergias de menores (art. 9)—, así
+   que Identity consulta Booking. No es una relación Eloquent: es una operación transversal por
+   naturaleza. El diseño limpio sería que Identity emitiera «usuario anonimizado» y cada
+   contexto borrase lo suyo. Anotado en `SEAM` con su porqué para que la decisión exista.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
@@ -185,9 +220,11 @@ mover la factory o registrar un resolver antes de tocar `User`.
    `LegalIdentity`, `CookiePolicyContent`, `HeroStatus`, `MapsEmbed`, `SocialEmbed`,
    `ThemeSettings`, `StructuredData`, `ScheduleDisplay`, `LandingAddonPresenter`,
    `LandingComplementResolver`, `ServicePriceTableBackfill`). `Zone` se queda en Booking.
-4. **Identity**: `User`, `Consent`, `CookieConsent(+Log)`, `CustomerRegistrar`,
-   `CustomerAccountContext`, `PuertaSettings`, puerta. `User` es kernel compartido: vive en
-   Identity, las relaciones cruzadas quedan exentas (costura).
+4. ✅ **Identity** (2026-08-12, ver §4.quinquies): `Models/`(`User`, `Consent`,
+   `CookieConsentLog`, `Role`, `Permission`) · `Services/`(`CookieConsent`, `CustomerRegistrar`,
+   `CustomerAccountContext`, `PuertaSettings`, `PermissionCatalog`). `User` es kernel
+   compartido: vive en Identity y es exención con nombre en el arch-test (`SHARED_KERNEL`). La
+   «puerta» es capa de entrega (`Livewire\Admin\Puerta`) y se queda donde está.
 5. **Payments** (`VERIFY_CONC=1`): `Redsys*`, `RedsysReturnHandler`, `PaymentRefund`,
    `IncidentSettings`, `OrderRefundFlags` + split del trait de guards.
 6. **Booking** (lo más referenciado, al final; `VERIFY_CONC=1` + verify-comandos):

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\SlotTemplates;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Resources\SlotTemplates\Pages\CreateSlotTemplate;
 use App\Filament\Resources\SlotTemplates\Pages\EditSlotTemplate;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
-use App\Models\Role;
 use App\Models\SlotTemplate;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

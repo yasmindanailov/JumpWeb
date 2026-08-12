@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Identity\Models\User;
 use App\Models\Order;
 use App\Models\OrderAdjustment;
 use App\Models\OrderItem;
@@ -10,7 +11,6 @@ use App\Models\PaymentRefund;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\ReservationFinancials;
 use Database\Seeders\PermissionSeeder;

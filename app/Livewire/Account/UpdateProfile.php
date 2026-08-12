@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Account;
 
+use App\Domain\Identity\Models\User;
 use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Middleware\SetLocale;
-use App\Models\User;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyPendingEmail;
 use Illuminate\Database\QueryException;

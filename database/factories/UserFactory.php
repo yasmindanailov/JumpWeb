@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,6 +12,16 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
+    /**
+     * Modelo EXPLÍCITO (Fase 2, paso 4). La resolución factory→modelo de Laravel adivina
+     * `App\Models\{Basename}`, y `User` vive ahora en `App\Domain\Identity\Models`. Declararlo
+     * aquí es más barato y más legible que enseñarle a adivinar módulos.
+     * (El sentido contrario —modelo→factory— lo resuelve `AppServiceProvider`.)
+     *
+     * @var class-string<User>
+     */
+    protected $model = User::class;
+
     /**
      * The current password being used by the factory.
      */

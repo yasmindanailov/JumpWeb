@@ -245,7 +245,7 @@ Permisos: `hasRole()`, `hasPermission()` (rol `admin` = super-admin, puede todo)
 ### `roles` / `permissions` / pivotes
 `roles(name unique, label)` — seed: `admin`, `customer`, `staff`.
 `permissions(name unique, label)` — sembrados por `PermissionSeeder` (catálogo:
-`App\Support\PermissionCatalog`); algunas migraciones insertan permisos idempotentes
+`App\Domain\Identity\Services\PermissionCatalog`); algunas migraciones insertan permisos idempotentes
 (`orders.edit_event_data`, `orders.edit_item`, `orders.cancel_item`, `orders.refund_item`).
 `role_user(user_id, role_id)` PK compuesta, cascade. `permission_role(permission_id, role_id)`
 PK compuesta, cascade. N:M estándar sin paquete externo.
@@ -258,7 +258,7 @@ re-aceptación). Una fila por documento aceptado.
 ### `cookie_consent_logs` (CookieConsentLog, **Prunable**)
 Prueba del consentimiento de cookies (sujeto puede ser ANÓNIMO): `user_id` nullable
 `nullOnDelete` · `categories` JSON (`{"maps":bool,"social":bool}`) · `version`
-(`App\Support\CookieConsent::POLICY_VERSION`) · `ip` · `user_agent`(512) · `accepted_at`
+(`App\Domain\Identity\Services\CookieConsent::POLICY_VERSION`) · `ip` · `user_agent`(512) · `accepted_at`
 (index). Poda automática > 24 meses (`model:prune` en `routes/console.php`).
 
 ### `audit_logs` (AuditLog — inmutable, append-only)

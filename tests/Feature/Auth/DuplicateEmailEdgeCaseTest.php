@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
-use App\Models\User;
 use App\Notifications\AccountAlreadyExists;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Maintenance;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
 use App\Models\Order;
@@ -10,7 +11,6 @@ use App\Models\Payment;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Support\OrderCreator;
 use Illuminate\Foundation\Testing\RefreshDatabase;

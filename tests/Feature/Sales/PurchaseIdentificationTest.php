@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
@@ -9,7 +10,6 @@ use App\Models\Order;
 use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;

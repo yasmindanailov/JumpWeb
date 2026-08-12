@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Cookies;
 
-use App\Models\CookieConsentLog;
-use App\Models\User;
-use App\Support\CookieConsent;
+use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CookieConsent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Tests\TestCase;

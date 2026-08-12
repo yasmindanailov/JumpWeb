@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Domain\Identity\Models\User;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;

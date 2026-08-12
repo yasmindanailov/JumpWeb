@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Identity\Services;
 
 /**
  * Fase 7.11 — Fuente única de la ESTRUCTURA de los permisos del panel: cómo se agrupan

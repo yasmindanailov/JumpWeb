@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Roles\Pages;
 
+use App\Domain\Identity\Models\Role;
 use App\Filament\Resources\Roles\Concerns\InteractsWithRoleForm;
 use App\Filament\Resources\Roles\RoleResource;
-use App\Models\Role;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
-use App\Support\CustomerAccountContext;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;

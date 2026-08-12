@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Identity\Models\User;
 use App\Livewire\Auth\Login;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Access;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\PermissionCatalog;
 use App\Filament\Resources\Roles\Concerns\InteractsWithRoleForm;
 use App\Filament\Resources\Roles\Pages\EditRole;
-use App\Models\Role;
-use App\Models\User;
-use App\Support\PermissionCatalog;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

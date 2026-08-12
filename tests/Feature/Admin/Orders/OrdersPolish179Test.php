@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Filament\Pages\CalendarPage;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
@@ -9,11 +12,8 @@ use App\Models\OrderAdjustment;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
-use App\Models\Permission;
-use App\Models\Role;
 use App\Models\Slot;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

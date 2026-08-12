@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\UpcomingReservation;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Access;
 
-use App\Support\PermissionCatalog;
+use App\Domain\Identity\Services\PermissionCatalog;
 use Database\Seeders\PermissionSeeder;
 use Tests\TestCase;
 

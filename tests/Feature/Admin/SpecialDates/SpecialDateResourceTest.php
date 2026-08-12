@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Admin\SpecialDates;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
 use App\Models\RateType;
-use App\Models\Role;
 use App\Models\SpecialDate;
-use App\Models\User;
 use App\Support\ParkSchedule;
 use App\Support\RateResolver;
 use Carbon\Carbon;

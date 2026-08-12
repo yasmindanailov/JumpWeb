@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use Database\Seeders\RoleSeeder;
 use Filament\Panel;
 use Illuminate\Foundation\Testing\RefreshDatabase;

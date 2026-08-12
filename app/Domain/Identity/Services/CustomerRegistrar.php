@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Identity\Services;
 
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\PhoneNormalizer;
-use App\Models\Consent;
-use App\Models\Role;
-use App\Models\User;
 use App\Notifications\CustomerAccountCreated;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

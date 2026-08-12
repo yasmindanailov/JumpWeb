@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Mail\PaymentIncidentMail;
@@ -12,7 +13,6 @@ use App\Models\RateType;
 use App\Models\Slot;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;

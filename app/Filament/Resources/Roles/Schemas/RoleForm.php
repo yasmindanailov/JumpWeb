@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Roles\Schemas;
 
-use App\Models\Role;
-use App\Support\PermissionCatalog;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Services\PermissionCatalog;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Maintenance;
 
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\MaintenanceSettings;
-use App\Models\Role;
-use App\Models\User;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
