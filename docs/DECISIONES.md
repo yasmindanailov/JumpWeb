@@ -81,3 +81,30 @@ jurisdicción en `ProductionSeeder`/`LegalContent`) siguen en el árbol y su ret
 explícito de Fase 1. Y **(f)** la capa agent-first se VERSIONA: `.claude/settings.json` y
 `.claude/skills/` salen del ignore global `/.claude/` — hasta hoy, un clon nuevo perdía las
 skills y los permisos que `DECISIONES #7` y la doc daban por presentes en el repo.
+
+## #11 · 2026-08-12 · Ciclo de vida del agente completo y escala documental (Paquetes C y D)
+Cierra el plan de la auditoría de `#10`. **(a)** Skill `/arranque-sesion`, espejo del cierre:
+base verde VERIFICADA (árbol, push pendiente, wip, hook, stack, gates) antes de trabajar —
+nacida del apagón real de hoy, que demostró el hueco. **(b)** El DoD pasa de 3 a 4
+condiciones: la doc del sistema tocado se actualiza AL TERMINAR la tarea, no al cierre
+(si la sesión muere antes, el conocimiento se perdía). **(c)** CONVENCIONES §9: lista
+CERRADA de cuándo parar y preguntar al owner (invariantes, revertir decisiones,
+dependencias, borrados, producto/alcance, gasto). **(d)** Permisos con fuerza técnica en tres capas:
+allow para todos los comandos literales del protocolo · deny declarativo (`rm -r*` pide
+confirmación; `migrate:fresh`/`db:wipe` y el repo origen vía Read/Edit/Write, vetados) ·
+**hook PreToolUse `scripts/guard-bash.sh`** que bloquea CUALQUIER Bash que toque
+`proyectos/jumpingjump` (también lectura: grep/rg/find) o contenga `migrate:fresh`/`db:wipe`
+en cualquier forma (`bash -c`, etc.). Límite conocido y asumido: `tinker` interactivo no es
+inspeccionable — lo cubre CONVENCIONES §9.4 (borrados = owner). **(e)** Los 54 invariantes llevan ID estable
+(`PAY-`/`AFORO-`/`RGPD-`/`SEC-`/`PERF-`/`SUITE-NN`) citable desde tests, commits y
+enrutado. **(f)** `docs/specs/` con plantilla: los diseños pre-implementación son artefacto
+de primera clase revisado por otro agente. **(g)** Plantilla de cabecera con estado y
+«verificado contra código» + fuentes únicas declaradas (suite→ESTADO, puertos→README).
+**(h)** Decisión revertida → «Sustituida por #N» en la antigua. **(i)** Docs nuevos con
+contenido verificado por agentes: `GLOSARIO.md` (término↔código), `DEUDA.md` (registro
+único; destapó que morphMap es prerequisito NO listado de Fase 2 y que la 2FA de admin no
+existe ni tiene plan) e `INSTALACION-CLIENTE.md` (la promesa white-label como runbook),
+más `TESTING.md` §datos de prueba (el contrato de conteos del seeder-fixture, que rompía
+la suite en silencio). **(j)** `AGENTS.md` = symlink a `CLAUDE.md` (estándar abierto de la
+Linux Foundation; coste cero, evita reabrir la pregunta). **(k)** Enrutado con granularidad
+de sección/ID y la fila Landing partida.

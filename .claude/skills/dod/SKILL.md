@@ -5,7 +5,7 @@ description: Checklist de «Hecho» (Definition of Done) de JumpWeb — usar ant
 
 # Definition of Done (CONVENCIONES §3.bis)
 
-Una tarea es ✅ solo si cumple LAS TRES. Verifica cada una EMPÍRICAMENTE, no de memoria:
+Una tarea es ✅ solo si cumple LAS CUATRO. Verifica cada una EMPÍRICAMENTE, no de memoria:
 
 ## 1. El código existe y está integrado
 - Clases/rutas/migraciones/vistas reales en el árbol (no un diseño ni un plan).
@@ -20,8 +20,8 @@ Una tarea es ✅ solo si cumple LAS TRES. Verifica cada una EMPÍRICAMENTE, no d
   `docker compose exec -u sail -T laravel.test php artisan test --filter=<Modulo>`
 
 ## 3. Verificación empírica del comportamiento
-- HTTP/render/BD reales: `curl localhost:8081/...`, render de la vista, fila en BD, email
-  en Mailpit (`localhost:8028`) — lo que aplique al cambio.
+- HTTP/render/BD reales: `curl -s http://localhost:8081/...`, render de la vista, fila en
+  BD, email en Mailpit (`http://localhost:8028`) — lo que aplique al cambio.
 - Si toca dinero, aforo, RGPD o seguridad: relee `docs/INVARIANTES.md` y confirma que
   ninguna invariante se relaja. En dinero/aforo considera además revisión adversarial
   (agentes independientes intentando refutar).
@@ -32,4 +32,11 @@ Una tarea es ✅ solo si cumple LAS TRES. Verifica cada una EMPÍRICAMENTE, no d
 - Feature visible de producto → además validación del owner (Yasmin) antes del ✅ definitivo:
   mientras tanto es 🟦 «pdte. validación».
 
-Si falla cualquiera de las tres → la tarea queda 🟦 y se anota QUÉ falta en el tracker.
+## 4. La doc refleja el cambio (AHORA, no al cierre)
+- El doc del sistema tocado está actualizado: `docs/sistemas/*` si cambia un sistema,
+  `INVARIANTES.md` si cambia una invariante (su ID viaja con el código), `MODELO-DATOS.md`
+  si cambia el esquema — o anota explícitamente «N/A: no altera ningún doc».
+- No se difiere a `/cierre-sesion`: si la sesión muere antes del cierre, el conocimiento
+  se pierde («nada vive solo en la conversación», CONVENCIONES §7.4).
+
+Si falla cualquiera de las cuatro → la tarea queda 🟦 y se anota QUÉ falta en el tracker.

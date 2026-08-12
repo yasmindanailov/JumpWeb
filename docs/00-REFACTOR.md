@@ -55,7 +55,9 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 
 ### Fase 1 — Desbranding y generalización superficial 🟦
 - [ ] Quitar «jumpingjump» del código — recuento canónico (no fotos):
-      `git grep -i jumpingjump -- ':!docs' | wc -l` → **167 líneas al 2026-08-12**
+      `git grep -i jumpingjump -- ':!docs' ':!.claude' | wc -l` → **167 líneas al 2026-08-12**
+      (se excluye `.claude/`: sus menciones son los deny del protocolo que BLOQUEAN el repo
+      origen, no residuo de marca)
       (app 26 · lang 28 · resources 18 · database 18 · tests 59 · raíz 9 · public 6 ·
       config 2 · routes 1; 2 de raíz son las credenciales del seeder documentadas a
       propósito en el README — al limpiarlas, actualizar también esa nota).
@@ -95,8 +97,11 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       franjas/aforo, pedidos, tickets) · **Content/CMS** (páginas, secciones, servicios, ofertas,
       FAQs, normas, tema) · **Identity** (auth, cuentas, RGPD/consents) · **Payments** (proveedores,
       pagos, reembolsos, señal) · **Platform** (settings, i18n, auditoría, mantenimiento).
-- [ ] Migrar `app/Support/` (~60 clases) a los módulos, con la suite como red (sin big-bang:
-      módulo a módulo, imports actualizados por fases).
+- [ ] **Prerequisito — morphMap**: los morphs (`prices.priceable_type`, `payments.payable_type`,
+      `audit_logs.target_type`) guardan FQCN → registrar `enforceMorphMap` (o migrar valores)
+      ANTES de mover/renombrar ningún modelo, o se rompen datos (ver `DEUDA.md` §Alta).
+- [ ] Migrar `app/Support/` (57 ficheros al 2026-08-12) a los módulos, con la suite como red
+      (sin big-bang: módulo a módulo, imports actualizados por fases).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

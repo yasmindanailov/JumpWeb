@@ -3,6 +3,7 @@
     "allow": [
       "Bash(docker compose ps:*)",
       "Bash(docker compose up -d)",
+      "Bash(docker compose down)",
       "Bash(docker compose exec -u sail:*)",
       "Bash(docker compose logs:*)",
       "Bash(git status:*)",
@@ -11,13 +12,54 @@
       "Bash(git show:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git push origin main)",
+      "Bash(git push origin wip/:*)",
+      "Bash(git push -u origin wip/:*)",
+      "Bash(VERIFY_CONC=1 git push)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git stash:*)",
+      "Bash(git fsck:*)",
+      "Bash(git grep:*)",
+      "Bash(git config core.hooksPath)",
+      "Bash(git config core.hooksPath .githooks)",
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(wc:*)",
+      "Bash(bash scripts/docs-check.sh)",
       "Bash(curl -s http://localhost:8081/:*)",
-      "Bash(curl -s -o /dev/null http://localhost:8081/:*)"
+      "Bash(curl -s -o /dev/null http://localhost:8081/:*)",
+      "Bash(curl -s -o /dev/null -w:*)",
+      "Bash(curl -s http://localhost:8028/:*)",
+      "Bash(curl -s -o /dev/null http://localhost:8028/:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "Bash(rm -r:*)",
+      "Bash(docker compose exec -u sail laravel.test php artisan migrate:fresh:*)",
+      "Bash(docker compose exec -u sail -T laravel.test php artisan migrate:fresh:*)",
+      "Bash(docker compose exec -u sail laravel.test php artisan db:wipe:*)",
+      "Bash(docker compose exec -u sail -T laravel.test php artisan db:wipe:*)",
+      "Read(//home/yasmin/proyectos/jumpingjump/**)",
+      "Edit(//home/yasmin/proyectos/jumpingjump/**)",
+      "Write(//home/yasmin/proyectos/jumpingjump/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/guard-bash.sh"
+          }
+        ]
+      }
     ]
   }
 }

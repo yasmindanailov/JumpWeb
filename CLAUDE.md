@@ -5,6 +5,8 @@
 > único que tendrá el siguiente agente. Protocolo en `docs/CONVENCIONES.md` (§7 y §5).
 
 ## ▶ Para continuar el proyecto (handoff)
+0. Skill **`/arranque-sesion`** → base verde VERIFICADA (árbol, push, hook, stack, gates).
+   Obligatorio tras un cierre abrupto (crash/apagón).
 1. Lee **`docs/ESTADO.md`** → foto viva (dónde estamos, qué sigue).
 2. Lee **`docs/00-REFACTOR.md`** → tracker VIVO del refactor (fases + checklists).
 3. Para tu tarea concreta: **solo su fila** de la tabla de enrutado de abajo.
@@ -44,18 +46,23 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 ## ⚡ Enrutado de contexto — LEE SOLO LO QUE NECESITES
 | Si trabajas en… | Lee solo |
 |---|---|
-| Refactor (fases, alcance, arquitectura objetivo) | `docs/00-REFACTOR.md` · `docs/DECISIONES` #1–#8 |
-| Dinero / pagos / Redsys / reembolsos | **`docs/INVARIANTES.md`** · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` (§pedidos/pagos) |
-| Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` |
-| Aforo / franjas / disponibilidad / calendario | **`docs/INVARIANTES.md`** · `docs/MODELO-DATOS.md` (§catálogo/aforo) · `docs/FLUJOS.md` |
-| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` |
-| Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` (§RGPD) · `docs/FLUJOS.md` (1–2) |
-| Landing / CMS público / tema | `docs/ARQUITECTURA.md` · `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` · `docs/MAPA-PAGINAS.md` |
+| Refactor (fases, alcance, arquitectura objetivo) | `docs/00-REFACTOR.md` · `docs/DECISIONES.md` (busca por tema; #1–#4 = fundacionales) |
+| Dinero / pagos / Redsys / reembolsos | **`docs/INVARIANTES.md` §1 (PAY) + §6 (SUITE)** · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
+| Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
+| Aforo / franjas / disponibilidad / calendario | **`docs/INVARIANTES.md` §2 (AFORO)** · `docs/MODELO-DATOS.md` §1 · `docs/FLUJOS.md` (flujos 3–4) |
+| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
+| Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 (RGPD) + §4 (SEC) · `docs/FLUJOS.md` (flujos 1–2) |
+| Landing / tema visual (tokens CSS) | `docs/ARQUITECTURA.md` (white-label) · `docs/MAPA-PAGINAS.md` |
+| CMS público (servicios, ofertas) | `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` |
+| Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` (copiar) · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
 | Panel admin / puerta / operación diaria | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
-| Tests / suite / fakes | `docs/TESTING.md` · `docs/CONVENCIONES.md` (§3.bis/§3.ter) |
-| API v1 / SPA sidebar / app móvil | `docs/00-REFACTOR.md` (Fases 3–4) · `docs/DECISIONES` #3/#4 |
+| Tests / suite / fakes / datos de prueba | `docs/TESTING.md` (fixture: §datos de prueba) · `docs/CONVENCIONES.md` (§3.bis/§3.ter) |
+| Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |
+| Deuda técnica (vista única) | `docs/DEUDA.md` |
+| Instalar un cliente nuevo (white-label) | `docs/INSTALACION-CLIENTE.md` |
+| API v1 / SPA sidebar / app móvil | `docs/00-REFACTOR.md` (Fases 3–4) · `docs/DECISIONES.md` #3/#4 |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
 | Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 
@@ -68,6 +75,8 @@ antes de construir encima (`CONVENCIONES §7`).
 2. Si tocas dinero, aforo, RGPD o seguridad: **lee `docs/INVARIANTES.md` primero**.
 3. Decisión nueva → `[DECIDIDO]`+fecha en el doc afectado **y** línea en `docs/DECISIONES.md`.
 4. Doc nuevo/renombrado → actualizar `docs/README.md` **y** esta tabla.
-5. Al terminar la sesión: skill **`/cierre-sesion`** (suite+Pint, tracker, ESTADO fiel, commit+push).
-6. **«Hecho» (✅) = código + prueba + verificación empírica** (skill **`/dod`**). Si falta algo, es 🟦.
+5. Al empezar: skill **`/arranque-sesion`** (base verde). Al terminar: **`/cierre-sesion`**
+   (suite+Pint+docs-check, tracker, ESTADO fiel, commit+push con evidencia).
+6. **«Hecho» (✅) = código + prueba + verificación empírica + doc del sistema al día**
+   (skill **`/dod`**, 4 condiciones). Si falta algo, es 🟦.
 7. **No tocar el repo del cliente origen** (`~/proyectos/jumpingjump`) desde sesiones de JumpWeb.

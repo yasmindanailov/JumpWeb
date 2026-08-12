@@ -24,7 +24,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null)" \
     || { echo '✗ docs-check: faltan los docs mínimos (¿repo incompleto?)' >&2; exit 1; }
 
 shopt -s nullglob
-DOCS=(CLAUDE.md README.md docs/*.md docs/sistemas/*.md)
+DOCS=(CLAUDE.md README.md docs/*.md docs/sistemas/*.md docs/specs/*.md)
 (( ${#DOCS[@]} >= 4 )) || { echo '✗ docs-check: corpus documental vacío' >&2; exit 1; }
 
 FAIL=0
@@ -35,13 +35,13 @@ ESCAPE_RE='\((futuro|ejemplo)\)'
 # ── 1 · Enlaces a docs citados (boundary-aware: ignora URLs externas …/docs/x.md) ─────
 while IFS= read -r raw; do
     ref="$raw"
-    [[ "$ref" == docs/* || "$ref" == sistemas/* ]] || ref="${ref#?}"
+    [[ "$ref" == docs/* || "$ref" == sistemas/* || "$ref" == specs/* ]] || ref="${ref#?}"
     if [[ "$ref" == docs/* ]]; then
         [[ -f "$ref" ]] || err "enlace roto: «$ref» no existe (citado en la doc)"
     else
         [[ -f "docs/$ref" ]] || err "enlace roto: «$ref» no existe bajo docs/ (citado en la doc)"
     fi
-done < <(grep -ohE '(^|[^/A-Za-z0-9_.-])(docs|sistemas)/[A-Za-z0-9_.-]+\.md' "${DOCS[@]}" | sort -u)
+done < <(grep -ohE '(^|[^/A-Za-z0-9_.-])(docs|sistemas|specs)/[A-Za-z0-9_/.-]+\.md' "${DOCS[@]}" | sort -u)
 
 # ── 2 · Anclas §N hacia CONVENCIONES / INVARIANTES (por línea, cualquier forma) ───────
 conv_ok() { grep -qE "^## §${1//./\\.}([^0-9]|$)" docs/CONVENCIONES.md; }
@@ -86,7 +86,11 @@ fi
 # ── 5 · Recuentos canónicos ───────────────────────────────────────────────────────────
 real_models=$(ls app/Models/*.php 2>/dev/null | wc -l)
 real_migrations=$(ls database/migrations/*.php 2>/dev/null | wc -l)
-real_invariants=$(grep -c '^| \*\*' docs/INVARIANTES.md)
+real_invariants=$(grep -cE '^\| [A-Z]+-[0-9]+ \| \*\*' docs/INVARIANTES.md)
+if grep -qE '^\| \*\*' docs/INVARIANTES.md; then
+    grep -nE '^\| \*\*' docs/INVARIANTES.md | head -3 >&2
+    err 'fila de invariante SIN ID (arriba): el formato es «| PAY-NN | **…» (DECISIONES #11)'
+fi
 real_resources=$(ls -d app/Filament/Resources/*/ 2>/dev/null | wc -l)
 
 check_count() { # $1=patrón grep · $2=valor real · $3=descripción del comando
@@ -98,7 +102,7 @@ check_count() { # $1=patrón grep · $2=valor real · $3=descripción del comand
 }
 check_count '~?[0-9]+ modelos ·' "$real_models" 'ls app/Models/*.php | wc -l'
 check_count '· ~?[0-9]+ migraciones' "$real_migrations" 'ls database/migrations | wc -l'
-check_count '~?[0-9]+ invariantes de no-regresión' "$real_invariants" "grep -c '^| **' docs/INVARIANTES.md"
+check_count '~?[0-9]+ invariantes de no-regresión' "$real_invariants" "grep -cE '^\| [A-Z]+-[0-9]+ \| \*\*' docs/INVARIANTES.md"
 check_count '~?[0-9]+ Filament Resources' "$real_resources" 'ls -d app/Filament/Resources/*/ | wc -l'
 
 # ── 6 · Citas «DECISIONES #N» apuntan a entradas reales ───────────────────────────────

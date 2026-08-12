@@ -6,10 +6,14 @@
 ## Vivos (se actualizan cada sesión)
 | Doc | Qué es |
 |---|---|
-| `ESTADO.md` | Foto viva mínima: dónde estamos / qué sigue. **Carga obligatoria al arrancar.** |
-| `00-REFACTOR.md` | Tracker VIVO del refactor de generalización (fases + checklists). |
-| `DECISIONES.md` | Cronológico de decisiones con su porqué. Buscar por número, no cargar entero. |
-| `CONVENCIONES.md` | Reglas y protocolo de los agentes (DoD §3.bis, handoff §7, git §8). |
+| `ESTADO.md` | Foto viva mínima: dónde estamos / qué sigue. **Carga obligatoria al arrancar.** Fuente única del recuento vivo de la suite. |
+| `00-REFACTOR.md` | Tracker VIVO del refactor de generalización (fases + checklists). Sus marcadores de fase MANDAN sobre ESTADO. |
+| `DECISIONES.md` | Cronológico de decisiones con su porqué. Buscar por número, no cargar entero. Revertida = «Sustituida por #N» en la antigua. |
+| `CONVENCIONES.md` | Reglas y protocolo de los agentes (DoD §3.bis, arranque/handoff §7, git §8, escalado al owner §9). |
+| `GLOSARIO.md` | Lenguaje ubicuo: término de dominio ↔ artefacto real de código/BD, con estado de generalización. |
+| `DEUDA.md` | Registro único de deuda técnica con severidad, medida y fase que la retira. |
+| `INSTALACION-CLIENTE.md` | Checklist de instanciar un cliente white-label (settings, tema, contenido, Redsys, cron). |
+| `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
 
 ## Base heredada (adaptada del proyecto origen el 2026-08-12)
 > Describen la base tal como se heredó; el refactor puede haberlas cambiado.
@@ -59,6 +63,6 @@ estos, su equivalente actual es:
 | `04-MODELO-DATOS.md` | `MODELO-DATOS.md` (regenerado; el del origen estaba desfasado) |
 | `UI-SPINNER.md` (sin ruta) | `sistemas/UI-SPINNER.md` |
 | `10-DESPLIEGUE.md`, `08-OPERATIVA-FISICA.md`, `02-CUESTIONARIO.md` | no portados (ciclo de vida del cliente) |
-| `DECISIONES.md #N` con N fuera de `#1`–`#10` | ledger del origen, no portado; el porqué relevante suele estar inline en el propio comentario |
+| `DECISIONES.md #N` en comentario HEREDADO (fichero no tocado desde la portación 2026-08-12) | ledger del origen, no portado — NO resolver contra el `DECISIONES.md` local aunque el número exista; el porqué relevante suele estar inline en el comentario |
 
 Los punteros se reescriben al equivalente actual **al tocar cada fichero** (no en barrido).

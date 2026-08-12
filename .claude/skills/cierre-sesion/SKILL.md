@@ -37,6 +37,8 @@ git add -A && git status --short   # revisa que no entra basura
 git commit    # convencional, español, cuerpo con el porqué
 git push
 ```
+- El cuerpo del commit de cierre termina con la evidencia (CONVENCIONES §8):
+  `Verificación: suite N tests / M aserciones (Xs) · Pint ✓ · docs-check ✓ · build ✓/N-A`
 
 ## 4. Última comprobación
 Relee tu `ESTADO.md`: ¿un agente SIN acceso a esta conversación puede retomar el trabajo

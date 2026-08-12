@@ -27,11 +27,13 @@
 - Fechas SIEMPRE absolutas (`2026-08-12`), nunca «hoy»/«la semana pasada».
 
 ## §3.bis Definición de «Hecho» (DoD)
-Una tarea solo se marca ✅ si cumple **las tres**:
+Una tarea solo se marca ✅ si cumple **las cuatro**:
 1. **El código existe** (clases/rutas/migraciones reales, no diseño).
 2. **Tiene prueba automática** que la cubre.
 3. **Está verificada empíricamente** (render/HTTP/BD reales, no solo la suite) y, si es una
    feature de producto visible, **validada por el owner** (Yasmin).
+4. **La doc del sistema tocado refleja el cambio** (o «N/A» explícito) — al terminar la
+   tarea, no al cierre de sesión.
 Si falta algo → 🟦, nunca ✅. Skill de apoyo: `/dod`.
 
 ## §3.ter Tests Unit vs Feature
@@ -54,9 +56,20 @@ Si falta algo → 🟦, nunca ✅. Skill de apoyo: `/dod`.
 - Datos de negocio desconocidos → placeholder + `[PENDIENTE]`; los valores reales viven en
   BD/panel (data-driven), jamás quemados en código.
 - Documentos cortos y enfocados: la doc es contexto de agentes; cada token cuenta.
+- **Plantilla de cabecera** (todo doc nuevo; los heredados migran al tocarlos, no en barrido):
+  `> Estado: vivo|heredado|diseño|congelado · Última actualización: AAAA-MM-DD ·`
+  `> Verificado contra código: AAAA-MM-DD (alcance) · Se invalida si: <qué lo dejaría viejo>`
+- **Fuentes únicas declaradas**: recuento vivo de la suite → `ESTADO.md` (lo refresca
+  `/cierre-sesion` con el run real); puertos y bootstrap → README raíz; recuentos
+  estructurales → los verifica `docs-check`. El resto de docs **enlaza, no copia**.
 
 ## §5 Flujos obligatorios de actualización
 - **Decisión nueva** → `[DECIDIDO]`+fecha en el doc afectado **y** línea en `DECISIONES.md`.
+- **Decisión revertida/modificada** → en la entrada ANTIGUA, primera línea: «Sustituida por
+  #N (fecha)». Ausencia de marca = vigente (el grep por número nunca devuelve una decisión
+  muerta sin saberlo).
+- **Diseño previo a implementación** → `docs/specs/<tema>.md` desde la plantilla
+  `docs/specs/PLANTILLA.md`; otro agente lo revisa ANTES de escribir código.
 - **Doc nuevo/renombrado** → actualizar `docs/README.md` **y** la tabla de enrutado de `CLAUDE.md`.
 - **Fin de sesión** → skill `/cierre-sesion`: progreso en `00-REFACTOR.md` + `ESTADO.md` fiel.
 - **`[PENDIENTE]` cerrado** → resolverlo en su doc y reflejarlo en `ESTADO.md`.
@@ -92,3 +105,16 @@ presentación · **convivencia**: no romper supuestos del sector origen document
 - **El gate de pre-push aplica solo a `main`** (`DECISIONES #10`): las ramas `wip/…` pueden
   empujarse en rojo como copia de seguridad — nunca se mergean a `main` sin pasar el gate.
 - **Una sola sesión de escritura a la vez** sobre el repo; subagentes de solo-lectura exentos.
+- **El commit de cierre lleva la evidencia** en el cuerpo: «Verificación: suite N tests /
+  M aserciones (Xs) · Pint ✓ · docs-check ✓ · build ✓/N-A» — `git log` como bitácora falsable.
+
+## §9 Cuándo parar y preguntar al owner
+El agente decide solo en todo lo demás; **PARA y pregunta** (marca ❗ + `[PENDIENTE: owner]`
+en el tracker) ante cualquiera de estos:
+1. Relajar, alterar o eliminar una invariante de `INVARIANTES.md`.
+2. Revertir o contradecir una decisión numerada de `DECISIONES.md`.
+3. Dependencia nueva (composer/npm) o servicio externo nuevo.
+4. Borrado de datos o migración destructiva fuera de la BD de dev.
+5. Decisiones de producto/alcance: features, precios, textos legales, marca.
+6. Cualquier gasto (infra, servicios, licencias).
+Feature visible → además validación del owner antes del ✅ definitivo (§3.bis).

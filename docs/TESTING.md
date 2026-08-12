@@ -115,3 +115,28 @@ docker compose exec -u sail laravel.test php artisan redsys:verify-sandbox      
   autorización real → `Ds_Response=0900`.
 
 Todas son **dev-only** (gateadas a no-producción) y limpian siempre lo que crean.
+
+## Datos de prueba (el fixture de la suite)
+
+> Verificado contra código: 2026-08-12. Recuento vivo de la suite → `ESTADO.md`
+> (fuente única, CONVENCIONES §4); las cifras de tiempos de arriba son del origen.
+
+- **127 de 213 ficheros de test siembran** (`grep -rl "this->seed(" tests | wc -l`):
+  `RoleSeeder` ×93 · `PermissionSeeder` ×91 (ritual estándar del panel) ·
+  `LandingContentSeeder` ×57 · `LandingServicesSeeder` ×4 · `SalesSeeder` ×1.
+- **`LandingContentSeeder` ES el fixture de la suite** y a la vez la semilla de demo local
+  (hasta la semilla neutra de Fase 1). Tiene un **contrato de conteos** asertado por tests:
+  **8 entradas vendibles** (`CatalogTest::test_seeds_eight_sellable_entries`) · **2 packs** y
+  **14 vendibles totales** (`PackFoundationTest`) · **4 addons** (`AddonFoundationTest`) ·
+  **2 destacadas, una por zona** (`CatalogTest`) · **15/8 atracciones con foto real**
+  (`ZoneImageTest`) · **2 packs sin LandingService** (`LandingServiceTest`).
+  ⚠️ **Tocar el seeder «para mejorar la demo» rompe la suite**: cualquier cambio renegocia
+  el contrato JUNTO con esos tests. Por eso `DemoPaidAttractionSeeder` vive fuera del
+  seeder de contenido (comentario en `DatabaseSeeder`).
+- **Factories: solo `UserFactory`** (592 usos, todos `User::factory()`); el resto del
+  fixture se monta con `::create` directo (~1.100 usos: `TicketType` 189 · `Zone` 142 ·
+  `Order` 125 · `Slot` 122…). No hay trait compartido: el helper `admin()`/`staff()`
+  (factory + sync de rol) está duplicado en ~36 ficheros — deuda registrada en `DEUDA.md`.
+- **Escenarios nuevos**: seguir el patrón dominante — sembrar roles/permisos si el test toca
+  panel, y construir catálogo/franjas con `::create` explícito del caso (no ampliar el
+  seeder-fixture para un test).

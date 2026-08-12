@@ -5,8 +5,8 @@ Plataforma **white-label de reservas online** para negocios con aforo por franja
 pago online, panel de administración y —en el roadmap— app móvil sobre la misma API.
 
 > **Estado:** en refactor de generalización a partir de una base en producción
-> probada (suite de 2132 tests, flujos de dinero/aforo endurecidos). Tracker vivo:
-> [`docs/00-REFACTOR.md`](docs/00-REFACTOR.md).
+> probada (suite de 2132 tests al 2026-08-12 — recuento vivo en `docs/ESTADO.md` —,
+> flujos de dinero/aforo endurecidos). Tracker vivo: [`docs/00-REFACTOR.md`](docs/00-REFACTOR.md).
 
 ## Stack
 
