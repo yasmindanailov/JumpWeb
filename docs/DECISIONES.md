@@ -62,3 +62,22 @@ agentes). Sustituto: **hook `pre-push` versionado en `.githooks/`** que corre Pi
 completo) + la suite completa `--parallel` (~75 s) y bloquea el push si algo falla.
 Activación por clon (una vez): `git config core.hooksPath .githooks` (documentado en
 README y CLAUDE.md). Refuerza el protocolo `/cierre-sesion`; `main` no puede quedar rojo.
+
+## #10 · 2026-08-12 · Endurecimiento del sistema documental (auditoría multi-agente)
+Una auditoría adversarial (7 lentes, 51 hallazgos) demostró que la doc dependía al 100% de
+disciplina en prosa y ya tenía drift el día 1 (Fase 0 contradictoria entre ESTADO y tracker,
+cifras desviadas, ancla rota ×18). Se decide: **(a)** la doc entra al gate — `scripts/docs-check.sh`
+(enlaces, anclas §N, rutas de código citadas, recuentos, coherencia de fases, sin citas
+`fichero:línea`) corre en el pre-push; **(b)** el gate de pre-push aplica **solo a `main`**
+(lee las refs de stdin) — las ramas `wip/…` se pueden empujar en rojo como backup, resolviendo
+la contradicción con §8; **(c)** guarda de rutas críticas: un push de `main` que toque
+`OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` exige confirmar (`VERIFY_CONC=1`) que se
+corrieron los comandos de concurrencia (la suite SQLite es ciega a esas carreras,
+`INVARIANTES §6`); **(d)** precedencia de estado: los marcadores de `00-REFACTOR.md` mandan
+sobre `ESTADO.md`; **(e)** reglas de cita (por `§N` y por símbolo, nunca `fichero:línea`) y
+de cifras (siempre con su comando reproducible). Además se acotó la afirmación de Fase 0
+«sin datos del cliente» a **infraestructura**: los datos de negocio (dirección, SEO,
+jurisdicción en `ProductionSeeder`/`LegalContent`) siguen en el árbol y su retirada es ítem
+explícito de Fase 1. Y **(f)** la capa agent-first se VERSIONA: `.claude/settings.json` y
+`.claude/skills/` salen del ignore global `/.claude/` — hasta hoy, un clon nuevo perdía las
+skills y los permisos que `DECISIONES #7` y la doc daban por presentes en el repo.

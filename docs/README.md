@@ -17,9 +17,9 @@
 
 | Doc | Qué es |
 |---|---|
-| `INVARIANTES.md` | ~45 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
+| `INVARIANTES.md` | 54 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
 | `ARQUITECTURA.md` | Stack real, estructura (`app/Support`), white-label 3 capas, composer global memoizado. |
-| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (31 modelos · 70 migraciones), por dominios, con rarezas heredadas. |
+| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (30 modelos · 70 migraciones), por dominios, con rarezas heredadas. |
 | `SEGURIDAD.md` | Estándar transversal nivel Reforzado (ASVS/NIST): 12 reglas + estado heredado. |
 | `TESTING.md` | Suite (paralelo paratest), anti-red, fakes por proveedor, Unit/Feature, comandos de verificación con MySQL real. |
 | `FLUJOS.md` | Los 6 recorridos de usuario heredados + reglas transversales. |
@@ -43,3 +43,22 @@
 ## Qué NO hay aquí (y dónde está)
 Los trackers del ciclo de vida del cliente origen (producción, handoffs, audits de copys,
 datos reales) viven SOLO en el repo origen — no se portaron a propósito (`DECISIONES #8`).
+
+### Punteros fantasma en comentarios del código (equivalencias)
+El código heredado cita ~71 veces docs y decisiones del **repo origen** que aquí no existen.
+(Convención: en la doc, el corpus del origen se menciona **sin** prefijo `docs/`, para que
+`docs-check` no lo confunda con un enlace de este repo.) Si un comentario te manda a uno de
+estos, su equivalente actual es:
+
+| Referencia en el código | Equivalente en este repo |
+|---|---|
+| `PLAN-REDSYS.md` | `sistemas/REDSYS.md` |
+| `PLAN-COMPRA-PRODUCTOS.md` | `sistemas/COMPRA-PRODUCTOS.md` |
+| `PLAN-FASE-7-PANEL.md` | `PANEL-ADMIN.md` |
+| `PLAN-COOKIES.md` | `sistemas/COOKIES.md` |
+| `04-MODELO-DATOS.md` | `MODELO-DATOS.md` (regenerado; el del origen estaba desfasado) |
+| `UI-SPINNER.md` (sin ruta) | `sistemas/UI-SPINNER.md` |
+| `10-DESPLIEGUE.md`, `08-OPERATIVA-FISICA.md`, `02-CUESTIONARIO.md` | no portados (ciclo de vida del cliente) |
+| `DECISIONES.md #N` con N fuera de `#1`–`#10` | ledger del origen, no portado; el porqué relevante suele estar inline en el propio comentario |
+
+Los punteros se reescriben al equivalente actual **al tocar cada fichero** (no en barrido).

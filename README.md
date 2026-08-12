@@ -19,25 +19,26 @@ pago online, panel de administración y —en el roadmap— app móvil sobre la 
 
 ## Puesta en marcha (local)
 
-Docker (Laravel Sail) dentro de WSL2. Este proyecto puede convivir con otro stack
-Sail en la misma máquina: usa puertos propios vía `.env` (no versionado):
-
-```
-APP_PORT=8081
-FORWARD_DB_PORT=3308
-FORWARD_MAILPIT_DASHBOARD_PORT=8028
-```
+Docker (Laravel Sail) dentro de WSL2. Este proyecto convive con otros stacks Sail en la
+misma máquina: `.env.example` ya trae los puertos propios de dev (web **8081** · MySQL
+**3308** · Mailpit **8028**); cada instalación puede cambiarlos en su `.env` (no versionado).
 
 ```bash
 # bootstrap sin vendor (una vez):
 docker run --rm -v $(pwd):/app -w /app laravelsail/php85-composer:latest composer install --ignore-platform-reqs
-cp .env.example .env   # + puertos de arriba y APP_KEY
-git config core.hooksPath .githooks   # gate local de push: Pint + suite (sustituye al CI en la nube)
+cp .env.example .env   # puertos de dev incluidos; APP_KEY se genera abajo
+git config core.hooksPath .githooks   # gate local de push a main: docs-check + Pint + suite
 docker compose up -d
 docker compose exec -u sail laravel.test php artisan key:generate
-docker compose exec -u sail laravel.test php artisan migrate --seed
+docker compose exec -u sail laravel.test php artisan migrate
 docker compose exec -u sail laravel.test npm ci && docker compose exec -u sail laravel.test npm run build
 ```
+
+> La BD queda migrada y **sin sembrar**: la semilla demo neutra es tarea de Fase 1
+> (`docs/00-REFACTOR.md`). El seeder heredado (`php artisan db:seed`) siembra contenido del
+> sector origen y crea (solo fuera de producción) `admin@jumpingjump.test` /
+> `empleado@jumpingjump.test`, contraseña `password` — úsalo a sabiendas si necesitas un
+> panel operativo en local.
 
 - Web: `http://localhost:8081` · Mailpit: `http://localhost:8028` · MySQL: `localhost:3308`
 - Tests: `docker compose exec -u sail laravel.test php artisan test --parallel`

@@ -5,7 +5,11 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
-/.claude/
+# La capa agent-first SÍ se versiona (DECISIONES #7/#10): settings compartidos y skills.
+# Lo demás de .claude/ (settings.local.json, estado de sesión…) queda fuera.
+/.claude/*
+!/.claude/settings.json
+!/.claude/skills/
 /.codex
 /.cursor/
 /.idea

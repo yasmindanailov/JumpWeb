@@ -1,10 +1,64 @@
 #!/usr/bin/env bash
-# Gate local de push (DECISIONES #9): no hay CI en la nube (sin facturación de GitHub
-# Actions, decisión del owner) → NADA se empuja con la suite rota o Pint sucio.
+# Gate local de push (DECISIONES #9 y #10): no hay CI en la nube (sin facturación de GitHub
+# Actions, decisión del owner) → NADA llega a `main` con la doc rota, Pint sucio o la suite roja.
+# El gate aplica SOLO a `main`: las ramas `wip/…` pueden empujarse en rojo como copia de
+# seguridad (CONVENCIONES §8) — nunca se mergean a main sin pasar por aquí.
+# Si el push toca código crítico de dinero/aforo, exige además confirmar los comandos de
+# concurrencia (la suite SQLite es ciega a las carreras InnoDB — INVARIANTES §6).
 # Activación (una vez por clon): git config core.hooksPath .githooks
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
+
+remote="${1:-origin}"   # git pasa el nombre del remoto como $1
+ZERO=0000000000000000000000000000000000000000
+pushing_main=0
+touched_critical=''
+# Ficheros cuyo cambio exige los comandos verify-* (DECISIONES #10.c / INVARIANTES §6).
+CRITICAL_RE='^app/Support/(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php$'
+
+while read -r _local_ref local_sha remote_ref remote_sha; do
+    [[ "$remote_ref" == "refs/heads/main" ]] || continue
+    if [[ "$local_sha" == "$ZERO" ]]; then
+        echo '⚠ pre-push: BORRADO de `main` en el remoto — el gate no aplica a deletes, pero esto destruye la rama principal.' >&2
+        continue
+    fi
+    pushing_main=1
+    # --no-renames: un rename puro solo listaría la ruta destino y escaparía a la guarda.
+    if [[ "$remote_sha" == "$ZERO" ]]; then
+        # main aún no existe en ESTE remoto: gatear lo que este remoto no tiene.
+        if ! files=$(git log --format= --name-only --no-renames "$local_sha" --not --remotes="$remote" 2>&1); then
+            echo '✗ pre-push: no puedo listar los commits nuevos para el remoto (git log falló). Gate cerrado.' >&2
+            exit 1
+        fi
+    else
+        if ! files=$(git diff --name-only --no-renames "$remote_sha" "$local_sha" 2>&1); then
+            echo '✗ pre-push: no puedo calcular el diff contra el remoto (¿`git fetch` pendiente?). Gate cerrado.' >&2
+            exit 1
+        fi
+    fi
+    if hits=$(grep -E "$CRITICAL_RE" <<<"$files"); then
+        touched_critical+="$hits"$'\n'
+    fi
+done
+
+if [[ $pushing_main -eq 0 ]]; then
+    echo '→ pre-push: no se empuja `main` — gate omitido (CONVENCIONES §8: wip/ puede ir en rojo).'
+    exit 0
+fi
+
+if [[ -n "$touched_critical" && "${VERIFY_CONC:-0}" != "1" ]]; then
+    echo '✗ pre-push: este push toca código crítico de dinero/aforo:' >&2
+    sort -u <<<"${touched_critical%$'\n'}" | sed 's/^/    /' >&2
+    echo '  La suite (SQLite) NO reproduce sus carreras (INVARIANTES §6). Corre lo que aplique:' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan redsys:verify-concurrency --workers=16' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan purchase:verify-oversell --workers=16' >&2
+    echo '  y confirma con:  VERIFY_CONC=1 git push' >&2
+    exit 1
+fi
+
+echo '→ pre-push: docs-check…'
+bash scripts/docs-check.sh
 
 if ! docker compose ps --status running 2>/dev/null | grep -q 'laravel\.test'; then
     echo '✗ pre-push: el stack no está arriba. Arranca con `docker compose up -d` y reintenta.' >&2
@@ -17,4 +71,4 @@ docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
 echo '→ pre-push: suite completa (--parallel)…'
 docker compose exec -u sail -T laravel.test php artisan test --parallel
 
-echo '✓ pre-push: verde. Empujando.'
+echo '✓ pre-push: verde. Empujando main.'

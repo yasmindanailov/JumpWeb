@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 Recorridos del usuario con las decisiones de diseño heredadas aplicadas: **simple**, con
 **modales/paneles**, **compra solo para registrados**, **waiver en el registro** (vocabulario

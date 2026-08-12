@@ -2,14 +2,14 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Estado heredado: ✅ implementado.** Feature **puramente informativa** (sin dinero/carrito/aforo):
 > widget flotante (caja de regalo animada) que aparece **solo si hay ofertas activas**; al pulsarlo
 > abre un modal con **carrusel** de ofertas (título + imagen), gestionadas desde el panel (CMS).
 > **NO confundir** con la feature «ofertas por cantidad» (precio por tramos, toca dinero): quedó
 > diferida en el repo origen y NO está portada. Los comentarios del código heredado citan
-> `docs/PLAN-OFERTAS-WIDGET.md` y decisiones `#NNN` del repo origen (histórico, no portado).
+> `PLAN-OFERTAS-WIDGET.md` y decisiones `#NNN` del repo origen (histórico, no portado).
 
 ## 1. Alcance heredado
 - CRUD de ofertas (sin máximo, orden libre) desde el panel Filament.

@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Sistema IMPLEMENTADO** (núcleo completo + superficies + armonización cancelar/reembolsar).
 > Referencia, no plan. ⚠️ Los `ruta:línea` son anclas del momento de escritura: pueden haber
@@ -58,8 +58,9 @@ JumpWeb el contenido legal es por-instalación.
 **Autorización normal (`Ds_Merchant_TransactionType = '0'`) por el importe de la señal.** El
 resto (`valor − señal`) se cobra presencialmente y vive fuera de Redsys.
 
-- La ida usa siempre `'0'` (`app/Support/Redsys.php:306`); la devolución usa REST `'3'`
-  (`Redsys.php:376`). No hay preautorización `'1'`/confirmación `'2'` en el repo.
+- La ida usa siempre `'0'` (`Redsys::buildPaymentFormData`, clave `DS_MERCHANT_TRANSACTIONTYPE`);
+  la devolución usa REST `'3'` (`Redsys::executeRefund`). No hay preautorización
+  `'1'`/confirmación `'2'` en el repo.
 - **Por qué NO preautorización:** según la doc oficial de Redsys caduca en 7 días (extensible
   a 30 con permiso bancario) y exige alta; las reservas de eventos se hacen con semanas de
   antelación → caducaría. Además el resto se cobra presencialmente, no online.
@@ -130,7 +131,7 @@ reembolso por línea, `pagadoOnline` y «pendiente de devolución».
 
 **Lo que nunca se rompió** (anclado a `Payment.amount`): `amountCollectedCents`,
 `onlineBackingProductsCents`, `refundableCapacityCents`, canario `amount_mismatch`
-(`RedsysReturnHandler.php:199`).
+(`RedsysReturnHandler`, chequeo `Ds_Amount` vs importe firmado).
 
 ---
 
@@ -206,7 +207,7 @@ local + Pagado en local» reconcilia (§7).
 
 - `app/Livewire/Tickets/Purchase.php` (creación de Payment, 2 puntos) → `onlineDueCents()`.
 - `app/Http/Controllers/Payments/RetryPaymentController.php` → íd.
-- `app/Support/Redsys.php:302` — `DS_MERCHANT_AMOUNT => (string) $payment->amount` (usa el
+- `Redsys::buildPaymentFormData` — `DS_MERCHANT_AMOUNT => (string) $payment->amount` (usa el
   amount del `$payment` recibido = ancla única → blinda el canario). **Crítico de seguridad.**
 - `app/Support/ManualOrderFulfiller.php` — `amount = onlineDueCents()` (D3); los
   `deposit_remainder` los crea `OrderCreator`; status `PAID` (semántica: la parte upfront está

@@ -2,10 +2,10 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Estado heredado: ✅ implementado (modelo A).** Los comentarios del código heredado citan
-> `docs/PLAN-SERVICIOS-DATA-DRIVEN.md` y decisiones `#NNN` del repo origen (histórico, no portado);
+> `PLAN-SERVICIOS-DATA-DRIVEN.md` y decisiones `#NNN` del repo origen (histórico, no portado);
 > este documento es su sustituto en JumpWeb.
 > Vocabulario: «cumpleaños», «zona», «pack», «aforo» (vocabulario del sector origen; su
 > generalización se decide en `00-REFACTOR.md` Fase 1/2).

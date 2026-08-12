@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Cuándo leer esto:** siempre que añadas una acción que llame al servidor (envío de
 > formulario, acción Livewire, carga de panel, redirección de pago) y el usuario deba **saber

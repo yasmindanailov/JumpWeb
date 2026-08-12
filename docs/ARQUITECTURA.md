@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > Nota de fiabilidad: el doc origen era un v1 previo al grueso del código (decía «roles aún no
 > instalado», «pagos Fase 5 futura»). Esta versión se **reescribió verificando contra el código

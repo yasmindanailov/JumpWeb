@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 **Qué es este doc:** REFERENCIA del sector origen (parque de saltos). Explica **por qué el
 dominio heredado es como es**: la web se diseñó para **convivir** con los sistemas físicos del

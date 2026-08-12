@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 Define **quién** usa la web y **qué** puede hacer. Era la lista cerrada de alcance (v1) del
 proyecto origen; el origen llegó a *feature-complete*, así que **todos los módulos listados

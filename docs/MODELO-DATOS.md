@@ -2,10 +2,10 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Fuente:** REGENERADO desde el código real (`app/Models/*.php` + `database/migrations/`, 70
-> migraciones). El `docs/04-MODELO-DATOS.md` del origen estaba desfasado y NO se portó.
+> migraciones). El `04-MODELO-DATOS.md` del origen estaba desfasado y NO se portó.
 
 ## 0. Convenciones transversales
 
@@ -19,8 +19,9 @@
 - **Weekday:** `0=domingo..6=sábado` (convención Carbon `dayOfWeek`) en `opening_hours`,
   `slot_templates`, `rate_types.weekdays`.
 - **Mass assignment:** la mayoría de modelos llevan `$guarded = []` (abierto; heredado).
-  Solo tienen allowlist `$fillable`: `User`, `Order`, `Payment`, `Setting`, `Role`,
-  `Permission`, `AuditLog`. Rareza a vigilar al escribir código nuevo.
+  Solo tienen allowlist `$fillable` estos 6: `Order`, `Payment`, `Setting`, `Role`,
+  `Permission`, `AuditLog` (`grep -l fillable app/Models/*.php`). Rareza a vigilar al
+  escribir código nuevo.
 - **⚠️ Sin morphMap:** no hay `Relation::enforceMorphMap()` — las columnas polimórficas
   (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan el
   **FQCN** (`App\Models\Order`…). Renombrar/mover una clase de modelo en el refactor
@@ -313,7 +314,7 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 6. **FKs ausentes a propósito:** `ticket_types.zone_id` (índice sin constraint; limitación
    histórica de ALTER en SQLite) y `order_items.parent_item_id` (integridad en app).
 7. **Sin morphMap** (ver §0): los morphs guardan FQCN → renombrar modelos rompe datos.
-8. **`$guarded = []`** en la mayoría de modelos (ver §0); solo 7 modelos con `$fillable`.
+8. **`$guarded = []`** en la mayoría de modelos (ver §0); solo 6 modelos con `$fillable`.
 9. **Migraciones con lógica de datos del origen:** backfills/repairs quirúrgicos
    (`ServicePriceTableBackfill`, `SpecialRateLabelBackfill`, `LegacyAddonAdjustmentRepair`,
    `LegacyGateAdjustmentReconciliation`) y seeds idempotentes de zonas (`color`, `image` con

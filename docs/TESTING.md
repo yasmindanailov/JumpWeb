@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > Cómo correr los tests, ejecución **en paralelo** y las **garantías** de la suite
 > (determinismo + sin red). Las convenciones de DÓNDE va cada test (Unit vs Feature) viven

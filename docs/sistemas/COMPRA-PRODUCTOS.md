@@ -2,7 +2,7 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Diseño definitivo del catálogo unificado y del flujo de compra; referencia activa del código.**
 > En el origen nació como propuesta y se implementó por capas hasta producción. ⚠️ Algunos marcadores

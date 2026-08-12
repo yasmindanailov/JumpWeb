@@ -21,7 +21,8 @@
 5. El resto, **solo vía la tabla de enrutado de `CLAUDE.md`** (leer lo mínimo que la tarea pida).
 
 ## §3 Marcadores
-- Índices/trackers: ✅ hecho · 🟦 en curso · 🔜 pendiente · ❗ bloqueado · ⏭️ pospuesto.
+- Índices/trackers: ✅ hecho · 🟦 en curso · ⬜ pendiente · ❗ bloqueado (única leyenda válida;
+  la cabecera de una fase debe ser coherente con sus checkboxes — lo comprueba `docs-check`).
 - Texto: `[DECIDIDO]` (+fecha) · `[PENDIENTE]` (+ quién resuelve) · `[SUPUESTO]` (a confirmar).
 - Fechas SIEMPRE absolutas (`2026-08-12`), nunca «hoy»/«la semana pasada».
 
@@ -41,6 +42,15 @@ Si falta algo → 🟦, nunca ✅. Skill de apoyo: `/dod`.
 
 ## §4 Contenido de la doc
 - **Una sola fuente de verdad por hecho**: no duplicar; enlazar con rutas relativas.
+- **Citas entre docs**: por número de sección (`CONVENCIONES §7`), nunca por nombre libre.
+  **Citas de código**: por símbolo (`Redsys::executeRefund`, «payload de la ida»), NUNCA
+  `fichero:línea` (los números de línea derivan en silencio; `docs-check` los rechaza).
+- **Cifras factuales** (recuentos, tamaños): acompañadas del comando reproducible que las
+  produce, o sustituidas por él. Una foto sin receta es drift en espera. Los recuentos
+  canónicos usan formas fijas que `docs-check` verifica contra el código: `N modelos ·
+  N migraciones`, `N Filament Resources`, `N invariantes de no-regresión`; un aproximado
+  deliberado lleva `~`. Rutas de código aún no existentes o de ejemplo: marca la línea con
+  `(futuro)` o `(ejemplo)` para eximirla del gate.
 - Datos de negocio desconocidos → placeholder + `[PENDIENTE]`; los valores reales viven en
   BD/panel (data-driven), jamás quemados en código.
 - Documentos cortos y enfocados: la doc es contexto de agentes; cada token cuenta.
@@ -50,6 +60,11 @@ Si falta algo → 🟦, nunca ✅. Skill de apoyo: `/dod`.
 - **Doc nuevo/renombrado** → actualizar `docs/README.md` **y** la tabla de enrutado de `CLAUDE.md`.
 - **Fin de sesión** → skill `/cierre-sesion`: progreso en `00-REFACTOR.md` + `ESTADO.md` fiel.
 - **`[PENDIENTE]` cerrado** → resolverlo en su doc y reflejarlo en `ESTADO.md`.
+- **Precedencia de estado** (`DECISIONES #10`): los marcadores de fase de `00-REFACTOR.md`
+  son LA fuente de verdad; `ESTADO.md` los resume y nunca puede contradecirlos.
+- **Gate documental**: `scripts/docs-check.sh` (enlaces, anclas, rutas citadas, recuentos,
+  coherencia de fases) corre en el pre-push de `main` y en `/cierre-sesion`. Doc roto = push
+  bloqueado, igual que la suite.
 
 ## §6 Principios rectores (no romper)
 Data-driven · white-label (1 instalación/cliente) · API-first · corrección antes que
@@ -74,3 +89,6 @@ presentación · **convivencia**: no romper supuestos del sector origen document
   porqué. Commit al cerrar una unidad de trabajo con la suite en verde; **push** de `main`
   al cerrar la sesión.
 - No commitear con la suite rota. Si hay que aparcar, rama `wip/…` y anotarlo en `ESTADO.md`.
+- **El gate de pre-push aplica solo a `main`** (`DECISIONES #10`): las ramas `wip/…` pueden
+  empujarse en rojo como copia de seguridad — nunca se mergean a `main` sin pasar el gate.
+- **Una sola sesión de escritura a la vez** sobre el repo; subagentes de solo-lectura exentos.

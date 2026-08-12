@@ -30,16 +30,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 
 ## Fases
 
-### Fase 0 — Fundación 🟦
-- [x] Exportar la base (árbol versionado + fix de aislamiento de la suite) SIN datos del
-      cliente origen (deploy scripts con IP/SSH, docs, mockup) — verificado por grep.
+### Fase 0 — Fundación ✅
+- [x] Exportar la base (árbol versionado + fix de aislamiento de la suite) sin datos de
+      **infraestructura** del cliente origen (deploy scripts con IP/SSH, docs, mockup) —
+      verificado por grep. ⚠️ Los datos de **negocio** del cliente (dirección, mapa, SEO,
+      jurisdicción legal) siguen en `ProductionSeeder`/`LegalContent` → ítem de Fase 1.
 - [x] Doc fundacional propia (README · CLAUDE.md · este tracker · ESTADO · DECISIONES).
 - [x] Repo GitHub privado `JumpWeb` creado (`yasmindanailov/JumpWeb`) y push del commit fundacional.
 - [x] Entorno local propio levantado (web 8081 · MySQL 3308 · Mailpit 8028), conviviendo con el
       stack origen (ambos responden 200 a la vez; verificado 2026-08-12).
 - [x] **Suite completa en verde en el repo nuevo** + Pint + `npm run build` (✓ built).
       Único fallo del primer run: `MailThemeTest` asertaba el literal de la marca origen →
-      hecho brand-agnostic (aserta `config('app.name')`). 2132 esperados.
+      brand-agnostic **solo en el wordmark** (aserta `config('app.name')`); el test aún fija
+      el tema `'jumpingjump'` y sus tokens → viaja con el renombrado del tema (Fase 1).
+      2132 esperados.
 - [x] **CI = gate local de pre-push** (2026-08-12, `DECISIONES #9`): GitHub Actions
       DESCARTADO (el owner no pagará facturación de GitHub); `ci.yml` eliminado. Hook
       versionado `.githooks/pre-push` (Pint repo completo + suite `--parallel`); activación
@@ -49,13 +53,28 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       de agentes: DoD, handoff, empirismo), skills `/cierre-sesion` y `/dod`
       (`.claude/skills/`), permisos preconfigurados (`.claude/settings.json`).
 
-### Fase 1 — Desbranding y generalización superficial ⬜
-- [ ] Quitar «jumpingjump» del código (~161 apariciones: app 26 · resources 18 · lang 28 ·
-      database 18 · tests 60 · public 7 · config 2 · package.json 1). La marca visible ya es
-      data-driven (`business.name`); esto es limpieza de residuos.
+### Fase 1 — Desbranding y generalización superficial 🟦
+- [ ] Quitar «jumpingjump» del código — recuento canónico (no fotos):
+      `git grep -i jumpingjump -- ':!docs' | wc -l` → **167 líneas al 2026-08-12**
+      (app 26 · lang 28 · resources 18 · database 18 · tests 59 · raíz 9 · public 6 ·
+      config 2 · routes 1; 2 de raíz son las credenciales del seeder documentadas a
+      propósito en el README — al limpiarlas, actualizar también esa nota).
+      ⚠️ Usar `git grep`: un `grep --exclude-dir=vendor` excluye
+      también `resources/views/vendor` (tema mail versionado) y descuadra. La marca visible
+      ya es data-driven (`business.name`); esto es limpieza de residuos. La mención de
+      `CLAUDE.md` regla 7 (ruta del repo origen) es intencional y se queda.
 - [ ] Renombrar artefactos con marca: tema mail `resources/views/vendor/mail/html/themes/jumpingjump.css`
-      (+ `config('mail.markdown.theme')`), comandos `jj:*` → `app:*`, claves i18n con la marca
-      (`.env*.example` ya genericizado en Fase 0).
+      (+ `config('mail.markdown.theme')` + `MailThemeTest`, que asertan el literal del tema),
+      comando `jj:purge-customers` → `app:purge-customers`, prefijos de pedido `JJ-`
+      (`OrderCreator`) y `JJ-CONC` (`VerifyRedsysConcurrency`), cookie `jj_*`, claves i18n
+      con la marca, `.env*.example` (`DB_DATABASE` y cabecera de producción), y los 2
+      ficheros cuyo **nombre** lleva la marca: `public/videos/header_jumpingjump.mp4`
+      (+ su regla en `.gitignore`) y el propio tema mail.
+- [ ] **Datos de NEGOCIO del cliente origen fuera del producto** (Fase 0 solo verificó
+      infraestructura): destino de `database/seeders/ProductionSeeder.php` (seed real del
+      cliente: dirección, mapa, SEO, tarifas, festivos locales), jurisdicción quemada en
+      `app/Support/LegalContent.php` → setting/BD, y barrido de datos no-marca
+      (`git grep -i 'san javier\|mirador\|hipos'`).
 - [ ] **Wordmark de los correos → data-driven:** el header usa `config('app.name')`; debe leer
       `business.name` (BD) como el resto de la marca (hallazgo del run fundacional).
 - [ ] Semilla demo neutra (negocio de ejemplo) separada del fixture de tests; sin datos del cliente origen.
@@ -64,8 +83,8 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Doc técnica portada y adaptada** (2026-08-12, `DECISIONES #8`; workflow de 14 agentes
       + verificación por grep): ARQUITECTURA · SEGURIDAD · TESTING · FLUJOS · PANEL-ADMIN ·
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
-      **`MODELO-DATOS.md` regenerado desde el código** (31 modelos · 70 migraciones) ·
-      **`INVARIANTES.md`** destilado (~45 invariantes de no-regresión). Sin datos del cliente
+      **`MODELO-DATOS.md` regenerado desde el código** (30 modelos · 70 migraciones) ·
+      **`INVARIANTES.md`** destilado (54 invariantes de no-regresión). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
 - [ ] Revisar vocabulario de dominio específico del sector (park/attraction/birthday/puerta/waiver)
@@ -78,8 +97,8 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       pagos, reembolsos, señal) · **Platform** (settings, i18n, auditoría, mantenimiento).
 - [ ] Migrar `app/Support/` (~60 clases) a los módulos, con la suite como red (sin big-bang:
       módulo a módulo, imports actualizados por fases).
-- [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (~2.000 líneas; muere
-      con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (~4.500 líneas).
+- [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
+      con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de
       aplicación, nunca con modelos de otro módulo directamente).
 

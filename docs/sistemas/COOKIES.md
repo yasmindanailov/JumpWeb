@@ -2,14 +2,14 @@
 
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
-> encima (CONVENCIONES §Verificación).
+> encima (CONVENCIONES §7).
 
 > **Estado REAL (verificado contra el código de este repo, 2026-08-12): ✅ IMPLEMENTADO.**
 > El doc origen (`PLAN-COOKIES.md`, histórico en el repo origen) figuraba como 🟦 «en ejecución»,
 > pero todos los artefactos existen aquí: helper, gate, componente de bloqueo, banner, endpoint,
 > log de acreditación con poda programada, toggle en el panel, i18n y suite de tests completa
 > (§6–§7 abajo son el **mapa del código real**, no un plan).
-> Los comentarios del código citan «#219» y `docs/PLAN-COOKIES.md`: son la decisión y el doc del
+> Los comentarios del código citan «#219» y `PLAN-COOKIES.md`: son la decisión y el doc del
 > **repo origen**; este documento los sustituye como referencia.
 
 Solución **a medida** (sin CMP de terceros) para cumplir **art. 22.2 LSSI-CE**, **RGPD**
