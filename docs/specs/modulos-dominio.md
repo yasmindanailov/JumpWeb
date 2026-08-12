@@ -58,13 +58,49 @@ registros/waiver) · `OrderAdjustment`→Booking (ledger pegado al pedido; Payme
 commit aparte): `ParkRule`→`VenueRule` (paso 3; SIN rename de tabla — `$table='park_rules'`
 fijo, evita migración y riesgo) · `ParkSchedule`→`OperatingSchedule` (paso 6).
 
+## 4.bis Paso 1 EJECUTADO (2026-08-12) — lo que el código enseñó
+El inventario del diseño se hizo sobre 278 clases; al implementar el paso 1 se midieron las
+flechas REALES una a una. Cuatro cosas no eran como el spec las anticipaba, y así quedaron
+(`DECISIONES #14`):
+
+1. **El contrato de Payments es SOLO reembolso.** El «cobro» (`Redsys::buildPaymentFormData`)
+   no lo consume Booking: sus únicos llamantes son la capa de entrega (`Livewire\Tickets\
+   Purchase`, `RetryPaymentController`), que en Fase 2 no se mueve. Ponerlo en el contrato
+   habría sido una superficie nueva, prohibida por §4. La única llamada Booking→Payments del
+   sistema es `Order::execute{Full,Partial}Refund` → `executeRefund`.
+2. **El DTO viaja CON el contrato.** `RedsysRefundResult` → `App\Domain\Payments\Contracts\
+   RefundResult` (mismos 5 campos, mismos 4 constructores). Si el contrato devolviera un tipo
+   de `App\Support`, su firma cambiaría en el paso 5 y los consumidores con ella: no sería un
+   contrato estable y se perdería el objetivo de §2. «Sin mover nada» del paso 1 aplica a las
+   IMPLEMENTACIONES; §4 ya decía que los DTOs se crean en `Contracts/`.
+3. **Había que EXTRAER, no solo declarar.** Para Content e Identity no existía ninguna clase de
+   Booking a la que bindear: las consultas vivían DENTRO de los consumidores. El paso 1 las
+   sacó a dos read-models propiedad de Booking —`CustomerReservationsReader` y
+   `PublishableCatalogReader`— que se quedan en `app/Support` hasta el paso 6 (mismo patrón
+   «implementación legacy, contrato en destino»).
+4. **Los contratos de Booking reciben `int $userId`, no `User`.** La consulta siempre fue por
+   `user_id`; así Booking no importa un modelo de Identity y el grafo queda sin esa flecha.
+
+**Hallazgo de regalo**: la regla de comprabilidad #226 estaba DUPLICADA en dos consultas SQL
+distintas (`Attraction::complementIsPurchasable()` y `LandingComplementResolver::compute()`)
+que podían divergir en silencio. El contrato las unificó en una sola.
+
+**Frontera ejecutable** (`tests/Feature/Architecture/ModuleBoundariesTest.php`): escanea con el
+TOKENIZADOR de PHP (no regex: los docblocks de los contratos citan clases legacy a propósito).
+Tres guardas — grafo permitido · baselines `SEAM`/`LEGACY` que solo encogen · «desde fuera de
+`app/Domain` solo se tocan `Contracts`». Las tres se verificaron **por mutación** (se introdujo
+a mano cada violación y se comprobó que el test cae). Comportamiento: `ModuleContractsTest`
+sustituye cada contrato por un doble y exige que el consumidor real cambie de conducta.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
    regla «diff solo-imports» para pasos de movimiento.
-1. **Contratos en destino** (sin mover nada): `App\Domain\Payments\Contracts` (cobro/refund
-   que Booking consume), `App\Domain\Booking\Contracts` (catálogo publicable para Content;
-   reservas del cliente para Identity), bindings a clases legacy + el arch-test de frontera (futuro).
+1. ✅ **Contratos en destino** (2026-08-12, ver §4.bis): `App\Domain\Payments\Contracts`
+   (`RefundGateway` + `RefundResult`), `App\Domain\Booking\Contracts` (`PublishableCatalog` +
+   `ComplementPlacement` para Content; `CustomerReservations` + `UpcomingReservation` +
+   `PendingGuestForm` para Identity), bindings en `Booking/Payments ServiceProvider` a las
+   implementaciones legacy, y el arch-test de frontera con sus baselines.
 2. **Platform** (mayor churn, riesgo semántico nulo): `Setting`, `AuditLog(+ger)`,
    `DisplayTime`, `Money`, `MaintenanceSettings`, `PhoneNormalizer`, `Duration`…
 3. **Content** (+`VenueRule`): páginas/legales (`LegalContent`, `LegalIdentity`,

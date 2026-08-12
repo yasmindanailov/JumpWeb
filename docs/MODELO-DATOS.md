@@ -57,6 +57,9 @@ Relaciones: `hasMany Attraction` (ordenadas por `position`).
 vendible** (`TYPE_ADDON`): si `Attraction::complementIsPurchasable()` (addon activo+vendible,
 con precio, enganchado como addon DE PAGO a ≥1 entrada vendible de la misma zona operativa),
 la landing muestra precio + CTA. Versión batch sin N+1: `App\Support\LandingComplementResolver`.
+Desde Fase 2 (paso 1) la REGLA vive una sola vez, en el contrato de Booking
+`App\Domain\Booking\Contracts\PublishableCatalog` (impl. `App\Support\PublishableCatalogReader`);
+las dos formas de preguntarla —una atracción o toda la página— comparten la misma consulta.
 
 ### `ticket_types` — producto vendible unificado (TicketType) ⭐ tabla central del catálogo
 Tres tipos (constantes de código, NO tabla): `entry` (entrada con franja),

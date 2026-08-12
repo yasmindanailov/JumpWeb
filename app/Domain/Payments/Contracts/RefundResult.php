@@ -1,18 +1,23 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Payments\Contracts;
 
 /**
- * Resultado inmutable de una llamada `Redsys::executeRefund()` (sub-fase 7.2b
- * extendida, #142). Refleja exactamente lo que el orquestador necesita para
- * decidir si actualizar la Order o registrar un fallo: ninguna excepción
- * escala desde `Redsys::executeRefund()` — cualquier error de transporte se
- * normaliza aquí con `success=false` y `failureReason` categorizado.
+ * Resultado inmutable de `RefundGateway::executeRefund()` (sub-fase 7.2b extendida,
+ * #142). Refleja exactamente lo que el orquestador necesita para decidir si actualizar
+ * la Order o registrar un fallo: ninguna excepción escala desde el gateway — cualquier
+ * error de transporte se normaliza aquí con `success=false` y `failureReason`
+ * categorizado.
  *
  * Esto permite que el orquestador (Order::executeFullRefund) sea un flujo
  * lineal sin try/catch, y que los tests cubran cada caso con un fake HTTP.
+ *
+ * Contrato de Payments (Fase 2, paso 1): los cinco campos son EXACTAMENTE los que
+ * consume Booking (`Order::executeFullRefund`/`executePartialRefund`) — ni uno más.
+ * `failureReason` viaja como string porque se persiste literal en
+ * `payment_refunds.failure_reason`; convertirlo a enum es una decisión aparte.
  */
-final readonly class RedsysRefundResult
+final readonly class RefundResult
 {
     public function __construct(
         public bool $success,

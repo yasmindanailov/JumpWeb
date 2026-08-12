@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Payments\Contracts\RefundResult;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
 use App\Models\Setting;
 use App\Support\Redsys;
-use App\Support\RedsysRefundResult;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -119,7 +119,7 @@ class VerifyRedsysSandbox extends Command
         };
     }
 
-    private function report(RedsysRefundResult $result, bool $real): int
+    private function report(RefundResult $result, bool $real): int
     {
         $this->table(['Campo', 'Valor'], [
             ['success', $result->success ? '<fg=green>true</>' : '<fg=red>false</>'],

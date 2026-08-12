@@ -2,32 +2,38 @@
 
 namespace App\Support;
 
+use App\Domain\Booking\Contracts\ComplementPlacement;
+use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Models\Attraction;
-use App\Models\TicketType;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Comprabilidad (solo lectura) de los COMPLEMENTOS vinculados a atracciones, para la LANDING (#228).
  *
  * Una atracción puede vincularse a un complemento (addon). En la landing solo mostramos precio + CTA
- * si ese complemento es REALMENTE comprable en la zona de la atracción (coherencia #226): addon
- * vendible+activo, enganchado (pivote `product_addons`) a ≥1 entrada (`TYPE_ENTRY`) vendible de una
- * zona operativa. Si no, la card degrada a informativa.
+ * si ese complemento es REALMENTE comprable en la zona de la atracción (coherencia #226). Si no, la
+ * card degrada a informativa.
  *
- * Este resolver hace el cálculo en BATCH (UNA query para todas las atracciones de la página),
- * evitando el N+1 de `Attraction::complementIsPurchasable()` (que comprueba una sola). El precio se
- * lee de `TicketType::displayPriceCents()` (tarifa normal/mínima), igual que el resto de la landing.
+ * Módulo **Content**. La REGLA de comprabilidad es de Booking y se pide por contrato
+ * (`PublishableCatalog::purchasableComplements`, Fase 2 paso 1) en BATCH: UNA query para todas las
+ * atracciones de la página, evitando el N+1 de `Attraction::complementIsPurchasable()` (que
+ * comprueba una sola y hoy pasa por el MISMO contrato). El precio se lee de
+ * `TicketType::displayPriceCents()` (tarifa normal/mínima) por relación Eloquent, la costura de BD
+ * que el spec deja exenta.
  */
 class LandingComplementResolver
 {
     /** @var array<string,true> conjunto de claves "zoneId:addonId" comprables */
     private array $purchasable;
 
-    /** @param  iterable<Attraction>  $attractions */
-    public function __construct(iterable $attractions)
+    /**
+     * @param  iterable<Attraction>  $attractions
+     * @param  ?PublishableCatalog  $catalog  inyectable en tests; por defecto, el del contenedor
+     *                                        (el llamante real lo construye con `new`).
+     */
+    public function __construct(iterable $attractions, ?PublishableCatalog $catalog = null)
     {
-        $this->purchasable = $this->compute(collect($attractions));
+        $this->purchasable = $this->compute(collect($attractions), $catalog ?? app(PublishableCatalog::class));
     }
 
     /** ¿El complemento de esta atracción es comprable en su zona? */
@@ -50,47 +56,20 @@ class LandingComplementResolver
      * @param  Collection<int,Attraction>  $attractions
      * @return array<string,true>
      */
-    private function compute(Collection $attractions): array
+    private function compute(Collection $attractions, PublishableCatalog $catalog): array
     {
-        $linked = $attractions->filter(
-            fn (Attraction $a): bool => (bool) $a->ticket_type_id && (bool) $a->zone_id
-        );
-
-        if ($linked->isEmpty()) {
-            return [];
-        }
-
-        $addonIds = $linked->pluck('ticket_type_id')->unique()->values()->all();
-        $zoneIds = $linked->pluck('zone_id')->unique()->values()->all();
-
-        // UNA sola query: pares (zona, addon) en los que el complemento es comprable = addon
-        // vendible+activo, CON precio, enganchado como complemento DE PAGO (`is_included=false`) a
-        // una ENTRADA vendible+activa de una zona ACTIVA. El precio y el `is_included` cierran la
-        // coherencia #226: la landing solo anuncia precio/CTA de lo que la cesta puede COBRAR (un
-        // addon sin precio mostraría «0,00 €»; uno solo incluido es gratis, no se vende aparte).
-        $pairs = DB::table('product_addons as pa')
-            ->join('ticket_types as addon', 'pa.addon_id', '=', 'addon.id')
-            ->join('ticket_types as entry', 'pa.product_id', '=', 'entry.id')
-            ->join('zones as z', 'entry.zone_id', '=', 'z.id')
-            ->whereIn('pa.addon_id', $addonIds)
-            ->whereIn('entry.zone_id', $zoneIds)
-            ->where('pa.is_included', false)
-            ->where('addon.type', TicketType::TYPE_ADDON)
-            ->where('addon.is_sellable', true)
-            ->where('addon.is_active', true)
-            ->whereExists(fn ($q) => $q->selectRaw('1')->from('prices')
-                ->whereColumn('prices.priceable_id', 'addon.id')
-                ->where('prices.priceable_type', (new TicketType)->getMorphClass()))
-            ->where('entry.type', TicketType::TYPE_ENTRY)
-            ->where('entry.is_sellable', true)
-            ->where('entry.is_active', true)
-            ->where('z.is_active', true)
-            ->distinct()
-            ->get(['entry.zone_id as zone_id', 'pa.addon_id as addon_id']);
+        $placements = $attractions
+            ->filter(fn (Attraction $a): bool => (bool) $a->ticket_type_id && (bool) $a->zone_id)
+            ->map(fn (Attraction $a): ComplementPlacement => new ComplementPlacement(
+                complementId: (int) $a->ticket_type_id,
+                zoneId: (int) $a->zone_id,
+            ))
+            ->values()
+            ->all();
 
         $set = [];
-        foreach ($pairs as $pair) {
-            $set[$pair->zone_id.':'.$pair->addon_id] = true;
+        foreach ($catalog->purchasableComplements($placements) as $placement) {
+            $set[$placement->zoneId.':'.$placement->complementId] = true;
         }
 
         return $set;

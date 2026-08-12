@@ -70,6 +70,25 @@ Para forzar el paso del tiempo (p. ej. comprobar que un timestamp no se reescrib
 reloj de prueba de Laravel: `$this->travel(1)->seconds()` / `$this->travelTo(...)`. **No** se
 usa `sleep()`: es determinista y sin coste de reloj real.
 
+### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
+Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
+degrada en silencio.
+- **`ModuleBoundariesTest`** — la frontera entre módulos de `app/Domain`
+  (`docs/specs/modulos-dominio.md` §4). Escanea con el **tokenizador de PHP**, no con regex
+  (los docblocks de los contratos citan clases legacy a propósito). Tres guardas: grafo
+  permitido (`ALLOWED`) · baselines `SEAM`/`LEGACY` que **solo pueden encoger** (una entrada
+  que deja de usarse hace fallar el test → hay que borrarla) · desde fuera de `app/Domain` solo
+  se tocan los `Contracts`. Además falla si el escaneo se queda vacío o si un módulo nuevo no
+  declara sus flechas.
+- **`ModuleContractsTest`** — la otra mitad: sustituye cada contrato por un doble y exige que el
+  consumidor real cambie de conducta. Si alguien vuelve a llamar a la implementación legacy por
+  debajo, el doble se queda sin usar y el test cae.
+- **`MorphMapTest`** (en `tests/Feature/`) — alias de morph estables para todo modelo, en
+  `app/Models` **y** `app/Domain/*/Models`.
+
+> Al tocar estos tests: modificar una baseline para AÑADIR una entrada es casi siempre la
+> señal de que la mudanza está mal hecha, no de que la lista se haya quedado corta.
+
 ## Entorno de pruebas (`phpunit.xml`)
 - **BD:** SQLite `:memory:` (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`). Las migraciones
   se aplican **una vez por proceso** (`RefreshDatabase`), no por test.

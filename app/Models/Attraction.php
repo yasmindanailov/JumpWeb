@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Booking\Contracts\ComplementPlacement;
+use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,27 +49,20 @@ class Attraction extends Model
      *
      * Comprobación de UNA atracción (panel/aviso). Para la LISTA de la landing se usa
      * `App\Support\LandingComplementResolver` (batch, sin N+1).
+     *
+     * La REGLA es de Booking y vive en su contrato (`PublishableCatalog`, Fase 2 paso 1);
+     * antes estaba duplicada aquí y en el resolver de la landing, con dos consultas que
+     * podían divergir. Aquí solo queda la guarda de los IDs.
      */
     public function complementIsPurchasable(): bool
     {
-        $addon = $this->ticketType;
-
-        // Debe ser un complemento vendible Y con precio (sin precio mostraría «0,00 €»).
-        if (! $addon || ! $addon->isAddon() || ! $addon->is_active || ! $addon->is_sellable
-            || ! $addon->prices()->exists()) {
+        if (! $this->ticket_type_id || ! $this->zone_id) {
             return false;
         }
 
-        // Enganchado como complemento DE PAGO (`is_included=false`) a ≥1 entrada vendible de la zona
-        // operativa: un addon solo incluido es gratis y no se vende aparte (coherencia #226).
-        return $addon->addonOfProducts()
-            ->where('product_addons.is_included', false)
-            ->where('ticket_types.type', TicketType::TYPE_ENTRY)
-            ->where('ticket_types.zone_id', $this->zone_id)
-            ->where('ticket_types.is_sellable', true)
-            ->where('ticket_types.is_active', true)
-            ->whereHas('zone', fn ($z) => $z->where('is_active', true))
-            ->exists();
+        return app(PublishableCatalog::class)->isComplementPurchasable(
+            new ComplementPlacement((int) $this->ticket_type_id, (int) $this->zone_id),
+        );
     }
 
     /** Precio de referencia (céntimos) del complemento vinculado, para la card de la landing. */

@@ -54,14 +54,28 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
   esta memoización un GET anónimo de la home dispara ~1.900 queries (~4 s de BD) — no la rompas.
 - Guardas: si la tabla `settings` no existe (CI/instalación limpia) devuelve payload vacío.
 - También en `AppServiceProvider`: singleton `CustomerAccountContext` (memoiza por petición la
-  consulta que comparten nav y sidebar de cuenta); `Model::preventSilentlyDiscardingAttributes()`
+  consulta que comparten nav y sidebar de cuenta; desde Fase 2 paso 1 pide los datos al contrato
+  `App\Domain\Booking\Contracts\CustomerReservations` en vez de consultar Booking a mano);
+  `Model::preventSilentlyDiscardingAttributes()`
   activo FUERA de producción (caza `$fillable` incompletos en tests; en prod se descarta en
   silencio para no romper flujos de pago); `URL::forceScheme('https')` solo en producción.
 
 ## 4. Estructura real del proyecto
 
+> ⚠️ **En migración (Fase 2, `docs/specs/modulos-dominio.md`)**: el destino es
+> `app/Domain/<Contexto>/{Contracts,Models,Services,…}` con 5 módulos (Booking · Content ·
+> Identity · Payments · Platform). Desde el paso 1 (2026-08-12) existen ya
+> `app/Domain/Booking/` y `app/Domain/Payments/` con sus **contratos** y sus ServiceProviders;
+> las implementaciones siguen en `app/Support`/`app/Models` y mudan en los pasos 2–6. La
+> frontera la impone `tests/Feature/Architecture/ModuleBoundariesTest.php`. Este árbol se
+> reescribe entero en el paso 7.
+
 ```
 app/
+  Domain/           🆕 módulos de dominio (Fase 2). Hoy: Booking/Contracts (CustomerReservations,
+                    PublishableCatalog + DTOs) · Payments/Contracts (RefundGateway, RefundResult)
+                    + <Módulo>ServiceProvider con los bindings a las implementaciones legacy.
+                    Regla: desde fuera de app/Domain SOLO se tocan los `Contracts`.
   Models/           ~30 modelos planos (Order, OrderItem, Ticket, TicketType, Slot,
                     SlotTemplate, Season, SpecialDate, Zone, Attraction, Room, Setting,
                     LandingService, Offer, Payment, PaymentRefund, Role, Permission, …)

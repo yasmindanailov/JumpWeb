@@ -110,8 +110,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       contra columnas morph (app y tests → `getMorphClass()`) + `MorphMapTest` (alias para
       todo modelo, round-trip, fila legacy FQCN sigue resolviendo, clase sin alias lanza).
       Mover/renombrar modelos ya NO rompe datos.
-- [ ] Migrar `app/Support/` (57 ficheros al 2026-08-12) a los módulos, con la suite como red
-      (sin big-bang: módulo a módulo, imports actualizados por fases).
+- [x] **Paso 1 — contratos en namespace de destino** (2026-08-12, `DECISIONES #14`; detalle en
+      `docs/specs/modulos-dominio.md` §4.bis): `app/Domain/{Booking,Payments}/Contracts` con las
+      TRES costuras reales medidas contra el código —Booking→Payments `RefundGateway`+`RefundResult`
+      (`Order` ya no importa `Redsys`), Booking→Identity `CustomerReservations`+2 DTOs
+      (`CustomerAccountContext` ya no consulta `Order`/`OrderItem`/`TicketType`), Booking→Content
+      `PublishableCatalog`+`ComplementPlacement`—, bindings a implementaciones legacy en
+      `Booking/PaymentsServiceProvider`, y la **frontera ejecutable**
+      (`ModuleBoundariesTest`: 3 guardas verificadas POR MUTACIÓN + `ModuleContractsTest`: cada
+      contrato sustituido por un doble). De regalo, la regla de comprabilidad #226 dejó de estar
+      duplicada en dos consultas SQL que podían divergir. Suite 2155 verde.
+- [ ] Pasos 2–6 — mudar `app/Support/` (57 ficheros al 2026-08-12) y `app/Models/` a los módulos,
+      con la suite como red (sin big-bang: Platform → Content → Identity → Payments → Booking).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

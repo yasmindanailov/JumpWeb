@@ -138,8 +138,10 @@ seed siempre incluye `guest_fields`).
 - **Email `GuestFormRequest`** (es/en/fr por `preferredLocale`, botón con color de marca), 1
   por reserva pendiente, disparado al quedar pagado (`RedsysReturnHandler` **y**
   `ManualOrderFulfiller`).
-- Avisos pendientes en la cuenta: `CustomerAccountContext::resolvePendingForms` (un aviso por
-  reserva).
+- Avisos pendientes en la cuenta: contrato `CustomerReservations::pendingGuestFormsFor()` de
+  Booking (impl. `App\Support\CustomerReservationsReader`), que `CustomerAccountContext`
+  (Identity) consume y convierte en URL — un aviso por reserva. Antes era una consulta directa
+  dentro de `CustomerAccountContext`; se extrajo en Fase 2, paso 1 (`docs/specs/modulos-dominio.md`).
 
 ### 4.2 Cara empleado (panel, es/zh_CN)
 

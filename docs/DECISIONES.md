@@ -143,3 +143,26 @@ grafo permitido y baseline solo-encoge; **(e)** cimientos aplicados YA: el gate
 `VERIFY_CONC` del pre-push ancla los críticos por basename (no por ruta), y
 `docs-check`/`MorphMapTest` cuentan modelos también en `app/Domain/*/Models` — los tres
 gates habrían muerto en silencio con la primera mudanza (hallazgo de la revisión).
+
+## #14 · 2026-08-12 · Paso 1 del spec de módulos: los contratos, medidos contra el código
+Ejecutado `docs/specs/modulos-dominio.md` §5.1 (detalle en su §4.bis). Al medir las flechas
+reales una a una, cuatro puntos del diseño se concretaron distinto y así quedan decididos:
+**(a)** el contrato de Payments es **solo reembolso** (`RefundGateway::executeRefund`) — el
+«cobro» no lo consume Booking sino la capa de entrega, y ponerlo habría sido una superficie
+inventada, que §4 prohíbe; **(b)** el DTO **viaja con el contrato** (`RedsysRefundResult` →
+`App\Domain\Payments\Contracts\RefundResult`): un contrato cuyo tipo de retorno siguiera en
+`App\Support` cambiaría de firma en el paso 5 y no sería estable — que es justo lo que el paso 1
+existe para evitar; **(c)** para Content e Identity **no había nada que bindear** (las consultas
+vivían dentro de los consumidores), así que el paso 1 las EXTRAJO a dos read-models de Booking
+(`CustomerReservationsReader`, `PublishableCatalogReader`) que se quedan en `app/Support` hasta
+el paso 6; **(d)** los contratos de Booking reciben `int $userId` y no el modelo `User`, con lo
+que el grafo se ahorra una flecha Booking→Identity.
+Efecto colateral valioso: la regla de comprabilidad #226 estaba **duplicada** en dos consultas
+SQL independientes (`Attraction::complementIsPurchasable()` y `LandingComplementResolver`) que
+podían divergir en silencio; el contrato las unificó en una.
+La frontera (`ModuleBoundariesTest`) escanea con el **tokenizador de PHP**, no con regex —los
+docblocks de los contratos citan clases legacy a propósito y una regex las contaría como
+dependencias— y sus tres guardas se validaron **por mutación** (introducir la violación a mano y
+comprobar que el test cae). `ModuleContractsTest` cubre la otra mitad: sustituye cada contrato
+por un doble y exige que el consumidor real cambie de conducta, de modo que nadie pueda volver a
+llamar a la implementación legacy por debajo sin que la suite lo cante.

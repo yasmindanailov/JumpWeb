@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Domain\Payments\Contracts\RefundGateway;
+use App\Domain\Payments\Contracts\RefundResult;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
@@ -24,7 +26,7 @@ use Throwable;
  *
  * Coexiste con la librería antigua v1.0 (SHA-256 + 3DES) que ya NO usamos.
  */
-class Redsys
+class Redsys implements RefundGateway
 {
     public const SIGNATURE_VERSION = 'HMAC_SHA512_V2';
 
@@ -371,7 +373,7 @@ class Redsys
      *
      * **NUNCA lanza excepciones**: cualquier fallo (red, timeout, JSON inválido,
      * firma rota en la respuesta, código distinto a 0900) se normaliza en un
-     * `RedsysRefundResult` con `success=false` y `failureReason` categorizado.
+     * `RefundResult` con `success=false` y `failureReason` categorizado.
      * El orquestador (Order::executeFullRefund) decide qué hacer con el resultado
      * sin try/catch.
      *
@@ -379,15 +381,15 @@ class Redsys
      *                            Redsys admite varias devoluciones parciales acumulativas
      *                            sobre el mismo Payment hasta agotar el importe original.
      */
-    public function executeRefund(Payment $original, int $amountCents): RedsysRefundResult
+    public function executeRefund(Payment $original, int $amountCents): RefundResult
     {
         if ($original->gateway_order === null || $original->gateway_order === '') {
-            return RedsysRefundResult::malformedResponse(
+            return RefundResult::malformedResponse(
                 'Payment has no gateway_order; cannot identify the original authorization to refund.',
             );
         }
         if ($amountCents <= 0) {
-            return RedsysRefundResult::malformedResponse(
+            return RefundResult::malformedResponse(
                 'Refund amount must be positive (got '.$amountCents.').',
             );
         }
@@ -432,7 +434,7 @@ class Redsys
                 'exception' => $e::class,
             ]);
 
-            return RedsysRefundResult::transportError(
+            return RefundResult::transportError(
                 'Network error contacting Redsys: '.$e->getMessage(),
             );
         }
@@ -446,7 +448,7 @@ class Redsys
                 'body_preview' => Str::limit($response->body(), 300, '…'),
             ]);
 
-            return RedsysRefundResult::transportError(
+            return RefundResult::transportError(
                 'Redsys returned HTTP '.$response->status().' — verify in portal before retrying.',
                 ['http_status' => $response->status(), 'body' => Str::limit($response->body(), 1000, '…')],
             );
@@ -468,7 +470,7 @@ class Redsys
                 'error_code' => $errorCode,
             ]);
 
-            return RedsysRefundResult::gatewayDenied(
+            return RefundResult::gatewayDenied(
                 $errorCode,
                 $payload,
                 'Redsys rechazó la devolución con código '.$errorCode.'.',
@@ -481,7 +483,7 @@ class Redsys
                 'body_preview' => Str::limit($response->body(), 300, '…'),
             ]);
 
-            return RedsysRefundResult::malformedResponse(
+            return RefundResult::malformedResponse(
                 'Redsys response missing Ds_MerchantParameters.',
                 is_array($payload) ? $payload : ['body' => Str::limit($response->body(), 1000, '…')],
             );
@@ -490,7 +492,7 @@ class Redsys
         try {
             $responseData = $this->decodeMerchantParameters((string) $payload['Ds_MerchantParameters']);
         } catch (Throwable $e) {
-            return RedsysRefundResult::malformedResponse(
+            return RefundResult::malformedResponse(
                 'Cannot decode Ds_MerchantParameters: '.$e->getMessage(),
                 $payload,
             );
@@ -513,7 +515,7 @@ class Redsys
                 'missing_signature' => $signatureReceived === '',
             ]);
 
-            return RedsysRefundResult::malformedResponse(
+            return RefundResult::malformedResponse(
                 'Redsys response signature missing or mismatched — verify in portal before retrying.',
                 $payload,
             );
@@ -524,13 +526,13 @@ class Redsys
             : null;
 
         if ($dsResponse === PaymentRefund::REDSYS_REFUND_SUCCESS_CODE) {
-            return RedsysRefundResult::succeeded($dsResponse, $responseData);
+            return RefundResult::succeeded($dsResponse, $responseData);
         }
 
         // Cualquier otro código = denegado por la pasarela. La traducción a texto
         // humano queda fuera de aquí (responsabilidad de la UI vía
         // `RedsysResponseCode::reasonText()`); aquí solo registramos el código.
-        return RedsysRefundResult::gatewayDenied(
+        return RefundResult::gatewayDenied(
             $dsResponse ?? 'unknown',
             $responseData,
             'Redsys denied the refund (Ds_Response='.($dsResponse ?? 'missing').').',

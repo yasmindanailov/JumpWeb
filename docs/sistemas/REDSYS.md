@@ -219,7 +219,11 @@ formato inválido en la ida → Redsys NO notifica, el usuario solo ve error fat
 Por eso se valida todo en servidor **antes** de redirigir. La ida a `realizarPago` exige POST
 (GET da `SIS0124`).
 
-## 9. Reembolso REST (`Redsys::executeRefund`)
+## 9. Reembolso REST (`RefundGateway::executeRefund`)
+> **Fase 2 (paso 1, 2026-08-12)**: el reembolso es la única superficie de Payments que consume
+> Booking, y viaja por el contrato `App\Domain\Payments\Contracts\RefundGateway` (bind a `Redsys`
+> en `PaymentsServiceProvider`). `Order` ya no importa `Redsys`. La ida a la pasarela NO está en
+> el contrato: sus llamantes son la capa de entrega, no Booking.
 - Endpoint REST: `https://sis-t.redsys.es:25443/sis/rest/trataPeticionREST` (test) ·
   `https://sis.redsys.es/sis/rest/trataPeticionREST` (live). Timeout 10 s.
 - Misma cripto y los mismos 3 campos; diferencias: `DS_MERCHANT_TRANSACTIONTYPE = '3'`
@@ -227,7 +231,7 @@ Por eso se valida todo en servidor **antes** de redirigir. La ida a `realizarPag
   `DS_MERCHANT_ORDER` = el **mismo `gateway_order` del Payment original** (así el banco enlaza
   devolución ↔ autorización). Admite devoluciones parciales acumulativas hasta el importe
   original.
-- **Nunca lanza excepciones**: todo se normaliza en `App\Support\RedsysRefundResult`
+- **Nunca lanza excepciones**: todo se normaliza en `App\Domain\Payments\Contracts\RefundResult`
   (`readonly`): `succeeded` (solo si `Ds_Response == '0900'` =
   `PaymentRefund::REDSYS_REFUND_SUCCESS_CODE`) · `gatewayDenied` (otro código, o respuesta
   "bare" `{"errorCode":"SISxxxx"}` con HTTP 200 sin `Ds_MerchantParameters` — p. ej. `SIS0054`
@@ -316,7 +320,7 @@ hace en `settings.redsys_environment`.
 | Librería oficial vendorizada | `app/Support/Redsys/Vendor/{Signature,Utils}.php` |
 | Procesador de confirmaciones | `app/Support/RedsysReturnHandler.php` |
 | Outcomes tipados | `app/Support/RedsysReturnOutcome.php` |
-| Resultado de refund | `app/Support/RedsysRefundResult.php` |
+| Contrato de reembolso (interfaz + DTO) | `app/Domain/Payments/Contracts/{RefundGateway,RefundResult}.php` |
 | `Ds_Response` → i18n cliente | `app/Support/RedsysResponseCode.php` |
 | Marca/país de tarjeta (panel) | `app/Support/RedsysCardCodes.php` |
 | Controller HTTP (3 rutas) | `app/Http/Controllers/Payments/RedsysReturnController.php` |

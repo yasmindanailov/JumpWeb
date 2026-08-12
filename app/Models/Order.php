@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Domain\Payments\Contracts\RefundGateway;
 use App\Models\Concerns\HasItemActionGuards;
 use App\Models\Concerns\OrderOperativeStatus;
 use App\Models\Concerns\OrderRefundFlags;
 use App\Support\AuditLogger;
 use App\Support\OrderFinancialSummary;
-use App\Support\Redsys;
 use App\Support\ReservationFinancials;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -638,7 +638,7 @@ class Order extends Model
 
         // Step 2: REST call FUERA de la txn. En modo manual saltamos esta fase.
         $restResult = $mode === PaymentRefund::MODE_REST
-            ? app(Redsys::class)->executeRefund($payment, $payment->amount)
+            ? app(RefundGateway::class)->executeRefund($payment, $payment->amount)
             : null;
 
         // Txn 2: finalizar refund + actualizar Order o registrar fallo.
@@ -1148,7 +1148,7 @@ class Order extends Model
      * (efectivo/datáfono, `provider` cash/datafono → sin `gateway_order`) NO se pueden reembolsar
      * por Redsys: solo cabe el «reembolso manual» (record-only: badge + log de constancia; el abono
      * físico lo gestiona el empleado fuera del sistema). Antes el REST se ofrecía igualmente y
-     * abortaba en `Redsys::executeRefund` («Payment has no gateway_order»).
+     * abortaba en `RefundGateway::executeRefund` («Payment has no gateway_order»).
      */
     public function isRedsysRefundable(): bool
     {
@@ -1632,7 +1632,7 @@ class Order extends Model
 
         // Step 2: REST call FUERA de la txn. En modo manual saltamos.
         $restResult = $mode === PaymentRefund::MODE_REST
-            ? app(Redsys::class)->executeRefund($payment, $amountCents)
+            ? app(RefundGateway::class)->executeRefund($payment, $amountCents)
             : null;
 
         // Txn 2: finalizar refund + actualizar Order/Item o registrar fallo.
