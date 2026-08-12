@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\SlotTemplates\Tables;
 
+use App\Domain\Platform\Services\Duration;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
 use App\Models\SlotTemplate;
 use App\Models\Zone;
-use App\Support\Duration;
 use Carbon\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;

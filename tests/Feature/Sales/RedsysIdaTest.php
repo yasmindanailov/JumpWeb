@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RateType;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;

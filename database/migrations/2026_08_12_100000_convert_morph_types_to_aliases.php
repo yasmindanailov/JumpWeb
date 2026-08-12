@@ -14,7 +14,16 @@ use Illuminate\Support\Facades\DB;
  */
 return new class extends Migration
 {
-    /** @var array<string, string> alias => FQCN (espejo del mapa de AppServiceProvider) */
+    /**
+     * ⛔ **CONGELADO — no reescribir estos FQCN.** Son los valores que la BD tenía GUARDADOS
+     * en 2026-08-12, no rutas de código: describen el pasado, no el presente. La modularización
+     * de Fase 2 mueve las clases (`App\Domain\<Módulo>\Models\…`), pero las filas antiguas
+     * siguen diciendo `App\Models\…` y es a ESAS a las que esta migración tiene que llegar.
+     * Un `sed` global las rompería EN SILENCIO (la migración es idempotente: no fallaría, solo
+     * dejaría las filas legacy sin convertir). Lo vigila `MorphMapTest`.
+     *
+     * @var array<string, string> alias => FQCN histórico
+     */
     private const MAP = [
         'attraction' => 'App\Models\Attraction',
         'audit_log' => 'App\Models\AuditLog',

@@ -2,9 +2,9 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\Zone;

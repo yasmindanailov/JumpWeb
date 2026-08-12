@@ -2,12 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
-use App\Models\Setting;
 use App\Support\ThemeSettings;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;

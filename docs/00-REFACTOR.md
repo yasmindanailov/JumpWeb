@@ -120,8 +120,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       (`ModuleBoundariesTest`: 3 guardas verificadas POR MUTACIÓN + `ModuleContractsTest`: cada
       contrato sustituido por un doble). De regalo, la regla de comprabilidad #226 dejó de estar
       duplicada en dos consultas SQL que podían divergir. Suite 2155 verde.
-- [ ] Pasos 2–6 — mudar `app/Support/` (57 ficheros al 2026-08-12) y `app/Models/` a los módulos,
-      con la suite como red (sin big-bang: Platform → Content → Identity → Payments → Booking).
+- [x] **Paso 2 — Platform mudado** (2026-08-12, `DECISIONES #15`; detalle en la spec §4.ter):
+      12 clases a `app/Domain/Platform/{Models,Services,Concerns,Enums}` (`Setting`, `AuditLog`,
+      `AuditLogger`, `DisplayTime`, `Money`, `Duration`, `PhoneNormalizer`,
+      `MaintenanceSettings`, `QrCode`, `Turnstile`, `HasTranslations`, `DashboardPeriod`),
+      **236 ficheros** tocados (26 blades con FQCN inline). Sin `Contracts`: Platform es la base
+      común («todos→Platform»), no una costura sustituible. Dos hallazgos que valen para los
+      pasos 3–6: las **dependencias invisibles** del namespace plano (30+, sin `use`, que al
+      mover revientan) y los **FQCN que son DATOS** (la migración del morphMap, ⛔ congelada y
+      con guard propio verificado por mutación). Suite 2157 verde.
+- [ ] Pasos 3–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
+      como red (sin big-bang: Content → Identity → Payments → Booking).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

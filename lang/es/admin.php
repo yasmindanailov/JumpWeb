@@ -595,7 +595,7 @@ return [
             'details_ticket_type' => 'Tipo',
             'details_zone' => 'Zona',
             'details_duration' => 'Duración',
-            // Formato humanizado de duración (decisión #148 iter — `App\Support\Duration::formatHumane`):
+            // Formato humanizado de duración (decisión #148 iter — `App\Domain\Platform\Services\Duration::formatHumane`):
             // el empleado piensa en horas, no en minutos. "1h", "1h 30min", "45 min".
             'duration' => [
                 'hours_only' => ':hoursh',

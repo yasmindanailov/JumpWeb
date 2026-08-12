@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\Setting;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;

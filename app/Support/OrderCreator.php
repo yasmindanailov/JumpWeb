@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Exceptions\ReservationException;
 use App\Livewire\Tickets\Purchase;
 use App\Models\Order;

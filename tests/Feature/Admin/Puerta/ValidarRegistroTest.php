@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Puerta;
 
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
-use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

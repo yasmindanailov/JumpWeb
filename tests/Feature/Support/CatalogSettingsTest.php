@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Support\CatalogSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

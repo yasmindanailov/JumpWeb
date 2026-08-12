@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Helper defensivo para el destinatario de los AVISOS DE INCIDENCIA de cobro (recomendación C,

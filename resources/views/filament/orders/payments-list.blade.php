@@ -1,7 +1,7 @@
 @php
     use App\Models\Payment;
     use App\Models\PaymentRefund;
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
     use App\Support\Redsys;
     use App\Support\RedsysCardCodes;
     use App\Support\RedsysResponseCode;
@@ -82,7 +82,7 @@
     $internalEvents = $internalEvents->sort($sortEvents)->values();
 
     $fmtAmount = function (int $cents, string $currency): string {
-        return \App\Support\Money::format($cents, $currency);
+        return \App\Domain\Platform\Services\Money::format($cents, $currency);
     };
 @endphp
 

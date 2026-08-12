@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Theme;
 
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
 use App\Models\Order;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\OrderConfirmation;

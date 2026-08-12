@@ -8,7 +8,7 @@
     @var \App\Support\DailyReservationsSummary $summary
 --}}
 @php
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
 
     $rows = $summary->rows();
 @endphp
@@ -97,7 +97,7 @@
     <table>
         <tr>
             <td style="width: 45%;">
-                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
+                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
                 <div class="doc-title">{{ __('admin.calendar.day_summary.title') }}</div>
             </td>
             <td style="width: 55%; text-align: right;">

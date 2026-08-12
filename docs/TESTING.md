@@ -46,6 +46,13 @@ Resultado idéntico en ambos modos (2132 verde, 7931 aserciones); ≈ 6,8× más
 día a día basta con correr el directorio o el `--filter` del módulo que tocas; la suite
 completa, antes de commitear o en CI.
 
+> **Verificado en JumpWeb el 2026-08-12** (Fase 2, paso 2), primera corrida secuencial completa
+> de este repo: **2157/2157 en ambos modos** (secuencial 557 s · paralelo 73 s). El contador
+> «PHPUnit Notices: 1» que muestra la corrida PARALELA completa **no aparece en la secuencial**
+> (0) ni al correr ficheros sueltos en paralelo: es del runner, no del código, y ningún test
+> falla por él. Si alguna vez sale un fallo SOLO en secuencial, sospecha primero de haber
+> tocado el árbol de trabajo con la suite corriendo — pasó una vez y no era orden de tests.
+
 ## Garantías de la suite
 
 ### 1. Sin red — `Http::preventStrayRequests()`
@@ -84,7 +91,9 @@ degrada en silencio.
   consumidor real cambie de conducta. Si alguien vuelve a llamar a la implementación legacy por
   debajo, el doble se queda sin usar y el test cae.
 - **`MorphMapTest`** (en `tests/Feature/`) — alias de morph estables para todo modelo, en
-  `app/Models` **y** `app/Domain/*/Models`.
+  `app/Models` **y** `app/Domain/*/Models`. Incluye el guard de la **migración congelada**:
+  los FQCN de `convert_morph_types_to_aliases` son los valores que la BD tenía en 2026-08-12
+  (DATOS, no rutas de código) y un `sed` global de la modularización los rompería en silencio.
 
 > Al tocar estos tests: modificar una baseline para AÑADIR una entrada es casi siempre la
 > señal de que la mudanza está mal hecha, no de que la lista se haya quedado corta.

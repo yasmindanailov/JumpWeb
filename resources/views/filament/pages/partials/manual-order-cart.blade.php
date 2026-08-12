@@ -1,4 +1,4 @@
-@php($euros = fn (int $cents) => \App\Support\Money::amount($cents))
+@php($euros = fn (int $cents) => \App\Domain\Platform\Services\Money::amount($cents))
 
 <x-filament::section :heading="__('admin.orders.create_manual.cart_title')" class="mt-6">
     @if (empty($this->cart))

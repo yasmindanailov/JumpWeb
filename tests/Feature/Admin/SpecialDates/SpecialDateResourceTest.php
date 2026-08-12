@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\SpecialDates;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
-use App\Models\AuditLog;
 use App\Models\RateType;
 use App\Models\Role;
 use App\Models\SpecialDate;

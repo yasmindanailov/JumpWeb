@@ -3,7 +3,7 @@
      colapsado a iconos, así que no necesita CSS a medida. --}}
 <span class="flex h-full flex-col justify-center items-start text-left leading-tight">
     <span class="text-lg font-bold tracking-tight text-gray-950 dark:text-white">
-        {{ \App\Models\Setting::value('business.name') ?: config('app.name') }}<span class="text-primary-500">.</span>
+        {{ \App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name') }}<span class="text-primary-500">.</span>
     </span>
     <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
         {{ __('admin.panel_subtitle') }}

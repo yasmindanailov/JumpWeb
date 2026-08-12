@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Dashboard;
 
-use App\Models\Setting;
-use App\Support\DashboardPeriod;
+use App\Domain\Platform\Enums\DashboardPeriod;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;

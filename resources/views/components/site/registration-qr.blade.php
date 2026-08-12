@@ -24,7 +24,7 @@
                     <span class="qr-corner qr-corner--bl" aria-hidden="true"></span>
                     <span class="qr-corner qr-corner--br" aria-hidden="true"></span>
                     <div class="qr-slot" role="img" aria-label="{{ __('landing.registration.qr_aria') }}">
-                        {!! $svg ?? \App\Support\QrCode::svg($regUrl) !!}
+                        {!! $svg ?? \App\Domain\Platform\Services\QrCode::svg($regUrl) !!}
                     </div>
                 </div>
             </div>

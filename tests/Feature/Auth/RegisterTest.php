@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Turnstile;
 use App\Livewire\Auth\Register;
-use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\AccountAlreadyExists;
-use App\Support\Turnstile;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;

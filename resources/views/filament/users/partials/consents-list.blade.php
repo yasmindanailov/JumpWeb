@@ -22,7 +22,7 @@
                     {{ __('admin.users.consents.types.'.$consent->type) }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ \App\Support\DisplayTime::format($consent->accepted_at, 'd/m/Y') }} · v{{ $consent->version }}
+                    {{ \App\Domain\Platform\Services\DisplayTime::format($consent->accepted_at, 'd/m/Y') }} · v{{ $consent->version }}
                 </span>
             </li>
         @endforeach

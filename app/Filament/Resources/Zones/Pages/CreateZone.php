@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Zones\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Zones\Concerns\InteractsWithZoneForm;
 use App\Filament\Resources\Zones\ZoneResource;
 use App\Models\Zone;
-use App\Support\AuditLogger;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

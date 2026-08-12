@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 
@@ -18,8 +18,8 @@ use Illuminate\Support\Carbon;
  *    default — nunca lanzamos excepción al renderizar una vista.
  *
  * Uso desde Blade:
- *   {{ \App\Support\DisplayTime::format($order->created_at) }}
- *   {{ \App\Support\DisplayTime::format($consent->accepted_at, 'd/m/Y') }}
+ *   {{ \App\Domain\Platform\Services\DisplayTime::format($order->created_at) }}
+ *   {{ \App\Domain\Platform\Services\DisplayTime::format($consent->accepted_at, 'd/m/Y') }}
  *
  * Uso desde notificaciones / lógica de servicio:
  *   ->line(__('foo.bar', ['when' => DisplayTime::format($order->paid_at)]))

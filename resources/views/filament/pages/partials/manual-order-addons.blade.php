@@ -1,5 +1,5 @@
 @php($model = $model ?? ['groups' => [], 'singles' => [], 'total' => 0])
-@php($euros = fn (int $c) => \App\Support\Money::amount($c))
+@php($euros = fn (int $c) => \App\Domain\Platform\Services\Money::amount($c))
 
 {{-- Complementos del alta manual: MISMA lógica y condiciones que la web (incluido/obligatorio/
      por-invitado/grupo de elección) vía el view-model compartido `AddonResolver::viewModel`.

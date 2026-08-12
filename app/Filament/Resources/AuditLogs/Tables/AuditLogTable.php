@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\AuditLogs\Tables;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\AuditLog;
 use App\Models\Order;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;

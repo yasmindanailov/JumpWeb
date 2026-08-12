@@ -2,8 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Domain\Platform\Enums\DashboardPeriod;
 use App\Models\OrderItem;
-use App\Support\DashboardPeriod;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;

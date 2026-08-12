@@ -42,7 +42,7 @@
     $eventData = is_array($item->event_data) ? $item->event_data : [];
     $hasEventData = collect($eventFields)->contains(fn ($f) => trim((string) ($eventData[$f['key']] ?? '')) !== '');
     $formStatus = $item->guestFormStatus();
-    $fmt = fn (int $cents) => \App\Support\Money::format($cents);
+    $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
     $customer = $item->order?->user;
     $userUrl = $userUrl ?? null;
     $slipUrl = $slipUrl ?? null;

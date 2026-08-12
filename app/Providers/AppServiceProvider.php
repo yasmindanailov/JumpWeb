@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
 use App\Models\Attraction;
-use App\Models\AuditLog;
 use App\Models\Consent;
 use App\Models\CookieConsentLog;
 use App\Models\Faq;
@@ -24,7 +25,6 @@ use App\Models\RateType;
 use App\Models\Role;
 use App\Models\Room;
 use App\Models\Season;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\SlotTemplate;
 use App\Models\SpecialDate;

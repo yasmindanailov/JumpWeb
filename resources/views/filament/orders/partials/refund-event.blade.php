@@ -1,6 +1,6 @@
 @php
     use App\Models\PaymentRefund;
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
     use App\Support\RedsysResponseCode;
 
     /** @var PaymentRefund $refund */

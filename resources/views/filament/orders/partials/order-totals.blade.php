@@ -36,7 +36,7 @@
     $s = $record->financialSummary();
 
     $cur = ($record->currency === 'EUR') ? '€' : $record->currency;
-    $fmt = fn (int $cents) => \App\Support\Money::amount($cents).' '.$cur;
+    $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::amount($cents).' '.$cur;
 
     $record->loadMissing([
         'payments.refunds.orderItem.ticketType',
@@ -123,7 +123,7 @@
     $paidLabel = $isPaidOnline
         ? __('admin.orders.order_financial.pagado_online')
         : __('admin.orders.order_financial.cobrado_manual');
-    $paidDateStr = $paymentDate ? \App\Support\DisplayTime::format($paymentDate, 'd/m/Y') : null;
+    $paidDateStr = $paymentDate ? \App\Domain\Platform\Services\DisplayTime::format($paymentDate, 'd/m/Y') : null;
 @endphp
 
 <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">

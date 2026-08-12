@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
+use App\Domain\Platform\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RateType;
@@ -98,6 +98,43 @@ class MorphMapTest extends TestCase
 
         $legacy = Payment::where('gateway_order', '9990005678')->firstOrFail();
         $this->assertTrue($legacy->payable->is($order));
+    }
+
+    /**
+     * Los FQCN de la migración de conversión son **DATOS HISTÓRICOS**, no referencias a código:
+     * describen lo que hay GUARDADO en la BD de una instalación anterior al morphMap. Si la
+     * modularización los reescribe (un `sed` global de `App\Models\X` → `App\Domain\…\X` los
+     * pilla de lleno), la migración deja de reconocer las filas legacy y las abandona con FQCN
+     * sin convertir — en silencio, porque es idempotente y no falla.
+     *
+     * Este guard se escribió al mover Platform (paso 2), que fue el primer `sed` masivo del
+     * refactor y el primero que pudo romperla.
+     */
+    public function test_the_historical_morph_migration_keeps_its_frozen_fqcns(): void
+    {
+        $migration = database_path('migrations/2026_08_12_100000_convert_morph_types_to_aliases.php');
+        $this->assertFileExists($migration);
+
+        $source = (string) file_get_contents($migration);
+
+        // Solo los valores del bloque `const MAP`, nunca los comentarios (la prosa del fichero
+        // menciona los namespaces nuevos justo para explicar por qué estos NO cambian) ni el
+        // mapa de columnas polimórficas, que también son pares `'x' => 'y'`.
+        $this->assertSame(1, preg_match('/const MAP = \[(.+?)\];/s', $source, $block), 'no encuentro const MAP');
+        preg_match_all("/=>\s*'([^']+)'/", $block[1], $matches);
+        $fqcns = $matches[1];
+
+        $this->assertNotEmpty($fqcns, 'el guard no puede pasar en vacío');
+        $this->assertContains('App\\Models\\Order', $fqcns);
+        $this->assertContains('App\\Models\\Setting', $fqcns);
+
+        foreach ($fqcns as $fqcn) {
+            $this->assertStringStartsWith(
+                'App\\Models\\', $fqcn,
+                "«{$fqcn}» ya no es el FQCN que la BD guardaba en 2026-08-12. Las cadenas de esta "
+                .'migración son DATOS históricos: describen filas existentes, no rutas de código.'
+            );
+        }
     }
 
     public function test_audit_logs_persist_target_aliases(): void

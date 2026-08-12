@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\AuditLogs;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\AuditLogs\Tables\AuditLogTable;
-use App\Models\AuditLog;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;

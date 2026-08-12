@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Turnstile;
 use App\Mail\ContactMessageMail;
-use App\Models\Setting;
-use App\Support\Turnstile;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;

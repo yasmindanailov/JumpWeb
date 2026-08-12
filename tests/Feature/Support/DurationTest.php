@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Support;
 
-use App\Support\Duration;
+use App\Domain\Platform\Services\Duration;
 use Tests\TestCase;
 
 /**

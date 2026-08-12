@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Http\Middleware\SetAdminLocale;
-use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;

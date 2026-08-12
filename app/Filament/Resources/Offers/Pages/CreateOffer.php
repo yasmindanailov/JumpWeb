@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Offers\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Offers\Concerns\InteractsWithOfferForm;
 use App\Filament\Resources\Offers\OfferResource;
 use App\Models\Offer;
-use App\Support\AuditLogger;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

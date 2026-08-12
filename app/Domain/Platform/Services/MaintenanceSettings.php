@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Helpers defensivos del subsistema de DISPONIBILIDAD / MANTENIMIENTO (fuera de roadmap, #218).

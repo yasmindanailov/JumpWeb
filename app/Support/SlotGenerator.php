@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Models\OrderItem;
 use App\Models\Slot;
 use App\Models\SlotTemplate;

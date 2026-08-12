@@ -14,7 +14,7 @@
      */
     $struck = $struck ?? false;
     $gateLines = $gateLines ?? [];
-    $fmt = fn (int $cents) => \App\Support\Money::format($cents);
+    $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
 @endphp
 
 <div class="space-y-1">

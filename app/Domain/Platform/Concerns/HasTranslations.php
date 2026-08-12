@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Concerns;
+namespace App\Domain\Platform\Concerns;
 
 /**
  * Traducciones ligeras sin dependencias externas.

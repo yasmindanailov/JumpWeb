@@ -2,19 +2,19 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Support\AddonResolver;
-use App\Support\AuditLogger;
 use App\Support\Cart;
 use App\Support\CatalogSettings;
-use App\Support\MaintenanceSettings;
 use App\Support\OrderCreator;
 use App\Support\PackAvailability;
 use App\Support\PaymentSettings;

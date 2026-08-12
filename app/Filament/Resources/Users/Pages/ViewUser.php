@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Textarea;

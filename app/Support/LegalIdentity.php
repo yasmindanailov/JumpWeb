@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Interpola los datos fiscales del titular (editables en `/admin/settings`, #205) dentro

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Maintenance;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Livewire\Tickets\Purchase;
-use App\Models\Setting;
-use App\Support\MaintenanceSettings;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

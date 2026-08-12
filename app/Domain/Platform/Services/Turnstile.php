@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;

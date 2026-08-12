@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Admin\Settings;
 
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
 use App\Support\CatalogSettings;
 use App\Support\Redsys;

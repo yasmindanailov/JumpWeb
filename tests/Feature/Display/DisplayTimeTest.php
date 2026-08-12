@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Display;
 
-use App\Models\Setting;
-use App\Support\DisplayTime;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -13,7 +13,7 @@ use Tests\TestCase;
  *
  * Arquitectura: BD en UTC (white-label friendly), presentación en
  * `settings.display_timezone` (default `Europe/Madrid`). El helper
- * `App\Support\DisplayTime::format()` aplica la TZ al formatear.
+ * `App\Domain\Platform\Services\DisplayTime::format()` aplica la TZ al formatear.
  *
  * Estos tests blindan los tres aspectos críticos:
  *   1. Conversión correcta UTC → Madrid (CEST en mayo = UTC+2).

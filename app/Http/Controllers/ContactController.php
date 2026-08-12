@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Turnstile;
 use App\Mail\ContactMessageMail;
-use App\Models\Setting;
-use App\Support\Turnstile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 

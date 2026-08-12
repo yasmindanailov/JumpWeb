@@ -166,3 +166,33 @@ dependencias— y sus tres guardas se validaron **por mutación** (introducir la
 comprobar que el test cae). `ModuleContractsTest` cubre la otra mitad: sustituye cada contrato
 por un doble y exige que el consumidor real cambie de conducta, de modo que nadie pueda volver a
 llamar a la implementación legacy por debajo sin que la suite lo cante.
+
+## #15 · 2026-08-12 · Paso 2 (Platform): qué es Platform y qué enseñó la primera mudanza
+Ejecutado `docs/specs/modulos-dominio.md` §5.2 (detalle en §4.ter). Decidido:
+**(a) Platform NO tiene `Contracts`.** El grafo dice «todos→Platform»: es la base compartida
+(settings, audit, formateo de dinero/fechas, i18n), no una costura de dominio que haga falta
+poder sustituir. Ponerle interfaces habría significado inventar 12 de una línea —exactamente la
+«superficie nueva» que el spec §4 prohíbe—. La tercera guarda de `ModuleBoundariesTest` («desde
+fuera solo se tocan los Contracts») se relajó **solo** para Platform, con el porqué escrito en
+el propio test. Los `Models/` de los módulos no-Platform NO se preautorizan: lo decide el paso 3
+con datos delante.
+**(b) La pertenencia a Platform es comprobable, no opinable**: como su lista de permitidos es
+vacía, una clase solo puede ser Platform si no depende de nadie más. Da 12 clases, que coinciden
+con el recuento del inventario multi-agente (9 de `Support` + 3 ficheros de `Models`). Única
+excepción declarada: `AuditLog::user()` es un `belongsTo` → costura Eloquent del §4, y vive en
+la allowlist `SEAM`, no en la baseline legacy.
+**(c) Dos trampas descubiertas al mover, que gobiernan los pasos 3–6:**
+1. **El grafo de imports miente en un namespace plano.** 30+ referencias a clases hermanas no
+llevan `use` (no hace falta dentro del mismo namespace) y por tanto son INVISIBLES; al mover la
+clase se vuelven «class not found». Se midieron con el tokenizador y 9 ficheros ganaron el
+`use` explícito. El checklist del spec incorpora este paso 0: **medir las invisibles antes de
+mover**.
+2. **Hay FQCN que son DATOS.** La migración `convert_morph_types_to_aliases` guarda
+`'App\Models\Setting'`… como los valores que la BD tenía en 2026-08-12. Un `sed` global los
+reescribe y la migración deja de reconocer las filas legacy **en silencio** (es idempotente: no
+falla, solo abandona los datos). Se excluyó del barrido, se marcó ⛔ CONGELADO y se le puso
+guard en `MorphMapTest`, verificado por mutación. El checklist ahora separa **imports** (se
+editan) de **cadenas históricas** (se congelan).
+**(d)** El paso confirmó que el gate de dinero funciona: tocar `OrderCreator`, `SlotGenerator` y
+`RedsysReturnHandler` —aunque fuese solo para añadir un `use`— disparó la exigencia de
+`VERIFY_CONC=1`. Se corrieron los dos verificadores sobre MySQL real.

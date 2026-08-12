@@ -1,6 +1,6 @@
 @php
     use App\Models\Payment;
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
     use App\Support\RedsysCardCodes;
     use App\Support\RedsysResponseCode;
 

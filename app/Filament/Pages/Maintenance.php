@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Setting;
-use App\Support\AuditLogger;
-use App\Support\MaintenanceSettings;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use BackedEnum;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;

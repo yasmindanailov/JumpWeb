@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Admin\Catalog;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Catalog\Pages\CreateCatalog;
-use App\Models\AuditLog;
 use App\Models\RateType;
 use App\Models\Role;
 use App\Models\TicketType;

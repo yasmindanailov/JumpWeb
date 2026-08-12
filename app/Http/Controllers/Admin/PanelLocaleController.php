@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\SetAdminLocale;
-use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 

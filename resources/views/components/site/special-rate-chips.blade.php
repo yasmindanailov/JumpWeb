@@ -13,9 +13,9 @@
         @foreach ($rows as $sr)
             <span class="price__special-chip">
                 @if ($sr['surchargeCents'] > 0)
-                    <b>+{{ \App\Support\Money::amount($sr['surchargeCents']) }}&nbsp;€</b>
+                    <b>+{{ \App\Domain\Platform\Services\Money::amount($sr['surchargeCents']) }}&nbsp;€</b>
                 @else
-                    <b>{{ \App\Support\Money::amount($sr['priceCents']) }}&nbsp;€</b>
+                    <b>{{ \App\Domain\Platform\Services\Money::amount($sr['priceCents']) }}&nbsp;€</b>
                 @endif
                 <span class="price__special-day">{{ $sr['rate']->tr('label') }}</span>
             </span>

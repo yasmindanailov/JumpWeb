@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Domain\Platform\Enums\DashboardPeriod;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\OrderItem;
-use App\Support\DashboardPeriod;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;

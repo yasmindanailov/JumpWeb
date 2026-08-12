@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Platform\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  *
  * No tiene `updated_at` ni soft delete: las filas son append-only y NUNCA
  * se modifican. El consumo es exclusivamente lectura (informes, investigación
- * de incidentes). Crear usando `App\Support\AuditLogger::log()`.
+ * de incidentes). Crear usando `App\Domain\Platform\Services\AuditLogger::log()`.
  */
 class AuditLog extends Model
 {

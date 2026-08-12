@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Support\Redsys;
 use App\Support\Redsys\Vendor\Utils;
 use Illuminate\Foundation\Testing\RefreshDatabase;

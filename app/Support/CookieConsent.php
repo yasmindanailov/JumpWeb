@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Http\Request;
 
 /**

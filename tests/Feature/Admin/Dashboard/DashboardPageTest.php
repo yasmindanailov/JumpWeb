@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Dashboard;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

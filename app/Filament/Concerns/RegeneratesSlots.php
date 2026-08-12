@@ -2,7 +2,7 @@
 
 namespace App\Filament\Concerns;
 
-use App\Support\AuditLogger;
+use App\Domain\Platform\Services\AuditLogger;
 use App\Support\PaymentSettings;
 use App\Support\SlotGenerator;
 use Carbon\Carbon;

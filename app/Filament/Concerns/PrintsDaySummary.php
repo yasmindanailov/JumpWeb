@@ -2,8 +2,8 @@
 
 namespace App\Filament\Concerns;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Support\DailyReservationsSummary;
-use App\Support\DisplayTime;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;

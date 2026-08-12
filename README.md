@@ -10,7 +10,7 @@ pago online, panel de administración y —en el roadmap— app móvil sobre la 
 
 ## Stack
 
-- **Backend:** Laravel 13 + MySQL. Dominio en servicios (`app/Support/`, en migración a módulos).
+- **Backend:** Laravel 13 + MySQL. Dominio en módulos (`app/Domain/<Contexto>/`, en migración desde `app/Support/`).
 - **Web pública:** Blade server-rendered (SEO) + Alpine.js; CSS estático propio.
 - **Sistema de reservas (sidebar):** Livewire v4 → en migración a **SPA contra la API v1**.
 - **Panel admin:** Filament.

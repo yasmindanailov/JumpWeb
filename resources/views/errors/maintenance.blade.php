@@ -13,7 +13,7 @@
     $phone = trim((string) ($site['phone'] ?? ''));
     $phoneTel = preg_replace('/\s+/', '', $phone);
     $email = trim((string) ($site['email'] ?? ''));
-    $message = \App\Support\MaintenanceSettings::siteMessage($locale);
+    $message = \App\Domain\Platform\Services\MaintenanceSettings::siteMessage($locale);
 @endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', $locale) }}">

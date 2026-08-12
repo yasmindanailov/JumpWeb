@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -12,7 +13,6 @@ use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;
-use App\Support\AuditLogger;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

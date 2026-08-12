@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
 use App\Models\RateType;
-use App\Models\Setting;
 use App\Models\TicketType;
 use App\Models\Zone;
 use App\Support\CatalogSettings;

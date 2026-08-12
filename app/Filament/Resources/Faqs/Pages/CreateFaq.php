@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Faqs\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Faqs\Concerns\InteractsWithFaqForm;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Models\Faq;
-use App\Support\AuditLogger;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

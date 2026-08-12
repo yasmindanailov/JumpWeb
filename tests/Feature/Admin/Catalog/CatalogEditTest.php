@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\Catalog;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\RateType;
 use App\Models\Role;

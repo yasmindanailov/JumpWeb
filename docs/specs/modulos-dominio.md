@@ -92,6 +92,39 @@ Tres guardas — grafo permitido · baselines `SEAM`/`LEGACY` que solo encogen �
 a mano cada violación y se comprobó que el test cae). Comportamiento: `ModuleContractsTest`
 sustituye cada contrato por un doble y exige que el consumidor real cambie de conducta.
 
+## 4.ter Paso 2 EJECUTADO (2026-08-12) — Platform, y lo que costó de verdad
+Primera MUDANZA real (12 clases, 236 ficheros tocados). Cuatro lecciones, todas aplicables a
+los pasos 3–6 (`DECISIONES #15`):
+
+1. **El grafo de imports MIENTE en un namespace plano.** Medido con el tokenizador: 30+
+   referencias a clases HERMANAS del mismo namespace no necesitan `use` y por tanto **no
+   aparecen como dependencia**. Mover la clase las convierte en «class not found». En Platform
+   afectaba a 9 ficheros (`OrderCreator`, `SlotGenerator`, `SlotOffer`, `HeroStatus`,
+   `ScheduleDisplay`, `RedsysReturnHandler`, `ManualOrderFulfiller`, `CustomerRegistrar`,
+   `ReservationSlip`), que ganaron el `use` explícito en el mismo commit.
+   👉 **Antes de cada mudanza: medir las invisibles**, no fiarse de los `use`. El paso 2 usó un
+   script de un solo uso (tokeniza y compara nombres cortos contra las clases del namespace).
+2. **Hay FQCN que son DATOS y no se tocan.** `2026_08_12_100000_convert_morph_types_to_aliases`
+   guarda `'App\Models\Setting'`… como **valores que la BD tenía**, no como referencias a
+   código. Un `sed` global los reescribe y la migración deja de reconocer las filas legacy —
+   **en silencio**, porque es idempotente y no falla. Se excluyó del barrido, se marcó
+   `⛔ CONGELADO` y lo vigila `MorphMapTest` (guard verificado por mutación).
+   👉 El checklist de §5 distingue ahora **imports** (se editan) de **cadenas FQCN históricas**
+   (se congelan).
+3. **Platform no tiene `Contracts`, y es correcto.** El grafo dice «todos→Platform»: es la base
+   compartida (settings, audit, formateo, i18n), no una costura sustituible. Ponerle interfaces
+   habría significado inventar 12 de una línea — la «superficie nueva» que §4 prohíbe. La
+   tercera guarda del arch-test se relajó SOLO para Platform, con el porqué escrito en el test.
+   Los `Models/` de los módulos NO-Platform siguen sin preautorizar: lo decide el paso 3.
+4. **La pertenencia a Platform es comprobable, no opinable**: como su lista de permitidos es
+   vacía, una clase solo es Platform si no depende de nadie más. Resultado: 12 clases
+   (9 de `Support` + `Setting`, `AuditLog`, `HasTranslations`), que coinciden con el recuento
+   del inventario multi-agente. Única excepción declarada: `AuditLog::user()` es un `belongsTo`
+   → costura Eloquent de §4, y vive en la allowlist `SEAM`, no en la baseline legacy.
+
+**Nota de deploy** (aplica a este paso por mover 2 modelos): drenar la cola y `queue:restart`
+antes de desplegar — los payloads serializados llevan el FQCN viejo.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
@@ -101,8 +134,10 @@ sustituye cada contrato por un doble y exige que el consumidor real cambie de co
    `ComplementPlacement` para Content; `CustomerReservations` + `UpcomingReservation` +
    `PendingGuestForm` para Identity), bindings en `Booking/Payments ServiceProvider` a las
    implementaciones legacy, y el arch-test de frontera con sus baselines.
-2. **Platform** (mayor churn, riesgo semántico nulo): `Setting`, `AuditLog(+ger)`,
-   `DisplayTime`, `Money`, `MaintenanceSettings`, `PhoneNormalizer`, `Duration`…
+2. ✅ **Platform** (2026-08-12, ver §4.ter): `Models/`(`Setting`, `AuditLog`) ·
+   `Services/`(`AuditLogger`, `DisplayTime`, `Money`, `Duration`, `PhoneNormalizer`,
+   `MaintenanceSettings`, `QrCode`, `Turnstile`) · `Concerns/`(`HasTranslations`) ·
+   `Enums/`(`DashboardPeriod`). Sin `Contracts` a propósito. 236 ficheros tocados.
 3. **Content** (+`VenueRule`): páginas/legales (`LegalContent`, `LegalIdentity`,
    `CookiePolicyContent`), landing (`HeroStatus`, `MapsEmbed`, `SocialEmbed`,
    `ThemeSettings`, presenters), `Faq`/`Page`/`LandingService`/`Offer`/`Attraction`/`Zone`*
@@ -118,12 +153,21 @@ sustituye cada contrato por un doble y exige que el consumidor real cambie de co
 7. **Cierre**: retirar `app/Support`/`app/Models` vacíos, baseline final en la allowlist,
    reescribir `ARQUITECTURA.md` y rutas citadas en docs.
 
-**Checklist mecánico de CADA paso de movimiento**: `git mv` + namespace + imports (app y
-tests) · grep de FQCN inline en **blades** (~30 usos detectados) · **migraciones históricas**
-que importen la clase (`Legacy*`/`*Backfill` — se editan sus imports en el mismo commit) ·
-citas en docs (DoD-4) · suite + Pint + docs-check · si toca modelos: nota de deploy «cola
-drenada + `queue:restart`» (payloads serializados con FQCN; `failed_jobs` legacy se
-reintenta o vacía ANTES).
+**Checklist mecánico de CADA paso de movimiento** (afinado tras el paso 2 — §4.ter):
+0. **Medir las dependencias INVISIBLES** de lo que se mueve y de lo que se queda: referencias a
+   clases hermanas del mismo namespace que no necesitan `use`. Son la causa nº1 de rotura y no
+   se ven en el grafo de imports. Se añade el `use` explícito en el MISMO commit.
+1. `git mv` + namespace + imports (app y tests).
+2. Grep de FQCN inline en **blades** (26 reales en el paso 2, la estimación era ~30).
+3. **Migraciones históricas**: distinguir dos casos opuestos —
+   · las que **importan** la clase (`Legacy*`/`*Backfill`) → se editan sus imports;
+   · las que llevan el FQCN como **cadena de datos** (`convert_morph_types_to_aliases`) →
+     ⛔ **se congelan**: describen filas ya guardadas, no código de hoy.
+4. Citas en docs (DoD-4) — lo caza `docs-check`, que vetó los dos pasos.
+5. Suite + Pint + docs-check; si el diff toca `OrderCreator`/`RedsysReturnHandler`/
+   `SlotGenerator` —aunque sea solo para añadir un `use`— el gate exige `VERIFY_CONC=1`.
+6. Si toca modelos: nota de deploy «cola drenada + `queue:restart`» (payloads serializados con
+   FQCN; `failed_jobs` legacy se reintenta o vacía ANTES).
 
 ## 6. Riesgos (de la revisión adversarial, con mitigación)
 1. Gate `VERIFY_CONC` moría al mover el núcleo (ancla por ruta) → resuelto en paso 0.

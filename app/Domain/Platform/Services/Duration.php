@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
 /**
  * Formato humanizado de duraciones en minutos para la operativa del panel

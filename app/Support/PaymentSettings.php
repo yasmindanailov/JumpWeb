@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Helpers defensivos para los settings críticos del módulo de pagos.

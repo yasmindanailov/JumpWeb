@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Catalog\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Catalog\Concerns\InteractsWithCatalogForm;
 use App\Models\TicketType;
-use App\Support\AuditLogger;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;

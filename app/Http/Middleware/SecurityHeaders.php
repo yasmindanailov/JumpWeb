@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Support\SocialEmbed;
 use Closure;
 use Illuminate\Http\Request;

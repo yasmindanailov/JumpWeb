@@ -2,9 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Models\Order;
-use App\Models\Setting;
-use App\Support\DisplayTime;
 use App\Support\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

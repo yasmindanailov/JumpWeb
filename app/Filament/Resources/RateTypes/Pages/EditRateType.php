@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\RateTypes\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\RateTypes\Concerns\InteractsWithRateTypeForm;
 use App\Filament\Resources\RateTypes\RateTypeResource;
 use App\Models\RateType;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

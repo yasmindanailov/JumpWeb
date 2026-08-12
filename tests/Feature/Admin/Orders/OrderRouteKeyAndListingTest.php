@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Models\Order;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\DisplayTime;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

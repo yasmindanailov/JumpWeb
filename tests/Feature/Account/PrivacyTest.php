@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Account;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Livewire\Account\DeleteAccount;
-use App\Models\AuditLog;
 use App\Models\Consent;
 use App\Models\Order;
 use App\Models\OrderItem;

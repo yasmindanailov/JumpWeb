@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
-use App\Models\Setting;
 use App\Support\Redsys;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

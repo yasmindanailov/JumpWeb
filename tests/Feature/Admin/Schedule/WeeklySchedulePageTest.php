@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Schedule;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Pages\WeeklySchedule;
-use App\Models\AuditLog;
 use App\Models\OpeningHour;
 use App\Models\Role;
 use App\Models\User;

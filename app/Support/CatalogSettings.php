@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Ajustes del catálogo del sidebar de compra (editables desde el panel, #226).

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\PhoneNormalizer;
 use App\Models\Consent;
 use App\Models\Role;
 use App\Models\User;

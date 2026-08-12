@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\AuditLogs;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Role;

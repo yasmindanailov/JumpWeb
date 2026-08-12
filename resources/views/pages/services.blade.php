@@ -83,7 +83,7 @@
                                      `price_table` (hoy «Excursiones de colegio»). Pestañas de zona (Kids/Jump) +
                                      tablitas por duración con columnas L–V / finde. SOLO presentación; reserva por teléfono. --}}
                                 @if (! empty($service->price_table['zones'] ?? null))
-                                    @php($fmt = fn (int $c): string => $c % 100 === 0 ? intdiv($c, 100).' €' : \App\Support\Money::format($c))
+                                    @php($fmt = fn (int $c): string => $c % 100 === 0 ? intdiv($c, 100).' €' : \App\Domain\Platform\Services\Money::format($c))
                                     @php($unit = $service->price_table['unit'] ?? 'kids')
                                     <div class="svc-rates" x-data="{ rz: 0 }">
                                         <span class="svc-rates__title">{{ __('services.rates.title') }}</span>

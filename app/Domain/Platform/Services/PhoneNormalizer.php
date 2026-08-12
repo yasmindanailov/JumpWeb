@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
 /**
  * Normalización ÚNICA de teléfonos del proyecto (#264-audit). Convierte a SOLO dígitos: quita

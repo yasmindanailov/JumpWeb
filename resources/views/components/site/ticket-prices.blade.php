@@ -12,7 +12,7 @@
     // las entradas; si lo llena (≥4) va como BANDA horizontal debajo, visible solo cuando esa zona está
     // activa. Solo con registro EXTERNO. El SVG del QR se genera UNA vez y se reutiliza en cada instancia.
     $hasReg = ! empty($site['registration_url'] ?? null);
-    $regSvg = $hasReg ? \App\Support\QrCode::svg($site['registration_url']) : null;
+    $regSvg = $hasReg ? \App\Domain\Platform\Services\QrCode::svg($site['registration_url']) : null;
     $fullZoneSlugs = []; // zonas cuyo grid llena las 4 columnas → la card va de banda (no inline)
 @endphp
 

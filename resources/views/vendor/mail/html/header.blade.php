@@ -10,6 +10,6 @@
 --}}
 <tr>
 <td class="header">
-<a href="{{ $url }}" style="display: inline-block; text-decoration: none;">{{ \App\Models\Setting::value('business.name') ?: config('app.name') }}<span class="brand-dot" style="display:inline-block; width:9px; height:9px; margin-left:3px; border-radius:2px; background: {{ \App\Support\ThemeSettings::brand() }};"></span></a>
+<a href="{{ $url }}" style="display: inline-block; text-decoration: none;">{{ \App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name') }}<span class="brand-dot" style="display:inline-block; width:9px; height:9px; margin-left:3px; border-radius:2px; background: {{ \App\Support\ThemeSettings::brand() }};"></span></a>
 </td>
 </tr>

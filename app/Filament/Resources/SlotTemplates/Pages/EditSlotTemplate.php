@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\SlotTemplates\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\SlotTemplates\Concerns\InteractsWithSlotTemplateForm;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
 use App\Models\SlotTemplate;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

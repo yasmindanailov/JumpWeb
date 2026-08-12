@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Seasons\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Seasons\Concerns\InteractsWithSeasonForm;
 use App\Filament\Resources\Seasons\SeasonResource;
 use App\Models\Season;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

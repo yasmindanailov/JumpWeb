@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Admin\Access;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;

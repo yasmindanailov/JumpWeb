@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
-use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Foundation\Testing\RefreshDatabase;

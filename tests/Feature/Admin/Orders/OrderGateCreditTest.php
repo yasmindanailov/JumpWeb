@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Orders;
 
-use App\Models\AuditLog;
+use App\Domain\Platform\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderAdjustment;
 use App\Models\OrderItem;

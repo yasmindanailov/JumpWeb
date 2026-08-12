@@ -21,9 +21,9 @@
 | **MySQL** | 8.4 (imagen Sail) |
 | **Vite** | build de JS (`resources/js/app.js`, `resources/js/admin/`) y CSS del panel |
 | PDFs | `barryvdh/laravel-dompdf` (`^3.1`) |
-| QR | `chillerlan/php-qrcode` v5 (ya venía como dependencia de Filament) vía `app/Support/QrCode.php` — SVG inline server-side, sin GD/imagick, color por CSS |
+| QR | `chillerlan/php-qrcode` v5 (ya venía como dependencia de Filament) vía `app/Domain/Platform/Services/QrCode.php` — SVG inline server-side, sin GD/imagick, color por CSS |
 | Pagos | **Redsys** con **conector propio**: `app/Support/Redsys.php` (único punto que conoce la criptografía) + clases vendorizadas `app/Support/Redsys/Vendor/{Signature,Utils}.php`. Sin paquete externo |
-| Anti-bot | Cloudflare Turnstile (`app/Support/Turnstile.php`) |
+| Anti-bot | Cloudflare Turnstile (`app/Domain/Platform/Services/Turnstile.php`) |
 
 **CSS — dos mundos separados:**
 - **Web pública:** CSS estático (`public/css/landing.css` del mockup + `public/css/site.css` propio + `public/css/spinner.css`). NO Tailwind.
@@ -32,7 +32,7 @@
 ## 2. Enfoques propios (no paquetes)
 
 - **Traducciones de contenido:** trait propio `HasTranslations`
-  (`app/Models/Concerns/HasTranslations.php`): campos ES/EN/FR como JSON, se leen con
+  (`app/Domain/Platform/Concerns/HasTranslations.php`): campos ES/EN/FR como JSON, se leen con
   `$model->tr('campo')`. NO `spatie/laravel-translatable` (DECISIONES).
 - **Auth:** a medida sobre Livewire con modales (`app/Livewire/Auth/`). NO Breeze/Fortify.
   Reglas en `SEGURIDAD.md`.
@@ -64,28 +64,31 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
 
 > ⚠️ **En migración (Fase 2, `docs/specs/modulos-dominio.md`)**: el destino es
 > `app/Domain/<Contexto>/{Contracts,Models,Services,…}` con 5 módulos (Booking · Content ·
-> Identity · Payments · Platform). Desde el paso 1 (2026-08-12) existen ya
-> `app/Domain/Booking/` y `app/Domain/Payments/` con sus **contratos** y sus ServiceProviders;
-> las implementaciones siguen en `app/Support`/`app/Models` y mudan en los pasos 2–6. La
-> frontera la impone `tests/Feature/Architecture/ModuleBoundariesTest.php`. Este árbol se
-> reescribe entero en el paso 7.
+> Identity · Payments · Platform). Al 2026-08-12 están hechos el paso 1 (contratos) y el
+> paso 2 (**Platform mudado entero**); Content, Identity, Payments y Booking siguen en
+> `app/Support`/`app/Models` y mudan en los pasos 3–6. La frontera la impone
+> `tests/Feature/Architecture/ModuleBoundariesTest.php`. Este árbol se reescribe en el paso 7.
 
 ```
 app/
-  Domain/           🆕 módulos de dominio (Fase 2). Hoy: Booking/Contracts (CustomerReservations,
-                    PublishableCatalog + DTOs) · Payments/Contracts (RefundGateway, RefundResult)
-                    + <Módulo>ServiceProvider con los bindings a las implementaciones legacy.
-                    Regla: desde fuera de app/Domain SOLO se tocan los `Contracts`.
-  Models/           ~30 modelos planos (Order, OrderItem, Ticket, TicketType, Slot,
-                    SlotTemplate, Season, SpecialDate, Zone, Attraction, Room, Setting,
-                    LandingService, Offer, Payment, PaymentRefund, Role, Permission, …)
-                    + Models/Concerns/ (HasTranslations)
-  Support/          ⚠️ AQUÍ viven los SERVICIOS DE DOMINIO (NO existe app/Services):
-                    directorio plano de clases de propósito único — OrderCreator,
-                    TicketIssuer, SlotGenerator, SlotAvailability, PackAvailability,
-                    RateResolver, AddonResolver, Cart, Money, Redsys*, QrCode,
-                    ParkSchedule, CookieConsent, AuditLogger, *Settings (ThemeSettings,
-                    PaymentSettings, PuertaSettings, …), etc.
+  Domain/
+    Platform/       ✅ MUDADO (paso 2). Base compartida: todos pueden depender de ella y ella
+                    de nadie. Models/ (Setting, AuditLog) · Services/ (AuditLogger, DisplayTime,
+                    Money, Duration, PhoneNormalizer, MaintenanceSettings, QrCode, Turnstile) ·
+                    Concerns/ (HasTranslations) · Enums/ (DashboardPeriod).
+    Booking/        Contracts/ (CustomerReservations, PublishableCatalog + DTOs) + ServiceProvider.
+    Payments/       Contracts/ (RefundGateway, RefundResult) + ServiceProvider.
+                    Regla: desde fuera de app/Domain solo se tocan los `Contracts` de un
+                    módulo — salvo Platform, que es la base común y se usa entera.
+  Models/           modelos aún sin mudar (Order, OrderItem, Ticket, TicketType, Slot,
+                    SlotTemplate, Season, SpecialDate, Zone, Attraction, Room,
+                    LandingService, Offer, Payment, PaymentRefund, Role, Permission, User…)
+                    + Models/Concerns/ (traits de Booking/Payments)
+  Support/          ⚠️ AQUÍ viven los SERVICIOS DE DOMINIO aún sin mudar (NO existe
+                    app/Services): directorio plano — OrderCreator, TicketIssuer,
+                    SlotGenerator, SlotAvailability, PackAvailability, RateResolver,
+                    AddonResolver, Cart, Redsys*, ParkSchedule, CookieConsent,
+                    *Settings (ThemeSettings, PaymentSettings, PuertaSettings, …), etc.
   Livewire/         Site/ · Auth/ · Account/ · Admin/ · Tickets/ (Purchase) · Concerns/
   Filament/         Resources/ (Orders, Catalog, Slots, SlotTemplates, Seasons,
                     SpecialDates, Zones, Attractions, LandingServices, Offers, Pages,

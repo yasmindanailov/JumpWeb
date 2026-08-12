@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Site;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;

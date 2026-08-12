@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Support\AuditLogger;
 use App\Support\ReservationSlip;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;

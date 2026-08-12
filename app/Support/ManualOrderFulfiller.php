@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Exceptions\ReservationException;
 use App\Models\Order;
 use App\Models\Payment;

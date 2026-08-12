@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Slot;
@@ -10,7 +11,6 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;
-use App\Support\DisplayTime;
 use App\Support\PaymentSettings;
 use App\Support\SlotGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;

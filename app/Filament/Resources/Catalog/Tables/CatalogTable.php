@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Catalog\Tables;
 
+use App\Domain\Platform\Services\Duration;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\Duration;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;

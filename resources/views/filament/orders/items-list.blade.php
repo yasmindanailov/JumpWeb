@@ -1,7 +1,7 @@
 @php
     use App\Models\OrderItem;
-    use App\Support\DisplayTime;
-    use App\Support\Duration;
+    use App\Domain\Platform\Services\DisplayTime;
+    use App\Domain\Platform\Services\Duration;
 
     /** @var \App\Models\Order $record */
     // #F11: ocultamos también los PRINCIPALES voided-leftover (cancelados net-cero,
@@ -330,7 +330,7 @@
                 // subtotal individual; el TOTAL y el split (online/puerta/devuelto) los
                 // pinta el partial compartido `reservation-financials`.
                 $rf = \App\Support\ReservationFinancials::make($record, $item);
-                $fmt = fn (int $cents) => \App\Support\Money::format($cents);
+                $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
             @endphp
 
             <div class="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 text-sm">

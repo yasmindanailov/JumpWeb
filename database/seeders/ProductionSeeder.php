@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Attraction;
 use App\Models\OpeningHour;
 use App\Models\Order;
 use App\Models\RateType;
 use App\Models\Season;
-use App\Models\Setting;
 use App\Models\SlotTemplate;
 use App\Models\SpecialDate;
 use App\Models\TicketType;

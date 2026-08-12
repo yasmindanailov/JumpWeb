@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Domain\Payments\Contracts\RefundResult;
+use App\Domain\Platform\Models\Setting;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
-use App\Models\Setting;
 use App\Support\Redsys;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;

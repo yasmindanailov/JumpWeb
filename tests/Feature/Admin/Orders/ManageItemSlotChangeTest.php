@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Permission;
 use App\Models\RateType;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\SpecialDate;
 use App\Models\TicketType;

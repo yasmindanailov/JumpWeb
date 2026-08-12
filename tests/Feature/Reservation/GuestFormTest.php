@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Reservation;
 
-use App\Models\AuditLog;
+use App\Domain\Platform\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Slot;

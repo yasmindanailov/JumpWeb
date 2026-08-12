@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\Orders\Pages;
 
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentRefund;
@@ -19,7 +20,6 @@ use App\Notifications\OrderItemRefunded;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderRefunded;
 use App\Support\AddonResolver;
-use App\Support\AuditLogger;
 use App\Support\PackAvailability;
 use App\Support\ParkSchedule;
 use App\Support\PaymentSettings;

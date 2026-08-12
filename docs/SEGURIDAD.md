@@ -24,7 +24,7 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - Enlaces de **reset con caducidad** 60 min y antiflood (`config/auth.php`, `expire => 60`).
 - Protección **CSRF** de Laravel activa en formularios web.
 - Cabeceras de seguridad + **CSP progresiva** vía middleware `SecurityHeaders` (ver regla 9).
-- **Turnstile** data-driven (`app/Support/Turnstile.php`; ver regla 5).
+- **Turnstile** data-driven (`app/Domain/Platform/Services/Turnstile.php`; ver regla 5).
 - `User::anonymize()` y logging sensible con hash (`logSensitive`; ver regla 7).
 
 ## Reglas (qué debe cumplir el código)
@@ -54,7 +54,7 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 ### 5. Anti-bot *(Reforzado)*
 - **Cloudflare Turnstile** (o hCaptcha) en registro y formularios públicos. Clave en `settings`
   (data-driven); si no hay clave configurada, se desactiva solo. Implementado en
-  `app/Support/Turnstile.php` + `Livewire/Auth/Register` + `ContactController`.
+  `app/Domain/Platform/Services/Turnstile.php` + `Livewire/Auth/Register` + `ContactController`.
 
 ### 6. Autorización — OWASP A01
 - **Roles / permisos** (`admin`, `customer`; preparado para `staff`) con Gates/Policies.

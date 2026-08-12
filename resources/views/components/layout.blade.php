@@ -83,7 +83,7 @@
          «solo él la ve». Los visitantes ven la página de mantenimiento (503), no este layout. El
          orden del `&&` hace short-circuit en `auth()->check()` → para visitantes NO se consulta el
          setting (sin coste). --}}
-    @if (auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('staff')) && \App\Support\MaintenanceSettings::siteInMaintenance())
+    @if (auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('staff')) && \App\Domain\Platform\Services\MaintenanceSettings::siteInMaintenance())
         <div class="maint-banner" role="status">
             <span class="maint-banner__text">{{ __('site.maintenance.preview_banner') }}</span>
             <a href="{{ url('/admin/configuracion/maintenance') }}" class="maint-banner__link">{{ __('site.maintenance.preview_manage') }} →</a>

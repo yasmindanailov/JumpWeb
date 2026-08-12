@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Sales;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\Zone;

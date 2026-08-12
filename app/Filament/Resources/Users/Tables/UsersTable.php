@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
-use App\Support\DisplayTime;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;

@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Concerns\RegeneratesSlots;
 use App\Models\OpeningHour;
-use App\Support\AuditLogger;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Forms\Components\TimePicker;

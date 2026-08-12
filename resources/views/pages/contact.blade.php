@@ -73,8 +73,8 @@
                 {{-- Anti-bot Turnstile (auditoría Fase 1, A4): solo se renderiza si hay claves
                      configuradas (security.turnstile_*). Sin claves no aparece nada y el envío funciona
                      igual. El CSP ya permite challenges.cloudflare.com (script-src/frame-src). --}}
-                @if (\App\Support\Turnstile::enabled())
-                    <div class="cf-turnstile" data-sitekey="{{ \App\Support\Turnstile::siteKey() }}"></div>
+                @if (\App\Domain\Platform\Services\Turnstile::enabled())
+                    <div class="cf-turnstile" data-sitekey="{{ \App\Domain\Platform\Services\Turnstile::siteKey() }}"></div>
                     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
                 @endif
 

@@ -4,10 +4,10 @@ namespace App\Support;
 
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
+use App\Domain\Platform\Models\Setting;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
-use App\Models\Setting;
 use App\Support\Redsys\Vendor\Signature;
 use App\Support\Redsys\Vendor\Utils;
 use Illuminate\Support\Facades\DB;

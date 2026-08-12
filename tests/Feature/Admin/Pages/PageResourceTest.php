@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Pages;
 
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Resources\Pages\PageResource;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Models\Page;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

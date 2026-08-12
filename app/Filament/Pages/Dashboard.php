@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Platform\Enums\DashboardPeriod;
 use App\Filament\Concerns\PrintsDaySummary;
-use App\Support\DashboardPeriod;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Pages\Dashboard as BaseDashboard;

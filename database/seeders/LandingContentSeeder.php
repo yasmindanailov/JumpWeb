@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\Attraction;
 use App\Models\Faq;
 use App\Models\LandingService;
 use App\Models\Page;
 use App\Models\ParkRule;
 use App\Models\RateType;
-use App\Models\Setting;
 use App\Models\TicketType;
 use App\Models\Zone;
 use App\Support\CookiePolicyContent;
@@ -100,7 +100,7 @@ class LandingContentSeeder extends Seeder
             ['key' => 'packs.prep_blocks_cupo', 'value' => '1', 'group' => 'packs'],    // 1 = sí, 0 = solo la franja de inicio
             // Mantenimiento — subsistema de disponibilidad (#218, fuera de roadmap). OFF por defecto:
             // el mantenimiento exige opt-in EXPLÍCITO desde el panel (Configuración → Mantenimiento)
-            // y es fail-safe (un valor corrupto NO cierra la web; ver App\Support\MaintenanceSettings).
+            // y es fail-safe (un valor corrupto NO cierra la web; ver App\Domain\Platform\Services\MaintenanceSettings).
             // El mensaje por idioma es un override OPCIONAL; vacío → texto i18n por defecto.
             ['key' => 'maintenance.site', 'value' => '0', 'group' => 'maintenance'],    // 1 = toda la web en mantenimiento
             ['key' => 'maintenance.message.es', 'value' => '', 'group' => 'maintenance'],
@@ -113,7 +113,7 @@ class LandingContentSeeder extends Seeder
             ['key' => 'reservations.paused', 'value' => '0', 'group' => 'maintenance'],
             // Mantenimiento POR PÁGINA (#218, item 1): '0' = disponible (default). '1' = esa página
             // muestra «sección no disponible» (503) con el nav/pie para navegar a otras. Lista fija
-            // = App\Support\MaintenanceSettings::PAGE_KEYS (home/precios/cumpleanos/servicios/normas/contacto).
+            // = App\Domain\Platform\Services\MaintenanceSettings::PAGE_KEYS (home/precios/cumpleanos/servicios/normas/contacto).
             ['key' => 'maintenance.page.home', 'value' => '0', 'group' => 'maintenance'],
             ['key' => 'maintenance.page.precios', 'value' => '0', 'group' => 'maintenance'],
             ['key' => 'maintenance.page.cumpleanos', 'value' => '0', 'group' => 'maintenance'],

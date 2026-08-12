@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;

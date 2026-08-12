@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Exceptions\ReservationException;
-use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RateType;

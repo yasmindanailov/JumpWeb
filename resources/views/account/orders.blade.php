@@ -40,7 +40,7 @@
                                 @endif
                             </span>
                         </div>
-                        <div class="orders__meta">{{ \App\Support\DisplayTime::format($order->created_at) }}</div>
+                        <div class="orders__meta">{{ \App\Domain\Platform\Services\DisplayTime::format($order->created_at) }}</div>
 
                         <div class="orders__products">
                             {{-- #F11: ocultamos los PRINCIPALES "fantasma" net-cero (cancelados,
@@ -161,7 +161,7 @@
                              revisa #139a). Ledger: "Subtotal" → cambios → "Total" (en vez de
                              "Neto", #198.3). Estilo inline `@php(...)` (coherencia del fichero). --}}
                         @php($s = $order->financialSummary())
-                        @php($eur = fn (int $c) => \App\Support\Money::format($c))
+                        @php($eur = fn (int $c) => \App\Domain\Platform\Services\Money::format($c))
                         @php($refundColCents = (int) ($order->refund_amount_cents ?? 0))
                         @php($hasRefundCol = $order->refunded_at !== null && $refundColCents > 0)
                         @php($hasBreakdown = $s->hasPendingAtGate() || $hasRefundCol || $s->hasPendienteDevolucion())
@@ -225,7 +225,7 @@
                         @if ($hasRefundCol)
                             <div class="orders__refund">
                                 <span class="orders__refund-label">
-                                    {{ __('tickets.refunded_on', ['date' => \App\Support\DisplayTime::format($order->refunded_at, 'd/m/Y')]) }}
+                                    {{ __('tickets.refunded_on', ['date' => \App\Domain\Platform\Services\DisplayTime::format($order->refunded_at, 'd/m/Y')]) }}
                                 </span>
                                 <strong class="orders__refund-amount">−{{ $eur($refundColCents) }}</strong>
                             </div>

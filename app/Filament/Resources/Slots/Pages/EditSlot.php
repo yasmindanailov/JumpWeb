@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Slots\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Slots\Concerns\InteractsWithSlotForm;
 use App\Filament\Resources\Slots\SlotResource;
 use App\Models\Slot;
 use App\Models\SlotTemplate;
-use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;

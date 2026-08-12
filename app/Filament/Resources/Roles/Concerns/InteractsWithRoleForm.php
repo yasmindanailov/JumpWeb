@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Roles\Concerns;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Support\AuditLogger;
 use App\Support\PermissionCatalog;
 
 /**

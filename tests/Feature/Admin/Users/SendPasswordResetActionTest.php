@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Users\Pages\ViewUser;
-use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;

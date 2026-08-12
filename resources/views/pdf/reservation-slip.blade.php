@@ -14,7 +14,7 @@
 --}}
 @php
     use App\Models\Order;
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
     use App\Support\ReservationSlip;
 
     // Badge de estado de pago: SOLO se muestra cuando el pedido NO está pagado
@@ -216,7 +216,7 @@
     <table>
         <tr>
             <td style="width: 55%;">
-                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
+                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
                 <div class="doc-title">{{ __('admin.orders.slip.title') }}</div>
             </td>
             <td style="width: 45%; text-align: right;">

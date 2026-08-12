@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Catalog\RelationManagers;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Models\ProductAddon;
 use App\Models\TicketType;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Platform\Services\Duration;
 use App\Http\Controllers\Controller;
 use App\Models\OrderItem;
 use App\Models\TicketType;
-use App\Support\Duration;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

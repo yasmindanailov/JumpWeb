@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Orders;
 
-use App\Models\AuditLog;
+use App\Domain\Platform\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\CustomerAccountCreated;

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Admin\Dashboard;
 
+use App\Domain\Platform\Models\Setting;
 use App\Filament\Widgets\ReservationsWidget;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;

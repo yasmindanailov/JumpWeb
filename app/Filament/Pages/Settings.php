@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Setting;
-use App\Support\AuditLogger;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\AuditLogger;
 use App\Support\CatalogSettings;
 use App\Support\MapsEmbed;
 use App\Support\PaymentSettings;

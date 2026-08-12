@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Services;
 
 /**
  * Formateo ÚNICO de importes en céntimos al estilo ES ("1.234,56 €").

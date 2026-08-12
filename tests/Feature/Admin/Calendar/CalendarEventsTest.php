@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Calendar;
 
+use App\Domain\Platform\Services\Duration;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Permission;
@@ -10,7 +11,6 @@ use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\User;
 use App\Models\Zone;
-use App\Support\Duration;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

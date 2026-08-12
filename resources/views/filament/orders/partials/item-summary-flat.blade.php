@@ -20,7 +20,7 @@
      * zona. El subtítulo redundante con el nombre se elimina. El precio del
      * principal queda alineado a la derecha del bloque fecha+hora.
      */
-    use App\Support\Duration;
+    use App\Domain\Platform\Services\Duration;
 
     $showChildren = $showChildren ?? false;
 

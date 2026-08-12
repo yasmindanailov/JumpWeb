@@ -44,7 +44,7 @@
                             @foreach ($consents as $consent)
                                 <li>
                                     <span class="account__consent-type">{{ __('account.account.privacy.consent_types.'.$consent->type) }}</span>
-                                    <span class="account__consent-meta">{{ \App\Support\DisplayTime::format($consent->accepted_at, 'd/m/Y') }} · v{{ $consent->version }}</span>
+                                    <span class="account__consent-meta">{{ \App\Domain\Platform\Services\DisplayTime::format($consent->accepted_at, 'd/m/Y') }} · v{{ $consent->version }}</span>
                                 </li>
                             @endforeach
                         </ul>

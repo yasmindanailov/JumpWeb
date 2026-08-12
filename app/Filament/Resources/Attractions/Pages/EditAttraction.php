@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Attractions\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\Attractions\Concerns\InteractsWithAttractionForm;
 use App\Models\Attraction;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

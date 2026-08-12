@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonInterface;
 
 /**

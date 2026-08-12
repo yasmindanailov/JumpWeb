@@ -19,7 +19,7 @@
      * estructurada para `*_blocked`, transiciones de estado para los demás.
      */
     use App\Models\Order;
-    use App\Support\DisplayTime;
+    use App\Domain\Platform\Services\DisplayTime;
 
     // Eager load idempotente: garantiza que el lookup `$order->items->firstWhere(...)`
     // dentro del loop no dispare N+1 queries por `ticketType`/`slot` de cada item.

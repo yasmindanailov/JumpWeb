@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Puerta;
 
-use App\Models\Setting;
+use App\Domain\Platform\Models\Setting;
 use App\Support\PuertaSettings;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

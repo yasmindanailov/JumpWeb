@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Zones\Pages;
 
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Zones\Concerns\InteractsWithZoneForm;
 use App\Filament\Resources\Zones\ZoneResource;
 use App\Models\Slot;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

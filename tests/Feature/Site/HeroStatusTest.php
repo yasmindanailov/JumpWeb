@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Platform\Models\Setting;
 use App\Models\OpeningHour;
-use App\Models\Setting;
 use App\Models\SpecialDate;
 use App\Support\HeroStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;

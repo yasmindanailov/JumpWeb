@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Platform\Enums;
 
+use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 

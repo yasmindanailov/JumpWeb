@@ -47,12 +47,20 @@ class ModuleBoundariesTest extends TestCase
      * Costura Booking↔Payments: el dinero. Explícita fichero a fichero — no es un permiso de
      * módulo, es una lista de flechas concretas que la revisión aceptó (spec §4 y §6).
      *
-     * Hoy vacía: la llamada real (`Order` → `RefundGateway`) sigue en `app/Models/Order.php` y
+     * Incluye también las **relaciones Eloquent cruzadas**, que el spec §4 exime a propósito:
+     * son costura de BASE DE DATOS (una FK), no una llamada de dominio, y romperlas costaría
+     * más de lo que ordenan.
+     *
+     * La llamada de dinero real (`Order` → `RefundGateway`) sigue en `app/Models/Order.php` y
      * entra aquí cuando Booking mude en el paso 6.
      *
      * @var array<string, list<string>>
      */
-    private const SEAM = [];
+    private const SEAM = [
+        // `audit_logs.user_id` → quién hizo la acción. Relación Eloquent, costura de BD (§4).
+        // Platform no depende de Identity: solo declara la FK que ya existe en el esquema.
+        'Platform/Models/AuditLog.php' => ['App\Models\User'],
+    ];
 
     /**
      * Baseline LEGACY: referencias desde `app/Domain` a código que aún no se ha modularizado
@@ -152,11 +160,21 @@ class ModuleBoundariesTest extends TestCase
     }
 
     /**
-     * Puerta de entrada: el resto de `app/` (capa de entrega y código aún sin modularizar) solo
-     * puede hablar con los `Contracts` de un módulo. Es la mitad que impide que la modularización
-     * se convierta en «mover carpetas y seguir llamando a lo de dentro».
+     * Puerta de entrada: el resto de `app/` (capa de entrega y código aún sin modularizar) habla
+     * con los `Contracts` de un módulo, nunca con sus tripas. Es la mitad que impide que la
+     * modularización se convierta en «mover carpetas y seguir llamando a lo de dentro».
+     *
+     * **Platform queda EXENTO por diseño**, no por comodidad: el grafo del spec §4 dice
+     * «todos→Platform». Platform es la base compartida (settings, audit, formateo, i18n) y no
+     * tiene `Contracts` porque no es una costura de dominio que haya que poder sustituir —
+     * meterle una interfaz a `Money::format()` sería ceremonia sin lector. Exigirle contratos
+     * habría obligado a inventar 12 interfaces de una línea, justo la «superficie nueva» que
+     * el spec prohíbe.
+     *
+     * Los `Models/` de los módulos NO-Platform aún no existen; cuando Content mude (paso 3) esa
+     * decisión se toma ALLÍ y con datos, no se preautoriza aquí.
      */
-    public function test_code_outside_the_modules_only_touches_contracts(): void
+    public function test_code_outside_the_modules_only_touches_contracts_or_platform(): void
     {
         $violations = [];
 
@@ -167,6 +185,10 @@ class ModuleBoundariesTest extends TestCase
 
             foreach ($this->appReferences($file) as $reference) {
                 if (! str_starts_with($reference, 'App\\Domain\\')) {
+                    continue;
+                }
+                // Platform entero: base compartida (spec §4, «todos→Platform»).
+                if (str_starts_with($reference, 'App\\Domain\\Platform\\')) {
                     continue;
                 }
                 // App\Domain\<Módulo>\Contracts\<Símbolo>
@@ -180,7 +202,8 @@ class ModuleBoundariesTest extends TestCase
 
         $this->assertSame(
             [], $violations,
-            "Fuera de app/Domain solo se pueden usar los Contracts de un módulo:\n".implode("\n", $violations)
+            "Fuera de app/Domain solo se pueden usar los Contracts de un módulo (o Platform entero):\n"
+            .implode("\n", $violations)
         );
     }
 

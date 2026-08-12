@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\Money;
+use App\Domain\Platform\Services\Money;
 use PHPUnit\Framework\TestCase;
 
 /**
