@@ -1,0 +1,585 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+/* Páginas Livewire del entorno admin que reusan este theme custom (decisión #126):
+ * la página de validar registro en puerta vive bajo `resources/views/livewire/admin/`
+ * y necesita que Tailwind 4 escanee sus utilities. */
+@source '../../../../resources/views/livewire/admin/**/*';
+@source '../../../../resources/views/layouts/puerta.blade.php';
+
+/* Paletas semánticas para la página de validar registro en puerta (#126).
+ *
+ * Filament 5 + Tailwind 4 tree-shakean agresivamente: el bundle del theme base
+ * de Filament solo incluye las variables de colores que sus propios componentes
+ * usan (gray, amber via primary). Las paletas estándar Tailwind (green, orange,
+ * red, etc.) NO están en el bundle aunque las clases utility `bg-green-50` SÍ
+ * compilan — resultado: clase aplicada pero color no resuelve.
+ *
+ * Declaración explícita de los 5 tonos por paleta que la vista usa (50/300/400/
+ * 600/700). Valores OKLCH = los oficiales de Tailwind 4 (verificables en su doc).
+ * Mantenerlos al día NO es preocupación: son colores estándar muy estables. */
+@theme {
+    --color-green-50:  oklch(98.2% 0.018 155.826);
+    --color-green-300: oklch(87.1% 0.150 154.449);
+    --color-green-400: oklch(79.2% 0.209 151.711);
+    --color-green-600: oklch(62.7% 0.194 149.214);
+    --color-green-700: oklch(52.7% 0.154 150.069);
+
+    --color-orange-50:  oklch(98.0% 0.016  73.684);
+    --color-orange-300: oklch(83.7% 0.128  66.290);
+    --color-orange-400: oklch(75.0% 0.183  55.934);
+    --color-orange-600: oklch(64.6% 0.222  41.116);
+    --color-orange-700: oklch(55.3% 0.195  38.402);
+
+    --color-red-50:  oklch(97.1% 0.013 17.380);
+    --color-red-300: oklch(80.8% 0.114 19.571);
+    --color-red-400: oklch(70.4% 0.191 22.216);
+    --color-red-600: oklch(57.7% 0.245 27.325);
+    --color-red-700: oklch(50.5% 0.213 27.518);
+}
+
+/* ─── Detalle de Order: layout 2-col con alturas independientes vía Flexbox ────
+ *
+ * Reemplaza el CSS Grid (versiones previas #135–#136) que sufría del problema
+ * clásico de Grid: un item span (Productos abarcando todas las filas) DISTRIBUYE
+ * su altura entre las filas que ocupa → Resumen y Detalles aparecían "empujadas"
+ * por la altura de Productos (gap vertical entre Resumen y Detalles ≈ altura
+ * Productos / 3).
+ *
+ * Decisión #137: usar `Filament\Schemas\Components\Flex::from('lg')` que en lg+
+ * renderiza `flex-row items-start` (alturas de cada columna INDEPENDIENTES, sin
+ * row stretching que es problema exclusivo de CSS Grid). La columna izquierda
+ * (Resumen + Detalles + Pagos en un Group) y la derecha (Productos) tienen su
+ * altura natural.
+ *
+ * **Mobile reorder**: en `flex-col` por defecto, los hijos directos del Flex son
+ * [Group, Items] → orden HTML: Resumen, Detalles, Pagos, Items. Queremos
+ * Resumen → Productos → Detalles → Pagos. Solución:
+ *   1. `display: contents` en los 3 wrappers internos del Group para que sus
+ *      3 sections se promocionen a flex children directos del Flex.
+ *   2. CSS `order` (vía `:has([data-mobile-order])`) para reordenar las 4
+ *      sections (3 del Group ya promocionadas + Items).
+ *
+ * `:has()` es CSS estándar desde 2023, soportado en todos los navegadores
+ * modernos. `display: contents` está soportado desde 2020 con buen status de
+ * accesibilidad. */
+
+/* Mobile (< lg): el Group debe ser transparente y las sections se reordenan. */
+@media (max-width: 1023px) {
+    /* Tres niveles de `display: contents` para "abrir" el Group:
+     *   1) `.fi-growable` que envuelve Group como flex child.
+     *   2) `[data-stack="left"]` (el div externo del Group).
+     *   3) `.fi-sc.fi-grid` (el grid interno del Group). */
+    .fi-sc-flex[data-layout="order-detail"] > .fi-growable:has([data-stack="left"]),
+    .fi-sc-flex[data-layout="order-detail"] [data-stack="left"],
+    .fi-sc-flex[data-layout="order-detail"] [data-stack="left"] > .fi-sc.fi-grid {
+        display: contents;
+    }
+
+    /* CSS order: orden visual en móvil = Resumen → Productos → Detalles → Pagos. */
+    .fi-sc-flex[data-layout="order-detail"] > *:has([data-mobile-order="1"]) { order: 1; }
+    .fi-sc-flex[data-layout="order-detail"] > *:has([data-mobile-order="2"]) { order: 2; }
+    .fi-sc-flex[data-layout="order-detail"] > *:has([data-mobile-order="3"]) { order: 3; }
+    .fi-sc-flex[data-layout="order-detail"] > *:has([data-mobile-order="4"]) { order: 4; }
+}
+
+
+/* ─── Sub-fase 7.2c iter cosmética (decisión #148): zone-card ─────────────
+ *
+ * Card de OrderItem con borde-izquierda de color de zona (`Zone->color`) +
+ * tinta sutil del mismo color de fondo. Reusa los colores de marca ya
+ * establecidos en `landing.css` (`--jump-1: #FF5B22`, `--kids-1: #C6FF3A`).
+ *
+ * El color se pasa como CSS custom property `--zone-color` inline desde el
+ * blade. `color-mix()` (CSS estándar 2023, todos los navegadores modernos)
+ * genera la tinta del fondo sin saturar el contenido.
+ *
+ * Variante `.zone-card--pack`: borde más grueso + tinta de fondo más
+ * intensa para diferenciar packs (cumpleaños) de entradas estándar, manteniendo
+ * el mismo color de zona base (petición explícita de la clienta — el contraste
+ * comunica "es un cumpleaños sin perder la información de zona").
+ *
+ * Estados terminales del item se superponen reduciendo opacidad — el estado
+ * de preparación sigue siendo la dimensión visual principal (ring/badge).
+ */
+.zone-card {
+    --zone-color: #9CA3AF; /* gray-400 fallback si la zona no tiene color asignado */
+    border-left: 4px solid var(--zone-color);
+    background-color: color-mix(in srgb, var(--zone-color) 6%, transparent);
+}
+
+.zone-card--pack {
+    border-left-width: 6px;
+    background-color: color-mix(in srgb, var(--zone-color) 14%, transparent);
+}
+
+/* Dark mode: subimos el porcentaje de mezcla porque el contraste contra fondo
+ * oscuro es menor. */
+.dark .zone-card {
+    background-color: color-mix(in srgb, var(--zone-color) 12%, transparent);
+}
+
+.dark .zone-card--pack {
+    background-color: color-mix(in srgb, var(--zone-color) 22%, transparent);
+}
+
+/* Badge de zona inline en el header de la card y en el resumen del modal.
+ * Pequeño chip pintado del color, texto contrastado por inversión. */
+.zone-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    background-color: color-mix(in srgb, var(--zone-color) 18%, transparent);
+    color: color-mix(in srgb, var(--zone-color) 70%, black);
+    /* `ring` es una utility de Tailwind, NO una propiedad CSS válida: en CSS plano
+     * el navegador la descartaba y el chip se quedaba sin su contorno sutil. El
+     * equivalente real es un box-shadow interno de 1px (#auditoría organización). */
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zone-color) 40%, transparent);
+}
+
+.dark .zone-badge {
+    background-color: color-mix(in srgb, var(--zone-color) 30%, transparent);
+    color: color-mix(in srgb, var(--zone-color) 80%, white);
+}
+
+/* Puntito de color para inline en textos compactos (ej. cabecera del summary
+ * del modal: "● JUMP · 90 min · 10 invitados"). */
+.zone-dot {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    background-color: var(--zone-color);
+    vertical-align: -1px;
+}
+
+/* ─── Fase 7.4 iter2 (decisión clienta): contenido del evento ───────────────
+ *
+ * Cada card renderiza, en orden: [nombre del producto] · [primer nombre del
+ * cliente] · [meta: nº invitados / cantidad + duración]. El COLOR DE FONDO de la
+ * píldora indica el ESTADO operativo (verde = preparado, gris = sin preparar,
+ * atenuado-tachado = finalizado); el color de la ZONA va como línea vertical
+ * lateral (ver `.fc-event` más abajo). Marcar preparado se hace SOLO en el modal
+ * (ya no hay checkbox en el card). */
+.jj-calendar .jj-evt {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    width: 100%;
+    line-height: 1.2;
+}
+
+/* P8: icono del TIPO de producto (entrada → ticket, cumpleaños → tarta). El SVG inline lo inyecta
+ * `calendar.js` SIN width/height → se DIMENSIONA aquí (si no, el SVG no tiene tamaño intrínseco y no
+ * se ve). El color (= color de la zona) lo fija el front inline por evento (`icon.style.color`). */
+.jj-calendar .jj-evt-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    width: 0.9375rem;
+    height: 0.9375rem;
+}
+
+.jj-calendar .jj-evt-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.jj-calendar .jj-evt-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* En mes (daygrid) el cliente se empuja al extremo derecho de la píldora. */
+.jj-calendar .jj-evt-cust {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding-left: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0.85;
+}
+
+/* Meta (invitados / cantidad + duración, punto 3): se oculta en mes —no hay
+ * sitio— y se muestra en semana/día y agenda, donde el evento tiene altura. */
+.jj-calendar .jj-evt-meta {
+    flex: 0 0 auto;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0.75;
+}
+
+.jj-calendar .fc-daygrid-event .jj-evt-meta {
+    display: none;
+}
+
+/* Semana/día: el ICONO y el TÍTULO van INLINE (decisión clienta 2026-06-13), como en la vista de
+ * mes — no apilados. Fila con `flex-wrap`: icono + título ocupan la 1.ª línea; cliente/meta envuelven
+ * debajo en columnas estrechas (sin truncar el título contra ellos). */
+.jj-calendar .fc-timegrid-event .jj-evt {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 1px 5px;
+    height: 100%;
+}
+
+.jj-calendar .fc-timegrid-event .jj-evt-title {
+    white-space: normal;
+}
+
+.jj-calendar .fc-timegrid-event .jj-evt-cust {
+    margin-inline-start: 0;
+    padding-left: 0;
+}
+
+/* Estado operativo = color de fondo de la píldora (punto 2). El texto va en
+ * OSCURO para buen contraste sobre los tintes claros: FullCalendar pinta el
+ * texto con `--fc-event-text-color` (blanco por defecto) en `.fc-event-main`,
+ * así que fijamos esa variable por estado además de `color` (belt-and-suspenders
+ * para herencia y para la vista agenda). */
+.jj-calendar .fc-event--active {
+    --fc-event-text-color: #1f2937; /* gris-900 sobre gris claro */
+    background-color: #e5e7eb; /* neutro: reserva activa (aún no finalizada) */
+    color: #1f2937;
+}
+
+.jj-calendar .fc-event--finished {
+    --fc-event-text-color: #6b7280;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    opacity: 0.6;
+}
+
+.jj-calendar .fc-event--finished .jj-evt-title {
+    text-decoration: line-through;
+}
+
+/* Indicador del formulario de reserva (#217): glifo a la izquierda del título, eje ORTOGONAL al
+ * fondo activo/finalizado. ✓ verde = completo; ! naranja = pendiente. **Decisión clienta
+ * (2026-06-13): SIN círculo/fondo/anillo** — solo el glifo coloreado (menos llamativo). El glifo va
+ * por `::before` (CSS explícito, no se purga) y el color semántico es el del propio glifo. */
+.jj-calendar .jj-evt-form {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.jj-calendar .jj-evt-form::before {
+    content: '✓';
+}
+
+.jj-calendar .jj-evt-form--ok {
+    color: #16a34a; /* verde: formulario completo */
+}
+
+.jj-calendar .jj-evt-form--pending {
+    color: #d97706; /* naranja: formulario pendiente */
+}
+
+.jj-calendar .jj-evt-form--pending::before {
+    content: '!';
+}
+
+/* En finalizado (atenuado), el badge NO se atenúa: el dato sigue importando. */
+.jj-calendar .fc-event--finished .jj-evt-form {
+    opacity: 1;
+}
+
+/* ─── Fase 7.4: tema "SaaS limpio" para FullCalendar (decisión clienta) ─────
+ *
+ * FullCalendar v6 autoinyecta su CSS base; aquí lo modernizamos SOLO dentro de
+ * `.jj-calendar` (no afecta a nada más del panel): píldoras redondeadas con
+ * sombra y hover, selector de vista tipo "segmented", cabeceras en versalitas,
+ * "hoy" y la hora actual con acento de marca (ámbar), bordes suaves. Con
+ * variantes `dark:`. Estética coherente con Filament. */
+.jj-calendar {
+    --fc-border-color: rgb(229 231 235); /* gray-200, rejilla suave */
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgb(249 250 251);
+    --fc-today-bg-color: rgba(245, 158, 11, 0.06); /* tinte ámbar muy sutil */
+    --fc-now-indicator-color: #f59e0b;
+    --fc-list-event-hover-bg-color: rgb(249 250 251);
+    font-size: 0.875rem;
+}
+
+/* Toolbar: título marcado + botones modernos */
+.jj-calendar .fc-toolbar.fc-header-toolbar {
+    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.jj-calendar .fc-toolbar-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: capitalize;
+    color: #111827;
+}
+
+.jj-calendar .fc-button {
+    background: #fff;
+    color: #374151;
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    text-transform: capitalize;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.jj-calendar .fc-button:hover {
+    background: #f9fafb;
+    border-color: rgb(209 213 219);
+    color: #111827;
+}
+
+.jj-calendar .fc-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+.jj-calendar .fc-button .fc-icon {
+    font-size: 1.1em;
+    vertical-align: -1px;
+}
+
+.jj-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.jj-calendar .fc-button-primary:not(:disabled):active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #fff;
+    box-shadow: none;
+}
+
+.jj-calendar .fc-button:disabled {
+    opacity: 0.45;
+}
+
+/* Selector de vista (mes/semana/día/agenda) tipo "segmented control" */
+.jj-calendar .fc-button-group {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    border-radius: 0.5rem;
+}
+
+.jj-calendar .fc-button-group .fc-button {
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+}
+
+.jj-calendar .fc-button-group .fc-button:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.jj-calendar .fc-button-group .fc-button:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.jj-calendar .fc-button-group .fc-button:not(:first-child) {
+    border-left-width: 0;
+}
+
+/* Cabeceras de días de la semana en versalitas discretas */
+.jj-calendar .fc-col-header-cell {
+    background: transparent;
+    padding: 0.5rem 0;
+}
+
+.jj-calendar .fc-col-header-cell-cushion {
+    padding: 0.25rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+}
+
+/* Número de día + realce de "hoy" */
+.jj-calendar .fc-daygrid-day-number {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.jj-calendar .fc-day-today .fc-daygrid-day-number {
+    color: #b45309;
+    font-weight: 700;
+}
+
+/* Punto 7: en la vista MES, toda la celda del día es clicable (→ vista de día).
+ * Cursor de mano + leve realce al pasar para que se note que es pulsable, no
+ * solo el número. */
+.jj-calendar .fc-daygrid-day {
+    cursor: pointer;
+}
+
+.jj-calendar .fc-daygrid-day:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* Eventos como píldoras con sombra y micro-hover. **Refinamiento clienta (2026-06-13): SIN borde
+ * lateral de color** — el color de la ZONA lo lleva el ICONO de tipo (tintado por el front), no una
+ * línea vertical (ahorra espacio horizontal). El antiguo punto de color de la vista agenda también
+ * se retiró, así que ya NO hay consumidor de `--jj-zone-color` (no se fija en el front). */
+.jj-calendar .fc-event {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    /* Cursor de "mano" (no de texto): el evento es clicable; `user-select: none`
+     * evita el I-beam al pasar sobre el texto del producto/cliente. `!important`
+     * para ganar a cualquier regla que FullCalendar inyecte en runtime. */
+    cursor: pointer !important;
+    user-select: none !important;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.jj-calendar .fc-event,
+.jj-calendar .fc-event * {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.jj-calendar .fc-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.jj-calendar .fc-daygrid-event {
+    padding: 2px 7px;
+    margin-top: 2px;
+}
+
+/* Enlace "+N más" discreto */
+.jj-calendar .fc-daygrid-more-link {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+/* Indicador de "ahora" con acento de marca */
+.jj-calendar .fc-timegrid-now-indicator-line {
+    border-color: #f59e0b;
+    border-top-width: 2px;
+}
+
+.jj-calendar .fc-timegrid-now-indicator-arrow {
+    border-color: #f59e0b;
+    background: #f59e0b;
+}
+
+/* Rejilla redondeada y horas suaves */
+.jj-calendar .fc-scrollgrid {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.jj-calendar .fc-timegrid-slot-label-cushion,
+.jj-calendar .fc-timegrid-axis-cushion {
+    font-size: 0.6875rem;
+    color: #9ca3af;
+}
+
+/* Vista agenda (lista) */
+.jj-calendar .fc-list {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.jj-calendar .fc-list-day-cushion {
+    background: #f9fafb;
+}
+
+/* El "dot" de color de la vista agenda se RETIRA (decisión clienta 2026-06-13): el ICONO de tipo
+ * (tintado con el color de zona) ya transmite tipo + color, así que el punto es redundante. Se oculta
+ * la celda gráfica entera (`fc-list-event-graphic`) → la fila gana ancho para el título. */
+.jj-calendar .fc-list-event-graphic {
+    display: none;
+}
+
+/* ── Dark mode ── */
+.dark .jj-calendar {
+    --fc-border-color: rgba(255, 255, 255, 0.08);
+    --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+    --fc-today-bg-color: rgba(245, 158, 11, 0.1);
+    --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.04);
+}
+
+.dark .jj-calendar .fc-toolbar-title {
+    color: #f3f4f6;
+}
+
+.dark .jj-calendar .fc-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: #d1d5db;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .jj-calendar .fc-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.dark .jj-calendar .fc-button-primary:not(:disabled).fc-button-active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #1f2937;
+}
+
+.dark .jj-calendar .fc-daygrid-day-number {
+    color: #9ca3af;
+}
+
+.dark .jj-calendar .fc-day-today .fc-daygrid-day-number {
+    color: #fbbf24;
+}
+
+.dark .jj-calendar .fc-list-day-cushion {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Estado operativo (fondo de la píldora) en dark mode. Texto claro sobre los
+ * fondos oscuros, fijando también `--fc-event-text-color` (la variable que pinta
+ * el texto del evento en FullCalendar). */
+.dark .jj-calendar .fc-event--active {
+    --fc-event-text-color: #e5e7eb;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+}
+
+.dark .jj-calendar .fc-event--finished {
+    --fc-event-text-color: #9ca3af;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #9ca3af;
+}
+
+.dark .jj-calendar .fc-daygrid-day:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}

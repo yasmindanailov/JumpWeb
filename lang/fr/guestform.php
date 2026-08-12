@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'eyebrow' => 'Formulaire de réservation',
+    'title' => 'Formulaire de réservation',
+    'subtitle' => 'Complétez les informations de chaque invité de cette réservation. Modifiable à tout moment jusqu’au jour de l’événement.',
+    'fact_when' => 'Date et heure',
+    'fact_guests' => 'Invités',
+    'fact_ref' => 'Réservation',
+    'progress' => ':done sur :total fiches complétées',
+    'progress_complete' => 'Toutes les fiches complétées (:total)',
+    'privacy' => 'Nous utilisons ces informations uniquement pour préparer votre événement. Les données des mineurs sont traitées de façon confidentielle et supprimées conformément à notre politique de confidentialité.',
+    'readonly_notice' => 'Cette réservation a déjà eu lieu. Le formulaire est en lecture seule : vous pouvez consulter les informations mais plus les modifier.',
+    'general_heading' => 'Informations générales',
+    'children_heading' => 'Informations de chaque invité',
+    'saved' => 'Formulaire enregistré. Merci ! Vous pouvez le modifier à tout moment.',
+    'child' => 'Invité·e :n',
+    'submit' => 'Enregistrer',
+    'hint' => 'Si vous ne les connaissez pas encore toutes, enregistrez ce que vous avez et revenez plus tard.',
+    'back' => 'Retour à mes réservations',
+
+    // Refonte de la page (#264) : feuille épurée avec accordéon de fiches.
+    'heading' => 'Données des invités',
+    'meter_label' => 'Fiches complétées',
+    'bulk_prompt' => 'Tu ne les connais pas encore toutes ?',
+    'bulk_action' => 'Ouvrir la première en attente',
+    'status_pending' => 'En attente',
+    'status_done' => 'Prête',
+    'name_empty' => 'À compléter',
+    'nav_prev' => 'Précédent',
+    'nav_next' => 'Suivant',
+    'nav_last' => 'Dernière fiche',
+    'toast_saved' => 'Enregistré',
+    'footer_privacy' => 'Confidentialité',
+];

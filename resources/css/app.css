@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* ====================================================================
+   Base de Tailwind para áreas autenticadas / panel de administración
+   (Fase 7). La LANDING pública NO usa este archivo: usa el CSS del
+   mockup en public/css/landing.css. Aquí solo dejamos los tokens de
+   marca para mantener coherencia visual en el panel.
+   ==================================================================== */
+@theme {
+    --color-jump-1: #ff5b22;
+    --color-jump-2: #ffe14a;
+    --color-kids-1: #c6ff3a;
+    --color-kids-2: #ff77c7;
+    --color-cream: #f4efe3;
+    --color-ink: #14130f;
+
+    --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
+}

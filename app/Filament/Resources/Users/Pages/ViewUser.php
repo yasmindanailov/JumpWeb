@@ -1,0 +1,305 @@
+<?php
+
+namespace App\Filament\Resources\Users\Pages;
+
+use App\Filament\Resources\Users\UserResource;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\AuditLogger;
+use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\HtmlString;
+
+/**
+ * Fase 7.5 — Ficha del usuario con acciones RGPD (decisión #180).
+ *
+ * Dos acciones de cabecera, ambas con defensa en profundidad (patrón #128 reusado
+ * de `ViewOrder`): `visible()` (permiso + estado) → re-check con `fresh()` → audit
+ * del bloqueo o del éxito → `Notification`.
+ *
+ *  - **Enviar enlace de contraseña** (`users.manage`): `Password::sendResetLink`
+ *    (notificación nativa `ResetPassword`, broker `users`). Audit `logSensitive`
+ *    (hashea el email, sin PII en claro).
+ *  - **Anonimizar** (`users.anonymize`): `User::anonymize()` (idempotente, borra
+ *    consents + roles + neutraliza PII). Audit `log` con `email_hash` + motivo +
+ *    conteos (sin PII en claro). Redirige al listado al terminar.
+ *
+ * Ambas acciones solo aplican sobre **cuentas de cliente** (no admin/staff), nunca
+ * sobre uno mismo, nunca sobre cuentas ya anonimizadas — ver `isSensitiveActionAllowed`.
+ */
+class ViewUser extends ViewRecord
+{
+    protected static string $resource = UserResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        /** @var User $record */
+        $record = $this->record;
+
+        // Título de la pestaña del navegador (sin HTML).
+        return __('admin.users.heading').' · '.$record->name;
+    }
+
+    /**
+     * H1 enriquecida: nombre del cliente + badge(s) de rol + (si aplica) "Anonimizada"
+     * inline (decisión #181). Pone el rol al lado del título → la ficha respira y se
+     * identifica de un vistazo sin gastar una card en ello.
+     */
+    public function getHeading(): string|Htmlable
+    {
+        return new HtmlString(view('filament.users.view-heading', [
+            'record' => $this->record,
+        ])->render());
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            $this->manageRolesAction(),
+            $this->sendPasswordResetAction(),
+            $this->anonymizeUserAction(),
+        ];
+    }
+
+    /**
+     * ¿Se permiten acciones sensibles (anonimizar / reset) sobre esta cuenta?
+     * Solo clientes: no admin, no staff, nunca uno mismo, nunca ya anonimizada.
+     * Lee la colección `roles` eager-loaded (`UserResource::getEloquentQuery`) para
+     * no lanzar una query por cada render de `visible()`.
+     */
+    private function isSensitiveActionAllowed(User $record): bool
+    {
+        $roleNames = $record->roles->pluck('name');
+
+        return ! $record->isAnonymized()
+            && ! $roleNames->contains('admin')
+            && ! $roleNames->contains('staff')
+            && $record->getKey() !== auth()->id();
+    }
+
+    /**
+     * Fase 7.11 — Asignar/quitar roles a este usuario (`role_user`). Gateada por `access.manage`
+     * (en la práctica solo admin, vía Gate::before). Cierra el diferido #180 (la edición de roles
+     * de usuario se aplazó a "la futura sub-fase de roles" = esta).
+     *
+     * Defensa en profundidad (patrón de las acciones RGPD): `visible()` (permiso + no anonimizada)
+     * → `action()` con `fresh()` + re-check + guardas anti-bloqueo + audit.
+     *
+     * Guardas anti-bloqueo:
+     *  1. No puedes quitarte a TI MISMO el rol admin (evita auto-lockout accidental; otro admin
+     *     puede degradarte).
+     *  2. No puedes quitar el ÚLTIMO admin del sistema.
+     */
+    private function manageRolesAction(): Action
+    {
+        return Action::make('manageRoles')
+            ->label(__('admin.access.user_roles.label'))
+            ->icon(Heroicon::OutlinedShieldCheck)
+            ->color('gray')
+            ->visible(fn (User $record): bool => (auth()->user()?->hasPermission('access.manage') ?? false)
+                && ! $record->isAnonymized())
+            ->modalHeading(__('admin.access.user_roles.modal_heading'))
+            ->modalDescription(__('admin.access.user_roles.modal_description'))
+            ->modalSubmitActionLabel(__('admin.access.user_roles.submit'))
+            ->fillForm(fn (User $record): array => [
+                'roles' => $record->roles()->pluck('roles.id')->all(),
+            ])
+            ->schema([
+                CheckboxList::make('roles')
+                    ->label(__('admin.access.user_roles.field'))
+                    ->options(fn (): array => Role::query()
+                        ->orderBy('id')
+                        ->get()
+                        ->mapWithKeys(fn (Role $role): array => [$role->id => __('admin.users.roles.'.$role->name)])
+                        ->all())
+                    ->columns(1)
+                    ->bulkToggleable(false),
+            ])
+            ->action(function (User $record, array $data): void {
+                $record = $record->fresh();
+                $actor = auth()->user();
+
+                // Re-check del permiso (capa 2) + cuenta no anonimizada entre render y submit.
+                if ($record === null
+                    || ! ($actor?->hasPermission('access.manage') ?? false)
+                    || $record->isAnonymized()) {
+                    if ($record !== null) {
+                        AuditLogger::log('access.user_roles_update_blocked', $record, ['reason' => 'forbidden']);
+                    }
+                    Notification::make()->title(__('admin.access.user_roles.blocked'))->danger()->send();
+
+                    return;
+                }
+
+                $before = $record->roles()->pluck('name')->all();
+
+                $targetIds = collect($data['roles'] ?? [])
+                    ->map(fn ($value): int => (int) $value)
+                    ->all();
+                $targetNames = Role::whereIn('id', $targetIds)->pluck('name')->all();
+
+                $hadAdmin = in_array('admin', $before, true);
+                $keepsAdmin = in_array('admin', $targetNames, true);
+
+                // Guarda 1: no quitarte a ti mismo el rol admin.
+                if ($record->getKey() === $actor->getKey() && $hadAdmin && ! $keepsAdmin) {
+                    AuditLogger::log('access.user_roles_update_blocked', $record, ['reason' => 'self_admin_demotion']);
+                    Notification::make()->title(__('admin.access.user_roles.blocked_self'))->danger()->send();
+
+                    return;
+                }
+
+                // Guarda 2 (anti-bloqueo): no quitar el último admin del sistema. El recuento y el
+                // sync van DENTRO de una transacción con `lockForUpdate` sobre el conjunto de admins
+                // → serializa degradaciones concurrentes: dos admins quitándose admin a la vez no
+                // pueden dejar el sistema con 0 admins (TOCTOU). En SQLite el lock es no-op pero la
+                // lógica sigue siendo correcta (los tests no son concurrentes).
+                $blockedLastAdmin = false;
+                DB::transaction(function () use ($record, $targetIds, $hadAdmin, $keepsAdmin, &$blockedLastAdmin): void {
+                    if ($hadAdmin && ! $keepsAdmin) {
+                        $admins = User::whereHas('roles', fn ($query) => $query->where('name', 'admin'))
+                            ->lockForUpdate()
+                            ->count();
+
+                        if ($admins <= 1) {
+                            $blockedLastAdmin = true;
+
+                            return;
+                        }
+                    }
+
+                    $record->roles()->sync($targetIds);
+                });
+
+                if ($blockedLastAdmin) {
+                    AuditLogger::log('access.user_roles_update_blocked', $record, ['reason' => 'last_admin']);
+                    Notification::make()->title(__('admin.access.user_roles.blocked_last_admin'))->danger()->send();
+
+                    return;
+                }
+
+                $after = $record->fresh()?->roles()->pluck('name')->all() ?? [];
+                $added = array_values(array_diff($after, $before));
+                $removed = array_values(array_diff($before, $after));
+
+                AuditLogger::log('access.user_roles_updated', $record, [
+                    'added' => $added,
+                    'removed' => $removed,
+                ]);
+
+                Notification::make()->title(__('admin.access.user_roles.success'))->success()->send();
+            });
+    }
+
+    private function sendPasswordResetAction(): Action
+    {
+        return Action::make('sendPasswordReset')
+            ->label(__('admin.users.actions.send_reset.label'))
+            ->icon(Heroicon::OutlinedKey)
+            ->color('gray')
+            ->visible(fn (User $record): bool => (auth()->user()?->hasPermission('users.manage') ?? false)
+                && $this->isSensitiveActionAllowed($record))
+            ->requiresConfirmation()
+            ->modalHeading(__('admin.users.actions.send_reset.modal_heading'))
+            ->modalDescription(fn (User $record): string => __('admin.users.actions.send_reset.modal_description', [
+                'email' => $record->email,
+            ]))
+            ->modalSubmitActionLabel(__('admin.users.actions.send_reset.submit'))
+            ->action(function (User $record): void {
+                $record = $record->fresh();
+
+                if (! $this->isSensitiveActionAllowed($record)) {
+                    AuditLogger::log('users.send_reset_blocked', $record, ['reason' => 'not_allowed']);
+                    Notification::make()
+                        ->title(__('admin.users.actions.send_reset.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $status = Password::sendResetLink(['email' => $record->email]);
+
+                // Audit sensible: el identificador (email) se guarda solo como sha256.
+                AuditLogger::logSensitive('users.password_reset_sent', $record->email, $record);
+
+                if ($status === Password::RESET_LINK_SENT) {
+                    Notification::make()
+                        ->title(__('admin.users.actions.send_reset.success', ['email' => $record->email]))
+                        ->success()
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title(__('admin.users.actions.send_reset.throttled'))
+                    ->warning()
+                    ->send();
+            });
+    }
+
+    private function anonymizeUserAction(): Action
+    {
+        return Action::make('anonymizeUser')
+            ->label(__('admin.users.actions.anonymize.label'))
+            ->icon(Heroicon::OutlinedTrash)
+            ->color('danger')
+            ->visible(fn (User $record): bool => (auth()->user()?->hasPermission('users.anonymize') ?? false)
+                && $this->isSensitiveActionAllowed($record))
+            ->requiresConfirmation()
+            ->modalHeading(__('admin.users.actions.anonymize.modal_heading'))
+            ->modalDescription(__('admin.users.actions.anonymize.modal_description'))
+            ->modalSubmitActionLabel(__('admin.users.actions.anonymize.submit'))
+            ->schema([
+                Textarea::make('reason')
+                    ->label(__('admin.users.actions.anonymize.reason'))
+                    ->required()
+                    ->maxLength(500),
+            ])
+            ->action(function (User $record, array $data): void {
+                $record = $record->fresh();
+
+                if (! $this->isSensitiveActionAllowed($record)) {
+                    AuditLogger::log('users.anonymize_blocked', $record, ['reason' => 'not_allowed']);
+                    Notification::make()
+                        ->title(__('admin.users.actions.anonymize.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                // Captura del pre-estado ANTES de mutar: `anonymize()` borra el email,
+                // los consents y los roles. El audit guarda el HASH del email (nunca en
+                // claro) + el motivo del operador + conteos para trazabilidad RGPD.
+                $emailHash = hash('sha256', (string) $record->email);
+                $consentsDeleted = $record->consents()->count();
+                $rolesDetached = $record->roles->pluck('name')->all();
+
+                $record->anonymize();
+
+                AuditLogger::log('users.anonymized', $record, [
+                    'email_hash' => $emailHash,
+                    'reason' => (string) ($data['reason'] ?? ''),
+                    'consents_deleted' => $consentsDeleted,
+                    'roles_detached' => $rolesDetached,
+                ]);
+
+                Notification::make()
+                    ->title(__('admin.users.actions.anonymize.success'))
+                    ->success()
+                    ->send();
+
+                // La ficha ahora apunta a una cuenta neutralizada → volver al listado.
+                $this->redirect(UserResource::getUrl('index'));
+            });
+    }
+}

@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'eyebrow' => 'Formulario de reserva',
+    'title' => 'Formulario de reserva',
+    'subtitle' => 'Completa los datos de cada invitado de esta reserva. Puedes editarlos cuando quieras hasta el día del evento.',
+    'fact_when' => 'Fecha y hora',
+    'fact_guests' => 'Invitados',
+    'fact_ref' => 'Reserva',
+    'progress' => ':done de :total fichas completas',
+    'progress_complete' => 'Todas las fichas completas (:total)',
+    'privacy' => 'Solo usamos estos datos para preparar tu evento. Los datos de los menores se tratan de forma confidencial y se eliminan según nuestra política de privacidad.',
+    'readonly_notice' => 'Esta reserva ya se ha celebrado. El formulario es de solo lectura: puedes consultar los datos pero ya no editarlos.',
+    'general_heading' => 'Datos generales',
+    'children_heading' => 'Datos de cada invitado',
+    'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
+    'child' => 'Invitado/a :n',
+    'submit' => 'Guardar',
+    'hint' => 'Si aún no los sabes todos, guarda lo que tengas y vuelve más adelante.',
+    'back' => 'Volver a mis reservas',
+
+    // Rediseño de la página (#264): hoja enfocada con acordeón de fichas.
+    'heading' => 'Datos de los invitados',
+    'meter_label' => 'Fichas completas',
+    'bulk_prompt' => '¿Aún no los sabes todos?',
+    'bulk_action' => 'Abrir la primera pendiente',
+    'status_pending' => 'Pendiente',
+    'status_done' => 'Lista',
+    'name_empty' => 'Sin completar',
+    'nav_prev' => 'Anterior',
+    'nav_next' => 'Siguiente',
+    'nav_last' => 'Última ficha',
+    'toast_saved' => 'Guardado',
+    'footer_privacy' => 'Privacidad',
+];

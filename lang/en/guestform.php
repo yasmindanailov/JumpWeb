@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'eyebrow' => 'Booking form',
+    'title' => 'Booking form',
+    'subtitle' => 'Fill in the details for each guest of this booking. You can edit them anytime until the event.',
+    'fact_when' => 'Date and time',
+    'fact_guests' => 'Guests',
+    'fact_ref' => 'Booking',
+    'progress' => ':done of :total guests completed',
+    'progress_complete' => 'All guests completed (:total)',
+    'privacy' => 'We only use these details to prepare your event. Minors’ data is kept confidential and deleted in line with our privacy policy.',
+    'readonly_notice' => 'This booking has already taken place. The form is read-only: you can review the details but no longer edit them.',
+    'general_heading' => 'General details',
+    'children_heading' => 'Each guest’s details',
+    'saved' => 'Form saved. Thank you! You can edit it again anytime.',
+    'child' => 'Guest :n',
+    'submit' => 'Save',
+    'hint' => "If you don't know them all yet, save what you have and come back later.",
+    'back' => 'Back to my bookings',
+
+    // Page redesign (#264): focused sheet with accordion of guest cards.
+    'heading' => 'Guest details',
+    'meter_label' => 'Guests completed',
+    'bulk_prompt' => "Don't know them all yet?",
+    'bulk_action' => 'Open the first pending',
+    'status_pending' => 'Pending',
+    'status_done' => 'Done',
+    'name_empty' => 'Not completed',
+    'nav_prev' => 'Previous',
+    'nav_next' => 'Next',
+    'nav_last' => 'Last guest',
+    'toast_saved' => 'Saved',
+    'footer_privacy' => 'Privacy',
+];

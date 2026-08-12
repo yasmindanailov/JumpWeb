@@ -1,0 +1,458 @@
+@php
+    use App\Models\OrderItem;
+    use App\Support\DisplayTime;
+    use App\Support\Duration;
+
+    /** @var \App\Models\Order $record */
+    // #F11: ocultamos también los PRINCIPALES voided-leftover (cancelados net-cero,
+    // nunca cobrados online ni reembolsados): saldrían fantasma como 0,00 € ·
+    // Cancelado. Mismo criterio que los complementos (autoridad única:
+    // Order::isVoidedLeftoverItem). Un cancelado con cargo real SÍ se sigue mostrando.
+    $items = $record->items->whereNull('parent_item_id')
+        ->reject(fn ($i) => $record->isVoidedLeftoverItem($i))
+        ->values();
+    $authUser = auth()->user();
+
+    // #173: cancelar y reembolsar por-item se gestionan desde el pie del modal
+    // Gestionar (#171/#172); ya no hay iconos de esas acciones en la sub-card.
+    // La visibilidad real la imponen los handlers de las Filament Actions
+    // (mountUsing + handler + orquestador) — defense in depth completa.
+
+    /**
+     * Fallback gris para zonas sin color asignado. Coincide con el fallback
+     * del CSS `.zone-card` (`#9CA3AF` = gray-400) y se usa también en el
+     * resumen operativo del modal. Tener UNA fuente de verdad evita drift.
+     */
+    $zoneColorFallback = '#9CA3AF';
+@endphp
+
+{{-- Banner contextual de la card "Productos del pedido" (sub-fase 7.2e.1bis5,
+     decisión #158). Dos mensajes según el ESTADO del Order:
+
+      1. Order CANCELADO entero (`status=cancelled`) → "pedido cancelado, las
+         acciones individuales no aplican".
+      2. Order FULLY REFUNDED (`isFullyRefunded`) → "reembolsado por completo:
+         ya no queda importe que reembolsar; CANCELAR productos SÍ sigue
+         disponible" (#225 D9: cancelar ≠ reembolsar — un full-refund deja el
+         Order en `paid`, así que `canCancelItem` sigue true; solo `refundItem`
+         queda bloqueado por `refundableCapacityCents()<=0`).
+
+     El backend gatea cada action con `canCancelItem`/`canRefundItem`; este
+     banner es solo la capa de UX explicativa. --}}
+@php
+    $orderCancelled = $record->status === \App\Models\Order::STATUS_CANCELLED;
+    $orderFullyRefunded = $record->isFullyRefunded();
+    $showCoherenceBanner = $orderCancelled || $orderFullyRefunded;
+@endphp
+
+@if ($showCoherenceBanner)
+    @php
+        $coherenceKey = $orderCancelled
+            ? 'admin.orders.item_actions.banner.order_cancelled'
+            : 'admin.orders.item_actions.banner.order_fully_refunded';
+    @endphp
+    <div class="mb-3 flex items-start gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-800 ring-1 ring-red-600/20 dark:bg-red-400/10 dark:text-red-300 dark:ring-red-400/30">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+        </svg>
+        <p>{{ __($coherenceKey) }}</p>
+    </div>
+@endif
+
+<div class="space-y-3">
+    @forelse ($items as $item)
+        @php
+            $status = $item->displayStatusForCustomer();
+            $record->loadMissing('adjustments');
+            $children = $item->children;
+            // Complementos VISIBLES en las listas: ocultamos los CANCELADOS que nunca se
+            // cobraron online ni se reembolsaron (p. ej. un menú añadido por extra_due y
+            // luego sustituido en un cambio de menú): son net-cero, mostrarlos solo confunde
+            // (líneas duplicadas). Los cancelados que SÍ se cobraron se mantienen (tachados),
+            // porque implican un reembolso pendiente que el staff debe cerrar.
+            $visibleChildren = $children->reject(fn ($c) => $record->isVoidedLeftoverItem($c))->values();
+            $ticketType = $item->ticketType;
+            $isPack = $ticketType?->isPack() ?? false;
+            $zone = $ticketType?->zone;
+            $zoneColor = $zone?->color ?? $zoneColorFallback;
+            // Sub-fase 7.2e.1bis5 (decisión #158): el badge principal del header
+            // del item PASA A SER el nombre del producto (no la zona). El color
+            // de zona sigue aplicándose al badge (la "pulsera simbólica" que el
+            // empleado escanea), pero el texto es el producto que el cliente
+            // compró. Resuelve la duplicación que había antes: el badge "JUMP"/
+            // "KIDS"/"Cumpleaños" arriba y el nombre "Cumpleaños Jump" como
+            // subtítulo plano debajo eran dos lugares para la misma información.
+            $productName = $ticketType?->tr('name') ?? '—';
+            $durationMin = $ticketType?->duration_min;
+            $quantityLabel = $isPack
+                ? __('tickets.guests_count', ['count' => $item->quantity])
+                : $item->quantity.' × '.__('admin.orders.item_detail.unit_entries');
+
+            // Sub-fase 7.2e.1bis5: badge "Reembolsado" del PRINCIPAL del item.
+            // Aparece junto al badge del nombre cuando hay refund parcial sobre
+            // el item principal (no sus children, esos llevan su propio badge
+            // más abajo). Reusa el texto genérico `refunded_badge` del Order
+            // por coherencia. NO incluye importe inline — el agregado vive en
+            // el bloque "Totales del producto".
+            $principalRefundedCents = $record->itemRefundedCents($item);
+        @endphp
+
+        {{-- Sub-card del item.
+             - El background/ring de la card cambia según el estado operativo
+               (`displayStatusForCustomer`): neutro (activo) o atenuado (finalizado).
+             - El color de zona se aplica SOLO al badge (`.zone-badge` con
+               `style="--zone-color"`), no al wrapper de la card — alineado con
+               la operativa: el badge ES la "pulsera" simbólica que el empleado
+               escanea.
+
+             Sub-fase 7.2e.1: si el item está CANCELADO (soft-cancel #152),
+             la card se renderiza atenuada con borde rojo sutil y sin botones
+             de acción — el item es histórico para auditoría, no operativa. --}}
+        @php
+            $isItemCancelled = $item->isCancelled();
+            // P6: icono del TIPO de producto a la izquierda del nombre (entrada → ticket,
+            // cumpleaños/pack → tarta). Decorativo; el nombre sigue dando la semántica.
+            $typeIcon = $isPack ? 'heroicon-o-cake' : 'heroicon-o-ticket';
+        @endphp
+        {{-- P3/P6: borde superior 5px sólido con el color de la zona/tipo (acento data-driven, visible). --}}
+        <div @class([
+            'rounded-xl ring-1 p-4',
+            'bg-gray-100 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10' => ! $isItemCancelled && $status === OrderItem::STATUS_ACTIVE,
+            'bg-gray-50 ring-gray-950/5 dark:bg-gray-900/50 dark:ring-white/5 opacity-80' => ! $isItemCancelled && $status === OrderItem::STATUS_FINISHED,
+            'bg-red-50/50 ring-red-600/20 dark:bg-red-400/5 dark:ring-red-400/20 opacity-75' => $isItemCancelled,
+        ]) style="border-top: 5px solid {{ $zoneColor }};">
+            {{-- Header del sub-card (P6): título GRANDE y CENTRADO con el icono del tipo de
+                 producto a su izquierda; debajo, fecha · hora · invitados inline. El badge de
+                 estado (Cancelado/Finalizado) queda arriba a la derecha. --}}
+            <div class="relative text-center">
+                {{-- Estado (no accionable), esquina superior derecha. --}}
+                @if ($isItemCancelled)
+                    <span class="absolute right-0 top-0 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-red-100 text-red-700 ring-red-600/30 dark:bg-red-400/15 dark:text-red-300 dark:ring-red-400/40">
+                        {{ __('admin.orders.item_status.cancelled') }}
+                    </span>
+                @elseif ($status === OrderItem::STATUS_FINISHED)
+                    <span class="absolute right-0 top-0 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-gray-200 text-gray-700 ring-gray-500/30 dark:bg-gray-800 dark:text-gray-300">
+                        {{ __('admin.orders.item_status.finished') }}
+                    </span>
+                @endif
+
+                {{-- Título: icono del tipo (tintado con el color de zona) + nombre del producto, grande. --}}
+                <div class="flex items-center justify-center gap-2">
+                    <span class="shrink-0" style="color: {{ $zoneColor }};">
+                        <x-filament::icon :icon="$typeIcon" class="h-6 w-6" />
+                    </span>
+                    <span class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $productName }}</span>
+                    @if (! $isItemCancelled && $principalRefundedCents > 0)
+                        <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-amber-100 text-amber-700 ring-amber-600/30 dark:bg-amber-400/15 dark:text-amber-300 dark:ring-amber-400/40">
+                            {{ __('admin.orders.refunded_badge') }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Meta inline: fecha · hora · invitados (· duración). Es lo que el empleado más
+                     mira cuando un cliente pregunta "¿es a las X?". --}}
+                <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    @if ($item->slot)
+                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ \Illuminate\Support\Carbon::parse($item->slot->date)->isoFormat('ddd D MMM') }}</span>
+                        <span class="text-gray-400 dark:text-gray-500">·</span>
+                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ $item->displayTimeWindow() }}</span>
+                        <span class="text-gray-400 dark:text-gray-500">·</span>
+                    @endif
+                    <span>{{ $quantityLabel }}</span>
+                    @if ($durationLabel = Duration::formatHumane($durationMin))
+                        <span class="text-gray-400 dark:text-gray-500">·</span>
+                        <span>{{ $durationLabel }}</span>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Sub-fase 7.2e.1bis5 (decisión #158): subtítulo con nombre del
+                 producto ELIMINADO. La información vive ahora en el badge
+                 principal del header con color de zona. --}}
+
+            {{-- Sub-fase 7.2e.1: meta de cancelación si aplica (audit visible para
+                 el operador + cliente vía "Mis pedidos"). --}}
+            @if ($isItemCancelled)
+                <div class="mt-1 text-xs text-red-700 dark:text-red-300">
+                    {{ __('admin.orders.cancel_item.meta', [
+                        'when' => DisplayTime::format($item->cancelled_at, 'd/m/Y H:i'),
+                        'who' => $item->cancelledBy?->name ?? '—',
+                    ]) }}
+                </div>
+            @endif
+
+            {{-- Datos del evento (#86) + datos por niño (post-form #217) en un ÚNICO subcard
+                 COLAPSABLE (decisión clienta: más limpio). El badge del estado del post-form se ve
+                 SIEMPRE en la cabecera; el detalle (evento + tabla por-niño) se despliega con
+                 «ver más». Las labels del evento se ordenan por el ESQUEMA del pack (#173); las
+                 claves huérfanas (pack editado) caen al final con la clave como label. --}}
+            @php
+                $eventFields = $ticketType?->eventFields() ?? [];
+                $schemaKeys = collect($eventFields)->pluck('key')->all();
+                $eventRows = [];
+                if (is_array($item->event_data)) {
+                    foreach ($eventFields as $field) {
+                        $value = $item->event_data[$field['key']] ?? null;
+                        if ($value !== null && $value !== '') {
+                            $eventRows[] = ['label' => $ticketType->eventFieldLabel($field), 'value' => $value];
+                        }
+                    }
+                    foreach ($item->event_data as $key => $value) {
+                        if (! in_array($key, $schemaKeys, true) && $value !== null && $value !== '') {
+                            $eventRows[] = ['label' => ucfirst(str_replace('_', ' ', (string) $key)), 'value' => $value];
+                        }
+                    }
+                }
+                $guestFormStatus = $item->guestFormStatus();
+                $guestFields = $guestFormStatus !== null ? ($ticketType?->guestFields() ?? []) : [];
+                $guestData = $item->guestData();
+                $guestOk = $guestFormStatus === \App\Models\OrderItem::GUEST_FORM_STATUS_OK;
+            @endphp
+            @if (count($eventRows) > 0 || $guestFormStatus !== null)
+                <div x-data="{ open: false }" class="mt-3 rounded-lg bg-white/60 p-3 text-xs ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ $guestFormStatus !== null ? __('admin.orders.party_data_section') : __('admin.orders.event_data_section') }}</span>
+                        @if ($guestFormStatus !== null)
+                            @if ($guestOk)
+                                <span class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/15 dark:text-green-400">✓ {{ __('admin.orders.guest_badge_ok') }}</span>
+                            @else
+                                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">! {{ __('admin.orders.guest_badge_pending') }}</span>
+                            @endif
+                        @endif
+                        <button type="button" x-on:click="open = ! open" class="ml-auto inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
+                            <span x-show="! open">{{ __('admin.orders.show_more') }}</span>
+                            <span x-show="open" x-cloak>{{ __('admin.orders.show_less') }}</span>
+                        </button>
+                    </div>
+
+                    <div x-show="open" x-cloak class="mt-2 space-y-3">
+                        @if (count($eventRows) > 0)
+                            <dl class="flex flex-col gap-y-1">
+                                @foreach ($eventRows as $row)
+                                    @php $shown = is_scalar($row['value']) ? (string) $row['value'] : json_encode($row['value'], JSON_UNESCAPED_UNICODE); @endphp
+                                    <div class="flex gap-2">
+                                        <dt class="shrink-0 font-medium text-gray-600 dark:text-gray-400">{{ $row['label'] }}:</dt>
+                                        <dd class="text-gray-800 dark:text-gray-200 break-words">{{ $shown }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        @endif
+
+                        @if ($guestFormStatus !== null)
+                            <div>
+                                @if (! empty($guestData))
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full">
+                                            <thead>
+                                                <tr class="text-left text-gray-500 dark:text-gray-400">
+                                                    <th class="py-1 pr-2 font-medium">#</th>
+                                                    @foreach ($guestFields as $gf)
+                                                        <th class="py-1 pr-2 font-medium">{{ $ticketType->guestFieldLabel($gf) }}</th>
+                                                    @endforeach
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for ($gi = 0; $gi < $item->quantity; $gi++)
+                                                    <tr class="border-t border-gray-100 dark:border-white/5">
+                                                        <td class="py-1 pr-2 text-gray-400">{{ $gi + 1 }}</td>
+                                                        @foreach ($guestFields as $gf)
+                                                            <td class="py-1 pr-2 text-gray-800 dark:text-gray-200">{{ $guestData[$gi][$gf['key']] ?? '—' }}</td>
+                                                        @endforeach
+                                                    </tr>
+                                                @endfor
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-gray-400 dark:text-gray-500">{{ __('admin.orders.guests_empty') }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Children / addons (complementos asociados a este item principal).
+                 Sub-fase 7.2e.1bis2 (feedback 2026-05-30): cada child muestra
+                 estado individual (Cancelado tachado o ↩ Devuelto badge), SIN
+                 precio inline a la derecha — el agregado total se reserva para
+                 la sección "Totales del producto" debajo. Visualmente la
+                 lista de children queda como inventario "qué incluye el pack",
+                 no como mini-tabla de precios. --}}
+            @if ($visibleChildren->isNotEmpty())
+                <ul class="mt-3 ml-6 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10">
+                    @foreach ($visibleChildren as $child)
+                        @php
+                            $childCancelled = $child->isCancelled();
+                            $childRefunded = $record->itemRefundedCents($child);
+                            $childBadge = $child->addonBadgeKey();
+                        @endphp
+                        <li @class([
+                            'flex flex-wrap items-center gap-2 text-sm',
+                            'text-gray-600 dark:text-gray-400' => ! $childCancelled,
+                            'text-gray-500 line-through dark:text-gray-500' => $childCancelled,
+                        ])>
+                            <span>+ {{ $child->quantity }} × {{ $child->ticketType?->tr('name') }}</span>
+                            @if ($childBadge)
+                                <span class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 ring-1 ring-inset ring-emerald-600/20 no-underline dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/30">{{ __('tickets.addon_badge_'.$childBadge) }}</span>
+                            @endif
+                            @if ($childCancelled)
+                                <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-red-100 text-red-700 ring-red-600/30 dark:bg-red-400/15 dark:text-red-300 dark:ring-red-400/40 no-underline">
+                                    {{ __('admin.orders.item_status.cancelled') }}
+                                </span>
+                            @elseif ($childRefunded > 0)
+                                {{-- Sub-fase 7.2e.1bis5 (decisión #158): badge
+                                     unificado "Reembolsado" sin formato propio.
+                                     El importe agregado vive en el bloque
+                                     "Totales del producto" más abajo. --}}
+                                <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-amber-100 text-amber-700 ring-amber-600/30 dark:bg-amber-400/15 dark:text-amber-300 dark:ring-amber-400/40">
+                                    {{ __('admin.orders.refunded_badge') }}
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+
+            {{-- Sección "Totales del producto" (sub-fase 7.2e.1bis2,
+                 feedback 2026-05-30): bloque agregado abajo del item con:
+                  • Línea Producto: importe del principal.
+                  • Línea Complementos: suma de complementos (si los hay).
+                  • Línea Total del producto: suma final.
+                  • Badges financieros DENTRO: ↩ Devuelto / ⚠ Pendiente refund.
+                 Separado visualmente con border-top sutil para diferenciar
+                 inventario (arriba) de cálculos (abajo). --}}
+            @php
+                // Robustez del desglose (#196): el bloque "Totales del producto" usa la
+                // fuente ÚNICA `ReservationFinancials` (mismas cifras en TODAS las
+                // superficies). Resuelve además F10 (los agregados ya no iteran $children
+                // crudo a mano). Las líneas por producto/complemento siguen mostrando su
+                // subtotal individual; el TOTAL y el split (online/puerta/devuelto) los
+                // pinta el partial compartido `reservation-financials`.
+                $rf = \App\Support\ReservationFinancials::make($record, $item);
+                $fmt = fn (int $cents) => \App\Support\Money::format($cents);
+            @endphp
+
+            <div class="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 text-sm">
+                {{-- Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): título
+                     explícito "Totales del producto" para diferenciar del bloque
+                     "Totales del pedido" de la card Resumen. --}}
+                <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {{ __('admin.orders.item_financial.heading') }}
+                </div>
+                <div class="space-y-1">
+                    @if ($visibleChildren->isNotEmpty())
+                        {{-- Desglose por línea: principal + cada complemento como "cantidad ×
+                             precio unitario" → importe cobrado, con su badge INCLUIDO/GRATIS y, si
+                             solo parte va incluida, el aviso "(N incluida)". --}}
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="text-gray-600 dark:text-gray-400">{{ __('admin.orders.item_financial.principal') }} · {{ $item->quantity }} × {{ $fmt($item->unit_price) }}</span>
+                            <span @class(['whitespace-nowrap text-gray-800 dark:text-gray-200', 'line-through' => $isItemCancelled])>{{ $fmt($item->chargedSubtotalCents()) }}</span>
+                        </div>
+                        @foreach ($visibleChildren as $child)
+                            @php($cBadge = $child->addonBadgeKey())
+                            @php($cNote = $child->partialFreeNote())
+                            <div @class(['flex items-start justify-between gap-3', 'text-gray-500 line-through dark:text-gray-500' => $child->isCancelled()])>
+                                <span class="text-gray-600 dark:text-gray-400">
+                                    {{ $child->ticketType?->tr('name') }}@if ($cBadge) <span class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 no-underline dark:bg-emerald-400/10 dark:text-emerald-300">{{ __('tickets.addon_badge_'.$cBadge) }}</span>@endif
+                                    · {{ $child->quantity }} × {{ $fmt($child->unit_price) }}@if ($cNote) <span class="text-xs text-gray-400 dark:text-gray-500">({{ $cNote }})</span>@endif
+                                </span>
+                                <span class="whitespace-nowrap text-gray-800 dark:text-gray-200">{{ $fmt($child->chargedSubtotalCents()) }}</span>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    @include('filament.orders.partials.reservation-financials', ['rf' => $rf, 'struck' => $isItemCancelled, 'gateLines' => $record->reservationGateLines($item)])
+                </div>
+            </div>
+
+            {{-- Línea de ACCIONES (#171/#172): Cancelar y Reembolsar viven dentro
+                 del modal Gestionar; aquí quedan el calendario, la impresión de la
+                 hoja de reserva y el botón Gestionar. --}}
+            <div class="mt-3 flex items-center justify-end gap-3 flex-wrap">
+                {{-- #179: icono de calendario → abre el calendario unificado en el
+                     DÍA de esta reserva (vista de día). Visible si el item tiene
+                     franja Y el usuario puede ver el calendario (gateado por
+                     `calendar.view`, igual que `CalendarPage::canAccess`), junto al
+                     botón de preparado. --}}
+                @if ($item->slot && $authUser?->hasPermission('calendar.view'))
+                    <x-filament::icon-button
+                        tag="a"
+                        :href="\App\Filament\Pages\CalendarPage::getUrl(['date' => $item->slot->date->format('Y-m-d')])"
+                        icon="heroicon-o-calendar-days"
+                        color="gray"
+                        size="lg"
+                        :label="__('admin.orders.btn_view_in_calendar')"
+                    />
+                @endif
+
+                {{-- #183 + ④ (decisión clienta 2026-06-14): imprimir hoja de reserva (PDF A4) en una
+                     pestaña nueva. DOS variantes en un desplegable: «Hoja de sala» (por defecto, SIN
+                     precios — documento operativo) y «Con precios» (desglose económico completo,
+                     `?precios=1`). Sin datos de cobro sensibles; la ruta revalida `orders.view` +
+                     pertenencia al pedido. Dos enlaces reales `target="_blank"` (sin bloqueo de popups). --}}
+                <x-filament::dropdown placement="bottom-end" teleport>
+                    <x-slot name="trigger">
+                        <x-filament::icon-button
+                            type="button"
+                            icon="heroicon-o-printer"
+                            color="gray"
+                            size="lg"
+                            :label="__('admin.orders.slip.btn_print')"
+                        />
+                    </x-slot>
+                    <x-filament::dropdown.list>
+                        <x-filament::dropdown.list.item
+                            tag="a"
+                            :href="route('admin.orders.items.slip', [$record, $item])"
+                            target="_blank"
+                            icon="heroicon-o-document-text"
+                        >
+                            {{ __('admin.orders.slip.print_operational') }}
+                        </x-filament::dropdown.list.item>
+                        <x-filament::dropdown.list.item
+                            tag="a"
+                            :href="route('admin.orders.items.slip', [$record, $item]).'?precios=1'"
+                            target="_blank"
+                            icon="heroicon-o-banknotes"
+                        >
+                            {{ __('admin.orders.slip.print_with_prices') }}
+                        </x-filament::dropdown.list.item>
+                    </x-filament::dropdown.list>
+                </x-filament::dropdown>
+
+                {{-- #263: icono de ENLACE del formulario post-reserva, POR PRODUCTO. Solo en reservas
+                     de cumpleaños con post-form (`isGuestFormReservation`) de un pedido PAGADO. Abre un
+                     modal con el enlace firmado para copiarlo y enviarlo por WhatsApp/SMS (útil sobre
+                     todo si el cliente no tiene email). El action revalida el gating (defensa). --}}
+                @if ($record->status === \App\Models\Order::STATUS_PAID && $item->isGuestFormReservation())
+                    <x-filament::icon-button
+                        wire:click="mountAction('copyGuestFormLink', { item: {{ $item->id }} })"
+                        icon="heroicon-o-link"
+                        color="gray"
+                        size="lg"
+                        :label="__('admin.orders.copy_guest_form.btn_aria')"
+                    />
+                @endif
+
+                {{-- P12: «Gestionar» pasa a ser un ICONO de lápiz (coherente con el resto de iconos de
+                     la fila). Mismo `mountAction('manageItem')`; el aria-label conserva la semántica.
+                     Visible siempre (incluso cancelados); decisión #159 (`viewItemDetail`→`manageItem`). --}}
+                <x-filament::icon-button
+                    wire:click="mountAction('manageItem', { item: {{ $item->id }} })"
+                    icon="heroicon-o-pencil-square"
+                    color="gray"
+                    size="lg"
+                    :label="__('admin.orders.item_detail.btn_aria', ['name' => $ticketType?->tr('name') ?? '—'])"
+                />
+
+                {{-- #173: los iconos de Cancelar y Reembolsar ya NO están en la
+                     sub-card — ambos viven como botones al pie del modal Gestionar
+                     (#171 reembolso, #172 cancelar). La línea de acciones queda con
+                     Preparado + Gestionar. --}}
+            </div>
+        </div>
+    @empty
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('admin.orders.no_items') }}</p>
+    @endforelse
+</div>

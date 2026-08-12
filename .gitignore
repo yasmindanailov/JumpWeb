@@ -1,0 +1,46 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.claude/
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/public/uploads
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Archivos temporales de diagnostico
+/_*.php
+/_*.html
+/_*.png
+
+# Vídeos: por defecto NO se versionan (fuentes pesadas / HEVC). EXCEPCIÓN: el vídeo del hero
+# y su póster, ya optimizados y ligeros (~1,9 MB, H.264 720p), SÍ se versionan para que el
+# repo sea un clon COMPLETO y desplegable (repositorio canónico). Ver docs/AUDIT-RENDIMIENTO.md §6.
+/public/videos/*
+!/public/videos/.gitkeep
+!/public/videos/header_jumpingjump.mp4
+!/public/videos/header_poster.jpg
+
+# Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan.
+# Las versiones optimizadas para web SI se versionan en /public/images/attractions.
+/design_mockup/imagenesatracciones/

@@ -1,0 +1,123 @@
+/* ====================================================================
+   Jumpingjump — Spinner
+   --------------------------------------------------------------------
+   Self-contained loading indicator. The dot hops on top of a rotated
+   foam-block — same brand mark as the logo wordmark, isolated.
+
+   USAGE
+     <span class="jj-spinner" role="status" aria-label="Loading"></span>
+     <span class="jj-spinner jj-spinner--sm"></span>
+     <span class="jj-spinner jj-spinner--lg"></span>
+     <span class="jj-spinner jj-spinner--xl"></span>
+     <!-- color override (any CSS color or var) -->
+     <span class="jj-spinner" style="--jj-spinner-color: #FF5B22"></span>
+     <!-- speed override -->
+     <span class="jj-spinner" style="--jj-spinner-speed: 1.6s"></span>
+
+   THEME VARIABLES
+     --jj-spinner-size   base size (multiplied internally)  default 36px
+     --jj-spinner-color  ink color of both shapes           default currentColor
+     --jj-spinner-speed  full loop duration                 default 1.4s
+   ==================================================================== */
+
+.jj-spinner {
+  /* tokens */
+  --jj-spinner-size: 36px;
+  --jj-spinner-color: currentColor;
+  --jj-spinner-speed: 1.4s;
+
+  /* layout */
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  width: var(--jj-spinner-size);
+  height: calc(var(--jj-spinner-size) * 1.5); /* room for the hop */
+  color: var(--jj-spinner-color);
+  line-height: 0;
+}
+
+/* screen-reader text helper (paired with role="status") */
+.jj-spinner__sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* foam-block — base (static) */
+.jj-spinner::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: calc(var(--jj-spinner-size) * 0.62);
+  height: calc(var(--jj-spinner-size) * 0.62);
+  background: var(--jj-spinner-color);
+  border-radius: calc(var(--jj-spinner-size) * 0.14);
+  transform: translateX(-50%) rotate(18deg);
+}
+
+/* dot — hops on top */
+.jj-spinner::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--jj-spinner-size) * 0.78);
+  width: calc(var(--jj-spinner-size) * 0.42);
+  height: calc(var(--jj-spinner-size) * 0.42);
+  background: var(--jj-spinner-color);
+  border-radius: 50%;
+  transform-origin: 50% 100%;
+  animation: jjSpinnerHop var(--jj-spinner-speed) cubic-bezier(0.4, 0, 0.5, 1) infinite;
+  /* base translateX so transform animation only handles Y + scale */
+  translate: -50% 0;
+}
+
+/* base hop — squash + stretch + jump (same vocabulary as logo) */
+@keyframes jjSpinnerHop {
+  0%, 14%  { transform: translateY(0)    scale(1,    1   ); }
+  26%      { transform: translateY(0)    scale(1.18, 0.74); }  /* squash + anticipation */
+  44%      { transform: translateY(-46%) scale(0.90, 1.14); }  /* lift-off stretch */
+  56%      { transform: translateY(-62%) scale(1,    1   ); }  /* peak */
+  70%      { transform: translateY(-22%) scale(1.06, 0.92); }  /* falling */
+  82%      { transform: translateY(0)    scale(1.20, 0.74); }  /* landing squash */
+  92%, 100%{ transform: translateY(0)    scale(1,    1   ); }
+}
+
+/* sizes */
+.jj-spinner--xs { --jj-spinner-size: 20px; }
+.jj-spinner--sm { --jj-spinner-size: 28px; }
+.jj-spinner--md { --jj-spinner-size: 36px; }   /* default */
+.jj-spinner--lg { --jj-spinner-size: 56px; }
+.jj-spinner--xl { --jj-spinner-size: 88px; }
+
+/* full-screen overlay variant */
+.jj-spinner-overlay {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  display: grid; place-items: center;
+  background: rgba(244, 239, 227, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* inline label below */
+.jj-spinner-with-label {
+  display: inline-flex; flex-direction: column;
+  align-items: center; gap: 14px;
+}
+.jj-spinner-with-label .jj-spinner-label {
+  font-family: var(--font-display, "Bricolage Grotesque", system-ui, sans-serif);
+  font-stretch: 75%; font-weight: 700;
+  font-size: 14px; letter-spacing: -0.005em;
+  color: var(--jj-spinner-color);
+  opacity: 0.7;
+}
+
+/* accessibility — respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .jj-spinner::before { animation: none; transform: translateY(-30%); }
+}
