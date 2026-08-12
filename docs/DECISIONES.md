@@ -407,3 +407,90 @@ Attest) como anti-abuso equivalente, (iii) exigir alta por web y dejar la app so
 sesión — que es legítimo y común, y hoy ya funcionaría: el login (`auth/tokens`) nunca dependió de
 Turnstile, solo de los dos limitadores. Si en Fase 6 se eligiera relajar la regla, ESO sí vuelve a
 ser decisión del owner.
+
+## #24 · 2026-08-13 · Fase 3 paso 0: cimientos de la API, y dos cosas que solo se ven al montarlas
+Ejecutado el paso 0 del corte de `docs/specs/api-v1.md` §9 (cimientos sin negocio). Lo previsto
+salió como estaba diseñado; lo que sigue son las decisiones que hubo que **tomar** porque el spec
+no podía verlas desde el papel.
+
+**(a) Grupo `api` reemplazado, no ampliado.** El spec pedía declararlo «pieza a pieza»; se hace con
+`$middleware->group('api', […])` en vez de `append`/`prepend`, porque en un grupo donde el ORDEN es
+el diseño —`ApiLocale` necesita la sesión que inyecta Sanctum, `EnsureSiteAvailable` necesita el
+idioma ya resuelto para su 503— depender de dónde inserte cada helper es un bug esperando.
+
+**(b) Idioma: se LEE la sesión, nunca se escribe.** `SetLocale` (web) persiste la elección en
+sesión, y por eso el spec dijo que no era reutilizable. La API resuelve
+sesión → `Accept-Language` → `users.locale` → `config`. El primer escalón no estaba en el spec y se
+añadió por un problema real: la SPA de Fase 4 comparte dominio y sesión con la web, así que sin él
+un visitante que elige «FR» en el pie vería la landing en francés y los datos del sidebar en otro
+idioma —la misma pantalla, dos idiomas—. Escribirla, en cambio, convertiría cada petición de un
+cliente sin sesión en estado de servidor nuevo. Ambas mitades verificadas **por mutación**.
+
+**(c) Códigos de error con indirección explícita.** `ApiErrorCode` es un enum cerrado y el mensaje
+sale de `lang/<idioma>/api.php` por una clave derivada. Además, el mensaje **nunca** procede de la
+excepción: `ModelNotFoundException` se convierte en un 404 cuyo `getMessage()` regala el FQCN del
+modelo y el id ajeno. Con test.
+
+**(d) `Cache-Control: no-store` decidido en la RESPUESTA, no ruta a ruta.** Se aplica cuando
+`$request->user()` resuelve al volver del pipeline —`auth:sanctum` ya ha llamado a
+`Auth::shouldUse()`, así que no cuesta ninguna consulta—. Ruta a ruta se acaba olvidando en alguna;
+así `RGPD-04` es el defecto de la superficie. Efecto aceptado: un endpoint público pedido por un
+visitante con sesión también sale `no-store`, lo que sacrifica caché para usuarios identificados
+pero no para el tráfico anónimo, que es el que `PERF-02` protege.
+
+**(e) Caducidad de tokens fijada YA, sin emisor.** Sanctum trae `expiration => null` (tokens
+eternos). Se pone techo de 30 días y `sanctum:prune-expired` semanal aunque `POST auth/tokens` no
+llegue hasta el paso 3: el default inseguro es justo el que nadie recuerda cambiar. La política
+fina (abilities, renovación) se decide allí, con el flujo delante.
+
+**(f) HALLAZGO — abrir `routes/api.php` abrió CORS a todo el mundo.** `HandleCors` es middleware
+**global** de Laravel y su config por defecto —que vive en el framework hasta que se publica— trae
+`'paths' => ['api/*']` con `'allowed_origins' => ['*']`. Verificado con `curl -I`:
+`Access-Control-Allow-Origin: *`, presente solo en `/api/v1`. Nadie lo decidió. El daño inmediato
+era acotado (sin `supports_credentials` el navegador no envía cookies cross-origin), pero el
+catálogo del paso 1 habría quedado legible desde cualquier web y era superficie regalada en la fase
+que abre el dominio al exterior. Cerrado publicando `config/cors.php` con orígenes **exactos**
+derivados de `APP_URL` (nunca `*`), `supports_credentials: true` —seguro precisamente porque el
+comodín no existe— y `CORS_ALLOWED_ORIGINS` para la instalación que sirva la SPA en otro dominio.
+
+**(g) HALLAZGO — el limitador no ve las peticiones sin credencial.** Laravel ordena
+`AuthenticatesRequests` **antes** que `ThrottleRequests` en `$middlewarePriority`, así que en una
+ruta con `auth:` el 401 se lanza sin pasar por `throttle:api`. Se **conserva el estándar**: forzar
+la prioridad afectaría también a la web, y allí sería PEOR —rutas como `verification.send` usan la
+clave por defecto del throttle, y un anónimo pasaría a consumir el cubo por IP de los usuarios
+legítimos tras el mismo NAT—. Lo que necesita techo de verdad (login, registro, reset, catálogo,
+disponibilidad, quote) es público y sí lo recibe. Queda fijado por test para que nadie lo
+redescubra.
+
+**(h) Migración de Sanctum PUBLICADA al repo.** Comprobado que Sanctum solo declara
+`publishesMigrations()` sin `loadMigrationsFrom()`: sin publicarla no habría tabla. Además, en un
+producto que se instala cliente a cliente, el esquema tiene que estar versionado aquí (72
+migraciones; `MODELO-DATOS.md` §5).
+
+**(i) `CRITICAL_RE` ampliado por NOMBRE, no por carpeta.** El gate de concurrencia cubre ahora
+`app/Http/Controllers/Api/**/(Order|Payment|Checkout|Quote|Availability)*.php`. Incluir la carpeta
+entera obligaría a correr dos verificadores de 16 workers por tocar `MeController`, y un gate que
+salta de más es un gate que se acaba saltando a mano. Que la lista siga cubriendo lo que debe lo
+vigila `CriticalPathGateTest`, que además falla si un controlador de API llega al núcleo con un
+nombre fuera del patrón.
+
+**Verificación empírica**: suite **2224 verde** (8292 aserciones, 59,0 s) · Pint limpio (679
+ficheros, sin reformatear) · `docs-check` verde · `composer audit` en 0 · superficies
+`/`, `/api/v1/me` (401 con sobre), 404/405/429/503 de la API y 404 HTML de la web comprobados con
+`curl` · idioma negociado en es/en/fr por `Accept-Language` · CORS comprobado con `Origin` propio y
+ajeno · guardas de frontera, de contrato y de gate **verificadas por mutación** (se introdujo la
+infracción, se vio el rojo, se revirtió). NO se corrieron los verificadores de concurrencia: el
+paso 0 no toca `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` ni ningún controlador de
+checkout, y el gate del pre-push lo confirma.
+
+⚠️ **Hallado al verificar, y NO causado por este trabajo**: `npm audit` pasó de 0 (`#22`, esa misma
+mañana) a **5 avisos (2 críticas, 3 altas)** sin que `package.json` ni `package-lock.json` cambiaran
+— son avisos publicados en el intervalo. Los 5 están en el árbol de herramientas de BUILD (`vite`,
+`postcss`, `nanoid`, `concurrently`→`shell-quote`) y ninguno en los paquetes que viajan al navegador.
+Los 5 declaran `fixAvailable`. Anotado en `DEUDA.md §Alta` y **no saneado en este commit** a
+propósito: mezclarlo con el paso 0 rompería la unidad de trabajo, y el saneado npm exige su propio
+`npm run build` + verificación de assets, como se hizo en `#22` con composer.
+
+⚠️ **Arreglado de paso, en el entorno local (no versionado)**: `.env` tenía `APP_URL=…:8080` con
+`APP_PORT=8081`. Enlaces absolutos de correo, URLs firmadas y —ahora— la derivación de CORS y de
+los dominios stateful de Sanctum salían con el puerto equivocado.

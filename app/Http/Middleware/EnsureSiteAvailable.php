@@ -3,6 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Platform\Services\MaintenanceSettings;
+use App\Http\Api\ApiErrorCode;
+use App\Http\Api\ApiErrorResponse;
+use App\Http\Api\ApiSurface;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,6 +26,13 @@ use Symfony\Component\HttpFoundation\Response;
  * **Bypass:** un usuario autenticado del panel (admin/staff) ve la web REAL para hacer QA; el
  * layout le inyecta un banner de aviso («solo tú la ves»). Idéntico criterio que
  * `User::canAccessPanel()` (admin || staff), sin acoplar a un Panel de Filament.
+ * ⚠️ El bypass se resuelve con el guard por defecto (sesión), porque este middleware corre ANTES
+ * del `auth:` de ruta: en `/api/v1` funciona para la SPA (comparte sesión) y NO para un cliente
+ * Bearer. Es irrelevante mientras no se emitan tokens (paso 3 de Fase 3); cuando se emitan, si un
+ * admin necesita QA desde la app, aquí es donde hay que consultar también el guard `sanctum`.
+ *
+ * **`/api/v1` también entra** (Fase 3 · paso 0, spec §4.7), con el 503 renderizado como sobre de
+ * error JSON — ver `maintenanceResponse`.
  *
  * El helper es fail-safe (un setting corrupto NO activa el mantenimiento), así que el camino por
  * defecto de este middleware es no hacer nada. Orden de registro: corre DESPUÉS de `SetLocale`
@@ -47,12 +57,12 @@ class EnsureSiteAvailable
 
         // Precedencia: sitio entero (item 2) por encima de página concreta (item 1).
         if (MaintenanceSettings::siteInMaintenance() && ! $isStaff) {
-            return $this->maintenanceResponse('errors.maintenance');
+            return $this->maintenanceResponse($request, 'errors.maintenance');
         }
 
         $pageKey = $this->currentPageKey($request);
         if ($pageKey !== null && MaintenanceSettings::pageInMaintenance($pageKey) && ! $isStaff) {
-            return $this->maintenanceResponse('errors.page-maintenance');
+            return $this->maintenanceResponse($request, 'errors.page-maintenance');
         }
 
         return $next($request);
@@ -77,8 +87,26 @@ class EnsureSiteAvailable
         return in_array($name, MaintenanceSettings::PAGE_KEYS, true) ? $name : null;
     }
 
-    private function maintenanceResponse(string $view): Response
+    /**
+     * El mismo 503 en los dos idiomas del sistema: HTML on-brand para la web, sobre de error JSON
+     * para `/api/v1` (Fase 3 · paso 0, spec §4.7).
+     *
+     * La decisión que el spec dejó escrita: **la API entra en el mantenimiento**, no queda fuera.
+     * Un kill-switch que apaga la web pero deja el dominio abierto por otra puerta no es un
+     * kill-switch. Lo que había que resolver era el formato: sin esto, un cliente JSON recibiría la
+     * página HTML de mantenimiento y fallaría al parsearla, convirtiendo un 503 explicable en un
+     * error incomprensible. `Retry-After` viaja en ambos (SEO en web, reintento en API).
+     */
+    private function maintenanceResponse(Request $request, string $view): Response
     {
+        if (ApiSurface::handles($request)) {
+            return ApiErrorResponse::make(
+                ApiErrorCode::Maintenance,
+                Response::HTTP_SERVICE_UNAVAILABLE,
+                headers: ['Retry-After' => (string) self::RETRY_AFTER_SECONDS],
+            );
+        }
+
         return response()
             ->view($view, [], Response::HTTP_SERVICE_UNAVAILABLE)
             ->header('Retry-After', (string) self::RETRY_AFTER_SECONDS);

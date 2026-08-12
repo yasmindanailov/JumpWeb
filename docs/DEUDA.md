@@ -1,7 +1,8 @@
 # Deuda técnica — registro único
 
-> Estado: vivo · Última actualización: 2026-08-12 ·
-> Verificado contra código: 2026-08-12 (cada ítem re-medido; los ya inexistentes, retirados) ·
+> Estado: vivo · Última actualización: 2026-08-13 ·
+> Verificado contra código: 2026-08-13 (Fase 3 · paso 0: ítems nuevos de la API; el resto sin
+> re-medir desde 2026-08-12) ·
 > Se invalida si: una fase retira un ítem sin actualizar su fila.
 
 Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se duplica).
@@ -12,6 +13,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | Ítem | Qué (medido) | Dónde muerde | La retira |
 |---|---|---|---|
 | ~~Dependencias con avisos de seguridad~~ **RETIRADA 2026-08-13** (`DECISIONES #22`) | `composer audit` (2026-08-13): **26 avisos en 5 paquetes** — `guzzlehttp/guzzle` 9 (1 alta), `league/commonmark` 6 (4 altas, DoS y bypass de filtro de enlaces), `dompdf/dompdf` 6, `guzzlehttp/psr7` 4, `laravel/framework` 1. Todos son transitivos. | La app hace peticiones HTTP salientes (Redsys, Turnstile), renderiza Markdown y genera PDFs: las tres superficies afectadas están EN USO | **Un `composer update` normal los resuelve**: verificado con `--dry-run` que sube commonmark 2.8.2→2.10.0 (los avisos son `<2.9.0`), guzzle 7.10.4→7.15.3, psr7 2.10.1→2.13.0, dompdf 3.1.5→3.1.6 y framework 13.11.2→13.25.0 — **sin cambiar ninguna restricción de `composer.json` ni añadir nada**. ✅ **hecha**: `composer audit` y `npm audit` → 0; suite 2186 verde, Pint sin churn, verificadores sobre MySQL y PDF real generado |
+| **Avisos npm en el árbol de build** (2026-08-13) | `npm audit`: **5 avisos — 2 críticas, 3 altas** (`shell-quote` vía `concurrently`, `vite`, `postcss`, `nanoid`). Aparecidos DESPUÉS del saneado de `DECISIONES #22` y sin que `package.json`/`package-lock.json` cambiaran. Ninguno en los paquetes que viajan al navegador (`alpinejs`, `@fullcalendar/*`, `html2canvas`) | Cadena de construcción de assets y `npm run dev`; no el bundle servido a usuarios. `shell-quote`/`concurrently` solo actúan en el script `dev` | **`npm audit fix` (sin `--force`) los resuelve**: los 5 declaran `fixAvailable`. Falta ejecutarlo y verificar con `npm run build` + render de superficies, como se hizo con composer en `#22` |
 | God-class `ViewOrder` | `app/Filament/Resources/Orders/Pages/ViewOrder.php`, 5.028 líneas; concentra edición de pedido, reembolsos y `lockZoneDaySlots` | Toda operación de dinero/aforo del panel roza INVARIANTES §1/§2 | Sin plan (Fase 2 lo declaró fuera de alcance: es capa de entrega) |
 | God-class `Purchase` + puente Alpine | `app/Livewire/Tickets/Purchase.php`, 2.049 líneas; `Alpine.store('purchase')` sincronizado a mano con `$wire.step` | Todo el checkout web; el puente depende de sincronía manual JS↔Livewire | Fase 4 (muere con la SPA) |
 | ~~Sin morphMap~~ | **RETIRADA en Fase 2** (2026-08-12): `enforceMorphMap` con alias para los 30 modelos + migración de datos + barrido de `::class` en columnas morph + `MorphMapTest` (verificado también en MySQL dev: 0 FQCN restantes) | — | ✅ hecha |
@@ -21,7 +23,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 
 | Ítem | Qué (medido) | Dónde muerde | La retira |
 |---|---|---|---|
-| Suite ciega a carreras InnoDB | SQLite `:memory:`; doble-cobro/sobreventa solo en comandos on-demand; el pre-push exige el flag `VERIFY_CONC=1`, no ejecuta los comandos | Un cambio de locks pasa verde y sobrevende en producción | Sin plan (mitigada por guarda del hook) |
+| Suite ciega a carreras InnoDB | SQLite `:memory:`; doble-cobro/sobreventa solo en comandos on-demand; el pre-push exige el flag `VERIFY_CONC=1`, no ejecuta los comandos | Un cambio de locks pasa verde y sobrevende en producción | Sin plan (mitigada por la guarda del hook; desde Fase 3 · paso 0 `CriticalPathGateTest` verifica además que esa guarda sigue cubriendo lo que debe) |
 | `$guarded = []` masivo | 22 de 30 modelos abiertos; solo 6 con `$fillable`; `User` sin ninguno | Mass assignment en código nuevo; `preventSilentlyDiscardingAttributes` solo en no-prod | Sin plan |
 | Branding residual | **RETIRADO en Fase 1** (2026-08-12): quedan solo 6 líneas intencionales (regla 7, guard-bash, cron de ejemplo neutro, y el `assertDontSee('jumpingjump.com')` que actúa de GUARD) + fixtures `JJ-…` autoconsistentes en tests (cosmético, sin valor de marca) y códigos forenses en comentarios | — | ✅ hecha |
 | `app/Support` cajón desastre | 57 ficheros PHP (55 planos + 2 vendorizados) mezclando dinero, aforo, CMS, settings y reparaciones legacy | Sin fronteras de módulo: todo importa a todo | Fase 2 |
@@ -31,7 +33,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | Hueco test: no-legibilidad de secretos | Solo se asevera la escritura; nada asevera que el form no CARGUE `redsys_secret_key` | Una regresión pintaría el secreto en el HTML del panel | Sin plan (INVARIANTES SEC-11 ⚠️) |
 | Una sola factory | `database/factories/` = solo `UserFactory` para 30 modelos y 213 ficheros de test | Fixtures a mano (~1.100 `::create`), helpers `admin()`/`staff()` duplicados ×36 | Sin plan (ver `TESTING.md` §datos) |
 | Vocabulario de sector en código | `PuertaSettings`, waiver, zonas/cumpleaños en clases, rutas y BD | Multi-sector exige renombrar clases y valores morph (se encadena con morphMap) | Fase 1 (decisión) + Fase 2 |
-| Migraciones con lógica de datos del origen | 9 de 70 migraciones con backfills/seeds + 4 clases `Legacy*`/`*Backfill` vivas en Support | Decisiones del origen incrustadas en el esquema; ruido en instalación limpia | Sin plan |
+| Migraciones con lógica de datos del origen | 9 de 72 migraciones con backfills/seeds + 4 clases `Legacy*`/`*Backfill` vivas en Support | Decisiones del origen incrustadas en el esquema; ruido en instalación limpia | Sin plan |
 
 ## Baja
 
@@ -49,6 +51,8 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | FKs ausentes a propósito | `ticket_types.zone_id` y `order_items.parent_item_id` sin constraint (limitación ALTER de SQLite) | Integridad solo en app; huérfanos posibles ante bugs | Sin plan |
 | `seasons.name` sin i18n | Sin cast ni `HasTranslations` (asumida etiqueta interna) | Inconsistencia con el resto del CMS | Sin plan |
 | CSP laxa + HSTS pendientes | `'unsafe-inline'/'unsafe-eval'` (los exigen Alpine/Livewire); HSTS no emitido | En el primer despliegue real de JumpWeb | Condición: despliegue propio (`SEGURIDAD.md`) |
+| Mantenimiento: sin bypass de staff con Bearer | `EnsureSiteAvailable` resuelve el bypass con el guard por defecto (sesión), porque corre antes del `auth:` de ruta. Con la SPA funciona (comparte sesión); con un token no | Un admin no podría hacer QA del sitio en mantenimiento desde la app nativa | Fase 3 · paso 3 (cuando existan tokens que emitir) — hoy la tabla está vacía |
+| Rutas de API con `auth:` fuera del limitador base | Medido: Laravel ordena `AuthenticatesRequests` antes que `ThrottleRequests`, así que el 401 no consume `throttle:api`. Se conserva el estándar a propósito (`DECISIONES #24g`): invertirlo empeoraría los `throttle` de la web | Un anónimo puede repetir peticiones a un endpoint autenticado sin techo; el 401 es barato y no toca BD | Sin plan (fijado por `ApiEnvelopeTest`; lo que necesita techo de verdad es público y sí lo tiene) |
 | Slugs públicos en español | `/mi-cuenta`, `/cumpleanos`… (`routes/web.php`) | Instalaciones no hispanohablantes | Fase 1 (decisión pendiente) |
 | Wordmark de emails no data-driven | El header de mail usa `config('app.name')` ¡con fallback literal de la marca origen! | Emails con marca distinta a la del panel | Fase 1 |
 

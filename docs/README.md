@@ -16,7 +16,8 @@
 | `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
 | `specs/vocabulario-dominio.md` | 🟦 Diseño de generalización del vocabulario (entrada de Fase 2; decisión final con los módulos). |
 | `specs/modulos-dominio.md` | ✅ Arquitectura de módulos de Fase 2 APROBADA (revisión multi-agente) — orden, contratos y checklists de mudanza. |
-| `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3) EN REVISIÓN — bloqueado por 2 decisiones de dependencia del owner. |
+| `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3), v2 tras revisión adversarial. **EN EJECUCIÓN**: paso 0 cerrado; §9 lleva el avance y §10 lo que el código enseñó al implementar. |
+| `../openapi/v1.yaml` | El **contrato** de la API v1 (OpenAPI 3.0.3, escrito a mano). No vive en `docs/` porque no es documentación: es el artefacto contra el que se validan los tests y, en Fase 6, la app móvil. Manda sobre el código (`DECISIONES #21`). |
 
 ## Base heredada (adaptada del proyecto origen el 2026-08-12)
 > Describen la base tal como se heredó; el refactor puede haberlas cambiado.
@@ -26,7 +27,7 @@
 |---|---|
 | `INVARIANTES.md` | 54 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
 | `ARQUITECTURA.md` | Stack real, estructura (`app/Domain/<Contexto>/`), white-label 3 capas, composer global memoizado. |
-| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (30 modelos · 71 migraciones), por dominios, con rarezas heredadas. |
+| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (30 modelos · 72 migraciones), por dominios, con rarezas heredadas. |
 | `SEGURIDAD.md` | Estándar transversal nivel Reforzado (ASVS/NIST): 12 reglas + estado heredado. |
 | `TESTING.md` | Suite (paralelo paratest), anti-red, fakes por proveedor, Unit/Feature, comandos de verificación con MySQL real. |
 | `FLUJOS.md` | Los 6 recorridos de usuario heredados + reglas transversales. |

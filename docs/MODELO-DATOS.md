@@ -4,7 +4,7 @@
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
 > encima (CONVENCIONES §7).
 
-> **Fuente:** REGENERADO desde el código real (`app/Domain/*/Models/*.php` + `database/migrations/`, 71
+> **Fuente:** REGENERADO desde el código real (`app/Domain/*/Models/*.php` + `database/migrations/`, 72
 > migraciones). El `04-MODELO-DATOS.md` del origen estaba desfasado y NO se portó.
 
 ## 0. Convenciones transversales
@@ -300,6 +300,22 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 
 `sessions` (driver database; `user_id` indexado — la anonimización borra las del titular),
 `password_reset_tokens`, `cache`/`cache_locks`, `jobs`/`job_batches`/`failed_jobs`.
+
+### `personal_access_tokens` — tokens Bearer de la API (Sanctum, Fase 3 · paso 0)
+
+Migración PUBLICADA al repo, no cargada desde el paquete: se comprobó que Sanctum solo declara
+`publishesMigrations()` (sin `loadMigrationsFrom`), así que sin publicarla la tabla no existiría —
+y además el esquema de un producto que se instala en cada cliente debe estar versionado aquí.
+
+`tokenable` es un morph, así que guarda el **alias** `user` y no el FQCN (morphMap forzado, §0):
+mover o renombrar `User` no rompe los tokens. `token` es un hash SHA-256, nunca el token en claro.
+`expires_at` lo rige `config('sanctum.expiration')` (30 días por defecto) y la poda semanal de
+`sanctum:prune-expired` (`routes/console.php`).
+
+⚠️ **Sin emisor todavía**: `POST auth/tokens` llega en el paso 3 de Fase 3, y con él la
+**revocación** —que la revisión del spec destapó como hueco: `User::anonymize()` purga `sessions`
+(`RGPD-01`) pero un Bearer sobreviviría al borrado—. Hasta entonces la tabla está vacía en toda
+instalación.
 
 ---
 

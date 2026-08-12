@@ -15,9 +15,21 @@ ZERO=0000000000000000000000000000000000000000
 pushing_main=0
 touched_critical=''
 # Ficheros cuyo cambio exige los comandos verify-* (DECISIONES #10.c / INVARIANTES §6).
-# Anclados por BASENAME, no por ruta: la modularización de Fase 2 los moverá de app/Support
-# a app/Domain/* y el gate debe seguirlos (hallazgo de la revisión del spec de módulos).
-CRITICAL_RE='^app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php$'
+# Dos familias, por dos motivos distintos:
+#
+#  1. **El núcleo, por BASENAME** (no por ruta): la modularización de Fase 2 los movió de
+#     app/Support a app/Domain/* y el gate tenía que seguirlos (hallazgo de la revisión del spec
+#     de módulos).
+#  2. **Los controladores de checkout de la API, por NOMBRE** (Fase 3 · paso 0, spec §9): un
+#     endpoint que crea pedidos, inicia pagos o calcula disponibilidad orquesta exactamente las
+#     carreras que la suite SQLite no puede ver, y con el patrón anterior no habría disparado
+#     nada. No se incluye toda la carpeta a propósito: obligar a correr dos verificadores de 16
+#     workers por tocar `MeController` convertiría el gate en algo que la gente aprende a saltarse.
+#
+# `ApiBoundariesTest` NO sustituye a esto: prohíbe que la lógica NAZCA en el controlador, pero un
+# controlador que llama al OrderCreator correcto sigue pudiendo reordenar sus llamadas y romper
+# `AFORO-01`. Que esta lista siga cubriendo lo que debe lo vigila `CriticalPathGateTest`.
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

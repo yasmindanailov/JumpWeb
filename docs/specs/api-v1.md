@@ -1,11 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2, reescrito tras revisión adversarial** (2026-08-13) · **SIN bloqueantes**:
-> dependencias decididas (`#21`), árbol saneado (`#22`) y el anti-bot resuelto sin relajar nada
-> (`#23`) · Listo para implementar por el corte de §9 · Última actualización: 2026-08-13 ·
-> Decisión asociada: `DECISIONES #21` (dependencias) + «#N» al aprobarse el diseño.
+> Estado: 🟦 **v2 · EN EJECUCIÓN — paso 0 (cimientos) TERMINADO** (2026-08-13) ·
+> Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
+> `#22` (árbol saneado), `#23` (anti-bot) y **`#24`** (paso 0).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
-> Qué cambió respecto a la v1 y por qué: **§8**.
+> Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
+> **Lo que el código enseñó al implementar: §10** — léelo antes de seguir por el paso 1.
+> ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
+> se conserva como registro del análisis, no como foto del código de hoy.
 
 ## 1. Contexto y problema
 
@@ -81,9 +83,11 @@ presente solo como transitiva de `packages-dev`; se declarará explícitamente.
 ## 4. Diseño elegido
 
 ### 4.1 Enrutado y versión
-`routes/api.php` (futuro) con prefijo **`/api/v1`**, registrado en `withRouting(api: …)`. La
-versión va en la URL. `v1` es evolutiva hasta que exista el primer cliente móvil (Fase 6); ahí se
-congela.
+`routes/api.php` con prefijo **`/api/v1`**, registrado en `withRouting(api: …)`. La versión va en
+la URL. `v1` es evolutiva hasta que exista el primer cliente móvil (Fase 6); ahí se congela.
+✅ Hecho en el paso 0: el prefijo tiene **fuente única** (`App\Http\Api\ApiSurface::PREFIX`), que
+usan a la vez el registro de rutas, el sobre de error y el 503 de mantenimiento — las tres cosas
+que dejarían de coincidir si cada una llevara su copia.
 
 ### 4.2 Autenticación, sesión y revocación
 - **SPA (mismo dominio)**: cookie de sesión de Sanctum (`statefulApi`) + CSRF. Sin token en
@@ -278,8 +282,9 @@ Se corrige:
 
 ## 9. Corte en pasos (un paso = una unidad committeable, suite verde + gates)
 
-0. **Cimientos, sin negocio**: `api:` en `withRouting`, grupo de middleware (§4.7), Sanctum, sobre
-   de error, `GET me`, esqueleto OpenAPI + su test con mutación. Cierra la deuda de dependencias.
+0. ✅ **Cimientos, sin negocio** (2026-08-13, `DECISIONES #24`): `api:` en `withRouting`, grupo de
+   middleware (§4.7), Sanctum, sobre de error, `GET me`, esqueleto OpenAPI + su test con mutación.
+   Cierra la deuda de dependencias. **Lo que el código enseñó: §10.**
 1. **Solo lectura**: `me/reservations`, `me/orders`, catálogo (read-model nuevo). Sin escritura.
 2. **Refactor sin endpoints**: extraer política de admisión e ida de pago (§4.6.1–2). Aquí tocan
    `VERIFY_CONC=1` y los dos verificadores; web y panel quedan de testigo.
@@ -292,3 +297,47 @@ Se corrige:
 ⚠️ El gate `pre-push` ancla `VERIFY_CONC` a `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator`:
 los controladores de checkout de API **no lo dispararían**. Ampliar `CRITICAL_RE` es parte del
 paso 0.
+
+## 10. Lo que el código enseñó — paso 0 (2026-08-13)
+
+Sección viva: cada paso añade la suya, como hizo `modulos-dominio.md` §4.bis–§4.octies. Solo lo que
+**cambia el trabajo del siguiente paso**; el porqué completo está en `DECISIONES #24`.
+
+**1. Abrir la API abrió CORS sin que nadie lo decidiera.** `HandleCors` es middleware GLOBAL de
+Laravel y su config por defecto (la del framework, hasta que se publica) trae `paths: ['api/*']` con
+`allowed_origins: ['*']`. `curl -I` lo confirmó en la primera petición que funcionó. Cerrado con
+`config/cors.php` de orígenes exactos derivados de `APP_URL`. **Lección general que el paso 1 debe
+aplicar**: al abrir una superficie nueva, no basta con revisar qué middleware se HEREDA —el §4.7 ya
+lo hizo—, hay que revisar también qué middleware GLOBAL se despierta con ella.
+
+**2. El limitador no ve las peticiones sin credencial.** `$middlewarePriority` de Laravel pone
+`AuthenticatesRequests` antes que `ThrottleRequests`: en una ruta con `auth:`, el 401 nunca llega a
+`throttle:api`. Se conserva el estándar (invertirlo empeoraría los `throttle` de la web) y está
+fijado por test. **Consecuencia para el paso 3**: los limitadores de `SEC-06` van en rutas PÚBLICAS
+(login, registro, reset), así que funcionan; pero cualquier futuro techo pensado para proteger un
+endpoint AUTENTICADO no puede confiar en el suelo genérico y necesita su propio mecanismo.
+
+**3. El coste del grupo de middleware es 1 consulta**, no las que se temían. `SecurityHeaders`
+calcula la CSP leyendo `settings`, y en una superficie de alta frecuencia eso preocupaba; el memo
+por petición de `PERF-02` ya lo cubría. Medido y fijado en `ApiOverheadTest`. **El paso 1 hereda el
+presupuesto** y le añadirá el suyo para `catalog/*` y `availability/*`.
+
+**4. Sanctum no carga sus migraciones** (solo `publishesMigrations`), así que hay que publicarlas o
+la tabla no existe. Publicadas al repo también por criterio propio: el esquema de un producto que se
+instala cliente a cliente se versiona aquí.
+
+**5. La estrictez del esquema ES la prueba por mutación.** Que renombrar un campo ponga el test en
+rojo depende de que el documento declare `additionalProperties: false` y liste el campo en
+`required`. Como eso puede relajarse sin que nadie lo note, `ApiContractTest` lo comprueba, con las
+excepciones declaradas por nombre (hoy: `params` y `fields` del sobre). **Todo esquema nuevo del
+paso 1 nace con esa forma** o el test lo rechaza.
+
+**6. `ApiBoundariesTest` y `CRITICAL_RE` no se solapan, se complementan.** El primero prohíbe que la
+lógica NAZCA en el controlador; el segundo obliga a correr los verificadores de concurrencia cuando
+un controlador de checkout cambia. Un controlador que llama al `OrderCreator` correcto pasa el
+primero y aun así puede reordenar sus llamadas y romper `AFORO-01`. **El paso 4 necesita los dos.**
+
+**7. Detalle operativo para quien escriba tests de API**: heredar de `Tests\Feature\Api\ApiTestCase`
+activa la validación contra el contrato en TODA petición del test. Para probar cimientos con rutas
+sintéticas (validación, fallos, límites) hay que heredar de `Tests\TestCase` y montar la ruta con
+`Route::middleware('api')`, o Spectator falla por «path no declarado» en vez de probar lo que toca.

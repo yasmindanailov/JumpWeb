@@ -1,0 +1,224 @@
+# JumpWeb — API v1
+#
+# Documento ESCRITO A MANO y versionado (`DECISIONES #21`). No se genera desde el código: con
+# generación, el contrato pasa a ser un reflejo de la implementación y cualquier refactor lo
+# cambiaría en silencio — inaceptable para un contrato contra el que la app móvil de Fase 6 se
+# construye y despliega por separado. La relación va al revés: **este fichero manda**, y los tests
+# de contrato (Spectator) caen cuando el código se desvía.
+#
+# Se sirve como fichero estático; ningún paquete de runtime lo publica por HTTP (`DECISIONES #21c`).
+#
+# Alcance actual: Fase 3 · paso 0 (cimientos). Los endpoints llegan por los pasos del spec §9.
+
+openapi: 3.0.3
+
+info:
+  title: JumpWeb API
+  version: 1.0.0
+  description: |
+    API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
+    app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
+
+    **Autenticación** (spec §4.2): la SPA de primera parte usa la cookie de sesión de Sanctum con
+    CSRF —nunca un token en `localStorage`—; el cliente móvil usa un Bearer emitido por
+    `POST /auth/tokens`, con caducidad y revocación.
+
+    **Errores**: todos comparten un único sobre (`Error`). El campo que un cliente debe programar
+    es `code`, no `message` ni el texto de ninguna traducción.
+
+    **Idioma**: se negocia por `Accept-Language` entre `es`, `en` y `fr`. Un cliente que comparta
+    sesión con la web (la SPA) hereda la elección del visitante sin enviar nada.
+
+servers:
+  - url: /api/v1
+    description: La versión va en la URL. `v1` es evolutiva hasta el primer cliente móvil (Fase 6).
+
+tags:
+  - name: Cuenta
+    description: El usuario autenticado y sus datos.
+
+paths:
+
+  /me:
+    get:
+      tags: [Cuenta]
+      operationId: getMe
+      summary: El usuario autenticado
+      description: |
+        Devuelve el perfil de quien hace la petición. La identidad sale SIEMPRE del guard, nunca de
+        un parámetro, así que no hay superficie de IDOR.
+
+        No exige el correo verificado: el registro «pay-first» crea cuentas sin verificar y el
+        cliente necesita poder leer ese estado (`email_verified_at: null`) para pedir el reenvío.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil del usuario autenticado.
+          headers:
+            Cache-Control:
+              description: Siempre `no-store` en respuestas autenticadas (`RGPD-04`).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+components:
+
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+      description: |
+        Modo SPA de primera parte. El cliente pide primero `GET /sanctum/csrf-cookie` y envía el
+        token CSRF en `X-XSRF-TOKEN`. Solo funciona desde un origen declarado como *stateful*.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Modo cliente nativo. Token emitido por `POST /auth/tokens` (paso 3), con caducidad y
+        revocable desde el borrado RGPD, el cambio de contraseña y «cerrar otras sesiones».
+
+  responses:
+    Unauthenticated:
+      description: Falta identidad o ya no es válida.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Limitador alcanzado. `params.retry_after` indica los segundos que faltan.
+      headers:
+        Retry-After:
+          description: Segundos hasta que se puede reintentar.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Maintenance:
+      description: El sitio está en mantenimiento (#218). Alcanza también a la API, a propósito.
+      headers:
+        Retry-After:
+          description: Segundos orientativos hasta el próximo intento.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    Error:
+      type: object
+      description: |
+        Sobre único de error de toda la API (spec §4.3). `code` es el contrato estable; `message`
+        es texto ya traducido, para mostrar cuando el cliente no sabe hacer nada mejor.
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              description: |
+                Código estable. La lista es CERRADA: añadir uno es evolutivo, renombrarlo o
+                quitarlo es incompatible y exige `v2`. Debe coincidir con `App\Http\Api\ApiErrorCode`.
+              enum:
+                - unauthenticated
+                - unauthorized
+                - not_found
+                - method_not_allowed
+                - session_expired
+                - validation_failed
+                - too_many_requests
+                - maintenance
+                - bad_request
+                - server_error
+            message:
+              type: string
+              description: Mensaje legible en el idioma negociado.
+            params:
+              type: object
+              description: |
+                Datos para interpolar el mensaje en el cliente. Presente solo cuando aporta algo:
+                hoy, `retry_after` en el 429; desde el paso 4, `product`/`when` de las reglas de
+                reserva, sin los cuales el cliente pintaría «El producto — no está disponible».
+              additionalProperties: true
+            fields:
+              type: object
+              description: Errores por campo. Presente solo en `validation_failed`.
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+
+    User:
+      type: object
+      description: |
+        El usuario autenticado. La lista de campos es una ALLOWLIST (`SEC-10`): una columna nueva
+        en `users` no aparece aquí hasta que alguien la añade a propósito, en el documento y en
+        `UserResource`.
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - locale
+        - marketing_opt_in
+        - email_verified_at
+        - pending_email
+        - pending_email_sent_at
+        - created_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        locale:
+          type: string
+          enum: [es, en, fr]
+          nullable: true
+        marketing_opt_in:
+          type: boolean
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: '`null` = cuenta sin verificar (registro «pay-first»).'
+        pending_email:
+          type: string
+          format: email
+          nullable: true
+          description: Cambio de correo en curso (doble opt-in por enlace firmado).
+        pending_email_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true

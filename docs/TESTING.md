@@ -95,8 +95,36 @@ degrada en silencio.
   los FQCN de `convert_morph_types_to_aliases` son los valores que la BD tenía en 2026-08-12
   (DATOS, no rutas de código) y un `sed` global de la modularización los rompería en silencio.
 
+- **`ApiBoundariesTest`** (Fase 3 · paso 0) — un controlador de `/api/v1` traduce HTTP ↔ dominio y
+  nada más: prohíbe transacciones, escrituras de Eloquent y contadores de intentos en la capa HTTP.
+  Hacía falta una guarda propia porque `ModuleBoundariesTest` **no** vigila esto (su lista
+  `DELIVERY` incluye `Http`). Es la versión falsable del criterio «ninguna regla de negocio nace en
+  un controlador de API».
+- **`CriticalPathGateTest`** (Fase 3 · paso 0) — trae al terreno de la suite la regex
+  `CRITICAL_RE` del hook `pre-push`: comprueba que sigue cubriendo el núcleo de dinero/aforo, que
+  **no** es un comodín (un gate que salta siempre acaba desactivado a mano) y que ningún
+  controlador de API alcanza ese núcleo con un nombre fuera del patrón.
+- **`ApiContractTest`** (Fase 3 · paso 0) — rutas registradas ↔ `paths` del OpenAPI en las DOS
+  direcciones, códigos de error del enum ↔ los del documento, y que los esquemas sean lo bastante
+  estrictos (`additionalProperties: false` + `required` completo) para que renombrar un campo
+  ponga en rojo el test del endpoint. Esa estrictez ES la prueba por mutación.
+
 > Al tocar estos tests: modificar una baseline para AÑADIR una entrada es casi siempre la
 > señal de que la mudanza está mal hecha, no de que la lista se haya quedado corta.
+
+### 4. Contrato de la API — Spectator + `openapi/v1.yaml` *(Fase 3)*
+La especificación **manda sobre el código** (`DECISIONES #21`): se escribe a mano y el test cae
+cuando la implementación se desvía, no al revés.
+- Un test de endpoint hereda de **`Tests\Feature\Api\ApiTestCase`**: eso activa la validación de la
+  **respuesta real** contra el esquema en cada petición (`assertValidResponse(200)`), no solo la
+  existencia de la ruta. Configura Spectator desde el propio caso base —y no publicando su fichero
+  de configuración en `config/`— porque es dependencia de desarrollo y su config no debe viajar a
+  producción.
+- Para probar CIMIENTOS con rutas sintéticas (validación, fallos, límites) hay que heredar de
+  `Tests\TestCase` y montar la ruta con `Route::middleware('api')`: si no, Spectator falla por
+  «path no declarado» en lugar de probar lo que toca.
+- `Tests\TestCase::setUp()` vacía `Accept-Language`, así que **un test de negociación de idioma que
+  no ponga la cabecera está probando el fallback**, no la negociación.
 
 ## Entorno de pruebas (`phpunit.xml`)
 - **BD:** SQLite `:memory:` (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`). Las migraciones

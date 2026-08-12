@@ -81,3 +81,20 @@ Schedule::command('slots:generate-rolling')
 Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3')
     ->everyMinute()
     ->withoutOverlapping(10);
+
+/*
+ * Fase 3 · paso 0 (`docs/specs/api-v1.md` §4.2) — poda de tokens de API caducados.
+ *
+ * `config('sanctum.expiration')` hace que un token deje de AUTENTICAR al cumplirse el plazo, pero
+ * la fila sigue en `personal_access_tokens` con su hash. Esto la borra 24 h después de caducar (el
+ * margen deja rastro para diagnosticar un «me ha echado la app» reciente sin conservar un
+ * credencial muerto indefinidamente). Semanal es de sobra para una tabla que crece por
+ * dispositivo, no por petición.
+ *
+ * Hoy no hay emisor —`POST auth/tokens` llega en el paso 3— y el comando es un no-op sobre una
+ * tabla vacía. Se registra ya porque forma parte de instalar Sanctum del derecho: la limpieza de
+ * credenciales caducadas no es algo que deba recordar el paso que los empieza a emitir.
+ */
+Schedule::command('sanctum:prune-expired --hours=24')
+    ->weekly()
+    ->withoutOverlapping();

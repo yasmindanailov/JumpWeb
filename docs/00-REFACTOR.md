@@ -86,7 +86,8 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Doc técnica portada y adaptada** (2026-08-12, `DECISIONES #8`; workflow de 14 agentes
       + verificación por grep): ARQUITECTURA · SEGURIDAD · TESTING · FLUJOS · PANEL-ADMIN ·
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
-      **`MODELO-DATOS.md` regenerado desde el código** (30 modelos · 71 migraciones) ·
+      **`MODELO-DATOS.md` regenerado desde el código** (30 modelos y las 71 migraciones de
+      entonces; el recuento vivo lo verifica `docs-check`) ·
       **`INVARIANTES.md`** destilado (54 invariantes de no-regresión). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
@@ -197,6 +198,22 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Árbol de dependencias SANEADO** (2026-08-13, `DECISIONES #22`): 26 avisos → 0
       (`composer audit` y `npm audit`), sin tocar restricciones ni añadir paquetes. Suite 2186
       verde, Pint sin churn, verificadores sobre MySQL, PDF real generado con dompdf 3.1.6.
+- [x] **Paso 0 — CIMIENTOS, sin negocio** (2026-08-13, `DECISIONES #24`; detalle en
+      `docs/specs/api-v1.md` §10): `routes/api.php` con prefijo `/api/v1` (`ApiSurface::PREFIX`,
+      fuente única) · **grupo de middleware declarado pieza a pieza** (SecurityHeaders ·
+      Sanctum stateful · `ApiLocale` · `EnsureSiteAvailable` con render JSON · `no-store`
+      autenticado · `throttle:api`) · **sobre de error único** con códigos estables
+      (`ApiErrorCode`) desacoplados de las claves i18n · `GET me` · **OpenAPI `openapi/v1.yaml`
+      escrito a mano** + validación de la respuesta REAL (Spectator) · guarda de frontera de API
+      (§6.5) y `CRITICAL_RE` del pre-push ampliado a los controladores de checkout, ambos
+      **verificados por mutación**. Dependencias instaladas (`#21`): Sanctum 4.3.3, Spectator
+      3.0.2, symfony/yaml 7.4.15 — `composer audit` sigue en 0.
+      **Dos hallazgos del código**, ninguno previsto por el spec: (a) crear `routes/api.php`
+      activó el `HandleCors` GLOBAL de Laravel, cuya config por defecto abre `api/*` a
+      `Access-Control-Allow-Origin: *` → cerrado con `config/cors.php` derivado de `APP_URL`;
+      (b) Laravel ordena `AuthenticatesRequests` ANTES que `ThrottleRequests`, así que en rutas
+      con `auth:` el 401 no consume el limitador — se conserva el estándar (invertirlo empeoraría
+      los `throttle` de la web) y queda fijado por test. Suite **2223 verde**.
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

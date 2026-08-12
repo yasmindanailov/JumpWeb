@@ -100,6 +100,25 @@ Implementación real heredada: middleware **`app/Http/Middleware/SecurityHeaders
 - El middleware **no pisa** una CSP que una respuesta concreta ya haya fijado.
 - **HSTS**: NO lo emite el middleware; en el origen se activó en la capa CDN/proxy al ir a
   producción. En JumpWeb queda **pendiente para su propio despliegue** (junto con la CSP estricta).
+- **También en `/api/v1`** desde Fase 3 · paso 0 (`SEC-01`), y colocado el PRIMERO del grupo para
+  que las cabeceras lleguen igualmente al 429 del limitador y al 503 de mantenimiento. Coste
+  medido: 1 consulta por petición (la lectura memoizada de `settings` que la CSP necesita), fijada
+  por `ApiOverheadTest`.
+
+### 9.bis CORS — solo orígenes exactos *(Fase 3 · paso 0, `DECISIONES #24f`)*
+`HandleCors` es middleware **global** de Laravel y su configuración por defecto —la del framework,
+mientras `config/cors.php` no esté publicado— aplica `allowed_origins: ['*']` a `api/*`. Es decir:
+**crear `routes/api.php` abrió CORS a cualquier origen sin que nadie lo decidiera** (comprobado con
+`curl -I`: la cabecera aparecía solo bajo `/api/v1`).
+- Cerrado publicando `config/cors.php`: orígenes **exactos** derivados de `APP_URL`, nunca `*` ni
+  patrones (un comodín de subdominio dejaría entrar a `evil.cliente.com`).
+- `supports_credentials: true`, que es seguro precisamente porque no hay comodín: el navegador
+  prohíbe combinar credenciales con `*`.
+- La SPA de Fase 4 vive en el MISMO dominio, así que en el caso normal no se emite ninguna cabecera
+  CORS. Una instalación que sirva la SPA en otro dominio lo declara en `CORS_ALLOWED_ORIGINS`, como
+  decisión de despliegue con nombre y sitio.
+- ⚠️ Al abrir cualquier superficie nueva, revisar no solo qué middleware se HEREDA sino qué
+  middleware **global** se despierta con ella.
 
 ### 10. Endurecimiento de entorno (producción) — `[PENDIENTE]` hasta el despliegue de JumpWeb
 - `APP_DEBUG=false`, `APP_ENV=production`, `SESSION_SECURE_COOKIE=true`, HTTPS forzado,

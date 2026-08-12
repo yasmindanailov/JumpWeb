@@ -20,6 +20,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
@@ -29,8 +30,16 @@ use Illuminate\Support\Str;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    /**
+     * `HasApiTokens` (Fase 3 · paso 0): habilita los tokens Bearer de Sanctum para el cliente
+     * móvil de Fase 6. La SPA de Fase 4 NO los usa —va por cookie de sesión, spec §4.2— y hoy no
+     * hay ningún emisor: `POST auth/tokens` llega en el paso 3, y con él la **revocación**, que es
+     * la parte que la revisión del spec destapó como hueco (`RGPD-01`: `anonymize()` purga
+     * `sessions` pero un Bearer sobreviviría al borrado). Hasta entonces la tabla está vacía.
+     *
+     * @use HasFactory<UserFactory>
+     */
+    use HasApiTokens, HasFactory, Notifiable;
 
     /** Dominio reservado para emails de cuentas anonimizadas (M3.3). No es enrutable. */
     public const ANONYMIZED_EMAIL_DOMAIN = 'deleted.local';
