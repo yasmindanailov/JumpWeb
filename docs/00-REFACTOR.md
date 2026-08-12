@@ -96,10 +96,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       viaja con el diseño de módulos de Fase 2 (morphMap como prerequisito).
 
 ### Fase 2 — Modularización del dominio 🟦
-- [ ] Diseño de contextos (con revisión multi-agente): **Catalog&Booking** (productos, tarifas,
-      franjas/aforo, pedidos, tickets) · **Content/CMS** (páginas, secciones, servicios, ofertas,
-      FAQs, normas, tema) · **Identity** (auth, cuentas, RGPD/consents) · **Payments** (proveedores,
-      pagos, reembolsos, señal) · **Platform** (settings, i18n, auditoría, mantenimiento).
+- [x] **Diseño de contextos con revisión multi-agente** (2026-08-12, `DECISIONES #13`):
+      spec aprobado en `docs/specs/modulos-dominio.md` — 4 inventariadores (278 clases) +
+      3 arquitecturas rivales + 3 revisores adversariales. Layout `app/Domain/<Contexto>/`,
+      contratos en namespace de destino, orden contratos→Platform→Content→Identity→
+      Payments→Booking (dinero al final). Cimientos aplicados: gate `VERIFY_CONC` por
+      basename y `docs-check`/`MorphMapTest` preparados para `app/Domain/*/Models` (los
+      tres gates habrían muerto en silencio con la primera mudanza).
 - [x] **Prerequisito — morphMap** (2026-08-12): `Relation::enforceMorphMap` con alias
       snake_case para los 30 modelos (`AppServiceProvider`) + migración
       `convert_morph_types_to_aliases` (idempotente y reversible; verificada en MySQL dev:

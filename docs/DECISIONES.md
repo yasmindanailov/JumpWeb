@@ -122,3 +122,20 @@ SEO con ciudad real, festivos locales). **(d) Sectores objetivo del white-label*
 aforo y franjas (parques, escape rooms, karting, bolos…) — la generalización de vocabulario
 de Fase 2 será CONSERVADORA: zona/atracción/franja encajan casi tal cual (spec en
 `docs/specs/`).
+
+## #13 · 2026-08-12 · Arquitectura de módulos de Fase 2 (spec aprobado con revisión multi-agente)
+Diseñada con 4 inventariadores (278 clases clasificadas) + 3 arquitecturas rivales
+(mínimo-riesgo · contratos-primero · núcleo-primero) + 3 revisores adversariales; la
+síntesis vive en `docs/specs/modulos-dominio.md`. Decidido: **(a)** layout
+`app/Domain/<Contexto>/` bajo el PSR-4 existente (composer/Filament/Livewire intactos),
+modelos DENTRO de cada módulo, capa de entrega quieta en Fase 2 (solo imports);
+**(b)** contratos = interfaces + DTOs readonly + enums en `Contracts/` del módulo dueño,
+creados en su namespace DEFINITIVO antes de mover implementaciones; relaciones Eloquent
+cruzadas exentas como costura de BD documentada; **(c)** orden: contratos → Platform →
+Content → Identity → Payments → Booking (el dinero, EL ÚLTIMO, con `VERIFY_CONC` y los
+verify-comandos); la opción «núcleo primero» se DESCARTÓ (churn infraestimado +50–220% y
+núcleo protegido moviéndose sin contratos); **(d)** frontera ejecutable con arch-test de
+grafo permitido y baseline solo-encoge; **(e)** cimientos aplicados YA: el gate
+`VERIFY_CONC` del pre-push ancla los críticos por basename (no por ruta), y
+`docs-check`/`MorphMapTest` cuentan modelos también en `app/Domain/*/Models` — los tres
+gates habrían muerto en silencio con la primera mudanza (hallazgo de la revisión).

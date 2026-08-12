@@ -26,10 +26,12 @@
   contraseña `password`).
 
 ## ▶ Próximo paso
-**Fase 2 — Modularización del dominio** (checklist ÚNICA en `00-REFACTOR.md` §Fase 2).
-Empezar por: **el prerequisito morphMap** (sin él, mover/renombrar modelos rompe datos
-polimórficos) y el diseño de contextos con revisión multi-agente — con
-`docs/specs/vocabulario-dominio.md` como entrada ya escrita.
+**Fase 2 — Modularización del dominio** 🟦 (checklist ÚNICA en `00-REFACTOR.md` §Fase 2).
+Hechos: **morphMap forzado** (migración verificada en MySQL: 0 FQCN) y **spec de módulos
+APROBADO** con revisión multi-agente (`docs/specs/modulos-dominio.md`, `DECISIONES #13`) +
+cimientos de gates. Siguiente ítem concreto: **paso 1 del spec — contratos en namespace de
+destino** (`App\Domain\Payments\Contracts`, `App\Domain\Booking\Contracts`, bindings a
+clases legacy + arch-test de frontera), y después Platform (paso 2).
 **Pendiente del owner** (❗): 2FA del panel admin (sin plan — `DEUDA.md` §Media) ·
 mecanismo del primer admin de producción (`INSTALACION-CLIENTE.md` §5) · backlog de
 producto de Fase 6.

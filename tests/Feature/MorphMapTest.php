@@ -28,8 +28,13 @@ class MorphMapTest extends TestCase
     {
         // Todo modelo NUEVO debe registrarse en el mapa de AppServiceProvider: este test
         // falla (vía ClassMorphViolationException implícita en getMorphClass) si se olvida.
-        foreach (glob(app_path('Models/*.php')) as $file) {
-            $class = 'App\\Models\\'.basename($file, '.php');
+        // Cubre la raíz heredada Y los módulos de Fase 2 (app/Domain/<Ctx>/Models), para que
+        // el guard no se vacíe conforme los modelos emigran (hallazgo de la revisión del spec).
+        $files = array_merge(glob(app_path('Models/*.php')), glob(app_path('Domain/*/Models/*.php')));
+        $this->assertNotEmpty($files, 'el guard no puede pasar en vacío');
+
+        foreach ($files as $file) {
+            $class = str_replace(['/', '.php'], ['\\', ''], 'App'.mb_substr($file, mb_strlen(app_path())));
             if (! is_subclass_of($class, Model::class)) {
                 continue;
             }

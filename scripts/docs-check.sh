@@ -84,7 +84,8 @@ if grep -rnE '\.php:[0-9]+' docs/ CLAUDE.md README.md 2>/dev/null | grep -vE "$E
 fi
 
 # ── 5 · Recuentos canónicos ───────────────────────────────────────────────────────────
-real_models=$(ls app/Models/*.php 2>/dev/null | wc -l)
+# Modelos en la raíz heredada Y en los módulos de Fase 2 (app/Domain/<Ctx>/Models).
+real_models=$(ls app/Models/*.php app/Domain/*/Models/*.php 2>/dev/null | wc -l)
 real_migrations=$(ls database/migrations/*.php 2>/dev/null | wc -l)
 real_invariants=$(grep -cE '^\| [A-Z]+-[0-9]+ \| \*\*' docs/INVARIANTES.md)
 if grep -qE '^\| \*\*' docs/INVARIANTES.md; then

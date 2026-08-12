@@ -15,7 +15,9 @@ ZERO=0000000000000000000000000000000000000000
 pushing_main=0
 touched_critical=''
 # Ficheros cuyo cambio exige los comandos verify-* (DECISIONES #10.c / INVARIANTES §6).
-CRITICAL_RE='^app/Support/(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php$'
+# Anclados por BASENAME, no por ruta: la modularización de Fase 2 los moverá de app/Support
+# a app/Domain/* y el gate debe seguirlos (hallazgo de la revisión del spec de módulos).
+CRITICAL_RE='^app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue
