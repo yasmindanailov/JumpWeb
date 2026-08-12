@@ -15,9 +15,9 @@
 {{-- El botón "primary" sigue el color de marca global (white-label, #7.10): se inyecta inline
      (fondo + bordes, que en email hacen de padding) y gana al `.button-primary` estático del
      tema al inlinear el CSS. Los botones semánticos (success/error) conservan su color. --}}
-@php($jjBrand = \App\Support\ThemeSettings::brand())
+@php($jjBrand = \App\Domain\Content\Services\ThemeSettings::brand())
 <a href="{{ $url }}" class="button button-{{ $color }}" target="_blank" rel="noopener"
-@if ($color === 'primary') style="background-color: {{ $jjBrand }}; border-color: {{ $jjBrand }}; color: {{ \App\Support\ThemeSettings::onBrand($jjBrand) }};" @endif>{!! $slot !!}</a>
+@if ($color === 'primary') style="background-color: {{ $jjBrand }}; border-color: {{ $jjBrand }}; color: {{ \App\Domain\Content\Services\ThemeSettings::onBrand($jjBrand) }};" @endif>{!! $slot !!}</a>
 </td>
 </tr>
 </table>

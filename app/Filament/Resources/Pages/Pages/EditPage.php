@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Pages\Pages;
 
+use App\Domain\Content\Models\Page;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Pages\Concerns\InteractsWithPageForm;
 use App\Filament\Resources\Pages\PageResource;
-use App\Models\Page;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;

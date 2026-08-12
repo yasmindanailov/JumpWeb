@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Faqs\Tables;
 
+use App\Domain\Content\Models\Faq;
 use App\Filament\Resources\Faqs\FaqResource;
-use App\Models\Faq;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;

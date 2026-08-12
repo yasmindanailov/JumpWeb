@@ -35,7 +35,7 @@
          tokens (`:root`); el tema sobreescribe `--zone-1` (white-label, va DESPUÉS, igual que
          x-layout); site.css trae los componentes + los estilos de la hoja del post-form (`.gf-*`). --}}
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ @filemtime(public_path('css/landing.css')) }}">
-    <style id="jj-theme">:root{ {{ \App\Support\ThemeSettings::cssRootDeclarations() }} }</style>
+    <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
     <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) }}">
 </head>
 <body class="gf">

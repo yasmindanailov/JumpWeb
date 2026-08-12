@@ -64,9 +64,9 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
 
 > ⚠️ **En migración (Fase 2, `docs/specs/modulos-dominio.md`)**: el destino es
 > `app/Domain/<Contexto>/{Contracts,Models,Services,…}` con 5 módulos (Booking · Content ·
-> Identity · Payments · Platform). Al 2026-08-12 están hechos el paso 1 (contratos) y el
-> paso 2 (**Platform mudado entero**); Content, Identity, Payments y Booking siguen en
-> `app/Support`/`app/Models` y mudan en los pasos 3–6. La frontera la impone
+> Identity · Payments · Platform). Al 2026-08-12 están hechos el paso 1 (contratos), el
+> paso 2 (**Platform**) y el paso 3 (**Content**); Identity, Payments y Booking siguen en
+> `app/Support`/`app/Models` y mudan en los pasos 4–6. La frontera la impone
 > `tests/Feature/Architecture/ModuleBoundariesTest.php`. Este árbol se reescribe en el paso 7.
 
 ```
@@ -76,19 +76,26 @@ app/
                     de nadie. Models/ (Setting, AuditLog) · Services/ (AuditLogger, DisplayTime,
                     Money, Duration, PhoneNormalizer, MaintenanceSettings, QrCode, Turnstile) ·
                     Concerns/ (HasTranslations) · Enums/ (DashboardPeriod).
+    Content/        ✅ MUDADO (paso 3). CMS público. Models/ (Faq, Page, LandingService, Offer,
+                    Attraction, VenueRule ←ex ParkRule) · Services/ (LegalContent, LegalIdentity,
+                    CookiePolicyContent, ThemeSettings, HeroStatus, MapsEmbed, SocialEmbed,
+                    StructuredData, ScheduleDisplay, LandingAddonPresenter,
+                    LandingComplementResolver, ServicePriceTableBackfill).
     Booking/        Contracts/ (CustomerReservations, PublishableCatalog + DTOs) + ServiceProvider.
     Payments/       Contracts/ (RefundGateway, RefundResult) + ServiceProvider.
-                    Regla: desde fuera de app/Domain solo se tocan los `Contracts` de un
-                    módulo — salvo Platform, que es la base común y se usa entera.
+                    Regla (afinada en el paso 3): la capa de ENTREGA (Filament, Http, Livewire,
+                    Providers…) usa la superficie pública de cualquier módulo — es el
+                    composition root; el código de dominio AÚN SIN MUDAR (`app/Support`,
+                    `app/Models`) solo entra por `Contracts` o por Platform.
   Models/           modelos aún sin mudar (Order, OrderItem, Ticket, TicketType, Slot,
-                    SlotTemplate, Season, SpecialDate, Zone, Attraction, Room,
-                    LandingService, Offer, Payment, PaymentRefund, Role, Permission, User…)
+                    SlotTemplate, Season, SpecialDate, Zone, Room, OpeningHour,
+                    Payment, PaymentRefund, Role, Permission, User, Consent…)
                     + Models/Concerns/ (traits de Booking/Payments)
   Support/          ⚠️ AQUÍ viven los SERVICIOS DE DOMINIO aún sin mudar (NO existe
                     app/Services): directorio plano — OrderCreator, TicketIssuer,
                     SlotGenerator, SlotAvailability, PackAvailability, RateResolver,
                     AddonResolver, Cart, Redsys*, ParkSchedule, CookieConsent,
-                    *Settings (ThemeSettings, PaymentSettings, PuertaSettings, …), etc.
+                    PaymentSettings, PuertaSettings, etc.
   Livewire/         Site/ · Auth/ · Account/ · Admin/ · Tickets/ (Purchase) · Concerns/
   Filament/         Resources/ (Orders, Catalog, Slots, SlotTemplates, Seasons,
                     SpecialDates, Zones, Attractions, LandingServices, Offers, Pages,
@@ -110,7 +117,7 @@ public/css/         landing.css · site.css · spinner.css · filament/
 
 Vocabulario del dominio en el código: zonas, atracciones, cumpleaños, **puerta** (validar/
 canjear entradas), waiver (vocabulario del sector origen; su generalización se decide en
-`00-REFACTOR.md` Fase 1/2). P. ej. `PuertaSettings`, `ParkSchedule`, `ParkRule`.
+`00-REFACTOR.md` Fase 1/2). P. ej. `PuertaSettings`, `ParkSchedule` (→ `OperatingSchedule` en el paso 6). `ParkRule` ya es `VenueRule` (paso 3).
 
 ## 5. White-label (3 capas)
 

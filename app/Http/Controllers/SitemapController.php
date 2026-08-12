@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attraction;
-use App\Models\Faq;
-use App\Models\LandingService;
-use App\Models\Page;
-use App\Models\ParkRule;
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
 use App\Models\TicketType;
 use App\Models\Zone;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +28,7 @@ class SitemapController extends Controller
         // Modificación más reciente del catálogo/contenido que comparten home, precios y cumpleaños.
         $catalog = $this->latestUpdate([TicketType::class, Zone::class, Attraction::class, Faq::class]);
         $servicesMod = $this->latestUpdate([LandingService::class]) ?? $catalog;
-        $rulesMod = $this->latestUpdate([ParkRule::class]) ?? $catalog;
+        $rulesMod = $this->latestUpdate([VenueRule::class]) ?? $catalog;
         $legalMods = $this->legalLastmods();
 
         // route, prioridad, frecuencia de cambio, lastmod (Carbon|null).

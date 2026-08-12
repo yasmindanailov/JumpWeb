@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\LandingServices;
 
+use App\Domain\Content\Models\LandingService;
 use App\Filament\Resources\LandingServices\Pages\CreateLandingService;
 use App\Filament\Resources\LandingServices\Pages\EditLandingService;
 use App\Filament\Resources\LandingServices\Pages\ListLandingServices;
 use App\Filament\Resources\LandingServices\Schemas\LandingServiceForm;
 use App\Filament\Resources\LandingServices\Tables\LandingServiceTable;
-use App\Models\LandingService;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

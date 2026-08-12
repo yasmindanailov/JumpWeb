@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  * Read-model de BOOKING: qué del catálogo es publicable fuera del módulo.
  *
  * Implementa `PublishableCatalog`. La regla de comprabilidad (#226) es la consulta EN LOTE
- * que vivía en `App\Support\LandingComplementResolver`; la variante unitaria de
+ * que vivía en `App\Domain\Content\Services\LandingComplementResolver`; la variante unitaria de
  * `Attraction::complementIsPurchasable()` ahora pasa por aquí con un solo par, de modo que
  * las dos formas de preguntar comparten UNA sola definición y no pueden divergir.
  *

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Page;
+use App\Domain\Content\Models\Page;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
-use App\Models\Faq;
+use App\Domain\Content\Models\Faq;
 use App\Models\OpeningHour;
 use Illuminate\Support\Facades\Schema;
 

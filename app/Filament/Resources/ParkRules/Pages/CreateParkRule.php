@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\ParkRules\Pages;
 
+use App\Domain\Content\Models\VenueRule;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\ParkRules\Concerns\InteractsWithParkRuleForm;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
-use App\Models\ParkRule;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -31,7 +31,7 @@ class CreateParkRule extends CreateRecord
 
     protected function afterCreate(): void
     {
-        /** @var ParkRule $record */
+        /** @var VenueRule $record */
         $record = $this->record;
 
         AuditLogger::log('content.rule_created', $record, [

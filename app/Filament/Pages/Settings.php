@@ -2,14 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Support\CatalogSettings;
-use App\Support\MapsEmbed;
 use App\Support\PaymentSettings;
 use App\Support\PuertaSettings;
 use App\Support\Redsys;
-use App\Support\SocialEmbed;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;

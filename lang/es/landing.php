@@ -54,7 +54,7 @@ return [
         'cta_buy' => 'Reservas aquí',
         'cta_buy_from' => 'desde :amount',
         'cta_buy_no_price' => 'Cumpleaños online',
-        // Chip de estado del hero (data-driven, App\Support\HeroStatus). `:duration` ya viene formateada
+        // Chip de estado del hero (data-driven, App\Domain\Content\Services\HeroStatus). `:duration` ya viene formateada
         // («2 h» / «45 min»); `:time` = «HH:MM»; `:day` = día de la semana en minúscula.
         'status_open' => 'Abierto ahora',
         'status_opens_in' => 'Abrimos en :duration',

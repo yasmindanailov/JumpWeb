@@ -47,7 +47,7 @@ manuales) en TODO el sistema, también en pedidos sin señal (D7–D9 abajo).
 | D9 | **Cancelar ≠ reembolsar tras un reembolso completo** | Un pedido reembolsado por completo **sigue permitiendo cancelar** productos individuales. El banner `order_fully_refunded` solo informa de que no queda nada que reembolsar. |
 
 **Pendiente heredado:** la cláusula de condiciones sobre el reembolso de la señal
-(`App\Support\LegalContent`) quedó en el origen con marcador `[PENDING: … refund of the
+(`App\Domain\Content\Services\LegalContent`) quedó en el origen con marcador `[PENDING: … refund of the
 birthday deposit]` (+ marcador en el seeder de landing). Verificar si sigue en la base; en
 JumpWeb el contenido legal es por-instalación.
 
@@ -420,7 +420,7 @@ selector de modo) · `app/Models/Concerns/HasItemActionGuards.php` ·
 `app/Livewire/Tickets/Purchase.php` (`cartDepositCents`/`stepDepositHint`) ·
 `app/Models/OrderAdjustment.php` (tipos) · `app/Support/RedsysReturnHandler.php` (canario, NO
 tocar) · `resources/views/filament/orders/items-list.blade.php` (banner D9) ·
-`app/Support/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`
+`app/Domain/Content/Services/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`
 heredado).
 
 ## 12. Tests

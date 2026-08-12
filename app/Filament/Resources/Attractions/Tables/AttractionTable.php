@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Attractions\Tables;
 
+use App\Domain\Content\Models\Attraction;
 use App\Filament\Resources\Attractions\AttractionResource;
-use App\Models\Attraction;
 use App\Models\Zone;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;

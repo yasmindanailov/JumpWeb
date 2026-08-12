@@ -6,7 +6,7 @@
      Los complementos en un mismo `choice_group` se agrupan bajo «Elige una opción» (excluyentes,
      espejo del checkout) — no se listan como si se sumaran. (#194) --}}
 @php
-    $rows = \App\Support\LandingAddonPresenter::rows($product, $isPack);
+    $rows = \App\Domain\Content\Services\LandingAddonPresenter::rows($product, $isPack);
     // Sueltos (sin grupo) vs grupos de elección excluyente (misma clave `choice_group`).
     $singles = array_values(array_filter($rows, fn ($r): bool => $r['group'] === null));
     $groups = [];

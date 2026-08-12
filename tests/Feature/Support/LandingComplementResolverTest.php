@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Support;
 
-use App\Models\Attraction;
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Services\LandingComplementResolver;
 use App\Models\RateType;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\LandingComplementResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;

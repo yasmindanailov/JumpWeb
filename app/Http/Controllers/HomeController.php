@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\HeroStatus;
+use App\Domain\Content\Services\LandingComplementResolver;
 use App\Http\Controllers\Payments\RedsysReturnController;
-use App\Models\Attraction;
-use App\Models\Faq;
-use App\Models\ParkRule;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\HeroStatus;
-use App\Support\LandingComplementResolver;
 use App\Support\RedsysReturnOutcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -60,7 +60,7 @@ class HomeController extends Controller
             'packages' => TicketType::birthdaySurfacePacks()
                 ->with(['zone', 'prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get(),
             'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
-            'rules' => ParkRule::where('is_active', true)->orderBy('position')->get(),
+            'rules' => VenueRule::where('is_active', true)->orderBy('position')->get(),
             // /registro, /login y /recuperar-contrasena abren su modal sobre la home.
             'authModal' => match (true) {
                 $request->routeIs('registro') => 'register',

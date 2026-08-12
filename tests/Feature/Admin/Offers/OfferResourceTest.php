@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Admin\Offers;
 
+use App\Domain\Content\Models\Offer;
 use App\Filament\Resources\Offers\OfferResource;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
-use App\Models\Offer;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;

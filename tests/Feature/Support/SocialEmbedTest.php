@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Support;
 
-use App\Support\SocialEmbed;
+use App\Domain\Content\Services\SocialEmbed;
 use Tests\TestCase;
 
 /**

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\Attraction;
+use App\Domain\Content\Models\Attraction;
 use App\Models\Zone;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

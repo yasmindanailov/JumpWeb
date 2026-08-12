@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Page;
-use App\Models\ParkRule;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
 
 class PageController extends Controller
 {
@@ -19,7 +19,7 @@ class PageController extends Controller
     public function rules()
     {
         return view('pages.rules', [
-            'rules' => ParkRule::where('is_active', true)->orderBy('position')->get(),
+            'rules' => VenueRule::where('is_active', true)->orderBy('position')->get(),
         ]);
     }
 }

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Attractions;
 
+use App\Domain\Content\Models\Attraction;
 use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
-use App\Models\Attraction;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Zone;

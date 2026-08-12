@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Faqs;
 
+use App\Domain\Content\Models\Faq;
 use App\Filament\Resources\Faqs\Pages\CreateFaq;
 use App\Filament\Resources\Faqs\Pages\EditFaq;
 use App\Filament\Resources\Faqs\Pages\ListFaqs;
 use App\Filament\Resources\Faqs\Schemas\FaqForm;
 use App\Filament\Resources\Faqs\Tables\FaqTable;
-use App\Models\Faq;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

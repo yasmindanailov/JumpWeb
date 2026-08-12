@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Offers\Tables;
 
+use App\Domain\Content\Models\Offer;
 use App\Filament\Resources\Offers\OfferResource;
-use App\Models\Offer;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Content\Models\LandingService;
 use App\Domain\Platform\Concerns\HasTranslations;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Database\Eloquent\Builder;

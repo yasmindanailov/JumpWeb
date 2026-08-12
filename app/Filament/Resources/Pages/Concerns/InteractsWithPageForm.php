@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Pages\Concerns;
 
-use App\Models\Page;
+use App\Domain\Content\Models\Page;
 
 /**
  * Fase 7.9 (iter. 2) — Remapeo i18n del cuerpo de una página legal entre el form y la columna:

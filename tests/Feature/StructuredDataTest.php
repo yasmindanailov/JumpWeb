@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Content\Services\StructuredData;
 use App\Models\OpeningHour;
-use App\Support\StructuredData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

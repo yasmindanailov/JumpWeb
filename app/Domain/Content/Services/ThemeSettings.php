@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 use App\Domain\Platform\Models\Setting;
 use App\Models\Zone;

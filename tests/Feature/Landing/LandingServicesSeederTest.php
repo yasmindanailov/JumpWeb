@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\Faq;
-use App\Models\LandingService;
-use App\Models\ParkRule;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\VenueRule;
 use App\Models\TicketType;
 use Database\Seeders\LandingServicesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,7 +41,7 @@ class LandingServicesSeederTest extends TestCase
         $this->seed(LandingServicesSeeder::class);
 
         $this->assertSame(0, Faq::count());
-        $this->assertSame(0, ParkRule::count());
+        $this->assertSame(0, VenueRule::count());
         $this->assertSame(0, TicketType::count());   // cero packs de cumpleaños / entradas creados
     }
 

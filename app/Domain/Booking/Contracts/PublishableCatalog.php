@@ -10,7 +10,7 @@ namespace App\Domain\Booking\Contracts;
  * de verdad (coherencia #226). Esa regla es de Booking: mira el pivote `product_addons`,
  * el tipo/estado del producto, la existencia de precio y el estado de la zona. Antes vivía
  * DUPLICADA en dos sitios de Content —`Attraction::complementIsPurchasable()` (unitaria) y
- * `App\Support\LandingComplementResolver` (en lote, sin N+1)— con dos consultas distintas
+ * `App\Domain\Content\Services\LandingComplementResolver` (en lote, sin N+1)— con dos consultas distintas
  * que podían divergir en silencio. El contrato las unifica: una sola regla, dos formas de
  * preguntarla.
  *

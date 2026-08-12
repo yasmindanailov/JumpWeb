@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Content\Models;
 
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Platform\Concerns\HasTranslations;
+use App\Models\TicketType;
+use App\Models\Zone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -48,7 +50,7 @@ class Attraction extends Model
      * a informativa (sin precio/CTA).
      *
      * Comprobación de UNA atracción (panel/aviso). Para la LISTA de la landing se usa
-     * `App\Support\LandingComplementResolver` (batch, sin N+1).
+     * `App\Domain\Content\Services\LandingComplementResolver` (batch, sin N+1).
      *
      * La REGLA es de Booking y vive en su contrato (`PublishableCatalog`, Fase 2 paso 1);
      * antes estaba duplicada aquí y en el resolver de la landing, con dos consultas que

@@ -39,7 +39,7 @@
 
     {{-- Datos estructurados (JSON-LD): marca + negocio local (dirección, teléfono, horario) para
          los resultados enriquecidos de buscadores. Invisible para el visitante; defensivo ante
-         campos `[PENDIENTE]`/vacíos (ver App\Support\StructuredData). --}}
+         campos `[PENDIENTE]`/vacíos (ver App\Domain\Content\Services\StructuredData). --}}
     <x-site.json-ld :site="$site" />
 
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -52,7 +52,7 @@
          `:root` por defecto. `--zone-1` = marca global (lo genérico de la web); `--jump-1`/
          `--kids-1` = color de cada zona (tarjetas de la sección «Zonas»). El acento de la
          sección «Atracciones» se aplica scoped a `#rides` desde `app.js`. --}}
-    <style id="jj-theme">:root{ {{ \App\Support\ThemeSettings::cssRootDeclarations() }} }</style>
+    <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
     {{-- Spinner de marca (copia del mockup, estático; ver docs/UI-SPINNER.md) --}}
     <link rel="stylesheet" href="{{ asset('css/spinner.css') }}?v={{ @filemtime(public_path('css/spinner.css')) }}">
     {{-- Estilos propios añadidos (no tocan el CSS del mockup) --}}

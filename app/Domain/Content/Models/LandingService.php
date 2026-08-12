@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Content\Models;
 
 use App\Domain\Platform\Concerns\HasTranslations;
+use App\Models\TicketType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

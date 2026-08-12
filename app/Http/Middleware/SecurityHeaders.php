@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Platform\Models\Setting;
-use App\Support\SocialEmbed;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

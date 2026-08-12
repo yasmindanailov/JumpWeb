@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 use Illuminate\Support\Facades\DB;
 

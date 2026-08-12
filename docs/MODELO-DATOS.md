@@ -10,7 +10,7 @@
 ## 0. Convenciones transversales
 
 - **i18n en columna:** todo texto traducible es JSON `{es,en,fr}` con cast `array` +
-  trait `App\Models\Concerns\HasTranslations` → se lee con `$model->tr('campo')`
+  trait `App\Domain\Platform\Concerns\HasTranslations` → se lee con `$model->tr('campo')`
   (fallback: `config('app.fallback_locale')` → primer valor).
 - **Dinero:** SIEMPRE céntimos `unsignedInteger` (excepción: `order_adjustments.amount_cents`
   es SIGNED, admite créditos negativos). Moneda `char(3)` default `EUR`.
@@ -56,7 +56,7 @@ Relaciones: `hasMany Attraction` (ordenadas por `position`).
 `ticket_type_id` FK nullable `nullOnDelete` → vincula la atracción a un **complemento
 vendible** (`TYPE_ADDON`): si `Attraction::complementIsPurchasable()` (addon activo+vendible,
 con precio, enganchado como addon DE PAGO a ≥1 entrada vendible de la misma zona operativa),
-la landing muestra precio + CTA. Versión batch sin N+1: `App\Support\LandingComplementResolver`.
+la landing muestra precio + CTA. Versión batch sin N+1: `App\Domain\Content\Services\LandingComplementResolver`.
 Desde Fase 2 (paso 1) la REGLA vive una sola vez, en el contrato de Booking
 `App\Domain\Booking\Contracts\PublishableCatalog` (impl. `App\Support\PublishableCatalogReader`);
 las dos formas de preguntarla —una atracción o toda la página— comparten la misma consulta.
@@ -266,7 +266,7 @@ Prueba del consentimiento de cookies (sujeto puede ser ANÓNIMO): `user_id` null
 `target_type/target_id` nullableMorphs · `payload` JSON (SOLO si no hay dato personal) ·
 `payload_hash` sha256 char(64) (siempre; única huella cuando el payload lleva PII) · `ip` ·
 `user_agent` · **solo `created_at`** (useCurrent, index; sin updated_at ni soft delete) ·
-index `(action, created_at)`. Crear SOLO vía `App\Support\AuditLogger::log()`.
+index `(action, created_at)`. Crear SOLO vía `App\Domain\Platform\Services\AuditLogger::log()`.
 `AuditLog::CRITICAL_ACTIONS` = incidencias que destaca la página del panel
 (`payments.duplicate_capture`, `payments.overbooked_capture`, `orders.refund_failed`…).
 
@@ -277,7 +277,7 @@ index `(action, created_at)`. Crear SOLO vía `App\Support\AuditLogger::log()`.
 | Tabla | Modelo | Campos clave |
 |---|---|---|
 | `faqs` | Faq | `question`/`answer` JSON i18n · `position` · `is_active` |
-| `park_rules` | ParkRule | `name`/`description` JSON i18n · `position` · `is_active` |
+| `park_rules` | VenueRule | `name`/`description` JSON i18n · `position` · `is_active` |
 | `pages` | Page | `slug` unique · `title`/`body` JSON i18n · `is_active`. Constantes: `REVIEWED_LEGAL_SLUGS` (sin aviso de borrador) y `PROTECTED_ACTIVE_SLUGS` (`privacidad`,`condiciones`,`waiver`,`cookies`,`aviso-legal` — NO desactivables: enlazadas desde footer/sitemap/banner) |
 | `landing_services` | LandingService | Sección editorial de `/servicios` + item del nav. `slug` unique (= anchor) · `accent_word`/`title`/`body`/`zone_label`/`specs`/`nav_subtitle` JSON i18n · `price_table` JSON (tabla de tarifas **SOLO INFORMATIVA**, no toca el flujo de compra) · `image` · `ticket_type_id` FK nullable **UNIQUE** `nullOnDelete` (relación 1:1 con un pack; NULL = sección solo-contacto; su existencia SACA al pack de la superficie cumpleaños) · `position` · `is_active` · `show_in_nav`. Scopes `active`/`inNav`/`ordered`; `isPurchasable()` delega en `TicketType::isSellablePackForLanding()` |
 | `offers` | Offer | Oferta promocional INFORMATIVA (widget flotante de la landing; sin dinero). `title` JSON i18n · `image` (disco `uploads` = `public/uploads`, servido SIN symlink; hooks `updating`/`deleted` borran el fichero huérfano) · `position` · `is_active` |
@@ -347,4 +347,4 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 | Complementos | `App\Support\AddonResolver` (incluidos/obligatorios/grupos/requires, a punto fijo) |
 | Pago/retorno | `App\Support\Redsys*` + `RedsysReturnHandler` (firma, idempotencia, incidencias) |
 | Emisión de entradas | `App\Support\TicketIssuer` (al pasar a `paid`) |
-| Auditoría | `App\Support\AuditLogger::log()` |
+| Auditoría | `App\Domain\Platform\Services\AuditLogger::log()` |

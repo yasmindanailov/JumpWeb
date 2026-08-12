@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Content\Services\ThemeSettings;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Support\Carbon;

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Offers\Schemas;
 
-use App\Models\Offer;
+use App\Domain\Content\Models\Offer;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;

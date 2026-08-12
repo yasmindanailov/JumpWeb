@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\LandingServices\Pages;
 
+use App\Domain\Content\Models\LandingService;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\LandingServices\Concerns\InteractsWithLandingServiceForm;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
-use App\Models\LandingService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 

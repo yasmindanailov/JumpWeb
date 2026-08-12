@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Content\Services\ScheduleDisplay;
 use App\Models\OpeningHour;
 use App\Models\Season;
 use App\Models\SpecialDate;
-use App\Support\ScheduleDisplay;
 use Carbon\Carbon;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Content\Models;
 
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;

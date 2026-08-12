@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\LandingServices\Tables;
 
+use App\Domain\Content\Models\LandingService;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
-use App\Models\LandingService;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;

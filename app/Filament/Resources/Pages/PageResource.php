@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Pages;
 
+use App\Domain\Content\Models\Page;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Filament\Resources\Pages\Schemas\PageForm;
 use App\Filament\Resources\Pages\Tables\PageTable;
-use App\Models\Page;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

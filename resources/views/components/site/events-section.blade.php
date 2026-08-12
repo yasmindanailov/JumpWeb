@@ -51,7 +51,7 @@
 
 {{-- El pack se identifica por su ID ÚNICO (#194); el accent solo decide el color del bloque. --}}
 <div class="bd-page"
-     x-data="{ pack: '{{ $firstPack->id }}', accents: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => $packAccent($p)])), bons: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => \App\Support\ThemeSettings::onBrand(\App\Support\ThemeSettings::zoneColor($packAccent($p)))])), minq: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => (int) $p->min_qty])) }"
+     x-data="{ pack: '{{ $firstPack->id }}', accents: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => $packAccent($p)])), bons: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::zoneColor($packAccent($p)))])), minq: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => (int) $p->min_qty])) }"
      :style="(accents[pack] === 'kids'
         ? '--bda: var(--kids-1); --zone-1: var(--kids-1); --zone-2: var(--kids-2)'
         : '--bda: var(--jump-1); --zone-1: var(--jump-1); --zone-2: var(--jump-2)') + '; --on-brand: ' + bons[pack]">

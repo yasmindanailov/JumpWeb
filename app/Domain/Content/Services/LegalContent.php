@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 /**
  * Contenido real de las páginas legales editables (#220): Política de privacidad, Términos y

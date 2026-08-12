@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\ThemeSettings;
+use App\Domain\Content\Services\ThemeSettings;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

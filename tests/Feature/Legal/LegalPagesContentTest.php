@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Legal;
 
+use App\Domain\Content\Models\Page;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Page;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

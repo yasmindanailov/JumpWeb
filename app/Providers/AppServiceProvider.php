@@ -2,20 +2,22 @@
 
 namespace App\Providers;
 
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\Offer;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Attraction;
 use App\Models\Consent;
 use App\Models\CookieConsentLog;
-use App\Models\Faq;
-use App\Models\LandingService;
-use App\Models\Offer;
 use App\Models\OpeningHour;
 use App\Models\Order;
 use App\Models\OrderAdjustment;
 use App\Models\OrderItem;
-use App\Models\Page;
-use App\Models\ParkRule;
 use App\Models\Payment;
 use App\Models\PaymentRefund;
 use App\Models\Permission;
@@ -34,8 +36,6 @@ use App\Models\User;
 use App\Models\Zone;
 use App\Support\CookieConsent;
 use App\Support\CustomerAccountContext;
-use App\Support\MapsEmbed;
-use App\Support\SocialEmbed;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -84,7 +84,7 @@ class AppServiceProvider extends ServiceProvider
             'order_adjustment' => OrderAdjustment::class,
             'order_item' => OrderItem::class,
             'page' => Page::class,
-            'park_rule' => ParkRule::class,
+            'park_rule' => VenueRule::class,
             'payment' => Payment::class,
             'payment_refund' => PaymentRefund::class,
             'permission' => Permission::class,

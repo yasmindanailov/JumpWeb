@@ -129,8 +129,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       pasos 3–6: las **dependencias invisibles** del namespace plano (30+, sin `use`, que al
       mover revientan) y los **FQCN que son DATOS** (la migración del morphMap, ⛔ congelada y
       con guard propio verificado por mutación). Suite 2157 verde.
-- [ ] Pasos 3–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
-      como red (sin big-bang: Content → Identity → Payments → Booking).
+- [x] **Paso 3 — Content mudado** (2026-08-12, `DECISIONES #16`; spec §4.quater): 18 clases a
+      `app/Domain/Content/{Models,Services}` + primer renombre de vocabulario
+      **`ParkRule`→`VenueRule`** (clase sí; tabla `park_rules`, alias morph `park_rule` y
+      nombres del panel CONGELADOS — verificado en MySQL dev). Se decidió **con datos** la
+      puerta de entrada que el paso 2 dejó abierta: la capa de entrega es el *composition root*
+      y usa la superficie pública de cualquier módulo; el código de dominio aún sin mudar solo
+      entra por `Contracts`/Platform (baseline `PENDING`, 3 entradas). El arch-test destapó que
+      **Content depende de Booking** en 3 frentes (calendario, zona, precio de referencia):
+      anotados en `LEGACY` para decidir en el paso 6. Suite 2170 verde.
+- [ ] Pasos 4–6 — mudar el resto de `app/Support/` y `app/Models/` a los módulos, con la suite
+      como red (sin big-bang: Identity → Payments → Booking).
 - [ ] Romper los god-class documentados: `Livewire/Tickets/Purchase.php` (2.049 líneas; muere
       con la SPA en Fase 4) y `Filament/.../ViewOrder.php` (5.028 líneas; `wc -l` 2026-08-12).
 - [ ] Contratos entre módulos explícitos (el panel y la web solo hablan con servicios de

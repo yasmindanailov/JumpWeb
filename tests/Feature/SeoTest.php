@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Page;
-use App\Models\ParkRule;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -100,9 +100,9 @@ class SeoTest extends TestCase
     public function test_rules_page_meta_description_derives_from_rules(): void
     {
         app()->setLocale('es');
-        ParkRule::query()->delete();
-        ParkRule::create(['name' => ['es' => 'Calcetines obligatorios'], 'description' => ['es' => 'Antideslizantes.'], 'is_active' => true, 'position' => 1]);
-        ParkRule::create(['name' => ['es' => 'Sin comida en la zona de salto'], 'description' => ['es' => 'Solo en la cafetería.'], 'is_active' => true, 'position' => 2]);
+        VenueRule::query()->delete();
+        VenueRule::create(['name' => ['es' => 'Calcetines obligatorios'], 'description' => ['es' => 'Antideslizantes.'], 'is_active' => true, 'position' => 1]);
+        VenueRule::create(['name' => ['es' => 'Sin comida en la zona de salto'], 'description' => ['es' => 'Solo en la cafetería.'], 'is_active' => true, 'position' => 2]);
 
         $html = $this->get('/normas')->assertOk()->getContent();
 

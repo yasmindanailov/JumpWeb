@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\CookiePolicyContent;
+use App\Domain\Content\Services\LegalContent;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Attraction;
-use App\Models\Faq;
-use App\Models\LandingService;
-use App\Models\Page;
-use App\Models\ParkRule;
 use App\Models\RateType;
 use App\Models\TicketType;
 use App\Models\Zone;
-use App\Support\CookiePolicyContent;
-use App\Support\LegalContent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -572,14 +572,14 @@ class LandingContentSeeder extends Seeder
         ];
 
         foreach ($rules as $i => [$name, $desc]) {
-            ParkRule::updateOrCreate(['position' => $i + 1], [
+            VenueRule::updateOrCreate(['position' => $i + 1], [
                 'name' => ['es' => $name[0], 'en' => $name[1], 'fr' => $name[2]],
                 'description' => ['es' => $desc[0], 'en' => $desc[1], 'fr' => $desc[2]],
             ]);
         }
 
         // Limpia normas antiguas sobrantes (antes había 6; ahora 5). Idempotente.
-        ParkRule::where('position', '>', count($rules))->delete();
+        VenueRule::where('position', '>', count($rules))->delete();
     }
 
     /**

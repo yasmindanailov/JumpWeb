@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\PublishableCatalog;
-use App\Models\Attraction;
+use App\Domain\Content\Models\Attraction;
 use Illuminate\Support\Collection;
 
 /**

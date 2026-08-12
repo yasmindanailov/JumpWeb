@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\ParkRules\Pages;
 
+use App\Domain\Content\Models\VenueRule;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\ParkRules\Concerns\InteractsWithParkRuleForm;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
-use App\Models\ParkRule;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -20,7 +20,7 @@ class EditParkRule extends EditRecord
 
     public function getTitle(): string|Htmlable
     {
-        /** @var ParkRule $record */
+        /** @var VenueRule $record */
         $record = $this->record;
 
         return __('admin.park_rules.edit_title', ['name' => (string) ($record->tr('name') ?? '')]);
@@ -44,7 +44,7 @@ class EditParkRule extends EditRecord
 
     protected function afterSave(): void
     {
-        /** @var ParkRule $record */
+        /** @var VenueRule $record */
         $record = $this->record;
 
         AuditLogger::log('content.rule_updated', $record, [
@@ -68,7 +68,7 @@ class EditParkRule extends EditRecord
             ->modalHeading(__('admin.park_rules.actions.delete.modal_heading'))
             ->modalDescription(__('admin.park_rules.actions.delete.modal_description'))
             ->modalSubmitActionLabel(__('admin.park_rules.actions.delete.submit'))
-            ->action(function (ParkRule $record): void {
+            ->action(function (VenueRule $record): void {
                 $record = $record->fresh();
 
                 if ($record === null) {

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Offers;
 
+use App\Domain\Content\Models\Offer;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
 use App\Filament\Resources\Offers\Pages\ListOffers;
 use App\Filament\Resources\Offers\Schemas\OfferForm;
 use App\Filament\Resources\Offers\Tables\OfferTable;
-use App\Models\Offer;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

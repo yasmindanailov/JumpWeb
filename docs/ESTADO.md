@@ -4,11 +4,12 @@
 > Última actualización: **2026-08-12**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1 y 2 hechos; quedan Content, Identity, Payments y Booking.**
-- Suite **2157 en verde EN LOS DOS MODOS** (8122 aserciones): `--parallel` ~1m13s y
-  **secuencial 2157/2157 en 557s** (comprobado en el cierre 2026-08-12, la primera vez en este
-  repo) · Pint limpio · `docs-check` verde · `redsys:verify-concurrency` y
-  `purchase:verify-oversell` EN VERDE sobre MySQL real.
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 (modularización) 🟦 — pasos 1, 2 y 3 hechos; quedan Identity, Payments y Booking.**
+- Suite **2170 en verde** (8149 aserciones, `--parallel` ~1m11s) · Pint limpio · `docs-check`
+  verde · `redsys:verify-concurrency` y `purchase:verify-oversell` EN VERDE sobre MySQL real.
+  La corrida SECUENCIAL completa se verificó en el paso 2 (2157/2157 en 557s): los dos modos
+  dan lo mismo. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del
+  runner, no del código (ver `TESTING.md`).
   Detalle sin consecuencias: el contador «PHPUnit Notices: 1» aparece **solo** en la corrida
   paralela completa; la secuencial da 0 y ningún test falla. Es del runner, no del código.
 - **Fase 2 — hecho** (detalle en el tracker):
@@ -49,6 +50,21 @@
      - **FQCN que son DATOS**: la migración `convert_morph_types_to_aliases` guarda los FQCN
        que la BD tenía en 2026-08-12. Un `sed` global la rompe EN SILENCIO. ⛔ Congelada, con
        guard en `MorphMapTest` verificado por mutación.
+  6. **PASO 3 — Content MUDADO** (`DECISIONES #16`, spec §4.quater): 18 clases en
+     `app/Domain/Content/{Models,Services}` + primer renombre de vocabulario
+     **`ParkRule`→`VenueRule`** (la CLASE; tabla `park_rules`, alias morph `park_rule` y
+     nombres del panel se CONGELAN — verificado en MySQL dev: el alias resuelve a la clase
+     nueva y las 5 filas se leen igual).
+     - **Puerta de entrada decidida CON DATOS** (lo que el paso 2 dejó abierto): la capa de
+       entrega (`Filament`, `Http`, `Livewire`, `Providers`, `Mail`, `Notifications`,
+       `Console`, `Exceptions`) es el *composition root* y usa la superficie pública de
+       cualquier módulo; el código de dominio AÚN SIN MUDAR (`app/Support`, `app/Models`) solo
+       entra por `Contracts` o Platform → baseline `PENDING` (3 entradas), que solo encoge.
+     - **Content NO es autosuficiente**: el arch-test destapó 3 dependencias reales hacia
+       Booking (calendario de operación · identidad de zona · precio de referencia), anotadas
+       en la baseline `LEGACY` para decidir en el paso 6.
+     - Herramienta nueva: **`scripts/module-deps.php`** — el «paso 0» del checklist (medir las
+       dependencias INVISIBLES) ya no es artesanal.
 - Fase 1 cerrada esta misma sesión: marca a 6 líneas intencionales, prefijo de pedidos =
   setting `sales.order_prefix` (default `R-`), semilla neutra «SaltoPark», jurisdicción
   legal por token, wordmark data-driven (`DECISIONES #12`).
@@ -60,23 +76,26 @@
   La BD dev ya corre la migración del morphMap.
 
 ## ▶ Próximo paso
-**Spec de módulos, PASO 3 — mudar Content** (leer `docs/specs/modulos-dominio.md` §5.3 y el
-**checklist mecánico** del final de §5, que el paso 2 afinó): páginas/legales (`LegalContent`,
-`LegalIdentity`, `CookiePolicyContent`), landing (`HeroStatus`, `MapsEmbed`, `SocialEmbed`,
-`ThemeSettings`, presenters) y los modelos `Faq`/`Page`/`LandingService`/`Offer`/`Attraction`
-+ el renombre `ParkRule`→`VenueRule` (SIN renombrar la tabla: `$table='park_rules'` fijo).
+**Spec de módulos, PASO 4 — mudar Identity** (leer `docs/specs/modulos-dominio.md` §5.4 y el
+**checklist mecánico** del final de §5): `User`, `Consent`, `CookieConsent`+`CookieConsentLog`,
+`Role`, `Permission`, `PermissionCatalog`, `CustomerRegistrar`, `CustomerAccountContext`,
+`PuertaSettings` y la puerta.
 
-**Empieza por el paso 0 del checklist**: medir las dependencias INVISIBLES (hermanas del mismo
-namespace, sin `use`) de lo que mueves y de lo que se queda. En el paso 2 fueron la única causa
-real de rotura. Ya se sabe de al menos dos: `EmailProductCard`→`ThemeSettings` (costura
-Booking→Content, spec §6.7) y `ProductAvailability`→`ParkSchedule`.
+**Paso 0 primero** (ya es un comando):
+`docker compose exec -u sail laravel.test php scripts/module-deps.php User Consent Role Permission …`
+— lista qué arrastra cada clase y quién la referencia, marcando las INVISIBLES (las que no
+llevan `use` por ser del mismo namespace; en el paso 2 fueron la única causa real de rotura).
 
-Dos decisiones que TOCA tomar en el paso 3, no antes:
-- ¿puede la capa de entrega (Filament/Livewire/Blade) referirse a `App\Domain\Content\Models\*`
-  directamente? Hoy la 3ª guarda de `ModuleBoundariesTest` solo exime a Platform; Content es el
-  primer módulo con modelos propios y ahí se decide con datos (el spec §4 anticipa que la capa
-  de entrega sigue hablando con modelos).
-- `Zone` es de **Booking**: a Content va solo su CMS visual (ver inventario del spec §5.3).
+⚠️ **Trampa conocida que muerde en ESTE paso**: `Model::factory()` resuelve la factory por la
+convención `App\Models\X` → `Database\Factories\XFactory`. Al mover `User` a
+`App\Domain\Identity\Models` esa resolución se rompe — y `UserFactory` es la ÚNICA factory del
+repo, usada por media suite. Hay que mover la factory al namespace espejo o registrar un
+resolver ANTES de tocar `User`. (Los pasos 2 y 3 no la tocaron: ningún modelo mudado usaba
+`HasFactory`.)
+
+`User` es **kernel compartido**: vive en Identity y sus relaciones cruzadas quedan exentas como
+costura de BD (spec §4). Ya hay una entrada suya en la allowlist `SEAM`
+(`Platform/Models/AuditLog.php` → `App\Models\User`) que habrá que reapuntar al namespace nuevo.
 
 Cada paso del spec = una unidad de sesión con suite verde.
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer

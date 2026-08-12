@@ -66,4 +66,4 @@ también viven en el código («aforo», «franja», «puerta»): grep funciona 
 | mantenimiento | `MaintenanceSettings` (site/página/reservas; fail-safe opt-in) | Apagado selectivo; un setting roto nunca tira la web. | ✔ |
 | zona horaria de display | `DisplayTime` (setting `display_timezone`; BD en UTC) | TZ de presentación; NUNCA usar `Carbon::today()` crudo en venta (invariante AFORO-09). | ✔ |
 | sala / mesa | `Room` (tabla `rooms`; sin lógica de aforo conectada) | Recurso físico para packs, previsto y SIN uso — ver `DEUDA.md`. | ❓ |
-| normas | `ParkRule` (CMS i18n) | Lista editable de normas del recinto en la landing. | ✔ (nombre 🏷️) |
+| normas | `VenueRule` (CMS i18n) | Lista editable de normas del recinto en la landing. | ✔ (nombre 🏷️) |

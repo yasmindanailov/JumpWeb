@@ -2,7 +2,7 @@
 @php
     // Horario del parque data-driven (#207): misma fuente que las reservas (opening_hours +
     // temporadas + fechas especiales), agrupado para mostrar.
-    $schedule = app(\App\Support\ScheduleDisplay::class);
+    $schedule = app(\App\Domain\Content\Services\ScheduleDisplay::class);
     $totalSqm = number_format($zones->sum('area_sqm'), 0, ',', '.');
     $totalRides = $zones->sum('rides_count');
     $totalZones = $zones->count();
@@ -35,7 +35,7 @@
                     <span class="word"><span class="blink">{{ __('landing.hero.l2') }}</span></span>
                 </h1>
 
-                {{-- Estado de apertura (data-driven, `App\Support\HeroStatus`) DEBAJO del título: «{Día} ·
+                {{-- Estado de apertura (data-driven, `App\Domain\Content\Services\HeroStatus`) DEBAJO del título: «{Día} ·
                      Abierto ahora» / «… · Abrimos en Xh», con un icono de ubicación al final. Sin fondo
                      (texto sobre el vídeo). Enlaza a #info (horario + cómo llegar). No se pinta sin horario. --}}
                 @if (! empty($heroStatus))
@@ -104,7 +104,7 @@
                          `Ejemplos Imagenes Secciones.html`): banda de foto arriba + color de zona y
                          datos abajo. Fondo = color de la zona (white-label, vía ThemeSettings). --}}
                     <a class="zone-photo-card" href="#rides"
-                             style="background: {{ \App\Support\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}; --on-brand: {{ \App\Support\ThemeSettings::onBrand(\App\Support\ThemeSettings::colorForAccent($zone->color, $zone->accent)) }}"
+                             style="background: {{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}; --on-brand: {{ \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent)) }}"
                              @click.prevent="goToRides('{{ $zone->accent }}')"
                              aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
                         <img class="zone-photo-card__photo" src="{{ asset($zone->image) }}"
@@ -168,7 +168,7 @@
         </div>
 
         @foreach ($zones as $zone)
-            <div class="slider" x-ref="slider_{{ $zone->accent }}" data-zone="{{ $zone->accent }}" data-color="{{ \App\Support\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}" x-show="zone==='{{ $zone->accent }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
+            <div class="slider" x-ref="slider_{{ $zone->accent }}" data-zone="{{ $zone->accent }}" data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}" x-show="zone==='{{ $zone->accent }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
                 @foreach ($zone->attractions as $ride)
                     <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
                         <div class="ride-card__viz">

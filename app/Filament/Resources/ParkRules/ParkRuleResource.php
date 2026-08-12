@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\ParkRules;
 
+use App\Domain\Content\Models\VenueRule;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
 use App\Filament\Resources\ParkRules\Schemas\ParkRuleForm;
 use App\Filament\Resources\ParkRules\Tables\ParkRuleTable;
-use App\Models\ParkRule;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -23,7 +23,7 @@ use Filament\Tables\Table;
  */
 class ParkRuleResource extends Resource
 {
-    protected static ?string $model = ParkRule::class;
+    protected static ?string $model = VenueRule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedExclamationTriangle;
 
@@ -95,7 +95,7 @@ class ParkRuleResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return ($record instanceof ParkRule)
+        return ($record instanceof VenueRule)
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 

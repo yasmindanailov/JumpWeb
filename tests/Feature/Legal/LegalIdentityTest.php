@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Legal;
 
+use App\Domain\Content\Services\LegalIdentity;
 use App\Domain\Platform\Models\Setting;
-use App\Support\LegalIdentity;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

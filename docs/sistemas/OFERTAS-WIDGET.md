@@ -30,7 +30,7 @@ recortado):
 | `position` | unsignedInteger default 0 | orden del carrusel (drag&drop en el panel) |
 | `is_active` | boolean default true | gobierna la visibilidad del widget |
 
-Modelo `app/Models/Offer.php`: `HasTranslations`, `$guarded=[]`, constante `IMAGE_DISK='uploads'`,
+Modelo `app/Domain/Content/Models/Offer.php`: `HasTranslations`, `$guarded=[]`, constante `IMAGE_DISK='uploads'`,
 scopes `active()` / `ordered()`, `imageUrl()` (`asset('uploads/'.$image)`, sin symlink). Sin slug,
 sin `ticket_type_id`, sin CTA.
 

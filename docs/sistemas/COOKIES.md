@@ -167,7 +167,7 @@ es/zh_CN (`admin.settings.cookies_banner_enabled*`).
 permanente «Configuración de cookies» → `$store.cookies.reopen()` (revocar = art. 7.3).
 
 **Política de cookies (2.ª capa)** — fuente única
-[`App\Support\CookiePolicyContent`](../../app/Support/CookiePolicyContent.php): estructura
+[`App\Domain\Content\Services\CookiePolicyContent`](../../app/Domain/Content/Services/CookiePolicyContent.php): estructura
 `pages.body` por idioma (secciones `{h,p}`), reutilizada por (a) el seeder
 (`LandingContentSeeder::seedPages`) y (b) la migración de reparación **idempotente**
 `2026_06_08_000002_refresh_cookie_policy_content` (refresca la página `cookies` **solo si** aún

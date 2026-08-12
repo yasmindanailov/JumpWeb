@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Attractions;
 
+use App\Domain\Content\Models\Attraction;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
 use App\Filament\Resources\Attractions\Schemas\AttractionForm;
 use App\Filament\Resources\Attractions\Tables\AttractionTable;
-use App\Models\Attraction;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

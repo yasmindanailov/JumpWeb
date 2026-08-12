@@ -60,6 +60,11 @@ class ModuleBoundariesTest extends TestCase
         // `audit_logs.user_id` → quién hizo la acción. Relación Eloquent, costura de BD (§4).
         // Platform no depende de Identity: solo declara la FK que ya existe en el esquema.
         'Platform/Models/AuditLog.php' => ['App\Models\User'],
+        // Relaciones Eloquent Content↔Booking: `attractions.zone_id`, `attractions.ticket_type_id`,
+        // `landing_services.ticket_type_id`. Son FKs del esquema, no llamadas de dominio; el
+        // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
+        'Content/Models/Attraction.php' => ['App\Models\TicketType', 'App\Models\Zone'],
+        'Content/Models/LandingService.php' => ['App\Models\TicketType'],
     ];
 
     /**
@@ -77,6 +82,26 @@ class ModuleBoundariesTest extends TestCase
             'App\Support\CustomerReservationsReader',
             'App\Support\PublishableCatalogReader',
         ],
+
+        // ─── Content → Booking: LECTURAS de dominio, no relaciones (paso 3, 2026-08-12) ───
+        // Estas NO son costura de BD: son consultas de Content a datos de Booking. Hoy apuntan a
+        // `App\Models`/`App\Support` (legacy) y por eso caben aquí; cuando Booking mude (paso 6)
+        // el grafo NO las permitirá y habrá que decidir, con todo a la vista, entre:
+        //   (a) contratos de Booking para «calendario de operación», «identidad de zona» y
+        //       «precio de referencia del producto», o
+        //   (b) reclasificar el calendario (`OpeningHour`/`Season`/`SpecialDate`/`ParkSchedule`):
+        //       lo consumen la landing (horarios, SEO) y Booking (generación de franjas) por
+        //       igual, así que puede que no sea de Booking sino del recinto.
+        // Mientras tanto la lista solo puede ENCOGER.
+        'Content/Services/HeroStatus.php' => ['App\Support\ParkSchedule'],
+        'Content/Services/ScheduleDisplay.php' => [
+            'App\Models\OpeningHour',
+            'App\Models\Season',
+            'App\Models\SpecialDate',
+        ],
+        'Content/Services/StructuredData.php' => ['App\Models\OpeningHour'],
+        'Content/Services/ThemeSettings.php' => ['App\Models\Zone'],
+        'Content/Services/LandingAddonPresenter.php' => ['App\Models\TicketType'],
     ];
 
     /** El escaneo nunca puede pasar en vacío (un glob roto lo volvería un test decorativo). */
@@ -160,27 +185,64 @@ class ModuleBoundariesTest extends TestCase
     }
 
     /**
-     * Puerta de entrada: el resto de `app/` (capa de entrega y código aún sin modularizar) habla
-     * con los `Contracts` de un módulo, nunca con sus tripas. Es la mitad que impide que la
-     * modularización se convierta en «mover carpetas y seguir llamando a lo de dentro».
+     * Capa de ENTREGA: los directorios que componen la aplicación a partir de varios contextos.
+     * Es el *composition root* del sistema — por definición toca varios módulos y el spec §4 la
+     * deja quieta en Fase 2 («solo actualizan imports»).
      *
-     * **Platform queda EXENTO por diseño**, no por comodidad: el grafo del spec §4 dice
-     * «todos→Platform». Platform es la base compartida (settings, audit, formateo, i18n) y no
-     * tiene `Contracts` porque no es una costura de dominio que haya que poder sustituir —
-     * meterle una interfaz a `Money::format()` sería ceremonia sin lector. Exigirle contratos
-     * habría obligado a inventar 12 interfaces de una línea, justo la «superficie nueva» que
-     * el spec prohíbe.
-     *
-     * Los `Models/` de los módulos NO-Platform aún no existen; cuando Content mude (paso 3) esa
-     * decisión se toma ALLÍ y con datos, no se preautoriza aquí.
+     * @var list<string>
      */
-    public function test_code_outside_the_modules_only_touches_contracts_or_platform(): void
+    private const DELIVERY = [
+        'Console', 'Exceptions', 'Filament', 'Http', 'Livewire', 'Mail', 'Notifications', 'Providers',
+    ];
+
+    /**
+     * Código de DOMINIO aún sin modularizar que se salta la puerta de entrada. Cada entrada es
+     * acoplamiento real entre contextos, no ceremonia: se retira cuando su módulo mude.
+     *
+     * @var array<string, list<string>>
+     */
+    private const PENDING = [
+        // Booking pinta el color de la zona en el email leyendo el tema (Content). Costura
+        // conocida y aceptada por la revisión (spec §6.7); muere cuando Content exponga el
+        // color por contrato o cuando la tarjeta de email deje de decidir su color.
+        'Support/EmailProductCard.php' => ['App\Domain\Content\Services\ThemeSettings'],
+        // Relaciones Eloquent inversas Booking→Content (`landing_services.ticket_type_id`,
+        // `attractions.zone_id`): FKs del esquema, costura de BD del §4.
+        'Models/TicketType.php' => ['App\Domain\Content\Models\LandingService'],
+        'Models/Zone.php' => ['App\Domain\Content\Models\Attraction'],
+    ];
+
+    /**
+     * Puerta de entrada a los módulos desde fuera de `app/Domain`.
+     *
+     * La regla se afinó en el paso 3 CON DATOS (antes decía «solo Contracts», que era cierto
+     * cuando los módulos solo tenían contratos). Al mudar Content aparecieron ~40 referencias
+     * desde Filament, controladores y providers a sus modelos Y a sus servicios: es la capa de
+     * entrega haciendo su trabajo. Prohibírselo habría significado reescribir el panel entero,
+     * que es justo lo que Fase 2 declara fuera de alcance. Así que:
+     *
+     *  - **capa de entrega** (`self::DELIVERY`) → puede usar la superficie pública de cualquier
+     *    módulo: es quien compone los contextos;
+     *  - **código de dominio aún sin mudar** (`app/Support`, `app/Models`) → solo `Contracts` y
+     *    Platform. Cualquier otra cosa es acoplamiento entre contextos y necesita entrada
+     *    explícita en `PENDING`, que **solo puede encoger** (se vacía en el paso 7).
+     *
+     * **Platform queda EXENTO entero**, no por comodidad: el grafo del spec §4 dice
+     * «todos→Platform». Es la base compartida (settings, audit, formateo, i18n), no una costura
+     * sustituible; meterle una interfaz a `Money::format()` sería ceremonia sin lector.
+     */
+    public function test_unmodularised_domain_code_enters_modules_only_through_contracts(): void
     {
         $violations = [];
 
         foreach ($this->phpFiles(app_path()) as $file) {
             if (str_starts_with($file, app_path('Domain'))) {
                 continue;
+            }
+
+            $relative = mb_substr($file, mb_strlen(app_path()) + 1);
+            if (in_array(explode('/', $relative)[0], self::DELIVERY, true)) {
+                continue;   // composition root
             }
 
             foreach ($this->appReferences($file) as $reference) {
@@ -195,16 +257,48 @@ class ModuleBoundariesTest extends TestCase
                 if (preg_match('/^App\\\\Domain\\\\[A-Za-z]+\\\\Contracts\\\\/', $reference) === 1) {
                     continue;
                 }
+                if (in_array($reference, self::PENDING[$relative] ?? [], true)) {
+                    continue;
+                }
 
-                $violations[] = '  '.mb_substr($file, mb_strlen(base_path()) + 1)."  →  {$reference}";
+                $violations[] = "  app/{$relative}  →  {$reference}";
             }
         }
 
         $this->assertSame(
             [], $violations,
-            "Fuera de app/Domain solo se pueden usar los Contracts de un módulo (o Platform entero):\n"
+            "El código de dominio aún sin mudar solo puede entrar a un módulo por sus Contracts\n"
+            ."(o por Platform). Si es acoplamiento real, decláralo en PENDING con su porqué:\n"
             .implode("\n", $violations)
         );
+    }
+
+    /** `PENDING` también solo encoge: una entrada que ya no se usa hay que borrarla. */
+    #[DataProvider('pendingProvider')]
+    public function test_pending_entries_are_still_in_use(string $relative, string $reference): void
+    {
+        $path = app_path($relative);
+
+        $this->assertFileExists($path, "PENDING: «{$relative}» ya no existe — quita su entrada");
+        $this->assertContains(
+            $reference,
+            $this->appReferences($path),
+            "PENDING: «{$relative}» ya no referencia «{$reference}» — quita la entrada"
+        );
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function pendingProvider(): iterable
+    {
+        foreach (self::PENDING as $relative => $references) {
+            foreach ($references as $reference) {
+                yield "{$relative} → {$reference}" => [$relative, $reference];
+            }
+        }
+
+        if (self::PENDING === []) {
+            yield 'PENDING vacía' => ['-', '-'];
+        }
     }
 
     private function isAllowed(string $module, string $relative, string $reference): bool

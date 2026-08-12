@@ -1,19 +1,21 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Content\Models;
 
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 
-class Faq extends Model
+class VenueRule extends Model
 {
     use HasTranslations;
+
+    protected $table = 'park_rules';
 
     protected $guarded = [];
 
     protected $casts = [
-        'question' => 'array',
-        'answer' => 'array',
+        'name' => 'array',
+        'description' => 'array',
         'is_active' => 'boolean',
     ];
 }

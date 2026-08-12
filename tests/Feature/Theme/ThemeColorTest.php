@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Theme;
 
+use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
 use App\Models\Order;
@@ -9,7 +10,6 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\OrderConfirmation;
-use App\Support\ThemeSettings;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;

@@ -5,7 +5,7 @@
     $legalSections = is_array($page->tr('body')) ? $page->tr('body') : [];
     $legalIntro = collect($legalSections)->pluck('p')->filter()->first();
     $legalMeta = $legalIntro
-        ? \Illuminate\Support\Str::limit(strip_tags(\App\Support\LegalIdentity::interpolate($legalIntro)), 155)
+        ? \Illuminate\Support\Str::limit(strip_tags(\App\Domain\Content\Services\LegalIdentity::interpolate($legalIntro)), 155)
         : $page->tr('title');
 @endphp
 <x-layout :title="$page->tr('title')" :description="$legalMeta">
@@ -20,7 +20,7 @@
 
         {{-- El aviso de borrador solo se muestra en las páginas legales aún NO revisadas; las de
              contenido definitivo (ver `Page::REVIEWED_LEGAL_SLUGS`) lo ocultan. --}}
-        @unless (in_array($page->slug, \App\Models\Page::REVIEWED_LEGAL_SLUGS, true))
+        @unless (in_array($page->slug, \App\Domain\Content\Models\Page::REVIEWED_LEGAL_SLUGS, true))
             <p class="page__note">{{ __('site.legal_draft_notice') }}</p>
         @endunless
 
@@ -31,7 +31,7 @@
                     <h2 class="page__h2">{{ $section['h'] }}</h2>
                 @endif
                 {{-- Interpola los datos fiscales del titular desde la configuración (#206). --}}
-                <p>{{ \App\Support\LegalIdentity::interpolate($section['p'] ?? '') }}</p>
+                <p>{{ \App\Domain\Content\Services\LegalIdentity::interpolate($section['p'] ?? '') }}</p>
             @endforeach
         </div>
 

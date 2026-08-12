@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Content\Models\Attraction;
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

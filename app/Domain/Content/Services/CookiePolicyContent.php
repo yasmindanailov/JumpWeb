@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 /**
  * Contenido real de la política de cookies (2.ª capa, #219). FUENTE ÚNICA usada por:

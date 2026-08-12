@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 /**
  * Normaliza lo que el operador pega en el ajuste «Mapa embebido» (#206). Google ofrece el

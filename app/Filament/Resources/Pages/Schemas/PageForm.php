@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Pages\Schemas;
 
-use App\Models\Page;
+use App\Domain\Content\Models\Page;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;

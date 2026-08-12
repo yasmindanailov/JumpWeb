@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Page;
-use App\Support\CookiePolicyContent;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Services\CookiePolicyContent;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 

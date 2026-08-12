@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\VenueRule;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
@@ -11,9 +14,6 @@ use App\Filament\Resources\Faqs\Pages\ListFaqs;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
-use App\Models\Attraction;
-use App\Models\Faq;
-use App\Models\ParkRule;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Zone;
@@ -255,8 +255,8 @@ class CmsLandingFlowTest extends TestCase
 
     public function test_rule_reorder_in_panel_reflects_on_normas(): void
     {
-        $first = ParkRule::create(['name' => ['es' => 'NormaUnoZZ'], 'position' => 90]);
-        $second = ParkRule::create(['name' => ['es' => 'NormaDosZZ'], 'position' => 91]);
+        $first = VenueRule::create(['name' => ['es' => 'NormaUnoZZ'], 'position' => 90]);
+        $second = VenueRule::create(['name' => ['es' => 'NormaDosZZ'], 'position' => 91]);
 
         $this->get('/normas')->assertSeeInOrder(['NormaUnoZZ', 'NormaDosZZ']);
 
@@ -274,7 +274,7 @@ class CmsLandingFlowTest extends TestCase
     {
         // Coherencia al QUITAR: si se desactivan todas las normas, /normas y la home siguen
         // cargando (200) y simplemente no muestran ninguna norma sembrada (sin romper el layout).
-        ParkRule::query()->update(['is_active' => false]);
+        VenueRule::query()->update(['is_active' => false]);
 
         $this->get('/')->assertOk()->assertDontSee('Conducta');
         $this->get('/normas')->assertOk()->assertDontSee('Conducta');
@@ -282,7 +282,7 @@ class CmsLandingFlowTest extends TestCase
 
     public function test_deactivated_rule_disappears_from_home_and_normas(): void
     {
-        $rule = ParkRule::create(['name' => ['es' => 'NormaVisibleZZ'], 'position' => 92]);
+        $rule = VenueRule::create(['name' => ['es' => 'NormaVisibleZZ'], 'position' => 92]);
 
         $this->get('/')->assertSee('NormaVisibleZZ');
         $this->get('/normas')->assertSee('NormaVisibleZZ');

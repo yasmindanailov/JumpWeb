@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LandingService;
+use App\Domain\Content\Models\LandingService;
 
 class ServicesController extends Controller
 {

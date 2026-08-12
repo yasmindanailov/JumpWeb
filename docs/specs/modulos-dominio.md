@@ -125,6 +125,48 @@ los pasos 3–6 (`DECISIONES #15`):
 **Nota de deploy** (aplica a este paso por mover 2 modelos): drenar la cola y `queue:restart`
 antes de desplegar — los payloads serializados llevan el FQCN viejo.
 
+## 4.quater Paso 3 EJECUTADO (2026-08-12) — Content, y la puerta de entrada resuelta
+18 clases (6 modelos + 12 servicios) + el primer renombre de vocabulario. Tres cosas
+(`DECISIONES #16`):
+
+1. **La «puerta de entrada» del arch-test se decidió CON DATOS**, como quedó apalabrado en el
+   paso 2. Al mudar Content aparecieron ~40 referencias desde Filament (22), controladores (11)
+   y providers (6) a sus **modelos Y a sus servicios**: es la capa de entrega haciendo su
+   trabajo, y prohibírselo habría exigido reescribir el panel entero — fuera de alcance
+   declarado (§2). Regla final, ya en el test:
+   · **capa de entrega** (`Console`, `Exceptions`, `Filament`, `Http`, `Livewire`, `Mail`,
+     `Notifications`, `Providers`) → superficie pública de cualquier módulo: es el
+     *composition root*, compone contextos por definición;
+   · **código de dominio aún sin mudar** (`app/Support`, `app/Models`) → solo `Contracts` y
+     Platform; lo demás va a la baseline `PENDING`, que **solo encoge** y se vacía en el paso 7.
+   Hoy `PENDING` tiene 3 entradas, todas ya previstas: `EmailProductCard`→`ThemeSettings`
+   (§6.7) y las dos relaciones Eloquent inversas `TicketType`→`LandingService`,
+   `Zone`→`Attraction`.
+2. **Renombre `ParkRule` → `VenueRule` con los DATOS congelados.** Cambia la clase; **no** la
+   tabla (`$table = 'park_rules'`, que ya estaba fijada) ni el alias morph (`'park_rule'`) ni
+   los nombres del panel (`ParkRuleResource`, URL `/admin/park-rules`, claves i18n
+   `admin.park_rules.*`): renombrar cualquiera de esos exigiría migración de datos o cambiaría
+   URLs a cambio de nada. Verificado en MySQL dev: el alias `'park_rule'` resuelve a
+   `App\Domain\Content\Models\VenueRule` y las 5 filas se leen igual.
+   ⚠️ Esto **rectifica** `vocabulario-dominio.md`, que proponía renombrar también la tabla.
+3. **Content NO es autosuficiente: le faltan tres cosas de Booking.** El arch-test las dejó al
+   descubierto y viven en la baseline `LEGACY` hasta el paso 6 — calendario de operación
+   (`ScheduleDisplay`, `StructuredData`, `HeroStatus` → `OpeningHour`/`Season`/`SpecialDate`/
+   `ParkSchedule`), identidad de zona (`ThemeSettings` → `Zone`) y precio de referencia
+   (`LandingAddonPresenter` → `TicketType`). Cuando Booking mude habrá que elegir entre darles
+   contrato o **reclasificar el calendario**: lo consumen la landing (horarios, SEO) y Booking
+   (generación de franjas) por igual, así que puede que no sea de Booking sino del recinto.
+   La decisión se toma en el paso 6, con todo delante — no antes.
+
+**Herramienta**: el «paso 0» (medir invisibles) dejó de ser artesanal —
+`scripts/module-deps.php`, con el mismo tokenizador que el arch-test. `php scripts/module-deps.php
+Faq Page …` lista qué arrastra cada clase y quién la referencia, marcando las INVISIBLES.
+
+**Trampa localizada para el paso 4** (aún no muerde): `Model::factory()` resuelve la factory por
+convención `App\Models\X` → `Database\Factories\XFactory`. Un modelo en `App\Domain\…\Models`
+rompe esa resolución. Hoy solo existe `UserFactory` y `User` es de **Identity** → el paso 4 debe
+mover la factory o registrar un resolver antes de tocar `User`.
+
 ## 5. Orden de migración (un paso = una unidad committeable, suite verde + gates)
 0. **Cimientos** (con este spec): pre-push ancla los críticos por BASENAME (no por ruta);
    `docs-check` y `MorphMapTest` cuentan modelos en `app/Models` + `app/Domain/*/Models`;
@@ -138,10 +180,11 @@ antes de desplegar — los payloads serializados llevan el FQCN viejo.
    `Services/`(`AuditLogger`, `DisplayTime`, `Money`, `Duration`, `PhoneNormalizer`,
    `MaintenanceSettings`, `QrCode`, `Turnstile`) · `Concerns/`(`HasTranslations`) ·
    `Enums/`(`DashboardPeriod`). Sin `Contracts` a propósito. 236 ficheros tocados.
-3. **Content** (+`VenueRule`): páginas/legales (`LegalContent`, `LegalIdentity`,
-   `CookiePolicyContent`), landing (`HeroStatus`, `MapsEmbed`, `SocialEmbed`,
-   `ThemeSettings`, presenters), `Faq`/`Page`/`LandingService`/`Offer`/`Attraction`/`Zone`*
-   (*Zone es de Booking: solo su CMS visual va aquí — ver inventario).
+3. ✅ **Content** (2026-08-12, ver §4.quater): `Models/`(`Faq`, `Page`, `LandingService`,
+   `Offer`, `Attraction`, **`VenueRule`** ←ex `ParkRule`) · `Services/`(`LegalContent`,
+   `LegalIdentity`, `CookiePolicyContent`, `HeroStatus`, `MapsEmbed`, `SocialEmbed`,
+   `ThemeSettings`, `StructuredData`, `ScheduleDisplay`, `LandingAddonPresenter`,
+   `LandingComplementResolver`, `ServicePriceTableBackfill`). `Zone` se queda en Booking.
 4. **Identity**: `User`, `Consent`, `CookieConsent(+Log)`, `CustomerRegistrar`,
    `CustomerAccountContext`, `PuertaSettings`, puerta. `User` es kernel compartido: vive en
    Identity, las relaciones cruzadas quedan exentas (costura).

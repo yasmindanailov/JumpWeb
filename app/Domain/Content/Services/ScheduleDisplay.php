@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 use App\Domain\Platform\Services\DisplayTime;
 use App\Models\OpeningHour;

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\LandingService;
+use App\Domain\Content\Models\LandingService;
 use App\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

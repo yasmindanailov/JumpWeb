@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\Faqs;
 
+use App\Domain\Content\Models\Faq;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\Faqs\Pages\CreateFaq;
 use App\Filament\Resources\Faqs\Pages\EditFaq;
 use App\Filament\Resources\Faqs\Pages\ListFaqs;
-use App\Models\Faq;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;

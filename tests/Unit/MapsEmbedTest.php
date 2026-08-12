@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Support\MapsEmbed;
+use App\Domain\Content\Services\MapsEmbed;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\ParkRules\Tables;
 
+use App\Domain\Content\Models\VenueRule;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
-use App\Models\ParkRule;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -20,7 +20,7 @@ class ParkRuleTable
             ->columns([
                 TextColumn::make('name')
                     ->label(__('admin.park_rules.col_name'))
-                    ->getStateUsing(fn (ParkRule $record): string => (string) ($record->tr('name') ?? '—'))
+                    ->getStateUsing(fn (VenueRule $record): string => (string) ($record->tr('name') ?? '—'))
                     ->wrap(),
 
                 TextColumn::make('is_active')
@@ -33,7 +33,7 @@ class ParkRuleTable
             ])
             ->defaultSort('position')
             ->reorderable('position')
-            ->recordUrl(fn (ParkRule $record): string => ParkRuleResource::getUrl('edit', ['record' => $record]))
+            ->recordUrl(fn (VenueRule $record): string => ParkRuleResource::getUrl('edit', ['record' => $record]))
             ->filters([
                 TernaryFilter::make('is_active')
                     ->label(__('admin.park_rules.col_active')),

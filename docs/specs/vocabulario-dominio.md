@@ -26,7 +26,7 @@ FUERA de alcance: multi-tenant, traducción de slugs de rutas (Fase 4, #12.a).
 | Artefacto | Decisión propuesta |
 |---|---|
 | `Zone`, `Attraction`, `Slot`, `TicketType` (entry/pack/addon), `Price`, `RateType`, `Season`, `SpecialDate` | SE QUEDAN — vocabulario compartido del sector objetivo. |
-| `ParkSchedule` → `OperatingSchedule` · `ParkRule` → `VenueRule` (tabla `park_rules` → `venue_rules`) | Renombrar EN Fase 2, junto con la modularización y DESPUÉS del morphMap (prerequisito ya en el tracker). |
+| `ParkSchedule` → `OperatingSchedule` (paso 6) · ~~`ParkRule` → `VenueRule`~~ **HECHO** (paso 3, 2026-08-12) | Renombrar EN Fase 2, con la modularización y DESPUÉS del morphMap. ⚠️ **Rectificado al ejecutar**: la tabla NO se renombra (`$table='park_rules'` fijo) ni el alias morph (`'park_rule'`) — son DATOS de instalaciones vivas y renombrarlos exigiría migración y riesgo a cambio de nada. Manda `modulos-dominio.md` §4. |
 | Namespace `Admin\Puerta` + `PuertaSettings` | Se queda «puerta» como término de producto (ya es genérico en el sector: control de acceso presencial); solo se documenta en GLOSARIO. |
 | Copys «cumpleaños/niños/invitados» (lang + `DEFAULT_GUEST_FIELDS`) | Ya son data-driven por producto (`event_fields`/`guest_fields`) o i18n editable: cada instalación redacta los suyos. Sin cambio de código. |
 | Accents de zona `jump`/`kids` (tokens CSS + `ThemeSettings::ZONE_DEFAULTS`) | Fase 2/5: pasar los tokens por-zona a derivados 100% de `zones.color` (hoy ya existe el mecanismo; retirar los defaults con nombre). |

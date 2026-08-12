@@ -41,7 +41,7 @@ return [
         'cta_buy' => 'Book here',
         'cta_buy_from' => 'from :amount',
         'cta_buy_no_price' => 'Birthdays online',
-        // Hero status chip (data-driven, App\Support\HeroStatus). `:duration` already formatted
+        // Hero status chip (data-driven, App\Domain\Content\Services\HeroStatus). `:duration` already formatted
         // («2 h» / «45 min»); `:time` = «HH:MM»; `:day` = lowercased weekday.
         'status_open' => 'Open now',
         'status_opens_in' => 'We open in :duration',

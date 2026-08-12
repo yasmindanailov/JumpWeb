@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domain\Content\Services\LandingAddonPresenter;
 use App\Models\RateType;
 use App\Models\TicketType;
-use App\Support\LandingAddonPresenter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

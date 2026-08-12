@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\Attraction;
+use App\Domain\Content\Models\Attraction;
 use App\Models\RateType;
 use App\Models\TicketType;
 use App\Models\Zone;

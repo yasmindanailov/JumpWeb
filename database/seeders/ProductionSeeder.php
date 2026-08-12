@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Content\Models\Attraction;
 use App\Domain\Platform\Models\Setting;
-use App\Models\Attraction;
 use App\Models\OpeningHour;
 use App\Models\Order;
 use App\Models\RateType;

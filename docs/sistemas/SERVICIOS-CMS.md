@@ -53,7 +53,7 @@ Detalles del FK: `unique` = relación 1:1 (`TicketType::landingService()` es `Ha
 puede estar en dos secciones; NULL sí se repite (varias secciones de solo-contacto conviven);
 `nullOnDelete` → si se borra el pack, la sección degrada a contacto sin romper.
 
-Modelo `app/Models/LandingService.php`: `HasTranslations`, `$guarded=[]`, casts json/boolean,
+Modelo `app/Domain/Content/Models/LandingService.php`: `HasTranslations`, `$guarded=[]`, casts json/boolean,
 scopes `active()` / `inNav()` / `ordered()`, relación `ticketType()`, y `isPurchasable()`.
 
 ### 3.bis `price_table` — tarifas de grupo INFORMATIVAS

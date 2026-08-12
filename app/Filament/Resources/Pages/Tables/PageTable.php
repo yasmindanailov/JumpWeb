@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Pages\Tables;
 
+use App\Domain\Content\Models\Page;
 use App\Filament\Resources\Pages\PageResource;
-use App\Models\Page;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;

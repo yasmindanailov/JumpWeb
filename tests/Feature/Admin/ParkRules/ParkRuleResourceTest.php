@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Admin\ParkRules;
 
+use App\Domain\Content\Models\VenueRule;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
-use App\Models\ParkRule;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -77,7 +77,7 @@ class ParkRuleResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $rule = ParkRule::firstOrFail();
+        $rule = VenueRule::firstOrFail();
         $this->assertSame(['es' => 'Conducta', 'en' => 'Conduct'], $rule->name);
         $this->assertSame(['es' => 'Respeta.'], $rule->description);
         $this->assertTrue($rule->is_active);
@@ -95,7 +95,7 @@ class ParkRuleResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $this->assertTrue(ParkRule::firstOrFail()->is_active);
+        $this->assertTrue(VenueRule::firstOrFail()->is_active);
     }
 
     public function test_create_requires_spanish_name(): void
@@ -106,12 +106,12 @@ class ParkRuleResourceTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['name.es']);
 
-        $this->assertSame(0, ParkRule::count());
+        $this->assertSame(0, VenueRule::count());
     }
 
     public function test_edit_updates_and_audits(): void
     {
-        $rule = ParkRule::create(['name' => ['es' => 'N'], 'position' => 1]);
+        $rule = VenueRule::create(['name' => ['es' => 'N'], 'position' => 1]);
 
         Livewire::actingAs($this->admin())
             ->test(EditParkRule::class, ['record' => $rule->id])
@@ -125,7 +125,7 @@ class ParkRuleResourceTest extends TestCase
 
     public function test_edit_preserves_untouched_locales(): void
     {
-        $rule = ParkRule::create(['name' => ['es' => 'Conducta', 'en' => 'Conduct'], 'position' => 1]);
+        $rule = VenueRule::create(['name' => ['es' => 'Conducta', 'en' => 'Conduct'], 'position' => 1]);
 
         Livewire::actingAs($this->admin())
             ->test(EditParkRule::class, ['record' => $rule->id])
@@ -138,8 +138,8 @@ class ParkRuleResourceTest extends TestCase
 
     public function test_admin_can_reorder_rules(): void
     {
-        $first = ParkRule::create(['name' => ['es' => 'Primera'], 'position' => 1]);
-        $second = ParkRule::create(['name' => ['es' => 'Segunda'], 'position' => 2]);
+        $first = VenueRule::create(['name' => ['es' => 'Primera'], 'position' => 1]);
+        $second = VenueRule::create(['name' => ['es' => 'Segunda'], 'position' => 2]);
 
         Livewire::actingAs($this->admin())
             ->test(ListParkRules::class)
@@ -150,7 +150,7 @@ class ParkRuleResourceTest extends TestCase
 
     public function test_delete_and_audits(): void
     {
-        $rule = ParkRule::create(['name' => ['es' => 'N']]);
+        $rule = VenueRule::create(['name' => ['es' => 'N']]);
 
         Livewire::actingAs($this->admin())
             ->test(EditParkRule::class, ['record' => $rule->id])

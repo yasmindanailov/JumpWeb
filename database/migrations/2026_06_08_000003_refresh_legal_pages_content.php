@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Page;
-use App\Support\LegalContent;
+use App\Domain\Content\Models\Page;
+use App\Domain\Content\Services\LegalContent;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 

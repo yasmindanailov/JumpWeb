@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Platform\Models\Setting;
 use App\Models\OpeningHour;
 use App\Models\SpecialDate;
-use App\Support\HeroStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Chip de estado de apertura del hero (`App\Support\HeroStatus`): data-driven sobre el horario real
+ * Chip de estado de apertura del hero (`App\Domain\Content\Services\HeroStatus`): data-driven sobre el horario real
  * del parque (`ParkSchedule`). Zona horaria forzada a UTC en tests → `now(tz)` == el instante fijado.
  */
 class HeroStatusTest extends TestCase

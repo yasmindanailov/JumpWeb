@@ -29,7 +29,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | Hueco test: alcance del lock zona/día | `lockZoneDaySlots` sin assert de ALCANCE (SQLite no reproduce la carrera) | Fase 2 podría estrechar el lock sin que nada falle → sobrellenado | Sin plan (INVARIANTES AFORO-05 ⚠️) |
 | Hueco test: no-legibilidad de secretos | Solo se asevera la escritura; nada asevera que el form no CARGUE `redsys_secret_key` | Una regresión pintaría el secreto en el HTML del panel | Sin plan (INVARIANTES SEC-11 ⚠️) |
 | Una sola factory | `database/factories/` = solo `UserFactory` para 30 modelos y 213 ficheros de test | Fixtures a mano (~1.100 `::create`), helpers `admin()`/`staff()` duplicados ×36 | Sin plan (ver `TESTING.md` §datos) |
-| Vocabulario de sector en código | `PuertaSettings`, `ParkSchedule`, `ParkRule`, waiver, zonas/cumpleaños en clases, rutas y BD | Multi-sector exige renombrar clases y valores morph (se encadena con morphMap) | Fase 1 (decisión) + Fase 2 |
+| Vocabulario de sector en código | `PuertaSettings`, `ParkSchedule`, waiver, zonas/cumpleaños en clases, rutas y BD | Multi-sector exige renombrar clases y valores morph (se encadena con morphMap) | Fase 1 (decisión) + Fase 2 |
 | Migraciones con lógica de datos del origen | 9 de 70 migraciones con backfills/seeds + 4 clases `Legacy*`/`*Backfill` vivas en Support | Decisiones del origen incrustadas en el esquema; ruido en instalación limpia | Sin plan |
 
 ## Baja

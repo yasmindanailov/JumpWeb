@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Domain\Content\Services;
 
 /**
  * Normaliza el ajuste «feed social» de la sección «en directo» (#215). La clienta

@@ -303,7 +303,7 @@ hace en `settings.redsys_environment`.
   Fijar el setting (lo lee `buildPaymentFormData`; prevalece sobre el portal):
   ```bash
   docker compose exec -u sail laravel.test php artisan tinker --execute="
-  use App\Models\Setting;
+  use App\Domain\Platform\Models\Setting;
   Setting::updateOrCreate(['key' => 'redsys_merchant_url'],
       ['value' => 'https://<tunel>.trycloudflare.com/pago/redsys/notificacion', 'group' => 'payment']);"
   ```

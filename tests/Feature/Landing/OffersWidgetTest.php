@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\Offer;
+use App\Domain\Content\Models\Offer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

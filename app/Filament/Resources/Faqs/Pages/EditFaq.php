@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Faqs\Pages;
 
+use App\Domain\Content\Models\Faq;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Faqs\Concerns\InteractsWithFaqForm;
 use App\Filament\Resources\Faqs\FaqResource;
-use App\Models\Faq;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;

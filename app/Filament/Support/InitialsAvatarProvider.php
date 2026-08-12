@@ -2,7 +2,7 @@
 
 namespace App\Filament\Support;
 
-use App\Support\ThemeSettings;
+use App\Domain\Content\Services\ThemeSettings;
 use Filament\AvatarProviders\Contracts\AvatarProvider;
 use Illuminate\Database\Eloquent\Model;
 

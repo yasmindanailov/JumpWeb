@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Models\LandingService;
-use App\Support\ServicePriceTableBackfill;
+use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Services\ServicePriceTableBackfill;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

@@ -196,3 +196,31 @@ editan) de **cadenas históricas** (se congelan).
 **(d)** El paso confirmó que el gate de dinero funciona: tocar `OrderCreator`, `SlotGenerator` y
 `RedsysReturnHandler` —aunque fuese solo para añadir un `use`— disparó la exigencia de
 `VERIFY_CONC=1`. Se corrieron los dos verificadores sobre MySQL real.
+
+## #16 · 2026-08-12 · Paso 3 (Content): la puerta de entrada, decidida con datos
+Ejecutado `docs/specs/modulos-dominio.md` §5.3 (detalle en §4.quater). Decidido:
+**(a) Quién puede entrar a un módulo desde fuera.** El paso 2 dejó la pregunta abierta a
+propósito («la decide el paso 3 con datos»). Los datos: al mudar Content aparecen ~40
+referencias desde Filament (22), controladores (11) y providers (6) a sus modelos **y a sus
+servicios**. Es la capa de entrega haciendo su trabajo; prohibírselo habría exigido reescribir
+el panel, que Fase 2 declara fuera de alcance. Regla final: la **capa de entrega**
+(`Console`, `Exceptions`, `Filament`, `Http`, `Livewire`, `Mail`, `Notifications`, `Providers`)
+usa la superficie pública de cualquier módulo —es el *composition root*—, mientras que el
+**código de dominio aún sin mudar** (`app/Support`, `app/Models`) solo entra por `Contracts` o
+por Platform; lo demás va a la baseline `PENDING`, que solo encoge y se vacía en el paso 7. La
+guarda se verificó por mutación en sus DOS direcciones: la MISMA referencia es roja desde
+`app/Support` y verde desde `app/Http`.
+**(b) `ParkRule` → `VenueRule` renombrando SOLO la clase.** La tabla (`park_rules`), el alias
+morph (`'park_rule'`) y los nombres del panel (`ParkRuleResource`, URL `/admin/park-rules`,
+claves i18n `admin.park_rules.*`) se CONGELAN: renombrarlos exige migración de datos o cambia
+URLs a cambio de nada. Verificado en MySQL dev: el alias resuelve a la clase nueva y las filas
+se leen igual. Esto **rectifica** `vocabulario-dominio.md`, que proponía renombrar la tabla;
+manda el spec de módulos.
+**(c) Content no es autosuficiente, y ahora se ve.** El arch-test destapó tres dependencias
+reales de Content hacia Booking, hoy en la baseline `LEGACY`: calendario de operación
+(`OpeningHour`/`Season`/`SpecialDate`/`ParkSchedule`), identidad de zona (`Zone`) y precio de
+referencia (`TicketType`). En el paso 6 habrá que elegir entre darles contrato o **reclasificar
+el calendario**: lo consumen la landing (horarios, SEO) y Booking (franjas) por igual, así que
+puede que no pertenezca a Booking sino al recinto. No se decide antes de tener el dato.
+**(d)** El «paso 0» del checklist (medir dependencias INVISIBLES) deja de ser artesanal:
+`scripts/module-deps.php`, con el mismo tokenizador que el arch-test.
