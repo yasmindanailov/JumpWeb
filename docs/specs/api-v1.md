@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b y 2 TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2 y 3 TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b) y **`#28`** (paso 2).
+> (paso 1b), **`#28`** (paso 2) y **`#29`**–**`#31`** (paso 3).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10, §10.bis, §10.ter y §10.quater** — léelos antes de
-> seguir por el paso 3.
+> **Lo que el código enseñó al implementar: §10 → §10.septies** — léelos antes de seguir por el
+> paso 4.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -320,8 +320,11 @@ Se corrige:
      limitadores de `SEC-06`, credenciales, `last_login_at`) + `POST auth/login` y `auth/logout`
      sobre la sesión stateful. La web lo consume desde el mismo commit. **Lo que el código enseñó:
      §10.sexies.**
-   - ⬜ **3c**: `Register` (Turnstile, honeypot, consents, pay-first) y la recuperación de
-     contraseña por API.
+   - ✅ **3c** (2026-08-13, `DECISIONES #31`): `Identity\Services\SelfSignup` (honeypot, tres
+     limitadores, Turnstile, cuenta+rol+consents atómicos) y `PasswordRecovery`, más
+     `POST auth/register`, `auth/email/resend`, `auth/password/forgot` y `auth/password/reset`.
+     La web consume los dos servicios desde el mismo commit. **Lo que el código enseñó:
+     §10.septies.**
    Desbloqueado desde `DECISIONES #23`; la EMISIÓN de tokens viaja a Fase 6 (`#29`).
 4. **El dinero**: quote, disponibilidad con cesta, `POST orders`, reintento y `payment-status` con
    estados reales + historia de retorno móvil.
@@ -574,3 +577,45 @@ mutación. En un cuerpo de petición, en cambio, hay campos legítimamente opcio
 Se resolvió con una excepción con nombre y su porqué, conservando `additionalProperties: false`,
 que es lo que de verdad importa ahí: impedir que un cliente cuele un campo que el servidor
 ignoraría en silencio.
+
+### 10.septies Lo que el código enseñó — paso 3c (2026-08-13)
+
+**33. El contrato destapó que la respuesta delataba el señuelo.** El primer borrador de
+`POST auth/register` devolvía el perfil cuando creaba cuenta y un cuerpo vacío cuando fingía
+(honeypot relleno o límite por correo agotado). Un bot distingue esas dos respuestas de un vistazo,
+así que el honeypot dejaba de servir para lo único que sirve. Lo señaló el test de contrato —el
+esquema declaraba un objeto y llegaba un array vacío—, no una revisión. **Ahora el 201 va SIEMPRE
+sin cuerpo**: indistinguible por construcción, y quien se registra en la compra pide su perfil a
+`GET /me`, que ya tiene sesión. Lección general: cuando una respuesta tiene que ser
+*indistinguible*, la forma del cuerpo es parte del secreto, no solo el status.
+
+**34. La misma trampa de sesión, por segunda vez y peor.** El paso 3b ya había encontrado que sin
+`Origin`/`Referer` *stateful* no hay sesión y `$request->session()` revienta con 500. Volvió a
+aparecer en el alta dentro de la compra, y ahí era peor: **la cuenta se creaba y el 500 llegaba
+después**, dejando al cliente sin saber si tenía cuenta. Las dos veces lo encontró un `curl` contra
+el servidor real y ninguna la suite, porque los tests mandan siempre el encabezado y ejercitan la
+rama buena. La comprobación vive ahora en un solo sitio (`Http\Api\Concerns\RequiresStatefulSession`)
+con su porqué, y hay test para las dos ramas. **Regla para los pasos que quedan**: todo endpoint que
+toque `session()` necesita esa guarda, y el `curl` sin encabezados es el que la encuentra.
+
+**35. Dos políticas de enumeración distintas, y las dos correctas.** El alta DICE que un correo ya
+existe (decisión de producto de la clienta: prima la conversión) y la recuperación de contraseña
+NO dice nada (`SEC-06` estricto). Parece incoherente y no lo es: en el registro hay alguien
+intentando comprar y esconderlo cuesta la venta; en la recuperación no se gana nada diciéndolo y sí
+se regala un oráculo. Lo que importa es que la decisión sea **explícita y la misma en las dos
+puertas** — replicar en la API la política de la web fue decisión del owner, precisamente para que
+la SPA de Fase 4 no cambie el comportamiento visible sin que nadie lo haya pedido. Lo que acota la
+enumeración masiva del alta es el límite de tres por hora y correo, no el mensaje.
+
+**36. Extraer defensa en capas obliga a mantener su ORDEN.** Las cuatro del alta —señuelo, límite
+por IP, límite por correo, anti-bot— solo funcionan en ese orden: validar la forma antes que el
+señuelo le diría al bot qué campos están mal antes de que la trampa actúe, y comprobar el correo
+antes que los límites convertiría el endpoint en el oráculo que los límites acotan. En el
+componente web ese orden estaba implícito en la secuencia del método; al extraerlo hubo que
+escribirlo como decisión, y el llamante solo valida la forma **cuando el señuelo ya ha dicho que
+hay una persona detrás**.
+
+**37. Un tipo de retorno demasiado estrecho rompe una respuesta sin cuerpo.** `response()->noContent()`
+devuelve `Illuminate\Http\Response`, no `JsonResponse`, así que un controlador declarado
+`: JsonResponse` revienta con `TypeError` — un 500 por una firma, no por la lógica. Aparece en
+cuanto un endpoint deja de devolver cuerpo, que es lo correcto para 201/202/204.

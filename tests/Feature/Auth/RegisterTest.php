@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
 use App\Livewire\Auth\Register;
@@ -47,7 +48,7 @@ class RegisterTest extends TestCase
     private function clearEmailRateLimits(string ...$emails): void
     {
         foreach ($emails as $email) {
-            $hash = Register::emailHash($email);
+            $hash = SelfSignup::emailHash($email);
             RateLimiter::clear('register-email:'.$hash);
             RateLimiter::clear('verify-resend-email:'.$hash);
         }

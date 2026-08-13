@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
+use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,6 +47,20 @@ Route::name('api.v1.')->group(function (): void {
     Route::post('/auth/logout', [AuthSessionController::class, 'logout'])
         ->middleware('auth:sanctum')
         ->name('auth.logout');
+
+    // ── Alta y contraseña (paso 3c) — PÚBLICO ────────────────────────────────────────────────
+    // Las cuatro capas de defensa del alta (honeypot, límite por IP, límite por correo y Turnstile)
+    // y los limitadores de la recuperación viven en los servicios de Identity, no en la ruta: son
+    // los MISMOS que aplica la web, no una copia con otros números. El `throttle:api` del grupo se
+    // suma como suelo genérico, y está bien que se sume.
+    //
+    // `email/resend` es público a propósito: quien acaba de darse de alta suelta todavía no tiene
+    // sesión, y es justo cuando necesita pedir el reenvío. Lo que impide que sea un cañón de
+    // correos hacia un buzón ajeno son sus dos cooldowns —por IP y por correo destinatario—.
+    Route::post('/auth/register', [AuthRegistrationController::class, 'register'])->name('auth.register');
+    Route::post('/auth/email/resend', [AuthRegistrationController::class, 'resendVerification'])->name('auth.email.resend');
+    Route::post('/auth/password/forgot', [PasswordRecoveryController::class, 'sendLink'])->name('auth.password.forgot');
+    Route::post('/auth/password/reset', [PasswordRecoveryController::class, 'reset'])->name('auth.password.reset');
 
     // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
     // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir

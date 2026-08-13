@@ -4,9 +4,9 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2, 3a y 3b CERRADOS;
-toca el paso 3c (registro y contraseña por API).**
-- Suite **2320 en verde** (8808 aserciones, `--parallel` ~61 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2 y 3 (a+b+c) CERRADOS;
+toca el paso 4 (el dinero).**
+- Suite **2347 en verde** (8955 aserciones, `--parallel` ~61 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -47,7 +47,7 @@ toca el paso 3c (registro y contraseña por API).**
   dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
   `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2, 3a y 3b — `DECISIONES #24`, `#26`–`#30`)
+## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2 y 3 — `DECISIONES #24`, `#26`–`#31`)
 Cimientos + la lectura de la cuenta + el catálogo + el dominio preparado para vender por API. Lo
 que existe y funciona (verificado con `curl`, con la suite y **contra MySQL real** ejerciendo el
 pipeline HTTP completo):
@@ -108,42 +108,59 @@ pipeline HTTP completo):
   ⚠️ **Para la SPA de Fase 4**: `Origin`/`Referer` de un dominio *stateful* hace falta en TODAS las
   peticiones, no solo en el login — sin él no hay sesión y un `GET /me` da 401 aunque la cookie sea
   válida (verificado con `curl`).
+- **Paso 3c — ALTA y CONTRASEÑA por API**: `POST auth/register` (con el contexto `standalone` o
+  `purchase`, que decide si hay sesión y si se manda verificación), `auth/email/resend`,
+  `auth/password/forgot` y `auth/password/reset`. Las reglas viven en `Identity\Services\SelfSignup`
+  y `PasswordRecovery`, que consume también la web.
+  · **Dos políticas de enumeración, las dos explícitas** (`DECISIONES #31a`/`#31b`): el alta DICE que
+    un correo ya existe —decisión de producto de la clienta— y la recuperación NO dice nada. Lo que
+    acota la enumeración del alta es el límite de 3/hora por correo.
+  · El `201` del alta va **sin cuerpo**: devolver el perfil solo cuando había cuenta delataba el
+    señuelo, y lo destapó el test de contrato.
 
 ## ▶ Próximo paso
-**Fase 3 · paso 3c — REGISTRO y CONTRASEÑA por API** (spec §4.2 y §9): `POST auth/register`,
-`password/forgot`, `password/reset` y `email/resend`, extrayendo antes lo que sea dominio de
-`Livewire\Auth\Register`, `ForgotPassword` y `ResetPassword`.
+**Fase 3 · paso 4 — EL DINERO** (spec §4.4, §4.5 y §9): `POST orders/quote`,
+`GET availability/{product}/dates`, `POST availability/{product}/times`, `POST orders`,
+`POST orders/{code}/payment` y `GET orders/{code}/payment-status`.
+**Es el paso de más riesgo de la fase**: `VERIFY_CONC=1` y los dos verificadores sobre MySQL son
+OBLIGATORIOS, y el `pre-push` los exigirá en cuanto se toque un controlador `Order*`/`Payment*`/
+`Checkout*`/`Quote*`/`Availability*` o el núcleo.
 
-**Lo medido el 2026-08-13, para no redescubrirlo:**
-- **`Register` es el más denso de los cuatro** (338 líneas) y lleva decisiones de PRODUCTO, no solo
-  reglas: honeypot → pantalla de éxito falsa; **tres** limitadores (por IP 5/min, por email
-  hasheado 3/hora y el propio Turnstile); y una **decisión explícita de la clienta** que rompe la
-  anti-enumeración a propósito —si el correo ya existe se le dice, para priorizar conversión sobre
-  ocultar qué correos hay—. Eso NO es un descuido que el refactor deba «arreglar»: si la API lo
-  cambiara por su cuenta, las dos superficies dirían cosas distintas.
-- La rama **pay-first** de `Register` (`embedded`) inicia sesión sin verificar el correo y avisa al
-  sidebar; es estado de sesión web y se queda fuera del servicio, como el anti-cesta-cruzada del 3b.
-- El alta crea cuenta + rol + consents en UNA transacción, con los emails FUERA de ella (un fallo de
-  SMTP no revierte el alta). Ese reparto hay que conservarlo tal cual.
-- `ResetPassword` ya llama a `User::revokeAllAccess()` (paso 3a) y aplica no-enumeración: un correo
-  inexistente y un token inválido dan el MISMO mensaje. El limitador propio (6/min por IP) está ahí
-  porque la acción Livewire NO pasa por el `throttle` de la ruta GET; en la API sí habrá ruta POST,
-  así que hay que decidir si se conserva el limitador del servicio, el de la ruta, o ambos.
-- El anti-bot **Turnstile es data-driven y no-op sin claves** (`DECISIONES #23`): la SPA es un
-  navegador y lo exigirá igual que la web. No hay nada que relajar.
+**El terreno ya está preparado — NO reimplementes nada de esto:**
+- **Admisión** → `Booking\Contracts\ReservationAdmission` (paso 2): pausa, tope de pendientes,
+  frecuencia y la extensión atómica del hold. `POST orders` llama a `admitReservation()`, que
+  CONSUME ficha; el reintento, a `admitPaymentRetry()`.
+- **Creación** → `OrderCreator` (`AFORO-01`: el lock con `zone_id` literal es la PRIMERA sentencia
+  de la transacción; no metas ningún SELECT antes).
+- **Ida del pago** → `Payments\Services\PaymentInitiator::open()`/`reopen()` (paso 2): crea el
+  `Payment`, firma el formulario y deja el rastro de fallo en `audit_logs`. Lanza
+  `PaymentInitiationException`; el destino del pedido lo decide el llamante
+  (`Order::releaseAfterFailedPaymentStart()` tras un primer cobro fallido, nada tras un reintento).
+- **Oferta de fechas/horas** → `SlotOffer`, fuente única web↔panel (`AFORO-02`). La disponibilidad
+  **lleva la cesta**: `offerableTimes()` descuenta los ocupantes provisionales de la propia cesta,
+  así que un GET sin cesta ofrecería horas que el checkout rechazaría.
+- **Tarificación** → `RateResolver` + `AddonResolver`. `orders/quote` NO debe sumar por su cuenta:
+  eso sería la segunda fuente de verdad que §4.6.4 quiere evitar.
 
-**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.sexies** («lo que el código
-enseñó»): treinta y dos puntos medidos en los pasos 0, 1a, 1b, 2, 3a y 3b. Los que más ahorran
-tiempo en el 3c: la validación de contrato **hay que pedirla** con `assertValidResponse()`
-(§10.ter 16); un esquema de PETICIÓN no se puede exigir como uno de respuesta (32); antes de
-unificar dos copias, ponerlas lado a lado y listar sus diferencias (19); y cuando una guarda de
-arquitectura protesta por código nuevo, la primera hipótesis es que el sitio correcto ya está
-decidido (31).
+**Lo que el paso 4 SÍ tiene que resolver** (spec §4.5, medido en la revisión):
+- `payment-status` con **estados reales** derivados de `Order.status` MÁS el último `Payment`
+  (`pending`/`authorized`/`paid`/`failed`/`superseded`). Hoy el rechazo solo viaja por sesión, así
+  que la API diría «pendiente» 15 min y luego «expirado», nunca «reintenta».
+- El **token de retorno**: `HomeController` hace `Cache::pull` ANTES de comprobar la sesión, así
+  que lo quema para un cliente sin cookie.
+- `redsys_merchant_url` (notificación S2S) es **prerequisito DURO del cliente móvil** (Fase 6): sin
+  ella y con terminal data-less, el único camino a `paid` es la vuelta del navegador → el pedido
+  caduca con la tarjeta cobrada (`PAY-02`).
 
-Después: paso 4 (el dinero: quote, disponibilidad con cesta, `POST orders`, reintento y
-`payment-status` con estados reales) · paso 5 (post-form). El corte completo está en el spec §9.
-**El paso 4 ya tiene el terreno preparado**: consume `ReservationAdmission` + `OrderCreator` +
-`PaymentInitiator`, sin reimplementar ninguna regla.
+**Antes de escribir código, lee `docs/INVARIANTES.md` §1 (PAY) y §2 (AFORO)** —es obligatorio por
+la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.septies**: treinta y siete puntos
+medidos en los pasos anteriores. Los que más pesan en el paso 4: el presupuesto de consultas se mide
+por PENDIENTE y no por techo (§10.ter 17); la validación de contrato hay que pedirla con
+`assertValidResponse()` (16); todo endpoint que toque `session()` necesita la guarda de
+`RequiresStatefulSession` y el `curl` sin encabezados es el que encuentra su ausencia (§10.septies
+34); y cuando una respuesta debe ser indistinguible, la forma del cuerpo es parte del secreto (33).
+
+Después: paso 5 (post-form migrado, 2.º consumidor). El corte completo está en el spec §9.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer admin de
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
@@ -159,6 +176,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2320** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2347** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

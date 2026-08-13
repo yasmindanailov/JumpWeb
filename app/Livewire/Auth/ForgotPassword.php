@@ -2,11 +2,9 @@
 
 namespace App\Livewire\Auth;
 
+use App\Domain\Identity\Contracts\PasswordResetResult;
+use App\Domain\Identity\Services\PasswordRecovery;
 use App\Livewire\Concerns\ResetsOnModalClose;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -23,23 +21,21 @@ class ForgotPassword extends Component
 
     public bool $sent = false;
 
-    public function sendLink()
+    public function sendLink(PasswordRecovery $recovery)
     {
         $this->validate(['email' => ['required', 'string', 'email']]);
 
-        $key = 'forgot:'.request()->ip();
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        $result = $recovery->requestLink($this->email, (string) request()->ip());
+
+        if ($result->outcome === PasswordResetResult::RATE_LIMITED) {
             throw ValidationException::withMessages([
-                'email' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($key)]),
+                'email' => __('auth.throttle', ['seconds' => $result->retryAfter]),
             ]);
         }
-        RateLimiter::hit($key, 60);
 
-        // Genérico siempre: enviamos el enlace si la cuenta existe, pero mostramos
-        // el mismo resultado en todos los casos (anti-enumeración, SEGURIDAD §2).
-        Password::sendResetLink(['email' => Str::lower(trim($this->email))]);
-        Log::info('auth.password_reset_requested', ['ip' => request()->ip()]);
-
+        // Genérico SIEMPRE: el enlace se envía si la cuenta existe, pero la pantalla es la misma en
+        // todos los casos (anti-enumeración, `SEGURIDAD` §2). Lo decide el servicio; aquí solo se
+        // pinta.
         $this->sent = true;
     }
 

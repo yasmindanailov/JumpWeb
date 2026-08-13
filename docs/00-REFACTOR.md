@@ -250,7 +250,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `CRITICAL_RE` del `pre-push` se amplió a las dos clases nuevas: el código de `PAY-04` llevaba
       tiempo fuera del gate por vivir en un Livewire. Suite **2292 verde** + los dos verificadores
       de concurrencia sobre MySQL (16 workers).
-- [ ] **Paso 3 — auth por API**, partido en 3a/3b/3c (`DECISIONES #29`):
+- [x] **Paso 3 — AUTH POR API ✅ COMPLETO** (3a + 3b + 3c, `DECISIONES #29`–`#31`):
       - [x] **3a — REVOCACIÓN de credenciales** (2026-08-13): punto único
             `User::revokeAllAccess()`/`revokeOtherAccess()` para sesiones **y** tokens de API.
             El hueco era de CINCO sitios, no cuatro: el quinto es la limpieza de go-live, que
@@ -263,7 +263,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             `SEC-06` verificado POR MUTACIÓN en las tres capas. Dos hallazgos: sin `Origin`
             *stateful* no hay sesión y el login respondía **500** (guarda + 400), y el logout no
             limpiaba los guards ya resueltos. Suite **2320 verde**.
-      - [ ] 3c — `Register` (Turnstile, honeypot, consents, pay-first) + recuperación de contraseña.
+      - [x] **3c — ALTA y CONTRASEÑA por API** (2026-08-13, `DECISIONES #31`):
+            `Identity\Services\SelfSignup` + `PasswordRecovery`, y los cuatro endpoints públicos
+            (`auth/register`, `auth/email/resend`, `auth/password/forgot`, `auth/password/reset`).
+            **Dos políticas de enumeración distintas y las dos explícitas**: el alta dice que un
+            correo ya existe (decisión de producto de la clienta, replicada a propósito) y la
+            recuperación no dice nada. El `201` del alta va sin cuerpo **porque el contrato destapó
+            que el perfil delataba el señuelo**. Suite **2347 verde**.
       - [ ] La EMISIÓN de tokens Bearer (`POST auth/tokens`) viaja a **Fase 6**, con la app que los
             consuma (`DECISIONES #29`); la infraestructura ya está lista.
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·

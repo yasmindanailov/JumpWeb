@@ -96,6 +96,126 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /auth/register:
+    post:
+      tags: [Sesión]
+      operationId: register
+      summary: Alta de cliente
+      description: |
+        Crea la cuenta. **El contexto decide la política**, y lo aplica el servidor:
+
+        - `standalone` (por defecto): no se inicia sesión y se envía el correo de verificación.
+        - `purchase`: alta dentro del flujo de compra («pay-first»). Se inicia sesión para poder
+          seguir al pago y **no** se envía verificación — el pago la sustituye, y un bot no paga.
+
+        **Si el correo ya tiene cuenta, se dice** (422 con el mensaje en `error.fields.email`). Es
+        una decisión de producto deliberada: prima la conversión sobre ocultar qué correos existen,
+        y es la misma que aplica la web. Lo que acota la enumeración masiva es el límite de tres
+        altas por hora y correo.
+
+        Responde **201 también cuando no ha creado nada**: si el señuelo `website` viene relleno o
+        se agotó el límite por correo, la respuesta es indistinguible de un alta buena —si no lo
+        fuera, el señuelo dejaría de servir—.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: |
+            Alta aceptada, **sin cuerpo**. No lo lleva a propósito: si la respuesta trajera el
+            perfil cuando hay cuenta y nada cuando se finge (señuelo o límite por correo), un bot
+            distinguiría las dos de un vistazo. Quien se registra en la compra queda identificado y
+            puede pedir su perfil a `GET /me`.
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/email/resend:
+    post:
+      tags: [Sesión]
+      operationId: resendVerification
+      summary: Reenviar la verificación del correo
+      description: |
+        Público a propósito: quien acaba de darse de alta todavía no tiene sesión y es justo cuando
+        necesita pedirlo.
+
+        Responde **202 siempre**, haya enviado o no. Si el cooldown o la inexistencia de la cuenta
+        se notaran en la respuesta, esto sería un oráculo de correos registrados. Los dos cooldowns
+        —por IP y por correo destinatario— son los que impiden usarlo para llenar un buzón ajeno.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '202':
+          description: Petición aceptada. No dice si se ha enviado algo.
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/password/forgot:
+    post:
+      tags: [Sesión]
+      operationId: requestPasswordReset
+      summary: Pedir el enlace de recuperación
+      description: |
+        Responde **202 exista o no la cuenta**. Aquí la anti-enumeración es estricta, al contrario
+        que en el alta: en el registro hay alguien intentando comprar y esconderlo cuesta la venta;
+        aquí no se gana nada diciéndolo y sí se regala un oráculo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '202':
+          description: Petición aceptada. No dice si esa cuenta existe.
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/password/reset:
+    post:
+      tags: [Sesión]
+      operationId: resetPassword
+      summary: Fijar la nueva contraseña
+      description: |
+        Con el token del correo. Al conseguirlo se invalidan **todas** las credenciales anteriores
+        del titular —sesiones y tokens de API—: es el caso de uso de quien ha perdido el control de
+        su cuenta.
+
+        Un token inválido, uno caducado y un correo inexistente devuelven el **mismo** 422.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '204':
+          description: Contraseña cambiada. Toda credencial anterior deja de valer.
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /auth/logout:
     post:
       tags: [Sesión]
@@ -1033,3 +1153,79 @@ components:
         remember:
           type: boolean
           description: Mantener la sesión abierta más allá del cierre del navegador.
+
+    RegisterRequest:
+      type: object
+      description: |
+        Datos del alta. El correo se normaliza en servidor. Las dos casillas legales son la prueba
+        de aceptación que exige el RGPD y se persisten como consentimientos con su versión.
+      required: [name, email, phone, password, accept_privacy, accept_terms]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 30
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Mínimo 8 caracteres y no puede aparecer en filtraciones conocidas.
+        accept_privacy:
+          type: boolean
+          description: Debe ser `true`.
+        accept_terms:
+          type: boolean
+          description: Debe ser `true`.
+        marketing:
+          type: boolean
+          description: Consentimiento OPCIONAL de comunicaciones comerciales.
+        context:
+          type: string
+          enum: [standalone, purchase]
+          description: |
+            Desde dónde se registra. `standalone` (por defecto) envía verificación y no inicia
+            sesión; `purchase` inicia sesión y no la envía (pay-first).
+        website:
+          type: string
+          description: |
+            Campo SEÑUELO. Un cliente legítimo lo deja vacío o no lo envía; si llega relleno, no se
+            crea nada y la respuesta es indistinguible de un alta buena.
+        turnstile_token:
+          type: string
+          description: Token del anti-bot, si la instalación lo tiene configurado.
+
+    EmailRequest:
+      type: object
+      description: Solo el correo. Se usa para pedir el enlace de recuperación y para reenviar la verificación.
+      required: [email]
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+
+    PasswordResetRequest:
+      type: object
+      description: Token del correo más la contraseña nueva, confirmada.
+      required: [token, email, password, password_confirmation]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        password_confirmation:
+          type: string
+          format: password

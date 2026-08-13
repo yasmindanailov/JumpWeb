@@ -6,6 +6,7 @@ use App\Domain\Identity\Contracts\LoginResult;
 use App\Domain\Identity\Services\PasswordLogin;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
+use App\Http\Api\Concerns\RequiresStatefulSession;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use Illuminate\Http\JsonResponse;
@@ -32,22 +33,20 @@ use Illuminate\Support\Facades\Auth;
  */
 class AuthSessionController extends Controller
 {
+    use RequiresStatefulSession;
+
     /**
      * Abre sesión y devuelve el perfil, la misma forma que `GET me`: quien acaba de identificarse
      * necesita justo eso, y devolverlo evita una segunda petición para pintar la pantalla.
      */
     public function login(Request $request, PasswordLogin $passwordLogin): UserResource|JsonResponse
     {
-        // ⚠️ Sin sesión no hay dónde abrirla. `EnsureFrontendRequestsAreStateful` solo monta
-        // `StartSession` cuando la petición viene de un origen declarado *stateful* (`Origin` o
-        // `Referer` en `config/sanctum.php`), así que un cliente mal configurado —o un `curl`—
-        // llega hasta aquí sin sesión. Sin esta guarda, `$request->session()` lanzaba
-        // «Session store not set on request» y el endpoint respondía **500** a un problema de
-        // integración perfectamente diagnosticable. Se comprueba ANTES de validar y antes de
-        // tocar el limitador: no tiene sentido gastarle intentos a quien no puede entrar de todos
-        // modos. El cliente nativo de Fase 6 no usará esta puerta, sino la emisión de tokens.
-        if (! $request->hasSession()) {
-            return ApiErrorResponse::make(ApiErrorCode::BadRequest, 400);
+        // Sin sesión no hay dónde abrirla (ver `RequiresStatefulSession`). Se comprueba ANTES de
+        // validar y de tocar el limitador: no tiene sentido gastarle intentos a quien no puede
+        // entrar de todos modos. El cliente nativo de Fase 6 no usará esta puerta, sino la emisión
+        // de tokens.
+        if ($denial = $this->requireSession($request)) {
+            return $denial;
         }
 
         $credentials = $request->validate([

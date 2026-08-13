@@ -1,0 +1,230 @@
+<?php
+
+namespace App\Domain\Identity\Services;
+
+use App\Domain\Identity\Contracts\SignupResult;
+use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\Turnstile;
+use App\Notifications\AccountAlreadyExists;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Throwable;
+
+/**
+ * Alta PÚBLICA de un cliente: la que hace el propio interesado desde la web o desde la app
+ * (Fase 3 · paso 3c, `docs/specs/api-v1.md` §4.6.3).
+ *
+ * No confundir con {@see CustomerRegistrar}, que es el alta que hace un OPERADOR desde el
+ * back-office con el cliente delante: aquella crea la cuenta ya verificada y con contraseña
+ * aleatoria, y no necesita defenderse de bots porque detrás hay una persona autenticada.
+ *
+ * Aquí, en cambio, casi todo el código es defensa, y esa es la razón de extraerlo: son cuatro
+ * capas —honeypot, límite por IP, límite por correo y anti-bot— que una API tendría que
+ * reimplementar entera para no ser la puerta floja. Se comprobó una por una al escribirlo; ninguna
+ * es decorativa:
+ *  - **honeypot**: campo oculto; si llega relleno, no se crea nada y se responde como si sí;
+ *  - **límite por IP** (5/min): frena el alta masiva desde un origen;
+ *  - **límite por CORREO** (3/hora, con el correo hasheado para no dejarlo en claves de caché):
+ *    frena que alguien con IPs rotativas bombardee el buzón de una víctima con verificaciones o
+ *    con avisos de «ya tienes cuenta». Es también lo que acota la enumeración;
+ *  - **Turnstile**: data-driven y no-op sin claves configuradas.
+ *
+ * **Qué NO hace, a propósito**: iniciar sesión. En la compra («pay-first») el alta va seguida de
+ * un `Auth::login()`, pero eso es un efecto de la sesión del llamante — spec §4.6.3, mismo criterio
+ * que en `PasswordLogin`. El servicio devuelve el usuario y quien atiende decide.
+ */
+class SelfSignup
+{
+    /** Altas por minuto y por IP. */
+    public const MAX_PER_IP = 5;
+
+    /** Altas por hora y por CORREO destinatario. Es el que acota la enumeración. */
+    public const MAX_PER_EMAIL = 3;
+
+    /**
+     * @param  array{name:string,email:string,phone:string,password:string,marketing?:bool}  $data  ya validado por el llamante
+     * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
+     *                               el pago la sustituye, y un bot no paga)
+     * @param  string  $honeypot  campo señuelo; si llega con algo, es un bot
+     */
+    public function register(array $data, string $ip, bool $notifyByEmail = true, string $honeypot = '', string $turnstileToken = ''): SignupResult
+    {
+        // 1) Honeypot. No se crea nada, pero el desenlace se parece a un éxito: si el bot pudiera
+        //    distinguirlo, el señuelo dejaría de servir. Y si fuera un falso positivo del
+        //    autocompletar del navegador, la persona tampoco se queda sin respuesta.
+        if ($honeypot !== '') {
+            Log::info('auth.register_honeypot', ['ip' => $ip]);
+
+            return SignupResult::pretended();
+        }
+
+        // 2) Límite por IP: cuenta TODOS los intentos, válidos o no.
+        $ipKey = 'register:'.$ip;
+        if (RateLimiter::tooManyAttempts($ipKey, self::MAX_PER_IP)) {
+            return SignupResult::rateLimited(RateLimiter::availableIn($ipKey));
+        }
+        RateLimiter::hit($ipKey, 60);
+
+        $email = Str::lower(trim($data['email']));
+
+        // 3) Límite por CORREO víctima. Al superarlo se responde como un éxito y NO se envía nada:
+        //    quien bombardea un buzón ajeno no debe poder distinguir cuándo deja de funcionar.
+        $emailKey = 'register-email:'.self::emailHash($email);
+        if (RateLimiter::tooManyAttempts($emailKey, self::MAX_PER_EMAIL)) {
+            Log::info('auth.register_email_throttled', ['ip' => $ip]);
+
+            return SignupResult::pretended();
+        }
+        RateLimiter::hit($emailKey, 3600);
+
+        // 4) Anti-bot, solo si hay claves configuradas.
+        if (! Turnstile::verify($turnstileToken, $ip)) {
+            return SignupResult::botCheckFailed();
+        }
+
+        // 5) Cuenta ya existente. **Se le dice al usuario** (decisión de producto de la clienta:
+        //    conversión sobre ocultación) y el aviso al titular real va por correo, no en pantalla.
+        if ($existing = User::where('email', $email)->first()) {
+            return $this->handleExisting($existing, $ip);
+        }
+
+        // 6) Cuenta + rol + consentimientos, en UNA transacción. Sin ella, un fallo a mitad dejaría
+        //    al usuario sin rol o sin consents, que son la prueba de aceptación que exige el RGPD.
+        //    El correo se manda FUERA: un fallo de SMTP no puede revertir un alta ya válida.
+        $user = $this->createAccount($data, $email, $ip);
+
+        if ($notifyByEmail) {
+            $this->sendVerification($user, $ip);
+        }
+
+        Log::info('auth.registered', ['user_id' => $user->id, 'ip' => $ip, 'purchase' => ! $notifyByEmail]);
+
+        return SignupResult::created($user);
+    }
+
+    /**
+     * Reenvía la verificación a un correo dado. Sin sesión a propósito: quien acaba de darse de
+     * alta todavía no la tiene, y es justo cuando más falta le hace.
+     *
+     * Dos cooldowns, y el segundo es el que importa: sin el límite por CORREO, cualquiera con IPs
+     * rotativas podría llenar el buzón de un tercero. Responde siempre lo mismo —haya enviado o
+     * no— para no delatar si esa cuenta existe o ya está verificada.
+     */
+    public function resendVerification(string $email, string $ip): bool
+    {
+        $ipKey = 'verify-resend:'.$ip;
+        if (RateLimiter::tooManyAttempts($ipKey, 1)) {
+            return false;
+        }
+        RateLimiter::hit($ipKey, 30);
+
+        $emailKey = 'verify-resend-email:'.self::emailHash($email);
+        if (RateLimiter::tooManyAttempts($emailKey, 1)) {
+            Log::info('auth.verification_resend_email_throttled', ['ip' => $ip]);
+
+            return false;
+        }
+        RateLimiter::hit($emailKey, 60);
+
+        $user = User::where('email', Str::lower(trim($email)))->first();
+        if ($user && ! $user->hasVerifiedEmail()) {
+            $this->sendVerification($user, $ip);
+        }
+
+        Log::info('auth.verification_resent', ['ip' => $ip]);
+
+        return true;
+    }
+
+    /**
+     * Hash corto del correo para usarlo como clave de limitador sin dejarlo en claro en la caché.
+     * No es reversible y va truncado.
+     */
+    public static function emailHash(string $email): string
+    {
+        return substr(hash('sha256', Str::lower(trim($email))), 0, 16);
+    }
+
+    /**
+     * Cuenta existente: verificada → aviso al titular real y se le dice a quien lo intenta; sin
+     * verificar → se le reenvía la verificación para que pueda completar su alta.
+     *
+     * Los dos envíos son NO bloqueantes: la respuesta al usuario no depende de que el SMTP conteste.
+     */
+    private function handleExisting(User $existing, string $ip): SignupResult
+    {
+        Log::info('auth.register_existing_email', ['ip' => $ip, 'verified' => $existing->hasVerifiedEmail()]);
+
+        if ($existing->hasVerifiedEmail()) {
+            $this->notifySafely($existing, fn () => $existing->notify(new AccountAlreadyExists));
+
+            return SignupResult::alreadyRegistered();
+        }
+
+        $this->sendVerification($existing, $ip);
+
+        return SignupResult::pendingVerification();
+    }
+
+    /**
+     * @param  array{name:string,email:string,phone:string,password:string,marketing?:bool}  $data
+     */
+    private function createAccount(array $data, string $email, string $ip): User
+    {
+        $now = now();
+        $marketing = (bool) ($data['marketing'] ?? false);
+
+        return DB::transaction(function () use ($data, $email, $ip, $now, $marketing): User {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $email,
+                'phone' => $data['phone'],
+                'password' => $data['password'],
+                'locale' => app()->getLocale(),
+                'marketing_opt_in' => $marketing,
+                'privacy_accepted_at' => $now,
+                'terms_accepted_at' => $now,
+                // #216: el waiver salió del flujo de alta (lo gestiona el sistema externo de la
+                // clienta). La columna y el tipo de consent se conservan para datos históricos.
+            ]);
+
+            if ($role = Role::where('name', 'customer')->first()) {
+                $user->roles()->attach($role);
+            }
+
+            $types = $marketing ? ['privacy', 'terms', 'marketing'] : ['privacy', 'terms'];
+            foreach ($types as $type) {
+                $user->consents()->create([
+                    'type' => $type,
+                    'accepted_at' => $now,
+                    'ip' => $ip,
+                    'version' => Consent::CURRENT_VERSION,
+                ]);
+            }
+
+            return $user;
+        });
+    }
+
+    private function sendVerification(User $user, string $ip): void
+    {
+        $this->notifySafely($user, fn () => $user->sendEmailVerificationNotification());
+    }
+
+    /**
+     * Envía sin dejar que un fallo del transporte tumbe la operación: la cuenta ya existe y el
+     * usuario puede pedir el reenvío. Se registra para que el fallo no sea invisible.
+     */
+    private function notifySafely(User $user, callable $send): void
+    {
+        try {
+            $send();
+        } catch (Throwable $e) {
+            Log::warning('auth.register_email_failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
+    }
+}

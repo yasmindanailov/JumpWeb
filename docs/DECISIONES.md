@@ -781,3 +781,54 @@ verde · `SEC-06` **verificado por mutación** en las tres capas · **ciclo comp
 (200 con el perfil) → `GET me` (200) → `POST auth/logout` (204) → `GET me` (**401**). Ese ciclo la
 suite no lo puede probar: corre con `SESSION_DRIVER=array` y la sesión no viaja entre peticiones
 (`SUITE-06`), así que un `/me` posterior daría 200 por el guard cacheado, no por la cookie.
+
+## #31 · 2026-08-13 · Fase 3 paso 3c: alta y contraseña por API (y las dos políticas de enumeración)
+Cierra el paso 3. Nacen `Identity\Services\SelfSignup` (las cuatro capas de defensa del alta y la
+creación atómica de cuenta+rol+consents) y `PasswordRecovery` (limitadores propios, rotación del
+`remember_token`, invalidación total de credenciales y no-enumeración), más los cuatro endpoints
+públicos: `auth/register`, `auth/email/resend`, `auth/password/forgot` y `auth/password/reset`. La
+web consume los dos servicios desde el mismo commit. Detalle en `api-v1.md` §10.septies.
+
+**(a) La API DICE que un correo ya existe, igual que la web** (decisión del owner). Es una decisión
+de producto de la clienta —prima la conversión sobre ocultar qué correos hay— y replicarla evita
+que la misma persona vea respuestas distintas según por dónde entre, o que la SPA de Fase 4 cambie
+el comportamiento visible sin que nadie lo haya pedido. Lo que acota la enumeración masiva es el
+límite de **tres altas por hora y correo**, no el mensaje.
+
+**(b) Y la recuperación de contraseña NO dice nada** (`SEC-06` estricto): pedir el enlace responde
+202 exista o no la cuenta, y un token inventado, uno de otra cuenta y un correo inexistente
+devuelven el MISMO 422 —con test que compara las tres respuestas byte a byte—. No es incoherente
+con (a): allí hay alguien intentando comprar y esconderlo cuesta la venta; aquí no se gana nada
+diciéndolo.
+
+**(c) El contexto del alta lo declara el cliente y lo aplica el servidor** (decisión del owner).
+`standalone` → 201 sin sesión y con verificación por correo; `purchase` → 201 con sesión y sin
+verificación (pay-first: lo sustituye el pago, y un bot no paga). No es un interruptor de
+seguridad: quedar identificado sin verificar es lo que el pay-first ya permite en la web, y sin
+verificar no se accede a «mi cuenta».
+
+**(d) El 201 del alta va SIEMPRE sin cuerpo.** El primer borrador devolvía el perfil cuando creaba
+cuenta y nada cuando fingía (honeypot o límite por correo): dos respuestas que un bot distingue de
+un vistazo, con lo que el señuelo dejaba de servir. **Lo destapó el test de contrato**, no una
+revisión. Quien se registra en la compra ya tiene sesión y pide su perfil a `GET /me`.
+
+**(e) La trampa de la sesión, por segunda vez y peor.** Igual que en el login del paso 3b, sin
+`Origin`/`Referer` *stateful* no hay sesión y `$request->session()` revienta con 500; en el alta
+con contexto `purchase` **la cuenta se creaba y el 500 llegaba después**. Las dos veces lo encontró
+un `curl` contra el servidor real y ninguna la suite, que siempre manda el encabezado. La
+comprobación se centraliza en `Http\Api\Concerns\RequiresStatefulSession` y se aplica ANTES de crear
+nada.
+
+**(f) El orden de las cuatro capas es la regla, no un detalle.** Señuelo → límite por IP → límite
+por correo → anti-bot. Validar la forma antes del señuelo le diría al bot qué campos están mal
+antes de que la trampa actúe; comprobar la existencia del correo antes de los límites convertiría
+el endpoint en el oráculo que esos límites acotan. En el componente el orden estaba implícito en la
+secuencia del método; al extraerlo hubo que escribirlo como decisión.
+
+**Verificación empírica**: suite **2347 verde** (8955 aserciones) · Pint limpio · `docs-check`
+verde · **honeypot y no-enumeración verificados por mutación** (que el señuelo cree la cuenta, o
+que el reset distinga correo inexistente de token inválido, deja en rojo los testigos de la API y
+de la web) · los cuatro endpoints ejercidos **contra el servidor real con `curl`**: alta suelta y
+honeypot devuelven `201` con **0 bytes** (indistinguibles), el correo repetido da 422, `forgot`
+responde igual para un correo existente y uno inventado, y el alta en compra sin origen *stateful*
+da 400 sin crear cuenta (antes: 500 con la cuenta ya creada).
