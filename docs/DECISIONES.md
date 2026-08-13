@@ -1121,3 +1121,83 @@ abre el formulario **sin cuenta ninguna** (esquema real de 4 columnas por invita
 clave inventada descartada por el saneado) → sin firma da 403, y un id inexistente da **el mismo
 403** → **la firma del enlace web da 403 en la API y 200 en su ruta web**, que es exactamente el
 motivo del canje. La reserva de prueba se borró de la BD de dev.
+
+---
+
+## #37 · 2026-08-13 · Cierre de Fase 3: la secuencia del dinero baja al dominio (y el driver espera)
+
+**Decisión del owner**: la abstracción `PaymentProvider` que quedaba abierta en `00-REFACTOR` se
+**parte en dos** y se hace ahora solo la mitad MEDIDA — la orquestación—, dejando el segundo driver
+de pasarela para Fase 6, con la app, que es su primer lector real. El argumento que decidió: la
+duplicación estaba medida (cinco puntos de llamada en cuatro clases de entrega) mientras que la
+forma del enchufe de driver, con un solo driver existente, es especulación.
+
+Diseño en `docs/specs/checkout-orquestado.md` (v2, aprobado tras revisión adversarial de 3 agentes).
+
+**(a) El bloqueo de `#34b` era real y tenía fecha de caducidad.** Aquel paso razonó que extraer
+«admitir → crear → abrir cobro» al dominio cruzaría Booking → Payments con una flecha de
+ORQUESTACIÓN y que la baseline de `ModuleBoundariesTest` solo encoge. Correcto **mientras no
+existiera el contrato de la ida**: el grafo ya sanciona `Booking → Payments\Contracts` —lo abrió el
+`RefundGateway` del paso 1 de Fase 2, que en su propio docblock se declara «la semilla» de esto—.
+Creado el puerto, la flecha deja de ser una excepción y pasa a ser el canal previsto. **Cero
+entradas nuevas en cualquier baseline**, que era el criterio rector del diseño y se verificó
+publicando el diff (vacío).
+
+**(b) El puerto vive en el módulo cuyos tipos habla — regla nueva, y sale de un dato.** Lo simétrico
+habría sido poner la ida en `Payments\Contracts`, junto a `RefundGateway`. No se puede: su firma
+habla de `Booking\Models\Order` y un contrato de Payments que nombre `Order` exige entrada en
+`SEAM`. `RefundGateway` habla de `Payment`, un tipo del propio Payments, y por eso sí puede vivir
+allí. Así que `Booking\Contracts\PaymentInitiation` es un **puerto REQUERIDO** —lo que Booking
+necesita— en una carpeta donde todo lo demás es OFRECIDO, y lo implementa Payments. Se marca como
+tal en su docblock y el bind vive en `PaymentsServiceProvider`, con un comentario recíproco en el
+de Booking para que nadie lo dé por no atado.
+
+**(c) La revisión encontró DOS afirmaciones falsas que hacían el spec inaplicable**, las dos
+unánimes entre los tres revisores. La v1 se habría estrellado al primer test:
+· `PaymentInitiationException` vivía en `Payments\Exceptions`, así que el `catch` del orquestador
+  —el disparador de la compensación— era una flecha prohibida. Las alternativas eran peores
+  (capturar `Throwable` compensaría fallos que no son de la pasarela; añadir a `SEAM` viola el
+  criterio rector), así que la excepción se mudó a `Contracts`: es lo que lanza el puerto, luego es
+  parte de su contrato. Precedente en la misma carpeta, `PaymentTicket`.
+· Las constantes `SOURCE_*` eran de `PaymentInitiator` y las nombraban las cinco superficies, así
+  que la ida seguiría citada desde la entrega hiciera lo que hiciera. Subieron a
+  `ReservationCheckout`, que es el símbolo que la entrega consume; el initiator las conserva como
+  ALIAS para no tocar los tests que las usan por ese nombre. Los literales no cambian: viajan a
+  `audit_logs` y son lo que la operadora lee (`PAY-05`).
+De regalo, la revisión también destapó que **el propio spec rompía el gate documental** (cita por
+línea + una entrada de `DECISIONES` que aún no existía). Se arregló antes de escribir código.
+
+**(d) El orquestador NO abre transacción, y eso es una regla escrita, no un olvido.** Envolver la
+secuencia tendría dos consecuencias silenciosas: el `lockForUpdate` de `lockSlots()` quedaría
+sostenido durante la firma del payload —contención en el punto que `AFORO-01` llama «el más
+sutil»— y el rastro `orders.payment_init_failed` haría rollback junto con la compensación, que es
+justo lo que `PAY-05` existe para impedir. Tiene test propio: si alguien envuelve la secuencia, la
+incidencia desaparece y el test cae.
+
+**(e) La ventana de retención la POSEE el dominio, y colocarla costó pensar.** Recibirla por
+parámetro habría sido lo cómodo, pero deja `AFORO-10` en manos del llamante —una superficie futura
+podría pasar `now()->addYears(1)`—. Leerla desde el orquestador exigía `PaymentSettings`, que es de
+Payments: la quinta entrada `SEAM` de la misma config. La salida fue `OrderCreator::
+checkoutHoldUntil()`: esa clase **ya** importa `PaymentSettings` con su costura declarada, y ya
+tenía un helper hermano (`verificationHoldUntil()`). Cero flechas nuevas, y de paso muere el
+`now()->addMinutes(...)` que estaba escrito a mano en las dos superficies que creaban pedidos.
+⚠️ Alcanza al checkout, no a toda creación: el pedido manual del panel nace FIRME a propósito, y
+por eso el default `?Carbon $hold = null` se conserva.
+
+**(f) Los criterios de éxito dejaron de ser greps.** La v1 medía «nadie escribe la secuencia» con
+`grep` → 0, que es exactamente el error que el trabajo denuncia: se cumple el día del commit y
+caduca al siguiente. Peor aún, tras el refactor una sexta superficie tendría un camino MÁS cómodo
+—inyectar el puerto directamente en un controlador— y ninguna guarda lo vería, porque
+`ModuleBoundariesTest` exime la capa de entrega entera y permite cualquier `Contracts`. Nace
+`CheckoutSequenceTest`: fuera de `app/Domain` nadie nombra la ida ni llama a `createPendingOrder`/
+`releaseAfterFailedPaymentStart`, con **una** excepción con nombre —el verificador de concurrencia,
+que llama a `OrderCreator` a propósito porque lo que mide es la carrera de `lockSlots()` y pasar por
+el orquestador cambiaría lo que la prueba mide—.
+
+**(g) Verificación.** Suite **2467 verde** (9567 aserciones) sin cambiar **ni una aserción** de los
+tests de las cuatro superficies · las **5 mutaciones del orden comprobadas** (quitar el hold: 4
+rojos · `admitReservation`→`mayReserve`: 3 · borrar la compensación: 3 · añadirla al reintento: 2 ·
+invertir admitir↔reabrir: 2) · los dos verificadores de concurrencia sobre MySQL con 16 workers ·
+ciclo completo por `curl` contra el servidor: crear (201, con `expires_at` puesto), reintentar (200,
+hold extendido y el intento previo `superseded` **comprobado en BD**), `payment-status` coherente, y
+el reintento de la web devolviendo su formulario firmado. El pedido de prueba se liberó.

@@ -51,6 +51,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Refactor (fases, alcance, arquitectura objetivo) | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` (Fase 2) · `docs/DECISIONES.md` (busca por tema) |
 | Dinero / pagos / Redsys / reembolsos | **`docs/INVARIANTES.md` §1 (PAY) + §6 (SUITE)** · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
+| Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` · `docs/INVARIANTES.md` §1 (PAY-04) + §2 (AFORO-10) |
 | Aforo / franjas / disponibilidad / calendario | **`docs/INVARIANTES.md` §2 (AFORO)** · `docs/MODELO-DATOS.md` §1 · `docs/FLUJOS.md` (flujos 3–4) |
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 (RGPD) + §4 (SEC) · `docs/FLUJOS.md` (flujos 1–2) |
@@ -64,7 +65,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |
 | Deuda técnica (vista única) | `docs/DEUDA.md` |
 | Instalar un cliente nuevo (white-label) | `docs/INSTALACION-CLIENTE.md` |
-| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.duodecies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#36 |
+| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.terdecies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#37 |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
 | Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 

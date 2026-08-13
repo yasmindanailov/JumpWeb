@@ -10,17 +10,21 @@ use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
+use App\Domain\Booking\Contracts\CheckoutOutcome;
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\OperatingWindow;
+use App\Domain\Booking\Contracts\PaymentInitiation;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\RetryAdmission;
+use App\Domain\Booking\Contracts\RetryOutcome;
 use App\Domain\Booking\Contracts\SeasonWindow;
 use App\Domain\Booking\Contracts\SpecialDay;
 use App\Domain\Booking\Contracts\UpcomingReservation;
@@ -32,6 +36,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
+use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
@@ -47,6 +52,7 @@ use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
+use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
 use App\Livewire\Tickets\Purchase;
 use Carbon\CarbonInterface;
@@ -84,6 +90,11 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
         $this->assertInstanceOf(CartPricer::class, app(CartPricing::class));
         $this->assertInstanceOf(AvailabilityReader::class, app(AvailabilityOffer::class));
+        // Los dos puertos del checkout (cierre de Fase 3). `PaymentInitiation` es el caso raro y
+        // conviene que salte a la vista: el contrato es de Booking pero lo implementa Payments, así
+        // que su bind vive en `PaymentsServiceProvider` y no en el de Booking.
+        $this->assertInstanceOf(CheckoutOrchestrator::class, app(ReservationCheckout::class));
+        $this->assertInstanceOf(PaymentInitiator::class, app(PaymentInitiation::class));
     }
 
     /**
@@ -602,6 +613,88 @@ class ModuleContractsTest extends TestCase
 
         $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
         $this->assertSame(4, $admission->calls, 'las tres superficies tienen que preguntar a la política');
+    }
+
+    /**
+     * ENTREGA → BOOKING: la SECUENCIA de la compra la aplica el dominio, y las **cinco** puertas de
+     * entrada pasan por el mismo contrato (cierre de Fase 3).
+     *
+     * El doble deniega siempre y **no crea nada**: si alguna superficie conservara su propia
+     * secuencia —admitir, crear el pedido, abrir el cobro—, este usuario limpio con una cesta
+     * plausible pasaría de largo y dejaría un pedido en base de datos. Que las cinco llamen se
+     * cuenta, porque el hallazgo que motivó todo esto fue justamente que había cinco copias del
+     * orden y bastaba con que una se dejara un paso.
+     *
+     * No sustituye a `test_all_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted`:
+     * aquel prueba que nadie reimplementa la POLÍTICA, este que nadie reimplementa el ORDEN.
+     */
+    public function test_all_purchase_surfaces_ask_booking_for_the_checkout_sequence(): void
+    {
+        $checkout = new class implements ReservationCheckout
+        {
+            public int $starts = 0;
+
+            public int $retries = 0;
+
+            public function start(User $user, array $cart, string $source): CheckoutOutcome
+            {
+                $this->starts++;
+
+                return CheckoutOutcome::deny(
+                    AdmissionDecision::deny(AdmissionDecision::TOO_MANY_PENDING, ['max' => 5])
+                );
+            }
+
+            public function retry(User $user, string $orderCode, string $source): RetryOutcome
+            {
+                $this->retries++;
+
+                return RetryOutcome::deny(RetryAdmission::deny(RetryAdmission::RESERVATIONS_PAUSED));
+            }
+        };
+        $this->app->instance(ReservationCheckout::class, $checkout);
+
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $cart = [['ticket_type_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'qty' => 1]];
+
+        // 1) Sidebar, comprar.
+        Livewire::actingAs($user)->test(Purchase::class)
+            ->set('step', 8)
+            ->set('cart', $cart)
+            ->call('confirmReservation')
+            ->assertSet('step', 4)
+            ->assertHasErrors('cart');
+
+        // 2) Sidebar, reintentar tras un pago denegado.
+        Livewire::actingAs($user)->test(Purchase::class)
+            ->set('step', 10)
+            ->set('orderCode', 'CUALQUIERA')
+            ->call('retryPayment')
+            ->assertSet('step', 10)
+            ->assertHasErrors('cart');
+
+        // 3) «Mis pedidos» (web).
+        $this->actingAs($user)
+            ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
+            ->assertRedirect(route('account.orders'))
+            ->assertSessionHas('status', 'order-retry-paused');
+
+        // 4) y 5) La API: crear y reintentar.
+        $this->actingAs($user)
+            ->postJson('/api/v1/orders', ['items' => [[
+                'product_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'quantity' => 1,
+            ]]])
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'too_many_pending_orders');
+
+        $this->actingAs($user)
+            ->postJson('/api/v1/orders/CUALQUIERA/payment')
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'reservations_paused');
+
+        $this->assertSame(0, Order::query()->count(), 'ninguna superficie puede crear pedidos por su cuenta');
+        $this->assertSame(2, $checkout->starts, 'las dos superficies que compran tienen que pedir la secuencia');
+        $this->assertSame(3, $checkout->retries, 'las tres que reintentan tienen que pedir la secuencia');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

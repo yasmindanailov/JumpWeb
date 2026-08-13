@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
-use App\Domain\Payments\Services\PaymentInitiator;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentTicket;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Controllers\Controller;
@@ -35,35 +35,40 @@ use Illuminate\Http\Request;
  * único por comercio y terminal de por vida; los intentos pendientes anteriores pasan a
  * `SUPERSEDED`, que es lo que impide que uno autorizado tarde emita tickets duplicados (`PAY-02`).
  * Todo eso vive en `PaymentInitiator::reopen()`, no aquí.
+ *
+ * Desde el cierre de Fase 3, tampoco vive aquí el ORDEN entre admitir y reabrir —que es lo que
+ * protege `PAY-04`, porque marcar `SUPERSEDED` antes de validar y extender el hold reabriría un
+ * cobro sobre una plaza que ya pudo cederse—: lo aplica `Booking\Contracts\ReservationCheckout`.
+ * Este controlador es traducción HTTP y nada más.
  */
 class OrderPaymentController extends Controller
 {
-    public function store(
-        Request $request,
-        string $code,
-        ReservationAdmission $admission,
-        PaymentInitiator $initiator,
-    ): OrderPaymentResource|JsonResponse {
+    public function store(Request $request, string $code, ReservationCheckout $checkout): OrderPaymentResource|JsonResponse
+    {
         /** @var User $user */
         $user = $request->user();
 
-        $verdict = $admission->admitPaymentRetry((int) $user->getAuthIdentifier(), $code);
+        try {
+            $outcome = $checkout->retry($user, $code, ReservationCheckout::SOURCE_RETRY_ACCOUNT);
+        } catch (PaymentInitiationException) {
+            // El diagnóstico ya está registrado y el pedido NO se ha tocado —sigue vivo y con el
+            // hold recién extendido—, así que se puede volver a intentar. Es la diferencia
+            // deliberada con `POST orders`, donde un primer cobro fallido sí suelta el pedido; el
+            // dominio la aplica y aquí solo se traduce a lo que ve el cliente.
+            return ApiErrorResponse::make(ApiErrorCode::PaymentUnavailable, 502);
+        }
 
-        if ($verdict->denied()) {
+        if ($outcome->denied()) {
+            /** @var RetryAdmission $verdict Garantizado por `denied()`. */
+            $verdict = $outcome->denial;
+
             return $this->denial($verdict);
         }
 
-        /** @var Order $order Garantizado por `allowed`; su hold ya viene extendido. */
-        $order = $verdict->order;
-
-        try {
-            $ticket = $initiator->reopen($order, $user->locale, PaymentInitiator::SOURCE_RETRY_ACCOUNT);
-        } catch (PaymentInitiationException) {
-            // El diagnóstico ya está registrado. El pedido NO se toca —sigue vivo y con el hold
-            // recién extendido—, así que se puede volver a intentar. Es la diferencia deliberada
-            // con `POST orders`, donde un primer cobro fallido sí suelta el pedido.
-            return ApiErrorResponse::make(ApiErrorCode::PaymentUnavailable, 502);
-        }
+        /** @var Order $order Garantizado por `allow`; su hold ya viene extendido. */
+        $order = $outcome->order;
+        /** @var PaymentTicket $ticket Garantizado por `allow`. */
+        $ticket = $outcome->ticket;
 
         return (new OrderPaymentResource($order->fresh(['items.ticketType', 'items.slot', 'items.children.ticketType', 'adjustments', 'payments.refunds'])))
             ->withPaymentTicket($ticket);

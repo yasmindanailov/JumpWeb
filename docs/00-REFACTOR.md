@@ -183,7 +183,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       Matiz medido en el paso 3: la capa de ENTREGA es el composition root y sí usa modelos de
       varios módulos — prohibírselo habría exigido reescribir el panel, fuera de alcance.
 
-### Fase 3 — API v1 (API-first) 🟦 — los 6 pasos del corte (spec §9) CERRADOS; queda 1 ítem
+### Fase 3 — API v1 (API-first) 🟦 — los 6 pasos del corte (spec §9) CERRADOS + el checkout orquestado; lo único abierto viaja a Fase 6 por decisión
 - [x] **Diseño escrito y REVISADO adversarialmente**: `docs/specs/api-v1.md` **v2** (2026-08-13).
       3 revisores independientes (invariantes/seguridad · arquitectura · riesgo de implementación):
       veredictos sólida-con-cambios · insuficiente · insuficiente, **15 hallazgos GRAVE**, todos
@@ -340,13 +340,35 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] Rate-limiting (suelo del grupo + techos propios donde hacen falta), sobre de error único
       con `code` estable —incluidos los **códigos de negocio** y su mapa exhaustivo por test—,
       paginación (`ApiCollection`) y convenciones → `DECISIONES #24`, `#26`–`#36`.
-- [ ] ⬜ **Abstracción `PaymentProvider`** (driver Redsys primero; deja el enchufe para Stripe u
-      otros — imprescindible para multi-sector fuera de España). **Es lo ÚNICO que queda de la
-      fase.** No se hizo dentro del paso 4c a propósito: habría mezclado dos trabajos en un diff,
-      y su ausencia está medida en `DEUDA.md` (la secuencia «admitir → crear → abrir cobro» vive
-      en la capa de entrega porque el dominio no tiene dónde alojarla sin añadir una flecha a una
-      baseline que solo encoge). **[PENDIENTE: owner]** hacerla ahora o llevarla a Fase 6 con la
-      app, que es su primer lector real.
+- [x] **CIERRE — el CHECKOUT ORQUESTADO** (2026-08-13, `DECISIONES #37`; spec
+      `docs/specs/checkout-orquestado.md`, aprobado tras revisión adversarial ×3). El owner partió
+      en dos la abstracción `PaymentProvider` que quedaba abierta: **la mitad medida ahora, el
+      driver a Fase 6**. Nacen `Booking\Contracts\ReservationCheckout` (la SECUENCIA) y
+      `Booking\Contracts\PaymentInitiation` (la IDA), con `Booking\Services\CheckoutOrchestrator`
+      detrás; las **cinco** llamadas de las cuatro superficies de entrega —sidebar (comprar y
+      reintentar), «Mis pedidos», y los dos endpoints de la API— pasan a pedir la secuencia en vez
+      de escribirla.
+      **Lo que se movió no son llamadas, es el ORDEN**, y por eso no lo veía ninguna guarda: un
+      llamante que use los tres servicios correctos en el orden equivocado pasaba
+      `ApiBoundariesTest` con nota. Ahora hay `CheckoutOrchestratorTest` (7 casos, uno por punto del
+      orden) con las **5 mutaciones comprobadas** —quitar el hold: 4 rojos · `admitReservation`→
+      `mayReserve`: 3 · borrar la compensación: 3 · añadirla al reintento: 2 · invertir el orden de
+      `PAY-04`: 2— y `CheckoutSequenceTest`, que **prohíbe ejecutablemente** que la secuencia
+      reaparezca fuera de `app/Domain` (un `grep` en el commit del refactor caduca al día siguiente;
+      esta es su versión falsable).
+      **Los dos hallazgos que la revisión destapó y sin los cuales el diseño era inaplicable**: (a)
+      el orquestador no podía capturar `PaymentInitiationException` sin violar el grafo de módulos
+      —vivía en `Payments\Exceptions` y Booking solo alcanza `Payments\Contracts`—, así que la
+      excepción se mudó a `Contracts`, que es donde le tocaba por ser lo que lanza el puerto; (b) las
+      constantes `SOURCE_*` eran de `PaymentInitiator` y las nombraban las cinco superficies, así que
+      subieron al puerto. **Regla nueva que sale de aquí: el puerto vive en el módulo cuyos tipos
+      habla** —por eso `RefundGateway` (habla de `Payment`) está en Payments y `PaymentInitiation`
+      (habla de `Order`) está en Booking, aunque lo implemente Payments—.
+      Suite **2467 verde** · **cero entradas nuevas en cualquier baseline** (era el criterio rector)
+      · los dos verificadores sobre MySQL (16 workers) · ciclo completo por `curl` en las cuatro
+      superficies contra el servidor.
+- [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
+      (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
 ### Fase 4 — Sidebar SPA ⬜
 - [ ] SPA embebida (Vue 3 + Vite) para el sistema completo del sidebar: login/registro,
@@ -362,6 +384,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
 ### Fase 6 — Móvil + features nuevas ⬜
+- [ ] **Segundo driver de pasarela** (Stripe u otros) sobre el puerto `Booking\Contracts\
+      PaymentInitiation` que dejó el cierre de Fase 3: selección de driver por configuración, e
+      imprescindible para instalar un cliente fuera de España. Se aplazó aquí a propósito
+      (`DECISIONES #37`): con un solo driver real, la forma del enchufe es especulación — el segundo
+      es quien la revela. El puerto ya existe, así que no hay que tocar a ningún consumidor.
+- [ ] **Emisión de tokens Bearer** (`POST auth/tokens`): la infraestructura de Sanctum y toda la
+      revocación están hechas y probadas desde Fase 3 · paso 3a (`DECISIONES #29`).
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 

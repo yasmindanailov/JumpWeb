@@ -9,10 +9,12 @@ use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
+use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
@@ -49,5 +51,12 @@ class BookingServiceProvider extends ServiceProvider
         // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
         // petición para no repetir esas lecturas entre la landing, el SEO y el hero.
         $this->app->bind(OperatingCalendar::class, OperatingSchedule::class);
+        // La SECUENCIA de la compra (cierre de Fase 3): admitir → crear → abrir cobro. La consumen
+        // las cuatro superficies de entrega, que antes la escribían a mano cada una.
+        //
+        // ⚠️ El otro puerto del checkout, `Booking\Contracts\PaymentInitiation` (la ida del pago),
+        // se ata en `PaymentsServiceProvider`: el contrato es de Booking pero lo implementa Payments,
+        // y la atadura vive donde vive la implementación.
+        $this->app->bind(ReservationCheckout::class, CheckoutOrchestrator::class);
     }
 }

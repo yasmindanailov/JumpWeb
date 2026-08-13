@@ -2,7 +2,9 @@
 
 namespace App\Domain\Payments;
 
+use App\Domain\Booking\Contracts\PaymentInitiation;
 use App\Domain\Payments\Contracts\RefundGateway;
+use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +25,15 @@ class PaymentsServiceProvider extends ServiceProvider
         // `Redsys` con `make()`, así que los tests que lo sustituyen con
         // `app()->instance(Redsys::class, …)` o `mock(Redsys::class)` siguen funcionando.
         $this->app->bind(RefundGateway::class, Redsys::class);
+
+        // La IDA del pago (cierre de Fase 3). El contrato es de **Booking** —un puerto REQUERIDO:
+        // lo que Booking necesita de una pasarela— y la implementación es de Payments, así que la
+        // atadura vive aquí, donde vive la implementación, igual que la del reembolso.
+        //
+        // ⚠️ Por nombre de clase, nunca por closure, y por el mismo motivo que arriba: los tests que
+        // simulan una pasarela caída sustituyen `PaymentInitiator::class` en el contenedor. Con un
+        // `fn () => new PaymentInitiator(...)` esa sustitución dejaría de aplicarse y los dos tests
+        // de la compensación asimétrica seguirían VERDES sin probar nada.
+        $this->app->bind(PaymentInitiation::class, PaymentInitiator::class);
     }
 }

@@ -4,14 +4,15 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — LOS 6 PASOS DEL CORTE (§9) ESTÁN
-CERRADOS**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida de pago · 3 auth · **4 el dinero**
-(precio · disponibilidad · pedido y cobro · desenlace) · **5 post-form**.
-⬜ **Queda UN ítem de la fase, y es decisión del owner**: la abstracción `PaymentProvider`
-(`00-REFACTOR`, Fase 3) — hacerla ahora o llevarla a Fase 6 con la app, que es su primer lector
-real. Mientras tanto, la secuencia «admitir → crear → abrir cobro» vive en la capa de entrega, con
-su porqué medido en `DEUDA.md`.
-- Suite **2455 en verde** (9508 aserciones, `--parallel` ~63 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — LOS 6 PASOS DEL CORTE (§9) CERRADOS + EL
+CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida de pago · 3 auth ·
+**4 el dinero** (precio · disponibilidad · pedido y cobro · desenlace) · **5 post-form** ·
+**cierre: la secuencia del dinero baja al dominio** (`DECISIONES #37`).
+✅ **El ítem que estaba pendiente del owner se resolvió el 2026-08-13**: partió `PaymentProvider` en
+dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
+Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
+fase es la emisión de tokens Bearer, también de Fase 6.
+- Suite **2467 en verde** (9567 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -19,11 +20,13 @@ su porqué medido en `DEUDA.md`.
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-13, 16 workers, la
-  última vez en el paso 4d). ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
-  `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b) y **todo controlador de API
-  `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`**: tocarlos exige `VERIFY_CONC=1` tras
-  correr los dos comandos (`INVARIANTES §6`). Todo el paso 4 los dispara, así que cuenta con ellos
-  en cada commit.
+  última vez en el cierre del checkout). ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
+  `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b), **`CheckoutOrchestrator`** (añadido
+  en el cierre) y **todo controlador de API `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`**:
+  tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos (`INVARIANTES §6`). Todo el paso 4 los
+  dispara, así que cuenta con ellos en cada commit.
+  ⚠️ **El gate NO cubre las superficies web** (`Livewire\Tickets\Purchase`, `RetryPaymentController`):
+  un commit que solo las toque no lo dispara aunque estén en el camino del dinero. Córrelos igual.
 - **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12: el dominio vive en
   `app/Domain/<Contexto>/` con 5 módulos (Platform · Content · Identity · Payments · Booking) y
   frontera EJECUTABLE. **No repitas esa lectura**: el detalle está en `00-REFACTOR.md`,
@@ -44,14 +47,18 @@ su porqué medido en `DEUDA.md`.
 contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#36` y
 en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo del próximo agente**:
 
-- **Nunca reimplementes una regla que ya tiene contrato.** Hay siete, y los siete los consume
-  también la web, así que divergir se nota: `Booking\Contracts\ProductCatalog` (qué se vende),
+- **Nunca reimplementes una regla que ya tiene contrato.** Hay nueve, y los consume también la web,
+  así que divergir se nota: `Booking\Contracts\ProductCatalog` (qué se vende),
   **`CartPricing` (cuánto suma y cuánto se cobra ahora)**, **`AvailabilityOffer` (qué días y horas
-  quedan, con la cesta descontada)**, `ReservationAdmission` (quién puede
-  reservar), `Payments\Services\PaymentInitiator` (cómo se abre un cobro),
-  `Identity\Services\PasswordLogin` y `SelfSignup`/`PasswordRecovery` (auth).
+  quedan, con la cesta descontada)**, `ReservationAdmission` (quién puede reservar),
+  **`ReservationCheckout` (EL ORDEN: admitir → crear → abrir cobro)**, **`PaymentInitiation` (cómo se
+  abre un cobro)**, `Identity\Services\PasswordLogin` y `SelfSignup`/`PasswordRecovery` (auth).
   `ModuleContractsTest` lo comprueba con dobles: si un consumidor vuelve a decidir por su cuenta,
   cae.
+- ⚠️ **`PaymentInitiation` es el contrato raro y conviene saberlo antes de buscarlo**: es un puerto
+  **REQUERIDO** —lo que Booking NECESITA de una pasarela—, así que vive en `Booking\Contracts` pero
+  lo implementa Payments y **su bind está en `PaymentsServiceProvider`**, no en el de Booking. La
+  regla que lo explica: *el puerto vive en el módulo cuyos tipos habla* (`DECISIONES #37`).
 - **La AUTORIZACIÓN por firma tiene una sola forma** (paso 5): `Http\Concerns\AuthorizesGuestForm`,
   compartida por la página web y la API. Su escalada **403 → 410 → 404** no es intercambiable —
   autorizar antes de comprobar elegibilidad es lo que impide enumerar reservas por el código de
@@ -81,18 +88,12 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
-**Decisión del owner primero, y luego Fase 4.**
+**Fase 4 — la SPA del sidebar.** No queda ninguna decisión del owner bloqueando: la de
+`PaymentProvider` se tomó el 2026-08-13 (`DECISIONES #37`) y su mitad medida está hecha y
+verificada.
 
-❗ **[PENDIENTE: owner] — la abstracción `PaymentProvider`** es el único ítem abierto de Fase 3
-(`00-REFACTOR`). Hoy la ida del pago se invoca directamente desde las tres superficies de entrega,
-así que la secuencia «admitir → crear → abrir cobro» vive duplicada ahí; extraerla al dominio exige
-antes ese contrato, porque si no habría que añadir una flecha a una baseline que **solo encoge**
-(razonado en `DECISIONES #34b` y medido en `DEUDA.md`). Las dos opciones son legítimas: hacerla
-ahora, o llevarla a Fase 6 con la app —su primer lector real, y quien traerá el segundo driver si
-alguna vez hace falta—.
-
-**Después: Fase 4 — la SPA del sidebar**, primer consumidor real de todo lo construido. Antes de
-escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.duodecies: son sesenta y nueve
+**Fase 4 es el primer consumidor real de todo lo construido.** Antes de
+escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.terdecies: son setenta y tres
 puntos MEDIDOS al implementar la API, y varios son trampas que la SPA va a pisar. Los tres que más:
 - ⚠️ **`Origin`/`Referer` de un dominio *stateful* hacen falta en TODAS las peticiones**, no solo en
   el login: sin ellos no hay sesión y un `GET /me` da 401 aunque la cookie valga (§10.sexies 28).
@@ -119,14 +120,24 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
   CONSUME ficha; el reintento, a `admitPaymentRetry()`.
 - **Creación** → `OrderCreator` (`AFORO-01`: el lock con `zone_id` literal es la PRIMERA sentencia
   de la transacción; no metas ningún SELECT antes).
-- **Ida del pago** → `Payments\Services\PaymentInitiator::open()`/`reopen()` (paso 2): crea el
-  `Payment`, firma el formulario y deja el rastro de fallo en `audit_logs`. Lanza
-  `PaymentInitiationException`; el destino del pedido lo decide el llamante
-  (`Order::releaseAfterFailedPaymentStart()` tras un primer cobro fallido, nada tras un reintento).
-- **Creación y cobro por API** → hechos en 4c: `POST orders`, `GET orders/{code}` y
-  `POST orders/{code}/payment`. ⚠️ **La SECUENCIA es la regla** y no la vigila ninguna guarda de
-  arquitectura: si tocas esos controladores, los cuatro tests de orden de `Api\V1\OrdersTest` son
-  la red (se verificaron por mutación).
+- **Ida del pago** → `Booking\Contracts\PaymentInitiation` (`open()`/`reopen()`), implementado por
+  `Payments\Services\PaymentInitiator`: crea el `Payment`, firma el formulario y deja el rastro de
+  fallo en `audit_logs`. Lanza `PaymentInitiationException` (que vive en `Payments\Contracts`, no en
+  un `Exceptions/`: es lo que lanza el puerto).
+- **LA SECUENCIA** → `Booking\Contracts\ReservationCheckout` sobre `CheckoutOrchestrator` (cierre de
+  Fase 3, `DECISIONES #37`). **Es el sitio ÚNICO donde vive el orden**, que es la regla: admitir
+  consumiendo ficha → crear con la ventana de retención (`AFORO-10`) → abrir el cobro sobre el
+  pedido persistido → soltarlo **solo** si era el primer intento. Antes estaba copiado en cinco
+  puntos de cuatro clases de entrega.
+  ⚠️ **No lo reescribas en una superficie nueva**: pide `start()`/`retry()` y traduce el resultado.
+  `CheckoutSequenceTest` lo prohíbe ejecutablemente fuera de `app/Domain`, y `CheckoutOrchestratorTest`
+  fija cada punto del orden con las 5 mutaciones comprobadas.
+  ⚠️ **No envuelvas la secuencia en una transacción**: el rastro de incidencia haría rollback
+  (`PAY-05`) y el lock de franjas quedaría sostenido durante la firma (`AFORO-01`). Hay test.
+- **Creación y cobro por API** → `POST orders`, `GET orders/{code}` y `POST orders/{code}/payment`
+  (4c). Los controladores ya solo traducen HTTP; el orden lo pone el contrato. ⚠️ El `catch` de
+  `PaymentInitiationException` que devuelve **502** sí es suyo y es obligatorio: `ApiExceptionRenderer`
+  solo conoce `ReservationException`, así que quitarlo degradaría el contrato a un 500 en silencio.
 - **Oferta de fechas/horas** → hecha en 4b: `Booking\Contracts\AvailabilityOffer` sobre `SlotOffer`
   (`AFORO-02`), con la cesta descontada. Ojo al par de números que publica: `available` es para
   MOSTRAR y `max_quantity` para ACOTAR el selector — en un pack no coinciden.
@@ -138,8 +149,8 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
 **Si tocas dinero, aforo, RGPD o seguridad, lee antes `docs/INVARIANTES.md`** (§1 PAY, §2 AFORO) —
-es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.duodecies:
-sesenta y nueve puntos MEDIDOS al construirla. Los que más se repiten como causa de error:
+es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.terdecies:
+setenta y tres puntos MEDIDOS al construirla. Los que más se repiten como causa de error:
 - el presupuesto de consultas se mide por PENDIENTE y no por techo (§10.ter 17);
 - la validación de contrato hay que PEDIRLA con `assertValidResponse()` (§10.ter 16);
 - un recurso que devuelve el controlador necesita `$wrap = null` (§10.octies 43);
@@ -169,6 +180,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2455** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2467** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

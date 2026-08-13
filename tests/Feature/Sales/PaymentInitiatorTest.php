@@ -4,7 +4,7 @@ namespace Tests\Feature\Sales;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;

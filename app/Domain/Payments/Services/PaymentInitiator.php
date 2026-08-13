@@ -2,9 +2,11 @@
 
 namespace App\Domain\Payments\Services;
 
+use App\Domain\Booking\Contracts\PaymentInitiation;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Models\Order;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Contracts\PaymentTicket;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
@@ -27,14 +29,22 @@ use Throwable;
  * vuelta de Redsys llega sin sesión válida (POST cross-site, `SameSite=Lax`), así que ese vínculo
  * persistido es la única forma robusta de reconocer el pedido al recibir la respuesta.
  */
-class PaymentInitiator
+class PaymentInitiator implements PaymentInitiation
 {
-    /** Superficie que abre el cobro. Solo viaja al `audit_logs`, para saber por dónde entró. */
-    public const SOURCE_CHECKOUT = 'checkout';
+    /**
+     * Superficie que abre el cobro. Solo viaja al `audit_logs`, para saber por dónde entró.
+     *
+     * **Son ALIAS desde el cierre de Fase 3**: la definición única vive en
+     * {@see ReservationCheckout}, que es el símbolo que consume la capa de entrega. Si siguieran
+     * aquí, o la entrega tendría que nombrar esta clase —y la ida del pago volvería a estar
+     * repartida— o el orquestador tendría que alcanzar `Payments\Services`, que el grafo de módulos
+     * prohíbe. Se conservan porque hay tests y dobles que las usan por este nombre.
+     */
+    public const SOURCE_CHECKOUT = ReservationCheckout::SOURCE_CHECKOUT;
 
-    public const SOURCE_RETRY_SIDEBAR = 'retry_sidebar';
+    public const SOURCE_RETRY_SIDEBAR = ReservationCheckout::SOURCE_RETRY_SIDEBAR;
 
-    public const SOURCE_RETRY_ACCOUNT = 'retry_account';
+    public const SOURCE_RETRY_ACCOUNT = ReservationCheckout::SOURCE_RETRY_ACCOUNT;
 
     public function __construct(private Redsys $redsys) {}
 

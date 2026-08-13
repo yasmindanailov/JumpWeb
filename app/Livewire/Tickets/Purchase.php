@@ -13,6 +13,7 @@ use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
@@ -23,10 +24,9 @@ use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\User;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentTicket;
 use App\Domain\Payments\Models\Payment;
-use App\Domain\Payments\Services\PaymentInitiator;
-use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
@@ -152,6 +152,13 @@ class Purchase extends Component
 
     private ReservationAdmission $admission;
 
+    /**
+     * La SECUENCIA de la compra (cierre de Fase 3). Convive con `$admission` a propósito y no la
+     * sustituye: el paso 4 usa `mayReserve()`, que solo CONSULTA, para avisar temprano sin gastar
+     * ficha por una pantalla que no crea nada. Lo que consume va dentro del orquestador.
+     */
+    private ReservationCheckout $checkout;
+
     private CartPricing $pricing;
 
     private AvailabilityOffer $availabilityOffer;
@@ -183,13 +190,14 @@ class Purchase extends Component
 
     private ?string $quoteMemoFor = null;
 
-    public function boot(AddonResolver $addonResolver, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing, AvailabilityOffer $availabilityOffer): void
+    public function boot(AddonResolver $addonResolver, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing, AvailabilityOffer $availabilityOffer, ReservationCheckout $checkout): void
     {
         $this->addonResolver = $addonResolver;
         $this->catalog = $catalog;
         $this->admission = $admission;
         $this->pricing = $pricing;
         $this->availabilityOffer = $availabilityOffer;
+        $this->checkout = $checkout;
     }
 
     public function mount(): void
@@ -888,7 +896,7 @@ class Purchase extends Component
      *  - cualquier manipulación del formulario invalida la firma → Redsys rechaza (SIS0042).
      *  - el `Payment` se crea ANTES de redirigir → el vuelta puede reconciliar sin sesión.
      */
-    public function confirmReservation(OrderCreator $creator, PaymentInitiator $initiator): void
+    public function confirmReservation(): void
     {
         if ($this->step !== 8) {
             return;
@@ -906,45 +914,40 @@ class Purchase extends Component
             return;
         }
 
-        // Admisión (Fase 3 · paso 2). Aquí SÍ consume: es el punto donde nace el pedido `pending`
-        // que retiene aforo, y un chequeo que no cuenta no limita nada.
-        $decision = $this->admission->admitReservation((int) $user->getAuthIdentifier());
-        if ($decision->denied()) {
+        // La SECUENCIA entera —admitir consumiendo ficha, crear el pedido con su ventana de
+        // retención (`AFORO-10`) y abrir el cobro sobre el pedido ya persistido— la aplica
+        // `Booking\Contracts\ReservationCheckout` desde el cierre de Fase 3. Antes estaba escrita
+        // aquí a mano, y otras tres veces en las demás superficies. Lo que queda en este método es
+        // lo que de verdad es del sidebar: a qué paso se vuelve y qué se le dice al cliente.
+        try {
+            $outcome = $this->checkout->start($user, $this->cart, ReservationCheckout::SOURCE_CHECKOUT);
+        } catch (ReservationException $e) {
+            $this->step = 4;
+            $this->addError('cart', __($e->getMessage(), $e->context));
+
+            return;
+        } catch (PaymentInitiationException) {
+            // El pedido ya lo soltó el dominio (retendría una plaza que nadie va a pagar) y el
+            // diagnóstico ya está en el log y en `audit_logs` (#169).
+            $this->step = 4;
+            $this->addError('cart', __('tickets.errors.payment_unavailable'));
+
+            return;
+        }
+
+        if ($outcome->denied()) {
+            /** @var AdmissionDecision $decision Garantizado por `denied()`. */
+            $decision = $outcome->denial;
             $this->step = 4;
             $this->reportAdmissionDenial($decision);
 
             return;
         }
 
-        try {
-            // El pedido nace con su ventana de retención (`sales.hold_minutes`) YA fijada (auditoría
-            // Fase 1, L7): si el proceso se interrumpe entre crear el pedido e iniciar el pago, queda
-            // auto-liberable por `orders:expire`. Antes el hold se aplicaba en un `save()` posterior →
-            // un crash en medio dejaba un pending con `expires_at=null` que retenía aforo para siempre.
-            $order = $creator->createPendingOrder($user, $this->cart, now()->addMinutes(PaymentSettings::holdMinutes()));
-        } catch (ReservationException $e) {
-            $this->step = 4;
-            $this->addError('cart', __($e->getMessage(), $e->context));
-
-            return;
-        }
-
-        // Ida del pago (Fase 3 · paso 2): la hace `Payments\PaymentInitiator`, que reserva el
-        // `gateway_order`, crea el `Payment` `pending` que ata `gateway_order ↔ Order` ANTES de
-        // redirigir —la vuelta de Redsys llega sin sesión válida (POST cross-site, `SameSite=Lax`),
-        // así que ese vínculo en BD es la única forma robusta de reconocer el pedido— y registra
-        // por su cuenta el diagnóstico de cualquier fallo (log + `audit_logs`, #169).
-        try {
-            $ticket = $initiator->open($order, $user->locale, PaymentInitiator::SOURCE_CHECKOUT);
-        } catch (PaymentInitiationException) {
-            // Si el cobro nunca llegó a abrirse, el pedido retiene plaza sin ningún pago asociado y
-            // nadie va a completarlo: se suelta en el acto en vez de esperar a `orders:expire`.
-            $order->releaseAfterFailedPaymentStart();
-            $this->step = 4;
-            $this->addError('cart', __('tickets.errors.payment_unavailable'));
-
-            return;
-        }
+        /** @var Order $order Garantizado por `allow`; ya retiene aforo. */
+        $order = $outcome->order;
+        /** @var PaymentTicket $ticket Garantizado por `allow`. */
+        $ticket = $outcome->ticket;
 
         // Retención de plaza (#62/#105): el Order ya nació con `expires_at = now + sales.hold_minutes`
         // (L7, arriba). Si el cliente no completa el cobro en esa ventana (≥ timeout del TPV), la Order
@@ -977,12 +980,12 @@ class Purchase extends Component
      *  - User no logueado (sesión expirada) → re-encamina al login.
      *  - Order no encontrada o no perteneciente al user → defensa anti-IDOR: vuelve al paso 1.
      *
-     * Desde Fase 3 · paso 2 lo deciden el dominio y el módulo de pagos: admitir el reintento y
-     * extender la retención con la sentencia atómica de `PAY-04` es
-     * `Booking\Contracts\ReservationAdmission`; abrir el cobro nuevo, `Payments\PaymentInitiator`.
-     * Aquí solo queda a qué paso se vuelve y qué se le dice al cliente.
+     * Desde el cierre de Fase 3 lo decide el dominio entero, incluido el ORDEN: admitir el reintento
+     * —que extiende la retención con la sentencia atómica de `PAY-04`— y solo después reabrir el
+     * cobro es `Booking\Contracts\ReservationCheckout::retry()`. Aquí solo queda a qué paso se
+     * vuelve y qué se le dice al cliente.
      */
-    public function retryPayment(PaymentInitiator $initiator): void
+    public function retryPayment(): void
     {
         if ($this->step !== 10) {
             return;
@@ -995,9 +998,19 @@ class Purchase extends Component
             return;
         }
 
-        $verdict = $this->admission->admitPaymentRetry((int) $user->getAuthIdentifier(), $this->orderCode);
+        try {
+            $outcome = $this->checkout->retry($user, $this->orderCode, ReservationCheckout::SOURCE_RETRY_SIDEBAR);
+        } catch (PaymentInitiationException) {
+            // El diagnóstico ya está registrado (log + `audit_logs`). El pedido NO se toca: sigue
+            // vivo con su hold recién extendido, así que el cliente puede volver a intentarlo.
+            $this->addError('cart', __('tickets.errors.payment_unavailable'));
 
-        if ($verdict->denied()) {
+            return;
+        }
+
+        if ($outcome->denied()) {
+            /** @var RetryAdmission $verdict Garantizado por `denied()`. */
+            $verdict = $outcome->denial;
             // Pausa (#218) y límite de frecuencia dejan al cliente donde está: su reserva sigue
             // viva y puede reintentar en cuanto se levante el aviso. `NOT_RETRYABLE` es otra cosa
             // —el hold cruzó y la plaza pudo cederse—, así que ahí sí hay que rehacer la selección.
@@ -1016,18 +1029,8 @@ class Purchase extends Component
             return;
         }
 
-        /** @var Order $order Garantizado por `allowed`; su hold ya viene extendido. */
-        $order = $verdict->order;
-
-        try {
-            $ticket = $initiator->reopen($order, $user->locale, PaymentInitiator::SOURCE_RETRY_SIDEBAR);
-        } catch (PaymentInitiationException) {
-            // El diagnóstico ya está registrado (log + `audit_logs`). El pedido NO se toca: sigue
-            // vivo con su hold recién extendido, así que el cliente puede volver a intentarlo.
-            $this->addError('cart', __('tickets.errors.payment_unavailable'));
-
-            return;
-        }
+        /** @var PaymentTicket $ticket Garantizado por `allow`. */
+        $ticket = $outcome->ticket;
 
         $this->resetErrorBag('cart');
         $this->declinedReasonText = null;

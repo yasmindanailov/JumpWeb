@@ -9,7 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\PaymentSettings;

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Payments;
 
-use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Models\Order;
-use App\Domain\Payments\Exceptions\PaymentInitiationException;
-use App\Domain\Payments\Services\PaymentInitiator;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
+use App\Domain\Payments\Contracts\PaymentTicket;
 use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,11 +19,11 @@ use Illuminate\Http\Request;
  * área privada (`/mi-cuenta/pedidos`), pero la vista no ofrecía un botón para reintentar el pago.
  * El cliente quedaba «informado pero sin acción».
  *
- * Desde Fase 3 · paso 2 **no decide nada por su cuenta**: la política de admisión —pausa de
- * reservas, frecuencia por titular y la extensión atómica del hold que exige `PAY-04`— vive en
- * `Booking\Contracts\ReservationAdmission`, y abrir el cobro en `Payments\PaymentInitiator`. Este
- * controlador solo traduce el veredicto a la respuesta HTTP que espera «Mis pedidos»: un redirect
- * con su `status` de flash.
+ * **No decide nada por su cuenta, ni siquiera el orden.** La política de admisión —pausa de
+ * reservas, frecuencia por titular y la extensión atómica del hold que exige `PAY-04`—, la apertura
+ * del cobro y la secuencia entre ambas viven en `Booking\Contracts\ReservationCheckout` desde el
+ * cierre de Fase 3. Este controlador solo traduce el resultado a la respuesta HTTP que espera «Mis
+ * pedidos»: un redirect con su `status` de flash.
  *
  * Que las reglas vivieran aquí tenía un coste medido: este endpoint aplicaba una política
  * DISTINTA de la del sidebar sin que nadie lo hubiera decidido (no limitaba la frecuencia por
@@ -34,35 +34,35 @@ use Illuminate\Http\Request;
  */
 class RetryPaymentController extends Controller
 {
-    public function __invoke(
-        Request $request,
-        string $code,
-        ReservationAdmission $admission,
-        PaymentInitiator $initiator,
-    ): View|RedirectResponse {
+    public function __invoke(Request $request, string $code, ReservationCheckout $checkout): View|RedirectResponse
+    {
         $user = $request->user();
         assert($user !== null); // auth middleware lo garantiza
 
-        $verdict = $admission->admitPaymentRetry((int) $user->getAuthIdentifier(), $code);
+        try {
+            $outcome = $checkout->retry($user, $code, ReservationCheckout::SOURCE_RETRY_ACCOUNT);
+        } catch (PaymentInitiationException) {
+            // El diagnóstico (log + `audit_logs`) ya lo dejó el initiator y el pedido NO se ha
+            // tocado —sigue vivo y se puede volver a intentar—: aquí solo se decide qué ve el
+            // cliente.
+            return redirect()
+                ->route('account.orders')
+                ->with('status', 'order-retry-failed');
+        }
 
-        if ($verdict->denied()) {
+        if ($outcome->denied()) {
+            /** @var RetryAdmission $verdict Garantizado por `denied()`. */
+            $verdict = $outcome->denial;
+
             return redirect()
                 ->route('account.orders')
                 ->with('status', $this->flashFor($verdict->reason));
         }
 
-        /** @var Order $order Garantizado por `allowed`; el hold ya está extendido. */
-        $order = $verdict->order;
-
-        try {
-            $ticket = $initiator->reopen($order, $user->locale, PaymentInitiator::SOURCE_RETRY_ACCOUNT);
-        } catch (PaymentInitiationException) {
-            // El diagnóstico (log + `audit_logs`) ya lo dejó el initiator: aquí solo se decide qué
-            // ve el cliente. El pedido NO se toca: sigue vivo y se puede volver a intentar.
-            return redirect()
-                ->route('account.orders')
-                ->with('status', 'order-retry-failed');
-        }
+        /** @var Order $order Garantizado por `allow`; el hold ya está extendido. */
+        $order = $outcome->order;
+        /** @var PaymentTicket $ticket Garantizado por `allow`. */
+        $ticket = $outcome->ticket;
 
         // Vista intermedia con auto-POST a la pasarela. La tarjeta NO toca este server.
         return view('payments.retry-redirect', [

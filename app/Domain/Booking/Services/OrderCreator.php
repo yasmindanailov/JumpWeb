@@ -62,6 +62,22 @@ class OrderCreator
     }
 
     /**
+     * Momento hasta el que un pedido de CHECKOUT retiene su plaza (`AFORO-10`), según el ajuste
+     * `sales.hold_minutes` del panel.
+     *
+     * Vive aquí y no en `CheckoutOrchestrator`, que es su único llamante, por una razón de frontera
+     * medida: la ventana sale de `PaymentSettings`, que es de Payments, y el grafo de módulos solo
+     * deja a Booking alcanzar `Payments\Contracts`. Esta clase **ya** lee `PaymentSettings` —para
+     * `orderPrefix()`, con su costura declarada desde Fase 2—, así que alojar aquí el cálculo evita
+     * abrir una flecha nueva hacia la misma configuración. De paso muere la duplicación: el
+     * `now()->addMinutes(...)` estaba escrito a mano en las dos superficies que creaban pedidos.
+     */
+    public static function checkoutHoldUntil(): Carbon
+    {
+        return now()->addMinutes(PaymentSettings::holdMinutes());
+    }
+
+    /**
      * Crea el pedido `pending` a partir de la cesta. Lanza ReservationException si algo no valida.
      * Si $hold es null, la reserva es FIRME (retiene la plaza y no caduca). Si se pasa una fecha,
      * la reserva es PROVISIONAL: retiene la plaza hasta esa hora y, si no se confirma (verificación

@@ -46,6 +46,12 @@ class CriticalPathGateTest extends TestCase
         // fuera—, y sí puede mover lo que verifica `purchase:verify-oversell`: `OrderCreator` la
         // llama como backstop del corte intra-día (`passesIntradayFloor`).
         'app/Domain/Booking/Services/SlotOffer.php',
+        // Cierre de Fase 3: aquí vive ahora la SECUENCIA «admitir → crear → abrir cobro», que antes
+        // estaba escrita a mano en cinco puntos de la capa de entrega. No contiene reglas nuevas
+        // —las tres piezas ya existían— pero sí el ORDEN, que es lo que ninguna guarda de
+        // arquitectura sabe ver y lo que decide si se retiene aforo sin cobrarlo (`AFORO-10`) o se
+        // reabre un cobro sobre un hold no validado (`PAY-04`).
+        'app/Domain/Booking/Services/CheckoutOrchestrator.php',
     ];
 
     /**
@@ -67,7 +73,14 @@ class CriticalPathGateTest extends TestCase
      *
      * @var list<string>
      */
-    private const CRITICAL_SYMBOLS = ['OrderCreator', 'SlotGenerator', 'RedsysReturnHandler', 'SlotOffer', 'PaymentInitiator'];
+    private const CRITICAL_SYMBOLS = [
+        'OrderCreator', 'SlotGenerator', 'RedsysReturnHandler', 'SlotOffer', 'PaymentInitiator',
+        // Cierre de Fase 3, y es la entrada que más trabaja de la lista: desde que la secuencia vive
+        // tras un contrato, un controlador de API llega al núcleo SIN nombrar ninguna de las clases
+        // anteriores. Un endpoint futuro que inyecte `ReservationCheckout` y no case con el patrón
+        // por su nombre quedaría fuera del gate, y su carrera no la ve la suite (SQLite).
+        'ReservationCheckout',
+    ];
 
     private function criticalPattern(): string
     {

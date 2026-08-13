@@ -7,7 +7,7 @@
 > (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.duodecies** — sesenta y nueve puntos
+> **Lo que el código enseñó al implementar: §10 → §10.terdecies** — setenta y tres puntos
 > medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
@@ -911,3 +911,39 @@ en cuanto alguien añadiera una. Van con la etiqueta ya resuelta al idioma —lo
 no en `lang/`— y su `required`. Es la misma decisión que el catálogo tomó en el paso 1b, y la que
 convierte a la API en algo que una app puede consumir sin desplegarse cada vez que el operador
 cambia una columna.
+
+### 10.terdecies Lo que el código enseñó — el CIERRE del checkout (2026-08-13)
+
+> Diseño completo en `docs/specs/checkout-orquestado.md`; la decisión, en `DECISIONES #37`. Aquí
+> solo lo que cambia el trabajo de quien toque la API a partir de ahora.
+
+**70. Los dos controladores del pedido ya NO llevan la secuencia, y eso cambia dónde mirar.**
+`OrdersController::store()` y `OrderPaymentController::store()` piden `start()`/`retry()` a
+`Booking\Contracts\ReservationCheckout` y traducen el resultado. Si vas a tocar el orden de
+«admitir → crear → abrir cobro», el sitio es `Booking\Services\CheckoutOrchestrator` y su red es
+`CheckoutOrchestratorTest`, no los tests de endpoint. Los cuatro tests de orden de
+`Api\V1\OrdersTest` siguen ahí y siguen mordiendo —se comprobó por mutación **después** de migrar—,
+pero ahora prueban que el endpoint pide la secuencia, no que la escriba bien.
+
+**71. El `catch` de `PaymentInitiationException` en el controlador es obligatorio, no decorativo.**
+El dominio compensa (suelta el pedido en un primer cobro, no lo toca en un reintento) y **re-lanza**;
+la disculpa es de la capa de entrega. Como `ApiExceptionRenderer` solo conoce `ReservationException`,
+un controlador que dejara de capturarla degradaría el **502 `payment_unavailable`** que el contrato
+documenta a un 500 genérico, en silencio. Es el precio de partir compensación y presentación, y hay
+que saberlo al escribir el siguiente endpoint que abra un cobro.
+
+**72. Un contrato nuevo puede sacar a un controlador del gate de concurrencia sin que se note.**
+`CriticalPathGateTest` vigilaba que ningún controlador de API tocara el núcleo fuera de
+`CRITICAL_RE` buscando los símbolos del núcleo (`OrderCreator`, `PaymentInitiator`…). Desde el
+cierre, un endpoint llega al dinero **sin nombrar ninguno**: le basta inyectar `ReservationCheckout`.
+Por eso ese símbolo entró en `CRITICAL_SYMBOLS`. Lección general: cuando una capacidad pasa a vivir
+tras un contrato, hay que revisar las guardas que la buscaban por el nombre de su implementación.
+
+**73. Un criterio de éxito medido con `grep` no es una guarda.** El diseño nació diciendo «tras esto,
+`grep PaymentInitiator app/Http` da 0». Se cumple el día del commit y caduca al siguiente, que es
+exactamente el problema que el trabajo venía a resolver — y peor: tras el refactor, una superficie
+nueva tenía un camino MÁS cómodo para reescribir la secuencia (inyectar el puerto directamente), y
+ninguna guarda lo veía, porque `ModuleBoundariesTest` exime la capa de entrega entera y permite
+cualquier `Contracts`, y `ApiBoundariesTest` no prohíbe `open()`/`reopen()`. La versión falsable es
+`CheckoutSequenceTest`. **Regla**: si un criterio de éxito se puede escribir como `grep`, casi
+siempre se puede escribir como test — y entonces hay que escribirlo como test.
