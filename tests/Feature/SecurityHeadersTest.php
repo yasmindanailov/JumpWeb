@@ -74,8 +74,36 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString('https://fonts.bunny.net', $csp);
         $this->assertStringContainsString('https://challenges.cloudflare.com', $csp);
 
-        // En entorno de pruebas (no local) no debe colarse el dev-server de Vite.
-        $this->assertStringNotContainsString('localhost:5173', $csp);
+        // En entorno de pruebas (no local) no debe colarse el dev-server de Vite. Se comprueba
+        // contra el puerto REALMENTE configurado: aseverar un literal (`5173`) se cumpliría solo
+        // desde el día que el puerto cambió, que es una aserción muerta disfrazada de verde.
+        $this->assertStringNotContainsString('http://localhost:'.config('app.vite_dev_port'), $csp);
+        $this->assertStringNotContainsString('ws://', $csp);
+    }
+
+    /**
+     * En local SÍ se permite el dev-server, y con el puerto que dice la configuración.
+     *
+     * Estuvo quemado a 5173 mientras `.env` fijaba 5374 y `.env.example` 5274 — tres valores a la
+     * vez—, así que la propia CSP bloqueaba el HMR sin que nada lo dijera. Este test es lo que
+     * impide que vuelva a quemarse: si alguien escribe un literal, el puerto inventado de aquí
+     * deja de aparecer.
+     */
+    public function test_the_csp_allows_the_configured_vite_dev_server_when_running_locally(): void
+    {
+        config(['app.vite_dev_port' => 5999]);
+        $this->app['env'] = 'local';
+
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertNotNull($csp);
+
+        foreach (['localhost', '127.0.0.1'] as $host) {
+            $this->assertStringContainsString("http://{$host}:5999", $csp, 'falta el origen del HMR');
+            $this->assertStringContainsString("ws://{$host}:5999", $csp, 'falta el websocket del HMR');
+        }
+
+        $this->assertStringNotContainsString('5173', $csp, 'el puerto sigue quemado en alguna parte');
     }
 
     public function test_form_action_switches_to_production_url_when_redsys_is_live(): void

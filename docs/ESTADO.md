@@ -12,10 +12,15 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2479 en verde** (9599 aserciones, `--parallel` ~63 s) · Pint limpio ·
+- Suite **2483 en verde** (9617 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
+- ⚠️ **El `pre-push` corre ahora también `npm run build`, ANTES de la suite** (2026-08-13). Se añadió
+  tras un fallo REAL: un build interrumpido dejó `public/build/manifest.json` a 0 bytes y **toda la
+  web pública respondió 500**. `public/build` está en `.gitignore`, así que el manifest no viaja en
+  el commit y nada lo miraba; `SUITE-05` ya lo pedía por escrito. `PrePushGateTest` vigila los
+  cuatro pasos del gate y que el build vaya antes que la suite.
 - **Auditorías de dependencias son verificación de CIERRE, no de instalación** (`DECISIONES #25`):
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
@@ -202,6 +207,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2479** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2483** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -56,6 +56,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Puerto del servidor de desarrollo de Vite
+    |--------------------------------------------------------------------------
+    |
+    | Solo se usa FUERA de producción, y para una cosa: que la CSP permita el origen del
+    | HMR cuando se trabaja con `npm run dev`. En producción los assets se sirven
+    | compilados desde el propio dominio y esto no interviene.
+    |
+    | Va por CONFIG y no por `env()` en runtime (misma lección que `PAY-06`: `env()`
+    | devuelve null tras `config:cache`), y se DERIVA en vez de quemarse: había tres
+    | valores distintos a la vez —la CSP decía 5173, `.env` 5374 y `.env.example` 5274—,
+    | así que el HMR estaba bloqueado por la propia CSP sin que nada lo dijera.
+    |
+    */
+
+    'vite_dev_port' => (int) env('VITE_PORT', 5173),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

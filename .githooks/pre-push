@@ -95,6 +95,18 @@ fi
 echo '→ pre-push: Pint (repo completo)…'
 docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
 
+# Build de assets ANTES de la suite, y por dos motivos independientes:
+#  · `INVARIANTES SUITE-05` ya lo exigía («npm run build una vez antes de la suite completa: las
+#    vistas dan `ViteManifestNotFound` sin manifest») y el hook no lo hacía;
+#  · `public/build` está en `.gitignore`, así que el manifest no viaja en el commit. Un `@vite`
+#    apuntando a un entry que no compila —o un manifest corrupto— se detecta cuando alguien carga
+#    la web, no cuando se empuja. Ocurrió el 2026-08-13: un build interrumpido dejó
+#    `manifest.json` a 0 bytes y TODA la web pública respondió 500.
+# Cuesta ~3 s. La alternativa era gatearlo solo al tocar `resources/` o `vite.config.js`, que no
+# habría cazado el manifest corrupto — que es justo el caso que pasó.
+echo '→ pre-push: npm run build…'
+docker compose exec -u sail -T laravel.test npm run build
+
 echo '→ pre-push: suite completa (--parallel)…'
 docker compose exec -u sail -T laravel.test php artisan test --parallel
 

@@ -59,14 +59,20 @@ class SecurityHeaders
 
         // En local, permitir el servidor de desarrollo de Vite (HMR) si se usa `npm run dev`.
         // En producción los assets se sirven compilados desde el propio dominio ('self').
+        //
+        // ⚠️ El puerto se DERIVA de la configuración (`VITE_PORT`), no se quema. Estaba quemado a
+        // 5173 mientras `.env` fijaba 5374 y `.env.example` 5274: tres valores a la vez, con el
+        // resultado de que la propia CSP bloqueaba el HMR sin que nada lo dijera. Quemar otro
+        // literal solo habría movido el problema al siguiente cambio de puerto.
         if (app()->environment('local')) {
-            foreach (['http://localhost:5173', 'http://127.0.0.1:5173'] as $devOrigin) {
-                $script[] = $devOrigin;
-                $style[] = $devOrigin;
-                $connect[] = $devOrigin;
+            $devPort = (int) config('app.vite_dev_port');
+
+            foreach (['localhost', '127.0.0.1'] as $host) {
+                $script[] = "http://{$host}:{$devPort}";
+                $style[] = "http://{$host}:{$devPort}";
+                $connect[] = "http://{$host}:{$devPort}";
+                $connect[] = "ws://{$host}:{$devPort}";
             }
-            $connect[] = 'ws://localhost:5173';
-            $connect[] = 'ws://127.0.0.1:5173';
         }
 
         $directives = [
