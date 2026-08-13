@@ -14,10 +14,11 @@
   publicados en el intervalo, todos en herramientas de build. Se sanearon con `npm audit fix` sin
   `--force` (Vite 8.2.1). La lección: `composer audit`/`npm audit` son verificación de CIERRE, no
   un trámite de instalación.
-- **Los verificadores de concurrencia NO se han corrido en esta sesión y no hacía falta**: el paso
-  0 no toca `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` ni ningún controlador de checkout,
-  y el gate del `pre-push` lo confirma. Su último verde sobre MySQL real es del 2026-08-13
-  (`DECISIONES #22`). En cuanto el paso 2 toque la política de admisión, vuelven a ser obligatorios.
+- **Los verificadores de concurrencia NO se han corrido en esta sesión y no hacía falta**: los pasos
+  0 y 1a no tocan `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` ni ningún controlador de
+  checkout —son cimientos y lectura—, y el gate del `pre-push` lo confirma. Su último verde sobre
+  MySQL real es del 2026-08-13 (`DECISIONES #22`). En cuanto el paso 2 toque la política de
+  admisión, vuelven a ser obligatorios.
 - **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12: el dominio vive en
   `app/Domain/<Contexto>/` con 5 módulos (Platform · Content · Identity · Payments · Booking) y
   frontera EJECUTABLE. **No repitas esa lectura**: el detalle está en `00-REFACTOR.md`,
@@ -65,18 +66,31 @@ Cimientos + la lectura de la cuenta. Lo que existe y funciona (verificado con `c
 
 ## ▶ Próximo paso
 **Fase 3 · paso 1b — CATÁLOGO por API** (`catalog/zones`, `catalog/products`,
-`catalog/products/{id}`): read-model NUEVO en Booking, extraído de `Purchase::render()`.
-Es la parte difícil del paso 1 y por eso se separó: `Purchase::catalogSection()` mezcla dominio y
-presentación —lleva una cadena `search` normalizada para el buscador en cliente y un `zone_anchor`
-para el deep-link de la landing—, y ninguna de las dos pertenece a un read-model de dominio. Hay
-que decidir qué se queda en la vista y qué sube al módulo, con `event_fields` y la config de
-complementos incluidas (spec §4.4).
+`catalog/products/{id}`): read-model NUEVO en Booking, extraído de `Purchase::render()` (spec §4.4).
 
-**Antes de escribir código, lee `docs/specs/api-v1.md` §10** («lo que el código enseñó»): son siete
-puntos medidos al implementar el paso 0 y varios cambian cómo se hace el paso 1 — en particular que
-todo esquema nuevo nace con `additionalProperties: false` + `required` completo (si no, la prueba
-por mutación deja de morder) y que heredar de `ApiTestCase` activa la validación de contrato en
-cada petición del test.
+Es la parte difícil del paso 1 y por eso se separó. **Lo ya medido en la sesión del 2026-08-13, para
+que no haya que redescubrirlo:**
+- La fuente actual es `Purchase::catalogTypes()` (productos seleccionables: `entry` + `pack`, sobre
+  `allSellableTypes()` con los scopes `sellable()` + `inOperationalZone()`) y
+  `Purchase::catalogSection()`, que **mezcla dominio y presentación**. De sus campos, `search` (una
+  cadena normalizada que filtra el buscador progresivo EN CLIENTE) y `zone_anchor` (el slug de zona
+  solo en el primer ítem, para el ancla del deep-link de la landing) son artefactos de la web SSR y
+  **no pertenecen a un read-model de dominio**: la API expone los datos y cada cliente construye su
+  índice de búsqueda. Los demás sí son dominio: `from` (`fromPriceCents`, un «precio desde», NO un
+  precio real — cuidado al nombrarlo), `badge`, `features`, `deposit_label`, `period_label`,
+  `is_pack`, `featured`.
+- La **config de complementos** NO hay que extraerla: `AddonResolver::viewModel()` ya es la fuente
+  única y la comparte con el alta manual del panel. El read-model la consume, no la reescribe.
+- `event_fields` sale de `TicketType::eventFields(?string $stage)`, con dos etapas
+  (`EVENT_STAGE_BOOKING` / `EVENT_STAGE_POSTFORM`): decidir cuál expone el catálogo.
+- **Dilema de nombre de controlador**: `Availability*` dispara el gate de concurrencia del
+  `pre-push` (`#24i`). Un catálogo de solo lectura no debería exigir los verificadores; la
+  disponibilidad del paso 4 sí. Mismo criterio que llevó a `MeOrdersController` (`#26e`).
+
+**Antes de escribir código, lee `docs/specs/api-v1.md` §10 y §10.bis** («lo que el código enseñó»):
+doce puntos medidos al implementar los pasos 0 y 1a, varios de ellos aplicables directamente al 1b
+—todo esquema nuevo nace con `additionalProperties: false` + `required` completo, `null` va DENTRO
+del `enum` en OpenAPI 3.0, y toda lista usa `ApiCollection`—.
 
 Después: paso 2 (extraer política de admisión e ida de pago — **aquí vuelven `VERIFY_CONC=1` y los
 dos verificadores**) · paso 3 (auth + revocación de tokens) · paso 4 (el dinero) · paso 5 (post-form).
