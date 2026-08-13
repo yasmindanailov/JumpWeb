@@ -876,6 +876,48 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/reservation-eligibility:
+    get:
+      tags: [Compra]
+      operationId: getMyReservationEligibility
+      summary: ¿Puede este titular reservar ahora?
+      description: |
+        Aviso TEMPRANO, para poder decirle al cliente que no va a poder reservar **antes** de
+        llevarlo a la pantalla de pago. Es lo que la web hace desde siempre al pasar del carrito a
+        la identificación.
+
+        **No consume nada.** Pregunta a la variante de solo consulta de la política de admisión, no
+        a la que gasta un intento del limitador. Es la diferencia entre contar reservas y contar
+        pantallas: si esto consumiera, pasar dos veces por la cesta impediría confirmar la segunda
+        compra del mismo minuto.
+
+        **Responde 200 aunque el veredicto sea que no**: es una consulta que salió bien, y el
+        motivo viaja dentro. Los errores de verdad (401, 429, 503) siguen siendo errores.
+
+        Sin parámetros a propósito: la identidad sale del guard, así que no hay forma de preguntar
+        por la elegibilidad de otro titular.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Veredicto de elegibilidad del titular autenticado.
+          headers:
+            Cache-Control:
+              description: Siempre `no-store` en respuestas autenticadas (`RGPD-04`).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationEligibility'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservations:
     get:
       tags: [Cuenta]
@@ -1079,6 +1121,36 @@ components:
                 type: array
                 items:
                   type: string
+
+    ReservationEligibility:
+      type: object
+      additionalProperties: false
+      required: [allowed, reason, max_pending_orders]
+      properties:
+        allowed:
+          type: boolean
+          description: Si `false`, `reason` dice por qué.
+        reason:
+          type: string
+          nullable: true
+          enum: [reservations_paused, too_many_pending_orders, too_many_requests, null]
+          description: |
+            Código estable del motivo, `null` si se admite. Es el MISMO código que devolvería el
+            sobre de error de `POST /orders` en esa situación, así que un cliente puede ramificar
+            igual en los dos sitios.
+
+            `too_many_requests` es el único que se arregla esperando; `reservations_paused` invita a
+            llamar al negocio, y `too_many_pending_orders` a pagar o dejar caducar lo pendiente.
+        max_pending_orders:
+          type: integer
+          nullable: true
+          description: |
+            Máximo de reservas sin pagar por titular. Solo viaja con `too_many_pending_orders`, que
+            es cuando el aviso lo nombra; `null` en cualquier otro caso.
+
+            ⚠️ **No se publica cuántas tiene** el titular, ni cuáles, ni cuándo se levanta el límite
+            de frecuencia: un endpoint de elegibilidad es por naturaleza un oráculo sobre una cuenta,
+            y se acota devolviendo lo justo para pintar el aviso.
 
     User:
       type: object

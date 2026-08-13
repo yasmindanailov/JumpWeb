@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Contracts\PaymentTicket;
+use App\Http\Api\AdmissionCodeMap;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\CartPayload;
@@ -115,14 +116,15 @@ class OrdersController extends Controller
      */
     private function admissionDenial(AdmissionDecision $decision): JsonResponse
     {
-        return match ($decision->reason) {
-            AdmissionDecision::RESERVATIONS_PAUSED => ApiErrorResponse::make(ApiErrorCode::ReservationsPaused, 409),
-            AdmissionDecision::TOO_MANY_PENDING => ApiErrorResponse::make(
-                ApiErrorCode::TooManyPendingOrders,
-                409,
-                params: ['max' => (int) ($decision->context['max'] ?? 0)],
-            ),
-            default => ApiErrorResponse::make(ApiErrorCode::TooManyRequests, 429),
-        };
+        /** @var string $reason Garantizado por `denied()`. */
+        $reason = $decision->reason;
+
+        return ApiErrorResponse::make(
+            AdmissionCodeMap::codeFor($reason),
+            AdmissionCodeMap::statusFor($reason),
+            params: $reason === AdmissionDecision::TOO_MANY_PENDING
+                ? ['max' => (int) ($decision->context['max'] ?? 0)]
+                : [],
+        );
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
+use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
@@ -141,6 +142,13 @@ Route::name('api.v1.')->group(function (): void {
         // dos: ninguno acepta un identificador de titular por la petición.
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
+
+        // Aviso TEMPRANO de «¿puedo reservar?» (Fase 4 · paso 4.0b). Consulta pura: pregunta a
+        // `mayReserve()`, que NO consume ficha del limitador — usar `admitReservation()` aquí haría
+        // que pasar dos veces por la cesta impidiera confirmar la segunda compra del minuto.
+        // Sin parámetros a propósito: la única fuente de identidad es el guard.
+        Route::get('/me/reservation-eligibility', MeReservationEligibilityController::class)
+            ->name('me.reservation-eligibility.show');
 
         // ── Pedido y cobro (paso 4c) ──────────────────────────────────────────────────────────
         // Autenticado y acotado al titular por el guard: ninguna de las tres rutas acepta un

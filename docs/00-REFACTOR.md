@@ -400,6 +400,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       De regalo, una fuga menor cerrada: el login solo descartaba el desenlace «confirmado» al
       cambiar de titular, así que a Bob podía aparecerle el «pago denegado» de Alice.
       Suite **2479 verde**; los 14 tests que siembran esas claves a mano siguen pasando sin tocarse.
+- [ ] **Paso 4.0b — los huecos de API** (EN CURSO, 2026-08-13; diseño en `sidebar-spa.md` §4.4 v3,
+      hecho por cinco agentes en paralelo y revisado en coherencia). **1 de 5 cerrado**:
+      `GET /me/reservation-eligibility`, el aviso temprano de «¿puedo reservar?» que la web tiene
+      desde siempre y la API no. Va primero porque su guarda protege a los otros cuatro:
+      `admitReservation`/`admitPaymentRetry` —las variantes que CONSUMEN ficha— quedan prohibidas
+      fuera de `app/Domain`. Sin eso, el error de «contar pantallas en vez de reservas» que el paso 2
+      de Fase 3 ya pagó una vez volvería con el primer endpoint que preguntara por elegibilidad.
+      Nace `Http\Api\AdmissionCodeMap`: el código público (`too_many_pending_orders`) NO es la
+      constante del dominio (`too_many_pending`), y el `match` que traducía vivía privado en un
+      controlador. Verificado por mutación: cambiar `mayReserve` por `admitReservation` —dos
+      palabras— deja **dos** guardas en rojo, la de conducta y la de arquitectura.
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del

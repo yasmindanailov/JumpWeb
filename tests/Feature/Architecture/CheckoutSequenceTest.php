@@ -47,7 +47,18 @@ class CheckoutSequenceTest extends TestCase
      *
      * @var list<string>
      */
-    private const FORBIDDEN_METHODS = ['createPendingOrder', 'releaseAfterFailedPaymentStart'];
+    private const FORBIDDEN_METHODS = [
+        'createPendingOrder', 'releaseAfterFailedPaymentStart',
+        // Fase 4 · paso 4.0b. Las dos variantes de la admisión que **CONSUMEN** ficha del limitador.
+        // Fuera del dominio solo se puede PREGUNTAR (`mayReserve()`), que no gasta nada.
+        //
+        // No es una precaución teórica: el paso 2 de Fase 3 ya pagó este error una vez —«el
+        // limitador contaba pantallas en vez de reservas», y la segunda compra del minuto se
+        // bloqueaba—, y el endpoint de elegibilidad que estrena este paso es exactamente el sitio
+        // donde volvería a cometerse, porque cambiar `mayReserve` por `admitReservation` son dos
+        // palabras y el test de endpoint feliz seguiría en verde.
+        'admitReservation', 'admitPaymentRetry',
+    ];
 
     /**
      * Excepciones CON NOMBRE, al estilo de las baselines de `ModuleBoundariesTest`: explícitas,
