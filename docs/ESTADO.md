@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2467 en verde** (9567 aserciones, `--parallel` ~63 s) · Pint limpio ·
+- Suite **2470 en verde** (9575 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -88,11 +88,33 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
-**Fase 4 — la SPA del sidebar.** No queda ninguna decisión del owner bloqueando: la de
-`PaymentProvider` se tomó el 2026-08-13 (`DECISIONES #37`) y su mitad medida está hecha y
-verificada.
+**Fase 4 — la SPA del sidebar, EN CURSO.** Diseño aprobado en `docs/specs/sidebar-spa.md`
+(**v2**, tras revisión adversarial ×3 que declaró la v1 INSUFICIENTE). **Léelo antes de tocar
+nada**: la v1 tenía tres afirmaciones falsas que la hacían inaplicable, y §7 dice cuáles.
 
-**Fase 4 es el primer consumidor real de todo lo construido.** Antes de
+Decisiones del owner ya tomadas (2026-08-13): alcance = **solo el cajón** (`/mi-cuenta` sigue en
+Blade) · tema = **tokens + hoja de estilos por instalación** · dependencias = **Vue 3 + Pinia** ·
+la cesta se persiste **sin `event_data`** (RGPD: son nombre, edad y alergias de un menor) · la
+**tokenización de `site.css` sube a Fase 4** (paso 4.0c).
+
+**Hecho: paso 4.0a, primera mitad.** La landing ya no sabe qué motor mueve el cajón: la intención
+se declara con `$store.purchase.openWith({…})` y cada motor registra su adaptador
+(`SidebarSeamTest`, verificado por mutación). Escrito el contrato de `mode`/`identifying`, y fuera
+`alpinejs` de `package.json` (estaba declarado y no lo importaba nadie).
+
+**Sigue aquí — 4.0a, segunda mitad**: sacar el consumo de `purchase.confirmed_code`/`failed_code`/
+`verifying_code` de `Purchase::mount()`. Hoy es su **único** consumidor: sin ese `mount()`, el cajón
+se auto-abriría en cada página hasta que caducara la sesión, y la SPA no tendría cómo leerlos.
+⚠️ **Dato medido el 2026-08-13 que condiciona el diseño**: `mount()` **NO corre en la petición del
+layout** —corre en la del `lazy`—, así que hoy hay DOS consumidores en DOS peticiones (el layout
+mira `session()->has()` para `data-purchase-open`; `mount()` lee y olvida después). Pasar el
+desenlace como prop del componente `lazy` funciona, pero **adelanta el olvido a la primera
+petición**: es un cambio de conducta en el camino del pago y hay que probarlo, no asumirlo.
+
+Luego: **4.0b** los cinco huecos de API (§4.4 del spec; el más gordo son los complementos
+RESUELTOS) · **4.0c** tokenizar `site.css` · **4.1** cimientos SPA.
+
+**Contexto de la API que sigue vigente.** Antes de
 escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.terdecies: son setenta y tres
 puntos MEDIDOS al implementar la API, y varios son trampas que la SPA va a pisar. Los tres que más:
 - ⚠️ **`Origin`/`Referer` de un dominio *stateful* hacen falta en TODAS las peticiones**, no solo en
@@ -180,6 +202,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2467** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2470** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

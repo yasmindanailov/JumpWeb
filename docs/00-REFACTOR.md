@@ -370,9 +370,27 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA ⬜
-- [ ] SPA embebida (Vue 3 + Vite) para el sistema completo del sidebar: login/registro,
-      compra/reserva, gestión de cuenta y reservas. **Primer consumidor real de la API v1.**
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v2, revisión ×3); paso 4.0a a medias
+- [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
+      **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
+      implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
+      verificaron uno a uno contra el código. Los tres que la hacían inaplicable: «cero endpoints
+      nuevos» era falso (faltan cinco, dos bloqueantes), la vuelta de Redsys no tenía camino hacia
+      la SPA, y «el contrato son las clases» era falso —90 de 292 selectores son estructurales, así
+      que el contrato es el ÁRBOL—. Decisiones del owner: alcance = solo el cajón · tema = tokens +
+      hoja por instalación · Vue 3 + Pinia · cesta sin `event_data` (RGPD) · tokenizar `site.css`
+      dentro de esta fase.
+- [x] **Paso 4.0a (1.ª mitad) — la landing deja de conocer el motor** (2026-08-13): la intención de
+      entrada al cajón se declara (`$store.purchase.openWith({…})`) y cada motor registra su
+      adaptador; antes tres vistas despachaban eventos de Livewire que **con otro motor no fallan:
+      no hacen nada**. Red: `SidebarSeamTest`, verificado por mutación. Escrito el contrato de
+      `mode`/`identifying` (los consume gente de FUERA del cajón) y retirado `alpinejs` de
+      `package.json`, que estaba declarado sin que nadie lo importara. Suite **2470 verde**.
+- [ ] **Paso 4.0a (2.ª mitad)** — sacar el consumo de los tres códigos de la vuelta de Redsys de
+      `Purchase::mount()`, hoy su único consumidor. ⚠️ Medido: `mount()` **no corre en la petición
+      del layout** sino en la del `lazy`, así que hay dos consumidores en dos peticiones.
+- [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
+      login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
       instalación para poder convivir/comparar).
 - [ ] Retirar `Purchase.php` + puente Alpine frágil cuando la paridad esté validada.
