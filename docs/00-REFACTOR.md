@@ -174,7 +174,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `LEGACY`/`PENDING`/`DEFERRED` vacías, `SEAM` solo con costura documentada; barrido de
       `App\Support`/`App\Models` a **cero**. Suite 2184 verde.
 - [x] **God-class: fuera del alcance de Fase 2, y así estaba spec'ado** (`modulos-dominio.md`
-      §2). `Livewire/Tickets/Purchase.php` (2.049 líneas) muere con la SPA en **Fase 4** (ya
+      §2). `Livewire/Tickets/Purchase.php` (1.859 líneas, medidas el 2026-08-13; la cifra 2.049 que figuraba aquí estaba inflada) muere con la SPA en **Fase 4** (ya
       listado allí); `Filament/.../ViewOrder.php` (5.028 líneas) es capa de entrega y no se tocó
       — Fase 2 solo documentó sus costuras. Lo que SÍ hizo Fase 2 con `Purchase`: cortar la
       dependencia INVERSA (`OrderCreator` ya no lo importa, paso 6). Sigue vivo en `DEUDA.md`.
