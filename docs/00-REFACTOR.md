@@ -257,8 +257,12 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             dejaba tokens **huérfanos** (`personal_access_tokens` es morph y no tiene FK,
             verificado). Guarda de arquitectura que prohíbe una sexta copia + `INVARIANTES
             RGPD-06`. Hecho ANTES de que exista un token emitido. Suite **2302 verde**.
-      - [ ] 3b — extraer `Login` a Identity (los DOS limitadores de `SEC-06`) + `POST auth/login`
-            y `auth/logout` sobre la sesión stateful de Sanctum.
+      - [x] **3b — SESIÓN POR API** (2026-08-13, `DECISIONES #30`): `Identity\Services\PasswordLogin`
+            (los DOS limitadores de `SEC-06`, credenciales, `last_login_at`) + `POST auth/login` y
+            `auth/logout` sobre la sesión stateful; la web lo consume desde el mismo commit.
+            `SEC-06` verificado POR MUTACIÓN en las tres capas. Dos hallazgos: sin `Origin`
+            *stateful* no hay sesión y el login respondía **500** (guarda + 400), y el logout no
+            limpiaba los guards ya resueltos. Suite **2320 verde**.
       - [ ] 3c — `Register` (Turnstile, honeypot, consents, pay-first) + recuperación de contraseña.
       - [ ] La EMISIÓN de tokens Bearer (`POST auth/tokens`) viaja a **Fase 6**, con la app que los
             consuma (`DECISIONES #29`); la infraestructura ya está lista.

@@ -12,6 +12,7 @@
 return [
     'errors' => [
         'unauthenticated' => 'Vous devez vous connecter pour continuer.',
+        'invalid_credentials' => 'L’adresse e-mail ou le mot de passe n’est pas correct.',
         'unauthorized' => "Vous n'avez pas l'autorisation d'effectuer cette action.",
         'not_found' => "Nous n'avons pas trouvé ce que vous cherchez.",
         'method_not_allowed' => "Cette opération n'est pas disponible à cette adresse.",

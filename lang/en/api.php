@@ -12,6 +12,7 @@
 return [
     'errors' => [
         'unauthenticated' => 'You need to sign in to continue.',
+        'invalid_credentials' => 'The email or password is not correct.',
         'unauthorized' => "You don't have permission to do this.",
         'not_found' => "We couldn't find what you're looking for.",
         'method_not_allowed' => 'That operation is not available at this address.',

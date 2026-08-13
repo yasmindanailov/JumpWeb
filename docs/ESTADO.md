@@ -4,9 +4,9 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2 y 3a CERRADOS;
-toca el paso 3b (sesión por API).**
-- Suite **2302 en verde** (8664 aserciones, `--parallel` ~62 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2, 3a y 3b CERRADOS;
+toca el paso 3c (registro y contraseña por API).**
+- Suite **2320 en verde** (8808 aserciones, `--parallel` ~61 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -47,7 +47,7 @@ toca el paso 3b (sesión por API).**
   dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
   `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2 y 3a — `DECISIONES #24`, `#26`–`#29`)
+## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2, 3a y 3b — `DECISIONES #24`, `#26`–`#30`)
 Cimientos + la lectura de la cuenta + el catálogo + el dominio preparado para vender por API. Lo
 que existe y funciona (verificado con `curl`, con la suite y **contra MySQL real** ejerciendo el
 pipeline HTTP completo):
@@ -97,45 +97,53 @@ pipeline HTTP completo):
   limitador contaba pantallas en vez de reservas —la 2.ª compra del mismo minuto se bloqueaba con
   el tope en 3—. Las tres asimetrías las resolvió el owner (`DECISIONES #28b–d`).
 
+- **Paso 3a — REVOCACIÓN de credenciales**: `User::revokeAllAccess()` / `revokeOtherAccess()` es el
+  punto ÚNICO que invalida sesiones **y** tokens de API. El hueco era de CINCO sitios, no de cuatro:
+  el quinto era la limpieza de go-live, que dejaba tokens **huérfanos** (`personal_access_tokens` es
+  morph y no tiene FK). `AccessRevocationTest` impide una sexta copia. `INVARIANTES RGPD-06`.
+- **Paso 3b — SESIÓN por API**: `POST auth/login` (200 con el perfil) y `POST auth/logout` (204)
+  sobre la sesión stateful de Sanctum. La regla vive en `Identity\Services\PasswordLogin`, que
+  consume también el modal de la web: los DOS limitadores de `SEC-06` no tienen dos copias, y eso
+  está **verificado por mutación** en las tres capas.
+  ⚠️ **Para la SPA de Fase 4**: `Origin`/`Referer` de un dominio *stateful* hace falta en TODAS las
+  peticiones, no solo en el login — sin él no hay sesión y un `GET /me` da 401 aunque la cookie sea
+  válida (verificado con `curl`).
+
 ## ▶ Próximo paso
-**Fase 3 · paso 3b — SESIÓN POR API** (spec §4.2 y §9): extraer `Livewire\Auth\Login` a un
-servicio de Identity y publicar `POST auth/login` y `POST auth/logout` sobre la sesión stateful de
-Sanctum (cookie + CSRF), que es lo que consumirá la SPA de Fase 4.
+**Fase 3 · paso 3c — REGISTRO y CONTRASEÑA por API** (spec §4.2 y §9): `POST auth/register`,
+`password/forgot`, `password/reset` y `email/resend`, extrayendo antes lo que sea dominio de
+`Livewire\Auth\Register`, `ForgotPassword` y `ResetPassword`.
 
 **Lo medido el 2026-08-13, para no redescubrirlo:**
-- **Los DOS limitadores de `SEC-06` son `private const` de `Login`**: `MAX_ATTEMPTS = 5` (clave
-  `email|ip`) y `MAX_ATTEMPTS_PER_IP = 30` (solo-IP, anti-spraying distribuido). **Los dos** tienen
-  que viajar al servicio: una API que reimplemente solo el primero reabre el credential-stuffing
-  distribuido que el segundo cubre —1 intento por (cuenta, IP) nunca acumula 5 en ninguna clave—.
-  Ojo al detalle: la clave compuesta se limpia al acertar la contraseña, la de IP **no** (es
-  compartida entre usuarios tras el mismo NAT).
-- **Qué NO debe viajar al servicio**: el anti-cesta-cruzada (`purchase.user_id` en sesión, hallazgo
-  D) y el `Session::regenerate()` son efectos de la sesión WEB. Criterio del spec §4.6.3, ya
-  estrenado en el paso 2: el servicio devuelve un veredicto y los efectos los pone el llamante.
-- `Login` hace además `last_login_at` y dos `Log::info` (`auth.login`, `auth.login_failed`) que sí
-  son del servicio, y lanza `ValidationException` con la clave `_global` para el lockout —eso es
-  presentación: en la API será un `429` con su código.
-- El registro (`Register`, 338 líneas: honeypot, 3 limitadores, Turnstile, anti-enumeración con
-  decisión de la clienta, transacción con consents+rol, rama pay-first) y la recuperación de
-  contraseña quedan para el **paso 3c**.
-- ⚠️ **La EMISIÓN de tokens Bearer NO entra aquí**: viaja a Fase 6 con la app que los consuma
-  (`DECISIONES #29`). La revocación ya está hecha y probada (paso 3a), así que cuando llegue el
-  emisor no hay que acordarse de nada.
-- `DEUDA.md` tiene una entrada emparentada: el bypass de mantenimiento para staff no funciona con
-  Bearer (`EnsureSiteAvailable` resuelve el bypass con el guard de sesión, porque corre antes del
-  `auth:` de ruta). Con la emisión aplazada, sigue sin morder.
+- **`Register` es el más denso de los cuatro** (338 líneas) y lleva decisiones de PRODUCTO, no solo
+  reglas: honeypot → pantalla de éxito falsa; **tres** limitadores (por IP 5/min, por email
+  hasheado 3/hora y el propio Turnstile); y una **decisión explícita de la clienta** que rompe la
+  anti-enumeración a propósito —si el correo ya existe se le dice, para priorizar conversión sobre
+  ocultar qué correos hay—. Eso NO es un descuido que el refactor deba «arreglar»: si la API lo
+  cambiara por su cuenta, las dos superficies dirían cosas distintas.
+- La rama **pay-first** de `Register` (`embedded`) inicia sesión sin verificar el correo y avisa al
+  sidebar; es estado de sesión web y se queda fuera del servicio, como el anti-cesta-cruzada del 3b.
+- El alta crea cuenta + rol + consents en UNA transacción, con los emails FUERA de ella (un fallo de
+  SMTP no revierte el alta). Ese reparto hay que conservarlo tal cual.
+- `ResetPassword` ya llama a `User::revokeAllAccess()` (paso 3a) y aplica no-enumeración: un correo
+  inexistente y un token inválido dan el MISMO mensaje. El limitador propio (6/min por IP) está ahí
+  porque la acción Livewire NO pasa por el `throttle` de la ruta GET; en la API sí habrá ruta POST,
+  así que hay que decidir si se conserva el limitador del servicio, el de la ruta, o ambos.
+- El anti-bot **Turnstile es data-driven y no-op sin claves** (`DECISIONES #23`): la SPA es un
+  navegador y lo exigirá igual que la web. No hay nada que relajar.
 
-**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.quinquies** («lo que el código
-enseñó»): veintisiete puntos medidos en los pasos 0, 1a, 1b, 2 y 3a. Los que más ahorran tiempo en
-el 3b: la validación de contrato **hay que pedirla** con `assertValidResponse()` (§10.ter 16); todo
-«esto puede ser nulo» en OpenAPI 3.0 hay que ejercerlo con un test (15); y antes de unificar dos
-copias, ponerlas lado a lado y listar sus diferencias, porque cada una es una decisión de producto
-(19).
+**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.sexies** («lo que el código
+enseñó»): treinta y dos puntos medidos en los pasos 0, 1a, 1b, 2, 3a y 3b. Los que más ahorran
+tiempo en el 3c: la validación de contrato **hay que pedirla** con `assertValidResponse()`
+(§10.ter 16); un esquema de PETICIÓN no se puede exigir como uno de respuesta (32); antes de
+unificar dos copias, ponerlas lado a lado y listar sus diferencias (19); y cuando una guarda de
+arquitectura protesta por código nuevo, la primera hipótesis es que el sitio correcto ya está
+decidido (31).
 
-Después: 3c (registro y contraseña por API) · paso 4 (el dinero: quote, disponibilidad con cesta,
-`POST orders`, reintento y `payment-status` con estados reales) · paso 5 (post-form). El corte
-completo está en el spec §9. **El paso 4 ya tiene el terreno preparado**: consume
-`ReservationAdmission` + `OrderCreator` + `PaymentInitiator`, sin reimplementar ninguna regla.
+Después: paso 4 (el dinero: quote, disponibilidad con cesta, `POST orders`, reintento y
+`payment-status` con estados reales) · paso 5 (post-form). El corte completo está en el spec §9.
+**El paso 4 ya tiene el terreno preparado**: consume `ReservationAdmission` + `OrderCreator` +
+`PaymentInitiator`, sin reimplementar ninguna regla.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer admin de
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
@@ -151,6 +159,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2302** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2320** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

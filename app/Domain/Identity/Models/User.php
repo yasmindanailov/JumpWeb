@@ -134,6 +134,28 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     }
 
     /**
+     * Revoca ÚNICAMENTE el token con el que se hace esta petición, si lo hay.
+     *
+     * Es el «cerrar sesión» de un cliente por Bearer: cierra su propia credencial y no toca las
+     * demás. Vive aquí, y no en el controlador que lo usa, por la regla del paso 3a —invalidar
+     * credenciales tiene un solo sitio—; `ApiBoundariesTest` lo señaló en cuanto se intentó lo
+     * contrario, que es exactamente para lo que está esa guarda.
+     *
+     * Devuelve `false` cuando la petición no viene por token (sesión de navegador): ahí no hay
+     * ninguno que revocar y quien llama decide qué hacer con la sesión.
+     */
+    public function revokeCurrentAccessToken(): bool
+    {
+        $token = $this->currentAccessToken();
+
+        if (! $token instanceof PersonalAccessToken) {
+            return false;
+        }
+
+        return (bool) $token->delete();
+    }
+
+    /**
      * Borra las filas de `sessions` del titular. Solo aplica con el driver de base de datos: con
      * `array`/`file`/`redis` no hay tabla que purgar y el resto de la invalidación (rotación del
      * `remember_token`, `logoutOtherDevices`) sigue haciendo su trabajo.

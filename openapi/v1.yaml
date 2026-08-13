@@ -35,6 +35,11 @@ servers:
     description: La versión va en la URL. `v1` es evolutiva hasta el primer cliente móvil (Fase 6).
 
 tags:
+  - name: Sesión
+    description: |
+      Abrir y cerrar sesión. La SPA de primera parte usa la **cookie de sesión de Sanctum con
+      CSRF**: pide `GET /sanctum/csrf-cookie` y envía el token en `X-XSRF-TOKEN`. La EMISIÓN de
+      tokens Bearer llega en Fase 6, con la app que los consuma.
   - name: Cuenta
     description: El usuario autenticado y sus datos.
   - name: Catálogo
@@ -44,6 +49,82 @@ tags:
       depende de la fecha y de la selección, y lo sirven `availability/*` y `orders/quote`.
 
 paths:
+
+  /auth/login:
+    post:
+      tags: [Sesión]
+      operationId: login
+      summary: Abrir sesión
+      description: |
+        Autentica con correo y contraseña y devuelve el perfil, con la misma forma que `GET /me`:
+        quien acaba de identificarse necesita justo eso, y devolverlo ahorra una segunda petición.
+
+        **Anti-enumeración** (`SEC-06`): unas credenciales que no casan devuelven siempre
+        `invalid_credentials`, sin distinguir si el correo existe. Lo que sí se distingue es el
+        limitador, que no revela nada de la cuenta y sí le dice a un cliente legítimo cuánto
+        esperar: hay un tope por (correo, IP) y otro por IP sola —este último es el que corta un
+        barrido de muchas cuentas desde el mismo origen—.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión abierta. El cuerpo es el perfil del usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Las credenciales no casan (`invalid_credentials`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '419':
+          description: Token CSRF ausente o caducado (modo SPA). Vuelve a pedir `GET /sanctum/csrf-cookie`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/logout:
+    post:
+      tags: [Sesión]
+      operationId: logout
+      summary: Cerrar sesión
+      description: |
+        Cierra **la credencial con la que se llama**, y solo esa: la sesión si viene por cookie, el
+        token si viene por Bearer. Cerrar las demás es otra operación distinta («cerrar sesión en
+        los demás dispositivos»).
+
+        Responde `204` sin cuerpo: no hay nada que contar.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Sesión cerrada.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '419':
+          description: Token CSRF ausente o caducado (modo SPA).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
 
   /catalog/zones:
     get:
@@ -330,6 +411,7 @@ components:
                 quitarlo es incompatible y exige `v2`. Debe coincidir con `App\Http\Api\ApiErrorCode`.
               enum:
                 - unauthenticated
+                - invalid_credentials
                 - unauthorized
                 - not_found
                 - method_not_allowed
@@ -935,3 +1017,19 @@ components:
           description: |
             Viene seleccionado de partida (el miembro por defecto de un grupo, o un obligatorio
             suelto). Lo decide el dominio para que ningún cliente lo adivine.
+
+    LoginRequest:
+      type: object
+      description: Credenciales de acceso. El correo se normaliza en servidor (minúsculas y sin espacios).
+      required: [email, password]
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        remember:
+          type: boolean
+          description: Mantener la sesión abierta más allá del cierre del navegador.

@@ -735,3 +735,49 @@ verde · **las cinco vías verificadas por mutación** (revertir la revocación 
 rojo; reintroducir una purga de sesiones a mano en un quinto fichero pone en rojo la guarda, con
 fichero y línea) · revocación ejercida **contra MySQL real**: 2 tokens antes de anonimizar, 0
 después y 0 filas huérfanas en la tabla.
+
+## #30 · 2026-08-13 · Fase 3 paso 3b: sesión por API, con `SEC-06` heredado y no reimplementado
+`Identity\Services\PasswordLogin` recoge lo que era dominio dentro de `Livewire\Auth\Login` —los
+DOS limitadores de `SEC-06`, la comprobación de credenciales, `last_login_at` y el rastro en el
+log— y nacen `POST /api/v1/auth/login` y `auth/logout` sobre la sesión stateful de Sanctum. La web
+consume el servicio desde el mismo commit. Detalle en `api-v1.md` §10.sexies.
+
+**(a) Los DOS limitadores viajan juntos, y por eso se extraen.** `MAX_ATTEMPTS = 5` por (correo, IP)
+y `MAX_ATTEMPTS_PER_IP = 30` por IP sola. El segundo es el que frena el password-spraying: un
+intento por cuenta nunca acumula cinco en la clave compuesta, así que una API que copiara solo el
+primero —el error natural al reimplementar— dejaría pasar el barrido entero sin que nada lo
+delatara. Verificado por mutación: quitar el de IP deja en rojo los tres testigos (servicio, web y
+API). La asimetría de limpieza también se conserva y ahora tiene test propio: al acertar se limpia
+la clave del titular, **nunca la de la IP** —es compartida, y limpiarla dejaría que un login válido
+intercalado reiniciara el contador del atacante—.
+
+**(b) Qué NO viajó al servicio**: `Session::regenerate()` y el anti-cesta-cruzada
+(`purchase.user_id`, hallazgo D). Son efectos de la sesión WEB; un cliente de API no tiene cesta en
+sesión. Criterio del spec §4.6.3, el mismo del paso 2.
+
+**(c) `invalid_credentials`, código público nuevo.** Se separa de `unauthenticated` porque el
+cliente los programa distinto («vuelve a intentarlo» vs «identifícate otra vez»), y **nunca**
+distingue si el correo existe: hay test que compara byte a byte la respuesta de «contraseña
+incorrecta» y la de «correo inexistente».
+
+**(d) Sin origen *stateful* no hay sesión, y el login respondía 500.** Hallazgo real:
+`EnsureFrontendRequestsAreStateful` solo monta `StartSession` si la petición trae `Origin`/`Referer`
+de un dominio declarado, así que un cliente mal configurado llegaba al controlador sin sesión y
+`$request->session()` reventaba. Ahora hay guarda explícita (400) antes de validar y antes de tocar
+el limitador. **Nota para Fase 4**: el encabezado hace falta en TODAS las peticiones de la SPA, no
+solo en el login — un `GET /me` sin `Origin` da 401 aunque la cookie sea válida (verificado).
+
+**(e) El logout cierra también los guards ya resueltos.** `auth('web')->logout()` deja `web` limpio
+pero el guard de la petición (`sanctum`) seguía cacheando al usuario (medido). Se añade
+`Auth::forgetGuards()`.
+
+**(f) La revocación del token del logout vive en `User`, no en el controlador.**
+`ApiBoundariesTest` marcó el `$token->delete()` como escritura de dominio en la capa HTTP y tenía
+razón: el paso 3a ya había decidido dónde va eso. Nace `User::revokeCurrentAccessToken()`.
+
+**Verificación empírica**: suite **2320 verde** (8808 aserciones) · Pint limpio · `docs-check`
+verde · `SEC-06` **verificado por mutación** en las tres capas · **ciclo completo ejercido con
+`curl` y tarro de cookies contra el servidor real**: `GET /sanctum/csrf-cookie` → `POST auth/login`
+(200 con el perfil) → `GET me` (200) → `POST auth/logout` (204) → `GET me` (**401**). Ese ciclo la
+suite no lo puede probar: corre con `SESSION_DRIVER=array` y la sesión no viaja entre peticiones
+(`SUITE-06`), así que un `/me` posterior daría 200 por el guard cacheado, no por la cookie.

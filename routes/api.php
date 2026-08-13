@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -28,6 +29,22 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::name('api.v1.')->group(function (): void {
+
+    // ── Sesión (paso 3b) ──────────────────────────────────────────────────────────────────────
+    // Modo SPA de Sanctum: cookie de sesión + CSRF, nunca un token en `localStorage`. El CSRF lo
+    // monta `EnsureFrontendRequestsAreStateful` para los orígenes declarados *stateful*, así que
+    // aquí no se declara nada al respecto — y por eso el login NO puede vivir fuera del grupo `api`.
+    //
+    // El limitador de `SEC-06` (por email+IP y por IP sola) está DENTRO de
+    // `Identity\Services\PasswordLogin`, no en la ruta: es la misma protección que aplica la web,
+    // no una copia con otros números. El `throttle:api` del grupo cuenta además cada intento,
+    // porque esta ruta es pública (spec §10, punto 2).
+    Route::post('/auth/login', [AuthSessionController::class, 'login'])->name('auth.login');
+    // El logout se declara con `auth:sanctum`: cerrar sesión sin tenerla no es una operación, y
+    // dejarlo público daría una respuesta idéntica a quien no ha entrado nunca.
+    Route::post('/auth/logout', [AuthSessionController::class, 'logout'])
+        ->middleware('auth:sanctum')
+        ->name('auth.logout');
 
     // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
     // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir

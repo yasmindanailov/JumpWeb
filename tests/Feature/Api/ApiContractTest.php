@@ -47,6 +47,11 @@ class ApiContractTest extends TestCase
         // que el endpoint ignora: `?page=2` no haría nada. Que estén o no ES la señal de si se
         // puede paginar; `total` va siempre, para que leerlo no exija saberlo.
         'ListMeta' => ['current_page', 'last_page', 'per_page'],
+        // Esquema de PETICIÓN, no de respuesta: un cuerpo sí puede tener campos legítimamente
+        // opcionales. `remember` por defecto es `false`, y exigirlo obligaría a todo cliente a
+        // enviarlo. Lo que sigue mordiendo aquí es `additionalProperties: false`, que es lo que
+        // impide colar un campo que el servidor ignoraría en silencio.
+        'LoginRequest' => ['remember'],
     ];
 
     /** @var array<string, mixed>|null */

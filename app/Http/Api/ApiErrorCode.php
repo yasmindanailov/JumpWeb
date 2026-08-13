@@ -23,6 +23,16 @@ enum ApiErrorCode: string
     /** 401 — no hay identidad (sin cookie de sesión ni Bearer válido). */
     case Unauthenticated = 'unauthenticated';
 
+    /**
+     * 401 — las credenciales enviadas no casan. **Nunca dice cuál de las dos falló** (`SEC-06`,
+     * anti-enumeración): distinguir «esa cuenta no existe» de «esa contraseña no es» convierte el
+     * login en un oráculo de qué correos están registrados.
+     *
+     * Se separa de `Unauthenticated` porque el cliente los programa distinto: uno significa
+     * «vuelve a intentarlo» y el otro «tu sesión ya no vale, identifícate otra vez».
+     */
+    case InvalidCredentials = 'invalid_credentials';
+
     /** 403 — hay identidad pero no permiso (incluye titularidad: anti-IDOR). */
     case Unauthorized = 'unauthorized';
 

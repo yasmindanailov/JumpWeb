@@ -14,6 +14,7 @@
 return [
     'errors' => [
         'unauthenticated' => 'Necesitas iniciar sesión para continuar.',
+        'invalid_credentials' => 'El correo o la contraseña no son correctos.',
         'unauthorized' => 'No tienes permiso para hacer esto.',
         'not_found' => 'No hemos encontrado lo que buscas.',
         'method_not_allowed' => 'Esta operación no está disponible en esta dirección.',

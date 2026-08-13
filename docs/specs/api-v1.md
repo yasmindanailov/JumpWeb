@@ -316,8 +316,10 @@ Se corrige:
      cierra el hueco de §4.2 antes de que exista un token emitido. Punto único
      (`User::revokeAllAccess()`/`revokeOtherAccess()`) + guarda de arquitectura + los tokens
      huérfanos de la limpieza de go-live. **Lo que el código enseñó: §10.quinquies.**
-   - ⬜ **3b**: extraer `Login` a Identity (con los DOS limitadores de `SEC-06`) y publicar
-     `POST auth/login` y `auth/logout` sobre la sesión stateful de Sanctum.
+   - ✅ **3b** (2026-08-13, `DECISIONES #30`): `Identity\Services\PasswordLogin` (los DOS
+     limitadores de `SEC-06`, credenciales, `last_login_at`) + `POST auth/login` y `auth/logout`
+     sobre la sesión stateful. La web lo consume desde el mismo commit. **Lo que el código enseñó:
+     §10.sexies.**
    - ⬜ **3c**: `Register` (Turnstile, honeypot, consents, pay-first) y la recuperación de
      contraseña por API.
    Desbloqueado desde `DECISIONES #23`; la EMISIÓN de tokens viaja a Fase 6 (`#29`).
@@ -532,3 +534,43 @@ emisor de tokens, así que ninguno de estos cinco huecos es explotable: es exact
 cerrarlos, sin urgencia, con tests y sin tocar nada en producción. Hacerlo junto con la emisión
 —como planteaba la v2 del spec— habría metido en el mismo commit la puerta y su cerradura, y
 cualquier prisa se habría llevado por delante la segunda.
+
+### 10.sexies Lo que el código enseñó — paso 3b (2026-08-13)
+
+**28. La sesión de la SPA depende de un encabezado, y sin él el endpoint reventaba con 500.**
+`EnsureFrontendRequestsAreStateful` solo monta `StartSession` cuando la petición viene de un origen
+declarado *stateful* — lo mira en `Origin`/`Referer`—. Un navegador los envía siempre; un `curl`,
+una app mal configurada o un test, no. Sin sesión, `$request->session()` lanza «Session store not
+set on request» y el login respondía **500** a un problema de integración perfectamente
+diagnosticable. Ahora hay una guarda explícita que devuelve 400 antes de validar nada y antes de
+tocar el limitador. **Consecuencia para quien integre la SPA (Fase 4)**: el encabezado hace falta
+en TODAS las peticiones, no solo en el login — se comprobó con `curl`, y un `GET /me` sin `Origin`
+devuelve 401 aunque la cookie de sesión sea válida.
+
+**29. `SESSION_DRIVER=array` hace imposible probar el ciclo de sesión en la suite.** Dos peticiones
+del mismo test no comparten sesión, así que un `GET /me` después de un login responde 200 **por el
+guard que quedó cacheado en memoria**, no porque la cookie valga: un falso positivo que además
+haría pasar un `logout` roto. Los tests aseveran solo lo observable dentro de la petición
+(`assertGuest()` + el guard de la petición) y el ciclo entero —entrar, usar, salir, ya no entrar—
+se verificó con `curl` y su tarro de cookies contra el servidor real. **Regla que sale de aquí**:
+antes de escribir un test de sesión multi-petición, comprobar qué driver usa la suite.
+
+**30. Cerrar sesión no basta con cerrar la sesión.** `auth('web')->logout()` deja el guard `web`
+limpio, pero el guard que atendió la petición (`sanctum`, un `RequestGuard`) sigue cacheando al
+usuario: medido, `auth('sanctum')->check()` devolvía `true` justo después del logout. En producción
+no se nota —cada petición es un proceso nuevo—, pero cualquier cosa que corra después dentro de la
+misma petición vería a un usuario ya deslogueado. Se cierra con `Auth::forgetGuards()`.
+
+**31. La guarda de frontera acertó, y el sitio correcto ya existía.** El primer borrador del
+`logout` borraba el token con `$token->delete()` en el controlador; `ApiBoundariesTest` lo marcó
+como escritura de dominio en la capa HTTP. No era un falso positivo: revocar una credencial es
+justo lo que el paso 3a había centralizado en `User`, así que la corrección fue mover el método
+(`revokeCurrentAccessToken()`), no añadir una excepción. **Cuando una guarda de arquitectura
+protesta por código nuevo, la primera hipótesis es que el sitio correcto ya está decidido.**
+
+**32. Un esquema de PETICIÓN no se puede exigir como uno de respuesta.** La guarda de estrictez del
+contrato reclama `required` completo, que en una respuesta es lo que hace morder la prueba por
+mutación. En un cuerpo de petición, en cambio, hay campos legítimamente opcionales (`remember`).
+Se resolvió con una excepción con nombre y su porqué, conservando `additionalProperties: false`,
+que es lo que de verdad importa ahí: impedir que un cliente cuele un campo que el servidor
+ignoraría en silencio.
