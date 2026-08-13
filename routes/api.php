@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
+use App\Http\Controllers\Api\V1\BookingStatusController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
@@ -79,6 +80,15 @@ Route::name('api.v1.')->group(function (): void {
     // Lo que cambia mientras el cliente navega NO va aquí: la pausa de reservas vive en su propio
     // endpoint, porque un snapshot de arranque mentiría en cuanto la dueña accionara el interruptor.
     Route::get('/config', ConfigController::class)->name('config.show');
+
+    // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
+    // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo
+    // existía por API como el código de un 409: el cliente se enteraba DESPUÉS de intentar crear el
+    // pedido, mientras que la web sustituye el flujo por un aviso con el teléfono del negocio.
+    //
+    // Va SEPARADO de `/config` porque es ESTADO y se relee: la dueña acciona el interruptor con
+    // clientes navegando, y un snapshot de arranque mentiría desde ese segundo.
+    Route::get('/booking/status', BookingStatusController::class)->name('booking.status');
 
     // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
     // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir

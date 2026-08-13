@@ -116,4 +116,38 @@ class MaintenanceSettings
 
         return $override !== '' ? $override : (string) __('tickets.paused.title', [], $locale);
     }
+
+    /**
+     * El aviso COMPLETO de «reservas en pausa»: título, mensaje y canales de contacto (Fase 4 ·
+     * paso 4.0b).
+     *
+     * Existe porque hay dos consumidores —el sidebar y `GET /api/v1/booking/status`— y la parte que
+     * faltaba por centralizar eran los canales: el título y el mensaje ya salían de aquí, pero el
+     * teléfono y el WhatsApp los normalizaba a mano la clase de UI.
+     *
+     * ⚠️ **La normalización del teléfono se conserva EXACTAMENTE como estaba** (`\s+`), y no se
+     * unifica con la otra que existe en el sistema (`[^0-9+]`, en el composer global de vistas)
+     * aunque las dos lean el mismo ajuste. Unificarlas **cambiaría el `tel:` renderizado** en
+     * cualquier instalación cuyo teléfono lleve puntuación, y eso es una decisión de producto, no
+     * un refactor. La divergencia queda anotada en `DEUDA.md` para que sea visible en vez de vivir
+     * escondida en dos ficheros.
+     */
+    public static function reservationNotice(?string $locale = null): ReservationNotice
+    {
+        $locale = $locale ?: app()->getLocale();
+
+        $phone = trim((string) Setting::value('contact.phone', ''));
+        $phoneTel = (string) preg_replace('/\s+/', '', $phone);
+        $whatsapp = (string) preg_replace('/\D/', '', (string) Setting::value('contact.whatsapp', ''));
+
+        return new ReservationNotice(
+            title: self::reservationTitle($locale),
+            message: self::reservationMessage($locale),
+            // `null` y no cadena vacía: «no hay canal» es un estado, no un texto vacío, y es lo que
+            // los dos consumidores preguntan para decidir si lo pintan.
+            phone: $phoneTel !== '' ? $phone : null,
+            phoneTel: $phoneTel !== '' ? $phoneTel : null,
+            whatsapp: $whatsapp !== '' ? $whatsapp : null,
+        );
+    }
 }

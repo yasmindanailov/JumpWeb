@@ -201,7 +201,7 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 |---|---|---|---|
 | 1 ✅ | `GET /me/reservation-eligibility` | sesión/Bearer | **HECHO 2026-08-13.** El aviso temprano de `mayReserve()`, que **no consume ficha**. Sin parámetros: es media defensa anti-oráculo. Nace `Http\Api\AdmissionCodeMap` (el código público NO es la constante del dominio) y `admitReservation`/`admitPaymentRetry` quedan **prohibidos fuera de `app/Domain`** por `CheckoutSequenceTest` |
 | 2 ✅ | `GET /config` | público | **HECHO 2026-08-13.** Los cuatro ajustes de instalación. Los dos números viajan **con su operador en la descripción** (`total > umbral`, `líneas > tope`), y la URL de registro **saneada en servidor**: `SEC-07` sin escape de plantilla que lo remate |
-| 3 | `GET /booking/status` | público | La pausa de reservas y su aviso (título, mensaje y contactos), **traducidos** |
+| 3 ✅ | `GET /booking/status` | público | **HECHO 2026-08-13.** La pausa y su aviso, traducidos. Los canales van **a la vez, no en cascada** (verificado por mutación), y `contact_url` llega **ya decidido por el servidor** — es el último recurso, no «la página de contacto» |
 | 4 | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` | sesión/Bearer | El resumen del paso 6. Lo que no es PII amplía el esquema existente; **las respuestas del pack van en endpoint aparte** |
 | 5 | `POST /catalog/products/{product}/addons` | público | Los complementos RESUELTOS |
 
@@ -233,8 +233,13 @@ se le escaparía al cliente:
 - El tope de cesta (`>` en servidor, `>=` en la UI) y el re-tope de cantidad.
 
 **Es el único hallazgo de toda la revisión que, si se ignora, se descubre en producción y no en la
-suite.** Salidas: un endpoint de validación de línea, o transcribir `missingRequiredEventFields` a
-`machine.js` con test —incluido el caso `number`— y **firmarlo por escrito**. ⚠️ Decisión pendiente.
+suite.**
+
+✅ **[DECIDIDO] 2026-08-13 — el owner**: **endpoint**, no transcripción. La alternativa —copiar
+`missingRequiredEventFields` y su saneador a `machine.js`— es una segunda implementación de una
+regla de servidor, es decir deuda por definición, y además la que más caro sale de descubrir: el
+caso `number` («cinco» → vacío) no lo encuentra ninguna revisión de código, solo un cliente
+enfadado. Se cierra con los otros cinco, en su propio paso.
 
 #### 4.4.3 El presupuesto de PETICIONES, que es lo que se nota
 

@@ -298,6 +298,39 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /booking/status:
+    get:
+      tags: [Compra]
+      operationId: getBookingStatus
+      summary: ¿Se puede reservar online ahora?
+      description: |
+        Estado del interruptor de reservas online (#218) y el aviso que lo sustituye: título,
+        mensaje y canales de contacto, **ya traducidos** al idioma resuelto para la petición.
+
+        Sin esto, un cliente solo se entera de la pausa **después** de intentar crear el pedido, por
+        el 409 `reservations_paused` — mientras que la web sustituye el flujo entero por el aviso
+        antes de que el cliente elija nada.
+
+        **Es ESTADO, no configuración**, y por eso vive aquí y no en `GET /config`: el operador
+        acciona el interruptor con clientes navegando. Conviene releerlo al abrir el flujo de compra
+        y de nuevo al recibir un 409 `reservations_paused`.
+
+        ⚠️ Los canales se ofrecen **a la vez**, no en cascada: si hay teléfono y WhatsApp, se pintan
+        los dos. `contact_url` no es «la URL de contacto» sino **el último recurso**, y llega ya
+        decidido por el servidor —`null` cuando hay algún canal directo—, para que el cliente pinte
+        lo que no sea nulo sin evaluar ninguna condición.
+      responses:
+        '200':
+          description: Estado de las reservas online y su aviso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingStatus'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /catalog/zones:
     get:
       tags: [Catálogo]
@@ -1161,6 +1194,57 @@ components:
                 type: array
                 items:
                   type: string
+
+    BookingStatus:
+      type: object
+      additionalProperties: false
+      required: [reservations_paused, notice]
+      properties:
+        reservations_paused:
+          type: boolean
+          description: |
+            `true` cuando el operador ha pausado la reserva online. Mientras lo esté, `POST /orders`
+            y el reintento de cobro responden **409 `reservations_paused`**.
+
+            La pausa NO afecta al pedido manual del panel ni a los pagos ya iniciados: un cobro en
+            curso puede terminar.
+        notice:
+          type: object
+          additionalProperties: false
+          required: [title, message, phone, phone_tel, whatsapp, contact_url]
+          description: |
+            Qué enseñar en lugar del flujo. Viaja **siempre**, también con las reservas abiertas: la
+            forma de la respuesta no cambia con el estado, y todo lo que contiene es información
+            pública del negocio.
+          properties:
+            title:
+              type: string
+              description: Ya traducido, con el literal por defecto si el operador no lo ha traducido.
+            message:
+              type: string
+              description: Ídem. Nunca llega vacío.
+            phone:
+              type: string
+              nullable: true
+              description: Teléfono tal y como lo escribió el operador, para MOSTRARLO. `null` si no hay.
+            phone_tel:
+              type: string
+              nullable: true
+              description: El mismo teléfono listo para un enlace `tel:`. `null` si no hay.
+            whatsapp:
+              type: string
+              nullable: true
+              description: Número en dígitos, listo para `wa.me/{whatsapp}`. `null` si no hay.
+            contact_url:
+              type: string
+              format: uri
+              nullable: true
+              description: |
+                **Último recurso**, no «la página de contacto»: llega con valor **solo** cuando no
+                hay ningún canal directo (ni teléfono ni WhatsApp), y `null` cuando sí lo hay.
+
+                La regla de cuándo procede vive en el servidor a propósito, para que las distintas
+                superficies no puedan discrepar sobre ella.
 
     PublicConfig:
       type: object

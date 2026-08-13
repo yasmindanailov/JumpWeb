@@ -836,12 +836,16 @@ class Purchase extends Component
      */
     public function pausedContact(): array
     {
-        $phone = trim((string) Setting::value('contact.phone', ''));
+        // La composición vive en `Platform\Services\MaintenanceSettings::reservationNotice()` desde
+        // que `GET /api/v1/booking/status` es el segundo consumidor (Fase 4 · paso 4.0b). Aquí solo
+        // queda la forma de array —con cadena vacía en vez de `null`— que esta vista consume desde
+        // antes; muere con el componente en el paso 4.7.
+        $notice = MaintenanceSettings::reservationNotice();
 
         return [
-            'phone' => $phone,
-            'phone_tel' => preg_replace('/\s+/', '', $phone) ?? '',
-            'whatsapp' => preg_replace('/\D/', '', (string) Setting::value('contact.whatsapp', '')) ?? '',
+            'phone' => $notice->phone ?? '',
+            'phone_tel' => $notice->phoneTel ?? '',
+            'whatsapp' => $notice->whatsapp ?? '',
         ];
     }
 

@@ -423,6 +423,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       un memo **estático sin purga**, y dos ficheros de test habían acabado con la misma copia de un
       reset por Reflection. Ahora hay `Turnstile::flushCache()` en `TestCase::setUp()`, como manda
       el invariante, y las dos copias se retiraron.
+      **3 de 5**: `GET /booking/status`, la pausa de reservas y su aviso traducido. Hasta ahora la
+      pausa solo existía por API como el código de un 409 —el cliente se enteraba DESPUÉS de
+      intentar crear el pedido—, mientras que la web sustituye el flujo entero por el aviso. Va
+      separado de `/config` porque es ESTADO y se relee: la dueña acciona el interruptor con
+      clientes navegando. Dos reglas quedan en el servidor y verificadas por mutación: los canales
+      se ofrecen **a la vez y no en cascada** (una cascada escondería el WhatsApp de toda
+      instalación con teléfono) y `contact_url` es **el último recurso ya decidido**, no «la página
+      de contacto», para que el cliente no evalúe ninguna condición. De paso quedó anotada en
+      `DEUDA.md` una divergencia preexistente que la extracción destapó: el mismo `contact.phone` se
+      normaliza de dos formas distintas según quién lo pinte.
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del
