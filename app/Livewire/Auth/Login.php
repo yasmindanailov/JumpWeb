@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Domain\Identity\Services\PasswordLogin;
+use App\Http\Sidebar\SidebarEntry;
 use App\Livewire\Concerns\ResetsOnModalClose;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
@@ -56,7 +57,11 @@ class Login extends Component
         $previousCartOwner = session('purchase.user_id');
         $newId = $result->user->getKey();
         if ($previousCartOwner !== null && (int) $previousCartOwner !== (int) $newId) {
-            session()->forget(['purchase.cart', 'purchase.confirmed_code']);
+            session()->forget('purchase.cart');
+            // Y el desenlace de pago pendiente, sea cual sea. Antes solo se descartaba el de
+            // «confirmado»: a Bob podía aparecerle el «pago denegado» de Alice, que es la misma
+            // fuga por el otro lado. `SidebarEntry` los descarta los tres (Fase 4 · paso 4.0a).
+            SidebarEntry::clear();
         }
         session(['purchase.user_id' => $newId]);
 

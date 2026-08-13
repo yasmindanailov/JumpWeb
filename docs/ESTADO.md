@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2470 en verde** (9575 aserciones, `--parallel` ~63 s) · Pint limpio ·
+- Suite **2479 en verde** (9599 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -102,14 +102,14 @@ se declara con `$store.purchase.openWith({…})` y cada motor registra su adapta
 (`SidebarSeamTest`, verificado por mutación). Escrito el contrato de `mode`/`identifying`, y fuera
 `alpinejs` de `package.json` (estaba declarado y no lo importaba nadie).
 
-**Sigue aquí — 4.0a, segunda mitad**: sacar el consumo de `purchase.confirmed_code`/`failed_code`/
-`verifying_code` de `Purchase::mount()`. Hoy es su **único** consumidor: sin ese `mount()`, el cajón
-se auto-abriría en cada página hasta que caducara la sesión, y la SPA no tendría cómo leerlos.
-⚠️ **Dato medido el 2026-08-13 que condiciona el diseño**: `mount()` **NO corre en la petición del
-layout** —corre en la del `lazy`—, así que hoy hay DOS consumidores en DOS peticiones (el layout
-mira `session()->has()` para `data-purchase-open`; `mount()` lee y olvida después). Pasar el
-desenlace como prop del componente `lazy` funciona, pero **adelanta el olvido a la primera
-petición**: es un cambio de conducta en el camino del pago y hay que probarlo, no asumirlo.
+**Hecho también: 4.0a segunda mitad.** El desenlace del pago (confirmado · denegado · verificando)
+tiene un solo dueño: `Http\Sidebar\SidebarEntry`. Antes las tres claves de sesión se nombraban a
+mano en cinco ficheros y solo `Purchase::mount()` las olvidaba.
+⚠️ **Dato medido que explica su forma**: el componente es `lazy`, así que su `mount()` **NO corre en
+la petición del layout** sino en la del `lazy`. Por eso hay dos verbos y no uno: el layout usa
+`peek()` (mirar sin consumir, para decidir si el cajón se abre solo) y el MOTOR usa `consume()`.
+Cuando el motor sea la SPA —que vive en el mismo documento— consumirá el layout. Guarda ejecutable
+de «un solo dueño» en `SidebarEntryTest`, verificada por mutación en PHP y en Blade.
 
 Luego: **4.0b** los cinco huecos de API (§4.4 del spec; el más gordo son los complementos
 RESUELTOS) · **4.0c** tokenizar `site.css` · **4.1** cimientos SPA.
@@ -202,6 +202,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2470** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2479** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

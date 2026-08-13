@@ -11,6 +11,7 @@ use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\LandingComplementResolver;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
+use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -124,9 +125,9 @@ class HomeController extends Controller
         Cache::pull($key);
 
         if ($outcome->isSuccess()) {
-            session(['purchase.confirmed_code' => (string) $entry['order_code']]);
+            SidebarEntry::confirmed((string) $entry['order_code']);
         } elseif ($outcome->isClientFailure()) {
-            session(['purchase.failed_code' => (string) $entry['order_code']]);
+            SidebarEntry::failed((string) $entry['order_code']);
         }
     }
 }

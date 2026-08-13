@@ -31,6 +31,7 @@ use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\MaintenanceSettings;
+use App\Http\Sidebar\SidebarEntry;
 use App\Providers\AppServiceProvider;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
@@ -223,38 +224,53 @@ class Purchase extends Component
             $this->step = 4;
         }
 
-        // Vuelta desde el enlace de verificación (Pieza 2, #76) o desde Redsys OK (capa 5.5c,
-        // #104). En ambos casos la reserva queda confirmada: mismo paso 6 + feedback.
-        if ($code = session('purchase.confirmed_code')) {
-            session()->forget('purchase.confirmed_code');
-            $this->orderCode = $code;
-            $this->confirmed = true;
-            $this->step = 6;
-        }
+        // El DESENLACE del pago que dejó esperando la vuelta de la pasarela. Este componente es hoy
+        // el motor del cajón, así que es quien lo CONSUME (`SidebarEntry` documenta por qué el
+        // consumidor depende del motor: aquí corre en la petición del `lazy`, no en la del layout).
+        // Antes, las tres claves de sesión se nombraban a mano justo aquí, y este era el único sitio
+        // del sistema que las olvidaba.
+        $entry = SidebarEntry::consume();
 
-        // Vuelta KO de Redsys (capa 5.5c, #104): pago denegado por el banco. La Order queda
-        // pending y caducará por `orders:expire` cuando cruce su `expires_at` (#105), liberando
-        // el aforo. El cliente puede reintentar. Paso 10 muestra la pantalla de error.
-        if ($failedCode = session('purchase.failed_code')) {
-            session()->forget('purchase.failed_code');
-            $this->orderCode = $failedCode;
-            $this->step = 10;
+        match ($entry->outcome) {
+            // Vuelta desde el enlace de verificación (Pieza 2, #76) o desde Redsys OK (capa 5.5c,
+            // #104). En ambos casos la reserva queda confirmada: paso 6 + feedback.
+            SidebarEntry::OUTCOME_CONFIRMED => $this->enterConfirmed($entry->orderCode),
+            // Vuelta KO de Redsys (capa 5.5c, #104): pago denegado por el banco. La Order queda
+            // pending y caducará por `orders:expire` al cruzar su `expires_at` (#105), liberando el
+            // aforo. El cliente puede reintentar; el paso 10 muestra el motivo del rechazo.
+            SidebarEntry::OUTCOME_FAILED => $this->enterDeclined($entry->orderCode),
+            // Vuelta SIN datos firmados (capa 5.5c, #106): el terminal no incluye los `Ds_*` en la
+            // redirección. No se puede confirmar en este lado, así que se muestra «verificando» y se
+            // depende de la notificación on-line (5.5d) o del correo que se enviará al confirmarse.
+            SidebarEntry::OUTCOME_VERIFYING => $this->enterVerifying($entry->orderCode),
+            default => null,
+        };
+    }
 
-            // Audit #114 G7: extraer el `Ds_Response` del Payment failed más reciente del
-            // user para mostrarlo traducido al cliente ("tarjeta caducada", "CVV erróneo"…).
-            // El campo `Payment.raw_response` está filtrado por allowlist (#113 M1).
-            $this->declinedReasonText = $this->resolveDeclinedReason($user = auth()->user(), $failedCode);
-        }
+    private function enterConfirmed(?string $orderCode): void
+    {
+        $this->orderCode = $orderCode;
+        $this->confirmed = true;
+        $this->step = 6;
+    }
 
-        // Vuelta SIN datos firmados de Redsys (capa 5.5c, #106): terminal sandbox no incluye
-        // los `Ds_*` en la redirección. No podemos confirmar el pago en este lado; mostramos
-        // "verificando" al cliente y dependemos de la notificación on-line (5.5d) o del propio
-        // email que enviará al usuario cuando se confirme.
-        if ($verifyingCode = session('purchase.verifying_code')) {
-            session()->forget('purchase.verifying_code');
-            $this->orderCode = $verifyingCode;
-            $this->step = 11;
-        }
+    private function enterDeclined(?string $orderCode): void
+    {
+        $this->orderCode = $orderCode;
+        $this->step = 10;
+
+        // Audit #114 G7: extraer el `Ds_Response` del Payment failed más reciente del user para
+        // mostrarlo traducido al cliente («tarjeta caducada», «CVV erróneo»…). El campo
+        // `Payment.raw_response` está filtrado por allowlist (#113 M1).
+        $this->declinedReasonText = $orderCode === null
+            ? null
+            : $this->resolveDeclinedReason(auth()->user(), $orderCode);
+    }
+
+    private function enterVerifying(?string $orderCode): void
+    {
+        $this->orderCode = $orderCode;
+        $this->step = 11;
     }
 
     /** Mientras el componente carga en diferido (lazy) se muestra el spinner. Ver docs/UI-SPINNER.md. */

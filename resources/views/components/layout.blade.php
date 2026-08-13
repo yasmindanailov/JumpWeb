@@ -62,14 +62,14 @@
 </head>
 {{-- `data-purchase-open` = "1" indica a Alpine que el sidebar de compra debe abrirse al
      cargar la página (`app.js`: `isOpen: document.body.dataset.purchaseOpen === '1'`).
-     Tres detonadores: enlace profundo a `/entradas` (#66) y los tres outcomes de la vuelta
-     de Redsys (#104/#106) — confirmado_code (paso 6), failed_code (paso 10), verifying_code
-     (paso 11). Estas claves de sesión las escribe `HomeController::maybeConsumeRedsysReturn`
-     a partir del token one-shot, y Purchase Livewire las consume en `mount()`. Las leemos
-     aquí en el mismo request, ANTES de que el componente lazy las consuma → el sidebar abre
-     en el outcome correcto sin un click manual. --}}
+     Dos detonadores: el enlace profundo a `/entradas` (#66) y un desenlace de la vuelta de
+     Redsys pendiente de enseñar (#104/#106).
+     ⚠️ Se usa `peek()` y NO `consume()`, y la diferencia importa: el componente de compra es
+     `lazy`, así que su `mount()` corre en una petición POSTERIOR a este render (medido). Si
+     el layout consumiera aquí, el motor se quedaría sin nada que enseñar. Quién consume
+     depende del motor, y `Http\Sidebar\SidebarEntry` lo explica en un solo sitio. --}}
 <body data-auth-modal="{{ $authModal }}"
-      data-purchase-open="{{ (request()->routeIs('entradas') || session()->has('purchase.confirmed_code') || session()->has('purchase.failed_code') || session()->has('purchase.verifying_code')) ? '1' : '' }}"
+      data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
       {{-- Estado inicial del consentimiento de cookies (#219), calculado por el servidor → lo lee el
            store `cookies` de Alpine (app.js), igual que `purchase`/`auth`. --}}
       data-cookie-enabled="{{ ($cookieBannerEnabled ?? false) ? '1' : '' }}"

@@ -386,9 +386,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       no hacen nada**. Red: `SidebarSeamTest`, verificado por mutación. Escrito el contrato de
       `mode`/`identifying` (los consume gente de FUERA del cajón) y retirado `alpinejs` de
       `package.json`, que estaba declarado sin que nadie lo importara. Suite **2470 verde**.
-- [ ] **Paso 4.0a (2.ª mitad)** — sacar el consumo de los tres códigos de la vuelta de Redsys de
-      `Purchase::mount()`, hoy su único consumidor. ⚠️ Medido: `mount()` **no corre en la petición
-      del layout** sino en la del `lazy`, así que hay dos consumidores en dos peticiones.
+- [x] **Paso 4.0a (2.ª mitad) — el desenlace del pago tiene un solo dueño** (2026-08-13): nace
+      `Http\Sidebar\SidebarEntry`, que posee las tres claves de sesión de la vuelta de la pasarela
+      —escribirlas, mirarlas y olvidarlas—. Antes se nombraban a mano en cinco ficheros y **solo
+      `Purchase::mount()` las olvidaba**: con otro motor, el cajón se auto-abriría en cada página
+      hasta que caducara la sesión. La distinción que lo hace posible es `peek()` (layout, NO
+      consume) vs `consume()` (el motor), y existe por un dato MEDIDO: el componente es `lazy`, así
+      que su `mount()` corre en una petición POSTERIOR a la del layout — consumir en el layout
+      dejaría al motor sin nada que enseñar.
+      Red: `SidebarEntryTest` (9 casos) con guarda ejecutable de «un solo dueño», verificada por
+      mutación en PHP **y** en Blade. La guarda ignora comentarios con el tokenizador: tres docblocks
+      citan las claves a propósito y una búsqueda de texto los contaba como infracciones.
+      De regalo, una fuga menor cerrada: el login solo descartaba el desenlace «confirmado» al
+      cambiar de titular, así que a Bob podía aparecerle el «pago denegado» de Alice.
+      Suite **2479 verde**; los 14 tests que siembran esas claves a mano siguen pasando sin tocarse.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

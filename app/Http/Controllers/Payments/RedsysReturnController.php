@@ -7,6 +7,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\RedsysReturnHandler;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Controller;
+use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -185,7 +186,7 @@ class RedsysReturnController extends Controller
         }
 
         // Aún `pending`: mostrar "verificando pago". El sidebar abrirá en paso 11.
-        session(['purchase.verifying_code' => $order->code]);
+        SidebarEntry::verifying($order->code);
 
         return redirect()->route('home', status: 303);
     }
