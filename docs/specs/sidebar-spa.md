@@ -1,6 +1,7 @@
 # [SPEC] Fase 4 — el sidebar como SPA (Vue 3), primer consumidor real de la API v1
 
-> Estado: 🟦 en revisión (**v2**, tras revisión adversarial de 3 agentes) · Última actualización:
+> Estado: 🟦 en revisión (**v3**: v2 tras revisión adversarial ×3, más §4.3.bis y §4.4 rediseñados
+> hueco a hueco con revisión de coherencia) · Última actualización:
 > 2026-08-13 · Decisión asociada: entrada nueva en `DECISIONES.md` al aprobarse.
 > Alcance aprobado por el owner el 2026-08-13: **solo el cajón del sidebar**; `/mi-cuenta` sigue en
 > Blade. Tema: **tokens + hoja de estilos por instalación**. Dependencias: Vue 3 + Pinia.
@@ -50,11 +51,14 @@ Fase 4 es a la vez el producto y **la prueba del contrato**.
 - **CE-2 — La forma del DOM no se rompe**: la SPA emite **el mismo árbol** (etiqueta + clases +
   anidamiento + `role`/`aria-*`/`disabled`) que la vista que sustituye, comprobado por **diff de DOM
   renderizado**, no por extracción de clases del código fuente (§4.2).
-- **CE-3 — La tokenización del sidebar SUBE**: el porcentaje de declaraciones con `var(--…)` no puede
-  bajar del 25% actual y debe crecer. Es lo que hace posible «una hoja por instalación» (§4.3).
+- **CE-3 — La tokenización del sidebar SUBE**: el porcentaje de declaraciones **TEMATIZABLES** con
+  `var(--…)` no puede bajar y debe crecer. Medido sobre el total daría 25%, pero ese número incluye
+  estructura (`display`, `flex-direction`) que no debe ser token: el honesto es **43% → 49% ya
+  conseguido**, y lo vigila `SidebarTokenBudgetTest` (§4.3.bis).
 - **CE-4 — Ninguna regla de negocio nace en el cliente** (`PAY-12`).
 - **CE-5 — Los huecos de API se declaran y se cierran ANTES de necesitarlos.** ⚠️ Sustituye al
-  «cero endpoints nuevos» de la v1, que era **falso**: hay cinco (§4.4).
+  «cero endpoints nuevos» de la v1, que era **falso**: son cinco endpoints y un sexto hueco que no
+  es un endpoint (§4.4).
 - **CE-6 — La máquina de estados tiene red automática.** ⚠️ Sustituye al «la suite no baja de
   cobertura» de la v1, que era **inalcanzable** sin tests JS (§4.8).
 - **CE-7 — El peso del JS público tiene techo declarado y verificado** (§4.7).
@@ -172,7 +176,116 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
   `style-src 'unsafe-inline'`. La Fase 9 se ha comprometido a quitarlo: ese día muere el white-label
   si no se ha movido a una ruta servida.
 
-### 4.4 Los cinco huecos de API (CE-5 de la v1 era falso)
+### 4.4 Los huecos de API — v3, tras diseñarlos uno a uno contra el código
+
+> **v3 (2026-08-13)**: cinco agentes diseñaron un hueco cada uno midiendo contra el Livewire actual,
+> y un sexto revisó la coherencia del conjunto (**SÓLIDO-CON-CAMBIOS**). Lo que sigue sustituye a la
+> tabla de la v2. Dos afirmaciones de la v2 eran **falsas** y están corregidas abajo; y **hay un
+> SEXTO hueco** que ninguno de los cinco cubría.
+
+#### 4.4.0 Dos correcciones de hecho (verificadas antes de escribirlas)
+
+1. ⚠️ **Los CTA del aviso de pausa NO son una cascada.** La v2 decía «tres CTA en cascada (`tel:` →
+   WhatsApp → `/contacto`)». Medido: el teléfono y el WhatsApp se pintan **a la vez**, en dos `@if`
+   independientes, y `/contacto` aparece **solo si faltan los dos**. Implementar la cascada habría
+   sido una regresión funcional silenciosa.
+2. ⚠️ **La resolución de complementos NO depende de la fecha de la línea.** Los **cuatro** llamantes
+   de producción pasan `Carbon::today()` —`Purchase::addonViewModel()`, `CreateManualOrderPage`,
+   `OrderCreator` y `CartPricer::resolveAddons()`, este último con el comentario explícito de que
+   «los complementos no tienen fecha propia»—. Depende del PRODUCTO, del ESTADO DE LA SELECCIÓN y de
+   la CANTIDAD. Aceptar una fecha en el endpoint habría inventado una divergencia que hoy no existe.
+
+#### 4.4.1 La superficie que se añade
+
+| # | Endpoint | Auth | Qué resuelve |
+|---|---|---|---|
+| 1 | `GET /me/reservation-eligibility` | sesión/Bearer | El aviso temprano de `mayReserve()`, que **no consume ficha**. Sin parámetros: es media defensa anti-oráculo |
+| 2 | `GET /config` | público | Los cuatro ajustes de instalación: bloque de registro externo, umbral del buscador, *sitekey* de Turnstile y tope de líneas |
+| 3 | `GET /booking/status` | público | La pausa de reservas y su aviso (título, mensaje y contactos), **traducidos** |
+| 4 | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` | sesión/Bearer | El resumen del paso 6. Lo que no es PII amplía el esquema existente; **las respuestas del pack van en endpoint aparte** |
+| 5 | `POST /catalog/products/{product}/addons` | público | Los complementos RESUELTOS |
+
+**Por qué `/config` y `/booking/status` están separados**, aunque los dos sean públicos y se pidan
+en el mismo momento: `/config` es **estático por despliegue** y `/booking/status` es **estado que la
+dueña cambia con clientes navegando**. Un payload inyectado en el montaje sirve para lo primero y
+miente para lo segundo — una landing puede quedarse abierta horas. Y hay un motivo de principio:
+la app de Fase 6 no tiene punto de montaje, así que un aviso que solo exista en Blade **no puede
+enseñarlo nunca**.
+
+⚠️ **Los tres «menores» tienen UNA casa: `/config`.** Dos diseños los proponían a la vez en el
+payload de montaje y en el endpoint. Se resuelve a favor del endpoint (API-first, y tiene test de
+contrato). El payload de montaje se queda solo con la i18n (§4.5).
+
+#### 4.4.2 El SEXTO hueco, que ninguno de los cinco vio
+
+**Validar una línea ANTES de meterla en la cesta.** Hoy lo hace `Purchase::addToCart()` en el
+servidor; con la cesta en `localStorage` (§4.6) **no queda ningún ida y vuelta al añadir**. Lo que
+se le escaparía al cliente:
+
+- **La fusión de líneas**: `findCartIndex()` fusiona cantidades **solo** si el producto no es pack
+  y no lleva complementos. Es una regla de composición que cambia cantidad, señal y ocupación.
+- **`missingRequiredEventFields()`** con la semántica de `sanitizeAnswerValue()`: para un campo
+  `number` aplica `preg_replace('/\D+/','')`. **Consecuencia medida**: la EDAD del menor contestada
+  «cinco» el servidor la ve **vacía** y cualquier validación ingenua en Vue la ve **contestada**.
+  Hoy el cliente lo descubre en el paso 3, con el campo resaltado y los nombres de lo que falta; con
+  la SPA lo descubriría **cinco pasos después**, ya identificado, con un 422 que **ni siquiera
+  nombra los campos** (`line_event_required` viaja con el contexto de producto/fecha, nada más).
+- El tope de cesta (`>` en servidor, `>=` en la UI) y el re-tope de cantidad.
+
+**Es el único hallazgo de toda la revisión que, si se ignora, se descubre en producción y no en la
+suite.** Salidas: un endpoint de validación de línea, o transcribir `missingRequiredEventFields` a
+`machine.js` con test —incluido el caso `number`— y **firmarlo por escrito**. ⚠️ Decisión pendiente.
+
+#### 4.4.3 El presupuesto de PETICIONES, que es lo que se nota
+
+Arranque: de 2 a **4** peticiones públicas y paralelizables. Asumible.
+
+⚠️ **El problema es el paso 3.** Con el diseño inicial del hueco 5 —resolver complementos y
+presupuestar en dos llamadas—, cada clic en un complemento cuesta **2 peticiones**, en la pantalla
+con más clics del embudo: una configuración típica son 8–12 clics → **16–24 peticiones**. Y la mitad
+recorren el N+1 de `AddonResolver` que `DEUDA.md` ya mide. Además `throttle:api` es **60/min
+compartido** con `availability/*`, `catalog/*` y `orders/quote`: 30 clics agotan el suelo y dejan al
+cliente sin poder consultar horas — y detrás de un NAT el cubo es por IP.
+
+**Decisión**: `POST /catalog/products/{product}/addons` devuelve **también** el dinero de la línea,
+**delegando en el contrato `CartPricing`** —la misma implementación que sirve `orders/quote`, no una
+segunda aritmética—. Baja el paso 3 a **1 petición por clic** y elimina de raíz que el cliente tenga
+que traducir `choices` → `addons[]`. `PAY-12` exige una sola fuente de CÁLCULO, no una sola URL.
+
+⚠️ Y hay un fallo silencioso que esa decisión también cierra: `CartPricer::resolveAddons()` tiene un
+`catch (Throwable) { return []; }`, así que una selección que el resolutor rechace **tarifica la
+línea sin complementos** — el pie mostraría un total sin ellos mientras las filas muestran sus
+importes, sin error visible.
+
+#### 4.4.4 Lo que hay que resolver antes de escribir código
+
+- **`ApiContractTest` se pondría rojo el primer día**: exige que `required` sea **exactamente** las
+  propiedades y **en el mismo orden**. Los esquemas de petición con campos opcionales necesitan su
+  entrada en `OPTIONAL_BY_DESIGN`, y los campos nuevos de `OrderItem` van **a la cola** de
+  `properties` y de `required`.
+- **`Vary` y `Cache-Control` se deciden para la SUPERFICIE pública, no por endpoint.** Los dos
+  diseños públicos proponían políticas distintas, y uno afirmaba que basta `Accept-Language`: es
+  **falso**, `ApiLocale::resolveLocale()` mira la **sesión primero**.
+- **Quién manda sobre el bit de pausa**: lo publican dos endpoints (uno público, uno autenticado) y
+  pueden discrepar. Regla: el aviso lo pinta siempre `booking/status`; la elegibilidad solo dispara
+  un refresco.
+- **Un nombre que mentiría**: `Order.needs_guest_form` colisionaría con el `needs_guest_form` que ya
+  existe en `OrderItem`, y **el agregado no es el agregado** (`Order::guestFormItems()` descarta las
+  líneas canceladas antes de preguntar).
+
+#### 4.4.5 Orden de implementación (del más seguro al más arriesgado)
+
+`GET /me/reservation-eligibility` → `GET /config` → `GET /booking/status` → resumen del paso 6 →
+**complementos resueltos, el último**. El de complementos es el único que **cambia la semántica de
+un método del dominio** consumido por dos superficies vivas (la compra pública y el pedido manual
+del panel), el único que puede hacer que la SPA se note lenta, y el que arrastra la decisión del
+§4.4.3. El de elegibilidad va primero porque su guarda —prohibir `admitReservation` fuera del
+dominio— es la que impide que los cuatro siguientes consuman ficha por navegar.
+
+<details>
+<summary>Tabla de la v2 (conservada: describe el porqué de cada hueco)</summary>
+
+
 
 | Hueco | Qué falta hoy | Por qué no vale reimplementarlo en el cliente |
 |---|---|---|
@@ -184,6 +297,8 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 
 Menores, del mismo tipo: el umbral del buscador (`CatalogSettings::searchMinItems()`), la *sitekey*
 de Turnstile y `MAX_LINES_PER_CART`.
+
+</details>
 
 **Decisión**: se cierran en un paso propio de API (4.0b), **antes** de que la SPA los necesite, con
 su esquema en `openapi/v1.yaml` y sus tests de contrato. Añadir es evolutivo; improvisarlos a mitad
