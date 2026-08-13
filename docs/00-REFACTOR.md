@@ -433,6 +433,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       de contacto», para que el cliente no evalúe ninguna condición. De paso quedó anotada en
       `DEUDA.md` una divergencia preexistente que la extracción destapó: el mismo `contact.phone` se
       normaliza de dos formas distintas según quién lo pinte.
+      **3,5 de 5**: la mitad SIN PII del resumen del paso 6 — seis campos que el sidebar componía y
+      ningún endpoint publicaba. El desglose de señal es **por RESERVA y no por pedido** (#225 F3:
+      en una cesta mixta entrada+pack, etiquetar el agregado engaña), y la composición del aviso
+      «señal pagada · resto en el parque» baja a `ReservationFinancials`, que ya se declaraba fuente
+      única del bloque de totales — son tres condiciones y cuatro superficies pintándolo.
+      ⚠️ `Order.guest_form_pending` **no es** `any(items[].needs_guest_form)`, y por eso no comparte
+      nombre: el servidor descarta antes las líneas CANCELADAS, así que un cliente que lo agregara
+      prometería un formulario que nadie va a pedir. Verificado por mutación.
+      Queda la mitad B: las respuestas del pack (nombre, edad y alergias de un menor, art. 9) en
+      endpoint aparte.
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del

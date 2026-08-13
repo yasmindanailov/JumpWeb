@@ -1468,6 +1468,7 @@ components:
         - paid_at
         - expires_at
         - items
+        - guest_form_pending
       additionalProperties: false
       properties:
         code:
@@ -1516,7 +1517,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+        guest_form_pending:
+          type: boolean
+          description: |
+            Si alguna reserva de este pedido tiene todavía pendiente el formulario de invitados.
 
+            ⚠️ **No es el `any()` de `items[].needs_guest_form`, y por eso se llama distinto.** El
+            servidor descarta primero las líneas CANCELADAS: un cliente que agregara el campo de las
+            líneas contaría una cancelada y prometería un formulario que nadie va a pedir.
     OrderRefund:
       type: object
       description: |
@@ -1549,6 +1557,11 @@ components:
         - guest_form_status
         - needs_guest_form
         - addons
+        - is_pack
+        - start_time
+        - paid_online_cents
+        - gate_remainder_cents
+        - shows_deposit_note
       additionalProperties: false
       properties:
         id:
@@ -1587,14 +1600,40 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItemAddon'
+        is_pack:
+          type: boolean
+          description: |
+            Si esta reserva es un PACK (un servicio con invitados) o una entrada. Se pinta distinto
+            —«N invitados · Nombre» frente a «N× Nombre»— y no se deduce de ningún otro campo.
+        start_time:
+          type: string
+          nullable: true
+          description: |
+            Hora de inicio en crudo (`HH:MM:SS`), o `null` si la reserva no tiene franja.
+            `time_window` es un texto YA compuesto para mostrar; esto evita tener que partirlo.
+        paid_online_cents:
+          type: integer
+          description: |
+            Lo pagado online **de esta reserva** (principal + sus complementos), no del pedido. En
+            una cesta mixta entrada+pack, el agregado del pedido no sirve para etiquetar una línea.
+        gate_remainder_cents:
+          type: integer
+          description: Lo que queda por cobrar en puerta **de esta reserva**. `0` si no queda nada.
+        shows_deposit_note:
+          type: boolean
+          description: |
+            Si procede enseñar «señal pagada · resto en el parque» para esta reserva.
 
+            Son TRES condiciones compuestas por el servidor —el pedido está pagado, el producto usa
+            señal y queda algo en puerta—. Se publica el resultado y no las piezas a propósito: hay
+            cuatro superficies pintando este bloque, y recomponerlo en cada una es como divergen.
     OrderItemAddon:
       type: object
       description: |
         Complemento contratado dentro de una línea. Deliberadamente con menos campos: no tiene
         franja ni post-form propios —los hereda del padre— y repetirlos invitaría a leerlos del
         sitio equivocado.
-      required: [id, product_name, quantity, charged_subtotal_cents]
+      required: [id, product_name, quantity, charged_subtotal_cents, free_quantity]
       additionalProperties: false
       properties:
         id:
@@ -1606,7 +1645,12 @@ components:
           type: integer
         charged_subtotal_cents:
           type: integer
-
+        free_quantity:
+          type: integer
+          description: |
+            Unidades que van INCLUIDAS sin cargo. Sin este número, «2 incluidas + 1 extra» y «3 de
+            pago» se pintan igual, y el importe cobrado no basta para distinguirlas cuando el extra
+            vale 0.
     OfferedDateList:
       type: object
       required: [data, meta]

@@ -1536,8 +1536,7 @@ class Purchase extends Component
         // (`aCobrarPuerta`) vía `ReservationFinancials` → la nota «Señal X€ · resto en el parque»
         // se muestra en la card del producto que la cobra (coherente con el sidecart), en vez de
         // etiquetar el agregado como «Señal pagada» (engañoso en cestas mixtas entrada+pack).
-        $paid = $order->status === Order::STATUS_PAID;
-        $lines = $order->items->whereNull('parent_item_id')->map(function ($item) use ($order, $paid) {
+        $lines = $order->items->whereNull('parent_item_id')->map(function ($item) use ($order) {
             $rf = ReservationFinancials::make($order, $item);
 
             return [
@@ -1545,7 +1544,9 @@ class Purchase extends Component
                 'qty' => $item->quantity,
                 'is_pack' => $item->ticketType?->isPack() ?? false,
                 'is_addon' => false,
-                'has_deposit' => $paid && ($item->ticketType?->hasDeposit() ?? false) && $rf->aCobrarPuerta > 0,
+                // La composición vive en `ReservationFinancials` desde que la API es el segundo
+                // consumidor (Fase 4 · paso 4.0b): son tres condiciones y divergirían por separado.
+                'has_deposit' => $rf->showsDepositNote($order, $item),
                 'deposit' => $rf->pagadoOnline,
                 'gate_remainder' => $rf->aCobrarPuerta,
                 'event' => $this->resolveEventData($item->ticketType, $item->event_data ?? []),

@@ -25,6 +25,11 @@ class OrderItemAddonResource extends JsonResource
             'product_name' => (string) ($this->resource->ticketType?->tr('name') ?? ''),
             'quantity' => (int) $this->resource->quantity,
             'charged_subtotal_cents' => $this->resource->chargedSubtotalCents(),
+            // Añadido en Fase 4 · paso 4.0b (a la COLA: `ApiContractTest` compara `required` con las
+            // propiedades EN ORDEN). Unidades que van incluidas sin cargo: sin esto, una línea de
+            // «2 incluidas + 1 extra» se pinta igual que una de «3 de pago», y el importe cobrado
+            // no basta para distinguirlas cuando el extra vale 0.
+            'free_quantity' => (int) $this->resource->free_quantity,
         ];
     }
 }

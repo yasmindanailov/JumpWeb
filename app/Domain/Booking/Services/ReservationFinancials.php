@@ -36,6 +36,27 @@ final readonly class ReservationFinancials
         public int $pendienteReembolso,
     ) {}
 
+    /**
+     * ¿Procede el aviso «señal pagada · resto en el parque» para esta reserva? (#225 F3)
+     *
+     * Son TRES condiciones y hay que cumplirlas las tres: el pedido está pagado, el producto usa
+     * señal, y queda algo por cobrar en puerta. Publicar los números por separado y dejar que cada
+     * superficie las compona es como divergen — y ya hay cuatro superficies pintando este bloque.
+     *
+     * Vive aquí porque esta clase se declara «fuente ÚNICA del bloque de totales del producto para
+     * TODAS las superficies»: la composición es parte del bloque, no de quien lo pinta.
+     *
+     * ⚠️ Mira el estado CRUDO del pedido, no `displayStatus()`. Para un pedido pagado los dos
+     * coinciden —`displayStatus()` solo convierte un pendiente vencido en caducado—, y usar el
+     * crudo mantiene la conducta byte a byte con la que tenía el sidebar.
+     */
+    public function showsDepositNote(Order $order, OrderItem $principal): bool
+    {
+        return $order->status === Order::STATUS_PAID
+            && ($principal->ticketType?->hasDeposit() ?? false)
+            && $this->aCobrarPuerta > 0;
+    }
+
     public static function make(Order $order, OrderItem $principal): self
     {
         /** @var Collection<int,OrderItem> $items */

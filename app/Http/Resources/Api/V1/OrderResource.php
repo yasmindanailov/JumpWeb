@@ -68,9 +68,16 @@ class OrderResource extends JsonResource
             // Cuándo se libera la retención de aforo de un pedido pendiente. `null` en un pedido
             // firme (`AFORO-10`: el default de `createPendingOrder` es un pedido que no caduca).
             'expires_at' => $order->expires_at?->toIso8601String(),
-            'items' => OrderItemResource::collection(
-                $order->items->whereNull('parent_item_id')->values()
-            )->resolve($request),
+            'items' => $order->items->whereNull('parent_item_id')->values()
+                // El pedido baja a cada línea: `ReservationFinancials` lo necesita y navegarlo desde
+                // la línea sería una consulta por línea (Fase 4 · paso 4.0b).
+                ->map(fn ($item) => (new OrderItemResource($item))->within($order)->resolve($request))
+                ->all(),
+            // ⚠️ **No es el `any()` de `items[].needs_guest_form`, y por eso tiene otro nombre.**
+            // `Order::needsGuestForm()` descarta primero las líneas CANCELADAS: un cliente que
+            // agregara el campo de las líneas contaría una cancelada y prometería un formulario que
+            // nadie va a pedir. Se publica compuesto por el servidor (Fase 4 · paso 4.0b).
+            'guest_form_pending' => $order->needsGuestForm(),
         ];
     }
 }
