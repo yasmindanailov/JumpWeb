@@ -6,15 +6,14 @@
 ## ▶ Dónde estamos
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — paso 0 (cimientos) CERRADO; toca el paso 1.**
 - Suite **2224 en verde** (8292 aserciones, `--parallel` ~59 s) · Pint limpio (679 ficheros, sin
-  reformatear) · `docs-check` verde · `composer audit` en **0**.
+  reformatear) · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
-- ⚠️ **`npm audit` ya NO está en 0**: 5 avisos (2 críticas, 3 altas) aparecidos entre el saneado de
-  `DECISIONES #22` y el cierre del paso 0 del mismo día. **No los causó ningún cambio nuestro**
-  —`package.json`/`package-lock.json` están intactos—: son avisos publicados después. Todos en el
-  árbol de HERRAMIENTAS DE BUILD (`vite`, `postcss`, `nanoid`, `concurrently`→`shell-quote`);
-  ninguno en los paquetes que viajan al navegador (`alpinejs`, `@fullcalendar/*`, `html2canvas`).
-  `fixAvailable` en los 5. Ver `DEUDA.md §Alta`.
+- **Aviso para el próximo cierre** (`DECISIONES #25`): el árbol npm pasó de 0 a **5 avisos (2
+  críticas, 3 altas)** en unas horas SIN que `package.json` ni el lock cambiaran — avisos
+  publicados en el intervalo, todos en herramientas de build. Se sanearon con `npm audit fix` sin
+  `--force` (Vite 8.2.1). La lección: `composer audit`/`npm audit` son verificación de CIERRE, no
+  un trámite de instalación.
 - **Los verificadores de concurrencia NO se han corrido en esta sesión y no hacía falta**: el paso
   0 no toca `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` ni ningún controlador de checkout,
   y el gate del `pre-push` lo confirma. Su último verde sobre MySQL real es del 2026-08-13
@@ -85,4 +84,4 @@ en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
 17 Filament Resources · **2224** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
-Spectator **3.0** (dev) · `composer audit` en 0; `npm audit` con 5 avisos de build pendientes (arriba).
+Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

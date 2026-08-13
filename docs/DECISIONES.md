@@ -485,12 +485,39 @@ checkout, y el gate del pre-push lo confirma.
 
 ⚠️ **Hallado al verificar, y NO causado por este trabajo**: `npm audit` pasó de 0 (`#22`, esa misma
 mañana) a **5 avisos (2 críticas, 3 altas)** sin que `package.json` ni `package-lock.json` cambiaran
-— son avisos publicados en el intervalo. Los 5 están en el árbol de herramientas de BUILD (`vite`,
-`postcss`, `nanoid`, `concurrently`→`shell-quote`) y ninguno en los paquetes que viajan al navegador.
-Los 5 declaran `fixAvailable`. Anotado en `DEUDA.md §Alta` y **no saneado en este commit** a
-propósito: mezclarlo con el paso 0 rompería la unidad de trabajo, y el saneado npm exige su propio
-`npm run build` + verificación de assets, como se hizo en `#22` con composer.
+— son avisos publicados en el intervalo. Se sanearon **aparte**, para no romper la unidad de trabajo
+de este paso: `DECISIONES #25`.
 
 ⚠️ **Arreglado de paso, en el entorno local (no versionado)**: `.env` tenía `APP_URL=…:8080` con
 `APP_PORT=8081`. Enlaces absolutos de correo, URLs firmadas y —ahora— la derivación de CORS y de
 los dominios stateful de Sanctum salían con el puerto equivocado.
+
+## #25 · 2026-08-13 · Saneado del árbol npm: 5 avisos → 0, sin tocar restricciones
+Al verificar el cierre del paso 0 de Fase 3, `npm audit` daba **5 avisos (2 críticas, 3 altas)**
+donde `DECISIONES #22` había dejado 0 esa misma mañana, y **sin que `package.json` ni
+`package-lock.json` hubieran cambiado**: son avisos publicados en el intervalo, no una regresión
+nuestra. Los cinco, en el árbol de HERRAMIENTAS DE BUILD: `shell-quote` (crítica, vía
+`concurrently`), `vite`, `postcss` y `nanoid`. Ninguno en los paquetes que viajan al navegador
+(`alpinejs`, `@fullcalendar/*`, `html2canvas`).
+
+Decidido sanearlo **como unidad propia**, separada del paso 0, aplicando el mismo criterio que `#22`:
+`npm audit fix` **sin `--force`**, es decir solo actualizaciones semver-compatibles, sin alterar
+ninguna restricción de `package.json` ni añadir paquetes. Resultado: `package.json` **intacto**,
+solo cambia el lock. `vite` 8.0.14→8.2.1 · `postcss` 8.5.15→8.5.26 · `nanoid` 3.3.12→3.3.18 ·
+`shell-quote` 1.8.3→1.9.0 · `concurrently` 9.2.1→9.2.4.
+
+**Por qué se sanea algo que «solo» afecta al build**: la cadena de construcción de assets es un
+vector de suministro —lo que ejecuta compila el JavaScript que sí llega a los usuarios— y el
+proyecto ya fijó en `#22` que no se construye sobre un árbol con avisos altos. El coste era un
+`audit fix` y una verificación.
+
+**Verificación empírica**: `npm audit` → **0** · `npm run build` OK con Vite 8.2.1 (23 módulos, 2,44 s)
+y **los mismos nombres de fichero** que antes, señal de que el output no cambió · suite **2224
+verde** (8292 aserciones, 60,0 s) · superficies `/`, `/normas`, `/servicios`, `/precios`,
+`/admin/login` → 200 con sus hojas de estilo · **assets realmente servidos**, comprobados uno a uno
+por HTTP: el `app.js` del manifest en la landing y los 8 del panel, incluido el tema Filament
+compilado por Vite (`theme-…​.css`) que usa la pantalla de puerta.
+
+Nota para quien lea esto en el futuro: que el árbol pasara de 0 a 5 avisos en unas horas sin tocar
+nada es el argumento de por qué `composer audit`/`npm audit` son parte de la verificación de CIERRE
+y no un trámite de instalación.
