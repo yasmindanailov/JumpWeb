@@ -43,12 +43,19 @@ final class CartPayload
      * hora canónica de BD (`H:i:s`) y las interfaces suelen pintar `H:i`. Se normaliza al traducir,
      * de modo que el dominio recibe siempre una sola forma.
      *
+     * @param  bool  $requireItems  `false` donde una cesta VACÍA es legítima. Lo es en la
+     *                              disponibilidad —la primera compra empieza sin nada elegido, y la
+     *                              cesta solo sirve para descontar lo que uno mismo ya retiene—, y
+     *                              no lo es al presupuestar o al crear el pedido, donde una cesta
+     *                              vacía es un error del cliente y merece decírselo.
      * @return array<string, array<int, string>>
      */
-    public static function rules(): array
+    public static function rules(bool $requireItems = true): array
     {
         return [
-            'items' => ['required', 'array', 'min:1', 'max:'.self::MAX_LINES],
+            'items' => $requireItems
+                ? ['required', 'array', 'min:1', 'max:'.self::MAX_LINES]
+                : ['sometimes', 'array', 'max:'.self::MAX_LINES],
             'items.*.product_id' => ['required', 'integer', 'min:1'],
             'items.*.date' => ['required', 'date_format:Y-m-d'],
             'items.*.time' => ['required', 'date_format:H:i:s,H:i'],

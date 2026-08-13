@@ -115,9 +115,17 @@ class SlotOffer
      * Misma semántica que la web: packs filtrados a cupo ≥ min_qty; entradas todas las de la ventana
      * (las llenas con `sellable=false`). El llamador pasa los ocupantes provisionales de su cesta.
      *
+     * ⚠️ **`available` y `max_quantity` no son el mismo número.** En una entrada coinciden; en un
+     * PACK no: `available` son las plazas que le quedan a la franja (para MOSTRAR «quedan N») y
+     * `max_quantity` es cuántos invitados admite ESA fiesta, topado además por el `max_qty` del pack
+     * — con cupo 60 y un pack de máximo 20, son 60 y 20—. Un selector de cantidad construido sobre
+     * `available` dejaría pedir invitados que el checkout rechazaría.
+     * `max_quantity` se calculaba aquí desde siempre y se descartaba: lo expone Fase 3 · paso 4b
+     * para que la API no tenga que recalcularlo (y con él, otra copia de la regla).
+     *
      * @param  array<int, array{entry_start:string, duration_min:int|null, seats:int}>  $cartOccupants
      * @param  array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>  $cartPackOccupants
-     * @return array<string, array{available:int, sellable:bool}>
+     * @return array<string, array{available:int, max_quantity:int, sellable:bool}>
      */
     public function offerableTimes(TicketType $type, string $date, array $cartOccupants = [], array $cartPackOccupants = []): array
     {
@@ -134,7 +142,11 @@ class SlotOffer
                     continue; // bajo el mínimo de invitados: no reservable
                 }
                 $display = $this->packAvailability->freeGuestSlots($slot, $type, $cartPackOccupants) ?? $free;
-                $out[(string) $slot->start_time] = ['available' => (int) $display, 'sellable' => true];
+                $out[(string) $slot->start_time] = [
+                    'available' => (int) $display,
+                    'max_quantity' => (int) $free,
+                    'sellable' => true,
+                ];
             }
 
             return $out;
@@ -142,7 +154,11 @@ class SlotOffer
 
         foreach ($slots as $slot) {
             $available = $this->slotAvailability->availableFor($slot, $type->duration_min, $cartOccupants);
-            $out[(string) $slot->start_time] = ['available' => (int) $available, 'sellable' => $available > 0];
+            $out[(string) $slot->start_time] = [
+                'available' => (int) $available,
+                'max_quantity' => (int) $available,
+                'sellable' => $available > 0,
+            ];
         }
 
         return $out;

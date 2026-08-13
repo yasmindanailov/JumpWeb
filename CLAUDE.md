@@ -32,8 +32,10 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 - Assets: `docker compose exec -u sail laravel.test npm run build`
   > ⚠️ **Siempre `-u sail`** (como root deja ficheros de root en `storage/` → 500 por permisos).
 - **CI = gate local**: el hook `pre-push` (`.githooks/`) corre **docs-check + Pint + suite**
-  en pushes de `main` y bloquea el push en rojo (`wip/…` exento; tocar `OrderCreator`/
-  `RedsysReturnHandler`/`SlotGenerator` exige `VERIFY_CONC=1`, ver `INVARIANTES §6`).
+  en pushes de `main` y bloquea el push en rojo (`wip/…` exento). Tocar el núcleo de dinero/aforo
+  exige además `VERIFY_CONC=1` tras correr los dos verificadores (`INVARIANTES §6`); **la lista
+  viva es el `CRITICAL_RE` del propio hook** —no se copia aquí para que no envejezca— y
+  `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
   Si no salta, actívalo: `git config core.hooksPath .githooks` (`DECISIONES #9`/`#10`).
 
 ## Principios (NO romper)
@@ -62,7 +64,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |
 | Deuda técnica (vista única) | `docs/DEUDA.md` |
 | Instalar un cliente nuevo (white-label) | `docs/INSTALACION-CLIENTE.md` |
-| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.octies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#32 |
+| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.nonies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#33 |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
 | Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 

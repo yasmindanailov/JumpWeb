@@ -3,28 +3,25 @@
 namespace App\Livewire\Tickets;
 
 use App\Domain\Booking\Contracts\AdmissionDecision;
+use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CartQuote;
 use App\Domain\Booking\Contracts\CartQuoteAddon;
 use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\CatalogProduct;
+use App\Domain\Booking\Contracts\OfferedDate;
+use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\Cart;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\OrderCreator;
-use App\Domain\Booking\Services\PackAvailability;
-use App\Domain\Booking\Services\ProductAvailability;
-use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\ReservationFinancials;
-use App\Domain\Booking\Services\SlotAvailability;
-use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Exceptions\PaymentInitiationException;
 use App\Domain\Payments\Models\Payment;
@@ -149,23 +146,26 @@ class Purchase extends Component
      */
     public ?string $declinedReasonText = null;
 
-    private RateResolver $rates;
-
-    private SlotAvailability $availability;
-
-    private ProductAvailability $productWindow;
-
-    private PackAvailability $packAvailability;
-
     private AddonResolver $addonResolver;
-
-    private SlotOffer $slotOffer;
 
     private ProductCatalog $catalog;
 
     private ReservationAdmission $admission;
 
     private CartPricing $pricing;
+
+    private AvailabilityOffer $availabilityOffer;
+
+    /**
+     * Memo de la oferta de días del producto elegido. `availableDates()` se consulta hasta seis
+     * veces por petición (validar el día, acotar los meses, pintar la rejilla), y sin memo cada una
+     * sería una consulta.
+     *
+     * @var list<OfferedDate>|null
+     */
+    private ?array $offeredDatesMemo = null;
+
+    private ?int $offeredDatesMemoFor = null;
 
     /** Memo por petición de los complementos del producto elegido (evita N consultas por render). */
     private ?Collection $selectedAddonsMemo = null;
@@ -183,17 +183,13 @@ class Purchase extends Component
 
     private ?string $quoteMemoFor = null;
 
-    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing): void
+    public function boot(AddonResolver $addonResolver, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing, AvailabilityOffer $availabilityOffer): void
     {
-        $this->rates = $rates;
-        $this->availability = $availability;
-        $this->productWindow = $productWindow;
-        $this->packAvailability = $packAvailability;
         $this->addonResolver = $addonResolver;
-        $this->slotOffer = $slotOffer;
         $this->catalog = $catalog;
         $this->admission = $admission;
         $this->pricing = $pricing;
+        $this->availabilityOffer = $availabilityOffer;
     }
 
     public function mount(): void
@@ -1126,28 +1122,11 @@ class Purchase extends Component
      */
     public function maxQty(): int
     {
-        $type = $this->selectedType();
-        if (! $type || ! $this->date || ! $this->time) {
-            return 0;
-        }
-        $slot = $type->zone_id ? $this->slotFor($type->zone_id) : null;
-        if (! $slot) {
+        if (! $this->typeId || ! $this->date || ! $this->time) {
             return 0;
         }
 
-        if ($type->isPack()) {
-            return $this->packAvailability->availableGuestsFor(
-                $slot,
-                $type,
-                $this->cartPackOccupants((int) $type->zone_id, $this->date),
-            );
-        }
-
-        return $this->availability->availableFor(
-            $slot,
-            $type->duration_min,
-            $this->cartOccupants((int) $type->zone_id, $this->date),
-        );
+        return $this->availabilityOffer->maxQuantity($this->typeId, $this->date, $this->time, $this->cart);
     }
 
     /** Cantidad mínima seleccionable: 1 para entradas; el mínimo de invitados (min_qty) para packs. */
@@ -1183,83 +1162,32 @@ class Purchase extends Component
     }
 
     /**
-     * Ocupantes provisionales de la cesta para una ENTRADA en una zona y día: las líneas de
-     * entrada ya añadidas que restan plazas a una nueva selección (5.4b). Los packs no cuentan
-     * aquí (pool propio, #82).
+     * La oferta de DÍAS del producto elegido, tal y como la describe el dominio (Fase 3 · paso 4b).
      *
-     * @return array<int, array{entry_start:string, duration_min:int|null, seats:int}>
+     * Memoizada por producto: `availableDates()` se consulta varias veces en la misma petición
+     * —validar el día elegido, acotar la navegación de meses, pintar la rejilla— y cada una sería
+     * una consulta. Se ata al producto y no a la petición porque `selectType()` lo cambia en medio.
+     *
+     * @return list<OfferedDate>
      */
-    private function cartOccupants(int $zoneId, string $date): array
+    private function offeredDates(): array
     {
-        $occupants = [];
-        foreach ($this->cart as $line) {
-            if (! isset($line['ticket_type_id'], $line['date'], $line['time'], $line['qty'])) {
-                continue;
-            }
-            $type = $this->allSellableTypes()->firstWhere('id', $line['ticket_type_id']);
-            if (! $type || $type->isPack() || (int) $type->zone_id !== $zoneId || $line['date'] !== $date) {
-                continue;
-            }
-            $occupants[] = [
-                'entry_start' => $line['time'],
-                'duration_min' => $type->duration_min,
-                'seats' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
-            ];
+        $productId = (int) ($this->typeId ?? 0);
+
+        if ($this->offeredDatesMemoFor !== $productId) {
+            // Sin producto elegido no hay oferta que pedir: el calendario solo se pinta en el paso 2,
+            // al que se llega por `selectType()`, que fija el mes con el primer día del producto.
+            $this->offeredDatesMemo = $productId > 0 ? $this->availabilityOffer->dates($productId) : [];
+            $this->offeredDatesMemoFor = $productId;
         }
 
-        return $occupants;
-    }
-
-    /**
-     * Fiestas provisionales de la cesta para el cupo de packs en una zona y día (pool propio, #82):
-     * las líneas de PACK ya añadidas que restan cupo a una nueva selección. Cada línea es una fiesta.
-     *
-     * @return array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>
-     */
-    private function cartPackOccupants(int $zoneId, string $date): array
-    {
-        $occupants = [];
-        foreach ($this->cart as $line) {
-            if (! isset($line['ticket_type_id'], $line['date'], $line['time'], $line['qty'])) {
-                continue;
-            }
-            $type = $this->allSellableTypes()->firstWhere('id', $line['ticket_type_id']);
-            if (! $type || ! $type->isPack() || (int) $type->zone_id !== $zoneId || $line['date'] !== $date) {
-                continue;
-            }
-            $occupants[] = [
-                'start' => $line['time'],
-                'prep_before_min' => (int) $type->prep_before_min,
-                'duration_min' => $type->duration_min,
-                'prep_after_min' => (int) $type->prep_after_min,
-                'guests' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
-            ];
-        }
-
-        return $occupants;
-    }
-
-    /**
-     * Franjas ofrecibles para la entrada elegida: abiertas (online, no cerradas) Y dentro de la
-     * ventana de disponibilidad del producto sobre el horario del día (§9.2). Fuente única de la
-     * que derivan las fechas y las horas. Memoizada por petición (la selección es constante).
-     *
-     * @return Collection<int, Slot>
-     */
-    private function offeredSlots(): Collection
-    {
-        // Fuente ÚNICA compartida con el panel (pedido manual): `SlotOffer` centraliza la lógica
-        // correcta (sellableOnline + zona + horizonte + ventana viva del día), para que web y panel
-        // no puedan divergir (auditoría Fase 1, #bug-calendario). Memoizada por petición.
-        return once(fn () => $this->slotOffer->offeredSlots($this->selectedType()));
+        return $this->offeredDatesMemo;
     }
 
     /** @return array<int,string> fechas (Y-m-d) con franjas ofrecibles para la entrada elegida. */
     private function availableDates(): array
     {
-        return $this->offeredSlots()
-            ->map(fn (Slot $s) => $s->date->toDateString())
-            ->unique()->values()->all();
+        return array_map(static fn (OfferedDate $day): string => $day->date, $this->offeredDates());
     }
 
     private function minMonth(): string
@@ -1289,22 +1217,27 @@ class Purchase extends Component
         $month = Carbon::parse($this->month.'-01');
         $start = $month->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $end = $month->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-        $available = array_flip($this->availableDates());
-        $type = $this->selectedType();
+
+        // Qué días se ofrecen, a qué tarifa y a qué precio lo dice el dominio de una vez. Antes se
+        // resolvían aquí día a día (`RateResolver::priceCents` consulta por llamada, hasta 42 veces
+        // por render); ahora es una consulta de tarifa por día distinto OFRECIDO, no por celda.
+        $offered = [];
+        foreach ($this->offeredDates() as $day) {
+            $offered[$day->date] = $day;
+        }
 
         $weeks = [];
         $week = [];
         foreach (CarbonPeriod::create($start, $end) as $day) {
             $ymd = $day->toDateString();
-            $selectable = isset($available[$ymd]);
-            $price = $selectable && $type ? $this->rates->priceCents($type, $day) : null;
+            $offer = $offered[$ymd] ?? null;
             $week[] = [
                 'date' => $ymd,
                 'day' => $day->day,
                 'in_month' => $day->month === $month->month,
-                'selectable' => $selectable,
-                'type' => $selectable ? $this->rates->for($day)->key : null,
-                'price_cents' => $price,
+                'selectable' => $offer !== null,
+                'type' => $offer?->rateKey,
+                'price_cents' => $offer?->priceCents,
                 'selected' => $this->date === $ymd,
             ];
             if (count($week) === 7) {
@@ -1329,20 +1262,18 @@ class Purchase extends Component
     /** @return array<int,string> horas ofrecibles el día elegido, para el producto elegido. */
     private function availableTimes(): array
     {
-        $type = $this->selectedType();
-        if (! $this->date || ! $type) {
+        if (! $this->typeId || ! $this->date) {
             return [];
         }
 
-        // Fuente única compartida con el panel (`SlotOffer`): mismas reglas de oferta de horas
-        // (ventana del día + cupo de pack ≥ min_qty), descontando la cesta provisional. Las
-        // entradas llenas vienen marcadas sellable=false; la vista las muestra deshabilitadas.
-        return array_keys($this->slotOffer->offerableTimes(
-            $type,
-            $this->date,
-            $this->cartOccupants((int) $type->zone_id, $this->date),
-            $this->cartPackOccupants((int) $type->zone_id, $this->date),
-        ));
+        // La oferta de horas la decide el dominio (`AvailabilityOffer`, Fase 3 · paso 4b) sobre la
+        // fuente única `SlotOffer` (`AFORO-02`), y **con la cesta delante**: las líneas que el
+        // cliente ya tiene elegidas retienen cupo, así que sin ellas se ofrecerían horas que el
+        // checkout rechazaría. Derivar esos ocupantes vivía aquí, en una clase de interfaz.
+        return array_map(
+            static fn (OfferedTime $slot): string => $slot->time,
+            $this->availabilityOffer->times($this->typeId, $this->date, $this->cart),
+        );
     }
 
     /**
@@ -1437,34 +1368,27 @@ class Purchase extends Component
         return $rows;
     }
 
-    private function slotFor(int $zoneId): ?Slot
-    {
-        if (! $this->date || ! $this->time) {
-            return null;
-        }
-
-        return $this->slotForTime($zoneId, $this->time);
-    }
-
-    /** Franja concreta (zona + día elegido + hora dada), o null. */
-    private function slotForTime(int $zoneId, string $time): ?Slot
+    /**
+     * Precio del día para la entrada elegida (según la fecha).
+     *
+     * Sale de la MISMA oferta que pinta el calendario ({@see offeredDates()}), no de una resolución
+     * de tarifa aparte: si se calculara por su cuenta, el precio del día elegido y el que se ve en
+     * su celda del calendario podrían no coincidir. Un día que no está entre los ofrecidos no tiene
+     * precio que anunciar —`selectDate()` no deja elegirlo— y devuelve null.
+     */
+    public function dayPriceCents(): ?int
     {
         if (! $this->date) {
             return null;
         }
 
-        return Slot::where('date', $this->date)
-            ->where('start_time', $time)
-            ->where('zone_id', $zoneId)
-            ->first();
-    }
+        foreach ($this->offeredDates() as $day) {
+            if ($day->date === $this->date) {
+                return $day->priceCents;
+            }
+        }
 
-    /** Precio del día para la entrada elegida (según la fecha). */
-    public function dayPriceCents(): ?int
-    {
-        $type = $this->selectedType();
-
-        return $type && $this->date ? $this->rates->priceCents($type, Carbon::parse($this->date)) : null;
+        return null;
     }
 
     /**

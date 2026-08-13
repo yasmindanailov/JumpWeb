@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\SpecialDate;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Decide qué tarifa (`rate_type`) aplica a una fecha y devuelve el precio de un
@@ -20,27 +21,60 @@ class RateResolver
     /** Tarifa aplicable a la fecha dada. */
     public function for(CarbonInterface $date): RateType
     {
-        $special = SpecialDate::with('rateType')
-            ->where('date', $date->toDateString())
-            ->first();
+        $key = $date->toDateString();
 
-        if ($special && $special->rateType) {
-            return $special->rateType;
+        return $this->forDates([$key])[$key];
+    }
+
+    /**
+     * Tarifa aplicable a CADA una de las fechas dadas, con **una sola consulta** de excepciones.
+     *
+     * Existe porque un calendario resuelve decenas de días seguidos y `for()` consulta
+     * `special_dates` por llamada: pintar un mes costaba una consulta por celda. Es la misma regla
+     * —de hecho `for()` delega aquí—, no una copia rápida para el calendario: dos resoluciones de
+     * tarifa que puedan divergir serían dos precios distintos para el mismo día.
+     *
+     * @param  array<int, string>  $dates  fechas en formato `Y-m-d`
+     * @return array<string, RateType> indexado por esa misma fecha
+     */
+    public function forDates(array $dates): array
+    {
+        $dates = array_values(array_unique($dates));
+
+        if ($dates === []) {
+            return [];
         }
 
-        $weekday = $date->dayOfWeek; // 0=domingo .. 6=sábado
+        $specials = SpecialDate::with('rateType')
+            ->whereIn('date', $dates)
+            ->get()
+            ->keyBy(fn (SpecialDate $special): string => $special->date->toDateString());
 
-        // Las tarifas no cambian dentro de una misma petición: se memorizan (el calendario
-        // resuelve la tarifa de muchos días seguidos).
+        // Las tarifas no cambian dentro de una misma petición: se memorizan.
         $rateTypes = once(fn () => RateType::where('is_active', true)->orderByDesc('priority')->get());
 
-        $byWeekday = $rateTypes->first(
-            fn (RateType $rate) => is_array($rate->weekdays) && in_array($weekday, $rate->weekdays, true)
-        );
+        $resolved = [];
+        foreach ($dates as $date) {
+            // Una excepción SIN tarifa asociada (p. ej. un día cerrado) no cambia el precio: cae al
+            // día de la semana, igual que antes de existir este método.
+            $special = $specials->get($date)?->rateType;
 
-        return $byWeekday
-            ?? $rateTypes->firstWhere('key', RateType::KEY_NORMAL)
-            ?? RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+            if ($special) {
+                $resolved[$date] = $special;
+
+                continue;
+            }
+
+            $weekday = Carbon::parse($date)->dayOfWeek; // 0=domingo .. 6=sábado
+
+            $resolved[$date] = $rateTypes->first(
+                fn (RateType $rate) => is_array($rate->weekdays) && in_array($weekday, $rate->weekdays, true)
+            )
+                ?? $rateTypes->firstWhere('key', RateType::KEY_NORMAL)
+                ?? RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+        }
+
+        return $resolved;
     }
 
     /**

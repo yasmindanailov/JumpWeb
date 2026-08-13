@@ -285,9 +285,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             una) y quedó medido lo que NO se arregló: 2 consultas por complemento, dentro de código
             compartido con `OrderCreator`. Suite **2376 verde** + los dos verificadores de
             concurrencia sobre MySQL (16 workers).
-      - [ ] **4b — DISPONIBILIDAD con la cesta**: `GET availability/{product}/dates` y
-            `POST availability/{product}/times` (la cesta viaja porque `SlotOffer::offerableTimes()`
-            descuenta sus ocupantes provisionales, `AFORO-02`).
+      - [x] **4b — DISPONIBILIDAD con la cesta** (2026-08-13, `DECISIONES #33`): nace
+            `Booking\Contracts\AvailabilityOffer` (+2 DTOs) con `AvailabilityReader` detrás, y
+            `GET availability/{product}/dates` + `POST availability/{product}/times` encima; la web
+            lo consume desde el mismo commit. Lo extraído no eran las reglas de oferta —ya vivían
+            bien en `SlotOffer`— sino la derivación de la CESTA a ocupantes, que estaba en la clase
+            de UI y es la que decide si una hora se puede vender (`AFORO-02`). **El hallazgo**: la
+            fuente única calculaba el máximo CONTRATABLE y publicaba solo el de mostrar — en un pack
+            con cupo 60 y máximo 20 son 60 y 20, y un cliente que acotara su selector con el primero
+            dejaría pedir invitados que el checkout rechaza. De regalo, `RateResolver` salió entero
+            de la capa de UI y `SlotOffer` entró en el `CRITICAL_RE` del `pre-push`, donde
+            `CriticalPathGateTest` ya lo daba por incluido. Suite **2404 verde** + los dos
+            verificadores de concurrencia sobre MySQL (16 workers).
       - [ ] **4c — CREACIÓN y COBRO**: `POST orders` y `POST orders/{code}/payment`.
       - [ ] **4d — DESENLACE**: `payment-status` con estados reales, el token de retorno y la
             historia de retorno móvil.

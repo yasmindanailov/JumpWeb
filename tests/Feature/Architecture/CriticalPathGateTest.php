@@ -41,6 +41,11 @@ class CriticalPathGateTest extends TestCase
         // recontar aforo (hallazgo L2)— y el initiator marca `SUPERSEDED` los intentos previos.
         'app/Domain/Booking/Services/ReservationAdmissionPolicy.php',
         'app/Domain/Payments/Services/PaymentInitiator.php',
+        // Fase 3 · paso 4b: la fuente ÚNICA de oferta (`AFORO-02`). Entró tarde al patrón —este
+        // mismo test ya la trataba como núcleo en `CRITICAL_SYMBOLS`, pero el fichero quedaba
+        // fuera—, y sí puede mover lo que verifica `purchase:verify-oversell`: `OrderCreator` la
+        // llama como backstop del corte intra-día (`passesIntradayFloor`).
+        'app/Domain/Booking/Services/SlotOffer.php',
     ];
 
     /**

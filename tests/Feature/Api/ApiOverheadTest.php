@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Http\Api\ApiSurface;
@@ -218,6 +219,34 @@ class ApiOverheadTest extends TestCase
     }
 
     /**
+     * Fase 3 · paso 4b — el calendario no puede costar una consulta por día ofrecido.
+     *
+     * Es el N+1 más fácil de reintroducir aquí, porque el precio de cada día se resuelve por
+     * separado y un calendario tiene decenas de días: era exactamente lo que hacía el sidebar antes
+     * de extraer esto (`RateResolver::priceCents` por celda, hasta 42 veces por render).
+     *
+     * Se mide por PENDIENTE: un horizonte con muchos más días tiene que costar lo mismo que uno con
+     * pocos, porque la tarifa se resuelve por día DISTINTO y estos comparten la de siempre.
+     */
+    public function test_listing_the_offered_dates_does_not_grow_with_the_number_of_days(): void
+    {
+        $product = $this->catalogFixture(1)[0];
+        $this->seedSlots($product, days: 2);
+        $this->warmUp('/availability/'.$product->id.'/dates');
+        $few = $this->queriesOf(fn () => $this->getJson('/'.ApiSurface::PREFIX.'/availability/'.$product->id.'/dates')->assertOk());
+
+        $this->seedSlots($product, days: 20);
+        $many = $this->queriesOf(fn () => $this->getJson('/'.ApiSurface::PREFIX.'/availability/'.$product->id.'/dates')->assertOk());
+
+        $this->assertCount(
+            count($few),
+            $many,
+            "Un calendario de 20 días cuesta más consultas que uno de 2: hay un precio resuelto por día.\n  ".
+            implode("\n  ", array_diff($many, $few))
+        );
+    }
+
+    /**
      * Catálogo mínimo pero completo: zona operativa, tarifa y productos con precio (sin precio, el
      * eager load de precios no se ejercería y la medición no valdría).
      *
@@ -247,6 +276,19 @@ class ApiOverheadTest extends TestCase
         }
 
         return $created;
+    }
+
+    /** Franjas vendibles del producto para los `$days` días siguientes (una por día, basta). */
+    private function seedSlots(TicketType $product, int $days): void
+    {
+        for ($i = 1; $i <= $days; $i++) {
+            $date = now()->addDays($i)->toDateString();
+
+            Slot::firstOrCreate(
+                ['zone_id' => $product->zone_id, 'date' => $date, 'start_time' => '10:00:00'],
+                ['end_time' => '11:00:00', 'capacity' => 50, 'online_capacity' => 50],
+            );
+        }
     }
 
     private function attachAddons(TicketType $product, int $count): void

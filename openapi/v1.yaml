@@ -8,8 +8,8 @@
 #
 # Se sirve como fichero estático; ningún paquete de runtime lo publica por HTTP (`DECISIONES #21c`).
 #
-# Alcance actual: Fase 3 · pasos 0 (cimientos), 1a (lectura de la cuenta) y 1b (catálogo). Los
-# demás endpoints llegan por los pasos del spec §9.
+# Alcance actual: Fase 3 · pasos 0 (cimientos), 1a (lectura de la cuenta), 1b (catálogo), 3 (auth),
+# 4a (presupuesto) y 4b (disponibilidad). Los demás endpoints llegan por los pasos del spec §9.
 
 openapi: 3.0.3
 
@@ -342,6 +342,96 @@ paths:
                 $ref: '#/components/schemas/CatalogProductDetail'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /availability/{product}/dates:
+    get:
+      tags: [Compra]
+      operationId: availabilityDates
+      summary: Días reservables de un producto
+      description: |
+        Los días con alguna franja viva, con el precio de cada uno. El precio va aquí porque un
+        calendario de compra sin precios obliga a entrar día a día para comparar, y porque
+        calcularlo en el cliente significaría reimplementar la resolución de tarifas.
+
+        **No lleva cesta a propósito**: un día se ofrece si tiene franjas. Si cabe o no la cantidad
+        que se quiere lo decide la franja, y saberlo aquí exigiría evaluar el cupo de todas las
+        horas de todos los días del horizonte para pintar un calendario.
+
+        ⚠️ Que un día aparezca **no reserva nada**: lo dicho es cierto en el instante en que se
+        calcula, y el checkout vuelve a comprobarlo todo bajo bloqueo.
+      parameters:
+        - name: product
+          in: path
+          required: true
+          description: Id del producto.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Días reservables, en orden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferedDateList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /availability/{product}/times:
+    post:
+      tags: [Compra]
+      operationId: availabilityTimes
+      summary: Horas reservables de un día
+      description: |
+        Las horas de entrada de ese día con el cupo que les queda.
+
+        **Es `POST` y lleva la cesta, y las dos cosas son necesarias.** El cupo se calcula
+        descontando los ocupantes que la propia cesta del cliente ya retiene: sin ellos, una segunda
+        línea sobre la misma franja vería libres las plazas que su primera línea ya ocupa, y el
+        checkout la rechazaría después. La cesta —líneas con complementos anidados— no cabe con
+        garantías en una URL, así que viaja en el cuerpo. **No cambia nada del servidor.**
+
+        La cesta es OPCIONAL: la primera compra empieza sin nada elegido, y ausente equivale a vacía.
+        La línea que se está configurando **no** debe ir en ella; si no, se contaría a sí misma.
+
+        ⚠️ **`available` no es `max_quantity`.** En una entrada coinciden; en un pack, `available`
+        son las plazas que le quedan a la franja y `max_quantity` cuántos invitados admite esa
+        fiesta. Un selector de cantidad construido sobre `available` dejaría pedir de más.
+      parameters:
+        - name: product
+          in: path
+          required: true
+          description: Id del producto.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityTimesRequest'
+      responses:
+        '200':
+          description: Horas reservables de ese día, en orden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferedTimeList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -881,6 +971,98 @@ components:
         charged_subtotal_cents:
           type: integer
 
+    OfferedDateList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfferedDate'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    OfferedDate:
+      type: object
+      description: Un día con franjas reservables, y lo que cuesta el producto ese día.
+      required: [date, price_cents, rate_key]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        price_cents:
+          type: integer
+          nullable: true
+          description: |
+            Precio unitario de ese día. **`null` = el producto no tiene precio para la tarifa que le
+            aplica**: el día se ofrece porque tiene franjas, pero el checkout rechazará la línea.
+            Distinto de un `0`, que es un producto gratuito intencionado.
+        rate_key:
+          type: string
+          description: |
+            Clave de configuración de la tarifa aplicada (`normal`, `special`…). No es una etiqueta
+            traducible: sirve para marcar los días de tarifa especial sin deducirlos del precio.
+
+    OfferedTimeList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfferedTime'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    OfferedTime:
+      type: object
+      description: Una hora de entrada reservable, con el cupo ya descontada la cesta enviada.
+      required: [time, available, max_quantity, sellable]
+      additionalProperties: false
+      properties:
+        time:
+          type: string
+          description: Hora de inicio de la franja, en formato `HH:MM:SS`.
+        available:
+          type: integer
+          description: |
+            Plazas —o invitados— que le quedan a la franja. Es para MOSTRAR («quedan N»), no para
+            acotar el selector de cantidad.
+        max_quantity:
+          type: integer
+          description: |
+            Máximo contratable en esta franja. En una entrada coincide con `available`; en un pack
+            está topado además por el máximo de invitados del propio pack, así que puede ser MENOR.
+            **Este es el número que acota un selector de cantidad.**
+        sellable:
+          type: boolean
+          description: |
+            `false` = la hora existe pero está completa. Se lista igualmente para que el cliente vea
+            que esa hora existe, en vez de que desaparezca sin explicación. Un pack por debajo de su
+            mínimo de invitados no llega a listarse: no es reservable de ninguna forma.
+
+    AvailabilityTimesRequest:
+      type: object
+      required: [date]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+          description: Día que se consulta.
+        items:
+          type: array
+          maxItems: 50
+          description: |
+            La cesta actual del cliente. **Opcional**: ausente equivale a vacía. Solo sirve para
+            descontar el cupo que uno mismo ya retiene, así que la línea que se está configurando no
+            debe ir aquí.
+          items:
+            $ref: '#/components/schemas/CartLine'
+
     Quote:
       type: object
       description: |
@@ -1009,9 +1191,9 @@ components:
             Las líneas de la cesta. El tope espeja el invariante de servidor del checkout: una cesta
             desmedida bloquearía muchas franjas a la vez al comprarla.
           items:
-            $ref: '#/components/schemas/QuoteRequestItem'
+            $ref: '#/components/schemas/CartLine'
 
-    QuoteRequestItem:
+    CartLine:
       type: object
       description: |
         Una línea de la cesta. Es el MISMO cuerpo que aceptan la disponibilidad y la creación del
@@ -1041,9 +1223,9 @@ components:
         addons:
           type: array
           items:
-            $ref: '#/components/schemas/QuoteRequestAddon'
+            $ref: '#/components/schemas/CartLineAddon'
 
-    QuoteRequestAddon:
+    CartLineAddon:
       type: object
       description: |
         Complemento pedido para la línea. Es una INTENCIÓN: el servidor la resuelve contra la

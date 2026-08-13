@@ -36,7 +36,13 @@ touched_critical=''
 # `ApiBoundariesTest` NO sustituye a esto: prohíbe que la lógica NAZCA en el controlador, pero un
 # controlador que llama al OrderCreator correcto sigue pudiendo reordenar sus llamadas y romper
 # `AFORO-01`. Que esta lista siga cubriendo lo que debe lo vigila `CriticalPathGateTest`.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|PaymentInitiator|ReservationAdmissionPolicy)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
+#
+# `SlotOffer` entra en Fase 3 · paso 4b, y llegaba tarde: `CriticalPathGateTest` ya lo trataba como
+# núcleo —un controlador de API que lo tocara tenía que casar con este patrón— pero el fichero en sí
+# no lo hacía. Es la fuente ÚNICA de oferta (`AFORO-02`) y `OrderCreator` la llama como backstop del
+# corte intra-día (`passesIntradayFloor`), así que un cambio suyo puede mover lo que
+# `purchase:verify-oversell` comprueba.
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|PaymentInitiator|ReservationAdmissionPolicy)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

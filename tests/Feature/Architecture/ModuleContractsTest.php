@@ -3,6 +3,7 @@
 namespace Tests\Feature\Architecture;
 
 use App\Domain\Booking\Contracts\AdmissionDecision;
+use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CartQuote;
 use App\Domain\Booking\Contracts\CartQuoteLine;
@@ -11,6 +12,8 @@ use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\OfferedDate;
+use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\OperatingWindow;
 use App\Domain\Booking\Contracts\PendingGuestForm;
@@ -26,6 +29,7 @@ use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
@@ -79,6 +83,7 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
         $this->assertInstanceOf(CartPricer::class, app(CartPricing::class));
+        $this->assertInstanceOf(AvailabilityReader::class, app(AvailabilityOffer::class));
     }
 
     /**
@@ -130,6 +135,71 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(6666, $component->instance()->cartDepositCents());
         $this->assertSame(1, $component->instance()->cartCount());
         $this->assertGreaterThan(0, $pricing->calls, 'Purchase debe pedir los importes al contrato');
+    }
+
+    /**
+     * WEB → BOOKING: los días y las horas que ofrece el sidebar los decide el dominio, no el
+     * componente Livewire (Fase 3 · paso 4b).
+     *
+     * El doble ofrece un día y una hora que NO existen en base de datos —no hay ni franjas ni
+     * producto—: si `Tickets\Purchase` siguiera derivando la oferta por su cuenta, el calendario
+     * saldría vacío y estas aserciones caerían. Cubre además el número que de verdad importa: el
+     * máximo que la vista deja elegir tiene que ser el que da el contrato, no uno recalculado
+     * aparte, porque `available` y `maxQuantity` no son el mismo número en un pack.
+     */
+    public function test_the_web_offer_of_days_and_times_comes_from_the_contract(): void
+    {
+        $offer = new class implements AvailabilityOffer
+        {
+            public int $calls = 0;
+
+            public function dates(int $productId): array
+            {
+                $this->calls++;
+
+                return [new OfferedDate('2099-01-01', 4242, 'special')];
+            }
+
+            public function times(int $productId, string $date, array $cart = []): array
+            {
+                return [new OfferedTime('07:30:00', 99, 7, true)];
+            }
+
+            public function maxQuantity(int $productId, string $date, string $time, array $cart = []): int
+            {
+                return 7;
+            }
+        };
+        $this->app->instance(AvailabilityOffer::class, $offer);
+
+        $product = $this->sellableProduct();
+
+        $component = Livewire::test(Purchase::class)
+            ->set('typeId', $product->id)
+            ->set('month', '2099-01')
+            ->set('date', '2099-01-01')
+            ->set('time', '07:30:00');
+
+        $day = collect($component->viewData('weeks'))->flatten(1)->firstWhere('date', '2099-01-01');
+
+        $this->assertNotNull($day, 'el calendario no pinta el día que ofrece el contrato');
+        $this->assertTrue($day['selectable']);
+        $this->assertSame(4242, $day['price_cents'], 'el precio del día lo pone el contrato');
+        $this->assertSame('special', $day['type'], 'la tarifa del día la pone el contrato');
+        $this->assertSame(['07:30:00'], $component->viewData('times'));
+        $this->assertSame(7, $component->viewData('maxQty'), 'el máximo elegible es el del contrato');
+        $this->assertGreaterThan(0, $offer->calls);
+    }
+
+    /** Producto vendible mínimo, para que el componente tenga algo que seleccionar. */
+    private function sellableProduct(): TicketType
+    {
+        $zone = Zone::create(['slug' => 'jump', 'name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+
+        return TicketType::create([
+            'name' => ['es' => 'Entrada'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
     }
 
     /**

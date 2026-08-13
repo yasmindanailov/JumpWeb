@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3 y 4a TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3, 4a y 4b TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3) y **`#32`** (paso 4a).
+> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a) y **`#33`** (paso 4b).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.octies** — léelos antes de seguir por el
-> paso 4b.
+> **Lo que el código enseñó al implementar: §10 → §10.nonies** — léelos antes de seguir por el
+> paso 4c.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -333,9 +333,10 @@ Se corrige:
    - ✅ **4a** (2026-08-13, `DECISIONES #32`): **tarificación de cesta** (§4.6.4).
      `Booking\Contracts\CartPricing` + `POST orders/quote`. La web consume el contrato desde el mismo
      commit. **Lo que el código enseñó: §10.octies.**
-   - ⬜ **4b**: **disponibilidad con la cesta** — `GET availability/{product}/dates` y
-     `POST availability/{product}/times`. Lleva la cesta porque `SlotOffer::offerableTimes()`
-     descuenta los ocupantes provisionales de la propia cesta (`AFORO-02`).
+   - ✅ **4b** (2026-08-13, `DECISIONES #33`): **disponibilidad con la cesta**.
+     `Booking\Contracts\AvailabilityOffer` + `GET availability/{product}/dates` y
+     `POST availability/{product}/times`. La web consume el contrato desde el mismo commit. **Lo que
+     el código enseñó: §10.nonies.**
    - ⬜ **4c**: **creación y cobro** — `POST orders` y `POST orders/{code}/payment`, sobre
      `ReservationAdmission` + `OrderCreator` + `PaymentInitiator`, que ya existen.
    - ⬜ **4d**: **desenlace** — `GET orders/{code}/payment-status` con estados reales, el token de
@@ -707,3 +708,51 @@ a veces sus alergias (dato de salud, `RGPD` §3), y este endpoint es PÚBLICO. E
 esos datos —acaba de enviarlos— y las etiquetas para pintarlos están en `GET catalog/products/{id}`,
 así que devolverlos no le aporta nada y sí abre una superficie. Es el hermano del punto 33: allí la
 forma del cuerpo era parte del secreto; aquí lo es la ausencia de un campo.
+
+### 10.nonies Lo que el código enseñó — paso 4b (2026-08-13)
+
+**46. La fuente única calculaba el número correcto y publicaba el otro.** `SlotOffer::offerableTimes()`
+devolvía por franja un `available` que, en un PACK, son las plazas que le quedan al cupo —sin topar
+por el `max_qty` del pack—, mientras que el máximo que se puede CONTRATAR sí está topado. Los dos
+números se calculaban ahí dentro y solo salía el primero; el segundo lo recomputaba la web por su
+cuenta (`Purchase::maxQty()`). Medido contra la instalación de demostración: un cumpleaños con cupo
+de 60 invitados y máximo de 20 publica `available: 60` y `max_quantity: 20`. Un cliente que hubiera
+construido su selector de cantidad sobre `available` habría dejado pedir 60 invitados que el
+checkout rechaza. **Lección**: cuando un método interno calcula dos magnitudes y expone una, la que
+se queda dentro es justo la que el siguiente consumidor va a recalcular mal.
+
+**47. Un endpoint de disponibilidad sin la cesta no es un endpoint incompleto: es uno incorrecto.**
+`offerableTimes()` descuenta los ocupantes provisionales de la propia cesta, así que sin ellos la
+segunda línea sobre la misma franja ve libres las plazas que la primera ya retiene. Por eso las
+horas van por `POST` con la cesta en el cuerpo y las fechas por `GET` sin ella (un día se ofrece si
+tiene franjas; evaluar el cupo de todas las horas de todos los días del horizonte para pintar un
+calendario sería absurdo). Verificado con `curl` contra el servidor real: 40 plazas sin cesta, 35
+con una línea de 5 en esa franja, y las demás intactas.
+
+**48. Los dos aforos son pools independientes, y una derivación descuidada los mezcla.** Las
+entradas ocupan PLAZAS a lo largo de su duración; los packs ocupan CUPO en su propio pool, contando
+montaje y limpieza (#82). La derivación cesta → ocupantes produce por eso DOS listas con forma
+distinta, y juntarlas restaría plazas de entrada por un cumpleaños. Vivía en la clase de UI, donde
+nadie podía probarla; ahora tiene test propio.
+
+**49. Resolver una tarifa por día costaba una consulta por celda del calendario.** El presupuesto
+por PENDIENTE lo destapó al primer intento: `RateResolver::for()` consulta `special_dates` en cada
+llamada, así que un horizonte de 20 días costaba 18 consultas más que uno de 2. **No se arregló
+duplicando la regla en el read-model** —dos resoluciones de tarifa que puedan divergir son dos
+precios para el mismo día— sino añadiendo `RateResolver::forDates()`, un lote en la misma clase que
+tiene la regla, con `for()` delegando en él. El coste es plano y la regla sigue siendo una.
+
+**50. Extraer la disponibilidad sacó `RateResolver` entero de la capa de UI, y eso no estaba
+previsto.** Al mover el calendario al contrato, el único uso que quedaba era `dayPriceCents()`, que
+resolvía la tarifa del día elegido por su cuenta —pudiendo, en teoría, no coincidir con el precio
+pintado en su propia celda—. Ahora lee de la misma oferta. `Livewire\Tickets\Purchase` ya no importa
+ningún servicio de precio ni de aforo: solo contratos. **Señal general**: cuando una extracción deja
+una dependencia con un solo uso, ese uso suele ser el que faltaba por extraer.
+
+**51. El gate de concurrencia llegaba tarde a su propia lista.** `CriticalPathGateTest` ya trataba
+`SlotOffer` como núcleo —un controlador de API que lo tocara tenía que casar con `CRITICAL_RE`— pero
+el fichero en sí no estaba en el patrón: se podía cambiar la fuente única de oferta y empujar sin
+correr un verificador. Y sí importa: `OrderCreator` llama a `SlotOffer::passesIntradayFloor()` como
+backstop, así que un cambio suyo puede mover lo que `purchase:verify-oversell` comprueba. Añadido en
+este paso. **Lección**: una lista de símbolos críticos y una lista de ficheros críticos que no se
+comprueban la una contra la otra acaban diciendo cosas distintas.

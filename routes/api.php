@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
+use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -74,6 +75,23 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/catalog/products/{product}', [CatalogProductsController::class, 'show'])
         ->whereNumber('product')
         ->name('catalog.products.show');
+
+    // ── Disponibilidad (paso 4b) — PÚBLICA ────────────────────────────────────────────────────
+    // El segundo momento en que el servidor participa en el carrito sin guardarlo: qué días y qué
+    // horas quedan. La fuente es `SlotOffer` (`AFORO-02`), la misma que el panel.
+    //
+    // Las HORAS van por POST y llevan la cesta: `offerableTimes()` descuenta los ocupantes que la
+    // propia cesta ya retiene, así que un GET sin cesta ofrecería horas que el checkout rechazaría.
+    // Las FECHAS van por GET porque no dependen de la cesta (un día se ofrece si tiene franjas).
+    //
+    // `whereNumber` no es cosmética: sin ella `/availability/abc/dates` llegaría al controlador y la
+    // coerción a `int` reventaría con un 500 en vez del 404 que corresponde.
+    Route::get('/availability/{product}/dates', [AvailabilityController::class, 'dates'])
+        ->whereNumber('product')
+        ->name('availability.dates');
+    Route::post('/availability/{product}/times', [AvailabilityController::class, 'times'])
+        ->whereNumber('product')
+        ->name('availability.times');
 
     // ── Presupuesto (paso 4a) — PÚBLICO ───────────────────────────────────────────────────────
     // El servidor participa en el carrito sin guardarlo: aquí pone el PRECIO. Es público porque la

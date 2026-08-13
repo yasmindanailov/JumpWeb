@@ -62,7 +62,11 @@ class ApiContractTest extends TestCase
         // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
         // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`
         // sigue impidiendo colar un campo que el servidor ignoraría en silencio.
-        'QuoteRequestItem' => ['event_data', 'addons'],
+        'CartLine' => ['event_data', 'addons'],
+        // Y otro cuerpo de PETICIÓN: en la disponibilidad la cesta es opcional de verdad —la
+        // primera compra empieza sin nada elegido— y ausente equivale a vacía. Exigirla obligaría a
+        // todo cliente a mandar `items: []` para preguntar por unas horas.
+        'AvailabilityTimesRequest' => ['items'],
     ];
 
     /** @var array<string, mixed>|null */

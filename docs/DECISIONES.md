@@ -895,3 +895,62 @@ presupuesto simple, pack con señal (180,00 € de valor → 30,00 € online y 
 422 con el campo nombrado, `Accept-Language: en` traduciendo el nombre del producto, cabeceras de
 `SEC-01` presentes y CORS acotado a `APP_URL`. Funciona **sin `Origin`/`Referer`**, y es correcto:
 no toca `session()` (§10.septies 34).
+
+## #33 · 2026-08-13 · Fase 3 paso 4b: la disponibilidad sale de la UI, y lleva la cesta
+Segunda unidad del paso 4. Nace `Booking\Contracts\AvailabilityOffer` (+`OfferedDate`/`OfferedTime`)
+con `AvailabilityReader` detrás, y encima `GET availability/{product}/dates` y
+`POST availability/{product}/times`. La web consume el contrato desde el mismo commit. Detalle en
+`api-v1.md` §10.nonies.
+
+**(a) Lo que se extrajo no eran las reglas de oferta —esas ya vivían bien en `SlotOffer`
+(`AFORO-02`)— sino la derivación de la CESTA a ocupantes provisionales**, que estaba dentro de
+`Livewire\Tickets\Purchase`. Es la pieza que decide si una hora se puede vender: sin ella, una
+segunda línea sobre la misma franja ve libres las plazas que la primera ya retiene. Cualquier otro
+cliente habría tenido que reescribirla, y una copia que cuente distinto ofrece horas que el checkout
+rechaza.
+
+**(b) Las horas van por `POST` con la cesta; las fechas por `GET` sin ella.** No es una rareza REST:
+la cesta —líneas con complementos anidados— no cabe con garantías en una URL, y el endpoint no
+cambia nada del servidor. Las fechas no dependen de la cesta (un día se ofrece si tiene franjas), y
+hacerlas depender obligaría a evaluar el cupo de todas las horas de todos los días del horizonte
+para pintar un calendario. La cesta es **opcional**: la primera compra empieza sin nada elegido.
+
+**(c) El hallazgo: la fuente única calculaba el número correcto y publicaba el otro.**
+`offerableTimes()` devolvía un `available` que en un PACK son las plazas del cupo **sin topar** por
+el máximo del pack, mientras que lo CONTRATABLE sí está topado — y ese segundo número lo calculaba
+ahí dentro y lo descartaba, obligando a la web a recomputarlo. Medido en la instalación de
+demostración: `available: 60`, `max_quantity: 20`. Un cliente que hubiera acotado su selector con el
+primero habría dejado pedir 60 invitados que el checkout rechaza. Ahora la fuente publica los dos y
+el contrato los separa con su porqué.
+
+**(d) La tarifa por día se resuelve en LOTE, sin duplicar la regla.** El presupuesto por pendiente
+destapó que `RateResolver::for()` consulta `special_dates` en cada llamada: un calendario costaba
+una consulta por celda. Se añadió `RateResolver::forDates()` **en la misma clase que tiene la
+regla**, con `for()` delegando en él; copiar la resolución dentro del read-model habría creado dos
+precios posibles para el mismo día.
+
+**(e) De regalo, `RateResolver` salió entero de la capa de UI.** Al mover el calendario al contrato,
+su único uso restante era `dayPriceCents()`, que resolvía la tarifa del día elegido por su cuenta y
+podía no coincidir con el precio pintado en su propia celda. Ahora lee de la misma oferta.
+`Purchase` ya no importa ningún servicio de precio ni de aforo: solo contratos.
+
+**(f) `SlotOffer` entra en el `CRITICAL_RE` del `pre-push`.** `CriticalPathGateTest` ya lo trataba
+como núcleo —un controlador de API que lo tocara debía casar con el patrón— pero el fichero en sí
+quedaba fuera: se podía cambiar la fuente única de oferta y empujar sin correr un verificador. Y sí
+importa, porque `OrderCreator` llama a `SlotOffer::passesIntradayFloor()` como backstop del corte
+intra-día.
+
+**(g) Renombre en el contrato público**: `QuoteRequestItem`/`QuoteRequestAddon` pasan a `CartLine`/
+`CartLineAddon`, porque desde este paso los comparten el presupuesto y la disponibilidad (y en 4c,
+la creación del pedido). `v1` es evolutiva hasta Fase 6 y no hay ningún cliente escrito todavía; el
+nombre correcto ahora es más barato que arrastrar uno que miente.
+
+**Verificación empírica**: suite **2404 verde** (9211 aserciones, `--parallel` ~62 s) · Pint limpio ·
+`docs-check` verde · **contrato verificado por mutación** (renombrar `max_quantity` en el Resource
+deja el test del endpoint en rojo con «The required properties (max_quantity) are missing») · **los
+dos verificadores de concurrencia VERDES sobre MySQL real** con 16 workers, corridos después de
+tocar `SlotOffer` y `RateResolver` (1 compra + 15 `sold_out`; 1 `authorized` + 15 `idempotent_paid`)
+· **paridad web↔API con cesta NO vacía y su mutación** en la suite · endpoints ejercidos **contra el
+servidor real con `curl`**: 14 días con su tarifa (el sábado sale `special` a 11,90 €), 40 plazas sin
+cesta y **35 con una línea de 5 en esa franja** —y las demás intactas—, el pack publicando 60 y 20, y
+404 tanto para un id inexistente como para uno no numérico.
