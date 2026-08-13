@@ -1201,3 +1201,64 @@ invertir admitir↔reabrir: 2) · los dos verificadores de concurrencia sobre My
 ciclo completo por `curl` contra el servidor: crear (201, con `expires_at` puesto), reintentar (200,
 hold extendido y el intento previo `superseded` **comprobado en BD**), `payment-status` coherente, y
 el reintento de la web devolviendo su formulario firmado. El pedido de prueba se liberó.
+
+---
+
+## #38 · 2026-08-13 · Fase 4: alcance del sidebar SPA, modelo de tema y las seis decisiones del owner
+
+Apertura de Fase 4. Diseño en `docs/specs/sidebar-spa.md` (**v3**), escrito, revisado
+adversarialmente por 3 agentes —que declararon la v1 **INSUFICIENTE**— y luego rediseñado hueco a
+hueco por 5 agentes más con una revisión de coherencia. Aquí quedan las decisiones; el porqué
+detallado y lo medido, en el spec.
+
+**(a) Alcance: SOLO el cajón del sidebar.** `/mi-cuenta` y `/mi-cuenta/pedidos` siguen en Blade.
+Lo que la fase retira es `Purchase.php`, que es su objetivo declarado; reescribir además unas
+páginas que hoy funcionan y no son deuda solo añade superficie que reprobar.
+
+**(b) Tema: tokens + una hoja de estilos POR INSTALACIÓN.** Mismo HTML, CSS potencialmente muy
+distinto por cliente. La consecuencia arquitectónica es la que gobierna toda la fase: **lo que
+emite el sidebar es un contrato público**, igual que `openapi/v1.yaml` lo es para la API. Eso
+descarta CSS-in-JS, estilos *scoped* y utilidades dentro del cajón.
+⚠️ Y al medirlo, la premisa de la v1 resultó falsa: **el contrato no son las clases, es el ÁRBOL**
+— 90 de 292 selectores son estructurales o dependen del tipo de elemento, así que un `<div>` donde
+había un `<button>` pierde el estilo con el contrato de clases cumplido al 100%. Se verifica por
+diff de DOM renderizado entre los dos motores, no extrayendo `class=` del código fuente.
+
+**(c) Dependencias: Vue 3 + Pinia** (`CONVENCIONES §9.3`). La recomendación inicial era Vue sin
+Pinia; el owner aportó el requisito que faltaba —el cajón hospedará **tres dominios** (compra,
+cuenta y gestión de entradas) que comparten sesión y saltan entre sí—, y con tres dominios los
+stores separados dejan de ser ceremonia. ⚠️ Queda dicho para que nadie lo confunda: **Pinia no
+resuelve el salto entre estados**; eso es diseño de máquina de estados e intención pendiente.
+
+**(d) La cesta se persiste SIN `event_data` (RGPD).** Hoy vive en la sesión del servidor y por eso
+sobrevive a irse a leer el correo de verificación; en la SPA vivirá en el navegador. Medido: los
+campos de etapa *booking* del pack sembrado son **nombre del homenajeado (un menor), su edad y
+«Notas (alergias…)»** — dato de salud, art. 9. Dejarlos en `localStorage` los pone fuera del
+alcance de `User::anonymize()` (`RGPD-01`), sin caducidad y en un dispositivo que puede ser
+compartido. Al restaurar, las líneas de pack piden esos campos otra vez: es la **única desviación
+consciente de la paridad** de toda la fase.
+⚠️ Con la misma decisión aparece una regresión de seguridad que la v1 no vio: `localStorage` no
+pertenece a ninguna sesión, así que la cesta persistida guarda el id de su titular y el store de
+auth la purga al cambiar de identidad — sin eso, la cesta de Alice sobreviviría al login de Bob en
+la tablet del parque, que es una defensa que **hoy existe**.
+
+**(e) Tokenizar `site.css` entra en Fase 4, no en Fase 5.** Es el único momento en que alguien
+recorre ese CSS nodo a nodo; hacerlo después, con el marcado ya en Vue, obliga a una **segunda**
+verificación completa de paridad visual — el mismo coste con el que se descartó reescribir el CSS.
+⚠️ Y medirlo bien cambió el tamaño del problema: el «75% quemado» incluye ESTRUCTURA (`display`,
+`flex-direction`) que no debe ser token nunca. De las 1.084 declaraciones del sidebar, las
+tematizables son 663 y estaban al **43%**. Ese es el número honesto y el que mide el presupuesto.
+
+**(f) El sexto hueco será un ENDPOINT, no una regla transcrita al cliente.** Hoy el servidor valida
+los campos del pack al añadir a la cesta; con la cesta en el navegador no queda ningún ida y vuelta.
+Copiar `missingRequiredEventFields` y su saneador a la SPA es una segunda implementación de una
+regla de servidor —deuda por definición— y de las caras: `sanitizeAnswerValue()` aplica
+`preg_replace('/\D+/','')` a los campos `number`, así que la EDAD contestada «cinco» el servidor la
+ve **vacía** y cualquier validación ingenua en el cliente la ve contestada. No lo encuentra ninguna
+revisión de código, solo un cliente enfadado.
+
+**(g) Dos afirmaciones del spec que eran FALSAS, corregidas contra el código antes de implementar
+nada**: los CTA del aviso de pausa **no son una cascada** (teléfono y WhatsApp se pintan a la vez;
+`/contacto` solo si faltan los dos), y la resolución de complementos **no depende de la fecha de la
+línea** (los cuatro llamantes de producción pasan `Carbon::today()`). Implementar cualquiera de las
+dos como estaba escrito habría sido una regresión funcional silenciosa.

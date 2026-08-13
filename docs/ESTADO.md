@@ -93,31 +93,63 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
-**Fase 4 — la SPA del sidebar, EN CURSO.** Diseño aprobado en `docs/specs/sidebar-spa.md`
-(**v2**, tras revisión adversarial ×3 que declaró la v1 INSUFICIENTE). **Léelo antes de tocar
-nada**: la v1 tenía tres afirmaciones falsas que la hacían inaplicable, y §7 dice cuáles.
 
-Decisiones del owner ya tomadas (2026-08-13): alcance = **solo el cajón** (`/mi-cuenta` sigue en
-Blade) · tema = **tokens + hoja de estilos por instalación** · dependencias = **Vue 3 + Pinia** ·
-la cesta se persiste **sin `event_data`** (RGPD: son nombre, edad y alergias de un menor) · la
-**tokenización de `site.css` sube a Fase 4** (paso 4.0c).
+**Fase 4 — la SPA del sidebar, EN CURSO.** Diseño en `docs/specs/sidebar-spa.md` (**v3**) y
+decisiones del owner en **`DECISIONES #38`**. **Lee las dos cosas antes de tocar nada**: la v1 del
+spec fue declarada INSUFICIENTE por tres revisores y tenía tres afirmaciones falsas que la hacían
+inaplicable; §7 dice cuáles.
 
-**Hecho: paso 4.0a, primera mitad.** La landing ya no sabe qué motor mueve el cajón: la intención
-se declara con `$store.purchase.openWith({…})` y cada motor registra su adaptador
-(`SidebarSeamTest`, verificado por mutación). Escrito el contrato de `mode`/`identifying`, y fuera
-`alpinejs` de `package.json` (estaba declarado y no lo importaba nadie).
+### Lo que ya está hecho (todo empujado y verificado por mutación)
 
-**Hecho también: 4.0a segunda mitad.** El desenlace del pago (confirmado · denegado · verificando)
-tiene un solo dueño: `Http\Sidebar\SidebarEntry`. Antes las tres claves de sesión se nombraban a
-mano en cinco ficheros y solo `Purchase::mount()` las olvidaba.
-⚠️ **Dato medido que explica su forma**: el componente es `lazy`, así que su `mount()` **NO corre en
-la petición del layout** sino en la del `lazy`. Por eso hay dos verbos y no uno: el layout usa
-`peek()` (mirar sin consumir, para decidir si el cajón se abre solo) y el MOTOR usa `consume()`.
-Cuando el motor sea la SPA —que vive en el mismo documento— consumirá el layout. Guarda ejecutable
-de «un solo dueño» en `SidebarEntryTest`, verificada por mutación en PHP y en Blade.
+- **4.0a — la costura, sin una línea de Vue.** (a) La landing declara su INTENCIÓN
+  (`$store.purchase.openWith({…})`) en vez de despachar eventos de Livewire: con otro motor esos
+  `dispatch` **no fallaban, no hacían nada** (`SidebarSeamTest`). (b) El desenlace del pago tiene un
+  solo dueño, `Http\Sidebar\SidebarEntry` (`SidebarEntryTest`, guarda de «un solo dueño»).
+  ⚠️ **Dato medido que explica su forma**: el componente es `lazy`, así que su `mount()` **NO corre
+  en la petición del layout**. Por eso hay DOS verbos: el layout usa `peek()` (mirar sin consumir) y
+  el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
+- **Gates**: el `pre-push` corre ahora `npm run build` **antes** de la suite (`PrePushGateTest`), y
+  el puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
+- **4.0c (mitad 1)** — tokenización de lo TEMATIZABLE: **43% → 49%**, colores crudos **13 → 3**.
+  Todas las sustituciones equivalentes por construcción. Presupuesto en `SidebarTokenBudgetTest`.
+- **4.0b — 4 huecos de API de 5, y medio del cuarto**: `GET /me/reservation-eligibility` ·
+  `GET /config` · `GET /booking/status` · los seis campos sin PII del resumen del pedido.
 
-Luego: **4.0b** los cinco huecos de API (§4.4 del spec; el más gordo son los complementos
-RESUELTOS) · **4.0c** tokenizar `site.css` · **4.1** cimientos SPA.
+### Por dónde SEGUIR, en este orden
+
+1. **4.0b·4b — `GET /orders/{code}/event-data`** (futuro). Las respuestas del pack (nombre, edad y
+   alergias de un MENOR: art. 9) en endpoint aparte, para que **no viajen en `me/orders`**. El test
+   que hace falsable esa decisión es justamente «`me/orders` nunca lleva las respuestas».
+   ⚠️ Verificar antes que `User::anonymize()` nulifica `event_data` también en líneas canceladas
+   (lo hace: su `update` no filtra por estado) y decidir si se recorta a `EVENT_STAGE_BOOKING` —
+   sería un **cambio de conducta** respecto al sidebar, que hoy pinta todas las etapas.
+2. **4.0b·6 — el endpoint de validación de línea.** Decidido en `#38(f)`: **endpoint, no regla
+   transcrita**. Hoy `Purchase::addToCart()` valida en servidor y con la cesta en `localStorage` no
+   queda ida y vuelta. Lo caro es `sanitizeAnswerValue()`: para un campo `number` aplica
+   `preg_replace('/\D+/','')`, así que la EDAD contestada «cinco» el servidor la ve **vacía** y una
+   validación ingenua en el cliente la ve contestada. Cubre además la fusión de líneas
+   (`findCartIndex`: solo si no es pack y no lleva complementos) y el tope de cesta.
+3. **4.0b·5 — complementos resueltos. EL MÁS ARRIESGADO, y por eso el último.** Es el único que
+   cambia la semántica de un método del dominio (`AddonResolver::viewModel()`) consumido por DOS
+   superficies vivas: la compra pública y el pedido manual del panel.
+   ⚠️ **Decisión pendiente antes de escribir una línea** (spec §4.4.3): si el dinero de la línea
+   vuelve en la MISMA respuesta, delegando en `CartPricing`. Sin eso son **2 peticiones por clic**
+   en la pantalla con más clics del embudo (8–12 clics = 16–24 peticiones) contra un `throttle:api`
+   de 60/min COMPARTIDO con disponibilidad y catálogo.
+4. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
+   `padding` 47). ⚠️ Esta mitad **no es gratis**: hay que DECIDIR una escala y redondear un valor
+   cambia el diseño. Se hace con revisión visual, no con un script.
+5. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
+
+### Tres cosas que conviene saber antes de tocar Fase 4
+
+- **El contrato visual es el ÁRBOL, no las clases** (§4.2): 90 de 292 selectores son estructurales
+  o dependen del tipo de elemento. Un `<div>` donde había un `<button>` pierde el estilo con el
+  contrato de clases cumplido al 100%.
+- **El sidebar no es un nodo**: 11 vistas usan su store Alpine. El paso final retira el puente
+  `$wire.step`↔store, **no Alpine** —lo trae Livewire y lo usan cookies, nav y accesibilidad—.
+- **i18n sigue SIN canal** (§4.5): 169 claves × 3 locales (más un `zh_CN` parcial) salen hoy de
+  `__()` en servidor. La SPA no tiene de dónde sacarlas; el plan es un payload JSON en el montaje.
 
 **Contexto de la API que sigue vigente.** Antes de
 escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.terdecies: son setenta y tres

@@ -2,7 +2,7 @@
 
 > Estado: 🟦 en revisión (**v3**: v2 tras revisión adversarial ×3, más §4.3.bis y §4.4 rediseñados
 > hueco a hueco con revisión de coherencia) · Última actualización:
-> 2026-08-13 · Decisión asociada: entrada nueva en `DECISIONES.md` al aprobarse.
+> 2026-08-13 · Decisión asociada: `DECISIONES #38`.
 > Alcance aprobado por el owner el 2026-08-13: **solo el cajón del sidebar**; `/mi-cuenta` sigue en
 > Blade. Tema: **tokens + hoja de estilos por instalación**. Dependencias: Vue 3 + Pinia.
 >
@@ -465,4 +465,7 @@ verificaron contra el código antes de incorporarlos; los que cambian el diseño
 
 **2026-08-13 — owner**: la tokenización de `site.css` sube a Fase 4 (paso 4.0c, §4.3).
 
-**Revisión de esta v2**: pendiente. **Entrada final**: `DECISIONES.md` al aprobarse.
+**Revisión de esta v2**: la revisión hueco a hueco de §4.4 (5 diseñadores + 1 revisor de
+coherencia, veredicto SÓLIDO-CON-CAMBIOS) actuó de facto como revisión de la v2 en su parte de API.
+Las partes de §4.2 (contrato de DOM) y §4.8 (red de la máquina de estados) **no se han vuelto a
+revisar** desde la v2. **Entrada final**: `DECISIONES #38`.
