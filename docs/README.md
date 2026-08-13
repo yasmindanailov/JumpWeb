@@ -16,7 +16,7 @@
 | `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
 | `specs/vocabulario-dominio.md` | 🟦 Diseño de generalización del vocabulario (entrada de Fase 2; decisión final con los módulos). |
 | `specs/modulos-dominio.md` | ✅ Arquitectura de módulos de Fase 2 APROBADA (revisión multi-agente) — orden, contratos y checklists de mudanza. |
-| `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3), v2 tras revisión adversarial. **EJECUTADO**: los 6 pasos del corte cerrados; §9 lleva el avance y §10 → §10.terdecies lo que el código enseñó al implementar (73 puntos). |
+| `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3), v2 tras revisión adversarial. **EJECUTADO**: los 6 pasos del corte cerrados; §9 lleva el avance y §10 → §10.quaterdecies lo que el código enseñó al implementar (77 puntos, el último lote ya de Fase 4). |
 | `specs/checkout-orquestado.md` | ✅ Diseño APROBADO (v2, revisión adversarial ×3) del cierre de Fase 3: la secuencia «admitir → crear → abrir cobro» baja al dominio tras los puertos `ReservationCheckout` y `PaymentInitiation`. El segundo driver de pasarela queda para Fase 6. |
 | `specs/sidebar-spa.md` | 🟦 Diseño de Fase 4: el sidebar como SPA (Vue 3 + Pinia), primer consumidor real de la API v1. Alcance = solo el cajón; el tema es **tokens + hoja de estilos por instalación**, lo que convierte los nombres de clase del sidebar en un contrato público. |
 | `../openapi/v1.yaml` | El **contrato** de la API v1 (OpenAPI 3.0.3, escrito a mano). No vive en `docs/` porque no es documentación: es el artefacto contra el que se validan los tests y, en Fase 6, la app móvil. Manda sobre el código (`DECISIONES #21`). |

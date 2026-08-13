@@ -1161,11 +1161,22 @@ class Purchase extends Component
     }
 
     /**
-     * Respuestas del evento como pares [label, value] en el orden del esquema del pack, para
-     * mostrarlas (carrito, pago, confirmación, "Mis pedidos"). Vacío si no es pack o no hay datos.
+     * Respuestas del evento en el orden del esquema del pack, para mostrarlas (carrito, pago,
+     * confirmación). Vacío si no es pack o no hay datos.
+     *
+     * **La composición ya no vive aquí**: la pone `TicketType::eventAnswers()` desde Fase 4 ·
+     * paso 4.0b·4b, cuando `GET /orders/{code}/event-data` iba a ser su tercera copia (la segunda
+     * es `ReservationSlip::eventDataRows()`, que enseña además las claves huérfanas porque su
+     * lector es el operador). Emparejar respuesta con etiqueta es *data-driven* —el orden lo pone
+     * el esquema y los textos viven en BD— y por eso baja al dominio.
+     *
+     * Sin `$stage`, o sea TODAS las fases: la conducta que esta pantalla ya tenía. En la práctica
+     * solo hay respuestas de `booking` —la cesta las sanea a esa fase y el pedido se crea con
+     * ellas—, pero el filtro es del endpoint, no de aquí: acotarlo también en la web sería un
+     * cambio de conducta metido de rebote en un paso de API.
      *
      * @param  array<string,mixed>|null  $data
-     * @return array<int, array{label:string, value:string}>
+     * @return list<array{key:string, label:string, value:string}>
      */
     private function resolveEventData(?TicketType $type, ?array $data): array
     {
@@ -1173,15 +1184,7 @@ class Purchase extends Component
             return [];
         }
 
-        $out = [];
-        foreach ($type->eventFields() as $field) {
-            $value = $data[$field['key']] ?? null;
-            if ($value !== null && $value !== '') {
-                $out[] = ['label' => $type->eventFieldLabel($field), 'value' => (string) $value];
-            }
-        }
-
-        return $out;
+        return $type->eventAnswers($data);
     }
 
     /**

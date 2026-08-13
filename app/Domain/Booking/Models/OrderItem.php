@@ -255,6 +255,34 @@ class OrderItem extends Model
         return $this->isFinishedInPractice() ? self::STATUS_FINISHED : self::STATUS_ACTIVE;
     }
 
+    /**
+     * Las respuestas del evento de ESTA reserva, ya emparejadas con la etiqueta de su campo
+     * (Fase 4 · paso 4.0b·4b). La composición la pone `TicketType::eventAnswers()`, que es su
+     * fuente única; aquí solo se le da lo suyo.
+     *
+     * **Solo un pack tiene datos de evento**, y esa es la regla que aplica ya el dominio al crear
+     * el pedido (`OrderCreator` solo puebla `event_data` en la rama del pack). Repetirla aquí no es
+     * redundancia defensiva: es la misma guarda que la compra pone antes de pintar la cesta, y sin
+     * ella una entrada con `event_fields` mal configurados en el panel devolvería respuestas que
+     * ninguna superficie web enseña.
+     *
+     * ⚠️ **Lleva PII de un menor** (nombre, edad y alergias — dato de salud del art. 9). Quien la
+     * llame responde de que la respuesta no se cachee (`RGPD-04`) y de que quien pregunta sea el
+     * titular.
+     *
+     * @return list<array{key:string, label:string, value:string}>
+     */
+    public function eventAnswers(?string $stage = null): array
+    {
+        $type = $this->ticketType;
+
+        if ($type === null || ! $type->isPack()) {
+            return [];
+        }
+
+        return $type->eventAnswers(is_array($this->event_data) ? $this->event_data : [], $stage);
+    }
+
     // ─── Post-form de datos por invitado (#217) ──────────────────────────────────
 
     /**

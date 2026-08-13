@@ -1,6 +1,6 @@
 # JumpWeb — Refactor de generalización (tracker VIVO)
 
-> Tracker activo del refactor. Última actualización: **2026-08-13**.
+> Tracker activo del refactor. Última actualización: **2026-08-14**.
 > Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
 > Regla: **la suite en verde es la red** — ninguna fase se cierra con tests rotos.
 
@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v2, revisión ×3); paso 4.0a a medias
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a hecho · 4.0b 4 de 5 · 4.0c a medias
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -441,8 +441,21 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ⚠️ `Order.guest_form_pending` **no es** `any(items[].needs_guest_form)`, y por eso no comparte
       nombre: el servidor descarta antes las líneas CANCELADAS, así que un cliente que lo agregara
       prometería un formulario que nadie va a pedir. Verificado por mutación.
-      Queda la mitad B: las respuestas del pack (nombre, edad y alergias de un menor, art. 9) en
-      endpoint aparte.
+      **4 de 5 (2026-08-14)**: `GET /orders/{code}/event-data`, la mitad B — las respuestas del pack
+      (nombre, edad y alergias de un menor, art. 9) en endpoint aparte y **solo las de la fase
+      `booking`** (`DECISIONES #39`, spec §4.4.6). ⚠️ **La guarda que sostiene el diseño no es la del
+      endpoint nuevo, es la de los otros dos**: `me/orders` y `GET orders/{code}` no las llevan
+      NUNCA, comprobado sobre el cuerpo entero de la respuesta —no campo a campo—, porque añadirlas a
+      `OrderItemResource` sería una línea y pondría datos de salud de un menor en cada página del
+      historial. Verificado por mutación (colar el campo en el pedido, quitar el filtro de fase y
+      quitar el scoping por titular ponen en rojo tres guardas distintas) y con `curl` contra el
+      servidor real: sesión de la SPA, pack sembrado de SaltoPark con las dos fases rellenas,
+      etiquetas desde BD en `es`/`en`, `no-store` presente y 404 —no 403— para un titular ajeno.
+      De la implementación salió una extracción: emparejar respuesta con etiqueta estaba copiado en
+      `Purchase::resolveEventData()` y en `ReservationSlip::eventDataRows()`, y este endpoint iba a
+      ser la TERCERA copia. La fuente única es ahora `TicketType::eventAnswers()`; la del panel no se
+      unificó a propósito (enseña las claves huérfanas, que no tienen fase que filtrar) y quedó
+      anotada en `DEUDA.md`.
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del

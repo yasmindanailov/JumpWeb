@@ -128,6 +128,13 @@ seed siempre incluye `guest_fields`).
   `guestFormSignedUrl()` (**fuente ÚNICA del enlace firmado**, `temporarySignedRoute`).
 - **Nomenclatura crítica: `guest`, NUNCA `children`** — `OrderItem::children()` **ya significa
   los complementos (addons)**; mezclarlos es foco de bugs.
+- ⚠️ **`event_data` tiene DOS mitades y dos lectores, uno por fase** (Fase 4 · paso 4.0b·4b,
+  `DECISIONES #39`). Las respuestas de `postform` las publica este sistema
+  (`GuestFormResource::generalAnswers()`, acotadas con `EVENT_STAGE_POSTFORM`); las de `booking`
+  —lo que se contestó al reservar— salen por `GET /api/v1/orders/{code}/event-data`, acotadas con
+  `EVENT_STAGE_BOOKING`. La simetría es deliberada: **ninguno de los dos reenvía lo del otro**,
+  para no abrir un segundo camino al mismo dato del art. 9. La composición etiqueta/valor la pone
+  `TicketType::eventAnswers()` (fuente única) y no cada serializador.
 
 ## 4. Superficies
 

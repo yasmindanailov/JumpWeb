@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
+use App\Http\Controllers\Api\V1\OrderEventDataController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
@@ -182,6 +183,12 @@ Route::name('api.v1.')->group(function (): void {
         // throttle de las callbacks de Redsys— y confundirlos deja el reintento 20× más laxo.
         Route::post('/orders', [OrdersController::class, 'store'])->name('orders.store');
         Route::get('/orders/{code}', [OrdersController::class, 'show'])->name('orders.show');
+        // Las respuestas del pack (Fase 4 · paso 4.0b·4b), APARTE del pedido y a propósito: son
+        // datos de un menor —el nombre del homenajeado, su edad y las alergias, art. 9—, y como
+        // campo de `OrderItem` viajarían en cada página de `me/orders`. Pedirlas es un acto
+        // explícito del cliente, no el efecto de listar el historial.
+        Route::get('/orders/{code}/event-data', OrderEventDataController::class)
+            ->name('orders.event-data.show');
         Route::post('/orders/{code}/payment', [OrderPaymentController::class, 'store'])
             ->middleware('throttle:6,1')
             ->name('orders.payment.store');

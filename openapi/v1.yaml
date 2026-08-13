@@ -746,6 +746,62 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /orders/{code}/event-data:
+    get:
+      tags: [Compra]
+      operationId: getOrderEventData
+      summary: Las respuestas del pack de un pedido
+      description: |
+        Lo que el cliente contestó **al reservar** un pack: por convención de la instalación de
+        origen, el nombre del homenajeado, su edad y las alergias. Es lo que el resumen de la compra
+        confirmada enseña bajo cada línea.
+
+        ### Por qué es un endpoint y no un campo del pedido
+
+        Son datos personales de un **MENOR**, y las alergias son dato de salud del **art. 9**. Como
+        campo de `OrderItem` viajarían en cada página de `me/orders` —una lista paginada que se pide
+        para ver el historial, no para leer alergias de niños—, así que pedirlos es un acto explícito
+        del cliente. `me/orders` y `GET orders/{code}` **no los llevan**, y hay test de ello.
+
+        ### Qué NO devuelve
+
+        - **Nada que no sea sensible.** Ni nombre de producto, ni fecha, ni importes: eso ya está en
+          `GET orders/{code}`. Empareja por `reservation_id`, que es el `id` de la línea de allí.
+        - **Las respuestas del post-form.** `event_data` guarda juntas las de las dos fases y aquí
+          solo salen las de la RESERVA; lo que se rellena después vive en
+          `GET reservations/{id}/guest-form`, que se abre con firma. Dos caminos hacia el mismo dato
+          del art. 9 es superficie que nadie pidió.
+        - **Las respuestas cuyo campo ya no existe.** Si el pack se editó tras la compra, lo
+          contestado a un campo retirado no sale: sin campo no hay etiqueta ni fase que emparejar.
+
+        Una reserva sin respuestas **sí aparece**, con `answers` vacío: así se distingue «este pack
+        no pedía nada» de «esta línea no venía en la respuesta».
+
+        ⚠️ La respuesta va con `Cache-Control: no-store`. Un código que no es de quien pregunta
+        responde **404**, igual que uno inexistente.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Código visible del pedido.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Las respuestas del evento, por reserva.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderEventData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /orders/{code}/payment:
     post:
       tags: [Compra]
@@ -1651,6 +1707,62 @@ components:
             Unidades que van INCLUIDAS sin cargo. Sin este número, «2 incluidas + 1 extra» y «3 de
             pago» se pintan igual, y el importe cobrado no basta para distinguirlas cuando el extra
             vale 0.
+
+    OrderEventData:
+      type: object
+      description: |
+        Lo que se contestó al reservar, por reserva del pedido. ⚠️ Contiene datos personales de
+        menores (art. 9); la respuesta va con `no-store`. Se pide aparte del pedido justamente para
+        que listarlo no los arrastre.
+      required: [order_code, reservations]
+      additionalProperties: false
+      properties:
+        order_code:
+          type: string
+        reservations:
+          type: array
+          description: |
+            Una entrada por línea de PRODUCTO del pedido, incluidas las que no tienen respuestas.
+            Los complementos no aparecen: no tienen datos de evento propios.
+          items:
+            $ref: '#/components/schemas/OrderEventDataReservation'
+
+    OrderEventDataReservation:
+      type: object
+      required: [reservation_id, answers]
+      additionalProperties: false
+      properties:
+        reservation_id:
+          type: integer
+          format: int64
+          description: |
+            El `id` de la línea en `GET orders/{code}`. Es la única llave: aquí no se repite nada de
+            lo que aquel ya publica.
+        answers:
+          type: array
+          description: |
+            En el orden del esquema del pack. Vacío si la reserva no es de un pack, si el pack no
+            pide datos al reservar, o si no se contestó nada.
+          items:
+            $ref: '#/components/schemas/EventAnswer'
+
+    EventAnswer:
+      type: object
+      description: Una respuesta del cliente con la etiqueta de su campo.
+      required: [key, label, value]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          description: |
+            Clave estable del campo, tal como la configuró la instalación. Es lo que permite dar a
+            una respuesta un tratamiento propio sin emparejar por la etiqueta, que es traducible.
+        label:
+          type: string
+          description: Etiqueta ya resuelta al idioma negociado (los textos viven en la base de datos).
+        value:
+          type: string
+
     OfferedDateList:
       type: object
       required: [data, meta]

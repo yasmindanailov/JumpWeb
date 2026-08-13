@@ -7,7 +7,7 @@
 > (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.terdecies** — setenta y tres puntos
+> **Lo que el código enseñó al implementar: §10 → §10.quaterdecies** — setenta y siete puntos
 > medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
@@ -947,3 +947,33 @@ ninguna guarda lo veía, porque `ModuleBoundariesTest` exime la capa de entrega 
 cualquier `Contracts`, y `ApiBoundariesTest` no prohíbe `open()`/`reopen()`. La versión falsable es
 `CheckoutSequenceTest`. **Regla**: si un criterio de éxito se puede escribir como `grep`, casi
 siempre se puede escribir como test — y entonces hay que escribirlo como test.
+
+### 10.quaterdecies Lo que el código enseñó — Fase 4 · paso 4.0b·4b (2026-08-14)
+
+Cuatro puntos del endpoint que saca la PII del pedido (`GET orders/{code}/event-data`,
+`DECISIONES #39`). El primero es el que generaliza.
+
+**74. La guarda de un endpoint de minimización va en los endpoints que NO deben llevar el dato.**
+Separar las respuestas del pack solo significa algo si el pedido no las lleva, y probar que el
+endpoint nuevo devuelve lo suyo no prueba nada de eso. La guarda útil recorre `me/orders` y
+`GET orders/{code}` y afirma que el valor **no aparece en el cuerpo entero de la respuesta** — no
+que falte un campo con cierto nombre: quien «ahorre una petición» mañana lo llamará de otra forma, y
+la prueba tiene que caer igual. Regla general: **una decisión de minimización se hace falsable en el
+sitio del que se quitó el dato, no en el que se puso.**
+
+**75. Una columna que mezcla dos fases obliga a decidir la fase EN CADA lector.** `event_data` guarda
+juntas las respuestas de la reserva y las del post-form, así que «devolver `event_data`» no es una
+operación con un solo significado. `GuestFormResource` ya acotaba a `postform`; este endpoint acota a
+`booking`, y la simetría solo es visible si se lee el otro lector. Cuando una columna carga dos
+conceptos, **el filtro es parte del contrato de cada consumidor**, no un detalle del serializador.
+
+**76. Un filtro por fase descarta las claves huérfanas, y eso es una decisión, no un efecto.** Si el
+esquema del pack se editó tras la compra, la respuesta a un campo retirado no tiene `stage` — así que
+ninguna consulta «solo `booking`» puede incluirla. Conviene decirlo en el contrato: el cliente que ve
+menos respuestas de las que el operador ve en la hoja de sala está viendo la conducta correcta.
+
+**77. La tercera copia se detecta buscando el dato, no la función.** Emparejar respuesta con etiqueta
+estaba en `Purchase::resolveEventData()` (privada) y en `ReservationSlip::eventDataRows()` (otro
+módulo, otro nombre, otra forma). Ninguna guarda de arquitectura las relaciona y ningún `grep` por
+nombre las encuentra: aparecieron al buscar **quién lee `event_data`**. Antes de escribir un
+serializador nuevo, buscar los LECTORES de la columna sale más barato que buscar el método.

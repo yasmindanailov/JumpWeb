@@ -2,7 +2,8 @@
 
 > Estado: 🟦 en revisión (**v3**: v2 tras revisión adversarial ×3, más §4.3.bis y §4.4 rediseñados
 > hueco a hueco con revisión de coherencia) · Última actualización:
-> 2026-08-13 · Decisión asociada: `DECISIONES #38`.
+> 2026-08-14 (§4.4.6: la fase de las respuestas del pack, decidida al implementar el hueco 4) ·
+> Decisión asociada: `DECISIONES #38` y **`#39`**.
 > Alcance aprobado por el owner el 2026-08-13: **solo el cajón del sidebar**; `/mi-cuenta` sigue en
 > Blade. Tema: **tokens + hoja de estilos por instalación**. Dependencias: Vue 3 + Pinia.
 >
@@ -202,7 +203,7 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 | 1 ✅ | `GET /me/reservation-eligibility` | sesión/Bearer | **HECHO 2026-08-13.** El aviso temprano de `mayReserve()`, que **no consume ficha**. Sin parámetros: es media defensa anti-oráculo. Nace `Http\Api\AdmissionCodeMap` (el código público NO es la constante del dominio) y `admitReservation`/`admitPaymentRetry` quedan **prohibidos fuera de `app/Domain`** por `CheckoutSequenceTest` |
 | 2 ✅ | `GET /config` | público | **HECHO 2026-08-13.** Los cuatro ajustes de instalación. Los dos números viajan **con su operador en la descripción** (`total > umbral`, `líneas > tope`), y la URL de registro **saneada en servidor**: `SEC-07` sin escape de plantilla que lo remate |
 | 3 ✅ | `GET /booking/status` | público | **HECHO 2026-08-13.** La pausa y su aviso, traducidos. Los canales van **a la vez, no en cascada** (verificado por mutación), y `contact_url` llega **ya decidido por el servidor** — es el último recurso, no «la página de contacto» |
-| 4 ⏳ | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` (futuro) | sesión/Bearer | **Mitad A HECHA 2026-08-13**: seis campos nuevos sin PII (`is_pack`, `start_time`, el desglose de señal POR RESERVA y `shows_deposit_note`; `free_quantity` en el complemento; `guest_form_pending` en el pedido). ⚠️ Ese último **no es el `any()` de las líneas** —el servidor descarta las canceladas— y por eso se llama distinto. **Mitad B pendiente**: las respuestas del pack (PII art. 9) en endpoint aparte |
+| 4 ✅ | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` | sesión/Bearer | **Mitad A HECHA 2026-08-13**: seis campos nuevos sin PII (`is_pack`, `start_time`, el desglose de señal POR RESERVA y `shows_deposit_note`; `free_quantity` en el complemento; `guest_form_pending` en el pedido). ⚠️ Ese último **no es el `any()` de las líneas** —el servidor descarta las canceladas— y por eso se llama distinto. **Mitad B HECHA 2026-08-14**: las respuestas del pack en endpoint aparte, **solo las de la fase `booking`**, y la guarda que sostiene la decisión es que `me/orders` y `GET orders/{code}` NUNCA las lleven (§4.4.6) |
 | 5 | `POST /catalog/products/{product}/addons` | público | Los complementos RESUELTOS |
 
 **Por qué `/config` y `/booking/status` están separados**, aunque los dos sean públicos y se pidan
@@ -286,6 +287,44 @@ un método del dominio** consumido por dos superficies vivas (la compra pública
 del panel), el único que puede hacer que la SPA se note lenta, y el que arrastra la decisión del
 §4.4.3. El de elegibilidad va primero porque su guarda —prohibir `admitReservation` fuera del
 dominio— es la que impide que los cuatro siguientes consuman ficha por navegar.
+
+#### 4.4.6 La fase de las respuestas del pack — `[DECIDIDO]` 2026-08-14
+
+El hueco 4 dejaba una pregunta abierta: `event_data` guarda **juntas** las respuestas de las dos
+fases (`booking`, lo que se contesta al reservar; `postform`, lo que se rellena después), y el
+sidebar las pinta **todas** (`eventFields()` sin filtro). ¿El endpoint hace lo mismo?
+
+**Decisión: solo `booking`.** Tres razones, en orden de peso:
+
+1. **Las de `postform` ya tienen endpoint, y se abre con FIRMA** (`GET reservations/{id}/guest-form`,
+   con `no-store` explícito). Publicarlas también aquí es un **segundo camino** hacia el mismo dato
+   del art. 9 sin que ningún consumidor lo haya pedido. La simetría inversa ya estaba escrita:
+   `GuestFormResource::generalAnswers()` acota a `postform` porque «devolver las primeras expondría
+   datos que este formulario ni edita ni debería reenviar».
+2. **No hay pérdida de paridad medible.** Al paso 6 del sidebar —la única pantalla que pinta esto
+   desde el pedido persistido— **solo se llega volviendo de la pasarela**, y en ese instante no
+   existe ninguna respuesta de post-form: `OrderCreator` persiste `event_data` filtrando a
+   `EVENT_STAGE_BOOKING`, y las de `postform` solo aparecen tras `submitGuestForm()`, semanas
+   después y por un enlace de correo. Filtrar es hoy un **no-op** en la web.
+3. **Una respuesta huérfana no tiene fase.** Si el pack se editó tras la compra, lo contestado a un
+   campo retirado no está en el esquema, así que no tiene `stage` ni etiqueta que emparejar: el
+   filtro por fase **exige** descartarlas. Eso coincide con lo que la web ya hacía.
+
+⚠️ **Dónde SÍ cambia la conducta**: el panel puede escribir respuestas de `postform` en `event_data`
+(`ViewOrder` edita con `eventFields()` sin filtro). Si un operador lo hace, ese dato no saldrá por
+este endpoint. Es una consecuencia aceptada, no un descuido — para eso está el del post-form.
+
+**La guarda que sostiene todo esto no es la del endpoint, es la de los otros dos**: `me/orders` y
+`GET orders/{code}` no llevan las respuestas **nunca**, y se comprueba sobre el cuerpo entero de la
+respuesta (no campo a campo), para que un nombre nuevo del mismo dato siga cayendo. Añadirlas a
+`OrderItemResource` sería una línea, ahorraría una petición y pondría datos de salud de un menor en
+cada página del historial: por eso la prohibición es ejecutable.
+
+De la implementación salió además una extracción: emparejar respuesta con etiqueta vivía copiado en
+`Purchase::resolveEventData()` y en `ReservationSlip::eventDataRows()`, y el endpoint iba a ser la
+tercera. Ahora la fuente única es `TicketType::eventAnswers()` —hermana de firma de
+`sanitizeEventData()` y `missingRequiredEventFields()`—; la del panel **no se unificó a propósito**
+(enseña las huérfanas, que su lector necesita) y queda anotada en `DEUDA.md`.
 
 <details>
 <summary>Tabla de la v2 (conservada: describe el porqué de cada hueco)</summary>

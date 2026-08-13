@@ -455,6 +455,50 @@ class TicketType extends Model
     }
 
     /**
+     * Las respuestas del evento **emparejadas con la etiqueta de su campo**, en el orden del
+     * ESQUEMA y sin las que quedaron vacías. `$stage` acota a una fase, igual que en
+     * `sanitizeEventData()` y `missingRequiredEventFields()` — que son sus hermanas de firma.
+     *
+     * **Fuente única de la composición** (Fase 4 · paso 4.0b·4b). Vivía copiada en
+     * `Purchase::resolveEventData()`, y con el endpoint `orders/{code}/event-data` iba a nacer una
+     * tercera: emparejar respuesta con etiqueta es una regla *data-driven* —el orden lo pone el
+     * esquema y los textos viven en BD con su respaldo de idioma—, no una vuelta de bucle.
+     *
+     * ⚠️ **Solo las claves que el esquema ACTUAL declara.** Si el pack se editó después de la
+     * compra, las respuestas cuyo campo desapareció **no salen**: sin campo no hay etiqueta que
+     * emparejar y —lo que decide el caso— tampoco `stage`, así que un filtro por fase no podría
+     * clasificarlas. La hoja de sala del panel (`ReservationSlip::eventDataRows()`) sí las enseña,
+     * con la etiqueta derivada de la clave, porque su lector es el operador y necesita ver TODO lo
+     * que el cliente contestó; la divergencia está anotada en `DEUDA.md`.
+     *
+     * `is_scalar` no es paranoia: `sanitizeEventData()` garantiza cadenas, pero `event_data` es una
+     * columna JSON con un cast a `array` y los pedidos importados no pasaron por ese saneo — el
+     * dominio ya lo reconoce en `DailyReservationsSummary::celebrantOf()`.
+     *
+     * @param  array<string,mixed>  $answers
+     * @return list<array{key:string, label:string, value:string}>
+     */
+    public function eventAnswers(array $answers, ?string $stage = null): array
+    {
+        $out = [];
+        foreach ($this->eventFields($stage) as $field) {
+            // `is_scalar` cubre también el «no respondido» (`null`), que es el caso frecuente.
+            $value = $answers[$field['key']] ?? null;
+            if (! is_scalar($value) || (string) $value === '') {
+                continue;
+            }
+
+            $out[] = [
+                'key' => (string) $field['key'],
+                'label' => $this->eventFieldLabel($field),
+                'value' => (string) $value,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Claves de campos OBLIGATORIOS que el cliente no rellenó (para bloquear la reserva).
      *
      * @param  array<string,mixed>  $answers

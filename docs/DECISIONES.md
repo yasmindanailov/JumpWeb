@@ -1262,3 +1262,38 @@ nada**: los CTA del aviso de pausa **no son una cascada** (teléfono y WhatsApp 
 `/contacto` solo si faltan los dos), y la resolución de complementos **no depende de la fecha de la
 línea** (los cuatro llamantes de producción pasan `Carbon::today()`). Implementar cualquiera de las
 dos como estaba escrito habría sido una regresión funcional silenciosa.
+
+## #39 · 2026-08-14 · Las respuestas del pack salen del pedido: endpoint aparte y solo la fase `booking`
+Cierre del hueco 4 de Fase 4 · paso 4.0b (`sidebar-spa.md` §4.4.1 y §4.4.6). Lo que el cliente
+contesta al reservar un pack —en la instalación sembrada, **el nombre de un MENOR, su edad y sus
+alergias**— se publica en `GET /orders/{code}/event-data`, no como campos de `OrderItem`.
+
+**(a) Endpoint aparte, porque el pedido se LISTA.** Como campo de `OrderItem` las respuestas
+viajarían en cada página de `me/orders`, que es una lista paginada de hasta 50 pedidos que se pide
+para ver el historial, no para leer alergias de niños. Con un endpoint, pedirlas es un acto
+explícito. ⚠️ **La guarda que sostiene la decisión no es la del endpoint nuevo, es la de los otros
+dos**: `me/orders` y `GET orders/{code}` no las llevan nunca, comprobado sobre el CUERPO ENTERO de
+la respuesta —no campo a campo—, para que renombrar el dato no esquive la prueba. Añadirlas a
+`OrderItemResource` sería una línea y ahorraría una petición: por eso la prohibición es ejecutable
+y no una nota.
+
+**(b) Solo la fase `booking`.** `event_data` guarda juntas las respuestas de las dos fases, y las
+del post-form ya tienen endpoint propio —que además se abre con FIRMA—, con la simetría escrita al
+revés en `GuestFormResource::generalAnswers()`. Publicarlas también aquí sería un segundo camino
+hacia el mismo dato del art. 9. **No hay pérdida de paridad medible**: al paso 6 del sidebar solo se
+llega volviendo de la pasarela, y ahí `event_data` solo tiene respuestas de `booking` (`OrderCreator`
+las filtra al persistir; las de post-form llegan semanas después). ⚠️ Sí cambia la conducta en un
+caso: si un operador rellena campos de post-form desde el panel, ese dato no sale por aquí. Aceptado.
+
+**(c) Devuelve la PII y NADA MÁS.** Ni nombre de producto, ni fecha, ni importes: eso ya lo sirve
+`GET orders/{code}` y el cliente empareja por `reservation_id`. Repetirlo invitaría a usar **este**
+endpoint —el que devuelve datos de un menor— para pintar el resumen entero. Las reservas sin
+respuestas sí aparecen con la lista vacía: distinguir «este pack no pedía nada» de «esta línea no
+vino» es lo que permite al cliente saber si la petición cubrió su pedido.
+
+**(d) Emparejar respuesta con etiqueta baja al dominio.** La composición vivía copiada en
+`Purchase::resolveEventData()` y en `ReservationSlip::eventDataRows()`, y el endpoint iba a ser la
+tercera. Ahora es `TicketType::eventAnswers()`, hermana de firma de `sanitizeEventData()` y
+`missingRequiredEventFields()`. La del panel **no se unificó a propósito** —enseña las claves
+huérfanas, que el operador necesita ver, y una respuesta huérfana no tiene `stage` que filtrar—:
+queda anotada en `DEUDA.md` en vez de resuelta a medias dentro de un paso de API.
