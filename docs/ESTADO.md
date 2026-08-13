@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2500 en verde** (9699 aserciones, `--parallel` ~63 s) · Pint limpio ·
+- Suite **2509 en verde** (9748 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -207,6 +207,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2500** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2509** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

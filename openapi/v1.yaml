@@ -43,6 +43,11 @@ tags:
       tokens Bearer llega en Fase 6, con la app que los consuma.
   - name: Cuenta
     description: El usuario autenticado y sus datos.
+  - name: Instalación
+    description: |
+      Cómo está configurada ESTA instalación. Superficie pública y estática entre despliegues: lo
+      que un cliente necesita para pintar bien a la primera, no para decidir nada. El estado que
+      cambia en caliente —la pausa de reservas— no vive aquí.
   - name: Catálogo
     description: |
       Qué se vende. Superficie PÚBLICA: se consulta sin identidad, igual que el escaparate de la
@@ -253,6 +258,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /config:
+    get:
+      tags: [Instalación]
+      operationId: getPublicConfig
+      summary: Ajustes públicos de la instalación
+      description: |
+        Los valores que un cliente necesita para pintar el cajón de reserva **bien a la primera**:
+        el bloque de registro externo del negocio, el umbral a partir del cual se ofrece el buscador
+        del catálogo, la clave pública del anti-bot y el tope de líneas de la cesta.
+
+        Sin esto un cliente aprende las reglas **chocándose** —descubre el tope de cesta con un 422—,
+        que es una regla de negocio naciendo en el cliente.
+
+        **Regla de admisión de este endpoint**, para que no degenere en cajón de sastre: solo entra
+        lo que es de la INSTALACIÓN (no del titular, no del catálogo, no de un pedido), **estático
+        entre despliegues o cambios de ajuste**, y necesario para PINTAR y no para decidir.
+
+        ⚠️ Lo que cambia mientras el cliente navega **no está aquí**: la pausa de reservas vive en
+        `GET /booking/status`, porque un snapshot de arranque mentiría en cuanto el operador
+        accionara el interruptor.
+
+        ⚠️ Nunca lleva datos del titular ni secretos. La *sitekey* de Turnstile es pública por
+        diseño; su clave secreta no sale de aquí jamás.
+      responses:
+        '200':
+          description: Ajustes públicos de esta instalación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicConfig'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -1121,6 +1161,64 @@ components:
                 type: array
                 items:
                   type: string
+
+    PublicConfig:
+      type: object
+      additionalProperties: false
+      required: [registration, catalog_search_min_items, cart_max_lines, turnstile_site_key]
+      properties:
+        registration:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [url, label, description]
+          description: |
+            Enlace al sistema de registro del negocio, que se ofrece junto a la reserva confirmada.
+            `null` cuando la instalación no lo tiene configurado — no es un error, es lo normal en
+            una instalación que no lo usa.
+
+            La etiqueta y la descripción llegan **ya traducidas** al idioma resuelto para la
+            petición, con el literal por defecto si el operador no las ha traducido.
+
+            ⚠️ La `url` viene **saneada en el servidor**: solo `http(s)`. Es la única defensa que hay
+            (`SEC-07`) — en una página web el escape de la plantilla remataba la jugada, pero un
+            cliente JSON no tiene escape que lo remate, así que si el saneado no ocurriese antes de
+            serializar no ocurriría en ninguna parte. Cuando la URL configurada no es válida, el
+            bloque entero llega `null` en vez de viajar a medias.
+          properties:
+            url:
+              type: string
+              format: uri
+            label:
+              type: string
+            description:
+              type: string
+        catalog_search_min_items:
+          type: integer
+          description: |
+            El buscador del catálogo se ofrece cuando el número TOTAL de productos es
+            **estrictamente mayor** que este número (`total > catalog_search_min_items`), sobre el
+            catálogo **sin filtrar** — no sobre el resultado de un `?type=`.
+
+            El operador va escrito aquí a propósito: publicar el número sin él reparte la regla entre
+            servidor y cliente, que es exactamente como divergen.
+        cart_max_lines:
+          type: integer
+          description: |
+            Tope de líneas de la cesta. El servidor rechaza con `cart_too_large` una cesta de
+            **más** líneas que este número (`líneas > cart_max_lines`), así que una cesta de
+            exactamente `cart_max_lines` es válida y un cliente debe impedir AÑADIR cuando ya las
+            tiene.
+
+            Es invariante de servidor (`PAY-12`): esto es un reflejo para no ofrecer un botón que el
+            servidor va a rechazar, nunca la autoridad.
+        turnstile_site_key:
+          type: string
+          nullable: true
+          description: |
+            Clave PÚBLICA del anti-bot (Cloudflare Turnstile) para el formulario de alta. `null`
+            cuando la instalación no tiene anti-bot configurado, que es un estado normal: sin claves
+            el widget es un no-op y el alta funciona igual.
 
     ReservationEligibility:
       type: object

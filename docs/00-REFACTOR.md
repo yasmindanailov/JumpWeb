@@ -411,6 +411,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       constante del dominio (`too_many_pending`), y el `match` que traducía vivía privado en un
       controlador. Verificado por mutación: cambiar `mayReserve` por `admitReservation` —dos
       palabras— deja **dos** guardas en rojo, la de conducta y la de arquitectura.
+      **2 de 5**: `GET /config`, los cuatro ajustes de instalación que Blade inyectaba a la vista y
+      que ningún endpoint publicaba — sin ellos un cliente aprende las reglas CHOCÁNDOSE (descubre
+      el tope de cesta con un 422). Los dos números viajan con su OPERADOR en la descripción
+      (medido: el buscador usa `total > umbral` sobre el catálogo sin filtrar; el servidor rechaza
+      `líneas > tope`), porque publicar el número sin él reparte la regla entre servidor y cliente.
+      ⚠️ Su caso crítico es `SEC-07`: la URL de registro la edita un operador, y en la web el
+      escape de Blade remataba la defensa — **un cliente JSON no tiene escape que la remate**, así
+      que el saneado tiene que ocurrir antes de serializar o no ocurre. Verificado por mutación.
+      De prerrequisito salió un incumplimiento de `SUITE-02` que llevaba tiempo: `Turnstile` tenía
+      un memo **estático sin purga**, y dos ficheros de test habían acabado con la misma copia de un
+      reset por Reflection. Ahora hay `Turnstile::flushCache()` en `TestCase::setUp()`, como manda
+      el invariante, y las dos copias se retiraron.
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del

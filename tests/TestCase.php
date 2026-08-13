@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Turnstile;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
 
@@ -36,5 +37,11 @@ abstract class TestCase extends BaseTestCase
         // ajuste creado por un test contaminaba los siguientes (p. ej. `display_timezone` o
         // la config Redsys). Se vacía aquí para que cada test parta de cero.
         Setting::flushMemo();
+
+        // Y el de `Turnstile`, por el mismo motivo (`SUITE-02` lo exige para todo memo estático
+        // nuevo). Lo llevaba sin purga desde que se añadió: dos ficheros de test acabaron con la
+        // misma copia de un reset por Reflection porque, sin esto, unas claves configuradas por un
+        // test decidían el resultado de los siguientes según el ORDEN en que corrieran.
+        Turnstile::flushCache();
     }
 }

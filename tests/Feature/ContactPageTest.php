@@ -98,7 +98,7 @@ class ContactPageTest extends TestCase
         // cortocircuita sin llamada de red.
         Mail::fake();
         Cache::flush();
-        $this->resetTurnstileCache();
+        Turnstile::flushCache();
         Setting::updateOrCreate(['key' => 'security.turnstile_site_key'], ['value' => 'site-key', 'group' => 'security']);
         Setting::updateOrCreate(['key' => 'security.turnstile_secret'], ['value' => 'secret-key', 'group' => 'security']);
 
@@ -107,15 +107,9 @@ class ContactPageTest extends TestCase
                 ->assertRedirect(route('contacto'));
             Mail::assertNothingOutgoing();
         } finally {
-            $this->resetTurnstileCache(); // no envenenar la memoización estática de tests posteriores
+            Turnstile::flushCache(); // no envenenar la memoización estática de tests posteriores
         }
     }
 
     /** Resetea la memoización estática de Turnstile (persiste entre tests del mismo proceso). */
-    private function resetTurnstileCache(): void
-    {
-        $ref = new \ReflectionProperty(Turnstile::class, 'cache');
-        $ref->setAccessible(true);
-        $ref->setValue(null, null);
-    }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
+use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
@@ -68,6 +69,16 @@ Route::name('api.v1.')->group(function (): void {
     Route::post('/auth/email/resend', [AuthRegistrationController::class, 'resendVerification'])->name('auth.email.resend');
     Route::post('/auth/password/forgot', [PasswordRecoveryController::class, 'sendLink'])->name('auth.password.forgot');
     Route::post('/auth/password/reset', [PasswordRecoveryController::class, 'reset'])->name('auth.password.reset');
+
+    // ── Ajustes de la instalación (Fase 4 · paso 4.0b) — PÚBLICO ────────────────────────────
+    // Los cuatro valores que un cliente necesita para pintar el cajón bien a la primera: el bloque
+    // de registro externo, el umbral del buscador, la clave pública del anti-bot y el tope de
+    // líneas de la cesta. Sin ellos, un cliente aprende las reglas CHOCÁNDOSE (descubre el tope con
+    // un 422), que es una regla de negocio naciendo en el cliente.
+    //
+    // Lo que cambia mientras el cliente navega NO va aquí: la pausa de reservas vive en su propio
+    // endpoint, porque un snapshot de arranque mentiría en cuanto la dueña accionara el interruptor.
+    Route::get('/config', ConfigController::class)->name('config.show');
 
     // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
     // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir

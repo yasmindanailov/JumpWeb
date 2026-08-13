@@ -200,7 +200,7 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 | # | Endpoint | Auth | Qué resuelve |
 |---|---|---|---|
 | 1 ✅ | `GET /me/reservation-eligibility` | sesión/Bearer | **HECHO 2026-08-13.** El aviso temprano de `mayReserve()`, que **no consume ficha**. Sin parámetros: es media defensa anti-oráculo. Nace `Http\Api\AdmissionCodeMap` (el código público NO es la constante del dominio) y `admitReservation`/`admitPaymentRetry` quedan **prohibidos fuera de `app/Domain`** por `CheckoutSequenceTest` |
-| 2 | `GET /config` | público | Los cuatro ajustes de instalación: bloque de registro externo, umbral del buscador, *sitekey* de Turnstile y tope de líneas |
+| 2 ✅ | `GET /config` | público | **HECHO 2026-08-13.** Los cuatro ajustes de instalación. Los dos números viajan **con su operador en la descripción** (`total > umbral`, `líneas > tope`), y la URL de registro **saneada en servidor**: `SEC-07` sin escape de plantilla que lo remate |
 | 3 | `GET /booking/status` | público | La pausa de reservas y su aviso (título, mensaje y contactos), **traducidos** |
 | 4 | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` | sesión/Bearer | El resumen del paso 6. Lo que no es PII amplía el esquema existente; **las respuestas del pack van en endpoint aparte** |
 | 5 | `POST /catalog/products/{product}/addons` | público | Los complementos RESUELTOS |

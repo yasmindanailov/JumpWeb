@@ -31,8 +31,8 @@ use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\MaintenanceSettings;
+use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
-use App\Providers\AppServiceProvider;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -1606,18 +1606,10 @@ class Purchase extends Component
      */
     private function registrationPrompt(): ?array
     {
-        $url = AppServiceProvider::safeExternalUrl(Setting::value('registration.url'));
-        if ($url === null) {
-            return null;
-        }
-
-        $loc = app()->getLocale();
-
-        return [
-            'url' => $url,
-            'label' => Setting::value('registration.label.'.$loc) ?: __('landing.nav.register'),
-            'description' => Setting::value('registration.description.'.$loc) ?: __('landing.nav.register_info'),
-        ];
+        // La composición vive en `Http\Sidebar\RegistrationLink` desde que `GET /api/v1/config` es
+        // el segundo consumidor (Fase 4 · paso 4.0b). Aquí solo queda la forma de array que esta
+        // vista consume desde antes, y que muere con el componente en el paso 4.7.
+        return RegistrationLink::current()?->toArray();
     }
 
     /**

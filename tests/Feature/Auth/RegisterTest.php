@@ -371,7 +371,7 @@ class RegisterTest extends TestCase
         // Este test fija el contrato del MARKUP correcto (no podemos ejecutar JS de navegador aquí).
         Setting::updateOrCreate(['key' => 'security.turnstile_site_key'], ['value' => 'site-key', 'group' => 'security']);
         Setting::updateOrCreate(['key' => 'security.turnstile_secret'], ['value' => 'secret-key', 'group' => 'security']);
-        $this->resetTurnstileCache();
+        Turnstile::flushCache();
 
         try {
             $html = Livewire::test(Register::class, ['embedded' => true])->html();
@@ -387,14 +387,9 @@ class RegisterTest extends TestCase
             $this->assertStringNotContainsString('data-callback', $html);
             $this->assertStringNotContainsString('turnstile/v0/api.js', $html);
         } finally {
-            $this->resetTurnstileCache(); // no envenenar la memoización estática de tests posteriores
+            Turnstile::flushCache(); // no envenenar la memoización estática de tests posteriores
         }
     }
 
     /** Resetea la memoización estática de Turnstile (persiste entre tests del mismo proceso). */
-    private function resetTurnstileCache(): void
-    {
-        $ref = new \ReflectionProperty(Turnstile::class, 'cache');
-        $ref->setValue(null, null);
-    }
 }
