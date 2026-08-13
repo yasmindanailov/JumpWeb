@@ -214,6 +214,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       (b) Laravel ordena `AuthenticatesRequests` ANTES que `ThrottleRequests`, así que en rutas
       con `auth:` el 401 no consume el limitador — se conserva el estándar (invertirlo empeoraría
       los `throttle` de la web) y queda fijado por test. Suite **2223 verde**.
+- [x] **Paso 1a — SOLO LECTURA de la cuenta** (2026-08-13, `DECISIONES #26`): `GET me/reservations`
+      (sobre el contrato `CustomerReservations` de Fase 2, sin reimplementar su filtrado) y
+      `GET me/orders` (paginado, **todos los estados**, con líneas y complementos anidados). Nace
+      `ApiCollection`: forma única de lista `data` + `meta` — el intento de apoyarse en
+      `ResourceCollection` produjo `data.data` y dos `meta`, y **lo cazó el test de contrato en la
+      primera ejecución**. Dos correcciones que solo aparecen al contrastar con el dominio: el campo
+      que la v1 llamó `online_due_cents` NO era «lo pendiente» sino el importe que se cobra online
+      (renombrado a `online_amount_cents`), y un `enum` de OpenAPI 3.0 rechaza `null` aunque el
+      campo sea `nullable` si no se lista dentro. Suite **2242 verde**.
+- [ ] Paso 1b — catálogo por API (read-model nuevo en Booking, extraído de `Purchase::render()`).
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

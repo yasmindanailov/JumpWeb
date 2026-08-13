@@ -4,9 +4,9 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — paso 0 (cimientos) CERRADO; toca el paso 1.**
-- Suite **2224 en verde** (8292 aserciones, `--parallel` ~59 s) · Pint limpio (679 ficheros, sin
-  reformatear) · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0 y 1a CERRADOS; toca el paso 1b (catálogo).**
+- Suite **2242 en verde** (8398 aserciones, `--parallel` ~59 s) · Pint limpio (688 ficheros) ·
+  `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
 - **Aviso para el próximo cierre** (`DECISIONES #25`): el árbol npm pasó de 0 a **5 avisos (2
@@ -33,14 +33,17 @@
   `payable`/`priceable`/`target` antiguo revienta) y hay que **drenar la cola + `queue:restart`**
   (los payloads serializados llevaban los FQCN viejos).
 - Entorno local: web `8081` · MySQL `3308` · Mailpit `8028`; BD dev sembrada con SaltoPark
-  (usuarios dev `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña `password`).
+  (usuarios dev `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña `password`; ojo: la BD
+  dev arrastra ADEMÁS el par `…@jumpingjump.test` del import, así que `User::first()` devuelve uno
+  del origen — usa el email completo al probar a mano).
   ⚠️ Corregido el 2026-08-13 en el `.env` local (no versionado): tenía `APP_URL=…:8080` con
   `APP_PORT=8081` — enlaces absolutos de correo, URLs firmadas y la derivación de CORS y de los
   dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
   `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (paso 0, `DECISIONES #24`)
-Cimientos, sin una sola regla de negocio. Lo que existe y funciona (verificado con `curl` y suite):
+## ▶ Qué hay hecho de la API (pasos 0 y 1a — `DECISIONES #24` y `#26`)
+Cimientos + la lectura de la cuenta. Lo que existe y funciona (verificado con `curl`, con la suite y
+**contra MySQL real** ejerciendo el pipeline HTTP completo):
 - `routes/api.php` bajo `/api/v1`, con **fuente única del prefijo** (`ApiSurface::PREFIX`).
 - **Grupo `api` declarado pieza a pieza** en `bootstrap/app.php` — el orden ES el diseño y está
   comentado allí: `SecurityHeaders` → Sanctum stateful → `ApiLocale` → `EnsureSiteAvailable`
@@ -53,10 +56,21 @@ Cimientos, sin una sola regla de negocio. Lo que existe y funciona (verificado c
 - Guardas nuevas, las tres **verificadas por mutación**: `ApiBoundariesTest` (nada de negocio en un
   controlador), `ApiContractTest` (el documento manda) y `CriticalPathGateTest` (el `CRITICAL_RE`
   del `pre-push`, ampliado a los controladores de checkout de API).
+- **Paso 1a**: `GET me/reservations` (sobre el contrato `CustomerReservations`, sin reimplementar su
+  filtrado) y `GET me/orders` (paginado, **todos los estados**, líneas y complementos anidados).
+  Nace `ApiCollection`: la forma única de lista `data` + `meta`.
+- El contrato ya ha ganado su sueldo dos veces: destapó que apoyarse en `ResourceCollection` producía
+  `data.data` con dos `meta`, y que el campo `online_due_cents` mentía en su nombre (es el importe
+  que se cobra online, no lo pendiente → `online_amount_cents`).
 
 ## ▶ Próximo paso
-**Fase 3 · paso 1 — SOLO LECTURA**: `me/reservations`, `me/orders` y el catálogo (read-model nuevo
-en Booking, extraído de `Purchase::render()`). Sin escritura.
+**Fase 3 · paso 1b — CATÁLOGO por API** (`catalog/zones`, `catalog/products`,
+`catalog/products/{id}`): read-model NUEVO en Booking, extraído de `Purchase::render()`.
+Es la parte difícil del paso 1 y por eso se separó: `Purchase::catalogSection()` mezcla dominio y
+presentación —lleva una cadena `search` normalizada para el buscador en cliente y un `zone_anchor`
+para el deep-link de la landing—, y ninguna de las dos pertenece a un read-model de dominio. Hay
+que decidir qué se queda en la vista y qué sube al módulo, con `event_fields` y la config de
+complementos incluidas (spec §4.4).
 
 **Antes de escribir código, lee `docs/specs/api-v1.md` §10** («lo que el código enseñó»): son siete
 puntos medidos al implementar el paso 0 y varios cambian cómo se hace el paso 1 — en particular que
@@ -82,6 +96,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2224** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2242** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -521,3 +521,55 @@ compilado por Vite (`theme-…​.css`) que usa la pantalla de puerta.
 Nota para quien lea esto en el futuro: que el árbol pasara de 0 a 5 avisos en unas horas sin tocar
 nada es el argumento de por qué `composer audit`/`npm audit` son parte de la verificación de CIERRE
 y no un trámite de instalación.
+
+## #26 · 2026-08-13 · Fase 3 paso 1a: «mis reservas» y «mis pedidos» por API
+Primera mitad del paso 1 del spec (`api-v1.md` §9). Se parte en 1a (cuenta) y 1b (catálogo) porque
+son trabajos de dificultad distinta: esto es lectura sobre contratos y modelos que ya existen; el
+catálogo exige **extraer un read-model de `Purchase.php`** y separar dominio de presentación
+(`catalogSection` mezcla hoy ambas cosas: lleva una cadena `search` normalizada para el buscador en
+cliente y un `zone_anchor` para el deep-link de la landing). Mezclarlos habría dado un commit que
+nadie puede revisar.
+
+**(a) La API no reimplementa ninguna regla.** `me/reservations` delega en
+`Booking\Contracts\CustomerReservations` —el mismo contrato que alimenta el sidebar web desde Fase
+2—, y todos los campos derivados de `me/orders` salen de métodos del dominio
+(`displayStatus`, `displayStatusForCustomer`, `chargedSubtotalCents`, `guestFormStatus`,
+`onlineDueCents`, `financialSummary`). Comprobado además que esos métodos devuelven **claves
+estables** (`paid`/`expired`, `active`/`finished`, `ok`/`pending`) y no etiquetas traducidas: sirven
+como contrato público tal cual. Los tests fijan las reglas heredadas (un pedido sin pagar no es
+reserva próxima; lo pasado no se lista) para que se note si alguna vez divergen.
+
+**(b) `ApiCollection`: una sola forma de lista, construida a mano.** El primer intento extendía
+`ResourceCollection`; con un paginador, Laravel responde por `PaginatedResourceResponse`, que ignora
+`$wrap` y añade sus propios `links` y `meta` → la respuesta salía con `data.data` y **dos** `meta`
+distintos. Lo destapó el test de contrato en su primera ejecución, no una revisión. Ahora la clase
+implementa `Responsable` y devuelve exactamente `{data, meta}`, pagine o no el endpoint. Sin `links`:
+las URLs absolutas no le sirven a un cliente que construye sus peticiones.
+
+**(c) `online_due_cents` era un nombre que MENTÍA.** Se diseñó como «lo que falta por pagar» y el
+test lo puso en rojo: `Order::onlineDueCents()` es el importe que se cobra online —la señal si el
+producto la usa, el total si no—, se deriva de los items y **no baja a 0 al pagar**. Renombrado a
+`online_amount_cents` y documentado por lo que es: la misma fuente que consumirán `Payment.amount` y
+el `DS_MERCHANT_AMOUNT` del reintento (paso 4), así que el cliente puede anticipar el cargo sin
+recalcularlo. Es el tipo de error que un contrato validado caza y una revisión de código no.
+
+**(d) Gotcha de OpenAPI 3.0**: un `enum` rechaza `null` aunque el campo se declare `nullable`, salvo
+que `null` esté dentro del propio `enum`. Afectaba a `guest_form_status`, donde `null` significa «esta
+línea no pide datos por invitado» y es distinto de «pendiente».
+
+**(e) `MeOrdersController`, no `OrdersController`.** El gate de concurrencia del `pre-push` dispara
+con los controladores de API cuyo nombre empieza por `Order` (`#24i`), y ahí vivirá el checkout del
+paso 4. Este endpoint es de solo lectura: exigir dos verificadores de 16 workers por tocarlo
+entrenaría a saltarse el gate. Que la separación es legítima —y no un truco para esquivarlo— lo
+comprueba `CriticalPathGateTest`, que falla si un controlador fuera del patrón alcanza `OrderCreator`,
+`SlotGenerator` o `RedsysReturnHandler`.
+
+**(f) Tamaño de página**: 10 por defecto, techo 50, `?per_page=`. La web pagina de 3 en 3 por decisión
+de producto **para esa pantalla**; un cliente que sincroniza historial necesita otro orden de
+magnitud, y el techo impide que `?per_page=100000` convierta el endpoint en una descarga completa.
+
+**Verificación empírica**: suite **2242 verde** (8398 aserciones, 59,3 s) · Pint limpio (688
+ficheros) · `docs-check` verde · **contrato verificado por mutación** (renombrar `total_cents` en
+`OrderResource` deja el test en rojo señalando el campo que falta) · los tres endpoints ejercidos
+**contra MySQL real** con el pipeline HTTP completo (200, forma correcta y `no-store` en los tres),
+no solo contra el SQLite de la suite.

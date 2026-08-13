@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MeOrdersController;
+use App\Http\Controllers\Api\V1\MeReservationsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,5 +33,10 @@ Route::name('api.v1.')->group(function (): void {
     // (`sanctum.guard`) y solo después el token.
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/me', [MeController::class, 'show'])->name('me.show');
+
+        // «Mis reservas» y «Mis pedidos» (paso 1, solo lectura). El scoping es por el guard en los
+        // dos: ninguno acepta un identificador de titular por la petición.
+        Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
+        Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
     });
 });

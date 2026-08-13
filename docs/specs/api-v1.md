@@ -1,11 +1,11 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — paso 0 (cimientos) TERMINADO** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0 y 1a TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
-> `#22` (árbol saneado), `#23` (anti-bot) y **`#24`** (paso 0).
+> `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0) y **`#26`** (paso 1a).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10** — léelo antes de seguir por el paso 1.
+> **Lo que el código enseñó al implementar: §10** — léelo antes de seguir por el paso 1b.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -285,7 +285,13 @@ Se corrige:
 0. ✅ **Cimientos, sin negocio** (2026-08-13, `DECISIONES #24`): `api:` en `withRouting`, grupo de
    middleware (§4.7), Sanctum, sobre de error, `GET me`, esqueleto OpenAPI + su test con mutación.
    Cierra la deuda de dependencias. **Lo que el código enseñó: §10.**
-1. **Solo lectura**: `me/reservations`, `me/orders`, catálogo (read-model nuevo). Sin escritura.
+1. **Solo lectura**, partido en dos por dificultad desigual:
+   - ✅ **1a** (2026-08-13, `DECISIONES #26`): `me/reservations` y `me/orders`. Lectura sobre
+     contratos y modelos que ya existen.
+   - ⬜ **1b**: catálogo (read-model nuevo en Booking). Exige extraer de `Purchase::render()` y
+     separar dominio de presentación: `catalogSection` mezcla hoy ambas cosas —lleva una cadena
+     `search` normalizada para el buscador en cliente y un `zone_anchor` para el deep-link de la
+     landing—, y esas dos NO pertenecen a un read-model de dominio.
 2. **Refactor sin endpoints**: extraer política de admisión e ida de pago (§4.6.1–2). Aquí tocan
    `VERIFY_CONC=1` y los dos verificadores; web y panel quedan de testigo.
 3. **Auth por API**: extracción de `Login`/`Register`/`ForgotPassword`/`ResetPassword` + revocación
@@ -341,3 +347,33 @@ primero y aun así puede reordenar sus llamadas y romper `AFORO-01`. **El paso 4
 activa la validación contra el contrato en TODA petición del test. Para probar cimientos con rutas
 sintéticas (validación, fallos, límites) hay que heredar de `Tests\TestCase` y montar la ruta con
 `Route::middleware('api')`, o Spectator falla por «path no declarado» en vez de probar lo que toca.
+
+### 10.bis Lo que el código enseñó — paso 1a (2026-08-13)
+
+**8. Una lista no se delega en `ResourceCollection`.** Con un paginador, Laravel responde por
+`PaginatedResourceResponse`, que ignora `$wrap` y añade sus propios `links` y `meta`: la respuesta
+salía con `data.data` y **dos** `meta` distintos. Ahora la forma la construye `ApiCollection`
+(implementa `Responsable`) y es idéntica pagine o no el endpoint. **Todo endpoint de lista del paso
+1b usa esa clase**; no hay una segunda forma de lista en el contrato.
+
+**9. Un nombre de campo puede mentir, y el contrato lo caza.** `online_due_cents` se diseñó como «lo
+que falta por pagar»; `Order::onlineDueCents()` es en realidad el importe que se cobra online —la
+señal, si el producto la usa— y **no baja a 0 al pagar**. Renombrado a `online_amount_cents`.
+Lección para el 1b: **leer el método antes de nombrar el campo**, sobre todo en el catálogo, donde
+`fromPriceCents` es «precio desde» y no un precio real.
+
+**10. Gotcha de OpenAPI 3.0**: un `enum` rechaza `null` aunque el campo se declare `nullable`, salvo
+que `null` figure dentro del propio `enum`. Aparecerá otra vez en el 1b (los campos opcionales del
+esquema de producto).
+
+**11. Los métodos de estado del dominio ya devuelven CLAVES, no etiquetas** (`paid`/`expired`,
+`active`/`finished`, `ok`/`pending`): son aptos como contrato público tal cual, sin mapa
+intermedio. Comprobado leyéndolos, no supuesto — conviene repetir la comprobación en el 1b antes de
+exponer cualquier estado del catálogo.
+
+**12. El gate de concurrencia condiciona cómo se NOMBRAN los controladores.** `MeOrdersController`
+existe con ese nombre porque `Order*` dispara `VERIFY_CONC`, y un endpoint de solo lectura no debe
+exigir dos verificadores de 16 workers. La separación no es un truco: `CriticalPathGateTest` falla
+si un controlador fuera del patrón alcanza el núcleo. El paso 1b tiene el mismo dilema con
+`Availability*` — un catálogo de solo lectura no debería disparar el gate, pero la disponibilidad
+del paso 4 sí.

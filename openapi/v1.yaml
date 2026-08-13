@@ -72,6 +72,80 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/reservations:
+    get:
+      tags: [Cuenta]
+      operationId: getMyReservations
+      summary: Mis próximas reservas
+      description: |
+        Reservas FUTURAS del cliente, de la más próxima a la más lejana: líneas principales de
+        pedidos pagados, no canceladas, con franja y aún no terminadas. Qué cuenta como «próxima»
+        lo decide el dominio (`Booking\Contracts\CustomerReservations`), no este endpoint.
+
+        Lista corta por naturaleza: no se pagina, pero lleva `meta.total` como cualquier otra lista.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Reservas próximas del cliente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpcomingReservationList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/orders:
+    get:
+      tags: [Cuenta]
+      operationId: getMyOrders
+      summary: Mis pedidos
+      description: |
+        Historial de pedidos del cliente, del más reciente al más antiguo y con **todos los
+        estados**. Incluir los `pending` es deliberado: es la única forma de que un cliente que
+        perdió el estado recupere un pedido a medio pagar mientras su retención de aforo sigue
+        viva (`expires_at` dice hasta cuándo, `online_amount_cents` por cuánto).
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Página, empezando en 1.
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          required: false
+          description: Pedidos por página.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Página del historial de pedidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
 components:
 
   securitySchemes:
@@ -92,6 +166,12 @@ components:
   responses:
     Unauthenticated:
       description: Falta identidad o ya no es válida.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationFailed:
+      description: Los datos enviados no validan. `error.fields` los enumera por campo.
       content:
         application/json:
           schema:
@@ -222,3 +302,221 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    ListMeta:
+      type: object
+      description: |
+        Metadatos de una lista. `total` está SIEMPRE; los campos de paginación solo en endpoints que
+        paginan, para que un cliente pueda leer `meta.total` sin saber si el endpoint pagina.
+      required: [total]
+      additionalProperties: false
+      properties:
+        total:
+          type: integer
+          description: Elementos totales, no los de esta página.
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+
+    UpcomingReservationList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpcomingReservation'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    UpcomingReservation:
+      type: object
+      description: |
+        Una reserva futura. Los tres datos que el dominio expone fuera de Booking; la fecha viaja
+        cruda (`Y-m-d`) porque el formato es decisión de quien la muestra, y la ventana horaria ya
+        viene compuesta porque componerla —según la franja tenga fin o no— es regla del dominio.
+      required: [date, time_window, product_name]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        time_window:
+          type: string
+          nullable: true
+          description: '«10:00–12:00», «10:00 – sin límite», o `null` si la franja no tiene hora.'
+        product_name:
+          type: string
+
+    OrderList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    Order:
+      type: object
+      description: |
+        Un pedido visto por su dueño. Todos los importes en **céntimos enteros**, con `currency` al
+        lado: la API no formatea dinero porque eso obligaría a decidir aquí el locale.
+      required:
+        - code
+        - status
+        - currency
+        - total_cents
+        - online_amount_cents
+        - pending_at_gate_cents
+        - refund
+        - can_be_retried
+        - created_at
+        - paid_at
+        - expires_at
+        - items
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          description: Código visible del pedido; su prefijo lo fija cada instalación.
+        status:
+          type: string
+          enum: [pending, paid, cancelled, expired, refunded]
+          description: |
+            Estado EFECTIVO: un pedido cuyo hold ya venció sale `expired` aunque el barrido
+            periódico todavía no haya pasado. `refunded` solo aparece en datos antiguos — el
+            reembolso vive en `refund`, no aquí.
+        currency:
+          type: string
+        total_cents:
+          type: integer
+          description: Lo facturado.
+        online_amount_cents:
+          type: integer
+          description: |
+            Importe que se cobra ONLINE: la señal si el producto la usa, el total si no. **No** es
+            «lo pendiente»: un pedido ya pagado informa el mismo importe. Es la misma fuente que
+            usará el reintento de pago, así que el cliente puede anticipar el cargo sin recalcularlo.
+        pending_at_gate_cents:
+          type: integer
+          description: Lo que queda por pagar EN PUERTA (resto de la señal, extras). No se suma a lo anterior.
+        refund:
+          $ref: '#/components/schemas/OrderRefund'
+        can_be_retried:
+          type: boolean
+          description: Lo decide el dominio, no el cliente. Lo servirá `POST orders/{code}/payment`.
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Cuándo se libera la retención de aforo. `null` en un pedido firme.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    OrderRefund:
+      type: object
+      description: |
+        El reembolso es una dimensión INDEPENDIENTE del estado: un pedido puede estar `paid` y
+        parcialmente reembolsado a la vez.
+      required: [refunded_at, amount_cents, fully_refunded]
+      additionalProperties: false
+      properties:
+        refunded_at:
+          type: string
+          format: date-time
+          nullable: true
+        amount_cents:
+          type: integer
+        fully_refunded:
+          type: boolean
+
+    OrderItem:
+      type: object
+      description: Una línea principal del pedido. Sus complementos van anidados en `addons`.
+      required:
+        - id
+        - product_name
+        - date
+        - time_window
+        - quantity
+        - charged_subtotal_cents
+        - status
+        - cancelled
+        - guest_form_status
+        - needs_guest_form
+        - addons
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        date:
+          type: string
+          format: date
+          nullable: true
+        time_window:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        charged_subtotal_cents:
+          type: integer
+          description: Lo realmente cobrado por la línea, no el precio de catálogo.
+        status:
+          type: string
+          enum: [active, finished]
+          description: Derivado de si su franja ya pasó. `cancelled` es un eje aparte.
+        cancelled:
+          type: boolean
+        guest_form_status:
+          type: string
+          # `null` va DENTRO del enum además de `nullable`: en OpenAPI 3.0 un enum sin él rechaza
+          # el nulo aunque el campo se declare anulable (lo destapó el test de contrato).
+          enum: [ok, pending, null]
+          nullable: true
+          description: '`null` = esta línea no pide datos por invitado; así el cliente distingue «no aplica» de «pendiente».'
+        needs_guest_form:
+          type: boolean
+        addons:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemAddon'
+
+    OrderItemAddon:
+      type: object
+      description: |
+        Complemento contratado dentro de una línea. Deliberadamente con menos campos: no tiene
+        franja ni post-form propios —los hereda del padre— y repetirlos invitaría a leerlos del
+        sitio equivocado.
+      required: [id, product_name, quantity, charged_subtotal_cents]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        charged_subtotal_cents:
+          type: integer

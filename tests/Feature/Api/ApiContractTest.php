@@ -42,6 +42,11 @@ class ApiContractTest extends TestCase
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],
+        // Los campos de paginación solo existen donde hay paginación. La alternativa —emitir
+        // `current_page: 1, last_page: 1` en una lista que no pagina— sería fingir una paginación
+        // que el endpoint ignora: `?page=2` no haría nada. Que estén o no ES la señal de si se
+        // puede paginar; `total` va siempre, para que leerlo no exija saberlo.
+        'ListMeta' => ['current_page', 'last_page', 'per_page'],
     ];
 
     /** @var array<string, mixed>|null */
