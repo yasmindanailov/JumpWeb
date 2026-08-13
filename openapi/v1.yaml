@@ -9,7 +9,8 @@
 # Se sirve como fichero estático; ningún paquete de runtime lo publica por HTTP (`DECISIONES #21c`).
 #
 # Alcance actual: Fase 3 · pasos 0 (cimientos), 1a (lectura de la cuenta), 1b (catálogo), 3 (auth),
-# 4a (presupuesto), 4b (disponibilidad) y 4c (pedido y cobro). Los demás llegan por el spec §9.
+# 4a (presupuesto), 4b (disponibilidad), 4c (pedido y cobro) y 4d (desenlace del pago). Lo que
+# falta llega por los pasos del spec §9.
 
 openapi: 3.0.3
 
@@ -590,6 +591,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /orders/{code}/payment-status:
+    get:
+      tags: [Compra]
+      operationId: getOrderPaymentStatus
+      summary: En qué ha quedado el pago
+      description: |
+        Endpoint de SONDEO: se consulta en bucle mientras se espera el desenlace. Es deliberadamente
+        pequeño —no devuelve el pedido entero— porque se pregunta cada pocos segundos; para eso está
+        `GET orders/{code}`.
+
+        Existe porque el desenlace no siempre vuelve por donde se fue: con un terminal que no incluye
+        los datos firmados en la redirección, la única confirmación llega por la notificación
+        server-to-server de la pasarela, y llega cuando llega.
+
+        **Dos ejes, y hacen falta los dos.** `order_status` dice qué ha sido de la RESERVA y
+        `payment_status` qué ha sido del último INTENTO de cobro. Con uno solo, un pedido cuya
+        tarjeta fue rechazada y uno que nadie ha intentado pagar son idénticos —ambos `pending`—, y
+        el cliente no sabría que puede reintentar.
+
+        **Cómo leerlo:**
+
+        - `payment_status: pending` → sigue esperando; vuelve a preguntar.
+        - `order_status: paid` → hecho.
+        - `payment_status: failed` + `can_be_retried: true` → ofrece reintentar, y usa
+          `declined_reason` para decir por qué («tarjeta caducada» invita a probar otra,
+          «denegada por tu banco» invita a llamar al banco).
+        - `order_status: expired` → la retención venció y la plaza volvió al inventario; hay que
+          rehacer la reserva.
+
+        ⚠️ **Consultar no confirma.** Este endpoint no transiciona nada: el único autorizado a dar
+        un pedido por pagado es el receptor de la respuesta firmada de la pasarela.
+
+        ### Para un cliente NATIVO (app móvil)
+
+        **El sondeo es tu único camino al desenlace, y eso es una decisión declarada, no un
+        descuido.** La vuelta de la pasarela es una redirección de NAVEGADOR: un cliente nativo no la
+        recibe, y la URL de retorno no admite parámetros donde colgar un identificador de sesión, así
+        que hoy no hay deep link que dispare. Abre la pasarela en un navegador del sistema y sondea
+        aquí.
+
+        ⚠️ **Y el sondeo solo llega a `paid` si la instalación tiene configurada la notificación
+        server-to-server** de la pasarela (`redsys_merchant_url`). Sin ella, y con un terminal que no
+        incluye los datos firmados en la redirección, el ÚNICO camino a `paid` es la vuelta del
+        navegador — que en una app nativa no ocurre—: el pedido acabaría caducando con la tarjeta ya
+        cobrada. **Es un prerequisito duro de la instalación**, no una recomendación.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Código visible del pedido.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estado del pago.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '503':
           $ref: '#/components/responses/Maintenance'
 
@@ -1236,6 +1305,71 @@ components:
             debe ir aquí.
           items:
             $ref: '#/components/schemas/CartLine'
+
+    PaymentStatus:
+      type: object
+      description: El desenlace del pago de un pedido, en su forma mínima para sondear.
+      required:
+        - order_code
+        - order_status
+        - payment_status
+        - can_be_retried
+        - declined_reason
+        - declined_message
+        - expires_at
+      additionalProperties: false
+      properties:
+        order_code:
+          type: string
+        order_status:
+          type: string
+          enum: [pending, paid, cancelled, expired, refunded]
+          description: |
+            Estado EFECTIVO de la reserva: un pedido cuyo hold ya venció sale `expired` aunque el
+            barrido periódico no haya pasado todavía.
+        payment_status:
+          type: string
+          enum: [none, pending, authorized, paid, failed, superseded]
+          description: |
+            En qué ha quedado el ÚLTIMO intento de cobro. `none` = todavía no se ha abierto ninguno.
+            `superseded` = ese intento quedó sustituido por otro posterior. Un pedido pagado responde
+            `paid` aunque después se abriera otro intento: manda el cobro que triunfó.
+        can_be_retried:
+          type: boolean
+          description: |
+            Lo decide el servidor, no el cliente: es la misma respuesta que va a honrar
+            `POST orders/{code}/payment`.
+        declined_reason:
+          type: string
+          # `null` va DENTRO del enum además de `nullable`: en OpenAPI 3.0 un enum sin él rechaza el
+          # nulo aunque el campo se declare anulable (lo destapó el test de contrato en el paso 1a).
+          enum:
+            - card_expired
+            - card_invalid
+            - cvv_wrong
+            - card_unsupported
+            - fraud_suspicion
+            - pin_attempts_exceeded
+            - auth_failed
+            - bank_denied
+            - user_cancelled
+            - system_error
+            - default
+            - null
+          nullable: true
+          description: |
+            **Código** del motivo del rechazo, para PROGRAMAR la respuesta. `null` salvo que el
+            último intento sea el rechazado — enseñar el motivo de un rechazo anterior mientras hay
+            otro cobro en curso diría que la tarjeta ha fallado cuando está esperando respuesta.
+        declined_message:
+          type: string
+          nullable: true
+          description: El mismo motivo en texto, ya traducido, para MOSTRAR.
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Hasta cuándo se retiene la plaza. Es el margen que queda para reintentar.
 
     OrderPayment:
       type: object

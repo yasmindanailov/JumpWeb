@@ -236,6 +236,65 @@ class Order extends Model
         );
     }
 
+    /** No hay ningún intento de cobro abierto todavía. */
+    public const PAYMENT_STATUS_NONE = 'none';
+
+    /**
+     * En qué ha quedado el ÚLTIMO intento de cobro (Fase 3 · paso 4d).
+     *
+     * Es el segundo eje del estado, y hacía falta porque el primero no lo cuenta todo: un pedido
+     * `pending` cuya tarjeta fue rechazada y otro `pending` que nadie ha intentado pagar son la
+     * misma cosa mirando solo a `status`. Hasta ahora ese matiz solo existía en la SESIÓN de la web
+     * (`purchase.failed_code`), así que un cliente de API veía «pendiente» durante toda la ventana
+     * de retención y después «caducado», **nunca «reintenta»** — teniendo el reintento disponible.
+     *
+     * Un pedido PAGADO responde `paid` aunque después se haya abierto otro intento: quien manda es
+     * el cobro que triunfó (`PAY-01`), no el orden de creación.
+     *
+     * Sin N+1: carga `payments` con `with('payments')` antes de llamarlo.
+     *
+     * @return 'none'|'pending'|'authorized'|'paid'|'failed'|'superseded'
+     */
+    public function paymentStatus(): string
+    {
+        $payments = $this->payments;
+
+        if ($payments->isEmpty()) {
+            return self::PAYMENT_STATUS_NONE;
+        }
+
+        if ($payments->contains(fn (Payment $payment) => $payment->status === Payment::STATUS_PAID)) {
+            return Payment::STATUS_PAID;
+        }
+
+        // El último ABIERTO, por orden de creación: `PaymentInitiator::reopen()` marca `SUPERSEDED`
+        // los pendientes anteriores y crea uno nuevo, así que el de mayor id es el intento en curso.
+        return (string) $payments->sortByDesc('id')->first()->status;
+    }
+
+    /**
+     * Código `Ds_Response` del rechazo que el cliente acaba de sufrir, o `null`.
+     *
+     * Solo lo devuelve cuando el ÚLTIMO intento es el fallido: enseñar el motivo de un rechazo
+     * anterior mientras hay otro cobro en curso le diría al cliente que su tarjeta ha fallado
+     * cuando en realidad está esperando respuesta.
+     *
+     * Devuelve el CÓDIGO en crudo y no un texto: traducirlo es de quien pinta, y en la API además
+     * el código es lo que un cliente puede programar (`RedsysResponseCode::reasonKey()`).
+     * `raw_response` está filtrado por allowlist (#113 M1) y `Ds_Response` está dentro.
+     */
+    public function declinedResponseCode(): ?string
+    {
+        if ($this->paymentStatus() !== Payment::STATUS_FAILED) {
+            return null;
+        }
+
+        $raw = $this->payments->sortByDesc('id')->first()?->raw_response;
+        $code = is_array($raw) ? ($raw['Ds_Response'] ?? null) : null;
+
+        return is_string($code) ? $code : null;
+    }
+
     /**
      * ¿La Order está caducada *de hecho*, aunque su `status` siga siendo `pending`?
      * (Audit edge cases pulido 2026-05-28 #116.)

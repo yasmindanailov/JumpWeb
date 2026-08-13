@@ -76,7 +76,7 @@ class HomeController extends Controller
      * la vuelta del navegador (capa 5.5c, #104).
      *
      * Validaciones (seguridad ÓPTIMA):
-     *  - El token debe existir en cache (TTL 5 min, un solo uso vía `Cache::pull`).
+     *  - El token debe existir en cache (TTL 5 min, un solo uso).
      *  - El `user_id` del token DEBE coincidir con `auth()->id()` — defensa contra que
      *    un atacante use un token capturado en una sesión distinta.
      *  - El outcome decide qué flag de sesión se escribe; `Purchase` Livewire lo lee en
@@ -84,6 +84,16 @@ class HomeController extends Controller
      *
      * Si cualquier validación falla, se ignora silenciosamente (no se escribe sesión, no
      * se muestra error específico → no leakeamos información sobre la existencia del token).
+     *
+     * ⚠️ **Se MIRA antes de consumir, y ese orden importa** (Fase 3 · paso 4d). Antes se hacía
+     * `Cache::pull` en la primera línea y se validaba después, buscando que un token capturado no
+     * fuera reutilizable. El efecto real era el contrario de lo buscado: como el token está atado a
+     * su `user_id`, un tercero **no podía usarlo pero sí QUEMARLO** — bastaba con abrir la URL de la
+     * vuelta sin sesión para que su dueño legítimo perdiera la confirmación y se quedara mirando un
+     * carrito vacío tras haber pagado. Ahora se lee con `get`, se comprueba la titularidad y solo se
+     * consume (`pull`) cuando de verdad se va a aplicar. La ventana de reutilización sigue cerrada
+     * —el `pull` es atómico y el token vive 5 minutos— y deja de haber una forma trivial de
+     * estropearle la vuelta a otro.
      */
     private function maybeConsumeRedsysReturn(Request $request): void
     {
@@ -92,14 +102,15 @@ class HomeController extends Controller
             return;
         }
 
-        $entry = Cache::pull(RedsysReturnController::cacheKey($token));
+        $key = RedsysReturnController::cacheKey($token);
+
+        $entry = Cache::get($key);
         if (! is_array($entry) || ! isset($entry['user_id'], $entry['order_code'], $entry['outcome'])) {
             return;
         }
 
-        // El token está atado al user_id propietario del pedido. Si no estás logueado o
-        // eres otro usuario, no se aplica nada (ya consumimos el token con Cache::pull
-        // → no es reusable; reduce ventana de ataque).
+        // El token está atado al user_id propietario del pedido. Si no estás logueado o eres otro
+        // usuario, no se aplica nada Y NO SE CONSUME: el dueño legítimo todavía puede usarlo.
         if ($request->user() === null || (int) $request->user()->id !== (int) $entry['user_id']) {
             return;
         }
@@ -108,6 +119,9 @@ class HomeController extends Controller
         if ($outcome === null) {
             return;
         }
+
+        // Un solo uso: se consume aquí, cuando ya se sabe que va a aplicarse.
+        Cache::pull($key);
 
         if ($outcome->isSuccess()) {
             session(['purchase.confirmed_code' => (string) $entry['order_code']]);

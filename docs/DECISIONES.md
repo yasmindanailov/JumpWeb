@@ -1016,3 +1016,55 @@ con `expires_at` y formulario firmado de Redsys) → `GET orders/{code}` (200) �
 (200, **retención extendida** y firma nueva) → 999 plazas (**422 `line_sold_out`** con
 `params.product` y `params.when`) → código inventado (404 en el GET, **409 `order_not_retryable`** en
 el reintento) → anónimo (401). El pedido de prueba se borró de la BD de dev.
+
+## #35 · 2026-08-13 · Fase 3 paso 4d: el desenlace del pago (y el token que se quemaba solo)
+Cierra el paso 4. Nace `GET orders/{code}/payment-status`, se arregla el consumo del token de la
+vuelta y se DECLARA cómo averigua el desenlace un cliente nativo. Detalle en `api-v1.md`
+§10.undecies.
+
+**(a) Dos ejes de estado, porque uno no distingue «rechazado» de «nadie lo ha intentado».** Mirando
+solo a `Order.status`, un pedido con la tarjeta denegada y uno que nunca llegó a la pasarela son
+idénticos: `pending`. Ese matiz vivía solo en la SESIÓN de la web (`purchase.failed_code`), así que
+la API habría dicho «pendiente» durante toda la retención y luego «caducado» —**nunca
+«reintenta»**—, teniendo el reintento disponible desde 4c. Ahora `order_status` dice qué ha sido de
+la reserva y `payment_status` qué ha sido del último intento.
+
+**(b) El motivo del rechazo se publica como CÓDIGO y como texto.** El código (`card_expired`,
+`bank_denied`, `user_cancelled`…) es lo que el cliente programa; el texto, lo que muestra. Es la
+misma distinción que el sobre de error hace entre `code` y `message`, y por el mismo motivo:
+con solo el texto habría que comparar cadenas traducidas.
+
+**(c) Un rechazo anterior deja de anunciarse en cuanto hay otro cobro en curso.** La regla vive en
+el dominio (`Order::declinedResponseCode()` solo responde si el ÚLTIMO intento es el fallido), no en
+el serializador: es una decisión sobre qué es verdad, no sobre cómo se pinta.
+
+**(d) El token de la vuelta se MIRA antes de consumirse.** Se leía con `Cache::pull` antes de validar
+la titularidad, buscando que uno capturado no fuera reutilizable. Pero el token va atado a su
+`user_id`: un tercero **nunca pudo usarlo, solo QUEMARLO** — bastaba abrir la URL de la vuelta sin
+sesión para que el cliente legítimo perdiera su confirmación y se encontrara el carrito vacío tras
+haber pagado. Ahora se lee, se valida y solo entonces se consume; la ventana de reutilización sigue
+cerrada (el `pull` es atómico, TTL 5 min). Verificado por mutación.
+
+**(e) El retorno móvil se resuelve DECLARÁNDOLO, no construyéndolo.** La vuelta de la pasarela es una
+redirección de navegador y `DS_MERCHANT_URLOK` no admite parámetros donde colgar un `state`: hoy no
+hay deep link que disparar. En vez de inventar una página puente para un lector que no existe hasta
+Fase 6, la decisión es explícita y viaja **en el propio contrato OpenAPI**, que es donde la leerá
+quien construya la app: el cliente nativo abre la pasarela en un navegador del sistema y **averigua
+el desenlace sondeando**. ⚠️ Con una condición que es **prerequisito DURO de instalación**: sin
+`redsys_merchant_url` (notificación server-to-server) y con terminal data-less, el único camino a
+`paid` es la vuelta del navegador —que en nativo no ocurre— y el pedido caducaría con la tarjeta ya
+cobrada (`PAY-02`). Escrito también en `sistemas/REDSYS.md` §8.
+
+**(f) `PAY-01` intacto**: sondear no confirma. El único autorizado a pasar una `Order` a `paid` sigue
+siendo `RedsysReturnHandler` con la firma delante; hay test de que consultar en bucle no transiciona
+nada ni abre cobros.
+
+**Verificación empírica**: suite **2438 verde** (9419 aserciones, `--parallel` ~63 s) · Pint limpio ·
+`docs-check` verde · **verificado por mutación** (volver a consumir el token antes de validar deja en
+rojo el test del dueño) · **los dos verificadores de concurrencia VERDES sobre MySQL real** con 16
+workers · **ciclo completo del desenlace ejercido contra el servidor real con `curl`**: crear pedido
+(201, 11,90 € — tarifa de sábado) → sondeo `pending/pending` sin motivo → marcar el cobro rechazado
+con `Ds_Response 0101` → **el MISMO endpoint devuelve `pending/failed`, `declined_reason: card_expired`,
+`can_be_retried: true`** y el mensaje traducido en es/en → reintento (200, retención extendida) →
+sondeo `pending/pending` con el motivo anterior ya oculto. `Cache-Control: no-store` presente
+(`RGPD-04`). El pedido de prueba se borró de la BD de dev.

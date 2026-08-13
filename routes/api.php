@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
+use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
@@ -132,5 +133,11 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/orders/{code}/payment', [OrderPaymentController::class, 'store'])
             ->middleware('throttle:6,1')
             ->name('orders.payment.store');
+        // Sondeo del desenlace (paso 4d). Se consulta EN BUCLE mientras se espera la notificación
+        // de la pasarela, así que se queda con el suelo genérico del grupo y no con el techo del
+        // reintento: aquí no se abre ningún cobro, solo se lee. No transiciona nada — `PAY-01` dice
+        // que el único que pasa una Order a `paid` es `RedsysReturnHandler`, con la firma delante.
+        Route::get('/orders/{code}/payment-status', OrderPaymentStatusController::class)
+            ->name('orders.payment.status');
     });
 });

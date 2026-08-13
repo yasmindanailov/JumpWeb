@@ -209,7 +209,8 @@ class RedsysReturnControllerTest extends TestCase
     public function test_home_get_does_not_apply_token_for_a_different_user(): void
     {
         // Defensa: aunque un atacante capture el token y se loguee con otra cuenta, no
-        // debe aplicar el resultado. Token consumido pero sesión intacta.
+        // debe aplicar el resultado. El token NO se consume (ver el test de abajo): quien
+        // lo tiene que usar es su dueño.
         [$payment] = $this->setupPaidableOrder();
         $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
         $token = $this->tokenFromRedirect($response);
@@ -224,13 +225,57 @@ class RedsysReturnControllerTest extends TestCase
     {
         // Sin autenticación, el token NO se aplica. Defensa contra que un atacante anónimo
         // use un token capturado para llegar al paso 6 (no podría — la sesión que se
-        // escribiría no se asociaría a ningún usuario en el sidebar).
+        // escribiría no se asociaría a ningún usuario en el sidebar). Tampoco se consume.
         [$payment] = $this->setupPaidableOrder();
         $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
         $token = $this->tokenFromRedirect($response);
 
         $this->get('/?redsys='.$token)->assertOk();
         $this->assertNull(session('purchase.confirmed_code'));
+    }
+
+    /**
+     * Fase 3 · paso 4d — **una vuelta ajena no le quema el token a su dueño.**
+     *
+     * Antes se consumía (`Cache::pull`) en la primera línea y se validaba después, buscando que un
+     * token capturado no fuera reutilizable. El efecto real era el contrario: como el token va atado
+     * a su `user_id`, un tercero **no podía usarlo pero sí QUEMARLO** — bastaba con abrir la URL de
+     * la vuelta sin sesión para que el cliente legítimo perdiera su confirmación y se encontrara un
+     * carrito vacío después de haber pagado. Ahora se mira, se valida y solo entonces se consume.
+     */
+    public function test_a_stranger_cannot_burn_the_token_of_its_owner(): void
+    {
+        [$payment, $user] = $this->setupPaidableOrder();
+        $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
+        $token = $this->tokenFromRedirect($response);
+
+        // Alguien sin sesión, y alguien con otra cuenta, pasan por la URL de la vuelta.
+        $this->get('/?redsys='.$token)->assertOk();
+        $this->actingAs(User::factory()->create())->get('/?redsys='.$token)->assertOk();
+
+        $this->assertNotNull(
+            Cache::get(RedsysReturnController::cacheKey($token)),
+            'un tercero no puede consumir el token: el dueño todavía no lo ha usado'
+        );
+
+        // Y el dueño lo sigue teniendo entero.
+        $this->actingAs($user)->get('/?redsys='.$token)->assertOk();
+        $this->assertSame($payment->payable->code, session('purchase.confirmed_code'));
+    }
+
+    /** Y una vez aplicado, sigue siendo de un solo uso. */
+    public function test_the_token_is_consumed_once_it_has_been_applied(): void
+    {
+        [$payment, $user] = $this->setupPaidableOrder();
+        $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
+        $token = $this->tokenFromRedirect($response);
+
+        $this->actingAs($user)->get('/?redsys='.$token)->assertOk();
+
+        $this->assertNull(
+            Cache::get(RedsysReturnController::cacheKey($token)),
+            'tras aplicarse, el token tiene que desaparecer de la cache'
+        );
     }
 
     public function test_browser_return_ko_writes_failed_code_to_session_on_follow_up(): void

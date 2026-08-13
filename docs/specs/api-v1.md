@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3, 4a, 4b y 4c TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0 a 4 TERMINADOS** (2026-08-13); queda el paso 5 ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b) y **`#34`** (paso 4c).
+> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c) y **`#35`** (paso 4d).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.decies** — léelos antes de seguir por el
-> paso 4d.
+> **Lo que el código enseñó al implementar: §10 → §10.undecies** — léelos antes de seguir por el
+> paso 5.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -341,8 +341,10 @@ Se corrige:
      `GET orders/{code}` y `POST orders/{code}/payment`, sobre `ReservationAdmission` +
      `OrderCreator` + `PaymentInitiator`, que ya existían. Nacen además los **códigos de error de
      negocio** con su mapa exhaustivo por test. **Lo que el código enseñó: §10.decies.**
-   - ⬜ **4d**: **desenlace** — `GET orders/{code}/payment-status` con estados reales, el token de
-     retorno que hoy se quema antes de validar la sesión, y la historia de retorno móvil.
+   - ✅ **4d** (2026-08-13, `DECISIONES #35`): **desenlace** —
+     `GET orders/{code}/payment-status` con los DOS ejes de estado y el motivo del rechazo, el
+     token de retorno que se quemaba antes de validar la titularidad, y el retorno móvil resuelto
+     por DECLARACIÓN en el propio contrato. **Lo que el código enseñó: §10.undecies.**
 5. **Post-form migrado** (2.º consumidor), una vez resuelto su canje de credencial.
 
 ⚠️ El gate `pre-push` ancla `VERIFY_CONC` a `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator`:
@@ -810,3 +812,53 @@ pasado con su pedido, y la respuesta es distinta según el momento — en un PRI
 suelta en el acto (no puede retener una plaza que nadie va a pagar) y hay que empezar de nuevo; en un
 REINTENTO el pedido sigue vivo con su hold recién extendido y basta con volver a intentarlo. Mismo
 código (`payment_unavailable`), dos consecuencias opuestas, las dos escritas en el contrato.
+
+### 10.undecies Lo que el código enseñó — paso 4d (2026-08-13)
+
+**58. Un solo eje de estado no distingue «rechazado» de «nadie lo ha intentado».** Un pedido cuya
+tarjeta acaba de ser denegada y uno que nunca llegó a la pasarela son, mirando solo a
+`Order.status`, exactamente lo mismo: `pending`. Ese matiz existía únicamente en la SESIÓN de la web
+(`purchase.failed_code`), así que un cliente de API habría visto «pendiente» durante los quince
+minutos de la retención y después «caducado» —**nunca «reintenta»**, teniendo el reintento
+disponible desde el paso 4c—. De ahí los dos ejes: `order_status` (qué ha sido de la RESERVA) y
+`payment_status` (qué ha sido del último INTENTO). Verificado en vivo: el mismo endpoint devuelve
+`pending/pending` antes del rechazo y `pending/failed` + `card_expired` + `can_be_retried: true`
+después.
+
+**59. El motivo del rechazo se publica como CÓDIGO y como texto, y hacían falta los dos.** El código
+(`card_expired`, `bank_denied`, `user_cancelled`…) es lo que un cliente PROGRAMA —una tarjeta
+caducada invita a probar otra, una denegación del banco invita a llamar al banco— y el texto es lo
+que muestra cuando no sabe hacer nada mejor. Con solo el texto, todo cliente tendría que comparar
+cadenas traducidas; con solo el código, tendría que mantener sus propias traducciones de un
+protocolo ajeno. Es la misma distinción que el sobre de error hace entre `code` y `message`.
+
+**60. Un rechazo anterior no se anuncia mientras hay otro cobro en curso.** Tras reintentar,
+`declined_reason` vuelve a `null`: enseñar el motivo del intento anterior le diría al cliente que su
+tarjeta ha fallado cuando en realidad está esperando respuesta. La regla vive en el dominio
+(`Order::declinedResponseCode()` solo responde si el ÚLTIMO intento es el fallido), no en el
+serializador, porque es una decisión sobre qué es verdad y no sobre cómo se pinta.
+
+**61. Consumir un token antes de validarlo protege de lo que no era el riesgo.** El token one-shot
+de la vuelta se leía con `Cache::pull` en la PRIMERA línea y se validaba después, buscando que uno
+capturado no fuera reutilizable. Pero el token va atado a su `user_id`: un tercero **nunca pudo
+usarlo — solo QUEMARLO**. Bastaba abrir la URL de la vuelta sin sesión para que el cliente legítimo
+perdiera su confirmación y se encontrara el carrito vacío después de haber pagado. Ahora se mira, se
+valida y solo entonces se consume; la ventana de reutilización sigue cerrada (el `pull` es atómico,
+TTL de 5 minutos). **Lección general**: cuando una defensa se justifica con «así reduce la ventana
+de ataque», conviene comprobar quién puede ejercer el ataque — aquí nadie podía, y el coste lo pagaba
+la víctima.
+
+**62. Los dos ejes se derivan de la relación ya cargada, no de dos consultas más.** `paymentStatus()`
+y `canBeRetried()` leen `payments` en memoria y el endpoint la precarga, porque este es el único de
+toda la API que se llama EN BUCLE. Un `lastFailedPayment()` por vuelta habría sido una consulta por
+segundo y por cliente esperando en la pantalla de pago.
+
+**63. El retorno móvil se resuelve DECLARÁNDOLO, no construyéndolo.** La vuelta de la pasarela es una
+redirección de navegador y `DS_MERCHANT_URLOK` no admite parámetros donde colgar un `state`, así que
+hoy no hay deep link que disparar. En vez de inventar una página puente para un lector que todavía no
+existe (Fase 6), la decisión es explícita y viaja **en el propio contrato OpenAPI**, que es donde la
+leerá quien construya la app: el cliente nativo abre la pasarela en un navegador del sistema y
+averigua el desenlace sondeando. ⚠️ Con una condición que es prerequisito DURO de instalación: sin
+`redsys_merchant_url` (notificación server-to-server) y con terminal data-less, el único camino a
+`paid` es la vuelta del navegador —que en nativo no ocurre— y el pedido caducaría con la tarjeta ya
+cobrada (`PAY-02`).

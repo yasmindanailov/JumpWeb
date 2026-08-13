@@ -272,7 +272,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             que el perfil delataba el señuelo**. Suite **2347 verde**.
       - [ ] La EMISIÓN de tokens Bearer (`POST auth/tokens`) viaja a **Fase 6**, con la app que los
             consuma (`DECISIONES #29`); la infraestructura ya está lista.
-- [ ] **Paso 4 — EL DINERO** 🟦, partido en cuatro (el paso de más riesgo de la fase):
+- [x] **Paso 4 — EL DINERO ✅ COMPLETO** (4a+4b+4c+4d), el paso de más riesgo de la fase:
       - [x] **4a — TARIFICACIÓN de la cesta** (2026-08-13, `DECISIONES #32`): nace
             `Booking\Contracts\CartPricing` (+3 DTOs) con `CartPricer` detrás, y `POST orders/quote`
             encima; la web lo consume desde el mismo commit. **El hallazgo**: la aritmética del
@@ -308,8 +308,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             añadiría una flecha a una baseline que solo encoge, y el arreglo de fondo
             (`PaymentProvider`) ya está en el backlog de la fase. Suite **2424 verde** + los dos
             verificadores sobre MySQL (16 workers) + flujo completo por `curl` contra el servidor.
-      - [ ] **4d — DESENLACE**: `payment-status` con estados reales, el token de retorno y la
-            historia de retorno móvil.
+      - [x] **4d — DESENLACE** (2026-08-13, `DECISIONES #35`): `GET orders/{code}/payment-status`
+            con los DOS ejes de estado (reserva + último intento de cobro) y el motivo del rechazo
+            como código y como texto. **El hueco que cerraba**: el rechazo de tarjeta solo viajaba
+            por la SESIÓN de la web, así que la API decía «pendiente» toda la retención y luego
+            «caducado», nunca «reintenta». Además, el token de la vuelta se consumía ANTES de
+            validar la titularidad: como va atado a su `user_id`, un tercero no podía usarlo pero sí
+            QUEMARLO —dejando al cliente sin confirmación tras haber pagado—; ahora se mira, se
+            valida y solo entonces se consume. El retorno móvil se resuelve por DECLARACIÓN en el
+            propio contrato (sondeo + `redsys_merchant_url` como prerequisito duro). Suite **2438
+            verde** + los dos verificadores sobre MySQL + ciclo completo por `curl`.
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·
       mis reservas · post-form de invitados · contenido (para la app).

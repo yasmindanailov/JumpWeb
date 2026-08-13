@@ -219,6 +219,29 @@ formato inválido en la ida → Redsys NO notifica, el usuario solo ve error fat
 Por eso se valida todo en servidor **antes** de redirigir. La ida a `realizarPago` exige POST
 (GET da `SIS0124`).
 
+### El token de la vuelta: se MIRA antes de consumirse [DECIDIDO 2026-08-13]
+El token one-shot se leía con `Cache::pull` **antes** de comprobar la titularidad, buscando que
+uno capturado no fuera reutilizable. El efecto real era el contrario del buscado: como el token
+va atado a su `user_id`, un tercero **no podía usarlo pero sí QUEMARLO** — bastaba con abrir la
+URL de la vuelta sin sesión para que el cliente legítimo perdiera su confirmación y se encontrara
+el carrito vacío después de haber pagado. Desde Fase 3 · paso 4d (`DECISIONES #35`) se lee con
+`Cache::get`, se valida y solo entonces se consume. La ventana de reutilización sigue cerrada
+(el `pull` es atómico, TTL 5 min) y deja de haber una forma trivial de estropearle la vuelta a
+otro. Verificado por mutación en `RedsysReturnControllerTest`.
+
+### Cliente NATIVO: solo hay sondeo, y exige la notificación S2S [DECIDIDO 2026-08-13]
+La vuelta del navegador es, literalmente, una redirección de navegador: **una app nativa no la
+recibe**, y `DS_MERCHANT_URLOK` no lleva parámetros donde colgar un `state`, así que hoy no hay
+deep link que disparar. La decisión (`DECISIONES #35`) es explícita: el cliente nativo abre la
+pasarela en un navegador del sistema y **averigua el desenlace sondeando**
+`GET /api/v1/orders/{code}/payment-status`.
+⚠️ Y ese sondeo **solo llega a `paid` si la instalación tiene `redsys_merchant_url` configurada**:
+sin notificación server-to-server y con terminal data-less, el único camino a `paid` es la vuelta
+del navegador —que en nativo no ocurre— y el pedido caducaría **con la tarjeta ya cobrada**
+(`PAY-02` lo capturaría como incidencia). Es **prerequisito duro de instalación** para Fase 6, no
+una recomendación; está escrito también en el propio contrato OpenAPI, que es donde lo leerá quien
+construya la app.
+
 ## 9. Reembolso REST (`RefundGateway::executeRefund`)
 > **Fase 2 (paso 1, 2026-08-12)**: el reembolso es la única superficie de Payments que consume
 > Booking, y viaja por el contrato `App\Domain\Payments\Contracts\RefundGateway` (bind a `Redsys`

@@ -4,9 +4,10 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2, 3 (a+b+c), **4a**,
-**4b** y **4c** CERRADOS; toca el paso 4d (el desenlace del pago) y luego el 5.**
-- Suite **2424 en verde** (9340 aserciones, `--parallel` ~63 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0 a 4 CERRADOS (el **paso 4, el del
+dinero, está COMPLETO**: 4a precio · 4b disponibilidad · 4c pedido y cobro · 4d desenlace); queda el
+**paso 5** (post-form migrado, 2.º consumidor) y con él termina la fase.**
+- Suite **2438 en verde** (9419 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -14,7 +15,7 @@
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-13, 16 workers, la
-  última vez en el paso 4c). ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
+  última vez en el paso 4d). ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
   `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b) y **todo controlador de API
   `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`**: tocarlos exige `VERIFY_CONC=1` tras
   correr los dos comandos (`INVARIANTES §6`). Todo el paso 4 los dispara, así que cuenta con ellos
@@ -34,9 +35,9 @@
   `payable`/`priceable`/`target` antiguo revienta) y hay que **drenar la cola + `queue:restart`**
   (los payloads serializados llevaban los FQCN viejos).
 
-## ▶ Qué hay hecho de la API (Fase 3, pasos 0 → 4c)
+## ▶ Qué hay hecho de la API (Fase 3, pasos 0 → 4)
 **El inventario NO se repite aquí**: la superficie exacta la declara `openapi/v1.yaml` —que es el
-contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#34` y
+contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#35` y
 en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo del próximo agente**:
 
 - **Nunca reimplementes una regla que ya tiene contrato.** Hay siete, y los siete los consume
@@ -70,28 +71,30 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
-**Fase 3 · paso 4d — EL DESENLACE DEL PAGO**: `GET orders/{code}/payment-status` con estados reales,
-el token de retorno y la historia de retorno móvil. Es la ÚLTIMA unidad del paso 4 (**4a ✅** precio ·
-**4b ✅** disponibilidad · **4c ✅** pedido y cobro); después queda el paso 5 (post-form).
-**Sigue siendo el paso de más riesgo de la fase**: `VERIFY_CONC=1` y los dos verificadores sobre
-MySQL son OBLIGATORIOS, porque el `pre-push` los exige en cuanto se toque un controlador
+**Fase 3 · paso 5 — POST-FORM MIGRADO** (`GET/PUT reservations/{id}/guest-form`), el SEGUNDO
+consumidor de la API y lo único que queda de la fase. Su dificultad NO es el endpoint: es **cómo
+autentica la API a un portador de firma**. La vía de hoy es una URL firmada de una ruta web
+concreta, y la firma de Laravel cubre la URL exacta — **no autoriza un `PUT /api/v1/...`** (spec §3c
+y §4.6.5). Hay que decidir y construir ese canje antes de exponer nada.
+⚠️ Lo que NO se puede regresar al migrarlo: el enlace CADUCA (`RGPD-03`, fecha del evento + 14 días,
+fuente única `Order::guestFormLinkExpiresAt`), devuelve **410 si el titular está anonimizado** (GET y
+POST), la URL no lleva PII, y el orden 403/410/404 está escalonado a propósito para no filtrar la
+existencia de una reserva (spec §6.6). Lee `docs/sistemas/POSTFORM-INVITADOS.md` y `INVARIANTES` §3.
+
+**El paso 4 (el dinero) está COMPLETO.** `VERIFY_CONC=1` y los dos verificadores sobre MySQL siguen
+siendo OBLIGATORIOS en cuanto se toque un controlador
 `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*` o el núcleo (que desde 4b incluye
-`SlotOffer`).
+`SlotOffer`) — el post-form no debería tocarlos, pero el gate manda.
+⚠️ `PAY-01` sigue intacto: `RedsysReturnHandler` es el ÚNICO que pasa una Order a `paid`; sondear el
+estado no transiciona nada, y hay test de ello.
 
-**Lo que 4d tiene que resolver, medido:**
-- **`payment-status` con estados REALES**, derivados de `Order.status` MÁS el último `Payment`
-  (`pending`/`authorized`/`paid`/`failed`/`superseded`). Hoy el rechazo de tarjeta solo viaja por
-  SESIÓN (`purchase.failed_code`), así que un cliente de API vería «pendiente» 15 minutos y luego
-  «expirado», **nunca «reintenta»** — teniendo el reintento ya disponible desde 4c.
-- **El token de retorno**: `HomeController::maybeConsumeRedsysReturn()` hace `Cache::pull` ANTES de
-  comprobar la sesión (verificado leyendo el método), así que lo QUEMA para un cliente sin cookie.
-- **`redsys_merchant_url`** (notificación S2S) es prerequisito DURO del cliente móvil de Fase 6: sin
-  ella y con terminal data-less, el único camino a `paid` es la vuelta del navegador → el pedido
-  caduca con la tarjeta cobrada (`PAY-02`).
-⚠️ `PAY-01` no se toca: `RedsysReturnHandler` sigue siendo el ÚNICO que pasa una Order a `paid`.
-El cuerpo de la cesta ya está resuelto: usa `Http\Api\CartPayload`, no escribas otro.
+**Pendiente que hereda Fase 6** (declarado en el contrato, `DECISIONES #35`): un cliente NATIVO
+averigua el desenlace del pago **solo sondeando** `payment-status` —la vuelta de la pasarela es una
+redirección de navegador y `DS_MERCHANT_URLOK` no admite parámetros para un deep link—, y eso exige
+`redsys_merchant_url` (notificación S2S) configurada: sin ella y con terminal data-less, el pedido
+caducaría con la tarjeta ya cobrada (`PAY-02`).
 
-**El terreno ya está preparado — NO reimplementes nada de esto:**
+**El terreno del DINERO ya está entero — NO reimplementes nada de esto:**
 - **Precio** → `Booking\Contracts\CartPricing` (paso 4a): qué suma la cesta y qué se cobra online,
   con la señal por línea. `CartPricerTest` compara sus importes con el pedido REAL, así que es el
   espejo verificado de `OrderCreator`.
@@ -111,11 +114,15 @@ El cuerpo de la cesta ya está resuelto: usa `Http\Api\CartPayload`, no escribas
 - **Oferta de fechas/horas** → hecha en 4b: `Booking\Contracts\AvailabilityOffer` sobre `SlotOffer`
   (`AFORO-02`), con la cesta descontada. Ojo al par de números que publica: `available` es para
   MOSTRAR y `max_quantity` para ACOTAR el selector — en un pack no coinciden.
+- **Desenlace del pago** → hecho en 4d: `GET orders/{code}/payment-status`, con DOS ejes
+  (`order_status` de la reserva · `payment_status` del último intento) y el motivo del rechazo como
+  código y como texto. `Order::paymentStatus()`/`declinedResponseCode()` son la fuente; el rechazo
+  anterior se oculta en cuanto hay otro cobro en curso.
 - **Tarificación** → hecha en 4a: `CartPricing`. `RateResolver` y `AddonResolver` siguen siendo las
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
 **Antes de escribir código, lee `docs/INVARIANTES.md` §1 (PAY) y §2 (AFORO)** —es obligatorio por
-la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.decies**: cincuenta y siete puntos
+la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.undecies**: sesenta y tres puntos
 medidos en los pasos anteriores. Los que más pesan en lo que queda del paso 4: el presupuesto de
 consultas se mide por PENDIENTE y no por techo (§10.ter 17); la validación de contrato hay que
 pedirla con `assertValidResponse()` (16); todo endpoint que toque `session()` necesita la guarda de
@@ -150,6 +157,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2424** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2438** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
