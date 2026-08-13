@@ -3,6 +3,9 @@
 namespace Tests\Feature\Architecture;
 
 use App\Domain\Booking\Contracts\AdmissionDecision;
+use App\Domain\Booking\Contracts\CartPricing;
+use App\Domain\Booking\Contracts\CartQuote;
+use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
@@ -23,6 +26,7 @@ use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
@@ -74,6 +78,58 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(CatalogReader::class, app(ProductCatalog::class));
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
+        $this->assertInstanceOf(CartPricer::class, app(CartPricing::class));
+    }
+
+    /**
+     * WEB → BOOKING: los importes del carrito los pone el dominio, no el componente Livewire
+     * (Fase 3 · paso 4a).
+     *
+     * El doble tarifica SIEMPRE lo mismo y devuelve un producto que no existe en base de datos. Si
+     * `Tickets\Purchase` conservara su aritmética —la que vivía en `cartLines()`, `cartTotalCents()`
+     * y `cartDepositCents()`—, con una cesta vacía en sesión el carrito saldría vacío y a cero, y
+     * estas aserciones caerían. Es lo que convierte «la web y la API cobran igual» en un hecho
+     * comprobado en vez de una promesa: `POST orders/quote` consume este mismo contrato.
+     */
+    public function test_the_web_cart_gets_its_amounts_from_the_contract(): void
+    {
+        $pricing = new class implements CartPricing
+        {
+            public int $calls = 0;
+
+            public function quote(array $cart): CartQuote
+            {
+                $this->calls++;
+
+                return new CartQuote(
+                    lines: [new CartQuoteLine(
+                        index: 0,
+                        productId: 4242,
+                        name: 'Línea del contrato',
+                        isPack: false,
+                        date: '2099-01-01',
+                        time: '10:00:00',
+                        quantity: 2,
+                        unitPriceCents: 3333,
+                        subtotalCents: 6666,
+                        addons: [],
+                        hasDeposit: false,
+                        depositCents: 6666,
+                        gateRemainderCents: 0,
+                    )],
+                    totalCents: 6666,
+                    onlineAmountCents: 6666,
+                );
+            }
+        };
+        $this->app->instance(CartPricing::class, $pricing);
+
+        $component = Livewire::test(Purchase::class);
+
+        $this->assertSame(6666, $component->instance()->cartTotalCents());
+        $this->assertSame(6666, $component->instance()->cartDepositCents());
+        $this->assertSame(1, $component->instance()->cartCount());
+        $this->assertGreaterThan(0, $pricing->calls, 'Purchase debe pedir los importes al contrato');
     }
 
     /**

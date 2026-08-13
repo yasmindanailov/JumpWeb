@@ -1,8 +1,8 @@
 # Deuda técnica — registro único
 
 > Estado: vivo · Última actualización: 2026-08-13 ·
-> Verificado contra código: 2026-08-13 (Fase 3 · paso 0: ítems nuevos de la API; el resto sin
-> re-medir desde 2026-08-12) ·
+> Verificado contra código: 2026-08-13 (Fase 3 · pasos 0 y 4a: ítems nuevos de la API; el resto
+> sin re-medir desde 2026-08-12) ·
 > Se invalida si: una fase retira un ítem sin actualizar su fila.
 
 Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se duplica).
@@ -35,6 +35,8 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | Vocabulario de sector en código | `PuertaSettings`, waiver, zonas/cumpleaños en clases, rutas y BD | Multi-sector exige renombrar clases y valores morph (se encadena con morphMap) | Fase 1 (decisión) + Fase 2 |
 | «Precio desde» no filtra tarifas activas | El mínimo sale de TODOS los `prices` del producto (`CatalogReader::fromPriceCents`, y así era ya en `Purchase`). `RateResolver` solo elige entre tarifas `is_active`, así que un precio colgado de una tarifa desactivada se anuncia pero no se puede comprar | Una instalación que desactive una tarifa barata sin borrar sus precios anunciaría un «desde» inalcanzable — en web y en API por igual | **Sin plan — decisión de owner** (toca lo que se le anuncia al cliente; no se cambió al extraer el read-model, Fase 3 · paso 1b) |
 | Cacheabilidad del catálogo público sin decidir | `GET /api/v1/catalog/*` responde con el `Cache-Control: no-cache, private` por defecto de Symfony; ni CDN ni proxy pueden cachearlo | La superficie pública de más tráfico previsible va sin caché HTTP; hacerlo cacheable exige decidir el `Vary` del idioma | Sin plan (Fase 3 · paso 1b lo dejó anotado, no resuelto) |
+| Cuarta copia de la aritmética de cesta en el panel | `CreateManualOrderPage::estimateLineCents()` + `cartOnlineDueCents()` + `cartHasDeposit()` reproducen las reglas de precio, complementos y señal que desde Fase 3 · paso 4a viven en `Booking\Contracts\CartPricing`. **Comprobado caso a caso el 2026-08-13: hoy coinciden** en las dos ramas de la Opción A (#225) | Un cambio de regla de señal o de complementos habría que portarlo a los dos sitios; el paso 2 ya encontró dos copias «iguales» que aplicaban políticas distintas sin que nadie lo hubiera decidido | Sin plan — **no se unificó a propósito** en el paso 4a: el panel calcula al AÑADIR la línea y el contrato al PINTARLA, así que migrarlo cambia su conducta ante un cambio de precio a media cesta |
+| N+1 de precio por complemento en `AddonResolver` | `AddonResolver::resolve()` pide el precio de cada complemento con `RateResolver::priceCents()`, que son 2 consultas por llamada (tarifa del día + importe). **Medido 2026-08-13 vía `orders/quote`: 1 complemento → 8 consultas, 3 → 12, 6 → 18** | Lo ejecuta también `OrderCreator` **dentro de la transacción que sostiene los locks de aforo**, donde alargar la txn es peor que en un presupuesto | Sin plan — es código de dinero compartido; su arreglo exige paso propio y los dos verificadores. `ApiOverheadTest::test_the_known_cost_per_addon_does_not_get_worse` impide que EMPEORE |
 | Migraciones con lógica de datos del origen | 9 de 72 migraciones con backfills/seeds + 4 clases `Legacy*`/`*Backfill` vivas en Support | Decisiones del origen incrustadas en el esquema; ruido en instalación limpia | Sin plan |
 
 ## Baja

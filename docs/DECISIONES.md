@@ -832,3 +832,66 @@ de la web) · los cuatro endpoints ejercidos **contra el servidor real con `curl
 honeypot devuelven `201` con **0 bytes** (indistinguibles), el correo repetido da 422, `forgot`
 responde igual para un correo existente y uno inventado, y el alta en compra sin origen *stateful*
 da 400 sin crear cuenta (antes: 500 con la cuenta ya creada).
+
+## #32 · 2026-08-13 · Fase 3 paso 4a: la tarificación de la cesta sale de la UI
+Abre el paso 4, el del dinero y el de más riesgo de la fase. Se parte en cuatro unidades
+committeables —4a tarificación, 4b disponibilidad con cesta, 4c creación y cobro, 4d desenlace— por
+el mismo motivo que los pasos 1 y 3: trabajos de naturaleza distinta en un solo diff son
+irrevisables. Esta entrada cubre **4a**. Detalle en `api-v1.md` §10.octies.
+
+**(a) Nace `Booking\Contracts\CartPricing`** (+ DTOs `CartQuote`, `CartQuoteLine`, `CartQuoteAddon`),
+con `CartPricer` detrás, y **la web lo consume desde el mismo commit**. Es la extracción que §4.6.4
+exigía ANTES de exponer nada: sin ella, `POST orders/quote` habría tenido que sumar por su cuenta y
+esa es la segunda fuente de verdad del precio que el spec quiere evitar. `ModuleContractsTest` lo
+comprueba con un doble: si `Purchase` volviera a calcular importes por su cuenta, el test cae.
+
+**(b) La aritmética estaba TRIPLICADA dentro del componente, y había una cuarta copia en el panel.**
+`cartLines()`, `cartTotalCents()` y `cartDepositCents()` recorrían la misma cesta con las mismas
+reglas; `CreateManualOrderPage` mantiene la suya, que precalcula al añadir la línea. **Se comprobó
+caso a caso y hoy coinciden**, así que no había bug: había el terreno del hallazgo del paso 2, donde
+dos copias «iguales» resultaron aplicar políticas distintas. La del panel **no se unifica aquí** —
+calcula al añadir y no al pintar, y cambiarlo alteraría su conducta— y queda medida en `DEUDA.md`.
+
+**(c) El «espejo exacto» pasa de comentario a test.** `cartDepositCents()` se documentaba como
+espejo de `Order::onlineDueCents()` y nada lo comprobaba. `CartPricerTest` crea ahora el pedido real
+con la misma cesta y compara los dos pares de importes, con una cesta **mixta y no vacía** y su
+mutación (§6.3: el test de paridad de la v1 usaba la cesta vacía y pasaba por construcción). De paso
+queda fijada una regla de dinero que no era obvia: **una señal fija se cobra una vez por LÍNEA, no
+por unidad**.
+
+**(d) `POST orders/quote` es público, sin estado y `POST`.** Público porque la web deja llegar hasta
+el pago como invitado. Sin estado porque un presupuesto no reserva: no bloquea aforo, no comprueba
+disponibilidad y no admite la reserva —eso es `OrderCreator` bajo lock (`AFORO-01`) y llega en 4c—.
+`POST` porque la cesta no cabe con garantías en una URL, no porque tenga efectos.
+
+**(e) Dos diferencias deliberadas con el checkout, y las dos visibles en el contrato.** Una línea sin
+precio para la tarifa del día llega con `unit_price_cents: null` en vez de lanzar (el rechazo de
+`PAY-12` lo pone el checkout), y una línea cuyo producto ya no se vende no aparece: su hueco en la
+secuencia de `index` es la señal. Presupuestar no es poder comprar, y el documento lo dice.
+
+**(f) El presupuesto acepta `event_data` y NO lo devuelve.** Se acepta para que el mismo cuerpo
+sirva luego para crear el pedido; no se devuelve porque son las respuestas del formulario del pack
+—nombre de un menor y a veces alergias, `RGPD` §3— y este endpoint es público. El cliente ya tiene
+esos datos y las etiquetas están en `GET catalog/products/{id}`.
+
+**(g) La forma de la cesta en la API tiene un solo sitio** (`Http\Api\CartPayload`): la comparten
+`orders/quote`, la disponibilidad de 4b y `POST orders` de 4c. Valida con reglas en vez de sanear en
+silencio —un cliente con un `date` mal formado recibe un 422 que NOMBRA el campo, no un presupuesto
+con menos líneas—, y traduce el vocabulario público (`product_id`, `quantity`) al del dominio.
+
+**(h) El coste bajó a un tercio sin buscarlo, y lo que no bajó está medido.** Una sola pasada con la
+tarifa resuelta una vez por fecha: presupuestar 12 líneas del mismo día cuesta lo mismo que una
+(fijado por PENDIENTE, no por techo). Lo que **sigue costando** son 2 consultas por complemento
+(medido: 1 → 8, 3 → 12, 6 → 18) porque `AddonResolver::resolve()` pide el precio de cada uno por
+separado; es código compartido con `OrderCreator`, que lo ejecuta dentro de la transacción de los
+locks, así que su arreglo es un paso propio. Hay test que impide que empeore y entrada en `DEUDA.md`.
+
+**Verificación empírica**: suite **2376 verde** (9094 aserciones, `--parallel` ~63 s) · Pint limpio ·
+`docs-check` verde · **contrato verificado por mutación** (renombrar `online_amount_cents` en el
+Resource deja en rojo 9 tests con «The required properties (online_amount_cents) are missing») ·
+**los dos verificadores de concurrencia VERDES sobre MySQL real** con 16 workers (`QuoteController`
+entra en el `CRITICAL_RE` del pre-push) · endpoint ejercido **contra el servidor real con `curl`**:
+presupuesto simple, pack con señal (180,00 € de valor → 30,00 € online y 150,00 € en el parque),
+422 con el campo nombrado, `Accept-Language: en` traduciendo el nombre del producto, cabeceras de
+`SEC-01` presentes y CORS acotado a `APP_URL`. Funciona **sin `Origin`/`Referer`**, y es correcto:
+no toca `session()` (§10.septies 34).

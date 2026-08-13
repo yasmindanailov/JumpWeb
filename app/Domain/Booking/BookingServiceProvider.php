@@ -2,12 +2,14 @@
 
 namespace App\Domain\Booking;
 
+use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ZonePalette;
+use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
@@ -35,6 +37,9 @@ class BookingServiceProvider extends ServiceProvider
         // Política de admisión de reservas (Fase 3 · paso 2): pausa, tope de pendientes y
         // frecuencia. La aplican el sidebar, «Mis pedidos» y, en el paso 4, `POST /orders`.
         $this->app->bind(ReservationAdmission::class, ReservationAdmissionPolicy::class);
+        // Tarificación de cesta (Fase 3 · paso 4a): la consumen el sidebar de la web y
+        // `POST /orders/quote`. Es el espejo declarado de lo que `OrderCreator` cobrará.
+        $this->app->bind(CartPricing::class, CartPricer::class);
         $this->app->bind(ZonePalette::class, ZonePaletteReader::class);
         // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
         // petición para no repetir esas lecturas entre la landing, el SEO y el hero.

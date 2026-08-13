@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2 y 3 TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3 y 4a TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b), **`#28`** (paso 2) y **`#29`**–**`#31`** (paso 3).
+> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3) y **`#32`** (paso 4a).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.septies** — léelos antes de seguir por el
-> paso 4.
+> **Lo que el código enseñó al implementar: §10 → §10.octies** — léelos antes de seguir por el
+> paso 4b.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -327,7 +327,19 @@ Se corrige:
      §10.septies.**
    Desbloqueado desde `DECISIONES #23`; la EMISIÓN de tokens viaja a Fase 6 (`#29`).
 4. **El dinero**: quote, disponibilidad con cesta, `POST orders`, reintento y `payment-status` con
-   estados reales + historia de retorno móvil.
+   estados reales + historia de retorno móvil. **Partido en cuatro** por el mismo motivo que los
+   pasos 1 y 3 —trabajos de naturaleza distinta en un solo diff son irrevisables— y porque este es
+   el paso de más riesgo de la fase:
+   - ✅ **4a** (2026-08-13, `DECISIONES #32`): **tarificación de cesta** (§4.6.4).
+     `Booking\Contracts\CartPricing` + `POST orders/quote`. La web consume el contrato desde el mismo
+     commit. **Lo que el código enseñó: §10.octies.**
+   - ⬜ **4b**: **disponibilidad con la cesta** — `GET availability/{product}/dates` y
+     `POST availability/{product}/times`. Lleva la cesta porque `SlotOffer::offerableTimes()`
+     descuenta los ocupantes provisionales de la propia cesta (`AFORO-02`).
+   - ⬜ **4c**: **creación y cobro** — `POST orders` y `POST orders/{code}/payment`, sobre
+     `ReservationAdmission` + `OrderCreator` + `PaymentInitiator`, que ya existen.
+   - ⬜ **4d**: **desenlace** — `GET orders/{code}/payment-status` con estados reales, el token de
+     retorno que hoy se quema antes de validar la sesión, y la historia de retorno móvil.
 5. **Post-form migrado** (2.º consumidor), una vez resuelto su canje de credencial.
 
 ⚠️ El gate `pre-push` ancla `VERIFY_CONC` a `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator`:
@@ -619,3 +631,79 @@ hay una persona detrás**.
 devuelve `Illuminate\Http\Response`, no `JsonResponse`, así que un controlador declarado
 `: JsonResponse` revienta con `TypeError` — un 500 por una firma, no por la lógica. Aparece en
 cuanto un endpoint deja de devolver cuerpo, que es lo correcto para 201/202/204.
+
+### 10.octies Lo que el código enseñó — paso 4a (2026-08-13)
+
+**38. «Espejo exacto» estaba escrito en un comentario, y eso no es una verificación.**
+`Purchase::cartDepositCents()` se documentaba como «ESPEJO EXACTO de lo que
+`OrderCreator`/`Order::onlineDueCents()` cobrarán para ESTA misma cesta (canario anti doble-fuente)»
+—y lo era—, pero **ningún test comparaba las dos cifras**: si alguien tocaba una de las dos
+aritméticas, el cliente veía un importe en la pantalla de pago y otro en el TPV, y la suite seguía
+verde. Ahora `CartPricerTest` crea el pedido de verdad con la misma cesta y compara `totalCents` con
+`Order::total` y `onlineAmountCents` con `onlineDueCents()`. **Lección para los pasos que quedan**:
+un comentario que declara una equivalencia es una petición de test, no una prueba de que exista.
+
+**39. La aritmética no estaba duplicada: estaba TRIPLICADA, y una de las copias no se veía.** El
+spec §4.6.4 mandaba extraer `cartLines`. Al medirlo eran tres métodos del mismo componente
+—`cartLines()`, `cartTotalCents()` y `cartDepositCents()`— recorriendo la cesta por separado con las
+mismas reglas, y una CUARTA copia en el panel (`CreateManualOrderPage::estimateLineCents()` +
+`cartOnlineDueCents()`), que precalcula los importes al añadir la línea en vez de al pintarla.
+**Se comprobó caso a caso y hoy coinciden** en las dos ramas de la Opción A (#225), así que no había
+bug que arreglar; lo que había era la misma situación del paso 2, cuando dos copias que «hacían lo
+mismo» resultaron aplicar políticas distintas. La del panel **no se unificó en este paso a
+propósito**: calcula al añadir y no al pintar, y cambiarlo alteraría su conducta ante un cambio de
+precio a media cesta. Queda medida en `DEUDA.md`, que es donde se ve, en vez de en la cabeza de
+quien la encontró.
+
+**40. Extraer los tres métodos en uno redujo el coste a un tercio, sin proponérselo.** Cada render
+llamaba a los tres, y cada uno resolvía otra vez el precio de cada línea y de cada complemento,
+porque `RateResolver::priceCents()` **consulta por llamada** (la trampa del punto 17, aquí en el
+carrito). Con una sola pasada y la tarifa resuelta una vez por fecha, presupuestar doce líneas del
+mismo día cuesta exactamente lo mismo que presupuestar una — fijado por pendiente en
+`ApiOverheadTest`, no por techo.
+⚠️ **Lo que NO se arregló, con su número**: cada complemento sigue costando **2 consultas** (1 → 8
+consultas, 3 → 12, 6 → 18), porque `AddonResolver::resolve()` pide el precio de cada uno por
+separado. Es código de dinero compartido con `OrderCreator`, que lo ejecuta **dentro de la
+transacción que sostiene los locks de aforo**, así que ahí duele más que en un presupuesto. Tocarlo
+exige su propio paso y los verificadores; mientras tanto hay un test que impide que EMPEORE.
+
+**41. Resolver por adelantado lo que quizá no haga falta rompe pantallas que funcionaban.** El
+primer borrador resolvía la tarifa de todas las fechas de la cesta —más hoy— antes de recorrerla.
+`RateResolver::for()` termina en un `firstOrFail()`, así que en una instalación **sin ninguna tarifa
+configurada** eso lanza: ocho tests de la compra web se pusieron en rojo con
+`ModelNotFoundException` por una cesta vacía. La resolución es perezosa y por fecha necesitada. La
+regla que sale de aquí: **en un servicio que también corre con la base de datos a medio configurar,
+lo que se precalcula tiene que ser exactamente lo que se va a usar.**
+
+**42. Un memo `static` dentro de un método es una fuga entre tests esperando a ocurrir.** La versión
+inicial memoizaba la tarifa con `static $memo = []` dentro del método: en PHP eso sobrevive a la
+petición, al objeto y al test siguiente, que es exactamente lo que `SUITE-02` documenta para
+`Setting::$memo` (31 fallos fantasma en el origen). Se cambió por una variable local a la llamada
+antes de que costara nada. **Y el memo del lado del consumidor no puede ser por petición**: en
+Livewire, `addToCart()` cambia la cesta y `render()` corre después, así que un `once()` habría
+devuelto los importes de la cesta ANTERIOR — un error de dinero silencioso. Se ata al CONTENIDO de
+la cesta, no a la petición.
+
+**43. Los recursos que se devuelven solos necesitan `$wrap = null`, y el contrato es quien lo dice.**
+`JsonResource` envuelve en `data` por defecto, así que el presupuesto salía como
+`{"data": {...}}` contra un contrato que declara el recurso en la raíz (§4.3). Lo cazó el test del
+endpoint en su primera ejecución, no una revisión. Los recursos de LISTA no lo necesitan porque pasan
+por `ApiCollection`, que construye la respuesta él mismo: la distinción es «lo devuelve el
+controlador» vs «lo serializa la colección».
+
+**44. Sanear en silencio es correcto para una sesión y pésimo para una API.** `Cart::sanitize()`
+descarta las líneas que no encajan —lo que debe hacer con una cesta de sesión que puede venir de una
+versión anterior del flujo—, pero aplicado a un cuerpo de petición significaría devolverle a un
+cliente un presupuesto con menos líneas sin decirle por qué. El endpoint valida la FORMA con reglas
+y responde 422 nombrando el campo (`items.0.date`); el saneado del dominio se queda debajo como
+defensa. La forma de la cesta en la API vive en un solo sitio (`Http\Api\CartPayload`) porque la
+comparten los tres endpoints del paso 4 — es la misma razón por la que `Cart::sanitize()` existe en
+el lado del dominio.
+
+**45. Cuando una respuesta puede llevar PII, la decisión es qué NO devolver.** El presupuesto acepta
+`event_data` —para que el mismo cuerpo sirva luego para crear el pedido— y **no lo devuelve**: son
+las respuestas del formulario del pack, que en el sector de origen incluyen el nombre de un menor y
+a veces sus alergias (dato de salud, `RGPD` §3), y este endpoint es PÚBLICO. El cliente ya tiene
+esos datos —acaba de enviarlos— y las etiquetas para pintarlos están en `GET catalog/products/{id}`,
+así que devolverlos no le aporta nada y sí abre una superficie. Es el hermano del punto 33: allí la
+forma del cuerpo era parte del secreto; aquí lo es la ausencia de un campo.

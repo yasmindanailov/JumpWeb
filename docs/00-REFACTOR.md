@@ -272,6 +272,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             que el perfil delataba el señuelo**. Suite **2347 verde**.
       - [ ] La EMISIÓN de tokens Bearer (`POST auth/tokens`) viaja a **Fase 6**, con la app que los
             consuma (`DECISIONES #29`); la infraestructura ya está lista.
+- [ ] **Paso 4 — EL DINERO** 🟦, partido en cuatro (el paso de más riesgo de la fase):
+      - [x] **4a — TARIFICACIÓN de la cesta** (2026-08-13, `DECISIONES #32`): nace
+            `Booking\Contracts\CartPricing` (+3 DTOs) con `CartPricer` detrás, y `POST orders/quote`
+            encima; la web lo consume desde el mismo commit. **El hallazgo**: la aritmética del
+            dinero no estaba duplicada sino TRIPLICADA dentro del propio componente —`cartLines()`,
+            `cartTotalCents()` y `cartDepositCents()` recorrían la misma cesta con las mismas
+            reglas—, más una cuarta copia en el panel que hoy coincide y queda medida en `DEUDA.md`.
+            El «ESPEJO EXACTO» que el comentario prometía respecto a `Order::onlineDueCents()` no lo
+            comprobaba ningún test: ahora `CartPricerTest` crea el pedido real y compara. De regalo,
+            una sola pasada dejó el coste en un tercio (presupuestar 12 líneas cuesta lo mismo que
+            una) y quedó medido lo que NO se arregló: 2 consultas por complemento, dentro de código
+            compartido con `OrderCreator`. Suite **2376 verde** + los dos verificadores de
+            concurrencia sobre MySQL (16 workers).
+      - [ ] **4b — DISPONIBILIDAD con la cesta**: `GET availability/{product}/dates` y
+            `POST availability/{product}/times` (la cesta viaja porque `SlotOffer::offerableTimes()`
+            descuenta sus ocupantes provisionales, `AFORO-02`).
+      - [ ] **4c — CREACIÓN y COBRO**: `POST orders` y `POST orders/{code}/payment`.
+      - [ ] **4d — DESENLACE**: `payment-status` con estados reales, el token de retorno y la
+            historia de retorno móvil.
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·
       mis reservas · post-form de invitados · contenido (para la app).

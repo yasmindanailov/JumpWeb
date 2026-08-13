@@ -58,6 +58,11 @@ class ApiContractTest extends TestCase
         // `website` lo rellenan los bots y `turnstile_token` solo existe si la instalación
         // configuró claves. Obligarlos convertiría en 422 a un cliente correcto.
         'RegisterRequest' => ['marketing', 'context', 'website', 'turnstile_token'],
+        // Cuerpo de PETICIÓN otra vez, y por el mismo motivo. Una línea de cesta sin complementos y
+        // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
+        // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`
+        // sigue impidiendo colar un campo que el servidor ignoraría en silencio.
+        'QuoteRequestItem' => ['event_data', 'addons'],
     ];
 
     /** @var array<string, mixed>|null */

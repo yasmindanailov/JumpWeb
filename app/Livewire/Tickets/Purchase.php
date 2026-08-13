@@ -3,6 +3,10 @@
 namespace App\Livewire\Tickets;
 
 use App\Domain\Booking\Contracts\AdmissionDecision;
+use App\Domain\Booking\Contracts\CartPricing;
+use App\Domain\Booking\Contracts\CartQuote;
+use App\Domain\Booking\Contracts\CartQuoteAddon;
+use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
@@ -161,12 +165,25 @@ class Purchase extends Component
 
     private ReservationAdmission $admission;
 
+    private CartPricing $pricing;
+
     /** Memo por petición de los complementos del producto elegido (evita N consultas por render). */
     private ?Collection $selectedAddonsMemo = null;
 
     private ?int $selectedAddonsMemoFor = null;
 
-    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog, ReservationAdmission $admission): void
+    /**
+     * Memo de la cesta tarificada, atado al CONTENIDO de la cesta (no a la petición).
+     *
+     * Se hace así, y no con `once()`, porque una misma petición puede tarificar dos cestas
+     * distintas: `addToCart()`/`removeLine()` cambian `$this->cart` y `render()` corre después. Un
+     * memo por petición devolvería el importe de la cesta ANTERIOR — un error de dinero silencioso.
+     */
+    private ?CartQuote $quoteMemo = null;
+
+    private ?string $quoteMemoFor = null;
+
+    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing): void
     {
         $this->rates = $rates;
         $this->availability = $availability;
@@ -176,6 +193,7 @@ class Purchase extends Component
         $this->slotOffer = $slotOffer;
         $this->catalog = $catalog;
         $this->admission = $admission;
+        $this->pricing = $pricing;
     }
 
     public function mount(): void
@@ -1165,40 +1183,6 @@ class Purchase extends Component
     }
 
     /**
-     * Complementos anidados de una línea, resueltos para mostrar (nombre, cantidad, subtotal).
-     *
-     * @param  array<int, array{ticket_type_id:int, qty:int}>  $addons
-     * @return array<int, array{name:mixed, qty:int, subtotal:int}>
-     */
-    private function resolveCartLineAddons(TicketType $product, int $lineQty, array $requested): array
-    {
-        if ($product->isAddon() || $requested === []) {
-            return ['rows' => [], 'subtotal' => 0];
-        }
-        $product->loadMissing('addons');
-        try {
-            $resolved = $this->addonResolver->resolve($product, $lineQty, $requested, Carbon::today());
-        } catch (\Throwable) {
-            // Cesta inconsistente (p. ej. un complemento dejó de estar disponible): no rompemos la
-            // vista — el checkout volverá a validar y dará el error apropiado.
-            return ['rows' => [], 'subtotal' => 0];
-        }
-
-        $rows = [];
-        foreach ($resolved['rows'] as $r) {
-            $addonType = $this->allSellableTypes()->firstWhere('id', $r['ticket_type_id']);
-            $rows[] = [
-                'name' => $addonType?->tr('name'),
-                'qty' => (int) $r['quantity'],
-                'free_qty' => (int) $r['free_quantity'],
-                'subtotal' => max(0, (int) $r['quantity'] - (int) $r['free_quantity']) * (int) $r['unit_price'],
-            ];
-        }
-
-        return ['rows' => $rows, 'subtotal' => (int) $resolved['subtotal']];
-    }
-
-    /**
      * Ocupantes provisionales de la cesta para una ENTRADA en una zona y día: las líneas de
      * entrada ya añadidas que restan plazas a una nueva selección (5.4b). Los packs no cuentan
      * aquí (pool propio, #82).
@@ -1484,65 +1468,76 @@ class Purchase extends Component
     }
 
     /**
-     * Carrito enriquecido para la vista (nombre, zona, precio del día y subtotal desde servidor).
+     * La cesta TARIFICADA por el dominio (Fase 3 · paso 4a).
+     *
+     * Los importes ya no se calculan aquí: los da `Booking\Contracts\CartPricing`, el mismo contrato
+     * que sirve `POST /api/v1/orders/quote`. Antes esta clase de interfaz contenía la aritmética del
+     * dinero en tres métodos que recorrían la cesta por separado —el desglose, el total y lo que se
+     * cobra online—, así que la API habría sido una cuarta copia y cualquier retoque en una sola de
+     * ellas habría separado lo que se MUESTRA de lo que se COBRA.
+     */
+    private function quote(): CartQuote
+    {
+        $key = md5(serialize($this->cart));
+
+        if ($this->quoteMemoFor !== $key) {
+            $this->quoteMemo = $this->pricing->quote($this->cart);
+            $this->quoteMemoFor = $key;
+        }
+
+        return $this->quoteMemo;
+    }
+
+    /**
+     * Carrito enriquecido para la VISTA. El dinero viene tarificado del dominio ({@see quote()}) y
+     * aquí solo se le da la forma que consume el blade.
+     *
+     * Lo único que se añade es `event`: las respuestas de los campos del pack, emparejadas con sus
+     * etiquetas. No viaja en el contrato de tarificación porque no es dinero —y porque son datos
+     * personales de un menor (`RGPD` §3): la API no los devuelve, el cliente ya los tiene—; la
+     * pareja etiqueta/valor la resuelve `resolveEventData()`, que esta misma clase comparte con la
+     * pantalla de confirmación.
      *
      * @return array<int, array<string, mixed>>
      */
     private function cartLines(): array
     {
-        $lines = [];
-        foreach ($this->cart as $i => $line) {
-            if (! isset($line['ticket_type_id'], $line['qty'])) {
-                continue;
-            }
-            $type = $this->allSellableTypes()->firstWhere('id', $line['ticket_type_id']);
-            if (! $type) {
-                continue;
-            }
-            // Los complementos no tienen fecha: su precio (plano) se resuelve con hoy.
-            $unit = (int) $this->rates->priceCents($type, $type->isAddon() ? Carbon::today() : Carbon::parse($line['date']));
-            $addonResult = $this->resolveCartLineAddons($type, (int) $line['qty'], $line['addons'] ?? []);
-            $principalSubtotal = $line['qty'] * $unit;
-            // #225 (F2): señal/depósito POR LÍNEA. La «señal» se muestra en la CARD del producto que
-            // la cobra (no como etiqueta del agregado, que confundía en cestas mixtas entrada+pack).
-            // `depositCents` es data-driven (sin señal → valor pleno = sin señal). Espejo de
-            // `cartDepositCents`: los complementos de un producto CON señal van 100% al parque (Opción A).
-            $deposit = $type->depositCents($principalSubtotal);
-            $hasDeposit = $deposit < $principalSubtotal;
-            $gateRemainder = $hasDeposit ? ($principalSubtotal - $deposit) + (int) $addonResult['subtotal'] : 0;
-            $lines[] = [
-                'index' => $i,
-                'name' => $type->tr('name'),
-                'date' => $line['date'] ?? null,
-                'time' => $line['time'] ?? null,
-                'qty' => $line['qty'],
-                'is_pack' => $type->isPack(),
-                'is_addon' => $type->isAddon(),
-                'event' => $this->resolveEventData($type, $line['event_data'] ?? []),
-                'addons' => $addonResult['rows'],
-                'subtotal' => $principalSubtotal,
-                'has_deposit' => $hasDeposit,
-                'deposit' => $deposit,
-                'gate_remainder' => $gateRemainder,
-            ];
-        }
+        return array_map(function (CartQuoteLine $line): array {
+            $type = $this->allSellableTypes()->firstWhere('id', $line->productId);
 
-        return $lines;
+            return [
+                'index' => $line->index,
+                'name' => $line->name,
+                'date' => $line->date,
+                'time' => $line->time,
+                'qty' => $line->quantity,
+                'is_pack' => $line->isPack,
+                'event' => $this->resolveEventData($type, $this->cart[$line->index]['event_data'] ?? []),
+                'addons' => array_map(fn (CartQuoteAddon $addon): array => [
+                    'name' => $addon->name,
+                    'qty' => $addon->quantity,
+                    'free_qty' => $addon->freeQuantity,
+                    'subtotal' => $addon->subtotalCents,
+                ], $line->addons),
+                'subtotal' => $line->subtotalCents,
+                'has_deposit' => $line->hasDeposit,
+                'deposit' => $line->depositCents,
+                'gate_remainder' => $line->gateRemainderCents,
+            ];
+        }, $this->quote()->lines);
     }
 
     /**
      * Nº de líneas del carrito — cuenta SOLO las que resuelven a un producto vendible/operativo, la
      * MISMA fuente que `cartLines()`/`cartTotalCents()`. Así el badge nunca diverge del render
      * (antes `count($this->cart)` contaba líneas fantasma de productos ya no vendibles). (P8)
+     *
+     * Desde el paso 4a esa coincidencia deja de ser una convención y pasa a ser estructural: quien
+     * decide qué línea se tarifica es el dominio, y el badge cuenta exactamente lo que devuelve.
      */
     public function cartCount(): int
     {
-        $ids = $this->allSellableTypes()->pluck('id')->all();
-
-        return count(array_filter(
-            $this->cart,
-            fn ($line) => isset($line['ticket_type_id']) && in_array((int) $line['ticket_type_id'], $ids, true)
-        ));
+        return count($this->quote()->lines);
     }
 
     /**
@@ -1636,25 +1631,10 @@ class Purchase extends Component
         ];
     }
 
+    /** Valor total de la cesta (principales + complementos), tarificado en servidor. */
     public function cartTotalCents(): int
     {
-        $total = 0;
-        foreach ($this->cart as $line) {
-            if (! isset($line['ticket_type_id'], $line['qty'])) {
-                continue;
-            }
-            $type = $this->allSellableTypes()->firstWhere('id', $line['ticket_type_id']);
-            if (! $type) {
-                continue;
-            }
-            $total += $line['qty'] * (int) $this->rates->priceCents($type, $type->isAddon() ? Carbon::today() : Carbon::parse($line['date']));
-
-            // Complementos anidados de la línea: el MISMO AddonResolver del checkout (incluido /
-            // por-invitado / grupo excluyente) → el total previsualizado coincide con el cobro.
-            $total += $this->resolveCartLineAddons($type, (int) $line['qty'], $line['addons'] ?? [])['subtotal'];
-        }
-
-        return $total;
+        return $this->quote()->totalCents;
     }
 
     /**
@@ -1662,31 +1642,15 @@ class Purchase extends Component
      * `OrderCreator`/`Order::onlineDueCents()` cobrarán para ESTA misma cesta (canario anti
      * doble-fuente): por cada línea, `TicketType::depositCents(valor_línea)` (none → total);
      * y los complementos de un producto CON señal van 100% al parque (online 0; Opción A), los
-     * de un producto sin señal se cobran online al completo. Reusa `allSellableTypes()` memoizado.
+     * de un producto sin señal se cobran online al completo.
+     *
+     * Desde el paso 4a la regla vive en `Booking\Services\CartPricer` y el «espejo exacto» dejó de
+     * ser una promesa escrita en un comentario: `CartPricerTest` crea el pedido de verdad con la
+     * misma cesta y compara los dos importes.
      */
     public function cartDepositCents(): int
     {
-        $online = 0;
-        foreach ($this->cart as $line) {
-            if (! isset($line['ticket_type_id'], $line['qty'])) {
-                continue;
-            }
-            $type = $this->allSellableTypes()->firstWhere('id', $line['ticket_type_id']);
-            if (! $type) {
-                continue;
-            }
-            $unit = (int) $this->rates->priceCents($type, $type->isAddon() ? Carbon::today() : Carbon::parse($line['date']));
-            $lineCharged = $line['qty'] * $unit;
-            $deposit = $type->depositCents($lineCharged);
-            $online += $deposit;
-
-            // Complementos: solo se cobran online si el principal NO tiene señal (Opción A).
-            if ($deposit >= $lineCharged) {
-                $online += $this->resolveCartLineAddons($type, (int) $line['qty'], $line['addons'] ?? [])['subtotal'];
-            }
-        }
-
-        return $online;
+        return $this->quote()->onlineAmountCents;
     }
 
     /**

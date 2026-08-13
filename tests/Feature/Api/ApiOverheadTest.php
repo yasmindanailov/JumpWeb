@@ -133,6 +133,91 @@ class ApiOverheadTest extends TestCase
     }
 
     /**
+     * Fase 3 · paso 4a — presupuestar una cesta no puede costar una consulta por línea.
+     *
+     * Es la medición que destapó el motivo de fondo para extraer la tarificación: cuando vivía en el
+     * componente Livewire, cada render llamaba a los TRES métodos (desglose, total y lo que se cobra
+     * online) y cada uno resolvía otra vez el precio de cada línea, porque
+     * `RateResolver::priceCents()` consulta por llamada —la misma trampa que el spec §10.ter 17
+     * documentó en el read-model del catálogo—. Ahora la tarifa de cada fecha se resuelve una vez y
+     * el precio se lee de la relación ya cargada.
+     *
+     * Se mide por PENDIENTE y no con un techo: doce líneas del mismo día tienen que costar
+     * exactamente lo mismo que una.
+     *
+     * ⚠️ **Lo que este test NO cubre**, dicho en voz alta para que no se lea como «coste plano»: las
+     * líneas CON complementos sí crecen, y su pendiente la fija el test siguiente.
+     */
+    public function test_quoting_a_cart_does_not_grow_with_the_number_of_lines(): void
+    {
+        $product = $this->catalogFixture(1)[0];
+        $date = now()->addDays(2)->toDateString();
+
+        $body = fn (int $lines): array => ['items' => array_map(static fn (int $i): array => [
+            'product_id' => $product->id,
+            'date' => $date,
+            'time' => str_pad((string) (8 + $i), 2, '0', STR_PAD_LEFT).':00:00',
+            'quantity' => 8,
+        ], range(0, $lines - 1))];
+
+        // La primera petición de un proceso paga el `select` de `settings` que `PERF-02` memoiza.
+        $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(1))->assertOk();
+
+        $one = $this->queriesOf(fn () => $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(1))->assertOk());
+        $many = $this->queriesOf(fn () => $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(12))->assertOk());
+
+        $this->assertCount(
+            count($one),
+            $many,
+            "Presupuestar 12 líneas cuesta más consultas que presupuestar 1: hay un precio resuelto por línea.\n  ".
+            implode("\n  ", array_diff($many, $one))
+        );
+    }
+
+    /**
+     * Fase 3 · paso 4a — el coste por COMPLEMENTO, que sí crece: **2 consultas por complemento
+     * resuelto** (medido 2026-08-13: 1 → 8 consultas, 3 → 12, 6 → 18).
+     *
+     * La causa no está en la tarificación sino en `AddonResolver::resolve()`, que pide el precio de
+     * cada complemento con `RateResolver::priceCents()` —y cada llamada son dos consultas: la tarifa
+     * del día y el importe—. Es código de dinero COMPARTIDO con `OrderCreator`, que lo ejecuta
+     * dentro de la transacción que sostiene los locks de aforo, así que ahí duele más que aquí.
+     *
+     * **No se arregla en este paso a propósito**: tocar el resolutor de complementos cambia el
+     * camino del cobro y exige los verificadores de concurrencia; hacerlo de tapadillo dentro de una
+     * extracción es justo lo que el spec §10.ter 18 dejó escrito que no se hace. Queda en
+     * `DEUDA.md` con esta medición. Lo que hace este test mientras tanto es que no EMPEORE: fija la
+     * pendiente conocida, no la bendice.
+     */
+    public function test_the_known_cost_per_addon_does_not_get_worse(): void
+    {
+        $product = $this->catalogFixture(1)[0];
+        $this->attachAddons($product, 6);
+        $addonIds = $product->addons()->pluck('ticket_types.id')->all();
+        $date = now()->addDays(2)->toDateString();
+
+        $body = fn (int $addons): array => ['items' => [[
+            'product_id' => $product->id, 'date' => $date, 'time' => '10:00:00', 'quantity' => 8,
+            'addons' => array_map(
+                static fn (int $id): array => ['product_id' => $id, 'quantity' => 1],
+                array_slice($addonIds, 0, $addons),
+            ),
+        ]]];
+
+        $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(1))->assertOk();
+
+        $one = $this->queriesOf(fn () => $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(1))->assertOk());
+        $six = $this->queriesOf(fn () => $this->postJson('/'.ApiSurface::PREFIX.'/orders/quote', $body(6))->assertOk());
+
+        $this->assertLessThanOrEqual(
+            count($one) + 2 * 5,
+            count($six),
+            "El coste por complemento ha crecido por encima de las 2 consultas medidas.\n  ".
+            implode("\n  ", array_diff($six, $one))
+        );
+    }
+
+    /**
      * Catálogo mínimo pero completo: zona operativa, tarifa y productos con precio (sin precio, el
      * eager load de precios no se ejercería y la medición no valdría).
      *

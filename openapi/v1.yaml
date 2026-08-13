@@ -47,6 +47,12 @@ tags:
       Qué se vende. Superficie PÚBLICA: se consulta sin identidad, igual que el escaparate de la
       web. Describe la oferta, nunca la disponibilidad ni el precio final de una cesta — eso
       depende de la fecha y de la selección, y lo sirven `availability/*` y `orders/quote`.
+  - name: Compra
+    description: |
+      El camino del dinero. El carrito NO se guarda en el servidor —es estado del cliente—, pero el
+      servidor sí participa en él: pone el **precio** (`orders/quote`), decide la **disponibilidad**
+      con la cesta delante y **admite y crea** el pedido. Ninguna de esas tres cosas puede
+      calcularla el cliente sin quedarse con una copia del negocio que acabaría divergiendo.
 
 paths:
 
@@ -336,6 +342,49 @@ paths:
                 $ref: '#/components/schemas/CatalogProductDetail'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /orders/quote:
+    post:
+      tags: [Compra]
+      operationId: quoteCart
+      summary: Presupuestar una cesta
+      description: |
+        Devuelve lo que suma una cesta y lo que se cobraría ahora, **sin crear nada**: no reserva
+        plaza, no comprueba disponibilidad y no admite la reserva. Existe para que ningún cliente
+        tenga que reimplementar el precio —tarifa del día, complementos y señal— ni crear un pedido
+        (que sí bloquea aforo) solo para enseñar un total.
+
+        Los importes son los que se cobrarán: salen del mismo contrato de dominio que consume la web
+        y que alimenta la creación del pedido.
+
+        **Dos avisos sobre lo que NO valida**, porque un presupuesto no es un checkout:
+
+        - una línea cuyo producto ya no se vende **no aparece** en la respuesta; su hueco en la
+          secuencia de `index` es la señal de que cayó;
+        - una línea sin precio para la tarifa de ese día llega con `unit_price_cents: null` y
+          `subtotal_cents: 0`. Se puede presupuestar, pero **no se puede comprar**: `POST orders` la
+          rechazará.
+
+        Es `POST` porque la cesta no cabe con garantías en una URL, no porque tenga efectos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: La cesta tarificada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -831,6 +880,185 @@ components:
           type: integer
         charged_subtotal_cents:
           type: integer
+
+    Quote:
+      type: object
+      description: |
+        Una cesta tarificada por el servidor.
+
+        `total_cents` y `online_amount_cents` son cosas distintas y **ninguna se deriva de la otra**:
+        el primero es lo que vale la reserva y el segundo lo que la pasarela cobra ahora. Con
+        productos de señal difieren, y la diferencia es lo que se paga presencialmente.
+      required: [lines, total_cents, online_amount_cents]
+      additionalProperties: false
+      properties:
+        lines:
+          type: array
+          description: Una por línea VENDIBLE de la cesta enviada, en su orden.
+          items:
+            $ref: '#/components/schemas/QuoteLine'
+        total_cents:
+          type: integer
+          description: 'Valor total de la cesta: principales + complementos cobrados.'
+        online_amount_cents:
+          type: integer
+          description: |
+            Lo que se cobra ONLINE. Sin señal coincide con `total_cents`. No es «lo pendiente»: no
+            baja a cero al pagarse.
+
+    QuoteLine:
+      type: object
+      description: Una línea de la cesta con su precio resuelto. Sus complementos van anidados.
+      required:
+        - index
+        - product_id
+        - product_name
+        - is_pack
+        - date
+        - time
+        - quantity
+        - unit_price_cents
+        - subtotal_cents
+        - has_deposit
+        - deposit_cents
+        - gate_remainder_cents
+        - addons
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          description: |
+            Posición de la línea en la cesta que se envió (base 0). Una línea cuyo producto ya no se
+            vende no se tarifica, así que la secuencia puede tener huecos: ese hueco es la señal.
+        product_id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        is_pack:
+          type: boolean
+          description: En un pack, `quantity` cuenta INVITADOS; en una entrada, unidades.
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          description: Hora de inicio de la franja, en formato `HH:MM:SS`.
+        quantity:
+          type: integer
+        unit_price_cents:
+          type: integer
+          nullable: true
+          description: |
+            Precio del día según la tarifa que aplique a `date`. **`null` = el producto no tiene
+            precio para esa tarifa**, así que no se puede comprar ese día y `subtotal_cents` es 0.
+            Es distinto de un `0`, que sí es un producto gratuito intencionado.
+        subtotal_cents:
+          type: integer
+          description: '`quantity × unit_price_cents` del PRINCIPAL, sin complementos.'
+        has_deposit:
+          type: boolean
+          description: ¿Esta línea cobra solo señal y deja un resto para el parque?
+        deposit_cents:
+          type: integer
+          description: Parte del principal que se cobra online. Sin señal, el subtotal entero.
+        gate_remainder_cents:
+          type: integer
+          description: |
+            Lo que queda por cobrar presencialmente de esta línea: el resto del principal más sus
+            complementos íntegros. Cero si la línea no cobra señal.
+        addons:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuoteLineAddon'
+
+    QuoteLineAddon:
+      type: object
+      description: |
+        Complemento tal y como el servidor lo ha RESUELTO, que no es siempre lo que se pidió: los
+        obligatorios se inyectan, cada grupo excluyente toma su opción por defecto y los
+        per-invitado ajustan su cantidad a la línea.
+      required: [product_id, product_name, quantity, free_quantity, subtotal_cents]
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        quantity:
+          type: integer
+          description: Cantidad efectiva tras aplicar la configuración del complemento.
+        free_quantity:
+          type: integer
+          description: Unidades incluidas (gratis) de esas `quantity`.
+        subtotal_cents:
+          type: integer
+          description: '`(quantity − free_quantity) × precio unitario`.'
+
+    QuoteRequest:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          description: |
+            Las líneas de la cesta. El tope espeja el invariante de servidor del checkout: una cesta
+            desmedida bloquearía muchas franjas a la vez al comprarla.
+          items:
+            $ref: '#/components/schemas/QuoteRequestItem'
+
+    QuoteRequestItem:
+      type: object
+      description: |
+        Una línea de la cesta. Es el MISMO cuerpo que aceptan la disponibilidad y la creación del
+        pedido, para que el cliente no tenga que guardar dos formas de su carrito.
+      required: [product_id, date, time, quantity]
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          minimum: 1
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          description: Hora de inicio de la franja. Se acepta `HH:MM` y `HH:MM:SS`.
+        quantity:
+          type: integer
+          minimum: 1
+        event_data:
+          type: object
+          description: |
+            Respuestas de los campos del evento de un pack. **No influyen en el precio y no se
+            devuelven**: son datos personales —de un menor, en el sector de origen— y este endpoint
+            es público. Se aceptan para que este mismo cuerpo sirva también para crear el pedido.
+        addons:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuoteRequestAddon'
+
+    QuoteRequestAddon:
+      type: object
+      description: |
+        Complemento pedido para la línea. Es una INTENCIÓN: el servidor la resuelve contra la
+        configuración del producto, así que la respuesta puede traer más complementos (obligatorios)
+        o cantidades distintas de las pedidas.
+      required: [product_id, quantity]
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
 
     CatalogZoneList:
       type: object

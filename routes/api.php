@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
+use App\Http\Controllers\Api\V1\QuoteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -73,6 +74,17 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/catalog/products/{product}', [CatalogProductsController::class, 'show'])
         ->whereNumber('product')
         ->name('catalog.products.show');
+
+    // ── Presupuesto (paso 4a) — PÚBLICO ───────────────────────────────────────────────────────
+    // El servidor participa en el carrito sin guardarlo: aquí pone el PRECIO. Es público porque la
+    // web deja llegar hasta el pago como invitado, y al serlo el `throttle:api` del grupo sí lo
+    // cuenta (en una ruta con `auth:`, el 401 se lanza antes — spec §10, punto 2).
+    //
+    // No crea nada, no bloquea aforo y no admite la reserva: eso son `ReservationAdmission` y
+    // `OrderCreator`, y llegan con `POST orders`. Es `POST` porque la cesta —líneas, complementos
+    // anidados y respuestas del evento— no cabe con garantías en una query string, no porque tenga
+    // efectos.
+    Route::post('/orders/quote', QuoteController::class)->name('orders.quote');
 
     // ── Zona autenticada ──────────────────────────────────────────────────────────────────────
     // `auth:sanctum` cubre los DOS modos del §4.2 con el mismo código: cookie de sesión para la
