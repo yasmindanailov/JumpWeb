@@ -15,8 +15,13 @@ namespace App\Http\Api;
  *    incompatible y exige versión nueva (`/api/v2`).
  *
  * El sobre que los transporta lo construye `ApiErrorResponse`; el mapeo excepción → código vive en
- * `ApiExceptionRenderer`. Los códigos de negocio (`ReservationException` y compañía) llegan en el
- * paso 4 con su propio mapa y su test de exhaustividad — no se inventan aquí sin lector.
+ * `ApiExceptionRenderer`. Los códigos de NEGOCIO llegaron en el paso 4c: el mapa clave-i18n → código
+ * es `ReservationErrorMap` y `ReservationErrorMapTest` cae si alguien lanza una clave sin mapear.
+ *
+ * **Por qué cada motivo tiene su código y no uno genérico**: añadir un caso es evolutivo, pero
+ * PARTIR uno existente rompe a todo cliente que se hubiera ramificado sobre él. Un «no disponible»
+ * único habría sido cómodo hoy y un cambio incompatible mañana, en cuanto alguien quisiera
+ * distinguir «agotado» —que se arregla refrescando la disponibilidad— de «fuera de horario», que no.
  */
 enum ApiErrorCode: string
 {
@@ -59,6 +64,78 @@ enum ApiErrorCode: string
 
     /** 500 — fallo no previsto. Nunca transporta detalles internos fuera de `APP_DEBUG`. */
     case ServerError = 'server_error';
+
+    // ── Negocio: la reserva no se puede crear (Fase 3 · paso 4c) ─────────────────────────────
+    // Todos llegan con **422**: la petición está bien formada y lo que falla es que esa cesta no se
+    // puede convertir en un pedido. La precisión la lleva el `code`, no el status — distinguir 409
+    // de 422 no le daría al cliente nada que no le diga ya el código.
+    //
+    // Los que terminan en `line_*` traen en `params` el `product` y el `when` de la línea culpable:
+    // sin ellos el cliente pintaría «El producto — no está disponible» (spec §4.3).
+
+    /** 422 — la cesta enviada no tiene ninguna línea utilizable. */
+    case CartEmpty = 'cart_empty';
+
+    /** 422 — la cesta supera el tope de líneas del servidor (`PAY-12`). */
+    case CartTooLarge = 'cart_too_large';
+
+    /** 422 — el producto no se puede vender (no está en venta, o no tiene precio para ese día). */
+    case ProductUnavailable = 'product_unavailable';
+
+    /** 422 — esa línea no se puede vender: producto o franja inexistentes, cerrados o no ofrecidos. */
+    case LineUnavailable = 'line_unavailable';
+
+    /** 422 — la fecha de la línea ya pasó. */
+    case LinePastDate = 'line_past_date';
+
+    /** 422 — la franja es de hoy y su hora ya pasó (`PAY-13`). */
+    case LineTooLate = 'line_too_late';
+
+    /** 422 — la franja no respeta la antelación mínima de reserva del producto. */
+    case LineTooSoon = 'line_too_soon';
+
+    /** 422 — la hora queda fuera de la ventana de disponibilidad del producto ese día. */
+    case LineOutsideWindow = 'line_outside_window';
+
+    /** 422 — no quedan plazas para esa entrada. Es el que invita a refrescar la disponibilidad. */
+    case LineSoldOut = 'line_sold_out';
+
+    /** 422 — no queda cupo de invitados para ese pack en esa franja. */
+    case LinePackSoldOut = 'line_pack_sold_out';
+
+    /** 422 — el número de invitados cae fuera del rango del pack. Lleva `params.min`/`params.max`. */
+    case LinePackGuestsRange = 'line_pack_guests_range';
+
+    /** 422 — faltan respuestas obligatorias del formulario del pack. */
+    case LineEventRequired = 'line_event_required';
+
+    // ── Negocio: la reserva no se admite, o el cobro no se puede abrir ───────────────────────
+
+    /**
+     * 409 — las reservas online están en PAUSA desde el panel (#218). No es culpa del cliente ni se
+     * arregla reintentando: es un interruptor del operador, y por eso no es un 422.
+     */
+    case ReservationsPaused = 'reservations_paused';
+
+    /**
+     * 409 — el titular ya tiene el máximo de pedidos pendientes vivos reteniendo aforo sin pagar
+     * (cierra el hallazgo E de la auditoría del origen). Lleva `params.max`.
+     */
+    case TooManyPendingOrders = 'too_many_pending_orders';
+
+    /**
+     * 409 — ese pedido ya no admite otro intento de cobro: no existe para este titular, no está
+     * pendiente, o su retención de aforo venció y la plaza volvió al inventario. Los tres casos dan
+     * la MISMA respuesta a propósito (anti-IDOR: no se filtra si el código existe).
+     */
+    case OrderNotRetryable = 'order_not_retryable';
+
+    /**
+     * 502 — el cobro no se pudo abrir contra la pasarela. En un primer intento el pedido se suelta
+     * en el acto (no retiene aforo sin nadie que lo vaya a pagar) y el cliente puede volver a
+     * empezar; en un reintento el pedido sigue vivo y se puede volver a intentar.
+     */
+    case PaymentUnavailable = 'payment_unavailable';
 
     /** Clave i18n del mensaje legible. Indirección deliberada: el código público no la conoce. */
     public function messageKey(): string

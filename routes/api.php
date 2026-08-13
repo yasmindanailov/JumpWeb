@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
+use App\Http\Controllers\Api\V1\OrderPaymentController;
+use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use Illuminate\Support\Facades\Route;
@@ -115,5 +117,20 @@ Route::name('api.v1.')->group(function (): void {
         // dos: ninguno acepta un identificador de titular por la petición.
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
+
+        // ── Pedido y cobro (paso 4c) ──────────────────────────────────────────────────────────
+        // Autenticado y acotado al titular por el guard: ninguna de las tres rutas acepta un
+        // identificador de titular por la petición, y un código ajeno responde 404 —no 403— para no
+        // convertirlas en un oráculo de códigos de pedido.
+        //
+        // El REINTENTO conserva su propio techo `throttle:6,1` además del suelo del grupo: es una
+        // operación que abre un cobro real contra la pasarela, y el suelo genérico no basta. El
+        // número es el mismo que ya aplica la web (spec §4.7); `PAY-15` (120/min) es otra cosa —el
+        // throttle de las callbacks de Redsys— y confundirlos deja el reintento 20× más laxo.
+        Route::post('/orders', [OrdersController::class, 'store'])->name('orders.store');
+        Route::get('/orders/{code}', [OrdersController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{code}/payment', [OrderPaymentController::class, 'store'])
+            ->middleware('throttle:6,1')
+            ->name('orders.payment.store');
     });
 });

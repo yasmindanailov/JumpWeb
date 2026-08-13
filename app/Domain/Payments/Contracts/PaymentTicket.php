@@ -18,10 +18,38 @@ use App\Domain\Payments\Models\Payment;
 final readonly class PaymentTicket
 {
     /**
-     * @param  array<string, string>  $formData  campos del formulario auto-POST, ya firmados
+     * @param  array<string, string>  $formData  payload CRUDO del proveedor (ver `gatewayFields()`)
      */
     public function __construct(
         public Payment $payment,
         public array $formData,
     ) {}
+
+    /** Dónde hay que POSTear el formulario. */
+    public function gatewayUrl(): string
+    {
+        return (string) ($this->formData['gatewayUrl'] ?? '');
+    }
+
+    /**
+     * Los campos del formulario CON SUS NOMBRES REALES, listos para enviarse tal cual.
+     *
+     * `formData` no es eso, aunque su nombre lo sugiera: es el payload crudo del proveedor, con la
+     * URL mezclada dentro y claves propias (`params`, `signature`) que **no** son los nombres de los
+     * `<input>`. Traducir de una forma a la otra era conocimiento repartido por las plantillas, y un
+     * cliente de API no tiene plantilla donde mirarlo. Aquí queda dicho una vez.
+     *
+     * ⚠️ El contenido va firmado: tocar un solo campo invalida la firma y la pasarela rechaza el
+     * cobro (SIS0042). Se transporta, no se manipula.
+     *
+     * @return array<string, string>
+     */
+    public function gatewayFields(): array
+    {
+        return [
+            'Ds_SignatureVersion' => (string) ($this->formData['signatureVersion'] ?? ''),
+            'Ds_MerchantParameters' => (string) ($this->formData['params'] ?? ''),
+            'Ds_Signature' => (string) ($this->formData['signature'] ?? ''),
+        ];
+    }
 }

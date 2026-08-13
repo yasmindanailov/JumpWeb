@@ -297,7 +297,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             de la capa de UI y `SlotOffer` entró en el `CRITICAL_RE` del `pre-push`, donde
             `CriticalPathGateTest` ya lo daba por incluido. Suite **2404 verde** + los dos
             verificadores de concurrencia sobre MySQL (16 workers).
-      - [ ] **4c — CREACIÓN y COBRO**: `POST orders` y `POST orders/{code}/payment`.
+      - [x] **4c — CREACIÓN y COBRO** (2026-08-13, `DECISIONES #34`): `POST orders`,
+            `GET orders/{code}` y `POST orders/{code}/payment` sobre las tres piezas que ya existían,
+            más los **códigos de error de negocio** del contrato (12 motivos de rechazo con mapa
+            exhaustivo por test). **Aquí no se extrae nada: se orquesta**, y por eso es el trozo de
+            más riesgo — una secuencia mal ordenada pasa `ApiBoundariesTest` con nota. La red son
+            cuatro tests (admisión antes y consumiendo · hold siempre, `AFORO-10` · cobro sobre el
+            pedido persistido · soltar en el primer fallo y no tocar en el reintento), verificados
+            por MUTACIÓN. La orquestación se queda en la capa de entrega a propósito: extraerla
+            añadiría una flecha a una baseline que solo encoge, y el arreglo de fondo
+            (`PaymentProvider`) ya está en el backlog de la fase. Suite **2424 verde** + los dos
+            verificadores sobre MySQL (16 workers) + flujo completo por `curl` contra el servidor.
       - [ ] **4d — DESENLACE**: `payment-status` con estados reales, el token de retorno y la
             historia de retorno móvil.
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·

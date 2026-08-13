@@ -22,5 +22,23 @@ return [
         'maintenance' => "We're carrying out maintenance. Please try again in a few minutes.",
         'bad_request' => "We couldn't make sense of the request.",
         'server_error' => 'Something went wrong. Please try again.',
+
+        // ── Negocio (Fase 3 · paso 4c) ───────────────────────────────────────────────────
+        'cart_empty' => 'Your basket is empty.',
+        'cart_too_large' => 'Your basket has too many lines. Remove one to continue.',
+        'product_unavailable' => 'That product is not available.',
+        'line_unavailable' => 'One of the lines in your basket is no longer available.',
+        'line_past_date' => 'That date has already passed.',
+        'line_too_late' => 'That time has already passed. Please choose another.',
+        'line_too_soon' => 'That time is too soon to book. Please choose another.',
+        'line_outside_window' => 'That time falls outside the available hours.',
+        'line_sold_out' => 'There are no places left for that time.',
+        'line_pack_sold_out' => 'There is no room left for that booking at that time.',
+        'line_pack_guests_range' => 'That number of guests is not valid for this service.',
+        'line_event_required' => 'Some required booking details are missing.',
+        'reservations_paused' => 'Online booking is temporarily closed.',
+        'too_many_pending_orders' => 'You already have several bookings awaiting payment. Complete them or wait until they expire.',
+        'order_not_retryable' => 'That booking can no longer be paid.',
+        'payment_unavailable' => 'We could not open the payment gateway. Please try again.',
     ],
 ];

@@ -954,3 +954,65 @@ tocar `SlotOffer` y `RateResolver` (1 compra + 15 `sold_out`; 1 `authorized` + 1
 servidor real con `curl`**: 14 días con su tarifa (el sábado sale `special` a 11,90 €), 40 plazas sin
 cesta y **35 con una línea de 5 en esa franja** —y las demás intactas—, el pack publicando 60 y 20, y
 404 tanto para un id inexistente como para uno no numérico.
+
+## #34 · 2026-08-13 · Fase 3 paso 4c: crear el pedido y abrir el cobro por API
+Tercera unidad del paso 4. Nacen `POST orders`, `GET orders/{code}` y `POST orders/{code}/payment`
+sobre las tres piezas que ya existían —`ReservationAdmission`, `OrderCreator` y `PaymentInitiator`—,
+más los **códigos de error de negocio** del contrato público. Detalle en `api-v1.md` §10.decies.
+
+**(a) A diferencia de 4a y 4b, aquí no se extrae nada: se ORQUESTA.** Y por eso es el trozo de más
+riesgo, porque una secuencia no la protege ninguna guarda de arquitectura — un controlador que llama
+a los tres servicios correctos en el orden equivocado pasa `ApiBoundariesTest` igual. La red son
+cuatro tests, uno por punto del orden: la admisión va antes y **consume** ficha; el pedido nace
+**siempre** con su ventana de retención (`AFORO-10`); el cobro se abre sobre el pedido ya
+persistido; y un cobro que no abre suelta el pedido en el primer intento y **no** lo toca en un
+reintento. Se comprobó que muerden mutando el controlador: las tres mutaciones dejan tests en rojo.
+
+**(b) La orquestación se queda en la capa de entrega, y no es pereza.** Extraerla a un servicio de
+dominio cruzaría Booking → Payments con una flecha de ORQUESTACIÓN, y la baseline de
+`ModuleBoundariesTest` **solo encoge**: añadirle una entrada es la señal de que algo está mal hecho.
+La capa de entrega es el *composition root* declarado en Fase 2 · paso 3. El arreglo de fondo ya
+tiene nombre en el backlog de la fase —la abstracción `PaymentProvider`, que convertiría la ida del
+pago en un contrato como el del reembolso— y meterla aquí habría mezclado dos trabajos en un diff.
+Queda anotado en `DEUDA.md` con este razonamiento.
+
+**(c) Doce códigos de error de negocio, y no uno genérico.** `ReservationException` lanza doce claves
+distintas; agruparlas habría sido cómodo hoy e incompatible mañana, porque **partir un código
+existente rompe a todo cliente ramificado sobre él** mientras que añadir uno es evolutivo. El mapa
+clave-i18n → código (`Http\Api\ReservationErrorMap`) es la indirección que el spec §4.3 pedía —el
+contrato público no puede ser una clave de `lang/`— y es **exhaustivo por test**: `ReservationErrorMapTest`
+lee el dominio con el tokenizador y falla si alguien lanza un motivo sin mapear, y también si el
+mapa traduce uno que ya nadie lanza.
+
+**(d) Statuses**: 422 para todo rechazo de cesta (petición bien formada, cesta no vendible; la
+precisión la lleva el `code`), **409** para lo que impide reservar y no depende de los datos
+—pausa del operador, tope de pendientes, pedido no reintentable—, **429** para el límite de
+frecuencia (es lo único que se arregla esperando) y **502** para «la pasarela no abrió el cobro».
+
+**(e) El mismo 502 tiene dos consecuencias opuestas, y el contrato las escribe.** En un primer cobro
+el pedido **se suelta** (no puede retener una plaza que nadie va a pagar) y hay que empezar de nuevo;
+en un reintento el pedido **sigue vivo** con su hold recién extendido y basta con reintentar. Es la
+misma asimetría que el paso 2 dejó decidida en el dominio.
+
+**(f) `PaymentTicket::formData` no era lo que su nombre decía.** Su docblock afirmaba ser «el
+conjunto de campos `<input>` de la pasarela» y en realidad es el payload crudo del proveedor, con la
+URL dentro y claves que no son los nombres de los campos. Esa traducción solo vivía en las
+plantillas Blade, y un cliente de API no tiene plantilla donde mirarla: ahora la dicen
+`gatewayUrl()` y `gatewayFields()`. **El contrato NO enumera los campos**: los declara como un mapa
+opaco que el cliente reenvía sin tocar —van firmados— y eso es lo que permitirá cambiar de proveedor
+sin romper a nadie.
+
+**(g) `GET orders/{code}` entra en este paso** aunque el spec lo listara suelto: sin él, un cliente
+que pierde la respuesta de la creación solo puede recuperar su pedido paginando `me/orders`. Un
+código ajeno responde **404**, no 403 — decir «existe pero no es tuyo» sería un oráculo de códigos.
+
+**Verificación empírica**: suite **2424 verde** (9340 aserciones, `--parallel` ~63 s) · Pint limpio ·
+`docs-check` verde · **contrato y secuencia verificados POR MUTACIÓN** (quitar el hold → 3 tests en
+rojo; no soltar el pedido → 1; usar la admisión que no consume → 1; quitar una entrada del mapa de
+errores → el test de exhaustividad lo nombra) · **los dos verificadores de concurrencia VERDES sobre
+MySQL real** con 16 workers · **flujo completo ejercido contra el servidor real con `curl` y tarro de
+cookies**: `csrf-cookie` → `login` (200) → `POST orders` (**201**, pedido `R-ASPXEW` pendiente, 19,80 €,
+con `expires_at` y formulario firmado de Redsys) → `GET orders/{code}` (200) → `POST orders/{code}/payment`
+(200, **retención extendida** y firma nueva) → 999 plazas (**422 `line_sold_out`** con
+`params.product` y `params.when`) → código inventado (404 en el GET, **409 `order_not_retryable`** en
+el reintento) → anónimo (401). El pedido de prueba se borró de la BD de dev.

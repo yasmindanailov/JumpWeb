@@ -24,5 +24,23 @@ return [
         'maintenance' => 'Estamos haciendo tareas de mantenimiento. Vuelve a intentarlo en unos minutos.',
         'bad_request' => 'No hemos podido interpretar la petición.',
         'server_error' => 'Ha ocurrido un error inesperado. Inténtalo de nuevo.',
+
+        // ── Negocio (Fase 3 · paso 4c) ───────────────────────────────────────────────────
+        'cart_empty' => 'Tu cesta está vacía.',
+        'cart_too_large' => 'La cesta tiene demasiadas líneas. Quita alguna para continuar.',
+        'product_unavailable' => 'Ese producto no está disponible.',
+        'line_unavailable' => 'Una de las líneas de tu cesta ya no está disponible.',
+        'line_past_date' => 'Esa fecha ya ha pasado.',
+        'line_too_late' => 'Esa hora ya ha pasado. Elige otra.',
+        'line_too_soon' => 'Esa hora es demasiado próxima para reservar. Elige otra.',
+        'line_outside_window' => 'Esa hora queda fuera del horario disponible.',
+        'line_sold_out' => 'No quedan plazas para esa hora.',
+        'line_pack_sold_out' => 'No queda sitio para esa reserva en esa hora.',
+        'line_pack_guests_range' => 'El número de invitados no es válido para ese servicio.',
+        'line_event_required' => 'Faltan datos obligatorios de la reserva.',
+        'reservations_paused' => 'Las reservas online están cerradas temporalmente.',
+        'too_many_pending_orders' => 'Ya tienes varias reservas pendientes de pago. Complétalas o espera a que caduquen.',
+        'order_not_retryable' => 'Esa reserva ya no se puede pagar.',
+        'payment_unavailable' => 'No hemos podido abrir la pasarela de pago. Inténtalo de nuevo.',
     ],
 ];

@@ -9,7 +9,7 @@
 # Se sirve como fichero estático; ningún paquete de runtime lo publica por HTTP (`DECISIONES #21c`).
 #
 # Alcance actual: Fase 3 · pasos 0 (cimientos), 1a (lectura de la cuenta), 1b (catálogo), 3 (auth),
-# 4a (presupuesto) y 4b (disponibilidad). Los demás endpoints llegan por los pasos del spec §9.
+# 4a (presupuesto), 4b (disponibilidad) y 4c (pedido y cobro). Los demás llegan por el spec §9.
 
 openapi: 3.0.3
 
@@ -437,6 +437,162 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /orders:
+    post:
+      tags: [Compra]
+      operationId: createOrder
+      summary: Crear la reserva y abrir su cobro
+      description: |
+        Convierte la cesta en un pedido y devuelve, junto a él, **el formulario firmado que hay que
+        POSTear a la pasarela**. El cliente reenvía `payment.fields` tal cual a `payment.url`: van
+        firmados y tocar uno solo invalida la firma.
+
+        **Crea estado**: desde este momento el pedido existe y RETIENE aforo, se complete el pago o
+        no. `order.expires_at` dice hasta cuándo; si nadie paga, la plaza vuelve al inventario.
+
+        **Todo se recalcula en el servidor.** Los importes no se envían: se derivan de la cesta con
+        las mismas reglas que `orders/quote` había anticipado. Un precio manipulado en el cliente no
+        tiene por dónde entrar.
+
+        **Qué puede salir mal**, y todos con su `code`:
+
+        - **422** — esa cesta no se puede vender: agotada, fuera de horario, sin precio ese día,
+          faltan datos del pack… El `code` distingue cada motivo y `params` trae el producto y la
+          fecha de la línea culpable.
+        - **409** — las reservas están en pausa, o ya tienes demasiadas pendientes de pago.
+        - **429** — has creado reservas demasiado seguidas.
+        - **502** — el pedido se creó pero la pasarela no abrió el cobro. **El pedido ya se ha
+          soltado**: no retiene plaza y hay que volver a empezar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRequest'
+      responses:
+        '201':
+          description: Reserva creada y cobro abierto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPayment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: La reserva no se admite (`reservations_paused`, `too_many_pending_orders`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: |
+            No se pudo abrir el cobro (`payment_unavailable`). El pedido se ha soltado y no retiene
+            aforo: se puede volver a intentar la compra desde el principio.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /orders/{code}:
+    get:
+      tags: [Compra]
+      operationId: getOrder
+      summary: Un pedido del titular
+      description: |
+        Para recuperar un pedido concreto sin recorrer la paginación de `me/orders` — el caso real es
+        un cliente que perdió la respuesta de la creación y necesita saber si su reserva existe y
+        hasta cuándo aguanta.
+
+        Un código que no es de quien pregunta responde **404**, igual que uno inexistente: decir
+        «existe pero no es tuyo» convertiría esto en un oráculo de códigos ajenos.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Código visible del pedido.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: El pedido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /orders/{code}/payment:
+    post:
+      tags: [Compra]
+      operationId: retryOrderPayment
+      summary: Reintentar el cobro de un pedido
+      description: |
+        Abre un intento de cobro NUEVO sobre un pedido que sigue vivo, y **extiende su retención de
+        aforo** al hacerlo. Devuelve lo mismo que crear la reserva, así que la respuesta trae el
+        pedido con su `expires_at` ya actualizado.
+
+        No crea aforo nuevo: reusa la plaza que ese pedido ya retiene. Por eso —a diferencia de
+        `POST /orders`— **no** se aplica el tope de pedidos pendientes; aplicarlo dejaría sin poder
+        pagar justo a quien más reservas pendientes tiene.
+
+        Sin cuerpo: no hay nada que enviar. El importe y la cesta ya son los del pedido.
+
+        **Qué puede salir mal:**
+
+        - **409 `reservations_paused`** — hay una pausa del operador; tu reserva sigue intacta.
+        - **409 `order_not_retryable`** — ese pedido ya no se puede pagar: no existe para ti, no
+          está pendiente, o su retención venció y la plaza volvió al inventario. Los tres casos dan
+          la misma respuesta a propósito.
+        - **429** — has reintentado demasiadas veces seguidas. **Tu reserva sigue intacta**: espera
+          y vuelve a intentarlo.
+        - **502** — la pasarela no abrió el cobro. El pedido **no** se ha tocado y se puede
+          reintentar.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Código visible del pedido.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cobro reabierto; la retención del pedido queda extendida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPayment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: El reintento no se admite (`reservations_paused`, `order_not_retryable`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: No se pudo abrir el cobro (`payment_unavailable`). El pedido sigue vivo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /orders/quote:
     post:
       tags: [Compra]
@@ -465,7 +621,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QuoteRequest'
+              $ref: '#/components/schemas/CartRequest'
       responses:
         '200':
           description: La cesta tarificada.
@@ -680,6 +836,24 @@ components:
                 - maintenance
                 - bad_request
                 - server_error
+                # Negocio — la cesta no se puede convertir en pedido (todos con 422).
+                - cart_empty
+                - cart_too_large
+                - product_unavailable
+                - line_unavailable
+                - line_past_date
+                - line_too_late
+                - line_too_soon
+                - line_outside_window
+                - line_sold_out
+                - line_pack_sold_out
+                - line_pack_guests_range
+                - line_event_required
+                # Negocio — la reserva no se admite (409) o el cobro no se abre (502).
+                - reservations_paused
+                - too_many_pending_orders
+                - order_not_retryable
+                - payment_unavailable
             message:
               type: string
               description: Mensaje legible en el idioma negociado.
@@ -1063,6 +1237,45 @@ components:
           items:
             $ref: '#/components/schemas/CartLine'
 
+    OrderPayment:
+      type: object
+      description: |
+        Un pedido y el formulario firmado para pagarlo. Es la respuesta de crear la reserva y la de
+        reintentar su cobro: las dos devuelven lo mismo, y en el reintento eso incluye el pedido con
+        su retención ya extendida.
+      required: [order, payment]
+      additionalProperties: false
+      properties:
+        order:
+          $ref: '#/components/schemas/Order'
+        payment:
+          $ref: '#/components/schemas/PaymentTicket'
+
+    PaymentTicket:
+      type: object
+      description: |
+        Lo necesario para mandar al cliente a la pasarela. **La tarjeta nunca toca este servidor.**
+      required: [provider, method, url, fields]
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          description: Pasarela que ha abierto el cobro (hoy siempre `redsys`).
+        method:
+          type: string
+          description: Verbo con el que enviar el formulario.
+        url:
+          type: string
+          description: Dónde enviarlo.
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+          description: |
+            Campos del formulario, con sus nombres. **Se reenvían TAL CUAL y sin tocarlos**: van
+            firmados y modificar uno solo hace que la pasarela rechace el cobro. El contrato no los
+            enumera a propósito — es lo que permite cambiar de proveedor sin romper a ningún cliente.
+
     Quote:
       type: object
       description: |
@@ -1178,7 +1391,7 @@ components:
           type: integer
           description: '`(quantity − free_quantity) × precio unitario`.'
 
-    QuoteRequest:
+    CartRequest:
       type: object
       required: [items]
       additionalProperties: false

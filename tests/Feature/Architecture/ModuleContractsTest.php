@@ -533,10 +533,11 @@ class ModuleContractsTest extends TestCase
      * por su cuenta: si alguna siguiera aplicando sus propias comprobaciones —pausa, tope de
      * pendientes, limitador—, este usuario limpio pasaría de largo y crearía su pedido.
      *
-     * Cubre las dos superficies a la vez a propósito: el hallazgo que motivó la extracción fue
-     * justamente que aplicaban políticas distintas sin que nadie lo hubiera decidido.
+     * Cubre las TRES superficies a la vez a propósito: el hallazgo que motivó la extracción fue
+     * justamente que dos de ellas aplicaban políticas distintas sin que nadie lo hubiera decidido.
+     * La de API llegó en el paso 4c y entra aquí el mismo día que nace, no después.
      */
-    public function test_both_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted(): void
+    public function test_all_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted(): void
     {
         $admission = new class implements ReservationAdmission
         {
@@ -583,7 +584,24 @@ class ModuleContractsTest extends TestCase
             ->assertRedirect(route('account.orders'))
             ->assertSessionHas('status', 'order-retry-paused');
 
-        $this->assertSame(2, $admission->calls, 'las dos superficies tienen que preguntar a la política');
+        // 3) La API (Fase 3 · paso 4c): mismo veredicto, misma consecuencia. Se comprueba aquí y no
+        //    solo en su test de endpoint porque lo que se vigila es que pregunte al CONTRATO — si
+        //    volviera a comprobar los límites por su cuenta, este doble se quedaría sin usar y el
+        //    usuario limpio pasaría de largo.
+        $this->actingAs($user)
+            ->postJson('/api/v1/orders', ['items' => [[
+                'product_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'quantity' => 1,
+            ]]])
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'too_many_pending_orders');
+
+        $this->actingAs($user)
+            ->postJson('/api/v1/orders/CUALQUIERA/payment')
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'reservations_paused');
+
+        $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
+        $this->assertSame(4, $admission->calls, 'las tres superficies tienen que preguntar a la política');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

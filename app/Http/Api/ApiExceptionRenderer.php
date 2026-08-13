@@ -2,6 +2,7 @@
 
 namespace App\Http\Api;
 
+use App\Domain\Booking\Exceptions\ReservationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,6 +76,18 @@ final class ApiExceptionRenderer
         // la pantalla de login, que para un cliente JSON es una respuesta inservible.
         if ($e instanceof AuthenticationException) {
             return ApiErrorResponse::make(ApiErrorCode::Unauthenticated, 401);
+        }
+
+        // Rechazo de reserva (Fase 3 · paso 4c). Se traduce AQUÍ y no en cada controlador por el
+        // mismo motivo que el sobre: para que cualquier endpoint que deje escapar una dé la misma
+        // respuesta. No tiene efectos que decidir —a diferencia de un cobro que no se pudo abrir,
+        // donde el destino del pedido lo elige el llamante—, así que centralizarla no esconde nada.
+        if ($e instanceof ReservationException) {
+            return ApiErrorResponse::make(
+                ReservationErrorMap::codeFor($e),
+                ReservationErrorMap::STATUS,
+                params: ReservationErrorMap::paramsFor($e),
+            );
         }
 
         if ($e instanceof HttpExceptionInterface) {

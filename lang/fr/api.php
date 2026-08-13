@@ -22,5 +22,23 @@ return [
         'maintenance' => 'Nous effectuons une opération de maintenance. Réessayez dans quelques minutes.',
         'bad_request' => "Nous n'avons pas pu interpréter la requête.",
         'server_error' => "Une erreur inattendue s'est produite. Veuillez réessayer.",
+
+        // ── Negocio (Fase 3 · paso 4c) ───────────────────────────────────────────────────
+        'cart_empty' => 'Votre panier est vide.',
+        'cart_too_large' => 'Votre panier contient trop de lignes. Retirez-en une pour continuer.',
+        'product_unavailable' => "Ce produit n'est pas disponible.",
+        'line_unavailable' => "L'une des lignes de votre panier n'est plus disponible.",
+        'line_past_date' => 'Cette date est déjà passée.',
+        'line_too_late' => 'Cette heure est déjà passée. Choisissez-en une autre.',
+        'line_too_soon' => 'Cette heure est trop proche pour réserver. Choisissez-en une autre.',
+        'line_outside_window' => 'Cette heure est en dehors des horaires disponibles.',
+        'line_sold_out' => "Il n'y a plus de places à cette heure.",
+        'line_pack_sold_out' => "Il n'y a plus de place pour cette réservation à cette heure.",
+        'line_pack_guests_range' => "Ce nombre d'invités n'est pas valide pour ce service.",
+        'line_event_required' => 'Il manque des informations obligatoires pour la réservation.',
+        'reservations_paused' => 'La réservation en ligne est temporairement fermée.',
+        'too_many_pending_orders' => 'Vous avez déjà plusieurs réservations en attente de paiement. Terminez-les ou attendez leur expiration.',
+        'order_not_retryable' => 'Cette réservation ne peut plus être payée.',
+        'payment_unavailable' => "Nous n'avons pas pu ouvrir la passerelle de paiement. Réessayez.",
     ],
 ];

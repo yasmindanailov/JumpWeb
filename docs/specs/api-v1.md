@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3, 4a y 4b TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b, 2, 3, 4a, 4b y 4c TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a) y **`#33`** (paso 4b).
+> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b) y **`#34`** (paso 4c).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.nonies** — léelos antes de seguir por el
-> paso 4c.
+> **Lo que el código enseñó al implementar: §10 → §10.decies** — léelos antes de seguir por el
+> paso 4d.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -337,8 +337,10 @@ Se corrige:
      `Booking\Contracts\AvailabilityOffer` + `GET availability/{product}/dates` y
      `POST availability/{product}/times`. La web consume el contrato desde el mismo commit. **Lo que
      el código enseñó: §10.nonies.**
-   - ⬜ **4c**: **creación y cobro** — `POST orders` y `POST orders/{code}/payment`, sobre
-     `ReservationAdmission` + `OrderCreator` + `PaymentInitiator`, que ya existen.
+   - ✅ **4c** (2026-08-13, `DECISIONES #34`): **creación y cobro** — `POST orders`,
+     `GET orders/{code}` y `POST orders/{code}/payment`, sobre `ReservationAdmission` +
+     `OrderCreator` + `PaymentInitiator`, que ya existían. Nacen además los **códigos de error de
+     negocio** con su mapa exhaustivo por test. **Lo que el código enseñó: §10.decies.**
    - ⬜ **4d**: **desenlace** — `GET orders/{code}/payment-status` con estados reales, el token de
      retorno que hoy se quema antes de validar la sesión, y la historia de retorno móvil.
 5. **Post-form migrado** (2.º consumidor), una vez resuelto su canje de credencial.
@@ -756,3 +758,55 @@ correr un verificador. Y sí importa: `OrderCreator` llama a `SlotOffer::passesI
 backstop, así que un cambio suyo puede mover lo que `purchase:verify-oversell` comprueba. Añadido en
 este paso. **Lección**: una lista de símbolos críticos y una lista de ficheros críticos que no se
 comprueban la una contra la otra acaban diciendo cosas distintas.
+
+### 10.decies Lo que el código enseñó — paso 4c (2026-08-13)
+
+**52. El paso donde no había nada que extraer era el más peligroso, y por eso.** 4a y 4b sacaron
+reglas de la capa de UI; 4c no saca ninguna —admisión, creación e ida del pago ya existían y estaban
+verificadas— y aun así es el de más riesgo de la fase. Lo que aporta es la SECUENCIA, y una
+secuencia no la protege ninguna guarda de arquitectura: un controlador que llama a los tres
+servicios correctos **en el orden equivocado** pasa `ApiBoundariesTest` con nota (§10, punto 6). La
+red tuvo que ser un test por cada punto del orden, y se comprobó que muerden mutando el código:
+quitar el hold de `createPendingOrder()` deja 3 tests en rojo, no soltar el pedido tras un cobro
+fallido deja 1, y cambiar `admitReservation()` por la variante que solo consulta deja 1.
+
+**53. La orquestación se quedó en la capa de entrega, y la baseline de módulos es lo que lo decidió.**
+La tentación era extraer «admitir → crear → abrir cobro» a un servicio de dominio para que la web y
+la API compartieran la secuencia. Cruzaría Booking → Payments con una flecha de ORQUESTACIÓN, y la
+baseline de `ModuleBoundariesTest` **solo encoge**: añadirle una entrada es la señal de que algo está
+mal hecho. La capa de entrega es el *composition root* declarado desde Fase 2 · paso 3 y ahí la
+composición entre módulos está sancionada. El arreglo de fondo ya tiene nombre en el backlog de la
+fase —la abstracción `PaymentProvider`, que convertiría la ida del pago en un contrato como el del
+reembolso— y meterla dentro de este paso habría mezclado dos trabajos en un diff. **Regla que sale
+de aquí**: cuando la extracción «limpia» exige añadir una entrada a una baseline que solo encoge, la
+extracción no es limpia; es otra tarea.
+
+**54. Los códigos de error de negocio son doce, y agruparlos habría sido una trampa cómoda.**
+`ReservationException` lanza doce claves distintas y la tentación era mapearlas a un
+`reservation_failed` único. Añadir un código es evolutivo; **partir uno existente rompe a todo
+cliente que se hubiera ramificado sobre él**, así que el código genérico habría sido cómodo hoy e
+incompatible el día que alguien quisiera distinguir «agotado» —que se arregla refrescando la
+disponibilidad— de «fuera de horario», que no. El mapa es exhaustivo **por test**: `ReservationErrorMapTest`
+lee el dominio con el tokenizador buscando cada excepción lanzada, y también vigila la dirección
+contraria (una entrada que ya nadie lanza es una rama muerta en el cliente).
+
+**55. `params` no es decoración: sin él el mensaje miente.** El sobre lleva el `product` y el `when`
+de la línea culpable porque el dominio los pone en `context` — verificado con `curl`: pedir 999
+plazas devuelve `line_sold_out` con `params.product = "Jump · 1 hora"` y `params.when = "2026-08-14
+10:00"`. Sin ellos, un cliente con varias líneas en la cesta no puede ni señalar cuál falló.
+
+**56. El formulario de la pasarela no se llamaba como se llamaba.** `PaymentTicket::formData` decía
+en su docblock que era «el conjunto de campos `<input>` que exige la pasarela», y no lo es: es el
+payload crudo del proveedor, con la URL mezclada dentro y claves (`params`, `signature`) que **no**
+son los nombres de los campos. Traducir de una forma a la otra era conocimiento que solo vivía en
+las plantillas Blade, y un cliente de API no tiene plantilla donde mirarlo. Ahora `gatewayUrl()` y
+`gatewayFields()` lo dicen una vez. **Y el contrato NO enumera los campos**: los declara como un mapa
+opaco que el cliente reenvía sin tocar, que es lo que permitirá cambiar de proveedor sin romper a
+nadie —y lo que evita que alguien «arregle» un campo firmado—.
+
+**57. Un 502 que no se distinga de un 500 deja al cliente sin saber si tiene reserva.** Cuando la
+pasarela no abre, la respuesta correcta no es un error genérico: el cliente necesita saber qué ha
+pasado con su pedido, y la respuesta es distinta según el momento — en un PRIMER cobro el pedido se
+suelta en el acto (no puede retener una plaza que nadie va a pagar) y hay que empezar de nuevo; en un
+REINTENTO el pedido sigue vivo con su hold recién extendido y basta con volver a intentarlo. Mismo
+código (`payment_unavailable`), dos consecuencias opuestas, las dos escritas en el contrato.

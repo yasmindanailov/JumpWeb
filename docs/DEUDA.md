@@ -1,8 +1,8 @@
 # Deuda técnica — registro único
 
 > Estado: vivo · Última actualización: 2026-08-13 ·
-> Verificado contra código: 2026-08-13 (Fase 3 · pasos 0 y 4a: ítems nuevos de la API; el resto
-> sin re-medir desde 2026-08-12) ·
+> Verificado contra código: 2026-08-13 (Fase 3 · pasos 0, 4a y 4c: ítems nuevos de la API; el
+> resto sin re-medir desde 2026-08-12) ·
 > Se invalida si: una fase retira un ítem sin actualizar su fila.
 
 Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se duplica).
@@ -37,6 +37,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 | Cacheabilidad del catálogo público sin decidir | `GET /api/v1/catalog/*` responde con el `Cache-Control: no-cache, private` por defecto de Symfony; ni CDN ni proxy pueden cachearlo | La superficie pública de más tráfico previsible va sin caché HTTP; hacerlo cacheable exige decidir el `Vary` del idioma | Sin plan (Fase 3 · paso 1b lo dejó anotado, no resuelto) |
 | Cuarta copia de la aritmética de cesta en el panel | `CreateManualOrderPage::estimateLineCents()` + `cartOnlineDueCents()` + `cartHasDeposit()` reproducen las reglas de precio, complementos y señal que desde Fase 3 · paso 4a viven en `Booking\Contracts\CartPricing`. **Comprobado caso a caso el 2026-08-13: hoy coinciden** en las dos ramas de la Opción A (#225) | Un cambio de regla de señal o de complementos habría que portarlo a los dos sitios; el paso 2 ya encontró dos copias «iguales» que aplicaban políticas distintas sin que nadie lo hubiera decidido | Sin plan — **no se unificó a propósito** en el paso 4a: el panel calcula al AÑADIR la línea y el contrato al PINTARLA, así que migrarlo cambia su conducta ante un cambio de precio a media cesta |
 | N+1 de precio por complemento en `AddonResolver` | `AddonResolver::resolve()` pide el precio de cada complemento con `RateResolver::priceCents()`, que son 2 consultas por llamada (tarifa del día + importe). **Medido 2026-08-13 vía `orders/quote`: 1 complemento → 8 consultas, 3 → 12, 6 → 18** | Lo ejecuta también `OrderCreator` **dentro de la transacción que sostiene los locks de aforo**, donde alargar la txn es peor que en un presupuesto | Sin plan — es código de dinero compartido; su arreglo exige paso propio y los dos verificadores. `ApiOverheadTest::test_the_known_cost_per_addon_does_not_get_worse` impide que EMPEORE |
+| Sin abstracción `PaymentProvider` | La ida del pago se invoca directamente (`Payments\Services\PaymentInitiator`) desde las TRES superficies de entrega —sidebar, «Mis pedidos» y `Api\V1\OrdersController`/`OrderPaymentController`—, así que la secuencia «admitir → crear → abrir cobro» vive duplicada en la capa de entrega. **Medido en Fase 3 · paso 4c**: extraerla a un servicio de dominio añadiría una flecha de ORQUESTACIÓN Booking→Payments a la baseline de `ModuleBoundariesTest`, que solo encoge | Cada superficie nueva vuelve a escribir el orden de llamadas, y el orden ES la regla (`AFORO-10`, soltar-o-no tras un cobro fallido) | **Backlog de Fase 3** (`00-REFACTOR`: «Abstracción `PaymentProvider`»): convertiría la ida del pago en un contrato como el del reembolso y daría al dominio dónde alojar la secuencia. Mientras tanto, cuatro tests por superficie fijan el orden y se verificaron por mutación |
 | Migraciones con lógica de datos del origen | 9 de 72 migraciones con backfills/seeds + 4 clases `Legacy*`/`*Backfill` vivas en Support | Decisiones del origen incrustadas en el esquema; ruido en instalación limpia | Sin plan |
 
 ## Baja
