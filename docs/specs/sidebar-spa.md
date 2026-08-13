@@ -135,6 +135,36 @@ transcribir.
 transcribir. El argumento que decidió: verificar la paridad visual una vez en lugar de dos, y que
 hasta entonces «una hoja por instalación» solo permitiría recolorear — que no es lo que se pidió.
 
+#### 4.3.bis Qué hay que tokenizar EXACTAMENTE (medido el 2026-08-13)
+
+El «75% quemado» de §1.1 es cierto y **engañoso si se toma como plan de trabajo**: incluye
+propiedades de ESTRUCTURA (`display` ×75, `flex-direction` ×28, `align-items` ×26, `cursor` ×21…)
+que no deben ser tokens — un `display: flex` no se tematiza. Medido sobre los 270 bloques del
+sidebar (165 clases, `site.css` + `landing.css`): 1.084 declaraciones, 280 con `var(--)`, **804
+quemadas, de las cuales solo 388 son TEMATIZABLES**. Ese 388 es el trabajo real.
+
+| Propiedad | Usos | Valores distintos | Lectura |
+|---|---|---|---|
+| `font-size` | 74 | 17 | 13/14/12/11px cubren **50 de 74** → escala de ~6 pasos y una cola corta |
+| `font-weight` | 51 | **5** | 700/600/800 cubren **49 de 51**. Es el más barato de todos |
+| `gap` | 52 | 13 | valores de 2 a 16px → una escala de espaciado los absorbe |
+| `padding` | 47 | — | misma escala que `gap` |
+| `transition` | 28 | 22 | casi todos únicos: **NO se tokeniza la declaración**, sí la duración y las 2-3 curvas |
+| `border-radius` | 18 | 9 | ⚠️ `--r`/`--r-sm`/`--r-lg` **ya existen** y no se usan; falta un `--r-pill` (999px ×6) |
+| `line-height` | 18 | 8 | escala corta |
+| `letter-spacing` | 11 | 8 | casi todo único: **no merece escala**, se deja |
+
+**Y una buena noticia que corrige el pronóstico**: los colores CRUDOS del sidebar son solo **10 usos
+y 8 valores**, no un mar. Seis son variantes alfa de `rgba(20, 19, 15, …)`, que es exactamente
+`--fg` (`#14130F`): se convierten en `color-mix(in srgb, var(--fg) X%, transparent)` sin inventar
+nada. El agujero real del white-label **no es el color: son las escalas de tipografía y espaciado**,
+que hoy no existen en absoluto.
+
+⚠️ Corolario para el orden de trabajo: `font-weight` y `border-radius` son casi gratis (5 y 9
+valores, con tokens ya existentes en el segundo) y se hacen primero; `font-size` y el espaciado son
+el grueso; `transition` y `letter-spacing` se dejan fuera salvo la duración. Y CE-3 debe medirse
+sobre las **tematizables**, no sobre el total, o premia tokenizar un `display`.
+
 Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 - **el punto de carga** de la hoja por instalación, decidido contra la cascada: `@vite(...)` va
   **después** de `site.css`, así que cualquier CSS que emita un entry de Vite ya le gana;

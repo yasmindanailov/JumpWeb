@@ -400,6 +400,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       De regalo, una fuga menor cerrada: el login solo descartaba el desenlace «confirmado» al
       cambiar de titular, así que a Bob podía aparecerle el «pago denegado» de Alice.
       Suite **2479 verde**; los 14 tests que siembran esas claves a mano siguen pasando sin tocarse.
+- [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
+      riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
+      si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del
+      sidebar. Nace la escala `--fw-*` (medida: 51 usos con solo 5 valores, tres cubren 49), se
+      empiezan a usar los `--r-pill`/`--r-sm` que **ya existían sin usarse**, y 10 de los 13 colores
+      crudos pasan a token (6 alfa de `--fg`, 2 `--bg-soft`, 1 `--err`, 1 `--warn`, comprobados por
+      aritmética RGB). Tokenización de propiedades TEMATIZABLES: **43% → 49%**; colores crudos:
+      **13 → 3**. Red: `SidebarTokenBudgetTest`, presupuesto que solo puede mejorar.
+      ⚠️ Queda la otra mitad: las escalas de `font-size` (74 usos, 17 valores) y de espaciado
+      (`gap` 52 + `padding` 47). Esas SÍ exigen decidir una escala y revisar el resultado a ojo,
+      porque redondear un valor cambia el diseño.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
