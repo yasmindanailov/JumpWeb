@@ -37,10 +37,19 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - Hash **bcrypt 12** (o `argon2id` si el hosting lo soporta).
 
 ### 2. Fuerza bruta y enumeración — OWASP A07 / ASVS V2.2
-- **Límite de intentos** en login, registro, reset y reenvío de verificación (p. ej. 5/min por email+IP).
+- **Límite de intentos** en login, registro, reset y reenvío de verificación.
 - **Bloqueo temporal** de la cuenta tras N fallos seguidos *(Reforzado)*.
 - **Mensajes genéricos**: nunca revelar si un email existe ("credenciales incorrectas"; "si la
-  cuenta existe, te hemos enviado un correo").
+  cuenta existe, te hemos enviado un correo"). ⚠️ **Excepción DECIDIDA en el alta**
+  (`DECISIONES #31a`): el registro sí dice que un correo ya tiene cuenta —decisión de producto de la
+  clienta, prima la conversión—, y la API replica esa política a propósito. Lo que acota la
+  enumeración ahí es el límite de 3 altas/hora por correo, no el mensaje. En la recuperación de
+  contraseña la no-enumeración es **estricta**.
+- **Dónde vive** (Fase 3 · paso 3, `DECISIONES #29`–`#31`): los limitadores y las reglas son de
+  DOMINIO y los consumen por igual la web y `/api/v1` —`Identity\Services\PasswordLogin` (los DOS
+  limitadores: por email+IP y por IP sola, anti-spraying), `SelfSignup` (señuelo + límite por IP +
+  límite por correo + anti-bot) y `PasswordRecovery`—. Ningún controlador ni componente los
+  reimplementa: si alguno lo hiciera, la puerta floja sería la que se olvidara del segundo.
 
 ### 3. Sesión — ASVS V3
 - **Regenerar** el ID de sesión al iniciar sesión; invalidar al cerrar.
@@ -54,7 +63,9 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 ### 5. Anti-bot *(Reforzado)*
 - **Cloudflare Turnstile** (o hCaptcha) en registro y formularios públicos. Clave en `settings`
   (data-driven); si no hay clave configurada, se desactiva solo. Implementado en
-  `app/Domain/Platform/Services/Turnstile.php` + `Livewire/Auth/Register` + `ContactController`.
+  `app/Domain/Platform/Services/Turnstile.php`, y lo aplica `Identity\Services\SelfSignup` —el
+  servicio de alta que consumen el modal de la web y `POST /api/v1/auth/register`— más
+  `ContactController`.
 
 ### 6. Autorización — OWASP A01
 - **Roles / permisos** (`admin`, `customer`; preparado para `staff`) con Gates/Policies.

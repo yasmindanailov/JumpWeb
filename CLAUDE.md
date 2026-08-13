@@ -62,7 +62,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |
 | Deuda técnica (vista única) | `docs/DEUDA.md` |
 | Instalar un cliente nuevo (white-label) | `docs/INSTALACION-CLIENTE.md` |
-| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10, §10.bis y §10.ter «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21/#24/#26/#27 |
+| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.septies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#31 |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
 | Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 

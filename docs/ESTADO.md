@@ -10,20 +10,13 @@ toca el paso 4 (el dinero).**
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
-- **Aviso para el próximo cierre** (`DECISIONES #25`): el árbol npm pasó de 0 a **5 avisos (2
-  críticas, 3 altas)** en unas horas SIN que `package.json` ni el lock cambiaran — avisos
-  publicados en el intervalo, todos en herramientas de build. Se sanearon con `npm audit fix` sin
-  `--force` (Vite 8.2.1). La lección: `composer audit`/`npm audit` son verificación de CIERRE, no
-  un trámite de instalación.
-- **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-13, paso 2, 16
-  workers): `purchase:verify-oversell` → 1 compra + 15 `sold_out` con asientos == aforo;
-  `redsys:verify-concurrency` → 1 `authorized` + 15 `idempotent_paid`, 1 pago y 1 ticket. Se
-  corrieron porque el paso 2 mudó el código de `PAY-04`; los pasos 0, 1a y 1b no los necesitaron
-  (cimientos y lectura).
-- ⚠️ **El `CRITICAL_RE` del `pre-push` cubre ahora también `PaymentInitiator` y
-  `ReservationAdmissionPolicy`**: tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos
-  (`INVARIANTES §6`). Antes ese código vivía en un componente Livewire y en un controlador web, o
-  sea, fuera del alcance del gate.
+- **Auditorías de dependencias son verificación de CIERRE, no de instalación** (`DECISIONES #25`):
+  el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
+  `composer audit` y `npm audit` en cada cierre.
+- **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-13, 16 workers,
+  `DECISIONES #28`). ⚠️ El `CRITICAL_RE` del `pre-push` cubre ahora también `PaymentInitiator` y
+  `ReservationAdmissionPolicy`: tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos
+  (`INVARIANTES §6`).
 - **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12: el dominio vive en
   `app/Domain/<Contexto>/` con 5 módulos (Platform · Content · Identity · Payments · Booking) y
   frontera EJECUTABLE. **No repitas esa lectura**: el detalle está en `00-REFACTOR.md`,
@@ -38,85 +31,29 @@ toca el paso 4 (el dinero).**
   (la conversión del morphMap de Fase 2 es requisito, no comodidad: sin ella, leer un
   `payable`/`priceable`/`target` antiguo revienta) y hay que **drenar la cola + `queue:restart`**
   (los payloads serializados llevaban los FQCN viejos).
-- Entorno local: web `8081` · MySQL `3308` · Mailpit `8028`; BD dev sembrada con SaltoPark
-  (usuarios dev `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña `password`; ojo: la BD
-  dev arrastra ADEMÁS el par `…@jumpingjump.test` del import, así que `User::first()` devuelve uno
-  del origen — usa el email completo al probar a mano).
-  ⚠️ Corregido el 2026-08-13 en el `.env` local (no versionado): tenía `APP_URL=…:8080` con
-  `APP_PORT=8081` — enlaces absolutos de correo, URLs firmadas y la derivación de CORS y de los
-  dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
-  `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2 y 3 — `DECISIONES #24`, `#26`–`#31`)
-Cimientos + la lectura de la cuenta + el catálogo + el dominio preparado para vender por API. Lo
-que existe y funciona (verificado con `curl`, con la suite y **contra MySQL real** ejerciendo el
-pipeline HTTP completo):
-- `routes/api.php` bajo `/api/v1`, con **fuente única del prefijo** (`ApiSurface::PREFIX`).
-- **Grupo `api` declarado pieza a pieza** en `bootstrap/app.php` — el orden ES el diseño y está
-  comentado allí: `SecurityHeaders` → Sanctum stateful → `ApiLocale` → `EnsureSiteAvailable`
-  (503 en JSON) → `no-store` autenticado → `throttle:api` → `SubstituteBindings`.
-- **Sobre de error único** `{error:{code,message,params?,fields?}}` con códigos estables
-  (`ApiErrorCode`) desacoplados de las claves i18n, y mensajes en `lang/<idioma>/api.php` (es/en/fr).
-- `GET /api/v1/me` + **OpenAPI escrito a mano** en `openapi/v1.yaml`, con validación de la
-  respuesta REAL (Spectator) y guardas de contrato en las dos direcciones.
-- Sanctum instalado con caducidad de token (30 días) y poda semanal, **sin emisor todavía**.
-- Guardas nuevas, las tres **verificadas por mutación**: `ApiBoundariesTest` (nada de negocio en un
-  controlador), `ApiContractTest` (el documento manda) y `CriticalPathGateTest` (el `CRITICAL_RE`
-  del `pre-push`, ampliado a los controladores de checkout de API).
-- **Paso 1a**: `GET me/reservations` (sobre el contrato `CustomerReservations`, sin reimplementar su
-  filtrado) y `GET me/orders` (paginado, **todos los estados**, líneas y complementos anidados).
-  Nace `ApiCollection`: la forma única de lista `data` + `meta`.
-- **Paso 1b**: el CATÁLOGO, público y de solo lectura — `GET catalog/zones`, `catalog/products`
-  (filtro `?type=entry|pack`) y `catalog/products/{id}` (mínimos/máximos, campos del evento de la
-  etapa `booking` y complementos ofrecibles). No es código solo para la API: nace el contrato
-  `Booking\Contracts\ProductCatalog` (+5 DTOs) con `CatalogReader` detrás, y **la web
-  (`Tickets\Purchase`) lo consume desde el mismo commit**, así que hay UNA definición de «qué se
-  vende». `search` y `zone_anchor` se quedaron en la web: son índice de búsqueda en cliente y ancla
-  de scroll, y se derivan de lo que da el contrato.
-- El contrato ya ha ganado su sueldo tres veces: destapó que apoyarse en `ResourceCollection`
-  producía `data.data` con dos `meta`, que el campo `online_due_cents` mentía en su nombre (es el
-  importe que se cobra online, no lo pendiente → `online_amount_cents`), y que un `$ref` con
-  `nullable` no valida **en ninguna de las dos direcciones** (por eso la zona anidada va inline, con
-  una guarda que impide que diverja del componente).
-- Y el presupuesto de consultas ganó el suyo: medido por PENDIENTE (mismo coste con 1 elemento que
-  con N) destapó un **N+1 real** en el propio read-model del catálogo —`RateResolver::priceCents()`
-  consulta por llamada—, corregido resolviendo la tarifa una vez.
-- **Paso 2 (sin endpoints nuevos)**: el dominio ya sabe *quién puede reservar* y *cómo se abre un
-  cobro*, que es lo que faltaba para que el `POST /orders` del paso 4 no reabra el hallazgo E.
-  · `Booking\Contracts\ReservationAdmission` — pausa (#218), tope de pendientes, frecuencia y la
-    extensión ATÓMICA del hold (`PAY-04`). `mayReserve()` consulta sin consumir ficha;
-    `admitReservation()` consume; `admitPaymentRetry()` no aplica el tope de pendientes (un
-    reintento no crea aforo) pero sí el limitador.
-  · `Payments\Services\PaymentInitiator` — `open()`/`reopen()`: crea el `Payment`, firma el
-    formulario, marca `SUPERSEDED` los intentos previos y deja el rastro de fallo en `audit_logs`.
-    Lanza `PaymentInitiationException`; qué le pasa al pedido lo decide el llamante.
-  · Los consumen el sidebar y «Mis pedidos», y lo comprueba `ModuleContractsTest` con un doble que
-    deniega: si alguno siguiera decidiendo por su cuenta, crearía el pedido igual.
-- **Lo que destapó juntar las dos copias**: aplicaban políticas DISTINTAS sin decisión previa ni
-  test que las fijara (el reintento de «Mis pedidos» no pasaba por ningún límite por titular), y el
-  limitador contaba pantallas en vez de reservas —la 2.ª compra del mismo minuto se bloqueaba con
-  el tope en 3—. Las tres asimetrías las resolvió el owner (`DECISIONES #28b–d`).
+## ▶ Qué hay hecho de la API (Fase 3, pasos 0 → 3)
+**El inventario NO se repite aquí**: la superficie exacta la declara `openapi/v1.yaml` —que es el
+contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#31` y
+en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo del próximo agente**:
 
-- **Paso 3a — REVOCACIÓN de credenciales**: `User::revokeAllAccess()` / `revokeOtherAccess()` es el
-  punto ÚNICO que invalida sesiones **y** tokens de API. El hueco era de CINCO sitios, no de cuatro:
-  el quinto era la limpieza de go-live, que dejaba tokens **huérfanos** (`personal_access_tokens` es
-  morph y no tiene FK). `AccessRevocationTest` impide una sexta copia. `INVARIANTES RGPD-06`.
-- **Paso 3b — SESIÓN por API**: `POST auth/login` (200 con el perfil) y `POST auth/logout` (204)
-  sobre la sesión stateful de Sanctum. La regla vive en `Identity\Services\PasswordLogin`, que
-  consume también el modal de la web: los DOS limitadores de `SEC-06` no tienen dos copias, y eso
-  está **verificado por mutación** en las tres capas.
-  ⚠️ **Para la SPA de Fase 4**: `Origin`/`Referer` de un dominio *stateful* hace falta en TODAS las
-  peticiones, no solo en el login — sin él no hay sesión y un `GET /me` da 401 aunque la cookie sea
-  válida (verificado con `curl`).
-- **Paso 3c — ALTA y CONTRASEÑA por API**: `POST auth/register` (con el contexto `standalone` o
-  `purchase`, que decide si hay sesión y si se manda verificación), `auth/email/resend`,
-  `auth/password/forgot` y `auth/password/reset`. Las reglas viven en `Identity\Services\SelfSignup`
-  y `PasswordRecovery`, que consume también la web.
-  · **Dos políticas de enumeración, las dos explícitas** (`DECISIONES #31a`/`#31b`): el alta DICE que
-    un correo ya existe —decisión de producto de la clienta— y la recuperación NO dice nada. Lo que
-    acota la enumeración del alta es el límite de 3/hora por correo.
-  · El `201` del alta va **sin cuerpo**: devolver el perfil solo cuando había cuenta delataba el
-    señuelo, y lo destapó el test de contrato.
+- **Nunca reimplementes una regla que ya tiene contrato.** Hay cinco, y los cinco los consume
+  también la web, así que divergir se nota: `Booking\Contracts\ProductCatalog` (qué se vende),
+  `ReservationAdmission` (quién puede reservar), `Payments\Services\PaymentInitiator` (cómo se abre
+  un cobro), `Identity\Services\PasswordLogin` y `SelfSignup`/`PasswordRecovery` (auth).
+  `ModuleContractsTest` lo comprueba con dobles: si un consumidor vuelve a decidir por su cuenta,
+  cae.
+- **Toda lista usa `ApiCollection`** (`data` + `meta`) y **todo esquema nuevo nace con
+  `additionalProperties: false` + `required` completo**, o `ApiContractTest` lo rechaza.
+- ⚠️ **`Origin`/`Referer` de un dominio *stateful* hace falta en TODAS las peticiones de la SPA**,
+  no solo en el login: sin él no hay sesión y un `GET /me` da 401 aunque la cookie sea válida. Todo
+  endpoint que toque `session()` necesita la guarda de `Http\Api\Concerns\RequiresStatefulSession`
+  — se olvidó dos veces y las dos las encontró un `curl`, no la suite.
+- ⚠️ **Invalidar credenciales tiene UN solo sitio**: `User::revokeAllAccess()`/`revokeOtherAccess()`
+  (`INVARIANTES RGPD-06`). `AccessRevocationTest` prohíbe que nadie más escriba en `sessions` o
+  `personal_access_tokens`.
+- **Sanctum está listo pero SIN emisor de tokens**: la emisión viaja a Fase 6 con la app que los
+  consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
 **Fase 3 · paso 4 — EL DINERO** (spec §4.4, §4.5 y §9): `POST orders/quote`,
@@ -166,11 +103,20 @@ Después: paso 5 (post-form migrado, 2.º consumidor). El corte completo está e
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 
 ## Entorno (local)
-- Docker (Sail) en WSL2, repo en `~/proyectos/jumpweb`. Web `localhost:8081` ·
-  Mailpit `localhost:8028` · MySQL `localhost:3308`. Siempre `-u sail` en `exec`.
-- Si tocas `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` **o un controlador de API de
-  pedidos/pagos/checkout/quote/disponibilidad**: el push exige `VERIFY_CONC=1` tras correr los
-  comandos de INVARIANTES §6.
+- Docker (Sail) en WSL2, repo en `~/proyectos/jumpweb`. Web `localhost:8081` · MySQL `localhost:3308`
+  · Mailpit `localhost:8028`. **Siempre `-u sail` en `exec`** (como root deja ficheros de root en
+  `storage/` → 500 por permisos).
+- BD dev sembrada con SaltoPark: `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña
+  `password`. ⚠️ La BD dev arrastra ADEMÁS el par `…@jumpingjump.test` del import, así que
+  `User::first()` devuelve uno del origen — usa el email completo al probar a mano.
+- ⚠️ Si clonas de cero, comprueba que **`APP_URL` coincide con `APP_PORT`** en el `.env` (no
+  versionado): con el puerto desalineado salen mal los enlaces absolutos de correo, las URLs
+  firmadas y la derivación de CORS y de los dominios stateful de Sanctum (corregido el 2026-08-13).
+- **El push exige `VERIFY_CONC=1`** —tras correr los dos comandos de `INVARIANTES §6`— si tocas
+  `OrderCreator`, `RedsysReturnHandler`, `SlotGenerator`, **`PaymentInitiator`**,
+  **`ReservationAdmissionPolicy`** o un controlador de API de pedidos/pagos/checkout/quote/
+  disponibilidad. La lista viva es el `CRITICAL_RE` de `.githooks/pre-push`, y
+  `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
 
 ## Herencia
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
