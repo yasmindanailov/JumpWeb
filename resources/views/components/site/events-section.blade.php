@@ -134,7 +134,7 @@
                             </div>
                             <p class="bd-pack__note">{!! __('landing.events.reserve_terms_rich', ['min' => $p->min_qty, 'max' => $p->max_qty, 'deposit' => intdiv((int) $p->deposit_value, 100)]) !!}</p>
                             <button type="button" class="bd-pack__cta"
-                                    @click="$store.purchase.open(); window.Livewire.dispatch('show-packs')">
+                                    @click="$store.purchase.openWith({ type: 'packs' })">
                                 {{ __('landing.events.cta') }}
                                 <x-icons.arrow-right :width="15" :height="15" />
                             </button>

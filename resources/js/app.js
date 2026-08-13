@@ -65,21 +65,60 @@ document.addEventListener('alpine:init', () => {
         // Se pone a true si el cliente inicia sesión DENTRO del sidebar (login embebido, #69):
         // el resto de la página (nav) se quedó con el estado de invitado y hay que refrescarlo.
         authChanged: false,
-        // Sidebar v2: «modo» del flujo (catalog | booking | cart | result). Lo fija el componente
-        // Livewire de compra reflejando `$wire.step` (reactivo, sin viaje al servidor); el panel
-        // `.sidecart__panel` recibe la clase `is-{modo}` que minimiza la cuenta y posiciona el footer.
+        // ── CONTRATO DEL MOTOR (Fase 4 · paso 4.0a) ────────────────────────────────────────
+        // `mode` e `identifying` son señales que el CAJÓN publica y que consume gente de FUERA
+        // del cajón: `layout.blade.php` pinta `is-{modo}` en `.sidecart__panel` (minimiza el
+        // bloque de cuenta y posiciona el footer) y `livewire/site/account-context` deshabilita
+        // sus botones de login con `identifying`.
+        //
+        // ⚠️ **Las escribe EL MOTOR, sea cual sea.** Hoy las escribe el puente reactivo de
+        // `purchase.blade.php` (`x-effect` ← `$wire.step`), que es el único escritor. Un motor
+        // nuevo que no las escriba deja el panel en `is-catalog` para siempre y los botones de
+        // invitado activos durante la identificación — dos regresiones silenciosas, porque
+        // ninguna de las dos clases aparece en el marcado del cajón: viven en el layout.
+        // ────────────────────────────────────────────────────────────────────────────────────
+        // «modo» del flujo: catalog | booking | cart | result.
         mode: 'catalog',
         setMode(m) {
             this.mode = m || 'catalog';
         },
-        // Sidebar v2: `true` SOLO en el paso de identificación (login/registro embebido, paso 5).
-        // Lo fija —y SOLO él— el puente reactivo de purchase.blade (`x-effect` ← `$wire.step`), igual
-        // que `mode`. El bloque de cuenta de invitado lo lee para BLOQUEAR sus botones «Iniciar sesión»
+        // `true` SOLO en el paso de identificación (login/registro embebido, paso 5). La escribe
+        // el MOTOR (ver el contrato de arriba); hoy, el puente reactivo de `purchase.blade.php`.
+        // El bloque de cuenta de invitado lo lee para BLOQUEAR sus botones «Iniciar sesión»
         // y «Ver mis reservas» (ambos abren el modal de login) mientras el flujo ya pide identificarse.
         // NO se resetea en close() a propósito: el componente persiste en el paso 5, así que al cerrar y
         // reabrir el sidebar con open() (sin round-trip Livewire → el x-effect no re-dispara) el bloqueo
         // debe SEGUIR activo. Solo cambia cuando cambia el paso (x-effect) o al recargar (default false).
         identifying: false,
+        // ── COSTURA DE INTENCIÓN (Fase 4 · paso 4.0a, `docs/specs/sidebar-spa.md` §4.1) ──
+        // Tres vistas de la landing no abren el cajón «vacío»: lo abren PIDIENDO algo concreto
+        // —la sección de packs, o las entradas de una zona—. Hasta ahora lo hacían despachando
+        // un evento de Livewire directamente desde el `@click`, lo que ataba la landing al motor
+        // del cajón: con otro motor esos `dispatch` **no fallan, no hacen nada**, y el cliente
+        // acaba en el catálogo raíz sin que nada avise.
+        //
+        // La intención se declara aquí, y CADA MOTOR registra cómo se aplica. La landing ya no
+        // sabe qué hay dentro del cajón.
+        intent: null,
+        intentAdapter: null,
+        /** El motor del cajón declara cómo se aplica una intención. */
+        useIntentAdapter(fn) {
+            this.intentAdapter = fn;
+            this.flushIntent();
+        },
+        /** Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }`. */
+        openWith(intent) {
+            this.open();
+            this.intent = intent;
+            this.flushIntent();
+        },
+        flushIntent() {
+            if (! this.intent || ! this.intentAdapter) return;
+
+            const intent = this.intent;
+            this.intent = null;      // se consume antes de aplicar: un adaptador que falle no la repite
+            this.intentAdapter(intent);
+        },
         open() {
             this.isOpen = true;
             document.body.classList.add('no-scroll');
@@ -156,6 +195,20 @@ document.addEventListener('alpine:init', () => {
             };
             requestAnimationFrame(tick);
         },
+    });
+
+    // Adaptador de intención del motor LIVEWIRE (Fase 4 · paso 4.0a). Es la única línea del
+    // sistema que sabe que el cajón lo mueve Livewire, y la que el paso 4.7 sustituye por la de
+    // Vue. Se registra en el arranque —no al hidratarse el componente `lazy`— para conservar
+    // EXACTAMENTE el momento en que se despachaba antes: en el `@click`.
+    window.Alpine.store('purchase').useIntentAdapter((intent) => {
+        if (! window.Livewire) return;
+
+        if (intent.type === 'packs') {
+            window.Livewire.dispatch('show-packs');
+        } else if (intent.type === 'zone') {
+            window.Livewire.dispatch('show-entradas-zone', { slug: intent.slug });
+        }
     });
 
     // Consentimiento de cookies (#219): banner de 2 capas + bloqueo previo de iframes de tercero.

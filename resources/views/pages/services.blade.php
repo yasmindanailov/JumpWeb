@@ -149,7 +149,7 @@
                                         {{-- Deep-link al sidebar (mismo cableado que la card de cumpleaños): abre el
                                              catálogo en la pestaña «Servicios» (packs); el pack es vendible+zona operativa. --}}
                                         <button type="button" class="svc-cta svc-cta--book"
-                                                @click="$store.purchase.open(); window.Livewire.dispatch('show-packs')">
+                                                @click="$store.purchase.openWith({ type: 'packs' })">
                                             {{ __('landing.pricing.book') }}
                                             <x-icons.arrow-right :width="15" :height="15" />
                                         </button>

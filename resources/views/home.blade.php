@@ -189,7 +189,7 @@
                         @if ($complements->isPurchasable($ride))
                             <div class="ride-card__buy">
                                 <div class="ride-card__price">@if ($ride->ticketType?->priceVaries())<span class="ride-card__from">{{ __('landing.pricing.from') }}</span>@endif{{ $ride->ticketType?->euros() }}<span class="cents">,{{ $ride->ticketType?->cents() }}</span><span class="eur">€</span></div>
-                                <button type="button" class="btn ride-card__cta" aria-label="{{ __('landing.rides.buy') }} · {{ $ride->tr('name') }}" @click="$store.purchase.open(); window.Livewire.dispatch('show-entradas-zone', { slug: '{{ $zone->slug }}' })">{{ __('landing.rides.buy') }}</button>
+                                <button type="button" class="btn ride-card__cta" aria-label="{{ __('landing.rides.buy') }} · {{ $ride->tr('name') }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.buy') }}</button>
                             </div>
                         @endif
                     </article>

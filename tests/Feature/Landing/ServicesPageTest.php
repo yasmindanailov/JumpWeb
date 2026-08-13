@@ -39,7 +39,10 @@ class ServicesPageTest extends TestCase
         $res->assertSee('Eventos de empresa');
         $res->assertSee('svc-ed2__price', false);          // muestra precio (pack comprable)
         $res->assertSee(__('landing.pricing.book'));        // CTA «Reservar»
-        $res->assertSee("dispatch('show-packs')", false);   // deep-link al sidebar de compra
+        // Deep-link al sidebar de compra. Desde Fase 4 · paso 4.0a la landing declara la INTENCIÓN
+        // en vez de despachar un evento de Livewire: el mismo destino, pero sin atar la página al
+        // motor del cajón (con otro motor, aquel `dispatch` no fallaba — no hacía nada).
+        $res->assertSee("openWith({ type: 'packs' })", false);
     }
 
     public function test_contact_only_services_show_get_in_touch_without_price(): void

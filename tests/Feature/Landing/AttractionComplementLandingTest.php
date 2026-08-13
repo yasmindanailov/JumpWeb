@@ -57,8 +57,11 @@ class AttractionComplementLandingTest extends TestCase
         $res->assertSee('ride-card__cta', false);
         $res->assertSee('5,00');                                  // precio del complemento (5 €)
         $res->assertSee(__('landing.rides.buy'));                 // «Comprar»
-        $res->assertSee('show-entradas-zone', false);            // deep-link al catálogo de Entradas...
-        $res->assertSee("slug: 'jump'", false);                  // ...posicionado en la zona Jump
+        // Deep-link al catálogo de Entradas, posicionado en la zona Jump. Desde Fase 4 · paso 4.0a
+        // la tarjeta declara la INTENCIÓN en vez de despachar un evento de Livewire (ver
+        // `SidebarSeamTest`): mismo destino, sin atar la landing al motor del cajón.
+        $res->assertSee("openWith({ type: 'zone'", false);
+        $res->assertSee("slug: 'jump'", false);
     }
 
     public function test_paid_attraction_sorts_first_within_its_zone(): void
