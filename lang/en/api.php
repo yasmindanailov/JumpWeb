@@ -40,5 +40,6 @@ return [
         'too_many_pending_orders' => 'You already have several bookings awaiting payment. Complete them or wait until they expire.',
         'order_not_retryable' => 'That booking can no longer be paid.',
         'payment_unavailable' => 'We could not open the payment gateway. Please try again.',
+        'guest_form_closed' => 'That booking has already taken place: its details can be viewed but no longer edited.',
     ],
 ];

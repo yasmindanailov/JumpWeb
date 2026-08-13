@@ -64,6 +64,29 @@ datos**. Pedirlo todo en la compra satura el flujo. Solución: **formulario post
 9. **Pedidos manuales**: mismo `guest_data`/estado; el empleado rellena en la ficha o dispara
    el email/enlace.
 
+## 2.bis Superficie de API [DECIDIDO 2026-08-13]
+
+Desde Fase 3 · paso 5 (`DECISIONES #36`) el post-form también se sirve por
+`GET`/`PUT /api/v1/reservations/{id}/guest-form`. Lo que hay que saber al tocarlo:
+
+- **La autorización es la misma y vive en un solo sitio**: `Http\Concerns\AuthorizesGuestForm`, que
+  comparten la página web y la API. La escalada **403 → 410 → 404** no es intercambiable: autorizar
+  antes de comprobar elegibilidad es lo que impide deducir por el código de estado si una reserva
+  existe, si está pagada o si su titular ejerció la supresión.
+- **El canje de credencial**: la firma de Laravel cubre la URL EXACTA, así que la del correo —que
+  apunta a la ruta web— **no** autoriza la de la API (verificado: la misma firma da 403 en la API y
+  200 en la web). `OrderItem::guestFormApiUrls()` firma las rutas de la API con la MISMA caducidad
+  (`RGPD-03`), y el `GET` devuelve la de guardar: un cliente solo necesita UNA URL firmada.
+- **Lo que se persiste lo decide el dominio**: `OrderItem::submitGuestForm()` —saneado contra el
+  esquema y contra la cantidad ACTUAL de invitados, mezcla que preserva los datos de la fase de
+  reserva, sello de completado y rastro sin PII—. Las dos superficies llaman al mismo método.
+- **`no-store` explícito** en las dos rutas de API (`RGPD-04`): llevan nombres y alergias de menores
+  y son accesibles sin sesión, así que el `no-store` de la superficie autenticada no las cubriría.
+- Pasada la fiesta, guardar responde **409 `guest_form_closed`**: el permiso no ha cambiado, ha
+  cambiado el momento — el enlace sigue abriendo para consultar.
+
+El contrato completo (esquema de campos, progreso, `save_url`) está en `openapi/v1.yaml`.
+
 ## 3. Modelo de datos
 
 ### 3.1 Columnas

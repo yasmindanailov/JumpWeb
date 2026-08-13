@@ -131,6 +131,13 @@ enum ApiErrorCode: string
     case OrderNotRetryable = 'order_not_retryable';
 
     /**
+     * 409 — el post-form de esa reserva ya no se puede editar: la fiesta se ha celebrado. Se
+     * consulta, pero no se escribe. **409 y no 403**: el permiso no ha cambiado, ha cambiado el
+     * momento — y el enlace sigue siendo válido hasta su caducidad para poder consultar.
+     */
+    case GuestFormClosed = 'guest_form_closed';
+
+    /**
      * 502 — el cobro no se pudo abrir contra la pasarela. En un primer intento el pedido se suelta
      * en el acto (no retiene aforo sin nadie que lo vaya a pagar) y el cliente puede volver a
      * empezar; en un reintento el pedido sigue vivo y se puede volver a intentar.

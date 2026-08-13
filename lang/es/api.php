@@ -42,5 +42,6 @@ return [
         'too_many_pending_orders' => 'Ya tienes varias reservas pendientes de pago. Complétalas o espera a que caduquen.',
         'order_not_retryable' => 'Esa reserva ya no se puede pagar.',
         'payment_unavailable' => 'No hemos podido abrir la pasarela de pago. Inténtalo de nuevo.',
+        'guest_form_closed' => 'Esa reserva ya se ha celebrado: sus datos se pueden consultar, pero ya no se editan.',
     ],
 ];

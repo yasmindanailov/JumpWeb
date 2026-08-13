@@ -4,10 +4,14 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0 a 4 CERRADOS (el **paso 4, el del
-dinero, está COMPLETO**: 4a precio · 4b disponibilidad · 4c pedido y cobro · 4d desenlace); queda el
-**paso 5** (post-form migrado, 2.º consumidor) y con él termina la fase.**
-- Suite **2438 en verde** (9419 aserciones, `--parallel` ~63 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — LOS 6 PASOS DEL CORTE (§9) ESTÁN
+CERRADOS**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida de pago · 3 auth · **4 el dinero**
+(precio · disponibilidad · pedido y cobro · desenlace) · **5 post-form**.
+⬜ **Queda UN ítem de la fase, y es decisión del owner**: la abstracción `PaymentProvider`
+(`00-REFACTOR`, Fase 3) — hacerla ahora o llevarla a Fase 6 con la app, que es su primer lector
+real. Mientras tanto, la secuencia «admitir → crear → abrir cobro» vive en la capa de entrega, con
+su porqué medido en `DEUDA.md`.
+- Suite **2455 en verde** (9508 aserciones, `--parallel` ~63 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -35,9 +39,9 @@ dinero, está COMPLETO**: 4a precio · 4b disponibilidad · 4c pedido y cobro ·
   `payable`/`priceable`/`target` antiguo revienta) y hay que **drenar la cola + `queue:restart`**
   (los payloads serializados llevaban los FQCN viejos).
 
-## ▶ Qué hay hecho de la API (Fase 3, pasos 0 → 4)
+## ▶ Qué hay hecho de la API (Fase 3, pasos 0 → 5)
 **El inventario NO se repite aquí**: la superficie exacta la declara `openapi/v1.yaml` —que es el
-contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#35` y
+contrato y manda sobre el código— y el porqué de cada paso está en `DECISIONES #24`, `#26`–`#36` y
 en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo del próximo agente**:
 
 - **Nunca reimplementes una regla que ya tiene contrato.** Hay siete, y los siete los consume
@@ -48,6 +52,12 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   `Identity\Services\PasswordLogin` y `SelfSignup`/`PasswordRecovery` (auth).
   `ModuleContractsTest` lo comprueba con dobles: si un consumidor vuelve a decidir por su cuenta,
   cae.
+- **La AUTORIZACIÓN por firma tiene una sola forma** (paso 5): `Http\Concerns\AuthorizesGuestForm`,
+  compartida por la página web y la API. Su escalada **403 → 410 → 404** no es intercambiable —
+  autorizar antes de comprobar elegibilidad es lo que impide enumerar reservas por el código de
+  estado—, y hay test por mutación de ello. Y ojo al canje: **la firma cubre la URL EXACTA**, así
+  que una firma de la web NO vale en la API (403 vs 200, medido); las URLs de API se firman aparte
+  con la misma caducidad (`OrderItem::guestFormApiUrls()`).
 - **La cesta que viaja por la API tiene una sola forma**: `Http\Api\CartPayload` (reglas de
   validación + traducción `product_id`/`quantity` → `ticket_type_id`/`qty`). La comparten
   `orders/quote` y `availability/{product}/times`, y la usará el `POST orders` de 4c. **No
@@ -71,22 +81,28 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
 ## ▶ Próximo paso
-**Fase 3 · paso 5 — POST-FORM MIGRADO** (`GET/PUT reservations/{id}/guest-form`), el SEGUNDO
-consumidor de la API y lo único que queda de la fase. Su dificultad NO es el endpoint: es **cómo
-autentica la API a un portador de firma**. La vía de hoy es una URL firmada de una ruta web
-concreta, y la firma de Laravel cubre la URL exacta — **no autoriza un `PUT /api/v1/...`** (spec §3c
-y §4.6.5). Hay que decidir y construir ese canje antes de exponer nada.
-⚠️ Lo que NO se puede regresar al migrarlo: el enlace CADUCA (`RGPD-03`, fecha del evento + 14 días,
-fuente única `Order::guestFormLinkExpiresAt`), devuelve **410 si el titular está anonimizado** (GET y
-POST), la URL no lleva PII, y el orden 403/410/404 está escalonado a propósito para no filtrar la
-existencia de una reserva (spec §6.6). Lee `docs/sistemas/POSTFORM-INVITADOS.md` y `INVARIANTES` §3.
+**Decisión del owner primero, y luego Fase 4.**
 
-**El paso 4 (el dinero) está COMPLETO.** `VERIFY_CONC=1` y los dos verificadores sobre MySQL siguen
-siendo OBLIGATORIOS en cuanto se toque un controlador
-`Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*` o el núcleo (que desde 4b incluye
-`SlotOffer`) — el post-form no debería tocarlos, pero el gate manda.
-⚠️ `PAY-01` sigue intacto: `RedsysReturnHandler` es el ÚNICO que pasa una Order a `paid`; sondear el
-estado no transiciona nada, y hay test de ello.
+❗ **[PENDIENTE: owner] — la abstracción `PaymentProvider`** es el único ítem abierto de Fase 3
+(`00-REFACTOR`). Hoy la ida del pago se invoca directamente desde las tres superficies de entrega,
+así que la secuencia «admitir → crear → abrir cobro» vive duplicada ahí; extraerla al dominio exige
+antes ese contrato, porque si no habría que añadir una flecha a una baseline que **solo encoge**
+(razonado en `DECISIONES #34b` y medido en `DEUDA.md`). Las dos opciones son legítimas: hacerla
+ahora, o llevarla a Fase 6 con la app —su primer lector real, y quien traerá el segundo driver si
+alguna vez hace falta—.
+
+**Después: Fase 4 — la SPA del sidebar**, primer consumidor real de todo lo construido. Antes de
+escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.duodecies: son sesenta y nueve
+puntos MEDIDOS al implementar la API, y varios son trampas que la SPA va a pisar. Los tres que más:
+- ⚠️ **`Origin`/`Referer` de un dominio *stateful* hacen falta en TODAS las peticiones**, no solo en
+  el login: sin ellos no hay sesión y un `GET /me` da 401 aunque la cookie valga (§10.sexies 28).
+- ⚠️ **La disponibilidad LLEVA la cesta** (`AFORO-02`) y publica DOS números: `available` es para
+  mostrar y `max_quantity` para acotar el selector — en un pack no coinciden (§10.nonies 46).
+- ⚠️ **La firma cubre la URL EXACTA**: las URLs de API se firman aparte (§10.duodecies 64).
+
+**Lo que la fase deja preparado y NO hay que rehacer**: todo el flujo de compra por API —catálogo,
+disponibilidad, presupuesto, pedido, cobro, reintento, desenlace—, la auth completa, «mis pedidos»,
+«mis reservas» y el post-form. El contrato manda: `openapi/v1.yaml`.
 
 **Pendiente que hereda Fase 6** (declarado en el contrato, `DECISIONES #35`): un cliente NATIVO
 averigua el desenlace del pago **solo sondeando** `payment-status` —la vuelta de la pasarela es una
@@ -122,7 +138,7 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
 **Antes de escribir código, lee `docs/INVARIANTES.md` §1 (PAY) y §2 (AFORO)** —es obligatorio por
-la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.undecies**: sesenta y tres puntos
+la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.duodecies**: sesenta y nueve puntos
 medidos en los pasos anteriores. Los que más pesan en lo que queda del paso 4: el presupuesto de
 consultas se mide por PENDIENTE y no por techo (§10.ter 17); la validación de contrato hay que
 pedirla con `assertValidResponse()` (16); todo endpoint que toque `session()` necesita la guarda de
@@ -157,6 +173,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2438** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2455** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

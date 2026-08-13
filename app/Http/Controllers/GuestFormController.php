@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
-use App\Domain\Platform\Services\AuditLogger;
+use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -31,9 +30,11 @@ use Illuminate\View\View;
  */
 class GuestFormController extends Controller
 {
+    use AuthorizesGuestForm;
+
     public function show(Request $request, OrderItem $reservation): View
     {
-        $this->authorizeAccess($request, $reservation);
+        $this->authorizeGuestFormAccess($request, $reservation);
 
         $type = $reservation->ticketType;
 
@@ -60,7 +61,7 @@ class GuestFormController extends Controller
 
     public function store(Request $request, OrderItem $reservation): RedirectResponse
     {
-        $this->authorizeAccess($request, $reservation);
+        $this->authorizeGuestFormAccess($request, $reservation);
 
         // Reserva ya celebrada → SOLO LECTURA: no se guarda ni se re-introducen datos de menores (la UI
         // ya no ofrece editar; esto blinda un POST forjado o una pestaña vieja). Vuelve a la vista
@@ -71,70 +72,28 @@ class GuestFormController extends Controller
                 ->with('status', 'guest-form-readonly');
         }
 
-        $type = $reservation->ticketType;
-
-        // Datos por-niño: saneados contra N = cantidad ACTUAL de invitados de ESTA reserva (regla 12).
+        // Qué se persiste de un formulario con datos de MENORES lo decide el dominio, no esta capa
+        // (Fase 3 · paso 5): saneado contra el esquema, mezcla que preserva los datos de la fase de
+        // reserva, sello de completado y rastro de auditoría, en una sola operación. La API hace
+        // exactamente esta llamada, así que las dos superficies no pueden guardar cosas distintas.
         $rawGuests = $request->input('guests', []);
-        $guestData = $type->sanitizeGuestData(is_array($rawGuests) ? $rawGuests : [], (int) $reservation->quantity);
-
-        // Datos generales del post-form (event_fields fase postform): se MEZCLAN en `event_data`.
-        // Conservamos TODO lo ya guardado SALVO los campos postform actuales (que se reemplazan por
-        // el envío saneado): así no se pierden los datos de la fase de reserva —aunque el esquema
-        // haya cambiado entre reservar y rellenar— y, a la vez, vaciar un campo postform sí lo borra.
         $rawGeneral = $request->input('general', []);
-        $postformData = $type->sanitizeEventData(is_array($rawGeneral) ? $rawGeneral : [], TicketType::EVENT_STAGE_POSTFORM);
-        $postformKeys = array_column($type->eventFields(TicketType::EVENT_STAGE_POSTFORM), 'key');
-        $preserved = array_diff_key($reservation->event_data ?? [], array_flip($postformKeys));
 
-        $reservation->forceFill([
-            'guest_data' => $guestData,
-            'event_data' => array_merge($preserved, $postformData),
-        ])->save();
-
-        // Sello de "completado" solo si de verdad lo está (auditoría; el estado es derivado).
-        if ($reservation->isGuestFormComplete()) {
-            $reservation->markGuestFormCompleted();
-        }
-
-        AuditLogger::log('orders.guest_form_submitted', $reservation->order, [
-            'order_code' => $reservation->order->code,
-            'order_item_id' => $reservation->id,
-            'via' => $request->hasValidSignature() ? 'signed_link' : 'account',
-        ]);
+        $reservation->submitGuestForm(
+            is_array($rawGuests) ? $rawGuests : [],
+            is_array($rawGeneral) ? $rawGeneral : [],
+            $this->guestFormVia($request),
+        );
 
         return redirect()
             ->to($this->backUrl($request, $reservation))
             ->with('status', 'guest-form-saved');
     }
 
-    /**
-     * Control de acceso de UNA reserva. Orden deliberado: autorización ANTES de comprobar
-     * elegibilidad/anonimización, para no filtrar a un tercero la existencia de una reserva por el
-     * código de estado (no-enumeración).
-     */
-    private function authorizeAccess(Request $request, OrderItem $reservation): void
-    {
-        $user = $request->user();
-        $isOwner = $user !== null && (int) ($reservation->order?->user_id ?? 0) === (int) $user->id;
-        abort_unless($request->hasValidSignature() || $isOwner, 403);
-
-        // RGPD art. 17 (auditoría Fase 1 · P5): tras anonimizar al titular, el enlace firmado NO debe
-        // seguir abriendo NI re-escribiendo nombres/alergias de menores en la reserva «borrada». 410.
-        abort_if($reservation->order?->user?->isAnonymized() ?? false, 410);
-
-        // Debe ser una reserva (pack principal no cancelado con post-form) de un pedido PAGADO. Un
-        // pedido pendiente/cancelado, o una entrada/complemento, no tienen post-form.
-        abort_unless(
-            $reservation->isGuestFormReservation() && $reservation->order?->status === Order::STATUS_PAID,
-            404,
-        );
-    }
-
     /** Tras guardar: "Mis pedidos" si está autenticado; si vino por enlace firmado, recarga firmada. */
     private function backUrl(Request $request, OrderItem $reservation): string
     {
-        $user = $request->user();
-        if ($user !== null && (int) ($reservation->order?->user_id ?? 0) === (int) $user->id) {
+        if ($this->ownsGuestForm($request, $reservation)) {
             return route('account.orders');
         }
 

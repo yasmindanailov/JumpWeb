@@ -318,14 +318,35 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             valida y solo entonces se consume. El retorno móvil se resuelve por DECLARACIÓN en el
             propio contrato (sondeo + `redsys_merchant_url` como prerequisito duro). Suite **2438
             verde** + los dos verificadores sobre MySQL + ciclo completo por `curl`.
-- [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
-      carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·
-      mis reservas · post-form de invitados · contenido (para la app).
-- [ ] **Abstracción `PaymentProvider`** (driver Redsys primero; deja el enchufe para Stripe u
-      otros — imprescindible para multi-sector fuera de España).
-- [ ] Especificación **OpenAPI** versionada + tests de contrato (la doc de la API es artefacto
-      de primera clase: la app móvil se construye contra ella).
-- [ ] Rate-limiting, formato de errores único, paginación y convenciones de la API → `DECISIONES`.
+- [x] **Paso 5 — POST-FORM por API ✅** (2026-08-13, `DECISIONES #36`): `GET`/`PUT
+      reservations/{id}/guest-form`, el **segundo consumidor**. Su dificultad no era el endpoint
+      sino **cómo autentica la API a un portador de firma**: la firma de Laravel cubre la URL
+      EXACTA, así que la del correo —de una ruta web— no autoriza un `PUT /api/v1/...`
+      (verificado: la misma firma da **403 en la API y 200 en su ruta web**). El canje es firmar
+      también la URL de la API con la MISMA caducidad y entregarla a quien ya demostró acceso
+      (`OrderItem::guestFormApiUrls()`); el `GET` devuelve la de guardar. De paso, la persistencia
+      bajó al dominio (`OrderItem::submitGuestForm()`) —la guarda de frontera prohíbe escribir
+      modelos desde un controlador de API, y con razón— y la escalada **403 → 410 → 404** pasó a
+      tener un solo sitio (`Http\Concerns\AuthorizesGuestForm`), compartido con la web: lo que se
+      comparte no son tres líneas, es el ORDEN, que es la propiedad de seguridad. Suite **2455
+      verde**; escalada y canje verificados por MUTACIÓN y con `curl`.
+- [x] **Endpoints v1** cubiertos por los pasos 0–5: auth/registro/perfil · catálogo ·
+      disponibilidad (fechas/franjas) · presupuesto · pedido y pago (init + reintento +
+      desenlace) · mis reservas y mis pedidos · post-form de invitados. **El contenido por API
+      NO entra**: el spec §2 lo asigna a Fase 5 a propósito.
+- [x] Especificación **OpenAPI** versionada (`openapi/v1.yaml`, escrita a mano) + tests de
+      contrato que validan la RESPUESTA REAL en cada endpoint, con estrictez vigilada
+      (`ApiContractTest`) y prueba por mutación en cada paso.
+- [x] Rate-limiting (suelo del grupo + techos propios donde hacen falta), sobre de error único
+      con `code` estable —incluidos los **códigos de negocio** y su mapa exhaustivo por test—,
+      paginación (`ApiCollection`) y convenciones → `DECISIONES #24`, `#26`–`#36`.
+- [ ] ⬜ **Abstracción `PaymentProvider`** (driver Redsys primero; deja el enchufe para Stripe u
+      otros — imprescindible para multi-sector fuera de España). **Es lo ÚNICO que queda de la
+      fase.** No se hizo dentro del paso 4c a propósito: habría mezclado dos trabajos en un diff,
+      y su ausencia está medida en `DEUDA.md` (la secuencia «admitir → crear → abrir cobro» vive
+      en la capa de entrega porque el dominio no tiene dónde alojarla sin añadir una flecha a una
+      baseline que solo encoge). **[PENDIENTE: owner]** hacerla ahora o llevarla a Fase 6 con la
+      app, que es su primer lector real.
 
 ### Fase 4 — Sidebar SPA ⬜
 - [ ] SPA embebida (Vue 3 + Vite) para el sistema completo del sidebar: login/registro,

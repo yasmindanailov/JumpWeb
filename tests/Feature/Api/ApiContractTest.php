@@ -67,6 +67,12 @@ class ApiContractTest extends TestCase
         // primera compra empieza sin nada elegido— y ausente equivale a vacía. Exigirla obligaría a
         // todo cliente a mandar `items: []` para preguntar por unas horas.
         'AvailabilityTimesRequest' => ['items'],
+        // Cuerpo de PETICIÓN, y aquí los DOS campos son opcionales de verdad: un formulario de
+        // invitados se guarda a trozos —primero las fichas, luego las observaciones generales, o al
+        // revés— y exigir ambos obligaría a reenviar lo que no se está tocando. Lo que sigue
+        // mordiendo es `additionalProperties: false`, que impide colar un campo que el servidor
+        // ignoraría en silencio.
+        'GuestFormRequest' => ['guests', 'general'],
     ];
 
     /** @var array<string, mixed>|null */

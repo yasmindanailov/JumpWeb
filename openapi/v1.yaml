@@ -9,8 +9,8 @@
 # Se sirve como fichero estático; ningún paquete de runtime lo publica por HTTP (`DECISIONES #21c`).
 #
 # Alcance actual: Fase 3 · pasos 0 (cimientos), 1a (lectura de la cuenta), 1b (catálogo), 3 (auth),
-# 4a (presupuesto), 4b (disponibilidad), 4c (pedido y cobro) y 4d (desenlace del pago). Lo que
-# falta llega por los pasos del spec §9.
+# 4a (presupuesto), 4b (disponibilidad), 4c (pedido y cobro), 4d (desenlace del pago) y 5
+# (post-form de invitados). Con el paso 5, la superficie de Fase 3 queda COMPLETA.
 
 openapi: 3.0.3
 
@@ -48,6 +48,11 @@ tags:
       Qué se vende. Superficie PÚBLICA: se consulta sin identidad, igual que el escaparate de la
       web. Describe la oferta, nunca la disponibilidad ni el precio final de una cesta — eso
       depende de la fecha y de la selección, y lo sirven `availability/*` y `orders/quote`.
+  - name: Reservas
+    description: |
+      Lo que el cliente hace con una reserva YA pagada. Su particularidad es la autorización: el
+      post-form de invitados se abre desde un enlace que viaja por correo semanas antes del evento,
+      así que se autoriza con **una firma** —no con una sesión—, y esa firma cubre la URL exacta.
   - name: Compra
     description: |
       El camino del dinero. El carrito NO se guarda en el servidor —es estado del cliente—, pero el
@@ -431,6 +436,139 @@ paths:
                 $ref: '#/components/schemas/OfferedTimeList'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /reservations/{reservation}/guest-form:
+    get:
+      tags: [Reservas]
+      operationId: getGuestForm
+      summary: El formulario de invitados de una reserva
+      description: |
+        Los datos por invitado de un evento ya reservado y pagado: quién viene, con qué alergias y
+        qué observaciones. Se rellena DESPUÉS de comprar, porque al reservar todavía no se sabe.
+
+        **Lleva el ESQUEMA, no solo los datos.** Las columnas por invitado las decide cada
+        instalación desde su panel (`guest_fields`), así que un cliente que las llevara quemadas
+        dejaría de funcionar en cuanto alguien añadiera una. Vienen con la etiqueta ya traducida y
+        con su `required`.
+
+        ### Autorización — es el único endpoint que se abre con una FIRMA
+
+        Se entra de dos formas: **con el enlace firmado** que llega por correo (sin cuenta) o **como
+        titular autenticado** del pedido. La firma cubre la URL exacta, así que la del correo —que
+        apunta a una página web— **no** vale aquí: la respuesta de este endpoint incluye `save_url`,
+        que es la URL de guardar ya firmada y con la misma caducidad. Ese es el canje.
+
+        ### Qué significa cada «no»
+
+        - **403** — ni firma válida ni titularidad. Es lo primero que se comprueba, a propósito.
+        - **410** — el titular ejerció su derecho de supresión: el canal queda cerrado y los datos
+          de los menores ya no se pueden abrir ni reescribir.
+        - **404** — no es una reserva con formulario de invitados de un pedido pagado. Solo lo ve
+          quien ya demostró acceso, así que no revela qué reservas existen.
+
+        ⚠️ La respuesta va con `Cache-Control: no-store`: contiene datos personales de menores.
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          description: Id de la reserva (la línea de pack del pedido).
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: El formulario, su esquema y lo ya rellenado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestForm'
+        '403':
+          description: Ni firma válida ni titularidad (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: El titular se anonimizó; el canal está cerrado (`not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+    put:
+      tags: [Reservas]
+      operationId: saveGuestForm
+      summary: Guardar el formulario de invitados
+      description: |
+        **`PUT` y no `PATCH`**: el envío sustituye la lista de invitados entera —se mandan las N
+        fichas que hay ahora—, no la parchea ficha a ficha.
+
+        Todo se sanea en el servidor contra el esquema del pack y contra la cantidad ACTUAL de
+        invitados: las claves que no estén en `guest_fields` se descartan, y si el operador subió el
+        número de invitados aparecen fichas nuevas vacías. Los datos generales se MEZCLAN
+        conservando lo que se respondió al reservar.
+
+        Se autoriza igual que el `GET`, y la URL firmada que hay que usar es la `save_url` que aquél
+        devuelve.
+
+        **409 `guest_form_closed`** cuando la fiesta ya se ha celebrado: entonces el formulario se
+        consulta pero no se edita. No es un problema de permisos —el enlace sigue siendo válido—,
+        es que ha pasado el momento.
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          description: Id de la reserva (la línea de pack del pedido).
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestFormRequest'
+      responses:
+        '200':
+          description: Guardado. Devuelve el formulario con el progreso recalculado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestForm'
+        '403':
+          description: Ni firma válida ni titularidad (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: La fiesta ya se celebró; el formulario es de solo lectura (`guest_form_closed`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '410':
+          description: El titular se anonimizó; el canal está cerrado (`not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/ValidationFailed'
         '429':
@@ -922,6 +1060,7 @@ components:
                 - reservations_paused
                 - too_many_pending_orders
                 - order_not_retryable
+                - guest_form_closed
                 - payment_unavailable
             message:
               type: string
@@ -1305,6 +1444,135 @@ components:
             debe ir aquí.
           items:
             $ref: '#/components/schemas/CartLine'
+
+    GuestForm:
+      type: object
+      description: |
+        El formulario de invitados de una reserva: su esquema, lo ya rellenado y a dónde guardarlo.
+        ⚠️ Contiene datos personales de menores; la respuesta va con `no-store`.
+      required:
+        - reservation_id
+        - order_code
+        - product_name
+        - date
+        - time_window
+        - guest_count
+        - status
+        - progress
+        - readonly
+        - guest_fields
+        - general_fields
+        - guests
+        - general
+        - save_url
+      additionalProperties: false
+      properties:
+        reservation_id:
+          type: integer
+          format: int64
+        order_code:
+          type: string
+        product_name:
+          type: string
+        date:
+          type: string
+          format: date
+          nullable: true
+        time_window:
+          type: string
+          nullable: true
+        guest_count:
+          type: integer
+          description: |
+            Cuántas fichas hay que rellenar. Es la cantidad ACTUAL de invitados de la reserva: si el
+            operador la sube, aparecen fichas nuevas vacías y el estado vuelve solo a `pending`.
+        status:
+          type: string
+          enum: [ok, pending, null]
+          nullable: true
+          description: '`null` = esta reserva no pide datos por invitado.'
+        progress:
+          type: object
+          description: Fichas completas sobre el total, para el indicador «X/N».
+          required: [done, total]
+          additionalProperties: false
+          properties:
+            done:
+              type: integer
+            total:
+              type: integer
+        readonly:
+          type: boolean
+          description: |
+            `true` cuando la fiesta ya se ha celebrado: se consulta pero guardar devuelve 409.
+        guest_fields:
+          type: array
+          description: Columnas POR INVITADO, configuradas por la instalación.
+          items:
+            $ref: '#/components/schemas/GuestFormField'
+        general_fields:
+          type: array
+          description: Campos generales del formulario (no por invitado).
+          items:
+            $ref: '#/components/schemas/GuestFormField'
+        guests:
+          type: array
+          description: |
+            Respuestas por invitado, en el mismo orden que las fichas. Cada elemento es un mapa
+            `clave de campo → valor`; las claves son las de `guest_fields`.
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        general:
+          type: object
+          additionalProperties:
+            type: string
+          description: Respuestas de los campos generales, por su clave.
+        save_url:
+          type: string
+          description: |
+            **El canje**: la URL de guardar, ya firmada y con la misma caducidad que el enlace del
+            correo. Quien entra con una firma no puede construírsela, así que recibirla aquí es lo
+            que le permite completar el formulario sin tener cuenta.
+
+    GuestFormField:
+      type: object
+      description: Una columna del formulario, tal y como la configuró la instalación.
+      required: [key, label, type, required]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+          description: Etiqueta ya resuelta al idioma negociado (los textos viven en la base de datos).
+        type:
+          type: string
+          description: Pista de presentación del campo (`text`, `textarea`, `number`…).
+        required:
+          type: boolean
+
+    GuestFormRequest:
+      type: object
+      description: |
+        El envío SUSTITUYE la lista entera de invitados. Todo se sanea en servidor contra el esquema
+        del pack: lo que no esté en `guest_fields` se descarta.
+      additionalProperties: false
+      properties:
+        guests:
+          type: array
+          maxItems: 200
+          description: Una ficha por invitado, con sus respuestas por clave de campo.
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        general:
+          type: object
+          additionalProperties:
+            type: string
+          description: Respuestas de los campos generales.
 
     PaymentStatus:
       type: object

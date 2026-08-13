@@ -4,6 +4,7 @@ namespace App\Domain\Booking\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\PaymentRefund;
+use App\Domain\Platform\Services\AuditLogger;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -369,6 +370,105 @@ class OrderItem extends Model
             $this->guestFormLinkExpiresAt(),
             ['reservation' => $this],
         );
+    }
+
+    /**
+     * Enlaces FIRMADOS a la API del post-form de esta reserva (Fase 3 · paso 5). **Este es el
+     * canje** que el spec §4.6.5 dejó pendiente.
+     *
+     * El problema que resuelve: la firma de Laravel cubre la URL EXACTA, así que la del correo
+     * —que apunta a una ruta web— no autoriza un `PUT /api/v1/...`. Reenviar su `signature` a otro
+     * path simplemente no valida. La salida no es inventar un almacén de credenciales nuevo: es
+     * firmar también la URL de la API, **con la misma caducidad** ({@see guestFormLinkExpiresAt}),
+     * y entregarla a quien ya ha demostrado acceso — la página que abre el enlace del correo, o el
+     * propio `GET` de la API, que devuelve el de guardar.
+     *
+     * Es exactamente el modelo de seguridad que la web ya usaba —su formulario POSTea a una ruta
+     * firmada con esa misma expiración—, portado sin relajar nada: mismo alcance (una reserva),
+     * misma vida y misma prueba (HMAC del servidor).
+     *
+     * @return array{show: string, save: string}
+     */
+    public function guestFormApiUrls(): array
+    {
+        $expiresAt = $this->guestFormLinkExpiresAt();
+
+        return [
+            'show' => URL::temporarySignedRoute('api.v1.reservations.guest-form.show', $expiresAt, ['reservation' => $this->id]),
+            'save' => URL::temporarySignedRoute('api.v1.reservations.guest-form.update', $expiresAt, ['reservation' => $this->id]),
+        ];
+    }
+
+    /**
+     * ¿Esta reserva ADMITE post-form ahora mismo? (Fase 3 · paso 5.)
+     *
+     * Es {@see isGuestFormReservation()} más la condición que faltaba y que hasta ahora comprobaba
+     * cada superficie por su cuenta: **el pedido tiene que estar PAGADO**. Un pedido pendiente o
+     * cancelado no tiene fiesta que preparar, y una entrada o un complemento no tienen invitados.
+     *
+     * Vive aquí y no en los controladores porque decide QUÉ es una reserva con post-form, que es
+     * dominio; lo que sigue siendo de la capa HTTP es con qué código se responde a un «no».
+     */
+    public function acceptsGuestForm(): bool
+    {
+        return $this->isGuestFormReservation()
+            && $this->order?->status === Order::STATUS_PAID;
+    }
+
+    /**
+     * Guarda el post-form de esta reserva (Fase 3 · paso 5): datos por-niño, datos generales, sello
+     * de completado y rastro de auditoría, en una sola operación.
+     *
+     * **Está aquí y no en los controladores por dos motivos.** El primero es que era la misma
+     * secuencia repetida en cuanto apareció el segundo consumidor —el saneado, la mezcla que
+     * PRESERVA los datos de la fase de reserva, el sello y el audit— y cada copia era una
+     * oportunidad de olvidarse de una parte. El segundo es que la guarda de frontera de la API
+     * prohíbe escribir modelos desde un controlador (`ApiBoundariesTest`), y con razón: quien decide
+     * qué se persiste de un formulario con datos de menores no puede ser la capa HTTP.
+     *
+     * **Todo se sanea contra el ESQUEMA en servidor** (regla 12): los datos por-niño contra la
+     * cantidad ACTUAL de invitados —si el empleado subió el número, aparecen filas nuevas vacías— y
+     * los generales contra los campos de la fase `postform`.
+     *
+     * **La mezcla de `event_data` conserva todo lo que no sea `postform`**: así no se pierden los
+     * datos que se dieron al reservar —aunque el esquema haya cambiado entre reservar y rellenar— y,
+     * a la vez, vaciar un campo del post-form sí lo borra.
+     *
+     * @param  array<mixed>  $guests  respuestas por invitado, en bruto
+     * @param  array<mixed>  $general  respuestas de los campos generales, en bruto
+     * @param  string  $via  por dónde entró el cliente (`signed_link` | `account`), solo para el audit
+     */
+    public function submitGuestForm(array $guests, array $general, string $via): void
+    {
+        $type = $this->ticketType;
+
+        if ($type === null) {
+            return;
+        }
+
+        $guestData = $type->sanitizeGuestData($guests, (int) $this->quantity);
+
+        $postformData = $type->sanitizeEventData($general, TicketType::EVENT_STAGE_POSTFORM);
+        $postformKeys = array_column($type->eventFields(TicketType::EVENT_STAGE_POSTFORM), 'key');
+        $preserved = array_diff_key($this->event_data ?? [], array_flip($postformKeys));
+
+        $this->forceFill([
+            'guest_data' => $guestData,
+            'event_data' => array_merge($preserved, $postformData),
+        ])->save();
+
+        // Sello de «completado» solo si de verdad lo está (el estado es derivado; esto es auditoría).
+        if ($this->isGuestFormComplete()) {
+            $this->markGuestFormCompleted();
+        }
+
+        // `RGPD-02`: el rastro NO lleva PII. Ni un nombre de niño ni una alergia — solo qué reserva
+        // se tocó y por dónde entró quien la tocó.
+        AuditLogger::log('orders.guest_form_submitted', $this->order, [
+            'order_code' => $this->order?->code,
+            'order_item_id' => $this->id,
+            'via' => $via,
+        ]);
     }
 
     /**

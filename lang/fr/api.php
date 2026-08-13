@@ -40,5 +40,6 @@ return [
         'too_many_pending_orders' => 'Vous avez déjà plusieurs réservations en attente de paiement. Terminez-les ou attendez leur expiration.',
         'order_not_retryable' => 'Cette réservation ne peut plus être payée.',
         'payment_unavailable' => "Nous n'avons pas pu ouvrir la passerelle de paiement. Réessayez.",
+        'guest_form_closed' => 'Cette réservation a déjà eu lieu : ses informations sont consultables mais ne sont plus modifiables.',
     ],
 ];

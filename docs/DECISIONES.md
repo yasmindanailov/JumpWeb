@@ -1068,3 +1068,56 @@ con `Ds_Response 0101` → **el MISMO endpoint devuelve `pending/failed`, `decli
 `can_be_retried: true`** y el mensaje traducido en es/en → reintento (200, retención extendida) →
 sondeo `pending/pending` con el motivo anterior ya oculto. `Cache-Control: no-store` presente
 (`RGPD-04`). El pedido de prueba se borró de la BD de dev.
+
+## #36 · 2026-08-13 · Fase 3 paso 5: el post-form por API, y cómo se autentica un portador de firma
+Último paso del corte de la fase (spec §9). `GET`/`PUT reservations/{id}/guest-form`, el **segundo
+consumidor** de la API. Detalle en `api-v1.md` §10.duodecies.
+
+**(a) El problema real no era el endpoint: era la CREDENCIAL.** Por eso este consumidor se eligió
+(spec §3c). La vía sin sesión del post-form es una URL firmada, y **la firma de Laravel cubre la URL
+exacta**: reenviar la `signature` del enlace del correo a `/api/v1/...` simplemente no valida.
+Verificado contra el servidor real: **la misma firma da 403 en la API y 200 en su ruta web**.
+
+**(b) El canje: firmar también la URL de la API, con la MISMA caducidad.** No hace falta un almacén
+de credenciales nuevo ni un emisor de tokens (que sigue aplazado a Fase 6, `DECISIONES #29`):
+`OrderItem::guestFormApiUrls()` firma las rutas de la API con la expiración del enlace del correo
+—fecha del evento + 14 días, `RGPD-03`— y se la entrega a quien ya demostró acceso. El `GET`
+devuelve además la URL de guardar, así que un cliente solo necesita UNA URL firmada para completar
+el flujo. Es el mismo modelo que la web ya usaba (su formulario POSTea a una ruta firmada con esa
+misma expiración), portado sin relajar nada: mismo alcance, misma vida, misma prueba.
+
+**(c) La escalada 403 → 410 → 404 pasa a tener un solo sitio.** Vivía en el controlador web y la API
+habría sido la segunda copia. **Lo que se comparte no son tres líneas: es el ORDEN**, que aquí es
+una propiedad de seguridad — autorizar ANTES de comprobar elegibilidad es lo que impide deducir por
+el código de estado si una reserva existe, si está pagada o si su titular ejerció la supresión.
+Ahora es `Http\Concerns\AuthorizesGuestForm`, y hay test por MUTACIÓN de que invertir el orden cae.
+
+**(d) La API resuelve la reserva A MANO, sin *route model binding*.** Con binding implícito un id
+inexistente daría 404 ANTES de la autorización, y ese 404 —frente al 403 de uno existente— sería un
+oráculo de reservas. Verificado: id existente e id inventado responden **el mismo 403** sin firma.
+
+**(e) La persistencia baja al dominio** (`OrderItem::submitGuestForm()`). Lo forzó la guarda de
+frontera —`ApiBoundariesTest` prohíbe escribir modelos desde un controlador de API— y es lo
+correcto: quien decide qué se persiste de un formulario con datos de MENORES no puede ser la capa
+HTTP. La web consume el mismo método desde este commit, así que el saneado contra el esquema, la
+mezcla que preserva los datos de la fase de reserva, el sello de completado y el rastro sin PII ya
+no pueden divergir entre superficies.
+
+**(f) El formulario viaja con su ESQUEMA.** Las columnas por invitado las configura cada instalación
+(`guest_fields`), así que un cliente que las llevara quemadas dejaría de funcionar en cuanto alguien
+añadiera una. Van con la etiqueta ya traducida y su `required`. Y se devuelven solo los campos
+generales de la fase `postform`: los de la reserva no los edita este formulario.
+
+**(g) `no-store` explícito en la ruta** (`RGPD-04`). La respuesta lleva nombres y alergias de menores
+(art. 9) y la ruta es accesible SIN sesión, así que el `no-store` por defecto de la superficie
+autenticada no la cubriría. **409 `guest_form_closed`** cuando la fiesta ya se celebró: el permiso no
+ha cambiado, ha cambiado el momento.
+
+**Verificación empírica**: suite **2455 verde** (9508 aserciones, `--parallel` ~63 s) · Pint limpio ·
+`docs-check` verde · **verificado por MUTACIÓN** (invertir la escalada deja en rojo el test de
+no-enumeración) · **flujo completo contra el servidor real con `curl`**: el enlace firmado de la API
+abre el formulario **sin cuenta ninguna** (esquema real de 4 columnas por invitado + 2 generales,
+`no-store` presente) → se guarda con la `save_url` que él mismo entrega (3 fichas, estado `ok`, y la
+clave inventada descartada por el saneado) → sin firma da 403, y un id inexistente da **el mismo
+403** → **la firma del enlace web da 403 en la API y 200 en su ruta web**, que es exactamente el
+motivo del canje. La reserva de prueba se borró de la BD de dev.

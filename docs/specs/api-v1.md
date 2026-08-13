@@ -1,13 +1,14 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0 a 4 TERMINADOS** (2026-08-13); queda el paso 5 ·
+> Estado: ✅ **v2 · LOS 6 PASOS DEL §9 TERMINADOS** (2026-08-13). Queda un ítem de la fase fuera
+> de este corte: la abstracción `PaymentProvider` (ver `00-REFACTOR`) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
 > `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
-> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c) y **`#35`** (paso 4d).
+> (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.undecies** — léelos antes de seguir por el
-> paso 5.
+> **Lo que el código enseñó al implementar: §10 → §10.duodecies** — sesenta y nueve puntos
+> medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -345,7 +346,10 @@ Se corrige:
      `GET orders/{code}/payment-status` con los DOS ejes de estado y el motivo del rechazo, el
      token de retorno que se quemaba antes de validar la titularidad, y el retorno móvil resuelto
      por DECLARACIÓN en el propio contrato. **Lo que el código enseñó: §10.undecies.**
-5. **Post-form migrado** (2.º consumidor), una vez resuelto su canje de credencial.
+5. ✅ **Post-form migrado** (2026-08-13, `DECISIONES #36`): `GET`/`PUT reservations/{id}/guest-form`.
+   El canje resultó no necesitar credencial nueva —basta firmar la URL de la API con la MISMA
+   caducidad y entregarla a quien ya demostró acceso—, y de paso la escalada 403→410→404 y la
+   persistencia quedaron con un solo dueño. **Lo que el código enseñó: §10.duodecies.**
 
 ⚠️ El gate `pre-push` ancla `VERIFY_CONC` a `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator`:
 los controladores de checkout de API **no lo dispararían**. Ampliar `CRITICAL_RE` es parte del
@@ -862,3 +866,48 @@ averigua el desenlace sondeando. ⚠️ Con una condición que es prerequisito D
 `redsys_merchant_url` (notificación server-to-server) y con terminal data-less, el único camino a
 `paid` es la vuelta del navegador —que en nativo no ocurre— y el pedido caducaría con la tarjeta ya
 cobrada (`PAY-02`).
+
+### 10.duodecies Lo que el código enseñó — paso 5 (2026-08-13)
+
+**64. La firma no viaja entre rutas, y eso se puede enseñar en una línea.** Todo el paso 5 existía
+por una frase del spec: «la firma de Laravel cubre la URL exacta, así que no autoriza
+`PUT /api/v1/...`». Comprobado contra el servidor real, la misma `signature` devuelve **403 en la
+API y 200 en su ruta web**. Tener ese par de números vale más que el párrafo: el canje deja de ser
+una precaución teórica y pasa a ser lo único que hace funcionar al segundo consumidor.
+
+**65. El canje no necesitaba un almacén de credenciales: necesitaba firmar la otra URL.** El primer
+instinto —emitir un token de vida corta, guardarlo en cache como el de la vuelta de Redsys— habría
+añadido un emisor de credenciales justo cuando la fase decidió aplazar el de Bearer a Fase 6. La
+salida era más simple y no relaja nada: firmar también las rutas de la API **con la misma
+caducidad** y entregárselas a quien ya demostró acceso. Mismo alcance (una reserva), misma vida,
+misma prueba. **Regla general**: antes de inventar una credencial nueva, mira si la que ya existe
+puede emitirse para el destino nuevo.
+
+**66. Lo que se comparte entre superficies no eran tres líneas: era el ORDEN.** La escalada
+403 → 410 → 404 parece una cadena de `abort()` intercambiables y no lo es: autorizar ANTES de
+comprobar elegibilidad es lo que impide deducir por el código de estado si una reserva existe, si
+está pagada o si su titular ejerció la supresión. Extraerla a un solo sitio no ahorró código
+—ahorró que la segunda copia se escribiera en otro orden—, y hay test por mutación de que invertirlo
+cae.
+
+**67. El *route model binding* implícito rompe la no-enumeración, y es invisible.** Con binding, un
+id inexistente responde 404 ANTES de que el controlador ejecute nada: frente al 403 de uno
+existente, eso ES el oráculo que la escalada quería evitar. La API resuelve la reserva a mano por
+eso. ⚠️ **La página web sigue usando binding implícito y por tanto conserva esa diferencia**: no se
+tocó en este paso porque cambiarla altera la conducta de una superficie en producción, y queda
+anotado en `DEUDA.md`.
+
+**68. La guarda de frontera volvió a señalar el sitio correcto, por segunda vez.** El primer borrador
+del `PUT` guardaba con `->save()` desde el controlador y `ApiBoundariesTest` lo marcó. No era un
+falso positivo: quien decide qué se persiste de un formulario con datos de MENORES no puede ser la
+capa HTTP. La corrección fue bajar la operación entera al dominio (`OrderItem::submitGuestForm()`) y
+que la web la consuma también — el mismo desenlace que el punto 31 del paso 3b, y por el mismo
+motivo: **cuando una guarda de arquitectura protesta por código nuevo, la primera hipótesis es que
+el sitio correcto ya está decidido.**
+
+**69. Un formulario data-driven tiene que viajar con su esquema.** Las columnas por invitado las
+configura cada instalación desde el panel; un cliente que las llevara quemadas dejaría de funcionar
+en cuanto alguien añadiera una. Van con la etiqueta ya resuelta al idioma —los textos viven en BD,
+no en `lang/`— y su `required`. Es la misma decisión que el catálogo tomó en el paso 1b, y la que
+convierte a la API en algo que una app puede consumir sin desplegarse cada vez que el operador
+cambia una columna.

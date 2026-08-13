@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
+use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
@@ -106,6 +107,28 @@ Route::name('api.v1.')->group(function (): void {
     // anidados y respuestas del evento— no cabe con garantías en una query string, no porque tenga
     // efectos.
     Route::post('/orders/quote', QuoteController::class)->name('orders.quote');
+
+    // ── Post-form de invitados (paso 5) — FIRMA o TITULAR ────────────────────────────────────
+    // El segundo consumidor de la API, y el único que se autoriza con una FIRMA: el enlace viaja
+    // por correo semanas antes del evento, sin cuenta detrás. La firma HMAC es la prueba de
+    // titularidad, igual que en la página web — y como cubre la URL exacta, la de la API se firma
+    // aparte con la misma caducidad (`OrderItem::guestFormApiUrls()`, el canje del spec §4.6.5).
+    //
+    // Fuera del grupo `auth:sanctum` a propósito: el titular autenticado también entra, pero
+    // exigir sesión cerraría la vía del correo, que es la principal. La autorización la hace el
+    // controlador con la escalada 403 → 410 → 404 (`Http\Concerns\AuthorizesGuestForm`).
+    //
+    // ⚠️ `no-store` EXPLÍCITO (`RGPD-04`): estas respuestas llevan nombres y alergias de menores, y
+    // como la ruta es accesible sin sesión, el `no-store` por defecto de la superficie autenticada
+    // no las cubriría. El `throttle:30,1` de escritura es el mismo que ya aplica la web.
+    Route::get('/reservations/{reservation}/guest-form', [GuestFormController::class, 'show'])
+        ->whereNumber('reservation')
+        ->middleware('no-store')
+        ->name('reservations.guest-form.show');
+    Route::put('/reservations/{reservation}/guest-form', [GuestFormController::class, 'update'])
+        ->whereNumber('reservation')
+        ->middleware(['throttle:30,1', 'no-store'])
+        ->name('reservations.guest-form.update');
 
     // ── Zona autenticada ──────────────────────────────────────────────────────────────────────
     // `auth:sanctum` cubre los DOS modos del §4.2 con el mismo código: cookie de sesión para la
