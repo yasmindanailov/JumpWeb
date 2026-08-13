@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
 use App\Livewire\Tickets\Purchase;
 use App\Notifications\OrderConfirmation;
@@ -106,7 +107,7 @@ class PurchaseLimitsTest extends TestCase
 
     public function test_user_with_max_pending_orders_cannot_confirm_another(): void
     {
-        for ($i = 1; $i <= Purchase::MAX_PENDING_PER_USER; $i++) {
+        for ($i = 1; $i <= ReservationAdmissionPolicy::MAX_PENDING_PER_USER; $i++) {
             $this->pendingFor($this->user, $i);
         }
 
@@ -119,7 +120,7 @@ class PurchaseLimitsTest extends TestCase
             ->assertHasErrors('cart');
 
         // No se creó un pedido adicional.
-        $this->assertSame(Purchase::MAX_PENDING_PER_USER, $this->user->orders()->count());
+        $this->assertSame(ReservationAdmissionPolicy::MAX_PENDING_PER_USER, $this->user->orders()->count());
     }
 
     public function test_pending_with_expired_hold_does_not_count_toward_the_cap(): void
@@ -131,7 +132,7 @@ class PurchaseLimitsTest extends TestCase
             'status' => Order::STATUS_PENDING, 'expires_at' => now()->subHour(),
             'subtotal' => 100, 'total' => 100,
         ]);
-        for ($i = 1; $i < Purchase::MAX_PENDING_PER_USER; $i++) {
+        for ($i = 1; $i < ReservationAdmissionPolicy::MAX_PENDING_PER_USER; $i++) {
             $this->pendingFor($this->user, $i);
         }
         // 1 caducado + 4 vivos = 5 totales, pero solo 4 cuentan → cabe uno más.
@@ -148,7 +149,7 @@ class PurchaseLimitsTest extends TestCase
     public function test_rate_limit_blocks_after_max_confirmations_in_a_minute(): void
     {
         // Burst de N+1 intentos. El N+1 debe quedar bloqueado por rate limit.
-        for ($i = 0; $i < Purchase::RESERVATIONS_PER_MINUTE; $i++) {
+        for ($i = 0; $i < ReservationAdmissionPolicy::RESERVATIONS_PER_MINUTE; $i++) {
             Livewire::actingAs($this->user)
                 ->test(Purchase::class)
                 ->set('step', 8)
@@ -165,6 +166,60 @@ class PurchaseLimitsTest extends TestCase
             ->call('confirmReservation')
             ->assertSet('step', 4)
             ->assertHasErrors('cart');
+    }
+
+    /**
+     * El límite cuenta RESERVAS CREADAS, no pantallas visitadas (Fase 3 · paso 2, `DECISIONES #28`).
+     *
+     * Este test ejercita el flujo COMPLETO —«Continuar» y luego «Confirmar»— dos veces seguidas, que
+     * es lo que hace un cliente que compra entradas y a continuación un pack. Antes gastaba dos
+     * fichas por compra (una al avanzar al paso de pago, que no crea nada, y otra al confirmar), así
+     * que la segunda compra del minuto se bloqueaba aunque el tope sean 3. Ahora la ficha se gasta
+     * donde nace el pedido que retiene aforo.
+     */
+    public function test_two_consecutive_purchases_in_the_same_minute_are_allowed(): void
+    {
+        foreach ([1, 2] as $ignored) {
+            Livewire::actingAs($this->user)
+                ->test(Purchase::class)
+                ->set('cart', $this->withCart(1))
+                ->call('checkout')            // carrito → paso de pago: NO consume ficha
+                ->assertSet('step', 8)
+                ->call('confirmReservation')  // aquí nace el pedido: SÍ la consume
+                ->assertHasNoErrors('cart')
+                ->assertSet('step', 9);
+        }
+
+        $this->assertSame(2, $this->user->orders()->count());
+    }
+
+    /**
+     * Y el techo real sigue siendo el mismo: tres reservas por minuto. Con el flujo completo, la
+     * cuarta ya no pasa — así que corregir el doble consumo no aflojó la protección, solo dejó de
+     * castigar la navegación.
+     */
+    public function test_the_fourth_full_purchase_in_a_minute_is_still_blocked(): void
+    {
+        for ($i = 0; $i < ReservationAdmissionPolicy::RESERVATIONS_PER_MINUTE; $i++) {
+            Livewire::actingAs($this->user)
+                ->test(Purchase::class)
+                ->set('cart', $this->withCart(1))
+                ->call('checkout')
+                ->call('confirmReservation')
+                ->assertSet('step', 9);
+        }
+
+        // El aviso llega ya al pulsar «Continuar», sin llevar al cliente hasta la pantalla de pago
+        // para decirle allí que no. Esa consulta temprana no consume ficha: por eso puede avisar
+        // tantas veces como haga falta sin empeorar la situación de quien ya está limitado.
+        Livewire::actingAs($this->user)
+            ->test(Purchase::class)
+            ->set('cart', $this->withCart(1))
+            ->call('checkout')
+            ->assertSet('step', 4)
+            ->assertHasErrors('cart');
+
+        $this->assertSame(ReservationAdmissionPolicy::RESERVATIONS_PER_MINUTE, $this->user->orders()->count());
     }
 
     public function test_unauthenticated_user_cannot_confirm_even_by_manipulating_step(): void

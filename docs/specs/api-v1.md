@@ -1,13 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a y 1b TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a, 1b y 2 TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
-> `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a) y **`#27`**
-> (paso 1b).
+> `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a), **`#27`**
+> (paso 1b) y **`#28`** (paso 2).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10, §10.bis y §10.ter** — léelos antes de seguir por
-> el paso 2.
+> **Lo que el código enseñó al implementar: §10, §10.bis, §10.ter y §10.quater** — léelos antes de
+> seguir por el paso 3.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -295,8 +295,12 @@ Se corrige:
      quedaron en la web —son índice de búsqueda en cliente y ancla de scroll—, y el resto pasó al
      contrato `ProductCatalog`, que la web consume desde el mismo commit. **Lo que el código
      enseñó: §10.ter.**
-2. **Refactor sin endpoints**: extraer política de admisión e ida de pago (§4.6.1–2). Aquí tocan
-   `VERIFY_CONC=1` y los dos verificadores; web y panel quedan de testigo.
+2. ✅ **Refactor sin endpoints** (2026-08-13, `DECISIONES #28`): política de admisión
+   (`Booking\Contracts\ReservationAdmission`) e ida de pago (`Payments\PaymentInitiator`)
+   extraídas de `Purchase` y de `RetryPaymentController` (§4.6.1–2), con los dos verificadores de
+   concurrencia verdes sobre MySQL. Las dos superficies aplicaban políticas DISTINTAS sin que
+   nadie lo hubiera decidido; el owner resolvió las tres asimetrías. **Lo que el código enseñó:
+   §10.quater.**
 3. **Auth por API**: extracción de `Login`/`Register`/`ForgotPassword`/`ResetPassword` + revocación
    de tokens. **Bloqueado por la decisión de §7.**
 4. **El dinero**: quote, disponibilidad con cesta, `POST orders`, reintento y `payment-status` con
@@ -433,3 +437,47 @@ conservó que el mínimo NO filtra por tarifa activa: una instalación con preci
 tarifa desactivada anunciaría un «desde» que no se puede comprar. Es un riesgo latente (no observado
 en datos reales), y tocar lo que se le anuncia al cliente exige decisión del owner — queda en
 `DEUDA.md`, no resuelto de tapadillo dentro de una extracción.
+
+### 10.quater Lo que el código enseñó — paso 2 (2026-08-13)
+
+**19. Duplicar código duplica la POLÍTICA, y eso no se ve leyendo una de las copias.** El spec
+describía la ida del pago como «duplicada casi línea a línea», y lo estaba; lo que no decía —porque
+solo aparece al poner las dos copias en paralelo— es que **no hacían lo mismo**. El reintento del
+sidebar aplicaba el tope de pedidos pendientes y el limitador por titular; el de «Mis pedidos», ni
+uno ni otro (solo el `throttle:6,1` por IP de su ruta). Ninguna de las dos conductas estaba fijada
+por un test: eran un accidente de la historia, no una decisión. **Lección para las extracciones que
+quedan** (§4.6.3, auth): antes de unificar, poner las copias lado a lado y listar en qué se
+diferencian; cada diferencia es una decisión de producto que alguien tiene que tomar, no un detalle
+de implementación que el refactor pueda resolver solo.
+
+**20. Un tope antiabuso puede estar contando lo que no cree contar.** El limitador de reservas
+(3/min) se consumía DOS veces por compra: al pasar del carrito a la pantalla de pago —que no crea
+nada— y al confirmar. Medido: la segunda compra del mismo minuto se bloqueaba, con el tope nominal
+en tres. La regla ahora es explícita en el contrato: `mayReserve()` consulta sin consumir y
+`admitReservation()` consume, y el chequeo temprano se conserva porque avisar antes es mejor UX que
+llevar al cliente hasta la pasarela para decirle allí que no. **La forma de encontrarlo fue contar
+las llamadas del flujo REAL**, no leer el método: los tests que existían saltaban directamente al
+paso de confirmación y por eso pasaban.
+
+**21. Al mudar código endurecido, el gate que lo protege se muda con él.** El UPDATE atómico de
+`PAY-04` y el `SUPERSEDED` de los intentos previos vivían en un componente Livewire y en un
+controlador web: dos sitios que el `CRITICAL_RE` del `pre-push` **nunca miró**, porque el patrón
+apunta al núcleo de dominio. Al darles nombre propio (`ReservationAdmissionPolicy`,
+`PaymentInitiator`) fue posible —y obligatorio— meterlos en el patrón, con su entrada en
+`CriticalPathGateTest` y su prueba por mutación. El refactor no solo quitó copias: puso bajo
+vigilancia código de dinero que llevaba tiempo fuera de ella.
+
+**22. Extraer una regla la vuelve testeable por sí misma, y eso cambia lo que se puede probar.**
+Las tres reglas de admisión solo se podían ejercitar montando un carrito, un catálogo y un usuario,
+y lo que se probaba era la pantalla. Con el servicio aislado aparecieron casos que antes no
+compensaba escribir: que un reintento rechazado por frecuencia **no** extienda el hold (si lo
+extendiera, martillear el botón mantendría la plaza retenida sin pagar), que un veredicto denegado
+no toque el pedido de otro titular, o que la pausa no gaste fichas del limitador. Ninguno era
+alcanzable a golpe de Livewire.
+
+**23. Un veredicto se traduce distinto en cada superficie, y ahí es donde estaba el mensaje que
+mentía.** Al unificar, «Mis pedidos» heredó el límite de frecuencia y su primer borrador reutilizó
+el flash existente de «no se puede reintentar», cuyo texto dice *«la reserva ha caducado y la plaza
+se ha liberado»*. Le habría dicho a quien pulsó dos veces seguidas que había perdido su reserva. El
+dominio devuelve `reason` y cada superficie decide el mensaje: por eso el DTO lleva una clave
+estable y no un texto ni una clave de `lang/`.

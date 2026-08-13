@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\ProductCatalog;
+use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Slot;
@@ -19,20 +22,19 @@ use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Exceptions\PaymentInitiationException;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
-use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Providers\AppServiceProvider;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -48,21 +50,17 @@ use Livewire\Component;
 class Purchase extends Component
 {
     /**
-     * Límites anti-abuso (auditoría 2026-05-26, hallazgo E).
+     * Límites anti-abuso (auditoría 2026-05-26, hallazgo E): sin ellos, un usuario autenticado
+     * podría iterar la confirmación y agotar el aforo del día sin pagar.
      *
-     * Sin Redsys los pedidos `pending` no caducan: un usuario autenticado podría iterar
-     * `confirmReservation` y agotar el aforo del día sin pagar. Lo cerramos con dos topes:
-     *  - MAX_LINES_PER_CART: nº de productos distintos por cesta (anti-DoS de contención BD).
-     *  - MAX_PENDING_PER_USER: pedidos pending vivos a la vez por usuario.
-     *  - 3 confirmReservation/min por usuario (RateLimiter).
-     * Hay holgura suficiente para familias con varias compras legítimas, y bloquea el spam.
+     * Solo queda aquí el cap de LÍNEAS, y reflejado: su autoridad está en `OrderCreator` (`PAY-12`)
+     * y el sidecart lo lee para no ofrecer un botón que el servidor va a rechazar. El tope de
+     * pedidos pendientes y el de frecuencia se mudaron a `ReservationAdmissionPolicy` en Fase 3 ·
+     * paso 2, con sus constantes: una regla que aplican tres superficies no puede tener su número
+     * en la clase de UI de una de ellas.
      */
     /** @see OrderCreator::MAX_LINES_PER_CART — el cap es invariante de SERVIDOR (PAY-12); aquí solo se refleja para la UI. */
     public const MAX_LINES_PER_CART = OrderCreator::MAX_LINES_PER_CART;
-
-    public const MAX_PENDING_PER_USER = 5;
-
-    public const RESERVATIONS_PER_MINUTE = 3;
 
     /**
      * Paso del asistente (el entero es estado interno; no se muestra al cliente). En orden de
@@ -161,12 +159,14 @@ class Purchase extends Component
 
     private ProductCatalog $catalog;
 
+    private ReservationAdmission $admission;
+
     /** Memo por petición de los complementos del producto elegido (evita N consultas por render). */
     private ?Collection $selectedAddonsMemo = null;
 
     private ?int $selectedAddonsMemoFor = null;
 
-    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog): void
+    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog, ReservationAdmission $admission): void
     {
         $this->rates = $rates;
         $this->availability = $availability;
@@ -175,6 +175,7 @@ class Purchase extends Component
         $this->addonResolver = $addonResolver;
         $this->slotOffer = $slotOffer;
         $this->catalog = $catalog;
+        $this->admission = $admission;
     }
 
     public function mount(): void
@@ -752,37 +753,28 @@ class Purchase extends Component
      *   al pulsar "Confirmar reserva" (confirmReservation()).
      */
     /**
-     * Aplica los topes anti-abuso a una intención de crear pedido (auditoría 2026-05-26, hallazgo E).
-     * Si supera los límites, re-encamina al paso 4 con un error de carro y devuelve false (el
-     * llamador debe abortar). Si los respeta, registra el intento en el rate limiter y devuelve true.
+     * Traduce a la UI del sidecart un veredicto DENEGADO de la política de admisión
+     * (`Booking\Contracts\ReservationAdmission`, Fase 3 · paso 2). El dominio dice por qué no; qué
+     * se pinta y a qué paso se vuelve es de esta interfaz.
      *
-     * Combina dos topes:
-     *  - MAX_PENDING_PER_USER (volumen): cuántas reservas pending vivas tiene el usuario.
-     *  - RESERVATIONS_PER_MINUTE (frecuencia): rate limit por user_id.
+     * El aviso de PAUSA (#218) tiene dos variantes porque sin teléfono configurado el mensaje
+     * interpolaría un `:phone` vacío y quedaría una gramática rota («Llámanos al  para reservar»);
+     * la variante sin teléfono invita a Contacto, mismo criterio que el componente `reserve-cta`.
      */
-    /**
-     * Guard de RESERVAS EN PAUSA (#218, item 3). Si el panel pausó las reservas online, ninguna
-     * superficie pública debe crear pedidos ni iniciar pagos. Los CTAs ya caen al teléfono; esto es
-     * la red de SERVIDOR para los casos en que el sidecart ya estaba abierto, un deep-link, o una
-     * manipulación por consola. Registra un aviso (con el teléfono) y devuelve true → el llamador
-     * aborta y decide a qué paso vuelve. El **pedido manual del panel** (`OrderCreator` directo) y
-     * las **callbacks de Redsys** NO pasan por aquí, así que un pago ya iniciado finaliza igual.
-     */
-    private function blockedByReservationPause(): bool
+    private function reportAdmissionDenial(AdmissionDecision $decision): void
     {
-        if (! MaintenanceSettings::reservationsPaused()) {
-            return false;
+        if ($decision->reason === AdmissionDecision::RESERVATIONS_PAUSED) {
+            $phone = trim((string) Setting::value('contact.phone', ''));
+            $this->addError('cart', $phone !== ''
+                ? __('tickets.errors.reservations_paused', ['phone' => $phone])
+                : __('tickets.errors.reservations_paused_no_phone'));
+
+            return;
         }
 
-        // Sin teléfono configurado, el mensaje NO interpola un `:phone` vacío (gramática rota
-        // «Llámanos al  para reservar»): cae a una variante que invita a Contacto (igual criterio
-        // que el componente `reserve-cta`, que sin teléfono enlaza a /contacto).
-        $phone = trim((string) Setting::value('contact.phone', ''));
-        $this->addError('cart', $phone !== ''
-            ? __('tickets.errors.reservations_paused', ['phone' => $phone])
-            : __('tickets.errors.reservations_paused_no_phone'));
-
-        return true;
+        $this->addError('cart', $decision->reason === AdmissionDecision::TOO_MANY_PENDING
+            ? __('tickets.errors.too_many_pending', ['max' => $decision->context['max'] ?? 0])
+            : __('tickets.errors.try_later'));
     }
 
     /**
@@ -833,31 +825,6 @@ class Purchase extends Component
         return MaintenanceSettings::reservationTitle();
     }
 
-    private function withinReservationLimits(User $user): bool
-    {
-        $livePending = $user->orders()
-            ->where('status', Order::STATUS_PENDING)
-            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-            ->count();
-        if ($livePending >= self::MAX_PENDING_PER_USER) {
-            $this->step = 4;
-            $this->addError('cart', __('tickets.errors.too_many_pending', ['max' => self::MAX_PENDING_PER_USER]));
-
-            return false;
-        }
-
-        $rateKey = 'reservation-confirm:'.$user->id;
-        if (RateLimiter::tooManyAttempts($rateKey, self::RESERVATIONS_PER_MINUTE)) {
-            $this->step = 4;
-            $this->addError('cart', __('tickets.errors.try_later'));
-
-            return false;
-        }
-        RateLimiter::hit($rateKey, 60);
-
-        return true;
-    }
-
     private function proceed(): void
     {
         $user = auth()->user();
@@ -867,16 +834,18 @@ class Purchase extends Component
             return;
         }
 
-        // Reservas en pausa (#218): no se crea ningún pedido público. Vuelve al carrito con el aviso.
-        if ($this->blockedByReservationPause()) {
+        // Admisión (Fase 3 · paso 2): pausa de reservas (#218) y topes anti-abuso (auditoría
+        // 2026-05-26, hallazgo E), decididos por el dominio.
+        //
+        // Aquí se CONSULTA sin consumir: este paso no crea nada —solo lleva a la pantalla de pago—,
+        // y gastar una ficha del limitador por navegar hacía que la SEGUNDA compra del mismo minuto
+        // se bloqueara al confirmar, aunque el tope sean 3 reservas. La ficha se gasta donde nace el
+        // pedido que retiene aforo: en `confirmReservation()`. El aviso temprano se conserva.
+        $decision = $this->admission->mayReserve((int) $user->getAuthIdentifier());
+        if ($decision->denied()) {
             $this->step = 4;
+            $this->reportAdmissionDenial($decision);
 
-            return;
-        }
-
-        // Topes anti-abuso (auditoría 2026-05-26, hallazgo E): el pedido `pending` se crea en
-        // confirmReservation() y retiene aforo; el tope evita que un usuario agote el día sin pagar.
-        if (! $this->withinReservationLimits($user)) {
             return;
         }
 
@@ -905,7 +874,7 @@ class Purchase extends Component
      *  - cualquier manipulación del formulario invalida la firma → Redsys rechaza (SIS0042).
      *  - el `Payment` se crea ANTES de redirigir → el vuelta puede reconciliar sin sesión.
      */
-    public function confirmReservation(OrderCreator $creator, Redsys $redsys): void
+    public function confirmReservation(OrderCreator $creator, PaymentInitiator $initiator): void
     {
         if ($this->step !== 8) {
             return;
@@ -923,14 +892,13 @@ class Purchase extends Component
             return;
         }
 
-        // Reservas en pausa (#218): no se crea la reserva firme ni se inicia el cobro Redsys.
-        if ($this->blockedByReservationPause()) {
+        // Admisión (Fase 3 · paso 2). Aquí SÍ consume: es el punto donde nace el pedido `pending`
+        // que retiene aforo, y un chequeo que no cuenta no limita nada.
+        $decision = $this->admission->admitReservation((int) $user->getAuthIdentifier());
+        if ($decision->denied()) {
             $this->step = 4;
+            $this->reportAdmissionDenial($decision);
 
-            return;
-        }
-
-        if (! $this->withinReservationLimits($user)) {
             return;
         }
 
@@ -947,55 +915,17 @@ class Purchase extends Component
             return;
         }
 
-        // Reserva del `gateway_order` (atómico, único de por vida) y creación del `Payment`
-        // `pending` que ata `gateway_order ↔ Order` ANTES de redirigir. La vuelta de Redsys
-        // viene sin sesión válida (POST cross-site, SameSite=Lax): este link en BD es la
-        // única forma robusta de identificar el pedido al recibir la respuesta. Si esto
-        // fallara, deshacemos el pedido para no dejar aforo retenido sin un pago asociado.
+        // Ida del pago (Fase 3 · paso 2): la hace `Payments\PaymentInitiator`, que reserva el
+        // `gateway_order`, crea el `Payment` `pending` que ata `gateway_order ↔ Order` ANTES de
+        // redirigir —la vuelta de Redsys llega sin sesión válida (POST cross-site, `SameSite=Lax`),
+        // así que ese vínculo en BD es la única forma robusta de reconocer el pedido— y registra
+        // por su cuenta el diagnóstico de cualquier fallo (log + `audit_logs`, #169).
         try {
-            $payment = DB::transaction(function () use ($order, $redsys): Payment {
-                $gatewayOrder = $redsys->nextGatewayOrder();
-
-                return Payment::create([
-                    'payable_type' => (new Order)->getMorphClass(),
-                    'payable_id' => $order->id,
-                    'provider' => 'redsys',
-                    'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total
-                    'currency' => $order->currency,
-                    'status' => Payment::STATUS_PENDING,
-                    'gateway_order' => $gatewayOrder,
-                ]);
-            });
-
-            $locale = $user->locale ?? app()->getLocale();
-            $formData = $redsys->buildPaymentFormData($order, $payment, $locale);
-        } catch (\Throwable $e) {
-            // Observabilidad (auditoría 2026-05-26, hallazgo en validación de 5.5b): el catch
-            // anterior tragaba la excepción sin logging → diagnóstico imposible en producción.
-            // Loguear con contexto rico (NO el secret_key ni la firma; sí la traza para depurar).
-            Log::error('redsys.ida_failed', [
-                'order_id' => $order->id,
-                'order_code' => $order->code,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'exception' => $e::class,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            // Feedback ADMIN (#169): rastro estructurado y visible en el panel
-            // (historial del pedido, 7.2d). Sin esto, un fallo de inicio de pago
-            // solo vivía en `laravel.log`, invisible para la operadora — el
-            // pedido se auto-caducaba "sin explicación". Aquí queda el porqué.
-            AuditLogger::log('orders.payment_init_failed', $order, [
-                'order_code' => $order->code,
-                'source' => 'checkout',
-                'exception' => $e::class,
-                'error' => $e->getMessage(),
-            ]);
-
-            // Si la preparación del pago falla, revertimos la reserva para liberar el aforo:
-            // no podemos dejar un pedido `pending` que retiene plaza sin un pago asociado.
-            $order->forceFill(['status' => Order::STATUS_EXPIRED, 'expires_at' => now()->subSecond()])->save();
+            $ticket = $initiator->open($order, $user->locale, PaymentInitiator::SOURCE_CHECKOUT);
+        } catch (PaymentInitiationException) {
+            // Si el cobro nunca llegó a abrirse, el pedido retiene plaza sin ningún pago asociado y
+            // nadie va a completarlo: se suelta en el acto en vez de esperar a `orders:expire`.
+            $order->releaseAfterFailedPaymentStart();
             $this->step = 4;
             $this->addError('cart', __('tickets.errors.payment_unavailable'));
 
@@ -1013,7 +943,7 @@ class Purchase extends Component
         $this->persistCart();
         $this->resetErrorBag('cart');
         $this->orderCode = $order->code;
-        $this->redsysFormData = $formData;
+        $this->redsysFormData = $ticket->formData;
         $this->step = 9;
     }
 
@@ -1032,8 +962,13 @@ class Purchase extends Component
      *    paso 1 (el aforo ya pudo haberse cedido lazy). El cliente debe rehacer su selección.
      *  - User no logueado (sesión expirada) → re-encamina al login.
      *  - Order no encontrada o no perteneciente al user → defensa anti-IDOR: vuelve al paso 1.
+     *
+     * Desde Fase 3 · paso 2 lo deciden el dominio y el módulo de pagos: admitir el reintento y
+     * extender la retención con la sentencia atómica de `PAY-04` es
+     * `Booking\Contracts\ReservationAdmission`; abrir el cobro nuevo, `Payments\PaymentInitiator`.
+     * Aquí solo queda a qué paso se vuelve y qué se le dice al cliente.
      */
-    public function retryPayment(Redsys $redsys): void
+    public function retryPayment(PaymentInitiator $initiator): void
     {
         if ($this->step !== 10) {
             return;
@@ -1046,95 +981,63 @@ class Purchase extends Component
             return;
         }
 
-        // Reservas en pausa (#218): no se reinicia un cobro nuevo. La callback de un pago YA
-        // iniciado finaliza igual (no pasa por aquí). El cliente puede llamar para completar.
-        if ($this->blockedByReservationPause()) {
-            return;
-        }
+        $verdict = $this->admission->admitPaymentRetry((int) $user->getAuthIdentifier(), $this->orderCode);
 
-        // Topes anti-abuso siguen aplicando (mismo patrón que confirmReservation).
-        if (! $this->withinReservationLimits($user)) {
-            return;
-        }
+        if ($verdict->denied()) {
+            // Pausa (#218) y límite de frecuencia dejan al cliente donde está: su reserva sigue
+            // viva y puede reintentar en cuanto se levante el aviso. `NOT_RETRYABLE` es otra cosa
+            // —el hold cruzó y la plaza pudo cederse—, así que ahí sí hay que rehacer la selección.
+            if ($verdict->reason === RetryAdmission::NOT_RETRYABLE) {
+                $this->orderCode = null;
+                $this->declinedReasonText = null;
+                $this->redsysFormData = [];
+                $this->step = 1;
+                $this->addError('cart', __('tickets.errors.retry_expired'));
 
-        // Buscamos la Order pending del USER actual con el código mostrado en paso 10.
-        // Defensa IDOR: el código ya viene de la sesión del propio user, pero filtramos
-        // explícitamente por user_id para evitar reusos accidentales si la sesión migró.
-        // Check + extensión de `expires_at` ATÓMICOS (auditoría Fase 1, L2): un UPDATE condicionado a
-        // pending + no-vencida que fija la nueva ventana en la misma sentencia (espejo de
-        // `RetryPaymentController`). Evita resucitar un hold ya cruzado sin recontar aforo.
-        $extended = $user->orders()
-            ->where('code', $this->orderCode)
-            ->where('status', Order::STATUS_PENDING)
-            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-            ->update(['expires_at' => now()->addMinutes(PaymentSettings::holdMinutes())]);
+                return;
+            }
 
-        if ($extended === 0) {
-            // La Order caducó (orders:expire la marcó expired) o se cedió aforo lazy. El
-            // cliente debe rehacer la reserva — devolvemos al paso 1 con un mensaje claro.
-            $this->orderCode = null;
-            $this->declinedReasonText = null;
-            $this->redsysFormData = [];
-            $this->step = 1;
-            $this->addError('cart', __('tickets.errors.retry_expired'));
+            $this->reportRetryDenial($verdict);
 
             return;
         }
 
-        /** @var Order $order */
-        $order = $user->orders()->where('code', $this->orderCode)->firstOrFail();
+        /** @var Order $order Garantizado por `allowed`; su hold ya viene extendido. */
+        $order = $verdict->order;
 
         try {
-            $payment = DB::transaction(function () use ($order, $redsys): Payment {
-                $gatewayOrder = $redsys->nextGatewayOrder();
-
-                // Descarta los intentos `pending` previos (auditoría Fase 1, complemento C1):
-                // ver `RetryPaymentController` y `Payment::STATUS_SUPERSEDED`.
-                Payment::where('payable_type', (new Order)->getMorphClass())
-                    ->where('payable_id', $order->id)
-                    ->where('status', Payment::STATUS_PENDING)
-                    ->update(['status' => Payment::STATUS_SUPERSEDED]);
-
-                return Payment::create([
-                    'payable_type' => (new Order)->getMorphClass(),
-                    'payable_id' => $order->id,
-                    'provider' => 'redsys',
-                    'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total
-                    'currency' => $order->currency,
-                    'status' => Payment::STATUS_PENDING,
-                    'gateway_order' => $gatewayOrder,
-                ]);
-            });
-
-            $locale = $user->locale ?? app()->getLocale();
-            $formData = $redsys->buildPaymentFormData($order, $payment, $locale);
-        } catch (\Throwable $e) {
-            Log::error('redsys.retry_failed', [
-                'order_id' => $order->id,
-                'order_code' => $order->code,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'exception' => $e::class,
-            ]);
-
-            AuditLogger::log('orders.payment_init_failed', $order, [
-                'order_code' => $order->code,
-                'source' => 'retry_sidebar',
-                'exception' => $e::class,
-                'error' => $e->getMessage(),
-            ]);
-
+            $ticket = $initiator->reopen($order, $user->locale, PaymentInitiator::SOURCE_RETRY_SIDEBAR);
+        } catch (PaymentInitiationException) {
+            // El diagnóstico ya está registrado (log + `audit_logs`). El pedido NO se toca: sigue
+            // vivo con su hold recién extendido, así que el cliente puede volver a intentarlo.
             $this->addError('cart', __('tickets.errors.payment_unavailable'));
 
             return;
         }
 
-        // (La ventana `expires_at` ya se extendió arriba, atómicamente con el check — L2.)
-
         $this->resetErrorBag('cart');
         $this->declinedReasonText = null;
-        $this->redsysFormData = $formData;
+        $this->redsysFormData = $ticket->formData;
         $this->step = 9;
+    }
+
+    /**
+     * Traduce a la UI del sidecart un reintento DENEGADO que no obliga a rehacer la reserva. Espeja
+     * a `reportAdmissionDenial()` —mismos textos para los mismos motivos— porque para el cliente es
+     * la misma situación venga de crear o de reintentar.
+     */
+    private function reportRetryDenial(RetryAdmission $verdict): void
+    {
+        if ($verdict->reason === RetryAdmission::RESERVATIONS_PAUSED) {
+            $phone = trim((string) Setting::value('contact.phone', ''));
+            $this->addError('cart', $phone !== ''
+                ? __('tickets.errors.reservations_paused', ['phone' => $phone])
+                : __('tickets.errors.reservations_paused_no_phone'));
+
+            return;
+        }
+
+        $this->addError('cart', __('tickets.errors.try_later'));
     }
 
     /**

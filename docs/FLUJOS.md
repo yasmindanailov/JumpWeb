@@ -59,9 +59,11 @@ redirección a Redsys**.
 > nace `pending` con `expires_at = now + hold_minutes` (setting `sales.hold_minutes`, vía
 > `PaymentSettings::holdMinutes()`): retiene la plaza de forma provisional. Si el pago no
 > llega, el comando programado `orders:expire` lo caduca y libera el aforo. Tras la vuelta OK
-> firmada se pone `expires_at = null` (pedido firme, no caduca). El reintento de pago
-> (`RetryPaymentController`) extiende la ventana con un UPDATE **atómico** (check + extensión
-> en la misma sentencia) para no reabrir cobros de pedidos ya caducados.
+> firmada se pone `expires_at = null` (pedido firme, no caduca). El reintento de pago extiende la
+> ventana con un UPDATE **atómico** (check + extensión en la misma sentencia) para no reabrir cobros
+> de pedidos ya caducados; desde Fase 3 · paso 2 esa sentencia vive UNA sola vez, en
+> `Booking\Services\ReservationAdmissionPolicy::admitPaymentRetry()`, y la usan por igual el
+> sidebar y «Mis pedidos».
 
 ## Flujo 4 — Reservar cumpleaños / evento
 

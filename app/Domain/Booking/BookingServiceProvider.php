@@ -6,11 +6,13 @@ use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
+use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
+use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Booking\Services\ZonePaletteReader;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,9 @@ class BookingServiceProvider extends ServiceProvider
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
         // Catálogo de venta (Fase 3 · paso 1b): lo consumen la web (`Tickets\Purchase`) y la API.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);
+        // Política de admisión de reservas (Fase 3 · paso 2): pausa, tope de pendientes y
+        // frecuencia. La aplican el sidebar, «Mis pedidos» y, en el paso 4, `POST /orders`.
+        $this->app->bind(ReservationAdmission::class, ReservationAdmissionPolicy::class);
         $this->app->bind(ZonePalette::class, ZonePaletteReader::class);
         // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
         // petición para no repetir esas lecturas entre la landing, el SEO y el hero.

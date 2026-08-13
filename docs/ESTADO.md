@@ -4,9 +4,9 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — paso 1 COMPLETO (0, 1a y 1b cerrados);
-toca el paso 2 (extraer política de admisión e ida de pago).**
-- Suite **2266 en verde** (8541 aserciones, `--parallel` ~63 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b y 2 CERRADOS;
+toca el paso 3 (auth por API + revocación de tokens).**
+- Suite **2292 en verde** (8645 aserciones, `--parallel` ~58 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -15,11 +15,15 @@ toca el paso 2 (extraer política de admisión e ida de pago).**
   publicados en el intervalo, todos en herramientas de build. Se sanearon con `npm audit fix` sin
   `--force` (Vite 8.2.1). La lección: `composer audit`/`npm audit` son verificación de CIERRE, no
   un trámite de instalación.
-- **Los verificadores de concurrencia NO se han corrido en esta sesión y no hacía falta**: los pasos
-  0, 1a y 1b no tocan `OrderCreator`/`RedsysReturnHandler`/`SlotGenerator` ni ningún controlador de
-  checkout —son cimientos y lectura—, y el gate del `pre-push` lo confirma. Su último verde sobre
-  MySQL real es del 2026-08-13 (`DECISIONES #22`). **El paso 2 SÍ los exige**: toca la política de
-  admisión (`VERIFY_CONC=1` + los dos comandos de `INVARIANTES §6`).
+- **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-13, paso 2, 16
+  workers): `purchase:verify-oversell` → 1 compra + 15 `sold_out` con asientos == aforo;
+  `redsys:verify-concurrency` → 1 `authorized` + 15 `idempotent_paid`, 1 pago y 1 ticket. Se
+  corrieron porque el paso 2 mudó el código de `PAY-04`; los pasos 0, 1a y 1b no los necesitaron
+  (cimientos y lectura).
+- ⚠️ **El `CRITICAL_RE` del `pre-push` cubre ahora también `PaymentInitiator` y
+  `ReservationAdmissionPolicy`**: tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos
+  (`INVARIANTES §6`). Antes ese código vivía en un componente Livewire y en un controlador web, o
+  sea, fuera del alcance del gate.
 - **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12: el dominio vive en
   `app/Domain/<Contexto>/` con 5 módulos (Platform · Content · Identity · Payments · Booking) y
   frontera EJECUTABLE. **No repitas esa lectura**: el detalle está en `00-REFACTOR.md`,
@@ -43,9 +47,10 @@ toca el paso 2 (extraer política de admisión e ida de pago).**
   dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
   `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (pasos 0, 1a y 1b — `DECISIONES #24`, `#26` y `#27`)
-Cimientos + la lectura de la cuenta. Lo que existe y funciona (verificado con `curl`, con la suite y
-**contra MySQL real** ejerciendo el pipeline HTTP completo):
+## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b y 2 — `DECISIONES #24`, `#26`, `#27` y `#28`)
+Cimientos + la lectura de la cuenta + el catálogo + el dominio preparado para vender por API. Lo
+que existe y funciona (verificado con `curl`, con la suite y **contra MySQL real** ejerciendo el
+pipeline HTTP completo):
 - `routes/api.php` bajo `/api/v1`, con **fuente única del prefijo** (`ApiSurface::PREFIX`).
 - **Grupo `api` declarado pieza a pieza** en `bootstrap/app.php` — el orden ES el diseño y está
   comentado allí: `SecurityHeaders` → Sanctum stateful → `ApiLocale` → `EnsureSiteAvailable`
@@ -76,40 +81,60 @@ Cimientos + la lectura de la cuenta. Lo que existe y funciona (verificado con `c
 - Y el presupuesto de consultas ganó el suyo: medido por PENDIENTE (mismo coste con 1 elemento que
   con N) destapó un **N+1 real** en el propio read-model del catálogo —`RateResolver::priceCents()`
   consulta por llamada—, corregido resolviendo la tarifa una vez.
+- **Paso 2 (sin endpoints nuevos)**: el dominio ya sabe *quién puede reservar* y *cómo se abre un
+  cobro*, que es lo que faltaba para que el `POST /orders` del paso 4 no reabra el hallazgo E.
+  · `Booking\Contracts\ReservationAdmission` — pausa (#218), tope de pendientes, frecuencia y la
+    extensión ATÓMICA del hold (`PAY-04`). `mayReserve()` consulta sin consumir ficha;
+    `admitReservation()` consume; `admitPaymentRetry()` no aplica el tope de pendientes (un
+    reintento no crea aforo) pero sí el limitador.
+  · `Payments\Services\PaymentInitiator` — `open()`/`reopen()`: crea el `Payment`, firma el
+    formulario, marca `SUPERSEDED` los intentos previos y deja el rastro de fallo en `audit_logs`.
+    Lanza `PaymentInitiationException`; qué le pasa al pedido lo decide el llamante.
+  · Los consumen el sidebar y «Mis pedidos», y lo comprueba `ModuleContractsTest` con un doble que
+    deniega: si alguno siguiera decidiendo por su cuenta, crearía el pedido igual.
+- **Lo que destapó juntar las dos copias**: aplicaban políticas DISTINTAS sin decisión previa ni
+  test que las fijara (el reintento de «Mis pedidos» no pasaba por ningún límite por titular), y el
+  limitador contaba pantallas en vez de reservas —la 2.ª compra del mismo minuto se bloqueaba con
+  el tope en 3—. Las tres asimetrías las resolvió el owner (`DECISIONES #28b–d`).
 
 ## ▶ Próximo paso
-**Fase 3 · paso 2 — REFACTOR SIN ENDPOINTS: extraer la política de admisión y la ida del pago**
-(spec §4.6.1–2 y §9). No añade superficie: mueve al dominio dos reglas que hoy viven fuera de él,
-con la web y el panel de testigos. **Aquí vuelven `VERIFY_CONC=1` y los dos verificadores de
-concurrencia** (`INVARIANTES §6`): el push los exige en cuanto se toque `OrderCreator`.
+**Fase 3 · paso 3 — AUTH POR API + revocación de tokens** (spec §4.2 y §9). Extraer de los
+componentes Livewire de auth los servicios que la API pueda consumir, y **emitir por fin tokens**
+(hasta hoy Sanctum está instalado pero sin emisor).
+**Desbloqueado** desde `DECISIONES #23`: el anti-bot del registro no era `SEC-06` y el consumidor
+de Fase 3/4 es la SPA, que ES un navegador → `POST auth/register` exigirá el Turnstile igual que la
+web. La app nativa es Fase 6, con sus tres salidas ya escritas.
 
 **Lo medido el 2026-08-13, para no redescubrirlo:**
-- **Política de admisión** — vive en `Livewire\Tickets\Purchase`, no en Booking:
-  `blockedByReservationPause()` (pausa de reservas del panel, #218) y `withinReservationLimits()`
-  con `MAX_PENDING_PER_USER = 5` y `RESERVATIONS_PER_MINUTE = 3` (líneas ~56–65 y ~760–850). Cierran
-  el hallazgo E del origen: sin ellas, un usuario autenticado agota el aforo del día iterando
-  `confirmReservation` sin pagar. `OrderCreator` **no contiene ninguna**, así que un `POST /orders`
-  «delgado sobre `OrderCreator`» las reabriría — es el motivo de que este paso vaya ANTES del 4.
-- **Ida del pago** — duplicada hoy entre `Purchase::retryPayment()` y
-  `App\Http\Controllers\Payments\RetryPaymentController` (136 líneas): comparten el UPDATE atómico
-  de `expires_at` (check+extensión en una sola sentencia, hallazgo L2), `Payment::STATUS_SUPERSEDED`,
-  `Redsys::nextGatewayOrder()` y el audit. La API sería la TERCERA copia. `PAY-04`/`PAY-11` exigen
-  que siga siendo **CAS atómico**: separarlo en check+save resucita un hold vencido sin recontar
-  aforo.
-- El paso 1b dejó el patrón de extracción probado y repetible: contrato + DTOs en
-  `Booking\Contracts`, implementación en `Booking\Services`, bind en `BookingServiceProvider`, y
-  **el consumidor viejo migrado en el mismo commit** con un doble en `ModuleContractsTest` que
-  demuestra que ya no hace el trabajo por su cuenta.
+- **Los limitadores de `SEC-06` son `private const` de `Livewire\Auth\Login`**: `MAX_ATTEMPTS = 5`
+  (clave `email|ip`) y `MAX_ATTEMPTS_PER_IP = 30` (2.º limitador solo-IP, anti-spraying
+  distribuido). Los dos tienen que viajar al servicio: son la mitad de `SEC-06`, y una API que
+  reimplemente solo el primero reabre el stuffing distribuido que ese segundo cubre.
+- Las cuatro superficies a extraer están en `app/Livewire/Auth/`: `Login`, `Register`,
+  `ForgotPassword`, `ResetPassword`. Criterio del spec §4.6.3: **el servicio devuelve resultado y
+  deja los efectos de SESIÓN al llamante** (el anti-cesta-cruzada de `Login` es estado de sesión
+  web y NO debe viajar al servicio). Es el mismo patrón de veredicto+DTO que estrenó el paso 2 con
+  `AdmissionDecision`.
+- ⚠️ **Hueco REAL que el paso 3 debe cerrar** (spec §4.2): toda la invalidación del repo es de
+  SESIÓN —`User::anonymize()`, `Account\UpdatePassword`, `Account\LogoutOtherDevices` y
+  `ResetPassword` borran filas de `sessions`—. **Un Bearer sobreviviría a las cuatro**, incluido el
+  borrado RGPD (art. 17). Hay que revocar `personal_access_tokens` en las cuatro, con test propio
+  en cada una. Hoy no muerde porque no hay emisor; en cuanto lo haya, sí.
+- `DEUDA.md` tiene una entrada que este paso puede cerrar: el bypass de mantenimiento para staff no
+  funciona con Bearer (`EnsureSiteAvailable` resuelve el bypass con el guard de sesión, porque
+  corre antes del `auth:` de ruta).
 
-**Antes de escribir código, lee `docs/specs/api-v1.md` §10, §10.bis y §10.ter** («lo que el código
-enseñó»): dieciocho puntos medidos en los pasos 0, 1a y 1b. Los que más ahorran tiempo en el paso 2:
-la validación de contrato **hay que pedirla** con `assertValidResponse()` (§10.ter 16), el
-presupuesto de consultas se mide por PENDIENTE y no por techo (17), y `DB::listen` no se
-desregistra (17).
+**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.quater** («lo que el código
+enseñó»): veintitrés puntos medidos en los pasos 0, 1a, 1b y 2. Los que más ahorran tiempo en el
+paso 3: la validación de contrato **hay que pedirla** con `assertValidResponse()` (§10.ter 16); en
+OpenAPI 3.0, todo «esto puede ser nulo» hay que **ejercerlo con un test**, no darlo por escrito
+(15); y antes de unificar dos copias, ponerlas lado a lado y listar sus diferencias, porque cada
+una es una decisión de producto que alguien tiene que tomar (19).
 
-Después: paso 3 (auth + revocación de tokens) · paso 4 (el dinero: quote, disponibilidad con cesta,
-`POST orders`, reintento y `payment-status` con estados reales) · paso 5 (post-form). El corte
-completo está en el spec §9.
+Después: paso 4 (el dinero: quote, disponibilidad con cesta, `POST orders`, reintento y
+`payment-status` con estados reales) · paso 5 (post-form). El corte completo está en el spec §9.
+**El paso 4 ya tiene el terreno preparado**: consume `ReservationAdmission` + `OrderCreator` +
+`PaymentInitiator`, sin reimplementar ninguna regla.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer admin de
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
@@ -125,6 +150,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2266** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2292** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

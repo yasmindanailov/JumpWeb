@@ -272,6 +272,28 @@ class Order extends Model
         return $this->isExpiredInPractice() ? self::STATUS_EXPIRED : $this->status;
     }
 
+    /**
+     * Suelta la plaza de un pedido cuyo cobro NUNCA llegó a abrirse (Fase 3 · paso 2).
+     *
+     * Si la preparación del pago falla, el pedido `pending` ya nació reteniendo aforo pero no tiene
+     * ningún `Payment` asociado: nadie va a pagarlo y nadie va a cancelarlo. Dejarlo vivo
+     * inmovilizaría plazas durante toda la ventana de retención por un fallo que ya sabemos que
+     * ocurrió, así que se caduca en el acto y `orders:expire` no tiene que esperar a su hora.
+     *
+     * `expires_at` va un segundo en el PASADO —no `now()`— para que `isExpiredInPractice()` lo dé
+     * por caducado sin depender de en qué microsegundo se lea.
+     *
+     * Solo tiene sentido sobre el primer cobro: en un REINTENTO el pedido ya existía y sigue vivo,
+     * así que un fallo al reabrir el cobro no debe tocarlo.
+     */
+    public function releaseAfterFailedPaymentStart(): void
+    {
+        $this->forceFill([
+            'status' => self::STATUS_EXPIRED,
+            'expires_at' => now()->subSecond(),
+        ])->save();
+    }
+
     public const OPERATIVE_STATUS_ACTIVE = 'active';
 
     public const OPERATIVE_STATUS_IN_PROGRESS = 'in_progress';

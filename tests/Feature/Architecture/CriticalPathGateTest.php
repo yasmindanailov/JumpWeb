@@ -36,6 +36,11 @@ class CriticalPathGateTest extends TestCase
         'app/Domain/Booking/Services/OrderCreator.php',
         'app/Domain/Booking/Services/SlotGenerator.php',
         'app/Domain/Payments/Services/RedsysReturnHandler.php',
+        // Fase 3 · paso 2: aquí vive ahora el código de `PAY-04`. La política extiende la retención
+        // con un UPDATE atómico condicionado —partirlo en check+save resucita un hold vencido sin
+        // recontar aforo (hallazgo L2)— y el initiator marca `SUPERSEDED` los intentos previos.
+        'app/Domain/Booking/Services/ReservationAdmissionPolicy.php',
+        'app/Domain/Payments/Services/PaymentInitiator.php',
     ];
 
     /**
@@ -57,7 +62,7 @@ class CriticalPathGateTest extends TestCase
      *
      * @var list<string>
      */
-    private const CRITICAL_SYMBOLS = ['OrderCreator', 'SlotGenerator', 'RedsysReturnHandler', 'SlotOffer'];
+    private const CRITICAL_SYMBOLS = ['OrderCreator', 'SlotGenerator', 'RedsysReturnHandler', 'SlotOffer', 'PaymentInitiator'];
 
     private function criticalPattern(): string
     {

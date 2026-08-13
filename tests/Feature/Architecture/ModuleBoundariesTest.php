@@ -128,6 +128,13 @@ class ModuleBoundariesTest extends TestCase
         'Payments/Concerns/GuardsItemRefunds.php' => ['App\Domain\Booking\Models\OrderItem'],
         'Payments/Services/Redsys.php' => ['App\Domain\Booking\Models\Order'],
         'Payments/Services/RedsysReturnHandler.php' => ['App\Domain\Booking\Models\Order', 'App\Domain\Booking\Services\TicketIssuer'],
+        // La IDA del pago (Fase 3 · paso 2), hermana exacta de las dos anteriores: abre el cobro de
+        // un pedido, así que necesita leer su importe online y su moneda. **No es una flecha
+        // nueva**: este código vivía duplicado en `Livewire\Tickets\Purchase` y en
+        // `RetryPaymentController`, que son capa de ENTREGA y por eso quedaban exentos —la costura
+        // existía igual, solo que fuera del dominio y sin que ninguna guarda la viera—. Traerla
+        // aquí la hace visible y la reduce a un solo fichero.
+        'Payments/Services/PaymentInitiator.php' => ['App\Domain\Booking\Models\Order'],
 
         // ─── BOOKING → PAYMENTS: el otro lado del dinero (paso 6, 2026-08-12) ───
         // `Order` es el punto de encuentro: los dos traits de reembolso se aplican SOBRE ÉL y
@@ -152,6 +159,10 @@ class ModuleBoundariesTest extends TestCase
         'Booking/Services/OrderCreator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
         'Booking/Services/SlotGenerator.php' => ['App\Domain\Payments\Services\PaymentSettings'],
         'Booking/Services/SlotOffer.php' => ['App\Domain\Payments\Services\PaymentSettings'],
+        // Cuarta lectura de la MISMA config: al admitir un reintento, la política extiende la
+        // ventana de retención con `holdMinutes()` (Fase 3 · paso 2). Refuerza que la candidata a
+        // contrato es `PaymentSettings`, no cada uno de sus lectores.
+        'Booking/Services/ReservationAdmissionPolicy.php' => ['App\Domain\Payments\Services\PaymentSettings'],
 
         // ─── BOOKING → CONTENT (paso 6) ───
         // Relaciones Eloquent inversas (`landing_services.ticket_type_id`, `attractions.zone_id`)

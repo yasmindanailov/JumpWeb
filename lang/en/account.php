@@ -162,6 +162,7 @@ return [
         'order-retry-unavailable' => 'We can no longer retry this payment: the booking has expired and the spot has been released. You can make a new booking whenever you want.',
         'order-retry-failed' => 'We could not start the payment now. Please try again in a moment; if the problem persists, write to us.',
         // Reservations paused (#218): payment retry is blocked; the customer can call.
+        'order-retry-throttled' => 'You are trying too often. Wait a minute and try again: your booking is still held.',
         'order-retry-paused' => 'Online booking is paused for now. Call us and we will complete your booking by phone.',
         'guest-form-saved' => 'Booking form saved. Thank you! You can edit it again anytime.',
     ],

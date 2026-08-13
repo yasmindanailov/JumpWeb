@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
@@ -12,6 +13,8 @@ use App\Domain\Booking\Contracts\OperatingWindow;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
+use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Contracts\SeasonWindow;
 use App\Domain\Booking\Contracts\SpecialDay;
 use App\Domain\Booking\Contracts\UpcomingReservation;
@@ -394,6 +397,67 @@ class ModuleContractsTest extends TestCase
             ->assertSee('zone-zona-del-contrato', false);
 
         $this->assertSame(1, $catalog->calls, 'Purchase debe pedir el catálogo UNA vez por render');
+    }
+
+    /**
+     * WEB → BOOKING: la ADMISIÓN de una reserva la decide el dominio, no el componente Livewire ni
+     * el controlador de «Mis pedidos» (Fase 3 · paso 2).
+     *
+     * El doble deniega SIEMPRE, con un motivo que ninguna de las dos superficies podría producir
+     * por su cuenta: si alguna siguiera aplicando sus propias comprobaciones —pausa, tope de
+     * pendientes, limitador—, este usuario limpio pasaría de largo y crearía su pedido.
+     *
+     * Cubre las dos superficies a la vez a propósito: el hallazgo que motivó la extracción fue
+     * justamente que aplicaban políticas distintas sin que nadie lo hubiera decidido.
+     */
+    public function test_both_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted(): void
+    {
+        $admission = new class implements ReservationAdmission
+        {
+            public int $calls = 0;
+
+            public function mayReserve(int $userId): AdmissionDecision
+            {
+                $this->calls++;
+
+                return AdmissionDecision::deny(AdmissionDecision::TOO_MANY_PENDING, ['max' => 5]);
+            }
+
+            public function admitReservation(int $userId): AdmissionDecision
+            {
+                $this->calls++;
+
+                return AdmissionDecision::deny(AdmissionDecision::TOO_MANY_PENDING, ['max' => 5]);
+            }
+
+            public function admitPaymentRetry(int $userId, string $orderCode): RetryAdmission
+            {
+                $this->calls++;
+
+                return RetryAdmission::deny(RetryAdmission::RESERVATIONS_PAUSED);
+            }
+        };
+        $this->app->instance(ReservationAdmission::class, $admission);
+
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // 1) El sidebar: ni avanza al paso de pago ni crea nada.
+        Livewire::actingAs($user)->test(Purchase::class)
+            ->set('step', 8)
+            ->set('cart', [['ticket_type_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'qty' => 1]])
+            ->call('confirmReservation')
+            ->assertSet('step', 4)
+            ->assertHasErrors('cart');
+
+        $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
+
+        // 2) «Mis pedidos»: el reintento se rechaza con el aviso de pausa que dictó el dominio.
+        $this->actingAs($user)
+            ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
+            ->assertRedirect(route('account.orders'))
+            ->assertSessionHas('status', 'order-retry-paused');
+
+        $this->assertSame(2, $admission->calls, 'las dos superficies tienen que preguntar a la política');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\Redsys;
@@ -311,12 +312,12 @@ class RedsysIdaTest extends TestCase
         Setting::create(['key' => 'sales.hold_minutes', 'value' => '15', 'group' => 'payment']);
 
         $user = User::factory()->create();
-        for ($i = 0; $i < Purchase::MAX_PENDING_PER_USER; $i++) {
+        for ($i = 0; $i < ReservationAdmissionPolicy::MAX_PENDING_PER_USER; $i++) {
             $this->buyOneAsVerifiedUser($user);
             // Espaciar para no chocar con el rate limit (3/min).
             RateLimiter::clear('reservation-confirm:'.$user->id);
         }
-        $this->assertSame(Purchase::MAX_PENDING_PER_USER, $user->orders()->where('status', Order::STATUS_PENDING)->count());
+        $this->assertSame(ReservationAdmissionPolicy::MAX_PENDING_PER_USER, $user->orders()->where('status', Order::STATUS_PENDING)->count());
 
         // Avanzamos el tiempo más allá de la ventana de retención → las órdenes caducan en BD.
         Carbon::setTestNow(now()->addMinutes(20));
@@ -336,10 +337,15 @@ class RedsysIdaTest extends TestCase
         // Observabilidad (auditoría 2026-05-26): si la preparación del pago falla, la traza
         // tiene que llegar a los logs CON contexto (order_id, user_id, exception class), pero
         // NUNCA con secret_key ni firma. Un `catch (\Throwable)` mudo es deuda inaceptable.
+        // El canal es `payments.initiation_failed` desde Fase 3 · paso 2: las tres copias de la ida
+        // del pago (checkout y los dos reintentos) loguean por el mismo sitio y se distinguen por
+        // `source`, en vez de por tres nombres de evento distintos que había que conocer para
+        // buscarlos.
         Log::shouldReceive('error')
             ->once()
-            ->with('redsys.ida_failed', \Mockery::on(function (array $ctx): bool {
+            ->with('payments.initiation_failed', \Mockery::on(function (array $ctx): bool {
                 return isset($ctx['order_id'], $ctx['order_code'], $ctx['user_id'], $ctx['error'], $ctx['exception'], $ctx['trace'])
+                    && $ctx['source'] === 'checkout'
                     && ! isset($ctx['secret_key'], $ctx['signature'], $ctx['params']);
             }));
 

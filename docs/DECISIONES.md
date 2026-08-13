@@ -633,3 +633,61 @@ del catálogo público, que hoy sale con el `no-cache, private` por defecto de S
 deja en rojo los tests que validan contra el documento) · los tres endpoints ejercidos **contra
 MySQL real** con el pipeline HTTP completo: 200 y forma correcta, 404 con sobre de error, 422 del
 filtro inválido, y textos en `es`/`en`/`fr` según `Accept-Language`.
+
+## #28 · 2026-08-13 · Fase 3 paso 2: política de admisión e ida de pago, fuera de la capa de UI
+Refactor SIN endpoints (`api-v1.md` §9, paso 2): las reglas que decidían si una reserva se admite y
+el código que abre el cobro salen de `Livewire\Tickets\Purchase` y de `RetryPaymentController`, y
+pasan a `Booking\Contracts\ReservationAdmission` (+ `ReservationAdmissionPolicy`) y a
+`Payments\Services\PaymentInitiator`. Sin esto, el `POST /orders` del paso 4 habría sido «delgado
+sobre `OrderCreator`» y habría reabierto el hallazgo E del origen —`OrderCreator` no contiene
+ninguno de los topes—, además de ser la tercera copia de la ida del pago. Detalle en §10.quater.
+
+**(a) Las dos superficies aplicaban políticas DISTINTAS, y nadie lo había decidido.** Poner las dos
+copias en paralelo —lo que el spec describía como «duplicadas casi línea a línea»— destapó que el
+reintento del sidebar aplicaba el tope de pendientes y el limitador por titular, y el de «Mis
+pedidos» ninguno de los dos (solo el `throttle:6,1` por IP de su ruta). **Ningún test fijaba ni una
+conducta ni la otra**: era un accidente de la historia. Se llevó al owner como tres decisiones:
+
+**(b) El reintento NO cuenta contra `MAX_PENDING_PER_USER`** (decisión del owner). El tope protege
+el aforo retenido por pedidos NUEVOS; un reintento reusa la plaza que ese mismo pedido ya retiene y
+que ya cuenta en el contador. Aplicarlo dejaba sin poder pagar justo a quien más pendientes
+acumulaba —con 5 vivos, el sidebar rechazaba el pago de cualquiera de ellos y encima devolvía al
+carrito vacío—. «Mis pedidos» ya funcionaba así; ahora las dos coinciden y es a propósito.
+
+**(c) El reintento SÍ pasa por el limitador por titular** en las dos superficies (decisión del
+owner): se conserva la clave que ya existía (`reservation-confirm:{userId}`, 3/min) en vez de
+inventar un cubo nuevo con un número que nadie ha medido. El `throttle:6,1` por IP de la ruta web se
+mantiene: son capas distintas.
+
+**(d) El limitador contaba pantallas, no reservas** (decisión del owner: corregirlo). Se consumía
+una ficha al pasar del carrito al paso de pago —que no crea nada— y otra al confirmar, así que la
+SEGUNDA compra del mismo minuto se bloqueaba con el tope nominal en tres. Ahora el contrato lo dice
+explícito: `mayReserve()` consulta sin consumir y `admitReservation()` consume. El techo real sigue
+siendo 3 reservas/min (test propio) y el aviso temprano se conserva, que era su otra función.
+
+**(e) El veredicto es un DTO con clave estable, no una excepción ni un texto.** El dominio dice por
+qué no admite; el efecto —`addError` y paso 4 en el sidebar, flash y redirect en «Mis pedidos», y
+en el paso 4 un código público de la API— es de cada superficie. Lo justificó el propio refactor:
+al heredar el límite de frecuencia, «Mis pedidos» iba a reutilizar el flash de «la reserva ha
+caducado y la plaza se ha liberado», que le habría dicho a quien pulsó dos veces que había perdido
+su reserva. Se añadió `order-retry-throttled` en los tres idiomas.
+
+**(f) El gate de concurrencia se muda con el código.** El UPDATE atómico de `PAY-04` y el
+`SUPERSEDED` de los intentos previos vivían en un componente Livewire y en un controlador web: dos
+sitios que el `CRITICAL_RE` del `pre-push` nunca miró. Al darles nombre propio entran en el patrón,
+en `CriticalPathGateTest::CRITICAL_FILES` y en `CRITICAL_SYMBOLS` —verificado por mutación: quitar
+la entrada deja el test en rojo—. `INVARIANTES PAY-04` se actualizó al sitio nuevo, como manda su
+propia regla de que el invariante viaja con el código.
+
+**(g) Dos costuras declaradas en `SEAM`, ninguna nueva de verdad.** `PaymentInitiator → Order` es
+hermana exacta de las de `Redsys` y `RedsysReturnHandler`; `ReservationAdmissionPolicy →
+PaymentSettings` es la cuarta lectura de la misma config de retención (`OrderCreator`,
+`SlotGenerator`, `SlotOffer`). Las dos EXISTÍAN ya, en ficheros de la capa de entrega que la guarda
+de módulos exime — moverlas al dominio no las crea, las hace visibles y las reduce a un fichero.
+
+**Verificación empírica**: suite **2292 verde** (8645 aserciones, 58 s) · Pint limpio ·
+`docs-check` verde · **los dos verificadores de concurrencia sobre MySQL real con 16 workers**:
+`purchase:verify-oversell` (1 compra + 15 `sold_out`, asientos == aforo) y
+`redsys:verify-concurrency` (1 `authorized` + 15 `idempotent_paid`, 1 pago, 1 ticket) ·
+política ejercida **contra MySQL** con tinker: extiende el hold vivo a la ventana completa, NO
+resucita un hold ya cruzado y NO toca el pedido de otro titular ni acertando su código.

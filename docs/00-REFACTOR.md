@@ -236,6 +236,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       de las dos direcciones**, así que la zona anidada va inline con una guarda que impide que
       diverja · el presupuesto de consultas medido por PENDIENTE (1 vs N) destapó un **N+1 real**
       en el propio read-model, corregido. Suite **2266 verde**.
+- [x] **Paso 2 — POLÍTICA DE ADMISIÓN e IDA DE PAGO fuera de la UI** (2026-08-13,
+      `DECISIONES #28`): refactor sin endpoints. Nacen `Booking\Contracts\ReservationAdmission`
+      (pausa de reservas, tope de pendientes, frecuencia y la extensión atómica del hold de
+      `PAY-04`) y `Payments\Services\PaymentInitiator` (crear el `Payment`, firmar el formulario,
+      `SUPERSEDED` de los intentos previos y el rastro en `audit_logs`). Los consumen el sidebar y
+      «Mis pedidos»; el `POST /orders` del paso 4 será el tercero, y por eso este paso va antes.
+      **El hallazgo**: las dos superficies aplicaban políticas DISTINTAS sin que nadie lo hubiera
+      decidido y sin ningún test que las fijara —el reintento de «Mis pedidos» no pasaba por ningún
+      límite por titular—, y el limitador contaba pantallas en vez de reservas (la 2.ª compra del
+      minuto se bloqueaba con el tope en 3). Las tres asimetrías las resolvió el owner. El
+      `CRITICAL_RE` del `pre-push` se amplió a las dos clases nuevas: el código de `PAY-04` llevaba
+      tiempo fuera del gate por vivir en un Livewire. Suite **2292 verde** + los dos verificadores
+      de concurrencia sobre MySQL (16 workers).
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·

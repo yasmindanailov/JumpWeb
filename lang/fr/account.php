@@ -162,6 +162,7 @@ return [
         'order-retry-unavailable' => 'Nous ne pouvons plus réessayer ce paiement : la réservation a expiré et la place a été libérée. Tu peux faire une nouvelle réservation quand tu veux.',
         'order-retry-failed' => 'Nous n’avons pas pu démarrer le paiement maintenant. Réessaie dans un instant ; si le problème persiste, écris-nous.',
         // Réservations suspendues (#218) : la relance du paiement est bloquée ; le client peut appeler.
+        'order-retry-throttled' => 'Tu essaies trop souvent. Attends une minute et réessaie : ta réservation est toujours conservée.',
         'order-retry-paused' => 'La réservation en ligne est suspendue pour le moment. Appelle-nous et nous finalisons ta réservation par téléphone.',
         'guest-form-saved' => 'Formulaire de réservation enregistré. Merci ! Vous pouvez le modifier à tout moment.',
     ],

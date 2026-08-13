@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
@@ -232,6 +233,37 @@ class PaymentRetryFromOrdersTest extends TestCase
 
         // No se creó Payment adicional.
         $this->assertSame(1, Payment::where('payable_id', $order->id)->count());
+    }
+
+    /**
+     * Fase 3 · paso 2 — este endpoint pasa ahora por la MISMA política de admisión que el sidebar,
+     * así que hereda su límite de frecuencia por titular (antes solo tenía el `throttle:6,1` por
+     * IP/sesión de la ruta, y esa asimetría no la había decidido nadie).
+     *
+     * El aviso es propio: la reserva NO ha caducado —sigue viva y pagable en cuanto pase el
+     * minuto—, y reutilizar aquí el mensaje de «ha caducado y la plaza se ha liberado» le habría
+     * dicho a quien pulsó dos veces seguidas que había perdido su reserva.
+     */
+    public function test_retry_endpoint_is_rate_limited_per_user_with_its_own_notice(): void
+    {
+        $user = User::factory()->create();
+        $order = $this->makeRetryableOrder($user);
+
+        for ($i = 0; $i < ReservationAdmissionPolicy::RESERVATIONS_PER_MINUTE; $i++) {
+            $this->actingAs($user)
+                ->post(route('account.orders.retry', ['code' => $order->code]))
+                ->assertOk();
+        }
+
+        $response = $this->actingAs($user)
+            ->post(route('account.orders.retry', ['code' => $order->code]));
+
+        $response->assertRedirect(route('account.orders'));
+        $response->assertSessionHas('status', 'order-retry-throttled');
+
+        // El pedido sigue vivo: el rechazo por frecuencia no toca su retención.
+        $this->assertSame(Order::STATUS_PENDING, $order->fresh()->status);
+        $this->assertTrue($order->fresh()->expires_at->isFuture());
     }
 
     public function test_retry_endpoint_denies_access_to_another_users_order(): void

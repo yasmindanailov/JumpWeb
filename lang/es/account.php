@@ -161,6 +161,9 @@ return [
         'account-deleted' => 'Tu cuenta ha sido eliminada. Esperamos verte de nuevo.',
         'order-retry-unavailable' => 'Ya no podemos reintentar este pago: la reserva ha caducado y la plaza se ha liberado. Puedes hacer una nueva reserva cuando quieras.',
         'order-retry-failed' => 'No hemos podido iniciar el pago ahora. Inténtalo de nuevo en un momento; si el problema persiste, escríbenos.',
+        // Frecuencia (Fase 3 · paso 2): el reintento comparte el limitador por titular con la
+        // creación de reservas. La reserva NO ha caducado, así que no vale el mensaje de arriba.
+        'order-retry-throttled' => 'Lo estás intentando demasiado seguido. Espera un minuto y vuelve a probar: tu reserva sigue guardada.',
         // Reservas en pausa (#218): el reintento de pago se bloquea; el cliente puede llamar.
         'order-retry-paused' => 'Las reservas online están pausadas temporalmente. Llámanos por teléfono y completamos tu reserva.',
         'guest-form-saved' => 'Formulario de reserva guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',

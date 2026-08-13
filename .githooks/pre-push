@@ -26,10 +26,17 @@ touched_critical=''
 #     nada. No se incluye toda la carpeta a propósito: obligar a correr dos verificadores de 16
 #     workers por tocar `MeController` convertiría el gate en algo que la gente aprende a saltarse.
 #
+# `PaymentInitiator` y `ReservationAdmissionPolicy` entran en la primera familia en Fase 3 · paso 2,
+# cuando el código que protege `PAY-04` se muda a ellos: el UPDATE atómico que extiende la retención
+# (partirlo en check+save resucita un hold vencido sin recontar aforo — hallazgo L2) y el
+# `SUPERSEDED` de los intentos de cobro previos. Antes ese código vivía en un componente Livewire y
+# en un controlador web, donde el gate nunca lo vio; que ahora tenga nombre propio es lo que permite
+# vigilarlo.
+#
 # `ApiBoundariesTest` NO sustituye a esto: prohíbe que la lógica NAZCA en el controlador, pero un
 # controlador que llama al OrderCreator correcto sigue pudiendo reordenar sus llamadas y romper
 # `AFORO-01`. Que esta lista siga cubriendo lo que debe lo vigila `CriticalPathGateTest`.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|PaymentInitiator|ReservationAdmissionPolicy)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

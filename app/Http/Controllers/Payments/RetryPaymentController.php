@@ -2,135 +2,88 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Domain\Booking\Contracts\ReservationAdmission;
+use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Models\Order;
-use App\Domain\Payments\Models\Payment;
-use App\Domain\Payments\Services\PaymentSettings;
-use App\Domain\Payments\Services\Redsys;
-use App\Domain\Platform\Services\AuditLogger;
-use App\Domain\Platform\Services\MaintenanceSettings;
+use App\Domain\Payments\Exceptions\PaymentInitiationException;
+use App\Domain\Payments\Services\PaymentInitiator;
 use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
- * Reintento de pago Redsys desde la página "Mis pedidos" (audit edge cases 2026-05-28).
+ * Reintento de pago Redsys desde la página «Mis pedidos» (audit edge cases 2026-05-28).
  *
- * Cierra el hueco descubierto en validación: el email `OrderPaymentDeclined` enviaba al
- * cliente al área privada (`/mi-cuenta/pedidos`), pero la vista no ofrecía un botón para
- * reintentar el pago. El cliente quedaba "informado pero sin acción". Este controller +
- * el botón en `account/orders.blade.php` cierran el loop.
+ * Cierra el hueco descubierto en validación: el email `OrderPaymentDeclined` enviaba al cliente al
+ * área privada (`/mi-cuenta/pedidos`), pero la vista no ofrecía un botón para reintentar el pago.
+ * El cliente quedaba «informado pero sin acción».
  *
- * Es el espejo en HTTP del método `Purchase::retryPayment()` del sidebar (mismo audit):
- *  1. Auth + verified (las rutas privadas ya lo exigen).
- *  2. Filtro por `user_id` del Order recibido → defensa IDOR (sin esto, un atacante con
- *     el `code` de otro user podría disparar un nuevo Payment para esa Order).
- *  3. Order debe estar `pending` y NO expirada (la plaza retenida; si caducó el aforo
- *     pudo cederse lazy a otro cliente — un nuevo Payment podría llevar a sobreventa).
- *  4. Nuevo Payment con NUEVO `gateway_order` (Redsys §5: gateway_order único de por
- *     vida, error 0913 si se reusa).
- *  5. Extensión de `expires_at` (nueva ventana completa de retención).
- *  6. Renderiza vista intermedia con auto-POST a la pasarela.
+ * Desde Fase 3 · paso 2 **no decide nada por su cuenta**: la política de admisión —pausa de
+ * reservas, frecuencia por titular y la extensión atómica del hold que exige `PAY-04`— vive en
+ * `Booking\Contracts\ReservationAdmission`, y abrir el cobro en `Payments\PaymentInitiator`. Este
+ * controlador solo traduce el veredicto a la respuesta HTTP que espera «Mis pedidos»: un redirect
+ * con su `status` de flash.
  *
- * NO usa Livewire — el controller HTTP es más simple (no necesita state ni reactividad)
- * y la vista intermedia es estática. CSRF activo por defecto (POST estándar autenticado).
+ * Que las reglas vivieran aquí tenía un coste medido: este endpoint aplicaba una política
+ * DISTINTA de la del sidebar sin que nadie lo hubiera decidido (no limitaba la frecuencia por
+ * titular, solo por IP con `throttle:6,1`). Ahora las dos superficies preguntan a la misma.
+ *
+ * NO usa Livewire — el controller HTTP es más simple (no necesita state ni reactividad) y la vista
+ * intermedia es estática. CSRF activo por defecto (POST estándar autenticado).
  */
 class RetryPaymentController extends Controller
 {
-    public function __invoke(Request $request, string $code, Redsys $redsys): View|RedirectResponse
-    {
+    public function __invoke(
+        Request $request,
+        string $code,
+        ReservationAdmission $admission,
+        PaymentInitiator $initiator,
+    ): View|RedirectResponse {
         $user = $request->user();
         assert($user !== null); // auth middleware lo garantiza
 
-        // Reservas en pausa (#218): no se reinicia un cobro nuevo desde «Mis pedidos». El banner
-        // global + el flash invitan a llamar; un pago YA iniciado finaliza por la callback de Redsys
-        // (no pasa por aquí). El pedido manual del panel tampoco se ve afectado.
-        if (MaintenanceSettings::reservationsPaused()) {
+        $verdict = $admission->admitPaymentRetry((int) $user->getAuthIdentifier(), $code);
+
+        if ($verdict->denied()) {
             return redirect()
                 ->route('account.orders')
-                ->with('status', 'order-retry-paused');
+                ->with('status', $this->flashFor($verdict->reason));
         }
 
-        // Check + extensión de `expires_at` ATÓMICOS (auditoría Fase 1, L2): un UPDATE condicionado a
-        // pending + no-vencida que, en la MISMA sentencia, fija la nueva ventana de retención. Defensa
-        // IDOR (acotado a `$user->orders()`). Si el hold cruzó entre el render de «Mis pedidos» y este
-        // POST, el WHERE `expires_at > now` no casa → 0 filas → no reabrimos el cobro (antes el check y
-        // la extensión eran pasos separados: la extensión resucitaba un hold ya vencido SIN recontar
-        // aforo, esquivando la detección C1 de sobreventa).
-        $extended = $user->orders()
-            ->where('code', $code)
-            ->where('status', Order::STATUS_PENDING)
-            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-            ->update(['expires_at' => now()->addMinutes(PaymentSettings::holdMinutes())]);
+        /** @var Order $order Garantizado por `allowed`; el hold ya está extendido. */
+        $order = $verdict->order;
 
-        if ($extended === 0) {
-            return redirect()
-                ->route('account.orders')
-                ->with('status', 'order-retry-unavailable');
-        }
-
-        /** @var Order $order */
-        $order = $user->orders()->where('code', $code)->firstOrFail();
-
-        // Crear nuevo Payment con nuevo gateway_order + firmar payload + render vista.
         try {
-            $payment = DB::transaction(function () use ($order, $redsys): Payment {
-                $gatewayOrder = $redsys->nextGatewayOrder();
-
-                // Descarta los intentos `pending` previos (auditoría Fase 1, complemento C1): el
-                // reintento crea un cobro nuevo y el anterior deja de ser el intento activo. Se
-                // marca `superseded` (NO `failed`): si ese intento viejo se autorizase tarde, el
-                // handler lo capturará como cobro real y su guarda de incidencia evitará emitir
-                // tickets duplicados (la Order ya estará PAID por este reintento).
-                Payment::where('payable_type', (new Order)->getMorphClass())
-                    ->where('payable_id', $order->id)
-                    ->where('status', Payment::STATUS_PENDING)
-                    ->update(['status' => Payment::STATUS_SUPERSEDED]);
-
-                return Payment::create([
-                    'payable_type' => (new Order)->getMorphClass(),
-                    'payable_id' => $order->id,
-                    'provider' => 'redsys',
-                    'amount' => $order->onlineDueCents(), // #225: importe ONLINE (señal/depósito), no el total
-                    'currency' => $order->currency,
-                    'status' => Payment::STATUS_PENDING,
-                    'gateway_order' => $gatewayOrder,
-                ]);
-            });
-
-            $locale = $user->locale ?? app()->getLocale();
-            $formData = $redsys->buildPaymentFormData($order, $payment, $locale);
-        } catch (Throwable $e) {
-            Log::error('redsys.retry_from_orders_failed', [
-                'order_id' => $order->id,
-                'order_code' => $order->code,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'exception' => $e::class,
-            ]);
-
-            // Feedback ADMIN (#169): rastro visible en el panel (historial del pedido).
-            AuditLogger::log('orders.payment_init_failed', $order, [
-                'order_code' => $order->code,
-                'source' => 'retry_account',
-                'exception' => $e::class,
-                'error' => $e->getMessage(),
-            ]);
-
+            $ticket = $initiator->reopen($order, $user->locale, PaymentInitiator::SOURCE_RETRY_ACCOUNT);
+        } catch (PaymentInitiationException) {
+            // El diagnóstico (log + `audit_logs`) ya lo dejó el initiator: aquí solo se decide qué
+            // ve el cliente. El pedido NO se toca: sigue vivo y se puede volver a intentar.
             return redirect()
                 ->route('account.orders')
                 ->with('status', 'order-retry-failed');
         }
 
-        // (La ventana `expires_at` ya se extendió arriba, atómicamente con el check — L2.)
-
         // Vista intermedia con auto-POST a la pasarela. La tarjeta NO toca este server.
         return view('payments.retry-redirect', [
-            'redsysFormData' => $formData,
+            'redsysFormData' => $ticket->formData,
             'orderCode' => $order->code,
         ]);
+    }
+
+    /**
+     * Veredicto del dominio → clave de flash de «Mis pedidos». Cada motivo tiene el suyo porque
+     * describen situaciones distintas para el cliente: la pausa invita a llamar, el límite de
+     * frecuencia a esperar un minuto **con la reserva intacta**, y solo `NOT_RETRYABLE` significa
+     * de verdad que la plaza se soltó. Reutilizar ahí el mensaje de «ha caducado» le habría dicho
+     * a quien pulsó dos veces seguidas que había perdido su reserva.
+     */
+    private function flashFor(?string $reason): string
+    {
+        return match ($reason) {
+            RetryAdmission::RESERVATIONS_PAUSED => 'order-retry-paused',
+            RetryAdmission::RATE_LIMITED => 'order-retry-throttled',
+            default => 'order-retry-unavailable',
+        };
     }
 }
