@@ -1,6 +1,6 @@
 # JumpWeb — Refactor de generalización (tracker VIVO)
 
-> Tracker activo del refactor. Última actualización: **2026-08-12**.
+> Tracker activo del refactor. Última actualización: **2026-08-13**.
 > Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
 > Regla: **la suite en verde es la red** — ninguna fase se cierra con tests rotos.
 
@@ -183,7 +183,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       Matiz medido en el paso 3: la capa de ENTREGA es el composition root y sí usa modelos de
       varios módulos — prohibírselo habría exigido reescribir el panel, fuera de alcance.
 
-### Fase 3 — API v1 (API-first) 🟦
+### Fase 3 — API v1 (API-first) 🟦 — los 6 pasos del corte (spec §9) CERRADOS; queda 1 ítem
 - [x] **Diseño escrito y REVISADO adversarialmente**: `docs/specs/api-v1.md` **v2** (2026-08-13).
       3 revisores independientes (invariantes/seguridad · arquitectura · riesgo de implementación):
       veredictos sólida-con-cambios · insuficiente · insuficiente, **15 hallazgos GRAVE**, todos

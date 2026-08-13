@@ -60,7 +60,7 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
   con la misma caducidad (`OrderItem::guestFormApiUrls()`).
 - **La cesta que viaja por la API tiene una sola forma**: `Http\Api\CartPayload` (reglas de
   validación + traducción `product_id`/`quantity` → `ticket_type_id`/`qty`). La comparten
-  `orders/quote` y `availability/{product}/times`, y la usará el `POST orders` de 4c. **No
+  `orders/quote`, `availability/{product}/times` y `POST orders`. **No
   escribas otras reglas de cuerpo de cesta**: es el equivalente de `Cart::sanitize()` en la capa de
   entrega, y existe justo para que no haya tres.
 - **Toda lista usa `ApiCollection`** (`data` + `meta`) y **todo esquema nuevo nace con
@@ -137,18 +137,15 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
 - **Tarificación** → hecha en 4a: `CartPricing`. `RateResolver` y `AddonResolver` siguen siendo las
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
-**Antes de escribir código, lee `docs/INVARIANTES.md` §1 (PAY) y §2 (AFORO)** —es obligatorio por
-la regla 2 de `CLAUDE.md`— **y `docs/specs/api-v1.md` §10 → §10.duodecies**: sesenta y nueve puntos
-medidos en los pasos anteriores. Los que más pesan en lo que queda del paso 4: el presupuesto de
-consultas se mide por PENDIENTE y no por techo (§10.ter 17); la validación de contrato hay que
-pedirla con `assertValidResponse()` (16); todo endpoint que toque `session()` necesita la guarda de
-`RequiresStatefulSession` y el `curl` sin encabezados es el que encuentra su ausencia (§10.septies
-34); un recurso que devuelve el controlador necesita `$wrap = null` (§10.octies 43); un comentario
-que declara una equivalencia de importes es una petición de test, no una prueba (38); y en la API se
-valida la forma con reglas en vez de sanear en silencio, que es correcto para una sesión y pésimo
-para un cliente (44).
-
-Después: paso 5 (post-form migrado, 2.º consumidor). El corte completo está en el spec §9.
+**Si tocas dinero, aforo, RGPD o seguridad, lee antes `docs/INVARIANTES.md`** (§1 PAY, §2 AFORO) —
+es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.duodecies:
+sesenta y nueve puntos MEDIDOS al construirla. Los que más se repiten como causa de error:
+- el presupuesto de consultas se mide por PENDIENTE y no por techo (§10.ter 17);
+- la validación de contrato hay que PEDIRLA con `assertValidResponse()` (§10.ter 16);
+- un recurso que devuelve el controlador necesita `$wrap = null` (§10.octies 43);
+- un comentario que declara una equivalencia es una petición de test, no una prueba (§10.octies 38);
+- en la API se valida la forma con reglas en vez de sanear en silencio: lo primero es correcto para
+  una sesión y pésimo para un cliente (§10.octies 44).
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer admin de
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
@@ -163,11 +160,10 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 - ⚠️ Si clonas de cero, comprueba que **`APP_URL` coincide con `APP_PORT`** en el `.env` (no
   versionado): con el puerto desalineado salen mal los enlaces absolutos de correo, las URLs
   firmadas y la derivación de CORS y de los dominios stateful de Sanctum (corregido el 2026-08-13).
-- **El push exige `VERIFY_CONC=1`** —tras correr los dos comandos de `INVARIANTES §6`— si tocas
-  `OrderCreator`, `RedsysReturnHandler`, `SlotGenerator`, **`PaymentInitiator`**,
-  **`ReservationAdmissionPolicy`** o un controlador de API de pedidos/pagos/checkout/quote/
-  disponibilidad. La lista viva es el `CRITICAL_RE` de `.githooks/pre-push`, y
-  `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
+- **El push exige `VERIFY_CONC=1`** —tras correr los dos comandos de `INVARIANTES §6`— si tocas el
+  núcleo de dinero/aforo. **La lista viva es el `CRITICAL_RE` de `.githooks/pre-push`**; no se copia
+  aquí para que no envejezca (ya lo hizo una vez), y `CriticalPathGateTest` vigila que siga
+  cubriendo lo que debe.
 
 ## Herencia
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
