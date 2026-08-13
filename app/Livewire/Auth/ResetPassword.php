@@ -4,7 +4,6 @@ namespace App\Livewire\Auth;
 
 use App\Domain\Identity\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
@@ -67,18 +66,13 @@ class ResetPassword extends Component
                     'remember_token' => Str::random(60),
                 ])->save();
 
-                // Caso de uso central de "olvidé mi contraseña": si la víctima cambia el password por
-                // sospecha de robo de sesión, NO podemos dejar otras sesiones suyas activas. Como aún
-                // no estamos autenticados aquí (el reset no autentica), no podemos usar
-                // logoutOtherDevices(); en su lugar borramos directamente las filas de `sessions` del
-                // usuario (driver=database). Las cookies "remember me" quedan invalidadas por la
-                // rotación del `remember_token` de arriba.
-                if (config('session.driver') === 'database') {
-                    DB::connection(config('session.connection'))
-                        ->table(config('session.table', 'sessions'))
-                        ->where('user_id', $user->getAuthIdentifier())
-                        ->delete();
-                }
+                // Caso de uso central de «olvidé mi contraseña»: si la víctima resetea por sospecha
+                // de robo, NO podemos dejar viva ninguna credencial suya. Aquí no estamos
+                // autenticados (el reset no autentica), así que no hay ninguna que preservar: se
+                // van TODAS, sesiones y tokens de API (Fase 3 · paso 3a) — un Bearer del atacante
+                // sobrevivía al reset—. Las cookies «remember me» las invalida la rotación del
+                // `remember_token` de arriba.
+                $user->revokeAllAccess();
 
                 event(new PasswordReset($user));
             }

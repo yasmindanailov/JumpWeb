@@ -4,9 +4,9 @@
 > Última actualización: **2026-08-13**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b y 2 CERRADOS;
-toca el paso 3 (auth por API + revocación de tokens).**
-- Suite **2292 en verde** (8645 aserciones, `--parallel` ~58 s) · Pint limpio ·
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — pasos 0, 1a, 1b, 2 y 3a CERRADOS;
+toca el paso 3b (sesión por API).**
+- Suite **2302 en verde** (8664 aserciones, `--parallel` ~62 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -47,7 +47,7 @@ toca el paso 3 (auth por API + revocación de tokens).**
   dominios stateful de Sanctum salían con el puerto equivocado. **Si clonas de cero, comprueba que
   `APP_URL` coincide con `APP_PORT`.**
 
-## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b y 2 — `DECISIONES #24`, `#26`, `#27` y `#28`)
+## ▶ Qué hay hecho de la API (pasos 0, 1a, 1b, 2 y 3a — `DECISIONES #24`, `#26`–`#29`)
 Cimientos + la lectura de la cuenta + el catálogo + el dominio preparado para vender por API. Lo
 que existe y funciona (verificado con `curl`, con la suite y **contra MySQL real** ejerciendo el
 pipeline HTTP completo):
@@ -98,43 +98,44 @@ pipeline HTTP completo):
   el tope en 3—. Las tres asimetrías las resolvió el owner (`DECISIONES #28b–d`).
 
 ## ▶ Próximo paso
-**Fase 3 · paso 3 — AUTH POR API + revocación de tokens** (spec §4.2 y §9). Extraer de los
-componentes Livewire de auth los servicios que la API pueda consumir, y **emitir por fin tokens**
-(hasta hoy Sanctum está instalado pero sin emisor).
-**Desbloqueado** desde `DECISIONES #23`: el anti-bot del registro no era `SEC-06` y el consumidor
-de Fase 3/4 es la SPA, que ES un navegador → `POST auth/register` exigirá el Turnstile igual que la
-web. La app nativa es Fase 6, con sus tres salidas ya escritas.
+**Fase 3 · paso 3b — SESIÓN POR API** (spec §4.2 y §9): extraer `Livewire\Auth\Login` a un
+servicio de Identity y publicar `POST auth/login` y `POST auth/logout` sobre la sesión stateful de
+Sanctum (cookie + CSRF), que es lo que consumirá la SPA de Fase 4.
 
 **Lo medido el 2026-08-13, para no redescubrirlo:**
-- **Los limitadores de `SEC-06` son `private const` de `Livewire\Auth\Login`**: `MAX_ATTEMPTS = 5`
-  (clave `email|ip`) y `MAX_ATTEMPTS_PER_IP = 30` (2.º limitador solo-IP, anti-spraying
-  distribuido). Los dos tienen que viajar al servicio: son la mitad de `SEC-06`, y una API que
-  reimplemente solo el primero reabre el stuffing distribuido que ese segundo cubre.
-- Las cuatro superficies a extraer están en `app/Livewire/Auth/`: `Login`, `Register`,
-  `ForgotPassword`, `ResetPassword`. Criterio del spec §4.6.3: **el servicio devuelve resultado y
-  deja los efectos de SESIÓN al llamante** (el anti-cesta-cruzada de `Login` es estado de sesión
-  web y NO debe viajar al servicio). Es el mismo patrón de veredicto+DTO que estrenó el paso 2 con
-  `AdmissionDecision`.
-- ⚠️ **Hueco REAL que el paso 3 debe cerrar** (spec §4.2): toda la invalidación del repo es de
-  SESIÓN —`User::anonymize()`, `Account\UpdatePassword`, `Account\LogoutOtherDevices` y
-  `ResetPassword` borran filas de `sessions`—. **Un Bearer sobreviviría a las cuatro**, incluido el
-  borrado RGPD (art. 17). Hay que revocar `personal_access_tokens` en las cuatro, con test propio
-  en cada una. Hoy no muerde porque no hay emisor; en cuanto lo haya, sí.
-- `DEUDA.md` tiene una entrada que este paso puede cerrar: el bypass de mantenimiento para staff no
-  funciona con Bearer (`EnsureSiteAvailable` resuelve el bypass con el guard de sesión, porque
-  corre antes del `auth:` de ruta).
+- **Los DOS limitadores de `SEC-06` son `private const` de `Login`**: `MAX_ATTEMPTS = 5` (clave
+  `email|ip`) y `MAX_ATTEMPTS_PER_IP = 30` (solo-IP, anti-spraying distribuido). **Los dos** tienen
+  que viajar al servicio: una API que reimplemente solo el primero reabre el credential-stuffing
+  distribuido que el segundo cubre —1 intento por (cuenta, IP) nunca acumula 5 en ninguna clave—.
+  Ojo al detalle: la clave compuesta se limpia al acertar la contraseña, la de IP **no** (es
+  compartida entre usuarios tras el mismo NAT).
+- **Qué NO debe viajar al servicio**: el anti-cesta-cruzada (`purchase.user_id` en sesión, hallazgo
+  D) y el `Session::regenerate()` son efectos de la sesión WEB. Criterio del spec §4.6.3, ya
+  estrenado en el paso 2: el servicio devuelve un veredicto y los efectos los pone el llamante.
+- `Login` hace además `last_login_at` y dos `Log::info` (`auth.login`, `auth.login_failed`) que sí
+  son del servicio, y lanza `ValidationException` con la clave `_global` para el lockout —eso es
+  presentación: en la API será un `429` con su código.
+- El registro (`Register`, 338 líneas: honeypot, 3 limitadores, Turnstile, anti-enumeración con
+  decisión de la clienta, transacción con consents+rol, rama pay-first) y la recuperación de
+  contraseña quedan para el **paso 3c**.
+- ⚠️ **La EMISIÓN de tokens Bearer NO entra aquí**: viaja a Fase 6 con la app que los consuma
+  (`DECISIONES #29`). La revocación ya está hecha y probada (paso 3a), así que cuando llegue el
+  emisor no hay que acordarse de nada.
+- `DEUDA.md` tiene una entrada emparentada: el bypass de mantenimiento para staff no funciona con
+  Bearer (`EnsureSiteAvailable` resuelve el bypass con el guard de sesión, porque corre antes del
+  `auth:` de ruta). Con la emisión aplazada, sigue sin morder.
 
-**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.quater** («lo que el código
-enseñó»): veintitrés puntos medidos en los pasos 0, 1a, 1b y 2. Los que más ahorran tiempo en el
-paso 3: la validación de contrato **hay que pedirla** con `assertValidResponse()` (§10.ter 16); en
-OpenAPI 3.0, todo «esto puede ser nulo» hay que **ejercerlo con un test**, no darlo por escrito
-(15); y antes de unificar dos copias, ponerlas lado a lado y listar sus diferencias, porque cada
-una es una decisión de producto que alguien tiene que tomar (19).
+**Antes de escribir código, lee `docs/specs/api-v1.md` §10 → §10.quinquies** («lo que el código
+enseñó»): veintisiete puntos medidos en los pasos 0, 1a, 1b, 2 y 3a. Los que más ahorran tiempo en
+el 3b: la validación de contrato **hay que pedirla** con `assertValidResponse()` (§10.ter 16); todo
+«esto puede ser nulo» en OpenAPI 3.0 hay que ejercerlo con un test (15); y antes de unificar dos
+copias, ponerlas lado a lado y listar sus diferencias, porque cada una es una decisión de producto
+(19).
 
-Después: paso 4 (el dinero: quote, disponibilidad con cesta, `POST orders`, reintento y
-`payment-status` con estados reales) · paso 5 (post-form). El corte completo está en el spec §9.
-**El paso 4 ya tiene el terreno preparado**: consume `ReservationAdmission` + `OrderCreator` +
-`PaymentInitiator`, sin reimplementar ninguna regla.
+Después: 3c (registro y contraseña por API) · paso 4 (el dinero: quote, disponibilidad con cesta,
+`POST orders`, reintento y `payment-status` con estados reales) · paso 5 (post-form). El corte
+completo está en el spec §9. **El paso 4 ya tiene el terreno preparado**: consume
+`ReservationAdmission` + `OrderCreator` + `PaymentInitiator`, sin reimplementar ninguna regla.
 
 **Pendiente del owner** (❗): 2FA del panel (sin plan — `DEUDA.md`) · mecanismo del primer admin de
 producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
@@ -150,6 +151,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2292** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2302** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

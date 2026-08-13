@@ -106,10 +106,19 @@ class PurgeCustomerData extends Command
             Payment::whereIn('id', $paymentIds)->delete();
             // 3. Pedidos → cascada order_items, tickets, order_adjustments.
             Order::query()->delete();
-            // 4. Adyacentes de usuario SIN FK: tokens de reset (por email) + sesiones.
+            // 4. Adyacentes de usuario SIN FK: tokens de reset (por email), sesiones y tokens de API.
+            //    Los `personal_access_tokens` son una tabla MORPH y no tienen clave foránea, así que
+            //    borrar la fila de `users` los dejaría huérfanos apuntando a un id que ya no existe
+            //    (verificado: 0 FKs en la tabla). Se añaden en Fase 3 · paso 3a, cuando Sanctum entró
+            //    en el proyecto después de escribirse este comando.
+            $purgedIds = User::whereNotIn('id', $keptIds)->pluck('id')->all();
             $emails = User::whereNotIn('id', $keptIds)->whereNotNull('email')->pluck('email')->all();
             DB::table('password_reset_tokens')->whereIn('email', $emails)->delete();
             DB::table('sessions')->whereNotIn('user_id', $keptIds)->delete();
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', (new User)->getMorphClass())
+                ->whereIn('tokenable_id', $purgedIds)
+                ->delete();
             // 5. Usuarios → cascada consents/role_user; nullOnDelete audit_logs/cookie_consent_logs/tickets/order_items.
             User::whereNotIn('id', $keptIds)->delete();
         });

@@ -88,7 +88,8 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
       **`MODELO-DATOS.md` regenerado desde el código** (30 modelos y las 71 migraciones de
       entonces; el recuento vivo lo verifica `docs-check`) ·
-      **`INVARIANTES.md`** destilado (54 invariantes de no-regresión). Sin datos del cliente
+      **`INVARIANTES.md`** destilado (54 entonces; hoy **55 invariantes de no-regresión**, el
+      recuento vivo lo verifica `docs-check`). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
 - [x] **Vocabulario de dominio: diseño entregado** (2026-08-12): spec en
@@ -249,7 +250,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `CRITICAL_RE` del `pre-push` se amplió a las dos clases nuevas: el código de `PAY-04` llevaba
       tiempo fuera del gate por vivir en un Livewire. Suite **2292 verde** + los dos verificadores
       de concurrencia sobre MySQL (16 workers).
-- [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
+- [ ] **Paso 3 — auth por API**, partido en 3a/3b/3c (`DECISIONES #29`):
+      - [x] **3a — REVOCACIÓN de credenciales** (2026-08-13): punto único
+            `User::revokeAllAccess()`/`revokeOtherAccess()` para sesiones **y** tokens de API.
+            El hueco era de CINCO sitios, no cuatro: el quinto es la limpieza de go-live, que
+            dejaba tokens **huérfanos** (`personal_access_tokens` es morph y no tiene FK,
+            verificado). Guarda de arquitectura que prohíbe una sexta copia + `INVARIANTES
+            RGPD-06`. Hecho ANTES de que exista un token emitido. Suite **2302 verde**.
+      - [ ] 3b — extraer `Login` a Identity (los DOS limitadores de `SEC-06`) + `POST auth/login`
+            y `auth/logout` sobre la sesión stateful de Sanctum.
+      - [ ] 3c — `Register` (Turnstile, honeypot, consents, pay-first) + recuperación de contraseña.
+      - [ ] La EMISIÓN de tokens Bearer (`POST auth/tokens`) viaja a **Fase 6**, con la app que los
+            consuma (`DECISIONES #29`); la infraestructura ya está lista.
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·
       mis reservas · post-form de invitados · contenido (para la app).

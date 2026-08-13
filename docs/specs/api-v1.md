@@ -94,16 +94,25 @@ que dejarían de coincidir si cada una llevara su copia.
 ### 4.2 Autenticación, sesión y revocación
 - **SPA (mismo dominio)**: cookie de sesión de Sanctum (`statefulApi`) + CSRF. Sin token en
   `localStorage`.
-- **Móvil**: Bearer emitido por `POST auth/tokens`, con `abilities`, caducidad configurada y
-  `sanctum:prune-expired` en el scheduler.
-- **`SEC-06` se hereda de verdad, no de palabra**: login y `auth/tokens` usan los DOS limitadores
-  (`email|ip` **y** solo-IP anti-spraying) y el reset conserva el mensaje genérico no-enumerable.
-  Hoy son `private const` dentro de `Livewire\Auth\Login`: **hay que extraerlos** (paso 3).
-- **⚠️ Revocación — hueco que la revisión destapó**: toda la invalidación del repo es de SESIÓN
-  (`User::anonymize()`, `UpdatePassword`, `LogoutOtherDevices`, `ResetPassword` borran filas de
-  `sessions`). Un Bearer sobreviviría a las cuatro. **Sanctum obliga a añadir revocación de
-  `personal_access_tokens` en `anonymize()` (RGPD art. 17), en el cambio de contraseña, en el
-  reset y en «cerrar otras sesiones»**, con test propio en cada uno.
+- **Móvil**: Bearer con `abilities`, caducidad configurada y `sanctum:prune-expired` en el
+  scheduler. ⚠️ **La EMISIÓN (`POST auth/tokens`) se aplaza a Fase 6, con la app** (decisión del
+  owner, 2026-08-13, `DECISIONES #29`): la v2 de este spec la ponía en el paso 3, pero el
+  consumidor de Fase 3 y 4 es la SPA, que usa cookie de sesión. Un emisor de Bearers de 30 días sin
+  ningún cliente que los use durante dos fases es superficie de ataque sin contrapartida, y
+  `DECISIONES #4` ya descartó «API sin consumidor». La infraestructura (trait, caducidad, poda)
+  queda lista y la REVOCACIÓN se hizo igualmente — ver el punto siguiente.
+- **`SEC-06` se hereda de verdad, no de palabra**: el login usa los DOS limitadores (`email|ip`
+  **y** solo-IP anti-spraying) y el reset conserva el mensaje genérico no-enumerable. Hoy son
+  `private const` dentro de `Livewire\Auth\Login`: **hay que extraerlos** (paso 3b). Cuando llegue
+  el emisor de tokens en Fase 6, hereda los mismos.
+- ✅ **Revocación — RESUELTO** (2026-08-13, paso 3a, `DECISIONES #29`). El hueco era real y algo
+  peor de lo que la revisión describió: la purga de sesiones estaba copiada en CUATRO ficheros,
+  ninguno tocaba `personal_access_tokens`, y además el comando de limpieza de go-live dejaba tokens
+  HUÉRFANOS —la tabla es morph y no tiene FK, así que borrar el usuario no los borra—. Ahora la
+  invalidación tiene un punto único (`User::revokeAllAccess()` / `revokeOtherAccess()`), alcanza a
+  las dos credenciales, y una guarda de arquitectura impide que aparezca una quinta copia
+  (`INVARIANTES RGPD-06`). Se hizo **antes** de que exista un solo token emitido, que es cuando se
+  puede hacer sin prisa.
 - Reconfirmación de contraseña en las acciones sensibles de `me/*` (SEGURIDAD §3), incluida la
   definición de qué significa con Bearer.
 - El cambio de email sigue siendo doble opt-in por enlace firmado web; la API expone iniciar,
@@ -127,7 +136,7 @@ que dejarían de coincidir si cada una llevara su copia.
 
 | Superficie | Endpoints (futuro) | Autorización | Se apoya en |
 |---|---|---|---|
-| Auth | `POST auth/login` · `register` · `logout` · `password/forgot` · `password/reset` · `email/resend` · `auth/tokens` | pública, con limitadores de `SEC-06` | **`Livewire\Auth\Register`** (no `CustomerRegistrar`, ver §8) |
+| Auth | `POST auth/login` · `register` · `logout` · `password/forgot` · `password/reset` · `email/resend` · ~~`auth/tokens`~~ (emisión aplazada a Fase 6, `DECISIONES #29`) | pública, con limitadores de `SEC-06` | **`Livewire\Auth\Register`** (no `CustomerRegistrar`, ver §8) |
 | Cuenta | `GET/PATCH me` · `PATCH me/password` · `DELETE me` · `POST me/logout-others` · `GET me/export` (RGPD art. 20) · email: iniciar/cancelar/reenviar | dueño; reconfirmación de contraseña | `Livewire\Account\*`, `User::anonymize()` |
 | **Mis pedidos** | `GET me/orders` (paginado, TODOS los estados) | dueño | `AccountController::index` (hoy pagina 3 con items/payments/adjustments) |
 | Mis reservas | `GET me/reservations` | dueño | `Booking\Contracts\CustomerReservations` |
@@ -301,8 +310,17 @@ Se corrige:
    concurrencia verdes sobre MySQL. Las dos superficies aplicaban políticas DISTINTAS sin que
    nadie lo hubiera decidido; el owner resolvió las tres asimetrías. **Lo que el código enseñó:
    §10.quater.**
-3. **Auth por API**: extracción de `Login`/`Register`/`ForgotPassword`/`ResetPassword` + revocación
-   de tokens. **Bloqueado por la decisión de §7.**
+3. **Auth por API**, partido en tres por el mismo motivo que el paso 1 (trabajos de naturaleza
+   distinta en un solo diff son irrevisables):
+   - ✅ **3a** (2026-08-13, `DECISIONES #29`): **revocación de credenciales**. Sin endpoints:
+     cierra el hueco de §4.2 antes de que exista un token emitido. Punto único
+     (`User::revokeAllAccess()`/`revokeOtherAccess()`) + guarda de arquitectura + los tokens
+     huérfanos de la limpieza de go-live. **Lo que el código enseñó: §10.quinquies.**
+   - ⬜ **3b**: extraer `Login` a Identity (con los DOS limitadores de `SEC-06`) y publicar
+     `POST auth/login` y `auth/logout` sobre la sesión stateful de Sanctum.
+   - ⬜ **3c**: `Register` (Turnstile, honeypot, consents, pay-first) y la recuperación de
+     contraseña por API.
+   Desbloqueado desde `DECISIONES #23`; la EMISIÓN de tokens viaja a Fase 6 (`#29`).
 4. **El dinero**: quote, disponibilidad con cesta, `POST orders`, reintento y `payment-status` con
    estados reales + historia de retorno móvil.
 5. **Post-form migrado** (2.º consumidor), una vez resuelto su canje de credencial.
@@ -481,3 +499,36 @@ el flash existente de «no se puede reintentar», cuyo texto dice *«la reserva 
 se ha liberado»*. Le habría dicho a quien pulsó dos veces seguidas que había perdido su reserva. El
 dominio devuelve `reason` y cada superficie decide el mensaje: por eso el DTO lleva una clave
 estable y no un texto ni una clave de `lang/`.
+
+### 10.quinquies Lo que el código enseñó — paso 3a (2026-08-13)
+
+**24. El hueco era peor de lo que la revisión describió, y la diferencia la dio contar los sitios.**
+§4.2 hablaba de cuatro lugares donde un Bearer sobreviviría. Al buscarlos aparecieron **cinco**: los
+cuatro previstos más `PurgeCustomerData`, el comando de limpieza de go-live, que borra la fila de
+`users` y —como `personal_access_tokens` es una tabla MORPH **sin clave foránea**, verificado con
+`Schema::getForeignKeys()` → 0— dejaría los tokens huérfanos apuntando a un id que ya no existe. El
+comando ya borraba a mano `sessions` y `password_reset_tokens` por ese mismo motivo; los tokens de
+API son la tercera tabla sin FK y llegaron después de escribirlo. **Lección**: cuando un fichero
+enumera «adyacentes sin FK», esa lista envejece cada vez que se instala un paquete que crea tablas.
+
+**25. Contra la duplicación que se repite sola, no sirve recordarlo: hay que hacerlo imposible.** La
+purga de sesiones estaba copiada en cuatro ficheros y las cuatro copias se olvidaron de los tokens
+—no por descuido, sino porque se escribieron antes de que Sanctum existiera—. Arreglar las cuatro
+habría dejado el mismo terreno para la quinta. Ahora solo `User` sabe escribir en esas tablas y una
+guarda de arquitectura lo comprueba con el tokenizador, con dos excepciones declaradas por nombre y
+con su motivo. El coste de la guarda es una clase de test; el de no tenerla, un agujero silencioso
+cada vez que aparezca una credencial nueva.
+
+**26. «Conservar la credencial actual» significa dos cosas distintas según por dónde entres.** En
+`revokeOtherAccess()`, si la petición llega por sesión, `currentAccessToken()` no devuelve un token
+persistido sino un `TransientToken` sin identificador — así que **caen todos los tokens de API**.
+No es un efecto colateral que haya que corregir: es lo correcto, porque quien cambia su contraseña
+desde el navegador espera que cualquier app conectada deje de estarlo. La rama simétrica (entrar por
+token y conservar solo ese) tiene su propio test, y para escribirlo hay que atar el token real con
+`withAccessToken()`: el que monta `Sanctum::actingAs` es de mentira y no ejerce la comparación.
+
+**27. Arreglar seguridad ANTES de que exista la superficie es más barato y más honesto.** Hoy no hay
+emisor de tokens, así que ninguno de estos cinco huecos es explotable: es exactamente el momento de
+cerrarlos, sin urgencia, con tests y sin tocar nada en producción. Hacerlo junto con la emisión
+—como planteaba la v2 del spec— habría metido en el mismo commit la puerta y su cerradura, y
+cualquier prisa se habría llevado por delante la segunda.

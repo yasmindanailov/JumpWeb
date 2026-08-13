@@ -691,3 +691,47 @@ de módulos exime — moverlas al dominio no las crea, las hace visibles y las r
 `redsys:verify-concurrency` (1 `authorized` + 15 `idempotent_paid`, 1 pago, 1 ticket) ·
 política ejercida **contra MySQL** con tinker: extiende el hold vivo a la ventana completa, NO
 resucita un hold ya cruzado y NO toca el pedido de otro titular ni acertando su código.
+
+## #29 · 2026-08-13 · Fase 3 paso 3a: revocación de credenciales (y la emisión de tokens a Fase 6)
+El paso 3 se parte en **3a** (revocación), **3b** (sesión por API) y **3c** (alta y contraseña),
+por el mismo motivo que el paso 1: mezclar seguridad, extracción y endpoints en un diff lo vuelve
+irrevisable. Detalle de lo aprendido en `api-v1.md` §10.quinquies.
+
+**(a) La EMISIÓN de tokens Bearer se aplaza a Fase 6** (decisión del owner). El spec se
+contradecía: §4.2 y §4.4 ponían `POST auth/tokens` en el paso 3, §9 solo pedía «revocación». El
+consumidor de Fase 3 y 4 es la SPA, que usa cookie de sesión; la app nativa es Fase 6. Un emisor de
+Bearers de 30 días que nadie consume durante dos fases es superficie de ataque sin contrapartida, y
+`DECISIONES #4` ya descartó «API sin consumidor». La infraestructura queda lista (trait
+`HasApiTokens`, caducidad de 30 días, `sanctum:prune-expired` semanal); lo que se aplaza es abrir
+la puerta. El spec se corrigió para dejar de contradecirse.
+
+**(b) La revocación SÍ se hace ahora, y el hueco era mayor de lo descrito.** §4.2 enumeraba cuatro
+sitios donde un Bearer sobreviviría (supresión RGPD, cambio de contraseña, «cerrar otras sesiones»,
+reset). Al medirlos aparecieron **cinco**: el quinto es `PurgeCustomerData`, la limpieza de go-live,
+que borra la fila de `users` y dejaría los tokens **huérfanos** — `personal_access_tokens` es una
+tabla morph **sin FK** (verificado: 0 claves foráneas). El comando ya borraba a mano `sessions` y
+`password_reset_tokens` por esa misma razón; los tokens son la tercera tabla sin FK y llegaron
+después de escribirlo.
+
+**(c) Punto único, no cinco parches.** Nacen `User::revokeAllAccess()` (todas las credenciales) y
+`User::revokeOtherAccess()` (todas menos la que hace la petición). Arreglar las cuatro copias por
+separado habría dejado el mismo terreno para la quinta: la purga de sesiones estaba duplicada
+precisamente porque no había un sitio donde ponerla. Ahora `AccessRevocationTest` prohíbe que nadie
+más nombre `sessions` o `personal_access_tokens`, con dos excepciones declaradas por nombre (el
+propio `User` y el borrado por CONJUNTO del comando de go-live, que no puede usar un método de
+instancia).
+
+**(d) Con sesión caen todos los tokens, y es lo correcto.** En `revokeOtherAccess()`,
+`currentAccessToken()` devuelve un `TransientToken` sin id cuando la petición viene por navegador,
+así que no hay ninguno que preservar: quien cambia su contraseña desde la web espera que cualquier
+app conectada deje de estarlo. La rama simétrica —entrar por token y conservar solo ese— tiene test
+propio.
+
+**(e) `INVARIANTES RGPD-06`** recoge la regla, y `RGPD-01` se actualizó: la supresión del art. 17
+invalida ahora las dos credenciales, no solo la sesión.
+
+**Verificación empírica**: suite **2302 verde** (8664 aserciones) · Pint limpio · `docs-check`
+verde · **las cinco vías verificadas por mutación** (revertir la revocación deja los 7 tests en
+rojo; reintroducir una purga de sesiones a mano en un quinto fichero pone en rojo la guarda, con
+fichero y línea) · revocación ejercida **contra MySQL real**: 2 tokens antes de anonimizar, 0
+después y 0 filas huérfanas en la tabla.

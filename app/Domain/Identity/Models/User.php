@@ -21,6 +21,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable([
     'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
@@ -83,6 +84,75 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function isAnonymized(): bool
     {
         return str_ends_with((string) $this->email, '@'.self::ANONYMIZED_EMAIL_DOMAIN);
+    }
+
+    /**
+     * Cierra TODA credencial de acceso de este titular: sus sesiones y sus tokens de API.
+     *
+     * **Punto único de invalidación** (Fase 3 · paso 3a). Antes, cada sitio que necesitaba echar a
+     * un usuario copiaba el borrado de la tabla `sessions` —cuatro copias— y ninguno tocaba los
+     * tokens, porque cuando se escribieron no existían. Con un emisor de Bearer (Fase 6) eso
+     * significaría que un token sobrevive al borrado RGPD, al cambio de contraseña, al reset y a
+     * «cerrar otras sesiones»: cuatro puertas abiertas que nadie vería hasta que fuera tarde. Se
+     * arregla ahora, con el sistema todavía sin tokens emitidos, porque después habría que
+     * acordarse.
+     *
+     * Se usa cuando la credencial en curso TAMBIÉN debe morir: supresión RGPD (art. 17) y
+     * restablecimiento de contraseña (quien resetea no está autenticado; si el atacante lo estaba,
+     * tiene que caer). Para «todas menos la mía», {@see revokeOtherAccess()}.
+     */
+    public function revokeAllAccess(): void
+    {
+        $this->purgeSessions(exceptCurrent: false);
+        $this->tokens()->delete();
+    }
+
+    /**
+     * Igual que {@see revokeAllAccess()} pero conservando la credencial con la que se hace la
+     * petición: la sesión actual si viene por navegador, el token actual si viene por API.
+     *
+     * Es el caso de «cambiar la contraseña por sospecha de robo» y el de «cerrar las demás
+     * sesiones»: el titular legítimo no debe autoexpulsarse al defenderse.
+     *
+     * ⚠️ Cuando la petición llega por SESIÓN, `currentAccessToken()` no devuelve un token
+     * persistido sino un `TransientToken`, así que **caen todos los tokens de API**. Es lo
+     * correcto y no un efecto colateral: quien cambia su contraseña desde la web espera que
+     * cualquier app que siguiera conectada deje de estarlo.
+     */
+    public function revokeOtherAccess(): void
+    {
+        $this->purgeSessions(exceptCurrent: true);
+
+        $tokens = $this->tokens();
+        $current = $this->currentAccessToken();
+
+        if ($current instanceof PersonalAccessToken) {
+            $tokens->whereKeyNot($current->getKey());
+        }
+
+        $tokens->delete();
+    }
+
+    /**
+     * Borra las filas de `sessions` del titular. Solo aplica con el driver de base de datos: con
+     * `array`/`file`/`redis` no hay tabla que purgar y el resto de la invalidación (rotación del
+     * `remember_token`, `logoutOtherDevices`) sigue haciendo su trabajo.
+     */
+    private function purgeSessions(bool $exceptCurrent): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        $query = DB::connection(config('session.connection'))
+            ->table((string) config('session.table', 'sessions'))
+            ->where('user_id', $this->getAuthIdentifier());
+
+        if ($exceptCurrent) {
+            $query->where('id', '!=', session()->getId());
+        }
+
+        $query->delete();
     }
 
     /**
@@ -167,15 +237,12 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'waiver_accepted_at' => null,
             ])->save();
 
-            // A2: invalida TODAS las sesiones activas del titular. El cambio de password NO basta (el
-            // guard web no monta AuthenticateSession), así que una baja/baneo dejaría la sesión viva.
-            // Centralizado aquí → lo garantizan AMBAS vías (panel `ViewUser` + self-service `DeleteAccount`).
-            if (config('session.driver') === 'database') {
-                DB::connection(config('session.connection'))
-                    ->table(config('session.table', 'sessions'))
-                    ->where('user_id', $this->getKey())
-                    ->delete();
-            }
+            // A2: invalida TODAS las credenciales del titular —sesiones y tokens de API—. El cambio
+            // de password NO basta (el guard web no monta AuthenticateSession), así que una
+            // baja/baneo dejaría la sesión viva. Centralizado aquí → lo garantizan AMBAS vías
+            // (panel `ViewUser` + self-service `DeleteAccount`). Los tokens entran en Fase 3 · paso
+            // 3a: sin ellos, un Bearer sobreviviría a la supresión del art. 17.
+            $this->revokeAllAccess();
         });
 
         return true;

@@ -4,7 +4,6 @@ namespace App\Livewire\Account;
 
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
@@ -38,17 +37,13 @@ class UpdatePassword extends Component
         $user = Auth::user();
         $user->update(['password' => $this->password]);
 
-        // Invalidar las DEMÁS sesiones (la actual sobrevive). Rota el recaller + password hash
-        // en sesión y, con driver=database, borramos también las filas para que el otro device
-        // no se reactive por cache. Es el comportamiento esperado del usuario al cambiar password.
+        // Invalidar las DEMÁS credenciales (la actual sobrevive). `logoutOtherDevices` rota el
+        // recaller y el password hash en sesión —para eso necesita la contraseña en claro—;
+        // `revokeOtherAccess()` borra además las filas de `sessions`, para que el otro dispositivo
+        // no se reactive por caché, y **revoca los tokens de API** (Fase 3 · paso 3a): cambiar la
+        // contraseña por sospecha de robo no sirve de nada si el atacante conserva un Bearer.
         Auth::logoutOtherDevices($this->password);
-        if (config('session.driver') === 'database') {
-            DB::connection(config('session.connection'))
-                ->table(config('session.table', 'sessions'))
-                ->where('user_id', $user->getAuthIdentifier())
-                ->where('id', '!=', session()->getId())
-                ->delete();
-        }
+        $user->revokeOtherAccess();
 
         $this->reset(['current_password', 'password', 'password_confirmation']);
         Log::info('account.password_updated', ['user_id' => $user->id]);

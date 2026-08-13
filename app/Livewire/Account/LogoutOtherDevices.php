@@ -4,7 +4,6 @@ namespace App\Livewire\Account;
 
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
@@ -29,14 +28,10 @@ class LogoutOtherDevices extends Component
 
         Auth::logoutOtherDevices($this->current_password);
 
-        // Sesiones en BD: borra explícitamente las demás sesiones de este usuario.
-        if (config('session.driver') === 'database') {
-            DB::connection(config('session.connection'))
-                ->table(config('session.table', 'sessions'))
-                ->where('user_id', $user->getAuthIdentifier())
-                ->where('id', '!=', session()->getId())
-                ->delete();
-        }
+        // Punto único de invalidación (Fase 3 · paso 3a): borra las demás filas de `sessions` y
+        // revoca los tokens de API. «Cerrar sesión en los demás dispositivos» tiene que alcanzar
+        // también a la app: para el titular, su móvil es otro dispositivo.
+        $user->revokeOtherAccess();
 
         $this->reset('current_password');
         Log::info('account.logout_other_devices', ['user_id' => $user->id]);
