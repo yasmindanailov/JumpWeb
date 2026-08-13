@@ -170,6 +170,48 @@ class ApiContractTest extends TestCase
     }
 
     /**
+     * La zona anidada en un producto está escrita INLINE y no como `$ref`, y esta guarda es el
+     * precio de esa decisión.
+     *
+     * El motivo (Fase 3 · paso 1b): en OpenAPI 3.0 un `$ref` no admite `nullable` a su lado, y la
+     * forma canónica de sortearlo —`allOf: [$ref]` con `nullable: true`— **no funciona** con el
+     * validador de Spectator: se midió, y con ella una zona nula falla («The data (null) must match
+     * the type: object») y una zona presente también («The data (object) must match the type:
+     * null»). La única forma que valida las dos es el objeto escrito entero, con su `nullable`.
+     *
+     * Copiar un esquema abre la puerta a que las copias se separen, así que aquí se comprueba que
+     * dicen exactamente lo mismo que el componente `CatalogZone`. Si mañana el validador soporta la
+     * forma canónica, esto se borra junto con las copias.
+     */
+    public function test_the_inlined_zone_schemas_say_the_same_as_the_component(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $component = $schemas['CatalogZone'] ?? null;
+
+        $this->assertIsArray($component, 'falta el componente `CatalogZone`');
+
+        foreach (['CatalogProduct', 'CatalogProductDetail'] as $owner) {
+            $inline = $schemas[$owner]['properties']['zone'] ?? null;
+
+            $this->assertIsArray($inline, "«{$owner}» ya no declara la zona inline");
+            $this->assertTrue(
+                $inline['nullable'] ?? false,
+                "«{$owner}.zone» tiene que ser anulable: hay productos sin zona"
+            );
+            $this->assertSame(
+                $component['properties'],
+                $inline['properties'] ?? null,
+                "«{$owner}.zone» ha divergido de `CatalogZone`: sus propiedades ya no coinciden"
+            );
+            $this->assertSame(
+                $component['required'],
+                $inline['required'] ?? null,
+                "«{$owner}.zone» ha divergido de `CatalogZone`: sus campos obligatorios ya no coinciden"
+            );
+        }
+    }
+
+    /**
      * Operaciones REGISTRADAS, como `GET /me`. Se identifican por el nombre `api.v1.*` y no por el
      * path: es lo que permite añadir rutas fuera del contrato (si alguna vez hiciera falta) sin
      * que la guarda se vuelva adivinatoria.

@@ -573,3 +573,63 @@ ficheros) · `docs-check` verde · **contrato verificado por mutación** (renomb
 `OrderResource` deja el test en rojo señalando el campo que falta) · los tres endpoints ejercidos
 **contra MySQL real** con el pipeline HTTP completo (200, forma correcta y `no-store` en los tres),
 no solo contra el SQLite de la suite.
+
+## #27 · 2026-08-13 · Fase 3 paso 1b: el CATÁLOGO por API, extraído del flujo de compra
+Segunda mitad del paso 1 (`api-v1.md` §9): `GET catalog/zones`, `catalog/products` y
+`catalog/products/{id}`, públicos y de solo lectura. Detalle de lo aprendido en `api-v1.md` §10.ter.
+
+**(a) Extracción, no copia: la web consume el mismo read-model desde el primer commit.** El spec
+§4.6.4 pedía un «read-model de catálogo en Booking»; hacerlo solo para la API habría creado la
+segunda definición de «qué se vende» que esa misma sección manda evitar. Nace
+`Booking\Contracts\ProductCatalog` (+ DTOs `CatalogZone`, `CatalogProduct`, `CatalogProductDetail`,
+`CatalogEventField`, `CatalogAddon`) con `CatalogReader` detrás, y `Livewire\Tickets\Purchase`
+—que era el dueño de la regla— pasa a pedírselo. Lo comprueba `ModuleContractsTest` con un doble
+que devuelve un producto inexistente: si la web volviera a consultar por su cuenta, la pantalla
+saldría vacía y el test caería.
+
+**(b) La frontera dominio/presentación se decidió campo a campo.** De los diez campos que producía
+`catalogSection()`, dos se quedaron en la web: `search` (índice del buscador progresivo, que se
+filtra EN CLIENTE) y `zone_anchor` (ancla de scroll del deep-link de la landing). Los dos se
+DERIVAN de lo que da el contrato, así que no cuestan nada donde están y no obligan a un cliente
+futuro a cargar con la interfaz de otro.
+
+**(c) El catálogo NO puede consumir `AddonResolver::viewModel()`, como suponía el spec.** Su firma
+exige el estado de la selección (cantidades, miembro elegido de cada grupo, invitados) porque su
+trabajo es decir qué está activo y cuánto suma; un catálogo describe la OFERTA y no tiene ese
+estado. Lo que sí se reutiliza son las reglas: qué complementos llegan a ofrecerse —un extra de
+pago sin precio para la tarifa no se ofrece— y la selección por defecto (`defaultSelection()`).
+
+**(d) Gotcha de OpenAPI 3.0, hermano del `enum` de `#26d`**: un `$ref` no admite `nullable` a su
+lado, y la forma canónica (`allOf: [$ref]` + `nullable`) **la ignora el validador**: con ella una
+zona nula falla y una zona presente también. La única que valida las dos es el objeto escrito
+inline con su `nullable`; la copia resultante la vigila `ApiContractTest` campo a campo, así que no
+puede divergir en silencio.
+
+**(e) La validación de contrato hay que pedirla explícitamente.** Heredar de `ApiTestCase` deja
+Spectator cableado, pero solo compara cuando el test llama a `assertValidResponse()`. Los primeros
+tests del catálogo estaban en verde sin validar nada contra el documento — se descubrió al hacer la
+mutación de comprobación, que solo tumbó el test que asertaba el campo a mano.
+
+**(f) N+1 REAL encontrado midiendo, no leyendo.** El presupuesto de consultas se fija por PENDIENTE
+(mismo coste con 1 elemento que con N) en vez de por techo fijo, y así destapó que
+`RateResolver::priceCents()` hace su propia consulta: llamarlo dentro del bucle de complementos
+costaba dos consultas por complemento. Arreglado resolviendo la tarifa una vez y leyendo el precio
+de la relación ya cargada, con resultado idéntico. Dos trampas de medición documentadas en §10.ter
+(`DB::listen` no se desregistra; la primera petición paga el `select` de `settings`).
+
+**(g) `CatalogProductsController`, no `Availability*`.** Mismo criterio que dio nombre a
+`MeOrdersController` (`#26e`): ese prefijo dispara el gate de concurrencia del `pre-push`, pensado
+para el código que orquesta carreras de aforo. Un catálogo de solo lectura no toca ninguna. La
+disponibilidad real del paso 4 sí lo llevará y sí lo disparará.
+
+**(h) Lo que NO se tocó, a propósito.** El «precio desde» sigue siendo el mínimo de los precios
+configurados **sin filtrar por tarifa activa**, igual que hoy: filtrarlo cambiaría el importe que se
+le anuncia al cliente en una instalación con precios colgando de una tarifa desactivada, y eso es
+decisión del owner, no de una extracción (`DEUDA.md`). Tampoco se decide aún la cacheabilidad HTTP
+del catálogo público, que hoy sale con el `no-cache, private` por defecto de Symfony.
+
+**Verificación empírica**: suite **2266 verde** (8541 aserciones, 63 s) · Pint limpio ·
+`docs-check` verde · **contrato verificado por mutación** (un campo de más en `CatalogProductResource`
+deja en rojo los tests que validan contra el documento) · los tres endpoints ejercidos **contra
+MySQL real** con el pipeline HTTP completo: 200 y forma correcta, 404 con sobre de error, 422 del
+filtro inválido, y textos en `es`/`en`/`fr` según `Accept-Language`.

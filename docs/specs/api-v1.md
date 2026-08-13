@@ -1,11 +1,13 @@
 # [SPEC] API v1 (Fase 3)
 
-> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0 y 1a TERMINADOS** (2026-08-13) ·
+> Estado: 🟦 **v2 · EN EJECUCIÓN — pasos 0, 1a y 1b TERMINADOS** (2026-08-13) ·
 > Última actualización: 2026-08-13 · Decisiones asociadas: `DECISIONES #21` (dependencias),
-> `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0) y **`#26`** (paso 1a).
+> `#22` (árbol saneado), `#23` (anti-bot), **`#24`** (paso 0), **`#26`** (paso 1a) y **`#27`**
+> (paso 1b).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10** — léelo antes de seguir por el paso 1b.
+> **Lo que el código enseñó al implementar: §10, §10.bis y §10.ter** — léelos antes de seguir por
+> el paso 2.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
@@ -288,10 +290,11 @@ Se corrige:
 1. **Solo lectura**, partido en dos por dificultad desigual:
    - ✅ **1a** (2026-08-13, `DECISIONES #26`): `me/reservations` y `me/orders`. Lectura sobre
      contratos y modelos que ya existen.
-   - ⬜ **1b**: catálogo (read-model nuevo en Booking). Exige extraer de `Purchase::render()` y
-     separar dominio de presentación: `catalogSection` mezcla hoy ambas cosas —lleva una cadena
-     `search` normalizada para el buscador en cliente y un `zone_anchor` para el deep-link de la
-     landing—, y esas dos NO pertenecen a un read-model de dominio.
+   - ✅ **1b** (2026-08-13, `DECISIONES #27`): catálogo (read-model nuevo en Booking). Se extrajo
+     de `Purchase::render()` separando dominio de presentación: `search` y `zone_anchor` se
+     quedaron en la web —son índice de búsqueda en cliente y ancla de scroll—, y el resto pasó al
+     contrato `ProductCatalog`, que la web consume desde el mismo commit. **Lo que el código
+     enseñó: §10.ter.**
 2. **Refactor sin endpoints**: extraer política de admisión e ida de pago (§4.6.1–2). Aquí tocan
    `VERIFY_CONC=1` y los dos verificadores; web y panel quedan de testigo.
 3. **Auth por API**: extracción de `Login`/`Register`/`ForgotPassword`/`ResetPassword` + revocación
@@ -377,3 +380,56 @@ exigir dos verificadores de 16 workers. La separación no es un truco: `Critical
 si un controlador fuera del patrón alcanza el núcleo. El paso 1b tiene el mismo dilema con
 `Availability*` — un catálogo de solo lectura no debería disparar el gate, pero la disponibilidad
 del paso 4 sí.
+
+### 10.ter Lo que el código enseñó — paso 1b (2026-08-13)
+
+**13. Extraer un read-model no es mover código: es decidir qué era dominio.** De los diez campos
+que `catalogSection()` producía, ocho lo eran y dos no. `search` (nombre + ventajas en minúsculas)
+es el índice del buscador que la web filtra EN CLIENTE, y `zone_anchor` (el slug de la zona solo en
+el primer producto de cada una) es el ancla de scroll del deep-link. Los dos se **derivan** de los
+datos del contrato (`name`, `features`, `zone`), así que quedarse en la vista no les cuesta nada, y
+subirlos al dominio habría obligado a todo cliente futuro a cargar con el índice de búsqueda de
+otro. **El criterio que funcionó**: si otro cliente con otra interfaz lo necesitaría igual, es
+dominio; si solo lo necesita el que lo pintó así, es presentación.
+
+**14. `AddonResolver::viewModel()` NO servía como fuente del catálogo, y el spec creía que sí.**
+Su firma pide el estado de la selección (`qtyMap`, `groupChoices`, invitados) porque su trabajo es
+decir qué está activo y cuánto suma; un catálogo no tiene ese estado. Lo que sí se reutiliza —y es
+lo que importaba— son las REGLAS: qué complementos llegan a ofrecerse (un extra de pago sin precio
+para la tarifa no se ofrece) y cuál es la selección por defecto (`defaultSelection()`, que sí es
+estática y sí es dominio). El read-model las llama; no las reescribe.
+
+**15. Un `$ref` con `nullable` no funciona, y falla en las DOS direcciones.** Para anidar un objeto
+opcional, OpenAPI 3.0 obliga a `allOf: [$ref]` + `nullable: true` — un `$ref` ignora sus hermanos.
+El validador de Spectator ignora ese `nullable`: con él, una zona nula falla («The data (null) must
+match the type: object») y una zona presente también («The data (object) must match the type:
+null»). La única forma que valida ambas es escribir el objeto entero inline con su `nullable`. Se
+paga con una copia del esquema, y esa copia la vigila `ApiContractTest` campo a campo. Es el
+hermano del gotcha del `enum` (punto 10): **en 3.0, todo lo que sea «esto puede ser nulo» hay que
+ejercerlo con un test, no darlo por escrito.**
+
+**16. La validación de contrato hay que PEDIRLA.** Heredar de `ApiTestCase` deja Spectator
+cableado, pero solo compara cuando el test llama a `assertValidRequest()`/`assertValidResponse()`.
+Los primeros tests del catálogo pasaban en verde sin validar nada contra el documento: la mutación
+de comprobación (renombrar un campo del Resource) solo tumbó el test que asertaba ese campo a mano.
+**Sin un `assertValidResponse()` explícito por endpoint y por status, el contrato no muerde.**
+
+**17. El presupuesto de consultas se mide por PENDIENTE, no por techo.** Un techo fijo envejece y se
+acaba subiendo; comparar el coste con 1 elemento y con N lo convierte en una prueba de N+1 que no
+hay que recalibrar. Así se destapó uno REAL en el primer borrador del read-model:
+`RateResolver::priceCents()` hace su propia consulta, y llamarlo dentro del bucle de complementos
+costaba dos consultas por complemento. Se arregló resolviendo la tarifa una vez y leyendo el precio
+de la relación ya cargada (`TicketType::priceCentsForRate()`), con resultado idéntico.
+⚠️ Dos trampas al medir, las dos vividas: `DB::listen` **no se puede desregistrar** —medir dos veces
+en el mismo test contaba cada consulta el doble y fingía un N+1 inexistente; se usa el query log—, y
+**la primera petición de un proceso paga el `select` de `settings`** que `PERF-02` memoiza, así que
+hay que calentar antes de comparar.
+
+**18. Dos definiciones de «precio de referencia» conviven en el producto**, y son distintas:
+`displayPriceCents()` (la de la landing) prefiere la tarifa `normal` y cae al mínimo; el catálogo
+de compra usa el mínimo a secas. El read-model conserva la del catálogo —`fromPriceCents`— porque
+cambiarla habría cambiado el importe anunciado en el flujo de compra. Con la misma lógica se
+conservó que el mínimo NO filtra por tarifa activa: una instalación con precios colgando de una
+tarifa desactivada anunciaría un «desde» que no se puede comprar. Es un riesgo latente (no observado
+en datos reales), y tocar lo que se le anuncia al cliente exige decisión del owner — queda en
+`DEUDA.md`, no resuelto de tapadillo dentro de una extracción.

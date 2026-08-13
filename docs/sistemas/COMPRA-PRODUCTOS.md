@@ -162,10 +162,16 @@ catálogo es **pequeño por diseño** (techo realista ~10–15 ítems) → acord
   («Jump · 1 hora») → **lista plana, sin subcabeceras de zona**.
 
 **Implementación.**
-- `App\Livewire\Tickets\Purchase`: `render()` agrupa por tipo en dos secciones;
-  `catalogSection()` precomputa el modelo de vista por ítem (incl. cadena `search`);
-  `catalogTypes()` (entry+pack) valida la selección; `showPacks()` → paso 1 +
-  `dispatch('catalog-open-services')`.
+- **Qué se vende lo decide el DOMINIO desde Fase 3 · paso 1b** (`DECISIONES #27`): el contrato
+  `App\Domain\Booking\Contracts\ProductCatalog` (implementado por `Services\CatalogReader`) define
+  el conjunto —`sellable()` + `inOperationalZone()`, tipos `entry`+`pack`, orden por `position`— y
+  los campos de cada ficha. Lo consumen la web y `GET /api/v1/catalog/products`: **una sola
+  definición**, verificada con un doble en `ModuleContractsTest`.
+- `App\Livewire\Tickets\Purchase`: `render()` pide el catálogo al contrato UNA vez y lo parte por
+  tipo en memoria; `catalogSection()` ya solo ADAPTA a la vista lo que el dominio da —une
+  `features` con « · » y precomputa los dos artefactos de esta interfaz: la cadena `search` del
+  buscador progresivo y el `zone_anchor` del deep-link—; `catalogTypes()` (entry+pack, sobre los
+  modelos) valida la selección; `showPacks()` → paso 1 + `dispatch('catalog-open-services')`.
 - `purchase.blade.php` paso 1: 2 secciones-acordeón **Alpine** (inline `x-data`, colapso CSS grid
   `0fr→1fr`), **buscador progresivo** (solo si total > umbral; umbral configurable desde el panel
   vía el helper defensivo `App\Domain\Booking\Services\CatalogSettings::searchMinItems()`, default 12), filtrado

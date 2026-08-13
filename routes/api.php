@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CatalogProductsController;
+use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
@@ -26,6 +28,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::name('api.v1.')->group(function (): void {
+
+    // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
+    // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir
+    // identidad aquí cerraría ese flujo. Al ser rutas públicas, el limitador `throttle:api` sí las
+    // cuenta (en una ruta con `auth:`, el 401 se lanza antes de llegar a él — spec §10, punto 2).
+    Route::get('/catalog/zones', [CatalogZonesController::class, 'index'])->name('catalog.zones.index');
+    Route::get('/catalog/products', [CatalogProductsController::class, 'index'])->name('catalog.products.index');
+    // `whereNumber` no es cosmética: sin ella, `/catalog/products/abc` llegaría al controlador y la
+    // coerción a `int` reventaría con un 500 en vez del 404 que corresponde.
+    Route::get('/catalog/products/{product}', [CatalogProductsController::class, 'show'])
+        ->whereNumber('product')
+        ->name('catalog.products.show');
 
     // ── Zona autenticada ──────────────────────────────────────────────────────────────────────
     // `auth:sanctum` cubre los DOS modos del §4.2 con el mismo código: cookie de sesión para la

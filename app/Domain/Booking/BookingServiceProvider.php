@@ -4,8 +4,10 @@ namespace App\Domain\Booking;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ZonePalette;
+use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
@@ -26,6 +28,8 @@ class BookingServiceProvider extends ServiceProvider
     {
         $this->app->bind(CustomerReservations::class, CustomerReservationsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
+        // Catálogo de venta (Fase 3 · paso 1b): lo consumen la web (`Tickets\Purchase`) y la API.
+        $this->app->bind(ProductCatalog::class, CatalogReader::class);
         $this->app->bind(ZonePalette::class, ZonePaletteReader::class);
         // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
         // petición para no repetir esas lecturas entre la landing, el SEO y el hero.

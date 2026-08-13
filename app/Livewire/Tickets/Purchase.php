@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Tickets;
 
+use App\Domain\Booking\Contracts\CatalogProduct;
+use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Slot;
@@ -157,12 +159,14 @@ class Purchase extends Component
 
     private SlotOffer $slotOffer;
 
+    private ProductCatalog $catalog;
+
     /** Memo por petición de los complementos del producto elegido (evita N consultas por render). */
     private ?Collection $selectedAddonsMemo = null;
 
     private ?int $selectedAddonsMemoFor = null;
 
-    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer): void
+    public function boot(RateResolver $rates, SlotAvailability $availability, ProductAvailability $productWindow, PackAvailability $packAvailability, AddonResolver $addonResolver, SlotOffer $slotOffer, ProductCatalog $catalog): void
     {
         $this->rates = $rates;
         $this->availability = $availability;
@@ -170,6 +174,7 @@ class Purchase extends Component
         $this->packAvailability = $packAvailability;
         $this->addonResolver = $addonResolver;
         $this->slotOffer = $slotOffer;
+        $this->catalog = $catalog;
     }
 
     public function mount(): void
@@ -1454,9 +1459,13 @@ class Purchase extends Component
     }
 
     /**
-     * Todos los productos vendibles del flujo (entradas + packs), para resolver el carrito MIXTO.
-     * El catálogo de cada pestaña sale de aquí filtrado por tipo ({@see catalogTypes()}). Cargado
-     * una vez por petición.
+     * Todos los productos vendibles del flujo (entradas + packs + complementos), para resolver el
+     * carrito MIXTO y la selección en curso. Cargado una vez por petición.
+     *
+     * El CATÁLOGO ya no sale de aquí: lo describe `ProductCatalog` (Fase 3 · paso 1b), que aplica
+     * el mismo filtro sobre los tipos seleccionables. Esta consulta sigue existiendo porque el
+     * carrito necesita además los complementos y los MODELOS (precio del día, franjas, aforo), no
+     * la ficha de catálogo.
      *
      * @return Collection<int,TicketType>
      */
@@ -1470,10 +1479,13 @@ class Purchase extends Component
     }
 
     /**
-     * Productos SELECCIONABLES del paso 1 y fuente única para validar la selección por id:
-     * entradas (`type=entry`) + servicios/packs (`type=pack`). Los complementos (`type=addon`)
-     * viven DENTRO de un producto (paso 3), no en el catálogo. El render los agrupa por TIPO en
-     * dos secciones; el CARRITO es único y mezcla entradas y servicios (OrderCreator los soporta).
+     * Productos SELECCIONABLES, para validar por id lo que el cliente elige: entradas
+     * (`type=entry`) + servicios/packs (`type=pack`). Los complementos (`type=addon`) viven DENTRO
+     * de un producto (paso 3), no en el catálogo. El CARRITO es único y mezcla entradas y servicios
+     * (OrderCreator los soporta).
+     *
+     * Mismo conjunto que expone `ProductCatalog`, resuelto sobre los modelos ya cargados: lo que se
+     * puede ELEGIR y lo que se OFRECE no pueden ser dos cosas distintas.
      *
      * @return Collection<int,TicketType>
      */
@@ -1485,51 +1497,57 @@ class Purchase extends Component
     }
 
     /**
-     * Modela una colección de productos para el catálogo del paso 1: precio «desde», etiqueta de
-     * señal (data-driven, valor CONFIGURADO #225 F2), si es pack (para el sufijo «por niño») y una
-     * cadena de búsqueda normalizada (nombre + features) que el buscador progresivo filtra en
-     * cliente. Lista plana ordenada por `position`; los nombres ya distinguen la zona
-     * («Jump · 1 hora», «Cumpleaños Jump»), por eso NO se sub-agrupa por zona (la zona es un
-     * constructo operativo —franjas + aforo—, no una categoría de catálogo; decisión 2026-06-10).
+     * Adapta a la VISTA los productos que describe el dominio (`Booking\Contracts\ProductCatalog`).
+     * Qué se vende y qué se cuenta de cada producto —precio «desde», etiqueta de señal (#225 F2),
+     * ventajas, unidad de precio— lo decide el read-model desde Fase 3 · paso 1b; aquí solo queda
+     * lo que es de ESTA interfaz y ningún otro cliente necesitaría:
      *
-     * `zone_anchor` (#228): el slug de la zona SOLO en el primer ítem de cada zona; la vista coloca
-     * ahí un ancla invisible para que el deep-link «Comprar» de una atracción de pago abra Entradas
-     * y haga scroll a su zona (evento `catalog-open-entries-zone`). Precalculado aquí para no meter
-     * `@php` en el blade (gotcha PCRE de `purchase.blade.php`).
+     *  - `features` unido con « · » y `deposit_label`/`period_label` como cadena (el blade los
+     *    imprime tal cual; el contrato los da como lista y como `null`, que es lo que son);
+     *  - `search` (#226): nombre + ventajas en minúsculas, el índice que el buscador progresivo
+     *    filtra EN CLIENTE. Un índice de búsqueda no es dominio: cada cliente construye el suyo;
+     *  - `zone_anchor` (#228): el slug de la zona SOLO en el primer producto de cada zona; la vista
+     *    coloca ahí un ancla invisible para que el deep-link «Comprar» de una atracción de pago
+     *    abra Entradas y haga scroll a su zona (evento `catalog-open-entries-zone`). Se precalcula
+     *    aquí para no meter `@php` en el blade (gotcha PCRE de `purchase.blade.php`).
      *
-     * @param  Collection<int,TicketType>  $types
-     * @return list<array{id:int,name:string,badge:string|null,features:string,from:int|null,deposit_label:string,is_pack:bool,featured:bool,search:string,zone_anchor:string|null}>
+     * Lista plana ordenada por `position`; los nombres ya distinguen la zona («Jump · 1 hora»,
+     * «Cumpleaños Jump»), por eso NO se sub-agrupa por zona (la zona es un constructo operativo
+     * —franjas + aforo—, no una categoría de catálogo; decisión 2026-06-10).
+     *
+     * @param  list<CatalogProduct>  $products
+     * @return list<array{id:int,name:string,badge:string|null,features:string,from:int|null,deposit_label:string,is_pack:bool,period_label:string,featured:bool,search:string,zone_anchor:string|null}>
      */
-    private function catalogSection(Collection $types): array
+    private function catalogSection(array $products): array
     {
         $seenZones = [];
+        $rows = [];
 
-        return $types->map(function (TicketType $type) use (&$seenZones) {
-            $features = $type->tr('features');
-            $featuresText = is_array($features) ? implode(' ', $features) : (string) $features;
-
-            $zoneSlug = $type->zone?->slug;
+        foreach ($products as $product) {
+            $zoneSlug = $product->zone?->slug;
             $anchor = ($zoneSlug !== null && ! in_array($zoneSlug, $seenZones, true)) ? $zoneSlug : null;
             if ($anchor !== null) {
                 $seenZones[] = $anchor;
             }
 
-            return [
-                'id' => $type->id,
-                'name' => (string) $type->tr('name'),
-                'badge' => $type->tr('badge') ?: null,
-                'features' => is_array($features) ? implode(' · ', $features) : (string) $features,
-                'from' => $this->fromPriceCents($type),
-                'deposit_label' => (string) $type->depositLabel(),
-                'is_pack' => $type->isPack(),
+            $rows[] = [
+                'id' => $product->id,
+                'name' => $product->name,
+                'badge' => $product->badge,
+                'features' => implode(' · ', $product->features),
+                'from' => $product->fromPriceCents,
+                'deposit_label' => (string) $product->depositLabel,
+                'is_pack' => $product->isPack(),
                 // Unidad de precio configurable («/niño», «por persona»…) — misma fuente que la
                 // landing (`period_label`); el catálogo la usaba hardcodeada (`tickets.per_child`).
-                'period_label' => (string) $type->tr('period_label'),
-                'featured' => (bool) $type->featured,
-                'search' => Str::lower(trim($type->tr('name').' '.$featuresText)),
+                'period_label' => (string) $product->periodLabel,
+                'featured' => $product->featured,
+                'search' => Str::lower(trim($product->name.' '.implode(' ', $product->features))),
                 'zone_anchor' => $anchor,
             ];
-        })->values()->all();
+        }
+
+        return $rows;
     }
 
     private function slotFor(int $zoneId): ?Slot
@@ -1552,14 +1570,6 @@ class Purchase extends Component
             ->where('start_time', $time)
             ->where('zone_id', $zoneId)
             ->first();
-    }
-
-    /** Precio de referencia ("desde X€") para el catálogo: el más bajo de sus tarifas. */
-    public function fromPriceCents(TicketType $type): ?int
-    {
-        $min = $type->prices->min('amount_cents');
-
-        return $min !== null ? (int) $min : null;
     }
 
     /** Precio del día para la entrada elegida (según la fecha). */
@@ -1989,12 +1999,17 @@ class Purchase extends Component
         // (pack). Lista plana ordenada por `position`; NO se sub-agrupa por zona (los nombres ya la
         // llevan y la zona es un constructo operativo, no una categoría de catálogo). El anuncio de
         // señal (#225 F2) viaja por ítem en `catalogSection()`.
+        //
+        // Qué se vende lo decide el DOMINIO (`ProductCatalog`), no este componente: la API sirve
+        // exactamente los mismos productos con los mismos campos (Fase 3 · paso 1b). Se pide UNA
+        // vez y se parte por tipo en memoria — pedir dos veces filtrando por tipo costaría el doble
+        // de consultas para el mismo resultado.
         $entries = [];
         $services = [];
         if ($this->step === 1) {
-            $types = $this->catalogTypes();
-            $entries = $this->catalogSection($types->where('type', TicketType::TYPE_ENTRY));
-            $services = $this->catalogSection($types->where('type', TicketType::TYPE_PACK));
+            $products = collect($this->catalog->products());
+            $entries = $this->catalogSection($products->where('type', CatalogProduct::TYPE_ENTRY)->all());
+            $services = $this->catalogSection($products->where('type', CatalogProduct::TYPE_PACK)->all());
         }
         $catalogTotal = count($entries) + count($services);
 

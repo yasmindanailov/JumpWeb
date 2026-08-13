@@ -2,11 +2,15 @@
 
 namespace Tests\Feature\Architecture;
 
+use App\Domain\Booking\Contracts\CatalogProduct;
+use App\Domain\Booking\Contracts\CatalogProductDetail;
+use App\Domain\Booking\Contracts\CatalogZone;
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\OperatingWindow;
 use App\Domain\Booking\Contracts\PendingGuestForm;
+use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\SeasonWindow;
 use App\Domain\Booking\Contracts\SpecialDay;
@@ -16,6 +20,7 @@ use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
@@ -32,10 +37,12 @@ use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
+use App\Livewire\Tickets\Purchase;
 use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -61,6 +68,7 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(Redsys::class, app(RefundGateway::class));
         $this->assertInstanceOf(CustomerReservationsReader::class, app(CustomerReservations::class));
         $this->assertInstanceOf(PublishableCatalogReader::class, app(PublishableCatalog::class));
+        $this->assertInstanceOf(CatalogReader::class, app(ProductCatalog::class));
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
     }
@@ -331,6 +339,61 @@ class ModuleContractsTest extends TestCase
 
         $specials = $schedule->upcomingSpecialDates();
         $this->assertTrue($specials[0]['is_closed']);
+    }
+
+    /**
+     * WEB → BOOKING: el catálogo del flujo de compra sale del contrato, no de una consulta propia
+     * del componente Livewire (Fase 3 · paso 1b).
+     *
+     * El doble no toca la base de datos y devuelve un producto que NO existe: si `Tickets\Purchase`
+     * siguiera construyendo el catálogo por su cuenta, la pantalla saldría vacía. Es la prueba de
+     * que la web y la API leen el mismo catálogo — sin ella, «fuente única» sería una afirmación
+     * del docblock y no un hecho comprobado.
+     */
+    public function test_the_web_purchase_flow_gets_its_catalog_from_the_contract(): void
+    {
+        $catalog = new class implements ProductCatalog
+        {
+            public int $calls = 0;
+
+            public function zones(): array
+            {
+                return [];
+            }
+
+            public function products(?string $type = null): array
+            {
+                $this->calls++;
+
+                return [new CatalogProduct(
+                    id: 4242,
+                    type: CatalogProduct::TYPE_ENTRY,
+                    name: 'Entrada del contrato',
+                    badge: 'Sello',
+                    features: ['Ventaja A', 'Ventaja B'],
+                    fromPriceCents: 1234,
+                    priceVaries: true,
+                    depositLabel: null,
+                    periodLabel: 'por persona',
+                    featured: false,
+                    zone: new CatalogZone(7, 'zona-del-contrato', 'Zona del contrato'),
+                )];
+            }
+
+            public function product(int $id): ?CatalogProductDetail
+            {
+                return null;
+            }
+        };
+        $this->app->instance(ProductCatalog::class, $catalog);
+
+        Livewire::test(Purchase::class)
+            ->assertSee('Entrada del contrato')
+            // La vista compone: las ventajas unidas con « · » y el ancla de zona del deep-link.
+            ->assertSee('Ventaja A · Ventaja B')
+            ->assertSee('zone-zona-del-contrato', false);
+
+        $this->assertSame(1, $catalog->calls, 'Purchase debe pedir el catálogo UNA vez por render');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Domain\Booking\Contracts;
+
+/**
+ * La FICHA COMPLETA de un producto del catálogo: su resumen de lista más lo que solo hace falta
+ * cuando alguien abre ese producto concreto.
+ *
+ * **Compone en vez de heredar** ({@see CatalogProduct} es `final`): un detalle *tiene* un resumen,
+ * y así hay una sola definición de los campos comunes. Que el JSON de la API lo aplane —el cliente
+ * ve un único objeto— es decisión de la capa HTTP, no de la forma del dominio.
+ *
+ * La separación lista/detalle no es estética: cargar complementos y campos de evento cuesta una
+ * consulta por producto, y el catálogo se lista entero en la primera pantalla del flujo de compra.
+ */
+final readonly class CatalogProductDetail
+{
+    /**
+     * @param  list<CatalogEventField>  $eventFields  campos del evento de la etapa `booking` (vacío si no es pack o no define ninguno)
+     * @param  list<CatalogAddon>  $addons  complementos OFRECIBLES, en el orden configurado
+     */
+    public function __construct(
+        public CatalogProduct $product,
+        /**
+         * Cantidad mínima contratable: los invitados mínimos de un pack, o 1 en una entrada. Es la
+         * misma regla que aplica `OrderCreator` al admitir la línea, así que un cliente que la
+         * respete no puede construir un pedido que el servidor vaya a rechazar por cantidad.
+         */
+        public int $minQuantity,
+        /** Tope contratable configurado (packs), o null si no lo hay. El aforo es otro límite, y lo da disponibilidad. */
+        public ?int $maxQuantity,
+        /** @var list<CatalogEventField> */
+        public array $eventFields,
+        /** @var list<CatalogAddon> */
+        public array $addons,
+    ) {}
+}

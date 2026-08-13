@@ -223,7 +223,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       que la v1 llamó `online_due_cents` NO era «lo pendiente» sino el importe que se cobra online
       (renombrado a `online_amount_cents`), y un `enum` de OpenAPI 3.0 rechaza `null` aunque el
       campo sea `nullable` si no se lista dentro. Suite **2242 verde**.
-- [ ] Paso 1b — catálogo por API (read-model nuevo en Booking, extraído de `Purchase::render()`).
+- [x] **Paso 1b — CATÁLOGO por API** (2026-08-13, `DECISIONES #27`): `GET catalog/zones`,
+      `catalog/products` (con filtro `?type=`) y `catalog/products/{id}`, públicos y de solo
+      lectura. No es una copia para la API: nace el contrato `Booking\Contracts\ProductCatalog`
+      (+5 DTOs) con `CatalogReader` detrás, y **`Livewire\Tickets\Purchase` pasa a consumirlo** en
+      el mismo commit — la web y la API sirven el mismo catálogo, y lo comprueba
+      `ModuleContractsTest` con un doble. La frontera dominio/presentación se decidió campo a campo:
+      `search` (índice del buscador en cliente) y `zone_anchor` (ancla del deep-link) se quedan en
+      la web porque se DERIVAN de lo que da el contrato. Tres hallazgos: el catálogo **no** podía
+      consumir `AddonResolver::viewModel()` como suponía el spec (su firma exige el estado de la
+      selección; lo reutilizable son sus REGLAS) · un `$ref` con `nullable` **no valida en ninguna
+      de las dos direcciones**, así que la zona anidada va inline con una guarda que impide que
+      diverja · el presupuesto de consultas medido por PENDIENTE (1 vs N) destapó un **N+1 real**
+      en el propio read-model, corregido. Suite **2266 verde**.
 - [ ] Autenticación por tokens (Sanctum) + flujo SPA (cookie) y móvil (token).
 - [ ] Endpoints v1: auth/registro/perfil · catálogo · disponibilidad (fechas/franjas) ·
       carrito/pedido · pago (init + retorno; la notificación server-to-server ya existe) ·
