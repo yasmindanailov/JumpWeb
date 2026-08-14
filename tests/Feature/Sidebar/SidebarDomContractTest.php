@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Models\Setting;
+use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
 use DOMDocument;
 use DOMElement;
@@ -344,16 +345,128 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
-    /** @return array<string, mixed> */
-    private function identifyProps(): array
+    /**
+     * ⚠️ **El formulario más largo del cajón, y el que más nodos invisibles tiene.**
+     *
+     * Tres de ellos no se ven nunca y el diff es lo ÚNICO que los vigila: el **honeypot** (`.hp`, que
+     * el CSS oculta y que es el señuelo del servidor), la **fila** `.form__row` que agrupa email y
+     * teléfono, y el `<small class="form__hint">` de la contraseña —que es un `<small>`, no un `<span>`,
+     * y el tipo de elemento es contrato—. Un motor sin honeypot deja al servidor sin su defensa y no se
+     * nota mirando la pantalla.
+     */
+    public function test_the_register_form_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = Livewire::test(Purchase::class)->set('step', 5)->call('setAuthMode', 'register');
+
+        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(5, $this->identifyProps('register'), 'bk-back', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del ALTA DIFIERE entre los dos motores.\n".
+            'Ojo al honeypot (`.hp`), a la fila de email+teléfono y al `<small>` del hint: no se ven, '.
+            "y son parte del contrato.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **El banner de errores del alta, que es un árbol distinto**: `<strong>` + `<ul>` con un `<li>`
+     * por aviso, **y además** cada aviso bajo su campo. Las dos cosas, no una.
+     *
+     * El caso anterior no puede verlo —un formulario recién abierto no tiene errores—, y el número de
+     * `<li>` depende de cuántos campos fallen: se fuerza un envío vacío, que falla en los seis.
+     */
+    public function test_the_register_error_banner_emits_the_same_tree_in_both_engines(): void
+    {
+        // Un alta VACÍA: falla la validación de todos los campos obligatorios a la vez, que es lo que
+        // llena la lista. Con un solo campo en rojo, un `<li>` de más o de menos no se vería.
+        $register = Livewire::test(Register::class, ['embedded' => true])->call('register');
+        $errors = $register->errors()->toArray();
+
+        $this->assertGreaterThan(3, count($errors), 'el caso necesita varios campos en rojo para probar la lista');
+
+        $livewire = $this->treeOf($register->html(), 'auth__errors');
+        $vue = $this->treeOf(
+            $this->renderVue(5, $this->identifyProps('register', $this->registerErrorsFrom($errors))),
+            'auth__errors'
+        );
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El banner de errores del alta DIFIERE entre los dos motores.\n".
+            "Es `<strong>` + `<ul>` con un `<li>` por aviso.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * El paso 7 — «revisa tu correo». Son tres nodos, pero uno lleva `role="status"`, que es contrato:
+     * lo anuncia el lector de pantalla sin robar el foco.
+     */
+    public function test_the_verify_email_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = Livewire::test(Purchase::class)->set('step', 7);
+
+        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(7, ['messages' => __('tickets')], 'purchase__confirm', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de «revisa tu correo» DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * Los avisos del bag de Livewire → la forma que compone `register.js` desde el sobre de la API.
+     *
+     * @param  array<string, array<int, string>>  $errors
+     * @return array<string, mixed>
+     */
+    private function registerErrorsFrom(array $errors): array
+    {
+        $fields = [];
+        foreach ($errors as $field => $messages) {
+            $fields[$field] = $messages[0] ?? '';
+        }
+
+        // El mismo orden que fija `register.js`: el de las reglas de validación.
+        $order = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'marketing'];
+        $summary = [];
+        foreach ($order as $key) {
+            if (isset($fields[$key])) {
+                $summary[] = $fields[$key];
+            }
+        }
+        foreach ($fields as $key => $message) {
+            if (! in_array($key, $order, true)) {
+                $summary[] = $message;
+            }
+        }
+
+        return ['summary' => $summary, 'fields' => $fields];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $registerErrors
+     * @return array<string, mixed>
+     */
+    private function identifyProps(string $mode = 'login', ?array $registerErrors = null): array
     {
         return [
-            'mode' => 'login',
-            'errors' => ['global' => '', 'fields' => []],
+            'mode' => $mode,
+            'loginErrors' => ['global' => '', 'fields' => []],
+            'registerErrors' => $registerErrors ?? ['summary' => [], 'fields' => []],
             'submitting' => false,
+            'form' => [],
             'messages' => __('tickets'),
-            // El montaje inyecta el grupo `account` PODADO a `login`, que es lo que este paso usa.
-            'account' => ['login' => __('account.login'), 'register' => __('account.register')],
+            // El montaje inyecta `account` PODADO, con los dos textos legales YA interpolados: llevan
+            // un `<a href>` dentro que compone `route()`, y el cajón los pinta con `v-html`.
+            'account' => [
+                'login' => __('account.login'),
+                'register' => array_replace(__('account.register'), [
+                    'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
+                    'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                ]),
+            ],
         ];
     }
 

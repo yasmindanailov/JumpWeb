@@ -137,6 +137,50 @@ class PublicConfigTest extends ApiTestCase
         $this->assertStringNotContainsString('secreto-jamas', $response->getContent() ?: '');
     }
 
+    /**
+     * ⚠️ **Media configuración es NO configuración, y el campo tiene que decirlo.**
+     *
+     * El anti-bot exige las DOS claves: con solo la pública, `Turnstile::enabled()` es `false`, la web
+     * **no pinta el widget** y `verify()` deja pasar el alta. Publicar la clave en ese estado le decía
+     * a un cliente que dibujara un captcha **que su propio servidor no comprueba**: un árbol distinto
+     * al de la web, un script de terceros de más y un obstáculo para el usuario a cambio de ninguna
+     * defensa.
+     *
+     * Es un estado alcanzable de verdad —se configura una clave y se deja la otra para luego— y lo
+     * destapó el paso de registro de la SPA, que es el primer cliente que lee este campo para decidir
+     * si pinta el widget.
+     */
+    public function test_half_configured_anti_bot_reads_as_not_configured(): void
+    {
+        foreach ([
+            'solo la clave pública' => ['security.turnstile_site_key' => 'site-visible'],
+            'solo la secreta' => ['security.turnstile_secret' => 'secreto-jamas'],
+        ] as $label => $settings) {
+            Setting::query()->whereIn('key', ['security.turnstile_site_key', 'security.turnstile_secret'])->delete();
+
+            foreach ($settings as $key => $value) {
+                Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => 'security']);
+            }
+
+            Setting::flushMemo();
+            Turnstile::flushCache();
+
+            $this->assertFalse(
+                Turnstile::enabled(),
+                "con «{$label}» el anti-bot no está activo: si esto cambia, este test ya no prueba lo que dice"
+            );
+
+            $this->getJson(self::PATH)
+                ->assertOk()
+                ->assertValidResponse(200)
+                ->assertJsonPath(
+                    'turnstile_site_key', null,
+                    "Con «{$label}» el endpoint anuncia un anti-bot que NO está activo. Un cliente ".
+                    'fiel al contrato pintaría un captcha que el servidor no verifica.'
+                );
+        }
+    }
+
     // ── Lo que NUNCA puede llevar ─────────────────────────────────────────────────────────────
 
     /**

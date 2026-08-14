@@ -200,6 +200,11 @@ class SidebarBundleBudgetTest extends TestCase
         // seguiría ofreciendo «Entrar» a quien acaba de entrar — y ningún test del repo lo vería,
         // porque el cambio ocurre en OTRO componente y en el navegador.
         'logged-in' => 'avisar a Livewire de que ya hay sesión',
+        // ⚠️ 4.4b·1: el alta embebida. `context` es lo que activa el **pay-first** en el servidor —sin
+        // él manda un correo de verificación y no abre sesión—, así que su ausencia no rompería nada
+        // visible: dejaría al cliente esperando un correo en mitad de una compra.
+        '/auth/register' => 'dar de alta desde el cajón',
+        'purchase' => 'declarar el contexto de compra, que es lo que activa el pay-first',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

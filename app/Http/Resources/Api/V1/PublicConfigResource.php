@@ -62,7 +62,15 @@ class PublicConfigResource extends JsonResource
             // `null` cuando la instalación no tiene anti-bot configurado, que es un estado NORMAL:
             // sin claves el widget es un no-op y el registro funciona igual (`SEGURIDAD` regla 5).
             // Decirlo con `null` es más honesto que omitir el campo — el cliente sabe que preguntó.
-            'turnstile_site_key' => Turnstile::siteKey(),
+            //
+            // ⚠️ **`enabled()`, no `siteKey()`, y la diferencia es medible**: el anti-bot exige las DOS
+            // claves, y con solo la pública `Turnstile::enabled()` es `false` — la web **no pinta el
+            // widget** y `verify()` deja pasar el alta—. Publicar la clave en ese estado le decía al
+            // cliente que dibujara un captcha que su propio servidor no comprueba: un árbol distinto
+            // al de la web, un script de terceros de más y un obstáculo para el usuario a cambio de
+            // ninguna defensa. Lo destapó el paso de registro de la SPA, que es el primer cliente que
+            // lee este campo para decidir.
+            'turnstile_site_key' => Turnstile::enabled() ? Turnstile::siteKey() : null,
         ];
     }
 }

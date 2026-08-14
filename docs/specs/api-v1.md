@@ -7,7 +7,7 @@
 > (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.sexdecies** — ochenta y tres puntos
+> **Lo que el código enseñó al implementar: §10 → §10.sexdecies** — ochenta y siete puntos
 > medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
@@ -1032,3 +1032,36 @@ invirtiendo las posiciones —la hoja se evalúa primero, cuando su requisito a�
 exige el punto fijo de verdad. **Cuando lo que se prueba es un algoritmo iterativo, el caso tiene que
 forzar el orden que obliga a iterar**; si no, se está probando el orden, no el algoritmo. Lo destapó
 la mutación, no la lectura del test.
+
+**84. Un campo «de configuración» puede mentir con media configuración puesta.** `GET /config`
+publicaba `turnstile_site_key` leyendo la clave pública, pero el anti-bot **solo está activo con las
+DOS claves**: con una sola, la web no pinta el widget y `verify()` deja pasar el alta. El contrato ya
+decía por escrito «`null` cuando la instalación no tiene anti-bot configurado» y la implementación no
+lo cumplía, así que el primer cliente que leyera el campo para DECIDIR —el cajón SPA— habría pintado un
+captcha que su propio servidor no comprueba. **Cuando un campo se publica para que alguien decida, su
+valor tiene que ser el veredicto, no la materia prima**: ahora es `enabled() ? siteKey() : null`, y
+«no nulo ⟺ el alta exige captcha» está escrito en el contrato.
+
+**85. `ConvertEmptyStringsToNull` convierte `sometimes|string` en una trampa para el caso NORMAL.** El
+señuelo anti-bot (`website`) viaja **siempre** desde un formulario, vacío en todo cliente legítimo. Ese
+`""` llega como `null`, `sometimes` lo ve presente y `string` lo rechaza: el alta moría con un **422
+sobre un campo que el usuario no ve**. Los tests del endpoint lo esquivaban por los dos únicos caminos
+que existen —mandarlo relleno u omitirlo—, que es exactamente por qué duró hasta el primer cliente
+real. **Todo campo opcional que un formulario emite vacío necesita `nullable`**, y el caso que lo
+prueba tiene que mandar la cadena vacía, no omitir la clave.
+
+**86. Dos puertas de la misma operación no comparten los mensajes de validación aunque compartan las
+reglas.** `Auth\Register` declara `validationAttributes()` —los rótulos del formulario— y `messages()`
+—el aviso propio de las casillas legales—; el controlador de la API no tenía ninguno de los dos. Con
+las mismas reglas, la web decía «El campo **Nombre y apellidos** es obligatorio.» y la API «El campo
+**name** es obligatorio.». Extraer el SERVICIO (`SelfSignup`) unificó la decisión, no la copia; la
+capa de entrega mantiene lo suyo y **hay que igualarlo a mano**, o el cliente que pinta el mismo
+formulario enseña un texto distinto según por qué puerta entró.
+
+**87. Una respuesta deliberadamente ambigua obliga al cliente a una segunda pregunta, y eso es
+correcto.** `POST auth/register` responde **201 sin cuerpo** tanto si creó la cuenta como si el señuelo
+actuó —si distinguiera, el bot lo notaría de un vistazo—. La consecuencia es que el cliente no puede
+saber a qué pantalla ir sin preguntar `GET /me`. No es un defecto del contrato: es el precio de que el
+honeypot sirva, y el contrato ya lo dejaba escrito («quien se registra dentro de la compra ya queda
+identificado y puede pedir su perfil»). ⚠️ Y el fallo de esa segunda pregunta **no** puede leerse como
+«hay sesión»: llevaría al pago a quien no ha entrado.

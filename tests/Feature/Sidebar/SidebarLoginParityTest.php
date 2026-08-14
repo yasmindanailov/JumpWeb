@@ -234,15 +234,16 @@ class SidebarLoginParityTest extends TestCase
             ['login', 'register'], array_keys($boot['account'] ?? []),
             'el grupo `account` del montaje ha dejado de estar podado: viaja en cada página pública'
         );
-        $this->assertSame(
-            ['cta'], array_keys($boot['account']['register'] ?? []),
-            'de `register` solo hace falta el rótulo de la pestaña hasta que 4.4b lo pinte entero'
-        );
 
         $bytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
 
+        // Medido: 1.671 B en español, 1.575 en inglés y 1.761 en francés, con los dos grupos que el
+        // paso 5 pinta —`login` entero, `register` entero desde 4.4b·1 y `auth`—. El techo era 1.024
+        // cuando solo viajaba el rótulo de la pestaña de alta; subió **a propósito** al transcribir el
+        // formulario. La referencia que lo hace un presupuesto y no un número suelto: el grupo
+        // `account` COMPLETO son 9,6 kB, seis veces esto, y viajaría en cada página pública.
         $this->assertLessThan(
-            1024, $bytes,
+            2048, $bytes,
             "Los textos de auth del montaje pesan {$bytes} B. Es un presupuesto, no un objetivo: si ".
             'hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página pública.'
         );

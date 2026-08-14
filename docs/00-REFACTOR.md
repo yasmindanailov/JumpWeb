@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO** (·1 elegibilidad · ·2 identificación) → toca 4.4b (registro embebido)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO** y **4.4b·1** (alta embebida) → toca 4.4b·2 (el widget de Turnstile)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -790,6 +790,32 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · ⚠️ **Lo que NO cierra**: el registro embebido es 4.4b y el pago 4.5, así que quien se identifica
         **se queda en el paso 5** —navegar al 8 dejaría el cajón en blanco—. `TRANSCRIBED_STEPS` declara
         en el código a qué pasos se puede navegar y **solo crece**.
+- [x] **Paso 4.4b·1 — el alta desde el cajón** (2026-08-14, `DECISIONES #53`). El paso 5 pinta su
+      formulario de registro —51 nodos— y habla con `POST /api/v1/auth/register` con
+      `context: purchase`, la política **pay-first** que el servidor ya conocía. Entra también el paso 7.
+      · ⚠️ **Turnstile se aplaza a ·2 porque NO SE PUEDE VERIFICAR** (exige claves de Cloudflare y
+        navegador), y en su lugar entra la **guarda**: `GET /config` dice si el alta exige captcha y, si
+        lo exige, el cajón delega en el modal de Livewire, que sí monta el widget. Sin ella, activar el
+        anti-bot con el motor SPA puesto dejaba un registro que **rechaza a todo el mundo**, sin log.
+      · ⚠️ **Tres bugs de SERVIDOR destapados por el primer cliente real** (los tres con su regresión):
+        (1) `/config` publicaba la clave del anti-bot aunque faltara la secreta —estado en que la web no
+        pinta el widget y el servidor no verifica nada—; (2) el señuelo VACÍO, que es lo que manda todo
+        cliente legítimo, provocaba un **422 sobre un campo que el usuario no ve** (`ConvertEmptyStringsToNull`
+        + `sometimes|string`); (3) las dos puertas del alta **decían cosas distintas al usuario**, porque
+        el componente declara `validationAttributes()`/`messages()` y el controlador no.
+      · ⚠️ **El 201 no dice si hubo cuenta**, y es a propósito: distinguirlo delataría el señuelo. El
+        cajón pregunta `GET /me` después — con sesión sigue la compra, sin ella va a «revisa tu correo».
+        Verificado en vivo: las dos respuestas son byte a byte idénticas.
+      · **Tres nodos invisibles que solo vigila el diff**: el honeypot (`.hp`), la fila `.form__row` de
+        email+teléfono y el `<small class="form__hint">`. Un motor sin honeypot deja al servidor sin su
+        señuelo y no se nota mirando la pantalla.
+      · **Red**: 23 casos de `node --test`, `SidebarRegisterParityTest` (literales de negocio y
+        validación en los tres idiomas, pay-first, indistinguibilidad del señuelo, payload y la guarda
+        del captcha de punta a punta) y tres casos nuevos de árbol —incluido el banner de errores, que
+        se compara con el formulario VACÍO porque con un campo en rojo un `<li>` de más no se vería—.
+      · Suite **2673 verde** · 176 tests JS · chunk del cajón 131,7 kB de 135.
+      · ⚠️ **Lo que NO cierra**: el widget de Turnstile (·2) y el pago (4.5). Quien crea su cuenta con
+        la cesta lista se queda en el paso 5, igual que quien inicia sesión.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

@@ -1,0 +1,168 @@
+/**
+ * El REGISTRO embebido del cajón (Fase 4 · paso 4.4b·1).
+ *
+ * El paso 5 de la web monta `<livewire:auth.register :embedded="true">`; el motor SPA habla con
+ * `POST /api/v1/auth/register` declarando `context: purchase`, que es la política **pay-first** que el
+ * servidor ya conoce (`DECISIONES #31`): no manda correo de verificación y **deja la sesión abierta**,
+ * porque el pago sustituye a la verificación —un bot no paga—. Las cuatro capas de defensa del alta
+ * —honeypot, límite por IP, límite por correo y anti-bot— viven en `Identity\Services\SelfSignup`, el
+ * mismo servicio que usa el modal de la web.
+ *
+ * ⚠️ **La respuesta NO dice si se creó la cuenta, y es a propósito.** `POST auth/register` devuelve
+ * **201 sin cuerpo siempre**: el primer borrador del contrato devolvía el perfil cuando había cuenta y
+ * nada cuando se fingía, y así **un bot distinguía las dos respuestas de un vistazo** y el señuelo
+ * dejaba de servir para lo único que sirve. La consecuencia para este cliente es que después del 201
+ * hay que **preguntar `GET /me`**: si hay sesión, la cuenta existe y la compra sigue; si no la hay, el
+ * señuelo actuó y toca la pantalla de «revisa tu correo», exactamente como hace la web.
+ *
+ * ⚠️ **Y el aviso del limitador va bajo el campo EMAIL, no en el banner** —al revés que en el login—.
+ * No es un descuido de la web: `Register::reportSignup()` lanza `auth.throttle` en la clave `email`
+ * mientras `Login` la lanza en `_global`. Se transcribe como está.
+ */
+
+import { t, tp } from './i18n.js';
+
+/** El contexto de alta que activa el pay-first. El otro (`standalone`) es el del modal suelto. */
+export const CONTEXT_PURCHASE = 'purchase';
+
+/**
+ * ¿El alta de esta instalación exige captcha? Se lee de `GET /config`.
+ *
+ * ⚠️ **No nulo ⟺ el anti-bot está ACTIVO**, y esa equivalencia costó un arreglo del contrato: el
+ * endpoint publicaba la clave pública aunque faltara la secreta, estado en el que la web **no pinta el
+ * widget** y el servidor no verifica ningún token.
+ *
+ * Mientras el cajón no monte el widget (4.4b·2), esto es lo que evita el peor fallo posible: pintar un
+ * formulario de alta que **rechazaría a todo el mundo** con «no eres un robot», sin correo y sin log.
+ * Con captcha, el registro se delega en el modal de auth de Livewire, que sí lo monta.
+ */
+export function signupRequiresCaptcha(config) {
+    const key = config?.turnstile_site_key;
+
+    return typeof key === 'string' && key !== '';
+}
+
+export const VALIDATION_FAILED = 'validation_failed';
+export const TOO_MANY_REQUESTS = 'too_many_requests';
+
+/**
+ * Lo que el formulario enseña tras un intento fallido.
+ *
+ * `summary` es la lista del banner: la web pinta **todos** los mensajes juntos arriba **y** cada uno
+ * bajo su campo. Las dos cosas, no una — el banner deja ver el conjunto de un formulario largo y los
+ * de debajo permiten corregir uno a uno (A11y).
+ *
+ * @typedef {{summary: string[], fields: Record<string, string>}} RegisterErrors
+ */
+
+/** El orden en que la web lista los avisos del banner: el de las reglas de validación. */
+const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'marketing'];
+
+function clean() {
+    return { summary: [], fields: {} };
+}
+
+/**
+ * El «no» del servidor traducido a lo que pinta el formulario. Espejo de `Register::reportSignup()`.
+ *
+ * ⚠️ **Los literales de negocio los manda el SERVIDOR y aquí se pintan tal cual**, al revés que en el
+ * login. Y es correcto en los dos sitios: el registro publica en `fields.email` exactamente
+ * `account.register.already_exists`, `exists_unverified` o `bot_check_failed` —los mismos que pinta el
+ * Blade—, mientras que el login publica un `message` propio que NO coincide con `auth.failed`.
+ * Comprobado campo a campo en `SidebarRegisterParityTest`.
+ *
+ * @param {{ok: boolean, status: number, data: any, error: object|null}} response
+ * @param {{messages: object, auth: object}} texts
+ * @returns {RegisterErrors}
+ */
+export function registerErrors(response, { messages = {}, auth = {} } = {}) {
+    if (response?.ok) {
+        return clean();
+    }
+
+    const code = response?.error?.code ?? null;
+
+    if (code === VALIDATION_FAILED) {
+        const fields = {};
+
+        for (const [key, value] of Object.entries(response?.error?.fields ?? {})) {
+            const message = firstOf(value);
+
+            if (message !== '') fields[key] = message;
+        }
+
+        return { summary: summaryOf(fields), fields };
+    }
+
+    // ⚠️ Bajo el campo EMAIL, no en el banner: es donde lo pone `Register`, y difiere del login a
+    // propósito. El banner lo lista igual, porque la web lista todo lo que hay en el bag.
+    if (code === TOO_MANY_REQUESTS) {
+        const fields = { email: tp(auth, 'throttle', { seconds: response?.error?.params?.retry_after ?? 0 }) };
+
+        return { summary: summaryOf(fields), fields };
+    }
+
+    // Corte de red, 5xx o un código que este formulario no conoce. No es un estado que el componente
+    // Livewire pueda tener, así que no hay paridad que respetar: el genérico del cajón, cuyo consejo
+    // —esperar y reintentar— vale para los tres. Va solo al banner: no es culpa de ningún campo.
+    return { summary: [t(messages, 'errors.try_later')], fields: {} };
+}
+
+/**
+ * La lista del banner, en el ORDEN de las reglas.
+ *
+ * ⚠️ El orden importa para el diff de árbol tanto como el número: son `<li>` hermanos, y el
+ * normalizador cuenta nodos. `Object.entries` conserva el orden de inserción del JSON, que es el del
+ * servidor, pero fijarlo aquí lo hace independiente de cómo serialice el sobre.
+ */
+function summaryOf(fields) {
+    const known = FIELD_ORDER.filter((key) => fields[key]).map((key) => fields[key]);
+    const rest = Object.keys(fields).filter((key) => ! FIELD_ORDER.includes(key)).map((key) => fields[key]);
+
+    return [...known, ...rest];
+}
+
+function firstOf(value) {
+    if (typeof value === 'string') return value;
+
+    return Array.isArray(value) && typeof value[0] === 'string' ? value[0] : '';
+}
+
+/**
+ * Envía el alta y averigua **si de verdad hubo cuenta**.
+ *
+ * Dos peticiones y la segunda no es opcional: el 201 es idéntico para un alta real y para un señuelo
+ * que actuó, así que `GET /me` es la única forma de saber a qué pantalla ir. La web lo sabe sin
+ * preguntar porque tiene el veredicto del dominio en la mano; este cliente no puede tenerlo sin
+ * romper el señuelo para todo el mundo.
+ *
+ * @param {{
+ *   form: object,
+ *   api: {post: Function, get: Function},
+ *   messages: object,
+ *   auth: object,
+ * }} deps
+ * @returns {Promise<{ok: boolean, identified: boolean, me: object|null, errors: RegisterErrors}>}
+ */
+export async function runRegister({ form, api, messages = {}, auth = {} }) {
+    const response = await api.post('/auth/register', {
+        name: form?.name ?? '',
+        email: form?.email ?? '',
+        phone: form?.phone ?? '',
+        password: form?.password ?? '',
+        marketing: form?.marketing === true,
+        accept_privacy: form?.accept_privacy === true,
+        accept_terms: form?.accept_terms === true,
+        context: CONTEXT_PURCHASE,
+        // El señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
+        website: form?.website ?? '',
+    });
+
+    if (! response.ok) {
+        return { ok: false, identified: false, me: null, errors: registerErrors(response, { messages, auth }) };
+    }
+
+    const me = await api.get('/me');
+
+    return { ok: true, identified: me.ok === true, me, errors: clean() };
+}

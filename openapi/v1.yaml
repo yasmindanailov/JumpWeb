@@ -1493,6 +1493,12 @@ components:
             cuando la instalación no tiene anti-bot configurado, que es un estado normal: sin claves
             el widget es un no-op y el alta funciona igual.
 
+            **No nulo ⟺ el alta EXIGE captcha**, y por eso este campo se puede usar como el bit que
+            decide si se pinta el widget. El anti-bot necesita las **dos** claves (pública y secreta):
+            con solo una configurada no está activo, el servidor no verifica ningún token y aquí viaja
+            `null`. Dibujar el widget con media configuración pondría al usuario a resolver un captcha
+            que su propio servidor deja pasar.
+
     ReservationEligibility:
       type: object
       additionalProperties: false

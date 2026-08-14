@@ -44,9 +44,16 @@ class AuthRegistrationController extends Controller
     /** Alta dentro de la compra: pay-first (sesión iniciada, sin verificación). */
     private const CONTEXT_PURCHASE = 'purchase';
 
-    public function register(Request $request, SelfSignup $signup): Response|JsonResponse
+    /**
+     * Las reglas del alta. **Las mismas que el componente Livewire**, campo a campo: son las dos
+     * puertas de la misma operación, y una regla que difiera es una cuenta que una puerta acepta y la
+     * otra no.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function rules(): array
     {
-        $data = $request->validate([
+        return [
             'name' => ['required', 'string', 'max:255'],
             // Sin `unique` a propósito: la existencia la resuelve el dominio, que además decide
             // qué se le cuenta al usuario y a quién se avisa por correo.
@@ -58,9 +65,59 @@ class AuthRegistrationController extends Controller
             'marketing' => ['sometimes', 'boolean'],
             'context' => ['sometimes', 'string', 'in:'.self::CONTEXT_STANDALONE.','.self::CONTEXT_PURCHASE],
             // El campo señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
-            'website' => ['sometimes', 'string'],
-            'turnstile_token' => ['sometimes', 'string'],
-        ]);
+            //
+            // ⚠️ **`nullable` no es adorno: sin él, el caso NORMAL fallaba.** `ConvertEmptyStringsToNull`
+            // convierte el `""` que manda un cliente legítimo en `null`, `sometimes` lo ve presente y
+            // `string` lo rechaza — así que el alta moría con un **422 sobre un campo que el usuario no
+            // ve** y que ni siquiera es suyo. Lo destapó el primer cliente real del endpoint (el cajón
+            // SPA); los tests del paso 3c mandaban el señuelo relleno o lo omitían, que son justo los
+            // dos casos que esquivan el fallo.
+            'website' => ['sometimes', 'nullable', 'string'],
+            'turnstile_token' => ['sometimes', 'nullable', 'string'],
+        ];
+    }
+
+    /**
+     * Los avisos propios de las casillas legales.
+     *
+     * ⚠️ **Espejo de `Register::messages()`, y sin ellos las dos puertas divergían**: el componente
+     * dice «Debes aceptar esta condición para continuar.» y la API caía al genérico de la regla
+     * `accepted`. Un cliente que pinte el mismo formulario enseñaría un texto distinto según por qué
+     * puerta entrara.
+     *
+     * @return array<string, string>
+     */
+    private function messages(): array
+    {
+        return [
+            'accept_privacy.accepted' => __('account.register.must_accept'),
+            'accept_terms.accepted' => __('account.register.must_accept'),
+        ];
+    }
+
+    /**
+     * Cómo se NOMBRAN los campos en los avisos de validación.
+     *
+     * ⚠️ **Sin esto las dos puertas decían cosas distintas**, y no en el código sino en la pantalla: el
+     * componente Livewire declara `validationAttributes()` con los rótulos del formulario —«El campo
+     * **Nombre y apellidos** es obligatorio.»— y la API respondía con el nombre técnico —«El campo
+     * **name** es obligatorio.»—. Lo mismo, dicho peor, a un cliente que pinta el mismo formulario.
+     *
+     * @return array<string, string>
+     */
+    private function attributes(): array
+    {
+        return [
+            'name' => __('account.register.name'),
+            'email' => __('account.register.email'),
+            'phone' => __('account.register.phone'),
+            'password' => __('account.register.password'),
+        ];
+    }
+
+    public function register(Request $request, SelfSignup $signup): Response|JsonResponse
+    {
+        $data = $request->validate($this->rules(), $this->messages(), $this->attributes());
 
         $inPurchase = ($data['context'] ?? self::CONTEXT_STANDALONE) === self::CONTEXT_PURCHASE;
 

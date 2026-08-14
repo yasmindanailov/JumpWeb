@@ -31,6 +31,14 @@ export const STEPS = {
     CART: 4,
     IDENTIFY: 5,
     CONFIRMED: 6,
+    /**
+     * «Revisa tu correo», tras un alta que NO abrió sesión (Fase 4 · paso 4.4b·1).
+     *
+     * ⚠️ No confundir con `VERIFYING` (11), que es verificar un PAGO. Este paso faltaba en la máquina
+     * y su ausencia estaba anotada en `paused.js`: es el único paso del embudo que el aviso de pausa
+     * **no** tapa, porque una verificación de correo en curso debe poder completarse.
+     */
+    VERIFY_EMAIL: 7,
     PAY: 8,
     REDIRECTING: 9,
     DECLINED: 10,
@@ -78,7 +86,12 @@ const TRANSITIONS = {
     [STEPS.DATE]: [STEPS.CATALOG, STEPS.TIME],
     [STEPS.TIME]: [STEPS.DATE, STEPS.CART],
     [STEPS.CART]: [STEPS.CATALOG, STEPS.IDENTIFY, STEPS.PAY],
-    [STEPS.IDENTIFY]: [STEPS.CART, STEPS.PAY],
+    // Desde la identificación se sale por tres puertas: atrás al carrito, adelante al pago (alta o
+    // login que abrieron sesión) o a «revisa tu correo» **cuando el alta no identificó a nadie** — el
+    // caso del señuelo, que el servidor y la web tratan igual que un alta buena para no delatarlo.
+    [STEPS.IDENTIFY]: [STEPS.CART, STEPS.PAY, STEPS.VERIFY_EMAIL],
+    // De «revisa tu correo» no se sale dentro del cajón: el Blade tampoco ofrece salida.
+    [STEPS.VERIFY_EMAIL]: [],
     [STEPS.PAY]: [STEPS.CART, STEPS.REDIRECTING],
     [STEPS.REDIRECTING]: [],
     [STEPS.CONFIRMED]: [STEPS.CATALOG],

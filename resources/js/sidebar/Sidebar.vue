@@ -10,6 +10,7 @@ import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runLogin } from './login.js';
+import { runRegister, signupRequiresCaptcha } from './register.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership,
     load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
@@ -20,6 +21,7 @@ import DateStep from './steps/DateStep.vue';
 import TimeStep from './steps/TimeStep.vue';
 import CartStep from './steps/CartStep.vue';
 import IdentifyStep from './steps/IdentifyStep.vue';
+import VerifyStep from './steps/VerifyStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -182,6 +184,9 @@ onMounted(async () => {
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
         if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
+        // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
+        // delega el registro en el modal de Livewire, que es el que monta el widget (4.4b·2).
+        signupCaptcha.value = signupRequiresCaptcha(config.data);
     }
 
     await restoreCart();
@@ -665,7 +670,7 @@ function runAction(action) {
  * ranura vacía —velo, banda y pie, y nada dentro—, que es peor que un CTA mudo. La lista **solo
  * crece**: al transcribir el pago se añade aquí y en `render-sidebar.mjs`, que es su espejo.
  */
-const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY];
+const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL];
 
 /** Lleva el cajón al paso que diga el veredicto, si esa pantalla ya existe. */
 function goToVerdict(step) {
@@ -706,29 +711,60 @@ async function checkout() {
 
 // ── El paso 5: identificarse sin salir del cajón ──────────────────────────────────────────────
 
-/** Las credenciales que se están tecleando. Viven aquí y se limpian al salir del paso. */
-const credentials = ref({ email: '', password: '', remember: false });
+/**
+ * Los campos de los DOS formularios, en un solo objeto.
+ *
+ * Juntos y no en dos refs porque el paso es uno: al salir se limpian de una vez, y **la contraseña no
+ * puede sobrevivir** a un cambio de pantalla en una tablet compartida.
+ */
+const emptyForm = () => ({
+    email: '', password: '', remember: false,
+    name: '', phone: '', accept_privacy: false, accept_terms: false, marketing: false,
+    // El señuelo: un cliente legítimo lo deja vacío y el servidor finge un alta si llega relleno.
+    website: '',
+});
 
-/** Lo que el formulario enseña del último intento: `{global, fields}` (`login.js`). */
+const form = ref(emptyForm());
+
+/** Lo que enseña cada formulario del último intento (`login.js` · `register.js`). */
 const loginError = ref({ global: '', fields: {} });
+const registerError = ref({ summary: [], fields: {} });
 
-/** `true` mientras el login está en vuelo: el botón cambia de rótulo, como en la web. */
+/** `true` mientras hay una petición de auth en vuelo: el botón cambia de rótulo, como en la web. */
 const loggingIn = ref(false);
 
 /** La pestaña activa del paso 5. */
 const authMode = ref('login');
 
 /**
- * Cambia de pestaña. Espejo de `Purchase::setAuthMode()`… **hasta donde se puede.**
+ * ¿El alta exige captcha en esta instalación? Sale de `GET /config` (`turnstile_site_key`).
  *
- * ⚠️ **El registro no se acepta todavía, y es deliberado**: su formulario es 4.4b, así que marcar la
- * pestaña como activa dejaría un rótulo «Crear cuenta» encendido con un formulario de LOGIN debajo —
- * que es peor que un botón que no responde, porque miente sobre lo que va a pasar—. El botón existe
- * porque el árbol lo exige (`SidebarDomContractTest` lo compara) y no lleva a ninguna parte, igual que
- * «Ir a pagar» hasta 4.4a·1.
+ * ⚠️ **No nulo ⟺ el anti-bot está ACTIVO**, y esa equivalencia costó un arreglo del contrato: el
+ * endpoint publicaba la clave pública aunque faltara la secreta, estado en el que la web **no pinta el
+ * widget** y el servidor no verifica nada. Ahora el campo es el bit que decide.
+ */
+const signupCaptcha = ref(false);
+
+/**
+ * Cambia de pestaña. Espejo de `Purchase::setAuthMode()`.
+ *
+ * ⚠️ **Con el anti-bot ACTIVO el cajón no pinta su formulario de alta: delega en el modal de auth de
+ * Livewire**, que sí monta el widget de Turnstile. El widget nativo llega en 4.4b·2, y hasta entonces
+ * esta es la degradación honesta: sin token, `SelfSignup` rechazaría **todas** las altas con «no eres
+ * un robot», sin correo y sin log — un registro que no funciona para nadie y que nada delata. El modal
+ * existe en los dos motores (`@livewireScripts` se quedan con la SPA, §4.9) y hace el alta completa.
  */
 function setAuthMode(mode) {
-    if (mode === 'login') authMode.value = 'login';
+    if (mode === 'register' && signupCaptcha.value) {
+        window.Alpine?.store('auth')?.open('register');
+
+        return;
+    }
+
+    authMode.value = mode === 'register' ? 'register' : 'login';
+    // Los avisos son de un intento que ya no se ve: arrastrarlos entre pestañas confunde.
+    loginError.value = { global: '', fields: {} };
+    registerError.value = { summary: [], fields: {} };
 }
 
 /**
@@ -751,7 +787,7 @@ async function submitLogin() {
 
     try {
         const result = await tracked(runLogin({
-            credentials: credentials.value,
+            credentials: form.value,
             api,
             messages: props.messages,
             auth: props.auth,
@@ -761,23 +797,79 @@ async function submitLogin() {
 
         if (! result.ok) return;
 
-        notifyLoggedIn();
-        applyIdentityFrom(result.response);
-        resetLoginForm();
-
-        const verdict = await tracked(continueAfterIdentification({
-            cartCount: cart.value.length,
-            me: result.response,
-            api,
-            messages: props.messages,
-            refreshStatus: refreshBookingStatus,
-        }));
-
-        cartError.value = verdict.error;
-        goToVerdict(verdict.step);
+        await enterWith(result.response);
     } finally {
         loggingIn.value = false;
     }
+}
+
+/**
+ * Crea la cuenta y sigue la compra. Espejo de `Register::register()` embebido.
+ *
+ * ⚠️ **El 201 NO dice si hubo cuenta**, y por eso `runRegister()` pregunta después por `GET /me`: la
+ * respuesta del alta es idéntica para un alta real y para un señuelo que actuó —si no lo fuera, un bot
+ * distinguiría las dos de un vistazo—. Con sesión, la compra continúa como tras un login; sin ella, el
+ * cajón va a «revisa tu correo», que es exactamente lo que hace la web con `registration-submitted`.
+ */
+async function submitRegister() {
+    if (loggingIn.value) return;
+
+    loggingIn.value = true;
+
+    try {
+        const result = await tracked(runRegister({
+            form: form.value,
+            api,
+            messages: props.messages,
+            auth: props.auth,
+        }));
+
+        registerError.value = result.errors;
+
+        if (! result.ok) return;
+
+        if (! result.identified) {
+            // El señuelo actuó: misma pantalla que ve un alta legítima sin sesión. No se distingue.
+            resetAuthForm();
+            goToVerdict(STEPS.VERIFY_EMAIL);
+
+            return;
+        }
+
+        await enterWith(result.me);
+    } finally {
+        loggingIn.value = false;
+    }
+}
+
+/**
+ * Lo que pasa cuando el cajón acaba de conseguir una sesión, venga de un login o de un alta.
+ *
+ * ⚠️ **Tres cosas, y ninguna sobra**:
+ *  1. **se avisa a Livewire** (`logged-in`). Fuera del cajón, `account-context` es un componente
+ *     Livewire que escucha ese evento para repintar «Hola, saltador/a»; sin el aviso, el panel seguiría
+ *     ofreciendo «Entrar» a alguien que acaba de entrar, y ningún test de este repo lo vería;
+ *  2. **se aplica la identidad** con la respuesta que ya se tiene —`POST auth/login` devuelve el perfil
+ *     con la misma forma que `GET /me`, y el alta lo consulta—, así que la cesta de invitado se queda
+ *     con su nuevo dueño sin una petición más;
+ *  3. **se continúa el checkout**, que es lo que hacen `onAuthenticated()` y el alta embebida llamando
+ *     a `proceed()`: quien entra con el tope de pendientes lleno tiene que enterarse aquí.
+ */
+async function enterWith(identity) {
+    notifyLoggedIn();
+    applyIdentityFrom(identity);
+    resetAuthForm();
+
+    const verdict = await tracked(continueAfterIdentification({
+        cartCount: cart.value.length,
+        me: identity,
+        api,
+        messages: props.messages,
+        refreshStatus: refreshBookingStatus,
+    }));
+
+    cartError.value = verdict.error;
+    goToVerdict(verdict.step);
 }
 
 /**
@@ -791,10 +883,11 @@ function notifyLoggedIn() {
     window.Livewire?.dispatch('logged-in');
 }
 
-/** Deja el formulario en blanco. La contraseña no se queda en memoria más de lo necesario. */
-function resetLoginForm() {
-    credentials.value = { email: '', password: '', remember: false };
+/** Deja los dos formularios en blanco. La contraseña no se queda en memoria más de lo necesario. */
+function resetAuthForm() {
+    form.value = emptyForm();
     loginError.value = { global: '', fields: {} };
+    registerError.value = { summary: [], fields: {} };
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
@@ -1012,16 +1105,20 @@ function goBack() {
 
         <IdentifyStep
             v-else-if="store.step === STEPS.IDENTIFY"
-            v-model:email="credentials.email"
-            v-model:password="credentials.password"
-            v-model:remember="credentials.remember"
+            v-model:form="form"
             :mode="authMode"
-            :errors="loginError"
+            :login-errors="loginError"
+            :register-errors="registerError"
             :submitting="loggingIn"
             :messages="messages"
             :account="account"
             @back="goToCart"
             @set-mode="setAuthMode"
-            @submit="submitLogin" />
+            @submit-login="submitLogin"
+            @submit-register="submitRegister" />
+
+        <VerifyStep
+            v-else-if="store.step === STEPS.VERIFY_EMAIL"
+            :messages="messages" />
     </Shell>
 </template>

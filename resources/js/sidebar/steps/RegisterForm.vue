@@ -1,0 +1,150 @@
+<script setup>
+import { computed, ref } from 'vue';
+import { t as translate } from '../i18n.js';
+
+/**
+ * El formulario de ALTA del paso 5 (Fase 4 · paso 4.4b·1).
+ *
+ * Es el más largo del cajón —51 nodos— y el que más detalles tiene que no se adivinan leyendo el
+ * Blade. Los cinco que importan:
+ *
+ * ⚠️ **1. El HONEYPOT es el primer nodo del formulario y es CONTRATO.** `.hp` lo oculta el CSS
+ * (`display: none`, para que el autocompletar no lo rellene) y su `aria-hidden` lo esconde del lector
+ * de pantalla. Un motor que no lo emitiera dejaría al servidor sin su señuelo, y **el diff de árbol es
+ * lo único que puede verlo**: el campo no se ve, no se rellena y no cambia nada visible.
+ *
+ * ⚠️ **2. El banner lista TODOS los avisos y además cada uno va bajo su campo.** Las dos cosas, no una
+ * (A11y de formulario largo): el banner deja ver el conjunto y los de debajo permiten corregir uno a
+ * uno. El banner lleva `<strong>` + `<ul>`, y el número de `<li>` es parte del árbol.
+ *
+ * ⚠️ **3. Los textos legales llevan HTML del servidor.** `accept_privacy` y `accept_terms` son
+ * literales con un `<a href>` cuya URL compone `route()`, y el Blade los pinta con `{!! !!}`. Aquí
+ * llegan **ya interpolados** en el payload del montaje y se pintan con `v-html`: es la única forma de
+ * emitir el mismo árbol —`<span><a>`— y de no partir un texto legal traducido en trozos. El contenido
+ * sale de `lang/` y de `route()`, nunca de una entrada de usuario, así que no hay superficie XSS.
+ *
+ * ⚠️ **4. El email y el teléfono van en un `.form__row`**, no sueltos: es una fila de dos columnas y
+ * su contenedor es un nodo del árbol.
+ *
+ * ⚠️ **5. La contraseña lleva `.form__hint` DESPUÉS del `.pwd-input`**, con los requisitos. Es un
+ * `<small>`, no un `<span>`: el tipo de elemento es contrato (§4.2).
+ */
+const props = defineProps({
+    /** Avisos del intento anterior: `{summary, fields}` (`register.js`). */
+    errors: { type: Object, default: () => ({ summary: [], fields: {} }) },
+
+    /** `true` mientras la petición está en vuelo: cambia el rótulo del botón. */
+    submitting: { type: Boolean, default: false },
+
+    /** El grupo `account`, con `register` entero y sus dos textos legales ya interpolados. */
+    account: { type: Object, default: () => ({}) },
+});
+
+defineEmits(['submit']);
+
+const name = defineModel('name', { type: String, default: '' });
+const email = defineModel('email', { type: String, default: '' });
+const phone = defineModel('phone', { type: String, default: '' });
+const password = defineModel('password', { type: String, default: '' });
+const acceptPrivacy = defineModel('acceptPrivacy', { type: Boolean, default: false });
+const acceptTerms = defineModel('acceptTerms', { type: Boolean, default: false });
+const marketing = defineModel('marketing', { type: Boolean, default: false });
+
+/** El señuelo. Un cliente legítimo lo deja vacío; que exista es lo que hace que sirva. */
+const website = defineModel('website', { type: String, default: '' });
+
+const revealed = ref(false);
+
+const a = (key) => translate(props.account, key);
+
+const fieldErrors = computed(() => props.errors?.fields ?? {});
+const summary = computed(() => props.errors?.summary ?? []);
+</script>
+
+<template>
+    <div class="auth">
+        <div class="auth__head">
+            <span class="eyebrow">{{ a('register.eyebrow') }}</span>
+            <h2 class="auth__title">{{ a('register.title') }}</h2>
+            <p class="auth__sub">{{ a('register.subtitle') }}</p>
+        </div>
+
+        <form class="form auth__form" novalidate @submit.prevent="$emit('submit')">
+            <!-- ⚠️ El señuelo. Lo oculta el CSS, no un atributo: si estuviera `hidden` o fuera de la
+                 vista por `type`, un bot lo detectaría igual de rápido que un humano no lo ve. -->
+            <div class="hp" aria-hidden="true">
+                <label>{{ a('register.leave_blank') }}
+                    <input v-model="website" type="text" tabindex="-1" autocomplete="off">
+                </label>
+            </div>
+
+            <div v-if="summary.length > 0" class="auth__errors" role="alert">
+                <strong>{{ a('register.fix_errors') }}</strong>
+                <ul>
+                    <li v-for="(message, i) in summary" :key="i">{{ message }}</li>
+                </ul>
+            </div>
+
+            <div class="form__field">
+                <label class="form__label" for="reg-name">{{ a('register.name') }}</label>
+                <input id="reg-name" v-model="name" type="text" autocomplete="name" required>
+                <span v-if="fieldErrors.name" class="form__error">{{ fieldErrors.name }}</span>
+            </div>
+
+            <div class="form__row">
+                <div class="form__field">
+                    <label class="form__label" for="reg-email">{{ a('register.email') }}</label>
+                    <input id="reg-email" v-model="email" type="email" autocomplete="email" required>
+                    <span v-if="fieldErrors.email" class="form__error">{{ fieldErrors.email }}</span>
+                </div>
+                <div class="form__field">
+                    <label class="form__label" for="reg-phone">{{ a('register.phone') }}</label>
+                    <input id="reg-phone" v-model="phone" type="tel" autocomplete="tel" required>
+                    <span v-if="fieldErrors.phone" class="form__error">{{ fieldErrors.phone }}</span>
+                </div>
+            </div>
+
+            <div class="form__field">
+                <label class="form__label" for="reg-password">{{ a('register.password') }}</label>
+                <div class="pwd-input">
+                    <input id="reg-password" v-model="password" :type="revealed ? 'text' : 'password'"
+                           autocomplete="new-password" required>
+                    <button type="button" class="pwd-input__toggle" tabindex="-1" @click="revealed = ! revealed">
+                        <svg v-show="! revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"></svg>
+                        <svg v-show="revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"></svg>
+                    </button>
+                </div>
+                <span v-if="fieldErrors.password" class="form__error">{{ fieldErrors.password }}</span>
+                <small class="form__hint">{{ a('register.password_hint') }}</small>
+            </div>
+
+            <div class="form__checks">
+                <label class="check">
+                    <input v-model="acceptPrivacy" type="checkbox">
+                    <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
+                    <span v-html="a('register.accept_privacy')"></span>
+                </label>
+                <span v-if="fieldErrors.accept_privacy" class="form__error">{{ fieldErrors.accept_privacy }}</span>
+
+                <label class="check">
+                    <input v-model="acceptTerms" type="checkbox">
+                    <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
+                    <span v-html="a('register.accept_terms')"></span>
+                </label>
+                <span v-if="fieldErrors.accept_terms" class="form__error">{{ fieldErrors.accept_terms }}</span>
+
+                <label class="check check--opt">
+                    <input v-model="marketing" type="checkbox">
+                    <span>{{ a('register.marketing') }}</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn--zone auth__submit" :disabled="submitting">
+                <span v-show="! submitting">{{ a('register.submit') }}</span>
+                <span v-show="submitting" class="btn__loading">
+                    <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ a('register.submitting') }}
+                </span>
+            </button>
+        </form>
+    </div>
+</template>

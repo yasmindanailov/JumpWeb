@@ -152,6 +152,41 @@ class AuthRegistrationTest extends ApiTestCase
         Notification::assertNothingSent();
     }
 
+    /**
+     * ⚠️ **El señuelo VACÍO es el caso normal, y hacía fallar el alta entera.**
+     *
+     * Un cliente legítimo manda `website: ""` —el campo existe en el formulario y viaja siempre—.
+     * `ConvertEmptyStringsToNull` lo convierte en `null`, `sometimes` lo veía presente y `string` lo
+     * rechazaba: **422 sobre un campo que el usuario no ve** y que ni siquiera es suyo. Los casos de
+     * este fichero lo esquivaban por los dos únicos caminos posibles —mandarlo relleno u omitirlo—, y
+     * lo destapó el primer cliente real del endpoint, el cajón SPA.
+     *
+     * Se comprueban las dos formas de «vacío» que puede mandar un cliente.
+     */
+    public function test_an_empty_honeypot_is_what_a_legitimate_client_sends(): void
+    {
+        $this->register(['website' => ''])
+            ->assertCreated()
+            ->assertValidResponse(201);
+
+        $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
+
+        $this->register(['email' => 'otra@jumpweb.test', 'website' => null])
+            ->assertCreated();
+
+        $this->assertSame(1, User::where('email', 'otra@jumpweb.test')->count());
+    }
+
+    /** Lo mismo para el token del anti-bot: sin widget en pantalla, un cliente manda la cadena vacía. */
+    public function test_an_empty_turnstile_token_does_not_break_a_signup_without_anti_bot(): void
+    {
+        $this->register(['turnstile_token' => ''])
+            ->assertCreated()
+            ->assertValidResponse(201);
+
+        $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
+    }
+
     public function test_signups_are_rate_limited_per_ip(): void
     {
         foreach (range(1, SelfSignup::MAX_PER_IP) as $i) {

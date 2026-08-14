@@ -9,17 +9,17 @@
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
 **4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a ✅ COMPLETO**
-(·1 el CTA pregunta quién eres y si puedes reservar · ·2 la pantalla de identificación) → **toca 4.4b,
-el registro embebido**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
+(·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) → **toca
+4.4b·2, el widget de Turnstile**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`) y 4.4a en dos (`#51`, `#52`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) y 4.4b en dos (`#53`). En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2660 en verde** (15.093 aserciones, `--parallel` ~68 s) · **158 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2673 en verde** (15.237 aserciones, `--parallel` ~67 s) · **176 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -228,9 +228,10 @@ producto → día → hora → cantidad → complementos → **añadir al carrit
 las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Al
 pulsar «Ir a pagar» **pregunta quién eres y si puedes reservar** (4.4a·1) y avisa cuando el servidor va
 a decir que no —tope de pendientes, frecuencia— o pinta el cartel si las reservas se acaban de pausar.
-Si eres invitado, **te lleva a la pantalla de identificación y puedes ENTRAR desde el propio cajón**
-(4.4a·2), con los mismos textos y el mismo limitador que la web. Y ahí se para: **quien ya está dentro
-se queda en el paso 5**, porque las dos pantallas que siguen son 4.4b (crear cuenta) y 4.5 (pagar). La
+Si eres invitado, **te lleva a la pantalla de identificación y puedes ENTRAR o CREAR CUENTA desde el
+propio cajón** (4.4a·2 y 4.4b·1), con los mismos textos, el mismo limitador y las mismas defensas
+anti-bot que la web. Y ahí se para: **quien ya está dentro se queda en el paso 5**, porque la pantalla
+que sigue es la de pagar (4.5). La
 cesta **sí sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO
 se activa en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar
 los dos en vivo (`CE-1`).
@@ -252,26 +253,26 @@ Livewire sí, porque reevalúa su guarda en cada render. El contrato pide ademá
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.4b — el registro embebido**, declarado **el más peligroso de la fase**: es el único que cruza la
-   frontera Livewire↔Vue en los dos sentidos y no tiene guardián en servidor. Lo que hay que saber:
-   · **La pestaña «Crear cuenta» ya existe y NO hace nada**, a propósito (`#52(f)`): marcarla activa
-     dejaría su rótulo encendido con un formulario de LOGIN debajo. Su formulario son **51 nodos** —el
-     de login son 31—, medidos.
-   · ⚠️ **Cómo se mide el árbol de ese paso**: hay que llegar **pulsando la pestaña**. Con
-     `->set('authMode', …)` Livewire deja el hijo VACÍO y el diff compara armazón contra armazón; un
-     motor SPA sin formulario pasaría en verde. Hay un caso que fija ese hecho.
-   · **El payload del montaje lleva `account` PODADO** (`login` + el `cta` de `register`): al pintar el
-     registro habrá que ampliarlo, y hay guarda de que sigue podado y de que lleva lo que se pinta —una
-     clave que falte se pinta VACÍA y nada avisa—.
-   · **Tras registrarse, el camino ya existe**: `continueAfterIdentification()` es el mismo que usa el
-     login, y `notifyLoggedIn()` es el puente que hace repintar `account-context`.
-   · ⚠️ **`POST /api/v1/auth/register` no toca `purchase.*`**, igual que el login (verificado): la
-     purga por titular vive en el cliente desde 4.3·4 y se reevalúa al pulsar pagar.
+1. **4.4b·2 — el widget de Turnstile**, lo único que le falta al alta. Lo que hay que saber:
+   · ⚠️ **Se aplazó porque NO SE PUEDE VERIFICAR sin claves de Cloudflare y un navegador** (`#53(a)`),
+     no por tamaño. Cuando se haga, hace falta un entorno con claves de prueba: sin verificación
+     empírica no puede marcarse ✅.
+   · **Hoy hay una GUARDA, no una nota**: `GET /config` publica `turnstile_site_key` **solo si el
+     anti-bot está activo de verdad** (las dos claves), y el cajón lo lee con
+     `signupRequiresCaptcha()`. Con captcha, la pestaña «Crear cuenta» **delega en el modal de auth de
+     Livewire**, que sí monta el widget. Hay caso de punta a punta con los tres estados.
+   · ⚠️ **El Blade documenta el fallo que ya costó una vez**: un `<script>` plano inyectado por un
+     morph de Livewire **no lo ejecuta el navegador**, así que api.js nunca cargaba, el widget no se
+     dibujaba y el token llegaba vacío → «no eres un robot» sin correo ni log. En Vue el modo de fallo
+     es otro, pero el síntoma sería el mismo.
+   · **Lo que hay que mirar antes**: la CSP del sitio (¿permite `challenges.cloudflare.com`?), y que el
+     token viaje en `turnstile_token` —el campo ya existe en el contrato y acepta la cadena vacía—.
    · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
      `OrderCreator` la rechaza con `line_event_required`. El dato ya está: al restaurar se piden los
      `event_fields` de los productos de la cesta.
-   · **El techo del bundle está en 135 kB y el chunk pesa 122,6**: quedan ~12 kB para el registro, el
-     pago y las tres pantallas de desenlace. Subirlo otra vez es una decisión, no un trámite.
+   · **El techo del bundle está en 135 kB y el chunk pesa 131,7**: quedan ~3 kB. El pago y las tres
+     pantallas de desenlace **no caben**: subirlo es una decisión que hay que tomar con su medición,
+     como se hizo en 4.4a·2.
 2. **4.5 en adelante** — el corte completo, en §4.10 del spec.
    ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
@@ -392,6 +393,29 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
     —trae el perfil con la forma de `GET /me`— y se continúa el checkout. Verificado en vivo que con el
     motor SPA la página **sigue cargando Livewire**: sin eso, el puente no tendría con quién hablar.
 
+- **4.4b·1 — el alta desde el cajón** (2026-08-14, `DECISIONES #53`). Cinco cosas que condicionan lo
+  que viene:
+  · ⚠️ **El primer cliente real de un endpoint encuentra lo que ningún test suyo encontró.** Tres bugs
+    de SERVIDOR, los tres con su regresión: `/config` anunciaba el anti-bot con **media configuración**
+    —clave pública sin secreta, estado en que la web no pinta el widget y el servidor no verifica—; el
+    **señuelo VACÍO**, que es lo que manda todo cliente legítimo, provocaba un **422 sobre un campo que
+    el usuario no ve** (`ConvertEmptyStringsToNull` + `sometimes|string`); y las **dos puertas del alta
+    decían cosas distintas** porque el componente declara `validationAttributes()`/`messages()` y el
+    controlador no.
+  · ⚠️ **El 201 del alta no dice si hubo cuenta, a propósito**: si lo dijera, un bot distinguiría un
+    alta buena de un señuelo de un vistazo. El cajón pregunta `GET /me` después — con sesión sigue la
+    compra, sin ella va a «revisa tu correo». Un fallo de red al preguntar **no** cuenta como sesión.
+  · ⚠️ **Turnstile NO está montado y hay una guarda para que eso no muerda**: con el anti-bot activo,
+    la pestaña de alta delega en el modal de Livewire. Sin ella, el registro del cajón habría rechazado
+    a **todo el mundo** con «no eres un robot», sin correo y sin log.
+  · **Tres nodos invisibles que solo vigila el diff de árbol**: el honeypot (`.hp`), la fila
+    `.form__row` de email+teléfono y el `<small class="form__hint">` de la contraseña. Y el **banner**
+    de errores se compara con el formulario VACÍO: con un solo campo en rojo, un `<li>` de más o de
+    menos no se vería.
+  · **Los literales del alta se pintan tal cual, al revés que en el login**: aquí el servidor publica
+    en `fields.email` los mismos que pinta el Blade; en el login tiene un `message` propio que no
+    coincide con `auth.failed`. Las dos conductas son correctas y las dos tienen su caso.
+
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
 - **El contrato visual es el ÁRBOL, no las clases** (§4.2): 90 de 292 selectores son estructurales
@@ -490,6 +514,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2660** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2673** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

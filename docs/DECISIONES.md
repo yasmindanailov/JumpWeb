@@ -1972,3 +1972,82 @@ con el flag activo: el `data-boot` real lleva los dos grupos con sus textos, Liv
 Quien se identifica con la cesta lista **se queda en el paso 5**, porque el 8 no está transcrito y
 navegar a él dejaría el cajón en blanco; `TRANSCRIBED_STEPS` declara en el código a qué pasos se puede
 navegar y **solo crece**.
+
+## #53 · 2026-08-14 · 4.4b·1 — el alta desde el cajón, y los tres bugs de servidor que destapó
+Fase 4 · paso 4.4b, primer tramo. El cajón ya crea cuentas: el paso 5 pinta su formulario de alta —51
+nodos— y habla con `POST /api/v1/auth/register` declarando `context: purchase`, la política
+**pay-first** que el servidor ya conocía (`DECISIONES #31`). El widget de Turnstile queda para 4.4b·2,
+con una guarda que hace imposible el fallo silencioso.
+
+**(a) Turnstile se aplaza porque NO SE PUEDE VERIFICAR, y eso es un criterio, no una excusa.** Montar
+el widget exige claves reales de Cloudflare y un navegador; escribirlo ahora sería entregar una
+integración con un tercero sin la «verificación empírica» que el DoD del proyecto exige. Lo que **sí**
+entra es la guarda: `GET /config` publica si el alta exige captcha y, si lo exige, el cajón **no pinta
+su formulario** — delega en el modal de auth de Livewire, que sí monta el widget. Sin esa guarda,
+activar el anti-bot con el motor SPA puesto habría dejado un registro que **rechaza a todo el mundo**
+con «no eres un robot», sin correo y sin log. Hay caso que recorre los tres estados del anti-bot con la
+respuesta REAL del endpoint pasada por el módulo REAL.
+
+**(b) BUG 1 — `GET /config` anunciaba un anti-bot que no existía.** El anti-bot exige las **dos**
+claves; con solo la pública, `Turnstile::enabled()` es `false`, la web **no pinta el widget** y
+`verify()` deja pasar el alta… pero el endpoint publicaba la clave igual. Un cliente fiel al contrato
+—que es lo que este paso construye— habría pintado un captcha **que su propio servidor no comprueba**:
+árbol distinto al de la web, un script de terceros de más y un obstáculo para el usuario a cambio de
+ninguna defensa. Y es un estado alcanzable de verdad: se configura una clave y se deja la otra para
+luego. Arreglado publicando la clave **solo si el anti-bot está activo**, que es lo que el contrato ya
+prometía por escrito; de regalo, el campo pasa a ser el bit exacto que el cliente necesita.
+
+**(c) BUG 2 — el señuelo VACÍO hacía fallar el alta entera.** Un cliente legítimo manda `website: ""`
+—el campo existe en el formulario y viaja siempre—. `ConvertEmptyStringsToNull` lo convierte en `null`,
+`sometimes` lo veía presente y `string` lo rechazaba: **422 sobre un campo que el usuario no ve** y que
+ni siquiera es suyo. Los tests del paso 3c lo esquivaban por los dos únicos caminos que existen
+—mandarlo relleno u omitirlo—, así que lo destapó el primer cliente real. Mismo arreglo para
+`turnstile_token`, que tiene el mismo problema por la misma razón.
+
+**(d) BUG 3 — las dos puertas del alta decían cosas distintas al usuario.** `Auth\Register` declara
+`validationAttributes()` con los rótulos del formulario y `messages()` con el aviso propio de las
+casillas legales; el controlador de la API no tenía ni lo uno ni lo otro. Resultado medido: la web
+decía «El campo **Nombre y apellidos** es obligatorio.» y la API «El campo **name** es obligatorio.»;
+la web «Debes aceptar esta condición para continuar.» y la API el genérico de `accepted`. Lo mismo,
+dicho peor, a un cliente que pinta el mismo formulario. Arreglado en el servidor —no en el cliente—,
+porque es donde estaba la divergencia y porque beneficia a cualquier consumidor de la API.
+
+**(e) El 201 no dice si hubo cuenta, y por eso hay una segunda petición.** `POST auth/register`
+responde **201 sin cuerpo siempre**: si distinguiera un alta buena de un señuelo, un bot lo notaría de
+un vistazo y el honeypot dejaría de servir. Así que tras el 201 el cajón pregunta `GET /me`: con
+sesión, la compra sigue; sin ella, el señuelo actuó y toca «revisa tu correo» —exactamente lo que hace
+la web con `registration-submitted`—. Verificado en vivo: las dos respuestas son **byte a byte
+idénticas** y solo la sesión las separa. ⚠️ Y un fallo de red al preguntar **no** cuenta como sesión:
+llevaría al pago a quien no ha entrado.
+
+**(f) Los literales del alta se pintan tal cual, al revés que en el login.** Aquí el servidor publica
+en `fields.email` exactamente `account.register.already_exists` / `exists_unverified` /
+`bot_check_failed` —los mismos que pinta el Blade—, así que reescribirlos sería inventar una segunda
+fuente. En el login no: la API tiene un `message` propio que **no** coincide con `auth.failed`, y por
+eso allí se ramifica sobre el código. Las dos conductas son correctas y las dos tienen su caso.
+
+**(g) Tres nodos invisibles que solo vigila el diff de árbol**: el **honeypot** (`.hp`, que oculta el
+CSS y que es el señuelo del servidor), la fila `.form__row` que agrupa email y teléfono, y el
+`<small class="form__hint">` de la contraseña —un `<small>`, no un `<span>`—. Un motor sin honeypot deja
+al servidor sin su defensa y **no se nota mirando la pantalla**. Verificado por mutación.
+
+**(h) El banner de errores es un árbol aparte y se compara con el formulario VACÍO**: `<strong>` + `<ul>`
+con un `<li>` por aviso, **y además** cada aviso bajo su campo (A11y de formulario largo). Con un solo
+campo en rojo, un `<li>` de más o de menos no se vería. El ORDEN de la lista lo fija el cliente por el
+de las reglas, para que no dependa de cómo serialice el sobre.
+
+**(i) Los textos legales viajan con su `<a href>` dentro y ya interpolado**, y se pintan con `v-html`.
+Partirlos en «texto + enlace» obligaría a recomponer una frase traducida que no ordena igual en cada
+idioma; el contenido sale de `lang/` y de `route()`, nunca de una entrada de usuario. El payload del
+montaje pasa de 538 B a **1.671 B** (es) con el grupo `register` entero — el grupo `account` COMPLETO
+son 9,6 kB, seis veces eso, en cada página pública.
+
+**(j) El paso 7 entra con el alta**, aunque dentro de la compra casi nunca lo vea una persona: solo se
+llega cuando el señuelo actuó. Son tres nodos y `role="status"`. ⚠️ **No lleva salida y eso es fiel**:
+el escape «¿ya tienes cuenta?» vive en la pantalla `sent` del componente Register, que **embebido no
+llega a verse** —el paso 5 deja de renderizarse en cuanto el cajón pasa al 7—. Verificado sobre el HTML.
+Con él, `machine.js` gana el paso 7, que le faltaba.
+
+**(k) Lo que NO entra**: el widget de Turnstile (4.4b·2), el pago (4.5) y las pantallas de desenlace
+(4.6). Quien crea su cuenta con la cesta lista **se queda en el paso 5**, igual que quien inicia sesión:
+el destino es el 8 y todavía no está transcrito.

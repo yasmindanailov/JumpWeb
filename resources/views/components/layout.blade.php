@@ -191,7 +191,18 @@
                         'orderCode' => $sidebarEntry->orderCode,
                         'messages' => __('tickets'),
                         'ui' => __('ui'),
-                        'account' => ['login' => __('account.login'), 'register' => ['cta' => __('account.register.cta')]],
+                        'account' => [
+                            'login' => __('account.login'),
+                            // ⚠️ Los dos textos legales llevan un `<a href>` dentro y viajan **ya
+                            // interpolados**: la URL la compone `route()`, y partirlos en «texto +
+                            // enlace» obligaría al cliente a recomponer una frase traducida —que en
+                            // francés y en inglés no ordena igual—. El cajón los pinta con `v-html`;
+                            // el contenido sale de `lang/` y de `route()`, nunca de un usuario.
+                            'register' => array_replace(__('account.register'), [
+                                'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
+                                'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                            ]),
+                        ],
                         'auth' => __('auth'),
                         'userId' => auth()->id(),
                     ], JSON_UNESCAPED_UNICODE) }}"></div>
