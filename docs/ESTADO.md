@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2541 en verde** (9916 aserciones, `--parallel` ~64 s) · Pint limpio ·
+- Suite **2563 en verde** (10041 aserciones, `--parallel` ~65 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -25,7 +25,9 @@ fase es la emisión de tokens Bearer, también de Fase 6.
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers, la
-  última vez en el paso 4.0b·4b, que toca un controlador `Order*`). ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
+  última vez en el paso 4.0b·6). ⚠️ **El `CRITICAL_RE` del hook se amplió con `Cart`** en ese paso:
+  un controlador de API que DECIDE sobre aforo entra en el gate aunque no escriba nada, igual que su
+  hermano `Availability*`. `CriticalPathGateTest` lo vigila con el fichero en `CRITICAL_FILES`. ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
   `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b), **`CheckoutOrchestrator`** (añadido
   en el cierre) y **todo controlador de API `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`**:
   tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos (`INVARIANTES §6`). Todo el paso 4 los
@@ -112,9 +114,10 @@ inaplicable; §7 dice cuáles.
   el puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
 - **4.0c (mitad 1)** — tokenización de lo TEMATIZABLE: **43% → 49%**, colores crudos **13 → 3**.
   Todas las sustituciones equivalentes por construcción. Presupuesto en `SidebarTokenBudgetTest`.
-- **4.0b — 4 huecos de API de 5**: `GET /me/reservation-eligibility` · `GET /config` ·
-  `GET /booking/status` · el resumen del pedido, **entero** (los seis campos sin PII el 2026-08-13
-  y `GET /orders/{code}/event-data` el 2026-08-14).
+- **4.0b — 5 de los 6 huecos**: `GET /me/reservation-eligibility` · `GET /config` ·
+  `GET /booking/status` · el resumen del pedido entero (campos sin PII +
+  `GET /orders/{code}/event-data`) · `POST /cart/validate-line`. **Falta uno: los complementos
+  resueltos**, apartado a propósito por ser el más arriesgado (ver «por dónde seguir»).
 - **4.0b·4b — la PII sale del pedido** (`DECISIONES #39`, spec §4.4.6). Tres cosas que conviene
   saber antes de tocar cualquier endpoint que devuelva datos de un menor:
   · **La guarda vive en los endpoints que NO deben llevar el dato**: `me/orders` y
@@ -127,25 +130,34 @@ inaplicable; §7 dice cuáles.
     copiada en `Purchase` y en `ReservationSlip`, y el endpoint iba a ser la tercera). La del panel
     NO se unificó —enseña las claves huérfanas, que no tienen fase que filtrar— y está en `DEUDA.md`.
 
+- **4.0b·6 — validar una línea antes de la cesta** (`DECISIONES #40`, spec §4.4.2). Nace
+  `Booking\Contracts\CartLineValidation` y **la compra web lo consume**: `addToCart()` ya no decide,
+  pide el veredicto y traduce el «no». Tres cosas que valen para el próximo paso:
+  · ⚠️ **Extraer una regla y no hacer que el consumidor viejo la use es copiar, no extraer.** Aquí
+    la delegación encontró en el primer intento un fallo invisible en el diff: `Cart::sanitize()`
+    fuerza `max(1, qty)` —correcto para una cesta guardada— y aplicado a una línea CANDIDATA
+    convertía «todavía no he elegido cuántos» en un 1. Lo cazó `PurchasePanelTest`.
+  · **Un validador previo valida contra lo que mirará el JUEZ, no contra lo que miraba la pantalla
+    de la que salió**: la franja se comprueba contra la OFERTA, porque `maxQuantity()` responde de
+    una franja concreta aunque no se ofrezca (ignora día pasado, corte intradía, ventana y
+    antelación).
+  · **Los `problems` van sin contexto**: el mínimo, el tope y las etiquetas ya los publican
+    `catalog/products/{id}` y `config`. El dominio sí los lleva —no sabe quién pregunta—; no
+    republicarlos es decisión de la capa de entrega.
+
 ### Por dónde SEGUIR, en este orden
 
-1. **4.0b·6 — el endpoint de validación de línea.** Decidido en `#38(f)`: **endpoint, no regla
-   transcrita**. Hoy `Purchase::addToCart()` valida en servidor y con la cesta en `localStorage` no
-   queda ida y vuelta. Lo caro es `sanitizeAnswerValue()`: para un campo `number` aplica
-   `preg_replace('/\D+/','')`, así que la EDAD contestada «cinco» el servidor la ve **vacía** y una
-   validación ingenua en el cliente la ve contestada. Cubre además la fusión de líneas
-   (`findCartIndex`: solo si no es pack y no lleva complementos) y el tope de cesta.
-2. **4.0b·5 — complementos resueltos. EL MÁS ARRIESGADO, y por eso el último.** Es el único que
+1. **4.0b·5 — complementos resueltos. EL MÁS ARRIESGADO, y por eso el último.** Es el único que
    cambia la semántica de un método del dominio (`AddonResolver::viewModel()`) consumido por DOS
    superficies vivas: la compra pública y el pedido manual del panel.
    ⚠️ **Decisión pendiente antes de escribir una línea** (spec §4.4.3): si el dinero de la línea
    vuelve en la MISMA respuesta, delegando en `CartPricing`. Sin eso son **2 peticiones por clic**
    en la pantalla con más clics del embudo (8–12 clics = 16–24 peticiones) contra un `throttle:api`
    de 60/min COMPARTIDO con disponibilidad y catálogo.
-3. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
+2. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
    `padding` 47). ⚠️ Esta mitad **no es gratis**: hay que DECIDIR una escala y redondear un valor
    cambia el diseño. Se hace con revisión visual, no con un script.
-4. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
+3. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -158,7 +170,7 @@ inaplicable; §7 dice cuáles.
   `__()` en servidor. La SPA no tiene de dónde sacarlas; el plan es un payload JSON en el montaje.
 
 **Contexto de la API que sigue vigente.** Antes de
-escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.quaterdecies: son setenta y tres
+escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.quindecies: son ochenta
 puntos MEDIDOS al implementar la API, y varios son trampas que la SPA va a pisar. Los tres que más:
 - ⚠️ **`Origin`/`Referer` de un dominio *stateful* hacen falta en TODAS las peticiones**, no solo en
   el login: sin ellos no hay sesión y un `GET /me` da 401 aunque la cookie valga (§10.sexies 28).
@@ -214,8 +226,8 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
 **Si tocas dinero, aforo, RGPD o seguridad, lee antes `docs/INVARIANTES.md`** (§1 PAY, §2 AFORO) —
-es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.quaterdecies:
-setenta y tres puntos MEDIDOS al construirla. Los que más se repiten como causa de error:
+es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.quindecies:
+ochenta puntos MEDIDOS al construirla y al abrir Fase 4. Los que más se repiten como causa de error:
 - el presupuesto de consultas se mide por PENDIENTE y no por techo (§10.ter 17);
 - la validación de contrato hay que PEDIRLA con `assertValidResponse()` (§10.ter 16);
 - un recurso que devuelve el controlador necesita `$wrap = null` (§10.octies 43);
@@ -245,6 +257,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2541** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2563** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a hecho · 4.0b 4 de 5 · 4.0c a medias
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a hecho · 4.0b 5 de 6 · 4.0c a medias
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -400,7 +400,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       De regalo, una fuga menor cerrada: el login solo descartaba el desenlace «confirmado» al
       cambiar de titular, así que a Bob podía aparecerle el «pago denegado» de Alice.
       Suite **2479 verde**; los 14 tests que siembran esas claves a mano siguen pasando sin tocarse.
-- [ ] **Paso 4.0b — los huecos de API** (EN CURSO, 2026-08-13; diseño en `sidebar-spa.md` §4.4 v3,
+- [ ] **Paso 4.0b — los huecos de API** (EN CURSO, **5 de 6**; diseño en `sidebar-spa.md` §4.4 v3,
       hecho por cinco agentes en paralelo y revisado en coherencia). **1 de 5 cerrado**:
       `GET /me/reservation-eligibility`, el aviso temprano de «¿puedo reservar?» que la web tiene
       desde siempre y la API no. Va primero porque su guarda protege a los otros cuatro:
@@ -456,6 +456,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ser la TERCERA copia. La fuente única es ahora `TicketType::eventAnswers()`; la del panel no se
       unificó a propósito (enseña las claves huérfanas, que no tienen fase que filtrar) y quedó
       anotada en `DEUDA.md`.
+      **El SEXTO hueco (2026-08-14)**: `POST /cart/validate-line` —el que ninguno de los
+      cinco diseños vio y el único que, ignorado, se descubre en producción y no en la suite
+      (`DECISIONES #40`)—. Con la cesta de la SPA en `localStorage` no queda ida y vuelta al añadir,
+      así que la regla o se pregunta o se transcribe a JavaScript; el caso que lo decide es que un
+      campo `number` se sanea a dígitos, así que la EDAD contestada «cinco» el servidor la ve VACÍA.
+      La regla baja al dominio (`Booking\Contracts\CartLineValidation`) **y la compra web la
+      consume**: `addToCart()` ya no decide, pide el veredicto y solo traduce el «no».
+      ⚠️ **Esa delegación encontró un fallo que ninguna revisión del diff habría visto**:
+      `Cart::sanitize()` fuerza `max(1, qty)` —correcto para una cesta guardada— y aplicado a una
+      línea CANDIDATA convertía «todavía no he elegido cuántos» en un 1; la web habría añadido una
+      entrada que nadie pidió. Lo cazó `PurchasePanelTest` al primer intento. Es el argumento entero
+      a favor de hacer consumir la extracción en el mismo commit.
+      La otra diferencia con la web es deliberada: la franja se comprueba contra la **oferta** y no
+      contra el aforo a secas, porque `maxQuantity()` responde de una franja concreta aunque no se
+      ofrezca (no mira día pasado, corte intradía, ventana ni antelación) y validar solo con él daría
+      por buenas líneas que el checkout rechaza.
+      Verificado por mutación (validar solo por aforo → 3 rojos; quitar la guarda de la fusión → 2;
+      sanear la candidata como cesta → rojo en la web) y con `curl` sobre los datos de SaltoPark.
+
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del

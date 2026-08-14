@@ -4,6 +4,8 @@ namespace App\Livewire\Tickets;
 
 use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\AvailabilityOffer;
+use App\Domain\Booking\Contracts\CartLineProblem;
+use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CartQuote;
 use App\Domain\Booking\Contracts\CartQuoteAddon;
@@ -165,6 +167,14 @@ class Purchase extends Component
     private AvailabilityOffer $availabilityOffer;
 
     /**
+     * Si una línea puede entrar en la cesta (Fase 4 · paso 4.0b·6). Las reglas que decidían eso
+     * vivían en el cuerpo de `addToCart()`, es decir en una clase de interfaz; con la cesta de la
+     * SPA en el navegador no queda ninguna ida y vuelta al añadir, así que o se preguntan por
+     * contrato o se transcriben a JavaScript.
+     */
+    private CartLineValidation $lineValidation;
+
+    /**
      * Memo de la oferta de días del producto elegido. `availableDates()` se consulta hasta seis
      * veces por petición (validar el día, acotar los meses, pintar la rejilla), y sin memo cada una
      * sería una consulta.
@@ -191,7 +201,7 @@ class Purchase extends Component
 
     private ?string $quoteMemoFor = null;
 
-    public function boot(AddonResolver $addonResolver, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing, AvailabilityOffer $availabilityOffer, ReservationCheckout $checkout): void
+    public function boot(AddonResolver $addonResolver, ProductCatalog $catalog, ReservationAdmission $admission, CartPricing $pricing, AvailabilityOffer $availabilityOffer, ReservationCheckout $checkout, CartLineValidation $lineValidation): void
     {
         $this->addonResolver = $addonResolver;
         $this->catalog = $catalog;
@@ -199,6 +209,7 @@ class Purchase extends Component
         $this->pricing = $pricing;
         $this->availabilityOffer = $availabilityOffer;
         $this->checkout = $checkout;
+        $this->lineValidation = $lineValidation;
     }
 
     public function mount(): void
@@ -409,72 +420,56 @@ class Purchase extends Component
         }
     }
 
-    /** Añade la entrada/pack elegido (con su fecha/hora/cantidad) al carrito y va al carrito. */
+    /**
+     * Añade la entrada/pack elegido (con su fecha/hora/cantidad) al carrito y va al carrito.
+     *
+     * **Ya no decide: pregunta.** Qué puede entrar en la cesta —producto elegible, franja ofrecida,
+     * cantidad, tope de líneas, campos obligatorios del pack— y en qué queda —cantidad efectiva y
+     * fusión con una línea existente— lo dice `Booking\Contracts\CartLineValidation` desde Fase 4 ·
+     * paso 4.0b·6. Vivía aquí, en una clase de interfaz, y la SPA no puede consumir lo que vive en
+     * un componente Livewire: o se pregunta por contrato o se transcribe a JavaScript
+     * (`DECISIONES #38(f)`).
+     *
+     * Lo que sigue siendo de esta pantalla es la PRESENTACIÓN del «no»: validar-al-pulsar en vez de
+     * deshabilitar el CTA, el error por campo que resalta cada input que falta, y el resumen que los
+     * NOMBRA. El dominio devuelve claves y datos; los textos los pone quien pinta.
+     */
     public function addToCart(): void
     {
-        // Validar-al-pulsar (#UX): el CTA no se deshabilita por campos; aquí damos feedback claro de
-        // lo que falta. Limpiamos errores previos para que un reintento re-valide de cero.
+        // Limpiamos errores previos para que un reintento re-valide de cero.
         $this->resetErrorBag();
 
         $type = $this->selectedType();
-        $max = $this->maxQty();
-        $min = $this->minSelectableQty();
-        if (! $type || $this->qty < $min || $max < $min) {
-            $this->addError('selection', __('tickets.errors.choose_one'));
+
+        $verdict = $this->lineValidation->validate($this->cart, [
+            'ticket_type_id' => $this->typeId,
+            'date' => $this->date,
+            'time' => $this->time,
+            'qty' => $this->qty,
+            'event_data' => $this->eventData,
+            // Complementos elegidos para este producto, anidados en su línea (#87). Van en la
+            // candidata porque deciden la fusión: una línea con complementos nunca se funde.
+            'addons' => $addons = $this->buildSelectedAddons(),
+        ]);
+
+        if ($verdict->rejected()) {
+            $this->showLineProblems($verdict->problems);
 
             return;
         }
 
-        // Cap de líneas (auditoría 2026-05-26, hallazgo L): un atacante podría inflar la cesta a
-        // miles de líneas para hacer DoS de contención sobre los locks de slots en `OrderCreator`.
-        // El tope es generoso (50 productos distintos) — bloquea solo el abuso, no flujos reales.
-        if (count($this->cart) >= self::MAX_LINES_PER_CART) {
-            $this->addError('selection', __('tickets.errors.cart_too_large'));
-
-            return;
-        }
-
-        // Datos del evento del pack (#86): los campos OBLIGATORIOS de la fase de reserva deben venir
-        // rellenos. Los campos `postform` (#217) se piden después, en el formulario por-niño.
-        // Feedback ESPECÍFICO (#UX): error por-campo (resalta cada input que falta) + un resumen que
-        // los NOMBRA, para que el usuario sepa exactamente qué corregir.
-        if ($type->isPack()) {
-            $missing = $type->missingRequiredEventFields($this->eventData, TicketType::EVENT_STAGE_BOOKING);
-            if ($missing !== []) {
-                $fields = collect($type->eventFields(TicketType::EVENT_STAGE_BOOKING))->keyBy('key');
-                $labels = [];
-                foreach ($missing as $key) {
-                    $this->addError("eventData.{$key}", __('tickets.errors.field_required'));
-                    if ($field = $fields->get($key)) {
-                        $labels[] = $type->eventFieldLabel($field);
-                    }
-                }
-                $this->addError('selection', __('tickets.errors.fields_missing', ['fields' => implode(', ', $labels)]));
-
-                return;
-            }
-        }
-
-        $this->qty = min($this->qty, $max); // re-tope en servidor (anti-manipulación)
+        $this->qty = $verdict->quantity;
         $this->resetErrorBag('selection');
 
-        // Complementos elegidos para este producto, anidados en su línea (#87).
-        $addons = $this->buildSelectedAddons();
-
-        // Se fusionan SOLO entradas sin complementos (los packs y los bundles con complementos
-        // nunca se fusionan: cada uno es su propio bloque).
-        $index = (! $type->isPack() && $addons === [])
-            ? $this->findCartIndex($this->typeId, $this->date, $this->time)
-            : null;
-        if ($index !== null) {
-            $this->cart[$index]['qty'] += $this->qty;
+        if ($verdict->mergesWithIndex !== null) {
+            $this->cart[$verdict->mergesWithIndex]['qty'] += $this->qty;
         } else {
             $this->cart[] = [
                 'ticket_type_id' => $this->typeId,
                 'date' => $this->date,
                 'time' => $this->time,
                 'qty' => $this->qty,
-                'event_data' => $type->isPack() ? $type->sanitizeEventData($this->eventData, TicketType::EVENT_STAGE_BOOKING) : [],
+                'event_data' => $type?->isPack() ? $type->sanitizeEventData($this->eventData, TicketType::EVENT_STAGE_BOOKING) : [],
                 'addons' => $addons,
             ];
         }
@@ -482,6 +477,40 @@ class Purchase extends Component
         $this->persistCart();
         $this->clearSelection();
         $this->step = 4;
+    }
+
+    /**
+     * Traduce el «no» del dominio a lo que esta pantalla enseña.
+     *
+     * Los tres motivos de SELECCIÓN —producto no elegible, franja no ofrecida, sin sitio— comparten
+     * aviso a propósito: es el que el sidebar ha enseñado siempre, y son el mismo callejón para
+     * quien está mirando el paso 3 (hay que volver a elegir). La API sí los separa, porque un
+     * cliente que programa contra códigos necesita saber si reintentar más tarde tiene sentido.
+     *
+     * @param  list<CartLineProblem>  $problems
+     */
+    private function showLineProblems(array $problems): void
+    {
+        $missingLabels = [];
+
+        foreach ($problems as $problem) {
+            match ($problem->reason) {
+                // Error POR CAMPO (resalta cada input) + el resumen que los nombra: sin los dos, un
+                // pack con cuatro campos deja al cliente adivinando cuál de ellos falta.
+                CartLineProblem::EVENT_FIELD_REQUIRED => (function () use ($problem, &$missingLabels): void {
+                    $this->addError("eventData.{$problem->field}", __('tickets.errors.field_required'));
+                    if (isset($problem->context['label'])) {
+                        $missingLabels[] = (string) $problem->context['label'];
+                    }
+                })(),
+                CartLineProblem::CART_FULL => $this->addError('selection', __('tickets.errors.cart_too_large')),
+                default => $this->addError('selection', __('tickets.errors.choose_one')),
+            };
+        }
+
+        if ($missingLabels !== []) {
+            $this->addError('selection', __('tickets.errors.fields_missing', ['fields' => implode(', ', $missingLabels)]));
+        }
     }
 
     /**

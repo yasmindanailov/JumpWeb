@@ -56,17 +56,42 @@ final class CartPayload
             'items' => $requireItems
                 ? ['required', 'array', 'min:1', 'max:'.self::MAX_LINES]
                 : ['sometimes', 'array', 'max:'.self::MAX_LINES],
-            'items.*.product_id' => ['required', 'integer', 'min:1'],
-            'items.*.date' => ['required', 'date_format:Y-m-d'],
-            'items.*.time' => ['required', 'date_format:H:i:s,H:i'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            ...self::lineRules('items.*'),
+        ];
+    }
+
+    /**
+     * Reglas de UNA línea, bajo el prefijo que se le dé.
+     *
+     * Existe porque desde Fase 4 · paso 4.0b·6 una línea también viaja **suelta**: `cart/validate-line`
+     * pregunta por una candidata que todavía no está en ninguna cesta. Escribir sus reglas otra vez
+     * es exactamente cómo empiezan a divergir dos ideas de «qué es una línea» — el mismo motivo por
+     * el que esta clase existe.
+     *
+     * ⚠️ **Una línea suelta se valida IGUAL que una de cesta**, `quantity >= 1` incluido. Se probó
+     * relajarlo a 0 —«todavía no he elegido cuántos» tiene respuesta de negocio— y no compensa:
+     * obligaba a un segundo esquema casi idéntico a `CartLine` en el contrato, y duplicar un esquema
+     * es la deuda que `ApiContractTest` ya vigila a mano en el único sitio donde existe. Pedir cero
+     * unidades es un problema de FORMA en un contrato público; lo que sí es de negocio —no llegar al
+     * mínimo de invitados de un pack— sigue contestándose como tal.
+     *
+     * @param  string  $prefix  `items.*` para las líneas de una cesta, `line` para una suelta
+     * @return array<string, array<int, string>>
+     */
+    public static function lineRules(string $prefix): array
+    {
+        return [
+            $prefix.'.product_id' => ['required', 'integer', 'min:1'],
+            $prefix.'.date' => ['required', 'date_format:Y-m-d'],
+            $prefix.'.time' => ['required', 'date_format:H:i:s,H:i'],
+            $prefix.'.quantity' => ['required', 'integer', 'min:1'],
             // Respuestas de los campos del evento de un pack. No influyen en el precio y el
             // presupuesto no las devuelve —son datos personales de un menor (`RGPD` §3) y el cliente
             // ya los tiene—; se aceptan para que el MISMO cuerpo sirva también para crear el pedido.
-            'items.*.event_data' => ['sometimes', 'array'],
-            'items.*.addons' => ['sometimes', 'array'],
-            'items.*.addons.*.product_id' => ['required', 'integer', 'min:1'],
-            'items.*.addons.*.quantity' => ['required', 'integer', 'min:1'],
+            $prefix.'.event_data' => ['sometimes', 'array'],
+            $prefix.'.addons' => ['sometimes', 'array'],
+            $prefix.'.addons.*.product_id' => ['required', 'integer', 'min:1'],
+            $prefix.'.addons.*.quantity' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -78,7 +103,18 @@ final class CartPayload
      */
     public static function toCart(array $items): array
     {
-        return array_values(array_map(static fn (array $item): array => [
+        return array_values(array_map(self::toLine(...), $items));
+    }
+
+    /**
+     * Una línea validada → la forma canónica del dominio.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array{ticket_type_id:int, date:string, time:string, qty:int, event_data:array<string,mixed>, addons:array<int, array{ticket_type_id:int, qty:int}>}
+     */
+    public static function toLine(array $item): array
+    {
+        return [
             'ticket_type_id' => (int) $item['product_id'],
             'date' => (string) $item['date'],
             'time' => self::normalizeTime((string) $item['time']),
@@ -88,7 +124,7 @@ final class CartPayload
                 'ticket_type_id' => (int) $addon['product_id'],
                 'qty' => (int) $addon['quantity'],
             ], is_array($item['addons'] ?? null) ? $item['addons'] : [])),
-        ], $items));
+        ];
     }
 
     /**

@@ -972,6 +972,66 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /cart/validate-line:
+    post:
+      tags: [Compra]
+      operationId: validateCartLine
+      summary: ¿Cabe esta línea en mi cesta?
+      description: |
+        Comprueba una línea **antes** de meterla en la cesta, y dice en qué quedaría. Para un cliente
+        que guarda su cesta en el navegador, este es el único momento en que el servidor participa al
+        añadir: sin él habría que reimplementar reglas de servidor en el cliente.
+
+        ⚠️ **Y una de ellas no se descubre leyendo código.** Las respuestas de un campo `number` se
+        sanean a dígitos, así que una edad contestada «cinco» **el servidor la ve vacía** mientras
+        cualquier validación ingenua en el cliente la ve contestada. El cliente lo descubriría cinco
+        pasos después, ya identificado, con un error que ni siquiera nombra el campo.
+
+        ### Responde 200 aunque la línea no sirva
+
+        Preguntar «¿puedo?» y que te contesten «no, y por esto» no es un error de la petición: el
+        veredicto va en `valid` y el motivo en `problems`. Solo la FORMA da 422 — una fecha que no es
+        una fecha—. Mismo criterio que `GET me/reservation-eligibility`.
+
+        ### Lo que devuelve aunque la línea sea válida
+
+        - **`quantity`** — con cuántas unidades entraría **de verdad**. El servidor recorta al cupo
+          en silencio desde siempre (anti-manipulación); `quantity_capped` avisa de que lo hizo, para
+          que no se pinte la cantidad que se pidió en vez de la que se tiene.
+        - **`merges_with_index`** — el índice de la línea de `items` que la **absorbería**. Solo se
+          funden entradas del mismo producto, día y hora **sin complementos**: un pack es siempre su
+          propio bloque. Sin este dato, un cliente crearía una línea duplicada donde el servidor
+          habría sumado cantidades.
+
+        ### Los `problems` vienen sin contexto, a propósito
+
+        Cada motivo trae su código y, si aplica, el campo del evento afectado. **Los números que dan
+        sentido al aviso ya los publicas tú**: `min_quantity` y los `event_fields` con su etiqueta
+        están en `GET catalog/products/{id}`, y `cart_max_lines` en `GET config`. Repetirlos aquí
+        sería un segundo sitio del que leer el mismo valor.
+
+        **No retiene nada.** Lo que dice es cierto en el instante en que se dice; quien garantiza la
+        plaza es el checkout, que revalida todo al crear el pedido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartLineCheckRequest'
+      responses:
+        '200':
+          description: El veredicto de la línea.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartLineVerdict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me:
     get:
       tags: [Cuenta]
@@ -2218,11 +2278,110 @@ components:
           items:
             $ref: '#/components/schemas/CartLine'
 
+    CartLineCheckRequest:
+      type: object
+      description: |
+        Una línea candidata y la cesta que el cliente **ya tiene**. La candidata NO va dentro de
+        `items`: `items` es lo que ya retiene cupo, y meterla ahí la haría competir consigo misma
+        por las plazas, devolviendo un cupo menor del real.
+      required: [line]
+      additionalProperties: false
+      properties:
+        line:
+          $ref: '#/components/schemas/CartLine'
+        items:
+          type: array
+          maxItems: 50
+          description: |
+            La cesta actual. Se puede omitir: la primera línea de una compra se añade sobre una
+            cesta vacía.
+          items:
+            $ref: '#/components/schemas/CartLine'
+
+    CartLineVerdict:
+      type: object
+      description: Si la línea puede entrar, y en qué quedaría si entra.
+      required: [valid, problems, quantity, quantity_capped, max_quantity, merges_with_index]
+      additionalProperties: false
+      properties:
+        valid:
+          type: boolean
+        problems:
+          type: array
+          description: Vacío cuando `valid` es `true`.
+          items:
+            $ref: '#/components/schemas/CartLineProblem'
+        quantity:
+          type: integer
+          description: |
+            Con cuántas unidades entraría **de verdad**, ya recortada al cupo disponible. **0** si no
+            entra: una línea rechazada no tiene cantidad efectiva.
+        quantity_capped:
+          type: boolean
+          description: |
+            `true` si la cantidad pedida no cabía y el servidor la recortó. Lo hace en silencio desde
+            siempre (anti-manipulación); esto es lo que evita pintar la cantidad que se pidió en vez
+            de la que se tiene.
+        max_quantity:
+          type: integer
+          description: |
+            Techo de esta franja con la cesta enviada ya descontada — el mismo número que acota el
+            selector en `availability/{product}/times`, para no obligar a pedir las dos cosas.
+        merges_with_index:
+          type: integer
+          nullable: true
+          description: |
+            Índice dentro de `items` de la línea que **absorbería** a la candidata sumando
+            cantidades, o `null` si entraría como línea nueva. Solo se funden entradas del mismo
+            producto, día y hora **sin complementos**: un pack es siempre su propio bloque, porque
+            fundirlo mezclaría dos fiestas y cambiaría señal y ocupación.
+
+    CartLineProblem:
+      type: object
+      description: |
+        Un motivo por el que la línea no puede entrar. **Sin contexto a propósito**: los números que
+        dan sentido al aviso ya los publican `GET catalog/products/{id}` (`min_quantity` y los
+        `event_fields` con su etiqueta) y `GET config` (`cart_max_lines`).
+      required: [reason, field]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          enum:
+            - product_unavailable
+            - time_unavailable
+            - sold_out
+            - quantity_below_minimum
+            - cart_full
+            - event_field_required
+          description: |
+            - `product_unavailable` — no existe, no se vende online o su zona no opera. Las tres dan
+              la misma respuesta: distinguirlas contaría qué hay en la base de datos.
+            - `time_unavailable` — esa fecha y hora no se ofrecen para este producto. Cubre franja
+              inexistente o cerrada, día pasado, hora ya pasada, fuera de la ventana del producto,
+              sin la antelación mínima, y el pack cuyo cupo no llega a su mínimo de invitados.
+              **Reintentar no ayuda**: hay que elegir otra hora.
+            - `sold_out` — la hora se ofrece pero está completa. A diferencia del anterior, aquí
+              volver a mirar más tarde sí tiene sentido.
+            - `quantity_below_minimum` — por debajo del mínimo contratable (`min_quantity` del
+              producto).
+            - `cart_full` — la cesta ya está en su tope de líneas (`cart_max_lines`).
+            - `event_field_required` — falta un campo obligatorio del pack. ⚠️ **«Falta» lo decide el
+              saneo del servidor**: un campo `number` se reduce a dígitos, así que una edad
+              contestada «cinco» llega vacía aunque el cliente la vea rellena.
+        field:
+          type: string
+          nullable: true
+          description: |
+            Clave del campo del evento afectado, para resaltar ESE input. `null` cuando el problema
+            es de la línea entera.
+
     CartLine:
       type: object
       description: |
-        Una línea de la cesta. Es el MISMO cuerpo que aceptan la disponibilidad y la creación del
-        pedido, para que el cliente no tenga que guardar dos formas de su carrito.
+        Una línea de la cesta. Es el MISMO cuerpo que aceptan la disponibilidad, la validación de
+        línea y la creación del pedido, para que el cliente no tenga que guardar dos formas de su
+        carrito.
       required: [product_id, date, time, quantity]
       additionalProperties: false
       properties:

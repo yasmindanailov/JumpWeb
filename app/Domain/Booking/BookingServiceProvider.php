@@ -3,6 +3,7 @@
 namespace App\Domain\Booking;
 
 use App\Domain\Booking\Contracts\AvailabilityOffer;
+use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
@@ -12,6 +13,7 @@ use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Services\AvailabilityReader;
+use App\Domain\Booking\Services\CartLineValidator;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
@@ -44,6 +46,11 @@ class BookingServiceProvider extends ServiceProvider
         // Tarificación de cesta (Fase 3 · paso 4a): la consumen el sidebar de la web y
         // `POST /orders/quote`. Es el espejo declarado de lo que `OrderCreator` cobrará.
         $this->app->bind(CartPricing::class, CartPricer::class);
+        // Si una línea puede entrar en la cesta (Fase 4 · paso 4.0b·6): producto, franja ofrecida,
+        // cantidad, tope de líneas y campos obligatorios del pack — más con qué cantidad entraría y
+        // si se funde con otra. La consumen el sidebar de la web y `POST cart/validate-line`, que
+        // existe porque la cesta de la SPA vive en el navegador y al añadir no hay ida y vuelta.
+        $this->app->bind(CartLineValidation::class, CartLineValidator::class);
         // Disponibilidad ofrecida (Fase 3 · paso 4b): sobre `SlotOffer` (`AFORO-02`), con la cesta
         // delante. La consumen el sidebar de la web y `availability/{product}/*`.
         $this->app->bind(AvailabilityOffer::class, AvailabilityReader::class);

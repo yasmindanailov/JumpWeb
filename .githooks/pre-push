@@ -42,7 +42,7 @@ touched_critical=''
 # no lo hacía. Es la fuente ÚNICA de oferta (`AFORO-02`) y `OrderCreator` la llama como backstop del
 # corte intra-día (`passesIntradayFloor`), así que un cambio suyo puede mover lo que
 # `purchase:verify-oversell` comprueba.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

@@ -7,7 +7,7 @@
 > (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.quaterdecies** — setenta y siete puntos
+> **Lo que el código enseñó al implementar: §10 → §10.quindecies** — ochenta puntos
 > medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
@@ -977,3 +977,30 @@ estaba en `Purchase::resolveEventData()` (privada) y en `ReservationSlip::eventD
 módulo, otro nombre, otra forma). Ninguna guarda de arquitectura las relaciona y ningún `grep` por
 nombre las encuentra: aparecieron al buscar **quién lee `event_data`**. Antes de escribir un
 serializador nuevo, buscar los LECTORES de la columna sale más barato que buscar el método.
+
+### 10.quindecies Lo que el código enseñó — Fase 4 · paso 4.0b·6 (2026-08-14)
+
+Tres puntos de `POST cart/validate-line`, el endpoint que sustituye a transcribir reglas de servidor
+al cliente (`DECISIONES #40`). El primero es el que más lejos llega.
+
+**78. Extraer una regla y no hacer que el consumidor viejo la use no es extraer: es copiar.** Aquí
+la compra web pasó a pedir el veredicto en el mismo paso, y esa delegación encontró en el primer
+intento un fallo que ninguna lectura del diff habría visto: `Cart::sanitize()` fuerza `max(1, qty)`
+—correcto para una cesta guardada, donde un 0 es corrupción— y aplicado a una línea CANDIDATA
+convertía «todavía no he elegido cuántos» en un 1. La regla general: **cuando saques una regla de
+una superficie viva, hazla consumir la extracción en el mismo commit**; su suite es la única prueba
+de que lo extraído dice lo mismo que decía.
+
+**79. Un validador previo tiene que validar contra lo que el juez final mirará, no contra lo que
+mira la interfaz de la que salió.** La web comprobaba el aforo de la franja y le bastaba, porque su
+hora venía siempre de la lista ofrecida. Un cliente de API manda la hora que quiera, y el método de
+aforo responde de una franja concreta **aunque no se ofrezca** —ignora día pasado, corte intradía,
+ventana del producto y antelación mínima—. Copiar la comprobación tal cual habría dado por buenas
+líneas que el checkout rechaza: **un endpoint de validación que miente es peor que no tenerlo.**
+
+**80. Un veredicto no necesita republicar el contexto que otro endpoint ya publica.** La tentación
+era devolver con cada problema el mínimo del producto, el tope de la cesta y la etiqueta del campo.
+Los tres ya viajan en `catalog/products/{id}` y en `config`, así que repetirlos crea un segundo sitio
+del que leer el mismo número — y como sería un mapa libre, obligaría además a relajar
+`additionalProperties: false` justo en el esquema recién nacido. El dominio sí los lleva, porque no
+sabe quién le pregunta; la capa de entrega es la que puede decidir no reenviarlos.

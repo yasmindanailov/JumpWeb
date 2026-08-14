@@ -135,6 +135,15 @@ preparación**. La cantidad se topa a ese aforo. Nunca se confía en el cliente.
 la oferta de franjas está consolidada en **`SlotOffer`** como fuente única (ver `00-REFACTOR.md`
 §Visión; posterior a este diseño).
 
+⚠️ **Y quién decide si una línea ENTRA en la cesta ya no es la pantalla** (Fase 4 · paso 4.0b·6,
+`DECISIONES #40`): es `Booking\Contracts\CartLineValidation`. Reúne lo que estaba repartido en el
+cuerpo de `Purchase::addToCart()` —producto elegible, franja **ofrecida** (no solo con aforo),
+cantidad contra el mínimo, tope de líneas (`PAY-12`) y campos obligatorios del pack— y responde
+además dos cosas que ninguna validación contesta: **con qué cantidad entraría** tras el re-tope y
+**si se funde** con una línea que ya estaba. La compra web lo consume y `POST /api/v1/cart/validate-line`
+lo publica, porque un cliente con la cesta en el navegador no hace ningún viaje al añadir.
+La fusión sigue siendo solo entre entradas del mismo producto, día y hora **sin complementos**.
+
 ### 7.5 Piezas y ubicación (estado en la base heredada)
 | Pieza | Detalle |
 |---|---|

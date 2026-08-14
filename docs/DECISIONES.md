@@ -1297,3 +1297,46 @@ tercera. Ahora es `TicketType::eventAnswers()`, hermana de firma de `sanitizeEve
 `missingRequiredEventFields()`. La del panel **no se unificó a propósito** —enseña las claves
 huérfanas, que el operador necesita ver, y una respuesta huérfana no tiene `stage` que filtrar—:
 queda anotada en `DEUDA.md` en vez de resuelta a medias dentro de un paso de API.
+
+## #40 · 2026-08-14 · Validar una línea antes de la cesta: contrato de dominio, y la web lo consume
+Ejecución de `#38(f)` (Fase 4 · paso 4.0b·6, `sidebar-spa.md` §4.4.2). Nace
+`POST /api/v1/cart/validate-line` y, debajo, `Booking\Contracts\CartLineValidation`.
+
+**(a) La regla baja al DOMINIO, no se copia a un controlador.** Lo que decide si una línea entra en
+la cesta —producto elegible, franja ofrecida, cantidad, tope de líneas, campos obligatorios del
+pack— vivía en el cuerpo de `Livewire\Tickets\Purchase::addToCart()`, es decir en una clase de
+interfaz. Escribirlo otra vez en un endpoint habría sido la segunda copia; escribirlo en JavaScript,
+la tercera. **Y la compra web lo consume**: `addToCart()` ya no decide, pide el veredicto y traduce
+el «no» a lo que enseña (error por campo + resumen que nombra lo que falta). Esa delegación es lo
+que convierte «fuente única» en algo comprobable, con la suite de la web de testigo.
+
+**(b) Hacer que la web delegara encontró un fallo que ninguna revisión habría visto.**
+`Cart::sanitize()` fuerza `max(1, qty)` —correcto para una cesta guardada, donde una cantidad 0 es
+corrupción—. Aplicado a una línea CANDIDATA convertía «todavía no he elegido cuántos» en un 1, y la
+web habría añadido una entrada que nadie pidió. La candidata tiene por eso su propia normalización.
+Lo cazó `PurchasePanelTest` al primer intento: es el argumento entero a favor de que la superficie
+vieja consuma la extracción en el mismo paso, en vez de dejarla «para después».
+
+**(c) La franja se comprueba contra la OFERTA, no contra el aforo.** La web no lo necesitaba —su
+hora venía siempre de `availableTimes()`—, pero un cliente de API puede enviar cualquiera, y
+`AvailabilityOffer::maxQuantity()` responde de una franja concreta **aunque no se ofrezca**: no mira
+día pasado, corte intradía, ventana del producto ni antelación mínima. Validar solo por aforo habría
+dado por buena una línea que `OrderCreator` rechaza después. Un validador que miente es peor que no
+tenerlo. Se consulta `times()` una sola vez, que ya trae el `max_quantity` de cada hora.
+
+**(d) 200 aunque la línea no sirva.** El veredicto va en el cuerpo (`valid` + `problems`), como en
+`GET me/reservation-eligibility`: preguntar «¿puedo?» y que te digan «no, y por esto» no es un error
+de la petición. La FORMA sigue siendo 422 y la decide `CartPayload`, que ahora expone también las
+reglas de UNA línea para que no nazca una segunda idea de qué es una línea.
+
+**(e) Los `problems` viajan SIN contexto.** El dominio adjunta los datos para componer el aviso
+—mínimo, tope, etiqueta del campo— porque cualquier consumidor puede necesitarlos, y el sidebar los
+usa. La API no los republica: `GET catalog/products/{id}` ya da `min_quantity` y los `event_fields`
+con su etiqueta, y `GET config` da `cart_max_lines`. Reenviarlos sería un segundo sitio del que leer
+el mismo número y —al ser un mapa libre— obligaría a relajar `additionalProperties: false` justo en
+el esquema más nuevo.
+
+**(f) Lo que NO se cambió, a propósito**: el tope de cesta se aplica aunque la línea fuese a
+fundirse con otra, igual que en la web. Eximir la fusión parece más fino —la cesta no crece— pero es
+un cambio de conducta en una defensa anti-abuso (`PAY-12`), y colarlo dentro de una extracción es
+justo lo que este proyecto no hace (mismo criterio que la divergencia de `contact.phone`).

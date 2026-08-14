@@ -242,6 +242,30 @@ regla de servidor, es decir deuda por definición, y además la que más caro sa
 caso `number` («cinco» → vacío) no lo encuentra ninguna revisión de código, solo un cliente
 enfadado. Se cierra con los otros cinco, en su propio paso.
 
+✅ **HECHO 2026-08-14** — `POST /cart/validate-line` (`DECISIONES #40`). Tres cosas que la
+implementación dejó claras y que conviene saber antes de tocarlo:
+
+1. **La regla bajó al dominio, no se copió a un controlador.** Nace
+   `Booking\Contracts\CartLineValidation`, y **la compra web lo consume**: `addToCart()` ya no
+   decide, pide el veredicto y solo traduce el «no» a lo que enseña. Esa delegación es lo que
+   convierte «fuente única» en algo comprobable — y la suite de la web en su testigo.
+2. **Hacer que la web delegara encontró un fallo que ninguna revisión habría visto.**
+   `Cart::sanitize()` fuerza `max(1, qty)` —correcto para una cesta guardada, donde un 0 es
+   corrupción— y aplicado a una línea CANDIDATA convertía «todavía no he elegido cuántos» en un 1:
+   la web habría añadido una entrada que nadie pidió. Por eso la candidata tiene su propia
+   normalización. Lo cazó `PurchasePanelTest`, no una lectura del diff.
+3. **El endpoint comprueba la franja contra la OFERTA, no contra el aforo.** La web no lo
+   necesitaba: allí la hora siempre venía de `availableTimes()`. Un cliente de API puede mandar
+   cualquiera, y `AvailabilityOffer::maxQuantity()` responde de una franja concreta **aunque no se
+   ofrezca** —no mira día pasado, corte intradía, ventana ni antelación—, así que validar solo por
+   aforo habría dado por buena una línea que el checkout rechaza. Un validador que miente es peor
+   que no tenerlo.
+
+⚠️ **Lo que se dejó igual a propósito**: el tope de cesta se aplica **aunque la línea fuese a
+fundirse** con otra, que es como lo hace la web desde siempre. Eximir la fusión parece más fino
+—la cesta no crece— pero es un cambio de conducta en una defensa anti-abuso, y no se cuela dentro
+de una extracción.
+
 #### 4.4.3 El presupuesto de PETICIONES, que es lo que se nota
 
 Arranque: de 2 a **4** peticiones públicas y paralelizables. Asumible.

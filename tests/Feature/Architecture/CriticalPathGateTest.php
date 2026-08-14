@@ -52,6 +52,12 @@ class CriticalPathGateTest extends TestCase
         // arquitectura sabe ver y lo que decide si se retiene aforo sin cobrarlo (`AFORO-10`) o se
         // reabre un cobro sobre un hold no validado (`PAY-04`).
         'app/Domain/Booking/Services/CheckoutOrchestrator.php',
+        // Fase 4 · paso 4.0b·6. No orquesta el checkout ni escribe nada —solo pregunta a la oferta
+        // si una línea cabe—, pero es superficie de API que DECIDE sobre aforo, y el gate ya trata
+        // así a su hermano `AvailabilityController` por el mismo motivo. Dejarlo fuera habría sido
+        // incoherente: los dos leen `SlotOffer` a través del mismo contrato, y la suite corre sobre
+        // SQLite, que no ve carreras. El patrón se amplió con `Cart` en este paso.
+        'app/Http/Controllers/Api/V1/CartLineController.php',
     ];
 
     /**

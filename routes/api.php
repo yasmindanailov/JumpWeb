@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\BookingStatusController;
+use App\Http\Controllers\Api\V1\CartLineController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
@@ -130,6 +131,20 @@ Route::name('api.v1.')->group(function (): void {
     // anidados y respuestas del evento— no cabe con garantías en una query string, no porque tenga
     // efectos.
     Route::post('/orders/quote', QuoteController::class)->name('orders.quote');
+
+    // ── ¿Cabe esta línea en mi cesta? (Fase 4 · paso 4.0b·6) — PÚBLICO ───────────────────────
+    // El tercer momento en que el servidor participa en el carrito sin guardarlo: aquí dice si una
+    // línea puede ENTRAR. Existe porque la cesta de la SPA vive en `localStorage` y al añadir no
+    // queda ninguna ida y vuelta, así que la alternativa era transcribir a JavaScript reglas de
+    // servidor — incluida la que nadie encuentra leyendo código: un campo `number` se sanea a
+    // dígitos, así que la edad contestada «cinco» el servidor la ve VACÍA (`DECISIONES #38(f)`).
+    //
+    // `POST` por lo mismo que el presupuesto: lleva la cesta entera —para descontar el cupo que uno
+    // mismo ya retiene— y eso no cabe con garantías en una query string. No tiene efectos.
+    //
+    // Responde 200 aunque la línea no sirva: preguntar «¿puedo?» y que te digan «no, y por esto» no
+    // es un error de la petición. Mismo criterio que `me/reservation-eligibility`.
+    Route::post('/cart/validate-line', CartLineController::class)->name('cart.validate-line');
 
     // ── Post-form de invitados (paso 5) — FIRMA o TITULAR ────────────────────────────────────
     // El segundo consumidor de la API, y el único que se autoriza con una FIRMA: el enlace viaja
