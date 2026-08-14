@@ -1,0 +1,101 @@
+<script setup>
+import { t as translate } from '../i18n.js';
+import { money } from '../money.js';
+import SummaryLine from './SummaryLine.vue';
+
+/**
+ * Paso 6 — **la reserva creada** (Fase 4 · paso 4.6·1).
+ *
+ * Es la primera pantalla del cajón a la que se llega **desde fuera**: el cliente se fue a la pasarela,
+ * pagó y volvió con una navegación completa. Nada de lo que el cajón tenía en memoria sobrevive, así
+ * que todo lo que aquí se pinta lo pide `outcome.js` con el código del pedido.
+ *
+ * ⚠️ **Se llega por DOS caminos y el marcado tiene que servir a los dos**: la vuelta OK de la pasarela
+ * (pedido `paid`) y el enlace de verificación de correo (pedido `pending`). Por eso la nota del pago
+ * ramifica sobre el estado REAL —hasta #224 decía «pendiente de pago» SIEMPRE, también a quien acababa
+ * de pagar— y por eso el desglose de la señal solo aparece con el pedido pagado.
+ *
+ * ⚠️ **`confirmation` puede ser `null` y la pantalla sigue teniendo sentido.** Es fiel al Blade: sin
+ * resumen quedan el código del pedido, el aviso del correo y el CTA. Es lo que se enseña cuando la
+ * sesión se perdió por el camino, y es mucho mejor que un «ha fallado algo» a quien acaba de pagar.
+ *
+ * ⚠️ **Los importes se PINTAN, no se suman** (`PAY-12`): `park_cents` viene compuesto por el servidor
+ * y `total − online` no es lo mismo.
+ */
+const props = defineProps({
+    /** El view-model de `outcome.js`, o `null` si el resumen no se pudo traer. */
+    confirmation: { type: Object, default: null },
+
+    /** El código del pedido. Se pinta aunque no haya resumen: es lo que el cliente necesita. */
+    orderCode: { type: String, default: '' },
+
+    /**
+     * El bloque de «registro del parque» que publica `GET /config`, o `null`.
+     *
+     * ⚠️ Su `url` llega **ya saneada por el servidor** (`SEC-07`): la edita un operador y en la web el
+     * escape de Blade remataba la defensa, pero un cliente JSON no tiene escape que la remate. No se
+     * vuelve a tocar aquí — sanearla otra vez sería fingir que este es el sitio donde ocurre.
+     */
+    registration: { type: Object, default: null },
+
+    messages: { type: Object, default: () => ({}) },
+    locale: { type: String, default: 'es' },
+});
+
+defineEmits(['add-another']);
+
+const t = (key) => translate(props.messages, key);
+</script>
+
+<template>
+    <div class="purchase__confirm purchase__done" role="status">
+        <div class="purchase__party" aria-hidden="true">
+            <span class="icon ic-b7" aria-hidden="true">
+                <svg viewBox="0 0 40 40" width="56" height="56"></svg>
+            </span>
+        </div>
+        <h3 class="wiz__title">{{ t('reservation_created') }}</h3>
+
+        <template v-if="confirmation">
+            <ul class="cart cart--summary">
+                <SummaryLine v-for="(line, i) in confirmation.lines" :key="i" :line="line" :messages="messages" :locale="locale" />
+            </ul>
+            <div class="purchase__total">
+                <span>{{ t('total') }}</span>
+                <strong>{{ money(confirmation.total_cents) }}</strong>
+            </div>
+            <!-- #225 F3: el agregado se etiqueta NEUTRO «Pagado online» —lo cobrado ahora es señal(es)
+                 + productos de pago completo— y la señal por-producto se nombra en su card. Solo con el
+                 pedido PAGADO y algo pendiente en el parque: en «verifica tu correo» sigue `pending`. -->
+            <template v-if="confirmation.status === 'paid' && confirmation.park_cents > 0">
+                <div class="purchase__split">
+                    <span>{{ t('paid_online_confirmed') }}</span>
+                    <strong>{{ money(confirmation.online_cents) }}</strong>
+                </div>
+                <div class="purchase__split">
+                    <span>{{ t('pending_at_park') }}</span>
+                    <strong>{{ money(confirmation.park_cents) }}</strong>
+                </div>
+            </template>
+        </template>
+
+        <p class="purchase__code">{{ t('order_code') }}: <strong>{{ orderCode }}</strong></p>
+        <p class="purchase__note">{{ t('email_sent_note') }}</p>
+        <p v-if="confirmation?.status === 'paid'" class="purchase__note">{{ t('payment_confirmed_note') }}</p>
+        <p v-else-if="confirmation?.status === 'pending'" class="purchase__note">{{ t('pending_payment') }}</p>
+
+        <!-- #217: solo si algún producto lo pide de verdad. Un pack sin formulario no lo promete. -->
+        <p v-if="confirmation?.has_guest_form" class="purchase__note purchase__note--guestform">{{ t('guest_form_notice') }}</p>
+
+        <div v-if="registration" class="purchase__reginfo">
+            <p class="purchase__reginfo-text">{{ registration.description }}</p>
+            <a :href="registration.url" target="_blank" rel="noopener" class="btn btn--ghost purchase__reginfo-btn">{{ registration.label }} →</a>
+        </div>
+
+        <!-- #225 F3: «Ver mis reservas» se retiró (ya está SIEMPRE en el bloque de cuenta del cajón),
+             así que queda UNA sola acción y por eso es primaria. -->
+        <div class="purchase__final-actions">
+            <button type="button" class="btn btn--zone btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
+        </div>
+    </div>
+</template>

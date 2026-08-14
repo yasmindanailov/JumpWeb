@@ -2171,3 +2171,81 @@ para lo único que queda de la fase: las tres pantallas de desenlace (4.6) y el 
 
 **(j) Lo que NO entra**: los pasos 6, 10 y 11 y la vuelta de Redsys (4.6). ⚠️ **Entre 4.5 y 4.6 no se
 despliega el flag**: quien pague en medio volvería a un cajón mudo, y ahora el cajón sí puede cobrar.
+
+## #56 · 2026-08-14 · 4.6·1 — la vuelta de la pasarela pinta la reserva creada
+Fase 4 · paso 4.6, primer tramo. Transcribe el paso **6** —la pantalla a la que se vuelve tras pagar—
+y cierra la costura del desenlace por el lado del cliente. El corte es el de siempre, **por
+DEPENDENCIA**: el sondeo del paso 11 aterriza en el 6, así que el 6 va primero; los pasos 10 y 11 son
+4.6·2.
+
+**(a) Este paso no compone: TRADUCE.** El resumen entero lo publica ya el servidor desde 4.0b —importes
+por reserva incluidos—, así que `outcome.js` solo cambia de vocabulario. Nada se recalcula (`PAY-12`):
+`park_cents` viene compuesto y **`total − online` no es lo mismo**, `shows_deposit_note` son TRES
+condiciones ya resueltas por `ReservationFinancials`, y `guest_form_pending` **no es** el `any()` de
+`items[].needs_guest_form` —el servidor descarta antes las líneas canceladas, y por eso los dos campos
+se llaman distinto en el contrato—.
+
+**(b) ⚠️ EL HALLAZGO DEL PASO: un test de cadena pasó sin probar la cadena, otra vez.** El caso que
+afirmaba «cada respuesta del pack cae bajo SU reserva» **pasaba en verde con el cliente emparejando por
+POSICIÓN**, medido por mutación. El motivo es que hoy `GET orders/{code}/event-data` devuelve las
+reservas en el mismo orden que las líneas del pedido, así que llave y posición coinciden **por
+casualidad**. El contrato no promete ningún orden: el caso bueno **le da la vuelta al sobre** y exige el
+mismo resumen. Es la lección de 4.0b·5 repetida, y el fallo que tapaba es feo —el nombre de un niño bajo
+la reserva de otro, con el árbol idéntico y el gate en verde—.
+
+**(b.bis) Y la mutación con la que se descubrió también era mala.** El primer intento emparejaba con
+`Object.values(answers)[i]`, y **pasó**: en JavaScript las claves de objeto que parecen enteros se
+ordenan ASCENDENTEMENTE, así que el mapa se reordenaba solo y devolvía lo correcto. Una mutación que no
+rompe nada no demuestra nada; la buena es recorrer las dos listas en paralelo, que es el fallo que un
+programador escribiría de verdad.
+
+**(c) La fila del resumen se EXTRAE, y la pregunta que lo decide es «¿hay dos copias?»** (4.0b·5). El
+paso 6 y el paso 8 emiten **el mismo árbol** hasta el `<span>` sin clase del precio y el
+`<div class="cart__lines">` que se pinta aunque quede vacío. Nace `SummaryLine.vue`, y la extracción se
+verificó por mutación: ponerle al precio la clase del carrito deja en rojo **los dos** pasos a la vez.
+Dos copias de un marcado que el CSS mira por ESTRUCTURA divergen en silencio, con el diff de cada
+pantalla verde por separado.
+
+**(d) ⚠️ El desenlace MANDA sobre la cesta, y el orden natural de la SPA era el contrario.**
+`Purchase::mount()` coloca el paso 4 si hay cesta y **después** deja que la vuelta de la pasarela lo
+pise; el motor SPA restauraba la cesta al final y navegaba al carrito. No es teórico: la cesta vive en
+`localStorage`, así que **otra pestaña puede haberla llenado mientras se pagaba en ésta**, y quien
+volvía de pagar aterrizaba en un carrito en vez de en su reserva. La precedencia se escribe en
+`machine.js` (`isOutcome()`) y no en el componente, porque dentro de un `.vue` no tendría red (`CE-6`);
+su caso la ata a `stepForOutcome()`, que es quien traduce lo que escribe `SidebarEntry`.
+
+**(e) `confirmation: null` es un estado legítimo, no un fallo.** El Blade pinta la pantalla igual sin
+resumen —quedan el código del pedido, el aviso del correo y el CTA— y es lo que ve quien perdió la
+sesión entre la ida a la pasarela y la vuelta. Enseñarle «ha fallado algo» a quien acaba de pagar sería
+mucho peor, así que `loadConfirmation()` devuelve `null` sin componer ningún aviso. Tiene caso propio en
+el diff de árbol: es la rama que se olvida.
+
+**(f) Son DOS peticiones y la segunda no es opcional.** Las respuestas del pack son datos de un MENOR y
+del art. 9, así que `GET orders/{code}` **no las lleva** (hay test de ello) y viven en su endpoint
+aparte. Van en paralelo —son independientes y el cliente acaba de pagar— y un fallo de la segunda **no**
+tumba el resumen: es un bloque menos bajo cada línea, no una pantalla rota.
+
+**(g) DIVERGENCIAS DECLARADAS, cada una con su caso** para que no puedan cambiar por el camino de
+arreglar otra cosa. **(1)** La API acota el resumen a la fase `booking` (§4.4.6, `#39`): lo que un
+operador rellene del post-form desde el panel sale en el cajón Livewire y no en el SPA. **(2)** El Blade
+ramifica sobre la columna `status` y la API publica `displayStatus()`, así que un pedido pendiente con
+el hold vencido hace que Livewire diga «pendiente de pago» y el cajón SPA **no diga nada** — prometer un
+pago pendiente sobre una plaza que ya volvió al inventario es peor que callar.
+
+**(h) El techo del bundle NO sube.** El paso costó **4,70 KiB** medidos (140,79 de 150 KiB), menos de lo
+que ocupa su marcado porque la extracción de la fila le quitó la suya a la pantalla de pagar. Quedan
+**9,21 KiB** para los pasos 10 y 11 y el widget de Turnstile; las dos pantallas que faltan no llevan
+lista ni importes.
+
+**(i) El centinela del chunk cubre el cableado que ningún test ejecuta.** `Sidebar.vue` no lo renderiza
+nadie —lee `window.Alpine`—, así que `purchase__confirm` y `/event-data` entran en `ENGINE_MUST_KNOW`.
+Verificado por mutación: quitar la llamada a `loadOutcome()` borra `/event-data` del bundle (Rollup poda
+el import que deja de usarse) y el test lo nombra.
+
+**(j) Verificado en vivo, no solo en la suite**: con `sidebar.engine = spa`, la home sirve el payload de
+montaje con su `orderCode`, el login por API deja sesión a través de nginx y las respuestas REALES de
+`GET /orders/{code}` y `/event-data` pasadas por el módulo REAL componen el resumen correcto.
+
+**(k) Lo que NO entra**: los pasos 10 (denegado + reintento) y 11 (verificando + sondeo), que son 4.6·2.
+⚠️ **El flag sigue sin desplegarse**: quien vuelva con un pago denegado o con un terminal *data-less*
+todavía se encuentra un cajón mudo.

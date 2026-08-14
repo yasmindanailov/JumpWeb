@@ -69,8 +69,17 @@ class SidebarBundleBudgetTest extends TestCase
      * las tres pantallas de desenlace (4.6) y el widget de Turnstile (4.4b·2), que es lo único que
      * queda de la fase. Un techo más holgado dejaría de vigilar.
      *
-     * Si el paso que meta el desenlace se pasa, la decisión vuelve a ser SUBIR el techo con su motivo
-     * escrito — no dejar que lo empuje el arrastre, que es lo que este test existe para impedir.
+     *   · 4.6·1 (paso 6: la reserva creada) ............... 144,17 kB = **140,79 KiB**
+     *
+     * ⚠️ **El techo NO sube en 4.6·1, y el margen es el dato que importa para lo que queda.** El paso
+     * costó **4,70 KiB** medidos —menos de lo que ocupa su marcado, porque la fila del resumen se
+     * EXTRAJO a `SummaryLine.vue` y la pantalla de pagar dejó de tener la suya—, así que quedan
+     * **9,21 KiB** de los 150 para los pasos 10 y 11 (4.6·2) y el widget de Turnstile (4.4b·2).
+     * Las dos pantallas que faltan no llevan lista ni importes: son título, notas y botones.
+     *
+     * Si el paso que meta el resto del desenlace se pasa, la decisión vuelve a ser SUBIR el techo con
+     * su motivo escrito — no dejar que lo empuje el arrastre, que es lo que este test existe para
+     * impedir.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 150;
 
@@ -223,6 +232,12 @@ class SidebarBundleBudgetTest extends TestCase
         // formulario firmado; sin ella el cajón crearía el pedido —reteniendo aforo— y no llevaría a
         // ninguna parte. El `/orders` del checkout no sirve de centinela: `/orders/quote` ya lo contiene.
         'purchase__redirecting' => 'sacar al cliente hacia la pasarela con el formulario firmado',
+        // ⚠️ 4.6·1: la vuelta. `purchase__confirm` es la clase de la pantalla de reserva creada, y
+        // `/event-data` la SEGUNDA petición que la sostiene: las respuestas del pack no viajan en
+        // `GET orders/{code}` —son datos de un menor y del art. 9— así que sin esta llamada el resumen
+        // saldría sin lo que el cliente contestó, con el resto de la pantalla intacto.
+        'purchase__confirm' => 'pintar la reserva creada al volver de la pasarela',
+        '/event-data' => 'traer las respuestas del pack que el pedido no lleva',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

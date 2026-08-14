@@ -10,19 +10,22 @@
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
 **4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a ✅ COMPLETO**
 (·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) ·
-**4.5 ✅ COMPLETO** (·1 la cesta pide lo que le falta · ·2 **pagar y salir a la pasarela**) → **toca
-4.6: la vuelta de Redsys y las tres pantallas de desenlace**.
+**4.5 ✅ COMPLETO** (·1 la cesta pide lo que le falta · ·2 **pagar y salir a la pasarela**) ·
+**4.6·1 ✅** (la vuelta de la pasarela pinta la reserva creada) → **toca 4.6·2: los pasos 10
+(denegado + reintento) y 11 (verificando + sondeo)**.
 El corte está en `docs/specs/sidebar-spa.md` §4.10. Queda además **4.4b·2** (el widget de Turnstile),
 aplazado a propósito porque no se puede verificar sin claves de Cloudflare y navegador.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`), 4.4b en dos (`#53`) y 4.5 en dos (`#54`, `#55`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`), 4.4b en dos (`#53`),
+4.5 en dos (`#54`, `#55`) y 4.6 en dos (`#56`) — el sondeo del paso 11 aterriza en el paso 6, así que
+el 6 va primero. En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2688 en verde** (15.319 aserciones, `--parallel` ~67 s) · **205 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2698 en verde** (15.381 aserciones, `--parallel` ~69 s) · **219 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -222,8 +225,8 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-**Cimientos cerrados (4.0a–4.0c, 4.1), los tres primeros pasos transcritos (4.2), el paso 4 entero
-con su pie, su aviso de pausa y su persistencia (4.3·1–·4), y la DECISIÓN del paso al pago (4.4a·1).**
+**Cimientos cerrados (4.0a–4.0c, 4.1), el embudo entero transcrito (4.2 → 4.5) y la primera de las
+tres pantallas de desenlace (4.6·1). Falta 4.6·2 y el widget de Turnstile (4.4b·2).**
 
 ⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
 abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
@@ -235,12 +238,16 @@ Si eres invitado, **te lleva a la pantalla de identificación y puedes ENTRAR o 
 propio cajón** (4.4a·2 y 4.4b·1), con los mismos textos, el mismo limitador y las mismas defensas
 anti-bot que la web. Y desde 4.5 **paga**: la pantalla de pago con su banda de desglose, «Pagar con
 tarjeta» que crea la reserva firme —admitir, crear con su hold y abrir el cobro, en una sola petición—
-y el auto-POST firmado hacia Redsys. **El cajón SPA recorre el embudo entero.** Donde se para ahora es
-al VOLVER: los pasos 6, 10 y 11 son 4.6, así que quien pague vuelve a un cajón mudo. La cesta **sí
-sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro.
-⚠️ **El flag NO se activa en producción y NO se despliega entre 4.5 y 4.6**: su default es `livewire`
-y ese es el motor que vende. Antes era una precaución teórica; ahora **el cajón SPA sí puede cobrar**,
-así que activarlo con 4.6 sin hacer dejaría a quien pague mirando una pantalla muda. Sirve para
+y el auto-POST firmado hacia Redsys. **El cajón SPA recorre el embudo entero.** Y desde 4.6·1 **también
+VUELVE**: quien paga bien aterriza en la pantalla de reserva creada, con su resumen pedido al servidor
+—líneas, respuestas del pack, desglose de la señal, aviso de post-form y enlace de registro—, su
+confeti y su «hacer otra reserva». Donde se para ahora es en los OTROS dos desenlaces: **pago denegado
+(paso 10) y verificando (paso 11) siguen sin pantalla**, y son 4.6·2. La cesta **sí sobrevive a la
+recarga** desde 4.3·4, sin `event_data` y con su dueño dentro.
+⚠️ **El flag NO se activa en producción y NO se despliega hasta que 4.6 esté ENTERO**: su default es
+`livewire` y ese es el motor que vende. Antes era una precaución teórica; ahora **el cajón SPA sí puede
+cobrar**, así que activarlo hoy dejaría mudo a quien vuelva con la tarjeta rechazada o con un terminal
+*data-less* —que son justo los casos en los que el cliente más necesita que le hablen—. Sirve para
 comparar los dos motores en vivo (`CE-1`).
 
 ✅ **La precondición del paso de PAGO está CERRADA** (4.5·1, `DECISIONES #54`): una línea de PACK
@@ -259,24 +266,35 @@ aviso, que es lo que el contrato pedía.
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.6 — la VUELTA de Redsys y las tres pantallas de desenlace** (pasos 6, 10 y 11). Es lo único
-   que separa al cajón de vender de punta a punta. Lo que hay que saber:
-   · ⚠️ **La costura ya está hecha desde 4.0a**: `Http\Sidebar\SidebarEntry` es el dueño único del
-     desenlace y **con la SPA el layout lo CONSUME** —no lo mira—, porque el motor es el propio
-     documento. `machine.js` ya sabe abrir en el paso que diga (`enterOutcome`). Lo que falta es
-     PINTAR las tres pantallas.
+1. **4.6·2 — los pasos 10 (denegado + reintento) y 11 (verificando + sondeo)**. Es lo único que
+   separa al cajón de vender de punta a punta. Lo que hay que saber:
+   · ⚠️ **La costura está entera y probada: no hay que tocarla.** `Http\Sidebar\SidebarEntry` es el
+     dueño único del desenlace, el layout lo CONSUME con la SPA, `boot.orderCode` llega hasta
+     `Sidebar.vue` y `machine.enterOutcome()` abre en el paso que diga. **Lo que falta es PINTAR dos
+     pantallas y cablear sus dos acciones.**
+   · ⚠️ **`isOutcome()` (en `machine.js`) YA cubre los pasos 10 y 11**, así que la precedencia sobre la
+     cesta restaurada no hay que rehacerla; sí hay que añadirlos a `TRANSCRIBED_STEPS` y a
+     `render-sidebar.mjs`, que son espejos el uno del otro.
    · ⚠️ **El paso 11 hace POLLING** (`wire:poll.5s="checkPaymentStatus"`): hay terminales que vuelven
      sin los datos firmados y el desenlace solo se sabe sondeando `GET orders/{code}/payment-status`.
      Ese endpoint ya existe desde Fase 3 · paso 4d, con sus dos ejes (`order_status` y
-     `payment_status`) y el motivo del rechazo como código y como texto.
+     `payment_status`) y el motivo del rechazo como código y como texto. ⚠️ **Livewire solo mira DOS
+     salidas** —`paid` → paso 6 y `expired` → paso 1 con `errors.retry_expired`—; el resto sigue
+     sondeando. Copiar esa acotación, no «mejorarla».
    · **El paso 10 reintenta**: `POST orders/{code}/payment`, que pasa por `admitPaymentRetry()` —extiende
-     el hold con un UPDATE atómico (`PAY-04`)— y NO aplica el tope de pendientes.
-   · **El código del pedido ya se guarda** (`orderCode` en `Sidebar.vue`, desde 4.5·2): las tres
-     pantallas lo necesitan y no hay que volver a pedirlo.
-   · ⚠️ **El flag NO se despliega hasta que 4.6 esté**: el cajón ya cobra y quien pague volvería a una
-     pantalla muda.
-   · **Presupuesto**: quedan **13,9 KiB** de bundle (136,1 de 150). Ver el aviso de unidades en
-     `SidebarBundleBudgetTest` antes de restar.
+     el hold con un UPDATE atómico (`PAY-04`)— y NO aplica el tope de pendientes. Su respuesta es la
+     MISMA que la de crear (`OrderPayment`), así que `pay.js::gatewayForm()` ya sirve: no compongas otro
+     formulario. `RetryAdmission::NOT_RETRYABLE` es la única salida que vuelve al paso 1.
+   · ⚠️ **El motivo del rechazo se pinta desde el CÓDIGO** (`declined_reason`), no desde el texto: el
+     enum tiene once valores más `null` y el contrato publica también `declined_message` ya traducido.
+     Mira lo que hizo `pay.js` con los doce errores del checkout antes de decidir cuál usar.
+   · ⚠️ **El CTA de reintentar tiene DOS `<span>` en el árbol de Livewire** (el rótulo y el
+     `.btn__loading` con su spinner): `wire:loading` es un atributo, no un condicional de servidor, así
+     que los dos nodos están SIEMPRE en el HTML y el diff los compara.
+   · **Presupuesto**: quedan **9,21 KiB** de bundle (140,79 de 150). Ver el aviso de unidades en
+     `SidebarBundleBudgetTest` antes de restar — Vite imprime en base 1000 y el test mide en base 1024.
+   · ⚠️ **El flag NO se despliega hasta que 4.6 esté ENTERO**: el cajón ya cobra y ya sabe volver
+     cuando el pago sale bien; quien vuelva con la tarjeta rechazada todavía se encuentra un cajón mudo.
 
 2. **4.4b·2 — el widget de Turnstile**, lo único que le falta al alta. Lo que hay que saber:
    · ⚠️ **Se aplazó porque NO SE PUEDE VERIFICAR sin claves de Cloudflare y un navegador** (`#53(a)`),
@@ -292,14 +310,13 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
      es otro, pero el síntoma sería el mismo.
    · **Lo que hay que mirar antes**: la CSP del sitio (¿permite `challenges.cloudflare.com`?), y que el
      token viaje en `turnstile_token` —el campo ya existe en el contrato y acepta la cadena vacía—.
-   · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
-     `OrderCreator` la rechaza con `line_event_required`. El dato ya está: al restaurar se piden los
-     `event_fields` de los productos de la cesta.
-   · **El presupuesto del bundle**: 135 KiB de techo. Ver el punto equivalente del paso 4.5·2 para las
-     unidades — Vite imprime en base 1000 y el test mide en base 1024, y confundirlos encoge el margen
-     aparente.
-3. **4.6 en adelante** — el corte completo, en §4.10 del spec.
-   ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
+   · **El presupuesto del bundle**: 150 KiB de techo, con **9,21 KiB libres** (140,79 medidos) que
+     comparte con 4.6·2. Ver el aviso de unidades de `SidebarBundleBudgetTest` antes de restar — Vite
+     imprime en base 1000 y el test mide en base 1024, y confundirlos encoge el margen aparente.
+3. **4.7 — la retirada**, cuando 4.6 esté entero: `Purchase.php`, el puente `$wire.step`↔store y el
+   flag; y congelar el manifiesto de DOM. El corte completo, en §4.10 del spec.
+   ⚠️ **El flag no se despliega hasta que 4.6 esté ENTERO**: hoy quien vuelve con la tarjeta rechazada
+   se encuentra un cajón mudo.
 4. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
@@ -441,6 +458,28 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
     en `fields.email` los mismos que pinta el Blade; en el login tiene un `message` propio que no
     coincide con `auth.failed`. Las dos conductas son correctas y las dos tienen su caso.
 
+- **4.6·1 — la vuelta de la pasarela pinta la reserva creada** (2026-08-14, `DECISIONES #56`). Cinco
+  cosas que condicionan lo que viene:
+  · ⚠️ **UN TEST DE CADENA VOLVIÓ A PASAR SIN PROBAR LA CADENA.** El caso que afirmaba «cada respuesta
+    del pack cae bajo SU reserva» estaba en verde **con el cliente emparejando por POSICIÓN**: hoy
+    `GET orders/{code}/event-data` devuelve las reservas en el mismo orden que las líneas, así que llave
+    y posición coinciden por casualidad. El caso bueno **le da la vuelta al sobre** y exige el mismo
+    resumen. Y la PRIMERA mutación tampoco valía: `Object.values(mapa)[i]` pasa, porque en JS las claves
+    que parecen enteros se ordenan ascendentemente y el mapa se recoloca solo.
+  · ⚠️ **El desenlace MANDA sobre la cesta restaurada, y el orden natural de la SPA era el contrario.**
+    `Purchase::mount()` pone el paso 4 si hay cesta y **después** deja que la vuelta lo pise; el motor
+    SPA restauraba al final. Con la cesta en `localStorage`, otra pestaña puede haberla llenado mientras
+    se pagaba en ésta. La precedencia se escribe en `machine.js` (`isOutcome()`), no en el `.vue`.
+  · **La fila del resumen es COMPARTIDA** (`SummaryLine.vue`): los pasos 6 y 8 emiten el mismo árbol
+    hasta el `<span>` sin clase del precio. La pregunta que decidió extraerla es «¿hay dos copias?»
+    (4.0b·5), y tocarla deja en rojo los dos pasos a la vez — que es la prueba de que la red la cubre.
+  · **`confirmation: null` es un estado LEGÍTIMO**: el Blade pinta la pantalla igual sin resumen —código
+    del pedido, aviso del correo y CTA— y es lo que ve quien perdió la sesión entre la pasarela y la
+    vuelta. Tratarlo como error sería enseñarle «ha fallado algo» a quien acaba de pagar.
+  · **Dos DIVERGENCIAS declaradas, cada una con su caso**: la API acota el resumen a la fase `booking`
+    (§4.4.6, lo del post-form no sale) y publica el estado EFECTIVO, así que un pedido pendiente con el
+    hold vencido sale `expired` donde el Blade dice `pending` — y el cajón entonces **no pinta nota**.
+
 - **4.5·2 — pagar y salir a la pasarela** (2026-08-14, `DECISIONES #55`). Cinco cosas que condicionan
   lo que viene:
   · ⚠️ **El diff de árbol NO puede verificar el paso 9, y se demostró por mutación**: `action`, `method`
@@ -476,6 +515,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `admission.js` | El paso del carrito al pago: identidad + elegibilidad + destino | `SidebarAdmissionParityTest` |
 | `login.js` · `register.js` | Identificarse y darse de alta desde el cajón | `SidebarLoginParityTest` · `SidebarRegisterParityTest` |
 | `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `SidebarPayParityTest` |
+| `outcome.js` | La VUELTA: traducir el pedido + las respuestas del pack al resumen del paso 6 | `SidebarOutcomeParityTest` |
 
 ⚠️ **Y la regla que las tres últimas paridades enseñaron**: cuando algo NO es un atributo de contrato
 del normalizador —`href`, `action`, `method`, los `name` de un formulario, el texto— **el diff de árbol
@@ -580,6 +620,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2688** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2698** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

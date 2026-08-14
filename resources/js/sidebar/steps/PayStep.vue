@@ -1,7 +1,6 @@
 <script setup>
-import { t as translate, tp as translateWith } from '../i18n.js';
-import { money } from '../money.js';
-import { shortDate } from '../progress.js';
+import { t as translate } from '../i18n.js';
+import SummaryLine from './SummaryLine.vue';
 
 /**
  * Paso 8 — la pantalla de PAGO (Fase 4 · paso 4.5·2).
@@ -22,6 +21,10 @@ import { shortDate } from '../progress.js';
  * ⚠️ Y una que el diff **no** ve: el CTA del pie estrena `icon: 'card'`. El normalizador no desciende
  * dentro de un `<svg>`, así que la tarjeta y la flecha son el mismo nodo para el gate; lo que cambia
  * es el dibujo, y de eso responde `SidebarCartParityTest` comparando el view-model del pie.
+ *
+ * ⚠️ **La FILA vive en `SummaryLine.vue` desde 4.6·1**, porque la pantalla de reserva creada emite
+ * exactamente el mismo árbol: dos copias de un marcado que el CSS mira por estructura divergirían en
+ * silencio, con el diff de cada pantalla verde por separado.
  */
 const props = defineProps({
     /** Las líneas del presupuesto, ya emparejadas con las respuestas del pack (`cart.js`). */
@@ -37,19 +40,6 @@ const props = defineProps({
 defineEmits(['back']);
 
 const t = (key) => translate(props.messages, key);
-const tp = (key, params) => translateWith(props.messages, key, params);
-
-const shortTime = (time) => String(time ?? '').slice(0, 5);
-
-const dayLabel = (date) => {
-    const label = shortDate(date, props.locale);
-
-    return label === '' ? '' : label.charAt(0).toUpperCase() + label.slice(1);
-};
-
-const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
-    ? t('addon_included')
-    : tp('addon_included_partial', { count: addon.free_quantity }));
 </script>
 
 <template>
@@ -64,45 +54,7 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
     <p class="purchase__note">{{ t('pay_intro') }}</p>
 
     <ul class="cart cart--summary">
-        <li v-for="line in lines" :key="line.index" class="cart__item">
-            <div class="cart__head">
-                <span class="cart__when">
-                    <span v-if="line.is_pack" class="icon ic-b1 prod-ico" aria-hidden="true">
-                        <svg viewBox="0 0 40 40" width="20" height="20"></svg>
-                    </span>
-                    <span v-else class="tk prod-ico" aria-hidden="true">
-                        <svg viewBox="0 0 60 36" width="22" height="13" fill="none"></svg>
-                    </span>
-                    <template v-if="line.is_pack">{{ tp('guests_count', { count: line.quantity }) }} · {{ line.product_name }}</template>
-                    <template v-else>{{ line.quantity }}&times; {{ line.product_name }}</template>
-                </span>
-                <!-- ⚠️ Sin clase, al contrario que en el carrito: aquí no hay botón de quitar al lado
-                     y el precio no necesita reservar su hueco. -->
-                <span>{{ money(line.subtotal_cents) }}</span>
-            </div>
-
-            <!-- Se emite SIEMPRE, aunque quede vacío: el condicional del Blade está DENTRO. -->
-            <div class="cart__lines">
-                <span v-if="line.date">{{ dayLabel(line.date) }} · {{ shortTime(line.time) }}</span>
-            </div>
-
-            <ul v-if="line.event.length" class="cart__event">
-                <li v-for="answer in line.event" :key="answer.key">
-                    <span class="cart__event-label">{{ answer.label }}:</span> {{ answer.value }}
-                </li>
-            </ul>
-
-            <ul v-if="line.addons.length" class="cart__addons">
-                <li v-for="addon in line.addons" :key="addon.product_id">
-                    <span>+ {{ addon.quantity }}&times; {{ addon.product_name }}<em v-if="addon.free_quantity" class="cart__addon-incl">{{ includedLabel(addon) }}</em></span>
-                    <span>{{ money(addon.subtotal_cents) }}</span>
-                </li>
-            </ul>
-
-            <!-- La señal se detalla en la card del producto que la cobra (#225): en una cesta mixta,
-                 etiquetar el agregado engaña. -->
-            <p v-if="line.has_deposit" class="cart__deposit">{{ tp('deposit_card_note', { deposit: money(line.deposit_cents), rest: money(line.gate_remainder_cents) }) }}</p>
-        </li>
+        <SummaryLine v-for="line in lines" :key="line.index" :line="line" :messages="messages" :locale="locale" />
     </ul>
 
     <div class="purchase__foot purchase__foot--info">

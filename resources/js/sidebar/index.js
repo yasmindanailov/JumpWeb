@@ -28,7 +28,7 @@ let app = null;
  * Vue ni Pinia: la landing habla con el store de Alpine, y el store con esto.
  *
  * @param {HTMLElement} el  el hueco del layout donde vive el cajón
- * @param {{outcome?: string|null, messages?: object, ui?: object}} boot  lo que el servidor dejó en el montaje
+ * @param {{outcome?: string|null, orderCode?: string|null, messages?: object, ui?: object}} boot  lo que el servidor dejó en el montaje
  */
 export function mount(el, boot = {}) {
     if (app) return app._jumpweb;
@@ -43,6 +43,11 @@ export function mount(el, boot = {}) {
         account: boot.account ?? {},
         auth: boot.auth ?? {},
         userId: boot.userId ?? null,
+        // ⚠️ **El pedido del que habla el desenlace.** Entre el clic de pagar y la vuelta hubo una
+        // navegación completa a otro dominio, así que la memoria del cajón NO sobrevive: este código es
+        // lo único con lo que las tres pantallas de desenlace pueden preguntar de qué reserva se trata.
+        // Lo posee el mismo dueño que el `outcome` —`Http\Sidebar\SidebarEntry`— y viaja con él.
+        orderCode: boot.orderCode ?? '',
     });
     app.use(pinia);
 

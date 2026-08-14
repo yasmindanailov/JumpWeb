@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO**, **4.4b·1** (alta embebida) y **4.5 COMPLETO** (·1 la cesta pide lo que le falta · ·2 pagar y salir a la pasarela) → toca 4.6 (la vuelta de Redsys y las tres pantallas de desenlace)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** (·1 la cesta pide lo que le falta · ·2 pagar y salir a la pasarela) y **4.6·1** (la reserva creada) → toca **4.6·2**: los pasos 10 (denegado + reintento) y 11 (verificando + sondeo)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -866,6 +866,39 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · Suite **2688 verde** · 205 tests JS · chunk del cajón 139,4 kB (136,1 KiB) de 150.
       · ⚠️ **Entre 4.5 y 4.6 NO se despliega el flag**: quien pague en medio vuelve a un cajón mudo, y
         ahora el cajón sí puede cobrar.
+- [x] **Paso 4.6·1 — la vuelta de la pasarela pinta la reserva creada** (2026-08-14, `DECISIONES #56`).
+      Transcribe el paso **6** y cierra la costura del desenlace por el lado del cliente. Corte por
+      DEPENDENCIA: el sondeo del paso 11 aterriza en el 6, así que el 6 va primero.
+      · ⚠️ **EL HALLAZGO: un test de cadena volvió a pasar sin probar la cadena.** El caso que afirmaba
+        «cada respuesta del pack cae bajo SU reserva» **pasaba con el cliente emparejando por POSICIÓN**
+        —medido por mutación—, porque hoy el endpoint devuelve las reservas en el mismo orden que las
+        líneas y llave y posición coinciden por casualidad. El caso bueno **le da la vuelta al sobre** y
+        exige el mismo resumen. Lo que tapaba: el nombre de un niño bajo la reserva de otro, con el árbol
+        idéntico.
+      · ⚠️ **Y la primera mutación tampoco valía**: `Object.values(answers)[i]` **pasa**, porque en JS
+        las claves que parecen enteros se ordenan ascendentemente y el mapa se recolocaba solo. Una
+        mutación que no rompe nada no demuestra nada.
+      · **La fila del resumen se EXTRAE** a `SummaryLine.vue`: los pasos 6 y 8 emiten el MISMO árbol y la
+        pregunta que decide es «¿hay dos copias?» (4.0b·5). Verificado por mutación: tocarla deja en rojo
+        los dos pasos a la vez.
+      · ⚠️ **El desenlace MANDA sobre la cesta**, y el orden natural de la SPA era el contrario: con la
+        cesta en `localStorage`, otra pestaña puede haberla llenado mientras se pagaba en ésta y quien
+        volvía de pagar aterrizaba en el carrito. La precedencia vive en `machine.js` (`isOutcome()`),
+        no en el componente (`CE-6`).
+      · **`confirmation: null` es un estado legítimo**: el Blade pinta la pantalla igual sin resumen, y
+        es lo que ve quien perdió la sesión por el camino. Tiene su propio caso de árbol.
+      · **Dos DIVERGENCIAS declaradas con caso**: la API acota las respuestas a la fase `booking`
+        (§4.4.6) y publica el estado EFECTIVO (`displayStatus()`), así que un hold vencido sale
+        `expired` donde el Blade dice `pending`.
+      · **El techo del bundle NO sube**: el paso costó 4,70 KiB (140,79 de 150). Quedan **9,21 KiB**
+        para 4.6·2 y Turnstile.
+      · **Red**: 14 casos nuevos de `node --test`, `SidebarOutcomeParityTest` (7 casos: resumen campo a
+        campo contra la API real, orden del sobre, enlace de registro y las dos divergencias) y 3 casos
+        de árbol. **Verificado por mutación ×6** y en vivo con `sidebar.engine = spa` (payload de
+        montaje, login por API a través de nginx y las dos respuestas reales pasadas por el módulo real).
+      · Suite **2698 verde** · 219 tests JS · chunk del cajón 144,2 kB (140,8 KiB) de 150.
+      · ⚠️ **El flag sigue sin desplegarse**: quien vuelva con un pago denegado o con un terminal
+        *data-less* todavía se encuentra un cajón mudo (pasos 10 y 11 → 4.6·2).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { STEPS, canGo, createMachine, isIdentifying, modeOf, stepForOutcome } from './machine.js';
+import { STEPS, canGo, createMachine, isIdentifying, isOutcome, modeOf, stepForOutcome } from './machine.js';
 
 /**
  * Fase 4 · paso 4.1 — la red de la máquina de estados del cajón (`sidebar-spa.md` §4.8, CE-6).
@@ -106,6 +106,23 @@ describe('la vuelta de la pasarela', () => {
         assert.equal(stepForOutcome('confirmed'), STEPS.CONFIRMED);
         assert.equal(stepForOutcome('failed'), STEPS.DECLINED);
         assert.equal(stepForOutcome('verifying'), STEPS.VERIFYING);
+    });
+
+    /**
+     * ⚠️ La precedencia que sostiene: el desenlace MANDA sobre la cesta restaurada. Se fija contra
+     * `stepForOutcome` —que es quien traduce lo que escribe `Http\Sidebar\SidebarEntry`— para que los
+     * dos conjuntos no puedan separarse: un desenlace nuevo que nadie añadiera aquí dejaría a quien
+     * vuelve de pagar en el carrito de otra pestaña.
+     */
+    test('los pasos de desenlace son EXACTAMENTE los que abre la vuelta de la pasarela', () => {
+        const fromOutside = ['confirmed', 'failed', 'verifying'].map(stepForOutcome);
+
+        assert.deepEqual(fromOutside.filter(isOutcome), fromOutside);
+        assert.deepEqual(
+            Object.values(STEPS).filter(isOutcome).sort(),
+            [...fromOutside].sort(),
+            'ni de más ni de menos: un paso del embudo marcado como desenlace impediría abrir en el carrito',
+        );
     });
 
     test('un desenlace desconocido no abre nada', () => {

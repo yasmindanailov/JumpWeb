@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './store.js';
-import { STEPS } from './machine.js';
+import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
 import { buildProgress } from './progress.js';
@@ -11,6 +11,7 @@ import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runLogin } from './login.js';
 import { runConfirm } from './pay.js';
+import { loadConfirmation } from './outcome.js';
 import { runRegister, signupRequiresCaptcha } from './register.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
@@ -25,6 +26,7 @@ import IdentifyStep from './steps/IdentifyStep.vue';
 import VerifyStep from './steps/VerifyStep.vue';
 import PayStep from './steps/PayStep.vue';
 import RedirectStep from './steps/RedirectStep.vue';
+import ConfirmedStep from './steps/ConfirmedStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -64,6 +66,16 @@ const props = defineProps({
      * dejaría una ventana en la que la cesta de quien acaba de salir sigue en pantalla.
      */
     userId: { type: [Number, String], default: null },
+
+    /**
+     * El código del pedido del que habla el desenlace de la pasarela. Cadena vacía si no hay ninguno.
+     *
+     * ⚠️ **Es lo ÚNICO que sobrevive a la ida a la pasarela.** Volver de Redsys es una navegación
+     * completa desde otro dominio: el motor se remonta de cero y nada de lo que el cajón sabía sigue
+     * ahí, ni siquiera el pedido que acaba de crear. Lo posee `Http\Sidebar\SidebarEntry` —el mismo
+     * dueño que el `outcome`, y por el mismo motivo— y viaja ya CONSUMIDO.
+     */
+    orderCode: { type: String, default: '' },
 });
 
 const store = usePurchaseStore();
@@ -151,12 +163,19 @@ const canNext = computed(() => offeredMonths.value.length > 0 && month.value < o
  */
 watch(
     () => store.step,
-    () => {
+    (step, previous) => {
         const alpine = window.Alpine?.store('purchase');
         if (! alpine) return;
 
         alpine.setMode(store.mode);
         alpine.identifying = store.identifying;
+
+        // ⚠️ **El confeti también es del store de Alpine, no del cajón**, y por eso se dispara desde
+        // aquí: `celebrate()` respeta `prefers-reduced-motion` y saca sus colores de los tokens de
+        // marca, así que reimplementarlo en Vue sería una segunda celebración que se olvidaría de las
+        // dos cosas. Solo al ENTRAR en el paso: con `immediate` en el montaje se repetiría en cada
+        // repintado, y el Blade lo ata a un `x-init` que corre una vez.
+        if (step === STEPS.CONFIRMED && previous !== STEPS.CONFIRMED) alpine.celebrate?.();
     },
     { immediate: true },
 );
@@ -190,9 +209,14 @@ onMounted(async () => {
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
         // delega el registro en el modal de Livewire, que es el que monta el widget (4.4b·2).
         signupCaptcha.value = signupRequiresCaptcha(config.data);
+        // El enlace de registro del parque, que solo pinta el paso 6. Llega ya SANEADO (`SEC-07`): lo
+        // edita un operador y un cliente JSON no tiene escape de plantilla que remate la defensa.
+        registration.value = config.data?.registration ?? null;
     }
 
-    await restoreCart();
+    // ⚠️ **En paralelo y no en cadena**: son independientes, y con un desenlace en pantalla el cliente
+    // acaba de pagar — encadenarlas le regalaría la espera de la cesta antes de ver su reserva.
+    await Promise.all([restoreCart(), loadOutcome()]);
 });
 
 /**
@@ -231,7 +255,13 @@ async function restoreCart() {
 
     await refreshQuote();
 
-    if (cart.value.length > 0) store.enter(STEPS.CART);
+    // ⚠️ **El desenlace MANDA sobre la cesta, y el orden es el de Livewire**: su `mount()` coloca el
+    // paso 4 si hay cesta y **después** deja que la vuelta de la pasarela lo pise. Aquí la cesta se
+    // restaura igual —quien pulse «hacer otra reserva» la encuentra— pero no navega. No es teórico: la
+    // cesta vive en `localStorage`, así que otra pestaña puede haberla llenado mientras se pagaba en
+    // ésta, y quien vuelve de pagar aterrizaría en un carrito en vez de en su reserva confirmada.
+    // La precedencia vive en `machine.js` porque aquí dentro no tendría red (`CE-6`).
+    if (cart.value.length > 0 && ! isOutcome(store.step)) store.enter(STEPS.CART);
 }
 
 function totalItems(list) {
@@ -674,7 +704,10 @@ function runAction(action) {
  * ranura vacía —velo, banda y pie, y nada dentro—, que es peor que un CTA mudo. La lista **solo
  * crece**: al transcribir el pago se añade aquí y en `render-sidebar.mjs`, que es su espejo.
  */
-const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL, STEPS.PAY, STEPS.REDIRECTING];
+const TRANSCRIBED_STEPS = [
+    STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL,
+    STEPS.PAY, STEPS.REDIRECTING, STEPS.CONFIRMED,
+];
 
 /** Lleva el cajón al paso que diga el veredicto, si esa pantalla ya existe. */
 function goToVerdict(step) {
@@ -902,8 +935,13 @@ function resetAuthForm() {
 /** El formulario firmado que devuelve `POST /orders`. Mientras sea `null`, el paso 9 no pinta nada. */
 const gateway = ref(null);
 
-/** El código del pedido creado. Lo necesitan las pantallas de desenlace (4.6). */
-const orderCode = ref('');
+/**
+ * El código del pedido en juego. Lo necesitan las pantallas de desenlace (4.6).
+ *
+ * Nace del montaje —lo que dejó la vuelta de la pasarela— y lo reescribe `confirmReservation()` con el
+ * pedido recién creado. Las dos fuentes no compiten: cuando hay desenlace no hay compra en curso.
+ */
+const orderCode = ref(props.orderCode ?? '');
 
 /** `true` mientras el pedido se está creando: impide el doble clic en el botón más caro del cajón. */
 const confirming = ref(false);
@@ -959,6 +997,42 @@ async function confirmReservation() {
     } finally {
         confirming.value = false;
     }
+}
+
+// ── El DESENLACE de la pasarela: el paso 6 ────────────────────────────────────────────────────
+
+/**
+ * El resumen del pedido que pinta el paso 6, o `null`.
+ *
+ * ⚠️ **`null` es un estado legítimo, no un fallo que haya que gritar**: el Blade pinta la pantalla
+ * igual sin resumen —con su código de pedido y el aviso del correo—, y ese es el caso de quien perdió
+ * la sesión entre la ida a la pasarela y la vuelta. Enseñarle «ha fallado algo» a quien acaba de pagar
+ * sería mucho peor.
+ */
+const confirmation = ref(null);
+
+/**
+ * El bloque de «registro del parque» que publica `GET /config`, o `null`.
+ *
+ * Lo pinta SOLO el paso 6, igual que en el Blade. Se guarda del `/config` del montaje en vez de
+ * pedirlo aparte: ya viaja en esa respuesta y una petición más en la pantalla del desenlace sería
+ * regalar espera justo donde el cliente ya ha pagado.
+ */
+const registration = ref(null);
+
+/**
+ * Trae lo que el paso 6 enseña.
+ *
+ * ⚠️ **Solo si el cajón está de verdad en un desenlace.** El código del pedido llega en el montaje de
+ * TODAS las páginas cuando hay uno en sesión; pedir su resumen sin estar en la pantalla que lo pinta
+ * sería dinero de peticiones a cambio de nada.
+ */
+async function loadOutcome() {
+    if (store.step !== STEPS.CONFIRMED || orderCode.value === '') {
+        return;
+    }
+
+    confirmation.value = await tracked(loadConfirmation({ orderCode: orderCode.value, api }));
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
@@ -1093,9 +1167,18 @@ function updateCartField(index, key, value) {
     cartError.value = '';
 }
 
-/** «Añadir otra reserva»: vuelve al catálogo con la selección limpia. */
+/**
+ * «Añadir otra reserva»: vuelve al catálogo con la selección limpia.
+ *
+ * Espejo de `Purchase::addAnother()`, incluido su barrido del contexto del pedido anterior —código,
+ * formulario firmado y resumen—: no se ve en el paso 1, pero dejarlo latente es lo que hace que una
+ * segunda compra herede el desenlace de la primera.
+ */
 function addAnother() {
     clearSelection();
+    orderCode.value = '';
+    gateway.value = null;
+    confirmation.value = null;
     store.enter(STEPS.CATALOG);
 }
 
@@ -1222,5 +1305,14 @@ function goBack() {
             v-else-if="store.step === STEPS.REDIRECTING"
             :form="gateway"
             :messages="messages" />
+
+        <ConfirmedStep
+            v-else-if="store.step === STEPS.CONFIRMED"
+            :confirmation="confirmation"
+            :order-code="orderCode"
+            :registration="registration"
+            :messages="messages"
+            :locale="locale"
+            @add-another="addAnother" />
     </Shell>
 </template>

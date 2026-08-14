@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sidebar;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
@@ -592,6 +593,175 @@ class SidebarDomContractTest extends TestCase
         ];
     }
 
+    // ── El paso 6: la reserva creada ──────────────────────────────────────────────────────────
+
+    /**
+     * El paso 6 — **la reserva creada**, y el primero al que se llega DESDE FUERA del cajón.
+     *
+     * Es el árbol más largo de los once y **cinco de sus bloques son condicionales** —el desglose de la
+     * señal, la nota del pago, el aviso del post-form, el enlace de registro y el resumen entero—, así
+     * que un solo caso no lo cubre: éste enciende todo lo que se puede encender, y los dos de abajo
+     * apagan lo que aquí está encendido.
+     *
+     * ⚠️ La fila del resumen la comparten desde 4.6·1 este paso y el de pagar (`SummaryLine.vue`). Que
+     * los dos casos sigan pasando **por separado** es lo que demuestra que la extracción no movió nada.
+     */
+    public function test_the_confirmed_step_emits_the_same_tree_in_both_engines(): void
+    {
+        Setting::updateOrCreate(['key' => 'registration.url'], ['value' => 'https://registro.example.test/alta', 'group' => 'business']);
+        Setting::flushMemo();
+
+        $component = $this->confirmedComponent(paid: true);
+
+        $confirmation = $component->viewData('confirmation');
+        $this->assertSame('paid', $confirmation['status'], 'el caso necesita el pedido PAGADO, o no hay desglose');
+        $this->assertGreaterThan(0, $confirmation['pending_at_park'], 'y algo pendiente en el parque');
+        $this->assertNotNull($component->viewData('registration'), 'y el enlace de registro configurado');
+
+        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la RESERVA CREADA difiere entre los dos motores.\n".
+            "Es el más largo del cajón y casi todo en él es condicional.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * El mismo paso con el pedido **PENDIENTE**: sin desglose de señal, con la nota de «pendiente de
+     * pago» en vez de la de pago confirmado, con el aviso del post-form y **sin** enlace de registro.
+     *
+     * ⚠️ No es un caso rebuscado: es el camino del enlace de verificación de correo, que también
+     * aterriza en el paso 6. Hasta #224 esta pantalla decía «pendiente de pago» SIEMPRE —también a
+     * quien acababa de pagar—, así que la rama importa.
+     */
+    public function test_the_confirmed_step_of_a_pending_order_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->confirmedComponent(paid: false, withGuestForm: true);
+
+        $confirmation = $component->viewData('confirmation');
+        $this->assertSame('pending', $confirmation['status'], 'el caso necesita el pedido PENDIENTE');
+        $this->assertTrue((bool) $confirmation['has_guest_form'], 'y una reserva que pide formulario de invitados');
+        $this->assertNull($component->viewData('registration'), 'y ninguna URL de registro configurada');
+
+        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la reserva creada de un pedido PENDIENTE difiere entre los dos motores.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **Y el caso que de verdad se olvida: SIN resumen.**
+     *
+     * El Blade pinta esta pantalla aunque `$confirmation` sea `null` —queda el código del pedido, el
+     * aviso del correo y el CTA—, y es lo que ve quien perdió la sesión entre la ida a la pasarela y la
+     * vuelta. Un motor que tratara ese caso como un error dejaría a quien acaba de pagar mirando un
+     * aviso de fallo, y **el gate no lo vería** si nadie compara este árbol.
+     */
+    public function test_the_confirmed_step_without_a_summary_emits_the_same_tree_in_both_engines(): void
+    {
+        // Sin sesión, `confirmationSummary()` devuelve null: es el mismo `null` que produce un pedido
+        // que ya no es de quien pregunta, y el que este caso existe para fijar.
+        $component = Livewire::test(Purchase::class)->set('step', 6)->set('orderCode', 'R-ABC123');
+
+        $this->assertNull($component->viewData('confirmation'), 'el caso tiene que llegar SIN resumen');
+
+        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(6, [
+            'confirmation' => null,
+            'orderCode' => 'R-ABC123',
+            'registration' => null,
+            'messages' => __('tickets'),
+            'locale' => app()->getLocale(),
+        ], 'purchase__confirm', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la reserva creada SIN resumen difiere entre los dos motores.\n".
+            "Es lo que ve quien perdió la sesión entre la pasarela y la vuelta.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * Un componente que ha comprado de verdad y está en la pantalla de reserva creada.
+     *
+     * Se llega **pagando**: `checkout()` + `confirmReservation()` crean el pedido con su hold y su
+     * cobro abierto, igual que en producción. Sembrar un `Order` a mano fijaría una forma de pedido que
+     * el código real no produce —y el resumen sale del pedido, no de la cesta—.
+     */
+    private function confirmedComponent(bool $paid, bool $withGuestForm = false): Testable
+    {
+        $component = $this->componentWithFullCart($withGuestForm);
+        $this->actingAs(User::factory()->create());
+        $component->call('checkout')->call('confirmReservation');
+
+        $code = (string) $component->get('orderCode');
+        $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
+
+        if ($paid) {
+            // La vuelta OK de la pasarela deja el pedido pagado; aquí solo hace falta ese HECHO, no
+            // volver a ejecutar el receptor de la respuesta firmada (que tiene sus propios tests).
+            Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
+        }
+
+        return $component->set('step', 6);
+    }
+
+    /**
+     * El view-model del paso 6, traducido a la forma en la que el cajón lo recibe de VERDAD.
+     *
+     * ⚠️ **La traducción no es cosmética** (mismo motivo que en el carrito, y ya mordió una vez con los
+     * complementos): el view-model de Livewire dice `name`/`qty`/`subtotal` y el pedido de la API dice
+     * `product_name`/`quantity`/`charged_subtotal_cents`. Alimentar al componente con los primeros
+     * dejaría este diff verde mientras el cajón real pinta filas vacías. Que las DOS fuentes digan lo
+     * mismo se comprueba aparte, en `SidebarOutcomeParityTest`.
+     *
+     * @return array<string, mixed>
+     */
+    private function confirmedProps(Testable $component): array
+    {
+        $confirmation = $component->viewData('confirmation');
+
+        return [
+            'confirmation' => $confirmation === null ? null : [
+                'code' => $confirmation['code'],
+                'status' => $confirmation['status'],
+                'total_cents' => $confirmation['total'],
+                'online_cents' => $confirmation['online'],
+                'park_cents' => $confirmation['pending_at_park'],
+                'has_guest_form' => (bool) $confirmation['has_guest_form'],
+                'lines' => array_map(fn (array $line): array => [
+                    'product_name' => $line['name'],
+                    'is_pack' => $line['is_pack'],
+                    'quantity' => $line['qty'],
+                    'date' => $line['date'],
+                    'time' => $line['time'],
+                    'subtotal_cents' => $line['subtotal'],
+                    'has_deposit' => (bool) $line['has_deposit'],
+                    'deposit_cents' => $line['deposit'],
+                    'gate_remainder_cents' => $line['gate_remainder'],
+                    'addons' => array_map(fn (array $addon): array => [
+                        'product_name' => $addon['name'],
+                        'quantity' => $addon['qty'],
+                        'free_quantity' => $addon['free_qty'],
+                        'subtotal_cents' => $addon['subtotal'],
+                    ], $line['addons']),
+                    'event' => $line['event'],
+                ], $confirmation['lines']),
+            ],
+            'orderCode' => (string) $component->get('orderCode'),
+            'registration' => $component->viewData('registration'),
+            'messages' => __('tickets'),
+            'locale' => app()->getLocale(),
+        ];
+    }
+
     // ── Reservas EN PAUSA: el flujo entero se sustituye ───────────────────────────────────────
 
     /**
@@ -920,7 +1090,7 @@ class SidebarDomContractTest extends TestCase
      * compone el propio dominio —con su saneado y su selección de complementos resuelta— y el test no
      * fija una forma de cesta que el código real nunca produciría.
      */
-    private function componentWithFullCart(): Testable
+    private function componentWithFullCart(bool $withGuestForm = false): Testable
     {
         $pack = $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
         $pack->update([
@@ -929,6 +1099,12 @@ class SidebarDomContractTest extends TestCase
             'event_fields' => [
                 ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
             ],
+            // El post-form por invitado (#217) es lo que hace que la reserva confirmada prometa un
+            // formulario. Va bajo bandera porque el resto de casos NO deben prometerlo: un pack sin
+            // `guest_fields` que enseñara el aviso sería la incoherencia que aquel cambio cerró.
+            ...($withGuestForm ? ['guest_fields' => [
+                ['key' => 'guest_name', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Nombre del invitado']],
+            ]] : []),
         ]);
         $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
         $this->slotsForNextDays($pack, 3);

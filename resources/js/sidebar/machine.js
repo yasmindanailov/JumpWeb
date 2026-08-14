@@ -119,6 +119,22 @@ export function stepForOutcome(outcome) {
 }
 
 /**
+ * ¿El cajón está en un paso al que se ha llegado **desde FUERA**? (Fase 4 · paso 4.6·1)
+ *
+ * ⚠️ **No es cosmético y decide una precedencia**: al montar, el cajón restaura su cesta y —como la
+ * web— abre en el carrito si hay algo. Pero `Purchase::mount()` coloca ese paso 4 **antes** de mirar
+ * el desenlace de la pasarela, así que el desenlace lo pisa. En la SPA el orden natural es el
+ * contrario, y la cesta vive en `localStorage`: **otra pestaña puede haberla llenado mientras se
+ * pagaba en ésta**, y quien vuelve de pagar aterrizaría en un carrito en vez de en su reserva.
+ *
+ * Vive aquí y no dentro del componente por lo de siempre (`CE-6`): en un `.vue` esta precedencia no
+ * tendría ninguna red, y es exactamente la clase de fallo que ningún árbol enseña.
+ */
+export function isOutcome(step) {
+    return step === STEPS.CONFIRMED || step === STEPS.DECLINED || step === STEPS.VERIFYING;
+}
+
+/**
  * Crea la máquina. Estado plano y transiciones explícitas; sin reactividad, que la pone el store.
  *
  * @param {{step?: number, onChange?: (step: number) => void}} options
