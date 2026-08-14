@@ -48,6 +48,8 @@ export function mount(el, boot = {}) {
         // lo único con lo que las tres pantallas de desenlace pueden preguntar de qué reserva se trata.
         // Lo posee el mismo dueño que el `outcome` —`Http\Sidebar\SidebarEntry`— y viaja con él.
         orderCode: boot.orderCode ?? '',
+        // Las rutas que pintan las pantallas de desenlace, compuestas con `route()` en el servidor.
+        urls: boot.urls ?? {},
     });
     app.use(pinia);
 

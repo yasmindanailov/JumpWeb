@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** (·1 la cesta pide lo que le falta · ·2 pagar y salir a la pasarela) y **4.6·1** (la reserva creada) → toca **4.6·2**: los pasos 10 (denegado + reintento) y 11 (verificando + sondeo)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** y **4.6 COMPLETO** (·1 la reserva creada · ·2 denegado y verificando) → **los ONCE pasos están transcritos**; quedan **4.4b·2** (widget de Turnstile) y **4.7** (retirada), y antes de desplegar el flag, el extremo a extremo con la pasarela en sandbox (§6)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -899,6 +899,38 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · Suite **2698 verde** · 219 tests JS · chunk del cajón 144,2 kB (140,8 KiB) de 150.
       · ⚠️ **El flag sigue sin desplegarse**: quien vuelva con un pago denegado o con un terminal
         *data-less* todavía se encuentra un cajón mudo (pasos 10 y 11 → 4.6·2).
+- [x] **Paso 4.6·2 — los otros dos desenlaces: denegado y verificando** (2026-08-14, `DECISIONES #57`).
+      Transcribe los pasos **10** (con su reintento) y **11** (con su sondeo). **La transcripción de la
+      fase queda COMPLETA**: los once pasos existen en los dos motores.
+      · ⚠️ **EL HALLAZGO: la máquina llevaba desde 4.1 con una transición INVENTADA.**
+        `TRANSITIONS[DECLINED]` decía `[CATALOG, PAY]` y las dos mitades estaban mal, medido contra
+        `retryPayment()`: el reintento sale **directo a la pasarela** (paso 9), no vuelve a la pantalla
+        de pago, y faltaba la salida a IDENTIFICARSE (`$user ? 1 : 5`). Sin `DECLINED → REDIRECTING`, el
+        reintento habría compuesto su formulario firmado y el cajón **se habría quedado quieto**, porque
+        `go()` rechaza en silencio.
+      · **El motivo del rechazo no necesita tabla**: `declined_reason` ES la clave de
+        `tickets.payment_failed.reasons.*`, que ya viaja en el montaje. Lo que sí hace falta es la caída
+        a `default` — sin ella, un motivo nuevo pinta el rótulo «Motivo:» **vacío**.
+      · ⚠️ **El bloque del motivo se pinta SIEMPRE que hay sesión**, aunque el Blade parezca
+        condicionarlo: `reasonText()` nunca devuelve null.
+      · ⚠️ **El sondeo solo mira `paid` y `expired`**: un intento `failed` con el pedido pendiente **no
+        mueve nada**, porque la notificación puede estar en vuelo. Ampliarlo diría «no has pagado» a
+        quien sí pagó.
+      · ⚠️ **El centinela obvio del bundle NO discriminaba**: `/payment-status` lo usan los dos pasos, así
+        que desconectar el bucle dejaba el gate en verde. Medido: `setInterval` aparece una sola vez en
+        el chunk y desaparece con él.
+      · ⚠️ **Deuda de PRODUCTO destapada** (no creada): un reintento denegado deja el botón **mudo** en
+        los dos motores — `errors.cart` no se pinta en el paso 10. Fila en `DEUDA.md`.
+      · **Red**: 13 casos nuevos de `node --test`, 8 de `SidebarOutcomeParityTest` (los cuatro «no» del
+        reintento provocados de verdad contra la API, el mapa entero de motivos en tres idiomas, el
+        sondeo y los dos enlaces) y 3 de árbol. **Verificado por mutación ×7** y en vivo con
+        `sidebar.engine = spa` (payload con sus `urls`, y las respuestas reales de `payment-status` y
+        del reintento pasadas por el módulo real).
+      · ⚠️ **Dos casos volvieron a pasar por casualidad** y se arreglaron midiendo: el titular
+        equivocado tras la segunda compra y la pausa pegándose entre iteraciones.
+      · Suite **2709 verde** · 232 tests JS · chunk del cajón 149,3 kB (145,9 KiB) de 150.
+      · ⚠️ **El flag sigue sin desplegarse**, y ya no por falta de pantalla: falta el extremo a extremo
+        con la pasarela en sandbox y navegador (§6) y el widget de Turnstile (4.4b·2).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

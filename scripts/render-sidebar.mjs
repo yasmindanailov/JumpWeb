@@ -32,6 +32,8 @@ import VerifyStep from '../resources/js/sidebar/steps/VerifyStep.vue';
 import PayStep from '../resources/js/sidebar/steps/PayStep.vue';
 import RedirectStep from '../resources/js/sidebar/steps/RedirectStep.vue';
 import ConfirmedStep from '../resources/js/sidebar/steps/ConfirmedStep.vue';
+import DeclinedStep from '../resources/js/sidebar/steps/DeclinedStep.vue';
+import VerifyingStep from '../resources/js/sidebar/steps/VerifyingStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
@@ -45,6 +47,8 @@ const COMPONENTS = {
     [STEPS.PAY]: PayStep,
     [STEPS.REDIRECTING]: RedirectStep,
     [STEPS.CONFIRMED]: ConfirmedStep,
+    [STEPS.DECLINED]: DeclinedStep,
+    [STEPS.VERIFYING]: VerifyingStep,
 };
 
 async function main() {

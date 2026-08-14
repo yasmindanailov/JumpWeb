@@ -205,6 +205,16 @@
                         ],
                         'auth' => __('auth'),
                         'userId' => auth()->id(),
+                        // ⚠️ **Las rutas las compone el SERVIDOR, no el cajón** (Fase 4 · paso 4.6·2).
+                        // Las pintan las pantallas de desenlace —«escribirnos» y «ver mis reservas»— y
+                        // quemarlas en el JS sería la segunda fuente de una URL que ya decide
+                        // `routes/web.php`; el día que cambie un slug, el cajón mandaría a un 404 **y
+                        // ningún gate lo vería**: `href` no es atributo de contrato del diff de árbol,
+                        // como enseñaron el WhatsApp del aviso de pausa y el enlace de registro.
+                        'urls' => [
+                            'contact' => route('contacto'),
+                            'my_orders' => route('account.orders'),
+                        ],
                     ], JSON_UNESCAPED_UNICODE) }}"></div>
                 @else
                     <livewire:tickets.purchase lazy />

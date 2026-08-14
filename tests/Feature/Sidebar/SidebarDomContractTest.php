@@ -8,7 +8,9 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Sidebar\SidebarEntry;
 use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
 use DOMDocument;
@@ -759,6 +761,161 @@ class SidebarDomContractTest extends TestCase
             'registration' => $component->viewData('registration'),
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
+        ];
+    }
+
+    // ── Los pasos 10 y 11: los otros dos desenlaces ───────────────────────────────────────────
+
+    /**
+     * El paso 10 — **el pago denegado, con sus tres CTA**.
+     *
+     * ⚠️ **Los dos `<span>` del botón principal están SIEMPRE en el árbol**, y es lo que hace que este
+     * caso valga: en Livewire `wire:loading` es un ATRIBUTO, no un condicional de servidor, así que el
+     * rótulo y el `.btn__loading` con su spinner viajan los dos en el HTML. Un motor que emitiera solo
+     * uno —lo natural con un `v-if`— dejaría el botón sin su estado de carga y el gate lo ve.
+     *
+     * ⚠️ Y la jerarquía de los tres: principal `<button>` con `btn--zone btn--lg`, secundario
+     * `<button>` fantasma y terciario **`<a>`**. El normalizador compara el tipo de elemento, así que
+     * emitir un `<button>` donde hay un enlace rompe con las clases correctas al 100%.
+     */
+    public function test_the_declined_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->declinedComponent();
+
+        $this->assertSame(10, (int) $component->get('step'), 'el caso tiene que llegar al pago denegado');
+        $this->assertNotNull($component->get('declinedReasonText'), 'y traer el motivo del rechazo');
+
+        $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
+        $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del PAGO DENEGADO difiere entre los dos motores.\n".
+            "El pedido sigue vivo aquí: esta pantalla es la segunda oportunidad, no un error.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **Y el bloque del motivo se emite SIEMPRE que hay sesión, aunque el rechazo no traiga código.**
+     *
+     * Medido: `RedsysResponseCode::reasonText()` **nunca devuelve null** —cae a `default`—, así que el
+     * `@if ($declinedReasonText)` del Blade es verdadero también sin `Ds_Response`. Un motor que
+     * condicionara el bloque a «hay motivo conocido» emitiría un nodo de menos justo en el caso más
+     * frecuente: el de un rechazo del que la pasarela no dijo el porqué.
+     */
+    public function test_the_declined_step_still_emits_the_reason_block_without_a_known_code(): void
+    {
+        $component = $this->declinedComponent(responseCode: null);
+
+        $this->assertSame(
+            __('tickets.payment_failed.reasons.default'), $component->get('declinedReasonText'),
+            'sin código, el servidor cae al motivo genérico — no a null'
+        );
+
+        $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
+        $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
+
+        $this->assertSame($livewire, $vue, $this->firstDivergence($livewire, $vue));
+    }
+
+    /**
+     * El paso 11 — **verificando**, la pantalla de los terminales que vuelven sin datos firmados.
+     *
+     * ⚠️ `role="status"` y `aria-live="polite"` son atributos de contrato y aquí no son decoración: la
+     * pantalla cambia SOLA cuando llega la notificación de la pasarela, y sin ellos un lector de
+     * pantalla no anunciaría nada. Lo que el diff no ve es el sondeo en sí — de eso responden
+     * `outcome.test.js` y `SidebarOutcomeParityTest`.
+     */
+    public function test_the_verifying_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->verifyingComponent();
+
+        $this->assertSame(11, (int) $component->get('step'), 'el caso tiene que llegar a «verificando»');
+
+        $livewire = $this->livewireTree($component, 'purchase__verifying', withSiblings: true);
+        $vue = $this->vueTree(11, $this->verifyingProps($component), 'purchase__verifying', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de «verificando el pago» difiere entre los dos motores.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * Un componente en el paso 10, con un pago REALMENTE rechazado.
+     *
+     * ⚠️ **Se llega por la costura, no con un `->set('step', 10)`**: `declinedReasonText` lo compone
+     * `mount()` a partir del último `Payment` fallido, así que colocar el paso a mano dejaría el motivo
+     * vacío y el caso compararía dos pantallas sin su bloque más frágil.
+     */
+    private function declinedComponent(?string $responseCode = '0101'): Testable
+    {
+        $code = $this->purchasedOrderCode();
+
+        Payment::whereHas('payable', fn ($q) => $q->where('code', $code))
+            ->latest('id')
+            ->first()
+            ?->update([
+                'status' => Payment::STATUS_FAILED,
+                'raw_response' => $responseCode === null ? [] : ['Ds_Response' => $responseCode],
+            ]);
+
+        SidebarEntry::failed($code);
+
+        return Livewire::test(Purchase::class);
+    }
+
+    /** Un componente en el paso 11, al que se llega por la misma costura. */
+    private function verifyingComponent(): Testable
+    {
+        SidebarEntry::verifying($this->purchasedOrderCode());
+
+        return Livewire::test(Purchase::class);
+    }
+
+    /** Compra REAL de punta a punta, para que el pedido lo cree el dominio y no el test. */
+    private function purchasedOrderCode(): string
+    {
+        $component = $this->componentWithFullCart();
+        $this->actingAs(User::factory()->create());
+        $component->call('checkout')->call('confirmReservation');
+
+        $code = (string) $component->get('orderCode');
+        $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
+
+        return $code;
+    }
+
+    /**
+     * El view-model del paso 10 en la forma que recibe el cajón.
+     *
+     * ⚠️ **`reason` llega YA traducido en los dos motores, pero por caminos distintos**: Livewire lo
+     * resuelve en servidor y el cajón lo saca del diccionario que ya viaja en el montaje, usando
+     * `declined_reason` como clave. Que las dos rutas den el mismo texto lo comprueba
+     * `SidebarOutcomeParityTest`, recorriendo el mapa entero del servidor.
+     *
+     * @return array<string, mixed>
+     */
+    private function declinedProps(Testable $component): array
+    {
+        return [
+            'orderCode' => (string) $component->get('orderCode'),
+            'reason' => (string) $component->get('declinedReasonText'),
+            'retrying' => false,
+            'contactUrl' => route('contacto'),
+            'messages' => __('tickets'),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function verifyingProps(Testable $component): array
+    {
+        return [
+            'orderCode' => (string) $component->get('orderCode'),
+            'ordersUrl' => route('account.orders'),
+            'messages' => __('tickets'),
         ];
     }
 

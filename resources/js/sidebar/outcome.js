@@ -1,5 +1,10 @@
 /**
- * El DESENLACE del pago: lo que el cajón enseña al VOLVER de la pasarela (Fase 4 · paso 4.6·1).
+ * El DESENLACE del pago: lo que el cajón enseña al VOLVER de la pasarela (Fase 4 · paso 4.6).
+ *
+ * Los TRES desenlaces viven aquí porque son la misma pregunta con tres respuestas —«¿en qué quedó mi
+ * pedido?»— y comparten la única pista que sobrevive al viaje, el código: el paso 6 (confirmado) pide
+ * el resumen entero, el 10 (denegado) y el 11 (verificando) sondean `payment-status`, y el reintento
+ * del 10 vuelve a salir por el mismo formulario firmado que compone `pay.js`.
  *
  * La costura ya estaba hecha desde 4.0a: `Http\Sidebar\SidebarEntry` es el dueño único de las tres
  * claves de sesión que dejó la vuelta de Redsys, el layout las CONSUME —con la SPA el motor es el
@@ -19,6 +24,9 @@
  * las lleva** —hay test de ello— y viven en `GET orders/{code}/event-data`, que se pide aparte a
  * propósito. Un resumen sin ellas pintaría la reserva confirmada sin lo que el cliente contestó.
  */
+
+import { t } from './i18n.js';
+import { gatewayForm } from './pay.js';
 
 /**
  * Las respuestas del pack, indexadas por el `id` de su reserva.
@@ -139,4 +147,154 @@ export async function loadConfirmation({ orderCode, api }) {
     // Las respuestas del pack sí pueden faltar sin que el resumen deje de valer: se pintan bajo cada
     // línea y su ausencia es un bloque menos, no una pantalla rota.
     return buildConfirmation(order.data, eventData.ok ? eventData.data : {});
+}
+
+// ── Los otros dos desenlaces: denegado (paso 10) y verificando (paso 11) ──────────────────────
+
+/**
+ * El motivo del rechazo, traducido.
+ *
+ * ⚠️ **`declined_reason` NO necesita tabla de traducción, y conviene saber por qué**: el servidor lo
+ * compone con `RedsysResponseCode::reasonKey()`, que devuelve exactamente la clave bajo
+ * `tickets.payment_failed.reasons.*` — el mismo literal que pinta el Blade, del mismo fichero de
+ * `lang/`, y **ya está en el payload de montaje** porque el grupo `tickets` viaja entero. Escribir aquí
+ * un mapa código→clave sería inventar una segunda fuente para un texto que ya llega resuelto.
+ *
+ * ⚠️ **Por eso la caída a `default` es obligatoria y no defensiva**: `i18n.js` devuelve cadena vacía
+ * cuando la clave no existe, así que un motivo NUEVO en el servidor pintaría el rótulo «Motivo:» con
+ * nada detrás. `SidebarOutcomeParityTest` recorre el mapa entero del servidor para que eso lo nombre un
+ * test y no un cliente.
+ *
+ * @param {object} messages  el grupo `tickets`
+ * @param {string|null} code  `declined_reason` del contrato
+ */
+export function declinedReasonText(messages, code) {
+    const key = typeof code === 'string' && code !== '' ? code : 'default';
+    const text = t(messages, `payment_failed.reasons.${key}`);
+
+    return text === '' ? t(messages, 'payment_failed.reasons.default') : text;
+}
+
+/**
+ * Sondea el desenlace del pago.
+ *
+ * `GET orders/{code}/payment-status` es deliberadamente pequeño porque se pregunta EN BUCLE; para el
+ * resumen entero está `GET orders/{code}`, que es lo que pide el paso 6.
+ *
+ * @param {{orderCode: string, api: {get: (path: string) => Promise<object>}}} deps
+ * @returns {Promise<object|null>}  `null` si no se pudo preguntar
+ */
+export async function loadPaymentStatus({ orderCode, api }) {
+    const code = String(orderCode ?? '');
+
+    if (code === '') {
+        return null;
+    }
+
+    const response = await api.get(`/orders/${encodeURIComponent(code)}/payment-status`);
+
+    return response.ok ? response.data : null;
+}
+
+/**
+ * Qué hacer con lo que devuelve el sondeo del paso 11.
+ *
+ * ⚠️ **Solo DOS salidas mueven el cajón, y la acotación es de Livewire**, no una simplificación:
+ * `checkPaymentStatus()` mira `paid` y `expired` y en cualquier otro caso **no hace nada**, dejando que
+ * el sondeo siga. Ampliarla —por ejemplo, saltar al paso 10 en cuanto el último intento falle— cambiaría
+ * la conducta de una pantalla cuyo sentido es esperar a la notificación de la pasarela: un `failed` con
+ * la notificación todavía en vuelo es exactamente el caso que este paso existe para no malinterpretar.
+ *
+ * ⚠️ **Un fallo al preguntar tampoco mueve nada.** Es el espejo del `if (! $order) return;` de Livewire:
+ * un 401 pasajero, un 429 del limitador o un corte de red no son un desenlace, y tratarlos como tal
+ * sacaría al cliente de la pantalla que le está diciendo la verdad.
+ *
+ * @param {object|null} status  la respuesta de `loadPaymentStatus()`
+ * @returns {'confirmed'|'expired'|'wait'}
+ */
+export function pollVerdict(status) {
+    if (status?.order_status === 'paid') return 'confirmed';
+    if (status?.order_status === 'expired') return 'expired';
+
+    return 'wait';
+}
+
+/**
+ * Los códigos de error de `POST /orders/{code}/payment` → la clave del diccionario.
+ *
+ * Es el hermano de `ERROR_KEYS` de `pay.js` y son conjuntos DISTINTOS a propósito: crear un pedido y
+ * reintentar su cobro no fallan por lo mismo. Aquí solo hay tres motivos y ninguno es de cesta —el
+ * pedido ya existe y su contenido ya no se discute—.
+ *
+ * ⚠️ **`reservations_paused` no está, igual que en `pay.js`**: no compone mensaje, pide releer el estado.
+ */
+export const RETRY_ERROR_KEYS = {
+    order_not_retryable: 'errors.retry_expired',
+    too_many_requests: 'errors.try_later',
+    payment_unavailable: 'errors.payment_unavailable',
+};
+
+/** El código de pausa, que no se traduce a un mensaje: se relee el estado. */
+export const RESERVATIONS_PAUSED = 'reservations_paused';
+
+/**
+ * Reintenta el cobro de un pedido que sigue vivo. Espejo de `Purchase::retryPayment()`.
+ *
+ * ⚠️ **La respuesta es la MISMA que la de crear el pedido** (`OrderPayment`), así que el formulario lo
+ * compone `gatewayForm()` de `pay.js` y no una copia: la firma cubre esos valores exactos, y dos sitios
+ * emitiendo campos firmados es la forma más cara de divergir que tiene este cajón.
+ *
+ * ⚠️ **Y no se orquesta nada aquí**: extender la retención con el UPDATE atómico de `PAY-04` y solo
+ * después reabrir el cobro es `ReservationCheckout::retry()`, en el servidor. El reintento **no** aplica
+ * el tope de pedidos pendientes, porque no crea aforo nuevo.
+ *
+ * @param {{orderCode: string, api: {post: (path: string, body: object) => Promise<object>}, messages: object}} deps
+ * @returns {Promise<{ok: boolean, form: object|null, error: string, rereadStatus: boolean, goTo: string|null}>}
+ */
+export async function runRetry({ orderCode, api, messages = {} }) {
+    const code = String(orderCode ?? '');
+
+    // Espejo del guardián de Livewire (`! $user || ! $this->orderCode`): sin código no hay pedido que
+    // reintentar, y la salida es volver al catálogo.
+    if (code === '') {
+        return { ok: false, form: null, error: '', rereadStatus: false, goTo: 'catalog' };
+    }
+
+    const response = await api.post(`/orders/${encodeURIComponent(code)}/payment`, {});
+
+    if (response.ok) {
+        const form = gatewayForm(response.data?.payment);
+
+        // El pedido sigue vivo con su hold recién extendido —al revés que al crear, aquí un fallo de
+        // pasarela NO lo suelta—, así que esto se avisa y se queda donde está.
+        return form === null
+            ? { ok: false, form: null, error: t(messages, 'errors.payment_unavailable'), rereadStatus: false, goTo: null }
+            : { ok: true, form, error: '', rereadStatus: false, goTo: null };
+    }
+
+    // ⚠️ La sesión se perdió entre la vuelta de la pasarela y el clic. Livewire lo mira ANTES de llamar
+    // (`$this->step = $user ? 1 : 5`) porque tiene el guard delante; un cliente de API solo puede
+    // enterarse por el 401, y la salida es la misma: la pantalla de identificación.
+    if (response.status === 401) {
+        return { ok: false, form: null, error: '', rereadStatus: false, goTo: 'identify' };
+    }
+
+    const failure = response.error?.code ?? null;
+
+    if (failure === RESERVATIONS_PAUSED) {
+        return { ok: false, form: null, error: '', rereadStatus: true, goTo: null };
+    }
+
+    return {
+        ok: false,
+        form: null,
+        // Un código que este cajón no conoce, un 5xx o un corte de red caen en el genérico: el aviso
+        // no puede quedarse vacío aunque hoy no se pinte en esta pantalla.
+        error: t(messages, RETRY_ERROR_KEYS[failure] ?? 'errors.try_later'),
+        rereadStatus: false,
+        // ⚠️ **Solo `order_not_retryable` obliga a rehacer la reserva**: el hold cruzó y la plaza pudo
+        // cederse. La pausa y el límite de frecuencia dejan al cliente donde está —su reserva sigue
+        // viva—, y confundirlos le diría a quien pulsó dos veces que ha perdido la plaza.
+        goTo: failure === 'order_not_retryable' ? 'catalog' : null,
+    };
 }

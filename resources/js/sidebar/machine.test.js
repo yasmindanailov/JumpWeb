@@ -74,9 +74,18 @@ describe('transiciones', () => {
         assert.ok(canGo(STEPS.PAY, STEPS.CART));
     });
 
-    test('un pago denegado ofrece reintentar, y también empezar de nuevo', () => {
-        assert.ok(canGo(STEPS.DECLINED, STEPS.PAY));
-        assert.ok(canGo(STEPS.DECLINED, STEPS.CATALOG));
+    /**
+     * ⚠️ **Las tres salidas están MEDIDAS contra `Purchase::retryPayment()`** (4.6·2), y las dos que
+     * había antes estaban mal: el reintento no vuelve a la pantalla de pago —reabre el cobro sobre un
+     * pedido que ya existe y sale DIRECTO a la pasarela— y faltaba la salida a identificarse, que es lo
+     * que hace el componente cuando la sesión se perdió entre la vuelta y el clic.
+     */
+    test('un pago denegado sale a la pasarela, al catálogo o a identificarse', () => {
+        assert.ok(canGo(STEPS.DECLINED, STEPS.REDIRECTING), 'el reintento va directo a la pasarela');
+        assert.ok(canGo(STEPS.DECLINED, STEPS.CATALOG), 'y `order_not_retryable` obliga a rehacer la reserva');
+        assert.ok(canGo(STEPS.DECLINED, STEPS.IDENTIFY), 'y sin sesión hay que volver a identificarse');
+
+        assert.equal(canGo(STEPS.DECLINED, STEPS.PAY), false, 'no se vuelve a confirmar lo que ya es un pedido');
     });
 
     /**

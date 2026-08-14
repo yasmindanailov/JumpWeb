@@ -2249,3 +2249,79 @@ montaje con su `orderCode`, el login por API deja sesión a través de nginx y l
 **(k) Lo que NO entra**: los pasos 10 (denegado + reintento) y 11 (verificando + sondeo), que son 4.6·2.
 ⚠️ **El flag sigue sin desplegarse**: quien vuelva con un pago denegado o con un terminal *data-less*
 todavía se encuentra un cajón mudo.
+
+## #57 · 2026-08-14 · 4.6·2 — los otros dos desenlaces, y la máquina que decía otra cosa
+Fase 4 · paso 4.6, segundo tramo. Transcribe los pasos **10** (pago denegado, con su reintento) y
+**11** (verificando, con su sondeo). **Con él, la transcripción de la Fase 4 queda completa**: el cajón
+SPA recorre el embudo entero y sabe volver de los tres desenlaces posibles.
+
+**(a) ⚠️ EL HALLAZGO DEL PASO: la máquina de estados llevaba desde 4.1 con una transición INVENTADA.**
+`TRANSITIONS[DECLINED]` decía `[CATALOG, PAY]` y las dos mitades estaban mal, medido contra
+`Purchase::retryPayment()`: el reintento **no vuelve a la pantalla de pago** —reabre el cobro sobre un
+pedido que ya existe y sale DIRECTO a la pasarela (`$this->step = 9`)—, y faltaba una tercera salida,
+IDENTIFICARSE, para la sesión que se perdió entre la vuelta y el clic (`$this->step = $user ? 1 : 5`).
+Era una suposición razonable de cuando el paso no estaba transcrito y nadie podía medirlo; con
+`DECLINED → REDIRECTING` ausente, el reintento habría compuesto su formulario firmado y **el cajón se
+habría quedado quieto en el paso 10**, porque `go()` rechaza en silencio.
+
+**(b) El motivo del rechazo NO necesita tabla de traducción, y saberlo ahorró un mapa.** El servidor
+publica `declined_reason` con `RedsysResponseCode::reasonKey()`, que devuelve exactamente la clave bajo
+`tickets.payment_failed.reasons.*` — el mismo literal que pinta el Blade, del mismo fichero de `lang/`,
+y **ya viaja en el payload de montaje** porque el grupo `tickets` va entero. Lo que sí hace falta es la
+caída a `default`: `i18n.js` devuelve cadena vacía si la clave no existe, así que un motivo nuevo en el
+servidor pintaría el rótulo «Motivo:» **con nada detrás**. `SidebarOutcomeParityTest` recorre
+`REASON_MAP` completo en los tres idiomas.
+
+**(c) ⚠️ El bloque del motivo se pinta SIEMPRE que hay sesión, y el Blade engaña al leerlo.** Su
+`@if ($declinedReasonText)` parece condicionar a «hay motivo conocido», pero `reasonText()` **nunca
+devuelve null** —cae a `default`—, así que con sesión y con pedido el bloque está siempre. Condicionarlo
+en Vue a «motivo conocido» habría emitido un nodo de menos justo en el caso más frecuente: el rechazo
+del que la pasarela no dice el porqué. Tiene caso propio.
+
+**(d) ⚠️ El sondeo solo mira DOS salidas, y ampliarlo sería un error.** `checkPaymentStatus()` reacciona
+a `paid` y a `expired`; **un intento `failed` con el pedido todavía `pending` no mueve nada**, porque la
+notificación server-to-server puede estar en vuelo — y esta pantalla existe precisamente para ese caso.
+Saltar al paso 10 ahí le diría «no has pagado» a quien sí pagó. Lo mismo con un fallo al preguntar: un
+401 pasajero, un 429 o un corte de red no son un desenlace.
+
+**(e) Un intervalo suelto es un fallo que ningún diff puede ver.** El sondeo se para en TRES sitios: el
+observador del paso, `onUnmounted` y el propio `poll()`, que comprueba dónde está el cajón antes de
+preguntar —de modo que una fuga dura como mucho un tick—. Y `startPolling()` es idempotente: llamarla
+dos veces dejaría dos temporizadores preguntando a la vez.
+
+**(f) ⚠️ El centinela del bundle tuvo que cambiarse porque el obvio NO discriminaba.** `/payment-status`
+lo usan los DOS pasos —el 10 pide ahí su motivo—, así que desconectar el bucle del 11 dejaba la cadena
+en el chunk y el gate en verde: el cliente se quedaría mirando «verificando» para siempre. Medido:
+`setInterval` aparece **una sola vez** en el chunk y desaparece al desconectar el sondeo. Ni Vue ni
+Pinia lo usan hoy.
+
+**(g) Las dos URLs de estas pantallas viajan del SERVIDOR**, en un `urls` nuevo del payload de montaje.
+`href` no es atributo de contrato del diff de árbol —lo enseñaron el WhatsApp del aviso de pausa y el
+enlace de registro—, así que un cajón que mandara «escribirnos» o «ver mis reservas» a un 404 pasaría el
+gate en verde. Quemarlas en el JS habría sido la segunda fuente de algo que decide `routes/web.php`.
+
+**(h) ⚠️ DEUDA DE PRODUCTO destapada al transcribir, no creada aquí**: un reintento denegado —pausa,
+frecuencia o 502— deja el botón **mudo**. Medido contra el HTML: `retryPayment()` escribe el motivo en
+`errors.cart` y el bloque del paso 10 no lo pinta (ni el pie, que es nulo en los pasos de resultado).
+El cajón SPA lo transcribe fiel, que es lo que pide la paridad, y la fila queda en `DEUDA.md`: el
+arreglo cambia la copia de una pantalla del camino del dinero en tres idiomas, y eso es del owner.
+
+**(i) DIVERGENCIA DECLARADA, la tercera de la fase**: Livewire busca el último `Payment` **fallido** del
+pedido y la API solo publica el motivo si el ÚLTIMO intento es el rechazado. Con un reintento en vuelo,
+el Blade sigue diciendo «tarjeta caducada» sobre un cobro que está esperando respuesta. Acierta la API
+—lo dice su contrato—, así que se declara en vez de copiarse; desde la pantalla no es alcanzable,
+porque al reintentar se sale al paso 9.
+
+**(j) Dos casos de test volvieron a pasar por CASUALIDAD**, y los dos se arreglaron midiendo: el de los
+cuatro «no» del reintento comparaba con el titular **equivocado** —la segunda compra dejaba a otro
+usuario autenticado, así que Livewire respondía `NOT_RETRYABLE` por anti-IDOR y tres de los cuatro
+escenarios acertaban por accidente—, y la pausa se pegaba entre iteraciones e impedía comprar. Es la
+tercera vez en la fase que un test de cadena pasa sin probar la cadena.
+
+**(k) El techo del bundle NO sube**: el tramo costó **5,06 KiB** (145,85 de 150). Quedan **4,15 KiB**
+para el widget de Turnstile (4.4b·2), que es un contenedor y un script EXTERNO, así que basta. En 4.7
+este número debería BAJAR: se va el motor Livewire.
+
+**(l) Lo que NO cierra**: el flag **sigue sin desplegarse**. Ya no es porque falte pantalla —están las
+once—, sino porque falta la verificación de punta a punta con la pasarela en sandbox y un navegador
+(§6 del spec) y el widget de Turnstile (4.4b·2).

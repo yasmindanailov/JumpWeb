@@ -7,17 +7,25 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Contracts\PaymentInitiationException;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\PaymentInitiator;
+use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Middleware\SetLocale;
+use App\Http\Sidebar\SidebarEntry;
 use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.6·1 — **el resumen de la reserva creada dice lo mismo salga de donde salga**.
+ * Fase 4 · paso 4.6 — **el desenlace del pago dice lo mismo salga de donde salga**.
  *
  * ⚠️ **Este test existe porque el diff de árbol NO puede verificar nada de esto**, y ya mordió una vez
  * en 4.2·3: el componente recibe las filas YA compuestas, así que el gate compara el mismo árbol
@@ -30,8 +38,15 @@ use Tests\TestCase;
  * `reservation_id`. Emparejarlas por posición pinta el nombre de un niño bajo la reserva de otro con
  * un árbol idéntico.
  *
- * **Dos divergencias DECLARADAS**, cada una con su caso para que no puedan cambiar sin que nadie lo
- * decida: la fase de las respuestas (§4.4.6) y el estado efectivo del pedido.
+ * Desde 4.6·2 cubre también los otros dos desenlaces —**denegado** y **verificando**—, y ahí el
+ * agujero del diff es todavía más ancho: qué hace el cajón con un `failed` mientras sondea, adónde va
+ * un reintento denegado y a qué URL llevan «escribirnos» y «ver mis reservas» **no dejan rastro
+ * ninguno en el marcado** (`href` no es atributo de contrato, como ya enseñaron el WhatsApp del aviso
+ * de pausa y el enlace de registro).
+ *
+ * **Tres divergencias DECLARADAS**, cada una con su caso para que no puedan cambiar sin que nadie lo
+ * decida: la fase de las respuestas (§4.4.6), el estado efectivo del pedido y el motivo de un rechazo
+ * ANTERIOR cuando ya hay otro cobro en curso.
  */
 class SidebarOutcomeParityTest extends TestCase
 {
@@ -185,7 +200,7 @@ class SidebarOutcomeParityTest extends TestCase
         );
     }
 
-    // ── Las dos divergencias DECLARADAS ───────────────────────────────────────────────────────
+    // ── Las divergencias DECLARADAS ───────────────────────────────────────────────────────────
 
     /**
      * ⚠️ **DIVERGENCIA DECLARADA (§4.4.6, `DECISIONES #39`): solo la fase `booking`.**
@@ -247,7 +262,430 @@ class SidebarOutcomeParityTest extends TestCase
         );
     }
 
+    // ── El paso 10: el motivo del rechazo ─────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ **El cajón cubre el mapa ENTERO de motivos del servidor, en los tres idiomas.**
+     *
+     * `declined_reason` es literalmente lo que devuelve `RedsysResponseCode::reasonKey()`, que es la
+     * clave bajo `tickets.payment_failed.reasons.*`, así que el cajón no tiene tabla que mantener… **y
+     * ahí está el riesgo**: `i18n.js` devuelve cadena vacía cuando la clave no existe, de modo que un
+     * motivo nuevo en el servidor pintaría el rótulo «Motivo:» **con nada detrás** y ningún gate lo
+     * diría. Aquí se recorre `REASON_MAP` completo —por reflexión, para no copiar una tabla que ya
+     * existe— y se compara con el texto que resuelve el servidor.
+     */
+    public function test_the_client_says_the_same_reason_as_the_server_for_every_code(): void
+    {
+        /** @var array<string, string> $map */
+        $map = (new \ReflectionClass(RedsysResponseCode::class))->getConstant('REASON_MAP');
+
+        $this->assertNotSame([], $map, 'el servidor tiene que publicar motivos, o este test no mira nada');
+
+        // Un código desconocido y el nulo entran también: son los dos caminos al genérico.
+        $codes = array_merge(array_keys($map), ['9999-inventado', null]);
+
+        foreach (SetLocale::SUPPORTED as $locale) {
+            $this->app->setLocale($locale);
+
+            $server = array_map(fn (?string $ds): string => RedsysResponseCode::reasonText($ds), $codes);
+            $keys = array_map(fn (?string $ds): string => RedsysResponseCode::reasonKey($ds), $codes);
+            $client = $this->reasonsInNode($keys, __('tickets'));
+
+            $this->assertSame(
+                $server, $client,
+                "El motivo del rechazo NO dice lo mismo en los dos motores, en «{$locale}».\n".
+                '⚠️ Un motivo que el diccionario no tenga se pinta VACÍO: el rótulo «Motivo:» sin nada '.
+                'detrás, en la pantalla en la que el cliente quiere saber por qué le han rechazado.'
+            );
+        }
+    }
+
+    /**
+     * Y de punta a punta sobre un rechazo REAL: el código que publica la API es el que el cajón usa de
+     * clave, y el texto coincide con el que compone el componente Livewire.
+     */
+    public function test_a_real_declined_payment_reaches_the_same_text_by_both_routes(): void
+    {
+        [, $user, $code] = $this->purchase();
+        $this->failLastPayment($code, '0129');       // CVV erróneo
+
+        SidebarEntry::failed($code);
+        $server = (string) Livewire::test(Purchase::class)->get('declinedReasonText');
+
+        $status = $this->paymentStatus($user, $code);
+
+        $this->assertSame('cvv_wrong', $status['declined_reason'], 'la API publica la CLAVE del motivo');
+        $this->assertSame(
+            $server, $this->reasonsInNode([$status['declined_reason']], __('tickets'))[0],
+            'los dos motores tienen que decir el mismo porqué'
+        );
+    }
+
+    /**
+     * ⚠️ **DIVERGENCIA DECLARADA: el motivo de un rechazo ANTERIOR no se enseña si hay otro cobro en
+     * curso.**
+     *
+     * Livewire busca el último `Payment` en estado `failed` del pedido; la API solo publica el motivo
+     * si el ÚLTIMO intento es el rechazado. Con un reintento en vuelo, el Blade sigue diciendo «tarjeta
+     * caducada» sobre un cobro que está esperando respuesta, y el cajón cae al genérico.
+     *
+     * La API es la que acierta —lo dice su propio contrato— y por eso la divergencia se declara en vez
+     * de copiarse. No es alcanzable desde la pantalla: al reintentar se sale al paso 9.
+     */
+    public function test_a_previous_decline_is_not_reported_while_another_payment_is_in_flight(): void
+    {
+        [, $user, $code] = $this->purchase();
+        $this->failLastPayment($code, '0101');
+
+        // Un cobro NUEVO sobre el mismo pedido: el rechazo anterior queda atrás.
+        $order = Order::where('code', $code)->firstOrFail();
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'provider' => 'redsys', 'gateway_order' => 'GO'.$order->id.'B',
+            'amount' => $order->total, 'currency' => 'EUR', 'status' => Payment::STATUS_PENDING,
+        ]);
+
+        SidebarEntry::failed($code);
+
+        $this->assertSame(
+            __('tickets.payment_failed.reasons.card_expired'),
+            Livewire::test(Purchase::class)->get('declinedReasonText'),
+            'el Blade sigue enseñando el motivo del intento anterior'
+        );
+        $this->assertNull(
+            $this->paymentStatus($user, $code)['declined_reason'],
+            "La API ha empezado a publicar el motivo de un rechazo ANTERIOR.\n".
+            '⚠️ Con otro cobro en curso, eso le diría al cliente que su tarjeta ha fallado cuando en '.
+            'realidad está esperando respuesta.'
+        );
+    }
+
+    // ── El paso 10: el reintento ──────────────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ **Los CUATRO «no» del reintento, provocados de VERDAD contra la API**, y el destino de cada uno
+     * comparado con el del componente Livewire.
+     *
+     * La distinción que importa es la del paso 2: solo `order_not_retryable` significa que ya no hay
+     * nada que pagar. La pausa y el límite de frecuencia dejan la reserva **intacta**, y confundirlos
+     * le diría a quien pulsó dos veces seguidas que ha perdido su plaza.
+     */
+    public function test_every_retry_denial_sends_the_client_where_livewire_goes(): void
+    {
+        foreach (['paused', 'not_retryable', 'rate_limited'] as $scenario) {
+            [$server, $client] = $this->retryBoth($scenario);
+
+            $this->assertSame(
+                $server, $client['goTo'],
+                "El reintento denegado por «{$scenario}» deja a los dos motores en sitios DISTINTOS.\n".
+                '⚠️ Solo `order_not_retryable` obliga a rehacer la reserva; los otros la dejan viva.'
+            );
+        }
+    }
+
+    /**
+     * El cuarto «no» va aparte porque su avería NO se puede deshacer: sustituye la pasarela en el
+     * contenedor, y una compra posterior en el mismo test se encontraría el sustituto.
+     *
+     * ⚠️ Y su regla es la contraria a la de crear: **el pedido NO se toca**. Sigue vivo con su hold
+     * recién extendido, así que los dos motores dejan al cliente donde está para que pueda repetir.
+     */
+    public function test_a_gateway_failure_on_retry_leaves_both_engines_where_they_were(): void
+    {
+        [$server, $client] = $this->retryBoth('gateway');
+
+        $this->assertNull($server, 'Livewire se queda en el paso 10');
+        $this->assertNull($client['goTo'], 'y el cajón tampoco se mueve: la reserva sigue viva');
+        $this->assertSame(__('tickets.errors.payment_unavailable'), $client['error']);
+    }
+
+    /** Y el reintento que SÍ se admite sale a la pasarela en los dos motores, con la misma URL. */
+    public function test_an_admitted_retry_leaves_for_the_gateway_in_both_engines(): void
+    {
+        [, $user, $code] = $this->purchase();
+        $this->failLastPayment($code, '0101');
+
+        SidebarEntry::failed($code);
+        $component = Livewire::test(Purchase::class)->call('retryPayment');
+
+        $this->assertSame(9, (int) $component->get('step'), 'el reintento del Blade sale DIRECTO a la pasarela');
+
+        [, $user2, $code2] = $this->purchase();
+        $this->failLastPayment($code2, '0101');
+        $client = $this->retryInNode($this->retryResponse($user2, $code2));
+
+        $this->assertTrue($client['ok'], 'y el del cajón también');
+        $this->assertSame(
+            ((array) $component->get('redsysFormData'))['gatewayUrl'], $client['form']['url'],
+            'los dos motores tienen que mandar el reintento al MISMO sitio'
+        );
+    }
+
+    // ── El paso 11: el sondeo ─────────────────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ **El sondeo se mueve con las MISMAS dos salidas que `checkPaymentStatus()`**, y las respuestas
+     * son las de la API real.
+     *
+     * El caso que importa es el tercero: un pedido cuyo último intento está `failed` pero que sigue
+     * `pending` **no mueve el cajón**. Es el corazón de esta pantalla —la notificación de la pasarela
+     * puede estar todavía en vuelo— y ampliar la acotación diría «no has pagado» a quien sí pagó.
+     */
+    public function test_the_poll_moves_the_drawer_exactly_where_livewire_does(): void
+    {
+        // (1) Pagado → paso 6, en los dos motores.
+        [, $user, $code] = $this->purchase();
+        Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
+
+        SidebarEntry::verifying($code);
+        $paidComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
+
+        $this->assertSame(6, (int) $paidComponent->get('step'));
+        $this->assertSame('confirmed', $this->pollVerdictInNode($this->paymentStatus($user, $code)));
+
+        // (2) Caducado → vuelta al catálogo, con el mismo aviso.
+        [, $user2, $code2] = $this->purchase();
+        Order::where('code', $code2)->update(['status' => Order::STATUS_EXPIRED]);
+
+        SidebarEntry::verifying($code2);
+        $expiredComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
+
+        $this->assertSame(1, (int) $expiredComponent->get('step'));
+        $this->assertSame(__('tickets.errors.retry_expired'), $expiredComponent->errors()->first('cart'));
+        $this->assertSame('expired', $this->pollVerdictInNode($this->paymentStatus($user2, $code2)));
+
+        // (3) Un intento FALLIDO con el pedido todavía pendiente: nadie se mueve.
+        [, $user3, $code3] = $this->purchase();
+        $this->failLastPayment($code3, '0101');
+
+        SidebarEntry::verifying($code3);
+        $pendingComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
+
+        $status = $this->paymentStatus($user3, $code3);
+
+        $this->assertSame('failed', $status['payment_status'], 'el caso necesita un intento rechazado');
+        $this->assertSame(11, (int) $pendingComponent->get('step'), 'Livewire se queda esperando');
+        $this->assertSame(
+            'wait', $this->pollVerdictInNode($status),
+            "El cajón se mueve con un intento fallido y Livewire no.\n".
+            '⚠️ La notificación de la pasarela puede estar en vuelo: salir de aquí le diría «no has '.
+            'pagado» a quien sí pagó.'
+        );
+    }
+
+    // ── Los dos enlaces que el diff de árbol NO ve ────────────────────────────────────────────
+
+    /**
+     * ⚠️ **`href` no es atributo de contrato**, así que un cajón que mandara «escribirnos» y «ver mis
+     * reservas» a cualquier otro sitio —o a un 404— pasaría el gate en VERDE. Es la misma lección del
+     * WhatsApp del aviso de pausa y del enlace de registro, y por eso las dos URLs las compone el
+     * SERVIDOR con `route()` y viajan en el payload de montaje.
+     */
+    public function test_the_outcome_links_point_where_the_blade_points(): void
+    {
+        [, , $code] = $this->purchase();
+
+        $boot = $this->bootPayload();
+
+        $this->assertSame(route('contacto'), $boot['urls']['contact'] ?? null);
+        $this->assertSame(route('account.orders'), $boot['urls']['my_orders'] ?? null);
+
+        // Y son las mismas que pinta el Blade. ⚠️ El desenlace se siembra AQUÍ y no antes: cargar la
+        // página para leer el payload lo CONSUME —es el dueño único de 4.0a haciendo su trabajo—.
+        SidebarEntry::verifying($code);
+        $verifying = Livewire::test(Purchase::class)->html();
+
+        SidebarEntry::failed($code);
+        $declined = Livewire::test(Purchase::class)->html();
+
+        $this->assertStringContainsString('href="'.e(route('account.orders')).'"', $verifying);
+        $this->assertStringContainsString('href="'.e(route('contacto')).'"', $declined);
+    }
+
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Los cuatro escenarios de reintento denegado: se provoca el MISMO estado para los dos motores y se
+     * devuelve a dónde va cada uno.
+     *
+     * @return array{0: string|null, 1: array<string, mixed>} destino de Livewire, veredicto del cajón
+     */
+    private function retryBoth(string $scenario): array
+    {
+        // ⚠️ La pausa es estado GLOBAL y se pega entre escenarios: sin este reseteo, el segundo del
+        // bucle no podría ni comprar y el caso fallaría por el sitio equivocado.
+        Setting::where('key', 'reservations.paused')->delete();
+        Setting::flushMemo();
+
+        // ⚠️ **Los DOS pedidos se crean ANTES de romper nada**, y no es un detalle: con las reservas
+        // pausadas no se puede comprar, así que aplicar el escenario en medio dejaría al segundo motor
+        // sin pedido que reintentar y el caso fallaría por el sitio equivocado.
+        // Y son DOS pedidos de dos titulares porque el reintento CONSUME estado —ficha del limitador,
+        // hold extendido—: compartirlo mediría dos situaciones distintas.
+        [, $user, $code] = $this->purchase();
+        [, $user2, $code2] = $this->purchase();
+        $this->failLastPayment($code, '0101');
+        $this->failLastPayment($code2, '0101');
+
+        $this->applyRetryScenario($scenario, $user, $code);
+        $this->applyRetryScenario($scenario, $user2, $code2);
+
+        // ⚠️ **Y el titular se vuelve a fijar aquí, que no es ceremonia**: la segunda compra dejó a
+        // `$user2` autenticado, así que sin esto Livewire reintentaría un pedido AJENO y respondería
+        // `NOT_RETRYABLE` —la defensa anti-IDOR haciendo su trabajo— en vez del motivo que mide el caso.
+        // Medido: con el titular equivocado, tres de los cuatro escenarios pasaban por casualidad.
+        $this->actingAs($user);
+
+        SidebarEntry::failed($code);
+        $component = Livewire::test(Purchase::class)->call('retryPayment');
+
+        $client = $this->retryInNode($this->retryResponse($user2, $code2));
+
+        return [match ((int) $component->get('step')) {
+            1 => 'catalog',
+            5 => 'identify',
+            default => null,
+        }, $client];
+    }
+
+    private function applyRetryScenario(string $scenario, User $user, string $code): void
+    {
+        match ($scenario) {
+            'paused' => $this->pauseReservations(),
+            // El hold ya cruzó: la plaza pudo cederse, así que no hay nada que reabrir.
+            'not_retryable' => Order::where('code', $code)->update(['expires_at' => now()->subMinute()]),
+            'rate_limited' => $this->exhaustRetryLimiter($user),
+            'gateway' => $this->breakGateway(),
+            default => null,
+        };
+    }
+
+    private function pauseReservations(): void
+    {
+        Setting::updateOrCreate(['key' => 'reservations.paused'], ['value' => '1', 'group' => 'general']);
+        Setting::flushMemo();
+    }
+
+    private function exhaustRetryLimiter(User $user): void
+    {
+        for ($i = 0; $i < ReservationAdmissionPolicy::RESERVATIONS_PER_MINUTE; $i++) {
+            RateLimiter::hit('reservation-confirm:'.$user->id, 60);
+        }
+    }
+
+    /** Una pasarela que no abre. El pedido NO se toca: sigue vivo con su hold recién extendido. */
+    private function breakGateway(): void
+    {
+        $this->app->bind(PaymentInitiator::class, fn () => new class extends PaymentInitiator
+        {
+            public function __construct() {}
+
+            public function reopen($order, ?string $preferredLocale = null, string $source = self::SOURCE_RETRY_SIDEBAR): never
+            {
+                throw new PaymentInitiationException('la pasarela no responde');
+            }
+        });
+    }
+
+    /** La respuesta REAL de `POST /orders/{code}/payment`, en la forma que ve `api.js`. */
+    private function retryResponse(User $user, string $code): array
+    {
+        $response = $this->actingAs($user)
+            ->postJson("/api/v1/orders/{$code}/payment", [], ['Origin' => config('app.url')]);
+
+        return [
+            'ok' => $response->isSuccessful(),
+            'status' => $response->getStatusCode(),
+            'data' => $response->json(),
+            'error' => $response->json('error'),
+        ];
+    }
+
+    /** La respuesta REAL de `GET /orders/{code}/payment-status`. */
+    private function paymentStatus(User $user, string $code): array
+    {
+        return $this->actingAs($user)
+            ->getJson("/api/v1/orders/{$code}/payment-status", ['Origin' => config('app.url')])
+            ->assertOk()
+            ->json();
+    }
+
+    private function failLastPayment(string $code, string $responseCode): void
+    {
+        Payment::whereHas('payable', fn ($q) => $q->where('code', $code))
+            ->latest('id')
+            ->firstOrFail()
+            ->update(['status' => Payment::STATUS_FAILED, 'raw_response' => ['Ds_Response' => $responseCode]]);
+    }
+
+    /** @return array<string, mixed> */
+    private function bootPayload(): array
+    {
+        Setting::updateOrCreate(['key' => 'sidebar.engine'], ['value' => 'spa', 'group' => 'general']);
+        Setting::flushMemo();
+
+        $html = $this->get('/')->getContent();
+
+        if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $html, $matches) !== 1) {
+            $this->fail('no se ha encontrado el punto de montaje de la SPA en la página');
+        }
+
+        return json_decode(html_entity_decode($matches[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @param  list<string>  $keys
+     * @param  array<string, mixed>  $messages
+     * @return list<string>
+     */
+    private function reasonsInNode(array $keys, array $messages): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { declinedReasonText } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                const { keys, messages } = JSON.parse(raw);
+                process.stdout.write(JSON.stringify({ out: keys.map((k) => declinedReasonText(messages, k)) }));
+            });
+            JS, ['keys' => $keys, 'messages' => $messages])['out'];
+    }
+
+    /** @param array<string, mixed> $status */
+    private function pollVerdictInNode(array $status): string
+    {
+        return $this->runInNode(<<<'JS'
+            import { pollVerdict } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                process.stdout.write(JSON.stringify({ out: pollVerdict(JSON.parse(raw).status) }));
+            });
+            JS, ['status' => $status])['out'];
+    }
+
+    /**
+     * El reintento pasado por el módulo REAL, con la respuesta REAL de la API.
+     *
+     * @param  array<string, mixed>  $response
+     * @return array<string, mixed>
+     */
+    private function retryInNode(array $response): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { runRetry } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', async () => {
+                const { response, messages } = JSON.parse(raw);
+                const api = { post: async () => response };
+                process.stdout.write(JSON.stringify({ out: await runRetry({ orderCode: 'R-X', api, messages }) }));
+            });
+            JS, ['response' => $response, 'messages' => __('tickets')])['out'];
+    }
 
     /**
      * Una compra REAL por el flujo de la web, dejada en la pantalla de reserva creada.

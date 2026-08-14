@@ -1,14 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { answersByReservation, buildConfirmation, confirmationLine, loadConfirmation } from './outcome.js';
+import {
+    answersByReservation, buildConfirmation, confirmationLine, declinedReasonText,
+    loadConfirmation, loadPaymentStatus, pollVerdict, runRetry,
+} from './outcome.js';
 
 /**
- * La red del DESENLACE (Fase 4 · paso 4.6·1).
+ * La red del DESENLACE (Fase 4 · paso 4.6).
  *
- * Lo que aquí se prueba es **la traducción y el emparejado**, que es lo único que este módulo hace y
- * lo único que un diff de árbol no puede ver: el componente recibe filas ya compuestas, así que un
- * emparejado cruzado —las respuestas de una reserva bajo otra— pinta un árbol idéntico con los datos
- * de otro niño.
+ * Lo que aquí se prueba es **la traducción, el emparejado y las DECISIONES**, que es lo único que este
+ * módulo hace y lo único que un diff de árbol no puede ver: el componente recibe filas ya compuestas,
+ * así que un emparejado cruzado —las respuestas de una reserva bajo otra— pinta un árbol idéntico con
+ * los datos de otro niño; y qué hace el cajón con un `failed` mientras sondea, o con un reintento
+ * denegado, no deja rastro ninguno en el marcado.
  */
 
 const item = (over = {}) => ({
@@ -182,4 +186,164 @@ test('si fallan SOLO las respuestas del pack, el resumen se pinta igual', async 
 
     assert.equal(built.code, 'R-ABC123');
     assert.deepEqual(built.lines[0].event, []);
+});
+
+// ── Los otros dos desenlaces: denegado (paso 10) y verificando (paso 11) ──────────────────────
+
+const MESSAGES = {
+    payment_failed: {
+        reasons: {
+            card_expired: 'Tu tarjeta está caducada.',
+            bank_denied: 'Tu banco ha denegado el pago.',
+            default: 'El pago no se autorizó.',
+        },
+    },
+    errors: {
+        retry_expired: 'Tu reserva ha caducado.',
+        try_later: 'Inténtalo más tarde.',
+        payment_unavailable: 'No hemos podido iniciar el pago.',
+    },
+};
+
+test('el motivo del rechazo se lee del diccionario con el CÓDIGO como clave', () => {
+    // `declined_reason` es exactamente lo que devuelve `RedsysResponseCode::reasonKey()`, que es la
+    // clave bajo `tickets.payment_failed.reasons.*`. No hay tabla que mantener.
+    assert.equal(declinedReasonText(MESSAGES, 'card_expired'), 'Tu tarjeta está caducada.');
+    assert.equal(declinedReasonText(MESSAGES, 'bank_denied'), 'Tu banco ha denegado el pago.');
+});
+
+test('un motivo desconocido, nulo o vacío cae en el genérico y NUNCA pinta vacío', () => {
+    // ⚠️ `i18n.js` devuelve cadena vacía cuando la clave no existe, así que sin esta caída un motivo
+    // nuevo del servidor pintaría el rótulo «Motivo:» con nada detrás.
+    assert.equal(declinedReasonText(MESSAGES, 'un_motivo_que_no_existe'), 'El pago no se autorizó.');
+    assert.equal(declinedReasonText(MESSAGES, null), 'El pago no se autorizó.');
+    assert.equal(declinedReasonText(MESSAGES, ''), 'El pago no se autorizó.');
+});
+
+test('el sondeo solo se mueve con `paid` y `expired`', () => {
+    assert.equal(pollVerdict({ order_status: 'paid', payment_status: 'paid' }), 'confirmed');
+    assert.equal(pollVerdict({ order_status: 'expired', payment_status: 'failed' }), 'expired');
+});
+
+test('lo demás sigue sondeando, incluido un intento FALLIDO', () => {
+    // ⚠️ Es la acotación de `checkPaymentStatus()` y no una simplificación: un `failed` con la
+    // notificación de la pasarela todavía en vuelo es justo el caso que esta pantalla existe para no
+    // malinterpretar. Saltar al paso 10 aquí sería decirle al cliente que no ha pagado.
+    assert.equal(pollVerdict({ order_status: 'pending', payment_status: 'failed' }), 'wait');
+    assert.equal(pollVerdict({ order_status: 'pending', payment_status: 'pending' }), 'wait');
+    assert.equal(pollVerdict({ order_status: 'cancelled', payment_status: 'none' }), 'wait');
+});
+
+test('no poder preguntar tampoco mueve el cajón', () => {
+    // Espejo del `if (! $order) return;` de Livewire: un 401 pasajero, un 429 o un corte de red no son
+    // un desenlace, y tratarlos como tal sacaría al cliente de la pantalla que dice la verdad.
+    assert.equal(pollVerdict(null), 'wait');
+    assert.equal(pollVerdict(undefined), 'wait');
+    assert.equal(pollVerdict({}), 'wait');
+});
+
+test('loadPaymentStatus pregunta por el pedido y devuelve null si no puede', async () => {
+    const asked = [];
+    const ok = { get: async (p) => { asked.push(p); return { ok: true, data: { order_status: 'paid' } }; } };
+
+    assert.deepEqual(await loadPaymentStatus({ orderCode: 'R-A B', api: ok }), { order_status: 'paid' });
+    assert.deepEqual(asked, ['/orders/R-A%20B/payment-status']);
+
+    const ko = { get: async () => ({ ok: false, status: 429 }) };
+    assert.equal(await loadPaymentStatus({ orderCode: 'R-1', api: ko }), null);
+
+    let calls = 0;
+    assert.equal(await loadPaymentStatus({ orderCode: '', api: { get: async () => { calls++; } } }), null);
+    assert.equal(calls, 0, 'sin código no se pregunta nada');
+});
+
+test('el reintento sale a la pasarela con el formulario del servidor', async () => {
+    const api = {
+        post: async (path, body) => {
+            assert.equal(path, '/orders/R-ABC123/payment');
+            assert.deepEqual(body, {}, 'el contrato dice que no hay cuerpo que enviar');
+
+            return {
+                ok: true,
+                data: { payment: { url: 'https://sis.redsys.es', method: 'POST', fields: { Ds_Signature: 'x' } } },
+            };
+        },
+    };
+
+    const result = await runRetry({ orderCode: 'R-ABC123', api, messages: MESSAGES });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.form.url, 'https://sis.redsys.es');
+    // ⚠️ Los campos se emiten TAL CUAL: la firma cubre esos valores exactos.
+    assert.deepEqual(result.form.fields, [{ name: 'Ds_Signature', value: 'x' }]);
+    assert.equal(result.goTo, null);
+});
+
+test('solo `order_not_retryable` obliga a rehacer la reserva', async () => {
+    // La pausa y el límite de frecuencia dejan al cliente donde está: su reserva SIGUE VIVA. Decirle
+    // que ha caducado a quien pulsó dos veces seguidas es el error que el paso 2 encontró en la web.
+    const cases = [
+        ['order_not_retryable', 409, 'catalog', MESSAGES.errors.retry_expired],
+        ['too_many_requests', 429, null, MESSAGES.errors.try_later],
+        ['payment_unavailable', 502, null, MESSAGES.errors.payment_unavailable],
+    ];
+
+    for (const [code, status, goTo, error] of cases) {
+        const api = { post: async () => ({ ok: false, status, error: { code } }) };
+        const result = await runRetry({ orderCode: 'R-1', api, messages: MESSAGES });
+
+        assert.equal(result.goTo, goTo, `${code} debería ir a ${goTo}`);
+        assert.equal(result.error, error, `${code} debería avisar con su texto`);
+        assert.equal(result.ok, false);
+        assert.equal(result.rereadStatus, false);
+    }
+});
+
+test('la pausa no compone mensaje: pide releer el estado', async () => {
+    const api = { post: async () => ({ ok: false, status: 409, error: { code: 'reservations_paused' } }) };
+    const result = await runRetry({ orderCode: 'R-1', api, messages: MESSAGES });
+
+    assert.equal(result.error, '', 'el cartel de mantenimiento habla por él');
+    assert.equal(result.rereadStatus, true);
+    assert.equal(result.goTo, null, 'la reserva sigue viva: no se rehace nada');
+});
+
+test('un 401 lleva a identificarse, que es lo que hace Livewire con `$user` nulo', async () => {
+    const api = { post: async () => ({ ok: false, status: 401, error: { code: 'unauthenticated' } }) };
+    const result = await runRetry({ orderCode: 'R-1', api, messages: MESSAGES });
+
+    assert.equal(result.goTo, 'identify');
+    assert.equal(result.error, '', 'no se culpa al cliente de una sesión caducada');
+});
+
+test('sin código de pedido no se llama a la API y se vuelve al catálogo', async () => {
+    let calls = 0;
+    const api = { post: async () => { calls++; return { ok: true, data: {} }; } };
+
+    assert.equal((await runRetry({ orderCode: '', api, messages: MESSAGES })).goTo, 'catalog');
+    assert.equal(calls, 0);
+});
+
+test('un 200 con formulario a medias avisa sin fingir que no ha pasado nada', async () => {
+    // El pedido sigue vivo con su hold recién extendido, así que se avisa y se queda donde está.
+    const api = { post: async () => ({ ok: true, data: { payment: { url: '', method: 'POST', fields: {} } } }) };
+    const result = await runRetry({ orderCode: 'R-1', api, messages: MESSAGES });
+
+    assert.equal(result.ok, false);
+    assert.equal(result.form, null);
+    assert.equal(result.error, MESSAGES.errors.payment_unavailable);
+    assert.equal(result.goTo, null, 'la reserva no se pierde por un formulario mal formado');
+});
+
+test('un código desconocido o un corte de red no dejan el reintento mudo', async () => {
+    for (const response of [
+        { ok: false, status: 409, error: { code: 'algo_nuevo' } },
+        { ok: false, status: 500, error: null },
+        { ok: false, status: 0, error: null },
+    ]) {
+        const result = await runRetry({ orderCode: 'R-1', api: { post: async () => response }, messages: MESSAGES });
+
+        assert.equal(result.error, MESSAGES.errors.try_later);
+        assert.equal(result.goTo, null, 'ante la duda, la reserva NO se da por perdida');
+    }
 });

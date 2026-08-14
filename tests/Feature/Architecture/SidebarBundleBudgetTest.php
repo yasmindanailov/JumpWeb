@@ -70,16 +70,18 @@ class SidebarBundleBudgetTest extends TestCase
      * queda de la fase. Un techo más holgado dejaría de vigilar.
      *
      *   · 4.6·1 (paso 6: la reserva creada) ............... 144,17 kB = **140,79 KiB**
+     *   · 4.6·2 (pasos 10 y 11: denegado y verificando) ... 149,34 kB = **145,85 KiB**
      *
-     * ⚠️ **El techo NO sube en 4.6·1, y el margen es el dato que importa para lo que queda.** El paso
-     * costó **4,70 KiB** medidos —menos de lo que ocupa su marcado, porque la fila del resumen se
-     * EXTRAJO a `SummaryLine.vue` y la pantalla de pagar dejó de tener la suya—, así que quedan
-     * **9,21 KiB** de los 150 para los pasos 10 y 11 (4.6·2) y el widget de Turnstile (4.4b·2).
-     * Las dos pantallas que faltan no llevan lista ni importes: son título, notas y botones.
+     * ⚠️ **El techo NO sube en 4.6, y el margen es hoy el dato que importa.** El primer tramo costó
+     * **4,70 KiB** —menos de lo que ocupa su marcado, porque la fila del resumen se EXTRAJO a
+     * `SummaryLine.vue` y la pantalla de pagar dejó de tener la suya— y el segundo **5,06 KiB**, con lo
+     * que quedan **4,15 KiB** de los 150.
      *
-     * Si el paso que meta el resto del desenlace se pasa, la decisión vuelve a ser SUBIR el techo con
-     * su motivo escrito — no dejar que lo empuje el arrastre, que es lo que este test existe para
-     * impedir.
+     * Con eso **la fase está transcrita entera** y lo único que falta es el widget de Turnstile
+     * (4.4b·2), que es un `<div>` contenedor y una llamada a un script EXTERNO —no viaja en el bundle—,
+     * así que el margen basta. Si aun así se pasa, la decisión vuelve a ser SUBIR el techo con su
+     * motivo escrito, no dejar que lo empuje el arrastre. Y en 4.7, al retirar el motor Livewire, este
+     * número debería BAJAR: se van con él los dos pasos que hoy conviven.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 150;
 
@@ -238,6 +240,22 @@ class SidebarBundleBudgetTest extends TestCase
         // saldría sin lo que el cliente contestó, con el resto de la pantalla intacto.
         'purchase__confirm' => 'pintar la reserva creada al volver de la pasarela',
         '/event-data' => 'traer las respuestas del pack que el pedido no lleva',
+        // ⚠️ 4.6·2: los otros dos desenlaces. Las dos primeras son las clases de sus pantallas; las dos
+        // últimas son DISCRIMINANTES y por eso están elegidas así:
+        //  · `/payment-status` solo lo escribe `loadPaymentStatus()`, así que si el sondeo del paso 11
+        //    dejara de llamarse, Rollup podaría el import y la cadena desaparecería del bundle;
+        //  · `order_not_retryable` solo vive en `RETRY_ERROR_KEYS`, que solo alcanza `runRetry()`. Un
+        //    `/payment` a secas NO valdría: es subcadena de `/payment-status` y estaría igual.
+        'purchase__failed' => 'pintar el pago denegado con su motivo',
+        'purchase__verifying' => 'pintar la espera del desenlace',
+        '/payment-status' => 'preguntar en qué ha quedado el pago',
+        'order_not_retryable' => 'saber cuándo ya no hay nada que reintentar y hay que rehacer la reserva',
+        // ⚠️ **`/payment-status` NO basta para el SONDEO, y está medido**: el paso 10 pide ese mismo
+        // endpoint para su motivo de rechazo, así que la cadena sigue en el bundle aunque el bucle del
+        // paso 11 no se arranque nunca — y el cliente se quedaría mirando «verificando» para siempre.
+        // `setInterval` sí discrimina: se midió que aparece **una sola vez** en el chunk y que
+        // desaparece al desconectar `startPolling()`. Ni Vue ni Pinia lo usan hoy.
+        'setInterval' => 'sondear EN BUCLE mientras espera la notificación de la pasarela',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

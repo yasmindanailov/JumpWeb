@@ -95,7 +95,16 @@ const TRANSITIONS = {
     [STEPS.PAY]: [STEPS.CART, STEPS.REDIRECTING],
     [STEPS.REDIRECTING]: [],
     [STEPS.CONFIRMED]: [STEPS.CATALOG],
-    [STEPS.DECLINED]: [STEPS.CATALOG, STEPS.PAY],
+    /**
+     * ⚠️ **Las tres salidas del pago denegado, MEDIDAS contra `Purchase::retryPayment()`** en 4.6·2.
+     * Hasta entonces esta lista decía `[CATALOG, PAY]` y las dos mitades estaban mal:
+     *  · el reintento **no vuelve a la pantalla de pago**, va DIRECTO a la pasarela (`$this->step = 9`)
+     *    — reabre el cobro sobre el pedido que ya existe, así que no hay nada que volver a confirmar;
+     *  · y sí hay una salida a IDENTIFICARSE: `$this->step = $user ? 1 : 5`, para la sesión que se
+     *    perdió entre la vuelta de la pasarela y el clic. Un cliente de API se entera por el 401.
+     * Era una suposición de 4.1, cuando el paso no estaba transcrito y nadie podía medirlo.
+     */
+    [STEPS.DECLINED]: [STEPS.CATALOG, STEPS.REDIRECTING, STEPS.IDENTIFY],
     [STEPS.VERIFYING]: [STEPS.CATALOG, STEPS.CONFIRMED, STEPS.DECLINED],
 };
 

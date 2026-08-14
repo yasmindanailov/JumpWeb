@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './store.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
@@ -11,7 +11,7 @@ import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runLogin } from './login.js';
 import { runConfirm } from './pay.js';
-import { loadConfirmation } from './outcome.js';
+import { declinedReasonText, loadConfirmation, loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
 import { runRegister, signupRequiresCaptcha } from './register.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
@@ -27,6 +27,8 @@ import VerifyStep from './steps/VerifyStep.vue';
 import PayStep from './steps/PayStep.vue';
 import RedirectStep from './steps/RedirectStep.vue';
 import ConfirmedStep from './steps/ConfirmedStep.vue';
+import DeclinedStep from './steps/DeclinedStep.vue';
+import VerifyingStep from './steps/VerifyingStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -76,6 +78,15 @@ const props = defineProps({
      * dueño que el `outcome`, y por el mismo motivo— y viaja ya CONSUMIDO.
      */
     orderCode: { type: String, default: '' },
+
+    /**
+     * Las rutas que el cajón pinta y no puede componer: `contact` y `my_orders`.
+     *
+     * ⚠️ Vienen del servidor con `route()` a propósito. Quemarlas aquí sería una segunda fuente de una
+     * URL que decide `routes/web.php`, y el fallo sería INVISIBLE: `href` no es atributo de contrato del
+     * diff de árbol, así que un enlace a un 404 pasaría el gate en verde.
+     */
+    urls: { type: Object, default: () => ({}) },
 });
 
 const store = usePurchaseStore();
@@ -179,6 +190,21 @@ watch(
     },
     { immediate: true },
 );
+
+/**
+ * ⚠️ **El sondeo se para al SALIR del paso 11, y va en su propio observador a propósito.**
+ *
+ * El de arriba se rinde en cuanto no hay store de Alpine —es lo correcto para lo que hace: publicar
+ * señales hacia fuera—, así que colgar de él la parada dejaría el temporizador vivo en cualquier página
+ * sin Alpine. Un intervalo suelto no rompe nada visible: sigue preguntando a la API cada cinco
+ * segundos, gastando fichas del limitador, y **ningún diff de árbol puede verlo**.
+ */
+watch(() => store.step, (step) => {
+    if (step !== STEPS.VERIFYING) stopPolling();
+});
+
+/** Y al desmontar el motor. Es la otra forma de dejarlo suelto, y la que no avisa. */
+onUnmounted(stopPolling);
 
 /**
  * El catálogo se pide al MONTAR, y montar ocurre al abrir el cajón (§4.7).
@@ -706,7 +732,7 @@ function runAction(action) {
  */
 const TRANSCRIBED_STEPS = [
     STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL,
-    STEPS.PAY, STEPS.REDIRECTING, STEPS.CONFIRMED,
+    STEPS.PAY, STEPS.REDIRECTING, STEPS.CONFIRMED, STEPS.DECLINED, STEPS.VERIFYING,
 ];
 
 /** Lleva el cajón al paso que diga el veredicto, si esa pantalla ya existe. */
@@ -999,7 +1025,7 @@ async function confirmReservation() {
     }
 }
 
-// ── El DESENLACE de la pasarela: el paso 6 ────────────────────────────────────────────────────
+// ── El DESENLACE de la pasarela: los pasos 6, 10 y 11 ─────────────────────────────────────────
 
 /**
  * El resumen del pedido que pinta el paso 6, o `null`.
@@ -1021,6 +1047,15 @@ const confirmation = ref(null);
 const registration = ref(null);
 
 /**
+ * El motivo del rechazo YA traducido que pinta el paso 10, o cadena vacía.
+ *
+ * ⚠️ Vacío significa «no se pudo preguntar», no «no hay motivo»: el servidor cae a `default` cuando no
+ * conoce el código, así que con respuesta el bloque se pinta siempre. Es el espejo exacto del `null` de
+ * Livewire, que solo aparece sin sesión o sin código de pedido.
+ */
+const declinedReason = ref('');
+
+/**
  * Trae lo que el paso 6 enseña.
  *
  * ⚠️ **Solo si el cajón está de verdad en un desenlace.** El código del pedido llega en el montaje de
@@ -1028,11 +1063,155 @@ const registration = ref(null);
  * sería dinero de peticiones a cambio de nada.
  */
 async function loadOutcome() {
-    if (store.step !== STEPS.CONFIRMED || orderCode.value === '') {
+    if (orderCode.value === '') {
         return;
     }
 
-    confirmation.value = await tracked(loadConfirmation({ orderCode: orderCode.value, api }));
+    if (store.step === STEPS.CONFIRMED) {
+        confirmation.value = await tracked(loadConfirmation({ orderCode: orderCode.value, api }));
+
+        return;
+    }
+
+    // El paso 10 necesita el motivo del rechazo, y sale del MISMO endpoint que sondea el paso 11: es
+    // pequeño a propósito porque se pregunta en bucle. Livewire lo resuelve en `mount()` leyendo el
+    // último `Payment` fallido; aquí lo pregunta quien lo pinta.
+    if (store.step === STEPS.DECLINED) {
+        const status = await tracked(loadPaymentStatus({ orderCode: orderCode.value, api }));
+
+        // Sin respuesta no se pinta el bloque, que es el espejo del `null` de Livewire cuando no hay
+        // sesión o el pedido no es de quien pregunta. Con respuesta SIEMPRE se pinta: el servidor cae a
+        // `default` cuando no conoce el motivo, y el Blade también.
+        declinedReason.value = status === null ? '' : declinedReasonText(props.messages, status.declined_reason);
+
+        return;
+    }
+
+    if (store.step === STEPS.VERIFYING) startPolling();
+}
+
+// ── El paso 11: el sondeo ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Cada cuánto se pregunta por el desenlace, en milisegundos.
+ *
+ * Son los mismos 5 s del `wire:poll.5s` de Livewire, y la cifra es paridad, no gusto. ⚠️ Lo que sí es
+ * distinto es a QUIÉN le cuesta: el sondeo de Livewire va por su propio canal y éste gasta 12 fichas
+ * por minuto del limitador genérico de la API (60/min, compartido con todo lo demás). Acelerarlo
+ * estrecharía ese margen para el resto del cajón.
+ */
+const POLL_MS = 5000;
+
+/** El temporizador del sondeo. `null` = no se está sondeando. */
+let pollTimer = null;
+
+/**
+ * Arranca el sondeo del paso 11.
+ *
+ * ⚠️ **Un intervalo que no se para es un fallo que ningún diff de árbol puede ver**, y aquí hay dos
+ * formas de dejarlo suelto: salir del paso 11 (el desenlace llegó) y desmontar el motor. Por eso hay
+ * una sola función de parada, se llama desde las dos y `startPolling()` es idempotente — llamarla dos
+ * veces dejaría dos temporizadores preguntando a la vez.
+ */
+function startPolling() {
+    if (pollTimer !== null) return;
+
+    pollTimer = setInterval(() => { void poll(); }, POLL_MS);
+}
+
+function stopPolling() {
+    if (pollTimer === null) return;
+
+    clearInterval(pollTimer);
+    pollTimer = null;
+}
+
+/**
+ * Una vuelta del sondeo. Espejo de `Purchase::checkPaymentStatus()`.
+ *
+ * ⚠️ **No pasa por `tracked()` y es deliberado**: encender el velo de carga cada cinco segundos haría
+ * parpadear una pantalla cuyo mensaje es «espera». El velo es para lo que el cliente acaba de pedir.
+ */
+async function poll() {
+    if (store.step !== STEPS.VERIFYING || orderCode.value === '') {
+        stopPolling();
+
+        return;
+    }
+
+    const verdict = pollVerdict(await loadPaymentStatus({ orderCode: orderCode.value, api }));
+
+    if (verdict === 'wait') return;
+
+    stopPolling();
+
+    if (verdict === 'confirmed') {
+        store.go(STEPS.CONFIRMED);
+        // El paso 6 pide el pedido ENTERO, que este endpoint no trae: es pequeño justamente porque se
+        // pregunta en bucle.
+        await loadOutcome();
+
+        return;
+    }
+
+    // Caducó antes de llegar la notificación. La plaza volvió al inventario, así que no hay nada que
+    // reintentar: el cliente vuelve al catálogo con el mismo aviso que da la web.
+    orderCode.value = '';
+    cartError.value = t('errors.retry_expired');
+    store.go(STEPS.CATALOG);
+}
+
+// ── El paso 10: el reintento ──────────────────────────────────────────────────────────────────
+
+/** `true` mientras se reabre el cobro: alterna el rótulo del CTA y bloquea el doble clic. */
+const retrying = ref(false);
+
+/**
+ * «Reintentar el pago». Espejo de `Purchase::retryPayment()`.
+ *
+ * ⚠️ **El pedido NO se toca si algo falla**, al revés que al crearlo: sigue vivo con su retención recién
+ * extendida, así que el cliente puede volver a intentarlo desde esta misma pantalla. La regla es del
+ * dominio (`ReservationCheckout::retry()`); aquí solo se traduce el «no».
+ */
+async function retryPayment() {
+    if (retrying.value) return;
+
+    retrying.value = true;
+
+    try {
+        const result = await tracked(runRetry({ orderCode: orderCode.value, api, messages: props.messages }));
+
+        if (result.rereadStatus) await tracked(refreshBookingStatus());
+
+        if (result.ok) {
+            declinedReason.value = '';
+            cartError.value = '';
+            gateway.value = result.form;
+            store.go(STEPS.REDIRECTING);
+
+            return;
+        }
+
+        // ⚠️ **Este aviso hoy NO SE VE en el paso 10, y es fiel: Livewire tampoco lo pinta.** Su bloque
+        // no lleva `@error('cart')` y el pie es nulo en los pasos de resultado, así que un reintento
+        // denegado por pausa, por frecuencia o por la pasarela deja el botón mudo en los dos motores.
+        // Medido, no supuesto. Está anotado como deuda de PRODUCTO en `DEUDA.md`: arreglarlo cambia la
+        // web, no la transcripción.
+        cartError.value = result.error;
+
+        if (result.goTo === 'catalog') {
+            orderCode.value = '';
+            declinedReason.value = '';
+            gateway.value = null;
+            store.go(STEPS.CATALOG);
+        }
+
+        // La sesión se perdió por el camino: `retryPayment()` hace `$this->step = $user ? 1 : 5`, y esa
+        // salida está declarada en el mapa de transiciones desde 4.6·2.
+        if (result.goTo === 'identify') store.go(STEPS.IDENTIFY);
+    } finally {
+        retrying.value = false;
+    }
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
@@ -1179,6 +1358,7 @@ function addAnother() {
     orderCode.value = '';
     gateway.value = null;
     confirmation.value = null;
+    declinedReason.value = '';
     store.enter(STEPS.CATALOG);
 }
 
@@ -1314,5 +1494,21 @@ function goBack() {
             :messages="messages"
             :locale="locale"
             @add-another="addAnother" />
+
+        <DeclinedStep
+            v-else-if="store.step === STEPS.DECLINED"
+            :order-code="orderCode"
+            :reason="declinedReason"
+            :retrying="retrying"
+            :contact-url="urls.contact ?? ''"
+            :messages="messages"
+            @retry="retryPayment"
+            @add-another="addAnother" />
+
+        <VerifyingStep
+            v-else-if="store.step === STEPS.VERIFYING"
+            :order-code="orderCode"
+            :orders-url="urls.my_orders ?? ''"
+            :messages="messages" />
     </Shell>
 </template>
