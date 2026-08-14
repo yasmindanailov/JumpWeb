@@ -329,6 +329,43 @@ class CatalogAddonsTest extends ApiTestCase
         $this->assertSame($quote->json('lines.0.deposit_cents'), $mine->json('line.deposit_cents'));
         $this->assertSame($quote->json('lines.0.gate_remainder_cents'), $mine->json('line.gate_remainder_cents'));
         $this->assertSame($quote->json('lines.0.addons'), $mine->json('line.addons'));
+        // El total de la línea es el del presupuesto de esa misma cesta, no una suma aparte.
+        $this->assertSame($quote->json('total_cents'), $mine->json('line.total_cents'));
+    }
+
+    /**
+     * **`total_cents` no se puede componer en el cliente, y este caso dice por qué** (Fase 4 · paso
+     * 4.3·2). El pie del paso 3 necesita «lo que vale esta línea», y la tentación es sumar
+     * `subtotal_cents` con `addons_total_cents`. Salen de recorridos DISTINTOS —el segundo del
+     * `viewModel()` del resolutor, el primero del tarificador—, así que la suma no es siempre lo que
+     * el checkout cobrará. Aquí se fija que el campo publicado sí lo es, con complementos incluidos y
+     * unidades gratis de por medio, que es donde una suma ingenua se separa.
+     */
+    public function test_the_line_total_includes_the_addons_and_is_not_a_naive_sum(): void
+    {
+        $pack = $this->pack(5000);
+        // Incluido con una unidad gratis y extras permitidos: dos unidades, una se cobra.
+        $cake = $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
+
+        $response = $this->ask($pack, [
+            'quantity' => 8, 'date' => $this->date, 'time' => '10:00:00',
+            'addons' => [['product_id' => $cake->id, 'quantity' => 2]],
+        ])->assertOk()->assertValidResponse(200);
+
+        $subtotal = (int) $response->json('line.subtotal_cents');
+        $charged = (int) $response->json('line.addons.0.subtotal_cents');
+
+        $this->assertSame(1, (int) $response->json('line.addons.0.free_quantity'), 'la unidad incluida tiene que ser gratis');
+        $this->assertSame(1000, $charged, 'solo la segunda tarta se cobra');
+        $this->assertSame($subtotal + $charged, (int) $response->json('line.total_cents'));
+
+        // Y coincide con presupuestar esa misma línea, que es la fuente que el checkout usará.
+        $quote = $this->postJson(self::ROOT.'/orders/quote', ['items' => [[
+            'product_id' => $pack->id, 'date' => $this->date, 'time' => '10:00:00', 'quantity' => 8,
+            'addons' => $response->json('selection'),
+        ]]])->assertOk();
+
+        $this->assertSame($quote->json('total_cents'), $response->json('line.total_cents'));
     }
 
     /**

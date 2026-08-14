@@ -2830,6 +2830,7 @@ components:
           required:
             - subtotal_cents
             - unit_price_cents
+            - total_cents
             - has_deposit
             - deposit_cents
             - gate_remainder_cents
@@ -2845,6 +2846,13 @@ components:
               description: |
                 `null` = el producto no tiene precio para la tarifa de ese día. Se puede presupuestar,
                 pero **no se puede comprar**.
+            total_cents:
+              type: integer
+              description: |
+                Lo que vale la línea ENTERA: principal más complementos cobrados. **Es el importe que
+                se pinta**, y viaja para que nadie lo componga sumando `subtotal_cents` con
+                `addons_total_cents`: los dos salen de recorridos distintos y pueden divergir, mientras
+                que este sale del mismo presupuesto que alimenta la creación del pedido (`PAY-12`).
             has_deposit:
               type: boolean
             deposit_cents:

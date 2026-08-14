@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y 4.3·1 hechos → toca el pie (4.3·2) y la cesta (4.3·3)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, 4.3·1 y 4.3·2 hechos → toca 4.3·3 (persistir la cesta y el aviso de pausa)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -627,7 +627,42 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `.purchase__maint` en los pasos 1-5 y 8. Con la pausa activa el cajón SPA seguiría vendiendo
         mientras Livewire enseña el aviso. **No es fuga de dinero** (`ReservationAdmissionPolicy`
         rechaza en servidor), pero **ningún test puede cazarlo**: ningún caso de `tests/Feature/Sidebar`
-        siembra la pausa. Lo cierra 4.3·2 junto al pie, que comparte su guarda.
+        siembra la pausa. Se reasignó a 4.3·3: el pie de 4.3·2 comparte su guarda y, al transcribirlo,
+        la divergencia pasó de «falta una pantalla» a «el cajón SPA ofrece pagar durante la pausa».
+- [x] **Paso 4.3·2 — el pie y la cesta en memoria** (2026-08-14, `DECISIONES #48`). Entra
+      `.bk-foot` con sus TRES árboles, el paso 4 y el flujo que los une. La cesta vive **en memoria**;
+      la persistencia en `localStorage` es 4.3·3, y `cart.js` nace ya sin tocar el almacén.
+      · **El pie no se podía partir de la cesta**, y ese fue el corte real: el CTA del paso 3 es
+        «Añadir al carrito» y `disabled` **es un atributo que el diff compara**, así que dejarlo
+        inactivo ponía el gate en rojo y dejarlo activo sin cesta era un botón mudo.
+      · **El séptimo hueco de API era otro, y este sí existía**: el endpoint de complementos construía
+        un `CartQuote` completo y **tiraba sus totales**, dejando al cliente sin más salida que sumar
+        `subtotal_cents` + `addons_total_cents` — dos recorridos DISTINTOS del servidor. Se publica
+        `line.total_cents` desde el mismo presupuesto (`PAY-12`: una sola fuente de CÁLCULO).
+      · ⚠️ **Dos rótulos que el diff daba por buenos**: el desglose es «Pagas ahora (señal)» en el paso
+        3 y «Pagas ahora» —NEUTRO— en la cesta, porque en una cesta mixta no todo lo que se cobra ahora
+        es señal (#225). El normalizador descarta el texto: lo fija `SidebarCartParityTest`.
+      · **La cesta ya viaja en la consulta de horas** (`AFORO-02`). Iba `items: []` desde 4.2 con un
+        comentario que decía que la clave estaba puesta «para que no se olvide»: este era el momento.
+      · ⚠️ **Un caso del gate pasaba con el fallo dentro, y lo dijo la mutación**: `.cart__lines` se
+        emite SIEMPRE —el condicional del Blade está DENTRO del `<div>`— y el caso de la cesta llena no
+        lo detectaba porque todas sus líneas tienen fecha. El estado es alcanzable y se midió:
+        `Cart::sanitize()` conserva `date: ''` y el presupuesto **la tarifica igual**. Tiene caso propio.
+      · **La baseline del armazón ENCOGIÓ sola**: `SHELL_BLOCKS_NOT_YET_IN_SPA` pasa de dos entradas a
+        una porque el test cayó al transcribir el pie. Es el patrón de baseline que solo mengua,
+        aplicado al marcado.
+      · **Red**: 6 casos nuevos de diff de árbol (cesta llena, cesta vacía, línea sin fecha, pie en sus
+        cuatro estados, ausencia de pie), `SidebarCartParityTest` (5 casos: pie del paso 3, pie de la
+        cesta mixta, ausencia, filas con HUECO de índice y emparejado de respuestas del pack) y 24
+        casos de `node --test`. **Verificado por mutación seis veces**: popover con `v-if`, icono sin
+        envoltorio, `.cart__lines` condicional, formateador sin millares, rótulo del desglose
+        intercambiado y emparejado por posición — los seis en rojo.
+      · Suite **2633 verde**; chunk del cajón 105,7 kB de 120.
+      · ⚠️ **Lo que NO cierra**: (1) «Ir a pagar» no lleva a ninguna parte (el paso 5 es 4.4a); (2) la
+        cesta no sobrevive a una recarga (4.3·3); y (3) **el aviso de reservas EN PAUSA sigue sin
+        existir, y ahora pesa más**: el pie comparte su guarda, así que con la pausa activa el cajón
+        SPA enseña una barra de «Ir a pagar» donde Livewire enseña el aviso de mantenimiento. Es la
+        divergencia más visible que la fase tiene abierta. La cierra 4.3·3.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

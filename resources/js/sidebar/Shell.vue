@@ -1,5 +1,6 @@
 <script setup>
 import BookingProgress from './steps/BookingProgress.vue';
+import Foot from './steps/Foot.vue';
 
 /**
  * El ARMAZÓN del cajón (Fase 4 · paso 4.3·1).
@@ -31,6 +32,15 @@ defineProps({
     /** La banda de progreso ya compuesta (`progress.js`), o `null` en los pasos que no la llevan. */
     progress: { type: Object, default: null },
 
+    /**
+     * El pie ya compuesto (`foot.js`), o `null`.
+     *
+     * ⚠️ `null` es un estado real y no un descuido: en el catálogo con la cesta vacía y en la cesta
+     * vacía el servidor **no emite pie**. Un motor que pintara la barra igual enseñaría «0,00 €»
+     * donde la web no enseña nada.
+     */
+    footer: { type: Object, default: null },
+
     /** El grupo `tickets` del idioma activo. */
     messages: { type: Object, default: () => ({}) },
 
@@ -42,7 +52,7 @@ defineProps({
     ui: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['back']);
+defineEmits(['back', 'action']);
 </script>
 
 <template>
@@ -65,12 +75,13 @@ defineEmits(['back']);
         <BookingProgress :progress="progress" :messages="messages" @back="$emit('back')" />
 
         <!--
-          TODO el contenido de los pasos vive aquí dentro. El pie dinámico queda FUERA (llega en el
-          paso 4.3·2), que es lo que lo deja anclado al fondo del panel en vez de scrollear con el
-          contenido.
+          TODO el contenido de los pasos vive aquí dentro. El pie queda FUERA, que es lo que lo deja
+          anclado al fondo del panel en vez de scrollear con el contenido.
         -->
         <div class="purchase__scroll">
             <slot />
         </div>
+
+        <Foot v-if="footer" :footer="footer" :messages="messages" @action="$emit('action', $event)" />
     </div>
 </template>

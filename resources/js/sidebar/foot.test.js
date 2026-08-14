@@ -1,0 +1,139 @@
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { AMOUNT_PLACEHOLDER, buildFooter } from './foot.js';
+
+/**
+ * Fase 4 · paso 4.3·2 — la red del pie (criterio CE-6).
+ *
+ * Aquí se fija la CONDUCTA; que coincida con `Purchase::footer()` lo comprueba
+ * `SidebarCartParityTest` contra el componente real. Lo que este fichero cubre y esa paridad no
+ * alcanza son los estados **sin barra**, que son los que un motor se salta con más facilidad: donde
+ * el servidor no emite pie, el cliente tampoco.
+ */
+
+const MESSAGES = {
+    total: 'Total',
+    continue: 'Continuar',
+    add_to_cart: 'Añadir al carrito',
+    go_to_cart: 'Ir al carrito',
+    go_to_pay: 'Ir a pagar',
+    cart_items: ':count artículo|:count artículos',
+    iva_note: 'Precios con IVA incluido',
+    footer_pay_now: 'Pagas ahora',
+    footer_pay_now_deposit: 'Pagas ahora (señal)',
+};
+
+const state = (overrides) => ({ messages: MESSAGES, locale: 'es', ...overrides });
+
+describe('los pasos SIN barra', () => {
+    /**
+     * ⚠️ `null` es un estado real y no un descuido. Con la cesta vacía el servidor no emite pie en el
+     * catálogo ni en el carrito; un cliente que devolviera una barra enseñaría «0,00 €» y un «Ir a
+     * pagar» donde la web no enseña nada.
+     */
+    test('el catálogo y el carrito sin cesta no llevan barra', () => {
+        assert.equal(buildFooter(state({ step: 1, cartCount: 0 })), null);
+        assert.equal(buildFooter(state({ step: 4, cartCount: 0 })), null);
+    });
+
+    test('los pasos que no son del embudo tampoco', () => {
+        for (const step of [5, 6, 9, 10, 11]) {
+            assert.equal(buildFooter(state({ step })), null, `el paso ${step} no lleva pie`);
+        }
+    });
+});
+
+describe('la barra-carrito del catálogo', () => {
+    test('lleva recuento, importe y NINGUNA de las claves de la barra normal', () => {
+        const footer = buildFooter(state({ step: 1, cartCount: 2, cartTotalCents: 123450 }));
+
+        assert.equal(footer.type, 'cart');
+        assert.equal(footer.action, 'goToCart');
+        assert.equal(footer.count, 2);
+        assert.equal(footer.amount, '1.234,50 €');
+        // La rama `cart` emite UN solo hijo: sin nota de IVA, sin desglose y sin CTA deshabilitable.
+        assert.deepEqual(Object.keys(footer), ['type', 'action', 'cta', 'count', 'label', 'amount']);
+    });
+
+    /** ⚠️ Pluralización de Laravel, no `n === 1`: en francés el cero cae en el SINGULAR. */
+    test('el recuento se pluraliza con las reglas del idioma', () => {
+        assert.equal(buildFooter(state({ step: 1, cartCount: 1, cartTotalCents: 0 })).label, '1 artículo');
+        assert.equal(buildFooter(state({ step: 1, cartCount: 2, cartTotalCents: 0 })).label, '2 artículos');
+    });
+});
+
+describe('el calendario', () => {
+    test('sin día elegido el CTA está inactivo y el importe es un guion', () => {
+        const footer = buildFooter(state({ step: 2, hasDate: false }));
+
+        assert.equal(footer.amount, AMOUNT_PLACEHOLDER);
+        assert.equal(footer.disabled, true);
+        assert.equal(footer.split, null);
+    });
+
+    test('elegir día habilita el CTA y NO cambia el importe', () => {
+        const footer = buildFooter(state({ step: 2, hasDate: true }));
+
+        assert.equal(footer.disabled, false);
+        assert.equal(footer.amount, AMOUNT_PLACEHOLDER, 'el precio depende del día pero no se enseña aquí');
+    });
+});
+
+describe('la hora', () => {
+    /**
+     * El CTA solo se inactiva hasta elegir HORA: lo demás —cantidad mínima, campos obligatorios— se
+     * valida AL PULSAR, con un aviso que dice qué falta, y no con un botón muerto que no lo explica.
+     */
+    test('sin hora el importe es un guion y el CTA está inactivo', () => {
+        const footer = buildFooter(state({ step: 3, hasTime: false, lineTotalCents: null }));
+
+        assert.equal(footer.amount, AMOUNT_PLACEHOLDER);
+        assert.equal(footer.disabled, true);
+    });
+
+    test('con hora se pinta el total publicado, sin sumar nada', () => {
+        const footer = buildFooter(state({ step: 3, hasTime: true, lineTotalCents: 120000, lineHasDeposit: false }));
+
+        assert.equal(footer.amount, '1.200,00 €');
+        assert.equal(footer.disabled, false);
+        assert.equal(footer.split, null, 'sin señal no hay desglose que enseñar');
+    });
+
+    /**
+     * ⚠️ El rótulo del paso 3 dice «(señal)» y el de la cesta NO: allí es un producto único y la señal
+     * explica por qué se cobra menos que el total; en una cesta mixta lo que se cobra ahora no es solo
+     * señal (#225). El diff de árbol no ve esta diferencia, porque es texto.
+     */
+    test('con señal el desglose usa el rótulo del PASO, no el neutro', () => {
+        const footer = buildFooter(state({
+            step: 3, hasTime: true, lineTotalCents: 120000,
+            lineHasDeposit: true, lineDepositCents: 3000, lineGateRemainderCents: 117000,
+        }));
+
+        assert.equal(footer.split.nowLabel, 'Pagas ahora (señal)');
+        assert.equal(footer.split.now, '30,00 €');
+        // El resto llega PUBLICADO, no restado: reconstruirlo sería reimplementar la regla de #225
+        // (los complementos de una línea con señal van íntegros al parque).
+        assert.equal(footer.split.park, '1.170,00 €');
+    });
+});
+
+describe('la cesta', () => {
+    test('el CTA nunca se inactiva y el importe es el total del presupuesto', () => {
+        const footer = buildFooter(state({ step: 4, cartCount: 2, cartTotalCents: 129900, cartOnlineCents: 129900 }));
+
+        assert.equal(footer.action, 'checkout');
+        assert.equal(footer.disabled, false);
+        assert.equal(footer.amount, '1.299,00 €');
+        assert.equal(footer.split, null, 'sin señal no hay desglose');
+    });
+
+    /** ⚠️ Rótulo NEUTRO: en una cesta mixta no todo lo que se cobra ahora es señal. */
+    test('con señal el desglose usa el rótulo neutro', () => {
+        const footer = buildFooter(state({ step: 4, cartCount: 2, cartTotalCents: 129900, cartOnlineCents: 30000 }));
+
+        assert.equal(footer.split.nowLabel, 'Pagas ahora');
+        assert.equal(footer.split.now, '300,00 €');
+        assert.equal(footer.split.park, '999,00 €');
+    });
+});

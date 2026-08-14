@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Contracts\AddonChoiceGroup;
+use App\Domain\Booking\Contracts\CartQuote;
 use App\Domain\Booking\Contracts\CartQuoteAddon;
 use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\ResolvedAddon;
@@ -26,17 +27,23 @@ class ResolvedAddonsResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * La línea tarificada, cuando la petición trajo día y hora.
+     * El PRESUPUESTO de la línea, cuando la petición trajo día y hora.
      *
      * Se INYECTA desde el controlador en vez de calcularse aquí: el dinero tiene un solo dueño
      * (`CartPricing`) y un serializador que lo pidiera por su cuenta sería el sitio más fácil desde
      * el que empezar a componerlo a mano.
+     *
+     * ⚠️ **Se guarda el presupuesto ENTERO y no solo su línea** (Fase 4 · paso 4.3·2), y esa es la
+     * diferencia que hace que `total_cents` no sea una suma: el agregado lo pone el dominio. El
+     * controlador ya construía este `CartQuote` completo y **tiraba sus totales**, así que el cliente
+     * no tenía de dónde sacar el importe del pie del paso 3 y habría acabado sumando `subtotal_cents`
+     * con `addons_total_cents` — que salen de dos recorridos DISTINTOS y pueden divergir.
      */
-    private ?CartQuoteLine $line = null;
+    private ?CartQuote $quote = null;
 
-    public function withLine(?CartQuoteLine $line): self
+    public function withQuote(?CartQuote $quote): self
     {
-        $this->line = $line;
+        $this->quote = $quote;
 
         return $this;
     }
@@ -61,21 +68,31 @@ class ResolvedAddonsResource extends JsonResource
             // El pie de la línea. `null` cuando la petición no llevó día y hora: sin ellos no hay
             // precio del producto base, y devolver un importe calculado sobre una fecha inventada
             // sería peor que no devolver ninguno.
-            'line' => $this->line === null ? null : [
-                'subtotal_cents' => $this->line->subtotalCents,
-                'unit_price_cents' => $this->line->unitPriceCents,
-                'has_deposit' => $this->line->hasDeposit,
-                'deposit_cents' => $this->line->depositCents,
-                'gate_remainder_cents' => $this->line->gateRemainderCents,
+            'line' => $this->line() === null ? null : [
+                'subtotal_cents' => $this->line()->subtotalCents,
+                'unit_price_cents' => $this->line()->unitPriceCents,
+                // Lo que vale la línea ENTERA: principal más complementos cobrados. Lo publica el
+                // presupuesto, no una suma de este serializador — `PAY-12` pide una sola fuente de
+                // CÁLCULO, y sumar aquí sería la segunda teniendo la primera ya hecha.
+                'total_cents' => $this->quote->totalCents,
+                'has_deposit' => $this->line()->hasDeposit,
+                'deposit_cents' => $this->line()->depositCents,
+                'gate_remainder_cents' => $this->line()->gateRemainderCents,
                 'addons' => array_map(static fn (CartQuoteAddon $addon): array => [
                     'product_id' => $addon->productId,
                     'product_name' => $addon->name,
                     'quantity' => $addon->quantity,
                     'free_quantity' => $addon->freeQuantity,
                     'subtotal_cents' => $addon->subtotalCents,
-                ], $this->line->addons),
+                ], $this->line()->addons),
             ],
         ];
+    }
+
+    /** La línea del presupuesto, o `null` si no hubo día y hora (y por tanto no hay pie). */
+    private function line(): ?CartQuoteLine
+    {
+        return $this->quote?->lines[0] ?? null;
     }
 
     /** @return array<string, mixed> */

@@ -210,6 +210,143 @@ class SidebarDomContractTest extends TestCase
         }
     }
 
+    // ── El paso 4: la cesta ───────────────────────────────────────────────────────────────────
+
+    /**
+     * La cesta con TODO lo que una línea puede llevar, porque cada rama solo aparece con sus datos:
+     * las respuestas del pack (`cart__event`), los complementos con su etiqueta de «incluido»
+     * (`cart__addons` + `cart__addon-incl`) y la nota de señal (`cart__deposit`). Un pedido simple de
+     * una entrada no emite ninguna de las cuatro, así que un caso así pasaría sin mirar nada.
+     */
+    public function test_the_cart_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->componentWithFullCart();
+
+        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del carrito DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **La cesta vacía en el paso 4 es alcanzable y no es un caso teórico**: `removeLine()` y
+     * `mount()` miran `$this->cart`, pero el recuento sale del PRESUPUESTO, así que un producto
+     * retirado de la venta con el cajón abierto deja la cesta «no vacía» y el contador a cero. Ahí el
+     * paso pinta su aviso y el pie desaparece: la pantalla queda sin CTA y sin salida. Es la conducta
+     * de los dos motores y hay que transcribirla igual.
+     */
+    public function test_the_empty_cart_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = Livewire::test(Purchase::class)->set('step', 4);
+
+        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del carrito VACÍO DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **Una línea SIN fecha, que es la trampa que el caso anterior no cubría.**
+     *
+     * `.cart__lines` se emite SIEMPRE: el condicional del Blade está DENTRO del `<div>`, no fuera. Lo
+     * natural al transcribir a Vue es poner el `v-if` en el div, y eso deja un nodo de menos y se
+     * lleva la separación que da la cabecera. **Se verificó por mutación que el caso de la cesta
+     * completa NO lo detectaba**, porque todas sus líneas tienen fecha.
+     *
+     * Y el estado es alcanzable, no teórico: `Cart::sanitize()` conserva una línea con `date: ''`
+     * (una cesta antigua o manipulada) y el presupuesto **la tarifica igual** —medido: subtotal
+     * correcto con la tarifa de hoy—, así que el carrito la pinta.
+     */
+    public function test_a_cart_line_without_a_date_still_emits_its_row_container(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 3);
+
+        $component = Livewire::test(Purchase::class)
+            ->set('cart', [[
+                'ticket_type_id' => $product->id, 'date' => '', 'time' => '10:00:00',
+                'qty' => 2, 'event_data' => [], 'addons' => [],
+            ]])
+            ->set('step', 4);
+
+        $this->assertSame('', $component->viewData('cartLines')[0]['date'], 'el caso exige una línea sin fecha');
+
+        $livewire = $this->livewireTree($component, 'cart__item');
+        $vue = $this->vueTree(4, $this->cartProps($component), 'cart__item');
+
+        $this->assertSame(
+            $livewire, $vue,
+            "La línea SIN fecha DIFIERE entre los dos motores.\n".
+            'El contenedor `.cart__lines` se emite siempre, aunque quede vacío: el condicional del '.
+            "Blade está DENTRO del `<div>`.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    // ── El PIE: la navegación del embudo ──────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ **El pie son TRES árboles, no uno**, y cada uno se emite en un estado distinto:
+     *  - rama `cart` (catálogo con cesta): un ÚNICO hijo y **sin nota de IVA**;
+     *  - rama `bar` sin desglose: el calendario, con el CTA inactivo y el importe en «—»;
+     *  - rama `bar` con desglose: seis nodos más, y `.bk-foot__info` cuelga DENTRO de `.bk-foot__l`.
+     *
+     * Se recorren los cuatro estados en un solo caso porque lo que se compara es siempre lo mismo, y
+     * separarlos multiplicaría el andamiaje sin añadir una sola aserción.
+     */
+    public function test_the_footer_emits_the_same_tree_in_every_state(): void
+    {
+        foreach ($this->footerStates() as $label => [$step, $component, $props]) {
+            $livewire = $this->livewireTree($component, 'bk-foot');
+            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component));
+
+            $this->assertSame(
+                $livewire, $vue,
+                "El pie del estado «{$label}» DIFIERE entre los dos motores.\n".
+                "Son tres árboles distintos: la barra-carrito, la barra sin desglose y la barra con él.\n\n".
+                $this->firstDivergence($livewire, $vue)
+            );
+        }
+    }
+
+    /**
+     * **La guarda del pie**: donde el servidor NO emite barra, el motor SPA tampoco.
+     *
+     * Con la cesta vacía, `footer()` devuelve `null` en el catálogo y en el carrito. Un motor que
+     * pintara la barra igual enseñaría «0,00 €» y un «Ir a pagar» donde la web no enseña nada — y el
+     * diff no lo vería, porque su ancla `bk-foot` simplemente no existiría en el lado de Livewire.
+     */
+    public function test_the_footer_is_absent_in_both_engines_when_the_cart_is_empty(): void
+    {
+        foreach ([1, 4] as $step) {
+            $component = Livewire::test(Purchase::class)->set('step', $step);
+
+            $this->assertNull(
+                $component->viewData('footer'),
+                "el servidor no emite pie en el paso {$step} con la cesta vacía"
+            );
+
+            $this->assertStringNotContainsString(
+                'bk-foot', $component->html(),
+                "Livewire no debería emitir el pie en el paso {$step} con la cesta vacía"
+            );
+
+            $props = $step === 1 ? $this->catalogProps() : $this->cartProps($component);
+            $vue = $this->renderVue($step, $props, $this->shellProps($component));
+
+            $this->assertStringNotContainsString(
+                'bk-foot', $vue,
+                "El motor SPA emite el pie en el paso {$step} con la cesta vacía y el servidor no. ".
+                'Enseñaría un total de 0,00 € y un CTA donde la web no enseña nada.'
+            );
+        }
+    }
+
     // ── El ARMAZÓN: lo que no pertenece a ningún paso ─────────────────────────────────────────
 
     /**
@@ -254,12 +391,13 @@ class SidebarDomContractTest extends TestCase
      *  - el orden de lo que SÍ está queda fijado hoy;
      *  - lo que falta está DECLARADO y es ejecutable, no una nota en un documento.
      *
-     * `bk-foot` sale de esta lista en 4.3·2 y `bk-paybreakdown` en 4.5. Añadir una entrada aquí es
-     * señal de que algo se ha desmontado.
+     * `bk-foot` salió en 4.3·2 y `bk-paybreakdown` sale en 4.5 —la banda de desglose es EXCLUSIVA del
+     * paso de pago y solo cuando hay señal—. Añadir una entrada aquí es señal de que algo se ha
+     * desmontado.
      *
      * @var list<string>
      */
-    private const SHELL_BLOCKS_NOT_YET_IN_SPA = ['bk-paybreakdown', 'bk-foot'];
+    private const SHELL_BLOCKS_NOT_YET_IN_SPA = ['bk-paybreakdown'];
 
     /**
      * ⚠️ **El ORDEN de los bloques del armazón, que es de lo que dependen los selectores de
@@ -377,6 +515,114 @@ class SidebarDomContractTest extends TestCase
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
 
     /**
+     * Un componente con la cesta sembrada con TODO lo que una línea puede llevar: un pack con señal,
+     * con respuestas del evento y con un complemento que trae unidades gratis.
+     *
+     * Se siembra pasando por `addToCart()` en vez de escribiendo `$cart` a mano: así la línea la
+     * compone el propio dominio —con su saneado y su selección de complementos resuelta— y el test no
+     * fija una forma de cesta que el código real nunca produciría.
+     */
+    private function componentWithFullCart(): Testable
+    {
+        $pack = $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
+        $pack->update([
+            'deposit_type' => 'fixed',
+            'deposit_value' => 3000,
+            'event_fields' => [
+                ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
+            ],
+        ]);
+        $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
+        $this->slotsForNextDays($pack, 3);
+
+        return Livewire::test(Purchase::class)
+            ->call('selectType', $pack->id)
+            ->call('selectDate', now()->addDay()->toDateString())
+            ->call('goToTime')
+            ->call('selectTime', '10:00:00')
+            ->set('eventData', ['celebrant' => 'Mara'])
+            ->call('incAddon', TicketType::where('name->es', 'Tarta')->value('id'))
+            ->call('addToCart');
+    }
+
+    /**
+     * Los CUATRO estados del pie, cada uno con su paso y sus props.
+     *
+     * @return array<string, array{0: int, 1: Testable, 2: array<string, mixed>}>
+     */
+    private function footerStates(): array
+    {
+        $withCart = $this->componentWithFullCart();
+
+        $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($entry, 5);
+        $onCalendar = Livewire::test(Purchase::class)->call('selectType', $entry->id);
+
+        $onTime = Livewire::test(Purchase::class)
+            ->call('selectType', $entry->id)
+            ->call('selectDate', now()->addDay()->toDateString())
+            ->call('goToTime')
+            ->call('selectTime', '10:00:00');
+
+        return [
+            // Rama `cart`: un único hijo, sin nota de IVA.
+            'catálogo con cesta' => [1, (clone $withCart)->set('step', 1), $this->catalogProps()],
+            // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
+            'calendario sin día' => [2, $onCalendar, $this->dateProps($onCalendar)],
+            // Rama `bar` sin desglose, con importe: una entrada se paga entera.
+            'hora de una entrada' => [3, $onTime, $this->timeProps($onTime)],
+            // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
+            'cesta con señal' => [4, $withCart, $this->cartProps($withCart)],
+        ];
+    }
+
+    /**
+     * El view-model del carrito, traducido a la forma que el cajón recibe de verdad.
+     *
+     * ⚠️ **La traducción no es cosmética y ya mordió una vez** (con los complementos, en 4.2): el
+     * view-model de Livewire usa `qty`, `name`, `subtotal`, y el presupuesto de la API publica
+     * `quantity`, `product_name`, `subtotal_cents`. Alimentar al componente con los primeros dejaría
+     * el diff verde mientras el cajón real pinta filas vacías. La paridad entre las dos fuentes se
+     * comprueba aparte, en `SidebarCartParityTest`.
+     *
+     * @return array<string, mixed>
+     */
+    private function cartProps(Testable $component): array
+    {
+        $lines = array_map(fn (array $line): array => [
+            'index' => $line['index'],
+            'product_id' => 0,
+            'product_name' => $line['name'],
+            'is_pack' => $line['is_pack'],
+            'date' => $line['date'],
+            'time' => $line['time'],
+            'quantity' => $line['qty'],
+            'subtotal_cents' => $line['subtotal'],
+            'has_deposit' => $line['has_deposit'],
+            'deposit_cents' => $line['deposit'],
+            'gate_remainder_cents' => $line['gate_remainder'],
+            'addons' => array_map(fn (array $addon): array => [
+                'product_id' => 0,
+                'product_name' => $addon['name'],
+                'quantity' => $addon['qty'],
+                'free_quantity' => $addon['free_qty'],
+                'subtotal_cents' => $addon['subtotal'],
+            ], $line['addons']),
+            'event' => $line['event'],
+        ], $component->viewData('cartLines'));
+
+        // El carrito solo pinta las líneas TARIFICADAS. Con la cesta vacía enseña su aviso, y con el
+        // recuento a cero también: el contador sale del presupuesto, no del array (fallo P8).
+        return [
+            'lines' => $component->viewData('cartCount') > 0 ? $lines : [],
+            'confirmed' => (bool) $component->get('confirmed'),
+            'error' => '',
+            'messages' => __('tickets'),
+            'locale' => app()->getLocale(),
+        ];
+    }
+
+    /**
      * Las props del ARMAZÓN, tomadas del propio componente Livewire.
      *
      * `busy` va a `false` a propósito: en Livewire el velo está SIEMPRE en el HTML servido y lo tapa
@@ -390,6 +636,9 @@ class SidebarDomContractTest extends TestCase
         return [
             'busy' => false,
             'progress' => $component->viewData('bookingProgress'),
+            // El pie se toma del SERVIDOR, igual que la banda: aquí se compara el marcado. Que el
+            // cliente componga el mismo view-model lo comprueba `SidebarCartParityTest`.
+            'footer' => $component->viewData('footer'),
             'messages' => __('tickets'),
             'ui' => __('ui'),
         ];
@@ -420,12 +669,17 @@ class SidebarDomContractTest extends TestCase
     private function slotsForNextDays(TicketType $product, int $days): void
     {
         for ($i = 1; $i <= $days; $i++) {
-            Slot::create([
-                'zone_id' => $product->zone_id,
-                'date' => now()->addDays($i)->toDateString(),
-                'start_time' => '10:00:00', 'end_time' => '11:00:00',
-                'capacity' => 20, 'online_capacity' => 20,
-            ]);
+            // ⚠️ Las franjas son de la ZONA, no del producto, y su clave única es (zona, día, hora).
+            // Un caso que siembre dos productos de la misma zona las pide dos veces: `firstOrCreate`
+            // hace que compartirlas sea lo natural, que es justo lo que son.
+            Slot::firstOrCreate(
+                [
+                    'zone_id' => $product->zone_id,
+                    'date' => now()->addDays($i)->toDateString(),
+                    'start_time' => '10:00:00',
+                ],
+                ['end_time' => '11:00:00', 'capacity' => 20, 'online_capacity' => 20],
+            );
         }
     }
 

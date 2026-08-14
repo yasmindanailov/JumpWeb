@@ -94,7 +94,7 @@ class CatalogAddonsController extends Controller
                 ], $resolved->selection),
             ])]);
 
-            $resource->withLine($quote->lines[0] ?? null);
+            $resource->withQuote($quote);
         }
 
         return $resource;

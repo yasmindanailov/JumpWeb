@@ -5,10 +5,14 @@ import { STEPS } from './machine.js';
 import { api } from './api.js';
 import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
 import { buildProgress } from './progress.js';
+import { t as translate, tp as translateWith } from './i18n.js';
+import { buildFooter } from './foot.js';
+import { addLine, cartRows, removeLine as removeCartLine, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
 import TimeStep from './steps/TimeStep.vue';
+import CartStep from './steps/CartStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -171,6 +175,9 @@ async function selectProduct(id) {
     addons.value = { groups: [], singles: [] };
     addonChoices.value = [];
     addonQuantities.value = [];
+    line.value = null;
+    resolvedSelection.value = [];
+    eventData.value = {};
     store.go(STEPS.DATE);
 
     const [dates, detail] = await tracked(Promise.all([
@@ -179,7 +186,14 @@ async function selectProduct(id) {
     ]));
 
     offeredDates.value = dates.ok ? (dates.data?.data ?? []) : [];
-    if (detail.ok) product.value = detail.data;
+
+    if (detail.ok) {
+        product.value = detail.data;
+        // Las ETIQUETAS del esquema del evento se guardan por producto porque el carrito las necesita
+        // más tarde, cuando ya se está mirando otra cosa: el presupuesto NO devuelve las respuestas
+        // del pack (RGPD, son datos de un menor) y sin las etiquetas no hay con qué emparejarlas.
+        fieldsByProduct.value = { ...fieldsByProduct.value, [id]: detail.data.event_fields ?? [] };
+    }
     // El calendario abre en el PRIMER mes con oferta, no en el actual: si el producto no se vende
     // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía.
     month.value = offeredMonths.value[0] ?? monthOf(new Date().toISOString().slice(0, 10));
@@ -193,6 +207,57 @@ const selectedProduct = ref(null);
 const quantity = ref(0);
 const product = ref(null);
 const addons = ref({ groups: [], singles: [] });
+/** El pie de la línea del paso 3, tal y como lo publica el endpoint de complementos. Nunca se suma. */
+const line = ref(null);
+/** La selección de complementos ya RESUELTA por el servidor: es lo que se guarda en la cesta. */
+const resolvedSelection = ref([]);
+
+// ── La CESTA ──────────────────────────────────────────────────────────────────────────────────
+//
+// En memoria en 4.3·2. La persistencia en `localStorage` —con su dueño, su purga al cambiar de
+// identidad y su reconciliación contra el presupuesto— llega en 4.3·3, y por eso el módulo `cart.js`
+// no toca el almacén: se le pasará por parámetro.
+
+/** Las líneas tal y como viajan a la API (`product_id`, `quantity`). */
+const cart = ref([]);
+/** El presupuesto de la cesta. Lo tarifica `POST /orders/quote`; aquí no se suma nada (`PAY-12`). */
+const quote = ref(null);
+/** El aviso de la cesta, ya traducido. Ocupa el sitio del `@error('cart')` del Blade. */
+const cartError = ref('');
+/** Errores por campo del evento, con la misma forma que el error bag de la web. */
+const fieldErrors = ref({});
+
+/**
+ * El badge y el recuento salen del PRESUPUESTO, no de `cart.length`.
+ *
+ * ⚠️ Fue un fallo real de la web (P8): contar el array local incluye las líneas cuyo producto dejó de
+ * venderse —que el presupuesto no tarifica— y el badge decía «1 artículo» sobre un total de 0,00 €.
+ */
+const cartCount = computed(() => quote.value?.lines?.length ?? 0);
+
+/**
+ * Las filas que pinta el carrito: cada línea tarificada con las respuestas del pack emparejadas.
+ *
+ * ⚠️ El emparejado va por `index` y no por posición: una línea no vendible desaparece del presupuesto
+ * y su hueco en la secuencia es la única señal de que existió.
+ */
+const cartLines = computed(() => cartRows(quote.value?.lines ?? [], cart.value, fieldsByProduct.value));
+
+/** Etiquetas de los campos del evento por producto, para poder emparejarlas en el carrito. */
+const fieldsByProduct = ref({});
+
+/** Pide el presupuesto de la cesta actual. Es la ÚNICA fuente de los importes del carrito. */
+async function refreshQuote() {
+    if (cart.value.length === 0) {
+        quote.value = null;
+
+        return;
+    }
+
+    const response = await tracked(api.post('/orders/quote', { items: toApiItems(cart.value) }));
+
+    quote.value = response.ok ? response.data : null;
+}
 const eventData = ref({});
 const addonChoices = ref([]);
 const addonQuantities = ref([]);
@@ -217,9 +282,12 @@ async function selectDate(date) {
     selectedTime.value = null;
     store.go(STEPS.TIME);
 
+    // ⚠️ `AFORO-02`: la oferta de horas **lleva la cesta**. `offerableTimes()` descuenta los ocupantes
+    // que la propia cesta ya retiene, así que una consulta sin ella ofrece horas y topes que el
+    // checkout rechazaría. Hasta 4.3·2 iba vacía porque no había cesta; ahora va la de verdad.
     const response = await tracked(api.post(`/availability/${selectedProductId.value}/times`, {
         date,
-        items: [],
+        items: toApiItems(cart.value),
     }));
 
     offeredTimes.value = response.ok ? (response.data?.data ?? []) : [];
@@ -251,7 +319,16 @@ async function refreshAddons() {
         choices: addonChoices.value,
     }));
 
-    if (response.ok) addons.value = { groups: response.data.groups, singles: response.data.singles };
+    if (response.ok) {
+        addons.value = { groups: response.data.groups, singles: response.data.singles };
+        // ⚠️ **El dinero del paso 3 viene de aquí y no se compone.** `line.total_cents` lo publica el
+        // endpoint desde 4.3·2 precisamente para que nadie sume `subtotal_cents` con
+        // `addons_total_cents`: salen de dos recorridos distintos del servidor y pueden divergir.
+        line.value = response.data.line ?? null;
+        // Y la selección que hay que GUARDAR es la que el dominio acaba de resolver —obligatorios
+        // inyectados, dependientes huérfanos podados—, no la que se pidió.
+        resolvedSelection.value = response.data.selection ?? [];
+    }
 }
 
 function changeQuantity(delta) {
@@ -318,6 +395,180 @@ const progress = computed(() => buildProgress({
 }));
 
 /**
+ * El PIE, compuesto para el estado actual (`foot.js`).
+ *
+ * Devolver `null` es tan significativo como devolver una barra: en el catálogo con la cesta vacía y
+ * en la cesta vacía el servidor no emite pie, y pintarlo igual enseñaría «0,00 €» donde la web no
+ * enseña nada.
+ */
+const footer = computed(() => buildFooter({
+    step: store.step,
+    messages: props.messages,
+    locale,
+    cartCount: cartCount.value,
+    cartTotalCents: quote.value?.total_cents ?? 0,
+    cartOnlineCents: quote.value?.online_amount_cents ?? 0,
+    hasDate: selectedDate.value !== null,
+    hasTime: selectedTime.value !== null,
+    lineTotalCents: line.value?.total_cents ?? null,
+    lineHasDeposit: line.value?.has_deposit ?? false,
+    lineDepositCents: line.value?.deposit_cents ?? 0,
+    lineGateRemainderCents: line.value?.gate_remainder_cents ?? 0,
+}));
+
+/**
+ * Las acciones del pie, con los MISMOS nombres que las del componente Livewire.
+ *
+ * Se conservan los nombres porque son el vocabulario de la paridad durante la convivencia: el
+ * view-model del pie los publica y el test los compara campo a campo.
+ */
+function runAction(action) {
+    if (action === 'goToTime') return goToTime();
+    if (action === 'addToCart') return addToCart();
+    if (action === 'goToCart') return goToCart();
+    // `checkout` es del paso 5 (identificación), que llega en 4.4a. Hasta entonces el CTA existe
+    // —el árbol lo exige— y no lleva a ninguna parte; el ESTADO lo dice sin adornos.
+}
+
+/** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
+function goToTime() {
+    if (selectedDate.value === null) return;
+
+    store.go(STEPS.TIME);
+}
+
+/** Vuelve al carrito desde una compra en curso, si hay cesta. */
+function goToCart() {
+    if (cart.value.length > 0) store.go(STEPS.CART);
+}
+
+/**
+ * Añade la línea elegida a la cesta.
+ *
+ * ⚠️ **No decide: pregunta.** Qué puede entrar —producto elegible, franja ofrecida, cantidad, tope de
+ * líneas, campos obligatorios del pack— y en qué queda —cantidad efectiva y fusión— lo dice
+ * `POST /cart/validate-line`, el mismo contrato que consume la compra web desde 4.0b·6. Lo que sí es
+ * de esta pantalla es la PRESENTACIÓN del «no»: validar al pulsar en vez de deshabilitar el CTA, y un
+ * aviso que NOMBRA los campos que faltan.
+ */
+async function addToCart() {
+    cartError.value = '';
+    fieldErrors.value = {};
+
+    const candidate = {
+        product_id: selectedProductId.value,
+        date: selectedDate.value,
+        time: selectedTime.value,
+        quantity: quantity.value,
+        event_data: { ...eventData.value },
+        // Lo que se guarda es la selección que el dominio RESOLVIÓ (obligatorios inyectados,
+        // dependientes huérfanos podados), no la que se pidió.
+        addons: resolvedSelection.value,
+    };
+
+    // ⚠️ La candidata NO va dentro de `items`: `items` es lo que YA retiene cupo, y meterla ahí la
+    // haría competir consigo misma y devolvería un tope menor del real.
+    const response = await tracked(api.post('/cart/validate-line', {
+        line: candidate,
+        items: toApiItems(cart.value),
+    }));
+
+    if (! response.ok) {
+        cartError.value = t('errors.choose_one');
+
+        return;
+    }
+
+    const verdict = response.data;
+
+    if (! verdict.valid) {
+        showLineProblems(verdict.problems ?? []);
+
+        return;
+    }
+
+    cart.value = addLine(cart.value, candidate, verdict);
+    clearSelection();
+    store.go(STEPS.CART);
+
+    await refreshQuote();
+}
+
+/**
+ * Traduce el «no» del servidor a lo que esta pantalla enseña.
+ *
+ * Los tres motivos de SELECCIÓN —producto no elegible, franja no ofrecida, sin sitio— comparten aviso
+ * a propósito: es el que el cajón ha enseñado siempre, y son el mismo callejón para quien mira el
+ * paso 3. Los campos que faltan se resaltan uno a uno **y** se nombran en un resumen: sin las dos
+ * cosas, un pack con cuatro campos deja al cliente adivinando cuál falla.
+ *
+ * ⚠️ Los `problems` vienen SIN contexto a propósito: el mínimo, el tope y las etiquetas ya los
+ * publican `catalog/products/{id}` y `config`, y republicarlos sería un segundo sitio del que leer el
+ * mismo valor.
+ */
+function showLineProblems(problems) {
+    const missing = [];
+
+    for (const problem of problems) {
+        if (problem.reason === 'event_field_required' && problem.field) {
+            fieldErrors.value = { ...fieldErrors.value, [problem.field]: t('errors.field_required') };
+
+            const label = (product.value?.event_fields ?? []).find((f) => f.key === problem.field)?.label;
+            if (label) missing.push(label);
+
+            continue;
+        }
+
+        cartError.value = problem.reason === 'cart_full'
+            ? t('errors.cart_too_large')
+            : t('errors.choose_one');
+    }
+
+    if (missing.length > 0) {
+        cartError.value = tp('errors.fields_missing', { fields: missing.join(', ') });
+    }
+}
+
+/** Quita una línea. Con la cesta vacía se vuelve al catálogo, como hace la web. */
+async function removeLine(index) {
+    cart.value = removeCartLine(cart.value, index);
+
+    if (cart.value.length === 0) {
+        quote.value = null;
+        store.enter(STEPS.CATALOG);
+
+        return;
+    }
+
+    await refreshQuote();
+}
+
+/** «Añadir otra reserva»: vuelve al catálogo con la selección limpia. */
+function addAnother() {
+    clearSelection();
+    store.enter(STEPS.CATALOG);
+}
+
+/** Deja la SELECCIÓN en blanco sin tocar la cesta. Espejo de `Purchase::clearSelection()`. */
+function clearSelection() {
+    selectedProductId.value = null;
+    selectedProduct.value = null;
+    product.value = null;
+    selectedDate.value = null;
+    selectedTime.value = null;
+    quantity.value = 0;
+    eventData.value = {};
+    addonChoices.value = [];
+    addonQuantities.value = [];
+    addons.value = { groups: [], singles: [] };
+    line.value = null;
+    resolvedSelection.value = [];
+}
+
+const t = (key) => translate(props.messages, key);
+const tp = (key, params) => translateWith(props.messages, key, params);
+
+/**
  * «Volver» de la banda. Espejo de `Purchase::back()`: desde la hora se DESHACE la elección de hora y
  * de cantidad —volver con la hora puesta dejaría el paso 2 mostrando un progreso que ya no aplica— y
  * desde el calendario se vuelve al catálogo.
@@ -336,7 +587,8 @@ function goBack() {
 </script>
 
 <template>
-    <Shell :busy="busy" :progress="progress" :messages="messages" :ui="ui" @back="goBack">
+    <Shell :busy="busy" :progress="progress" :footer="footer" :messages="messages" :ui="ui"
+           @back="goBack" @action="runAction">
         <CatalogStep
             v-if="store.step === STEPS.CATALOG"
             :sections="sections"
@@ -369,6 +621,7 @@ function goBack() {
             :event-fields="product?.event_fields ?? []"
             :period-label="product?.period_label ?? ''"
             :addons="addons"
+            :errors="fieldErrors"
             :messages="messages"
             @select-time="selectTime"
             @inc="changeQuantity(1)"
@@ -378,5 +631,14 @@ function goBack() {
             @toggle-addon="(id) => setAddonQuantity(id, addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
             @inc-addon="(id) => setAddonQuantity(id, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
             @dec-addon="(id) => setAddonQuantity(id, Math.max(0, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) - 1))" />
+
+        <CartStep
+            v-else-if="store.step === STEPS.CART"
+            :lines="cartLines"
+            :error="cartError"
+            :messages="messages"
+            :locale="locale"
+            @remove="removeLine"
+            @add-another="addAnother" />
     </Shell>
 </template>

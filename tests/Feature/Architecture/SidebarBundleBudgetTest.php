@@ -40,7 +40,8 @@ class SidebarBundleBudgetTest extends TestCase
      *   · 4.1 (Vue 3 + Pinia + andamio, sin negocio) ....... 69,13 kB
      *   · 4.2 (catálogo, calendario, hora y complementos) ... 90,29 kB
      *   · 4.3·1 (armazón + módulos de texto e importes) ..... 95,54 kB
-     * Quedan ~24 kB para la cesta, la identificación, el pago y las tres pantallas de desenlace. Si el
+     *   · 4.3·2 (pie + cesta en memoria + paso 4) ........... 105,72 kB
+     * Quedan ~14 kB para la identificación, el pago y las tres pantallas de desenlace. Si el
      * paso que los meta se pasa, la decisión es SUBIR el techo con su motivo escrito — no dejar que lo
      * empuje el arrastre, que es lo que este test existe para impedir.
      */

@@ -1646,3 +1646,57 @@ coincide. Hay caso que lo vigila.
 **(h) Lo que este tramo NO cierra, dicho sin optimismo**: el pie (`.bk-foot`) sigue sin existir en el
 motor SPA, así que el cajón sigue **auto-avanzando** del calendario a la hora donde Livewire exige
 pulsar «Continuar», y no hay CTA para añadir a la cesta. Eso es 4.3·2.
+
+## #48 · 2026-08-14 · 4.3·2 — el pie es la navegación, no una barra; y el séptimo hueco que sí existía
+Fase 4 · paso 4.3 (segundo tramo). Entra el pie (`.bk-foot`), el paso 4 (la cesta) y el flujo que los
+une. **La cesta vive en memoria**: la persistencia en `localStorage` —con su dueño, su purga y su
+reconciliación— es 4.3·3, y el módulo `cart.js` nace ya sin tocar el almacén para poder recibirlo.
+
+**(a) El pie no se podía partir de la cesta, y esa fue la decisión de alcance.** El plan inicial era
+«·2 el pie · ·3 la cesta», pero el CTA del paso 3 es «Añadir al carrito» y **`disabled` es un atributo
+que el diff SÍ compara**: dejarlo inactivo habría puesto el gate en rojo, y dejarlo activo sin cesta
+habría sido un botón mudo. El corte honesto es por dependencia, no por pantalla.
+
+**(b) El séptimo hueco de API era otro, y este sí.** La propuesta de devolver el `event_data` saneado
+se descartó en 4.3·1 con evidencia (revierte una decisión RGPD probada y rompe `RGPD-04`). El hueco
+real estaba al lado: `POST /catalog/products/{id}/addons` **construía un `CartQuote` completo y tiraba
+sus totales**, así que el cliente no tenía de dónde sacar el importe del pie del paso 3 y la única
+salida era sumar `subtotal_cents` con `addons_total_cents` — que salen de **dos recorridos distintos**
+del servidor. Se publica `line.total_cents` desde el mismo presupuesto: dos líneas, cero consultas
+nuevas, cero PII, y `PAY-12` respetado (una sola fuente de CÁLCULO, no una sola URL).
+
+**(c) Lo que el cliente NO compone, y por qué cada cosa**: el total del paso 3 lo publica el endpoint;
+el desglose viene ya partido (`deposit_cents` + `gate_remainder_cents`), porque reconstruirlo restando
+sería reimplementar la Opción A de #225 —los complementos de una línea con señal van íntegros al
+parque—; y el recuento de la barra-carrito es **pluralización de Laravel**, no `n === 1`. La única
+resta que queda es `park = total − online` en la cesta, y es legítima porque son dos AGREGADOS de la
+misma fuente y es literalmente lo que hace el servidor.
+
+**(d) Dos rótulos que el diff de árbol daba por buenos.** El desglose se llama «Pagas ahora (señal)»
+en el paso 3 y «Pagas ahora» —NEUTRO— en la cesta y en el pago, porque en una cesta mixta lo que se
+cobra ahora no es solo señal (#225). El normalizador del gate descarta los nodos de texto, así que
+reutilizar el componente sin parametrizar el rótulo pasa verde y cambia la copia. Lo fija
+`SidebarCartParityTest`, verificado por mutación.
+
+**(e) La cesta se ofrece ya en la consulta de horas** (`AFORO-02`). `POST availability/{id}/times`
+viajaba con `items: []` desde 4.2, con un comentario que decía que la clave estaba puesta «para que no
+se olvide al añadirla». Este es ese momento: sin la cesta, `offerableTimes()` no descuenta lo que ella
+ya retiene y el cajón ofrece horas y topes que el checkout rechaza.
+
+**(f) Un caso del gate pasaba con el fallo dentro, y lo dijo la mutación.** El contenedor
+`.cart__lines` se emite SIEMPRE —el condicional del Blade está DENTRO del `<div>`—, pero el caso de la
+cesta completa no lo detectaba porque todas sus líneas tienen fecha. El estado es alcanzable y se
+midió: `Cart::sanitize()` conserva una línea con `date: ''` y **el presupuesto la tarifica igual**. Hay
+caso propio para ella.
+
+**(g) La baseline de bloques del armazón ENCOGIÓ, que es lo que tenía que pasar.**
+`SHELL_BLOCKS_NOT_YET_IN_SPA` pasa de `['bk-paybreakdown', 'bk-foot']` a `['bk-paybreakdown']` sola:
+el test cayó al transcribir el pie y obligó a quitarlo de la lista. Es el patrón de baseline que solo
+mengua, aplicado al marcado.
+
+**(h) Lo que este tramo NO cierra, dicho sin optimismo**: (1) el CTA «Ir a pagar» **no lleva a ninguna
+parte** —el paso 5 es 4.4a—; (2) la cesta **no sobrevive a una recarga**, que es 4.3·3; y (3) el aviso
+de **reservas en pausa** sigue sin existir en el motor SPA, y ahora pesa más: el pie comparte su
+guarda, así que con la pausa activa el cajón SPA enseña una barra de «Ir a pagar» donde Livewire
+enseña el aviso de mantenimiento. No es fuga de dinero —el servidor rechaza— pero es la divergencia
+más visible que la fase tiene abierta, y la cierra 4.3·3.
