@@ -105,7 +105,14 @@
                         <span class="catalog-acc__title" id="catalog-title-{{ $section['key'] }}">{{ __('tickets.section_'.$section['key']) }}</span>
                         <span class="catalog-acc__count">{{ count($section['items']) }}</span>
                     </div>
-                    <div class="catalog-acc__body" :class="isOpen('{{ $section['key'] }}') ? 'is-open' : ''" id="catalog-sec-{{ $section['key'] }}">
+                    {{-- ⚠️ `is-open` va ESTÁTICA, no por binding, y no es cosmética: el CSS colapsa este
+                         cuerpo con `grid-template-rows: 0fr` y solo esta clase lo abre. El `:class` que
+                         había preguntaba a `isOpen()`, que devuelve `true` FIJO desde #P6 (las secciones
+                         dejaron de ser plegables) — o sea, código muerto que además la escondía del diff
+                         de árbol: el normalizador descarta los `:*` como andamiaje, así que el cajón SPA
+                         pudo nacer SIN la clase y con el catálogo a altura 0, sin que ningún gate lo
+                         dijera. Lo encontró el extremo a extremo con navegador. --}}
+                    <div class="catalog-acc__body is-open" id="catalog-sec-{{ $section['key'] }}">
                         <div class="catalog-acc__body-inner">
                             <div class="catalog">
                                 @foreach ($section['items'] as $item)

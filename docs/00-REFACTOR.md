@@ -951,6 +951,27 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · **Red**: 9 casos de `node --test`, 3 de `ScrollLockOwnerTest` y 2 de árbol. **Verificado por
         mutación ×6** y en vivo: en el bundle SERVIDO, `no-scroll` aparece **una sola vez**.
       · Suite **2714 verde** · 241 tests JS · entry de la landing 16,24 KiB de 20.
+- [x] **§6 · el EXTREMO A EXTREMO con navegador y pasarela real** (2026-08-14, `DECISIONES #59`).
+      Se ejecutó por fin la verificación que la fase pedía desde el principio. **Encontró cuatro cosas y
+      tres estaban rotas de raíz**: la fase se daba por transcrita, con paridades y mutaciones en verde, y
+      **el motor SPA no funcionaba en producción**.
+      · ⚠️ **EL FALLO MAYOR: el desenlace del pago no llegaba al STORE.** `index.js` aplicaba
+        `machine.enterOutcome()` DESPUÉS de `store.boot()`, y el store no observa la máquina: la copia.
+        Máquina en el paso 6, store en el 1, y Vue pinta del store → **quien volvía de pagar veía el
+        catálogo**. Toda la 4.6, invisible. Arreglado + `store.test.js` (red que se podía tener desde 4.1).
+      · ⚠️ **El motor no montaba con el cajón nacido abierto**: `bootSpaEngine()` colgaba solo de
+        `open()`, y `/entradas` y la vuelta del pago abren el cajón sin llamarlo → hueco VACÍO.
+      · ⚠️ **El catálogo SPA no enseñaba ni un producto**: falta `is-open` y el CSS colapsa el cuerpo.
+        El diff no podía verlo —en el Blade la ponía un `:class` de Alpine, que el normalizador descarta—.
+        Arreglado en el ORIGEN (clase estática en los dos motores), así que **ahora el gate SÍ la ve**.
+      · **Divergencia declarada, no arreglada**: elegir día avanza solo en la SPA y no en Livewire, con
+        lo que el CTA «Continuar» del paso 2 es inalcanzable. Ficha en `DEUDA.md`: es producto.
+      · ✅ **Verificado en los DOS motores**: embudo entero contra la pasarela REAL, cobro de la **señal**
+        (30 € de 165 €), vuelta al paso 6 y **pedidos IDÉNTICOS en BD**. Paso 11 con vuelta *data-less*:
+        sondeo cada 5 s, salto solo al 6 y **parada** del sondeo.
+      · **El andamio (Playwright) es desechable y NO entra en el repo ni en el gate**; la receta y las
+        ocho trampas de la pasarela quedan en `VERIFICACION-E2E-CAJON.md` §5.bis.
+      · Suite **2714 verde** · 247 tests JS.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

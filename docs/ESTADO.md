@@ -26,7 +26,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2714 en verde** (15.482 aserciones, `--parallel` ~70 s) · **241 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2714 en verde** (15.482 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -289,10 +289,14 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      bastar: el widget es un contenedor y un script EXTERNO, que no viaja en el bundle. Ver el aviso de
      unidades de `SidebarBundleBudgetTest` antes de restar — Vite imprime en base 1000 y el test mide en
      base 1024, y confundirlos encoge el margen aparente.
-2. **El EXTREMO A EXTREMO con la pasarela en sandbox**, que es lo único que separa al flag de poder
-   desplegarse. ▶ **El guion operativo está escrito: `docs/VERIFICACION-E2E-CAJON.md`** — empieza por la
-   tabla de qué NO hace falta mirar (media docena de casos de §6 ya tienen red automática) y sigue con
-   los dos bloques, el que va sin túnel y el que lo necesita. Lo que hay que saber:
+2. ✅ **El EXTREMO A EXTREMO ya se ha hecho** (2026-08-14, `DECISIONES #59`) con navegador headless y la
+   pasarela REAL, en los dos motores. ⚠️ **Y encontró que el motor SPA NO FUNCIONABA en producción**,
+   con la fase entera transcrita y el gate en verde: el desenlace del pago no llegaba al store (quien
+   volvía de pagar veía el catálogo), el motor no montaba con el cajón nacido abierto y el catálogo no
+   enseñaba ni un producto. Los tres arreglados y verificados. El guion y las trampas de la pasarela
+   están en `docs/VERIFICACION-E2E-CAJON.md`. **Lo que sigue pendiente de navegador**: el bloque B (el
+   terminal *data-less* con notificación S2S, que necesita túnel), el 3DS con challenge y el móvil real.
+   Lo que hay que saber:
    · **Es la última pieza de verificación que la fase declaró y que NADIE ha hecho todavía**: recorrer
      la compra con los DOS motores contra Redsys en sandbox y **comparar el pedido en BD**. Todo lo
      demás está cubierto por paridades, pero ninguna de ellas ejecuta un navegador ni la pasarela real.
@@ -454,6 +458,22 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
   · **Los literales del alta se pintan tal cual, al revés que en el login**: aquí el servidor publica
     en `fields.email` los mismos que pinta el Blade; en el login tiene un `message` propio que no
     coincide con `auth.failed`. Las dos conductas son correctas y las dos tienen su caso.
+
+- **§6 · el extremo a extremo con navegador** (2026-08-14, `DECISIONES #59`). ⚠️ **La lección más cara
+  de la fase, y hay que leerla entera antes de dar nada por hecho:**
+  · ⚠️ **VERDE NO ES FUNCIONA.** La Fase 4 estaba «transcrita», con once paridades, mutaciones y
+    centinelas de bundle, y **el motor SPA no vendía**: el desenlace del pago no llegaba al store —el
+    store COPIA la máquina, no la observa, y `index.js` la movía después de arrancarlo—, el motor no
+    montaba cuando el cajón nace abierto, y el catálogo no enseñaba ni un producto. Tres fallos de
+    CABLEADO, ninguno de marcado. **Ningún test podía verlos porque ninguno ejecuta el montaje real.**
+  · **La red que faltaba era barata**: `store.test.js` reproduce la secuencia de `index.js` con Pinia en
+    `node --test`. Se podía tener desde 4.1. Si algo se monta, hay que probar el montaje.
+  · ⚠️ **Un `:class` de Alpine esconde una clase del diff de árbol**, y esta vez tapaba el paso 1 entero.
+    El arreglo bueno no es parchear el cliente: es sacar la clase del binding para que el gate la vea.
+  · **Y arreglar eso movió otro gate**: `SidebarTokenBudgetTest` deduce el CSS del sidebar leyendo los
+    `class="…"` del Blade, así que una clase de ESTADO compartida (`is-open`) le ensancha el escaneo.
+  · ✅ Lo que sí quedó demostrado: embudo entero en los dos motores contra la pasarela real, cobro de la
+    **señal** (30 € de 165 €), y **pedidos idénticos en BD**.
 
 - **§6 · el bloqueo de scroll tiene un solo dueño** (2026-08-14, `DECISIONES #58`). Cierra el último
   ítem del plan de verificación de la fase. Tres cosas que condicionan lo que viene:

@@ -265,6 +265,15 @@ class SidebarTokenBudgetTest extends TestCase
                     if (preg_match('/^[a-zA-Z][\w-]*$/', $token) !== 1) {
                         continue;   // interpolaciones y expresiones: no son nombres de clase
                     }
+                    // ⚠️ **Los modificadores de ESTADO (`is-…`) no son del sidebar y ensanchan el
+                    // escaneo hasta romperlo.** Son compartidos —`.sidecart.is-open`, `.modal.is-open`,
+                    // `.cal__day.is-selected`—, así que meterlos aquí hace que cuenten como «reglas del
+                    // sidebar» rincones del CSS que no lo son. Se descubrió al sacar `is-open` de un
+                    // `:class` de Alpine a la clase estática: el recuento de colores crudos subió de 3 a
+                    // 4 sin que nadie tocara una sola línea de CSS.
+                    if (str_starts_with($token, 'is-')) {
+                        continue;
+                    }
                     if ($source['prefix'] !== null && ! str_starts_with($token, $source['prefix'])) {
                         continue;
                     }

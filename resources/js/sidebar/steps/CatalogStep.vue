@@ -80,7 +80,14 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                 <span class="catalog-acc__title" :id="'catalog-title-' + section.key">{{ t('section_' + section.key) }}</span>
                 <span class="catalog-acc__count">{{ section.items.length }}</span>
             </div>
-            <div class="catalog-acc__body" :id="'catalog-sec-' + section.key">
+            <!-- ⚠️ **`is-open` NO es decorativa: sin ella el catálogo no enseña NADA.** El CSS colapsa
+                 el cuerpo con `grid-template-rows: 0fr` y solo `.is-open` lo abre. El Blade la emite
+                 SIEMPRE —su `isOpen()` devuelve `true` fijo: las secciones no son plegables desde #P6—
+                 y aquí faltaba, así que con el motor SPA las secciones salían a altura 0 y no se podía
+                 comprar nada. Lo encontró el extremo a extremo con navegador; **el diff de árbol no
+                 podía verlo**, porque en el Blade la clase la pone un `:class` de Alpine y el
+                 normalizador descarta los `:*` como andamiaje — el mismo agujero que `aria-expanded`. -->
+            <div class="catalog-acc__body is-open" :id="'catalog-sec-' + section.key">
                 <div class="catalog-acc__body-inner">
                     <div class="catalog">
                         <button v-for="item in section.items" :key="item.id"

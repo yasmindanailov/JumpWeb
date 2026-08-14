@@ -377,12 +377,24 @@ document.addEventListener('alpine:init', () => {
     // foco automático al primer elemento interactivo cuando se abre el panel. Sin esto el
     // usuario de teclado/lector de pantalla puede tabular detrás del backdrop y perderse.
     // Implementación manual (~25 líneas) para no depender del plugin @alpinejs/focus.
-    // ⚠️ **El estado INICIAL también es del dueño único.** Dos superpuestos pueden venir ya abiertos
-    // del servidor —el cajón por `/entradas` o por un desenlace de pago pendiente, y el modal de auth
-    // por `/registro`— y hasta aquí solo el primero bloqueaba el scroll, con un `x-init` suelto en el
-    // layout; el modal de auth abierto al cargar dejaba la página moviéndose por detrás. Pedir la
-    // llave aquí arregla los dos casos a la vez y retira el `x-init`, que era el sexto escritor.
-    if (window.Alpine.store('purchase').isOpen) scrollLock.lock('sidecart');
+    // ── EL CAJÓN PUEDE NACER ABIERTO, y eso tiene DOS consecuencias ────────────────────────────
+    // El servidor lo abre solo en dos casos (`data-purchase-open`): el enlace profundo `/entradas` y
+    // **la vuelta de la pasarela con un desenlace pendiente**.
+    //
+    // ⚠️ (1) **Hay que ARRANCAR EL MOTOR aquí.** `bootSpaEngine()` colgaba solo de `open()`, que en
+    // este camino no se llama nunca: con `sidebar.engine = spa`, `/entradas` y —peor— la vuelta del
+    // pago abrían el cajón con **el hueco VACÍO**. Encontrado en el extremo a extremo con navegador
+    // (`VERIFICACION-E2E-CAJON.md`); ninguna paridad podía verlo, porque todas montan los componentes
+    // por su cuenta y nunca pasan por este arranque. Es no-op con el motor Livewire (no hay hueco).
+    //
+    // ⚠️ (2) El bloqueo de scroll también es del dueño único, y aquí había una asimetría: el modal de
+    // auth abierto al cargar (`/registro`) no bloqueaba nada, porque el `x-init` que lo hacía vivía
+    // solo en el cajón. Pedir la llave aquí arregla los dos casos y retira ese sexto escritor.
+    if (window.Alpine.store('purchase').isOpen) {
+        scrollLock.lock('sidecart');
+        window.Alpine.store('purchase').bootSpaEngine();
+    }
+
     if (window.Alpine.store('auth').modal) scrollLock.lock('auth');
 
     window.Alpine.data('a11yPanel', (openExpr) => ({

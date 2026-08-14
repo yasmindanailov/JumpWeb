@@ -53,13 +53,20 @@ export function mount(el, boot = {}) {
     });
     app.use(pinia);
 
-    const store = usePurchaseStore(pinia);
-    store.boot(machine);
-
     // El desenlace de la pasarela decide en qué paso ABRE el cajón. Lo posee `Http\Sidebar\SidebarEntry`
     // en servidor (paso 4.0a) y llega ya consumido: mirarlo dos veces reabriría el cajón en cada
     // página hasta que caducara la sesión, que es el fallo que aquel paso cerró.
+    //
+    // ⚠️ **Va ANTES de `store.boot()`, y el orden es el fallo que rompía la Fase 4 entera.** El store
+    // copia `machine.step` en `boot()`, `go()` y `enter()`; una llamada DIRECTA a la máquina después de
+    // arrancar lo deja desincronizado —la máquina en el paso 6 y el store en el 1— y Vue pinta desde el
+    // store: quien volvía de pagar veía **el catálogo**. Ningún test podía verlo (la máquina se prueba
+    // sola, los componentes se montan con props y nadie ejecuta esta secuencia); lo encontró el extremo
+    // a extremo con navegador.
     if (boot.outcome) machine.enterOutcome(boot.outcome);
+
+    const store = usePurchaseStore(pinia);
+    store.boot(machine);
 
     const root = app.mount(el);
 

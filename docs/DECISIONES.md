@@ -2376,3 +2376,63 @@ los dos motores lo hace** —cero llamadas a `focus()` al mover de paso, en los 
 está (`a11yPanel`: primer foco al abrir y trampa de Tab). Es un hueco heredado, no una regresión de la
 SPA, y por eso va a `DEUDA.md` en vez de a un paso: nombrarlo importa para que nadie lea §6 y crea que
 el motor nuevo lo perdió.
+
+## #59 · 2026-08-14 · El extremo a extremo con navegador, y los CUATRO fallos que solo él veía
+Se ejecutó por fin la verificación que `specs/sidebar-spa.md` §6 pedía desde el principio: recorrer la
+compra con los DOS motores, contra la pasarela REAL en sandbox, con un navegador de verdad. **Encontró
+cuatro cosas, tres de ellas rotas de raíz, y ninguna la veía la suite.** La fase se daba por transcrita
+y el motor SPA **no funcionaba en producción**.
+
+**(a) ⚠️ EL FALLO MAYOR: el desenlace del pago nunca llegaba al store, así que TODA la Fase 4.6 era
+invisible.** `index.js` aplicaba `machine.enterOutcome(boot.outcome)` **después** de `store.boot()`, y
+el store no observa la máquina: la COPIA, en `boot()`, `go()` y `enter()`. Resultado: la máquina en el
+paso 6 y el store en el 1 — y Vue pinta desde el store. **Quien volvía de pagar veía el catálogo.** Las
+tres pantallas de desenlace, sus paridades y sus mutaciones estaban perfectas; nadie ejecutaba la
+secuencia de montaje. Arreglado (el desenlace se aplica ANTES de arrancar el store) y con red propia:
+`store.test.js` reproduce esa secuencia con Pinia en `node --test` — que se podía hacer desde 4.1 y no
+se hizo.
+
+**(b) ⚠️ El motor SPA no montaba cuando el cajón NACÍA abierto.** `bootSpaEngine()` colgaba solo de
+`open()`, que en ese camino no se llama nunca. Los dos disparadores son `data-purchase-open`: el enlace
+profundo `/entradas` y **la vuelta de la pasarela**. Con `sidebar.engine = spa`, las dos abrían el cajón
+con el hueco **VACÍO**. Arreglado en el arranque de Alpine, junto al bloqueo de scroll inicial.
+
+**(c) ⚠️ El catálogo del cajón SPA no enseñaba ni un producto.** El CSS colapsa `.catalog-acc__body`
+con `grid-template-rows: 0fr` y solo `.is-open` lo abre. El Blade la emitía **siempre** —vía un
+`:class` de Alpine cuyo `isOpen()` devuelve `true` fijo desde #P6— y `CatalogStep.vue` no la emitía
+nunca. **El diff de árbol no podía verlo**: el normalizador descarta los `:*` como andamiaje, así que
+los dos árboles salían idénticos. Es el mismo agujero que `aria-expanded` (`#58(f)`), esta vez tapando
+el paso 1 entero. **Arreglado en el ORIGEN**: la clase pasa a estática en los DOS motores, con lo que el
+binding muerto desaparece y **el gate vuelve a verla** — verificado por mutación.
+
+**(c.bis) Y ese arreglo destapó un efecto de alcance en otro gate.** `SidebarTokenBudgetTest` deduce
+«qué CSS es del sidebar» leyendo los `class="…"` del Blade; al entrar `is-open` —un modificador de
+ESTADO compartido con el velo y los modales— el escaneo se comió medio `site.css` y el recuento de
+colores crudos subió de 3 a 4 sin que nadie tocara una línea de CSS. Los `is-…` quedan excluidos.
+
+**(d) DIVERGENCIA de conducta, declarada y NO arreglada**: elegir día. En Livewire `selectDate()` solo
+lo MARCA y hay que pulsar «Continuar» (`goToTime`); en la SPA avanza sola al paso 3, así que el CTA
+«Continuar» del paso 2 es **inalcanzable**. Ningún test podía verlo: el diff renderiza cada paso por
+separado. Se anota en `DEUDA.md` en vez de tocarse: quitar un clic puede ser mejor UX, pero es un cambio
+de producto y no estaba decidido.
+
+**(e) Lo que SÍ funciona, medido de punta a punta y en los dos motores**: catálogo → día → hora →
+cantidad → campos del pack → carrito → pago → pasarela real → vuelta → **paso 6 con su resumen**. El
+cobro online es la **SEÑAL** (30,00 € de una reserva de 165,00 €), y los dos pedidos quedan
+**IDÉNTICOS en BD** —estado, total, online, pendiente en puerta, líneas, subtotales y respuestas—, que
+es exactamente el criterio que pedía §6. El paso 11 se verificó con la vuelta *data-less* real: pantalla
+de verificación, **sondeo cada 5 s**, salto solo al paso 6 al pagarse el pedido y **el sondeo PARA**.
+
+**(f) El andamio es desechable y está fuera del repo**, a propósito: Playwright + Chromium dentro del
+contenedor (que ya trae las librerías de Chromium para Dusk), con un puente TCP 8081→80 para que
+`APP_URL` y las cookies resuelvan igual que fuera. **No se añade al `package.json` ni al gate**: meter un
+navegador de 115 MB y un tercero en el camino crítico del `pre-push` es una decisión aparte, con su
+coste. La receta está en `VERIFICACION-E2E-CAJON.md`.
+
+**(g) Lo que el andamio aprendió de la pasarela, y que ahorra una hora**: el botón «Pagar» solo se
+habilita si se rellena el **titular** (con la tarjeta perfecta sigue `disabled`); hay que **teclear**, no
+`fill()`, porque la pasarela rellena sus campos ocultos desde eventos de teclado; el sandbox mete
+**siempre** un simulador EMV 3DS por medio; **denegar el 3DS NO vuelve al comercio** —devuelve al
+formulario de tarjeta—, así que el KO se provoca cancelando; y cada recorrido abortado deja un pedido
+pendiente, de modo que a los cinco el **tope de pendientes** deniega el checkout y parece un fallo del
+andamio cuando es la app haciendo lo correcto.

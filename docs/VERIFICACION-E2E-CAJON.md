@@ -1,7 +1,26 @@
 # Verificación extremo a extremo del cajón SPA — guion operativo
 
-> Estado: vivo · Creado 2026-08-14 · Es la forma EJECUTABLE de `specs/sidebar-spa.md` §6.
+> Estado: vivo · Creado 2026-08-14 · **EJECUTADO el 2026-08-14** (`DECISIONES #59`) ·
+> Es la forma EJECUTABLE de `specs/sidebar-spa.md` §6.
 > Se invalida si: cambia el corte de pasos del cajón o el driver de pasarela.
+
+## ▶ Resultado de la PRIMERA ejecución (2026-08-14)
+
+Se recorrió con navegador headless (Playwright) y la pasarela REAL en sandbox, con los dos motores.
+**Encontró cuatro cosas y tres estaban rotas de raíz** — el motor SPA no funcionaba en producción
+pese a tener la fase entera transcrita y en verde. El detalle está en `DECISIONES #59`; en corto:
+
+| # | Qué | Estado |
+|---|---|---|
+| a | **El desenlace del pago no llegaba al store**: quien volvía de pagar veía el catálogo. Toda la 4.6, invisible | ✅ arreglado + red en `store.test.js` |
+| b | **El motor no montaba con el cajón nacido abierto** (`/entradas` y la vuelta del pago): hueco vacío | ✅ arreglado |
+| c | **El catálogo SPA no enseñaba ni un producto** (`is-open` ausente; el diff no podía verla) | ✅ arreglado en el ORIGEN, y ahora el gate SÍ la ve |
+| d | **Elegir día avanza solo en la SPA y no en Livewire** | 🟦 declarado en `DEUDA.md` — decisión de producto |
+
+✅ **Verificado de punta a punta en los DOS motores**: el embudo entero, el cobro de la **señal**
+(30,00 € de una reserva de 165,00 €), la vuelta al paso 6, y **los dos pedidos IDÉNTICOS en BD**. El
+paso 11 se comprobó con la vuelta *data-less* real: sondeo cada 5 s, salto solo al paso 6 y **parada**
+del sondeo. Lo que sigue sin verificarse está en §6 de este documento.
 
 ## 0. Qué es esto, y qué NO es
 
@@ -224,6 +243,37 @@ Para cada caso, una línea: `A1 spa ✅` / `A2 spa ⚠️ el motivo salía vací
 - en qué paso, con qué motor y qué se esperaba;
 - lo que dijo la consola del navegador (literal);
 - el código del pedido, que es lo que permite reconstruirlo desde la BD.
+
+## 5.bis El ANDAMIO automático (opcional, y fuera del repo)
+
+La primera ejecución no se hizo a mano: se montó un navegador headless. **No está en el repo ni en el
+gate a propósito** —115 MB de navegador y un tercero en el camino crítico del `pre-push` son una
+decisión con coste, no un detalle— pero la receta es corta y reproducible:
+
+- **Dentro del contenedor**, que ya trae las librerías de Chromium (Sail las incluye para Dusk; el host
+  WSL NO las tiene): `mkdir /root/e2e && cd /root/e2e && npm i playwright && npx playwright install chromium`.
+- **Puente de puerto 8081→80** dentro del contenedor (15 líneas de Node con `net.createServer`): hace
+  falta porque `APP_URL` es `http://localhost:8081` y de ahí salen las cookies, las URLs absolutas y la
+  vuelta de Redsys. Sin él, la vuelta apunta a un puerto que dentro no existe.
+- **`reducedMotion: 'no-preference'`** en el contexto: headless declara `reduce` y `celebrate()` se salta
+  el confeti con esa preferencia — sin eso se mide la ausencia como si fuera un fallo.
+
+⚠️ **Lo que el andamio aprendió de la pasarela, y ahorra una hora:**
+
+1. **El botón «Pagar» solo se habilita si se rellena el TITULAR.** Con la tarjeta perfectamente escrita
+   sigue `disabled`, y no hay ningún mensaje que lo diga.
+2. Hay que **TECLEAR** (`pressSequentially`), no `fill()`: la pasarela rellena sus campos ocultos desde
+   eventos de teclado reales.
+3. El sandbox mete **siempre** un **simulador EMV 3DS** por medio, con tres salidas (éxito / denegar /
+   cancelar por el titular).
+4. ⚠️ **Denegar el 3DS NO devuelve al comercio**: vuelve al formulario de tarjeta pidiendo otra. El KO se
+   provoca **cancelando** en la pasarela.
+5. Tras pagar hay un **resguardo** con un botón «Continuar»; no hay redirección automática.
+6. **Cada recorrido abortado deja un pedido pendiente**, y a los cinco el tope de pendientes deniega el
+   checkout: parece un fallo del andamio y es la app haciendo lo correcto. Hay que caducarlos entre casos.
+7. El catálogo tarda más en la SPA (chunk + tres peticiones): **esperas por CONDICIÓN, no por reloj**.
+8. Varios recursos de la pasarela dan **404 en su propio sandbox** (`999008881-1-ni.js`, algunos PNG) y
+   su página lanza `$ is not defined`. Es ruido suyo, no nuestro: no lo cuentes como error de la app.
 
 ## 6. Lo que este guion NO cubre, y hay que decirlo
 
