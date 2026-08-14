@@ -269,8 +269,12 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
      Es el espejo exacto de `confirmReservation()`: no hay que orquestar nada en el cliente.
    · **Lo que `confirmReservation()` hace además, y hay que transcribir**: vaciar la cesta (y
      persistirla vacía), guardar el código del pedido y no volver atrás.
-   · ⚠️ **El techo del bundle está en 135 kB y el chunk pesa 133,1**: quedan **2 kB** y faltan cinco
-     pantallas. Subirlo es una decisión que se toma con su medición, como en 4.4a·2.
+   · **El presupuesto del bundle, con las unidades bien puestas**: el chunk pesa **130,0 KiB** y el
+     techo son **135 KiB**, así que quedan **5,0 KiB**. ⚠️ Ojo al leer los números: Vite los imprime en
+     base 1000 («133,1 kB») y el test los mide en base 1024, así que restar uno del otro da un margen
+     más pequeño del real —se hizo, y por eso queda dicho aquí—. Lo que de verdad viaja por la red son
+     **44,6 kB comprimidos**. Si el pago no cabe, subir el techo es una decisión con su medición, como
+     en 4.4a·2; no es un límite técnico, es una guarda contra el engorde por arrastre.
    · ⚠️ **Entre 4.5 y 4.6 no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
    · Y el contrato pide **releer el estado tras un 409 `reservations_paused`**, que es el último
      residual de la pausa.
@@ -292,9 +296,9 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
    · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
      `OrderCreator` la rechaza con `line_event_required`. El dato ya está: al restaurar se piden los
      `event_fields` de los productos de la cesta.
-   · **El techo del bundle está en 135 kB y el chunk pesa 131,7**: quedan ~3 kB. El pago y las tres
-     pantallas de desenlace **no caben**: subirlo es una decisión que hay que tomar con su medición,
-     como se hizo en 4.4a·2.
+   · **El presupuesto del bundle**: 135 KiB de techo. Ver el punto equivalente del paso 4.5·2 para las
+     unidades — Vite imprime en base 1000 y el test mide en base 1024, y confundirlos encoge el margen
+     aparente.
 3. **4.6 en adelante** — el corte completo, en §4.10 del spec.
    ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
 4. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica

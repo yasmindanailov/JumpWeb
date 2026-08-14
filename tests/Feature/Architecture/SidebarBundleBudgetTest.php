@@ -53,10 +53,16 @@ class SidebarBundleBudgetTest extends TestCase
      * reutilizan ese runtime. Con 120 el margen quedaba en 0,30 kB, que no es un presupuesto sino un
      * accidente esperando.
      *
-     * Quedan ~12 kB (medidos con la misma división por 1024 que usa el assert) para el registro
-     * embebido, el pago y las tres pantallas de desenlace. Si el paso que los meta se pasa, la decisión
-     * vuelve a ser SUBIR el techo con su motivo escrito — no dejar que lo empuje el arrastre, que es lo
-     * que este test existe para impedir.
+     *   · 4.4b·1 (alta embebida + paso 7) .................. 131,70 kB
+     *   · 4.5·1 (la cesta pide lo que le falta) ............ 133,12 kB
+     *
+     * ⚠️ **CUIDADO AL RESTAR: las dos cifras no están en la misma unidad.** Vite imprime en base 1000
+     * («133,12 kB») y este assert divide entre 1024, así que el chunk mide **130,0 KiB** y el margen
+     * real es **5,0 KiB** — no los 2 que sale de restar el número de Vite del techo. Se hizo esa resta
+     * al cerrar 4.5·1 y el margen aparente salió menos de la mitad del verdadero.
+     *
+     * Si el paso que meta el pago se pasa, la decisión vuelve a ser SUBIR el techo con su motivo
+     * escrito — no dejar que lo empuje el arrastre, que es lo que este test existe para impedir.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 135;
 
