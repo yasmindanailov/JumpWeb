@@ -13,6 +13,7 @@
 | `GLOSARIO.md` | Lenguaje ubicuo: término de dominio ↔ artefacto real de código/BD, con estado de generalización. |
 | `DEUDA.md` | Registro único de deuda técnica con severidad, medida y fase que la retira. |
 | `INSTALACION-CLIENTE.md` | Checklist de instanciar un cliente white-label (settings, tema, contenido, Redsys, cron). |
+| `VERIFICACION-E2E-CAJON.md` | Guion OPERATIVO del extremo a extremo del cajón SPA con la pasarela en sandbox: la forma ejecutable de `specs/sidebar-spa.md` §6. Empieza diciendo qué NO hace falta mirar porque ya tiene red automática. Es lo único que separa a `sidebar.engine = spa` de poder desplegarse. |
 | `specs/PLANTILLA.md` | Plantilla de spec para diseños previos a implementación (`specs/`). |
 | `specs/vocabulario-dominio.md` | 🟦 Diseño de generalización del vocabulario (entrada de Fase 2; decisión final con los módulos). |
 | `specs/modulos-dominio.md` | ✅ Arquitectura de módulos de Fase 2 APROBADA (revisión multi-agente) — orden, contratos y checklists de mudanza. |

@@ -289,17 +289,23 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      bastar: el widget es un contenedor y un script EXTERNO, que no viaja en el bundle. Ver el aviso de
      unidades de `SidebarBundleBudgetTest` antes de restar — Vite imprime en base 1000 y el test mide en
      base 1024, y confundirlos encoge el margen aparente.
-2. **El EXTREMO A EXTREMO con la pasarela en sandbox** (§6 del spec), que es lo único que separa al
-   flag de poder desplegarse. Lo que hay que saber:
+2. **El EXTREMO A EXTREMO con la pasarela en sandbox**, que es lo único que separa al flag de poder
+   desplegarse. ▶ **El guion operativo está escrito: `docs/VERIFICACION-E2E-CAJON.md`** — empieza por la
+   tabla de qué NO hace falta mirar (media docena de casos de §6 ya tienen red automática) y sigue con
+   los dos bloques, el que va sin túnel y el que lo necesita. Lo que hay que saber:
    · **Es la última pieza de verificación que la fase declaró y que NADIE ha hecho todavía**: recorrer
      la compra con los DOS motores contra Redsys en sandbox y **comparar el pedido en BD**. Todo lo
      demás está cubierto por paridades, pero ninguna de ellas ejecuta un navegador ni la pasarela real.
    · **Lo que solo se puede ver ahí**: el auto-envío del paso 9 (`onMounted` no corre en SSR, así que el
      gate compara el marcado sin dispararlo), el confeti del paso 6, el sondeo del 11 vivo, y que el
      puente hacia Livewire sigue hablando (`account-context`, los modales de auth).
-   · **El guion ya está escrito** en §6: los once pasos y sus caminos raros —pausa, tope de pendientes,
-     frecuencia, agotado, vuelta *data-less*, carrera notificación-antes-que-navegador, pedido caducado
-     durante el sondeo, `NOT_RETRYABLE`, sesión perdida entre pasos, cesta cruzada—.
+   · ⚠️ **Dos datos que ahorran una hora, medidos al escribir el guion**: el sandbox de Redsys **YA está
+     configurado** en dev (FUC 999008881, terminal 001, clave puesta, entorno test) y los dos packs de
+     cumpleaños traen señal, campos de evento, post-form y complementos — comprar un pack ejercita todo
+     el resumen de una vez. Lo único que falta es `redsys_merchant_url`, que es la notificación S2S y
+     necesita túnel.
+   · ⚠️ **El flag NO es editable desde el panel**, al contrario de lo que dice el spec §4.9: hoy es solo
+     una fila de `settings`. El guion trae los dos comandos.
    · ✅ **La accesibilidad de §6 ya está cerrada salvo un punto** (`DECISIONES #58`): `no-scroll` tiene
      dueño único con guarda ejecutable, y los `role`/`aria-*` los compara el diff. ⚠️ **Lo único que
      sigue abierto es el foco al cambiar de paso, que NINGUNO de los dos motores hace** — hueco
