@@ -8,7 +8,8 @@ import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
-import { runCheckout } from './admission.js';
+import { continueAfterIdentification, runCheckout } from './admission.js';
+import { runLogin } from './login.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership,
     load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
@@ -18,6 +19,7 @@ import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
 import TimeStep from './steps/TimeStep.vue';
 import CartStep from './steps/CartStep.vue';
+import IdentifyStep from './steps/IdentifyStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -36,6 +38,18 @@ const props = defineProps({
 
     /** El grupo `ui` (hoy, solo el rótulo del velo de carga). Va aparte: son dos grupos de `lang/`. */
     ui: { type: Object, default: () => ({}) },
+
+    /**
+     * El grupo `account`, PODADO a lo que el paso de identificación pinta (§4.5).
+     *
+     * ⚠️ Va aparte y con su camino real (`account.login.email`) por lo mismo que `ui`: son grupos
+     * distintos de `lang/`, y fundirlos aquí crearía una tercera forma del diccionario. Medido: el
+     * grupo entero son 9,6 kB en español —tanto como `tickets`— para pintar diez rótulos.
+     */
+    account: { type: Object, default: () => ({}) },
+
+    /** El grupo `auth`: los dos avisos del login (`failed`, `throttle`). Tres claves. */
+    auth: { type: Object, default: () => ({}) },
 
     /**
      * Quién es el titular al cargar la página, inyectado por el servidor. `null` = visitante anónimo.
@@ -645,16 +659,28 @@ function runAction(action) {
 }
 
 /**
+ * Los pasos que el motor SPA sabe PINTAR hoy. Un veredicto que lleve a otro **no navega**.
+ *
+ * ⚠️ No es una precaución teórica: ir al paso 8 antes de 4.5 dejaría el cajón con el armazón y la
+ * ranura vacía —velo, banda y pie, y nada dentro—, que es peor que un CTA mudo. La lista **solo
+ * crece**: al transcribir el pago se añade aquí y en `render-sidebar.mjs`, que es su espejo.
+ */
+const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY];
+
+/** Lleva el cajón al paso que diga el veredicto, si esa pantalla ya existe. */
+function goToVerdict(step) {
+    if (TRANSCRIBED_STEPS.includes(step)) store.go(step);
+}
+
+/**
  * «Ir a pagar». Espejo de `Purchase::checkout()`.
  *
  * **Aquí solo está el cableado**: preguntar, aplicar la identidad y decidir es `runCheckout()`, que
  * vive en `admission.js` porque la lógica que baja a un `.vue` pierde su red (CE-6) — un árbol no
  * dice a quién se preguntó, en qué orden, ni si la cesta se purgó por el camino.
  *
- * ⚠️ **A dónde se va todavía NO se navega, y es deliberado**: los pasos 5 (identificación) y 8 (pago)
- * no están transcritos —son 4.4b y 4.5—, así que navegar dejaría el cajón en blanco, que es peor que
- * un CTA mudo. El destino se decide igualmente y `SidebarAdmissionParityTest` lo compara con el del
- * componente Livewire: cuando esas pantallas existan, esto es cablear, no volver a decidir.
+ * Desde 4.4a·2 el invitado SÍ llega a su pantalla; el paso de pago sigue sin transcribir (4.5), así
+ * que ese destino lo filtra `goToVerdict()`.
  */
 async function checkout() {
     const verdict = await tracked(runCheckout({
@@ -675,6 +701,100 @@ async function checkout() {
     }
 
     cartError.value = verdict.error;
+    goToVerdict(verdict.step);
+}
+
+// ── El paso 5: identificarse sin salir del cajón ──────────────────────────────────────────────
+
+/** Las credenciales que se están tecleando. Viven aquí y se limpian al salir del paso. */
+const credentials = ref({ email: '', password: '', remember: false });
+
+/** Lo que el formulario enseña del último intento: `{global, fields}` (`login.js`). */
+const loginError = ref({ global: '', fields: {} });
+
+/** `true` mientras el login está en vuelo: el botón cambia de rótulo, como en la web. */
+const loggingIn = ref(false);
+
+/** La pestaña activa del paso 5. */
+const authMode = ref('login');
+
+/**
+ * Cambia de pestaña. Espejo de `Purchase::setAuthMode()`… **hasta donde se puede.**
+ *
+ * ⚠️ **El registro no se acepta todavía, y es deliberado**: su formulario es 4.4b, así que marcar la
+ * pestaña como activa dejaría un rótulo «Crear cuenta» encendido con un formulario de LOGIN debajo —
+ * que es peor que un botón que no responde, porque miente sobre lo que va a pasar—. El botón existe
+ * porque el árbol lo exige (`SidebarDomContractTest` lo compara) y no lleva a ninguna parte, igual que
+ * «Ir a pagar» hasta 4.4a·1.
+ */
+function setAuthMode(mode) {
+    if (mode === 'login') authMode.value = 'login';
+}
+
+/**
+ * Envía las credenciales y, si entra, continúa la compra donde la dejó.
+ *
+ * ⚠️ **Tres cosas pasan al entrar, y ninguna sobra**:
+ *  1. **se avisa a Livewire** (`logged-in`). Fuera del cajón, `account-context` es un componente
+ *     Livewire que escucha ese evento para repintar «Hola, saltador/a»; sin el aviso, el panel seguiría
+ *     ofreciendo «Entrar» a alguien que acaba de entrar, y ningún test de este repo lo vería;
+ *  2. **se aplica la identidad** con la respuesta del propio login —`POST auth/login` devuelve el
+ *     perfil con la misma forma que `GET /me` justo para esto—, así que la cesta de invitado se queda
+ *     con su nuevo dueño sin una petición más;
+ *  3. **se continúa el checkout**, que es lo que hace `Purchase::onAuthenticated()` llamando a
+ *     `proceed()`: quien se identifica con el tope de pendientes lleno tiene que enterarse aquí.
+ */
+async function submitLogin() {
+    if (loggingIn.value) return;
+
+    loggingIn.value = true;
+
+    try {
+        const result = await tracked(runLogin({
+            credentials: credentials.value,
+            api,
+            messages: props.messages,
+            auth: props.auth,
+        }));
+
+        loginError.value = result.errors;
+
+        if (! result.ok) return;
+
+        notifyLoggedIn();
+        applyIdentityFrom(result.response);
+        resetLoginForm();
+
+        const verdict = await tracked(continueAfterIdentification({
+            cartCount: cart.value.length,
+            me: result.response,
+            api,
+            messages: props.messages,
+            refreshStatus: refreshBookingStatus,
+        }));
+
+        cartError.value = verdict.error;
+        goToVerdict(verdict.step);
+    } finally {
+        loggingIn.value = false;
+    }
+}
+
+/**
+ * Avisa al resto de la página de que hay sesión.
+ *
+ * ⚠️ **El bus es el de Livewire y no un `CustomEvent` propio**: quien escucha es `account-context`, un
+ * componente Livewire con `#[On('logged-in')]`, y Livewire solo atiende su propio canal. Con la SPA
+ * montada, este motor ocupa el sitio del componente `Purchase`, que era quien lo emitía.
+ */
+function notifyLoggedIn() {
+    window.Livewire?.dispatch('logged-in');
+}
+
+/** Deja el formulario en blanco. La contraseña no se queda en memoria más de lo necesario. */
+function resetLoginForm() {
+    credentials.value = { email: '', password: '', remember: false };
+    loginError.value = { global: '', fields: {} };
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
@@ -889,5 +1009,19 @@ function goBack() {
             :locale="locale"
             @remove="removeLine"
             @add-another="addAnother" />
+
+        <IdentifyStep
+            v-else-if="store.step === STEPS.IDENTIFY"
+            v-model:email="credentials.email"
+            v-model:password="credentials.password"
+            v-model:remember="credentials.remember"
+            :mode="authMode"
+            :errors="loginError"
+            :submitting="loggingIn"
+            :messages="messages"
+            :account="account"
+            @back="goToCart"
+            @set-mode="setAuthMode"
+            @submit="submitLogin" />
     </Shell>
 </template>

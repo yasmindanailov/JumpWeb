@@ -171,17 +171,52 @@ export async function runCheckout({ cartCount, api, messages = {}, applyIdentity
         return { step: STEPS.CATALOG, error: '', rereadStatus: false, purged: true };
     }
 
-    const decision = decideCheckout({ cartCount, me, eligibility, messages });
+    return settle({ cartCount, me, eligibility, messages }, refreshStatus);
+}
+
+/**
+ * Lo que pasa DESPUÉS de identificarse dentro del cajón (Fase 4 · paso 4.4a·2).
+ *
+ * Espejo de `Purchase::onAuthenticated()`, que llama a `proceed()`: el mismo camino que el clic de
+ * pagar, menos la pregunta por la identidad — quien acaba de entrar ya la trajo. `POST auth/login`
+ * devuelve el perfil con la misma forma que `GET /me` **justo para esto**, así que identificarse no
+ * cuesta una petición de más.
+ *
+ * ⚠️ No se salta la elegibilidad: el aviso temprano vale igual para quien acaba de entrar, y en la web
+ * lo da el mismo `proceed()`. Quien se identifique con el tope de pendientes lleno tiene que verlo aquí
+ * y no en la pantalla de pago.
+ *
+ * @param {{
+ *   cartCount: number,
+ *   me: {ok: boolean, status: number, data: any},
+ *   api: {get: (path: string) => Promise<object>},
+ *   messages: object,
+ *   refreshStatus: () => Promise<boolean>,
+ * }} deps
+ * @returns {Promise<CheckoutVerdict & {purged: boolean}>}
+ */
+export async function continueAfterIdentification({ cartCount, me, api, messages = {}, refreshStatus }) {
+    const eligibility = await api.get('/me/reservation-eligibility');
+
+    return settle({ cartCount, me, eligibility, messages }, refreshStatus);
+}
+
+/**
+ * Decide y, si el veredicto es la pausa, relee el estado para que el cartel pueda aparecer.
+ *
+ * ⚠️ **La relectura es lo que HACE aparecer el cartel, así que si falla el clic se queda mudo.** El
+ * veredicto de pausa no compone mensaje —el cartel habla por él—, de modo que un fallo aquí dejaría un
+ * botón que no enseña nada: ni cartel, ni aviso, ni movimiento. Se degrada al aviso genérico, cuyo
+ * consejo —esperar y reintentar— es correcto también para esto.
+ */
+async function settle(state, refreshStatus) {
+    const decision = decideCheckout(state);
 
     if (! decision.rereadStatus) {
         return { ...decision, purged: false };
     }
 
-    // ⚠️ **La relectura es lo que HACE aparecer el cartel, así que si falla el clic se queda mudo.**
-    // El veredicto de pausa no compone mensaje —el cartel habla por él—, de modo que un fallo aquí
-    // dejaría un botón que no enseña nada: ni cartel, ni aviso, ni movimiento. Se degrada al aviso
-    // genérico, cuyo consejo —esperar y reintentar— es correcto también para esto.
     const reread = await refreshStatus();
 
-    return { ...decision, error: reread ? '' : t(messages, 'errors.try_later'), purged: false };
+    return { ...decision, error: reread ? '' : t(state.messages, 'errors.try_later'), purged: false };
 }

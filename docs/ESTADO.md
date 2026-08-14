@@ -8,18 +8,18 @@
 
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
-**4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a·1 ✅** (el CTA de
-pagar pregunta quién eres y si puedes reservar) → **toca 4.4a·2, la PANTALLA de identificación**.
-El corte está en `docs/specs/sidebar-spa.md` §4.10.
+**4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a ✅ COMPLETO**
+(·1 el CTA pregunta quién eres y si puedes reservar · ·2 la pantalla de identificación) → **toca 4.4b,
+el registro embebido**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`) y 4.4a en dos (`#51`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`) y 4.4a en dos (`#51`, `#52`). En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2652 en verde** (15.021 aserciones, `--parallel` ~65 s) · **139 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2660 en verde** (15.093 aserciones, `--parallel` ~68 s) · **158 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -226,13 +226,14 @@ con su pie, su aviso de pausa y su persistencia (4.3·1–·4), y la DECISIÓN d
 abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
 producto → día → hora → cantidad → complementos → **añadir al carrito → carrito con su total**, y con
 las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Al
-pulsar «Ir a pagar» ya **pregunta quién eres y si puedes reservar** (4.4a·1) y avisa cuando el
-servidor va a decir que no —tope de pendientes, frecuencia— o pinta el cartel si las reservas se
-acaban de pausar. Y ahí se para: **cuando la respuesta es que SÍ, el CTA sigue sin llevar a ninguna
-parte**, porque las pantallas destino son 4.4b (identificarse) y 4.5 (pagar). La cesta **sí sobrevive
-a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO se activa en
-producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en
-vivo (`CE-1`).
+pulsar «Ir a pagar» **pregunta quién eres y si puedes reservar** (4.4a·1) y avisa cuando el servidor va
+a decir que no —tope de pendientes, frecuencia— o pinta el cartel si las reservas se acaban de pausar.
+Si eres invitado, **te lleva a la pantalla de identificación y puedes ENTRAR desde el propio cajón**
+(4.4a·2), con los mismos textos y el mismo limitador que la web. Y ahí se para: **quien ya está dentro
+se queda en el paso 5**, porque las dos pantallas que siguen son 4.4b (crear cuenta) y 4.5 (pagar). La
+cesta **sí sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO
+se activa en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar
+los dos en vivo (`CE-1`).
 
 ❗ **Precondición del paso de PAGO, apuntada aquí para que no se descubra tarde**: una línea de PACK
 restaurada vuelve **sin sus respuestas** (`DECISIONES #38(d)`, RGPD) y `OrderCreator` la rechaza con
@@ -251,28 +252,26 @@ Livewire sí, porque reevalúa su guarda en cada render. El contrato pide ademá
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.4a·2 — la PANTALLA de identificación** (paso 5). La decisión de llegar a ella ya está tomada y
-   probada (4.4a·1); lo que falta es transcribirla. Lo que hay que saber antes:
-   · **Lo que el paso 5 emite hoy en Livewire**: su propio botón «Volver al carrito» —no tiene banda
-     de progreso—, título, intro, las dos pestañas `zone-tab` (login/registro) y, dentro,
-     `<livewire:auth.login :embedded="true">` o su hermano de registro. **Ahí está el corte con 4.4b**:
-     el marcado del paso es de ·2, y el registro embebido con su restauración de cesta es 4.4b.
-   · ⚠️ **La defensa anti-cesta-cruzada del servidor desaparece en cuanto el cajón se identifique por
-     API**: `POST /api/v1/auth/login` **no toca `purchase.*`** en ninguna línea (verificado), así que
-     no escribe el marcador ni purga nada. Desde 4.3·4 la purga vive en el cliente y cubre las cinco
-     casillas, y desde 4.4a·1 se reevalúa además **en el clic de pagar**, que es el momento crítico.
-   · **`GET /me` está cableado en tres sitios**: al abrir el cajón, al oír `logged-in` y al pulsar «Ir
-     a pagar» (este último en paralelo con la elegibilidad). Los tres pasan por `applyIdentityFrom()`,
-     que es el único sitio donde vive la regla del 401.
-   · **Al identificarse hay que volver a decidir**: `Purchase::onAuthenticated()` llama a `proceed()`
-     desde el paso 5, o sea que el camino es el mismo `runCheckout()` que ya existe — no se escribe
-     otra vez.
+1. **4.4b — el registro embebido**, declarado **el más peligroso de la fase**: es el único que cruza la
+   frontera Livewire↔Vue en los dos sentidos y no tiene guardián en servidor. Lo que hay que saber:
+   · **La pestaña «Crear cuenta» ya existe y NO hace nada**, a propósito (`#52(f)`): marcarla activa
+     dejaría su rótulo encendido con un formulario de LOGIN debajo. Su formulario son **51 nodos** —el
+     de login son 31—, medidos.
+   · ⚠️ **Cómo se mide el árbol de ese paso**: hay que llegar **pulsando la pestaña**. Con
+     `->set('authMode', …)` Livewire deja el hijo VACÍO y el diff compara armazón contra armazón; un
+     motor SPA sin formulario pasaría en verde. Hay un caso que fija ese hecho.
+   · **El payload del montaje lleva `account` PODADO** (`login` + el `cta` de `register`): al pintar el
+     registro habrá que ampliarlo, y hay guarda de que sigue podado y de que lleva lo que se pinta —una
+     clave que falte se pinta VACÍA y nada avisa—.
+   · **Tras registrarse, el camino ya existe**: `continueAfterIdentification()` es el mismo que usa el
+     login, y `notifyLoggedIn()` es el puente que hace repintar `account-context`.
+   · ⚠️ **`POST /api/v1/auth/register` no toca `purchase.*`**, igual que el login (verificado): la
+     purga por titular vive en el cliente desde 4.3·4 y se reevalúa al pulsar pagar.
    · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
      `OrderCreator` la rechaza con `line_event_required`. El dato ya está: al restaurar se piden los
      `event_fields` de los productos de la cesta.
-   · ⚠️ Y el paso **4.4b** (registro embebido + restauración de cesta) sigue declarado **el más
-     peligroso de la fase**: es el único que cruza la frontera Livewire↔Vue en los dos sentidos y no
-     tiene guardián en servidor.
+   · **El techo del bundle está en 135 kB y el chunk pesa 122,6**: quedan ~12 kB para el registro, el
+     pago y las tres pantallas de desenlace. Subirlo otra vez es una decisión, no un trámite.
 2. **4.5 en adelante** — el corte completo, en §4.10 del spec.
    ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
@@ -369,6 +368,29 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
     los tres idiomas, con las respuestas REALES de la API. El `:max` del tope sale de dos sitios
     distintos —el `context` del veredicto en Livewire y `max_pending_orders` en el sobre—, así que un
     desajuste entre ellos no se ve en ningún otro lado.
+
+- **4.4a·2 — la pantalla de identificación** (2026-08-14, `DECISIONES #52`). Cinco cosas que
+  condicionan lo que viene:
+  · ⚠️ **El árbol del paso 5 son 31 nodos, y llegar por el camino equivocado enseña 9.** Con
+    `->set('authMode', …)` Livewire deja el hijo `<div wire:name="auth.login"></div>` **VACÍO** —los
+    componentes hijos se hidratan en una petición posterior—, así que el diff compararía armazón contra
+    armazón y un motor SPA **sin formulario** pasaría en verde. Se llega **pulsando la pestaña**, y hay
+    un caso que fija ese hecho para que nadie lo simplifique de vuelta.
+  · ⚠️ **Los dos motores decían cosas DISTINTAS para el mismo rechazo** (`auth.failed` vs
+    `invalid_credentials`, y lo mismo con el limitador). El cajón ramifica sobre el **código** del sobre
+    y pinta el **literal del diccionario**: pintar el `message` habría cambiado la copia del cajón en
+    las tres lenguas sin que ningún gate lo dijera. La validación sí se pinta tal cual —los dos motores
+    usan las mismas reglas y sus textos ya coinciden, comprobado—.
+  · **El reparto de los avisos es contrato** (L-02): el del limitador al banner `_global` y el de
+    credenciales **bajo el campo email**. Juntarlos mezcla un mensaje genérico —que no revela si el
+    correo existe— con uno que sí dice algo del sistema.
+  · **El montaje lleva dos grupos nuevos y PODADOS** (`account.login` + el `cta` de `register`, y
+    `auth`): 538 bytes medidos en vivo. El grupo `account` entero son 9,6 kB **en cada página pública**,
+    y una clave que falte se pinta VACÍA sin que nada avise — por eso hay guarda de las dos cosas.
+  · **Al entrar pasan TRES cosas**: se avisa a Livewire (`logged-in`, que es lo que hace repintar
+    `account-context` fuera del cajón), se aplica la identidad con la respuesta del **propio login**
+    —trae el perfil con la forma de `GET /me`— y se continúa el checkout. Verificado en vivo que con el
+    motor SPA la página **sigue cargando Livewire**: sin eso, el puente no tendría con quién hablar.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -468,6 +490,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2652** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2660** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

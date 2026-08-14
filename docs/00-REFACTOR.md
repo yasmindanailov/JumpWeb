@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a·1** → toca 4.4a·2 (la pantalla de identificación)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO** (·1 elegibilidad · ·2 identificación) → toca 4.4b (registro embebido)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -762,6 +762,34 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         las respuestas **REALES** de la API. El cableado lo vigila `SidebarBundleBudgetTest` sobre el
         bundle construido. **Verificado por mutación 6 veces** y en vivo con `curl`.
       · Suite **2652 verde** · 139 tests JS · chunk del cajón 112,3 kB de 120.
+- [x] **Paso 4.4a·2 — la pantalla de identificación** (2026-08-14, `DECISIONES #52`). Cierra 4.4a: el
+      invitado que pulsa «Ir a pagar» ya llega a su pantalla, y el login habla con
+      `POST /api/v1/auth/login` —el mismo `PasswordLogin` que el modal de la web—.
+      · ⚠️ **El árbol del paso 5 son 31 nodos, y llegar por el camino equivocado enseña 9**: con
+        `->set('authMode', …)` Livewire deja el hijo `<div wire:name="auth.login"></div>` **VACÍO** y el
+        diff habría comparado armazón contra armazón — un motor SPA sin formulario pasaba en verde. El
+        caso llega pulsando la pestaña, y un segundo caso fija el hecho medido.
+      · ⚠️ **Los dos motores decían cosas DISTINTAS para el mismo rechazo** (`auth.failed` vs
+        `invalid_credentials`, y lo mismo con el limitador). El cajón ramifica sobre el CÓDIGO y pinta
+        el literal del diccionario; pintar el `message` habría cambiado la copia en las tres lenguas
+        sin que ningún gate lo dijera. La validación sí se pinta tal cual: los dos motores usan las
+        mismas reglas y sus textos ya coinciden.
+      · **El montaje inyecta `account` PODADO y `auth`**: el grupo entero son 9,6 kB —tanto como
+        `tickets`— para pintar diez rótulos, y viajaría en cada página pública. Medido en vivo: 538 B.
+        Guarda de que lleva todo lo que el paso pinta (una clave que falte se pinta VACÍA) y de que
+        sigue podado.
+      · **Al entrar pasan tres cosas**: se avisa a Livewire (`logged-in`, que es lo que hace repintar
+        `account-context` fuera del cajón), se aplica la identidad con la respuesta del propio login
+        —trae el perfil con la forma de `GET /me`— y se continúa el checkout, como `onAuthenticated()`.
+      · **El techo del bundle sube de 120 a 135 kB**, medido: el paso costó 9,97 kB y casi todo es
+        runtime de formularios de Vue que entra por primera vez. Con 120 el margen quedaba en 0,30 kB.
+      · **Red**: 20 casos de `node --test` (reparto de avisos, validación, envío), `SidebarLoginParityTest`
+        (textos en los tres idiomas contra el componente Livewire real + el payload del montaje) y dos
+        casos nuevos de árbol. **Verificado por mutación 3 veces** y en vivo con el flag activo.
+      · Suite **2660 verde** · 158 tests JS · chunk del cajón 122,6 kB de 135.
+      · ⚠️ **Lo que NO cierra**: el registro embebido es 4.4b y el pago 4.5, así que quien se identifica
+        **se queda en el paso 5** —navegar al 8 dejaría el cajón en blanco—. `TRANSCRIBED_STEPS` declara
+        en el código a qué pasos se puede navegar y **solo crece**.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

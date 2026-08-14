@@ -1901,3 +1901,74 @@ Node, que responde «releer el estado».
 se transcribe; y sigue viva la precondición de `#50(h)` —una línea de PACK restaurada vuelve sin sus
 respuestas y `OrderCreator` la rechaza—, que ahora está **un paso más cerca de morder** y no puede
 quedar fuera de 4.5.
+
+## #52 · 2026-08-14 · 4.4a·2 — el cajón identifica sin salir de sí mismo, y los dos textos que no coincidían
+Fase 4 · paso 4.4a, segundo tramo. El invitado que pulsa «Ir a pagar» ya llega a su pantalla: el paso 5
+está transcrito y el login habla con `POST /api/v1/auth/login`, que consume **el mismo**
+`Identity\Services\PasswordLogin` que el modal de la web — así que los dos limitadores de `SEC-06`, la
+comprobación de credenciales y el sello de última entrada son literalmente el mismo código.
+
+**(a) El árbol del paso 5 son 31 nodos, y llegar a él por el camino equivocado enseña 9.** Medido: con
+`->set('authMode', 'login')` sobre un componente recién montado, Livewire deja el hijo como
+`<div wire:id=… wire:name="auth.login"></div>` **VACÍO** —los componentes hijos se hidratan en una
+petición posterior—, así que el diff habría comparado armazón contra armazón y **un motor SPA sin
+formulario habría pasado en verde**. El caso llega al estado pulsando la pestaña, y hay un segundo caso
+que fija el hecho medido para que nadie lo «simplifique» de vuelta.
+
+**(b) Los dos motores decían cosas DISTINTAS para el mismo rechazo.** Medido antes de escribir una
+línea:
+- web (`auth.failed`): «Estas credenciales no coinciden con nuestros registros.»
+- API (`invalid_credentials`): «El correo o la contraseña no son correctos.»
+- web (`auth.throttle`): «Demasiados intentos. Inténtalo de nuevo en :seconds segundos.»
+- API (`too_many_requests`): «Has hecho demasiadas peticiones seguidas…» + `params.retry_after`
+
+**El cajón ramifica sobre el CÓDIGO y pinta el literal del diccionario.** Pintar el `message` del sobre
+—lo natural en un cliente de API— habría cambiado la copia del cajón en las tres lenguas sin que ningún
+gate lo dijera: el diff de árbol descarta los nodos de texto. Y es además lo que el contrato pide de un
+cliente: los códigos son estables, los mensajes son para quien no tiene diccionario. La validación sí
+se pinta tal cual llega, porque los dos motores la escriben con **las mismas reglas** y sus textos ya
+coinciden (comprobado en los tres idiomas, con el caso vacío y el de formato inválido).
+⚠️ Hay un caso que comprueba que los dos textos **siguen siendo distintos**: si algún día se unifican en
+el servidor, cae — y estará bien que caiga, porque entonces el rodeo sobra.
+
+**(c) El reparto de los avisos es tan contrato como el texto** (hallazgo L-02 de la auditoría del
+origen): el del limitador va al banner `_global` y el de credenciales **bajo el campo email**. Juntarlos
+mezcla un mensaje genérico —que no revela si el correo existe— con uno que sí dice algo del sistema.
+
+**(d) El montaje inyecta dos grupos nuevos, PODADOS, y la poda es la decisión.** El paso 5 no usa el
+grupo `tickets`: sus rótulos son `account.login.*` y sus avisos `auth.*`. El grupo `account` entero son
+**9,6 kB** en español —tanto como `tickets`— y viajaría en el HTML de **todas** las páginas públicas
+para pintar diez rótulos; se poda a `login` + el `cta` de `register`, conservando el CAMINO real de
+`lang/` porque `i18n.js` lee por camino y aplanarlo sería una tercera forma del diccionario. Medido en
+vivo: **538 bytes**. Hay guarda de que lleva todo lo que el paso pinta —una clave que falte se pinta
+VACÍA y nada avisa— y de que sigue podado.
+
+**(e) Al entrar pasan TRES cosas y ninguna sobra.** Se avisa a Livewire con `logged-in` —fuera del
+cajón, `account-context` es un componente Livewire que lo escucha para repintar «Hola, saltador/a», y
+sin el aviso el panel seguiría ofreciendo «Entrar» a quien acaba de entrar—; se aplica la identidad con
+la respuesta **del propio login**, que trae el perfil con la misma forma que `GET /me` justo para que
+identificarse no cueste una petición más; y se continúa el checkout, que es lo que hace
+`Purchase::onAuthenticated()` llamando a `proceed()`. Verificado en vivo que con el motor SPA la página
+**sigue cargando Livewire** y que `account-context` está en ella: sin eso, el puente no tendría con
+quién hablar.
+
+**(f) La pestaña de «Crear cuenta» NO cambia de modo, a propósito.** Su formulario es 4.4b; marcarla
+activa dejaría el rótulo encendido con un formulario de LOGIN debajo, que es peor que un botón que no
+responde porque miente sobre lo que va a pasar. El botón existe porque el árbol lo exige y no lleva a
+ninguna parte, igual que «Ir a pagar» hasta 4.4a·1.
+
+**(g) El techo del bundle sube de 120 a 135 kB, y es una decisión medida.** El paso costó **9,97 kB**
+(3,13 comprimidos), aislado construyendo con y sin él: casi todo es runtime de Vue que hasta ahora no
+entraba —`vModelText`, `vModelCheckbox`, `withDirectives`—, porque este es el **primer formulario** del
+cajón. Es coste de una vez: el registro y el pago reutilizan ese runtime. Con 120 el margen quedaba en
+**0,30 kB**, que no es un presupuesto sino un accidente esperando.
+
+**(h) Verificado por mutación**, cada una cazada por el caso que le toca: un solo icono en el toggle de
+contraseña · pintar el `message` del sobre en vez del literal · quitar el puente `logged-in`. Y en vivo
+con el flag activo: el `data-boot` real lleva los dos grupos con sus textos, Livewire se carga y
+`account-context` está presente.
+
+**(i) Lo que NO entra**: el registro embebido y su restauración de cesta (4.4b) y el paso de pago (4.5).
+Quien se identifica con la cesta lista **se queda en el paso 5**, porque el 8 no está transcrito y
+navegar a él dejaría el cajón en blanco; `TRANSCRIBED_STEPS` declara en el código a qué pasos se puede
+navegar y **solo crece**.

@@ -36,7 +36,14 @@ export function mount(el, boot = {}) {
     const machine = createMachine();
     const pinia = createPinia();
 
-    app = createApp(Sidebar, { messages: boot.messages ?? {}, ui: boot.ui ?? {}, userId: boot.userId ?? null });
+    app = createApp(Sidebar, {
+        messages: boot.messages ?? {},
+        ui: boot.ui ?? {},
+        // Los dos grupos que el paso de identificación necesita y que NO están en `tickets` (§4.5).
+        account: boot.account ?? {},
+        auth: boot.auth ?? {},
+        userId: boot.userId ?? null,
+    });
     app.use(pinia);
 
     const store = usePurchaseStore(pinia);

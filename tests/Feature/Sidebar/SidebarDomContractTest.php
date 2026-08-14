@@ -289,6 +289,74 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
+    // ── El paso 5: la identificación ──────────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ **El estado se alcanza PULSANDO la pestaña, y no es ceremonia: es lo único que hace que
+     * Livewire renderice el formulario.**
+     *
+     * Medido: `->set('authMode', 'login')` sobre un componente recién montado deja el hijo como
+     * `<div wire:id=… wire:name="auth.login"></div>` **VACÍO** —los componentes hijos se hidratan en
+     * una petición posterior—, así que el árbol del paso 5 tendría **9 nodos** en vez de 31 y este
+     * diff compararía el armazón contra el armazón. Un motor SPA que no emitiera el formulario
+     * pasaría en verde. Llegando por `setAuthMode` el hijo se renderiza entero.
+     *
+     * `embedded` es parte del caso: quita el enlace de «¿olvidaste tu contraseña?» y el pie de «¿no
+     * tienes cuenta?», que dentro del cajón llevarían fuera de la compra.
+     */
+    public function test_the_identify_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = Livewire::test(Purchase::class)
+            ->set('step', 5)
+            ->call('setAuthMode', 'register')
+            ->call('setAuthMode', 'login');
+
+        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(5, $this->identifyProps(), 'bk-back', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la identificación DIFIERE entre los dos motores.\n".
+            'Este paso no tiene banda de progreso, así que su «Volver» es propio; y el formulario que '.
+            "cuelga de las pestañas es el login embebido.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * **La guarda del caso de arriba.** Si alguien lo «simplifica» a un `set('authMode', …)`, el diff
+     * volvería a comparar dos armazones sin formulario y nadie lo notaría. Aquí se fija el hecho
+     * medido: por clic hay formulario, por `set` no.
+     */
+    public function test_reaching_the_identify_step_by_setting_the_mode_hides_the_embedded_form(): void
+    {
+        $bySet = Livewire::test(Purchase::class)->set('step', 5)->set('authMode', 'login')->html();
+        $byClick = Livewire::test(Purchase::class)->set('step', 5)
+            ->call('setAuthMode', 'register')->call('setAuthMode', 'login')->html();
+
+        $this->assertStringNotContainsString(
+            'auth__form', $bySet,
+            'si `set` ya renderizara el hijo, el caso del paso 5 podría simplificarse; hasta entonces, no'
+        );
+        $this->assertStringContainsString(
+            'auth__form', $byClick,
+            'el camino por clic tiene que renderizar el formulario, o el diff del paso 5 no compara nada'
+        );
+    }
+
+    /** @return array<string, mixed> */
+    private function identifyProps(): array
+    {
+        return [
+            'mode' => 'login',
+            'errors' => ['global' => '', 'fields' => []],
+            'submitting' => false,
+            'messages' => __('tickets'),
+            // El montaje inyecta el grupo `account` PODADO a `login`, que es lo que este paso usa.
+            'account' => ['login' => __('account.login'), 'register' => __('account.register')],
+        ];
+    }
+
     // ── Reservas EN PAUSA: el flujo entero se sustituye ───────────────────────────────────────
 
     /**

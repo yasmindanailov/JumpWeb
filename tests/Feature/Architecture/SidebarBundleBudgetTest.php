@@ -43,12 +43,22 @@ class SidebarBundleBudgetTest extends TestCase
      *   · 4.3·2 (pie + cesta en memoria + paso 4) ........... 105,72 kB
      *   · 4.3·3 (aviso de reservas en pausa) ................ 107,29 kB
      *   · 4.3·4 (persistencia de la cesta) .................. 111,01 kB
-     * Quedan ~11 kB (medidos con la misma división por 1024 que usa el assert) para la identificación,
-     * el pago y las tres pantallas de desenlace. Si el
-     * paso que los meta se pasa, la decisión es SUBIR el techo con su motivo escrito — no dejar que lo
-     * empuje el arrastre, que es lo que este test existe para impedir.
+     *   · 4.4a·1 (elegibilidad al pasar al pago) ............ 112,59 kB
+     *   · 4.4a·2 (paso de identificación + login) ........... 122,56 kB
+     *
+     * ⚠️ **El techo sube a 135 en 4.4a·2, y es una decisión, no un arrastre.** El paso costó **9,97 kB**
+     * (3,13 kB comprimidos) y se midió aislado construyendo con y sin él: casi todo es runtime de Vue
+     * que hasta ahora no entraba —`vModelText`, `vModelCheckbox` y `withDirectives`—, porque este es el
+     * **primer formulario** del cajón. Es coste de una vez: el registro de 4.4b y el pago de 4.5
+     * reutilizan ese runtime. Con 120 el margen quedaba en 0,30 kB, que no es un presupuesto sino un
+     * accidente esperando.
+     *
+     * Quedan ~12 kB (medidos con la misma división por 1024 que usa el assert) para el registro
+     * embebido, el pago y las tres pantallas de desenlace. Si el paso que los meta se pasa, la decisión
+     * vuelve a ser SUBIR el techo con su motivo escrito — no dejar que lo empuje el arrastre, que es lo
+     * que este test existe para impedir.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 120;
+    private const SIDEBAR_CHUNK_MAX_KB = 135;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -181,6 +191,15 @@ class SidebarBundleBudgetTest extends TestCase
         // pausadas, no se entera de que ya no puede vender. `runCheckout()` tiene su propia red en
         // `node --test`; lo que esto dice es que sigue CABLEADO al clic de «Ir a pagar».
         '/me/reservation-eligibility' => 'preguntar si el titular puede reservar antes de llevarlo a pagar',
+        // ⚠️ 4.4a·2: identificarse sin salir del cajón. La comprobación de credenciales y los dos
+        // limitadores de `SEC-06` viven en `Identity\Services\PasswordLogin`, que es el MISMO servicio
+        // que usa el modal de la web: el cajón no puede tener su propia copia de nada de eso.
+        '/auth/login' => 'identificar al cliente contra el servicio que también usa la web',
+        // ⚠️ Y el aviso al resto de la página. Fuera del cajón, `account-context` es un componente
+        // Livewire que escucha `logged-in` para repintar «Hola, saltador/a»; sin el puente, el panel
+        // seguiría ofreciendo «Entrar» a quien acaba de entrar — y ningún test del repo lo vería,
+        // porque el cambio ocurre en OTRO componente y en el navegador.
+        'logged-in' => 'avisar a Livewire de que ya hay sesión',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

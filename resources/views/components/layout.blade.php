@@ -178,11 +178,21 @@
                          memoizado por petición, de modo que el `peek()` del `<body>` de arriba
                          sigue viendo lo suyo y nadie se roba el valor. --}}
                     @php($sidebarEntry = \App\Http\Sidebar\SidebarEntry::consume())
+                    {{-- ⚠️ `account` va PODADO a lo que el paso de identificación pinta, y la poda es la
+                         decisión: el grupo entero son **9,6 kB** en español (tanto como `tickets`) y
+                         viajaría en el HTML de todas las páginas públicas para pintar diez rótulos. Se
+                         conserva el CAMINO real de `lang/` (`account.login.email`) en vez de aplanarlo,
+                         porque `i18n.js` lee por camino y una forma nueva del diccionario sería la
+                         tercera. Medido: `login` 275 B, `register` entero 1.121 B —de los que este paso
+                         usa UNO, el rótulo de la pestaña—, `auth` 187 B. El registro completo llega con
+                         4.4b, que es quien lo pinta. --}}
                     <div id="sidecart-spa" data-boot="{{ json_encode([
                         'outcome' => $sidebarEntry->outcome,
                         'orderCode' => $sidebarEntry->orderCode,
                         'messages' => __('tickets'),
                         'ui' => __('ui'),
+                        'account' => ['login' => __('account.login'), 'register' => ['cta' => __('account.register.cta')]],
+                        'auth' => __('auth'),
                         'userId' => auth()->id(),
                     ], JSON_UNESCAPED_UNICODE) }}"></div>
                 @else
