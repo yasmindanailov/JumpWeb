@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2607 en verde** (14173 aserciones, `--parallel` ~64 s) · **15 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2610 en verde** (14186 aserciones, `--parallel` ~63 s) · **15 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -112,14 +112,20 @@ inaplicable; §7 dice cuáles.
   el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
 - **Gates**: el `pre-push` corre `npm run build` **antes** de la suite y, desde 4.1, `npm run test:js`
   (`PrePushGateTest` vigila cada paso). El puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
-- **4.2 — pasos 1 y 2 de 3** (`DECISIONES #44` y **`#45`**). Lo importante no es el paso: es **la
-  red**, y son DOS:
+- **4.2 — CERRADO: los tres pasos** (`DECISIONES #44`–`#46`). Lo importante no son los pasos: es **la
+  red**, y son DOS tipos:
   · **Paridad de ÁRBOL** (`SidebarDomContractTest`) — compara lo que emite cada motor.
   · **Paridad de COMPOSICIÓN** (`SidebarCalendarParityTest`) — porque el diff de árbol le pasa a Vue
     el view-model del SERVIDOR, así que no vería una rejilla que el cliente compone mal. Sus dos
     casos frontera salieron de medir: un mes que empieza en domingo, y el huso del navegador
     (`new Date('YYYY-MM-DD')` es UTC). ⚠️ La primera versión del caso de husos **pasaba con el bug
     dentro** — el desfase solo mueve el lunes si el día 1 ya era lunes.
+  · **Paridad de DATOS entre fuentes** (`SidebarAddonsParityTest`) — el paso 3 destapó que el
+    componente usaba los nombres del view-model de Livewire y el endpoint publica otros: **diff
+    verde y cajón real con filas vacías**. Ahora se comparan campo a campo.
+  ⚠️ **La regla que deja el paso**: si el cliente recibe un dato de la API o lo compone él, el diff de
+  árbol NO lo verifica. Y ojo con los casos frontera: la acotación del selector no se comprobaba
+  hasta llevar la cantidad a sus topes (medido: cambiar el techo no ponía el diff en rojo).
   ⚠️ **Declarado y no resuelto**: las cabeceras de día y el nombre del mes los compone el servidor con
   Carbon y el cliente con `Intl`, así que el texto visible puede diferir (§4.5 ya lo avisaba). `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y
   sin navegador (`@vue/server-renderer` viene con Vue). Tres cosas para el siguiente:
@@ -206,15 +212,20 @@ inaplicable; §7 dice cuáles.
 **Cimientos cerrados: 4.0a, 4.0b, 4.0c y 4.1.** El motor SPA monta, tiene red y no pesa en la
 landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.2 — paso 3** (1 y 2 ya están): hora, cantidad y complementos. ⚠️ Los complementos son de este
-   paso, no del 4 (la v1 del spec los ponía mal), y su pie ya es dinero: se pinta con lo que devuelve
-   `POST catalog/products/{id}/addons`, no se suma en el cliente. La hora lleva **la cesta**
-   (`AFORO-02`) y publica dos números: `available` para MOSTRAR y `max_quantity` para ACOTAR el
-   selector — en un pack **no coinciden**.
-   **La red ya está puesta**: añade el caso a `SidebarDomContractTest` ANTES de transcribir y
-   transcribe hasta que el diff calle. ⚠️ Y si el cliente COMPONE algo que el servidor también
-   compone, el diff de árbol no lo ve —le pasa el view-model del servidor—: hace falta un test de
-   paridad de datos aparte, como `SidebarCalendarParityTest`.
+1. **4.3 — la cesta y el presupuesto** (`§4.10`). Lo que ya está resuelto y NO hay que rehacer: el
+   dinero sale de `POST orders/quote` (`CartPricing`), y si una línea entra en la cesta lo dice
+   `POST cart/validate-line` — con la fusión, el re-tope y los campos obligatorios ya decididos.
+   ⚠️ **La cesta de la SPA vive en `localStorage` SIN `event_data`** (`DECISIONES #38(d)`, RGPD): al
+   restaurarla, las líneas de pack piden esos campos otra vez. Es la única desviación consciente de
+   la paridad de toda la fase. Y la cesta persistida guarda el id de su titular y se purga al
+   cambiar de identidad — sin eso, la cesta de Alice sobrevive al login de Bob en la tablet.
+
+   **El método de trabajo, ya rodado**: añade el caso a `SidebarDomContractTest` ANTES de
+   transcribir, y transcribe hasta que el diff calle.
+   ⚠️ **Y recuerda su límite**: el diff alimenta a Vue con datos del SERVIDOR, así que **no ve** lo
+   que el cliente recibe de la API con otros nombres ni lo que compone él. Para eso hacen falta
+   paridades de DATOS aparte — ya hay dos de ejemplo (`SidebarCalendarParityTest`,
+   `SidebarAddonsParityTest`).
 2. **4.3 en adelante** — el corte completo, en §4.10 del spec. ⚠️ Entre 4.5 y 4.6 **no se despliega
    el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
@@ -319,6 +330,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2607** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2610** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -6,6 +6,7 @@ import { api } from './api.js';
 import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
+import TimeStep from './steps/TimeStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -133,20 +134,113 @@ function toItem(product) {
  */
 async function selectProduct(id) {
     selectedProductId.value = id;
+    // La FICHA trae lo que el paso 3 necesita y el listado no lleva: el mínimo contratable y el
+    // esquema de campos del evento, ya resueltos al idioma. Se pide junto a los días, no después,
+    // porque los dos hacen falta antes de que el cliente pueda elegir nada.
+    product.value = null;
     selectedDate.value = null;
+    selectedTime.value = null;
+    addons.value = { groups: [], singles: [] };
+    addonChoices.value = [];
+    addonQuantities.value = [];
     store.go(STEPS.DATE);
 
-    const response = await api.get(`/availability/${id}/dates`);
+    const [dates, detail] = await Promise.all([
+        api.get(`/availability/${id}/dates`),
+        api.get(`/catalog/products/${id}`),
+    ]);
 
-    offeredDates.value = response.ok ? (response.data?.data ?? []) : [];
+    offeredDates.value = dates.ok ? (dates.data?.data ?? []) : [];
+    if (detail.ok) product.value = detail.data;
     // El calendario abre en el PRIMER mes con oferta, no en el actual: si el producto no se vende
     // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía.
     month.value = offeredMonths.value[0] ?? monthOf(new Date().toISOString().slice(0, 10));
 }
 
-function selectDate(date) {
+/** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
+const offeredTimes = ref([]);
+const selectedTime = ref(null);
+const quantity = ref(0);
+const product = ref(null);
+const addons = ref({ groups: [], singles: [] });
+const eventData = ref({});
+const addonChoices = ref([]);
+const addonQuantities = ref([]);
+
+/** La hora elegida, con sus dos números. ⚠️ El selector se acota con `max_quantity`, NO con `available`. */
+const offeredTime = computed(() => offeredTimes.value.find((t) => t.time === selectedTime.value) ?? null);
+const maxQuantity = computed(() => offeredTime.value?.max_quantity ?? 0);
+const minQuantity = computed(() => (product.value?.type === 'pack' ? (product.value?.min_quantity ?? 1) : 1));
+
+/** El precio del DÍA elegido. Lo trae la oferta de días; no se deriva del «desde» del catálogo. */
+const dayPriceCents = computed(() => offeredDates.value.find((d) => d.date === selectedDate.value)?.price_cents ?? null);
+
+/**
+ * Elegir día pide las HORAS, y la petición **lleva la cesta**.
+ *
+ * ⚠️ `AFORO-02`: `offerableTimes()` descuenta los ocupantes que la propia cesta ya retiene, así que
+ * una consulta sin cesta ofrece horas que el checkout rechazaría. Hoy la cesta va vacía porque el
+ * paso 4 llega después; el cuerpo ya viaja con su clave para que no se olvide al añadirla.
+ */
+async function selectDate(date) {
     selectedDate.value = date;
-    // El paso 3 llega en el siguiente tramo de la fase.
+    selectedTime.value = null;
+    store.go(STEPS.TIME);
+
+    const response = await api.post(`/availability/${selectedProductId.value}/times`, {
+        date,
+        items: [],
+    });
+
+    offeredTimes.value = response.ok ? (response.data?.data ?? []) : [];
+}
+
+/** Elegir hora fija la cantidad en el mínimo contratable y resuelve los complementos. */
+async function selectTime(time) {
+    selectedTime.value = time;
+    quantity.value = Math.min(minQuantity.value, maxQuantity.value);
+
+    await refreshAddons();
+}
+
+/**
+ * Los complementos RESUELTOS contra la selección actual.
+ *
+ * ⚠️ La partición en grupos, las notas, las unidades gratis, los topes y la poda EN CADENA de las
+ * dependencias las decide el servidor: reimplementarlas aquí es lo que `CE-4` prohíbe. La respuesta
+ * trae además el dinero de la línea, para que un clic no cueste dos peticiones.
+ */
+async function refreshAddons() {
+    if (! selectedProductId.value || quantity.value < 1) return;
+
+    const response = await api.post(`/catalog/products/${selectedProductId.value}/addons`, {
+        quantity: quantity.value,
+        date: selectedDate.value,
+        time: selectedTime.value,
+        addons: addonQuantities.value,
+        choices: addonChoices.value,
+    });
+
+    if (response.ok) addons.value = { groups: response.data.groups, singles: response.data.singles };
+}
+
+function changeQuantity(delta) {
+    const next = quantity.value + delta;
+    if (next < minQuantity.value || next > maxQuantity.value) return;
+
+    quantity.value = next;
+    // La cantidad cambia lo que cuestan los complementos por-invitado: hay que volver a resolver.
+    refreshAddons();
+}
+
+function chooseAddon(group, productId) {
+    addonChoices.value = [...addonChoices.value.filter((c) => c.group !== group), { group, product_id: productId }];
+    refreshAddons();
+}
+
+function setAddonQuantity(productId, qty) {
+    addonQuantities.value = [...addonQuantities.value.filter((a) => a.product_id !== productId), { product_id: productId, quantity: qty }];
+    refreshAddons();
 }
 
 /**
@@ -205,5 +299,27 @@ const monthLabel = computed(() => {
             @prev-month="month = shiftMonth(month, -1)"
             @next-month="month = shiftMonth(month, 1)"
             @back="store.go(STEPS.CATALOG)" />
+
+        <TimeStep
+            v-else-if="store.step === STEPS.TIME"
+            :times="offeredTimes.map((t) => t.time)"
+            :selected-time="selectedTime"
+            :quantity="quantity"
+            :min-quantity="minQuantity"
+            :max-quantity="maxQuantity"
+            :is-pack="product?.type === 'pack'"
+            :day-price-cents="dayPriceCents"
+            :event-fields="product?.event_fields ?? []"
+            :period-label="product?.period_label ?? ''"
+            :addons="addons"
+            :messages="messages"
+            @select-time="selectTime"
+            @inc="changeQuantity(1)"
+            @dec="changeQuantity(-1)"
+            @update-field="(key, value) => (eventData[key] = value)"
+            @choose-addon="chooseAddon"
+            @toggle-addon="(id) => setAddonQuantity(id, addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
+            @inc-addon="(id) => setAddonQuantity(id, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
+            @dec-addon="(id) => setAddonQuantity(id, Math.max(0, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) - 1))" />
     </div>
 </template>

@@ -1545,3 +1545,34 @@ decimales**, que en una rejilla de siete columnas no es un descuido sino la úni
 ⚠️ **(f) Queda declarado, no resuelto**: las cabeceras de día y el nombre del mes los compone el
 servidor con Carbon y el cliente con `Intl`, así que **el texto visible puede diferir** (§4.5 ya lo
 avisaba). Es el único punto del paso 2 donde los dos motores no comparten la fuente del texto.
+
+## #46 · 2026-08-14 · El paso 3 cierra 4.2, y enseña dónde el diff de árbol NO llega
+Fase 4 · paso 4.2 (último tramo): hora, cantidad, campos del pack y complementos.
+
+**(a) El diff de árbol tiene un límite estructural, y este paso lo destapó dos veces.** Compara lo
+que emite cada motor, pero **alimenta al componente Vue con datos del SERVIDOR**. Todo lo que el
+cliente reciba de otra fuente —o componga él— queda fuera de su alcance:
+1. **Los complementos llegaban con otros nombres.** El componente usaba los del view-model de
+   Livewire (`id`, `qty`, `can_inc`) y el endpoint publica `product_id`, `quantity`, `can_increase`.
+   El diff seguía **verde** mientras el cajón real habría pintado filas vacías. Corregido: el
+   componente habla el lenguaje de su fuente —la API— y el test traduce.
+2. **La acotación del selector no se estaba comprobando.** Con la cantidad lejos de sus topes, los
+   dos botones salen habilitados en cualquier motor: se verificó por mutación que cambiar el techo
+   **no** ponía el diff en rojo. Hace falta llevar la cantidad a los extremos, que es donde el
+   `disabled` deja de coincidir.
+
+**(b) De ahí sale una regla para el resto de la fase**: *si el cliente recibe un dato de la API o lo
+compone él, el diff de árbol no lo verifica y hace falta una paridad de DATOS aparte.* Ya van dos:
+`SidebarCalendarParityTest` (composición de la rejilla) y `SidebarAddonsParityTest` (endpoint ↔
+view-model, campo a campo). La segunda muerde señalando el campo exacto: se comprobó renombrando
+`can_increase` en el recurso y quitando la poda de un dependiente.
+
+**(c) La trampa medida se confirmó con datos reales**: en el pack de SaltoPark, `available` = 60 y
+`max_quantity` = 20. **No son el mismo número** (`AFORO-02`), y un selector construido sobre el
+primero dejaría pedir 60 invitados que el checkout rechaza. El componente usa el segundo.
+
+**(d) Lo que la paridad de árbol volvió a enseñar**: un complemento bloqueado emite un stepper
+**inerte**, no ninguno — los tres controles posibles (stepper, interruptor y el rótulo de
+por-invitado) tienen árboles distintos, y `.entry__stepper button` depende del tipo de elemento.
+
+Con esto **4.2 queda cerrado**: los tres pasos transcritos, cada uno con su paridad demostrada.

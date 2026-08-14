@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c y 4.1 hechos → toca transcribir pasos (4.2)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1 y 4.2 hechos → toca la cesta (4.3)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -546,7 +546,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `node_modules/vue/` y **pasaba sin mirar nada** (un build de producción no conserva las rutas
         de origen), y un test del flag fallaba porque **Livewire memoiza que ya emitió sus assets** y
         ese estado estático sobrevive entre peticiones del mismo test (familia `SUITE-02`).
-- [ ] **Paso 4.2 — pasos 1–3 (EN CURSO, 1 de 3; 2026-08-14, `DECISIONES #44`).** Entra el
+- [x] **Paso 4.2 — pasos 1–3 (CERRADO 2026-08-14, `DECISIONES #44`–`#46`).** Entra el
       **catálogo** con su paridad DEMOSTRADA, y con él la red que sostiene toda la transcripción:
       `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y **sin
       navegador** —`@vue/server-renderer` viene con Vue; Node no carga `.vue` sin compilar, así que
@@ -568,7 +568,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       domingo, y el huso del navegador (`new Date('YYYY-MM-DD')` es UTC, y al oeste es la víspera).
       La primera versión del caso de husos **pasaba con el bug dentro**: el desfase solo mueve el
       lunes de la semana si el día 1 ya era lunes.
-      · **Pendiente**: paso 3 (hora, cantidad y complementos).
+      **Paso 3 hecho, y con él 4.2 CERRADO** (2026-08-14, `DECISIONES #46`): hora, cantidad, campos
+      del pack y complementos.
+      ⚠️ **El paso destapó el límite estructural del diff de árbol**: compara lo que emite cada motor,
+      pero alimenta a Vue con datos del SERVIDOR, así que **no ve** lo que el cliente recibe de otra
+      fuente ni lo que compone él. Mordió dos veces: los complementos llegaban con los nombres del
+      view-model de Livewire y no con los del endpoint —diff verde, cajón real con filas vacías—, y
+      la acotación del selector no se comprobaba porque la cantidad no estaba en sus topes.
+      · **Regla para el resto de la fase**: si el cliente recibe un dato de la API o lo compone él,
+        hace falta una paridad de DATOS aparte. Ya van dos: `SidebarCalendarParityTest` y
+        `SidebarAddonsParityTest` (endpoint ↔ view-model, campo a campo).
+      · **Confirmado con datos reales**: en el pack sembrado `available` = 60 y `max_quantity` = 20.
+        No son el mismo número (`AFORO-02`).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

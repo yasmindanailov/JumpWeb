@@ -126,6 +126,90 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
+    // ── El paso 3: hora, cantidad y complementos ──────────────────────────────────────────────
+
+    /**
+     * El paso más denso del embudo: chips de hora, caja de cantidad, campos del pack y complementos.
+     *
+     * Se prueba con un PACK y con complementos de las tres formas que existen —grupo excluyente,
+     * incluido y dependiente— porque cada una emite un árbol distinto: un dependiente bloqueado
+     * enseña un stepper INERTE, un per-invitado un interruptor, y el resto un stepper normal. Un
+     * caso con un solo complemento suelto no probaría ninguna de las tres ramas.
+     */
+    public function test_the_time_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $pack = $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
+        $pack->update(['event_fields' => [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
+            ['key' => 'notes', 'type' => 'textarea', 'required' => false, 'stage' => 'booking', 'label' => ['es' => 'Notas']],
+        ]]);
+
+        $this->addon($pack, 'Hamburguesa', 800, ['choice_group' => 'menu']);
+        $this->addon($pack, 'Pizza', 900, ['choice_group' => 'menu']);
+        $tarta = $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
+        $this->addon($pack, 'Velas', 200, ['requires_addon_id' => $tarta->id]);
+        $this->addon($pack, 'Comida', 700, ['quantity_mode' => 'per_guest']);
+
+        $this->slotsForNextDays($pack, 3);
+
+        $date = now()->addDay()->toDateString();
+        $component = Livewire::test(Purchase::class)
+            ->call('selectType', $pack->id)
+            ->call('selectDate', $date)
+            ->call('goToTime')
+            ->call('selectTime', '10:00:00');
+
+        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(3, $this->timeProps($component), 'wiz__title', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del paso de hora DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **El selector se acota con `max_quantity`, y esto es lo que lo comprueba.**
+     *
+     * El caso anterior no bastaba: con la cantidad lejos de sus topes, los dos botones salen
+     * habilitados en cualquier motor y el diff pasa aunque la regla de acotación sea otra —se
+     * verificó por mutación que cambiar el techo NO lo ponía en rojo—. Aquí la cantidad se lleva a
+     * los dos extremos, que es donde el `disabled` deja de ser el mismo si alguien confunde
+     * `available` con `max_quantity` (`AFORO-02`): en un pack **no son el mismo número**.
+     */
+    public function test_the_quantity_stepper_is_bounded_the_same_in_both_engines(): void
+    {
+        $pack = $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
+        $this->slotsForNextDays($pack, 3);
+
+        $date = now()->addDay()->toDateString();
+        $component = Livewire::test(Purchase::class)
+            ->call('selectType', $pack->id)
+            ->call('selectDate', $date)
+            ->call('goToTime')
+            ->call('selectTime', '10:00:00');
+
+        $max = $component->viewData('maxQty');
+        $min = $component->viewData('minQty');
+
+        $this->assertGreaterThan($min, $max, 'sin margen entre mínimo y máximo el caso no probaría nada');
+
+        foreach ([$min, $max] as $quantity) {
+            $component->set('qty', $quantity);
+
+            $livewire = $this->livewireTree($component, 'qtybox');
+            $vue = $this->vueTree(3, $this->timeProps($component), 'qtybox');
+
+            $this->assertSame(
+                $livewire, $vue,
+                "Con cantidad {$quantity} (mínimo {$min}, máximo {$max}) el selector NO se acota igual.\n".
+                '⚠️ En un pack `available` y `max_quantity` no son el mismo número, y construir el '.
+                "selector sobre el primero deja pedir invitados que el checkout rechaza.\n\n".
+                $this->firstDivergence($livewire, $vue)
+            );
+        }
+    }
+
     /**
      * La BANDA de progreso tiene su propio caso porque **no es del paso 2**: la comparten los pasos 2
      * y 3, vive fuera del bloque de cada uno en el Blade y trae el «volver» del flujo. Un diff que
@@ -226,6 +310,121 @@ class SidebarDomContractTest extends TestCase
             'selectedDate' => $component->get('date'),
             'messages' => __('tickets'),
         ];
+    }
+
+    /**
+     * El view-model del paso 3, tomado del propio componente Livewire.
+     *
+     * @return array<string, mixed>
+     */
+    private function timeProps(Testable $component): array
+    {
+        return [
+            'times' => $component->viewData('times'),
+            'selectedTime' => $component->get('time'),
+            'quantity' => $component->get('qty'),
+            'minQuantity' => $component->viewData('minQty'),
+            'maxQuantity' => $component->viewData('maxQty'),
+            'isPack' => $component->viewData('selectedIsPack'),
+            'dayPriceCents' => $component->viewData('dayPriceCents'),
+            'periodLabel' => $component->viewData('selectedPeriodLabel'),
+            'eventFields' => $this->eventFieldsFor($component),
+            // ⚠️ **Traducido a la forma de la API, que es la que el cajón recibe de verdad.** El
+            // view-model de Livewire usa otros nombres (`id`, `qty`, `can_inc`…), y alimentar al
+            // componente con ellos dejaría el diff verde mientras el cajón real pinta filas vacías.
+            // `SidebarAddonsParityTest` comprueba aparte que las dos fuentes dicen lo mismo.
+            'addons' => $this->addonsAsApi($component->viewData('addonModel')),
+            'messages' => __('tickets'),
+        ];
+    }
+
+    /**
+     * El view-model de complementos de Livewire → la forma que publica
+     * `POST catalog/products/{id}/addons`.
+     *
+     * @param  array<string, mixed>  $model
+     * @return array<string, mixed>
+     */
+    private function addonsAsApi(array $model): array
+    {
+        $row = fn (array $opt): array => [
+            'product_id' => $opt['id'],
+            'product_name' => $opt['name'],
+            'price_cents' => $opt['price'],
+            'note' => $opt['note'],
+            'is_included' => $opt['is_included'],
+            'is_mandatory' => $opt['is_mandatory'],
+            'per_guest' => $opt['per_guest'],
+            'allow_extra' => $opt['allow_extra'],
+            'badge' => $opt['badge'],
+            'features' => $opt['features'],
+            'selected' => $opt['selected'],
+            'available' => $opt['available'],
+            'requires_name' => $opt['requires_name'],
+            'quantity' => $opt['qty'],
+            'free_quantity' => $opt['free'],
+            'charged_cents' => $opt['charged'],
+            'min_quantity' => $opt['min'],
+            'max_quantity' => $opt['max'],
+            'can_toggle' => $opt['can_toggle'],
+            'can_increase' => $opt['can_inc'],
+            'can_decrease' => $opt['can_dec'],
+        ];
+
+        return [
+            'groups' => array_map(fn (array $group): array => [
+                'key' => $group['key'],
+                'label' => $group['label'],
+                'options' => array_map($row, $group['options']),
+            ], $model['groups']),
+            'singles' => array_map($row, $model['singles']),
+        ];
+    }
+
+    /**
+     * Los campos del evento con su etiqueta ya resuelta.
+     *
+     * El Blade la resuelve al pintar (`$selectedType->eventFieldLabel($field)`); la API la publica ya
+     * resuelta en `catalog/products/{id}`. Aquí se replica lo segundo, que es lo que el cajón SPA
+     * recibirá de verdad.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function eventFieldsFor(Testable $component): array
+    {
+        $type = TicketType::find($component->get('typeId'));
+
+        return array_map(fn (array $field): array => [
+            'key' => $field['key'],
+            'label' => $type->eventFieldLabel($field),
+            'type' => $field['type'],
+            'required' => $field['required'],
+        ], $component->viewData('eventFields'));
+    }
+
+    /**
+     * Un complemento enganchado al producto, con la config del pivote que el caso necesite.
+     *
+     * @param  array<string, mixed>  $pivot
+     */
+    private function addon(TicketType $product, string $name, ?int $priceCents, array $pivot = []): TicketType
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 0, 'is_sellable' => true, 'is_active' => true,
+            'position' => (int) TicketType::max('position') + 1,
+        ]);
+
+        if ($priceCents !== null) {
+            $addon->prices()->create(['rate_type_id' => $this->rateId, 'amount_cents' => $priceCents]);
+        }
+
+        $product->configurableAddons()->attach($addon->id, array_merge([
+            'quantity_mode' => 'fixed',
+            'position' => (int) $product->configurableAddons()->count() + 1,
+        ], $pivot));
+
+        return $addon;
     }
 
     /** El árbol del componente Livewire en un paso, ya normalizado. */
