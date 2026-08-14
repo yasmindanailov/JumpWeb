@@ -1832,3 +1832,72 @@ servidor la rechazará al crear el pedido (`line_event_required`). No se constru
 para volver a rellenarla porque **ese camino no se puede recorrer**: «Ir a pagar» no lleva a ninguna
 parte hasta 4.4a. Queda declarado como **precondición del paso de pago**, y el dato para construirlo ya
 está: al restaurar se piden los `event_fields` de los productos de la cesta.
+
+## #51 · 2026-08-14 · 4.4a·1 — el CTA de pagar aprende quién eres y si puedes reservar
+Fase 4 · paso 4.4a, primer tramo. Hasta aquí «Ir a pagar» existía porque el diff de árbol lo exigía y
+**no llevaba a ninguna parte** (`#48(a)`). Ahora hace las dos preguntas que la web hace desde siempre
+al pasar del carrito a la identificación, y el paso queda **partido en dos** porque sus dos destinos
+—la pantalla de identificación (5) y la de pago (8)— son 4.4b y 4.5.
+
+**(a) El paso se parte, y el criterio es el mismo que en 4.2 y 4.3: la DEPENDENCIA.** Las cinco
+salidas de `Purchase::checkout()` se midieron una a una antes de escribir nada, y solo dos tienen
+pantalla hoy: el aviso de admisión denegada y el cartel de pausa se pintan en el paso 4, que ya está
+transcrito. Las otras tres llevan a los pasos 5 y 8. **Transcribir la decisión sin navegar** deja el
+CTA mudo donde ya lo estaba y cierra las dos que sí se ven; navegar habría dejado el cajón **en
+blanco**, que es peor que un botón que no responde.
+
+**(b) Son DOS preguntas y no una, y la segunda no es la obvia.** `GET /me/reservation-eligibility` da
+el aviso temprano —para eso nació en 4.0b—, pero `GET /me` es el que sostiene la seguridad: con la
+cesta en `localStorage` (`#50`), el clic de «Ir a pagar» es **el único momento** en que el cajón puede
+enterarse de que la sesión cambió en OTRA pestaña. `logged-in` es un evento del mismo documento y el
+`userId` del montaje es de la carga de la página; sin esta comprobación, la cesta de Alice se convierte
+en el pedido de Bob y ninguna de las cinco casillas de la tabla de purga llega a evaluarse.
+⚠️ Y van **en paralelo**: en cadena, el clic más caro del embudo paga dos viajes sin que ninguna
+dependa de la otra. Hay caso que lo mide contando peticiones en vuelo, no leyendo el código.
+
+**(c) La identidad se aplica ANTES de mirar el veredicto.** Si el titular cambió, la cesta se purga, el
+cajón vuelve al catálogo y **no hay veredicto que aplicar**: seguir sería llevar a pagar una cesta que
+acaba de dejar de existir. El orden se prueba con un doble que registra qué se le pasó y cuándo.
+
+**(d) La PAUSA no se enseña como error de carrito, y esto se MIDIÓ en vez de leerse.**
+`reportAdmissionDenial()` escribe `errors.reservations_paused` —con teléfono o sin él— en el error bag
+del componente… y **ese mensaje no se pinta jamás**: al volver al paso 4 se cumple
+`showPausedNotice()` y el cartel de mantenimiento sustituye el flujo entero. Verificado sobre el HTML
+real: el bag lo tiene, el documento no. Un motor que pintara ese error donde la web pinta el cartel
+enseñaría un texto que **no existe en ninguna instalación**, y el gate de árbol lo daría por bueno
+—descarta los nodos de texto—. Por eso el veredicto de pausa **no compone mensaje**: pide releer
+`GET /booking/status`, que es lo que hace aparecer el cartel.
+⚠️ **De regalo, cierra el residual que 4.3·3 dejó declarado**: un cajón ya ABIERTO cuando se acciona el
+interruptor no se enteraba hasta cerrarlo y volver a abrirlo. Ahora el clic de comprar lo descubre.
+
+**(e) La secuencia vive en un módulo plano, no en el componente** (`CE-6`, `sidebar-spa.md` §4.8). La
+decisión pura ya lo exigía; la SECUENCIA —dos peticiones, aplicar identidad, decidir— se llevó también
+a `admission.js` con `api` y `applyIdentity` **inyectados por parámetro**, igual que `cart.js` recibe el
+almacén. El motivo es el fallo que 4.3·1 ya pagó: un árbol no dice a quién se preguntó, en qué orden,
+ni si la cesta se purgó por el camino, así que esa lógica dentro del `.vue` no tendría red. El
+componente queda con seis líneas de cableado.
+
+**(f) El destino se compara aunque las pantallas no existan.** `SidebarAdmissionParityTest` recorre las
+**cinco** situaciones —invitado, admitido, cesta vacía, tope de pendientes, límite de frecuencia y
+pausa— y compara el paso al que llega el componente Livewire con el que decide el módulo, alimentado
+con las respuestas **REALES** de la API (no fabricadas: así un cambio del código público se ve). Cuando
+los pasos 5 y 8 se transcriban, enchufarlos es cablear y no volver a decidir.
+
+**(g) Lo que NINGÚN test podía ver, y cómo se cubre.** Los avisos se comparan **palabra por palabra y
+en los tres idiomas** —el normalizador del diff descarta los nodos de texto— e incluyen el `:max` del
+tope, que sale de dos sitios distintos: del `context` del veredicto en Livewire y de
+`max_pending_orders` en el sobre de la API. Y que el CTA siga **cableado** a la pregunta lo vigila
+`SidebarBundleBudgetTest` sobre el bundle construido, que es la única red posible de eso.
+
+**(h) Verificado por mutación seis veces**, cada una cazada por el caso que le toca: pintar la pausa
+como error de carrito · ramificar sobre el código interno `too_many_pending` en vez del público
+`too_many_pending_orders` · mandar al invitado a pagar · encadenar las dos peticiones · resolver la
+identidad con la respuesta de la elegibilidad · quitar el cableado del CTA. Y verificado **en vivo**
+con `curl` sobre la instalación de desarrollo: 401 sin sesión en los dos endpoints, `allowed: true` con
+cookie y `Origin`, y `reservations_paused` con el interruptor puesto — pasado por el módulo real en
+Node, que responde «releer el estado».
+
+**(i) Lo que NO entra**: no se navega a los pasos 5 ni 8 (4.4b y 4.5); la pantalla de identificación no
+se transcribe; y sigue viva la precondición de `#50(h)` —una línea de PACK restaurada vuelve sin sus
+respuestas y `OrderCreator` la rechaza—, que ahora está **un paso más cerca de morder** y no puede
+quedar fuera de 4.5.

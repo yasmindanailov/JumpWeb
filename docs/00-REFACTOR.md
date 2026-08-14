@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y **4.3 COMPLETO** (·1–·4) → toca 4.4a (identificación de un usuario ya autenticado)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a·1** → toca 4.4a·2 (la pantalla de identificación)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -732,6 +732,36 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         la rechazará al crear el pedido. El camino para volver a rellenarla no se construye porque **no
         se puede recorrer** —«Ir a pagar» no lleva a ninguna parte hasta 4.4a—; queda como precondición
         del paso de pago, con el dato ya disponible (al restaurar se piden los `event_fields`).
+- [x] **Paso 4.4a·1 — el CTA de pagar aprende quién eres y si puedes reservar** (2026-08-14,
+      `DECISIONES #51`). El paso 4.4a se parte en dos por el mismo criterio que 4.2 y 4.3 —la
+      DEPENDENCIA—: de las **cinco** salidas de `Purchase::checkout()`, medidas una a una antes de
+      escribir nada, solo dos tienen pantalla hoy (el aviso de admisión denegada y el cartel de pausa
+      se pintan en el paso 4, ya transcrito). Las otras tres llevan a los pasos 5 y 8, que son 4.4b y
+      4.5.
+      · **Se transcribe la DECISIÓN, no la navegación**: el CTA sigue mudo donde ya lo estaba, y las
+        dos salidas que sí se ven quedan cerradas. Navegar a un paso sin transcribir dejaría el cajón
+        **en blanco**, que es peor que un botón que no responde.
+      · ⚠️ **Son DOS preguntas y la segunda no es la obvia**: `GET /me/reservation-eligibility` da el
+        aviso temprano, pero `GET /me` es el que sostiene la seguridad — con la cesta en
+        `localStorage`, este clic es **el único momento** en que el cajón puede enterarse de que la
+        sesión cambió en OTRA pestaña (`logged-in` es del mismo documento; el `userId` del montaje es
+        de la carga de la página). Van **en paralelo**, y hay caso que lo mide contando peticiones en
+        vuelo. La identidad se aplica **antes** del veredicto: si el titular cambió no hay compra que
+        continuar.
+      · ⚠️ **La PAUSA no se enseña como error de carrito, y se MIDIÓ**: Livewire escribe
+        `errors.reservations_paused` en su bag y **nunca se pinta** —`showPausedNotice()` sustituye el
+        flujo entero—. El veredicto de pausa pide **releer `GET /booking/status`** en vez de componer
+        mensaje, y de regalo **cierra el residual de 4.3·3**: un cajón ya ABIERTO cuando se acciona el
+        interruptor ya no espera a que lo cierren para enterarse.
+      · **La secuencia vive en `admission.js`, no en el `.vue`** (`CE-6`), con `api` y `applyIdentity`
+        inyectados como `cart.js` recibe el almacén: un árbol no dice a quién se preguntó ni en qué
+        orden, así que esa lógica dentro del componente no tendría red.
+      · **Red**: 31 casos de `node --test` (decisión, degradados, secuencia con dobles) y
+        `SidebarAdmissionParityTest`, que recorre las **cinco** situaciones comparando el paso destino
+        con el del componente Livewire y los avisos **palabra por palabra en los tres idiomas**, con
+        las respuestas **REALES** de la API. El cableado lo vigila `SidebarBundleBudgetTest` sobre el
+        bundle construido. **Verificado por mutación 6 veces** y en vivo con `curl`.
+      · Suite **2652 verde** · 139 tests JS · chunk del cajón 112,3 kB de 120.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

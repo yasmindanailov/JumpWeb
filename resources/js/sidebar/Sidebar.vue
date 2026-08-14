@@ -8,6 +8,7 @@ import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
+import { runCheckout } from './admission.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership,
     load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
@@ -75,6 +76,10 @@ async function refreshBookingStatus() {
     const response = await api.get('/booking/status');
 
     if (response.ok) bookingStatus.value = response.data;
+
+    // Devuelve si se pudo releer: el paso al pago lo necesita para no dejar un clic mudo cuando el
+    // veredicto dice «pausa» y el estado que pintaría el cartel no llega.
+    return response.ok;
 }
 
 /**
@@ -545,13 +550,25 @@ const progress = computed(() => buildProgress({
  * la cesta de quien no ha hecho nada malo — y no habría manera de recuperarla.
  */
 async function refreshIdentity() {
-    const response = await api.get('/me');
+    return applyIdentityFrom(await api.get('/me'));
+}
 
+/**
+ * Traduce una respuesta de `GET /me` a la identidad de ahora y se la aplica a la cesta.
+ *
+ * Está aparte de `refreshIdentity()` desde 4.4a·1 porque el paso al pago pide `/me` **en paralelo**
+ * con la elegibilidad —dos preguntas, un viaje— y necesita aplicar el resultado sin volver a pedirlo.
+ * La regla del 401 vive aquí, en un solo sitio: es lo que impide que un corte de red purgue la cesta
+ * de quien no ha hecho nada.
+ *
+ * @returns {'keep'|'purge'} qué se hizo con la cesta
+ */
+function applyIdentityFrom(response) {
     if (! response.ok && response.status !== 401) {
-        return;
+        return 'keep';
     }
 
-    applyIdentity(response.ok ? (response.data?.id ?? null) : null);
+    return applyIdentity(response.ok ? (response.data?.id ?? null) : null);
 }
 
 /**
@@ -559,9 +576,13 @@ async function refreshIdentity() {
  *
  * La purga alcanza a la cesta guardada Y a la de memoria: no basta con borrar el almacén, porque la
  * pantalla seguiría enseñando las líneas del titular anterior hasta la próxima recarga.
+ *
+ * @returns {'keep'|'purge'}
  */
 function applyIdentity(newOwner) {
-    if (decideOwnership(cartOwner.value, newOwner) === 'purge') {
+    const decision = decideOwnership(cartOwner.value, newOwner);
+
+    if (decision === 'purge') {
         cart.value = [];
         quote.value = null;
         cartError.value = '';
@@ -570,6 +591,8 @@ function applyIdentity(newOwner) {
     }
 
     cartOwner.value = newOwner;
+
+    return decision;
 }
 
 defineExpose({ refreshBookingStatus, refreshIdentity });
@@ -618,8 +641,40 @@ function runAction(action) {
     if (action === 'goToTime') return goToTime();
     if (action === 'addToCart') return addToCart();
     if (action === 'goToCart') return goToCart();
-    // `checkout` es del paso 5 (identificación), que llega en 4.4a. Hasta entonces el CTA existe
-    // —el árbol lo exige— y no lleva a ninguna parte; el ESTADO lo dice sin adornos.
+    if (action === 'checkout') return checkout();
+}
+
+/**
+ * «Ir a pagar». Espejo de `Purchase::checkout()`.
+ *
+ * **Aquí solo está el cableado**: preguntar, aplicar la identidad y decidir es `runCheckout()`, que
+ * vive en `admission.js` porque la lógica que baja a un `.vue` pierde su red (CE-6) — un árbol no
+ * dice a quién se preguntó, en qué orden, ni si la cesta se purgó por el camino.
+ *
+ * ⚠️ **A dónde se va todavía NO se navega, y es deliberado**: los pasos 5 (identificación) y 8 (pago)
+ * no están transcritos —son 4.4b y 4.5—, así que navegar dejaría el cajón en blanco, que es peor que
+ * un CTA mudo. El destino se decide igualmente y `SidebarAdmissionParityTest` lo compara con el del
+ * componente Livewire: cuando esas pantallas existan, esto es cablear, no volver a decidir.
+ */
+async function checkout() {
+    const verdict = await tracked(runCheckout({
+        cartCount: cart.value.length,
+        api,
+        messages: props.messages,
+        applyIdentity: applyIdentityFrom,
+        // ⚠️ **La pausa se enseña releyendo el estado, no pintando un error**: el componente Livewire
+        // escribe su mensaje en el bag y el cartel de mantenimiento lo tapa antes de que llegue a
+        // pintarse (medido). Releer es además lo que cierra el residual de 4.3·3 — un cajón ya
+        // ABIERTO cuando se acciona el interruptor no se enteraba hasta cerrarlo y volver a abrirlo.
+        refreshStatus: refreshBookingStatus,
+    }));
+
+    // El titular cambió: la cesta ya se purgó y el cajón está en el catálogo. No hay compra que seguir.
+    if (verdict.purged) {
+        return;
+    }
+
+    cartError.value = verdict.error;
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */

@@ -176,6 +176,11 @@ class SidebarBundleBudgetTest extends TestCase
         'purchase__maint' => 'pintar el aviso de pausa',
         '/orders/quote' => 'presupuestar la cesta',
         '/cart/validate-line' => 'preguntar si una línea entra en la cesta',
+        // ⚠️ 4.4a·1: el aviso TEMPRANO de admisión. Sin esta llamada el cajón lleva a la pantalla de
+        // pago a quien el servidor va a rechazar —tope de pendientes, frecuencia— y, con las reservas
+        // pausadas, no se entera de que ya no puede vender. `runCheckout()` tiene su propia red en
+        // `node --test`; lo que esto dice es que sigue CABLEADO al clic de «Ir a pagar».
+        '/me/reservation-eligibility' => 'preguntar si el titular puede reservar antes de llevarlo a pagar',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

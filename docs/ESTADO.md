@@ -8,17 +8,18 @@
 
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
-**4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) → **toca 4.4a, la
-identificación**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
-⚠️ **El paso 4.3 se partió en CUATRO al implementarlo** (`DECISIONES #47`–`#50`), como se partió 4.2.
-El corte no fue por pantalla sino por DEPENDENCIA: el pie no se podía separar de la cesta porque el CTA
-del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el diff compara; y la pausa se
-adelantó porque el pie de ·2 comparte su guarda y la divergencia pasó de «falta una pantalla» a «el
-cajón ofrece pagar mientras la web dice que no se puede».
+**4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a·1 ✅** (el CTA de
+pagar pregunta quién eres y si puedes reservar) → **toca 4.4a·2, la PANTALLA de identificación**.
+El corte está en `docs/specs/sidebar-spa.md` §4.10.
+⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`) y 4.4a en dos (`#51`). En 4.3 el pie no se podía
+separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
+diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
+que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2647 en verde** (14.974 aserciones, `--parallel` ~65 s) · **108 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2652 en verde** (15.021 aserciones, `--parallel` ~65 s) · **139 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -218,41 +219,57 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-**Cimientos cerrados (4.0a–4.0c, 4.1), los tres primeros pasos transcritos (4.2) y el paso 4 entero
-con su pie, su aviso de pausa y su persistencia (4.3·1–·4).**
+**Cimientos cerrados (4.0a–4.0c, 4.1), los tres primeros pasos transcritos (4.2), el paso 4 entero
+con su pie, su aviso de pausa y su persistencia (4.3·1–·4), y la DECISIÓN del paso al pago (4.4a·1).**
 
 ⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
 abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
 producto → día → hora → cantidad → complementos → **añadir al carrito → carrito con su total**, y con
-las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Y ahí
-se para: **«Ir a pagar» no lleva a ninguna parte** — el paso 5 es 4.4a. La cesta **sí sobrevive a la
-recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO se activa en producción**;
-su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en vivo (`CE-1`).
+las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Al
+pulsar «Ir a pagar» ya **pregunta quién eres y si puedes reservar** (4.4a·1) y avisa cuando el
+servidor va a decir que no —tope de pendientes, frecuencia— o pinta el cartel si las reservas se
+acaban de pausar. Y ahí se para: **cuando la respuesta es que SÍ, el CTA sigue sin llevar a ninguna
+parte**, porque las pantallas destino son 4.4b (identificarse) y 4.5 (pagar). La cesta **sí sobrevive
+a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO se activa en
+producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en
+vivo (`CE-1`).
 
 ❗ **Precondición del paso de PAGO, apuntada aquí para que no se descubra tarde**: una línea de PACK
 restaurada vuelve **sin sus respuestas** (`DECISIONES #38(d)`, RGPD) y `OrderCreator` la rechaza con
-`line_event_required`. Hoy no muerde porque el CTA no lleva a ninguna parte, pero **4.4a/4.5 no pueden
-cerrarse sin el camino para volver a rellenarla**. El dato ya está: al restaurar se piden los
-`event_fields` de los productos de la cesta.
+`line_event_required`. Sigue sin morder porque el CTA no navega, pero **está un paso más cerca**:
+desde 4.4a·1 el cajón ya sabe que el titular puede reservar, así que lo único que falta para que ese
+rechazo salga a pantalla son las pantallas de 4.4b/4.5. **Ninguna de las dos puede cerrarse sin el
+camino para volver a rellenarla.** El dato ya está: al restaurar se piden los `event_fields` de los
+productos de la cesta.
 
-⚠️ **Residual declarado de la pausa**: el estado se relee al cargar la página y **en cada apertura del
-cajón**, pero un cajón que ya esté ABIERTO cuando se acciona el interruptor no se entera hasta
-cerrarlo y volver a abrirlo. Livewire sí, porque reevalúa su guarda en cada render. El contrato pide
-además releer tras un 409 `reservations_paused`, y eso llega con el checkout (4.5).
+⚠️ **Residual de la pausa, ya ENCOGIDO**: el estado se relee al cargar la página, **en cada apertura
+del cajón** y —desde 4.4a·1— **al pulsar «Ir a pagar»**, que es el único punto donde vender de más
+tendría consecuencias. Lo que sigue abierto es lo demás: un cajón ABIERTO y quieto en el catálogo o en
+el calendario no se entera del interruptor hasta que alguien lo cierre, lo reabra o intente pagar.
+Livewire sí, porque reevalúa su guarda en cada render. El contrato pide además releer tras un 409
+`reservations_paused`, y eso llega con el checkout (4.5).
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.4a — identificación de un usuario YA autenticado** (`§4.10`). Lo que hay que saber antes:
+1. **4.4a·2 — la PANTALLA de identificación** (paso 5). La decisión de llegar a ella ya está tomada y
+   probada (4.4a·1); lo que falta es transcribirla. Lo que hay que saber antes:
+   · **Lo que el paso 5 emite hoy en Livewire**: su propio botón «Volver al carrito» —no tiene banda
+     de progreso—, título, intro, las dos pestañas `zone-tab` (login/registro) y, dentro,
+     `<livewire:auth.login :embedded="true">` o su hermano de registro. **Ahí está el corte con 4.4b**:
+     el marcado del paso es de ·2, y el registro embebido con su restauración de cesta es 4.4b.
    · ⚠️ **La defensa anti-cesta-cruzada del servidor desaparece en cuanto el cajón se identifique por
      API**: `POST /api/v1/auth/login` **no toca `purchase.*`** en ninguna línea (verificado), así que
      no escribe el marcador ni purga nada. Desde 4.3·4 la purga vive en el cliente y cubre las cinco
-     casillas, pero conviene saberlo antes de tocar el login por API.
-   · **`GET /me` ya está cableado**: `refreshIdentity()` se llama al abrir el cajón y al oír
-     `logged-in`, y purga la cesta si el titular cambió.
+     casillas, y desde 4.4a·1 se reevalúa además **en el clic de pagar**, que es el momento crítico.
+   · **`GET /me` está cableado en tres sitios**: al abrir el cajón, al oír `logged-in` y al pulsar «Ir
+     a pagar» (este último en paralelo con la elegibilidad). Los tres pasan por `applyIdentityFrom()`,
+     que es el único sitio donde vive la regla del 401.
+   · **Al identificarse hay que volver a decidir**: `Purchase::onAuthenticated()` llama a `proceed()`
+     desde el paso 5, o sea que el camino es el mismo `runCheckout()` que ya existe — no se escribe
+     otra vez.
    · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
-     `OrderCreator` la rechaza con `line_event_required`. Hoy no muerde porque «Ir a pagar» no lleva a
-     ninguna parte, pero 4.4a/4.5 **no pueden cerrarse sin el camino para volver a rellenarla**. El
-     dato ya está: al restaurar se piden los `event_fields` de los productos de la cesta.
+     `OrderCreator` la rechaza con `line_event_required`. El dato ya está: al restaurar se piden los
+     `event_fields` de los productos de la cesta.
    · ⚠️ Y el paso **4.4b** (registro embebido + restauración de cesta) sigue declarado **el más
      peligroso de la fase**: es el único que cruza la frontera Livewire↔Vue en los dos sentidos y no
      tiene guardián en servidor.
@@ -329,6 +346,29 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
     `unit_price_cents: null`.
   · **`npm run test:js` solo alcanza UN nivel de carpeta** (el patrón lo expande `sh`): un test en una
     subcarpeta no se ejecuta nunca y la suite dice «pass». Ya hay guarda en `PrePushGateTest`.
+
+- **4.4a·1 — el CTA de pagar pregunta quién eres y si puedes reservar** (2026-08-14, `DECISIONES #51`).
+  Cinco cosas que condicionan lo que viene:
+  · ⚠️ **Se transcribe la DECISIÓN, no la navegación.** De las CINCO salidas de `checkout()` —medidas
+    una a una— solo dos tienen pantalla hoy: el aviso de admisión denegada y el cartel de pausa, los
+    dos en el paso 4. Las otras tres van a los pasos 5 y 8, y navegar a un paso sin transcribir deja
+    el cajón **en blanco**, que es peor que un CTA mudo. El destino se decide igualmente y se compara
+    con el de Livewire, así que 4.4a·2 y 4.5 **cablean, no vuelven a decidir**.
+  · ⚠️ **Son DOS peticiones en paralelo y la segunda no es la obvia**: `GET /me` no es para saludar —es
+    el único momento en que el cajón puede enterarse de que la sesión cambió en OTRA pestaña, y con la
+    cesta en `localStorage` eso es lo que sostiene la defensa anti-cesta-cruzada—. La identidad se
+    aplica **antes** del veredicto: si el titular cambió, no hay compra que continuar.
+  · ⚠️ **La PAUSA no se pinta como error de carrito, y está MEDIDO**: Livewire escribe
+    `errors.reservations_paused` en su bag y **el HTML no lo contiene** —`showPausedNotice()` tapa el
+    paso entero—. Pintarlo sería enseñar un texto que no existe en ninguna instalación, y el diff de
+    árbol lo daría por bueno porque descarta los nodos de texto.
+  · **La SECUENCIA vive en el módulo plano, no en el `.vue`** (`CE-6`), con `api` y `applyIdentity`
+    inyectados como `cart.js` recibe el almacén. Un árbol no dice a quién se preguntó ni en qué orden:
+    dentro del componente esa lógica no tendría red, que es el fallo que 4.3·1 ya pagó.
+  · **El texto de los avisos solo lo compara `SidebarAdmissionParityTest`**, palabra por palabra y en
+    los tres idiomas, con las respuestas REALES de la API. El `:max` del tope sale de dos sitios
+    distintos —el `context` del veredicto en Livewire y `max_pending_orders` en el sobre—, así que un
+    desajuste entre ellos no se ve en ningún otro lado.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -428,6 +468,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2647** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2652** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
