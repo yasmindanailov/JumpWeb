@@ -159,7 +159,11 @@ document.addEventListener('alpine:init', () => {
         open() {
             this.isOpen = true;
             document.body.classList.add('no-scroll');
-            this.bootSpaEngine();
+            // ⚠️ Al abrir se RELEE el estado de las reservas: el motor SPA se monta una sola vez por
+            // carga de página, así que sin esto la pausa solo entraría al recargar. En la primera
+            // apertura el propio montaje ya la pide, y `refreshStatus` es un no-op sobre un motor que
+            // todavía no existe.
+            this.bootSpaEngine()?.then?.((handle) => handle?.refreshStatus?.());
         },
         close() {
             this.isOpen = false;

@@ -46,6 +46,10 @@ class SidebarTextParityTest extends TestCase
             // inyecta `number_format(...).' €'` en cada uno. La plantilla no lo añade.
             'deposit_card_note' => ['deposit' => '30,00 €', 'rest' => '114,00 €'],
             'errors.fields_missing' => ['fields' => 'Homenajeado, Edad'],
+            // ⚠️ El único texto interpolado del aviso de pausa, y el único de todo el cajón que vive en
+            // un subarray Y lleva parámetro. Sin él, el rótulo del botón de llamar se quedaba sin
+            // paridad: el diff de árbol tampoco lo ve, porque descarta los nodos de texto.
+            'paused.call' => ['phone' => '968 22 22 22'],
         ];
     }
 
@@ -60,7 +64,8 @@ class SidebarTextParityTest extends TestCase
             }
 
             // Claves ANIDADAS, que son las que el helper anterior no sabía leer.
-            foreach (['errors.choose_one', 'errors.cart_too_large', 'errors.field_required'] as $key) {
+            foreach (['errors.choose_one', 'errors.cart_too_large', 'errors.field_required',
+                'paused.whatsapp', 'paused.contact'] as $key) {
                 $expected[$key] = __('tickets.'.$key);
             }
 

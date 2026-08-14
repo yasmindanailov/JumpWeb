@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
 use DOMDocument;
 use DOMElement;
@@ -286,6 +287,100 @@ class SidebarDomContractTest extends TestCase
             'El contenedor `.cart__lines` se emite siempre, aunque quede vacío: el condicional del '.
             "Blade está DENTRO del `<div>`.\n\n".$this->firstDivergence($livewire, $vue)
         );
+    }
+
+    // ── Reservas EN PAUSA: el flujo entero se sustituye ───────────────────────────────────────
+
+    /**
+     * ⚠️ **La divergencia que 4.3·2 dejó abierta, cerrada aquí.** Con el interruptor puesto, el cajón
+     * SPA seguía vendiendo —catálogo, cesta y «Ir a pagar»— mientras Livewire enseñaba el aviso de
+     * mantenimiento. Y **ningún test podía cazarlo**: hasta este paso, ni un solo caso de
+     * `tests/Feature/Sidebar` sembraba la pausa.
+     *
+     * Se ancla en `.jj-loading` con hermanos y en el paso 2, que es donde el servidor SÍ compone banda
+     * y pie: así el mismo `assertSame` demuestra las cuatro cosas a la vez —que el aviso está DENTRO
+     * de la zona scrollable, que la banda NO está, que el pie NO está y que el paso no se pinta—, sin
+     * necesitar un idioma aparte para las ausencias.
+     *
+     * ⚠️ Y las props del armazón siguen viniendo del SERVIDOR, que durante la pausa **sigue componiendo
+     * `bookingProgress` y `footer` no nulos** —lo que los oculta es la vista—. Anularlos aquí «para que
+     * el caso pase» lo dejaría probando nada.
+     */
+    public function test_the_paused_notice_replaces_the_whole_flow_in_both_engines(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
+
+        // Con las reservas abiertas, este estado lleva banda Y pie: es lo que hace significativa su
+        // ausencia después.
+        $this->assertSame(
+            ['jj-loading', 'bk-progress', 'purchase__scroll', 'bk-foot'],
+            $this->shellBlocks($component->html()),
+            'sin banda y sin pie de partida, la ausencia que este caso comprueba no probaría nada'
+        );
+
+        $this->pauseReservations();
+        $component->call('$refresh');
+
+        $this->assertNotNull($component->viewData('bookingProgress'), 'el servidor sigue componiendo la banda en pausa');
+        $this->assertNotNull($component->viewData('footer'), 'el servidor sigue componiendo el pie en pausa');
+
+        $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
+        $vue = $this->vueTree(2, $this->dateProps($component), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El cajón EN PAUSA DIFIERE entre los dos motores.\n".
+            'El aviso no solo sustituye el contenido: apaga también la banda de progreso, el pie y la '.
+            "banda de desglose del pago — la misma condición gobierna los cuatro sitios.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **El aviso tapa SEIS pasos**, y aquí se comprueba que el motor SPA los tapa todos —incluidos
+     * el 5 y el 8, que todavía no están transcritos—.
+     *
+     * Que esos dos se puedan comparar no es casualidad: con el aviso puesto **no hay paso que
+     * renderizar**, porque sustituye el contenido entero. El renderizador SSR lo admite desde este
+     * paso, y es lo fiel al Blade.
+     *
+     * ⚠️ La otra mitad —que los pasos de RESULTADO (6, 7, 9, 10, 11) **no** se tapen— no puede
+     * comprobarse aquí: sin aviso hace falta el componente del paso, y esos cinco no existen todavía.
+     * Vive en `SidebarPausedParityTest`, que compara el mapa ENTERO contra `showPausedNotice()`.
+     */
+    public function test_the_paused_notice_covers_the_six_steps_the_server_covers(): void
+    {
+        $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->pauseReservations();
+
+        foreach ([1, 2, 3, 4, 5, 8] as $step) {
+            $component = Livewire::test(Purchase::class)->set('step', $step);
+
+            $this->assertTrue(
+                $component->instance()->showPausedNotice(),
+                "el servidor ha dejado de tapar el paso {$step}: revisa `showPausedNotice()`"
+            );
+            $this->assertStringContainsString('purchase__maint', $component->html());
+
+            $vue = $this->renderVue($step, [], $this->shellProps($component));
+
+            $this->assertStringContainsString(
+                'purchase__maint', $vue,
+                "El motor SPA NO tapa el paso {$step} y el servidor sí."
+            );
+
+            foreach (['bk-progress', 'bk-foot', 'bk-paybreakdown'] as $block) {
+                $this->assertStringNotContainsString(
+                    $block, $vue,
+                    "El motor SPA emite «{$block}» en el paso {$step} con las reservas pausadas. ".
+                    'La misma condición que enseña el aviso apaga los tres bloques del armazón: dejar '.
+                    'uno vivo es un CTA de compra sobre un cartel que dice que no se puede comprar.'
+                );
+            }
+        }
     }
 
     // ── El PIE: la navegación del embudo ──────────────────────────────────────────────────────
@@ -635,6 +730,7 @@ class SidebarDomContractTest extends TestCase
     {
         return [
             'busy' => false,
+            'notice' => $this->noticeProps($component),
             'progress' => $component->viewData('bookingProgress'),
             // El pie se toma del SERVIDOR, igual que la banda: aquí se compara el marcado. Que el
             // cliente componga el mismo view-model lo comprueba `SidebarCartParityTest`.
@@ -642,6 +738,78 @@ class SidebarDomContractTest extends TestCase
             'messages' => __('tickets'),
             'ui' => __('ui'),
         ];
+    }
+
+    /**
+     * Pausa las reservas y siembra los DOS canales de contacto.
+     *
+     * ⚠️ Los canales se siembran a propósito: sin ellos el aviso pinta un solo enlace —el de
+     * `/contacto`— que para el normalizador es **indistinguible** del de WhatsApp (los dos son
+     * `<a class="btn btn--lg">`, y `href`/`target`/`rel` no son atributos de contrato). El caso pasaría
+     * sin probar ni que los dos canales conviven ni que solo el del teléfono lleva `btn--zone`.
+     */
+    private function pauseReservations(): void
+    {
+        Setting::updateOrCreate(['key' => 'reservations.paused'], ['value' => '1']);
+        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '+34 968 12 34 56']);
+        Setting::updateOrCreate(['key' => 'contact.whatsapp'], ['value' => '+34 600-11-22-33']);
+        Setting::flushMemo();
+    }
+
+    /**
+     * El aviso que recibiría el cliente, compuesto **por el módulo del cliente ejecutado en Node**.
+     *
+     * ⚠️ **La primera versión lo recomponía en PHP y eso vaciaba el caso**: el diff habría comparado
+     * el Blade contra un Vue alimentado por una réplica de la regla del cliente, así que la regla del
+     * cliente —la de los canales, que `DECISIONES #38(g)` señala como «regresión funcional
+     * silenciosa»— no la tocaba nadie. Se verificó: con la réplica, poner los canales en cascada
+     * dejaba la suite entera en verde.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function noticeProps(Testable $component): ?array
+    {
+        if (! $component->instance()->showPausedNotice()) {
+            return null;
+        }
+
+        return $this->buildNoticeInNode([
+            'status' => $this->getJson('/api/v1/booking/status')->assertOk()->json(),
+            'step' => (int) $component->get('step'),
+            'messages' => __('tickets'),
+        ]);
+    }
+
+    /**
+     * Ejecuta `paused.js` en Node, que es lo que hace el cajón de verdad.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<string, mixed>|null
+     */
+    private function buildNoticeInNode(array $state): ?array
+    {
+        $script = <<<'JS'
+            import { buildNotice } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                process.stdout.write(JSON.stringify({ notice: buildNotice(JSON.parse(raw)) }));
+            });
+            JS;
+
+        $path = base_path('storage/framework/testing/dom-build-notice.mjs');
+        @mkdir(dirname($path), 0775, true);
+        file_put_contents($path, str_replace('__MODULE__', base_path('resources/js/sidebar/paused.js'), $script));
+
+        $process = new Process(['node', $path], base_path());
+        $process->setInput(json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $process->setTimeout(60);
+        $process->run();
+
+        $this->assertTrue($process->isSuccessful(), "El módulo del aviso falló:\n".$process->getErrorOutput());
+
+        return json_decode($process->getOutput(), true, 512, JSON_THROW_ON_ERROR)['notice'];
     }
 
     /** @return array<string, mixed> */

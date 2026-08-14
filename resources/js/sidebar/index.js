@@ -47,9 +47,21 @@ export function mount(el, boot = {}) {
     // página hasta que caducara la sesión, que es el fallo que aquel paso cerró.
     if (boot.outcome) machine.enterOutcome(boot.outcome);
 
-    app.mount(el);
+    const root = app.mount(el);
 
     const handle = {
+        /**
+         * Relee el estado de las reservas (la pausa).
+         *
+         * ⚠️ Lo llama la landing en CADA apertura del cajón. El motor se monta una sola vez por carga
+         * de página y no se desmonta, así que sin esto la pausa solo entraría al recargar — que es el
+         * snapshot que `GET /booking/status` existe para evitar, y la diferencia con Livewire, que
+         * reevalúa su guarda en cada render.
+         */
+        refreshStatus() {
+            root.refreshBookingStatus?.();
+        },
+
         /** Aplica una intención de entrada de la landing (`{type:'packs'}` · `{type:'zone', slug}`). */
         applyIntent(intent) {
             machine.queueIntent(intent);

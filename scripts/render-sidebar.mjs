@@ -49,7 +49,13 @@ async function main() {
     const { step, props = {}, shell = null } = JSON.parse(input);
     const component = COMPONENTS[step];
 
-    if (! component) {
+    // ⚠️ **Con el aviso de PAUSA no hace falta paso**, y eso es lo fiel al Blade: el aviso sustituye el
+    // contenido ENTERO, así que no hay ranura que rellenar. Sin esta salida no se podrían comparar los
+    // pasos 5 y 8 —donde el servidor también tapa el flujo— porque todavía no están transcritos y el
+    // script abortaría con un mensaje que habla de otra cosa.
+    const paused = shell !== null && shell.notice;
+
+    if (! component && ! paused) {
         process.stderr.write(`El paso ${step} todavía no está transcrito a Vue.\n`);
         process.exit(2);
     }
@@ -58,7 +64,7 @@ async function main() {
     // que lo que compara el gate sea la composición real y no una aproximación.
     const app = shell === null
         ? createSSRApp(component, props)
-        : createSSRApp({ render: () => h(Shell, shell, { default: () => h(component, props) }) });
+        : createSSRApp({ render: () => h(Shell, shell, paused ? null : { default: () => h(component, props) }) });
 
     app.use(createPinia());
 

@@ -7,6 +7,7 @@ import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
+import { buildNotice } from './paused.js';
 import { addLine, cartRows, removeLine as removeCartLine, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
@@ -37,6 +38,34 @@ const store = usePurchaseStore();
 
 const sections = ref([]);
 const searchEnabled = ref(false);
+
+/**
+ * El estado de las reservas (`GET /booking/status`).
+ *
+ * ⚠️ Es ESTADO y se relee; el objeto `notice` que trae viaja SIEMPRE, también con las reservas
+ * abiertas, así que **el único bit de pausa es `reservations_paused`**.
+ */
+const bookingStatus = ref(null);
+
+/**
+ * Relee el estado de las reservas.
+ *
+ * ⚠️ **Se llama en CADA apertura del cajón, no solo al montar**, y el matiz es el paso entero: el
+ * motor SPA se monta **una vez por carga de página** y no se desmonta nunca, así que una lectura solo
+ * en `onMounted` sería exactamente el snapshot que este endpoint existe para evitar — una pestaña
+ * abierta antes del interruptor seguiría vendiendo hasta que alguien recargara. El motor Livewire no
+ * tiene ese problema porque reevalúa la guarda en cada render.
+ *
+ * Un fallo de red NO inventa una pausa: se conserva lo último que se supo, que es la conducta segura
+ * (el servidor rechaza igual al crear el pedido).
+ */
+async function refreshBookingStatus() {
+    const response = await api.get('/booking/status');
+
+    if (response.ok) bookingStatus.value = response.data;
+}
+
+defineExpose({ refreshBookingStatus });
 
 /**
  * Peticiones en vuelo. Es lo que enciende el velo de carga del armazón, y es un CONTADOR y no un
@@ -105,9 +134,13 @@ watch(
  * añadiría una petición por visita en la ruta de más tráfico del sitio.
  */
 onMounted(async () => {
+    // ⚠️ El estado de la pausa se PIDE y no se inyecta en el montaje, y está decidido: `/config` es
+    // estático por despliegue, pero la pausa la acciona la dueña **con clientes navegando**. Una
+    // landing abierta horas con un snapshot mentiría desde el segundo en que se toca el interruptor.
     const [catalog, config] = await tracked(Promise.all([
         api.get('/catalog/products'),
         api.get('/config'),
+        refreshBookingStatus(),
     ]));
 
     if (catalog.ok) sections.value = groupIntoSections(catalog.data?.data ?? []);
@@ -395,6 +428,18 @@ const progress = computed(() => buildProgress({
 }));
 
 /**
+ * El aviso de pausa, si toca en este paso (`paused.js`).
+ *
+ * ⚠️ No tapa los pasos de RESULTADO: quien vuelve de la pasarela tiene que ver en qué quedó su pago,
+ * aunque las reservas se hayan pausado entre medias.
+ */
+const notice = computed(() => buildNotice({
+    status: bookingStatus.value,
+    step: store.step,
+    messages: props.messages,
+}));
+
+/**
  * El PIE, compuesto para el estado actual (`foot.js`).
  *
  * Devolver `null` es tan significativo como devolver una barra: en el catálogo con la cesta vacía y
@@ -587,7 +632,7 @@ function goBack() {
 </script>
 
 <template>
-    <Shell :busy="busy" :progress="progress" :footer="footer" :messages="messages" :ui="ui"
+    <Shell :busy="busy" :progress="progress" :footer="footer" :notice="notice" :messages="messages" :ui="ui"
            @back="goBack" @action="runAction">
         <CatalogStep
             v-if="store.step === STEPS.CATALOG"

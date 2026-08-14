@@ -1,6 +1,7 @@
 <script setup>
 import BookingProgress from './steps/BookingProgress.vue';
 import Foot from './steps/Foot.vue';
+import PausedNotice from './steps/PausedNotice.vue';
 
 /**
  * El ARMAZÓN del cajón (Fase 4 · paso 4.3·1).
@@ -41,6 +42,20 @@ defineProps({
      */
     footer: { type: Object, default: null },
 
+    /**
+     * El aviso de reservas EN PAUSA ya compuesto (`paused.js`), o `null`.
+     *
+     * ⚠️ **Cuando llega, apaga TRES bloques además de sustituir el contenido**: la banda de progreso,
+     * el pie y la banda de desglose del pago. En el Blade la misma condición gobierna los cuatro
+     * sitios, y transcribir solo el contenido dejaría un «Ir a pagar» vivo sobre un aviso que dice
+     * que no se puede comprar — que es exactamente la divergencia que 4.3·2 dejó abierta.
+     *
+     * ⚠️ Y la guarda vive AQUÍ y no en `buildFooter()`/`buildProgress()` a propósito: el servidor
+     * sigue componiendo los dos view-models durante la pausa —lo que los oculta es la vista—, así que
+     * anularlos en los módulos pondría en rojo las paridades que los comparan campo a campo.
+     */
+    notice: { type: Object, default: null },
+
     /** El grupo `tickets` del idioma activo. */
     messages: { type: Object, default: () => ({}) },
 
@@ -72,16 +87,17 @@ defineEmits(['back', 'action']);
             </span>
         </div>
 
-        <BookingProgress :progress="progress" :messages="messages" @back="$emit('back')" />
+        <BookingProgress :progress="notice ? null : progress" :messages="messages" @back="$emit('back')" />
 
         <!--
           TODO el contenido de los pasos vive aquí dentro. El pie queda FUERA, que es lo que lo deja
           anclado al fondo del panel en vez de scrollear con el contenido.
         -->
         <div class="purchase__scroll">
-            <slot />
+            <PausedNotice v-if="notice" :notice="notice" />
+            <slot v-else />
         </div>
 
-        <Foot v-if="footer" :footer="footer" :messages="messages" @action="$emit('action', $event)" />
+        <Foot v-if="footer && ! notice" :footer="footer" :messages="messages" @action="$emit('action', $event)" />
     </div>
 </template>

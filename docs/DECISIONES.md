@@ -1700,3 +1700,62 @@ de **reservas en pausa** sigue sin existir en el motor SPA, y ahora pesa más: e
 guarda, así que con la pausa activa el cajón SPA enseña una barra de «Ir a pagar» donde Livewire
 enseña el aviso de mantenimiento. No es fuga de dinero —el servidor rechaza— pero es la divergencia
 más visible que la fase tiene abierta, y la cierra 4.3·3.
+
+## #49 · 2026-08-14 · 4.3·3 — el cajón SPA deja de vender durante la pausa
+Fase 4 · paso 4.3 (tercer tramo). Cierra la divergencia que `#48(h)` dejó declarada: con las reservas
+pausadas, el motor SPA seguía vendiendo —catálogo, cesta y «Ir a pagar»— mientras Livewire enseñaba
+el aviso de mantenimiento. No era fuga de dinero (`ReservationAdmissionPolicy` rechaza en servidor),
+pero sí la divergencia más visible que la fase tenía abierta.
+
+**(a) La pausa apaga CUATRO bloques, no uno.** Lo visible es que el contenido scrollable se sustituye
+por el aviso, pero la misma condición gobierna además la banda de progreso, el pie y la banda de
+desglose del pago. Un armazón que solo cambiara el contenido dejaría un «Ir a pagar» vivo sobre un
+cartel que dice que no se puede comprar. ⚠️ **Y la guarda va en la VISTA, no en los compositores**:
+con la pausa activa el servidor **sigue** devolviendo `bookingProgress()` y `footer()` no nulos, así
+que anularlos en `foot.js`/`progress.js` habría puesto en rojo las paridades que los comparan.
+
+**(b) El aviso tapa SEIS pasos y no todos, y eso no se puede derivar.** Son `[1,2,3,4,5,8]`: incluye
+el de PAGO (que es modo `cart`) y excluye el 7 —verificación de correo, que la máquina ni tiene—.
+Los pasos de RESULTADO rinden normales aunque las reservas estén pausadas, porque son acciones **ya
+iniciadas**: un `v-if="paused"` en la raíz taparía la pantalla de «pago confirmado» a quien acaba de
+pagar. Se compara el mapa ENTERO contra el servidor, que es como apareció la divergencia del «modo».
+
+**(c) El título y el mensaje NO son literales de i18n**, y esta es la trampa invisible del paso: son
+ajustes que la dueña edita **por idioma** en el panel, y `tickets.paused.*` es solo su respaldo. Sin
+override los dos textos coinciden **exactamente**, así que pintarlos desde el diccionario inyectado
+sale idéntico en desarrollo y enseña el texto genérico en toda instalación que haya escrito el suyo.
+Salen de `notice.title`/`notice.message`; del diccionario solo salen los tres rótulos de los CTA, que
+el endpoint no publica.
+
+**(d) Los canales van A LA VEZ, no en cascada** (`#38(g)`), y `contact_url` es **el último recurso ya
+decidido** por el servidor. El cliente pinta lo que no sea nulo y no evalúa ninguna condición. Un
+`v-else-if` encadenado escondería el WhatsApp de toda instalación con teléfono, en silencio.
+
+**(e) El estado se RELEE en cada apertura del cajón, y esto es lo que de verdad cierra la
+divergencia.** El motor SPA se monta **una sola vez por carga de página** y no se desmonta nunca, así
+que una lectura solo en `onMounted` habría sido exactamente el snapshot que el endpoint existe para
+evitar: una pestaña abierta antes del interruptor seguiría vendiendo hasta que alguien recargara,
+mientras Livewire —que reevalúa su guarda en cada render— entra en el siguiente clic. Nace
+`refreshStatus()` en el handle del motor y lo llama `open()`. ⚠️ **Residual declarado**: un cajón que
+ya esté ABIERTO cuando se acciona el interruptor no se entera hasta cerrarlo y volver a abrirlo; el
+contrato pide además releer tras un 409 `reservations_paused`, y eso llega con el checkout (4.5).
+
+**(f) Tres huecos de red que encontró la revisión adversarial, los tres con su mutante:**
+1. **El caso de árbol recomponía el aviso en PHP.** Comparaba el Blade contra un Vue alimentado por
+   una réplica de la regla del cliente, así que la regla del cliente no la tocaba nadie: poner los
+   canales en cascada dejaba la suite ENTERA en verde. Ahora el caso ejecuta `buildNotice()` **en
+   Node**, que es lo que hace el cajón.
+2. **`primary` y `external` no los comparaba nadie.** El primero pinta el botón principal con el color
+   de la zona; el segundo abre en pestaña nueva **con `rel="noopener"`** — y ni `target` ni `rel` son
+   atributos de contrato. Intercambiarlos pasaba en verde. Ahora se extraen del HTML del Blade y se
+   comparan.
+3. **Nada ejecutaba `Sidebar.vue`.** Es el único sitio que pide `/booking/status` y no puede pasar por
+   el renderizador del gate (lee `window.Alpine`): borrar la llamada dejaba la suite entera verde y el
+   cajón volvía a vender en pausa **con la casilla marcada**. Nace una guarda sobre el chunk
+   CONSTRUIDO —del mismo tipo que la que vigila que Vue no viaje con la landing—: el motor tiene que
+   contener las llamadas que no puede decidir por su cuenta.
+
+**(g) Lo que el diff de árbol NO puede ver de este bloque, dicho entero**: `href`, `target` y `rel` no
+son atributos de contrato, así que **el enlace de WhatsApp y el de `/contacto` producen árboles byte a
+byte idénticos**. Sin la paridad de enlaces, un motor que mandara a la página de contacto donde el
+servidor ofrece WhatsApp pasaría el gate en verde.

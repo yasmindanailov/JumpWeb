@@ -8,16 +8,17 @@
 
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
-4.3·1 ✅ (armazón) · **4.3·2 ✅ (el pie y la cesta en memoria)** → **toca 4.3·3: persistir la cesta y
-el aviso de pausa**. El corte completo está en `docs/specs/sidebar-spa.md` §4.10.
-⚠️ **El paso 4.3 se partió en TRES al implementarlo** (`DECISIONES #47`, `#48`), como se partió 4.2:
-**·1 el armazón · ·2 el pie y la cesta en memoria · ·3 la persistencia y la pausa**. El corte real no
-fue por pantalla sino por DEPENDENCIA: el pie no se podía separar de la cesta porque el CTA del paso 3
-es «Añadir al carrito» y `disabled` es un atributo que el diff compara.
+4.3·1 ✅ (armazón) · 4.3·2 ✅ (pie y cesta en memoria) · **4.3·3 ✅ (el aviso de reservas en pausa)** →
+**toca 4.3·4: persistir la cesta en `localStorage`**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
+⚠️ **El paso 4.3 se partió en CUATRO al implementarlo** (`DECISIONES #47`–`#49`), como se partió 4.2:
+**·1 el armazón · ·2 el pie y la cesta en memoria · ·3 la pausa · ·4 la persistencia**. El corte no fue
+por pantalla sino por DEPENDENCIA: el pie no se podía separar de la cesta porque el CTA del paso 3 es
+«Añadir al carrito» y `disabled` es un atributo que el diff compara; y la pausa se adelantó porque el
+pie de ·2 comparte su guarda y la divergencia pasó de «falta una pantalla» a «el cajón ofrece pagar».
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2633 en verde** (14841 aserciones, `--parallel` ~65 s) · **68 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2642 en verde** (14954 aserciones, `--parallel` ~70 s) · **80 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -220,24 +221,22 @@ inaplicable; §7 dice cuáles.
 **Cimientos cerrados (4.0a–4.0c, 4.1) y los tres primeros pasos transcritos (4.2).**
 
 ⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
-abre con su armazón (velo, banda con «Volver», zona scrollable y **pie**), pide catálogo y recorre
-producto → día → hora → cantidad → complementos → **añadir al carrito → carrito con su total**. Y ahí
+abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
+producto → día → hora → cantidad → complementos → **añadir al carrito → carrito con su total**, y con
+las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Y ahí
 se para: **«Ir a pagar» no lleva a ninguna parte** (el paso 5 es 4.4a) y **la cesta no sobrevive a una
-recarga** (4.3·3). **El flag NO se activa en producción**; su default es `livewire` y ese es el motor
+recarga** (4.3·4). **El flag NO se activa en producción**; su default es `livewire` y ese es el motor
 que vende. Sirve para comparar los dos en vivo (`CE-1`).
 
-❗ **Y hay una divergencia abierta que conviene tener delante**: el aviso de **reservas EN PAUSA** no
-existe en el motor SPA (verificado: no consulta `GET /booking/status`, que existe desde 4.0b). Con la
-pausa activa, el cajón SPA **ofrece pagar** mientras Livewire enseña el aviso de mantenimiento con
-teléfono/WhatsApp. No es fuga de dinero —`ReservationAdmissionPolicy` rechaza en servidor— pero es la
-divergencia más visible de la fase, y **ningún test puede cazarla**: ningún caso de
-`tests/Feature/Sidebar` siembra la pausa. La cierra 4.3·3.
+⚠️ **Residual declarado de la pausa**: el estado se relee al cargar la página y **en cada apertura del
+cajón**, pero un cajón que ya esté ABIERTO cuando se acciona el interruptor no se entera hasta
+cerrarlo y volver a abrirlo. Livewire sí, porque reevalúa su guarda en cada render. El contrato pide
+además releer tras un 409 `reservations_paused`, y eso llega con el checkout (4.5).
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.3·3 — persistir la cesta, y el aviso de pausa.** Lo primero es lo que `DECISIONES #38(d)`
-   decidió y nadie ha implementado todavía; lo segundo es la divergencia de arriba. Seis cosas MEDIDAS
-   antes de empezar, todas con evidencia:
+1. **4.3·4 — persistir la cesta en `localStorage`.** Es lo que `DECISIONES #38(d)` decidió y nadie ha
+   implementado todavía. Seis cosas MEDIDAS antes de empezar, todas con evidencia:
    · **El saneador del cliente debe espejar `CartPayload::lineRules()`, NO `Cart::sanitize()`.** Medido:
      `Cart::sanitize()` conserva una línea con `date: ''` y `POST orders/quote` rechaza el cuerpo
      **entero** con 422 en cuanto una línea no cumple el formato → cesta impintable y sin botón para
@@ -304,6 +303,21 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
   · ⚠️ **Dos rótulos que el diff da por buenos**: «Pagas ahora (señal)» en el paso 3 y «Pagas ahora»
     NEUTRO en la cesta (#225). El normalizador descarta el texto; los fija `SidebarCartParityTest`.
   · **La cesta ya viaja en la consulta de horas** (`AFORO-02`): iba `items: []` desde 4.2.
+
+- **4.3·3 — el aviso de reservas en pausa** (2026-08-14, `DECISIONES #49`). Cierra la divergencia que
+  4.3·2 dejó declarada. Cinco cosas que condicionan lo que viene:
+  · **La pausa apaga CUATRO bloques**, no solo el contenido: la banda, el pie y la banda de desglose
+    del pago. ⚠️ Y la guarda va en la VISTA: el servidor **sigue** componiendo `bookingProgress()` y
+    `footer()` no nulos durante la pausa, así que anularlos en los módulos rompería sus paridades.
+  · ⚠️ **Tapa SEIS pasos** (`[1,2,3,4,5,8]`) y no se puede derivar: los de RESULTADO rinden normales
+    porque son acciones ya iniciadas.
+  · ⚠️ **El título y el mensaje son ajustes del PANEL por idioma**, no literales de i18n — y sin
+    override coinciden EXACTAMENTE, así que el fallo es invisible en desarrollo.
+  · **El estado se relee en cada apertura del cajón**: el motor se monta una sola vez por carga de
+    página, así que leerlo solo al montar habría sido el snapshot que el endpoint existe para evitar.
+  · ⚠️ **Lo que el diff de árbol NO ve de este bloque**: `href`, `target` y `rel` no son atributos de
+    contrato, así que el enlace de WhatsApp y el de `/contacto` producen árboles **idénticos**. La
+    paridad de enlaces es lo único que distingue mandar al WhatsApp de mandar a contacto.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -403,6 +417,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2633** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2642** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

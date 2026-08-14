@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, 4.3·1 y 4.3·2 hechos → toca 4.3·3 (persistir la cesta y el aviso de pausa)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y 4.3·1–·3 hechos → toca 4.3·4 (persistir la cesta en `localStorage`)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -621,7 +621,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `node --test`. Suite **2622 verde**; chunk del cajón 95,5 kB de 120.
       · ⚠️ **Lo que NO cierra**: el pie no existe todavía, así que el cajón sigue **auto-avanzando**
         del calendario a la hora donde Livewire exige «Continuar». Eso es 4.3·2.
-      · ❗ **Y queda declarado, no resuelto, el aviso de reservas EN PAUSA.** Verificado: la SPA no
+      · ❗ **Quedó declarado y lo cierra 4.3·3: el aviso de reservas EN PAUSA.** Verificado: la SPA no
         consulta `GET /booking/status` (que existe desde 4.0b). En el Blade la misma condición
         gobierna la banda, la banda de pago y el pie, y sustituye el contenido scrollable entero por
         `.purchase__maint` en los pasos 1-5 y 8. Con la pausa activa el cajón SPA seguiría vendiendo
@@ -631,7 +631,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         la divergencia pasó de «falta una pantalla» a «el cajón SPA ofrece pagar durante la pausa».
 - [x] **Paso 4.3·2 — el pie y la cesta en memoria** (2026-08-14, `DECISIONES #48`). Entra
       `.bk-foot` con sus TRES árboles, el paso 4 y el flujo que los une. La cesta vive **en memoria**;
-      la persistencia en `localStorage` es 4.3·3, y `cart.js` nace ya sin tocar el almacén.
+      la persistencia en `localStorage` es 4.3·4, y `cart.js` nace ya sin tocar el almacén.
       · **El pie no se podía partir de la cesta**, y ese fue el corte real: el CTA del paso 3 es
         «Añadir al carrito» y `disabled` **es un atributo que el diff compara**, así que dejarlo
         inactivo ponía el gate en rojo y dejarlo activo sin cesta era un botón mudo.
@@ -659,10 +659,41 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         intercambiado y emparejado por posición — los seis en rojo.
       · Suite **2633 verde**; chunk del cajón 105,7 kB de 120.
       · ⚠️ **Lo que NO cierra**: (1) «Ir a pagar» no lleva a ninguna parte (el paso 5 es 4.4a); (2) la
-        cesta no sobrevive a una recarga (4.3·3); y (3) **el aviso de reservas EN PAUSA sigue sin
+        cesta no sobrevive a una recarga (4.3·4); y (3) **el aviso de reservas EN PAUSA sigue sin
         existir, y ahora pesa más**: el pie comparte su guarda, así que con la pausa activa el cajón
         SPA enseña una barra de «Ir a pagar» donde Livewire enseña el aviso de mantenimiento. Es la
-        divergencia más visible que la fase tiene abierta. La cierra 4.3·3.
+        divergencia más visible que la fase tiene abierta. La cerró 4.3·3.
+- [x] **Paso 4.3·3 — el cajón deja de vender durante la pausa** (2026-08-14, `DECISIONES #49`).
+      Cierra la divergencia que 4.3·2 dejó declarada.
+      · **La pausa apaga CUATRO bloques, no uno**: el contenido scrollable, la banda, el pie y la banda
+        de desglose del pago. ⚠️ Y la guarda va en la VISTA: con la pausa activa el servidor **sigue**
+        componiendo `bookingProgress()` y `footer()` no nulos, así que anularlos en los módulos habría
+        puesto en rojo las paridades que los comparan campo a campo.
+      · ⚠️ **Tapa SEIS pasos y no se puede derivar**: `[1,2,3,4,5,8]`. Los de RESULTADO rinden
+        normales —son acciones YA iniciadas—, así que un `v-if="paused"` en la raíz taparía el «pago
+        confirmado» de quien acaba de pagar. Se compara el mapa ENTERO, que es como apareció la
+        divergencia del «modo» en 4.3·1.
+      · ⚠️ **El título y el mensaje NO son literales de i18n**: son ajustes del panel POR IDIOMA, y sin
+        override coinciden EXACTAMENTE con el literal — o sea que el fallo sale idéntico en desarrollo
+        y solo se ve en la instalación que haya escrito el suyo. Tiene caso propio.
+      · **Los canales van a la vez y `contact_url` llega ya decidido** (`#38(g)`): el cliente pinta lo
+        que no sea nulo y no evalúa nada.
+      · ⚠️ **El estado se RELEE en cada apertura**, y eso es lo que de verdad cierra la divergencia: el
+        motor se monta una sola vez por carga de página, así que leerlo solo en `onMounted` habría
+        sido el mismo snapshot que el endpoint existe para evitar. **Residual declarado**: un cajón ya
+        ABIERTO cuando se acciona el interruptor no se entera hasta reabrirlo.
+      · **Tres huecos de red que encontró la revisión adversarial, los tres con su mutante**: el caso
+        de árbol recomponía el aviso EN PHP (poner los canales en cascada dejaba la suite entera
+        verde); `primary`/`external` —el color del botón principal y el `rel="noopener"`— no los
+        comparaba nadie; y **nada ejecutaba `Sidebar.vue`**, así que borrar la llamada a
+        `/booking/status` pasaba en verde y devolvía el cajón a vender en pausa con la casilla marcada.
+        Nace una guarda sobre el chunk CONSTRUIDO, del tipo de la que vigila que Vue no viaje con la
+        landing.
+      · **Red**: 2 casos de árbol (el aviso sustituyendo el flujo entero; los seis pasos tapados con
+        sus tres bloques ausentes), `SidebarPausedParityTest` (6 casos: mapa de once pasos, los cuatro
+        estados de canales con sus enlaces, las dos formas del teléfono, el override del panel y los
+        tres idiomas), 12 de `node --test` y la guarda del chunk. **Verificado por mutación 8 veces.**
+      · Suite **2642 verde**; chunk del cajón 107,3 kB de 120.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

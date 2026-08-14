@@ -154,6 +154,45 @@ class SidebarBundleBudgetTest extends TestCase
     }
 
     /**
+     * **Lo que el chunk que se SIRVE tiene que saber hacer** (Fase 4 · paso 4.3·3).
+     *
+     * ⚠️ Nace de un hueco real: `Sidebar.vue` es el único sitio que pide `GET /booking/status`, y
+     * **ningún test lo ejecuta**. No puede: lee `window.Alpine` y el idioma del documento, así que el
+     * renderizador SSR del gate monta `Shell` directamente y nunca pasa por él. Se verificó por
+     * mutación que borrar esa llamada dejaba la suite ENTERA en verde — y con ella el cajón volvía a
+     * vender durante la pausa, que es justo la divergencia que 4.3·3 cierra.
+     *
+     * Es una guarda barata y del mismo tipo que la de arriba: mirar el artefacto construido. No dice
+     * que el cableado sea correcto —eso lo dicen las paridades—, dice que **está**.
+     *
+     * @var array<string, string>
+     */
+    private const ENGINE_MUST_KNOW = [
+        '/booking/status' => 'preguntar si las reservas están en pausa',
+        'purchase__maint' => 'pintar el aviso de pausa',
+        '/orders/quote' => 'presupuestar la cesta',
+        '/cart/validate-line' => 'preguntar si una línea entra en la cesta',
+    ];
+
+    public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void
+    {
+        $manifest = $this->manifest();
+        $chunk = (string) $manifest['resources/js/sidebar/index.js']['file'];
+        $js = (string) file_get_contents(public_path('build/'.$chunk));
+
+        foreach (self::ENGINE_MUST_KNOW as $needle => $what) {
+            $this->assertStringContainsString(
+                $needle, $js,
+                "El chunk del cajón ya no contiene «{$needle}», así que ha dejado de {$what}.
+".
+                'Es la única red de ese cableado: `Sidebar.vue` no lo ejecuta ningún test —lee '.
+                '`window.Alpine`, así que el renderizador del gate monta `Shell` directamente—, y '.
+                'borrar una de estas llamadas dejaba la suite entera en verde.'
+            );
+        }
+    }
+
+    /**
      * **La guarda de la guarda.** El test de arriba solo significa algo si esas firmas están de
      * verdad en el bundle del motor: si Vue cambiara sus marcadores internos, aquélla seguiría verde
      * para siempre sin mirar nada — que es exactamente lo que hacía su primera versión.
