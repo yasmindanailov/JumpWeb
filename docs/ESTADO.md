@@ -4,14 +4,14 @@
 > Última actualización: **2026-08-14**.
 
 ## ▶ Dónde estamos
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) 🟦 — LOS 6 PASOS DEL CORTE (§9) CERRADOS + EL
-CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida de pago · 3 auth ·
-**4 el dinero** (precio · disponibilidad · pedido y cobro · desenlace) · **5 post-form** ·
-**cierre: la secuencia del dinero baja al dominio** (`DECISIONES #37`).
-✅ **El ítem que estaba pendiente del owner se resolvió el 2026-08-13**: partió `PaymentProvider` en
-dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
-Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
-fase es la emisión de tokens Bearer, también de Fase 6.
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
+
+**Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
+`site.css`) · 4.1 ✅ (cimientos SPA) · **4.2 ✅ (pasos 1–3 transcritos con paridad demostrada)** →
+**toca 4.3, la cesta**. El corte completo está en `docs/specs/sidebar-spa.md` §4.10.
+
+**Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
+único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
 - Suite **2610 en verde** (14186 aserciones, `--parallel` ~63 s) · **15 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
@@ -19,19 +19,22 @@ fase es la emisión de tokens Bearer, también de Fase 6.
 - ⚠️ **El `pre-push` corre ahora también `npm run build`, ANTES de la suite** (2026-08-13). Se añadió
   tras un fallo REAL: un build interrumpido dejó `public/build/manifest.json` a 0 bytes y **toda la
   web pública respondió 500**. `public/build` está en `.gitignore`, así que el manifest no viaja en
-  el commit y nada lo miraba; `SUITE-05` ya lo pedía por escrito. `PrePushGateTest` vigila los
-  cuatro pasos del gate y que el build vaya antes que la suite.
+  el commit y nada lo miraba; `SUITE-05` ya lo pedía por escrito.
+  **El gate son hoy SEIS pasos** —docs-check · Pint · `npm run build` · `npm run build:ssr` ·
+  `npm run test:js` · suite—, y `PrePushGateTest` los vigila uno a uno y comprueba que el build va
+  antes que la suite. Los dos últimos entraron con la SPA: el bundle SSR hace falta para el diff de
+  árbol (Node no carga `.vue` sin compilar) y `test:js` corre la máquina de estados del cajón.
 - **Auditorías de dependencias son verificación de CIERRE, no de instalación** (`DECISIONES #25`):
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
-- **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers, la
-  última vez en el paso 4.0b·5). ⚠️ **El `CRITICAL_RE` del hook se amplió con `Cart`** en ese paso:
-  un controlador de API que DECIDE sobre aforo entra en el gate aunque no escriba nada, igual que su
-  hermano `Availability*`. `CriticalPathGateTest` lo vigila con el fichero en `CRITICAL_FILES`. ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
-  `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b), **`CheckoutOrchestrator`** (añadido
-  en el cierre) y **todo controlador de API `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`**:
-  tocarlos exige `VERIFY_CONC=1` tras correr los dos comandos (`INVARIANTES §6`). Todo el paso 4 los
-  dispara, así que cuenta con ellos en cada commit.
+- **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers; la
+  última vez en el paso 4.0b·5).
+  **La lista viva de lo que exige `VERIFY_CONC=1` es el `CRITICAL_RE` de `.githooks/pre-push`** — no
+  se copia aquí para que no envejezca (ya pasó una vez), y `CriticalPathGateTest` vigila que siga
+  cubriendo lo que debe. En grandes trazos: el núcleo de dinero/aforo por nombre de clase, y **todo
+  controlador de API `Order*`/`Payment*`/`Checkout*`/`Quote*`/`Availability*`/`Cart*`**.
+  ⚠️ `Cart` entró en 4.0b·6 con este criterio: **un controlador de API que DECIDE sobre aforo entra
+  en el gate aunque no escriba nada**, igual que su hermano `Availability*`.
   ⚠️ **El gate NO cubre las superficies web** (`Livewire\Tickets\Purchase`, `RetryPaymentController`):
   un commit que solo las toque no lo dispara aunque estén en el camino del dinero. Córrelos igual.
 - **Fase 2 (modularización) CERRADA** en 7 pasos, 2026-08-12: el dominio vive en
@@ -209,8 +212,15 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-**Cimientos cerrados: 4.0a, 4.0b, 4.0c y 4.1.** El motor SPA monta, tiene red y no pesa en la
-landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
+**Cimientos cerrados (4.0a–4.0c, 4.1) y los tres primeros pasos transcritos (4.2).**
+
+⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
+abre, pide catálogo, deja elegir producto → día → hora → cantidad → complementos… **y ahí se queda**.
+El paso 4 (cesta) todavía no existe, así que el flujo no se puede completar. **El flag NO se activa
+en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en
+vivo, que es lo que `CE-1` pide.
+
+Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
 1. **4.3 — la cesta y el presupuesto** (`§4.10`). Lo que ya está resuelto y NO hay que rehacer: el
    dinero sale de `POST orders/quote` (`CartPricing`), y si una línea entra en la cesta lo dice
@@ -226,8 +236,10 @@ landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al 
    que el cliente recibe de la API con otros nombres ni lo que compone él. Para eso hacen falta
    paridades de DATOS aparte — ya hay dos de ejemplo (`SidebarCalendarParityTest`,
    `SidebarAddonsParityTest`).
-2. **4.3 en adelante** — el corte completo, en §4.10 del spec. ⚠️ Entre 4.5 y 4.6 **no se despliega
-   el flag**: quien pague en medio volvería a un cajón mudo.
+2. **4.4 en adelante** — el corte completo, en §4.10 del spec. ⚠️ El paso **4.4b** (registro embebido
+   + restauración de cesta) está declarado **el más peligroso de la fase**, y no el de pagar: es el
+   único que cruza la frontera Livewire↔Vue en los dos sentidos y no tiene guardián en servidor.
+   ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
