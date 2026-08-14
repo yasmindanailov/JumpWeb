@@ -2472,9 +2472,9 @@ familias y cada una necesita una decisión distinta, que es lo que hará 4.7·2:
   (`lang/`, OpenAPI), que es contra quien de verdad comparan los textos y los importes.
 
 **(e) Lo que NO entra aquí, y el orden importa**: retirar el componente y el puente es 4.7·2, y el flag
-4.7·3. ⚠️ **Y sigue en pie la condición**: antes de borrar `Purchase.php` conviene dejar el flag en `spa`
-en uso real unos días. Lo de hoy demuestra que el motor vende; no demuestra que lo haga con clientes
-distintos, navegadores distintos y móviles.
+4.7·3. ⚠️ **La condición que este punto añadía —«dejar el flag en `spa` en uso real unos días»— quedó
+RETIRADA el 2026-08-15 por VACÍA: no hay instalación viva ni canal de despliegue con los que cumplirla.
+Ver `#62`.** Lo que ordena 4.7·2b es el contador de `PurchaseRetirementTest`, no el calendario.
 
 ## #61 · 2026-08-15 · 4.7·2a — el inventario de la retirada deja de crecer
 Segundo tramo de la retirada, y otra vez sin borrar nada del motor que hoy vende. Ataca el riesgo
@@ -2503,3 +2503,30 @@ estaba mal desde antes de existir 4.7.
 y `Api\V1\CatalogAddonsTest` ya la cubre **mejor** —recorre la cadena entera, no un solo nivel—. O sea:
 mueren con el componente sin pérdida de cobertura. Se deja escrito, no se ejecuta: **no se borran tests
 del motor que hoy vende**. Ese borrado es 4.7·2b, después de que el flag lleve tiempo en `spa`.
+
+## #62 · 2026-08-15 · Retirada de una condición VACÍA: no hay producción con la que curtir el motor
+Al planificar 4.7·2 se puso una condición sensata en apariencia: **«antes de borrar `Purchase.php`,
+dejar el flag en `spa` en uso real unos días»** (`#60(e)`, y repetida en el tracker y en `ESTADO`).
+Se comprobó y **no puede cumplirse**. Se retira.
+
+**(a) Lo medido**: este repo es **el PRODUCTO**, sin marca de cliente (`CLAUDE.md`, primera línea);
+**no hay canal de despliegue** —ni `.github`, ni script; el de `INSTALACION-CLIENTE.md` §1 sigue siendo
+un `[DECISION-PENDIENTE]`—; y las menciones a «producción» de `ESTADO.md` son del **cliente ORIGEN**,
+que vive en otro repo al que este no despliega nada (`DECISIONES #1`). **No hay tráfico.**
+
+**(b) Por qué importa y no es una formalidad.** Una condición que no puede cumplirse no es prudencia:
+es un bloqueo indefinido disfrazado, y en un repo de agentes es peor todavía —el siguiente lee «espera»
+y espera—. `docs-check` la habría dejado pasar sin decir nada: no valida el sentido de una frase.
+
+**(c) Lo que aquel margen protegía de verdad era tener INTERRUPTOR de vuelta**, y el interruptor lo
+mata el propio 4.7·2b por construcción: esperar no lo conserva, solo lo aplaza. Lo que sí conserva el
+interruptor es el ORDEN —el flag se retira el último, en 4.7·3—, y eso sigue en pie.
+
+**(d) Lo que ordena 4.7·2b no es el calendario, es el CONTADOR.** `PurchaseRetirementTest` dice cuántos
+ficheros conducen todavía por el componente (hoy **25**) y no le deja subir. Reclasificar hasta 0 —cada
+uno con su evidencia: dónde vive la cobertura si muere, a qué superficie se re-apunta si sobrevive— y
+borrar entonces. Eso no es esperar: es el trabajo.
+
+**(e) La regla que deja, y vale para cualquier fase**: una condición de bloqueo tiene que nombrar el
+**hecho observable** que la levanta. «Cuando haya rodado un tiempo» no lo es; «cuando el contador llegue
+a 0» sí.

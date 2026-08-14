@@ -317,8 +317,25 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
 3. **4.7 — la retirada, EN CURSO** (`DECISIONES #60`, `#61`). **·1 el manifiesto congelado ✅** ·
    **·2a el inventario deja de crecer ✅** (2026-08-15) · **·2b retirar el componente y el puente** ·
    **·3 retirar el flag**.
-   · **`PurchaseRetirementTest` es hoy el marcador de cuánto falta**: los dependientes solo pueden
-     encoger, y van **25** (eran 26). Cuando llegue a 0, `Purchase.php` se puede borrar.
+   · ▶ **EMPIEZA AQUÍ: el marcador es `PurchaseRetirementTest`.** Los dependientes solo pueden encoger
+     y van **25** (eran 26). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo es
+     reclasificar uno a uno, **con evidencia**, no de golpe:
+     · **Si el fichero se re-apunta** (su sujeto es el dominio o el servidor): condúcelo por `/api/v1`
+       y quítalo de `DEPENDENTS`. Patrón hecho: `SlotOfferTest` → `POST availability/{p}/times`.
+     · **Si muere con el componente**: ANTES hay que enseñar dónde vive su cobertura. Patrón hecho y
+       medido: los dos casos de `AddonDependencyTest` mueren sin pérdida porque `CatalogAddonsTest`
+       cubre la poda de dependencias **mejor** (la cadena entera). ⚠️ Eso se comprueba, no se supone.
+     · **Las nueve PARIDADES** son el grupo grande y el último: o comparan contra el manifiesto
+       congelado (`tests/Fixtures/sidebar-dom-manifest.json`, ya hecho para el árbol) o contra el
+       contrato del servidor (`lang/`, `openapi/v1.yaml`), que es contra quien de verdad comparan sus
+       textos e importes. ⚠️ Y varias dejan de tener sentido al quedar UN solo consumidor: p. ej.
+       `AvailabilityTest::test_the_api_and_the_web_offer_the_same_times…` existía para probar que dos
+       implementaciones coincidían. Eso no es perder cobertura; es que la pregunta desaparece.
+   · **Los tres candidatos más baratos para empezar** (1 uso cada uno, ya inspeccionados):
+     `Ui/SpinnerTest` (el velo del panel Livewire — el de la SPA lo cubre el caso del armazón),
+     `Auth/DuplicateEmailEdgeCaseTest` (el evento `purchase:switch-to-login`) y
+     `Sales/CatalogVisibilityAndCartPruneTest` (la poda de la cesta en `mount`, que en la SPA es
+     `cart.js` y tiene sus casos en `cart.test.js`).
    · ⚠️ **Lo que hace grande a 4.7·2, medido**: **26 ficheros de test ejecutan `Purchase`**, con ~160
      casos, en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como
      conductor de dominio y deben re-apuntarse a la API, y las nueve paridades, que o congelan o
@@ -326,8 +343,13 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      de cobertura.
    · ✅ **El manifiesto ya está congelado** (30 entradas, 696 nodos): el contrato visual sobrevive a la
      retirada. Se regenera con `MANIFEST_REFRESH=1` y hay que decirlo en el commit.
-   · ⚠️ **Condición antes de 4.7·2**: dejar el flag en `spa` en uso REAL unos días. Lo del e2e demuestra
-     que el motor vende; no que lo haga con clientes, navegadores y móviles distintos.
+   · ⚠️ **NO esperes a «curtir el motor en producción»: esa condición se planteó y se RETIRÓ el
+     2026-08-15 por vacía** (`DECISIONES #62`). Este repo es el PRODUCTO —`CLAUDE.md`, primera
+     línea—, **no hay canal de despliegue** (ni `.github` ni script; el de `INSTALACION-CLIENTE.md` §1
+     sigue `[DECISION-PENDIENTE]`) y las menciones a «producción» de este documento son del cliente
+     ORIGEN, que vive en otro repo. **No hay tráfico con el que curtir nada.** Lo que aquel margen
+     protegía era tener interruptor de vuelta, y el interruptor lo mata el propio 4.7·2b: esperar no
+     lo conserva, solo aplaza.
    · ⚠️ **El techo del bundle debería BAJAR aquí**: se va el motor Livewire, y con él los dos pasos que
      hoy conviven.
 4. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica

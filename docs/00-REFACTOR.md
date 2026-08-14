@@ -999,8 +999,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · Suite **2718 verde** · dependientes: **25** (eran 26).
 - [ ] **Paso 4.7·2b — retirar el componente y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php` y el puente `$wire.step`↔store, con la reclasificación de los 25 dependientes.
-      ⚠️ **Antes**: dejar el flag en `spa` en uso real unos días. Lo verificado es que el motor vende, no
-      que lo haga con clientes, navegadores y móviles distintos.
+      ⚠️ **La condición de «curtirlo en producción» se RETIRÓ el 2026-08-15 por vacía** (`DECISIONES
+      #62`): no hay instalación viva ni canal de despliegue, así que no hay tráfico que esperar. Lo que
+      de verdad ordena este tramo es el CONTADOR de `PurchaseRetirementTest`: reclasificar los 25
+      dependientes hasta 0 y borrar entonces, no antes.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
