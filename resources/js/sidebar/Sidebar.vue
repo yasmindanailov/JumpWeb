@@ -12,7 +12,7 @@ import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runLogin } from './login.js';
 import { runRegister, signupRequiresCaptcha } from './register.js';
 import {
-    addLine, cartRows, clear as clearStoredCart, decideOwnership,
+    addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
     load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
 } from './cart.js';
 import Shell from './Shell.vue';
@@ -690,6 +690,9 @@ function goToVerdict(step) {
 async function checkout() {
     const verdict = await tracked(runCheckout({
         cartCount: cart.value.length,
+        // ⚠️ La guarda de las líneas incompletas la aplica el módulo, ANTES de preguntar nada al
+        // servidor (`#38(d)`, 4.5·1): una cesta que no se puede comprar todavía no gasta dos peticiones.
+        incompleteLines: hasPendingEventFields(cartLines.value),
         api,
         messages: props.messages,
         applyIdentity: applyIdentityFrom,
@@ -1005,6 +1008,23 @@ async function removeLine(index) {
     await refreshQuote();
 }
 
+/**
+ * Contesta un campo del evento de una línea de la CESTA (Fase 4 · paso 4.5·1).
+ *
+ * ⚠️ **Estas respuestas viven SOLO en memoria y no se persisten nunca.** Es la razón de que haya que
+ * volver a pedirlas: son el nombre de un menor, su edad y sus alergias (`#38(d)`, art. 9 del RGPD).
+ * Por eso aquí **no se llama a `persist()`** — y no es un olvido: `saveCart()` las descartaría de
+ * todos modos, y el canario de `cart.test.js` busca centinelas en el volcado entero del almacén.
+ */
+function updateCartField(index, key, value) {
+    const line = cart.value[index];
+    if (! line) return;
+
+    line.event_data = { ...(line.event_data ?? {}), [key]: value };
+    // La fila se recompone sola: `cartLines` es un computed sobre `cart`.
+    cartError.value = '';
+}
+
 /** «Añadir otra reserva»: vuelve al catálogo con la selección limpia. */
 function addAnother() {
     clearSelection();
@@ -1101,7 +1121,8 @@ function goBack() {
             :messages="messages"
             :locale="locale"
             @remove="removeLine"
-            @add-another="addAnother" />
+            @add-another="addAnother"
+            @update-field="updateCartField" />
 
         <IdentifyStep
             v-else-if="store.step === STEPS.IDENTIFY"

@@ -63,11 +63,21 @@ export const TOO_MANY_PENDING = 'too_many_pending_orders';
  * }} state
  * @returns {CheckoutVerdict}
  */
-export function decideCheckout({ cartCount, me, eligibility, messages = {} }) {
+export function decideCheckout({ cartCount, incompleteLines = false, me, eligibility, messages = {} }) {
     // Espejo de la primera guarda de `checkout()`. El pie no pinta el CTA con la cesta vacía, así que
     // es defensiva en los dos motores — y se conserva por eso mismo: la web la tiene.
     if (! (cartCount > 0)) {
         return verdict(STEPS.CART, t(messages, 'errors.cart_empty'));
+    }
+
+    // ⚠️ **La única guarda del cajón que la web NO tiene** (`#38(d)`, Fase 4 · paso 4.5·1). Una línea de
+    // pack restaurada vuelve sin sus respuestas —no se persisten: son datos de un menor— y
+    // `POST /orders` la rechaza con `line_event_required`. Pero **el presupuesto la tarifica igual**,
+    // así que sin esto el cliente ve una cesta perfecta y descubre el problema en el botón de pagar.
+    // Va ANTES de preguntar nada al servidor: no tiene sentido gastar dos peticiones —ni una ficha de
+    // `throttle`— por una cesta que no se puede comprar todavía.
+    if (incompleteLines === true) {
+        return verdict(STEPS.CART, t(messages, 'errors.event_required'));
     }
 
     // ⚠️ **Un 401 es la ÚNICA respuesta que significa «no hay nadie».** Cualquier otro fallo deja la
@@ -152,11 +162,11 @@ function verdict(step, error, rereadStatus = false) {
  * }} deps
  * @returns {Promise<CheckoutVerdict & {purged: boolean}>}
  */
-export async function runCheckout({ cartCount, api, messages = {}, applyIdentity, refreshStatus }) {
+export async function runCheckout({ cartCount, incompleteLines = false, api, messages = {}, applyIdentity, refreshStatus }) {
     // Sin cesta no se pregunta NADA: es la primera guarda de `checkout()` y ahorra dos peticiones por
     // un clic que el pie ni siquiera ofrece.
     if (! (cartCount > 0)) {
-        return { ...decideCheckout({ cartCount, me: null, eligibility: null, messages }), purged: false };
+        return { ...decideCheckout({ cartCount, incompleteLines, me: null, eligibility: null, messages }), purged: false };
     }
 
     const [me, eligibility] = await Promise.all([
@@ -171,7 +181,7 @@ export async function runCheckout({ cartCount, api, messages = {}, applyIdentity
         return { step: STEPS.CATALOG, error: '', rereadStatus: false, purged: true };
     }
 
-    return settle({ cartCount, me, eligibility, messages }, refreshStatus);
+    return settle({ cartCount, incompleteLines, me, eligibility, messages }, refreshStatus);
 }
 
 /**

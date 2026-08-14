@@ -9,17 +9,19 @@
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
 **4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a ✅ COMPLETO**
-(·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) → **toca
-4.4b·2, el widget de Turnstile**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
+(·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) ·
+**4.5·1 ✅** (la cesta restaurada pide lo que le falta) → **toca 4.5·2: los pasos 8 y 9, pagar**.
+El corte está en `docs/specs/sidebar-spa.md` §4.10. Queda además **4.4b·2** (el widget de Turnstile),
+aplazado a propósito porque no se puede verificar sin claves de Cloudflare y navegador.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) y 4.4b en dos (`#53`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) 4.4b en dos (`#53`) y 4.5 en dos (`#54`). En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2673 en verde** (15.237 aserciones, `--parallel` ~67 s) · **176 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2678 en verde** (15.256 aserciones, `--parallel` ~66 s) · **189 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -236,13 +238,11 @@ cesta **sí sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su due
 se activa en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar
 los dos en vivo (`CE-1`).
 
-❗ **Precondición del paso de PAGO, apuntada aquí para que no se descubra tarde**: una línea de PACK
-restaurada vuelve **sin sus respuestas** (`DECISIONES #38(d)`, RGPD) y `OrderCreator` la rechaza con
-`line_event_required`. Sigue sin morder porque el CTA no navega, pero **está un paso más cerca**:
-desde 4.4a·1 el cajón ya sabe que el titular puede reservar, así que lo único que falta para que ese
-rechazo salga a pantalla son las pantallas de 4.4b/4.5. **Ninguna de las dos puede cerrarse sin el
-camino para volver a rellenarla.** El dato ya está: al restaurar se piden los `event_fields` de los
-productos de la cesta.
+✅ **La precondición del paso de PAGO está CERRADA** (4.5·1, `DECISIONES #54`): una línea de PACK
+restaurada vuelve sin sus respuestas —y seguirá volviendo así, es `#38(d)`—, pero ahora **el carrito
+las vuelve a pedir** antes de dejar avanzar. Medido: el presupuesto tarificaba esa línea sin avisar y
+solo `POST /orders` la rechazaba, así que el fallo aparecía en el botón de pagar. ⚠️ La regla que deja:
+**el cliente ENUMERA qué falta, el servidor DECIDE si vale** — copiar el saneo sería `#38(f)` otra vez.
 
 ⚠️ **Residual de la pausa, ya ENCOGIDO**: el estado se relee al cargar la página, **en cada apertura
 del cajón** y —desde 4.4a·1— **al pulsar «Ir a pagar»**, que es el único punto donde vender de más
@@ -253,7 +253,29 @@ Livewire sí, porque reevalúa su guarda en cada render. El contrato pide ademá
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.4b·2 — el widget de Turnstile**, lo único que le falta al alta. Lo que hay que saber:
+1. **4.5·2 — los pasos 8 y 9: PAGAR.** Es lo único que separa al cajón SPA de vender. Medido el
+   2026-08-14, antes de empezar:
+   · **Paso 8 = 19 nodos** (el carrito en modo `cart--summary`: sin botón de quitar y sin «añadir
+     otra»), **paso 9 = 8 nodos** (el auto-POST). Y el pie del 8 estrena dos cosas: `icon: 'card'` y
+     **`splitMode: 'band'`**, que es la banda `bk-paybreakdown` —7 nodos— declarada en
+     `SHELL_BLOCKS_NOT_YET_IN_SPA` desde 4.3·1.
+   · ⚠️ **El diff de árbol NO puede verificar el paso 9, y esto hay que resolverlo con una paridad
+     propia**: `action`, `method` y los `name` de los tres campos firmados (`Ds_SignatureVersion`,
+     `Ds_MerchantParameters`, `Ds_Signature`) **no son atributos de contrato** del normalizador. Un
+     motor que los emitiera vacíos o con otro nombre pasaría el gate en verde y Redsys rechazaría el
+     pago con SIS0042. Es el mismo agujero que la paridad de enlaces del aviso de pausa.
+   · **`POST /orders` hace las tres cosas de una vez** —admite, crea con su hold y abre el cobro— y
+     devuelve el formulario firmado en la misma respuesta (`OrderPaymentResource::withPaymentTicket`).
+     Es el espejo exacto de `confirmReservation()`: no hay que orquestar nada en el cliente.
+   · **Lo que `confirmReservation()` hace además, y hay que transcribir**: vaciar la cesta (y
+     persistirla vacía), guardar el código del pedido y no volver atrás.
+   · ⚠️ **El techo del bundle está en 135 kB y el chunk pesa 133,1**: quedan **2 kB** y faltan cinco
+     pantallas. Subirlo es una decisión que se toma con su medición, como en 4.4a·2.
+   · ⚠️ **Entre 4.5 y 4.6 no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
+   · Y el contrato pide **releer el estado tras un 409 `reservations_paused`**, que es el último
+     residual de la pausa.
+
+2. **4.4b·2 — el widget de Turnstile**, lo único que le falta al alta. Lo que hay que saber:
    · ⚠️ **Se aplazó porque NO SE PUEDE VERIFICAR sin claves de Cloudflare y un navegador** (`#53(a)`),
      no por tamaño. Cuando se haga, hace falta un entorno con claves de prueba: sin verificación
      empírica no puede marcarse ✅.
@@ -273,9 +295,9 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
    · **El techo del bundle está en 135 kB y el chunk pesa 131,7**: quedan ~3 kB. El pago y las tres
      pantallas de desenlace **no caben**: subirlo es una decisión que hay que tomar con su medición,
      como se hizo en 4.4a·2.
-2. **4.5 en adelante** — el corte completo, en §4.10 del spec.
+3. **4.6 en adelante** — el corte completo, en §4.10 del spec.
    ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
-3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
+4. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
 
@@ -514,6 +536,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2673** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2678** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

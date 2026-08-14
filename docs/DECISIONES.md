@@ -2051,3 +2051,60 @@ Con él, `machine.js` gana el paso 7, que le faltaba.
 **(k) Lo que NO entra**: el widget de Turnstile (4.4b·2), el pago (4.5) y las pantallas de desenlace
 (4.6). Quien crea su cuenta con la cesta lista **se queda en el paso 5**, igual que quien inicia sesión:
 el destino es el 8 y todavía no está transcrito.
+
+## #54 · 2026-08-14 · 4.5·1 — la cesta restaurada pide lo que le falta, antes de llegar al pago
+Fase 4 · paso 4.5, primer tramo. Ejecuta lo que `DECISIONES #38(d)` dejó decidido y sin construir: «al
+restaurar, las líneas de pack piden esos campos otra vez». Es **la única desviación consciente de la
+paridad de toda la fase**, y hasta ahora era una nota.
+
+**(a) El problema, medido y no supuesto.** La cesta persistida vuelve **sin `event_data`** (`#38(d)`,
+RGPD: en la instalación sembrada son el nombre de un menor, su edad y sus alergias). Medido el
+2026-08-14 con el pack real: **`POST /orders/quote` la tarifica igual** —200, con su total correcto—
+y solo **`POST /orders` la rechaza**, con un 422 `line_event_required`. Es decir: el cliente veía una
+cesta perfecta y descubría el problema **en el botón de pagar**, sin ninguna pantalla donde
+arreglarlo. Ese era el bloqueante que el ESTADO llevaba tres pasos declarando.
+
+**(b) Se decidió PEDIR lo que falta, no descartar la línea, y la alternativa se evaluó en serio.** Las
+tres opciones estaban sobre la mesa: (1) pedirlo, (2) no restaurar las líneas de pack, (3) persistir
+también las respuestas. La (3) se descartó con el owner tras medir dónde quedarían los datos:
+`localStorage` en texto plano, **sin caducidad** —la única poda es por fecha de reserva pasada, que
+pueden ser meses—, legible por cualquier JS del mismo origen (y la CSP es laxa a propósito, lo exigen
+Alpine y Livewire) y **fuera del alcance de `User::anonymize()`**, con un agujero que ninguna purga
+tapa: un invitado que configura el cumpleaños y se va no dispara ningún cambio de titular. La (2) se
+descartó porque perder el día, la hora, los invitados y los complementos de un cumpleaños por haber
+recargado es peor que volver a escribir un nombre.
+⚠️ **Y el coste real es mínimo, medido en vivo**: del pack sembrado solo `celebrant` es obligatorio, así
+que el cajón vuelve a pedir **un** campo — ni la edad ni las alergias.
+
+**(c) La frontera con `#38(f)`: el cliente ENUMERA, el servidor DECIDE.** `pendingEventFields()` no
+valida nada: mira si hay algo escrito. Quién decide si una respuesta vale sigue siendo del servidor, y
+no es ceremonia — `sanitizeEventData()` aplica `preg_replace('/\D+/','')` a los campos `number`, así
+que una edad contestada «cinco» **el servidor la ve vacía** y cualquier validación ingenua del cliente
+la ve contestada. Ese caso exacto está fijado en un test que comprueba las dos mitades a la vez.
+
+**(d) Los campos que se piden son EXACTAMENTE los que el servidor exige**, comparados contra
+`TicketType::missingRequiredEventFields()` con el esquema REAL de `GET catalog/products/{id}`. Pedir de
+menos deja que el cliente se choque con el 422; pedir de más le exige datos que nadie mirará. ⚠️ Y los
+campos de **post-form** no se piden nunca aunque sean obligatorios —se rellenan semanas después, con
+firma—: hay caso con uno `required` de esa fase para probarlo.
+
+**(e) La guarda vive en el módulo, no en el `.vue`** (`CE-6`), y **va antes de preguntar nada**: una
+cesta que no se puede comprar todavía no gasta dos peticiones ni una ficha de `throttle`. Solo un
+`true` explícito bloquea: un valor accidental no puede parar una compra.
+
+**(f) Las respuestas nuevas NO se persisten, y eso está blindado por partida doble.** `updateCartField()`
+no llama a `persist()` **y** `saveCart()` las descartaría igualmente; el canario del RGPD de
+`cart.test.js` siembra centinelas y los busca en el volcado entero del almacén, no en la clave
+`event_data` de la primera línea.
+
+**(g) El bloque nuevo es el único del cajón que la web no tiene**, y por eso reutiliza el marcado del
+paso 3 (`.eventfields`): mismo control, mismo estilo, pidiendo lo mismo. El árbol del carrito con
+líneas COMPLETAS no cambia —lo comprueba el gate—, así que la desviación solo existe en el estado que
+la web no puede tener.
+
+**(h) Verificado por mutación** (pedir también los opcionales → cae la paridad con el servidor; quitar
+la guarda → caen dos casos del módulo) y **en vivo** contra el catálogo real.
+
+**(i) Lo que NO entra**: los pasos 8 y 9 (la pantalla de pago y el auto-POST a Redsys), que son 4.5·2.
+Con este tramo el CTA de pagar deja de llevar a un rechazo inevitable; a dónde lleva cuando todo está
+bien sigue siendo 4.5·2.

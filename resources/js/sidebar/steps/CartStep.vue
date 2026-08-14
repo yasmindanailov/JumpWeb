@@ -35,7 +35,7 @@ const props = defineProps({
     locale: { type: String, default: 'es' },
 });
 
-defineEmits(['remove', 'add-another']);
+defineEmits(['remove', 'add-another', 'update-field']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -96,6 +96,31 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
                         <span class="cart__event-label">{{ answer.label }}:</span> {{ answer.value }}
                     </li>
                 </ul>
+
+                <!--
+                    ⚠️ **El único bloque del cajón que la web NO tiene, y es la desviación declarada en
+                    `DECISIONES #38(d)`**: «al restaurar, las líneas de pack piden esos campos otra vez».
+                    La cesta persistida vuelve sin `event_data` —nombre de un menor, su edad y sus
+                    alergias no se dejan en el navegador—, así que una línea de pack restaurada está
+                    incompleta por construcción. Sin esto, el presupuesto la tarifica igual y el fallo
+                    aparece al PAGAR, con un 422 que el cliente no puede arreglar desde ninguna pantalla.
+
+                    Reutiliza el marcado del paso 3 (`.eventfields`) a propósito: es el mismo control,
+                    con el mismo estilo, pidiendo lo mismo.
+                -->
+                <div v-if="line.pending?.length" class="eventfields cart__pending">
+                    <p class="form__error">{{ t('errors.event_required') }}</p>
+                    <label v-for="field in line.pending" :key="field.key" class="eventfields__field">
+                        <span class="eventfields__label">{{ field.label }}<span class="eventfields__req" aria-hidden="true">*</span></span>
+                        <textarea v-if="field.type === 'textarea'" rows="2" required
+                                  @input="$emit('update-field', line.index, field.key, $event.target.value)"></textarea>
+                        <input v-else
+                               :type="field.type === 'number' ? 'number' : 'text'"
+                               :min="field.type === 'number' ? 0 : null"
+                               required
+                               @input="$emit('update-field', line.index, field.key, $event.target.value)">
+                    </label>
+                </div>
 
                 <ul v-if="line.addons.length" class="cart__addons">
                     <li v-for="addon in line.addons" :key="addon.product_id">

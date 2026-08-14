@@ -115,7 +115,59 @@ export function cartRows(quoteLines, cart, fieldsByProduct = {}) {
     return quoteLines.map((line) => ({
         ...line,
         event: eventAnswers(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
+        // Lo que hay que volver a pedir para que esta línea se pueda comprar (Fase 4 · paso 4.5·1).
+        pending: pendingEventFields(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
     }));
+}
+
+/**
+ * Los campos OBLIGATORIOS del pack que esta línea todavía no tiene contestados
+ * (Fase 4 · paso 4.5·1).
+ *
+ * ⚠️ **Esto ENUMERA, no valida, y la distinción es la regla `#38(f)`.** Quién decide si una respuesta
+ * vale es el servidor, y no por ceremonia: `sanitizeEventData()` aplica `preg_replace('/\D+/', '')` a
+ * los campos `number`, así que una edad contestada «cinco» el servidor **la ve vacía** y cualquier
+ * validación ingenua en el cliente la ve contestada. Copiar esa regla aquí era exactamente lo que
+ * aquella decisión prohibió. Lo que sí puede saber el cliente —y no es negocio— es si hay algo
+ * escrito o no hay nada.
+ *
+ * **Por qué hace falta**: la cesta persistida vuelve SIN `event_data` (`#38(d)`, RGPD: son el nombre
+ * de un menor, su edad y sus alergias), así que una línea de pack restaurada está incompleta **por
+ * construcción**. El presupuesto la tarifica igual —medido: 200 con su total correcto—, de modo que
+ * sin esto el cliente ve una cesta perfecta y el fallo aparece al final del embudo, al pagar, con un
+ * 422 `line_event_required` que no puede arreglar desde ninguna pantalla.
+ *
+ * @param {Array<{key: string, label: string, required?: boolean, type?: string}>} fields  esquema del producto
+ * @param {Record<string, unknown>} answers  lo contestado hasta ahora
+ * @returns {Array<{key: string, label: string, required: boolean, type: string}>}
+ */
+export function pendingEventFields(fields, answers) {
+    return (Array.isArray(fields) ? fields : [])
+        .filter((field) => field?.required === true)
+        .filter((field) => {
+            const value = answers?.[field.key];
+
+            return value === null || value === undefined || typeof value === 'object' || String(value).trim() === '';
+        })
+        .map((field) => ({
+            key: field.key,
+            label: field.label ?? '',
+            required: true,
+            type: field.type ?? 'text',
+        }));
+}
+
+/**
+ * ¿Hay alguna línea de la cesta que no se pueda comprar todavía por falta de respuestas?
+ *
+ * Es la guarda que impide llevar al pago una cesta que el servidor va a rechazar. Recorre las FILAS
+ * ya compuestas —no la cesta cruda— porque el emparejado por `index` con el presupuesto es lo que
+ * dice qué línea se pinta de verdad.
+ *
+ * @param {Array<{pending?: Array<object>}>} rows  filas de `cartRows()`
+ */
+export function hasPendingEventFields(rows) {
+    return (Array.isArray(rows) ? rows : []).some((row) => (row?.pending ?? []).length > 0);
 }
 
 /**

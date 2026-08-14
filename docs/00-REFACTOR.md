@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO** y **4.4b·1** (alta embebida) → toca 4.4b·2 (el widget de Turnstile)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO**, **4.4b·1** (alta embebida) y **4.5·1** (la cesta restaurada pide lo que le falta) → toca 4.5·2 (los pasos 8 y 9: pagar)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -816,6 +816,29 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · Suite **2673 verde** · 176 tests JS · chunk del cajón 131,7 kB de 135.
       · ⚠️ **Lo que NO cierra**: el widget de Turnstile (·2) y el pago (4.5). Quien crea su cuenta con
         la cesta lista se queda en el paso 5, igual que quien inicia sesión.
+- [x] **Paso 4.5·1 — la cesta restaurada pide lo que le falta** (2026-08-14, `DECISIONES #54`). Cierra
+      el bloqueante que el ESTADO llevaba tres pasos declarando y ejecuta `#38(d)`, que lo había
+      decidido sin construirlo: «al restaurar, las líneas de pack piden esos campos otra vez».
+      · ⚠️ **El problema no avisaba**: medido, `POST /orders/quote` tarifica la línea sin respuestas
+        —200, con su total correcto— y solo `POST /orders` la rechaza con 422 `line_event_required`. El
+        cliente veía una cesta perfecta y se chocaba **en el botón de pagar**, sin pantalla donde
+        arreglarlo.
+      · **Se eligió PEDIR, no descartar.** Persistir las respuestas se descartó con el owner tras medir
+        dónde quedarían: `localStorage` en texto plano, sin caducidad real, legible por cualquier JS del
+        mismo origen y **fuera del alcance de `User::anonymize()`**, con un agujero que ninguna purga
+        tapa (el invitado que se va). Descartar la línea se descartó porque perder un cumpleaños
+        configurado por recargar es peor que reescribir un nombre. ⚠️ Medido en vivo: del pack sembrado
+        solo `celebrant` es obligatorio, así que se vuelve a pedir **un** campo.
+      · ⚠️ **La frontera de `#38(f)`: el cliente ENUMERA, el servidor DECIDE.** El módulo mira si hay
+        algo escrito, nada más — `sanitizeEventData()` deja solo los dígitos en los `number`, así que una
+        edad «cinco» el servidor la ve VACÍA y el cliente no puede saberlo sin copiar la regla. Hay caso
+        que fija las dos mitades a la vez.
+      · **Los campos pedidos son los que el servidor exige**, comparados contra
+        `missingRequiredEventFields()` con el esquema real del catálogo; y los de POST-FORM no se piden
+        nunca aunque sean obligatorios (hay caso con uno).
+      · **Red**: 12 casos de `node --test` y `SidebarPendingFieldsParityTest` (el quote que no avisa, la
+        paridad de campos, la fase, y la frontera del «cinco»). Verificado por mutación ×2 y en vivo.
+      · Suite **2678 verde** · 189 tests JS · chunk del cajón 133,1 kB de 135.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

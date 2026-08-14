@@ -18,6 +18,7 @@ const MESSAGES = {
         cart_empty: 'Añade al menos una visita para continuar.',
         too_many_pending: 'Tienes :max reservas pendientes (el máximo).',
         try_later: 'Demasiados intentos seguidos. Espera un minuto antes de volver a intentarlo.',
+        event_required: 'Completa los datos obligatorios del cumpleaños.',
         reservations_paused: 'Las reservas online están pausadas. Llámanos al :phone para reservar.',
     },
 };
@@ -201,6 +202,53 @@ describe('la identidad manda sobre el veredicto', () => {
         const verdict = decide({ me: fail(401), eligibility: ok({ allowed: true }) });
 
         assert.equal(verdict.step, STEPS.IDENTIFY);
+    });
+});
+
+describe('la cesta que todavía no se puede comprar', () => {
+    /**
+     * ⚠️ **La única guarda del cajón que la web no tiene** (`#38(d)`, 4.5·1). Una línea de pack
+     * restaurada vuelve sin sus respuestas —no se persisten: son el nombre de un menor, su edad y sus
+     * alergias— y `POST /orders` la rechaza con `line_event_required`. Pero el PRESUPUESTO la tarifica
+     * igual, con su total correcto, así que sin esto el cliente ve una cesta perfecta y descubre el
+     * problema en el botón de pagar, sin ninguna pantalla donde arreglarlo.
+     */
+    test('con líneas incompletas se queda en el carrito y dice qué falta', () => {
+        const verdict = decide({ incompleteLines: true });
+
+        assert.equal(verdict.step, STEPS.CART);
+        assert.equal(verdict.error, MESSAGES.errors.event_required);
+        assert.equal(verdict.rereadStatus, false);
+    });
+
+    /**
+     * ⚠️ **Y manda sobre el veredicto del servidor**: aunque la elegibilidad diga que sí, la cesta no
+     * se puede convertir en pedido. Sin este orden, el cajón llevaría a pagar y el 422 llegaría después.
+     */
+    test('manda sobre un «sí puedes reservar»', () => {
+        const verdict = decide({ incompleteLines: true, eligibility: ok({ allowed: true }) });
+
+        assert.equal(verdict.step, STEPS.CART);
+        assert.equal(verdict.error, MESSAGES.errors.event_required);
+    });
+
+    /** La cesta VACÍA sigue mandando sobre todo: es la primera guarda de `checkout()`. */
+    test('la cesta vacía se comprueba antes que las líneas incompletas', () => {
+        const verdict = decide({ cartCount: 0, incompleteLines: true });
+
+        assert.equal(verdict.error, MESSAGES.errors.cart_empty);
+    });
+
+    /** Y con la cesta completa no estorba: el flag es opcional y por defecto no bloquea nada. */
+    test('sin líneas incompletas el camino sigue como siempre', () => {
+        assert.equal(decide({ incompleteLines: false }).step, STEPS.PAY);
+        assert.equal(decide().step, STEPS.PAY);
+    });
+
+    /** ⚠️ Solo `true` bloquea: un valor accidental —una lista, un `'no'`— no puede parar una compra. */
+    test('solo un `true` explícito bloquea', () => {
+        assert.equal(decide({ incompleteLines: 'sí' }).step, STEPS.PAY);
+        assert.equal(decide({ incompleteLines: [] }).step, STEPS.PAY);
     });
 });
 

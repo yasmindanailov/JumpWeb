@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addLine, cartRows, decideOwnership, eventAnswers, load, reconcile, removeLine, sanitizeLine, save, toApiItems } from './cart.js';
+import { addLine, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems } from './cart.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red de la cesta (criterio CE-6).
@@ -368,6 +368,87 @@ describe('restaurar', () => {
 
         assert.deepEqual(load(roto, { owner: null, today: HOY, maxLines: 50 }).lines, []);
         assert.deepEqual(load(null, { owner: null, today: HOY, maxLines: 50 }).lines, []);
+    });
+});
+
+describe('lo que una línea restaurada tiene que volver a pedir', () => {
+    const ESQUEMA = [
+        { key: 'celebrant', label: 'Nombre del homenajeado/a', required: true, type: 'text' },
+        { key: 'age', label: 'Edad que cumple', required: false, type: 'number' },
+        { key: 'notes', label: 'Notas (alergias…)', required: false, type: 'textarea' },
+    ];
+
+    /**
+     * ⚠️ **El caso que da sentido al paso.** La cesta persistida vuelve SIN `event_data` (`#38(d)`), así
+     * que una línea de pack restaurada está incompleta **por construcción** — y el presupuesto la
+     * tarifica igual, con su total correcto. Sin esto, el fallo aparece al pagar.
+     */
+    test('una línea restaurada pide sus campos obligatorios', () => {
+        assert.deepEqual(
+            pendingEventFields(ESQUEMA, {}).map((f) => f.key),
+            ['celebrant'],
+        );
+    });
+
+    test('los campos OPCIONALES no se piden: la línea se compra sin ellos', () => {
+        const pendientes = pendingEventFields(ESQUEMA, { celebrant: 'Mara' });
+
+        assert.deepEqual(pendientes, []);
+    });
+
+    /** Una respuesta en blanco no cuenta como contestada, ni con espacios. */
+    test('el blanco y los espacios no cuentan como respuesta', () => {
+        assert.equal(pendingEventFields(ESQUEMA, { celebrant: '' }).length, 1);
+        assert.equal(pendingEventFields(ESQUEMA, { celebrant: '   ' }).length, 1);
+        assert.equal(pendingEventFields(ESQUEMA, { celebrant: null }).length, 1);
+        assert.equal(pendingEventFields(ESQUEMA, { celebrant: {} }).length, 1);
+    });
+
+    /**
+     * ⚠️ **Esto ENUMERA, no valida** (`#38(f)`). Una edad contestada «cinco» el SERVIDOR la ve vacía
+     * —`sanitizeEventData()` aplica `preg_replace('/\\D+/','')` a los `number`—, y el cliente no puede
+     * saberlo sin copiar esa regla, que es justo lo que aquella decisión prohibió. Aquí se fija la
+     * frontera: hay algo escrito, así que no se pide; el «no» lo dará el servidor.
+     */
+    test('no reimplementa el saneo del servidor: solo mira si hay algo escrito', () => {
+        const conTexto = pendingEventFields(
+            [{ key: 'age', label: 'Edad', required: true, type: 'number' }],
+            { age: 'cinco' },
+        );
+
+        assert.deepEqual(conTexto, [], 'el cliente lo ve contestado; quien decide si vale es el servidor');
+    });
+
+    test('un esquema vacío o ausente no pide nada ni lanza', () => {
+        assert.deepEqual(pendingEventFields([], {}), []);
+        assert.deepEqual(pendingEventFields(undefined, undefined), []);
+    });
+
+    test('el campo pedido lleva su etiqueta y su tipo, para poder pintarlo', () => {
+        const [campo] = pendingEventFields(ESQUEMA, {});
+
+        assert.equal(campo.label, 'Nombre del homenajeado/a');
+        assert.equal(campo.type, 'text');
+        assert.equal(campo.required, true);
+    });
+
+    /** La guarda del checkout mira las FILAS, que es lo que de verdad se pinta. */
+    test('la cesta sabe si alguna de sus filas está incompleta', () => {
+        assert.equal(hasPendingEventFields([{ pending: [] }, { pending: [{ key: 'celebrant' }] }]), true);
+        assert.equal(hasPendingEventFields([{ pending: [] }, { pending: [] }]), false);
+        assert.equal(hasPendingEventFields([]), false);
+        assert.equal(hasPendingEventFields(undefined), false);
+    });
+
+    /** Y `cartRows` las compone: es de donde salen las filas que mira la guarda. */
+    test('las filas del carrito traen lo que falta de cada línea', () => {
+        const filas = cartRows(
+            [{ index: 0, product_id: 7 }],
+            [{ product_id: 7, event_data: {} }],
+            { 7: ESQUEMA },
+        );
+
+        assert.deepEqual(filas[0].pending.map((f) => f.key), ['celebrant']);
     });
 });
 
