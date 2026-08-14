@@ -2,8 +2,8 @@
 
 > Estado: 🟦 en revisión (**v3**: v2 tras revisión adversarial ×3, más §4.3.bis y §4.4 rediseñados
 > hueco a hueco con revisión de coherencia) · Última actualización:
-> 2026-08-14 (§4.4.6: la fase de las respuestas del pack, decidida al implementar el hueco 4) ·
-> Decisión asociada: `DECISIONES #38` y **`#39`**.
+> 2026-08-14 (**§4.4 CERRADA**: los seis huecos de API implementados, con lo que cada uno enseñó) ·
+> Decisiones asociadas: `DECISIONES #38`, **`#39`**, **`#40`** y **`#41`**.
 > Alcance aprobado por el owner el 2026-08-13: **solo el cajón del sidebar**; `/mi-cuenta` sigue en
 > Blade. Tema: **tokens + hoja de estilos por instalación**. Dependencias: Vue 3 + Pinia.
 >
@@ -204,7 +204,7 @@ Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 | 2 ✅ | `GET /config` | público | **HECHO 2026-08-13.** Los cuatro ajustes de instalación. Los dos números viajan **con su operador en la descripción** (`total > umbral`, `líneas > tope`), y la URL de registro **saneada en servidor**: `SEC-07` sin escape de plantilla que lo remate |
 | 3 ✅ | `GET /booking/status` | público | **HECHO 2026-08-13.** La pausa y su aviso, traducidos. Los canales van **a la vez, no en cascada** (verificado por mutación), y `contact_url` llega **ya decidido por el servidor** — es el último recurso, no «la página de contacto» |
 | 4 ✅ | `GET /orders/{code}` **ampliado** + `GET /orders/{code}/event-data` | sesión/Bearer | **Mitad A HECHA 2026-08-13**: seis campos nuevos sin PII (`is_pack`, `start_time`, el desglose de señal POR RESERVA y `shows_deposit_note`; `free_quantity` en el complemento; `guest_form_pending` en el pedido). ⚠️ Ese último **no es el `any()` de las líneas** —el servidor descarta las canceladas— y por eso se llama distinto. **Mitad B HECHA 2026-08-14**: las respuestas del pack en endpoint aparte, **solo las de la fase `booking`**, y la guarda que sostiene la decisión es que `me/orders` y `GET orders/{code}` NUNCA las lleven (§4.4.6) |
-| 5 | `POST /catalog/products/{product}/addons` | público | Los complementos RESUELTOS |
+| 5 ✅ | `POST /catalog/products/{product}/addons` | público | **HECHO 2026-08-14** (`DECISIONES #41`). Los complementos RESUELTOS **y el pie de la línea en la misma respuesta**, delegando el dinero en `CartPricing`. Nace `Booking\Contracts\AddonOffer`, que **no reimplementa nada**: publica lo que `AddonResolver` ya decide. Un grupo sin elegir usa su opción por defecto, así que la primera llamada va sin `choices` |
 
 **Por qué `/config` y `/booking/status` están separados**, aunque los dos sean públicos y se pidan
 en el mismo momento: `/config` es **estático por despliegue** y `/booking/status` es **estado que la
@@ -286,6 +286,27 @@ que traducir `choices` → `addons[]`. `PAY-12` exige una sola fuente de CÁLCUL
 `catch (Throwable) { return []; }`, así que una selección que el resolutor rechace **tarifica la
 línea sin complementos** — el pie mostraría un total sin ellos mientras las filas muestran sus
 importes, sin error visible.
+
+✅ **HECHO 2026-08-14** (`DECISIONES #41`). Lo que la implementación añadió a lo escrito arriba:
+
+- **La decisión de «todo en una respuesta» quedó MEDIDA, no supuesta**: componer resolución y
+  tarificación en una petición cuesta **las mismas consultas** que pedirlas por separado (9 + 5 con
+  4 complementos), con la mitad de viajes y de fichas de `throttle`. La pendiente la fija ahora
+  `ApiOverheadTest::test_resolving_addons_pays_the_known_slope_and_no_more`.
+- **El fallo silencioso se cierra por construcción**: lo que se tarifica es la selección que el
+  propio dominio acaba de resolver —obligatorios inyectados, huérfanos podados—, así que el `catch`
+  no puede dispararse por lo que mande el cliente. Verificado por mutación: pasarle la selección
+  CRUDA devuelve el pie sin complementos, que es exactamente el fallo descrito.
+- ⚠️ **La compra web NO se cambió, y aquí sí es lo correcto.** En 4.0b·6 la regla vivía dentro del
+  componente Livewire y había que sacarla; aquí ya vivía en el dominio y las dos superficies ya la
+  comparten, así que hacer pasar al sidebar por los DTOs nuevos solo cambiaría el tipo de dato que
+  consume la plantilla del paso con más clics **sin retirar ninguna duplicación**. No había copia
+  que unificar: había una fuente que publicar. Por eso el paso «más arriesgado» acabó sin tocar
+  `AddonResolver::viewModel()` ni a sus dos consumidores vivos.
+- **Un test que no probaba lo que decía**: el de la poda en cadena pasaba igual con una poda de un
+  solo nivel, porque el orden natural de los complementos ya la resolvía en una pasada. Se invirtió
+  el orden de posiciones para que exija el punto fijo de verdad; lo destapó la mutación, no la
+  lectura.
 
 #### 4.4.4 Lo que hay que resolver antes de escribir código
 

@@ -7,7 +7,7 @@
 > (paso 1b), **`#28`** (paso 2), **`#29`**–**`#31`** (paso 3), **`#32`** (paso 4a), **`#33`** (paso 4b), **`#34`** (paso 4c), **`#35`** (paso 4d) y **`#36`** (paso 5).
 > Antecedentes: `DECISIONES #3` (el sidebar se rehace como SPA contra la API) y `#4` (API-first).
 > Qué cambió respecto a la v1 y por qué: **§8** · Corte en pasos y su avance: **§9** ·
-> **Lo que el código enseñó al implementar: §10 → §10.quindecies** — ochenta puntos
+> **Lo que el código enseñó al implementar: §10 → §10.sexdecies** — ochenta y tres puntos
 > medidos. Son la entrada obligatoria para quien construya la SPA de Fase 4 sobre esta API.
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
@@ -1004,3 +1004,31 @@ Los tres ya viajan en `catalog/products/{id}` y en `config`, así que repetirlos
 del que leer el mismo número — y como sería un mapa libre, obligaría además a relajar
 `additionalProperties: false` justo en el esquema recién nacido. El dominio sí los lleva, porque no
 sabe quién le pregunta; la capa de entrega es la que puede decidir no reenviarlos.
+
+### 10.sexdecies Lo que el código enseñó — Fase 4 · paso 4.0b·5 (2026-08-14)
+
+Tres puntos del endpoint de complementos, que cerró los seis huecos del paso (`DECISIONES #41`).
+
+**81. «Extraer» y «publicar» son operaciones distintas, y confundirlas es lo que hace peligroso un
+paso.** El anterior (4.0b·6) sacó una regla de dentro de un componente Livewire, y no hacer que la
+web la consumiera habría sido copiarla. Éste parecía el mismo trabajo —y estaba declarado como el más
+arriesgado por eso— pero la regla **ya vivía en el dominio y las dos superficies ya la compartían**:
+lo único que faltaba era exponerla con DTOs. Hacer pasar además al sidebar por esos DTOs no retiraba
+ninguna deuda y sí movía la plantilla del paso con más clics del embudo. **La pregunta que decide no
+es «¿debería la web usar el contrato?», sino «¿hay dos copias?»**: si no las hay, tocar la superficie
+viva es riesgo sin contrapartida.
+
+**82. Juntar dos operaciones en una respuesta no siempre cuesta más: mídelo.** La intuición era que
+resolver los complementos **y** tarificar la línea en la misma petición pagaría dos veces el N+1
+conocido. Medido: son las mismas consultas que pedir las dos cosas por separado (9 + 5 con cuatro
+complementos), con la mitad de viajes y la mitad de fichas de `throttle` —que aquí importa, porque el
+cubo es de 60/min y **compartido** con disponibilidad, catálogo y presupuesto—. Lo que sí hay que
+dejar fijado es la pendiente, para que nadie añada una tercera pasada sin verla.
+
+**83. Un test de «cadena» puede pasar sin probar la cadena.** El de la poda de dependencias
+(A→B→C) pasaba **igual con una poda de un solo nivel**, porque el orden natural de los complementos
+ya la resolvía en una sola pasada: al llegar a la hoja, su requisito ya se había eliminado. Solo
+invirtiendo las posiciones —la hoja se evalúa primero, cuando su requisito aún está en pie— el test
+exige el punto fijo de verdad. **Cuando lo que se prueba es un algoritmo iterativo, el caso tiene que
+forzar el orden que obliga a iterar**; si no, se está probando el orden, no el algoritmo. Lo destapó
+la mutación, no la lectura del test.

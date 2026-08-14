@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\BookingStatusController;
 use App\Http\Controllers\Api\V1\CartLineController;
+use App\Http\Controllers\Api\V1\CatalogAddonsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
@@ -103,6 +104,17 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/catalog/products/{product}', [CatalogProductsController::class, 'show'])
         ->whereNumber('product')
         ->name('catalog.products.show');
+    // Los complementos RESUELTOS contra la selección del cliente (Fase 4 · paso 4.0b·5). El `show`
+    // de arriba publica la CONFIGURACIÓN de cada enganche; esto publica el resultado de aplicarla:
+    // grupos excluyentes, notas, unidades gratis, topes y la poda EN CADENA de las dependencias.
+    //
+    // `POST` porque lleva la selección, no porque tenga efectos. Devuelve además el dinero de la
+    // línea —delegando en `CartPricing`, no recalculándolo— porque es la pantalla con más clics del
+    // embudo: con dos endpoints cada clic costaría 2 peticiones contra un `throttle:api` de 60/min
+    // COMPARTIDO con disponibilidad, catálogo y presupuesto (spec §4.4.3).
+    Route::post('/catalog/products/{product}/addons', CatalogAddonsController::class)
+        ->whereNumber('product')
+        ->name('catalog.products.addons');
 
     // ── Disponibilidad (paso 4b) — PÚBLICA ────────────────────────────────────────────────────
     // El segundo momento en que el servidor participa en el carrito sin guardarlo: qué días y qué

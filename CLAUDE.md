@@ -56,7 +56,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 (RGPD) + §4 (SEC) · `docs/FLUJOS.md` (flujos 1–2) |
 | Landing / tema visual (tokens CSS) | `docs/ARQUITECTURA.md` (white-label) · `docs/MAPA-PAGINAS.md` |
-| Sidebar SPA (Fase 4) / Vue / tema por instalación | `docs/specs/sidebar-spa.md` (**§4.2–§4.3: los nombres de clase son CONTRATO**) · `docs/specs/api-v1.md` §10 → §10.quindecies |
+| Sidebar SPA (Fase 4) / Vue / tema por instalación | `docs/specs/sidebar-spa.md` (**§4.2–§4.3: los nombres de clase son CONTRATO**) · `docs/specs/api-v1.md` §10 → §10.sexdecies |
 | CMS público (servicios, ofertas) | `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` (copiar) · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
@@ -66,7 +66,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |
 | Deuda técnica (vista única) | `docs/DEUDA.md` |
 | Instalar un cliente nuevo (white-label) | `docs/INSTALACION-CLIENTE.md` |
-| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.quindecies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#37, #39, #40 |
+| API v1 / SPA sidebar / app móvil | `docs/specs/api-v1.md` (Fase 3, 🟦 — **§10 → §10.sexdecies «lo que el código enseñó», antes de tocar nada**) · `openapi/v1.yaml` (el CONTRATO: manda sobre el código) · `docs/DECISIONES.md` #21, #24, #26–#37, #39–#41 |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
 | Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 

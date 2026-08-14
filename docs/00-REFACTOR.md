@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a hecho · 4.0b 5 de 6 · 4.0c a medias
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a y 4.0b hechos · 4.0c a medias
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -400,7 +400,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       De regalo, una fuga menor cerrada: el login solo descartaba el desenlace «confirmado» al
       cambiar de titular, así que a Bob podía aparecerle el «pago denegado» de Alice.
       Suite **2479 verde**; los 14 tests que siembran esas claves a mano siguen pasando sin tocarse.
-- [ ] **Paso 4.0b — los huecos de API** (EN CURSO, **5 de 6**; diseño en `sidebar-spa.md` §4.4 v3,
+- [x] **Paso 4.0b — los huecos de API** (CERRADO 2026-08-14, **los 6**; diseño en `sidebar-spa.md` §4.4 v3,
       hecho por cinco agentes en paralelo y revisado en coherencia). **1 de 5 cerrado**:
       `GET /me/reservation-eligibility`, el aviso temprano de «¿puedo reservar?» que la web tiene
       desde siempre y la API no. Va primero porque su guarda protege a los otros cuatro:
@@ -474,6 +474,27 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       por buenas líneas que el checkout rechaza.
       Verificado por mutación (validar solo por aforo → 3 rojos; quitar la guarda de la fusión → 2;
       sanear la candidata como cesta → rojo en la web) y con `curl` sobre los datos de SaltoPark.
+
+      **El QUINTO hueco, y con él la fase de API cerrada (2026-08-14)**:
+      `POST /catalog/products/{product}/addons` (`DECISIONES #41`), los complementos RESUELTOS y el
+      pie de la línea en la misma respuesta. Estaba declarado como el más arriesgado del paso porque
+      «cambia la semántica de un método del dominio consumido por dos superficies vivas», y al
+      medirlo el riesgo se disolvió: la regla **ya vivía en el dominio y las dos superficies ya la
+      compartían**, así que no había copia que unificar — solo una fuente que publicar con DTOs.
+      Nace `Booking\Contracts\AddonOffer`, que no reimplementa nada, y **ni `AddonResolver` ni sus
+      dos consumidores se tocaron**. ⚠️ Es la decisión OPUESTA a la de 4.0b·6 y por la razón
+      contraria: allí no delegar habría sido copiar; aquí delegar no arregla nada y mueve la
+      plantilla del paso con más clics del embudo.
+      El dinero viaja en la misma respuesta —delegando en `CartPricing`— y la decisión quedó MEDIDA:
+      componer resolución y tarificación cuesta las mismas consultas que pedirlas por separado
+      (9 + 5 con 4 complementos), con la mitad de viajes y de fichas de `throttle`. La pendiente la
+      fija `ApiOverheadTest::test_resolving_addons_pays_the_known_slope_and_no_more`.
+      De regalo cierra por construcción el fallo silencioso que el spec §4.4.3 describía: lo que se
+      tarifica es la selección que el dominio acaba de resolver, así que el `catch (Throwable)` de
+      `CartPricer::resolveAddons()` no puede dispararse por lo que mande el cliente.
+      ⚠️ **Y la verificación destapó un test que no probaba lo que decía**: el de la poda en cadena
+      pasaba igual con una poda de un solo nivel, porque el orden natural ya la resolvía en una
+      pasada. Se invirtieron las posiciones para que exija el punto fijo. Lo encontró la mutación.
 
 - [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta

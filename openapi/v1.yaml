@@ -426,6 +426,79 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /catalog/products/{product}/addons:
+    post:
+      tags: [Catálogo]
+      operationId: resolveProductAddons
+      summary: Los complementos, resueltos contra tu selección
+      description: |
+        La ficha del producto publica la **configuración** de cada complemento; esto publica el
+        **resultado de aplicarla** a lo que llevas elegido: la partición en grupos excluyentes, la
+        nota de precio, la etiqueta, las unidades gratis, los topes, la poda **en cadena** de las
+        dependencias «requiere» y la regla de que un complemento de pago sin tarifa ese día ni
+        siquiera se ofrece. Nada de eso se puede deducir desde el cliente sin reimplementar reglas
+        de servidor.
+
+        Es `POST` porque lleva tu selección, **no porque tenga efectos**: no reserva, no cobra y no
+        guarda nada.
+
+        ### Qué mandar
+
+        - **`quantity`** es la cantidad de la LÍNEA (los invitados de un pack). Decide la cantidad de
+          los complementos por invitado, así que cambiarla cambia el importe.
+        - **`addons`** son las cantidades de los complementos de cantidad libre. Una cantidad `0`
+          vale y significa «este ya no lo quiero», para no tener que rehacer la lista entera.
+        - **`choices`** es el elegido de cada grupo excluyente. Va aparte de las cantidades porque
+          dentro de un grupo lo que selecciona es **ser el elegido**, no tener cantidad: con una
+          lista plana, dos miembros marcados serían ambiguos. Un grupo que no mandes se resuelve con
+          su elegido por defecto, así que la **primera** llamada puede ir sin `choices` y ya
+          devuelve el estado inicial correcto.
+        - **`date` y `time`** son opcionales y van **solo** para tarificar la línea. Los complementos
+          NO dependen del día reservado —dependen del producto, de la selección y de la cantidad—,
+          así que sin ellos la respuesta es la misma salvo que `line` viaja nula.
+
+        ### Qué devuelve, y por qué junto
+
+        Es la pantalla con más clics del embudo, y cada clic cambia el importe. Con dos endpoints
+        cada clic costaría **2 peticiones** contra un `throttle:api` de 60/min **compartido** con
+        disponibilidad, catálogo y presupuesto. Por eso `line` —el pie de la línea— viene en la misma
+        respuesta. ⚠️ **El dinero no se calcula aquí**: sale del mismo cálculo que sirve
+        `orders/quote` y que alimenta la creación del pedido.
+
+        Y **`selection` es lo que hay que guardar en la cesta**: ya lleva los obligatorios inyectados
+        y los dependientes huérfanos fuera, así que una cesta construida con ella es la que el
+        checkout aceptará. Traducir a mano lo pintado en lo que se guarda es un error fácil y caro.
+      parameters:
+        - name: product
+          in: path
+          required: true
+          description: Id del producto BASE (una entrada o un pack, nunca un complemento).
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddonSelectionRequest'
+      responses:
+        '200':
+          description: Los complementos resueltos, y el pie de la línea si mandaste día y hora.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolvedAddons'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /availability/{product}/dates:
     get:
       tags: [Compra]
@@ -2655,6 +2728,256 @@ components:
           type: string
           enum: [text, number, textarea]
         required:
+          type: boolean
+
+    AddonSelectionRequest:
+      type: object
+      description: |
+        La cantidad de la línea y lo que llevas elegido. La primera llamada puede ir solo con
+        `quantity`: los grupos se resuelven con su elegido por defecto.
+      required: [quantity]
+      additionalProperties: false
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          description: Cantidad de la LÍNEA (los invitados de un pack), no de los complementos.
+        date:
+          type: string
+          format: date
+          description: |
+            Solo para tarificar la línea. Los complementos **no** dependen del día reservado.
+        time:
+          type: string
+          description: Hora de inicio de la franja (`HH:MM` o `HH:MM:SS`). Solo para tarificar.
+        addons:
+          type: array
+          description: |
+            Cantidades de los complementos de cantidad libre. Una cantidad `0` es válida y significa
+            «este ya no lo quiero»: no hace falta rehacer la lista.
+          items:
+            $ref: '#/components/schemas/AddonQuantity'
+        choices:
+          type: array
+          description: |
+            El elegido de cada grupo excluyente. Un grupo que no mandes usa su elegido por defecto.
+          items:
+            $ref: '#/components/schemas/AddonChoice'
+
+    AddonQuantity:
+      type: object
+      required: [product_id, quantity]
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 0
+
+    AddonChoice:
+      type: object
+      required: [group, product_id]
+      additionalProperties: false
+      properties:
+        group:
+          type: string
+          maxLength: 100
+          description: Clave del grupo, tal como la publica `choice_group` en la ficha del producto.
+        product_id:
+          type: integer
+          format: int64
+          minimum: 1
+
+    ResolvedAddons:
+      type: object
+      description: Los complementos ya resueltos, lo que hay que guardar, y el pie de la línea.
+      required: [groups, singles, addons_total_cents, selection, line]
+      additionalProperties: false
+      properties:
+        groups:
+          type: array
+          description: |
+            Grupos EXCLUYENTES: dentro de cada uno hay exactamente uno seleccionado, y elegir otro
+            deselecciona al anterior. Van aparte porque esa regla no se ve mirando las filas.
+          items:
+            $ref: '#/components/schemas/AddonChoiceGroup'
+        singles:
+          type: array
+          description: Complementos sueltos.
+          items:
+            $ref: '#/components/schemas/ResolvedAddon'
+        addons_total_cents:
+          type: integer
+          description: Lo que suman los complementos seleccionados.
+        selection:
+          type: array
+          description: |
+            **Lo que hay que guardar en la cesta.** Ya lleva los obligatorios inyectados y los
+            dependientes huérfanos fuera, así que una cesta construida con esto es la que el checkout
+            aceptará. Es la misma forma que los `addons` de una línea de cesta.
+          items:
+            $ref: '#/components/schemas/CartLineAddon'
+        line:
+          type: object
+          nullable: true
+          description: |
+            El pie de la línea con esta selección. **`null` si no mandaste `date` y `time`**: sin
+            ellos no hay precio del producto base, y un importe calculado sobre una fecha inventada
+            sería peor que ninguno. Sale del mismo cálculo que `orders/quote`.
+          required:
+            - subtotal_cents
+            - unit_price_cents
+            - has_deposit
+            - deposit_cents
+            - gate_remainder_cents
+            - addons
+          additionalProperties: false
+          properties:
+            subtotal_cents:
+              type: integer
+              description: Solo el principal. Lo que suman los complementos va en cada uno de ellos.
+            unit_price_cents:
+              type: integer
+              nullable: true
+              description: |
+                `null` = el producto no tiene precio para la tarifa de ese día. Se puede presupuestar,
+                pero **no se puede comprar**.
+            has_deposit:
+              type: boolean
+            deposit_cents:
+              type: integer
+            gate_remainder_cents:
+              type: integer
+              description: |
+                Lo que quedaría por pagar en el parque. Los complementos de un producto CON señal se
+                cobran allí íntegros.
+            addons:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuoteLineAddon'
+
+    AddonChoiceGroup:
+      type: object
+      description: Un grupo «elige uno».
+      required: [key, label, options]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          description: Lo que hay que devolver en `choices.group` al elegir un miembro.
+        label:
+          type: string
+          description: Título ya traducido del grupo.
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResolvedAddon'
+
+    ResolvedAddon:
+      type: object
+      description: |
+        Un complemento ya resuelto contra la selección. Distinto de `CatalogAddon`, que publica la
+        CONFIGURACIÓN: esto es el resultado de aplicarla.
+      required:
+        - product_id
+        - product_name
+        - price_cents
+        - note
+        - is_included
+        - is_mandatory
+        - per_guest
+        - allow_extra
+        - badge
+        - features
+        - selected
+        - available
+        - requires_name
+        - quantity
+        - free_quantity
+        - charged_cents
+        - min_quantity
+        - max_quantity
+        - can_toggle
+        - can_increase
+        - can_decrease
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        price_cents:
+          type: integer
+          description: Precio unitario del día. `0` si es gratis.
+        note:
+          type: string
+          description: |
+            La línea de precio ya compuesta y traducida («Incluido», «5,00 € por invitado»…). Viaja
+            hecha porque mezcla textos traducibles con importes formateados.
+        is_included:
+          type: boolean
+          description: Va incluido en el producto; sus primeras unidades no se cobran.
+        is_mandatory:
+          type: boolean
+          description: 'El producto lo exige: no se puede quitar.'
+        per_guest:
+          type: boolean
+          description: La cantidad la fija el nº de invitados, no el cliente.
+        allow_extra:
+          type: boolean
+          description: Admite unidades por encima de las incluidas.
+        badge:
+          type: string
+          nullable: true
+          enum: [included, free, null]
+          description: |
+            `included` = va con el producto · `free` = no cuesta nada. **No son lo mismo** y por eso
+            no se derivan del precio.
+        features:
+          type: array
+          description: Ventajas, para el desplegable «Más info».
+          items:
+            type: string
+        selected:
+          type: boolean
+          description: |
+            ⚠️ **No se deduce de `quantity`.** En un grupo lo que selecciona es ser el elegido, y un
+            complemento cuyo requisito no está elegido queda fuera aunque lo hubieras marcado. Es el
+            mismo veredicto que aplicará el cobro.
+        available:
+          type: boolean
+          description: |
+            Su requisito («requiere X») está elegido. Si es `false`, el complemento se enseña pero no
+            se puede activar.
+        requires_name:
+          type: string
+          nullable: true
+          description: 'Nombre del complemento que le falta, para el aviso «Requiere: X».'
+        quantity:
+          type: integer
+        free_quantity:
+          type: integer
+          description: Cuántas de esas unidades van sin cargo.
+        charged_cents:
+          type: integer
+          description: '`(quantity − free_quantity) × price_cents`.'
+        min_quantity:
+          type: integer
+        max_quantity:
+          type: integer
+          nullable: true
+        can_toggle:
+          type: boolean
+          description: |
+            Se activa con un interruptor y no con un contador: es el caso por-invitado opcional,
+            donde la cantidad la decide el aforo.
+        can_increase:
+          type: boolean
+        can_decrease:
           type: boolean
 
     CatalogAddon:

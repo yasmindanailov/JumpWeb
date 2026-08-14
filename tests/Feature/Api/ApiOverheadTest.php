@@ -219,6 +219,52 @@ class ApiOverheadTest extends TestCase
     }
 
     /**
+     * Fase 4 · paso 4.0b·5 — resolver los complementos es la pantalla con MÁS clics del embudo.
+     *
+     * Una configuración típica son 8–12 clics y cada uno pide esta respuesta, así que su pendiente
+     * es la que decide si la SPA se nota lenta (spec §4.4.3). El endpoint hace a propósito dos cosas
+     * en una petición —resolver los complementos y tarificar la línea— y por eso paga DOS veces la
+     * pendiente conocida de `RateResolver::priceCents()`: una al componer el modelo de vista y otra
+     * al tarificar. Se midió antes de decidirlo: repartirlo en dos endpoints cuesta las mismas
+     * consultas, con el doble de viajes y de fichas de `throttle`.
+     *
+     * Lo que fija este test es esa pendiente, para que nadie añada una tercera pasada sin verlo.
+     * **No la bendice**: el N+1 de fondo está en `DEUDA.md`, y arreglarlo toca el resolutor —camino
+     * del cobro— así que exige paso propio y los verificadores de concurrencia.
+     */
+    public function test_resolving_addons_pays_the_known_slope_and_no_more(): void
+    {
+        $product = $this->catalogFixture(1)[0];
+        $this->attachAddons($product, 6);
+        $addonIds = $product->addons()->pluck('ticket_types.id')->all();
+        $date = now()->addDays(2)->toDateString();
+        $path = '/'.ApiSurface::PREFIX.'/catalog/products/'.$product->id.'/addons';
+
+        $body = fn (int $addons): array => [
+            'quantity' => 8, 'date' => $date, 'time' => '10:00:00',
+            'addons' => array_map(
+                static fn (int $id): array => ['product_id' => $id, 'quantity' => 1],
+                array_slice($addonIds, 0, $addons),
+            ),
+        ];
+
+        // Calentamiento: la primera petición del proceso paga el memo de settings (`PERF-02`).
+        $this->postJson($path, $body(1))->assertOk();
+
+        $one = $this->queriesOf(fn () => $this->postJson($path, $body(1))->assertOk());
+        $six = $this->queriesOf(fn () => $this->postJson($path, $body(6))->assertOk());
+
+        // Los SEIS complementos se recorren siempre —están enganchados al producto—, así que lo que
+        // crece con la selección es solo lo que se tarifica: 5 complementos más × 2 pasadas.
+        $this->assertLessThanOrEqual(
+            count($one) + 5 * 2,
+            count($six),
+            "Resolver complementos ha crecido por encima de la pendiente medida.\n  ".
+            implode("\n  ", array_diff($six, $one))
+        );
+    }
+
+    /**
      * Fase 3 · paso 4b — el calendario no puede costar una consulta por día ofrecido.
      *
      * Es el N+1 más fácil de reintroducir aquí, porque el precio de cada día se resuelve por

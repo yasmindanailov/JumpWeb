@@ -1340,3 +1340,51 @@ el esquema más nuevo.
 fundirse con otra, igual que en la web. Eximir la fusión parece más fino —la cesta no crece— pero es
 un cambio de conducta en una defensa anti-abuso (`PAY-12`), y colarlo dentro de una extracción es
 justo lo que este proyecto no hace (mismo criterio que la divergencia de `contact.phone`).
+
+## #41 · 2026-08-14 · Los complementos resueltos: publicar la regla, con el dinero en la misma respuesta
+Cierre del hueco 5 —y de los seis— de Fase 4 · paso 4.0b (`sidebar-spa.md` §4.4.1 y §4.4.3). Nace
+`POST /api/v1/catalog/products/{product}/addons` sobre `Booking\Contracts\AddonOffer`.
+
+**(a) Publicar, no extraer — y por eso la web NO se tocó.** Era el hueco declarado «más arriesgado»
+porque cambia la semántica de `AddonResolver::viewModel()`, consumido por dos superficies vivas (la
+compra pública y el alta manual del panel). Al medirlo, el riesgo desaparecía: la regla **ya vivía en
+el dominio** y las dos superficies **ya la comparten**, así que no había ninguna copia que unificar.
+Lo que faltaba era exponerla con DTOs que un contrato público pueda publicar. Hacer pasar además al
+sidebar por esos DTOs solo cambiaría el tipo de dato que consume la plantilla del paso con más clics
+del embudo, sin retirar deuda: se dejó como estaba. ⚠️ **Es la decisión opuesta a la de `#40`, y por
+la razón contraria**: allí la regla estaba dentro de un componente Livewire y no delegar habría sido
+copiarla; aquí delegar no arregla nada y sí mueve una plantilla frágil.
+
+**(b) El dinero de la línea viaja en la misma respuesta, y está MEDIDO.** Es la pantalla con más
+clics (8–12 por configuración) y cada clic cambia el importe: con dos endpoints serían 16–24
+peticiones contra un `throttle:api` de 60/min **compartido** con disponibilidad, catálogo y
+presupuesto. Se midió antes de decidirlo: componer las dos cosas cuesta **las mismas consultas** que
+pedirlas por separado (9 + 5 con 4 complementos), con la mitad de viajes y de fichas de límite.
+`ApiOverheadTest::test_resolving_addons_pays_the_known_slope_and_no_more` fija esa pendiente.
+⚠️ El importe **no se calcula aquí**: se pide a `CartPricing`, la misma implementación que sirve
+`orders/quote`. `PAY-12` exige una sola fuente de CÁLCULO, no una sola URL.
+
+**(c) Cierra un fallo silencioso por construcción.** `CartPricer::resolveAddons()` captura cualquier
+error del resolutor y **tarifica la línea sin complementos**: el pie mostraría un total sin ellos
+mientras las filas muestran sus importes. Aquí lo que se tarifica es la selección que el propio
+dominio acaba de resolver —obligatorios inyectados, huérfanos podados—, así que ese `catch` no puede
+dispararse por lo que mande el cliente. Verificado por mutación: pasarle la selección CRUDA reproduce
+exactamente el fallo descrito.
+
+**(d) Un grupo sin elegir usa su opción por defecto.** Un grupo excluyente sin miembro activo no es
+un estado que exista, así que la primera llamada puede ir solo con `quantity` y ya devuelve el estado
+inicial correcto. Eso evita un segundo método «dame los valores por defecto» y evita que un cliente
+pinte la pantalla con todos los grupos vacíos y un total que no es el real.
+
+**(e) `selection` viaja además de lo pintado.** Traducir lo que se enseña en lo que se guarda exige
+saber qué miembro de cada grupo cuenta, inyectar los obligatorios que nadie marcó y podar los
+dependientes huérfanos. Publicar la selección ya resuelta —en la forma exacta de los `addons` de una
+línea de cesta— evita que cada cliente escriba su propia versión de esa regla.
+
+**(f) Lo que la verificación destapó**: el test de la poda en cadena **pasaba igual con una poda de
+un solo nivel**, porque el orden natural de los complementos ya la resolvía en una pasada. Se
+invirtieron las posiciones para que exija el punto fijo de verdad. Lo encontró la mutación, no la
+lectura — y es la clase de test verde que el proyecto considera peor que no tener test. Aparte, quedó
+anotada en `DEUDA.md` una divergencia preexistente que el endpoint hereda: el formato de importe
+(`2,00 €`) está quemado en español y no mira el locale, así que con `Accept-Language: en` el nombre
+llega traducido y el precio no.

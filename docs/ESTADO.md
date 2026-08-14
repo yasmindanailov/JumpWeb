@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2563 en verde** (10041 aserciones, `--parallel` ~65 s) · Pint limpio ·
+- Suite **2581 en verde** (10176 aserciones, `--parallel` ~61 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -25,7 +25,7 @@ fase es la emisión de tokens Bearer, también de Fase 6.
   el árbol npm pasó de 0 a 5 avisos en unas horas sin que el lock cambiara. Correr
   `composer audit` y `npm audit` en cada cierre.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers, la
-  última vez en el paso 4.0b·6). ⚠️ **El `CRITICAL_RE` del hook se amplió con `Cart`** en ese paso:
+  última vez en el paso 4.0b·5). ⚠️ **El `CRITICAL_RE` del hook se amplió con `Cart`** en ese paso:
   un controlador de API que DECIDE sobre aforo entra en el gate aunque no escriba nada, igual que su
   hermano `Availability*`. `CriticalPathGateTest` lo vigila con el fichero en `CRITICAL_FILES`. ⚠️ El `CRITICAL_RE` del `pre-push` cubre `PaymentInitiator`,
   `ReservationAdmissionPolicy`, **`SlotOffer`** (añadido en 4b), **`CheckoutOrchestrator`** (añadido
@@ -114,10 +114,10 @@ inaplicable; §7 dice cuáles.
   el puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
 - **4.0c (mitad 1)** — tokenización de lo TEMATIZABLE: **43% → 49%**, colores crudos **13 → 3**.
   Todas las sustituciones equivalentes por construcción. Presupuesto en `SidebarTokenBudgetTest`.
-- **4.0b — 5 de los 6 huecos**: `GET /me/reservation-eligibility` · `GET /config` ·
-  `GET /booking/status` · el resumen del pedido entero (campos sin PII +
-  `GET /orders/{code}/event-data`) · `POST /cart/validate-line`. **Falta uno: los complementos
-  resueltos**, apartado a propósito por ser el más arriesgado (ver «por dónde seguir»).
+- **4.0b — CERRADO el 2026-08-14: los SEIS huecos**. `GET /me/reservation-eligibility` ·
+  `GET /config` · `GET /booking/status` · el resumen del pedido entero (campos sin PII +
+  `GET /orders/{code}/event-data`) · `POST /cart/validate-line` ·
+  `POST /catalog/products/{product}/addons`. **La API ya tiene todo lo que la SPA necesita.**
 - **4.0b·4b — la PII sale del pedido** (`DECISIONES #39`, spec §4.4.6). Tres cosas que conviene
   saber antes de tocar cualquier endpoint que devuelva datos de un menor:
   · **La guarda vive en los endpoints que NO deben llevar el dato**: `me/orders` y
@@ -145,19 +145,27 @@ inaplicable; §7 dice cuáles.
     `catalog/products/{id}` y `config`. El dominio sí los lleva —no sabe quién pregunta—; no
     republicarlos es decisión de la capa de entrega.
 
+- **4.0b·5 — complementos resueltos** (`DECISIONES #41`). Venía marcado como el más arriesgado del
+  paso y acabó sin tocar `AddonResolver` ni a sus dos consumidores. La lección, que sirve para el
+  resto de la fase:
+  · ⚠️ **«Extraer» y «publicar» no son lo mismo.** En 4.0b·6 la regla estaba dentro de un componente
+    Livewire y no hacer que la web la consumiera habría sido copiarla; aquí ya vivía en el dominio y
+    las dos superficies ya la compartían, así que delegar no arreglaba nada y sí movía la plantilla
+    del paso con más clics. **La pregunta que decide es «¿hay dos copias?»**, no «¿debería la web
+    usar el contrato?».
+  · **El dinero viaja en la misma respuesta** delegando en `CartPricing`, y está MEDIDO: componer
+    resolución y tarificación cuesta las mismas consultas que pedirlas por separado, con la mitad de
+    viajes y de fichas de `throttle` (60/min compartido). La pendiente la fija `ApiOverheadTest`.
+  · **Un test de «cadena» puede pasar sin probar la cadena**: el de la poda de dependencias pasaba
+    igual con una poda de un nivel, porque el orden natural ya la resolvía en una pasada. Si se
+    prueba un algoritmo iterativo, el caso tiene que forzar el orden que obliga a iterar.
+
 ### Por dónde SEGUIR, en este orden
 
-1. **4.0b·5 — complementos resueltos. EL MÁS ARRIESGADO, y por eso el último.** Es el único que
-   cambia la semántica de un método del dominio (`AddonResolver::viewModel()`) consumido por DOS
-   superficies vivas: la compra pública y el pedido manual del panel.
-   ⚠️ **Decisión pendiente antes de escribir una línea** (spec §4.4.3): si el dinero de la línea
-   vuelve en la MISMA respuesta, delegando en `CartPricing`. Sin eso son **2 peticiones por clic**
-   en la pantalla con más clics del embudo (8–12 clics = 16–24 peticiones) contra un `throttle:api`
-   de 60/min COMPARTIDO con disponibilidad y catálogo.
-2. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
+1. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
    `padding` 47). ⚠️ Esta mitad **no es gratis**: hay que DECIDIR una escala y redondear un valor
    cambia el diseño. Se hace con revisión visual, no con un script.
-3. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
+2. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -170,7 +178,7 @@ inaplicable; §7 dice cuáles.
   `__()` en servidor. La SPA no tiene de dónde sacarlas; el plan es un payload JSON en el montaje.
 
 **Contexto de la API que sigue vigente.** Antes de
-escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.quindecies: son ochenta
+escribir una línea de Vue, lee `docs/specs/api-v1.md` §10 → §10.sexdecies: son ochenta y tres
 puntos MEDIDOS al implementar la API, y varios son trampas que la SPA va a pisar. Los tres que más:
 - ⚠️ **`Origin`/`Referer` de un dominio *stateful* hacen falta en TODAS las peticiones**, no solo en
   el login: sin ellos no hay sesión y un `GET /me` da 401 aunque la cookie valga (§10.sexies 28).
@@ -226,8 +234,8 @@ caducaría con la tarjeta ya cobrada (`PAY-02`).
   reglas, pero ya no se llaman desde fuera del contrato (`Purchase` no importa ninguno de los dos).
 
 **Si tocas dinero, aforo, RGPD o seguridad, lee antes `docs/INVARIANTES.md`** (§1 PAY, §2 AFORO) —
-es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.quindecies:
-ochenta puntos MEDIDOS al construirla y al abrir Fase 4. Los que más se repiten como causa de error:
+es la regla 2 de `CLAUDE.md`. Y si trabajas sobre la API, `docs/specs/api-v1.md` §10 → §10.sexdecies:
+ochenta y tres puntos MEDIDOS al construirla y al abrir Fase 4. Los que más se repiten como causa de error:
 - el presupuesto de consultas se mide por PENDIENTE y no por techo (§10.ter 17);
 - la validación de contrato hay que PEDIRLA con `assertValidResponse()` (§10.ter 16);
 - un recurso que devuelve el controlador necesita `$wrap = null` (§10.octies 43);
@@ -257,6 +265,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2563** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2581** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

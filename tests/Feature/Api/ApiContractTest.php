@@ -72,6 +72,13 @@ class ApiContractTest extends TestCase
         // una cesta vacía. Exigirla obligaría a mandar `items: []` para preguntar por la primera.
         // Lo que sigue mordiendo aquí es `line`, que sí es obligatoria.
         'CartLineCheckRequest' => ['items'],
+        // Cuerpo de PETICIÓN, y los cuatro son opcionales de verdad. `date`/`time` van SOLO para
+        // tarificar la línea —los complementos no dependen del día reservado—, así que exigirlos
+        // obligaría a haber elegido franja para poder mirar los complementos. `addons` y `choices`
+        // faltan en la PRIMERA llamada a propósito: sin ellos la respuesta trae el estado inicial
+        // con el elegido por defecto de cada grupo. Lo que sigue mordiendo es `quantity`, que es
+        // obligatoria porque decide la cantidad de los complementos por invitado.
+        'AddonSelectionRequest' => ['date', 'time', 'addons', 'choices'],
         // Cuerpo de PETICIÓN, y aquí los DOS campos son opcionales de verdad: un formulario de
         // invitados se guarda a trozos —primero las fichas, luego las observaciones generales, o al
         // revés— y exigir ambos obligaría a reenviar lo que no se está tocando. Lo que sigue

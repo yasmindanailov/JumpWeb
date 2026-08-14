@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking;
 
+use App\Domain\Booking\Contracts\AddonOffer;
 use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
@@ -12,6 +13,7 @@ use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
+use App\Domain\Booking\Services\AddonOfferReader;
 use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartLineValidator;
 use App\Domain\Booking\Services\CartPricer;
@@ -54,6 +56,11 @@ class BookingServiceProvider extends ServiceProvider
         // Disponibilidad ofrecida (Fase 3 · paso 4b): sobre `SlotOffer` (`AFORO-02`), con la cesta
         // delante. La consumen el sidebar de la web y `availability/{product}/*`.
         $this->app->bind(AvailabilityOffer::class, AvailabilityReader::class);
+        // Complementos RESUELTOS contra la selección del cliente (Fase 4 · paso 4.0b·5): la
+        // partición en grupos, las notas, las unidades gratis, los topes y la poda en cadena de las
+        // dependencias. No inventa reglas —las pide a `AddonResolver`, la misma autoridad que aplica
+        // `OrderCreator`—: lo que añade es publicarlas para un cliente que no puede deducirlas.
+        $this->app->bind(AddonOffer::class, AddonOfferReader::class);
         $this->app->bind(ZonePalette::class, ZonePaletteReader::class);
         // `OperatingSchedule` memoiza horarios, temporadas y excepciones: se comparte por
         // petición para no repetir esas lecturas entre la landing, el SEO y el hero.
