@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2581 en verde** (10176 aserciones, `--parallel` ~61 s) · Pint limpio ·
+- Suite **2583 en verde** (14105 aserciones, `--parallel` ~67 s) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -112,8 +112,20 @@ inaplicable; §7 dice cuáles.
   el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
 - **Gates**: el `pre-push` corre ahora `npm run build` **antes** de la suite (`PrePushGateTest`), y
   el puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
-- **4.0c (mitad 1)** — tokenización de lo TEMATIZABLE: **43% → 49%**, colores crudos **13 → 3**.
-  Todas las sustituciones equivalentes por construcción. Presupuesto en `SidebarTokenBudgetTest`.
+- **4.0c — CERRADO el 2026-08-14, las dos mitades** (`DECISIONES #42`). Tokenización de lo
+  TEMATIZABLE **43% → 49% → 75%**; colores crudos **13 → 3**. Nada movió un píxel. Tres cosas para
+  quien siga:
+  · ⚠️ **«Decidir una escala» era la decisión equivocada**: medido, una escala canónica movería el
+    **52-55%** de los tamaños de letra, y el spec §2 declara el rediseño visual FUERA de alcance. La
+    salida fue una escala **multiplicativa sobre una unidad** (`--fs-13: calc(var(--fs-unit) * 13)`):
+    cero píxeles movidos **y** un punto de control real — cambiar `--sp-unit` airea el cajón entero
+    conservando proporciones. La escala canónica queda como decisión de producto abierta, ya medida.
+  · **La verificación no fue «a ojo»**: como no se redondea, revertir los tokens a sus literales
+    devuelve los dos CSS **byte a byte idénticos**. Es más fuerte que un screenshot.
+  · ⚠️ **Destapó un fallo real en producción**: un comentario de `site.css` se cerraba a media frase
+    (una pareja asterisco-barra dentro del texto) y el navegador **descartaba la regla siguiente** —
+    `.gf-sr-only`, la que oculta el texto para lectores de pantalla en la hoja del post-form—, así
+    que el aviso de progreso **se veía**. Corregido, con guarda en `SidebarTokenBudgetTest`.
 - **4.0b — CERRADO el 2026-08-14: los SEIS huecos**. `GET /me/reservation-eligibility` ·
   `GET /config` · `GET /booking/status` · el resumen del pedido entero (campos sin PII +
   `GET /orders/{code}/event-data`) · `POST /cart/validate-line` ·
@@ -162,10 +174,14 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-1. **4.0c (mitad 2)** — escalas de `font-size` (74 usos, 17 valores) y espaciado (`gap` 52 +
-   `padding` 47). ⚠️ Esta mitad **no es gratis**: hay que DECIDIR una escala y redondear un valor
-   cambia el diseño. Se hace con revisión visual, no con un script.
-2. **4.1 en adelante** — cimientos SPA. El corte completo, en §4.10 del spec.
+**Los cimientos están puestos: 4.0a, 4.0b y 4.0c cerrados.** Lo que sigue es la SPA en sí.
+
+1. **4.1 en adelante — cimientos SPA** (Vue 3 + Pinia). El corte completo, en §4.10 del spec. Antes
+   de escribir una línea de Vue, las tres cosas de abajo («Tres cosas que conviene saber») y
+   `api-v1.md` §10 → §10.sexdecies.
+2. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
+   (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
+   `DEUDA.md`.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -265,6 +281,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2581** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2583** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

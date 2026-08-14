@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a y 4.0b hechos · 4.0c a medias
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a, 4.0b y 4.0c hechos → toca la SPA
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -496,7 +496,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       pasaba igual con una poda de un solo nivel, porque el orden natural ya la resolvía en una
       pasada. Se invirtieron las posiciones para que exija el punto fijo. Lo encontró la mutación.
 
-- [ ] **Paso 4.0c — tokenizar `site.css`** (EN CURSO, 2026-08-13). Primera mitad hecha, la de
+- [x] **Paso 4.0c — tokenizar `site.css`** (CERRADO 2026-08-14). Primera mitad, la de
       riesgo cero: todas las sustituciones son **equivalentes por construcción** —un script aborta
       si el token no vale EXACTAMENTE el literal que sustituye— y solo dentro de las reglas del
       sidebar. Nace la escala `--fw-*` (medida: 51 usos con solo 5 valores, tres cubren 49), se
@@ -504,9 +504,22 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       crudos pasan a token (6 alfa de `--fg`, 2 `--bg-soft`, 1 `--err`, 1 `--warn`, comprobados por
       aritmética RGB). Tokenización de propiedades TEMATIZABLES: **43% → 49%**; colores crudos:
       **13 → 3**. Red: `SidebarTokenBudgetTest`, presupuesto que solo puede mejorar.
-      ⚠️ Queda la otra mitad: las escalas de `font-size` (74 usos, 17 valores) y de espaciado
-      (`gap` 52 + `padding` 47). Esas SÍ exigen decidir una escala y revisar el resultado a ojo,
-      porque redondear un valor cambia el diseño.
+      **2.ª mitad hecha (2026-08-14, `DECISIONES #42`): 49% → 75%.** ⚠️ Y el plan de arriba estaba
+      equivocado en lo esencial: «decidir una escala» habría movido el **52-55%** de los tamaños de
+      letra (medido: 40 de 73 usos, 47px de desviación) y el 25% del espaciado. Eso es **rediseño
+      visual**, que el spec §2 declara FUERA de alcance. La salida es una escala **multiplicativa
+      sobre una unidad** —`--fs-13: calc(var(--fs-unit) * 13)`—, que da las dos cosas que parecían
+      incompatibles: cero píxeles movidos y un punto de control real (cambiar `--sp-unit` airea el
+      cajón entero conservando proporciones). Solo entran los valores que se REPITEN: 12 escalones de
+      tipografía y 17 de espaciado cubren 202 de 210 literales.
+      La revisión «a ojo» se sustituye por algo más fuerte: revertir los tokens a sus literales
+      devuelve los dos CSS **byte a byte idénticos** a los originales.
+      ⚠️ **La verificación destapó un fallo REAL preexistente en producción**: un comentario de
+      `site.css` se cerraba a media frase por una pareja asterisco-barra dentro del texto, el resto
+      pasaba a leerse como selector y el navegador **descartaba la regla siguiente** —`.gf-sr-only`,
+      la que oculta el texto para lectores de pantalla en la hoja del post-form—, así que el aviso
+      «has completado X de N fichas» **se veía**. Corregido, con guarda propia en
+      `SidebarTokenBudgetTest` (ningún selector puede contener un cierre de comentario ni ser prosa).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

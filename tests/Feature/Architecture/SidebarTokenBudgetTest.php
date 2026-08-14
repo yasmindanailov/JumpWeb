@@ -39,8 +39,14 @@ class SidebarTokenBudgetTest extends TestCase
         'border-top', 'border-bottom',
     ];
 
-    /** Suelo medido tras el paso 4.0c. **Solo puede subir.** */
-    private const MIN_TOKENISED_PERCENT = 49;
+    /**
+     * Suelo medido tras el paso 4.0c. **Solo puede subir.**
+     *
+     * 43% al abrir la fase · 49% tras la 1.ª mitad (pesos, radios y colores) · **75% tras la 2.ª**
+     * (las escalas de tipografía y espaciado). Las tres subidas son equivalentes por construcción:
+     * ninguna movió un píxel.
+     */
+    private const MIN_TOKENISED_PERCENT = 75;
 
     /**
      * Colores CRUDOS que quedan en el sidebar (`#rrggbb`, `rgba(...)`). **Solo puede bajar**: son
@@ -99,6 +105,102 @@ class SidebarTokenBudgetTest extends TestCase
             "El sidebar tiene {$raw} colores crudos (tope: ".self::MAX_RAW_COLOURS.").\n".
             'Un color escrito a mano no lo puede cambiar ninguna instalación. Los alfa sobre el '.
             'texto salen con `color-mix(in srgb, var(--fg) X%, transparent)`.'
+        );
+    }
+
+    /**
+     * **Un comentario mal cerrado no rompe el CSS: se come la regla siguiente, en silencio.**
+     *
+     * Lo encontró la verificación de la 2.ª mitad del paso 4.0c, y llevaba tiempo: un comentario de
+     * `site.css` enumeraba tokens con comodines —«--r» seguido de asterisco y barra— y esa pareja
+     * **cerraba el comentario a media frase**. El resto del texto pasaba a leerse como un selector,
+     * se pegaba al de la regla siguiente y el navegador **descartaba la regla entera** — que resultó
+     * ser `.gf-sr-only`, la que oculta visualmente el texto para lectores de pantalla en la hoja del
+     * post-form. Efecto real: un aviso que debía ser solo accesible se veía, duplicando lo que el
+     * medidor de al lado ya decía.
+     *
+     * La firma de ese fallo es exacta y barata de vigilar: un cierre de comentario dentro de un
+     * selector. Un selector desmedido delata lo mismo cuando el texto no llega a incluir el cierre.
+     */
+    public function test_no_stylesheet_rule_is_swallowed_by_a_broken_comment(): void
+    {
+        foreach (['landing.css', 'site.css'] as $file) {
+            $css = (string) file_get_contents(public_path('css/'.$file));
+
+            // Se quitan los comentarios BIEN cerrados; lo que quede en un selector es texto que se
+            // escapó de uno.
+            $stripped = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+            preg_match_all('/([^{}]+)\{/', $stripped, $matches);
+
+            foreach ($matches[1] as $selector) {
+                $selector = trim($selector);
+
+                $this->assertStringNotContainsString(
+                    '*/', $selector,
+                    "«{$file}»: un selector contiene un cierre de comentario, así que un comentario ".
+                    'de más arriba se cerró antes de tiempo y su texto está contaminando esta regla '.
+                    "—que el navegador descarta ENTERA, sin avisar—:\n  ".mb_substr($selector, 0, 160)
+                );
+
+                // La longitud se mide por selector INDIVIDUAL, no por el grupo: una regla puede
+                // enumerar legítimamente veinte selectores separados por comas —`landing.css` tiene
+                // uno de 257 caracteres— y medir el grupo entero solo produce falsos positivos.
+                foreach (explode(',', $selector) as $single) {
+                    $single = trim($single);
+
+                    $this->assertLessThan(
+                        160, mb_strlen($single),
+                        "«{$file}»: un selector de ".mb_strlen($single).' caracteres no es un selector, '.
+                        "es prosa que se ha escapado de un comentario:\n  ".mb_substr($single, 0, 160)
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * **Un token de escala que no existe no falla: se descarta en silencio.** `font-size:
+     * var(--fs-99)` con `--fs-99` sin definir no es un tamaño raro — es una declaración inválida
+     * que el navegador tira, así que el texto sale al tamaño heredado y nadie se entera hasta que
+     * alguien lo ve. Es el riesgo que la 2.ª mitad del paso 4.0c introduce al cambiar 202 literales
+     * por indirecciones, y por eso viene con su guarda.
+     *
+     * Vigila los dos sentidos: usar sin definir (rompe) y definir sin usar (escala inventada, que
+     * es cómo un sistema de diseño empieza a mentir sobre lo que el producto usa de verdad).
+     */
+    public function test_every_scale_token_used_is_defined_and_every_one_defined_is_used(): void
+    {
+        $defined = [];
+        $used = [];
+
+        foreach (['landing.css', 'site.css'] as $file) {
+            $css = (string) file_get_contents(public_path('css/'.$file));
+
+            preg_match_all('/^\s*(--(?:fs|sp)-[\w-]+)\s*:/m', $css, $matches);
+            $defined = array_merge($defined, $matches[1]);
+
+            preg_match_all('/var\((--(?:fs|sp)-[\w-]+)\)/', $css, $matches);
+            $used = array_merge($used, $matches[1]);
+        }
+
+        $defined = array_unique($defined);
+        $used = array_unique($used);
+
+        $this->assertNotEmpty($used, 'no se ha visto ni un token de escala: ¿ha cambiado el nombre?');
+
+        $this->assertSame(
+            [], array_values(array_diff($used, $defined)),
+            'Tokens de escala USADOS sin definir. Un `calc()` sin su variable es una declaración '.
+            'inválida: el navegador la descarta y el valor cae al heredado, sin avisar.'
+        );
+
+        // Las unidades son el punto de control de cada escala: existen para que las use quien
+        // instala, no las reglas, así que no cuentan como «definidas sin usar».
+        $this->assertSame(
+            [], array_values(array_diff($defined, $used, ['--fs-unit', '--sp-unit'])),
+            'Tokens de escala definidos que no usa nadie. Una escala con escalones muertos describe '.
+            'un sistema que el producto no tiene; si un valor dejó de usarse, se retira el token.'
         );
     }
 

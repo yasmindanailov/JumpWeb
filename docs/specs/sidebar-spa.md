@@ -170,6 +170,24 @@ valores, con tokens ya existentes en el segundo) y se hacen primero; `font-size`
 el grueso; `transition` y `letter-spacing` se dejan fuera salvo la duración. Y CE-3 debe medirse
 sobre las **tematizables**, no sobre el total, o premia tokenizar un `display`.
 
+✅ **HECHO 2026-08-14 — las dos mitades** (`DECISIONES #42`). Tokenización de lo tematizable:
+**43% → 49% → 75%**. Lo que este paso corrige del plan de arriba:
+
+- ⚠️ **«Decidir una escala» era la decisión equivocada, y los números lo dicen.** Una escala canónica
+  de 6–7 pasos movería el **52-55%** de los tamaños de letra (47px de desviación total) y una de
+  espaciado en pares el 25%. Eso es **rediseño visual**, que §2 declara fuera de alcance. La escala
+  canónica queda como decisión de producto abierta, ya medida.
+- **La salida es una escala MULTIPLICATIVA sobre una unidad**: `--fs-13: calc(var(--fs-unit) * 13)`.
+  Da las dos cosas que parecían incompatibles — cero píxeles movidos y un punto de control real, que
+  es lo que el white-label pedía—. Cambiar `--sp-unit` a `1.15px` airea el cajón entero conservando
+  proporciones.
+- **La revisión «a ojo» que este plan asumía se sustituye por algo más fuerte**: como no se redondea,
+  revertir los tokens a sus literales devuelve los dos CSS **byte a byte idénticos** a los originales.
+- ⚠️ **Y destapó un fallo real preexistente**: un comentario de `site.css` se cerraba a media frase
+  por una pareja asterisco-barra dentro del texto, y el navegador **descartaba la regla siguiente** —
+  `.gf-sr-only`, la que oculta el texto para lectores de pantalla en la hoja del post-form—. El aviso
+  de progreso, pensado como `role="status"`, **se veía**. Corregido, con guarda.
+
 Además, dos cosas que hay que dejar hechas o Fase 5 se encarece:
 - **el punto de carga** de la hoja por instalación, decidido contra la cascada: `@vite(...)` va
   **después** de `site.css`, así que cualquier CSS que emita un entry de Vite ya le gana;

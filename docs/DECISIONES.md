@@ -1388,3 +1388,41 @@ lectura — y es la clase de test verde que el proyecto considera peor que no te
 anotada en `DEUDA.md` una divergencia preexistente que el endpoint hereda: el formato de importe
 (`2,00 €`) está quemado en español y no mira el locale, así que con `Accept-Language: en` el nombre
 llega traducido y el precio no.
+
+## #42 · 2026-08-14 · Las escalas del sidebar son múltiplos de una unidad, no una escala redondeada
+Cierre de Fase 4 · paso 4.0c (2.ª mitad): tipografía y espaciado (`sidebar-spa.md` §4.3.bis).
+
+**(a) NO se redondea a una escala canónica, y la medición lo decide.** El plan escrito decía
+«decidir una escala» y avisaba de que redondear cambia el diseño. Medido antes de tocar nada: una
+escala de 6–7 pasos movería el **52-55%** de los tamaños de letra del cajón (40 de 73 usos, 47px de
+desviación) y una de espaciado en pares el 25%. Eso no es tokenizar: es **rediseñar**, y el spec §2
+declara el rediseño visual **fuera de alcance** de la fase. La escala canónica queda como decisión de
+producto abierta, ya con sus números.
+
+**(b) La escala es MULTIPLICATIVA sobre una unidad**: `--fs-13: calc(var(--fs-unit) * 13)` con
+`--fs-unit: 1px`. Con eso se consiguen las dos cosas a la vez que parecían incompatibles: **cero
+píxeles movidos** —`calc(1px * 13)` es `13px`, no «casi»— y **un punto de control real**, que es lo
+que el white-label pedía: una instalación que quiera el cajón un 15% más aireado cambia `--sp-unit`
+y se mueve todo a la vez conservando las proporciones. Con literales por escalón habría que tocar
+diecisiete. Y el nombre no miente cuando la unidad cambia: `--sp-12` son doce unidades.
+
+**(c) Solo entran los valores que se REPITEN.** 12 escalones de tipografía y 17 de espaciado cubren
+202 de los 210 literales; los ocho restantes aparecen una vez cada uno y se quedan literales. Un
+valor único no forma parte de ninguna escala, y meterlo fingiría un sistema que el producto no tiene.
+Resultado: tokenización de lo tematizable **49% → 75%**.
+
+**(d) La verificación sustituye al «a ojo» que el plan asumía, y es más fuerte.** Como no se redondea
+nada, la equivalencia se demuestra: revertir cada `var(--fs-N)`/`var(--sp-N)` a su literal devuelve
+los dos ficheros **byte a byte idénticos** a los originales (190.668 y 95.055 bytes). Eso prueba que
+la única diferencia introducida es la indirección.
+
+**(e) ⚠️ Y la verificación destapó un fallo REAL que llevaba tiempo en producción.** Al parsear
+`site.css` con PostCSS —para comprobar que ninguna declaración quedaba inválida— salió un error de
+sintaxis **anterior** a este cambio: un comentario enumeraba tokens con comodines y una de esas
+parejas asterisco-barra **cerraba el comentario a media frase**. El texto restante se leía como
+selector, se pegaba al de la regla siguiente y el navegador **descartaba la regla entera**: era
+`.gf-sr-only`, la que oculta visualmente el texto para lectores de pantalla en la hoja del post-form.
+Efecto real: el aviso «has completado X de N fichas», pensado como `role="status"` solo accesible,
+**se veía**, duplicando lo que el medidor de al lado ya decía. Se corrige aquí —restaura la conducta
+que el propio Blade documenta, no cambia ningún diseño— y **viene con guarda**: ningún selector puede
+contener un cierre de comentario ni ser prosa.
