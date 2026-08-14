@@ -1,7 +1,7 @@
 # Estado del proyecto — foto viva
 
 > Documento corto (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
-> Última actualización: **2026-08-14**.
+> Última actualización: **2026-08-15**.
 
 ## ▶ Dónde estamos
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
@@ -12,9 +12,10 @@
 (·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) ·
 **4.5 ✅ COMPLETO** (·1 la cesta pide lo que le falta · ·2 **pagar y salir a la pasarela**) ·
 **4.6 ✅ COMPLETO** (·1 la reserva creada · ·2 denegado y verificando) → **los ONCE pasos están
-transcritos**. Lo que queda de la fase: **4.4b·2** (el widget de Turnstile, aplazado a propósito porque
-no se puede verificar sin claves de Cloudflare y navegador), el **extremo a extremo con la pasarela en
-sandbox** (§6 del spec) y **4.7** (la retirada de `Purchase.php` y del puente).
+transcritos**, y el **extremo a extremo con navegador y pasarela real ya se ha hecho** (`#59`: encontró
+que el motor NO funcionaba en producción, y se arregló). Lo que queda de la fase: **4.7** (la retirada
+de `Purchase.php` y del puente, EN CURSO) y **4.4b·2** (el widget de Turnstile, aplazado a propósito
+porque no se puede verificar sin claves de Cloudflare).
 El corte está en `docs/specs/sidebar-spa.md` §4.10.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
 4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`), 4.4b en dos (`#53`),
@@ -248,8 +249,10 @@ consumir aforo nuevo—, y con un terminal que vuelve sin datos firmados **sonde
 notificación de la pasarela confirma o la reserva caduca. La cesta **sí sobrevive a la recarga** desde
 4.3·4, sin `event_data` y con su dueño dentro.
 ⚠️ **El flag NO se activa en producción y NO se despliega todavía**, pero el motivo ha CAMBIADO: ya no
-falta pantalla. Faltan dos cosas y las dos necesitan un navegador —el **extremo a extremo con la
-pasarela en sandbox** comparando el pedido en BD (§6 del spec) y el **widget de Turnstile** (4.4b·2)—.
+falta pantalla, y el extremo a extremo **ya se hizo** (`#59`, con los arreglos que destapó). Lo que
+queda antes de activarlo: el **widget de Turnstile** (4.4b·2, necesita claves de Cloudflare) y los tres
+caminos que el e2e dejó declarados sin cubrir —el terminal *data-less* con notificación S2S (necesita
+túnel), el 3DS con challenge y el móvil real—.
 Su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos motores en vivo
 (`CE-1`).
 
@@ -336,11 +339,10 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      `Auth/DuplicateEmailEdgeCaseTest` (el evento `purchase:switch-to-login`) y
      `Sales/CatalogVisibilityAndCartPruneTest` (la poda de la cesta en `mount`, que en la SPA es
      `cart.js` y tiene sus casos en `cart.test.js`).
-   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **26 ficheros de test ejecutan `Purchase`**, con ~160
-     casos, en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como
-     conductor de dominio y deben re-apuntarse a la API, y las nueve paridades, que o congelan o
-     comparan contra el contrato del servidor. Borrar el fichero sin reclasificarlos es pérdida neta
-     de cobertura.
+   · ⚠️ **Lo que hace grande a 4.7·2, medido**: eran **26 ficheros** con ~160 casos al empezar (hoy 25),
+     en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como conductor
+     de dominio y deben re-apuntarse a la API, y las nueve paridades. Borrar el fichero sin
+     reclasificarlos es pérdida neta de cobertura.
    · ✅ **El manifiesto ya está congelado** (30 entradas, 696 nodos): el contrato visual sobrevive a la
      retirada. Se regenera con `MANIFEST_REFRESH=1` y hay que decirlo en el commit.
    · ⚠️ **NO esperes a «curtir el motor en producción»: esa condición se planteó y se RETIRÓ el

@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** y **4.6 COMPLETO** (·1 la reserva creada · ·2 denegado y verificando) → **los ONCE pasos están transcritos**; quedan **4.4b·2** (widget de Turnstile) y **4.7** (retirada), y antes de desplegar el flag, el extremo a extremo con la pasarela en sandbox (§6)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** y **4.6 COMPLETO** (·1 la reserva creada · ·2 denegado y verificando) → **los ONCE pasos están transcritos**; el extremo a extremo con navegador y pasarela real ya HECHO (`#59`, destapó que el motor no funcionaba y se arregló); quedan **4.7** (retirada, EN CURSO) y **4.4b·2** (widget de Turnstile)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
