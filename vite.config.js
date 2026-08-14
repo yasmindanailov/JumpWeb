@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -16,6 +17,10 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        // Fase 4 · paso 4.1 — el cajón SPA. Vue NO entra en el bundle de la landing: el entry
+        // (`resources/js/sidebar/index.js`) se trae con `import()` dinámico en la primera apertura
+        // del cajón, así que Vite lo saca a un chunk propio. `SidebarBundleBudgetTest` lo vigila.
+        vue(),
     ],
     server: {
         watch: {

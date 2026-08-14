@@ -140,7 +140,41 @@
                  de formulario pendiente con sesión; «Iniciar sesión» + «Mis reservas» sin ella. --}}
             <livewire:site.account-context />
             <div class="sidecart__body">
-                <livewire:tickets.purchase lazy />
+                {{-- Fase 4 · paso 4.1: los dos motores conviven tras `sidebar.engine`, para poder
+                     COMPARARLOS en vivo y volver atrás sin desplegar (`sidebar-spa.md` §4.9, CE-1).
+                     El default y el fallback son Livewire: el fallback no puede ser el motor en
+                     construcción.
+
+                     ⚠️ Lo que NO se bifurca son `@livewireStyles`/`@livewireScripts`: los modales de
+                     auth y `account-context` son Livewire en los dos modos — y **Alpine lo trae
+                     Livewire**, así que retirarlo dejaría al cajón SPA sin el store que lo abre. --}}
+                @if (\App\Domain\Platform\Services\SidebarSettings::usesSpa())
+                    {{-- El hueco del motor SPA. Va VACÍO: el entry se trae con `import()` en la
+                         primera apertura del cajón, no con la página (§4.7). Lo que sí viaja aquí es
+                         lo que el servidor sabe y el cliente no puede pedir:
+
+                         · `outcome` — en qué quedó el pago. Lo posee `Http\Sidebar\SidebarEntry` y
+                           llega ya CONSUMIDO; mirarlo dos veces reabriría el cajón en cada página
+                           hasta que caducara la sesión (el fallo que cerró el paso 4.0a).
+                         · `messages` — el grupo `tickets` del locale activo (§4.5). La SPA no tiene
+                           canal de i18n propio: son 169 claves × 3 locales que hoy salen de `__()`
+                           en servidor, y un endpoint para leerlas sería una petición más en el
+                           arranque para algo que ya está resuelto al pintar la página. --}}
+                    {{-- ⚠️ Aquí se CONSUME, no se mira, y es el matiz que el paso 4.0a dejó
+                         anotado: el layout usa `peek()` porque el componente Livewire es `lazy` y
+                         su `mount()` corre en una petición POSTERIOR. Con la SPA **el motor es este
+                         mismo documento**, así que el que consume es este. `consume()` está
+                         memoizado por petición, de modo que el `peek()` del `<body>` de arriba
+                         sigue viendo lo suyo y nadie se roba el valor. --}}
+                    @php($sidebarEntry = \App\Http\Sidebar\SidebarEntry::consume())
+                    <div id="sidecart-spa" data-boot="{{ json_encode([
+                        'outcome' => $sidebarEntry->outcome,
+                        'orderCode' => $sidebarEntry->orderCode,
+                        'messages' => __('tickets'),
+                    ], JSON_UNESCAPED_UNICODE) }}"></div>
+                @else
+                    <livewire:tickets.purchase lazy />
+                @endif
             </div>
         </aside>
     </div>

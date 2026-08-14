@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2583 en verde** (14105 aserciones, `--parallel` ~67 s) · Pint limpio ·
+- Suite **2597 en verde** (14145 aserciones, `--parallel` ~61 s) · **15 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -110,8 +110,19 @@ inaplicable; §7 dice cuáles.
   ⚠️ **Dato medido que explica su forma**: el componente es `lazy`, así que su `mount()` **NO corre
   en la petición del layout**. Por eso hay DOS verbos: el layout usa `peek()` (mirar sin consumir) y
   el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
-- **Gates**: el `pre-push` corre ahora `npm run build` **antes** de la suite (`PrePushGateTest`), y
-  el puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
+- **Gates**: el `pre-push` corre `npm run build` **antes** de la suite y, desde 4.1, `npm run test:js`
+  (`PrePushGateTest` vigila cada paso). El puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
+- **4.1 — cimientos SPA hechos** (`DECISIONES #43`). El motor monta tras el flag `sidebar.engine`
+  (default y fallback: `livewire`). Cuatro cosas que condicionan lo que viene:
+  · **El entry se trae con `import()` en la PRIMERA apertura**, nunca con la página: el enganche
+    cuesta medio kB en la landing y el motor son 69 kB aparte. `SidebarBundleBudgetTest` vigila que
+    el chunk siga existiendo — un `import` estático lo fundiría con el entry sin que el diff lo vea.
+  · **La lógica va en `resources/js/sidebar/machine.js`, un módulo PLANO sin Vue**, probado con
+    `node --test`. Si la lógica baja a un componente o a un store, pierde su red (CE-6).
+  · **El cliente HTTP es `api.js`** y lleva ya las trampas medidas: `credentials`, `Accept`, el
+    `XSRF-TOKEN` **url-decodificado** y el reintento único ante un 419.
+  · ⚠️ **Con la SPA el layout CONSUME el desenlace del pago** (con Livewire solo lo mira): el
+    componente es `lazy` y su `mount()` corre después; aquí el motor es el propio documento.
 - **4.0c — CERRADO el 2026-08-14, las dos mitades** (`DECISIONES #42`). Tokenización de lo
   TEMATIZABLE **43% → 49% → 75%**; colores crudos **13 → 3**. Nada movió un píxel. Tres cosas para
   quien siga:
@@ -174,12 +185,15 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-**Los cimientos están puestos: 4.0a, 4.0b y 4.0c cerrados.** Lo que sigue es la SPA en sí.
+**Cimientos cerrados: 4.0a, 4.0b, 4.0c y 4.1.** El motor SPA monta, tiene red y no pesa en la
+landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.1 en adelante — cimientos SPA** (Vue 3 + Pinia). El corte completo, en §4.10 del spec. Antes
-   de escribir una línea de Vue, las tres cosas de abajo («Tres cosas que conviene saber») y
-   `api-v1.md` §10 → §10.sexdecies.
-2. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
+1. **4.2 — pasos 1–3: catálogo, calendario, hora+cantidad y COMPLEMENTOS.** ⚠️ Los complementos son
+   del paso 3, no del 4 (la v1 del spec los ponía mal), y su pie ya es dinero: se pinta con lo que
+   devuelve `POST catalog/products/{id}/addons`, no se suma en el cliente.
+2. **4.3 en adelante** — el corte completo, en §4.10 del spec. ⚠️ Entre 4.5 y 4.6 **no se despliega
+   el flag**: quien pague en medio volvería a un cajón mudo.
+3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
 
@@ -281,6 +295,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2583** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2597** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -10,7 +10,7 @@ use Tests\TestCase;
  * `DECISIONES #9` descartó GitHub Actions: **el CI de este proyecto es el hook de pre-push**. Eso
  * significa que un paso que desaparezca de un script de shell no lo nota nadie hasta el día que
  * hacía falta, y ese día es tarde. `CriticalPathGateTest` ya trae al terreno ejecutable la parte de
- * concurrencia; esto hace lo mismo con los cuatro pasos del gate.
+ * concurrencia; esto hace lo mismo con cada paso del gate.
  *
  * El de `npm run build` se añadió el 2026-08-13 **después de que el fallo ocurriera de verdad**: un
  * build interrumpido dejó `public/build/manifest.json` a 0 bytes y toda la web pública respondió
@@ -20,7 +20,12 @@ use Tests\TestCase;
 class PrePushGateTest extends TestCase
 {
     /**
-     * Los cuatro pasos, con el comando que los identifica y por qué están.
+     * Los pasos del gate, con el comando que los identifica y por qué están.
+     *
+     * `test:js` entró en Fase 4 · paso 4.1: la máquina de estados del cajón SPA es un módulo JS
+     * plano —lo es justo para poder probarla sin montar un runner de componentes— y su red solo vale
+     * si algo la ejecuta. La del sidebar Livewire tiene seis ficheros de test detrás; transcribirla
+     * sin equivalente sería una pérdida neta de cobertura (`sidebar-spa.md` §4.8, CE-6).
      *
      * @var array<string, string>
      */
@@ -28,6 +33,7 @@ class PrePushGateTest extends TestCase
         'docs-check' => 'scripts/docs-check.sh',
         'Pint' => 'pint --test',
         'build de assets' => 'npm run build',
+        'tests JS' => 'npm run test:js',
         'suite' => 'artisan test --parallel',
     ];
 

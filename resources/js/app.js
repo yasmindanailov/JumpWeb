@@ -119,9 +119,47 @@ document.addEventListener('alpine:init', () => {
             this.intent = null;      // se consume antes de aplicar: un adaptador que falle no la repite
             this.intentAdapter(intent);
         },
+        // ── MOTOR SPA (Fase 4 · paso 4.1, `docs/specs/sidebar-spa.md` §4.7) ─────────────────
+        // El entry de Vue se trae con `import()` en la PRIMERA apertura, nunca con la página: la
+        // landing sirve hoy 15 kB de JS propio y meter Vue + Pinia + once pasos en el bundle de
+        // todas las páginas públicas es un orden de magnitud más — y durante la convivencia del
+        // flag se enviarían LOS DOS motores. El precedente correcto ya existía con `html2canvas`.
+        //
+        // ⚠️ Montar al ABRIR y no al cargar también evita el riesgo que sí toca `PERF-02`: una raíz
+        // Vue ávida pidiendo catálogo en cada carga de landing añadiría una petición por visita en
+        // la ruta de más tráfico del sitio.
+        spaHandle: null,
+        spaLoading: false,
+        async bootSpaEngine() {
+            if (this.spaHandle || this.spaLoading) return this.spaHandle;
+
+            const host = document.getElementById('sidecart-spa');
+            if (! host) return null;      // motor Livewire: no hay hueco que montar
+
+            this.spaLoading = true;
+
+            try {
+                const mod = await import('./sidebar/index.js');
+                // Lo que el servidor dejó en el montaje: el desenlace del pago (ya consumido, con
+                // un solo dueño desde el paso 4.0a) y las traducciones del grupo `tickets`.
+                const boot = JSON.parse(host.dataset.boot || '{}');
+
+                this.spaHandle = mod.mount(host, boot);
+                this.useIntentAdapter((intent) => this.spaHandle.applyIntent(intent));
+            } catch (e) {
+                // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
+                // el cajón abierto y mudo sin dejar rastro de por qué.
+                console.error('[sidebar] no se pudo cargar el motor SPA', e);
+            } finally {
+                this.spaLoading = false;
+            }
+
+            return this.spaHandle;
+        },
         open() {
             this.isOpen = true;
             document.body.classList.add('no-scroll');
+            this.bootSpaEngine();
         },
         close() {
             this.isOpen = false;

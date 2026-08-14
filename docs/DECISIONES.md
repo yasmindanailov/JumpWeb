@@ -1426,3 +1426,49 @@ Efecto real: el aviso «has completado X de N fichas», pensado como `role="stat
 **se veía**, duplicando lo que el medidor de al lado ya decía. Se corrige aquí —restaura la conducta
 que el propio Blade documenta, no cambia ningún diseño— y **viene con guarda**: ningún selector puede
 contener un cierre de comentario ni ser prosa.
+
+## #43 · 2026-08-14 · Cimientos de la SPA: el motor entra sin pesar en la landing
+Fase 4 · paso 4.1 (`sidebar-spa.md` §4.7–§4.9). **Sin negocio**: dependencias, montaje, cliente HTTP,
+máquina de estados y las redes que la fase necesita antes de transcribir un solo paso.
+
+**(a) El motor se carga al ABRIR el cajón, no con la página.** Vue + Pinia + once pasos en el bundle
+de todas las páginas públicas es un orden de magnitud sobre los 16 kB que la landing sirve hoy — y
+**con el flag activo se enviarían los DOS motores**. El entry va tras un `import()` dinámico, como ya
+hacía `html2canvas`. Medido: el enganche cuesta **medio kB** en la landing (15,8 → 16,3) y el motor
+son 69 kB en su propio chunk. Montar al abrir cierra además el riesgo que sí toca `PERF-02`: una raíz
+ávida pidiendo catálogo en cada carga añadiría una petición por visita en la ruta de más tráfico.
+
+**(b) Nace el techo de bundle, que el repo no tenía.** `SidebarBundleBudgetTest` fija el peso del
+entry y del chunk, y sobre todo comprueba que **el chunk sigue existiendo**: en cuanto alguien
+escriba un `import` estático en `app.js`, Rollup lo funde con el entry y la landing engorda sin que
+el diff lo enseñe. Verificado por mutación: con el import estático, el entry salta a 85 kB y caen
+cuatro guardas.
+
+**(c) La máquina de estados es un módulo JS PLANO, sin un solo `import` de Vue.** No es purismo: la
+del sidebar Livewire tiene hoy seis ficheros de test detrás, y transcribirla sin red sería una
+pérdida neta de cobertura (`CE-6`). Plana se prueba con `node --test`, que ya está disponible porque
+Vite 8 exige Node 20+ — cero dependencias nuevas. Los componentes quedan sin test unitario **a
+propósito**: son marcado, y de eso responde el diff de árbol. `npm run test:js` entra en el
+`pre-push`, porque una red que no se ejecuta no es una red.
+
+**(d) El flag `sidebar.engine` tiene fallback ASIMÉTRICO**: cualquier valor que no se reconozca cae a
+`livewire`. Un typo en el panel no puede dejar la web sin la única superficie que vende, y el
+fallback no puede ser el motor en obras.
+
+**(e) Con la SPA, el que CONSUME el desenlace del pago es el layout.** El paso 4.0a dejó anotado que
+el layout usa `peek()` porque el componente Livewire es `lazy` y su `mount()` corre en una petición
+posterior; con la SPA el motor es ese mismo documento. `SidebarEntry::consume()` está memoizado por
+petición, así que el `peek()` del `<body>` sigue viendo lo suyo y el cajón se auto-abre igual.
+
+**(f) La i18n viaja en el montaje, no por endpoint** (§4.5): son 121 claves del grupo `tickets` ya
+resueltas al pintar la página. Un endpoint sería una petición más en el arranque para algo que el
+servidor acaba de calcular.
+
+**(g) ⚠️ Dos fallos que encontró la verificación, no la lectura.** El primero, en una guarda propia:
+`test_vue_never_travels_with_the_landing` buscaba `node_modules/vue/` y **pasaba sin mirar nada**,
+porque un build de producción no conserva las rutas de origen — la cadena no estaba ni en el chunk
+que sí lleva Vue. Ahora usa marcadores internos medidos contra el bundle real, y tiene **una guarda
+de la guarda** que comprueba que esas firmas siguen existiendo. El segundo, en un test del flag:
+comprobar los dos motores en un mismo caso fallaba porque **Livewire memoiza que ya emitió sus assets
+y ese estado estático sobrevive entre peticiones del mismo test** — misma familia que `SUITE-02`. Se
+separó en dos casos.

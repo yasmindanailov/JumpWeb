@@ -107,6 +107,14 @@ docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
 echo '→ pre-push: npm run build…'
 docker compose exec -u sail -T laravel.test npm run build
 
+# Máquina de estados del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.8). Corre con el runner
+# integrado de Node, sin dependencias: la máquina es un módulo JS plano justo para poder probarla
+# así. Va aquí y no «cuando toque» porque la del sidebar Livewire tiene hoy seis ficheros de test
+# detrás — transcribirla sin red sería una pérdida neta de cobertura, y el gate es lo único que
+# garantiza que la red se ejecute. Cuesta <1 s.
+echo '→ pre-push: tests JS (node --test)…'
+docker compose exec -u sail -T laravel.test npm run test:js
+
 echo '→ pre-push: suite completa (--parallel)…'
 docker compose exec -u sail -T laravel.test php artisan test --parallel
 

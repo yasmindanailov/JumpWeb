@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a, 4.0b y 4.0c hechos → toca la SPA
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c y 4.1 hechos → toca transcribir pasos (4.2)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -520,6 +520,32 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       la que oculta el texto para lectores de pantalla en la hoja del post-form—, así que el aviso
       «has completado X de N fichas» **se veía**. Corregido, con guarda propia en
       `SidebarTokenBudgetTest` (ningún selector puede contener un cierre de comentario ni ser prosa).
+- [x] **Paso 4.1 — cimientos SPA** (2026-08-14, `DECISIONES #43`). **Sin negocio**: dependencias
+      (Vue 3 + Pinia), montaje, cliente HTTP, máquina de estados y las redes que la fase necesita
+      antes de transcribir un paso.
+      · **El motor se carga al ABRIR, no con la página**: `import()` dinámico como ya hacía
+        `html2canvas`. Medido: el enganche cuesta **medio kB** en la landing (15,8 → 16,3 kB) y el
+        motor son 69 kB en chunk propio. Con el flag activo se enviarían si no los DOS motores.
+      · **Nace el techo de bundle**, que el repo no tenía (`SidebarBundleBudgetTest`, CE-7). Lo que
+        de verdad vigila es que el chunk SIGA existiendo: un `import` estático en `app.js` lo funde
+        con el entry y la landing engorda sin que el diff lo enseñe. Verificado por mutación — con
+        el import estático el entry salta a 85 kB y caen cuatro guardas.
+      · **La máquina de estados es un módulo JS plano** (`resources/js/sidebar/machine.js`), sin un
+        `import` de Vue, probado con `node --test` (15 casos). No es purismo: la del Livewire tiene
+        seis ficheros de test detrás y transcribirla sin red sería pérdida neta de cobertura (CE-6).
+        `npm run test:js` entra en el `pre-push`.
+      · **Flag `sidebar.engine`** con fallback ASIMÉTRICO a `livewire`: un typo en el panel no puede
+        dejar la web sin la única superficie que vende.
+      · ⚠️ **Con la SPA, el que CONSUME el desenlace del pago es el layout** — el matiz que 4.0a
+        dejó anotado. `SidebarEntry::consume()` está memoizado por petición, así que el `peek()` del
+        `<body>` sigue viendo lo suyo.
+      · ⚠️ **`SidebarDomContractTest` NO entra en este paso**: compara el árbol de los dos motores
+        paso a paso, y sin negocio el motor SPA solo emite el andamio. Nace con **4.2**, el primer
+        paso transcrito, que es cuando empieza a poder romperse.
+      · ⚠️ **Dos fallos los encontró la verificación, no la lectura**: una guarda propia buscaba
+        `node_modules/vue/` y **pasaba sin mirar nada** (un build de producción no conserva las rutas
+        de origen), y un test del flag fallaba porque **Livewire memoiza que ya emitió sus assets** y
+        ese estado estático sobrevive entre peticiones del mismo test (familia `SUITE-02`).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
