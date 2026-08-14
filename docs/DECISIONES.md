@@ -2108,3 +2108,66 @@ la guarda → caen dos casos del módulo) y **en vivo** contra el catálogo real
 **(i) Lo que NO entra**: los pasos 8 y 9 (la pantalla de pago y el auto-POST a Redsys), que son 4.5·2.
 Con este tramo el CTA de pagar deja de llevar a un rechazo inevitable; a dónde lleva cuando todo está
 bien sigue siendo 4.5·2.
+
+## #55 · 2026-08-14 · 4.5·2 — el cajón SPA ya vende: pagar y salir hacia la pasarela
+Fase 4 · paso 4.5, segundo tramo. Transcribe los pasos **8** (pantalla de pago) y **9** (auto-POST
+firmado). Con él, el motor SPA recorre el embudo entero: catálogo → día → hora → cesta →
+identificación → **pago → pasarela**.
+
+**(a) Una sola petición, y no es una simplificación.** `POST /orders` admite consumiendo ficha, crea el
+pedido con su ventana de retención (`AFORO-10`) y abre el cobro **en ese orden**, porque el orden es
+una regla del dominio (`CheckoutOrchestrator`, `DECISIONES #37`), y devuelve el pedido **y** el
+formulario firmado en la misma respuesta. Partirlo en dos llamadas desde el cliente habría
+reimplementado esa secuencia en una superficie nueva, que es justo lo que `CheckoutSequenceTest`
+prohíbe fuera de `app/Domain`.
+
+**(b) ⚠️ EL HALLAZGO DEL PASO: el diff de árbol NO puede verificar el paso 9, y se demostró.** El
+normalizador conserva `role`, `type`, `disabled` y los `aria-*`; **`action`, `method` y los `name` de
+los campos no son atributos de contrato**. Medido por mutación: renombrar los campos firmados a
+minúsculas —lo que rompe el cobro con SIS0042, con el pedido ya creado y el aforo retenido— **pasa el
+diff de árbol en VERDE**. Por eso nace `SidebarPayParityTest`, que compara el formulario campo a campo
+contra la respuesta real de la API. Es el mismo agujero que obligó a la paridad de enlaces del aviso de
+pausa, con mucho más dinero delante.
+
+**(c) `payment.fields` es un mapa OPACO y se trata como tal.** El cajón no conoce
+`Ds_MerchantParameters` ni `Ds_Signature`: itera el mapa y emite un campo oculto por entrada, con sus
+valores intactos. Eso hace dos cosas a la vez — impide que nadie «normalice» un valor que la firma
+cubre, y deja el paso 9 preparado para el segundo driver de pasarela de Fase 6 sin tocar una línea.
+Verificado en vivo: un pedido real devuelve `HMAC_SHA512_V2` y el módulo lo emite tal cual.
+
+**(d) El paso 8 se parece al carrito lo justo para equivocarse.** Cuatro diferencias que el diff sí ve
+y que invitan a reutilizar el componente: la lista lleva `cart--summary`, **no hay botón de quitar**
+—el pedido está a un clic de retener aforo—, el precio va en un `<span>` **sin clase**, y el pie de
+aviso no lleva ni «añadir otra reserva» ni el aviso de «carrito listo».
+
+**(e) La banda `bk-paybreakdown` sale de `SHELL_BLOCKS_NOT_YET_IN_SPA`**, donde estaba declarada desde
+4.3·1. Va FUERA del scroll y **pegada encima del pie**: `.bk-paybreakdown + .bk-foot` es un selector de
+hermano adyacente, así que un nodo entre las dos le quita el borde que las une sin que falte ninguna
+clase. Y la apaga el aviso de pausa, igual que a la banda de progreso y al pie: la misma condición
+gobierna los cuatro sitios.
+
+**(f) A partir del 201 el pedido EXISTE, y eso cambia cómo se tratan los fallos.** Si el formulario
+viniera mal, fingir que no ha pasado nada dejaría al cliente creyendo que puede reintentar desde cero
+con una plaza retenida a su nombre. Se avisa con el mismo texto que el 502 del puerto —«no hemos podido
+iniciar el pago»— y **se conserva el código del pedido**, que es lo único que permite recuperarlo. La
+cesta se vacía y se persiste vacía en ese mismo momento: una recarga no puede resucitarla y hacer que
+alguien compre dos veces lo mismo.
+
+**(g) Los doce motivos de rechazo se traducen desde el CÓDIGO, no desde la clave.** El componente
+Livewire recibe la clave del diccionario (`__($e->getMessage(), $e->context)`); un cliente de API
+recibe el código estable y tiene que volver a la clave. El mapa inverso vive en `pay.js` y
+`SidebarPayParityTest` **recorre el enum entero del servidor**: un motivo nuevo que nadie mapee lo
+nombra el test, en vez de salir como un aviso genérico en la pantalla de pagar. Verificado por mutación.
+Los `params` (`:product`, `:when`, `:max`) los pone el dominio y el cliente solo los interpola.
+
+**(h) La pausa cierra su último residual.** `reservations_paused` no compone mensaje: pide releer
+`GET /booking/status`, que es lo que el contrato pedía tras un 409 y lo que quedaba pendiente desde
+4.3·3.
+
+**(i) El techo del bundle sube de 135 a 150 KiB, medido.** Los dos pasos costaron **5,51 KiB**
+—aislados construyendo con y sin ellos—, mucho menos que los 9,97 del primer formulario porque el
+runtime que aquel trajo ya estaba dentro. Con 135 el chunk se pasaba por 1,09 KiB; 150 deja **13,9 KiB**
+para lo único que queda de la fase: las tres pantallas de desenlace (4.6) y el widget de Turnstile.
+
+**(j) Lo que NO entra**: los pasos 6, 10 y 11 y la vuelta de Redsys (4.6). ⚠️ **Entre 4.5 y 4.6 no se
+despliega el flag**: quien pague en medio volvería a un cajón mudo, y ahora el cajón sí puede cobrar.

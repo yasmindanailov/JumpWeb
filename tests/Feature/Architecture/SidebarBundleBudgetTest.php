@@ -55,16 +55,24 @@ class SidebarBundleBudgetTest extends TestCase
      *
      *   · 4.4b·1 (alta embebida + paso 7) .................. 131,70 kB
      *   · 4.5·1 (la cesta pide lo que le falta) ............ 133,12 kB
+     *   · 4.5·2 (pasos 8 y 9: pagar y salir) ............... 139,36 kB
      *
      * ⚠️ **CUIDADO AL RESTAR: las dos cifras no están en la misma unidad.** Vite imprime en base 1000
-     * («133,12 kB») y este assert divide entre 1024, así que el chunk mide **130,0 KiB** y el margen
-     * real es **5,0 KiB** — no los 2 que sale de restar el número de Vite del techo. Se hizo esa resta
-     * al cerrar 4.5·1 y el margen aparente salió menos de la mitad del verdadero.
+     * («139,36 kB») y este assert divide entre 1024, así que el chunk mide **136,09 KiB**. Restar el
+     * número de Vite del techo da un margen bastante menor del real; se hizo al cerrar 4.5·1 y salió
+     * menos de la mitad del verdadero.
      *
-     * Si el paso que meta el pago se pasa, la decisión vuelve a ser SUBIR el techo con su motivo
+     * ⚠️ **El techo sube a 150 en 4.5·2, y otra vez es una decisión medida.** Los pasos 8 y 9 costaron
+     * **5,51 KiB**, aislados construyendo con y sin ellos — mucho menos que los 9,97 del primer
+     * formulario, porque el runtime que aquel trajo ya estaba dentro. Con 135 el chunk se pasaba por
+     * 1,09 KiB, así que subirlo era inevitable; lo que se decide es CUÁNTO: 150 deja **13,9 KiB** para
+     * las tres pantallas de desenlace (4.6) y el widget de Turnstile (4.4b·2), que es lo único que
+     * queda de la fase. Un techo más holgado dejaría de vigilar.
+     *
+     * Si el paso que meta el desenlace se pasa, la decisión vuelve a ser SUBIR el techo con su motivo
      * escrito — no dejar que lo empuje el arrastre, que es lo que este test existe para impedir.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 135;
+    private const SIDEBAR_CHUNK_MAX_KB = 150;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -211,6 +219,10 @@ class SidebarBundleBudgetTest extends TestCase
         // visible: dejaría al cliente esperando un correo en mitad de una compra.
         '/auth/register' => 'dar de alta desde el cajón',
         'purchase' => 'declarar el contexto de compra, que es lo que activa el pay-first',
+        // ⚠️ 4.5·2: el paso 9. `purchase__redirecting` es la clase de la pantalla que monta el
+        // formulario firmado; sin ella el cajón crearía el pedido —reteniendo aforo— y no llevaría a
+        // ninguna parte. El `/orders` del checkout no sirve de centinela: `/orders/quote` ya lo contiene.
+        'purchase__redirecting' => 'sacar al cliente hacia la pasarela con el formulario firmado',
     ];
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void

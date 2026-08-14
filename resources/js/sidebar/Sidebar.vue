@@ -10,6 +10,7 @@ import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runLogin } from './login.js';
+import { runConfirm } from './pay.js';
 import { runRegister, signupRequiresCaptcha } from './register.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
@@ -22,6 +23,8 @@ import TimeStep from './steps/TimeStep.vue';
 import CartStep from './steps/CartStep.vue';
 import IdentifyStep from './steps/IdentifyStep.vue';
 import VerifyStep from './steps/VerifyStep.vue';
+import PayStep from './steps/PayStep.vue';
+import RedirectStep from './steps/RedirectStep.vue';
 
 /**
  * La raíz del cajón SPA.
@@ -661,6 +664,7 @@ function runAction(action) {
     if (action === 'addToCart') return addToCart();
     if (action === 'goToCart') return goToCart();
     if (action === 'checkout') return checkout();
+    if (action === 'confirmReservation') return confirmReservation();
 }
 
 /**
@@ -670,7 +674,7 @@ function runAction(action) {
  * ranura vacía —velo, banda y pie, y nada dentro—, que es peor que un CTA mudo. La lista **solo
  * crece**: al transcribir el pago se añade aquí y en `render-sidebar.mjs`, que es su espejo.
  */
-const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL];
+const TRANSCRIBED_STEPS = [STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY, STEPS.VERIFY_EMAIL, STEPS.PAY, STEPS.REDIRECTING];
 
 /** Lleva el cajón al paso que diga el veredicto, si esa pantalla ya existe. */
 function goToVerdict(step) {
@@ -891,6 +895,70 @@ function resetAuthForm() {
     form.value = emptyForm();
     loginError.value = { global: '', fields: {} };
     registerError.value = { summary: [], fields: {} };
+}
+
+// ── El paso 8: confirmar y salir hacia la pasarela ────────────────────────────────────────────
+
+/** El formulario firmado que devuelve `POST /orders`. Mientras sea `null`, el paso 9 no pinta nada. */
+const gateway = ref(null);
+
+/** El código del pedido creado. Lo necesitan las pantallas de desenlace (4.6). */
+const orderCode = ref('');
+
+/** `true` mientras el pedido se está creando: impide el doble clic en el botón más caro del cajón. */
+const confirming = ref(false);
+
+/**
+ * «Pagar con tarjeta». Espejo de `Purchase::confirmReservation()`.
+ *
+ * ⚠️ **Una sola petición, y no es una simplificación**: `POST /orders` admite consumiendo ficha, crea
+ * el pedido con su ventana de retención (`AFORO-10`) y abre el cobro, **en ese orden**, porque el orden
+ * es una regla del dominio (`CheckoutOrchestrator`, `DECISIONES #37`). Partirlo en dos llamadas desde
+ * aquí sería reimplementar esa secuencia en una superficie nueva, que es lo que `CheckoutSequenceTest`
+ * prohíbe fuera de `app/Domain`.
+ *
+ * ⚠️ **Y a partir del 201 el pedido EXISTE y retiene aforo.** Por eso la cesta se vacía aquí y no
+ * antes, y por eso un fallo del formulario no se trata como «no ha pasado nada»: se avisa igual que el
+ * 502 del puerto de pasarela, que es lo que el cliente ha vivido.
+ */
+async function confirmReservation() {
+    if (confirming.value) return;
+
+    confirming.value = true;
+
+    try {
+        const result = await tracked(runConfirm({
+            items: toApiItems(cart.value),
+            api,
+            messages: props.messages,
+        }));
+
+        if (result.rereadStatus) {
+            await tracked(refreshBookingStatus());
+        }
+
+        if (! result.ok) {
+            cartError.value = result.error;
+            // Espejo del componente Livewire: cualquier «no» al confirmar devuelve al CARRITO, que es
+            // donde el cliente puede arreglarlo —quitar una línea, cambiar una franja—.
+            goToVerdict(STEPS.CART);
+
+            return;
+        }
+
+        // La reserva es firme: la cesta se vacía y se persiste vacía, para que una recarga no la
+        // resucite y el cliente acabe comprando dos veces lo mismo.
+        cart.value = [];
+        quote.value = null;
+        persist();
+
+        cartError.value = '';
+        orderCode.value = result.orderCode;
+        gateway.value = result.form;
+        store.go(STEPS.REDIRECTING);
+    } finally {
+        confirming.value = false;
+    }
 }
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
@@ -1140,6 +1208,19 @@ function goBack() {
 
         <VerifyStep
             v-else-if="store.step === STEPS.VERIFY_EMAIL"
+            :messages="messages" />
+
+        <PayStep
+            v-else-if="store.step === STEPS.PAY"
+            :lines="cartLines"
+            :error="cartError"
+            :messages="messages"
+            :locale="locale"
+            @back="goToCart" />
+
+        <RedirectStep
+            v-else-if="store.step === STEPS.REDIRECTING"
+            :form="gateway"
             :messages="messages" />
     </Shell>
 </template>

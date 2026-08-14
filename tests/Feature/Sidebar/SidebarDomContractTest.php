@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
@@ -470,6 +471,127 @@ class SidebarDomContractTest extends TestCase
         ];
     }
 
+    // ── Los pasos 8 y 9: pagar ────────────────────────────────────────────────────────────────
+
+    /**
+     * El paso 8 — la pantalla de PAGO. Es el carrito otra vez, y ahí está la trampa: **se parece tanto
+     * al paso 4 que lo natural es reutilizarlo**, y tiene cuatro diferencias que el diff sí ve —la
+     * clase `cart--summary`, la ausencia del botón de quitar, el precio SIN clase y el pie de aviso
+     * sin «añadir otra reserva»—.
+     */
+    public function test_the_pay_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->componentWithFullCart();
+        $this->actingAs(User::factory()->create());
+        $component->call('checkout');
+
+        $this->assertSame(8, (int) $component->get('step'), 'el caso tiene que llegar al paso de pago');
+
+        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(8, $this->payProps($component), 'bk-back', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la pantalla de PAGO DIFIERE entre los dos motores.\n".
+            'Se parece al carrito, pero no es el carrito: `cart--summary`, sin botón de quitar y con el '.
+            "precio en un `<span>` sin clase.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **La BANDA de desglose del pago**, que llevaba declarada en `SHELL_BLOCKS_NOT_YET_IN_SPA`
+     * desde 4.3·1 y ahora se retira de esa lista.
+     *
+     * Se ancla en `.bk-paybreakdown` **con hermanos** porque lo que importa no es solo su contenido: es
+     * que vaya pegada ENCIMA del pie. `.bk-paybreakdown + .bk-foot` es un selector de hermano
+     * adyacente, así que un nodo entre las dos —o meterla dentro del scroll— le quita el borde que las
+     * une sin que falte ninguna clase.
+     */
+    public function test_the_payment_breakdown_band_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->componentWithFullCart();
+        $this->actingAs(User::factory()->create());
+        $component->call('checkout');
+
+        $footer = $component->viewData('footer');
+
+        $this->assertSame('band', $footer['splitMode'] ?? null, 'el paso de pago tiene que pedir la banda');
+        $this->assertNotNull($footer['split'] ?? null, 'y el caso necesita señal, o no hay desglose que comparar');
+
+        $livewire = $this->livewireTree($component, 'bk-paybreakdown', withSiblings: true);
+        $vue = $this->vueTree(8, $this->payProps($component), 'bk-paybreakdown', withSiblings: true, shell: $this->shellProps($component));
+
+        $this->assertSame(
+            $livewire, $vue,
+            "La banda de desglose del pago DIFIERE entre los dos motores.\n".
+            "Va FUERA del scroll y pegada encima del pie: de ese orden depende su borde.\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * El paso 9 — el auto-POST hacia la pasarela.
+     *
+     * ⚠️ **Este árbol es el que MENOS dice de los once**, y conviene saberlo: `action`, `method` y los
+     * `name` de los campos **no son atributos de contrato**, así que este diff da por bueno un
+     * formulario con los campos vacíos, mal nombrados o apuntando a otro sitio — y el pago fallaría con
+     * SIS0042 con la suite en verde. Lo que de verdad lo verifica es `SidebarPayParityTest`, campo a
+     * campo. Aquí solo se comprueba la ESTRUCTURA: el `<noscript>` con su botón, y que los tres campos
+     * ocultos existen.
+     */
+    public function test_the_redirect_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $component = $this->componentWithFullCart();
+        $this->actingAs(User::factory()->create());
+        $component->call('checkout')->call('confirmReservation');
+
+        $this->assertSame(9, (int) $component->get('step'), 'el caso tiene que llegar a la redirección');
+
+        $livewire = $this->livewireTree($component, 'purchase__redirecting', withSiblings: true);
+        $vue = $this->vueTree(9, ['form' => $this->gatewayFormProps($component), 'messages' => __('tickets')], 'purchase__redirecting', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol de la redirección DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * El view-model del paso 8: las mismas líneas que el carrito, en la forma de la API.
+     *
+     * @return array<string, mixed>
+     */
+    private function payProps(Testable $component): array
+    {
+        return [
+            'lines' => $this->cartProps($component)['lines'],
+            'error' => '',
+            'messages' => __('tickets'),
+            'locale' => app()->getLocale(),
+        ];
+    }
+
+    /**
+     * El formulario de la pasarela en la forma que publica la API (`payment.fields` es un mapa) y que
+     * `pay.js` traduce a lista.
+     *
+     * @return array<string, mixed>
+     */
+    private function gatewayFormProps(Testable $component): array
+    {
+        $data = (array) $component->get('redsysFormData');
+
+        return [
+            'url' => $data['gatewayUrl'] ?? '',
+            'method' => 'POST',
+            'fields' => [
+                ['name' => 'Ds_SignatureVersion', 'value' => $data['signatureVersion'] ?? ''],
+                ['name' => 'Ds_MerchantParameters', 'value' => $data['params'] ?? ''],
+                ['name' => 'Ds_Signature', 'value' => $data['signature'] ?? ''],
+            ],
+        ];
+    }
+
     // ── Reservas EN PAUSA: el flujo entero se sustituye ───────────────────────────────────────
 
     /**
@@ -673,7 +795,7 @@ class SidebarDomContractTest extends TestCase
      *
      * @var list<string>
      */
-    private const SHELL_BLOCKS_NOT_YET_IN_SPA = ['bk-paybreakdown'];
+    private const SHELL_BLOCKS_NOT_YET_IN_SPA = [];
 
     /**
      * ⚠️ **El ORDEN de los bloques del armazón, que es de lo que dependen los selectores de

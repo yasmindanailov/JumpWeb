@@ -98,6 +98,29 @@ defineEmits(['back', 'action']);
             <slot v-else />
         </div>
 
+        <!--
+          La banda de desglose del PAGO. Es exclusiva del paso 8 (`splitMode === 'band'`) y solo cuando
+          de verdad queda algo para el parque.
+
+          ⚠️ Va FUERA del scroll y PEGADA encima del pie: `.bk-paybreakdown + .bk-foot` es un selector
+          de hermano adyacente, así que meterla dentro de `.purchase__scroll` —o dejar cualquier nodo
+          entre las dos— le quita el borde que las une. Es el orden que `SHELL_BLOCKS_NOT_YET_IN_SPA`
+          llevaba declarando desde 4.3·1.
+
+          ⚠️ Y la apaga el aviso de pausa, igual que a la banda de progreso y al pie: la misma condición
+          gobierna los cuatro sitios en el Blade.
+        -->
+        <div v-if="! notice && footer && footer.splitMode === 'band' && footer.split" class="bk-paybreakdown">
+            <div class="bk-paybreakdown__row">
+                <span class="bk-paybreakdown__l">{{ footer.split.nowLabel }}</span>
+                <span class="bk-paybreakdown__v">{{ footer.split.now }}</span>
+            </div>
+            <div class="bk-paybreakdown__row">
+                <span class="bk-paybreakdown__l">{{ messages.pay_at_park ?? '' }}</span>
+                <span class="bk-paybreakdown__v">{{ footer.split.park }}</span>
+            </div>
+        </div>
+
         <Foot v-if="footer && ! notice" :footer="footer" :messages="messages" @action="$emit('action', $event)" />
     </div>
 </template>

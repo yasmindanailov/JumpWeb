@@ -10,18 +10,19 @@
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
 **4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) · **4.4a ✅ COMPLETO**
 (·1 elegibilidad · ·2 identificación) · **4.4b·1 ✅** (el alta desde el cajón, y el paso 7) ·
-**4.5·1 ✅** (la cesta restaurada pide lo que le falta) → **toca 4.5·2: los pasos 8 y 9, pagar**.
+**4.5 ✅ COMPLETO** (·1 la cesta pide lo que le falta · ·2 **pagar y salir a la pasarela**) → **toca
+4.6: la vuelta de Redsys y las tres pantallas de desenlace**.
 El corte está en `docs/specs/sidebar-spa.md` §4.10. Queda además **4.4b·2** (el widget de Turnstile),
 aplazado a propósito porque no se puede verificar sin claves de Cloudflare y navegador.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) 4.4b en dos (`#53`) y 4.5 en dos (`#54`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) 4.4b en dos (`#53`) y 4.5 en dos (`#54`, `#55`). En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2678 en verde** (15.256 aserciones, `--parallel` ~66 s) · **189 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2688 en verde** (15.319 aserciones, `--parallel` ~67 s) · **205 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -232,8 +233,11 @@ pulsar «Ir a pagar» **pregunta quién eres y si puedes reservar** (4.4a·1) y 
 a decir que no —tope de pendientes, frecuencia— o pinta el cartel si las reservas se acaban de pausar.
 Si eres invitado, **te lleva a la pantalla de identificación y puedes ENTRAR o CREAR CUENTA desde el
 propio cajón** (4.4a·2 y 4.4b·1), con los mismos textos, el mismo limitador y las mismas defensas
-anti-bot que la web. Y ahí se para: **quien ya está dentro se queda en el paso 5**, porque la pantalla
-que sigue es la de pagar (4.5). La
+anti-bot que la web. Y desde 4.5 **paga**: la pantalla de pago con su banda de desglose, «Pagar con
+tarjeta» que crea la reserva firme —admitir, crear con su hold y abrir el cobro, en una sola petición—
+y el auto-POST firmado hacia Redsys. **El cajón SPA recorre el embudo entero.** Donde se para ahora es
+al VOLVER: los pasos 6, 10 y 11 son 4.6, así que quien pague vuelve a un cajón mudo — por eso **el flag
+no se despliega entre 4.5 y 4.6**. La
 cesta **sí sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO
 se activa en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar
 los dos en vivo (`CE-1`).
@@ -248,36 +252,30 @@ solo `POST /orders` la rechazaba, así que el fallo aparecía en el botón de pa
 del cajón** y —desde 4.4a·1— **al pulsar «Ir a pagar»**, que es el único punto donde vender de más
 tendría consecuencias. Lo que sigue abierto es lo demás: un cajón ABIERTO y quieto en el catálogo o en
 el calendario no se entera del interruptor hasta que alguien lo cierre, lo reabra o intente pagar.
-Livewire sí, porque reevalúa su guarda en cada render. El contrato pide además releer tras un 409
-`reservations_paused`, y eso llega con el checkout (4.5).
+Livewire sí, porque reevalúa su guarda en cada render. ✅ **Lo del 409 `reservations_paused` ya está
+cerrado** (4.5·2): confirmar el pedido con las reservas pausadas relee el estado en vez de componer un
+aviso, que es lo que el contrato pedía.
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.5·2 — los pasos 8 y 9: PAGAR.** Es lo único que separa al cajón SPA de vender. Medido el
-   2026-08-14, antes de empezar:
-   · **Paso 8 = 19 nodos** (el carrito en modo `cart--summary`: sin botón de quitar y sin «añadir
-     otra»), **paso 9 = 8 nodos** (el auto-POST). Y el pie del 8 estrena dos cosas: `icon: 'card'` y
-     **`splitMode: 'band'`**, que es la banda `bk-paybreakdown` —7 nodos— declarada en
-     `SHELL_BLOCKS_NOT_YET_IN_SPA` desde 4.3·1.
-   · ⚠️ **El diff de árbol NO puede verificar el paso 9, y esto hay que resolverlo con una paridad
-     propia**: `action`, `method` y los `name` de los tres campos firmados (`Ds_SignatureVersion`,
-     `Ds_MerchantParameters`, `Ds_Signature`) **no son atributos de contrato** del normalizador. Un
-     motor que los emitiera vacíos o con otro nombre pasaría el gate en verde y Redsys rechazaría el
-     pago con SIS0042. Es el mismo agujero que la paridad de enlaces del aviso de pausa.
-   · **`POST /orders` hace las tres cosas de una vez** —admite, crea con su hold y abre el cobro— y
-     devuelve el formulario firmado en la misma respuesta (`OrderPaymentResource::withPaymentTicket`).
-     Es el espejo exacto de `confirmReservation()`: no hay que orquestar nada en el cliente.
-   · **Lo que `confirmReservation()` hace además, y hay que transcribir**: vaciar la cesta (y
-     persistirla vacía), guardar el código del pedido y no volver atrás.
-   · **El presupuesto del bundle, con las unidades bien puestas**: el chunk pesa **130,0 KiB** y el
-     techo son **135 KiB**, así que quedan **5,0 KiB**. ⚠️ Ojo al leer los números: Vite los imprime en
-     base 1000 («133,1 kB») y el test los mide en base 1024, así que restar uno del otro da un margen
-     más pequeño del real —se hizo, y por eso queda dicho aquí—. Lo que de verdad viaja por la red son
-     **44,6 kB comprimidos**. Si el pago no cabe, subir el techo es una decisión con su medición, como
-     en 4.4a·2; no es un límite técnico, es una guarda contra el engorde por arrastre.
-   · ⚠️ **Entre 4.5 y 4.6 no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
-   · Y el contrato pide **releer el estado tras un 409 `reservations_paused`**, que es el último
-     residual de la pausa.
+1. **4.6 — la VUELTA de Redsys y las tres pantallas de desenlace** (pasos 6, 10 y 11). Es lo único
+   que separa al cajón de vender de punta a punta. Lo que hay que saber:
+   · ⚠️ **La costura ya está hecha desde 4.0a**: `Http\Sidebar\SidebarEntry` es el dueño único del
+     desenlace y **con la SPA el layout lo CONSUME** —no lo mira—, porque el motor es el propio
+     documento. `machine.js` ya sabe abrir en el paso que diga (`enterOutcome`). Lo que falta es
+     PINTAR las tres pantallas.
+   · ⚠️ **El paso 11 hace POLLING** (`wire:poll.5s="checkPaymentStatus"`): hay terminales que vuelven
+     sin los datos firmados y el desenlace solo se sabe sondeando `GET orders/{code}/payment-status`.
+     Ese endpoint ya existe desde Fase 3 · paso 4d, con sus dos ejes (`order_status` y
+     `payment_status`) y el motivo del rechazo como código y como texto.
+   · **El paso 10 reintenta**: `POST orders/{code}/payment`, que pasa por `admitPaymentRetry()` —extiende
+     el hold con un UPDATE atómico (`PAY-04`)— y NO aplica el tope de pendientes.
+   · **El código del pedido ya se guarda** (`orderCode` en `Sidebar.vue`, desde 4.5·2): las tres
+     pantallas lo necesitan y no hay que volver a pedirlo.
+   · ⚠️ **El flag NO se despliega hasta que 4.6 esté**: el cajón ya cobra y quien pague volvería a una
+     pantalla muda.
+   · **Presupuesto**: quedan **13,9 KiB** de bundle (136,1 de 150). Ver el aviso de unidades en
+     `SidebarBundleBudgetTest` antes de restar.
 
 2. **4.4b·2 — el widget de Turnstile**, lo único que le falta al alta. Lo que hay que saber:
    · ⚠️ **Se aplazó porque NO SE PUEDE VERIFICAR sin claves de Cloudflare y un navegador** (`#53(a)`),
@@ -442,6 +440,23 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
     en `fields.email` los mismos que pinta el Blade; en el login tiene un `message` propio que no
     coincide con `auth.failed`. Las dos conductas son correctas y las dos tienen su caso.
 
+- **4.5·2 — pagar y salir a la pasarela** (2026-08-14, `DECISIONES #55`). Cinco cosas que condicionan
+  lo que viene:
+  · ⚠️ **El diff de árbol NO puede verificar el paso 9, y se demostró por mutación**: `action`, `method`
+    y los `name` de los campos **no son atributos de contrato**, así que renombrar los campos firmados
+    —lo que rompe el cobro con SIS0042, con el pedido ya creado y el aforo retenido— **pasa el gate en
+    VERDE**. Lo cubre `SidebarPayParityTest`, campo a campo contra la respuesta real.
+  · **`payment.fields` es un mapa OPACO**: el cajón itera y emite sin conocer los nombres. Impide
+    «normalizar» un valor que la firma cubre **y** deja el paso listo para el segundo driver de Fase 6.
+  · ⚠️ **A partir del 201 el pedido EXISTE y retiene aforo.** Un formulario mal formado no se trata
+    como «no ha pasado nada»: se avisa y **se conserva el código**. Y la cesta se vacía y se persiste
+    vacía en ese momento, para que una recarga no la resucite.
+  · ⚠️ **El paso 8 se parece al carrito lo justo para equivocarse**: `cart--summary`, sin botón de
+    quitar, el precio en un `<span>` SIN clase y el pie de aviso sin «añadir otra reserva».
+  · **Los doce motivos de rechazo se traducen desde el CÓDIGO**, no desde la clave —eso es lo que
+    recibe un cliente de API—, y `SidebarPayParityTest` recorre el enum ENTERO del servidor: un motivo
+    nuevo sin mapear lo nombra el test en vez de salir como aviso genérico en la pantalla de pagar.
+
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
 - **El contrato visual es el ÁRBOL, no las clases** (§4.2): 90 de 292 selectores son estructurales
@@ -540,6 +555,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2678** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2688** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

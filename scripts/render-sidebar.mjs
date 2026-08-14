@@ -29,6 +29,8 @@ import TimeStep from '../resources/js/sidebar/steps/TimeStep.vue';
 import CartStep from '../resources/js/sidebar/steps/CartStep.vue';
 import IdentifyStep from '../resources/js/sidebar/steps/IdentifyStep.vue';
 import VerifyStep from '../resources/js/sidebar/steps/VerifyStep.vue';
+import PayStep from '../resources/js/sidebar/steps/PayStep.vue';
+import RedirectStep from '../resources/js/sidebar/steps/RedirectStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
@@ -39,6 +41,8 @@ const COMPONENTS = {
     [STEPS.CART]: CartStep,
     [STEPS.IDENTIFY]: IdentifyStep,
     [STEPS.VERIFY_EMAIL]: VerifyStep,
+    [STEPS.PAY]: PayStep,
+    [STEPS.REDIRECTING]: RedirectStep,
 };
 
 async function main() {

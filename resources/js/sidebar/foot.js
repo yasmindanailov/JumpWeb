@@ -86,6 +86,16 @@ export function buildFooter(state) {
         return state.cartCount > 0 ? cartFooter(state, 'checkout', t(messages, 'go_to_pay'), 'arrow', 'popover') : null;
     }
 
+    // ⚠️ **El paso de PAGO cambia las dos cosas que el carrito dejaba fijas**: el icono es una tarjeta
+    // y el desglose sube a una BANDA propia (`bk-paybreakdown`, siempre visible) en vez de esconderse
+    // tras el ⓘ. No es cosmética: en la pantalla donde se paga, lo que se va a cobrar no puede estar
+    // detrás de un clic. Y a diferencia del paso 4, **no se condiciona a que haya cesta**: aquí ya se
+    // ha pasado por la identificación, así que una cesta vacía en este paso no es un estado alcanzable
+    // — el servidor mismo lo rechazaría con `cart_empty`.
+    if (step === 8) {
+        return cartFooter(state, 'confirmReservation', t(messages, 'pay_confirm'), 'card', 'band');
+    }
+
     return null;
 
     /** La barra-carrito del catálogo: un único botón con badge, recuento e importe. */

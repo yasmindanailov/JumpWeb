@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO**, **4.4b·1** (alta embebida) y **4.5·1** (la cesta restaurada pide lo que le falta) → toca 4.5·2 (los pasos 8 y 9: pagar)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4) y **4.4a COMPLETO**, **4.4b·1** (alta embebida) y **4.5 COMPLETO** (·1 la cesta pide lo que le falta · ·2 pagar y salir a la pasarela) → toca 4.6 (la vuelta de Redsys y las tres pantallas de desenlace)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -839,6 +839,33 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · **Red**: 12 casos de `node --test` y `SidebarPendingFieldsParityTest` (el quote que no avisa, la
         paridad de campos, la fase, y la frontera del «cinco»). Verificado por mutación ×2 y en vivo.
       · Suite **2678 verde** · 189 tests JS · chunk del cajón 133,1 kB de 135.
+- [x] **Paso 4.5·2 — el cajón ya VENDE: pagar y salir a la pasarela** (2026-08-14, `DECISIONES #55`).
+      Transcribe los pasos 8 y 9. El motor SPA recorre ya el embudo entero.
+      · ⚠️ **EL HALLAZGO: el diff de árbol NO puede verificar el paso 9, y se demostró por mutación.**
+        `action`, `method` y los `name` de los campos **no son atributos de contrato**, así que
+        renombrar los campos firmados —lo que rompe el cobro con SIS0042, con el pedido ya creado y el
+        aforo retenido— **pasa el gate en VERDE**. Nace `SidebarPayParityTest`, que los compara campo a
+        campo contra la respuesta real de la API.
+      · **Una sola petición**: `POST /orders` admite, crea con su hold y abre el cobro en ese orden
+        —regla del dominio— y devuelve el formulario firmado en la misma respuesta. Partirlo habría
+        reimplementado `CheckoutOrchestrator` en el cliente.
+      · **`payment.fields` es un mapa OPACO**: el cajón itera y emite, sin conocer los nombres. Impide
+        «normalizar» un valor que la firma cubre **y** deja el paso listo para el segundo driver de F6.
+      · ⚠️ **El paso 8 se parece al carrito lo justo para equivocarse**: `cart--summary`, sin botón de
+        quitar, precio en un `<span>` SIN clase y pie de aviso sin «añadir otra».
+      · **A partir del 201 el pedido EXISTE**: un formulario mal formado no se trata como «no ha pasado
+        nada» —se avisa y se conserva el código—, y la cesta se vacía y se persiste vacía para que una
+        recarga no la resucite.
+      · **La banda `bk-paybreakdown` sale de `SHELL_BLOCKS_NOT_YET_IN_SPA`** y la pausa cierra su último
+        residual: `reservations_paused` pide releer el estado, que es lo que el contrato pedía tras un 409.
+      · **El techo del bundle sube de 135 a 150 KiB**, medido: los dos pasos costaron 5,51 KiB y con 135
+        el chunk se pasaba por 1,09. Quedan 13,9 KiB para 4.6 y Turnstile.
+      · **Red**: 21 casos de `node --test`, `SidebarPayParityTest` (formulario campo a campo, el enum
+        entero de errores y los textos en tres idiomas) y tres casos nuevos de árbol. **Verificado por
+        mutación ×2** y en vivo con un pedido real (`R-KB8ONS`, borrado después).
+      · Suite **2688 verde** · 205 tests JS · chunk del cajón 139,4 kB (136,1 KiB) de 150.
+      · ⚠️ **Entre 4.5 y 4.6 NO se despliega el flag**: quien pague en medio vuelve a un cajón mudo, y
+        ahora el cajón sí puede cobrar.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
