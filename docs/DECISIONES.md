@@ -1508,3 +1508,40 @@ nodos con clase, y el estilo perdido igual.
 ⚠️ **(f) El paso 4.2 queda ABIERTO a propósito**: entra el paso 1 (catálogo) con su paridad
 demostrada; los pasos 2 (calendario) y 3 (hora, cantidad y complementos) siguen pendientes. La red ya
 está puesta, así que cada uno se cierra contra ella.
+
+## #45 · 2026-08-14 · El calendario: repartir días es presentación, decidir cuáles se ofrecen no
+Fase 4 · paso 4.2 (segundo tramo): el **paso 2**, con su banda de progreso.
+
+**(a) La rejilla la compone el CLIENTE, y eso no rompe `CE-4`.** Qué días se pueden reservar lo dice
+`SlotOffer` a través de `GET availability/{producto}/dates` (`AFORO-02`) y llega con su precio y su
+clave de tarifa. Repartir esos días en semanas de lunes a domingo y rellenar los huecos del mes
+anterior es presentación pura, así que vive en `resources/js/sidebar/calendar.js` — módulo plano, sin
+Vue, por el mismo motivo que la máquina de estados.
+
+**(b) Pero «presentación» no significa «sin verificar».** El diff de árbol compara Vue contra el
+view-model del SERVIDOR, así que no vería una rejilla compuesta mal por el cliente: el test pasaría y
+el cajón enseñaría otro calendario. `SidebarCalendarParityTest` cierra ese hueco comparando las dos
+composiciones **dato a dato** para el mismo mes.
+
+**(c) ⚠️ Dos casos frontera que se descubrieron midiendo, no razonando.**
+1. **Un mes que empieza en domingo**: `getDay()` devuelve 0 para el domingo, así que una semana que
+   empiece en lunes necesita retroceder seis días y no cero. Se busca un mes real que cumpla la
+   condición en vez de darlo por supuesto.
+2. **El huso horario del navegador**: `new Date('2026-08-01')` se interpreta como medianoche **UTC**,
+   y al oeste eso es el día anterior. La primera versión del test comparaba husos con el mes en
+   curso y **pasaba con el bug dentro**: el desfase de un día solo cambia el lunes de la semana si el
+   día 1 ya era lunes. Corregido a ese mes, la mutación cae en los dos husos al oeste. Un test que no
+   distingue es peor que no tenerlo.
+
+**(d) La banda de progreso tiene su propio caso de diff**, porque **no es del paso 2**: la comparten
+los pasos 2 y 3, vive fuera del bloque de cada uno en el Blade y trae el «volver» del flujo. Un diff
+anclado en el título del paso no la vería, y un motor que no la emitiera dejaría al cliente sin
+salida y sin contador de fases.
+
+**(e) Lo que la paridad volvió a enseñar**: un día no reservable es un `<span>`, no un `<button>`
+deshabilitado — `.cal__day` se estila según el tipo de elemento—; y el precio del día se pinta **sin
+decimales**, que en una rejilla de siete columnas no es un descuido sino la única forma de que quepa.
+
+⚠️ **(f) Queda declarado, no resuelto**: las cabeceras de día y el nombre del mes los compone el
+servidor con Carbon y el cliente con `Intl`, así que **el texto visible puede diferir** (§4.5 ya lo
+avisaba). Es el único punto del paso 2 donde los dos motores no comparten la fuente del texto.

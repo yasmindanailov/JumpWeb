@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2600 en verde** (14153 aserciones, `--parallel` ~64 s) · **15 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2607 en verde** (14173 aserciones, `--parallel` ~64 s) · **15 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -112,8 +112,16 @@ inaplicable; §7 dice cuáles.
   el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
 - **Gates**: el `pre-push` corre `npm run build` **antes** de la suite y, desde 4.1, `npm run test:js`
   (`PrePushGateTest` vigila cada paso). El puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
-- **4.2 — el catálogo transcrito, 1 de 3 pasos** (`DECISIONES #44`). Lo importante no es el paso: es
-  **la red**. `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y
+- **4.2 — pasos 1 y 2 de 3** (`DECISIONES #44` y **`#45`**). Lo importante no es el paso: es **la
+  red**, y son DOS:
+  · **Paridad de ÁRBOL** (`SidebarDomContractTest`) — compara lo que emite cada motor.
+  · **Paridad de COMPOSICIÓN** (`SidebarCalendarParityTest`) — porque el diff de árbol le pasa a Vue
+    el view-model del SERVIDOR, así que no vería una rejilla que el cliente compone mal. Sus dos
+    casos frontera salieron de medir: un mes que empieza en domingo, y el huso del navegador
+    (`new Date('YYYY-MM-DD')` es UTC). ⚠️ La primera versión del caso de husos **pasaba con el bug
+    dentro** — el desfase solo mueve el lunes si el día 1 ya era lunes.
+  ⚠️ **Declarado y no resuelto**: las cabeceras de día y el nombre del mes los compone el servidor con
+  Carbon y el cliente con `Intl`, así que el texto visible puede diferir (§4.5 ya lo avisaba). `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y
   sin navegador (`@vue/server-renderer` viene con Vue). Tres cosas para el siguiente:
   · **Node no carga `.vue`**: el renderizador se compila con `npm run build:ssr`, que está en el
     `pre-push`. Sin ese paso el test de `CE-2` no corre.
@@ -198,12 +206,15 @@ inaplicable; §7 dice cuáles.
 **Cimientos cerrados: 4.0a, 4.0b, 4.0c y 4.1.** El motor SPA monta, tiene red y no pesa en la
 landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.2 — pasos 2 y 3** (el 1 ya está). ⚠️ Los complementos son del paso **3**, no del 4 (la v1 del
-   spec los ponía mal), y su pie ya es dinero: se pinta con lo que devuelve
-   `POST catalog/products/{id}/addons`, no se suma en el cliente.
+1. **4.2 — paso 3** (1 y 2 ya están): hora, cantidad y complementos. ⚠️ Los complementos son de este
+   paso, no del 4 (la v1 del spec los ponía mal), y su pie ya es dinero: se pinta con lo que devuelve
+   `POST catalog/products/{id}/addons`, no se suma en el cliente. La hora lleva **la cesta**
+   (`AFORO-02`) y publica dos números: `available` para MOSTRAR y `max_quantity` para ACOTAR el
+   selector — en un pack **no coinciden**.
    **La red ya está puesta**: añade el caso a `SidebarDomContractTest` ANTES de transcribir y
-   transcribe hasta que el diff calle. El primer intento del catálogo falló por el envoltorio de los
-   iconos, que ninguna lectura del Blade habría delatado.
+   transcribe hasta que el diff calle. ⚠️ Y si el cliente COMPONE algo que el servidor también
+   compone, el diff de árbol no lo ve —le pasa el view-model del servidor—: hace falta un test de
+   paridad de datos aparte, como `SidebarCalendarParityTest`.
 2. **4.3 en adelante** — el corte completo, en §4.10 del spec. ⚠️ Entre 4.5 y 4.6 **no se despliega
    el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
@@ -308,6 +319,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2600** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2607** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -1,16 +1,22 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './store.js';
 import { STEPS } from './machine.js';
 import { api } from './api.js';
+import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
 import CatalogStep from './steps/CatalogStep.vue';
+import DateStep from './steps/DateStep.vue';
 
 /**
  * La raíz del cajón SPA.
  *
  * **El nodo raíz emite `class="purchase"` y eso no es decorativo**: el contrato visual es el ÁRBOL
  * (§4.2), y 90 de los 292 selectores que estilan el cajón son estructurales o dependen del tipo de
- * elemento. Lo verifica `SidebarDomContractTest`.
+ * elemento. Lo verifica `SidebarDomContractTest` paso a paso.
+ *
+ * **Aquí se PIDEN los datos; los pasos solo pintan.** Esa separación es lo que hace verificable la
+ * paridad: los componentes de paso reciben todo por props, así que se pueden renderizar en Node —sin
+ * red ni navegador— y comparar con lo que emite Livewire.
  */
 const props = defineProps({
     /** El grupo `tickets` del locale activo, inyectado por el servidor en el montaje (§4.5). */
@@ -21,7 +27,27 @@ const store = usePurchaseStore();
 
 const sections = ref([]);
 const searchEnabled = ref(false);
-const loading = ref(false);
+
+/** Lo que el paso 2 necesita. Llega de la API; ninguna regla de oferta se decide aquí (`AFORO-02`). */
+const selectedProductId = ref(null);
+const offeredDates = ref([]);
+const selectedDate = ref(null);
+const month = ref(null);
+
+/**
+ * La rejilla del mes que se está viendo.
+ *
+ * Repartir los días ofrecidos en semanas es PRESENTACIÓN —y por eso puede vivir aquí—, pero la
+ * composición tiene que dar exactamente lo mismo que la del servidor o el cajón enseñaría otro
+ * calendario. `SidebarCalendarParityTest` compara las dos dato a dato, incluidos un mes que empieza
+ * en domingo y tres husos horarios distintos.
+ */
+const weeks = computed(() => (month.value ? buildWeeks(month.value, offeredDates.value, selectedDate.value) : []));
+
+/** Los meses navegables se acotan a los que tienen oferta: no se ofrece pasear por meses vacíos. */
+const offeredMonths = computed(() => [...new Set(offeredDates.value.map((d) => monthOf(d.date)))].sort());
+const canPrev = computed(() => offeredMonths.value.length > 0 && month.value > offeredMonths.value[0]);
+const canNext = computed(() => offeredMonths.value.length > 0 && month.value < offeredMonths.value[offeredMonths.value.length - 1]);
 
 /**
  * El PUENTE de señales hacia fuera del cajón.
@@ -47,15 +73,9 @@ watch(
  * El catálogo se pide al MONTAR, y montar ocurre al abrir el cajón (§4.7).
  *
  * ⚠️ Ese reparto es lo que respeta `PERF-02`: una raíz que pidiera catálogo al cargar la página
- * añadiría una petición por visita en la ruta de más tráfico del sitio. Al abrir, la pide quien de
- * verdad va a comprar.
- *
- * Las dos llamadas van en paralelo porque no dependen entre sí: el umbral del buscador es un ajuste
- * de instalación y el catálogo es contenido.
+ * añadiría una petición por visita en la ruta de más tráfico del sitio.
  */
 onMounted(async () => {
-    loading.value = true;
-
     const [catalog, config] = await Promise.all([
         api.get('/catalog/products'),
         api.get('/config'),
@@ -69,8 +89,6 @@ onMounted(async () => {
         const threshold = config.data?.catalog_search_min_items;
         searchEnabled.value = typeof threshold === 'number' && totalItems(sections.value) > threshold;
     }
-
-    loading.value = false;
 });
 
 function totalItems(list) {
@@ -81,16 +99,12 @@ function totalItems(list) {
  * Agrupa el catálogo plano en las DOS secciones que el cajón enseña.
  *
  * Es presentación, no negocio: qué se vende ya lo decidió `ProductCatalog`, y lo único que se hace
- * aquí es repartir por `type` en el mismo orden en que llegan — que es el `position` configurado en
- * el panel.
+ * aquí es repartir por `type` en el mismo orden en que llegan — que es el `position` del panel.
  */
 function groupIntoSections(products) {
-    const entries = products.filter((p) => p.type === 'entry');
-    const services = products.filter((p) => p.type === 'pack');
-
     return [
-        { key: 'entries', items: entries.map(toItem) },
-        { key: 'services', items: services.map(toItem) },
+        { key: 'entries', items: products.filter((p) => p.type === 'entry').map(toItem) },
+        { key: 'services', items: products.filter((p) => p.type === 'pack').map(toItem) },
     ];
 }
 
@@ -106,17 +120,60 @@ function toItem(product) {
         from: product.from_price_cents ?? null,
         period_label: product.period_label ?? '',
         deposit_label: product.deposit_label ?? '',
-        // El índice del buscador lo compone el SERVIDOR, y se compara contra él y no contra el
-        // nombre visible: es la semántica que el sidebar Livewire ya tenía.
         search: [product.name, ...(product.features ?? [])].join(' ').toLowerCase(),
     };
 }
 
-function selectProduct(id) {
+/**
+ * Elegir producto lleva al calendario y pide su oferta de días.
+ *
+ * ⚠️ Los días **no se calculan**: `GET availability/{id}/dates` los devuelve ya filtrados por
+ * `SlotOffer` (`AFORO-02`), con su precio y su clave de tarifa. Componer la rejilla del mes a partir
+ * de ellos sí es presentación.
+ */
+async function selectProduct(id) {
+    selectedProductId.value = id;
+    selectedDate.value = null;
     store.go(STEPS.DATE);
-    // El paso 2 llega en el siguiente tramo de la fase; hasta entonces la elección solo avanza.
-    void id;
+
+    const response = await api.get(`/availability/${id}/dates`);
+
+    offeredDates.value = response.ok ? (response.data?.data ?? []) : [];
+    // El calendario abre en el PRIMER mes con oferta, no en el actual: si el producto no se vende
+    // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía.
+    month.value = offeredMonths.value[0] ?? monthOf(new Date().toISOString().slice(0, 10));
 }
+
+function selectDate(date) {
+    selectedDate.value = date;
+    // El paso 3 llega en el siguiente tramo de la fase.
+}
+
+/**
+ * Las cabeceras de día y el nombre del mes, en el idioma del documento.
+ *
+ * ⚠️ El servidor los compone con Carbon y su locale; aquí se usa `Intl`, así que **el texto visible
+ * puede diferir** (§4.5 lo declara y la paridad lo compara explícitamente). Es el único punto del
+ * paso 2 donde los dos motores no comparten la fuente del texto.
+ */
+const locale = document.documentElement.lang || 'es';
+
+const weekdayHeaders = computed(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    // 2024-01-01 fue lunes: sirve de ancla para nombrar los siete días en orden.
+    return Array.from({ length: 7 }, (_, i) => {
+        const day = new Date(2024, 0, 1 + i);
+        const label = formatter.format(day).replace('.', '');
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    });
+});
+
+const monthLabel = computed(() => {
+    if (! month.value) return '';
+    const [y, m] = month.value.split('-').map(Number);
+    const label = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+});
 </script>
 
 <template>
@@ -127,5 +184,26 @@ function selectProduct(id) {
             :search-enabled="searchEnabled"
             :messages="messages"
             @select="selectProduct" />
+
+        <!--
+          El paso 2 recibe la rejilla ya compuesta. Mientras el calendario del cliente no exista
+          —llega con el resto de 4.2—, se le pasa lo que la API devuelve y el componente pinta lo
+          que haya: sin días ofrecidos enseña su aviso de «no hay fechas», que es la conducta
+          correcta y no una pantalla en blanco.
+        -->
+        <DateStep
+            v-else-if="store.step === STEPS.DATE"
+            :progress="null"
+            :weeks="weeks"
+            :weekday-headers="weekdayHeaders"
+            :month-label="monthLabel"
+            :can-prev="canPrev"
+            :can-next="canNext"
+            :selected-date="selectedDate"
+            :messages="messages"
+            @select="selectDate"
+            @prev-month="month = shiftMonth(month, -1)"
+            @next-month="month = shiftMonth(month, 1)"
+            @back="store.go(STEPS.CATALOG)" />
     </div>
 </template>

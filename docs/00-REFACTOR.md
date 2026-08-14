@@ -559,7 +559,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         una clase renombrada, ponen el diff en rojo con la línea exacta.
       · ⚠️ **Lo que la paridad obligó a copiar y no se habría adivinado**: los iconos son componentes
         Blade que envuelven su SVG en un `<span class="icon …">`, y ese envoltorio ES contrato.
-      · **Pendiente**: pasos 2 (calendario) y 3 (hora, cantidad y complementos).
+      **Paso 2 hecho (2026-08-14, `DECISIONES #45`)**: calendario + banda de progreso, con paridad de
+      árbol Y de composición. La rejilla la compone el cliente (`calendar.js`, módulo plano) porque
+      repartir días en semanas es presentación; qué días se ofrecen lo sigue diciendo `SlotOffer`.
+      ⚠️ **El diff de árbol NO habría visto una rejilla mal compuesta** —allí a Vue se le pasa el
+      view-model del servidor—, así que `SidebarCalendarParityTest` compara las dos composiciones
+      dato a dato. Y sus dos casos frontera salieron de MEDIR, no de razonar: un mes que empieza en
+      domingo, y el huso del navegador (`new Date('YYYY-MM-DD')` es UTC, y al oeste es la víspera).
+      La primera versión del caso de husos **pasaba con el bug dentro**: el desfase solo mueve el
+      lunes de la semana si el día 1 ya era lunes.
+      · **Pendiente**: paso 3 (hora, cantidad y complementos).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

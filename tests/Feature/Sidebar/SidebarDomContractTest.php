@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sidebar;
 
 use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Livewire\Tickets\Purchase;
@@ -11,6 +12,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
@@ -101,6 +103,51 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
+    // ── El paso 2: calendario ─────────────────────────────────────────────────────────────────
+
+    /**
+     * ⚠️ El contenido del paso 2 son CUATRO nodos hermanos —título, calendario, leyenda y el aviso de
+     * «sin fechas»—, no un contenedor. Se comparan todos: dejar fuera los hermanos es como se cuela
+     * una leyenda que no se pinta o un título con otra etiqueta.
+     */
+    public function test_the_date_step_emits_the_same_tree_in_both_engines(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
+
+        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El árbol del calendario DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * La BANDA de progreso tiene su propio caso porque **no es del paso 2**: la comparten los pasos 2
+     * y 3, vive fuera del bloque de cada uno en el Blade y trae el «volver» del flujo. Un diff que
+     * empezara en el título del paso no la vería, y un motor que no la emitiera dejaría al cliente
+     * sin salida y sin contador de fases.
+     */
+    public function test_the_booking_progress_band_emits_the_same_tree_in_both_engines(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
+
+        $livewire = $this->livewireTree($component, 'bk-progress');
+        $vue = $this->vueTree(2, $this->dateProps($component), 'bk-progress');
+
+        $this->assertSame(
+            $livewire, $vue,
+            "La banda de progreso DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
     /**
      * **La guarda de la guarda.** Un diff de árboles que normaliza de más acaba comparando dos
      * cadenas vacías y pasando siempre. Aquí se comprueba que el normalizador CONSERVA lo que el
@@ -143,6 +190,44 @@ class SidebarDomContractTest extends TestCase
         ];
     }
 
+    /**
+     * Franjas para los próximos N días, para que el calendario tenga algo que ofrecer.
+     *
+     * Sin ellas el paso 2 se pinta vacío y el diff compararía dos calendarios sin días
+     * seleccionables — es decir, pasaría sin mirar lo que de verdad importa: la celda con precio,
+     * la seleccionada y la deshabilitada.
+     */
+    private function slotsForNextDays(TicketType $product, int $days): void
+    {
+        for ($i = 1; $i <= $days; $i++) {
+            Slot::create([
+                'zone_id' => $product->zone_id,
+                'date' => now()->addDays($i)->toDateString(),
+                'start_time' => '10:00:00', 'end_time' => '11:00:00',
+                'capacity' => 20, 'online_capacity' => 20,
+            ]);
+        }
+    }
+
+    /**
+     * El view-model del calendario, tomado del propio componente Livewire.
+     *
+     * @return array<string, mixed>
+     */
+    private function dateProps(Testable $component): array
+    {
+        return [
+            'progress' => $component->viewData('bookingProgress'),
+            'weeks' => $component->viewData('weeks'),
+            'weekdayHeaders' => $component->viewData('weekdayHeaders'),
+            'monthLabel' => $component->viewData('monthLabel'),
+            'canPrev' => $component->viewData('canPrev'),
+            'canNext' => $component->viewData('canNext'),
+            'selectedDate' => $component->get('date'),
+            'messages' => __('tickets'),
+        ];
+    }
+
     /** El árbol del componente Livewire en un paso, ya normalizado. */
     private function livewireTreeForStep(int $step): string
     {
@@ -151,12 +236,18 @@ class SidebarDomContractTest extends TestCase
         return $this->treeOf($html, 'catalog-acc');
     }
 
+    /** Igual, pero para un componente ya colocado por el test en el paso que quiere comparar. */
+    private function livewireTree(Testable $component, string $anchor, bool $withSiblings = false): string
+    {
+        return $this->treeOf($component->html(), $anchor, $withSiblings);
+    }
+
     /**
      * El árbol que emite Vue, renderizado en Node.
      *
      * @param  array<string, mixed>  $props
      */
-    private function vueTree(int $step, array $props): string
+    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false): string
     {
         $bundle = base_path('storage/ssr/render-sidebar.js');
 
@@ -176,7 +267,7 @@ class SidebarDomContractTest extends TestCase
             "El renderizador de Vue falló:\n".$process->getErrorOutput()
         );
 
-        return $this->treeOf($process->getOutput(), 'catalog-acc');
+        return $this->treeOf($process->getOutput(), $anchor, $withSiblings);
     }
 
     /**
@@ -188,7 +279,7 @@ class SidebarDomContractTest extends TestCase
      * envuelven el paso en algo propio —Livewire su `wire:id`, Vue su raíz—, así que comparar desde
      * fuera mediría el andamiaje.
      */
-    private function treeOf(string $html, string $class): string
+    private function treeOf(string $html, string $class, bool $withSiblings = false): string
     {
         $dom = $this->parse($html);
         $xpath = new DOMXPath($dom);
@@ -200,6 +291,15 @@ class SidebarDomContractTest extends TestCase
 
         $lines = [];
         $this->describe($node, 0, $lines);
+
+        // Hay pasos cuyo contenido son varios nodos HERMANOS —el paso 2 son título, calendario,
+        // leyenda y un aviso— y no un solo contenedor. Comparar solo el primero dejaría fuera todo
+        // lo demás, que es justo donde es fácil equivocarse.
+        if ($withSiblings) {
+            for ($sibling = $node->nextSibling; $sibling !== null; $sibling = $sibling->nextSibling) {
+                $this->describe($sibling, 0, $lines);
+            }
+        }
 
         return implode("\n", $lines);
     }

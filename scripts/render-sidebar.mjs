@@ -15,11 +15,13 @@ import { createSSRApp } from 'vue';
 import { renderToString } from '@vue/server-renderer';
 import { createPinia } from 'pinia';
 import CatalogStep from '../resources/js/sidebar/steps/CatalogStep.vue';
+import DateStep from '../resources/js/sidebar/steps/DateStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
     [STEPS.CATALOG]: CatalogStep,
+    [STEPS.DATE]: DateStep,
 };
 
 async function main() {
