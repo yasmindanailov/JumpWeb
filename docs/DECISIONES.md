@@ -2475,3 +2475,31 @@ familias y cada una necesita una decisión distinta, que es lo que hará 4.7·2:
 4.7·3. ⚠️ **Y sigue en pie la condición**: antes de borrar `Purchase.php` conviene dejar el flag en `spa`
 en uso real unos días. Lo de hoy demuestra que el motor vende; no demuestra que lo haga con clientes
 distintos, navegadores distintos y móviles.
+
+## #61 · 2026-08-15 · 4.7·2a — el inventario de la retirada deja de crecer
+Segundo tramo de la retirada, y otra vez sin borrar nada del motor que hoy vende. Ataca el riesgo
+propio de un desmontaje LARGO: que mientras dura, alguien siga construyendo encima.
+
+**(a) Nace `PurchaseRetirementTest`, y la lista solo puede ENCOGER.** Vigila las dos direcciones: que no
+aparezcan tests NUEVOS conduciendo por `Livewire::test(Purchase::class)` —lo que construyan encima habrá
+que rehacerlo o se perderá— y que ninguna entrada declare una dependencia que ya no existe, porque
+entonces la lista deja de decir cuánto falta. Es la disciplina de las baselines del arch-test de Fase 2.
+Verificado por mutación en los dos sentidos. ⚠️ Y la guarda se excluye a sí misma del escaneo: declara el
+patrón, así que se contaba como infractora — la misma trampa que `SidebarEntryTest` ya documentaba.
+
+**(b) ⚠️ El inventario NO clasifica, a propósito.** Qué hacer con cada fichero es una decisión por
+fichero y vive en `#60(d)`; fijar la familia en un test sería congelar una decisión que aún no está
+tomada, y las que sí lo están se han tomado MIDIENDO, no por el nombre del fichero.
+
+**(c) Primer fichero fuera de la lista, y por el motivo correcto.**
+`SlotOfferTest::test_public_purchase_flow_excludes_past_times_today` decía «end-to-end del flujo público
+REAL» y conducía por el componente, pero su sujeto es una regla de DOMINIO (`SlotOffer`, `AFORO-02`).
+Tras la retirada, el flujo público **es** `POST availability/{producto}/times` — lo que pide el cajón—,
+así que ahí se re-apunta. **Un test de dominio no debe morir porque muera una vista**, y ese acoplamiento
+estaba mal desde antes de existir 4.7.
+
+**(d) Y una clasificación que se resolvió MIDIENDO, no suponiendo**: los dos casos de
+`AddonDependencyTest` que conducen por el componente prueban la poda de dependencias «de punta a punta»,
+y `Api\V1\CatalogAddonsTest` ya la cubre **mejor** —recorre la cadena entera, no un solo nivel—. O sea:
+mueren con el componente sin pérdida de cobertura. Se deja escrito, no se ejecuta: **no se borran tests
+del motor que hoy vende**. Ese borrado es 4.7·2b, después de que el flag lleve tiempo en `spa`.

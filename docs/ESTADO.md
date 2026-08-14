@@ -26,7 +26,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2715 en verde** (15.543 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2718 en verde** (15.548 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -314,8 +314,11 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      dueño único con guarda ejecutable, y los `role`/`aria-*` los compara el diff. ⚠️ **Lo único que
      sigue abierto es el foco al cambiar de paso, que NINGUNO de los dos motores hace** — hueco
      heredado, ficha en `DEUDA.md`.
-3. **4.7 — la retirada, PARTIDA EN TRES** (`DECISIONES #60`). **·1 el manifiesto congelado ✅**
-   (2026-08-14) · **·2 retirar el componente y el puente** · **·3 retirar el flag**.
+3. **4.7 — la retirada, EN CURSO** (`DECISIONES #60`, `#61`). **·1 el manifiesto congelado ✅** ·
+   **·2a el inventario deja de crecer ✅** (2026-08-15) · **·2b retirar el componente y el puente** ·
+   **·3 retirar el flag**.
+   · **`PurchaseRetirementTest` es hoy el marcador de cuánto falta**: los dependientes solo pueden
+     encoger, y van **25** (eran 26). Cuando llegue a 0, `Purchase.php` se puede borrar.
    · ⚠️ **Lo que hace grande a 4.7·2, medido**: **26 ficheros de test ejecutan `Purchase`**, con ~160
      casos, en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como
      conductor de dominio y deben re-apuntarse a la API, y las nueve paridades, que o congelan o
@@ -685,6 +688,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2718** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -13,11 +13,9 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Pages\CreateManualOrderPage;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -238,22 +236,32 @@ class SlotOfferTest extends TestCase
         $this->assertTrue($this->entry->meetsMinAdvance('2026-09-14', '19:00:00', $now));
     }
 
+    /**
+     * End-to-end del flujo público REAL: al elegir HOY a las 12:00, la franja de las 10:00 —ya pasada—
+     * no aparece entre las horas ofrecidas.
+     *
+     * ⚠️ **Conduce por la API y no por el componente Livewire** (Fase 4 · paso 4.7·2). El sujeto de este
+     * caso es una regla de DOMINIO (`SlotOffer`, `AFORO-02`) y el componente solo era el conductor; con
+     * la retirada del sidebar Livewire, la superficie pública del flujo **es** `POST availability/{p}/times`,
+     * que es justo lo que pide el cajón SPA. Un test de dominio no debe morir porque muera una vista.
+     */
     public function test_public_purchase_flow_excludes_past_times_today(): void
     {
-        // End-to-end del flujo público real (Livewire `Purchase`, no solo el servicio): al elegir HOY
-        // a las 12:00, la franja de las 10:00 (ya pasada) NO aparece en las horas ofrecidas.
         Carbon::setTestNow(Carbon::parse('2026-09-14 12:00:00', 'Europe/Madrid'));
-        // El render del calendario público resuelve la tarifa del día (RateResolver) → necesita la base.
+        // La oferta pública resuelve la tarifa del día (RateResolver) → necesita la base.
         RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true]);
         $today = DisplayTime::today()->toDateString();
         $this->slot($today, '10:00:00');
         $this->slot($today, '15:00:00');
 
-        Livewire::test(Purchase::class)
-            ->call('selectType', $this->entry->id)
-            ->call('selectDate', $today)
-            ->assertViewHas('times', fn (array $times): bool => ! in_array('10:00:00', $times, true)
-                && in_array('15:00:00', $times, true));
+        $times = $this->postJson(
+            "/api/v1/availability/{$this->entry->id}/times",
+            ['date' => $today, 'items' => []],
+            ['Origin' => config('app.url')]
+        )->assertOk()->json('data.*.time');
+
+        $this->assertNotContains('10:00:00', $times, 'la franja ya pasada no se puede ofrecer');
+        $this->assertContains('15:00:00', $times, 'y la que queda por delante sí');
     }
 
     public function test_panel_calendar_blocks_lead_time_window_via_min_date(): void

@@ -986,10 +986,21 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         ~160 casos, en tres familias —los que mueren con él, los que deben re-apuntarse al servidor y las
         nueve paridades—. La retirada NO es borrar un fichero; eso es 4.7·2.
       · Suite **2715 verde**.
-- [ ] **Paso 4.7·2 — retirar el componente y el puente** (pendiente): `Purchase.php`, `purchase.blade.php`
-      y el puente `$wire.step`↔store, con la reclasificación de los 26 ficheros de test.
-      ⚠️ **Antes**: dejar el flag en `spa` en uso real unos días. Lo verificado hoy es que el motor vende,
-      no que lo haga con clientes, navegadores y móviles distintos.
+- [x] **Paso 4.7·2a — el inventario de la retirada deja de crecer** (2026-08-15, `DECISIONES #61`).
+      Sin borrar nada del motor que hoy vende: ataca el riesgo de un desmontaje largo, que es que alguien
+      siga construyendo encima.
+      · Nace `PurchaseRetirementTest`: la lista de dependientes **solo puede encoger**, y vigila las dos
+        direcciones (ni tests nuevos conduciendo por el componente, ni entradas que ya no dependan).
+        Verificado por mutación ×2. ⚠️ Se excluye a sí misma del escaneo: declara el patrón.
+      · **Primer fichero fuera**: `SlotOfferTest` conducía por el componente para probar una regla de
+        DOMINIO; se re-apunta a `POST availability/{p}/times`, que es el flujo público que sobrevive.
+      · **Y una clasificación resuelta midiendo**: los dos casos de `AddonDependencyTest` mueren sin
+        pérdida — `CatalogAddonsTest` ya cubre la poda **mejor** (la cadena entera). Escrito, no ejecutado.
+      · Suite **2718 verde** · dependientes: **25** (eran 26).
+- [ ] **Paso 4.7·2b — retirar el componente y el puente** (pendiente): `Purchase.php`,
+      `purchase.blade.php` y el puente `$wire.step`↔store, con la reclasificación de los 25 dependientes.
+      ⚠️ **Antes**: dejar el flag en `spa` en uso real unos días. Lo verificado es que el motor vende, no
+      que lo haga con clientes, navegadores y móviles distintos.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
