@@ -99,7 +99,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTreeForStep(1);
         $vue = $this->vueTree(1, $this->catalogProps());
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del catálogo DIFIERE entre los dos motores.\n".
             'El contrato visual es el árbol (§4.2): 90 de 292 selectores del cajón son estructurales '.
@@ -126,7 +126,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del calendario DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -161,7 +161,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El día elegido NO se marca igual en los dos motores.\n".
             '⚠️ `aria-current` es lo único que le dice a un lector de pantalla cuál está seleccionado: '.
@@ -205,7 +205,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(3, $this->timeProps($component), 'wiz__title', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del paso de hora DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -243,7 +243,7 @@ class SidebarDomContractTest extends TestCase
             $livewire = $this->livewireTree($component, 'qtybox');
             $vue = $this->vueTree(3, $this->timeProps($component), 'qtybox');
 
-            $this->assertSame(
+            $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
                 "Con cantidad {$quantity} (mínimo {$min}, máximo {$max}) el selector NO se acota igual.\n".
                 '⚠️ En un pack `available` y `max_quantity` no son el mismo número, y construir el '.
@@ -268,7 +268,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del carrito DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -288,7 +288,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del carrito VACÍO DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -323,7 +323,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'cart__item');
         $vue = $this->vueTree(4, $this->cartProps($component), 'cart__item');
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "La línea SIN fecha DIFIERE entre los dos motores.\n".
             'El contenedor `.cart__lines` se emite siempre, aunque quede vacío: el condicional del '.
@@ -356,7 +356,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(5, $this->identifyProps(), 'bk-back', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la identificación DIFIERE entre los dos motores.\n".
             'Este paso no tiene banda de progreso, así que su «Volver» es propio; y el formulario que '.
@@ -402,7 +402,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(5, $this->identifyProps('register'), 'bk-back', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del ALTA DIFIERE entre los dos motores.\n".
             'Ojo al honeypot (`.hp`), a la fila de email+teléfono y al `<small>` del hint: no se ven, '.
@@ -432,7 +432,7 @@ class SidebarDomContractTest extends TestCase
             'auth__errors'
         );
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El banner de errores del alta DIFIERE entre los dos motores.\n".
             "Es `<strong>` + `<ul>` con un `<li>` por aviso.\n\n".$this->firstDivergence($livewire, $vue)
@@ -450,7 +450,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(7, ['messages' => __('tickets')], 'purchase__confirm', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de «revisa tu correo» DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -530,7 +530,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(8, $this->payProps($component), 'bk-back', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la pantalla de PAGO DIFIERE entre los dos motores.\n".
             'Se parece al carrito, pero no es el carrito: `cart--summary`, sin botón de quitar y con el '.
@@ -561,7 +561,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-paybreakdown', withSiblings: true);
         $vue = $this->vueTree(8, $this->payProps($component), 'bk-paybreakdown', withSiblings: true, shell: $this->shellProps($component));
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "La banda de desglose del pago DIFIERE entre los dos motores.\n".
             "Va FUERA del scroll y pegada encima del pie: de ese orden depende su borde.\n\n".
@@ -590,7 +590,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__redirecting', withSiblings: true);
         $vue = $this->vueTree(9, ['form' => $this->gatewayFormProps($component), 'messages' => __('tickets')], 'purchase__redirecting', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la redirección DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -660,7 +660,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la RESERVA CREADA difiere entre los dos motores.\n".
             "Es el más largo del cajón y casi todo en él es condicional.\n\n".$this->firstDivergence($livewire, $vue)
@@ -687,7 +687,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la reserva creada de un pedido PENDIENTE difiere entre los dos motores.\n\n".
             $this->firstDivergence($livewire, $vue)
@@ -719,7 +719,7 @@ class SidebarDomContractTest extends TestCase
             'locale' => app()->getLocale(),
         ], 'purchase__confirm', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de la reserva creada SIN resumen difiere entre los dos motores.\n".
             "Es lo que ve quien perdió la sesión entre la pasarela y la vuelta.\n\n".
@@ -825,7 +825,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol del PAGO DENEGADO difiere entre los dos motores.\n".
             "El pedido sigue vivo aquí: esta pantalla es la segunda oportunidad, no un error.\n\n".
@@ -853,7 +853,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
 
-        $this->assertSame($livewire, $vue, $this->firstDivergence($livewire, $vue));
+        $this->assertTree(__FUNCTION__, $livewire, $vue, $this->firstDivergence($livewire, $vue));
     }
 
     /**
@@ -873,7 +873,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'purchase__verifying', withSiblings: true);
         $vue = $this->vueTree(11, $this->verifyingProps($component), 'purchase__verifying', withSiblings: true);
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El árbol de «verificando el pago» difiere entre los dos motores.\n\n".
             $this->firstDivergence($livewire, $vue)
@@ -997,7 +997,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
         $vue = $this->vueTree(2, $this->dateProps($component), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El cajón EN PAUSA DIFIERE entre los dos motores.\n".
             'El aviso no solo sustituye el contenido: apaga también la banda de progreso, el pie y la '.
@@ -1067,7 +1067,7 @@ class SidebarDomContractTest extends TestCase
             $livewire = $this->livewireTree($component, 'bk-foot');
             $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component));
 
-            $this->assertSame(
+            $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
                 "El pie del estado «{$label}» DIFIERE entre los dos motores.\n".
                 "Son tres árboles distintos: la barra-carrito, la barra sin desglose y la barra con él.\n\n".
@@ -1170,7 +1170,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
         $vue = $this->vueTree(1, $this->catalogProps(), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "El ARMAZÓN del cajón DIFIERE entre los dos motores.\n".
             'Son el velo de carga, la banda de progreso y la zona scrollable: los nodos que sostienen '.
@@ -1252,7 +1252,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-progress');
         $vue = $this->vueTree(2, $this->dateProps($component), 'bk-progress', shell: $this->shellProps($component));
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "La banda de progreso DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -1278,7 +1278,7 @@ class SidebarDomContractTest extends TestCase
         $livewire = $this->livewireTree($component, 'bk-progress');
         $vue = $this->vueTree(3, $this->timeProps($component), 'bk-progress', shell: $this->shellProps($component));
 
-        $this->assertSame(
+        $this->assertTree(__FUNCTION__,
             $livewire, $vue,
             "La banda de progreso del paso 3 DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
@@ -1307,6 +1307,40 @@ class SidebarDomContractTest extends TestCase
         $withVue = $this->normalise('<button type="button" class="catalog__item" data-v-7ba5bd90 data-search="x">a</button>');
 
         $this->assertSame($withLivewire, $withVue);
+    }
+
+    /**
+     * **El manifiesto no acumula fantasmas.**
+     *
+     * ⚠️ La foto congelada solo vale si sigue describiendo casos que existen: una entrada de un test
+     * borrado o renombrado se queda ahí para siempre, engordando el fichero y dando una falsa
+     * sensación de cobertura. Aquí se comprueba que cada clave apunta a un método REAL de esta clase.
+     *
+     * La dirección contraria —que todo caso esté en el manifiesto— la cubre `assertTree()` en el acto,
+     * con su `assertArrayHasKey`.
+     */
+    public function test_the_frozen_manifest_has_no_orphan_entries(): void
+    {
+        $methods = array_map(
+            fn (\ReflectionMethod $m): string => $m->getName(),
+            (new \ReflectionClass(self::class))->getMethods(\ReflectionMethod::IS_PUBLIC)
+        );
+
+        $orphans = [];
+
+        foreach (array_keys($this->manifest()) as $key) {
+            $method = explode('#', $key)[0];
+
+            if (! in_array($method, $methods, true)) {
+                $orphans[] = $key;
+            }
+        }
+
+        $this->assertSame(
+            [], $orphans,
+            "El manifiesto congelado tiene entradas de casos que ya no existen:\n  ".implode("\n  ", $orphans)."\n\n".
+            'Regenéralo con `MANIFEST_REFRESH=1` tras borrar el fichero, o quítalas a mano.'
+        );
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
@@ -1694,6 +1728,85 @@ class SidebarDomContractTest extends TestCase
     }
 
     /** El árbol del componente Livewire en un paso, ya normalizado. */
+    /**
+     * **El MANIFIESTO congelado** (Fase 4 · paso 4.7·1, `sidebar-spa.md` §4.2).
+     *
+     * ⚠️ **Toda la red de esta fase compara contra Livewire, y Livewire se va.** Cuando `Purchase.php`
+     * desaparezca, un diff «los dos motores emiten lo mismo» se queda sin uno de los dos y pasaría en
+     * verde para siempre. El manifiesto es la foto del árbol VERIFICADO, tomada mientras los dos
+     * motores conviven, para que el contrato visual sobreviva a la retirada.
+     *
+     * Mientras Livewire vive se comprueban las DOS cosas —motor contra motor, y motor contra
+     * manifiesto—, que es lo único que impide que la foto envejezca en silencio. Al retirarlo quedará
+     * solo la segunda, y habrá sido correcta el día que se tomó.
+     */
+    private const MANIFEST = 'tests/Fixtures/sidebar-dom-manifest.json';
+
+    /** Trazas capturadas en esta ejecución, por caso. Se usan para detectar entradas huérfanas. */
+    private array $seen = [];
+
+    /**
+     * Compara los dos motores y, además, contra el árbol congelado.
+     *
+     * `$case` es el nombre del método; con varios árboles en un mismo caso se numeran por orden de
+     * llamada, que dentro de un test es determinista.
+     *
+     * Para REGENERAR el manifiesto —tras un cambio de interfaz deliberado—:
+     * `MANIFEST_REFRESH=1 php artisan test --filter=SidebarDomContractTest`
+     */
+    private function assertTree(string $case, string $livewire, string $vue, string $message): void
+    {
+        $this->assertSame($livewire, $vue, $message);
+
+        $manifest = $this->manifest();
+        $key = $case.'#'.(count(array_filter(array_keys($this->seen), fn (string $k): bool => str_starts_with($k, $case.'#'))) + 1);
+        $this->seen[$key] = $livewire;
+
+        if (getenv('MANIFEST_REFRESH') === '1') {
+            $manifest[$key] = $livewire;
+            ksort($manifest);
+            file_put_contents(base_path(self::MANIFEST), json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
+
+            return;
+        }
+
+        $this->assertArrayHasKey(
+            $key, $manifest,
+            "El manifiesto congelado no cubre «{$key}».\n".
+            'Si el caso es nuevo, regenéralo: `MANIFEST_REFRESH=1 php artisan test --filter=SidebarDomContractTest`.'
+        );
+
+        $this->assertSame(
+            $manifest[$key], $livewire,
+            "El árbol de «{$key}» ha CAMBIADO respecto al manifiesto congelado.\n".
+            "⚠️ Eso es un cambio del CONTRATO VISUAL, no un detalle: 90 de los 292 selectores que\n".
+            "estilan el cajón son estructurales. Si el cambio es deliberado, regenera el manifiesto\n".
+            "(`MANIFEST_REFRESH=1`) y dilo en el commit; si no lo es, acabas de romper el estilo.\n\n".
+            $this->firstDivergence($manifest[$key], $livewire)
+        );
+    }
+
+    /** @return array<string, string> */
+    private function manifest(): array
+    {
+        $path = base_path(self::MANIFEST);
+
+        if (! is_file($path)) {
+            if (getenv('MANIFEST_REFRESH') === '1') {
+                @mkdir(dirname($path), 0775, true);
+
+                return [];
+            }
+
+            $this->fail(
+                'Falta el manifiesto congelado del cajón ('.self::MANIFEST.").\n".
+                'Genéralo con `MANIFEST_REFRESH=1 php artisan test --filter=SidebarDomContractTest`.'
+            );
+        }
+
+        return json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+    }
+
     private function livewireTreeForStep(int $step): string
     {
         $html = Livewire::test(Purchase::class)->set('step', $step)->html();

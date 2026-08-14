@@ -26,7 +26,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2714 en verde** (15.482 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.543 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -314,10 +314,19 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      dueño único con guarda ejecutable, y los `role`/`aria-*` los compara el diff. ⚠️ **Lo único que
      sigue abierto es el foco al cambiar de paso, que NINGUNO de los dos motores hace** — hueco
      heredado, ficha en `DEUDA.md`.
-3. **4.7 — la retirada**: `Purchase.php`, el puente `$wire.step`↔store y el flag; y congelar el
-   manifiesto de DOM. El corte completo, en §4.10 del spec.
-   ⚠️ **El techo del bundle debería BAJAR aquí**: se va el motor Livewire, y con él los dos pasos que
-   hoy conviven.
+3. **4.7 — la retirada, PARTIDA EN TRES** (`DECISIONES #60`). **·1 el manifiesto congelado ✅**
+   (2026-08-14) · **·2 retirar el componente y el puente** · **·3 retirar el flag**.
+   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **26 ficheros de test ejecutan `Purchase`**, con ~160
+     casos, en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como
+     conductor de dominio y deben re-apuntarse a la API, y las nueve paridades, que o congelan o
+     comparan contra el contrato del servidor. Borrar el fichero sin reclasificarlos es pérdida neta
+     de cobertura.
+   · ✅ **El manifiesto ya está congelado** (30 entradas, 696 nodos): el contrato visual sobrevive a la
+     retirada. Se regenera con `MANIFEST_REFRESH=1` y hay que decirlo en el commit.
+   · ⚠️ **Condición antes de 4.7·2**: dejar el flag en `spa` en uso REAL unos días. Lo del e2e demuestra
+     que el motor vende; no que lo haga con clientes, navegadores y móviles distintos.
+   · ⚠️ **El techo del bundle debería BAJAR aquí**: se va el motor Livewire, y con él los dos pasos que
+     hoy conviven.
 4. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
@@ -676,6 +685,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2714** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

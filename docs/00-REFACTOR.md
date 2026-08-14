@@ -972,6 +972,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · **El andamio (Playwright) es desechable y NO entra en el repo ni en el gate**; la receta y las
         ocho trampas de la pasarela quedan en `VERIFICACION-E2E-CAJON.md` §5.bis.
       · Suite **2714 verde** · 247 tests JS.
+- [x] **Paso 4.7·1 — el manifiesto de DOM, congelado** (2026-08-14, `DECISIONES #60`). No retira nada:
+      pone la red que tiene que existir ANTES de retirar, y mide el paso.
+      · ⚠️ **Toda la red de la fase compara contra Livewire, y Livewire se va**: al borrarlo, catorce
+        paridades y el diff de árbol se quedan sin uno de los dos motores y **pasarían en verde para
+        siempre**. La foto solo se puede tomar mientras conviven.
+      · **Mientras convivan se comprueban las DOS cosas** (motor↔motor y motor↔manifiesto), que es lo
+        único que impide que envejezca en silencio. Verificado por mutación con el caso que importa: el
+        mismo cambio en los DOS motores —invisible para el diff entre ellos— lo caza el manifiesto.
+      · 30 entradas · 696 nodos · `tests/Fixtures/sidebar-dom-manifest.json`. Se regenera a propósito
+        (`MANIFEST_REFRESH=1`) y hay guarda contra entradas huérfanas.
+      · ⚠️ **Y el dato que cambia la planificación**: **26 ficheros de test ejecutan el componente**, con
+        ~160 casos, en tres familias —los que mueren con él, los que deben re-apuntarse al servidor y las
+        nueve paridades—. La retirada NO es borrar un fichero; eso es 4.7·2.
+      · Suite **2715 verde**.
+- [ ] **Paso 4.7·2 — retirar el componente y el puente** (pendiente): `Purchase.php`, `purchase.blade.php`
+      y el puente `$wire.step`↔store, con la reclasificación de los 26 ficheros de test.
+      ⚠️ **Antes**: dejar el flag en `spa` en uso real unos días. Lo verificado hoy es que el motor vende,
+      no que lo haga con clientes, navegadores y móviles distintos.
+- [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

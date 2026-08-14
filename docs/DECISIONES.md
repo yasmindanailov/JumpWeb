@@ -2436,3 +2436,42 @@ habilita si se rellena el **titular** (con la tarjeta perfecta sigue `disabled`)
 formulario de tarjeta—, así que el KO se provoca cancelando; y cada recorrido abortado deja un pedido
 pendiente, de modo que a los cinco el **tope de pendientes** deniega el checkout y parece un fallo del
 andamio cuando es la app haciendo lo correcto.
+
+## #60 · 2026-08-14 · 4.7·1 — el manifiesto congelado, y lo que de verdad cuesta la retirada
+Fase 4 · paso 4.7, primer tramo. **No retira nada**: pone la red que tiene que existir ANTES de retirar,
+y mide el tamaño real del paso. El corte es por dependencia, como toda la fase.
+
+**(a) ⚠️ El problema que resuelve, dicho sin rodeos: toda la red de la fase compara contra Livewire, y
+Livewire se va.** Catorce ficheros de paridad, más el diff de árbol, dicen «los dos motores emiten lo
+mismo». Al borrar `Purchase.php` se quedan sin uno de los dos y **pasarían en verde para siempre**. Un
+manifiesto congelado —la foto del árbol VERIFICADO, tomada mientras conviven— es lo que hace que el
+contrato visual sobreviva a la retirada. Y solo se puede tomar ahora.
+
+**(b) Mientras los dos motores vivan se comprueban las DOS cosas**: motor contra motor y motor contra
+manifiesto. Es lo único que impide que la foto envejezca en silencio; al retirar Livewire quedará solo la
+segunda, y habrá sido correcta el día que se tomó. Verificado por mutación con **el caso que importa**:
+el mismo cambio aplicado a los DOS motores —invisible para el diff entre ellos, que es exactamente el
+escenario de después— lo caza el manifiesto.
+
+**(c) La foto son 30 entradas y 696 nodos** (`tests/Fixtures/sidebar-dom-manifest.json`, 26 kB), y se
+regenera a propósito: `MANIFEST_REFRESH=1 php artisan test --filter=SidebarDomContractTest`. Un cambio de
+interfaz deliberado obliga a regenerarla **y a decirlo en el commit**; uno accidental sale en rojo.
+Hay guarda contra entradas HUÉRFANAS —claves de casos borrados o renombrados—, también por mutación:
+sin ella el fichero engorda dando una falsa sensación de cobertura.
+
+**(d) ⚠️ Y el dato que cambia la planificación: la retirada NO es «borrar un fichero».** Medido:
+**26 ficheros de test ejecutan `Livewire::test(Purchase::class)`**, con ~160 casos. Se reparten en tres
+familias y cada una necesita una decisión distinta, que es lo que hará 4.7·2:
+· **Mueren con el componente** — los que prueban SU interfaz: `PurchasePanelTest` (39 casos),
+  `SidebarV2Test` (17), `PurchaseCatalogGroupingTest` (10)… ⚠️ Ojo: varios prueban CONDUCTA que hoy vive
+  en la SPA o en la API; borrarlos sin comprobar el equivalente es pérdida neta de cobertura.
+· **Se re-apuntan al servidor** — los que usan el componente como MERO conductor de dominio
+  (`SlotOfferTest`, `AvailabilityTest`, `QuoteTest`, `CartPricerTest`…): deben conducir por la API o por
+  el dominio, que es donde ya vive la regla.
+· **Las nueve PARIDADES** — o congelan (esta es la primera) o se re-apuntan al contrato del servidor
+  (`lang/`, OpenAPI), que es contra quien de verdad comparan los textos y los importes.
+
+**(e) Lo que NO entra aquí, y el orden importa**: retirar el componente y el puente es 4.7·2, y el flag
+4.7·3. ⚠️ **Y sigue en pie la condición**: antes de borrar `Purchase.php` conviene dejar el flag en `spa`
+en uso real unos días. Lo de hoy demuestra que el motor vende; no demuestra que lo haga con clientes
+distintos, navegadores distintos y móviles.
