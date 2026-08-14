@@ -15,7 +15,7 @@
 El corte está en `docs/specs/sidebar-spa.md` §4.10. Queda además **4.4b·2** (el widget de Turnstile),
 aplazado a propósito porque no se puede verificar sin claves de Cloudflare y navegador.
 ⚠️ **Los pasos se parten al implementarlos, y el criterio es siempre la DEPENDENCIA**, no la pantalla:
-4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`) 4.4b en dos (`#53`) y 4.5 en dos (`#54`, `#55`). En 4.3 el pie no se podía
+4.2 en tres, 4.3 en cuatro (`DECISIONES #47`–`#50`), 4.4a en dos (`#51`, `#52`), 4.4b en dos (`#53`) y 4.5 en dos (`#54`, `#55`). En 4.3 el pie no se podía
 separar de la cesta porque el CTA del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el
 diff compara; en 4.4a, de las cinco salidas de `checkout()` solo dos tienen pantalla transcrita, así
 que el tramo ·1 transcribe la DECISIÓN sin navegar.
@@ -236,11 +236,12 @@ propio cajón** (4.4a·2 y 4.4b·1), con los mismos textos, el mismo limitador y
 anti-bot que la web. Y desde 4.5 **paga**: la pantalla de pago con su banda de desglose, «Pagar con
 tarjeta» que crea la reserva firme —admitir, crear con su hold y abrir el cobro, en una sola petición—
 y el auto-POST firmado hacia Redsys. **El cajón SPA recorre el embudo entero.** Donde se para ahora es
-al VOLVER: los pasos 6, 10 y 11 son 4.6, así que quien pague vuelve a un cajón mudo — por eso **el flag
-no se despliega entre 4.5 y 4.6**. La
-cesta **sí sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO
-se activa en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar
-los dos en vivo (`CE-1`).
+al VOLVER: los pasos 6, 10 y 11 son 4.6, así que quien pague vuelve a un cajón mudo. La cesta **sí
+sobrevive a la recarga** desde 4.3·4, sin `event_data` y con su dueño dentro.
+⚠️ **El flag NO se activa en producción y NO se despliega entre 4.5 y 4.6**: su default es `livewire`
+y ese es el motor que vende. Antes era una precaución teórica; ahora **el cajón SPA sí puede cobrar**,
+así que activarlo con 4.6 sin hacer dejaría a quien pague mirando una pantalla muda. Sirve para
+comparar los dos motores en vivo (`CE-1`).
 
 ✅ **La precondición del paso de PAGO está CERRADA** (4.5·1, `DECISIONES #54`): una línea de PACK
 restaurada vuelve sin sus respuestas —y seguirá volviendo así, es `#38(d)`—, pero ahora **el carrito
@@ -456,6 +457,30 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
   · **Los doce motivos de rechazo se traducen desde el CÓDIGO**, no desde la clave —eso es lo que
     recibe un cliente de API—, y `SidebarPayParityTest` recorre el enum ENTERO del servidor: un motivo
     nuevo sin mapear lo nombra el test en vez de salir como aviso genérico en la pantalla de pagar.
+
+### El MAPA del cajón SPA (para no buscarlo a ciegas)
+
+`resources/js/sidebar/` — **la lógica vive en módulos PLANOS sin Vue** (`CE-6`), y los componentes solo
+pintan. Esa separación es lo que hace que todo lo de abajo se pruebe con `node --test` y se compare
+contra el servidor desde PHP ejecutándolo en Node.
+
+| Módulo | De qué responde | Su paridad |
+|---|---|---|
+| `machine.js` | En qué paso está el cajón y a cuál puede ir. Los `STEPS` son los de Livewire | `SidebarProgressParityTest` (el mapa de «modo») |
+| `api.js` | El cliente HTTP y sus cuatro trampas medidas (cookie, `Accept`, CSRF url-decodificado, reintento del 419) | — |
+| `i18n.js` · `money.js` | Textos por CAMINO con plural de Laravel · importes que espejan `number_format` | `SidebarTextParityTest` · `SidebarMoneyParityTest` |
+| `calendar.js` · `progress.js` | La rejilla del mes · la banda de fases y su contexto | `SidebarCalendarParityTest` · `SidebarProgressParityTest` |
+| `cart.js` | Cesta: saneado, persistencia con su dueño, reconciliación y **qué respuestas faltan** | `SidebarCartParityTest` · `SidebarPendingFieldsParityTest` |
+| `foot.js` | El pie de cada paso (CTA, importes, desglose) | `SidebarCartParityTest` |
+| `paused.js` | El aviso de reservas en pausa y en qué pasos tapa | `SidebarPausedParityTest` |
+| `admission.js` | El paso del carrito al pago: identidad + elegibilidad + destino | `SidebarAdmissionParityTest` |
+| `login.js` · `register.js` | Identificarse y darse de alta desde el cajón | `SidebarLoginParityTest` · `SidebarRegisterParityTest` |
+| `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `SidebarPayParityTest` |
+
+⚠️ **Y la regla que las tres últimas paridades enseñaron**: cuando algo NO es un atributo de contrato
+del normalizador —`href`, `action`, `method`, los `name` de un formulario, el texto— **el diff de árbol
+lo da por bueno**. Si transcribes algo de esa clase, necesita paridad propia; si no, pasará el gate en
+verde estando roto. Está demostrado por mutación en el paso 9.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
