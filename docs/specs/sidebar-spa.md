@@ -531,6 +531,15 @@ Setting `sidebar.engine` (`livewire` por defecto · `spa`), editable en el panel
 - **Accesibilidad**: `role="dialog"`, `aria-live`, `role="status"`/`alert`, `aria-current`,
   `aria-expanded`, `<fieldset>/<legend>` con radios reales, foco al cambiar de paso, y `no-scroll`
   del `<body>` con **un solo dueño** declarado.
+  ✅ **CERRADO el 2026-08-14** salvo un punto (`DECISIONES #58`): los `role`/`aria-*` y `aria-current`
+  los compara el diff de árbol —`aria-current` con un caso que ELIGE día, porque sin él el atributo no
+  se emite y la ampliación era inerte—; `aria-expanded` no puede compararse ahí (binding de Alpine
+  descartado como andamiaje vs. atributo renderizado por el SSR de Vue) y tiene caso propio, que además
+  destapó que el cajón SPA **no anunciaba** el estado del desglose de la señal; y `no-scroll` tiene ya
+  su dueño único (`resources/js/ui/scroll-lock.js` + `ScrollLockOwnerTest`), que retira SEIS escritores
+  y cierra un fallo alcanzable con dos clics.
+  ⚠️ **Lo que sigue abierto: el foco al cambiar de paso**, que **ninguno de los dos motores** hace. Es
+  un hueco heredado, no una regresión; ficha en `DEUDA.md`.
 - **Extremo a extremo real** con la pasarela en sandbox, en los dos motores, comparando el pedido en BD.
 - **Gates**: suite, Pint, `docs-check`, `npm run build` (**hay que añadirlo al hook: hoy no está**),
   `composer audit` y `npm audit` en 0.

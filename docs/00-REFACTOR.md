@@ -931,6 +931,26 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · Suite **2709 verde** · 232 tests JS · chunk del cajón 149,3 kB (145,9 KiB) de 150.
       · ⚠️ **El flag sigue sin desplegarse**, y ya no por falta de pantalla: falta el extremo a extremo
         con la pasarela en sandbox y navegador (§6) y el widget de Turnstile (4.4b·2).
+- [x] **§6 · accesibilidad — el bloqueo de scroll tiene UN SOLO DUEÑO** (2026-08-14, `DECISIONES #58`).
+      Cierra el último ítem del plan de verificación de la fase que seguía sin cumplirse. No era
+      pulcritud: eran **seis escritores** de `body.no-scroll` en tres ficheros, y el fallo se alcanza con
+      dos clics —cerrar el modal de auth abierto ENCIMA del cajón desbloqueaba el scroll con el panel
+      todavía delante—. Nace `resources/js/ui/scroll-lock.js` (cerrojo con llaves, store `scrollLock`) y
+      su guarda ejecutable `ScrollLockOwnerTest`.
+      · **La llave es por INSTANCIA**: «Mis pedidos» pinta un modal por pedido; con una compartida,
+        cerrar A soltaría el scroll con B delante.
+      · **El estado inicial también es del dueño**, y ahí había una asimetría: el modal de auth abierto
+        al cargar (`/registro`) no bloqueaba nada. De paso se retira el `x-init` del layout.
+      · ⚠️ **Ampliar el contrato de árbol no basta**: `aria-current` entró en la lista y por mutación se
+        vio que era INERTE —el caso del calendario no elige día—. Ahora hay un caso que sí.
+      · ⚠️ **`aria-expanded` NO puede ser atributo de contrato**, medido: binding de Alpine descartado
+        como andamiaje frente a atributo renderizado por el SSR de Vue. Tiene caso propio, y al hacerlo
+        apareció que el cajón SPA **no anunciaba** el estado del desglose de la señal. Arreglado.
+      · ⚠️ **Queda ABIERTO el foco al cambiar de paso**, que **ninguno de los dos motores** hace: hueco
+        heredado, no regresión. Ficha en `DEUDA.md`.
+      · **Red**: 9 casos de `node --test`, 3 de `ScrollLockOwnerTest` y 2 de árbol. **Verificado por
+        mutación ×6** y en vivo: en el bundle SERVIDO, `no-scroll` aparece **una sola vez**.
+      · Suite **2714 verde** · 241 tests JS · entry de la landing 16,24 KiB de 20.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

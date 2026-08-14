@@ -26,7 +26,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2709 en verde** (15.464 aserciones, `--parallel` ~69 s) · **232 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2714 en verde** (15.482 aserciones, `--parallel` ~70 s) · **241 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -300,8 +300,10 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
    · **El guion ya está escrito** en §6: los once pasos y sus caminos raros —pausa, tope de pendientes,
      frecuencia, agotado, vuelta *data-less*, carrera notificación-antes-que-navegador, pedido caducado
      durante el sondeo, `NOT_RETRYABLE`, sesión perdida entre pasos, cesta cruzada—.
-   · ⚠️ **Y hay un accesorio declarado y sin comprobar**: la accesibilidad (§6) —foco al cambiar de
-     paso, `no-scroll` del `<body>` con un solo dueño— que tampoco tiene red automática.
+   · ✅ **La accesibilidad de §6 ya está cerrada salvo un punto** (`DECISIONES #58`): `no-scroll` tiene
+     dueño único con guarda ejecutable, y los `role`/`aria-*` los compara el diff. ⚠️ **Lo único que
+     sigue abierto es el foco al cambiar de paso, que NINGUNO de los dos motores hace** — hueco
+     heredado, ficha en `DEUDA.md`.
 3. **4.7 — la retirada**: `Purchase.php`, el puente `$wire.step`↔store y el flag; y congelar el
    manifiesto de DOM. El corte completo, en §4.10 del spec.
    ⚠️ **El techo del bundle debería BAJAR aquí**: se va el motor Livewire, y con él los dos pasos que
@@ -447,6 +449,19 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
     en `fields.email` los mismos que pinta el Blade; en el login tiene un `message` propio que no
     coincide con `auth.failed`. Las dos conductas son correctas y las dos tienen su caso.
 
+- **§6 · el bloqueo de scroll tiene un solo dueño** (2026-08-14, `DECISIONES #58`). Cierra el último
+  ítem del plan de verificación de la fase. Tres cosas que condicionan lo que viene:
+  · ⚠️ **Eran SEIS escritores de `body.no-scroll` y el fallo se alcanza con dos clics**: con el cajón
+    abierto, cerrar el modal de auth —al que se llega desde su propio bloque de cuenta— desbloqueaba el
+    scroll con el panel delante. Ahora hay cerrojo con llaves (`resources/js/ui/scroll-lock.js`) y
+    guarda ejecutable. **Nadie más puede tocar esa clase.**
+  · ⚠️ **Ampliar el contrato de árbol NO basta**: `aria-current` entró en la lista de atributos y por
+    mutación resultó INERTE —el caso del calendario no elegía día, así que ningún motor lo emitía—. Un
+    atributo solo lo cubre el caso que lo hace aparecer.
+  · ⚠️ **`aria-expanded` no puede compararse en el diff** (binding de Alpine descartado como andamiaje
+    vs. atributo renderizado por el SSR de Vue), y al darle caso propio apareció que el cajón SPA **no
+    anunciaba** si el desglose de la señal estaba abierto. Arreglado.
+
 - **4.6·2 — los otros dos desenlaces: denegado y verificando** (2026-08-14, `DECISIONES #57`). Cinco
   cosas que condicionan lo que viene:
   · ⚠️ **LA MÁQUINA DE ESTADOS LLEVABA DESDE 4.1 CON UNA TRANSICIÓN INVENTADA.**
@@ -527,6 +542,10 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `login.js` · `register.js` | Identificarse y darse de alta desde el cajón | `SidebarLoginParityTest` · `SidebarRegisterParityTest` |
 | `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `SidebarPayParityTest` |
 | `outcome.js` | La VUELTA entera: el resumen del paso 6, el motivo del rechazo del 10 con su reintento, y el sondeo del 11 | `SidebarOutcomeParityTest` |
+
+Fuera de `sidebar/` hay un módulo compartido que el cajón también usa: **`resources/js/ui/scroll-lock.js`**
+—el dueño ÚNICO de `body.no-scroll`, con llaves por superpuesto—. Lo vigila `ScrollLockOwnerTest`; nadie
+más puede tocar esa clase (`DECISIONES #58`).
 
 ⚠️ **Y la regla que las tres últimas paridades enseñaron**: cuando algo NO es un atributo de contrato
 del normalizador —`href`, `action`, `method`, los `name` de un formulario, el texto— **el diff de árbol
@@ -631,6 +650,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2709** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2714** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

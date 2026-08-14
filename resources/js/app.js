@@ -1,9 +1,21 @@
+import { installScrollLock } from './ui/scroll-lock.js';
+
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
 // dentro de `alpine:init` usando el Alpine global que expone Livewire.
 // Ver docs/DECISIONES.md #29 (la landing usaba Alpine standalone "aún").
 
 document.addEventListener('alpine:init', () => {
+    // ── EL BLOQUEO DE SCROLL, con UN SOLO DUEÑO (`sidebar-spa.md` §6) ──────────────────────────
+    // Cinco superpuestos tapan la página y hasta aquí cada uno escribía `body.no-scroll` por su
+    // cuenta. Con un booleano y varios escritores, el último en cerrar manda: con el cajón de compra
+    // abierto, cerrar el modal de auth —al que se llega desde el propio bloque de cuenta del cajón—
+    // desbloqueaba el scroll con el panel todavía delante. Ahora cada uno pide y suelta SU llave.
+    // La lógica y la manipulación de la clase viven en `ui/scroll-lock.js` —el dueño único, que
+    // `ScrollLockOwnerTest` vigila—; esto es solo el envoltorio que le da acceso a las plantillas.
+    const scrollLock = installScrollLock();
+    window.Alpine.store('scrollLock', scrollLock);
+
     // Almacén global del modal de autenticación (login/registro).
     // El valor inicial puede venir de la URL (p. ej. /registro) vía data-attr.
     window.Alpine.store('auth', {
@@ -18,13 +30,13 @@ document.addEventListener('alpine:init', () => {
             }
             this.modal = name;
             // T4.4 — bloquea el scroll del body mientras el modal está abierto (consistente
-            // con el sidebar de compra que ya lo hacía).
-            document.body.classList.add('no-scroll');
+            // con el sidebar de compra que ya lo hacía). Con su llave desde el dueño único.
+            scrollLock.lock('auth');
         },
         close() {
             const wasCompleted = this.completed;
             this.completed = false;
-            document.body.classList.remove('no-scroll');
+            scrollLock.unlock('auth');
             // Si hubo un registro completado (muestra el email del cliente), recargamos
             // para no dejar datos al siguiente cliente (tablet compartida).
             if (wasCompleted) {
@@ -158,7 +170,7 @@ document.addEventListener('alpine:init', () => {
         },
         open() {
             this.isOpen = true;
-            document.body.classList.add('no-scroll');
+            scrollLock.lock('sidecart');
             // ⚠️ Al abrir se RELEE el estado de las reservas: el motor SPA se monta una sola vez por
             // carga de página, así que sin esto la pausa solo entraría al recargar. En la primera
             // apertura el propio montaje ya la pide, y `refreshStatus` es un no-op sobre un motor que
@@ -176,7 +188,7 @@ document.addEventListener('alpine:init', () => {
             // OJO: `identifying` NO se resetea aquí (ver su declaración). Si se pusiera a false, al
             // reabrir el sidebar sin round-trip Livewire el x-effect no re-dispararía y el botón de
             // login quedaría desbloqueado en pleno paso de identificación.
-            document.body.classList.remove('no-scroll');
+            scrollLock.unlock('sidecart');
             // Si hubo login dentro del sidebar, recargamos la PÁGINA ACTUAL (no navegamos a otro
             // sitio) para que el nav refleje la sesión. Al cierre, no a mitad del flujo; el carrito
             // vive en sesión, así que no se pierde nada. Mismo patrón que el modal (#51).
@@ -365,6 +377,14 @@ document.addEventListener('alpine:init', () => {
     // foco automático al primer elemento interactivo cuando se abre el panel. Sin esto el
     // usuario de teclado/lector de pantalla puede tabular detrás del backdrop y perderse.
     // Implementación manual (~25 líneas) para no depender del plugin @alpinejs/focus.
+    // ⚠️ **El estado INICIAL también es del dueño único.** Dos superpuestos pueden venir ya abiertos
+    // del servidor —el cajón por `/entradas` o por un desenlace de pago pendiente, y el modal de auth
+    // por `/registro`— y hasta aquí solo el primero bloqueaba el scroll, con un `x-init` suelto en el
+    // layout; el modal de auth abierto al cargar dejaba la página moviéndose por detrás. Pedir la
+    // llave aquí arregla los dos casos a la vez y retira el `x-init`, que era el sexto escritor.
+    if (window.Alpine.store('purchase').isOpen) scrollLock.lock('sidecart');
+    if (window.Alpine.store('auth').modal) scrollLock.lock('auth');
+
     window.Alpine.data('a11yPanel', (openExpr) => ({
         _focusableSelector:
             'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
@@ -685,7 +705,7 @@ document.addEventListener('alpine:init', () => {
             // fondo y pasa el foco al panel; al cerrar lo restaura y devuelve el foco al botón ☰.
             // (Dispara solo en CAMBIOS → no pelea con el `no-scroll` que el sidecart pone al cargar.)
             this.$watch('mobileOpen', (open) => {
-                document.body.classList.toggle('no-scroll', open);
+                this.$store.scrollLock.set('nav', open);
                 if (open) {
                     this.$nextTick(() => this.$refs.mobPanel?.querySelector('a[href],button:not([disabled])')?.focus());
                 } else {
@@ -864,7 +884,7 @@ document.addEventListener('alpine:init', () => {
             this.positionOrigin();
             this.loaded = true; // carga las imágenes on-demand (perezosas hasta la 1ª apertura)
             this.$store.offers.open = true; // t=0: scrim entra + la caja se abre (tapa + confeti)
-            document.body.classList.add('no-scroll');
+            this.$store.scrollLock.lock('offers');
 
             if (this._reduced()) {
                 this.shown = true; // sin animación: modal directo
@@ -880,7 +900,7 @@ document.addEventListener('alpine:init', () => {
             this.shown = false;
             this.burst = false;
             this.$store.offers.open = false;
-            document.body.classList.remove('no-scroll');
+            this.$store.scrollLock.unlock('offers');
         },
 
         // Carrusel por índice con vuelta infinita (patrón `birthdayProcess`).

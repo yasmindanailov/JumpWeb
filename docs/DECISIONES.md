@@ -2325,3 +2325,54 @@ este número debería BAJAR: se va el motor Livewire.
 **(l) Lo que NO cierra**: el flag **sigue sin desplegarse**. Ya no es porque falte pantalla —están las
 once—, sino porque falta la verificación de punta a punta con la pasarela en sandbox y un navegador
 (§6 del spec) y el widget de Turnstile (4.4b·2).
+
+## #58 · 2026-08-14 · El bloqueo de scroll tiene un solo dueño, y lo que apareció al mirarlo
+Cierra el último ítem del plan de verificación de Fase 4 (§6 del spec) que seguía sin cumplirse: «`no-scroll`
+del `<body>` con **un solo dueño** declarado». No es pulcritud, y las tres cosas que aparecieron al
+medirlo tampoco.
+
+**(a) ⚠️ Eran SEIS escritores y el fallo se alcanza con dos clics.** `body.no-scroll` lo escribían por su
+cuenta el cajón de compra, el modal de auth, el cajón del nav móvil, el modal de ofertas, el modal de
+«gestionar reserva» de Mis pedidos y un `x-init` suelto del layout. Con un booleano y varios escritores,
+**el último en cerrar manda**: con el cajón de compra abierto, su bloque de cuenta ofrece «Iniciar
+sesión» y abre el modal de auth; al cerrarlo, su `remove()` desbloqueaba el scroll **con el panel
+todavía delante**. La SPA lo hace más probable, no menos: el cajón se queda montado.
+La salida es un cerrojo con LLAVES —`resources/js/ui/scroll-lock.js`, expuesto como store
+`scrollLock`—: cada superpuesto pide y suelta la suya y la clase está puesta mientras quede alguna.
+
+**(b) La llave es por INSTANCIA, no por tipo.** «Mis pedidos» pinta un modal por pedido, así que su
+llave lleva el id dentro: con una compartida, abrir A, abrir B y cerrar A soltaría el scroll con B
+delante — el mismo fallo dentro de una sola pantalla.
+
+**(c) El estado INICIAL también es del dueño, y ahí había una asimetría.** Dos superpuestos pueden venir
+ya abiertos del servidor —el cajón por `/entradas` o por un desenlace pendiente, y el modal de auth por
+`/registro`— y **solo el primero bloqueaba**, con el `x-init` del layout; el modal de auth abierto al
+cargar dejaba la página moviéndose por detrás. Pedir la llave al arrancar Alpine arregla los dos y retira
+el sexto escritor.
+
+**(d) La manipulación de la clase vive DENTRO del dueño** (`installScrollLock()`), no en `app.js`. Si el
+`apply` que toca el DOM se escribiera fuera —que es lo natural—, ese fichero volvería a ser un escritor
+y la guarda no podría distinguir el cableado legítimo del siguiente que se cuele. El núcleo sigue sin
+conocer el DOM, que es lo que lo hace probable con `node --test`. Medido sobre el bundle SERVIDO:
+`no-scroll` aparece **una sola vez**.
+
+**(e) ⚠️ Ampliar el contrato de árbol NO basta: hay que llevar el caso al estado que lo hace aparecer.**
+Al cerrar los apartados de accesibilidad de §6 se añadió `aria-current` a los atributos de contrato del
+diff, y por mutación se comprobó que **no servía de nada**: el caso del calendario no elige día, así que
+ningún motor emitía el atributo y borrarlo del componente pasaba en verde. Es la lección de la acotación
+del selector de cantidad (4.2) otra vez. Ahora hay un caso con día elegido.
+
+**(f) ⚠️ Y `aria-expanded` NO puede ser atributo de contrato, medido.** Los dos motores lo declaran, pero
+por caminos que el HTML servido no hace comparables: en Livewire es un binding de Alpine —que el
+normalizador descarta como andamiaje— y en Vue lo renderiza el SSR. Compararlo dejaba el pie en rojo por
+una diferencia que no existe en el navegador. Tiene caso propio, sobre el marcado de cada motor.
+
+**(g) Al mirarlo apareció una divergencia REAL de accesibilidad, y se arregló**: el botón del desglose de
+la señal del pie llevaba `:aria-expanded` en el Blade y **nada** en el cajón SPA, así que un lector de
+pantalla no decía si el desglose estaba desplegado. El diff no podía verlo por partida doble.
+
+**(h) Lo que queda ABIERTO y se anota, no se arregla**: §6 pide «foco al cambiar de paso» y **ninguno de
+los dos motores lo hace** —cero llamadas a `focus()` al mover de paso, en los dos—. El foco de PANEL sí
+está (`a11yPanel`: primer foco al abrir y trampa de Tab). Es un hueco heredado, no una regresión de la
+SPA, y por eso va a `DEUDA.md` en vez de a un paso: nombrarlo importa para que nadie lea §6 y crea que
+el motor nuevo lo perdió.

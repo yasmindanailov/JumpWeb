@@ -132,6 +132,43 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️ **El mismo calendario CON el día elegido, y el caso existe por un fallo de red medido.**
+     *
+     * `aria-current="date"` entró en la lista de atributos de contrato al cerrar el último ítem de
+     * accesibilidad de §6, y se comprobó por mutación que **no servía de nada**: el caso de arriba no
+     * elige día, así que ningún motor emite el atributo y borrarlo del componente pasaba en verde. Un
+     * atributo solo está cubierto por el caso que lo hace aparecer.
+     *
+     * Es la misma lección que la acotación del selector de cantidad en 4.2: hay que llevar el estado a
+     * donde el atributo existe.
+     */
+    public function test_the_selected_day_is_marked_the_same_in_both_engines(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $component = Livewire::test(Purchase::class)
+            ->call('selectType', $product->id)
+            ->call('selectDate', now()->addDay()->toDateString());
+
+        $this->assertNotNull($component->get('date'), 'el caso tiene que llegar con día elegido');
+        $this->assertStringContainsString(
+            'aria-current="date"', $component->html(),
+            'y el servidor tiene que marcarlo, o este caso no mira nada'
+        );
+
+        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El día elegido NO se marca igual en los dos motores.\n".
+            '⚠️ `aria-current` es lo único que le dice a un lector de pantalla cuál está seleccionado: '.
+            "la clase `is-selected` no se lee.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
     // ── El paso 3: hora, cantidad y complementos ──────────────────────────────────────────────
 
     /**
@@ -1072,6 +1109,41 @@ class SidebarDomContractTest extends TestCase
         }
     }
 
+    /**
+     * ⚠️ **Los dos motores anuncian si el desglose de la señal está abierto, y esto NO lo ve el diff.**
+     *
+     * Es el último apartado de accesibilidad de §6 que quedaba sin comprobar, y al medirlo apareció una
+     * divergencia real: el botón del popover del pie llevaba `:aria-expanded` en el Blade y **nada** en
+     * el cajón SPA, así que un lector de pantalla no decía si el desglose estaba desplegado. El diff de
+     * árbol no podía verlo por partida doble — el binding de Alpine se descarta como andamiaje y la
+     * ausencia en Vue no deja rastro.
+     *
+     * Se comprueba sobre el marcado de cada motor, en su propia forma: el atributo es de RUNTIME en los
+     * dos, así que lo que se exige es que ambos lo DECLAREN.
+     */
+    public function test_both_engines_announce_the_deposit_popover_state(): void
+    {
+        $component = $this->componentWithFullCart();
+        $footer = $component->viewData('footer');
+
+        $this->assertSame('popover', $footer['splitMode'] ?? null, 'el caso necesita el pie con ⓘ');
+
+        $this->assertStringContainsString(
+            ':aria-expanded', $component->html(),
+            'el Blade ha dejado de anunciar si el desglose está abierto'
+        );
+
+        $vue = $this->renderVue(4, $this->cartProps($component), $this->shellProps($component));
+
+        $this->assertStringContainsString(
+            'aria-expanded', $vue,
+            'El cajón SPA no anuncia si el desglose de la señal está abierto.
+'.
+            '⚠️ El diff de árbol NO puede verlo: en Livewire es un binding de Alpine —que el '.
+            'normalizador descarta— y aquí sería, simplemente, un atributo que falta.'
+        );
+    }
+
     // ── El ARMAZÓN: lo que no pertenece a ningún paso ─────────────────────────────────────────
 
     /**
@@ -1777,7 +1849,17 @@ class SidebarDomContractTest extends TestCase
      *
      * @var list<string>
      */
-    private const CONTRACT_ATTRIBUTES = ['role', 'type', 'disabled', 'aria-hidden', 'aria-label', 'aria-labelledby', 'aria-live'];
+    /**
+     * ⚠️ **`aria-current` entró aquí en el cierre de §6; `aria-expanded` NO puede entrar, y se midió.**
+     *
+     * Los dos motores marcan el estado de expansión del desglose de la señal, pero por caminos que el
+     * HTML SERVIDO no hace comparables: Livewire lo declara como binding de Alpine
+     * (`:aria-expanded="…"`), que este normalizador descarta junto al resto del andamiaje, y Vue lo
+     * RENDERIZA en el SSR (`aria-expanded="false"`). Compararlo dejaba el pie en rojo por una
+     * diferencia que no existe en el navegador. Que los dos lo declaren lo comprueba
+     * `test_both_engines_announce_the_deposit_popover_state`, sobre el marcado de cada uno.
+     */
+    private const CONTRACT_ATTRIBUTES = ['role', 'type', 'disabled', 'aria-hidden', 'aria-label', 'aria-labelledby', 'aria-live', 'aria-current'];
 
     /** @param list<string> $lines */
     private function describe(DOMNode $node, int $depth, array &$lines): void

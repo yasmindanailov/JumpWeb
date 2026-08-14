@@ -48,6 +48,7 @@ const open = ref(false);
                 <span class="bk-foot__total">
                     <span class="bk-foot__l">{{ footer.label }}<span v-if="footer.split && footer.splitMode === 'popover'" class="bk-foot__info" @keydown.escape="open = false">
                         <button type="button" class="bk-foot__info-btn" :aria-label="messages.deposit_info ?? ''"
+                                :aria-expanded="open ? 'true' : 'false'"
                                 @click="open = ! open">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
                         </button>

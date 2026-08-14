@@ -270,16 +270,20 @@
                              las clases `.modal*` ya validadas por el modal de auth.
                              Estado Alpine LOCAL por Order: cada modal es independiente. --}}
                         @if ($order->displayStatus() === \App\Domain\Booking\Models\Order::STATUS_PAID)
+                            {{-- ⚠️ La llave del bloqueo lleva el ID del PEDIDO, y eso no es cosmético: esta
+                                 página pinta un modal por pedido, así que con una llave compartida abrir
+                                 A, abrir B y cerrar A soltaría el scroll con B todavía delante. El dueño
+                                 único vive en `resources/js/ui/scroll-lock.js` (`sidebar-spa.md` §6). --}}
                             <div class="orders__manage" x-data="{
                                 open: false,
                                 show() {
                                     this.open = true;
-                                    document.body.classList.add('no-scroll');
+                                    $store.scrollLock.lock('order-manage:{{ $order->id }}');
                                     this.$nextTick(() => this.$refs.panel?.querySelector('a,button')?.focus());
                                 },
                                 hide() {
                                     this.open = false;
-                                    document.body.classList.remove('no-scroll');
+                                    $store.scrollLock.unlock('order-manage:{{ $order->id }}');
                                 }
                             }">
                                 <button type="button" class="btn btn--ghost orders__manage-btn" @click="show()">

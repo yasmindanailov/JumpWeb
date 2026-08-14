@@ -124,8 +124,10 @@
     @endguest
 
     {{-- Sidebar de compra de entradas (Fase 5.2): asistente paso a paso sobre la página actual. --}}
+    {{-- ⚠️ El bloqueo de scroll YA NO se pone aquí (`sidebar-spa.md` §6): lo pide el dueño único desde
+         `app.js` al arrancar Alpine, junto con el del modal de auth —que venía abierto sin bloquear
+         nada—. Un `x-init` suelto era el sexto escritor de `body.no-scroll`. --}}
     <div x-data="a11yPanel('$store.purchase.isOpen')" x-cloak class="sidecart" :class="$store.purchase.isOpen && 'is-open'"
-         x-init="$store.purchase.isOpen && document.body.classList.add('no-scroll')"
          @keydown.escape.window="$store.purchase.close()" @keydown="trap($event)">
         <div class="sidecart__backdrop" @click="$store.purchase.close()"></div>
         {{-- Sidebar v2: el «modo» del flujo (catalog/booking/cart/result) lo fija el componente de
