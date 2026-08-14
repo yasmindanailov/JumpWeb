@@ -18,7 +18,7 @@ cajón ofrece pagar mientras la web dice que no se puede».
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2647 en verde** (14973 aserciones, `--parallel` ~66 s) · **108 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2647 en verde** (14.974 aserciones, `--parallel` ~65 s) · **108 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -218,7 +218,8 @@ inaplicable; §7 dice cuáles.
 
 ### Por dónde SEGUIR, en este orden
 
-**Cimientos cerrados (4.0a–4.0c, 4.1) y los tres primeros pasos transcritos (4.2).**
+**Cimientos cerrados (4.0a–4.0c, 4.1), los tres primeros pasos transcritos (4.2) y el paso 4 entero
+con su pie, su aviso de pausa y su persistencia (4.3·1–·4).**
 
 ⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
 abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
