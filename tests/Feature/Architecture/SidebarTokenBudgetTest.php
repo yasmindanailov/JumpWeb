@@ -160,6 +160,43 @@ class SidebarTokenBudgetTest extends TestCase
     }
 
     /**
+     * **El hueco donde monta el motor SPA es un eslabón de la cadena flex del panel, y sin regla
+     * propia la parte** (Fase 4 · paso 4.3·1).
+     *
+     * Vue monta DENTRO de su contenedor, no lo reemplaza, así que `#sidecart-spa` queda entre
+     * `.sidecart__body` y `.purchase`. Lo que sostiene «el contenido scrollea y el pie queda anclado
+     * al fondo» es una cadena de HIJOS DIRECTOS —`.sidecart__body{display:flex;flex-direction:column}`
+     * → `.purchase{flex:1;min-height:0}` → `.purchase__scroll{flex:1;min-height:0;overflow-y:auto}`—,
+     * y un `display:block` en medio corta la altura: el scroll no recorta y el pie deja de estar
+     * pegado.
+     *
+     * ⚠️ **Ningún diff de árbol puede ver esto**: todos los casos de `SidebarDomContractTest` anclan
+     * DENTRO de `.purchase`, y el nodo intermedio ni siquiera existe en el motor Livewire. Hasta 4.3·1
+     * el fallo estaba latente porque el motor SPA no emitía todavía ni la zona scrollable ni el pie.
+     */
+    public function test_the_spa_mount_point_keeps_the_flex_chain_of_the_panel(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        preg_match('/#sidecart-spa\s*\{([^}]*)\}/', $css, $rule);
+
+        $this->assertNotEmpty(
+            $rule,
+            'Falta la regla de `#sidecart-spa` en `site.css`. Sin ella el hueco donde monta Vue es un '.
+            '`display:block` en medio de la cadena flex del panel: el cajón SPA deja de recortar el '.
+            'scroll y el pie deja de estar anclado al fondo.'
+        );
+
+        foreach (['display: flex', 'flex-direction: column', 'flex: 1', 'min-height: 0'] as $declaration) {
+            $this->assertStringContainsString(
+                $declaration, $rule[1],
+                "La regla de `#sidecart-spa` ha perdido «{$declaration}», que es una de las cuatro que ".
+                'reproducen lo que `.purchase` recibe de `.sidecart__body` en el motor Livewire.'
+            );
+        }
+    }
+
+    /**
      * **Un token de escala que no existe no falla: se descarta en silencio.** `font-size:
      * var(--fs-99)` con `--fs-99` sin definir no es un tamaño raro — es una declaración inválida
      * que el navegador tira, así que el texto sale al tamaño heredado y nadie se entera hasta que

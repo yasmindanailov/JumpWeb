@@ -1086,6 +1086,14 @@ body.no-scroll { overflow: hidden; }
 .sidecart__body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 @media (max-width: 480px) { .sidecart__panel { width: 100%; } }
 
+/* Motor SPA (Fase 4): Vue monta DENTRO de su hueco, no lo reemplaza, así que `#sidecart-spa` queda
+   como nodo intermedio entre `.sidecart__body` y `.purchase`. La cadena que sostiene «scroll que
+   recorta + pie anclado» es de HIJOS DIRECTOS, así que un `display:block` en medio la parte: la
+   altura no llega a `.purchase`, `.purchase__scroll` no clampa y el pie deja de estar pegado al
+   fondo. Con el motor Livewire este nodo no existe y esta regla no aplica a nadie.
+   ⚠️ El diff de árbol NO puede ver esto: todos sus casos anclan DENTRO de `.purchase`. */
+#sidecart-spa { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
 /* Asistente (wizard): solo se muestra el paso activo. Sidebar v2: columna flex que llena el
    cuerpo; el contenido scrollea en `.purchase__scroll` y el footer queda pinned debajo. */
 .purchase { display: flex; flex-direction: column; position: relative; flex: 1; min-height: 0; }

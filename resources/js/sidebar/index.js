@@ -28,7 +28,7 @@ let app = null;
  * Vue ni Pinia: la landing habla con el store de Alpine, y el store con esto.
  *
  * @param {HTMLElement} el  el hueco del layout donde vive el cajón
- * @param {{outcome?: string|null, messages?: object}} boot  lo que el servidor dejó en el montaje
+ * @param {{outcome?: string|null, messages?: object, ui?: object}} boot  lo que el servidor dejó en el montaje
  */
 export function mount(el, boot = {}) {
     if (app) return app._jumpweb;
@@ -36,7 +36,7 @@ export function mount(el, boot = {}) {
     const machine = createMachine();
     const pinia = createPinia();
 
-    app = createApp(Sidebar, { messages: boot.messages ?? {} });
+    app = createApp(Sidebar, { messages: boot.messages ?? {}, ui: boot.ui ?? {} });
     app.use(pinia);
 
     const store = usePurchaseStore(pinia);

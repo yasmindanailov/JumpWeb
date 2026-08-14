@@ -6,16 +6,22 @@
  * motor que no la emitiera pasaría un diff que empezara en el título del paso, y el cliente perdería
  * el «volver» y el contador de fases sin que nada avisara.
  *
- * **No calcula el progreso**: qué fase está activa, cómo se llama la tercera —«Extras» en una
- * entrada, «Datos» en un pack— y qué contexto se enseña lo decide el servidor. Aquí se pinta.
+ * **No calcula el progreso**: en qué fase está el cliente, cómo se llama la tercera —«Extras» en una
+ * entrada, «Datos» en un pack— y qué contexto se enseña lo compone `progress.js`, un módulo plano con
+ * su propia paridad contra el servidor. Aquí se pinta.
  */
-defineProps({
+import { t as translate, tp as translateWith } from '../i18n.js';
+
+const props = defineProps({
     /** `{active, total, steps: [{label, state}], context}`, tal cual lo compone el servidor. */
     progress: { type: Object, default: null },
     messages: { type: Object, default: () => ({}) },
 });
 
 defineEmits(['back']);
+
+const t = (key) => translate(props.messages, key);
+const tp = (key, params) => translateWith(props.messages, key, params);
 </script>
 
 <template>
@@ -23,9 +29,9 @@ defineEmits(['back']);
         <div class="bk-progress__top">
             <button type="button" class="bk-back" @click="$emit('back')">
                 <svg class="arrow-ico" viewBox="0 0 24 24" aria-hidden="true"></svg>
-                <span>{{ messages.back ?? '' }}</span>
+                <span>{{ t('back') }}</span>
             </button>
-            <span class="bk-step-count">{{ (messages.step_count ?? '').replace(':n', progress.active).replace(':total', progress.total) }}</span>
+            <span class="bk-step-count">{{ tp('step_count', { n: progress.active, total: progress.total }) }}</span>
         </div>
         <div class="bk-seg" aria-hidden="true">
             <span v-for="(segment, i) in progress.steps" :key="i" class="bk-seg__item" :class="'is-' + segment.state">
@@ -33,9 +39,10 @@ defineEmits(['back']);
                 <span class="bk-seg__label">{{ segment.label }}</span>
             </span>
         </div>
-        <!-- El contexto —producto · día · hora— lo COMPONE el servidor: se va llenando conforme el
-             cliente elige, y sus fechas salen del formateador de Carbon con el locale activo.
-             Recomponerlo aquí con `Intl` daría un texto distinto (§4.5). -->
+        <!-- El contexto —producto · día · hora— se va llenando conforme el cliente elige.
+             ⚠️ Su fecha es el ÚNICO texto del cajón que los dos motores no sacan de la misma fuente:
+             el servidor usa Carbon y el cliente `Intl` (§4.5). Medido: en inglés y en francés el
+             resultado es idéntico; en español difieren los puntos de abreviatura. Ver `progress.js`. -->
         <div v-if="progress.context" class="bk-context"><span class="jj-block" aria-hidden="true"></span><span>{{ progress.context }}</span></div>
     </div>
 </template>

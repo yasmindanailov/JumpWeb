@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
+import { t as translate, tp as translateWith } from '../i18n.js';
+import { money } from '../money.js';
 
 /**
  * Paso 1 — el CATÁLOGO (Fase 4 · paso 4.2).
@@ -32,7 +34,8 @@ const emit = defineEmits(['select']);
 
 const query = ref('');
 
-const t = (key) => props.messages[key] ?? '';
+const t = (key) => translate(props.messages, key);
+const tp = (key, params) => translateWith(props.messages, key, params);
 
 /** Mismo saneo que el filtro de Alpine que sustituye: minúsculas y sin extremos. */
 const normalised = computed(() => query.value.toString().toLowerCase().trim());
@@ -45,9 +48,6 @@ const matches = (item) => normalised.value === '' || (item.search ?? '').include
 const sectionMatches = (section) => (section.items ?? []).some((item) => matches(item));
 
 const anyMatch = computed(() => normalised.value === '' || props.sections.some((s) => sectionMatches(s)));
-
-/** Los importes llegan en céntimos y se pintan; no se suman ni se derivan (`PAY-12`). */
-const money = (cents) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 </script>
 
 <template>
@@ -104,7 +104,7 @@ const money = (cents) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
                             </span>
                             <span v-if="item.from !== null || item.deposit_label" class="catalog__pricecol">
                                 <span v-if="item.from !== null" class="catalog__price"><span class="price__from">{{ t('from') }}</span>{{ money(item.from) }}<span v-if="item.is_pack" class="catalog__per"> {{ item.period_label || t('per_child') }}</span></span>
-                                <span v-if="item.deposit_label" class="catalog__deposit">{{ t('deposit_catalog').replace(':amount', item.deposit_label) }}</span>
+                                <span v-if="item.deposit_label" class="catalog__deposit">{{ tp('deposit_catalog', { amount: item.deposit_label }) }}</span>
                             </span>
                             <span class="catalog__go" aria-hidden="true">
                                 <svg class="arrow-ico" viewBox="0 0 24 24" aria-hidden="true"></svg>

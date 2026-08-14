@@ -159,7 +159,11 @@
                          · `messages` — el grupo `tickets` del locale activo (§4.5). La SPA no tiene
                            canal de i18n propio: son 169 claves × 3 locales que hoy salen de `__()`
                            en servidor, y un endpoint para leerlas sería una petición más en el
-                           arranque para algo que ya está resuelto al pintar la página. --}}
+                           arranque para algo que ya está resuelto al pintar la página.
+                         · `ui` — el grupo `ui` (hoy, el rótulo del velo de carga). Va SEPARADO de
+                           `messages` y no fundido con él porque son dos grupos distintos de `lang/`:
+                           aplanarlos aquí crearía una tercera forma del diccionario que no existe en
+                           ningún otro sitio. Son 25 bytes. --}}
                     {{-- ⚠️ Aquí se CONSUME, no se mira, y es el matiz que el paso 4.0a dejó
                          anotado: el layout usa `peek()` porque el componente Livewire es `lazy` y
                          su `mount()` corre en una petición POSTERIOR. Con la SPA **el motor es este
@@ -171,6 +175,7 @@
                         'outcome' => $sidebarEntry->outcome,
                         'orderCode' => $sidebarEntry->orderCode,
                         'messages' => __('tickets'),
+                        'ui' => __('ui'),
                     ], JSON_UNESCAPED_UNICODE) }}"></div>
                 @else
                     <livewire:tickets.purchase lazy />

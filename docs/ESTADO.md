@@ -7,12 +7,16 @@
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
 
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
-`site.css`) · 4.1 ✅ (cimientos SPA) · **4.2 ✅ (pasos 1–3 transcritos con paridad demostrada)** →
-**toca 4.3, la cesta**. El corte completo está en `docs/specs/sidebar-spa.md` §4.10.
+`site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
+**4.3·1 ✅ (el armazón y los cimientos de texto)** → **toca 4.3·2, el pie**. El corte completo está en
+`docs/specs/sidebar-spa.md` §4.10.
+⚠️ **El paso 4.3 se partió en TRES al implementarlo** (`DECISIONES #47`), como se partió 4.2:
+**·1 el armazón · ·2 el pie (`.bk-foot`) · ·3 la cesta**. El tramo ·1 no transcribe ningún paso nuevo:
+cierra lo que 4.2 dejó abierto **sin que el gate pudiera verlo**.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2610 en verde** (14186 aserciones, `--parallel` ~63 s) · **15 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2622 en verde** (14773 aserciones, `--parallel` ~72 s) · **44 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -215,27 +219,81 @@ inaplicable; §7 dice cuáles.
 **Cimientos cerrados (4.0a–4.0c, 4.1) y los tres primeros pasos transcritos (4.2).**
 
 ⚠️ **HASTA DÓNDE LLEGA HOY EL MOTOR SPA, dicho sin optimismo**: con `sidebar.engine = spa` el cajón
-abre, pide catálogo, deja elegir producto → día → hora → cantidad → complementos… **y ahí se queda**.
-El paso 4 (cesta) todavía no existe, así que el flujo no se puede completar. **El flag NO se activa
-en producción**; su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en
-vivo, que es lo que `CE-1` pide.
+abre con su armazón (velo, banda de progreso con «Volver», zona scrollable), pide catálogo y deja
+elegir producto → día → hora → cantidad → complementos… **y ahí se queda**. **No hay pie**, así que
+no hay CTA para añadir a la cesta ni total que enseñar, y el paso del calendario a la hora
+**auto-avanza** donde Livewire exige pulsar «Continuar». **El flag NO se activa en producción**; su
+default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en vivo (`CE-1`).
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.3 — la cesta y el presupuesto** (`§4.10`). Lo que ya está resuelto y NO hay que rehacer: el
-   dinero sale de `POST orders/quote` (`CartPricing`), y si una línea entra en la cesta lo dice
-   `POST cart/validate-line` — con la fusión, el re-tope y los campos obligatorios ya decididos.
+1. **4.3·2 — el PIE** (`.bk-foot`). Es lo siguiente y es más que un nodo: es la navegación del embudo
+   («Continuar» del paso 2, «Añadir al carrito» del 3, «Ir a pagar» del 4). Lo medido antes de
+   empezar, para que no se descubra a mitad:
+   · **Son TRES árboles, no dos**: rama `cart` (la barra-carrito del paso 1, con UN solo hijo y sin
+     nota), rama `bar` SIN popover, y rama `bar` CON popover — donde `.bk-foot__info` cuelga **dentro**
+     de `<span class="bk-foot__l">`, no como hermano, y añade 6 nodos.
+   · ⚠️ **El popover va SIEMPRE en el árbol**: en Livewire lo tapan `x-show` + `x-cloak`. Con `v-if`
+     el árbol de Vue tiene 6 nodos menos y el diff cae por algo que no es contrato. `v-show` sí vale:
+     el normalizador descarta `style`.
+   · ⚠️ **El rótulo del desglose NO es el mismo en el paso 3 y en el 4**: `footer_pay_now_deposit`
+     («Pagas ahora (señal)») frente a `footer_pay_now` («Pagas ahora», neutro porque en cestas mixtas
+     no es solo señal, #225). Reutilizar el componente sin parametrizarlo pasa verde y cambia la copia.
+   · ⚠️ **El importe del paso 3 no se puede sumar en cliente** (`PAY-12`). Y hay un hueco de API que
+     SÍ merece existir, ya medido: `POST catalog/products/{id}/addons` construye un `CartQuote`
+     completo y **tira `totalCents`**; publicar `line.total_cents` son dos líneas, cero consultas
+     nuevas, cero PII y no toca el `CRITICAL_RE` del pre-push. El desglose ya viene resuelto
+     (`deposit_cents` + `gate_remainder_cents`): **prohibido componerlo restando**.
+   · El caso del gate ancla en `.bk-foot`; el armazón ya tiene su caso anclado en `.jj-loading` con
+     hermanos, que es el que cubre el ORDEN entre ellos.
+   · ❗ **Y el pie arrastra una pantalla ENTERA que el motor SPA no tiene: el aviso de reservas EN
+     PAUSA.** Verificado: `grep booking/status resources/js` no devuelve nada, así que la SPA no sabe
+     de la pausa. En el Blade la misma condición (`showPausedNotice()`) gobierna **la banda, la banda
+     de pago y el pie**, y además sustituye el contenido de `.purchase__scroll` entero por
+     `.purchase__maint` en los pasos 1, 2, 3, 4, 5 y 8. Con la pausa activa, hoy el cajón SPA seguiría
+     vendiendo mientras Livewire enseña el aviso con teléfono/WhatsApp. **No es fuga de dinero**
+     —`ReservationAdmissionPolicy` rechaza en servidor—, pero es una divergencia de motor que **ningún
+     test puede cazar**: ningún caso de `tests/Feature/Sidebar` siembra la pausa. El endpoint ya existe
+     desde 4.0b (`GET /booking/status`, y va aparte de `/config` porque es ESTADO y se relee). Quien
+     haga 4.3·2 lo cierra o lo declara por escrito con su fila en `DEUDA.md`; lo que no vale es dejarlo
+     sin mencionar, porque el pie no se puede dar por transcrito sin su guarda.
+2. **4.3·3 — la cesta y el presupuesto**. Lo que ya está resuelto y NO hay que rehacer: el dinero sale
+   de `POST orders/quote` (`CartPricing`), y si una línea entra lo dice `POST cart/validate-line` —con
+   la fusión, el re-tope y los campos obligatorios ya decididos—.
    ⚠️ **La cesta de la SPA vive en `localStorage` SIN `event_data`** (`DECISIONES #38(d)`, RGPD): al
    restaurarla, las líneas de pack piden esos campos otra vez. Es la única desviación consciente de
-   la paridad de toda la fase. Y la cesta persistida guarda el id de su titular y se purga al
-   cambiar de identidad — sin eso, la cesta de Alice sobrevive al login de Bob en la tablet.
+   la paridad de toda la fase. Seis cosas MEDIDAS antes de empezar, todas con evidencia:
+   · **El saneador del cliente debe espejar `CartPayload::lineRules()`, NO `Cart::sanitize()`.** Medido:
+     `Cart::sanitize()` conserva una línea con `date: ''` y `POST orders/quote` rechaza el cuerpo
+     **entero** con 422 en cuanto una línea no cumple el formato → cesta impintable y sin botón para
+     quitar la línea culpable, en un almacén que no caduca.
+   · **La poda no la decide el cliente**: el hueco en la secuencia de `index` que devuelve el quote **es**
+     la señal de que una línea cayó, y el contador sale de `lines.length` (fue el bug P8: «1 ítem a 0 €»).
+     Hay que BORRARLA de `localStorage`, no solo dejar de pintarla, o viaja al `POST /orders` y revienta
+     con «:product = —».
+   · ⚠️ **La purga por titular tiene CINCO casillas, y una no existe en el servidor**: (dueño=X,
+     ahora=anónimo) → PURGAR. En sesión ese caso no puede darse porque el logout invalida la sesión
+     entera; en `localStorage` la cesta de Alice le queda visible a un Bob anónimo. Y ojo: la regla del
+     servidor es `dueño != null && dueño != nuevo`, así que **una cesta de invitado SOBREVIVE al login**
+     (es el flujo principal, con test propio: `LoginTest::test_login_preserves_guest_cart_for_the_same_person`).
+   · ⚠️ **La identidad no la da el `data-boot`**: el login embebido NO recarga la página
+     (`Login::login()` con `embedded` hace `dispatch('logged-in')` y devuelve `null`), así que el
+     `userId` inyectado se queda viejo justo cuando cambia el titular.
+   · ⚠️ **Un pack restaurado sin `event_data` es IMPAGABLE**: `OrderCreator` lanza `event_required_line`
+     y el paso 4 no tiene edición de línea —el único control es «quitar»—, así que el aviso «vuelve
+     atrás y rellénalos» es literalmente imposible de obedecer. La cesta tiene que nacer sabiendo qué
+     líneas están incompletas.
+   · **El módulo NO puede tocar `localStorage` desde el global**: en el node del contenedor
+     `typeof localStorage === 'undefined'` (medido), y ahí corren `npm run test:js` y el renderizador
+     SSR del diff. El almacén se recibe por parámetro y cada acceso va en `try/catch`.
 
    **El método de trabajo, ya rodado**: añade el caso a `SidebarDomContractTest` ANTES de
    transcribir, y transcribe hasta que el diff calle.
-   ⚠️ **Y recuerda su límite**: el diff alimenta a Vue con datos del SERVIDOR, así que **no ve** lo
-   que el cliente recibe de la API con otros nombres ni lo que compone él. Para eso hacen falta
-   paridades de DATOS aparte — ya hay dos de ejemplo (`SidebarCalendarParityTest`,
-   `SidebarAddonsParityTest`).
+   ⚠️ **Y recuerda su límite**: el diff alimenta a Vue con datos del SERVIDOR **y descarta los nodos de
+   texto**, así que no ve ni lo que el cliente recibe con otros nombres, ni lo que compone él, ni un
+   importe mal formateado, ni un plural sin resolver. Para eso hacen falta paridades de DATOS aparte —
+   ya hay cinco de ejemplo (`SidebarCalendarParityTest`, `SidebarAddonsParityTest`,
+   `SidebarMoneyParityTest`, `SidebarTextParityTest`, `SidebarProgressParityTest`).
 2. **4.4 en adelante** — el corte completo, en §4.10 del spec. ⚠️ El paso **4.4b** (registro embebido
    + restauración de cesta) está declarado **el más peligroso de la fase**, y no el de pagar: es el
    único que cruza la frontera Livewire↔Vue en los dos sentidos y no tiene guardián en servidor.
@@ -243,6 +301,25 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
    `DEUDA.md`.
+
+- **4.3·1 — el armazón y los cimientos de texto** (2026-08-14, `DECISIONES #47`). No transcribe ningún
+  paso: cierra lo que 4.2 dejó abierto **sin que el gate pudiera verlo**. Cinco cosas que condicionan
+  todo lo que viene:
+  · ⚠️ **Los nueve casos del gate salían verdes con el motor SPA sin emitir NADA del armazón** —ni velo
+    de carga, ni banda, ni zona scrollable—, porque **todos anclan DENTRO** (`catalog-acc`,
+    `wiz__title`). Ahora hay un caso anclado en `.jj-loading` **con hermanos**: es la única forma de
+    comparar el ORDEN entre ellos, del que dependen selectores de adyacencia.
+  · ⚠️ **La banda de progreso estaba escrita, verde en el gate y no se pintaba**: `Sidebar.vue` le
+    pasaba `progress: null`. El cajón vivo iba sin «Volver». Es `#46(a)` otra vez.
+  · ⚠️ **`#sidecart-spa` no tenía ni una regla CSS** y partía la cadena flex del panel (Vue monta
+    DENTRO del hueco). Ningún diff de árbol puede verlo: lleva guarda propia en `SidebarTokenBudgetTest`.
+  · **El dinero y los textos tienen ahora módulo único con paridad**: `money.js` espeja `number_format`
+    —`toFixed` no agrupa e `Intl.NumberFormat('es-ES')` **no agrupa entre 1.000 y 9.999**, así que las
+    dos salidas obvias fallan— e `i18n.js` lee por CAMINO (cuatro claves del payload son subarrays y se
+    pintaban **vacías**), sustituye todos los marcadores y resuelve el plural de Laravel (en francés el
+    CERO es singular).
+  · **`modeOf(8)` decía `result` y el servidor dice `cart`**: la clase se pinta FUERA del cajón, así que
+    ningún árbol la alcanzaba. Se fija recorriendo el mapa entero, que es como apareció.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -342,6 +419,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2610** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2622** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -45,11 +45,17 @@ export const STEPS = {
  * con `identifying`. Un motor que no publique estas dos señales deja el panel en `is-catalog` para
  * siempre y los botones de invitado activos en plena identificación: **dos regresiones silenciosas**,
  * porque ninguna de las dos clases aparece en el marcado del cajón.
+ *
+ * ⚠️ **El paso de PAGO es modo `cart`, no `result`**, y aquí decía `result` hasta 4.3·1. Se midió
+ * contra `Purchase::stepModeMap()`, que es la fuente del otro motor: `8 => 'cart'`. El cajón SPA
+ * recolocaba el pie y el bloque de cuenta de otra forma que Livewire justo en la pantalla de pagar, y
+ * **ningún test de árbol podía verlo** porque la clase se pinta FUERA del cajón. La paridad de esta
+ * función la fija ahora `SidebarProgressParityTest`, recorriendo el mapa entero del servidor.
  */
 export function modeOf(step) {
     if (step === STEPS.CATALOG) return 'catalog';
     if (step === STEPS.DATE || step === STEPS.TIME) return 'booking';
-    if (step === STEPS.CART || step === STEPS.IDENTIFY) return 'cart';
+    if (step === STEPS.CART || step === STEPS.IDENTIFY || step === STEPS.PAY) return 'cart';
 
     return 'result';
 }

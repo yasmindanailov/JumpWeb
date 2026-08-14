@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from 'vue';
+import { t as translate, tp as translateWith } from '../i18n.js';
+import { money } from '../money.js';
 
 /**
  * Paso 3 — HORA, cantidad, datos del pack y COMPLEMENTOS (Fase 4 · paso 4.2).
@@ -49,12 +51,8 @@ const props = defineProps({
 
 defineEmits(['select-time', 'inc', 'dec', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon']);
 
-const t = (key) => props.messages[key] ?? '';
-
-/** Traduce con parámetros `:clave`, como hace `__()` en servidor. */
-const tp = (key, params) => Object.entries(params).reduce((text, [k, v]) => text.replace(':' + k, v), t(key));
-
-const money = (cents) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
+const t = (key) => translate(props.messages, key);
+const tp = (key, params) => translateWith(props.messages, key, params);
 
 /** `10:00:00` → `10:00`. El servidor guarda la hora canónica; el chip enseña la corta. */
 const shortTime = (time) => time.slice(0, 5);

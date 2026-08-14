@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import BookingProgress from './BookingProgress.vue';
+import { t as translate } from '../i18n.js';
+import { dayPrice } from '../money.js';
 
 /**
  * Paso 2 — el CALENDARIO (Fase 4 · paso 4.2).
@@ -15,10 +16,14 @@ import BookingProgress from './BookingProgress.vue';
  *
  * ⚠️ **El precio del día se pinta SIN decimales** (`0` posiciones), a diferencia del resto del
  * cajón. No es un descuido del original: en una rejilla de siete columnas los céntimos no caben.
+ * Su formato lo pone `money.js`, que espeja `number_format`: el `Math.round` que había aquí perdía el
+ * separador de millares desde 999,50 € (a cero decimales el redondeo cruza el millar antes que el
+ * importe), y el diff de árbol no lo veía por ser texto.
+ *
+ * ⚠️ **La banda de progreso ya no se emite aquí**: vive en `Shell.vue`, porque en el Blade está FUERA
+ * de la zona scrollable y es de los pasos 2 y 3, no solo del 2.
  */
 const props = defineProps({
-    /** La banda de progreso, que comparten los pasos 2 y 3. */
-    progress: { type: Object, default: null },
     /** Semanas del mes, tal y como las compone el servidor: `[[celda, …], …]`. */
     weeks: { type: Array, default: () => [] },
     weekdayHeaders: { type: Array, default: () => [] },
@@ -29,15 +34,12 @@ const props = defineProps({
     messages: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['select', 'prev-month', 'next-month', 'back']);
+defineEmits(['select', 'prev-month', 'next-month']);
 
-const t = (key) => props.messages[key] ?? '';
+const t = (key) => translate(props.messages, key);
 
 /** ¿Hay al menos un día reservable en el mes que se está viendo? */
 const hasSelectable = computed(() => props.weeks.flat().some((cell) => cell.selectable));
-
-/** Sin decimales: la rejilla no da para céntimos. Mismo formato que el Blade que sustituye. */
-const dayPrice = (cents) => Math.round(cents / 100) + '€';
 
 /**
  * Las clases de una celda reservable. Se componen aquí y no en la plantilla porque son cuatro
@@ -52,8 +54,6 @@ const dayClasses = (cell) => [
 </script>
 
 <template>
-    <BookingProgress :progress="progress" :messages="messages" @back="$emit('back')" />
-
     <h3 class="wiz__title">{{ t('step_date') }}</h3>
 
     <div class="cal">

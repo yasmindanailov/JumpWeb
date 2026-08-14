@@ -22,6 +22,10 @@ describe('modo publicado hacia fuera', () => {
         assert.equal(modeOf(STEPS.TIME), 'booking');
         assert.equal(modeOf(STEPS.CART), 'cart');
         assert.equal(modeOf(STEPS.IDENTIFY), 'cart');
+        // ⚠️ El paso de PAGO es modo `cart`. Decía `result` hasta 4.3·1 y se descubrió MIDIENDO
+        // contra `Purchase::stepModeMap()` (`8 => 'cart'`), no leyendo: la clase `is-{modo}` se
+        // pinta fuera del cajón, así que ningún diff de árbol podía delatarlo.
+        assert.equal(modeOf(STEPS.PAY), 'cart');
         assert.equal(modeOf(STEPS.CONFIRMED), 'result');
         assert.equal(modeOf(STEPS.DECLINED), 'result');
         assert.equal(modeOf(STEPS.VERIFYING), 'result');

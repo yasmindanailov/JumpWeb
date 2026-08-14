@@ -4,6 +4,8 @@ import { usePurchaseStore } from './store.js';
 import { STEPS } from './machine.js';
 import { api } from './api.js';
 import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
+import { buildProgress } from './progress.js';
+import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
 import TimeStep from './steps/TimeStep.vue';
@@ -22,12 +24,34 @@ import TimeStep from './steps/TimeStep.vue';
 const props = defineProps({
     /** El grupo `tickets` del locale activo, inyectado por el servidor en el montaje (§4.5). */
     messages: { type: Object, default: () => ({}) },
+
+    /** El grupo `ui` (hoy, solo el rótulo del velo de carga). Va aparte: son dos grupos de `lang/`. */
+    ui: { type: Object, default: () => ({}) },
 });
 
 const store = usePurchaseStore();
 
 const sections = ref([]);
 const searchEnabled = ref(false);
+
+/**
+ * Peticiones en vuelo. Es lo que enciende el velo de carga del armazón, y es un CONTADOR y no un
+ * booleano a propósito: el cajón lanza pares de peticiones en paralelo (días + ficha del producto), y
+ * con un booleano la primera en volver apagaría el velo mientras la otra sigue.
+ */
+const inFlight = ref(0);
+const busy = computed(() => inFlight.value > 0);
+
+/** Envuelve una llamada para que cuente en el velo. No cambia el resultado ni traga errores. */
+async function tracked(promise) {
+    inFlight.value++;
+
+    try {
+        return await promise;
+    } finally {
+        inFlight.value--;
+    }
+}
 
 /** Lo que el paso 2 necesita. Llega de la API; ninguna regla de oferta se decide aquí (`AFORO-02`). */
 const selectedProductId = ref(null);
@@ -77,10 +101,10 @@ watch(
  * añadiría una petición por visita en la ruta de más tráfico del sitio.
  */
 onMounted(async () => {
-    const [catalog, config] = await Promise.all([
+    const [catalog, config] = await tracked(Promise.all([
         api.get('/catalog/products'),
         api.get('/config'),
-    ]);
+    ]));
 
     if (catalog.ok) sections.value = groupIntoSections(catalog.data?.data ?? []);
 
@@ -134,6 +158,10 @@ function toItem(product) {
  */
 async function selectProduct(id) {
     selectedProductId.value = id;
+    // El nombre y el tipo salen del CATÁLOGO, que ya está en memoria, y no de la ficha que se está
+    // pidiendo: la banda de progreso los enseña de inmediato al entrar en el calendario, y esperar a
+    // la ficha dejaría el contexto en blanco durante el viaje.
+    selectedProduct.value = sections.value.flatMap((s) => s.items).find((item) => item.id === id) ?? null;
     // La FICHA trae lo que el paso 3 necesita y el listado no lleva: el mínimo contratable y el
     // esquema de campos del evento, ya resueltos al idioma. Se pide junto a los días, no después,
     // porque los dos hacen falta antes de que el cliente pueda elegir nada.
@@ -145,10 +173,10 @@ async function selectProduct(id) {
     addonQuantities.value = [];
     store.go(STEPS.DATE);
 
-    const [dates, detail] = await Promise.all([
+    const [dates, detail] = await tracked(Promise.all([
         api.get(`/availability/${id}/dates`),
         api.get(`/catalog/products/${id}`),
-    ]);
+    ]));
 
     offeredDates.value = dates.ok ? (dates.data?.data ?? []) : [];
     if (detail.ok) product.value = detail.data;
@@ -160,6 +188,8 @@ async function selectProduct(id) {
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
 const offeredTimes = ref([]);
 const selectedTime = ref(null);
+/** La fila del CATÁLOGO del producto elegido (nombre y tipo), disponible sin esperar a la ficha. */
+const selectedProduct = ref(null);
 const quantity = ref(0);
 const product = ref(null);
 const addons = ref({ groups: [], singles: [] });
@@ -187,10 +217,10 @@ async function selectDate(date) {
     selectedTime.value = null;
     store.go(STEPS.TIME);
 
-    const response = await api.post(`/availability/${selectedProductId.value}/times`, {
+    const response = await tracked(api.post(`/availability/${selectedProductId.value}/times`, {
         date,
         items: [],
-    });
+    }));
 
     offeredTimes.value = response.ok ? (response.data?.data ?? []) : [];
 }
@@ -213,13 +243,13 @@ async function selectTime(time) {
 async function refreshAddons() {
     if (! selectedProductId.value || quantity.value < 1) return;
 
-    const response = await api.post(`/catalog/products/${selectedProductId.value}/addons`, {
+    const response = await tracked(api.post(`/catalog/products/${selectedProductId.value}/addons`, {
         quantity: quantity.value,
         date: selectedDate.value,
         time: selectedTime.value,
         addons: addonQuantities.value,
         choices: addonChoices.value,
-    });
+    }));
 
     if (response.ok) addons.value = { groups: response.data.groups, singles: response.data.singles };
 }
@@ -268,10 +298,45 @@ const monthLabel = computed(() => {
     const label = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1));
     return label.charAt(0).toUpperCase() + label.slice(1);
 });
+
+/**
+ * La banda de progreso de los pasos 2 y 3.
+ *
+ * ⚠️ **Hasta 4.3·1 esto era `null` fijo**, así que el cajón SPA vivo iba sin «Volver» y sin contador
+ * de fases aunque el componente existiera y el gate lo comparase en verde: el diff alimenta a Vue con
+ * el view-model del SERVIDOR. La composición vive en `progress.js` —módulo plano— para poder
+ * compararla contra `bookingProgress()` dato a dato.
+ */
+const progress = computed(() => buildProgress({
+    step: store.step,
+    isPack: selectedProduct.value?.is_pack ?? false,
+    productName: selectedProduct.value?.name ?? '',
+    date: selectedDate.value,
+    time: selectedTime.value,
+    messages: props.messages,
+    locale,
+}));
+
+/**
+ * «Volver» de la banda. Espejo de `Purchase::back()`: desde la hora se DESHACE la elección de hora y
+ * de cantidad —volver con la hora puesta dejaría el paso 2 mostrando un progreso que ya no aplica— y
+ * desde el calendario se vuelve al catálogo.
+ */
+function goBack() {
+    if (store.step === STEPS.TIME) {
+        selectedTime.value = null;
+        quantity.value = 0;
+        store.go(STEPS.DATE);
+
+        return;
+    }
+
+    store.go(STEPS.CATALOG);
+}
 </script>
 
 <template>
-    <div class="purchase" data-engine="spa">
+    <Shell :busy="busy" :progress="progress" :messages="messages" :ui="ui" @back="goBack">
         <CatalogStep
             v-if="store.step === STEPS.CATALOG"
             :sections="sections"
@@ -279,15 +344,8 @@ const monthLabel = computed(() => {
             :messages="messages"
             @select="selectProduct" />
 
-        <!--
-          El paso 2 recibe la rejilla ya compuesta. Mientras el calendario del cliente no exista
-          —llega con el resto de 4.2—, se le pasa lo que la API devuelve y el componente pinta lo
-          que haya: sin días ofrecidos enseña su aviso de «no hay fechas», que es la conducta
-          correcta y no una pantalla en blanco.
-        -->
         <DateStep
             v-else-if="store.step === STEPS.DATE"
-            :progress="null"
             :weeks="weeks"
             :weekday-headers="weekdayHeaders"
             :month-label="monthLabel"
@@ -297,8 +355,7 @@ const monthLabel = computed(() => {
             :messages="messages"
             @select="selectDate"
             @prev-month="month = shiftMonth(month, -1)"
-            @next-month="month = shiftMonth(month, 1)"
-            @back="store.go(STEPS.CATALOG)" />
+            @next-month="month = shiftMonth(month, 1)" />
 
         <TimeStep
             v-else-if="store.step === STEPS.TIME"
@@ -321,5 +378,5 @@ const monthLabel = computed(() => {
             @toggle-addon="(id) => setAddonQuantity(id, addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
             @inc-addon="(id) => setAddonQuantity(id, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
             @dec-addon="(id) => setAddonQuantity(id, Math.max(0, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) - 1))" />
-    </div>
+    </Shell>
 </template>

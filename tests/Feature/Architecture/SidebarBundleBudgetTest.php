@@ -33,9 +33,16 @@ class SidebarBundleBudgetTest extends TestCase
     private const LANDING_ENTRY_MAX_KB = 20;
 
     /**
-     * Techo del chunk del cajón, que se descarga en la PRIMERA apertura. Medido: 69,13 kB (27,4 kB
-     * gzip) con Vue 3 + Pinia y el andamio. Los once pasos llegan a partir de 4.2, así que este
-     * número subirá; lo que no puede es subir **sin que nadie lo decida**.
+     * Techo del chunk del cajón, que se descarga en la PRIMERA apertura. Los once pasos llegan a
+     * partir de 4.2, así que este número sube; lo que no puede es subir **sin que nadie lo decida**.
+     *
+     * Consumo medido, para que el margen se lea de un vistazo y no haya que reconstruir para saberlo:
+     *   · 4.1 (Vue 3 + Pinia + andamio, sin negocio) ....... 69,13 kB
+     *   · 4.2 (catálogo, calendario, hora y complementos) ... 90,29 kB
+     *   · 4.3·1 (armazón + módulos de texto e importes) ..... 95,54 kB
+     * Quedan ~24 kB para la cesta, la identificación, el pago y las tres pantallas de desenlace. Si el
+     * paso que los meta se pasa, la decisión es SUBIR el techo con su motivo escrito — no dejar que lo
+     * empuje el arrastre, que es lo que este test existe para impedir.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 120;
 

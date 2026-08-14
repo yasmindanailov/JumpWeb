@@ -210,11 +210,102 @@ class SidebarDomContractTest extends TestCase
         }
     }
 
+    // ── El ARMAZÓN: lo que no pertenece a ningún paso ─────────────────────────────────────────
+
+    /**
+     * El armazón del cajón: velo de carga, banda y zona scrollable.
+     *
+     * ⚠️ **Este caso nace en 4.3·1 porque hasta entonces NADIE miraba ahí.** Todos los casos anclan
+     * DENTRO (`catalog-acc`, `wiz__title`), así que el motor SPA podía —y lo hacía— no emitir ni el
+     * velo, ni la zona scrollable, ni la banda, y el gate seguía verde. No es decoración: esos nodos
+     * son la cadena flex que recorta el panel y ancla el pie.
+     *
+     * Se ancla en `.jj-loading`, el PRIMER hijo de `.purchase`, con hermanos: es la única forma de
+     * comparar el orden entre ellos, del que dependen selectores de adyacencia
+     * (`.bk-paybreakdown + .bk-foot`, que llega en 4.5).
+     *
+     * Con el catálogo y la cesta vacía, Livewire emite exactamente dos hijos —velo y scroll—: el pie
+     * es `null` sin cesta. Los pasos con pie entran con 4.3·2.
+     */
+    public function test_the_shell_emits_the_same_tree_in_both_engines(): void
+    {
+        $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+
+        $component = Livewire::test(Purchase::class);
+
+        $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
+        $vue = $this->vueTree(1, $this->catalogProps(), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
+
+        $this->assertSame(
+            $livewire, $vue,
+            "El ARMAZÓN del cajón DIFIERE entre los dos motores.\n".
+            'Son el velo de carga, la banda de progreso y la zona scrollable: los nodos que sostienen '.
+            "la cadena flex del panel (scroll que recorta + pie anclado al fondo).\n\n".
+            $this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * Los bloques del armazón que aún NO emite el motor SPA. **Solo puede ENCOGER.**
+     *
+     * Existe porque el caso de arriba compara el armazón del paso 1 —donde Livewire emite solo dos
+     * hijos— y el ORDEN entre la banda y la zona scrollable se quedaba sin verificar. Aquí se compara
+     * la secuencia completa de bloques descontando lo que todavía no está transcrito, de modo que:
+     *  - el orden de lo que SÍ está queda fijado hoy;
+     *  - lo que falta está DECLARADO y es ejecutable, no una nota en un documento.
+     *
+     * `bk-foot` sale de esta lista en 4.3·2 y `bk-paybreakdown` en 4.5. Añadir una entrada aquí es
+     * señal de que algo se ha desmontado.
+     *
+     * @var list<string>
+     */
+    private const SHELL_BLOCKS_NOT_YET_IN_SPA = ['bk-paybreakdown', 'bk-foot'];
+
+    /**
+     * ⚠️ **El ORDEN de los bloques del armazón, que es de lo que dependen los selectores de
+     * adyacencia** (`.bk-paybreakdown + .bk-foot`) y la cadena flex del panel: la banda va pegada
+     * ARRIBA, el pie anclado ABAJO y el scroll en medio.
+     *
+     * Se comprueba en el paso 2, que es el único donde el armazón lleva banda **y** pie a la vez. El
+     * caso del armazón completo no puede cubrirlo todavía porque el motor SPA aún no emite el pie;
+     * hasta que lo emita, la comparación se hace descontando la lista declarada de arriba.
+     */
+    public function test_the_shell_blocks_appear_in_the_same_order_in_both_engines(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
+
+        $livewire = $this->shellBlocks($component->html());
+        $vue = $this->shellBlocks($this->renderVue(2, $this->dateProps($component), $this->shellProps($component)));
+
+        $this->assertContains('bk-progress', $livewire, 'el paso 2 tiene que llevar banda, o el caso no prueba el orden');
+        $this->assertContains('bk-foot', $livewire, 'el paso 2 tiene que llevar pie, o el orden que se compara es trivial');
+
+        $expected = array_values(array_diff($livewire, self::SHELL_BLOCKS_NOT_YET_IN_SPA));
+
+        $this->assertSame(
+            $expected, $vue,
+            "Los bloques del armazón NO salen en el mismo orden en los dos motores.\n".
+            'La banda va pegada arriba, el pie anclado abajo y el scroll en medio; de ese orden dependen '.
+            "la cadena flex del panel y los selectores de adyacencia.\n".
+            '  Livewire: '.implode(' → ', $livewire)."\n".
+            '  Vue     : '.implode(' → ', $vue)."\n".
+            '  (descontando lo aún no transcrito: '.implode(', ', self::SHELL_BLOCKS_NOT_YET_IN_SPA).')'
+        );
+    }
+
     /**
      * La BANDA de progreso tiene su propio caso porque **no es del paso 2**: la comparten los pasos 2
      * y 3, vive fuera del bloque de cada uno en el Blade y trae el «volver» del flujo. Un diff que
      * empezara en el título del paso no la vería, y un motor que no la emitiera dejaría al cliente
      * sin salida y sin contador de fases.
+     *
+     * ⚠️ **Se renderiza a través del ARMAZÓN desde 4.3·1, y ese cambio es el que da valor al caso.**
+     * Antes se renderizaba `DateStep` suelto, que montaba la banda él mismo; el gate salía verde
+     * mientras `Sidebar.vue` le pasaba `progress: null` y `TimeStep` ni la importaba — o sea, el
+     * cajón vivo no tenía «Volver» en ningún paso. Ahora la emite quien la emite de verdad.
      */
     public function test_the_booking_progress_band_emits_the_same_tree_in_both_engines(): void
     {
@@ -224,11 +315,37 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
 
         $livewire = $this->livewireTree($component, 'bk-progress');
-        $vue = $this->vueTree(2, $this->dateProps($component), 'bk-progress');
+        $vue = $this->vueTree(2, $this->dateProps($component), 'bk-progress', shell: $this->shellProps($component));
 
         $this->assertSame(
             $livewire, $vue,
             "La banda de progreso DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        );
+    }
+
+    /**
+     * ⚠️ **Y también en el paso 3, que es donde faltaba.** La banda la pintan los DOS pasos del modo
+     * «booking», pero el caso anterior solo cubría el 2 y `TimeStep.vue` ni siquiera importaba el
+     * componente: el paso más denso del embudo iba sin «Volver» y sin contador. Un caso por paso, no
+     * uno por componente.
+     */
+    public function test_the_booking_progress_band_is_also_emitted_on_the_time_step(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 3);
+
+        $component = Livewire::test(Purchase::class)
+            ->call('selectType', $product->id)
+            ->call('selectDate', now()->addDay()->toDateString())
+            ->call('goToTime')
+            ->call('selectTime', '10:00:00');
+
+        $livewire = $this->livewireTree($component, 'bk-progress');
+        $vue = $this->vueTree(3, $this->timeProps($component), 'bk-progress', shell: $this->shellProps($component));
+
+        $this->assertSame(
+            $livewire, $vue,
+            "La banda de progreso del paso 3 DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
         );
     }
 
@@ -258,6 +375,25 @@ class SidebarDomContractTest extends TestCase
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Las props del ARMAZÓN, tomadas del propio componente Livewire.
+     *
+     * `busy` va a `false` a propósito: en Livewire el velo está SIEMPRE en el HTML servido y lo tapa
+     * `wire:loading`, y en Vue lo tapa `v-show`. El normalizador descarta `style`, así que los dos
+     * árboles coinciden — lo que se compara es que el NODO esté, no si se ve.
+     *
+     * @return array<string, mixed>
+     */
+    private function shellProps(Testable $component): array
+    {
+        return [
+            'busy' => false,
+            'progress' => $component->viewData('bookingProgress'),
+            'messages' => __('tickets'),
+            'ui' => __('ui'),
+        ];
+    }
 
     /** @return array<string, mixed> */
     private function catalogProps(): array
@@ -444,9 +580,52 @@ class SidebarDomContractTest extends TestCase
     /**
      * El árbol que emite Vue, renderizado en Node.
      *
+     * Con `$shell` el paso se renderiza DENTRO del armazón (`Shell.vue`), que es la única forma de
+     * comparar los nodos que no pertenecen a ningún paso —el velo, la banda y la zona scrollable—:
+     * en el Blade viven fuera del bloque de cada paso.
+     *
      * @param  array<string, mixed>  $props
+     * @param  array<string, mixed>|null  $shell
      */
-    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false): string
+    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null): string
+    {
+        return $this->treeOf($this->renderVue($step, $props, $shell), $anchor, $withSiblings);
+    }
+
+    /**
+     * Los bloques que cuelgan DIRECTAMENTE de `.purchase`, en orden de documento y por su primera
+     * clase. Es lo que hace comparable la ESTRUCTURA del armazón sin entrar en el contenido de cada
+     * bloque, que ya tiene sus propios casos.
+     *
+     * @return list<string>
+     */
+    private function shellBlocks(string $html): array
+    {
+        $xpath = new DOMXPath($this->parse($html));
+        $root = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' purchase ')]")?->item(0);
+
+        if (! $root instanceof DOMElement) {
+            $this->fail('no se ha encontrado la raíz «purchase» en el HTML renderizado');
+        }
+
+        $blocks = [];
+
+        foreach ($root->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                $blocks[] = preg_split('/\s+/', trim($child->getAttribute('class')))[0] ?? '';
+            }
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * El HTML que emite Vue, renderizado en Node.
+     *
+     * @param  array<string, mixed>  $props
+     * @param  array<string, mixed>|null  $shell
+     */
+    private function renderVue(int $step, array $props, ?array $shell = null): string
     {
         $bundle = base_path('storage/ssr/render-sidebar.js');
 
@@ -457,7 +636,10 @@ class SidebarDomContractTest extends TestCase
         );
 
         $process = new Process(['node', $bundle], base_path());
-        $process->setInput(json_encode(['step' => $step, 'props' => $props], JSON_THROW_ON_ERROR));
+        $process->setInput(json_encode(
+            array_filter(['step' => $step, 'props' => $props, 'shell' => $shell], fn ($value) => $value !== null),
+            JSON_THROW_ON_ERROR
+        ));
         $process->setTimeout(60);
         $process->run();
 
@@ -466,7 +648,7 @@ class SidebarDomContractTest extends TestCase
             "El renderizador de Vue falló:\n".$process->getErrorOutput()
         );
 
-        return $this->treeOf($process->getOutput(), $anchor, $withSiblings);
+        return $process->getOutput();
     }
 
     /**

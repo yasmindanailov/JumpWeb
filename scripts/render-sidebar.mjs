@@ -9,11 +9,20 @@
  * INYECTADO en vez de pedirse a la API a propósito: lo que este script compara es el marcado, y una
  * llamada de red dentro del gate lo haría lento y frágil por motivos que no son el marcado.
  *
+ * ⚠️ **Con `"shell": {…}` renderiza el paso DENTRO del armazón** (Fase 4 · paso 4.3·1), que es la
+ * única forma de comparar los nodos que no son de ningún paso —el velo de carga, la banda de progreso
+ * y la zona scrollable— porque en el Blade viven fuera del bloque de cada paso. `Shell.vue` es
+ * SSR-renderizable justo para esto: recibe todo por props y no toca `document` ni `window`.
+ * `Sidebar.vue` NO puede pasar por aquí (lee `window.Alpine` y el idioma del documento), y por eso el
+ * armazón es un componente propio y no parte de la raíz.
+ *
  * Uso:  echo '{"step":1,"props":{…}}' | node scripts/render-sidebar.mjs
+ *       echo '{"step":2,"props":{…},"shell":{…}}' | node scripts/render-sidebar.mjs
  */
-import { createSSRApp } from 'vue';
+import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
 import { createPinia } from 'pinia';
+import Shell from '../resources/js/sidebar/Shell.vue';
 import CatalogStep from '../resources/js/sidebar/steps/CatalogStep.vue';
 import DateStep from '../resources/js/sidebar/steps/DateStep.vue';
 import TimeStep from '../resources/js/sidebar/steps/TimeStep.vue';
@@ -35,7 +44,7 @@ async function main() {
         process.stdin.on('error', reject);
     });
 
-    const { step, props = {} } = JSON.parse(input);
+    const { step, props = {}, shell = null } = JSON.parse(input);
     const component = COMPONENTS[step];
 
     if (! component) {
@@ -43,7 +52,12 @@ async function main() {
         process.exit(2);
     }
 
-    const app = createSSRApp(component, props);
+    // Con armazón, el paso va en la ranura por defecto de `Shell` — igual que en `Sidebar.vue`, para
+    // que lo que compara el gate sea la composición real y no una aproximación.
+    const app = shell === null
+        ? createSSRApp(component, props)
+        : createSSRApp({ render: () => h(Shell, shell, { default: () => h(component, props) }) });
+
     app.use(createPinia());
 
     process.stdout.write(await renderToString(app));

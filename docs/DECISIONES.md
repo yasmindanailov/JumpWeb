@@ -1576,3 +1576,73 @@ primero dejaría pedir 60 invitados que el checkout rechaza. El componente usa e
 por-invitado) tienen árboles distintos, y `.entry__stepper button` depende del tipo de elemento.
 
 Con esto **4.2 queda cerrado**: los tres pasos transcritos, cada uno con su paridad demostrada.
+
+## #47 · 2026-08-14 · 4.3·1 — el cajón SPA tenía armazón de cartón, y el gate no podía verlo
+Fase 4 · paso 4.3 (primer tramo de tres). El paso 4.3 «cesta y presupuesto» resultó demasiado grande
+para un commit y se parte como se partió 4.2: **·1 el armazón y los cimientos de texto · ·2 el pie ·
+·3 la cesta**. Este tramo no transcribe ningún paso nuevo: cierra lo que 4.2 dejó abierto sin que
+nadie lo viera.
+
+**(a) El motor SPA no emitía NADA del armazón, y los nueve casos del gate salían verdes.** Su raíz era
+`<div class="purchase">` con el paso colgando directamente: sin velo de carga, sin banda de progreso y
+sin la zona scrollable. La razón es estructural y conviene retenerla: **todos los casos de
+`SidebarDomContractTest` anclan DENTRO** (`catalog-acc`, `wiz__title`), así que nunca miraban a los
+hermanos de arriba. Ahora hay un caso anclado en `.jj-loading` con hermanos —el primer hijo de
+`.purchase`—, que es la única forma de comparar también el ORDEN entre ellos: de él dependen selectores
+de adyacencia como `.bk-paybreakdown + .bk-foot`. Verificado por mutación: quitar el velo, quitar la
+zona scrollable o quitar la banda ponen el diff en rojo.
+
+**(b) La banda de progreso estaba escrita, comparada en verde y NO se pintaba.** `BookingProgress.vue`
+existe desde 4.2 y su caso pasaba, pero `Sidebar.vue` le pasaba `progress: null` y `TimeStep` ni lo
+importaba: **el cajón vivo no tenía «Volver» ni contador de fases en ningún paso**. Es el límite del
+diff de árbol otra vez (`#46(a)`): alimenta a Vue con el view-model del SERVIDOR. La composición baja
+a `progress.js`, módulo plano, con paridad de datos contra `bookingProgress()` en sus tres estados y
+para entrada y pack.
+
+**(c) `#sidecart-spa` partía la cadena flex del panel, y este paso es el que lo destapa.** Vue monta
+DENTRO de su hueco, no lo reemplaza, así que ese `<div>` queda entre `.sidecart__body` y `.purchase` —
+y no tenía **ni una regla CSS** (medido: 0 coincidencias en `site.css`). Lo que sostiene «el contenido
+scrollea y el pie queda anclado» es una cadena de HIJOS DIRECTOS, y un `display:block` en medio corta
+la altura. No se notaba porque el motor SPA aún no emitía scroll ni pie. ⚠️ **Ningún diff de árbol
+puede ver esto**, así que la regla viene con guarda ejecutable (`SidebarTokenBudgetTest`, verificada
+por mutación).
+
+**(d) El formato de importes era una divergencia silenciosa, y las dos salidas «obvias» de JS fallan.**
+El cajón SPA tenía DOS copias de `(céntimos/100).toFixed(2)`, que **no agrupa millares**, y una tercera
+variante en el calendario. Medido contra `number_format`:
+- `toFixed(2)` → «1000,00» donde PHP escribe «1.000,00» (desde 1.000 €, que un pack de 20 invitados
+  cruza a diario);
+- `Intl.NumberFormat('es-ES')` **tampoco vale**: el español declara `minimumGroupingDigits: 2`, así que
+  no agrupa entre 1.000 y 9.999 — arregla los importes de cinco cifras y deja rotos los de cuatro.
+⚠️ **Y el gate es CIEGO a esto**: el normalizador descarta los nodos de texto a propósito. La red es
+`SidebarMoneyParityTest`, que barre todos los céntimos de 0 a 2.000 más los cruces de millar contra
+`number_format` — y **encontró un fallo en la primera ejecución** que ninguna lectura habría dado: el
+signo hay que decidirlo sobre el RESULTADO y no sobre la entrada, porque `number_format(-0.05, 0)`
+devuelve «0», no «-0».
+
+**(e) El diccionario del cajón se leía mal de tres formas, las tres en silencio.** Medido sobre el
+payload real: `__('tickets')` son 121 claves de primer nivel de las que **cuatro son subarrays**
+(`errors`, `paused`, `statuses`, `payment_failed`), así que `messages['errors.choose_one']` era
+`undefined` y el helper devolvía `''` — el aviso de error se pintaba **vacío**. Además `String.replace`
+con patrón de texto sustituye solo la PRIMERA aparición, y `cart_items` lleva `:count` dos veces. Y
+`cart_items` es la única clave del grupo con pluralización de Laravel, servida CRUDA: sin resolverla la
+barra-carrito enseñaría «2 artículo|2 artículos». Nace `i18n.js` con las tres cosas y su paridad contra
+`__()`/`trans_choice()` en los tres idiomas. ⚠️ **El selector de plural no es `n === 1`**: en francés el
+CERO cae en el singular (medido), que es justo el número que más se ve en una barra de carrito.
+
+**(f) El «modo» del paso de PAGO divergía, y ninguna prueba podía verlo.** `modeOf(8)` devolvía
+`result` y `Purchase::stepModeMap()` dice `cart`. La clase `is-{modo}` se pinta **fuera** del cajón
+(`.sidecart__panel`), así que ningún diff de árbol la alcanza. Corregido y fijado recorriendo el mapa
+ENTERO del servidor, no una muestra — que es como apareció.
+
+**(g) La divergencia de fechas de §4.5 queda ACOTADA, no solo declarada.** El contexto de la banda lo
+compone el servidor con Carbon y el cliente con `Intl`. Medido: **el patrón hay que fijarlo nosotros**,
+porque un preajuste de `Intl` INVIERTE día y mes en inglés («Sat, Sep 5» frente a «Sat 5 Sep»). Con el
+patrón fijo, **inglés y francés coinciden EXACTAMENTE** y solo el español difiere, y solo en los puntos
+de abreviatura y en `sept`/`sep`. Queda en `DEUDA.md` con la forma de cerrarlo. ⚠️ Y los puntos de
+`Intl` **no se recortan** aunque a primera vista lo pidan: recortarlos rompería el francés, que hoy
+coincide. Hay caso que lo vigila.
+
+**(h) Lo que este tramo NO cierra, dicho sin optimismo**: el pie (`.bk-foot`) sigue sin existir en el
+motor SPA, así que el cajón sigue **auto-avanzando** del calendario a la hora donde Livewire exige
+pulsar «Continuar», y no hay CTA para añadir a la cesta. Eso es 4.3·2.

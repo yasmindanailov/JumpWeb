@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1 y 4.2 hechos → toca la cesta (4.3)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y 4.3·1 hechos → toca el pie (4.3·2) y la cesta (4.3·3)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -580,6 +580,54 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `SidebarAddonsParityTest` (endpoint ↔ view-model, campo a campo).
       · **Confirmado con datos reales**: en el pack sembrado `available` = 60 y `max_quantity` = 20.
         No son el mismo número (`AFORO-02`).
+- [x] **Paso 4.3·1 — el armazón y los cimientos de texto** (2026-08-14, `DECISIONES #47`). El paso
+      4.3 «cesta y presupuesto» resultó demasiado grande para un commit y se parte en tres, como se
+      partió 4.2: **·1 el armazón · ·2 el pie · ·3 la cesta**. Este tramo **no transcribe ningún paso
+      nuevo**: cierra lo que 4.2 dejó abierto sin que nadie lo viera.
+      · ⚠️ **El motor SPA no emitía NADA del armazón y los nueve casos del gate salían verdes**: sin
+        velo de carga, sin banda de progreso y sin la zona scrollable. La causa es estructural —**todos
+        los casos anclan DENTRO** (`catalog-acc`, `wiz__title`)—, así que nunca miraban a los hermanos
+        de arriba. Nace `Shell.vue` (SSR-renderizable: todo por props, sin `document` ni `window`) y su
+        caso ancla en `.jj-loading` **con hermanos**, que es la única forma de comparar también el
+        ORDEN — de él dependen selectores de adyacencia. Verificado por mutación ×3.
+      · ⚠️ **La banda de progreso estaba escrita, verde en el gate y NO se pintaba**: `Sidebar.vue` le
+        pasaba `progress: null` y `TimeStep` ni la importaba, o sea que el cajón vivo **no tenía
+        «Volver» ni contador de fases en ningún paso**. Es el límite del diff de árbol otra vez
+        (`#46(a)`). La composición baja a `progress.js` con paridad de datos en sus tres estados.
+      · ⚠️ **`#sidecart-spa` partía la cadena flex del panel** y este paso es el que lo destapa: Vue
+        monta DENTRO del hueco, ese `<div>` queda entre `.sidecart__body` y `.purchase` y **no tenía ni
+        una regla CSS** (medido: 0 coincidencias). Ningún diff de árbol puede verlo, así que la regla
+        viene con guarda ejecutable verificada por mutación.
+      · **Los importes: tres copias, una rota y el gate ciego.** El normalizador descarta los nodos de
+        texto, así que «1000,00 €» frente a «1.000,00 €» pasaba verde. Y las dos salidas obvias de JS
+        fallan las dos: `toFixed` no agrupa nunca e `Intl.NumberFormat('es-ES')` no agrupa **entre
+        1.000 y 9.999** (`minimumGroupingDigits: 2`), o sea que arregla las cifras grandes y rompe las
+        que más aparecen en una cesta. Nace `money.js` y su barrido contra `number_format`, que
+        **encontró un fallo en la primera ejecución**: el signo se decide sobre el RESULTADO
+        (`number_format(-0.05, 0)` es «0», no «-0»).
+      · **El diccionario se leía mal de tres formas**: cuatro de las 121 claves son SUBARRAYS
+        (`errors`, `paused`, `statuses`, `payment_failed`) y se leían por clave literal → error pintado
+        **vacío**; `String.replace` sustituye solo la primera aparición y `cart_items` lleva `:count`
+        dos veces; y `cart_items` es la única clave con pluralización de Laravel, servida cruda.
+        ⚠️ El selector de plural **no es `n === 1`**: en francés el CERO cae en el singular.
+      · **El «modo» del paso de PAGO divergía** (`modeOf(8)` decía `result`, el servidor dice `cart`) y
+        su clase se pinta FUERA del cajón, así que ningún árbol la alcanzaba. Fijado recorriendo el
+        mapa ENTERO, que es como apareció.
+      · **La divergencia de fechas de §4.5 queda ACOTADA**: con el patrón fijado por nosotros —un
+        preajuste de `Intl` invierte día y mes en inglés— `en` y `fr` salen **idénticos** y solo el
+        español difiere en la ortografía de la abreviatura. En `DEUDA.md` con su forma de cierre.
+      · **Red**: 3 paridades PHP↔JS nuevas (`SidebarMoneyParityTest`, `SidebarTextParityTest`,
+        `SidebarProgressParityTest`), 2 casos nuevos de diff de árbol, 1 guarda de CSS y 22 casos de
+        `node --test`. Suite **2622 verde**; chunk del cajón 95,5 kB de 120.
+      · ⚠️ **Lo que NO cierra**: el pie no existe todavía, así que el cajón sigue **auto-avanzando**
+        del calendario a la hora donde Livewire exige «Continuar». Eso es 4.3·2.
+      · ❗ **Y queda declarado, no resuelto, el aviso de reservas EN PAUSA.** Verificado: la SPA no
+        consulta `GET /booking/status` (que existe desde 4.0b). En el Blade la misma condición
+        gobierna la banda, la banda de pago y el pie, y sustituye el contenido scrollable entero por
+        `.purchase__maint` en los pasos 1-5 y 8. Con la pausa activa el cajón SPA seguiría vendiendo
+        mientras Livewire enseña el aviso. **No es fuga de dinero** (`ReservationAdmissionPolicy`
+        rechaza en servidor), pero **ningún test puede cazarlo**: ningún caso de `tests/Feature/Sidebar`
+        siembra la pausa. Lo cierra 4.3·2 junto al pie, que comparte su guarda.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
