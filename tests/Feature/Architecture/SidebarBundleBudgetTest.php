@@ -41,7 +41,10 @@ class SidebarBundleBudgetTest extends TestCase
      *   · 4.2 (catálogo, calendario, hora y complementos) ... 90,29 kB
      *   · 4.3·1 (armazón + módulos de texto e importes) ..... 95,54 kB
      *   · 4.3·2 (pie + cesta en memoria + paso 4) ........... 105,72 kB
-     * Quedan ~14 kB para la identificación, el pago y las tres pantallas de desenlace. Si el
+     *   · 4.3·3 (aviso de reservas en pausa) ................ 107,29 kB
+     *   · 4.3·4 (persistencia de la cesta) .................. 111,01 kB
+     * Quedan ~11 kB (medidos con la misma división por 1024 que usa el assert) para la identificación,
+     * el pago y las tres pantallas de desenlace. Si el
      * paso que los meta se pasa, la decisión es SUBIR el techo con su motivo escrito — no dejar que lo
      * empuje el arrastre, que es lo que este test existe para impedir.
      */
@@ -168,6 +171,7 @@ class SidebarBundleBudgetTest extends TestCase
      * @var array<string, string>
      */
     private const ENGINE_MUST_KNOW = [
+        'jw.cart.v1' => 'persistir la cesta con su clave versionada',
         '/booking/status' => 'preguntar si las reservas están en pausa',
         'purchase__maint' => 'pintar el aviso de pausa',
         '/orders/quote' => 'presupuestar la cesta',

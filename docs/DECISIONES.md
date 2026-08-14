@@ -1759,3 +1759,76 @@ contrato pide además releer tras un 409 `reservations_paused`, y eso llega con 
 son atributos de contrato, así que **el enlace de WhatsApp y el de `/contacto` producen árboles byte a
 byte idénticos**. Sin la paridad de enlaces, un motor que mandara a la página de contacto donde el
 servidor ofrece WhatsApp pasaría el gate en verde.
+
+## #50 · 2026-08-14 · 4.3·4 — la cesta sobrevive a la recarga, y la fuga que eso introduce
+Fase 4 · paso 4.3 (cuarto y último tramo). La cesta del cajón SPA pasa a vivir en `localStorage`
+—`DECISIONES #38(d)`—, y con ella llegan las defensas que la sesión daba gratis y el almacén del
+navegador no.
+
+**(a) La identidad sale del SERVIDOR, y por dos canales.** `userId` viaja en el `data-boot` (12 bytes
+medidos, con el HTML y antes de que exista ningún `fetch`) y se re-resuelve con `GET /me` **al abrir el
+cajón y al oír `logged-in`**. Se descartó que el id viajara en el evento de Livewire: `dispatch('logged-in')`
+va **sin payload**, y colgar una defensa de seguridad de un id que circula por el bus de eventos del
+navegador es confiar en el cliente. El `data-boot` no es un lujo: **el logout es una navegación
+completa**, y es justo el caso que la sesión resolvía sola con `invalidate()`.
+⚠️ Un fallo de red **no** es un cierre de sesión: solo un 401 significa «ya no hay nadie». Purgar por
+un corte destruiría la cesta de quien no ha hecho nada.
+
+**(b) La purga tiene CINCO casillas y una no existe en el servidor.** En sesión, el logout vacía cesta
+y marcador a la vez, así que nadie tuvo que decidir qué pasa con «había dueño X y ahora no hay nadie».
+`localStorage` no tiene `invalidate`: **(X → anónimo) → PURGAR** es la casilla que el cajón inventa
+entero, es la más probable en la tablet de un parque y es **la fuga que introduce la persistencia**.
+Las otras cuatro espejan al servidor, incluida la que sostiene el flujo principal: **una cesta de
+invitado SOBREVIVE al login**. Y la comparación va casteada por los dos lados —`localStorage` solo
+guarda texto, y un `70 !== '70'` purgaría la cesta de su propio dueño en cada carga—.
+
+**(c) El saneador espeja `CartPayload`, no `Cart::sanitize()`, y descarta en vez de corregir.** Los dos
+saneadores del servidor son OPUESTOS y elegir mal duele de dos formas distintas:
+- `Cart::sanitize()` **corrige**: `qty: 0`, `-5` y `'abc'` salen los tres como **1**. En un almacén que
+  el usuario puede editar y que sobrevive a los despliegues, eso convierte una línea corrupta en **una
+  compra de una unidad que nadie pidió**, con su precio pintado;
+- `CartPayload` **rechaza el cuerpo ENTERO** con un 422: medido, **una sola** línea con `date: ''` deja
+  la cesta sin presupuesto, sin horas y sin poder preguntar si cabe otra —los tres endpoints comparten
+  las reglas—, o sea el cajón inservible y sin botón para quitar la culpable.
+La síntesis es la que el propio `CartPayload` documenta para una cesta de sesión: **descartar la línea
+mala y restaurar el resto**, con sus criterios de formato. ⚠️ Y una expresión regular NO basta para la
+fecha: `date_format` reconstruye la fecha, así que `2026-02-30` se rechaza — fue la única divergencia
+que salió al pasar el corpus por los dos lados.
+
+**(d) Caducidad propia, porque el presupuesto no la tiene.** Medido: `POST orders/quote` tarifica **con
+importes completos** una fecha de hace 19 meses; no consulta franjas. La sesión caducaba a los 120
+minutos y `localStorage` no caduca nunca, así que sin descartar los días pasados al restaurar el cliente
+ve un total creíble y el rechazo le llega al pulsar pagar, ya identificado. La comparación es de
+CADENAS (`Y-m-d` ordena solo), sin `Date`, para no reabrir el agujero de husos.
+
+**(e) Reconciliar es dos cosas, y la segunda no se adivina.** Se borran del almacén las líneas cuyo
+`index` no vuelve —el hueco es la señal de que el producto dejó de venderse— **y** las que vuelven con
+`unit_price_cents: null`: se venden, pero no tienen precio para la tarifa de ese día, cuentan en el
+badge, suman 0 al total y el checkout las rechaza sin decir cuál son. Es el bug P8 por otra puerta. Y
+de las que sobreviven se quitan los complementos si el presupuesto los devolvió vacíos habiéndolos
+enviado, porque `CartPricer` atrapa el error del resolutor y tarifica la línea **sin ninguno**: el
+total miente a la baja mientras la cesta guardada conserva el complemento roto.
+⚠️ **Reconciliar DESPLAZA los índices**, y las filas y el botón de quitar se emparejan por el `index`
+del presupuesto: podar y pintar el presupuesto viejo enseña las respuestas de otra línea y deja el
+botón mudo. Por eso podar y re-presupuestar es **una sola operación**.
+
+**(f) El canario del RGPD.** `event_data` no se persiste, y comprobarlo mirando esa clave en la primera
+línea lo pasarían en verde cuatro mutaciones distintas —guardarlas en una segunda clave, anidarlas en
+un complemento o en un `meta`, o dejarlas en un marcador de «línea incompleta»—. El doble de almacén
+graba **todas** las escrituras de **cualquier** clave y la aserción busca centinelas únicos en el
+volcado entero. Son datos del art. 9 y el cliente es su única fuente: la fuga solo puede salir por ahí.
+
+**(g) Dos huecos de red que encontró la revisión adversarial, los dos con su mutante:**
+1. **Las guardas de `toApiItems` no estaban probadas**, y 4.3·4 crea las primeras líneas que llegan sin
+   `event_data` ni `addons`: quitar el `?? {}` y el `?.` dejaba la suite JS **entera en verde** y el
+   módulo lanzaba `TypeError` con la primera cesta restaurada. Se cubrió **antes** de tocar nada.
+2. **`npm run test:js` solo alcanza un nivel de carpeta**: el patrón lo expande `sh`, donde el doble
+   asterisco vale por uno. Un test en una subcarpeta no se ejecutaría **nunca** y la suite diría
+   «pass». Es el fallo más barato de este paso —cuatro piezas nuevas invitan a agruparlas— y ahora
+   `PrePushGateTest` compara los ficheros que el patrón alcanza con los que hay en el árbol.
+
+**(h) Lo que NO entra, y por qué**: una línea de PACK restaurada vuelve **sin sus respuestas** y el
+servidor la rechazará al crear el pedido (`line_event_required`). No se construye todavía el camino
+para volver a rellenarla porque **ese camino no se puede recorrer**: «Ir a pagar» no lleva a ninguna
+parte hasta 4.4a. Queda declarado como **precondición del paso de pago**, y el dato para construirlo ya
+está: al restaurar se piden los `event_fields` de los productos de la cesta.

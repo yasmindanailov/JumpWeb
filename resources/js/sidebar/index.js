@@ -36,7 +36,7 @@ export function mount(el, boot = {}) {
     const machine = createMachine();
     const pinia = createPinia();
 
-    app = createApp(Sidebar, { messages: boot.messages ?? {}, ui: boot.ui ?? {} });
+    app = createApp(Sidebar, { messages: boot.messages ?? {}, ui: boot.ui ?? {}, userId: boot.userId ?? null });
     app.use(pinia);
 
     const store = usePurchaseStore(pinia);
@@ -60,6 +60,18 @@ export function mount(el, boot = {}) {
          */
         refreshStatus() {
             root.refreshBookingStatus?.();
+        },
+
+        /**
+         * Vuelve a resolver QUIÉN es el titular, y purga la cesta si ha cambiado.
+         *
+         * ⚠️ La identidad sale SIEMPRE del servidor (`GET /me` la toma del guard, nunca de un
+         * parámetro). El evento `logged-in` de Livewire solo DISPARA esta llamada: no trae el id
+         * —`dispatch('logged-in')` va sin payload— y colgarse de un id que viaje por el bus de eventos
+         * del navegador sería confiar en el cliente para una defensa de seguridad.
+         */
+        refreshIdentity() {
+            return root.refreshIdentity?.();
         },
 
         /** Aplica una intención de entrada de la landing (`{type:'packs'}` · `{type:'zone', slug}`). */

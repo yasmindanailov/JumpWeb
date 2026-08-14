@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sidebar;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\SidebarSettings;
 use App\Http\Sidebar\SidebarEntry;
@@ -121,6 +122,33 @@ class SidebarEngineTest extends TestCase
 
         $this->assertIsArray($boot['messages'] ?? null);
         $this->assertSame(__('tickets.title'), $boot['messages']['title'] ?? null);
+    }
+
+    /**
+     * ⚠️ **Quién es el titular viaja con el HTML, y de eso depende una defensa de seguridad.**
+     *
+     * La cesta del cajón SPA vive en `localStorage` y lleva su dueño dentro; si cambia, se purga
+     * (`DECISIONES #38(d)`). La identidad llega en el montaje —antes de que exista ningún `fetch`, en
+     * cada carga de página— porque el **logout es una navegación completa**, y ese es justo el caso que
+     * la sesión resolvía sola con `invalidate()` y que `localStorage` no tiene: sin este dato, la cesta
+     * de quien acaba de salir sigue en pantalla para el siguiente que use el dispositivo.
+     *
+     * Se comprueban las DOS formas porque la purga compara contra `null`: si `auth()->id()` dejara de
+     * viajar, el visitante anónimo parecería «el mismo de siempre» y no se purgaría nada.
+     */
+    public function test_the_mount_point_carries_who_the_owner_is(): void
+    {
+        $this->useEngine(SidebarSettings::ENGINE_SPA);
+
+        $anonymous = $this->bootPayload($this->get('/')->getContent());
+
+        $this->assertArrayHasKey('userId', $anonymous, 'la clave debe estar siempre: la purga compara contra null');
+        $this->assertNull($anonymous['userId']);
+
+        $user = User::factory()->create();
+        $authenticated = $this->bootPayload($this->actingAs($user)->get('/')->getContent());
+
+        $this->assertSame($user->id, $authenticated['userId'] ?? null);
     }
 
     /**

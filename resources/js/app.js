@@ -163,7 +163,12 @@ document.addEventListener('alpine:init', () => {
             // carga de página, así que sin esto la pausa solo entraría al recargar. En la primera
             // apertura el propio montaje ya la pide, y `refreshStatus` es un no-op sobre un motor que
             // todavía no existe.
-            this.bootSpaEngine()?.then?.((handle) => handle?.refreshStatus?.());
+            this.bootSpaEngine()?.then?.((handle) => {
+                handle?.refreshStatus?.();
+                // Y se re-resuelve el titular: la cesta del cajón vive en `localStorage` y lleva su
+                // dueño dentro, así que abrir es el momento de comprobar que sigue siendo el mismo.
+                handle?.refreshIdentity?.();
+            });
         },
         close() {
             this.isOpen = false;

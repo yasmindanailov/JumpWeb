@@ -135,3 +135,372 @@ export function eventAnswers(fields, answers) {
         .filter((row) => row.value !== null && row.value !== undefined && typeof row.value !== 'object' && String(row.value) !== '')
         .map((row) => ({ ...row, value: String(row.value) }));
 }
+
+// ── La PERSISTENCIA (Fase 4 · paso 4.3·4) ─────────────────────────────────────────────────────
+//
+// ⚠️ **El almacén entra por PARÁMETRO y nunca se lee del global**, y no es purismo: en el Node del
+// contenedor —el que corre `npm run test:js` y el renderizador SSR del gate— `typeof localStorage`
+// es `undefined` (medido), así que un módulo que lo leyera del global no se podría probar. Y lo que
+// lanza en un navegador no es `getItem`: es el ACCESO a la propiedad `window.localStorage` cuando el
+// origen es opaco o el usuario bloqueó los datos de sitio, así que quien lo pase tiene que leerlo
+// dentro de su propio `try`.
+
+/** La clave, con espacio de nombres y VERSIÓN. Un formato que no reconozcamos se descarta entero. */
+export const STORAGE_KEY = 'jw.cart.v1';
+
+const STORAGE_VERSION = 1;
+
+/**
+ * Los campos que el saneador conoce, en el orden del contrato.
+ *
+ * Existe para que un test pueda comprobar que el servidor no ha añadido ninguno sin que el cliente se
+ * entere: `CartPayload::lineRules()` publica sus claves, y compararlas es más barato que descubrirlo
+ * con un 422 en producción.
+ *
+ * @type {ReadonlyArray<string>}
+ */
+export const SANITISED_FIELDS = ['product_id', 'date', 'time', 'quantity', 'event_data', 'addons'];
+
+/**
+ * Entero al estilo de la regla `integer` de Laravel, que **no es estricta**: acepta la cadena `'3'`.
+ *
+ * ⚠️ Medido contra el servidor: `quantity: "3"` da 200 y se tarifica como 3. Un `Number.isInteger`
+ * a secas la descartaría y el servidor la habría aceptado — una divergencia que solo aparece con
+ * datos viejos, o sea en producción y meses después. `'03'` sí se rechaza, como `FILTER_VALIDATE_INT`.
+ */
+function toInt(value) {
+    if (typeof value === 'number') {
+        return Number.isInteger(value) ? value : null;
+    }
+
+    if (typeof value === 'string' && /^[+-]?(0|[1-9]\d*)$/.test(value.trim())) {
+        return Number(value.trim());
+    }
+
+    return null;
+}
+
+/**
+ * `Y-m-d` con ida y vuelta REAL, como `date_format:Y-m-d` de PHP.
+ *
+ * ⚠️ **Una expresión regular no basta**, y es la única divergencia que salió al pasar un corpus por
+ * los dos lados: `/^\d{4}-\d{2}-\d{2}$/` acepta `2026-02-30`, que el servidor RECHAZA porque
+ * reconstruye la fecha y la compara con la entrada. Aquí se reconstruye igual.
+ *
+ * La fecha se arma con `setUTCFullYear` y no con `new Date(y, m, d)` por dos motivos: los años de dos
+ * cifras se mapearían a 19xx, y así no interviene el huso del navegador para nada.
+ */
+function validDate(value) {
+    if (typeof value !== 'string' || ! /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return null;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    const probe = new Date(0);
+    probe.setUTCFullYear(year, month - 1, day);
+
+    const sameDay = probe.getUTCFullYear() === year
+        && probe.getUTCMonth() === month - 1
+        && probe.getUTCDate() === day;
+
+    return sameDay ? value : null;
+}
+
+/**
+ * `H:i` o `H:i:s` → hora CANÓNICA `H:i:s`.
+ *
+ * ⚠️ **`10:00` es legal y hay que NORMALIZARLA, no rechazarla**: el servidor acepta los dos formatos
+ * (`date_format:H:i:s,H:i`) y le añade los segundos. Descartarla borraría líneas que el servidor
+ * habría aceptado. Se guarda canónica porque el dominio compara franjas por CADENA, y una hora sin
+ * segundos no casa con ninguna y falla **en silencio**.
+ */
+function canonicalTime(value) {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const match = value.trim().match(/^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/);
+
+    return match === null ? null : `${match[1]}:${match[2]}:${match[3] ?? '00'}`;
+}
+
+/**
+ * Una línea cruda → una línea válida, o `null` si no lo es.
+ *
+ * ⚠️ **Espeja los criterios de `CartPayload::lineRules()`, no los de `Cart::sanitize()`**, y esa
+ * elección es la decisión de diseño del paso. Los dos saneadores del servidor son OPUESTOS:
+ *  - `Cart::sanitize()` **corrige**: `qty: 0`, `-5` y `'abc'` salen los tres como **1**. En una cesta
+ *    de sesión eso es tolerable porque solo la escribe el servidor; en `localStorage` —que el usuario
+ *    puede editar y que sobrevive a los despliegues— convertiría una línea corrupta en **una compra
+ *    de una unidad que nadie pidió**, con su precio y todo;
+ *  - `CartPayload` **rechaza**, pero rechaza el CUERPO ENTERO con un 422: medido, una sola línea con
+ *    `date: ''` deja la cesta sin presupuesto, sin horas y sin poder preguntar si cabe otra línea —
+ *    el cajón inservible y sin botón para quitar la culpable.
+ *
+ * La síntesis es la que el propio `CartPayload` documenta para una cesta de sesión: **descartar la
+ * línea mala y restaurar el resto**, aplicando sus criterios de formato.
+ */
+export function sanitizeLine(raw) {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+        return null;
+    }
+
+    const productId = toInt(raw.product_id);
+    const date = validDate(raw.date);
+    const time = canonicalTime(raw.time);
+    const quantity = toInt(raw.quantity);
+
+    if (productId === null || productId < 1 || date === null || time === null || quantity === null || quantity < 1) {
+        return null;
+    }
+
+    // Un `addons` que no es lista se trata como ausente; un complemento mal formado se descarta SOLO
+    // él, que es lo que hace el saneador de sesión. La línea sigue siendo comprable sin él.
+    const addons = (Array.isArray(raw.addons) ? raw.addons : [])
+        .map((addon) => {
+            if (addon === null || typeof addon !== 'object') return null;
+
+            const id = toInt(addon.product_id);
+            const qty = toInt(addon.quantity);
+
+            return id !== null && id >= 1 && qty !== null && qty >= 1 ? { product_id: id, quantity: qty } : null;
+        })
+        .filter(Boolean);
+
+    // ⚠️ `event_data` NO se restaura NUNCA: no se persiste (`DECISIONES #38(d)`, art. 9 del RGPD).
+    // Se deja el objeto vacío para que la forma en memoria sea siempre la misma.
+    return { product_id: productId, date, time, quantity, event_data: {}, addons };
+}
+
+/**
+ * ¿Qué hacer con una cesta guardada cuando el titular de ahora es otro?
+ *
+ * **La tabla tiene CINCO casillas y una no existe en el servidor.** En sesión, el logout hace
+ * `session()->invalidate()`, que vacía cesta y marcador **a la vez**, así que nadie tuvo nunca que
+ * decidir qué pasa con «había dueño X y ahora no hay nadie». `localStorage` no tiene invalidate ni
+ * caducidad: esa casilla es la que el cajón inventa entero, es la MÁS probable en la tablet de un
+ * parque —Alice cierra sesión, Bob abre el cajón sin identificarse— y es la fuga que la persistencia
+ * introduce.
+ *
+ * | guardada | ahora | qué se hace | por qué |
+ * |---|---|---|---|
+ * | sin dueño | anónimo | conservar | visitante que aún no se ha identificado |
+ * | sin dueño | X | conservar | **el flujo principal**: añado al carrito y luego entro para pagar |
+ * | X | X | conservar | mismo titular |
+ * | X | Y | PURGAR | la tablet compartida: Bob no hereda la cesta de Alice |
+ * | X | anónimo | PURGAR | ⚠️ el logout — la casilla que el servidor no tiene |
+ *
+ * ⚠️ La comparación va con los dos lados casteados: el servidor lo hace con `(int)` a propósito, y
+ * aquí hace más falta todavía porque `localStorage` solo guarda texto. Un `70 !== '70'` purgaría la
+ * cesta de su propio dueño en cada carga.
+ */
+export function decideOwnership(storedOwner, currentOwner) {
+    if (storedOwner === null || storedOwner === undefined) {
+        return 'keep';
+    }
+
+    return String(storedOwner) === String(currentOwner) ? 'keep' : 'purge';
+}
+
+/** Lee el almacén sin dejar que un fallo suyo tumbe el cajón. */
+function read(storage) {
+    try {
+        return storage?.getItem(STORAGE_KEY) ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Escribe en el almacén sin dejar que un fallo suyo tumbe el cajón: se degrada a memoria.
+ *
+ * ⚠️ Sin almacén devuelve `false`, no `true`. El encadenamiento opcional no lanza —`null?.setItem()`
+ * es `undefined`—, así que un `return true` detrás informaría de que se persistió cuando no se ha
+ * escrito nada; y quien decida enseñar «tu cesta se guarda» se lo creería.
+ */
+function write(storage, value) {
+    if (storage === null || storage === undefined) {
+        return false;
+    }
+
+    try {
+        storage.setItem(STORAGE_KEY, value);
+
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function forget(storage) {
+    try {
+        storage?.removeItem(STORAGE_KEY);
+    } catch {
+        // Un almacén que no deja borrar tampoco dejará leer; la cesta vive en memoria y ya está.
+    }
+}
+
+/**
+ * El sobre guardado, o `null` si no hay nada que valga.
+ *
+ * ⚠️ `JSON.parse` no filtra: con la clave ausente `getItem` devuelve `null` y `JSON.parse(null)` NO
+ * lanza —coacciona a la cadena `'null'` y devuelve `null`—; con la clave vacía sí lanza; y basura
+ * estructuralmente válida (`'42'`, `'[]'`, `'"hola"'`) pasa el parseo y revienta después. Por eso la
+ * FORMA se valida a mano tras parsear.
+ */
+function parseEnvelope(raw) {
+    if (typeof raw !== 'string' || raw === '') {
+        return null;
+    }
+
+    let payload;
+
+    try {
+        payload = JSON.parse(raw);
+    } catch {
+        return null;
+    }
+
+    if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+        return null;
+    }
+
+    if (payload.v !== STORAGE_VERSION || ! Array.isArray(payload.lines)) {
+        return null;
+    }
+
+    return payload;
+}
+
+/**
+ * Restaura la cesta guardada.
+ *
+ * Hace los CUATRO saneados que la sesión hacía gratis y `localStorage` no:
+ *  1. **formato** — descarta las líneas que la API rechazaría (ver `sanitizeLine`);
+ *  2. **titular** — purga si la cesta es de otro (ver `decideOwnership`);
+ *  3. **caducidad** — descarta las líneas cuyo día ya pasó. La sesión caducaba a los 120 minutos;
+ *     `localStorage` no caduca nunca, y medido: `POST orders/quote` tarifica **con importes completos**
+ *     una fecha de hace 19 meses, así que sin esto el cliente ve un total creíble y el rechazo le
+ *     llega al pulsar pagar, ya identificado;
+ *  4. **tope** — recorta al máximo de líneas. Con 51, los TRES endpoints que reciben la cesta
+ *     responden 422 sobre el array entero, así que el cajón queda inservible incluso para quitar.
+ *
+ * La comparación de fechas es de CADENAS (`Y-m-d` ordena lexicográficamente): sin `Date`, no hay huso
+ * que pueda mover el corte un día.
+ *
+ * @param {{getItem: Function, setItem: Function, removeItem: Function}|null} storage
+ * @param {{owner: number|string|null, today: string, maxLines: number}} context
+ * @returns {{lines: Array<object>, purged: boolean, dropped: number}}
+ */
+export function load(storage, { owner = null, today, maxLines = 50 } = {}) {
+    const payload = parseEnvelope(read(storage));
+
+    if (payload === null) {
+        return { lines: [], purged: false, dropped: 0 };
+    }
+
+    if (decideOwnership(payload.owner, owner) === 'purge') {
+        forget(storage);
+
+        return { lines: [], purged: true, dropped: payload.lines.length };
+    }
+
+    const sane = payload.lines
+        .map(sanitizeLine)
+        .filter((line) => line !== null && (today === undefined || line.date >= today));
+
+    const lines = sane.slice(0, maxLines);
+
+    return { lines, purged: false, dropped: payload.lines.length - lines.length };
+}
+
+/**
+ * Guarda la cesta.
+ *
+ * ⚠️ **`event_data` no viaja al almacén, y esa es la razón de ser de esta función.** En la instalación
+ * sembrada son el nombre de un MENOR, su edad y sus alergias —dato de salud, art. 9—, y dejarlos en
+ * el navegador los pone fuera del alcance de `User::anonymize()` (`RGPD-01`), sin caducidad y en un
+ * dispositivo que puede ser compartido. Es la única desviación consciente de la paridad de la fase.
+ *
+ * ⚠️ Y antes de escribir se RELEE: si lo guardado es de otro titular, esta cesta no lo pisa — la
+ * purga que hizo otra pestaña no se puede deshacer desde esta.
+ *
+ * @returns {boolean} si llegó a persistirse (un `false` no es un error: la cesta sigue en memoria)
+ */
+export function save(storage, { owner = null, lines = [] } = {}) {
+    const stored = parseEnvelope(read(storage));
+
+    if (stored !== null && decideOwnership(stored.owner, owner) === 'purge') {
+        forget(storage);
+
+        return false;
+    }
+
+    const payload = {
+        v: STORAGE_VERSION,
+        owner: owner ?? null,
+        lines: lines.map((line) => ({
+            product_id: line.product_id,
+            date: line.date,
+            time: line.time,
+            quantity: line.quantity,
+            addons: (line.addons ?? []).map((addon) => ({ product_id: addon.product_id, quantity: addon.quantity })),
+        })),
+    };
+
+    return write(storage, JSON.stringify(payload));
+}
+
+/** Olvida la cesta guardada. Lo usa la purga por cambio de titular. */
+export function clear(storage) {
+    forget(storage);
+}
+
+/**
+ * Reconcilia la cesta con lo que el presupuesto acaba de decir.
+ *
+ * ⚠️ **No basta con no pintar la línea muerta: hay que BORRARLA**, o viaja igual en el siguiente
+ * `POST /orders` y el pedido revienta con «:product = —» (el fallo P8, que la web ya pagó una vez y
+ * que en `localStorage` no caduca nunca).
+ *
+ * Se descartan dos cosas, y la segunda no se adivina leyendo:
+ *  - las líneas cuyo `index` **no vuelve**: el hueco en la secuencia es la señal de que el producto
+ *    dejó de venderse;
+ *  - las líneas que vuelven con `unit_price_cents: null`, o sea **sin precio para la tarifa de ese
+ *    día**. Cuentan en el badge, suman 0 al total y el checkout las rechaza sin decir cuál es: es el
+ *    mismo síntoma del bug P8 por otra puerta.
+ *
+ * Y de las que sobreviven se quitan los complementos si el presupuesto los devolvió vacíos habiéndolos
+ * enviado: `CartPricer` atrapa el error del resolutor y tarifica la línea **sin ninguno**, así que un
+ * complemento retirado hace que el total mienta a la baja mientras la cesta guardada lo conserva.
+ *
+ * ⚠️ **Reconciliar DESPLAZA los índices**, así que quien la llame tiene que volver a presupuestar
+ * antes de pintar: las filas y el botón de quitar se emparejan por el `index` del presupuesto, y
+ * pintar el viejo sobre la cesta podada enseña las respuestas de otra línea y deja el botón mudo.
+ * Por eso devuelve `changed`.
+ *
+ * @returns {{lines: Array<object>, changed: boolean}}
+ */
+export function reconcile(cart, quoteLines) {
+    const byIndex = new Map((quoteLines ?? []).map((line) => [line.index, line]));
+
+    const lines = cart
+        .map((line, index) => {
+            const quoted = byIndex.get(index);
+
+            if (quoted === undefined || quoted.unit_price_cents === null) {
+                return null;
+            }
+
+            const sentAddons = line.addons ?? [];
+            const lostAddons = sentAddons.length > 0 && (quoted.addons ?? []).length === 0;
+
+            return lostAddons ? { ...line, addons: [] } : line;
+        })
+        .filter(Boolean);
+
+    const changed = lines.length !== cart.length
+        || lines.some((line, i) => line !== cart[i]);
+
+    return { lines, changed };
+}

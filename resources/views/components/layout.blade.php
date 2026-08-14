@@ -160,6 +160,13 @@
                            canal de i18n propio: son 169 claves × 3 locales que hoy salen de `__()`
                            en servidor, y un endpoint para leerlas sería una petición más en el
                            arranque para algo que ya está resuelto al pintar la página.
+                         · `userId` — quién es el titular AHORA. La cesta del cajón SPA vive en
+                           `localStorage` y lleva su dueño dentro, así que hace falta para purgarla si
+                           cambia (`DECISIONES #38(d)`). Viaja con el HTML —antes de que exista ningún
+                           fetch, en cada carga de página— porque es la fuente más fiable que hay: el
+                           LOGOUT es una navegación completa, y ese es justo el caso que la sesión
+                           resolvía sola con `invalidate()` y que `localStorage` no tiene. `null` para
+                           el visitante anónimo, que es el valor que la purga compara.
                          · `ui` — el grupo `ui` (hoy, el rótulo del velo de carga). Va SEPARADO de
                            `messages` y no fundido con él porque son dos grupos distintos de `lang/`:
                            aplanarlos aquí crearía una tercera forma del diccionario que no existe en
@@ -176,6 +183,7 @@
                         'orderCode' => $sidebarEntry->orderCode,
                         'messages' => __('tickets'),
                         'ui' => __('ui'),
+                        'userId' => auth()->id(),
                     ], JSON_UNESCAPED_UNICODE) }}"></div>
                 @else
                     <livewire:tickets.purchase lazy />

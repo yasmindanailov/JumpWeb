@@ -42,6 +42,60 @@ class PrePushGateTest extends TestCase
         'suite' => 'artisan test --parallel',
     ];
 
+    /**
+     * ⚠️ **`npm run test:js` solo ve UN nivel de carpeta, y su fallo es silencioso.**
+     *
+     * El script pasa a `node --test` un patrón con doble asterisco sobre `resources/js`, y quien lo
+     * expande es el shell de npm (`sh`/`dash`), donde `globstar` está DESACTIVADO: el doble asterisco
+     * equivale a uno solo. Un test colocado en
+     * `resources/js/sidebar/steps/` —o en cualquier subcarpeta— **no se ejecutaría nunca**, y la suite
+     * imprimiría «pass» sin ejecutarlo. No hay error ni aviso: el fichero simplemente no existe para
+     * el runner.
+     *
+     * Es el modo de fallo más barato del cajón SPA, porque la tentación de agrupar los módulos en
+     * subcarpetas crece con cada paso. `test_the_gate_still_runs_every_step` no lo ve: comprueba que
+     * la cadena `npm run test:js` sigue en el hook, no que ejecute algo.
+     *
+     * Esto compara los ficheros que el patrón alcanza con los que existen en el árbol.
+     *
+     * (Y sí: la primera versión de este docblock cerraba el comentario a media frase al escribir el
+     * patrón literal, que lleva un cierre dentro. Es el mismo fallo que `SidebarTokenBudgetTest`
+     * vigila en las hojas de estilo, esta vez en PHP.)
+     */
+    public function test_every_js_test_file_is_reachable_by_the_runner(): void
+    {
+        $root = base_path('resources/js');
+
+        $onDisk = [];
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+
+        foreach ($iterator as $file) {
+            if (str_ends_with($file->getFilename(), '.test.js')) {
+                $onDisk[] = str_replace($root.'/', '', $file->getPathname());
+            }
+        }
+
+        // El MISMO patrón del script, expandido con el mismo criterio: un solo nivel.
+        $reachable = array_map(
+            fn (string $path): string => str_replace($root.'/', '', $path),
+            glob($root.'/*/*.test.js') ?: []
+        );
+
+        sort($onDisk);
+        sort($reachable);
+
+        $this->assertNotEmpty($onDisk, 'no hay tests JS: la red del cajón SPA ha desaparecido');
+
+        $this->assertSame(
+            $onDisk, $reachable,
+            "Hay ficheros de test JS que `npm run test:js` NO ejecuta.\n".
+            'El patrón del script lo expande `sh`, donde el doble asterisco es un solo nivel: un '.
+            "test en una subcarpeta no corre NUNCA y la suite dice «pass» igual.\n".
+            '  en el árbol : '.implode(', ', array_diff($onDisk, $reachable))."\n".
+            '  al alcance  : '.implode(', ', $reachable)
+        );
+    }
+
     private function hook(): string
     {
         $path = base_path('.githooks/pre-push');

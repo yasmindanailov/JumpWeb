@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y 4.3·1–·3 hechos → toca 4.3·4 (persistir la cesta en `localStorage`)
+### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2 y **4.3 COMPLETO** (·1–·4) → toca 4.4a (identificación de un usuario ya autenticado)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -694,6 +694,44 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         estados de canales con sus enlaces, las dos formas del teléfono, el override del panel y los
         tres idiomas), 12 de `node --test` y la guarda del chunk. **Verificado por mutación 8 veces.**
       · Suite **2642 verde**; chunk del cajón 107,3 kB de 120.
+- [x] **Paso 4.3·4 — la cesta sobrevive a la recarga** (2026-08-14, `DECISIONES #50`). Cierra el paso
+      4.3 y ejecuta `DECISIONES #38(d)`: la cesta pasa a `localStorage`, **sin `event_data`** y con su
+      dueño dentro.
+      · **La identidad sale del SERVIDOR por dos canales**: `userId` en el `data-boot` (12 bytes, con
+        el HTML) y `GET /me` al abrir el cajón y al oír `logged-in`. Se descartó que el id viajara en
+        el evento —`dispatch('logged-in')` va sin payload— porque una defensa de seguridad no puede
+        colgarse del bus de eventos del navegador. ⚠️ Un fallo de red NO es un logout: solo el 401.
+      · ⚠️ **La purga tiene CINCO casillas y una no existe en el servidor**: (X → anónimo) → PURGAR.
+        En sesión el logout vacía cesta y marcador a la vez; `localStorage` no tiene `invalidate`, así
+        que esa casilla es la fuga que introduce la persistencia y la más probable en una tablet. Las
+        otras cuatro espejan al servidor, **incluida la que sostiene el flujo principal**: una cesta de
+        invitado sobrevive al login.
+      · ⚠️ **El saneador espeja `CartPayload`, NO `Cart::sanitize()`, y DESCARTA en vez de corregir.**
+        Los dos saneadores del servidor son opuestos: uno convierte `qty: 0` en 1 —una compra que nadie
+        pidió, con precio— y el otro tira el cuerpo entero con un 422 —cajón inservible por UNA línea
+        mala, y sin botón para quitarla—. La síntesis la documenta el propio `CartPayload`.
+      · **Caducidad propia**: medido, el presupuesto tarifica con importes completos una fecha de hace
+        19 meses. La sesión caducaba a los 120 minutos; `localStorage` no caduca nunca.
+      · ⚠️ **Reconciliar y re-presupuestar son UNA operación**: podar desplaza los índices, y las filas
+        y el botón de quitar se emparejan por el `index` del presupuesto. Y se poda por dos criterios,
+        no uno: el hueco de `index` **y** `unit_price_cents: null` (el bug P8 por otra puerta).
+      · **El CANARIO del RGPD**: el doble de almacén graba todas las escrituras de cualquier clave y se
+        buscan centinelas en el volcado entero — mirar la clave `event_data` de la primera línea lo
+        pasarían en verde cuatro mutaciones distintas.
+      · **Dos huecos de red que encontró la revisión**: las guardas de `toApiItems` no estaban probadas
+        (quitarlas dejaba la suite JS entera verde y el módulo lanzaba con la primera cesta restaurada),
+        y **`npm run test:js` solo alcanza un nivel de carpeta** — un test en una subcarpeta no correría
+        nunca y la suite diría «pass». Los dos cerrados con guarda propia.
+      · **El ORÁCULO DIFERENCIAL** es la pieza central de la red: un corpus de 22 líneas pasa por el
+        `Validator` REAL con `CartPayload::lineRules()` y por el saneador en Node, y se comparan los
+        veredictos. Verificado por mutación ×3, nombrando el caso exacto que diverge.
+      · **Red**: 27 casos nuevos de `node --test` (saneador, tabla de purga, restaurar, guardar con
+        canario, reconciliar), 3 de paridad diferencial, el `userId` del montaje y la guarda del glob.
+      · Suite **2647 verde**; chunk del cajón 111,0 kB de 120.
+      · ⚠️ **Lo que NO entra**: una línea de PACK restaurada vuelve **sin sus respuestas** y el servidor
+        la rechazará al crear el pedido. El camino para volver a rellenarla no se construye porque **no
+        se puede recorrer** —«Ir a pagar» no lleva a ninguna parte hasta 4.4a—; queda como precondición
+        del paso de pago, con el dato ya disponible (al restaurar se piden los `event_fields`).
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por

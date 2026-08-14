@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addLine, cartRows, eventAnswers, removeLine, toApiItems } from './cart.js';
+import { addLine, cartRows, decideOwnership, eventAnswers, load, reconcile, removeLine, sanitizeLine, save, toApiItems } from './cart.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red de la cesta (criterio CE-6).
@@ -75,6 +75,23 @@ describe('lo que viaja a la API', () => {
         assert.deepEqual(item, { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2 });
     });
 
+    /**
+     * ⚠️ **Las líneas RESTAURADAS llegan sin esas claves**, y hasta 4.3·4 ninguna prueba las tenía:
+     * la fábrica de este fichero siempre ponía `event_data: {}` y `addons: []`, así que las dos
+     * guardas de `toApiItems` no estaban probadas. Medido: quitar el `?? {}` y el `?.` dejaba la suite
+     * JS **entera en verde** y el módulo lanzaba `TypeError` con la primera cesta restaurada.
+     *
+     * Y la forma tiene que ser EXACTAMENTE la misma en los tres casos, porque `event_data: null` da
+     * 422 en el servidor: la regla es `['sometimes','array']`, y `sometimes` no implica `nullable`.
+     */
+    test('una línea sin esas claves, o con ellas a null, produce el mismo cuerpo de cuatro claves', () => {
+        const esperado = { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2 };
+
+        assert.deepEqual(toApiItems([{ product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2 }]), [esperado]);
+        assert.deepEqual(toApiItems([{ ...esperado, event_data: null, addons: null }]), [esperado]);
+        assert.deepEqual(toApiItems([{ ...esperado, event_data: {}, addons: [] }]), [esperado]);
+    });
+
     /** Las claves vacías no viajan: el contrato las declara opcionales y mandarlas vacías es ruido. */
     test('las respuestas del pack y los complementos solo viajan si los hay', () => {
         const [item] = toApiItems([line({
@@ -138,5 +155,352 @@ describe('respuestas del pack emparejadas con su etiqueta', () => {
     /** Un valor que no es escalar tampoco: pintarlo daría «[object Object]». */
     test('un valor que no es escalar no se pinta', () => {
         assert.deepEqual(eventAnswers([{ key: 'a', label: 'A' }], { a: { x: 1 } }), []);
+    });
+});
+
+// ── La PERSISTENCIA (Fase 4 · paso 4.3·4) ─────────────────────────────────────────────────────
+
+/**
+ * Un almacén doblado que GRABA todas las llamadas, no solo las de nuestra clave.
+ *
+ * Grabarlas todas es deliberado: el canario de más abajo tiene que poder cazar que alguien guarde las
+ * respuestas del pack en una SEGUNDA clave «para no perder el trabajo del usuario».
+ */
+function fakeStorage(initial = {}) {
+    const data = new Map(Object.entries(initial));
+    const writes = [];
+
+    return {
+        getItem: (key) => (data.has(key) ? data.get(key) : null),
+        setItem: (key, value) => { writes.push([key, value]); data.set(key, value); },
+        removeItem: (key) => { data.delete(key); },
+        dump: () => JSON.stringify([...data.entries()]) + JSON.stringify(writes),
+        raw: (key) => (data.has(key) ? data.get(key) : null),
+        has: (key) => data.has(key),
+    };
+}
+
+/** El sobre tal y como lo escribiría una versión anterior o el propio módulo. */
+const envelope = (lines, owner = null) => JSON.stringify({ v: 1, owner, lines });
+
+describe('el saneador de líneas restauradas', () => {
+    test('una línea buena sobrevive y sale con la hora canónica', () => {
+        assert.deepEqual(
+            sanitizeLine({ product_id: 1, date: '2026-09-05', time: '10:00', quantity: 2 }),
+            { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2, event_data: {}, addons: [] }
+        );
+    });
+
+    /**
+     * ⚠️ **Se DESCARTA la línea, no se corrige.** `Cart::sanitize()` del servidor convierte `qty: 0`,
+     * `-5` y `'abc'` en **1**; copiarlo aquí convertiría una cesta corrupta en una compra de una unidad
+     * que nadie pidió, con su precio pintado. En un almacén que el usuario puede editar y que sobrevive
+     * a los despliegues, eso es dinero.
+     */
+    test('una cantidad imposible descarta la línea en vez de corregirla', () => {
+        for (const quantity of [0, -5, 'abc', 2.5, '3.5', null, true, undefined]) {
+            assert.equal(
+                sanitizeLine({ product_id: 1, date: '2026-09-05', time: '10:00:00', quantity }),
+                null,
+                `cantidad ${JSON.stringify(quantity)}`
+            );
+        }
+    });
+
+    /**
+     * ⚠️ **Una expresión regular NO basta para la fecha**, y es la única divergencia que salió al pasar
+     * un corpus por los dos lados: `/^\d{4}-\d{2}-\d{2}$/` acepta el 30 de febrero, que el servidor
+     * rechaza porque reconstruye la fecha y la compara.
+     */
+    test('una fecha que no existe se descarta, aunque tenga la forma correcta', () => {
+        assert.equal(sanitizeLine({ product_id: 1, date: '2026-02-30', time: '10:00:00', quantity: 1 }), null);
+        assert.equal(sanitizeLine({ product_id: 1, date: '2026-13-01', time: '10:00:00', quantity: 1 }), null);
+        assert.notEqual(sanitizeLine({ product_id: 1, date: '2028-02-29', time: '10:00:00', quantity: 1 }), null, '2028 es bisiesto');
+    });
+
+    test('una fecha sin acolchar o una hora imposible descartan la línea', () => {
+        for (const date of ['', '2026-8-5', '2026-08-17T10:00', null, 20260905]) {
+            assert.equal(sanitizeLine({ product_id: 1, date, time: '10:00:00', quantity: 1 }), null, `fecha ${date}`);
+        }
+
+        for (const time of ['1000', '25:00', '10:60', '10:00:00.000', '', null]) {
+            assert.equal(sanitizeLine({ product_id: 1, date: '2026-09-05', time, quantity: 1 }), null, `hora ${time}`);
+        }
+    });
+
+    /**
+     * ⚠️ La regla `integer` de Laravel **no es estricta**: acepta la cadena `'3'` (medido, el servidor
+     * la tarifica como 3). Descartarla borraría líneas que el servidor sí acepta.
+     */
+    test('las cadenas numéricas enteras se aceptan y se normalizan a número', () => {
+        const line = sanitizeLine({ product_id: '7', date: '2026-09-05', time: '10:00:00', quantity: '3' });
+
+        assert.equal(line.product_id, 7);
+        assert.equal(line.quantity, 3);
+        assert.equal(typeof line.quantity, 'number', 'con cadenas, sumar unidades concatenaría');
+    });
+
+    test('un complemento mal formado se descarta SOLO él; la línea sigue siendo comprable', () => {
+        const line = sanitizeLine({
+            product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 1,
+            addons: [{ product_id: 4, quantity: 1 }, { product_id: 0, quantity: 1 }, { quantity: 2 }, null, 'basura'],
+        });
+
+        assert.deepEqual(line.addons, [{ product_id: 4, quantity: 1 }]);
+    });
+
+    /** Un `addons` que no es lista se trata como ausente, y no revienta al recorrerlo. */
+    test('un `addons` que no es una lista no rompe la línea', () => {
+        assert.deepEqual(sanitizeLine({ product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 1, addons: 'x' }).addons, []);
+    });
+
+    test('lo que no es un objeto no es una línea', () => {
+        for (const raw of [null, 'x', 42, [], undefined]) {
+            assert.equal(sanitizeLine(raw), null);
+        }
+    });
+});
+
+describe('de quién es la cesta guardada', () => {
+    /**
+     * **La tabla entera, y con los tipos mezclados.** `localStorage` solo guarda texto, así que el
+     * dueño puede volver como cadena: un `70 !== '70'` purgaría la cesta de su propio dueño en cada
+     * carga. El servidor castea los dos lados a propósito.
+     */
+    test('las cinco casillas', () => {
+        assert.equal(decideOwnership(null, null), 'keep', 'anónimo que sigue anónimo');
+        assert.equal(decideOwnership(null, 7), 'keep', 'EL FLUJO PRINCIPAL: cesta de invitado que se identifica');
+        assert.equal(decideOwnership(7, 7), 'keep', 'mismo titular');
+        assert.equal(decideOwnership(7, 9), 'purge', 'la tablet compartida');
+        // ⚠️ La casilla que el servidor NO TIENE: en sesión, el logout vacía cesta y marcador a la vez.
+        assert.equal(decideOwnership(7, null), 'purge', 'LOGOUT: la fuga que introduce localStorage');
+    });
+
+    test('el dueño se compara casteado, venga como número o como cadena', () => {
+        assert.equal(decideOwnership(70, '70'), 'keep');
+        assert.equal(decideOwnership('70', 70), 'keep');
+        assert.equal(decideOwnership('70', '9'), 'purge');
+    });
+
+    /** Sin marcador es una cesta de invitado: se conserva pase lo que pase. */
+    test('una cesta sin dueño nunca se purga', () => {
+        assert.equal(decideOwnership(undefined, 7), 'keep');
+        assert.equal(decideOwnership(null, 7), 'keep');
+    });
+});
+
+describe('restaurar', () => {
+    const HOY = '2026-09-05';
+
+    test('una cesta guardada vuelve saneada', () => {
+        const storage = fakeStorage({
+            'jw.cart.v1': envelope([{ product_id: 1, date: '2026-09-06', time: '10:00', quantity: 2 }]),
+        });
+
+        const { lines, purged } = load(storage, { owner: null, today: HOY, maxLines: 50 });
+
+        assert.equal(purged, false);
+        assert.equal(lines.length, 1);
+        assert.equal(lines[0].time, '10:00:00');
+    });
+
+    /**
+     * ⚠️ La sesión caducaba a los 120 minutos; `localStorage` no caduca nunca. Y medido: el
+     * presupuesto tarifica **con importes completos** una fecha de hace 19 meses, así que sin este
+     * corte el cliente ve un total creíble y el rechazo le llega al pulsar pagar, ya identificado.
+     */
+    test('las líneas de días pasados se descartan al restaurar', () => {
+        const storage = fakeStorage({
+            'jw.cart.v1': envelope([
+                { product_id: 1, date: '2026-09-04', time: '10:00:00', quantity: 1 },
+                { product_id: 2, date: HOY, time: '10:00:00', quantity: 1 },
+                { product_id: 3, date: '2026-09-06', time: '10:00:00', quantity: 1 },
+            ]),
+        });
+
+        const { lines } = load(storage, { owner: null, today: HOY, maxLines: 50 });
+
+        assert.deepEqual(lines.map((l) => l.product_id), [2, 3], 'hoy SÍ se conserva');
+    });
+
+    /** Con 51 líneas los TRES endpoints que reciben la cesta dan 422 sobre el array entero. */
+    test('la cesta se recorta al tope de líneas', () => {
+        const many = Array.from({ length: 60 }, (_, i) => ({ product_id: i + 1, date: '2026-09-06', time: '10:00:00', quantity: 1 }));
+        const storage = fakeStorage({ 'jw.cart.v1': envelope(many) });
+
+        assert.equal(load(storage, { owner: null, today: HOY, maxLines: 50 }).lines.length, 50);
+    });
+
+    test('la cesta de otro titular se purga y se BORRA del almacén', () => {
+        const storage = fakeStorage({
+            'jw.cart.v1': envelope([{ product_id: 1, date: '2026-09-06', time: '10:00:00', quantity: 1 }], 7),
+        });
+
+        const { lines, purged } = load(storage, { owner: 9, today: HOY, maxLines: 50 });
+
+        assert.deepEqual(lines, []);
+        assert.equal(purged, true);
+        assert.equal(storage.has('jw.cart.v1'), false, 'no basta con no devolverla: hay que borrarla');
+    });
+
+    /**
+     * ⚠️ `JSON.parse` no filtra nada: con la clave ausente devuelve `null` sin lanzar, con la clave
+     * vacía LANZA, y basura estructuralmente válida pasa el parseo y revienta después. La forma se
+     * valida a mano.
+     */
+    test('un almacén con basura no rompe el cajón', () => {
+        for (const raw of ['', 'null', '42', '[]', '"hola"', '{"v":1}', '{"v":9,"lines":[]}', '{lines:[]}', '{"v":1,"lines":{}}']) {
+            const storage = fakeStorage({ 'jw.cart.v1': raw });
+
+            assert.deepEqual(load(storage, { owner: null, today: HOY, maxLines: 50 }).lines, [], `payload ${raw}`);
+        }
+    });
+
+    test('un formato de otra versión se descarta entero', () => {
+        const storage = fakeStorage({ 'jw.cart.v1': JSON.stringify({ v: 2, owner: null, lines: [{ product_id: 1 }] }) });
+
+        assert.deepEqual(load(storage, { owner: null, today: HOY, maxLines: 50 }).lines, []);
+    });
+
+    /** Sin almacén —o con uno que lanza al leer— la cesta arranca vacía y el cajón funciona igual. */
+    test('un almacén que lanza no tumba el cajón', () => {
+        const roto = { getItem: () => { throw new Error('SecurityError'); }, setItem: () => {}, removeItem: () => {} };
+
+        assert.deepEqual(load(roto, { owner: null, today: HOY, maxLines: 50 }).lines, []);
+        assert.deepEqual(load(null, { owner: null, today: HOY, maxLines: 50 }).lines, []);
+    });
+});
+
+describe('guardar', () => {
+    /**
+     * ⚠️ **EL CANARIO DEL RGPD.** No basta con mirar la clave `event_data` de la primera línea: eso lo
+     * pasarían en verde cuatro mutaciones distintas —guardarlas en una segunda clave, anidarlas dentro
+     * de un complemento o de un `meta`, o dejarlas en un marcador de «línea incompleta»—. Aquí se
+     * siembran centinelas únicos y se comprueba que NINGUNO aparece en el volcado ENTERO del almacén,
+     * incluidas todas las escrituras de cualquier clave.
+     *
+     * El dato es art. 9: en la instalación sembrada son el nombre de un menor, su edad y sus alergias.
+     * Y el cliente es la ÚNICA fuente, así que la fuga solo puede salir por aquí.
+     */
+    test('las respuestas del pack NO llegan al almacén, por ninguna vía', () => {
+        const storage = fakeStorage();
+
+        save(storage, {
+            owner: 7,
+            lines: [line({
+                event_data: {
+                    celebrant: '__CANARIO_NOMBRE__',
+                    age: '__CANARIO_EDAD__',
+                    notes: '__CANARIO_ALERGIA__',
+                },
+            })],
+        });
+
+        assert.equal(
+            storage.dump().includes('__CANARIO_'),
+            false,
+            'una respuesta del pack ha llegado al navegador: es dato del art. 9 y no puede persistirse'
+        );
+    });
+
+    test('lo guardado conserva producto, día, hora, cantidad y complementos', () => {
+        const storage = fakeStorage();
+
+        save(storage, { owner: 7, lines: [line({ addons: [{ product_id: 4, quantity: 2 }] })] });
+
+        const payload = JSON.parse(storage.raw('jw.cart.v1'));
+
+        assert.equal(payload.owner, 7);
+        assert.deepEqual(payload.lines[0], {
+            product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2,
+            addons: [{ product_id: 4, quantity: 2 }],
+        });
+    });
+
+    /**
+     * ⚠️ Dos pestañas: si en otra se identificó otro titular, su login ya purgó el almacén. Escribir
+     * la cesta de esta pestaña encima la RESUCITARÍA. Se relee antes de escribir.
+     */
+    test('no se pisa la cesta de otro titular: la purga de otra pestaña no se deshace', () => {
+        const storage = fakeStorage({ 'jw.cart.v1': envelope([{ product_id: 1, date: '2026-09-06', time: '10:00:00', quantity: 1 }], 9) });
+
+        assert.equal(save(storage, { owner: 7, lines: [line()] }), false);
+        assert.equal(storage.has('jw.cart.v1'), false);
+    });
+
+    /** Un almacén lleno o bloqueado no puede tumbar la compra: la cesta sigue viva en memoria. */
+    test('un almacén que lanza al escribir se degrada a memoria', () => {
+        const roto = { getItem: () => null, setItem: () => { throw new Error('QuotaExceededError'); }, removeItem: () => {} };
+
+        assert.equal(save(roto, { owner: null, lines: [line()] }), false);
+        assert.equal(save(null, { owner: null, lines: [line()] }), false);
+    });
+
+    test('lo guardado se puede volver a leer tal cual', () => {
+        const storage = fakeStorage();
+
+        save(storage, { owner: 7, lines: [line({ addons: [{ product_id: 4, quantity: 2 }] })] });
+
+        const { lines } = load(storage, { owner: 7, today: '2026-09-05', maxLines: 50 });
+
+        assert.equal(lines.length, 1);
+        assert.deepEqual(lines[0].event_data, {}, 'la línea vuelve sin respuestas: hay que volver a pedirlas');
+        assert.deepEqual(lines[0].addons, [{ product_id: 4, quantity: 2 }]);
+    });
+});
+
+describe('reconciliar con el presupuesto', () => {
+    /** El hueco en la secuencia de `index` es la señal de que el producto dejó de venderse. */
+    test('una línea que el presupuesto no devuelve se BORRA', () => {
+        const cart = [line({ product_id: 1 }), line({ product_id: 2 }), line({ product_id: 3 })];
+        const quote = [
+            { index: 0, unit_price_cents: 990, addons: [] },
+            { index: 2, unit_price_cents: 990, addons: [] },
+        ];
+
+        const { lines, changed } = reconcile(cart, quote);
+
+        assert.deepEqual(lines.map((l) => l.product_id), [1, 3]);
+        assert.equal(changed, true);
+    });
+
+    /**
+     * ⚠️ **El hueco de `index` no cubre todas las líneas inservibles.** Una cuyo producto se vende
+     * pero no tiene precio para la tarifa de ese día vuelve con `unit_price_cents: null`: cuenta en el
+     * badge, suma 0 al total y el checkout la rechaza sin decir cuál es. Es el bug P8 por otra puerta.
+     */
+    test('una línea sin precio para ese día también se borra', () => {
+        const cart = [line({ product_id: 1 }), line({ product_id: 2 })];
+        const quote = [
+            { index: 0, unit_price_cents: 990, addons: [] },
+            { index: 1, unit_price_cents: null, addons: [] },
+        ];
+
+        assert.deepEqual(reconcile(cart, quote).lines.map((l) => l.product_id), [1]);
+    });
+
+    /**
+     * ⚠️ El presupuesto atrapa el error del resolutor y tarifica la línea **sin ningún** complemento,
+     * así que un complemento retirado hace que el total mienta a la baja mientras la cesta guardada lo
+     * conserva — y el checkout revienta con un código sin contexto.
+     */
+    test('los complementos que el presupuesto no devuelve se quitan de la línea', () => {
+        const cart = [line({ addons: [{ product_id: 4, quantity: 1 }] })];
+        const quote = [{ index: 0, unit_price_cents: 990, addons: [] }];
+
+        const { lines, changed } = reconcile(cart, quote);
+
+        assert.deepEqual(lines[0].addons, []);
+        assert.equal(changed, true);
+    });
+
+    test('una cesta que no ha perdido nada no se toca', () => {
+        const cart = [line({ addons: [{ product_id: 4, quantity: 1 }] })];
+        const quote = [{ index: 0, unit_price_cents: 990, addons: [{ product_id: 4 }] }];
+
+        const { lines, changed } = reconcile(cart, quote);
+
+        assert.equal(changed, false);
+        assert.equal(lines[0], cart[0], 'la misma referencia: nada que reescribir');
     });
 });

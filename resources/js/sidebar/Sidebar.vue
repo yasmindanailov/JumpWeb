@@ -8,7 +8,10 @@ import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
-import { addLine, cartRows, removeLine as removeCartLine, toApiItems } from './cart.js';
+import {
+    addLine, cartRows, clear as clearStoredCart, decideOwnership,
+    load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
+} from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
@@ -32,6 +35,15 @@ const props = defineProps({
 
     /** El grupo `ui` (hoy, solo el rótulo del velo de carga). Va aparte: son dos grupos de `lang/`. */
     ui: { type: Object, default: () => ({}) },
+
+    /**
+     * Quién es el titular al cargar la página, inyectado por el servidor. `null` = visitante anónimo.
+     *
+     * ⚠️ Llega con el HTML a propósito: el LOGOUT es una navegación completa, y es justo el caso que
+     * la sesión resolvía sola con `invalidate()` y que `localStorage` no tiene. Esperar a un `fetch`
+     * dejaría una ventana en la que la cesta de quien acaba de salir sigue en pantalla.
+     */
+    userId: { type: [Number, String], default: null },
 });
 
 const store = usePurchaseStore();
@@ -64,8 +76,6 @@ async function refreshBookingStatus() {
 
     if (response.ok) bookingStatus.value = response.data;
 }
-
-defineExpose({ refreshBookingStatus });
 
 /**
  * Peticiones en vuelo. Es lo que enciende el velo de carga del armazón, y es un CONTADOR y no un
@@ -150,8 +160,52 @@ onMounted(async () => {
     if (config.ok) {
         const threshold = config.data?.catalog_search_min_items;
         searchEnabled.value = typeof threshold === 'number' && totalItems(sections.value) > threshold;
+        // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
+        // el mismo número.
+        if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
     }
+
+    await restoreCart();
 });
+
+/**
+ * Restaura la cesta guardada y la deja lista para pintarse.
+ *
+ * Tres cosas en orden, y ninguna es opcional:
+ *  1. **saneado y purga** las hace el módulo (formato, titular, caducidad y tope);
+ *  2. **las ETIQUETAS de los campos del pack** se piden para los productos restaurados. El presupuesto
+ *     no devuelve las respuestas del evento —son datos de un menor— y sin el esquema no habría con qué
+ *     emparejarlas; da igual que vuelvan vacías: el esquema también dice si la línea está incompleta;
+ *  3. **el presupuesto**, que además reconcilia y borra lo que ya no vale.
+ *
+ * ⚠️ Y como la web: con cesta, el cajón abre EN el carrito.
+ */
+async function restoreCart() {
+    const { lines } = loadStoredCart(storage(), {
+        owner: cartOwner.value,
+        today: today(),
+        maxLines: maxCartLines.value,
+    });
+
+    if (lines.length === 0) {
+        return;
+    }
+
+    cart.value = lines;
+
+    const ids = [...new Set(lines.map((line) => line.product_id))];
+    const details = await tracked(Promise.all(ids.map((id) => api.get(`/catalog/products/${id}`))));
+
+    const fields = { ...fieldsByProduct.value };
+    details.forEach((response, i) => {
+        if (response.ok) fields[ids[i]] = response.data.event_fields ?? [];
+    });
+    fieldsByProduct.value = fields;
+
+    await refreshQuote();
+
+    if (cart.value.length > 0) store.enter(STEPS.CART);
+}
 
 function totalItems(list) {
     return list.reduce((n, section) => n + section.items.length, 0);
@@ -253,6 +307,45 @@ const resolvedSelection = ref([]);
 
 /** Las líneas tal y como viajan a la API (`product_id`, `quantity`). */
 const cart = ref([]);
+
+/**
+ * De quién es la cesta que hay en memoria. Empieza siendo la del titular que pintó la página.
+ *
+ * Se compara con la identidad de cada momento en `decideOwnership()`, que tiene las cinco casillas —
+ * incluida la que el servidor no tiene, porque allí el logout vacía la sesión entera.
+ */
+const cartOwner = ref(props.userId ?? null);
+
+/** El tope de líneas lo publica `GET /config`; no se quema aquí (`cart_max_lines`). */
+const maxCartLines = ref(50);
+
+/**
+ * El almacén del navegador, o `null` si no se puede usar.
+ *
+ * ⚠️ El acceso a la PROPIEDAD es lo que lanza (`SecurityError` con los datos de sitio bloqueados o en
+ * un iframe sin `allow-same-origin`), no `getItem`. Por eso va dentro del `try` y el módulo de cesta
+ * lo recibe por parámetro: así se puede doblar en las pruebas, donde no existe.
+ */
+function storage() {
+    try {
+        return window.localStorage ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/** El día de HOY en el huso del navegador, para caducar las líneas de días pasados. */
+function today() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Persiste la cesta. Nunca con `event_data`: eso lo garantiza el módulo (`DECISIONES #38(d)`). */
+function persist() {
+    saveCart(storage(), { owner: cartOwner.value, lines: cart.value });
+}
 /** El presupuesto de la cesta. Lo tarifica `POST /orders/quote`; aquí no se suma nada (`PAY-12`). */
 const quote = ref(null);
 /** El aviso de la cesta, ya traducido. Ocupa el sitio del `@error('cart')` del Blade. */
@@ -290,6 +383,23 @@ async function refreshQuote() {
     const response = await tracked(api.post('/orders/quote', { items: toApiItems(cart.value) }));
 
     quote.value = response.ok ? response.data : null;
+
+    if (! response.ok) {
+        return;
+    }
+
+    // ⚠️ **Reconciliar y volver a presupuestar es UNA sola operación.** Podar desplaza los índices, y
+    // las filas y el botón de quitar se emparejan por el `index` del PRESUPUESTO: pintar el viejo
+    // sobre la cesta podada enseñaría las respuestas de otra línea y dejaría el botón mudo.
+    const { lines, changed } = reconcile(cart.value, quote.value.lines ?? []);
+
+    if (changed) {
+        cart.value = lines;
+        persist();
+        quote.value = null;
+
+        await refreshQuote();
+    }
 }
 const eventData = ref({});
 const addonChoices = ref([]);
@@ -428,6 +538,43 @@ const progress = computed(() => buildProgress({
 }));
 
 /**
+ * Vuelve a resolver quién es el titular y purga la cesta si ha cambiado.
+ *
+ * ⚠️ **Un fallo de red NO es un cierre de sesión.** Solo un 401 significa «ya no hay nadie»; con
+ * cualquier otro fallo se conserva la identidad conocida, porque purgar por un corte de red destruiría
+ * la cesta de quien no ha hecho nada malo — y no habría manera de recuperarla.
+ */
+async function refreshIdentity() {
+    const response = await api.get('/me');
+
+    if (! response.ok && response.status !== 401) {
+        return;
+    }
+
+    applyIdentity(response.ok ? (response.data?.id ?? null) : null);
+}
+
+/**
+ * Aplica una identidad a la cesta que hay en memoria.
+ *
+ * La purga alcanza a la cesta guardada Y a la de memoria: no basta con borrar el almacén, porque la
+ * pantalla seguiría enseñando las líneas del titular anterior hasta la próxima recarga.
+ */
+function applyIdentity(newOwner) {
+    if (decideOwnership(cartOwner.value, newOwner) === 'purge') {
+        cart.value = [];
+        quote.value = null;
+        cartError.value = '';
+        clearStoredCart(storage());
+        store.enter(STEPS.CATALOG);
+    }
+
+    cartOwner.value = newOwner;
+}
+
+defineExpose({ refreshBookingStatus, refreshIdentity });
+
+/**
  * El aviso de pausa, si toca en este paso (`paused.js`).
  *
  * ⚠️ No tapa los pasos de RESULTADO: quien vuelve de la pasarela tiene que ver en qué quedó su pago,
@@ -533,6 +680,7 @@ async function addToCart() {
     }
 
     cart.value = addLine(cart.value, candidate, verdict);
+    persist();
     clearSelection();
     store.go(STEPS.CART);
 
@@ -577,6 +725,7 @@ function showLineProblems(problems) {
 /** Quita una línea. Con la cesta vacía se vuelve al catálogo, como hace la web. */
 async function removeLine(index) {
     cart.value = removeCartLine(cart.value, index);
+    persist();
 
     if (cart.value.length === 0) {
         quote.value = null;

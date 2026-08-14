@@ -8,17 +8,17 @@
 
 **Fase 4, al detalle**: 4.0a ✅ (la costura) · 4.0b ✅ (los SEIS huecos de API) · 4.0c ✅ (tokenizar
 `site.css`) · 4.1 ✅ (cimientos SPA) · 4.2 ✅ (pasos 1–3 transcritos con paridad demostrada) ·
-4.3·1 ✅ (armazón) · 4.3·2 ✅ (pie y cesta en memoria) · **4.3·3 ✅ (el aviso de reservas en pausa)** →
-**toca 4.3·4: persistir la cesta en `localStorage`**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
-⚠️ **El paso 4.3 se partió en CUATRO al implementarlo** (`DECISIONES #47`–`#49`), como se partió 4.2:
-**·1 el armazón · ·2 el pie y la cesta en memoria · ·3 la pausa · ·4 la persistencia**. El corte no fue
-por pantalla sino por DEPENDENCIA: el pie no se podía separar de la cesta porque el CTA del paso 3 es
-«Añadir al carrito» y `disabled` es un atributo que el diff compara; y la pausa se adelantó porque el
-pie de ·2 comparte su guarda y la divergencia pasó de «falta una pantalla» a «el cajón ofrece pagar».
+**4.3 ✅ COMPLETO** (·1 armazón · ·2 pie y cesta · ·3 pausa · ·4 persistencia) → **toca 4.4a, la
+identificación**. El corte está en `docs/specs/sidebar-spa.md` §4.10.
+⚠️ **El paso 4.3 se partió en CUATRO al implementarlo** (`DECISIONES #47`–`#50`), como se partió 4.2.
+El corte no fue por pantalla sino por DEPENDENCIA: el pie no se podía separar de la cesta porque el CTA
+del paso 3 es «Añadir al carrito» y `disabled` es un atributo que el diff compara; y la pausa se
+adelantó porque el pie de ·2 comparte su guarda y la divergencia pasó de «falta una pantalla» a «el
+cajón ofrece pagar mientras la web dice que no se puede».
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2642 en verde** (14954 aserciones, `--parallel` ~70 s) · **80 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2647 en verde** (14973 aserciones, `--parallel` ~66 s) · **108 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -224,9 +224,15 @@ inaplicable; §7 dice cuáles.
 abre con su armazón (velo, banda con «Volver», zona scrollable y pie), pide catálogo, recorre
 producto → día → hora → cantidad → complementos → **añadir al carrito → carrito con su total**, y con
 las reservas pausadas **sustituye el flujo entero por el aviso de mantenimiento**, como la web. Y ahí
-se para: **«Ir a pagar» no lleva a ninguna parte** (el paso 5 es 4.4a) y **la cesta no sobrevive a una
-recarga** (4.3·4). **El flag NO se activa en producción**; su default es `livewire` y ese es el motor
-que vende. Sirve para comparar los dos en vivo (`CE-1`).
+se para: **«Ir a pagar» no lleva a ninguna parte** — el paso 5 es 4.4a. La cesta **sí sobrevive a la
+recarga** desde 4.3·4, sin `event_data` y con su dueño dentro. **El flag NO se activa en producción**;
+su default es `livewire` y ese es el motor que vende. Sirve para comparar los dos en vivo (`CE-1`).
+
+❗ **Precondición del paso de PAGO, apuntada aquí para que no se descubra tarde**: una línea de PACK
+restaurada vuelve **sin sus respuestas** (`DECISIONES #38(d)`, RGPD) y `OrderCreator` la rechaza con
+`line_event_required`. Hoy no muerde porque el CTA no lleva a ninguna parte, pero **4.4a/4.5 no pueden
+cerrarse sin el camino para volver a rellenarla**. El dato ya está: al restaurar se piden los
+`event_fields` de los productos de la cesta.
 
 ⚠️ **Residual declarado de la pausa**: el estado se relee al cargar la página y **en cada apertura del
 cajón**, pero un cajón que ya esté ABIERTO cuando se acciona el interruptor no se entera hasta
@@ -235,35 +241,21 @@ además releer tras un 409 `reservations_paused`, y eso llega con el checkout (4
 
 Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.3·4 — persistir la cesta en `localStorage`.** Es lo que `DECISIONES #38(d)` decidió y nadie ha
-   implementado todavía. Seis cosas MEDIDAS antes de empezar, todas con evidencia:
-   · **El saneador del cliente debe espejar `CartPayload::lineRules()`, NO `Cart::sanitize()`.** Medido:
-     `Cart::sanitize()` conserva una línea con `date: ''` y `POST orders/quote` rechaza el cuerpo
-     **entero** con 422 en cuanto una línea no cumple el formato → cesta impintable y sin botón para
-     quitar la línea culpable, en un almacén que no caduca.
-   · **La poda no la decide el cliente**: el hueco en la secuencia de `index` que devuelve el quote **es**
-     la señal de que una línea cayó, y el contador sale de `lines.length` (fue el bug P8). Hay que
-     BORRARLA de `localStorage`, no solo dejar de pintarla, o viaja al `POST /orders` y revienta con
-     «:product = —». El emparejado por `index` ya está hecho y probado (`cart.js::cartRows`).
-   · ⚠️ **La purga por titular tiene CINCO casillas, y una no existe en el servidor**: (dueño=X,
-     ahora=anónimo) → PURGAR. En sesión ese caso no puede darse porque el logout invalida la sesión
-     entera; en `localStorage` la cesta de Alice le queda visible a un Bob anónimo. Y la regla del
-     servidor es `dueño != null && dueño != nuevo`, así que **una cesta de invitado SOBREVIVE al login**
-     (flujo principal, con test propio: `LoginTest::test_login_preserves_guest_cart_for_the_same_person`).
-   · ⚠️ **La identidad no la da el `data-boot`**: el login embebido NO recarga la página
-     (`Login::login()` con `embedded` hace `dispatch('logged-in')` y devuelve `null`), así que el
-     `userId` inyectado se queda viejo justo cuando cambia el titular.
-   · ⚠️ **Un pack restaurado sin `event_data` es IMPAGABLE**: `OrderCreator` lanza `event_required_line`
-     y el paso 4 no tiene edición de línea —el único control es «quitar»—, así que el aviso «vuelve
-     atrás y rellénalos» es imposible de obedecer. La cesta tiene que nacer sabiendo qué líneas están
-     incompletas.
-   · **El módulo NO puede tocar `localStorage` desde el global**: en el node del contenedor
-     `typeof localStorage === 'undefined'` (medido), y ahí corren `npm run test:js` y el renderizador
-     SSR del diff. Por eso `cart.js` ya nace sin tocarlo: el almacén se recibirá por parámetro y cada
-     acceso irá en `try/catch`.
-2. **4.4a en adelante** — el corte completo, en §4.10 del spec. ⚠️ El paso **4.4b** (registro embebido
-   + restauración de cesta) está declarado **el más peligroso de la fase**, y no el de pagar: es el
-   único que cruza la frontera Livewire↔Vue en los dos sentidos y no tiene guardián en servidor.
+1. **4.4a — identificación de un usuario YA autenticado** (`§4.10`). Lo que hay que saber antes:
+   · ⚠️ **La defensa anti-cesta-cruzada del servidor desaparece en cuanto el cajón se identifique por
+     API**: `POST /api/v1/auth/login` **no toca `purchase.*`** en ninguna línea (verificado), así que
+     no escribe el marcador ni purga nada. Desde 4.3·4 la purga vive en el cliente y cubre las cinco
+     casillas, pero conviene saberlo antes de tocar el login por API.
+   · **`GET /me` ya está cableado**: `refreshIdentity()` se llama al abrir el cajón y al oír
+     `logged-in`, y purga la cesta si el titular cambió.
+   · ❗ **Precondición del paso de PAGO**: una línea de PACK restaurada vuelve **sin sus respuestas** y
+     `OrderCreator` la rechaza con `line_event_required`. Hoy no muerde porque «Ir a pagar» no lleva a
+     ninguna parte, pero 4.4a/4.5 **no pueden cerrarse sin el camino para volver a rellenarla**. El
+     dato ya está: al restaurar se piden los `event_fields` de los productos de la cesta.
+   · ⚠️ Y el paso **4.4b** (registro embebido + restauración de cesta) sigue declarado **el más
+     peligroso de la fase**: es el único que cruza la frontera Livewire↔Vue en los dos sentidos y no
+     tiene guardián en servidor.
+2. **4.5 en adelante** — el corte completo, en §4.10 del spec.
    ⚠️ Entre 4.5 y 4.6 **no se despliega el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
    (medida: movería el 52-55% de los tamaños) y el formato de importe quemado en español, los dos en
@@ -318,6 +310,24 @@ Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
   · ⚠️ **Lo que el diff de árbol NO ve de este bloque**: `href`, `target` y `rel` no son atributos de
     contrato, así que el enlace de WhatsApp y el de `/contacto` producen árboles **idénticos**. La
     paridad de enlaces es lo único que distingue mandar al WhatsApp de mandar a contacto.
+
+- **4.3·4 — la cesta sobrevive a la recarga** (2026-08-14, `DECISIONES #50`). Cinco cosas que
+  condicionan lo que viene:
+  · ⚠️ **La purga por titular tiene CINCO casillas y una NO existe en el servidor**: (X → anónimo) →
+    purgar. En sesión el logout vacía cesta y marcador a la vez; `localStorage` no tiene `invalidate`.
+    Es la fuga que introduce la persistencia. Y **una cesta de invitado SOBREVIVE al login**: es el
+    flujo principal, no un descuido.
+  · **La identidad sale del servidor por DOS canales**: `userId` en el `data-boot` (el logout es una
+    navegación completa) y `GET /me` al abrir el cajón y al oír `logged-in`. ⚠️ Un fallo de red **no**
+    es un logout: solo el 401.
+  · ⚠️ **El saneador espeja `CartPayload`, no `Cart::sanitize()`**: descarta la línea mala en vez de
+    corregirla —`qty: 0` → 1 sería una compra que nadie pidió— y valida el FORMATO, porque una sola
+    línea corrupta hace que los tres endpoints de cesta devuelvan 422 y dejen el cajón inservible.
+  · ⚠️ **Reconciliar y re-presupuestar son UNA operación**: podar desplaza los índices y las filas se
+    emparejan por el `index` del presupuesto. Se poda por dos criterios: el hueco de `index` **y**
+    `unit_price_cents: null`.
+  · **`npm run test:js` solo alcanza UN nivel de carpeta** (el patrón lo expande `sh`): un test en una
+    subcarpeta no se ejecuta nunca y la suite dice «pass». Ya hay guarda en `PrePushGateTest`.
 
 ### Tres cosas que conviene saber antes de tocar Fase 4
 
@@ -417,6 +427,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2642** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2647** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

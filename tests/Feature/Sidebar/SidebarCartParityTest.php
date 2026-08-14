@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Http\Api\CartPayload;
 use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
@@ -270,6 +271,170 @@ class SidebarCartParityTest extends TestCase
 
         $this->assertSame(['celebrant', 'notes'], array_column($server, 'key'), 'el orden lo pone el ESQUEMA, no las respuestas');
         $this->assertSame($server, $client);
+    }
+
+    // ── El SANEADOR de la cesta persistida (Fase 4 · paso 4.3·4) ──────────────────────────────
+
+    /**
+     * El corpus de líneas con el que se comparan los dos lados.
+     *
+     * No son casos «raros»: son las formas que una cesta guardada en el navegador acaba teniendo —una
+     * versión anterior del cajón, un `localStorage` editado a mano desde las DevTools, una migración a
+     * medias—. Cada una lleva escrito qué pasaría si el cliente y el servidor no coincidieran.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function corpus(): array
+    {
+        $base = ['product_id' => 1, 'date' => '2026-09-05', 'time' => '10:00:00', 'quantity' => 2];
+
+        return [
+            'línea buena' => $base,
+            'hora sin segundos' => [...$base, 'time' => '10:00'],
+            'cantidad como cadena' => [...$base, 'quantity' => '3'],
+            'producto como cadena' => [...$base, 'product_id' => '1'],
+            // ⚠️ El caso que una expresión regular da por bueno: `date_format` reconstruye la fecha.
+            'fecha que no existe' => [...$base, 'date' => '2026-02-30'],
+            'fecha bisiesta válida' => [...$base, 'date' => '2028-02-29'],
+            'fecha sin acolchar' => [...$base, 'date' => '2026-9-5'],
+            'fecha vacía' => [...$base, 'date' => ''],
+            'fecha con hora' => [...$base, 'date' => '2026-09-05T10:00'],
+            'hora sin dos puntos' => [...$base, 'time' => '1000'],
+            'hora imposible' => [...$base, 'time' => '25:00'],
+            'hora con milésimas' => [...$base, 'time' => '10:00:00.000'],
+            'cantidad cero' => [...$base, 'quantity' => 0],
+            'cantidad negativa' => [...$base, 'quantity' => -1],
+            'cantidad decimal' => [...$base, 'quantity' => 2.5],
+            'cantidad decimal como cadena' => [...$base, 'quantity' => '3.5'],
+            'cantidad con texto' => [...$base, 'quantity' => 'abc'],
+            'producto cero' => [...$base, 'product_id' => 0],
+            'producto nulo' => [...$base, 'product_id' => null],
+            'complemento correcto' => [...$base, 'addons' => [['product_id' => 4, 'quantity' => 1]]],
+            'complementos vacíos' => [...$base, 'addons' => []],
+            'respuestas vacías' => [...$base, 'event_data' => []],
+        ];
+    }
+
+    /**
+     * ⚠️ **El ORÁCULO DIFERENCIAL: el saneador del cliente acepta lo que el servidor acepta.**
+     *
+     * Es la única forma de comparar dos implementaciones sin copiar la lista de reglas a mano —copiarla
+     * es exactamente lo que se separa con el tiempo—. El corpus pasa por el `Validator` REAL con
+     * `CartPayload::lineRules()` y por `sanitizeLine()` en Node, y se comparan los veredictos.
+     *
+     * Importa porque los dos errores posibles duelen de formas distintas: si el cliente es más
+     * ESTRICTO, borra líneas que el servidor habría comprado; si es más LAXO, una sola línea mala hace
+     * que `orders/quote` devuelva 422 sobre el cuerpo entero y el cajón se queda **sin precios, sin
+     * horas y sin poder preguntar si cabe otra línea** — inservible y sin botón para quitar la culpable,
+     * en un almacén que no caduca.
+     */
+    public function test_the_client_sanitiser_accepts_exactly_what_the_server_accepts(): void
+    {
+        $corpus = $this->corpus();
+        $client = $this->sanitiseInNode(array_values($corpus));
+
+        $expected = [];
+        $actual = [];
+
+        foreach (array_keys($corpus) as $i => $label) {
+            $server = ! validator(['line' => $corpus[$label]], CartPayload::lineRules('line'))->fails();
+
+            $expected[$label] = $server ? 'acepta' : 'descarta';
+            $actual[$label] = $client[$i] === null ? 'descarta' : 'acepta';
+        }
+
+        $this->assertSame(
+            $expected, $actual,
+            'El saneador del cajón y el validador de la API NO coinciden.
+'.
+            'Más estricto borra líneas comprables; más laxo deja que UNA línea mala tumbe el cuerpo '.
+            'entero del presupuesto con un 422 y deje el cajón inservible.'
+        );
+    }
+
+    /**
+     * **La vuelta del oráculo**: lo que el saneador DEVUELVE tiene que pasar el validador del servidor.
+     *
+     * No basta con acertar el veredicto: la línea saneada es la que se manda de verdad, y si el
+     * saneador normalizara mal —una hora a la que le faltan los segundos, una cantidad que se queda en
+     * cadena— el 422 llegaría igual.
+     */
+    public function test_what_the_client_keeps_is_accepted_by_the_server(): void
+    {
+        $client = $this->sanitiseInNode(array_values($this->corpus()));
+        $kept = array_values(array_filter($client));
+
+        $this->assertNotEmpty($kept, 'si el saneador lo descartara todo, este caso no probaría nada');
+
+        foreach ($kept as $line) {
+            $this->assertFalse(
+                validator(['line' => $line], CartPayload::lineRules('line'))->fails(),
+                'El servidor rechaza una línea que el cliente conserva: '.json_encode($line, JSON_UNESCAPED_UNICODE)
+            );
+        }
+    }
+
+    /**
+     * **Y el inventario de campos**, para que un campo nuevo en el contrato no pase inadvertido.
+     *
+     * `CartPayload::lineRules()` publica sus claves; si el servidor empieza a validar un séptimo campo
+     * y el saneador del cliente no lo conoce, lo tirará al restaurar sin que nadie se entere.
+     */
+    public function test_the_client_knows_every_field_the_server_validates(): void
+    {
+        $server = array_map(
+            fn (string $key): string => str_replace('line.', '', $key),
+            array_keys(CartPayload::lineRules('line'))
+        );
+
+        // Las reglas de los complementos van con comodín (`addons.*.…`): el campo de la línea es `addons`.
+        $server = array_values(array_unique(array_map(
+            fn (string $key): string => explode('.', $key)[0],
+            $server
+        )));
+
+        sort($server);
+
+        $client = $this->sanitisedFieldsInNode();
+        sort($client);
+
+        $this->assertSame(
+            $server, $client,
+            'El servidor valida campos de línea que el saneador del cliente no conoce.
+'.
+            'Los que no conoce los TIRA al restaurar, y la cesta vuelve incompleta sin decir nada.'
+        );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $lines
+     * @return array<int, array<string, mixed>|null>
+     */
+    private function sanitiseInNode(array $lines): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { sanitizeLine } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                process.stdout.write(JSON.stringify({ lines: JSON.parse(raw).map(sanitizeLine) }));
+            });
+            JS, $lines, 'sanitise-lines.mjs', 'cart.js')['lines'];
+    }
+
+    /** @return array<int, string> */
+    private function sanitisedFieldsInNode(): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { SANITISED_FIELDS } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                process.stdout.write(JSON.stringify({ fields: [...SANITISED_FIELDS] }));
+            });
+            JS, [], 'sanitised-fields.mjs', 'cart.js')['fields'];
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
