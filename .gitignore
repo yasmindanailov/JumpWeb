@@ -48,3 +48,4 @@ Thumbs.db
 # Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan.
 # Las versiones optimizadas para web SI se versionan en /public/images/attractions.
 /design_mockup/imagenesatracciones/
+storage/ssr

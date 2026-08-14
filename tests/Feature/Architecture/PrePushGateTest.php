@@ -22,6 +22,10 @@ class PrePushGateTest extends TestCase
     /**
      * Los pasos del gate, con el comando que los identifica y por qué están.
      *
+     * `build:ssr` entró en Fase 4 · paso 4.2: `SidebarDomContractTest` compara el árbol renderizado
+     * de los DOS motores, y el de Vue hay que compilarlo antes porque Node no carga `.vue`. Sin ese
+     * paso, el test de paridad visual no puede correr — y es el que sostiene `CE-2`.
+     *
      * `test:js` entró en Fase 4 · paso 4.1: la máquina de estados del cajón SPA es un módulo JS
      * plano —lo es justo para poder probarla sin montar un runner de componentes— y su red solo vale
      * si algo la ejecuta. La del sidebar Livewire tiene seis ficheros de test detrás; transcribirla
@@ -33,6 +37,7 @@ class PrePushGateTest extends TestCase
         'docs-check' => 'scripts/docs-check.sh',
         'Pint' => 'pint --test',
         'build de assets' => 'npm run build',
+        'build SSR del cajón' => 'npm run build:ssr',
         'tests JS' => 'npm run test:js',
         'suite' => 'artisan test --parallel',
     ];

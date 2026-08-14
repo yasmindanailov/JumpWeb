@@ -12,7 +12,7 @@ CHECKOUT ORQUESTADO**: 0 cimientos · 1 lectura y catálogo · 2 admisión e ida
 dos y aprobó la mitad medida. La orquestación está hecha; **el segundo driver de pasarela viaja a
 Fase 6** con la app, su primer lector real (`DEUDA.md`, severidad rebajada). Lo único abierto de la
 fase es la emisión de tokens Bearer, también de Fase 6.
-- Suite **2597 en verde** (14145 aserciones, `--parallel` ~61 s) · **15 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2600 en verde** (14153 aserciones, `--parallel` ~64 s) · **15 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -112,6 +112,16 @@ inaplicable; §7 dice cuáles.
   el MOTOR usa `consume()`. Cuando el motor sea la SPA —mismo documento— consumirá el layout.
 - **Gates**: el `pre-push` corre `npm run build` **antes** de la suite y, desde 4.1, `npm run test:js`
   (`PrePushGateTest` vigila cada paso). El puerto de Vite se DERIVA de `config('app.vite_dev_port')`.
+- **4.2 — el catálogo transcrito, 1 de 3 pasos** (`DECISIONES #44`). Lo importante no es el paso: es
+  **la red**. `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y
+  sin navegador (`@vue/server-renderer` viene con Vue). Tres cosas para el siguiente:
+  · **Node no carga `.vue`**: el renderizador se compila con `npm run build:ssr`, que está en el
+    `pre-push`. Sin ese paso el test de `CE-2` no corre.
+  · **El diff normaliza el andamiaje de cada motor y conserva lo que el CSS mira.** Dentro de un
+    `<svg>` no desciende —es geometría—, pero que HAYA un `<svg>` sí se comprueba.
+  · ⚠️ **Los iconos del sidebar envuelven su SVG en un `<span class="icon …">` y ese envoltorio es
+    CONTRATO** (`.catalog-acc__head span` lo mira). El primer intento emitía el `<svg>` suelto: todas
+    las clases correctas y el estilo perdido igual. Lo cazó el diff, no la lectura del Blade.
 - **4.1 — cimientos SPA hechos** (`DECISIONES #43`). El motor monta tras el flag `sidebar.engine`
   (default y fallback: `livewire`). Cuatro cosas que condicionan lo que viene:
   · **El entry se trae con `import()` en la PRIMERA apertura**, nunca con la página: el enganche
@@ -188,9 +198,12 @@ inaplicable; §7 dice cuáles.
 **Cimientos cerrados: 4.0a, 4.0b, 4.0c y 4.1.** El motor SPA monta, tiene red y no pesa en la
 landing. Lo que sigue es **transcribir pasos**, y cada uno cierra su paridad al final.
 
-1. **4.2 — pasos 1–3: catálogo, calendario, hora+cantidad y COMPLEMENTOS.** ⚠️ Los complementos son
-   del paso 3, no del 4 (la v1 del spec los ponía mal), y su pie ya es dinero: se pinta con lo que
-   devuelve `POST catalog/products/{id}/addons`, no se suma en el cliente.
+1. **4.2 — pasos 2 y 3** (el 1 ya está). ⚠️ Los complementos son del paso **3**, no del 4 (la v1 del
+   spec los ponía mal), y su pie ya es dinero: se pinta con lo que devuelve
+   `POST catalog/products/{id}/addons`, no se suma en el cliente.
+   **La red ya está puesta**: añade el caso a `SidebarDomContractTest` ANTES de transcribir y
+   transcribe hasta que el diff calle. El primer intento del catálogo falló por el envoltorio de los
+   iconos, que ninguna lectura del Blade habría delatado.
 2. **4.3 en adelante** — el corte completo, en §4.10 del spec. ⚠️ Entre 4.5 y 4.6 **no se despliega
    el flag**: quien pague en medio volvería a un cajón mudo.
 3. **Lo que queda ABIERTO como decisión de producto, no como tarea**: la escala tipográfica canónica
@@ -295,6 +308,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2597** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2600** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

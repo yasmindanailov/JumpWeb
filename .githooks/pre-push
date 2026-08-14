@@ -112,6 +112,12 @@ docker compose exec -u sail -T laravel.test npm run build
 # así. Va aquí y no «cuando toque» porque la del sidebar Livewire tiene hoy seis ficheros de test
 # detrás — transcribirla sin red sería una pérdida neta de cobertura, y el gate es lo único que
 # garantiza que la red se ejecute. Cuesta <1 s.
+# Bundle SSR del cajón (Fase 4 · paso 4.2). `SidebarDomContractTest` compara el ÁRBOL que emite
+# cada motor, y para renderizar el de Vue en Node hace falta compilar sus `.vue`: Node no los carga
+# solo. Se construye con Vite, como el bundle de cliente. Cuesta <2 s.
+echo '→ pre-push: build SSR del cajón…'
+docker compose exec -u sail -T laravel.test npm run build:ssr
+
 echo '→ pre-push: tests JS (node --test)…'
 docker compose exec -u sail -T laravel.test npm run test:js
 

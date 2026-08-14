@@ -546,7 +546,21 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `node_modules/vue/` y **pasaba sin mirar nada** (un build de producción no conserva las rutas
         de origen), y un test del flag fallaba porque **Livewire memoiza que ya emitió sus assets** y
         ese estado estático sobrevive entre peticiones del mismo test (familia `SUITE-02`).
-- [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: catálogo, fecha/hora, cesta,
+- [ ] **Paso 4.2 — pasos 1–3 (EN CURSO, 1 de 3; 2026-08-14, `DECISIONES #44`).** Entra el
+      **catálogo** con su paridad DEMOSTRADA, y con él la red que sostiene toda la transcripción:
+      `SidebarDomContractTest` compara el ÁRBOL renderizado de los dos motores en el gate y **sin
+      navegador** —`@vue/server-renderer` viene con Vue; Node no carga `.vue` sin compilar, así que
+      el renderizador se construye con Vite y `npm run build:ssr` entra en el `pre-push`—.
+      · **Se normaliza el andamiaje de cada motor y se conserva lo que el CSS mira**: etiqueta,
+        clases, anidamiento y accesibilidad. Dentro de un `<svg>` no se desciende (es geometría), pero
+        que HAYA un `<svg>` sí se comprueba: de eso dependen selectores como `.catalog__go svg`.
+      · **El test trae su propia guarda**, porque un diff que normaliza de más pasa siempre.
+        Verificado por mutación sobre el componente real: un `<div>` donde el Blade pone `<button>`, o
+        una clase renombrada, ponen el diff en rojo con la línea exacta.
+      · ⚠️ **Lo que la paridad obligó a copiar y no se habría adivinado**: los iconos son componentes
+        Blade que envuelven su SVG en un `<span class="icon …">`, y ese envoltorio ES contrato.
+      · **Pendiente**: pasos 2 (calendario) y 3 (hora, cantidad y complementos).
+- [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
 - [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
       instalación para poder convivir/comparar).

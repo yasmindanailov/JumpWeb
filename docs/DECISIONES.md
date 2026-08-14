@@ -1472,3 +1472,39 @@ de la guarda** que comprueba que esas firmas siguen existiendo. El segundo, en u
 comprobar los dos motores en un mismo caso fallaba porque **Livewire memoiza que ya emitió sus assets
 y ese estado estático sobrevive entre peticiones del mismo test** — misma familia que `SUITE-02`. Se
 separó en dos casos.
+
+## #44 · 2026-08-14 · La paridad visual se demuestra con un diff de árbol, no con un screenshot
+Fase 4 · paso 4.2 (primer tramo): nace `SidebarDomContractTest` y con él el **paso 1, el catálogo**.
+
+**(a) El diff corre en el gate, sin navegador.** `CE-2` exige comparar el ÁRBOL renderizado de los
+dos motores, no extraer `class=` del código —la v1 del spec daba por hecho lo segundo y se midió que
+era falso: 90 de 292 selectores son estructurales o dependen del tipo de elemento—. La forma barata
+de hacerlo es `@vue/server-renderer`, que **ya viene con Vue**: se renderiza el componente en Node y
+se compara con lo que emite Livewire. Un navegador headless habría sido una dependencia pesada, lenta
+y con su propio modo de fallo, para responder la misma pregunta.
+⚠️ Node no carga `.vue` sin compilar, así que el renderizador se construye con Vite (`npm run
+build:ssr`) y ese paso entra en el `pre-push`: sin él, el test que sostiene `CE-2` no puede correr.
+
+**(b) Qué se normaliza y qué no, que es donde está el valor.** Fuera el andamiaje de cada motor
+(`wire:*`, `x-*`, `@*`, `:*`, `data-v-*`); dentro la etiqueta, las clases, el anidamiento y los
+atributos de accesibilidad. **No se desciende dentro de un `<svg>`**: su interior es geometría, y
+exigir los mismos `<path>` convertiría un contrato visual en una copia literal de los iconos — que
+HAYA un `<svg>` donde toca sí se comprueba, porque de eso dependen selectores como `.catalog__go svg`.
+
+**(c) Un diff que normaliza de más pasa siempre**, así que el test trae **su propia guarda**: se
+comprueba que el normalizador distingue un `<div>` de un `<button>` y detecta una clase que falta.
+Verificado por mutación en el componente real: cambiar el `<button>` de la ficha por un `<div>`, o
+renombrar `catalog__pricecol`, ponen el diff en rojo señalando la línea exacta.
+
+**(d) El árbol se compara contra el view-model REAL del Livewire**, tomado del propio componente en
+vez de escrito a mano en el test. Escribirlo a mano compararía Vue contra una idea del catálogo, no
+contra el catálogo.
+
+**(e) Lo que la paridad obligó a copiar y no se habría adivinado**: los iconos del sidebar son
+componentes Blade que envuelven su SVG en un `<span class="icon …">`, y ese envoltorio es contrato
+—`.catalog-acc__head span` lo mira—. El primer intento emitía el `<svg>` suelto: mismas clases en los
+nodos con clase, y el estilo perdido igual.
+
+⚠️ **(f) El paso 4.2 queda ABIERTO a propósito**: entra el paso 1 (catálogo) con su paridad
+demostrada; los pasos 2 (calendario) y 3 (hora, cantidad y complementos) siguen pendientes. La red ya
+está puesta, así que cada uno se cierra contra ella.
