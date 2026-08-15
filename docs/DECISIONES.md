@@ -3264,3 +3264,29 @@ intacta.
 `showPausedNotice()` del componente; ahora se escribe paso a paso, porque en qué pasos se tapa el flujo
 no lo publica ningún endpoint: es una regla de interfaz. Los de resultado (6, 7, 9, 10 y 11) quedan
 fuera porque son acciones ya iniciadas que deben poder completarse.
+
+## #82 · 2026-08-15 · 4.7·2b·2 — el primer caso que se RETIRA por redundante, medido
+Séptima de la auditoría: `SidebarProgressParityTest` (4 usos). Contador **23 → 22**. De sus tres casos
+uno se va, uno no se toca y uno se congela.
+
+**(a) La comparación de la banda se retira, y no por descuido.** Nació porque el diff de árbol
+alimentaba a Vue con el view-model del servidor; ese hueco lo cerró (B) en `#71`, cuando el árbol pasó
+a **ejecutar** `progress.js`. **Medido**: las dos mutaciones que esta comparación cazaba —clavar la
+fase activa y vaciar el producto del contexto— dejan rojo **también** `progress.test.js`. Es el primer
+caso de la auditoría que se retira entero por redundancia demostrada, no por clasificación.
+
+**(b) ⚠️ Y se comprobó qué se iba con él, que es la parte que se olvida.** `ucfirst()` solo se ejerce
+desde `buildProgress()`, así que al retirar la comparación había que mirar si alguien más lo cubría:
+mutarlo deja **dos casos rojos en `progress.test.js`** y el diff de árbol verde —descarta el texto—.
+Cobertura intacta. **Retirar un caso obliga a medir qué dejaba de estar cubierto, no solo que la suite
+siga verde.**
+
+**(c) El mapa de «modo» se congela contra el motor vivo** (misma técnica que `#81`): `stepModeMap()`
+era la única declaración que existía y su consumidor **sobrevive** —`layout.blade.php` pinta
+`is-{modo}` en `.sidecart__panel`—. Se volcó y se escribió como decisión, con el 8 (pago) en `cart` y
+no en `result`, que es la divergencia que este caso destapó en 4.3·1. Dos mutaciones sobre `modeOf()`
+lo dejan rojo.
+
+**(d) La fecha del contexto se queda intacta**: es el único texto del cajón cuya fuente NO comparten
+los dos lados —Carbon frente a `Intl`— y el caso acota hasta dónde llega la divergencia del español.
+Eso no depende de ningún motor.

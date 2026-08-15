@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.694 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
+- Suite **2714 en verde** (15.670 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -65,17 +65,18 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 23
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 22
 dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componente se borra.
 
 ▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
 alimenta del servidor en los once pasos, así que por fin se puede preguntar por cada paridad **«¿qué
-afirma esto que el diff ya no afirme?»**. Van cinco respondidas y las cinco fuera del inventario:
+afirma esto que el diff ya no afirme?»**. Van seis respondidas y las seis fuera del inventario:
 `SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`), `SidebarAdmissionParityTest`
-(`#78`), `SidebarCartParityTest` (`#80`) y `SidebarPausedParityTest` (`#81`).
+(`#78`), `SidebarCartParityTest` (`#80`), `SidebarPausedParityTest` (`#81`) y
+`SidebarProgressParityTest` (`#82`).
 `SidebarCalendarParityTest` está clasificada (`#79`), pero muere con el componente: no baja el contador.
 
-**La regla de la auditoría** (`#75`), que vale para las tres restantes: separa lo que **compara entre
+**La regla de la auditoría** (`#75`), que vale para las dos restantes: separa lo que **compara entre
 motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
 como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
 test). El tercero hay que buscarlo activamente.
@@ -84,8 +85,8 @@ test). El tercero hay que buscarlo activamente.
 direcciones: en `#77` la lectura decía «redundante con el diff de árbol» y la medición encontró **tres
 campos que solo cazaba ella**; en `#78` la lectura decía «compara destinos, se queda» y la medición
 encontró que esa mitad **la cubría entera `admission.test.js`** — lo que había que rescatar era otra
-cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Seis avisos que valen para las
-tres:**
+cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Siete avisos que valen para las
+dos:**
 - un campo pinchado en su valor **trivial** (0, `null`, lista vacía) NO está fijado: el cruce sale verde;
 - una mutación por sustitución de texto puede caer en **otra** aparición del mismo nombre — comprueba
   dónde cayó, no solo que el fichero cambió;
@@ -96,15 +97,17 @@ tres:**
   `number_format` y la API — re-apunta a esas tres y comparará menos, pero lo que nadie más mira;
 - y cuando **no hay fuente** a la que re-apuntar (`#81`), **mide la referencia antes de perderla**:
   vuelca lo que el motor vivo emite de verdad y congélalo, como hizo `#60` con el manifiesto. Después
-  de borrarlo solo queda reconstruirla de memoria.
+  de borrarlo solo queda reconstruirla de memoria;
+- y al **retirar** un caso por redundante (`#82`), mide qué dejaba de cubrirse: que la suite siga verde
+  no lo dice — hay que mutar lo que ese caso era el único en ejercer.
 
 ⚠️ **Y una paridad puede NO ser homogénea** (`#79`, `SidebarCalendarParityTest`): dos de sus casos
 mueren con el componente y el tercero sobrevive, así que la unidad de la auditoría es el **caso**, no
 el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
 usarlo— porque hace leer mal la clasificación al borrar.
 
-**Las tres que quedan por auditar**, por tamaño: `SidebarProgressParityTest` (4) ·
-`SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+**Las dos que quedan por auditar**, por tamaño: `SidebarOutcomeParityTest` (10) ·
+`SidebarDomContractTest` (26).
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
@@ -268,6 +271,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2714** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

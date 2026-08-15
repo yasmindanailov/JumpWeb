@@ -1286,8 +1286,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · Cinco mutaciones, las cinco rojas (tapar un paso de resultado, WhatsApp a otro destino,
           `tel:` con el número rotulado, título desde el diccionario, el canal de llamar deja de ser
           el principal).
-        · **Quedan TRES por auditar**: `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest`
-          (10) · `SidebarDomContractTest` (26).
+      · ✅ **`SidebarProgressParityTest` reducida y FUERA del inventario** (2026-08-15,
+        `DECISIONES #82`). 23 → **22**. De sus tres casos uno se va, uno no se toca y uno se congela.
+        · **Primer caso RETIRADO por redundancia demostrada**: la comparación de la banda existía por
+          el hueco que (B) cerró en `#71` —el árbol ya ejecuta `progress.js`—, y sus dos mutaciones
+          dejan rojo **también** `progress.test.js`.
+        · ⚠️ **Y se midió qué se iba con él**: `ucfirst()` solo se ejerce desde `buildProgress()`;
+          mutarlo deja dos rojos en `progress.test.js` y el árbol verde. Cobertura intacta.
+          **Retirar un caso obliga a medir qué dejaba de cubrirse, no solo que la suite siga verde.**
+        · El mapa de «modo» se **congela** contra el motor vivo (técnica de `#81`): su consumidor
+          sobrevive —`layout.blade.php` pinta `is-{modo}`— y el 8 (pago) es `cart`, no `result`.
+        · La fecha del contexto se queda intacta: Carbon frente a `Intl`, con la divergencia del
+          español acotada. No depende de ningún motor.
+        · **Quedan DOS por auditar**: `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
