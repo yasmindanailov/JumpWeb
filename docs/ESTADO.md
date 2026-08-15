@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2710 en verde** (15.658 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
+- Suite **2708 en verde** (15.653 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -65,19 +65,18 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 21
-dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componente se borra.
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 20
+dependientes** (eran 32 al corregir el escáner). ⚠️ **Pero la meta NO es 0** — ver abajo.
 
-▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
-alimenta del servidor en los once pasos, así que por fin se puede preguntar por cada paridad **«¿qué
-afirma esto que el diff ya no afirme?»**. Van **ocho auditadas**: seis fuera del inventario
+**Las nueve paridades: auditoría CERRADA** (histórico, no hay nada que hacer aquí). Van **ocho
+auditadas**: seis fuera del inventario
 —`SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`), `SidebarAdmissionParityTest`
 (`#78`), `SidebarCartParityTest` (`#80`), `SidebarPausedParityTest` (`#81`) y
 `SidebarProgressParityTest` (`#82`)— y dos que **mueren con el componente** y por tanto no bajan el
 contador: `SidebarCalendarParityTest` (`#79`) y `SidebarDomContractTest` (`#83`), las dos operando
 DENTRO en ·2b·3, no borradas enteras.
 
-**La regla de la auditoría** (`#75`), que vale para la que queda: separa lo que **compara entre
+**La regla de la auditoría** (`#75`), que sigue valiendo para lo que venga: separa lo que **compara entre
 motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
 como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
 test). El tercero hay que buscarlo activamente.
@@ -110,12 +109,27 @@ usarlo— porque hace leer mal la clasificación al borrar.
 inventario** y **dos que mueren con el componente** operando DENTRO, con sus instrucciones escritas en
 sus propios ficheros (`#79` el calendario, `#83` el diff de árbol). Contador **27 → 21**.
 
-▶ **EMPIEZA AQUÍ: los dependientes que NO son paridades.** Quedan 21 y ninguno está auditado con esta
-regla todavía. Los de `tests/Feature/Sales/*` son el grueso —`PurchaseLimitsTest`,
-`PurchaseIdentificationTest`, `DepositSurfacesTest`, `PurchaseRetryAndPollingTest`…— y la lección de
-`#85` se aplica igual: **busca primero la pieza de la que cuelgan todos** (allí fue `purchase()`) y
-cámbiala a la API antes de tocar caso por caso. Tres ya están clasificados y no hay que re-medirlos
-(ver abajo).
+▶ **EMPIEZA AQUÍ: los dependientes que NO son paridades** (`#86`). Quedan **20**.
+
+⚠️⚠️ **La meta NO es que el contador llegue a 0.** Medido: **nueve** de los que quedan tienen por
+sujeto la SUPERFICIE del motor —`PurchasePanelTest` (40 casos), `SidebarDomContractTest` (34),
+`SidebarCalendarParityTest`, `SidebarSeamTest`, `SpinnerTest`, `DuplicateEmailEdgeCaseTest`,
+`ReservationPauseGuardTest`, media `ModuleContractsTest` y `SidebarTokenBudgetTest`— y esos **solo
+pueden salir del inventario en el mismo commit que borra el componente**. La condición terminal real
+es **«todas las entradas restantes CLASIFICADAS como que mueren»**. Está escrito también en el
+docblock de `PurchaseRetirementTest`.
+
+**La pregunta de la auditoría CAMBIA de forma** para estos: ya no es «¿qué afirma que el diff no
+afirme?» sino **«¿su sujeto es el DOMINIO —y el componente solo conduce— o es la SUPERFICIE
+Livewire?»**. Los primeros se re-apuntan y bajan el contador; los segundos mueren.
+
+⚠️ **Y aquí NO hay nudo**: la lección de `#85` se aplicó y dio negativo — los once que quedan por
+auditar tienen cada uno sus propios ayudantes pequeños, sin nada compartido. Se van de uno en uno.
+Hecho: `AddonDependencyTest` (`#86`). Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
+· `PurchaseLimitsTest` (13) · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
+· `AddonInclusionPurchaseTest` (7) · `DepositSurfacesTest` (6) · `ReservationPauseTest` (5) ·
+`PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
+`PurchaseConfirmationStatusTest` (3) · `CatalogVisibilityAndCartPruneTest` (1).
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 ✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está
@@ -287,6 +301,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2710** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2708** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

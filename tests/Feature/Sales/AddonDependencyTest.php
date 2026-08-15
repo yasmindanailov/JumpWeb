@@ -11,11 +11,9 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -202,43 +200,20 @@ class AddonDependencyTest extends TestCase
         $this->assertSame($expected, $all);
     }
 
-    // ─── Checkout público (Livewire): la dependencia se respeta de punta a punta ─────────────────
-
-    public function test_checkout_does_not_carry_an_orphan_dependent_into_the_cart(): void
-    {
-        $cake = $this->makeAddon('Tarta', 2000, [], 0);
-        $second = $this->makeAddon('Segunda tarta', 1500, ['requires_addon_id' => $cake->id], 1);
-
-        // El cliente fuerza la cantidad de la 2.ª sin elegir la 1.ª; el carrito NO la lleva.
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $this->product->id)
-            ->call('selectDate', $this->date)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('incAddon', $second->id)        // intenta añadir la 2.ª (sin la 1.ª)
-            ->call('addToCart')
-            ->assertSet('step', 4);
-
-        $addons = collect($component->get('cart'))->last()['addons'] ?? [];
-        $this->assertFalse(collect($addons)->contains('ticket_type_id', $second->id));
-    }
-
-    public function test_checkout_carries_the_dependent_once_its_requirement_is_chosen(): void
-    {
-        $cake = $this->makeAddon('Tarta', 2000, [], 0);
-        $second = $this->makeAddon('Segunda tarta', 1500, ['requires_addon_id' => $cake->id], 1);
-
-        // Con la 1.ª elegida, la 2.ª pasa a poder añadirse y ambas viajan al carrito.
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $this->product->id)
-            ->call('selectDate', $this->date)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('incAddon', $cake->id)
-            ->call('incAddon', $second->id)
-            ->call('addToCart')
-            ->assertSet('step', 4);
-
-        $addons = collect(collect($component->get('cart'))->last()['addons'] ?? []);
-        $this->assertTrue($addons->contains('ticket_type_id', $cake->id));
-        $this->assertTrue($addons->contains('ticket_type_id', $second->id));
-    }
+    /*
+     * ⚠️ **Aquí vivían los dos casos de «checkout público (Livewire)»**, retirados en 4.7·2b·2
+     * (`DECISIONES #86`) por REDUNDANTES, y medido antes de tocarlos.
+     *
+     * Ejercían la poda de dependencias conduciendo el componente hasta el carrito. Las dos mutaciones
+     * que los ponían rojos —que `buildSelection()` deje de podar huérfanos, y que un dependiente no
+     * viaje nunca ni con su requisito puesto— dejan rojos **otros dos casos que SOBREVIVEN**, uno de
+     * ellos en este mismo fichero:
+     *
+     *   · `test_build_selection_excludes_an_orphan_dependent` (aquí arriba, llama al dominio directo);
+     *   · `Api\V1\CatalogAddonsTest::test_the_dependency_pruning_follows_the_whole_chain`, que además
+     *     recorre la cadena A→B→C a punto fijo, con las posiciones invertidas a propósito.
+     *
+     * O sea: la regla está mejor cubierta donde se queda que donde estaba. Lo único que se pierde es
+     * la travesía por la UI del motor que se va.
+     */
 }

@@ -3403,3 +3403,37 @@ no pone rojo este test, porque hoy toda clave de `REASON_MAP` existe en `lang/`.
 fuera del inventario** (`#75`, `#77`, `#78`, `#80`, `#81`, `#82`, `#85`) y **dos que mueren con el
 componente** operando DENTRO, con sus instrucciones escritas donde se leerán (`#79`, `#83`).
 Contador **27 → 21**.
+
+## #86 · 2026-08-15 · 4.7·2b·2 — la meta no era 0, y el tramo de `Sales/` no tiene nudo
+Arranca la auditoría de los dependientes que **no son paridades**, y lo primero que da la medición son
+dos correcciones al plan antes de tocar ningún test.
+
+**(a) ⚠️⚠️ El contador NO puede llegar a 0, y la doc decía que sí.** Un fichero cuyo SUJETO es la
+superficie del motor —`PurchasePanelTest` (40 casos), el diff de árbol (34), el aviso del spinner…—
+no se puede re-apuntar a nada: **muere CON el componente**, así que solo sale del inventario en el
+mismo commit que lo borra. Medido hoy: **nueve de los que quedaban ya están en ese grupo**. La
+condición terminal real es **«todas las entradas restantes están CLASIFICADAS como que mueren»**, y
+entonces ·2b·3 las borra de golpe. Queda escrito en el propio `PurchaseRetirementTest`, que es donde
+lo va a leer quien persiga el número.
+
+**(b) Y aquí NO hay nudo, al contrario que en `#85`.** La lección de aquel paso —«busca la pieza de la
+que cuelgan todos»— se aplicó y **dio negativo**: los doce ficheros de `Sales/`+`Maintenance/` tienen
+cada uno sus propios ayudantes pequeños (`withCart`, `setupFailedOrder`, `orderFor`, `pause`…), sin
+nada compartido. Se auditan uno a uno; el apalancamiento está en otro sitio.
+
+**(c) La pregunta de la auditoría CAMBIA de forma.** Para las paridades era «¿qué afirma esto que el
+diff ya no afirme?». Para estos es **«¿su sujeto es el DOMINIO —y el componente solo conduce— o es la
+SUPERFICIE Livewire?»**. Los primeros se re-apuntan (y bajan el contador); los segundos mueren, como
+`PurchasePanelTest`.
+
+**(d) Primer fichero: `AddonDependencyTest`, dos casos RETIRADOS por redundantes.** Sus dos casos de
+«checkout público» ejercían la poda de dependencias conduciendo el componente hasta el carrito. Dos
+mutaciones sobre `AddonResolver::buildSelection()` —que deje de podar huérfanos, y que un dependiente
+no viaje nunca ni con su requisito puesto— dejan rojos **tres** casos, y **dos de los tres
+sobreviven**: `test_build_selection_excludes_an_orphan_dependent` (en el mismo fichero, llamando al
+dominio directo) y `CatalogAddonsTest::test_the_dependency_pruning_follows_the_whole_chain`, que
+además recorre la cadena A→B→C a punto fijo con las posiciones invertidas a propósito. **La regla está
+mejor cubierta donde se queda que donde estaba**; lo único que se pierde es la travesía por la UI del
+motor que se va, y eso se va igual.
+
+**(e) Contador: 21 → 20.**

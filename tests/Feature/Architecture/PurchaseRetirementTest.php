@@ -19,6 +19,13 @@ use Tests\TestCase;
  * re-apunte al servidor o porque muera con él— se quita de aquí, y el test lo exige: una entrada que ya
  * no depende es tan mala señal como una dependencia nueva sin declarar.
  *
+ * ⚠️⚠️ **La meta NO es que el contador llegue a 0, y creerlo cuesta tiempo** (medido el 2026-08-15,
+ * `DECISIONES #86`). Un fichero cuyo SUJETO es la superficie del motor —`PurchasePanelTest`, el diff de
+ * árbol, el aviso del spinner— no se puede re-apuntar a nada: **muere CON el componente**, así que solo
+ * puede salir de esta lista en el mismo commit que lo borra. Medido hoy: de los que quedan, **nueve
+ * están ya en ese grupo**. La condición terminal real es **«todas las entradas restantes están
+ * CLASIFICADAS como que mueren»**, y entonces ·2b·3 las borra de golpe con el componente.
+ *
  * ⚠️ **La promesa del contador es «0 ⟹ `Purchase` se puede borrar»**, y por eso el escaneo mira TRES
  * formas de acoplamiento, no una. La primera versión (2026-08-15) solo reconocía el literal
  * `Livewire::test(Purchase::class)` y **declaraba 25 dependientes cuando había 32**: se le escapaban
@@ -65,7 +72,6 @@ class PurchaseRetirementTest extends TestCase
         'tests/Feature/Auth/DuplicateEmailEdgeCaseTest.php',
         'tests/Feature/Maintenance/ReservationPauseGuardTest.php',
         'tests/Feature/Maintenance/ReservationPauseTest.php',
-        'tests/Feature/Sales/AddonDependencyTest.php',
         'tests/Feature/Sales/AddonInclusionPurchaseTest.php',
         'tests/Feature/Sales/CatalogVisibilityAndCartPruneTest.php',
         'tests/Feature/Sales/DepositSurfacesTest.php',

@@ -1339,6 +1339,22 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ✅ **La auditoría de las NUEVE paridades queda CERRADA**: siete re-apuntadas y fuera del
           inventario, dos que mueren con el componente operando DENTRO (`#79`, `#83`). **27 → 21.**
 
+- [ ] **Paso 4.7·2b·2·C — los dependientes que NO son paridades** (EN CURSO; 2026-08-15,
+      `DECISIONES #86`). Cerrada la auditoría de las nueve paridades, quedan **20** entradas y la
+      pregunta cambia de forma: **«¿su sujeto es el DOMINIO —y el componente solo conduce— o es la
+      SUPERFICIE Livewire?»**. Los primeros se re-apuntan; los segundos mueren.
+      · ⚠️⚠️ **La meta NO es que el contador llegue a 0**, y la doc decía que sí. **Nueve** de los que
+        quedan tienen por sujeto la superficie del motor y **solo pueden salir en el commit que lo
+        borra**. Condición terminal real: **todas las entradas restantes CLASIFICADAS como que
+        mueren**. Escrito en el docblock de `PurchaseRetirementTest`.
+      · ⚠️ **Aquí NO hay nudo**: la lección de `#85` se aplicó y dio negativo — los once que quedan por
+        auditar tienen cada uno sus ayudantes propios, sin nada compartido. Se van de uno en uno.
+      · ✅ **`AddonDependencyTest`: dos casos RETIRADOS por redundantes** (21 → **20**). Las dos
+        mutaciones sobre `AddonResolver::buildSelection()` que los ponían rojos dejan rojos **tres**
+        casos, y **dos sobreviven** —uno en el mismo fichero llamando al dominio directo, y
+        `CatalogAddonsTest::test_the_dependency_pruning_follows_the_whole_chain`, que además recorre la
+        cadena a punto fijo—. La regla queda mejor cubierta donde se queda.
+
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
       `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
