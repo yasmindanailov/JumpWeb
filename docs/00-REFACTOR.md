@@ -1241,9 +1241,23 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ⚠️ **La guarda del bundle rancio saltó por TERCERA vez en tres días**: mutar un módulo y
           restaurarlo con `git checkout` le pone fecha nueva, y tumbó los 30 casos del diff de golpe.
           **Tras iterar sobre `resources/js/`, `npm run build:ssr` antes de leer nada.**
-        · **Quedan SEIS**: `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3) ·
-          `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest`
-          (10) · `SidebarDomContractTest` (26).
+      · ✅ **`SidebarCalendarParityTest` auditada: NO es homogénea** (2026-08-15, `DECISIONES #79`).
+        **El contador no se mueve** —lo que muere con el componente sigue en el inventario hasta
+        ·2b·3—, y aun así había que hacerlo: sin esta separación ·2b·3 borraría un caso VIVO.
+        · Los **dos primeros casos mueren**: su referencia es `viewData('weeks')`, que compone
+          `Purchase` y no existe en ningún otro sitio. No hay fuente a la que re-apuntar, y su hueco
+          lo cerró (B) en `#68`.
+        · ⚠️ **El caso de los HUSOS sobrevive**: no compara motores, compara el cliente consigo mismo
+          con `TZ` forzado en dos procesos Node. `calendar.test.js` **no puede hacerlo** (un solo
+          proceso; el huso se lee al arrancar), así que es la única red de una defensa que ya se
+          comprobó inerte con el huso del contenedor.
+        · **Conducía el componente sin usarlo**: montaba `Livewire::test(Purchase::class)` y sembraba
+          un producto que no aparece en ninguna aserción. Medido y retirados los dos.
+        ▶ **·2b·3 tiene que operar DENTRO de este fichero**, no borrarlo entero. Anotado en su propio
+          docblock, que es donde lo leerá quien lo borre.
+        · **Quedan CINCO por auditar**: `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) ·
+          `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest`
+          (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

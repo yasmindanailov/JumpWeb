@@ -3176,3 +3176,28 @@ un número suelto no dice cuál es ni se entera si el embudo se renumera.
 tres días** —mutar un módulo y restaurarlo con `git checkout` le pone fecha nueva—, y esta vez tumbó
 los 30 casos del diff de árbol de golpe. Sin ella habrían comparado contra un bundle viejo: cuesta un
 `npm run build:ssr` y evita un verde falso, que es exactamente el trato que `#69` buscaba.
+
+## #79 · 2026-08-15 · 4.7·2b·2 — una paridad que NO es homogénea: dos casos mueren y uno sobrevive
+Cuarta de la auditoría: `SidebarCalendarParityTest` (3 usos). La doc ya la daba por «candidata a
+retirarse», pero eso se había **leído**; medida, resulta que el fichero mezcla dos cosas y hay que
+tratarlas distinto. **El contador NO se mueve** —lo que muere con el componente sigue en el inventario
+hasta ·2b·3—, y aun así el paso vale: sin esta separación, ·2b·3 borraría un caso vivo.
+
+**(a) Los dos primeros casos comparan ENTRE MOTORES y mueren.** Su referencia es `viewData('weeks')`,
+que compone `Purchase` y no existe en ningún otro sitio: no hay fuente a la que re-apuntar. El hueco
+que tapaban lo cerró (B) en `#68` —el diff de árbol ejecuta `calendar.js`— y las dos fronteras que
+declaraban medidas viven en `calendar.test.js`.
+
+**(b) ⚠️ El caso de los husos NO compara motores: compara el cliente consigo mismo.** Corre
+`buildWeeks()` en dos procesos Node con `TZ` distinto y exige la misma rejilla. Eso
+`calendar.test.js` **no puede hacerlo** —corre en un solo proceso y el huso se lee al arrancarlo—, así
+que es la única red de una defensa que ya se comprobó **inerte** con el huso del contenedor. Sobrevive.
+
+**(c) Y conducía el componente sin usarlo.** El caso montaba `Livewire::test(Purchase::class)` y
+sembraba un producto que no aparece en ninguna aserción. Medido: quitando los dos, los cinco casos
+siguen verdes. Retirados — un acoplamiento vestigial en un fichero condenado es exactamente lo que
+hace que una clasificación se lea mal al borrar.
+
+**(d) Lo que esto deja escrito para ·2b·3**: este fichero es de los pocos donde hay que **operar
+DENTRO** en vez de borrarlo entero. Está anotado en su propio docblock, que es donde lo va a leer
+quien lo borre.

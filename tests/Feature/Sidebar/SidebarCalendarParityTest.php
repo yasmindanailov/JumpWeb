@@ -27,6 +27,22 @@ use Tests\TestCase;
  *
  * ⚠️ Repartir días en semanas es PRESENTACIÓN y por eso puede vivir en el cliente. Lo que no vive
  * ahí es qué días se ofrecen: eso lo dice `SlotOffer` (`AFORO-02`) y llega por la API.
+ *
+ * ### Clasificación para la retirada, MEDIDA el 2026-08-15 (`DECISIONES #79`)
+ *
+ * El fichero **no es homogéneo**, y por eso no se re-apunta ni se borra entero:
+ *
+ * · Los **dos primeros casos comparan ENTRE MOTORES** —la referencia es `viewData('weeks')`, que
+ *   compone `Purchase` y no existe en ningún otro sitio—, así que **mueren con el componente en
+ *   ·2b·3**. Su hueco ya lo cerró (B) en `#68`: el diff de árbol ejecuta `calendar.js`, y las dos
+ *   fronteras que estos casos declaraban medidas viven en `calendar.test.js` (18 casos).
+ * · El **caso de los husos SOBREVIVE**: no compara motores, compara el cliente consigo mismo con el
+ *   huso del proceso forzado. Eso `calendar.test.js` **no puede hacerlo** —corre en un solo proceso y
+ *   `TZ` se lee al arrancarlo—, así que es la única red de una defensa que ya se comprobó inerte con
+ *   el huso del contenedor.
+ *
+ * ▶ **Lo que ·2b·3 tiene que hacer con este fichero**: borrar los dos primeros casos y quedarse con
+ * el de los husos, no borrarlo entero. Es de los pocos donde hay que operar DENTRO.
  */
 class SidebarCalendarParityTest extends TestCase
 {
@@ -153,9 +169,10 @@ class SidebarCalendarParityTest extends TestCase
     #[DataProvider('timezones')]
     public function test_the_grid_does_not_shift_with_the_browsers_timezone(string $timezone): void
     {
-        $product = $this->productWithSlots(10);
-
-        Livewire::test(Purchase::class)->call('selectType', $product->id);
+        // ⚠️ **Este caso NO compara motores: compara el cliente consigo mismo en dos husos**, y por
+        // eso es el único del fichero que sobrevive a la retirada (`DECISIONES #79`). Conducía el
+        // componente y sembraba un producto que no usaba: los dos eran vestigiales —medido, quitarlos
+        // deja los cinco casos verdes— y se retiran para que la clasificación de ·2b·3 se lea sola.
 
         // ⚠️ **Un mes que empieza en LUNES es el único caso que delata el desfase**, y esto se
         // descubrió midiendo: con la fecha parseada en UTC el día se corre a la víspera, pero el

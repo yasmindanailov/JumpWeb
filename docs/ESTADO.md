@@ -92,9 +92,15 @@ seis:**
 - **tras iterar sobre `resources/js/`: `npm run build:ssr`**. La guarda del bundle rancio ya ha saltado
   tres veces en tres días (restaurar un módulo con `git checkout` le pone fecha nueva).
 
-**Las seis que quedan**, por tamaño: `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3) ·
+⚠️ **Y una paridad puede NO ser homogénea** (`#79`, `SidebarCalendarParityTest`): dos de sus casos
+mueren con el componente y el tercero sobrevive, así que la unidad de la auditoría es el **caso**, no
+el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
+usarlo— porque hace leer mal la clasificación al borrar.
+
+**Las cinco que quedan por auditar**, por tamaño: `SidebarCartParityTest` (3) ·
 `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest` (10) ·
 `SidebarDomContractTest` (26).
+`SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
 - `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`
