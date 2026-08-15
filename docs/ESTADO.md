@@ -134,10 +134,15 @@ auditar tienen cada uno sus propios ayudantes pequeños, sin nada compartido. Se
 Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAndCartPruneTest`
 (`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
 `AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
-`DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
+`DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro) y `PurchaseLimitsTest`
+(`#92`, muere entero — con DOS casos sin medir anotados dentro).
+⚠️⚠️ **La trampa que más caro sale, ya van tres veces**: una mutación mal apuntada puede producir un
+resultado **coherente con la hipótesis equivocada**. En `#92` hizo creer que el límite anti-abuso de
+crear reservas no lo guardaba nadie —falso: lo guardan nueve casos—, porque el ancla aparecía DOS
+veces en el fichero y se cambió la otra. **Antes de creerte un hueco: exige que el ancla sea única.** ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
 regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que
 se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
-· `PurchaseLimitsTest` (13) · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
+· `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
 · `ReservationPauseTest` (5) ·
 `PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
 `PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.

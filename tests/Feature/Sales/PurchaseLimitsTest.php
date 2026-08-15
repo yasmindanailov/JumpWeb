@@ -24,6 +24,21 @@ use Tests\TestCase;
  *  - cap de pedidos pending vivos por usuario (MAX_PENDING_PER_USER)
  *  - rate limit por usuario en confirmReservation (RESERVATIONS_PER_MINUTE)
  *  - defensa frente a manipulación de `$step` desde el cliente
+ *
+ * ⚠️ **Clasificado el 2026-08-15 (`DECISIONES #92`): muere con el componente.** Sus reglas SOBREVIVEN
+ * —son de dominio— pero este fichero las ejerce **conduciendo la UI**, y cada una tiene ya su guarda
+ * donde se queda. Medido con tres mutaciones sobre el dominio:
+ *
+ *  · **tope de líneas**: cae `OrderCreatorTest::test_rejects_a_cart_with_more_than_max_lines`, y su
+ *    mitad de UI cae `Api\V1\CartLineValidationTest::test_a_full_cart_rejects_a_new_line`;
+ *  · **tope de pendientes**: caen SIETE supervivientes —`ReservationEligibilityTest` ×2, `OrdersTest`,
+ *    `ReservationAdmissionPolicyTest` ×2 y `SidebarAdmissionParityTest` ×2—;
+ *  · **límite de frecuencia al CREAR**: caen NUEVE —los anteriores más `CheckoutOrchestratorTest` ×2—.
+ *
+ * ▶ **Sin medir todavía, y hay que hacerlo ANTES de borrarlo** (·2b·3): `test_unverified_user_can_
+ * confirm_pay_first` y `test_confirm_does_not_send_email_until_redsys_authorises`. La segunda fija una
+ * regla de producto —el correo no sale hasta que la pasarela autoriza— que no se ha comprobado que
+ * cubra nadie más. Los dos casos de `$step` son superficie pura y se van sin más.
  */
 class PurchaseLimitsTest extends TestCase
 {

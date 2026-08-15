@@ -3579,3 +3579,35 @@ caso del email, así que la rebanada «del primero al siguiente método» no lo 
 se escribió a la vez ya afirmaba que los dos estaban fuera. Se vio contando los métodos después, no
 antes. **Al cortar por rangos, cuenta lo que queda; el texto que lo explica se escribe con el
 resultado, no con la intención.**
+
+## #92 · 2026-08-15 · 4.7·2b·2·C — la tercera mutación mal apuntada, y por qué la disciplina se paga sola
+Quinto fichero del tramo: `PurchaseLimitsTest` (13 usos, 10 casos). **Muere con el componente** y el
+contador no se mueve. Pero lo que hay que contar de este paso es cómo estuvo a punto de salir mal.
+
+**(a) Una mutación mal apuntada me hizo creer que había un agujero de abuso.** Al desactivar el
+límite de frecuencia, `PurchaseLimitsTest` seguía **entero en verde** —incluidos sus tres casos que
+dicen probarlo— y los únicos que caían eran de REINTENTO. La lectura obvia era grave: *«el límite de
+crear reservas no lo detecta nadie»*.
+
+**Era falso.** `ReservationAdmissionPolicy` tiene **DOS** `tooManyAttempts`: uno en
+`admitPaymentRetry()` (línea 61) y otro en `evaluate()` (línea 94). El `str_replace(..., 1)` cambió el
+PRIMERO, o sea el del reintento. Todo encajaba: caían los de reintento porque eran justo los que había
+roto. **La coincidencia entre lo que rompes y lo que cae puede ser una explicación completa de un
+experimento que no hiciste.**
+
+**(b) Bien apuntada, la respuesta es la contraria: cobertura de sobra.** Caen **once** casos y **nueve
+sobreviven** —`ReservationAdmissionPolicyTest` ×2, `OrdersTest`, `ReservationEligibilityTest` ×2,
+`CheckoutOrchestratorTest` ×2 y `SidebarAdmissionParityTest` ×2 (la re-apuntada en `#78`)—. Los otros
+dos topes, igual: el de líneas lo guardan `OrderCreatorTest` y `CartLineValidationTest`; el de
+pendientes, siete supervivientes.
+
+**(c) La regla, por tercera vez en dos días, y ahora con su forma exacta.** Ya estaba escrita en
+`#77(e)` («comprueba dónde cayó») y en `#90(f)` («comprueba el contenido, no el código de salida»).
+Le falta una tercera cara: **cuando el mismo símbolo aparece más de una vez en el fichero, una
+sustitución posicional muta el que no es — y el resultado puede ser coherente con la hipótesis
+equivocada**. Antes de creerse un hueco: `grep -c` del ancla, y exigir que sea única.
+
+**(d) ⚠️ Dos casos quedan SIN medir a propósito**, anotados en el fichero para que ·2b·3 no los borre a
+ciegas: `test_unverified_user_can_confirm_pay_first` y, sobre todo,
+`test_confirm_does_not_send_email_until_redsys_authorises` — una regla de producto (el correo no sale
+hasta que la pasarela autoriza) de la que **no se ha comprobado que quede guarda**.

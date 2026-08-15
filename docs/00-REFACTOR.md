@@ -1398,6 +1398,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ⚠️ **El primer corte se llevó UN canario, no dos** —el segundo iba después del caso del
           email— y el docblock ya afirmaba que los dos estaban fuera. **Al cortar por rangos, cuenta lo
           que queda; el texto se escribe con el resultado, no con la intención.**
+      · ✅ **`PurchaseLimitsTest` clasificado: muere con el componente** (`DECISIONES #92`). Sus reglas
+        sobreviven —son de dominio— pero él las ejerce conduciendo la UI, y cada una tiene guarda donde
+        se queda: tope de líneas (`OrderCreatorTest`, `CartLineValidationTest`), tope de pendientes
+        (SIETE supervivientes) y límite de frecuencia al crear (NUEVE).
+        · ⚠️⚠️ **Y una mutación mal apuntada me hizo creer que había un agujero de abuso**:
+          `ReservationAdmissionPolicy` tiene DOS `tooManyAttempts` —reintento y creación— y la
+          sustitución posicional cambió el primero. Todo encajaba con la hipótesis equivocada porque
+          caían justo los casos de reintento, que eran los que había roto. **Tercera cara de la regla:
+          cuando el ancla se repite, exige que sea ÚNICA antes de creerte el resultado.**
+        · ⚠️ **Dos casos quedan SIN medir a propósito** y anotados en el fichero, para que ·2b·3 no los
+          borre a ciegas: el del usuario sin verificar y —sobre todo— el de que **el correo no sale
+          hasta que la pasarela autoriza**, del que no se ha comprobado que quede guarda.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
