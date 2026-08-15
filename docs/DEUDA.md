@@ -106,6 +106,20 @@ violación es un fichero. Sus 41 funciones son los MISMOS métodos de `Purchase.
   el `<script>` sin tocar la plantilla se verifica solo.
 - **Sin plan de fase todavía**: no bloquea 4.7 y no se mezcla con la retirada.
 
+## ▶ Media · la suite sigue sin auditar contra la FECHA (2026-08-16, `DECISIONES #97`)
+
+Segunda mordida medida. El `pre-push` cayó con **1 fallo** a las **00:02 de Madrid** —el contenedor
+marcaba 22:02 UTC del día anterior— y el reintento inmediato salió **verde**. Es el mismo patrón de
+`#64`: un caso que compone su fixture con fechas relativas y cruza la medianoche entre el montaje y la
+aserción.
+
+⚠️ **No se identificó cuál**, y esa es la parte evitable: la salida del gate no se volcó a fichero y se
+perdió al reintentar. **Procedimiento a partir de ahora: si el `pre-push` cae, `git push > log 2>&1`
+antes de volver a intentarlo.**
+
+El barrido sigue pendiente y ahora tiene dos incidencias detrás, no una. Candidatos: todo test que
+siembre franjas con `now()->addDays(n)` y asevere sobre `today`/`tomorrow` sin congelar el reloj.
+
 Estas filas se comprobaron una a una contra el árbol actual y siguen **exactamente** como estaban; no
 se tocan para no ensuciar el diff, pero constan como verificadas:
 

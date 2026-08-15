@@ -19,8 +19,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 - Suite **2715 en verde** (15.680 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
-- ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
-  amanecieron rojos sin que nadie tocara nada. Están arreglados congelando el reloj, pero **nadie ha
+- ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
+  tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
+  `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
+  ⚠️ **Y no se supo cuál era**: la salida del gate no se capturó y se perdió. **Si el `pre-push` cae,
+  vuelca su salida a fichero antes de reintentar** — un rojo transitorio sin nombre no se puede
+  arreglar. Están arreglados congelando el reloj, pero **nadie ha
   barrido el resto**. Si te encuentras un rojo que no viene de tu cambio, **guarda el árbol y prueba en
   el commit anterior antes de tocar nada** — es lo que separó el diagnóstico en minutos de una sesión
   perdida. Ficha en `DEUDA.md`.

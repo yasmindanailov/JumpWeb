@@ -3717,3 +3717,23 @@ y su único test conduce la UI, el contrato no lo está fijando*.
 
 **(e) Recuento corregido**: quedaba **uno**, no ninguno — `Maintenance/ReservationPauseTest` (5 usos)
 sigue sin auditar. El anuncio anterior de «quedan dos» estaba mal contado.
+
+## #97 · 2026-08-16 · La deuda de la FECHA muerde por segunda vez, y esta vez sin nombre
+El `pre-push` del commit de `#96` cayó con **1 fallo** a las **00:02 de Madrid** (22:02 UTC del día
+anterior en el contenedor). La suite había salido verde un minuto antes y el reintento inmediato
+volvió a salir verde: **fallo transitorio en el cruce de medianoche**, el patrón exacto que `#64`
+documentó y que `DEUDA.md` tiene abierto como barrido pendiente.
+
+**(a) Lo que confirma.** No fue casualidad de aquella vez: hay al menos un caso que compone su fixture
+con fechas relativas y cruza el día entre el montaje y la aserción. Con esto van **dos incidencias
+medidas**, y el barrido deja de ser una precaución teórica.
+
+**(b) ⚠️ Y lo que se hizo mal, que es lo aprovechable.** **No se supo qué caso fue**: la salida del
+gate no se volcó a fichero y se perdió al reintentar. Un rojo transitorio sin nombre no se puede
+arreglar, y el siguiente cruce de medianoche volverá a empezar de cero.
+**Procedimiento desde hoy: si el `pre-push` cae, `git push > log 2>&1` ANTES de reintentar.** Está
+anotado en `ESTADO.md` y en la ficha de `DEUDA.md`.
+
+**(c) No se persigue ahora**: el reintento es verde, `main` está sano y el tramo en curso es otro.
+Queda en `DEUDA.md` con las dos incidencias detrás y el criterio de búsqueda escrito —tests que
+siembran franjas con `now()->addDays(n)` y aseveran sobre `today` sin congelar el reloj—.
