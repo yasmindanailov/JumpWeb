@@ -84,7 +84,6 @@ class PurchaseRetirementTest extends TestCase
         'tests/Feature/Sidebar/SidebarDomContractTest.php',
         'tests/Feature/Sidebar/SidebarOutcomeParityTest.php',
         'tests/Feature/Sidebar/SidebarPausedParityTest.php',
-        'tests/Feature/Sidebar/SidebarPayParityTest.php',
         'tests/Feature/Sidebar/SidebarProgressParityTest.php',
         'tests/Feature/Ui/SpinnerTest.php',
     ];

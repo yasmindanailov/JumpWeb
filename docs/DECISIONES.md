@@ -3024,3 +3024,34 @@ Blade hay que cambiarle la fuente al escaneo, y la salida buena no es «escanear
 —que es justo lo que la retirada necesita— y deja de crecer cada vez que el marcado reutiliza una clase
 compartida. Tokenizar el bloque de formularios del sitio es **Fase 5** («theming como paquete
 coherente»), no 4.7. Ficha en `DEUDA.md`.
+
+## #75 · 2026-08-15 · 4.7·2b·2 — la primera paridad sale del inventario, y su referencia MEJORA
+Arranca la auditoría de las nueve paridades con la pregunta que ahora se puede hacer: **«¿qué afirma
+esto que el diff de árbol, ya alimentado del servidor (`#73`), no afirme?»**. `SidebarPayParityTest`
+es la primera en responderla del todo: de sus siete casos, solo dos tocaban el componente.
+
+**(a) El caso de los nombres de campo pierde su mitad de comparación.** Afirmaba dos cosas: que la API
+publica las tres llaves firmadas (sobrevive) y que **los dos motores mandan el pago al mismo sitio**
+(desaparece con el segundo motor). La mitad Livewire no se pierde: `PurchasePanelTest` fija sobre el
+marcado REAL el `action` al sandbox y los tres `name=` — se mudó allí en `#72` precisamente para esto.
+
+**(b) ⚠️ Y el caso de los tres idiomas se re-apunta al DICCIONARIO, que es la referencia correcta.**
+Comparaba el texto del cliente con el error bag de Livewire. Lo primero que se probó fue usar
+`error.message` de la API, y **se midió que no sirve**: es una cadena fija de desarrollador —«No quedan
+plazas para esa hora»— y **ni siquiera se traduce**: sale idéntica en `es`, `en` y `fr` mientras el
+servidor dice «se ha agotado», «has sold out» y «est complet».
+Por eso el cliente compone desde la CLAVE con los `params` del rechazo (`pay.js`: `ERROR_KEYS[code]` +
+`tp(messages, key, error.params)`), y la referencia que sobrevive es **`__()` con esos mismos params**.
+El re-apunte no es un apaño para salvar el caso de la retirada: es la referencia que debió tener desde
+el principio, porque el error bag de Livewire era **un intermediario** del mismo diccionario.
+**Verificado por mutación ×2**: que el cliente deje de interpolar los params, y que use la clave de otro
+código, dejan el caso en rojo. No se ha vuelto tautológico.
+
+**(c) La regla que deja para las ocho restantes.** Al auditar una paridad hay que separar tres cosas:
+lo que **compara entre motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo
+que usa el motor viejo como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente).
+El tercer caso es el interesante y es el que hay que buscar: casi siempre mejora el test.
+
+**(d) Contador: 28 → 27.** Y una nota de proceso: la guarda del bundle rancio (`#69`) volvió a saltar
+—restaurar un módulo con `cp` le pone fecha nueva— cazando 30 casos que habrían comparado contra código
+viejo. Van dos veces en dos días.

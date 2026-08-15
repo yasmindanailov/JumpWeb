@@ -27,7 +27,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2715 en verde** (15.645 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.648 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -354,7 +354,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      entran dos falsos positivos que solo lo mencionan como historia) y mira TRES formas —conduce ·
      nombra la clase · depende de sus vistas—, con guarda **una por forma**.
    · ▶ **EMPIEZA AQUÍ: el marcador es `PurchaseRetirementTest`.** Los dependientes solo pueden encoger
-     y van **28** (de 32 corregidos). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo
+     y van **27** (de 32 corregidos). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo
      es reclasificar uno a uno, **con evidencia**, no de golpe:
      · **Si el fichero se re-apunta** (su sujeto es el dominio o el servidor): condúcelo por `/api/v1`
        y quítalo de `DEPENDENTS`. Patrón hecho: `SlotOfferTest` → `POST availability/{p}/times`.
@@ -407,7 +407,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      `Api/V1/OrdersTest` ya los cubre en la superficie que sobrevive) ·
      `Sales/CatalogVisibilityAndCartPruneTest` (la poda de la cesta en `mount`, que en la SPA es
      `cart.js` con sus casos en `cart.test.js`) — este último, pendiente de comprobar caso a caso.
-   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **32 ficheros** de acoplamiento real (hoy **28**), en
+   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **32 ficheros** de acoplamiento real (hoy **27**), en
      tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como conductor
      de dominio y deben re-apuntarse a la API, y las nueve paridades. Borrar el fichero sin
      reclasificarlos es pérdida neta de cobertura.

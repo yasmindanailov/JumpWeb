@@ -1194,6 +1194,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         dos casos del fichero (los de `Register`) sobreviven intactos.
       ⚠️ **Sin inspeccionar todavía**: `DepositSurfacesTest`, `PurchaseRetryAndPollingTest`,
       `RedsysIdaTest`, `SidebarSeamTest`, `SidebarTokenBudgetTest` y el grupo de las nueve paridades.
+      · ✅ **Arranca la auditoría de las nueve paridades** (2026-08-15, `DECISIONES #75`), con la
+        pregunta que (B) hace posible: «¿qué afirma esto que el diff, ya alimentado del servidor, no
+        afirme?». **`SidebarPayParityTest` FUERA del inventario** (28 → **27**): su comparación entre
+        motores desaparece —la mitad Livewire la fija `PurchasePanelTest` sobre el marcado real— y su
+        caso de los tres idiomas se **re-apunta al diccionario**, que es la referencia correcta.
+        · ⚠️ **Medido: `error.message` de la API NO sirve como referencia** — es una cadena fija de
+          desarrollador y **no se traduce** (idéntica en `es`/`en`/`fr`). El cliente compone desde la
+          CLAVE con los `params` del rechazo, así que la referencia que sobrevive es `__()`.
+        · **La regla para las ocho restantes**: separa lo que compara ENTRE MOTORES (muere), lo que
+          afirma del CONTRATO (se queda) y lo que usa el motor viejo como INTERMEDIARIO de una fuente
+          que sobrevive (se re-apunta a la fuente — y casi siempre mejora el test).
+
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
       `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por

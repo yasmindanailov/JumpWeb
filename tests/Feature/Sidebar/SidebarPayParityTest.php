@@ -10,11 +10,8 @@ use App\Domain\Identity\Models\User;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ReservationErrorMap;
 use App\Http\Middleware\SetLocale;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -108,16 +105,18 @@ class SidebarPayParityTest extends TestCase
     }
 
     /**
-     * **Y son los mismos que emite el Blade.** Los nombres salen del mismo `PaymentTicket` en los dos
-     * motores, así que esto no puede fallar por casualidad — pero si alguien «normalizara» los campos
-     * en una de las dos superficies, aquí se vería.
+     * **Los tres campos que publica el contrato, con esos nombres exactos.**
+     *
+     * ⚠️ **Aquí vivía además una comparación con el Blade** —«los dos motores mandan el pago al mismo
+     * sitio»— retirada en 4.7·2b·2: esa pregunta **desaparece con el segundo motor**, y la mitad
+     * Livewire no se pierde, la fija `PurchasePanelTest` sobre el marcado real (`action` al sandbox y
+     * los tres `name=`). Lo que queda aquí es lo que sobrevive: que la API siga publicando **esas tres
+     * llaves**, porque el cliente las reenvía sin mirarlas y renombrar una es un SIS0042 con el pedido
+     * ya creado.
      */
-    public function test_both_engines_post_the_same_field_names_to_the_same_gateway(): void
+    public function test_the_contract_publishes_the_three_signed_field_names(): void
     {
         $payment = $this->createOrderByApi()->json('payment');
-
-        $component = $this->componentAtPayment()->call('confirmReservation');
-        $blade = (array) $component->get('redsysFormData');
 
         $this->assertSame(
             ['Ds_SignatureVersion', 'Ds_MerchantParameters', 'Ds_Signature'],
@@ -125,10 +124,7 @@ class SidebarPayParityTest extends TestCase
             'los campos que publica la API han cambiado: revisa el driver y este test a la vez'
         );
 
-        $this->assertSame(
-            $blade['gatewayUrl'], $payment['url'],
-            'los dos motores tienen que mandar el pago al MISMO sitio'
-        );
+        $this->assertStringStartsWith('https://', (string) $payment['url'], 'el destino lo firma el servidor');
     }
 
     /**
@@ -180,8 +176,15 @@ class SidebarPayParityTest extends TestCase
     }
 
     /**
-     * Y los textos coinciden con los del componente Livewire, **en los tres idiomas y con sus
-     * parámetros interpolados**.
+     * Y el texto coincide con el del DICCIONARIO, **en los tres idiomas y con sus parámetros
+     * interpolados**.
+     *
+     * ⚠️ **La referencia era el error bag de Livewire y se re-apuntó a `lang/` en 4.7·2b·2** (`#75`).
+     * No es solo salvarla de la retirada: es la referencia CORRECTA. Se midió que `error.message` de
+     * la API **no sirve** —es una cadena fija de desarrollador («No quedan plazas para esa hora») y ni
+     * siquiera se traduce: sale igual en `es`, `en` y `fr`—, y por eso el cliente compone desde la
+     * CLAVE con los `params` del rechazo. Comparar contra `__()` con esos mismos params es exactamente
+     * lo que hace `tp()`, y sobrevive al motor.
      *
      * Se provoca un rechazo REAL —una franja que se agota entre que se pinta y se confirma— para que
      * los `params` (`product`, `when`) los ponga el dominio y no el test.
@@ -192,31 +195,36 @@ class SidebarPayParityTest extends TestCase
             $this->app->setLocale($locale);
 
             // El aforo se agota tras pintar el carrito: es el rechazo más común de todos.
-            $component = $this->componentAtPayment();
             Slot::query()->update(['online_capacity' => 0]);
 
-            $component->call('confirmReservation');
-
-            $server = (string) $component->errors()->first('cart');
-
-            $texts = __('tickets');
             $response = $this->actingAs(User::factory()->create())
                 ->postJson('/api/v1/orders', $this->items(), ['Origin' => config('app.url')]);
             $this->app->setLocale($locale);
 
+            $error = (array) $response->json('error');
+            $this->assertSame('line_sold_out', $error['code'] ?? null, "el rechazo esperado no llegó en «{$locale}»");
+
+            // La referencia es el DICCIONARIO con los params que publica el propio rechazo, que es lo
+            // que hace `tp()` en el cliente. Antes la referencia era el error bag de Livewire; se
+            // re-apuntó en 4.7·2b·2 y el cambio la mejora, no solo la salva — ver el aviso de arriba.
+            $server = __('tickets.errors.sold_out_line', (array) ($error['params'] ?? []));
+
             $client = $this->confirmErrorInNode([
                 'ok' => false,
                 'status' => $response->getStatusCode(),
-                'error' => $response->json('error'),
-            ], $texts);
+                'error' => $error,
+            ], __('tickets'));
 
-            $this->assertNotSame('', $server, "el servidor tiene que rechazar en «{$locale}»");
+            $this->assertStringContainsString(
+                (string) ($error['params']['product'] ?? '—'), $server,
+                "en «{$locale}» el literal no interpola el producto: el caso no probaría la interpolación"
+            );
             $this->assertSame(
                 $server,
                 $client['error'],
-                "El aviso del rechazo en «{$locale}» NO dice lo mismo en los dos motores.\n".
-                '⚠️ Los `params` (`:product`, `:when`) los pone el dominio; el cliente solo los '.
-                'interpola en la misma clave.'
+                "El aviso del rechazo en «{$locale}» NO coincide con el del diccionario.\n".
+                '⚠️ Los `params` (`:product`, `:when`) los pone el DOMINIO y viajan en el rechazo; el '.
+                'cliente solo los interpola en la misma clave.'
             );
 
             Slot::query()->update(['online_capacity' => 30]);
@@ -260,20 +268,6 @@ class SidebarPayParityTest extends TestCase
         return $this->actingAs(User::factory()->create())
             ->postJson('/api/v1/orders', $this->items(), ['Origin' => config('app.url')])
             ->assertCreated();
-    }
-
-    /** Un componente Livewire con la cesta puesta y en el paso de pago. */
-    private function componentAtPayment(): Testable
-    {
-        $this->actingAs(User::factory()->create());
-
-        return Livewire::test(Purchase::class)
-            ->call('selectType', $this->entry->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout');
     }
 
     /**
