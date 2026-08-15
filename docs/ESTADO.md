@@ -106,7 +106,15 @@ mueren con el componente y el tercero sobrevive, así que la unidad de la audito
 el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
 usarlo— porque hace leer mal la clasificación al borrar.
 
-**Queda UNA por auditar**: `SidebarOutcomeParityTest` (10 usos) — y se audita por su cuenta.
+✅ **La auditoría de las nueve paridades está CERRADA.** `SidebarOutcomeParityTest` queda **medida
+entera y con el plan escrito** (`#84`), pero sin re-apuntar: sus catorce casos cuelgan de `purchase()`,
+que fabrica la compra conduciendo el componente, así que **o se cambia esa pieza a
+`POST /api/v1/orders` —receta probada en `#65`— o no se mueve ninguno**. No falta decidir nada; falta
+hacer ese cambio, y entonces el contador baja de 22 a 21.
+▶ **Lo único que solo caza ese fichero son los motivos del rechazo** —renombrar
+`payment_failed.reasons.cvv_wrong` deja los 2714 verdes salvo dos, los dos de allí— y su referencia
+**sobrevive** (`RedsysResponseCode::reasonText()`). El resto está clasificado en `#84`: qué es
+redundante, qué muere y qué se parte.
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 ✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está

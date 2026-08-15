@@ -3323,3 +3323,43 @@ partir de ·2b·3 la única guarda es la disciplina de declararlo en el commit.
 **(e) La lección de proceso, que es la misma de toda la auditoría**: una nota de handoff escrita
 leyendo el código es una hipótesis, no un plan. Esta llevaba dos días en `ESTADO.md` y habría costado
 una sesión entera de trabajo mal dirigido.
+
+## #84 · 2026-08-15 · 4.7·2b·2 — la última paridad, medida entera: cuelga de UNA pieza
+Novena y última de la auditoría: `SidebarOutcomeParityTest` (10 usos, 14 casos, 863 líneas). Queda
+**medida entera y con el plan escrito**, pero **el contador no se mueve todavía** y conviene decir por
+qué con precisión: no es que falte decidir nada, es que el re-apunte **no se puede hacer por partes**.
+
+**(a) Todo el fichero cuelga de `purchase()`.** Ese ayudante fabrica una compra REAL conduciendo el
+componente —catálogo, día, hora, respuestas del pack, complemento, carrito, `checkout()`,
+`confirmReservation()`— y devuelve `[componente, usuario, código]`. **Los catorce casos parten de ahí**,
+así que no hay ningún caso que se pueda re-apuntar solo: o se cambia esa pieza a `POST /api/v1/orders`
+—receta ya probada en `#65`, con `Origin` y la cesta en el cuerpo— o no se mueve ninguno. Esa es la
+única razón por la que este tramo no cerró hoy, y está escrita para que nadie vuelva a medirlo.
+
+**(b) Lo que sí queda medido, caso por caso:**
+· **Los motivos del rechazo son lo ÚNICO que solo caza este fichero.** Renombrar
+  `payment_failed.reasons.cvv_wrong` en `lang/es/tickets.php` deja los 2714 casos verdes salvo **dos**,
+  y los dos son de aquí. `outcome.test.js` no puede verlo —su diccionario es fabricado—.
+· **Y su referencia SOBREVIVE**: `Purchase::resolveDeclinedReason()` termina en
+  `RedsysResponseCode::reasonText()`. Es un intermediario, como el de `#81`. De hecho el caso que
+  recorre `REASON_MAP` entero **ya compara contra el dominio** y no toca el componente.
+· **Los destinos del reintento y del sondeo son redundantes**: mutar `answersByReservation()` y
+  `pollVerdict()` deja rojos **a la vez** la paridad y `outcome.test.js`. Misma conclusión que `#78`;
+  lo que sobrevive no es el destino sino que lo provoquen respuestas REALES de la API.
+· **Los dos casos del enlace de registro MUEREN**: `PublicConfigTest` ya cubre lo mismo y mejor —el
+  saneado de `SEC-07` con cuatro URLs hostiles, que aquí no se prueba—.
+· **El caso de los enlaces del desenlace se parte**: su primera mitad ya es del servidor
+  (`urls.contact`/`urls.my_orders` contra `route()`) y sobrevive; la segunda comprueba que el Blade
+  pinta esos `href` y muere con él.
+· **La divergencia declarada del rechazo anterior** (Livewire enseña el motivo de un intento viejo con
+  otro cobro en vuelo; la API no) **desaparece sola**: sin segundo motor no hay divergencia, y lo que
+  queda es la conducta de la API, que es la que acierta.
+
+**(c) ⚠️ Un residual que hay que decidir en ·2b·3, no descubrir**: la mitad del Blade del caso de los
+enlaces es lo único que hoy comprueba que un motor PINTA esas URLs. El diff de árbol no puede
+sustituirla —`href` no es atributo de contrato— y los módulos planos no las tocan: las consumen los
+`.vue`. O se añade una aserción sobre el HTML de Vue al reestructurar `SidebarDomContractTest`
+(`#83`), o se acepta que solo se verifica que el servidor las publica.
+
+**(d) Nota de proceso: la guarda del bundle rancio saltó por CUARTA vez en tres días**, otra vez por
+mutar un módulo y restaurarlo con `git checkout`. Ya está en `ESTADO.md` como aviso; van cuatro.

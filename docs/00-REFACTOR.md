@@ -1310,7 +1310,23 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **Lo que deja hecho: las tres operaciones exactas de ·2b·3**, escritas dentro de
           `assertTree()`, que es donde se leerán. Y el riesgo asumido: sin segundo motor,
           `MANIFEST_REFRESH=1` acepta cualquier deriva.
-        · **Queda UNA por auditar**: `SidebarOutcomeParityTest` (10).
+      · ✅ **`SidebarOutcomeParityTest` MEDIDA entera, con el plan escrito** (2026-08-15,
+        `DECISIONES #84`). **El contador no se mueve todavía**, y no por falta de decisión: el
+        re-apunte **no se puede hacer por partes**.
+        · ⚠️ **Los catorce casos cuelgan de `purchase()`**, que fabrica la compra conduciendo el
+          componente. O se cambia esa pieza a `POST /api/v1/orders` —receta probada en `#65`— o no se
+          mueve ninguno. Esa es la única razón por la que el tramo no cerró.
+        · **Lo único que solo caza este fichero son los motivos del rechazo**: renombrar
+          `payment_failed.reasons.cvv_wrong` deja los 2714 verdes salvo DOS, los dos de aquí. Y su
+          referencia SOBREVIVE (`RedsysResponseCode::reasonText()`), así que es re-apunte, no pérdida.
+        · **Redundantes** (mutación: rojos a la vez que `outcome.test.js`): los destinos del reintento
+          y del sondeo. **Mueren**: los dos casos del enlace de registro —`PublicConfigTest` ya lo
+          cubre mejor, con las cuatro URLs hostiles de `SEC-07`—. **Se parte**: el caso de los enlaces
+          del desenlace (la mitad del servidor sobrevive; la del Blade muere).
+        · ⚠️ **Residual a DECIDIR en ·2b·3**: la mitad del Blade es lo único que hoy comprueba que un
+          motor PINTA esas URLs; `href` no es atributo de contrato y los módulos planos no las tocan.
+        · **La auditoría de las NUEVE paridades queda cerrada**: seis re-apuntadas y fuera del
+          inventario, dos que mueren con el componente (`#79`, `#83`) y esta, medida y planificada.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
