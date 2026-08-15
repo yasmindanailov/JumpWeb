@@ -15,38 +15,41 @@ use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Middleware\SetLocale;
-use App\Http\Sidebar\SidebarEntry;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.6 — **el desenlace del pago dice lo mismo salga de donde salga**.
+ * Fase 4 · paso 4.6, re-apuntado en 4.7·2b·2 — **el desenlace del pago, contra las fuentes que
+ * sobreviven** (`DECISIONES #85`).
  *
- * ⚠️ **Este test existe porque el diff de árbol NO puede verificar nada de esto**, y ya mordió una vez
- * en 4.2·3: el componente recibe las filas YA compuestas, así que el gate compara el mismo árbol
- * tanto si los números son los del pedido como si son de otro. El fallo que este paso podía repetir es
- * más feo que aquél —el marcado usa `product_name`/`charged_subtotal_cents` y el view-model de
- * Livewire dice `name`/`subtotal`—: **diff verde y cajón real con filas vacías**.
+ * ⚠️ **La compra la crea `POST /api/v1/orders`, no el motor que se va.** Ese era el nudo: `purchase()`
+ * conducía el componente y los catorce casos partían de ella, así que ninguno se podía re-apuntar por
+ * separado. Cambiada esa pieza, cada caso encontró su referencia — y el pedido nace además por el
+ * mismo camino que usará el cajón.
  *
- * Y hay un fallo peor todavía, que solo se ve aquí: las respuestas del pack viajan en un endpoint
- * APARTE —son datos de un menor y del art. 9, y `GET orders/{code}` no las lleva— y se emparejan por
- * `reservation_id`. Emparejarlas por posición pinta el nombre de un niño bajo la reserva de otro con
- * un árbol idéntico.
+ * ### Lo que este fichero es hoy, y lo que ya no
  *
- * Desde 4.6·2 cubre también los otros dos desenlaces —**denegado** y **verificando**—, y ahí el
- * agujero del diff es todavía más ancho: qué hace el cajón con un `failed` mientras sondea, adónde va
- * un reintento denegado y a qué URL llevan «escribirnos» y «ver mis reservas» **no dejan rastro
- * ninguno en el marcado** (`href` no es atributo de contrato, como ya enseñaron el WhatsApp del aviso
- * de pausa y el enlace de registro).
+ *  · **Los MOTIVOS del rechazo son su razón de ser**, y está medido: renombrar
+ *    `payment_failed.reasons.cvv_wrong` en `lang/es/tickets.php` deja los 2714 casos verdes **salvo
+ *    dos, y los dos son de aquí**. `outcome.test.js` no puede verlo —su diccionario es fabricado—.
+ *    La referencia es `RedsysResponseCode`, que es dominio: `Purchase::resolveDeclinedReason()`
+ *    terminaba en esa misma llamada, o sea que era un intermediario.
+ *  · **Las divergencias declaradas se quedan con su mitad viva**: el resumen acotado a la fase
+ *    `booking` (RGPD, §4.4.6), el estado EFECTIVO del pedido caducado y el silencio de la API sobre
+ *    un rechazo anterior con otro cobro en vuelo. En las tres, la API es la que acierta.
+ *  · **Los destinos del reintento y del sondeo se VOLCARON del motor vivo** antes de retirarlo
+ *    (técnica de `#81`): eran su única declaración escrita.
+ *  · **Lo que se retiró, medido**: la comparación del resumen contra el view-model —su composición la
+ *    cubre `outcome.test.js` y sus campos `OrderSummaryFieldsTest`/`OrderEventDataTest`, y se
+ *    comprobó que un `park_cents` compuesto restando es un mutante EQUIVALENTE para este fixture— y
+ *    los dos casos del enlace de registro, que `PublicConfigTest` cubre mejor, con las cuatro URLs
+ *    hostiles del saneado de `SEC-07` que aquí no se probaban.
  *
- * **Tres divergencias DECLARADAS**, cada una con su caso para que no puedan cambiar sin que nadie lo
- * decida: la fase de las respuestas (§4.4.6), el estado efectivo del pedido y el motivo de un rechazo
- * ANTERIOR cuando ya hay otro cobro en curso.
+ * ⚠️ **Residual DECLARADO** (`#84(c)`): que un motor PINTE las URLs del desenlace ya no lo comprueba
+ * nadie —`href` no es atributo de contrato y los módulos planos no las tocan: las consumen los
+ * `.vue`—. Lo que se afirma aquí es que el servidor las compone con `route()` y las publica.
  */
 class SidebarOutcomeParityTest extends TestCase
 {
@@ -83,60 +86,6 @@ class SidebarOutcomeParityTest extends TestCase
     // ── El resumen entero ─────────────────────────────────────────────────────────────────────
 
     /**
-     * **Campo a campo, sobre el pedido REAL de una compra REAL.**
-     *
-     * El pedido lo crea el flujo de compra de la web —con su señal, sus respuestas del pack y su
-     * complemento con unidades incluidas— y después se leen las dos fuentes: el view-model del
-     * componente y lo que `outcome.js` compone con las respuestas de la API.
-     */
-    public function test_the_confirmed_summary_says_the_same_from_both_sources(): void
-    {
-        [$component, $user, $code] = $this->purchase();
-        Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
-
-        // ⚠️ El `$refresh` no es ceremonia: el view-model se compone al RENDERIZAR, así que sin él se
-        // compararía la foto de antes del cobro contra la de después —y la nota de señal es una de las
-        // tres condiciones que dependen justo de eso—.
-        $server = $this->summaryFromLivewire($component->call('$refresh'));
-        $client = $this->summaryFromApi($user, $code);
-
-        $this->assertSame(
-            $server, $client,
-            "El resumen de la reserva creada NO dice lo mismo en los dos motores.\n".
-            '⚠️ El diff de árbol da esto por bueno: recibe las filas ya compuestas, así que unas filas '.
-            "con los números de otro pedido pintan exactamente el mismo árbol.\n".
-            'Server: '.json_encode($server, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n".
-            'Client: '.json_encode($client, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
-        );
-    }
-
-    /**
-     * ⚠️ **Las respuestas del pack van bajo SU reserva, y esto no se puede probar con una sola línea.**
-     *
-     * `GET orders/{code}/event-data` no repite ni el nombre del producto ni la fecha —a propósito: no
-     * duplica lo que el otro endpoint ya publica—, así que la única llave es `reservation_id`. Con dos
-     * packs en el mismo pedido, emparejar por posición es un cruce silencioso: el árbol es idéntico y
-     * lo que cambia es el nombre del niño que se enseña.
-     */
-    public function test_each_pack_answer_lands_under_its_own_reservation(): void
-    {
-        [$component, $user, $code] = $this->purchase(second: true);
-
-        $server = $this->summaryFromLivewire($component);
-        $client = $this->summaryFromApi($user, $code);
-
-        $names = array_map(fn (array $line): array => array_column($line['event'], 'value'), $client['lines']);
-
-        $this->assertSame([['Mara'], ['Nil']], $names, 'las dos reservas tienen que traer SU respuesta');
-        $this->assertSame(
-            array_column($server['lines'], 'event'),
-            array_column($client['lines'], 'event'),
-            "Las respuestas del pack NO caen bajo la misma reserva en los dos motores.\n".
-            '⚠️ La llave es `reservation_id`, no la posición.'
-        );
-    }
-
-    /**
      * ⚠️ **Y este es el caso que de verdad prueba el emparejado**, porque el de arriba NO lo hace: se
      * midió por mutación que un cliente que recorriera las dos listas EN PARALELO lo pasa en verde.
      * El motivo es que hoy el endpoint devuelve las reservas en el mismo orden que las líneas del
@@ -148,7 +97,7 @@ class SidebarOutcomeParityTest extends TestCase
      */
     public function test_the_order_of_the_answers_envelope_does_not_change_the_summary(): void
     {
-        [, $user, $code] = $this->purchase(second: true);
+        [$user, $code] = $this->purchase(second: true);
 
         $straight = $this->summaryFromApi($user, $code);
         $reversed = $this->summaryFromApi($user, $code, reverseAnswers: true);
@@ -158,45 +107,6 @@ class SidebarOutcomeParityTest extends TestCase
             "El resumen CAMBIA si las respuestas llegan en otro orden.\n".
             '⚠️ Eso es emparejar por posición: el nombre de un niño acabaría bajo la reserva de otro, '.
             'con el árbol intacto y el gate en verde.'
-        );
-    }
-
-    /**
-     * ⚠️ **El enlace de «registro del parque»: su `href` es INVISIBLE para el diff de árbol** —igual
-     * que pasó con el WhatsApp del aviso de pausa—, así que un motor que mandara a otro sitio pasaría
-     * el gate en verde. Y no es un enlace cualquiera: lo edita un operador y viaja SANEADO por el
-     * servidor (`SEC-07`), porque un cliente JSON no tiene escape de plantilla que remate la defensa.
-     */
-    public function test_the_registration_link_is_the_same_in_both_engines(): void
-    {
-        Setting::updateOrCreate(['key' => 'registration.url'], ['value' => 'https://registro.example.test/alta', 'group' => 'business']);
-        Setting::flushMemo();
-
-        [$component, $user] = $this->purchase();
-
-        $server = $component->viewData('registration');
-        $client = $this->actingAs($user)
-            ->getJson('/api/v1/config', ['Origin' => config('app.url')])
-            ->assertOk()
-            ->json('registration');
-
-        $this->assertNotNull($server, 'el caso necesita el enlace configurado');
-        $this->assertSame(
-            $server, $client,
-            "El enlace de registro NO es el mismo en los dos motores.\n".
-            '⚠️ `href` no es atributo de contrato: el diff de árbol da por bueno un botón que lleve a '.
-            'otro sitio.'
-        );
-    }
-
-    /** Y sin URL configurada, los dos motores no ofrecen nada — que es lo normal en una instalación. */
-    public function test_neither_engine_invents_a_registration_link(): void
-    {
-        [$component, $user] = $this->purchase();
-
-        $this->assertNull($component->viewData('registration'));
-        $this->assertNull(
-            $this->actingAs($user)->getJson('/api/v1/config', ['Origin' => config('app.url')])->json('registration')
         );
     }
 
@@ -214,19 +124,14 @@ class SidebarOutcomeParityTest extends TestCase
      */
     public function test_the_post_form_answers_are_declared_out_of_the_api_summary(): void
     {
-        [$component, $user, $code] = $this->purchase(withGuestStage: true);
+        [$user, $code] = $this->purchase(withGuestStage: true);
 
         // Lo que un operador rellenaría después, desde el panel: misma columna, otra fase.
         $item = Order::where('code', $code)->firstOrFail()->items()->whereNull('parent_item_id')->firstOrFail();
         $item->update(['event_data' => array_merge((array) $item->event_data, ['guest_name' => 'Ada'])]);
 
-        $server = $this->summaryFromLivewire($component->call('$refresh'));
         $client = $this->summaryFromApi($user, $code);
 
-        $this->assertSame(
-            ['Mara', 'Ada'], array_column($server['lines'][0]['event'], 'value'),
-            'el Blade pinta las respuestas de las DOS fases'
-        );
         $this->assertSame(
             ['Mara'], array_column($client['lines'][0]['event'], 'value'),
             "La API ha dejado de acotar el resumen a la fase `booking`.\n".
@@ -247,13 +152,11 @@ class SidebarOutcomeParityTest extends TestCase
      */
     public function test_an_expired_hold_is_reported_as_expired_by_the_api(): void
     {
-        [$component, $user, $code] = $this->purchase();
+        [$user, $code] = $this->purchase();
         Order::where('code', $code)->update(['expires_at' => now()->subMinute()]);
 
-        $server = $this->summaryFromLivewire($component->call('$refresh'));
         $client = $this->summaryFromApi($user, $code);
 
-        $this->assertSame(Order::STATUS_PENDING, $server['status'], 'el Blade lee la columna');
         $this->assertSame(
             Order::STATUS_EXPIRED, $client['status'],
             "La API ha dejado de publicar el estado EFECTIVO del pedido.\n".
@@ -304,13 +207,14 @@ class SidebarOutcomeParityTest extends TestCase
      * Y de punta a punta sobre un rechazo REAL: el código que publica la API es el que el cajón usa de
      * clave, y el texto coincide con el que compone el componente Livewire.
      */
-    public function test_a_real_declined_payment_reaches_the_same_text_by_both_routes(): void
+    public function test_a_real_declined_payment_reaches_the_domains_own_text(): void
     {
-        [, $user, $code] = $this->purchase();
+        [$user, $code] = $this->purchase();
         $this->failLastPayment($code, '0129');       // CVV erróneo
 
-        SidebarEntry::failed($code);
-        $server = (string) Livewire::test(Purchase::class)->get('declinedReasonText');
+        // La referencia es el DOMINIO, no el componente: `Purchase::resolveDeclinedReason()`
+        // terminaba en esta misma llamada, así que era un intermediario (misma re-apuntada que #81).
+        $server = RedsysResponseCode::reasonText('0129');
 
         $status = $this->paymentStatus($user, $code);
 
@@ -334,7 +238,7 @@ class SidebarOutcomeParityTest extends TestCase
      */
     public function test_a_previous_decline_is_not_reported_while_another_payment_is_in_flight(): void
     {
-        [, $user, $code] = $this->purchase();
+        [$user, $code] = $this->purchase();
         $this->failLastPayment($code, '0101');
 
         // Un cobro NUEVO sobre el mismo pedido: el rechazo anterior queda atrás.
@@ -345,12 +249,12 @@ class SidebarOutcomeParityTest extends TestCase
             'amount' => $order->total, 'currency' => 'EUR', 'status' => Payment::STATUS_PENDING,
         ]);
 
-        SidebarEntry::failed($code);
-
+        // El motivo del intento ANTERIOR sigue en la base de datos —`RedsysResponseCode` lo
+        // traduciría—, y aun así la API calla porque el ÚLTIMO intento no es el rechazado.
         $this->assertSame(
             __('tickets.payment_failed.reasons.card_expired'),
-            Livewire::test(Purchase::class)->get('declinedReasonText'),
-            'el Blade sigue enseñando el motivo del intento anterior'
+            RedsysResponseCode::reasonText('0101'),
+            'el caso necesita que ese código siga siendo «tarjeta caducada»'
         );
         $this->assertNull(
             $this->paymentStatus($user, $code)['declined_reason'],
@@ -370,14 +274,24 @@ class SidebarOutcomeParityTest extends TestCase
      * nada que pagar. La pausa y el límite de frecuencia dejan la reserva **intacta**, y confundirlos
      * le diría a quien pulsó dos veces seguidas que ha perdido su plaza.
      */
-    public function test_every_retry_denial_sends_the_client_where_livewire_goes(): void
+    public function test_every_retry_denial_sends_the_client_where_it_must(): void
     {
-        foreach (['paused', 'not_retryable', 'rate_limited'] as $scenario) {
-            [$server, $client] = $this->retryBoth($scenario);
+        // ⚠️ **Los destinos se VOLCARON del motor vivo antes de retirarlo** (`DECISIONES #85`), que es
+        // la técnica de `#81`: eran su única declaración y después no habría contra qué contrastarlos.
+        $expected = [
+            // La pausa y el límite dejan la reserva INTACTA: no se mueve a nadie de sitio.
+            'paused' => null,
+            'rate_limited' => null,
+            // Solo este significa que ya no hay nada que pagar, y por eso es el único que devuelve
+            // al catálogo. Confundirlo con los otros le diría a quien pulsó dos veces seguidas que
+            // ha perdido su plaza.
+            'not_retryable' => 'catalog',
+        ];
 
+        foreach ($expected as $scenario => $goTo) {
             $this->assertSame(
-                $server, $client['goTo'],
-                "El reintento denegado por «{$scenario}» deja a los dos motores en sitios DISTINTOS.\n".
+                $goTo, $this->retryBoth($scenario)['goTo'],
+                "El reintento denegado por «{$scenario}» no deja al cliente donde debe.\n".
                 '⚠️ Solo `order_not_retryable` obliga a rehacer la reserva; los otros la dejan viva.'
             );
         }
@@ -390,33 +304,27 @@ class SidebarOutcomeParityTest extends TestCase
      * ⚠️ Y su regla es la contraria a la de crear: **el pedido NO se toca**. Sigue vivo con su hold
      * recién extendido, así que los dos motores dejan al cliente donde está para que pueda repetir.
      */
-    public function test_a_gateway_failure_on_retry_leaves_both_engines_where_they_were(): void
+    public function test_a_gateway_failure_on_retry_leaves_the_client_where_it_was(): void
     {
-        [$server, $client] = $this->retryBoth('gateway');
+        $client = $this->retryBoth('gateway');
 
-        $this->assertNull($server, 'Livewire se queda en el paso 10');
-        $this->assertNull($client['goTo'], 'y el cajón tampoco se mueve: la reserva sigue viva');
+        $this->assertNull($client['goTo'], 'el cajón no se mueve: la reserva sigue viva');
         $this->assertSame(__('tickets.errors.payment_unavailable'), $client['error']);
     }
 
-    /** Y el reintento que SÍ se admite sale a la pasarela en los dos motores, con la misma URL. */
-    public function test_an_admitted_retry_leaves_for_the_gateway_in_both_engines(): void
+    /** Y el reintento que SÍ se admite sale a la pasarela, con la URL que publica la propia API. */
+    public function test_an_admitted_retry_leaves_for_the_gateway(): void
     {
-        [, $user, $code] = $this->purchase();
+        [$user, $code] = $this->purchase();
         $this->failLastPayment($code, '0101');
 
-        SidebarEntry::failed($code);
-        $component = Livewire::test(Purchase::class)->call('retryPayment');
-
-        $this->assertSame(9, (int) $component->get('step'), 'el reintento del Blade sale DIRECTO a la pasarela');
-
-        [, $user2, $code2] = $this->purchase();
+        [$user2, $code2] = $this->purchase();
         $this->failLastPayment($code2, '0101');
         $client = $this->retryInNode($this->retryResponse($user2, $code2));
 
         $this->assertTrue($client['ok'], 'y el del cajón también');
         $this->assertSame(
-            ((array) $component->get('redsysFormData'))['gatewayUrl'], $client['form']['url'],
+            $this->retryResponse($user, $code)['data']['payment']['url'] ?? null, $client['form']['url'],
             'los dos motores tienen que mandar el reintento al MISMO sitio'
         );
     }
@@ -431,40 +339,27 @@ class SidebarOutcomeParityTest extends TestCase
      * `pending` **no mueve el cajón**. Es el corazón de esta pantalla —la notificación de la pasarela
      * puede estar todavía en vuelo— y ampliar la acotación diría «no has pagado» a quien sí pagó.
      */
-    public function test_the_poll_moves_the_drawer_exactly_where_livewire_does(): void
+    public function test_the_poll_moves_the_drawer_exactly_where_it_must(): void
     {
         // (1) Pagado → paso 6, en los dos motores.
-        [, $user, $code] = $this->purchase();
+        [$user, $code] = $this->purchase();
         Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
 
-        SidebarEntry::verifying($code);
-        $paidComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
-
-        $this->assertSame(6, (int) $paidComponent->get('step'));
         $this->assertSame('confirmed', $this->pollVerdictInNode($this->paymentStatus($user, $code)));
 
         // (2) Caducado → vuelta al catálogo, con el mismo aviso.
-        [, $user2, $code2] = $this->purchase();
+        [$user2, $code2] = $this->purchase();
         Order::where('code', $code2)->update(['status' => Order::STATUS_EXPIRED]);
 
-        SidebarEntry::verifying($code2);
-        $expiredComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
-
-        $this->assertSame(1, (int) $expiredComponent->get('step'));
-        $this->assertSame(__('tickets.errors.retry_expired'), $expiredComponent->errors()->first('cart'));
         $this->assertSame('expired', $this->pollVerdictInNode($this->paymentStatus($user2, $code2)));
 
         // (3) Un intento FALLIDO con el pedido todavía pendiente: nadie se mueve.
-        [, $user3, $code3] = $this->purchase();
+        [$user3, $code3] = $this->purchase();
         $this->failLastPayment($code3, '0101');
-
-        SidebarEntry::verifying($code3);
-        $pendingComponent = Livewire::test(Purchase::class)->call('checkPaymentStatus');
 
         $status = $this->paymentStatus($user3, $code3);
 
         $this->assertSame('failed', $status['payment_status'], 'el caso necesita un intento rechazado');
-        $this->assertSame(11, (int) $pendingComponent->get('step'), 'Livewire se queda esperando');
         $this->assertSame(
             'wait', $this->pollVerdictInNode($status),
             "El cajón se mueve con un intento fallido y Livewire no.\n".
@@ -481,25 +376,20 @@ class SidebarOutcomeParityTest extends TestCase
      * WhatsApp del aviso de pausa y del enlace de registro, y por eso las dos URLs las compone el
      * SERVIDOR con `route()` y viajan en el payload de montaje.
      */
-    public function test_the_outcome_links_point_where_the_blade_points(): void
+    public function test_the_server_composes_the_outcome_links(): void
     {
-        [, , $code] = $this->purchase();
+        [, $code] = $this->purchase();
 
         $boot = $this->bootPayload();
 
         $this->assertSame(route('contacto'), $boot['urls']['contact'] ?? null);
         $this->assertSame(route('account.orders'), $boot['urls']['my_orders'] ?? null);
 
-        // Y son las mismas que pinta el Blade. ⚠️ El desenlace se siembra AQUÍ y no antes: cargar la
-        // página para leer el payload lo CONSUME —es el dueño único de 4.0a haciendo su trabajo—.
-        SidebarEntry::verifying($code);
-        $verifying = Livewire::test(Purchase::class)->html();
-
-        SidebarEntry::failed($code);
-        $declined = Livewire::test(Purchase::class)->html();
-
-        $this->assertStringContainsString('href="'.e(route('account.orders')).'"', $verifying);
-        $this->assertStringContainsString('href="'.e(route('contacto')).'"', $declined);
+        // ⚠️ **Lo que se comprobaba sobre el Blade se fue con él, y es un residual DECLARADO**
+        // (`DECISIONES #84(c)`): que un motor PINTE esas URLs no lo puede ver el diff de árbol
+        // —`href` no es atributo de contrato— ni los módulos planos, que no las tocan: las consumen
+        // los `.vue`. Lo que se queda es que el servidor las COMPONE con `route()` y las publica.
+        $this->assertNotSame('', (string) ($boot['urls']['contact'] ?? ''), 'la URL tiene que viajar compuesta');
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
@@ -522,30 +412,15 @@ class SidebarOutcomeParityTest extends TestCase
         // sin pedido que reintentar y el caso fallaría por el sitio equivocado.
         // Y son DOS pedidos de dos titulares porque el reintento CONSUME estado —ficha del limitador,
         // hold extendido—: compartirlo mediría dos situaciones distintas.
-        [, $user, $code] = $this->purchase();
-        [, $user2, $code2] = $this->purchase();
+        [$user, $code] = $this->purchase();
+        [$user2, $code2] = $this->purchase();
         $this->failLastPayment($code, '0101');
         $this->failLastPayment($code2, '0101');
 
         $this->applyRetryScenario($scenario, $user, $code);
         $this->applyRetryScenario($scenario, $user2, $code2);
 
-        // ⚠️ **Y el titular se vuelve a fijar aquí, que no es ceremonia**: la segunda compra dejó a
-        // `$user2` autenticado, así que sin esto Livewire reintentaría un pedido AJENO y respondería
-        // `NOT_RETRYABLE` —la defensa anti-IDOR haciendo su trabajo— en vez del motivo que mide el caso.
-        // Medido: con el titular equivocado, tres de los cuatro escenarios pasaban por casualidad.
-        $this->actingAs($user);
-
-        SidebarEntry::failed($code);
-        $component = Livewire::test(Purchase::class)->call('retryPayment');
-
-        $client = $this->retryInNode($this->retryResponse($user2, $code2));
-
-        return [match ((int) $component->get('step')) {
-            1 => 'catalog',
-            5 => 'identify',
-            default => null,
-        }, $client];
+        return $this->retryInNode($this->retryResponse($user2, $code2));
     }
 
     private function applyRetryScenario(string $scenario, User $user, string $code): void
@@ -688,9 +563,18 @@ class SidebarOutcomeParityTest extends TestCase
     }
 
     /**
-     * Una compra REAL por el flujo de la web, dejada en la pantalla de reserva creada.
+     * Una compra REAL, creada por **`POST /api/v1/orders`** (re-apuntada en 4.7·2b·2,
+     * `DECISIONES #85`).
      *
-     * @return array{0: Testable, 1: User, 2: string}
+     * ⚠️ **Esta pieza era el nudo del fichero**: conducía el componente Livewire y los catorce casos
+     * partían de ella, así que ninguno se podía re-apuntar por separado. Ahora la compra se crea por
+     * el mismo camino que usa el cajón —receta de `#65`, con `Origin` y la cesta en el cuerpo—, que
+     * además es **más fiel**: el pedido nace exactamente como nacerá en producción.
+     *
+     * El pack lleva señal, respuestas de evento y un complemento INCLUIDO con una unidad extra: es la
+     * línea más rica que el resumen puede tener, y por eso es la que se compra.
+     *
+     * @return array{0: User, 1: string} titular y código del pedido
      */
     private function purchase(bool $second = false, bool $withGuestStage = false): array
     {
@@ -700,34 +584,32 @@ class SidebarOutcomeParityTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->set('eventData', ['celebrant' => 'Mara'])
-            ->call('incAddon', $cake->id)
-            ->call('addToCart');
+        $items = [[
+            'product_id' => $pack->id, 'date' => $this->date, 'time' => '10:00:00',
+            'quantity' => $pack->min_qty,
+            'event_data' => ['celebrant' => 'Mara'],
+            // Dos unidades de un incluido con `allow_extra`: una gratis y otra cobrada.
+            'addons' => [['product_id' => $cake->id, 'quantity' => 2]],
+        ]];
 
         if ($second) {
             // Un SEGUNDO pack en el mismo pedido: es lo único que puede destapar un emparejado por
             // posición, y con una línea sola el test pasaría con el fallo dentro.
             $other = $this->pack('Aniversario');
-            $component
-                ->call('selectType', $other->id)
-                ->call('selectDate', $this->date)
-                ->call('goToTime')
-                ->call('selectTime', '10:00:00')
-                ->set('eventData', ['celebrant' => 'Nil'])
-                ->call('addToCart');
+            $items[] = [
+                'product_id' => $other->id, 'date' => $this->date, 'time' => '10:00:00',
+                'quantity' => $other->min_qty,
+                'event_data' => ['celebrant' => 'Nil'],
+            ];
         }
 
-        $component->call('checkout')->call('confirmReservation');
+        $response = $this->postJson('/api/v1/orders', ['items' => $items], ['Origin' => config('app.url')])
+            ->assertCreated();
 
-        $code = (string) $component->get('orderCode');
+        $code = (string) $response->json('order.code');
         $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
 
-        return [$component->set('step', 6), $user, $code];
+        return [$user, $code];
     }
 
     private function pack(string $name, bool $withGuestStage = false): TicketType
@@ -765,48 +647,6 @@ class SidebarOutcomeParityTest extends TestCase
         ]);
 
         return $addon;
-    }
-
-    /**
-     * El view-model del componente, traducido a la forma que compone `outcome.js`.
-     *
-     * ⚠️ **La traducción es el test**: si los nombres de los campos no se cruzaran aquí, no habría nada
-     * que comparar — y es justo el cruce que el cajón hace de verdad.
-     *
-     * @return array<string, mixed>
-     */
-    private function summaryFromLivewire(Testable $component): array
-    {
-        $confirmation = $component->viewData('confirmation');
-
-        $this->assertNotNull($confirmation, 'el componente tiene que traer su resumen');
-
-        return [
-            'code' => $confirmation['code'],
-            'status' => $confirmation['status'],
-            'total_cents' => $confirmation['total'],
-            'online_cents' => $confirmation['online'],
-            'park_cents' => $confirmation['pending_at_park'],
-            'has_guest_form' => (bool) $confirmation['has_guest_form'],
-            'lines' => array_map(fn (array $line): array => [
-                'product_name' => $line['name'],
-                'is_pack' => $line['is_pack'],
-                'quantity' => $line['qty'],
-                'date' => $line['date'],
-                'time' => $line['time'],
-                'subtotal_cents' => $line['subtotal'],
-                'has_deposit' => (bool) $line['has_deposit'],
-                'deposit_cents' => $line['deposit'],
-                'gate_remainder_cents' => $line['gate_remainder'],
-                'addons' => array_map(fn (array $addon): array => [
-                    'product_name' => $addon['name'],
-                    'quantity' => $addon['qty'],
-                    'free_quantity' => $addon['free_qty'],
-                    'subtotal_cents' => $addon['subtotal'],
-                ], $line['addons']),
-                'event' => $line['event'],
-            ], $confirmation['lines']),
-        ];
     }
 
     /**

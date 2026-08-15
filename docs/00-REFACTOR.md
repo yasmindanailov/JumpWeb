@@ -1325,8 +1325,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           del desenlace (la mitad del servidor sobrevive; la del Blade muere).
         · ⚠️ **Residual a DECIDIR en ·2b·3**: la mitad del Blade es lo único que hoy comprueba que un
           motor PINTA esas URLs; `href` no es atributo de contrato y los módulos planos no las tocan.
-        · **La auditoría de las NUEVE paridades queda cerrada**: seis re-apuntadas y fuera del
-          inventario, dos que mueren con el componente (`#79`, `#83`) y esta, medida y planificada.
+      · ✅ **`SidebarOutcomeParityTest` re-apuntada y FUERA del inventario** (2026-08-15,
+        `DECISIONES #85`). 22 → **21**. `purchase()` crea el pedido con `POST /api/v1/orders` (receta
+        de `#65`): deshecho el nudo, los catorce casos encontraron su referencia sin pelea.
+        · **Cuatro casos retirados, cada uno medido**: los dos del resumen contra el view-model
+          —`outcome.test.js` cubre la composición, `OrderSummaryFieldsTest`/`OrderEventDataTest` los
+          campos, y componer `park_cents` restando resultó ser un mutante EQUIVALENTE para su
+          fixture— y los dos del enlace de registro, que `PublicConfigTest` cubre mejor.
+        · Las tres divergencias declaradas se quedan con su mitad viva; los destinos del reintento y
+          del sondeo se **volcaron** del motor vivo (técnica de `#81`).
+        · ⚠️ **Un mutante verde comprobado, no asumido**: quitar la caída a `default` no pone rojo
+          este test (hoy toda clave de `REASON_MAP` existe en `lang/`); lo caza `outcome.test.js`.
+        · ✅ **La auditoría de las NUEVE paridades queda CERRADA**: siete re-apuntadas y fuera del
+          inventario, dos que mueren con el componente operando DENTRO (`#79`, `#83`). **27 → 21.**
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

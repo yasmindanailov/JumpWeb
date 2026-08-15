@@ -79,7 +79,6 @@ class PurchaseRetirementTest extends TestCase
         'tests/Feature/Sales/SidebarV2Test.php',
         'tests/Feature/Sidebar/SidebarCalendarParityTest.php',
         'tests/Feature/Sidebar/SidebarDomContractTest.php',
-        'tests/Feature/Sidebar/SidebarOutcomeParityTest.php',
         'tests/Feature/Ui/SpinnerTest.php',
     ];
 

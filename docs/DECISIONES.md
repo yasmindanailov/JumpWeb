@@ -3363,3 +3363,43 @@ sustituirla —`href` no es atributo de contrato— y los módulos planos no las
 
 **(d) Nota de proceso: la guarda del bundle rancio saltó por CUARTA vez en tres días**, otra vez por
 mutar un módulo y restaurarlo con `git checkout`. Ya está en `ESTADO.md` como aviso; van cuatro.
+
+## #85 · 2026-08-15 · 4.7·2b·2 — deshecho el nudo: la compra se crea por la API
+Cierra lo que `#84` dejó medido y planificado. `SidebarOutcomeParityTest` **fuera del inventario**:
+contador **22 → 21**. Y confirma que el diagnóstico de `#84` era correcto: cambiada UNA pieza, los
+catorce casos encontraron su referencia sin pelea.
+
+**(a) `purchase()` crea el pedido con `POST /api/v1/orders`** (receta de `#65`, con `Origin` y la cesta
+en el cuerpo) en vez de conducir el componente. Además de desatar el nudo es **más fiel**: el pedido
+nace por el mismo camino que usará el cajón, con su señal, sus respuestas de evento y un complemento
+INCLUIDO con una unidad extra.
+
+**(b) Cuatro casos RETIRADOS, cada uno con su medición.** Los dos que comparaban el resumen contra el
+view-model: su composición la cubre `outcome.test.js` y sus campos `OrderSummaryFieldsTest` y
+`OrderEventDataTest` —y se midió que **componer `park_cents` restando es un mutante EQUIVALENTE para
+este fixture**, así que esa comparación ni siquiera cazaba el error que el propio módulo advierte—. Y
+los dos del enlace de registro: `PublicConfigTest` cubre lo mismo **mejor**, con las cuatro URLs
+hostiles del saneado de `SEC-07` que aquí no se probaban. El emparejado por `reservation_id` no se
+pierde: lo prueba el caso que da la vuelta al sobre, que nunca tocó el componente.
+
+**(c) Las tres divergencias declaradas se quedan con su mitad viva**: el resumen acotado a la fase
+`booking` (RGPD), el estado EFECTIVO de un hold caducado y el silencio de la API sobre un rechazo
+anterior con otro cobro en vuelo. En las tres la API es la que acierta, así que al irse el otro motor
+la divergencia desaparece y queda la conducta correcta.
+
+**(d) Los destinos del reintento y del sondeo se VOLCARON del motor vivo** antes de retirarlo (técnica
+de `#81`): eran su única declaración escrita. Quedan como decisión —pausa y límite **no mueven a
+nadie**; solo `order_not_retryable` devuelve al catálogo— con el porqué al lado.
+
+**(e) La referencia de los motivos es el DOMINIO.** `Purchase::resolveDeclinedReason()` terminaba en
+`RedsysResponseCode::reasonText()`: intermediario puro. Y la razón de ser del fichero sigue medida —
+renombrar `payment_failed.reasons.cvv_wrong` deja los 2710 casos verdes **salvo dos, los dos de aquí**.
+
+**(f) Un mutante verde, comprobado y no asumido**: quitar la caída a `default` de `declinedReasonText`
+no pone rojo este test, porque hoy toda clave de `REASON_MAP` existe en `lang/`. Lo caza
+`outcome.test.js` —verificado, 1 rojo—, que es quien debe. Cada nivel prueba lo suyo.
+
+**(g) Balance de la auditoría, que aquí termina.** De las nueve paridades: **siete re-apuntadas y
+fuera del inventario** (`#75`, `#77`, `#78`, `#80`, `#81`, `#82`, `#85`) y **dos que mueren con el
+componente** operando DENTRO, con sus instrucciones escritas donde se leerán (`#79`, `#83`).
+Contador **27 → 21**.

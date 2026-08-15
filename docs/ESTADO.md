@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2714 en verde** (15.670 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
+- Suite **2710 en verde** (15.658 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -65,7 +65,7 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 22
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 21
 dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componente se borra.
 
 ▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
@@ -106,15 +106,16 @@ mueren con el componente y el tercero sobrevive, así que la unidad de la audito
 el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
 usarlo— porque hace leer mal la clasificación al borrar.
 
-✅ **La auditoría de las nueve paridades está CERRADA.** `SidebarOutcomeParityTest` queda **medida
-entera y con el plan escrito** (`#84`), pero sin re-apuntar: sus catorce casos cuelgan de `purchase()`,
-que fabrica la compra conduciendo el componente, así que **o se cambia esa pieza a
-`POST /api/v1/orders` —receta probada en `#65`— o no se mueve ninguno**. No falta decidir nada; falta
-hacer ese cambio, y entonces el contador baja de 22 a 21.
-▶ **Lo único que solo caza ese fichero son los motivos del rechazo** —renombrar
-`payment_failed.reasons.cvv_wrong` deja los 2714 verdes salvo dos, los dos de allí— y su referencia
-**sobrevive** (`RedsysResponseCode::reasonText()`). El resto está clasificado en `#84`: qué es
-redundante, qué muere y qué se parte.
+✅ **La auditoría de las nueve paridades está CERRADA** (`#85`): **siete re-apuntadas y fuera del
+inventario** y **dos que mueren con el componente** operando DENTRO, con sus instrucciones escritas en
+sus propios ficheros (`#79` el calendario, `#83` el diff de árbol). Contador **27 → 21**.
+
+▶ **EMPIEZA AQUÍ: los dependientes que NO son paridades.** Quedan 21 y ninguno está auditado con esta
+regla todavía. Los de `tests/Feature/Sales/*` son el grueso —`PurchaseLimitsTest`,
+`PurchaseIdentificationTest`, `DepositSurfacesTest`, `PurchaseRetryAndPollingTest`…— y la lección de
+`#85` se aplica igual: **busca primero la pieza de la que cuelgan todos** (allí fue `purchase()`) y
+cámbiala a la API antes de tocar caso por caso. Tres ya están clasificados y no hay que re-medirlos
+(ver abajo).
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 ✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está
@@ -286,6 +287,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2714** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2710** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
