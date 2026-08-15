@@ -9,6 +9,7 @@
 | `ESTADO.md` | Foto viva mínima: dónde estamos / qué sigue. **Carga obligatoria al arrancar.** Fuente única del recuento vivo de la suite. |
 | `00-REFACTOR.md` | Tracker VIVO del refactor de generalización (fases + checklists). Sus marcadores de fase MANDAN sobre ESTADO. |
 | `DECISIONES.md` | Cronológico de decisiones con su porqué. Buscar por número, no cargar entero. Revertida = «Sustituida por #N» en la antigua. |
+| `ENTORNOS.md` | Los dos entornos (local y **staging**, que es 0 LIVE / 0 PRODUCCIÓN), sus seis guardas y el procedimiento de despliegue. |
 | `CONVENCIONES.md` | Reglas y protocolo de los agentes (DoD §3.bis, arranque/handoff §7, git §8, escalado al owner §9). |
 | `GLOSARIO.md` | Lenguaje ubicuo: término de dominio ↔ artefacto real de código/BD, con estado de generalización. |
 | `DEUDA.md` | Registro único de deuda técnica con severidad, medida y fase que la retira. |

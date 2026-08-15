@@ -98,11 +98,15 @@ tramo, no un descubrimiento del final.
 
 ### Lo que NO depende de nosotros
 
-- **4.4b·2 · Turnstile**: necesita claves de Cloudflare y un hostname. **Hay un staging en preparación**
-  (owner, 2026-08-15), y eso desbloquea además los tres caminos de navegador pendientes —el terminal
-  *data-less* con notificación S2S (necesita URL pública), el 3DS con challenge y el móvil real—.
-  ⚠️ Cuando exista, revisar `#62`: retiró la condición de «curtirlo en producción» **porque no había
-  canal de despliegue**, y esa premisa cambia. Lo que NO cambia es que el contador sigue ordenando 4.7.
+- ✅ **Ya hay servidor de PRUEBAS**: `jumpweb.sites.aelium.app` (`DECISIONES #76`, reglas en
+  `docs/ENTORNOS.md`). **0 LIVE, 0 PRODUCCIÓN.** Desbloquea las cuatro cosas que estaban atascadas por
+  falta de URL pública: **Turnstile** (4.4b·2), la **notificación S2S** de Redsys, el **3DS con
+  challenge** y el **móvil real**.
+  ⚠️ **Pero `#62` NO se reabre**: retiró «esperar a que ruede en producción» por vacía, y un staging
+  **no tiene tráfico**. Lo que ordena 4.7 sigue siendo el CONTADOR, no el calendario.
+  ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca en bloque y con guion.
+  ▶ Pendiente: el **procedimiento de despliegue** (`ENTORNOS.md` §4), que cierra el
+  `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1 y se escribe **midiendo**, no a ojo.
 - **Pendiente del owner** (❗): 2FA del panel · mecanismo del primer admin (`INSTALACION-CLIENTE.md` §5)
   · backlog de producto de Fase 6.
 

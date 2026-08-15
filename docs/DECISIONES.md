@@ -3055,3 +3055,38 @@ El tercer caso es el interesante y es el que hay que buscar: casi siempre mejora
 **(d) Contador: 28 → 27.** Y una nota de proceso: la guarda del bundle rancio (`#69`) volvió a saltar
 —restaurar un módulo con `cp` le pone fecha nueva— cazando 30 casos que habrían comparado contra código
 viejo. Van dos veces en dos días.
+
+## #76 · 2026-08-15 · [DECIDIDO] Hay un servidor de PRUEBAS, y no es producción
+El owner levanta `jumpweb.sites.aelium.app` (infra propia, panel enhanceCP). Cambia una premisa que
+estaba escrita, así que se decide qué cambia y —sobre todo— **qué no**.
+
+**(a) Qué es.** Un banco de pruebas del PRODUCTO: **0 LIVE, 0 PRODUCCIÓN**, sin clientes, sin dinero
+real y sin datos de personas reales. No es la instalación de nadie. Existe **solo** para lo que
+necesita una URL pública o un navegador de verdad y no se puede ver en local. Reglas en
+`docs/ENTORNOS.md`.
+
+**(b) Lo que desbloquea, que era exactamente lo que estaba atascado**: el **widget de Turnstile**
+(4.4b·2 — Cloudflare emite las claves contra un hostname), la **notificación S2S de Redsys**
+(`redsys_merchant_url`, el «bloque B» del e2e que hasta hoy exigía un túnel), el **3DS con challenge**
+y el **móvil real**. Los cuatro estaban declarados como pendientes de navegador desde `#59`.
+
+**(c) ⚠️ Lo que NO cambia, y es lo importante: `#62` no se reabre.** Aquella decisión retiró la
+condición «dejar el flag en `spa` en uso real unos días» **por vacía**, y sigue siéndolo: un staging
+**no tiene tráfico**. La retirada de `Purchase.php` la sigue ordenando el CONTADOR de
+`PurchaseRetirementTest`, no el calendario ni «que ruede un poco». Se escribe aquí y en `ENTORNOS.md`
+porque el modo de fallo es previsible: alguien lee «ya hay servidor» y reintroduce el bloqueo.
+
+**(d) Seis guardas, cada una atada a algo que este código hace hoy** (detalle en `ENTORNOS.md` §2):
+Redsys en `test` —el único fallo de la lista que cuesta DINERO— · **nunca un volcado del cliente
+origen**, porque traería nombres, edades y alergias de menores a un servidor de pruebas · el correo no
+sale · no indexable · `APP_URL` con el dominio real y HTTPS · cola en `database` con worker vivo.
+
+**(e) Y un dato práctico verificado al escribir esto**: **las claves de Turnstile se leen SOLO de
+`settings` (BD), nunca de `.env`** (`Platform\Services\Turnstile`). En staging se configuran por el
+panel de admin. Es la contradicción que `INSTALACION-CLIENTE.md` §3 ya declaraba abierta.
+
+**(f) El procedimiento de despliegue queda [PENDIENTE DE MEDIR]**, a propósito: cierra el
+`[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1 y **no se escribe a ojo**. Se ejecuta una vez, se
+anota lo que de verdad pasó y se deja reproducible. El principio sí está decidido: **staging se levanta
+con el mismo procedimiento que levantaría la instalación de un cliente**; configurado a mano sería un
+*snowflake* y no demostraría nada sobre lo que instalará el siguiente.
