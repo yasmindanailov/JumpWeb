@@ -3481,3 +3481,30 @@ el del Blade. Sujeto = superficie → muere, y ·2b·3 lo borra ENTERO.
 para componer esa pantalla. Lo cubrían dos casos PHP, pero **no quien debe**. Nace el caso —los tres
 estados más el pedido ausente—, verificado por mutación: 27 verdes limpios, 26+1 rojo con `status`
 clavado. **Auditar para retirar también encuentra huecos en lo que se queda.**
+
+## #89 · 2026-08-15 · 4.7·2b·2·C — tres reglas publicadas que no guardaba nadie
+Tercer fichero del tramo: `AddonInclusionPurchaseTest` (7 usos, 7 casos). **Muere ENTERO** —su sujeto
+es el puente UI → carrito, lo dice su propio docblock— y el contador no se mueve. Pero el paso vale
+por lo que la auditoría encontró de camino, que no era lo que se buscaba.
+
+**(a) ⚠️⚠️ Tres reglas de dominio que la API publica y que NADIE verificaba.** Medido, una a una,
+contra los 2708 casos: quitarle a `can_decrease` su `$qty > $min`, a `can_increase` su tope `max_qty`
+y a `can_toggle` su exigencia de por-invitado deja la suite **entera en verde**. Son los tres botones
+del paso con más clics del embudo: un valor equivocado pinta un `−` que no se puede pulsar, o —peor—
+uno que sí y lleva la cesta por debajo de lo que el producto EXIGE.
+
+**(b) Y el punto ciego tenía forma, no era descuido.** `SidebarAddonsParityTest` compara la fila
+publicada contra el modelo de vista del dominio… y **las dos mitades salen del mismo `viewModel()`**,
+así que mutar la REGLA es un mutante equivalente para él (mutar la TRADUCCIÓN sí lo caza — es lo que
+`#77` midió). Y los casos de este fichero, que parecían cubrirlo, ejercen **la guarda propia del
+componente**: por eso tampoco caían. Dos redes distintas, y el hueco justo en medio.
+
+**(c) La cobertura se escribió ANTES de clasificar el fichero como prescindible.** Tres casos nuevos
+en `Api\V1\CatalogAddonsTest` —quien publica esos campos—: el mínimo del obligatorio cierra el `−` y
+solo en el mínimo, el tope cierra el `+` y solo en el tope, y el interruptor lo es solo el
+por-invitado opcional. Verificados con las tres mutaciones, las tres rojas.
+**La cobertura equivalente no siempre existe: a veces hay que escribirla.**
+
+**(d) Los otros cuatro casos del fichero sí tenían equivalente**, y está localizado: los defaults del
+obligatorio y del grupo, el complemento de pago sin tarifa que ni se ofrece, la cantidad del
+por-invitado y el cero que retira — los cuatro en `CatalogAddonsTest` desde 4.0b·5.

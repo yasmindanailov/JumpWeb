@@ -19,6 +19,17 @@ use Tests\TestCase;
  * los obligatorios/incluidos arrancan seleccionados, el grupo excluyente arranca en su default
  * (el incluido) y se puede cambiar al de pago, y el carrito que se manda a `OrderCreator` refleja
  * exactamente esa selección (la lógica de precio/gratis la prueba `AddonInclusionTest`).
+ *
+ * ⚠️ **Este fichero ENTERO muere con el componente** (medido el 2026-08-15, `DECISIONES #89`). Su
+ * propio docblock lo dice sin querer: prueba **el puente UI → carrito**, o sea la superficie. Sus
+ * siete casos ejercen las **guardas propias del componente**, no los campos que la API publica —se
+ * midió: mutar `can_decrease`, `can_increase` y `can_toggle` en el dominio los dejaba a todos en
+ * VERDE—. ·2b·3 lo borra entero.
+ *
+ * ⚠️⚠️ **Y auditarlo destapó tres reglas que no guardaba NADIE**, ni él: el mínimo del obligatorio, el
+ * tope `max_qty` y que el interruptor solo lo sea el por-invitado opcional. Los tres viajan al cliente
+ * en `can_*` y sus fronteras se fijaron en `Api\V1\CatalogAddonsTest` antes de dar este fichero por
+ * prescindible. **La cobertura equivalente no siempre existe: a veces hay que escribirla.**
  */
 class AddonInclusionPurchaseTest extends TestCase
 {

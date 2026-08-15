@@ -1377,6 +1377,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ⚠️ **Y destapó un hueco en lo que se QUEDA**: con `status` clavado, `outcome.test.js` seguía
           verde — el módulo no fijaba su propio mapeo del estado. Nace el caso (los tres estados más
           el pedido ausente), verificado por mutación. **287 tests JS** (antes 286).
+      · ✅ **`AddonInclusionPurchaseTest` clasificado: muere ENTERO** (`DECISIONES #89`) — su sujeto es
+        el puente UI → carrito. Contador sin cambio. **Pero la auditoría destapó tres reglas de dominio
+        publicadas que NO guardaba nadie**, y esa es la ganancia del paso.
+        · ⚠️⚠️ Medido: quitarle a `can_decrease` su `$qty > $min`, a `can_increase` su tope `max_qty` y
+          a `can_toggle` su exigencia de por-invitado deja la suite **entera en verde**.
+        · **El punto ciego tenía forma**: `SidebarAddonsParityTest` no puede verlo —sus dos mitades
+          salen del mismo `viewModel()`, así que mutar la REGLA es equivalente para él (mutar la
+          TRADUCCIÓN sí lo caza, `#77`)— y los casos Livewire ejercen la guarda PROPIA del componente.
+        · **Cobertura escrita ANTES de clasificarlo**: tres casos en `Api\V1\CatalogAddonsTest`, con
+          sus fronteras y verificados por mutación. **La cobertura equivalente no siempre existe: a
+          veces hay que escribirla.**
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

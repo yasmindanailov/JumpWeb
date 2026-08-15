@@ -302,6 +302,80 @@ class CatalogAddonsTest extends ApiTestCase
             ->assertJsonPath('singles.0.charged_cents', 5600);
     }
 
+    // ── Los CONTROLES: qué se puede hacer con cada fila ───────────────────────────────────────
+
+    /**
+     * ⚠️ **Los tres `can_*` son reglas de DOMINIO publicadas, y hasta 4.7·2b·2·C no las guardaba
+     * nadie** (`DECISIONES #89`). El agujero se midió: quitarle a `can_decrease` su `$qty > $min`, a
+     * `can_increase` su tope `max_qty` y a `can_toggle` su exigencia de por-invitado dejaba los 2708
+     * casos **en verde**.
+     *
+     * Y no era descuido de nadie, sino un punto ciego con forma: `SidebarAddonsParityTest` compara la
+     * fila publicada contra el modelo de vista, pero **las dos mitades salen del mismo `viewModel()`**,
+     * así que mutar la regla es un mutante EQUIVALENTE para él. Y los casos del motor Livewire que
+     * parecían cubrirlo probaban la guarda PROPIA del componente, no el campo que viaja al cliente:
+     * por eso tampoco caían. La frontera hay que fijarla aquí, que es quien los publica.
+     *
+     * Publicarlos es lo que evita que el cliente recomponga estas reglas —la tercera copia de la misma
+     * cadena—, así que un valor equivocado se pinta como un botón que no se puede pulsar, o peor: como
+     * uno que sí.
+     */
+    public function test_the_minimum_of_a_mandatory_addon_closes_its_decrease(): void
+    {
+        $pack = $this->pack();
+        $insurance = $this->addon($pack, 'Seguro', 400, ['is_mandatory' => true, 'included_quantity' => 2]);
+
+        $atMinimum = $this->ask($pack, ['addons' => [['product_id' => $insurance->id, 'quantity' => 2]]])
+            ->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(2, $atMinimum->json('singles.0.min_quantity'), 'el obligatorio publica su mínimo');
+        $this->assertFalse(
+            $atMinimum->json('singles.0.can_decrease'),
+            'en el mínimo no se puede bajar: el producto EXIGE ese complemento'
+        );
+
+        $above = $this->ask($pack, ['addons' => [['product_id' => $insurance->id, 'quantity' => 3]]])->assertOk();
+
+        $this->assertTrue(
+            $above->json('singles.0.can_decrease'),
+            'y por encima del mínimo sí: si no, el caso de arriba pasaría con `can_decrease` clavado a false'
+        );
+    }
+
+    /** El tope del pivote cierra el `+`, y solo al llegar a él. */
+    public function test_the_pivot_cap_closes_the_increase_at_its_top(): void
+    {
+        $pack = $this->pack();
+        $balloons = $this->addon($pack, 'Globos', 300, ['max_qty' => 3]);
+
+        $below = $this->ask($pack, ['addons' => [['product_id' => $balloons->id, 'quantity' => 2]]])
+            ->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(3, $below->json('singles.0.max_quantity'));
+        $this->assertTrue($below->json('singles.0.can_increase'), 'por debajo del tope se puede subir');
+
+        $atCap = $this->ask($pack, ['addons' => [['product_id' => $balloons->id, 'quantity' => 3]]])->assertOk();
+
+        $this->assertFalse($atCap->json('singles.0.can_increase'), 'en el tope, no');
+    }
+
+    /**
+     * `can_toggle` distingue el INTERRUPTOR del contador, y solo lo es el por-invitado opcional: su
+     * cantidad la fija el aforo, así que un `+`/`−` ahí no significa nada.
+     */
+    public function test_only_an_optional_per_guest_addon_is_a_switch(): void
+    {
+        $pack = $this->pack();
+        $meal = $this->addon($pack, 'Comida', 700, ['quantity_mode' => 'per_guest']);
+        $socks = $this->addon($pack, 'Calcetines', 300);
+
+        $rows = collect($this->ask($pack)->assertOk()->assertValidResponse(200)->json('singles'))
+            ->keyBy('product_id');
+
+        $this->assertTrue($rows[$meal->id]['can_toggle'], 'el por-invitado opcional es un interruptor');
+        $this->assertFalse($rows[$socks->id]['can_toggle'], 'el de cantidad libre NO: se cuenta con el stepper');
+    }
+
     // ── El dinero de la línea ─────────────────────────────────────────────────────────────────
 
     /**
