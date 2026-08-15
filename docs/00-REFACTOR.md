@@ -1159,15 +1159,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           · **Balance de (B)**: 7 tramos · `catalog.js`, `calendar.js` (con test propio) y `offer.js` ·
             **286 tests JS** frente a 247 · 4 traducciones a mano retiradas · **manifiesto sin cambiar
             ni una vez en los siete**.
-      · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
-        cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
-        escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:
-        `jj-spinner*`, `jj-loading`, el bloque `auth__*`/`form__*`, los iconos— y el Blade tiene **4 que
-        los `.vue` no**: `is-selected`, `is-invalid`, `active` y `catalog__item--feat`. Cambiar la
-        fuente ENSANCHA el ámbito y puede mover el presupuesto: necesita tramo propio.
-      · **`SidebarSeamTest` sí es pequeño**: su `ENGINE_VIEW` es una EXCLUSIÓN («en la vista del propio
-        motor el evento está en su sitio»). Al no haber vista del motor, la excepción desaparece sola
-        junto con los dos eventos (`show-packs`, `show-entradas-zone`), que mueren con el componente.
+      · ⚠️⚠️ **`SidebarTokenBudgetTest`: MEDIDO el 2026-08-15, y lo que sale no es un detalle del
+        escaneo — es una TAREA DE 4.0c QUE FALTA.** El test deriva el ámbito CSS del cajón escaneando
+        `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese escaneo no ve**
+        —casi todas de parciales que el Blade incluye y el escáner no sigue: `jj-spinner*`, `jj-loading`,
+        el bloque `auth__*`/`form__*`, los iconos— y el Blade tiene **4 que los `.vue` no**
+        (`is-selected`, `is-invalid`, `active`, `catalog__item--feat`).
+        **Al añadir las fuentes Vue al escaneo, medido con la suite: la tokenización cae del 75% al
+        70% y los colores crudos suben de 3 a 5.**
+        ▶ **La lectura correcta**: la tokenización de 4.0c midió su ámbito **desde el Blade**, así que
+        está incompleta para el motor que va a sobrevivir. No es una regresión ni un problema de la
+        retirada: es trabajo de 4.0c que solo se ve mirando el ámbito bueno. **Bajar los umbrales para
+        que pase sería exactamente lo que la disciplina «solo encoge» prohíbe.**
+        ▶ **El orden que esto impone**: tokenizar lo que los `.vue` destapan **y luego** cambiar la
+        fuente del escaneo. Ficha en `DEUDA.md`.
+      · **`SidebarSeamTest` NO se puede re-apuntar, y conviene saber por qué** (medido el 2026-08-15):
+        su `ENGINE_VIEW` es una EXCLUSIÓN («en la vista del propio motor el evento está en su sitio»).
+        Ampliarla a todo `livewire/` la debilitaría —otro componente, como `account-context`, podría
+        despachar un evento del motor y no se vería—. La exclusión **desaparece sola con el Blade**,
+        junto con los dos eventos. Es de ·2b·3, no de ·2b·2.
       **Clasificación ya medida** para los que se inspeccionaron en ·b1, para no repetir el trabajo:
       · `ReservationPauseGuardTest` (3 casos) — **muere con el componente sin pérdida**: su sujeto es el
         guard de servidor y la superficie que sobrevive ya lo cubre en `Api/V1/OrdersTest`
