@@ -1,6 +1,6 @@
 # Deuda técnica — registro único
 
-> Estado: vivo · Última actualización: 2026-08-14 ·
+> Estado: vivo · Última actualización: 2026-08-15 ·
 > **Reconciliado contra el CÓDIGO fila por fila el 2026-08-14** (no contra el tracker: se comprobó
 > cada afirmación con el árbol actual, no con lo que una fase dijo que iba a hacer) ·
 > Se invalida si: una fase retira un ítem sin actualizar su fila.
@@ -87,6 +87,24 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 `DECISIONES #9`).
 
 ## Verificado y SIN cambios (reconciliación 2026-08-14)
+
+## ▶ Alta · `Sidebar.vue` es el segundo objeto-dios (2026-08-15, `DECISIONES #90`)
+
+**Medido**, no estimado: **618 líneas de CÓDIGO** en su `<script>` (de 1.477 crudas; el resto es
+documentación) y **las 11 llamadas a la API del cajón**. Los otros 18 componentes suman 236 líneas
+entre todos, ninguno pasa de 24 y ninguno toca la API — o sea que **CE-6 lo cumplen 18 de 19**, y la
+violación es un fichero. Sus 41 funciones son los MISMOS métodos de `Purchase.php`: `selectProduct`,
+`addToCart`, `checkout`, `confirmReservation`, `retryPayment`, `goBack`…
+
+- **Causa raíz, ya corregida**: CE-6 estaba escrito y **no lo vigilaba nada**. Desde `#90` lo vigila
+  `SidebarComponentBudgetTest`, con techo general y `Sidebar.vue` como excepción declarada que **solo
+  puede encoger**. La deuda deja de crecer y pasa a ser un número que baja.
+- **El camino ya existe y está probado**: `admission.js::runCheckout()` es una secuencia extraída a un
+  módulo plano, con sus dependencias por parámetro y sus casos en `admission.test.js`. Quedan ~10
+  secuencias (`selectProduct`, `addToCart`, `confirmReservation`, `poll`, `goBack`…).
+- **Y hay red para hacerlo**: el manifiesto de DOM compara el árbol byte a byte, así que refactorizar
+  el `<script>` sin tocar la plantilla se verifica solo.
+- **Sin plan de fase todavía**: no bloquea 4.7 y no se mezcla con la retirada.
 
 Estas filas se comprobaron una a una contra el árbol actual y siguen **exactamente** como estaban; no
 se tocan para no ensuciar el diff, pero constan como verificadas:

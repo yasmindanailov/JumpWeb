@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2711 en verde** (15.672 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
+- Suite **2715 en verde** (15.680 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -42,6 +42,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES · *recibir* una entidad de
   otro módulo es costura de BD, *consultar* sus datos o *repetir* sus reglas exige contrato · las
   baselines del arch-test **solo encogen**.
+- ⚠️ **`Sidebar.vue` es el segundo objeto-dios, y ya está VIGILADO** (`DECISIONES #90`): 618 líneas de
+  código y las 11 llamadas a la API del cajón, con los mismos métodos que `Purchase.php`. Los otros 18
+  componentes suman 236 y ninguno toca la API — **CE-6 lo cumplen 18 de 19**. Desde hoy lo guarda
+  `SidebarComponentBudgetTest` (techo por componente + excepción declarada que **solo encoge**), así
+  que la deuda deja de crecer. La extracción —patrón `admission.js::runCheckout()`, ~10 secuencias— va
+  en `DEUDA.md` como Alta, **fuera de 4.7** a propósito.
 - ⚠️ **NOTA DE DESPLIEGUE permanente**: las migraciones corren **ANTES** de servir tráfico (el morphMap
   de Fase 2 es requisito) y hay que **drenar la cola + `queue:restart`** (los payloads serializados
   llevaban los FQCN viejos).
@@ -314,6 +320,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2711** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

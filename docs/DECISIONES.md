@@ -3508,3 +3508,45 @@ por-invitado opcional. Verificados con las tres mutaciones, las tres rojas.
 **(d) Los otros cuatro casos del fichero sí tenían equivalente**, y está localizado: los defaults del
 obligatorio y del grupo, el complemento de pago sin tarifa que ni se ofrece, la cantidad del
 por-invitado y el cero que retira — los cuatro en `CatalogAddonsTest` desde 4.0b·5.
+
+## #90 · 2026-08-15 · [DECIDIDO] CE-6 con dientes: `Sidebar.vue` era el segundo objeto-dios
+Lo levanta el owner mirando el fichero: 1.477 líneas. La sospecha era **«estamos limpiando un
+objeto-dios para crear otro»**, y medida resulta exacta — con un matiz que cambia la forma de la
+solución.
+
+**(a) La medición.** `Sidebar.vue` tiene **618 líneas de CÓDIGO** (de 1.477 crudas: el resto es
+documentación) y **las 11 llamadas a la API del cajón**. Los otros **18 componentes** suman 236 entre
+todos, ninguno pasa de **24** y ninguno toca la API. Y sus 41 funciones son los MISMOS métodos de
+`Purchase.php`: `selectProduct`, `addToCart`, `checkout`, `confirmReservation`, `retryPayment`,
+`goBack`… Se estaba construyendo el segundo mientras se desmontaba el primero.
+
+**(b) El matiz que salva el trabajo hecho**: los 18 módulos planos (3.060 líneas, 287 tests) **sí**
+existen y tienen la lógica pura. Lo que queda dentro del `.vue` es **orquestación**, y el patrón para
+sacarla ya está probado —`admission.js::runCheckout()`, con sus dependencias por parámetro—. No hay
+que rediseñar nada: hay que aplicarlo ~10 veces más.
+
+**(c) ⚠️ La causa raíz era que CE-6 no tenía dientes.** Llevaba escrito en la spec desde el principio
+y **no lo vigilaba nada**: las únicas guardas del cajón son presupuestos de KiB del bundle, que un
+`<script>` de 1.363 líneas pasa sin despeinarse. Es exactamente cómo creció `Purchase.php` en su día.
+Nace `SidebarComponentBudgetTest`: techo de código por componente, cero llamadas a la API desde un
+`.vue`, y `Sidebar.vue` como **excepción declarada que solo puede encoger** —en las dos direcciones:
+crecer es regresión, y bajar sin actualizar el número deja la baseline floja—.
+
+**(d) Se cuentan líneas de CÓDIGO, no crudas, y no es un detalle.** Un contador de líneas crudas
+habría convertido **«borra los comentarios» en una forma legítima de pasar el test**, en un proyecto
+cuya documentación es la mitad del fichero. La guarda mide lógica; la prosa que la explica no estorba.
+Hay un caso que lo fija sobre una muestra sintética.
+
+**(e) Cuatro mutaciones, las cuatro rojas**: un componente que cruza el techo, uno que llama a la API,
+la excepción que crece, y el escáner roto —esta última cae por partida doble, incluida la guarda de la
+guarda—.
+
+**(f) ⚠️ Y una trampa de proceso que casi cuela una guarda ROTA**: al revertir la mutación del escáner
+con `git checkout`, el comando falló **porque el fichero era nuevo y no estaba trackeado** — el
+`Updated 1 path` de las otras tres no salió, pero entre el ruido no se ve. La mutación siguió dentro
+hasta que se comprobó a mano. **Al mutar un fichero SIN TRACKEAR, `git checkout` no revierte nada:
+comprueba el contenido, no el código de salida.**
+
+**(g) No se mezcla con 4.7.** La extracción queda en `DEUDA.md` como **Alta** y sin plan de fase: no
+bloquea la retirada y meterla en medio ensuciaría los dos trabajos. Lo que sí cambia desde hoy es que
+la deuda **deja de crecer** y pasa a ser un número que baja.
