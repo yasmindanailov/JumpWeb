@@ -2723,3 +2723,43 @@ falta aquí —la SPA vive en el mismo dominio y usa sesión— pero sí para la
 toca**: hoy es la única superficie que monta el widget de Turnstile, y el alta del cajón **delega en él**
 cuando el anti-bot está activo. Retirarlo antes de montar Turnstile en Vue dejaría el registro sin
 salida. O sea: **el orden es 4.7 → Turnstile → área de cliente**, y no es preferencia, es dependencia.
+
+## #67 · 2026-08-15 · 4.7·2b·2·B — el diff de árbol se alimenta del SERVIDOR, no del motor que se va
+Tercer tramo de 4.7·2b, y el que desbloquea a los demás. La opción se eligió midiendo (`00-REFACTOR.md`,
+paso 4.7·2b·2): entre congelar también las props y **alimentar a Vue con las respuestas reales de la
+API**, la segunda es estrictamente mejor y esta decisión la ejecuta, paso a paso.
+
+**(a) ⚠️ El problema, y no era el que parecía.** `SidebarDomContractTest` construía las props de Vue
+desde el view-model del componente Livewire (trece helpers que leen `viewData()`). El motivo obvio para
+cambiarlo era que **sin componente no hay props**, así que el gate no sobreviviría a la retirada. El
+motivo REAL es peor: al entregarle a Vue un dato ya cocinado por el motor que se va, **el gate nunca
+ejecutaba la traducción que corre en el navegador**. Medido: de las **25 funciones de `Sidebar.vue`,
+21 no tenían ningún test** — y entre ellas `groupIntoSections()`/`toItem()`, que son literalmente
+«de la respuesta de la API a lo que se pinta» en el primer paso del embudo.
+
+**(b) La forma: la traducción baja a un módulo PLANO y la ejecutan los dos.** Nace
+`resources/js/sidebar/catalog.js` (`sectionsFrom`, `toItem`, `totalItems`, `searchIsEnabled`) con 12
+casos de `node --test`. `Sidebar.vue` lo **consume** —extraer sin que el consumidor lo use es copiar,
+no extraer (`#40`)— y `scripts/render-sidebar.mjs` gana un segundo modo: con `"api": {…}` recibe las
+respuestas **crudas** y construye las props con **ese mismo módulo**. El modo `props` sigue para los
+pasos no migrados: esto es incremental, un paso cada vez.
+
+**(c) La verificación de FIDELIDAD, que es la que da confianza: el manifiesto NO cambió.** Los 34 casos
+del gate pasan sin regenerar `sidebar-dom-manifest.json`. O sea: alimentar a Vue desde
+`GET /catalog/products` + `GET /config` produce **exactamente el mismo árbol** que producía el
+view-model de Livewire. Si hubiera cambiado una sola entrada, sería una divergencia real y habría que
+mirarla, no regenerarla.
+
+**(d) Y la mutación que demuestra que esto NO es cosmético.** Se cambió en `toItem()` el campo
+`from_price_cents` por uno que la API no publica — el fallo de `#46(a)`, con el cajón real pintando
+tarjetas sin precio:
+· **modo nuevo (alimentado por la API): ROJO**, y nombra la divergencia en la primera línea;
+· **modo viejo (props cocinadas por el test), con la MISMA mutación: VERDE.**
+Las dos mitades se ejecutaron. Eso es el punto ciego, medido, y cerrado para el paso 1.
+
+**(e) Lo que esto cambia en la planificación de la retirada.** Cada paso que se migre a este modo
+(i) deja de depender del componente para sus props y (ii) hace redundante, **por el motivo correcto**,
+la paridad que existía para tapar este mismo hueco: `SidebarAddonsParityTest` y
+`SidebarCalendarParityTest` nacieron justo porque el gate no ejecutaba la traducción del cliente.
+⚠️ **Todavía no se pueden retirar**: solo el paso 1 está migrado. Retirarlas antes de migrar su paso
+sería quitar la red y dejar el agujero.

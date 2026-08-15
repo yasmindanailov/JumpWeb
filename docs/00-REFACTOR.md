@@ -1072,6 +1072,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           **Con (B), varias paridades dejan de hacer falta por el motivo correcto**, no por descuido.
         ▶ **Recomendación: (B)**, y hacerla ANTES que las ocho paridades, porque decide cuáles de ellas
         siguen teniendo pregunta que responder.
+      · ✅ **·B ARRANCADO — el paso 1 ya se alimenta del servidor** (2026-08-15, `DECISIONES #67`).
+        Se eligió la opción (B). Nace `resources/js/sidebar/catalog.js` (12 casos `node --test`) con la
+        traducción que vivía DENTRO de `Sidebar.vue` sin red; `Sidebar.vue` lo consume y
+        `render-sidebar.mjs` gana un modo `"api"` que construye las props con ese mismo módulo a partir
+        de las respuestas CRUDAS de `GET /catalog/products` y `GET /config`.
+        · ⚠️ **El motivo real no era «sin componente no hay props»**: era que el gate **nunca ejecutaba
+          la traducción que corre en el navegador**. Medido: **21 de las 25 funciones de `Sidebar.vue`
+          no tenían ningún test**.
+        · ✅ **Fidelidad demostrada: el manifiesto NO cambió.** Los 34 casos pasan sin regenerarlo, así
+          que alimentar desde la API produce el MISMO árbol. Una entrada distinta habría sido una
+          divergencia real, no un fixture que actualizar.
+        · ✅ **Mutación en las dos direcciones**: renombrar `from_price_cents` en `toItem()` deja el
+          gate **ROJO** en el modo nuevo y **VERDE** en el viejo. Las dos mitades ejecutadas.
+        · ⚠️ **Consecuencia para el resto**: cada paso migrado hace redundante —por el motivo correcto—
+          la paridad que existía para tapar este hueco (`SidebarAddonsParityTest`,
+          `SidebarCalendarParityTest`). **No se pueden retirar todavía**: solo el paso 1 está migrado.
+        · **Quedan por migrar diez pasos**: calendario (2), hora+complementos (3), cesta (4),
+          identificación (5), verificar (7), pago (8), redirección (9), confirmada (6), denegada (10) y
+          verificando (11).
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:

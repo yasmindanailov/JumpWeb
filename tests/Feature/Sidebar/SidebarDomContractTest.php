@@ -114,7 +114,7 @@ class SidebarDomContractTest extends TestCase
         $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
 
         $livewire = $this->livewireTreeForStep(1);
-        $vue = $this->vueTree(1, $this->catalogProps());
+        $vue = $this->vueTree(1, [], api: $this->catalogApiPayload());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1080,9 +1080,9 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_footer_emits_the_same_tree_in_every_state(): void
     {
-        foreach ($this->footerStates() as $label => [$step, $component, $props]) {
+        foreach ($this->footerStates() as $label => [$step, $component, $props, $api]) {
             $livewire = $this->livewireTree($component, 'bk-foot');
-            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component));
+            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component), api: $api);
 
             $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
@@ -1115,8 +1115,9 @@ class SidebarDomContractTest extends TestCase
                 "Livewire no debería emitir el pie en el paso {$step} con la cesta vacía"
             );
 
-            $props = $step === 1 ? $this->catalogProps() : $this->cartProps($component);
-            $vue = $this->renderVue($step, $props, $this->shellProps($component));
+            $vue = $step === 1
+                ? $this->renderVue($step, [], $this->shellProps($component), $this->catalogApiPayload())
+                : $this->renderVue($step, $this->cartProps($component), $this->shellProps($component));
 
             $this->assertStringNotContainsString(
                 'bk-foot', $vue,
@@ -1185,7 +1186,7 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class);
 
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
-        $vue = $this->vueTree(1, $this->catalogProps(), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
+        $vue = $this->vueTree(1, [], 'jj-loading', withSiblings: true, shell: $this->shellProps($component), api: $this->catalogApiPayload());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1418,15 +1419,17 @@ class SidebarDomContractTest extends TestCase
             ->call('goToTime')
             ->call('selectTime', '10:00:00');
 
+        // El cuarto elemento es la carga CRUDA de la API para los pasos ya migrados (4.7·2b·2·B);
+        // `null` significa «este paso todavía se alimenta con props cocinadas por el test».
         return [
             // Rama `cart`: un único hijo, sin nota de IVA.
-            'catálogo con cesta' => [1, (clone $withCart)->set('step', 1), $this->catalogProps()],
+            'catálogo con cesta' => [1, (clone $withCart)->set('step', 1), [], $this->catalogApiPayload()],
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
-            'calendario sin día' => [2, $onCalendar, $this->dateProps($onCalendar)],
+            'calendario sin día' => [2, $onCalendar, $this->dateProps($onCalendar), null],
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
-            'hora de una entrada' => [3, $onTime, $this->timeProps($onTime)],
+            'hora de una entrada' => [3, $onTime, $this->timeProps($onTime), null],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
-            'cesta con señal' => [4, $withCart, $this->cartProps($withCart)],
+            'cesta con señal' => [4, $withCart, $this->cartProps($withCart), null],
         ];
     }
 
@@ -1571,18 +1574,26 @@ class SidebarDomContractTest extends TestCase
         return json_decode($process->getOutput(), true, 512, JSON_THROW_ON_ERROR)['notice'];
     }
 
-    /** @return array<string, mixed> */
-    private function catalogProps(): array
+    /**
+     * El paso 1 se alimenta de las respuestas **REALES** del servidor (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ **Antes esto devolvía el view-model del componente Livewire, y esa era su debilidad.** Al
+     * pasarle a Vue un catálogo ya cocinado por el motor que se va, el gate no ejecutaba nunca la
+     * traducción que de verdad corre en el navegador (`catalog.js`: agrupar por tipo y renombrar los
+     * campos de la API). Un renombre ahí salía VERDE con el cajón real pintando filas vacías — y ya
+     * pasó una vez con los complementos (`#46(a)`).
+     *
+     * Ahora se piden los dos endpoints que pide el cajón al abrirse y se entregan **crudos**: quien
+     * los traduce es el propio cliente, dentro del renderizador. Es también lo que hace que este test
+     * sobreviva a la retirada del componente: ya no depende de él para el paso 1.
+     *
+     * @return array<string, mixed>
+     */
+    private function catalogApiPayload(): array
     {
-        // El mismo view-model que el componente Livewire compone para su vista. Se toma de ÉL y no
-        // se escribe a mano: si se escribiera, el test compararía el árbol de Vue contra una idea
-        // del catálogo, no contra el catálogo.
-        $component = Livewire::test(Purchase::class);
-
         return [
-            'sections' => $component->viewData('catalog'),
-            'searchEnabled' => $component->viewData('catalogSearchEnabled'),
-            'messages' => __('tickets'),
+            'catalog' => $this->getJson('/api/v1/catalog/products')->assertOk()->json(),
+            'config' => $this->getJson('/api/v1/config')->assertOk()->json(),
         ];
     }
 
@@ -1847,9 +1858,12 @@ class SidebarDomContractTest extends TestCase
      * @param  array<string, mixed>  $props
      * @param  array<string, mixed>|null  $shell
      */
-    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null): string
+    /**
+     * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor (ver `renderVue`)
+     */
+    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null, ?array $api = null): string
     {
-        return $this->treeOf($this->renderVue($step, $props, $shell), $anchor, $withSiblings);
+        return $this->treeOf($this->renderVue($step, $props, $shell, $api), $anchor, $withSiblings);
     }
 
     /**
@@ -1885,7 +1899,10 @@ class SidebarDomContractTest extends TestCase
      * @param  array<string, mixed>  $props
      * @param  array<string, mixed>|null  $shell
      */
-    private function renderVue(int $step, array $props, ?array $shell = null): string
+    /**
+     * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor; si viene, manda sobre `$props`
+     */
+    private function renderVue(int $step, array $props, ?array $shell = null, ?array $api = null): string
     {
         $bundle = base_path('storage/ssr/render-sidebar.js');
 
@@ -1895,9 +1912,16 @@ class SidebarDomContractTest extends TestCase
             'sin compilar, así que el renderizador se construye con Vite. El `pre-push` ya lo hace.'
         );
 
+        // ⚠️ Con `api` las props NO viajan: las construye el renderizador con los módulos del cliente.
+        // Mandar las dos cosas sería dejar abierta la puerta a que un paso «migrado» siguiera pintando
+        // las props cocinadas por el test sin que nadie lo notara.
+        $payload = $api === null
+            ? ['step' => $step, 'props' => $props, 'shell' => $shell]
+            : ['step' => $step, 'api' => $api, 'messages' => __('tickets'), 'shell' => $shell];
+
         $process = new Process(['node', $bundle], base_path());
         $process->setInput(json_encode(
-            array_filter(['step' => $step, 'props' => $props, 'shell' => $shell], fn ($value) => $value !== null),
+            array_filter($payload, fn ($value) => $value !== null),
             JSON_THROW_ON_ERROR
         ));
         $process->setTimeout(60);

@@ -16,8 +16,15 @@
  * `Sidebar.vue` NO puede pasar por aquí (lee `window.Alpine` y el idioma del documento), y por eso el
  * armazón es un componente propio y no parte de la raíz.
  *
+ * ⚠️ **Y desde 4.7·2b·2·B hay un SEGUNDO modo, que es el bueno**: con `"api": {…}` las props no
+ * llegan hechas — se construyen aquí, con los módulos planos que usa `Sidebar.vue`, a partir de las
+ * respuestas REALES del servidor. Es lo que cierra el punto ciego del modo `props`: allí la traducción
+ * «respuesta → lo que se pinta» la hacía el test, así que el gate no la ejecutaba nunca. El modo
+ * `props` sigue existiendo para los pasos que aún no se han migrado.
+ *
  * Uso:  echo '{"step":1,"props":{…}}' | node scripts/render-sidebar.mjs
  *       echo '{"step":2,"props":{…},"shell":{…}}' | node scripts/render-sidebar.mjs
+ *       echo '{"step":1,"api":{"catalog":{…},"config":{…}},"messages":{…}}' | node scripts/render-sidebar.mjs
  */
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
@@ -35,6 +42,7 @@ import ConfirmedStep from '../resources/js/sidebar/steps/ConfirmedStep.vue';
 import DeclinedStep from '../resources/js/sidebar/steps/DeclinedStep.vue';
 import VerifyingStep from '../resources/js/sidebar/steps/VerifyingStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
+import { searchIsEnabled, sectionsFrom } from '../resources/js/sidebar/catalog.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -51,6 +59,34 @@ const COMPONENTS = {
     [STEPS.VERIFYING]: VerifyingStep,
 };
 
+/**
+ * **De la respuesta CRUDA de la API a las props del paso, con el MISMO código que corre en el
+ * navegador** (Fase 4 · paso 4.7·2b·2·B).
+ *
+ * ⚠️ **Por qué este mapa existe y por qué no puede volver a vivir en el test.** Hasta ahora las props
+ * se inyectaban ya cocinadas, y quien las cocinaba era el test en PHP a partir del view-model del
+ * componente Livewire. Eso dejaba fuera del gate justo la pieza que de verdad corre en producción: la
+ * traducción «respuesta del servidor → lo que pinta el paso». Un renombre de campo ahí salía VERDE con
+ * el cajón real pintando filas vacías, y ya ocurrió una vez (`#46(a)`).
+ *
+ * Cada entrada llama a los módulos PLANOS que importa `Sidebar.vue` — no a una copia—, así que lo que
+ * el gate ejercita es el camino real. Un paso sin entrada aquí sigue funcionando con `props`
+ * inyectadas: la migración es incremental y cada paso que entra deja de tener el punto ciego.
+ *
+ * @type {Record<number, (api: object, messages: object) => object>}
+ */
+const PROPS_FROM_API = {
+    [STEPS.CATALOG]: (api, messages) => {
+        const sections = sectionsFrom(api.catalog?.data ?? []);
+
+        return {
+            sections,
+            searchEnabled: searchIsEnabled(sections, api.config?.catalog_search_min_items),
+            messages,
+        };
+    },
+};
+
 async function main() {
     const input = await new Promise((resolve, reject) => {
         let raw = '';
@@ -60,8 +96,24 @@ async function main() {
         process.stdin.on('error', reject);
     });
 
-    const { step, props = {}, shell = null } = JSON.parse(input);
+    const { step, props = {}, shell = null, api = null, messages = {} } = JSON.parse(input);
     const component = COMPONENTS[step];
+
+    // Modo «alimentado por el servidor»: las props NO llegan hechas, se construyen aquí con el código
+    // del cliente a partir de lo que devolvió la API de verdad. Si el paso todavía no tiene
+    // constructor, es un error en voz alta y no un silencioso «pues renderizo sin datos».
+    let resolved = props;
+
+    if (api !== null) {
+        const build = PROPS_FROM_API[step];
+
+        if (! build) {
+            process.stderr.write(`El paso ${step} no sabe construir sus props desde la API todavía.\n`);
+            process.exit(3);
+        }
+
+        resolved = build(api, messages);
+    }
 
     // ⚠️ **Con el aviso de PAUSA no hace falta paso**, y eso es lo fiel al Blade: el aviso sustituye el
     // contenido ENTERO, así que no hay ranura que rellenar. Sin esta salida no se podrían comparar los
@@ -77,8 +129,8 @@ async function main() {
     // Con armazón, el paso va en la ranura por defecto de `Shell` — igual que en `Sidebar.vue`, para
     // que lo que compara el gate sea la composición real y no una aproximación.
     const app = shell === null
-        ? createSSRApp(component, props)
-        : createSSRApp({ render: () => h(Shell, shell, paused ? null : { default: () => h(component, props) }) });
+        ? createSSRApp(component, resolved)
+        : createSSRApp({ render: () => h(Shell, shell, paused ? null : { default: () => h(component, resolved) }) });
 
     app.use(createPinia());
 

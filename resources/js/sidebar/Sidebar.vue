@@ -4,6 +4,7 @@ import { usePurchaseStore } from './store.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
+import { searchIsEnabled, sectionsFrom } from './catalog.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
@@ -222,13 +223,13 @@ onMounted(async () => {
         refreshBookingStatus(),
     ]));
 
-    if (catalog.ok) sections.value = groupIntoSections(catalog.data?.data ?? []);
+    if (catalog.ok) sections.value = sectionsFrom(catalog.data?.data ?? []);
 
     // El umbral lo decide el SERVIDOR y viaja con su operador en la descripción del contrato
     // (`total > umbral`): el cliente compara, no reinventa la regla.
     if (config.ok) {
         const threshold = config.data?.catalog_search_min_items;
-        searchEnabled.value = typeof threshold === 'number' && totalItems(sections.value) > threshold;
+        searchEnabled.value = searchIsEnabled(sections.value, threshold);
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
         if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
@@ -288,39 +289,6 @@ async function restoreCart() {
     // ésta, y quien vuelve de pagar aterrizaría en un carrito en vez de en su reserva confirmada.
     // La precedencia vive en `machine.js` porque aquí dentro no tendría red (`CE-6`).
     if (cart.value.length > 0 && ! isOutcome(store.step)) store.enter(STEPS.CART);
-}
-
-function totalItems(list) {
-    return list.reduce((n, section) => n + section.items.length, 0);
-}
-
-/**
- * Agrupa el catálogo plano en las DOS secciones que el cajón enseña.
- *
- * Es presentación, no negocio: qué se vende ya lo decidió `ProductCatalog`, y lo único que se hace
- * aquí es repartir por `type` en el mismo orden en que llegan — que es el `position` del panel.
- */
-function groupIntoSections(products) {
-    return [
-        { key: 'entries', items: products.filter((p) => p.type === 'entry').map(toItem) },
-        { key: 'services', items: products.filter((p) => p.type === 'pack').map(toItem) },
-    ];
-}
-
-/** El producto de la API → la fila que el catálogo pinta. Renombra; no calcula. */
-function toItem(product) {
-    return {
-        id: product.id,
-        name: product.name,
-        is_pack: product.type === 'pack',
-        featured: product.featured ?? false,
-        badge: product.badge ?? '',
-        features: (product.features ?? []).join(' · '),
-        from: product.from_price_cents ?? null,
-        period_label: product.period_label ?? '',
-        deposit_label: product.deposit_label ?? '',
-        search: [product.name, ...(product.features ?? [])].join(' ').toLowerCase(),
-    };
 }
 
 /**
