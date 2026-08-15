@@ -105,8 +105,12 @@ tramo, no un descubrimiento del final.
   ⚠️ **Pero `#62` NO se reabre**: retiró «esperar a que ruede en producción» por vacía, y un staging
   **no tiene tráfico**. Lo que ordena 4.7 sigue siendo el CONTADOR, no el calendario.
   ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca en bloque y con guion.
-  ▶ Pendiente: el **procedimiento de despliegue** (`ENTORNOS.md` §4), que cierra el
-  `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1 y se escribe **midiendo**, no a ojo.
+  ▶ **La máquina ya está MEDIDA** (`ENTORNOS.md` §4, acceso por clave verificado). Dos diferencias con
+  local que condicionan el trabajo: **la BD es MariaDB 11.4, no MySQL 8.4** —así que «verificado en
+  staging» **NO** equivale a «verificado en MySQL», y ninguna conclusión sobre concurrencia sale de
+  ahí— y **no hay node/npm**, así que los assets se construyen fuera y se suben compilados.
+  ▶ Pendiente: el **procedimiento de despliegue**, que cierra el `[DECISION-PENDIENTE]` de
+  `INSTALACION-CLIENTE.md` §1 y se escribe **midiendo**, no a ojo.
 - **Pendiente del owner** (❗): 2FA del panel · mecanismo del primer admin (`INSTALACION-CLIENTE.md` §5)
   · backlog de producto de Fase 6.
 

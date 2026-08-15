@@ -18,7 +18,8 @@ Es un banco de pruebas del PRODUCTO, no la instalación de nadie. Si algún día
 real de un cliente, será otra cosa distinta y con otras reglas (`INSTALACION-CLIENTE.md`).
 
 - **Infra propia** del owner, gestionada desde el panel **enhanceCP**.
-- **Acceso**: `ssh -p 22 jumpweb_1@51.68.7.199` (alias local `jumpweb-staging`). Solo por CLAVE.
+- **Acceso**: `ssh jumpweb-staging` (alias configurado en `~/.ssh/config`, clave dedicada
+  `~/.ssh/jumpweb_staging_ed25519`). Solo por CLAVE — **verificado el 2026-08-15**.
   ⚠️ **Ningún secreto vive en este repo**: ni contraseñas, ni claves privadas, ni `.env`.
 - **El repo NO despliega solo**: no hay `.github`, no hay webhook. El despliegue es explícito (§4).
 
@@ -61,12 +62,45 @@ retirada de `Purchase.php` sigue siendo el CONTADOR de `PurchaseRetirementTest`,
 Quien lea «ya hay servidor» y deduzca «esperemos a que ruede» está reintroduciendo un bloqueo que ya se
 midió como imposible de cumplir.
 
-## 4 · El procedimiento de despliegue
+## 4 · La máquina, MEDIDA (2026-08-15, acceso por clave)
 
-> ⚠️ **[PENDIENTE DE MEDIR EN LA MÁQUINA]** — este hueco cierra el `[DECISION-PENDIENTE]` de
-> `INSTALACION-CLIENTE.md` §1, y **no se escribe a ojo**: se ejecuta una vez, se anota lo que de verdad
-> pasó y se deja reproducible. Falta conocer PHP, MySQL, document root, si hay composer/node y qué
-> permisos tiene el usuario.
+Inventario en solo lectura, para no volver a suponerlo:
+
+| | Staging | Local | ¿Importa? |
+|---|---|---|---|
+| SO | Ubuntu 24.04.4 LTS | contenedor Sail | no |
+| PHP (CLI por defecto) | **8.3.29** | **8.5.9** | cumple `composer.json` (`^8.3`) |
+| PHP disponibles en panel | 8.0 … **8.5.1** (`/opt/ecp-php85/bin/php`) | — | **se puede igualar a local** |
+| Base de datos | **MariaDB 11.4.10** | **MySQL 8.4.11** | ⚠️ **sí — ver abajo** |
+| Composer | 2.9.5 | — | ✓ |
+| **node / npm** | **NO ESTÁN** | sí | ⚠️ **sí — ver abajo** |
+| git · rsync · unzip | sí | — | ✓ |
+| HOME | `/var/www/<uuid>` | — | rutas con UUID, no con el nombre |
+| Document root | `~/public_html` (grupo 33 = `www-data`) | — | solo tiene `robots.txt` |
+| `robots.txt` | ya trae `Disallow: /` | — | ✓ **guarda 4 cumplida de fábrica** |
+| Base de datos creada | **NINGUNA todavía** | — | hay que crearla en el panel |
+
+⚠️ **DOS diferencias con local que condicionan el procedimiento, y ninguna es cosmética:**
+
+1. **La BD es MariaDB, no MySQL.** Los invariantes de dinero y aforo de este proyecto —`AFORO-01`, el
+   lock de franjas— y **los dos verificadores de concurrencia** se han validado sobre **MySQL 8.4**.
+   MariaDB no es un drop-in para razonar sobre locks. **Consecuencia que hay que escribir donde nadie
+   la pierda: «verificado en staging» NO equivale a «verificado en MySQL».** Para Turnstile, S2S, 3DS y
+   móvil da igual —no dependen del motor—, pero ninguna conclusión sobre concurrencia sale de ahí.
+2. **No hay node ni npm.** `npm run build` y `build:ssr` **no se pueden ejecutar en el servidor**, así
+   que los assets se construyen fuera y se suben ya compilados. Eso convierte el despliegue en
+   «construir + sincronizar», no en «clonar y compilar» — y hay que decidirlo así en el procedimiento,
+   no descubrirlo a mitad.
+
+### Lo que queda por hacer, y se hará MIDIENDO
+
+> ⚠️ **[PENDIENTE]** — cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1. Se ejecuta una
+> vez, se anota lo que de verdad pasa y se deja reproducible.
+
+Pendiente: crear la BD y su usuario en el panel · elegir la versión de PHP (¿igualar a 8.5?) · subir el
+código con los assets ya construidos · `.env` con las seis guardas de §2 · `migrate --force` ·
+`storage:link` · permisos de `storage/` y `bootstrap/cache` · worker de cola y cron del scheduler ·
+sembrar con `ProductionSeeder`.
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un
