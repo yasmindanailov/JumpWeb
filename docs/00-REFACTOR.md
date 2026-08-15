@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — diseño APROBADO (`specs/sidebar-spa.md` v3, revisión ×3); 4.0a–4.0c, 4.1, 4.2, **4.3 COMPLETO** (·1–·4), **4.4a COMPLETO**, **4.4b·1** (alta embebida), **4.5 COMPLETO** y **4.6 COMPLETO** (·1 la reserva creada · ·2 denegado y verificando) → **los ONCE pasos están transcritos**; el extremo a extremo con navegador y pasarela real ya HECHO (`#59`, destapó que el motor no funcionaba y se arregló); quedan **4.7** (retirada, EN CURSO) y **4.4b·2** (widget de Turnstile)
+### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). Queda **4.7**, la retirada de `Purchase.php`, EN CURSO —hechos el manifiesto congelado (·1), el inventario (·2a), la corrección del contador (·2b·1) y **la migración (B)**, con la que el diff de árbol se alimenta del servidor (`#67`–`#73`); en curso el re-apunte (·2b·2), pendientes el borrado (·2b·3) y el flag (·3)— y **4.4b·2**, el widget de Turnstile, bloqueado en claves de Cloudflare. ⚠️ El flag sigue en `livewire`: **la paridad está cerrada, la sustitución no**
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -1226,11 +1226,14 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `embedded` se retira aquí o se deja para Fase 5 es parte de este tramo, no un descubrimiento
         para el final.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
-- [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
-      login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**
-- [ ] Paridad funcional con el sidebar Livewire actual ANTES de retirarlo (feature-flag por
-      instalación para poder convivir/comparar).
-- [ ] Retirar `Purchase.php` + puente Alpine frágil cuando la paridad esté validada.
+- [x] **SPA embebida (Vue 3 + Pinia) para el cajón completo** — HECHO: los ONCE pasos (fecha/hora,
+      cesta, login/registro, pago, vuelta y reintento) con Vue 3.5 y Pinia 3.0, y verificado de punta a
+      punta con navegador y la pasarela REAL (`#59`). **Primer consumidor real de la API v1**, cumplido.
+- [x] **Paridad funcional ANTES de retirarlo, con feature-flag por instalación** — HECHO: `sidebar.engine`
+      (default `livewire`) permite comparar los dos motores en vivo, y la paridad son el diff de árbol
+      contra manifiesto congelado (`#60`) más trece paridades de datos, textos e importes.
+      ⚠️ **Que la paridad esté cerrada NO significa que el flag esté activado**: falta Turnstile
+      (4.4b·2) y los tres caminos de navegador, ver `ESTADO.md`.
 
 ### Fase 5 — Capa de contenido profesional ⬜
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
