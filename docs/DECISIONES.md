@@ -3550,3 +3550,32 @@ comprueba el contenido, no el código de salida.**
 **(g) No se mezcla con 4.7.** La extracción queda en `DEUDA.md` como **Alta** y sin plan de fase: no
 bloquea la retirada y meterla en medio ensuciaría los dos trabajos. Lo que sí cambia desde hoy es que
 la deuda **deja de crecer** y pasa a ser un número que baja.
+
+## #91 · 2026-08-15 · 4.7·2b·2·C — el canario era un intermediario, y el fichero no es homogéneo
+Cuarto fichero del tramo: `DepositSurfacesTest` (6 usos, 12 casos). **El contador no se mueve** —los
+cuatro casos de UI mueren con el componente y ·2b·3 opera DENTRO— pero el fichero baja de 6 usos a 4 y
+queda clasificado entero.
+
+**(a) Los dos casos del CANARIO anti doble-fuente, retirados por redundantes.** Comparaban
+`Purchase::cartDepositCents()` con `Order::onlineDueCents()` para la misma cesta. Pero ese método es
+**literalmente** `return $this->quote()->onlineAmountCents;`: un intermediario de `CartPricing`, igual
+que el `pausedTitle()` de `#81`. El salto por el componente no añadía nada.
+
+**(b) Medido, con la comprobación en las dos direcciones.** Mutando `onlineDueCents()` para que cobre
+el total en vez de la señal caen **catorce** casos, y los que hacen exactamente esta pregunta
+**sobreviven**: `CartPricerTest::test_the_quote_of_a_mixed_cart_matches_what_the_order_will_charge` —el
+canario sin componente— y `DepositChargeTest::test_addons_of_a_deposit_product_are_fully_charged_at_
+the_park`, que es el segundo caso (Opción A). Repetida la mutación **ya sin los canarios**, siguen
+cayendo **doce**: la cobertura está intacta y no se perdió nada al retirarlos.
+
+**(c) Los cuatro casos de UI mueren, con su equivalente localizado**: el desglose del pie lo fija
+`SidebarCartParityTest` desde `#80` —`nowLabel`/`now`/`park` contra el diccionario y `number_format`—,
+el estado del ⓘ lo compara el diff de árbol, y el anuncio del catálogo sale de `deposit_catalog`, que
+está en la lista de `SidebarTextParityTest`. Los otros seis casos del fichero **no tocan el
+componente** y se quedan tal cual: el email, el PDF, el desglose por producto y los dos de sobrecobro.
+
+**(d) ⚠️ Nota de proceso: el primer corte se llevó UN canario, no dos.** El segundo estaba después del
+caso del email, así que la rebanada «del primero al siguiente método» no lo incluía — y el docblock que
+se escribió a la vez ya afirmaba que los dos estaban fuera. Se vio contando los métodos después, no
+antes. **Al cortar por rangos, cuenta lo que queda; el texto que lo explica se escribe con el
+resultado, no con la intención.**

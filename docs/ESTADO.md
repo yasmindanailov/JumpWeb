@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.680 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
+- Suite **2713 en verde** (15.673 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -133,11 +133,12 @@ Livewire?»**. Los primeros se re-apuntan y bajan el contador; los segundos muer
 auditar tienen cada uno sus propios ayudantes pequeños, sin nada compartido. Se van de uno en uno.
 Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAndCartPruneTest`
 (`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
-`AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
+`AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
+`DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
 regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que
 se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
 · `PurchaseLimitsTest` (13) · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
-· `DepositSurfacesTest` (6) · `ReservationPauseTest` (5) ·
+· `ReservationPauseTest` (5) ·
 `PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
 `PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.
 ⚠️ **Una mutación se apunta al MECANISMO que se quiere clasificar, no al dato que ambos leen** — la
@@ -320,6 +321,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2713** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

@@ -1388,6 +1388,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **Cobertura escrita ANTES de clasificarlo**: tres casos en `Api\V1\CatalogAddonsTest`, con
           sus fronteras y verificados por mutación. **La cobertura equivalente no siempre existe: a
           veces hay que escribirla.**
+      · ✅ **`DepositSurfacesTest` clasificado y adelgazado** (`DECISIONES #91`): de 6 usos a **4**.
+        Contador sin cambio —los cuatro de UI mueren y ·2b·3 opera DENTRO—.
+        · **Los dos casos del canario, retirados por redundantes**: `cartDepositCents()` es
+          literalmente `$this->quote()->onlineAmountCents`, un intermediario de `CartPricing`.
+        · Medido en las dos direcciones: mutar `onlineDueCents()` tumba **14** casos, y los que hacen
+          esa pregunta sobreviven (`CartPricerTest`, `DepositChargeTest`). Repetida **sin** los
+          canarios siguen cayendo **12**: cobertura intacta.
+        · ⚠️ **El primer corte se llevó UN canario, no dos** —el segundo iba después del caso del
+          email— y el docblock ya afirmaba que los dos estaban fuera. **Al cortar por rangos, cuenta lo
+          que queda; el texto se escribe con el resultado, no con la intención.**
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

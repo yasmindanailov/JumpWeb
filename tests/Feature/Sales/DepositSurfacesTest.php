@@ -28,6 +28,20 @@ use Tests\TestCase;
  * Verifica las piezas de coherencia más delicadas: el CANARIO anti doble-fuente (el split
  * previsto en el sidecart == lo que `OrderCreator`/`onlineDueCents` cobran para la MISMA
  * cesta), el email de confirmación (señal + pendiente, no «total pagado»), y la caja del PDF.
+ *
+ * ⚠️ **Clasificación para la retirada, MEDIDA el 2026-08-15** (`DECISIONES #91`). El fichero **no es
+ * homogéneo** y ·2b·3 tiene que operar DENTRO:
+ *
+ *  · **el canario ya no está aquí**: era un intermediario y sus dos casos se retiraron por
+ *    redundantes (ver el bloque de abajo, con la medición);
+ *  · **los cuatro casos de UI mueren con el componente** —lo que ANUNCIA el catálogo, lo que pinta el
+ *    pie del paso 3, el detalle del sidecart y el paso 6—: su sujeto es la superficie. Su cobertura
+ *    equivalente está localizada: el desglose del pie lo fija `SidebarCartParityTest` desde `#80`
+ *    (`nowLabel`/`now`/`park` contra el diccionario y `number_format`), el estado del ⓘ lo compara
+ *    `SidebarDomContractTest`, y el anuncio del catálogo sale de `deposit_catalog`, que está en la
+ *    lista de `SidebarTextParityTest`;
+ *  · **el resto no toca el componente** y se queda tal cual: el email, el PDF, el desglose por
+ *    producto y los dos casos de sobrecobro.
  * El resto de superficies leen `OrderFinancialSummary`/`ReservationFinancials` (cubiertas en
  * sus tests) y se corrigen solas.
  */
@@ -91,24 +105,23 @@ class DepositSurfacesTest extends TestCase
         return $addon;
     }
 
-    public function test_cart_split_reconciles_and_matches_what_order_creator_charges(): void
-    {
-        // CANARIO anti doble-fuente (riesgo #7): el split previsto del sidecart DEBE coincidir
-        // con lo que OrderCreator/onlineDueCents cobran para la MISMA cesta. Si divergen, el
-        // canario `amount_mismatch` de Redsys rechazaría el pago.
-        $cart = [['ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1]];
-
-        $component = Livewire::actingAs($this->user)->test(Purchase::class)->set('cart', $cart);
-        $deposit = $component->instance()->cartDepositCents();
-        $total = $component->instance()->cartTotalCents();
-
-        $this->assertSame(3000, $deposit);            // pagas ahora (señal)
-        $this->assertSame(18000, $total);             // valor total
-        $this->assertSame(15000, $total - $deposit);  // en el parque
-
-        $order = $this->creator->createPendingOrder($this->user, $cart);
-        $this->assertSame($deposit, $order->fresh(['items', 'adjustments'])->onlineDueCents());
-    }
+    /*
+     * ⚠️ **Aquí vivían los DOS casos del canario anti doble-fuente**, retirados en 4.7·2b·2·C
+     * (`DECISIONES #91`) por redundantes, y medido antes de tocarlos.
+     *
+     * Comparaban `Purchase::cartDepositCents()` con `Order::onlineDueCents()` para la misma cesta.
+     * Pero ese método es **literalmente** `$this->quote()->onlineAmountCents`: un intermediario de
+     * `CartPricing`, como el `pausedTitle()` de `#81`. El salto por Livewire no añadía nada.
+     *
+     * Mutando `onlineDueCents()` para que cobre el total en vez de la señal caen **catorce** casos, y
+     * entre ellos los que hacen exactamente esta pregunta y SOBREVIVEN:
+     *
+     *   · `Sales\CartPricerTest::test_the_quote_of_a_mixed_cart_matches_what_the_order_will_charge`
+     *     — el canario, sin componente de por medio;
+     *   · `Sales\DepositChargeTest::test_addons_of_a_deposit_product_are_fully_charged_at_the_park`
+     *     — la mitad de los complementos (Opción A), que era el segundo caso;
+     *   · `Support\DepositFoundationTest`, para el cimiento.
+     */
 
     public function test_confirmation_email_shows_deposit_and_pending_lines(): void
     {
@@ -128,27 +141,6 @@ class DepositSurfacesTest extends TestCase
         $this->assertStringContainsString('150,00', $body);                 // el resto
         // No anuncia «Total pagado: 180,00» (sería falso: solo se cobró la señal).
         $this->assertStringNotContainsString('Total pagado: 180,00', $body);
-    }
-
-    public function test_cart_canary_holds_with_addons_of_a_deposit_product(): void
-    {
-        // L1: el canario también debe cuadrar con complementos (Opción A: van 100% a puerta).
-        // Si cartDepositCents y onlineDueCents divergieran aquí, Redsys rechazaría el pago.
-        $socks = $this->attachAddon('Calcetines', 2000);
-        $cart = [[
-            'ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1,
-            'addons' => [['ticket_type_id' => $socks->id, 'qty' => 1]],
-        ]];
-
-        $deposit = Livewire::actingAs($this->user)->test(Purchase::class)->set('cart', $cart)
-            ->instance()->cartDepositCents();
-
-        $order = $this->creator->createPendingOrder($this->user, $cart);
-
-        // Solo la señal (30€); el complemento (20€) va al parque (Opción A).
-        $this->assertSame(3000, $deposit);
-        $this->assertSame($deposit, $order->fresh(['items', 'adjustments'])->onlineDueCents());
-        $this->assertSame(20000, (int) $order->total); // 180 pack + 20 addon
     }
 
     public function test_deposit_remainder_breakdown_by_product_includes_addon_children(): void
