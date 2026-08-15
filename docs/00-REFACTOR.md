@@ -1447,6 +1447,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **Los tres huecos del tramo son del mismo tipo** (`#89`, `#93`, `#96`): campos que el
           servidor PUBLICA y que solo probaba el motor que se va. **Criterio de búsqueda para lo que
           queda: si un dato viaja al cliente y su único test conduce la UI, el contrato no lo fija.**
+      · ✅ **`ReservationPauseTest` clasificado — y con él el tramo `·C` queda CERRADO**
+        (`DECISIONES #98`). No es homogéneo: sus seis casos de `MaintenanceSettings` se quedan y los
+        cinco `sidecart_*` mueren, cubiertos por `SidebarPausedParityTest` desde `#81` (medido: quitar
+        el WhatsApp de `BookingStatusResource` tumba tres casos y **dos sobreviven**).
+      ▶ **BALANCE DEL TRAMO: once ficheros, contador 21 → 20 — la cifra esperada**, porque `#86` ya
+        midió que la mayoría muere con el componente. Lo que produjo de verdad: **tres huecos reales
+        cerrados** (`#89` las reglas `can_*`, `#93` pagar sin verificar, `#96` el `type` del catálogo),
+        **un falso positivo evitado** (`#92`) y **cuatro caras de la disciplina de mutación**
+        (`#77`, `#90`, `#92`, `#95`).
+      ✅ **LAS 20 ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
+        ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

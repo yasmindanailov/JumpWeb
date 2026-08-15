@@ -18,6 +18,19 @@ use Tests\TestCase;
  * + los canales de contacto (teléfono / WhatsApp) en lugar del flujo de compra. El banner global se
  * RETIRÓ (2026-06-16, decisión clienta): el aviso vive SOLO en el sidecart. El guard de servidor
  * (enforcement) se cubre en `ReservationPauseGuardTest`.
+ *
+ * ⚠️ **Clasificado el 2026-08-16 (`DECISIONES #98`): NO es homogéneo, ·2b·3 opera DENTRO.**
+ *
+ *  · **Los seis primeros casos NO tocan el componente y se quedan tal cual**: son de
+ *    `MaintenanceSettings` —el fail-safe, que solo el literal «1» pausa, el valor corrupto que deja
+ *    las reservas abiertas, la ausencia de banner global y los dos de textos—. Su guarda no depende
+ *    de la retirada.
+ *  · **Los cinco `sidecart_*` mueren con el componente**, y su equivalente está localizado y medido:
+ *    `SidebarPausedParityTest` los cubre desde `#81` —título y mensaje contra
+ *    `MaintenanceSettings`, los canales en sus CUATRO estados incluido el respaldo a contacto, y en
+ *    qué pasos se tapa el flujo—. Medido: quitando el WhatsApp de `BookingStatusResource` caen tres
+ *    casos y **dos sobreviven** (`Api\V1\BookingStatusTest::test_both_channels_travel_together` y
+ *    esa paridad); este fichero **no cae**, que es la prueba de que ejerce el camino del Blade.
  */
 class ReservationPauseTest extends TestCase
 {

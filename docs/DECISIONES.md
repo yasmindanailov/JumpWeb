@@ -3737,3 +3737,42 @@ anotado en `ESTADO.md` y en la ficha de `DEUDA.md`.
 **(c) No se persigue ahora**: el reintento es verde, `main` está sano y el tramo en curso es otro.
 Queda en `DEUDA.md` con las dos incidencias detrás y el criterio de búsqueda escrito —tests que
 siembran franjas con `now()->addDays(n)` y aseveran sobre `today` sin congelar el reloj—.
+
+## #98 · 2026-08-16 · 4.7·2b·2·C — el último del inventario, y el tramo queda CERRADO
+Undécimo y último: `Maintenance/ReservationPauseTest` (5 usos, 11 casos). **No es homogéneo** y ·2b·3
+opera DENTRO. Con él, **las 20 entradas del inventario quedan clasificadas** — que es la condición
+terminal real de `#86`, no un contador a 0.
+
+**(a) Seis casos no tocan el componente y se quedan.** Son de `MaintenanceSettings`: el fail-safe (solo
+el literal «1» pausa), el valor corrupto que deja las reservas abiertas, la ausencia de banner global y
+los dos de textos. Su guarda no depende de la retirada.
+
+**(b) Los cinco `sidecart_*` mueren, con equivalente medido.** `SidebarPausedParityTest` los cubre
+desde `#81`: título y mensaje contra `MaintenanceSettings`, los canales en sus **cuatro** estados
+—incluido el respaldo a contacto cuando no hay ninguno— y en qué pasos se tapa el flujo. Medido
+quitando el WhatsApp de `BookingStatusResource`: caen tres casos y **dos sobreviven**
+(`Api\V1\BookingStatusTest::test_both_channels_travel_together` y esa paridad). **Este fichero no
+cae**, que es la prueba positiva de que ejerce el camino del Blade.
+
+**(c) ⚠️ Una segunda mutación DESCARTADA por ruidosa.** Se probó a quitar el fail-safe de
+`reservationsPaused()` y la salida salió llena de casos del diff de árbol sin relación aparente. **No
+se concluye nada de ella**, y además no hacía falta: esa regla la guardan los propios casos **no
+acoplados** de este fichero, que sobreviven. Es la segunda vez en el tramo (`#87(c)` fue la primera).
+**Una mutación que no separa el mecanismo que quieres clasificar no es una medición, aunque dé rojo.**
+
+### Balance del tramo `·C` (`#86` → `#98`)
+
+**Once ficheros auditados, contador 21 → 20.** Esa cifra es la esperada, no un fracaso: `#86` ya midió
+que la mayoría muere con el componente y solo puede salir del inventario en el commit que lo borra.
+Lo que el tramo produjo de verdad:
+
+- **Tres huecos reales cerrados**, los tres del mismo tipo —campos que el servidor PUBLICA y cuyo
+  único test conducía la UI—: las tres reglas `can_*` de los complementos (`#89`), pagar sin el correo
+  verificado (`#93`) y el `type` del catálogo (`#96`).
+- **Un falso positivo evitado** (`#92`): una mutación mal apuntada hacía creer que el límite anti-abuso
+  de crear reservas no lo guardaba nadie. Lo guardan nueve casos.
+- **Cuatro caras de la disciplina de mutación**, todas nacidas de errores propios: comprueba DÓNDE cayó
+  (`#77`), comprueba el CONTENIDO y no el código de salida (`#90`), exige que el ancla sea ÚNICA
+  (`#92`) y no muteS una rama de una propiedad de INDISTINGUIBILIDAD (`#95`).
+- **Y el criterio de búsqueda para el futuro**: si un dato viaja al cliente y su único test conduce el
+  motor viejo, el contrato no lo está fijando.

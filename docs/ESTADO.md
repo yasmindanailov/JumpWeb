@@ -86,111 +86,72 @@ auditadas**: seis fuera del inventario
 contador: `SidebarCalendarParityTest` (`#79`) y `SidebarDomContractTest` (`#83`), las dos operando
 DENTRO en ·2b·3, no borradas enteras.
 
-**La regla de la auditoría** (`#75`), que sigue valiendo para lo que venga: separa lo que **compara entre
-motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
-como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
-test). El tercero hay que buscarlo activamente.
+✅ **El tramo `·C` —los dependientes que NO son paridades— también está CERRADO** (`#86`→`#98`): los
+**once** auditados, y con ellos **las 20 entradas del inventario están CLASIFICADAS**. Contador 21 → 20.
 
-⚠️ **Y la auditoría se hace MUTANDO, no leyendo.** Las hechas lo demuestran en las dos
-direcciones: en `#77` la lectura decía «redundante con el diff de árbol» y la medición encontró **tres
-campos que solo cazaba ella**; en `#78` la lectura decía «compara destinos, se queda» y la medición
-encontró que esa mitad **la cubría entera `admission.test.js`** — lo que había que rescatar era otra
-cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Siete avisos, que siguen valiendo:**
-- un campo pinchado en su valor **trivial** (0, `null`, lista vacía) NO está fijado: el cruce sale verde;
-- una mutación por sustitución de texto puede caer en **otra** aparición del mismo nombre — comprueba
-  dónde cayó, no solo que el fichero cambió;
-- lo que un test JS prueba con fixtures **fabricados** no cubre que el servidor real emita eso;
-- **tras iterar sobre `resources/js/`: `npm run build:ssr`**. La guarda del bundle rancio ya ha saltado
-  tres veces en tres días (restaurar un módulo con `git checkout` le pone fecha nueva);
-- un view-model del motor viejo **casi nunca es una fuente** (`#80`): suele ser un ensamblaje de `__()`,
-  `number_format` y la API — re-apunta a esas tres y comparará menos, pero lo que nadie más mira;
-- y cuando **no hay fuente** a la que re-apuntar (`#81`), **mide la referencia antes de perderla**:
-  vuelca lo que el motor vivo emite de verdad y congélalo, como hizo `#60` con el manifiesto. Después
-  de borrarlo solo queda reconstruirla de memoria;
-- y al **retirar** un caso por redundante (`#82`), mide qué dejaba de cubrirse: que la suite siga verde
-  no lo dice — hay que mutar lo que ese caso era el único en ejercer.
+⚠️⚠️ **Esa cifra es la esperada, no un fracaso.** `#86` midió que la mayoría de lo que queda tiene por
+sujeto la SUPERFICIE del motor —`PurchasePanelTest` (40 casos), el diff de árbol (34), el spinner…— y
+eso **solo puede salir del inventario en el commit que borra el componente**. La meta nunca fue un 0;
+era **«todo clasificado»**, y ya está. Escrito también en el docblock de `PurchaseRetirementTest`.
 
-⚠️ **Y una paridad puede NO ser homogénea** (`#79`, `SidebarCalendarParityTest`): dos de sus casos
-mueren con el componente y el tercero sobrevive, así que la unidad de la auditoría es el **caso**, no
-el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
-usarlo— porque hace leer mal la clasificación al borrar.
+**Lo que el tramo produjo de verdad, que no es el contador:**
+- **Tres huecos reales cerrados**, los tres del mismo tipo —campos que el servidor PUBLICA y cuyo único
+  test conducía la UI—: las reglas `can_*` de los complementos (`#89`), pagar sin el correo verificado
+  (`#93`) y el `type` del catálogo, que decide en qué sección aparece cada producto (`#96`).
+- **Un falso positivo evitado** (`#92`): parecía que el límite anti-abuso de crear reservas no lo
+  guardaba nadie. Lo guardan nueve casos; la mutación estaba mal apuntada.
+- **Y `CE-6` con dientes** (`#90`), que salió de una observación del owner: `Sidebar.vue` era el segundo
+  objeto-dios y nada lo vigilaba.
 
-✅ **La auditoría de las nueve paridades está CERRADA** (`#85`): **siete re-apuntadas y fuera del
-inventario** y **dos que mueren con el componente** operando DENTRO, con sus instrucciones escritas en
-sus propios ficheros (`#79` el calendario, `#83` el diff de árbol). Contador **27 → 21**.
+▶ **EMPIEZA AQUÍ: 4.7·2b·3 — borrar el componente.** Ya no falta clasificar nada. El tramo consiste en
+un commit único con `Purchase.php`, `purchase.blade.php`, el placeholder, la línea de
+`layout.blade.php`, el puente `$wire.step`↔store y **todos los tests que mueren con él**.
 
-▶ **EMPIEZA AQUÍ: los dependientes que NO son paridades** (`#86`). Quedan **20**.
+⚠️ **Tres ficheros exigen operar DENTRO, no borrarlos enteros**, y cada uno lleva las instrucciones en
+su propio docblock: `SidebarCalendarParityTest` (`#79` — sobrevive el caso de los husos),
+`SidebarDomContractTest` (`#83` — tres operaciones exactas, incluida **mover el anclaje del manifiesto
+a `$vue`**) y `ReservationPauseTest` (`#98` — se quedan sus seis casos de `MaintenanceSettings`).
+`DepositSurfacesTest` y `ModuleContractsTest` también conservan casos.
 
-⚠️⚠️ **La meta NO es que el contador llegue a 0.** Medido: **nueve** de los que quedan tienen por
-sujeto la SUPERFICIE del motor —`PurchasePanelTest` (40 casos), `SidebarDomContractTest` (34),
-`SidebarCalendarParityTest`, `SidebarSeamTest`, `SpinnerTest`, `DuplicateEmailEdgeCaseTest`,
-`ReservationPauseGuardTest`, media `ModuleContractsTest` y `SidebarTokenBudgetTest`— y esos **solo
-pueden salir del inventario en el mismo commit que borra el componente**. La condición terminal real
-es **«todas las entradas restantes CLASIFICADAS como que mueren»**. Está escrito también en el
-docblock de `PurchaseRetirementTest`.
+⚠️ **Y arrastra el modo `embedded` de la auth**: `purchase.blade.php` es el ÚNICO sitio que lo monta.
+Decidir si se retira ahí o en Fase 5 es parte del tramo, no un descubrimiento del final.
 
-**La pregunta de la auditoría CAMBIA de forma** para estos: ya no es «¿qué afirma que el diff no
-afirme?» sino **«¿su sujeto es el DOMINIO —y el componente solo conduce— o es la SUPERFICIE
-Livewire?»**. Los primeros se re-apuntan y bajan el contador; los segundos mueren.
+### Lo que enseñó la auditoría, y sigue valiendo
 
-⚠️ **Y aquí NO hay nudo**: la lección de `#85` se aplicó y dio negativo — los once que quedan por
-auditar tienen cada uno sus propios ayudantes pequeños, sin nada compartido. Se van de uno en uno.
-Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAndCartPruneTest`
-(`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
-`AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
-`DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro) y `PurchaseLimitsTest`
-(`#92`+`#93`, muere entero) `PurchaseRetryAndPollingTest` (`#94`, sin huecos) los dos de identificación (`#95`) y el catálogo + sidebar v2 (`#96`).
-⚠️⚠️ **La trampa que más caro sale, ya van tres veces**: una mutación mal apuntada puede producir un
-resultado **coherente con la hipótesis equivocada**. En `#92` hizo creer que el límite anti-abuso de
-crear reservas no lo guardaba nadie —falso: lo guardan nueve casos—, porque el ancla aparecía DOS
-veces en el fichero y se cambió la otra. **Antes de creerte un hueco: exige que el ancla sea única.**
-⚠️ **Los TRES huecos del tramo son del mismo tipo** (`#89`, `#93`, `#96`): campos que el servidor
-PUBLICA y cuyo único test conducía la UI. **Criterio de búsqueda: si un dato viaja al cliente y su
-único test conduce el motor viejo, el contrato NO lo está fijando.**
-⚠️ **Una propiedad de INDISTINGUIBILIDAD no se prueba mutando una de sus ramas** (`#95`): la
-anti-enumeración del alta hace que las dos respuestas sean iguales a propósito, así que mutar una es un
-mutante equivalente **por diseño** y su verde no dice nada. Se prueba comparando las dos entre sí.
-⚠️ **Y un `⚠️ sin medir` en un fichero condenado es deuda con fecha de caducidad** (`#93`): si nadie lo
-cierra antes de ·2b·3, la regla se va con el fichero. Las dos veces que se ha medido uno, **había
-hueco** — `#89` (tres reglas `can_*`) y `#93` (pagar sin verificar el correo). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
-regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que
-se va. Por tamaño de acoplamiento, el resto: · `PurchaseRetryAndPollingTest` (11)
-· `ReservationPauseTest` (5) ·
- `PurchaseIdentificationTest` (3) ·
-`PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.
-⚠️ **Una mutación se apunta al MECANISMO que se quiere clasificar, no al dato que ambos leen** — la
-primera, contra `Order::displayStatus()`, salió inútil por ancha; la dirigida a `buildConfirmation()`
-cerró la pregunta. Y de paso destapó que `outcome.test.js` no fijaba su propio `status`:
-**auditar para retirar también encuentra huecos en lo que se queda**.
-⚠️⚠️ **Y el mayor hasta ahora, en `#89`**: tres reglas que la API publica —el mínimo del obligatorio,
-el tope `max_qty` y que el interruptor solo lo sea el por-invitado— **no las guardaba nadie**. El punto
-ciego tiene forma y conviene reconocerla: una paridad cuyas dos mitades salen de la MISMA función no
-puede ver un fallo en esa función (mutante equivalente), y los tests del motor viejo suelen ejercer su
-guarda propia, no el campo publicado. **Si una regla viaja al cliente, fíjala donde se PUBLICA.**
-`SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
+**La regla de clasificación** (`#75`, `#86`): separa lo que **compara entre motores** (muere), lo que
+**afirma del contrato** (se queda) y lo que usa el motor viejo como **intermediario de una fuente que
+sobrevive** (se re-apunta). Y hazle la pregunta al **SUJETO del caso, no a la regla que menciona**
+(`#87`): una regla que sobrevive no salva un caso que prueba una superficie que se va.
 
-✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está
-anclado en `$livewire` —Vue solo queda cubierta por transitividad— y ese motor es además **el que hoy
-sirve** (`SidebarSettings::engine()` devuelve `livewire` por defecto y como fallback). Muere DENTRO, con
-tres operaciones exactas ya escritas en su propio `assertTree()`.
-⚠️ Y **no decide nada sobre `SidebarOutcomeParityTest`**, al contrario de lo que decía esta nota hasta
-`#83`: aquella frase se escribió leyendo y la medición la desmintió. **Una nota de handoff escrita
-leyendo el código es una hipótesis, no un plan.**
+**Se hace MUTANDO, no leyendo**, y estas son las cuatro trampas que costaron tiempo — todas de errores
+propios:
+- comprueba **dónde cayó** la mutación: un nombre puede aparecer dos veces en el fichero (`#77`);
+- comprueba el **contenido**, no el código de salida: `git checkout` no revierte un fichero sin
+  trackear (`#90`);
+- exige que el **ancla sea única** antes de creerte un hueco: una mutación mal apuntada puede dar un
+  resultado **coherente con la hipótesis equivocada** (`#92`);
+- no muteS **una rama** de una propiedad de indistinguibilidad —la anti-enumeración— porque el verde no
+  dice nada (`#95`).
 
-**Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
-- `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`
-  **mueren con el componente**, cada uno con su cobertura equivalente localizada.
-- `SidebarSeamTest` **no se puede re-apuntar**: su exclusión `ENGINE_VIEW` desaparece sola con el Blade,
-  y ampliarla debilitaría la guarda.
+**Y dos criterios que se ganaron midiendo:**
+- **Si un dato viaja al cliente y su único test conduce el motor viejo, el contrato NO lo está
+  fijando** — así salieron los tres huecos.
+- **Un `⚠️ sin medir` en un fichero condenado es deuda con fecha de caducidad** (`#93`): las dos veces
+  que se cerró uno, había hueco.
+- **Tras iterar sobre `resources/js/`: `npm run build:ssr`.** La guarda del bundle rancio saltó cuatro
+  veces en tres días.
+
+**Notas por fichero que ·2b·3 necesita** (el detalle, en el tracker y en cada docblock):
 - `SidebarTokenBudgetTest` necesita una **decisión previa** (`#74`): definir el ámbito por las familias
   propias del cajón en vez de rascar una plantilla. Ficha en `DEUDA.md`.
+- `SidebarSeamTest` **no se puede re-apuntar**: su exclusión `ENGINE_VIEW` desaparece sola con el Blade.
+- `SpinnerTest`, `DuplicateEmailEdgeCaseTest` y `ReservationPauseGuardTest` **mueren enteros**, cada uno
+  con su cobertura equivalente ya localizada.
 
-**Después de bajar el contador a 0**: 4.7·2b·3 borra `Purchase.php` (1.904 líneas), `purchase.blade.php`
-(713), el placeholder, la línea de `layout.blade.php` y el puente — **en un solo commit** con los tests
-que mueren con él. Luego 4.7·3 retira el flag.
-⚠️ **Y arrastra el modo `embedded` de la auth**: `purchase.blade.php` es el ÚNICO sitio que monta
-`<livewire:auth.login|register :embedded="true">`. Decidir si se retira ahí o en Fase 5 es parte del
-tramo, no un descubrimiento del final.
+⚠️ **Y una lección de handoff que salió cara** (`#83`): esta misma nota afirmaba durante dos días que
+`SidebarDomContractTest` podía convertirse ya en «Vue contra el manifiesto» y que eso decidía sobre otra
+paridad. Las dos mitades eran falsas, y estaban escritas **leyendo el código**. **Una nota de handoff
+escrita leyendo es una hipótesis, no un plan** — márcala como tal o mídela antes de dejarla.
 
 ### Lo que NO depende de nosotros
 
