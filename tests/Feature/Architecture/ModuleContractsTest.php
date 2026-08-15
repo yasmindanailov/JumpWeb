@@ -31,6 +31,7 @@ use App\Domain\Booking\Contracts\UpcomingReservation;
 use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AvailabilityReader;
@@ -146,6 +147,17 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(6666, $component->instance()->cartDepositCents());
         $this->assertSame(1, $component->instance()->cartCount());
         $this->assertGreaterThan(0, $pricing->calls, 'Purchase debe pedir los importes al contrato');
+
+        // Y la superficie que SOBREVIVE a la retirada del componente (Fase 4 · paso 4.7·2b·2): el cajón
+        // SPA no suma nada, pide el presupuesto. Si el endpoint volviera a tarificar por su cuenta, el
+        // doble se quedaría sin usar y saldrían los importes reales de una cesta que no existe.
+        $this->postJson('/api/v1/orders/quote', ['items' => [[
+            'product_id' => 4242, 'date' => '2099-01-01', 'time' => '10:00:00', 'quantity' => 2,
+        ]]])
+            ->assertOk()
+            ->assertJsonPath('total_cents', 6666)
+            ->assertJsonPath('online_amount_cents', 6666)
+            ->assertJsonPath('lines.0.product_name', 'Línea del contrato');
     }
 
     /**
@@ -200,12 +212,44 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(['07:30:00'], $component->viewData('times'));
         $this->assertSame(7, $component->viewData('maxQty'), 'el máximo elegible es el del contrato');
         $this->assertGreaterThan(0, $offer->calls);
+
+        // Y la superficie que SOBREVIVE (Fase 4 · paso 4.7·2b·2). El día y la hora del doble no existen
+        // en base de datos —no hay franjas—, así que un endpoint que consultase `slots` por su cuenta
+        // devolvería una lista VACÍA en vez de esto.
+        $this->getJson('/api/v1/availability/'.$product->id.'/dates')
+            ->assertOk()
+            ->assertJsonPath('data.0.date', '2099-01-01')
+            ->assertJsonPath('data.0.price_cents', 4242)
+            ->assertJsonPath('data.0.rate_key', 'special');
+
+        $this->postJson('/api/v1/availability/'.$product->id.'/times', ['date' => '2099-01-01'])
+            ->assertOk()
+            ->assertJsonPath('data.0.time', '07:30:00')
+            // ⚠️ Los DOS números, que no son el mismo: `available` es para mostrar y `max_quantity`
+            // para acotar el selector. Comprobar solo uno dejaría pasar que el endpoint los cruzase.
+            ->assertJsonPath('data.0.available', 99)
+            ->assertJsonPath('data.0.max_quantity', 7);
     }
 
     /** Producto vendible mínimo, para que el componente tenga algo que seleccionar. */
+    /**
+     * Producto vendible mínimo… con su tarifa.
+     *
+     * ⚠️ **La `RateType` no es adorno y costó un diagnóstico**: sin ninguna tarifa en base de datos,
+     * `RateResolver::for()` lanza `ModelNotFoundException` y el catálogo no puede describir el
+     * producto, así que `GET availability/{id}/dates` responde **404** —el guard del controlador
+     * pregunta al catálogo—. El componente Livewire no lo notaba porque su calendario solo consulta
+     * `AvailabilityOffer`, que en este caso está doblado. Es un ejemplo exacto de la lección de la
+     * fase: dos superficies del mismo dato no piden lo mismo, así que un fixture que basta para una
+     * puede no bastar para la otra.
+     */
     private function sellableProduct(): TicketType
     {
         $zone = Zone::create(['slug' => 'jump', 'name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+
+        RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0,
+        ]);
 
         return TicketType::create([
             'name' => ['es' => 'Entrada'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
@@ -534,6 +578,16 @@ class ModuleContractsTest extends TestCase
             ->assertSee('zone-zona-del-contrato', false);
 
         $this->assertSame(1, $catalog->calls, 'Purchase debe pedir el catálogo UNA vez por render');
+
+        // Y la superficie que SOBREVIVE (Fase 4 · paso 4.7·2b·2). El producto del doble no existe en
+        // base de datos: un endpoint que listara `ticket_types` por su cuenta devolvería lista vacía.
+        $this->getJson('/api/v1/catalog/products')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', 4242)
+            ->assertJsonPath('data.0.name', 'Entrada del contrato')
+            ->assertJsonPath('data.0.zone.slug', 'zona-del-contrato');
+
+        $this->assertSame(2, $catalog->calls, 'las DOS superficies tienen que pedir el catálogo al contrato');
     }
 
     /**

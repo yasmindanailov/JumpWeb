@@ -1025,9 +1025,30 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         único caso que lo caza.
       · **No borra ni un test del motor que hoy vende**: eso es 4.7·2b·3, en el mismo commit que el
         componente. Suite **2715 verde**.
-- [ ] **Paso 4.7·2b·2 — re-apuntar lo que SOBREVIVE** (pendiente): los ficheros cuyo sujeto es el
-      dominio o el servidor y que solo usan el componente como conductor, más las paridades que pueden
-      compararse contra el manifiesto congelado o contra el contrato (`lang/`, `openapi/v1.yaml`).
+- [ ] **Paso 4.7·2b·2 — re-apuntar lo que SOBREVIVE** (EN CURSO; 2026-08-15, `DECISIONES #65`): los
+      ficheros cuyo sujeto es el dominio o el servidor y que solo usan el componente como conductor, más
+      las paridades que pueden compararse contra el manifiesto congelado o contra el contrato (`lang/`,
+      `openapi/v1.yaml`).
+      · ✅ **`RedsysIdaTest` re-apuntado a `POST /api/v1/orders` y FUERA del inventario** (29 → **28**).
+        Sus dieciséis casos son sobre el payload que sale a la pasarela, o sea servidor puro. La
+        equivalencia se comprobó, no se supuso: mismo `CheckoutOrchestrator`, mismo `source`
+        (`checkout`), mismo `$user->locale`.
+      · ⚠️ **La mutación descubrió que re-apuntar había DEBILITADO un caso.** El del idioma seguía verde
+        con el orquestador mutado para no pasar el idioma del titular: `ApiLocale` cae a `users.locale`,
+        así que una petición muda ya dejaba la app en `fr` y el fallback daba el mismo `004`. Con
+        Livewire no pasaba (no cruza middleware HTTP). **Regla: al re-apuntar un caso hay que volver a
+        mutarlo** — la superficie nueva puede traer por su cuenta el valor que el caso creía verificar.
+      · ✅ **El único caso que prueba la VISTA se muda con los suyos** (`PurchasePanelTest`), no se
+        borra: es lo único que cubre el marcado del auto-POST en el lado Livewire —el diff de árbol
+        normaliza `action`, `method` y los `name`—. Agruparlo es lo que permite que ·2b·3 borre ficheros
+        enteros en vez de operar dentro de ficheros que sobreviven.
+      · ✅ **`ModuleContractsTest` gana la mitad de API que le faltaba** (sigue en el inventario a
+        propósito): sus tres guardas de «la web no reimplementa» ahora comprueban también
+        `POST orders/quote`, `availability/{id}/dates|times` y `GET catalog/products`. Hueco real, y
+        las tres verificadas por mutación. ·2b·3 solo tendrá que borrar la mitad Livewire.
+      · **Pendientes de este tramo**: `DepositSurfacesTest` (2 usos re-apuntables + 4 de UI),
+        `PurchaseRetryAndPollingTest`, `SidebarSeamTest`/`SidebarTokenBudgetTest` (leen
+        `purchase.blade.php`; hay que apuntarlos a las fuentes Vue) y el grupo de las nueve paridades.
       **Clasificación ya medida** para los que se inspeccionaron en ·b1, para no repetir el trabajo:
       · `ReservationPauseGuardTest` (3 casos) — **muere con el componente sin pérdida**: su sujeto es el
         guard de servidor y la superficie que sobrevive ya lo cubre en `Api/V1/OrdersTest`

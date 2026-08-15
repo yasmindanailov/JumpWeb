@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -367,6 +368,52 @@ class PurchasePanelTest extends TestCase
         $this->assertSame([], session('purchase.cart'));
         // Detalles del Payment los cubre RedsysIdaTest; aquí solo verificamos que existe el link.
         $this->assertSame(1, $order->payments()->count());
+    }
+
+    /**
+     * El paso 9 del PANEL: el formulario de auto-POST hacia la pasarela, tal y como lo pinta el Blade.
+     *
+     * ⚠️ **Vivía en `RedsysIdaTest` y se mudó aquí en 4.7·2b·2** (`DECISIONES #65`), porque su sujeto
+     * no es Redsys sino ESTA vista: el resto de aquel fichero se re-apuntó a `POST /api/v1/orders` —el
+     * payload es servidor puro y sobrevive a la retirada—, pero este caso mira el marcado del
+     * componente y por tanto **muere con él**. Agruparlo con los suyos es lo que permite que 4.7·2b·3
+     * sea un borrado de ficheros enteros y no una cirugía dentro de ficheros que sobreviven.
+     *
+     * ⚠️ **Y no lo cubre ningún otro sitio, medido**: el diff de árbol del gate NORMALIZA `action`,
+     * `method` y los `name` de los campos —no son atributos de contrato—, así que renombrar un campo
+     * firmado (SIS0042 con el pedido ya creado y el aforo retenido) pasa el gate en VERDE; está
+     * demostrado por mutación en `SidebarPayParityTest`, que cubre el lado SPA. Este es el lado
+     * Livewire de esa misma verificación.
+     */
+    public function test_the_payment_step_renders_the_auto_post_form_to_the_gateway(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = Livewire::test(Purchase::class)
+            ->call('selectType', $this->jump1h->id)
+            ->call('selectDate', $this->today)->call('goToTime')
+            ->call('selectTime', '10:00:00')
+            ->call('addToCart')
+            ->call('checkout')
+            ->assertSet('step', 8)
+            ->call('confirmReservation')
+            ->assertHasNoErrors()
+            ->assertSet('step', 9);
+
+        $form = (array) $component->get('redsysFormData');
+
+        $component
+            ->assertSeeHtml('id="redsys-form"')
+            ->assertSeeHtml('action="'.Redsys::URL_TEST.'"')
+            ->assertSeeHtml('method="POST"')
+            ->assertSeeHtml('target="_top"')
+            ->assertSeeHtml('name="Ds_SignatureVersion"')
+            ->assertSeeHtml('value="'.Redsys::SIGNATURE_VERSION.'"')
+            ->assertSeeHtml('name="Ds_MerchantParameters"')
+            ->assertSeeHtml('value="'.$form['params'].'"')
+            ->assertSeeHtml('name="Ds_Signature"')
+            ->assertSeeHtml('value="'.$form['signature'].'"');
     }
 
     public function test_confirm_reservation_does_nothing_outside_the_payment_step(): void

@@ -27,7 +27,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2715 en verde** (15.546 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.538 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -335,7 +335,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      entran dos falsos positivos que solo lo mencionan como historia) y mira TRES formas —conduce ·
      nombra la clase · depende de sus vistas—, con guarda **una por forma**.
    · ▶ **EMPIEZA AQUÍ: el marcador es `PurchaseRetirementTest`.** Los dependientes solo pueden encoger
-     y van **29** (de 32 corregidos). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo
+     y van **28** (de 32 corregidos). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo
      es reclasificar uno a uno, **con evidencia**, no de golpe:
      · **Si el fichero se re-apunta** (su sujeto es el dominio o el servidor): condúcelo por `/api/v1`
        y quítalo de `DEPENDENTS`. Patrón hecho: `SlotOfferTest` → `POST availability/{p}/times`.
@@ -353,6 +353,13 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
        fichero ANTES de borrar, y si no está, el caso se re-apunta en vez de morir. Así sobrevivió el
        único caso que ejerce la suma de una cesta mixta (`QuoteTest`) y así murieron sin hueco los de
        `AvailabilityTest`, cuyos controles ya estaban fijados por dos casos que existían.
+     · ⚠️ **Y la regla que dejó ·2b·2** (`#65`): **al re-apuntar un caso a otra superficie hay que
+       VOLVER A MUTARLO.** Verde antes y verde después no demuestra que siga probando lo mismo — el
+       caso del idioma de la pasarela pasó a ser inerte porque `ApiLocale` ya resolvía por su cuenta el
+       valor que el caso creía estar verificando. Lo cazó la mutación, no la lectura.
+     · **Y el otro patrón de ·2b·2**: el caso que prueba la VISTA no se borra, **se muda al fichero que
+       muere con el componente** (`PurchasePanelTest`). Así ·2b·3 borra ficheros enteros en vez de
+       operar dentro de ficheros que sobreviven, que es mucho más fácil de revisar.
    · **Clasificación ya MEDIDA de cuatro ficheros** (no la repitas; el detalle en `00-REFACTOR.md`):
      `Ui/SpinnerTest` **muere** (el velo del cajón SPA lo cubre el caso del armazón de
      `SidebarDomContractTest`, anclado en `.jj-loading` con hermanos) · `Auth/DuplicateEmailEdgeCaseTest`
@@ -362,7 +369,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      `Api/V1/OrdersTest` ya los cubre en la superficie que sobrevive) ·
      `Sales/CatalogVisibilityAndCartPruneTest` (la poda de la cesta en `mount`, que en la SPA es
      `cart.js` con sus casos en `cart.test.js`) — este último, pendiente de comprobar caso a caso.
-   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **32 ficheros** de acoplamiento real (hoy **29**), en
+   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **32 ficheros** de acoplamiento real (hoy **28**), en
      tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como conductor
      de dominio y deben re-apuntarse a la API, y las nueve paridades. Borrar el fichero sin
      reclasificarlos es pérdida neta de cobertura.

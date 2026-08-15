@@ -2628,3 +2628,61 @@ en `TESTING.md` §2, que es donde lo buscará quien congele la próxima.
 **(d) Lo que esto NO cierra.** Se arreglaron los tres casos que hoy están rojos; **nadie ha barrido la
 suite entera buscando otros que solo fallen ciertos días** (fin de mes, cambio de año, festivos). Que
 2715 estén verdes hoy no demuestra que lo estén el día 31. Queda como deuda en `DEUDA.md`.
+
+## #65 · 2026-08-15 · 4.7·2b·2 — la ida del pago deja de conducirse por una vista condenada
+Segundo tramo de 4.7·2b. Sigue sin borrarse el componente: lo que se hace es poner **cada caso a su
+lado de la línea** —el que prueba servidor se re-apunta a la superficie que sobrevive; el que prueba la
+vista se agrupa con los suyos— para que 4.7·2b·3 sea un borrado y no una cirugía.
+
+**(a) `RedsysIdaTest` entero se re-apunta a `POST /api/v1/orders` y SALE del inventario** (29 → 28).
+Su sujeto son dieciséis casos sobre el **payload que sale hacia la pasarela** —importe, moneda, datos
+de comercio, URLs, idioma, ASCII, firma y su round-trip, el `gateway_order`, el rastro del fallo—, y
+eso es servidor puro: no tiene por qué morir con una pantalla. La equivalencia no se supuso, se
+comprobó: **las dos superficies pasan por el mismo `CheckoutOrchestrator` → `PaymentInitiation::open()`
+(`#37`), con el mismo `source` (`checkout`) y el mismo `$user->locale`**.
+⚠️ Y hubo que traducir nombres: el componente publicaba el payload CRUDO del proveedor
+(`gatewayUrl`/`params`/`signature`), y la API publica lo mismo con los **nombres reales de los
+`<input>`** (`payment.url` + `payment.fields['Ds_*']`), que es lo que documenta
+`PaymentTicket::gatewayFields()`.
+
+**(b) ⚠️ La mutación descubrió que re-apuntar había DEBILITADO un caso, y ese es el hallazgo del
+tramo.** `test_consumer_language_follows_user_locale` seguía verde con el orquestador mutado para **no
+pasar el idioma del titular**. Motivo medido: `ApiLocale` resuelve sesión → `Accept-Language` →
+`users.locale`, así que una petición MUDA de un usuario francés ya dejaba la app en `fr` y el fallback
+`?? app()->getLocale()` daba el mismo `004` por casualidad. Con Livewire no pasaba —el componente no
+cruza middleware HTTP—, o sea que **el cambio de conductor cambió lo que el caso podía ver**.
+Arreglado mandando `Accept-Language: es` con un titular `fr`: las dos fuentes discrepan y el 004 solo
+puede venir del titular. **Y de paso cubre algo que no cubría nadie**: quien paga desde un dispositivo
+negociado en otro idioma ve la pasarela **en el suyo**, que es lo que declara el puerto.
+**La regla que deja**: al re-apuntar un caso a otra superficie hay que **volver a mutar**. Verde antes y
+verde después no demuestra que siga probando lo mismo — la superficie nueva puede traer por su cuenta
+el valor que el caso creía estar verificando.
+
+**(c) El único caso que prueba la VISTA se muda con los suyos, no se borra.**
+`test_view_renders_auto_post_form_to_redsys_sandbox` mira el marcado del Blade (el `id`, la `action`,
+los tres `name` firmados), así que muere con el componente: se traslada a `PurchasePanelTest`, cuyo
+sujeto es el panel. ⚠️ **No es contabilidad: es lo único que cubre ese marcado en el lado Livewire** —el
+diff de árbol NORMALIZA `action`, `method` y los `name`, y está demostrado por mutación en
+`SidebarPayParityTest`, que cubre el lado SPA—. Agruparlo permite que ·2b·3 borre ficheros enteros.
+
+**(d) `ModuleContractsTest` no sale del inventario, y gana la mitad que le faltaba.** Sus tres guardas
+de «la web no reimplementa» conducían SOLO por Livewire; ahora comprueban **también** la superficie que
+sobrevive: `POST orders/quote`, `GET availability/{id}/dates` + `POST …/times` y
+`GET catalog/products`. Era un hueco real —de las nueve superficies, solo admisión y checkout se
+vigilaban en API—, y las tres aserciones nuevas están verificadas por mutación: con los controladores
+saltándose el contrato, **los tres casos caen**. Se conserva la mitad Livewire a propósito: mientras el
+motor por defecto sea `livewire`, su guarda no se retira. ·2b·3 solo tendrá que borrar esas líneas.
+
+**(e) Y un fixture que bastaba para una superficie y no para la otra.** Añadir la mitad de API destapó
+que `sellableProduct()` no sembraba ninguna `RateType`: sin tarifas, `RateResolver::for()` lanza
+`ModelNotFoundException`, el catálogo no puede describir el producto y `availability/{id}/dates`
+responde **404**. Livewire no lo notaba porque su calendario solo consulta `AvailabilityOffer`, que ahí
+está doblado. Es la lección de la fase otra vez: **dos superficies del mismo dato no piden lo mismo**.
+
+**(f) El recuento de aserciones BAJA 8 y está cuadrado**, porque un número que baja sin explicación es
+lo que esconde una pérdida: `RedsysIdaTest` −38, `PurchasePanelTest` +13, `ModuleContractsTest` +17.
+El −38 es (i) el andamiaje del conductor Livewire —`assertSet('step', 8)` + `assertHasNoErrors()` en
+**cada una de las 20 compras** que hace el fichero, sustituido por un `assertCreated()`—, (ii) las 10
+aserciones del caso que se MUDÓ, que reaparecen en `PurchasePanelTest`, y (iii) cuatro aserciones de UI
+—paso 9, `confirmed`, cesta vacía y `orderCode`— que `PurchasePanelTest` ya fijaba **verbatim**.
+Casos: 16 → 15 aquí y 39 → 40 allí; la suite se queda en **2715**.

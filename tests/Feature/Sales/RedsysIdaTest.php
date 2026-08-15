@@ -14,7 +14,6 @@ use App\Domain\Payments\Services\Redsys;
 use App\Domain\Payments\Services\Redsys\Vendor\Utils;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
-use App\Livewire\Tickets\Purchase;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -22,23 +21,35 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
  * Fase 5.5b — IDA al sandbox Redsys (#104).
  *
- * `Purchase::confirmReservation()` deja de mostrar el placeholder #78 y pasa a:
- *   1. Crear la reserva firme (`Order` pending) — existente, OK.
- *   2. Reservar un `gateway_order` ÚNICO (atómico).
- *   3. Crear `Payment` `pending` que ata `gateway_order → Order` ANTES de redirigir
+ * Lo que se compra deja tras de sí:
+ *   1. La reserva firme (`Order` pending) con su ventana de retención.
+ *   2. Un `gateway_order` ÚNICO (atómico).
+ *   3. Un `Payment` `pending` que ata `gateway_order → Order` ANTES de redirigir
  *      (clave para reconciliar la vuelta sin sesión).
- *   4. Firmar el payload con `App\Domain\Payments\Services\Redsys` (server-side, regla 12 SEGURIDAD).
- *   5. Pasar al paso 9 y exponer `redsysFormData` para que la vista renderice el auto-POST.
+ *   4. El payload FIRMADO por `App\Domain\Payments\Services\Redsys` (server-side, regla 12 SEGURIDAD).
  *
  * El email de confirmación de pedido (OrderConfirmation) NO se envía en esta capa: se
  * mueve a 5.5c (sobre la rama Ds_Response ∈ 0000–0099). Hasta entonces, no decimos al
  * cliente que su reserva está "confirmada" — solo está pendiente de pago.
+ *
+ * ⚠️ **Se conduce por `POST /api/v1/orders`, no por el sidebar Livewire** (Fase 4 · paso 4.7·2b·2,
+ * `DECISIONES #65`). El sujeto de este fichero es el PAYLOAD que sale hacia la pasarela —importe,
+ * moneda, datos de comercio, URLs, idioma, ASCII y firma—, y eso es servidor puro: no tiene por qué
+ * morir con una vista. La superficie que sobrevive a la retirada es la que usa el cajón SPA, y
+ * produce **exactamente el mismo payload** porque las dos pasan por el mismo orquestador
+ * (`CheckoutOrchestrator` → `PaymentInitiation::open()`, `DECISIONES #37`) con el mismo `source`
+ * (`checkout`) y el mismo idioma (`$user->locale`).
+ *
+ * ⚠️ **Y la traducción de nombres importa**: lo que el componente publicaba en `redsysFormData` es el
+ * payload CRUDO del proveedor (`gatewayUrl`/`signatureVersion`/`params`/`signature`); la API publica
+ * los mismos datos con los **nombres reales de los `<input>`** (`payment.url` +
+ * `payment.fields['Ds_*']`), que es lo que documenta `PaymentTicket::gatewayFields()`. No son dos
+ * formatos: es el mismo dato dicho para quien no tiene plantilla donde mirarlo.
  */
 class RedsysIdaTest extends TestCase
 {
@@ -94,42 +105,51 @@ class RedsysIdaTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Compra una entrada por la superficie que SOBREVIVE a la retirada del sidebar Livewire.
+     *
+     * Devuelve el sobre `payment` tal y como lo publica el contrato —`url` + `fields` con los nombres
+     * reales de los `<input>`— porque es lo que de verdad viaja a la pasarela. Los casos de abajo
+     * decodifican `Ds_MerchantParameters` y miran dentro: ahí está el sujeto del fichero.
+     *
+     * @return array{0: array<string, mixed>, 1: User}
+     */
     private function buyOneAsVerifiedUser(?User $user = null): array
     {
         $user = $user ?? User::factory()->create();
 
-        $component = Livewire::actingAs($user)
-            ->test(Purchase::class)
-            ->call('selectType', $this->jump1h->id)
-            ->call('selectDate', $this->today)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout')
-            ->assertSet('step', 8)
-            ->call('confirmReservation')
-            ->assertHasNoErrors();
+        $response = $this->actingAs($user)->postJson('/api/v1/orders', ['items' => [[
+            'product_id' => $this->jump1h->id, 'date' => $this->today, 'time' => '10:00:00', 'quantity' => 1,
+        ]]]);
 
-        return [$component, $user];
+        $response->assertCreated();
+
+        return [(array) $response->json('payment'), $user];
     }
 
-    public function test_confirm_reservation_creates_order_payment_and_advances_to_step_nine(): void
+    /** Los tres campos firmados, con los nombres que exige la pasarela. */
+    private function fields(array $payment): array
     {
-        [$component, $user] = $this->buyOneAsVerifiedUser();
+        return (array) $payment['fields'];
+    }
 
-        // El paso de pago YA NO es el éxito (step 6): es el redirect (step 9). El éxito
-        // sólo se alcanzará tras la vuelta firmada de Redsys (5.5c).
-        $component->assertSet('step', 9)
-            ->assertSet('confirmed', false)
-            ->assertSet('cart', []);
+    /**
+     * El `gateway_order` y el `Payment` que deja la ida, que es lo específico de Redsys.
+     *
+     * ⚠️ Lo que este caso ya NO comprueba, y dónde vive: que el pedido nazca `pending` con su
+     * `expires_at` lo fija `Api\V1\OrdersTest::test_the_created_order_always_carries_its_hold`, y que
+     * el sidebar Livewire avance al paso 9 con la cesta vacía lo fija `PurchasePanelTest` (paso 8 →
+     * `confirmReservation` → 9, `confirmed` false, `cart` vacía). Aquí queda lo que no cubre nadie
+     * más: **la FORMA del `gateway_order`**, que es requisito del manual de Redsys §5.
+     */
+    public function test_the_ida_leaves_a_pending_payment_with_a_well_formed_gateway_order(): void
+    {
+        [, $user] = $this->buyOneAsVerifiedUser();
 
         $order = Order::where('user_id', $user->id)->firstOrFail();
         $this->assertSame(Order::STATUS_PENDING, $order->status);
-        // #105 (2026-05-26): la Order se crea pending CON `expires_at = now() + hold_minutes`.
-        // El detalle de la ventana (15 min) lo cubre `test_order_expires_at_is_set_to_hold_window…`;
-        // aquí basta con verificar que ya no es null.
         $this->assertNotNull($order->expires_at);
         $this->assertSame(1000, $order->total);          // céntimos, servidor
-        $this->assertSame($order->code, $component->get('orderCode'));
 
         $payment = $order->payments()->firstOrFail();
         $this->assertSame(Payment::STATUS_PENDING, $payment->status);
@@ -142,33 +162,31 @@ class RedsysIdaTest extends TestCase
 
     public function test_redsys_form_data_carries_signed_payload_and_sandbox_url(): void
     {
-        [$component] = $this->buyOneAsVerifiedUser();
+        [$payment] = $this->buyOneAsVerifiedUser();
 
-        $form = $component->get('redsysFormData');
+        $fields = $this->fields($payment);
 
-        $this->assertIsArray($form);
-        $this->assertSame(Redsys::URL_TEST, $form['gatewayUrl']);
-        $this->assertSame(Redsys::SIGNATURE_VERSION, $form['signatureVersion']);
-        $this->assertNotEmpty($form['params']);
-        $this->assertNotEmpty($form['signature']);
+        $this->assertSame(Redsys::URL_TEST, $payment['url']);
+        $this->assertSame(Redsys::SIGNATURE_VERSION, $fields['Ds_SignatureVersion']);
+        $this->assertNotEmpty($fields['Ds_MerchantParameters']);
+        $this->assertNotEmpty($fields['Ds_Signature']);
 
         // Firma server-side reproducible: re-firmando los mismos params con la clave del
         // sandbox debe coincidir bit a bit (round-trip). Si no, hay manipulación o bug.
         $expected = (new Redsys)->createMerchantSignature(
             'sq7HjrUOBfKmC576ILgskD5srU870gJ7',
-            $form['params'],
+            $fields['Ds_MerchantParameters'],
             // El gateway_order va en el propio payload — lo decodificamos para extraerlo.
-            (new Redsys)->decodeMerchantParameters($form['params'])['DS_MERCHANT_ORDER'],
+            (new Redsys)->decodeMerchantParameters($fields['Ds_MerchantParameters'])['DS_MERCHANT_ORDER'],
         );
-        $this->assertSame($expected, $form['signature']);
+        $this->assertSame($expected, $fields['Ds_Signature']);
     }
 
     public function test_payload_amount_currency_and_merchant_data_come_from_the_server(): void
     {
-        [$component, $user] = $this->buyOneAsVerifiedUser();
+        [$payment, $user] = $this->buyOneAsVerifiedUser();
 
-        $form = $component->get('redsysFormData');
-        $data = (new Redsys)->decodeMerchantParameters($form['params']);
+        $data = (new Redsys)->decodeMerchantParameters($this->fields($payment)['Ds_MerchantParameters']);
         $order = Order::where('user_id', $user->id)->firstOrFail();
 
         $this->assertSame('1000', $data['DS_MERCHANT_AMOUNT']);    // céntimos, NO 10.00
@@ -204,9 +222,9 @@ class RedsysIdaTest extends TestCase
 
     public function test_payload_urls_are_absolute_and_point_to_named_routes(): void
     {
-        [$component] = $this->buyOneAsVerifiedUser();
+        [$payment] = $this->buyOneAsVerifiedUser();
 
-        $data = (new Redsys)->decodeMerchantParameters($component->get('redsysFormData')['params']);
+        $data = (new Redsys)->decodeMerchantParameters($this->fields($payment)['Ds_MerchantParameters']);
 
         $this->assertSame(route('payments.redsys.return.ok'), $data['DS_MERCHANT_URLOK']);
         $this->assertSame(route('payments.redsys.return.ko'), $data['DS_MERCHANT_URLKO']);
@@ -219,8 +237,8 @@ class RedsysIdaTest extends TestCase
     {
         // Hasta 5.5d (notificación on-line) no hay URL pública configurable; el campo viaja
         // vacío y Redsys solo responde por la vuelta (UrlOK/UrlKO).
-        [$component] = $this->buyOneAsVerifiedUser();
-        $data = (new Redsys)->decodeMerchantParameters($component->get('redsysFormData')['params']);
+        [$payment] = $this->buyOneAsVerifiedUser();
+        $data = (new Redsys)->decodeMerchantParameters($this->fields($payment)['Ds_MerchantParameters']);
         $this->assertSame('', $data['DS_MERCHANT_MERCHANTURL']);
     }
 
@@ -228,37 +246,43 @@ class RedsysIdaTest extends TestCase
     {
         Setting::create(['key' => 'redsys_merchant_url', 'value' => 'https://example.com/notif', 'group' => 'payment']);
 
-        [$component] = $this->buyOneAsVerifiedUser();
-        $data = (new Redsys)->decodeMerchantParameters($component->get('redsysFormData')['params']);
+        [$payment] = $this->buyOneAsVerifiedUser();
+        $data = (new Redsys)->decodeMerchantParameters($this->fields($payment)['Ds_MerchantParameters']);
         $this->assertSame('https://example.com/notif', $data['DS_MERCHANT_MERCHANTURL']);
     }
 
-    public function test_consumer_language_follows_user_locale(): void
+    /**
+     * El idioma de la pasarela es el del TITULAR, y gana al de la petición.
+     *
+     * ⚠️ **La cabecera `Accept-Language: es` no es decorado: sin ella este caso no probaba nada**, y
+     * se descubrió por mutación al re-apuntar el fichero en 4.7·2b·2. `ApiLocale` resuelve
+     * sesión → `Accept-Language` → `users.locale`, así que una petición MUDA de un usuario francés ya
+     * deja el locale de la app en `fr`: apagar el `$user->locale` que pasa `CheckoutOrchestrator`
+     * —cuyo fallback es justamente `app()->getLocale()`— **seguía dando 004**. Con la cabecera, las dos
+     * fuentes discrepan y el 004 solo puede venir del titular. Verificado: con la mutación puesta, el
+     * caso cae.
+     *
+     * Y lo que fija de paso no lo cubría nadie: quien paga desde un dispositivo negociado en otro
+     * idioma —o compartido— ve la pasarela **en el suyo**, que es lo que declara el puerto
+     * (`PaymentInitiation`: «idioma del titular; `null` cae al locale de la petición»).
+     */
+    public function test_consumer_language_follows_the_holder_and_not_the_request(): void
     {
         $userFr = User::factory()->create(['locale' => 'fr']);
-        [$component] = $this->buyOneAsVerifiedUser($userFr);
 
-        $data = (new Redsys)->decodeMerchantParameters($component->get('redsysFormData')['params']);
+        $response = $this->actingAs($userFr)
+            ->withHeader('Accept-Language', 'es')
+            ->postJson('/api/v1/orders', ['items' => [[
+                'product_id' => $this->jump1h->id, 'date' => $this->today, 'time' => '10:00:00', 'quantity' => 1,
+            ]]]);
+
+        $response->assertCreated();
+        $this->assertSame('es', app()->getLocale(), 'la petición tiene que quedar en OTRO idioma que el titular');
+
+        $data = (new Redsys)->decodeMerchantParameters(
+            (string) $response->json('payment.fields.Ds_MerchantParameters')
+        );
         $this->assertSame('004', $data['DS_MERCHANT_CONSUMERLANGUAGE']); // 004 = FR (manual Anexo 1)
-    }
-
-    public function test_view_renders_auto_post_form_to_redsys_sandbox(): void
-    {
-        [$component] = $this->buyOneAsVerifiedUser();
-        $form = $component->get('redsysFormData');
-
-        // El sidebar muestra el formulario con los 3 campos firmados + acción a sandbox.
-        $component
-            ->assertSeeHtml('id="redsys-form"')
-            ->assertSeeHtml('action="https://sis-t.redsys.es:25443/sis/realizarPago"')
-            ->assertSeeHtml('method="POST"')
-            ->assertSeeHtml('target="_top"')
-            ->assertSeeHtml('name="Ds_SignatureVersion"')
-            ->assertSeeHtml('value="HMAC_SHA512_V2"')
-            ->assertSeeHtml('name="Ds_MerchantParameters"')
-            ->assertSeeHtml('value="'.$form['params'].'"')
-            ->assertSeeHtml('name="Ds_Signature"')
-            ->assertSeeHtml('value="'.$form['signature'].'"');
     }
 
     public function test_order_confirmation_email_is_no_t_sent_on_redsys_ida(): void
@@ -362,17 +386,9 @@ class RedsysIdaTest extends TestCase
         app()->instance(Redsys::class, $broken);
 
         $user = User::factory()->create();
-        Livewire::actingAs($user)
-            ->test(Purchase::class)
-            ->call('selectType', $this->jump1h->id)
-            ->call('selectDate', $this->today)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout')
-            ->assertSet('step', 8)
-            ->call('confirmReservation')
-            ->assertSet('step', 4)
-            ->assertHasErrors('cart');
+        $this->actingAs($user)->postJson('/api/v1/orders', ['items' => [[
+            'product_id' => $this->jump1h->id, 'date' => $this->today, 'time' => '10:00:00', 'quantity' => 1,
+        ]]])->assertStatus(502)->assertJsonPath('error.code', 'payment_unavailable');
 
         // El Order que se llegó a crear debe quedar expired (no `pending` huérfano).
         $order = Order::where('user_id', $user->id)->firstOrFail();
@@ -392,11 +408,11 @@ class RedsysIdaTest extends TestCase
         // Lo probamos a nivel de servicio: re-firmar los params ALTERADOS con la misma
         // clave y mismo `gateway_order` produce una firma DISTINTA a la enviada
         // originalmente. Redsys rechazaría la operación (SIS0042).
-        [$component] = $this->buyOneAsVerifiedUser();
-        $form = $component->get('redsysFormData');
+        [$payment] = $this->buyOneAsVerifiedUser();
+        $fields = $this->fields($payment);
 
         $redsys = new Redsys;
-        $data = $redsys->decodeMerchantParameters($form['params']);
+        $data = $redsys->decodeMerchantParameters($fields['Ds_MerchantParameters']);
         $originalAmount = $data['DS_MERCHANT_AMOUNT'];
         $gatewayOrder = $data['DS_MERCHANT_ORDER'];
 
@@ -410,9 +426,9 @@ class RedsysIdaTest extends TestCase
         );
 
         $this->assertNotSame($originalAmount, $data['DS_MERCHANT_AMOUNT']);
-        $this->assertNotSame($form['params'], $tamperedParams);
+        $this->assertNotSame($fields['Ds_MerchantParameters'], $tamperedParams);
         $this->assertNotSame(
-            $form['signature'],
+            $fields['Ds_Signature'],
             $tamperedSignature,
             'Tampered amount must invalidate the signature (Redsys would reject with SIS0042).',
         );
@@ -426,11 +442,10 @@ class RedsysIdaTest extends TestCase
         // del comercio (Setting editado en panel Fase 7) incluyen caracteres no-ASCII.
         Setting::updateOrCreate(['key' => 'redsys_merchant_name'], ['value' => 'Jumpingjümp · Niños', 'group' => 'payment']);
 
-        [$component] = $this->buyOneAsVerifiedUser();
-        $form = $component->get('redsysFormData');
+        [$payment] = $this->buyOneAsVerifiedUser();
 
         $redsys = new Redsys;
-        $data = $redsys->decodeMerchantParameters($form['params']);
+        $data = $redsys->decodeMerchantParameters($this->fields($payment)['Ds_MerchantParameters']);
 
         // Merchant name transliterado a ASCII puro (sin ü ni ñ ni el bullet ·).
         $this->assertMatchesRegularExpression('/^[\x20-\x7e]+$/', $data['DS_MERCHANT_MERCHANTNAME'], 'Merchant name debe ser ASCII puro');
