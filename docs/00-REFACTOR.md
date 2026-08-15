@@ -1272,8 +1272,22 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           que el fichero prueba es qué se PINTA con una cesta dada, no cómo se llena.
         · Siete mutaciones, las siete rojas (dos claves ausentes, rótulo cruzado, plural ingenuo,
           marcador «—» → «0,00 €», separador de millares, emparejar por la primera línea).
-        · **Quedan CUATRO por auditar**: `SidebarPausedParityTest` (4) · `SidebarProgressParityTest`
-          (4) · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+      · ✅ **`SidebarPausedParityTest` re-apuntada y FUERA del inventario** (2026-08-15,
+        `DECISIONES #81`). 24 → **23**. El título y el mensaje eran intermediarios de un renglón
+        (`Purchase::pausedTitle()` es `return MaintenanceSettings::reservationTitle();`).
+        · ⚠️ **Y los enlaces se CONGELARON contra el motor vivo**, porque no había fuente a la que
+          re-apuntarlos: la composición (`tel:` sin espacios, `wa.me` solo con dígitos, el rótulo con
+          el número tal y como se escribió, el respaldo a `/contacto` solo sin canales directos) vivía
+          en el Blade. Se volcó lo que emitía DE VERDAD en los cuatro estados de canales y se escribió
+          una composición que lo reproduce, verificada contra el motor todavía en pie. **Mismo criterio
+          que `#60`: una referencia que se va se mide antes de perderla.**
+        · La lista de pasos tapados pasa a ser la DECISIÓN escrita, no un espejo de
+          `showPausedNotice()`: en qué pasos se tapa el flujo no lo publica ningún endpoint.
+        · Cinco mutaciones, las cinco rojas (tapar un paso de resultado, WhatsApp a otro destino,
+          `tel:` con el número rotulado, título desde el diccionario, el canal de llamar deja de ser
+          el principal).
+        · **Quedan TRES por auditar**: `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest`
+          (10) · `SidebarDomContractTest` (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

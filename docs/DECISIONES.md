@@ -3235,3 +3235,32 @@ razón por la que necesitaba un componente.
 separador de millares y emparejar las filas por la primera línea de la cesta.
 
 **(f) Contador: 25 → 24.**
+
+## #81 · 2026-08-15 · 4.7·2b·2 — congelar la referencia ANTES de que el motor se vaya
+Sexta de la auditoría: `SidebarPausedParityTest` (4 usos). Contador **24 → 23**. Mismo patrón que
+`#80` —la referencia no era una fuente— con una técnica nueva que conviene dejar escrita.
+
+**(a) El título y el mensaje eran un intermediario de un renglón.** `Purchase::pausedTitle()` es
+literalmente `return MaintenanceSettings::reservationTitle();`. Se re-apunta ahí: es dominio, lo lee
+el panel y sobrevive. Lo mismo con el mensaje, y en los tres idiomas —el override es POR IDIOMA—.
+
+**(b) ⚠️ Los enlaces no se podían re-apuntar a nada: se CONGELARON contra el motor vivo.** Los `href`
+los componía el Blade con `contact.phone` y `contact.whatsapp`. Los ajustes sobreviven; la composición
+(`tel:` sin espacios, `wa.me` solo con dígitos, el rótulo con el número tal y como lo escribió la
+dueña, el respaldo a `/contacto` **solo** si no hay ningún canal directo) vivía en la plantilla. Antes
+de sustituirla se **volcó lo que emitía de verdad en los cuatro estados de canales** y se escribió una
+composición que reproduce exactamente eso, verificada contra el motor todavía en pie. Es el mismo
+criterio de `#60` al congelar el manifiesto de DOM: **una referencia que se va se mide antes de
+perderla, no se reconstruye de memoria después**.
+
+**(c) Lo que muere es la mitad «lo mismo que el servidor», no la cobertura.** Cinco mutaciones sobre
+`paused.js`, las cinco rojas: tapar además un paso de resultado, mandar el WhatsApp a otro destino,
+poner en el `tel:` el número rotulado (con espacios), sacar el título del diccionario en vez del panel,
+y que el canal de llamar deje de ser el principal. Ninguna la ve el diff de árbol —`href`, `target` y
+`rel` no son atributos de contrato y el texto se descarta—, que es la razón de ser del fichero y sigue
+intacta.
+
+**(d) Y la lista de pasos tapados pasa a ser la DECISIÓN, no un espejo.** Antes se afirmaba contra
+`showPausedNotice()` del componente; ahora se escribe paso a paso, porque en qué pasos se tapa el flujo
+no lo publica ningún endpoint: es una regla de interfaz. Los de resultado (6, 7, 9, 10 y 11) quedan
+fuera porque son acciones ya iniciadas que deben poder completarse.

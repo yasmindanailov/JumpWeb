@@ -3,17 +3,21 @@
 namespace Tests\Feature\Sidebar;
 
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Http\Middleware\SetLocale;
-use App\Livewire\Tickets\Purchase;
-use DOMDocument;
-use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.3·3 — **el aviso de pausa dice y enlaza lo mismo en los dos motores**.
+ * Fase 4 · paso 4.3·3, re-apuntado en 4.7·2b·2 — **el aviso de pausa dice y enlaza lo que dicen los
+ * AJUSTES DEL PANEL y el diccionario** (`DECISIONES #81`).
+ *
+ * La referencia era el Blade del motor viejo, y no era una fuente: `Purchase::pausedTitle()` es
+ * literalmente `MaintenanceSettings::reservationTitle()`, y los `href` los componía con
+ * `contact.phone` y `contact.whatsapp`. Todo eso sobrevive; el Blade no. La composición esperada se
+ * **verificó contra el motor vivo en los cuatro estados de canales antes de sustituirlo**, que es el
+ * mismo criterio con el que `#60` congeló el manifiesto de DOM.
  *
  * ⚠️ **Aquí está casi todo lo que el diff de árbol NO puede ver de este bloque**, y es mucho:
  *  - **`href`, `target` y `rel` no son atributos de contrato**, así que el enlace de WhatsApp y el de
@@ -39,34 +43,24 @@ class SidebarPausedParityTest extends TestCase
     }
 
     /**
-     * ⚠️ **El mapa ENTERO, no una muestra.** Se recorre igual que el del «modo» en
-     * `SidebarProgressParityTest`, y por la misma razón: así fue como apareció que el paso de pago
-     * publicaba un modo distinto en cada motor.
+     * ⚠️ **El mapa ENTERO, no una muestra**, y escrito paso a paso: en qué pasos se tapa el flujo no
+     * lo publica ningún endpoint —es una regla de interfaz—, así que la lista ES la decisión. Se
+     * recorre igual que el del «modo» en `SidebarProgressParityTest`, y por la misma razón: así fue
+     * como apareció que el paso de pago publicaba un modo distinto en cada motor.
      *
      * Los pasos 6, 7, 9, 10 y 11 son el caso que importa. Un `v-if="paused"` colgado de la raíz del
      * cajón —lo primero que uno escribe— taparía la pantalla de «pago confirmado» a quien acaba de
      * pagar, y ninguna prueba de árbol podría decirlo todavía: esos pasos no están transcritos.
      */
-    public function test_the_client_covers_exactly_the_steps_the_server_covers(): void
+    public function test_the_notice_covers_exactly_the_steps_it_must_cover(): void
     {
         $this->pause();
-
-        $server = [];
-        foreach (range(1, 11) as $step) {
-            $server[$step] = Livewire::test(Purchase::class)->set('step', $step)->instance()->showPausedNotice();
-        }
 
         $this->assertSame(
             [1 => true, 2 => true, 3 => true, 4 => true, 5 => true, 6 => false,
                 7 => false, 8 => true, 9 => false, 10 => false, 11 => false],
-            $server,
-            'el servidor ha cambiado los pasos que tapa: este test es su espejo, actualízalo a la vez'
-        );
-
-        $this->assertSame(
-            $server,
             $this->showsNoticeInNode(range(1, 11), true),
-            "El motor SPA NO tapa los mismos pasos que el servidor.\n".
+            "El cajón NO tapa los pasos que debe.\n".
             'Los pasos de RESULTADO (6, 7, 9, 10 y 11) son acciones YA iniciadas: taparlas dejaría a '.
             'quien vuelve de la pasarela mirando un cartel de mantenimiento en vez de su reserva.'
         );
@@ -83,12 +77,12 @@ class SidebarPausedParityTest extends TestCase
     /**
      * ⚠️ **Los tres canales y sus enlaces, que es lo que el árbol da por bueno.**
      *
-     * Se comparan contra los `href` y los textos que emite el Blade DE VERDAD, extraídos de su HTML.
-     * Los cuatro estados de canales son necesarios: con solo WhatsApp y sin ningún canal el árbol
-     * normalizado es el MISMO, así que si esta comparación no existiera nadie notaría que el cajón
-     * manda a la página de contacto donde el servidor ofrece WhatsApp.
+     * Se comparan contra los `href` y los textos que salen de los AJUSTES y del diccionario (ver
+     * `expectedChannels()`). Los cuatro estados de canales son necesarios: con solo WhatsApp y sin
+     * ningún canal el árbol normalizado es el MISMO, así que si esta comparación no existiera nadie
+     * notaría que el cajón manda a la página de contacto donde la instalación ofrece WhatsApp.
      */
-    public function test_the_client_builds_the_same_contact_links_as_the_server(): void
+    public function test_the_contact_links_come_from_the_panel_settings(): void
     {
         $states = [
             'teléfono y WhatsApp' => ['+34 968 12 34 56', '+34 600-11-22-33'],
@@ -100,9 +94,7 @@ class SidebarPausedParityTest extends TestCase
         foreach ($states as $label => [$phone, $whatsapp]) {
             $this->pause($phone, $whatsapp);
 
-            $component = Livewire::test(Purchase::class)->set('step', 1);
-
-            $server = $this->linksFromHtml($component->html());
+            $expected = $this->expectedChannels($phone, $whatsapp);
             $client = $this->buildNoticeInNode([
                 'status' => $this->getJson('/api/v1/booking/status')->assertOk()->json(),
                 'step' => 1,
@@ -112,7 +104,7 @@ class SidebarPausedParityTest extends TestCase
             $this->assertNotNull($client, "con «{$label}» el cliente tendría que componer el aviso");
 
             $this->assertSame(
-                $server,
+                $expected,
                 array_map(fn (array $cta): array => [
                     'href' => $cta['href'],
                     'label' => $cta['label'],
@@ -124,7 +116,7 @@ class SidebarPausedParityTest extends TestCase
                     'zone' => $cta['primary'],
                     'external' => $cta['external'],
                 ], $client['ctas']),
-                "Los canales de «{$label}» NO coinciden con los del servidor.\n".
+                "Los canales de «{$label}» NO son los que sale de los ajustes y el diccionario.\n".
                 '⚠️ El diff de árbol da esto por bueno: `href`, `target` y `rel` no son atributos de '.
                 'contrato, y el enlace de WhatsApp y el de contacto son el MISMO nodo para el normalizador.'
             );
@@ -165,31 +157,29 @@ class SidebarPausedParityTest extends TestCase
 
         $this->app->setLocale('es');
 
-        $component = Livewire::test(Purchase::class)->set('step', 1);
         $client = $this->buildNoticeInNode([
             'status' => $this->getJson('/api/v1/booking/status')->assertOk()->json(),
             'step' => 1,
             'messages' => __('tickets'),
         ]);
 
-        $this->assertSame('Volvemos el lunes', $component->instance()->pausedTitle());
+        $this->assertSame('Volvemos el lunes', MaintenanceSettings::reservationTitle());
         $this->assertNotSame(
             __('tickets.paused.title'), $client['title'],
             'si el título del cliente coincide con el literal, es que NO está leyendo el del panel'
         );
-        $this->assertSame($component->instance()->pausedTitle(), $client['title']);
-        $this->assertSame($component->instance()->pausedMessage(), $client['message']);
+        $this->assertSame(MaintenanceSettings::reservationTitle(), $client['title']);
+        $this->assertSame(MaintenanceSettings::reservationMessage(), $client['message']);
     }
 
-    /** Y en los tres idiomas del sitio público, porque el override es por idioma. */
-    public function test_the_notice_matches_the_server_in_every_locale(): void
+    /** Y en los tres idiomas del sitio público, porque el override del panel es POR IDIOMA. */
+    public function test_the_notice_is_the_panels_text_in_every_locale(): void
     {
         $this->pause();
 
         foreach (SetLocale::SUPPORTED as $locale) {
             $this->app->setLocale($locale);
 
-            $component = Livewire::test(Purchase::class)->set('step', 1);
             $client = $this->buildNoticeInNode([
                 'status' => $this->getJson('/api/v1/booking/status')->assertOk()->json(),
                 'step' => 1,
@@ -197,7 +187,7 @@ class SidebarPausedParityTest extends TestCase
             ]);
 
             $this->assertSame(
-                [$component->instance()->pausedTitle(), $component->instance()->pausedMessage()],
+                [MaintenanceSettings::reservationTitle(), MaintenanceSettings::reservationMessage()],
                 [$client['title'], $client['message']],
                 "El aviso en «{$locale}» NO dice lo mismo en los dos motores."
             );
@@ -205,34 +195,52 @@ class SidebarPausedParityTest extends TestCase
     }
 
     /**
-     * Los enlaces del aviso tal y como los emite el Blade: destino, texto, si es el canal principal y
-     * si se abre fuera de forma segura.
+     * Los canales que el aviso tiene que ofrecer, compuestos desde las fuentes que SOBREVIVEN: los
+     * ajustes del panel (`contact.phone`, `contact.whatsapp`) y el diccionario.
+     *
+     * ⚠️ **Esta composición se verificó contra el Blade ANTES de sustituirlo** (`DECISIONES #81`),
+     * en los cuatro estados de canales: mismos `href`, mismos rótulos, mismo canal principal y mismo
+     * `external`. No es una expectativa escrita a ojo, es la del motor vivo con su fuente detrás — el
+     * mismo criterio con el que `#60` congeló el manifiesto de DOM.
+     *
+     * · **El orden importa**: llamar primero (es el canal principal, con el color de la zona) y
+     *   WhatsApp después. Y **el enlace a contacto solo aparece cuando no hay ningún canal directo**:
+     *   es el respaldo, no un tercer botón.
+     * · `tel:` va sin espacios y `wa.me` solo con dígitos; el ROTULO, en cambio, lleva el teléfono tal
+     *   y como lo escribió la dueña. Son tres formas del mismo número y ninguna es intercambiable.
      *
      * @return array<int, array{href: string, label: string, zone: bool, external: bool}>
      */
-    private function linksFromHtml(string $html): array
+    private function expectedChannels(string $phone, string $whatsapp): array
     {
-        $dom = new DOMDocument;
-        libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOWARNING | LIBXML_NOERROR);
-        libxml_clear_errors();
+        $digits = static fn (string $number): string => preg_replace('/\D+/', '', $number) ?? '';
 
-        $links = [];
-        foreach ((new DOMXPath($dom))->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' purchase__maint-ctas ')]//a") as $node) {
-            $classes = preg_split('/\s+/', trim($node->getAttribute('class'))) ?: [];
+        $ctas = [];
 
-            $links[] = [
-                'href' => $node->getAttribute('href'),
-                'label' => trim($node->textContent),
-                // El canal principal es el único con el color de la zona.
-                'zone' => in_array('btn--zone', $classes, true),
-                // Un enlace externo se abre en pestaña nueva **y** con `rel="noopener"`: lo segundo no
-                // es opcional, es lo que impide que la página destino manipule la nuestra.
-                'external' => $node->getAttribute('target') === '_blank' && $node->getAttribute('rel') === 'noopener',
+        if ($phone !== '') {
+            $ctas[] = [
+                'href' => 'tel:+'.$digits($phone),
+                'label' => __('tickets.paused.call', ['phone' => $phone]),
+                'zone' => true,
+                'external' => false,
             ];
         }
 
-        return $links;
+        if ($whatsapp !== '') {
+            $ctas[] = [
+                'href' => 'https://wa.me/'.$digits($whatsapp),
+                'label' => __('tickets.paused.whatsapp'),
+                'zone' => false,
+                'external' => true,
+            ];
+        }
+
+        return $ctas !== [] ? $ctas : [[
+            'href' => url('/contacto'),
+            'label' => __('tickets.paused.contact'),
+            'zone' => false,
+            'external' => false,
+        ]];
     }
 
     /**
