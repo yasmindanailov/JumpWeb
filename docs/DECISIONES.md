@@ -3635,3 +3635,30 @@ verificado por mutación en las dos direcciones.
 medir» en un fichero condenado es deuda con fecha de caducidad**. Si nadie lo mide antes de ·2b·3, la
 regla se va con el fichero y nadie se entera — y las dos veces que se ha medido, había hueco. Los
 `⚠️ sin medir` de los ficheros ya clasificados hay que cerrarlos **antes** del borrado, no durante.
+
+## #94 · 2026-08-15 · 4.7·2b·2·C — el reintento y el sondeo, con su dinero ya guardado en otro sitio
+Sexto fichero del tramo: `PurchaseRetryAndPollingTest` (11 usos, 10 casos). **Muere con el componente**
+y el contador no se mueve. Es el que más superficie de dinero toca de los que quedaban, así que se
+midieron sus dos reglas críticas antes de darlo por prescindible — y esta vez **no había hueco**.
+
+**(a) El reintento abre un `gateway_order` NUEVO.** Reusar el anterior significa firma duplicada y
+cobro rechazado por la pasarela. Mutando `PaymentInitiator` para que reutilice el último caen **diez**
+casos y **nueve sobreviven**: `PaymentInitiatorTest` ×2, `Account\PaymentRetryFromOrdersTest` ×4,
+`Api\V1\OrdersTest::test_the_retry_opens_a_new_payment_and_extends_the_hold`,
+`SidebarOutcomeParityTest` (el re-apuntado en `#85`) y `ReservationPauseGuardTest`.
+
+**(b) La defensa IDOR del reintento.** Quitando el filtro por titular de `extendHold()` caen **cinco**
+y **cuatro sobreviven**, con los dos que la nombran explícitamente:
+`OrdersTest::test_a_stranger_cannot_retry_someone_elses_order` y
+`ReservationAdmissionPolicyTest::test_a_denied_retry_does_not_touch_another_users_order`.
+
+**(c) El resto, con su equivalente localizado**: la ventana del hold la fijan los mismos dos
+endpoints; los tres desenlaces del sondeo y el motivo del rechazo —incluido el código desconocido que
+cae al genérico— los cubre `SidebarOutcomeParityTest` desde `#85`. Lo único sin equivalente es
+`addAnother`, que limpia el estado residual del componente: superficie pura.
+
+**(d) Y conviene anotar el resultado NEGATIVO.** Tras `#89` y `#93`, la pregunta al abrir un fichero
+era «¿qué hueco esconde?». Aquí la respuesta es **ninguno**, y eso también es información: el terreno
+del dinero se endureció por su cuenta (Fase 3 lo publicó por API y le puso tests propios), así que los
+ficheros que solo lo *conducían* desde la UI son los que menos riesgo tienen al retirarse. **Medir para
+no encontrar nada sigue siendo medir.**

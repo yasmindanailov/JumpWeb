@@ -135,7 +135,7 @@ Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAn
 (`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
 `AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
 `DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro) y `PurchaseLimitsTest`
-(`#92`, muere entero — con DOS casos sin medir anotados dentro).
+(`#92`+`#93`, muere entero) y `PurchaseRetryAndPollingTest` (`#94`, muere entero — sin huecos).
 ⚠️⚠️ **La trampa que más caro sale, ya van tres veces**: una mutación mal apuntada puede producir un
 resultado **coherente con la hipótesis equivocada**. En `#92` hizo creer que el límite anti-abuso de
 crear reservas no lo guardaba nadie —falso: lo guardan nueve casos—, porque el ancla aparecía DOS

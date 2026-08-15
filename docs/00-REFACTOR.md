@@ -1418,6 +1418,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           fichero condenado. Fijada en `OrdersTest`, verificada por mutación.
         · **La lección, segunda vez** (`#89` fueron tres reglas): **un caso «sin medir» en un fichero
           condenado es deuda con fecha de caducidad**. Hay que cerrarlos ANTES del borrado.
+      · ✅ **`PurchaseRetryAndPollingTest` clasificado: muere con el componente** (`DECISIONES #94`).
+        Es el que más dinero toca de los que quedaban, así que se midieron sus dos reglas críticas:
+        · **`gateway_order` nuevo en cada reintento** (reusarlo = firma duplicada = cobro rechazado):
+          tumbarlo cae **10** casos, **9 supervivientes**;
+        · **defensa IDOR del reintento**: cae **5**, **4 supervivientes**.
+        · El resto —ventana del hold, los tres desenlaces del sondeo, el motivo del rechazo— lo cubre
+          `SidebarOutcomeParityTest` desde `#85`. Sin equivalente solo `addAnother`: superficie pura.
+        · **Resultado NEGATIVO, y se anota**: aquí **no había hueco**. El terreno del dinero se
+          endureció solo en Fase 3, así que los ficheros que solo lo CONDUCÍAN desde la UI son los de
+          menos riesgo al retirarse. **Medir para no encontrar nada sigue siendo medir.**
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

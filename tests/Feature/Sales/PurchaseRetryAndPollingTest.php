@@ -28,6 +28,24 @@ use Tests\TestCase;
  *  - G10 polling paso 11 → Order paid → step 6.
  *  - G10 polling paso 11 → Order expired → step 1 + mensaje.
  *  - addAnother limpia orderCode/redsysFormData/declinedReasonText.
+ *
+ * ⚠️ **Clasificado el 2026-08-15 (`DECISIONES #94`): muere con el componente.** Conduce la UI para
+ * ejercer reglas que son de dominio, y **cada una tiene ya su guarda donde se queda**. Medido:
+ *
+ *  · **el reintento abre un `gateway_order` NUEVO** —reusarlo es una firma duplicada y un cobro
+ *    rechazado—: mutarlo tumba **diez** casos y **nueve sobreviven** (`PaymentInitiatorTest` ×2,
+ *    `Account\PaymentRetryFromOrdersTest` ×4, `Api\V1\OrdersTest::test_the_retry_opens_a_new_
+ *    payment_and_extends_the_hold`, `SidebarOutcomeParityTest` y `ReservationPauseGuardTest`);
+ *  · **la defensa IDOR** —el reintento de un pedido AJENO—: quitar el filtro por titular tumba
+ *    **cinco** y **cuatro sobreviven**, incluidos `OrdersTest::test_a_stranger_cannot_retry_someone_
+ *    elses_order` y `ReservationAdmissionPolicyTest::test_a_denied_retry_does_not_touch_another_
+ *    users_order`;
+ *  · **la ventana del hold** la fijan los mismos dos endpoints;
+ *  · **los desenlaces del sondeo y el motivo del rechazo** los cubre `SidebarOutcomeParityTest`
+ *    re-apuntado en `#85` —incluido el código desconocido que cae al genérico—.
+ *
+ * Lo único sin equivalente es `addAnother`, que limpia el estado residual del componente: superficie
+ * pura, y su gemelo en el cajón es la reinicialización del store (`store.test.js`).
  */
 class PurchaseRetryAndPollingTest extends TestCase
 {
