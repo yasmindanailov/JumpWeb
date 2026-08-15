@@ -3687,3 +3687,33 @@ mutación es **equivalente por diseño** y no puede probar nada.
 **Regla nueva: una propiedad de INDISTINGUIBILIDAD no se prueba mutando una de las dos ramas; se
 prueba comparando las dos respuestas entre sí.** Es la cuarta cara de la disciplina de mutación de
 estos dos días, junto a `#77(e)`, `#90(f)` y `#92(a)`.
+
+## #96 · 2026-08-15 · 4.7·2b·2·C — el catálogo y el sidebar v2, y el `type` que nadie fijaba
+Noveno y décimo del tramo: `PurchaseCatalogGroupingTest` (11 usos) y `SidebarV2Test` (20 usos, el
+fichero más grande del inventario). **Los dos mueren con el componente**; contador en 20.
+
+**(a) `SidebarV2Test` lo decía en su propio docblock sin saberlo**: «cubre los VM que lo proyectan y el
+MARKUP que los consume». Eso es la superficie. Sus tres piezas tienen hoy dueño propio con su red: el
+«modo» en `machine.js` con el mapa congelado en `#82`, la banda en `progress.js` —que el diff de árbol
+EJECUTA desde `#71`— y el pie en `foot.js`, con sus textos fijados por `SidebarCartParityTest` desde
+`#80`. **Es el que más casos tiene (17) y el que menos deja al irse**: todo lo suyo se rehízo en Fase 4.
+
+**(b) `PurchaseCatalogGroupingTest`: reglas de datos cubiertas, presentación que muere.** El filtro de
+zona operativa lo guardan dos casos de `CatalogTest`; el umbral del buscador,
+`PublicConfigTest::test_the_search_threshold_follows_the_setting`; el agrupado en secciones es del
+cliente (`catalog.js`, `#67`) y lo ejecuta el diff de árbol.
+
+**(c) ⚠️ Pero el `type` publicado no lo fijaba nadie.** Cruzando la traducción de `CatalogReader`
+—entrada↔pack— `CatalogTest` se quedaba **en verde**: solo caían el diff de árbol y este fichero
+condenado. No es cosmético: **el tipo es la sección en la que aparece cada producto**, así que un pack
+de cumpleaños se ofrecería bajo «Entradas» con un árbol perfectamente válido. Y es un campo del
+CONTRATO (`CatalogProduct::TYPE_*`, no la constante interna del modelo). Fijado en
+`CatalogTest::test_each_product_publishes_its_own_type`, verificado por mutación.
+
+**(d) Tercer hueco del tramo, y los tres del mismo tipo.** `#89` (tres reglas `can_*`), `#93` (pagar
+sin verificar) y este: **campos que el servidor PUBLICA y que solo probaba el motor que se va**. El
+patrón es reconocible y vale como criterio de búsqueda para lo que queda: *si un dato viaja al cliente
+y su único test conduce la UI, el contrato no lo está fijando*.
+
+**(e) Recuento corregido**: quedaba **uno**, no ninguno — `Maintenance/ReservationPauseTest` (5 usos)
+sigue sin auditar. El anuncio anterior de «quedan dos» estaba mal contado.

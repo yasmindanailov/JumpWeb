@@ -18,6 +18,18 @@ use Tests\TestCase;
  * zona es un constructo operativo —franjas + aforo—, no una categoría de catálogo). Se eliminó
  * el antiguo toggle Entradas/Packs (robaba atención); ya NO hay «modo» que conmutar: entradas y
  * servicios conviven en un solo render. El buscador es progresivo (solo si el catálogo es grande).
+ *
+ * ⚠️ **Muere con el componente** (medido el 2026-08-15, `DECISIONES #96`): su sujeto es cómo se PINTA
+ * el catálogo —secciones, buscador, iconos, destacados—. Sus reglas de datos sobreviven:
+ *
+ *  · **el filtro de zona operativa**: mutarlo tumba tres casos y **dos sobreviven**
+ *    (`Api\V1\CatalogTest` ×2);
+ *  · **el umbral del buscador** lo publica el servidor y lo fija
+ *    `PublicConfigTest::test_the_search_threshold_follows_the_setting`;
+ *  · **el TIPO de cada producto** —la sección en la que aparece— lo fija ahora
+ *    `CatalogTest::test_each_product_publishes_its_own_type`, que **nació de auditar este fichero**:
+ *    cruzar entrada↔pack en `CatalogReader` dejaba el contrato en verde;
+ *  · **el agrupado en secciones** es del cliente (`catalog.js`, `#67`) y lo ejecuta el diff de árbol.
  */
 class PurchaseCatalogGroupingTest extends TestCase
 {

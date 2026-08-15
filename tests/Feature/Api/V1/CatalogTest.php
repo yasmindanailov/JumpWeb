@@ -127,6 +127,28 @@ class CatalogTest extends ApiTestCase
 
     // ── Lista de productos ────────────────────────────────────────────────────────────────────
 
+    /**
+     * ⚠️ **El `type` publicado separa «Entradas» de «Servicios», y no lo fijaba nadie**
+     * (`DECISIONES #96`). Medido: cruzar la traducción de `CatalogReader` —entrada↔pack— dejaba este
+     * fichero **en verde**; solo caían el diff de árbol y un test del motor que se retira.
+     *
+     * No es cosmético: es la sección en la que aparece cada producto. Con el tipo cruzado, un pack de
+     * cumpleaños se ofrece bajo «Entradas» y una entrada suelta bajo «Servicios», con un árbol
+     * perfectamente válido. Y es un campo del CONTRATO —`CatalogProduct::TYPE_*`, no la constante
+     * interna del modelo—, así que su sitio es aquí.
+     */
+    public function test_each_product_publishes_its_own_type(): void
+    {
+        $this->priced($this->product('Entrada 1 h'), 990);
+        $this->priced($this->product('Pack cumple', ['type' => TicketType::TYPE_PACK, 'min_qty' => 8]), 1500);
+
+        $byName = collect($this->getJson(self::ROOT.'/catalog/products')->assertOk()->json('data'))
+            ->keyBy('name');
+
+        $this->assertSame('entry', $byName['Entrada 1 h']['type'], 'una entrada se publica como entrada');
+        $this->assertSame('pack', $byName['Pack cumple']['type'], 'y un pack como pack');
+    }
+
     public function test_products_lists_what_is_on_sale_and_nothing_else(): void
     {
         $this->priced($this->product('Entrada 1 h'), 990);

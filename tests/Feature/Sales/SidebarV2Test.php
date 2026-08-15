@@ -22,6 +22,21 @@ use Tests\TestCase;
  * El estado de negocio sigue siendo server-authoritative (Livewire); este test cubre los VM que
  * lo proyectan (`sidebarMode`, `bookingProgress`, `footer`) y el markup que los consume. La
  * animación/colapso (puro CSS/Alpine) se valida visualmente (DoD).
+ *
+ * ⚠️ **Muere ENTERO con el componente** (2026-08-15, `DECISIONES #96`), y su propio docblock ya lo
+ * decía sin saberlo: «cubre los VM que lo proyectan y el MARKUP que los consume». Eso es la
+ * superficie, y no hay nada a lo que re-apuntarla. Las tres piezas que proyecta tienen hoy dueño
+ * propio en el cajón, cada una con su red:
+ *
+ *  · **el «modo» del panel** → `machine.js::modeOf()`, con el mapa entero congelado en
+ *    `SidebarProgressParityTest` (`#82`) porque su clase se pinta FUERA del cajón;
+ *  · **la banda de fases** → `progress.js` + `progress.test.js`, y el diff de árbol la EJECUTA
+ *    desde `#71`;
+ *  · **el pie contextual y el desglose de la señal** → `foot.js` + `foot.test.js`, y sus TEXTOS los
+ *    fija `SidebarCartParityTest` desde `#80` contra el diccionario y `number_format`.
+ *
+ * Es el fichero más grande del inventario (17 casos) y el que menos deja al irse: todo lo que prueba
+ * se rehízo en Fase 4 con su propia red.
  */
 class SidebarV2Test extends TestCase
 {

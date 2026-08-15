@@ -1438,6 +1438,15 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           anti-enumeración. **Una propiedad de INDISTINGUIBILIDAD no se prueba mutando una rama: se
           prueba comparando las dos respuestas entre sí.** Cuarta cara de la disciplina, con `#77(e)`,
           `#90(f)` y `#92(a)`.
+      · ✅ **`PurchaseCatalogGroupingTest` y `SidebarV2Test` clasificados: mueren** (`DECISIONES #96`).
+        El segundo es el más grande del inventario (17 casos) y **el que menos deja**: sus tres piezas
+        —modo, banda y pie— tienen dueño propio con su red desde `#71`, `#80` y `#82`.
+        · ⚠️ **Tercer hueco del tramo: el `type` publicado del catálogo no lo fijaba nadie.** Cruzar
+          entrada↔pack en `CatalogReader` dejaba `CatalogTest` en verde. **El tipo es la SECCIÓN en la
+          que aparece cada producto.** Fijado en `CatalogTest::test_each_product_publishes_its_own_type`.
+        · **Los tres huecos del tramo son del mismo tipo** (`#89`, `#93`, `#96`): campos que el
+          servidor PUBLICA y que solo probaba el motor que se va. **Criterio de búsqueda para lo que
+          queda: si un dato viaja al cliente y su único test conduce la UI, el contrato no lo fija.**
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

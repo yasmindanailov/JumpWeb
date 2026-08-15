@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2714 en verde** (15.677 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
+- Suite **2715 en verde** (15.680 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -135,11 +135,14 @@ Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAn
 (`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
 `AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
 `DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro) y `PurchaseLimitsTest`
-(`#92`+`#93`, muere entero) `PurchaseRetryAndPollingTest` (`#94`, sin huecos) y los dos de identificación (`#95`).
+(`#92`+`#93`, muere entero) `PurchaseRetryAndPollingTest` (`#94`, sin huecos) los dos de identificación (`#95`) y el catálogo + sidebar v2 (`#96`).
 ⚠️⚠️ **La trampa que más caro sale, ya van tres veces**: una mutación mal apuntada puede producir un
 resultado **coherente con la hipótesis equivocada**. En `#92` hizo creer que el límite anti-abuso de
 crear reservas no lo guardaba nadie —falso: lo guardan nueve casos—, porque el ancla aparecía DOS
 veces en el fichero y se cambió la otra. **Antes de creerte un hueco: exige que el ancla sea única.**
+⚠️ **Los TRES huecos del tramo son del mismo tipo** (`#89`, `#93`, `#96`): campos que el servidor
+PUBLICA y cuyo único test conducía la UI. **Criterio de búsqueda: si un dato viaja al cliente y su
+único test conduce el motor viejo, el contrato NO lo está fijando.**
 ⚠️ **Una propiedad de INDISTINGUIBILIDAD no se prueba mutando una de sus ramas** (`#95`): la
 anti-enumeración del alta hace que las dos respuestas sean iguales a propósito, así que mutar una es un
 mutante equivalente **por diseño** y su verde no dice nada. Se prueba comparando las dos entre sí.
@@ -147,8 +150,7 @@ mutante equivalente **por diseño** y su verde no dice nada. Se prueba comparand
 cierra antes de ·2b·3, la regla se va con el fichero. Las dos veces que se ha medido uno, **había
 hueco** — `#89` (tres reglas `can_*`) y `#93` (pagar sin verificar el correo). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
 regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que
-se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
-· `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
+se va. Por tamaño de acoplamiento, el resto: · `PurchaseRetryAndPollingTest` (11)
 · `ReservationPauseTest` (5) ·
  `PurchaseIdentificationTest` (3) ·
 `PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.
@@ -332,6 +334,6 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2714** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
