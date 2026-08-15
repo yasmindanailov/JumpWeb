@@ -27,10 +27,16 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2718 en verde** (15.548 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.546 aserciones, `--parallel` ~70 s) · **247 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
+- ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió una vez** (`DECISIONES #64`,
+  2026-08-15): tres casos amanecieron rojos sin que nadie tocara nada —dos porque la foto congelada
+  del calendario caduca cada día, uno porque su fixture tiene tarifa de fin de semana—. Los tres
+  están arreglados congelando el reloj, pero **nadie ha barrido el resto**: si te encuentras un rojo
+  que no viene de tu cambio, **antes de tocar nada guarda el árbol y prueba en el commit anterior**
+  —es lo que separó el diagnóstico en minutos de una sesión perdida—. Ficha en `DEUDA.md`.
 - ⚠️ **El `pre-push` corre ahora también `npm run build`, ANTES de la suite** (2026-08-13). Se añadió
   tras un fallo REAL: un build interrumpido dejó `public/build/manifest.json` a 0 bytes y **toda la
   web pública respondió 500**. `public/build` está en `.gitignore`, así que el manifest no viaja en
@@ -317,12 +323,20 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      dueño único con guarda ejecutable, y los `role`/`aria-*` los compara el diff. ⚠️ **Lo único que
      sigue abierto es el foco al cambiar de paso, que NINGUNO de los dos motores hace** — hueco
      heredado, ficha en `DEUDA.md`.
-3. **4.7 — la retirada, EN CURSO** (`DECISIONES #60`, `#61`). **·1 el manifiesto congelado ✅** ·
-   **·2a el inventario deja de crecer ✅** (2026-08-15) · **·2b retirar el componente y el puente** ·
+3. **4.7 — la retirada, EN CURSO** (`DECISIONES #60`, `#61`, `#63`). **·1 el manifiesto congelado ✅** ·
+   **·2a el inventario deja de crecer ✅** · **·2b·1 el contador dice la verdad ✅** (2026-08-15) ·
+   **·2b·2 re-apuntar lo que sobrevive** · **·2b·3 borrar componente + vistas + puente** ·
    **·3 retirar el flag**.
+   · ⚠️ **El contador MEDÍA MENOS DE LA MITAD DE LAS FORMAS y se arregló** (`#63`): declaraba **25**
+     dependientes y el acoplamiento real eran **32**. No veía a los cuatro que conducen con
+     `Livewire::actingAs($u)->test(…)` —21 llamadas—, al que lee `Purchase::MAX_LINES_PER_CART` ni a los
+     dos que dependen de `purchase.blade.php`. **Llegar a 0 con siete invisibles no habría levantado el
+     bloqueo: habría roto la suite al borrar.** Hoy el escaneo tokeniza (descarta comentarios: sin eso
+     entran dos falsos positivos que solo lo mencionan como historia) y mira TRES formas —conduce ·
+     nombra la clase · depende de sus vistas—, con guarda **una por forma**.
    · ▶ **EMPIEZA AQUÍ: el marcador es `PurchaseRetirementTest`.** Los dependientes solo pueden encoger
-     y van **25** (eran 26). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo es
-     reclasificar uno a uno, **con evidencia**, no de golpe:
+     y van **29** (de 32 corregidos). Cuando llegue a 0, `Purchase.php` se borra sin pensar. El trabajo
+     es reclasificar uno a uno, **con evidencia**, no de golpe:
      · **Si el fichero se re-apunta** (su sujeto es el dominio o el servidor): condúcelo por `/api/v1`
        y quítalo de `DEPENDENTS`. Patrón hecho: `SlotOfferTest` → `POST availability/{p}/times`.
      · **Si muere con el componente**: ANTES hay que enseñar dónde vive su cobertura. Patrón hecho y
@@ -331,20 +345,38 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      · **Las nueve PARIDADES** son el grupo grande y el último: o comparan contra el manifiesto
        congelado (`tests/Fixtures/sidebar-dom-manifest.json`, ya hecho para el árbol) o contra el
        contrato del servidor (`lang/`, `openapi/v1.yaml`), que es contra quien de verdad comparan sus
-       textos e importes. ⚠️ Y varias dejan de tener sentido al quedar UN solo consumidor: p. ej.
-       `AvailabilityTest::test_the_api_and_the_web_offer_the_same_times…` existía para probar que dos
-       implementaciones coincidían. Eso no es perder cobertura; es que la pregunta desaparece.
-   · **Los tres candidatos más baratos para empezar** (1 uso cada uno, ya inspeccionados):
-     `Ui/SpinnerTest` (el velo del panel Livewire — el de la SPA lo cubre el caso del armazón),
-     `Auth/DuplicateEmailEdgeCaseTest` (el evento `purchase:switch-to-login`) y
+       textos e importes. ⚠️ Y varias dejan de tener sentido al quedar UN solo consumidor: la paridad de
+       `AvailabilityTest` existía para probar que dos implementaciones coincidían, y se retiró en ·2b·1.
+       Eso no es perder cobertura; es que la pregunta desaparece.
+     · ⚠️ **La regla que dejó ·2b·1 al retirar la primera paridad**: separa **lo que comparaba** de **lo
+       que además afirmaba**. Lo primero se va con el segundo motor; lo segundo hay que buscarlo en el
+       fichero ANTES de borrar, y si no está, el caso se re-apunta en vez de morir. Así sobrevivió el
+       único caso que ejerce la suma de una cesta mixta (`QuoteTest`) y así murieron sin hueco los de
+       `AvailabilityTest`, cuyos controles ya estaban fijados por dos casos que existían.
+   · **Clasificación ya MEDIDA de cuatro ficheros** (no la repitas; el detalle en `00-REFACTOR.md`):
+     `Ui/SpinnerTest` **muere** (el velo del cajón SPA lo cubre el caso del armazón de
+     `SidebarDomContractTest`, anclado en `.jj-loading` con hermanos) · `Auth/DuplicateEmailEdgeCaseTest`
+     **muere** (su caso prueba `Purchase::onSwitchToLoginTab`, y ese escape **no es alcanzable embebido
+     en ninguno de los dos motores**: el paso 5 deja de renderizarse en cuanto se salta al 7) ·
+     `Maintenance/ReservationPauseGuardTest` **muere** (sus tres casos son guards de SERVIDOR y
+     `Api/V1/OrdersTest` ya los cubre en la superficie que sobrevive) ·
      `Sales/CatalogVisibilityAndCartPruneTest` (la poda de la cesta en `mount`, que en la SPA es
-     `cart.js` y tiene sus casos en `cart.test.js`).
-   · ⚠️ **Lo que hace grande a 4.7·2, medido**: eran **26 ficheros** con ~160 casos al empezar (hoy 25),
-     en tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como conductor
+     `cart.js` con sus casos en `cart.test.js`) — este último, pendiente de comprobar caso a caso.
+   · ⚠️ **Lo que hace grande a 4.7·2, medido**: **32 ficheros** de acoplamiento real (hoy **29**), en
+     tres familias — los que mueren con él (prueban SU interfaz), los que solo lo usan como conductor
      de dominio y deben re-apuntarse a la API, y las nueve paridades. Borrar el fichero sin
      reclasificarlos es pérdida neta de cobertura.
+   · ⚠️ **Y arrastra el modo `embedded` de la auth**: `purchase.blade.php` es el ÚNICO sitio que monta
+     `<livewire:auth.login|register :embedded="true">`. Al borrarlo, ese modo se queda sin usuario —y
+     con él el evento `purchase:switch-to-login`—. Decidir si se retira en ·2b·3 o se deja para Fase 5
+     es parte del tramo, no un descubrimiento del final.
    · ✅ **El manifiesto ya está congelado** (30 entradas, 696 nodos): el contrato visual sobrevive a la
      retirada. Se regenera con `MANIFEST_REFRESH=1` y hay que decirlo en el commit.
+     ⚠️ **Y CADUCABA A LAS 24 H hasta el 2026-08-15** (`DECISIONES #64`): dos entradas son el calendario
+     y su rejilla depende de HOY. Ahora `SidebarDomContractTest` congela el reloj en `setUp()`
+     (`FROZEN_NOW = 2026-08-12`); si cambias esa fecha, hay que regenerar el manifiesto. **No lo
+     regeneres sin mirar el diff**: al hacerlo bien cambian 2 entradas de 30, y eso es lo que demuestra
+     que no se ha tapado nada más.
    · ⚠️ **NO esperes a «curtir el motor en producción»: esa condición se planteó y se RETIRÓ el
      2026-08-15 por vacía** (`DECISIONES #62`). Este repo es el PRODUCTO —`CLAUDE.md`, primera
      línea—, **no hay canal de despliegue** (ni `.github` ni script; el de `INSTALACION-CLIENTE.md` §1
@@ -712,6 +744,6 @@ producción (`INSTALACION-CLIENTE.md` §5) · backlog de producto de Fase 6.
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys
 en sandbox y suite **2132** verde al importarla.
 Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2718** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).

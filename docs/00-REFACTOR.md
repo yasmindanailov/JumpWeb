@@ -982,7 +982,12 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         mismo cambio en los DOS motores —invisible para el diff entre ellos— lo caza el manifiesto.
       · 30 entradas · 696 nodos · `tests/Fixtures/sidebar-dom-manifest.json`. Se regenera a propósito
         (`MANIFEST_REFRESH=1`) y hay guarda contra entradas huérfanas.
-      · ⚠️ **Y el dato que cambia la planificación**: **26 ficheros de test ejecutan el componente**, con
+      · ⚠️ **La foto valía UN DÍA y se arregló el 2026-08-15** (`DECISIONES #64`): dos de las treinta
+        entradas son el calendario, y la rejilla del mes depende de HOY. Ahora el reloj se congela en
+        `setUp()` (`FROZEN_NOW`) y el manifiesto se regeneró con él. La regla que deja: **una foto que
+        incluye el tiempo se toma con el reloj parado**, o no es una red.
+      · ⚠️ **Y el dato que cambia la planificación**: **26 ficheros de test ejecutan el componente** —medido
+        con un patrón que resultó corto; el acoplamiento real eran 32 (`#63`)—, con
         ~160 casos, en tres familias —los que mueren con él, los que deben re-apuntarse al servidor y las
         nueve paridades—. La retirada NO es borrar un fichero; eso es 4.7·2.
       · Suite **2715 verde**.
@@ -996,13 +1001,64 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         DOMINIO; se re-apunta a `POST availability/{p}/times`, que es el flujo público que sobrevive.
       · **Y una clasificación resuelta midiendo**: los dos casos de `AddonDependencyTest` mueren sin
         pérdida — `CatalogAddonsTest` ya cubre la poda **mejor** (la cadena entera). Escrito, no ejecutado.
-      · Suite **2718 verde** · dependientes: **25** (eran 26).
-- [ ] **Paso 4.7·2b — retirar el componente y el puente** (pendiente): `Purchase.php`,
-      `purchase.blade.php` y el puente `$wire.step`↔store, con la reclasificación de los 25 dependientes.
+      · Suite **2718 verde** · dependientes: **25** (eran 26). ⚠️ Ese recuento resultó CORTO:
+        el escaneo solo veía una de las tres formas de acoplamiento. Corregido a 32 en ·2b·1 (`#63`).
+- [x] **Paso 4.7·2b·1 — el contador medía menos de la mitad de las formas** (2026-08-15,
+      `DECISIONES #63`). Arregla el instrumento antes de usarlo, y saca los tres primeros dependientes.
+      · ⚠️ **El inventario declaraba 25 y el acoplamiento real eran 32.** El escaneo reconocía un solo
+        literal (`Livewire::test(Purchase::class)`) y no veía: **cuatro** que conducen con
+        `Livewire::actingAs($u)->test(…)` —21 llamadas—, **uno** que lee `Purchase::MAX_LINES_PER_CART`
+        y **dos** que dependen de `purchase.blade.php`. Con siete invisibles, un contador a 0 no
+        levantaba ningún bloqueo: rompía la suite al borrar.
+      · **El escaneo tokeniza y descarta comentarios**, y mira TRES formas. Dos mutaciones: la lista
+        vieja contra el escáner nuevo cae nombrando **exactamente los siete**; sin descartar comentarios
+        entran **dos falsos positivos** que solo lo mencionan como historia. La guarda de la guarda pasa
+        a ser **una por forma** —la vieja («más de 10») pasaba con la mitad de las formas ciegas—.
+      · **Tres fuera, cada uno por su motivo** (32 → **29**): `OrderCreatorTest` lee el tope de
+        `OrderCreator`, que es quien lo define **y su propio sujeto**; `AvailabilityTest` pierde su
+        paridad porque **la pregunta desaparece** al quedar un solo motor y sus controles ya están
+        fijados por dos casos que existían; `QuoteTest` **se re-apunta** porque su paridad era el único
+        caso del fichero que ejerce la suma de una cesta mixta.
+      · ⚠️ **Y destapó una trampa de importes**: `deposit_cents` de una línea SIN señal **no** incluye
+        sus complementos, pero esos complementos **sí** se cobran online → sumar los `deposit_cents` no
+        da `online_amount_cents` (110,00 vs 125,00). Fijado, con la mutación que demuestra que es el
+        único caso que lo caza.
+      · **No borra ni un test del motor que hoy vende**: eso es 4.7·2b·3, en el mismo commit que el
+        componente. Suite **2715 verde**.
+- [ ] **Paso 4.7·2b·2 — re-apuntar lo que SOBREVIVE** (pendiente): los ficheros cuyo sujeto es el
+      dominio o el servidor y que solo usan el componente como conductor, más las paridades que pueden
+      compararse contra el manifiesto congelado o contra el contrato (`lang/`, `openapi/v1.yaml`).
+      **Clasificación ya medida** para los que se inspeccionaron en ·b1, para no repetir el trabajo:
+      · `ReservationPauseGuardTest` (3 casos) — **muere con el componente sin pérdida**: su sujeto es el
+        guard de servidor y la superficie que sobrevive ya lo cubre en `Api/V1/OrdersTest`
+        (`test_a_paused_installation_refuses_to_create_and_leaves_no_order` y su gemelo del reintento).
+      · `Ui/SpinnerTest` (1 caso + el del placeholder) — **muere**: el velo del cajón SPA lo cubre el
+        caso del armazón de `SidebarDomContractTest`, anclado en `.jj-loading` **con hermanos**.
+      · `Auth/DuplicateEmailEdgeCaseTest` (1 caso) — **muere**: prueba `Purchase::onSwitchToLoginTab`, y
+        ese escape **no existe embebido en ninguno de los dos motores** —el paso 5 deja de renderizarse
+        en cuanto el cajón salta al 7—, hecho ya verificado y documentado en `VerifyStep.vue`. Los otros
+        dos casos del fichero (los de `Register`) sobreviven intactos.
+      ⚠️ **Sin inspeccionar todavía**: `DepositSurfacesTest`, `PurchaseRetryAndPollingTest`,
+      `RedsysIdaTest`, `SidebarSeamTest`, `SidebarTokenBudgetTest` y el grupo de las nueve paridades.
+- [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
+      `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
+      `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
+      defecto no pase ni un día con menos red de la que tiene—.
       ⚠️ **La condición de «curtirlo en producción» se RETIRÓ el 2026-08-15 por vacía** (`DECISIONES
       #62`): no hay instalación viva ni canal de despliegue, así que no hay tráfico que esperar. Lo que
-      de verdad ordena este tramo es el CONTADOR de `PurchaseRetirementTest`: reclasificar los 25
-      dependientes hasta 0 y borrar entonces, no antes.
+      de verdad ordena este tramo es el CONTADOR de `PurchaseRetirementTest`: reclasificar hasta 0 y
+      borrar entonces, no antes.
+      · **Medido en ·b1**: fuera de `tests/`, el único acoplamiento EJECUTABLE al componente es
+        `resources/views/components/layout.blade.php` (`<livewire:tickets.purchase lazy />`). Todo lo
+        demás que lo nombra en `app/` son docblocks que cuentan de dónde salió una regla.
+      · ⚠️ **Y arrastra más de lo que su nombre dice, también medido en ·b1**: `purchase.blade.php` es
+        el ÚNICO sitio que monta `<livewire:auth.login|register :embedded="true">`, así que el **modo
+        `embedded` de los dos componentes de auth se queda sin usuario** — y con él el evento
+        `purchase:switch-to-login` (`Register::requestSwitchToLogin` → `Purchase::onSwitchToLoginTab`),
+        cuyo disparador ya hoy es inalcanzable: el escape vive en la pantalla `sent` del Register y el
+        paso 5 deja de renderizarse en cuanto `registration-submitted` salta al 7. Decidir si el modo
+        `embedded` se retira aquí o se deja para Fase 5 es parte de este tramo, no un descubrimiento
+        para el final.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
 - [ ] SPA embebida (Vue 3 + Pinia) para el cajón completo: fecha/hora, cesta,
       login/registro, pago, vuelta y reintento. **Primer consumidor real de la API v1.**

@@ -18,6 +18,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Symfony\Component\Process\Process;
@@ -58,9 +59,25 @@ class SidebarDomContractTest extends TestCase
 
     private int $rateId;
 
+    /**
+     * ⚠️ **El reloj se CONGELA, y sin esto el manifiesto de 4.7·1 caduca al día siguiente.**
+     *
+     * Medido el 2026-08-15, un día después de congelarlo: los dos casos del calendario cayeron contra
+     * el manifiesto —no entre motores— porque la rejilla del mes depende de HOY (cada día que pasa
+     * añade una casilla deshabilitada, y cada mes cambia la forma entera). Una foto de un árbol que se
+     * mueve solo no es una red: es una alarma diaria que el siguiente agente aprende a ignorar.
+     *
+     * La fecha elegida no es arbitraria: **miércoles 12 de agosto de 2026**, mes que empieza en SÁBADO
+     * —así la rejilla conserva sus casillas de relleno inicial, que son estructura— y día 12 para que
+     * `slotsForNextDays(5)` (13–17) no cruce a septiembre. Cambiarla obliga a regenerar el manifiesto.
+     */
+    private const FROZEN_NOW = '2026-08-12 09:00:00';
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        Carbon::setTestNow(self::FROZEN_NOW);
 
         $this->rateId = (int) RateType::create([
             'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0,

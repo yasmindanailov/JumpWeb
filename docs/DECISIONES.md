@@ -2529,4 +2529,102 @@ borrar entonces. Eso no es esperar: es el trabajo.
 
 **(e) La regla que deja, y vale para cualquier fase**: una condición de bloqueo tiene que nombrar el
 **hecho observable** que la levanta. «Cuando haya rodado un tiempo» no lo es; «cuando el contador llegue
-a 0» sí.
+a 0» sí. ⚠️ **Con un corolario que costó descubrir al día siguiente** (`#63`): si el hecho observable lo
+mide un test, hay que comprobar que lo mide ENTERO. El contador decía 25 y eran 32.
+
+## #63 · 2026-08-15 · 4.7·2b·1 — el contador de la retirada medía menos de la mitad de las formas
+Primer tramo de 4.7·2b. **No borra el componente**: arregla el instrumento que dice cuándo se puede
+borrar, y saca los tres primeros dependientes. El corte es por dependencia, como toda la fase: un
+contador que miente no ordena nada.
+
+**(a) ⚠️ Lo medido, y por qué importa.** `PurchaseRetirementTest` reconocía **un solo literal**,
+`Livewire::test(Purchase::class)`, y declaraba **25** dependientes. El acoplamiento real eran **32**
+ficheros. Se le escapaban tres cosas, todas ejecutables:
+· **cuatro que conducen con otro receptor** — `Livewire::actingAs($u)->test(Purchase::class)`:
+  `ReservationPauseGuardTest`, `DepositSurfacesTest`, `PurchaseRetryAndPollingTest`, `RedsysIdaTest`.
+  Son 21 llamadas al componente que el inventario daba por inexistentes;
+· **uno que lee una constante suya** — `OrderCreatorTest` usaba `Purchase::MAX_LINES_PER_CART`;
+· **dos que dependen de sus VISTAS** — `SidebarSeamTest` y `SidebarTokenBudgetTest` leen
+  `purchase.blade.php`, que se va con el componente.
+La promesa del contador es **«0 ⟹ `Purchase` se puede borrar»**. Con siete ficheros invisibles, llegar
+a 0 no habría levantado ningún bloqueo: habría roto la suite al borrar. **El crecimiento de la lista es
+la corrección, no una regresión** — y por eso la disciplina de «solo encoge» se mantiene intacta a
+partir de aquí.
+
+**(b) La forma de medir, y las dos mutaciones que la sostienen.** El escaneo **tokeniza y descarta
+comentarios**, y mira tres formas (conduce · nombra la clase · depende de sus vistas). Las dos
+mutaciones se ejecutaron:
+· con la lista vieja de 25 y el escáner nuevo, el test cae **nombrando exactamente los siete**;
+· sin descartar comentarios entran **dos falsos positivos** (`SidebarEntryTest`,
+  `SidebarMoneyParityTest`), que solo mencionan el componente para contar de dónde salió una regla y
+  **no se rompen al borrarlo**. Medir sobre el texto crudo habría inflado el inventario con historia.
+⚠️ Y la guarda de la guarda pasa a ser **una por forma**: la vieja («que encuentre más de 10») pasaba
+en verde con la mitad de las formas ciegas, que es justo lo que ocurrió.
+
+**(c) Los tres primeros dependientes salen, cada uno por un motivo distinto** (32 → **29**):
+· **`OrderCreatorTest` se re-apunta al DUEÑO de la regla.** Leía el tope de líneas del componente, que
+  solo lo refleja para la UI; ahora lo lee de `OrderCreator`, que es quien lo define **y el sujeto del
+  propio test**. Un test de servidor no debe nombrar una clase de interfaz para leer un invariante de
+  servidor.
+· **`AvailabilityTest` pierde sus dos casos de paridad, y no hay hueco.** Comparaban las horas y el tope
+  del sidebar contra los de la API: **la pregunta desaparece cuando desaparece la segunda
+  implementación** —el cajón SPA es cliente de ese mismo `POST availability/{id}/times` y acota el
+  selector con `max_quantity`—. Y sus números de control siguen fijados por dos casos que ya existían
+  (cesta de 4 → 6 y cesta de 10 → 0), así que el borrado no deja hueco; que la web pida el máximo al
+  contrato lo sigue vigilando `ModuleContractsTest`.
+· **`QuoteTest` se RE-APUNTA en vez de morir, y ahí está la diferencia.** Su paridad de cesta mixta era
+  el **único** caso del fichero que ejerce la SUMA de varias líneas con reglas distintas; se conserva
+  como caso de API con los mismos importes (295,00 · 125,00). Su hermano de mutación sí muere: el
+  control era 5 × 40,00 y el fichero ya multiplica 2 × 40,00.
+⚠️ **La regla que deja este punto**: al retirar una paridad hay que separar **lo que comparaba** de **lo
+que además afirmaba**. Lo primero se va con el segundo motor; lo segundo hay que buscarlo en el fichero
+antes de borrar, y si no está, se queda.
+
+**(d) Y re-apuntar encontró un fallo en la propia doc del cambio, medido con la mutación.** Al escribir
+el caso conservado se dio por hecho que `deposit_cents` de una línea SIN señal incluiría sus
+complementos: **no los incluye** (80,00, no 95,00) y aun así **sí se cobran online**
+(`CartPricer`: `online += deposit + (hasDeposit ? 0 : addons)`). O sea: **sumar los `deposit_cents` de
+las líneas no da `online_amount_cents`** —110,00 frente a 125,00—, que es exactamente la resta que
+`#48` prohíbe al cliente. Queda fijado con su par de aserciones, y la mutación demuestra que es el
+ÚNICO caso del fichero que lo caza: apagar ese sumando deja los otros diez en verde.
+
+**(e) Lo que este tramo NO hace, y el orden importa.** No borra ni un test del motor que hoy vende: la
+familia «muere con el componente» se va **en el mismo commit que el componente** (4.7·2b·3), para que
+el motor por defecto no pase ni un día con menos red de la que tiene. Lo que sí queda hecho es su
+clasificación con evidencia, en `00-REFACTOR.md`.
+
+## #64 · 2026-08-15 · El manifiesto congelado caducaba a las 24 h, y la suite dependía del calendario
+Al cerrar `#63` la suite amaneció con **tres fallos que nadie había causado**. Se comprobó antes de
+tocar nada —árbol guardado, vuelta al commit anterior, los mismos tres fallos— así que no era del
+trabajo de la sesión: la suite **no era determinista respecto a la fecha**, y llevaba así desde que se
+escribió cada pieza. Las dos causas son distintas y las dos dejan regla.
+
+**(a) ⚠️ La red de 4.7·1 valía UN DÍA.** `tests/Fixtures/sidebar-dom-manifest.json` es la foto del árbol
+que tiene que **sobrevivir a la retirada** de Livewire (`#60`), y dos de sus treinta entradas son el
+calendario. La rejilla del mes depende de HOY: cada día añade una casilla deshabilitada y cada mes
+cambia la forma entera. Congelada el 14, **caducó el 15**. Una foto que se mueve sola no es una red: es
+una alarma diaria, y en un repo de agentes lo que pasa con una alarma diaria es que el siguiente
+aprende a regenerarla sin mirar — y ahí se pierde el contrato visual entero, en silencio.
+**Arreglo**: reloj congelado en `setUp()` (`FROZEN_NOW = 2026-08-12 09:00`, miércoles de un mes que
+empieza en sábado, para conservar las casillas de relleno; día 12 para que `slotsForNextDays(5)` no
+cruce a septiembre) y manifiesto regenerado. **Dos medidas lo sostienen**: quitar el congelado devuelve
+los dos casos a rojo, y al regenerar **cambian exactamente 2 entradas de 30** —prueba de que las otras
+28 ya eran estables y de que la regeneración no tapó nada más—.
+
+**(b) Un fixture con tarifas por día de la semana rompe el fichero los fines de semana.** `CatalogTest`
+declara una tarifa `special` con `weekdays: [0, 6]`, y `CatalogReader` resuelve la tarifa de los
+complementos con `Carbon::today()` **descartando el complemento de PAGO sin precio para esa tarifa**
+—regla correcta y ya documentada ahí: ofrecerlo acabaría en un checkout rechazado—. Sábado y domingo,
+los tres complementos del caso se quedaban en uno. ⚠️ **La conducta del servidor no se tocó**: el que
+dependía del calendario era el test, y su sujeto es el catálogo, no las tarifas. Reloj congelado al
+mismo día laborable.
+
+**(c) La regla que dejan, y aplica a cualquier fase.** Si el sujeto de un test **no** es el tiempo pero
+su fixture o su dato tienen calendario —tarifas por día, rejilla de mes, franjas relativas a `now()`—,
+**el reloj se congela en `setUp()` con una constante documentada**. Y su corolario, que es el que
+faltaba en `#60`: **una foto que incluye el tiempo hay que tomarla con el reloj parado.** Está escrito
+en `TESTING.md` §2, que es donde lo buscará quien congele la próxima.
+
+**(d) Lo que esto NO cierra.** Se arreglaron los tres casos que hoy están rojos; **nadie ha barrido la
+suite entera buscando otros que solo fallen ciertos días** (fin de mes, cambio de año, festivos). Que
+2715 estén verdes hoy no demuestra que lo estén el día 31. Queda como deuda en `DEUDA.md`.

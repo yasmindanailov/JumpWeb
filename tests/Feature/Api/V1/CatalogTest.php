@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use Illuminate\Support\Carbon;
 use Tests\Feature\Api\ApiTestCase;
 
 /**
@@ -28,9 +29,27 @@ class CatalogTest extends ApiTestCase
 
     private int $specialRateId;
 
+    /**
+     * ⚠️ **El reloj se congela en un día LABORABLE, y no es celo: sin esto el fichero falla los fines
+     * de semana.** Medido el sábado 2026-08-15: `test_the_detail_describes_the_offered_addons` cayó
+     * enseñando **un** complemento de tres. La causa no está en el caso sino en el fixture de abajo —la
+     * tarifa `special` aplica `weekdays: [0, 6]`—, combinada con una regla real del read-model:
+     * `CatalogReader` resuelve la tarifa de los complementos con `Carbon::today()` (documentado ahí: es
+     * lo que hacen también el modelo de vista de la compra y `OrderCreator`) y **descarta el
+     * complemento de PAGO que no tiene precio para esa tarifa**, porque ofrecerlo acabaría en un
+     * checkout rechazado. Los complementos del caso solo tienen precio `normal`, así que el fin de
+     * semana desaparecen — el incluido sobrevive porque no necesita precio.
+     *
+     * O sea: la conducta es CORRECTA y el test era el que dependía del calendario. Se congela el reloj
+     * en vez de darles precio especial, porque el sujeto de este fichero es el catálogo, no las tarifas.
+     */
+    private const FROZEN_NOW = '2026-08-12 09:00:00';
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        Carbon::setTestNow(self::FROZEN_NOW);
 
         $this->zone = Zone::create([
             'slug' => 'jump', 'name' => ['es' => 'Jump', 'en' => 'Jump zone'], 'accent' => 'jump',

@@ -12,7 +12,6 @@ use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\Setting;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -301,8 +300,11 @@ class OrderCreatorTest extends TestCase
         // Auditoría Fase 1 (L6): el cap de líneas es un INVARIANTE de servidor (regla 12). Una cesta
         // forjada con más de MAX_LINES_PER_CART líneas se rechaza al crear el pedido —antes de bloquear
         // decenas de franjas (contención de BD)—, aunque la UI (`addToCart`) ya lo compruebe.
+        // ⚠️ El tope se lee de `OrderCreator`, que es quien lo DEFINE y el sujeto de este test. Se leía
+        // del componente Livewire —que solo lo refleja para la UI—, y eso ataba un test de servidor a
+        // una clase de interfaz condenada (Fase 4 · paso 4.7·2b).
         $cart = [];
-        for ($i = 0; $i <= Purchase::MAX_LINES_PER_CART; $i++) {
+        for ($i = 0; $i <= OrderCreator::MAX_LINES_PER_CART; $i++) {
             $cart[] = $this->line('10:00:00', 1);
         }
 

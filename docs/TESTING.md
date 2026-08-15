@@ -77,6 +77,29 @@ Para forzar el paso del tiempo (p. ej. comprobar que un timestamp no se reescrib
 reloj de prueba de Laravel: `$this->travel(1)->seconds()` / `$this->travelTo(...)`. **No** se
 usa `sleep()`: es determinista y sin coste de reloj real.
 
+⚠️ **Y hay una segunda mitad de esto que costó una sesión: un test puede depender de la fecha
+sin nombrarla nunca.** El 2026-08-15 la suite amaneció con **tres fallos que nadie había
+causado** —el árbol quedó limpio y el commit anterior fallaba igual—, y las dos causas valen
+como patrón:
+- **Una FOTO de un árbol que contiene el calendario caduca cada día.**
+  `SidebarDomContractTest` compara contra el manifiesto congelado de 4.7·1, y la rejilla del mes
+  depende de HOY: cada día que pasa añade una casilla deshabilitada y cada mes cambia la forma
+  entera. La foto valía **exactamente un día**. Se arregla congelando el reloj en `setUp()`
+  (`FROZEN_NOW`) y regenerando el manifiesto; verificado por mutación: quitar el congelado
+  devuelve los dos casos a rojo, y al regenerar **solo cambian las 2 entradas del calendario**
+  de las 30, que es la prueba de que el resto ya era estable.
+- **Un fixture con tarifas por día de la semana hace que el fichero falle en fin de semana.**
+  `CatalogTest` declara una tarifa `special` con `weekdays: [0, 6]`; `CatalogReader` resuelve la
+  tarifa de los complementos con `Carbon::today()` y **descarta el complemento de pago sin precio
+  para esa tarifa**. Sábado y domingo, tres complementos se quedaban en uno. La conducta del
+  servidor es correcta: el que dependía del calendario era el test.
+
+**La regla**: si el sujeto del test NO es el tiempo pero el fixture o el dato tienen calendario
+(tarifas por día, rejilla de mes, franjas relativas a `now()`), **congela el reloj en `setUp()`
+con una constante documentada**. Un test que solo pasa los martes está rojo, aún no lo sabes.
+⚠️ Y el corolario para cualquier fixture congelado: **una foto que incluye el tiempo hay que
+tomarla con el reloj parado**, o no es una red — es una alarma diaria que se aprende a ignorar.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

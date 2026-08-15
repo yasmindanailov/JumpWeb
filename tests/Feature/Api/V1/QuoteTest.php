@@ -8,10 +8,8 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\OrderCreator;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Livewire\Livewire;
 use Tests\Feature\Api\ApiTestCase;
 
 /**
@@ -19,11 +17,12 @@ use Tests\Feature\Api\ApiTestCase;
  *
  * El presupuesto y el carrito de la web salen del MISMO contrato (`Booking\Contracts\CartPricing`),
  * así que estos tests fijan dos cosas distintas: la FORMA de la respuesta contra `openapi/v1.yaml`
- * y la PARIDAD con lo que la web enseña para la misma cesta.
+ * y la CONDUCTA de la tarificación, incluida la agregación de una cesta **mixta y no vacía**.
  *
- * La paridad se prueba con una cesta **mixta y no vacía**, y con su mutación. No es celo: el test de
- * paridad de la v1 del spec usaba la cesta vacía y por eso pasaba por construcción (§6.3), que es la
- * clase de test verde que no prueba nada.
+ * Que la cesta sea mixta y no vacía no es celo: el test de paridad de la v1 del spec usaba la cesta
+ * vacía y por eso pasaba por construcción (§6.3), que es la clase de test verde que no prueba nada.
+ * Aquella paridad —contra el sidebar Livewire— se re-apuntó en 4.7·2b (`#63`); el caso de agregación
+ * mixta que dejó explica ahí mismo qué se conservó y por qué.
  *
  * Heredar de `ApiTestCase` deja cableado el contrato, pero la validación hay que PEDIRLA con
  * `assertValidRequest()`/`assertValidResponse()` (spec §10.ter 16).
@@ -246,67 +245,56 @@ class QuoteTest extends ApiTestCase
             ->assertValidResponse(422);
     }
 
-    // ── Paridad con la web (spec §6.3) ────────────────────────────────────────────────────────
+    // ── Agregación de una cesta MIXTA ─────────────────────────────────────────────────────────
 
     /**
-     * La misma cesta, en la web y en la API, tiene que dar los mismos dos importes. Es la prueba de
-     * que el paso 4a hizo lo que dice: retirar la aritmética del componente de UI en vez de darle
-     * una copia a la API.
+     * Los dos importes de una cesta de VARIAS líneas con reglas distintas: una con señal y complemento,
+     * otra sin señal y con complemento. Es el único caso del fichero que ejerce la SUMA —los demás son
+     * de una línea—, y lo que fija es la regla de agregación de `CartPricing`: al total contribuye todo,
+     * y a lo que se cobra ahora contribuye **la señal** de la línea que la tiene y **el total** de la
+     * que no (Opción A de #225).
+     *
+     * Los números, para que la aritmética se pueda seguir sin ejecutar nada:
+     * · línea 1 — 180,00 (señal fija 30,00) + calcetines 20,00 ×1 → suma 200,00 · ahora 30,00
+     * · línea 2 — 40,00 ×2 = 80,00 + bebida 5,00 ×3 = 15,00 → suma 95,00 · ahora 95,00
+     * · TOTAL 295,00 · AHORA 125,00
+     *
+     * ⚠️ **Y el matiz que se midió al escribirlo, porque invita a una resta equivocada**: en la línea
+     * SIN señal `deposit_cents` vale 80,00, **no** 95,00 — es la señal del principal, y para un producto
+     * sin señal eso es su subtotal, complementos aparte—. Sus 15,00 de complemento sí se cobran online
+     * (`CartPricer`: `online += deposit + (hasDeposit ? 0 : addons)`), así que **sumar los
+     * `deposit_cents` de las líneas NO da `online_amount_cents`**: 30,00 + 80,00 = 110,00, y se cobran
+     * 125,00. El importe agregado se publica ya hecho justo para que ningún cliente lo componga.
+     *
+     * ⚠️ **Nació como test de PARIDAD con el sidebar Livewire y se re-apuntó en 4.7·2b** (`#63`): la
+     * mitad que comparaba `Purchase::cartTotalCents()` con `total_cents` se fue con su motor, y con ella
+     * su caso hermano de mutación —cuyo control, 5 × 40,00 = 200,00, no añadía nada a
+     * `test_it_quotes_a_cart_and_matches_the_contract`, que ya multiplica 2 × 40,00—. Lo que NO se fue
+     * es esto: la agregación mixta, que no la ejerce ningún otro caso. Y que la web pida los importes
+     * al contrato en vez de recalcularlos lo sigue vigilando
+     * `ModuleContractsTest::test_the_web_cart_gets_its_amounts_from_the_contract`.
      */
-    public function test_the_api_and_the_web_price_the_same_mixed_cart_identically(): void
+    public function test_it_aggregates_a_mixed_cart_charging_only_the_deposit_of_the_line_that_has_one(): void
     {
         $socks = $this->addon($this->deposit, 'Calcetines', 2000);
         $drink = $this->addon($this->full, 'Bebida', 500);
 
-        $webCart = [
-            ['ticket_type_id' => $this->deposit->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1,
-                'event_data' => [], 'addons' => [['ticket_type_id' => $socks->id, 'qty' => 1]]],
-            ['ticket_type_id' => $this->full->id, 'date' => $this->date, 'time' => '11:00:00', 'qty' => 2,
-                'event_data' => [], 'addons' => [['ticket_type_id' => $drink->id, 'qty' => 3]]],
-        ];
-
-        session()->put('purchase.cart', $webCart);
-        $web = Livewire::test(Purchase::class);
-
-        $api = $this->postJson(self::PATH, ['items' => [
+        $response = $this->postJson(self::PATH, ['items' => [
             $this->item($this->deposit, '10:00:00', 1, [['product_id' => $socks->id, 'quantity' => 1]]),
             $this->item($this->full, '11:00:00', 2, [['product_id' => $drink->id, 'quantity' => 3]]),
-        ]])->assertOk();
+        ]]);
 
-        $this->assertSame(
-            $web->instance()->cartTotalCents(),
-            $api->json('total_cents'),
-            'la web y la API no valoran igual la misma cesta'
-        );
-        $this->assertSame(
-            $web->instance()->cartDepositCents(),
-            $api->json('online_amount_cents'),
-            'la web y la API no cobran lo mismo por la misma cesta'
-        );
-
-        // Control: los importes no son cero, así que la igualdad significa algo.
-        $this->assertSame(29500, $api->json('total_cents'));
-        $this->assertSame(12500, $api->json('online_amount_cents'));
-    }
-
-    /**
-     * Mutación del test anterior: si la cesta cambia, los dos lados tienen que cambiar A LA VEZ. Sin
-     * esto, dos implementaciones que devolvieran siempre lo mismo pasarían la paridad.
-     */
-    public function test_changing_the_cart_moves_both_the_web_and_the_api(): void
-    {
-        $webCart = [[
-            'ticket_type_id' => $this->full->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 5,
-            'event_data' => [], 'addons' => [],
-        ]];
-
-        session()->put('purchase.cart', $webCart);
-        $web = Livewire::test(Purchase::class);
-
-        $api = $this->postJson(self::PATH, ['items' => [$this->item($this->full, '10:00:00', 5)]])->assertOk();
-
-        $this->assertSame(20000, $api->json('total_cents'));
-        $this->assertSame($web->instance()->cartTotalCents(), $api->json('total_cents'));
+        $response->assertOk()->assertValidRequest()->assertValidResponse(200)
+            ->assertJsonPath('total_cents', 29500)
+            ->assertJsonPath('online_amount_cents', 12500)
+            // Y el reparto por línea, que es lo que hace verificable la suma en vez de solo comprobarla.
+            ->assertJsonPath('lines.0.deposit_cents', 3000)
+            ->assertJsonPath('lines.0.gate_remainder_cents', 17000)
+            ->assertJsonPath('lines.1.has_deposit', false)
+            // El aviso de arriba, fijado: 80,00 y no 95,00, y aun así los 15,00 del complemento van
+            // en el agregado de «ahora». Sin este par de líneas la resta equivocada pasa desapercibida.
+            ->assertJsonPath('lines.1.deposit_cents', 8000)
+            ->assertJsonPath('lines.1.gate_remainder_cents', 0);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────────────────

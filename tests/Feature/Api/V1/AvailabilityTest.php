@@ -6,9 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Support\Carbon;
-use Livewire\Livewire;
 use Tests\Feature\Api\ApiTestCase;
 
 /**
@@ -17,9 +15,18 @@ use Tests\Feature\Api\ApiTestCase;
  *
  * La disponibilidad de la API y la de la web salen del MISMO contrato
  * (`Booking\Contracts\AvailabilityOffer`) sobre la misma fuente de oferta (`SlotOffer`, `AFORO-02`).
- * Estos tests fijan la forma contra `openapi/v1.yaml` y la PARIDAD con lo que la web ofrece para la
- * misma cesta —con cesta NO vacía y con su mutación, que es lo que el spec §6.3 exige después de
- * descubrir que el test de paridad de la v1 pasaba por construcción—.
+ * Estos tests fijan la forma contra `openapi/v1.yaml` y la conducta de la oferta con cesta.
+ *
+ * ⚠️ **Aquí vivían dos casos de PARIDAD con el sidebar Livewire, retirados en 4.7·2b** (`#63`). No se
+ * perdió cobertura y conviene saber por qué, porque el patrón se repite en toda la retirada:
+ * · lo que comparaban ya no tiene dos lados — el cajón SPA **es** cliente de este mismo endpoint
+ *   (`Sidebar.vue`: `POST /availability/{id}/times`, y acota el selector con `max_quantity`), así que
+ *   la pregunta «¿coinciden las dos implementaciones?» desaparece con la segunda implementación;
+ * · sus números de control siguen fijados aquí, y por eso su borrado no deja hueco:
+ *   `test_the_cart_of_the_client_discounts_what_it_already_holds` fija la misma cesta de 4 → 6 y
+ *   `test_a_time_the_cart_fills_is_still_listed_as_not_sellable` fija el tope, 10 → 0;
+ * · que la web pida el máximo al CONTRATO y no lo recalcule lo sigue vigilando
+ *   `ModuleContractsTest::test_the_web_offer_of_days_and_times_comes_from_the_contract`.
  */
 class AvailabilityTest extends ApiTestCase
 {
@@ -218,79 +225,6 @@ class AvailabilityTest extends ApiTestCase
 
         $response->assertStatus(422)->assertValidResponse(422);
         $this->assertArrayHasKey('items.0.date', $response->json('error.fields'));
-    }
-
-    // ── Paridad con la web (spec §6.3) ────────────────────────────────────────────────────────
-
-    /**
-     * Las horas que ofrece la API y las que pinta el sidebar tienen que ser las mismas para la misma
-     * cesta, y el máximo que la web deja elegir tiene que ser el `max_quantity` de esa hora. Es la
-     * prueba de que el paso 4b retiró la derivación de ocupantes de la capa de UI en vez de darle
-     * una copia a la API.
-     */
-    public function test_the_api_and_the_web_offer_the_same_times_for_the_same_cart(): void
-    {
-        $cart = [[
-            'ticket_type_id' => $this->entry->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 4,
-            'event_data' => [], 'addons' => [],
-        ]];
-
-        session()->put('purchase.cart', $cart);
-
-        $web = Livewire::test(Purchase::class)
-            ->call('selectType', $this->entry->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
-
-        $api = $this->postJson($this->timesPath($this->entry->id), [
-            'date' => $this->date,
-            'items' => [[
-                'product_id' => $this->entry->id, 'date' => $this->date, 'time' => '10:00:00', 'quantity' => 4,
-            ]],
-        ])->assertOk();
-
-        $this->assertSame(
-            $web->viewData('times'),
-            array_column($api->json('data'), 'time'),
-            'la web y la API no ofrecen las mismas horas para la misma cesta'
-        );
-        $this->assertSame(
-            $web->viewData('maxQty'),
-            $api->json('data.0.max_quantity'),
-            'el máximo que la web deja elegir no es el que la API publica'
-        );
-
-        // Control: los números no son triviales — la cesta ya ha descontado 4 de las 10 plazas.
-        $this->assertSame(6, $api->json('data.0.max_quantity'));
-    }
-
-    /**
-     * Mutación del anterior: cambiar la cesta tiene que mover a los dos lados a la vez. Sin este
-     * control, dos implementaciones que ignorasen la cesta pasarían la paridad.
-     */
-    public function test_changing_the_cart_moves_both_the_web_and_the_api(): void
-    {
-        session()->put('purchase.cart', [[
-            'ticket_type_id' => $this->entry->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 9,
-            'event_data' => [], 'addons' => [],
-        ]]);
-
-        $web = Livewire::test(Purchase::class)
-            ->call('selectType', $this->entry->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
-
-        $api = $this->postJson($this->timesPath($this->entry->id), [
-            'date' => $this->date,
-            'items' => [[
-                'product_id' => $this->entry->id, 'date' => $this->date, 'time' => '10:00:00', 'quantity' => 9,
-            ]],
-        ])->assertOk();
-
-        $this->assertSame(1, $api->json('data.0.max_quantity'));
-        $this->assertSame($web->viewData('maxQty'), $api->json('data.0.max_quantity'));
     }
 
     private function makeEntry(): TicketType
