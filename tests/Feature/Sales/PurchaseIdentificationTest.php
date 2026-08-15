@@ -25,6 +25,23 @@ use Tests\TestCase;
  * el cliente NUEVO se registra dentro del sidebar, lo que crea una reserva PROVISIONAL que
  * retiene su plaza; verifica su email para CONFIRMARLA y vuelve a su compra. Anti-enumeración:
  * un email ya existente no crea reserva y muestra el mismo aviso genérico.
+ *
+ * ⚠️ **Muere con el componente** (medido el 2026-08-15, `DECISIONES #95`): sus cinco casos conducen el
+ * modo `embedded` de `Auth\Register`, que se queda sin usuario cuando desaparece `purchase.blade.php`.
+ * Las reglas SOBREVIVEN, cada una con su guarda:
+ *
+ *  · el alta, la anti-enumeración y el reenvío de verificación → `Api\V1\AuthRegistrationTest`
+ *    (`test_an_existing_verified_email_is_reported_and_the_owner_is_warned` y su gemelo sin verificar),
+ *    más `SidebarRegisterParityTest`;
+ *  · **pagar sin el correo verificado** → `Api\V1\OrdersTest::test_an_unverified_holder_may_pay_
+ *    first_and_verify_later`, que **nació de esta misma auditoría** (`#93`) porque no lo guardaba nadie;
+ *  · **la pausa bloquea el checkout** → `OrdersTest::test_a_paused_installation_refuses_to_create_and_
+ *    leaves_no_order`.
+ *
+ * ⚠️ **Y una medición que NO concluyó, anotada para no repetirla**: cambiar `alreadyRegistered()` por
+ * `pendingVerification()` en `SelfSignup` deja la suite entera verde — pero es un mutante
+ * **equivalente por diseño**, porque la anti-enumeración consiste justo en que las dos respuestas sean
+ * indistinguibles. Para probar esa propiedad hay que comparar las DOS respuestas entre sí, no mutar una.
  */
 class PurchaseIdentificationTest extends TestCase
 {

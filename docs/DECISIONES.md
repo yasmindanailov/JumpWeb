@@ -3662,3 +3662,28 @@ era «¿qué hueco esconde?». Aquí la respuesta es **ninguno**, y eso también
 del dinero se endureció por su cuenta (Fase 3 lo publicó por API y le puso tests propios), así que los
 ficheros que solo lo *conducían* desde la UI son los que menos riesgo tienen al retirarse. **Medir para
 no encontrar nada sigue siendo medir.**
+
+## #95 · 2026-08-15 · 4.7·2b·2·C — los dos de identificación, y un mutante equivalente POR DISEÑO
+Séptimo y octavo del tramo: `PurchaseRegistrationPromptTest` (5 usos) y `PurchaseIdentificationTest`
+(3). **Los dos mueren con el componente**; el contador sigue en 20.
+
+**(a) `PurchaseRegistrationPromptTest` ya es redundante HOY.** Sus cuatro reglas las cubre
+`Api\V1\PublicConfigTest`, que es quien publica el bloque —y mejor: su caso de URL hostil prueba
+**cuatro** esquemas peligrosos y aquí solo se prueba uno—. Medido quitando los `?:` de
+`RegistrationLink::current()`: caen dos casos y el superviviente es el de `PublicConfigTest`. El quinto
+caso, en qué pasos se enseña el bloque, es superficie pura.
+
+**(b) `PurchaseIdentificationTest` conduce el modo `embedded`**, que se queda sin usuario al
+desaparecer `purchase.blade.php` (`#61`). Sus reglas sobreviven repartidas: el alta y la
+anti-enumeración en `AuthRegistrationTest`, la pausa en `OrdersTest`, y **pagar sin verificar en el
+caso que nació de esta auditoría** (`#93`) — o sea que uno de sus cinco casos protegía algo que, hasta
+hace dos commits, **solo protegía él**.
+
+**(c) ⚠️ Y una medición que NO concluyó, escrita para que nadie la repita.** Para probar la
+anti-enumeración se mutó `SelfSignup` cambiando `alreadyRegistered()` por `pendingVerification()`: la
+suite entera se quedó **verde**. La lectura fácil sería «nadie guarda la anti-enumeración». Es falso:
+esas dos respuestas son **indistinguibles a propósito** —eso ES la anti-enumeración—, así que la
+mutación es **equivalente por diseño** y no puede probar nada.
+**Regla nueva: una propiedad de INDISTINGUIBILIDAD no se prueba mutando una de las dos ramas; se
+prueba comparando las dos respuestas entre sí.** Es la cuarta cara de la disciplina de mutación de
+estos dos días, junto a `#77(e)`, `#90(f)` y `#92(a)`.

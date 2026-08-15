@@ -12,6 +12,14 @@ use Tests\TestCase;
  * Registro «del parque» en la pantalla final de la compra (#223, paso 6): si hay URL de registro
  * externo configurada (apartado Registro del panel), se muestra un botón (etiqueta del config) +
  * un texto informativo (campo nuevo `registration.description.{loc}`, con fallback i18n).
+ *
+ * ⚠️ **Muere con el componente, y es REDUNDANTE ya hoy** (medido el 2026-08-15, `DECISIONES #95`).
+ * Sus cuatro reglas las cubre `Api\V1\PublicConfigTest`, que es quien publica el bloque:
+ * `test_the_registration_block_travels_translated`, `test_an_untranslated_block_falls_back_to_the_
+ * default_wording`, `test_a_dangerous_registration_url_never_reaches_the_client` —con CUATRO URLs
+ * hostiles, que aquí no se prueban— y el `registration: null` de una instalación desnuda.
+ * Medido quitando los `?:` de `RegistrationLink::current()`: caen dos casos, y el superviviente es el
+ * de `PublicConfigTest`. El quinto caso —en qué pasos se enseña— es superficie pura.
  */
 class PurchaseRegistrationPromptTest extends TestCase
 {

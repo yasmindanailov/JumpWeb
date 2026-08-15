@@ -1428,6 +1428,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **Resultado NEGATIVO, y se anota**: aquí **no había hueco**. El terreno del dinero se
           endureció solo en Fase 3, así que los ficheros que solo lo CONDUCÍAN desde la UI son los de
           menos riesgo al retirarse. **Medir para no encontrar nada sigue siendo medir.**
+      · ✅ **`PurchaseRegistrationPromptTest` y `PurchaseIdentificationTest` clasificados: mueren**
+        (`DECISIONES #95`). El primero **ya es redundante hoy** —`PublicConfigTest` cubre sus cuatro
+        reglas, y su caso de URL hostil prueba CUATRO esquemas frente a uno—. El segundo conduce el
+        modo `embedded` de `Auth\Register`, que se queda sin usuario con el Blade; sus reglas viven en
+        `AuthRegistrationTest`, `OrdersTest` y **el caso que nació en `#93`**.
+        · ⚠️ **Mutante equivalente POR DISEÑO, anotado para no repetirlo**: mutar `SelfSignup` para
+          intercambiar las dos respuestas del alta deja la suite verde, pero eso **es** la
+          anti-enumeración. **Una propiedad de INDISTINGUIBILIDAD no se prueba mutando una rama: se
+          prueba comparando las dos respuestas entre sí.** Cuarta cara de la disciplina, con `#77(e)`,
+          `#90(f)` y `#92(a)`.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

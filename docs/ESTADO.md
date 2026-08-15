@@ -135,11 +135,14 @@ Hechos: `AddonDependencyTest` (`#86`, dos casos retirados), `CatalogVisibilityAn
 (`#87`, muere DENTRO), `PurchaseConfirmationStatusTest` (`#88`, muere entero) y
 `AddonInclusionPurchaseTest` (`#89`, muere entero — y destapó tres huecos reales) y
 `DepositSurfacesTest` (`#91`, de 6 usos a 4: canario retirado, UI muere dentro) y `PurchaseLimitsTest`
-(`#92`+`#93`, muere entero) y `PurchaseRetryAndPollingTest` (`#94`, muere entero — sin huecos).
+(`#92`+`#93`, muere entero) `PurchaseRetryAndPollingTest` (`#94`, sin huecos) y los dos de identificación (`#95`).
 ⚠️⚠️ **La trampa que más caro sale, ya van tres veces**: una mutación mal apuntada puede producir un
 resultado **coherente con la hipótesis equivocada**. En `#92` hizo creer que el límite anti-abuso de
 crear reservas no lo guardaba nadie —falso: lo guardan nueve casos—, porque el ancla aparecía DOS
 veces en el fichero y se cambió la otra. **Antes de creerte un hueco: exige que el ancla sea única.**
+⚠️ **Una propiedad de INDISTINGUIBILIDAD no se prueba mutando una de sus ramas** (`#95`): la
+anti-enumeración del alta hace que las dos respuestas sean iguales a propósito, así que mutar una es un
+mutante equivalente **por diseño** y su verde no dice nada. Se prueba comparando las dos entre sí.
 ⚠️ **Y un `⚠️ sin medir` en un fichero condenado es deuda con fecha de caducidad** (`#93`): si nadie lo
 cierra antes de ·2b·3, la regla se va con el fichero. Las dos veces que se ha medido uno, **había
 hueco** — `#89` (tres reglas `can_*`) y `#93` (pagar sin verificar el correo). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
@@ -147,7 +150,7 @@ regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueb
 se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
 · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
 · `ReservationPauseTest` (5) ·
-`PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
+ `PurchaseIdentificationTest` (3) ·
 `PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.
 ⚠️ **Una mutación se apunta al MECANISMO que se quiere clasificar, no al dato que ambos leen** — la
 primera, contra `Order::displayStatus()`, salió inútil por ancha; la dirigida a `buildConfirmation()`
