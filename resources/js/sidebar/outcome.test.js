@@ -123,6 +123,19 @@ test('el pendiente en puerta se PINTA, no se resta del total', () => {
     assert.equal(built.park_cents, 25000);
 });
 
+test('el estado del pedido viaja tal cual, y es lo que separa «pagado» de «pendiente»', () => {
+    // ⚠️ Este caso nace en 4.7·2b·2·C (`DECISIONES #88`), de un HUECO medido: clavar `status` a
+    // `'pending'` dejaba este fichero entero en verde. Lo cazaban dos casos PHP —el diff de árbol y
+    // la paridad del desenlace—, pero no el test del propio módulo, que es quien debe fijar su mapeo.
+    // No es cosmético: es la diferencia entre decirle «pago confirmado» o «pendiente de pago» a quien
+    // acaba de pagar.
+    assert.equal(buildConfirmation(order({ status: 'paid' })).status, 'paid');
+    assert.equal(buildConfirmation(order({ status: 'pending' })).status, 'pending');
+    assert.equal(buildConfirmation(order({ status: 'expired' })).status, 'expired');
+    // Sin pedido no se inventa un estado: cadena vacía, que es lo que el resumen trata como «no sé».
+    assert.equal(buildConfirmation(undefined).status, '');
+});
+
 test('has_guest_form sale del pedido, no del any() de las líneas', () => {
     // El servidor descarta antes las líneas CANCELADAS; agregarlas aquí prometería un formulario que
     // nadie va a pedir. Por eso los dos campos se llaman distinto en el contrato.

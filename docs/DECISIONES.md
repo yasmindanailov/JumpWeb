@@ -3462,3 +3462,22 @@ siempre: la mutación es **demasiado ancha** —tumba media docena de casos del 
 que no tienen nada que ver con la pantalla final de la compra— y su lista de cazadores no dice nada
 sobre este tramo. Ese fichero queda **sin clasificar** a propósito: hace falta una mutación dirigida al
 lado SPA (`buildConfirmation()`), no al modelo. Una medición ruidosa no es una medición.
+
+## #88 · 2026-08-15 · 4.7·2b·2·C — la mutación dirigida cierra el cabo, y destapa un hueco
+Cierra lo que `#87(c)` dejó abierto a propósito: `PurchaseConfirmationStatusTest` (3 usos, 3 casos).
+**El contador no se mueve** —el fichero ENTERO muere con el componente— pero el paso deja dos cosas.
+
+**(a) La mutación dirigida sí concluye.** En vez de mutar `Order::displayStatus()` —que tumba media
+docena de casos del panel y no dice nada—, se clava `buildConfirmation()` a `'pending'`: que el
+resumen del cajón deje de distinguir pagado de pendiente. Caen **dos** casos y **los dos sobreviven**:
+el paso 6 del diff de árbol —que a partir de ·2b·3 afirma el manifiesto congelado— y
+`SidebarOutcomeParityTest::test_an_expired_hold_is_reported_as_expired_by_the_api`. Y
+`PurchaseConfirmationStatusTest` **no cae**, que es exactamente la prueba de que ejerce otro camino:
+el del Blade. Sujeto = superficie → muere, y ·2b·3 lo borra ENTERO.
+**Lección: una mutación se apunta al mecanismo que se quiere clasificar, no al dato que ambos leen.**
+
+**(b) ⚠️ Y de paso destapó un hueco en el lado JS.** Con `status` clavado, `outcome.test.js` seguía en
+**verde**: el test del propio módulo no fijaba su mapeo del estado, aunque el módulo entero existe
+para componer esa pantalla. Lo cubrían dos casos PHP, pero **no quien debe**. Nace el caso —los tres
+estados más el pedido ausente—, verificado por mutación: 27 verdes limpios, 26+1 rojo con `status`
+clavado. **Auditar para retirar también encuentra huecos en lo que se queda.**

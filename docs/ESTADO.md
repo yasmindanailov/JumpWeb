@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2708 en verde** (15.653 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
+- Suite **2708 en verde** (15.653 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -132,9 +132,11 @@ se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
 · `PurchaseLimitsTest` (13) · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
 · `AddonInclusionPurchaseTest` (7) · `DepositSurfacesTest` (6) · `ReservationPauseTest` (5) ·
 `PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
-`PurchaseConfirmationStatusTest` (3) — este último **intentado y sin clasificar a propósito**: la
-mutación de `Order::displayStatus()` sale demasiado ancha y no dice nada; hace falta una dirigida a
-`buildConfirmation()` (`#87(c)`).
+`PurchaseConfirmationStatusTest` (3) — este último ya **clasificado** (`#88`): muere ENTERO.
+⚠️ **Una mutación se apunta al MECANISMO que se quiere clasificar, no al dato que ambos leen** — la
+primera, contra `Order::displayStatus()`, salió inútil por ancha; la dirigida a `buildConfirmation()`
+cerró la pregunta. Y de paso destapó que `outcome.test.js` no fijaba su propio `status`:
+**auditar para retirar también encuentra huecos en lo que se queda**.
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 ✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está

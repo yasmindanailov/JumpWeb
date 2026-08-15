@@ -19,6 +19,17 @@ use Tests\TestCase;
  * pedido. Antes se mostraba «Tu reserva está pendiente de pago» SIEMPRE, también cuando el pago
  * ya estaba confirmado (vuelta OK de Redsys / notificación) → incoherente. Ahora: pagado → «Pago
  * confirmado»; pendiente (flujo de verificar email) → «pendiente de pago».
+ *
+ * ⚠️ **Este fichero ENTERO muere con el componente** (medido el 2026-08-15, `DECISIONES #88`). Sus
+ * tres casos prueban lo que PINTA el paso 6 del motor Livewire: su sujeto es la superficie, no la
+ * regla, así que no hay nada a lo que re-apuntarlos. ·2b·3 lo borra entero, que es lo preferible.
+ *
+ * **Su cobertura equivalente está localizada y medida.** Clavando `buildConfirmation()` a `'pending'`
+ * —o sea, que el resumen deje de distinguir pagado de pendiente— caen dos casos y **los dos
+ * sobreviven**: `SidebarDomContractTest::test_the_confirmed_step_emits_the_same_tree_in_both_engines`
+ * (que a partir de ·2b·3 afirma el manifiesto congelado) y
+ * `SidebarOutcomeParityTest::test_an_expired_hold_is_reported_as_expired_by_the_api`. Este fichero
+ * **no cae** con esa mutación: es la prueba de que ejerce otro camino, el del Blade.
  */
 class PurchaseConfirmationStatusTest extends TestCase
 {

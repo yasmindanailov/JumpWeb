@@ -1367,6 +1367,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           `Order::displayStatus()` para clasificar `PurchaseConfirmationStatusTest` tumba media docena
           de casos del panel que no vienen al caso. Ese fichero queda **sin clasificar** a propósito:
           hace falta una mutación dirigida al lado SPA (`buildConfirmation()`).
+      · ✅ **`PurchaseConfirmationStatusTest` clasificado** (`DECISIONES #88`): el fichero **ENTERO
+        muere** con el componente —sus tres casos prueban lo que PINTA el paso 6—, así que ·2b·3 lo
+        borra entero. Contador sin cambio.
+        · **La mutación dirigida sí concluye**: clavar `buildConfirmation()` a `'pending'` tumba dos
+          casos y **los dos sobreviven** (el paso 6 del diff de árbol y la paridad del desenlace); este
+          fichero **no cae**, que es la prueba de que ejerce el camino del Blade. **Una mutación se
+          apunta al MECANISMO que se quiere clasificar, no al dato que ambos leen.**
+        · ⚠️ **Y destapó un hueco en lo que se QUEDA**: con `status` clavado, `outcome.test.js` seguía
+          verde — el módulo no fijaba su propio mapeo del estado. Nace el caso (los tres estados más
+          el pedido ausente), verificado por mutación. **287 tests JS** (antes 286).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
