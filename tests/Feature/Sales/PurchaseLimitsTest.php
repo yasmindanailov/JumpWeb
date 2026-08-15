@@ -35,10 +35,16 @@ use Tests\TestCase;
  *    `ReservationAdmissionPolicyTest` ×2 y `SidebarAdmissionParityTest` ×2—;
  *  · **límite de frecuencia al CREAR**: caen NUEVE —los anteriores más `CheckoutOrchestratorTest` ×2—.
  *
- * ▶ **Sin medir todavía, y hay que hacerlo ANTES de borrarlo** (·2b·3): `test_unverified_user_can_
- * confirm_pay_first` y `test_confirm_does_not_send_email_until_redsys_authorises`. La segunda fija una
- * regla de producto —el correo no sale hasta que la pasarela autoriza— que no se ha comprobado que
- * cubra nadie más. Los dos casos de `$step` son superficie pura y se van sin más.
+ ▶ **Los dos que quedaban abiertos, ya medidos** (`DECISIONES #93`):
+ *  · **el correo hasta que la pasarela autoriza**: su punto de aplicación lo guardan **siete**
+ *    supervivientes —`RedsysNotificationEndpointTest` ×3 y `RedsysReturnHandlerTest` ×4—, medido
+ *    haciendo que el manejador notifique autorice o no. Se va sin pérdida;
+ *  · **pagar sin verificar el correo**: NO lo guardaba nadie. Añadir un
+ *    `abort_if(! $user->hasVerifiedEmail(), 403)` al endpoint dejaba los 2713 casos en verde. La regla
+ *    vivía escrita solo aquí, y aquí se muere — así que se fijó donde se aplica:
+ *    `Api\V1\OrdersTest::test_an_unverified_holder_may_pay_first_and_verify_later`.
+ *
+ * Los dos casos de `$step` son superficie pura y se van sin más.
  */
 class PurchaseLimitsTest extends TestCase
 {

@@ -89,6 +89,34 @@ class OrdersTest extends ApiTestCase
 
     // ── Crear la reserva ──────────────────────────────────────────────────────────────────────
 
+    /**
+     * ⚠️ **Se PAGA primero y se verifica después, y esto no lo guardaba nadie** (`DECISIONES #93`).
+     *
+     * Es una decisión de producto explícita: `hasVerifiedEmail()` rebotaba al carrito y se retiró
+     * porque el pago **auto-verifica** la cuenta al volver (`RedsysReturnHandler`). Exigir el correo
+     * verificado para pagar dejaría fuera justo a quien acaba de darse de alta en el cajón —el camino
+     * normal de un cliente nuevo—, y el cobro es lo que confirma que ese correo es suyo.
+     *
+     * **Medido**: añadir un `abort_if(! $user->hasVerifiedEmail(), 403)` a este endpoint dejaba los
+     * 2713 casos **en verde**. La regla vivía escrita solo en un test del motor que se retira
+     * (`Sales\PurchaseLimitsTest`), que la ejercía conduciendo la UI. Aquí queda donde se aplica.
+     *
+     * La sesión SÍ sigue siendo obligatoria: eso lo fija el caso de más abajo.
+     */
+    public function test_an_unverified_holder_may_pay_first_and_verify_later(): void
+    {
+        $unverified = User::factory()->unverified()->create();
+
+        $this->actingAs($unverified)->postJson(self::PATH, $this->cart())
+            ->assertCreated()
+            ->assertValidResponse(201);
+
+        $this->assertSame(
+            1, Order::where('user_id', $unverified->id)->count(),
+            'el pedido tiene que existir: el cobro es lo que verificará la cuenta'
+        );
+    }
+
     public function test_it_creates_the_order_and_returns_the_signed_gateway_form(): void
     {
         $response = $this->actingAs($this->user)->postJson(self::PATH, $this->cart());

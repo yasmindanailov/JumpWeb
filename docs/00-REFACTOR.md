@@ -1408,8 +1408,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           caían justo los casos de reintento, que eran los que había roto. **Tercera cara de la regla:
           cuando el ancla se repite, exige que sea ÚNICA antes de creerte el resultado.**
         · ⚠️ **Dos casos quedan SIN medir a propósito** y anotados en el fichero, para que ·2b·3 no los
-          borre a ciegas: el del usuario sin verificar y —sobre todo— el de que **el correo no sale
-          hasta que la pasarela autoriza**, del que no se ha comprobado que quede guarda.
+          borre a ciegas: el del usuario sin verificar y el del correo hasta que la pasarela autoriza.
+      · ✅ **Los dos cabos de `#92`, cerrados** (`DECISIONES #93`), y uno era otro hueco real:
+        · **el correo hasta que autoriza**: lo guardan SIETE supervivientes
+          (`RedsysNotificationEndpointTest` ×3, `RedsysReturnHandlerTest` ×4). Se va sin pérdida.
+        · ⚠️ **pagar sin verificar el correo: NO lo guardaba nadie** — añadir un
+          `abort_if(! $user->hasVerifiedEmail(), 403)` al endpoint dejaba los 2713 casos en verde. Es
+          una decisión de producto (el pago auto-verifica la cuenta) que vivía escrita solo en el
+          fichero condenado. Fijada en `OrdersTest`, verificada por mutación.
+        · **La lección, segunda vez** (`#89` fueron tres reglas): **un caso «sin medir» en un fichero
+          condenado es deuda con fecha de caducidad**. Hay que cerrarlos ANTES del borrado.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

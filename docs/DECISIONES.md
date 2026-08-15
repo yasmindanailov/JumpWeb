@@ -3611,3 +3611,27 @@ equivocada**. Antes de creerse un hueco: `grep -c` del ancla, y exigir que sea �
 ciegas: `test_unverified_user_can_confirm_pay_first` y, sobre todo,
 `test_confirm_does_not_send_email_until_redsys_authorises` — una regla de producto (el correo no sale
 hasta que la pasarela autoriza) de la que **no se ha comprobado que quede guarda**.
+
+## #93 · 2026-08-15 · 4.7·2b·2·C — cerrar los cabos de `#92`, y uno era otro hueco real
+`#92` dejó dos casos de `PurchaseLimitsTest` **sin medir a propósito**, anotados para no borrarlos a
+ciegas. Medidos ahora, uno se va sin pérdida y el otro era un agujero.
+
+**(a) «El correo no sale hasta que la pasarela autoriza» — cubierto, se va sin pérdida.** Haciendo que
+`RedsysReturnHandler` notifique **autorice o no**, caen **siete** casos y los siete SOBREVIVEN:
+`RedsysNotificationEndpointTest` ×3 y `RedsysReturnHandlerTest` ×4. El punto de aplicación está bien
+guardado; lo que se va es la travesía por la UI.
+
+**(b) ⚠️ «Se paga primero y se verifica después» — NO lo guardaba nadie.** Añadir un
+`abort_if(! $user->hasVerifiedEmail(), 403)` a `POST /api/v1/orders` deja los **2713 casos en verde**.
+Y no es una regla menor: `hasVerifiedEmail()` rebotaba al carrito y se retiró **a propósito** porque el
+pago auto-verifica la cuenta al volver. Exigirlo dejaría fuera justo a quien acaba de darse de alta en
+el cajón —el camino normal de un cliente nuevo— y el cobro es precisamente lo que confirma que ese
+correo es suyo. La regla vivía escrita **solo** en un test del motor que se retira.
+
+**(c) Se fijó donde se aplica**: `OrdersTest::test_an_unverified_holder_may_pay_first_and_verify_later`,
+verificado por mutación en las dos direcciones.
+
+**(d) La lección, que ya va por su segunda vez** (`#89` fueron tres reglas `can_*`): **un caso «sin
+medir» en un fichero condenado es deuda con fecha de caducidad**. Si nadie lo mide antes de ·2b·3, la
+regla se va con el fichero y nadie se entera — y las dos veces que se ha medido, había hueco. Los
+`⚠️ sin medir` de los ficheros ya clasificados hay que cerrarlos **antes** del borrado, no durante.
