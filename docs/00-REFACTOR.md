@@ -1145,8 +1145,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             TRANSPORTE y no se pueden ejercer sin red; lo que se ejerce es quien LEE el sobre.
           · Mutaciones: vaciar los campos firmados (paso 9) y vaciar `summaryOf()` (paso 5) dejan su
             caso en rojo.
-        · ▶ **SIGUIENTE**: los pasos 6, 10 y 11 (los tres desenlaces) y el bucle del aviso de pausa,
-          que es el último montaje que toma el armazón del servidor.
+        · ✅ **(B) COMPLETA — pasos 6, 10, 11 y el último montaje del armazón** (`DECISIONES #73`).
+          **Ya no queda un solo sitio donde el diff le pase a Vue algo compuesto por Livewire.**
+          · Paso 6: `buildConfirmation()` desde el pedido + las respuestas del pack, que llegan por
+            endpoints distintos (`#39`). Mutar `answersByReservation()` deja dos casos rojos.
+          · Paso 10: `declinedReasonText()` sobre `declined_reason`. Paso 11 no traduce nada.
+          · ⚠️ **Otra mutación que el diff no caza y está bien**: quitar la caída a `default` del motivo
+            sale verde porque ningún fixture trae una clave DESCONOCIDA; la cubre `outcome.test.js` y se
+            verificó que allí sí cae. Segunda vez que la respuesta es «mira si lo ve quien debe».
+          · ⚠️ **La guarda del bundle rancio se cobró su primera pieza en vivo**: restaurar un módulo con
+            `cp` le puso fecha nueva y el gate cayó ENTERO nombrándolo. Sin ella: verde contra código
+            viejo.
+          · **Balance de (B)**: 7 tramos · `catalog.js`, `calendar.js` (con test propio) y `offer.js` ·
+            **286 tests JS** frente a 247 · 4 traducciones a mano retiradas · **manifiesto sin cambiar
+            ni una vez en los siete**.
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:

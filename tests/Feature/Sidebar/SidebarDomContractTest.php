@@ -691,7 +691,12 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotNull($component->viewData('registration'), 'y el enlace de registro configurado');
 
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
-        $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
+            api: $this->confirmedApiPayload($component),
+            state: $this->clientState(step: 6) + [
+                'orderCode' => (string) $component->get('orderCode'),
+                'registration' => $component->viewData('registration'),
+            ]);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -718,7 +723,12 @@ class SidebarDomContractTest extends TestCase
         $this->assertNull($component->viewData('registration'), 'y ninguna URL de registro configurada');
 
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
-        $vue = $this->vueTree(6, $this->confirmedProps($component), 'purchase__confirm', withSiblings: true);
+        $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
+            api: $this->confirmedApiPayload($component),
+            state: $this->clientState(step: 6) + [
+                'orderCode' => (string) $component->get('orderCode'),
+                'registration' => $component->viewData('registration'),
+            ]);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -796,6 +806,44 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
+    /**
+     * El desenlace del paso 6 desde los DOS endpoints reales (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ El resumen y las respuestas del pack llegan **por separado** y no por capricho: el pedido no
+     * lleva los datos de un menor (`#39`), así que el cliente los pide aparte y los empareja. Ese
+     * emparejado ya mordió una vez —`#56`: el caso pasaba con el cliente emparejando por POSICIÓN,
+     * porque llave y posición coinciden por casualidad cuando el orden natural es el mismo—, y hasta
+     * ahora el gate no lo ejecutaba: el test traducía el view-model de Livewire a mano.
+     *
+     * @return array<string, mixed>
+     */
+    private function confirmedApiPayload(Testable $component): array
+    {
+        $code = (string) $component->get('orderCode');
+
+        return [
+            'order' => $this->getJson('/api/v1/orders/'.$code)->assertOk()->json(),
+            'eventData' => $this->getJson('/api/v1/orders/'.$code.'/event-data')->assertOk()->json(),
+        ];
+    }
+
+    /**
+     * El desenlace del paso 10: el estado del cobro tal y como lo publica el contrato.
+     *
+     * ⚠️ Se pide `payment-status` y NO se traduce el motivo: `declined_reason` **es** la clave de
+     * `tickets.payment_failed.reasons.*`, y quien la resuelve —con su caída a `default`, que es lo que
+     * impide pintar «Motivo:» sin nada detrás— es `outcome.js`.
+     *
+     * @return array<string, mixed>
+     */
+    private function declinedApiPayload(Testable $component): array
+    {
+        $code = (string) $component->get('orderCode');
+
+        return ['paymentStatus' => $this->getJson('/api/v1/orders/'.$code.'/payment-status')->assertOk()->json()];
+    }
+
+    /** @deprecated sin usuarios desde 4.7·2b·2·B; se va con el resto al cerrar la migración */
     private function confirmedProps(Testable $component): array
     {
         $confirmation = $component->viewData('confirmation');
@@ -856,7 +904,12 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotNull($component->get('declinedReasonText'), 'y traer el motivo del rechazo');
 
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
-        $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
+        $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
+            api: $this->declinedApiPayload($component),
+            state: $this->clientState(step: 10) + [
+                'orderCode' => (string) $component->get('orderCode'),
+                'contactUrl' => route('contacto'),
+            ]);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -884,7 +937,12 @@ class SidebarDomContractTest extends TestCase
         );
 
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
-        $vue = $this->vueTree(10, $this->declinedProps($component), 'purchase__failed', withSiblings: true);
+        $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
+            api: $this->declinedApiPayload($component),
+            state: $this->clientState(step: 10) + [
+                'orderCode' => (string) $component->get('orderCode'),
+                'contactUrl' => route('contacto'),
+            ]);
 
         $this->assertTree(__FUNCTION__, $livewire, $vue, $this->firstDivergence($livewire, $vue));
     }
@@ -1068,7 +1126,12 @@ class SidebarDomContractTest extends TestCase
             );
             $this->assertStringContainsString('purchase__maint', $component->html());
 
-            $vue = $this->renderVue($step, [], $this->shellProps($component));
+            // ⚠️ Con el aviso puesto, el armazón TAPA el paso entero, así que no hace falta cargar la
+            // API de cada uno: lo que se compara es que el aviso sustituya el flujo. El armazón lo
+            // compone igualmente el cliente (`shellFromServer: false`) — es el último montaje que lo
+            // tomaba del servidor, y dejarlo así habría escondido el único que faltaba.
+            $vue = $this->renderVue($step, [], null, [],
+                $this->clientState(step: $step, notice: $this->noticeProps($component)), shellFromServer: false);
 
             $this->assertStringContainsString(
                 'purchase__maint', $vue,

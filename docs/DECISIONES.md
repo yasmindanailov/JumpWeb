@@ -2949,3 +2949,41 @@ las dos del paso 5 sin errores (no traducen nada: mode, formulario vacío y los 
 diccionario que inyecta el montaje) y el bucle del aviso de pausa, que aún monta el armazón del
 servidor porque recorre pasos sin migrar. **El manifiesto no ha cambiado en ninguno de los seis
 tramos**, que es la prueba acumulada de que la migración es fiel.
+
+## #73 · 2026-08-15 · 4.7·2b·2·B COMPLETA — los tres desenlaces, y el gate deja de mirarse al espejo
+Séptimo y último tramo de (B) (`#67`–`#72`). Con él, **los once pasos y el armazón se alimentan del
+servidor**: no queda un solo sitio donde el diff de árbol le pase a Vue algo que haya compuesto el
+motor que se retira.
+
+**(a) Paso 6 — el resumen de la reserva creada.** Lo compone `buildConfirmation()` desde
+`GET /orders/{code}` y `GET /orders/{code}/event-data`, que llegan **por separado** porque las
+respuestas de un menor no viajan en el pedido (`#39`). El test lo traducía a mano, y ese emparejado ya
+mordió una vez: el caso de `#56` pasaba **con el cliente emparejando por POSICIÓN**, porque llave y
+posición coinciden por casualidad cuando el orden natural es el mismo. Mutación: anular
+`answersByReservation()` deja **dos casos** en rojo.
+
+**(b) Paso 10 — el motivo del rechazo.** Se pide `payment-status` y lo resuelve `declinedReasonText()`
+sobre `declined_reason`, que **es** la clave del diccionario. Paso 11 no se migra porque no traduce
+nada: código de pedido y una URL.
+
+**(c) ⚠️ Otra mutación que el gate NO caza, y también está bien.** Quitar la caída a `default` del
+motivo deja los 34 casos verdes, porque ninguno de los dos fixtures produce una clave **desconocida**
+—uno trae `0101` y el otro `null`, y los dos resuelven—. Esa caída la cubre `outcome.test.js` con un
+caso hecho para ella («un motivo desconocido, nulo o vacío cae en el genérico y NUNCA pinta vacío»), y
+**se verificó que la misma mutación lo pone rojo**. Segunda vez en esta migración que la respuesta
+correcta a «el diff no lo ve» es *mira si lo ve quien debe*, no *infla los fixtures del diff*.
+
+**(d) El último montaje del armazón.** El bucle del aviso de pausa era el único que seguía tomándolo
+del servidor. Con el aviso puesto el armazón tapa el paso entero, así que no hace falta cargar la API
+de cada uno — pero dejarlo así habría escondido el único que faltaba. **Hoy son cero.**
+
+**(e) ⚠️ Y la guarda del bundle rancio se cobró su primera pieza, en vivo.** Restaurar `outcome.js` con
+`cp` tras una mutación le puso fecha nueva y el gate cayó **entero** nombrando el fichero. Sin ella
+habría comparado contra código viejo y habría salido verde. Es exactamente el modo de fallo que `#69`
+describía, ocurriendo dos horas después de escribir la guarda.
+
+**(f) El balance de (B), medido.** Siete tramos · cuatro módulos nuevos (`catalog.js`, `calendar.js`
+con test propio, `offer.js`) · **286 tests JS** frente a 247 al empezar · cuatro traducciones a mano
+retiradas del test · y **el manifiesto sin cambiar ni una vez en los siete**. Eso último es la prueba
+acumulada: cada vez que se sustituyó «lo que compone el servidor» por «lo que compone el cliente», el
+árbol salió idéntico.

@@ -57,6 +57,7 @@ import { buildProgress } from '../resources/js/sidebar/progress.js';
 import { buildFooter } from '../resources/js/sidebar/foot.js';
 import { gatewayForm } from '../resources/js/sidebar/pay.js';
 import { registerErrors } from '../resources/js/sidebar/register.js';
+import { buildConfirmation, declinedReasonText } from '../resources/js/sidebar/outcome.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -192,6 +193,38 @@ const PROPS_FROM_API = {
      */
     [STEPS.REDIRECTING]: (api, messages) => ({
         form: gatewayForm(api.payment ?? null),
+        messages,
+    }),
+
+    /**
+     * ⚠️ El resumen de la reserva creada lo compone `buildConfirmation()` a partir del PEDIDO y de las
+     * respuestas del pack, que llegan por endpoints distintos (`#39`: las de un menor no viajan en el
+     * pedido). El test lo traducía a mano —`name`/`qty`/`subtotal` frente a
+     * `product_name`/`quantity`/`charged_subtotal_cents`— y ese emparejado ya mordió una vez: el caso
+     * de `#56` pasaba con el cliente emparejando por POSICIÓN, porque la llave y la posición coinciden
+     * por casualidad cuando el orden natural es el mismo.
+     */
+    [STEPS.CONFIRMED]: (api, messages, state) => ({
+        confirmation: api.order ? buildConfirmation(api.order, api.eventData ?? {}) : null,
+        orderCode: state.orderCode ?? '',
+        // El enlace de registro lo inyecta el SERVIDOR en el montaje (`RegistrationLink`): no es una
+        // derivación del cliente, así que viaja como estado y no se recompone aquí.
+        registration: state.registration ?? null,
+        messages,
+        locale: state.locale ?? 'es',
+    }),
+
+    /**
+     * ⚠️ El motivo del rechazo **no lleva tabla de traducción a propósito**: `declined_reason` ES la
+     * clave de `tickets.payment_failed.reasons.*`. Lo que sí es obligatorio es la caída a `default`,
+     * porque `i18n.js` pinta VACÍO una clave que no existe — y eso dejaría el rótulo «Motivo:» sin
+     * nada detrás. Componerlo aquí es lo que mete esa caída dentro del gate.
+     */
+    [STEPS.DECLINED]: (api, messages, state) => ({
+        orderCode: state.orderCode ?? '',
+        reason: declinedReasonText(messages, api.paymentStatus?.declined_reason ?? null),
+        retrying: false,
+        contactUrl: state.contactUrl ?? '',
         messages,
     }),
 
