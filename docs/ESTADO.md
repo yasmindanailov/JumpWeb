@@ -110,6 +110,15 @@ usarlo— porque hace leer mal la clasificación al borrar.
 `SidebarDomContractTest` (26).
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
+⚠️ **`SidebarDomContractTest` no es una paridad más y no se audita con la misma pregunta.** Es el diff
+de árbol EN SÍ: su sujeto *es* «los dos motores emiten el mismo árbol», así que con un solo motor la
+pregunta desaparece entera y no hay nada que re-apuntar. Lo que hay que decidir —y es una decisión, no
+una clasificación— es **qué ocupa su sitio**: hoy sus 34 casos son la única red del marcado del cajón,
+y (B) ya los alimenta del servidor, así que el candidato natural es que dejen de comparar y pasen a
+**afirmar el manifiesto congelado** (Vue servida por la API contra el árbol de `#60`), conservando la
+guarda de bundle rancio (`#69`). Hacerlo antes de tocar `SidebarOutcomeParityTest` conviene, porque
+decide si esa sigue teniendo pregunta —igual que (B) decidió por las nueve—.
+
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
 - `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`
   **mueren con el componente**, cada uno con su cobertura equivalente localizada.
