@@ -1205,6 +1205,26 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **La regla para las ocho restantes**: separa lo que compara ENTRE MOTORES (muere), lo que
           afirma del CONTRATO (se queda) y lo que usa el motor viejo como INTERMEDIARIO de una fuente
           que sobrevive (se re-apunta a la fuente — y casi siempre mejora el test).
+      · ✅ **`SidebarAddonsParityTest` re-apuntada y FUERA del inventario** (2026-08-15,
+        `DECISIONES #77`). 27 → **26**. El motivo por el que nació lo cerró (B) en `#69`, pero lo que
+        queda no es comparación entre motores: el componente solo conducía `AddonResolver::viewModel()`,
+        que **sobrevive con dos consumidores** —este endpoint y el alta manual del panel—. El sujeto
+        pasa a ser **la capa de publicación** (`toDto()` + `ResolvedAddonsResource`, 21 traducciones de
+        clave), y el `asApi()` del test es su segunda escritura deliberada.
+        · ⚠️ **No se podía borrar, y está medido**: mutando campo a campo contra los 2715 casos,
+          `note`, `min_quantity` y `max_quantity` dan **1 fallo en toda la suite** y es este. El
+          contrato fija los NOMBRES publicados, nunca de qué campo sale cada valor.
+        · ⚠️⚠️ **El caso era VACUO en dos campos** (mecanismo de `#68`): sin obligatorio ni tope en el
+          fixture, `min` era 0 y `max` `null` en los cinco complementos, así que cruzar `min` ← `max`
+          salía **verde** (`(int) null` es `0`). Ahora hay uno de cada (`min` = 2, `max` = 3) y tres
+          aserciones de frontera sobre lo publicado impiden que se vuelva a perder en silencio.
+        · ⚠️ **Dos mutaciones mal apuntadas antes de acertar**: `product_name` y `quantity` viven dos
+          veces en el Resource —fila resuelta y `line.addons`— y la línea con menos sangría es
+          subcadena de la otra. **Al mutar hay que comprobar DÓNDE cayó la mutación.** De paso quedó
+          medido que `line.addons` sí está cubierto (3 rojos en `CatalogAddonsTest`).
+        · **Quedan SIETE**: `SidebarAdmissionParityTest` (2) · `SidebarCalendarParityTest` (3) ·
+          `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4)
+          · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

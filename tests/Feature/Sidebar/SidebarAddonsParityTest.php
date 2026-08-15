@@ -6,27 +6,49 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use App\Livewire\Tickets\Purchase;
+use App\Domain\Booking\Services\AddonResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.2 — **los complementos que ve el cajón SPA son los mismos que ve la web**.
+ * Fase 4 · paso 4.7·2b·2 — **lo que publica el endpoint de complementos es el modelo de vista del
+ * dominio, campo a campo** (`DECISIONES #77`).
  *
- * `SidebarDomContractTest` compara el ÁRBOL, pero alimenta al componente Vue con el view-model del
- * SERVIDOR traducido a la forma de la API. Eso deja un hueco que ya mordió una vez durante este
- * mismo paso: el componente usaba los nombres de Livewire (`id`, `qty`, `can_inc`) y el endpoint
- * publica otros (`product_id`, `quantity`, `can_increase`), así que **el diff seguía verde mientras
- * el cajón real habría pintado filas vacías**.
+ * ### Qué preguntaba antes y qué pregunta ahora
  *
- * Esto lo cierra por el otro lado: se compara lo que el ENDPOINT devuelve con lo que el componente
- * Livewire compone, campo a campo, para la misma selección. Si las dos fuentes se separan —un nombre
- * que cambia, un campo que se añade en una sola— salta aquí.
+ * Nació en 4.2 comparando el endpoint con lo que componía el componente Livewire, porque el diff de
+ * árbol alimentaba a Vue con el view-model del servidor **traducido por el propio test**: un
+ * componente que leyera `id`/`qty`/`can_inc` en vez de `product_id`/`quantity`/`can_increase` pasaba
+ * en verde con el cajón pintando filas vacías. Ese hueco lo cerró (B): desde `DECISIONES #69` el
+ * paso 3 del diff se alimenta de las respuestas REALES, y esa mitad de la pregunta ya no es suya.
  *
- * ⚠️ **Las dos salen del mismo `AddonResolver`**, así que no es una comparación de dos aritméticas:
- * es una comparación de dos PROYECCIONES de la misma. Justamente por eso divergir es fácil y
- * silencioso.
+ * Lo que queda **no es una comparación entre motores**, y por eso sobrevive a la retirada de
+ * `Purchase`: el componente solo era un **intermediario** de `AddonResolver::viewModel()`, que es
+ * dominio y conserva dos consumidores —este endpoint, vía `AddonOfferReader`, y el alta manual del
+ * panel (`CreateManualOrderPage`)—. Así que se compara contra esa fuente directamente.
+ *
+ * ### Lo que protege, MEDIDO por mutación contra los 2715 casos (2026-08-15)
+ *
+ * `AddonOfferReader::toDto()` + `ResolvedAddonsResource` son **21 traducciones de clave a mano**, y
+ * cruzar dos o vaciar una es silencioso: el contrato (`required` + `additionalProperties: false`)
+ * fija los NOMBRES publicados, nunca que el valor de cada uno venga del campo que le toca. Mutando
+ * campo a campo y corriendo la suite entera:
+ *
+ * · `note`, `min_quantity`, `max_quantity` → **este es el ÚNICO caso de la suite que los caza**.
+ * · `features`, `can_toggle`, `can_increase` → aquí y en el diff de árbol (llegan al DOM).
+ * · `price_cents`, `charged_cents` → aquí y en `CatalogAddonsTest`.
+ * · `free_quantity` → solo en `CatalogAddonsTest`; el fixture de aquí no lo distinguía.
+ *
+ * ⚠️ **Y el fixture viejo pinchaba `min` y `max` en valores TRIVIALES** —0 y `null` en los cinco
+ * complementos—, así que cruzar `min` ← `max` salía **VERDE**: `(int) null` es `0`. Es el mecanismo
+ * de `#68` otra vez —el caso frontera se elige por el MECANISMO del fallo, no por el síntoma—. Por
+ * eso ahora hay un complemento OBLIGATORIO (`min` = 2) y otro con TOPE (`max` = 3): con eso, cruzar
+ * las dos claves en cualquier dirección deja el caso rojo.
+ *
+ * ⚠️ **Lo que este test NO es**: no verifica `viewModel()` —las dos mitades salen de él, así que una
+ * regla mal calculada saldría igual en las dos—. Eso es `AddonDependencyTest` y las reglas del
+ * endpoint son de `CatalogAddonsTest`. Aquí el sujeto es **la capa de publicación**, y solo ella.
  */
 class SidebarAddonsParityTest extends TestCase
 {
@@ -36,9 +58,17 @@ class SidebarAddonsParityTest extends TestCase
 
     private int $rateId;
 
+    /** @var array<string, int> */
+    private array $ids = [];
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        // El reloj, parado: los dos lados resuelven sobre `Carbon::today()` y el fixture siembra
+        // franjas relativas a hoy. Una foto que incluye el tiempo se toma con el reloj quieto
+        // (`DECISIONES #64`).
+        $this->freezeTime();
 
         $this->rateId = (int) RateType::create([
             'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0,
@@ -50,45 +80,67 @@ class SidebarAddonsParityTest extends TestCase
         ]);
     }
 
-    public function test_the_endpoint_and_the_web_view_model_describe_the_same_addons(): void
+    public function test_the_published_addons_are_the_domain_view_model_field_by_field(): void
     {
         $pack = $this->packWithAddons();
-        $date = now()->addDay()->toDateString();
 
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
+        // Un estado ELEGIDO, no el de partida: el elegido del grupo no es el primero por posición,
+        // el incluido va por encima de sus unidades gratis y el del tope va justo en él. Las dos
+        // entradas se pasan explícitas a los dos lados, así que este test no repite el completado
+        // por defecto de `AddonOfferReader::resolve()` — de eso responde `CatalogAddonsTest`.
+        $guests = 8;
+        $quantities = [$this->ids['tarta'] => 2, $this->ids['globos'] => 3];
+        $choices = ['menu' => $this->ids['pizza']];
 
-        $quantity = (int) $component->get('qty');
+        $fromDomain = $this->flatten($this->asApi(app(AddonResolver::class)->viewModel(
+            $pack->addons,
+            $quantities,
+            $choices,
+            $guests,
+            $pack->isPack(),
+            Carbon::today(),
+        )));
 
-        // La API, pidiendo lo mismo que la web tiene elegido: la selección por defecto.
         $response = $this->postJson('/api/v1/catalog/products/'.$pack->id.'/addons', [
-            'quantity' => $quantity,
-            'date' => $date,
-            'time' => '10:00:00',
+            'quantity' => $guests,
+            'addons' => array_map(
+                static fn (int $id, int $qty): array => ['product_id' => $id, 'quantity' => $qty],
+                array_keys($quantities),
+                array_values($quantities),
+            ),
+            'choices' => [['group' => 'menu', 'product_id' => $this->ids['pizza']]],
         ]);
 
         $response->assertOk();
 
         $fromApi = $this->flatten($response->json());
-        $fromWeb = $this->flatten($this->asApi($component->viewData('addonModel')));
 
         $this->assertNotEmpty($fromApi, 'sin complementos el test compararía dos listas vacías');
 
+        // Las fronteras que el fixture existe para poner, comprobadas sobre lo PUBLICADO: si algún
+        // día dejan de darse, la comparación de abajo seguiría verde sin probar lo que dice probar.
+        $this->assertSame(2, $fromApi['suelto '.$this->ids['seguro'].' · min_quantity'],
+            'el obligatorio tiene que publicar un mínimo > 0, o cruzar `min` con `max` no se ve');
+        $this->assertSame(3, $fromApi['suelto '.$this->ids['globos'].' · max_quantity'],
+            'el del tope tiene que publicar un máximo no nulo, y distinto de su mínimo');
+        $this->assertNotSame([], $fromApi['suelto '.$this->ids['tarta'].' · features'],
+            'las ventajas tienen que viajar no vacías, o vaciarlas sería un mutante equivalente');
+
         $this->assertSame(
-            $fromWeb, $fromApi,
-            "El endpoint de complementos y el view-model de la web NO describen lo mismo.\n".
-            'Los dos salen del mismo `AddonResolver`, así que una diferencia aquí es una PROYECCIÓN '.
-            'que se ha separado: un nombre distinto, un campo que solo tiene una de las dos. El diff '.
-            'de árbol no lo ve, porque a Vue se le pasa el view-model del servidor.'
+            $fromDomain, $fromApi,
+            "Lo que publica el endpoint NO es el modelo de vista del dominio.\n".
+            '`AddonOfferReader::toDto()` y `ResolvedAddonsResource` solo pueden RENOMBRAR claves: si '.
+            'aquí sale una diferencia, la publicación ha perdido un campo, ha cruzado dos o ha '.
+            'decidido algo por su cuenta — y eso es la segunda fuente de verdad que el contrato '.
+            'existe para no tener.'
         );
     }
 
     /**
-     * Un pack con las tres formas de complemento que existen, porque cada una llena campos
-     * distintos: un grupo excluyente, un incluido con extras y un dependiente.
+     * Un pack con las formas de complemento que llenan campos DISTINTOS, que es el único criterio
+     * para que esté en el fixture: un grupo excluyente, un incluido con extras y ventajas, un
+     * dependiente, un por-invitado, un obligatorio (el único que da `min` > 0) y uno con tope (el
+     * único que da `max` no nulo).
      */
     private function packWithAddons(): TicketType
     {
@@ -99,11 +151,22 @@ class SidebarAddonsParityTest extends TestCase
         ]);
         $pack->prices()->create(['rate_type_id' => $this->rateId, 'amount_cents' => 5000]);
 
-        $this->addon($pack, 'Hamburguesa', 800, ['choice_group' => 'menu']);
-        $this->addon($pack, 'Pizza', 900, ['choice_group' => 'menu']);
-        $tarta = $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
-        $this->addon($pack, 'Velas', 200, ['requires_addon_id' => $tarta->id]);
-        $this->addon($pack, 'Comida', 700, ['quantity_mode' => 'per_guest']);
+        $this->ids['hamburguesa'] = $this->addon($pack, 'Hamburguesa', 800, ['choice_group' => 'menu'])->id;
+        $this->ids['pizza'] = $this->addon($pack, 'Pizza', 900, ['choice_group' => 'menu'])->id;
+
+        $tarta = $this->addon($pack, 'Tarta', 1000,
+            ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true],
+            ['es' => ['Bizcocho de chocolate', 'Velas incluidas']],
+        );
+        $this->ids['tarta'] = $tarta->id;
+
+        $this->ids['velas'] = $this->addon($pack, 'Velas', 200, ['requires_addon_id' => $tarta->id])->id;
+        $this->ids['comida'] = $this->addon($pack, 'Comida', 700, ['quantity_mode' => 'per_guest'])->id;
+
+        // `min` = max(1, included_quantity) solo si es obligatorio y no es por-invitado.
+        $this->ids['seguro'] = $this->addon($pack, 'Seguro', 400, ['is_mandatory' => true, 'included_quantity' => 2])->id;
+        // `max` sale del pivote y de ningún otro sitio.
+        $this->ids['globos'] = $this->addon($pack, 'Globos', 300, ['max_qty' => 3])->id;
 
         for ($i = 1; $i <= 3; $i++) {
             Slot::create([
@@ -116,12 +179,16 @@ class SidebarAddonsParityTest extends TestCase
         return $pack;
     }
 
-    /** @param array<string, mixed> $pivot */
-    private function addon(TicketType $product, string $name, int $priceCents, array $pivot = []): TicketType
+    /**
+     * @param  array<string, mixed>  $pivot
+     * @param  array<string, list<string>>|null  $features
+     */
+    private function addon(TicketType $product, string $name, int $priceCents, array $pivot = [], ?array $features = null): TicketType
     {
         $addon = TicketType::create([
             'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
             'seats_per_unit' => 0, 'is_sellable' => true, 'is_active' => true,
+            'features' => $features,
             'position' => (int) TicketType::max('position') + 1,
         ]);
         $addon->prices()->create(['rate_type_id' => $this->rateId, 'amount_cents' => $priceCents]);
@@ -135,8 +202,11 @@ class SidebarAddonsParityTest extends TestCase
     }
 
     /**
-     * El view-model de la web → la forma que publica el endpoint. Es la MISMA traducción que hace el
-     * test de árbol, y está aquí a propósito: si un día deja de valer, los dos caen a la vez.
+     * El modelo de vista del dominio → la forma que publica el endpoint.
+     *
+     * ⚠️ **Es una segunda escritura DELIBERADA de `AddonOfferReader::toDto()`**, y ahí está todo el
+     * valor del test: la de producción y esta se escribieron por separado, así que un cruce de
+     * claves en una no se repite en la otra. Copiarla de allí la volvería tautológica.
      *
      * @param  array<string, mixed>  $model
      * @return array<string, mixed>
@@ -177,7 +247,8 @@ class SidebarAddonsParityTest extends TestCase
 
     /**
      * Aplana a `clave => valor` por complemento, para que el fallo señale QUÉ campo difiere en vez de
-     * volcar dos árboles enteros.
+     * volcar dos árboles enteros. De paso, un campo que sobre o falte en un lado cambia el juego de
+     * claves, así que también se ve.
      *
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>

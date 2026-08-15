@@ -3090,3 +3090,46 @@ panel de admin. Es la contradicción que `INSTALACION-CLIENTE.md` §3 ya declara
 anota lo que de verdad pasó y se deja reproducible. El principio sí está decidido: **staging se levanta
 con el mismo procedimiento que levantaría la instalación de un cliente**; configurado a mano sería un
 *snowflake* y no demostraría nada sobre lo que instalará el siguiente.
+
+## #77 · 2026-08-15 · 4.7·2b·2 — la segunda paridad sale del inventario, y su fixture tapaba dos campos
+Sigue la auditoría de `#75` con `SidebarAddonsParityTest` (1 uso). La regla de las tres categorías
+—entre motores / del contrato / intermediario de una fuente que sobrevive— vuelve a dar el tercer
+caso, y esta vez la medición encuentra además un caso **vacuo**.
+
+**(a) El motivo por el que nació ya está cerrado, y por eso su mitad de comparación muere.** Existía
+porque el diff de árbol le pasaba a Vue el view-model del servidor traducido por el propio test: un
+componente que leyera `id`/`qty`/`can_inc` en vez de `product_id`/`quantity`/`can_increase` pasaba en
+verde con el cajón pintando filas vacías. Eso lo cerró (B) en `#69`, cuando el paso 3 pasó a
+alimentarse de las respuestas REALES.
+
+**(b) Lo que queda es INTERMEDIARIO, y la fuente sobrevive dos veces.** El componente solo conducía
+`AddonResolver::viewModel()`, que es dominio y conserva dos consumidores tras la retirada: este
+endpoint (vía `AddonOfferReader`) y el **alta manual del panel** (`CreateManualOrderPage`). Se
+re-apunta ahí: el sujeto pasa a ser **la capa de publicación** —`toDto()` + `ResolvedAddonsResource`,
+21 traducciones de clave a mano—, y el `asApi()` del test es su segunda escritura DELIBERADA, que es
+lo único que hace visible un cruce de claves.
+
+**(c) ⚠️ La medición dice que no se podía borrar: tres campos los caza SOLO este test.** Mutando
+campo a campo contra los 2715 casos: `note`, `min_quantity` y `max_quantity` dan **1 fallo en toda la
+suite**, y es este. `features`, `can_toggle` y `can_increase` los comparte con el diff de árbol
+(llegan al DOM); `price_cents` y `charged_cents`, con `CatalogAddonsTest`; `free_quantity` **solo lo
+cazaba `CatalogAddonsTest`**, porque aquí el fixture no lo distinguía. El contrato
+(`required` + `additionalProperties: false`) fija los NOMBRES publicados, nunca que el valor de cada
+uno venga del campo que le toca: por eso un cruce es silencioso.
+
+**(d) ⚠️⚠️ Y el caso era VACUO en dos campos, por el mecanismo de `#68`.** El fixture viejo no tenía
+ningún complemento obligatorio ni ninguno con tope, así que `min` era 0 y `max` era `null` en los
+cinco: cruzar `min` ← `max` salía **VERDE**, porque `(int) null` es `0`. Pinchar un campo en su valor
+trivial no es fijarlo. Con un obligatorio (`min` = 2) y uno con tope (`max` = 3) los dos cruces caen,
+y tres aserciones de frontera sobre lo PUBLICADO impiden que el fixture vuelva a perderlos en
+silencio. **Regla, otra vez: el caso se elige por el MECANISMO del fallo, no por el síntoma.**
+
+**(e) Dos mutaciones MAL APUNTADAS antes de acertar, y las dos por la misma causa.** `product_name` y
+`quantity` viven **dos veces** en `ResolvedAddonsResource` —en la fila resuelta y en `line.addons`—,
+y una sustitución de texto por la línea con menos sangría casa primero con la otra, que es subcadena
+suya. Salió «verde» dos veces sin probar nada. De paso quedó medido que esa otra mitad **sí está
+cubierta**: mutarla deja tres casos rojos en `CatalogAddonsTest`. **Al mutar hay que comprobar dónde
+cayó la mutación, no solo que el fichero cambió.**
+
+**(f) Contador: 27 → 26.** El guardián del inventario nombró el fichero él solo en cuanto dejó de
+tocar el componente, que es exactamente para lo que está.

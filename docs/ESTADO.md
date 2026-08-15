@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.648 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) ·
+- Suite **2715 en verde** (15.651 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -64,22 +64,28 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 27
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 26
 dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componente se borra.
 
 ▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
 alimenta del servidor en los once pasos, así que por fin se puede preguntar por cada paridad **«¿qué
-afirma esto que el diff ya no afirme?»**. La primera respuesta completa fue `SidebarPayParityTest`
-(`#75`), que salió del inventario.
+afirma esto que el diff ya no afirme?»**. Van dos respondidas: `SidebarPayParityTest` (`#75`) y
+`SidebarAddonsParityTest` (`#77`), las dos fuera del inventario.
 
-**La regla de la auditoría** (`#75`), que vale para las ocho restantes: separa lo que **compara entre
+**La regla de la auditoría** (`#75`), que vale para las siete restantes: separa lo que **compara entre
 motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
 como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
 test). El tercero hay que buscarlo activamente.
 
-**Las ocho que quedan**, por tamaño: `SidebarAddonsParityTest` (1 uso) · `SidebarAdmissionParityTest`
-(2) · `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) ·
-`SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+⚠️ **Y la auditoría se hace MUTANDO, no leyendo** (`#77`): la lectura decía que esa paridad era
+redundante con el diff de árbol, y la medición contra los 2715 casos dijo que **tres campos los cazaba
+solo ella**. Dos avisos que salieron de ahí y valen para las siete: un campo pinchado en su valor
+trivial (0, `null`, lista vacía) **no está fijado** —el cruce sale verde—, y una mutación por
+sustitución de texto puede caer en **otra** aparición del mismo nombre: comprueba dónde cayó.
+
+**Las siete que quedan**, por tamaño: `SidebarAdmissionParityTest` (2) · `SidebarCalendarParityTest`
+(3) · `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) ·
+`SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
 
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
 - `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`
