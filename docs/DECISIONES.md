@@ -2841,3 +2841,41 @@ el caso del catálogo verde, con 7 aserciones.
 · **La regla que deja**: *un test que compara contra un ARTEFACTO tiene que comprobar que el artefacto
   no está rancio.* Que el gate de CI lo construya no basta: el modo de fallo peligroso es local y
   silencioso.
+
+## #70 · 2026-08-15 · 4.7·2b·2·B — el paso 4, y una mutación que NO cazó el gate (y está bien)
+Cuarto paso migrado (`#67`–`#69`). Cae la tercera y mayor de las traducciones que el test hacía por su
+cuenta, y aparece un caso que **no se migra a propósito**.
+
+**(a) El carrito se alimenta del presupuesto REAL.** `cartProps()` renombraba a mano el view-model de
+Livewire a la forma de la API —`qty`→`quantity`, `name`→`product_name`, `subtotal`→`subtotal_cents`, y
+**`product_id` inventado a 0**—, así que el gate **nunca ejecutaba `cartRows()`**, que es quien empareja
+cada línea tarificada con las respuestas del pack. Ahora se pide `POST /orders/quote` de verdad y
+compone el cliente. Manifiesto sin cambios; la mutación de dejar de emparejar las respuestas con sus
+etiquetas pone el gate en rojo.
+
+**(b) ⚠️ Lo que sí se traduce aquí es la CESTA, y la diferencia importa.** La cesta **no es una
+respuesta del servidor**: es estado del cliente. Livewire la guarda en sesión (`ticket_type_id`/`qty`) y
+el cajón en `localStorage` (`product_id`/`quantity`), la misma equivalencia que declara
+`Http\Api\CartPayload`. Traducir ESTADO para que los dos motores partan de la misma cesta no es lo
+mismo que traducir la RESPUESTA que el cliente tiene que saber leer — lo primero es montar el
+escenario, lo segundo es tapar el sujeto del test.
+
+**(c) ⚠️ Un caso que NO se migra, y el motivo es interesante.** «Una línea de carrito sin fecha»
+siembra `date: ''`, y ese estado **no es alcanzable por el cliente**: `POST /orders/quote` lo rechaza
+con 422 y el saneador del cajón lo descarta antes de guardarlo (`cart.js` espeja `CartPayload`). No hay
+camino real que alimentar; lo que comprueba ese caso es que el marcado no se desmorona **si llegara**.
+Se queda con props cocinadas y con la explicación al lado. **Regla: alimentar desde la API solo tiene
+sentido para estados que el cliente puede alcanzar.**
+
+**(d) ⚠️ Y una mutación que el gate NO cazó — comprobado que está bien así.** Cambiar el emparejamiento
+de `cartRows()` de `index` a POSICIÓN dejó los 34 casos en verde, porque los fixtures del diff tienen
+**una sola línea** y ahí índice y posición coinciden. No es un agujero: esa regla la cubre
+`cart.test.js` con un caso hecho para ella —tres líneas en la cesta y dos en el presupuesto, con el
+hueco en medio— y **se verificó que la misma mutación lo pone rojo**. Cada nivel prueba lo suyo: el
+diff de árbol, que el marcado sale del cliente; el test del módulo, las reglas del módulo. Perseguir
+esa mutación desde el diff habría significado inflar sus fixtures para reprobar algo ya probado.
+
+**(e) Lo que queda del paso 4**: el PIE y la banda de progreso siguen tomándose del servidor en
+`shellProps()`, y eso afecta a los **doce** sitios que montan el armazón, no solo al paso 4. Es el
+siguiente tramo y va aparte a propósito: mezclar el armazón con la cesta habría hecho un cambio que
+nadie puede revisar.

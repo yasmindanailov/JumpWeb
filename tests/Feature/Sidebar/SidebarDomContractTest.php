@@ -289,7 +289,8 @@ class SidebarDomContractTest extends TestCase
         $component = $this->componentWithFullCart();
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
-        $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
+            api: $this->cartApiPayload($component), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -309,7 +310,8 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->set('step', 4);
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
-        $vue = $this->vueTree(4, $this->cartProps($component), 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
+            api: $this->cartApiPayload($component), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -344,6 +346,11 @@ class SidebarDomContractTest extends TestCase
         $this->assertSame('', $component->viewData('cartLines')[0]['date'], 'el caso exige una línea sin fecha');
 
         $livewire = $this->livewireTree($component, 'cart__item');
+        // ⚠️ **El ÚNICO caso del paso 4 que sigue con props cocinadas, y a propósito** (4.7·2b·2·B):
+        // su fixture es una línea con `date: ''`, que `POST /orders/quote` RECHAZA con 422 y que el
+        // saneador del cajón **descarta** antes de guardarla (`cart.js` espeja `CartPayload`). O sea:
+        // el estado que este caso ejerce **no es alcanzable por el cliente**, así que no hay camino
+        // real que alimentar — lo que se comprueba aquí es que el marcado no se desmorona si llegara.
         $vue = $this->vueTree(4, $this->cartProps($component), 'cart__item');
 
         $this->assertTree(__FUNCTION__,
@@ -1125,7 +1132,8 @@ class SidebarDomContractTest extends TestCase
 
             $vue = $step === 1
                 ? $this->renderVue($step, [], $this->shellProps($component), $this->catalogApiPayload())
-                : $this->renderVue($step, $this->cartProps($component), $this->shellProps($component));
+                : $this->renderVue($step, [], $this->shellProps($component),
+                    $this->cartApiPayload($component), $this->clientState());
 
             $this->assertStringNotContainsString(
                 'bk-foot', $vue,
@@ -1159,7 +1167,8 @@ class SidebarDomContractTest extends TestCase
             'el Blade ha dejado de anunciar si el desglose está abierto'
         );
 
-        $vue = $this->renderVue(4, $this->cartProps($component), $this->shellProps($component));
+        $vue = $this->renderVue(4, [], $this->shellProps($component),
+            $this->cartApiPayload($component), $this->clientState());
 
         $this->assertStringContainsString(
             'aria-expanded', $vue,
@@ -1444,7 +1453,7 @@ class SidebarDomContractTest extends TestCase
                 $entry->id, (string) $onTime->get('date'), '10:00:00', (int) $onTime->get('qty')
             )],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
-            'cesta con señal' => [4, $withCart, $this->cartProps($withCart), null],
+            'cesta con señal' => [4, $withCart, [], $this->cartApiPayload($withCart)],
         ];
     }
 
@@ -1458,6 +1467,64 @@ class SidebarDomContractTest extends TestCase
      * comprueba aparte, en `SidebarCartParityTest`.
      *
      * @return array<string, mixed>
+     */
+    /**
+     * La cesta del cliente y su PRESUPUESTO real (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ **Aquí desaparece la tercera —y la más grande— de las traducciones que hacía el test.**
+     * `cartProps()` renombraba a mano el view-model de Livewire a la forma de la API (`qty`→`quantity`,
+     * `name`→`product_name`, `subtotal`→`subtotal_cents`… y **`product_id` inventado a 0**), así que el
+     * gate nunca ejecutaba `cartRows()`, que es quien de verdad empareja cada línea tarificada con las
+     * respuestas del pack. Y ese emparejamiento **es por `index`, no por posición**: una línea cuyo
+     * producto dejó de venderse desaparece del presupuesto y el hueco es la única señal. Recorrer las
+     * dos listas en paralelo pinta los precios de una línea sobre otra — el fallo que `#56` ya midió.
+     *
+     * ⚠️ **Lo que sí se traduce aquí, y es legítimo, es la CESTA**: no es una respuesta del servidor,
+     * es estado del cliente. Livewire la guarda en sesión con `ticket_type_id`/`qty` y el cajón la
+     * guarda en `localStorage` con `product_id`/`quantity` — la misma equivalencia que declara
+     * `Http\Api\CartPayload`. Traducir ESTADO para que los dos motores partan de la misma cesta no es
+     * lo mismo que traducir la RESPUESTA que el cliente tiene que saber leer.
+     *
+     * @return array<string, mixed>
+     */
+    private function cartApiPayload(Testable $component): array
+    {
+        $items = array_map(fn (array $line): array => [
+            'product_id' => (int) $line['ticket_type_id'],
+            'date' => $line['date'],
+            'time' => $line['time'],
+            'quantity' => (int) $line['qty'],
+            'event_data' => (array) ($line['event_data'] ?? []),
+            'addons' => array_map(fn (array $addon): array => [
+                'product_id' => (int) $addon['ticket_type_id'],
+                'quantity' => (int) $addon['qty'],
+            ], (array) ($line['addons'] ?? [])),
+        ], (array) $component->get('cart'));
+
+        if ($items === []) {
+            return ['quote' => null, 'cart' => [], 'fieldsByProduct' => []];
+        }
+
+        // Las etiquetas del esquema del evento viven en la ficha del producto: el presupuesto NO
+        // devuelve las respuestas del pack (RGPD, §4.4.6) y sin ellas no hay con qué emparejarlas.
+        $fields = [];
+        foreach ($items as $item) {
+            $fields[$item['product_id']] = $this->getJson('/api/v1/catalog/products/'.$item['product_id'])
+                ->assertOk()->json('event_fields');
+        }
+
+        return [
+            'quote' => $this->postJson('/api/v1/orders/quote', ['items' => $items])->assertOk()->json(),
+            'cart' => $items,
+            'fieldsByProduct' => $fields,
+        ];
+    }
+
+    /**
+     * El view-model de Livewire traducido a mano a la forma de la API.
+     *
+     * ⚠️ **En retirada**: solo la usan el caso de la línea sin fecha —estado inalcanzable por el
+     * cliente, ver ahí— y el paso 8, que se migra en el siguiente tramo. Cuando esos dos caigan, se va.
      */
     private function cartProps(Testable $component): array
     {

@@ -52,6 +52,7 @@ import {
     buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, offeredMonths, weekdayHeaders,
 } from '../resources/js/sidebar/calendar.js';
 import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
+import { cartRows } from '../resources/js/sidebar/cart.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -144,6 +145,19 @@ const PROPS_FROM_API = {
             messages,
         };
     },
+
+    /**
+     * ⚠️ Las filas las compone `cartRows()`, que **empareja por `index` y no por posición**: una línea
+     * cuyo producto dejó de venderse no se tarifica y desaparece del presupuesto. Componerlas fuera
+     * dejaría ese emparejamiento sin ejecutar, que es el fallo que `#56` midió.
+     */
+    [STEPS.CART]: (api, messages, state) => ({
+        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}),
+        confirmed: state.confirmed ?? false,
+        error: state.error ?? '',
+        messages,
+        locale: state.locale ?? 'es',
+    }),
 };
 
 async function main() {

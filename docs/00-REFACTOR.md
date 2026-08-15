@@ -1116,8 +1116,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           pasa en verde. En el `pre-push` no ocurre (construye antes), pero **al iterar en local sí**.
           Arreglado con `assertBundleIsNotStale()`, verificado en las dos direcciones.
           **Regla: un test que compara contra un artefacto tiene que comprobar que no está rancio.**
-        · **Quedan por migrar ocho pasos**: cesta (4), identificación (5), verificar (7), pago (8),
-          redirección (9), confirmada (6), denegada (10) y verificando (11).
+        · ✅ **Paso 4 (cesta) migrado** (`DECISIONES #70`). Cae `cartProps()`, la tercera y mayor de las
+          traducciones a mano —inventaba `product_id: 0`—, así que el gate ya ejecuta `cartRows()`.
+        · ⚠️ **Un caso NO se migra a propósito**: «línea sin fecha» siembra un estado que el cliente no
+          puede alcanzar (la API lo rechaza con 422 y el saneador lo descarta). **Alimentar desde la API
+          solo tiene sentido para estados alcanzables.**
+        · ⚠️ **Y una mutación que el gate NO cazó, y está bien**: emparejar por posición en vez de por
+          `index` deja el diff verde porque sus fixtures tienen UNA línea. Esa regla la cubre
+          `cart.test.js` con un caso hecho para ella, y **se verificó que la misma mutación lo pone
+          rojo**. Cada nivel prueba lo suyo.
+        · ▶ **SIGUIENTE TRAMO — el ARMAZÓN**: `shellProps()` sigue tomando el pie y la banda del
+          servidor, y eso toca los **doce** sitios que montan el armazón, no solo un paso. Va aparte a
+          propósito. Después, los pasos 5, 7, 8, 9, 6, 10 y 11.
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:
