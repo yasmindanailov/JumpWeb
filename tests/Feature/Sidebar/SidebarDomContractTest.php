@@ -222,7 +222,9 @@ class SidebarDomContractTest extends TestCase
             ->call('selectTime', '10:00:00');
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
-        $vue = $this->vueTree(3, $this->timeProps($component), 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(3, [], 'wiz__title', withSiblings: true,
+            api: $this->timeApiPayload($pack->id, $date, '10:00:00', (int) $component->get('qty')),
+            state: $this->clientState($date, '10:00:00', (int) $component->get('qty')));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -260,7 +262,9 @@ class SidebarDomContractTest extends TestCase
             $component->set('qty', $quantity);
 
             $livewire = $this->livewireTree($component, 'qtybox');
-            $vue = $this->vueTree(3, $this->timeProps($component), 'qtybox');
+            $vue = $this->vueTree(3, [], 'qtybox',
+                api: $this->timeApiPayload($pack->id, $date, '10:00:00', $quantity),
+                state: $this->clientState($date, '10:00:00', $quantity));
 
             $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
@@ -1301,7 +1305,9 @@ class SidebarDomContractTest extends TestCase
             ->call('selectTime', '10:00:00');
 
         $livewire = $this->livewireTree($component, 'bk-progress');
-        $vue = $this->vueTree(3, $this->timeProps($component), 'bk-progress', shell: $this->shellProps($component));
+        $vue = $this->vueTree(3, [], 'bk-progress', shell: $this->shellProps($component),
+            api: $this->timeApiPayload($product->id, $component->get('date'), '10:00:00', (int) $component->get('qty')),
+            state: $this->clientState($component->get('date'), '10:00:00', (int) $component->get('qty')));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1434,7 +1440,9 @@ class SidebarDomContractTest extends TestCase
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
             'calendario sin día' => [2, $onCalendar, [], $this->dateApiPayload($entry->id)],
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
-            'hora de una entrada' => [3, $onTime, $this->timeProps($onTime), null],
+            'hora de una entrada' => [3, $onTime, [], $this->timeApiPayload(
+                $entry->id, (string) $onTime->get('date'), '10:00:00', (int) $onTime->get('qty')
+            )],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
             'cesta con señal' => [4, $withCart, $this->cartProps($withCart), null],
         ];
@@ -1653,99 +1661,41 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function clientState(?string $selectedDate = null): array
+    private function clientState(?string $selectedDate = null, ?string $selectedTime = null, ?int $quantity = null): array
     {
-        return ['selectedDate' => $selectedDate, 'locale' => app()->getLocale()];
+        return array_filter([
+            'selectedDate' => $selectedDate,
+            'selectedTime' => $selectedTime,
+            'quantity' => $quantity,
+            'locale' => app()->getLocale(),
+        ], fn ($value) => $value !== null);
     }
 
     /**
-     * El view-model del paso 3, tomado del propio componente Livewire.
+     * El paso 3 se alimenta de las CUATRO respuestas que pide el cajón para pintarlo
+     * (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ **Aquí desaparece la traducción que el test hacía por su cuenta.** Para los complementos había
+     * un `addonsAsApi()` que vivía en este mismo fichero y renombraba el view-model de Livewire a la forma de
+     * la API —`id`→`product_id`, `qty`→`quantity`, `can_inc`→`can_increase`—, y esa traducción **es
+     * justo el punto ciego**: el cajón real recibe la respuesta del endpoint, no una traducción del
+     * test. Es el fallo que `#46(a)` documenta —diff verde, cajón con filas vacías— y el motivo de que
+     * `SidebarAddonsParityTest` tuviera que cubrirlo por el otro lado.
      *
      * @return array<string, mixed>
      */
-    private function timeProps(Testable $component): array
+    private function timeApiPayload(int $productId, string $date, string $time, int $quantity): array
     {
-        return [
-            'times' => $component->viewData('times'),
-            'selectedTime' => $component->get('time'),
-            'quantity' => $component->get('qty'),
-            'minQuantity' => $component->viewData('minQty'),
-            'maxQuantity' => $component->viewData('maxQty'),
-            'isPack' => $component->viewData('selectedIsPack'),
-            'dayPriceCents' => $component->viewData('dayPriceCents'),
-            'periodLabel' => $component->viewData('selectedPeriodLabel'),
-            'eventFields' => $this->eventFieldsFor($component),
-            // ⚠️ **Traducido a la forma de la API, que es la que el cajón recibe de verdad.** El
-            // view-model de Livewire usa otros nombres (`id`, `qty`, `can_inc`…), y alimentar al
-            // componente con ellos dejaría el diff verde mientras el cajón real pinta filas vacías.
-            // `SidebarAddonsParityTest` comprueba aparte que las dos fuentes dicen lo mismo.
-            'addons' => $this->addonsAsApi($component->viewData('addonModel')),
-            'messages' => __('tickets'),
-        ];
-    }
-
-    /**
-     * El view-model de complementos de Livewire → la forma que publica
-     * `POST catalog/products/{id}/addons`.
-     *
-     * @param  array<string, mixed>  $model
-     * @return array<string, mixed>
-     */
-    private function addonsAsApi(array $model): array
-    {
-        $row = fn (array $opt): array => [
-            'product_id' => $opt['id'],
-            'product_name' => $opt['name'],
-            'price_cents' => $opt['price'],
-            'note' => $opt['note'],
-            'is_included' => $opt['is_included'],
-            'is_mandatory' => $opt['is_mandatory'],
-            'per_guest' => $opt['per_guest'],
-            'allow_extra' => $opt['allow_extra'],
-            'badge' => $opt['badge'],
-            'features' => $opt['features'],
-            'selected' => $opt['selected'],
-            'available' => $opt['available'],
-            'requires_name' => $opt['requires_name'],
-            'quantity' => $opt['qty'],
-            'free_quantity' => $opt['free'],
-            'charged_cents' => $opt['charged'],
-            'min_quantity' => $opt['min'],
-            'max_quantity' => $opt['max'],
-            'can_toggle' => $opt['can_toggle'],
-            'can_increase' => $opt['can_inc'],
-            'can_decrease' => $opt['can_dec'],
-        ];
+        $root = '/api/v1';
 
         return [
-            'groups' => array_map(fn (array $group): array => [
-                'key' => $group['key'],
-                'label' => $group['label'],
-                'options' => array_map($row, $group['options']),
-            ], $model['groups']),
-            'singles' => array_map($row, $model['singles']),
+            'times' => $this->postJson($root.'/availability/'.$productId.'/times', ['date' => $date])->assertOk()->json(),
+            'dates' => $this->getJson($root.'/availability/'.$productId.'/dates')->assertOk()->json(),
+            'product' => $this->getJson($root.'/catalog/products/'.$productId)->assertOk()->json(),
+            'addons' => $this->postJson($root.'/catalog/products/'.$productId.'/addons', [
+                'quantity' => $quantity, 'date' => $date, 'time' => $time,
+            ])->assertOk()->json(),
         ];
-    }
-
-    /**
-     * Los campos del evento con su etiqueta ya resuelta.
-     *
-     * El Blade la resuelve al pintar (`$selectedType->eventFieldLabel($field)`); la API la publica ya
-     * resuelta en `catalog/products/{id}`. Aquí se replica lo segundo, que es lo que el cajón SPA
-     * recibirá de verdad.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function eventFieldsFor(Testable $component): array
-    {
-        $type = TicketType::find($component->get('typeId'));
-
-        return array_map(fn (array $field): array => [
-            'key' => $field['key'],
-            'label' => $type->eventFieldLabel($field),
-            'type' => $field['type'],
-            'required' => $field['required'],
-        ], $component->viewData('eventFields'));
     }
 
     /**
@@ -1930,6 +1880,8 @@ class SidebarDomContractTest extends TestCase
             'sin compilar, así que el renderizador se construye con Vite. El `pre-push` ya lo hace.'
         );
 
+        $this->assertBundleIsNotStale($bundle);
+
         // ⚠️ Con `api` las props NO viajan: las construye el renderizador con los módulos del cliente.
         // Mandar las dos cosas sería dejar abierta la puerta a que un paso «migrado» siguiera pintando
         // las props cocinadas por el test sin que nadie lo notara.
@@ -1951,6 +1903,54 @@ class SidebarDomContractTest extends TestCase
         );
 
         return $process->getOutput();
+    }
+
+    /**
+     * ⚠️ **El bundle SSR es un ARTEFACTO, y uno rancio da VERDE FALSO.**
+     *
+     * Este test no renderiza las fuentes: renderiza `storage/ssr/render-sidebar.js`, que compila Vite.
+     * Si alguien toca un módulo del cajón y no reconstruye, el gate compara **código viejo** — y eso no
+     * es un rojo molesto, es un **verde que miente**. Medido el 2026-08-15: con `catalog.js` roto a
+     * propósito (leyendo un campo que la API no publica) y el bundle sin reconstruir, el caso del
+     * catálogo pasó en verde con 7 aserciones.
+     *
+     * En el `pre-push` no ocurre —el hook construye antes de la suite y `PrePushGateTest` lo vigila—,
+     * pero al iterar en local sí, que es justo cuando más se cambian estos módulos.
+     *
+     * La comprobación es de fecha de modificación, que es lo que distingue «compilado después» de
+     * «compilado antes» sin volver a compilar dentro del test (medio minuto por ejecución).
+     */
+    private function assertBundleIsNotStale(string $bundle): void
+    {
+        $built = (int) filemtime($bundle);
+        $newer = [];
+
+        $sources = array_merge(
+            [base_path('scripts/render-sidebar.mjs')],
+            glob(resource_path('js/sidebar/*.js')) ?: [],
+            glob(resource_path('js/sidebar/*.vue')) ?: [],
+            glob(resource_path('js/sidebar/steps/*.vue')) ?: [],
+        );
+
+        foreach ($sources as $source) {
+            // Los `*.test.js` no entran en el bundle: cambiarlos no lo deja rancio.
+            if (str_ends_with($source, '.test.js')) {
+                continue;
+            }
+
+            if ((int) filemtime($source) > $built) {
+                $newer[] = str_replace(base_path().'/', '', $source);
+            }
+        }
+
+        $this->assertSame(
+            [], $newer,
+            "El bundle SSR del cajón está RANCIO: hay fuentes más nuevas que él.\n  ".
+            implode("\n  ", $newer)."\n\n".
+            "⚠️ Este test renderiza el bundle, no las fuentes, así que seguir sin reconstruir compara\n".
+            "código VIEJO — y eso da verde aunque lo que acabas de escribir esté roto.\n".
+            'Corre `npm run build:ssr` (el `pre-push` ya lo hace por ti antes de la suite).'
+        );
     }
 
     /**

@@ -27,7 +27,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2715 en verde** (15.552 aserciones, `--parallel` ~70 s) · **277 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.612 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -367,7 +367,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
        —**21 de sus 25 funciones no tenían ningún test**—, `Sidebar.vue` lo consume y
        `render-sidebar.mjs` construye las props con él desde `GET /catalog/products` + `GET /config`.
        **El manifiesto NO cambió** (prueba de fidelidad) y la mutación sale ROJA en el modo nuevo y
-       VERDE en el viejo (prueba de que el hueco existía). **Quedan nueve pasos por migrar**, y el
+       VERDE en el viejo (prueba de que el hueco existía). **Quedan ocho pasos por migrar**, y el
        patrón está fijado: extraer a módulo plano → que `Sidebar.vue` lo consuma → añadir el
        constructor en `PROPS_FROM_API` → alimentar el caso desde la API → el manifiesto no debe moverse.
      · ▶ El razonamiento de por qué (B) y no (A) (medido el 2026-08-15, detalle en `00-REFACTOR.md`): `SidebarDomContractTest` le pasa a Vue props que salen
@@ -675,6 +675,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `i18n.js` · `money.js` | Textos por CAMINO con plural de Laravel · importes que espejan `number_format` | `SidebarTextParityTest` · `SidebarMoneyParityTest` |
 | `catalog.js` | El paso 1: agrupar el catálogo de la API en secciones, renombrar campos y decidir si hay buscador | **`SidebarDomContractTest`, que desde 4.7·2b·2·B lo EJECUTA** (`#67`) · `catalog.test.js` |
 | `calendar.js` · `progress.js` | La rejilla del mes, los meses navegables y el mes en que abre · la banda de fases y su contexto | **`calendar.test.js` (18 casos, nace en `#68`)** + el diff de árbol, que ya lo EJECUTA · `SidebarProgressParityTest` |
+| `offer.js` | El paso 3: qué hora está elegida, el suelo y el techo del selector y el precio del día | **el diff de árbol, que lo EJECUTA** · `offer.test.js` (9 casos, `#69`) |
 | `cart.js` | Cesta: saneado, persistencia con su dueño, reconciliación y **qué respuestas faltan** | `SidebarCartParityTest` · `SidebarPendingFieldsParityTest` |
 | `foot.js` | El pie de cada paso (CTA, importes, desglose) | `SidebarCartParityTest` |
 | `paused.js` | El aviso de reservas en pausa y en qué pasos tapa | `SidebarPausedParityTest` |

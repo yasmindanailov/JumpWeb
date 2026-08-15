@@ -51,6 +51,7 @@ import { searchIsEnabled, sectionsFrom } from '../resources/js/sidebar/catalog.j
 import {
     buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, offeredMonths, weekdayHeaders,
 } from '../resources/js/sidebar/calendar.js';
+import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -110,6 +111,36 @@ const PROPS_FROM_API = {
             canPrev: canGoPrev(month, months),
             canNext: canGoNext(month, months),
             selectedDate: state.selectedDate ?? null,
+            messages,
+        };
+    },
+
+    /**
+     * ⚠️ La CANTIDAD tampoco se recibe: se deriva con la misma regla que aplica `Sidebar.vue` al
+     * elegir hora (`initialQuantity`). Recibirla dejaría fuera del gate el suelo y el techo del
+     * selector, que es de lo único que depende que el paso 3 no deje pedir lo que no cabe.
+     */
+    [STEPS.TIME]: (api, messages, state) => {
+        const times = api.times?.data ?? [];
+        const product = api.product ?? null;
+        const time = state.selectedTime ?? null;
+
+        return {
+            times: times.map((t) => t.time),
+            selectedTime: time,
+            // La cantidad se DERIVA por defecto —así el gate ejercita el suelo y el techo—, pero un
+            // caso puede forzarla: el cliente también la mueve con los botones del selector.
+            quantity: state.quantity ?? initialQuantity(product, times, time),
+            minQuantity: minQuantityFor(product),
+            maxQuantity: maxQuantityFor(times, time),
+            isPack: product?.type === 'pack',
+            dayPriceCents: dayPriceCents(api.dates?.data ?? [], state.selectedDate ?? null),
+            periodLabel: product?.period_label ?? '',
+            eventFields: product?.event_fields ?? [],
+            // El endpoint publica los complementos ya RESUELTOS —grupos, notas, gratis, topes y la poda
+            // en cadena—: aquí se pasan tal cual, porque decidir cualquiera de esas cosas en el cliente
+            // es lo que `CE-4` prohíbe.
+            addons: { groups: api.addons?.groups ?? [], singles: api.addons?.singles ?? [] },
             messages,
         };
     },

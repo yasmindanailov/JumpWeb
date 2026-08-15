@@ -100,6 +100,15 @@ con una constante documentada**. Un test que solo pasa los martes está rojo, a�
 ⚠️ Y el corolario para cualquier fixture congelado: **una foto que incluye el tiempo hay que
 tomarla con el reloj parado**, o no es una red — es una alarma diaria que se aprende a ignorar.
 
+### 2.bis. Un test que compara contra un ARTEFACTO tiene que comprobar que no está rancio
+⚠️ **Medido el 2026-08-15** (`DECISIONES #69`): `SidebarDomContractTest` no renderiza las fuentes del
+cajón, sino `storage/ssr/render-sidebar.js`, que compila Vite. Con una fuente **rota** y el bundle sin
+reconstruir, el gate **pasó en verde**. Un rojo espurio cuesta una hora; un verde falso cuesta el
+contrato visual entero. Que el `pre-push` construya antes de la suite no basta: el modo de fallo
+peligroso es LOCAL y silencioso, justo mientras se itera sobre esos módulos.
+La guarda es `assertBundleIsNotStale()`: compara la fecha del artefacto con la de cada fuente que entra
+en él. Si añades un test que compare contra algo compilado, generado o congelado, ponle la suya.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

@@ -8,6 +8,9 @@ import {
     offeredMonths as monthsWithOffer, shiftMonth, weekdayHeaders as composeWeekdayHeaders,
 } from './calendar.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
+import {
+    dayPriceCents as priceOfDay, initialQuantity, maxQuantityFor, minQuantityFor, timeAt,
+} from './offer.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
@@ -461,12 +464,12 @@ const addonChoices = ref([]);
 const addonQuantities = ref([]);
 
 /** La hora elegida, con sus dos números. ⚠️ El selector se acota con `max_quantity`, NO con `available`. */
-const offeredTime = computed(() => offeredTimes.value.find((t) => t.time === selectedTime.value) ?? null);
-const maxQuantity = computed(() => offeredTime.value?.max_quantity ?? 0);
-const minQuantity = computed(() => (product.value?.type === 'pack' ? (product.value?.min_quantity ?? 1) : 1));
+const offeredTime = computed(() => timeAt(offeredTimes.value, selectedTime.value));
+const maxQuantity = computed(() => maxQuantityFor(offeredTimes.value, selectedTime.value));
+const minQuantity = computed(() => minQuantityFor(product.value));
 
 /** El precio del DÍA elegido. Lo trae la oferta de días; no se deriva del «desde» del catálogo. */
-const dayPriceCents = computed(() => offeredDates.value.find((d) => d.date === selectedDate.value)?.price_cents ?? null);
+const dayPriceCents = computed(() => priceOfDay(offeredDates.value, selectedDate.value));
 
 /**
  * Elegir día pide las HORAS, y la petición **lleva la cesta**.
@@ -494,7 +497,9 @@ async function selectDate(date) {
 /** Elegir hora fija la cantidad en el mínimo contratable y resuelve los complementos. */
 async function selectTime(time) {
     selectedTime.value = time;
-    quantity.value = Math.min(minQuantity.value, maxQuantity.value);
+    // ⚠️ La regla y su equivalencia con la del servidor —que PARECE distinta y no lo es— viven en
+    // `offer.js` con la medición que lo demuestra.
+    quantity.value = initialQuantity(product.value, offeredTimes.value, time);
 
     await refreshAddons();
 }

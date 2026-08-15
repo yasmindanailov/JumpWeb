@@ -2802,3 +2802,42 @@ local, con su caso. Solo muerde cuando no hay ninguna oferta, que es por lo que 
 **(e) Consecuencia: `SidebarCalendarParityTest` ya es candidata a retirarse** — su hueco está cerrado y
 sus fronteras están en `calendar.test.js`—, **pero no se retira todavía**: mientras Livewire viva sigue
 siendo el único sitio que compara las dos composiciones entre sí. Se va en 4.7·2b·3, con el componente.
+
+## #69 · 2026-08-15 · 4.7·2b·2·B — el paso 3, y el VERDE FALSO que escondía el bundle SSR
+Tercer paso migrado (`#67`, `#68`). El traslado en sí fue el de siempre; lo que apareció al hacerlo, no.
+
+**(a) El paso 3 se alimenta de sus CUATRO respuestas reales** —`availability/{p}/times`,
+`availability/{p}/dates`, `catalog/products/{p}` y `catalog/products/{p}/addons`— y **desaparece la
+traducción que el test hacía por su cuenta**: había en el propio fichero un `addonsAsApi()` que
+renombraba el view-model de Livewire a la forma de la API (`id`→`product_id`, `qty`→`quantity`,
+`can_inc`→`can_increase`). Esa traducción **era el punto ciego con nombre y apellidos**: el cajón real
+recibe la respuesta del endpoint, no una traducción escrita en el test, y es el fallo de `#46(a)`
+—diff verde, cajón con filas vacías— por el que `SidebarAddonsParityTest` existe. Nace `offer.js`
+(9 casos) con el suelo, el techo, el precio del día y la cantidad inicial. Manifiesto sin cambios.
+
+**(b) ⚠️ Una divergencia que PARECÍA existir y no existe — y por qué conviene dejarlo escrito.**
+`Purchase::selectTime()` fija `qty = techo >= mínimo ? mínimo : 0`; la SPA hace `min(mínimo, techo)`.
+Difieren solo con `0 < techo < mínimo`. Se buscó ese caso con un pack de mínimo 8 y el aforo de
+invitados casi agotado, y **no es alcanzable**: con 5 invitados libres los DOS motores devuelven lista
+de horas **vacía** —la oferta retira la hora entera cuando el mínimo no cabe— y con 8 libres los dos
+publican `max_quantity = 8`. O sea: para toda hora ofrecida se cumple `techo ≥ mínimo`, y ahí las dos
+expresiones coinciden. Queda en el docblock de `initialQuantity()` con la medición, para que nadie
+«arregle» una de las dos a ciegas.
+
+**(c) ⚠️⚠️ Y el hallazgo de verdad: el gate podía dar VERDE FALSO, y lo dio.**
+`SidebarDomContractTest` no renderiza las fuentes: renderiza `storage/ssr/render-sidebar.js`, que
+compila Vite. Al migrar este paso se editó el renderizador y se corrió el test **sin reconstruir**, lo
+que produjo un rojo confuso (el selector acotado al revés) que costó una medición entender. Buscando
+la causa apareció lo grave, que es el caso simétrico: **con una fuente ROTA y el bundle sin
+reconstruir, el gate pasa en verde**. Medido: `catalog.js` leyendo un campo que la API no publica →
+el caso del catálogo verde, con 7 aserciones.
+· Un rojo espurio cuesta una hora. **Un verde falso cuesta el contrato visual entero**, y este test es
+  justamente la red que tiene que sobrevivir a la retirada de Livewire.
+· En el `pre-push` no ocurría —el hook construye antes de la suite—, pero **al iterar en local sí**, que
+  es exactamente cuando más se tocan estos módulos.
+· **Arreglo**: `assertBundleIsNotStale()` compara la fecha del bundle con la de cada fuente que entra en
+  él (los `*.test.js` no entran, y por eso se excluyen). Verificado en las dos direcciones: con el
+  bundle al día, verde; con una fuente más nueva, rojo **nombrando el fichero**.
+· **La regla que deja**: *un test que compara contra un ARTEFACTO tiene que comprobar que el artefacto
+  no está rancio.* Que el gate de CI lo construya no basta: el modo de fallo peligroso es local y
+  silencioso.

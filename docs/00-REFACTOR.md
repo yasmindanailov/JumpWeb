@@ -1104,8 +1104,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · **`SidebarCalendarParityTest` ya es candidata a retirarse** (su hueco está cerrado y sus
           fronteras viven en `calendar.test.js`), **pero no se retira hasta ·2b·3**: mientras Livewire
           viva es el único sitio que compara las dos composiciones entre sí.
-        · **Quedan por migrar nueve pasos**: hora+complementos (3), cesta (4), identificación (5),
-          verificar (7), pago (8), redirección (9), confirmada (6), denegada (10) y verificando (11).
+        · ✅ **Paso 3 (hora, cantidad y complementos) migrado** (`DECISIONES #69`). Se alimenta de sus
+          cuatro respuestas reales y **desaparece el `addonsAsApi()` que el test hacía por su cuenta**,
+          que era el punto ciego con nombre y apellidos. Nace `offer.js` (9 casos). Manifiesto intacto.
+        · ⚠️ **Divergencia que parecía existir y NO existe**: `qty = techo >= mín ? mín : 0` (servidor)
+          frente a `min(mín, techo)` (SPA) solo difieren con `0 < techo < mín`, y ese caso **no es
+          alcanzable** —la oferta retira la hora entera cuando el mínimo no cabe; medido con un pack de
+          mínimo 8 y el aforo casi agotado—. Escrito en `initialQuantity()` para que nadie lo «arregle».
+        · ⚠️⚠️ **EL GATE PODÍA DAR VERDE FALSO**: renderiza `storage/ssr/render-sidebar.js`, un
+          ARTEFACTO. Medido: con `catalog.js` roto y el bundle sin reconstruir, el caso del catálogo
+          pasa en verde. En el `pre-push` no ocurre (construye antes), pero **al iterar en local sí**.
+          Arreglado con `assertBundleIsNotStale()`, verificado en las dos direcciones.
+          **Regla: un test que compara contra un artefacto tiene que comprobar que no está rancio.**
+        · **Quedan por migrar ocho pasos**: cesta (4), identificación (5), verificar (7), pago (8),
+          redirección (9), confirmada (6), denegada (10) y verificando (11).
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:
