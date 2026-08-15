@@ -3201,3 +3201,37 @@ hace que una clasificación se lea mal al borrar.
 **(d) Lo que esto deja escrito para ·2b·3**: este fichero es de los pocos donde hay que **operar
 DENTRO** en vez de borrarlo entero. Está anotado en su propio docblock, que es donde lo va a leer
 quien lo borre.
+
+## #80 · 2026-08-15 · 4.7·2b·2 — el view-model que servía de referencia no era una fuente
+Quinta de la auditoría: `SidebarCartParityTest` (3 usos). Es el caso más claro de la tercera categoría
+de `#75`: la referencia (`Purchase::viewData('footer')` y `viewData('cartLines')`) **no era una
+fuente**, era un ensamblaje de `__()`, `number_format` y el presupuesto — las tres sobreviven.
+
+**(a) Los tres casos del pie se re-apuntan al diccionario y a `number_format`.** Y no a la ligera:
+**medido, renombrar `footer_pay_now` en `lang/es/tickets.php` deja los 2715 casos verdes salvo UNO**, y
+es el del pie de la cesta. `foot.test.js` no puede verlo —su diccionario es fabricado— y
+`SidebarTextParityTest` no lleva esas claves. Los tres fallos que el fichero nació para impedir siguen
+cubiertos: el separador de millares, el rótulo NEUTRO de la cesta frente al «(señal)» del paso 3, y el
+recuento pluralizado por Laravel.
+
+**(b) Se compara MENOS y mejor.** Antes se comparaba el view-model entero contra el de Livewire; ahora
+solo los **textos e importes**, que es lo único que ni el diff de árbol ni `foot.test.js` pueden mirar
+—el normalizador descarta los nodos de texto y el árbol ya ejecuta `foot.js` desde `#71`—. La
+estructura tiene dueño; duplicarla aquí era medir el andamiaje.
+
+**(c) El caso de las filas conserva lo suyo cambiando de referencia.** Su valor es el **hueco en la
+secuencia de `index`** cuando un producto deja de venderse: el presupuesto salta esa línea y el
+`index` es lo único que ata cada fila a su cesta. El diff de árbol no puede verlo —sus fixtures tienen
+UNA línea, y con una línea emparejar por posición sale verde (`#70`)—. La referencia pasa a ser el
+presupuesto REAL, que es de donde `Purchase` lo sacaba, y se añade la aserción que faltaba: que la
+fila del pack lleve SUS respuestas y no las de la línea que ocupa su posición.
+
+**(d) Y la cesta se compone directamente, sin conducir ningún motor.** Es una lista de líneas: lo que
+este fichero prueba es qué se PINTA con una cesta dada, no cómo se llena. Eso retira de paso la última
+razón por la que necesitaba un componente.
+
+**(e) Siete mutaciones, las siete rojas**: dos claves ausentes del diccionario (`footer_pay_now`,
+`iva_note`), el rótulo cruzado, el plural ingenuo, el marcador «—» sustituido por «0,00 €», el
+separador de millares y emparejar las filas por la primera línea de la cesta.
+
+**(f) Contador: 25 → 24.**

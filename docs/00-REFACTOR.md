@@ -1255,9 +1255,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           un producto que no aparece en ninguna aserción. Medido y retirados los dos.
         ▶ **·2b·3 tiene que operar DENTRO de este fichero**, no borrarlo entero. Anotado en su propio
           docblock, que es donde lo leerá quien lo borre.
-        · **Quedan CINCO por auditar**: `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) ·
-          `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest`
-          (26).
+      · ✅ **`SidebarCartParityTest` re-apuntada y FUERA del inventario** (2026-08-15,
+        `DECISIONES #80`). 25 → **24**. El caso más claro de la tercera categoría: `viewData('footer')`
+        y `viewData('cartLines')` **no eran fuentes**, eran un ensamblaje de `__()`, `number_format` y
+        el presupuesto — las tres sobreviven.
+        · ⚠️ **Medido**: renombrar `footer_pay_now` en `lang/es/tickets.php` deja los 2715 verdes
+          **salvo uno**, y es el del pie de la cesta.
+        · **Se compara MENOS y mejor**: solo textos e importes, que es lo único que ni el diff de árbol
+          (descarta el texto) ni `foot.test.js` (diccionario fabricado) pueden mirar. La estructura ya
+          tiene dueño desde `#71`; duplicarla aquí era medir el andamiaje.
+        · **El caso de las filas conserva lo suyo**: el HUECO en la secuencia de `index` cuando un
+          producto deja de venderse. El árbol no puede verlo —sus fixtures tienen UNA línea (`#70`)—.
+          Referencia nueva: el presupuesto real, más la aserción que faltaba (que la fila del pack
+          lleve SUS respuestas, no las de la línea que ocupa su posición).
+        · **La cesta se compone directamente**, sin conducir ningún motor: es una lista de líneas, y lo
+          que el fichero prueba es qué se PINTA con una cesta dada, no cómo se llena.
+        · Siete mutaciones, las siete rojas (dos claves ausentes, rótulo cruzado, plural ingenuo,
+          marcador «—» → «0,00 €», separador de millares, emparejar por la primera línea).
+        · **Quedan CUATRO por auditar**: `SidebarPausedParityTest` (4) · `SidebarProgressParityTest`
+          (4) · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

@@ -7,25 +7,27 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Http\Api\CartPayload;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.3·2 — **el pie y el carrito dicen lo mismo en los dos motores**.
+ * Fase 4 · paso 4.3·2, re-apuntado en 4.7·2b·2 — **el pie y el carrito dicen lo que dicen el
+ * DICCIONARIO y `number_format`** (`DECISIONES #80`).
  *
  * ⚠️ **Esto es lo que `SidebarDomContractTest` no puede ver, y aquí conviene decirlo entero**: su
  * normalizador descarta los nodos de texto a propósito («el contrato es la estructura, no la copia»),
- * así que un importe mal formateado, un plural sin resolver o un rótulo cambiado pasan **verdes**. Y
- * además alimenta a Vue con el view-model del SERVIDOR, de modo que tampoco vería que el cliente
- * compone otro.
+ * así que un importe mal formateado, un plural sin resolver o un rótulo cambiado pasan **verdes**.
  *
- * Aquí se cierra por el otro lado: el view-model que compone el CLIENTE —ejecutando sus módulos
- * planos en Node, con las respuestas REALES de la API— contra el que compone `Purchase`, campo a
- * campo. Si las dos fuentes se separan, salta con el campo exacto.
+ * ### Qué comparaba antes y por qué la referencia cambia
+ *
+ * Comparaba el pie y las filas contra el view-model de `Purchase`. Pero ese view-model **no era una
+ * fuente**: lo ensamblaba con `__()` y `number_format`, o sea que era un **intermediario** de las dos
+ * cosas que sobreviven. Se compara contra ellas directamente, que es la misma re-apuntada de `#75(b)`.
+ *
+ * ⚠️ **Y está MEDIDO que hace falta**: renombrar `footer_pay_now` en `lang/es/tickets.php` deja los
+ * 2715 casos verdes **salvo uno**, y es el del pie de la cesta. `foot.test.js` no puede verlo —su
+ * diccionario es fabricado— y `SidebarTextParityTest` no lleva esas claves.
  *
  * Los tres fallos que este test existe para impedir, los tres ya medidos:
  *  - **el importe sin separador de millares** (`1000,00 €` frente a `1.000,00 €`), que en una cesta se
@@ -33,12 +35,18 @@ use Tests\TestCase;
  *  - **el rótulo del desglose**, que NO es el mismo en el paso 3 («Pagas ahora (señal)») y en la cesta
  *    («Pagas ahora», neutro porque en una cesta mixta no todo es señal, #225);
  *  - **el recuento de la barra-carrito**, que es pluralización de Laravel y no `n === 1`.
+ *
+ * ⚠️ **Lo que este test NO es**: no fija la ESTRUCTURA del pie —eso es `foot.test.js`, y el árbol lo
+ * ejecuta desde `#71`— sino sus textos e importes, que son lo único que el gate no puede mirar.
  */
 class SidebarCartParityTest extends TestCase
 {
     use RefreshDatabase;
 
     private const ROOT = '/api/v1';
+
+    /** El marcador de «todavía no hay importe» del pie (`foot.js`), que NO es «0,00 €». */
+    private const AMOUNT_PLACEHOLDER = '—';
 
     private Zone $zone;
 
@@ -122,32 +130,41 @@ class SidebarCartParityTest extends TestCase
     /**
      * El pie del paso 3, que es el único que se compone con el dinero de UNA línea.
      *
-     * El estado se toma del componente Livewire y el dinero de la respuesta REAL del endpoint de
-     * complementos, que es de donde lo saca el cajón: así lo que se compara es la composición, no de
-     * dónde salen los números.
+     * El dinero sale de la respuesta REAL del endpoint de complementos, que es de donde lo saca el
+     * cajón: así lo que se compara son los textos, no de dónde salen los números.
      */
-    public function test_the_client_builds_the_same_step_footer_as_the_server(): void
+    public function test_the_step_footer_is_the_dictionary_and_number_format(): void
     {
         $pack = $this->pack();
 
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime');
+        // Sin hora: importe «—» y CTA inactivo. Es el único estado en que el pie no lleva importe,
+        // así que el marcador tiene que ser el del módulo y no un importe de cero.
+        $this->assertFooterTexts($this->stepState(hasTime: false, line: null), [
+            'cta' => __('tickets.add_to_cart'),
+            'label' => __('tickets.total'),
+            'amount' => self::AMOUNT_PLACEHOLDER,
+            'note' => __('tickets.iva_note'),
+        ]);
 
-        // Sin hora: importe «—» y CTA inactivo.
-        $this->assertFooterMatches($component, $this->stepState($component, null));
-
-        $component->call('selectTime', '10:00:00');
-
-        $line = $this->lineFromApi($pack, (int) $component->get('qty'));
+        $line = $this->lineFromApi($pack, $pack->min_qty);
 
         $this->assertGreaterThan(
             100000, $line['total_cents'],
             'el caso tiene que cruzar los 1.000 € o no prueba el separador de millares'
         );
+        $this->assertTrue($line['has_deposit'], 'sin señal no habría desglose que comparar en el paso 3');
 
-        $this->assertFooterMatches($component, $this->stepState($component, $line));
+        $this->assertFooterTexts($this->stepState(hasTime: true, line: $line), [
+            'cta' => __('tickets.add_to_cart'),
+            'label' => __('tickets.total'),
+            'amount' => $this->money($line['total_cents']),
+            // ⚠️ El rótulo CON «(señal)»: aquí se sabe que todo lo que se cobra ahora lo es. En la
+            // cesta no, y por eso el de abajo es otro.
+            'nowLabel' => __('tickets.footer_pay_now_deposit'),
+            'now' => $this->money($line['deposit_cents']),
+            'park' => $this->money($line['gate_remainder_cents']),
+            'note' => __('tickets.iva_note'),
+        ]);
     }
 
     /**
@@ -156,10 +173,11 @@ class SidebarCartParityTest extends TestCase
      * ⚠️ La cesta se llena con una entrada **y** un pack con señal a propósito: es la cesta MIXTA, y
      * es donde el rótulo neutro «Pagas ahora» tiene sentido y el del paso 3 no.
      */
-    public function test_the_client_builds_the_same_cart_footer_as_the_server(): void
+    public function test_the_cart_footer_is_the_dictionary_and_number_format(): void
     {
-        $component = $this->componentWithMixedCart();
-        $quote = $this->quoteFromApi($component);
+        $cart = $this->mixedCart();
+        $quote = $this->quoteFromApi($cart);
+        $count = count($quote['lines']);
 
         $this->assertGreaterThan(
             100000, $quote['total_cents'],
@@ -171,31 +189,49 @@ class SidebarCartParityTest extends TestCase
         );
 
         foreach ([1, 4] as $step) {
-            $component->set('step', $step);
-
-            $this->assertFooterMatches($component, [
+            $state = [
                 'step' => $step,
                 'messages' => __('tickets'),
                 'locale' => app()->getLocale(),
-                'cartCount' => count($quote['lines']),
+                'cartCount' => $count,
                 'cartTotalCents' => $quote['total_cents'],
                 'cartOnlineCents' => $quote['online_amount_cents'],
-            ]);
+            ];
+
+            // La barra del catálogo ancla en el RECUENTO —pluralizado por Laravel— y la del carrito
+            // en el rótulo «Total». Son dos composiciones distintas del mismo dinero.
+            $expected = $step === 1
+                ? [
+                    'cta' => __('tickets.go_to_cart'),
+                    'label' => trans_choice('tickets.cart_items', $count, ['count' => $count]),
+                    'amount' => $this->money($quote['total_cents']),
+                ]
+                : [
+                    'cta' => __('tickets.go_to_pay'),
+                    'label' => __('tickets.total'),
+                    'amount' => $this->money($quote['total_cents']),
+                    // ⚠️ Rótulo NEUTRO, sin «(señal)»: en una cesta mixta lo que se cobra ahora no es
+                    // solo señal (#225). Es el otro rótulo del paso 3, y confundirlos es silencioso.
+                    'nowLabel' => __('tickets.footer_pay_now'),
+                    'now' => $this->money($quote['online_amount_cents']),
+                    'park' => $this->money($quote['total_cents'] - $quote['online_amount_cents']),
+                    'note' => __('tickets.iva_note'),
+                ];
+
+            $this->assertFooterTexts($state, $expected);
         }
     }
 
     /**
-     * **La guarda del pie**: donde el servidor no emite barra, el cliente tampoco la compone.
+     * **La guarda del pie**: con la cesta vacía no hay barra en el catálogo ni en el carrito.
      *
-     * Con la cesta vacía `footer()` es `null` en el catálogo y en el carrito. Un cliente que
-     * devolviera una barra enseñaría «0,00 €» y un «Ir a pagar» donde la web no enseña nada.
+     * Un cliente que devolviera una barra enseñaría «0,00 €» y un «Ir a pagar» sobre una cesta que no
+     * existe. La mitad que lo comprobaba sobre `Purchase::footer()` se va con el componente; esta
+     * afirma la conducta directamente, que es lo que hay que conservar.
      */
-    public function test_neither_engine_builds_a_footer_with_an_empty_cart(): void
+    public function test_no_footer_is_built_with_an_empty_cart(): void
     {
         foreach ([1, 4] as $step) {
-            $component = Livewire::test(Purchase::class)->set('step', $step);
-
-            $this->assertNull($component->viewData('footer'));
             $this->assertNull($this->buildFooterInNode([
                 'step' => $step, 'messages' => __('tickets'), 'locale' => app()->getLocale(),
                 'cartCount' => 0, 'cartTotalCents' => 0, 'cartOnlineCents' => 0,
@@ -213,36 +249,55 @@ class SidebarCartParityTest extends TestCase
      * hueco. Un cliente que recorriera las dos listas en paralelo pintaría los precios de una línea
      * sobre otra, y el botón de quitar borraría la reserva equivocada.
      */
-    public function test_the_client_builds_the_same_cart_rows_as_the_server(): void
+    /**
+     * ⚠️ **La línea que el presupuesto SALTA, y el hueco que deja.**
+     *
+     * Un producto que deja de venderse con la cesta ya guardada no se tarifica, así que el
+     * presupuesto devuelve menos líneas de las que hay — y el `index` de cada fila es lo ÚNICO que
+     * dice a qué línea de la cesta corresponde. Emparejar por POSICIÓN pintaría las respuestas del
+     * pack en la fila equivocada.
+     *
+     * La referencia ya no es `viewData('cartLines')` sino el presupuesto REAL, que es de donde
+     * `Purchase` sacaba lo mismo. El caso conserva lo que el diff de árbol no puede ver: sus fixtures
+     * tienen **una** línea, y con una línea emparejar por posición sale verde (`#70`).
+     */
+    public function test_the_client_pairs_each_row_with_its_own_cart_line(): void
     {
-        $component = $this->componentWithMixedCart();
+        $cart = $this->mixedCart();
 
         // Un tercer producto EN MEDIO que deja de venderse: el presupuesto lo salta y su hueco en la
         // secuencia de `index` es la única señal de que existió.
         $retired = $this->entry(500);
-        $cart = $component->get('cart');
         array_splice($cart, 1, 0, [[
             'ticket_type_id' => $retired->id, 'date' => $this->date, 'time' => '10:00:00',
             'qty' => 1, 'event_data' => [], 'addons' => [],
         ]]);
-        // Se retira ANTES de sembrar la cesta: `viewData()` devuelve lo del ÚLTIMO render, así que
-        // retirarlo después dejaría el presupuesto calculado con el producto todavía a la venta.
         $retired->update(['is_sellable' => false]);
-        $component->set('cart', $cart)->set('step', 4);
 
-        $server = $component->viewData('cartLines');
+        $lines = $this->quoteFromApi($cart)['lines'];
 
-        $this->assertCount(2, $server, 'la línea retirada no se tarifica');
-        $this->assertSame([0, 2], array_column($server, 'index'), 'la secuencia de índices tiene que tener un HUECO');
+        $this->assertCount(2, $lines, 'la línea retirada no se tarifica');
 
-        $client = $this->cartRowsInNode($this->quoteFromApi($component)['lines'], $component);
+        $client = $this->cartRowsInNode($lines, $cart);
 
+        $this->assertSame([0, 2], array_column($client, 'index'),
+            'la secuencia de índices tiene que tener un HUECO: es lo que ata cada fila a su línea');
+
+        // Y lo que se pinta de cada fila es lo que publica el presupuesto, sin recomponer importes.
         $this->assertSame(
-            $this->comparableRows($server),
-            $this->comparableRows($client),
-            "Las filas del carrito NO coinciden entre los dos motores.\n".
-            'El diff de árbol no lo ve: descarta el texto y alimenta a Vue con el view-model del servidor.'
+            $this->paintedFields($lines),
+            $this->paintedFields($client),
+            "Las filas del carrito NO dicen lo que dice el presupuesto.\n".
+            '`cartRows()` recoloca esos campos, no los calcula: una diferencia aquí es un importe '.
+            'compuesto en el cliente, que es la segunda aritmética que `PAY-12` prohíbe.'
         );
+
+        // Y el hueco no es decorativo: la fila del pack tiene que llevar SUS respuestas, no las de la
+        // línea que ocupa esa posición.
+        $pack = collect($client)->firstWhere('is_pack', true);
+        $this->assertSame(2, $pack['index'], 'el pack es la TERCERA línea de la cesta');
+        $this->assertSame(['Mara'], array_column($pack['event'], 'value'),
+            'las respuestas tienen que ser las de la línea 2, no las de la que va en su posición');
     }
 
     /**
@@ -439,24 +494,29 @@ class SidebarCartParityTest extends TestCase
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
 
-    /** Una cesta MIXTA: una entrada que se paga entera y un pack con señal. */
-    private function componentWithMixedCart(): Testable
+    /**
+     * Una cesta MIXTA: una entrada que se paga entera y un pack con señal.
+     *
+     * Se compone directamente en la forma que el cajón persiste, sin conducir ningún motor: lo que
+     * este fichero prueba es qué se PINTA con una cesta dada, no cómo se llena.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function mixedCart(): array
     {
-        $pack = $this->pack();
         $entry = $this->entry();
+        $pack = $this->pack();
 
-        return Livewire::test(Purchase::class)
-            ->call('selectType', $entry->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->set('eventData', ['celebrant' => 'Mara'])
-            ->call('addToCart');
+        return [
+            [
+                'ticket_type_id' => $entry->id, 'date' => $this->date, 'time' => '10:00:00',
+                'qty' => 1, 'event_data' => [], 'addons' => [],
+            ],
+            [
+                'ticket_type_id' => $pack->id, 'date' => $this->date, 'time' => '10:00:00',
+                'qty' => $pack->min_qty, 'event_data' => ['celebrant' => 'Mara'], 'addons' => [],
+            ],
+        ];
     }
 
     /**
@@ -465,13 +525,13 @@ class SidebarCartParityTest extends TestCase
      * @param  array<string, mixed>|null  $line
      * @return array<string, mixed>
      */
-    private function stepState(Testable $component, ?array $line): array
+    private function stepState(bool $hasTime, ?array $line): array
     {
         return [
             'step' => 3,
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
-            'hasTime' => $component->get('time') !== null,
+            'hasTime' => $hasTime,
             'lineTotalCents' => $line['total_cents'] ?? null,
             'lineHasDeposit' => $line['has_deposit'] ?? false,
             'lineDepositCents' => $line['deposit_cents'] ?? 0,
@@ -479,18 +539,42 @@ class SidebarCartParityTest extends TestCase
         ];
     }
 
-    /** @param array<string, mixed> $state */
-    private function assertFooterMatches(Testable $component, array $state): void
+    /**
+     * Un importe como lo escribe el servidor. **Es la referencia que sobrevive**: `number_format` con
+     * coma decimal, punto de millares y el euro detrás, que es lo que pinta el sitio entero.
+     */
+    private function money(int $cents): string
     {
-        $server = $component->viewData('footer');
-        $client = $this->buildFooterInNode($state);
+        return number_format($cents / 100, 2, ',', '.').' €';
+    }
 
-        $this->assertSame(
-            $server, $client,
-            "El pie del paso {$state['step']} NO coincide con el del servidor.\n".
-            '⚠️ Ni el diff de árbol ni ninguna otra prueba pueden cazar esto: los importes y los '.
-            'rótulos son TEXTO, y el normalizador del gate descarta los nodos de texto.'
-        );
+    /**
+     * Comprueba los TEXTOS del pie que compone el cliente contra el diccionario y `number_format`.
+     *
+     * Solo los textos y los importes: la estructura la fija `foot.test.js` y el árbol la ejecuta
+     * desde `#71`. Lo que ninguno de los dos puede mirar es lo que aquí se compara, porque el
+     * normalizador del gate descarta los nodos de texto.
+     *
+     * @param  array<string, mixed>  $state
+     * @param  array<string, string>  $expected
+     */
+    private function assertFooterTexts(array $state, array $expected): void
+    {
+        $footer = $this->buildFooterInNode($state);
+
+        $this->assertIsArray($footer, "el paso {$state['step']} tiene que componer pie con esta cesta");
+
+        $flat = $footer + ($footer['split'] ?? []);
+
+        foreach ($expected as $key => $value) {
+            $this->assertArrayHasKey($key, $flat, "el pie del paso {$state['step']} no lleva «{$key}»");
+            $this->assertSame(
+                $value, $flat[$key],
+                "El «{$key}» del pie del paso {$state['step']} NO es el del diccionario/`number_format`.\n".
+                '⚠️ Ni el diff de árbol ni ninguna otra prueba pueden cazar esto: los importes y los '.
+                'rótulos son TEXTO, y el normalizador del gate descarta los nodos de texto.'
+            );
+        }
     }
 
     /** El pie de la línea, tal y como lo publica el endpoint que el cajón consulta. */
@@ -502,7 +586,7 @@ class SidebarCartParityTest extends TestCase
     }
 
     /** El presupuesto de la cesta del componente, pedido a la API como haría el cajón. */
-    private function quoteFromApi(Testable $component): array
+    private function quoteFromApi(array $cart): array
     {
         $items = array_map(fn (array $line): array => array_filter([
             'product_id' => $line['ticket_type_id'],
@@ -512,39 +596,39 @@ class SidebarCartParityTest extends TestCase
             'addons' => array_map(fn (array $addon): array => [
                 'product_id' => $addon['ticket_type_id'], 'quantity' => $addon['qty'],
             ], $line['addons'] ?? []),
-        ], fn ($value) => $value !== []), $component->get('cart'));
+        ], fn ($value) => $value !== []), $cart);
 
         return $this->postJson(self::ROOT.'/orders/quote', ['items' => array_values($items)])->assertOk()->json();
     }
 
     /**
-     * Deja las filas comparables: solo lo que se PINTA. `product_id` se excluye porque el view-model
-     * de Livewire no lo lleva —su vista no lo necesita— y compararlo mediría el andamiaje.
+     * Lo que se PINTA de cada fila, en la forma en que lo publica el PRESUPUESTO.
+     *
+     * Sirve para los dos lados —las filas del cliente y las líneas del presupuesto— porque el cliente
+     * no reescribe estos campos: los recoloca. Ahí está la comprobación: si `cartRows()` empezara a
+     * componer un importe por su cuenta, dejaría de coincidir con la fuente de la que sale.
+     *
+     * `product_id` se excluye a propósito: no se pinta, y compararlo mediría el andamiaje.
      *
      * @param  array<int, array<string, mixed>>  $rows
      * @return array<int, array<string, mixed>>
      */
-    private function comparableRows(array $rows): array
+    private function paintedFields(array $rows): array
     {
         return array_map(fn (array $row): array => [
-            'index' => $row['index'],
-            'name' => $row['name'] ?? $row['product_name'],
-            'is_pack' => $row['is_pack'],
-            'date' => $row['date'],
-            'time' => $row['time'],
-            'quantity' => $row['qty'] ?? $row['quantity'],
-            'subtotal_cents' => $row['subtotal'] ?? $row['subtotal_cents'],
+            'product_name' => $row['product_name'],
+            'quantity' => $row['quantity'],
+            'subtotal_cents' => $row['subtotal_cents'],
             'has_deposit' => $row['has_deposit'],
-            'deposit_cents' => $row['deposit'] ?? $row['deposit_cents'],
-            'gate_remainder_cents' => $row['gate_remainder'] ?? $row['gate_remainder_cents'],
-            'event' => $row['event'],
+            'deposit_cents' => $row['deposit_cents'],
+            'gate_remainder_cents' => $row['gate_remainder_cents'],
             'addons' => array_map(fn (array $addon): array => [
-                'name' => $addon['name'] ?? $addon['product_name'],
-                'quantity' => $addon['qty'] ?? $addon['quantity'],
-                'free_quantity' => $addon['free_qty'] ?? $addon['free_quantity'],
-                'subtotal_cents' => $addon['subtotal'] ?? $addon['subtotal_cents'],
+                'product_name' => $addon['product_name'],
+                'quantity' => $addon['quantity'],
+                'free_quantity' => $addon['free_quantity'],
+                'subtotal_cents' => $addon['subtotal_cents'],
             ], $row['addons']),
-        ], $rows);
+        ], array_values($rows));
     }
 
     /** @param array<string, mixed> $state */
@@ -565,12 +649,12 @@ class SidebarCartParityTest extends TestCase
      * @param  array<int, array<string, mixed>>  $quoteLines
      * @return array<int, array<string, mixed>>
      */
-    private function cartRowsInNode(array $quoteLines, Testable $component): array
+    private function cartRowsInNode(array $quoteLines, array $cartLines): array
     {
-        $cart = array_map(fn (array $line): array => ['event_data' => $line['event_data'] ?? []], $component->get('cart'));
+        $cart = array_map(fn (array $line): array => ['event_data' => $line['event_data'] ?? []], $cartLines);
 
         $fields = [];
-        foreach ($component->get('cart') as $line) {
+        foreach ($cartLines as $line) {
             $type = TicketType::find($line['ticket_type_id']);
             $fields[(string) $line['ticket_type_id']] = array_map(
                 fn (array $field): array => ['key' => $field['key'], 'label' => $type->eventFieldLabel($field)],
