@@ -55,6 +55,8 @@ import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '
 import { cartRows } from '../resources/js/sidebar/cart.js';
 import { buildProgress } from '../resources/js/sidebar/progress.js';
 import { buildFooter } from '../resources/js/sidebar/foot.js';
+import { gatewayForm } from '../resources/js/sidebar/pay.js';
+import { registerErrors } from '../resources/js/sidebar/register.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -153,6 +155,46 @@ const PROPS_FROM_API = {
      * cuyo producto dejó de venderse no se tarifica y desaparece del presupuesto. Componerlas fuera
      * dejaría ese emparejamiento sin ejecutar, que es el fallo que `#56` midió.
      */
+    /**
+     * El paso 8 pinta las MISMAS filas que el carrito —`SummaryLine.vue` es compartida— así que se
+     * compone igual, con `cartRows()` sobre el presupuesto real.
+     */
+    /**
+     * ⚠️ El banner de errores del alta lo compone `register.js`, no el test. El orden de los avisos —el
+     * de las reglas de validación— y el reparto entre el banner y cada campo son SUYOS: el test los
+     * reimplementaba en PHP («el mismo orden que fija `register.js`», decía su comentario), que es la
+     * definición de punto ciego. Ahora se le entrega el 422 crudo de `POST /auth/register`.
+     */
+    [STEPS.IDENTIFY]: (api, messages, state) => ({
+        mode: state.mode ?? 'login',
+        loginErrors: { global: '', fields: {} },
+        registerErrors: api.register
+            ? registerErrors(envelope(api.register.status, api.register.body), { messages, auth: state.auth ?? {} })
+            : { summary: [], fields: {} },
+        submitting: false,
+        form: {},
+        messages,
+        account: state.account ?? {},
+    }),
+
+    [STEPS.PAY]: (api, messages, state) => ({
+        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}),
+        error: state.error ?? '',
+        messages,
+        locale: state.locale ?? 'es',
+    }),
+
+    /**
+     * ⚠️ El paso 9 traduce el sobre `payment` de la API a la lista de `<input>` que el navegador
+     * auto-POSTea, y esa traducción es de `pay.js`. El test la hacía a mano —`fields` es un MAPA en el
+     * contrato y una LISTA en el componente—, así que el gate nunca la ejecutaba; justo el sitio donde
+     * un campo renombrado rompe el cobro con SIS0042 **con el pedido ya creado y el aforo retenido**.
+     */
+    [STEPS.REDIRECTING]: (api, messages) => ({
+        form: gatewayForm(api.payment ?? null),
+        messages,
+    }),
+
     [STEPS.CART]: (api, messages, state) => ({
         lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}),
         confirmed: state.confirmed ?? false,
@@ -175,6 +217,21 @@ const PROPS_FROM_API = {
  * ⚠️ **El aviso de pausa NO se compone aquí**: el test ya ejecuta `paused.js` en Node con la respuesta
  * real de `GET /booking/status`, así que ese lado nunca tuvo el hueco. Se recibe hecho.
  */
+/**
+ * El sobre que devuelve `api.js` para una respuesta ya recibida.
+ *
+ * ⚠️ **Se reproduce aquí a propósito y conviene saber el límite**: `api.js` es quien lo construye en
+ * el navegador —con sus cuatro trampas medidas: cookie, `Accept`, CSRF url-decodificado y el reintento
+ * del 419—, pero esas trampas son del TRANSPORTE y no se pueden ejercer sin red. Lo que sí se ejerce
+ * desde aquí es lo que viene después: quien LEE ese sobre. La forma está tipada en `api.js`
+ * (`ApiResult`), y son cinco campos.
+ */
+function envelope(status, body) {
+    const ok = status >= 200 && status < 300;
+
+    return { ok, status, data: body, error: ok ? null : (body?.error ?? null), offline: false };
+}
+
 function shellFromApi(api, messages, ui, state) {
     const sections = sectionsFrom(api.catalog?.data ?? []);
     const selected = sections.flatMap((s) => s.items).find((item) => item.id === state.productId) ?? null;

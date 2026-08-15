@@ -456,9 +456,19 @@ class SidebarDomContractTest extends TestCase
 
         $this->assertGreaterThan(3, count($errors), 'el caso necesita varios campos en rojo para probar la lista');
 
+        // ⚠️ El lado SPA ya no recibe los errores cocinados por el test: recibe el **422 crudo** de
+        // `POST /auth/register` y los compone `register.js`. El orden de los avisos —el de las reglas de
+        // validación— y el reparto entre banner y campo son SUYOS, y el test los reimplementaba en PHP
+        // («el mismo orden que fija `register.js`», decía su comentario): eso es un punto ciego, no una
+        // comodidad.
+        $api = ['register' => [
+            'status' => 422,
+            'body' => $this->postJson('/api/v1/auth/register', [])->assertStatus(422)->json(),
+        ]];
+
         $livewire = $this->treeOf($register->html(), 'auth__errors');
         $vue = $this->treeOf(
-            $this->renderVue(5, $this->identifyProps('register', $this->registerErrorsFrom($errors))),
+            $this->renderVue(5, [], null, $api, $this->identifyState('register')),
             'auth__errors'
         );
 
@@ -487,33 +497,28 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
-     * Los avisos del bag de Livewire → la forma que compone `register.js` desde el sobre de la API.
+     * El estado de cliente del paso 5: la pestaña activa y los DOS grupos de diccionario que el
+     * montaje inyecta.
      *
-     * @param  array<string, array<int, string>>  $errors
+     * ⚠️ `account` va con los dos textos legales **ya interpolados** —llevan un `<a href>` que compone
+     * `route()` y el cajón los pinta con `v-html`—, y `auth` es el grupo de Laravel del que sale el
+     * aviso del limitador. Los dos son payload del SERVIDOR, no derivaciones: se pasan tal cual.
+     *
      * @return array<string, mixed>
      */
-    private function registerErrorsFrom(array $errors): array
+    private function identifyState(string $mode = 'login'): array
     {
-        $fields = [];
-        foreach ($errors as $field => $messages) {
-            $fields[$field] = $messages[0] ?? '';
-        }
-
-        // El mismo orden que fija `register.js`: el de las reglas de validación.
-        $order = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'marketing'];
-        $summary = [];
-        foreach ($order as $key) {
-            if (isset($fields[$key])) {
-                $summary[] = $fields[$key];
-            }
-        }
-        foreach ($fields as $key => $message) {
-            if (! in_array($key, $order, true)) {
-                $summary[] = $message;
-            }
-        }
-
-        return ['summary' => $summary, 'fields' => $fields];
+        return $this->clientState(step: 5) + [
+            'mode' => $mode,
+            'account' => [
+                'login' => __('account.login'),
+                'register' => array_replace(__('account.register'), [
+                    'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
+                    'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                ]),
+            ],
+            'auth' => __('auth'),
+        ];
     }
 
     /**
@@ -558,7 +563,8 @@ class SidebarDomContractTest extends TestCase
         $this->assertSame(8, (int) $component->get('step'), 'el caso tiene que llegar al paso de pago');
 
         $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
-        $vue = $this->vueTree(8, $this->payProps($component), 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(8, [], 'bk-back', withSiblings: true,
+            api: $this->cartApiPayload($component), state: $this->clientState(step: 8));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -589,7 +595,8 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotNull($footer['split'] ?? null, 'y el caso necesita señal, o no hay desglose que comparar');
 
         $livewire = $this->livewireTree($component, 'bk-paybreakdown', withSiblings: true);
-        $vue = $this->vueTree(8, $this->payProps($component), 'bk-paybreakdown', withSiblings: true, shell: $this->shellProps($component));
+        $vue = $this->vueTree(8, [], 'bk-paybreakdown', withSiblings: true,
+            api: $this->cartApiPayload($component), state: $this->clientState(step: 8), shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -613,12 +620,20 @@ class SidebarDomContractTest extends TestCase
     {
         $component = $this->componentWithFullCart();
         $this->actingAs(User::factory()->create());
+
+        // ⚠️ El sobre de pago se pide ANTES de confirmar, y no es un detalle de orden: a partir del 201
+        // el pedido EXISTE y retiene aforo, así que `confirmReservation()` vacía la cesta —y sin cesta
+        // no hay con qué crear por la API el pedido equivalente (la primera versión de esto se llevó un
+        // 422 por ahí). Los dos motores acaban con un pedido cada uno, que es lo que se compara.
+        $api = $this->redirectApiPayload($component);
+
         $component->call('checkout')->call('confirmReservation');
 
         $this->assertSame(9, (int) $component->get('step'), 'el caso tiene que llegar a la redirección');
 
         $livewire = $this->livewireTree($component, 'purchase__redirecting', withSiblings: true);
-        $vue = $this->vueTree(9, ['form' => $this->gatewayFormProps($component), 'messages' => __('tickets')], 'purchase__redirecting', withSiblings: true);
+        $vue = $this->vueTree(9, [], 'purchase__redirecting', withSiblings: true,
+            api: $api, state: $this->clientState(step: 9));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -627,39 +642,27 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
-     * El view-model del paso 8: las mismas líneas que el carrito, en la forma de la API.
+     * El sobre `payment` REAL de `POST /api/v1/orders` (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ **Aquí desaparece la cuarta traducción a mano del test.** `gatewayFormProps()` convertía el
+     * mapa `payment.fields` del contrato en la LISTA de `{name, value}` que pinta `RedirectStep`, que
+     * es exactamente lo que hace `pay.js::gatewayForm()`. El gate nunca la ejecutaba — y es el sitio
+     * donde un campo renombrado rompe el cobro con SIS0042 **con el pedido ya creado y el aforo
+     * retenido**.
+     *
+     * Se crea un pedido de verdad por la API con la misma cesta: los importes y las firmas serán otros
+     * —son dos pedidos distintos— pero lo que este diff compara es la ESTRUCTURA, y los valores los
+     * compara campo a campo `SidebarPayParityTest`.
      *
      * @return array<string, mixed>
      */
-    private function payProps(Testable $component): array
+    private function redirectApiPayload(Testable $component): array
     {
-        return [
-            'lines' => $this->cartProps($component)['lines'],
-            'error' => '',
-            'messages' => __('tickets'),
-            'locale' => app()->getLocale(),
-        ];
-    }
+        $cart = $this->cartApiPayload($component);
 
-    /**
-     * El formulario de la pasarela en la forma que publica la API (`payment.fields` es un mapa) y que
-     * `pay.js` traduce a lista.
-     *
-     * @return array<string, mixed>
-     */
-    private function gatewayFormProps(Testable $component): array
-    {
-        $data = (array) $component->get('redsysFormData');
+        $response = $this->postJson('/api/v1/orders', ['items' => $cart['cart']])->assertCreated();
 
-        return [
-            'url' => $data['gatewayUrl'] ?? '',
-            'method' => 'POST',
-            'fields' => [
-                ['name' => 'Ds_SignatureVersion', 'value' => $data['signatureVersion'] ?? ''],
-                ['name' => 'Ds_MerchantParameters', 'value' => $data['params'] ?? ''],
-                ['name' => 'Ds_Signature', 'value' => $data['signature'] ?? ''],
-            ],
-        ];
+        return ['payment' => $response->json('payment')];
     }
 
     // ── El paso 6: la reserva creada ──────────────────────────────────────────────────────────

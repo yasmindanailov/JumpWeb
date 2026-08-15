@@ -2912,3 +2912,40 @@ pie mutó `splitMode` en la rama del paso 3, que los fixtures ejercitan **con un
 sin desglose—: verde. La rama que sí tiene desglose es la de la CESTA, y mutándola ahí caen dos casos.
 Es la misma lección que el caso de husos de `#68`: **la mutación hay que apuntarla a la rama que el
 fixture recorre**, o mide otra cosa.
+
+## #72 · 2026-08-15 · 4.7·2b·2·B — pasos 5, 8 y 9: caen las últimas traducciones a mano del test
+Sexto tramo (`#67`–`#71`). Con este, **el test ya no traduce nada del servidor**: las cuatro
+traducciones que hacía por su cuenta han desaparecido, cada una sustituida por el módulo del cliente
+que de verdad corre en el navegador.
+
+**(a) Paso 9 — la más peligrosa de las cuatro.** `gatewayFormProps()` convertía a mano el mapa
+`payment.fields` del contrato en la LISTA de `{name, value}` que pinta `RedirectStep`, que es
+exactamente lo que hace `pay.js::gatewayForm()`. El gate nunca la ejecutaba, y es el sitio donde un
+campo renombrado rompe el cobro con **SIS0042 con el pedido ya creado y el aforo retenido**. Ahora se
+crea un pedido de verdad por `POST /api/v1/orders` y traduce el cliente. Mutación: vaciar los campos
+firmados deja el caso en rojo.
+
+**(b) ⚠️ Y ese caso enseñó un orden que no es negociable.** La primera versión pedía el sobre DESPUÉS
+de `confirmReservation()` y se llevó un **422**: a partir del 201 el pedido existe y retiene aforo, así
+que confirmar **vacía la cesta** — y sin cesta no hay con qué crear el pedido equivalente por la API.
+Queda escrito en el caso: el sobre se pide antes.
+
+**(c) Paso 5 — el banner de errores del alta.** `registerErrorsFrom()` reimplementaba en PHP el orden
+de los avisos, y su propio comentario lo confesaba: «el mismo orden que fija `register.js`». Eso es la
+definición de punto ciego. Ahora se le entrega el **422 crudo** de `POST /auth/register` y compone
+`register.js`. Mutación: que `summaryOf()` devuelva lista vacía deja el caso en rojo.
+⚠️ El sobre de `api.js` (`{ok, status, data, error, offline}`) se reproduce en el renderizador, y el
+límite queda escrito: las cuatro trampas de `api.js` son del TRANSPORTE —cookie, `Accept`, CSRF
+url-decodificado, reintento del 419— y no se pueden ejercer sin red. Lo que sí se ejerce es quien LEE
+ese sobre, que es lo que este tramo perseguía.
+
+**(d) Paso 8 — sin sorpresa, y es buena señal.** Pinta las mismas filas que el carrito
+(`SummaryLine.vue` es compartida), así que se compone con `cartRows()` sobre el presupuesto real, igual
+que el paso 4.
+
+**(e) El recuento del tramo**: de las trece props cocinadas que tenía el test quedan **tres**, y las
+tres con motivo escrito — la línea de carrito sin fecha (estado inalcanzable por el cliente, `#70`),
+las dos del paso 5 sin errores (no traducen nada: mode, formulario vacío y los dos grupos de
+diccionario que inyecta el montaje) y el bucle del aviso de pausa, que aún monta el armazón del
+servidor porque recorre pasos sin migrar. **El manifiesto no ha cambiado en ninguno de los seis
+tramos**, que es la prueba acumulada de que la migración es fiel.

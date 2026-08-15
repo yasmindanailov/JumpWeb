@@ -1135,8 +1135,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           · ⚠️ **Otra mutación mal apuntada**: tumbar `splitMode` en la rama del paso 3 salió verde
             porque su fixture es una ENTRADA (sin señal); la rama con desglose es la de la cesta.
             Misma lección que los husos de `#68`.
-        · ▶ **SIGUIENTE**: los pasos 5, 7, 8, 9, 6, 10 y 11 (identificación, verificar, pago,
-          redirección y los tres desenlaces), cada uno con los tres montajes de armazón que quedan.
+        · ✅ **Pasos 5, 8 y 9 migrados** (`DECISIONES #72`). Con ellos **el test ya no traduce nada del
+          servidor**: caen `gatewayFormProps()` (el mapa `payment.fields` → lista, que hace `pay.js`),
+          `registerErrorsFrom()` (el orden del banner, que fija `register.js`) y `payProps()`.
+          · ⚠️ **El paso 9 enseñó un orden no negociable**: pedir el sobre de pago DESPUÉS de
+            `confirmReservation()` da 422, porque confirmar **vacía la cesta** (a partir del 201 el
+            pedido existe y retiene aforo). Se pide antes, y está escrito en el caso.
+          · ⚠️ **El límite del sobre de `api.js` queda declarado**: sus cuatro trampas son del
+            TRANSPORTE y no se pueden ejercer sin red; lo que se ejerce es quien LEE el sobre.
+          · Mutaciones: vaciar los campos firmados (paso 9) y vaciar `summaryOf()` (paso 5) dejan su
+            caso en rojo.
+        · ▶ **SIGUIENTE**: los pasos 6, 10 y 11 (los tres desenlaces) y el bucle del aviso de pausa,
+          que es el último montaje que toma el armazón del servidor.
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:
