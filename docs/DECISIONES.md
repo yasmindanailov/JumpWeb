@@ -2686,3 +2686,40 @@ El −38 es (i) el andamiaje del conductor Livewire —`assertSet('step', 8)` + 
 aserciones del caso que se MUDÓ, que reaparecen en `PurchasePanelTest`, y (iii) cuatro aserciones de UI
 —paso 9, `confirmed`, cesta vacía y `orderCode`— que `PurchasePanelTest` ya fijaba **verbatim**.
 Casos: 16 → 15 aquí y 39 → 40 allí; la suite se queda en **2715**.
+
+## #66 · 2026-08-15 · [DECIDIDO] El cajón es el ÁREA DE CLIENTE, no el embudo de compra
+Decisión del owner, tomada el 2026-08-15 mientras se retiraba el sidebar Livewire. **No cambia el
+trabajo de 4.7 —que sigue siendo terminar la retirada— pero sí cambia lo que 4.7 no puede cerrarse
+sin dejar preparado**, y por eso se escribe antes de seguir.
+
+**(a) La decisión, dicha entera.** Toda la gestión del cliente vivirá **dentro del cajón**: entrar y
+darse de alta, sus entradas y reservas, y las gestiones de cuenta (perfil, contraseña, cerrar sesión en
+otros dispositivos, borrar cuenta). Hoy eso está repartido en tres sitios —el cajón (compra), un modal
+de auth en la cabecera y las páginas `/mi-cuenta/…`—, y **el destino es uno solo**.
+
+**(b) Lo que NO decide, y conviene que no se dé por decidido.** No dice *cuándo*: el orden acordado es
+**terminar 4.7 primero** (retirar el motor Livewire del cajón), después Turnstile —que necesita claves
+de Cloudflare y un hostname que pone el owner— y después esto. Tampoco dice si las páginas
+`/mi-cuenta/…` desaparecen o se quedan como vista completa además del cajón: eso es diseño, y necesita
+su spec (`CONVENCIONES §5`) antes de una línea de código.
+
+**(c) ⚠️ Lo que esto obliga a NO hacer desde hoy, que es el motivo de escribirlo ahora.**
+`machine.js` modela hoy **once pasos numerados de un embudo de compra** y sus transiciones
+(`TRANSITIONS`), con `CATALOG` como origen y `CONFIRMED` como final. Un área de cliente **no es un
+embudo**: son zonas a las que se entra desde fuera y entre las que se navega sin orden. Quien toque la
+máquina de aquí en adelante **no puede estrecharla más** —ni añadir supuestos de «siempre se viene del
+paso anterior»—, porque el rediseño de estados es el primer trabajo del área de cliente.
+
+**(d) El servidor ya está, y eso es lo que hace la decisión barata.** Medido contra `openapi/v1.yaml`:
+`/auth/login`, `/auth/register`, `/auth/logout`, `/auth/password/forgot`, `/auth/password/reset`,
+`/auth/email/resend`, `/me`, `/me/orders`, `/me/reservations`, `/me/reservation-eligibility` y el
+post-form por firma **ya existen y están probados** desde Fase 3. El área de cliente es, en lo esencial,
+**cliente nuevo de contratos que ya se pagaron**: no hay que abrir dominio, hay que pintar.
+⚠️ Lo único que Fase 3 dejó fuera a propósito es la **emisión de tokens Bearer** (`#29a`), que no hace
+falta aquí —la SPA vive en el mismo dominio y usa sesión— pero sí para la app móvil de Fase 6.
+
+**(e) La consecuencia inmediata para 4.7, y es solo una.** El modal de auth de la cabecera
+(`layout.blade.php`, `@livewire('auth.login|register|forgot-password')`) **sobrevive a 4.7 y no se
+toca**: hoy es la única superficie que monta el widget de Turnstile, y el alta del cajón **delega en él**
+cuando el anti-bot está activo. Retirarlo antes de montar Turnstile en Vue dejaría el registro sin
+salida. O sea: **el orden es 4.7 → Turnstile → área de cliente**, y no es preferencia, es dependencia.

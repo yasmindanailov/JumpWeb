@@ -1048,7 +1048,39 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         las tres verificadas por mutación. ·2b·3 solo tendrá que borrar la mitad Livewire.
       · **Pendientes de este tramo**: `DepositSurfacesTest` (2 usos re-apuntables + 4 de UI),
         `PurchaseRetryAndPollingTest`, `SidebarSeamTest`/`SidebarTokenBudgetTest` (leen
-        `purchase.blade.php`; hay que apuntarlos a las fuentes Vue) y el grupo de las nueve paridades.
+        `purchase.blade.php`; hay que apuntarlos a las fuentes Vue) y el grupo de las paridades.
+      · **Inventario de las paridades, medido el 2026-08-15**: de las trece, **CINCO ya no tocan
+        Livewire** y sobreviven intactas —`SidebarLoginParityTest`, `SidebarRegisterParityTest`,
+        `SidebarMoneyParityTest`, `SidebarTextParityTest`, `SidebarPendingFieldsParityTest`: comparan
+        contra el diccionario y el contrato—. Quedan **ocho** más el diff de árbol:
+        `SidebarOutcomeParityTest` (10 usos) · `SidebarPausedParityTest` (4) ·
+        `SidebarProgressParityTest` (4) · `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3)
+        · `SidebarAdmissionParityTest` (2) · `SidebarAddonsParityTest` (1) · `SidebarPayParityTest` (1)
+        · `SidebarDomContractTest` (26).
+      · ⚠️ **LA PIEZA GRANDE, y hay que decidirla antes de tocar ninguna paridad**: `SidebarDomContractTest`
+        alimenta a Vue con props que salen **TODAS del componente Livewire** —trece helpers
+        `…Props(Testable $component)` que leen `viewData()`—. Sin componente no hay props, así que el
+        diff de árbol **no sobrevive tal cual**. Hay dos salidas y no son equivalentes:
+        · **(A) congelar también las props** → el test pasa a comparar «Vue con props de fichero»
+          contra el manifiesto. Barato, y detecta regresiones de Vue. Pero es foto contra foto: no
+          vería que el SERVIDOR cambie la forma de un dato.
+        · **(B) alimentar a Vue con las respuestas REALES de la API** → el test pasa a decir «la SPA,
+          servida por el servidor de verdad, emite el árbol congelado». Más caro y **estrictamente
+          mejor**: cierra el punto ciego que hoy obliga a que existan `SidebarAddonsParityTest` y
+          `SidebarCalendarParityTest` —el diff le pasa a Vue el view-model de Livewire traducido, así
+          que un componente que lea nombres de campo equivocados pasa en verde; ya mordió una vez—.
+          **Con (B), varias paridades dejan de hacer falta por el motivo correcto**, no por descuido.
+        ▶ **Recomendación: (B)**, y hacerla ANTES que las ocho paridades, porque decide cuáles de ellas
+        siguen teniendo pregunta que responder.
+      · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
+        cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
+        escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:
+        `jj-spinner*`, `jj-loading`, el bloque `auth__*`/`form__*`, los iconos— y el Blade tiene **4 que
+        los `.vue` no**: `is-selected`, `is-invalid`, `active` y `catalog__item--feat`. Cambiar la
+        fuente ENSANCHA el ámbito y puede mover el presupuesto: necesita tramo propio.
+      · **`SidebarSeamTest` sí es pequeño**: su `ENGINE_VIEW` es una EXCLUSIÓN («en la vista del propio
+        motor el evento está en su sitio»). Al no haber vista del motor, la excepción desaparece sola
+        junto con los dos eventos (`show-packs`, `show-entradas-zone`), que mueren con el componente.
       **Clasificación ya medida** para los que se inspeccionaron en ·b1, para no repetir el trabajo:
       · `ReservationPauseGuardTest` (3 casos) — **muere con el componente sin pérdida**: su sujeto es el
         guard de servidor y la superficie que sobrevive ya lo cubre en `Api/V1/OrdersTest`

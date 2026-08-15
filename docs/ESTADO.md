@@ -118,6 +118,25 @@ en `docs/specs/api-v1.md` §9. Lo que sigue es solo lo que **cambia el trabajo d
 - **Sanctum está listo pero SIN emisor de tokens**: la emisión viaja a Fase 6 con la app que los
   consuma (`DECISIONES #29a`). La revocación ya está hecha y probada.
 
+## ▶ Decisión de producto VIGENTE que enmarca todo lo demás
+
+⚠️ **El cajón es el ÁREA DE CLIENTE, no el embudo de compra** (`DECISIONES #66`, 2026-08-15, owner).
+Toda la gestión del cliente vivirá dentro del cajón: entrar y darse de alta, sus entradas y reservas, y
+las gestiones de cuenta. Hoy está repartido en tres sitios —el cajón, el modal de auth de la cabecera y
+las páginas `/mi-cuenta/…`— y el destino es UNO.
+- **El orden es dependencia, no preferencia**: **4.7** (retirar el motor Livewire del cajón) →
+  **Turnstile** (necesita claves y hostname de Cloudflare, los pone el owner) → **área de cliente**.
+  El modal de la cabecera no se puede retirar antes de Turnstile porque es el único que monta el widget
+  y el alta del cajón **delega en él** cuando el anti-bot está activo.
+- ⚠️ **Lo que obliga a NO hacer desde hoy**: `machine.js` modela once pasos NUMERADOS de un embudo con
+  sus transiciones. Un área de cliente no es un embudo —son zonas a las que se entra desde fuera—, así
+  que **no se puede estrechar más la máquina** ni añadir supuestos de «siempre se viene del paso
+  anterior». Rediseñar los estados es el primer trabajo de esa fase.
+- **El servidor ya está** (medido contra `openapi/v1.yaml`): `/auth/*`, `/me`, `/me/orders`,
+  `/me/reservations`, `/me/reservation-eligibility` y el post-form por firma existen y están probados
+  desde Fase 3. El área de cliente es cliente nuevo de contratos ya pagados: hay que pintar, no abrir
+  dominio.
+
 ## ▶ Próximo paso
 
 **Fase 4 — la SPA del sidebar, EN CURSO.** Diseño en `docs/specs/sidebar-spa.md` (**v3**) y
@@ -342,6 +361,17 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
      · **Si muere con el componente**: ANTES hay que enseñar dónde vive su cobertura. Patrón hecho y
        medido: los dos casos de `AddonDependencyTest` mueren sin pérdida porque `CatalogAddonsTest`
        cubre la poda de dependencias **mejor** (la cadena entera). ⚠️ Eso se comprueba, no se supone.
+     · ▶ **ANTES de tocar ninguna paridad, decide cómo se alimenta el diff de árbol** (medido el
+       2026-08-15, detalle en `00-REFACTOR.md`): `SidebarDomContractTest` le pasa a Vue props que salen
+       **todas del componente Livewire** (13 helpers que leen `viewData()`), así que **sin componente no
+       hay props** y el test no sobrevive tal cual. Las dos salidas: (A) congelar también las props
+       —foto contra foto, no ve un cambio del servidor— o **(B) alimentar a Vue con las respuestas
+       REALES de la API**, que además cierra el punto ciego por el que existen `SidebarAddonsParityTest`
+       y `SidebarCalendarParityTest`. **Recomendación: (B), y primero**, porque decide cuáles de las
+       ocho paridades restantes siguen teniendo pregunta que responder.
+     · **De las TRECE paridades, cinco ya no tocan Livewire** y sobreviven intactas (login, registro,
+       dinero, textos, campos pendientes: comparan contra el diccionario y el contrato). Las que quedan
+       son ocho más el diff de árbol.
      · **Las nueve PARIDADES** son el grupo grande y el último: o comparan contra el manifiesto
        congelado (`tests/Fixtures/sidebar-dom-manifest.json`, ya hecho para el árbol) o contra el
        contrato del servidor (`lang/`, `openapi/v1.yaml`), que es contra quien de verdad comparan sus
