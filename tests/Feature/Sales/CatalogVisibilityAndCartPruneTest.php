@@ -82,6 +82,20 @@ class CatalogVisibilityAndCartPruneTest extends TestCase
             ->assertDontSee('EntradaOculta');    // oculta de la web → NO en la landing (aunque sea vendible)
     }
 
+    /**
+     * ⚠️ **Este caso MUERE con el componente, y los otros dos del fichero NO** (medido el 2026-08-15,
+     * `DECISIONES #87`). ·2b·3 tiene que operar DENTRO: borrar este y dejar los de arriba.
+     *
+     * Su sujeto no es la regla, es **dónde se aplica**: la poda vive en `Purchase::mount()`, que lee
+     * la cesta de la SESIÓN. En el cajón SPA esa misma regla vive en otro sitio y ya tiene red:
+     *
+     *  · que el servidor **no tarifique** una línea retirada — medido mutando el filtro `sellable()`
+     *    de `CartPricer`: caen `Api\V1\QuoteTest`, `Sales\CartPricerTest` y
+     *    `Sidebar\SidebarCartParityTest`, **los tres supervivientes**, y este caso NO cae, porque
+     *    ejerce otro camino;
+     *  · que el cliente **descarte** la línea que no volvió tarificada — `cart.js::reconcile()`, con
+     *    sus casos en `cart.test.js`.
+     */
     public function test_cart_prunes_a_line_whose_product_became_unsellable(): void
     {
         $entry = $this->entry(active: true, sellable: true);

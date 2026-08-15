@@ -1354,6 +1354,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         casos, y **dos sobreviven** —uno en el mismo fichero llamando al dominio directo, y
         `CatalogAddonsTest::test_the_dependency_pruning_follows_the_whole_chain`, que además recorre la
         cadena a punto fijo—. La regla queda mejor cubierta donde se queda.
+      · ✅ **`CatalogVisibilityAndCartPruneTest` clasificado** (`DECISIONES #87`). **El contador no se
+        mueve**: su caso acoplado muere con el componente y los otros dos no lo tocan → ·2b·3 opera
+        DENTRO, como en `#79`.
+        · **La distinción que enseña**: su regla SOBREVIVE, lo que muere es **dónde se aplica**
+          (`Purchase::mount()`, sobre la cesta de sesión). **La pregunta hay que hacérsela al SUJETO
+          del caso, no a la regla que menciona.**
+        · Medido: mutar el filtro `sellable()` de `CartPricer` tumba tres casos, **los tres
+          supervivientes** (`QuoteTest`, `CartPricerTest`, `SidebarCartParityTest`) — y **este NO**,
+          que es la prueba de que ejerce otro camino. La otra mitad es `cart.js::reconcile()`.
+        · ⚠️ **Medición DESCARTADA por ruidosa, anotada para no repetirla**: mutar
+          `Order::displayStatus()` para clasificar `PurchaseConfirmationStatusTest` tumba media docena
+          de casos del panel que no vienen al caso. Ese fichero queda **sin clasificar** a propósito:
+          hace falta una mutación dirigida al lado SPA (`buildConfirmation()`).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

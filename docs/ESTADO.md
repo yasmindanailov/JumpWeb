@@ -125,11 +125,16 @@ Livewire?»**. Los primeros se re-apuntan y bajan el contador; los segundos muer
 
 ⚠️ **Y aquí NO hay nudo**: la lección de `#85` se aplicó y dio negativo — los once que quedan por
 auditar tienen cada uno sus propios ayudantes pequeños, sin nada compartido. Se van de uno en uno.
-Hecho: `AddonDependencyTest` (`#86`). Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
+Hechos: `AddonDependencyTest` (`#86`, dos casos retirados) y `CatalogVisibilityAndCartPruneTest`
+(`#87`, clasificado: muere DENTRO). ⚠️ **La pregunta hay que hacérsela al SUJETO del caso, no a la
+regla que menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que
+se va. Por tamaño de acoplamiento, el resto: `SidebarV2Test` (20 usos)
 · `PurchaseLimitsTest` (13) · `PurchaseCatalogGroupingTest` (11) · `PurchaseRetryAndPollingTest` (11)
 · `AddonInclusionPurchaseTest` (7) · `DepositSurfacesTest` (6) · `ReservationPauseTest` (5) ·
 `PurchaseRegistrationPromptTest` (5) · `PurchaseIdentificationTest` (3) ·
-`PurchaseConfirmationStatusTest` (3) · `CatalogVisibilityAndCartPruneTest` (1).
+`PurchaseConfirmationStatusTest` (3) — este último **intentado y sin clasificar a propósito**: la
+mutación de `Order::displayStatus()` sale demasiado ancha y no dice nada; hace falta una dirigida a
+`buildConfirmation()` (`#87(c)`).
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
 ✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está

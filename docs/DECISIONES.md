@@ -3437,3 +3437,28 @@ mejor cubierta donde se queda que donde estaba**; lo único que se pierde es la 
 motor que se va, y eso se va igual.
 
 **(e) Contador: 21 → 20.**
+
+## #87 · 2026-08-15 · 4.7·2b·2·C — cuando el sujeto no es la regla sino DÓNDE se aplica
+Segundo fichero del tramo: `CatalogVisibilityAndCartPruneTest` (1 uso, 3 casos). **El contador no se
+mueve**: su caso acoplado **muere con el componente**, y los otros dos no lo tocan — así que ·2b·3
+opera DENTRO, como en `#79`.
+
+**(a) La distinción que este fichero enseña.** Su regla —una línea cuyo producto dejó de venderse no
+puede contar en la cesta— **sí sobrevive**; lo que muere es **dónde se aplica**: en
+`Purchase::mount()`, leyendo la cesta de la SESIÓN. En el cajón esa regla vive partida en dos sitios y
+los dos tienen red. **La pregunta de la clasificación hay que hacérsela al SUJETO del caso, no a la
+regla que menciona**: una regla que sobrevive no salva un caso que prueba una superficie que se va.
+
+**(b) Medido, no leído.** Mutando el filtro `sellable()` de `CartPricer` —que el presupuesto tarifique
+lo que ya no se vende— caen exactamente tres casos, **los tres supervivientes**: `Api\V1\QuoteTest`,
+`Sales\CartPricerTest` y `Sidebar\SidebarCartParityTest` (el que se re-apuntó en `#80`). **Y el caso de
+este fichero NO cae**, que es la prueba de que ejerce otro camino: el de `mount()`. La otra mitad —que
+el cliente descarte la línea que no volvió tarificada— es `cart.js::reconcile()`, con sus casos en
+`cart.test.js`.
+
+**(c) ⚠️ Y una medición que se DESCARTA por inconcluyente, anotada para que nadie la repita.** Para
+clasificar `PurchaseConfirmationStatusTest` se probó a mutar `Order::displayStatus()` para que mintiera
+siempre: la mutación es **demasiado ancha** —tumba media docena de casos del panel de administración
+que no tienen nada que ver con la pantalla final de la compra— y su lista de cazadores no dice nada
+sobre este tramo. Ese fichero queda **sin clasificar** a propósito: hace falta una mutación dirigida al
+lado SPA (`buildConfirmation()`), no al modelo. Una medición ruidosa no es una medición.
