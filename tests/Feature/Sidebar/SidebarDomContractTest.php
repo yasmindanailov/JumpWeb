@@ -1910,6 +1910,33 @@ class SidebarDomContractTest extends TestCase
      */
     private const MANIFEST = 'tests/Fixtures/sidebar-dom-manifest.json';
 
+    /*
+     * ⚠️⚠️ **LO QUE ·2b·3 TIENE QUE HACER CON ESTE FICHERO, y por qué no se puede hacer antes**
+     * (medido el 2026-08-15, `DECISIONES #83`).
+     *
+     * Este test NO se audita con la pregunta de `#75`: su sujeto *es* la comparación entre motores.
+     * Pero tampoco se puede convertir hoy en «Vue contra el manifiesto», y el motivo está en el
+     * código de abajo: **el manifiesto está anclado en `$livewire`**, no en `$vue`. Vue solo queda
+     * cubierta por transitividad, a través del `assertSame($livewire, $vue)` de la primera línea.
+     * Y `SidebarSettings::engine()` devuelve `livewire` por defecto Y como fallback, así que **el
+     * motor anclado es además el que hoy sirve**: quitarle su red ahora dejaría sin prueba de DOM
+     * justo al que vende.
+     *
+     * Por eso se queda en el inventario y muere DENTRO, no entero. Son tres cambios exactos:
+     *   1. `assertTree()`: borrar `assertSame($livewire, $vue)` y **cambiar el anclaje a `$vue`** en
+     *      las dos apariciones que quedan —la comparación contra el manifiesto y la rama de
+     *      `MANIFEST_REFRESH`—. Si solo se borra la primera, el manifiesto seguiría vigilando un
+     *      motor que ya no existe y Vue se quedaría sin nada.
+     *   2. Retirar los renderizadores del motor viejo (`livewireTree*`) y la firma de `$livewire`.
+     *   3. `assertBundleIsNotStale()` **se queda**: pasa a ser la única guarda de que el artefacto
+     *      contra el que se renderiza no está rancio (`#69`).
+     *
+     * ⚠️ **Y queda un riesgo asumido, que conviene tener escrito**: hoy regenerar el manifiesto es
+     * seguro porque la igualdad entre motores lo respalda. Sin el segundo motor, `MANIFEST_REFRESH=1`
+     * acepta CUALQUIER deriva sin que nada la contradiga. Es el precio del árbol congelado que `#60`
+     * ya aceptó; a partir de ·2b·3 la única guarda es la disciplina de decirlo en el commit.
+     */
+
     /** Trazas capturadas en esta ejecución, por caso. Se usan para detectar entradas huérfanas. */
     private array $seen = [];
 

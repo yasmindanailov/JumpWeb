@@ -70,13 +70,14 @@ dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componen
 
 ▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
 alimenta del servidor en los once pasos, así que por fin se puede preguntar por cada paridad **«¿qué
-afirma esto que el diff ya no afirme?»**. Van seis respondidas y las seis fuera del inventario:
-`SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`), `SidebarAdmissionParityTest`
+afirma esto que el diff ya no afirme?»**. Van **ocho auditadas**: seis fuera del inventario
+—`SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`), `SidebarAdmissionParityTest`
 (`#78`), `SidebarCartParityTest` (`#80`), `SidebarPausedParityTest` (`#81`) y
-`SidebarProgressParityTest` (`#82`).
-`SidebarCalendarParityTest` está clasificada (`#79`), pero muere con el componente: no baja el contador.
+`SidebarProgressParityTest` (`#82`)— y dos que **mueren con el componente** y por tanto no bajan el
+contador: `SidebarCalendarParityTest` (`#79`) y `SidebarDomContractTest` (`#83`), las dos operando
+DENTRO en ·2b·3, no borradas enteras.
 
-**La regla de la auditoría** (`#75`), que vale para las dos restantes: separa lo que **compara entre
+**La regla de la auditoría** (`#75`), que vale para la que queda: separa lo que **compara entre
 motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
 como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
 test). El tercero hay que buscarlo activamente.
@@ -85,8 +86,7 @@ test). El tercero hay que buscarlo activamente.
 direcciones: en `#77` la lectura decía «redundante con el diff de árbol» y la medición encontró **tres
 campos que solo cazaba ella**; en `#78` la lectura decía «compara destinos, se queda» y la medición
 encontró que esa mitad **la cubría entera `admission.test.js`** — lo que había que rescatar era otra
-cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Siete avisos que valen para las
-dos:**
+cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Siete avisos, que siguen valiendo:**
 - un campo pinchado en su valor **trivial** (0, `null`, lista vacía) NO está fijado: el cruce sale verde;
 - una mutación por sustitución de texto puede caer en **otra** aparición del mismo nombre — comprueba
   dónde cayó, no solo que el fichero cambió;
@@ -106,18 +106,16 @@ mueren con el componente y el tercero sobrevive, así que la unidad de la audito
 el fichero. Ojo también con el **acoplamiento vestigial** —ese fichero conducía el componente sin
 usarlo— porque hace leer mal la clasificación al borrar.
 
-**Las dos que quedan por auditar**, por tamaño: `SidebarOutcomeParityTest` (10) ·
-`SidebarDomContractTest` (26).
+**Queda UNA por auditar**: `SidebarOutcomeParityTest` (10 usos) — y se audita por su cuenta.
 `SidebarCalendarParityTest` **ya está clasificada** (`#79`): ·2b·3 opera DENTRO, no la borra entera.
 
-⚠️ **`SidebarDomContractTest` no es una paridad más y no se audita con la misma pregunta.** Es el diff
-de árbol EN SÍ: su sujeto *es* «los dos motores emiten el mismo árbol», así que con un solo motor la
-pregunta desaparece entera y no hay nada que re-apuntar. Lo que hay que decidir —y es una decisión, no
-una clasificación— es **qué ocupa su sitio**: hoy sus 34 casos son la única red del marcado del cajón,
-y (B) ya los alimenta del servidor, así que el candidato natural es que dejen de comparar y pasen a
-**afirmar el manifiesto congelado** (Vue servida por la API contra el árbol de `#60`), conservando la
-guarda de bundle rancio (`#69`). Hacerlo antes de tocar `SidebarOutcomeParityTest` conviene, porque
-decide si esa sigue teniendo pregunta —igual que (B) decidió por las nueve—.
+✅ **`SidebarDomContractTest` YA está auditado** (`#83`) y **se queda hasta ·2b·3**: el manifiesto está
+anclado en `$livewire` —Vue solo queda cubierta por transitividad— y ese motor es además **el que hoy
+sirve** (`SidebarSettings::engine()` devuelve `livewire` por defecto y como fallback). Muere DENTRO, con
+tres operaciones exactas ya escritas en su propio `assertTree()`.
+⚠️ Y **no decide nada sobre `SidebarOutcomeParityTest`**, al contrario de lo que decía esta nota hasta
+`#83`: aquella frase se escribió leyendo y la medición la desmintió. **Una nota de handoff escrita
+leyendo el código es una hipótesis, no un plan.**
 
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
 - `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`

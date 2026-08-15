@@ -1298,7 +1298,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           sobrevive —`layout.blade.php` pinta `is-{modo}`— y el 8 (pago) es `cart`, no `result`.
         · La fecha del contexto se queda intacta: Carbon frente a `Intl`, con la divergencia del
           español acotada. No depende de ningún motor.
-        · **Quedan DOS por auditar**: `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+      · ✅ **`SidebarDomContractTest` auditado: se queda hasta ·2b·3, y muere DENTRO** (2026-08-15,
+        `DECISIONES #83`). **El contador no se mueve**, y la conclusión CORRIGE la nota de handoff de
+        `#82`, que se escribió leyendo.
+        · ⚠️ **El manifiesto está anclado en `$livewire`**, no en `$vue`: la SPA solo queda cubierta
+          por transitividad. Y `SidebarSettings::engine()` devuelve `livewire` por defecto Y como
+          fallback, así que el motor anclado **es el que hoy sirve** — quitarle su red ahora dejaría
+          sin prueba de DOM justo al que vende.
+        · **Tampoco decide nada sobre `SidebarOutcomeParityTest`**: (B) cambiaba de qué se ALIMENTA el
+          diff; esto solo quita un motor cuando desaparezca. Esa paridad se audita por su cuenta.
+        · **Lo que deja hecho: las tres operaciones exactas de ·2b·3**, escritas dentro de
+          `assertTree()`, que es donde se leerán. Y el riesgo asumido: sin segundo motor,
+          `MANIFEST_REFRESH=1` acepta cualquier deriva.
+        · **Queda UNA por auditar**: `SidebarOutcomeParityTest` (10).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente

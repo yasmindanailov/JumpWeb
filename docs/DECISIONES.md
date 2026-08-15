@@ -3290,3 +3290,36 @@ lo dejan rojo.
 **(d) La fecha del contexto se queda intacta**: es el único texto del cajón cuya fuente NO comparten
 los dos lados —Carbon frente a `Intl`— y el caso acota hasta dónde llega la divergencia del español.
 Eso no depende de ningún motor.
+
+## #83 · 2026-08-15 · 4.7·2b·2 — el manifiesto está anclado en el motor que se va (y en el que vende)
+Octava de la auditoría: `SidebarDomContractTest` (26 usos). **El contador no se mueve**, y la
+conclusión CORRIGE la nota de handoff que dejó `#82`: aquella decía que el candidato natural era que
+el test «dejara de comparar y pasara a afirmar el manifiesto congelado», y que convenía hacerlo ANTES
+de `SidebarOutcomeParityTest`. Escrito leyendo. Medido, las dos mitades de esa frase están mal.
+
+**(a) No se puede hacer hoy, y el motivo está en dos líneas de `assertTree()`.** El manifiesto se
+compara contra **`$livewire`**, no contra `$vue`; la SPA solo queda cubierta por transitividad, a
+través del `assertSame($livewire, $vue)` que va justo antes. Y `SidebarSettings::engine()` devuelve
+`livewire` **por defecto y como fallback**, así que el motor anclado es además **el que hoy sirve**.
+Quitarle su red ahora dejaría sin prueba de DOM justo al que vende, a cambio de nada.
+
+**(b) Tampoco decide nada sobre `SidebarOutcomeParityTest`.** El razonamiento de `#82` copiaba la
+forma de (B) —«resolverlo primero decide cuáles de las otras siguen teniendo pregunta»—, pero (B)
+cambiaba **de qué se alimenta** el diff, y esto no cambia nada de lo que el diff ve: solo quita un
+motor cuando desaparezca. `SidebarOutcomeParityTest` se audita por su cuenta.
+
+**(c) Lo que sí deja hecho este paso: las TRES operaciones exactas de ·2b·3**, escritas donde se van a
+leer —en el propio `assertTree()`—. (1) borrar la comparación entre motores **y mover el anclaje a
+`$vue`** en sus dos apariciones, incluida la rama de `MANIFEST_REFRESH`; (2) retirar los
+renderizadores del motor viejo; (3) **conservar `assertBundleIsNotStale()`**, que pasa a ser la única
+guarda de que el artefacto no está rancio. Si solo se hiciera (1) a medias —borrar la comparación y
+dejar el anclaje— el manifiesto vigilaría un motor inexistente y Vue se quedaría sin nada.
+
+**(d) Y un riesgo asumido, escrito para que nadie lo descubra tarde**: hoy regenerar el manifiesto es
+seguro porque la igualdad entre motores lo respalda. Sin segundo motor, `MANIFEST_REFRESH=1` acepta
+cualquier deriva sin que nada la contradiga. Es el precio del árbol congelado que `#60` ya aceptó; a
+partir de ·2b·3 la única guarda es la disciplina de declararlo en el commit.
+
+**(e) La lección de proceso, que es la misma de toda la auditoría**: una nota de handoff escrita
+leyendo el código es una hipótesis, no un plan. Esta llevaba dos días en `ESTADO.md` y habría costado
+una sesión entera de trabajo mal dirigido.
