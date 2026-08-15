@@ -1088,9 +1088,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ⚠️ **Consecuencia para el resto**: cada paso migrado hace redundante —por el motivo correcto—
           la paridad que existía para tapar este hueco (`SidebarAddonsParityTest`,
           `SidebarCalendarParityTest`). **No se pueden retirar todavía**: solo el paso 1 está migrado.
-        · **Quedan por migrar diez pasos**: calendario (2), hora+complementos (3), cesta (4),
-          identificación (5), verificar (7), pago (8), redirección (9), confirmada (6), denegada (10) y
-          verificando (11).
+        · ✅ **Paso 2 (calendario) migrado** (`DECISIONES #68`). El mes se DERIVA de la oferta, no se
+          pasa. Manifiesto sin cambios; dos mutaciones (relleno fuera de mes, navegación desacotada)
+          lo ponen rojo. ⚠️ **`calendar.js` no tenía ningún test**: nace `calendar.test.js` (18 casos)
+          con los dos frontera que la paridad declaraba medidos.
+        · ⚠️ **Y otra vez un caso frontera VACUO, como en 4.2**: el de husos pasaba con la mutación de
+          entrada (`new Date(month + '-01')`) porque el peligro tiene DOS puertas —salida
+          (`toISOString`) y entrada (parseo UTC)— y el desfase de la entrada **solo mueve el arranque
+          si el día 1 ya era lunes**. Añadido un mes que empieza en lunes: ahora cada mutación deja
+          rojo exactamente un caso. **Regla: el caso frontera se elige por el MECANISMO del fallo, no
+          por el síntoma.**
+        · **Fallo real arreglado de paso**: el mes inicial se derivaba con `toISOString()` (UTC), así
+          que en Madrid entre las 00:00 y las 02:00 del día 1 el respaldo daba el mes anterior. Ahora
+          es `initialMonth()`, en local, con su caso.
+        · **`SidebarCalendarParityTest` ya es candidata a retirarse** (su hueco está cerrado y sus
+          fronteras viven en `calendar.test.js`), **pero no se retira hasta ·2b·3**: mientras Livewire
+          viva es el único sitio que compara las dos composiciones entre sí.
+        · **Quedan por migrar nueve pasos**: hora+complementos (3), cesta (4), identificación (5),
+          verificar (7), pago (8), redirección (9), confirmada (6), denegada (10) y verificando (11).
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:

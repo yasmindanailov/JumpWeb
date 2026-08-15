@@ -141,7 +141,8 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
-        $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
+            api: $this->dateApiPayload($product->id), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -176,7 +177,8 @@ class SidebarDomContractTest extends TestCase
         );
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
-        $vue = $this->vueTree(2, $this->dateProps($component), 'wiz__title', withSiblings: true);
+        $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
+            api: $this->dateApiPayload($product->id), state: $this->clientState($component->get('date')));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1012,7 +1014,8 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotNull($component->viewData('footer'), 'el servidor sigue componiendo el pie en pausa');
 
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
-        $vue = $this->vueTree(2, $this->dateProps($component), 'jj-loading', withSiblings: true, shell: $this->shellProps($component));
+        $vue = $this->vueTree(2, [], 'jj-loading', withSiblings: true, shell: $this->shellProps($component),
+            api: $this->dateApiPayload($product->id), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1082,7 +1085,8 @@ class SidebarDomContractTest extends TestCase
     {
         foreach ($this->footerStates() as $label => [$step, $component, $props, $api]) {
             $livewire = $this->livewireTree($component, 'bk-foot');
-            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component), api: $api);
+            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component),
+                api: $api, state: $api === null ? [] : $this->clientState());
 
             $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
@@ -1231,7 +1235,9 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
 
         $livewire = $this->shellBlocks($component->html());
-        $vue = $this->shellBlocks($this->renderVue(2, $this->dateProps($component), $this->shellProps($component)));
+        $vue = $this->shellBlocks($this->renderVue(
+            2, [], $this->shellProps($component), $this->dateApiPayload($product->id), $this->clientState()
+        ));
 
         $this->assertContains('bk-progress', $livewire, 'el paso 2 tiene que llevar banda, o el caso no prueba el orden');
         $this->assertContains('bk-foot', $livewire, 'el paso 2 tiene que llevar pie, o el orden que se compara es trivial');
@@ -1268,7 +1274,8 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
 
         $livewire = $this->livewireTree($component, 'bk-progress');
-        $vue = $this->vueTree(2, $this->dateProps($component), 'bk-progress', shell: $this->shellProps($component));
+        $vue = $this->vueTree(2, [], 'bk-progress', shell: $this->shellProps($component),
+            api: $this->dateApiPayload($product->id), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1425,7 +1432,7 @@ class SidebarDomContractTest extends TestCase
             // Rama `cart`: un único hijo, sin nota de IVA.
             'catálogo con cesta' => [1, (clone $withCart)->set('step', 1), [], $this->catalogApiPayload()],
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
-            'calendario sin día' => [2, $onCalendar, $this->dateProps($onCalendar), null],
+            'calendario sin día' => [2, $onCalendar, [], $this->dateApiPayload($entry->id)],
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
             'hora de una entrada' => [3, $onTime, $this->timeProps($onTime), null],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
@@ -1622,22 +1629,33 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
-     * El view-model del calendario, tomado del propio componente Livewire.
+     * El paso 2 se alimenta de la oferta REAL de días (Fase 4 · paso 4.7·2b·2·B).
+     *
+     * ⚠️ **Lo que cambia no es de dónde salen los datos: es QUIÉN COMPONE LA REJILLA.** Antes se le
+     * pasaba a Vue el `weeks` que ya había repartido el servidor, así que `buildWeeks()` —el reparto
+     * que de verdad corre en el navegador— **no se ejecutaba nunca en el gate**. Es el hueco que
+     * `SidebarCalendarParityTest` declara en su propio docblock. Ahora se entrega la respuesta cruda
+     * de `GET availability/{producto}/dates` y compone el cliente.
+     *
+     * ⚠️ **El MES no se pasa: se deriva de la oferta dentro del renderizador**, igual que hace
+     * `Sidebar.vue` al elegir producto (abre en el primero con oferta). Pasarlo dejaría esa regla
+     * fuera del gate otra vez, que es el error que este paso corrige.
      *
      * @return array<string, mixed>
      */
-    private function dateProps(Testable $component): array
+    private function dateApiPayload(int $productId): array
     {
-        return [
-            'progress' => $component->viewData('bookingProgress'),
-            'weeks' => $component->viewData('weeks'),
-            'weekdayHeaders' => $component->viewData('weekdayHeaders'),
-            'monthLabel' => $component->viewData('monthLabel'),
-            'canPrev' => $component->viewData('canPrev'),
-            'canNext' => $component->viewData('canNext'),
-            'selectedDate' => $component->get('date'),
-            'messages' => __('tickets'),
-        ];
+        return ['dates' => $this->getJson('/api/v1/availability/'.$productId.'/dates')->assertOk()->json()];
+    }
+
+    /**
+     * Lo que NO viene del servidor: el día elegido y el idioma del documento.
+     *
+     * @return array<string, mixed>
+     */
+    private function clientState(?string $selectedDate = null): array
+    {
+        return ['selectedDate' => $selectedDate, 'locale' => app()->getLocale()];
     }
 
     /**
@@ -1861,9 +1879,9 @@ class SidebarDomContractTest extends TestCase
     /**
      * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor (ver `renderVue`)
      */
-    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null, ?array $api = null): string
+    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null, ?array $api = null, array $state = []): string
     {
-        return $this->treeOf($this->renderVue($step, $props, $shell, $api), $anchor, $withSiblings);
+        return $this->treeOf($this->renderVue($step, $props, $shell, $api, $state), $anchor, $withSiblings);
     }
 
     /**
@@ -1902,7 +1920,7 @@ class SidebarDomContractTest extends TestCase
     /**
      * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor; si viene, manda sobre `$props`
      */
-    private function renderVue(int $step, array $props, ?array $shell = null, ?array $api = null): string
+    private function renderVue(int $step, array $props, ?array $shell = null, ?array $api = null, array $state = []): string
     {
         $bundle = base_path('storage/ssr/render-sidebar.js');
 
@@ -1917,7 +1935,7 @@ class SidebarDomContractTest extends TestCase
         // las props cocinadas por el test sin que nadie lo notara.
         $payload = $api === null
             ? ['step' => $step, 'props' => $props, 'shell' => $shell]
-            : ['step' => $step, 'api' => $api, 'messages' => __('tickets'), 'shell' => $shell];
+            : ['step' => $step, 'api' => $api, 'messages' => __('tickets'), 'state' => $state, 'shell' => $shell];
 
         $process = new Process(['node', $bundle], base_path());
         $process->setInput(json_encode(

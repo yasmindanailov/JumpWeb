@@ -2763,3 +2763,42 @@ la paridad que existía para tapar este mismo hueco: `SidebarAddonsParityTest` y
 `SidebarCalendarParityTest` nacieron justo porque el gate no ejecutaba la traducción del cliente.
 ⚠️ **Todavía no se pueden retirar**: solo el paso 1 está migrado. Retirarlas antes de migrar su paso
 sería quitar la red y dejar el agujero.
+
+## #68 · 2026-08-15 · 4.7·2b·2·B — el paso 2, y dos husos que el módulo del calendario no cubría
+Segundo paso migrado al modo «alimentado por el servidor» (`#67`). Mismo patrón, y otra vez lo que
+apareció al mirar de cerca vale más que el propio traslado.
+
+**(a) El paso 2 ya no recibe la rejilla hecha.** Antes se le pasaba a Vue el `weeks` que había
+repartido el SERVIDOR, así que `buildWeeks()` —el reparto que corre en el navegador— **no se ejecutaba
+nunca en el gate**; el propio docblock de `SidebarCalendarParityTest` lo declara como el hueco que
+existe para tapar. Ahora el test entrega la respuesta cruda de `GET availability/{producto}/dates` y
+compone el cliente. ⚠️ **El MES tampoco se pasa: se deriva**, igual que hace `Sidebar.vue` al elegir
+producto. Pasarlo habría dejado esa regla fuera del gate otra vez, que es el error que este paso
+corrige. **El manifiesto no cambió** (fidelidad) y dos mutaciones lo confirman: dejar de marcar los
+días de relleno fuera de mes, y desacotar la navegación, ponen el gate en rojo.
+
+**(b) ⚠️ `calendar.js` no tenía NINGÚN fichero de test**, y eso solo se ve al necesitar que sobreviva:
+lo cubría `SidebarCalendarParityTest`, en PHP, comparándolo con el servidor — o sea, con el motor que
+se va. Nace `calendar.test.js` (18 casos) y ahí se traen en forma ejecutable los dos casos frontera que
+aquella paridad declaraba MEDIDOS: el mes que empieza en domingo y el huso del navegador.
+
+**(c) Y la lección de la sesión: la primera versión del caso de husos era VACUA, como la de 4.2.**
+La mutación obvia —parsear el mes con `new Date(month + '-01')`— **pasaba en verde**. No porque el
+test fuera ciego, sino porque el peligro tiene **dos puertas** y ese caso solo cubría una:
+· por la **salida** — derivar `YYYY-MM-DD` con `toISOString()`: el caso sí la caza (medido);
+· por la **entrada** — `new Date('2026-08-01')`, medianoche UTC: **no la cazaba con agosto**, porque el
+  desfase retrasa un día el «primero de mes» y **el arranque de la rejilla solo se mueve si ese primero
+  ya era lunes**. Agosto de 2026 empieza en sábado.
+Se añadió el caso con junio de 2026 (empieza en lunes) y ahora cada puerta tiene la suya: **cada
+mutación deja ROJO exactamente un caso y verde el otro**. Es el aviso de 4.2 leído del derecho, y
+generaliza: *un caso frontera hay que elegirlo por el mecanismo del fallo, no por el síntoma*.
+
+**(d) Un fallo real, pequeño y arreglado al extraer.** El mes en que abre el calendario se derivaba en
+`Sidebar.vue` con `new Date().toISOString().slice(0, 10)` — **UTC**, la misma trampa contra la que está
+escrito todo `calendar.js`, colada por la única puerta que no pasaba por él. En Madrid, entre las 00:00
+y las 02:00 del día 1, el respaldo devolvía el mes ANTERIOR. Vive ahora en `initialMonth()`, en horario
+local, con su caso. Solo muerde cuando no hay ninguna oferta, que es por lo que nadie lo había visto.
+
+**(e) Consecuencia: `SidebarCalendarParityTest` ya es candidata a retirarse** — su hueco está cerrado y
+sus fronteras están en `calendar.test.js`—, **pero no se retira todavía**: mientras Livewire viva sigue
+siendo el único sitio que compara las dos composiciones entre sí. Se va en 4.7·2b·3, con el componente.

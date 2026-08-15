@@ -22,6 +22,11 @@
  * «respuesta → lo que se pinta» la hacía el test, así que el gate no la ejecutaba nunca. El modo
  * `props` sigue existiendo para los pasos que aún no se han migrado.
  *
+ * ⚠️ **`state` es lo que NO viene del servidor** —el día elegido, el idioma del documento— y viaja
+ * aparte a propósito: mezclarlo con `api` invitaría a colar ahí un dato derivado y a que el gate
+ * volviera a comparar contra algo cocinado fuera del cliente. Todo lo que se pueda DERIVAR de la
+ * respuesta (el mes en que abre el calendario, por ejemplo) se deriva aquí, no se recibe.
+ *
  * Uso:  echo '{"step":1,"props":{…}}' | node scripts/render-sidebar.mjs
  *       echo '{"step":2,"props":{…},"shell":{…}}' | node scripts/render-sidebar.mjs
  *       echo '{"step":1,"api":{"catalog":{…},"config":{…}},"messages":{…}}' | node scripts/render-sidebar.mjs
@@ -43,6 +48,9 @@ import DeclinedStep from '../resources/js/sidebar/steps/DeclinedStep.vue';
 import VerifyingStep from '../resources/js/sidebar/steps/VerifyingStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
 import { searchIsEnabled, sectionsFrom } from '../resources/js/sidebar/catalog.js';
+import {
+    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, offeredMonths, weekdayHeaders,
+} from '../resources/js/sidebar/calendar.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -85,6 +93,26 @@ const PROPS_FROM_API = {
             messages,
         };
     },
+
+    /**
+     * ⚠️ El mes se DERIVA de la oferta, igual que hace `Sidebar.vue` al elegir producto: el calendario
+     * abre en el primero con oferta. Recibirlo desde fuera dejaría fuera del gate justo esa regla.
+     */
+    [STEPS.DATE]: (api, messages, state) => {
+        const dates = api.dates?.data ?? [];
+        const month = initialMonth(dates);
+        const months = offeredMonths(dates);
+
+        return {
+            weeks: buildWeeks(month, dates, state.selectedDate ?? null),
+            weekdayHeaders: weekdayHeaders(state.locale),
+            monthLabel: monthLabel(month, state.locale),
+            canPrev: canGoPrev(month, months),
+            canNext: canGoNext(month, months),
+            selectedDate: state.selectedDate ?? null,
+            messages,
+        };
+    },
 };
 
 async function main() {
@@ -96,7 +124,7 @@ async function main() {
         process.stdin.on('error', reject);
     });
 
-    const { step, props = {}, shell = null, api = null, messages = {} } = JSON.parse(input);
+    const { step, props = {}, shell = null, api = null, messages = {}, state = {} } = JSON.parse(input);
     const component = COMPONENTS[step];
 
     // Modo «alimentado por el servidor»: las props NO llegan hechas, se construyen aquí con el código
@@ -112,7 +140,7 @@ async function main() {
             process.exit(3);
         }
 
-        resolved = build(api, messages);
+        resolved = build(api, messages, state);
     }
 
     // ⚠️ **Con el aviso de PAUSA no hace falta paso**, y eso es lo fiel al Blade: el aviso sustituye el

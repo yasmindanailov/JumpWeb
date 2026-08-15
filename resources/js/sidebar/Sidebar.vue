@@ -3,7 +3,10 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './store.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
-import { buildWeeks, monthOf, shiftMonth } from './calendar.js';
+import {
+    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel as composeMonthLabel,
+    offeredMonths as monthsWithOffer, shiftMonth, weekdayHeaders as composeWeekdayHeaders,
+} from './calendar.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
@@ -161,9 +164,9 @@ const month = ref(null);
 const weeks = computed(() => (month.value ? buildWeeks(month.value, offeredDates.value, selectedDate.value) : []));
 
 /** Los meses navegables se acotan a los que tienen oferta: no se ofrece pasear por meses vacíos. */
-const offeredMonths = computed(() => [...new Set(offeredDates.value.map((d) => monthOf(d.date)))].sort());
-const canPrev = computed(() => offeredMonths.value.length > 0 && month.value > offeredMonths.value[0]);
-const canNext = computed(() => offeredMonths.value.length > 0 && month.value < offeredMonths.value[offeredMonths.value.length - 1]);
+const offeredMonths = computed(() => monthsWithOffer(offeredDates.value));
+const canPrev = computed(() => canGoPrev(month.value, offeredMonths.value));
+const canNext = computed(() => canGoNext(month.value, offeredMonths.value));
 
 /**
  * El PUENTE de señales hacia fuera del cajón.
@@ -333,8 +336,9 @@ async function selectProduct(id) {
         fieldsByProduct.value = { ...fieldsByProduct.value, [id]: detail.data.event_fields ?? [] };
     }
     // El calendario abre en el PRIMER mes con oferta, no en el actual: si el producto no se vende
-    // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía.
-    month.value = offeredMonths.value[0] ?? monthOf(new Date().toISOString().slice(0, 10));
+    // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía. La regla —y su respaldo
+    // en horario LOCAL, que aquí se derivaba en UTC— vive en `calendar.js` desde 4.7·2b·2·B.
+    month.value = initialMonth(offeredDates.value);
 }
 
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
@@ -553,22 +557,8 @@ function setAddonQuantity(productId, qty) {
  */
 const locale = document.documentElement.lang || 'es';
 
-const weekdayHeaders = computed(() => {
-    const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
-    // 2024-01-01 fue lunes: sirve de ancla para nombrar los siete días en orden.
-    return Array.from({ length: 7 }, (_, i) => {
-        const day = new Date(2024, 0, 1 + i);
-        const label = formatter.format(day).replace('.', '');
-        return label.charAt(0).toUpperCase() + label.slice(1);
-    });
-});
-
-const monthLabel = computed(() => {
-    if (! month.value) return '';
-    const [y, m] = month.value.split('-').map(Number);
-    const label = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1));
-    return label.charAt(0).toUpperCase() + label.slice(1);
-});
+const weekdayHeaders = computed(() => composeWeekdayHeaders(locale));
+const monthLabel = computed(() => composeMonthLabel(month.value, locale));
 
 /**
  * La banda de progreso de los pasos 2 y 3.
