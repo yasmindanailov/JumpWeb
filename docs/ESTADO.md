@@ -27,7 +27,7 @@ que el tramo ·1 transcribe la DECISIÓN sin navegar.
 
 **Fase 3 quedó cerrada** con los 6 pasos del corte más el checkout orquestado (`DECISIONES #37`). Lo
 único que hereda Fase 6 es la emisión de tokens Bearer y el segundo driver de pasarela.
-- Suite **2715 en verde** (15.618 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) · Pint limpio ·
+- Suite **2715 en verde** (15.631 aserciones, `--parallel` ~70 s) · **286 tests JS** (`node --test`) · Pint limpio ·
   `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner, no del
   código (ver `TESTING.md`).
@@ -367,7 +367,7 @@ navegador y una retirada— y por eso el orden de abajo cambia respecto al de to
        —**21 de sus 25 funciones no tenían ningún test**—, `Sidebar.vue` lo consume y
        `render-sidebar.mjs` construye las props con él desde `GET /catalog/products` + `GET /config`.
        **El manifiesto NO cambió** (prueba de fidelidad) y la mutación sale ROJA en el modo nuevo y
-       VERDE en el viejo (prueba de que el hueco existía). **Queda el ARMAZÓN (pie y banda, que tocan los doce montajes) y siete pasos**, y el
+       VERDE en el viejo (prueba de que el hueco existía). **El ARMAZÓN ya está migrado** (quedan 3 de sus 12 montajes, atados al paso 8 y al bucle de la pausa) **y siete pasos**, y el
        patrón está fijado: extraer a módulo plano → que `Sidebar.vue` lo consuma → añadir el
        constructor en `PROPS_FROM_API` → alimentar el caso desde la API → el manifiesto no debe moverse.
      · ▶ El razonamiento de por qué (B) y no (A) (medido el 2026-08-15, detalle en `00-REFACTOR.md`): `SidebarDomContractTest` le pasa a Vue props que salen

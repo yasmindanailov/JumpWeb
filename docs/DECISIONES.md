@@ -2879,3 +2879,36 @@ esa mutación desde el diff habría significado inflar sus fixtures para reproba
 `shellProps()`, y eso afecta a los **doce** sitios que montan el armazón, no solo al paso 4. Es el
 siguiente tramo y va aparte a propósito: mezclar el armazón con la cesta habría hecho un cambio que
 nadie puede revisar.
+
+## #71 · 2026-08-15 · 4.7·2b·2·B — el ARMAZÓN lo compone el cliente, y la banda de 4.3·1 queda cubierta
+Quinto tramo (`#67`–`#70`), y el primero que no es «un paso»: el armazón se monta en DOCE sitios, así
+que su punto ciego valía por doce.
+
+**(a) El hueco, con su propia confesión escrita.** `shellProps()` decía, tal cual: «el pie se toma del
+SERVIDOR, igual que la banda: aquí se compara el marcado. Que el cliente componga el mismo view-model
+lo comprueba `SidebarCartParityTest`». O sea, el gate comparaba el marcado de un pie que `foot.js` **no
+había compuesto**. Ahora `render-sidebar.mjs` construye el armazón con `buildProgress()` y
+`buildFooter()` —los módulos que usa `Sidebar.vue`— a partir del presupuesto, del catálogo y de la
+línea del endpoint de complementos. **El manifiesto no cambió.**
+
+**(b) ⚠️ Y esto cubre por fin el fallo que 4.3·1 pagó.** Aquel paso encontró que la banda de progreso
+estaba escrita, salía VERDE en el gate y **el cajón vivo iba sin «Volver»**, porque `Sidebar.vue` le
+pasaba `progress: null`. Era invisible precisamente porque el gate alimentaba a Vue con la banda del
+servidor. Medido ahora: mutar `buildProgress()` para que no emita nunca deja **tres casos en rojo**.
+Un fallo que costó una sesión entera ya no puede repetirse en silencio.
+
+**(c) La migración es explícita, no automática.** El renderizador solo compone el armazón si se le
+pide (`shellFromServer: false`); los montajes que aún no se han migrado siguen pasándolo cocinado.
+Mezclar las dos cosas en silencio escondería **cuál** de los doce sigue comparando contra el servidor —
+y el recuento es justamente lo que dice cuánto falta. Quedan **tres**, todos del paso 8 y del bucle de
+la pausa, y se migran con su paso.
+
+**(d) El aviso de pausa NO entra aquí, y es correcto**: el test ya ejecutaba `paused.js` en Node con la
+respuesta real de `GET /booking/status`. Ese lado nunca tuvo el hueco, así que el armazón lo recibe
+hecho en vez de recomponerlo — duplicarlo habría sido inventar una segunda fuente.
+
+**(e) ⚠️ Una mutación mal elegida no prueba nada, y volvió a pasar.** El primer intento de tumbar el
+pie mutó `splitMode` en la rama del paso 3, que los fixtures ejercitan **con una entrada** —sin señal,
+sin desglose—: verde. La rama que sí tiene desglose es la de la CESTA, y mutándola ahí caen dos casos.
+Es la misma lección que el caso de husos de `#68`: **la mutación hay que apuntarla a la rama que el
+fixture recorre**, o mide otra cosa.

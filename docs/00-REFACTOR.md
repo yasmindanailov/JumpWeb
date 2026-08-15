@@ -1125,9 +1125,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           `index` deja el diff verde porque sus fixtures tienen UNA línea. Esa regla la cubre
           `cart.test.js` con un caso hecho para ella, y **se verificó que la misma mutación lo pone
           rojo**. Cada nivel prueba lo suyo.
-        · ▶ **SIGUIENTE TRAMO — el ARMAZÓN**: `shellProps()` sigue tomando el pie y la banda del
-          servidor, y eso toca los **doce** sitios que montan el armazón, no solo un paso. Va aparte a
-          propósito. Después, los pasos 5, 7, 8, 9, 6, 10 y 11.
+        · ✅ **El ARMAZÓN migrado** (`DECISIONES #71`): el pie y la banda los compone el cliente
+          (`foot.js`, `progress.js`) a partir del presupuesto, el catálogo y la línea de complementos.
+          De los doce montajes quedan **tres**, todos del paso 8 y del bucle de la pausa.
+          · ⚠️ **Cubre por fin el fallo de 4.3·1**: la banda estaba escrita, el gate verde y el cajón
+            vivo sin «Volver». Mutar `buildProgress()` para que no emita deja hoy **tres casos rojos**.
+          · **La migración es explícita** (`shellFromServer: false`), no automática: mezclarlas en
+            silencio escondería cuál de los doce sigue comparando contra el servidor.
+          · ⚠️ **Otra mutación mal apuntada**: tumbar `splitMode` en la rama del paso 3 salió verde
+            porque su fixture es una ENTRADA (sin señal); la rama con desglose es la de la cesta.
+            Misma lección que los husos de `#68`.
+        · ▶ **SIGUIENTE**: los pasos 5, 7, 8, 9, 6, 10 y 11 (identificación, verificar, pago,
+          redirección y los tres desenlaces), cada uno con los tres montajes de armazón que quedan.
       · ⚠️ **`SidebarTokenBudgetTest` no es un cambio de una línea, medido**: deriva el ámbito CSS del
         cajón escaneando `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese
         escaneo no ve** —casi todas de parciales que el Blade incluye y el escáner no sigue:

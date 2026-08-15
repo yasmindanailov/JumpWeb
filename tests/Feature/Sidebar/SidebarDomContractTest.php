@@ -1025,8 +1025,10 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotNull($component->viewData('footer'), 'el servidor sigue componiendo el pie en pausa');
 
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
-        $vue = $this->vueTree(2, [], 'jj-loading', withSiblings: true, shell: $this->shellProps($component),
-            api: $this->dateApiPayload($product->id), state: $this->clientState());
+        $vue = $this->vueTree(2, [], 'jj-loading', withSiblings: true,
+            api: $this->dateApiPayload($product->id),
+            state: $this->clientState(step: 2, productId: $product->id, notice: $this->noticeProps($component)),
+            shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1094,10 +1096,9 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_footer_emits_the_same_tree_in_every_state(): void
     {
-        foreach ($this->footerStates() as $label => [$step, $component, $props, $api]) {
+        foreach ($this->footerStates() as $label => [$step, $component, $props, $api, $state]) {
             $livewire = $this->livewireTree($component, 'bk-foot');
-            $vue = $this->vueTree($step, $props, 'bk-foot', shell: $this->shellProps($component),
-                api: $api, state: $api === null ? [] : $this->clientState());
+            $vue = $this->vueTree($step, $props, 'bk-foot', api: $api, state: $state, shellFromServer: false);
 
             $this->assertTree(__FUNCTION__,
                 $livewire, $vue,
@@ -1131,9 +1132,10 @@ class SidebarDomContractTest extends TestCase
             );
 
             $vue = $step === 1
-                ? $this->renderVue($step, [], $this->shellProps($component), $this->catalogApiPayload())
-                : $this->renderVue($step, [], $this->shellProps($component),
-                    $this->cartApiPayload($component), $this->clientState());
+                ? $this->renderVue($step, [], null, $this->catalogApiPayload(),
+                    $this->clientState(step: 1), shellFromServer: false)
+                : $this->renderVue($step, [], null, $this->cartApiPayload($component),
+                    $this->clientState(step: $step), shellFromServer: false);
 
             $this->assertStringNotContainsString(
                 'bk-foot', $vue,
@@ -1167,8 +1169,8 @@ class SidebarDomContractTest extends TestCase
             'el Blade ha dejado de anunciar si el desglose está abierto'
         );
 
-        $vue = $this->renderVue(4, [], $this->shellProps($component),
-            $this->cartApiPayload($component), $this->clientState());
+        $vue = $this->renderVue(4, [], null, $this->cartApiPayload($component),
+            $this->clientState(step: 4), shellFromServer: false);
 
         $this->assertStringContainsString(
             'aria-expanded', $vue,
@@ -1203,7 +1205,8 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class);
 
         $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
-        $vue = $this->vueTree(1, [], 'jj-loading', withSiblings: true, shell: $this->shellProps($component), api: $this->catalogApiPayload());
+        $vue = $this->vueTree(1, [], 'jj-loading', withSiblings: true, api: $this->catalogApiPayload(),
+            state: $this->clientState(step: 1), shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1249,7 +1252,8 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->shellBlocks($component->html());
         $vue = $this->shellBlocks($this->renderVue(
-            2, [], $this->shellProps($component), $this->dateApiPayload($product->id), $this->clientState()
+            2, [], null, $this->dateApiPayload($product->id),
+            $this->clientState(step: 2, productId: $product->id), shellFromServer: false
         ));
 
         $this->assertContains('bk-progress', $livewire, 'el paso 2 tiene que llevar banda, o el caso no prueba el orden');
@@ -1287,8 +1291,8 @@ class SidebarDomContractTest extends TestCase
         $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
 
         $livewire = $this->livewireTree($component, 'bk-progress');
-        $vue = $this->vueTree(2, [], 'bk-progress', shell: $this->shellProps($component),
-            api: $this->dateApiPayload($product->id), state: $this->clientState());
+        $vue = $this->vueTree(2, [], 'bk-progress', api: $this->dateApiPayload($product->id),
+            state: $this->clientState(step: 2, productId: $product->id), shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1314,9 +1318,10 @@ class SidebarDomContractTest extends TestCase
             ->call('selectTime', '10:00:00');
 
         $livewire = $this->livewireTree($component, 'bk-progress');
-        $vue = $this->vueTree(3, [], 'bk-progress', shell: $this->shellProps($component),
+        $vue = $this->vueTree(3, [], 'bk-progress',
             api: $this->timeApiPayload($product->id, $component->get('date'), '10:00:00', (int) $component->get('qty')),
-            state: $this->clientState($component->get('date'), '10:00:00', (int) $component->get('qty')));
+            state: $this->clientState($component->get('date'), '10:00:00', (int) $component->get('qty'), step: 3, productId: $product->id),
+            shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1441,19 +1446,37 @@ class SidebarDomContractTest extends TestCase
             ->call('goToTime')
             ->call('selectTime', '10:00:00');
 
-        // El cuarto elemento es la carga CRUDA de la API para los pasos ya migrados (4.7·2b·2·B);
-        // `null` significa «este paso todavía se alimenta con props cocinadas por el test».
+        // ⚠️ **Los CUATRO estados se alimentan del servidor, armazón incluido** (4.7·2b·2·B): el pie lo
+        // compone `foot.js` aquí, no se toma del view-model de Livewire. Cada entrada lleva su carga de
+        // API y el estado de cliente que el armazón necesita.
+        //
+        // ⚠️ La rama `cart` del paso 1 necesita **las dos cargas**: el catálogo para el paso y el
+        // presupuesto para el pie. Es el único estado en el que el pie habla de algo que no está en la
+        // pantalla que se pinta.
+        $onTimeDate = (string) $onTime->get('date');
+
         return [
             // Rama `cart`: un único hijo, sin nota de IVA.
-            'catálogo con cesta' => [1, (clone $withCart)->set('step', 1), [], $this->catalogApiPayload()],
+            'catálogo con cesta' => [
+                1, (clone $withCart)->set('step', 1), [],
+                array_merge($this->catalogApiPayload(), $this->cartApiPayload($withCart)),
+                $this->clientState(step: 1),
+            ],
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
-            'calendario sin día' => [2, $onCalendar, [], $this->dateApiPayload($entry->id)],
+            'calendario sin día' => [
+                2, $onCalendar, [], $this->dateApiPayload($entry->id),
+                $this->clientState(step: 2, productId: $entry->id),
+            ],
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
-            'hora de una entrada' => [3, $onTime, [], $this->timeApiPayload(
-                $entry->id, (string) $onTime->get('date'), '10:00:00', (int) $onTime->get('qty')
-            )],
+            'hora de una entrada' => [
+                3, $onTime, [],
+                $this->timeApiPayload($entry->id, $onTimeDate, '10:00:00', (int) $onTime->get('qty')),
+                $this->clientState($onTimeDate, '10:00:00', (int) $onTime->get('qty'), step: 3, productId: $entry->id),
+            ],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
-            'cesta con señal' => [4, $withCart, [], $this->cartApiPayload($withCart)],
+            'cesta con señal' => [
+                4, $withCart, [], $this->cartApiPayload($withCart), $this->clientState(step: 4),
+            ],
         ];
     }
 
@@ -1720,7 +1743,12 @@ class SidebarDomContractTest extends TestCase
      */
     private function dateApiPayload(int $productId): array
     {
-        return ['dates' => $this->getJson('/api/v1/availability/'.$productId.'/dates')->assertOk()->json()];
+        return [
+            'dates' => $this->getJson('/api/v1/availability/'.$productId.'/dates')->assertOk()->json(),
+            // El ARMAZÓN lo necesita: la banda de progreso enseña el nombre del producto elegido, y el
+            // cajón lo saca del CATÁLOGO que ya tiene en memoria, no de la ficha que está pidiendo.
+            'catalog' => $this->getJson('/api/v1/catalog/products')->assertOk()->json(),
+        ];
     }
 
     /**
@@ -1728,12 +1756,22 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function clientState(?string $selectedDate = null, ?string $selectedTime = null, ?int $quantity = null): array
-    {
+    private function clientState(
+        ?string $selectedDate = null,
+        ?string $selectedTime = null,
+        ?int $quantity = null,
+        ?int $step = null,
+        ?int $productId = null,
+        ?array $notice = null,
+    ): array {
         return array_filter([
             'selectedDate' => $selectedDate,
             'selectedTime' => $selectedTime,
             'quantity' => $quantity,
+            // Lo que el ARMAZÓN necesita para componer la banda y el pie con el código del cliente.
+            'step' => $step,
+            'productId' => $productId,
+            'notice' => $notice,
             'locale' => app()->getLocale(),
         ], fn ($value) => $value !== null);
     }
@@ -1762,6 +1800,7 @@ class SidebarDomContractTest extends TestCase
             'addons' => $this->postJson($root.'/catalog/products/'.$productId.'/addons', [
                 'quantity' => $quantity, 'date' => $date, 'time' => $time,
             ])->assertOk()->json(),
+            'catalog' => $this->getJson($root.'/catalog/products')->assertOk()->json(),
         ];
     }
 
@@ -1896,9 +1935,9 @@ class SidebarDomContractTest extends TestCase
     /**
      * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor (ver `renderVue`)
      */
-    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null, ?array $api = null, array $state = []): string
+    private function vueTree(int $step, array $props, string $anchor = 'catalog-acc', bool $withSiblings = false, ?array $shell = null, ?array $api = null, array $state = [], bool $shellFromServer = true): string
     {
-        return $this->treeOf($this->renderVue($step, $props, $shell, $api, $state), $anchor, $withSiblings);
+        return $this->treeOf($this->renderVue($step, $props, $shell, $api, $state, $shellFromServer), $anchor, $withSiblings);
     }
 
     /**
@@ -1937,7 +1976,7 @@ class SidebarDomContractTest extends TestCase
     /**
      * @param  array<string, mixed>|null  $api  respuestas CRUDAS del servidor; si viene, manda sobre `$props`
      */
-    private function renderVue(int $step, array $props, ?array $shell = null, ?array $api = null, array $state = []): string
+    private function renderVue(int $step, array $props, ?array $shell = null, ?array $api = null, array $state = [], bool $shellFromServer = true): string
     {
         $bundle = base_path('storage/ssr/render-sidebar.js');
 
@@ -1954,7 +1993,10 @@ class SidebarDomContractTest extends TestCase
         // las props cocinadas por el test sin que nadie lo notara.
         $payload = $api === null
             ? ['step' => $step, 'props' => $props, 'shell' => $shell]
-            : ['step' => $step, 'api' => $api, 'messages' => __('tickets'), 'state' => $state, 'shell' => $shell];
+            : [
+                'step' => $step, 'api' => $api, 'messages' => __('tickets'), 'state' => $state,
+                'shell' => $shell, 'ui' => __('ui'), 'shellFromServer' => $shellFromServer,
+            ];
 
         $process = new Process(['node', $bundle], base_path());
         $process->setInput(json_encode(

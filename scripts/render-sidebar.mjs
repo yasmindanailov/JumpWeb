@@ -53,6 +53,8 @@ import {
 } from '../resources/js/sidebar/calendar.js';
 import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
 import { cartRows } from '../resources/js/sidebar/cart.js';
+import { buildProgress } from '../resources/js/sidebar/progress.js';
+import { buildFooter } from '../resources/js/sidebar/foot.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -160,6 +162,58 @@ const PROPS_FROM_API = {
     }),
 };
 
+/**
+ * **El ARMAZÓN construido con el código del cliente** (Fase 4 · paso 4.7·2b·2·B, `DECISIONES #71`).
+ *
+ * ⚠️ Hasta aquí, el pie y la banda de progreso se le pasaban a Vue **tomados del servidor**, y el
+ * propio helper del test lo decía: «el pie se toma del SERVIDOR… que el cliente componga el mismo
+ * view-model lo comprueba `SidebarCartParityTest`». O sea: el gate comparaba el marcado de un pie que
+ * `foot.js` no había compuesto. Es el mismo punto ciego que los pasos, pero peor —el armazón se monta
+ * en DOCE sitios— y ya mordió una vez: en 4.3·1 la banda estaba escrita, salía verde en el gate y el
+ * cajón vivo iba sin «Volver», porque `Sidebar.vue` le pasaba `progress: null`.
+ *
+ * ⚠️ **El aviso de pausa NO se compone aquí**: el test ya ejecuta `paused.js` en Node con la respuesta
+ * real de `GET /booking/status`, así que ese lado nunca tuvo el hueco. Se recibe hecho.
+ */
+function shellFromApi(api, messages, ui, state) {
+    const sections = sectionsFrom(api.catalog?.data ?? []);
+    const selected = sections.flatMap((s) => s.items).find((item) => item.id === state.productId) ?? null;
+    const quote = api.quote ?? null;
+    const line = api.addons?.line ?? null;
+
+    return {
+        // En Livewire el velo está SIEMPRE en el HTML servido y lo tapa `wire:loading`; aquí se compara
+        // el marcado en reposo, así que el cajón tampoco puede estar ocupado.
+        busy: false,
+        notice: state.notice ?? null,
+        progress: buildProgress({
+            step: state.step,
+            isPack: selected?.is_pack ?? false,
+            productName: selected?.name ?? '',
+            date: state.selectedDate ?? null,
+            time: state.selectedTime ?? null,
+            messages,
+            locale: state.locale ?? 'es',
+        }),
+        footer: buildFooter({
+            step: state.step,
+            messages,
+            locale: state.locale ?? 'es',
+            cartCount: quote?.lines?.length ?? 0,
+            cartTotalCents: quote?.total_cents ?? 0,
+            cartOnlineCents: quote?.online_amount_cents ?? 0,
+            hasDate: (state.selectedDate ?? null) !== null,
+            hasTime: (state.selectedTime ?? null) !== null,
+            lineTotalCents: line?.total_cents ?? null,
+            lineHasDeposit: line?.has_deposit ?? false,
+            lineDepositCents: line?.deposit_cents ?? 0,
+            lineGateRemainderCents: line?.gate_remainder_cents ?? 0,
+        }),
+        messages,
+        ui,
+    };
+}
+
 async function main() {
     const input = await new Promise((resolve, reject) => {
         let raw = '';
@@ -169,7 +223,7 @@ async function main() {
         process.stdin.on('error', reject);
     });
 
-    const { step, props = {}, shell = null, api = null, messages = {}, state = {} } = JSON.parse(input);
+    const { step, props = {}, shell = null, api = null, messages = {}, state = {}, ui = {}, shellFromServer = true } = JSON.parse(input);
     const component = COMPONENTS[step];
 
     // Modo «alimentado por el servidor»: las props NO llegan hechas, se construyen aquí con el código
@@ -188,11 +242,16 @@ async function main() {
         resolved = build(api, messages, state);
     }
 
+    // ⚠️ El armazón se construye aquí SOLO si se pide: los pasos que aún no se han migrado siguen
+    // pasándolo cocinado, y mezclar las dos cosas en silencio escondería cuál de los doce montajes
+    // sigue comparando contra el servidor.
+    const frame = (! shellFromServer && api !== null) ? shellFromApi(api, messages, ui, state) : shell;
+
     // ⚠️ **Con el aviso de PAUSA no hace falta paso**, y eso es lo fiel al Blade: el aviso sustituye el
     // contenido ENTERO, así que no hay ranura que rellenar. Sin esta salida no se podrían comparar los
     // pasos 5 y 8 —donde el servidor también tapa el flujo— porque todavía no están transcritos y el
     // script abortaría con un mensaje que habla de otra cosa.
-    const paused = shell !== null && shell.notice;
+    const paused = frame !== null && frame.notice;
 
     if (! component && ! paused) {
         process.stderr.write(`El paso ${step} todavía no está transcrito a Vue.\n`);
@@ -201,9 +260,9 @@ async function main() {
 
     // Con armazón, el paso va en la ranura por defecto de `Shell` — igual que en `Sidebar.vue`, para
     // que lo que compara el gate sea la composición real y no una aproximación.
-    const app = shell === null
+    const app = frame === null
         ? createSSRApp(component, resolved)
-        : createSSRApp({ render: () => h(Shell, shell, paused ? null : { default: () => h(component, resolved) }) });
+        : createSSRApp({ render: () => h(Shell, frame, paused ? null : { default: () => h(component, resolved) }) });
 
     app.use(createPinia());
 
