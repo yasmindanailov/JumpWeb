@@ -1351,7 +1351,8 @@ body.no-scroll { overflow: hidden; }
    velo con wire:loading. */
 .jj-loading {
     position: absolute; inset: 0; z-index: 30;
-    background: rgba(244, 239, 227, 0.82); /* var(--bg) translúcido */
+    /* `--bg` al 82%: es EXACTAMENTE el mismo color (--bg es #F4EFE3), con el patrón de 4.0c. */
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     color: var(--zone-1); /* el spinner hereda este color (marca) */
 }

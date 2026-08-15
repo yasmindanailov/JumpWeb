@@ -2987,3 +2987,40 @@ con test propio, `offer.js`) · **286 tests JS** frente a 247 al empezar · cuat
 retiradas del test · y **el manifiesto sin cambiar ni una vez en los siete**. Eso último es la prueba
 acumulada: cada vez que se sustituyó «lo que compone el servidor» por «lo que compone el cliente», el
 árbol salió idéntico.
+
+## #74 · 2026-08-15 · El presupuesto de tokens define «el cajón» rascando una plantilla, y eso no escala
+Corrección de una lectura propia, hecha el mismo día. **Vale sobre todo como método**: la primera
+conclusión salió de una sonda que no reproducía la línea base del test, y por eso era falsa.
+
+**(a) ⚠️ El error de método, primero, porque es el que enseña.** Al ver que ampliar el escaneo de
+`SidebarTokenBudgetTest` a las fuentes Vue bajaba la tokenización de 75% a 70%, se escribió una sonda
+aparte para desglosar QUÉ entraba. La sonda daba **70% y 11 colores crudos para el ámbito de HOY**,
+cuando el test dice **75% y 3**: le faltaba la restricción de `prefix` sobre `layout.blade.php` —del
+layout solo cuentan las clases `sidecart*`—, así que arrastraba medio sitio. **Una sonda que no
+reproduce la línea base del instrumento no mide lo mismo que él**, y sus conclusiones no valen. Se
+rehízo el desglose sobre el test REAL, volcando desde dentro.
+
+**(b) Lo medido de verdad.** Añadir los `.vue` lleva el ámbito de **1.073 a 1.307 declaraciones**
+(tematizables 658 → 767, sin token 160 → 224) y los crudos de 3 a 5. Pero desglosado:
+· **60** de las nuevas sin token son el bloque `auth__*`/`form__*`/`check`/`pwd-input` — los
+  formularios de login y alta, **compartidos con el modal de auth y con `/mi-cuenta`**;
+· otras 14 son `eyebrow`, `icon`, `tk`, `account__card`: del sitio;
+· **una sola era del cajón**: el velo `.jj-loading`.
+O sea: **no es que 4.0c dejara el cajón a medias.** Es que el marcado de la SPA reutiliza clases del
+sitio —los formularios de auth viven ahora DENTRO del cajón— y rascarlas de la plantilla las mete en
+«el ámbito del cajón».
+
+**(c) Lo que sí se arregla aquí, y es una línea.** `.jj-loading` llevaba `rgba(244, 239, 227, 0.82)`
+con un comentario que ya decía «`var(--bg)` translúcido»: `--bg` es `#F4EFE3`, así que es EXACTAMENTE
+ese token al 82%. Convertido a `color-mix(in srgb, var(--bg) 82%, transparent)`, el patrón que 4.0c
+verificó para los otros diez alfa. Con el ámbito ancho, los crudos bajan de **5 a 4**; con el de hoy no
+se mueve nada, porque el velo no estaba en él —el Blade lo emite por un componente y el escáner solo
+lee literales—, que es otra muestra del mismo problema.
+
+**(d) La decisión que esto deja pendiente, y NO es una tarea de tokenización.** El día que se borre el
+Blade hay que cambiarle la fuente al escaneo, y la salida buena no es «escanear los `.vue`»: es
+**definir el ámbito por las familias PROPIAS del cajón** (`purchase__`, `cart__`, `bk-`, `cal__`,
+`wiz__`, `qtybox`, `catalog-acc`, `jj-`, `sidecart`…). Así el presupuesto deja de depender del motor
+—que es justo lo que la retirada necesita— y deja de crecer cada vez que el marcado reutiliza una clase
+compartida. Tokenizar el bloque de formularios del sitio es **Fase 5** («theming como paquete
+coherente»), no 4.7. Ficha en `DEUDA.md`.

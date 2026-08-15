@@ -1159,20 +1159,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           · **Balance de (B)**: 7 tramos · `catalog.js`, `calendar.js` (con test propio) y `offer.js` ·
             **286 tests JS** frente a 247 · 4 traducciones a mano retiradas · **manifiesto sin cambiar
             ni una vez en los siete**.
-      · ⚠️⚠️ **`SidebarTokenBudgetTest`: MEDIDO el 2026-08-15, y lo que sale no es un detalle del
-        escaneo — es una TAREA DE 4.0c QUE FALTA.** El test deriva el ámbito CSS del cajón escaneando
+      · ⚠️⚠️ **`SidebarTokenBudgetTest`: RE-MEDIDO con la lógica real del test (`DECISIONES #74`), y la
+        primera lectura era IMPRECISA — no es una tarea de 4.0c que falte.** El test deriva el ámbito CSS del cajón escaneando
         `class="…"` de `purchase.blade.php`. Los `.vue` traen **41 clases que ese escaneo no ve**
         —casi todas de parciales que el Blade incluye y el escáner no sigue: `jj-spinner*`, `jj-loading`,
         el bloque `auth__*`/`form__*`, los iconos— y el Blade tiene **4 que los `.vue` no**
         (`is-selected`, `is-invalid`, `active`, `catalog__item--feat`).
-        **Al añadir las fuentes Vue al escaneo, medido con la suite: la tokenización cae del 75% al
-        70% y los colores crudos suben de 3 a 5.**
-        ▶ **La lectura correcta**: la tokenización de 4.0c midió su ámbito **desde el Blade**, así que
-        está incompleta para el motor que va a sobrevivir. No es una regresión ni un problema de la
-        retirada: es trabajo de 4.0c que solo se ve mirando el ámbito bueno. **Bajar los umbrales para
-        que pase sería exactamente lo que la disciplina «solo encoge» prohíbe.**
-        ▶ **El orden que esto impone**: tokenizar lo que los `.vue` destapan **y luego** cambiar la
-        fuente del escaneo. Ficha en `DEUDA.md`.
+        **Al añadir las fuentes Vue: el ámbito pasa de 1.073 a 1.307 declaraciones, la tokenización cae
+        del 75% al 70% y los crudos suben de 3 a 5.**
+        ▶ **Pero lo que entra NO es CSS del cajón mal tokenizado**, y esto solo se ve desglosando: son
+        **60** declaraciones del bloque `auth__*`/`form__*`/`check`/`pwd-input` —los formularios de
+        login y alta, compartidos con el modal de auth y con `/mi-cuenta`— más `eyebrow`, `icon` y `tk`,
+        que son del sitio. **Del cajón solo había UNA**: el velo `.jj-loading`, con su
+        `rgba(244,239,227,0.82)` que es exactamente `--bg` al 82% — **ya tokenizada** con el patrón de
+        4.0c, y los crudos del ámbito ancho bajan de 5 a 4.
+        ▶ **Lo que esto impone es una DECISIÓN, no una tarea**: definir el ámbito por las familias
+        PROPIAS del cajón (`purchase__`, `cart__`, `bk-`, `cal__`, `wiz__`, `qtybox`, `jj-`, `sidecart`…)
+        en vez de rascar una plantilla — así el presupuesto deja de depender del motor. Tokenizar el
+        bloque de formularios del sitio es **Fase 5**, no la retirada. Ficha en `DEUDA.md`.
       · **`SidebarSeamTest` NO se puede re-apuntar, y conviene saber por qué** (medido el 2026-08-15):
         su `ENGINE_VIEW` es una EXCLUSIÓN («en la vista del propio motor el evento está en su sitio»).
         Ampliarla a todo `livewire/` la debilitaría —otro componente, como `account-context`, podría
