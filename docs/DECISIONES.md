@@ -3133,3 +3133,46 @@ cayó la mutación, no solo que el fichero cambió.**
 
 **(f) Contador: 27 → 26.** El guardián del inventario nombró el fichero él solo en cuanto dejó de
 tocar el componente, que es exactamente para lo que está.
+
+## #78 · 2026-08-15 · 4.7·2b·2 — una paridad donde el motor viejo NO era la referencia de nada
+Tercera de la auditoría: `SidebarAdmissionParityTest` (2 usos). Es el primer caso en que la respuesta
+de la regla de `#75` no es «re-apuntar la referencia» sino **«la referencia no aportaba nada, y lo que
+hay que rescatar es otra cosa»** — y se vio midiendo, no leyendo.
+
+**(a) La mitad que comparaba destinos contra Livewire era redundante, y está medido.** Cinco
+mutaciones sobre `admission.js` —la clave del aviso del tope, el `max` que sale del sobre, la clave de
+la cesta vacía, que la pausa componga mensaje y que el invitado vaya a pagar— dejan **rojos a la vez**
+la paridad y `admission.test.js`. El reparto del módulo ya tiene su red, con más fronteras que esta.
+
+**(b) Lo único que este fichero puede decir es que la cadena entera es REAL.** `admission.test.js`
+prueba el módulo con un diccionario y unas respuestas fabricadas por quien escribió el módulo; aquí
+las respuestas las da el servidor de verdad sobre una instalación pausada, un titular con el tope
+lleno o el limitador agotado, y el diccionario es el de `lang/`. **Medido: renombrar
+`errors.too_many_pending` en `lang/es/tickets.php` deja los 2715 casos verdes salvo UNO, y es este.**
+`admission.test.js` no puede verlo —su diccionario es de mentira— y `SidebarTextParityTest` no lleva
+esas claves.
+
+**(c) La re-apuntada es la misma de `#75(b)`: el error bag era intermediario del diccionario.**
+Verificado en el código: `Purchase::checkout()` escribe literalmente `__('tickets.errors.cart_empty')`.
+La referencia pasa a ser `__()`, y la del tope interpola la constante de la POLÍTICA mientras el
+cliente interpola `max_pending_orders` **del sobre de la API** — así que el caso sigue cazando un
+desajuste entre esos dos números sin necesitar el motor que se va.
+
+**(d) Lo que se pierde, dicho sin adornos.** El caso que demostraba sobre el HTML que el mensaje de
+pausa se escribe y **no se pinta** muere con el Blade: era su única prueba posible. Lo que se queda es
+la conducta que aquello justificaba —sin mensaje y releyendo el estado—, ejercida con la instalación
+realmente pausada. La decisión sigue documentada aquí y en `admission.js`.
+
+**(e) Siete mutaciones para demostrar que la re-apuntada no es tautológica**, las siete rojas: la
+clave que falta en el diccionario, cuatro sobre el módulo y **dos de deriva de contrato en el
+servidor** —publicar el nombre interno del dominio (`too_many_pending`) en vez del código público, y
+dejar de publicar `max_pending_orders`—. Esas dos últimas son el sujeto nuevo del fichero: el
+**cableado** entre el endpoint y el módulo, que ninguno de los dos prueba por su cuenta.
+
+**(f) Y los pasos se leen de `machine.js`, no se escriben en PHP.** El test afirma a qué PASO se va;
+un número suelto no dice cuál es ni se entera si el embudo se renumera.
+
+**(g) Contador: 26 → 25.** Nota de proceso: **la guarda del bundle rancio saltó por tercera vez en
+tres días** —mutar un módulo y restaurarlo con `git checkout` le pone fecha nueva—, y esta vez tumbó
+los 30 casos del diff de árbol de golpe. Sin ella habrían comparado contra un bundle viejo: cuesta un
+`npm run build:ssr` y evita un verde falso, que es exactamente el trato que `#69` buscaba.

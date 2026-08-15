@@ -16,7 +16,7 @@ claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md`
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.651 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
+- Suite **2715 en verde** (15.652 aserciones, `--parallel` ~80 s) · **286 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió** (`DECISIONES #64`): tres casos
@@ -28,8 +28,9 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   `npm run test:js` · suite—, y `PrePushGateTest` los vigila uno a uno, incluido que el build vaya
   ANTES que la suite (se añadió tras un fallo real: un manifest a 0 bytes tumbó la web entera).
 - ⚠️ **`SidebarDomContractTest` compara contra un ARTEFACTO** (`storage/ssr/render-sidebar.js`). Tiene
-  guarda contra bundle rancio (`#69`) porque un bundle viejo daba **verde falso**; ha saltado dos veces
-  en dos días. Si tocas un módulo del cajón, `npm run build:ssr`.
+  guarda contra bundle rancio (`#69`) porque un bundle viejo daba **verde falso**; ha saltado **tres
+  veces en tres días** —la última tumbando sus 30 casos de golpe (`#78`)—. Si tocas un módulo del cajón,
+  o lo mutas y lo restauras, `npm run build:ssr` **antes** de leer ningún resultado.
 - **Auditorías de dependencias = verificación de CIERRE, no de instalación** (`#25`): el árbol npm pasó
   de 0 a 5 avisos en unas horas sin que el lock cambiara. Correrlas en cada cierre.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers).
@@ -64,28 +65,36 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 26
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 25
 dependientes** (eran 32 al corregir el escáner). Cuando llegue a 0, el componente se borra.
 
 ▶ **EMPIEZA AQUÍ: seguir la auditoría de las paridades.** Con (B) cerrada (`#73`) el diff de árbol se
 alimenta del servidor en los once pasos, así que por fin se puede preguntar por cada paridad **«¿qué
-afirma esto que el diff ya no afirme?»**. Van dos respondidas: `SidebarPayParityTest` (`#75`) y
-`SidebarAddonsParityTest` (`#77`), las dos fuera del inventario.
+afirma esto que el diff ya no afirme?»**. Van tres respondidas y las tres fuera del inventario:
+`SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`) y `SidebarAdmissionParityTest`
+(`#78`).
 
-**La regla de la auditoría** (`#75`), que vale para las siete restantes: separa lo que **compara entre
+**La regla de la auditoría** (`#75`), que vale para las seis restantes: separa lo que **compara entre
 motores** (muere con el segundo), lo que **afirma del contrato** (se queda) y lo que usa el motor viejo
 como **intermediario de una fuente que sobrevive** (se re-apunta a la fuente — y casi siempre mejora el
 test). El tercero hay que buscarlo activamente.
 
-⚠️ **Y la auditoría se hace MUTANDO, no leyendo** (`#77`): la lectura decía que esa paridad era
-redundante con el diff de árbol, y la medición contra los 2715 casos dijo que **tres campos los cazaba
-solo ella**. Dos avisos que salieron de ahí y valen para las siete: un campo pinchado en su valor
-trivial (0, `null`, lista vacía) **no está fijado** —el cruce sale verde—, y una mutación por
-sustitución de texto puede caer en **otra** aparición del mismo nombre: comprueba dónde cayó.
+⚠️ **Y la auditoría se hace MUTANDO, no leyendo.** Las tres hechas lo demuestran en las dos
+direcciones: en `#77` la lectura decía «redundante con el diff de árbol» y la medición encontró **tres
+campos que solo cazaba ella**; en `#78` la lectura decía «compara destinos, se queda» y la medición
+encontró que esa mitad **la cubría entera `admission.test.js`** — lo que había que rescatar era otra
+cosa (que la cadena sea REAL: servidor + diccionario de verdad). **Cuatro avisos que valen para las
+seis:**
+- un campo pinchado en su valor **trivial** (0, `null`, lista vacía) NO está fijado: el cruce sale verde;
+- una mutación por sustitución de texto puede caer en **otra** aparición del mismo nombre — comprueba
+  dónde cayó, no solo que el fichero cambió;
+- lo que un test JS prueba con fixtures **fabricados** no cubre que el servidor real emita eso;
+- **tras iterar sobre `resources/js/`: `npm run build:ssr`**. La guarda del bundle rancio ya ha saltado
+  tres veces en tres días (restaurar un módulo con `git checkout` le pone fecha nueva).
 
-**Las siete que quedan**, por tamaño: `SidebarAdmissionParityTest` (2) · `SidebarCalendarParityTest`
-(3) · `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) ·
-`SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+**Las seis que quedan**, por tamaño: `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3) ·
+`SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest` (10) ·
+`SidebarDomContractTest` (26).
 
 **Clasificación ya MEDIDA de otros dependientes** (no la repitas; el detalle en el tracker):
 - `Ui/SpinnerTest`, `Auth/DuplicateEmailEdgeCaseTest` y `Maintenance/ReservationPauseGuardTest`

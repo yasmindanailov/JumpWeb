@@ -12,31 +12,43 @@ use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Middleware\SetLocale;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * Fase 4 · paso 4.4a·1 — **el paso del carrito al pago lleva al mismo sitio en los dos motores**.
+ * Fase 4 · paso 4.4a·1, re-apuntado en 4.7·2b·2 — **el paso del carrito al pago, con las respuestas
+ * REALES del servidor y el diccionario REAL** (`DECISIONES #78`).
  *
- * El diff de árbol no puede ver nada de esto: lo que se compara aquí no es marcado, es **a qué
- * pantalla se va y qué se dice** al pulsar «Ir a pagar». Son cinco situaciones y cada una tiene su
- * destino —identificarse, pagar, o quedarse en el carrito con un aviso—, y el cliente las decide con
- * un veredicto de la API mientras el servidor las decide con el guard y la política de admisión.
+ * ### Qué comparaba antes y por qué eso ya no es la pregunta
  *
- * ⚠️ **El caso que este test existe para fijar es el de la PAUSA**, y salió de medirlo, no de leer el
- * Blade: `reportAdmissionDenial()` escribe `errors.reservations_paused` en el bag y **ese mensaje no
- * se pinta jamás** — al volver al paso 4 se cumple `showPausedNotice()` y el cartel de mantenimiento
- * sustituye el flujo entero. Un motor que enseñara ese error donde la web enseña el cartel mostraría
- * un texto que no existe en ninguna instalación, y el gate de árbol lo daría por bueno.
+ * Nació comparando el destino y el aviso contra el componente Livewire. Medido campo a campo, esa
+ * mitad **no dejaba nada que el módulo no probara ya por su cuenta**: las cinco situaciones, el
+ * destino de cada una, la clave de cada aviso, el `max` que sale del sobre y la regla de releer el
+ * estado están todas en `admission.test.js`, y las cinco mutaciones que se probaron dejan rojos los
+ * dos a la vez. Comparar contra un motor que se va no añadía red.
  *
- * ⚠️ Y el destino se compara **aunque los pasos 5 y 8 no estén transcritos todavía** (son 4.4b y 4.5).
- * Eso es a propósito: la decisión ya está tomada y probada, así que enchufar esas pantallas será
- * cablear y no volver a decidir — que es justo el fallo que 4.3·1 encontró con la banda de progreso.
+ * ### Lo que sí queda, y es lo único que este fichero puede decir
+ *
+ * `admission.test.js` prueba el módulo con un diccionario y unas respuestas **fabricadas por quien
+ * escribió el módulo**. Este test es el único sitio donde la cadena entera es real:
+ *
+ *  · **las respuestas las da el servidor de verdad** —`GET /me` y `GET /me/reservation-eligibility`
+ *    sobre una instalación en pausa, un titular con el tope lleno o el limitador agotado—, así que un
+ *    cambio de contrato se ve aquí aunque el módulo siga verde contra sus fixtures;
+ *  · **el diccionario es el de `lang/`**, no uno inventado, y la referencia es `__()`, que es la
+ *    fuente que el error bag de Livewire solo intermediaba (misma re-apuntada que `#75(b)`).
+ *
+ * ⚠️ **Está MEDIDO que esa segunda mitad no la cubre nadie más**: renombrar `errors.too_many_pending`
+ * en `lang/es/tickets.php` deja los 2715 casos verdes salvo uno, y es el de aquí. `admission.test.js`
+ * no puede verlo —su diccionario es de mentira— y `SidebarTextParityTest` no lleva esas claves en su
+ * lista.
+ *
+ * ⚠️ **Lo que este test NO es**: no fija el reparto de `decideCheckout()` —eso es `admission.test.js`,
+ * con muchos más casos frontera— ni los códigos que publica el endpoint —eso es
+ * `ReservationEligibilityTest`, que los afirma uno a uno—. Aquí el sujeto es el **cableado**: que esas
+ * dos piezas, tal y como existen, encajen.
  */
 class SidebarAdmissionParityTest extends TestCase
 {
@@ -75,70 +87,72 @@ class SidebarAdmissionParityTest extends TestCase
         $this->entry->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 990]);
     }
 
-    // ── El destino: las cinco situaciones ─────────────────────────────────────────────────────
+    // ── El destino, con las respuestas reales de cada situación ───────────────────────────────
 
     /**
-     * ⚠️ **Las CINCO situaciones y sus destinos, comparadas una a una.**
+     * ⚠️ **Las cinco situaciones, cada una con su destino, alimentadas por el servidor de verdad.**
      *
-     * No es una muestra: son todas las salidas de `Purchase::checkout()`. Y el orden importa tanto
-     * como el destino — la cesta vacía se comprueba **antes** de preguntar nada al servidor, y el
-     * «no hay nadie» manda sobre cualquier veredicto de elegibilidad.
-     */
-    public function test_the_client_goes_where_the_server_goes(): void
-    {
-        foreach ($this->situations() as $label => [$user, $prepare]) {
-            $prepare();
-
-            $server = $this->serverStep($user, withCart: $label !== 'cesta vacía');
-            $client = $this->clientVerdict($user, cartCount: $label === 'cesta vacía' ? 0 : 1);
-
-            $this->assertSame(
-                $server,
-                $client['step'],
-                "Con «{$label}» los dos motores NO van al mismo paso.\n".
-                "  Livewire: {$server}\n".
-                "  Cajón SPA: {$client['step']}\n".
-                '⚠️ El diff de árbol no puede ver esto: lo que diverge no es el marcado, es a qué '.
-                'pantalla lleva el CTA que convierte la cesta en un pedido.'
-            );
-        }
-    }
-
-    /**
-     * Las cinco situaciones de `checkout()`, cada una con su titular y cómo se prepara.
+     * El destino se nombra por la constante de `machine.js` y no por su número: el paso al que se va
+     * es la decisión, el número con el que se llame es del embudo.
      *
-     * @return array<string, array{0: ?User, 1: callable}>
+     * Lo que esto añade a `admission.test.js` no es el reparto —allí está, con más fronteras— sino que
+     * las respuestas que lo alimentan **no las escribe nadie**: si `allowed` o `reason` cambiaran de
+     * nombre, sus fixtures seguirían verdes y este caso no.
      */
-    private function situations(): array
+    public function test_the_real_responses_take_the_client_where_each_situation_leads(): void
     {
+        $steps = $this->steps();
+
         $clean = User::factory()->create();
         $capped = User::factory()->create();
         $throttled = User::factory()->create();
         $paused = User::factory()->create();
 
-        return [
-            'invitado' => [null, fn () => null],
-            'identificado y admitido' => [$clean, fn () => null],
-            // ⚠️ La cesta del caso anterior sobrevive: vive en la SESIÓN y `mount()` la restaura, así
-            // que sin vaciarla este caso no probaría la cesta vacía sino la del vecino.
-            'cesta vacía' => [$clean, fn () => session()->forget('purchase.cart')],
-            'tope de pendientes' => [$capped, fn () => $this->fillPendingOrders($capped)],
-            'límite de frecuencia' => [$throttled, fn () => $this->exhaustRateLimit($throttled)],
-            'reservas en pausa' => [$paused, fn () => $this->pause()],
+        $this->fillPendingOrders($capped);
+        $this->exhaustRateLimit($throttled);
+
+        $expected = [
+            // Sin sesión, `GET /me` responde 401 y ese es el único «no hay nadie» que vale.
+            'invitado' => [null, 1, 'IDENTIFY'],
+            'identificado y admitido' => [$clean, 1, 'PAY'],
+            // La única guarda que no pregunta nada al servidor, y por eso va la primera.
+            'cesta vacía' => [$clean, 0, 'CART'],
+            'tope de pendientes' => [$capped, 1, 'CART'],
+            'límite de frecuencia' => [$throttled, 1, 'CART'],
         ];
+
+        foreach ($expected as $label => [$user, $cartCount, $step]) {
+            $this->assertSame(
+                $steps[$step],
+                $this->clientVerdict($user, cartCount: $cartCount)['step'],
+                "Con «{$label}» el cajón no va a «{$step}».\n".
+                '⚠️ El diff de árbol no puede ver esto: lo que se decide no es marcado, es a qué '.
+                'pantalla lleva el CTA que convierte la cesta en un pedido.'
+            );
+        }
+
+        // La pausa va aparte porque cambia el estado de la instalación para todos los demás.
+        $this->pause();
+        $this->assertSame(
+            $steps['CART'],
+            $this->clientVerdict($paused, cartCount: 1)['step'],
+            'con las reservas en pausa el cajón se queda en el carrito'
+        );
     }
 
-    // ── El texto del aviso ────────────────────────────────────────────────────────────────────
+    // ── El texto del aviso, contra el diccionario ─────────────────────────────────────────────
 
     /**
-     * ⚠️ **Los avisos, palabra por palabra y en los TRES idiomas.**
+     * ⚠️ **Los avisos, palabra por palabra y en los TRES idiomas, contra `__()`.**
      *
-     * El del tope lleva un parámetro (`:max`) que sale de dos sitios distintos —del `context` del
-     * veredicto en Livewire y de `max_pending_orders` del sobre en la API—, así que un desajuste
-     * entre esos dos números se ve aquí y en ningún otro sitio. Y va por idioma porque el francés y
-     * el inglés no comparten la posición del marcador.
+     * El error bag de Livewire era un **intermediario** de estas mismas claves, así que la referencia
+     * correcta siempre fue el diccionario (`#75(b)`). Y el del tope no es una comparación de textos:
+     * el cliente interpola `max_pending_orders` **del sobre de la API** y la referencia interpola la
+     * constante de la POLÍTICA, así que un desajuste entre esos dos números cae aquí.
+     *
+     * Va por idioma porque el francés y el inglés no comparten la posición del marcador.
      */
-    public function test_the_denial_messages_match_the_server_in_every_locale(): void
+    public function test_the_denial_messages_are_the_dictionary_with_the_servers_own_numbers(): void
     {
         $capped = User::factory()->create();
         $throttled = User::factory()->create();
@@ -149,15 +163,24 @@ class SidebarAdmissionParityTest extends TestCase
         foreach (SetLocale::SUPPORTED as $locale) {
             $this->app->setLocale($locale);
 
-            foreach (['tope de pendientes' => $capped, 'límite de frecuencia' => $throttled] as $label => $user) {
-                $server = $this->serverError($user);
-                $client = $this->clientVerdict($user, cartCount: 1)['error'];
+            $cases = [
+                'tope de pendientes' => [
+                    $capped,
+                    __('tickets.errors.too_many_pending', ['max' => ReservationAdmissionPolicy::MAX_PENDING_PER_USER]),
+                ],
+                'límite de frecuencia' => [$throttled, __('tickets.errors.try_later')],
+            ];
 
-                $this->assertNotSame('', $server, "el servidor tiene que avisar de «{$label}»");
+            foreach ($cases as $label => [$user, $expected]) {
+                $this->assertStringNotContainsString(
+                    'tickets.errors', $expected,
+                    "la clave del aviso de «{$label}» no existe en el diccionario «{$locale}»"
+                );
+
                 $this->assertSame(
-                    $server,
-                    $client,
-                    "El aviso de «{$label}» en «{$locale}» NO dice lo mismo en los dos motores.\n".
+                    $expected,
+                    $this->clientVerdict($user, cartCount: 1)['error'],
+                    "El aviso de «{$label}» en «{$locale}» NO es el del diccionario.\n".
                     '⚠️ El normalizador del diff de árbol descarta los nodos de texto: este aviso solo '.
                     'lo compara este test.'
                 );
@@ -165,56 +188,49 @@ class SidebarAdmissionParityTest extends TestCase
         }
     }
 
-    /** Y el de la cesta vacía, que es la única guarda que no pregunta nada al servidor. */
-    public function test_the_empty_cart_message_matches_the_server(): void
+    /** Y el de la cesta vacía, la única guarda que no pregunta nada al servidor. */
+    public function test_the_empty_cart_message_is_the_dictionary(): void
     {
         $user = User::factory()->create();
 
         foreach (SetLocale::SUPPORTED as $locale) {
             $this->app->setLocale($locale);
 
-            $component = Livewire::test(Purchase::class)->set('step', 4)->call('checkout');
+            $expected = __('tickets.errors.cart_empty');
+
+            $this->assertStringNotContainsString('tickets.errors', $expected,
+                "la clave del aviso de cesta vacía no existe en el diccionario «{$locale}»");
 
             $this->assertSame(
-                (string) $component->errors()->first('cart'),
+                $expected,
                 $this->clientVerdict($user, cartCount: 0)['error'],
-                "El aviso de cesta vacía en «{$locale}» NO coincide."
+                "El aviso de cesta vacía en «{$locale}» NO es el del diccionario."
             );
         }
     }
 
-    // ── La pausa: el aviso que el servidor escribe y NUNCA enseña ─────────────────────────────
+    // ── La pausa: el veredicto que no compone mensaje ─────────────────────────────────────────
 
     /**
-     * ⚠️ **Lo que este caso fija está MEDIDO y es contraintuitivo**: con las reservas en pausa,
-     * `reportAdmissionDenial()` escribe su mensaje en el error bag y el HTML **no lo contiene**,
-     * porque `showPausedNotice()` sustituye el flujo entero por el cartel de mantenimiento.
+     * ⚠️ **La pausa no se enseña como error de carrito, y eso salió de MEDIR el motor viejo**:
+     * `reportAdmissionDenial()` escribía `errors.reservations_paused` en su bag y ese texto **no se
+     * pintaba jamás**, porque el cartel de mantenimiento sustituía el flujo entero. Pintarlo en el
+     * cajón habría sido enseñar un texto que la web no enseña en ninguna instalación.
      *
-     * Por eso el cliente NO compone error para la pausa: pintarlo sería enseñar un texto que la web
-     * no enseña en ninguna instalación. Lo que hace en su lugar —releer el estado— es lo que le
-     * permite pintar el cartel, y de paso cierra el residual que 4.3·3 dejó declarado: un cajón ya
-     * ABIERTO cuando se acciona el interruptor no se enteraba hasta cerrarlo y volver a abrirlo.
+     * La demostración sobre el Blade se va con el Blade —era su única prueba posible—; lo que se
+     * queda, y es lo que importa, es la conducta: **sin mensaje, y releyendo el estado**, que es lo
+     * que hace aparecer el cartel y lo que cierra el residual de 4.3·3 (un cajón ya ABIERTO cuando se
+     * acciona el interruptor). Aquí se ejerce con la instalación REALMENTE pausada.
      */
     public function test_the_pause_is_a_notice_and_not_a_cart_error(): void
     {
         $user = User::factory()->create();
         $this->pause();
 
-        $component = $this->componentWithCart($user)->call('checkout');
-        $message = (string) $component->errors()->first('cart');
-        $html = $component->html();
-
-        $this->assertNotSame('', $message, 'el servidor sí escribe el mensaje en su bag');
-        $this->assertStringContainsString('purchase__maint', $html, 'y el cartel de mantenimiento lo tapa');
-        $this->assertStringNotContainsString(
-            $message, $html,
-            'si el mensaje de pausa llegara a pintarse, el cliente tendría que pintarlo también'
-        );
-
         $verdict = $this->clientVerdict($user, cartCount: 1);
 
-        $this->assertSame('', $verdict['error'], 'el cajón no puede enseñar un texto que la web no enseña');
-        $this->assertTrue($verdict['rereadStatus'], 'y tiene que releer el estado para poder pintar el cartel');
+        $this->assertSame('', $verdict['error'], 'el cajón no puede enseñar un texto donde la web enseña el cartel');
+        $this->assertTrue($verdict['rereadStatus'], 'y tiene que releer el estado para poder pintarlo');
     }
 
     /**
@@ -239,43 +255,6 @@ class SidebarAdmissionParityTest extends TestCase
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
 
-    /** El paso al que llega el componente Livewire tras pulsar «Ir a pagar». */
-    private function serverStep(?User $user, bool $withCart): int
-    {
-        $component = $withCart
-            ? $this->componentWithCart($user)
-            : $this->actingAsOrGuest($user)->livewire()->set('step', 4);
-
-        return (int) $component->call('checkout')->get('step');
-    }
-
-    /** El aviso que el componente Livewire deja en el carrito tras pulsar «Ir a pagar». */
-    private function serverError(User $user): string
-    {
-        return (string) $this->componentWithCart($user)->call('checkout')->errors()->first('cart');
-    }
-
-    /**
-     * Un componente con una línea en la cesta, sembrada pasando por el flujo real.
-     *
-     * Se pasa por `addToCart()` en vez de escribir `$cart` a mano para que la línea la componga el
-     * dominio: un test que fija una forma de cesta que el código nunca produce prueba su propia idea.
-     */
-    private function componentWithCart(?User $user): Testable
-    {
-        return $this->actingAsOrGuest($user)->livewire()
-            ->call('selectType', $this->entry->id)
-            ->call('selectDate', $this->date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart');
-    }
-
-    private function livewire(): Testable
-    {
-        return Livewire::test(Purchase::class);
-    }
-
     private function actingAsOrGuest(?User $user): self
     {
         if ($user !== null) {
@@ -290,7 +269,7 @@ class SidebarAdmissionParityTest extends TestCase
      *
      * ⚠️ **Las respuestas se piden de verdad y no se fabrican**, que es lo que hace este test capaz de
      * ver un cambio de contrato: si `reason` dejara de publicar `too_many_pending_orders`, el módulo
-     * caería en el aviso genérico y el mensaje dejaría de coincidir con el del servidor.
+     * caería en el aviso genérico y el mensaje dejaría de coincidir con el del diccionario.
      *
      * @return array{step: int, error: string, rereadStatus: bool}
      */
@@ -365,17 +344,33 @@ class SidebarAdmissionParityTest extends TestCase
     }
 
     /**
-     * Ejecuta `admission.js` en Node, que es lo que corre en el navegador.
+     * Los pasos del embudo tal y como los nombra `machine.js`.
+     *
+     * Se leen del módulo en vez de escribir números en PHP: lo que este test afirma es a qué PASO se
+     * va, y un número suelto en el test no dice cuál es ni se entera si el embudo se renumera.
+     *
+     * @return array<string, int>
+     */
+    private function steps(): array
+    {
+        return $this->runInNode(null, <<<'JS'
+            import { STEPS } from 'file://__MODULE__';
+            process.stdout.write(JSON.stringify(STEPS));
+            JS, 'machine.js');
+    }
+
+    /**
+     * Ejecuta un módulo del cajón en Node, que es lo que corre en el navegador.
      *
      * Mismo patrón que las demás paridades del cajón: script efímero que importa el módulo REAL por
      * ruta absoluta y habla por stdin/stdout con JSON.
      *
-     * @param  array<string, mixed>  $state
-     * @return array{step: int, error: string, rereadStatus: bool}
+     * @param  array<string, mixed>|null  $state
+     * @return array<string, mixed>
      */
-    private function runInNode(array $state): array
+    private function runInNode(?array $state, ?string $script = null, string $module = 'admission.js'): array
     {
-        $script = <<<'JS'
+        $script ??= <<<'JS'
             import { decideCheckout } from 'file://__MODULE__';
             let raw = '';
             process.stdin.setEncoding('utf8');
@@ -385,17 +380,17 @@ class SidebarAdmissionParityTest extends TestCase
             });
             JS;
 
-        $path = base_path('storage/framework/testing/decide-checkout.mjs');
+        $path = base_path('storage/framework/testing/sidebar-'.pathinfo($module, PATHINFO_FILENAME).'.mjs');
 
         @mkdir(dirname($path), 0775, true);
-        file_put_contents($path, str_replace('__MODULE__', base_path('resources/js/sidebar/admission.js'), $script));
+        file_put_contents($path, str_replace('__MODULE__', base_path('resources/js/sidebar/'.$module), $script));
 
         $process = new Process(['node', $path], base_path());
-        $process->setInput(json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $process->setInput($state === null ? '' : json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $process->setTimeout(60);
         $process->run();
 
-        $this->assertTrue($process->isSuccessful(), "El módulo de admisión falló:\n".$process->getErrorOutput());
+        $this->assertTrue($process->isSuccessful(), "El módulo «{$module}» falló:\n".$process->getErrorOutput());
 
         return json_decode($process->getOutput(), true, 512, JSON_THROW_ON_ERROR);
     }

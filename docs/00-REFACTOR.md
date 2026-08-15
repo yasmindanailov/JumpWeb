@@ -1222,9 +1222,28 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
           veces en el Resource —fila resuelta y `line.addons`— y la línea con menos sangría es
           subcadena de la otra. **Al mutar hay que comprobar DÓNDE cayó la mutación.** De paso quedó
           medido que `line.addons` sí está cubierto (3 rojos en `CatalogAddonsTest`).
-        · **Quedan SIETE**: `SidebarAdmissionParityTest` (2) · `SidebarCalendarParityTest` (3) ·
-          `SidebarCartParityTest` (3) · `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4)
-          · `SidebarOutcomeParityTest` (10) · `SidebarDomContractTest` (26).
+      · ✅ **`SidebarAdmissionParityTest` re-apuntada y FUERA del inventario** (2026-08-15,
+        `DECISIONES #78`). 26 → **25**. Primer caso en que la respuesta NO es «re-apuntar la
+        referencia» sino **«la referencia no aportaba nada»**: cinco mutaciones sobre `admission.js`
+        dejan rojos a la vez la paridad y `admission.test.js`, así que comparar destinos contra
+        Livewire no añadía red. Lo que se rescata es otra cosa: **la cadena entera es REAL** —las
+        respuestas las da el servidor sobre una instalación pausada / un tope lleno / el limitador
+        agotado, y el diccionario es el de `lang/`—.
+        · ⚠️ **Medido**: renombrar `errors.too_many_pending` en `lang/es/tickets.php` deja los 2715
+          casos verdes **salvo uno**, y es este. `admission.test.js` no puede verlo (su diccionario es
+          fabricado) y `SidebarTextParityTest` no lleva esas claves.
+        · **El sujeto nuevo es el CABLEADO** endpoint ↔ módulo, que ninguno de los dos prueba solo:
+          las dos mutaciones de deriva de contrato —publicar el nombre interno del dominio en vez del
+          código público, y dejar de publicar `max_pending_orders`— lo dejan rojo.
+        · **Lo que se pierde, dicho sin adornos**: el caso que demostraba sobre el HTML que el mensaje
+          de pausa se escribe y **no se pinta** muere con el Blade —era su única prueba posible—. Se
+          queda la conducta que aquello justificaba, ejercida con la instalación realmente pausada.
+        · ⚠️ **La guarda del bundle rancio saltó por TERCERA vez en tres días**: mutar un módulo y
+          restaurarlo con `git checkout` le pone fecha nueva, y tumbó los 30 casos del diff de golpe.
+          **Tras iterar sobre `resources/js/`, `npm run build:ssr` antes de leer nada.**
+        · **Quedan SEIS**: `SidebarCalendarParityTest` (3) · `SidebarCartParityTest` (3) ·
+          `SidebarPausedParityTest` (4) · `SidebarProgressParityTest` (4) · `SidebarOutcomeParityTest`
+          (10) · `SidebarDomContractTest` (26).
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
