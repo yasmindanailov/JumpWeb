@@ -112,65 +112,38 @@ componente **el cajón SPA queda como ÚNICO motor y sin vuelta atrás sin despl
 faltan **Turnstile y los tres caminos de navegador**. El contador y esta pregunta son distintas: aquél
 dice cuándo se puede borrar sin romper la suite, no qué motor queda sirviendo después.
 
-▶ **EMPIEZA AQUÍ: levantar STAGING y verificar allí** (decisión del owner, `#100`). En este orden:
-1. **El procedimiento de despliegue**, que no existe (`ENTORNOS.md` §4, `[PENDIENTE DE MEDIR]`; cierra
-   también el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1). Se ejecuta una vez y se anota lo
-   que de verdad pasa — **no se escribe a ojo**.
-2. **Flag en `spa`** allí, y cerrar lo que `VERIFICACION-E2E-CAJON.md` §6 declara sin cubrir: la
-   **notificación S2S** de Redsys, el **3DS con challenge** (`4548 8172 1249 3017`) y el **móvil real**.
-   Más **Turnstile** (4.4b·2), **ya desbloqueado** (`#101`): las claves están, el servidor y el
-   contrato ya lo soportan y **la CSP ya permite `challenges.cloudflare.com`**. Lo único que falta es
-   montar el widget en `RegisterForm.vue`, mandar el token y retirar la delegación al modal.
-3. **Y entonces `4.7·2b·3`**: el borrado, que ya está enteramente preparado y sin decisiones abiertas.
+✅ **STAGING APROVISIONADO** (2026-08-16, `#102`): BD `jumpweb_1_test` (MariaDB 11.4.10, verificada
+conectando) · PHP 8.3 · `documentRoot` → `public_html/public` · `robots.txt` con `Disallow: /`
+sirviéndose por HTTPS. `ENTORNOS.md` §4 tiene el detalle y las cuatro cosas que la doc del panel no
+cuenta.
 
-⚠️ **Necesita al OWNER**: el panel de la máquina, las claves de Cloudflare, un navegador y un móvil.
-Nada de eso se puede hacer desde el bucle local. El tramo consiste en
-un commit único con `Purchase.php`, `purchase.blade.php`, el placeholder, la línea de
-`layout.blade.php`, el puente `$wire.step`↔store y **todos los tests que mueren con él**.
+▶ **EMPIEZA AQUÍ: `scripts/deploy.sh`.** Es lo único que separa al proyecto de poder verificar.
+Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
+`ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `storage:link`, permisos, cron del
+scheduler y worker (**el `crontab` del sitio SÍ se puede escribir**) y `ProductionSeeder`.
 
-⚠️ **Tres ficheros exigen operar DENTRO, no borrarlos enteros**, y cada uno lleva las instrucciones en
-su propio docblock: `SidebarCalendarParityTest` (`#79` — sobrevive el caso de los husos),
-`SidebarDomContractTest` (`#83` — tres operaciones exactas, incluida **mover el anclaje del manifiesto
-a `$vue`**) y `ReservationPauseTest` (`#98` — se quedan sus seis casos de `MaintenanceSettings`).
-`DepositSurfacesTest` y `ModuleContractsTest` también conservan casos.
+⚠️ **Tres cosas que el script tiene que hacer y no son obvias:**
+- **reescribir `public/robots.txt` con `Disallow: /` y verificarlo por HTTP** — el del repo permite
+  indexar a propósito (el producto debe indexarse en casa de un cliente), así que el primer `rsync`
+  tumba la guarda 4 si el script no lo repone;
+- **negarse** si el destino no es staging, si `redsys_environment` quedaría en `live`, si el correo
+  saldría o si `APP_DEBUG` es `true` — lo valioso del script es lo que **no** deja hacer;
+- **comprobar la salud del sitio al terminar**, no dar por hecho que fue bien.
 
-⚠️ **Y arrastra el modo `embedded` de la auth**: `purchase.blade.php` es el ÚNICO sitio que lo monta.
-Decidir si se retira ahí o en Fase 5 es parte del tramo, no un descubrimiento del final.
+**Después del despliegue, en este orden:**
+1. **Verificar en staging** lo que `#100` exige antes de borrar nada: **Turnstile** (4.4b·2, ya
+   desbloqueado, `#101`), la **notificación S2S** de Redsys, el **3DS con challenge** y el **móvil
+   real** — los tres últimos son `VERIFICACION-E2E-CAJON.md` §6.
+2. **`4.7·2b·3`**: el borrado, que está enteramente preparado y sin decisiones abiertas.
+3. **`scripts/provision.sh`** contra la API del panel, **después** del `deploy.sh` (`#102(f)`): su
+   trabajo es dejar el servidor en el estado que el despliegue espera, y ese estado solo se conoce
+   habiéndolo alcanzado una vez. Necesita un token nuevo, con el menor alcance posible.
 
-### Lo que enseñó la auditoría, y sigue valiendo
+⚠️ **El token de API usado para medir esto era temporal y el owner lo retira.** El panel es
+`https://cp.hosturbo.net/api`; los identificadores del sitio están en `ENTORNOS.md` §4.
 
-**La regla de clasificación** (`#75`, `#86`): separa lo que **compara entre motores** (muere), lo que
-**afirma del contrato** (se queda) y lo que usa el motor viejo como **intermediario de una fuente que
-sobrevive** (se re-apunta). Y hazle la pregunta al **SUJETO del caso, no a la regla que menciona**
-(`#87`): una regla que sobrevive no salva un caso que prueba una superficie que se va.
-
-**Se hace MUTANDO, no leyendo**, y estas son las cuatro trampas que costaron tiempo — todas de errores
-propios:
-- comprueba **dónde cayó** la mutación: un nombre puede aparecer dos veces en el fichero (`#77`);
-- comprueba el **contenido**, no el código de salida: `git checkout` no revierte un fichero sin
-  trackear (`#90`);
-- exige que el **ancla sea única** antes de creerte un hueco: una mutación mal apuntada puede dar un
-  resultado **coherente con la hipótesis equivocada** (`#92`);
-- no muteS **una rama** de una propiedad de indistinguibilidad —la anti-enumeración— porque el verde no
-  dice nada (`#95`).
-
-**Y dos criterios que se ganaron midiendo:**
-- **Si un dato viaja al cliente y su único test conduce el motor viejo, el contrato NO lo está
-  fijando** — así salieron los tres huecos.
-- **Un `⚠️ sin medir` en un fichero condenado es deuda con fecha de caducidad** (`#93`): las dos veces
-  que se cerró uno, había hueco.
-- **Tras iterar sobre `resources/js/`: `npm run build:ssr`.** La guarda del bundle rancio saltó cuatro
-  veces en tres días.
-
-**Notas por fichero que ·2b·3 necesita** (el detalle, en el tracker y en cada docblock):
-- `SidebarSeamTest` **no se puede re-apuntar**: su exclusión `ENGINE_VIEW` desaparece sola con el Blade.
-- `SpinnerTest`, `DuplicateEmailEdgeCaseTest` y `ReservationPauseGuardTest` **mueren enteros**, cada uno
-  con su cobertura equivalente ya localizada.
-
-⚠️ **Y una lección de handoff que salió cara** (`#83`): esta misma nota afirmaba durante dos días que
-`SidebarDomContractTest` podía convertirse ya en «Vue contra el manifiesto» y que eso decidía sobre otra
-paridad. Las dos mitades eran falsas, y estaban escritas **leyendo el código**. **Una nota de handoff
-escrita leyendo es una hipótesis, no un plan** — márcala como tal o mídela antes de dejarla.
+**El MÉTODO de la auditoría —clasificar por sujeto y medir mutando— vive ahora en
+`CONVENCIONES.md` §3.quater**, que es donde se busca un protocolo. Aquí solo el estado.
 
 ### Lo que NO depende de nosotros
 

@@ -76,9 +76,10 @@ Inventario en solo lectura, para no volver a suponerlo:
 | **node / npm** | **NO ESTÁN** | sí | ⚠️ **sí — ver abajo** |
 | git · rsync · unzip | sí | — | ✓ |
 | HOME | `/var/www/<uuid>` | — | rutas con UUID, no con el nombre |
-| Document root | `~/public_html` (grupo 33 = `www-data`) | — | solo tiene `robots.txt` |
-| `robots.txt` | ya trae `Disallow: /` | — | ✓ **guarda 4 cumplida de fábrica** |
-| Base de datos creada | **NINGUNA todavía** | — | hay que crearla en el panel |
+| Document root | ✅ **`~/public_html/public`** (cambiado el 2026-08-16, `#102`) | — | apunta ya al `public/` de Laravel |
+| `robots.txt` | `Disallow: /` en el nuevo docroot | — | ⚠️ **NO es de fábrica**: el del repo permite indexar (`#102`) |
+| Base de datos | ✅ **`jumpweb_1_test`** (2026-08-16) | — | usuario propio con `ALL PRIVILEGES`; verificada conectando |
+| Panel: API | `https://cp.hosturbo.net/api` · `Bearer` + `orgId` | — | **sin OpenAPI publicado** (`#102`) |
 
 ⚠️ **DOS diferencias con local que condicionan el procedimiento, y ninguna es cosmética:**
 
@@ -92,15 +93,39 @@ Inventario en solo lectura, para no volver a suponerlo:
    «construir + sincronizar», no en «clonar y compilar» — y hay que decidirlo así en el procedimiento,
    no descubrirlo a mitad.
 
-### Lo que queda por hacer, y se hará MIDIENDO
+### El APROVISIONAMIENTO, ya medido (2026-08-16, `DECISIONES #102`)
 
-> ⚠️ **[PENDIENTE]** — cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1. Se ejecuta una
-> vez, se anota lo que de verdad pasa y se deja reproducible.
+✅ **Hecho**: BD `jumpweb_1_test` + su usuario · sitio en **PHP 8.3** · `documentRoot` →
+`public_html/public` · `robots.txt` con `Disallow: /` sirviéndose y verificado por HTTP.
 
-Pendiente: crear la BD y su usuario en el panel · elegir la versión de PHP (¿igualar a 8.5?) · subir el
-código con los assets ya construidos · `.env` con las seis guardas de §2 · `migrate --force` ·
-`storage:link` · permisos de `storage/` y `bootstrap/cache` · worker de cola y cron del scheduler ·
-sembrar con `ProductionSeeder`.
+**Lo que enseñó, y no está en la documentación de enhance:**
+
+1. ⚠️ **Desde el sitio NO se puede aprovisionar, y es correcto.** `appinit` es PID 1: cada sitio es un
+   contenedor. Su usuario Unix tiene `USAGE` y nada más —el propio `.my.cnf` avisa de que **no es el
+   usuario de BD del sitio**—, así que `CREATE DATABASE` da `ERROR 1044`. El plano de control vive
+   fuera. Automatizar el aprovisionamiento exige la **API del panel**, no la shell del sitio.
+2. ⚠️⚠️ **Crear el directorio destino ANTES de cambiar el `documentRoot`.** Enhance **no valida que
+   exista**: si no está, regenera el vhost apuntando a la nada, el sitio cae al vhost por defecto de
+   LiteSpeed —con su certificado, que parece un fallo de TLS y no lo es— y **no avisa**. Medido con un
+   A/B: volver al docroot viejo lo revive; repetir el cambio con el directorio ya creado entra limpio.
+3. **El certificado NO se pierde** en el proceso: era el vhost el que no cargaba.
+4. **La API del panel no publica OpenAPI.** `/swagger/v1/swagger.json` devuelve `200` **con HTML**
+   —es una SPA y responde 200 a cualquier ruta—, así que ese verde no significa nada. Los endpoints
+   se descubren y se verifican uno a uno.
+
+**Endpoints verificados** (`Authorization: Bearer <token>`, base `https://cp.hosturbo.net/api`):
+`GET orgs/{org}` · `GET orgs/{org}/websites` · `GET orgs/{org}/websites/{ws}` ·
+`GET|PATCH orgs/{org}/websites/{ws}/domains[/{domainId}]` → el `PATCH` de `documentRoot` responde `204`.
+
+> ⚠️ **[PENDIENTE]** el DESPLIEGUE, que sigue sin medirse y cierra el `[DECISION-PENDIENTE]` de
+> `INSTALACION-CLIENTE.md` §1: subir el código con los assets ya construidos · `.env` con las seis
+> guardas de §2 · `composer install --no-dev` · `migrate --force` · `storage:link` · permisos de
+> `storage/` y `bootstrap/cache` · worker de cola y cron del scheduler (**el `crontab` del sitio SÍ se
+> puede escribir**) · sembrar con `ProductionSeeder`.
+>
+> ⚠️ **Y el `robots.txt` es responsabilidad del DESPLIEGUE, no del producto**: el del repo dice
+> `Disallow:` (vacío = permitir todo) porque la instalación de un cliente **debe** indexarse. El
+> primer `rsync` tumbaría la guarda 4 si el script no lo reescribe **y lo verifica por HTTP**.
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un

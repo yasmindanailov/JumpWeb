@@ -42,6 +42,34 @@ Si falta algo → 🟦, nunca ✅. Skill de apoyo: `/dod`.
 - Todo lo demás (BD/HTTP/Livewire/Filament) → `tests/Feature` con `Tests\TestCase`.
 - No migrar lo existente; aplicar a lo nuevo.
 
+## §3.quater Auditar un test antes de retirarlo (Fase 4 · `#75`→`#98`)
+
+Al retirar una superficie vieja, cada test suyo se clasifica **por su SUJETO, no por la regla que
+menciona** (`#87`): una regla que sobrevive no salva un caso que prueba una superficie que se va.
+Tres categorías: lo que **compara entre superficies** (muere), lo que **afirma del contrato** (se
+queda) y lo que usa la vieja como **intermediario de una fuente que sobrevive** (se re-apunta — y casi
+siempre mejora el test). El tercero hay que buscarlo activamente.
+
+**Y se hace MUTANDO, no leyendo.** Una nota escrita leyendo el código es una hipótesis, no un plan
+(`#83`). Cuatro trampas, todas nacidas de errores reales:
+
+1. **Comprueba DÓNDE cayó la mutación** (`#77`): un nombre puede aparecer dos veces en el fichero.
+2. **Comprueba el CONTENIDO, no el código de salida** (`#90`): `git checkout` no revierte un fichero
+   sin trackear, y la mutación se queda dentro.
+3. **Exige que el ancla sea ÚNICA antes de creerte un hueco** (`#92`): una mutación mal apuntada puede
+   dar un resultado **coherente con la hipótesis equivocada**.
+4. **No mutes UNA rama de una propiedad de indistinguibilidad** (`#95`): si dos respuestas son iguales
+   a propósito —anti-enumeración—, el mutante es equivalente por diseño y su verde no dice nada.
+
+**Dos criterios que se ganaron midiendo:**
+- **Si un dato viaja al cliente y su único test conduce la superficie vieja, el contrato NO lo está
+  fijando.** Así salieron los tres huecos reales de `#89`, `#93` y `#96`.
+- **Un «⚠️ sin medir» en un fichero condenado es deuda con fecha de caducidad** (`#93`): si nadie lo
+  cierra antes del borrado, la regla se va con el fichero. Las dos veces que se cerró uno, había hueco.
+
+⚠️ **Un valor TRIVIAL no está fijado** (0, `null`, lista vacía): el cruce de dos campos sale verde.
+⚠️ **Y medir para no encontrar nada sigue siendo medir** (`#94`): el resultado negativo se anota.
+
 ## §4 Contenido de la doc
 - **Una sola fuente de verdad por hecho**: no duplicar; enlazar con rutas relativas.
 - **Citas entre docs**: por número de sección (`CONVENCIONES §7`), nunca por nombre libre.

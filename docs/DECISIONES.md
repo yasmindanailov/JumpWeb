@@ -3879,3 +3879,47 @@ configuran por el panel de admin. Si alguna vez se filtran, se rotan en Cloudfla
 
 **(e) Encaja en el orden de `#100`**: Turnstile es uno de los cuatro puntos que hay que cerrar en
 staging antes de borrar `Purchase.php`. Deja de estar bloqueado en un tercero y pasa a ser trabajo.
+
+## #102 · 2026-08-16 · Staging APROVISIONADO, y cuatro cosas que la doc del panel no cuenta
+Ejecutado el aprovisionamiento de `jumpweb.sites.aelium.app` —lo que `ENTORNOS.md` §4 tenía como
+`[PENDIENTE DE MEDIR]`— y anotado lo que de verdad pasó, que es como esa doc exige escribirlo.
+
+**(a) Hecho y verificado**: BD `jumpweb_1_test` con su usuario (`ALL PRIVILEGES`, **MariaDB 11.4.10**,
+probada conectando desde el contenedor) · sitio en **PHP 8.3** · `documentRoot` → `public_html/public`
+· `robots.txt` con `Disallow: /` sirviéndose por HTTPS con el certificado correcto.
+
+**(b) ⚠️ Desde el sitio NO se puede aprovisionar, y está bien diseñado.** `appinit` es **PID 1**: cada
+sitio es un contenedor. Su usuario Unix tiene `USAGE` y nada más —el propio `.my.cnf` de enhance avisa
+de que **no es el usuario de BD del sitio**—, así que `CREATE DATABASE` responde `ERROR 1044`. Si el
+usuario de un sitio pudiera crear bases o cambiar su PHP, podría hacerlo con los de otros clientes.
+**Consecuencia**: automatizar el aprovisionamiento exige la **API del panel**, no la shell del sitio —
+y eso fue lo que reordenó el plan.
+
+**(c) ⚠️⚠️ El fallo que costó el sitio, y su regla.** Cambiar el `documentRoot` por API **cuando el
+directorio destino todavía no existe** deja el vhost apuntando a la nada: el sitio cae al vhost por
+defecto de LiteSpeed —sirviendo **su** certificado, que parece un fallo de TLS y no lo es— y enhance
+**no avisa**. Aislado con un A/B: volver al docroot viejo lo revivió; repetir el cambio con el
+directorio ya creado entró limpio, con el certificado correcto.
+▶ **Regla para `provision.sh`: crear el directorio ANTES de mover el docroot.** No es «ten cuidado»:
+es un paso con orden obligatorio que ninguna documentación del panel menciona.
+
+**(d) ⚠️ La guarda 4 estaba en falso, y no por descuido.** `ENTORNOS.md` daba «`robots.txt` con
+`Disallow: /` → cumplida de fábrica». Era cierto **solo mientras el docroot fuera `public_html`**, donde
+había uno puesto a mano. El del repo dice `Disallow:` (vacío = **permitir todo**) porque la instalación
+de un cliente **debe** indexarse. Al mover el docroot al `public/` de la app, la guarda se caía sola.
+▶ **El `robots.txt` de staging es responsabilidad del DESPLIEGUE, no del producto**: `deploy.sh` tendrá
+que reescribirlo en cada ejecución **y verificarlo por HTTP**, o el primer `rsync` lo tumba.
+
+**(e) ⚠️ La API del panel no publica OpenAPI, y creí que sí.** `/swagger/v1/swagger.json` devuelve
+`200`… con HTML: es una SPA y responde `200` a **cualquier** ruta. Un verde que no significa nada —el
+mismo modo de fallo que esta sesión lleva documentando— y esta vez lo dio por bueno el agente hasta que
+falló el parseo. Los endpoints se descubren y se verifican uno a uno.
+**Verificados**: base `https://cp.hosturbo.net/api`, `Authorization: Bearer` + `orgId`;
+`GET orgs/{org}` · `GET orgs/{org}/websites` · `GET …/websites/{ws}` ·
+`GET|PATCH …/websites/{ws}/domains[/{id}]` → el `PATCH` de `documentRoot` responde `204`.
+
+**(f) Lo que queda, y en qué orden.** El **despliegue** sigue sin medir: es lo que cierra
+`INSTALACION-CLIENTE.md` §1 y lo que desbloquea la verificación de `#100` (Turnstile + los tres caminos
+de navegador) y, tras ella, el borrado de `Purchase.php`. El `provision.sh` se escribe **después** del
+`deploy.sh`, con este procedimiento delante: su trabajo es dejar el servidor en el estado exacto que el
+despliegue espera, y ese estado solo se conoce habiéndolo alcanzado una vez.

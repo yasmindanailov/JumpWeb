@@ -1479,9 +1479,9 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `ESTADO.md` declara que para activarlo faltan **Turnstile y los tres caminos de navegador**.
       ⚠️ **El contador y esto son preguntas DISTINTAS**: aquél dice cuándo se puede borrar sin romper
       la suite; no dice qué motor queda sirviendo después. Solo estaba escrita una.
-      ▶ **Orden decidido por el owner**: (1) levantar staging con el procedimiento de despliegue
-      —`[PENDIENTE DE MEDIR]`, `ENTORNOS.md` §4—; (2) flag en `spa` allí y cerrar los tres caminos +
-      Turnstile; (3) **y entonces** borrar. `#62` no se reabre: esto no es «dejarlo rodar», son tres
+      ▶ **Orden decidido por el owner**: (1) levantar staging — ✅ **aprovisionado** el 2026-08-16
+      (`#102`); queda el **despliegue**, todavía `[PENDIENTE DE MEDIR]`; (2) flag en `spa` allí y
+      cerrar los tres caminos + Turnstile (✅ desbloqueado, `#101`); (3) **y entonces** borrar. `#62` no se reabre: esto no es «dejarlo rodar», son tres
       verificaciones concretas y nombradas.
       **Lo que se borra cuando toque**: `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
