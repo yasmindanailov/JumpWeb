@@ -68,7 +68,6 @@ class PurchaseRetirementTest extends TestCase
     private const DEPENDENTS = [
         'tests/Feature/Architecture/ModuleContractsTest.php',
         'tests/Feature/Architecture/SidebarSeamTest.php',
-        'tests/Feature/Architecture/SidebarTokenBudgetTest.php',
         'tests/Feature/Auth/DuplicateEmailEdgeCaseTest.php',
         'tests/Feature/Maintenance/ReservationPauseGuardTest.php',
         'tests/Feature/Maintenance/ReservationPauseTest.php',

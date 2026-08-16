@@ -3776,3 +3776,37 @@ Lo que el tramo produjo de verdad:
   (`#92`) y no muteS una rama de una propiedad de INDISTINGUIBILIDAD (`#95`).
 - **Y el criterio de búsqueda para el futuro**: si un dato viaja al cliente y su único test conduce el
   motor viejo, el contrato no lo está fijando.
+
+## #99 · 2026-08-16 · [DECIDIDO] El presupuesto de tokens define «el cajón» por FAMILIAS, no rascando una plantilla
+Cierra el `[DECISION-PENDIENTE]` que dejó `#74`, y era **bloqueador de ·2b·3**:
+`SidebarTokenBudgetTest` derivaba el ámbito CSS leyendo los `class="…"` de `purchase.blade.php`, o sea
+de la plantilla que ·2b·3 borra. **Contador 20 → 19**, el primer movimiento del tramo `·C`.
+
+**(a) La regla pasa a ser una propiedad del CSS, no de una vista.** Una clase es del cajón si pertenece
+a una de sus **familias** —`sidecart`, `purchase`, `cart`, `cartbar`, `catalog`, `addons`, `cal__`,
+`bk-`, `jj-`, `qtybox`, `wiz__`, `eventfields`, `entry__`—. Así el ámbito deja de depender del motor.
+
+**(b) ⚠️ Y excluye a propósito lo que NO es del cajón**, que es lo que `#74` había medido: `auth__*`,
+`form__*`, `pwd-*` y `check` son los formularios de login y alta **compartidos con el modal de la
+cabecera y con `/mi-cuenta`**; `eyebrow`, `icon`, `tk`, `btn--` y `zone-` son del sitio. Tokenizarlos es
+Fase 5. Si entraran aquí, el presupuesto del cajón subiría y bajaría por cambios que no son suyos.
+
+**(c) Los números cambian y NO son comparables con los de antes.** El ámbito pasa de **1.073**
+declaraciones (Blade) a **1.127** —y no a las 1.307 del escaneo ancho, porque la diferencia es
+justamente lo compartido—. La tokenización queda en **71 %** (era 75 sobre el ámbito estrecho) y los
+crudos en **6** (eran 3). **La guarda no se ha relajado: mide otra cosa, y bien.** Está escrito en las
+dos constantes, porque el modo de fallo es previsible —alguien ve «75 → 71» y cree que hubo regresión—.
+
+**(d) Los seis crudos son del cajón y quedan NOMBRADOS**, no escondidos en un número:
+`.cal__day--normal`, `.cal__day--special .cal__day-price`, `.addons__badge--included`,
+`.addons-mini__badge`, `.addons-mini__badge--included` y `.purchase__note--guestform`. Son de las 41
+clases que solo viven en los `.vue` y que el escaneo del Blade nunca vio.
+⚠️ **No se tokenizan aquí a propósito**: cambiar un color cambia PÍXELES y eso exige verificación
+visual (DoD §4). Meterlo en un refactor de tests sería colar un cambio de interfaz sin mirarlo. Tarea
+propia, con los seis ya localizados. Ficha en `DEUDA.md`.
+
+**(e) Y el caso pasa a ser un TRINQUETE de verdad.** Se llamaba `..._only_shrink` y aseveraba con un
+`<=`: tokenizar un color no obligaba a bajar el número, así que el siguiente crudo entraba gratis.
+Ahora es `assertSame`, verificado en las dos direcciones —añadir un crudo y tokenizar uno sin bajar la
+baseline dejan el caso rojo—. **Un nombre que promete un trinquete y una aserción que es un techo son
+la misma clase de mentira que una baseline que no aprieta.**

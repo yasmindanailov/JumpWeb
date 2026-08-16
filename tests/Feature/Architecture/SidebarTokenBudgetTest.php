@@ -46,7 +46,13 @@ class SidebarTokenBudgetTest extends TestCase
      * (las escalas de tipografía y espaciado). Las tres subidas son equivalentes por construcción:
      * ninguna movió un píxel.
      */
-    private const MIN_TOKENISED_PERCENT = 75;
+    /**
+     * ⚠️ **Este número NO es comparable con el 75 % anterior**: cambió el ÁMBITO, no la calidad del
+     * CSS. Aquel se medía sobre lo que se rascaba de `purchase.blade.php`; este, sobre las familias
+     * propias del cajón (`#99`), que incluyen 41 clases que el Blade no veía y excluyen el bloque de
+     * formularios compartido con el sitio. **La guarda no se ha relajado: mide otra cosa, y bien.**
+     */
+    private const MIN_TOKENISED_PERCENT = 71;
 
     /**
      * Colores CRUDOS que quedan en el sidebar (`#rrggbb`, `rgba(...)`). **Solo puede bajar**: son
@@ -60,14 +66,30 @@ class SidebarTokenBudgetTest extends TestCase
      * —la copia del mockup, compartida con toda la landing— y por tanto fuera del alcance de esta
      * fase.
      */
-    private const MAX_RAW_COLOURS = 3;
+    /**
+     * Los colores escritos a mano que quedan en el ámbito REAL del cajón, medidos el 2026-08-16
+     * (`DECISIONES #99`). Igual que arriba: **no es comparable con el 3 anterior**, que se medía sobre
+     * un ámbito más estrecho. Son estos seis, y están nombrados para que se ataquen por su nombre:
+     *
+     *   · `.cal__day--normal`                    `background: rgba(20, 19, 15, 0.05)`
+     *   · `.cal__day--special .cal__day-price`   `background: rgba(255, 255, 255, 0.55)`
+     *   · `.addons__badge--included`             `color: #fff`
+     *   · `.addons-mini__badge`                  `background: rgba(34, 197, 94, 0.15)`
+     *   · `.addons-mini__badge--included`        `color: #fff`
+     *   · `.purchase__note--guestform`           `background: color-mix(…, #fff)`
+     *
+     * ⚠️ **No se tokenizan aquí a propósito**: cambiar un color cambia PÍXELES, y eso exige
+     * verificación visual (DoD §4). Meterlo en un refactor de tests sería colar un cambio de interfaz
+     * sin mirarlo. Queda como tarea propia, con los seis ya localizados. Ficha en `DEUDA.md`.
+     */
+    private const MAX_RAW_COLOURS = 6;
 
     /** @var ?list<array{property: string, value: string}> */
     private ?array $declarations = null;
 
     public function test_the_scan_actually_sees_the_sidebar_rules(): void
     {
-        $this->assertNotEmpty($this->sidebarClasses(), 'no se ha detectado ninguna clase del sidebar');
+        $this->assertNotEmpty(self::FAMILIES, 'sin familias declaradas no hay ámbito que medir');
         $this->assertGreaterThan(100, count($this->sidebarDeclarations()), 'el escaneo ve muy pocas reglas: ¿ha cambiado el CSS de sitio?');
     }
 
@@ -100,11 +122,15 @@ class SidebarTokenBudgetTest extends TestCase
             $raw += preg_match_all('/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/', $declaration['value']);
         }
 
-        $this->assertLessThanOrEqual(
+        // ⚠️ **Trinquete ESTRICTO, no un techo** (`#99`): el nombre del caso siempre dijo «only
+        // shrink» y la aserción era un `<=`, así que tokenizar un color no obligaba a bajar el número
+        // y el siguiente crudo entraba gratis. Ahora bajarlo es parte del commit que lo tokeniza.
+        $this->assertSame(
             self::MAX_RAW_COLOURS, $raw,
-            "El sidebar tiene {$raw} colores crudos (tope: ".self::MAX_RAW_COLOURS.").\n".
-            'Un color escrito a mano no lo puede cambiar ninguna instalación. Los alfa sobre el '.
-            'texto salen con `color-mix(in srgb, var(--fg) X%, transparent)`.'
+            "El sidebar tiene {$raw} colores crudos y la baseline dice ".self::MAX_RAW_COLOURS.".\n".
+            "⚠️ Si han CRECIDO: un color escrito a mano no lo puede cambiar ninguna instalación. Los\n".
+            "alfa sobre el texto salen con `color-mix(in srgb, var(--fg) X%, transparent)`.\n".
+            'Si han BAJADO —enhorabuena—, actualiza `MAX_RAW_COLOURS` en este mismo commit.'
         );
     }
 
@@ -248,43 +274,31 @@ class SidebarTokenBudgetTest extends TestCase
      *
      * @return list<string>
      */
-    private function sidebarClasses(): array
-    {
-        $classes = [];
-
-        foreach ([
-            ['path' => resource_path('views/livewire/tickets/purchase.blade.php'), 'prefix' => null],
-            ['path' => resource_path('views/components/layout.blade.php'), 'prefix' => 'sidecart'],
-        ] as $source) {
-            $blade = (string) preg_replace('/\{\{--.*?--\}\}/s', '', (string) file_get_contents($source['path']));
-
-            preg_match_all('/class="([^"]*)"/', $blade, $matches);
-
-            foreach ($matches[1] as $attribute) {
-                foreach (preg_split('/\s+/', $attribute) ?: [] as $token) {
-                    if (preg_match('/^[a-zA-Z][\w-]*$/', $token) !== 1) {
-                        continue;   // interpolaciones y expresiones: no son nombres de clase
-                    }
-                    // ⚠️ **Los modificadores de ESTADO (`is-…`) no son del sidebar y ensanchan el
-                    // escaneo hasta romperlo.** Son compartidos —`.sidecart.is-open`, `.modal.is-open`,
-                    // `.cal__day.is-selected`—, así que meterlos aquí hace que cuenten como «reglas del
-                    // sidebar» rincones del CSS que no lo son. Se descubrió al sacar `is-open` de un
-                    // `:class` de Alpine a la clase estática: el recuento de colores crudos subió de 3 a
-                    // 4 sin que nadie tocara una sola línea de CSS.
-                    if (str_starts_with($token, 'is-')) {
-                        continue;
-                    }
-                    if ($source['prefix'] !== null && ! str_starts_with($token, $source['prefix'])) {
-                        continue;
-                    }
-
-                    $classes[$token] = true;
-                }
-            }
-        }
-
-        return array_keys($classes);
-    }
+    /**
+     * Las clases del cajón, **por FAMILIA y no rascando una plantilla** (Fase 4 · paso 4.7·2b·2·C,
+     * `DECISIONES #99` — cierra el `[DECISION-PENDIENTE]` de `#74`).
+     *
+     * ⚠️ **Antes esto salía de `class="…"` de `purchase.blade.php`**, y eso tenía dos problemas: el
+     * ámbito dependía del MOTOR —desaparece con el Blade en ·2b·3— y no veía las 41 clases que solo
+     * viven en los `.vue` porque el escáner no seguía los parciales incluidos.
+     *
+     * La regla ahora es una propiedad del CSS, no de una vista: **una clase es del cajón si pertenece
+     * a una de sus familias**. Medido el 2026-08-16, el ámbito pasa de 1.073 declaraciones (Blade) a
+     * **1.127**, y no a las 1.307 del escaneo ancho — porque la diferencia entre ambos es exactamente
+     * lo que NO es del cajón y se excluye a propósito:
+     *
+     * ⚠️ **`auth__*`, `form__*`, `pwd-*` y `check` NO entran**, aunque el cajón los pinte: son los
+     * formularios de login y alta, **compartidos con el modal de la cabecera y con `/mi-cuenta`**.
+     * Tokenizarlos es trabajo de Fase 5, y meterlos aquí haría que el presupuesto del cajón subiera y
+     * bajara por cambios que no son suyos. Lo mismo con `eyebrow`, `icon`, `tk`, `btn--` y `zone-`,
+     * que son del sitio.
+     *
+     * @return list<string>
+     */
+    private const FAMILIES = [
+        'sidecart', 'purchase', 'cart', 'cartbar', 'catalog', 'addons',
+        'cal__', 'bk-', 'jj-', 'qtybox', 'wiz__', 'eventfields', 'entry__',
+    ];
 
     /**
      * Declaraciones de las reglas cuyo selector toca alguna clase del sidebar, en los DOS ficheros:
@@ -301,7 +315,6 @@ class SidebarTokenBudgetTest extends TestCase
             return $this->declarations;
         }
 
-        $classes = $this->sidebarClasses();
         $declarations = [];
 
         foreach (['site.css', 'landing.css'] as $file) {
@@ -310,7 +323,7 @@ class SidebarTokenBudgetTest extends TestCase
             preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
 
             foreach ($rules as $rule) {
-                if (! $this->selectorTouchesSidebar($rule[1], $classes)) {
+                if (! $this->selectorTouchesSidebar($rule[1])) {
                     continue;
                 }
 
@@ -329,10 +342,16 @@ class SidebarTokenBudgetTest extends TestCase
     }
 
     /** @param  list<string>  $classes */
-    private function selectorTouchesSidebar(string $selector, array $classes): bool
+    /**
+     * ⚠️ **Los modificadores de ESTADO (`is-…`) siguen fuera**, y por el mismo motivo de siempre: son
+     * compartidos (`.sidecart.is-open`, `.modal.is-open`, `.cal__day.is-selected`), así que contarlos
+     * mete en el ámbito rincones del CSS que no son del cajón. Se descubrió al sacar `is-open` de un
+     * `:class` de Alpine: los crudos subieron de 3 a 4 sin tocar una línea de CSS.
+     */
+    private function selectorTouchesSidebar(string $selector): bool
     {
-        foreach ($classes as $class) {
-            if (preg_match('/\.'.preg_quote($class, '/').'(?![\w-])/', $selector) === 1) {
+        foreach (self::FAMILIES as $family) {
+            if (preg_match('/\.'.preg_quote($family, '/').'[\w-]*(?![\w-])/', $selector) === 1) {
                 return true;
             }
         }

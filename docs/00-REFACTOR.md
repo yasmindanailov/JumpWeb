@@ -1456,7 +1456,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         cerrados** (`#89` las reglas `can_*`, `#93` pagar sin verificar, `#96` el `type` del catálogo),
         **un falso positivo evitado** (`#92`) y **cuatro caras de la disciplina de mutación**
         (`#77`, `#90`, `#92`, `#95`).
-      ✅ **LAS 20 ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
+      · ✅ **`#74` RESUELTO y `SidebarTokenBudgetTest` FUERA del inventario** (`DECISIONES #99`).
+        20 → **19**, el primer movimiento del tramo. El ámbito CSS pasa a definirse por **familias**
+        del cajón en vez de rascando `purchase.blade.php` —la plantilla que ·2b·3 borra—, así que
+        deja de depender del motor. Excluye a propósito `auth__`/`form__`/`pwd-`, compartidos con el
+        modal de la cabecera y `/mi-cuenta` (eso es Fase 5).
+        · **Los números NO son comparables**: ámbito 1.073 → **1.127**, tokenización 75 → **71 %**,
+          crudos 3 → **6**. Cambió lo que se mide, no la calidad. Escrito en las dos constantes.
+        · **Los seis crudos quedan NOMBRADOS**, no escondidos en un número, y **no se tokenizan aquí**:
+          cambiar un color cambia píxeles y exige verificación visual (DoD §4). Ficha en `DEUDA.md`.
+        · **Y el caso pasa a ser un trinquete de verdad**: se llamaba `..._only_shrink` y aseveraba con
+          `<=`, así que tokenizar uno no obligaba a bajar el número. Ahora `assertSame`, verificado en
+          las dos direcciones.
+      ✅ **LAS ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
         ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
 - [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,

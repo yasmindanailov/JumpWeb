@@ -87,7 +87,7 @@ contador: `SidebarCalendarParityTest` (`#79`) y `SidebarDomContractTest` (`#83`)
 DENTRO en ·2b·3, no borradas enteras.
 
 ✅ **El tramo `·C` —los dependientes que NO son paridades— también está CERRADO** (`#86`→`#98`): los
-**once** auditados, y con ellos **las 20 entradas del inventario están CLASIFICADAS**. Contador 21 → 20.
+**once** auditados, y con ellos **todas las entradas del inventario están CLASIFICADAS**. Contador 21 → **19**.
 
 ⚠️⚠️ **Esa cifra es la esperada, no un fracaso.** `#86` midió que la mayoría de lo que queda tiene por
 sujeto la SUPERFICIE del motor —`PurchasePanelTest` (40 casos), el diff de árbol (34), el spinner…— y
@@ -103,7 +103,10 @@ era **«todo clasificado»**, y ya está. Escrito también en el docblock de `Pu
 - **Y `CE-6` con dientes** (`#90`), que salió de una observación del owner: `Sidebar.vue` era el segundo
   objeto-dios y nada lo vigilaba.
 
-▶ **EMPIEZA AQUÍ: 4.7·2b·3 — borrar el componente.** Ya no falta clasificar nada. El tramo consiste en
+✅ **El bloqueador `#74` está RESUELTO** (`#99`): `SidebarTokenBudgetTest` ya no rasca el Blade —su
+ámbito es por familias del cajón— y salió del inventario. Era lo único que impedía borrar.
+
+▶ **EMPIEZA AQUÍ: 4.7·2b·3 — borrar el componente.** Ya no falta clasificar nada ni decidir nada. El tramo consiste en
 un commit único con `Purchase.php`, `purchase.blade.php`, el placeholder, la línea de
 `layout.blade.php`, el puente `$wire.step`↔store y **todos los tests que mueren con él**.
 
@@ -142,8 +145,6 @@ propios:
   veces en tres días.
 
 **Notas por fichero que ·2b·3 necesita** (el detalle, en el tracker y en cada docblock):
-- `SidebarTokenBudgetTest` necesita una **decisión previa** (`#74`): definir el ámbito por las familias
-  propias del cajón en vez de rascar una plantilla. Ficha en `DEUDA.md`.
 - `SidebarSeamTest` **no se puede re-apuntar**: su exclusión `ENGINE_VIEW` desaparece sola con el Blade.
 - `SpinnerTest`, `DuplicateEmailEdgeCaseTest` y `ReservationPauseGuardTest` **mueren enteros**, cada uno
   con su cobertura equivalente ya localizada.

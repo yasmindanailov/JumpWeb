@@ -106,6 +106,21 @@ violación es un fichero. Sus 41 funciones son los MISMOS métodos de `Purchase.
   el `<script>` sin tocar la plantilla se verifica solo.
 - **Sin plan de fase todavía**: no bloquea 4.7 y no se mezcla con la retirada.
 
+## ▶ Media · seis colores CRUDOS en el CSS del cajón, ya localizados (2026-08-16, `DECISIONES #99`)
+
+No los ve ninguna instalación como suyos: un color escrito a mano no se puede cambiar desde el panel.
+Estaban invisibles porque el presupuesto de tokens rascaba `purchase.blade.php` y estas clases solo
+viven en los `.vue`. Ahora el ámbito es por familias y los seis están **nombrados** en
+`SidebarTokenBudgetTest::MAX_RAW_COLOURS`:
+
+`.cal__day--normal` · `.cal__day--special .cal__day-price` · `.addons__badge--included` ·
+`.addons-mini__badge` · `.addons-mini__badge--included` · `.purchase__note--guestform`
+
+- **No se tocan en un refactor de tests**: cambiar un color cambia PÍXELES y eso exige verificación
+  visual (DoD §4). Es tarea propia y pequeña, con los seis ya localizados.
+- El tope es un **trinquete estricto**: bajarlo es parte del commit que tokenice cada uno.
+- **Sin plan de fase**: no bloquea nada.
+
 ## ▶ Media · la suite sigue sin auditar contra la FECHA (2026-08-16, `DECISIONES #97`)
 
 Segunda mordida medida. El `pre-push` cayó con **1 fallo** a las **00:02 de Madrid** —el contenedor
