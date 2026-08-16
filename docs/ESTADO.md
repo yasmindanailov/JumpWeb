@@ -10,8 +10,8 @@
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · 4.4b·1 ✅ · 4.5 ✅ · 4.6 ✅ →
 **los ONCE pasos están transcritos** y el extremo a extremo con navegador y pasarela real ya se hizo
-(`#59`). Queda **4.7** (la retirada de `Purchase.php`, EN CURSO) y **4.4b·2** (Turnstile, bloqueado en
-claves de Cloudflare). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
+(`#59`). Queda **4.7** (la retirada de `Purchase.php`, **bloqueada en la verificación de staging**, `#100`)
+y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#101`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
@@ -118,7 +118,9 @@ dice cuándo se puede borrar sin romper la suite, no qué motor queda sirviendo 
    que de verdad pasa — **no se escribe a ojo**.
 2. **Flag en `spa`** allí, y cerrar lo que `VERIFICACION-E2E-CAJON.md` §6 declara sin cubrir: la
    **notificación S2S** de Redsys, el **3DS con challenge** (`4548 8172 1249 3017`) y el **móvil real**.
-   Más **Turnstile** (4.4b·2), que necesita claves de Cloudflare contra el hostname.
+   Más **Turnstile** (4.4b·2), **ya desbloqueado** (`#101`): las claves están, el servidor y el
+   contrato ya lo soportan y **la CSP ya permite `challenges.cloudflare.com`**. Lo único que falta es
+   montar el widget en `RegisterForm.vue`, mandar el token y retirar la delegación al modal.
 3. **Y entonces `4.7·2b·3`**: el borrado, que ya está enteramente preparado y sin decisiones abiertas.
 
 ⚠️ **Necesita al OWNER**: el panel de la máquina, las claves de Cloudflare, un navegador y un móvil.

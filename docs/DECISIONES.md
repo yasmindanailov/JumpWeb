@@ -3846,3 +3846,36 @@ de la suite: sin él clasificado, borrar rompería la red aunque staging estuvie
 (`ESTADO.md`: «falta Turnstile para activarlo») y un tramo escrito en otro (`00-REFACTOR.md`: «lo
 ordena el contador») **pueden ser ambos correctos y aun así dejar un hueco entre ellos**. Lo que
 faltaba no era información: era la frase que las une.
+
+## #101 · 2026-08-16 · Turnstile deja de estar bloqueado, y lo que falta es MENOS de lo que parecía
+El owner aporta las claves de Cloudflare, que era el único bloqueo declarado de **4.4b·2**. Medido el
+estado real antes de planificar, el trabajo restante es más pequeño de lo que la ficha sugería.
+
+**(a) Lo que YA está hecho, y es casi todo:**
+- **El servidor entero**: `Platform\Services\Turnstile` tiene `siteKey()`, `secret()`, `enabled()` y
+  `verify()` contra `challenges.cloudflare.com`, y `SelfSignup` ya lo exige.
+- **El contrato**: `GET /config` publica `turnstile_site_key` **solo si el anti-bot está completo**
+  —la equivalencia «no nulo ⟺ activo» costó un arreglo y está fijada por `PublicConfigTest`, incluido
+  que **la secreta nunca viaja**—.
+- **El cliente ya lo lee**: `register.js::signupRequiresCaptcha()` con sus casos en
+  `register.test.js`.
+- **⚠️ Y la CSP ya lo permite**: `SecurityHeaders` incluye `challenges.cloudflare.com` en `script-src`,
+  `connect-src` y `frame-src`. No hay trabajo de cabeceras.
+
+**(b) Lo único que falta es el widget en el cajón.** Hoy, con el anti-bot activo, `setAuthMode()`
+**delega en el modal de auth de la cabecera** —que sí lo monta— en vez de pintar su formulario. Esa
+degradación es deliberada y honesta: sin token, `SelfSignup` rechazaría **todas** las altas con «no
+eres un robot», sin correo y sin log.
+▶ 4.4b·2 = montar el widget en `RegisterForm.vue`, mandar el token con el alta y **retirar la
+delegación**.
+
+**(c) ⚠️ Y la delegación NO se rompe con `·2b·3`**, cosa que convenía comprobar antes de tocar nada: el
+modal al que delega es el de la **cabecera**, que no vive en `purchase.blade.php` y por tanto
+sobrevive al borrado. El modo `embedded` que `·2b·3` retira es otro.
+
+**(d) Las claves NO entran en el repo.** `#76(e)` ya lo había medido: se leen **solo de `settings`**,
+nunca de `.env`. En local quedan en la BD de desarrollo y `git status` no ve nada; en staging se
+configuran por el panel de admin. Si alguna vez se filtran, se rotan en Cloudflare.
+
+**(e) Encaja en el orden de `#100`**: Turnstile es uno de los cuatro puntos que hay que cerrar en
+staging antes de borrar `Purchase.php`. Deja de estar bloqueado en un tercero y pasa a ser trabajo.
