@@ -1471,7 +1471,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **LAS ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
         ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
-- [ ] **Paso 4.7·2b·3 — borrar el componente, sus vistas y el puente** (pendiente): `Purchase.php`,
+- [ ] **Paso 4.7·2b·3 — borrar el componente** (pendiente, **BLOQUEADO en staging** desde el
+      2026-08-16, `DECISIONES #100`).
+      ⚠️⚠️ **Borrar NO es limpiar: es ACTIVAR.** `layout.blade.php` bifurca con `usesSpa()` y su propio
+      comentario dice que «el fallback no puede ser el motor en construcción». Al borrar el componente
+      desaparece esa rama y **el cajón SPA queda como único motor, sin vuelta atrás sin desplegar** —y
+      `ESTADO.md` declara que para activarlo faltan **Turnstile y los tres caminos de navegador**.
+      ⚠️ **El contador y esto son preguntas DISTINTAS**: aquél dice cuándo se puede borrar sin romper
+      la suite; no dice qué motor queda sirviendo después. Solo estaba escrita una.
+      ▶ **Orden decidido por el owner**: (1) levantar staging con el procedimiento de despliegue
+      —`[PENDIENTE DE MEDIR]`, `ENTORNOS.md` §4—; (2) flag en `spa` allí y cerrar los tres caminos +
+      Turnstile; (3) **y entonces** borrar. `#62` no se reabre: esto no es «dejarlo rodar», son tres
+      verificaciones concretas y nombradas.
+      **Lo que se borra cuando toque**: `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
       `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
       defecto no pase ni un día con menos red de la que tiene—.

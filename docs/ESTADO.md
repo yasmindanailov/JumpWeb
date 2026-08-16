@@ -103,10 +103,26 @@ era **«todo clasificado»**, y ya está. Escrito también en el docblock de `Pu
 - **Y `CE-6` con dientes** (`#90`), que salió de una observación del owner: `Sidebar.vue` era el segundo
   objeto-dios y nada lo vigilaba.
 
-✅ **El bloqueador `#74` está RESUELTO** (`#99`): `SidebarTokenBudgetTest` ya no rasca el Blade —su
-ámbito es por familias del cajón— y salió del inventario. Era lo único que impedía borrar.
+✅ **El bloqueador `#74` está RESUELTO** (`#99`) y **el inventario está clasificado entero**: por el
+lado de la SUITE, borrar ya no rompe nada.
 
-▶ **EMPIEZA AQUÍ: 4.7·2b·3 — borrar el componente.** Ya no falta clasificar nada ni decidir nada. El tramo consiste en
+⚠️⚠️ **Pero borrar no es limpiar: es ACTIVAR** (`DECISIONES #100`). `layout.blade.php` bifurca con
+`usesSpa()` y su comentario lo dice: «el fallback no puede ser el motor en construcción». Al borrar el
+componente **el cajón SPA queda como ÚNICO motor y sin vuelta atrás sin desplegar** — y para eso
+faltan **Turnstile y los tres caminos de navegador**. El contador y esta pregunta son distintas: aquél
+dice cuándo se puede borrar sin romper la suite, no qué motor queda sirviendo después.
+
+▶ **EMPIEZA AQUÍ: levantar STAGING y verificar allí** (decisión del owner, `#100`). En este orden:
+1. **El procedimiento de despliegue**, que no existe (`ENTORNOS.md` §4, `[PENDIENTE DE MEDIR]`; cierra
+   también el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1). Se ejecuta una vez y se anota lo
+   que de verdad pasa — **no se escribe a ojo**.
+2. **Flag en `spa`** allí, y cerrar lo que `VERIFICACION-E2E-CAJON.md` §6 declara sin cubrir: la
+   **notificación S2S** de Redsys, el **3DS con challenge** (`4548 8172 1249 3017`) y el **móvil real**.
+   Más **Turnstile** (4.4b·2), que necesita claves de Cloudflare contra el hostname.
+3. **Y entonces `4.7·2b·3`**: el borrado, que ya está enteramente preparado y sin decisiones abiertas.
+
+⚠️ **Necesita al OWNER**: el panel de la máquina, las claves de Cloudflare, un navegador y un móvil.
+Nada de eso se puede hacer desde el bucle local. El tramo consiste en
 un commit único con `Purchase.php`, `purchase.blade.php`, el placeholder, la línea de
 `layout.blade.php`, el puente `$wire.step`↔store y **todos los tests que mueren con él**.
 

@@ -3810,3 +3810,39 @@ propia, con los seis ya localizados. Ficha en `DEUDA.md`.
 Ahora es `assertSame`, verificado en las dos direcciones —añadir un crudo y tokenizar uno sin bajar la
 baseline dejan el caso rojo—. **Un nombre que promete un trinquete y una aserción que es un techo son
 la misma clase de mentira que una baseline que no aprieta.**
+
+## #100 · 2026-08-16 · [DECIDIDO] Borrar `Purchase.php` no es limpiar: es ACTIVAR el motor SPA
+Al preparar `·2b·3` —con el inventario ya clasificado y `#74` resuelto, o sea sin nada que lo
+frenara— apareció una consecuencia que **el tramo no menciona en ningún sitio** y que cambia su orden.
+
+**(a) El borrado activa, no solo limpia.** `layout.blade.php` bifurca con
+`SidebarSettings::usesSpa()`, y su propio comentario dice: *«El default y el fallback son Livewire: el
+fallback no puede ser el motor en construcción»*. Borrar el componente elimina esa rama, así que
+**el cajón SPA pasa a ser el único motor y sin vuelta atrás sin desplegar**.
+
+**(b) Y `ESTADO.md` declara que ese motor NO está listo para eso**: «el flag NO está activado… lo que
+falta para activarlo es **Turnstile y los tres caminos de navegador**». Los tres —la notificación S2S
+de Redsys, el 3DS con challenge y el móvil real— están listados en `VERIFICACION-E2E-CAJON.md` §6 como
+**lo que el guion NO cubre**, y `#76` los desbloqueó con el servidor de pruebas, pero **ninguno se ha
+hecho**.
+
+**(c) El tramo estaba escrito como si lo ordenara solo el contador.** `·2b·3` dice «reclasificar hasta
+0 y borrar entonces», y `#62` retiró por vacía la condición de «curtirlo en producción». Las dos cosas
+siguen siendo ciertas y **ninguna cubre esto**: el contador dice cuándo se PUEDE borrar sin romper la
+suite; no dice nada sobre qué motor queda sirviendo después. **Son dos preguntas distintas y solo
+estaba escrita una.**
+
+**(d) La decisión (owner): verificar en staging ANTES de borrar.** El orden de `·2b·3` pasa a ser:
+1. **levantar staging** con el procedimiento de despliegue —`[PENDIENTE DE MEDIR]` de `ENTORNOS.md`
+   §4, que cierra a su vez el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1—;
+2. **poner el flag en `spa`** allí y cerrar los tres caminos de navegador + Turnstile (4.4b·2);
+3. **y entonces** borrar el componente, sus vistas, el puente y los tests que mueren con él.
+
+**(e) Lo que NO cambia**: `#62` no se reabre —no hay tráfico que esperar, y esto no es «dejarlo
+rodar»: es cerrar tres verificaciones concretas y nombradas—. Y el contador sigue ordenando la parte
+de la suite: sin él clasificado, borrar rompería la red aunque staging estuviera verde.
+
+**(f) La lección, que ya es la tercera del refactor**: una condición escrita en un sitio
+(`ESTADO.md`: «falta Turnstile para activarlo») y un tramo escrito en otro (`00-REFACTOR.md`: «lo
+ordena el contador») **pueden ser ambos correctos y aun así dejar un hueco entre ellos**. Lo que
+faltaba no era información: era la frase que las une.
