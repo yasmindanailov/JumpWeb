@@ -4155,3 +4155,60 @@ usos del disco `public`), y no siembra ni crea admin salvo que se le pida con `-
 tiene el owner: las **credenciales del usuario de BD** de `jumpweb_1_test` (el `.my.cnf` del servidor es
 el usuario ADMINISTRATIVO y él mismo avisa de que no debe usarse para la web — coincide con `#102(b)`)
 y el **email del admin** del panel. El dry-run contra staging ya pasa entero.
+
+## #106 · 2026-08-19 · STAGING DESPLEGADO — y la guarda del DINERO daba un VERDE FALSO
+Ejecutado el primer despliegue real con `scripts/deploy.sh`. El sitio quedó sirviendo, pero el propio
+script traía **dos comprobaciones rotas**, y una era la única que cuesta dinero. Lo que sigue importa
+más que el despliegue.
+
+**(a) ⚠️⚠️ La guarda 1 decía ✓ sin haber leído nada.** Concurrieron TRES causas independientes, y hacen
+falta las tres para entender por qué no saltó ninguna alarma:
+1. leía el ajuste con `Setting::value(...)`, cuyo **FQCN lleva backslashes que NO sobreviven** a la capa
+   local → ssh → shell remoto: llegaba mutilado y `tinker` devolvía un **PARSE ERROR**;
+2. el `tr -dc 'a-z'` **convirtió ese error en una cadena de basura** con pinta de valor
+   (`arseerroryntaxerrorunexpected…`), que es lo que el script imprimió como si fuera el entorno; y
+3. la condición preguntaba **«¿CONTIENE `live`?»** — y la basura no lo contiene.
+▶ **Con el entorno en `live`, la guarda habría pasado igual.** Comprobado por SQL directo que la
+realidad era `test`, así que no hubo consecuencia; pero la guarda no lo sabía, y eso es el defecto.
+
+**(b) La regla que sale de aquí, y vale para TODA guarda de dinero: pregunta «¿es lo que ESPERO?»,
+nunca «¿es lo que TEMO?».** Lo primero falla cerrado ante un error; lo segundo lo bendice. La guarda
+ahora exige `test` **exacto** (o vacío = el default del código) y aborta ante cualquier otra cosa,
+incluido un error de lectura. Y se lee por `DB::table('settings')`, que **no necesita namespaces** y
+por tanto no se puede mutilar.
+
+**(c) El corolario, que este repo ya conocía y volvió a morder**: `#102(e)` documentó «un 200 con HTML
+es un verde que no significa nada». Aquí la forma fue otra y la lección la misma: **un `tr`/`grep` que
+SANEA la salida de un comando puede convertir un ERROR en un valor plausible**. Si una comprobación
+limpia lo que recibe, tiene que validar la FORMA de lo que queda, no solo mirarlo.
+
+**(d) La menor, que dio un rojo falso**: `grep -c X || echo 0` imprime **dos** ceros cuando no hay
+coincidencias —`grep -c` ya emite «0» y ADEMÁS sale con 1—, así que la comprobación de migraciones
+comparaba `"0\n0"` contra `"0"` y fallaba **con el sitio perfectamente sano**. `|| true` conserva el 0
+y traga el código. Un falso rojo cuesta menos que un falso verde, pero enseña lo mismo: el comando que
+verifica también hay que verificarlo.
+
+**(e) Los cuatro arreglos, medidos MUTANDO**: restaurar cada bug pone en rojo exactamente su caso
+(`DeployScriptGateTest`, 26 casos). El de la guarda de dinero es el que más valía fijar, porque su modo
+de fallo es **silencioso y solo se manifiesta el día que el entorno está mal**.
+
+**(f) Lo desplegado y verificado POR FUERA del script** (`#59`: verde no es funciona). Las **12 páginas
+públicas en 200** (home, precios, cumpleaños, servicios, normas, contacto, entradas y las 5 legales) ·
+**los tres idiomas en vivo**, comprobando el `<html lang>` tras `/lang/{locale}` — y de paso queda
+medido que **el idioma va por SESIÓN, no por prefijo de URL**, así que `/en` y `/fr` dan 404 y eso es
+correcto (`INSTALACION-CLIENTE.md` §7 se leía como si hubiera prefijo) · `/admin` → 302 y
+`/admin/login` → 200 · `/api/v1/config` → 200 · `robots.txt` con `Disallow: /` · 5 tareas del
+scheduler · ninguna migración pendiente · `failed_jobs` vacía.
+
+**(g) El script es idempotente, y se probó ejecutándolo dos veces**: la segunda dijo «Nothing to
+migrate», no duplicó el cron (marcador) y dejó el sitio arriba igual.
+
+**(h) Estado del contenido**: `ProductionSeeder` sembró la semilla neutra SaltoPark y
+`slots:generate-rolling` materializó **1440 franjas**. Admin creado (`app:create-admin`, id 1) con su
+contraseña impresa una sola vez.
+
+**(i) Lo que ESTO desbloquea, y es el motivo de todo el tramo**: `/api/v1/config` publica hoy
+`turnstile_site_key: null` —o sea, **el anti-bot está inactivo por falta de claves**—. Ese es
+exactamente el siguiente trabajo: cargar las claves de Cloudflare en el panel (ya hay admin para
+entrar) y cerrar **4.4b·2**, y con él los tres caminos de navegador que `#100` exige antes de borrar
+`Purchase.php`.

@@ -16,7 +16,7 @@ y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#10
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2755 en verde** (15.782 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
+- Suite **2758 en verde** (15.791 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -141,9 +141,22 @@ medidos el 2026-08-19). No son «tener cuidado»: sin ellos el despliegue **no p
    ese comando no toca — habría creado una cuenta que existe y **no entra**.
    Cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y prueba**.
 
-✅ **`scripts/deploy.sh` ESCRITO Y PROBADO** (2026-08-19, `DECISIONES #105`) — **pero NO ejecutado**:
-el despliegue real espera dos datos que solo tiene el owner (ver abajo). El dry-run contra staging
-pasa entero. Lo guarda `DeployScriptGateTest` (23 casos, **10 mutaciones muertas**).
+✅✅ **STAGING DESPLEGADO Y VERIFICANDO** (2026-08-19, `DECISIONES #105` + `#106`).
+`scripts/deploy.sh` existe, se ejecutó **dos veces** (idempotente: la 2.ª dijo «Nothing to migrate» y
+no duplicó el cron) y el sitio sirve. Lo guarda `DeployScriptGateTest` (26 casos, **14 mutaciones
+muertas**).
+**Verificado POR FUERA del script** (`#59`: verde no es funciona): las **12 páginas públicas en 200**
+· los **tres idiomas en vivo** · `/admin` 302 y `/admin/login` 200 · `/api/v1/config` 200 ·
+`robots.txt` con `Disallow: /` · 5 tareas del scheduler · `failed_jobs` vacía.
+Contenido: semilla neutra SaltoPark + **1440 franjas** · admin creado.
+⚠️ **Y el despliegue destapó que la guarda del DINERO daba un VERDE FALSO** (`#106`): leía
+`redsys_environment` por un FQCN que no sobrevive a ssh, el `tr` convertía el `PARSE ERROR` en basura
+con pinta de valor, y la condición preguntaba «¿contiene `live`?» — así que **habría pasado con el
+entorno en `live`**. Arreglado y **fail-closed**: ahora exige `test` exacto y aborta ante cualquier
+otra cosa. ▶ **La regla, para toda guarda de dinero: pregunta «¿es lo que ESPERO?», nunca «¿es lo que
+TEMO?».**
+⚠️ **Medido de paso**: el idioma va por SESIÓN (`/lang/{locale}`), **no por prefijo de URL** — `/en` y
+`/fr` dan 404 y es correcto.
 Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
 `ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `ProductionSeeder`,
 **`app:create-admin`**, `slots:generate-rolling`, permisos y cron del scheduler (**el `crontab` del
@@ -170,16 +183,19 @@ subidas del panel).
 y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
 `slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
 
-▶▶ **EMPIEZA AQUÍ: ejecutar el despliegue.** Faltan DOS datos del owner y nada más:
-1. ❗ **Credenciales del usuario de BD de `jumpweb_1_test`** (usuario + contraseña), para escribir el
-   `.env` en el servidor. ⚠️ **El `.my.cnf` del servidor NO vale**: es el usuario ADMINISTRATIVO y él
-   mismo avisa de que no debe usarse para la web (coincide con `#102(b)`).
-   ▶ Con ellos: `scripts/deploy.sh --env-template` da el `.env` con las guardas ya puestas.
-2. ❗ **Email del admin del panel**, para `--admin-email`.
-Y entonces: `scripts/deploy.sh` (dry-run) → `scripts/deploy.sh --go --seed --admin-email=…`.
+▶▶ **EMPIEZA AQUÍ: cargar las claves de Turnstile en el panel y cerrar 4.4b·2.**
+Medido ahora mismo: `/api/v1/config` publica `turnstile_site_key: null`, o sea que **el anti-bot está
+INACTIVO por falta de claves**. Ya hay admin para entrar al panel, así que no queda bloqueo.
+Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
+`RegisterForm.vue` · mandar `turnstile_token` en `register.js::runRegister` (hoy NO viaja) · retirar la
+delegación de `Sidebar.vue::setAuthMode` · el cargador del script externo (hoy solo existe para
+Livewire) · re-apuntar las **tres redes** que hoy afirman lo contrario · y medir el coste en bundle
+contra **4,15 KiB de margen** (`SidebarBundleBudgetTest`).
+⚠️ **Se desarrolla en LOCAL**: Cloudflare emite claves de prueba que aceptan cualquier hostname y
+`Turnstile::verify()` se ejercita con `Http::fake`. Staging es para verificarlo, no para construirlo.
 
-**Después del despliegue, en este orden:**
-1. **Verificar en staging** lo que `#100` exige antes de borrar nada: **Turnstile** (4.4b·2), la
+**Y en staging, lo que `#100` exige antes de borrar nada:**
+1. **Turnstile** (4.4b·2), la
    **notificación S2S** de Redsys, el **3DS con challenge** y el **móvil real**.
    ⚠️ Ojo con la referencia: el S2S **no está en `VERIFICACION-E2E-CAJON.md` §6** —§6 lista 3DS, los
    tres idiomas, móvil y Turnstile—; su receta es el **bloque B (§3)**, y está escrita para un túnel

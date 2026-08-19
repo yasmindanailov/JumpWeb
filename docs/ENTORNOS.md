@@ -171,8 +171,19 @@ Inventario en solo lectura, para no volver a suponerlo:
 > ⚠️ **`storage:link` NO va** (lo prohíbe `INSTALACION-CLIENTE.md` §1 y el código lo confirma: 0 usos
 > del disco `public`), y **`public/uploads` se excluye del `--delete`** o el segundo despliegue borra
 > las subidas del panel.
-> Lo guarda `DeployScriptGateTest` (23 casos, 10 mutaciones muertas), incluido un caso que **deriva el
+> Lo guarda `DeployScriptGateTest` (26 casos, 14 mutaciones muertas), incluido un caso que **deriva el
 > suelo de PHP del `composer.lock`** para que el desfase de `#103(f)` no pueda repetirse.
+> ✅ **EJECUTADO el 2026-08-19** (`#106`), dos veces (idempotente). Sitio sirviendo, 12 páginas públicas
+> en 200, tres idiomas, panel accesible, 1440 franjas.
+> ⚠️⚠️ **Y destapó que la guarda del DINERO daba un VERDE FALSO**: leía `redsys_environment` por un FQCN
+> cuyos backslashes no sobreviven a ssh, el `tr` convertía el `PARSE ERROR` en basura con pinta de
+> valor, y la condición preguntaba «¿contiene `live`?». **Habría pasado con el entorno en `live`.**
+> Ahora es **fail-closed** (exige `test` exacto) y lee por `DB::table`, sin namespaces.
+> ▶ **Regla para toda guarda de dinero: pregunta «¿es lo que ESPERO?», nunca «¿es lo que TEMO?».**
+> ▶ Y su corolario, hermano de `#102(e)`: **un `tr`/`grep` que SANEA la salida puede convertir un error
+> en un valor plausible**. Si una comprobación limpia lo que recibe, valida la FORMA de lo que queda.
+> ⚠️ **El idioma va por SESIÓN** (`/lang/{locale}`), no por prefijo de URL: `/en` y `/fr` dan **404** y
+> es correcto. `INSTALACION-CLIENTE.md` §7 («200 en es/en/fr») se leía como si hubiera prefijo.
 >
 > ⚠️ **Y el `robots.txt` es responsabilidad del DESPLIEGUE, no del producto**: el del repo dice
 > `Disallow:` (vacío = permitir todo) porque la instalación de un cliente **debe** indexarse. El
