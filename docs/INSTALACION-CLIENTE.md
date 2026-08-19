@@ -25,7 +25,7 @@ Desde `.env.production.example`: `APP_KEY` nueva (`key:generate`, NO la de dev) 
 `APP_ENV=production` + `APP_DEBUG=false` · `APP_URL` con HTTPS (lo usan Redsys, signed URLs
 y emails) · `DB_*` · `SESSION_SECURE_COOKIE=true` · **`QUEUE_CONNECTION=database`** (nunca
 `sync`: los mails son `ShouldQueue`) · `MAIL_*` real + SPF/DKIM/DMARC · `REDSYS_SECRET_KEY`
-en el vault (§6). Después: `migrate --force` · `config:cache`.
+en el vault (§6). Después: `migrate --force` · `db:seed` · **`app:create-admin`** (§5) · `config:cache`.
 ⚠️ **`npm run build` NO se corre en el servidor**: puede no haber node (staging no lo tiene,
 `ENTORNOS.md` §4). Los assets se construyen en local y se suben ya compilados.
 - Cron único que lo mueve todo (`routes/console.php`): `* * * * * php artisan schedule:run`
@@ -82,9 +82,23 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de
   operativa). El admin no lleva permisos: `Gate::before` le concede todo.
-- `[DECISION-PENDIENTE]` **Ningún seeder crea el admin real de producción** (los usuarios
-  `@…test` solo se crean fuera de producción). Mecanismo canónico por definir: ¿comando
-  `app:make-admin` o tinker documentado?
+- ✅ **[DECIDIDO 2026-08-19, `DECISIONES #104`] El mecanismo canónico es el comando
+  `app:create-admin`** — cerrado el `[DECISION-PENDIENTE]` que había aquí. Sigue siendo cierto que
+  **ningún seeder crea el admin real** (`ProductionSeeder` no crea usuarios; los `@…test` solo salen
+  `if (! isProduction())`), y por eso hace falta un paso explícito:
+  ```bash
+  php artisan app:create-admin --email=jefa@cliente.tld --name="Nombre Apellido"
+  ```
+  · **La contraseña se GENERA y se imprime UNA vez** (no se pasa por `--password`: quedaría en `ps`,
+    en el historial y en el log del despliegue). Anótala en el vault en ese momento.
+  · **Idempotente y asimétrico a propósito**: re-ejecutarlo **repara el rol** si falta, pero **NO
+    toca la contraseña** —rotarla en cada redespliegue echaría al owner de su propio panel—. Para
+    rotarla: `--reset-password`.
+  · **Aborta** si el rol no existe (⇒ los seeders no han corrido) o si se le pide un rol que no abre
+    el panel. Sale con código **1**, así que `deploy.sh` puede encadenarlo con `set -e`.
+  · `--role=staff` crea una cuenta de puerta con el mismo mecanismo.
+  ⚠️ **`make:filament-user` NO sirve**: `canAccessPanel()` exige `hasRole('admin'|'staff')` y ese rol
+  vive en la pivote `role_user`, que ese comando no toca — crearía una cuenta que no entra.
 
 ## 6 · Pagos (Redsys) — go-live
 1. Rellenar en el panel el FUC real, terminal, nombre y URL del comercio.
@@ -101,6 +115,6 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
 - Públicas 200 en es/en/fr: `/`, `/precios`, `/cumpleanos`, `/servicios`, `/normas`,
   `/contacto`, `/entradas` + las 5 legales (`/privacidad`, `/condiciones`, `/cookies`,
   `/aviso-legal`, `/waiver`).
-- `/admin` con el admin real; `schedule:list` = **5** tareas (la 5.ª es `sanctum:prune-expired`,
+- `/admin` con el admin creado por `app:create-admin` (§5); `schedule:list` = **5** tareas (la 5.ª es `sanctum:prune-expired`,
   añadida en Fase 3 · paso 0); tabla `jobs` se vacía en ~1 min;
   `failed_jobs` vacía; compra sandbox completa (Redsys test → email de confirmación → QR).

@@ -4021,3 +4021,68 @@ Fase 3 extrajo servicios) **o se midió algo que la doc ya no reflejaba**. Ningu
 doc: los siete salieron de **ejecutar la afirmación**. ▶ **`docs-check.sh` valida estructura y citas,
 no CONTENIDO** — y eso es justo lo que se le escapó aquí. Candidato a deuda: llevar al gate las
 afirmaciones que son mecánicamente comprobables (símbolos citados que deben existir, cifras derivables).
+
+## #104 · 2026-08-19 · [DECIDIDO] El primer admin es un COMANDO, y con eso cae el último bloqueo del despliegue
+`#103` midió que tras desplegar **no hay por dónde entrar al panel**, y que eso no es un detalle de
+comodidad: es el único camino para meter las claves de Turnstile —`Turnstile::keys()` las lee **solo**
+de `settings`—, o sea que sin admin el servidor de pruebas **no compra lo que dice comprar**. El
+«mecanismo del primer admin» dejó de ser un pendiente del owner para ser camino crítico. Aquí se cierra.
+
+**(a) Por qué un comando y no `make:filament-user`.** Medido: `User::canAccessPanel()` exige
+`hasRole('admin') || hasRole('staff')`, y ese rol vive en la pivote `role_user`, que el comando de
+Filament **no toca**. Crearía una cuenta que existe y **no entra** — el modo de fallo más caro de
+todos, porque parece hecho. Por eso el caso central del test no asevera «existe el usuario» sino
+`canAccessPanel()`.
+
+**(b) La contraseña se GENERA y se imprime una vez.** `--password` existe, pero no es el camino: una
+contraseña en la línea de órdenes queda en `ps`, en el historial del shell y en el log del despliegue.
+Generar 24 caracteres y enseñarlos una sola vez no deja rastro en ningún sitio.
+⚠️ **Y a la generada NO se le aplica `uncompromised()` a propósito**: una cadena aleatoria de 24
+caracteres no está en ningún corpus de filtraciones, así que la comprobación no compraría nada — y sí
+metería una llamada a Have I Been Pwned **en el camino feliz del despliegue**, que pasaría a depender
+de que el servidor tenga salida a Internet y de que HIBP conteste (su verificador tiene 30 s de
+timeout). A la explícita, que sí la elige un humano, se le exige **la misma política que al registro
+real** (`min(8)->uncompromised()`): una cuenta con todos los permisos no puede tener menos exigencia
+que un cliente.
+
+**(c) La idempotencia es ASIMÉTRICA, y es la decisión de diseño que más importa.** Re-ejecutarlo
+**repara el rol** si falta, pero **NO toca la contraseña**. La simetría ingenua —«idempotente = deja
+el mismo estado»— aquí sería un fallo: rotar la contraseña en cada redespliegue **echa al owner de su
+propio panel**, y lo descubriría el día que necesita entrar. Para rotarla hay que pedirlo
+(`--reset-password`). Y el rol se ata con `syncWithoutDetaching`, no con `sync`: reparar el acceso no
+puede desatar los roles que la cuenta ya tuviera.
+
+**(d) Aborta si el rol no existe, en vez de crearlo.** Un `admin` sin fila en `roles` significa que los
+seeders no han corrido, y entonces falta mucho más que el rol: fabricarlo dejaría la instalación en un
+estado intermedio que nadie ha probado. Sale con código **1** —verificado ejecutándolo, no leyéndolo—
+así que `deploy.sh` puede encadenarlo con `set -e`.
+
+**(e) Medido mutando, que es como este repo comprueba que un verde significa algo** (`CONVENCIONES`
+§3.quater). **Once mutaciones, las once muertas**, y cada una mató exactamente el caso que la vigila:
+no atar el rol (2 rojos: admin y staff) · no marcar el email como verificado · `sync` en vez de
+`syncWithoutDetaching` · rotar la contraseña siempre · match de email sensible a mayúsculas · aceptar
+cualquier rol · crear el rol en vez de abortar · quitar la política de contraseña · no validar el email
+· **imprimir una contraseña distinta de la que se guarda** · **imprimir contraseña al solo reparar**.
+**Ningún caso quedó inerte**, que es el fallo que `#65` documentó y que solo se ve mutando.
+
+**(e.bis) Y la garantía que más pesa la destapó el propio método**: la contraseña se enseña **una
+sola vez** y no queda guardada en ningún sitio, así que si lo impreso NO fuera lo que abre, el owner se
+quedaría fuera **sin recuperación posible** salvo volver a ejecutar el comando. El primer test decía
+solo «está hasheada», que es mucho más débil y **no habría cazado ese fallo**. Se reforzó capturando la
+salida REAL y autenticando con ella; verificado además a mano contra MySQL (`Auth::attempt` con la
+impresa → `true`; con otra → `false`), y fijado con dos mutantes: imprimir una contraseña distinta de
+la guardada, e imprimir contraseña al solo reparar (que sería MENTIR: la suya no ha cambiado).
+
+**(f) El match de email es case-insensitive, y tiene su caso propio.** No es cosmética: `deploy.sh`
+puede recibir el email escrito de cualquier forma, y con un match sensible a mayúsculas el segundo
+despliegue **crearía una cuenta duplicada** en vez de reconocer la suya. Se mutó para comprobarlo.
+
+**(g) Y el email queda VERIFICADO al crear.** Un admin recién creado tiene que poder operar sin pasar
+por el correo — que además en staging **no sale** (guarda 3 de `ENTORNOS.md` §2, `MAIL_MAILER=log`).
+Nota de implementación que costará descubrir dos veces: `email_verified_at` **no está en el
+`#[Fillable]` de `User`**, así que no se puede asignar en masa; hay que ponerla como propiedad.
+
+**(h) Lo que esto desbloquea.** Con `#103(f)` (PHP 8.5, ya subido y verificado por SSH) y esto, **el
+despliegue deja de tener bloqueos**: `scripts/deploy.sh` es el siguiente trabajo, y ya con el pliego
+medido delante. Cierra además el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y
+prueba**, no con prosa — que era la forma en que llevaba abierto desde Fase 0.

@@ -16,7 +16,7 @@ y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#10
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.679 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
+- Suite **2732 en verde** (15.725 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -123,30 +123,36 @@ cuenta.
 
 ⚠️⚠️ **ANTES de `deploy.sh` había DOS bloqueos que la cadena anterior no veía** (`DECISIONES #103`,
 medidos el 2026-08-19). No son «tener cuidado»: sin ellos el despliegue **no puede terminar** o
-**no compra lo que dice comprar**. **Queda uno.**
+**no compra lo que dice comprar**. **Ya NO queda ninguno: los dos están resueltos** (2026-08-19).
 
 1. ✅ **RESUELTO (2026-08-19) · el PHP del sitio.** 17 paquetes `symfony/*` exigen `php >=8.4.1` y
    staging se aprovisionó en 8.3, así que `composer install --no-dev` habría abortado. El owner subió
    el sitio y está **verificado por SSH**: `php -v` → **8.5.1**, y `which php` → `/usr/bin/php`, o sea
    que es el binario que usarán `composer`, `artisan` y el cron. Detalle en `ENTORNOS.md` §4, punto 0.
-2. ❗ **ÚNICO BLOQUEO VIVO — tras desplegar NO hay forma de entrar a `/admin`, y ahí es donde se
-   configuran las claves de Turnstile.** `ProductionSeeder` crea 0 usuarios · `DatabaseSeeder` solo crea admin
+2. ✅ **RESUELTO (2026-08-19, `DECISIONES #104`) · el primer admin.** Tras desplegar no había forma
+   de entrar a `/admin`, y ahí es donde se configuran las claves de Turnstile. `ProductionSeeder` crea 0 usuarios · `DatabaseSeeder` solo crea admin
    `if (! isProduction())` · `canAccessPanel()` exige rol `admin`/`staff` (que `make:filament-user`
    no da) · `Turnstile::keys()` lee **solo** de `settings`. Cadena: sin admin → sin panel → sin claves
-   → **4.4b·2 sigue bloqueado**. ▶ **[DECIDIDO] escribir un comando artisan propio e idempotente**
-   (`app:create-admin`) que cree el usuario con su rol; lo invoca `deploy.sh` y cierra a la vez el
-   `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5.
-   ▶▶ **ES EL PRÓXIMO TRABAJO**, y se hace entero en local: no depende de staging.
+   → 4.4b·2 quedaba bloqueado. ▶ **Hecho: `app:create-admin`** (17 casos, **11 mutaciones muertas**).
+   Genera la contraseña y la enseña UNA vez · **idempotencia ASIMÉTRICA**: repara el rol si falta pero
+   **NO** toca la contraseña (rotarla en cada redespliegue echaría al owner de su panel) · aborta con
+   código 1 si el rol no está sembrado o si se le pide un rol que no abre el panel.
+   ⚠️ **`make:filament-user` NO servía**: `canAccessPanel()` exige el rol de la pivote `role_user`, que
+   ese comando no toca — habría creado una cuenta que existe y **no entra**.
+   Cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y prueba**.
 
-▶ **DESPUÉS, `scripts/deploy.sh`.** Construir assets en local (**no hay node en el servidor**),
-`rsync`, `.env` con las seis guardas de `ENTORNOS.md` §2, `composer install --no-dev`,
-`migrate --force`, permisos, cron del scheduler (**el `crontab` del sitio SÍ se puede escribir**) y
-`ProductionSeeder`. ⚠️ **`storage:link` NO va**: `INSTALACION-CLIENTE.md` §1 lo prohíbe y el código lo
+▶▶ **EMPIEZA AQUÍ: `scripts/deploy.sh`** — ya SIN bloqueos.
+Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
+`ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `ProductionSeeder`,
+**`app:create-admin`**, `slots:generate-rolling`, permisos y cron del scheduler (**el `crontab` del
+sitio SÍ se puede escribir, y está VACÍO**).
+**La máquina ya está medida entera** (`ENTORNOS.md` §4): el `rsync` entra como `jumpweb_1`, así que
+**no hace falta `chown`**; la raíz de la app es `~/public_html/` y el docroot su `public/`. ⚠️ **`storage:link` NO va**: `INSTALACION-CLIENTE.md` §1 lo prohíbe y el código lo
 confirma (0 usos del disco `public`; la única subida es `Offer::IMAGE_DISK='uploads'` →
 `public/uploads`, que además hay que **excluir del `--delete`** o el segundo despliegue borra las
 subidas del panel).
 
-⚠️ **Cuatro cosas que el script tiene que hacer y no son obvias:**
+⚠️ **Cinco cosas que el script tiene que hacer y no son obvias:**
 - **reescribir `public/robots.txt` con `Disallow: /` y verificarlo por HTTP** — el del repo permite
   indexar a propósito (el producto debe indexarse en casa de un cliente), así que el primer `rsync`
   tumba la guarda 4 si el script no lo repone;
@@ -155,7 +161,9 @@ subidas del panel).
 - **borrar `public/hot` en destino y excluirlo del envío**: si existe, Vite sirve TODOS los assets
   desde `localhost:5274` y la web queda sin CSS ni JS **sin ningún error de servidor**;
 - **comprobar la salud del sitio al terminar** (`/up` → 200, `robots.txt`, `schedule:list`), no dar
-  por hecho que fue bien.
+  por hecho que fue bien;
+- ⚠️ **al verificar el `robots.txt`, comparar el CONTENIDO y por HTTP, no el tamaño**: medido en las
+  dos puntas el 2026-08-19, el servido (26 B) y el del repo (25 B) **pesan casi igual**.
 ⚠️ **`ProductionSeeder` no deja nada comprable por sí solo**: crea `SlotTemplate`s pero **0 franjas**
 y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
 `slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
