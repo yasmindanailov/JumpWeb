@@ -130,9 +130,22 @@ Inventario en solo lectura, para no volver a suponerlo:
 **Lo que enseñó, y no está en la documentación de enhance:**
 
 1. ⚠️ **Desde el sitio NO se puede aprovisionar, y es correcto.** `appinit` es PID 1: cada sitio es un
-   contenedor. Su usuario Unix tiene `USAGE` y nada más —el propio `.my.cnf` avisa de que **no es el
-   usuario de BD del sitio**—, así que `CREATE DATABASE` da `ERROR 1044`. El plano de control vive
-   fuera. Automatizar el aprovisionamiento exige la **API del panel**, no la shell del sitio.
+   contenedor. Su usuario de BD tiene `USAGE` **a nivel global**, así que `CREATE DATABASE` da
+   `ERROR 1044`. El plano de control vive fuera: automatizar el aprovisionamiento exige la **API del
+   panel**, no la shell del sitio.
+   ⚠️ **[CORRECCIÓN MEDIDA 2026-08-19] `#102(b)` decía que `jumpweb_1` «no es el usuario de BD del
+   sitio». Eso era cierto ANTES de crear la base, y hoy es FALSO** — `SHOW GRANTS` lo dice sin
+   ambigüedad: `GRANT USAGE ON *.*` **+ `GRANT ALL PRIVILEGES ON jumpweb_1_test.*`**. Al crear la BD
+   por el panel, el panel le concedió todo sobre ella; es el ÚNICO usuario con acceso (`SHOW DATABASES`
+   → solo `information_schema` y `jumpweb_1_test`).
+   ▶ **Pero la razón para NO usarlo en el `.env` sigue en pie, y es otra: el propio `.my.cnf` avisa de
+   que «the password may be rotated from time to time».** Una rotación del panel dejaría el sitio sin
+   BD **sin avisar y sin que ningún test lo cace**. Es decir: la conclusión de `#102(b)` era correcta y
+   su motivo no. Quien lea «no tiene permisos» perderá el tiempo buscando otro usuario; el peligro real
+   es la ROTACIÓN.
+   ▶ Para una instalación de CLIENTE: usuario de BD dedicado, creado por el panel, con su contraseña en
+   el vault. Para staging es admisible usar `jumpweb_1` a sabiendas de que una rotación se arregla
+   releyendo `.my.cnf` y reescribiendo el `.env`.
 2. ⚠️⚠️ **Crear el directorio destino ANTES de cambiar el `documentRoot`.** Enhance **no valida que
    exista**: si no está, regenera el vhost apuntando a la nada, el sitio cae al vhost por defecto de
    LiteSpeed —con su certificado, que parece un fallo de TLS y no lo es— y **no avisa**. Medido con un
