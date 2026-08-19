@@ -183,9 +183,16 @@ subidas del panel).
 y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
 `slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
 
-▶▶ **EMPIEZA AQUÍ: cargar las claves de Turnstile en el panel y cerrar 4.4b·2.**
-Medido ahora mismo: `/api/v1/config` publica `turnstile_site_key: null`, o sea que **el anti-bot está
-INACTIVO por falta de claves**. Ya hay admin para entrar al panel, así que no queda bloqueo.
+✅ **Turnstile CONFIGURADO en staging** (2026-08-19, `#107`): `/api/v1/config` publica ya la site key
+y **no** la secreta, y `siteverify` de Cloudflare responde `invalid-input-response` —**no**
+`invalid-input-secret`—, o sea que **reconoce el secreto como válido**. El servidor tiene salida a
+`challenges.cloudflare.com`.
+⚠️ **NO se configuran por el panel**, y la doc decía que sí: son fila de `settings` escrita por
+`tinker`/SQL (`ENTORNOS.md` §3). Ficha en `DEUDA.md` — merece un comando propio.
+⚠️ **Sin verificar: el HOSTNAME.** Cloudflare ata las claves a un dominio y solo lo valida al canjear
+un token REAL, lo que exige navegador.
+
+▶▶ **EMPIEZA AQUÍ: 4.4b·2 — montar el widget en el cajón SPA**, que es lo único que falta de Turnstile.
 Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
 `RegisterForm.vue` · mandar `turnstile_token` en `register.js::runRegister` (hoy NO viaja) · retirar la
 delegación de `Sidebar.vue::setAuthMode` · el cargador del script externo (hoy solo existe para

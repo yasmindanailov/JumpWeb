@@ -4212,3 +4212,48 @@ contraseña impresa una sola vez.
 exactamente el siguiente trabajo: cargar las claves de Cloudflare en el panel (ya hay admin para
 entrar) y cerrar **4.4b·2**, y con él los tres caminos de navegador que `#100` exige antes de borrar
 `Purchase.php`.
+
+## #107 · 2026-08-19 · Turnstile CONFIGURADO en staging — y no se configura donde la doc decía
+Cargadas las claves de Cloudflare en staging. La pregunta del owner («¿dónde la añado?») destapó que
+la respuesta escrita era falsa.
+
+**(a) ⚠️ `ENTORNOS.md` §3 decía «van por el panel de admin». El panel NO las puede editar.** Medido:
+`security.turnstile_*` no aparece en ningún formulario de `app/Filament/`, y el docblock de la página
+de ajustes dice justo lo contrario — «**Fuera de alcance por seguridad (NUNCA editables aquí): los
+SECRETOS (`redsys_secret_key`, `security.turnstile_secret`)**». O sea: la exclusión es **deliberada y
+correcta**, y lo que estaba mal era la doc que mandaba buscarlas ahí. Quien entrara al panel no las
+encontraría y no sabría por qué.
+
+**(b) El mecanismo real, escrito donde se busca**: la fila de `settings` (`group` = `security`), por
+`tinker` o SQL en el servidor. No hace falta limpiar caché: `Setting` memoiza **solo por proceso**
+(`flushMemo` en `saved`/`deleted`), no de forma persistente — comprobado leyendo el modelo antes de
+escribir, no después de que fallara.
+
+**(c) Las claves ya estaban… en la BD de desarrollo LOCAL.** El owner las aportó el 2026-08-16 y
+`#101(d)` había predicho exactamente dónde acabarían: «en local quedan en la BD de desarrollo y
+`git status` no ve nada». Se transfirieron de local a staging **sin que el secreto pasara por la
+salida** de ninguna herramienta.
+
+**(d) Verificado de tres formas, y la segunda es la que de verdad cierra la duda:**
+1. `/api/v1/config` publica `turnstile_site_key` y **NO publica la secreta** — la invariante de
+   `PublicConfigTest`, confirmada en vivo y no solo en la suite.
+2. ⚠️ **`siteverify` de Cloudflare devuelve `invalid-input-response`, NO `invalid-input-secret`**. Esa
+   distinción es el hallazgo: significa que **Cloudflare reconoce el secreto como válido** y solo
+   rechazó el token de prueba que se le mandó a propósito. Sin esto, «la clave está puesta» sería una
+   suposición: una clave equivocada se ve exactamente igual desde el lado de la app.
+3. De paso queda probado que **el servidor tiene salida a `challenges.cloudflare.com`**, que es lo que
+   `Turnstile::verify()` necesita y nadie había comprobado.
+
+**(e) Lo que NO se ha verificado, y hay que decirlo**: el **hostname**. Cloudflare ata las claves a un
+dominio y lo valida al canjear un token REAL, cosa que no se puede hacer sin navegador. `Turnstile.php`
+registra ese modo de fallo (`Log::warning('turnstile.verify_failed', … 'hostname')`), señal de que ya
+mordió una vez. Queda para la sesión de navegador de `VERIFICACION-E2E-CAJON.md`.
+
+**(f) Y una observación de mecanismo que no es defecto**: el HTML inicial **no** trae el `<script>` de
+Cloudflare ni el contenedor `cf-turnstile`. No es un fallo: el modal de auth es Livewire y el widget se
+monta **al abrirlo**, cargando el script bajo demanda (`window.__cfTurnstileLoading`). La CSP ya lo
+permite en `script-src`, `frame-src` y `connect-src`, verificado en la CABECERA REAL del servidor.
+
+**(g) Deuda que esto deja anotada**: configurar un secreto de BD es hoy **un paso a mano, no probado**,
+y **cada instalación de cliente lo necesita** — sin claves el anti-bot se autodesactiva en silencio.
+Merece un comando hermano de `app:create-admin`. Ficha en `DEUDA.md`.
