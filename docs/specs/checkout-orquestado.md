@@ -219,7 +219,7 @@ start(User $user, array $cart, string $source): CheckoutOutcome
   4. catch PaymentInitiationException
          order->releaseAfterFailedPaymentStart()  ← compensación: primer intento SUELTA
          throw                                     ← el llamante decide qué ve el cliente
-  5. CheckoutOutcome::ready($order, $ticket)
+  5. CheckoutOutcome::allow($order, $ticket)
 
 retry(User $user, string $orderCode, string $source): RetryOutcome
   1. verdict = admission->admitPaymentRetry($user->id, $orderCode)
@@ -229,7 +229,7 @@ retry(User $user, string $orderCode, string $source): RetryOutcome
   3. catch PaymentInitiationException
          (NO se toca el pedido: sigue vivo con su hold recién extendido)
          throw
-  4. RetryOutcome::ready($verdict->order, $ticket)
+  4. RetryOutcome::allow($verdict->order, $ticket)
 ```
 
 ⚠️ **El orquestador NO abre transacción, y eso es la regla, no un olvido.** Hoy son dos unidades de
@@ -239,7 +239,7 @@ sostenido durante la firma del payload —contención en el punto exacto que `AF
 sutil»—, y el `audit_logs` de fallo de inicio haría **rollback** junto con la compensación, que es
 justo lo que `PAY-05` prohíbe (las incidencias son visibles, no solo log).
 
-Los constructores estáticos se llaman `deny()`/`ready()` y no `denied()`: `denied()` es el
+Los constructores estáticos se llaman `deny()`/**`allow()`** y no `denied()`: `denied()` es el
 PREDICADO, por consistencia con `AdmissionDecision` y `RetryAdmission`, y en PHP no pueden coexistir.
 
 `$source` sigue siendo parámetro porque distingue superficies en `audit_logs`.

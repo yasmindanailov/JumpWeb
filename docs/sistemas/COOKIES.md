@@ -131,7 +131,9 @@ rama sin tabla `settings` (CI/instalación limpia): no decidido + banner off.
 - Inyectado en [layout.blade.php](../../resources/views/components/layout.blade.php) para todos;
   el estado inicial servidor→cliente viaja por atributos `data-cookie-*` del `<body>`.
 - Store: `{decided, enabled, prefs:{maps,social}, panel, visible}` + `acceptAll`, `rejectAll`,
-  `grant(cat)`, `openPanel`, `reopen`, `save(prefs)`.
+  `grant(cat)`, `openPanel`, **`closePanel`**, **`savePanel`**, **`persist`**.
+  ⚠️ **No existen `reopen()` ni `save(prefs)`** (corregido 2026-08-19): la superficie real de
+  `Alpine.store('cookies')` está en `resources/js/app.js`.
 - **Capa 1**: 3 botones en igualdad «Aceptar» · «Rechazar» · «Configurar» + texto breve + enlace
   a la política. Sin preselección.
 - **Capa 2** (panel): Necesarias (ON, disabled) · Mapa (toggle) · Redes sociales (toggle) +
@@ -164,7 +166,7 @@ rama sin tabla `settings` (CI/instalación limpia): no decidido + banner off.
 es/zh_CN (`admin.settings.cookies_banner_enabled*`).
 
 **Footer** ([footer.blade.php](../../resources/views/components/site/footer.blade.php)): enlace
-permanente «Configuración de cookies» → `$store.cookies.reopen()` (revocar = art. 7.3).
+permanente «Configuración de cookies» → `$store.cookies.openPanel()` (revocar = art. 7.3).
 
 **Política de cookies (2.ª capa)** — fuente única
 [`App\Domain\Content\Services\CookiePolicyContent`](../../app/Domain/Content/Services/CookiePolicyContent.php): estructura

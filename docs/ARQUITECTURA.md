@@ -65,7 +65,9 @@ una lectura), `$cookieConsent`, `$navServices` (servicios con `show_in_nav`), `$
 > ✅ **Modularizado (Fase 2, `docs/specs/modulos-dominio.md`)**: `app/Models` y `app/Support`
 > **ya no existen**. El dominio vive en `app/Domain/<Contexto>/` con 5 módulos. La frontera la
 > impone `tests/Feature/Architecture/ModuleBoundariesTest.php` (grafo + baselines que solo
-> encogen). Queda el paso 7 (cierre): resolver las 5 flechas `DEFERRED` de Content→Booking.
+> encogen). ✅ **El paso 7 (cierre) está HECHO**: `ModuleBoundariesTest::DEFERRED` es `[]` — las 5
+> flechas Content→Booking se resolvieron el 2026-08-12 con `Booking\Contracts\OperatingCalendar`
+> (+4 DTOs) y `Booking\Contracts\ZonePalette`.
 
 ```
 app/

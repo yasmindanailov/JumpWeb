@@ -19,8 +19,10 @@
 - **Weekday:** `0=domingo..6=sábado` (convención Carbon `dayOfWeek`) en `opening_hours`,
   `slot_templates`, `rate_types.weekdays`.
 - **Mass assignment:** la mayoría de modelos llevan `$guarded = []` (abierto; heredado).
-  Solo tienen allowlist `$fillable` estos 6: `Order`, `Payment`, `Setting`, `Role`,
-  `Permission`, `AuditLog` (`grep -rl fillable app/Domain/*/Models/`). Rareza a vigilar al
+  Tienen allowlist estos **7**: `Order`, `Payment`, `Setting`, `Role`, `Permission`, `AuditLog`
+  y **`User`** — ⚠️ este último con el **atributo PHP `#[Fillable([...])]`**, no con la propiedad, así
+  que el `grep -rl fillable` en minúscula NO lo ve (13 campos; `getGuarded()` sigue siendo `["*"]`).
+  Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
   `AppServiceProvider` con alias snake_case para los 30 modelos — las columnas polimórficas
@@ -312,10 +314,12 @@ mover o renombrar `User` no rompe los tokens. `token` es un hash SHA-256, nunca 
 `expires_at` lo rige `config('sanctum.expiration')` (30 días por defecto) y la poda semanal de
 `sanctum:prune-expired` (`routes/console.php`).
 
-⚠️ **Sin emisor todavía**: `POST auth/tokens` llega en el paso 3 de Fase 3, y con él la
-**revocación** —que la revisión del spec destapó como hueco: `User::anonymize()` purga `sessions`
-(`RGPD-01`) pero un Bearer sobreviviría al borrado—. Hasta entonces la tabla está vacía en toda
-instalación.
+⚠️ **Sin emisor todavía**, y **NO llega en Fase 3**: `POST auth/tokens` se aplazó a **Fase 6** por
+decisión del owner (`DECISIONES #29a`, 2026-08-13; en `api-v1.md` aparece tachado y `route:list` no
+tiene ninguna ruta de tokens). Hasta entonces la tabla está vacía en toda instalación.
+✅ **La revocación, en cambio, YA EXISTE** (esto también decía lo contrario): `User::revokeAllAccess()`
+purga sesiones **y** hace `$this->tokens()->delete()`, y `anonymize()` lo invoca — el hueco que la
+revisión del spec destapó está cerrado.
 
 ---
 
@@ -338,7 +342,7 @@ instalación.
 6. **FKs ausentes a propósito:** `ticket_types.zone_id` (índice sin constraint; limitación
    histórica de ALTER en SQLite) y `order_items.parent_item_id` (integridad en app).
 7. **morphMap forzado desde Fase 2** (ver §0): alias estables en los morphs; deuda retirada.
-8. **`$guarded = []`** en la mayoría de modelos (ver §0); solo 6 modelos con `$fillable`.
+8. **`$guarded = []`** en la mayoría de modelos (ver §0); **7** con allowlist (`User` vía atributo `#[Fillable]`).
 9. **Migraciones con lógica de datos del origen:** backfills/repairs quirúrgicos
    (`ServicePriceTableBackfill`, `SpecialRateLabelBackfill`, `LegacyAddonAdjustmentRepair`,
    `LegacyGateAdjustmentReconciliation`) y seeds idempotentes de zonas (`color`, `image` con

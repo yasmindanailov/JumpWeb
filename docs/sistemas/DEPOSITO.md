@@ -116,7 +116,7 @@ pedido»):
 | `itemRefundedCents` | Σ `payment_refunds.succeeded` con `order_item_id` |
 | `itemOriginalOnlineCents` | **deposit-aware**: online original = `depositCents(origQty × unit_price)` (`none`→valor; `fixed`→señal; `percent`→`round(% × valor_original)`) |
 | `itemRefundableRemainderCents` | `max(0, itemOriginalOnlineCents − itemRefundedCents)` (techo ensanchado, §5.8) |
-| `refundableCapacityCents` (agregado) | `max(0, Payment.amount − totalRefunded)` |
+| `refundableCapacityCents` (agregado) | `max(0, Payment.amount − (Σ refunds `succeeded` **+ `pending`**))` — ⚠️ **NO es `totalRefunded`**: reserva ADEMÁS los refunds EN VUELO. Un `pending` —parcial o TOTAL (`order_item_id` NULL)— inmoviliza su importe para que dos reembolsos concurrentes no puedan devolver más de lo cobrado (auditoría Fase 1, **M5**). Un `failed` no reserva nada. Código: `Order::refundableCapacityCents()`. |
 | `amountCollectedCents` | `max(0, Σ payments.paid − Σ refunds)` |
 | `onlineBackingProductsCents` | `max(0, netHeld − pendienteDevolucion)`, `netHeld = paid − refunds` |
 
@@ -205,8 +205,11 @@ local + Pagado en local» reconcilia (§7).
 
 ### 5.7 Inicio de pago — fuente única `Payment.amount = onlineDueCents()`
 
-- `app/Livewire/Tickets/Purchase.php` (creación de Payment, 2 puntos) → `onlineDueCents()`.
-- `app/Http/Controllers/Payments/RetryPaymentController.php` → íd.
+- ✅ **Fuente ÚNICA real (corregido 2026-08-19)**: `Payments\Services\PaymentInitiator::start()`
+  crea el `Payment` con `'amount' => $order->onlineDueCents()`. Es el **único** `Payment::create` del
+  camino de compra, y se alcanza por el puerto `Booking\Contracts\PaymentInitiation`.
+  ⚠️ Antes esta lista decía `Purchase.php` (2 puntos) y `RetryPaymentController.php`: **ninguno de los
+  dos crea ya el `Payment`** — pasan por el orquestador desde Fase 3.
 - `Redsys::buildPaymentFormData` — `DS_MERCHANT_AMOUNT => (string) $payment->amount` (usa el
   amount del `$payment` recibido = ancla única → blinda el canario). **Crítico de seguridad.**
 - `app/Domain/Booking/Services/ManualOrderFulfiller.php` — `amount = onlineDueCents()` (D3); los
@@ -373,7 +376,8 @@ o quedarse el depósito según T&C.
 - **Catálogo:** «Señal :amount para reservar» (`TicketType::depositLabel` — valor CONFIGURADO,
   no `depositCents`, que con precio por-unidad caparía; `fixed`→€, `percent`→%).
 - **Paso de cantidad:** «Señal :deposit ahora · :rest en el local»
-  (`Purchase::stepDepositHint`, calculado en el COMPONENTE — ver gotcha Blade abajo).
+  (calculado en el COMPONENTE — ver gotcha Blade abajo). ⚠️ **El nombre `Purchase::stepDepositHint`
+  es FANTASMA** (corregido 2026-08-19): 0 ocurrencias en el código; nunca se portó del origen.
 - **Cesta y pago:** nota por-producto en cada card; el total del pago es «**Total a pagar
   ahora**» + «En el local». El agregado online NO se etiqueta «señal» (en cestas mixtas
   pack+entrada sería falso): agregado neutro «Pagado online», y la señal real se nombra
@@ -417,7 +421,7 @@ o quedarse el depósito según T&C.
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
 selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
 `app/Domain/Booking/Services/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
-`app/Livewire/Tickets/Purchase.php` (`cartDepositCents`/`stepDepositHint`) ·
+`app/Livewire/Tickets/Purchase.php` (`cartDepositCents`; ⚠️ `stepDepositHint` **no existe**) ·
 `app/Domain/Booking/Models/OrderAdjustment.php` (tipos) · `app/Domain/Payments/Services/RedsysReturnHandler.php` (canario, NO
 tocar) · `resources/views/filament/orders/items-list.blade.php` (banner D9) ·
 `app/Domain/Content/Services/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`

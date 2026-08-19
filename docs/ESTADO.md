@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-15**.
+> aquí solo se enlaza. Última actualización: **2026-08-19**.
 
 ## ▶ Dónde estamos
 
@@ -16,7 +16,7 @@ y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#10
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2715 en verde** (15.680 aserciones, `--parallel` ~80 s) · **287 tests JS** (`node --test`) ·
+- Suite **2715 en verde** (15.679 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -75,7 +75,7 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 20
+**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 19
 dependientes** (eran 32 al corregir el escáner). ⚠️ **Pero la meta NO es 0** — ver abajo.
 
 **Las nueve paridades: auditoría CERRADA** (histórico, no hay nada que hacer aquí). Van **ocho
@@ -103,39 +103,77 @@ era **«todo clasificado»**, y ya está. Escrito también en el docblock de `Pu
 - **Y `CE-6` con dientes** (`#90`), que salió de una observación del owner: `Sidebar.vue` era el segundo
   objeto-dios y nada lo vigilaba.
 
-✅ **El bloqueador `#74` está RESUELTO** (`#99`) y **el inventario está clasificado entero**: por el
-lado de la SUITE, borrar ya no rompe nada.
+✅ **El bloqueador `#74` está RESUELTO** (`#99`) y **el inventario está clasificado entero**.
+⚠️ **Pero «clasificado» NO es «borrar no rompe nada»: hay un agujero medido de UN fichero**
+(`DECISIONES #103`). `SidebarEngineTest` **no está en las 19 entradas** —el escáner no lo caza porque
+no nombra `Purchase::` ni la vista— y sus dos casos comparan los dos motores, así que uno se pone rojo
+al borrar (o, peor, se queda VERDE con el cajón en blanco). Hay que decidir su destino **antes**.
 
-⚠️⚠️ **Pero borrar no es limpiar: es ACTIVAR** (`DECISIONES #100`). `layout.blade.php` bifurca con
-`usesSpa()` y su comentario lo dice: «el fallback no puede ser el motor en construcción». Al borrar el
-componente **el cajón SPA queda como ÚNICO motor y sin vuelta atrás sin desplegar** — y para eso
-faltan **Turnstile y los tres caminos de navegador**. El contador y esta pregunta son distintas: aquél
-dice cuándo se puede borrar sin romper la suite, no qué motor queda sirviendo después.
+⚠️⚠️ **Y borrar no es limpiar: es ACTIVAR** (`DECISIONES #100`) — con un matiz medido el 2026-08-19
+que cambia el reparto del trabajo (`#103`): **el borrado por sí solo NO activa la SPA**. El default y
+el fallback de `usesSpa()` son `livewire`, así que quitar la rama `@else` deja el cajón **vacío**, no
+en SPA. **Lo que activa el motor es `4.7·3` — retirar el flag**, un paso que existe en el tracker y
+que la cadena de abajo no contaba. Son dos trabajos, no uno; y `4.7·3` es el que hereda entera la
+condición de `#100` (**Turnstile y los tres caminos de navegador, verificados en staging**).
 
 ✅ **STAGING APROVISIONADO** (2026-08-16, `#102`): BD `jumpweb_1_test` (MariaDB 11.4.10, verificada
 conectando) · PHP 8.3 · `documentRoot` → `public_html/public` · `robots.txt` con `Disallow: /`
 sirviéndose por HTTPS. `ENTORNOS.md` §4 tiene el detalle y las cuatro cosas que la doc del panel no
 cuenta.
 
-▶ **EMPIEZA AQUÍ: `scripts/deploy.sh`.** Es lo único que separa al proyecto de poder verificar.
-Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
-`ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `storage:link`, permisos, cron del
-scheduler y worker (**el `crontab` del sitio SÍ se puede escribir**) y `ProductionSeeder`.
+⚠️⚠️ **ANTES de `deploy.sh` había DOS bloqueos que la cadena anterior no veía** (`DECISIONES #103`,
+medidos el 2026-08-19). No son «tener cuidado»: sin ellos el despliegue **no puede terminar** o
+**no compra lo que dice comprar**. **Queda uno.**
 
-⚠️ **Tres cosas que el script tiene que hacer y no son obvias:**
+1. ✅ **RESUELTO (2026-08-19) · el PHP del sitio.** 17 paquetes `symfony/*` exigen `php >=8.4.1` y
+   staging se aprovisionó en 8.3, así que `composer install --no-dev` habría abortado. El owner subió
+   el sitio y está **verificado por SSH**: `php -v` → **8.5.1**, y `which php` → `/usr/bin/php`, o sea
+   que es el binario que usarán `composer`, `artisan` y el cron. Detalle en `ENTORNOS.md` §4, punto 0.
+2. ❗ **ÚNICO BLOQUEO VIVO — tras desplegar NO hay forma de entrar a `/admin`, y ahí es donde se
+   configuran las claves de Turnstile.** `ProductionSeeder` crea 0 usuarios · `DatabaseSeeder` solo crea admin
+   `if (! isProduction())` · `canAccessPanel()` exige rol `admin`/`staff` (que `make:filament-user`
+   no da) · `Turnstile::keys()` lee **solo** de `settings`. Cadena: sin admin → sin panel → sin claves
+   → **4.4b·2 sigue bloqueado**. ▶ **[DECIDIDO] escribir un comando artisan propio e idempotente**
+   (`app:create-admin`) que cree el usuario con su rol; lo invoca `deploy.sh` y cierra a la vez el
+   `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5.
+   ▶▶ **ES EL PRÓXIMO TRABAJO**, y se hace entero en local: no depende de staging.
+
+▶ **DESPUÉS, `scripts/deploy.sh`.** Construir assets en local (**no hay node en el servidor**),
+`rsync`, `.env` con las seis guardas de `ENTORNOS.md` §2, `composer install --no-dev`,
+`migrate --force`, permisos, cron del scheduler (**el `crontab` del sitio SÍ se puede escribir**) y
+`ProductionSeeder`. ⚠️ **`storage:link` NO va**: `INSTALACION-CLIENTE.md` §1 lo prohíbe y el código lo
+confirma (0 usos del disco `public`; la única subida es `Offer::IMAGE_DISK='uploads'` →
+`public/uploads`, que además hay que **excluir del `--delete`** o el segundo despliegue borra las
+subidas del panel).
+
+⚠️ **Cuatro cosas que el script tiene que hacer y no son obvias:**
 - **reescribir `public/robots.txt` con `Disallow: /` y verificarlo por HTTP** — el del repo permite
   indexar a propósito (el producto debe indexarse en casa de un cliente), así que el primer `rsync`
   tumba la guarda 4 si el script no lo repone;
 - **negarse** si el destino no es staging, si `redsys_environment` quedaría en `live`, si el correo
   saldría o si `APP_DEBUG` es `true` — lo valioso del script es lo que **no** deja hacer;
-- **comprobar la salud del sitio al terminar**, no dar por hecho que fue bien.
+- **borrar `public/hot` en destino y excluirlo del envío**: si existe, Vite sirve TODOS los assets
+  desde `localhost:5274` y la web queda sin CSS ni JS **sin ningún error de servidor**;
+- **comprobar la salud del sitio al terminar** (`/up` → 200, `robots.txt`, `schedule:list`), no dar
+  por hecho que fue bien.
+⚠️ **`ProductionSeeder` no deja nada comprable por sí solo**: crea `SlotTemplate`s pero **0 franjas**
+y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
+`slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
 
 **Después del despliegue, en este orden:**
-1. **Verificar en staging** lo que `#100` exige antes de borrar nada: **Turnstile** (4.4b·2, ya
-   desbloqueado, `#101`), la **notificación S2S** de Redsys, el **3DS con challenge** y el **móvil
-   real** — los tres últimos son `VERIFICACION-E2E-CAJON.md` §6.
-2. **`4.7·2b·3`**: el borrado, que está enteramente preparado y sin decisiones abiertas.
-3. **`scripts/provision.sh`** contra la API del panel, **después** del `deploy.sh` (`#102(f)`): su
+1. **Verificar en staging** lo que `#100` exige antes de borrar nada: **Turnstile** (4.4b·2), la
+   **notificación S2S** de Redsys, el **3DS con challenge** y el **móvil real**.
+   ⚠️ Ojo con la referencia: el S2S **no está en `VERIFICACION-E2E-CAJON.md` §6** —§6 lista 3DS, los
+   tres idiomas, móvil y Turnstile—; su receta es el **bloque B (§3)**, y está escrita para un túnel
+   `cloudflared` local, sin variante de staging todavía.
+   ⚠️ **Y falta la receta de cómo poner el flag en `spa` ALLÍ**: la única escrita usa
+   `docker compose exec`, y en staging no hay docker (el flag tampoco es editable por panel).
+2. **`4.7·2b·3`**: el borrado. ⚠️ **NO está «sin decisiones abiertas»**: quedan el destino de
+   `SidebarEngineTest` (fuera del inventario) y el del modo `embedded` de auth, que el propio tramo
+   declara «parte de este tramo».
+3. **`4.7·3` — retirar el flag**, que es *lo que de verdad activa el motor SPA* (`#103`). Faltaba en
+   esta cadena.
+4. **`scripts/provision.sh`** contra la API del panel, **después** del `deploy.sh` (`#102(f)`): su
    trabajo es dejar el servidor en el estado que el despliegue espera, y ese estado solo se conoce
    habiéndolo alcanzado una vez. Necesita un token nuevo, con el menor alcance posible.
 
@@ -236,7 +274,7 @@ bueno**. Si transcribes algo de esa clase necesita paridad propia. Demostrado po
   existente rompe a todo cliente ramificado sobre él**.
 - **La cesta que viaja por la API** → `Http\Api\CartPayload`, una sola forma para los tres endpoints.
 
-⚠️ **Tres trampas de la API que la SPA pisa** (las 83 medidas están en `specs/api-v1.md` §10):
+⚠️ **Tres trampas de la API que la SPA pisa** (las **87** medidas están en `specs/api-v1.md` §10):
 `Origin`/`Referer` hacen falta en TODAS las peticiones stateful, no solo en el login (§10.sexies 28) ·
 la disponibilidad LLEVA la cesta y publica dos números (§10.nonies 46) · **la firma cubre la URL
 EXACTA**, así que las URLs de API se firman aparte (§10.duodecies 64).

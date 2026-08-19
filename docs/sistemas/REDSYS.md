@@ -377,9 +377,13 @@ hace en `settings.redsys_environment`.
    rechaza el form de ida), pago real mínimo + reversión inmediata, y monitoring de logs:
    `redsys.return.invalid_signature{source:notification}` (posible atacante),
    `amount_mismatch`/`currency_mismatch` (config/protocolo), `overbooked_alert` (contactar
-   cliente en 24 h), `redsys.notification.unhandled_exception`. Rate-limit del endpoint de
-   notificación: en el edge/WAF (con bypass para los rangos IP de Redsys — pedirlos al banco;
-   Redsys reintenta con backoff y un límite estricto rompería reintentos legítimos), NO en la app.
+   cliente en 24 h), `redsys.notification.unhandled_exception`. ⚠️ **Rate-limit del endpoint de
+   notificación: ya está EN LA APP y es invariante.** Las tres rutas `/pago/redsys/*` van bajo
+   `throttle:120,1` (`routes/web.php`, auditoría Fase 1 · L5) y eso es **`PAY-15`, que NO se deshace**
+   (`INVARIANTES.md` §1) — y **sin test dedicado**, así que nada cazaría la regresión. Un rate-limit
+   adicional en el edge/WAF es complementario y opcional; si se pone, **con bypass para los rangos IP
+   de Redsys** (pedirlos al banco: reintenta con backoff y un límite estricto rompería reintentos
+   legítimos). [DECIDIDO 2026-08-19] Antes decía «NO en la app», que contradecía a `PAY-15`.
 
 ## Referencias oficiales (públicas)
 - Manual "Integración por Redirección": `canales.redsys.es/canales/ayuda/documentacion/Manual integracion para conexion por Redireccion.pdf`

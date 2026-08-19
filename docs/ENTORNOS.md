@@ -36,8 +36,16 @@ Ninguna es teórica: todas salen de algo que este código hace hoy.
    servidor de pruebas: es el riesgo RGPD más caro que tiene este producto (`INVARIANTES` §3).
 3. ⚠️ **El correo no sale.** `MAIL_MAILER=log` o un buzón trampa. Los seeds llevan direcciones con
    pinta de reales y los avisos de pedido son `ShouldQueue`: con SMTP real, se envían.
-4. **No indexable.** `noindex` y, mejor, autenticación básica delante. Un staging indexado compite en
-   Google con el sitio del cliente que se instale mañana.
+4. **No indexable.** Un staging indexado compite en Google con el sitio del cliente que se instale
+   mañana. La vía es el **`robots.txt` con `Disallow: /`**, que es responsabilidad del DESPLIEGUE, no
+   del producto (§4, `#102(d)`): el del repo dice `Disallow:` (vacío = permitir todo) a propósito,
+   así que **cada `rsync` la tumba si el script no la repone y la verifica por HTTP**.
+   ⚠️⚠️ **[DECIDIDO 2026-08-19] La autenticación básica GLOBAL queda PROHIBIDA**, y antes esta guarda
+   la recomendaba («mejor, autenticación básica delante»). Medido: `/pago/redsys/notificacion` **no
+   lleva auth** —no puede llevarla, es una S2S máquina-a-máquina— así que un basic-auth sobre `/`
+   devuelve **401 a Redsys** y el pedido caduca **con la tarjeta ya cobrada** (`PAY-02`). Es decir:
+   rompería exactamente la verificación por la que este servidor existe (bloque B del e2e). Si algún
+   día se pone, **debe excluir `pago/redsys/*` y `up`**.
 5. **`APP_URL` = el dominio real, con HTTPS.** Si no coincide se rompen A LA VEZ los enlaces absolutos
    de los correos, las URLs firmadas, la derivación de CORS y los dominios *stateful* de Sanctum. Ya
    mordió en local (`ESTADO.md` § entorno).
@@ -69,7 +77,7 @@ Inventario en solo lectura, para no volver a suponerlo:
 | | Staging | Local | ¿Importa? |
 |---|---|---|---|
 | SO | Ubuntu 24.04.4 LTS | contenedor Sail | no |
-| PHP (CLI por defecto) | **8.3.29** | **8.5.9** | cumple `composer.json` (`^8.3`) |
+| PHP (CLI por defecto) | ✅ **8.5.1** (subido el 2026-08-19; era 8.3.29) | **8.5.9** | ✓ el lock exige `>=8.4.1` — ver abajo |
 | PHP disponibles en panel | 8.0 … **8.5.1** (`/opt/ecp-php85/bin/php`) | — | **se puede igualar a local** |
 | Base de datos | **MariaDB 11.4.10** | **MySQL 8.4.11** | ⚠️ **sí — ver abajo** |
 | Composer | 2.9.5 | — | ✓ |
@@ -80,9 +88,30 @@ Inventario en solo lectura, para no volver a suponerlo:
 | `robots.txt` | `Disallow: /` en el nuevo docroot | — | ⚠️ **NO es de fábrica**: el del repo permite indexar (`#102`) |
 | Base de datos | ✅ **`jumpweb_1_test`** (2026-08-16) | — | usuario propio con `ALL PRIVILEGES`; verificada conectando |
 | Panel: API | `https://cp.hosturbo.net/api` · `Bearer` + `orgId` | — | **sin OpenAPI publicado** (`#102`) |
+| Usuario Unix | ✅ **`jumpweb_1`** (uid/gid 1051) — medido 2026-08-19 | — | el `rsync` entra con él; **no hace falta `chown`** |
+| Raíz de la app | ✅ **`~/public_html/`** (`$HOME` = `/var/www/c4bf5527-126c-4fe3-9086-7f346458a4fd`) | — | destino del `rsync`; el docroot es su `public/` |
+| Crontab del sitio | ✅ **VACÍO** (medido 2026-08-19) | — | el scheduler se instala de cero, sin riesgo de pisar nada |
+| rsync · git · unzip · crontab · mysql | ✅ todos en PATH | — | `deploy.sh` no necesita instalar nada |
+| Disco | 423 GB libres de 467 GB | — | holgado (el árbol + `vendor` ≈ 200 MB) |
 
-⚠️ **DOS diferencias con local que condicionan el procedimiento, y ninguna es cosmética:**
+⚠️ **TRES diferencias con local que condicionan el procedimiento, y ninguna es cosmética:**
 
+0. ✅ **[RESUELTO 2026-08-19] El PHP del sitio ya es 8.5.1** —el owner lo subió por el panel, y está
+   **verificado por SSH**: `php -v` → `PHP 8.5.1 (cli)`, y `which php` → `/usr/bin/php`, o sea que el
+   binario por defecto del sitio (el que usarán `composer`, `artisan` y el cron) es ya el bueno.
+   ⚠️ **Se deja escrito el porqué, que no era obvio y volverá a serlo al instalar un cliente**: hasta
+   hoy esta tabla decía «cumple `composer.json` (`^8.3`)»: cierto sobre `composer.json`, **falso sobre
+   lo que se instala**. El requisito efectivo lo fija el LOCK, no el `.json`, y está medido:
+   `composer why-not php 8.3.29` → **17 paquetes de producción** (todo `symfony/*` 8.1) exigen
+   `php >=8.4.1`. No hay `config.platform` en `composer.json` que lo amortigüe, y
+   `--ignore-platform-reqs` **no es opción** (Symfony 8.1 usa sintaxis de 8.4). Es decir:
+   **`composer install --no-dev` aborta en el sitio tal y como se aprovisionó** (`#102(a)`, PHP 8.3).
+   ▶ **Consecuencia con orden obligatorio, del mismo tipo que `#102(c)`: subir el sitio a PHP 8.5 por
+   la API del panel ANTES del primer despliegue** — hecho. La alternativa —fijar
+   `config.platform.php=8.3` y re-resolver el lock— se **descartó**: degradaría el lock del PRODUCTO
+   para acomodar un servidor de pruebas.
+   ▶ **Requisito para `INSTALACION-CLIENTE.md`: el hosting de un cliente necesita PHP ≥ 8.4.1**, no el
+   `^8.3` de `composer.json`. Comprobarlo ANTES de vender/instalar, con `composer check-platform-reqs`.
 1. **La BD es MariaDB, no MySQL.** Los invariantes de dinero y aforo de este proyecto —`AFORO-01`, el
    lock de franjas— y **los dos verificadores de concurrencia** se han validado sobre **MySQL 8.4**.
    MariaDB no es un drop-in para razonar sobre locks. **Consecuencia que hay que escribir donde nadie
@@ -126,6 +155,11 @@ Inventario en solo lectura, para no volver a suponerlo:
 > ⚠️ **Y el `robots.txt` es responsabilidad del DESPLIEGUE, no del producto**: el del repo dice
 > `Disallow:` (vacío = permitir todo) porque la instalación de un cliente **debe** indexarse. El
 > primer `rsync` tumbaría la guarda 4 si el script no lo reescribe **y lo verifica por HTTP**.
+> ✅ **Confirmado en las DOS puntas el 2026-08-19**: `~/public_html/public/robots.txt` sirve hoy
+> `Disallow: /` (26 B) y el del repo es permisivo (25 B) — o sea que el `rsync` **sí** lo pisa. Ojo a
+> la trampa: **los dos ficheros pesan casi igual**, así que comprobar el tamaño no distingue uno de
+> otro; hay que comprobar el CONTENIDO, y por HTTP. (Hay además un `~/public_html/robots.txt` de 25 B
+> con la guarda, resto de cuando el docroot era `public_html`: hoy **no se sirve** y es inocuo.)
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un

@@ -25,7 +25,9 @@ Desde `.env.production.example`: `APP_KEY` nueva (`key:generate`, NO la de dev) 
 `APP_ENV=production` + `APP_DEBUG=false` · `APP_URL` con HTTPS (lo usan Redsys, signed URLs
 y emails) · `DB_*` · `SESSION_SECURE_COOKIE=true` · **`QUEUE_CONNECTION=database`** (nunca
 `sync`: los mails son `ShouldQueue`) · `MAIL_*` real + SPF/DKIM/DMARC · `REDSYS_SECRET_KEY`
-en el vault (§6). Después: `migrate --force` · `config:cache` · `npm run build`.
+en el vault (§6). Después: `migrate --force` · `config:cache`.
+⚠️ **`npm run build` NO se corre en el servidor**: puede no haber node (staging no lo tiene,
+`ENTORNOS.md` §4). Los assets se construyen en local y se suben ya compilados.
 - Cron único que lo mueve todo (`routes/console.php`): `* * * * * php artisan schedule:run`
   → `orders:expire` (5 min) · poda RGPD de `CookieConsentLog` (diaria) ·
   `slots:generate-rolling` (03:00) · `queue:work --stop-when-empty` (worker por minuto;
@@ -99,5 +101,6 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
 - Públicas 200 en es/en/fr: `/`, `/precios`, `/cumpleanos`, `/servicios`, `/normas`,
   `/contacto`, `/entradas` + las 5 legales (`/privacidad`, `/condiciones`, `/cookies`,
   `/aviso-legal`, `/waiver`).
-- `/admin` con el admin real; `schedule:list` = 4 tareas; tabla `jobs` se vacía en ~1 min;
+- `/admin` con el admin real; `schedule:list` = **5** tareas (la 5.ª es `sanctum:prune-expired`,
+  añadida en Fase 3 · paso 0); tabla `jobs` se vacía en ~1 min;
   `failed_jobs` vacía; compra sandbox completa (Redsys test → email de confirmación → QR).

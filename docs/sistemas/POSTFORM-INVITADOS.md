@@ -118,7 +118,8 @@ seed siempre incluye `guest_fields`).
 
 - **`TicketType`**: `guestFields()` (normaliza, espejo de `eventFields()`),
   `guestFieldLabel()`, `sanitizeGuestData(array $rows, int $n)`,
-  `missingRequiredGuestFields(array $rows, int $n)`, `guestDataCompletedCount()`,
+  `guestDataCompletedCount()`, ⚠️ **`missingRequiredGuestFields()` NO existe** (corregido
+  2026-08-19: nunca se portó del origen),
   `DEFAULT_GUEST_FIELDS`.
 - **`OrderItem`**: cast `guest_data => array`; `guestData()`, `isGuestFormComplete()` (deriva
   contra `quantity`), `guestFormStatus(): 'ok'|'pending'|null` (null si no es pack o no pide

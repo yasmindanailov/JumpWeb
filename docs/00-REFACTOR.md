@@ -1339,8 +1339,11 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         · ✅ **La auditoría de las NUEVE paridades queda CERRADA**: siete re-apuntadas y fuera del
           inventario, dos que mueren con el componente operando DENTRO (`#79`, `#83`). **27 → 21.**
 
-- [ ] **Paso 4.7·2b·2·C — los dependientes que NO son paridades** (EN CURSO; 2026-08-15,
-      `DECISIONES #86`). Cerrada la auditoría de las nueve paridades, quedan **20** entradas y la
+- [x] **Paso 4.7·2b·2·C — los dependientes que NO son paridades** (✅ **CERRADO** el 2026-08-16 con
+      `DECISIONES #98`; casilla cerrada el 2026-08-19 — se quedó abierta con la condición terminal ya
+      cumplida, ver el balance al final del ítem. Contador hoy: **19**).
+      Arrancó el 2026-08-15 (`DECISIONES #86`): cerrada la auditoría de las nueve paridades, quedaban
+      **20** entradas y la
       pregunta cambia de forma: **«¿su sujeto es el DOMINIO —y el componente solo conduce— o es la
       SUPERFICIE Livewire?»**. Los primeros se re-apuntan; los segundos mueren.
       · ⚠️⚠️ **La meta NO es que el contador llegue a 0**, y la doc decía que sí. **Nueve** de los que
@@ -1487,6 +1490,23 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
       `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
       defecto no pase ni un día con menos red de la que tiene—.
+      ⚠️⚠️ **[DECIDIDO 2026-08-19] «La línea», en singular, NO basta — y el borrado por sí solo NO
+      activa la SPA.** Medido con el código delante: `usesSpa()` es `false` por DEFAULT y por FALLBACK
+      (`SidebarSettings::ENGINE_LIVEWIRE`), y el `<div class="sidecart__body">` está **fuera** del
+      condicional. Hay dos caminos y los dos tienen trampa:
+      · **Camino A — borrar solo la rama `@else` y dejar el `@if`**: con el motor por defecto el cajón
+        se abre **EN BLANCO**. La página no rompe, así que no hay error que mirar — y **la suite lo da
+        VERDE**: `SidebarEngineTest::test_with_the_default_engine_the_livewire_drawer_is_rendered` solo
+        asevera `assertSee('sidecart__body')`, que sigue emitiéndose. Es un verde falso de manual.
+      · **Camino B — colapsar el condicional y dejar la SPA incondicional**: entonces sí es cierto lo
+        que dice `#100`, pero se pone **ROJO** el caso hermano de ese mismo fichero
+        (`assertDontSee('id="sidecart-spa"')` bajo el motor por defecto).
+      ⚠️ **Y `SidebarEngineTest` NO está en el inventario** (las 19 entradas de `DEPENDENTS`): el
+      escáner no lo caza porque no nombra `Purchase::` ni la vista (`COUPLINGS`). **Consecuencia: la
+      promesa «inventario clasificado ⟹ borrar no rompe la suite» tiene un agujero medido de UN
+      fichero**, y hay que decidir el destino de sus dos casos ANTES de borrar, no al ver el rojo.
+      ▶ **Lo que de verdad activa el motor es `4.7·3` (retirar el flag), no este paso.** Son dos
+      trabajos y estaban contados como uno.
       ⚠️ **La condición de «curtirlo en producción» se RETIRÓ el 2026-08-15 por vacía** (`DECISIONES
       #62`): no hay instalación viva ni canal de despliegue, así que no hay tráfico que esperar. Lo que
       de verdad ordena este tramo es el CONTADOR de `PurchaseRetirementTest`: reclasificar hasta 0 y
@@ -1503,6 +1523,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `embedded` se retira aquí o se deja para Fase 5 es parte de este tramo, no un descubrimiento
         para el final.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
+      ⚠️ **[DECIDIDO 2026-08-19] Este es el paso que ACTIVA el motor SPA, no `·2b·3`.** Mientras el
+      default y el fallback de `SidebarSettings::engine()` sean `livewire`, borrar el componente deja
+      el cajón vacío (camino A de `·2b·3`) o rompe `SidebarEngineTest` (camino B). Retirar el flag es
+      lo que hace que el SPA sea el único motor **y sin vuelta atrás sin desplegar**, así que hereda
+      entera la condición de `#100`: **no se toca hasta que Turnstile y los tres caminos de navegador
+      estén verificados en staging**. Arrastra además los dos casos de `SidebarEngineTest`, que dejan
+      de tener sujeto cuando no hay dos motores que comparar.
 - [x] **SPA embebida (Vue 3 + Pinia) para el cajón completo** — HECHO: los ONCE pasos (fecha/hora,
       cesta, login/registro, pago, vuelta y reintento) con Vue 3.5 y Pinia 3.0, y verificado de punta a
       punta con navegador y la pasarela REAL (`#59`). **Primer consumidor real de la API v1**, cumplido.

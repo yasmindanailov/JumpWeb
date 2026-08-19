@@ -3923,3 +3923,101 @@ falló el parseo. Los endpoints se descubren y se verifican uno a uno.
 de navegador) y, tras ella, el borrado de `Purchase.php`. El `provision.sh` se escribe **después** del
 `deploy.sh`, con este procedimiento delante: su trabajo es dejar el servidor en el estado exacto que el
 despliegue espera, y ese estado solo se conoce habiéndolo alcanzado una vez.
+
+## #103 · 2026-08-19 · [DECIDIDO] La auditoría doc↔código antes de desplegar: dos bloqueos y un paso que faltaba
+Antes de escribir `deploy.sh` se auditó el corpus documental **contra el código**, midiendo cada
+afirmación falsificable en vez de leerla: **794 comprobaciones** repartidas en siete familias, cada
+hallazgo pasado por un verificador que intentaba REFUTARLO. Resultado: **52 desfases confirmados**
+(1 de dinero, 18 importantes, 33 menores) y **11 descartados** por el refutador — el refutador es el
+que hace que la cifra signifique algo.
+
+**(a) ⚠️ El desfase más caro era de DINERO, y llevaba desde el origen.** `DEPOSITO.md` §5 documentaba
+`refundableCapacityCents` = `max(0, Payment.amount − totalRefunded)`, y `totalRefunded` está definido
+en el propio doc como «Σ `payment_refunds.succeeded`». **El código reserva ADEMÁS los refunds en
+`pending`**, y su comentario dice por qué: *«dos refunds concurrentes no puedan devolver más de lo
+cobrado (auditoría Fase 1, M5)»*. Es decir: la doc describía la guarda **más débil de lo que es**, en
+la dirección en la que equivocarse cuesta dinero real. Un agente que «corrigiera» el código para que
+coincidiera con la doc reabría el hueco M5. Corregido en la tabla, con el mecanismo y el porqué.
+
+**(b) ⚠️ `REDSYS.md` §14 mandaba deshacer una invariante.** Decía que el rate-limit del endpoint de
+notificación va «en el edge/WAF … **NO en la app**». Pero las tres rutas `/pago/redsys/*` llevan
+`throttle:120,1` desde la auditoría Fase 1, y eso es **`PAY-15`, registrada como NO deshacer**. Y la
+agravante: **`PAY-15` no tiene test dedicado** (así consta en `INVARIANTES.md`), así que nada habría
+cazado la regresión. Dos docs del mismo repo diciendo lo contrario, y el que se lee al ir a producción
+era el que estaba mal.
+
+**(c) ⚠️ El enrutador enseñaba lo contrario de lo medido.** `CLAUDE.md` mandaba leer «§4.2–§4.3: **los
+nombres de clase son CONTRATO**». §4.2 se titula literalmente *«El contrato visual es el ÁRBOL, no las
+clases»* y abre con «medido: **90 de 292 selectores** no se satisfacen emitiendo la clase correcta»;
+la revisión adversarial del propio spec ya había registrado «*el contrato son las clases* era falso» y
+`SidebarClassContractTest` fue **sustituido por no ser falsable**. La lección aprendida estaba escrita
+en el spec y **la fila del enrutador se quedó con la versión anterior** — que es la que todo el mundo
+lee primero.
+
+**(d) ⚠️⚠️ Borrar `Purchase.php` NO activa la SPA, y `#100` daba eso por hecho.** Medido con el código
+delante: `usesSpa()` es `false` por DEFAULT **y** por FALLBACK, y el `<div class="sidecart__body">`
+está FUERA del condicional. Hay dos caminos y los dos tienen trampa:
+- **A · borrar solo la rama `@else`**: con el motor por defecto el cajón se abre **EN BLANCO**. La
+  página no rompe, así que no hay error que mirar — y **la suite lo da VERDE**, porque
+  `SidebarEngineTest` solo asevera `assertSee('sidecart__body')`, que se sigue emitiendo.
+- **B · colapsar el condicional**: entonces sí queda la SPA sola, pero se pone **ROJO** el caso hermano
+  de ese mismo fichero.
+▶ **Lo que de verdad activa el motor es `4.7·3` — retirar el flag**, un paso que YA EXISTÍA en el
+tracker y que la cadena del próximo paso **no contaba**. Son dos trabajos y estaban contados como uno.
+`4.7·3` hereda entera la condición de `#100`.
+
+**(e) ⚠️ Y la promesa «todo clasificado ⟹ borrar no rompe la suite» tiene un agujero de UN fichero.**
+`SidebarEngineTest` **no está en las 19 entradas** de `DEPENDENTS`: el escáner no lo caza porque no
+nombra `Purchase::` ni la vista (`COUPLINGS`). Sus dos casos existen para comparar los dos motores, así
+que dejan de tener sujeto cuando solo queda uno. **Hay que decidir su destino ANTES de borrar**, no al
+ver el rojo — o peor, al no verlo (camino A).
+
+**(f) ⚠️❗ El despliegue no podía terminar: PHP 8.3 no instala este `composer.lock`.** `ENTORNOS.md` §4
+afirmaba «PHP 8.3.29 … cumple `composer.json` (`^8.3`)». Cierto sobre `composer.json`, **falso sobre lo
+que se instala**: el requisito efectivo lo fija el LOCK, y `composer why-not php 8.3.29` devuelve **17
+paquetes de producción** (todo `symfony/*` 8.1) exigiendo `php >=8.4.1`. No hay `config.platform` que
+lo amortigüe y `--ignore-platform-reqs` no vale (Symfony 8.1 usa sintaxis de 8.4). El sitio se
+aprovisionó en 8.3 (`#102(a)`), así que `composer install --no-dev` **aborta**.
+▶ **Decisión (owner): subir el sitio a PHP 8.5** por la API del panel, ANTES del primer despliegue —
+lo cual además iguala staging a local (8.5.9), que es el principio ya escrito al final de `ENTORNOS.md`
+§4. Se **descarta** fijar `config.platform.php=8.3` y re-resolver: degradaría el lock del PRODUCTO para
+acomodar un servidor de pruebas. **Necesita un token nuevo del panel; el usado en `#102` lo retiró el owner.**
+⚠️ **La lección es la misma de `#102(e)`**: se midió contra la restricción equivocada y el resultado
+*parecía* verde. `composer.json` es la intención; el lock es lo que se instala.
+
+**(g) ⚠️❗ Y no compraba lo que dice comprar: tras desplegar no hay quien entre a `/admin`.**
+`ProductionSeeder` crea **0 usuarios** · `DatabaseSeeder` solo crea admin `if (! isProduction())` ·
+`canAccessPanel()` exige rol `admin`/`staff`, que `make:filament-user` **no** da · y
+`Turnstile::keys()` lee **solo** de `settings`. La cadena completa: **sin admin → sin panel → sin
+claves → 4.4b·2 sigue bloqueado**. O sea: el «mecanismo del primer admin», que `ESTADO.md` clasificaba
+como *pendiente del owner, no depende de nosotros*, es **camino crítico** desde el momento en que
+staging existe para verificar Turnstile.
+▶ **Decisión (owner): un comando artisan propio e idempotente** (`app:create-admin`) que cree el
+usuario con su rol. Lo invoca `deploy.sh` y cierra el `[DECISION-PENDIENTE]` de
+`INSTALACION-CLIENTE.md` §5 **con código y prueba**, no con prosa.
+
+**(h) ⚠️ La guarda 4 recomendaba algo que rompe la guarda de dinero.** `ENTORNOS.md` §2 decía «noindex
+y, **mejor, autenticación básica delante**». Pero `/pago/redsys/notificacion` **no lleva auth y no
+puede llevarla**: es una S2S máquina-a-máquina. Un basic-auth sobre `/` devuelve **401 a Redsys** → el
+pedido caduca **con la tarjeta ya cobrada** (`PAY-02`), que es exactamente el bloque B del e2e y una de
+las cuatro razones por las que este servidor existe. **La autenticación básica global queda PROHIBIDA**;
+la guarda 4 es el `robots.txt`, que es responsabilidad del DESPLIEGUE (`#102(d)`).
+
+**(i) Lo demás, corregido en su doc**: `INVARIANTES` RGPD-03 y SEC-06 apuntaban a métodos que Fase 2/3
+movieron (`AuthorizesGuestForm`, `PasswordLogin`/`PasswordRecovery`) · `MODELO-DATOS` contaba 6 modelos
+con allowlist y son **7** (`User` la declara con el atributo `#[Fillable]`, que el `grep` en minúscula
+del propio doc no ve) y daba por venir en Fase 3 la emisión de tokens (aplazada a Fase 6, `#29a`)
+diciendo además que faltaba la revocación, **que ya existe** · `checkout-orquestado` llamaba `ready()`
+a un constructor que se llama `allow()` · `ARQUITECTURA` daba por abierto el paso 7 de Fase 2, cerrado
+desde el 2026-08-12 (`DEFERRED` es `[]`) · `COOKIES` documentaba `reopen()`/`save()`, que no existen ·
+`POSTFORM` y `DEPOSITO` citaban tres símbolos FANTASMA nunca portados del origen
+(`missingRequiredGuestFields`, `stepDepositHint`, y la creación del `Payment` en `Purchase.php`, que
+vive en `PaymentInitiator::start()`) · `INSTALACION-CLIENTE` decía `schedule:list` = 4 tareas (son
+**5**) y mandaba `npm run build` en un servidor sin node · `DEUDA` seguía en «27 ficheros … hasta 0».
+
+**(j) La lección transversal, y es nueva.** Todos los desfases graves son del mismo tipo: **la doc y el
+código dijeron lo mismo el día que se escribieron, y luego el código se movió** (Fase 2 modularizó,
+Fase 3 extrajo servicios) **o se midió algo que la doc ya no reflejaba**. Ninguno se detecta leyendo la
+doc: los siete salieron de **ejecutar la afirmación**. ▶ **`docs-check.sh` valida estructura y citas,
+no CONTENIDO** — y eso es justo lo que se le escapó aquí. Candidato a deuda: llevar al gate las
+afirmaciones que son mecánicamente comprobables (símbolos citados que deben existir, cifras derivables).
