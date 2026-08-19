@@ -123,10 +123,13 @@ LOG_STACK=daily
 LOG_LEVEL=warning
 
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
+# ⚠️ `localhost`, NO `127.0.0.1` — y la diferencia NO es cosmética: medido el 2026-08-19, MariaDB
+# en esta máquina escucha SOLO por socket UNIX (0 sockets TCP en el 3306), así que `127.0.0.1` da
+# «ERROR 2002 … Can't connect (115)». `localhost` hace que el cliente use el socket.
+DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=jumpweb_1_test
-DB_USERNAME=            # ← el usuario creado en `#102`
+DB_USERNAME=            # ← el usuario DEDICADO del sitio (no el de `~/.my.cnf`, que el panel rota)
 DB_PASSWORD=
 
 SESSION_DRIVER=database

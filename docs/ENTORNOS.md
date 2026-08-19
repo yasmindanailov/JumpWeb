@@ -81,6 +81,7 @@ Inventario en solo lectura, para no volver a suponerlo:
 | PHP disponibles en panel | 8.0 … **8.5.1** (`/opt/ecp-php85/bin/php`) | — | **se puede igualar a local** |
 | Base de datos | **MariaDB 11.4.10** | **MySQL 8.4.11** | ⚠️ **sí — ver abajo** |
 | Composer | 2.9.5 | — | ✓ |
+| MySQL: cómo se conecta | ⚠️ **socket UNIX** — 0 sockets TCP en 3306 | TCP | ⚠️ **`DB_HOST=localhost`, NO `127.0.0.1`**: con la IP da `ERROR 2002 (115)` |
 | **node / npm** | **NO ESTÁN** | sí | ⚠️ **sí — ver abajo** |
 | git · rsync · unzip | sí | — | ✓ |
 | HOME | `/var/www/<uuid>` | — | rutas con UUID, no con el nombre |
@@ -136,16 +137,19 @@ Inventario en solo lectura, para no volver a suponerlo:
    ⚠️ **[CORRECCIÓN MEDIDA 2026-08-19] `#102(b)` decía que `jumpweb_1` «no es el usuario de BD del
    sitio». Eso era cierto ANTES de crear la base, y hoy es FALSO** — `SHOW GRANTS` lo dice sin
    ambigüedad: `GRANT USAGE ON *.*` **+ `GRANT ALL PRIVILEGES ON jumpweb_1_test.*`**. Al crear la BD
-   por el panel, el panel le concedió todo sobre ella; es el ÚNICO usuario con acceso (`SHOW DATABASES`
-   → solo `information_schema` y `jumpweb_1_test`).
+   por el panel, el panel le concedió todo sobre ella.
+   ⚠️ **Pero NO es el único, y creerlo fue un error de método**: desde `jumpweb_1` no se puede leer
+   `mysql.user`, así que «no veo otro usuario» se confundió con «no hay otro». **Sí existe el usuario
+   DEDICADO del sitio, `jumpweb_1_test`** (verificado conectando el 2026-08-19: `ALL PRIVILEGES` sobre
+   su BD y DDL real probado). **Ese es el que va en el `.env`.**
    ▶ **Pero la razón para NO usarlo en el `.env` sigue en pie, y es otra: el propio `.my.cnf` avisa de
    que «the password may be rotated from time to time».** Una rotación del panel dejaría el sitio sin
    BD **sin avisar y sin que ningún test lo cace**. Es decir: la conclusión de `#102(b)` era correcta y
    su motivo no. Quien lea «no tiene permisos» perderá el tiempo buscando otro usuario; el peligro real
    es la ROTACIÓN.
-   ▶ Para una instalación de CLIENTE: usuario de BD dedicado, creado por el panel, con su contraseña en
-   el vault. Para staging es admisible usar `jumpweb_1` a sabiendas de que una rotación se arregla
-   releyendo `.my.cnf` y reescribiendo el `.env`.
+   ▶ **Regla, y vale igual para un cliente: en el `.env` va SIEMPRE el usuario dedicado del sitio**
+   (aquí `jumpweb_1_test`), nunca el de `~/.my.cnf`. Su contraseña vive en el vault del owner, no en
+   el repo.
 2. ⚠️⚠️ **Crear el directorio destino ANTES de cambiar el `documentRoot`.** Enhance **no valida que
    exista**: si no está, regenera el vhost apuntando a la nada, el sitio cae al vhost por defecto de
    LiteSpeed —con su certificado, que parece un fallo de TLS y no lo es— y **no avisa**. Medido con un
