@@ -146,11 +146,16 @@ Inventario en solo lectura, para no volver a suponerlo:
 `GET orgs/{org}` · `GET orgs/{org}/websites` · `GET orgs/{org}/websites/{ws}` ·
 `GET|PATCH orgs/{org}/websites/{ws}/domains[/{domainId}]` → el `PATCH` de `documentRoot` responde `204`.
 
-> ⚠️ **[PENDIENTE]** el DESPLIEGUE, que sigue sin medirse y cierra el `[DECISION-PENDIENTE]` de
-> `INSTALACION-CLIENTE.md` §1: subir el código con los assets ya construidos · `.env` con las seis
-> guardas de §2 · `composer install --no-dev` · `migrate --force` · `storage:link` · permisos de
-> `storage/` y `bootstrap/cache` · worker de cola y cron del scheduler (**el `crontab` del sitio SÍ se
-> puede escribir**) · sembrar con `ProductionSeeder`.
+> ✅ **[HECHO 2026-08-19, `DECISIONES #105`] El despliegue es `scripts/deploy.sh`**, y con él se cierra
+> el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1. **DRY-RUN por defecto**: sin `--go` no toca
+> el servidor. Hace, en este orden: `down` → drenar cola → `rsync` (con sus exclusiones) → reponer
+> `robots.txt` → `composer install --no-dev` → `migrate --force` → [`--seed`] → `slots:generate-rolling`
+> → [`--admin-email`] → `optimize` → cron → `up` → **salud**.
+> ⚠️ **`storage:link` NO va** (lo prohíbe `INSTALACION-CLIENTE.md` §1 y el código lo confirma: 0 usos
+> del disco `public`), y **`public/uploads` se excluye del `--delete`** o el segundo despliegue borra
+> las subidas del panel.
+> Lo guarda `DeployScriptGateTest` (23 casos, 10 mutaciones muertas), incluido un caso que **deriva el
+> suelo de PHP del `composer.lock`** para que el desfase de `#103(f)` no pueda repetirse.
 >
 > ⚠️ **Y el `robots.txt` es responsabilidad del DESPLIEGUE, no del producto**: el del repo dice
 > `Disallow:` (vacío = permitir todo) porque la instalación de un cliente **debe** indexarse. El

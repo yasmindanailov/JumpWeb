@@ -4086,3 +4086,72 @@ Nota de implementación que costará descubrir dos veces: `email_verified_at` **
 despliegue deja de tener bloqueos**: `scripts/deploy.sh` es el siguiente trabajo, y ya con el pliego
 medido delante. Cierra además el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y
 prueba**, no con prosa — que era la forma en que llevaba abierto desde Fase 0.
+
+## #105 · 2026-08-19 · [DECIDIDO] El despliegue es un script, y su valor es lo que NO deja hacer
+Escrito `scripts/deploy.sh`, que cierra el `[PENDIENTE]` de `ENTORNOS.md` §4 y el
+`[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §1 —abierto desde Fase 0—. No es un port del
+`deploy-prod.sh` del origen: se escribió **midiendo la máquina**, que es como esa doc exige hacerlo.
+
+**(a) DRY-RUN por defecto.** Sin `--go` no toca el servidor: comprueba todo, enseña el plan de `rsync`
+y sale. Misma convención que `app:purge-customers`, y por la misma razón — en un canal de despliegue,
+el modo destructivo se pide, no se hereda de un tecleo.
+
+**(b) Nunca sube el `.env`: lo LEE y lo VALIDA.** Ningún secreto vive en el repo (`ENTORNOS.md` §1), y
+subir el local tumbaría cuatro guardas de golpe. Las seis se comprueban una a una y el error dice la
+CONSECUENCIA, no solo el valor: «MAIL_MAILER='smtp' — EL CORREO SALDRÍA. Los seeds llevan direcciones
+con pinta de reales». Verificado con un `.env` sonda deliberadamente mal: **cazó las seis**.
+▶ Y `--env-template` imprime el `.env` de staging con las guardas ya puestas, para no escribirlo a ojo.
+
+**(c) La guarda 1 no se puede comprobar donde uno esperaría.** `redsys_environment` es un `Setting` de
+BD, no una variable de entorno, así que **antes de migrar no se puede leer**. Se comprueba justo
+después de `migrate` y **antes de `up`**: si estuviera en `live`, el sitio se queda en mantenimiento en
+vez de levantarse cobrando con tarjetas de verdad.
+
+**(d) El orden no es preferencia, es corrección.** `down` antes de nada —`public/index.php` mira
+`maintenance.php` ANTES del autoloader, así que la 503 sobrevive a un `vendor/` roto a mitad de
+`composer install`—; drenar la cola antes del `rsync`; migrar antes de servir (con `APP_ENV=production`,
+`tableExists()` no comprueba: servir sin migrar da **500 duro**, no degradación); y `composer install`
+antes de `optimize`, porque dispara `filament:upgrade` → `config:clear`/`route:clear`/`view:clear` y se
+llevaría por delante cualquier caché horneada antes. Los cuatro órdenes tienen su caso en el test.
+
+**(e) Las exclusiones del `rsync`, verificadas ejecutándolas** contra un destino local antes de apuntar
+al servidor: **0 entradas** de `.env`, `vendor`, `node_modules`, `tests`, `docs`, `storage`, `openapi`,
+`.git` y `public/uploads`; y sí viajan `public/build` (manifest + 7 assets), migraciones, `lang`,
+vistas, `composer.lock` y `artisan`. **1086 entradas**, y el dry-run contra staging dio el mismo número.
+⚠️ `storage/` nunca viaja, y no solo por los logs: contiene `framework/testing/disks/*` —un árbol por
+worker de la suite— y `storage/ssr`, que es artefacto de TEST.
+
+**(f) ⚠️ Dos fallos REALES que solo aparecieron al ejecutarlo, y que ninguna revisión de lectura habría
+visto:**
+1. **SIGPIPE.** El dry-run encadenaba `rsync … | head -40`; `head` cierra el pipe, `rsync` muere con
+   SIGPIPE y, con `set -o pipefail`, **el script entero abortaba con código 141**. Arreglado volcando a
+   fichero y recortando después (que además ejecuta el `rsync` una vez en lugar de dos).
+2. **El `APP_KEY` era huevo y gallina.** La plantilla decía «genera con `php artisan key:generate`»,
+   pero en arranque en frío **no hay `vendor/`**. Se cambia por `openssl rand -base64 32`, verificado
+   presente en el servidor.
+
+**(g) ⚠️⚠️ Y la lección más transferible salió de mutar el TEST del script.** `DeployScriptGateTest`
+nació con 23 casos en verde… y al mutar `deploy.sh` salieron **TRES INERTES**: quitar la reposición del
+`robots.txt`, quitar el drenaje de cola y romper el orden de `composer install` **no ponían nada rojo**.
+La causa era la misma en los tres: las agujas se encontraban **en los COMENTARIOS que explican por qué
+cada paso está ahí**, y en los mensajes de error. Es decir: **documentar bien el script hacía que su
+propio test dejara de morder** — el texto sobrevivía al código.
+▶ **Regla, y vale para cualquier test sobre un fichero de texto: asevera sobre lo EJECUTABLE (fuera las
+líneas de comentario) y ancla las agujas al SITIO DE LLAMADA, no a un substring.** Tras endurecerlo,
+las **10 mutaciones mueren**. Es la cuarta cara de la disciplina de mutación en este repo (`#65`, `#77`,
+`#92`, y ahora esta), y la primera en la que el inerte lo causaba la propia documentación.
+
+**(h) Y el test que impide repetir `#103(f)`**: un caso **deriva del `composer.lock`** el mayor
+`php >=` que exige cualquier paquete de producción (hoy 8.4.1, por `symfony/clock`) y lo compara con el
+`PHP_MIN` del script. Aquel desfase vivió en la doc sin que nada lo cazara; ahora, el día que un
+`composer update` suba el suelo, el rojo llega en la suite y no en mitad de un despliegue.
+
+**(i) Lo que NO hace, a propósito**: no pone basic-auth (`#103(h)`: rompería la S2S de Redsys y con ella
+`PAY-02`), no corre `storage:link` (`INSTALACION-CLIENTE.md` §1 lo prohíbe y el código lo confirma: 0
+usos del disco `public`), y no siembra ni crea admin salvo que se le pida con `--seed` / `--admin-email`
+— `ProductionSeeder` borra y recrea el catálogo entero, y eso no puede ser el default de nada.
+
+**(j) Estado: escrito y probado, NO ejecutado.** El despliegue real está esperando dos datos que solo
+tiene el owner: las **credenciales del usuario de BD** de `jumpweb_1_test` (el `.my.cnf` del servidor es
+el usuario ADMINISTRATIVO y él mismo avisa de que no debe usarse para la web — coincide con `#102(b)`)
+y el **email del admin** del panel. El dry-run contra staging ya pasa entero.

@@ -1,0 +1,472 @@
+#!/usr/bin/env bash
+# =============================================================================
+# JumpWeb — despliegue a STAGING (`docs/ENTORNOS.md` §4 · `DECISIONES #105`)
+# -----------------------------------------------------------------------------
+# «Construir + sincronizar», no «clonar y compilar»: en el servidor NO hay node
+# (medido, `ENTORNOS.md` §4), así que los assets se construyen aquí y se suben ya
+# compilados.
+#
+# ⚠️ LO VALIOSO DE ESTE SCRIPT ES LO QUE **NO** DEJA HACER. Cada guarda sale de algo
+# medido, no de una precaución genérica:
+#
+#   · **DRY-RUN POR DEFECTO.** Sin `--go` no toca el servidor. Misma convención que
+#     `app:purge-customers`.
+#   · **PHP ≥ 8.4.1**: el requisito lo fija el LOCK, no `composer.json` (17 paquetes
+#     `symfony/*`). Con 8.3 `composer install` aborta a medias — `#103(f)`.
+#   · **NUNCA sube el `.env`**: lo lee y lo VALIDA. Ningún secreto vive en el repo
+#     (`ENTORNOS.md` §1), y subir el local tumbaría cuatro guardas de golpe.
+#   · **`robots.txt`**: el del repo PERMITE indexar a propósito (una instalación de
+#     cliente debe indexarse), así que cada `rsync` tumba la guarda 4. Se repone y se
+#     verifica **por HTTP y comparando CONTENIDO, no tamaño**: medido el 2026-08-19,
+#     el servido (26 B) y el del repo (25 B) pesan casi igual.
+#   · **`public/hot`**: si existe, Vite reescribe TODOS los assets a `localhost:5274`
+#     y la web queda sin CSS ni JS **sin ningún error de servidor**. Se excluye y se
+#     borra en destino.
+#   · **`public/uploads`**: son las subidas del panel y están gitignoradas. Excluirlas
+#     las protege también del `--delete` (rsync no borra lo excluido).
+#   · **`storage/`**: nunca viaja. Además de logs y cachés del servidor, contiene
+#     `framework/testing/disks/*` (un árbol por worker de la suite) y `storage/ssr`,
+#     que es un artefacto de TEST. El esqueleto se crea con `mkdir -p`.
+#   · **`redsys_environment`**: es un `Setting` de BD, no una variable de entorno, así
+#     que solo se puede comprobar DESPUÉS de migrar. Se comprueba ahí, antes de servir
+#     tráfico, y si estuviera en `live` el sitio se queda en mantenimiento.
+#   · **Basic-auth global: PROHIBIDA** (no la pone este script y no debe ponerse a
+#     mano). `/pago/redsys/notificacion` es una S2S y no puede llevar auth: un 401 a
+#     Redsys deja el pedido caducando con la tarjeta cobrada — `PAY-02`, `#103(h)`.
+#
+# ORDEN QUE NO ES NEGOCIABLE (cada uno con su porqué medido):
+#   `down` ANTES de nada  → `public/index.php` comprueba `maintenance.php` ANTES del
+#                            autoloader, así que la página de 503 sobrevive a un
+#                            `vendor/` roto a mitad de `composer install`.
+#   drenar la cola        → los payloads serializados llevan FQCN; un job encolado con
+#                            el código viejo cae a `failed_jobs` y el cliente pagó y no
+#                            recibe nada.
+#   migrar ANTES de servir→ el morphMap de Fase 2 es requisito, y con `APP_ENV=production`
+#                            `tableExists()` NO comprueba: servir antes de migrar da 500
+#                            duro, no degradación.
+#   `composer install` ANTES de `optimize` → dispara `filament:upgrade`, que hace
+#                            `config:clear`/`route:clear`/`view:clear` y se llevaría por
+#                            delante cualquier caché horneada antes.
+#
+# USO
+#   scripts/deploy.sh                      # DRY-RUN: comprueba todo y enseña el plan
+#   scripts/deploy.sh --go                 # despliega de verdad
+#   scripts/deploy.sh --go --seed          # + `ProductionSeeder` (SOLO arranque en frío)
+#   scripts/deploy.sh --go --admin-email=… # + crea el admin del panel
+#   scripts/deploy.sh --env-template       # imprime el `.env` de staging a rellenar
+#
+# ⚠️ Este script despliega a STAGING, que es **0 LIVE · 0 PRODUCCIÓN**. Instalar a un
+#    cliente real exige revisar las guardas 1 y 3 (Redsys `live`, correo real): eso es
+#    una decisión, no una bandera.
+# =============================================================================
+set -Eeuo pipefail
+
+# ── Destino (staging por defecto; overridable para no ser un snowflake) ──────────
+SSH_HOST="${DEPLOY_SSH_HOST:-jumpweb-staging}"
+SITE_URL="${DEPLOY_URL:-https://jumpweb.sites.aelium.app}"
+REMOTE_SUBDIR="${DEPLOY_SUBDIR:-public_html}"
+
+# El LOCK exige >= 8.4.1 (17 paquetes symfony/*). No es `composer.json` (`^8.3`).
+readonly PHP_MIN="8.4.1"
+readonly CRON_MARKER="# jumpweb:scheduler"
+readonly ROBOTS_GUARD=$'User-agent: *\nDisallow: /'
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+GO=0; DO_SEED=0; ADMIN_EMAIL=""; ADMIN_NAME="Administrador"; SKIP_BUILD=0
+
+# ── Salida ───────────────────────────────────────────────────────────────────────
+c_red=$'\033[31m'; c_grn=$'\033[32m'; c_yel=$'\033[33m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
+step() { printf '\n%s▶ %s%s\n' "$c_grn" "$*" "$c_off"; }
+info() { printf '   %s\n' "$*"; }
+dim()  { printf '   %s%s%s\n' "$c_dim" "$*" "$c_off"; }
+warn() { printf '%s   ⚠ %s%s\n' "$c_yel" "$*" "$c_off"; }
+die()  { printf '\n%s✗ %s%s\n\n' "$c_red" "$*" "$c_off" >&2; exit 1; }
+
+on_error() {
+    local code=$? line=${1:-?}
+    printf '\n%s✗ ABORTADO en la línea %s (código %s).%s\n' "$c_red" "$line" "$code" "$c_off" >&2
+    if [[ $GO -eq 1 && ${SITE_IS_DOWN:-0} -eq 1 ]]; then
+        printf '%s  El sitio ha quedado EN MANTENIMIENTO a propósito: no se sirve nada roto.\n' "$c_yel"
+        printf '  Arregla la causa y vuelve a lanzar el script, o levántalo a mano con:\n'
+        printf '    ssh %s "cd %s && php artisan up"%s\n\n' "$SSH_HOST" "${REMOTE_ROOT:-<ruta>}" "$c_off" >&2
+    fi
+}
+trap 'on_error $LINENO' ERR
+
+# ── Argumentos ───────────────────────────────────────────────────────────────────
+print_env_template() {
+    cat <<'TPL'
+# ── .env de STAGING para JumpWeb ────────────────────────────────────────────────
+# Créalo en <HOME>/public_html/.env EN EL SERVIDOR. NO se sube por rsync (a propósito:
+# ningún secreto vive en el repo, `ENTORNOS.md` §1) y `deploy.sh` lo VALIDA, no lo escribe.
+#
+# ⚠️ EL APP_KEY, EN ARRANQUE EN FRÍO, NO SE GENERA CON ARTISAN: `key:generate` necesita
+# `vendor/`, que todavía no existe (huevo y gallina). Genéralo con openssl, que SÍ está
+# en el servidor (verificado):
+#     echo "base64:$(openssl rand -base64 32)"
+APP_NAME=JumpWeb
+APP_ENV=production
+APP_KEY=            # ← base64:… (ver arriba). NUNCA reutilices el de desarrollo.
+APP_DEBUG=false
+APP_URL=https://jumpweb.sites.aelium.app
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=es_ES
+APP_MAINTENANCE_DRIVER=file
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=daily
+LOG_LEVEL=warning
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=jumpweb_1_test
+DB_USERNAME=            # ← el usuario creado en `#102`
+DB_PASSWORD=
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_SECURE_COOKIE=true
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# ⚠️ GUARDA 3 — en staging el correo NO SALE. Los seeds llevan direcciones con pinta de
+# reales y 22 avisos son `ShouldQueue`: con SMTP real se enviarían de verdad.
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="no-reply@jumpweb.sites.aelium.app"
+MAIL_FROM_NAME="${APP_NAME}"
+
+API_RATE_LIMIT_PER_MINUTE=60
+SANCTUM_TOKEN_EXPIRATION_MINUTES=43200
+
+# ⚠️ GUARDA 1 — el ENTORNO de Redsys NO se decide aquí: es el `Setting` `redsys_environment`
+# (default `test`), y `deploy.sh` lo comprueba tras migrar. Esta clave es la del comercio;
+# vacía = se usa la de sandbox pública, que es justo lo que queremos en staging.
+REDSYS_SECRET_KEY=
+TPL
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --go) GO=1 ;;
+        --seed) DO_SEED=1 ;;
+        --skip-build) SKIP_BUILD=1 ;;
+        --admin-email=*) ADMIN_EMAIL="${1#*=}" ;;
+        --admin-name=*) ADMIN_NAME="${1#*=}" ;;
+        --env-template) print_env_template; exit 0 ;;
+        -h|--help) sed -n '2,70p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) die "Opción desconocida: $1 (usa --help)" ;;
+    esac
+    shift
+done
+
+SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=15 -o LogLevel=ERROR)
+sshx() { ssh "${SSH_OPTS[@]}" "$SSH_HOST" "$@"; }
+remote_php() { sshx "cd '$REMOTE_ROOT' && php $*"; }
+
+printf '%s\n' "════════════════════════════════════════════════════════════════════"
+printf ' JumpWeb · despliegue → %s\n' "$SITE_URL"
+printf ' destino: %s  ·  modo: %s\n' "$SSH_HOST" \
+    "$([[ $GO -eq 1 ]] && printf 'EJECUTAR' || printf 'DRY-RUN (sin --go no se toca nada)')"
+printf '%s\n' "════════════════════════════════════════════════════════════════════"
+
+# =============================================================================
+# 1 · PRE-VUELO LOCAL — si algo falla aquí, el servidor ni se entera
+# =============================================================================
+step "1/9 · Pre-vuelo local"
+
+command -v rsync >/dev/null || die "rsync no está instalado en local."
+
+if [[ -n "$(git status --porcelain)" ]]; then
+    warn "El árbol tiene cambios SIN COMMITEAR. Se desplegaría código que no está en el historial,"
+    warn "y entonces «lo que hay en staging» deja de ser reproducible."
+    [[ $GO -eq 1 ]] && die "Commitea (o guarda) antes de desplegar con --go."
+fi
+info "commit a desplegar: $(git rev-parse --short HEAD) ($(git rev-parse --abbrev-ref HEAD))"
+
+if [[ $SKIP_BUILD -eq 0 ]]; then
+    info "construyendo assets (en el servidor NO hay node)…"
+    if command -v npm >/dev/null; then
+        npm run build >/dev/null 2>&1 || die "npm run build FALLÓ. No se despliega sin assets."
+    else
+        docker compose exec -u sail -T laravel.test npm run build >/dev/null 2>&1 \
+            || die "npm run build FALLÓ (vía Docker). No se despliega sin assets."
+    fi
+fi
+
+# ⚠️ Medido el 2026-08-13: un build interrumpido dejó `manifest.json` a 0 bytes y TODA la web
+# dio 500 (`ViteManifestNotFound`). Por eso se comprueba el TAMAÑO, no solo la existencia.
+[[ -f public/build/manifest.json ]] || die "Falta public/build/manifest.json: el build no llegó a emitirlo."
+manifest_bytes=$(wc -c < public/build/manifest.json)
+[[ "$manifest_bytes" -gt 0 ]] || die "public/build/manifest.json está a 0 BYTES (build interrumpido). Toda la web daría 500."
+info "manifest.json: ${manifest_bytes} B · $(du -sh public/build | cut -f1) en public/build"
+
+[[ -f public/hot ]] && { rm -f public/hot; warn "public/hot existía en LOCAL (npm run dev interrumpido). Borrado."; }
+
+# =============================================================================
+# 2 · PRE-VUELO REMOTO — versión de PHP, `.env` y sus guardas
+# =============================================================================
+step "2/9 · Pre-vuelo remoto"
+
+sshx true 2>/dev/null || die "No hay acceso SSH a '$SSH_HOST'. Revisa ~/.ssh/config (ENTORNOS §1)."
+
+REMOTE_HOME=$(sshx 'echo $HOME')
+REMOTE_ROOT="${REMOTE_HOME}/${REMOTE_SUBDIR}"
+info "raíz remota: $REMOTE_ROOT"
+
+remote_php_version=$(sshx 'php -r "echo PHP_VERSION;"')
+if [[ "$(printf '%s\n%s\n' "$PHP_MIN" "$remote_php_version" | sort -V | head -1)" != "$PHP_MIN" ]]; then
+    die "PHP remoto $remote_php_version < $PHP_MIN.
+   El mínimo NO lo fija composer.json (^8.3) sino el LOCK: 17 paquetes symfony/* exigen >=8.4.1.
+   Con esta versión 'composer install --no-dev' aborta a medias (DECISIONES #103(f)).
+   ▶ Sube el PHP del sitio desde el panel ANTES de desplegar."
+fi
+info "PHP remoto: $remote_php_version (≥ $PHP_MIN ✓)"
+
+if ! sshx "test -f '$REMOTE_ROOT/.env'"; then
+    die "No hay .env en $REMOTE_ROOT.
+   Este script NUNCA lo sube: ningún secreto vive en el repo (ENTORNOS §1).
+   ▶ Créalo en el servidor con la plantilla:  scripts/deploy.sh --env-template"
+fi
+
+env_get() { sshx "grep -E '^[[:space:]]*$1=' '$REMOTE_ROOT/.env' | tail -1 | cut -d= -f2- | tr -d '\"'\\''[:space:]'" || true; }
+
+r_env=$(env_get APP_ENV);      r_debug=$(env_get APP_DEBUG)
+r_url=$(env_get APP_URL);      r_queue=$(env_get QUEUE_CONNECTION)
+r_mail=$(env_get MAIL_MAILER); r_key=$(env_get APP_KEY)
+
+guard_errors=()
+[[ "$r_key" != "" ]]                        || guard_errors+=("APP_KEY vacío → generar con: echo \"base64:\$(openssl rand -base64 32)\"  (en frío NO vale key:generate: necesita vendor/)")
+[[ "$r_env" == "production" ]]              || guard_errors+=("APP_ENV='$r_env' (debe ser 'production')")
+[[ "$r_debug" == "false" ]]                 || guard_errors+=("GUARDA · APP_DEBUG='$r_debug' (debe ser 'false': filtraría trazas y config)")
+[[ "$r_url" == https://* ]]                 || guard_errors+=("GUARDA 5 · APP_URL='$r_url' debe ser HTTPS (rompe a la vez emails, URLs firmadas, CORS y Sanctum)")
+[[ "$r_queue" == "database" ]]              || guard_errors+=("GUARDA 6 · QUEUE_CONNECTION='$r_queue' (debe ser 'database'; con 'sync' los 22 ShouldQueue se envían en la petición)")
+[[ "$r_mail" == "log" || "$r_mail" == "array" ]] \
+    || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o un buzón trampa.")
+
+if [[ ${#guard_errors[@]} -gt 0 ]]; then
+    printf '\n%s✗ El .env remoto NO cumple las guardas de ENTORNOS.md §2:%s\n' "$c_red" "$c_off" >&2
+    printf '   · %s\n' "${guard_errors[@]}" >&2
+    die "Corrige el .env en el servidor y vuelve a lanzar."
+fi
+info "guardas del .env ✓  (env=$r_env · debug=$r_debug · queue=$r_queue · mail=$r_mail)"
+
+IS_COLD=0
+sshx "test -d '$REMOTE_ROOT/vendor'" || IS_COLD=1
+if [[ $IS_COLD -eq 1 ]]; then
+    warn "ARRANQUE EN FRÍO: no hay vendor/ en el servidor (nada desplegado todavía)."
+    [[ $DO_SEED -eq 0 ]] && warn "Sin --seed no habrá catálogo: la web quedará vacía."
+    [[ -z "$ADMIN_EMAIL" ]] && warn "Sin --admin-email no habrá forma de entrar a /admin (y ahí van las claves de Turnstile)."
+fi
+
+# =============================================================================
+# 3 · EL PLAN — exclusiones del rsync, cada una con su motivo medido
+# =============================================================================
+step "3/9 · Plan de sincronización"
+
+RSYNC_EXCLUDES=(
+    --exclude='/.env'                # se valida, jamás se sube (secretos)
+    --exclude='/.git/'
+    --exclude='/.githooks/'
+    --exclude='/.claude/'
+    --exclude='/node_modules/'       # 97 MB y no hay node en el servidor
+    --exclude='/vendor/'             # lo construye composer allí; excluirlo lo protege del --delete
+    --exclude='/tests/'              # 0 valor en runtime; lleva fixtures y credenciales de prueba
+    --exclude='/docs/'
+    --exclude='/openapi/'            # solo lo leen los tests (config/api.php → tests/)
+    --exclude='/storage/'            # logs y cachés DEL SERVIDOR + basura de test + storage/ssr
+    --exclude='/public/hot'          # si llega, Vite sirve todo desde localhost:5274 y la web queda muda
+    --exclude='/public/uploads/'     # subidas del panel: excluirlas las salva del --delete
+    --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
+    --exclude='/.phpunit.result.cache'
+    --exclude='/compose.yaml'
+    --exclude='/phpunit.xml'
+    --exclude='/package-lock.json'
+    --exclude='/design_mockup/'
+)
+dim "excluidos: .env · .git · vendor · node_modules · tests · docs · openapi · storage · public/hot · public/uploads · bootstrap/cache"
+dim "SÍ viajan: app · bootstrap · config · database · lang · public (con build) · resources · routes · artisan · composer.*"
+
+rsync_run() {  # $1 = extra flags
+    rsync -az --delete --human-readable $1 "${RSYNC_EXCLUDES[@]}" \
+        -e "ssh ${SSH_OPTS[*]}" \
+        ./ "${SSH_HOST}:${REMOTE_ROOT}/"
+}
+
+if [[ $GO -eq 0 ]]; then
+    info "cambios que se enviarían (rsync --dry-run):"
+    # ⚠️ La salida se vuelca a fichero y LUEGO se recorta. Encadenar `rsync | head` mata el
+    # rsync con SIGPIPE y, con `set -o pipefail`, tumba el script entero con código 141
+    # (medido el 2026-08-19: el primer dry-run real abortó justo aquí). De paso, así el
+    # rsync se ejecuta UNA vez en vez de dos para contar.
+    plan="$(mktemp)"; trap 'rm -f "$plan"' EXIT
+    rsync_run "--dry-run --itemize-changes" >"$plan" 2>&1
+    sed -n '1,40p' "$plan" | sed 's/^/     /'
+    total=$(grep -c '^[<>ch.]' "$plan" || true)
+    [[ "$total" -gt 40 ]] && dim "… y $((total - 40)) más"
+    printf '\n'
+    info "TOTAL de entradas que cambiarían: $total"
+    printf '\n%s── DRY-RUN: no se ha tocado el servidor. Repite con --go para desplegar. ──%s\n\n' "$c_yel" "$c_off"
+    exit 0
+fi
+
+# =============================================================================
+# 4 · MANTENIMIENTO + DRENAJE DE COLA
+# =============================================================================
+step "4/9 · Mantenimiento y drenaje de cola"
+
+SITE_IS_DOWN=0
+if [[ $IS_COLD -eq 0 ]]; then
+    # `public/index.php` mira `maintenance.php` ANTES del autoloader: la 503 sobrevive a un
+    # `vendor/` a medias. Por eso `down` va PRIMERO y `up` al final.
+    remote_php "artisan down --retry=60" >/dev/null && SITE_IS_DOWN=1
+    info "sitio en mantenimiento (503)"
+
+    # Un job encolado con el código viejo referencia FQCN que ya no existen y cae a
+    # `failed_jobs`: el cliente pagó y no recibe nada. Drenar es lo que compra la seguridad.
+    remote_php "artisan queue:work --stop-when-empty --max-time=120" >/dev/null 2>&1 || true
+    pending=$(remote_php "artisan tinker --execute='echo DB::table(\"jobs\")->count();'" 2>/dev/null | tr -dc '0-9' || echo "?")
+    info "cola drenada · jobs pendientes: ${pending:-0}"
+    [[ "${pending:-0}" != "0" ]] && warn "Quedan jobs en cola; se desplegará igual, pero revisa failed_jobs después."
+else
+    dim "arranque en frío: nada que parar ni que drenar"
+fi
+
+# =============================================================================
+# 5 · SINCRONIZAR
+# =============================================================================
+step "5/9 · Sincronizando código y assets"
+
+sshx "mkdir -p '$REMOTE_ROOT'"
+rsync_run "" | tail -4 | sed 's/^/     /'
+
+# El esqueleto de storage NO viaja (ver exclusiones): se crea aquí, vacío y con permisos.
+sshx "cd '$REMOTE_ROOT' && mkdir -p \
+    storage/app/private storage/app/public \
+    storage/framework/cache/data storage/framework/sessions storage/framework/views \
+    storage/logs bootstrap/cache public/uploads && \
+    chmod -R ug+rwX storage bootstrap/cache public/uploads"
+info "esqueleto de storage/ y bootstrap/cache asegurado"
+
+sshx "rm -f '$REMOTE_ROOT/public/hot'"
+info "public/hot borrado en destino"
+
+# =============================================================================
+# 6 · GUARDA 4 · robots.txt
+# =============================================================================
+step "6/9 · Reponiendo el robots.txt (guarda 4)"
+
+# El del repo dice `Disallow:` (vacío = permitir TODO) porque la instalación de un cliente
+# DEBE indexarse. Cada rsync lo pisa, así que esto no es opcional ni una sola vez.
+sshx "printf '%s\n' 'User-agent: *' 'Disallow: /' > '$REMOTE_ROOT/public/robots.txt'"
+info "robots.txt reescrito (se verifica por HTTP al final)"
+
+# =============================================================================
+# 7 · DEPENDENCIAS Y BASE DE DATOS
+# =============================================================================
+step "7/9 · composer install · migrate · seed"
+
+# `composer install` dispara `post-autoload-dump` → `filament:upgrade`, que hace
+# config:clear/route:clear/view:clear. Por eso va ANTES de `optimize`, nunca después.
+sshx "cd '$REMOTE_ROOT' && composer install --no-dev --optimize-autoloader --no-interaction --no-progress" \
+    2>&1 | tail -3 | sed 's/^/     /'
+info "dependencias de producción instaladas"
+
+remote_php "artisan migrate --force" 2>&1 | tail -5 | sed 's/^/     /'
+info "migraciones aplicadas"
+
+# ── GUARDA 1 · solo comprobable AQUÍ: `redsys_environment` es un Setting de BD ──────
+redsys_env=$(remote_php "artisan tinker --execute='echo App\\\\Domain\\\\Platform\\\\Models\\\\Setting::value(\"redsys_environment\",\"test\");'" 2>/dev/null | tr -dc 'a-z' || echo "")
+if [[ "$redsys_env" == *live* ]]; then
+    die "GUARDA 1 · redsys_environment = 'live' EN STAGING: cobraría de verdad, con tarjetas de verdad.
+   Es el único fallo de la lista que cuesta DINERO. El sitio queda en mantenimiento a propósito.
+   ▶ Pásalo a 'test' desde el panel y vuelve a lanzar."
+fi
+info "guarda 1 ✓ · redsys_environment = '${redsys_env:-test}' (no es 'live')"
+
+if [[ $DO_SEED -eq 1 ]]; then
+    warn "Sembrando con ProductionSeeder (borra y recrea el CATÁLOGO; aborta solo si ya hay PEDIDOS)."
+    remote_php "artisan db:seed --class=Database\\\\Seeders\\\\ProductionSeeder --force" 2>&1 | tail -4 | sed 's/^/     /'
+    info "semilla neutra aplicada"
+fi
+
+# `ProductionSeeder` deja SlotTemplates pero 0 franjas materializadas: sin esto no hay
+# absolutamente nada que comprar, y entonces no se puede verificar ni Turnstile ni el S2S.
+remote_php "artisan slots:generate-rolling" 2>&1 | tail -2 | sed 's/^/     /'
+info "franjas generadas"
+
+if [[ -n "$ADMIN_EMAIL" ]]; then
+    step "7b/9 · Cuenta de acceso al panel"
+    warn "La contraseña se imprime UNA sola vez. Anótala AHORA en el vault."
+    remote_php "artisan app:create-admin --email='$ADMIN_EMAIL' --name='$ADMIN_NAME'" | sed 's/^/     /'
+fi
+
+# =============================================================================
+# 8 · CACHÉS, CRON Y LEVANTAR
+# =============================================================================
+step "8/9 · Cachés, cron del scheduler y levantar"
+
+remote_php "artisan optimize" >/dev/null
+info "config/route/view/event cacheadas (+ filament:optimize)"
+
+# Un solo cron lo mueve todo: `schedule:run` dispara las CINCO tareas, incluido el worker de
+# cola (`queue:work --stop-when-empty`), así que NO hace falta supervisor ni systemd.
+# Idempotente por marcador: se reescribe la línea, nunca se acumula.
+cron_line="* * * * * cd $REMOTE_ROOT && php artisan schedule:run >/dev/null 2>&1 $CRON_MARKER"
+sshx "( crontab -l 2>/dev/null | grep -vF '$CRON_MARKER' || true; echo '$cron_line' ) | crontab -"
+info "cron instalado: $(sshx "crontab -l | grep -cF '$CRON_MARKER'") entrada (sin duplicados)"
+
+remote_php "artisan up" >/dev/null; SITE_IS_DOWN=0
+info "sitio levantado"
+
+# =============================================================================
+# 9 · SALUD — no se da por hecho que fue bien
+# =============================================================================
+step "9/9 · Verificación de salud"
+
+fails=0
+check() { # $1=descripción  $2=condición ya evaluada (0 ok)
+    if [[ "$2" -eq 0 ]]; then printf '   %s✓%s %s\n' "$c_grn" "$c_off" "$1"
+    else printf '   %s✗ %s%s\n' "$c_red" "$1" "$c_off"; fails=$((fails+1)); fi
+}
+
+http_code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$SITE_URL/up" || echo 000)
+check "GET /up → $http_code (esperado 200)" "$([[ "$http_code" == "200" ]] && echo 0 || echo 1)"
+
+home_code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$SITE_URL/" || echo 000)
+check "GET / → $home_code (esperado 200)" "$([[ "$home_code" == "200" ]] && echo 0 || echo 1)"
+
+# ⚠️ Se compara el CONTENIDO, no el tamaño: el servido (26 B) y el permisivo del repo (25 B)
+# pesan casi igual, así que un check por tamaño daría verde con la guarda caída.
+robots=$(curl -s -m 20 "$SITE_URL/robots.txt" || echo "")
+check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
+    "$(grep -qx 'Disallow: /' <<<"$robots" && echo 0 || echo 1)"
+
+tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || echo 0)
+check "scheduler: $tasks tareas registradas (esperadas 5)" "$([[ "$tasks" == "5" ]] && echo 0 || echo 1)"
+
+migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || echo 0)
+check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"
+
+failed=$(remote_php "artisan tinker --execute='echo DB::table(\"failed_jobs\")->count();'" 2>/dev/null | tr -dc '0-9' || echo 0)
+check "failed_jobs: ${failed:-0}" "$([[ "${failed:-0}" == "0" ]] && echo 0 || echo 1)"
+
+printf '\n'
+if [[ $fails -gt 0 ]]; then
+    die "$fails comprobación(es) de salud FALLARON. El despliegue terminó pero el sitio NO está sano."
+fi
+
+printf '%s════════════════════════════════════════════════════════════════════%s\n' "$c_grn" "$c_off"
+printf '%s ✓ DESPLIEGUE COMPLETO Y VERIFICADO — %s%s\n' "$c_grn" "$SITE_URL" "$c_off"
+printf '%s════════════════════════════════════════════════════════════════════%s\n\n' "$c_grn" "$c_off"
+info "commit desplegado: $(git rev-parse --short HEAD)"
+dim "Recuerda: staging es 0 LIVE · 0 PRODUCCIÓN. Y «verificado aquí» ≠ «verificado en MySQL»:"
+dim "la BD es MariaDB 11.4, así que ninguna conclusión sobre concurrencia sale de este servidor."

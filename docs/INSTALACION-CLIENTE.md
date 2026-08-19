@@ -34,8 +34,14 @@ en el vault (§6). Después: `migrate --force` · `db:seed` · **`app:create-adm
   vigilar `failed_jobs`).
 - `storage:link` NO se usa: las subidas del panel van al disco `uploads` =
   `public/uploads` directo (excluirlo del rsync `--delete`).
-- `[DECISION-PENDIENTE]` El script de deploy del origen (`deploy-prod.sh`, runbook
-  `10-DESPLIEGUE.md`) no se portó: JumpWeb aún no tiene canal de deploy propio.
+- ✅ **[DECIDIDO 2026-08-19, `DECISIONES #105`] El canal de despliegue es `scripts/deploy.sh`**
+  —cerrado el `[DECISION-PENDIENTE]` que había aquí—. No es un port del `deploy-prod.sh` del origen:
+  se escribió MIDIENDO la máquina. **DRY-RUN por defecto** (sin `--go` no toca nada), valida las seis
+  guardas del `.env` remoto **sin subirlo jamás**, y comprueba la salud al terminar.
+  ⚠️ **Está escrito para STAGING, que es 0 LIVE · 0 PRODUCCIÓN.** Instalar a un cliente real exige
+  revisar las guardas 1 y 3 (Redsys en `live`, correo real): eso es una decisión, no una bandera.
+  ⚠️ **El servidor necesita PHP ≥ 8.4.1**, que NO es lo que dice `composer.json` (`^8.3`): el suelo lo
+  fija el LOCK. Compruébalo antes de contratar hosting con `composer check-platform-reqs`.
 
 ## 2 · BD y seed de arranque
 `php artisan db:seed --class=Database\\Seeders\\ProductionSeeder --force` (solo arranque en

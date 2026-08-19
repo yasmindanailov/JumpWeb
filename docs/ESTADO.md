@@ -16,7 +16,7 @@ y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#10
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2732 en verde** (15.725 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
+- Suite **2755 en verde** (15.782 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -141,7 +141,9 @@ medidos el 2026-08-19). No son «tener cuidado»: sin ellos el despliegue **no p
    ese comando no toca — habría creado una cuenta que existe y **no entra**.
    Cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y prueba**.
 
-▶▶ **EMPIEZA AQUÍ: `scripts/deploy.sh`** — ya SIN bloqueos.
+✅ **`scripts/deploy.sh` ESCRITO Y PROBADO** (2026-08-19, `DECISIONES #105`) — **pero NO ejecutado**:
+el despliegue real espera dos datos que solo tiene el owner (ver abajo). El dry-run contra staging
+pasa entero. Lo guarda `DeployScriptGateTest` (23 casos, **10 mutaciones muertas**).
 Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
 `ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `ProductionSeeder`,
 **`app:create-admin`**, `slots:generate-rolling`, permisos y cron del scheduler (**el `crontab` del
@@ -167,6 +169,14 @@ subidas del panel).
 ⚠️ **`ProductionSeeder` no deja nada comprable por sí solo**: crea `SlotTemplate`s pero **0 franjas**
 y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
 `slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
+
+▶▶ **EMPIEZA AQUÍ: ejecutar el despliegue.** Faltan DOS datos del owner y nada más:
+1. ❗ **Credenciales del usuario de BD de `jumpweb_1_test`** (usuario + contraseña), para escribir el
+   `.env` en el servidor. ⚠️ **El `.my.cnf` del servidor NO vale**: es el usuario ADMINISTRATIVO y él
+   mismo avisa de que no debe usarse para la web (coincide con `#102(b)`).
+   ▶ Con ellos: `scripts/deploy.sh --env-template` da el `.env` con las guardas ya puestas.
+2. ❗ **Email del admin del panel**, para `--admin-email`.
+Y entonces: `scripts/deploy.sh` (dry-run) → `scripts/deploy.sh --go --seed --admin-email=…`.
 
 **Después del despliegue, en este orden:**
 1. **Verificar en staging** lo que `#100` exige antes de borrar nada: **Turnstile** (4.4b·2), la
