@@ -387,13 +387,24 @@ remote_php "artisan migrate --force" 2>&1 | tail -5 | sed 's/^/     /'
 info "migraciones aplicadas"
 
 # ── GUARDA 1 · solo comprobable AQUÍ: `redsys_environment` es un Setting de BD ──────
-redsys_env=$(remote_php "artisan tinker --execute='echo App\\\\Domain\\\\Platform\\\\Models\\\\Setting::value(\"redsys_environment\",\"test\");'" 2>/dev/null | tr -dc 'a-z' || echo "")
-if [[ "$redsys_env" == *live* ]]; then
-    die "GUARDA 1 · redsys_environment = 'live' EN STAGING: cobraría de verdad, con tarjetas de verdad.
-   Es el único fallo de la lista que cuesta DINERO. El sitio queda en mantenimiento a propósito.
-   ▶ Pásalo a 'test' desde el panel y vuelve a lanzar."
+# ⚠️⚠️ ESTA GUARDA DIO UN VERDE FALSO EL 2026-08-19 y hay que saber por qué (`DECISIONES #106`):
+#   (1) leía el Setting con `Setting::value(...)`, cuyo FQCN lleva backslashes que NO sobreviven a
+#       la capa local→ssh→shell remoto: llegaba mutilado y `tinker` devolvía un **PARSE ERROR**;
+#   (2) el `tr -dc 'a-z'` convertía ese error en una cadena de basura; y
+#   (3) la condición preguntaba «¿CONTIENE *live*?», así que la basura pasaba.
+# Es decir: **con el entorno en `live` la guarda habría pasado igual**. Los dos arreglos:
+#   · se lee por `DB::table('settings')`, que NO necesita namespaces y por tanto no se puede mutilar;
+#   · y es FAIL-CLOSED: se exige `test` EXACTO (o vacío = el default del código). Cualquier otra cosa
+#     —incluido un error— aborta. Preguntar «¿es lo que espero?» en vez de «¿es lo que temo?».
+redsys_env=$(remote_php "artisan tinker --execute='echo DB::table(\"settings\")->where(\"key\",\"redsys_environment\")->value(\"value\");'" 2>/dev/null | tr -d '[:space:]' || echo "")
+if [[ -n "$redsys_env" && "$redsys_env" != "test" ]]; then
+    die "GUARDA 1 · redsys_environment = '${redsys_env}' — NO es 'test'.
+   Si fuera 'live', staging cobraría de verdad con tarjetas de verdad: es el único fallo de la lista
+   que cuesta DINERO. Y si es un valor raro o un error, tampoco se sigue: esta guarda es FAIL-CLOSED
+   a propósito (un verde que no se ha podido comprobar NO es un verde).
+   El sitio queda en mantenimiento. ▶ Revísalo en el panel y vuelve a lanzar."
 fi
-info "guarda 1 ✓ · redsys_environment = '${redsys_env:-test}' (no es 'live')"
+info "guarda 1 ✓ · redsys_environment = '${redsys_env:-test (default)}' — exacto, no 'contiene'"
 
 if [[ $DO_SEED -eq 1 ]]; then
     warn "Sembrando con ProductionSeeder (borra y recrea el CATÁLOGO; aborta solo si ya hay PEDIDOS)."
@@ -453,10 +464,13 @@ robots=$(curl -s -m 20 "$SITE_URL/robots.txt" || echo "")
 check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
     "$(grep -qx 'Disallow: /' <<<"$robots" && echo 0 || echo 1)"
 
-tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || echo 0)
+# ⚠️ `grep -c X || echo 0` imprime DOS ceros cuando no hay coincidencias: `grep -c` ya emite «0» y
+# ADEMÁS sale con 1, así que el `||` añade otro. Eso rompió la comprobación de migraciones el
+# 2026-08-19 (`0\n0` != `0` → rojo con el sitio sano). `|| true` conserva el 0 y traga el código.
+tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || true)
 check "scheduler: $tasks tareas registradas (esperadas 5)" "$([[ "$tasks" == "5" ]] && echo 0 || echo 1)"
 
-migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || echo 0)
+migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || true)
 check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"
 
 failed=$(remote_php "artisan tinker --execute='echo DB::table(\"failed_jobs\")->count();'" 2>/dev/null | tr -dc '0-9' || echo 0)

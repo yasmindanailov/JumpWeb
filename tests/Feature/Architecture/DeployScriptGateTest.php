@@ -210,6 +210,69 @@ class DeployScriptGateTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️ Nace de un VERDE FALSO real (2026-08-19, `DECISIONES #106`): la guarda del dinero preguntaba
+     * «¿CONTIENE `live`?» sobre una salida que venía siendo un PARSE ERROR mutilado, así que pasaba
+     * siempre — **también habría pasado con el entorno en `live`**.
+     *
+     * La regla que fija este caso: **una guarda de dinero pregunta «¿es lo que espero?», nunca «¿es lo
+     * que temo?»**. Lo primero falla cerrado ante un error; lo segundo lo bendice.
+     */
+    public function test_the_redsys_guard_is_fail_closed(): void
+    {
+        $s = $this->executable();
+
+        $this->assertStringContainsString(
+            '"$redsys_env" != "test"',
+            $s,
+            'La guarda de `redsys_environment` debe exigir `test` EXACTO. Si vuelve a preguntar si '.
+            '«contiene live», cualquier error de lectura pasará por verde — que es justo lo que ocurrió.',
+        );
+
+        $this->assertStringNotContainsString(
+            '== *live*',
+            $s,
+            'La guarda NO puede preguntar «¿contiene live?»: una salida corrupta no contiene «live» '.
+            'y pasaría, con el entorno de pago sin comprobar de verdad.',
+        );
+    }
+
+    /**
+     * La lectura del Setting no puede depender de un FQCN: los backslashes no sobreviven a la capa
+     * local → ssh → shell remoto, y llegaban mutilados (PARSE ERROR). `DB::table()` no los necesita.
+     */
+    public function test_the_redsys_guard_reads_without_namespaces(): void
+    {
+        $s = $this->executable();
+
+        $this->assertMatchesRegularExpression(
+            '/redsys_env=\$\(remote_php "artisan tinker[^\n]*DB::table/',
+            $s,
+            'Léelo con `DB::table("settings")`, no con un FQCN: `App\\Domain\\...\\Setting` pierde los '.
+            'backslashes al atravesar ssh y `tinker` devuelve un PARSE ERROR que la guarda daba por bueno.',
+        );
+    }
+
+    /**
+     * `grep -c X || echo 0` imprime DOS ceros cuando no hay coincidencias —`grep -c` ya emite «0» y
+     * además sale con 1—, así que la comparación contra «0» falla con el sitio sano. Rompió la
+     * comprobación de migraciones en el primer despliegue real.
+     */
+    public function test_the_health_counters_do_not_double_their_zero(): void
+    {
+        $this->assertStringNotContainsString(
+            "grep -c 'Pending' || echo 0",
+            $this->executable(),
+            'Usa `|| true`: con `|| echo 0` el contador vale "0\n0" y da un rojo falso.',
+        );
+
+        $this->assertStringNotContainsString(
+            "grep -c 'artisan' || echo 0",
+            $this->executable(),
+            'Mismo fallo en el contador de tareas del scheduler.',
+        );
+    }
+
     public function test_the_redsys_guard_runs_after_migrating_and_before_serving(): void
     {
         $s = $this->executable();
