@@ -4329,3 +4329,42 @@ y **no crea a nadie**; y con token válido el alta pasa. Este segundo exige `Htt
 tras el primer canje (el reset está probado con dobles, no contra el proveedor), que el widget se pinte
 dentro del cajón con claves reales, y el comportamiento de la caducidad. Anotado en
 `VERIFICACION-E2E-CAJON.md` como lo que hay que mirar en la sesión de staging.
+
+## #109 · 2026-08-20 · [DECIDIDO] `app:set-setting` — la puerta CLI a lo que el panel no expone
+Al ir a poner el flag en `spa` en staging, el mismo hueco mordió por tercera vez: **hay ajustes que
+el panel no expone y solo se podían tocar a mano**. Se cierra con un comando, hermano de
+`app:create-admin`.
+
+**(a) Los tres casos que lo hacían falta, y ninguno es hipotético:**
+· `security.turnstile_site_key` / `security.turnstile_secret` — el anti-bot se lee SOLO de `settings` y
+  la página del panel los excluye **a propósito** («NUNCA editables aquí»). Sin ellos el anti-bot se
+  autodesactiva **en silencio** (`#107`). Ficha abierta en `DEUDA.md`, que esto cierra.
+· `sidebar.engine` — el flag del motor del cajón. Tampoco está en el panel, y la única receta escrita
+  usaba `docker compose exec`: en un servidor real no existe. Era el último bloqueo para la sesión de
+  verificación en staging.
+
+**(b) Es una puerta trasera al panel, así que trae guardas — y la lista NO es genérica.** Tres claves
+exigen `--force` escrito a mano, cada una por un daño medido: `redsys_environment` (en `live` la
+instalación **cobra de verdad**: el único ajuste de esa tabla que cuesta dinero) · `redsys_secret_key`
+(vive en el vault/`.env`; escribirla en BD la mete en todos los backups) · `redsys_next_gateway_order`
+(contador operativo: retrocederlo colisiona pedidos en la pasarela, SIS0051/0913). Es la misma lista
+que el panel se niega a editar, traída a la CLI.
+
+**(c) Nunca imprime un secreto, y no es paranoia: este comando se ejecuta por SSH desde `deploy.sh`,
+así que su salida acaba en el log del despliegue.** Enmascara por el NOMBRE de la clave
+(`secret`/`password`/`token`), no por el valor. Y tiene su espejo: los valores que **no** son secretos
+sí se imprimen, porque enmascararlo todo dejaría el comando inútil para verificar a ojo.
+
+**(d) Dos detalles que solo se ven habiendo leído el modelo:**
+· **El grupo de una fila existente NO se pisa.** `--group` solo aplica al CREARLA; si no, actualizar
+  el valor de un ajuste desde la CLI lo movería de grupo y desaparecería de su pestaña del panel.
+· **Vaciar y borrar no son lo mismo.** `Turnstile::enabled()` distingue «clave vacía» de «sin fila»
+  solo por el valor; el comando escribe la cadena vacía y conserva la fila (y su grupo).
+
+**(e) Relee de la BD antes de dar el verde.** No confía en lo que acaba de escribir: si algo lo pisara
+—otro proceso, un memo— el comando lo diría en vez de dar un verde que no significa nada. Es la misma
+disciplina que `#106` obligó a aprender en la guarda del despliegue.
+
+**(f) Medido mutando: cinco mutaciones, las cinco muertas** —quitar la guarda de claves protegidas
+(3 rojos), pisar el grupo, imprimir el secreto en claro, aceptar una clave vacía y no detectar el
+sin-cambios—. 13 casos.

@@ -16,7 +16,7 @@ y **4.4b·2** ✅ (Turnstile: el cajón monta su propio widget desde el 2026-08-
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2760 en verde** (15.802 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
+- Suite **2773 en verde** (15.834 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -215,8 +215,8 @@ centinela) — el detalle en `#108(e)`, porque la lección es transferible.
 ▶▶ **EMPIEZA AQUÍ: la sesión de verificación en STAGING, en bloque.** Ya no queda trabajo de código
 antes de ella: poner el flag en `spa`, redesplegar y cerrar de una vez **Turnstile en el navegador**,
 la **notificación S2S** (la URL ya está configurada), el **3DS con challenge** y el **móvil real**.
-⚠️ **Falta escribir la receta de cómo poner el flag en `spa` ALLÍ**: la única que hay usa
-`docker compose exec` y en staging no hay docker.
+✅ **Y ya hay con qué poner el flag allí**: `app:set-setting sidebar.engine spa` (`#109`), que cierra
+de paso la ficha de DEUDA de los secretos de BD — el mismo hueco había mordido tres veces.
 Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
 `RegisterForm.vue` · mandar `turnstile_token` en `register.js::runRegister` (hoy NO viaja) · retirar la
 delegación de `Sidebar.vue::setAuthMode` · el cargador del script externo (hoy solo existe para

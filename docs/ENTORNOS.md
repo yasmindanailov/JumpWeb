@@ -63,19 +63,25 @@ Ninguna es teórica: todas salen de algo que este código hace hoy.
   ningún formulario de `app/Filament/`, y el docblock de la página de ajustes lo dice al revés —
   «**Fuera de alcance por seguridad (NUNCA editables aquí): los SECRETOS (`redsys_secret_key`,
   `security.turnstile_secret`)**». Quien entre al panel a buscarlas no las encuentra.
-  ▶ **El mecanismo REAL hoy es escribir la fila de `settings` en el servidor** (`group` = `security`),
-  por `tinker` o por SQL:
+  ▶ ✅ **El mecanismo es `app:set-setting`** (`DECISIONES #109`), que existe justo por esto:
+  ```bash
+  php artisan app:set-setting security.turnstile_site_key '0x…' --group=security
+  php artisan app:set-setting security.turnstile_secret  '0x…' --group=security
+  ```
+  Nunca imprime el valor de un secreto (se ejecuta por SSH y su salida acaba en el log del
+  despliegue), y relee de la BD antes de dar el verde.
+  <details><summary>El SQL equivalente, por si hiciera falta sin `vendor/`</summary>
   ```sql
   INSERT INTO settings (`key`,`value`,`group`,created_at,updated_at)
   VALUES ('security.turnstile_site_key','…','security',NOW(),NOW()),
          ('security.turnstile_secret','…','security',NOW(),NOW())
   ON DUPLICATE KEY UPDATE `value`=VALUES(`value`), updated_at=NOW();
   ```
+  </details>
   No hace falta limpiar caché: `Setting` solo memoiza **por proceso** (`flushMemo` en `saved`/`deleted`),
   no de forma persistente. Se comprueba por HTTP en `/api/v1/config` (`turnstile_site_key` deja de ser
   `null`), que además fija que **la secreta nunca viaja**.
-  ▶ Ficha en `DEUDA.md`: esto merece un comando propio, como `app:create-admin`, porque **cada
-  instalación de cliente lo necesita** y hoy es un paso a mano no probado.
+  ▶ La ficha de `DEUDA.md` queda **retirada**: era exactamente esto.
 - **La notificación S2S de Redsys** (`redsys_merchant_url`): es el «bloque B» de
   `VERIFICACION-E2E-CAJON.md`, que hasta hoy exigía un túnel. Sin ella, un terminal *data-less* deja el
   pedido caducando con la tarjeta cobrada (`PAY-02`).
