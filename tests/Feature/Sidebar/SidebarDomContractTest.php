@@ -290,7 +290,7 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
-            api: $this->cartApiPayload($component), state: $this->clientState());
+            api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -311,7 +311,7 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
-            api: $this->cartApiPayload($component), state: $this->clientState());
+            api: $this->cartApiPayload([]), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -564,7 +564,7 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(8, [], 'bk-back', withSiblings: true,
-            api: $this->cartApiPayload($component), state: $this->clientState(step: 8));
+            api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -596,7 +596,7 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'bk-paybreakdown', withSiblings: true);
         $vue = $this->vueTree(8, [], 'bk-paybreakdown', withSiblings: true,
-            api: $this->cartApiPayload($component), state: $this->clientState(step: 8), shellFromServer: false);
+            api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8), shellFromServer: false);
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -658,7 +658,7 @@ class SidebarDomContractTest extends TestCase
      */
     private function redirectApiPayload(Testable $component): array
     {
-        $cart = $this->cartApiPayload($component);
+        $cart = $this->cartApiPayload($this->fullCartItems());
 
         $response = $this->postJson('/api/v1/orders', ['items' => $cart['cart']])->assertCreated();
 
@@ -1200,7 +1200,7 @@ class SidebarDomContractTest extends TestCase
             $vue = $step === 1
                 ? $this->renderVue($step, [], null, $this->catalogApiPayload(),
                     $this->clientState(step: 1), shellFromServer: false)
-                : $this->renderVue($step, [], null, $this->cartApiPayload($component),
+                : $this->renderVue($step, [], null, $this->cartApiPayload([]),
                     $this->clientState(step: $step), shellFromServer: false);
 
             $this->assertStringNotContainsString(
@@ -1235,7 +1235,7 @@ class SidebarDomContractTest extends TestCase
             'el Blade ha dejado de anunciar si el desglose está abierto'
         );
 
-        $vue = $this->renderVue(4, [], null, $this->cartApiPayload($component),
+        $vue = $this->renderVue(4, [], null, $this->cartApiPayload($this->fullCartItems()),
             $this->clientState(step: 4), shellFromServer: false);
 
         $this->assertStringContainsString(
@@ -1525,7 +1525,7 @@ class SidebarDomContractTest extends TestCase
             // Rama `cart`: un único hijo, sin nota de IVA.
             'catálogo con cesta' => [
                 1, (clone $withCart)->set('step', 1), [],
-                array_merge($this->catalogApiPayload(), $this->cartApiPayload($withCart)),
+                array_merge($this->catalogApiPayload(), $this->cartApiPayload($this->fullCartItems())),
                 $this->clientState(step: 1),
             ],
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
@@ -1541,7 +1541,7 @@ class SidebarDomContractTest extends TestCase
             ],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
             'cesta con señal' => [
-                4, $withCart, [], $this->cartApiPayload($withCart), $this->clientState(step: 4),
+                4, $withCart, [], $this->cartApiPayload($this->fullCartItems()), $this->clientState(step: 4),
             ],
         ];
     }
@@ -1576,7 +1576,40 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function cartApiPayload(Testable $component): array
+    /**
+     * La cesta que un cliente tendría tras recorrer el flujo de {@see self::componentWithFullCart()},
+     * **DECLARADA en vez de derivada del motor**.
+     *
+     * ⚠️ **Esto no es una comodidad, es un arreglo de método** (4.7·2b·3, paso 1). Hasta hoy el
+     * payload que se le daba a Vue salía de `$component->get('cart')`, o sea **del motor Livewire que
+     * este mismo fichero está comparando**: un fixture derivado del sujeto bajo prueba. Mientras los
+     * dos motores existían el `assertSame($livewire, $vue)` lo tapaba —los dos lados nacían del
+     * mismo sitio—, pero al quedar uno la circularidad se vuelve invisible y el manifiesto congelaría
+     * lo que emitiera Vue ese día, sin nada que lo contradijera.
+     *
+     * Los valores están MEDIDOS, no supuestos: se volcó `$component->get('cart')` en las nueve
+     * llamadas del fichero y las ocho no vacías resultaron **idénticas**. `qty` sale de `min_qty` del
+     * pack —el suelo del selector— y se lee del DOMINIO, que es de donde lo lee también el cliente.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function fullCartItems(): array
+    {
+        $pack = TicketType::where('name->es', 'Cumpleaños')->firstOrFail();
+        $tarta = TicketType::where('name->es', 'Tarta')->firstOrFail();
+
+        return [[
+            'ticket_type_id' => $pack->id,
+            'date' => now()->addDay()->toDateString(),
+            'time' => '10:00:00',
+            'qty' => (int) $pack->min_qty,
+            'event_data' => ['celebrant' => 'Mara'],
+            'addons' => [['ticket_type_id' => $tarta->id, 'qty' => 1]],
+        ]];
+    }
+
+    /** @param list<array<string, mixed>> $cart */
+    private function cartApiPayload(array $cart): array
     {
         $items = array_map(fn (array $line): array => [
             'product_id' => (int) $line['ticket_type_id'],
@@ -1588,7 +1621,7 @@ class SidebarDomContractTest extends TestCase
                 'product_id' => (int) $addon['ticket_type_id'],
                 'quantity' => (int) $addon['qty'],
             ], (array) ($line['addons'] ?? [])),
-        ], (array) $component->get('cart'));
+        ], $cart);
 
         if ($items === []) {
             return ['quote' => null, 'cart' => [], 'fieldsByProduct' => []];
