@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
 use App\Livewire\Auth\Register;
 use App\Livewire\Tickets\Purchase;
@@ -625,7 +626,7 @@ class SidebarDomContractTest extends TestCase
         // el pedido EXISTE y retiene aforo, así que `confirmReservation()` vacía la cesta —y sin cesta
         // no hay con qué crear por la API el pedido equivalente (la primera versión de esto se llevó un
         // 422 por ahí). Los dos motores acaban con un pedido cada uno, que es lo que se compara.
-        $api = $this->redirectApiPayload($component);
+        $api = $this->redirectApiPayload();
 
         $component->call('checkout')->call('confirmReservation');
 
@@ -656,7 +657,7 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function redirectApiPayload(Testable $component): array
+    private function redirectApiPayload(): array
     {
         $cart = $this->cartApiPayload($this->fullCartItems());
 
@@ -692,10 +693,10 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
-            api: $this->confirmedApiPayload($component),
+            api: $this->confirmedApiPayload(),
             state: $this->clientState(step: 6) + [
-                'orderCode' => (string) $component->get('orderCode'),
-                'registration' => $component->viewData('registration'),
+                'orderCode' => $this->confirmedOrderCode(),
+                'registration' => RegistrationLink::current()?->toArray(),
             ]);
 
         $this->assertTree(__FUNCTION__,
@@ -724,10 +725,10 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
-            api: $this->confirmedApiPayload($component),
+            api: $this->confirmedApiPayload(),
             state: $this->clientState(step: 6) + [
-                'orderCode' => (string) $component->get('orderCode'),
-                'registration' => $component->viewData('registration'),
+                'orderCode' => $this->confirmedOrderCode(),
+                'registration' => RegistrationLink::current()?->toArray(),
             ]);
 
         $this->assertTree(__FUNCTION__,
@@ -817,9 +818,27 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function confirmedApiPayload(Testable $component): array
+    /**
+     * El pedido que el caso acaba de crear, leído de la BD y NO del view-model del motor.
+     *
+     * ⚠️ Es la misma corrección de método que `fullCartItems()` (4.7·2b·3, paso 1): el payload que se
+     * le da a Vue no puede salir del motor que este fichero compara. Medido antes de cambiarlo: en los
+     * dos casos del desenlace la BD tiene **un solo pedido** y su código coincide exactamente con el
+     * `orderCode` del componente, así que la fuente nueva es equivalente y además sobrevive al borrado
+     * —tras él, ese pedido lo crea la API, que es como lo crea un cliente de verdad—.
+     */
+    private function confirmedOrderCode(): string
     {
-        $code = (string) $component->get('orderCode');
+        $code = (string) Order::query()->latest('id')->value('code');
+
+        $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido antes de pedir su código');
+
+        return $code;
+    }
+
+    private function confirmedApiPayload(): array
+    {
+        $code = $this->confirmedOrderCode();
 
         return [
             'order' => $this->getJson('/api/v1/orders/'.$code)->assertOk()->json(),
@@ -836,9 +855,9 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function declinedApiPayload(Testable $component): array
+    private function declinedApiPayload(): array
     {
-        $code = (string) $component->get('orderCode');
+        $code = $this->confirmedOrderCode();
 
         return ['paymentStatus' => $this->getJson('/api/v1/orders/'.$code.'/payment-status')->assertOk()->json()];
     }
@@ -875,8 +894,8 @@ class SidebarDomContractTest extends TestCase
                     'event' => $line['event'],
                 ], $confirmation['lines']),
             ],
-            'orderCode' => (string) $component->get('orderCode'),
-            'registration' => $component->viewData('registration'),
+            'orderCode' => $this->confirmedOrderCode(),
+            'registration' => RegistrationLink::current()?->toArray(),
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
         ];
@@ -905,9 +924,9 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
-            api: $this->declinedApiPayload($component),
+            api: $this->declinedApiPayload(),
             state: $this->clientState(step: 10) + [
-                'orderCode' => (string) $component->get('orderCode'),
+                'orderCode' => $this->confirmedOrderCode(),
                 'contactUrl' => route('contacto'),
             ]);
 
@@ -938,9 +957,9 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
-            api: $this->declinedApiPayload($component),
+            api: $this->declinedApiPayload(),
             state: $this->clientState(step: 10) + [
-                'orderCode' => (string) $component->get('orderCode'),
+                'orderCode' => $this->confirmedOrderCode(),
                 'contactUrl' => route('contacto'),
             ]);
 
@@ -1029,7 +1048,7 @@ class SidebarDomContractTest extends TestCase
     private function declinedProps(Testable $component): array
     {
         return [
-            'orderCode' => (string) $component->get('orderCode'),
+            'orderCode' => $this->confirmedOrderCode(),
             'reason' => (string) $component->get('declinedReasonText'),
             'retrying' => false,
             'contactUrl' => route('contacto'),
@@ -1041,7 +1060,7 @@ class SidebarDomContractTest extends TestCase
     private function verifyingProps(Testable $component): array
     {
         return [
-            'orderCode' => (string) $component->get('orderCode'),
+            'orderCode' => $this->confirmedOrderCode(),
             'ordersUrl' => route('account.orders'),
             'messages' => __('tickets'),
         ];
