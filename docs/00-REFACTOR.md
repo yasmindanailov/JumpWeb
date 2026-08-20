@@ -1498,8 +1498,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **LAS ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
         ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
-- [ ] **Paso 4.7·2b·3 — borrar el componente** (pendiente, **BLOQUEADO en staging** desde el
-      2026-08-16, `DECISIONES #100`).
+- [ ] **Paso 4.7·2b·3 — borrar el componente** (pendiente; ✅ **DESBLOQUEADO el 2026-08-20**,
+      `DECISIONES #110`: los cuatro caminos que `#100` exigía están verificados en staging con el motor
+      en `spa` — Turnstile dentro del cajón y su reset, el pago con notificación S2S, el 3DS con
+      challenge y el móvil real).
+      ⚠️ **Quedan sus DOS decisiones propias**, ya medidas: el destino de `SidebarEngineTest` —que NO
+      está en el inventario y cuyos dos casos comparan los DOS motores— y el del modo `embedded` de
+      auth. Ver el cuerpo de este ítem.
       ⚠️⚠️ **Borrar NO es limpiar: es ACTIVAR.** `layout.blade.php` bifurca con `usesSpa()` y su propio
       comentario dice que «el fallback no puede ser el motor en construcción». Al borrar el componente
       desaparece esa rama y **el cajón SPA queda como único motor, sin vuelta atrás sin desplegar** —y

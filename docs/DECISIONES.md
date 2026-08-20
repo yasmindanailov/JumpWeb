@@ -4368,3 +4368,42 @@ disciplina que `#106` obligó a aprender en la guarda del despliegue.
 **(f) Medido mutando: cinco mutaciones, las cinco muertas** —quitar la guarda de claves protegidas
 (3 rojos), pisar el grupo, imprimir el secreto en claro, aceptar una clave vacía y no detectar el
 sin-cambios—. 13 casos.
+
+## #110 · 2026-08-20 · Los CUATRO caminos de `#100`, VERIFICADOS — y `4.7·2b·3` queda desbloqueado
+El owner recorrió en staging el guion de `VERIFICACION-E2E-CAJON.md` §5.ter con el motor en `spa`.
+Con esto se cierra la condición que `#100` puso para borrar `Purchase.php`, y que llevaba abierta
+desde el 2026-08-16.
+
+**(a) Lo verificado, los cuatro:**
+1. **Turnstile DENTRO del cajón SPA** — el widget se pinta en el paso de alta del propio cajón, en
+   mitad del flujo de compra, y **ya no delega** en el modal de la cabecera. Era la incógnita real de
+   4.4b·2: el widget se había escrito y probado con dobles, y contra Cloudflare no lo había visto nadie.
+2. **El RESET del widget** (T2), que es el que ningún test del repo puede ver: el token es de un solo
+   uso y `SelfSignup` lo quema **antes** de comprobar si el correo ya existe, así que sin reset un
+   segundo intento daría «no eres un robot» con el tick verde puesto. Probado con dobles; ahora,
+   contra el proveedor.
+3. **El pago completo con la notificación S2S** (T3) — el bloque B, que hasta hoy exigía un túnel.
+4. **3DS con challenge** (T4) y **móvil real** (T5), que **nadie había recorrido nunca** en este proyecto.
+
+**(b) Corroborado en la BD de staging, no solo en el relato:** 3 pedidos, **2 en `paid`**
+(`R-0PT9LJ`, `R-C7AHJS`), 16 entradas y 2 usuarios. Y un detalle que confirma otra cosa de paso: los
+pagos son de **30,00 €** sobre totales de 151,20 y 127,20, o sea que **la señal (depósito parcial)
+funcionó de punta a punta** — `PAY-10` ejercitado sin buscarlo.
+
+**(c) ⚠️ El LÍMITE de esa corroboración, y hay que escribirlo.** Que un pedido esté en `paid` **NO
+distingue** si lo cerró la notificación S2S o el retorno del navegador: `RedsysReturnHandler` es
+idempotente y atiende los dos caminos. Se intentó aislar y **no se pudo**: el usuario Unix del sitio no
+tiene acceso a ningún access log del vhost, y en `storage/logs` la única línea de Redsys es un
+`redsys.return.malformed` que dejó la propia comprobación de la ruta. Así que **T3 se apoya en que el
+owner siguió la receta del bloque B**, no en una medición independiente.
+▶ Si algún día hace falta certeza sobre el S2S, la vía es un terminal *data-less* de verdad —donde el
+retorno **no** lleva datos y solo la notificación puede cerrar el pedido— o acceso al access log.
+
+**(d) Lo que esto desbloquea.** `4.7·2b·3` —el borrado de `Purchase.php`— deja de estar bloqueado por
+`#100`. Siguen abiertas sus DOS decisiones propias, ya medidas y ninguna sorpresa: el destino de
+`SidebarEngineTest` (que **no está en el inventario** y compara los dos motores, `#103(e)`) y el del
+modo `embedded` de `auth.login`/`auth.register`, que el propio tramo declara «parte de este tramo».
+
+**(e) Y una cosa que NO cambia**: el modal de auth de la cabecera **sobrevive** al borrado. Vive en
+`layout.blade.php`, no en `purchase.blade.php`, y sigue siendo la puerta de auth de la web fuera del
+cajón. Retirarlo es trabajo del área de cliente (`#66`), no de 4.7.

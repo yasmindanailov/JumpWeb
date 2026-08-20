@@ -212,9 +212,17 @@ centinela) — el detalle en `#108(e)`, porque la lección es transferible.
 ⚠️ **Coste medido: 1,76 KiB de bundle, y quedan 1,76.** El ledger del presupuesto llevaba caduco desde
 4.6·2 (decía 4,15 de margen cuando eran 3,52). El siguiente que añada algo al cajón lo tiene justo.
 
-▶▶ **EMPIEZA AQUÍ: la sesión de verificación en STAGING, en bloque.** Ya no queda trabajo de código
-antes de ella: poner el flag en `spa`, redesplegar y cerrar de una vez **Turnstile en el navegador**,
-la **notificación S2S** (la URL ya está configurada), el **3DS con challenge** y el **móvil real**.
+✅✅ **LOS CUATRO CAMINOS DE `#100`, VERIFICADOS EN STAGING** (2026-08-20, owner, `#110`), con el motor
+en `spa`: **Turnstile dentro del cajón** (ya no delega en el modal) · **el RESET del widget** —el caso
+que ningún test puede ver— · el **pago completo con notificación S2S** · **3DS con challenge** y
+**móvil real**, que nadie había recorrido nunca.
+Corroborado en BD: 3 pedidos, **2 en `paid`**, 16 entradas — y los pagos de 30,00 € sobre totales de
+151,20/127,20, o sea que **la señal funcionó** de paso (`PAY-10`).
+⚠️ **Límite de esa corroboración**: `paid` **no distingue** si lo cerró el S2S o el retorno del
+navegador (`RedsysReturnHandler` atiende los dos y es idempotente), y no hay access log accesible al
+usuario del sitio. T3 se apoya en la receta seguida, no en una medición independiente (`#110(c)`).
+
+▶▶ **EMPIEZA AQUÍ: `4.7·2b·3` — el borrado de `Purchase.php`.** `#100` ya no lo bloquea.
 ✅ **Y ya hay con qué poner el flag allí**: `app:set-setting sidebar.engine spa` (`#109`), que cierra
 de paso la ficha de DEUDA de los secretos de BD — el mismo hueco había mordido tres veces.
 Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
@@ -233,9 +241,13 @@ contra **4,15 KiB de margen** (`SidebarBundleBudgetTest`).
    `cloudflared` local, sin variante de staging todavía.
    ⚠️ **Y falta la receta de cómo poner el flag en `spa` ALLÍ**: la única escrita usa
    `docker compose exec`, y en staging no hay docker (el flag tampoco es editable por panel).
-2. **`4.7·2b·3`**: el borrado. ⚠️ **NO está «sin decisiones abiertas»**: quedan el destino de
-   `SidebarEngineTest` (fuera del inventario) y el del modo `embedded` de auth, que el propio tramo
-   declara «parte de este tramo».
+2. **`4.7·2b·3`**: el borrado. ⚠️ **NO está «sin decisiones abiertas»**, y son DOS, ya medidas:
+   · el destino de **`SidebarEngineTest`**, que **no está en el inventario** (el escáner no lo caza) y
+     cuyos dos casos existen para comparar los DOS motores: dejan de tener sujeto cuando queda uno;
+   · y el del modo **`embedded`** de `auth.login`/`auth.register`, que se queda sin usuario porque
+     `purchase.blade.php` era el único sitio que lo montaba.
+   ⚠️ Y lo que NO cambia: **el modal de auth de la CABECERA sobrevive** — vive en `layout.blade.php`,
+   no en `purchase.blade.php`. Retirarlo es trabajo del área de cliente (`#66`).
 3. **`4.7·3` — retirar el flag**, que es *lo que de verdad activa el motor SPA* (`#103`). Faltaba en
    esta cadena.
 4. **`scripts/provision.sh`** contra la API del panel, **después** del `deploy.sh` (`#102(f)`): su

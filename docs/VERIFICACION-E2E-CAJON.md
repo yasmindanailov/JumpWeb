@@ -287,6 +287,13 @@ decisión con coste, no un detalle— pero la receta es corta y reproducible:
 > ⚠️ **Si algo se tuerce, el flag es la marcha atrás**, y no hace falta desplegar:
 > `ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting sidebar.engine livewire"`.
 
+> ✅ **RECORRIDO ENTERO EL 2026-08-20 por el owner, y las seis en verde** (`DECISIONES #110`). Lo que
+> sigue se conserva como RECETA —es la que se repetirá en cada instalación de cliente—, no como
+> pendiente. Corroborado en BD: 2 pedidos en `paid`, 16 entradas, y la señal ejercitada (30,00 € sobre
+> totales de 151,20/127,20).
+> ⚠️ **Con un límite que hay que saber**: `paid` **no distingue** el S2S del retorno del navegador, y
+> no hay access log accesible al usuario del sitio. Ver `#110(c)`.
+
 ### T1 · El widget del anti-bot DENTRO del cajón
 1. Abre la web **en ventana de incógnito** (sin sesión) y abre el cajón.
 2. Llega al paso de identificarse y pulsa la pestaña **«Crear cuenta»**.
@@ -328,14 +335,12 @@ pasarela, móvil—, como receta escrita aquí con su trampa medida.
 
 ## 6. Lo que este guion NO cubre, y hay que decirlo
 
-- **El 3DS con challenge** (`4548 8172 1249 3017`). El flujo del cajón no cambia —la pasarela se encarga—,
-  pero nadie lo ha recorrido.
+- ~~**El 3DS con challenge**~~ ✅ recorrido el 2026-08-20 (`#110`).
 - **Los tres idiomas en vivo**: los textos ya se comparan palabra por palabra en `es`/`en`/`fr` en las
   paridades; aquí solo se recorre el idioma activo.
-- **Móvil real**: el cajón del nav y el de compra se superponen en pantallas pequeñas, y eso solo se ve en
-  un móvil de verdad.
-- **El widget de Turnstile** (4.4b·2): necesita claves de Cloudflare. Mientras no esté, con el anti-bot
-  activo el alta del cajón montaba su widget desde 4.4b·2 (antes delegaba en el modal de Livewire).
+- ~~**Móvil real**~~ ✅ recorrido el 2026-08-20 (`#110`).
+- ~~**El widget de Turnstile**~~ ✅ recorrido el 2026-08-20 (`#110`): se pinta dentro del cajón y el
+  RESET funciona contra Cloudflare real.
   ⚠️ **Lo que hay que mirar en el navegador, y NO lo cubre ningún test**: que el widget se pinte
   DENTRO del cajón (no solo en el modal de la cabecera), que el alta pase con él, y **que tras un
   fallo del alta el widget se REINICIE** — el token es de un solo uso y el servidor lo quema antes de
