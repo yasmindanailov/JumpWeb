@@ -6,10 +6,13 @@ use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\SelfSignup;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
@@ -185,6 +188,56 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertValidResponse(201);
 
         $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
+    }
+
+    /**
+     * ⚠️ **La rama del anti-bot ACTIVO no la cubría nadie**, y es la que el cajón acaba de estrenar
+     * (4.4b·2). Hasta ahora el único caso de token corría con el anti-bot APAGADO, o sea que el
+     * `Turnstile::verify()` ni se llamaba.
+     *
+     * El modo de fallo que fija es el más caro de diagnosticar del sistema: un widget que no llega a
+     * pintarse manda el token vacío, y `Turnstile::verify('')` **corta antes del POST a Cloudflare y
+     * antes de su `Log::warning`** — así que el alta se rechaza sin dejar rastro NI en los logs del
+     * servidor NI en el panel de Cloudflare. Lo único observable es este 422.
+     */
+    public function test_with_the_anti_bot_active_an_empty_token_is_rejected_and_creates_nobody(): void
+    {
+        $this->enableAntiBot();
+
+        $this->register(['turnstile_token' => ''])
+            ->assertStatus(422)
+            ->assertValidResponse(422);
+
+        $this->assertDatabaseMissing('users', ['email' => 'nuevo@jumpweb.test']);
+    }
+
+    /**
+     * El camino feliz con anti-bot. ⚠️ El `Http::fake` NO es decorado: `TestCase::setUp()` activa
+     * `Http::preventStrayRequests()`, y con un token NO vacío `Turnstile::verify()` sí sale a la red.
+     * Sin el doble, esto moriría por «stray request» y el rojo hablaría de otra cosa.
+     */
+    public function test_with_the_anti_bot_active_a_verified_token_lets_the_signup_through(): void
+    {
+        $this->enableAntiBot();
+        Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => true])]);
+
+        $this->register(['turnstile_token' => 'un-token-que-cloudflare-acepta'])
+            ->assertCreated()
+            ->assertValidResponse(201);
+
+        $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
+    }
+
+    /** Deja el anti-bot COMPLETO (las dos claves) y purga los dos memos estáticos. */
+    private function enableAntiBot(): void
+    {
+        Setting::updateOrCreate(['key' => 'security.turnstile_site_key'], ['value' => 'site', 'group' => 'security']);
+        Setting::updateOrCreate(['key' => 'security.turnstile_secret'], ['value' => 'secreto', 'group' => 'security']);
+
+        Setting::flushMemo();
+        Turnstile::flushCache();
+
+        $this->assertTrue(Turnstile::enabled(), 'el anti-bot no quedó activo: el caso no probaría nada');
     }
 
     public function test_signups_are_rate_limited_per_ip(): void

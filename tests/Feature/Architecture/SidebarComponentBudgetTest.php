@@ -56,7 +56,9 @@ class SidebarComponentBudgetTest extends TestCase
      * @var array<string, array{code: int, api: int}>
      */
     private const EXCEPTIONS = [
-        'sidebar/Sidebar.vue' => ['code' => 618, 'api' => 11],
+        // 618 → 614 en 4.4b·2: retirar la delegación en el modal de Livewire quitó cuatro líneas y
+        // el vaciado del token del anti-bot añadió una. La lógica del widget vive en `turnstile.js`.
+        'sidebar/Sidebar.vue' => ['code' => 614, 'api' => 11],
     ];
 
     /**

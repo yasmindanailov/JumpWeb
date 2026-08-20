@@ -116,9 +116,11 @@ describe('el reparto de los avisos', () => {
 
 describe('la guarda del anti-bot', () => {
     /**
-     * ⚠️ **Es la guarda que evita el peor fallo posible mientras el widget no esté** (4.4b·2): sin
-     * token, `SelfSignup` rechaza **todas** las altas con «no eres un robot», sin correo y sin log. Con
-     * captcha activo el cajón no pinta su formulario: delega en el modal de Livewire, que sí lo monta.
+     * ⚠️ Desde 4.4b·2 este bit decide **si montar el widget en el cajón**, ya no «si delegar en el
+     * modal de Livewire» (esa delegación se retiró). Lo que fija sigue siendo lo mismo y sigue siendo
+     * lo que importa: la equivalencia **clave publicada ⟺ anti-bot COMPLETO**. Con la clave a medias
+     * se pintaría un formulario que rechaza a todo el mundo con «no eres un robot», sin correo y sin
+     * una sola línea de log — `Turnstile::verify('')` corta antes del POST y antes de su `Log::warning`.
      */
     test('con clave publicada, el alta exige captcha', () => {
         assert.equal(signupRequiresCaptcha({ turnstile_site_key: '0x4AAAAAAA' }), true);
@@ -137,6 +139,41 @@ describe('la guarda del anti-bot', () => {
      */
     test('una clave vacía no cuenta como anti-bot', () => {
         assert.equal(signupRequiresCaptcha({ turnstile_site_key: '' }), false);
+    });
+});
+
+describe('el token del anti-bot en el envío', () => {
+    /**
+     * ⚠️ **Esta es la única red que ve este cableado.** Se intentó cubrirlo con un centinela de
+     * `SidebarBundleBudgetTest` y NO discrimina: al quitar la línea del payload, `turnstile_token`
+     * baja de 6 a 4 ocurrencias en el chunk —el identificador vive también en `emptyForm`, en el
+     * `v-model` del paso y en el vaciado tras un fallo—, así que aquel caso seguía en verde con el
+     * token sin mandarse. Medido reconstruyendo, no razonado.
+     */
+    function apiSpy() {
+        const calls = [];
+
+        return { calls, post: async (path, body) => { calls.push({ path, body }); return ok(null, 201); }, get: async () => ok({ id: 7 }) };
+    }
+
+    test('manda el token del anti-bot', async () => {
+        const api = apiSpy();
+
+        await runRegister({ form: { email: 'a@b.c', turnstile_token: 'tok-de-cloudflare' }, api });
+
+        assert.equal(api.calls[0].body.turnstile_token, 'tok-de-cloudflare');
+    });
+
+    test('sin token manda cadena vacía, NUNCA null ni undefined', async () => {
+        // `openapi/v1.yaml` declara `turnstile_token` como `type: string` sin `nullable`, y
+        // `RegisterRequest` es `additionalProperties: false`: Spectator valida también la PETICIÓN,
+        // así que un `null` haría fallar por esquema y el rojo hablaría de otra cosa.
+        const api = apiSpy();
+
+        await runRegister({ form: { email: 'a@b.c' }, api });
+
+        assert.equal(api.calls[0].body.turnstile_token, '');
+        assert.notEqual(api.calls[0].body.turnstile_token, null);
     });
 });
 

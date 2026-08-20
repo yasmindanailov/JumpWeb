@@ -4257,3 +4257,75 @@ permite en `script-src`, `frame-src` y `connect-src`, verificado en la CABECERA 
 **(g) Deuda que esto deja anotada**: configurar un secreto de BD es hoy **un paso a mano, no probado**,
 y **cada instalación de cliente lo necesita** — sin claves el anti-bot se autodesactiva en silencio.
 Merece un comando hermano de `app:create-admin`. Ficha en `DEUDA.md`.
+
+## #108 · 2026-08-20 · 4.4b·2 — el widget del anti-bot en el cajón, y dos centinelas que no mordían
+Montado el widget de Cloudflare Turnstile en el cajón SPA y **retirada la delegación** en el modal de
+auth de la cabecera. Con esto 4.4b·2 queda cerrado y Turnstile deja de atar nada.
+
+**(a) La lógica va a un módulo PLANO, `resources/js/sidebar/turnstile.js`** (`CE-6`), no al `.vue`. Y
+la ubicación es una decisión, no una carpeta cualquiera: `js/sidebar/*.js` es el **único glob de nivel
+1** que vigila la rancidez del bundle SSR, así que un módulo en `js/sidebar/antibot/` habría escapado a
+esa guarda y el diff de árbol habría comparado código viejo **dando verde con el widget roto**.
+
+**(b) ⚠️ El contenedor va con `v-if` y PELADO, y las dos cosas son contrato de árbol.** El Blade lo
+envuelve en `@if ($turnstileEnabled)` y **la suite nunca siembra las claves**, así que con el anti-bot
+apagado el motor Livewire no emite nada ahí. Un `<div>` incondicional pone en rojo el diff de árbol Y
+el manifiesto congelado a la vez; y con clase también, porque el normalizador SÍ imprime las clases.
+Además `class="cf-turnstile"` no serviría: el auto-render de Cloudflare solo ve los `.cf-turnstile` de
+la carga inicial, no los inyectados — por eso los dos motores renderizan EXPLÍCITAMENTE sobre el nodo.
+
+**(c) Tres cosas que NO son copia-pega del motor Livewire, y por qué:**
+1. **El guard `__cfTurnstileLoading` se comparte pero NO sirve para cortar.** El modal de la cabecera
+   se renderiza *eager* en toda página pública, así que cuando el cajón abre el flag **ya vale `true`**.
+   Un `if (flag) return;` habría dejado el widget del cajón sin pintar SIEMPRE. El único predicado
+   válido es `win.turnstile && win.turnstile.render`, con sondeo.
+2. **Se guarda el `widgetId`**, que la referencia Alpine descarta. Sin él no hay `reset()`, y hace
+   falta de verdad: el token es de un solo uso y `SelfSignup` lo quema **antes** de mirar si el correo
+   ya existe. Sin reset, quien se equivoca de correo recibe «ya tienes cuenta», corrige, reenvía con el
+   mismo token y Cloudflare lo rechaza por duplicado → «no eres un robot» **con el tick verde puesto**
+   y sin salida que no sea recargar. Por eso el vaciado del token va en **cualquier** rama de fallo, no
+   solo en la del captcha: los tres desenlaces llegan como `validation_failed` bajo `fields.email` y el
+   cliente **no puede distinguirlos**.
+3. **No se rinde en silencio.** Agotado el sondeo, avisa por consola y fuerza el token vacío.
+
+**(d) ⚠️⚠️ Y el porqué de (c.3) es el hallazgo que más vale de este paso: el modo de fallo más probable
+del anti-bot es INVISIBLE.** `Turnstile::verify('')` corta **antes** del POST a Cloudflare y **antes**
+de su `Log::warning`, así que un widget que no llegue a pintarse produce un 422 con **cero líneas en
+`storage/logs` y cero en el panel de Cloudflare**. No hay dónde mirar. La consola del navegador es el
+único sitio donde ese fallo deja huella, y por eso el aviso no es cosmético.
+
+**(e) Medido MUTANDO, y salieron DOS cosas inertes — las dos mías.**
+- **Un test inerte**: la guarda `widgetId !== null` de `render()` es hoy **inalcanzable** (el sondeo se
+  para antes de pintar), así que quitarla no ponía nada en rojo. El caso se re-apuntó al mecanismo
+  REAL y se dejó escrito que quien añada un tercer sitio de llamada tendrá que traer su propio caso.
+- **Un CENTINELA inerte**, y este costó una reconstrucción descubrirlo: `turnstile_token` parecía el
+  candidato natural para vigilar «el token viaja al servidor», pero al quitarlo del payload las
+  ocurrencias en el chunk bajan de 6 a **4**, no a 0 —el mismo identificador vive en `emptyForm`, en el
+  `v-model` del paso y en el vaciado tras un fallo—, así que el caso seguía VERDE con el token sin
+  mandarse. **Es exactamente la trampa `/payment` vs `/payment-status` que ese fichero documenta, y
+  caí en ella igual.** Se retiró: queda un solo centinela, `challenges.cloudflare.com`, verificado
+  mutando (con el widget fuera baja a 0 y el caso se pone rojo). El cableado del payload lo cubre
+  `register.test.js`, que sí muere al quitar la línea.
+▶ **La lección: un centinela que busca un identificador COMPARTIDO no vigila nada.** Antes de añadir
+uno hay que medir que con la función fuera baje a CERO, y eso exige reconstruir, no razonar.
+
+**(f) El presupuesto de bundle, y un ledger que llevaba caduco.** El docblock decía «margen 4,15 KiB»
+desde 4.6·2; medido antes de tocar nada, el chunk ya estaba en 146,48 KiB, o sea **3,52** de margen —
+creció durante 4.7·2b·2·B/C sin que nadie anotara la cifra. El widget costó **1,76 KiB** (148,24 KiB)
+y **quedan 1,76**. ⚠️ El siguiente que añada algo al cajón tiene el margen muy corto; la decisión
+escrita del proyecto sigue siendo **subir el techo con motivo**, no adelgazar a ciegas.
+
+**(g) `Sidebar.vue` ENCOGIÓ, que es la dirección buena**: 618 → **614** líneas de código (la delegación
+quitó cuatro, el vaciado del token añadió una). Baseline actualizada en el mismo commit, como exige
+`SidebarComponentBudgetTest`. Y `RegisterForm.vue` se pasó del techo en el primer intento (43 sobre 40):
+se resolvió **compactando el painter y dejando la decisión en el módulo** —`mountTurnstile` ya es
+inerte sin clave— en vez de subir el techo.
+
+**(h) La rama que no cubría nadie, ahora cubierta**: con el anti-bot ACTIVO, un token vacío se rechaza
+y **no crea a nadie**; y con token válido el alta pasa. Este segundo exige `Http::fake` de siteverify:
+`TestCase` tiene `preventStrayRequests()` y con token no vacío `verify()` **sí sale a la red**.
+
+**(i) Lo que sigue sin verificar y solo lo puede ver un navegador**: que Cloudflare invalide el token
+tras el primer canje (el reset está probado con dobles, no contra el proveedor), que el widget se pinte
+dentro del cajón con claves reales, y el comportamiento de la caducidad. Anotado en
+`VERIFICACION-E2E-CAJON.md` como lo que hay que mirar en la sesión de staging.

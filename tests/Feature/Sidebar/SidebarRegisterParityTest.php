@@ -245,11 +245,16 @@ class SidebarRegisterParityTest extends TestCase
     /**
      * ⚠️ **El eslabón entre el servidor y el cajón, comprobado de punta a punta.**
      *
-     * Mientras el cajón no monte el widget de Turnstile (4.4b·2), pintar su formulario de alta en una
-     * instalación con anti-bot **rechazaría a todo el mundo** con «no eres un robot», sin correo y sin
-     * log. La guarda es que `GET /config` publique la clave **solo cuando el anti-bot está activo de
-     * verdad** y que el módulo del cajón lo lea: se comprueban los dos extremos con la respuesta REAL
-     * del endpoint pasada por el módulo REAL.
+     * Desde 4.4b·2 el cajón MONTA su propio widget, así que este bit ya no decide «si delegar en el
+     * modal de Livewire» sino **con qué clave montar el widget**. Lo que fija no ha cambiado, y es lo
+     * que importa: que `GET /config` publique la clave **solo cuando el anti-bot está activo de
+     * verdad** —las DOS claves, no una— y que el módulo del cajón lo lea igual. Se comprueban los dos
+     * extremos con la respuesta REAL del endpoint pasada por el módulo REAL.
+     *
+     * ⚠️ Con la clave a medias, el cajón pintaría un widget que no verifica nada y el servidor
+     * rechazaría **todas** las altas con «no eres un robot», sin correo y **sin una sola línea de
+     * log**: `Turnstile::verify('')` corta antes del POST a Cloudflare y antes de su `Log::warning`.
+     * Ese fallo es invisible en los dos extremos, y por eso la equivalencia se comprueba aquí.
      */
     public function test_the_cajon_knows_when_the_signup_needs_a_captcha(): void
     {
@@ -280,9 +285,10 @@ class SidebarRegisterParityTest extends TestCase
             $this->assertSame(
                 $expected,
                 $this->requiresCaptchaInNode($config),
-                "Con «{$label}» el cajón NO decide bien si puede pintar su formulario de alta.\n".
-                '⚠️ Pintarlo con el anti-bot activo rechazaría todas las altas con «no eres un robot», '.
-                'sin correo y sin log: un registro que no funciona para nadie y que nada delata.'
+                "Con «{$label}» el cajón NO decide bien si tiene que montar el widget del anti-bot.\n".
+                '⚠️ Montarlo con la configuración a medias, o NO montarlo con el anti-bot activo, '.
+                'rechazaría todas las altas con «no eres un robot», sin correo y sin log: un registro '.
+                'que no funciona para nadie y que nada delata.'
             );
         }
     }

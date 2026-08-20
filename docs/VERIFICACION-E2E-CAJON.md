@@ -284,4 +284,10 @@ decisión con coste, no un detalle— pero la receta es corta y reproducible:
 - **Móvil real**: el cajón del nav y el de compra se superponen en pantallas pequeñas, y eso solo se ve en
   un móvil de verdad.
 - **El widget de Turnstile** (4.4b·2): necesita claves de Cloudflare. Mientras no esté, con el anti-bot
-  activo el alta del cajón **delega en el modal de Livewire** a propósito.
+  activo el alta del cajón montaba su widget desde 4.4b·2 (antes delegaba en el modal de Livewire).
+  ⚠️ **Lo que hay que mirar en el navegador, y NO lo cubre ningún test**: que el widget se pinte
+  DENTRO del cajón (no solo en el modal de la cabecera), que el alta pase con él, y **que tras un
+  fallo del alta el widget se REINICIE** — el token es de un solo uso y el servidor lo quema antes de
+  comprobar si el correo ya existe, así que reenviar sin reset da «no eres un robot» con el tick verde
+  puesto. El reset está implementado y probado con dobles, pero **contra Cloudflare real no lo ha
+  visto nadie**.

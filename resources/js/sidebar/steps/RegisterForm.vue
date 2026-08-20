@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
+import { mountTurnstile } from '../turnstile.js';
 
 /**
  * El formulario de ALTA del paso 5 (Fase 4 · paso 4.4b·1).
@@ -28,6 +29,18 @@ import { t as translate } from '../i18n.js';
  *
  * ⚠️ **5. La contraseña lleva `.form__hint` DESPUÉS del `.pwd-input`**, con los requisitos. Es un
  * `<small>`, no un `<span>`: el tipo de elemento es contrato (§4.2).
+ *
+ * ⚠️⚠️ **6. El contenedor del anti-bot va con `v-if` y PELADO** (4.4b·2). Las dos cosas son contrato
+ * de árbol, medidas contra el manifiesto congelado:
+ * · **`v-if`**, porque el Blade lo envuelve en `@if ($turnstileEnabled)` y la suite NUNCA siembra las
+ *   claves `security.turnstile_*` → con el anti-bot apagado el motor Livewire no emite NADA ahí. Un
+ *   `<div>` incondicional pone en rojo el diff de árbol Y el manifiesto a la vez.
+ * · **Sin clase, sin id, sin `data-*`**: el normalizador del diff SÍ imprime las clases, y el nodo
+ *   Livewire es un `<div>` a secas. Además `class="cf-turnstile"` no serviría de nada: el auto-render
+ *   de Cloudflare solo ve los `.cf-turnstile` presentes en la carga inicial, no los inyectados — por
+ *   eso los dos motores renderizan EXPLÍCITAMENTE sobre el nodo.
+ * · Y va por `ref`, no por `querySelector`: con el anti-bot activo hay **dos** widgets vivos en la
+ *   página (este y el del modal de la cabecera), y un selector se llevaría el que no es.
  */
 const props = defineProps({
     /** Avisos del intento anterior: `{summary, fields}` (`register.js`). */
@@ -38,6 +51,9 @@ const props = defineProps({
 
     /** El grupo `account`, con `register` entero y sus dos textos legales ya interpolados. */
     account: { type: Object, default: () => ({}) },
+
+    /** Clave pública del anti-bot. Vacía ⟺ apagado ⟺ no se emite el contenedor (detalle 6). */
+    turnstileSiteKey: { type: String, default: '' },
 });
 
 defineEmits(['submit']);
@@ -52,6 +68,34 @@ const marketing = defineModel('marketing', { type: Boolean, default: false });
 
 /** El señuelo. Un cliente legítimo lo deja vacío; que exista es lo que hace que sirva. */
 const website = defineModel('website', { type: String, default: '' });
+
+/**
+ * El token del anti-bot. Lo escribe Cloudflare por callback, no el usuario.
+ *
+ * ⚠️ El padre lo VACÍA tras un envío fallido, y ese vaciado es la señal de «pide uno nuevo»: el token
+ * es de un solo uso y el servidor lo quema ANTES de mirar si el correo ya existe, así que reenviar con
+ * el mismo daría «no eres un robot» con el tick verde puesto y sin salida salvo recargar.
+ */
+const turnstileToken = defineModel('turnstileToken', { type: String, default: '' });
+
+const captchaEl = ref(null);
+let widget = null;
+
+// Sin guarda de clave a propósito: `mountTurnstile` ya devuelve un apaño inerte si falta la clave o
+// el nodo, y el componente es un PINTOR — la decisión vive en el módulo, no aquí.
+onMounted(() => {
+    widget = mountTurnstile(captchaEl.value, {
+        sitekey: props.turnstileSiteKey,
+        onToken: (token) => { turnstileToken.value = token; },
+    });
+});
+
+// El padre vacía el token al fallar un envío → hay que pedirle uno nuevo a Cloudflare.
+watch(turnstileToken, (v, prev) => { if (v === '' && prev !== '') widget?.reset(); });
+
+// El paso 5 DESTRUYE este componente al cambiar a «Entrar» (`v-else` en `IdentifyStep`), así que esto
+// corre de verdad y a menudo: sin `remove()` quedaría un widget huérfano en Cloudflare.
+onBeforeUnmount(() => widget?.destroy());
 
 const revealed = ref(false);
 
@@ -138,6 +182,8 @@ const summary = computed(() => props.errors?.summary ?? []);
                     <span>{{ a('register.marketing') }}</span>
                 </label>
             </div>
+
+            <div v-if="turnstileSiteKey" ref="captchaEl"></div>
 
             <button type="submit" class="btn btn--zone auth__submit" :disabled="submitting">
                 <span v-show="! submitting">{{ a('register.submit') }}</span>

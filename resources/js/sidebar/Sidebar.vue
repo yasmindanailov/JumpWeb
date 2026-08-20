@@ -240,8 +240,8 @@ onMounted(async () => {
         // el mismo número.
         if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
-        // delega el registro en el modal de Livewire, que es el que monta el widget (4.4b·2).
-        signupCaptcha.value = signupRequiresCaptcha(config.data);
+        // el cajón monta su propio widget de Turnstile con ella (`turnstile.js`, 4.4b·2).
+        signupSiteKey.value = signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '';
         // El enlace de registro del parque, que solo pinta el paso 6. Llega ya SANEADO (`SEC-07`): lo
         // edita un operador y un cliente JSON no tiene escape de plantilla que remate la defensa.
         registration.value = config.data?.registration ?? null;
@@ -750,7 +750,8 @@ const emptyForm = () => ({
     email: '', password: '', remember: false,
     name: '', phone: '', accept_privacy: false, accept_terms: false, marketing: false,
     // El señuelo: un cliente legítimo lo deja vacío y el servidor finge un alta si llega relleno.
-    website: '',
+    // Y el token del anti-bot, que escribe Cloudflare por callback (`turnstile.js`), no el usuario.
+    website: '', turnstile_token: '',
 });
 
 const form = ref(emptyForm());
@@ -772,24 +773,20 @@ const authMode = ref('login');
  * endpoint publicaba la clave pública aunque faltara la secreta, estado en el que la web **no pinta el
  * widget** y el servidor no verifica nada. Ahora el campo es el bit que decide.
  */
-const signupCaptcha = ref(false);
+const signupSiteKey = ref('');
 
 /**
  * Cambia de pestaña. Espejo de `Purchase::setAuthMode()`.
  *
- * ⚠️ **Con el anti-bot ACTIVO el cajón no pinta su formulario de alta: delega en el modal de auth de
- * Livewire**, que sí monta el widget de Turnstile. El widget nativo llega en 4.4b·2, y hasta entonces
- * esta es la degradación honesta: sin token, `SelfSignup` rechazaría **todas** las altas con «no eres
- * un robot», sin correo y sin log — un registro que no funciona para nadie y que nada delata. El modal
- * existe en los dos motores (`@livewireScripts` se quedan con la SPA, §4.9) y hace el alta completa.
+ * ✅ **La delegación en el modal de Livewire se RETIRÓ en 4.4b·2**: el cajón monta su propio widget de
+ * Turnstile (`turnstile.js` + `RegisterForm.vue`), así que ya pinta su formulario de alta también con
+ * el anti-bot activo. Lo que había aquí era una degradación honesta mientras el widget no existía —sin
+ * token, `SelfSignup` rechaza **todas** las altas con «no eres un robot», sin correo y sin log—, y su
+ * único motivo era ese.
+ * ⚠️ El modal de la cabecera NO desaparece con esto ni con `4.7·2b·3`: vive en `layout.blade.php`, no
+ * en `purchase.blade.php`, y sigue siendo la puerta de auth de la web fuera del cajón.
  */
 function setAuthMode(mode) {
-    if (mode === 'register' && signupCaptcha.value) {
-        window.Alpine?.store('auth')?.open('register');
-
-        return;
-    }
-
     authMode.value = mode === 'register' ? 'register' : 'login';
     // Los avisos son de un intento que ya no se ve: arrastrarlos entre pestañas confunde.
     loginError.value = { global: '', fields: {} };
@@ -855,7 +852,12 @@ async function submitRegister() {
 
         registerError.value = result.errors;
 
-        if (! result.ok) return;
+        // Vaciarlo es la señal de «pide otro» para el widget (`RegisterForm` lo observa). Va en
+        // CUALQUIER fallo, no solo en el del captcha: el token es de un solo uso y el servidor lo
+        // quema antes de comprobar si el correo ya existe, así que un segundo intento con el mismo
+        // token daría «no eres un robot» con el tick verde puesto. Y afinar más es imposible: los
+        // tres desenlaces llegan como `validation_failed` bajo `fields.email`, indistinguibles.
+        if (! result.ok) { form.value.turnstile_token = ''; return; }
 
         if (! result.identified) {
             // El señuelo actuó: misma pantalla que ve un alta legítima sin sesión. No se distingue.
@@ -1427,6 +1429,7 @@ function goBack() {
             :submitting="loggingIn"
             :messages="messages"
             :account="account"
+            :turnstile-site-key="signupSiteKey"
             @back="goToCart"
             @set-mode="setAuthMode"
             @submit-login="submitLogin"

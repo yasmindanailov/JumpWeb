@@ -71,11 +71,19 @@ class SidebarBundleBudgetTest extends TestCase
      *
      *   · 4.6·1 (paso 6: la reserva creada) ............... 144,17 kB = **140,79 KiB**
      *   · 4.6·2 (pasos 10 y 11: denegado y verificando) ... 149,34 kB = **145,85 KiB**
+     *   · ⚠️ **el ledger se quedó ahí y siguió creciendo sin anotarse** durante 4.7·2b·2·B/C: medido
+     *     el 2026-08-19, ANTES de tocar nada, el chunk estaba en **146,48 KiB** — o sea que el margen
+     *     real no eran los 4,15 de abajo sino **3,52**. Que una cifra de presupuesto envejezca en
+     *     silencio es exactamente lo que un presupuesto no puede permitirse.
+     *   · 4.4b·2 (el widget de Turnstile: `turnstile.js` + el nodo y sus bindings) ... **148,24 KiB**,
+     *     o sea **1,76 KiB** de coste real. Margen que queda: **1,76 KiB**.
      *
      * ⚠️ **El techo NO sube en 4.6, y el margen es hoy el dato que importa.** El primer tramo costó
      * **4,70 KiB** —menos de lo que ocupa su marcado, porque la fila del resumen se EXTRAJO a
      * `SummaryLine.vue` y la pantalla de pagar dejó de tener la suya— y el segundo **5,06 KiB**, con lo
-     * que quedan **4,15 KiB** de los 150.
+     * que quedan **1,76 KiB** de los 150 (re-medido en 4.4b·2; ver el ledger de arriba).
+     * ⚠️ **El siguiente que añada algo al cajón tiene el margen muy corto**: con 1,76 KiB, la decisión
+     * escrita de este proyecto sigue siendo SUBIR el techo con su motivo, no adelgazar a ciegas.
      *
      * Con eso **la fase está transcrita entera** y lo único que falta es el widget de Turnstile
      * (4.4b·2), que es un `<div>` contenedor y una llamada a un script EXTERNO —no viaja en el bundle—,
@@ -230,6 +238,18 @@ class SidebarBundleBudgetTest extends TestCase
         // visible: dejaría al cliente esperando un correo en mitad de una compra.
         '/auth/register' => 'dar de alta desde el cajón',
         'purchase' => 'declarar el contexto de compra, que es lo que activa el pay-first',
+        // ⚠️ 4.4b·2: el widget anti-bot. Va UNO, y el porqué de que no vayan dos está medido.
+        // Verificado mutando: quitar el montaje del widget y reconstruir deja esta cadena en CERO y
+        // pone rojo este caso. Discrimina de verdad.
+        'challenges.cloudflare.com' => 'cargar el widget del anti-bot en el propio cajón',
+        // ⚠️ **`turnstile_token` NO sirve de centinela, y probarlo costó una reconstrucción.** Parece
+        // el candidato natural para «el token viaja al servidor», pero al quitarlo del payload de
+        // `runRegister()` las ocurrencias bajan de 6 a **4**, no a 0: el mismo identificador vive en
+        // el cableado del formulario (`emptyForm`, el `v-model` del paso, el vaciado tras un fallo),
+        // así que el caso seguía VERDE con el token sin mandarse. Es la misma trampa que `/payment`
+        // vs `/payment-status` documentada abajo, y no hay substring que distinga «está en el
+        // payload» de «está en el formulario». Ese cableado lo cubre `register.test.js` («manda el
+        // token del anti-bot»), que sí muere al quitar la línea.
         // ⚠️ 4.5·2: el paso 9. `purchase__redirecting` es la clase de la pantalla que monta el
         // formulario firmado; sin ella el cajón crearía el pedido —reteniendo aforo— y no llevaría a
         // ninguna parte. El `/orders` del checkout no sirve de centinela: `/orders/quote` ya lo contiene.

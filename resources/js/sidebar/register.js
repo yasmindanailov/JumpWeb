@@ -32,9 +32,12 @@ export const CONTEXT_PURCHASE = 'purchase';
  * endpoint publicaba la clave pública aunque faltara la secreta, estado en el que la web **no pinta el
  * widget** y el servidor no verifica ningún token.
  *
- * Mientras el cajón no monte el widget (4.4b·2), esto es lo que evita el peor fallo posible: pintar un
- * formulario de alta que **rechazaría a todo el mundo** con «no eres un robot», sin correo y sin log.
- * Con captcha, el registro se delega en el modal de auth de Livewire, que sí lo monta.
+ * Desde 4.4b·2 este bit ya NO decide «si delegar en el modal de Livewire», sino **si montar el widget
+ * en el propio cajón**. La razón por la que sigue leyéndose de aquí y no de la clave cruda es la misma
+ * de arriba: solo cuando el anti-bot está COMPLETO tiene sentido pintar el widget. Con la clave a
+ * medias se pintaría un formulario que **rechazaría a todo el mundo** con «no eres un robot», sin
+ * correo y sin una sola línea de log —`Turnstile::verify('')` corta antes del POST y antes de su
+ * `Log::warning`—, que es exactamente el fallo que esta guarda existe para evitar.
  */
 export function signupRequiresCaptcha(config) {
     const key = config?.turnstile_site_key;
@@ -156,6 +159,10 @@ export async function runRegister({ form, api, messages = {}, auth = {} }) {
         context: CONTEXT_PURCHASE,
         // El señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
         website: form?.website ?? '',
+        // ⚠️ Cadena vacía, NUNCA `null`: `openapi/v1.yaml` declara `turnstile_token` como
+        // `type: string` sin `nullable` y `RegisterRequest` es `additionalProperties: false`, así que
+        // Spectator valida también la PETICIÓN y un `null` haría fallar por esquema, no por lógica.
+        turnstile_token: form?.turnstile_token ?? '',
     });
 
     if (! response.ok) {

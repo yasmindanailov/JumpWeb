@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). Queda **4.7**, la retirada de `Purchase.php`, EN CURSO —hechos el manifiesto congelado (·1), el inventario (·2a), la corrección del contador (·2b·1) y **la migración (B)**, con la que el diff de árbol se alimenta del servidor (`#67`–`#73`); en curso el re-apunte (·2b·2), pendientes el borrado (·2b·3) y el flag (·3)— y **4.4b·2**, el widget de Turnstile, **desbloqueado el 2026-08-16** (`#101`: las claves están, y el servidor, el contrato y la CSP ya lo soportan — falta solo el widget). ⚠️ El flag sigue en `livewire`: **la paridad está cerrada, la sustitución no**
+### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). Queda **4.7**, la retirada de `Purchase.php`, EN CURSO —hechos el manifiesto congelado (·1), el inventario (·2a), la corrección del contador (·2b·1) y **la migración (B)**, con la que el diff de árbol se alimenta del servidor (`#67`–`#73`); en curso el re-apunte (·2b·2), pendientes el borrado (·2b·3) y el flag (·3)— **4.4b·2, HECHO** el 2026-08-20 (`#108`: el cajón monta su propio widget de Turnstile y la delegación en el modal de la cabecera queda retirada). ⚠️ El flag sigue en `livewire`: **la paridad está cerrada, la sustitución no**
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -790,6 +790,30 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       · ⚠️ **Lo que NO cierra**: el registro embebido es 4.4b y el pago 4.5, así que quien se identifica
         **se queda en el paso 5** —navegar al 8 dejaría el cajón en blanco—. `TRANSCRIBED_STEPS` declara
         en el código a qué pasos se puede navegar y **solo crece**.
+- [x] **Paso 4.4b·2 — el widget del anti-bot en el cajón** (2026-08-20, `DECISIONES #108`). Retira la
+      delegación en el modal de auth de la cabecera: el cajón monta su propio Turnstile.
+      · La lógica va a `resources/js/sidebar/turnstile.js`, **módulo plano** (`CE-6`) — y a ese NIVEL a
+        propósito: `js/sidebar/*.js` es el único glob que vigila la rancidez del bundle SSR, así que una
+        subcarpeta habría escapado a la guarda y el diff de árbol daría **verde con el widget roto**.
+      · ⚠️ **El contenedor va con `v-if` y PELADO**, y las dos cosas son contrato de árbol: el Blade lo
+        envuelve en `@if ($turnstileEnabled)` y la suite **nunca siembra las claves**, así que un `<div>`
+        incondicional —o con clase— pone en rojo el diff Y el manifiesto congelado a la vez.
+      · ⚠️ **Tres cosas que NO son copia-pega del motor Livewire**: el guard `__cfTurnstileLoading` se
+        comparte pero **no sirve para cortar** (el modal de la cabecera va *eager*, así que ya vale
+        `true` cuando el cajón abre: cortar por él dejaría el widget sin pintar SIEMPRE) · se guarda el
+        `widgetId` para poder **resetear** (el token es de un solo uso y el servidor lo quema antes de
+        mirar si el correo existe) · y **no se rinde en silencio**.
+      · ⚠️⚠️ **El modo de fallo más probable es INVISIBLE**: `Turnstile::verify('')` corta antes del POST
+        y antes de su `Log::warning`, así que un widget que no se pinte da un 422 con **cero rastro** en
+        los logs y **cero** en el panel de Cloudflare. Por eso el aviso por consola no es cosmética.
+      · **Medido mutando (12 mutaciones), y salieron DOS cosas inertes, las dos propias**: un test que
+        cubría una guarda inalcanzable, y un CENTINELA de bundle (`turnstile_token`) que **no
+        discriminaba** porque el identificador vive también en el cableado del formulario — la misma
+        trampa `/payment` vs `/payment-status` que ese fichero documenta. Detalle en `#108(e)`.
+      · **Coste: 1,76 KiB de bundle; quedan 1,76.** El ledger del presupuesto llevaba caduco desde
+        4.6·2. Y `Sidebar.vue` ENCOGIÓ: 618 → 614.
+      · ⚠️ **Lo que NO cierra**: contra Cloudflare real no lo ha visto nadie. El reset está probado con
+        dobles, no con el proveedor. Va a la sesión de navegador (`VERIFICACION-E2E-CAJON.md`).
 - [x] **Paso 4.4b·1 — el alta desde el cajón** (2026-08-14, `DECISIONES #53`). El paso 5 pinta su
       formulario de registro —51 nodos— y habla con `POST /api/v1/auth/register` con
       `context: purchase`, la política **pay-first** que el servidor ya conocía. Entra también el paso 7.

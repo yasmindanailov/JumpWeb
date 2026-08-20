@@ -41,6 +41,9 @@ const props = defineProps({
 
     /** El grupo `account`: los rótulos de los dos formularios. */
     account: { type: Object, default: () => ({}) },
+
+    /** Clave pública del anti-bot; baja tal cual a `RegisterForm` (4.4b·2). */
+    turnstileSiteKey: { type: String, default: '' },
 });
 
 defineEmits(['back', 'set-mode', 'submit-login', 'submit-register']);
@@ -94,6 +97,8 @@ const a = (key) => translate(props.account, key);
         v-model:accept-terms="form.accept_terms"
         v-model:marketing="form.marketing"
         v-model:website="form.website"
+        v-model:turnstile-token="form.turnstile_token"
+        :turnstile-site-key="turnstileSiteKey"
         :errors="registerErrors"
         :submitting="submitting"
         :account="account"

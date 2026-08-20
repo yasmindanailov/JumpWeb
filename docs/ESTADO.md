@@ -11,12 +11,12 @@
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · 4.4b·1 ✅ · 4.5 ✅ · 4.6 ✅ →
 **los ONCE pasos están transcritos** y el extremo a extremo con navegador y pasarela real ya se hizo
 (`#59`). Queda **4.7** (la retirada de `Purchase.php`, **bloqueada en la verificación de staging**, `#100`)
-y **4.4b·2** (Turnstile, **ya DESBLOQUEADO**: el owner aportó las claves, `#101`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
+y **4.4b·2** ✅ (Turnstile: el cajón monta su propio widget desde el 2026-08-20, `#108`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2758 en verde** (15.791 aserciones, `--parallel` ~70 s) · **287 tests JS** (`node --test`) ·
+- Suite **2760 en verde** (15.802 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -63,9 +63,11 @@ gestión del cliente vivirá dentro del cajón: entrar y darse de alta, sus entr
 gestiones de cuenta. Hoy está repartido en tres sitios —el cajón, el modal de auth de la cabecera y las
 páginas `/mi-cuenta/…`— y el destino es UNO.
 
-- **El orden es dependencia, no preferencia**: **4.7** → **Turnstile** → **área de cliente**. El modal
-  de la cabecera no se puede retirar antes de Turnstile porque es el único que monta el widget y el
-  alta del cajón **delega en él** cuando el anti-bot está activo.
+- **El orden es dependencia, no preferencia**: **4.7** → **Turnstile** → **área de cliente**.
+  ✅ **Turnstile ya no ata nada** (4.4b·2, 2026-08-20): el cajón monta su propio widget y la delegación
+  en el modal de la cabecera **está retirada**. ⚠️ Pero el modal **no se retira aquí ni en `4.7·2b·3`**:
+  vive en `layout.blade.php`, no en `purchase.blade.php`, y sigue siendo la puerta de auth de la web
+  fuera del cajón. Retirarlo es trabajo del área de cliente.
 - ⚠️ **Lo que obliga a NO hacer desde hoy**: `machine.js` modela once pasos NUMERADOS de un embudo. Un
   área de cliente no es un embudo, así que **no se puede estrechar más la máquina** ni añadir supuestos
   de «siempre se viene del paso anterior». Rediseñar los estados es el primer trabajo de esa fase.
@@ -203,7 +205,18 @@ Esta SÍ es editable desde `/admin` (a diferencia de los secretos de Turnstile).
 verificada en vivo: **405** en GET (es POST-only) y **200** en POST sin token CSRF, o sea que la
 exención está activa y Redsys podrá notificar.
 
-▶▶ **EMPIEZA AQUÍ: 4.4b·2 — montar el widget en el cajón SPA**, que es lo único que falta de Turnstile.
+✅ **4.4b·2 HECHO** (2026-08-20, `#108`): el cajón monta su widget (`turnstile.js`, módulo plano) y la
+delegación en el modal de la cabecera **está retirada**. 17 casos nuevos de `node --test` + 2 de API +
+el centinela de bundle; **12 mutaciones**, de las que dos destaparon cosas inertes MÍAS (un test y un
+centinela) — el detalle en `#108(e)`, porque la lección es transferible.
+⚠️ **Coste medido: 1,76 KiB de bundle, y quedan 1,76.** El ledger del presupuesto llevaba caduco desde
+4.6·2 (decía 4,15 de margen cuando eran 3,52). El siguiente que añada algo al cajón lo tiene justo.
+
+▶▶ **EMPIEZA AQUÍ: la sesión de verificación en STAGING, en bloque.** Ya no queda trabajo de código
+antes de ella: poner el flag en `spa`, redesplegar y cerrar de una vez **Turnstile en el navegador**,
+la **notificación S2S** (la URL ya está configurada), el **3DS con challenge** y el **móvil real**.
+⚠️ **Falta escribir la receta de cómo poner el flag en `spa` ALLÍ**: la única que hay usa
+`docker compose exec` y en staging no hay docker.
 Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
 `RegisterForm.vue` · mandar `turnstile_token` en `register.js::runRegister` (hoy NO viaja) · retirar la
 delegación de `Sidebar.vue::setAuthMode` · el cargador del script externo (hoy solo existe para
