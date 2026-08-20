@@ -189,8 +189,19 @@ y **no** la secreta, y `siteverify` de Cloudflare responde `invalid-input-respon
 `challenges.cloudflare.com`.
 ⚠️ **NO se configuran por el panel**, y la doc decía que sí: son fila de `settings` escrita por
 `tinker`/SQL (`ENTORNOS.md` §3). Ficha en `DEUDA.md` — merece un comando propio.
-⚠️ **Sin verificar: el HOSTNAME.** Cloudflare ata las claves a un dominio y solo lo valida al canjear
-un token REAL, lo que exige navegador.
+✅ **Hostname CONFIRMADO** (owner, 2026-08-19): el widget `jumpwebtest` tiene
+`jumpweb.sites.aelium.app` en su lista, modo «Gestionado», y la site key del panel de Cloudflare
+(`0x4AAAAAAERdBnBtpE6fS2u0`) es **idéntica** a la que sirve `/api/v1/config`. Ya no queda duda sobre
+las claves; lo único que falta de Turnstile es **pintar el widget en el cajón SPA** (4.4b·2).
+
+❗ **PENDIENTE DEL OWNER, 1 minuto en el panel: `redsys_merchant_url`.** Medido el 2026-08-19: **no
+existe** en `settings` (los otros seis `redsys_*` sí). Sin ella, `DS_MERCHANT_MERCHANTURL` viaja vacío,
+Redsys **nunca envía la notificación S2S** y con un terminal *data-less* el pedido caduca **con la
+tarjeta ya cobrada** (`PAY-02`). ▶ Valor exacto:
+`https://jumpweb.sites.aelium.app/pago/redsys/notificacion`
+Esta SÍ es editable desde `/admin` (a diferencia de los secretos de Turnstile). Y la ruta ya está
+verificada en vivo: **405** en GET (es POST-only) y **200** en POST sin token CSRF, o sea que la
+exención está activa y Redsys podrá notificar.
 
 ▶▶ **EMPIEZA AQUÍ: 4.4b·2 — montar el widget en el cajón SPA**, que es lo único que falta de Turnstile.
 Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
