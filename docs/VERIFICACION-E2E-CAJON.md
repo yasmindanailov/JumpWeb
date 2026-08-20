@@ -275,6 +275,57 @@ decisión con coste, no un detalle— pero la receta es corta y reproducible:
 8. Varios recursos de la pasarela dan **404 en su propio sandbox** (`999008881-1-ni.js`, algunos PNG) y
    su página lanza `$ is not defined`. Es ruido suyo, no nuestro: no lo cuentes como error de la app.
 
+## 5.ter · LA SESIÓN DE STAGING (2026-08-20) — guion en bloque
+
+> `ENTORNOS.md` §5: **staging se toca EN BLOQUE, con guion escrito, no a goteo.** Esto es ese guion.
+> Estado de partida, medido y dejado listo el 2026-08-20: commit `9fc8922` desplegado ·
+> **`sidebar.engine = spa`** (el cajón que se sirve ES el nuevo) · anti-bot ACTIVO con las claves de
+> `jumpwebtest`, cuyo hostname es `jumpweb.sites.aelium.app` · `redsys_merchant_url` configurada ·
+> `redsys_environment = test` · correo en `log` (NO sale) · catálogo neutro con 1440 franjas.
+> Admin: `yasi09265@gmail.com`.
+>
+> ⚠️ **Si algo se tuerce, el flag es la marcha atrás**, y no hace falta desplegar:
+> `ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting sidebar.engine livewire"`.
+
+### T1 · El widget del anti-bot DENTRO del cajón
+1. Abre la web **en ventana de incógnito** (sin sesión) y abre el cajón.
+2. Llega al paso de identificarse y pulsa la pestaña **«Crear cuenta»**.
+   ▶ **Antes delegaba en el modal de la cabecera; ahora NO debe.** Si se abre el modal, la delegación
+   no se retiró y hay regresión.
+3. **Mira que el widget se pinte dentro del cajón** y complete su comprobación.
+   ⚠️ Si aparece un hueco vacío: abre la consola. El módulo avisa (`[turnstile] no cargó …`) — es el
+   único sitio donde ese fallo deja rastro: `Turnstile::verify('')` corta antes del POST a Cloudflare
+   y antes de su log, así que **no habrá nada en `storage/logs` ni en el panel de Cloudflare**.
+4. Da de alta una cuenta nueva → debe crearse y seguir el flujo.
+
+### T2 · El RESET del widget — el caso que ningún test puede ver
+Es el más importante de la sesión, porque el reset está probado **con dobles, no contra Cloudflare**.
+1. En el alta, escribe **un correo que YA exista** (p. ej. el del admin) y envía.
+2. Debe salir el aviso de que esa cuenta ya existe.
+3. **Corrige el correo por uno nuevo y vuelve a enviar SIN recargar la página.**
+   ▶ **Debe funcionar.** Si sale «no eres un robot» con el tick verde puesto, el reset no está
+   surtiendo efecto contra el proveedor: el token es de un solo uso y `SelfSignup` lo quema **antes**
+   de comprobar si el correo existe.
+
+### T3 · La notificación S2S (bloque B, ahora sin túnel)
+La URL ya está configurada, así que el bloque B de §3 se puede recorrer **contra staging directamente**,
+sin `cloudflared`. Sigue esa receta y comprueba que el pedido llega a `paid` por la notificación.
+
+### T4 · 3DS con challenge
+Tarjeta `4548 8172 1249 3017`. El flujo del cajón no cambia —se encarga la pasarela—, pero nadie lo ha
+recorrido nunca.
+
+### T5 · Móvil real
+El cajón del nav y el de compra se superponen en pantallas pequeñas, y eso solo se ve en un móvil.
+
+### T6 · Los tres idiomas en vivo
+Los textos ya se comparan palabra por palabra en las paridades; aquí solo hay que ver que el cambio de
+idioma no rompe el cajón. Verificado por HTTP el 2026-08-20 que `/lang/{es,en,fr}` cambia el
+`<html lang>`; falta recorrer el cajón en uno que no sea `es`.
+
+⚠️ **Todo hallazgo vuelve al repo** (`ENTORNOS.md` §5): como TEST si se puede testear; si no —navegador,
+pasarela, móvil—, como receta escrita aquí con su trampa medida.
+
 ## 6. Lo que este guion NO cubre, y hay que decirlo
 
 - **El 3DS con challenge** (`4548 8172 1249 3017`). El flujo del cajón no cambia —la pasarela se encarga—,
