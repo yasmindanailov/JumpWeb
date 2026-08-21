@@ -2,21 +2,25 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-19**.
+> aquí solo se enlaza. Última actualización: **2026-08-21**.
 
 ## ▶ Dónde estamos
 
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
 
-**Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · 4.4b·1 ✅ · 4.5 ✅ · 4.6 ✅ →
-**los ONCE pasos están transcritos** y el extremo a extremo con navegador y pasarela real ya se hizo
-(`#59`). Queda **4.7** (la retirada de `Purchase.php`, **bloqueada en la verificación de staging**, `#100`)
-y **4.4b·2** ✅ (Turnstile: el cajón monta su propio widget desde el 2026-08-20, `#108`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
+**Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ →
+**los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real se hizo
+(`#59`) y **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`). Queda
+**`4.7`**: la retirada de `Purchase.php`, **empezada y aparcada** en `wip/4.7-2b-3-retirada-purchase`
+(`#111`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
+
+✅ **STAGING está desplegado, sirviendo el cajón SPA y con el anti-bot activo.** Canal de despliegue:
+`scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2773 en verde** (15.834 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
+- Suite **2773 en verde** (15.843 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
   El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
@@ -77,206 +81,55 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**4.7 · la retirada de `Purchase.php`.** Lo ordena un número: **`PurchaseRetirementTest` declara 19
-dependientes** (eran 32 al corregir el escáner). ⚠️ **Pero la meta NO es 0** — ver abajo.
+**`4.7·2b·3` — terminar la retirada de `Purchase.php`.** Está EMPEZADA y APARCADA en la rama
+`wip/4.7-2b-3-retirada-purchase`; `main` está verde sin ella. **Retómala desde esa rama**, no de cero.
 
-**Las nueve paridades: auditoría CERRADA** (histórico, no hay nada que hacer aquí). Van **ocho
-auditadas**: seis fuera del inventario
-—`SidebarPayParityTest` (`#75`), `SidebarAddonsParityTest` (`#77`), `SidebarAdmissionParityTest`
-(`#78`), `SidebarCartParityTest` (`#80`), `SidebarPausedParityTest` (`#81`) y
-`SidebarProgressParityTest` (`#82`)— y dos que **mueren con el componente** y por tanto no bajan el
-contador: `SidebarCalendarParityTest` (`#79`) y `SidebarDomContractTest` (`#83`), las dos operando
-DENTRO en ·2b·3, no borradas enteras.
+⚠️ **Antes de tocar nada, lee `DECISIONES #111`**: explica por qué el orden es contraintuitivo y qué
+trampas ya se midieron. Lo esencial, para no repetirlo:
+- El **nombre de cada caso de `SidebarDomContractTest` es la CLAVE del manifiesto congelado**. Los
+  `…_in_both_engines` **no se renombran**: regenerar el manifiesto sin segundo motor congelaría como
+  contrato lo que Vue emitiera ese día.
+- El diff de árbol ve **estructura, no valores** — pero con excepciones que solo aparecen mutando una
+  a una (el día del calendario y los topes del selector SÍ son contrato). No lo deduzcas: mútalo.
+- **Mide el nombre del campo antes de escribirlo.** Cuatro suposiciones salieron mal en la sesión
+  pasada (`#111(f)`).
 
-✅ **El tramo `·C` —los dependientes que NO son paridades— también está CERRADO** (`#86`→`#98`): los
-**once** auditados, y con ellos **todas las entradas del inventario están CLASIFICADAS**. Contador 21 → **19**.
+**Lo que ya está hecho en esa rama** (y es lo que más costaba): motor retirado (2.624 líneas), flag
+fuera, el bug de los enlaces profundos arreglado, nueve ficheros muertos borrados (110 casos), un caso
+rescatado a `AccountContextTest`, y **`SidebarDomContractTest` con sus 33 casos verdes y ya
+independiente del motor**.
 
-⚠️⚠️ **Esa cifra es la esperada, no un fracaso.** `#86` midió que la mayoría de lo que queda tiene por
-sujeto la SUPERFICIE del motor —`PurchasePanelTest` (40 casos), el diff de árbol (34), el spinner…— y
-eso **solo puede salir del inventario en el commit que borra el componente**. La meta nunca fue un 0;
-era **«todo clasificado»**, y ya está. Escrito también en el docblock de `PurchaseRetirementTest`.
+**Lo que queda**: ~12 ficheros, enumerados uno a uno en el mensaje del commit de la rama —
+`SidebarEngineTest` (cirugía + renombrar a `SidebarMountTest`), `ModuleContractsTest` (⚠️ sus cuatro
+contadores exactos hay que **MEDIRLOS**, no ajustarlos hasta que pasen), `SpinnerTest`, las dos
+paridades con residuo, `DuplicateEmailEdgeCaseTest`, `CartPricerTest`, `ModuleBoundariesTest`,
+`ReservationPauseGuardTest`, `CatalogVisibilityAndCartPruneTest` y dos docblocks en `app/`. Más lang,
+doc y el commit 2 (`requestSwitchToLogin`, que queda sin oyente).
 
-**Lo que el tramo produjo de verdad, que no es el contador:**
-- **Tres huecos reales cerrados**, los tres del mismo tipo —campos que el servidor PUBLICA y cuyo único
-  test conducía la UI—: las reglas `can_*` de los complementos (`#89`), pagar sin el correo verificado
-  (`#93`) y el `type` del catálogo, que decide en qué sección aparece cada producto (`#96`).
-- **Un falso positivo evitado** (`#92`): parecía que el límite anti-abuso de crear reservas no lo
-  guardaba nadie. Lo guardan nueve casos; la mutación estaba mal apuntada.
-- **Y `CE-6` con dientes** (`#90`), que salió de una observación del owner: `Sidebar.vue` era el segundo
-  objeto-dios y nada lo vigilaba.
+⚠️ **Y una guarda que NO se puede perder al operar `SidebarEngineTest`**: sus dos
+`assertSee('livewire.js')` son **las únicas de toda la suite**. Sin ellas, el día que alguien retire
+`@livewireScripts` razonando «ya no hay componentes Livewire de compra», nada se pone rojo — y caen a
+la vez Alpine, `$store.purchase` (que es lo que ABRE el cajón desde los once puntos de la landing),
+`$store.auth`, los tres modales de auth y `account-context`.
 
-✅ **El bloqueador `#74` está RESUELTO** (`#99`) y **el inventario está clasificado entero**.
-⚠️ **Pero «clasificado» NO es «borrar no rompe nada»: hay un agujero medido de UN fichero**
-(`DECISIONES #103`). `SidebarEngineTest` **no está en las 19 entradas** —el escáner no lo caza porque
-no nombra `Purchase::` ni la vista— y sus dos casos comparan los dos motores, así que uno se pone rojo
-al borrar (o, peor, se queda VERDE con el cajón en blanco). Hay que decidir su destino **antes**.
-
-⚠️⚠️ **Y borrar no es limpiar: es ACTIVAR** (`DECISIONES #100`) — con un matiz medido el 2026-08-19
-que cambia el reparto del trabajo (`#103`): **el borrado por sí solo NO activa la SPA**. El default y
-el fallback de `usesSpa()` son `livewire`, así que quitar la rama `@else` deja el cajón **vacío**, no
-en SPA. **Lo que activa el motor es `4.7·3` — retirar el flag**, un paso que existe en el tracker y
-que la cadena de abajo no contaba. Son dos trabajos, no uno; y `4.7·3` es el que hereda entera la
-condición de `#100` (**Turnstile y los tres caminos de navegador, verificados en staging**).
-
-✅ **STAGING APROVISIONADO** (2026-08-16, `#102`): BD `jumpweb_1_test` (MariaDB 11.4.10, verificada
-conectando) · PHP 8.3 · `documentRoot` → `public_html/public` · `robots.txt` con `Disallow: /`
-sirviéndose por HTTPS. `ENTORNOS.md` §4 tiene el detalle y las cuatro cosas que la doc del panel no
-cuenta.
-
-⚠️⚠️ **ANTES de `deploy.sh` había DOS bloqueos que la cadena anterior no veía** (`DECISIONES #103`,
-medidos el 2026-08-19). No son «tener cuidado»: sin ellos el despliegue **no puede terminar** o
-**no compra lo que dice comprar**. **Ya NO queda ninguno: los dos están resueltos** (2026-08-19).
-
-1. ✅ **RESUELTO (2026-08-19) · el PHP del sitio.** 17 paquetes `symfony/*` exigen `php >=8.4.1` y
-   staging se aprovisionó en 8.3, así que `composer install --no-dev` habría abortado. El owner subió
-   el sitio y está **verificado por SSH**: `php -v` → **8.5.1**, y `which php` → `/usr/bin/php`, o sea
-   que es el binario que usarán `composer`, `artisan` y el cron. Detalle en `ENTORNOS.md` §4, punto 0.
-2. ✅ **RESUELTO (2026-08-19, `DECISIONES #104`) · el primer admin.** Tras desplegar no había forma
-   de entrar a `/admin`, y ahí es donde se configuran las claves de Turnstile. `ProductionSeeder` crea 0 usuarios · `DatabaseSeeder` solo crea admin
-   `if (! isProduction())` · `canAccessPanel()` exige rol `admin`/`staff` (que `make:filament-user`
-   no da) · `Turnstile::keys()` lee **solo** de `settings`. Cadena: sin admin → sin panel → sin claves
-   → 4.4b·2 quedaba bloqueado. ▶ **Hecho: `app:create-admin`** (17 casos, **11 mutaciones muertas**).
-   Genera la contraseña y la enseña UNA vez · **idempotencia ASIMÉTRICA**: repara el rol si falta pero
-   **NO** toca la contraseña (rotarla en cada redespliegue echaría al owner de su panel) · aborta con
-   código 1 si el rol no está sembrado o si se le pide un rol que no abre el panel.
-   ⚠️ **`make:filament-user` NO servía**: `canAccessPanel()` exige el rol de la pivote `role_user`, que
-   ese comando no toca — habría creado una cuenta que existe y **no entra**.
-   Cierra el `[DECISION-PENDIENTE]` de `INSTALACION-CLIENTE.md` §5 **con código y prueba**.
-
-✅✅ **STAGING DESPLEGADO Y VERIFICANDO** (2026-08-19, `DECISIONES #105` + `#106`).
-`scripts/deploy.sh` existe, se ejecutó **dos veces** (idempotente: la 2.ª dijo «Nothing to migrate» y
-no duplicó el cron) y el sitio sirve. Lo guarda `DeployScriptGateTest` (26 casos, **14 mutaciones
-muertas**).
-**Verificado POR FUERA del script** (`#59`: verde no es funciona): las **12 páginas públicas en 200**
-· los **tres idiomas en vivo** · `/admin` 302 y `/admin/login` 200 · `/api/v1/config` 200 ·
-`robots.txt` con `Disallow: /` · 5 tareas del scheduler · `failed_jobs` vacía.
-Contenido: semilla neutra SaltoPark + **1440 franjas** · admin creado.
-⚠️ **Y el despliegue destapó que la guarda del DINERO daba un VERDE FALSO** (`#106`): leía
-`redsys_environment` por un FQCN que no sobrevive a ssh, el `tr` convertía el `PARSE ERROR` en basura
-con pinta de valor, y la condición preguntaba «¿contiene `live`?» — así que **habría pasado con el
-entorno en `live`**. Arreglado y **fail-closed**: ahora exige `test` exacto y aborta ante cualquier
-otra cosa. ▶ **La regla, para toda guarda de dinero: pregunta «¿es lo que ESPERO?», nunca «¿es lo que
-TEMO?».**
-⚠️ **Medido de paso**: el idioma va por SESIÓN (`/lang/{locale}`), **no por prefijo de URL** — `/en` y
-`/fr` dan 404 y es correcto.
-Construir assets en local (**no hay node en el servidor**), `rsync`, `.env` con las seis guardas de
-`ENTORNOS.md` §2, `composer install --no-dev`, `migrate --force`, `ProductionSeeder`,
-**`app:create-admin`**, `slots:generate-rolling`, permisos y cron del scheduler (**el `crontab` del
-sitio SÍ se puede escribir, y está VACÍO**).
-**La máquina ya está medida entera** (`ENTORNOS.md` §4): el `rsync` entra como `jumpweb_1`, así que
-**no hace falta `chown`**; la raíz de la app es `~/public_html/` y el docroot su `public/`. ⚠️ **`storage:link` NO va**: `INSTALACION-CLIENTE.md` §1 lo prohíbe y el código lo
-confirma (0 usos del disco `public`; la única subida es `Offer::IMAGE_DISK='uploads'` →
-`public/uploads`, que además hay que **excluir del `--delete`** o el segundo despliegue borra las
-subidas del panel).
-
-⚠️ **Cinco cosas que el script tiene que hacer y no son obvias:**
-- **reescribir `public/robots.txt` con `Disallow: /` y verificarlo por HTTP** — el del repo permite
-  indexar a propósito (el producto debe indexarse en casa de un cliente), así que el primer `rsync`
-  tumba la guarda 4 si el script no lo repone;
-- **negarse** si el destino no es staging, si `redsys_environment` quedaría en `live`, si el correo
-  saldría o si `APP_DEBUG` es `true` — lo valioso del script es lo que **no** deja hacer;
-- **borrar `public/hot` en destino y excluirlo del envío**: si existe, Vite sirve TODOS los assets
-  desde `localhost:5274` y la web queda sin CSS ni JS **sin ningún error de servidor**;
-- **comprobar la salud del sitio al terminar** (`/up` → 200, `robots.txt`, `schedule:list`), no dar
-  por hecho que fue bien;
-- ⚠️ **al verificar el `robots.txt`, comparar el CONTENIDO y por HTTP, no el tamaño**: medido en las
-  dos puntas el 2026-08-19, el servido (26 B) y el del repo (25 B) **pesan casi igual**.
-⚠️ **`ProductionSeeder` no deja nada comprable por sí solo**: crea `SlotTemplate`s pero **0 franjas**
-y marca las entradas `is_sellable => false` (solo venden los packs). Hay que correr
-`slots:generate-rolling` después, o no habrá qué comprar para verificar Turnstile, S2S ni 3DS.
-
-✅ **Turnstile CONFIGURADO en staging** (2026-08-19, `#107`): `/api/v1/config` publica ya la site key
-y **no** la secreta, y `siteverify` de Cloudflare responde `invalid-input-response` —**no**
-`invalid-input-secret`—, o sea que **reconoce el secreto como válido**. El servidor tiene salida a
-`challenges.cloudflare.com`.
-⚠️ **NO se configuran por el panel**, y la doc decía que sí: son fila de `settings` escrita por
-`tinker`/SQL (`ENTORNOS.md` §3). Ficha en `DEUDA.md` — merece un comando propio.
-✅ **Hostname CONFIRMADO** (owner, 2026-08-19): el widget `jumpwebtest` tiene
-`jumpweb.sites.aelium.app` en su lista, modo «Gestionado», y la site key del panel de Cloudflare
-(`0x4AAAAAAERdBnBtpE6fS2u0`) es **idéntica** a la que sirve `/api/v1/config`. Ya no queda duda sobre
-las claves; lo único que falta de Turnstile es **pintar el widget en el cajón SPA** (4.4b·2).
-
-❗ **PENDIENTE DEL OWNER, 1 minuto en el panel: `redsys_merchant_url`.** Medido el 2026-08-19: **no
-existe** en `settings` (los otros seis `redsys_*` sí). Sin ella, `DS_MERCHANT_MERCHANTURL` viaja vacío,
-Redsys **nunca envía la notificación S2S** y con un terminal *data-less* el pedido caduca **con la
-tarjeta ya cobrada** (`PAY-02`). ▶ Valor exacto:
-`https://jumpweb.sites.aelium.app/pago/redsys/notificacion`
-Esta SÍ es editable desde `/admin` (a diferencia de los secretos de Turnstile). Y la ruta ya está
-verificada en vivo: **405** en GET (es POST-only) y **200** en POST sin token CSRF, o sea que la
-exención está activa y Redsys podrá notificar.
-
-✅ **4.4b·2 HECHO** (2026-08-20, `#108`): el cajón monta su widget (`turnstile.js`, módulo plano) y la
-delegación en el modal de la cabecera **está retirada**. 17 casos nuevos de `node --test` + 2 de API +
-el centinela de bundle; **12 mutaciones**, de las que dos destaparon cosas inertes MÍAS (un test y un
-centinela) — el detalle en `#108(e)`, porque la lección es transferible.
-⚠️ **Coste medido: 1,76 KiB de bundle, y quedan 1,76.** El ledger del presupuesto llevaba caduco desde
-4.6·2 (decía 4,15 de margen cuando eran 3,52). El siguiente que añada algo al cajón lo tiene justo.
-
-✅✅ **LOS CUATRO CAMINOS DE `#100`, VERIFICADOS EN STAGING** (2026-08-20, owner, `#110`), con el motor
-en `spa`: **Turnstile dentro del cajón** (ya no delega en el modal) · **el RESET del widget** —el caso
-que ningún test puede ver— · el **pago completo con notificación S2S** · **3DS con challenge** y
-**móvil real**, que nadie había recorrido nunca.
-Corroborado en BD: 3 pedidos, **2 en `paid`**, 16 entradas — y los pagos de 30,00 € sobre totales de
-151,20/127,20, o sea que **la señal funcionó** de paso (`PAY-10`).
-⚠️ **Límite de esa corroboración**: `paid` **no distingue** si lo cerró el S2S o el retorno del
-navegador (`RedsysReturnHandler` atiende los dos y es idempotente), y no hay access log accesible al
-usuario del sitio. T3 se apoya en la receta seguida, no en una medición independiente (`#110(c)`).
-
-▶▶ **EMPIEZA AQUÍ: `4.7·2b·3` — el borrado de `Purchase.php`.** `#100` ya no lo bloquea.
-✅ **Y ya hay con qué poner el flag allí**: `app:set-setting sidebar.engine spa` (`#109`), que cierra
-de paso la ficha de DEUDA de los secretos de BD — el mismo hueco había mordido tres veces.
-Lo que falta de 4.4b·2 son **seis piezas, no tres** (`#101(b)` decía tres): el widget en
-`RegisterForm.vue` · mandar `turnstile_token` en `register.js::runRegister` (hoy NO viaja) · retirar la
-delegación de `Sidebar.vue::setAuthMode` · el cargador del script externo (hoy solo existe para
-Livewire) · re-apuntar las **tres redes** que hoy afirman lo contrario · y medir el coste en bundle
-contra **4,15 KiB de margen** (`SidebarBundleBudgetTest`).
-⚠️ **Se desarrolla en LOCAL**: Cloudflare emite claves de prueba que aceptan cualquier hostname y
-`Turnstile::verify()` se ejercita con `Http::fake`. Staging es para verificarlo, no para construirlo.
-
-**Y en staging, lo que `#100` exige antes de borrar nada:**
-1. **Turnstile** (4.4b·2), la
-   **notificación S2S** de Redsys, el **3DS con challenge** y el **móvil real**.
-   ⚠️ Ojo con la referencia: el S2S **no está en `VERIFICACION-E2E-CAJON.md` §6** —§6 lista 3DS, los
-   tres idiomas, móvil y Turnstile—; su receta es el **bloque B (§3)**, y está escrita para un túnel
-   `cloudflared` local, sin variante de staging todavía.
-   ⚠️ **Y falta la receta de cómo poner el flag en `spa` ALLÍ**: la única escrita usa
-   `docker compose exec`, y en staging no hay docker (el flag tampoco es editable por panel).
-2. **`4.7·2b·3`**: el borrado. ⚠️ **NO está «sin decisiones abiertas»**, y son DOS, ya medidas:
-   · el destino de **`SidebarEngineTest`**, que **no está en el inventario** (el escáner no lo caza) y
-     cuyos dos casos existen para comparar los DOS motores: dejan de tener sujeto cuando queda uno;
-   · y el del modo **`embedded`** de `auth.login`/`auth.register`, que se queda sin usuario porque
-     `purchase.blade.php` era el único sitio que lo montaba.
-   ⚠️ Y lo que NO cambia: **el modal de auth de la CABECERA sobrevive** — vive en `layout.blade.php`,
-   no en `purchase.blade.php`. Retirarlo es trabajo del área de cliente (`#66`).
-3. **`4.7·3` — retirar el flag**, que es *lo que de verdad activa el motor SPA* (`#103`). Faltaba en
-   esta cadena.
-4. **`scripts/provision.sh`** contra la API del panel, **después** del `deploy.sh` (`#102(f)`): su
-   trabajo es dejar el servidor en el estado que el despliegue espera, y ese estado solo se conoce
-   habiéndolo alcanzado una vez. Necesita un token nuevo, con el menor alcance posible.
-
-⚠️ **El token de API usado para medir esto era temporal y el owner lo retira.** El panel es
-`https://cp.hosturbo.net/api`; los identificadores del sitio están en `ENTORNOS.md` §4.
-
-**El MÉTODO de la auditoría —clasificar por sujeto y medir mutando— vive ahora en
-`CONVENCIONES.md` §3.quater**, que es donde se busca un protocolo. Aquí solo el estado.
+**Después de `4.7·2b·3`**: desplegar a staging y comprobar en navegador el punto **A7 · enlaces
+profundos** de `VERIFICACION-E2E-CAJON.md` — es el arreglo que la rama trae y **nadie lo ha visto
+funcionar**; `#100` no lo incluyó entre sus cuatro caminos. Luego, `scripts/provision.sh` (`#102(f)`),
+que necesita un token nuevo del panel: el usado para medir lo retiró el owner.
 
 ### Lo que NO depende de nosotros
 
-- ✅ **Ya hay servidor de PRUEBAS**: `jumpweb.sites.aelium.app` (`DECISIONES #76`, reglas en
-  `docs/ENTORNOS.md`). **0 LIVE, 0 PRODUCCIÓN.** Desbloquea las cuatro cosas que estaban atascadas por
-  falta de URL pública: **Turnstile** (4.4b·2), la **notificación S2S** de Redsys, el **3DS con
-  challenge** y el **móvil real**.
-  ⚠️ **Pero `#62` NO se reabre**: retiró «esperar a que ruede en producción» por vacía, y un staging
-  **no tiene tráfico**. Lo que ordena 4.7 sigue siendo el CONTADOR, no el calendario.
-  ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca en bloque y con guion.
-  ▶ **La máquina ya está MEDIDA** (`ENTORNOS.md` §4, acceso por clave verificado). Dos diferencias con
-  local que condicionan el trabajo: **la BD es MariaDB 11.4, no MySQL 8.4** —así que «verificado en
-  staging» **NO** equivale a «verificado en MySQL», y ninguna conclusión sobre concurrencia sale de
-  ahí— y **no hay node/npm**, así que los assets se construyen fuera y se suben compilados.
-  ▶ Pendiente: el **procedimiento de despliegue**, que cierra el `[DECISION-PENDIENTE]` de
-  `INSTALACION-CLIENTE.md` §1 y se escribe **midiendo**, no a ojo.
-- **Pendiente del owner** (❗): 2FA del panel · mecanismo del primer admin (`INSTALACION-CLIENTE.md` §5)
-  · backlog de producto de Fase 6.
+- ✅ **Servidor de PRUEBAS**: `jumpweb.sites.aelium.app` (`#76`), **desplegado y sirviendo** (`#106`).
+  **0 LIVE · 0 PRODUCCIÓN.** Las cuatro cosas que estaban atascadas por falta de URL pública
+  —Turnstile, S2S, 3DS y móvil— **están verificadas** (`#110`).
+  ⚠️ **Dos diferencias con local que siguen condicionando el trabajo** (`ENTORNOS.md` §4): la BD es
+  **MariaDB 11.4, no MySQL 8.4** —«verificado en staging» **NO** equivale a «verificado en MySQL», y
+  ninguna conclusión sobre concurrencia sale de ahí— y **no hay node/npm**, así que los assets se
+  construyen fuera y se suben compilados.
+  ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca EN BLOQUE y con guion escrito
+  (`VERIFICACION-E2E-CAJON.md` §5.ter).
+- **Pendiente del owner** (❗): 2FA del panel · backlog de producto de Fase 6 · un **token nuevo de la
+  API del panel** para `scripts/provision.sh` (el usado para medir se retiró).
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 
@@ -286,12 +139,18 @@ cantidad → complementos → carrito → identificarse (entrar o **crear cuenta
 motivo y reintento, y el sondeo cada 5 s del terminal *data-less*). Con las reservas pausadas sustituye
 el flujo por el aviso de mantenimiento. La cesta sobrevive a la recarga.
 
-⚠️ **Pero el flag NO está activado: su default es `livewire` y ese es el motor que vende.** Lo que falta
-para activarlo es Turnstile y los tres caminos de navegador de arriba, no pantalla.
+✅ **Y ya es el motor que se sirve en staging**, con el anti-bot activo y los cuatro caminos de
+navegador verificados (`#110`). En `main` el flag sigue existiendo con default `livewire`; se retira
+con `4.7` (la rama aparcada ya lo hace).
 
 ⚠️ **Residual de la pausa**: el estado se relee al cargar la página, en cada apertura del cajón y al
 pulsar «Ir a pagar». Un cajón ABIERTO y quieto no se entera del interruptor hasta cerrarlo, reabrirlo o
-intentar pagar; Livewire sí, porque reevalúa su guarda en cada render.
+intentar pagar.
+
+⚠️ **Y un agujero MEDIDO que la rama arregla y nadie ha visto funcionar todavía**: los enlaces
+profundos de la landing (zona, packs, eventos) abrían el cajón en el catálogo raíz con el motor SPA,
+porque el adaptador de intención de Livewire consumía la intención antes de que la SPA se montara
+(`#111(h)`). Hay que comprobarlo en navegador tras desplegar la rama — es el punto **A7** del guion.
 
 ## ▶ El MAPA del cajón SPA (para no buscarlo a ciegas)
 
@@ -379,6 +238,10 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | 4.7·2b·1 | El contador medía 25 de 32 · la suite dependía de la fecha | `#63`, `#64` |
 | 4.7·2b·2 | Re-apuntar al servidor: `RedsysIdaTest`, `ModuleContractsTest`, `SidebarPayParityTest` | `#65`, `#75` |
 | 4.7·2b·2·B | **El diff de árbol se alimenta del SERVIDOR** en los once pasos y el armazón | `#67`–`#73` |
+| 4.7·2b·2·C | Los dependientes que no son paridades · el inventario queda CLASIFICADO | `#86`–`#98` |
+| 4.4b·2 | **El widget del anti-bot en el cajón**, y dos centinelas que no mordían | `#108` |
+| Staging | Despliegue (`deploy.sh`) · la guarda del dinero en verde falso · los CUATRO caminos verificados | `#105`–`#110` |
+| 4.7·2b·3·0 | **Independizar el contrato de árbol ANTES de borrar** (el fixture salía del motor) | `#111` |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
 **verde no es funciona** (`#59`: la fase entera transcrita y el motor no vendía) · **una foto que

@@ -4407,3 +4407,65 @@ modo `embedded` de `auth.login`/`auth.register`, que el propio tramo declara «p
 **(e) Y una cosa que NO cambia**: el modal de auth de la cabecera **sobrevive** al borrado. Vive en
 `layout.blade.php`, no en `purchase.blade.php`, y sigue siendo la puerta de auth de la web fuera del
 cajón. Retirarlo es trabajo del área de cliente (`#66`), no de 4.7.
+
+## #111 · 2026-08-21 · [DECIDIDO] Independizar el contrato de árbol ANTES de borrar, y por qué el orden inverso no funcionaba
+El borrado de `Purchase.php` (`4.7·2b·3`) se intentó de frente, se PARÓ a mitad con una medición, y se
+rehízo con el orden invertido. Lo que sigue es esa lección, que es lo transferible.
+
+**(a) ⚠️ El primer intento se paró por una señal de aborto puesta a propósito, y funcionó.** El pliego
+predecía «exactamente 2 rojos» al colapsar la bifurcación; salieron **4**. Se paró a medir en vez de
+seguir: **no había mecanismo nuevo** —eran los dos previstos, y el pliego había contado los casos de
+menos (`SidebarEntry::consume()` corriendo ahora en cada render del layout afecta a TRES casos, no a
+uno)—. Se siguió. La señal de aborto vale precisamente porque a veces se levanta sin drama.
+
+**(b) ⚠️⚠️ Lo que sí paró el intento: `Purchase` no era «el otro motor», era la FÁBRICA DE FIXTURES.**
+El pliego decía que re-apuntar `SidebarDomContractTest` era «retirar los renderizadores del motor viejo
+y la firma de `$livewire`». Medido: quedaban **65 usos de `$component->`** que no eran comparación —
+`cartApiPayload($component)`, `confirmedApiPayload($component)`, `$component->get('qty'|'date'|'step')`,
+`viewData(...)`—. Reconstruirlos con un solo motor es hacerlo **sin nada contra lo que validarlos**, en
+el fichero que protege 90 de los 292 selectores estructurales del cajón.
+
+**(c) El problema de fondo no era el acoplamiento: era la CIRCULARIDAD.** El payload que se le daba a
+Vue salía del motor Livewire que ese mismo fichero comparaba. Con los dos motores vivos el
+`assertSame($livewire, $vue)` lo tapaba —los dos lados nacían del mismo sitio—; al quedar uno, la
+circularidad se vuelve invisible y el manifiesto congelaría lo que Vue emitiera ese día.
+
+▶ **De ahí el orden, que es contraintuitivo y es la decisión de esta entrada: independizar PRIMERO,
+con los dos motores vivos —la única ventana en la que se puede comprobar que el fixture declarado
+produce el mismo árbol que el derivado— y borrar DESPUÉS.** Al revés se reconstruyen 65 fixtures a
+ciegas. Es el mismo error de método que `#106`: preguntar «¿pasa el test?» en vez de «¿sigue midiendo
+lo mismo?».
+
+**(d) Hecho en cuatro entregas verdes sobre `main`**, cada una medida instrumentando el helper para
+volcar lo que el motor producía ANTES de sustituirlo, y cada una mutada. La validación cazó **cuatro
+errores propios al vuelo** (dos casos de cesta vacía que recibieron la llena, y dos fixtures mal
+declarados), que es exactamente para lo que se hizo así.
+
+**(e) Y una regla que salió de mutar, y que no se puede deducir:** el diff de árbol es sensible a la
+**FORMA** (una línea de cesta, un complemento, `event_data`: 2, 1 y 6 rojos) pero **no a los valores**
+(cambiar `qty` de 6 a 7: verde). ⚠️ **Con excepciones que solo aparecen mutando una a una**: el día del
+paso de FECHA sí muerde —`aria-current="date"` marca la celda del calendario— y los topes del selector
+también —`disabled` es atributo de contrato—. **Dos fechas en el mismo fichero, una es contrato y la
+otra no.** Deducirlo de una regla general habría dejado fixtures inertes.
+
+**(f) Cuatro nombres de campo que se habían SUPUESTO mal**, y los cuatro se cazaron midiendo antes de
+escribir: la señal en el presupuesto es `online_amount_cents < total_cents` (no existe `deposit_cents`)
+· el post-form es `guest_form_pending` (no `has_guest_form`) · lo pendiente en el parque es
+`pending_at_gate_cents` · la pausa es `reservations_paused` (no `paused`).
+
+**(g) ⚠️ Restricción que manda sobre el resto del borrado: el NOMBRE de cada caso es la CLAVE del
+manifiesto congelado.** Los `…_in_both_engines` **no se pueden renombrar** sin regenerarlo, y
+regenerarlo sin segundo motor congelaría como contrato lo que Vue emitiera ese día. Se quedan con su
+nombre histórico, y aquí queda escrito por qué no es descuido.
+
+**(h) Un BUG VIVO destapado y arreglado.** El adaptador de intención de Livewire (`app.js`) se
+registraba **sin mirar el motor**, y `flushIntent()` CONSUME la intención antes de aplicarla: con el
+cajón SPA se quedaba con el primer `openWith()` de cada carga y lo despachaba a un componente que ya no
+se renderizaba. Los tres enlaces profundos de la landing (zona, packs, eventos) abrían el cajón en el
+catálogo raíz. ⚠️ **No estaba entre los cuatro caminos que `#100` exigió verificar**, así que se
+desplegó roto y nadie lo vio. El borrado del adaptador es su arreglo, y está en la rama.
+
+**(i) Estado: `main` VERDE con las cuatro entregas; el borrado APARCADO en
+`wip/4.7-2b-3-retirada-purchase`** con el motor ya retirado y —lo que más costaba— el contrato de árbol
+independiente y en verde (33 casos). Lo que queda son ~12 ficheros ya identificados uno a uno en el
+mensaje de ese commit.

@@ -68,8 +68,10 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
 | resto | `sales.hold_minutes` (seed 15; fallback de código sin fila: 20) · `purchase_horizon_months` (6) · `payment.tax_rate` (21) · `incidents.alert_email` (→ `contact.email`) · `puerta.*` · `display_timezone` · `maintenance.*` · `cookies.banner_enabled` · `registration.*` (waiver externo) · `social.*` · `landing.tagline/footer_rights` · `catalog.search_min_items` | Default sano. Fuente de verdad exhaustiva: `Settings::MANAGED` |
 | **no tocar** | `redsys_next_gateway_order` (contador vivo) · `sales.manual_hold_minutes` (no expuesto) | — |
 
-- `[DECISION-PENDIENTE]` `security.turnstile_*`: excluidas del panel («viven en el vault»)
-  pero `.env.production.example` dice lo contrario; hoy la única vía es INSERT a mano.
+- ✅ **[RESUELTO 2026-08-20, `DECISIONES #109`]** `security.turnstile_*` están excluidas del panel
+  **a propósito** (son secretos), y ya no hay que meterlas con un INSERT a mano: la vía es
+  `php artisan app:set-setting security.turnstile_site_key '0x…' --group=security`. El comando nunca
+  imprime el valor de un secreto —se ejecuta por SSH y su salida acaba en el log del despliegue—.
 - Nota menor verificada: `ProductionSeeder` guarda `registration.url` con `group=business`
   y el panel la reescribe a `group=registration` (sin efecto: se lee por `key`).
 

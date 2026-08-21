@@ -1049,7 +1049,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         único caso que lo caza.
       · **No borra ni un test del motor que hoy vende**: eso es 4.7·2b·3, en el mismo commit que el
         componente. Suite **2715 verde**.
-- [ ] **Paso 4.7·2b·2 — re-apuntar lo que SOBREVIVE** (EN CURSO; 2026-08-15, `DECISIONES #65`): los
+- [x] **Paso 4.7·2b·2 — re-apuntar lo que SOBREVIVE** (✅ **CERRADO**; casilla cerrada el 2026-08-21:
+      su condición terminal la declaró cumplida el tramo `·C` —«LAS ENTRADAS DEL INVENTARIO ESTÁN
+      CLASIFICADAS», `DECISIONES #98`— y se quedó abierta por descuido).
+      2026-08-15, `DECISIONES #65`: los
       ficheros cuyo sujeto es el dominio o el servidor y que solo usan el componente como conductor, más
       las paridades que pueden compararse contra el manifiesto congelado o contra el contrato (`lang/`,
       `openapi/v1.yaml`).
@@ -1498,8 +1501,9 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **LAS ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
         ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
-- [ ] **Paso 4.7·2b·3 — borrar el componente** (pendiente; ✅ **DESBLOQUEADO el 2026-08-20**,
-      `DECISIONES #110`: los cuatro caminos que `#100` exigía están verificados en staging con el motor
+- [ ] **Paso 4.7·2b·3 — borrar el componente** (🟦 **EN CURSO, APARCADO en
+      `wip/4.7-2b-3-retirada-purchase`** desde el 2026-08-21, `DECISIONES #111`; ✅ desbloqueado el
+      2026-08-20 por `#110`: los cuatro caminos que `#100` exigía están verificados en staging con el motor
       en `spa` — Turnstile dentro del cajón y su reset, el pago con notificación S2S, el 3DS con
       challenge y el móvil real).
       ⚠️ **Quedan sus DOS decisiones propias**, ya medidas: el destino de `SidebarEngineTest` —que NO
@@ -1511,10 +1515,11 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `ESTADO.md` declara que para activarlo faltan **Turnstile y los tres caminos de navegador**.
       ⚠️ **El contador y esto son preguntas DISTINTAS**: aquél dice cuándo se puede borrar sin romper
       la suite; no dice qué motor queda sirviendo después. Solo estaba escrita una.
-      ▶ **Orden decidido por el owner**: (1) levantar staging — ✅ **aprovisionado** el 2026-08-16
-      (`#102`); queda el **despliegue**, todavía `[PENDIENTE DE MEDIR]`; (2) flag en `spa` allí y
-      cerrar los tres caminos + Turnstile (✅ desbloqueado, `#101`); (3) **y entonces** borrar. `#62` no se reabre: esto no es «dejarlo rodar», son tres
-      verificaciones concretas y nombradas.
+      ▶ **Orden decidido por el owner, y CUMPLIDO ENTERO**: (1) levantar staging — ✅ aprovisionado
+      (`#102`) y ✅ **desplegado** con `scripts/deploy.sh` (`#105`, `#106`); (2) flag en `spa` allí y
+      cerrar los cuatro caminos — ✅ **verificados por el owner el 2026-08-20** (`#110`); (3) **y
+      entonces** borrar, que es lo que queda. `#62` no se reabre: no era «dejarlo rodar», eran cuatro
+      verificaciones concretas y nombradas, y están hechas.
       **Lo que se borra cuando toque**: `Purchase.php`,
       `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
       `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
@@ -1551,6 +1556,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         paso 5 deja de renderizarse en cuanto `registration-submitted` salta al 7. Decidir si el modo
         `embedded` se retira aquí o se deja para Fase 5 es parte de este tramo, no un descubrimiento
         para el final.
+- [x] **Paso 4.7·2b·3·0 — independizar el contrato de árbol ANTES de borrar** (2026-08-21,
+      `DECISIONES #111`). Cuatro entregas verdes sobre `main`.
+      ⚠️ **El orden es contraintuitivo y es lo que hay que llevarse de aquí**: `SidebarDomContractTest`
+      sacaba sus fixtures **del motor Livewire que él mismo comparaba** —65 usos de `$component->`—.
+      Con los dos motores vivos el `assertSame($livewire, $vue)` lo tapaba; al quedar uno, la
+      circularidad se vuelve invisible y el manifiesto congelaría lo que Vue emitiera ese día. Por eso
+      se independiza PRIMERO, que es la única ventana en la que se puede comprobar que el fixture
+      declarado produce el mismo árbol que el derivado.
+      · Cada valor se midió instrumentando el helper ANTES de sustituirlo, y cada entrega se mutó. La
+        validación cazó **cuatro errores propios al vuelo**.
+      · **Regla que salió de mutar**: el diff ve ESTRUCTURA, no valores — **con excepciones que solo
+        aparecen mutando una a una** (el día del calendario y los topes del selector SÍ son contrato).
+      · Y **cuatro nombres de campo estaban supuestos mal**: `online_amount_cents < total_cents`,
+        `guest_form_pending`, `pending_at_gate_cents`, `reservations_paused`.
 - [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
       ⚠️ **[DECIDIDO 2026-08-19] Este es el paso que ACTIVA el motor SPA, no `·2b·3`.** Mientras el
       default y el fallback de `SidebarSettings::engine()` sean `livewire`, borrar el componente deja
