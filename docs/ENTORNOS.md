@@ -168,6 +168,41 @@ Inventario en solo lectura, para no volver a suponerlo:
    no se liberan). Comprobar el cron es parte de la instalación, no un extra.
    ▶ **Pendiente del owner**: activar las tareas programadas del sitio en el panel de Enhance.
 
+   **LA ENTRADA EXACTA** (medida el 2026-08-22, no supuesta):
+
+   ```
+   * * * * * cd /var/www/c4bf5527-126c-4fe3-9086-7f346458a4fd/public_html && /usr/bin/php artisan schedule:run >/dev/null 2>&1
+   ```
+
+   Si el panel pide los campos por separado: **frecuencia** cada minuto (`* * * * *`) · **directorio**
+   `~/public_html` · **comando** `/usr/bin/php artisan schedule:run`.
+
+   ⚠️ **Cada minuto no es negociable**, aunque solo una de las cinco tareas corra a esa frecuencia:
+   `schedule:run` es el despachador; es él quien decide qué toca. Con una frecuencia menor, el worker
+   de cola (`queue:work`, cada minuto) se retrasa y con él **todo el correo transaccional**.
+
+   ⚠️ **`/usr/bin/php` y no `/opt/ecp-php85/bin/php`**, aunque hoy el primero sea un enlace al segundo:
+   `/usr/bin/php` sigue al PHP que el panel asigne al sitio, y clavar la ruta de la versión rompería
+   el cron el día que se suba a 8.6. Medido: incluso con el entorno vacío —que es como corre cron—
+   `php` resuelve a `/usr/bin/php` → 8.5.1.
+
+   ⚠️ **Puede quedar DUPLICADO con el que instala `deploy.sh`** en el crontab del usuario (mismo
+   comando, marcador `# jumpweb:scheduler`). Hoy ese no se ejecuta —no hay demonio cron— pero si al
+   activar el panel también empieza a correr, habría dos despachadores por minuto. No es peligroso
+   —las tareas llevan `withoutOverlapping`— pero **comprueba cuál de los dos vive** y quédate con uno:
+   `ssh jumpweb-staging 'crontab -l'`.
+
+   ▶ **CÓMO SABER QUE FUNCIONA, sin esperar a que algo falle.** Hay un canario servido: en la cola
+   quedó un `OrderExpiredWithoutPayment` varado desde el 2026-08-21. Si el cron arranca, se envía solo
+   en menos de un minuto:
+
+   ```
+   ssh jumpweb-staging "cd ~/public_html && php artisan tinker --execute='echo DB::table(\"jobs\")->count();'"
+   ```
+
+   **1 → 0** significa que el despachador vive. Y desde `DECISIONES #115` el propio `deploy.sh` lo
+   comprueba al terminar: su paso 9 pasa de `✗ cola: 1 jobs VARADOS` a verde.
+
 ### El APROVISIONAMIENTO, ya medido (2026-08-16, `DECISIONES #102`)
 
 ✅ **Hecho**: BD `jumpweb_1_test` + su usuario · sitio en **PHP 8.3** · `documentRoot` →

@@ -9,14 +9,14 @@
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
-**4.7 ✅ en código y suite** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador
+**4.7 ✅ (validado por el owner el 2026-08-22)** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador
 y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging**
 (`#110`) y **`Purchase.php` está RETIRADO** (`#112`). El corte del diseño está en
 `docs/specs/sidebar-spa.md` §4.10.
 
-⚠️ **La fase sigue 🟦 y no es formalismo**: quedan **DOS comprobaciones en navegador** que nadie ha
-hecho —los enlaces profundos (A7) y los iconos de `#113`—, y el DoD (`CONVENCIONES §3.bis`) dice que
-una feature visible **no es ✅ hasta que el owner la valida**. Las dos están en «Próximo paso».
+✅ **Las dos comprobaciones de navegador que faltaban están HECHAS y el owner ha validado el cajón**
+(2026-08-22). La fase sigue 🟦 solo por lo que viene después —el área de cliente (`#66`)—, no por
+`4.7`: eso está cerrado.
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -110,36 +110,24 @@ verde**, y verificado por fuera del script —bundle nuevo servido, API en 200, 
 todavía configurado y `Purchase.php` fuera del servidor—. 🟩 **El cajón SPA es ya el motor único
 también ALLÍ.**
 
-▶ **VERIFICADAS EN NAVEGADOR el 2026-08-21** (headless, contra staging; guion y receta en
-`VERIFICACION-E2E-CAJON.md` §5.quater). Resultado sin adornos:
+✅✅ **`4.7` VALIDADO POR EL OWNER el 2026-08-22** — probó el cajón en un navegador y funciona. Con eso
+se cumple la cuarta condición del DoD (`CONVENCIONES §3.bis`, la que solo puede dar una persona), y
+**`4.7` pasa a ✅**. Lo que quedaba de la verificación automática ya estaba medido:
 
-- ✅ **V1 · ICONOS: PASA.** 3 pantallas censadas, 16 `<svg>`, **0 vacíos, 0 sin geometría, 16
-  visibles**, y confirmado mirando la captura. (El embudo se cortó en «hora»: el pack elegido no tenía
-  horas ese día. Los pasos 4–6 quedan sin censar.)
-- ⚠️⚠️ **V2 · ENLACES PROFUNDOS: FALLÓ — y no era una regresión, es que NUNCA se cablearon**
-  (`DECISIONES #117`). `machine.takeIntent()` seguía devolviendo `{type:'packs'}` con el cajón ya
-  abierto: la costura llegaba a `queueIntent()` y moría ahí. `#111(h)` quitó el adaptador que se
-  COMÍA la intención; **aplicarla no se transcribió nunca a la SPA**.
-  ✅ **Arreglado y re-verificado el mismo día**: `intent.js` (módulo plano) + `SidebarIntentWiringTest`,
-  escrita en rojo antes del arreglo. En vivo: `{applied:true, anchor:'catalog-sec-services'}` y la
-  intención ya consumida.
-  ⚠️ **Queda abierta la mitad de ZONA**: `catalog.js::toItem()` descarta el campo `zone`, así que el
-  cajón aterriza en «Entradas» pero no en la zona pedida. Se devuelve `exact:false` en vez de fingir
-  paridad. Cerrarlo **toca el manifiesto de árbol CONGELADO** → es una decisión de producto.
+- ✅ **V1 · ICONOS**: 3 pantallas, 16 `<svg>`, **0 vacíos, 0 sin geometría**, y confirmado en captura.
+- ✅ **V2 · ENLACES PROFUNDOS**: fallaban porque **nunca se cablearon** (`#117`); arreglado el mismo día
+  con `intent.js` y su guarda. ⚠️ **La mitad de ZONA sigue abierta** y pasa a `DEUDA.md`: el cajón
+  aterriza en «Entradas» pero no en la zona pedida, porque `catalog.js::toItem()` descarta el campo
+  `zone`. No es un paso pendiente de `4.7`: es una decisión de producto que toca el manifiesto de
+  árbol congelado.
+- ✅ **La cuenta se oculta durante la compra** (`#118`, petición del owner), y al implementarlo salió
+  que `is-{modo}` e `identifying` **llegaban muertos** a `account-context` — el panel congelado en
+  `is-catalog` y los botones de invitado ACTIVOS durante la identificación. Arreglado y verificado en
+  staging (5/5 pasos).
 
-⚠️ **`4.7` sigue sin ser ✅**, y ahora por dos motivos: falta el ojo del owner (`CONVENCIONES §3.bis`,
-un headless mide pero no valida) y falta la mitad de zona.
-
-⚠️⚠️ **Y una limitación del ENTORNO que condiciona toda verificación futura allí**: staging tiene 4
-productos, **todos `pack`, ninguno `entry`**. El catálogo pinta **una sola sección**, así que ni el
-enlace de zona ni el efecto VISUAL del de packs se pueden ver. Además los CTA de `/` y `/servicios`
-viven dentro de un `@if` que el seed no cumple: **solo `/cumpleanos` tiene botón**. Para verificar los
-tres hace falta un catálogo más completo.
-
-⚠️ **La lección transversal, que ya es la cuarta de la misma familia**: **probar los dos extremos de
-una costura no la cablea.** `machine.test.js` prueba `queueIntent`/`takeIntent` como par y pasa; nadie
-llamaba a `takeIntent` en producción. Y mi propia verificación por bundle («refs a `Livewire` 6→3»)
-tampoco podía verlo: **medir el artefacto en vez del resultado**, que es lo que ya falló en `#113`.
+▶ **Siguiente por dependencia: el ÁREA DE CLIENTE** (`DECISIONES #66`). Ya no ata nada ni Turnstile ni
+`4.7`. Y `#118` le da su primer argumento medido: el bloque de cuenta del cajón es **Livewire y
+hermano** del punto de montaje de Vue, y esa frontera es donde murió la señal.
 
 ❗❗ **BLOQUEO NUEVO Y SERIO, DEL OWNER: EL SCHEDULER NO CORRE EN STAGING** (`DECISIONES #115`). El
 crontab está instalado y correcto y `schedule:run` funciona a mano, pero **no hay demonio cron en el
