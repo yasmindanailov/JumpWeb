@@ -49,7 +49,7 @@ class Detalles216Test extends TestCase
         // Invitado: el texto está y NO es un enlace directo a /mi-cuenta/pedidos (abre login).
         $this->get('/')
             ->assertOk()
-            ->assertSee(__('tickets.my_reservations'))
+            ->assertSeeText(__('tickets.my_reservations'))
             ->assertSee("auth.open('login')", false);
 
         // Con sesión: enlaza a la página de pedidos del cliente.

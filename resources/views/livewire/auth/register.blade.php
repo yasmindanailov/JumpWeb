@@ -36,11 +36,14 @@
                  y aquí tiene también el escape en la propia pestaña sin tener que cerrarla. --}}
             <p class="auth__switch auth__switch--from-sent">
                 {{ __('account.verify.already_have_account') }}
-                @if ($embedded)
-                    <button type="button" wire:click="requestSwitchToLogin">{{ __('account.login.cta') }}</button>
-                @else
-                    <button type="button" @click="$store.auth.open('login')">{{ __('account.login.cta') }}</button>
-                @endif
+                {{-- ⚠️ La rama `embedded` de este escape se retiró en 4.7·2b·3: llamaba a
+                     `Register::requestSwitchToLogin`, cuyo único oyente era `Tickets\Purchase`.
+                     Y **no era alcanzable ni antes de borrarlo**: el cajón salta al paso 7 en cuanto
+                     `registration-submitted` se dispara, así que esta pantalla `sent` no llega a
+                     verse embebida (lo documenta también `VerifyStep.vue`, que reproduce esa
+                     ausencia a propósito). Queda la rama del modal independiente, que sí está viva
+                     y la resuelve Alpine sin tocar el servidor. --}}
+                <button type="button" @click="$store.auth.open('login')">{{ __('account.login.cta') }}</button>
             </p>
         </div>
     @else

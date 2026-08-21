@@ -14,8 +14,9 @@ use Illuminate\Support\Collection;
  * por-invitado / grupo excluyente), inyecta lo que el cliente no envió pero el producto exige,
  * valida la exclusividad de los grupos y computa las unidades GRATIS (incluidas) frente a las de
  * pago. Una única fuente de verdad compartida por `OrderCreator` (creación del pedido) y por la
- * previsualización del carrito de `Tickets\Purchase` → lo que se MUESTRA coincide con lo que se
- * COBRA, sin que el cliente pueda saltarse un obligatorio ni elegir dos de un grupo.
+ * previsualización del carrito en la superficie de compra —el componente Livewire hasta 4.7·2b·3,
+ * hoy `POST orders/quote` y el cajón SPA— → lo que se MUESTRA coincide con lo que se COBRA, sin que
+ * el cliente pueda saltarse un obligatorio ni elegir dos de un grupo.
  *
  * Reglas de precio (céntimos):
  *  - Complemento INCLUIDO: las primeras unidades son gratis (`free_quantity`); si no tiene precio
@@ -207,7 +208,7 @@ class AddonResolver
     }
 
     // ─── API de SELECCIÓN/VISTA compartida por la compra pública y el panel ────────────────────
-    // (la compra pública `Tickets\Purchase`, el alta manual y, donde aplica, el modal "Gestionar"
+    // (la compra pública —vía la API—, el alta manual y, donde aplica, el modal "Gestionar"
     //  delegan aquí para que la lógica de incluido/obligatorio/per-invitado/grupo NO derive.)
 
     /**

@@ -55,7 +55,6 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
-use App\Livewire\Tickets\Purchase;
 use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -99,14 +98,14 @@ class ModuleContractsTest extends TestCase
     }
 
     /**
-     * WEB → BOOKING: los importes del carrito los pone el dominio, no el componente Livewire
-     * (Fase 3 · paso 4a).
+     * WEB → BOOKING: los importes del carrito los pone el dominio, no la superficie que los pinta
+     * (Fase 3 · paso 4a; re-apuntado en 4.7·2b·3 al retirarse `Tickets\Purchase`).
      *
-     * El doble tarifica SIEMPRE lo mismo y devuelve un producto que no existe en base de datos. Si
-     * `Tickets\Purchase` conservara su aritmética —la que vivía en `cartLines()`, `cartTotalCents()`
-     * y `cartDepositCents()`—, con una cesta vacía en sesión el carrito saldría vacío y a cero, y
-     * estas aserciones caerían. Es lo que convierte «la web y la API cobran igual» en un hecho
-     * comprobado en vez de una promesa: `POST orders/quote` consume este mismo contrato.
+     * El doble tarifica SIEMPRE lo mismo y devuelve un producto que NO existe en base de datos: un
+     * endpoint que volviera a sumar por su cuenta se quedaría sin usar el doble y devolvería los
+     * importes reales de una cesta que no existe. La superficie que queda es `POST orders/quote`, de
+     * la que cuelga el cajón SPA — su cesta no suma nada, pide el presupuesto—, y es lo que convierte
+     * «la web y la app cobran igual» en un hecho comprobado en vez de una promesa.
      */
     public function test_the_web_cart_gets_its_amounts_from_the_contract(): void
     {
@@ -141,16 +140,6 @@ class ModuleContractsTest extends TestCase
         };
         $this->app->instance(CartPricing::class, $pricing);
 
-        $component = Livewire::test(Purchase::class);
-
-        $this->assertSame(6666, $component->instance()->cartTotalCents());
-        $this->assertSame(6666, $component->instance()->cartDepositCents());
-        $this->assertSame(1, $component->instance()->cartCount());
-        $this->assertGreaterThan(0, $pricing->calls, 'Purchase debe pedir los importes al contrato');
-
-        // Y la superficie que SOBREVIVE a la retirada del componente (Fase 4 · paso 4.7·2b·2): el cajón
-        // SPA no suma nada, pide el presupuesto. Si el endpoint volviera a tarificar por su cuenta, el
-        // doble se quedaría sin usar y saldrían los importes reales de una cesta que no existe.
         $this->postJson('/api/v1/orders/quote', ['items' => [[
             'product_id' => 4242, 'date' => '2099-01-01', 'time' => '10:00:00', 'quantity' => 2,
         ]]])
@@ -158,17 +147,19 @@ class ModuleContractsTest extends TestCase
             ->assertJsonPath('total_cents', 6666)
             ->assertJsonPath('online_amount_cents', 6666)
             ->assertJsonPath('lines.0.product_name', 'Línea del contrato');
+
+        $this->assertSame(1, $pricing->calls, 'el presupuesto lo tiene que pedir al contrato');
     }
 
     /**
-     * WEB → BOOKING: los días y las horas que ofrece el sidebar los decide el dominio, no el
-     * componente Livewire (Fase 3 · paso 4b).
+     * WEB → BOOKING: los días y las horas que ofrece el cajón los decide el dominio, no la
+     * superficie que los pinta (Fase 3 · paso 4b; re-apuntado en 4.7·2b·3).
      *
      * El doble ofrece un día y una hora que NO existen en base de datos —no hay ni franjas ni
-     * producto—: si `Tickets\Purchase` siguiera derivando la oferta por su cuenta, el calendario
-     * saldría vacío y estas aserciones caerían. Cubre además el número que de verdad importa: el
-     * máximo que la vista deja elegir tiene que ser el que da el contrato, no uno recalculado
-     * aparte, porque `available` y `maxQuantity` no son el mismo número en un pack.
+     * producto—: un endpoint que consultase `slots` por su cuenta devolvería listas VACÍAS y estas
+     * aserciones caerían. Cubre además el número que de verdad importa: el máximo elegible tiene que
+     * ser el que da el contrato, no uno recalculado aparte, porque `available` y `max_quantity` no
+     * son el mismo número en un pack.
      */
     public function test_the_web_offer_of_days_and_times_comes_from_the_contract(): void
     {
@@ -197,25 +188,6 @@ class ModuleContractsTest extends TestCase
 
         $product = $this->sellableProduct();
 
-        $component = Livewire::test(Purchase::class)
-            ->set('typeId', $product->id)
-            ->set('month', '2099-01')
-            ->set('date', '2099-01-01')
-            ->set('time', '07:30:00');
-
-        $day = collect($component->viewData('weeks'))->flatten(1)->firstWhere('date', '2099-01-01');
-
-        $this->assertNotNull($day, 'el calendario no pinta el día que ofrece el contrato');
-        $this->assertTrue($day['selectable']);
-        $this->assertSame(4242, $day['price_cents'], 'el precio del día lo pone el contrato');
-        $this->assertSame('special', $day['type'], 'la tarifa del día la pone el contrato');
-        $this->assertSame(['07:30:00'], $component->viewData('times'));
-        $this->assertSame(7, $component->viewData('maxQty'), 'el máximo elegible es el del contrato');
-        $this->assertGreaterThan(0, $offer->calls);
-
-        // Y la superficie que SOBREVIVE (Fase 4 · paso 4.7·2b·2). El día y la hora del doble no existen
-        // en base de datos —no hay franjas—, así que un endpoint que consultase `slots` por su cuenta
-        // devolvería una lista VACÍA en vez de esto.
         $this->getJson('/api/v1/availability/'.$product->id.'/dates')
             ->assertOk()
             ->assertJsonPath('data.0.date', '2099-01-01')
@@ -229,6 +201,8 @@ class ModuleContractsTest extends TestCase
             // para acotar el selector. Comprobar solo uno dejaría pasar que el endpoint los cruzase.
             ->assertJsonPath('data.0.available', 99)
             ->assertJsonPath('data.0.max_quantity', 7);
+
+        $this->assertSame(1, $offer->calls, 'los días los tiene que pedir al contrato');
     }
 
     /** Producto vendible mínimo, para que el componente tenga algo que seleccionar. */
@@ -527,12 +501,12 @@ class ModuleContractsTest extends TestCase
 
     /**
      * WEB → BOOKING: el catálogo del flujo de compra sale del contrato, no de una consulta propia
-     * del componente Livewire (Fase 3 · paso 1b).
+     * de la superficie que lo pinta (Fase 3 · paso 1b; re-apuntado en 4.7·2b·3).
      *
-     * El doble no toca la base de datos y devuelve un producto que NO existe: si `Tickets\Purchase`
-     * siguiera construyendo el catálogo por su cuenta, la pantalla saldría vacía. Es la prueba de
-     * que la web y la API leen el mismo catálogo — sin ella, «fuente única» sería una afirmación
-     * del docblock y no un hecho comprobado.
+     * El doble no toca la base de datos y devuelve un producto que NO existe: un endpoint que
+     * listara `ticket_types` por su cuenta devolvería lista vacía. Es la prueba de que el catálogo
+     * tiene fuente única — sin ella, «fuente única» sería una afirmación del docblock y no un hecho
+     * comprobado.
      */
     public function test_the_web_purchase_flow_gets_its_catalog_from_the_contract(): void
     {
@@ -571,36 +545,27 @@ class ModuleContractsTest extends TestCase
         };
         $this->app->instance(ProductCatalog::class, $catalog);
 
-        Livewire::test(Purchase::class)
-            ->assertSee('Entrada del contrato')
-            // La vista compone: las ventajas unidas con « · » y el ancla de zona del deep-link.
-            ->assertSee('Ventaja A · Ventaja B')
-            ->assertSee('zone-zona-del-contrato', false);
-
-        $this->assertSame(1, $catalog->calls, 'Purchase debe pedir el catálogo UNA vez por render');
-
-        // Y la superficie que SOBREVIVE (Fase 4 · paso 4.7·2b·2). El producto del doble no existe en
-        // base de datos: un endpoint que listara `ticket_types` por su cuenta devolvería lista vacía.
         $this->getJson('/api/v1/catalog/products')
             ->assertOk()
             ->assertJsonPath('data.0.id', 4242)
             ->assertJsonPath('data.0.name', 'Entrada del contrato')
             ->assertJsonPath('data.0.zone.slug', 'zona-del-contrato');
 
-        $this->assertSame(2, $catalog->calls, 'las DOS superficies tienen que pedir el catálogo al contrato');
+        $this->assertSame(1, $catalog->calls, 'el catálogo se pide al contrato, una vez por petición');
     }
 
     /**
-     * WEB → BOOKING: la ADMISIÓN de una reserva la decide el dominio, no el componente Livewire ni
-     * el controlador de «Mis pedidos» (Fase 3 · paso 2).
+     * WEB → BOOKING: la ADMISIÓN de una reserva la decide el dominio, no el cajón ni el controlador
+     * de «Mis pedidos» (Fase 3 · paso 2; re-apuntado en 4.7·2b·3).
      *
      * El doble deniega SIEMPRE, con un motivo que ninguna de las dos superficies podría producir
      * por su cuenta: si alguna siguiera aplicando sus propias comprobaciones —pausa, tope de
      * pendientes, limitador—, este usuario limpio pasaría de largo y crearía su pedido.
      *
-     * Cubre las TRES superficies a la vez a propósito: el hallazgo que motivó la extracción fue
+     * Cubre las superficies VIVAS a la vez a propósito: el hallazgo que motivó la extracción fue
      * justamente que dos de ellas aplicaban políticas distintas sin que nadie lo hubiera decidido.
-     * La de API llegó en el paso 4c y entra aquí el mismo día que nace, no después.
+     * Eran tres; retirado el componente Livewire quedan «Mis pedidos» y los dos endpoints de API,
+     * que son por donde pasa hoy el cajón.
      */
     public function test_all_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted(): void
     {
@@ -633,23 +598,13 @@ class ModuleContractsTest extends TestCase
 
         $user = User::factory()->create(['email_verified_at' => now()]);
 
-        // 1) El sidebar: ni avanza al paso de pago ni crea nada.
-        Livewire::actingAs($user)->test(Purchase::class)
-            ->set('step', 8)
-            ->set('cart', [['ticket_type_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'qty' => 1]])
-            ->call('confirmReservation')
-            ->assertSet('step', 4)
-            ->assertHasErrors('cart');
-
-        $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
-
-        // 2) «Mis pedidos»: el reintento se rechaza con el aviso de pausa que dictó el dominio.
+        // 1) «Mis pedidos»: el reintento se rechaza con el aviso de pausa que dictó el dominio.
         $this->actingAs($user)
             ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
             ->assertRedirect(route('account.orders'))
             ->assertSessionHas('status', 'order-retry-paused');
 
-        // 3) La API (Fase 3 · paso 4c): mismo veredicto, misma consecuencia. Se comprueba aquí y no
+        // 2) La API (Fase 3 · paso 4c): mismo veredicto, misma consecuencia. Se comprueba aquí y no
         //    solo en su test de endpoint porque lo que se vigila es que pregunte al CONTRATO — si
         //    volviera a comprobar los límites por su cuenta, este doble se quedaría sin usar y el
         //    usuario limpio pasaría de largo.
@@ -666,18 +621,22 @@ class ModuleContractsTest extends TestCase
             ->assertJsonPath('error.code', 'reservations_paused');
 
         $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
-        $this->assertSame(4, $admission->calls, 'las tres superficies tienen que preguntar a la política');
+        $this->assertSame(3, $admission->calls, 'todas las superficies tienen que preguntar a la política');
     }
 
     /**
-     * ENTREGA → BOOKING: la SECUENCIA de la compra la aplica el dominio, y las **cinco** puertas de
-     * entrada pasan por el mismo contrato (cierre de Fase 3).
+     * ENTREGA → BOOKING: la SECUENCIA de la compra la aplica el dominio, y **todas** las puertas de
+     * entrada pasan por el mismo contrato (cierre de Fase 3; re-apuntado en 4.7·2b·3).
+     *
+     * ⚠️ Eran CINCO puertas y hoy son TRES: las dos del componente Livewire —comprar y reintentar—
+     * se fueron con él en 4.7·2b·3, y el cajón SPA no añade puertas nuevas porque entra por las de
+     * API que ya se contaban aquí. Los contadores de abajo están MEDIDOS, no ajustados.
      *
      * El doble deniega siempre y **no crea nada**: si alguna superficie conservara su propia
      * secuencia —admitir, crear el pedido, abrir el cobro—, este usuario limpio con una cesta
-     * plausible pasaría de largo y dejaría un pedido en base de datos. Que las cinco llamen se
-     * cuenta, porque el hallazgo que motivó todo esto fue justamente que había cinco copias del
-     * orden y bastaba con que una se dejara un paso.
+     * plausible pasaría de largo y dejaría un pedido en base de datos. Que llamen TODAS se cuenta,
+     * porque el hallazgo que motivó todo esto fue justamente que había cinco copias del orden y
+     * bastaba con que una se dejara un paso.
      *
      * No sustituye a `test_all_purchase_surfaces_ask_booking_whether_the_reservation_is_admitted`:
      * aquel prueba que nadie reimplementa la POLÍTICA, este que nadie reimplementa el ORDEN.
@@ -709,31 +668,14 @@ class ModuleContractsTest extends TestCase
         $this->app->instance(ReservationCheckout::class, $checkout);
 
         $user = User::factory()->create(['email_verified_at' => now()]);
-        $cart = [['ticket_type_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'qty' => 1]];
 
-        // 1) Sidebar, comprar.
-        Livewire::actingAs($user)->test(Purchase::class)
-            ->set('step', 8)
-            ->set('cart', $cart)
-            ->call('confirmReservation')
-            ->assertSet('step', 4)
-            ->assertHasErrors('cart');
-
-        // 2) Sidebar, reintentar tras un pago denegado.
-        Livewire::actingAs($user)->test(Purchase::class)
-            ->set('step', 10)
-            ->set('orderCode', 'CUALQUIERA')
-            ->call('retryPayment')
-            ->assertSet('step', 10)
-            ->assertHasErrors('cart');
-
-        // 3) «Mis pedidos» (web).
+        // 1) «Mis pedidos» (web).
         $this->actingAs($user)
             ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
             ->assertRedirect(route('account.orders'))
             ->assertSessionHas('status', 'order-retry-paused');
 
-        // 4) y 5) La API: crear y reintentar.
+        // 2) y 3) La API: crear y reintentar.
         $this->actingAs($user)
             ->postJson('/api/v1/orders', ['items' => [[
                 'product_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'quantity' => 1,
@@ -747,8 +689,8 @@ class ModuleContractsTest extends TestCase
             ->assertJsonPath('error.code', 'reservations_paused');
 
         $this->assertSame(0, Order::query()->count(), 'ninguna superficie puede crear pedidos por su cuenta');
-        $this->assertSame(2, $checkout->starts, 'las dos superficies que compran tienen que pedir la secuencia');
-        $this->assertSame(3, $checkout->retries, 'las tres que reintentan tienen que pedir la secuencia');
+        $this->assertSame(1, $checkout->starts, 'la superficie que compra tiene que pedir la secuencia');
+        $this->assertSame(2, $checkout->retries, 'las que reintentan tienen que pedir la secuencia');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

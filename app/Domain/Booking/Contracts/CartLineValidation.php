@@ -6,10 +6,11 @@ namespace App\Domain\Booking\Contracts;
  * Si una línea puede entrar en una cesta, y en qué queda (Fase 4 · paso 4.0b·6,
  * `docs/specs/sidebar-spa.md` §4.4.2, `DECISIONES #38(f)`).
  *
- * **Por qué existe.** Hoy esa decisión la toma `Livewire\Tickets\Purchase::addToCart()`, es decir el
- * servidor, en cada clic de «añadir a la cesta». Con la cesta de la SPA en `localStorage` **no queda
- * ninguna ida y vuelta al añadir**, así que sin este contrato la regla se transcribiría a JavaScript
- * — una segunda implementación de una regla de servidor, que es deuda por definición.
+ * **Por qué existe.** Esa decisión la tomaba `Livewire\Tickets\Purchase::addToCart()` —el servidor,
+ * en cada clic de «añadir a la cesta»— hasta que 4.7·2b·3 retiró el componente. Con la cesta de la
+ * SPA en `localStorage` **no queda ninguna ida y vuelta al añadir**, así que sin este contrato la
+ * regla se habría transcrito a JavaScript: una segunda implementación de una regla de servidor, que
+ * es deuda por definición.
  *
  * ⚠️ **Y de las caras de descubrir.** El saneo de un campo `number` aplica
  * `preg_replace('/\D+/', '')`: la EDAD contestada «cinco» el servidor la ve **vacía** y cualquier

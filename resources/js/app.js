@@ -162,6 +162,11 @@ document.addEventListener('alpine:init', () => {
                 // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
                 // el cajón abierto y mudo sin dejar rastro de por qué.
                 console.error('[sidebar] no se pudo cargar el motor SPA', e);
+                // Y tampoco puede dejar el velo girando para siempre: normalmente lo retira Vue al
+                // montar (`container.textContent = ''`), pero si no hay montaje nadie lo haría. Un
+                // spinner eterno MIENTE —dice «esto va a llegar»—; vaciarlo devuelve el cajón al
+                // estado que tenía antes de que el velo existiera.
+                host.textContent = '';
             } finally {
                 this.spaLoading = false;
             }
@@ -256,19 +261,15 @@ document.addEventListener('alpine:init', () => {
         },
     });
 
-    // Adaptador de intención del motor LIVEWIRE (Fase 4 · paso 4.0a). Es la única línea del
-    // sistema que sabe que el cajón lo mueve Livewire, y la que el paso 4.7 sustituye por la de
-    // Vue. Se registra en el arranque —no al hidratarse el componente `lazy`— para conservar
-    // EXACTAMENTE el momento en que se despachaba antes: en el `@click`.
-    window.Alpine.store('purchase').useIntentAdapter((intent) => {
-        if (! window.Livewire) return;
-
-        if (intent.type === 'packs') {
-            window.Livewire.dispatch('show-packs');
-        } else if (intent.type === 'zone') {
-            window.Livewire.dispatch('show-entradas-zone', { slug: intent.slug });
-        }
-    });
+    // ⚠️ Aquí vivía el adaptador de intención del motor LIVEWIRE, y BORRARLO FUE UN ARREGLO, no solo
+    // limpieza (4.7·2b·3, `DECISIONES #111`). Se registraba en el arranque y SIN mirar el motor, así
+    // que con el cajón SPA activo se quedaba con la intención del primer `openWith()` de cada carga
+    // —`flushIntent()` la CONSUME antes de aplicarla— y la despachaba a un componente que ya no se
+    // renderizaba. El adaptador de la SPA se registra dentro de `bootSpaEngine()`, tras un
+    // `await import()`, así que siempre llegaba tarde y encontraba `intent === null`.
+    // Efecto medido en staging: los tres enlaces profundos de la landing (zona, packs, eventos)
+    // abrían el cajón en el catálogo raíz. Sin este adaptador, `flushIntent()` sale por
+    // `! this.intentAdapter` CONSERVANDO la intención, que espera al `useIntentAdapter` de la SPA.
 
     // Consentimiento de cookies (#219): banner de 2 capas + bloqueo previo de iframes de tercero.
     // El estado inicial lo calcula el SERVIDOR (`CookieConsent::state`) y llega por `data-*` del body

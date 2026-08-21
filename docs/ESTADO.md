@@ -8,11 +8,15 @@
 
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
 
-**Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ →
-**los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real se hizo
-(`#59`) y **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`). Queda
-**`4.7`**: la retirada de `Purchase.php`, **empezada y aparcada** en `wip/4.7-2b-3-retirada-purchase`
-(`#111`). El corte del diseño está en `docs/specs/sidebar-spa.md` §4.10.
+**Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
+**4.7 ✅** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real
+se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`) y
+**`Purchase.php` está RETIRADO** (`#112`, 2026-08-21). El corte del diseño está en
+`docs/specs/sidebar-spa.md` §4.10.
+
+🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
+`sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
+`#110` verificó. La rama `wip/4.7-2b-3-retirada-purchase` es la que lo trae.
 
 ✅ **STAGING está desplegado, sirviendo el cajón SPA y con el anti-bot activo.** Canal de despliegue:
 `scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
@@ -20,9 +24,13 @@
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2773 en verde** (15.843 aserciones, `--parallel` ~70 s) · **302 tests JS** (`node --test`) ·
-  Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` OK.
-  El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
+- Suite **2639 en verde** (15.228 aserciones, `--parallel` ~63 s) · **302 tests JS** (`node --test`) ·
+  Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` y
+  `build:ssr` OK. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner
+  (ver `TESTING.md`).
+  ⚠️ **Bajó de 2773 a 2639 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
+  era la superficie que se va (y entró uno nuevo, el del velo de carga). Ninguno se borró sin localizar
+  y EJECUTAR antes su sucesor (`#112(a)`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
   tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
   `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
@@ -44,14 +52,16 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers).
   **La lista viva de lo que exige `VERIFY_CONC=1` es el `CRITICAL_RE` de `.githooks/pre-push`** — no se
   copia aquí para que no envejezca, y `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
-  ⚠️ **El gate NO cubre las superficies web** (`Livewire\Tickets\Purchase`, `RetryPaymentController`):
-  córrelos igual aunque el hook no lo pida.
+  ⚠️ **El gate NO cubre la superficie web del reintento** (`RetryPaymentController`): córrelo igual
+  aunque el hook no lo pida. (Antes también quedaba fuera `Livewire\Tickets\Purchase`, retirado en
+  `#112`; la compra pasa hoy por `POST /api/v1/orders`, que sí entra por el `CRITICAL_RE`.)
 - **Fase 2 dejó tres cosas que se usan al tocar código hoy** (el resto, en `specs/modulos-dominio.md`):
   `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES · *recibir* una entidad de
   otro módulo es costura de BD, *consultar* sus datos o *repetir* sus reglas exige contrato · las
   baselines del arch-test **solo encogen**.
 - ⚠️ **`Sidebar.vue` es el segundo objeto-dios, y ya está VIGILADO** (`DECISIONES #90`): 618 líneas de
-  código y las 11 llamadas a la API del cajón, con los mismos métodos que `Purchase.php`. Los otros 18
+  código y las 11 llamadas a la API del cajón, con los mismos métodos que tenía `Purchase.php` (que ya
+  no existe: `#112`). Los otros 18
   componentes suman 236 y ninguno toca la API — **CE-6 lo cumplen 18 de 19**. Desde hoy lo guarda
   `SidebarComponentBudgetTest` (techo por componente + excepción declarada que **solo encoge**), así
   que la deuda deja de crecer. La extracción —patrón `admission.js::runCheckout()`, ~10 secuencias— va
@@ -81,41 +91,36 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**`4.7·2b·3` — terminar la retirada de `Purchase.php`.** Está EMPEZADA y APARCADA en la rama
-`wip/4.7-2b-3-retirada-purchase`; `main` está verde sin ella. **Retómala desde esa rama**, no de cero.
+**Desplegar la rama a staging y comprobar el punto A7 · enlaces profundos** de
+`VERIFICACION-E2E-CAJON.md`, en navegador. Es el arreglo que trae `#111(h)` —los enlaces de zona,
+packs y eventos abrían el cajón en el catálogo raíz— y **nadie lo ha visto funcionar**: `#100` no lo
+incluyó entre sus cuatro caminos, así que se desplegó roto y no se notó. **Es la única verificación
+empírica que le falta a `4.7`.**
 
-⚠️ **Antes de tocar nada, lee `DECISIONES #111`**: explica por qué el orden es contraintuitivo y qué
-trampas ya se midieron. Lo esencial, para no repetirlo:
-- El **nombre de cada caso de `SidebarDomContractTest` es la CLAVE del manifiesto congelado**. Los
-  `…_in_both_engines` **no se renombran**: regenerar el manifiesto sin segundo motor congelaría como
-  contrato lo que Vue emitiera ese día.
-- El diff de árbol ve **estructura, no valores** — pero con excepciones que solo aparecen mutando una
-  a una (el día del calendario y los topes del selector SÍ son contrato). No lo deduzcas: mútalo.
-- **Mide el nombre del campo antes de escribirlo.** Cuatro suposiciones salieron mal en la sesión
-  pasada (`#111(f)`).
+⚠️ **Y con el motor único, el despliegue deja de tener red**: ya no hay flag al que volver. El canal
+sigue siendo `scripts/deploy.sh` (dry-run por defecto) y los assets se construyen fuera (`ENTORNOS.md`
+§4: staging no tiene node/npm).
 
-**Lo que ya está hecho en esa rama** (y es lo que más costaba): motor retirado (2.624 líneas), flag
-fuera, el bug de los enlaces profundos arreglado, nueve ficheros muertos borrados (110 casos), un caso
-rescatado a `AccountContextTest`, y **`SidebarDomContractTest` con sus 33 casos verdes y ya
-independiente del motor**.
+Luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el usado para medir
+lo retiró el owner.
 
-**Lo que queda**: ~12 ficheros, enumerados uno a uno en el mensaje del commit de la rama —
-`SidebarEngineTest` (cirugía + renombrar a `SidebarMountTest`), `ModuleContractsTest` (⚠️ sus cuatro
-contadores exactos hay que **MEDIRLOS**, no ajustarlos hasta que pasen), `SpinnerTest`, las dos
-paridades con residuo, `DuplicateEmailEdgeCaseTest`, `CartPricerTest`, `ModuleBoundariesTest`,
-`ReservationPauseGuardTest`, `CatalogVisibilityAndCartPruneTest` y dos docblocks en `app/`. Más lang,
-doc y el commit 2 (`requestSwitchToLogin`, que queda sin oyente).
+**Después de eso, el orden lo manda `#66`**: el **área de cliente** dentro del cajón. Turnstile ya no
+ata nada (4.4b·2) y `4.7` ya no ata nada, así que es lo siguiente.
 
-⚠️ **Y una guarda que NO se puede perder al operar `SidebarEngineTest`**: sus dos
-`assertSee('livewire.js')` son **las únicas de toda la suite**. Sin ellas, el día que alguien retire
-`@livewireScripts` razonando «ya no hay componentes Livewire de compra», nada se pone rojo — y caen a
-la vez Alpine, `$store.purchase` (que es lo que ABRE el cajón desde los once puntos de la landing),
-`$store.auth`, los tres modales de auth y `account-context`.
-
-**Después de `4.7·2b·3`**: desplegar a staging y comprobar en navegador el punto **A7 · enlaces
-profundos** de `VERIFICACION-E2E-CAJON.md` — es el arreglo que la rama trae y **nadie lo ha visto
-funcionar**; `#100` no lo incluyó entre sus cuatro caminos. Luego, `scripts/provision.sh` (`#102(f)`),
-que necesita un token nuevo del panel: el usado para medir lo retiró el owner.
+⚠️ **Tres cosas que esta sesión dejó MEDIDAS y que condicionan lo que venga** (todas en `#112`):
+- **`assertSee(__('tickets.*'))` contra una página completa NO PRUEBA NADA.** El montaje del cajón va
+  en todas las páginas y lleva el grupo `tickets` entero (11 kB). Usa `assertSeeText`/
+  `assertDontSeeText`: `strip_tags` deja fuera el payload porque viaja en un atributo. Se auditó y se
+  convirtieron 13 claves vacuas en 5 ficheros — **si añades una aserción de texto sobre una página,
+  esta es la trampa**.
+- **La aserción de `livewire.js` de `SidebarMountTest` es la única de la suite, y HOY no puede
+  morder**: la auto-inyección de Livewire y la directiva son dos fuentes redundantes. Morderá cuando
+  el área de cliente retire el **último componente Livewire del layout** — y entonces retirar
+  `@livewireScripts` sí dejaría la web sin Alpine, y con él sin `$store.purchase`, que es lo que ABRE
+  el cajón desde los once puntos de la landing. La tabla de verdad está en el docblock del caso.
+- **El modo `embedded` de `auth.login`/`auth.register` ya no lo monta nadie en producción**, pero es
+  la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`. Muere cuando el área de
+  cliente rehaga la auth dentro del cajón, no antes.
 
 ### Lo que NO depende de nosotros
 
@@ -133,21 +138,21 @@ que necesita un token nuevo del panel: el usado para medir lo retiró el owner.
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 
-Con `sidebar.engine = spa` el cajón **recorre el embudo entero y vuelve**: catálogo → día → hora →
+El cajón **recorre el embudo entero y vuelve**: catálogo → día → hora →
 cantidad → complementos → carrito → identificarse (entrar o **crear cuenta** dentro del cajón) → pagar
 → auto-POST firmado a Redsys → y los **tres desenlaces** (reserva creada con su resumen, rechazo con su
 motivo y reintento, y el sondeo cada 5 s del terminal *data-less*). Con las reservas pausadas sustituye
 el flujo por el aviso de mantenimiento. La cesta sobrevive a la recarga.
 
-✅ **Y ya es el motor que se sirve en staging**, con el anti-bot activo y los cuatro caminos de
-navegador verificados (`#110`). En `main` el flag sigue existiendo con default `livewire`; se retira
-con `4.7` (la rama aparcada ya lo hace).
+✅ **Y es el motor que se sirve en staging**, con el anti-bot activo y los cuatro caminos de navegador
+verificados (`#110`). 🟩 **Desde `#112` es el ÚNICO**: no queda flag, ni segundo motor, ni vuelta atrás
+sin desplegar.
 
 ⚠️ **Residual de la pausa**: el estado se relee al cargar la página, en cada apertura del cajón y al
 pulsar «Ir a pagar». Un cajón ABIERTO y quieto no se entera del interruptor hasta cerrarlo, reabrirlo o
 intentar pagar.
 
-⚠️ **Y un agujero MEDIDO que la rama arregla y nadie ha visto funcionar todavía**: los enlaces
+⚠️ **Y un agujero MEDIDO, arreglado, que nadie ha visto funcionar todavía**: los enlaces
 profundos de la landing (zona, packs, eventos) abrían el cajón en el catálogo raíz con el motor SPA,
 porque el adaptador de intención de Livewire consumía la intención antes de que la SPA se montara
 (`#111(h)`). Hay que comprobarlo en navegador tras desplegar la rama — es el punto **A7** del guion.
@@ -242,8 +247,11 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | 4.4b·2 | **El widget del anti-bot en el cajón**, y dos centinelas que no mordían | `#108` |
 | Staging | Despliegue (`deploy.sh`) · la guarda del dinero en verde falso · los CUATRO caminos verificados | `#105`–`#110` |
 | 4.7·2b·3·0 | **Independizar el contrato de árbol ANTES de borrar** (el fixture salía del motor) | `#111` |
+| **4.7·2b·3 + ·3** | 🟩 **`Purchase.php` RETIRADO y el flag con él** · y tres guardas que estaban en verde **sin medir nada** | **`#112`** |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
+**una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de
+`livewire.js` llevaba tiempo inerte y la doc la daba por crítica) ·
 **verde no es funciona** (`#59`: la fase entera transcrita y el motor no vendía) · **una foto que
 incluye el tiempo hay que tomarla con el reloj parado** (`#64`) · **un test que compara contra un
 artefacto tiene que comprobar que no está rancio** (`#69`) · **al re-apuntar un caso hay que volver a

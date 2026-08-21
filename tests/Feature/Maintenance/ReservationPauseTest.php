@@ -4,10 +4,8 @@ namespace Tests\Feature\Maintenance;
 
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\MaintenanceSettings;
-use App\Livewire\Tickets\Purchase;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -19,18 +17,26 @@ use Tests\TestCase;
  * RETIRÓ (2026-06-16, decisión clienta): el aviso vive SOLO en el sidecart. El guard de servidor
  * (enforcement) se cubre en `ReservationPauseGuardTest`.
  *
- * ⚠️ **Clasificado el 2026-08-16 (`DECISIONES #98`): NO es homogéneo, ·2b·3 opera DENTRO.**
+ * ⚠️ **Los cinco casos `sidecart_*` se fueron con `Tickets\Purchase`** (4.7·2b·3, ejecutando la
+ * clasificación que `DECISIONES #98` dejó medida el 2026-08-16: el fichero NO era homogéneo y había
+ * que operar DENTRO). Los seis que quedan no tocaban el componente —son de `MaintenanceSettings`:
+ * el fail-safe, que solo el literal «1» pausa, el valor corrupto que deja las reservas abiertas, la
+ * ausencia de banner global y los dos de textos— y su guarda no dependía de la retirada.
  *
- *  · **Los seis primeros casos NO tocan el componente y se quedan tal cual**: son de
- *    `MaintenanceSettings` —el fail-safe, que solo el literal «1» pausa, el valor corrupto que deja
- *    las reservas abiertas, la ausencia de banner global y los dos de textos—. Su guarda no depende
- *    de la retirada.
- *  · **Los cinco `sidecart_*` mueren con el componente**, y su equivalente está localizado y medido:
- *    `SidebarPausedParityTest` los cubre desde `#81` —título y mensaje contra
- *    `MaintenanceSettings`, los canales en sus CUATRO estados incluido el respaldo a contacto, y en
- *    qué pasos se tapa el flujo—. Medido: quitando el WhatsApp de `BookingStatusResource` caen tres
- *    casos y **dos sobreviven** (`Api\V1\BookingStatusTest::test_both_channels_travel_together` y
- *    esa paridad); este fichero **no cae**, que es la prueba de que ejerce el camino del Blade.
+ * El equivalente de los cinco estaba localizado y medido antes de borrarlos, uno a uno, en
+ * `SidebarPausedParityTest` (desde `#81`):
+ *
+ *  · título y mensaje editables → `test_the_title_and_message_come_from_the_panel_not_from_the_
+ *    dictionary` (y `test_the_notice_is_the_panels_text_in_every_locale`);
+ *  · flujo normal con las reservas abiertas → `test_nothing_is_covered_when_reservations_are_open`;
+ *  · canales de teléfono y WhatsApp → `test_the_contact_links_come_from_the_panel_settings`, que los
+ *    recorre en sus CUATRO estados —incluido el respaldo a `/contacto` sin ninguno—, más
+ *    `test_the_call_button_shows_one_form_of_the_phone_and_links_the_other`;
+ *  · en qué pasos tapa → `test_the_notice_covers_exactly_the_steps_it_must_cover`.
+ *
+ * Medido entonces: quitando el WhatsApp de `BookingStatusResource` caían tres casos y **dos
+ * sobrevivían** (`Api\V1\BookingStatusTest::test_both_channels_travel_together` y esa paridad),
+ * mientras que este fichero **no caía** — que es justo la prueba de que ejercía el camino del Blade.
  */
 class ReservationPauseTest extends TestCase
 {
@@ -94,73 +100,5 @@ class ReservationPauseTest extends TestCase
 
         $this->assertSame('Reservas en pausa', MaintenanceSettings::reservationTitle('es'));
         $this->assertSame('Volvemos el 20 de junio, reserva por teléfono.', MaintenanceSettings::reservationMessage('es'));
-    }
-
-    public function test_sidecart_shows_editable_paused_title_and_message(): void
-    {
-        app()->setLocale('es');
-        Setting::updateOrCreate(['key' => 'reservations.title.es'], ['value' => 'Reservas en pausa', 'group' => 'maintenance']);
-        Setting::updateOrCreate(['key' => 'reservations.message.es'], ['value' => 'Mensaje personalizado de la dueña', 'group' => 'maintenance']);
-        $this->pause();
-
-        Livewire::test(Purchase::class)
-            ->assertSet('step', 1)
-            ->assertSee('Reservas en pausa')                  // título override
-            ->assertSee('Mensaje personalizado de la dueña')  // mensaje override
-            ->assertDontSee(__('tickets.paused.title'))       // los overrides SUSTITUYEN a los textos por defecto
-            ->assertDontSee(__('tickets.paused.body'));
-    }
-
-    // ─── Aviso de mantenimiento DENTRO del sidecart ──────────────────────────────
-
-    public function test_sidecart_shows_normal_flow_when_reservations_open(): void
-    {
-        Livewire::test(Purchase::class)
-            ->assertSet('step', 1)
-            ->assertSee(__('tickets.section_entries'))          // el catálogo normal
-            ->assertDontSee(__('tickets.paused.title'));
-    }
-
-    public function test_sidecart_shows_maintenance_notice_with_phone_and_whatsapp_when_paused(): void
-    {
-        Setting::updateOrCreate(['key' => 'contact.whatsapp'], ['value' => '+34 968 22 22 22', 'group' => 'contact']);
-        $this->pause();
-
-        Livewire::test(Purchase::class)
-            ->assertSet('step', 1)
-            ->assertSee(__('tickets.paused.title'))
-            ->assertDontSee(__('tickets.section_entries'))      // el flujo de compra NO se muestra
-            ->assertSee('tel:968222222', false)              // CTA «Llamar»
-            ->assertSee('wa.me/34968222222', false);         // CTA «WhatsApp» (dígitos)
-    }
-
-    public function test_sidecart_notice_shows_only_on_booking_steps(): void
-    {
-        // Los pasos de RESULTADO de pago (6/9/10/11) y la verificación de email (7) NO muestran el
-        // aviso: son acciones ya iniciadas que deben poder completarse aunque se pausen las reservas.
-        $this->pause();
-        $purchase = Livewire::test(Purchase::class)->instance();
-
-        foreach ([1, 2, 3, 4, 5, 8] as $bookingStep) {
-            $purchase->step = $bookingStep;
-            $this->assertTrue($purchase->showPausedNotice(), "Paso {$bookingStep} (reserva) → aviso.");
-        }
-        foreach ([6, 7, 9, 10, 11] as $outcomeStep) {
-            $purchase->step = $outcomeStep;
-            $this->assertFalse($purchase->showPausedNotice(), "Paso {$outcomeStep} (resultado) → sin aviso.");
-        }
-    }
-
-    public function test_sidecart_notice_falls_back_to_contact_without_phone_or_whatsapp(): void
-    {
-        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '', 'group' => 'contact']);
-        Setting::updateOrCreate(['key' => 'contact.whatsapp'], ['value' => '', 'group' => 'contact']);
-        $this->pause();
-
-        Livewire::test(Purchase::class)
-            ->assertSee(__('tickets.paused.title'))
-            ->assertSee(route('contacto'), false)            // sin tel/WA → enlace a /contacto
-            ->assertDontSee('tel:', false)
-            ->assertDontSee('wa.me', false);
     }
 }

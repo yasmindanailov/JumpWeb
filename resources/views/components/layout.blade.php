@@ -142,15 +142,21 @@
                  de formulario pendiente con sesión; «Iniciar sesión» + «Mis reservas» sin ella. --}}
             <livewire:site.account-context />
             <div class="sidecart__body">
-                {{-- Fase 4 · paso 4.1: los dos motores conviven tras `sidebar.engine`, para poder
-                     COMPARARLOS en vivo y volver atrás sin desplegar (`sidebar-spa.md` §4.9, CE-1).
-                     El default y el fallback son Livewire: el fallback no puede ser el motor en
-                     construcción.
+                {{-- ⚠️ **Lo que no se puede perder aquí es que el bundle de Livewire llegue a la
+                     página**, aunque en este cajón ya no quede ningún componente Livewire de compra
+                     (4.7·2b·3). **Alpine lo trae Livewire** —`app.js` no lo importa ni lo arranca:
+                     usa el global que Livewire expone—, así que sin él se caen a la vez
+                     `$store.purchase` (lo que ABRE este cajón desde los once puntos de la landing),
+                     `$store.auth` y los tres modales de auth.
 
-                     ⚠️ Lo que NO se bifurca son `@livewireStyles`/`@livewireScripts`: los modales de
-                     auth y `account-context` son Livewire en los dos modos — y **Alpine lo trae
-                     Livewire**, así que retirarlo dejaría al cajón SPA sin el store que lo abre. --}}
-                @if (\App\Domain\Platform\Services\SidebarSettings::usesSpa())
+                     ⚠️ Pero **hoy llegan DOS fuentes redundantes**, y conviene saberlo antes de
+                     tocar: `@livewireScripts` emite incondicionalmente, y la auto-inyección de
+                     Livewire lo inyecta igual **si algún componente Livewire se renderizó** —hoy se
+                     renderizan cuatro: los tres modales de auth y `account-context`—. **Medido**
+                     (2026-08-21): retirar solo la directiva NO rompe nada; lo fatal es quedarse sin
+                     las dos. La tabla de verdad completa y el porqué están en
+                     `SidebarMountTest::test_livewire_scripts_are_still_served`, la única aserción de
+                     `livewire.js` de la suite. --}}
                     {{-- El hueco del motor SPA. Va VACÍO: el entry se trae con `import()` en la
                          primera apertura del cajón, no con la página (§4.7). Lo que sí viaja aquí es
                          lo que el servidor sabe y el cliente no puede pedir:
@@ -217,10 +223,29 @@
                             'contact' => route('contacto'),
                             'my_orders' => route('account.orders'),
                         ],
-                    ], JSON_UNESCAPED_UNICODE) }}"></div>
-                @else
-                    <livewire:tickets.purchase lazy />
-                @endif
+                    ], JSON_UNESCAPED_UNICODE) }}">
+                        {{-- ⚠️ **El velo de carga del cajón, y va DENTRO del hueco a propósito.**
+                             El motor se trae con `import()` en la primera apertura (§4.7), así que
+                             entre el clic y el primer pintado de Vue hay una descarga: con la caché
+                             fría el cajón se abría EN BLANCO. El velo `.jj-loading` que emite la
+                             propia SPA no puede taparlo —vive dentro de la app que aún no ha
+                             montado—, y `spaLoading` de `app.js` es solo guarda de reentrada.
+                             Aquí no hace falta ni una línea de JS para apagarlo: **Vue limpia el
+                             contenedor al montar** (`app.mount()` hace `container.textContent = ''`,
+                             verificado en el runtime instalado), de modo que este nodo desaparece
+                             solo en cuanto el cajón está listo. Si el chunk NO carga,
+                             `bootSpaEngine()` lo vacía en su `catch` para no dejar un spinner
+                             girando para siempre.
+                             Es el mismo marcado que servía el `placeholder()` del componente
+                             Livewire `lazy` que se retiró en 4.7·2b·3, y reusa su clase
+                             `.purchase-loading`. Lo vigila `SpinnerTest`. --}}
+                        <div class="purchase-loading">
+                            <span class="jj-spinner-with-label">
+                                <x-ui.spinner size="lg" :label="__('ui.loading')" />
+                                <span class="jj-spinner-label" aria-hidden="true">{{ __('ui.loading') }}</span>
+                            </span>
+                        </div>
+                    </div>
             </div>
         </aside>
     </div>

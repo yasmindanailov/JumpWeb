@@ -200,8 +200,6 @@ class SidebarRegisterParityTest extends TestCase
      */
     public function test_the_mount_payload_carries_the_legal_texts_with_their_links(): void
     {
-        $this->withSpaEngine();
-
         foreach (SetLocale::SUPPORTED as $locale) {
             $this->app->setLocale($locale);
 
@@ -224,8 +222,6 @@ class SidebarRegisterParityTest extends TestCase
     /** Y lleva TODO lo que el formulario pinta: una clave que falte se pinta VACÍA y nada avisa. */
     public function test_the_mount_payload_carries_every_label_the_form_paints(): void
     {
-        $this->withSpaEngine();
-
         $register = $this->bootPayload()['account']['register'] ?? [];
 
         foreach ([
@@ -322,12 +318,6 @@ class SidebarRegisterParityTest extends TestCase
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
-
-    private function withSpaEngine(): void
-    {
-        Setting::updateOrCreate(['key' => 'sidebar.engine'], ['value' => 'spa']);
-        Setting::flushMemo();
-    }
 
     /** @return array<string, mixed> */
     private function bootPayload(): array

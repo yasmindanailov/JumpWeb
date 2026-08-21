@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Domain\Identity\Models\User;
 use App\Livewire\Auth\Register;
-use App\Livewire\Tickets\Purchase;
 use App\Notifications\AccountAlreadyExists;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -20,10 +19,13 @@ use Tests\TestCase;
  *   1. CTA del email apunta a `route('login')` (modal de login en la home), no a `/`.
  *   2. La pantalla `sent` SIEMPRE muestra el link "¿ya tienes cuenta? Inicia sesión"
  *      (visible en registro nuevo Y en duplicado → anti-enumeración preservada).
- *   3. En modo embedded (sidebar), el botón llama a `requestSwitchToLogin` (Livewire);
- *      en modo no-embedded, el botón llama a `$store.auth.open('login')` (Alpine).
- *   4. `Register::requestSwitchToLogin` emite el evento que Purchase escucha.
- *   5. `Purchase::onSwitchToLoginTab` reacciona poniendo step=5 + authMode=login.
+ *
+ * ⚠️ **Tenía tres casos más y los tres murieron con `Tickets\Purchase`** (4.7·2b·3): cubrían el
+ * camino EMBEBIDO del escape —`requestSwitchToLogin` → evento `purchase:switch-to-login` →
+ * `Purchase::onSwitchToLoginTab`—, y ese camino se retiró entero. No fue solo que se quedara sin
+ * oyente: **ya era inalcanzable antes de borrar nada**, porque el cajón salta al paso 7 en cuanto
+ * `registration-submitted` se dispara y la pantalla `sent` no llega a verse embebida. Lo que sigue
+ * vivo —y sigue probado aquí— es el escape del modal independiente, que resuelve Alpine.
  */
 class DuplicateEmailEdgeCaseTest extends TestCase
 {
@@ -97,43 +99,5 @@ class DuplicateEmailEdgeCaseTest extends TestCase
             ->call('register')
             ->assertHasErrors(['email'])
             ->assertSet('sent', false);
-    }
-
-    public function test_request_switch_to_login_dispatches_event_when_embedded(): void
-    {
-        Livewire::test(Register::class, ['embedded' => true])
-            ->set('sent', true)
-            ->set('email', 'cualquier@test.local')
-            ->call('requestSwitchToLogin')
-            ->assertSet('sent', false)
-            ->assertSet('email', '')
-            ->assertDispatched('purchase:switch-to-login');
-    }
-
-    public function test_request_switch_to_login_is_noop_when_not_embedded(): void
-    {
-        // En modo no-embedded el switch lo hace Alpine ($store.auth.open). No queremos
-        // que un POST malicioso a Livewire haga reset del componente del usuario por
-        // sorpresa (defense in depth: el método no embedded simplemente no actúa).
-        Livewire::test(Register::class, ['embedded' => false])
-            ->set('sent', true)
-            ->set('email', 'verify@test.local')
-            ->call('requestSwitchToLogin')
-            ->assertSet('sent', true)
-            ->assertSet('email', 'verify@test.local')
-            ->assertNotDispatched('purchase:switch-to-login');
-    }
-
-    public function test_purchase_listens_to_switch_to_login_event(): void
-    {
-        // Cuando el sidebar Purchase recibe el evento, debe volver al paso 5 con
-        // authMode=login. La cesta sigue intacta en sesión, así el cliente puede
-        // continuar la compra inmediatamente tras iniciar sesión.
-        Livewire::test(Purchase::class)
-            ->set('step', 7)
-            ->set('authMode', 'register')
-            ->dispatch('purchase:switch-to-login')
-            ->assertSet('step', 5)
-            ->assertSet('authMode', 'login');
     }
 }

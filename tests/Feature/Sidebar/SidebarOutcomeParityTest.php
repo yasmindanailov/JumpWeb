@@ -496,9 +496,6 @@ class SidebarOutcomeParityTest extends TestCase
     /** @return array<string, mixed> */
     private function bootPayload(): array
     {
-        Setting::updateOrCreate(['key' => 'sidebar.engine'], ['value' => 'spa', 'group' => 'general']);
-        Setting::flushMemo();
-
         $html = $this->get('/')->getContent();
 
         if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $html, $matches) !== 1) {

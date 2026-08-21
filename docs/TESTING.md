@@ -109,6 +109,27 @@ peligroso es LOCAL y silencioso, justo mientras se itera sobre esos módulos.
 La guarda es `assertBundleIsNotStale()`: compara la fecha del artefacto con la de cada fuente que entra
 en él. Si añades un test que compare contra algo compilado, generado o congelado, ponle la suya.
 
+### 2.ter. En una página con el cajón, `assertSee` de un texto de `tickets` NO PRUEBA NADA
+⚠️⚠️ **Medido el 2026-08-21** (`DECISIONES #112(e)`). El punto de montaje del cajón SPA va en
+**todas** las páginas públicas y lleva `__('tickets')` **entero** dentro de su atributo `data-boot`
+—unos 11 kB—, porque la SPA no tiene canal de i18n propio. Consecuencia: cualquier
+`assertSee(__('tickets.loquesea'))` contra una respuesta de página **pasa siempre**, pinte la página
+lo que pinte, y el `assertDontSee` simétrico **falla siempre**. Se auditó tras retirar el motor
+Livewire —que era lo que hasta entonces tapaba el montaje— y salieron **13 claves vacuas** y 4
+literales que coinciden con valores del grupo, repartidos en 5 ficheros.
+
+**La regla**: contra una respuesta de página, usa **`assertSeeText` / `assertDontSeeText`**. Aplican
+`strip_tags`, y el payload viaja en un ATRIBUTO, así que desaparece: miden lo que el usuario ve, que
+es lo que esos casos querían decir. `assertSee` sigue siendo lo correcto para fragmentos de HTML
+—clases, `href`, `aria-*`—, que es justo lo que `assertSeeText` no puede ver.
+
+⚠️ **Dos avisos que costaron una medición cada uno:**
+- **La colisión de subcadena sobrevive al cambio**: «Reembolsado» es prefijo de «Reembolsado el …»,
+  así que el caso seguía verde con el distintivo borrado. Si el texto es prefijo de otro de la misma
+  página, ancla además en algo estructural (su clase).
+- **No vale solo con convertirlo**: hay que MUTAR la vista y ver el caso caer. Convertir sin mutar
+  cambia un verde falso por otro (`#65`).
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

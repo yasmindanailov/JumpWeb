@@ -2,14 +2,7 @@
 
 namespace Tests\Feature\Sidebar;
 
-use App\Domain\Booking\Models\RateType;
-use App\Domain\Booking\Models\Slot;
-use App\Domain\Booking\Models\TicketType;
-use App\Domain\Booking\Models\Zone;
-use App\Livewire\Tickets\Purchase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
@@ -28,122 +21,28 @@ use Tests\TestCase;
  * ⚠️ Repartir días en semanas es PRESENTACIÓN y por eso puede vivir en el cliente. Lo que no vive
  * ahí es qué días se ofrecen: eso lo dice `SlotOffer` (`AFORO-02`) y llega por la API.
  *
- * ### Clasificación para la retirada, MEDIDA el 2026-08-15 (`DECISIONES #79`)
+ * ### Qué queda aquí tras la retirada (`DECISIONES #79`, ejecutado en 4.7·2b·3)
  *
- * El fichero **no es homogéneo**, y por eso no se re-apunta ni se borra entero:
+ * El fichero **no era homogéneo**, y por eso se operó DENTRO en vez de borrarlo entero:
  *
- * · Los **dos primeros casos comparan ENTRE MOTORES** —la referencia es `viewData('weeks')`, que
- *   compone `Purchase` y no existe en ningún otro sitio—, así que **mueren con el componente en
- *   ·2b·3**. Su hueco ya lo cerró (B) en `#68`: el diff de árbol ejecuta `calendar.js`, y las dos
- *   fronteras que estos casos declaraban medidas viven en `calendar.test.js` (18 casos).
- * · El **caso de los husos SOBREVIVE**: no compara motores, compara el cliente consigo mismo con el
- *   huso del proceso forzado. Eso `calendar.test.js` **no puede hacerlo** —corre en un solo proceso y
- *   `TZ` se lee al arrancarlo—, así que es la única red de una defensa que ya se comprobó inerte con
- *   el huso del contenedor.
+ * · Los **dos primeros casos comparaban ENTRE MOTORES** —su referencia era `viewData('weeks')`, que
+ *   componía `Purchase` y no existe en ningún otro sitio—, así que **se fueron con el componente**.
+ *   Su hueco lo había cerrado ya (B) en `#68`: el diff de árbol EJECUTA `calendar.js`, y las dos
+ *   fronteras que aquellos casos declaraban medidas viven en `calendar.test.js` (18 casos).
+ * · El **caso de los husos se queda, y hoy es el único**: no compara motores, compara el cliente
+ *   consigo mismo con el huso del proceso forzado. Eso `calendar.test.js` **no puede hacerlo** —corre
+ *   en un solo proceso y `TZ` se lee al arrancarlo—, así que es la única red de una defensa que ya se
+ *   comprobó inerte con el huso del contenedor.
  *
- * ▶ **Lo que ·2b·3 tiene que hacer con este fichero**: borrar los dos primeros casos y quedarse con
- * el de los husos, no borrarlo entero. Es de los pocos donde hay que operar DENTRO.
+ * ⚠️ Por eso el nombre del fichero dice «Parity» y ya casi no queda paridad: se conserva porque la
+ * doc y el tracker lo citan por él. Lo que hay dentro es la defensa del huso, y nada más.
  */
 class SidebarCalendarParityTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private Zone $zone;
-
-    private int $rateId;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->rateId = (int) RateType::create([
-            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0,
-        ])->id;
-
-        $this->zone = Zone::create([
-            'slug' => 'jump', 'name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true,
-        ]);
-    }
-
-    private function productWithSlots(int $days): TicketType
-    {
-        $product = TicketType::create([
-            'name' => ['es' => 'Entrada 1h'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
-            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true,
-            'position' => 1,
-        ]);
-        $product->prices()->create(['rate_type_id' => $this->rateId, 'amount_cents' => 990]);
-
-        for ($i = 1; $i <= $days; $i++) {
-            Slot::create([
-                'zone_id' => $this->zone->id, 'date' => now()->addDays($i)->toDateString(),
-                'start_time' => '10:00:00', 'end_time' => '11:00:00',
-                'capacity' => 20, 'online_capacity' => 20,
-            ]);
-        }
-
-        return $product;
-    }
-
-    public function test_the_client_builds_the_same_grid_as_the_server(): void
-    {
-        $product = $this->productWithSlots(20);
-
-        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
-
-        $serverWeeks = $component->viewData('weeks');
-        $month = $component->get('month');
-
-        // Los días OFRECIDOS, tal y como se los daría la API al cliente. Se derivan del mismo
-        // view-model del servidor para que lo único que se compare sea la COMPOSICIÓN, no de dónde
-        // salen los días.
-        $offered = [];
-        foreach ($serverWeeks as $week) {
-            foreach ($week as $cell) {
-                if ($cell['selectable']) {
-                    $offered[] = ['date' => $cell['date'], 'price_cents' => $cell['price_cents'], 'rate_key' => $cell['type']];
-                }
-            }
-        }
-
-        $this->assertNotEmpty($offered, 'sin días ofrecidos el test compararía dos rejillas vacías');
-
-        $clientWeeks = $this->buildWeeksInNode($month, $offered, $component->get('date'));
-
-        $this->assertSame(
-            $this->normalise($serverWeeks),
-            $this->normalise($clientWeeks),
-            "La rejilla del cliente NO coincide con la del servidor para {$month}.\n".
-            'El diff de árbol no ve esto: allí a Vue se le pasa el view-model del servidor. Aquí se '.
-            'compara lo que el cajón compondría de verdad.'
-        );
-    }
-
-    /**
-     * ⚠️ **Un mes que empieza en DOMINGO es el caso que rompe una rejilla que empiece en lunes**:
-     * `getDay()` devuelve 0 para el domingo, así que un cálculo ingenuo no retrocede seis días y el
-     * mes entero se desplaza una casilla. Se busca uno de verdad en vez de darlo por supuesto.
-     */
-    public function test_a_month_starting_on_sunday_lines_up_in_both_engines(): void
-    {
-        $product = $this->productWithSlots(1);
-
-        // ISO: el domingo es 7, no 0. `Carbon::SUNDAY` vale 0 y no sirve para comparar con `dayOfWeekIso`.
-        $month = $this->nextMonthStartingOn(7);
-
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $product->id)
-            ->set('month', $month);
-
-        $serverWeeks = $component->viewData('weeks');
-        $clientWeeks = $this->buildWeeksInNode($month, [], null);
-
-        $this->assertSame(
-            $this->normalise($serverWeeks),
-            $this->normalise($clientWeeks),
-            "La rejilla de {$month} —un mes que empieza en domingo— no coincide."
-        );
-    }
+    // ⚠️ **Sin `RefreshDatabase` y sin `setUp`, y no es descuido**: retirados los dos casos que
+    // comparaban motores, el único que queda ejecuta `calendar.js` en Node y **no toca la base de
+    // datos**. El andamiaje que había —zona, tarifa y un producto con franjas— solo alimentaba a
+    // aquellos dos; dejarlo montaría el esquema entero por cada huso para no consultarlo nunca.
 
     /**
      * ⚠️ **El navegador del cliente puede estar en CUALQUIER huso, y el calendario no puede moverse
@@ -170,9 +69,7 @@ class SidebarCalendarParityTest extends TestCase
     public function test_the_grid_does_not_shift_with_the_browsers_timezone(string $timezone): void
     {
         // ⚠️ **Este caso NO compara motores: compara el cliente consigo mismo en dos husos**, y por
-        // eso es el único del fichero que sobrevive a la retirada (`DECISIONES #79`). Conducía el
-        // componente y sembraba un producto que no usaba: los dos eran vestigiales —medido, quitarlos
-        // deja los cinco casos verdes— y se retiran para que la clasificación de ·2b·3 se lea sola.
+        // eso es el único del fichero que sobrevivió a la retirada (`DECISIONES #79`).
 
         // ⚠️ **Un mes que empieza en LUNES es el único caso que delata el desfase**, y esto se
         // descubrió midiendo: con la fecha parseada en UTC el día se corre a la víspera, pero el

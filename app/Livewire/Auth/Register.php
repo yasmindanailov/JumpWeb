@@ -158,11 +158,19 @@ class Register extends Component
             ]);
         }
 
-        // Alta dentro de la compra: se inicia sesión y se avisa al sidebar para que siga al pago.
+        // Alta dentro de la compra: se inicia sesión y se avisa al cajón para que siga al pago.
+        //
+        // ⚠️ **En producción esta rama ya no la monta nadie** (4.7·2b·3): `embedded` solo lo activan
+        // hoy `SidebarLoginParityTest`/`SidebarRegisterParityTest`, que la usan como REFERENCIA
+        // contra la que se compara el alta del cajón SPA. El oyente de `logged-in` era
+        // `Purchase::onAuthenticated()` —que encadenaba `proceed()` hasta el paso de pago— y se fue
+        // con el componente; en el cajón SPA ese encadenado lo hace `admission.js::runCheckout()`.
+        // Se conserva porque es lo que da sentido a esas paridades: sin ella no habría con qué
+        // comparar el «alta *pay-first*» que la SPA reproduce.
         if ($this->embedded && $result->user !== null) {
             Auth::login($result->user);
             session(['purchase.user_id' => $result->user->getKey()]); // anti-cesta-cruzada (espejo de Login)
-            $this->dispatch('logged-in'); // Purchase::onAuthenticated → proceed() → paso de pago
+            $this->dispatch('logged-in');
 
             return null;
         }
@@ -187,30 +195,6 @@ class Register extends Component
         if ($this->embedded) {
             $this->dispatch('registration-submitted');
         }
-    }
-
-    /**
-     * Escape "¿ya tienes cuenta? Inicia sesión" desde la pantalla 'verifica tu correo'
-     * cuando este componente está EMBEBIDO en el sidebar de compra (#69, decisión #112).
-     *
-     * En modo no-embedded (modal independiente) el switch se hace con `$store.auth.open('login')`
-     * desde Alpine — no toca al servidor. En modo embedded, sin embargo, hay que avisar al
-     * `Purchase` Livewire del sidebar para que cambie su `authMode` y resetee el estado
-     * del Register (para no dejar el `sent=true` colgado si el usuario vuelve a registro).
-     *
-     * Anti-enumeración (#46) intacta: este método se invoca igual si el email era nuevo o
-     * ya existía — el flujo a la pantalla `sent` es idéntico en ambos casos, y este link
-     * sale exactamente igual también para registros legítimos que quieran volver a login.
-     */
-    public function requestSwitchToLogin(): void
-    {
-        if (! $this->embedded) {
-            return; // en modal independiente lo gestiona Alpine; no nos llaman desde ahí.
-        }
-
-        $this->reset(['sent', 'name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'marketing', 'turnstileToken', 'website']);
-        $this->resetValidation();
-        $this->dispatch('purchase:switch-to-login');
     }
 
     /**

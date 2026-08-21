@@ -4469,3 +4469,89 @@ desplegó roto y nadie lo vio. El borrado del adaptador es su arreglo, y está e
 `wip/4.7-2b-3-retirada-purchase`** con el motor ya retirado y —lo que más costaba— el contrato de árbol
 independiente y en verde (33 casos). Lo que queda son ~12 ficheros ya identificados uno a uno en el
 mensaje de ese commit.
+
+## #112 · 2026-08-21 · `Purchase.php` RETIRADO — y tres guardas que llevaban tiempo sin medir nada
+Cierra `4.7·2b·3` (y con él `4.7·3`): el motor Livewire del cajón ya no existe, el cajón SPA es el
+motor ÚNICO y la suite queda verde. La retirada en sí fue lo previsible; **lo transferible es lo que
+apareció al mutar**, porque las tres cosas estaban en verde y ninguna medía lo que su nombre decía.
+
+**(a) Cómo se operaron los ~12 ficheros.** Cada caso se clasificó por su **SUJETO**
+(`CONVENCIONES §3.quater`), no por la regla que menciona, y **antes de borrar ninguno se localizó y
+se ejecutó su sucesor**: los cinco `sidecart_*` de `ReservationPauseTest` contra
+`SidebarPausedParityTest` (sus cuatro estados de canal, incluido el respaldo sin teléfono), los
+cuatro de UI de `DepositSurfacesTest` contra `SidebarCartParityTest`/`SidebarTextParityTest`, los
+tres del flujo público de `ReservationPauseGuardTest` contra `Api\V1\OrdersTest` y
+`BookingStatusTest`. Cuatro de ellos ya venían clasificados y medidos por `#79`, `#87`, `#91` y
+`#98`: **operar dentro del fichero, no borrarlo entero**, y esa previsión ahorró la sesión.
+
+**(b) ⚠️ Los CONTADORES se miden, no se ajustan.** Los seis de `ModuleContractsTest` se pusieron a
+`999` a propósito y se leyó el valor real en el fallo: pricing 1 · offer 1 · catalog 1 · admission 3
+· `starts` 1 · `retries` 2. Ajustarlos «hasta que pasen» habría escondido cualquier superficie que
+hubiera dejado de preguntar al contrato. Después se mutaron los cinco dobles: los cinco casos caen,
+luego el re-apunte NO quedó inerte (que es lo que enseñó `#65`).
+
+**(c) ⚠️⚠️ `assertSee('livewire.js')` estaba INERTE, y `ESTADO.md` la daba por la guarda crítica.**
+La nota heredada decía que retirar `@livewireScripts` dejaría la web sin Alpine y que esas dos
+aserciones eran la única red. **Falso, medido con la tabla de verdad entera**: hay DOS fuentes
+redundantes —la directiva, que emite siempre, y la **auto-inyección** de Livewire, que actúa si algún
+componente llegó a renderizarse (`SupportAutoInjectedAssets`, y hoy el layout renderiza cuatro)—.
+Directiva NO + componentes SÍ → verde. Directiva SÍ + componentes NO → verde. Solo con las dos fuera
+se pone rojo. Es la trampa 4 de `§3.quater` en estado puro: **mutar UNA rama de algo redundante no
+dice nada**. La guarda se conserva porque asevera el RESULTADO —que el bundle llegue— y morderá el
+día que el **área de cliente** (`#66`) retire el último componente Livewire del layout; corregidos el
+docblock y el comentario de `layout.blade.php`, que afirmaban lo contrario.
+
+**(d) ⚠️⚠️ Dos tests de SEGURIDAD de la vuelta de Redsys también estaban inertes, y por culpa del
+propio borrado.** Con el motor SPA el layout **consume** `SidebarEntry` al pintar, así que
+`session('purchase.confirmed_code')` está SIEMPRE vacía al terminar la respuesta. Los dos casos que
+defienden que un tercero no aplique el desenlace ajeno aseveraban justo eso, o sea un valor que ya no
+puede ser otra cosa (`§3.quater`: **un valor trivial no está fijado**). Medido: desactivando la
+comprobación de titularidad de `HomeController::maybeConsumeRedsysReturn()` —la vulnerabilidad real—
+los dos seguían VERDES. Re-apuntados al `data-boot` del cajón, la misma mutación los pone rojos.
+
+**(e) ⚠️⚠️ Y el efecto sistémico: `assertSee(__('tickets.*'))` contra una página completa pasó a ser
+VERDE FALSO.** El montaje del cajón es ahora incondicional y lleva `__('tickets')` **entero (11 kB)
+en el HTML de todas las páginas**. Auditado resolviendo cada clave contra el payload real: **13
+claves vacuas** y 4 literales que coinciden con valores del grupo, repartidos en 5 ficheros. El
+instrumento correcto es `assertSeeText`/`assertDontSeeText`: `strip_tags` deja fuera el payload
+porque viaja en un ATRIBUTO, así que mide lo que el usuario ve, que es lo que esos casos querían
+decir. Verificado mutando la vista: ahora caen. ⚠️ Uno seguía sin morder por **colisión de
+subcadena** —«Reembolsado» es prefijo de «Reembolsado el …»—, y se ancló además a su clase.
+▶ **Regla para el futuro**: en una página que monte el cajón, un `assertSee` de cualquier texto del
+grupo `tickets` no prueba nada. Es el mismo cuño de `#106`: preguntar «¿pasa el test?» en vez de
+«¿sigue midiendo lo mismo?».
+
+**(f) `Register::requestSwitchToLogin()` retirado, y el modo `embedded` NO.** El método se quedaba
+sin oyente al morir `Purchase`, pero además **ya era inalcanzable antes de borrar nada**: el cajón
+salta al paso 7 en cuanto `registration-submitted` se dispara, así que la pantalla `sent` no llega a
+verse embebida — algo que `VerifyStep.vue` ya tenía documentado y que se confirmó leyendo el
+componente borrado. Era, además, un método Livewire **público**: superficie invocable desde el
+navegador. ⚠️ El modo `embedded` en cambio **se queda**: aunque en producción no lo monte nadie, es
+la REFERENCIA viva contra la que `SidebarLoginParityTest` y `SidebarRegisterParityTest` comparan las
+pantallas de auth del cajón. Retirarlo habría borrado siete comparaciones para limpiar una rama que
+no molesta; muere solo cuando el área de cliente rehaga la auth dentro del cajón.
+
+**(g) Un error de doc que venía de antes, cazado al barrer.** `OrderCreator` citaba un `#[Locked]`
+sobre la cesta del componente Livewire «como la otra capa» de defensa del cap de líneas. Ese atributo
+**nunca se aplicó**: se evaluó y se descartó a propósito porque la cesta es *client-syncable*, y así
+lo dice `PAY-12` y lo dejaba anotado el propio componente. La única capa era, y es, `OrderCreator`.
+
+**(h) Un HUECO destapado al retirar, y cerrado el mismo día: el cajón se abría SIN feedback de
+carga.** `app.js::bootSpaEngine()` hace `await import()` del chunk del motor y durante esa espera no
+se pintaba nada —`spaLoading` es solo guarda de reentrada—; el velo `.jj-loading` no podía taparlo
+porque vive DENTRO de la app Vue que aún no ha montado. El motor Livewire sí tenía `placeholder()`, y
+se fue con él sin que nadie lo notara: **`UI-SPINNER.md` seguía marcando ✅ ese caso**, que es el
+recordatorio de que retirar una superficie se lleva por delante capacidades que su doc sigue
+prometiendo.
+▶ **Arreglado con cero JavaScript**: el velo va estático DENTRO de `#sidecart-spa`, con el mismo
+marcado que servía el placeholder, y **Vue lo borra al montar** (`app.mount()` hace
+`container.textContent = ''`, verificado en el runtime instalado, no supuesto). El `catch` de
+`bootSpaEngine()` lo vacía si el chunk no carga, porque un spinner eterno miente.
+⚠️ **Y el caso que lo vigila tuvo que reescribirse tras mutarlo**: la primera versión anclaba con una
+expresión regular de `id="sidecart-spa"` a `</div></div>` y **daba verde con el velo FUERA del hueco**
+—donde Vue nunca lo retiraría y se quedaría pegado para siempre—. Con `DOMDocument` sí muerde. Es
+`#65` otra vez: un caso nuevo también hay que mutarlo.
+
+**(i) Lo que queda para el siguiente**: desplegar a staging y comprobar en navegador el punto **A7 ·
+enlaces profundos** de `VERIFICACION-E2E-CAJON.md` — el arreglo de `#111(h)`, que **nadie ha visto
+funcionar**.

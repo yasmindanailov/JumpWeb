@@ -853,7 +853,8 @@ class ViewOrder extends ViewRecord
      *    visual con grid mensual (días seleccionables con estado de
      *    disponibilidad) + lista de horas como chips. Reemplaza los Selects
      *    nativos de fecha+hora de 7.2e.2 por una experiencia más
-     *    intuitiva, alineada con el flujo cliente (Tickets\Purchase).
+     *    intuitiva, alineada con la del flujo de compra del cliente (que en
+     *    su día fue `Tickets\Purchase` y hoy es el cajón SPA).
      *  - **Tab 2 "Datos del evento"** (solo si pack + eventFields +
      *    permiso edit_event_data): form `event_data` separado del bloque
      *    fecha+hora. Restaura el patrón de 7.2c donde estos datos vivían

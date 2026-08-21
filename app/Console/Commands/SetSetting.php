@@ -10,12 +10,14 @@ use Illuminate\Console\Command;
  * hueco: **hay ajustes que el panel NO expone, y hasta hoy solo se podían tocar a mano** con `tinker`
  * o SQL en el servidor — un paso no probado que cada instalación de cliente necesita.
  *
- * Los tres que lo hacían falta, medidos:
+ * Los que lo hacían falta, medidos:
  *  · `security.turnstile_site_key` / `security.turnstile_secret` — el anti-bot se lee SOLO de
  *    `settings`, y la página del panel los excluye **a propósito** («NUNCA editables aquí»). Sin ellos
  *    el anti-bot se autodesactiva **en silencio** (`DECISIONES #107`).
- *  · `sidebar.engine` — el flag que elige motor del cajón. Tampoco está en el panel, y la única receta
- *    escrita para cambiarlo usaba `docker compose exec`, que en un servidor real no existe.
+ *
+ * ⚠️ El tercero era `sidebar.engine`, el flag que elegía motor del cajón, y **ya no existe**: 4.7·2b·3
+ * retiró el motor Livewire y con él el ajuste. Se deja escrito porque era la mitad del porqué de este
+ * comando, y porque la necesidad que lo justifica —ajustes fuera del panel— sigue igual de viva.
  *
  * ⚠️ **Es una puerta trasera al panel, así que trae guardas.** No basta con «escribe lo que te digan»:
  * las tres claves de {@see self::PROTECTED_KEYS} pueden costar dinero o corromper la numeración de
@@ -28,12 +30,12 @@ use Illuminate\Console\Command;
 class SetSetting extends Command
 {
     protected $signature = 'app:set-setting
-        {key : La clave, tal cual está en la tabla (p. ej. `sidebar.engine`).}
+        {key : La clave, tal cual está en la tabla (p. ej. `security.turnstile_site_key`).}
         {value : El valor. Cadena vacía = se guarda vacío, que NO es lo mismo que borrar la fila.}
         {--group= : Grupo de la fila. Solo se usa al CREARLA; si ya existe, se respeta el suyo.}
         {--force : Obligatorio para las claves protegidas (ver PROTECTED_KEYS).}';
 
-    protected $description = 'Escribe un ajuste que el panel no expone (anti-bot, motor del cajón…). Idempotente.';
+    protected $description = 'Escribe un ajuste que el panel no expone (anti-bot, claves de despliegue…). Idempotente.';
 
     /**
      * Claves que exigen `--force`, cada una con el daño que hace tocarla a ciegas.

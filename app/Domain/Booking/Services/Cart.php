@@ -6,8 +6,9 @@ namespace App\Domain\Booking\Services;
  * Contrato ÚNICO de "qué es una línea de cesta válida".
  *
  * Antes esta normalización vivía DUPLICADA byte a byte en {@see OrderCreator::sanitize()}
- * (defensa server-side al crear el pedido) y en `Tickets\Purchase::sanitizeCart()` (limpieza
- * de la sesión al montar el wizard). Tenerla en dos sitios significaba que un cambio en la
+ * (defensa server-side al crear el pedido) y en `Tickets\Purchase::sanitizeCart()` —el componente
+ * Livewire, retirado en 4.7·2b·3, que saneaba la sesión al montar el wizard—. Tenerla en dos sitios
+ * significaba que un cambio en la
  * forma de la línea (un campo nuevo, una regla de complementos) había que portarlo a ambos
  * o la cesta de sesión y la validación del alta dejaban de coincidir. Aquí es una sola fuente.
  *
