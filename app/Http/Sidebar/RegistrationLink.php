@@ -11,8 +11,9 @@ use App\Providers\AppServiceProvider;
  *
  * Es *data-driven* de principio a fin —URL, etiqueta y descripción salen de `settings`, las dos
  * últimas por idioma— y por eso no puede vivir quemado en ninguna vista. Lo componía
- * `Livewire\Tickets\Purchase` en privado; con `GET /api/v1/config` aparece el segundo consumidor,
- * así que la composición sube a un solo sitio (Fase 4 · paso 4.0b).
+ * `Livewire\Tickets\Purchase` en privado; con `GET /api/v1/config` apareció el segundo consumidor y
+ * la composición subió a un solo sitio (Fase 4 · paso 4.0b). Retirado el componente en 4.7·2b·3, ese
+ * endpoint es el único que queda.
  *
  * **Vive en la capa de ENTREGA a propósito.** Lo que hace es leer ajustes, sanear una URL y caer a
  * un texto traducido: la i18n es presentación, y sus dos consumidores son de entrega. Subirlo a

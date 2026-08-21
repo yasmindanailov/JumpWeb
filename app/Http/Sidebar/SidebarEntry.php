@@ -18,14 +18,15 @@ namespace App\Http\Sidebar;
  * precedencia y su ciclo de vida viven aquí y en ningún otro sitio, y `SidebarEntryTest` lo impone.
  * Es el mismo trato que `User::revokeAllAccess()` da a las credenciales (`RGPD-06`).
  *
- * **Quién consume, y por qué depende del motor.** No es una incoherencia, es una diferencia real
- * entre los dos motores y conviene tenerla escrita:
+ * **Quién lee, y por qué son dos llamadas distintas.** Con el motor Livewire eran dos peticiones y
+ * dos lectores; desde 4.7·2b·3 el cajón SPA vive en el MISMO documento y las dos corren juntas:
  *  - **`peek()`** lo usa el LAYOUT para decidir si el cajón se abre solo (`data-purchase-open`).
- *    No consume: en Livewire el componente es `lazy` y su `mount()` corre en una petición
- *    POSTERIOR —medido el 2026-08-13—, así que consumir aquí dejaría al componente sin nada.
- *  - **`consume()`** lo llama el MOTOR: hoy `Purchase::mount()`, en la petición del `lazy`. Cuando
- *    el motor sea la SPA, que vive en el MISMO documento, lo llamará el layout y entregará el
- *    resultado por `data-*`.
+ *    No consume. Cuando el motor era Livewire NO PODÍA consumir: el componente era `lazy` y su
+ *    `mount()` corría en una petición POSTERIOR (medido el 2026-08-13).
+ *  - **`consume()`** lo llama el MOTOR, y hoy el motor **es el propio layout**: se lo lleva al
+ *    componer `data-boot` del punto de montaje. Por eso `consume()` está memoizado por petición —el
+ *    `peek()` del `<body>` y este corren en la MISMA— y por eso la SESIÓN queda vacía al terminar
+ *    la respuesta, que es lo que comprueban `SidebarMountTest` y `RedsysReturnControllerTest`.
  */
 final readonly class SidebarEntry
 {

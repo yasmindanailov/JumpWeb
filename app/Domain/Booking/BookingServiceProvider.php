@@ -40,7 +40,7 @@ class BookingServiceProvider extends ServiceProvider
     {
         $this->app->bind(CustomerReservations::class, CustomerReservationsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
-        // Catálogo de venta (Fase 3 · paso 1b): lo consumen la web (`Tickets\Purchase`) y la API.
+        // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);
         // Política de admisión de reservas (Fase 3 · paso 2): pausa, tope de pendientes y
         // frecuencia. La aplican el sidebar, «Mis pedidos» y, en el paso 4, `POST /orders`.

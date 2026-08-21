@@ -3,7 +3,6 @@
 namespace Tests\Feature\Sidebar;
 
 use App\Domain\Identity\Models\User;
-use App\Domain\Platform\Models\Setting;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Auth\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -200,8 +199,6 @@ class SidebarLoginParityTest extends TestCase
      */
     public function test_the_mount_payload_carries_every_text_the_step_paints(): void
     {
-        $this->withSpaEngine();
-
         $boot = $this->bootPayload();
 
         foreach (['cta', 'eyebrow', 'title', 'email', 'password', 'remember', 'submit', 'submitting'] as $key) {
@@ -226,8 +223,6 @@ class SidebarLoginParityTest extends TestCase
      */
     public function test_the_mount_payload_stays_pruned(): void
     {
-        $this->withSpaEngine();
-
         $boot = $this->bootPayload();
 
         $this->assertSame(
@@ -250,12 +245,6 @@ class SidebarLoginParityTest extends TestCase
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────
-
-    private function withSpaEngine(): void
-    {
-        Setting::updateOrCreate(['key' => 'sidebar.engine'], ['value' => 'spa']);
-        Setting::flushMemo();
-    }
 
     /**
      * El `data-boot` que el layout inyecta de verdad, leído del HTML de la home.

@@ -329,7 +329,7 @@ class PaymentRetryFromOrdersTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee(__('account.orders.retry_payment'))
+            ->assertSeeText(__('account.orders.retry_payment'))
             ->assertSee(route('account.orders.retry', ['code' => $order->code]));
     }
 
@@ -342,7 +342,7 @@ class PaymentRetryFromOrdersTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertDontSee(__('account.orders.retry_payment'));
+            ->assertDontSeeText(__('account.orders.retry_payment'));
     }
 
     public function test_orders_page_does_not_show_retry_button_for_expired_orders(): void
@@ -354,7 +354,7 @@ class PaymentRetryFromOrdersTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertDontSee(__('account.orders.retry_payment'));
+            ->assertDontSeeText(__('account.orders.retry_payment'));
     }
 
     // ── displayStatus + expired hint (#116 pulido tras feedback de la clienta) ───────────
@@ -407,8 +407,8 @@ class PaymentRetryFromOrdersTest extends TestCase
             ->assertOk();
 
         // Status efectivo "Caducado", no "Pendiente de pago".
-        $response->assertSee(__('tickets.statuses.expired'));
-        $response->assertDontSee(__('account.orders.retry_payment'));
+        $response->assertSeeText(__('tickets.statuses.expired'));
+        $response->assertDontSeeText(__('account.orders.retry_payment'));
     }
 
     // ── Modal "Gestionar tu reserva" en Orders pagadas (#117) ──────────────────────────
@@ -457,7 +457,7 @@ class PaymentRetryFromOrdersTest extends TestCase
         $response->assertSee($order->code);
 
         // CTA "Ir a contacto" → enlace a la página /contacto.
-        $response->assertSee(__('account.orders.manage_cta'));
+        $response->assertSeeText(__('account.orders.manage_cta'));
         $response->assertSee(route('contacto'));
     }
 

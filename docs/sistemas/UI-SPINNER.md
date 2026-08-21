@@ -54,7 +54,7 @@ Spinner autocontenido. Hereda el color del texto (`currentColor`) y respeta
 | Nivel | Cuándo | Cómo se ve | Componente |
 |---|---|---|---|
 | **1. En el botón** | Envíos de formulario (login, registro, recuperar/restablecer, «Mi cuenta») | Spinner pequeño **dentro del botón** + botón deshabilitado | `<x-ui.spinner size="xs">` con `wire:loading` |
-| **2. Velo local** | Carga o recálculo de un **panel** (sidebar de compra: abrir `lazy`, elegir día/hora/mes) | Velo translúcido **solo sobre ese panel** + spinner con etiqueta | `<x-ui.loading-overlay>` (panel en `position:relative`) |
+| **2. Velo local** | Carga o recálculo de un **panel** (cajón de compra: elegir día/hora/mes) | Velo translúcido **solo sobre ese panel** + spinner con etiqueta | `<x-ui.loading-overlay>` (panel en `position:relative`) |
 | **3. Pantalla completa** | Saltos que **bloquean toda la página** (ir a pagar → Redsys) | Overlay a pantalla completa con spinner XL + etiqueta | `<x-ui.loading-overlay fixed>` (clase `.jj-spinner-overlay`) |
 
 **Micro-acciones** (steppers `+`/`−` de cantidades): **sin overlay** — demasiado rápidas y
@@ -74,15 +74,16 @@ componentes `<x-ui.*>` **reenvían atributos**: se les pasa `wire:*` directament
 </button>
 ```
 
-**Nivel 2 — panel que carga en diferido (`lazy`):** el placeholder lo define el propio
-componente Livewire:
-```php
-// app/Livewire/Tickets/Purchase.php
-public function placeholder(): string
-{
-    return view('components.ui.loading-overlay-placeholder')->render();
-}
-```
+**Nivel 2 — panel que carga en diferido:** con Livewire lo resolvía el `placeholder()` del propio
+componente `lazy`, que devolvía `components.ui.loading-overlay-placeholder`.
+
+⚠️ **Ese mecanismo YA NO EXISTE y su hueco está ABIERTO** (4.7·2b·3, 2026-08-21). Retirado el
+componente de compra, el cajón lo monta Vue con un `await import()` desde
+`app.js::bootSpaEngine()`, y ahí **no se pinta nada mientras el chunk viaja**: la bandera
+`spaLoading` es solo guarda de reentrada y no llega a ninguna vista, y el velo `.jj-loading` no
+puede taparlo porque vive DENTRO de la app Vue que aún no ha montado. Está en `DEUDA.md`; el arreglo
+acotado es pintar el velo **dentro** de `#sidecart-spa` en `layout.blade.php`, que Vue reemplaza al
+montar. Un componente Livewire `lazy` nuevo sí seguiría usando `placeholder()`.
 
 **Nivel 2 — panel que recalcula** (avanzar/retroceder, elegir día/hora/mes): velo local
 dentro del panel (`position:relative`), apuntando a **todas** las acciones que recargan el
@@ -116,7 +117,7 @@ panel (incluido `back`, para que retroceder tenga el mismo feedback que avanzar)
 | Recuperar contraseña — enviar | 1 botón | ✅ |
 | Restablecer contraseña — enviar | 1 botón | ✅ |
 | Mi cuenta — perfil / contraseña / cerrar otras sesiones / borrar cuenta | 1 botón | ✅ |
-| Sidebar de compra — abrir (`lazy`) | 2 velo local | ✅ |
+| Cajón de compra — abrir | 2 velo local | ❌ **hueco abierto**: el motor SPA se trae con `import()` y no pinta nada durante la espera (4.7·2b·3, ver §niveles y `DEUDA.md`) |
 | Sidebar de compra — avanzar / retroceder (día · hora · mes · volver) | 2 velo local | ✅ |
 | Sidebar de compra — `+`/`−` cantidades | micro (sin overlay, por diseño) | ✅ |
 | Ir a pagar (Redsys) | 3 pantalla completa | marcado «pospuesto» en el doc origen — verificar |

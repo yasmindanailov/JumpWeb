@@ -3,7 +3,6 @@
 namespace Tests\Feature\Ui;
 
 use App\Livewire\Auth\Login;
-use App\Livewire\Tickets\Purchase;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
@@ -67,20 +66,22 @@ class SpinnerTest extends TestCase
             ->assertSeeHtml('jj-spinner');
     }
 
-    public function test_purchase_panel_has_a_loading_veil_targeting_panel_actions(): void
-    {
-        $this->seed(LandingContentSeeder::class);
-
-        Livewire::test(Purchase::class)
-            ->assertSeeHtml('jj-loading')
-            ->assertSeeHtml('addToCart'); // el velo cubre las acciones del panel (navegación + carrito)
-    }
-
-    public function test_lazy_placeholder_renders_the_brand_spinner(): void
-    {
-        $html = view('livewire.tickets.purchase-placeholder')->render();
-
-        $this->assertStringContainsString('purchase-loading', $html);
-        $this->assertStringContainsString('jj-spinner', $html);
-    }
+    /*
+     * ⚠️ **Aquí vivían los dos casos del cajón, y los dos se fueron con `Tickets\Purchase`**
+     * (4.7·2b·3). No son iguales, y la diferencia importa:
+     *
+     * · `test_purchase_panel_has_a_loading_veil_targeting_panel_actions` — el velo del panel. Su
+     *   sujeto **tiene sucesor y está fijado**: el cajón SPA emite `.jj-loading` como PRIMER hijo de
+     *   `.purchase`, y `SidebarDomContractTest` lo ancla ahí en dos casos y declara el orden de
+     *   bloques `jj-loading → bk-progress → purchase__scroll → bk-foot`. Lo que no sobrevive es el
+     *   `wire:target`, que era vocabulario de Livewire.
+     *
+     * · `test_lazy_placeholder_renders_the_brand_spinner` — el placeholder del `lazy`. Este **NO
+     *   tiene sucesor, y al medirlo apareció un HUECO REAL**: `bootSpaEngine()` abre el cajón y hace
+     *   `await import()` del chunk del motor, y durante esa espera no se pinta nada — `spaLoading` es
+     *   solo una guarda de reentrada y no llega a ninguna vista—. El velo `.jj-loading` no puede
+     *   taparlo porque vive DENTRO de la app Vue que aún no ha montado. Con la caché fría el cajón se
+     *   abre vacío. Está anotado en `DEUDA.md`; se cierra pintando el velo dentro de `#sidecart-spa`,
+     *   que Vue reemplaza al montar.
+     */
 }

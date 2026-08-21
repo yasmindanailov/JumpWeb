@@ -14,7 +14,6 @@ use App\Domain\Platform\Models\Setting;
 use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
 use App\Livewire\Auth\Register;
-use App\Livewire\Tickets\Purchase;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
@@ -1747,46 +1746,43 @@ class SidebarDomContractTest extends TestCase
         return $addon;
     }
 
-    /** El árbol del componente Livewire en un paso, ya normalizado. */
     /**
      * **El MANIFIESTO congelado** (Fase 4 · paso 4.7·1, `sidebar-spa.md` §4.2).
      *
-     * ⚠️ **Toda la red de esta fase compara contra Livewire, y Livewire se va.** Cuando `Purchase.php`
-     * desaparezca, un diff «los dos motores emiten lo mismo» se queda sin uno de los dos y pasaría en
-     * verde para siempre. El manifiesto es la foto del árbol VERIFICADO, tomada mientras los dos
-     * motores conviven, para que el contrato visual sobreviva a la retirada.
+     * ⚠️ **Toda la red de esta fase comparaba contra Livewire, y Livewire ya se fue** (4.7·2b·3). Un
+     * diff «los dos motores emiten lo mismo» se habría quedado sin uno de los dos y habría pasado en
+     * verde para siempre. El manifiesto es la foto del árbol VERIFICADO, tomada **mientras los dos
+     * motores convivían**, justamente para que el contrato visual sobreviviera a la retirada.
      *
-     * Mientras Livewire vive se comprueban las DOS cosas —motor contra motor, y motor contra
-     * manifiesto—, que es lo único que impide que la foto envejezca en silencio. Al retirarlo quedará
-     * solo la segunda, y habrá sido correcta el día que se tomó.
+     * Mientras Livewire vivió se comprobaban las DOS cosas —motor contra motor y motor contra
+     * manifiesto—, que es lo único que impedía que la foto envejeciera en silencio. Hoy queda solo la
+     * segunda, y fue correcta el día que se tomó.
      */
     private const MANIFEST = 'tests/Fixtures/sidebar-dom-manifest.json';
 
     /*
-     * ⚠️⚠️ **LO QUE ·2b·3 TIENE QUE HACER CON ESTE FICHERO, y por qué no se puede hacer antes**
-     * (medido el 2026-08-15, `DECISIONES #83`).
+     * ⚠️⚠️ **CÓMO QUEDÓ ESTE FICHERO TRAS ·2b·3** (`DECISIONES #111`; la medición previa, en `#83`).
      *
-     * Este test NO se audita con la pregunta de `#75`: su sujeto *es* la comparación entre motores.
-     * Pero tampoco se puede convertir hoy en «Vue contra el manifiesto», y el motivo está en el
-     * código de abajo: **el manifiesto está anclado en `$livewire`**, no en `$vue`. Vue solo queda
-     * cubierta por transitividad, a través del `assertSame($livewire, $vue)` de la primera línea.
-     * Y `SidebarSettings::engine()` devuelve `livewire` por defecto Y como fallback, así que **el
-     * motor anclado es además el que hoy sirve**: quitarle su red ahora dejaría sin prueba de DOM
-     * justo al que vende.
+     * Este test nunca se auditó con la pregunta de `#75`: su sujeto ERA la comparación entre motores.
+     * Tampoco se pudo convertir en «Vue contra el manifiesto» hasta el final, porque el manifiesto
+     * estaba anclado en `$livewire` y Vue solo quedaba cubierta por transitividad, a través del
+     * `assertSame($livewire, $vue)` de la primera línea — y el motor anclado era, además, el que
+     * servía. Por eso murió DENTRO y no entero, en tres cambios exactos, todos hechos:
+     *   1. `assertTree()`: fuera el `assertSame($livewire, $vue)` y **anclaje cambiado a `$vue`** en
+     *      sus dos apariciones —la comparación contra el manifiesto y la rama de `MANIFEST_REFRESH`—.
+     *      Borrar solo la primera habría dejado el manifiesto vigilando un motor inexistente.
+     *   2. Retirados los renderizadores del motor viejo (`livewireTree*`) y la firma de `$livewire`.
+     *   3. `assertBundleIsNotStale()` **se quedó**: es la única guarda de que el artefacto contra el
+     *      que se renderiza no está rancio (`#69`).
      *
-     * Por eso se queda en el inventario y muere DENTRO, no entero. Son tres cambios exactos:
-     *   1. `assertTree()`: borrar `assertSame($livewire, $vue)` y **cambiar el anclaje a `$vue`** en
-     *      las dos apariciones que quedan —la comparación contra el manifiesto y la rama de
-     *      `MANIFEST_REFRESH`—. Si solo se borra la primera, el manifiesto seguiría vigilando un
-     *      motor que ya no existe y Vue se quedaría sin nada.
-     *   2. Retirar los renderizadores del motor viejo (`livewireTree*`) y la firma de `$livewire`.
-     *   3. `assertBundleIsNotStale()` **se queda**: pasa a ser la única guarda de que el artefacto
-     *      contra el que se renderiza no está rancio (`#69`).
-     *
-     * ⚠️ **Y queda un riesgo asumido, que conviene tener escrito**: hoy regenerar el manifiesto es
-     * seguro porque la igualdad entre motores lo respalda. Sin el segundo motor, `MANIFEST_REFRESH=1`
+     * ⚠️ **Y el riesgo asumido, ahora ya real**: mientras hubo dos motores, regenerar el manifiesto
+     * era seguro porque la igualdad entre ellos lo respaldaba. Sin el segundo, `MANIFEST_REFRESH=1`
      * acepta CUALQUIER deriva sin que nada la contradiga. Es el precio del árbol congelado que `#60`
-     * ya aceptó; a partir de ·2b·3 la única guarda es la disciplina de decirlo en el commit.
+     * aceptó; desde ·2b·3 la única guarda es la disciplina de decir POR QUÉ en el commit.
+     *
+     * ⚠️ Y una restricción que no se puede perder: **el NOMBRE de cada caso es la CLAVE del
+     * manifiesto**. Los `…_in_both_engines` conservan su nombre histórico a propósito — renombrarlos
+     * obligaría a regenerarlo, y regenerarlo sin segundo motor congelaría lo que Vue emitiera ese día.
      */
 
     /** Trazas capturadas en esta ejecución, por caso. Se usan para detectar entradas huérfanas. */

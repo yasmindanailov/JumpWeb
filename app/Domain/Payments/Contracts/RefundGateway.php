@@ -12,8 +12,8 @@ use App\Domain\Payments\Models\Payment;
  * `Order::executePartialRefund()` (`app(Redsys::class)->executeRefund(...)`): mismo
  * método, mismos parámetros, mismo resultado. NO se añade el «cobro» (la ida a la
  * pasarela, `Redsys::buildPaymentFormData`) porque Booking no lo consume: sus únicos
- * llamantes son la capa de entrega (`Livewire\Tickets\Purchase` y
- * `RetryPaymentController`), que en Fase 2 se queda quieta. Inventarlo aquí sería una
+ * llamantes eran la capa de entrega (`Livewire\Tickets\Purchase` —retirado en 4.7·2b·3— y
+ * `RetryPaymentController`), que en Fase 2 se quedaba quieta. Inventarlo aquí habría sido una
  * superficie nueva, prohibida por el spec (§4).
  *
  * **Nunca lanza**: cualquier fallo (red, timeout, respuesta malformada, denegación del

@@ -18,8 +18,9 @@
 - **No existe API.** `composer.json` declara **6 paquetes** (más `php`) y ninguno es Sanctum; no
   hay fichero de rutas de API —`routes/api.php` (futuro)— ni `api:` en `withRouting()` de
   `bootstrap/app.php`. Las **37** declaraciones `Route::` de `routes/web.php` son server-rendered.
-- **El sistema de reservas vive dentro de una clase de UI.** `app/Livewire/Tickets/Purchase.php`
-  (2.049 líneas, **46** métodos públicos). La v1 afirmó que «solo cuatro son operaciones de
+- **El sistema de reservas vive dentro de una clase de UI.** El componente Livewire de compra
+  `Tickets\Purchase` (2.049 líneas, **46** métodos públicos; retirado el 2026-08-21 en 4.7·2b·3,
+  mucho después de este diagnóstico). La v1 afirmó que «solo cuatro son operaciones de
   servidor»: **falso**, y era la premisa de la que colgaba medio diseño. El carrito de hoy no es
   cliente puro, es **cliente con validación de servidor en cada paso**: `addToCart()` re-topa la
   cantidad contra el aforo y sanea `event_data`; `selectDate()`/`selectTime()` validan contra

@@ -6,9 +6,10 @@ namespace App\Domain\Platform\Services;
  * El aviso que sustituye al flujo de compra cuando las reservas online están en pausa (#218).
  *
  * Título, mensaje y canales de contacto son **editables por idioma desde el panel**, así que no
- * pueden vivir quemados en ninguna vista. Los componía a medias `Livewire\Tickets\Purchase`; con
- * `GET /api/v1/booking/status` aparece el segundo consumidor y la composición sube aquí, junto al
- * resto del subsistema de disponibilidad (Fase 4 · paso 4.0b).
+ * pueden vivir quemados en ninguna vista. Los componía a medias el componente Livewire de compra
+ * —retirado en 4.7·2b·3—; con `GET /api/v1/booking/status` apareció el segundo consumidor y la
+ * composición subió aquí, junto al resto del subsistema de disponibilidad (Fase 4 · paso 4.0b).
+ * Hoy el único consumidor es ese endpoint, del que cuelga el cajón SPA.
  *
  * **Qué NO decide**: en qué pasos se enseña el aviso. Eso es del cliente —el sidebar lo muestra en
  * los pasos de reserva y no en los de resultado— y depende de una máquina de estados que el

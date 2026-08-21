@@ -79,7 +79,7 @@ class OrdersPageTest extends TestCase
             ->assertOk()
             ->assertSee($order->code)
             ->assertSee('Jump · 1 hora')   // producto
-            ->assertSee('Pendiente de pago') // estado traducido
+            ->assertSeeText('Pendiente de pago') // estado traducido
             ->assertSee('20,00 €');         // total (2 × 10,00 €)
     }
 
@@ -220,7 +220,7 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee('Completado')
+            ->assertSeeText('Completado')
             ->assertDontSee('>Pagado<');  // estricto: no debe aparecer dentro de un tag
     }
 
@@ -240,8 +240,12 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee(__('tickets.statuses.paid'))      // "Completado"
-            ->assertSee(__('tickets.refunded_badge'));    // "Reembolsado"
+            ->assertSeeText(__('tickets.statuses.paid'))      // "Completado"
+            // ⚠️ El texto solo NO basta y se midió: «Reembolsado» es prefijo de «Reembolsado el …»,
+            // el rótulo de la fecha del reembolso, así que borrando el distintivo del pedido este
+            // caso seguía verde. Se ancla también en su clase para que distinga uno de otro.
+            ->assertSeeText(__('tickets.refunded_badge'))     // "Reembolsado"
+            ->assertSee('orders__status--refunded-badge', false);
     }
 
     public function test_refund_summary_shows_amount_date_and_net_when_refunded(): void
@@ -260,8 +264,8 @@ class OrdersPageTest extends TestCase
             ->get(route('account.orders'))
             ->assertOk()
             ->assertSee('25/05/2026')                                    // fecha del refund
-            ->assertSee('Reembolsado el')                                // label
-            ->assertSee(__('tickets.subtotal'))                          // ledger: Subtotal → … → Total (#198.3, ya no "Neto")
+            ->assertSeeText('Reembolsado el')                                // label
+            ->assertSeeText(__('tickets.subtotal'))                          // ledger: Subtotal → … → Total (#198.3, ya no "Neto")
             ->assertSee('−'.number_format($order->total / 100, 2, ',', '.').' €')
             ->assertSee('0,00 €');                                       // Total final = 0 (reembolso completo)
     }
@@ -275,11 +279,11 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertDontSee(__('tickets.refunded_badge'))
-            ->assertDontSee(__('tickets.net'))
+            ->assertDontSeeText(__('tickets.refunded_badge'))
+            ->assertDontSeeText(__('tickets.net'))
             // Pedido limpio: sin líneas del desglose detallado (#196).
-            ->assertDontSee(__('tickets.at_gate'))
-            ->assertDontSee(__('tickets.pendiente_devolucion'));
+            ->assertDontSeeText(__('tickets.at_gate'))
+            ->assertDontSeeText(__('tickets.pendiente_devolucion'));
     }
 
     public function test_at_gate_line_renders_when_edit_added_a_gate_charge(): void
@@ -296,7 +300,7 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee(__('tickets.at_gate'))
+            ->assertSeeText(__('tickets.at_gate'))
             ->assertSee('+10,00 €', escape: false);
     }
 
@@ -318,10 +322,10 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee(__('tickets.deposit_paid_online'))      // agregado online (ahora «Pagado online», neutro)
-            ->assertSee(__('tickets.at_gate'))                  // agregado a cobrar en el parque
-            ->assertSee(__('tickets.show_breakdown'))           // #225 F3: toggle «Ver desglose» del ↳
-            ->assertSee(__('tickets.deposit_remainder_line'))   // ↳ resto de la señal (en el DOM, x-show)
+            ->assertSeeText(__('tickets.deposit_paid_online'))      // agregado online (ahora «Pagado online», neutro)
+            ->assertSeeText(__('tickets.at_gate'))                  // agregado a cobrar en el parque
+            ->assertSeeText(__('tickets.show_breakdown'))           // #225 F3: toggle «Ver desglose» del ↳
+            ->assertSeeText(__('tickets.deposit_remainder_line'))   // ↳ resto de la señal (en el DOM, x-show)
             ->assertSee('+7,00 €', escape: false);              // el resto
     }
 
@@ -357,8 +361,8 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee('Pagado online')                                                                 // agregado NEUTRO (no «Señal pagada»)
-            ->assertSee(__('tickets.deposit_card_note', ['deposit' => '30,00 €', 'rest' => '150,00 €'])) // señal del pack en su card
+            ->assertSeeText('Pagado online')                                                                 // agregado NEUTRO (no «Señal pagada»)
+            ->assertSeeText(__('tickets.deposit_card_note', ['deposit' => '30,00 €', 'rest' => '150,00 €'])) // señal del pack en su card
             ->assertSee('orders__product-deposit', false);                                               // #3: reubicada al PIE de la card (no entre los datos del evento)
     }
 
@@ -459,9 +463,9 @@ class OrdersPageTest extends TestCase
         $this->actingAs($user)
             ->get(route('account.orders'))
             ->assertOk()
-            ->assertSee(__('tickets.pendiente_devolucion'))
-            ->assertSee(__('tickets.pendiente_devolucion_caption')) // #198.1: explica el porqué
-            ->assertSee(__('tickets.subtotal'))                     // ledger Subtotal → … → Total
+            ->assertSeeText(__('tickets.pendiente_devolucion'))
+            ->assertSeeText(__('tickets.pendiente_devolucion_caption')) // #198.1: explica el porqué
+            ->assertSeeText(__('tickets.subtotal'))                     // ledger Subtotal → … → Total
             ->assertSee('−10,00 €', escape: false);                // pendiente de devolución
     }
 }

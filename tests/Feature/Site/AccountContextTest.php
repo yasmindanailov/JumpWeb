@@ -45,6 +45,7 @@ class AccountContextTest extends TestCase
             ->assertSee('Ana')
             ->assertDontSee(__('account.sidecart.guest_hello'));
     }
+
     /**
      * ⚠️ **RESCATADO de `SidebarV2Test` al borrar el motor Livewire** (4.7·2b·3, `DECISIONES #111`).
      * Ese fichero murió entero con el componente, pero este caso NO hablaba de él: es el ÚNICO sitio
@@ -61,5 +62,4 @@ class AccountContextTest extends TestCase
             ->assertSee(__('account.sidecart.tag'))
             ->assertSee("'is-' + \$store.purchase.mode", false);
     }
-
 }

@@ -13,13 +13,11 @@ use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
-use App\Livewire\Tickets\Purchase;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -29,19 +27,28 @@ use Tests\TestCase;
  * previsto en el sidecart == lo que `OrderCreator`/`onlineDueCents` cobran para la MISMA
  * cesta), el email de confirmación (señal + pendiente, no «total pagado»), y la caja del PDF.
  *
- * ⚠️ **Clasificación para la retirada, MEDIDA el 2026-08-15** (`DECISIONES #91`). El fichero **no es
- * homogéneo** y ·2b·3 tiene que operar DENTRO:
+ * ⚠️ **Los cuatro casos de UI se fueron con `Tickets\Purchase`** (4.7·2b·3, ejecutando la
+ * clasificación que `DECISIONES #91` dejó medida el 2026-08-15: el fichero **no era homogéneo** y
+ * había que operar DENTRO). Eran lo que ANUNCIA el catálogo, lo que pinta el pie del paso 3, el
+ * detalle del sidecart y el paso 6: su sujeto era la superficie, no la regla del dinero.
  *
- *  · **el canario ya no está aquí**: era un intermediario y sus dos casos se retiraron por
- *    redundantes (ver el bloque de abajo, con la medición);
- *  · **los cuatro casos de UI mueren con el componente** —lo que ANUNCIA el catálogo, lo que pinta el
- *    pie del paso 3, el detalle del sidecart y el paso 6—: su sujeto es la superficie. Su cobertura
- *    equivalente está localizada: el desglose del pie lo fija `SidebarCartParityTest` desde `#80`
- *    (`nowLabel`/`now`/`park` contra el diccionario y `number_format`), el estado del ⓘ lo compara
- *    `SidebarDomContractTest`, y el anuncio del catálogo sale de `deposit_catalog`, que está en la
- *    lista de `SidebarTextParityTest`;
- *  · **el resto no toca el componente** y se queda tal cual: el email, el PDF, el desglose por
- *    producto y los dos casos de sobrecobro.
+ * Su cobertura equivalente se comprobó una a una antes de borrarlos, y toda está en la superficie
+ * viva:
+ *
+ *  · el desglose del pie → `SidebarCartParityTest` desde `#80` (`nowLabel`/`now`/`park` contra el
+ *    diccionario y `number_format`);
+ *  · el estado del ⓘ → `SidebarDomContractTest`;
+ *  · el anuncio del catálogo → la clave `deposit_catalog`, en la lista de `SidebarTextParityTest`;
+ *  · la nota por producto del paso 6 → la clave `deposit_card_note`, también en
+ *    `SidebarTextParityTest` (con sus dos interpolaciones), pintada por `SummaryLine.vue` y
+ *    `CartStep.vue`, con su caso de interpolación en `i18n.test.js` y la superficie de cuenta en
+ *    `Account\OrdersPageTest`.
+ *
+ * ⚠️ **Lo que NO se movió de aquí es la regla**: `PAY-10` la vigila `DepositRefundCoherenceTest`, y
+ * el canario anti doble-fuente ya se había retirado por redundante en `#91`.
+ *
+ * El resto de casos no tocaban el componente y se quedan tal cual: el email, el PDF, el desglose por
+ * producto y los dos de sobrecobro.
  * El resto de superficies leen `OrderFinancialSummary`/`ReservationFinancials` (cubiertas en
  * sus tests) y se corrigen solas.
  */
@@ -210,104 +217,6 @@ class DepositSurfacesTest extends TestCase
         $breakdown = implode(' | ', $slip->pendingAtGateBreakdown());
         $this->assertStringContainsString(__('admin.orders.slip.deposit_remainder_line'), $breakdown);
         $this->assertStringContainsString($slip->productName(), $breakdown);
-    }
-
-    public function test_sidecart_details_deposit_per_product_and_keeps_aggregate_neutral(): void
-    {
-        // #225 F2: en una cesta MIXTA (entrada de pago completo + pack con señal) el agregado «Pagas
-        // ahora» NO debe etiquetarse «(señal)» (engañaba: la entrada se paga entera). La señal se
-        // detalla en la CARD del producto que la cobra; el agregado queda neutro.
-        $full = TicketType::create([
-            'name' => ['es' => 'Entrada completa'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
-            'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 3,
-        ]);
-        $full->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 4000]);
-
-        $cart = [
-            ['ticket_type_id' => $full->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1],     // 40 €, pago completo
-            ['ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '11:00:00', 'qty' => 1], // 180 €, señal 30 €
-        ];
-
-        App::setLocale('es');
-        Livewire::actingAs($this->user)->test(Purchase::class)
-            ->set('cart', $cart)
-            ->set('step', 8)
-            // Sidebar v2: el footer ancla en el TOTAL (220 €) y desglosa NEUTRO «Pagas ahora» (40 + 30
-            // = 70 €) + «En el parque» (150 €). El agregado NO se etiqueta «(señal)» (engañaba en cesta
-            // mixta: la entrada se paga entera).
-            ->assertSee(__('tickets.footer_pay_now'))
-            ->assertDontSee('Pagas ahora (señal)')
-            ->assertSee('220,00 €')   // Total (ancla)
-            ->assertSee('70,00 €')    // pagas ahora (neutro)
-            ->assertSee('150,00 €')   // en el parque
-            // La señal se detalla en la card del PACK (no de la entrada de pago completo).
-            ->assertSee(__('tickets.deposit_card_note', ['deposit' => '30,00 €', 'rest' => '150,00 €']));
-    }
-
-    public function test_catalog_announces_the_deposit_on_a_deposit_product(): void
-    {
-        // #225 F2: el catálogo anuncia la señal CONFIGURADA (data-driven). La entrada con señal fija
-        // de 30 € muestra «Señal 30,00 €»; los productos sin señal no muestran nada. La señal vive en
-        // la columna del precio (`.catalog__pricecol`), DEBAJO del precio (no bajo la descripción).
-        $full = TicketType::create([
-            'name' => ['es' => 'Entrada completa'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
-            'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 4,
-        ]);
-        $full->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 4000]);
-
-        App::setLocale('es');
-        Livewire::actingAs($this->user)->test(Purchase::class)
-            ->set('step', 1)
-            ->assertSee(__('tickets.deposit_catalog', ['amount' => '30,00 €']))   // producto con señal
-            ->assertSee('catalog__pricecol', false)                               // señal bajo el precio (#225 F2 reubicada)
-            ->assertSee('Entrada completa');                                       // el sin-señal aparece, sin nota
-    }
-
-    public function test_quantity_step_announces_the_deposit_in_the_footer(): void
-    {
-        // #225 F2 + Sidebar v2: el footer ancla en el TOTAL (180 €) y desglosa la señal: «Pagas ahora
-        // (señal) 30 €» + «En el parque 150 €». Producto único → la etiqueta lleva «(señal)» (aclara
-        // por qué se cobra menos que el total). No se repite en el cuerpo del paso.
-        App::setLocale('es');
-        Livewire::actingAs($this->user)->test(Purchase::class)
-            ->call('selectType', $this->dep->id)   // entrada con señal 30 € sobre 180 €
-            ->call('selectDate', $this->date)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->set('qty', 1)
-            ->assertSee(__('tickets.footer_pay_now_deposit'))   // «Pagas ahora (señal)»
-            ->assertSee(__('tickets.pay_at_park'))              // «En el parque»
-            ->assertSee('180,00 €')                             // Total (ancla)
-            ->assertSee('30,00 €')                              // pagas ahora (señal)
-            ->assertSee('150,00 €');                            // en el parque
-    }
-
-    public function test_confirmation_step_6_names_deposit_per_product_not_in_aggregate(): void
-    {
-        // #225 F3: en el paso 6 (confirmación), una cesta MIXTA (producto con señal + entrada de
-        // pago completo) NO etiqueta el agregado como «Señal pagada» (engañaba: la entrada se paga
-        // entera). La señal se nombra en la card del producto; el agregado es neutro «Pagado online».
-        $full = TicketType::create([
-            'name' => ['es' => 'Entrada completa'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
-            'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 5,
-        ]);
-        $full->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 4000]);
-
-        $order = $this->creator->createPendingOrder($this->user, [
-            ['ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1],  // 180, señal 30
-            ['ticket_type_id' => $full->id, 'date' => $this->date, 'time' => '11:00:00', 'qty' => 1],        // 40, pago completo
-        ]);
-        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
-        $this->payDeposit($order, $order->fresh(['items', 'adjustments'])->onlineDueCents()); // 70 (30 señal + 40)
-
-        App::setLocale('es');
-        Livewire::actingAs($this->user)->test(Purchase::class)
-            ->set('orderCode', $order->code)
-            ->set('step', 6)
-            ->assertSee(__('tickets.paid_online_confirmed'))                                          // «Pagado online» (neutro)
-            ->assertDontSee('Señal pagada')                                                           // etiqueta antigua retirada
-            ->assertSee(__('tickets.deposit_card_note', ['deposit' => '30,00 €', 'rest' => '150,00 €'])) // señal por-producto
-            ->assertSee('70,00 €')                                                                    // pagado online (30 + 40)
-            ->assertSee('150,00 €');                                                                  // pendiente en el parque
     }
 
     private function payDeposit(Order $order, int $amountCents): Payment

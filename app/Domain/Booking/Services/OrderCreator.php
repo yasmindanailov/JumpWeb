@@ -91,10 +91,15 @@ class OrderCreator
         if ($cart === []) {
             throw new ReservationException('tickets.errors.cart_empty');
         }
-        // Cap de líneas como INVARIANTE de servidor (auditoría Fase 1, L6, regla 12): la UI ya lo
-        // comprueba en `addToCart`, pero una petición forjada podría llegar con más. Sin esto, una
-        // cesta enorme bloquearía muchas franjas a la vez (contención de BD). `#[Locked]` en
-        // `Purchase::$cart` es la otra capa (impide al cliente inflarla por el payload Livewire).
+        // Cap de líneas como INVARIANTE de servidor (auditoría Fase 1, L6, regla 12): el cliente ya
+        // lo comprueba al añadir, pero una petición forjada podría llegar con más. Sin esto, una
+        // cesta enorme bloquearía muchas franjas a la vez (contención de BD).
+        // ⚠️ **Esta es la ÚNICA capa que cuenta, y conviene no volver a escribirlo mal**: el comentario
+        // que había aquí citaba un `#[Locked]` sobre la cesta del componente Livewire «como la otra
+        // capa», y ese atributo **nunca se aplicó** — se evaluó y se descartó a propósito porque la
+        // cesta es client-syncable por diseño (lo dice `PAY-12`, y el propio componente lo dejaba
+        // anotado). Hoy la cesta viaja en el payload de la API, así que con más razón: se re-valida
+        // entera aquí, y aquí es donde está la defensa.
         if (count($cart) > self::MAX_LINES_PER_CART) {
             throw new ReservationException('tickets.errors.cart_too_large');
         }

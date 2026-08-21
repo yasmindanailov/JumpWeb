@@ -28,23 +28,23 @@ class SetSettingTest extends TestCase
 
     public function test_it_creates_a_setting_that_did_not_exist(): void
     {
-        $this->artisan('app:set-setting', ['key' => 'sidebar.engine', 'value' => 'spa'])
+        $this->artisan('app:set-setting', ['key' => 'contact.phone', 'value' => '968 22 22 22'])
             ->assertExitCode(0);
 
-        $this->assertSame('spa', Setting::value('sidebar.engine'));
+        $this->assertSame('968 22 22 22', Setting::value('contact.phone'));
     }
 
     public function test_it_updates_one_that_already_existed_and_keeps_its_group(): void
     {
-        Setting::create(['key' => 'sidebar.engine', 'value' => 'livewire', 'group' => 'ui']);
+        Setting::create(['key' => 'contact.phone', 'value' => '968 11 11 11', 'group' => 'contact']);
 
-        $this->artisan('app:set-setting', ['key' => 'sidebar.engine', 'value' => 'spa'])
+        $this->artisan('app:set-setting', ['key' => 'contact.phone', 'value' => '968 22 22 22'])
             ->assertExitCode(0);
 
-        $row = Setting::query()->where('key', 'sidebar.engine')->firstOrFail();
+        $row = Setting::query()->where('key', 'contact.phone')->firstOrFail();
 
-        $this->assertSame('spa', $row->value);
-        $this->assertSame('ui', $row->group, 'el grupo de una fila existente no se pisa');
+        $this->assertSame('968 22 22 22', $row->value);
+        $this->assertSame('contact', $row->group, 'el grupo de una fila existente no se pisa');
     }
 
     public function test_the_group_option_only_applies_when_creating(): void
@@ -57,12 +57,12 @@ class SetSettingTest extends TestCase
 
     public function test_rerunning_with_the_same_value_is_a_no_op(): void
     {
-        $this->artisan('app:set-setting', ['key' => 'sidebar.engine', 'value' => 'spa'])->assertExitCode(0);
-        $this->artisan('app:set-setting', ['key' => 'sidebar.engine', 'value' => 'spa'])
+        $this->artisan('app:set-setting', ['key' => 'contact.phone', 'value' => '968 22 22 22'])->assertExitCode(0);
+        $this->artisan('app:set-setting', ['key' => 'contact.phone', 'value' => '968 22 22 22'])
             ->expectsOutputToContain('Sin cambios')
             ->assertExitCode(0);
 
-        $this->assertSame(1, Setting::query()->where('key', 'sidebar.engine')->count());
+        $this->assertSame(1, Setting::query()->where('key', 'contact.phone')->count());
     }
 
     public function test_it_can_store_an_empty_value_without_deleting_the_row(): void
@@ -144,8 +144,8 @@ class SetSettingTest extends TestCase
     public function test_it_does_print_a_value_that_is_not_a_secret(): void
     {
         // El espejo del anterior: enmascararlo TODO haría el comando inútil para verificar a ojo.
-        $this->artisan('app:set-setting', ['key' => 'sidebar.engine', 'value' => 'spa'])
-            ->expectsOutputToContain('spa')
+        $this->artisan('app:set-setting', ['key' => 'contact.phone', 'value' => '968 22 22 22'])
+            ->expectsOutputToContain('968 22 22 22')
             ->assertExitCode(0);
     }
 }

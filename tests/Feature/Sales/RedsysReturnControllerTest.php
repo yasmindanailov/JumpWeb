@@ -13,6 +13,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Controllers\Payments\RedsysReturnController;
+use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -26,17 +27,53 @@ use Tests\TestCase;
  *   1. POST `/pago/redsys/retorno-ok` con firma válida (SIN cookie de sesión) → 303
  *      a `/?redsys={token}` con token one-shot en cache (5 min TTL).
  *   2. Token contiene `user_id + order_code + outcome` y se consume al primer uso.
- *   3. GET `/?redsys={token}` autenticado como el propietario → la sesión recoge
- *      `purchase.confirmed_code` y el sidebar (Purchase Livewire) abre el paso 6 con
- *      el código.
- *   4. Defensas: token usado por usuario distinto NO escribe sesión; token caducado
- *      no aplica; firma inválida devuelve 400 sin generar token.
+ *   3. GET `/?redsys={token}` autenticado como el propietario → el desenlace llega al cajón y este
+ *      se abre solo en el paso 6 con el código.
+ *   4. Defensas: token usado por usuario distinto NO aplica el desenlace; token caducado no aplica;
+ *      firma inválida devuelve 400 sin generar token.
+ *
+ * ⚠️⚠️ **Dónde se comprueba el desenlace, y por qué cambió en 4.7·2b·3.** Estos casos miraban
+ * `session('purchase.confirmed_code')` DESPUÉS del GET. Con el motor Livewire eso valía porque el
+ * componente era `lazy` y consumía la sesión en una petición POSTERIOR. Retirado el componente, el
+ * cajón SPA **vive en el mismo documento** y es `layout.blade.php` quien llama a
+ * `SidebarEntry::consume()`: al terminar el GET la sesión está SIEMPRE vacía.
+ *
+ * Eso no solo puso rojos los tres casos positivos — **dejó INERTES los dos de seguridad**, que
+ * aseveraban `assertNull(session(...))` sobre un valor que ya no puede ser otra cosa. Medido por
+ * mutación el 2026-08-21: desactivando la comprobación de titularidad de
+ * `HomeController::maybeConsumeRedsysReturn()` —es decir, con un tercero aplicándose el desenlace
+ * ajeno— `test_home_get_does_not_apply_token_for_a_different_user` y
+ * `test_home_get_does_not_apply_token_when_unauthenticated` seguían en VERDE.
+ *
+ * ▶ Por eso todos leen ahora el payload de montaje del cajón (`outcomeInBoot()`), que es donde el
+ * desenlace viaja de verdad. Repetida la misma mutación contra la versión nueva, los dos se ponen
+ * rojos.
  */
 class RedsysReturnControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     private const SANDBOX_KEY = 'sq7HjrUOBfKmC576ILgskD5srU870gJ7';
+
+    /**
+     * El desenlace que el servidor le entrega al cajón en ESTA respuesta.
+     *
+     * Es el sucesor de mirar `session('purchase.*_code')`: el layout consume la sesión al pintar y
+     * deja el resultado en `data-boot` del punto de montaje. Devuelve `[outcome, orderCode]`, los
+     * dos `null` cuando no había nada que entregar.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function outcomeInBoot(TestResponse $response): array
+    {
+        if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $response->getContent(), $m) !== 1) {
+            $this->fail('no se ha encontrado el punto de montaje del cajón en la respuesta');
+        }
+
+        $boot = json_decode(html_entity_decode($m[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR);
+
+        return [$boot['outcome'] ?? null, $boot['orderCode'] ?? null];
+    }
 
     protected function setUp(): void
     {
@@ -192,18 +229,21 @@ class RedsysReturnControllerTest extends TestCase
         $token = $this->tokenFromRedirect($response);
 
         // GET subsiguiente con cookies del usuario propietario.
-        $this->actingAs($user)->get('/?redsys='.$token)
-            ->assertOk()
-            // #106 (validación visual 2026-05-26): además de escribir la session flag, el
-            // layout debe abrir el sidebar automáticamente (Alpine lee `data-purchase-open`).
-            // Sin esto el cliente vuelve de Redsys y NO ve el resultado hasta hacer click.
+        $owner = $this->actingAs($user)->get('/?redsys='.$token);
+        $owner->assertOk()
+            // #106 (validación visual 2026-05-26): además de entregar el desenlace, el layout debe
+            // abrir el cajón automáticamente (Alpine lee `data-purchase-open`). Sin esto el cliente
+            // vuelve de Redsys y NO ve el resultado hasta hacer click.
             ->assertSee('data-purchase-open="1"', false);
 
-        $this->assertSame($payment->payable->code, session('purchase.confirmed_code'));
-        // Token consumido (one-shot): segunda GET no debería escribir nada.
-        session()->forget('purchase.confirmed_code');
-        $this->actingAs($user)->get('/?redsys='.$token);
-        $this->assertNull(session('purchase.confirmed_code'));
+        $this->assertSame(
+            [SidebarEntry::OUTCOME_CONFIRMED, $payment->payable->code],
+            $this->outcomeInBoot($owner)
+        );
+
+        // Token consumido (one-shot): la segunda GET ya no entrega nada.
+        $second = $this->actingAs($user)->get('/?redsys='.$token);
+        $this->assertSame([null, null], $this->outcomeInBoot($second));
     }
 
     public function test_home_get_does_not_apply_token_for_a_different_user(): void
@@ -216,9 +256,13 @@ class RedsysReturnControllerTest extends TestCase
         $token = $this->tokenFromRedirect($response);
 
         $bob = User::factory()->create();
-        $this->actingAs($bob)->get('/?redsys='.$token)->assertOk();
-        $this->assertNull(session('purchase.confirmed_code'));
-        $this->assertNull(session('purchase.failed_code'));
+        $asBob = $this->actingAs($bob)->get('/?redsys='.$token);
+        $asBob->assertOk();
+
+        // ⚠️ Se mira el PAYLOAD, no la sesión: el layout la consume al pintar, así que
+        // `assertNull(session(...))` sería cierto pase lo que pase (medido por mutación).
+        $this->assertSame([null, null], $this->outcomeInBoot($asBob));
+        $asBob->assertDontSee('data-purchase-open="1"', false);
     }
 
     public function test_home_get_does_not_apply_token_when_unauthenticated(): void
@@ -230,8 +274,11 @@ class RedsysReturnControllerTest extends TestCase
         $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
         $token = $this->tokenFromRedirect($response);
 
-        $this->get('/?redsys='.$token)->assertOk();
-        $this->assertNull(session('purchase.confirmed_code'));
+        $anonymous = $this->get('/?redsys='.$token);
+        $anonymous->assertOk();
+
+        $this->assertSame([null, null], $this->outcomeInBoot($anonymous));
+        $anonymous->assertDontSee('data-purchase-open="1"', false);
     }
 
     /**
@@ -259,8 +306,12 @@ class RedsysReturnControllerTest extends TestCase
         );
 
         // Y el dueño lo sigue teniendo entero.
-        $this->actingAs($user)->get('/?redsys='.$token)->assertOk();
-        $this->assertSame($payment->payable->code, session('purchase.confirmed_code'));
+        $owner = $this->actingAs($user)->get('/?redsys='.$token);
+        $owner->assertOk();
+        $this->assertSame(
+            [SidebarEntry::OUTCOME_CONFIRMED, $payment->payable->code],
+            $this->outcomeInBoot($owner)
+        );
     }
 
     /** Y una vez aplicado, sigue siendo de un solo uso. */
@@ -288,9 +339,12 @@ class RedsysReturnControllerTest extends TestCase
         parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
         $token = $query['redsys'];
 
-        $this->actingAs($user)->get('/?redsys='.$token)->assertOk();
-        $this->assertSame($payment->payable->code, session('purchase.failed_code'));
-        $this->assertNull(session('purchase.confirmed_code'));
+        $owner = $this->actingAs($user)->get('/?redsys='.$token);
+        $owner->assertOk();
+        $this->assertSame(
+            [SidebarEntry::OUTCOME_FAILED, $payment->payable->code],
+            $this->outcomeInBoot($owner)
+        );
 
         $payment->refresh();
         $this->assertSame(Payment::STATUS_FAILED, $payment->status);

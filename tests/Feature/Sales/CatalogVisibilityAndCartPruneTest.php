@@ -6,10 +6,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -82,37 +80,18 @@ class CatalogVisibilityAndCartPruneTest extends TestCase
             ->assertDontSee('EntradaOculta');    // oculta de la web → NO en la landing (aunque sea vendible)
     }
 
-    /**
-     * ⚠️ **Este caso MUERE con el componente, y los otros dos del fichero NO** (medido el 2026-08-15,
-     * `DECISIONES #87`). ·2b·3 tiene que operar DENTRO: borrar este y dejar los de arriba.
+    /*
+     * ⚠️ **Aquí vivía `test_cart_prunes_a_line_whose_product_became_unsellable`, y murió con
+     * `Tickets\Purchase`** (4.7·2b·3, ejecutando la clasificación que `DECISIONES #87` dejó medida
+     * el 2026-08-15: «borrar este y dejar los de arriba»).
      *
-     * Su sujeto no es la regla, es **dónde se aplica**: la poda vive en `Purchase::mount()`, que lee
-     * la cesta de la SESIÓN. En el cajón SPA esa misma regla vive en otro sitio y ya tiene red:
+     * Su sujeto no era la regla sino **dónde se aplicaba**: la poda vivía en `Purchase::mount()`,
+     * que leía la cesta de la SESIÓN. En el cajón SPA esa misma regla vive en otro sitio y ya tiene
+     * red —lo comprobó aquella medición mutando el filtro `sellable()` de `CartPricer`—:
      *
-     *  · que el servidor **no tarifique** una línea retirada — medido mutando el filtro `sellable()`
-     *    de `CartPricer`: caen `Api\V1\QuoteTest`, `Sales\CartPricerTest` y
-     *    `Sidebar\SidebarCartParityTest`, **los tres supervivientes**, y este caso NO cae, porque
-     *    ejerce otro camino;
-     *  · que el cliente **descarte** la línea que no volvió tarificada — `cart.js::reconcile()`, con
-     *    sus casos en `cart.test.js`.
+     *  · que el servidor **no tarifique** una línea retirada → caen `Api\V1\QuoteTest`,
+     *    `Sales\CartPricerTest` y `Sidebar\SidebarCartParityTest`, los tres supervivientes;
+     *  · que el cliente **descarte** la línea que no volvió tarificada → `cart.js::reconcile()`,
+     *    con sus casos en `cart.test.js`.
      */
-    public function test_cart_prunes_a_line_whose_product_became_unsellable(): void
-    {
-        $entry = $this->entry(active: true, sellable: true);
-        session(['purchase.cart' => [[
-            'ticket_type_id' => $entry->id, 'qty' => 1,
-            'date' => $this->today, 'time' => '10:00:00', 'addons' => [], 'event_data' => [],
-        ]]]);
-
-        // El producto deja de estar «En venta online».
-        $entry->update(['is_sellable' => false]);
-
-        $component = Livewire::test(Purchase::class);
-        $component->assertSet('cart', []);                   // la línea fantasma se podó en mount
-        $this->assertSame(0, $component->instance()->cartCount()); // badge a 0 (no «1 ítem a 0 €»)
-        $component->assertSet('step', 1);                    // cesta vacía → no fuerza el paso 4
-
-        // La cesta de sesión también queda saneada (no reaparece al recargar).
-        $this->assertSame([], session('purchase.cart'));
-    }
 }

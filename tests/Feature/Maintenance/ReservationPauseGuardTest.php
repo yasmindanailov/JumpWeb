@@ -12,19 +12,34 @@ use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
-use App\Livewire\Tickets\Purchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
  * Reservas en pausa (#218, item 3) — GUARDS DE SERVIDOR (defensa en profundidad).
  *
- * Cubre que, con las reservas pausadas: el flujo público de compra (`Purchase`) no crea pedidos ni
- * inicia pagos, y el reintento de pago desde «Mis pedidos» se bloquea — PERO el camino del
- * **pedido manual del panel** (`OrderCreator`) sigue funcionando (la decisión de diseño clave: el
- * cliente llama y el personal reserva a mano). Las callbacks de Redsys no pasan por estos guards.
+ * Cubre que, con las reservas pausadas, el reintento de pago desde «Mis pedidos» se bloquea — PERO
+ * el camino del **pedido manual del panel** (`OrderCreator`) sigue funcionando (la decisión de
+ * diseño clave: el cliente llama y el personal reserva a mano). Las callbacks de Redsys no pasan
+ * por estos guards.
+ *
+ * ⚠️ **Los tres casos del flujo público de compra se fueron con `Tickets\Purchase`** (4.7·2b·3).
+ * Su sujeto —el guard de servidor— SOBREVIVE entero; el componente solo era el intermediario, así
+ * que antes de borrarlos se comprobó uno a uno que la superficie viva los cubre:
+ *
+ *  · «bloquea y no crea pedido» → `Api\V1\OrdersTest::test_a_paused_installation_refuses_to_create_
+ *    and_leaves_no_order`, y el guard de dominio en `CheckoutOrchestratorTest` y
+ *    `ReservationAdmissionPolicyTest`.
+ *  · «se pausa a mitad de flujo, justo antes de confirmar» → lo mismo, y además es INHERENTE en la
+ *    API: el guard se evalúa en la llamada que crea, no se arrastra de un paso anterior. Importa
+ *    porque el cajón SPA sí cachea el estado de pausa en cliente (solo lo relee al cargar, al abrir
+ *    y al pulsar «Ir a pagar»), de modo que el servidor es quien tiene que decir la última palabra.
+ *  · «teléfono vacío» → su modo de fallo era interpolar un `:phone` vacío en el mensaje del Blade, y
+ *    **ese mensaje ya no existe**: la API responde con el código `reservations_paused` y
+ *    `ReservationErrorMap` no toca el teléfono. Lo que sí sobrevive —que un teléfono en blanco no se
+ *    cuele como canal de contacto— lo cubre `Api\V1\BookingStatusTest::test_a_blank_phone_is_not_a_
+ *    channel`.
  */
 class ReservationPauseGuardTest extends TestCase
 {
@@ -78,68 +93,6 @@ class ReservationPauseGuardTest extends TestCase
     private function pause(): void
     {
         Setting::updateOrCreate(['key' => 'reservations.paused'], ['value' => '1', 'group' => 'maintenance']);
-    }
-
-    // ─── Flujo público de compra (Purchase) ─────────────────────────────────────
-
-    public function test_checkout_is_blocked_and_creates_no_order_when_paused(): void
-    {
-        $this->pause();
-
-        Livewire::actingAs(User::factory()->create())
-            ->test(Purchase::class)
-            ->call('selectType', $this->jump1h->id)
-            ->call('selectDate', $this->today)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout')          // verificado → proceed() → guard de pausa
-            ->assertSet('step', 4)      // re-encaminado al carrito (no avanza a pago)
-            ->assertHasErrors('cart');
-
-        $this->assertSame(0, Order::count());
-    }
-
-    public function test_confirm_reservation_is_blocked_when_paused_mid_flow(): void
-    {
-        // Llega al paso de pago con las reservas ABIERTAS y se pausan justo antes de confirmar.
-        $component = Livewire::actingAs(User::factory()->create())
-            ->test(Purchase::class)
-            ->call('selectType', $this->jump1h->id)
-            ->call('selectDate', $this->today)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout')
-            ->assertSet('step', 8);
-
-        $this->pause();
-
-        $component->call('confirmReservation')
-            ->assertSet('step', 4)
-            ->assertHasErrors('cart');
-
-        // Ni pedido ni pago: el guard corta ANTES de crear la reserva firme.
-        $this->assertSame(0, Order::count());
-        $this->assertSame(0, Payment::count());
-    }
-
-    public function test_checkout_blocked_with_empty_phone_creates_no_order(): void
-    {
-        // Defensa: aunque no haya teléfono configurado, el guard sigue impidiendo la reserva (sin
-        // interpolar un `:phone` vacío que rompería la gramática). El aviso al usuario lo da el panel
-        // del sidecart (ReservationPauseTest), no este mensaje, que es solo la red de servidor.
-        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '', 'group' => 'contact']);
-        $this->pause();
-
-        Livewire::actingAs(User::factory()->create())
-            ->test(Purchase::class)
-            ->call('selectType', $this->jump1h->id)
-            ->call('selectDate', $this->today)->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->call('addToCart')
-            ->call('checkout')
-            ->assertHasErrors('cart');
-
-        $this->assertSame(0, Order::count());
     }
 
     // ─── La decisión clave: el pedido MANUAL (OrderCreator) NO se ve afectado ────

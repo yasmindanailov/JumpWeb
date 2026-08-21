@@ -421,7 +421,9 @@ o quedarse el depósito según T&C.
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
 selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
 `app/Domain/Booking/Services/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
-`app/Livewire/Tickets/Purchase.php` (`cartDepositCents`; ⚠️ `stepDepositHint` **no existe**) ·
+`app/Domain/Booking/Services/CartPricer.php` (el desglose de la señal por línea; ⚠️ aquí vivía
+`Livewire\Tickets\Purchase::cartDepositCents()`, retirado en 4.7·2b·3 — hoy el cajón lo pide por
+`POST /api/v1/orders/quote`) ·
 `app/Domain/Booking/Models/OrderAdjustment.php` (tipos) · `app/Domain/Payments/Services/RedsysReturnHandler.php` (canario, NO
 tocar) · `resources/views/filament/orders/items-list.blade.php` (banner D9) ·
 `app/Domain/Content/Services/LegalContent.php` (cláusula de reembolso de señal — marcador `[PENDING]`

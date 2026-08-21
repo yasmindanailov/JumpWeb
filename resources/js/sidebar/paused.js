@@ -27,7 +27,8 @@
 import { t, tp } from './i18n.js';
 
 /**
- * Los pasos que el aviso TAPA. Espejo de `Purchase::showPausedNotice()`.
+ * Los pasos que el aviso TAPA. Nació como espejo de `Purchase::showPausedNotice()`; retirado ese
+ * componente en 4.7·2b·3, esta es la única fuente, y quien la vigila es `SidebarPausedParityTest`.
  *
  * ⚠️ **No se puede derivar**: son seis, e incluyen el paso de PAGO (8, que es modo `cart`) y excluyen
  * el 7 —verificación de correo, que `machine.js` ni siquiera tiene—. Los pasos de RESULTADO (6, 9, 10

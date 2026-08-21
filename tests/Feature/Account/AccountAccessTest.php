@@ -51,7 +51,7 @@ class AccountAccessTest extends TestCase
             ->assertOk()
             ->assertSee('Hola, Mara')                      // chip de cuenta en el nav
             ->assertSee('nav__acct', false)                // el chip abre el sidebar
-            ->assertSee(__('tickets.my_reservations'))     // «Mis reservas» en el bloque del sidecart
+            ->assertSeeText(__('tickets.my_reservations'))     // «Mis reservas» en el bloque del sidecart
             ->assertSee(route('account.orders'), false);   // enlaza a su página de pedidos
     }
 

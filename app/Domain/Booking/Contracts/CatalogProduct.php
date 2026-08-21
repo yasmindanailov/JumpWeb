@@ -11,7 +11,8 @@ namespace App\Domain\Booking\Contracts;
  * una consulta por producto.
  *
  * **Dominio, no presentación.** Este DTO no lleva la cadena `search` normalizada ni el `zone_anchor`
- * que hoy calcula `Livewire\Tickets\Purchase`: la primera es el índice del buscador que la web
+ * que calculaba `Livewire\Tickets\Purchase` (retirado en 4.7·2b·3): la primera es el índice del
+ * buscador que la web
  * filtra en cliente y el segundo es el ancla de scroll de su blade. Los dos son artefactos de una
  * interfaz concreta y se construyen a partir de estos datos (`name`, `features`, `zone`), no al
  * revés. La regla que separa uno de otro: si otro cliente con otra interfaz lo necesitaría igual,
