@@ -289,7 +289,12 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
-Recuento VIVO (lo verifica `docs-check` contra el código): 30 modelos · 72 migraciones ·
-17 Filament Resources · **2715** tests. La migración añadida es `personal_access_tokens` (Sanctum).
+Recuento VIVO: 30 modelos · 72 migraciones · 17 Filament Resources. La migración añadida es
+`personal_access_tokens` (Sanctum).
+⚠️ **El contador de tests NO se repite aquí**: vive arriba, en «Dónde estamos», con su contexto.
+`docs-check` vigila los tres números de esta línea y las invariantes —son sus cuatro patrones—, pero
+**«N tests» no casa con ninguno**, así que repetirlo es drift en espera. Ya mordió: esta línea decía
+**2715** mientras el cuerpo y la suite decían **2642** (medido el 2026-08-21, no ajustado). Misma
+doctrina que se aplicó a las líneas de `Sidebar.vue`: una foto sin receta que la vigile, se retira.
 Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
 Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
