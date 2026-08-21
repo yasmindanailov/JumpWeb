@@ -179,7 +179,7 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
-            api: $this->dateApiPayload($product->id), state: $this->clientState($component->get('date')));
+            api: $this->dateApiPayload($product->id), state: $this->clientState(now()->addDay()->toDateString()));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -224,8 +224,8 @@ class SidebarDomContractTest extends TestCase
 
         $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(3, [], 'wiz__title', withSiblings: true,
-            api: $this->timeApiPayload($pack->id, $date, '10:00:00', (int) $component->get('qty')),
-            state: $this->clientState($date, '10:00:00', (int) $component->get('qty')));
+            api: $this->timeApiPayload($pack->id, $date, '10:00:00', (int) $pack->min_qty),
+            state: $this->clientState($date, '10:00:00', (int) $pack->min_qty));
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -254,8 +254,17 @@ class SidebarDomContractTest extends TestCase
             ->call('goToTime')
             ->call('selectTime', '10:00:00');
 
-        $max = $component->viewData('maxQty');
-        $min = $component->viewData('minQty');
+        // Los topes salen de la FICHA del producto, no del view-model del motor que este fichero
+        // compara (4.7·2b·3, paso 1). Medido antes de sustituirlos: el componente devolvía exactamente
+        // `min_qty` y `max_qty` del pack (6 y 20).
+        // ⚠️ Estos DOS sí son estructurales, a diferencia de otras cantidades: el selector deshabilita
+        // sus botones en los extremos y `disabled` es atributo de CONTRATO para el normalizador.
+        // Verificado mutando: mover el suelo o el techo pone el caso en rojo. (La cantidad del paso de
+        // HORA, en cambio, no muerde: ahí es texto. Y el día del paso de FECHA sí, porque
+        // `aria-current="date"` marca la celda del calendario. No todos los valores del mismo tipo
+        // pesan igual: hay que mutarlos uno a uno en vez de deducirlo.)
+        $min = (int) $pack->min_qty;
+        $max = (int) $pack->max_qty;
 
         $this->assertGreaterThan($min, $max, 'sin margen entre mínimo y máximo el caso no probaría nada');
 
@@ -867,45 +876,6 @@ class SidebarDomContractTest extends TestCase
         return ['paymentStatus' => $this->getJson('/api/v1/orders/'.$code.'/payment-status')->assertOk()->json()];
     }
 
-    /** @deprecated sin usuarios desde 4.7·2b·2·B; se va con el resto al cerrar la migración */
-    private function confirmedProps(Testable $component): array
-    {
-        $confirmation = $component->viewData('confirmation');
-
-        return [
-            'confirmation' => $confirmation === null ? null : [
-                'code' => $confirmation['code'],
-                'status' => $confirmation['status'],
-                'total_cents' => $confirmation['total'],
-                'online_cents' => $confirmation['online'],
-                'park_cents' => $confirmation['pending_at_park'],
-                'has_guest_form' => (bool) $confirmation['has_guest_form'],
-                'lines' => array_map(fn (array $line): array => [
-                    'product_name' => $line['name'],
-                    'is_pack' => $line['is_pack'],
-                    'quantity' => $line['qty'],
-                    'date' => $line['date'],
-                    'time' => $line['time'],
-                    'subtotal_cents' => $line['subtotal'],
-                    'has_deposit' => (bool) $line['has_deposit'],
-                    'deposit_cents' => $line['deposit'],
-                    'gate_remainder_cents' => $line['gate_remainder'],
-                    'addons' => array_map(fn (array $addon): array => [
-                        'product_name' => $addon['name'],
-                        'quantity' => $addon['qty'],
-                        'free_quantity' => $addon['free_qty'],
-                        'subtotal_cents' => $addon['subtotal'],
-                    ], $line['addons']),
-                    'event' => $line['event'],
-                ], $confirmation['lines']),
-            ],
-            'orderCode' => $this->confirmedOrderCode(),
-            'registration' => RegistrationLink::current()?->toArray(),
-            'messages' => __('tickets'),
-            'locale' => app()->getLocale(),
-        ];
-    }
-
     // ── Los pasos 10 y 11: los otros dos desenlaces ───────────────────────────────────────────
 
     /**
@@ -1038,27 +1008,6 @@ class SidebarDomContractTest extends TestCase
         $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
 
         return $code;
-    }
-
-    /**
-     * El view-model del paso 10 en la forma que recibe el cajón.
-     *
-     * ⚠️ **`reason` llega YA traducido en los dos motores, pero por caminos distintos**: Livewire lo
-     * resuelve en servidor y el cajón lo saca del diccionario que ya viaja en el montaje, usando
-     * `declined_reason` como clave. Que las dos rutas den el mismo texto lo comprueba
-     * `SidebarOutcomeParityTest`, recorriendo el mapa entero del servidor.
-     *
-     * @return array<string, mixed>
-     */
-    private function declinedProps(Testable $component): array
-    {
-        return [
-            'orderCode' => $this->confirmedOrderCode(),
-            'reason' => (string) $component->get('declinedReasonText'),
-            'retrying' => false,
-            'contactUrl' => route('contacto'),
-            'messages' => __('tickets'),
-        ];
     }
 
     /** @return array<string, mixed> */
@@ -1715,29 +1664,6 @@ class SidebarDomContractTest extends TestCase
             'error' => '',
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
-        ];
-    }
-
-    /**
-     * Las props del ARMAZÓN, tomadas del propio componente Livewire.
-     *
-     * `busy` va a `false` a propósito: en Livewire el velo está SIEMPRE en el HTML servido y lo tapa
-     * `wire:loading`, y en Vue lo tapa `v-show`. El normalizador descarta `style`, así que los dos
-     * árboles coinciden — lo que se compara es que el NODO esté, no si se ve.
-     *
-     * @return array<string, mixed>
-     */
-    private function shellProps(Testable $component): array
-    {
-        return [
-            'busy' => false,
-            'notice' => $this->noticeProps($component),
-            'progress' => $component->viewData('bookingProgress'),
-            // El pie se toma del SERVIDOR, igual que la banda: aquí se compara el marcado. Que el
-            // cliente componga el mismo view-model lo comprueba `SidebarCartParityTest`.
-            'footer' => $component->viewData('footer'),
-            'messages' => __('tickets'),
-            'ui' => __('ui'),
         ];
     }
 
