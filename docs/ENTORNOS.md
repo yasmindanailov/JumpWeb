@@ -21,6 +21,15 @@ real de un cliente, será otra cosa distinta y con otras reglas (`INSTALACION-CL
 - **Acceso**: `ssh jumpweb-staging` (alias configurado en `~/.ssh/config`, clave dedicada
   `~/.ssh/jumpweb_staging_ed25519`). Solo por CLAVE — **verificado el 2026-08-15**.
   ⚠️ **Ningún secreto vive en este repo**: ni contraseñas, ni claves privadas, ni `.env`.
+  ⚠️⚠️ **Y por eso el acceso es POR PUESTO DE TRABAJO, no del proyecto.** Medido el 2026-08-21: el
+  segundo puesto no tenía ni `~/.ssh/config` ni la clave, así que `deploy.sh` moría en `2/9` y desde
+  ahí **no se podía desplegar ni verificar nada**. Al montar un puesto nuevo, la clave y el alias son
+  parte del aprovisionamiento, igual que la terna de deny de `.claude/settings.json` — y los dos los
+  aporta el owner, porque el repo no puede llevarlos.
+- **El build de los assets se hace en LOCAL y por SAIL** (`DECISIONES #114`), no con «el npm que
+  haya»: es el canal que usa el `pre-push`, así que lo que el gate verificó es lo que se sube. Bajo
+  WSL, `command -v npm` resuelve al npm de **Windows** por el interop de `/mnt/c` y ese no puede
+  construir (lanza `CMD.EXE`, que no admite rutas UNC). `deploy.sh` ya lo descarta solo.
 - **El repo NO despliega solo**: no hay `.github`, no hay webhook. El despliegue es explícito (§4).
 
 ## 2 · Las SEIS guardas, y por qué cada una

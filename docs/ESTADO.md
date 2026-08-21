@@ -112,6 +112,21 @@ hecho nadie; hasta que se hagan, `4.7` no es ✅ del todo (`CONVENCIONES §3.bis
 sigue siendo `scripts/deploy.sh` (dry-run por defecto) y los assets se construyen fuera (`ENTORNOS.md`
 §4: staging no tiene node/npm).
 
+❗❗ **BLOQUEADO EN EL 2º PUESTO POR FALTA DE ACCESO SSH** (medido el 2026-08-21). El dry-run llega
+íntegro hasta `2/9 · Pre-vuelo remoto` y muere ahí: **no hay `~/.ssh/config` ni clave de
+`jumpweb-staging` en esta máquina** (la única clave presente es del proyecto origen). `deploy.sh` nació
+y se midió entero en el PRIMER puesto (`#105`–`#110`), y las credenciales viven allí.
+▶ **Lo tiene que aportar el owner**: la clave y la entrada `Host jumpweb-staging` de `ENTORNOS.md` §1.
+Sin eso, desde este puesto **no se puede desplegar ni verificar nada en staging** — y las dos
+comprobaciones de arriba son exactamente eso.
+
+✅ **Lo que sí se arregló por el camino** (`DECISIONES #114`): el dry-run no llegaba ni al SSH. Moría en
+`1/9` con «npm run build FALLÓ» **y sin motivo**, porque elegía canal con `command -v npm` y bajo WSL
+eso resuelve al npm de **Windows** (interop de `/mnt/c`), que lanza `CMD.EXE`, no admite rutas UNC y no
+encuentra `vite`. Ahora el canal canónico es **Sail** —el mismo que usa el `pre-push`, así que los
+assets que el gate verificó son los que se suben— y el fallo **enseña su salida**. Tres casos nuevos en
+`DeployScriptGateTest`, mutados los tres.
+
 Luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el usado para medir
 lo retiró el owner.
 
@@ -140,7 +155,8 @@ y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
   ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca EN BLOQUE y con guion escrito
   (`VERIFICACION-E2E-CAJON.md` §5.ter).
 - **Pendiente del owner** (❗): 2FA del panel · backlog de producto de Fase 6 · un **token nuevo de la
-  API del panel** para `scripts/provision.sh` (el usado para medir se retiró).
+  API del panel** para `scripts/provision.sh` (el usado para medir se retiró) · ❗❗ **la clave SSH y la
+  entrada `Host jumpweb-staging` en el 2º puesto de trabajo** — sin eso ese puesto no despliega.
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 

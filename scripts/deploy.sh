@@ -197,12 +197,48 @@ info "commit a desplegar: $(git rev-parse --short HEAD) ($(git rev-parse --abbre
 
 if [[ $SKIP_BUILD -eq 0 ]]; then
     info "construyendo assets (en el servidor NO hay node)…"
-    if command -v npm >/dev/null; then
-        npm run build >/dev/null 2>&1 || die "npm run build FALLÓ. No se despliega sin assets."
+
+    # ⚠️ EL CANAL CANÓNICO ES SAIL, y no es preferencia de estilo: es el que usa el `pre-push`
+    # (`.githooks/`), así que los assets que el gate verificó son EXACTAMENTE los que se suben.
+    # Construir con otra cadena de herramientas es divergencia silenciosa entre «verde en local»
+    # y «lo que hay en staging».
+    #
+    # ⚠️⚠️ Y `command -v npm` NO SIRVE PARA ELEGIR. Medido el 2026-08-21 en el 2º puesto de
+    # trabajo: bajo WSL, `command -v npm` encuentra el npm de **Windows** por el interop de
+    # `/mnt/c`. Ese npm lanza `CMD.EXE`, que **no admite rutas UNC** (`\\wsl.localhost\…`), se
+    # cae al directorio de Windows y no encuentra `vite`. El script moría con «npm run build
+    # FALLÓ» **y sin motivo** —stderr iba a /dev/null— mientras el npm de Docker funcionaba
+    # perfectamente. Un rojo sin nombre no se puede arreglar; es la misma lección que el
+    # `pre-push` perdido de `DECISIONES #97`.
+    build_log="$(mktemp)"
+    npm_path="$(command -v npm || true)"
+
+    if docker compose ps --status=running --services 2>/dev/null | grep -qx 'laravel.test'; then
+        build_via="Sail (canal canónico, el mismo que el pre-push)"
+        build_cmd=(docker compose exec -u sail -T laravel.test npm run build)
+    elif [[ -n "$npm_path" && "$npm_path" != /mnt/* ]] && command -v node >/dev/null; then
+        build_via="npm del host ($npm_path)"
+        build_cmd=(npm run build)
+    elif [[ "$npm_path" == /mnt/* ]]; then
+        die "El único npm del PATH es el de Windows ($npm_path), y no puede construir aquí:
+   lanza CMD.EXE, que no admite rutas UNC (\\wsl.localhost\…) y no encuentra vite.
+   ▶ Arranca el stack y se usa el canal canónico:  docker compose up -d"
     else
-        docker compose exec -u sail -T laravel.test npm run build >/dev/null 2>&1 \
-            || die "npm run build FALLÓ (vía Docker). No se despliega sin assets."
+        die "No hay forma de construir los assets: ni el contenedor 'laravel.test' está arriba
+   ni hay un npm/node usable en el host. En el servidor NO hay node (ENTORNOS §4), así que sin
+   build local no se despliega.
+   ▶ docker compose up -d"
     fi
+
+    dim "vía: $build_via"
+
+    if ! "${build_cmd[@]}" >"$build_log" 2>&1; then
+        printf '\n%s── salida del build ──%s\n' "$c_dim" "$c_off" >&2
+        tail -25 "$build_log" | sed 's/^/     /' >&2
+        rm -f "$build_log"
+        die "npm run build FALLÓ (vía $build_via). No se despliega sin assets."
+    fi
+    rm -f "$build_log"
 fi
 
 # ⚠️ Medido el 2026-08-13: un build interrumpido dejó `manifest.json` a 0 bytes y TODA la web

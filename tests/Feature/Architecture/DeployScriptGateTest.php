@@ -273,6 +273,91 @@ class DeployScriptGateTest extends TestCase
         );
     }
 
+    // ── El BUILD de assets: el canal, y el rojo que no decía por qué (2026-08-21) ─────────────────
+
+    /**
+     * ⚠️ Nace de un fallo REAL medido el 2026-08-21 al desplegar desde el SEGUNDO puesto de trabajo.
+     *
+     * El script elegía el canal de build con `command -v npm`, y bajo WSL eso encuentra el npm de
+     * **Windows** a través del interop de `/mnt/c`. Ese npm lanza `CMD.EXE`, que no admite rutas UNC
+     * (`\\wsl.localhost\...`), se cae al directorio de Windows y no encuentra `vite`. Resultado: el
+     * despliegue moría en el paso 1/9 **con el npm de Docker funcionando perfectamente al lado**.
+     *
+     * La corrección es de fondo, no un parche de entorno: **el canal canónico es Sail**, porque es el
+     * que usa el `pre-push`. Construir con otra cadena de herramientas significa que los assets
+     * verificados por el gate NO son los que se suben — divergencia silenciosa entre «verde en local»
+     * y «lo que hay en staging».
+     */
+    public function test_the_asset_build_prefers_the_canonical_sail_channel(): void
+    {
+        $s = $this->executable();
+
+        $sail = strpos($s, 'build_cmd=(docker compose exec -u sail -T laravel.test npm run build)');
+        $host = strpos($s, 'build_cmd=(npm run build)');
+
+        $this->assertNotFalse($sail, 'El build por Sail ha desaparecido de '.self::SCRIPT.'.');
+        $this->assertNotFalse($host, 'El respaldo por npm del host ha desaparecido de '.self::SCRIPT.'.');
+
+        $this->assertLessThan(
+            $host,
+            $sail,
+            'Sail tiene que ser la PRIMERA opción, no el respaldo. Es el canal que usa el `pre-push`, '.
+            'así que solo construyendo ahí se cumple que los assets verificados por el gate son los '.
+            'mismos que viajan al servidor. Al revés, «verde en local» deja de decir nada sobre staging.',
+        );
+    }
+
+    /**
+     * La discriminación tiene que ser por la RUTA del binario, no por «¿existe npm?»: bajo WSL existe,
+     * responde a `npm --version` con toda naturalidad (11.11.0, medido) y aun así no puede construir.
+     */
+    public function test_the_asset_build_refuses_the_windows_npm_that_wsl_leaks_into_path(): void
+    {
+        $s = $this->executable();
+
+        $this->assertStringContainsString(
+            '"$npm_path" != /mnt/*',
+            $s,
+            'Falta la guarda que descarta el npm de Windows. `command -v npm` NO basta para elegir '.
+            'canal: bajo WSL resuelve a `/mnt/c/Program Files/nodejs/npm`, que contesta a '.
+            '`npm --version` y aun así no puede construir (CMD.EXE no admite rutas UNC).',
+        );
+
+        $this->assertStringNotContainsString(
+            'if command -v npm >/dev/null; then',
+            $s,
+            'Volvió la condición que causó el fallo: preguntar solo si npm EXISTE elige el binario de '.
+            'Windows en cualquier puesto WSL con Node instalado en el anfitrión.',
+        );
+    }
+
+    /**
+     * ⚠️ La otra mitad del fallo, y la que costó el diagnóstico: el build se ejecutaba con
+     * `>/dev/null 2>&1`, así que el script moría diciendo «npm run build FALLÓ» **sin el motivo**. El
+     * motivo estaba a un `2>&1` de distancia y explicaba el problema entero en tres líneas.
+     *
+     * Es literalmente la lección de `DECISIONES #97` —el `pre-push` que cayó y cuya salida se perdió—
+     * aplicada al otro script del proyecto: **un rojo sin nombre no se puede arreglar**.
+     */
+    public function test_the_asset_build_does_not_swallow_the_reason_it_failed(): void
+    {
+        $s = $this->executable();
+
+        $this->assertStringNotContainsString(
+            'npm run build >/dev/null 2>&1',
+            $s,
+            'El build NO puede tirar su salida a /dev/null: al fallar deja un «FALLÓ» sin causa y el '.
+            'siguiente que lo lea empieza el diagnóstico desde cero.',
+        );
+
+        $this->assertStringContainsString(
+            'tail -25 "$build_log"',
+            $s,
+            'Al fallar el build hay que VOLCAR su salida. Guardarla y no enseñarla es lo mismo que no '.
+            'guardarla.',
+        );
+    }
+
     public function test_the_redsys_guard_runs_after_migrating_and_before_serving(): void
     {
         $s = $this->executable();

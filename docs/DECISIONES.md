@@ -4603,3 +4603,43 @@ lo declaraba, en su docblock y en su código—, esa frase no es una nota al pie
 nombre**, y hay que cerrarlo con una guarda propia el día que se escribe, no cuando alguien mira la
 pantalla. `#112` cerró tres guardas que no medían nada; esta es la cuarta, y la única que se veía a
 simple vista.
+
+## #114 · 2026-08-21 · [DECIDIDO] El canal de build del despliegue es SAIL, no «el npm que haya»
+`scripts/deploy.sh` elegía cómo construir los assets con `if command -v npm`. Desplegando desde el
+**segundo puesto de trabajo** murió en el paso 1/9 con «npm run build FALLÓ», y el npm de Docker
+funcionaba perfectamente al lado. Medido, no supuesto:
+
+- `command -v npm` → `/mnt/c/Program Files/nodejs/npm`. Bajo WSL, el interop de `/mnt/c` mete los
+  binarios de **Windows** en el `PATH`, y ese npm existe y contesta `11.11.0` a `--version`.
+- Pero al ejecutarlo lanza `CMD.EXE`, que **no admite rutas UNC**: «`'\\wsl.localhost\Ubuntu\…'`
+  CMD.EXE se inició con esta ruta como el directorio actual. No se permiten rutas UNC», se cae al
+  directorio de Windows, y ahí `vite` no existe. `node`, además, no estaba en el `PATH` de WSL.
+- Y el script ejecutaba el build con **`>/dev/null 2>&1`**, así que nada de lo anterior se veía.
+
+**(a) La decisión no es «detectar mejor el npm»: es que el canal canónico es SAIL.** Se prueba Sail
+primero y el npm del host queda como respaldo. El motivo es de corrección, no de comodidad: **Sail es
+el canal que usa el `pre-push`** (`.githooks/`), así que solo construyendo ahí se cumple que los
+assets que el gate verificó son EXACTAMENTE los que viajan al servidor. Con dos cadenas de
+herramientas distintas, «verde en local» deja de decir nada sobre lo que hay en staging — y eso es
+divergencia silenciosa, la clase de fallo que este proyecto ya conoce.
+
+**(b) `command -v npm` no es un test válido de «hay un npm usable aquí».** La guarda discrimina por
+la RUTA del binario (`!= /mnt/*`) y exige además un `node` resoluble, porque el modo de fallo medido
+es justamente un npm que existe, responde y no puede construir. Preguntar «¿existe?» es el mismo
+error de forma que la guarda de Redsys de `#106`: preguntar por lo que se teme en vez de exigir lo
+que se espera.
+
+**(c) Y la otra mitad, que es la que costó el diagnóstico: el rojo no decía por qué.** El motivo
+estaba a un `2>&1` de distancia y explicaba el problema entero en tres líneas. Es **literalmente la
+lección de `#97`** —el `pre-push` que cayó a las 00:02, cuya salida no se capturó y se perdió—
+aplicada al otro script del proyecto. Ahora el build vuelca a fichero y, si falla, se enseñan sus
+últimas 25 líneas antes de abortar. **Un rojo sin nombre no se puede arreglar.**
+
+▶ Lo guardan tres casos nuevos en `DeployScriptGateTest`, mutados los tres (invertir el orden de los
+canales · devolver `command -v npm` · devolver el `>/dev/null 2>&1`): rojos los tres.
+
+**(d) Lo que esto enseña sobre el proyecto, y no sobre WSL.** El fallo no apareció al escribir el
+script: apareció al ejecutarlo desde **otra máquina**. Un canal de despliegue solo está probado en el
+puesto donde se escribió hasta que alguien lo corre en otro, y `deploy.sh` nació y se midió entero en
+el primer puesto (`#105`–`#110`). Al montar un segundo puesto conviene correr los dos guiones
+—`deploy.sh` en dry-run y el gate— antes de necesitarlos.
