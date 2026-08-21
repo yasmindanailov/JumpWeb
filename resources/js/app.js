@@ -162,6 +162,11 @@ document.addEventListener('alpine:init', () => {
                 // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
                 // el cajón abierto y mudo sin dejar rastro de por qué.
                 console.error('[sidebar] no se pudo cargar el motor SPA', e);
+                // Y tampoco puede dejar el velo girando para siempre: normalmente lo retira Vue al
+                // montar (`container.textContent = ''`), pero si no hay montaje nadie lo haría. Un
+                // spinner eterno MIENTE —dice «esto va a llegar»—; vaciarlo devuelve el cajón al
+                // estado que tenía antes de que el velo existiera.
+                host.textContent = '';
             } finally {
                 this.spaLoading = false;
             }

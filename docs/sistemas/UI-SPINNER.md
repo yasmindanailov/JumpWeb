@@ -77,13 +77,21 @@ componentes `<x-ui.*>` **reenvían atributos**: se les pasa `wire:*` directament
 **Nivel 2 — panel que carga en diferido:** con Livewire lo resolvía el `placeholder()` del propio
 componente `lazy`, que devolvía `components.ui.loading-overlay-placeholder`.
 
-⚠️ **Ese mecanismo YA NO EXISTE y su hueco está ABIERTO** (4.7·2b·3, 2026-08-21). Retirado el
-componente de compra, el cajón lo monta Vue con un `await import()` desde
-`app.js::bootSpaEngine()`, y ahí **no se pinta nada mientras el chunk viaja**: la bandera
-`spaLoading` es solo guarda de reentrada y no llega a ninguna vista, y el velo `.jj-loading` no
-puede taparlo porque vive DENTRO de la app Vue que aún no ha montado. Está en `DEUDA.md`; el arreglo
-acotado es pintar el velo **dentro** de `#sidecart-spa` en `layout.blade.php`, que Vue reemplaza al
-montar. Un componente Livewire `lazy` nuevo sí seguiría usando `placeholder()`.
+⚠️ **Retirado ese componente (4.7·2b·3), el hueco se abrió y se cerró el mismo día** (`#112(h)`). El
+cajón lo monta Vue con un `await import()` desde `app.js::bootSpaEngine()`, y durante esa descarga no
+se pintaba nada: `spaLoading` es solo guarda de reentrada, y el velo `.jj-loading` **no puede taparlo
+porque vive DENTRO de la app Vue que aún no ha montado**.
+
+**Cómo se resuelve hoy**: el velo va **estático dentro de `#sidecart-spa`** en `layout.blade.php`,
+con el mismo marcado (`.purchase-loading`) que servía el `placeholder()` retirado. No necesita ni una
+línea de JS para apagarse: **Vue limpia el contenedor al montar** (`app.mount()` hace
+`container.textContent = ''`, verificado en el runtime instalado). Si el chunk no carga, el `catch` de
+`bootSpaEngine()` lo vacía — un spinner eterno MIENTE. Lo vigila
+`SpinnerTest::test_the_spa_mount_point_carries_a_loading_veil_until_vue_takes_over`, que asevera
+**dentro del nodo** (con DOM, no con regex: la primera versión usaba una expresión regular y al mutarla
+se vio que daba verde con el velo fuera del hueco).
+
+Un componente Livewire `lazy` nuevo sí seguiría usando `placeholder()`.
 
 **Nivel 2 — panel que recalcula** (avanzar/retroceder, elegir día/hora/mes): velo local
 dentro del panel (`position:relative`), apuntando a **todas** las acciones que recargan el
@@ -117,7 +125,7 @@ panel (incluido `back`, para que retroceder tenga el mismo feedback que avanzar)
 | Recuperar contraseña — enviar | 1 botón | ✅ |
 | Restablecer contraseña — enviar | 1 botón | ✅ |
 | Mi cuenta — perfil / contraseña / cerrar otras sesiones / borrar cuenta | 1 botón | ✅ |
-| Cajón de compra — abrir | 2 velo local | ❌ **hueco abierto**: el motor SPA se trae con `import()` y no pinta nada durante la espera (4.7·2b·3, ver §niveles y `DEUDA.md`) |
+| Cajón de compra — abrir | 2 velo local (estático dentro de `#sidecart-spa`, lo retira Vue al montar) | ✅ |
 | Sidebar de compra — avanzar / retroceder (día · hora · mes · volver) | 2 velo local | ✅ |
 | Sidebar de compra — `+`/`−` cantidades | micro (sin overlay, por diseño) | ✅ |
 | Ir a pagar (Redsys) | 3 pantalla completa | marcado «pospuesto» en el doc origen — verificar |

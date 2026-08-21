@@ -223,7 +223,29 @@
                             'contact' => route('contacto'),
                             'my_orders' => route('account.orders'),
                         ],
-                    ], JSON_UNESCAPED_UNICODE) }}"></div>
+                    ], JSON_UNESCAPED_UNICODE) }}">
+                        {{-- ⚠️ **El velo de carga del cajón, y va DENTRO del hueco a propósito.**
+                             El motor se trae con `import()` en la primera apertura (§4.7), así que
+                             entre el clic y el primer pintado de Vue hay una descarga: con la caché
+                             fría el cajón se abría EN BLANCO. El velo `.jj-loading` que emite la
+                             propia SPA no puede taparlo —vive dentro de la app que aún no ha
+                             montado—, y `spaLoading` de `app.js` es solo guarda de reentrada.
+                             Aquí no hace falta ni una línea de JS para apagarlo: **Vue limpia el
+                             contenedor al montar** (`app.mount()` hace `container.textContent = ''`,
+                             verificado en el runtime instalado), de modo que este nodo desaparece
+                             solo en cuanto el cajón está listo. Si el chunk NO carga,
+                             `bootSpaEngine()` lo vacía en su `catch` para no dejar un spinner
+                             girando para siempre.
+                             Es el mismo marcado que servía el `placeholder()` del componente
+                             Livewire `lazy` que se retiró en 4.7·2b·3, y reusa su clase
+                             `.purchase-loading`. Lo vigila `SpinnerTest`. --}}
+                        <div class="purchase-loading">
+                            <span class="jj-spinner-with-label">
+                                <x-ui.spinner size="lg" :label="__('ui.loading')" />
+                                <span class="jj-spinner-label" aria-hidden="true">{{ __('ui.loading') }}</span>
+                            </span>
+                        </div>
+                    </div>
             </div>
         </aside>
     </div>

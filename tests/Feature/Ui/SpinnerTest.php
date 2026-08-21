@@ -66,6 +66,48 @@ class SpinnerTest extends TestCase
             ->assertSeeHtml('jj-spinner');
     }
 
+    /**
+     * ⚠️ **El cajón se abre antes de que exista su motor, y ese hueco se ve.**
+     *
+     * El entry de la SPA se trae con `import()` en la primera apertura, así que entre el clic y el
+     * primer pintado de Vue hay una descarga. El velo `.jj-loading` que emite la propia SPA **no
+     * puede cubrirla**: vive DENTRO de la app que aún no ha montado. Sin este marcado el cajón se
+     * abre en blanco con la caché fría — que es justo lo que pasó al retirar el motor Livewire, cuyo
+     * `placeholder()` del `lazy` tapaba el hueco (4.7·2b·3, `DECISIONES #112(h)`).
+     *
+     * Va DENTRO de `#sidecart-spa` y no hace falta apagarlo: **Vue limpia el contenedor al montar**
+     * (`app.mount()` → `container.textContent = ''`, verificado en el runtime instalado). Si el chunk
+     * no carga, lo vacía el `catch` de `bootSpaEngine()`.
+     *
+     * ⚠️ Se asevera **dentro del hueco**, no en la página: `.purchase-loading` suelto pasaría aunque
+     * el velo estuviera fuera del punto de montaje, donde Vue nunca lo retiraría y se quedaría
+     * pegado bajo el cajón para siempre.
+     */
+    public function test_the_spa_mount_point_carries_a_loading_veil_until_vue_takes_over(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // ⚠️ Con DOM, no con una expresión regular: la primera versión de este caso usaba un regex
+        // desde `id="sidecart-spa"` hasta `</div></div>`, y **al mutarlo se vio que no medía nada** —
+        // sacando el velo FUERA del hueco seguía en verde, porque el regex se comía el nodo siguiente.
+        $dom = new \DOMDocument;
+        $dom->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+
+        $host = $dom->getElementById('sidecart-spa');
+        $this->assertNotNull($host, 'no se ha encontrado el hueco de montaje del cajón');
+
+        $inner = '';
+        foreach ($host->childNodes as $child) {
+            $inner .= $dom->saveHTML($child);
+        }
+
+        $this->assertStringContainsString('purchase-loading', $inner, 'el velo tiene que estar DENTRO del hueco: es Vue quien lo retira al montar');
+        $this->assertStringContainsString('jj-spinner', $inner);
+        $this->assertStringContainsString(__('ui.loading'), $inner);
+    }
+
     /*
      * ⚠️ **Aquí vivían los dos casos del cajón, y los dos se fueron con `Tickets\Purchase`**
      * (4.7·2b·3). No son iguales, y la diferencia importa:

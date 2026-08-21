@@ -4536,12 +4536,21 @@ sobre la cesta del componente Livewire «como la otra capa» de defensa del cap 
 **nunca se aplicó**: se evaluó y se descartó a propósito porque la cesta es *client-syncable*, y así
 lo dice `PAY-12` y lo dejaba anotado el propio componente. La única capa era, y es, `OrderCreator`.
 
-**(h) DEUDA NUEVA, medida al retirar: el cajón se abre SIN feedback de carga.**
-`app.js::bootSpaEngine()` hace `await import()` del chunk del motor y durante esa espera no se pinta
-nada —`spaLoading` es solo guarda de reentrada—; el velo `.jj-loading` no puede taparlo porque vive
-DENTRO de la app Vue que aún no ha montado. El motor Livewire sí tenía placeholder, y se fue con él.
-`UI-SPINNER.md` seguía marcando ✅ ese caso. Ficha en `DEUDA.md`; el arreglo acotado es pintar el velo
-dentro de `#sidecart-spa`, que Vue reemplaza al montar.
+**(h) Un HUECO destapado al retirar, y cerrado el mismo día: el cajón se abría SIN feedback de
+carga.** `app.js::bootSpaEngine()` hace `await import()` del chunk del motor y durante esa espera no
+se pintaba nada —`spaLoading` es solo guarda de reentrada—; el velo `.jj-loading` no podía taparlo
+porque vive DENTRO de la app Vue que aún no ha montado. El motor Livewire sí tenía `placeholder()`, y
+se fue con él sin que nadie lo notara: **`UI-SPINNER.md` seguía marcando ✅ ese caso**, que es el
+recordatorio de que retirar una superficie se lleva por delante capacidades que su doc sigue
+prometiendo.
+▶ **Arreglado con cero JavaScript**: el velo va estático DENTRO de `#sidecart-spa`, con el mismo
+marcado que servía el placeholder, y **Vue lo borra al montar** (`app.mount()` hace
+`container.textContent = ''`, verificado en el runtime instalado, no supuesto). El `catch` de
+`bootSpaEngine()` lo vacía si el chunk no carga, porque un spinner eterno miente.
+⚠️ **Y el caso que lo vigila tuvo que reescribirse tras mutarlo**: la primera versión anclaba con una
+expresión regular de `id="sidecart-spa"` a `</div></div>` y **daba verde con el velo FUERA del hueco**
+—donde Vue nunca lo retiraría y se quedaría pegado para siempre—. Con `DOMDocument` sí muerde. Es
+`#65` otra vez: un caso nuevo también hay que mutarlo.
 
 **(i) Lo que queda para el siguiente**: desplegar a staging y comprobar en navegador el punto **A7 ·
 enlaces profundos** de `VERIFICACION-E2E-CAJON.md` — el arreglo de `#111(h)`, que **nadie ha visto

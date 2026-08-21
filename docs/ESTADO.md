@@ -24,12 +24,13 @@ se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en s
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2638 en verde** (15.223 aserciones, `--parallel` ~63 s) · **302 tests JS** (`node --test`) ·
+- Suite **2639 en verde** (15.228 aserciones, `--parallel` ~63 s) · **302 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` y
   `build:ssr` OK. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner
   (ver `TESTING.md`).
-  ⚠️ **Bajó de 2773 a 2638 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
-  era la superficie que se va. Ninguno se borró sin localizar y EJECUTAR antes su sucesor (`#112(a)`).
+  ⚠️ **Bajó de 2773 a 2639 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
+  era la superficie que se va (y entró uno nuevo, el del velo de carga). Ninguno se borró sin localizar
+  y EJECUTAR antes su sucesor (`#112(a)`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
   tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
   `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
