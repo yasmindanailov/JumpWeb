@@ -28,7 +28,12 @@ const tp = (key, params) => translateWith(props.messages, key, params);
     <div v-if="progress" class="bk-progress">
         <div class="bk-progress__top">
             <button type="button" class="bk-back" @click="$emit('back')">
-                <svg class="arrow-ico" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" focusable="false">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+            </svg>
                 <span>{{ t('back') }}</span>
             </button>
             <span class="bk-step-count">{{ tp('step_count', { n: progress.active, total: progress.total }) }}</span>

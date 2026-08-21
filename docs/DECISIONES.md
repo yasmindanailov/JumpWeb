@@ -4555,3 +4555,51 @@ expresión regular de `id="sidecart-spa"` a `</div></div>` y **daba verde con el
 **(i) Lo que queda para el siguiente**: desplegar a staging y comprobar en navegador el punto **A7 ·
 enlaces profundos** de `VERIFICACION-E2E-CAJON.md` — el arreglo de `#111(h)`, que **nadie ha visto
 funcionar**.
+
+## #113 · 2026-08-21 · El cajón se servía SIN ICONOS, y el contrato de árbol no podía verlo
+Reportado por el owner mirando el cajón: no se veían los iconos. Medido: los **20 `<svg>` del cajón
+SPA estaban VACÍOS** —envoltorio sin dibujo—, así que ninguno pintaba nada. Es un fallo de Fase 4, no
+de la retirada; lo que hizo `#112` fue **destaparlo**.
+
+**(a) La causa, y está escrita en el código que lo provocó.** La transcripción a Vue replicó el
+ÁRBOL y no el dibujo, con el motivo anotado en `CatalogStep.vue`: «el interior del `<svg>` es
+geometría y el diff no desciende en él». Es **literalmente cierto** —`SidebarDomContractTest::
+describe()` hace `return` al llegar a un `<svg>`, y por buenas razones: exigir a dos motores los
+mismos `<path>` convertiría un contrato visual en una copia literal de los iconos—. El error no fue
+la regla del normalizador: fue **transcribir hasta donde el gate mira y parar ahí**.
+
+**(b) ⚠️ Por qué nadie lo vio antes, dicho sin adornos.** El diff de árbol da los 20 envoltorios por
+buenos; el manifiesto congelado también, porque un `<svg>` vacío y uno lleno son **el mismo nodo**
+para él (comprobado: la corrección no cambió ni un byte del manifiesto). En local el default era
+`livewire`, así que se veían los iconos del Blade. En **staging** llevaba roto desde que se puso el
+flag en `spa` — y `#110` verificó allí **cuatro caminos de navegador** sin reparar en ello. Es la
+tercera vez en dos entradas que aparece el mismo cuño: **verde no es funciona** (`#59`), y un ojo
+humano mirando una pantalla no sustituye a una guarda.
+
+**(c) La regla que ya estaba escrita y no se aplicó.** `ESTADO.md` lo dice desde las paridades:
+**cuando algo NO es atributo de contrato del normalizador, necesita paridad propia.** La tenían el
+texto (`SidebarTextParityTest`), los importes, la cesta, el calendario… y los iconos no. La lista de
+«lo que el diff no ve» estaba, pero se leía como una advertencia y no como un inventario que hay que
+cerrar.
+
+▶ **De ahí `SidebarIconParityTest`, y su formulación es la decisión**: no compara icono por icono
+—un mapeo por posición se rompe al reordenar un fichero— sino que exige que **el cajón no invente
+dibujos**. Cada geometría que emite tiene que ser, tras normalizar, la de un `<x-icons.*>` del
+sistema de diseño, o estar declarada como propia del cajón con su motivo (son cuatro, las que venían
+inline en el blade retirado y se quedaron sin componente). Así una copia que derive del original no
+coincide con NADA y cae, y un icono nuevo obliga a una decisión consciente. Mutado tres veces: vaciar
+un icono, cambiar el original en Blade, y estrenar un dibujo sin declararlo — los tres, rojos.
+
+**(d) ⚠️ Y saltó una guarda buena que conviene no leer como un estorbo.** Los dibujos costaron
+**7,26 KiB** —medido construyendo con y sin ellos, no restando— y el chunk pasó de 148,24 a 155,50
+KiB, por encima del techo de 150 de `SidebarBundleBudgetTest`. El techo sube a **160** siguiendo la
+regla escrita de ese fichero (subirlo con su motivo, no adelgazar a ciegas), con una precisión que
+importa: **esto no es una función nueva que presupuestar, es la que ya se creía entregada**. De paso
+quedó medido que **2,36 de esos 7,26 KiB son duplicación literal** (el taco y el pack viajan tres
+veces, la flecha tres, los ojos dos): oportunidad anotada con cifra, no sospecha.
+
+**(e) Lo que hay que llevarse.** Cuando un gate declare explícitamente que **no** mira algo —y este
+lo declaraba, en su docblock y en su código—, esa frase no es una nota al pie: es un **hueco con
+nombre**, y hay que cerrarlo con una guarda propia el día que se escribe, no cuando alguien mira la
+pantalla. `#112` cerró tres guardas que no medían nada; esta es la cuarta, y la única que se veía a
+simple vista.

@@ -130,6 +130,24 @@ es lo que esos casos querían decir. `assertSee` sigue siendo lo correcto para f
 - **No vale solo con convertirlo**: hay que MUTAR la vista y ver el caso caer. Convertir sin mutar
   cambia un verde falso por otro (`#65`).
 
+### 2.quater. Lo que un gate declara que NO mira es un hueco CON NOMBRE
+⚠️⚠️ **Medido el 2026-08-21** (`DECISIONES #113`): el cajón SPA se sirvió con sus **20 iconos
+vacíos** —`<svg>` sin dibujo dentro— y la suite entera en verde. El motivo estaba escrito en el
+propio código: `SidebarDomContractTest` **no desciende dentro de un `<svg>`** (su interior es
+geometría, no estructura estilable), así que un envoltorio vacío y uno lleno son el mismo nodo para
+el manifiesto congelado. La regla del normalizador es correcta; lo que falló fue transcribir hasta
+donde el gate mira y parar ahí.
+
+**La regla**: cuando un test declare explícitamente que no comprueba algo, eso NO es una nota al pie
+— es un hueco con nombre, y necesita su propia guarda el mismo día que se escribe. En el cajón la
+lista de lo que el diff de árbol no ve ya estaba en `ESTADO.md` (el texto, `href`, `action`, los
+`name` de un formulario…) y cada elemento tenía su paridad; los iconos no la tenían, y por eso se
+cayeron sin ruido. Hoy la tienen: `SidebarIconParityTest`.
+
+⚠️ **Y la guarda se formula para que no se rompa al reordenar**: no compara icono por icono por
+posición, sino que exige que el cajón **no invente dibujos** — cada geometría que emite es la de un
+`<x-icons.*>` o está declarada como propia con su motivo.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

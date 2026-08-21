@@ -82,16 +82,33 @@ class SidebarBundleBudgetTest extends TestCase
      * **4,70 KiB** —menos de lo que ocupa su marcado, porque la fila del resumen se EXTRAJO a
      * `SummaryLine.vue` y la pantalla de pagar dejó de tener la suya— y el segundo **5,06 KiB**, con lo
      * que quedan **1,76 KiB** de los 150 (re-medido en 4.4b·2; ver el ledger de arriba).
-     * ⚠️ **El siguiente que añada algo al cajón tiene el margen muy corto**: con 1,76 KiB, la decisión
-     * escrita de este proyecto sigue siendo SUBIR el techo con su motivo, no adelgazar a ciegas.
+     *   · 4.7·2b·4 (**los DIBUJOS de los 20 iconos**) ..... **155,50 KiB**
      *
-     * Con eso **la fase está transcrita entera** y lo único que falta es el widget de Turnstile
-     * (4.4b·2), que es un `<div>` contenedor y una llamada a un script EXTERNO —no viaja en el bundle—,
-     * así que el margen basta. Si aun así se pasa, la decisión vuelve a ser SUBIR el techo con su
-     * motivo escrito, no dejar que lo empuje el arrastre. Y en 4.7, al retirar el motor Livewire, este
-     * número debería BAJAR: se van con él los dos pasos que hoy conviven.
+     * ⚠️⚠️ **El techo sube a 160 aquí, y no es un arrastre: es que el cajón se estaba sirviendo SIN
+     * ICONOS.** Los 20 `<svg>` del cajón eran envoltorios VACÍOS —la transcripción de Fase 4 replicó
+     * el árbol y no el dibujo— y ningún gate podía verlo, porque el diff de árbol no desciende dentro
+     * de un `<svg>` (`DECISIONES #113`). Esto no es una función nueva que haya que presupuestar: es
+     * la que ya se creía entregada.
+     *
+     * Coste MEDIDO construyendo con y sin ellos, con el reloj parado —no restando del ledger—:
+     * **148,24 KiB → 155,50 KiB = 7,26 KiB**. Y el ledger de arriba resultó exacto: el «sin iconos»
+     * cayó clavado en los 148,24 que dejó anotados 4.4b·2.
+     *
+     * ⚠️ **De esos 7,26 KiB, 2,36 son DUPLICACIÓN literal** (medido): el taco de entradas y el pack
+     * viajan tres veces cada uno, la flecha de «Volver» tres, y los dos ojos del campo de contraseña
+     * dos. Extraerlos a componentes de icono propios del cajón los dejaría en una sola copia. **No se
+     * hizo aquí a propósito**: la regla escrita de este fichero es subir el techo con su motivo y no
+     * adelgazar a ciegas, y el trabajo de esta sesión era que los iconos SE VEAN. Queda anotado como
+     * oportunidad medida, no como sospecha — y quien la tome se lleva 2,36 KiB seguros.
+     * ⚠️ La copia múltiple **no puede derivar en silencio**: `SidebarIconParityTest` exige que cada
+     * dibujo del cajón sea, byte a byte, el de su `<x-icons.*>`; si una copia se retoca y las otras no,
+     * cae.
+     *
+     * **160 deja 4,50 KiB de margen.** Es corto a propósito y no arbitrario: la fase del cajón está
+     * cerrada, así que lo que viene —el ÁREA DE CLIENTE dentro del cajón (`DECISIONES #66`)— es una
+     * fase nueva que tendrá que decidir su propio presupuesto, no colarse por el margen de esta.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 150;
+    private const SIDEBAR_CHUNK_MAX_KB = 160;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

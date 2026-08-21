@@ -25,7 +25,7 @@ borrar (se conserva por si hace falta leer el tramo commit a commit).
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2639 en verde** (15.228 aserciones, `--parallel` ~63 s) · **302 tests JS** (`node --test`) ·
+- Suite **2642 en verde** (15.239 aserciones, `--parallel` ~63 s) · **302 tests JS** (`node --test`) ·
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` y
   `build:ssr` OK. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner
   (ver `TESTING.md`).
@@ -185,8 +185,13 @@ Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
 
 ⚠️ **La regla que enseñaron las paridades**: cuando algo NO es atributo de contrato del normalizador
-—`href`, `action`, `method`, los `name` de un formulario, **el texto**— el diff de árbol **lo da por
-bueno**. Si transcribes algo de esa clase necesita paridad propia. Demostrado por mutación en el paso 9.
+—`href`, `action`, `method`, los `name` de un formulario, **el texto**, y **el interior de un
+`<svg>`**— el diff de árbol **lo da por bueno**. Si transcribes algo de esa clase necesita paridad
+propia. Demostrado por mutación en el paso 9.
+⚠️⚠️ **Y esa lista mordió de verdad** (`#113`): los **20 iconos del cajón eran `<svg>` VACÍOS** y se
+sirvieron así —en staging, con `#110` mirando cuatro caminos en navegador sin verlo—, porque el diff
+no desciende en `<svg>`. Hoy lo cubre `SidebarIconParityTest`, que exige que el cajón **no invente
+dibujos**: cada geometría es la de un `<x-icons.*>` o está declarada como propia con su motivo.
 
 ## ▶ Lo que NO hay que reimplementar (el terreno del dinero está entero)
 
@@ -249,6 +254,7 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | Staging | Despliegue (`deploy.sh`) · la guarda del dinero en verde falso · los CUATRO caminos verificados | `#105`–`#110` |
 | 4.7·2b·3·0 | **Independizar el contrato de árbol ANTES de borrar** (el fixture salía del motor) | `#111` |
 | **4.7·2b·3 + ·3** | 🟩 **`Purchase.php` RETIRADO y el flag con él** · y tres guardas que estaban en verde **sin medir nada** | **`#112`** |
+| 4.7·2b·4 | **El cajón se servía SIN ICONOS**: 20 `<svg>` vacíos que el diff de árbol no podía ver | **`#113`** |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
 **una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de

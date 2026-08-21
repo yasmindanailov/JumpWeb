@@ -1545,6 +1545,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         aparecen mutando una a una** (el día del calendario y los topes del selector SÍ son contrato).
       · Y **cuatro nombres de campo estaban supuestos mal**: `online_amount_cents < total_cents`,
         `guest_form_pending`, `pending_at_gate_cents`, `reservations_paused`.
+- [x] **Paso 4.7·2b·4 — los DIBUJOS de los iconos** (2026-08-21, `DECISIONES #113`). Sub-paso que no
+      estaba en ningún plan: lo destapó el owner mirando el cajón. **Los 20 `<svg>` estaban VACÍOS**
+      —envoltorio sin dibujo— desde la transcripción de Fase 4, así que el cajón se servía sin un solo
+      icono. No lo rompió la retirada; la retirada lo **destapó** (en local el default `livewire`
+      servía los del Blade; en staging llevaba roto desde el flag, y `#110` verificó cuatro caminos de
+      navegador sin verlo).
+      ⚠️ **Ningún gate podía cazarlo, y estaba escrito**: el diff de árbol **no desciende dentro de un
+      `<svg>`**, de modo que uno vacío y uno lleno son el mismo nodo. Comprobado: la corrección no
+      cambió ni un byte del manifiesto congelado.
+      ▶ Transcrita la geometría de los 20 desde sus `<x-icons.*>`, y **guarda nueva**:
+      `SidebarIconParityTest`, formulada como «**el cajón no inventa dibujos**» —cada geometría es la
+      de un componente del sistema de diseño o está declarada como propia con su motivo—, que es lo
+      que la hace inmune a reordenar ficheros. Mutada tres veces: vaciar un icono, cambiar el original
+      en Blade y estrenar un dibujo sin declararlo; los tres, rojos.
+      ⚠️ Costaron **7,26 KiB** (medido con y sin ellos): el chunk pasa de 148,24 a 155,50 KiB y el techo
+      de `SidebarBundleBudgetTest` sube 150 → **160**, con el matiz que importa: no es una función
+      nueva que presupuestar, es **la que ya se creía entregada**. De paso quedó medido que 2,36 de
+      esos KiB son duplicación literal — oportunidad anotada con cifra.
 - [x] **Paso 4.7·3 — retirar el flag** (✅ **HECHO** el 2026-08-21, dentro de `·2b·3`): `SidebarSettings`,
       el ajuste y su fijación en el fixture, fuera.
       ⚠️ **[DECIDIDO 2026-08-19] Este era el paso que ACTIVA el motor SPA, no `·2b·3`** — y por eso

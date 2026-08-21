@@ -39,7 +39,10 @@ const open = ref(false);
                 <span class="cartbar__total">{{ footer.amount }}</span>
             </span>
             <span class="cartbar__go">{{ footer.cta }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="4" y1="12" x2="19" y2="12" />
+                    <polyline points="13 6 19 12 13 18" />
+                </svg>
             </span>
         </button>
 
@@ -50,7 +53,11 @@ const open = ref(false);
                         <button type="button" class="bk-foot__info-btn" :aria-label="messages.deposit_info ?? ''"
                                 :aria-expanded="open ? 'true' : 'false'"
                                 @click="open = ! open">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <line x1="12" y1="11" x2="12" y2="16" />
+                                <circle cx="12" cy="8" r="0.6" fill="currentColor" />
+                            </svg>
                         </button>
                         <span v-show="open" class="bk-foot__pop">
                             <span class="bk-foot__pop-row"><span>{{ footer.split.nowLabel }}</span><span>{{ footer.split.now }}</span></span>
@@ -62,8 +69,20 @@ const open = ref(false);
                 <button type="button" class="bk-cta" :disabled="footer.disabled" @click="$emit('action', footer.action)">
                     <span>{{ footer.cta }}</span>
                     <!-- Mismo NODO para el icono de tarjeta y el de flecha: el diff no desciende dentro
-                         de un `<svg>`, así que lo que cambia es el dibujo, no el árbol. -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+                         de un `<svg>`, así que lo que cambia es el dibujo, no el árbol.
+                         ⚠️ Por eso mismo el diff TAMPOCO ve si el dibujo falta: los `<template>` de
+                         dentro no crean nodo, y quien vigila que haya geometría es
+                         `SidebarIconParityTest` (4.7·2b·4). -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <template v-if="footer.icon === 'card'">
+                            <rect x="2" y="5" width="20" height="14" rx="2.5" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                        </template>
+                        <template v-else>
+                            <line x1="4" y1="12" x2="19" y2="12" />
+                            <polyline points="13 6 19 12 13 18" />
+                        </template>
+                    </svg>
                 </button>
             </div>
             <p v-if="footer.note" class="bk-foot__note">{{ footer.note }}</p>
