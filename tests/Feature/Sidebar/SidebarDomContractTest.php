@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
@@ -114,16 +115,14 @@ class SidebarDomContractTest extends TestCase
         $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
 
-        $livewire = $this->livewireTreeForStep(1);
         $vue = $this->vueTree(1, [], api: $this->catalogApiPayload());
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol del catálogo DIFIERE entre los dos motores.\n".
             'El contrato visual es el árbol (§4.2): 90 de 292 selectores del cajón son estructurales '.
             'o dependen del tipo de elemento, así que esta diferencia es estilo perdido aunque las '.
             "clases coincidan.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -139,15 +138,11 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 5);
 
-        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
-
-        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
             api: $this->dateApiPayload($product->id), state: $this->clientState());
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol del calendario DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol del calendario DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -166,26 +161,13 @@ class SidebarDomContractTest extends TestCase
     {
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 5);
-
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $product->id)
-            ->call('selectDate', now()->addDay()->toDateString());
-
-        $this->assertNotNull($component->get('date'), 'el caso tiene que llegar con día elegido');
-        $this->assertStringContainsString(
-            'aria-current="date"', $component->html(),
-            'y el servidor tiene que marcarlo, o este caso no mira nada'
-        );
-
-        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
             api: $this->dateApiPayload($product->id), state: $this->clientState(now()->addDay()->toDateString()));
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El día elegido NO se marca igual en los dos motores.\n".
             '⚠️ `aria-current` es lo único que le dice a un lector de pantalla cuál está seleccionado: '.
-            "la clase `is-selected` no se lee.\n\n".$this->firstDivergence($livewire, $vue)
+            "la clase `is-selected` no se lee.\n\n"
         );
     }
 
@@ -216,20 +198,13 @@ class SidebarDomContractTest extends TestCase
         $this->slotsForNextDays($pack, 3);
 
         $date = now()->addDay()->toDateString();
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
 
-        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(3, [], 'wiz__title', withSiblings: true,
             api: $this->timeApiPayload($pack->id, $date, '10:00:00', (int) $pack->min_qty),
             state: $this->clientState($date, '10:00:00', (int) $pack->min_qty));
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol del paso de hora DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol del paso de hora DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -248,11 +223,6 @@ class SidebarDomContractTest extends TestCase
         $this->slotsForNextDays($pack, 3);
 
         $date = now()->addDay()->toDateString();
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', $date)
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
 
         // Los topes salen de la FICHA del producto, no del view-model del motor que este fichero
         // compara (4.7·2b·3, paso 1). Medido antes de sustituirlos: el componente devolvía exactamente
@@ -269,19 +239,16 @@ class SidebarDomContractTest extends TestCase
         $this->assertGreaterThan($min, $max, 'sin margen entre mínimo y máximo el caso no probaría nada');
 
         foreach ([$min, $max] as $quantity) {
-            $component->set('qty', $quantity);
 
-            $livewire = $this->livewireTree($component, 'qtybox');
             $vue = $this->vueTree(3, [], 'qtybox',
                 api: $this->timeApiPayload($pack->id, $date, '10:00:00', $quantity),
                 state: $this->clientState($date, '10:00:00', $quantity));
 
-            $this->assertTree(__FUNCTION__,
-                $livewire, $vue,
+            $this->assertTree(__FUNCTION__, $vue,
                 "Con cantidad {$quantity} (mínimo {$min}, máximo {$max}) el selector NO se acota igual.\n".
                 '⚠️ En un pack `available` y `max_quantity` no son el mismo número, y construir el '.
                 "selector sobre el primero deja pedir invitados que el checkout rechaza.\n\n".
-                $this->firstDivergence($livewire, $vue)
+                ''
             );
         }
     }
@@ -296,15 +263,13 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_cart_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->componentWithFullCart();
+        $this->setUpFullCart();
 
-        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState());
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol del carrito DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol del carrito DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -317,15 +282,12 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_empty_cart_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = Livewire::test(Purchase::class)->set('step', 4);
 
-        $livewire = $this->livewireTree($component, 'wiz__title', withSiblings: true);
         $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
             api: $this->cartApiPayload([]), state: $this->clientState());
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol del carrito VACÍO DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol del carrito VACÍO DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -351,16 +313,6 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 3);
 
-        $component = Livewire::test(Purchase::class)
-            ->set('cart', [[
-                'ticket_type_id' => $product->id, 'date' => '', 'time' => '10:00:00',
-                'qty' => 2, 'event_data' => [], 'addons' => [],
-            ]])
-            ->set('step', 4);
-
-        $this->assertSame('', $component->viewData('cartLines')[0]['date'], 'el caso exige una línea sin fecha');
-
-        $livewire = $this->livewireTree($component, 'cart__item');
         // ⚠️ **El ÚNICO caso del paso 4 que sigue con props cocinadas, y a propósito** (4.7·2b·2·B):
         // su fixture es una línea con `date: ''`, que `POST /orders/quote` RECHAZA con 422 y que el
         // saneador del cajón **descarta** antes de guardarla (`cart.js` espeja `CartPayload`). O sea:
@@ -368,11 +320,10 @@ class SidebarDomContractTest extends TestCase
         // real que alimentar — lo que se comprueba aquí es que el marcado no se desmorona si llegara.
         $vue = $this->vueTree(4, $this->datelessCartProps($product), 'cart__item');
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "La línea SIN fecha DIFIERE entre los dos motores.\n".
             'El contenedor `.cart__lines` se emite siempre, aunque quede vacío: el condicional del '.
-            "Blade está DENTRO del `<div>`.\n\n".$this->firstDivergence($livewire, $vue)
+            "Blade está DENTRO del `<div>`.\n\n"
         );
     }
 
@@ -393,41 +344,14 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_identify_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = Livewire::test(Purchase::class)
-            ->set('step', 5)
-            ->call('setAuthMode', 'register')
-            ->call('setAuthMode', 'login');
 
-        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(5, $this->identifyProps(), 'bk-back', withSiblings: true);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la identificación DIFIERE entre los dos motores.\n".
             'Este paso no tiene banda de progreso, así que su «Volver» es propio; y el formulario que '.
             "cuelga de las pestañas es el login embebido.\n\n".
-            $this->firstDivergence($livewire, $vue)
-        );
-    }
-
-    /**
-     * **La guarda del caso de arriba.** Si alguien lo «simplifica» a un `set('authMode', …)`, el diff
-     * volvería a comparar dos armazones sin formulario y nadie lo notaría. Aquí se fija el hecho
-     * medido: por clic hay formulario, por `set` no.
-     */
-    public function test_reaching_the_identify_step_by_setting_the_mode_hides_the_embedded_form(): void
-    {
-        $bySet = Livewire::test(Purchase::class)->set('step', 5)->set('authMode', 'login')->html();
-        $byClick = Livewire::test(Purchase::class)->set('step', 5)
-            ->call('setAuthMode', 'register')->call('setAuthMode', 'login')->html();
-
-        $this->assertStringNotContainsString(
-            'auth__form', $bySet,
-            'si `set` ya renderizara el hijo, el caso del paso 5 podría simplificarse; hasta entonces, no'
-        );
-        $this->assertStringContainsString(
-            'auth__form', $byClick,
-            'el camino por clic tiene que renderizar el formulario, o el diff del paso 5 no compara nada'
+            ''
         );
     }
 
@@ -442,16 +366,13 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_register_form_emits_the_same_tree_in_both_engines(): void
     {
-        $component = Livewire::test(Purchase::class)->set('step', 5)->call('setAuthMode', 'register');
 
-        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(5, $this->identifyProps('register'), 'bk-back', withSiblings: true);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol del ALTA DIFIERE entre los dos motores.\n".
             'Ojo al honeypot (`.hp`), a la fila de email+teléfono y al `<small>` del hint: no se ven, '.
-            "y son parte del contrato.\n\n".$this->firstDivergence($livewire, $vue)
+            "y son parte del contrato.\n\n"
         );
     }
 
@@ -466,11 +387,6 @@ class SidebarDomContractTest extends TestCase
     {
         // Un alta VACÍA: falla la validación de todos los campos obligatorios a la vez, que es lo que
         // llena la lista. Con un solo campo en rojo, un `<li>` de más o de menos no se vería.
-        $register = Livewire::test(Register::class, ['embedded' => true])->call('register');
-        $errors = $register->errors()->toArray();
-
-        $this->assertGreaterThan(3, count($errors), 'el caso necesita varios campos en rojo para probar la lista');
-
         // ⚠️ El lado SPA ya no recibe los errores cocinados por el test: recibe el **422 crudo** de
         // `POST /auth/register` y los compone `register.js`. El orden de los avisos —el de las reglas de
         // validación— y el reparto entre banner y campo son SUYOS, y el test los reimplementaba en PHP
@@ -481,16 +397,21 @@ class SidebarDomContractTest extends TestCase
             'body' => $this->postJson('/api/v1/auth/register', [])->assertStatus(422)->json(),
         ]];
 
-        $livewire = $this->treeOf($register->html(), 'auth__errors');
+        // La precondición sigue viva y ahora se lee del MISMO 422 que consume el cajón: con un solo
+        // campo en rojo, un `<li>` de más o de menos no se vería.
+        $this->assertGreaterThan(
+            3, count($api['register']['body']['error']['fields'] ?? []),
+            'el caso necesita varios campos en rojo para probar la lista'
+        );
+
         $vue = $this->treeOf(
             $this->renderVue(5, [], null, $api, $this->identifyState('register')),
             'auth__errors'
         );
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El banner de errores del alta DIFIERE entre los dos motores.\n".
-            "Es `<strong>` + `<ul>` con un `<li>` por aviso.\n\n".$this->firstDivergence($livewire, $vue)
+            "Es `<strong>` + `<ul>` con un `<li>` por aviso.\n\n"
         );
     }
 
@@ -500,14 +421,11 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_verify_email_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = Livewire::test(Purchase::class)->set('step', 7);
 
-        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(7, ['messages' => __('tickets')], 'purchase__confirm', withSiblings: true);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol de «revisa tu correo» DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de «revisa tu correo» DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -571,21 +489,16 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_pay_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->componentWithFullCart();
+        $this->setUpFullCart();
         $this->actingAs(User::factory()->create());
-        $component->call('checkout');
 
-        $this->assertSame(8, (int) $component->get('step'), 'el caso tiene que llegar al paso de pago');
-
-        $livewire = $this->livewireTree($component, 'bk-back', withSiblings: true);
         $vue = $this->vueTree(8, [], 'bk-back', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8));
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la pantalla de PAGO DIFIERE entre los dos motores.\n".
             'Se parece al carrito, pero no es el carrito: `cart--summary`, sin botón de quitar y con el '.
-            "precio en un `<span>` sin clase.\n\n".$this->firstDivergence($livewire, $vue)
+            "precio en un `<span>` sin clase.\n\n"
         );
     }
 
@@ -600,24 +513,28 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_payment_breakdown_band_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->componentWithFullCart();
+        $this->setUpFullCart();
         $this->actingAs(User::factory()->create());
-        $component->call('checkout');
 
-        $footer = $component->viewData('footer');
+        // La precondición sigue viva, pero su sujeto ya no es el view-model del motor: es el
+        // PRESUPUESTO. Sin señal no hay desglose que comparar y el caso no probaría nada.
+        $quote = $this->cartApiPayload($this->fullCartItems())['quote'];
 
-        $this->assertSame('band', $footer['splitMode'] ?? null, 'el paso de pago tiene que pedir la banda');
-        $this->assertNotNull($footer['split'] ?? null, 'y el caso necesita señal, o no hay desglose que comparar');
+        // «Hay señal» en el CONTRATO es que lo que se paga online sea menor que el total: el
+        // presupuesto no publica un `deposit_cents` (medido: sus claves son `lines`, `total_cents` y
+        // `online_amount_cents`). Sin esa diferencia no hay desglose que comparar.
+        $this->assertLessThan(
+            (int) $quote['total_cents'], (int) $quote['online_amount_cents'],
+            'el caso necesita señal, o no hay desglose de pago que comparar'
+        );
 
-        $livewire = $this->livewireTree($component, 'bk-paybreakdown', withSiblings: true);
         $vue = $this->vueTree(8, [], 'bk-paybreakdown', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8), shellFromServer: false);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "La banda de desglose del pago DIFIERE entre los dos motores.\n".
             "Va FUERA del scroll y pegada encima del pie: de ese orden depende su borde.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -633,7 +550,7 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_redirect_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->componentWithFullCart();
+        $this->setUpFullCart();
         $this->actingAs(User::factory()->create());
 
         // ⚠️ El sobre de pago se pide ANTES de confirmar, y no es un detalle de orden: a partir del 201
@@ -642,17 +559,11 @@ class SidebarDomContractTest extends TestCase
         // 422 por ahí). Los dos motores acaban con un pedido cada uno, que es lo que se compara.
         $api = $this->redirectApiPayload();
 
-        $component->call('checkout')->call('confirmReservation');
-
-        $this->assertSame(9, (int) $component->get('step'), 'el caso tiene que llegar a la redirección');
-
-        $livewire = $this->livewireTree($component, 'purchase__redirecting', withSiblings: true);
         $vue = $this->vueTree(9, [], 'purchase__redirecting', withSiblings: true,
             api: $api, state: $this->clientState(step: 9));
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "El árbol de la redirección DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de la redirección DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -698,14 +609,18 @@ class SidebarDomContractTest extends TestCase
         Setting::updateOrCreate(['key' => 'registration.url'], ['value' => 'https://registro.example.test/alta', 'group' => 'business']);
         Setting::flushMemo();
 
-        $component = $this->confirmedComponent(paid: true);
+        $orderCode = $this->setUpConfirmedOrder(paid: true);
 
-        $confirmation = $component->viewData('confirmation');
-        $this->assertSame('paid', $confirmation['status'], 'el caso necesita el pedido PAGADO, o no hay desglose');
-        $this->assertGreaterThan(0, $confirmation['pending_at_park'], 'y algo pendiente en el parque');
-        $this->assertNotNull($component->viewData('registration'), 'y el enlace de registro configurado');
+        // Las tres precondiciones siguen vivas y ahora se leen del DOMINIO, no del view-model.
+        $order = Order::where('code', $orderCode)->firstOrFail();
 
-        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
+        $this->assertSame(Order::STATUS_PAID, $order->status, 'el caso necesita el pedido PAGADO, o no hay desglose');
+        $this->assertGreaterThan(
+            0, (int) ($this->confirmedApiPayload()['order']['pending_at_gate_cents'] ?? 0),
+            'y algo pendiente en el parque, o no hay desglose que comparar'
+        );
+        $this->assertNotNull(RegistrationLink::current(), 'y el enlace de registro configurado');
+
         $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
             api: $this->confirmedApiPayload(),
             state: $this->clientState(step: 6) + [
@@ -713,10 +628,9 @@ class SidebarDomContractTest extends TestCase
                 'registration' => RegistrationLink::current()?->toArray(),
             ]);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la RESERVA CREADA difiere entre los dos motores.\n".
-            "Es el más largo del cajón y casi todo en él es condicional.\n\n".$this->firstDivergence($livewire, $vue)
+            "Es el más largo del cajón y casi todo en él es condicional.\n\n"
         );
     }
 
@@ -730,14 +644,17 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_confirmed_step_of_a_pending_order_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->confirmedComponent(paid: false, withGuestForm: true);
+        $orderCode = $this->setUpConfirmedOrder(paid: false, withGuestForm: true);
+        // Las dos precondiciones siguen vivas; su sujeto pasa del view-model al DOMINIO y a la API.
+        $this->assertSame(
+            Order::STATUS_PENDING, Order::where('code', $orderCode)->firstOrFail()->status,
+            'el caso necesita el pedido PENDIENTE'
+        );
+        $this->assertTrue(
+            (bool) ($this->confirmedApiPayload()['order']['guest_form_pending'] ?? false),
+            'y una reserva que pide formulario de invitados'
+        );
 
-        $confirmation = $component->viewData('confirmation');
-        $this->assertSame('pending', $confirmation['status'], 'el caso necesita el pedido PENDIENTE');
-        $this->assertTrue((bool) $confirmation['has_guest_form'], 'y una reserva que pide formulario de invitados');
-        $this->assertNull($component->viewData('registration'), 'y ninguna URL de registro configurada');
-
-        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, [], 'purchase__confirm', withSiblings: true,
             api: $this->confirmedApiPayload(),
             state: $this->clientState(step: 6) + [
@@ -745,10 +662,9 @@ class SidebarDomContractTest extends TestCase
                 'registration' => RegistrationLink::current()?->toArray(),
             ]);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la reserva creada de un pedido PENDIENTE difiere entre los dos motores.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -764,11 +680,7 @@ class SidebarDomContractTest extends TestCase
     {
         // Sin sesión, `confirmationSummary()` devuelve null: es el mismo `null` que produce un pedido
         // que ya no es de quien pregunta, y el que este caso existe para fijar.
-        $component = Livewire::test(Purchase::class)->set('step', 6)->set('orderCode', 'R-ABC123');
 
-        $this->assertNull($component->viewData('confirmation'), 'el caso tiene que llegar SIN resumen');
-
-        $livewire = $this->livewireTree($component, 'purchase__confirm', withSiblings: true);
         $vue = $this->vueTree(6, [
             'confirmation' => null,
             'orderCode' => 'R-ABC123',
@@ -777,11 +689,10 @@ class SidebarDomContractTest extends TestCase
             'locale' => app()->getLocale(),
         ], 'purchase__confirm', withSiblings: true);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la reserva creada SIN resumen difiere entre los dos motores.\n".
             "Es lo que ve quien perdió la sesión entre la pasarela y la vuelta.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -792,22 +703,28 @@ class SidebarDomContractTest extends TestCase
      * cobro abierto, igual que en producción. Sembrar un `Order` a mano fijaría una forma de pedido que
      * el código real no produce —y el resumen sale del pedido, no de la cesta—.
      */
-    private function confirmedComponent(bool $paid, bool $withGuestForm = false): Testable
+    /**
+     * Deja creado el pedido del desenlace y devuelve su código.
+     *
+     * ⚠️ Antes conducía el componente Livewire hasta el paso 6. Ahora crea el pedido por la API y,
+     * si el caso lo pide, marca el HECHO de que la pasarela lo dejó pagado — que es lo único que hace
+     * falta aquí; volver a ejecutar el receptor de la respuesta firmada tiene sus propios tests.
+     */
+    private function setUpConfirmedOrder(bool $paid, bool $withGuestForm = false): string
     {
-        $component = $this->componentWithFullCart($withGuestForm);
+        $this->setUpFullCart($withGuestForm);
         $this->actingAs(User::factory()->create());
-        $component->call('checkout')->call('confirmReservation');
 
-        $code = (string) $component->get('orderCode');
-        $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
+        $cart = $this->cartApiPayload($this->fullCartItems());
+        $this->postJson('/api/v1/orders', ['items' => $cart['cart']])->assertCreated();
+
+        $code = $this->confirmedOrderCode();
 
         if ($paid) {
-            // La vuelta OK de la pasarela deja el pedido pagado; aquí solo hace falta ese HECHO, no
-            // volver a ejecutar el receptor de la respuesta firmada (que tiene sus propios tests).
             Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
         }
 
-        return $component->set('step', 6);
+        return $code;
     }
 
     /**
@@ -892,12 +809,8 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_declined_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->declinedComponent();
+        $this->setUpDeclinedOrder();
 
-        $this->assertSame(10, (int) $component->get('step'), 'el caso tiene que llegar al pago denegado');
-        $this->assertNotNull($component->get('declinedReasonText'), 'y traer el motivo del rechazo');
-
-        $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
             api: $this->declinedApiPayload(),
             state: $this->clientState(step: 10) + [
@@ -905,11 +818,10 @@ class SidebarDomContractTest extends TestCase
                 'contactUrl' => route('contacto'),
             ]);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol del PAGO DENEGADO difiere entre los dos motores.\n".
             "El pedido sigue vivo aquí: esta pantalla es la segunda oportunidad, no un error.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -923,14 +835,14 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_declined_step_still_emits_the_reason_block_without_a_known_code(): void
     {
-        $component = $this->declinedComponent(responseCode: null);
+        $this->setUpDeclinedOrder(responseCode: null);
 
+        // El sujeto sobrevive al motor: quien decide el motivo es el servicio del dominio.
         $this->assertSame(
-            __('tickets.payment_failed.reasons.default'), $component->get('declinedReasonText'),
+            __('tickets.payment_failed.reasons.default'), RedsysResponseCode::reasonText(null),
             'sin código, el servidor cae al motivo genérico — no a null'
         );
 
-        $livewire = $this->livewireTree($component, 'purchase__failed', withSiblings: true);
         $vue = $this->vueTree(10, [], 'purchase__failed', withSiblings: true,
             api: $this->declinedApiPayload(),
             state: $this->clientState(step: 10) + [
@@ -938,7 +850,7 @@ class SidebarDomContractTest extends TestCase
                 'contactUrl' => route('contacto'),
             ]);
 
-        $this->assertTree(__FUNCTION__, $livewire, $vue, $this->firstDivergence($livewire, $vue));
+        $this->assertTree(__FUNCTION__, $vue, '');
     }
 
     /**
@@ -951,17 +863,13 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_verifying_step_emits_the_same_tree_in_both_engines(): void
     {
-        $component = $this->verifyingComponent();
+        $this->setUpVerifyingOrder();
 
-        $this->assertSame(11, (int) $component->get('step'), 'el caso tiene que llegar a «verificando»');
+        $vue = $this->vueTree(11, $this->verifyingProps(), 'purchase__verifying', withSiblings: true);
 
-        $livewire = $this->livewireTree($component, 'purchase__verifying', withSiblings: true);
-        $vue = $this->vueTree(11, $this->verifyingProps($component), 'purchase__verifying', withSiblings: true);
-
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El árbol de «verificando el pago» difiere entre los dos motores.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -972,7 +880,7 @@ class SidebarDomContractTest extends TestCase
      * `mount()` a partir del último `Payment` fallido, así que colocar el paso a mano dejaría el motivo
      * vacío y el caso compararía dos pantallas sin su bloque más frágil.
      */
-    private function declinedComponent(?string $responseCode = '0101'): Testable
+    private function setUpDeclinedOrder(?string $responseCode = '0101'): void
     {
         $code = $this->purchasedOrderCode();
 
@@ -986,32 +894,37 @@ class SidebarDomContractTest extends TestCase
 
         SidebarEntry::failed($code);
 
-        return Livewire::test(Purchase::class);
     }
 
     /** Un componente en el paso 11, al que se llega por la misma costura. */
-    private function verifyingComponent(): Testable
+    private function setUpVerifyingOrder(): void
     {
         SidebarEntry::verifying($this->purchasedOrderCode());
 
-        return Livewire::test(Purchase::class);
     }
 
     /** Compra REAL de punta a punta, para que el pedido lo cree el dominio y no el test. */
+    /**
+     * Un pedido creado de verdad, POR LA API — que es como lo crea un cliente.
+     *
+     * ⚠️ Antes lo creaba conduciendo el componente Livewire (`checkout` + `confirmReservation`).
+     * Con el motor retirado el camino es el mismo que usa el cajón SPA: `POST /api/v1/orders` con la
+     * cesta declarada. El código se lee de la BD, no de la respuesta, por la misma razón que en
+     * {@see self::confirmedOrderCode()}: es el resultado, no la vista de nadie.
+     */
     private function purchasedOrderCode(): string
     {
-        $component = $this->componentWithFullCart();
+        $this->setUpFullCart();
         $this->actingAs(User::factory()->create());
-        $component->call('checkout')->call('confirmReservation');
 
-        $code = (string) $component->get('orderCode');
-        $this->assertNotSame('', $code, 'el caso tiene que haber creado el pedido');
+        $cart = $this->cartApiPayload($this->fullCartItems());
+        $this->postJson('/api/v1/orders', ['items' => $cart['cart']])->assertCreated();
 
-        return $code;
+        return $this->confirmedOrderCode();
     }
 
     /** @return array<string, mixed> */
-    private function verifyingProps(Testable $component): array
+    private function verifyingProps(): array
     {
         return [
             'orderCode' => $this->confirmedOrderCode(),
@@ -1042,34 +955,20 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 5);
 
-        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
-
         // Con las reservas abiertas, este estado lleva banda Y pie: es lo que hace significativa su
         // ausencia después.
-        $this->assertSame(
-            ['jj-loading', 'bk-progress', 'purchase__scroll', 'bk-foot'],
-            $this->shellBlocks($component->html()),
-            'sin banda y sin pie de partida, la ausencia que este caso comprueba no probaría nada'
-        );
-
         $this->pauseReservations();
-        $component->call('$refresh');
 
-        $this->assertNotNull($component->viewData('bookingProgress'), 'el servidor sigue componiendo la banda en pausa');
-        $this->assertNotNull($component->viewData('footer'), 'el servidor sigue componiendo el pie en pausa');
-
-        $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
         $vue = $this->vueTree(2, [], 'jj-loading', withSiblings: true,
             api: $this->dateApiPayload($product->id),
-            state: $this->clientState(step: 2, productId: $product->id, notice: $this->noticeProps($component)),
+            state: $this->clientState(step: 2, productId: $product->id, notice: $this->noticeProps(2)),
             shellFromServer: false);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El cajón EN PAUSA DIFIERE entre los dos motores.\n".
             'El aviso no solo sustituye el contenido: apaga también la banda de progreso, el pie y la '.
             "banda de desglose del pago — la misma condición gobierna los cuatro sitios.\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -1091,20 +990,13 @@ class SidebarDomContractTest extends TestCase
         $this->pauseReservations();
 
         foreach ([1, 2, 3, 4, 5, 8] as $step) {
-            $component = Livewire::test(Purchase::class)->set('step', $step);
-
-            $this->assertTrue(
-                $component->instance()->showPausedNotice(),
-                "el servidor ha dejado de tapar el paso {$step}: revisa `showPausedNotice()`"
-            );
-            $this->assertStringContainsString('purchase__maint', $component->html());
 
             // ⚠️ Con el aviso puesto, el armazón TAPA el paso entero, así que no hace falta cargar la
             // API de cada uno: lo que se compara es que el aviso sustituya el flujo. El armazón lo
             // compone igualmente el cliente (`shellFromServer: false`) — es el último montaje que lo
             // tomaba del servidor, y dejarlo así habría escondido el único que faltaba.
             $vue = $this->renderVue($step, [], null, [],
-                $this->clientState(step: $step, notice: $this->noticeProps($component)), shellFromServer: false);
+                $this->clientState(step: $step, notice: $this->noticeProps($step)), shellFromServer: false);
 
             $this->assertStringContainsString(
                 'purchase__maint', $vue,
@@ -1135,15 +1027,13 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_the_footer_emits_the_same_tree_in_every_state(): void
     {
-        foreach ($this->footerStates() as $label => [$step, $component, $props, $api, $state]) {
-            $livewire = $this->livewireTree($component, 'bk-foot');
+        foreach ($this->footerStates() as $label => [$step, $props, $api, $state]) {
             $vue = $this->vueTree($step, $props, 'bk-foot', api: $api, state: $state, shellFromServer: false);
 
-            $this->assertTree(__FUNCTION__,
-                $livewire, $vue,
+            $this->assertTree(__FUNCTION__, $vue,
                 "El pie del estado «{$label}» DIFIERE entre los dos motores.\n".
                 "Son tres árboles distintos: la barra-carrito, la barra sin desglose y la barra con él.\n\n".
-                $this->firstDivergence($livewire, $vue)
+                ''
             );
         }
     }
@@ -1158,17 +1048,6 @@ class SidebarDomContractTest extends TestCase
     public function test_the_footer_is_absent_in_both_engines_when_the_cart_is_empty(): void
     {
         foreach ([1, 4] as $step) {
-            $component = Livewire::test(Purchase::class)->set('step', $step);
-
-            $this->assertNull(
-                $component->viewData('footer'),
-                "el servidor no emite pie en el paso {$step} con la cesta vacía"
-            );
-
-            $this->assertStringNotContainsString(
-                'bk-foot', $component->html(),
-                "Livewire no debería emitir el pie en el paso {$step} con la cesta vacía"
-            );
 
             $vue = $step === 1
                 ? $this->renderVue($step, [], null, $this->catalogApiPayload(),
@@ -1198,14 +1077,15 @@ class SidebarDomContractTest extends TestCase
      */
     public function test_both_engines_announce_the_deposit_popover_state(): void
     {
-        $component = $this->componentWithFullCart();
-        $footer = $component->viewData('footer');
+        $this->setUpFullCart();
 
-        $this->assertSame('popover', $footer['splitMode'] ?? null, 'el caso necesita el pie con ⓘ');
+        // La precondición —«hay señal, luego el pie lleva el ⓘ del desglose»— sale del PRESUPUESTO,
+        // que es lo que compone el pie en el cajón (`foot.js`), no del view-model del motor retirado.
+        $quote = $this->cartApiPayload($this->fullCartItems())['quote'];
 
-        $this->assertStringContainsString(
-            ':aria-expanded', $component->html(),
-            'el Blade ha dejado de anunciar si el desglose está abierto'
+        $this->assertLessThan(
+            (int) $quote['total_cents'], (int) $quote['online_amount_cents'],
+            'el caso necesita señal, o el pie no lleva el ⓘ que se comprueba abajo'
         );
 
         $vue = $this->renderVue(4, [], null, $this->cartApiPayload($this->fullCartItems()),
@@ -1241,18 +1121,14 @@ class SidebarDomContractTest extends TestCase
     {
         $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
 
-        $component = Livewire::test(Purchase::class);
-
-        $livewire = $this->livewireTree($component, 'jj-loading', withSiblings: true);
         $vue = $this->vueTree(1, [], 'jj-loading', withSiblings: true, api: $this->catalogApiPayload(),
             state: $this->clientState(step: 1), shellFromServer: false);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
+        $this->assertTree(__FUNCTION__, $vue,
             "El ARMAZÓN del cajón DIFIERE entre los dos motores.\n".
             'Son el velo de carga, la banda de progreso y la zona scrollable: los nodos que sostienen '.
             "la cadena flex del panel (scroll que recorta + pie anclado al fondo).\n\n".
-            $this->firstDivergence($livewire, $vue)
+            ''
         );
     }
 
@@ -1287,27 +1163,24 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 5);
 
-        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
-
-        $livewire = $this->shellBlocks($component->html());
         $vue = $this->shellBlocks($this->renderVue(
             2, [], null, $this->dateApiPayload($product->id),
             $this->clientState(step: 2, productId: $product->id), shellFromServer: false
         ));
 
-        $this->assertContains('bk-progress', $livewire, 'el paso 2 tiene que llevar banda, o el caso no prueba el orden');
-        $this->assertContains('bk-foot', $livewire, 'el paso 2 tiene que llevar pie, o el orden que se compara es trivial');
-
-        $expected = array_values(array_diff($livewire, self::SHELL_BLOCKS_NOT_YET_IN_SPA));
+        // ⚠️ **Antes este caso comparaba el orden de los DOS motores; con uno solo, el orden se
+        // DECLARA** (4.7·2b·3). Lo que protege sigue siendo lo mismo y no es cosmético: la banda va
+        // pegada arriba, el pie anclado abajo y el scroll en medio, y de ese orden dependen la cadena
+        // flex del panel y los selectores de adyacencia (`.bk-paybreakdown + .bk-foot`).
+        $expected = ['jj-loading', 'bk-progress', 'purchase__scroll', 'bk-foot'];
 
         $this->assertSame(
             $expected, $vue,
-            "Los bloques del armazón NO salen en el mismo orden en los dos motores.\n".
-            'La banda va pegada arriba, el pie anclado abajo y el scroll en medio; de ese orden dependen '.
-            "la cadena flex del panel y los selectores de adyacencia.\n".
-            '  Livewire: '.implode(' → ', $livewire)."\n".
-            '  Vue     : '.implode(' → ', $vue)."\n".
-            '  (descontando lo aún no transcrito: '.implode(', ', self::SHELL_BLOCKS_NOT_YET_IN_SPA).')'
+            "Los bloques del armazón NO salen en el orden que fija el contrato.\n".
+            'La banda va pegada arriba, el pie anclado abajo y el scroll en medio; de ese orden '.
+            "dependen la cadena flex del panel y los selectores de adyacencia.\n".
+            '  esperado: '.implode(' → ', $expected)."\n".
+            '  emitido : '.implode(' → ', $vue)
         );
     }
 
@@ -1327,15 +1200,11 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 5);
 
-        $component = Livewire::test(Purchase::class)->call('selectType', $product->id);
-
-        $livewire = $this->livewireTree($component, 'bk-progress');
         $vue = $this->vueTree(2, [], 'bk-progress', api: $this->dateApiPayload($product->id),
             state: $this->clientState(step: 2, productId: $product->id), shellFromServer: false);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "La banda de progreso DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "La banda de progreso DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -1350,21 +1219,13 @@ class SidebarDomContractTest extends TestCase
         $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($product, 3);
 
-        $component = Livewire::test(Purchase::class)
-            ->call('selectType', $product->id)
-            ->call('selectDate', now()->addDay()->toDateString())
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
-
-        $livewire = $this->livewireTree($component, 'bk-progress');
         $vue = $this->vueTree(3, [], 'bk-progress',
-            api: $this->timeApiPayload($product->id, $component->get('date'), '10:00:00', (int) $component->get('qty')),
-            state: $this->clientState($component->get('date'), '10:00:00', (int) $component->get('qty'), step: 3, productId: $product->id),
+            api: $this->timeApiPayload($product->id, now()->addDay()->toDateString(), '10:00:00', (int) $product->min_qty),
+            state: $this->clientState(now()->addDay()->toDateString(), '10:00:00', (int) $product->min_qty, step: 3, productId: $product->id),
             shellFromServer: false);
 
-        $this->assertTree(__FUNCTION__,
-            $livewire, $vue,
-            "La banda de progreso del paso 3 DIFIERE entre los dos motores.\n\n".$this->firstDivergence($livewire, $vue)
+        $this->assertTree(__FUNCTION__, $vue,
+            "La banda de progreso del paso 3 DIFIERE entre los dos motores.\n\n"
         );
     }
 
@@ -1437,7 +1298,14 @@ class SidebarDomContractTest extends TestCase
      * compone el propio dominio —con su saneado y su selección de complementos resuelta— y el test no
      * fija una forma de cesta que el código real nunca produciría.
      */
-    private function componentWithFullCart(bool $withGuestForm = false): Testable
+    /**
+     * Deja creado el pack con señal, su complemento incluido y sus franjas.
+     *
+     * ⚠️ Antes devolvía el componente Livewire recorrido hasta la cesta; con el motor retirado
+     * (4.7·2b·3) solo monta el ESTADO DE DOMINIO, que es lo que los payloads de la API necesitan.
+     * La cesta en sí la declara {@see self::fullCartItems()}.
+     */
+    private function setUpFullCart(bool $withGuestForm = false): void
     {
         $pack = $this->product('Cumpleaños', TicketType::TYPE_PACK, 5000);
         $pack->update([
@@ -1456,14 +1324,6 @@ class SidebarDomContractTest extends TestCase
         $this->addon($pack, 'Tarta', 1000, ['is_included' => true, 'included_quantity' => 1, 'allow_extra' => true]);
         $this->slotsForNextDays($pack, 3);
 
-        return Livewire::test(Purchase::class)
-            ->call('selectType', $pack->id)
-            ->call('selectDate', now()->addDay()->toDateString())
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00')
-            ->set('eventData', ['celebrant' => 'Mara'])
-            ->call('incAddon', TicketType::where('name->es', 'Tarta')->value('id'))
-            ->call('addToCart');
     }
 
     /**
@@ -1473,17 +1333,10 @@ class SidebarDomContractTest extends TestCase
      */
     private function footerStates(): array
     {
-        $withCart = $this->componentWithFullCart();
+        $withCart = $this->setUpFullCart();
 
         $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
         $this->slotsForNextDays($entry, 5);
-        $onCalendar = Livewire::test(Purchase::class)->call('selectType', $entry->id);
-
-        $onTime = Livewire::test(Purchase::class)
-            ->call('selectType', $entry->id)
-            ->call('selectDate', now()->addDay()->toDateString())
-            ->call('goToTime')
-            ->call('selectTime', '10:00:00');
 
         // ⚠️ **Los CUATRO estados se alimentan del servidor, armazón incluido** (4.7·2b·2·B): el pie lo
         // compone `foot.js` aquí, no se toma del view-model de Livewire. Cada entrada lleva su carga de
@@ -1507,24 +1360,24 @@ class SidebarDomContractTest extends TestCase
         return [
             // Rama `cart`: un único hijo, sin nota de IVA.
             'catálogo con cesta' => [
-                1, (clone $withCart)->set('step', 1), [],
+                1, [],
                 array_merge($this->catalogApiPayload(), $this->cartApiPayload($this->fullCartItems())),
                 $this->clientState(step: 1),
             ],
             // Rama `bar` sin desglose y con el CTA INACTIVO: el importe es «—» hasta elegir día.
             'calendario sin día' => [
-                2, $onCalendar, [], $this->dateApiPayload($entry->id),
+                2, [], $this->dateApiPayload($entry->id),
                 $this->clientState(step: 2, productId: $entry->id),
             ],
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
             'hora de una entrada' => [
-                3, $onTime, [],
+                3, [],
                 $this->timeApiPayload($entry->id, $onTimeDate, '10:00:00', $onTimeQty),
                 $this->clientState($onTimeDate, '10:00:00', $onTimeQty, step: 3, productId: $entry->id),
             ],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
             'cesta con señal' => [
-                4, $withCart, [], $this->cartApiPayload($this->fullCartItems()), $this->clientState(step: 4),
+                4, [], $this->cartApiPayload($this->fullCartItems()), $this->clientState(step: 4),
             ],
         ];
     }
@@ -1694,15 +1547,20 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>|null
      */
-    private function noticeProps(Testable $component): ?array
+    private function noticeProps(int $step): ?array
     {
-        if (! $component->instance()->showPausedNotice()) {
+        // ⚠️ Antes preguntaba `$component->instance()->showPausedNotice()`, o sea al motor retirado.
+        // Ahora la decisión la toma quien de verdad manda: el SERVIDOR, por `GET /booking/status`,
+        // que es exactamente lo que consulta el cajón. Y el paso lo declara el propio caso.
+        $status = $this->getJson('/api/v1/booking/status')->assertOk()->json();
+
+        if (($status['reservations_paused'] ?? false) !== true) {
             return null;
         }
 
         return $this->buildNoticeInNode([
-            'status' => $this->getJson('/api/v1/booking/status')->assertOk()->json(),
-            'step' => (int) $component->get('step'),
+            'status' => $status,
+            'step' => $step,
             'messages' => __('tickets'),
         ]);
     }
@@ -1943,16 +1801,23 @@ class SidebarDomContractTest extends TestCase
      * Para REGENERAR el manifiesto —tras un cambio de interfaz deliberado—:
      * `MANIFEST_REFRESH=1 php artisan test --filter=SidebarDomContractTest`
      */
-    private function assertTree(string $case, string $livewire, string $vue, string $message): void
+    private function assertTree(string $case, string $vue, string $message): void
     {
-        $this->assertSame($livewire, $vue, $message);
-
+        // ⚠️ **Desde 4.7·2b·3 el ancla es `$vue`; antes era `$livewire`** (`DECISIONES #111`). Al
+        // quedar UN solo motor desaparece el `assertSame($livewire, $vue)` que los comparaba, y el
+        // manifiesto congelado pasa a ser la ÚNICA referencia.
+        // Re-anclar no cambió ni un byte del JSON, y se comprobó antes de tocarlo: mientras los dos
+        // motores vivían, los 30 casos pasaban las DOS aserciones a la vez, luego `$manifest === $vue`.
+        // ⚠️ Lo que sí cambia es lo que significa: ya no se compara motor contra motor, se compara **el
+        // motor de hoy contra el árbol congelado el día que había dos**. Y `MANIFEST_REFRESH=1` ya no
+        // tiene un segundo motor que lo contradiga, así que aceptaría cualquier deriva: regenerarlo
+        // exige decir POR QUÉ en el commit.
         $manifest = $this->manifest();
         $key = $case.'#'.(count(array_filter(array_keys($this->seen), fn (string $k): bool => str_starts_with($k, $case.'#'))) + 1);
-        $this->seen[$key] = $livewire;
+        $this->seen[$key] = $vue;
 
         if (getenv('MANIFEST_REFRESH') === '1') {
-            $manifest[$key] = $livewire;
+            $manifest[$key] = $vue;
             ksort($manifest);
             file_put_contents(base_path(self::MANIFEST), json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
 
@@ -1966,12 +1831,12 @@ class SidebarDomContractTest extends TestCase
         );
 
         $this->assertSame(
-            $manifest[$key], $livewire,
+            $manifest[$key], $vue,
             "El árbol de «{$key}» ha CAMBIADO respecto al manifiesto congelado.\n".
             "⚠️ Eso es un cambio del CONTRATO VISUAL, no un detalle: 90 de los 292 selectores que\n".
             "estilan el cajón son estructurales. Si el cambio es deliberado, regenera el manifiesto\n".
             "(`MANIFEST_REFRESH=1`) y dilo en el commit; si no lo es, acabas de romper el estilo.\n\n".
-            $this->firstDivergence($manifest[$key], $livewire)
+            $this->firstDivergence($manifest[$key], $vue)
         );
     }
 
@@ -1994,19 +1859,6 @@ class SidebarDomContractTest extends TestCase
         }
 
         return json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-    }
-
-    private function livewireTreeForStep(int $step): string
-    {
-        $html = Livewire::test(Purchase::class)->set('step', $step)->html();
-
-        return $this->treeOf($html, 'catalog-acc');
-    }
-
-    /** Igual, pero para un componente ya colocado por el test en el paso que quiere comparar. */
-    private function livewireTree(Testable $component, string $anchor, bool $withSiblings = false): string
-    {
-        return $this->treeOf($component->html(), $anchor, $withSiblings);
     }
 
     /**

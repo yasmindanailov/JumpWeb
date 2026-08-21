@@ -45,4 +45,21 @@ class AccountContextTest extends TestCase
             ->assertSee('Ana')
             ->assertDontSee(__('account.sidecart.guest_hello'));
     }
+    /**
+     * ⚠️ **RESCATADO de `SidebarV2Test` al borrar el motor Livewire** (4.7·2b·3, `DECISIONES #111`).
+     * Ese fichero murió entero con el componente, pero este caso NO hablaba de él: es el ÚNICO sitio
+     * de la suite que asevera el tag del bloque de cuenta y el puente de la clase de modo del panel
+     * —`:class="'is-' + $store.purchase.mode"`—, que vive en `layout.blade.php` y SOBREVIVE al
+     * borrado. Dejarlo morir habría quitado dos guardas del layout sin que nada se pusiera rojo.
+     */
+    public function test_account_context_includes_the_minimised_tag(): void
+    {
+        // Invitado: la página de entradas renderiza el layout con el bloque de cuenta y su tag, y el
+        // panel enlaza su clase de modo a `$store.purchase.mode` (puente del sidebar v2).
+        $this->get(route('entradas'))
+            ->assertOk()
+            ->assertSee(__('account.sidecart.tag'))
+            ->assertSee("'is-' + \$store.purchase.mode", false);
+    }
+
 }
