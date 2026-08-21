@@ -4728,3 +4728,70 @@ que NO mira es un hueco con nombre». `#115`: «una comprobación que mide una c
 peor que no tenerla». Y ahora: **retirar una copia no vigila el original**. Las tres son la misma
 pregunta —¿quién comprueba esto, y cuándo se entera de que ha dejado de ser cierto?— y las tres se
 resuelven igual: dándole al dato un sitio donde se mida solo.
+
+## #117 · 2026-08-21 · A7 no estaba «roto a medias»: la costura de intención nunca se cableó
+Verificando A7 en staging con navegador headless —el andamio de `VERIFICACION-E2E-CAJON.md` §5.bis,
+que solo se había usado en local (`#59`)— salió algo que ni el gate ni yo habíamos visto.
+
+**(a) Lo medido, en vivo.** Tras pulsar «ver packs» en `/cumpleanos`, con el cajón ABIERTO, el
+catálogo CARGADO y 1,5 s de margen:
+
+    machine.takeIntent()  →  { "type": "packs" }     ← nadie la había consumido
+    machine.step          →  1                        ← catálogo raíz
+    Alpine store.intent   →  null                     ← Alpine SÍ la había entregado
+
+La cadena estaba entera hasta el penúltimo eslabón: `@click` → `openWith()` → `flushIntent()` →
+`applyIntent()` → `queueIntent()` → **nada**. `takeIntent()` —lo ÚNICO que consume la intención— no
+lo llamaba nadie en producción: solo `machine.test.js`. Los tres enlaces profundos abrían el catálogo
+raíz, y **no fallaban: no hacían nada**, que es literalmente el modo de fallo que la costura de 4.0a
+se creó para impedir.
+
+**(b) Por qué ningún test lo vio, que es lo que hay que llevarse.** `machine.test.js` prueba
+`queueIntent` y `takeIntent` **como par, en aislamiento**, y pasa. **Los dos extremos estaban
+probados y nadie cableaba el medio.** Un test unitario verde no dice absolutamente nada sobre si
+alguien llama a lo que prueba. Es primo del fallo de la banda de progreso en 4.3·1 —módulo verde,
+cableado roto, gate sin verlo— y de las tres guardas inertes de `#112`.
+
+**(c) Por qué `#111(h)` no lo cerró, sin reproche.** Diagnosticó bien —el adaptador de Livewire
+CONSUMÍA la intención y la despachaba a un componente que ya no se renderizaba— y concluyó «el
+borrado del adaptador es su arreglo». **Lo era, para la mitad de dejar de perderla.** La otra mitad
+—aplicarla— nunca se transcribió a la SPA, y como el síntoma era el mismo antes y después (el cajón
+abre en el catálogo raíz), nada distinguía «arreglado» de «arreglado a medias».
+
+**(d) ⚠️ Y por qué mi propia verificación previa tampoco lo vio.** Yo había medido el bundle
+desplegado —«refs a `Livewire` en `app.js`: 6 → 3»— y di el arreglo por bueno. El adaptador SÍ se
+había ido; eso era cierto y era irrelevante. **Es exactamente la clase de evidencia que ya falló en
+`#113`**: medir el artefacto en lugar del resultado. Un grep de un bundle no puede ver una función
+que nadie llama, igual que no podía ver un `<svg>` vacío.
+
+**(e) El arreglo, y su límite DECLARADO.** `intent.js`, módulo plano (`CE-6`, y además el techo de
+`Sidebar.vue` en `SidebarComponentBudgetTest` **solo encoge**): traduce la intención a un destino y lo
+aplica con el mundo inyectado —paso, ancla y desplazamiento—, así que se prueba entero sin DOM ni Vue.
+`index.js` lo cablea conservando el paso por la máquina —sigue siendo la dueña única de «hay una
+intención pendiente»— pero **drenándola acto seguido**.
+⚠️ **`{type:'zone'}` queda a medias, y se devuelve marcado `exact: false` en vez de fingir paridad**:
+el motor retirado hacía scroll a la ZONA concreta y la SPA no puede, porque `catalog.js::toItem()`
+**descarta el campo `zone`** que la API sí publica. Aterriza en la sección «Entradas», que es lo
+correcto hasta donde el modelo alcanza. Completarlo exige devolver la dimensión de zona al modelo del
+catálogo, y eso **toca el manifiesto de árbol CONGELADO**: es una decisión de producto, no un parche.
+
+**(f) Verificado tras desplegar, en el navegador y contra staging:**
+
+    packs  → { applied: true, anchor: "catalog-sec-services", exact: true }
+    pendiente tras aplicarla → null (CONSUMIDA)   ← el inverso exacto de (a)
+    zona   → { applied: false, reason: "anchor_missing", anchor: "catalog-sec-entries" }
+    basura → { applied: false, reason: "no_intent" }
+
+⚠️ **Y una limitación del ENTORNO que conviene saber**: staging tiene 4 productos, **todos `pack` y
+ninguno `entry`**, así que solo se pinta una sección y **la posición del scroll no puede distinguir el
+arreglo**. Por eso la verificación se hizo sobre el VALOR DEVUELTO por el cableado y no sobre la
+pantalla. Para ver el efecto visual hace falta un catálogo con las dos secciones.
+
+**(g) La guarda: `SidebarIntentWiringTest`.** Alguien de PRODUCCIÓN tiene que consumir la intención, y
+los `*.test.js` **no cuentan** — si contaran, el test pasaría en verde con el fallo intacto, que es
+justo lo que pasaba. Escrita ANTES del arreglo y vista en ROJO; verde después.
+
+**(h) La regla, que generaliza más allá de esto.** `#113` dejó «lo que un gate declara que NO mira es
+un hueco con nombre» y `#115` «una comprobación que mide una cosa y se lee como otra es peor que no
+tenerla». Esta añade la que faltaba: **probar los dos extremos de una costura no la cablea.** Cuando
+una pieza existe para que OTRA la llame, hay que vigilar la llamada, no la pieza.

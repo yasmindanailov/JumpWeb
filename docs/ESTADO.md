@@ -110,19 +110,36 @@ verde**, y verificado por fuera del script —bundle nuevo servido, API en 200, 
 todavía configurado y `Purchase.php` fuera del servidor—. 🟩 **El cajón SPA es ya el motor único
 también ALLÍ.**
 
-▶ **LO QUE QUEDA SON DOS COSAS, Y LAS DOS LAS TIENE QUE MIRAR EL OWNER EN UN NAVEGADOR.** Hasta que se
-hagan, `4.7` **no es ✅** (`CONVENCIONES §3.bis`). **El guion está escrito y listo en
-`VERIFICACION-E2E-CAJON.md` §5.quater** (V1 iconos · V2 enlaces profundos), con el «antes» medido a los
-dos lados para que se sepa qué se está mirando:
+▶ **VERIFICADAS EN NAVEGADOR el 2026-08-21** (headless, contra staging; guion y receta en
+`VERIFICACION-E2E-CAJON.md` §5.quater). Resultado sin adornos:
 
-| | Lo que se servía antes | Lo que se sirve ahora |
-|---|---|---|
-| Geometrías de iconos (`#113`) | **0** en 33 `<svg>` | **40** en 42 |
-| Refs a `Livewire` en `app.js` (`#111(h)`) | **6** | **3** |
+- ✅ **V1 · ICONOS: PASA.** 3 pantallas censadas, 16 `<svg>`, **0 vacíos, 0 sin geometría, 16
+  visibles**, y confirmado mirando la captura. (El embudo se cortó en «hora»: el pack elegido no tenía
+  horas ese día. Los pasos 4–6 quedan sin censar.)
+- ⚠️⚠️ **V2 · ENLACES PROFUNDOS: FALLÓ — y no era una regresión, es que NUNCA se cablearon**
+  (`DECISIONES #117`). `machine.takeIntent()` seguía devolviendo `{type:'packs'}` con el cajón ya
+  abierto: la costura llegaba a `queueIntent()` y moría ahí. `#111(h)` quitó el adaptador que se
+  COMÍA la intención; **aplicarla no se transcribió nunca a la SPA**.
+  ✅ **Arreglado y re-verificado el mismo día**: `intent.js` (módulo plano) + `SidebarIntentWiringTest`,
+  escrita en rojo antes del arreglo. En vivo: `{applied:true, anchor:'catalog-sec-services'}` y la
+  intención ya consumida.
+  ⚠️ **Queda abierta la mitad de ZONA**: `catalog.js::toItem()` descarta el campo `zone`, así que el
+  cajón aterriza en «Entradas» pero no en la zona pedida. Se devuelve `exact:false` en vez de fingir
+  paridad. Cerrarlo **toca el manifiesto de árbol CONGELADO** → es una decisión de producto.
 
-⚠️ **Las dos fallan de la misma forma —«no falla, no hace nada»— y por eso hay que saber qué esperar**:
-en V2 el cajón SÍ se abre; lo que estaba roto es **dónde**. Si abre en el catálogo raíz en vez de en la
-zona o en los packs, la regresión sigue viva.
+⚠️ **`4.7` sigue sin ser ✅**, y ahora por dos motivos: falta el ojo del owner (`CONVENCIONES §3.bis`,
+un headless mide pero no valida) y falta la mitad de zona.
+
+⚠️⚠️ **Y una limitación del ENTORNO que condiciona toda verificación futura allí**: staging tiene 4
+productos, **todos `pack`, ninguno `entry`**. El catálogo pinta **una sola sección**, así que ni el
+enlace de zona ni el efecto VISUAL del de packs se pueden ver. Además los CTA de `/` y `/servicios`
+viven dentro de un `@if` que el seed no cumple: **solo `/cumpleanos` tiene botón**. Para verificar los
+tres hace falta un catálogo más completo.
+
+⚠️ **La lección transversal, que ya es la cuarta de la misma familia**: **probar los dos extremos de
+una costura no la cablea.** `machine.test.js` prueba `queueIntent`/`takeIntent` como par y pasa; nadie
+llamaba a `takeIntent` en producción. Y mi propia verificación por bundle («refs a `Livewire` 6→3»)
+tampoco podía verlo: **medir el artefacto en vez del resultado**, que es lo que ya falló en `#113`.
 
 ❗❗ **BLOQUEO NUEVO Y SERIO, DEL OWNER: EL SCHEDULER NO CORRE EN STAGING** (`DECISIONES #115`). El
 crontab está instalado y correcto y `schedule:run` funciona a mano, pero **no hay demonio cron en el

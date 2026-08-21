@@ -355,6 +355,28 @@ visible no es ✅ hasta que el owner la valida**, así que `4.7` no cierra hasta
 ⚠️ **Hazlas en ventana de incógnito**: el cajón persiste la cesta y el estado, y una sesión sucia
 puede enseñarte un cajón que ya está en el paso 4 y hacerte creer que el enlace profundo funcionó.
 
+> ✅ **EJECUTADA el 2026-08-21 con navegador headless** (receta abajo). Resultado, sin adornos:
+> **V1 PASÓ · V2 FALLÓ y destapó que la funcionalidad nunca se había cableado** (`DECISIONES #117`),
+> se arregló y se re-verificó. Lo que sigue conserva el guion porque se repetirá en cada instalación.
+>
+> ⚠️ **Sigue pendiente el OJO DEL OWNER** (`CONVENCIONES §3.bis`): un navegador headless mide, no
+> valida. Lo que aporta es que ya no vas a *descubrir* nada, solo a confirmarlo.
+>
+> ⚠️⚠️ **Y una limitación del ENTORNO que hay que saber antes de repetirlo**: staging tiene 4
+> productos, **todos `pack` y ninguno `entry`**, así que el catálogo pinta **una sola sección**. Eso
+> deja **dos cosas sin poder verificarse allí**: el enlace profundo de ZONA (no hay sección
+> «Entradas» donde aterrizar) y el efecto VISUAL del de packs (desplazarse a la única sección es un
+> no-op). Se verificaron por el valor devuelto por el cableado, no por la pantalla.
+>
+> **El andamio, contra staging, es más simple que en local**: es una URL pública HTTPS, así que
+> **sobra el puente de puertos** de §5.bis. Dentro del contenedor (que ya trae las librerías de
+> Chromium — verificadas las seis):
+> `mkdir -p /home/sail/e2e && cd /home/sail/e2e && npm i playwright && npx playwright install chromium`.
+> ⚠️ **Fuera del árbol del proyecto a propósito, y no solo por peso**: `deploy.sh` no excluye una
+> carpeta nueva en la raíz, así que ahí dentro **se subiría a staging en el siguiente `rsync`**.
+> ⚠️ `networkidle` **no vale** en estas páginas (hay actividad continua): esperar por CONDICIÓN
+> —«el catálogo tiene contenido y no es el estado vacío»—, que es la trampa 7 de §5.bis.
+
 ### V1 · Los ICONOS (`DECISIONES #113`)
 Se servían los **20 vacíos**. Está medido a los dos lados, así que aquí solo falta el ojo:
 el bundle de antes tenía **0 geometrías** en 33 `<svg>`; el que se sirve ahora tiene **40** en 42, y
@@ -365,6 +387,12 @@ la diferencia son **7.441 bytes** — que cuadra con los 7,26 KiB que midió `#1
 3. Recorre día → hora → cantidad → complementos → carrito mirando los iconos de cada paso.
    ▶ Lo que buscas es un icono **en blanco**: el `<svg>` se pinta y ocupa su sitio, así que el
    síntoma no es un roto, es un **hueco** donde debería haber un dibujo.
+
+✅ **MEDIDO el 2026-08-21 · 3 pantallas (catálogo, fecha, hora) · 16 `<svg>` · 0 vacíos · 0 sin
+geometría · 16 visibles**, y confirmado además MIRANDO la captura: se ven el icono de la sección, el
+de cada pack, las flechas de fila, el de iniciar sesión y el pin. El embudo se cortó en «hora» porque
+el pack elegido no tenía horas seleccionables ese día — **no es un fallo, es el dato de staging**, y
+deja los pasos 4–6 sin censar.
 
 ### V2 · A7 · Los ENLACES PROFUNDOS (`DECISIONES #111(h)`)
 **No son URLs: son tres botones de la landing** que abren el cajón *pidiendo algo concreto*. El bug
@@ -382,6 +410,21 @@ Medido en el bundle: las referencias a `Livewire` en `app.js` pasaron de **6 a 3
 ▶ **El fallo se ve solo si sabes qué mirar**: el cajón SÍ se abre en los tres casos. Lo que estaba
 roto es **dónde** abre. Si aterrizas en el catálogo raíz en vez de en la zona o en los packs, la
 regresión sigue viva.
+
+⚠️⚠️ **RESULTADO 2026-08-21: FALLÓ, y por un motivo peor que una regresión** (`DECISIONES #117`).
+Medido en vivo: tras pulsar el CTA, con el cajón abierto y el catálogo cargado,
+`machine.takeIntent()` **seguía devolviendo `{type:'packs'}`** — nadie la había consumido. La costura
+llegaba hasta `queueIntent()` y ahí moría: `takeIntent()` no lo llamaba nadie en producción, solo
+`machine.test.js`. `#111(h)` quitó el adaptador que se COMÍA la intención, pero **aplicarla nunca se
+transcribió a la SPA**.
+✅ **Arreglado y re-verificado el mismo día** (`intent.js` + `SidebarIntentWiringTest`):
+`{applied:true, anchor:'catalog-sec-services'}` y la intención ya consumida.
+⚠️ **La mitad de ZONA sigue abierta**: `catalog.js::toItem()` descarta el campo `zone`, así que el
+cajón aterriza en «Entradas» pero **no en la zona pedida**. Se devuelve marcado `exact:false` en vez
+de fingir paridad; cerrarlo toca el manifiesto de árbol congelado y es una decisión, no un parche.
+⚠️ **Y el seed de staging no lo pinta**: en `/` y `/servicios` los CTA viven dentro de un `@if`
+(`isPurchasable`, «pack vendible + zona operativa») que los 4 packs del seed no cumplen, así que solo
+`/cumpleanos` tiene botón. Para probar los tres hace falta un catálogo más completo.
 
 ⚠️ **Y por eso este caso es el que enseña algo**: un camino que «no falla, no hace nada» es invisible
 para cualquier gate y para un ojo que no sepa qué esperaba. Es la misma forma de fallo que los iconos
