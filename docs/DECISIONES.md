@@ -4696,3 +4696,35 @@ lee como otra es peor que no tenerla**, porque regala confianza que no ha ganado
 ▶ **PENDIENTE DEL OWNER**: activar las tareas programadas del sitio en el panel de Enhance. Hasta
 entonces, en staging hay que disparar a mano lo que haga falta:
 `ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
+
+## #116 · 2026-08-21 · [DECIDIDO] El contador de la suite deja de ser una foto y pasa a tener receta
+`#112`/`6e6d56b` retiraron cifras que mentían con una regla explícita: **una foto sin receta que la
+vigile es drift en espera, así que se retira**. Se aplicó a las líneas de `Sidebar.vue` y, hoy, al
+duplicado del contador de tests en «Herencia» (decía **2715** con la suite en **2642**).
+
+**(a) Y aun así volvió a derivar DOS veces el mismo día**, lo cual es el dato que importa: una de
+ellas **en el commit que acababa de retirar el duplicado por haber derivado**, y otra al añadir tres
+casos nuevos. No es descuido de nadie. Es que retirar la copia arregla la duplicación, **no** el
+número: el original sigue sin vigilancia porque `docs-check` no lo mira —sus cuatro patrones son
+modelos, migraciones, invariantes y Resources, y «N tests» no casa con ninguno—.
+
+**(b) La decisión: darle la receta en vez de retirarlo también.** El contador tiene valor real —es la
+señal de «la suite no ha encogido sin que nadie lo note»— así que la salida no era borrarlo sino
+vigilarlo. Y el sitio natural es el `pre-push`, **porque ya tiene la cifra en la mano**: acaba de
+correr la suite. Comparar cuesta cero. Si la suite dice 2650 y `ESTADO.md` dice 2645, el push se corta
+con las dos cifras y la línea exacta a corregir.
+
+**(c) Fail-closed, y no por simetría.** Se comprueban CUATRO lecturas (tests y aserciones, medidos y
+declarados) y **si alguna sale vacía el gate corta**. Sin eso, un cambio de formato en la salida del
+runner o en `ESTADO.md` dejaría al gate comparando dos cadenas vacías —que son iguales, o sea VERDE,
+sin haber comprobado nada—. Es exactamente el modo de fallo de `#106`, donde una guarda comparaba
+contra basura y la bendecía.
+
+▶ Dos casos en `PrePushGateTest`, mutados los dos: neutralizar la comparación → rojo; sustituir la
+condición de fail-closed por `if false` → rojo.
+
+**(d) La regla generalizable, que es la tercera versión de la misma.** `#113`: «lo que un gate declara
+que NO mira es un hueco con nombre». `#115`: «una comprobación que mide una cosa y se lee como otra es
+peor que no tenerla». Y ahora: **retirar una copia no vigila el original**. Las tres son la misma
+pregunta —¿quién comprueba esto, y cuándo se entera de que ha dejado de ser cierto?— y las tres se
+resuelven igual: dándole al dato un sitio donde se mida solo.

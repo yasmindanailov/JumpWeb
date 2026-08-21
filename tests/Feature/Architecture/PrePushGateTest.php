@@ -142,6 +142,57 @@ class PrePushGateTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️ El contador de la suite que declara `ESTADO.md` es el único número «vivo» de la doc que
+     * **`docs-check` NO vigila**: sus cuatro patrones son modelos, migraciones, invariantes y
+     * Resources, y «N tests» no casa con ninguno.
+     *
+     * Y derivó, con una insistencia que da la medida del problema: el 2026-08-21 la doc decía
+     * **2715** con la suite en **2642**, se retiró el duplicado por eso mismo… y en esa MISMA sesión
+     * el número se quedó atrás **dos veces más**, una de ellas en el commit que acababa de corregirlo.
+     * No es descuido de nadie: es un número sin receta.
+     *
+     * El gate es el sitio natural para la receta porque **ya tiene la cifra en la mano** — acaba de
+     * correr la suite—, así que compararla no cuesta nada. `DECISIONES #116`.
+     */
+    public function test_the_gate_checks_the_suite_counter_declared_in_the_state_doc(): void
+    {
+        $hook = $this->hook();
+
+        $this->assertStringContainsString(
+            'MIENTE sobre el tamaño de la suite',
+            $hook,
+            'El gate ya no compara el contador de la suite con el que declara `docs/ESTADO.md`. '.
+            'Sin esa comparación el número vuelve a ser una foto sin receta, y ya demostró que '.
+            'deriva en cuestión de horas.',
+        );
+
+        $this->assertStringContainsString(
+            'Suite \*\*[0-9]+ en verde\*\*',
+            $hook,
+            'Falta la lectura del número declarado en `docs/ESTADO.md`. Si cambias el formato de '.
+            'esa línea, cambia también este patrón — o el gate dejará de leerla y no lo dirá.',
+        );
+    }
+
+    /**
+     * Si no se puede leer alguno de los cuatro números, el gate **corta**. Un contador que no se ha
+     * podido comprobar no es un contador comprobado — misma forma que la guarda de Redsys de `#106`,
+     * donde preguntar por lo que se teme en vez de exigir lo que se espera bendijo un `PARSE ERROR`.
+     */
+    public function test_the_counter_check_is_fail_closed(): void
+    {
+        $hook = $this->hook();
+
+        $this->assertStringContainsString(
+            '-z "$ran_tests" || -z "$ran_asserts" || -z "$doc_tests" || -z "$doc_asserts"',
+            $hook,
+            'La comprobación del contador tiene que cortar cuando alguna lectura sale VACÍA. Sin '.
+            'eso, un cambio de formato en la salida del runner o en `ESTADO.md` la deja comparando '.
+            'dos cadenas vacías — que son iguales, o sea VERDE, sin haber comprobado nada.',
+        );
+    }
+
     /** El gate solo aplica a `main`: las ramas `wip/…` pueden empujarse en rojo (`CONVENCIONES §8`). */
     public function test_the_gate_is_scoped_to_main(): void
     {

@@ -33,13 +33,15 @@ seguro**.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2645 en verde** (15.249 aserciones, `--parallel` ~44 s medidos el 2026-08-21) ·
+- Suite **2650 en verde** (15.262 aserciones, `--parallel` ~39 s medidos el 2026-08-21) ·
   **302 tests JS** (`node --test`) · Pint limpio (818 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
-  ⚠️ **Este es el ÚNICO sitio donde vive el contador** — «Herencia» dejó de repetirlo el 2026-08-21
-  porque `docs-check` NO lo vigila y ya había derivado (decía 2715 con la suite en 2642). Si lo mueves
-  o lo duplicas, vuelve a derivar.
+  ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
+  la suite con lo que declara esta línea y **corta si no cuadran** (`DECISIONES #116`). Antes no lo
+  vigilaba nadie —`docs-check` no lo mira— y derivó tres veces en un solo día.
+  ⚠️ **Sigue siendo el ÚNICO sitio donde vive**: si lo duplicas en otro documento, esa copia no la
+  guarda nadie.
   ⚠️ **Bajó de 2773 a 2642 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
   era la superficie retirada, y entraron 4 nuevos (el velo de carga y los tres de la paridad de
   iconos). Ninguno se borró sin localizar y EJECUTAR antes su sucesor (`#112(a)`). Los **+3** hasta

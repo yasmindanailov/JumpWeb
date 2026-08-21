@@ -122,6 +122,37 @@ echo '→ pre-push: tests JS (node --test)…'
 docker compose exec -u sail -T laravel.test npm run test:js
 
 echo '→ pre-push: suite completa (--parallel)…'
-docker compose exec -u sail -T laravel.test php artisan test --parallel
+suite_log="$(mktemp)"
+docker compose exec -u sail -T laravel.test php artisan test --parallel 2>&1 | tee "$suite_log"
+
+# ── El CONTADOR de la suite en ESTADO.md, que hasta hoy no vigilaba nadie ─────────────────────
+# ⚠️ `docs-check` NO lo comprueba: sus cuatro patrones son modelos, migraciones, invariantes y
+# Resources, y «N tests» no casa con ninguno. Por eso derivó — el 2026-08-21 la doc decía 2715
+# con la suite en 2642, y en esa MISMA sesión volvió a quedarse atrás dos veces más, una de ellas
+# en el commit que acababa de retirar el duplicado por haber derivado.
+# El gate ya tiene la cifra en la mano (acaba de correr la suite), así que compararla es gratis.
+# `DECISIONES #116`. Fail-closed: si no se puede leer alguno de los cuatro números, se corta.
+ran_tests=$(grep -a 'Tests:' "$suite_log" | grep -oE 'Tests:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
+ran_asserts=$(grep -a 'Assertions:' "$suite_log" | grep -oE 'Assertions:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
+doc_tests=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\*' docs/ESTADO.md | grep -oE '[0-9]+' | head -1 || true)
+doc_asserts=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\* \([0-9.]+ aserciones' docs/ESTADO.md | grep -oE '\([0-9.]+' | tr -d '(.' | head -1 || true)
+rm -f "$suite_log"
+
+if [[ -z "$ran_tests" || -z "$ran_asserts" || -z "$doc_tests" || -z "$doc_asserts" ]]; then
+    echo '✗ pre-push: no he podido leer el contador de la suite o el que declara `docs/ESTADO.md`.' >&2
+    echo '  Un número que no se ha podido comprobar NO es un número comprobado: gate cerrado.' >&2
+    echo "  suite=[${ran_tests:-?}/${ran_asserts:-?}]  doc=[${doc_tests:-?}/${doc_asserts:-?}]" >&2
+    exit 1
+fi
+
+if [[ "$ran_tests" != "$doc_tests" || "$ran_asserts" != "$doc_asserts" ]]; then
+    echo '✗ pre-push: `docs/ESTADO.md` MIENTE sobre el tamaño de la suite.' >&2
+    echo "    la suite acaba de dar:  ${ran_tests} tests · ${ran_asserts} aserciones" >&2
+    echo "    ESTADO.md declara:      ${doc_tests} tests · ${doc_asserts} aserciones" >&2
+    echo '  ▶ Corrige la línea «Suite **N en verde** (M aserciones…)» de `docs/ESTADO.md`.' >&2
+    echo '    Es la ÚNICA copia del número a propósito; no la dupliques en otro documento.' >&2
+    exit 1
+fi
+echo "→ pre-push: contador de ESTADO.md al día (${ran_tests} tests · ${ran_asserts} aserciones)."
 
 echo '✓ pre-push: verde. Empujando main.'
