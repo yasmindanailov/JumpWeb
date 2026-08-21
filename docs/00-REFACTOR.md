@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). Queda **4.7**, la retirada de `Purchase.php`, EN CURSO —hechos el manifiesto congelado (·1), el inventario (·2a), la corrección del contador (·2b·1) y **la migración (B)**, con la que el diff de árbol se alimenta del servidor (`#67`–`#73`); en curso el re-apunte (·2b·2), pendientes el borrado (·2b·3) y el flag (·3)— **4.4b·2, HECHO** el 2026-08-20 (`#108`: el cajón monta su propio widget de Turnstile y la delegación en el modal de la cabecera queda retirada). ⚠️ El flag sigue en `livewire`: **la paridad está cerrada, la sustitución no**
+### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. Queda de la fase el A7 (enlaces profundos) en navegador, que nadie ha visto funcionar
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -1501,61 +1501,36 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **LAS ENTRADAS DEL INVENTARIO ESTÁN CLASIFICADAS.** Es la condición terminal de `#86`:
         ·2b·3 puede borrar el componente y, con él, todas las que mueren.
 
-- [ ] **Paso 4.7·2b·3 — borrar el componente** (🟦 **EN CURSO, APARCADO en
-      `wip/4.7-2b-3-retirada-purchase`** desde el 2026-08-21, `DECISIONES #111`; ✅ desbloqueado el
-      2026-08-20 por `#110`: los cuatro caminos que `#100` exigía están verificados en staging con el motor
-      en `spa` — Turnstile dentro del cajón y su reset, el pago con notificación S2S, el 3DS con
-      challenge y el móvil real).
-      ⚠️ **Quedan sus DOS decisiones propias**, ya medidas: el destino de `SidebarEngineTest` —que NO
-      está en el inventario y cuyos dos casos comparan los DOS motores— y el del modo `embedded` de
-      auth. Ver el cuerpo de este ítem.
-      ⚠️⚠️ **Borrar NO es limpiar: es ACTIVAR.** `layout.blade.php` bifurca con `usesSpa()` y su propio
-      comentario dice que «el fallback no puede ser el motor en construcción». Al borrar el componente
-      desaparece esa rama y **el cajón SPA queda como único motor, sin vuelta atrás sin desplegar** —y
-      `ESTADO.md` declara que para activarlo faltan **Turnstile y los tres caminos de navegador**.
-      ⚠️ **El contador y esto son preguntas DISTINTAS**: aquél dice cuándo se puede borrar sin romper
-      la suite; no dice qué motor queda sirviendo después. Solo estaba escrita una.
-      ▶ **Orden decidido por el owner, y CUMPLIDO ENTERO**: (1) levantar staging — ✅ aprovisionado
-      (`#102`) y ✅ **desplegado** con `scripts/deploy.sh` (`#105`, `#106`); (2) flag en `spa` allí y
-      cerrar los cuatro caminos — ✅ **verificados por el owner el 2026-08-20** (`#110`); (3) **y
-      entonces** borrar, que es lo que queda. `#62` no se reabre: no era «dejarlo rodar», eran cuatro
-      verificaciones concretas y nombradas, y están hechas.
-      **Lo que se borra cuando toque**: `Purchase.php`,
-      `purchase.blade.php`, `purchase-placeholder.blade.php`, la línea de `layout.blade.php` y el puente
-      `$wire.step`↔store, **en el mismo commit** que los tests que mueren con él —para que el motor por
-      defecto no pase ni un día con menos red de la que tiene—.
-      ⚠️⚠️ **[DECIDIDO 2026-08-19] «La línea», en singular, NO basta — y el borrado por sí solo NO
-      activa la SPA.** Medido con el código delante: `usesSpa()` es `false` por DEFAULT y por FALLBACK
-      (`SidebarSettings::ENGINE_LIVEWIRE`), y el `<div class="sidecart__body">` está **fuera** del
-      condicional. Hay dos caminos y los dos tienen trampa:
-      · **Camino A — borrar solo la rama `@else` y dejar el `@if`**: con el motor por defecto el cajón
-        se abre **EN BLANCO**. La página no rompe, así que no hay error que mirar — y **la suite lo da
-        VERDE**: `SidebarEngineTest::test_with_the_default_engine_the_livewire_drawer_is_rendered` solo
-        asevera `assertSee('sidecart__body')`, que sigue emitiéndose. Es un verde falso de manual.
-      · **Camino B — colapsar el condicional y dejar la SPA incondicional**: entonces sí es cierto lo
-        que dice `#100`, pero se pone **ROJO** el caso hermano de ese mismo fichero
-        (`assertDontSee('id="sidecart-spa"')` bajo el motor por defecto).
-      ⚠️ **Y `SidebarEngineTest` NO está en el inventario** (las 19 entradas de `DEPENDENTS`): el
-      escáner no lo caza porque no nombra `Purchase::` ni la vista (`COUPLINGS`). **Consecuencia: la
-      promesa «inventario clasificado ⟹ borrar no rompe la suite» tiene un agujero medido de UN
-      fichero**, y hay que decidir el destino de sus dos casos ANTES de borrar, no al ver el rojo.
-      ▶ **Lo que de verdad activa el motor es `4.7·3` (retirar el flag), no este paso.** Son dos
-      trabajos y estaban contados como uno.
-      ⚠️ **La condición de «curtirlo en producción» se RETIRÓ el 2026-08-15 por vacía** (`DECISIONES
-      #62`): no hay instalación viva ni canal de despliegue, así que no hay tráfico que esperar. Lo que
-      de verdad ordena este tramo es el CONTADOR de `PurchaseRetirementTest`: reclasificar hasta 0 y
-      borrar entonces, no antes.
-      · **Medido en ·b1**: fuera de `tests/`, el único acoplamiento EJECUTABLE al componente es
-        `resources/views/components/layout.blade.php` (`<livewire:tickets.purchase lazy />`). Todo lo
-        demás que lo nombra en `app/` son docblocks que cuentan de dónde salió una regla.
-      · ⚠️ **Y arrastra más de lo que su nombre dice, también medido en ·b1**: `purchase.blade.php` es
-        el ÚNICO sitio que monta `<livewire:auth.login|register :embedded="true">`, así que el **modo
-        `embedded` de los dos componentes de auth se queda sin usuario** — y con él el evento
-        `purchase:switch-to-login` (`Register::requestSwitchToLogin` → `Purchase::onSwitchToLoginTab`),
-        cuyo disparador ya hoy es inalcanzable: el escape vive en la pantalla `sent` del Register y el
-        paso 5 deja de renderizarse en cuanto `registration-submitted` salta al 7. Decidir si el modo
-        `embedded` se retira aquí o se deja para Fase 5 es parte de este tramo, no un descubrimiento
-        para el final.
+- [x] **Paso 4.7·2b·3 — borrar el componente** (✅ **HECHO** el 2026-08-21, `DECISIONES #111` y
+      **`#112`**; desbloqueado el 2026-08-20 por `#110`, que cerró los cuatro caminos de navegador que
+      `#100` exigía). **Arrastra `4.7·3`**: el flag se fue en el mismo movimiento, porque dejarlo sin
+      su segunda rama no tenía sujeto.
+      **Borrado**: `Purchase.php` (1.904 líneas), `purchase.blade.php` (713),
+      `purchase-placeholder.blade.php`, `SidebarSettings.php` y la bifurcación de `layout.blade.php`.
+      **El cajón SPA queda como motor ÚNICO.**
+      ▶ **Sus dos decisiones propias, resueltas**: `SidebarEngineTest` → renombrado a
+      **`SidebarMountTest`** (mueren los tres casos del flag y el que comparaba motores; quedan seis
+      sobre lo que el SERVIDOR le pone al cajón) · el modo **`embedded` NO se retira**: en producción
+      no lo monta nadie, pero es la REFERENCIA viva de `SidebarLoginParityTest` y
+      `SidebarRegisterParityTest`. Lo que sí se retiró es `Register::requestSwitchToLogin()`, que se
+      quedaba sin oyente **y ya era inalcanzable antes** (`#112(f)`).
+      ⚠️⚠️ **Lo que hay que llevarse de este paso NO es el borrado, son las TRES guardas que estaban
+      en verde sin medir nada** —y ninguna se habría visto sin mutar (`#112`)—:
+      · `assertSee('livewire.js')`, que `ESTADO` daba por la guarda crítica, era **inerte**: dos
+        fuentes redundantes (la directiva y la auto-inyección de Livewire). Trampa 4 de `§3.quater`.
+      · **dos tests de SEGURIDAD** de la vuelta de Redsys quedaron inertes por el propio borrado: el
+        layout consume la sesión al pintar, así que su `assertNull(session(...))` es cierto pase lo
+        que pase. Medido desactivando la comprobación de titularidad: seguían verdes.
+      · y el efecto sistémico: **`assertSee(__('tickets.*'))` contra página completa es VERDE FALSO**,
+        porque el montaje incondicional lleva el grupo `tickets` entero en cada página. 13 claves
+        vacuas en 5 ficheros, convertidas a `assertSeeText`/`assertDontSeeText`.
+      ⚠️ **Y los contadores se MIDEN, no se ajustan**: los seis de `ModuleContractsTest` se pusieron a
+      `999` para leer el valor real en el fallo.
+      · **Medido en ·b1 y confirmado ahora**: fuera de `tests/`, el único acoplamiento EJECUTABLE al
+        componente era `layout.blade.php`. El resto que lo nombra en `app/` son docblocks de
+        procedencia; se corrigieron **solo los que hablaban de él en PRESENTE**, y uno resultó falso
+        de antes (`OrderCreator` citaba un `#[Locked]` que nunca se aplicó, `#112(g)`).
+      ⚠️ **Deuda NUEVA que destapó**: el cajón se abre **sin feedback de carga** (`#112(h)`).
 - [x] **Paso 4.7·2b·3·0 — independizar el contrato de árbol ANTES de borrar** (2026-08-21,
       `DECISIONES #111`). Cuatro entregas verdes sobre `main`.
       ⚠️ **El orden es contraintuitivo y es lo que hay que llevarse de aquí**: `SidebarDomContractTest`
@@ -1570,14 +1545,13 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         aparecen mutando una a una** (el día del calendario y los topes del selector SÍ son contrato).
       · Y **cuatro nombres de campo estaban supuestos mal**: `online_amount_cents < total_cents`,
         `guest_form_pending`, `pending_at_gate_cents`, `reservations_paused`.
-- [ ] **Paso 4.7·3 — retirar el flag** (pendiente): `SidebarSettings`, el ajuste y su fijación en el fixture.
-      ⚠️ **[DECIDIDO 2026-08-19] Este es el paso que ACTIVA el motor SPA, no `·2b·3`.** Mientras el
-      default y el fallback de `SidebarSettings::engine()` sean `livewire`, borrar el componente deja
-      el cajón vacío (camino A de `·2b·3`) o rompe `SidebarEngineTest` (camino B). Retirar el flag es
-      lo que hace que el SPA sea el único motor **y sin vuelta atrás sin desplegar**, así que hereda
-      entera la condición de `#100`: **no se toca hasta que Turnstile y los tres caminos de navegador
-      estén verificados en staging**. Arrastra además los dos casos de `SidebarEngineTest`, que dejan
-      de tener sujeto cuando no hay dos motores que comparar.
+- [x] **Paso 4.7·3 — retirar el flag** (✅ **HECHO** el 2026-08-21, dentro de `·2b·3`): `SidebarSettings`,
+      el ajuste y su fijación en el fixture, fuera.
+      ⚠️ **[DECIDIDO 2026-08-19] Este era el paso que ACTIVA el motor SPA, no `·2b·3`** — y por eso
+      acabaron siendo el mismo commit: con el default y el fallback en `livewire`, borrar el componente
+      dejaba el cajón vacío (camino A) o rompía el caso hermano (camino B), así que separarlos habría
+      significado dejar `main` roto entre los dos. Heredaba entera la condición de `#100`, cumplida el
+      2026-08-20 (`#110`). Los dos casos de `SidebarEngineTest` que comparaban motores se fueron con él.
 - [x] **SPA embebida (Vue 3 + Pinia) para el cajón completo** — HECHO: los ONCE pasos (fecha/hora,
       cesta, login/registro, pago, vuelta y reintento) con Vue 3.5 y Pinia 3.0, y verificado de punta a
       punta con navegador y la pasarela REAL (`#59`). **Primer consumidor real de la API v1**, cumplido.
