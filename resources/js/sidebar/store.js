@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { createMachine, STEPS } from './machine.js';
+import { isIdentifying, modeOf, STEPS } from './machine.js';
 
 /**
  * El store del flujo de compra (Fase 4 · paso 4.1).
@@ -24,11 +24,27 @@ export const usePurchaseStore = defineStore('purchase', {
     }),
 
     getters: {
-        /** El «modo» que el layout pinta como `is-{modo}` en el panel del cajón. */
-        mode: (state) => state.machine?.mode ?? 'catalog',
+        /**
+         * Las dos señales que el cajón PUBLICA hacia fuera, derivadas del paso.
+         *
+         * ⚠️⚠️ **Se derivan de `state.step`, NO de `state.machine`, y no es estilo: es lo único que
+         * funciona.** Hasta el 2026-08-22 esto era `state.machine?.mode`, y estaba **muerto**
+         * (`DECISIONES #118`). Un getter de Pinia es un `computed`: solo se recalcula cuando cambia
+         * algo REACTIVO que haya leído. `state.machine` es un objeto plano cuya identidad nunca
+         * cambia, y su `get mode()` devuelve `modeOf(current)` sobre una variable de CLOSURE que Vue
+         * no puede ver. Resultado: el valor se cacheaba en el primer render y no se invalidaba jamás.
+         *
+         * Medido en navegador: en el paso 5, `machine.mode` decía `cart` y `machine.identifying`
+         * decía `true`, mientras el store seguía publicando `catalog` y `false`.
+         *
+         * `state.step` sí es estado reactivo de Pinia —lo copian `boot()`, `go()` y `enter()`—, y
+         * `modeOf`/`isIdentifying` son las MISMAS funciones puras que usa la máquina, así que no hay
+         * segunda fuente de verdad: solo se lee el dato por el lado que Vue puede observar.
+         */
+        mode: (state) => modeOf(state.step),
 
         /** `true` en el paso de identificación: bloquea los botones de login de FUERA del cajón. */
-        identifying: (state) => state.machine?.identifying ?? false,
+        identifying: (state) => isIdentifying(state.step),
     },
 
     actions: {

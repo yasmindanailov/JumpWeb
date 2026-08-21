@@ -13,6 +13,12 @@
       formulario de reserva pendiente (#217) + «Cerrar sesión» (principal) + «Mis reservas» (contorno).
 --}}
 <div class="acct @guest acct--guest @endguest">
+    {{-- ⚠️ Envoltorio INTERNO, y no es decorativo: el bloque se colapsa con la técnica grid
+         `1fr → 0fr` (la misma que `.catalog-acc__body`), que anima la altura REAL sin tener que
+         medirla. Esa técnica exige que el contenido cuelgue de un hijo con `overflow: hidden` y
+         `min-height: 0`. El root `.acct` no puede serlo: Livewire exige UN SOLO root y ahí viven el
+         fondo, el padding y el borde que también se colapsan. --}}
+    <div class="acct__inner">
     @auth
         @php($acct = app(\App\Domain\Identity\Services\CustomerAccountContext::class)->for(auth()->user()))
         @php($initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($acct['firstName'], 0, 1)))
@@ -87,4 +93,5 @@
             </button>
         </div>
     @endauth
+    </div>
 </div>

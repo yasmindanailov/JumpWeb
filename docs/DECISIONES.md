@@ -4795,3 +4795,70 @@ justo lo que pasaba. Escrita ANTES del arreglo y vista en ROJO; verde después.
 un hueco con nombre» y `#115` «una comprobación que mide una cosa y se lee como otra es peor que no
 tenerla». Esta añade la que faltaba: **probar los dos extremos de una costura no la cablea.** Cuando
 una pieza existe para que OTRA la llame, hay que vigilar la llamada, no la pieza.
+
+## #118 · 2026-08-22 · El bloque de cuenta se OCULTA en la compra — y al implementarlo salió que el «modo» del panel llevaba muerto
+Petición del owner: el saludo «Hola, saltador/a · Inicia sesión y guarda tus reservas» **solo genera
+ruido dentro del embudo**; que se oculte con una animación al entrar en la compra y vuelva al
+terminar.
+
+**(a) Lo que había, medido antes de tocar.** El panel ya publicaba una clase de modo
+(`is-catalog`/`is-booking`/`is-cart`/`is-result`) y el CSS «minimizaba» la cuenta — **pero solo en
+`booking`**. O sea que el bloque **reaparecía ENTERO** justo en carrito, identificación y pago, que es
+donde más estorba; y en identificación enseñaba sus dos botones **deshabilitados**
+(`$store.purchase.identifying` los bloquea porque el flujo ya pide identificarse abajo): ruido con
+botones muertos.
+
+**(b) La implementación.** Se oculta en `booking` (día, hora) y `cart` (carrito, identificación,
+pago); sigue visible en `catalog` —aún no ha entrado, y ahí el CTA sí sirve— y en `result` —ya
+terminó, que es literalmente el «hasta finalizar» que se pidió—.
+- **Se colapsa con `grid-template-rows: 1fr → 0fr`**, el idioma que este repo ya usa en
+  `.catalog-acc__body`, y no con `max-height`: un techo mayor que la altura real deja dos tercios de
+  la animación sin que se mueva nada y luego da un tirón. Exige un hijo que recorte, de ahí
+  `.acct__inner` — el root no puede serlo porque ahí viven el fondo, el padding y el borde que también
+  se colapsan, y Livewire exige un único root.
+- ⚠️ **`visibility: hidden`, y no es adorno: el panel tiene TRAMPA DE FOCO** (`a11yPanel`). Colapsar
+  solo con la rejilla y la opacidad dejaría dos botones invisibles pero TABULABLES dentro de la
+  trampa. Verificado pulsando Tab de verdad en un navegador: con el bloque oculto, **25 tabulaciones
+  y ninguna aterriza dentro**; en catálogo sí es alcanzable.
+
+**(c) ⚠️⚠️ Y entonces salió lo gordo: el «modo» del panel NO CAMBIABA.** Al verificarlo en navegador,
+el panel seguía en `is-catalog` en los pasos 2, 3, 4 y 5. Aislado paso a paso:
+
+    paso 5 →  machine.mode = "cart"   ·  store.mode = "catalog"
+              machine.identifying = true ·  store.identifying = false
+
+La máquina estaba PERFECTA; el store de Pinia publicaba valores rancios. **Causa**: los getters eran
+`state.machine?.mode` / `state.machine?.identifying`. Un getter de Pinia es un `computed` y solo se
+recalcula cuando cambia algo REACTIVO que haya leído; `state.machine` es un objeto plano cuya
+identidad nunca cambia, y su `get mode()` devuelve `modeOf(current)` sobre una variable de **closure**
+que Vue no puede observar. El valor se cacheaba en el primer render y no se invalidaba jamás.
+
+▶ Son **exactamente las dos regresiones silenciosas** que los comentarios de `app.js` y `machine.js`
+avisaban por escrito («un motor que no publique estas dos señales deja el panel en `is-catalog` para
+siempre y los botones de invitado activos durante la identificación»). Estaban avisadas, escritas… y
+vivas. La segunda es de verdad seria: en la identificación los botones del bloque de cuenta seguían
+ACTIVOS, y **pulsarlos CIERRA el cajón** y abre el modal de login en mitad del checkout.
+
+**(d) El arreglo**: derivar de `state.step` —que sí es estado reactivo de Pinia— con `modeOf()` e
+`isIdentifying()`, las MISMAS funciones puras que usa la máquina. No hay segunda fuente de verdad: se
+lee el mismo dato por el lado que Vue puede observar.
+
+**(e) ⚠️ Por qué el test que ya existía no lo cazó, que es la lección.** `store.test.js` **ya**
+comprobaba `store.mode` tras un `enter()` y pasaba **con la señal muerta**: un `computed` que nunca se
+ha evaluado no puede estar rancio, así que leerlo UNA sola vez, después del cambio, siempre da el
+valor bueno. En el navegador se lee en cada render, se cachea en el primer pintado y ahí se queda.
+▶ **Un test de una señal derivada tiene que ejercitar la INVALIDACIÓN, no el valor**: leer ANTES y
+DESPUÉS de la transición. El caso nuevo lo hace, y con la primera lectura comentada como lo que es —la
+que crea la caché—. Mutado devolviendo los getters a la forma antigua: rojo.
+
+**(f) Y una tercera del mismo árbol.** `#117` dejó «probar los dos extremos de una costura no la
+cablea». Esta añade el matiz: **aquí la costura SÍ estaba cableada** —el `watch` existía, el getter
+existía, la clase se pintaba— y aun así no funcionaba, porque el cable pasaba por un punto que el
+framework no puede observar. No basta con que las piezas se llamen: hay que comprobar que el valor
+LLEGA, y eso solo se ve ejecutando.
+
+**(g) De paso, `DECISIONES #42` queda completo.** Su plan decía «en `transition` no se tokeniza la
+declaración, pero sí la duración y las 2-3 curvas», y esa mitad seguía pendiente. Nacen
+`--dur-collapse`, `--dur-fade`, `--ease-panel` y `--ease-bounce`, y las **22** apariciones de las dos
+curvas del cajón pasan a token (mismo valor exacto → riesgo visual cero). El suelo de
+`SidebarTokenBudgetTest` sube de 71 a **72**, que es lo que su propio mensaje pide al subir el ratio.

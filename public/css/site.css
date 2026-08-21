@@ -47,6 +47,18 @@
     --warn-hover: #92400e;
     --refund: #8a5a16;      /* reembolso: texto/importe devuelto */
     --refund-bg: #fdf1d8;
+
+    /* ── MOVIMIENTO (2026-08-22) ────────────────────────────────────────────────────────────────
+       `DECISIONES #42` midió las 28 `transition` del cajón y decidió: **la declaración NO se
+       tokeniza —casi todas son únicas— pero la DURACIÓN y las dos o tres CURVAS sí**. Esa mitad
+       quedó pendiente y se estrena aquí, con los valores que el cajón ya repetía a mano.
+       Es lo que permite que una instalación retemple el movimiento sin reescribir reglas — y sin
+       ese punto de control, cada `transition` nueva es un literal que el cliente ya no puede tocar
+       (que es justo lo que mide `SidebarTokenBudgetTest`). */
+    --dur-collapse: 0.35s;
+    --dur-fade: 0.22s;
+    --ease-panel: cubic-bezier(0.2, 0.8, 0.2, 1);   /* paneles y colapsos: entra rápido, frena */
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* CTA y chevrons: sobrepasa y vuelve */
 }
 
 /* ====================================================================
@@ -400,10 +412,10 @@
   font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
   background: transparent; color: var(--fg); border: 1px solid var(--line-strong);
   transition:
-    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.32s var(--ease-bounce),
     background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
 }
-.svc-cta svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.svc-cta svg { transition: transform 0.3s var(--ease-bounce); }
 .svc-cta:hover svg { transform: translateX(4px); }
 .svc-cta--info:hover {
   transform: translateY(-3px) scale(1.02);
@@ -1075,7 +1087,7 @@ body.no-scroll { overflow: hidden; }
 .sidecart.is-open { visibility: visible; }
 .sidecart__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--fg) 50%, transparent); opacity: 0; transition: opacity 0.3s ease; }
 .sidecart.is-open .sidecart__backdrop { opacity: 1; }
-.sidecart__panel { position: absolute; top: 0; right: 0; height: 100%; width: min(440px, 100%); display: flex; flex-direction: column; background: var(--bg); box-shadow: -20px 0 60px -20px color-mix(in srgb, var(--fg) 40%, transparent); transform: translateX(100%); transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.sidecart__panel { position: absolute; top: 0; right: 0; height: 100%; width: min(440px, 100%); display: flex; flex-direction: column; background: var(--bg); box-shadow: -20px 0 60px -20px color-mix(in srgb, var(--fg) 40%, transparent); transform: translateX(100%); transition: transform 0.32s var(--ease-panel); }
 .sidecart.is-open .sidecart__panel { transform: translateX(0); }
 .sidecart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-16) var(--sp-20); border-bottom: 1px solid var(--line); }
 .sidecart__title { font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-18); color: var(--fg); }
@@ -1137,28 +1149,78 @@ body.no-scroll { overflow: hidden; }
    (ver purchase.blade.php / layout.blade.php).
    ==================================================================== */
 
-/* (1) «Mi cuenta» se minimiza SOLO al entrar en el flujo de compra (modo booking, pasos 2-3). En
-   catálogo, carrito y confirmación se mantiene completa. Conserva su borde inferior para que haya
-   una línea separadora entre la cuenta y la banda del stepper (igual que el mockup). */
-.acct { transition: padding 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.acct__avatar { transition: width 0.35s ease, height 0.35s ease, font-size 0.35s ease, border-radius 0.35s ease; }
+/* (1) «Mi cuenta» se OCULTA durante el proceso de compra y VUELVE al terminar (2026-08-22, decisión
+   del owner: dentro del embudo solo genera ruido).
+
+   Sustituye a la conducta anterior —«se MINIMIZA, y solo en modo booking»—, que dejaba dos efectos
+   que nadie quería: reaparecía ENTERA justo en carrito, identificación y pago, que es donde más
+   estorba; y en el paso de identificación enseñaba sus dos botones DESHABILITADOS (el flujo ya pide
+   identificarse abajo, así que `$store.purchase.identifying` los bloquea) — o sea ruido con botones
+   muertos.
+
+   ▶ Qué modos ocultan: `booking` (día · hora) y `cart` (carrito · identificación · pago).
+     Siguen visibles `catalog` —aún no ha entrado en el proceso, y ahí el CTA de sesión SÍ sirve— y
+     `result` —ya terminó: reserva creada, denegada o verificando—.
+     ⚠️ El mapa paso→modo vive en `machine.js::modeOf()` y está bajo PARIDAD con el servidor
+     (`SidebarProgressParityTest`): desde el CSS no se toca, solo se reacciona a la clase.
+
+   ⚠️ **`visibility` NO es adorno, es accesibilidad.** El panel tiene trampa de foco (`a11yPanel`,
+   `app.js`), así que colapsar solo con `max-height`/`opacity` dejaría dos botones invisibles pero
+   TABULABLES dentro de la trampa, y anunciados por el lector de pantalla. `visibility: hidden` los
+   saca de las dos cosas de forma nativa. Se RETRASA el tiempo de la animación al ocultar (para que
+   el colapso se vea) y va a 0 s al mostrar (para que aparezca desde el primer fotograma).
+
+   ⚠️ **Se colapsa con la técnica grid `1fr → 0fr`, no con `max-height`**, y es el idioma que este
+   repo ya usa en `.catalog-acc__body`. El motivo es de calidad, no de gusto: `max-height` obliga a
+   inventar un techo mayor que la altura real, así que dos tercios de la animación transcurren SIN
+   que se mueva nada y el resto da un tirón. `1fr → 0fr` anima la altura REAL sin medirla. Exige que
+   el contenido cuelgue de un hijo con `overflow: hidden` y `min-height: 0` — de ahí `.acct__inner`,
+   que no es decorativo: el root `.acct` no puede serlo porque ahí viven el fondo, el padding y el
+   borde que también se colapsan (y Livewire exige un único root). */
+.acct {
+    display: grid;
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    transition: grid-template-rows var(--dur-collapse) var(--ease-panel),
+                padding var(--dur-collapse) var(--ease-panel),
+                border-bottom-width var(--dur-collapse) var(--ease-panel),
+                opacity var(--dur-fade) ease,
+                visibility 0s;
+}
+.sidecart__panel.is-booking .acct,
+.sidecart__panel.is-cart .acct {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows var(--dur-collapse) var(--ease-panel),
+                padding var(--dur-collapse) var(--ease-panel),
+                border-bottom-width var(--dur-collapse) var(--ease-panel),
+                opacity var(--dur-fade) ease,
+                /* el retardo IGUALA a la duración del colapso: se va del foco justo al terminar */
+                visibility 0s var(--dur-collapse);
+}
+/* La preferencia del sistema manda: se oculta igual, pero sin recorrido. */
+@media (prefers-reduced-motion: reduce) {
+    .acct,
+    .sidecart__panel.is-booking .acct,
+    .sidecart__panel.is-cart .acct { transition: none; }
+}
+/* `.acct__tag` era la etiqueta que SOLO se veía con la cuenta minimizada. Sin ese estado ya no tiene
+   dónde mostrarse, y se queda oculta. El `<span>` se conserva a propósito: `AccountContextTest`
+   comprueba que su texto viaja en el HTML, y retirarlo es una limpieza aparte (marcado Livewire +
+   clave de idioma en tres idiomas). Con él se fue la transición de `.acct__avatar`, que solo servía
+   para animar el encogido del avatar al minimizarse. */
 .acct__tag { display: none; font-size: 12.5px; font-weight: 600; color: var(--fg-mute); }
-.sidecart__panel.is-booking .acct { padding-top: var(--sp-12); padding-bottom: var(--sp-12); }
-/* `.acct__txt` pasa a bloque para que saludo + tag fluyan en una sola línea. */
-.sidecart__panel.is-booking .acct__txt { display: block; }
-.sidecart__panel.is-booking .acct__sub,
-.sidecart__panel.is-booking .acct__cta,
-.sidecart__panel.is-booking .acct__alert { display: none; }
-.sidecart__panel.is-booking .acct__hello { display: inline; }
-.sidecart__panel.is-booking .acct__tag { display: inline; }
-.sidecart__panel.is-booking .acct__tag::before { content: "·"; margin: 0 6px; color: var(--line-strong); }
-.sidecart__panel.is-booking .acct__avatar { width: 38px; height: 38px; font-size: var(--fs-16); border-radius: 11px; }
 
 /* (2) Stepper detallado — banda STICKY (flex-shrink:0, fuera del scroll) pegada bajo «Mi cuenta»,
    con fondo `--bg-soft` (igual que la cuenta → bloque cohesivo, distinto del contenido `--bg`) y un
    borde inferior de 1px que la separa del contenido scrollable. */
 @keyframes bk-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.bk-progress { flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.bk-progress { flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade 0.35s var(--ease-panel); }
 .bk-progress__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
 .bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--zone-1); transition: gap 0.2s ease; }
 .bk-back svg { width: 15px; height: 15px; }
@@ -1171,7 +1233,7 @@ body.no-scroll { overflow: hidden; }
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 .bk-seg__bar { height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative; }
-.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--zone-1); transform: scaleX(0); transform-origin: left; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--zone-1); transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease-panel); }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
 .bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--zone-1) 30%, transparent); }
@@ -1214,16 +1276,16 @@ body.no-scroll { overflow: hidden; }
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: 14px; }
-.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, color 0.2s ease, box-shadow 0.25s ease; }
+.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform 0.25s var(--ease-bounce), background 0.2s ease, color 0.2s ease, box-shadow 0.25s ease; }
 .bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--fg) 40%, transparent); }
-.bk-cta svg { width: 17px; height: 17px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.bk-cta svg { width: 17px; height: 17px; transition: transform 0.3s var(--ease-bounce); }
 .bk-cta:hover svg { transform: translateX(4px); }
 .bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* (3.bis) Barra-carrito del catálogo (estilo mockup `.cart`): un único botón con badge de cantidad
    + (artículos / total) + «Ir al carrito». Clase propia (`.cartbar`) para no colisionar con `.cart`
    (lista de líneas del carrito). */
-.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--fg); color: var(--bg); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, color 0.2s ease; }
+.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--fg); color: var(--bg); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform 0.25s var(--ease-bounce), background 0.2s ease, color 0.2s ease; }
 .cartbar:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); }
 .cartbar:hover .cartbar__count { background: var(--fg); color: var(--zone-1); }
 .cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: 10px; background: var(--zone-1); color: var(--on-brand); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background 0.2s ease, color 0.2s ease; }
@@ -1231,7 +1293,7 @@ body.no-scroll { overflow: hidden; }
 .cartbar__label { font-size: var(--fs-11); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
 .cartbar__total { font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-18); letter-spacing: -0.01em; }
 .cartbar__go { display: inline-flex; align-items: center; gap: var(--sp-7); font-size: var(--fs-13); font-weight: var(--fw-semibold); white-space: nowrap; }
-.cartbar__go svg { width: 16px; height: 16px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.cartbar__go svg { width: 16px; height: 16px; transition: transform 0.3s var(--ease-bounce); }
 .cartbar:hover .cartbar__go svg { transform: translateX(4px); }
 
 /* Respeto de `prefers-reduced-motion`: sin animaciones/transiciones decorativas. */
@@ -1460,11 +1522,11 @@ body.no-scroll { overflow: hidden; }
 .catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--zone-1); }
 .catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-15); letter-spacing: -0.01em; color: var(--fg); }
 .catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-bold); color: var(--fg-mute); }
-.catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform 0.3s var(--ease-panel); }
 .catalog-acc__chev.is-open { transform: rotate(180deg); }
 
 /* Cuerpo colapsable: técnica grid 0fr→1fr (sin medir alturas, anima suave). */
-.catalog-acc__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.catalog-acc__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.32s var(--ease-panel); }
 .catalog-acc__body.is-open { grid-template-rows: 1fr; }
 .catalog-acc__body-inner { overflow: hidden; min-height: 0; }
 .catalog-acc__body .catalog { padding: var(--sp-2) 0 var(--sp-14); margin-bottom: 0; }
@@ -1760,7 +1822,7 @@ body.no-scroll { overflow: hidden; }
 .cta-prime:focus-visible .ic-e2 svg .tk-back,
 .cta-med:hover .ic-e2 svg .tk-back,
 .cta-med:focus-visible .ic-e2 svg .tk-back {
-    animation: e2-fan 1.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: e2-fan 1.3s var(--ease-bounce);
 }
 @keyframes e2-fan {
     0%   { transform: rotate(0deg); }
@@ -1783,7 +1845,7 @@ body.no-scroll { overflow: hidden; }
 /* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
    de la cabecera del acordeón (no en bucle); reduced-motion la deja en reposo. */
 .catalog-acc__head:hover .ic-e5 svg .t-deal {
-    animation: e5-deal 1.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: e5-deal 1.4s var(--ease-bounce);
 }
 @keyframes e5-deal {
     0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -1816,7 +1878,7 @@ body.no-scroll { overflow: hidden; }
 .ic-s1 svg .grip {
     fill: var(--zone-1); stroke: none;
     transform-origin: 50% 50%; transform-box: fill-box;
-    animation: s1-grip 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+    animation: s1-grip 1.8s var(--ease-bounce) infinite;
 }
 .ic-s1 svg .g2 { animation-delay: 0.12s; }
 .ic-s1 svg .g3 { animation-delay: 0.24s; }
@@ -2489,8 +2551,10 @@ body[data-has-hero] .nav-cta-med.is-revealed {
        bloque de cuenta es `--bg` sobre un panel `--bg-card`); aquí el panel ya es `--bg`, así que el
        bloque usa el tono más marcado `--bg-soft` para conservar ese contraste. */
     padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--bg-soft);
-    display: flex; flex-direction: column; gap: 13px;
 }
+/* La columna vive en el envoltorio, no en el root: el root es hoy una rejilla de UNA fila que se
+   colapsa a `0fr` durante el proceso de compra (ver el bloque «(1) Mi cuenta» de más arriba). */
+.acct__inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 13px; }
 .acct__row { display: flex; align-items: center; gap: 13px; }
 .acct__avatar {
     width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
@@ -2512,7 +2576,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     padding: 11px 15px; border-radius: var(--r-btn);
     font-family: var(--font-body); font-size: 13px; font-weight: 600; white-space: nowrap;
     cursor: pointer; text-decoration: none; border: 1px solid transparent;
-    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.22s ease;
+    transition: transform 0.22s var(--ease-bounce), background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.22s ease;
 }
 .acct__btn svg { width: 15px; height: 15px; }
 .acct__btn--primary { background: var(--fg); color: var(--bg-card); }
@@ -2802,7 +2866,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .ck-tgl::after {
     content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
     border-radius: 50%; background: var(--bg-card);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.25s var(--ease-bounce); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .ck-tgl.is-on { background: var(--zone-1); }
 .ck-tgl.is-on::after { transform: translateX(18px); }
@@ -2918,7 +2982,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .gf-meter__count { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: -0.02em; }
 .gf-meter__count em { font-style: normal; color: var(--zone-1); }
 .gf-meter__track { height: 8px; border-radius: var(--r-pill); background: rgba(244, 239, 227, 0.14); overflow: hidden; }
-.gf-meter__bar { height: 100%; width: 0%; background: var(--zone-1); border-radius: var(--r-pill); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.gf-meter__bar { height: 100%; width: 0%; background: var(--zone-1); border-radius: var(--r-pill); transition: width 0.5s var(--ease-panel); }
 
 /* perforación entre stub y form */
 .gf-perf { position: relative; height: 0; border-top: 2px dashed var(--line-strong); margin: 0 clamp(24px, 5vw, 44px); }
@@ -2960,10 +3024,10 @@ html:not(.js) .gf-fiche__chev { display: none; }
 .gf-fiche__status--done { color: var(--on-brand); background: var(--zone-1); }
 .gf-fiche.is-complete .gf-fiche__status--pending { display: none; }
 .gf-fiche:not(.is-complete) .gf-fiche__status--done { display: none; }
-.gf-fiche__chev { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--fg-mute); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s ease; }
+.gf-fiche__chev { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--fg-mute); transition: transform 0.3s var(--ease-panel), color 0.2s ease; }
 .gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
 .gf-fiche__body { display: grid; grid-template-rows: 1fr; }
-html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows 0.34s cubic-bezier(0.2, 0.8, 0.2, 1); }
+html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows 0.34s var(--ease-panel); }
 html.js .gf-fiche.is-open .gf-fiche__body { grid-template-rows: 1fr; }
 /* Durante la activación JS (#264-audit): el colapso inicial (todas abiertas → acordeón) sin animación. */
 html.gf-initing .gf-fiche__body, html.gf-initing .gf-fiche__chev { transition: none !important; }
@@ -3015,7 +3079,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     --box: #E0392C; --ribbon: #FBF1DD;
     --box-dk: #B02C21; --box-lt: #E55241; --box-in: #892119; --ribbon-dk: #C9A24A;
     --offw-accent: var(--zone-1, #FF5B22);
-    --offw-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --offw-spring: var(--ease-bounce);
 }
 
 /* ---- Lanzador: la caja ES el botón (bottom-right) ---- */

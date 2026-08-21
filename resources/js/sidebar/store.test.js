@@ -87,6 +87,56 @@ describe('las transiciones pasan por el store', () => {
     });
 
     /**
+     * ⚠️⚠️ **EL CASO QUE FALTABA, y su forma es la lección** (`DECISIONES #118`).
+     *
+     * Este fichero ya comprobaba `store.mode` tras un `enter()`… y pasaba **con la señal MUERTA**.
+     * El motivo es sutil y general: un getter de Pinia es un `computed`, y **un `computed` que nunca
+     * se ha evaluado no puede estar rancio**. Leerlo una sola vez, después del cambio, siempre da el
+     * valor bueno. En el navegador se lee en cada render, así que se cacheaba en el primer pintado y
+     * se quedaba ahí para siempre.
+     *
+     * Medido en navegador el 2026-08-22: en el paso 5, `machine.mode` = `cart` e
+     * `machine.identifying` = `true`, mientras el store publicaba `catalog` y `false`. Consecuencias
+     * REALES, las dos que los comentarios de `app.js` avisaban: el panel se quedaba en `is-catalog`
+     * para siempre, y en la identificación los botones de login del bloque de cuenta seguían ACTIVOS
+     * —pulsarlos CIERRA el cajón y abre el modal en mitad del checkout—.
+     *
+     * ▶ Por eso aquí se lee **ANTES y DESPUÉS**: la primera lectura es la que crea la caché, y sin
+     * ella el caso no muerde. Un test de una señal derivada tiene que ejercitar la INVALIDACIÓN, no
+     * el valor.
+     */
+    test('las señales publicadas se REFRESCAN al cambiar de paso, no se cachean', () => {
+        const { store } = mountSequence(null);
+
+        // ⚠️ Esta lectura no es decorativa: es la que crea la caché del `computed`. Sin ella, todo lo
+        // de abajo pasaría también con la implementación rota.
+        assert.equal(store.mode, 'catalog', 'de partida, catálogo');
+        assert.equal(store.identifying, false);
+
+        store.go(STEPS.DATE);
+        assert.equal(store.mode, 'booking', 'elegir producto entra en el flujo: el panel deja de ser `is-catalog`');
+
+        store.go(STEPS.TIME);
+        assert.equal(store.mode, 'booking');
+
+        store.enter(STEPS.CART);
+        assert.equal(store.mode, 'cart');
+        assert.equal(store.identifying, false, 'en el carrito todavía no se pide identificarse');
+
+        store.enter(STEPS.IDENTIFY);
+        assert.equal(store.mode, 'cart');
+        assert.equal(
+            store.identifying, true,
+            'SIN esto, los botones de login del bloque de cuenta se quedan activos durante la '
+            + 'identificación, y pulsarlos cierra el cajón en mitad de la compra',
+        );
+
+        store.enter(STEPS.CONFIRMED);
+        assert.equal(store.mode, 'result', 'y al terminar vuelve a ser un desenlace');
+        assert.equal(store.identifying, false);
+    });
+
+    /**
      * ⚠️ La guarda de la guarda: **mover la máquina POR DETRÁS del store lo desincroniza**. Se fija el
      * hecho para que nadie lo descubra otra vez en producción — si algún día el store llega a observar
      * la máquina de verdad, este caso será el que lo diga.

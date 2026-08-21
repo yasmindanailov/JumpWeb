@@ -52,7 +52,16 @@ class SidebarTokenBudgetTest extends TestCase
      * propias del cajón (`#99`), que incluyen 41 clases que el Blade no veía y excluyen el bloque de
      * formularios compartido con el sitio. **La guarda no se ha relajado: mide otra cosa, y bien.**
      */
-    private const MIN_TOKENISED_PERCENT = 71;
+    /**
+     * ⚠️ **Sube a 72 el 2026-08-22.** Ocultar el bloque de cuenta durante la compra metió cuatro
+     * declaraciones nuevas y bajó el ratio a 70; en vez de forzar el suelo se ejecutó **la mitad
+     * pendiente de `DECISIONES #42`** —«en `transition` no se tokeniza la declaración, pero sí la
+     * duración y las 2-3 curvas»—: nacen `--dur-collapse`, `--dur-fade`, `--ease-panel` y
+     * `--ease-bounce`, y las **22** apariciones de las dos curvas del cajón pasan a token. Mismo
+     * valor exacto en las 22, así que el riesgo visual es cero y el punto de control es real: una
+     * instalación puede retemplar el movimiento sin reescribir una sola regla.
+     */
+    private const MIN_TOKENISED_PERCENT = 72;
 
     /**
      * Colores CRUDOS que quedan en el sidebar (`#rrggbb`, `rgba(...)`). **Solo puede bajar**: son
