@@ -1,7 +1,8 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import Sidebar from './Sidebar.vue';
-import { createMachine } from './machine.js';
+import { createMachine, STEPS } from './machine.js';
+import { applyIntent as applyIntentToCatalog } from './intent.js';
 import { usePurchaseStore } from './store.js';
 
 /**
@@ -18,6 +19,30 @@ import { usePurchaseStore } from './store.js';
  * pidiera catálogo en cada carga de landing, añadiría una petición por visita en la ruta de más
  * tráfico. Por eso se monta **al abrir**, no al cargar.
  */
+
+/**
+ * Espera a que el ancla de una sección exista en el DOM, y se rinde.
+ *
+ * ⚠️ **Por CONDICIÓN y acotada, no por reloj.** El catálogo llega por red y el componente lo pinta
+ * después, así que mirar el DOM en el instante del clic encontraría la nada; pero esperar sin techo
+ * dejaría un bucle vivo en una landing que el cliente ya abandonó. Si no aparece en ~4 s, quien llama
+ * recibe `null` y lo dice — el cajón se queda en el catálogo, que es el mejor destino posible.
+ */
+function waitForAnchor(id, { attempts = 40, every = 100 } = {}) {
+    return new Promise((resolve) => {
+        let left = attempts;
+
+        const look = () => {
+            const element = id ? document.getElementById(id) : null;
+
+            if (element || left-- <= 0) return resolve(element ?? null);
+
+            setTimeout(look, every);
+        };
+
+        look();
+    });
+}
 
 let app = null;
 
@@ -95,9 +120,31 @@ export function mount(el, boot = {}) {
             return root.refreshIdentity?.();
         },
 
-        /** Aplica una intención de entrada de la landing (`{type:'packs'}` · `{type:'zone', slug}`). */
+        /**
+         * Aplica una intención de entrada de la landing (`{type:'packs'}` · `{type:'zone', slug}`).
+         *
+         * ⚠️⚠️ **Encolar NO es aplicar, y esa confusión costó la funcionalidad entera** (`#117`). Hasta
+         * el 2026-08-21 esto solo hacía `queueIntent(...)` y nadie llamaba nunca a `takeIntent()`: la
+         * intención se guardaba para siempre y los tres enlaces profundos abrían el catálogo raíz.
+         * **No fallaban: no hacían nada.** Se conserva el paso por la máquina —es la dueña única de
+         * «hay una intención pendiente», y así `queueIntent`/`takeIntent` siguen siendo un par— pero
+         * se DRENA acto seguido, que es lo que faltaba.
+         *
+         * La decisión de a dónde llevar el cajón vive en `intent.js` (módulo plano, `CE-6`); aquí solo
+         * se le da acceso al mundo: el paso, el DOM y el desplazamiento.
+         */
         applyIntent(intent) {
             machine.queueIntent(intent);
+
+            return applyIntentToCatalog(machine.takeIntent(), {
+                goToCatalog: () => {
+                    if (store.step !== STEPS.CATALOG) store.go(STEPS.CATALOG);
+                },
+                waitForAnchor: (id) => waitForAnchor(id),
+                // `block: 'start'` y no `center`: la sección tiene que quedar arriba del panel, que es
+                // donde el cliente espera encontrarla tras pedirla desde la landing.
+                scrollTo: (element) => element.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+            });
         },
         store,
         machine,

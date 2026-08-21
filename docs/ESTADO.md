@@ -33,8 +33,8 @@ seguro**.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2650 en verde** (15.262 aserciones, `--parallel` ~39 s medidos el 2026-08-21) ·
-  **302 tests JS** (`node --test`) · Pint limpio (818 ficheros) · `docs-check` verde ·
+- Suite **2652 en verde** (15.265 aserciones, `--parallel` ~39 s medidos el 2026-08-21) ·
+  **313 tests JS** (`node --test`) · Pint limpio (819 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
