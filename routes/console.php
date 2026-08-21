@@ -75,8 +75,15 @@ Schedule::command('slots:generate-rolling')
  * Registrado el ÚLTIMO a propósito: los comandos de arriba (orders:expire…) corren primero en cada
  * `schedule:run`, así el worker (que puede ocupar hasta 55 s) no los retrasa.
  *
- * En PRODUCCIÓN usa el MISMO cron `schedule:run` (ya configurado en Enhance). Si ese cron no corre,
- * los emails se acumulan en `jobs` sin enviarse — vigilar `failed_jobs` (`docs/10-DESPLIEGUE.md §6`).
+ * En PRODUCCIÓN usa el MISMO cron `schedule:run`. Si ese cron no corre, los emails se acumulan en
+ * `jobs` sin enviarse.
+ *
+ * ⚠️⚠️ **Y NO se vigila con `failed_jobs`, que es a lo que invitaba esta nota.** Medido el
+ * 2026-08-21 en staging (`DECISIONES #115`): con el cron muerto, 6 avisos llevaban 24 h en `jobs`
+ * con `attempts = 0` y `failed_jobs` estaba en **CERO** — porque **un job que nunca se INTENTA
+ * nunca falla**. La señal correcta es la EDAD del trabajo más viejo de `jobs`: con el worker vivo la
+ * cola se drena cada minuto, así que algo disponible desde hace más de 5 minutos significa que nadie
+ * lo está sacando. `scripts/deploy.sh` lo comprueba así al terminar.
  */
 Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3')
     ->everyMinute()

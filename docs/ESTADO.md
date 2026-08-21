@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-21**.
+> aquí solo se enlaza. Última actualización: **2026-08-21** (staging desplegado y el scheduler destapado).
 
 ## ▶ Dónde estamos
 
@@ -103,33 +103,43 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**Desplegar a staging y mirar el cajón en un navegador.** Son DOS comprobaciones, y ninguna la ha
-hecho nadie; hasta que se hagan, `4.7` no es ✅ del todo (`CONVENCIONES §3.bis`):
+✅ **DESPLEGADO el 2026-08-21**: commit **`1977db7`** en staging, las **6 comprobaciones de salud en
+verde**, y verificado por fuera del script —bundle nuevo servido, API en 200, las 3 zonas, Turnstile
+todavía configurado y `Purchase.php` fuera del servidor—. 🟩 **El cajón SPA es ya el motor único
+también ALLÍ.**
 
-1. **A7 · enlaces profundos** (`VERIFICACION-E2E-CAJON.md`). Los enlaces de zona, packs y eventos
-   abrían el cajón en el catálogo raíz; el arreglo va en `#111(h)`. **Se desplegó roto y no se notó**
-   porque `#100` no lo incluyó entre sus cuatro caminos.
-2. **Los ICONOS** (`#113`). Se servían todos vacíos y ahora llevan su dibujo. Verificado en la salida
-   del motor y en el bundle, pero **nadie los ha visto en pantalla**.
+▶ **LO QUE QUEDA SON DOS COSAS, Y LAS DOS LAS TIENE QUE MIRAR EL OWNER EN UN NAVEGADOR.** Hasta que se
+hagan, `4.7` **no es ✅** (`CONVENCIONES §3.bis`). **El guion está escrito y listo en
+`VERIFICACION-E2E-CAJON.md` §5.quater** (V1 iconos · V2 enlaces profundos), con el «antes» medido a los
+dos lados para que se sepa qué se está mirando:
 
-⚠️ **Y con el motor único, el despliegue deja de tener red**: ya no hay flag al que volver. El canal
-sigue siendo `scripts/deploy.sh` (dry-run por defecto) y los assets se construyen fuera (`ENTORNOS.md`
-§4: staging no tiene node/npm).
+| | Lo que se servía antes | Lo que se sirve ahora |
+|---|---|---|
+| Geometrías de iconos (`#113`) | **0** en 33 `<svg>` | **40** en 42 |
+| Refs a `Livewire` en `app.js` (`#111(h)`) | **6** | **3** |
 
-❗❗ **BLOQUEADO EN EL 2º PUESTO POR FALTA DE ACCESO SSH** (medido el 2026-08-21). El dry-run llega
-íntegro hasta `2/9 · Pre-vuelo remoto` y muere ahí: **no hay `~/.ssh/config` ni clave de
-`jumpweb-staging` en esta máquina** (la única clave presente es del proyecto origen). `deploy.sh` nació
-y se midió entero en el PRIMER puesto (`#105`–`#110`), y las credenciales viven allí.
-▶ **Lo tiene que aportar el owner**: la clave y la entrada `Host jumpweb-staging` de `ENTORNOS.md` §1.
-Sin eso, desde este puesto **no se puede desplegar ni verificar nada en staging** — y las dos
-comprobaciones de arriba son exactamente eso.
+⚠️ **Las dos fallan de la misma forma —«no falla, no hace nada»— y por eso hay que saber qué esperar**:
+en V2 el cajón SÍ se abre; lo que estaba roto es **dónde**. Si abre en el catálogo raíz en vez de en la
+zona o en los packs, la regresión sigue viva.
 
-✅ **Lo que sí se arregló por el camino** (`DECISIONES #114`): el dry-run no llegaba ni al SSH. Moría en
-`1/9` con «npm run build FALLÓ» **y sin motivo**, porque elegía canal con `command -v npm` y bajo WSL
-eso resuelve al npm de **Windows** (interop de `/mnt/c`), que lanza `CMD.EXE`, no admite rutas UNC y no
-encuentra `vite`. Ahora el canal canónico es **Sail** —el mismo que usa el `pre-push`, así que los
-assets que el gate verificó son los que se suben— y el fallo **enseña su salida**. Tres casos nuevos en
-`DeployScriptGateTest`, mutados los tres.
+❗❗ **BLOQUEO NUEVO Y SERIO, DEL OWNER: EL SCHEDULER NO CORRE EN STAGING** (`DECISIONES #115`). El
+crontab está instalado y correcto y `schedule:run` funciona a mano, pero **no hay demonio cron en el
+contenedor del sitio**: nadie lo invoca. Medido — 6 avisos con 24 h en `jobs` y `attempts = 0`, y un
+pedido 24 h sin caducar que `orders:expire` caducó al instante al lanzarlo a mano.
+⚠️ **Y el despliegue lo daba por SANO**: «5 tareas registradas» mide el REGISTRO, y `failed_jobs` es
+**ciego** a esto —un job que nunca se intenta nunca falla—. Ya no: `deploy.sh` mide ahora la EDAD del
+trabajo más viejo de la cola, con tres guardas mutadas en `DeployScriptGateTest`.
+▶ **Lo tiene que activar el owner en el panel de Enhance** (tareas programadas del sitio). Mientras
+tanto, en staging se dispara a mano: `ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
+▶ **Y obliga a releer `#110`**: sus cuatro caminos siguen valiendo —ninguno depende del cron— pero
+**allí nunca se ha ejercitado la caducidad de pedidos ni el envío diferido**.
+
+✅ **Dos cosas más que se arreglaron por el camino, las dos de despliegue** (`#114`): el canal de build
+era «el npm que haya» y bajo WSL eso es el de **Windows**, que no puede construir (CMD.EXE no admite
+rutas UNC) — ahora el canal canónico es **Sail**, el mismo que usa el `pre-push`, y el fallo enseña su
+salida en vez de morir mudo. Y el **acceso SSH del 2º puesto**, que no existía: clave dedicada por
+puesto (nunca copiada del otro), `known_hosts` fijado —`BatchMode=yes` no pregunta, muere— y el alias
+por hostname para no clavar ninguna IP (`DECISIONES #1`).
 
 Luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el usado para medir
 lo retiró el owner.
@@ -146,6 +156,8 @@ y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
 - **El modo `embedded` de `auth.login`/`auth.register` ya no lo monta nadie en producción**, pero es
   la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`: muere cuando el área de
   cliente rehaga la auth dentro del cajón, no antes (`#112(f)`).
+- **Una comprobación que mide una cosa y se lee como otra es PEOR que no tenerla**, porque regala
+  confianza que no ha ganado. Dos señales de salud en verde con el scheduler muerto: `DECISIONES #115`.
 
 ### Lo que NO depende de nosotros
 
@@ -158,9 +170,12 @@ y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
   construyen fuera y se suben compilados.
   ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca EN BLOQUE y con guion escrito
   (`VERIFICACION-E2E-CAJON.md` §5.ter).
-- **Pendiente del owner** (❗): 2FA del panel · backlog de producto de Fase 6 · un **token nuevo de la
-  API del panel** para `scripts/provision.sh` (el usado para medir se retiró) · ❗❗ **la clave SSH y la
-  entrada `Host jumpweb-staging` en el 2º puesto de trabajo** — sin eso ese puesto no despliega.
+- **Pendiente del owner** (❗): ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS del sitio en el panel de Enhance**
+  — sin cron no hay envío de correo ni caducidad de pedidos (`DECISIONES #115`); es lo más grave de la
+  lista · 2FA del panel · backlog de producto de Fase 6 · un **token nuevo de la API del panel** para
+  `scripts/provision.sh` (el usado para medir se retiró) · y **las DOS comprobaciones de navegador**
+  de `VERIFICACION-E2E-CAJON.md` §5.quater, que son las que cierran `4.7`.
+  ✅ Resuelto el 2026-08-21: el acceso SSH del 2º puesto (clave propia, no copiada).
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 

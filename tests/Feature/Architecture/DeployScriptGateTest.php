@@ -273,6 +273,83 @@ class DeployScriptGateTest extends TestCase
         );
     }
 
+    // ── ¿ALGUIEN dispara el scheduler? La comprobación que faltaba (2026-08-21) ───────────────────
+
+    /**
+     * ⚠️ Nace del fallo de `DECISIONES #115`, y es de los que más enseñan de este proyecto.
+     *
+     * En staging el crontab estaba instalado y correcto, `php` resolvía, y `schedule:run` funcionaba
+     * perfectamente al ejecutarlo a mano. Pero **nada lo invocaba**: no hay demonio cron en el
+     * contenedor del sitio. Consecuencia medida: 6 notificaciones llevaban **24 h** en `jobs` con
+     * `attempts = 0`, y un pedido llevaba 24 h sin caducar aunque `orders:expire` lo caducó al
+     * instante en cuanto se ejecutó a mano.
+     *
+     * ⚠️⚠️ **Y el despliegue lo declaró SANO.** Las dos comprobaciones que había son ciegas a esto:
+     *  · «5 tareas registradas» mide que la APP conoce sus tareas, no que alguien las dispare;
+     *  · `failed_jobs = 0` no puede verlo, porque **un job que nunca se INTENTA nunca falla** — y el
+     *    comentario de `routes/console.php` mandaba vigilar justo eso para este caso.
+     *
+     * La señal que sí lo ve es la EDAD del trabajo más viejo de la cola: con el worker vivo `jobs` se
+     * drena cada minuto, así que algo disponible desde hace más de 5 minutos significa que nadie lo
+     * está sacando.
+     */
+    public function test_the_health_check_detects_a_scheduler_that_nobody_is_firing(): void
+    {
+        $s = $this->executable();
+
+        $this->assertStringContainsString(
+            'time() - 300',
+            $s,
+            'Falta la comprobación de trabajos VARADOS en la cola. Sin ella, un servidor con el '.
+            'scheduler muerto pasa el despliegue en verde: los avisos se acumulan sin enviarse y las '.
+            'franjas retenidas no se liberan, y nada avisa.',
+        );
+
+        $this->assertStringContainsString(
+            'VARADOS',
+            $s,
+            'La comprobación tiene que DECIR qué mide. Un check mudo se lee como decoración.',
+        );
+    }
+
+    /**
+     * La lectura del contador NO puede llevar `|| echo 0`: convertiría cualquier fallo de lectura en
+     * un cero, o sea en un verde. Es el mismo error de forma que la guarda de Redsys de `#106` —un
+     * verde que no se ha podido comprobar no es un verde—, y aquí se paga igual de caro.
+     */
+    public function test_the_stranded_jobs_counter_is_fail_closed(): void
+    {
+        $this->assertMatchesRegularExpression(
+            "/stale=\\\$\\([^\n]*tr -dc '0-9'\\)/",
+            $this->executable(),
+            'El contador de trabajos varados termina en `tr -dc \'0-9\')`, SIN `|| echo 0`: si la '.
+            'lectura falla, `stale` queda vacío y la comprobación cae. Con `|| echo 0` un error de '.
+            'lectura se leería como «cola sana».',
+        );
+    }
+
+    /**
+     * Un check que mide una cosa y se lee como otra es peor que no tenerlo: da una confianza que no
+     * ha ganado. `schedule:list` prueba el REGISTRO, y el nombre tiene que decirlo.
+     */
+    public function test_the_scheduler_check_does_not_claim_more_than_it_measures(): void
+    {
+        $s = $this->executable();
+
+        $this->assertStringContainsString(
+            'tareas REGISTRADAS en la app',
+            $s,
+            'El check de `schedule:list` debe decir que mide el REGISTRO. Leerlo como «el scheduler '.
+            'funciona» es exactamente lo que dejó pasar un servidor con el cron muerto (`#115`).',
+        );
+
+        $this->assertStringNotContainsString(
+            'tareas registradas (esperadas 5)',
+            $s,
+            'Volvió la etiqueta ambigua que se leía como «el scheduler funciona».',
+        );
+    }
+
     // ── El BUILD de assets: el canal, y el rojo que no decía por qué (2026-08-21) ─────────────────
 
     /**

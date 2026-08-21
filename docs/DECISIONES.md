@@ -4643,3 +4643,56 @@ script: apareció al ejecutarlo desde **otra máquina**. Un canal de despliegue 
 puesto donde se escribió hasta que alguien lo corre en otro, y `deploy.sh` nació y se midió entero en
 el primer puesto (`#105`–`#110`). Al montar un segundo puesto conviene correr los dos guiones
 —`deploy.sh` en dry-run y el gate— antes de necesitarlos.
+
+## #115 · 2026-08-21 · El scheduler de staging llevaba 24 h MUERTO, y el despliegue lo daba por sano
+Tras desplegar `1977db7`, el drenaje de cola de `deploy.sh` avisó de **6 jobs pendientes**. Tirando
+del hilo salió algo bastante peor que 6 correos:
+
+- Los 6 eran `OrderConfirmation` ×2, `GuestFormRequest` ×2 y `AccountAlreadyExists` ×2, en la cola
+  `default`, sin reservar y con **`attempts = 0`**: nunca se habían intentado. Llevaban **~24,4 h**.
+- Había además **un pedido en `pending` desde hacía 24 h**, con `orders:expire` programado cada 5
+  minutos.
+- El crontab estaba **instalado y correcto** (una entrada, sin duplicados), `php` resolvía a
+  `/usr/bin/php` 8.5.1, y `schedule:run` ejecutado A MANO funcionaba y lanzaba `queue:work`.
+- **Observado 6,5 minutos** —una ventana completa de `orders:expire` y seis de `queue:work`—: el
+  pedido seguía `pending`.
+- **Control, para descartar que el pedido no fuera elegible**: `orders:expire` a mano → «Pedidos
+  caducados: 1», al instante.
+
+▶ Conclusión: **no hay demonio cron en el contenedor del sitio.** El crontab se escribe y nadie lo
+ejecuta (`pgrep -x cron` → nada; los `/etc/cron.*` existen pero vacíos de proceso). Es cosa del
+hosting/panel, **no del script ni de la app**.
+
+**(a) Lo que esto rompe si pasa en casa de un cliente**, que es el motivo de escribirlo: `queue:work`
+no corre → **el cliente paga y no recibe nada** (`OrderConfirmation` es `ShouldQueue`) · `orders:expire`
+no corre → las franjas retenidas **no se liberan** y el aforo se fuga en silencio (`AFORO-10`) ·
+`slots:generate-rolling` no corre → la ventana de franjas deja de avanzar y llega el día en que no hay
+nada que comprar · `model:prune` no corre → la retención de `CookieConsentLog` deja de cumplirse.
+
+**(b) ⚠️⚠️ Y el despliegue lo declaró SANO, con las 6 comprobaciones en verde.** Esta es la parte que
+hay que llevarse, porque no es un descuido sino **dos señales que miden otra cosa**:
+- **«scheduler: 5 tareas registradas»** mide que la APP conoce sus tareas. No dice **nada** de que
+  alguien las dispare. Se leía como «el scheduler funciona».
+- **`failed_jobs = 0`** es **estructuralmente ciego** a este fallo: un job que nunca se intenta nunca
+  falla. Y el comentario de `routes/console.php` —heredado, escrito con buen criterio— mandaba
+  vigilar exactamente esa señal para exactamente este caso. Estaba corregido en el sitio equivocado.
+
+**(c) La señal que sí lo ve, y por qué.** La **edad del trabajo más viejo de `jobs`**: con el worker
+vivo la cola se drena cada minuto, así que algo disponible desde hace más de 5 minutos significa que
+nadie lo está sacando. Es una comprobación de EJECUCIÓN, no de configuración, y no depende de por qué
+mecanismo se dispare el scheduler. Fail-closed: si la lectura falla, el contador queda vacío y la
+comprobación cae —misma forma que la guarda de Redsys de `#106`—. Se añade a `deploy.sh` con un aviso
+secundario informativo si no se ve demonio cron. Tres casos nuevos en `DeployScriptGateTest`, mutados.
+
+**(d) Lo que esto obliga a releer.** `#110` verificó cuatro caminos de navegador en staging con el
+scheduler muerto. **No los invalida** —ninguno depende del cron— pero significa que **allí nunca se ha
+ejercitado la caducidad de pedidos ni el envío diferido**, y la doc no lo decía porque nadie lo sabía.
+
+**(e) La regla, que ya es la tercera vez que aparece con otro disfraz.** `#113` la dejó escrita: **lo
+que un gate declara que NO mira es un hueco con nombre.** Aquí ni siquiera lo declaraba: lo insinuaba
+al revés, con una etiqueta que prometía más de lo que medía. **Una comprobación que mide una cosa y se
+lee como otra es peor que no tenerla**, porque regala confianza que no ha ganado.
+
+▶ **PENDIENTE DEL OWNER**: activar las tareas programadas del sitio en el panel de Enhance. Hasta
+entonces, en staging hay que disparar a mano lo que haga falta:
+`ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.

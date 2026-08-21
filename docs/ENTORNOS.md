@@ -123,7 +123,8 @@ Inventario en solo lectura, para no volver a suponerlo:
 | Panel: API | `https://cp.hosturbo.net/api` · `Bearer` + `orgId` | — | **sin OpenAPI publicado** (`#102`) |
 | Usuario Unix | ✅ **`jumpweb_1`** (uid/gid 1051) — medido 2026-08-19 | — | el `rsync` entra con él; **no hace falta `chown`** |
 | Raíz de la app | ✅ **`~/public_html/`** (`$HOME` = `/var/www/c4bf5527-126c-4fe3-9086-7f346458a4fd`) | — | destino del `rsync`; el docroot es su `public/` |
-| Crontab del sitio | ✅ **VACÍO** (medido 2026-08-19) | — | el scheduler se instala de cero, sin riesgo de pisar nada |
+| Crontab del sitio | escribible, y `deploy.sh` instala su línea | — | ⚠️ **pero NADIE la ejecuta** — ver abajo |
+| **Demonio cron** | ❗ **NO HAY** (medido 2026-08-21) | sí | ⚠️⚠️ **sí — el scheduler NO corre** |
 | rsync · git · unzip · crontab · mysql | ✅ todos en PATH | — | `deploy.sh` no necesita instalar nada |
 | Disco | 423 GB libres de 467 GB | — | holgado (el árbol + `vendor` ≈ 200 MB) |
 
@@ -154,6 +155,18 @@ Inventario en solo lectura, para no volver a suponerlo:
    que los assets se construyen fuera y se suben ya compilados. Eso convierte el despliegue en
    «construir + sincronizar», no en «clonar y compilar» — y hay que decidirlo así en el procedimiento,
    no descubrirlo a mitad.
+3. ❗❗ **EL SCHEDULER NO CORRE** (medido el 2026-08-21, `DECISIONES #115`). El crontab está instalado
+   y correcto, `php` resuelve, y `schedule:run` funciona **a mano** — pero **no hay demonio cron en el
+   contenedor del sitio**, así que nadie lo invoca. Medido: 6 avisos llevaban **24 h** en `jobs` con
+   `attempts = 0`, y un pedido llevaba 24 h sin caducar (`orders:expire` lo caducó al instante al
+   ejecutarlo a mano).
+   ▶ **Consecuencia para verificar aquí**: en staging **no se ha ejercitado nunca** la caducidad de
+   pedidos ni el envío diferido de correo. Lo que necesite el scheduler, dispáralo a mano:
+   `ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
+   ▶ **Consecuencia para INSTALAR A UN CLIENTE**, que es lo grave: sin cron, el cliente **paga y no
+   recibe nada** (las notificaciones son `ShouldQueue`) y **el aforo se fuga** (las franjas retenidas
+   no se liberan). Comprobar el cron es parte de la instalación, no un extra.
+   ▶ **Pendiente del owner**: activar las tareas programadas del sitio en el panel de Enhance.
 
 ### El APROVISIONAMIENTO, ya medido (2026-08-16, `DECISIONES #102`)
 

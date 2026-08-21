@@ -284,8 +284,12 @@ decisión con coste, no un detalle— pero la receta es corta y reproducible:
 > `redsys_environment = test` · correo en `log` (NO sale) · catálogo neutro con 1440 franjas.
 > Admin: `yasi09265@gmail.com`.
 >
-> ⚠️ **Si algo se tuerce, el flag es la marcha atrás**, y no hace falta desplegar:
-> `ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting sidebar.engine livewire"`.
+> ⚠️⚠️ **CADUCADO — NO INTENTES ESTO.** Esta sesión decía «si algo se tuerce, el flag es la marcha
+> atrás: `app:set-setting sidebar.engine livewire`». **Ese flag ya no existe** (`#112` lo retiró con
+> el componente), así que ese comando no te va a salvar: te va a hacer perder el tiempo justo cuando
+> menos lo tienes. **Hoy la marcha atrás es desplegar un commit anterior** — es exactamente lo que
+> `#100` avisó que pasaría al borrar el motor. Se deja escrito, tachado, en vez de borrarlo: quien
+> recuerde el truco tiene que encontrar aquí por qué ya no vale.
 
 > ✅ **RECORRIDO ENTERO EL 2026-08-20 por el owner, y las seis en verde** (`DECISIONES #110`). Lo que
 > sigue se conserva como RECETA —es la que se repetirá en cada instalación de cliente—, no como
@@ -332,6 +336,65 @@ idioma no rompe el cajón. Verificado por HTTP el 2026-08-20 que `/lang/{es,en,f
 
 ⚠️ **Todo hallazgo vuelve al repo** (`ENTORNOS.md` §5): como TEST si se puede testear; si no —navegador,
 pasarela, móvil—, como receta escrita aquí con su trampa medida.
+
+## 5.quater · LA SESIÓN DE STAGING (2026-08-21) — las DOS que nadie ha visto
+
+> Estado de partida, **medido tras desplegar**, no supuesto: commit **`1977db7`** desplegado el
+> 2026-08-21 · las 6 comprobaciones de salud de `deploy.sh` en verde · `redsys_environment = test`
+> (guarda 1 ✓) · correo en `log` (guarda 3 ✓) · `robots.txt` con `Disallow: /` verificado por HTTP
+> (guarda 4 ✓) · nada pendiente de migrar · 1440 franjas.
+>
+> 🟩 **Y una diferencia de fondo con la sesión anterior: el cajón SPA es ya el motor ÚNICO también
+> AQUÍ.** Este despliegue se llevó `Purchase.php` del servidor (verificado por `ls`). No hay flag, no
+> hay segundo motor y **no hay marcha atrás que no sea desplegar un commit anterior**.
+
+Son **DOS**, las dos visuales, y las dos existen porque `#100` no las incluyó entre sus cuatro
+caminos: se desplegaron rotas y nadie lo vio. **El DoD (`CONVENCIONES §3.bis`) dice que una feature
+visible no es ✅ hasta que el owner la valida**, así que `4.7` no cierra hasta esto.
+
+⚠️ **Hazlas en ventana de incógnito**: el cajón persiste la cesta y el estado, y una sesión sucia
+puede enseñarte un cajón que ya está en el paso 4 y hacerte creer que el enlace profundo funcionó.
+
+### V1 · Los ICONOS (`DECISIONES #113`)
+Se servían los **20 vacíos**. Está medido a los dos lados, así que aquí solo falta el ojo:
+el bundle de antes tenía **0 geometrías** en 33 `<svg>`; el que se sirve ahora tiene **40** en 42, y
+la diferencia son **7.441 bytes** — que cuadra con los 7,26 KiB que midió `#113(d)`.
+
+1. Abre `https://jumpweb.sites.aelium.app/entradas` → el cajón abre en el catálogo.
+2. **Mira que cada tarjeta y cada botón lleven su dibujo**, no un hueco.
+3. Recorre día → hora → cantidad → complementos → carrito mirando los iconos de cada paso.
+   ▶ Lo que buscas es un icono **en blanco**: el `<svg>` se pinta y ocupa su sitio, así que el
+   síntoma no es un roto, es un **hueco** donde debería haber un dibujo.
+
+### V2 · A7 · Los ENLACES PROFUNDOS (`DECISIONES #111(h)`)
+**No son URLs: son tres botones de la landing** que abren el cajón *pidiendo algo concreto*. El bug
+era que el adaptador de intención de Livewire se registraba sin mirar el motor y `flushIntent()`
+**consume** la intención antes de aplicarla, así que se la comía y despachaba a un componente que ya
+no se renderizaba. Resultado: los tres abrían el cajón **en el catálogo raíz**.
+Medido en el bundle: las referencias a `Livewire` en `app.js` pasaron de **6 a 3**.
+
+| Dónde | Qué pulsar | Qué DEBE pasar |
+|---|---|---|
+| `/` (home) | el CTA de una tarjeta de zona (hay tres: `jump`, `kids`, `cumpleanos`) | el cajón abre **en las entradas de ESA zona** |
+| `/servicios` | el botón de «ver packs» | el cajón abre **en la sección de packs** |
+| `/cumpleanos` | el botón de «ver packs» de la sección de eventos | el cajón abre **en la sección de packs** |
+
+▶ **El fallo se ve solo si sabes qué mirar**: el cajón SÍ se abre en los tres casos. Lo que estaba
+roto es **dónde** abre. Si aterrizas en el catálogo raíz en vez de en la zona o en los packs, la
+regresión sigue viva.
+
+⚠️ **Y por eso este caso es el que enseña algo**: un camino que «no falla, no hace nada» es invisible
+para cualquier gate y para un ojo que no sepa qué esperaba. Es la misma forma de fallo que los iconos
+vacíos, y las dos se colaron por el mismo sitio — cuatro caminos verificados y estos dos fuera.
+
+### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
+Ya que hay una sesión abierta y el motor es otro:
+- **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo
+  verificó con el flag en `spa`, pero **con el componente Livewire todavía presente**; hoy no está.
+- **Los tres idiomas** (`T6` sigue pendiente de recorrer el cajón en uno que no sea `es`).
+
+⚠️ **Todo hallazgo vuelve al repo** (`ENTORNOS.md` §5): como TEST si se puede testear; si no
+—navegador, pasarela, móvil—, como receta escrita aquí con su trampa medida.
 
 ## 6. Lo que este guion NO cubre, y hay que decirlo
 

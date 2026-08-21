@@ -504,13 +504,40 @@ check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
 # ADEMÁS sale con 1, así que el `||` añade otro. Eso rompió la comprobación de migraciones el
 # 2026-08-19 (`0\n0` != `0` → rojo con el sitio sano). `|| true` conserva el 0 y traga el código.
 tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || true)
-check "scheduler: $tasks tareas registradas (esperadas 5)" "$([[ "$tasks" == "5" ]] && echo 0 || echo 1)"
+# ⚠️ Esto mide el REGISTRO, no la EJECUCIÓN: dice que la app conoce sus 5 tareas, NO que nadie las
+# dispare. Se deja porque sigue valiendo, pero con el nombre correcto — leerlo como «el scheduler
+# funciona» es justo lo que pasó el 2026-08-21 (`DECISIONES #115`).
+check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 5)" "$([[ "$tasks" == "5" ]] && echo 0 || echo 1)"
 
 migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || true)
 check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"
 
 failed=$(remote_php "artisan tinker --execute='echo DB::table(\"failed_jobs\")->count();'" 2>/dev/null | tr -dc '0-9' || echo 0)
 check "failed_jobs: ${failed:-0}" "$([[ "${failed:-0}" == "0" ]] && echo 0 || echo 1)"
+
+# ── ¿ALGUIEN DISPARA el scheduler? — la comprobación que faltaba (`DECISIONES #115`) ──────────────
+# ⚠️⚠️ MEDIDO el 2026-08-21: el crontab estaba instalado y correcto, `schedule:run` funcionaba a
+# mano, y aun así **nada lo invocaba**: no hay demonio cron en el contenedor del sitio. 6 avisos
+# llevaban 24 h en `jobs` con `attempts=0` y un pedido llevaba 24 h sin caducar.
+#
+# ⚠️ Y las DOS comprobaciones que ya había dieron VERDE: «5 tareas registradas» mide el registro, y
+# `failed_jobs` **no puede ver esto** —un job que nunca se INTENTA nunca falla—. El comentario de
+# `routes/console.php` mandaba vigilar `failed_jobs` precisamente para este caso, y es ciego a él.
+#
+# La señal que SÍ lo ve es la EDAD del trabajo más viejo de la cola: con el worker vivo, `jobs` se
+# drena cada minuto, así que un job disponible desde hace más de 5 minutos significa que nadie lo
+# está sacando. Fail-closed: si la lectura falla, `stale` queda vacío y la comprobación cae.
+stale=$(remote_php "artisan tinker --execute='echo DB::table(\"jobs\")->where(\"available_at\", \"<\", time() - 300)->count();'" 2>/dev/null | tr -dc '0-9')
+check "cola: ${stale:-?} jobs VARADOS >5 min (esperados 0 — si hay, nadie corre \`schedule:run\`)" \
+    "$([[ "${stale}" == "0" ]] && echo 0 || echo 1)"
+
+# Señal secundaria, informativa: sin demonio cron, el crontab que acabamos de escribir es papel
+# mojado. No se hace fallar por esto —un host puede disparar el scheduler por otro medio— pero se
+# DICE, porque es la causa raíz que costó media sesión encontrar.
+if ! sshx 'pgrep -x cron >/dev/null 2>&1 || pgrep -x crond >/dev/null 2>&1'; then
+    warn "No se ve ningún demonio cron en el servidor: el crontab instalado puede no ejecutarse nunca."
+    warn "Compruébalo en el panel (sección de tareas programadas del sitio) — DECISIONES #115."
+fi
 
 printf '\n'
 if [[ $fails -gt 0 ]]; then
