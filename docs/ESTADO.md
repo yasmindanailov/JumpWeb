@@ -16,7 +16,8 @@ se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en s
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
-`#110` verificó. La rama `wip/4.7-2b-3-retirada-purchase` es la que lo trae.
+`#110` verificó. Está **en `main`**; la rama `wip/4.7-2b-3-retirada-purchase` ya fusionada y se puede
+borrar (se conserva por si hace falta leer el tramo commit a commit).
 
 ✅ **STAGING está desplegado, sirviendo el cajón SPA y con el anti-bot activo.** Canal de despliegue:
 `scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
