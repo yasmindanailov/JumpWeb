@@ -9,18 +9,26 @@
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
-**4.7 ✅** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real
-se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`) y
-**`Purchase.php` está RETIRADO** (`#112`, 2026-08-21). El corte del diseño está en
+**4.7 ✅ en código y suite** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador
+y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging**
+(`#110`) y **`Purchase.php` está RETIRADO** (`#112`). El corte del diseño está en
 `docs/specs/sidebar-spa.md` §4.10.
+
+⚠️ **La fase sigue 🟦 y no es formalismo**: quedan **DOS comprobaciones en navegador** que nadie ha
+hecho —los enlaces profundos (A7) y los iconos de `#113`—, y el DoD (`CONVENCIONES §3.bis`) dice que
+una feature visible **no es ✅ hasta que el owner la valida**. Las dos están en «Próximo paso».
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
-`#110` verificó. Está **en `main`**; la rama `wip/4.7-2b-3-retirada-purchase` ya fusionada y se puede
-borrar (se conserva por si hace falta leer el tramo commit a commit).
+`#110` verificó. Está **en `main`**. ⚠️ La rama `wip/4.7-2b-3-retirada-purchase` **está fusionada y no contiene nada
+que `main` no tenga** (`git log main..wip/… ` → 0): si `/arranque-sesion` la saca, esta línea es su
+explicación. Se conserva solo por si alguien quiere leer el tramo commit a commit; **borrarla es
+seguro**.
 
 ✅ **STAGING está desplegado, sirviendo el cajón SPA y con el anti-bot activo.** Canal de despliegue:
 `scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
+⚠️ **Pero lo que corre ALLÍ es anterior a los arreglos de hoy** —enlaces profundos e iconos—: ver
+«Hasta dónde llega hoy el motor SPA».
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
@@ -29,9 +37,9 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   Pint limpio · `docs-check` verde · `composer audit` y `npm audit` en **0** · `npm run build` y
   `build:ssr` OK. El contador «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner
   (ver `TESTING.md`).
-  ⚠️ **Bajó de 2773 a 2639 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
-  era la superficie que se va (y entró uno nuevo, el del velo de carga). Ninguno se borró sin localizar
-  y EJECUTAR antes su sucesor (`#112(a)`).
+  ⚠️ **Bajó de 2773 a 2642 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
+  era la superficie retirada, y entraron 4 nuevos (el velo de carga y los tres de la paridad de
+  iconos). Ninguno se borró sin localizar y EJECUTAR antes su sucesor (`#112(a)`).
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
   tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
   `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
@@ -60,13 +68,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES · *recibir* una entidad de
   otro módulo es costura de BD, *consultar* sus datos o *repetir* sus reglas exige contrato · las
   baselines del arch-test **solo encogen**.
-- ⚠️ **`Sidebar.vue` es el segundo objeto-dios, y ya está VIGILADO** (`DECISIONES #90`): 618 líneas de
-  código y las 11 llamadas a la API del cajón, con los mismos métodos que tenía `Purchase.php` (que ya
-  no existe: `#112`). Los otros 18
-  componentes suman 236 y ninguno toca la API — **CE-6 lo cumplen 18 de 19**. Desde hoy lo guarda
-  `SidebarComponentBudgetTest` (techo por componente + excepción declarada que **solo encoge**), así
-  que la deuda deja de crecer. La extracción —patrón `admission.js::runCheckout()`, ~10 secuencias— va
-  en `DEUDA.md` como Alta, **fuera de 4.7** a propósito.
+- ⚠️ **`Sidebar.vue` es el segundo objeto-dios, y ya está VIGILADO** (`DECISIONES #90`): concentra
+  **todas** las llamadas a la API del cajón y los otros 18 componentes no tocan ninguna, así que
+  **CE-6 lo cumplen 18 de 19**. Lo guarda `SidebarComponentBudgetTest` (techo por componente +
+  excepción declarada que **solo encoge**), y **las cifras vivas están en su `EXCEPTIONS`**, no aquí:
+  copiarlas a este documento es drift en espera, y ya había pasado. La extracción —patrón
+  `admission.js::runCheckout()`, ~10 secuencias— va en `DEUDA.md` como Alta.
 - ⚠️ **NOTA DE DESPLIEGUE permanente**: las migraciones corren **ANTES** de servir tráfico (el morphMap
   de Fase 2 es requisito) y hay que **drenar la cola + `queue:restart`** (los payloads serializados
   llevaban los FQCN viejos).
@@ -92,11 +99,14 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-**Desplegar la rama a staging y comprobar el punto A7 · enlaces profundos** de
-`VERIFICACION-E2E-CAJON.md`, en navegador. Es el arreglo que trae `#111(h)` —los enlaces de zona,
-packs y eventos abrían el cajón en el catálogo raíz— y **nadie lo ha visto funcionar**: `#100` no lo
-incluyó entre sus cuatro caminos, así que se desplegó roto y no se notó. **Es la única verificación
-empírica que le falta a `4.7`.**
+**Desplegar a staging y mirar el cajón en un navegador.** Son DOS comprobaciones, y ninguna la ha
+hecho nadie; hasta que se hagan, `4.7` no es ✅ del todo (`CONVENCIONES §3.bis`):
+
+1. **A7 · enlaces profundos** (`VERIFICACION-E2E-CAJON.md`). Los enlaces de zona, packs y eventos
+   abrían el cajón en el catálogo raíz; el arreglo va en `#111(h)`. **Se desplegó roto y no se notó**
+   porque `#100` no lo incluyó entre sus cuatro caminos.
+2. **Los ICONOS** (`#113`). Se servían todos vacíos y ahora llevan su dibujo. Verificado en la salida
+   del motor y en el bundle, pero **nadie los ha visto en pantalla**.
 
 ⚠️ **Y con el motor único, el despliegue deja de tener red**: ya no hay flag al que volver. El canal
 sigue siendo `scripts/deploy.sh` (dry-run por defecto) y los assets se construyen fuera (`ENTORNOS.md`
@@ -105,23 +115,18 @@ sigue siendo `scripts/deploy.sh` (dry-run por defecto) y los assets se construye
 Luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el usado para medir
 lo retiró el owner.
 
-**Después de eso, el orden lo manda `#66`**: el **área de cliente** dentro del cajón. Turnstile ya no
-ata nada (4.4b·2) y `4.7` ya no ata nada, así que es lo siguiente.
+**Después, el orden lo manda `#66`**: el **área de cliente** dentro del cajón. Ni Turnstile (4.4b·2)
+ni `4.7` atan ya nada.
 
-⚠️ **Tres cosas que esta sesión dejó MEDIDAS y que condicionan lo que venga** (todas en `#112`):
-- **`assertSee(__('tickets.*'))` contra una página completa NO PRUEBA NADA.** El montaje del cajón va
-  en todas las páginas y lleva el grupo `tickets` entero (11 kB). Usa `assertSeeText`/
-  `assertDontSeeText`: `strip_tags` deja fuera el payload porque viaja en un atributo. Se auditó y se
-  convirtieron 13 claves vacuas en 5 ficheros — **si añades una aserción de texto sobre una página,
-  esta es la trampa**.
-- **La aserción de `livewire.js` de `SidebarMountTest` es la única de la suite, y HOY no puede
-  morder**: la auto-inyección de Livewire y la directiva son dos fuentes redundantes. Morderá cuando
-  el área de cliente retire el **último componente Livewire del layout** — y entonces retirar
-  `@livewireScripts` sí dejaría la web sin Alpine, y con él sin `$store.purchase`, que es lo que ABRE
-  el cajón desde los once puntos de la landing. La tabla de verdad está en el docblock del caso.
+⚠️ **Tres trampas MEDIDAS que condicionan lo que venga.** No se explican aquí —cada una tiene su sitio
+y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
+- **Un `assertSee` de un texto del grupo `tickets` contra una página completa NO PRUEBA NADA**: el
+  montaje del cajón lo lleva entero en cada página. Receta y porqué: `TESTING.md` **§2.ter**.
+- **Lo que un gate declara que NO mira es un hueco con nombre** — así se sirvieron 20 iconos vacíos:
+  `TESTING.md` **§2.quater** y `DECISIONES #113`.
 - **El modo `embedded` de `auth.login`/`auth.register` ya no lo monta nadie en producción**, pero es
-  la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`. Muere cuando el área de
-  cliente rehaga la auth dentro del cajón, no antes.
+  la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`: muere cuando el área de
+  cliente rehaga la auth dentro del cajón, no antes (`#112(f)`).
 
 ### Lo que NO depende de nosotros
 
@@ -149,14 +154,14 @@ el flujo por el aviso de mantenimiento. La cesta sobrevive a la recarga.
 verificados (`#110`). 🟩 **Desde `#112` es el ÚNICO**: no queda flag, ni segundo motor, ni vuelta atrás
 sin desplegar.
 
+⚠️ **OJO con lo que hay ALLÍ ahora mismo**: staging sirve una versión **anterior** a los dos arreglos
+de esta sesión, así que **hoy tiene los enlaces profundos rotos y los iconos invisibles**. No es una
+regresión nueva: es lo que lleva desde que se puso el flag en `spa`. Se corrige al desplegar, y es
+justo lo que hay que mirar entonces (ver «Próximo paso»).
+
 ⚠️ **Residual de la pausa**: el estado se relee al cargar la página, en cada apertura del cajón y al
 pulsar «Ir a pagar». Un cajón ABIERTO y quieto no se entera del interruptor hasta cerrarlo, reabrirlo o
 intentar pagar.
-
-⚠️ **Y un agujero MEDIDO, arreglado, que nadie ha visto funcionar todavía**: los enlaces
-profundos de la landing (zona, packs, eventos) abrían el cajón en el catálogo raíz con el motor SPA,
-porque el adaptador de intención de Livewire consumía la intención antes de que la SPA se montara
-(`#111(h)`). Hay que comprobarlo en navegador tras desplegar la rama — es el punto **A7** del guion.
 
 ## ▶ El MAPA del cajón SPA (para no buscarlo a ciegas)
 
@@ -188,10 +193,8 @@ por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa cla
 —`href`, `action`, `method`, los `name` de un formulario, **el texto**, y **el interior de un
 `<svg>`**— el diff de árbol **lo da por bueno**. Si transcribes algo de esa clase necesita paridad
 propia. Demostrado por mutación en el paso 9.
-⚠️⚠️ **Y esa lista mordió de verdad** (`#113`): los **20 iconos del cajón eran `<svg>` VACÍOS** y se
-sirvieron así —en staging, con `#110` mirando cuatro caminos en navegador sin verlo—, porque el diff
-no desciende en `<svg>`. Hoy lo cubre `SidebarIconParityTest`, que exige que el cajón **no invente
-dibujos**: cada geometría es la de un `<x-icons.*>` o está declarada como propia con su motivo.
+⚠️⚠️ **Y esa lista mordió**: los 20 iconos se sirvieron VACÍOS (`#113`). Hoy los cubre
+`SidebarIconParityTest`.
 
 ## ▶ Lo que NO hay que reimplementar (el terreno del dinero está entero)
 
