@@ -328,9 +328,14 @@ class SidebarDomContractTest extends TestCase
      * lleva la separación que da la cabecera. **Se verificó por mutación que el caso de la cesta
      * completa NO lo detectaba**, porque todas sus líneas tienen fecha.
      *
-     * Y el estado es alcanzable, no teórico: `Cart::sanitize()` conserva una línea con `date: ''`
-     * (una cesta antigua o manipulada) y el presupuesto **la tarifica igual** —medido: subtotal
-     * correcto con la tarifa de hoy—, así que el carrito la pinta.
+     * ⚠️ **[CORREGIDO 2026-08-21, medido] El presupuesto NO la tarifica: la RECHAZA.** Este docblock
+     * decía lo contrario («la tarifica igual —medido: subtotal correcto—») y era falso:
+     * `POST /api/v1/orders/quote` con `date: ''` devuelve **422** con
+     * `items.0.date: El campo items.0.date es obligatorio`. Sondeado contra la API real antes de
+     * reescribir esto. Quien creyera la versión vieja intentaría alimentar el caso por la API y
+     * perdería el tiempo: **no hay camino real que alimentar**, y por eso este es el único caso del
+     * paso 4 cuyo fixture se declara a mano — lo que comprueba es que el marcado no se desmorona si
+     * un estado así llegara (cesta antigua o manipulada que el saneador dejara pasar).
      */
     public function test_a_cart_line_without_a_date_still_emits_its_row_container(): void
     {
@@ -352,7 +357,7 @@ class SidebarDomContractTest extends TestCase
         // saneador del cajón **descarta** antes de guardarla (`cart.js` espeja `CartPayload`). O sea:
         // el estado que este caso ejerce **no es alcanzable por el cliente**, así que no hay camino
         // real que alimentar — lo que se comprueba aquí es que el marcado no se desmorona si llegara.
-        $vue = $this->vueTree(4, $this->cartProps($component), 'cart__item');
+        $vue = $this->vueTree(4, $this->datelessCartProps($product), 'cart__item');
 
         $this->assertTree(__FUNCTION__,
             $livewire, $vue,
@@ -1538,7 +1543,17 @@ class SidebarDomContractTest extends TestCase
         // ⚠️ La rama `cart` del paso 1 necesita **las dos cargas**: el catálogo para el paso y el
         // presupuesto para el pie. Es el único estado en el que el pie habla de algo que no está en la
         // pantalla que se pinta.
-        $onTimeDate = (string) $onTime->get('date');
+        // ⚠️ El día y la cantidad se DECLARAN, no se leen del view-model del motor que este fichero
+        // compara (4.7·2b·3, paso 1). Los dos son lo que el propio montaje de arriba fijó: el día es
+        // el que se le pasó a `selectDate()`, y la cantidad es el suelo del selector para una entrada.
+        // Medido antes de sustituirlo: el componente devolvía exactamente estos dos valores.
+        // ⚠️ Y medido también lo que ESTE test NO protege: mutar los dos deja los 34 casos en verde,
+        // porque el diff compara ESTRUCTURA y el normalizador da el texto por bueno a propósito. No es
+        // una pérdida —antes salían del componente y tampoco los protegía nadie aquí—: quien los
+        // vigila son `SidebarMoneyParityTest` y `SidebarTextParityTest`, que es la división de trabajo
+        // declarada. Lo único que este fixture necesita es un día CON franjas, no un día concreto.
+        $onTimeDate = now()->addDay()->toDateString();
+        $onTimeQty = (int) $entry->min_qty;
 
         return [
             // Rama `cart`: un único hijo, sin nota de IVA.
@@ -1555,8 +1570,8 @@ class SidebarDomContractTest extends TestCase
             // Rama `bar` sin desglose, con importe: una entrada se paga entera.
             'hora de una entrada' => [
                 3, $onTime, [],
-                $this->timeApiPayload($entry->id, $onTimeDate, '10:00:00', (int) $onTime->get('qty')),
-                $this->clientState($onTimeDate, '10:00:00', (int) $onTime->get('qty'), step: 3, productId: $entry->id),
+                $this->timeApiPayload($entry->id, $onTimeDate, '10:00:00', $onTimeQty),
+                $this->clientState($onTimeDate, '10:00:00', $onTimeQty, step: 3, productId: $entry->id),
             ],
             // Rama `bar` CON desglose: seis nodos más, y el disparador dentro del rótulo.
             'cesta con señal' => [
@@ -1667,35 +1682,36 @@ class SidebarDomContractTest extends TestCase
      * ⚠️ **En retirada**: solo la usan el caso de la línea sin fecha —estado inalcanzable por el
      * cliente, ver ahí— y el paso 8, que se migra en el siguiente tramo. Cuando esos dos caigan, se va.
      */
-    private function cartProps(Testable $component): array
+    /**
+     * Las props del ÚNICO caso que no puede alimentarse por la API (la línea sin fecha), DECLARADAS.
+     *
+     * ⚠️ Antes se renombraban a mano desde `$component->viewData('cartLines')`, o sea **desde el motor
+     * que este fichero compara** (4.7·2b·3, paso 1). Los valores están MEDIDOS volcando ese view-model
+     * antes de sustituirlo: una línea, `date: ''`, `qty: 2`, subtotal 1.980 = 2 × 990. Los que se
+     * pueden derivar del dominio se derivan (nombre y precio del producto); los demás describen el
+     * estado que el caso ejerce a propósito.
+     *
+     * @return array<string, mixed>
+     */
+    private function datelessCartProps(TicketType $product): array
     {
-        $lines = array_map(fn (array $line): array => [
-            'index' => $line['index'],
-            'product_id' => 0,
-            'product_name' => $line['name'],
-            'is_pack' => $line['is_pack'],
-            'date' => $line['date'],
-            'time' => $line['time'],
-            'quantity' => $line['qty'],
-            'subtotal_cents' => $line['subtotal'],
-            'has_deposit' => $line['has_deposit'],
-            'deposit_cents' => $line['deposit'],
-            'gate_remainder_cents' => $line['gate_remainder'],
-            'addons' => array_map(fn (array $addon): array => [
-                'product_id' => 0,
-                'product_name' => $addon['name'],
-                'quantity' => $addon['qty'],
-                'free_quantity' => $addon['free_qty'],
-                'subtotal_cents' => $addon['subtotal'],
-            ], $line['addons']),
-            'event' => $line['event'],
-        ], $component->viewData('cartLines'));
-
-        // El carrito solo pinta las líneas TARIFICADAS. Con la cesta vacía enseña su aviso, y con el
-        // recuento a cero también: el contador sale del presupuesto, no del array (fallo P8).
         return [
-            'lines' => $component->viewData('cartCount') > 0 ? $lines : [],
-            'confirmed' => (bool) $component->get('confirmed'),
+            'lines' => [[
+                'index' => 0,
+                'product_id' => 0,
+                'product_name' => $product->tr('name'),
+                'is_pack' => false,
+                'date' => '',
+                'time' => '10:00:00',
+                'quantity' => 2,
+                'subtotal_cents' => 2 * 990,
+                'has_deposit' => false,
+                'deposit_cents' => 2 * 990,
+                'gate_remainder_cents' => 0,
+                'addons' => [],
+                'event' => [],
+            ]],
+            'confirmed' => false,
             'error' => '',
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
