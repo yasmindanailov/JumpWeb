@@ -5,6 +5,13 @@
 #  · migrate:fresh / db:wipe quedan bloqueados en CUALQUIER forma (bash -c, sh -lc, etc.).
 # Recibe el tool_input JSON por stdin; exit 2 = bloquear con mensaje. Fail-open si no hay
 # python3 o el JSON no parsea (el allowlist/deny normal sigue aplicando).
+#
+# ⚠️ Este guard casa por RUTA RELATIVA («proyectos/jumpingjump»), así que vale en cualquier
+# máquina. Los deny `Read/Edit/Write` de `.claude/settings.json` NO: son rutas ABSOLUTAS con el
+# nombre de usuario dentro, y hay una entrada por cada puesto de trabajo (`yasmin` y `yasmi`).
+# NO son un duplicado que limpiar: borrar una destapa el repo origen en ese puesto para las
+# herramientas de fichero (medido el 2026-08-19 al provisionar el segundo puesto: el repo origen
+# también está clonado allí). Al añadir un puesto nuevo, se añade su terna.
 set -uo pipefail
 
 input=$(cat)

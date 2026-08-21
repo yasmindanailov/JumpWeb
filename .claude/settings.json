@@ -46,7 +46,10 @@
       "Bash(docker compose exec -u sail -T laravel.test php artisan db:wipe:*)",
       "Read(//home/yasmin/proyectos/jumpingjump/**)",
       "Edit(//home/yasmin/proyectos/jumpingjump/**)",
-      "Write(//home/yasmin/proyectos/jumpingjump/**)"
+      "Write(//home/yasmin/proyectos/jumpingjump/**)",
+      "Read(//home/yasmi/proyectos/jumpingjump/**)",
+      "Edit(//home/yasmi/proyectos/jumpingjump/**)",
+      "Write(//home/yasmi/proyectos/jumpingjump/**)"
     ]
   },
   "hooks": {

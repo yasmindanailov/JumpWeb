@@ -276,6 +276,9 @@ MECANISMO del fallo, no por el síntoma** (`#68`).
 - BD dev sembrada con SaltoPark: `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña `password`.
   ⚠️ La BD dev arrastra ADEMÁS el par `…@jumpingjump.test` del import, así que `User::first()` devuelve
   uno del origen — usa el email completo al probar a mano.
+  ⚠️ **Eso es de la máquina donde se hizo el import, no del producto**: un clon nuevo sembrado con
+  `migrate --seed` NO tiene ese par (medido el 2026-08-19 al montar el segundo puesto de trabajo).
+  Si `User::first()` te devuelve un usuario limpio no es un fallo: es que estás en un clon nuevo.
 - ⚠️ Si clonas de cero, comprueba que **`APP_URL` coincide con `APP_PORT`** en el `.env` (no versionado):
   con el puerto desalineado salen mal los enlaces absolutos de correo, las URLs firmadas y la derivación
   de CORS y de los dominios stateful de Sanctum.
