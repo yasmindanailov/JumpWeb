@@ -1,4 +1,7 @@
-<x-layout :title="__('account.reset.title')" :auth-modal="null">
+{{-- `noindex`: esta URL lleva un TOKEN de restablecimiento. Que una superficie así se sirviera
+     `index, follow` era un descuido heredado —el `noindex` de auth venía del prop `authModal`, que
+     esta página pone a `null`—. Fijado en `SeoTest`. --}}
+<x-layout :title="__('account.reset.title')" :auth-modal="null" :noindex="true">
 <div x-data="landing">
     <x-site.nav />
 

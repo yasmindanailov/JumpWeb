@@ -150,4 +150,55 @@ class SeoTest extends TestCase
             ->assertSee('og-image.jpg', false)              // cae a la imagen por defecto del sitio
             ->assertDontSee('javascript:alert(1)', false);  // el valor peligroso NO se emite (saneado)
     }
+
+    /**
+     * **Las tres PUERTAS de auth no se indexan nunca** (`specs/auth-en-cajon.md` §1.3).
+     *
+     * ⚠️⚠️ **Esto es conducta viva que NADIE aseveraba, y se escribe ANTES de tocar la auth a
+     * propósito.** Hoy el `noindex` de `/login`, `/registro` y `/recuperar-contrasena` es un efecto
+     * lateral del prop `authModal` del layout —el mismo que decide si se pinta el modal—, así que
+     * retirar el modal se llevaría por delante el `<meta robots>` **sin que nada fallara**: tres URLs
+     * de auth entrando en el índice de Google en silencio.
+     *
+     * ▶ Es la familia de `DECISIONES #89`/`#93`: *un dato que viaja al cliente cuyo único test conduce
+     * la superficie vieja no está fijado por nadie*. Con este caso, la conducta queda fijada por lo
+     * que el cliente RECIBE y no por quién se lo pone, que es lo que permite cambiar el mecanismo sin
+     * perderla.
+     *
+     * ⚠️ El **control negativo** va en el mismo caso y no es adorno: sin él, un layout que emitiera
+     * `noindex` en TODA la web pasaría este test con matrícula (`CONVENCIONES §3.quater`: un valor
+     * que no distingue no fija nada).
+     */
+    public function test_the_auth_doors_are_never_indexable(): void
+    {
+        // ⚠️ Las tres primeras lo llevaban ya; las dos últimas **NO** (medido el 2026-08-23:
+        // `index, follow`), y una de ellas es una URL con un TOKEN de restablecimiento dentro. El
+        // `noindex` de auth venía del prop `authModal`, que estas dos páginas ponen a `null`, así que
+        // se quedaban fuera por el mismo efecto lateral que lo daba a las otras.
+        $surfaces = [
+            '/login', '/registro', '/recuperar-contrasena',
+            '/restablecer-contrasena/token-de-prueba', '/email/verificar',
+        ];
+
+        foreach ($surfaces as $surface) {
+            $this->get($surface)
+                ->assertOk()
+                ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+        }
+
+        // Control negativo: la home SÍ se indexa. Si esto cae, el caso de arriba dejó de medir nada.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<meta name="robots" content="index, follow">', false);
+    }
+
+    /** Y la otra mitad de «no indexable»: ninguna de las tres se anuncia en el sitemap. */
+    public function test_the_auth_doors_are_not_advertised_in_the_sitemap(): void
+    {
+        $res = $this->get('/sitemap.xml')->assertOk();
+
+        foreach (['login', 'registro', 'recuperar-contrasena'] as $slug) {
+            $res->assertDontSee('<loc>'.url('/'.$slug).'</loc>', false);
+        }
+    }
 }
