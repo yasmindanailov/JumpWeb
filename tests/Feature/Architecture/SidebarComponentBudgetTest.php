@@ -65,7 +65,17 @@ class SidebarComponentBudgetTest extends TestCase
         // **72%** (441). Mover estado a stores da poco por sí solo; lo que baja el número de verdad es
         // sacar las secuencias — 184 líneas son de un solo dominio y pueden ser acciones de su store,
         // y 214 son transversales y piden el patrón `admission.js::runCheckout()`.
-        'sidebar/Sidebar.vue' => ['code' => 434, 'api' => 2],
+        //
+        // ⚠️ **614 → 438 y 11 → 2 llamadas a la API** en la reorganización del 2026-08-22 (nueve
+        // stores). El segundo número es el que de verdad mide `CE-6`; las líneas son el síntoma.
+        //
+        // ⚠️⚠️ **Y SUBE DE 434 A 438, que es lo que esta regla existe para hacer visible.** No es el
+        // objeto-dios recreciendo: son las cuatro líneas de `actOnIdentity()`, que RESTAURAN una
+        // conducta perdida al mudar la identidad al store — si la cesta se purga hay que volver al
+        // catálogo, o el cliente se queda mirando un carrito vacío. Verificado en navegador entrando y
+        // cerrando sesión: sin ellas, purga y se queda en el paso 4.
+        // Una subida sin este párrafo detrás sería exactamente lo que la regla prohíbe.
+        'sidebar/Sidebar.vue' => ['code' => 438, 'api' => 2],
     ];
 
     /**

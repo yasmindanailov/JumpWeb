@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { STEPS, canGo, createMachine, isIdentifying, isOutcome, modeOf, stepForOutcome } from './machine.js';
+import { STEPS, canGo, createMachine, isIdentifying, isOutcome, modeOf, stepForOutcome, FUNNEL_STEPS, FUNNEL_TRANSITIONS } from './machine.js';
 
 /**
  * Fase 4 · paso 4.1 — la red de la máquina de estados del cajón (`sidebar-spa.md` §4.8, CE-6).
@@ -187,4 +187,39 @@ describe('avisos de cambio', () => {
 
         assert.deepEqual(seen, [STEPS.DATE, STEPS.CONFIRMED]);
     });
+});
+
+/**
+ * ⚠️⚠️ **EL GRAFO DEL EMBUDO ESTÁ CERRADO, y este caso existe para que siga estándolo.**
+ *
+ * `DECISIONES #66` ya decidió que el cajón hospedará también el ÁREA DE CLIENTE —pedidos, reservas,
+ * ajustes—, y **un área de cliente no es un embudo**: sus pantallas se navegan libremente, sin orden
+ * ni vuelta atrás obligatoria. Colgarlas de `FUNNEL_TRANSITIONS` mezclaría dos modelos de navegación
+ * en un mapa, y desde ese día cualquier cambio en uno obligaría a razonar sobre el otro.
+ *
+ * El caso no impide crecer: impide crecer POR AQUÍ. Cuando lleguen esas pantallas van en su propia
+ * sección, con su propio modelo, y este mapa se queda como está.
+ */
+test('el grafo del embudo solo conoce los pasos del embudo', () => {
+    const conocidos = new Set(FUNNEL_STEPS);
+
+    // ⚠️ Se recorre el MAPA, no una lista de destinos que ya se sabe buenos. El primer intento de este
+    // caso iteraba `FUNNEL_STEPS × FUNNEL_STEPS` y era INERTE: colar un `42` en el grafo no lo movía,
+    // porque el 42 nunca llegaba a mirarse. Un test sobre un conjunto cerrado tiene que leer el
+    // conjunto, no una copia de lo que se espera encontrar en él.
+    for (const [desde, destinos] of Object.entries(FUNNEL_TRANSITIONS)) {
+        assert.ok(conocidos.has(Number(desde)), `el grafo parte de ${desde}, que no es un paso del embudo`);
+
+        for (const hasta of destinos) {
+            assert.ok(conocidos.has(hasta), `el embudo lleva a ${hasta}, que no es un paso suyo`);
+        }
+    }
+
+    assert.equal(
+        Object.keys(FUNNEL_TRANSITIONS).length, FUNNEL_STEPS.length,
+        'el grafo tiene que hablar de TODOS los pasos del embudo y de ninguno más',
+    );
+
+    assert.equal(FUNNEL_STEPS.length, 11, 'el embudo tiene ONCE pasos; una pantalla nueva aquí es una señal de alarma, no una feature');
+    assert.equal(new Set(FUNNEL_STEPS).size, 11, 'sin repetidos');
 });

@@ -81,7 +81,32 @@ export function isIdentifying(step) {
  * Lo que NO está aquí es tan informativo como lo que está: de `CONFIRMED` solo se sale volviendo al
  * catálogo (empezar otra compra), y de `REDIRECTING` no se sale — el navegador se va a la pasarela.
  */
-const TRANSITIONS = {
+/**
+ * **Los pasos que forman el EMBUDO DE COMPRA.** Es la lista cerrada que `FUNNEL_TRANSITIONS` gobierna.
+ *
+ * ⚠️⚠️ **Se exporta para que se pueda VIGILAR que sigue cerrada** (`machine.test.js`), y el motivo es
+ * una decisión de producto ya tomada: `DECISIONES #66` dice que el cajón será también el ÁREA DE
+ * CLIENTE —sus pedidos, sus reservas, sus ajustes—, y **un área de cliente NO es un embudo**: sus
+ * pantallas se navegan libremente, sin orden ni vuelta atrás obligatoria.
+ *
+ * ▶ **Colgar esas pantallas de este grafo sería el error caro**: mezclaría dos modelos de navegación
+ * en un solo mapa, y a partir de ahí cada cambio de cualquiera de los dos tendría que razonar sobre
+ * el otro. Cuando lleguen, van en su propia SECCIÓN con su propio modelo. Este mapa se queda con lo
+ * que ya tiene.
+ */
+export const FUNNEL_STEPS = [
+    STEPS.CATALOG, STEPS.DATE, STEPS.TIME, STEPS.CART, STEPS.IDENTIFY,
+    STEPS.CONFIRMED, STEPS.VERIFY_EMAIL, STEPS.PAY, STEPS.REDIRECTING, STEPS.DECLINED, STEPS.VERIFYING,
+];
+
+/**
+ * Las transiciones permitidas **DENTRO DEL EMBUDO**.
+ *
+ * ⚠️ Antes se llamaba `TRANSITIONS` a secas, y el nombre importaba: leído así parecía «las
+ * transiciones del cajón», que es lo que invita a añadir aquí la primera pantalla de cuenta. Es del
+ * EMBUDO, y solo suyo.
+ */
+export const FUNNEL_TRANSITIONS = {
     [STEPS.CATALOG]: [STEPS.DATE],
     [STEPS.DATE]: [STEPS.CATALOG, STEPS.TIME],
     [STEPS.TIME]: [STEPS.DATE, STEPS.CART],
@@ -109,7 +134,7 @@ const TRANSITIONS = {
 };
 
 export function canGo(from, to) {
-    return (TRANSITIONS[from] ?? []).includes(to);
+    return (FUNNEL_TRANSITIONS[from] ?? []).includes(to);
 }
 
 /**

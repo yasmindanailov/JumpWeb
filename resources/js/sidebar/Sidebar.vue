@@ -445,8 +445,23 @@ const progress = computed(() => buildProgress({
  * cualquier otro fallo se conserva la identidad conocida, porque purgar por un corte de red destruiría
  * la cesta de quien no ha hecho nada malo — y no habría manera de recuperarla.
  */
-function refreshIdentity() {
-    return cartStore.identify({ api });
+async function refreshIdentity() {
+    return actOnIdentity(await cartStore.identify({ api }));
+}
+
+/**
+ * Aplica una respuesta de identidad y **vuelve al catálogo si la cesta se purgó**.
+ *
+ * ⚠️⚠️ **La navegación vive AQUÍ y no en el store, y hay que llamarla desde los TRES sitios.** El
+ * store decide y ejecuta la purga —vaciar y olvidar— pero no mueve el paso, porque un store que
+ * navega es un store que sabe de embudos. Lo que no puede pasar es que se purgue la cesta y el
+ * cliente se quede mirando un carrito vacío: eso fue una regresión real del 2026-08-22, introducida
+ * al mudar la identidad y cazada al revisar los sitios de llamada uno a uno.
+ */
+function actOnIdentity(decision) {
+    if (decision === 'purge') store.enter(STEPS.CATALOG);
+
+    return decision;
 }
 
 /**
@@ -554,7 +569,7 @@ async function checkout() {
         incompleteLines: hasPendingEventFields(cartStore.rows),
         api,
         messages: props.messages,
-        applyIdentity: (response) => cartStore.applyIdentityResponse(response),
+        applyIdentity: (response) => actOnIdentity(cartStore.applyIdentityResponse(response)),
         // ⚠️ **La pausa se enseña releyendo el estado, no pintando un error**: el componente Livewire
         // escribe su mensaje en el bag y el cartel de mantenimiento lo tapa antes de que llegue a
         // pintarse (medido). Releer es además lo que cierra el residual de 4.3·3 — un cajón ya
@@ -646,7 +661,7 @@ async function submitRegister() {
  */
 async function enterWith(identity) {
     notifyLoggedIn();
-    cartStore.applyIdentityResponse(identity);
+    actOnIdentity(cartStore.applyIdentityResponse(identity));
     authStore.reset();
 
     const verdict = await tracked(continueAfterIdentification({
