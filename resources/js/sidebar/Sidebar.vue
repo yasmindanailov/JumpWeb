@@ -5,6 +5,7 @@ import { useDateStore } from './stores/date.js';
 import { useTimeStore } from './stores/time.js';
 import { useAuthStore } from './stores/auth.js';
 import { useCartStore } from './stores/cart.js';
+import { useOutcomeStore } from './stores/outcome.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
@@ -15,7 +16,7 @@ import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runConfirm } from './pay.js';
-import { declinedReasonText, loadConfirmation, loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
+import { loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
 import { signupRequiresCaptcha } from './register.js';
 import { addLine, cartRows, decideOwnership, hasPendingEventFields, reconcile, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
@@ -230,7 +231,7 @@ onMounted(async () => {
         authStore.setSignupSiteKey(signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '');
         // El enlace de registro del parque, que solo pinta el paso 6. Llega ya SANEADO (`SEC-07`): lo
         // edita un operador y un cliente JSON no tiene escape de plantilla que remate la defensa.
-        registration.value = config.data?.registration ?? null;
+        outcomeStore.registration = config.data?.registration ?? null;
     }
 
     // ⚠️ **En paralelo y no en cadena**: son independientes, y con un desenlace en pantalla el cliente
@@ -785,19 +786,20 @@ function notifyLoggedIn() {
 
 // ── El paso 8: confirmar y salir hacia la pasarela ────────────────────────────────────────────
 
-/** El formulario firmado que devuelve `POST /orders`. Mientras sea `null`, el paso 9 no pinta nada. */
-const gateway = ref(null);
-
 /**
- * El código del pedido en juego. Lo necesitan las pantallas de desenlace (4.6).
+ * Todo el DESENLACE vive en `stores/outcome.js` (reorganización del 2026-08-22): el formulario firmado
+ * de la pasarela, el código del pedido en juego, el resumen, el motivo del rechazo, los dos
+ * indicadores de «algo en vuelo» y el bloque de registro del parque.
  *
- * Nace del montaje —lo que dejó la vuelta de la pasarela— y lo reescribe `confirmReservation()` con el
- * pedido recién creado. Las dos fuentes no compiten: cuando hay desenlace no hay compra en curso.
+ * ⚠️ El SONDEO se queda aquí: su temporizador muere con el motor y su desenlace MUEVE el paso. Las dos
+ * cosas son del embudo.
  */
-const orderCode = ref(props.orderCode ?? '');
+const outcomeStore = useOutcomeStore();
 
-/** `true` mientras el pedido se está creando: impide el doble clic en el botón más caro del cajón. */
-const confirming = ref(false);
+// ⚠️ El código del pedido nace del MONTAJE: es lo que dejó la vuelta de la pasarela, y llega ya
+// consumido por `Http\Sidebar\SidebarEntry` (mirarlo dos veces reabriría el cajón en cada página).
+outcomeStore.setOrderCode(props.orderCode);
+
 
 /**
  * «Pagar con tarjeta». Espejo de `Purchase::confirmReservation()`.
@@ -813,9 +815,9 @@ const confirming = ref(false);
  * 502 del puerto de pasarela, que es lo que el cliente ha vivido.
  */
 async function confirmReservation() {
-    if (confirming.value) return;
+    if (outcomeStore.confirming) return;
 
-    confirming.value = true;
+    outcomeStore.confirming = true;
 
     try {
         const result = await tracked(runConfirm({
@@ -844,43 +846,18 @@ async function confirmReservation() {
         cartStore.persist();
 
         cartStore.error = '';
-        orderCode.value = result.orderCode;
-        gateway.value = result.form;
+        outcomeStore.orderCode = result.orderCode;
+        outcomeStore.gateway = result.form;
         store.go(STEPS.REDIRECTING);
     } finally {
-        confirming.value = false;
+        outcomeStore.confirming = false;
     }
 }
 
 // ── El DESENLACE de la pasarela: los pasos 6, 10 y 11 ─────────────────────────────────────────
 
-/**
- * El resumen del pedido que pinta el paso 6, o `null`.
- *
- * ⚠️ **`null` es un estado legítimo, no un fallo que haya que gritar**: el Blade pinta la pantalla
- * igual sin resumen —con su código de pedido y el aviso del correo—, y ese es el caso de quien perdió
- * la sesión entre la ida a la pasarela y la vuelta. Enseñarle «ha fallado algo» a quien acaba de pagar
- * sería mucho peor.
- */
-const confirmation = ref(null);
 
-/**
- * El bloque de «registro del parque» que publica `GET /config`, o `null`.
- *
- * Lo pinta SOLO el paso 6, igual que en el Blade. Se guarda del `/config` del montaje en vez de
- * pedirlo aparte: ya viaja en esa respuesta y una petición más en la pantalla del desenlace sería
- * regalar espera justo donde el cliente ya ha pagado.
- */
-const registration = ref(null);
 
-/**
- * El motivo del rechazo YA traducido que pinta el paso 10, o cadena vacía.
- *
- * ⚠️ Vacío significa «no se pudo preguntar», no «no hay motivo»: el servidor cae a `default` cuando no
- * conoce el código, así que con respuesta el bloque se pinta siempre. Es el espejo exacto del `null` de
- * Livewire, que solo aparece sin sesión o sin código de pedido.
- */
-const declinedReason = ref('');
 
 /**
  * Trae lo que el paso 6 enseña.
@@ -890,12 +867,12 @@ const declinedReason = ref('');
  * sería dinero de peticiones a cambio de nada.
  */
 async function loadOutcome() {
-    if (orderCode.value === '') {
+    if (outcomeStore.orderCode === '') {
         return;
     }
 
     if (store.step === STEPS.CONFIRMED) {
-        confirmation.value = await tracked(loadConfirmation({ orderCode: orderCode.value, api }));
+        await tracked(outcomeStore.loadConfirmation({ api }));
 
         return;
     }
@@ -904,12 +881,9 @@ async function loadOutcome() {
     // pequeño a propósito porque se pregunta en bucle. Livewire lo resuelve en `mount()` leyendo el
     // último `Payment` fallido; aquí lo pregunta quien lo pinta.
     if (store.step === STEPS.DECLINED) {
-        const status = await tracked(loadPaymentStatus({ orderCode: orderCode.value, api }));
+        const status = await tracked(loadPaymentStatus({ orderCode: outcomeStore.orderCode, api }));
 
-        // Sin respuesta no se pinta el bloque, que es el espejo del `null` de Livewire cuando no hay
-        // sesión o el pedido no es de quien pregunta. Con respuesta SIEMPRE se pinta: el servidor cae a
-        // `default` cuando no conoce el motivo, y el Blade también.
-        declinedReason.value = status === null ? '' : declinedReasonText(props.messages, status.declined_reason);
+        outcomeStore.applyDeclinedReason(props.messages, status);
 
         return;
     }
@@ -960,13 +934,13 @@ function stopPolling() {
  * parpadear una pantalla cuyo mensaje es «espera». El velo es para lo que el cliente acaba de pedir.
  */
 async function poll() {
-    if (store.step !== STEPS.VERIFYING || orderCode.value === '') {
+    if (store.step !== STEPS.VERIFYING || outcomeStore.orderCode === '') {
         stopPolling();
 
         return;
     }
 
-    const verdict = pollVerdict(await loadPaymentStatus({ orderCode: orderCode.value, api }));
+    const verdict = pollVerdict(await loadPaymentStatus({ orderCode: outcomeStore.orderCode, api }));
 
     if (verdict === 'wait') return;
 
@@ -983,15 +957,13 @@ async function poll() {
 
     // Caducó antes de llegar la notificación. La plaza volvió al inventario, así que no hay nada que
     // reintentar: el cliente vuelve al catálogo con el mismo aviso que da la web.
-    orderCode.value = '';
+    outcomeStore.orderCode = '';
     cartStore.error = t('errors.retry_expired');
     store.go(STEPS.CATALOG);
 }
 
 // ── El paso 10: el reintento ──────────────────────────────────────────────────────────────────
 
-/** `true` mientras se reabre el cobro: alterna el rótulo del CTA y bloquea el doble clic. */
-const retrying = ref(false);
 
 /**
  * «Reintentar el pago». Espejo de `Purchase::retryPayment()`.
@@ -1001,19 +973,19 @@ const retrying = ref(false);
  * dominio (`ReservationCheckout::retry()`); aquí solo se traduce el «no».
  */
 async function retryPayment() {
-    if (retrying.value) return;
+    if (outcomeStore.retrying) return;
 
-    retrying.value = true;
+    outcomeStore.retrying = true;
 
     try {
-        const result = await tracked(runRetry({ orderCode: orderCode.value, api, messages: props.messages }));
+        const result = await tracked(runRetry({ orderCode: outcomeStore.orderCode, api, messages: props.messages }));
 
         if (result.rereadStatus) await tracked(refreshBookingStatus());
 
         if (result.ok) {
-            declinedReason.value = '';
+            outcomeStore.declinedReason = '';
             cartStore.error = '';
-            gateway.value = result.form;
+            outcomeStore.gateway = result.form;
             store.go(STEPS.REDIRECTING);
 
             return;
@@ -1027,9 +999,9 @@ async function retryPayment() {
         cartStore.error = result.error;
 
         if (result.goTo === 'catalog') {
-            orderCode.value = '';
-            declinedReason.value = '';
-            gateway.value = null;
+            outcomeStore.orderCode = '';
+            outcomeStore.declinedReason = '';
+            outcomeStore.gateway = null;
             store.go(STEPS.CATALOG);
         }
 
@@ -1037,7 +1009,7 @@ async function retryPayment() {
         // salida está declarada en el mapa de transiciones desde 4.6·2.
         if (result.goTo === 'identify') store.go(STEPS.IDENTIFY);
     } finally {
-        retrying.value = false;
+        outcomeStore.retrying = false;
     }
 }
 
@@ -1167,10 +1139,10 @@ function updateCartField(index, key, value) {
  */
 function addAnother() {
     clearSelection();
-    orderCode.value = '';
-    gateway.value = null;
-    confirmation.value = null;
-    declinedReason.value = '';
+    outcomeStore.orderCode = '';
+    outcomeStore.gateway = null;
+    outcomeStore.confirmation = null;
+    outcomeStore.declinedReason = '';
     store.enter(STEPS.CATALOG);
 }
 
@@ -1296,23 +1268,23 @@ function goBack() {
 
         <RedirectStep
             v-else-if="store.step === STEPS.REDIRECTING"
-            :form="gateway"
+            :form="outcomeStore.gateway"
             :messages="messages" />
 
         <ConfirmedStep
             v-else-if="store.step === STEPS.CONFIRMED"
-            :confirmation="confirmation"
-            :order-code="orderCode"
-            :registration="registration"
+            :confirmation="outcomeStore.confirmation"
+            :order-code="outcomeStore.orderCode"
+            :registration="outcomeStore.registration"
             :messages="messages"
             :locale="locale"
             @add-another="addAnother" />
 
         <DeclinedStep
             v-else-if="store.step === STEPS.DECLINED"
-            :order-code="orderCode"
-            :reason="declinedReason"
-            :retrying="retrying"
+            :order-code="outcomeStore.orderCode"
+            :reason="outcomeStore.declinedReason"
+            :retrying="outcomeStore.retrying"
             :contact-url="urls.contact ?? ''"
             :messages="messages"
             @retry="retryPayment"
@@ -1320,7 +1292,7 @@ function goBack() {
 
         <VerifyingStep
             v-else-if="store.step === STEPS.VERIFYING"
-            :order-code="orderCode"
+            :order-code="outcomeStore.orderCode"
             :orders-url="urls.my_orders ?? ''"
             :messages="messages" />
     </Shell>

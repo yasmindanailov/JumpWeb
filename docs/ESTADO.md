@@ -34,7 +34,7 @@ seguro**.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2658 en verde** (15.276 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **343 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
+  **348 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -231,6 +231,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `stores/time.js` | El estado del paso 3: horas ofrecidas, hora elegida y el tope del selector (**`max_quantity`, no `available`**) | `stores/time.test.js` |
 | `stores/auth.js` | El paso 5 entero: los dos formularios, sus avisos, la pestaña, el bit del anti-bot y las dos peticiones | `stores/auth.test.js` |
 | `stores/cart.js` | La cesta: líneas, dueño, presupuesto, avisos y persistencia (**las respuestas del evento NO se guardan**, RGPD) | `stores/cart.test.js` |
+| `stores/outcome.js` | El desenlace: formulario de la pasarela, código del pedido, resumen, motivo del rechazo | `stores/outcome.test.js` |
 
 Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
