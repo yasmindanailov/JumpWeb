@@ -158,3 +158,108 @@ describe('el store de identificarse', () => {
         assert.equal(a.signupSiteKey, '', 'nulo y vacío son lo mismo: el anti-bot está apagado');
     });
 });
+
+describe('el CONTEXTO del alta, que decide quien llama', () => {
+    /**
+     * ⚠️ **La costura completa, y es donde de verdad puede romperse.** `register.js` ya tiene su caso
+     * del default conservador; lo que esto fija es que el store **no se coma el parámetro por el
+     * camino** —que es la familia de `DECISIONES #118`: los dos extremos probados y el medio sin
+     * cablear—.
+     */
+    test('el store PASA el contexto que le dan hasta el cuerpo de la petición', async () => {
+        const a = store();
+        const api = fakeApi({
+            '/auth/register': { ok: true, status: 201, data: null },
+            '/me': { ok: true, status: 200, data: { id: 3 } },
+        });
+
+        await a.register({ api, messages: MENSAJES, auth: {}, context: 'purchase' });
+
+        assert.equal(api.llamadas[0].body.context, 'purchase');
+    });
+
+    test('y sin contexto se queda el conservador, nunca el que salta la verificación', async () => {
+        const a = store();
+        const api = fakeApi({
+            '/auth/register': { ok: true, status: 201, data: null },
+            '/me': { ok: false, status: 401, data: null },
+        });
+
+        await a.register({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(api.llamadas[0].body.context, 'standalone');
+    });
+});
+
+describe('pedir el enlace de recuperar contraseña', () => {
+    test('arranca sin haber pedido nada y sin avisos', () => {
+        const a = store();
+
+        assert.equal(a.forgotSent, false);
+        assert.deepEqual(a.forgotError, { global: '', fields: {} });
+    });
+
+    test('el 202 deja la pantalla en «revisa tu correo», con el correo del formulario', async () => {
+        const a = store();
+        a.form.email = 'cliente@ejemplo.test';
+
+        const api = fakeApi({ '/auth/password/forgot': { ok: true, status: 202, data: null } });
+        const r = await a.requestPasswordLink({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(r.ok, true);
+        assert.equal(a.forgotSent, true);
+        assert.deepEqual(api.llamadas[0].body, { email: 'cliente@ejemplo.test' });
+    });
+
+    test('un límite de intentos NO enseña «revisa tu correo» y deja su aviso bajo el campo', async () => {
+        const a = store();
+        a.form.email = 'cliente@ejemplo.test';
+
+        const api = fakeApi({
+            '/auth/password/forgot': {
+                ok: false,
+                status: 429,
+                data: null,
+                error: { code: 'too_many_requests', message: 'x', params: { retry_after: 30 } },
+            },
+        });
+
+        await a.requestPasswordLink({ api, messages: MENSAJES, auth: { throttle: 'Espera :seconds s.' } });
+
+        assert.equal(a.forgotSent, false, 'decirle «revisa tu correo» a quien no ha recibido nada es mentirle');
+        assert.equal(a.forgotError.fields.email, 'Espera 30 s.');
+    });
+
+    test('no se puede pedir dos veces con la primera petición en vuelo', async () => {
+        const a = store();
+        a.busy = true;
+
+        const r = await a.requestPasswordLink({ api: fakeApi({}), messages: MENSAJES, auth: {} });
+
+        assert.deepEqual(r, { ok: false, skipped: true });
+    });
+
+    /**
+     * ⚠️ **Y reiniciar borra el «enviado»**: sin esto, quien abriera la pantalla se encontraría la
+     * confirmación de la visita anterior —o del cliente anterior, en una tablet compartida— sin haber
+     * pedido nada. Es la defensa que en la web hacía `$store.auth.completed` con su recarga.
+     */
+    test('reiniciar borra el «enviado» y su aviso', async () => {
+        const a = store();
+        a.form.email = 'cliente@ejemplo.test';
+
+        await a.requestPasswordLink({
+            api: fakeApi({ '/auth/password/forgot': { ok: true, status: 202, data: null } }),
+            messages: MENSAJES,
+            auth: {},
+        });
+
+        assert.equal(a.forgotSent, true);
+
+        a.reset();
+
+        assert.equal(a.forgotSent, false);
+        assert.deepEqual(a.forgotError, { global: '', fields: {} });
+        assert.equal(a.form.email, '');
+    });
+});

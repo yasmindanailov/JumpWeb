@@ -2,11 +2,10 @@
  * El REGISTRO embebido del cajón (Fase 4 · paso 4.4b·1).
  *
  * El paso 5 de la web monta `<livewire:auth.register :embedded="true">`; el motor SPA habla con
- * `POST /api/v1/auth/register` declarando `context: purchase`, que es la política **pay-first** que el
- * servidor ya conoce (`DECISIONES #31`): no manda correo de verificación y **deja la sesión abierta**,
- * porque el pago sustituye a la verificación —un bot no paga—. Las cuatro capas de defensa del alta
- * —honeypot, límite por IP, límite por correo y anti-bot— viven en `Identity\Services\SelfSignup`, el
- * mismo servicio que usa el modal de la web.
+ * `POST /api/v1/auth/register` declarando **el contexto que le pase quien llama** —`purchase` en el
+ * embudo, `standalone` en el área de cliente—, que es lo que el servidor traduce en política
+ * (`DECISIONES #31`). Las cuatro capas de defensa del alta —honeypot, límite por IP, límite por correo
+ * y anti-bot— viven en `Identity\Services\SelfSignup`, el mismo servicio que usa el modal de la web.
  *
  * ⚠️ **La respuesta NO dice si se creó la cuenta, y es a propósito.** `POST auth/register` devuelve
  * **201 sin cuerpo siempre**: el primer borrador del contrato devolvía el perfil cuando había cuenta y
@@ -22,8 +21,21 @@
 
 import { t, tp } from './i18n.js';
 
-/** El contexto de alta que activa el pay-first. El otro (`standalone`) es el del modal suelto. */
+/**
+ * **Los DOS contextos de alta, y cuál se manda NO puede quedar quemado aquí** (`DECISIONES #31`,
+ * `specs/auth-en-cajon.md` §4.3).
+ *
+ * · `purchase` → **pay-first**: el servidor NO manda correo de verificación y **abre sesión**, porque
+ *   el pago sustituye a la verificación —un bot no paga—. Es el del paso 5 del embudo.
+ * · `standalone` → el alta suelta: manda el correo de verificación y **no** abre sesión.
+ *
+ * ⚠️⚠️ **Hasta el 2026-08-23 este módulo mandaba `purchase` QUEMADO**, porque su único cliente era el
+ * embudo. Al traer el alta al área de cliente, reutilizar el módulo «tal cual» habría convertido el
+ * alta suelta en pay-first: **sin correo de verificación y con sesión abierta**, un cambio de política
+ * que nadie decidió y que ninguna pantalla delata. Lo destapó la revisión de la spec, no un test.
+ */
 export const CONTEXT_PURCHASE = 'purchase';
+export const CONTEXT_STANDALONE = 'standalone';
 
 /**
  * ¿El alta de esta instalación exige captcha? Se lee de `GET /config`.
@@ -139,15 +151,21 @@ function firstOf(value) {
  * preguntar porque tiene el veredicto del dominio en la mano; este cliente no puede tenerlo sin
  * romper el señuelo para todo el mundo.
  *
+ * ⚠️ **`context` por defecto es `standalone`, y el default se eligió por SEGURIDAD, no por gusto.**
+ * Es el mismo que aplica el servidor cuando el campo no viaja, y es el conservador: quien olvide
+ * pasarlo en el embudo verá al cliente parado en «revisa tu correo» —visible, y se arregla—, mientras
+ * que el default contrario habría saltado la verificación de correo **en silencio**.
+ *
  * @param {{
  *   form: object,
  *   api: {post: Function, get: Function},
  *   messages: object,
  *   auth: object,
+ *   context: string,
  * }} deps
  * @returns {Promise<{ok: boolean, identified: boolean, me: object|null, errors: RegisterErrors}>}
  */
-export async function runRegister({ form, api, messages = {}, auth = {} }) {
+export async function runRegister({ form, api, messages = {}, auth = {}, context = CONTEXT_STANDALONE }) {
     const response = await api.post('/auth/register', {
         name: form?.name ?? '',
         email: form?.email ?? '',
@@ -156,7 +174,7 @@ export async function runRegister({ form, api, messages = {}, auth = {} }) {
         marketing: form?.marketing === true,
         accept_privacy: form?.accept_privacy === true,
         accept_terms: form?.accept_terms === true,
-        context: CONTEXT_PURCHASE,
+        context,
         // El señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
         website: form?.website ?? '',
         // ⚠️ Cadena vacía, NUNCA `null`: `openapi/v1.yaml` declara `turnstile_token` como

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { registerErrors, runRegister, signupRequiresCaptcha } from './register.js';
+import { registerErrors, runRegister, signupRequiresCaptcha, CONTEXT_PURCHASE, CONTEXT_STANDALONE } from './register.js';
 
 /**
  * Fase 4 · paso 4.4b·1 — la red del alta embebida (criterio CE-6).
@@ -196,14 +196,44 @@ describe('el envío', () => {
         };
     }
 
-    /** ⚠️ `context: purchase` es lo que activa el pay-first en el servidor. Sin él manda un correo. */
-    test('declara el contexto de COMPRA, que es lo que activa el pay-first', async () => {
+    /**
+     * ⚠️ **El contexto lo decide QUIEN LLAMA, y `purchase` es lo que activa el pay-first**: sin correo
+     * de verificación y con sesión abierta, porque el pago la sustituye.
+     *
+     * Hasta el 2026-08-23 este módulo lo mandaba QUEMADO, y este caso lo daba por bueno porque su
+     * único cliente era el embudo. Con el alta también en el área de cliente, eso habría convertido el
+     * alta suelta en pay-first sin que nadie lo decidiera (`specs/auth-en-cajon.md` §4.3).
+     */
+    test('manda el contexto que le pasan, y `purchase` es el que activa el pay-first', async () => {
+        const api = apiDouble();
+
+        await runRegister({ form: FORM, api, messages: MESSAGES, auth: AUTH, context: CONTEXT_PURCHASE });
+
+        assert.equal(api.calls[0].path, '/auth/register');
+        assert.equal(api.calls[0].body.context, 'purchase');
+    });
+
+    test('y el alta SUELTA manda el suyo, que es el que sí manda el correo de verificación', async () => {
+        const api = apiDouble();
+
+        await runRegister({ form: FORM, api, messages: MESSAGES, auth: AUTH, context: CONTEXT_STANDALONE });
+
+        assert.equal(api.calls[0].body.context, 'standalone');
+    });
+
+    /**
+     * ⚠️⚠️ **El default es el CONSERVADOR, y se eligió por seguridad.** Quien olvide pasar el contexto
+     * en el embudo verá al cliente parado en «revisa tu correo» —visible, y se arregla—; el default
+     * contrario habría saltado la verificación de correo **en silencio**, que es un cambio de política
+     * que ninguna pantalla delata. Es además el mismo que aplica el servidor si el campo no viaja.
+     */
+    test('sin contexto se queda el conservador, no el pay-first', async () => {
         const api = apiDouble();
 
         await runRegister({ form: FORM, api, messages: MESSAGES, auth: AUTH });
 
-        assert.equal(api.calls[0].path, '/auth/register');
-        assert.equal(api.calls[0].body.context, 'purchase');
+        assert.equal(api.calls[0].body.context, 'standalone');
+        assert.notEqual(api.calls[0].body.context, 'purchase', 'el default NUNCA puede ser el que salta la verificación');
     });
 
     /** El señuelo viaja SIEMPRE, vacío o no: si no viajara, el servidor no podría usarlo. */

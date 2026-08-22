@@ -45,13 +45,14 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2676 en verde** (15.420 aserciones, `--parallel` **~43 s** medidos el 2026-08-23) ·
-  **525 tests JS** (`node --test`) · Pint limpio (835 ficheros) · `docs-check` verde ·
-  ⚠️ **2675 → 2677 → 2676 el 2026-08-23**: +2 por los casos de `SeoTest` que fijan que las **cinco**
-  superficies de auth se sirven `noindex` y no están en el sitemap (`specs/auth-en-cajon.md` §8·A1),
-  y −1 al mudar los supervivientes de las dos paridades (A2): el caso del alta embebida se retiró
-  **tras medir** que `Api\V1\AuthRegistrationTest` ya cubre su mitad de API. Medir para no encontrar
-  nada sigue siendo medir (`#94`).
+- Suite **2678 en verde** (15.427 aserciones, `--parallel` **~41 s** medidos el 2026-08-23) ·
+  **546 tests JS** (`node --test`) · Pint limpio (837 ficheros) · `docs-check` verde ·
+  ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
+  `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
+  sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
+  embebida se retiró **tras medir** que `Api\V1\AuthRegistrationTest` ya cubre su mitad de API —medir
+  para no encontrar nada sigue siendo medir (`#94`)—; y **+2 PHP / +21 JS** por `forgot.js`, el
+  contexto del alta y su guarda de cableado (A3).
   ⚠️ **Y el cierre anterior fue la primera vez que el contador BAJÓ**: la retirada de `/mi-cuenta/…`
   se llevó **63 casos** cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los
   que afirmaban del dominio se extrajeron y los que la usaban de intermediario se re-apuntaron
@@ -168,6 +169,11 @@ que se retiran (§4.7.bis) — ✅ **ya mudado**, ver abajo.
 del payload en `SidebarMountTest`, el señuelo en `Api\V1\AuthRegistrationTest`, el anti-bot en el
 nuevo `SidebarAntiBotTest`— y **re-mutados allí** (`#65`). En los dos ficheros de paridad solo quedan
 los **6** casos que de verdad comparan motores, y todos siguen montando Livewire: mueren con el modal.
+▶ **A3 hecho el 2026-08-23**: nace `forgot.js` —recuperar contraseña, con la no-enumeración probada
+**cruzando las dos respuestas** y no mirando una rama— y **`context` deja de estar quemado**. El
+embudo manda `purchase` explícito; el default es `standalone`, el conservador. Verificado **sobre el
+chunk construido**, no sobre el fuente. ⚠️ El techo del chunk sube **190 → 191 KiB** (medido: 190,5,
+**+1,0**), y con criterio nuevo: **paso a paso con su medida**, no por adelantado para toda la tanda.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

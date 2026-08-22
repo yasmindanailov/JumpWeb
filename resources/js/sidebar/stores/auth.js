@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { runLogin } from '../login.js';
-import { runRegister } from '../register.js';
+import { runRegister, CONTEXT_STANDALONE } from '../register.js';
+import { runForgot } from '../forgot.js';
 
 /**
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
@@ -35,14 +36,26 @@ const emptyForm = () => ({
 
 const NO_LOGIN_ERROR = () => ({ global: '', fields: {} });
 const NO_REGISTER_ERROR = () => ({ summary: [], fields: {} });
+const NO_FORGOT_ERROR = () => ({ global: '', fields: {} });
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         form: emptyForm(),
 
-        /** Lo que enseña cada formulario del último intento (`login.js` · `register.js`). */
+        /** Lo que enseña cada formulario del último intento (`login.js` · `register.js` · `forgot.js`). */
         loginError: NO_LOGIN_ERROR(),
         registerError: NO_REGISTER_ERROR(),
+        forgotError: NO_FORGOT_ERROR(),
+
+        /**
+         * El enlace de recuperación **ya se pidió**: la pantalla pasa a «revisa tu correo».
+         *
+         * ⚠️ **Es lo único que separa las dos caras de esa zona, y tiene que seguir siéndolo.** El
+         * servidor responde 202 exista o no la cuenta (`SEC-06`), así que cualquier condición extra
+         * que se cuele aquí reconstruiría en el cliente el oráculo de enumeración que el servidor se
+         * cuida de no dar. Lo explica `forgot.js` y lo vigila su `node --test`.
+         */
+        forgotSent: false,
 
         /** `true` mientras hay una petición en vuelo: el botón cambia de rótulo, como en la web. */
         busy: false,
@@ -76,11 +89,19 @@ export const useAuthStore = defineStore('auth', {
             this.signupSiteKey = key || '';
         },
 
-        /** Deja los dos formularios en blanco. La contraseña no se queda en memoria de más. */
+        /**
+         * Deja los TRES formularios en blanco. La contraseña no se queda en memoria de más.
+         *
+         * ⚠️ **`forgotSent` también se limpia, y no es simetría gratuita**: es lo que impide que quien
+         * abra la pantalla de recuperar se encuentre el «revisa tu correo» de la visita anterior —o
+         * del cliente anterior, en una tablet compartida— sin haber pedido nada.
+         */
         reset() {
             this.form = emptyForm();
             this.loginError = NO_LOGIN_ERROR();
             this.registerError = NO_REGISTER_ERROR();
+            this.forgotError = NO_FORGOT_ERROR();
+            this.forgotSent = false;
         },
 
         /**
@@ -125,8 +146,14 @@ export const useAuthStore = defineStore('auth', {
          * ⚠️ **El 201 NO dice si hubo cuenta**, y por eso `runRegister()` pregunta después por
          * `GET /me`: la respuesta del alta es idéntica para un alta real y para un señuelo que actuó
          * —si no lo fuera, un bot distinguiría las dos de un vistazo—.
+         *
+         * ⚠️⚠️ **`context` lo decide QUIEN LLAMA, y por eso viaja como parámetro** (§4.3 de
+         * `specs/auth-en-cajon.md`): el embudo manda `purchase` —pay-first: sin correo de verificación
+         * y con sesión— y el área de cliente, `standalone`. El store no puede elegirlo, porque no sabe
+         * desde qué pantalla se está pintando el formulario: es exactamente la misma forma. Sin
+         * parámetro se queda el conservador, que es el del servidor.
          */
-        async register({ api, messages, auth }) {
+        async register({ api, messages, auth, context = CONTEXT_STANDALONE }) {
             if (this.busy) {
                 return { ok: false, skipped: true };
             }
@@ -134,12 +161,39 @@ export const useAuthStore = defineStore('auth', {
             this.busy = true;
 
             try {
-                const result = await runRegister({ form: this.form, api, messages, auth });
+                const result = await runRegister({ form: this.form, api, messages, auth, context });
                 this.registerError = result.errors;
 
                 if (! result.ok) {
                     this.clearCaptchaToken();
                 }
+
+                return result;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /**
+         * Pide el enlace de recuperación. Devuelve el resultado tal cual lo compone `forgot.js`.
+         *
+         * ⚠️ **La guarda de reentrada es la MISMA `busy` que los otros dos**, y eso es deliberado: los
+         * tres formularios comparten pantalla dentro de la sección de cuenta, y dos peticiones de auth
+         * a la vez desde el mismo cajón no es un estado que nadie quiera razonar. Vive aquí y no en el
+         * botón porque `disabled` es presentación y un `Enter` repetido no pasa por él.
+         */
+        async requestPasswordLink({ api, messages, auth }) {
+            if (this.busy) {
+                return { ok: false, skipped: true };
+            }
+
+            this.busy = true;
+
+            try {
+                const result = await runForgot({ email: this.form.email, api, messages, auth });
+
+                this.forgotError = result.errors;
+                this.forgotSent = result.sent;
 
                 return result;
             } finally {

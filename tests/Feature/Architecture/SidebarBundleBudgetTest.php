@@ -190,8 +190,17 @@ class SidebarBundleBudgetTest extends TestCase
      * exactamente el trabajo que un presupuesto hace bien.
      * ▶ Y una referencia para quien lo suba: el área de cliente ENTERA —tres tandas, siete pantallas,
      * once endpoints— ha costado **27,9 KiB** sobre el cierre de la reorganización (161,6 → 189,5).
+     *
+     * ⚠️ **190 → 191 el 2026-08-23, y lo paga la AUTH dentro del cajón** (`specs/auth-en-cajon.md`
+     * §8·A3): el módulo `forgot.js` —las reglas de recuperar contraseña— más el tercer formulario en
+     * `stores/auth.js`. Medido: **190,5 KiB**, **+1,0** sobre el cierre de la tanda 3.
+     * ▶ **La subida es de UN KiB a propósito, y el criterio es nuevo**: hasta aquí este fichero subía
+     * por adelantado para que una tanda entera cupiera, y luego bajaba al cerrarla. Eso funcionó tres
+     * veces, pero deja un tramo largo en el que el presupuesto **no aprieta**. Este trabajo lo sube
+     * paso a paso, con la medida de cada uno: las tres zonas de auth (A4) volverán a subirlo con la
+     * suya. Cuesta un rojo más por paso y a cambio ningún tramo queda sin guardia.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 190;
+    private const SIDEBAR_CHUNK_MAX_KB = 191;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

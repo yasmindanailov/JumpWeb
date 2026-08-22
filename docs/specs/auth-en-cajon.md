@@ -1,7 +1,7 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1 y A2 EJECUTADOS** (§8) ·
+> Última actualización: 2026-08-23 · **A1, A2 y A3 EJECUTADOS** (§8) ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -199,8 +199,18 @@ verificación cuando el alta viene de la compra (`notifyByEmail: ! $inPurchase`)
 Con eso, darse de alta desde la cabecera **no mandaría el correo de verificación** y el «revisa tu
 correo» de §3.3 solo aparecería cuando actuara el señuelo.
 ▶ **`context` pasa a ser PARÁMETRO** y lo fija quien invoca: el paso 5 manda `purchase`, la zona
-`REGISTER` manda `standalone` —el contexto que hoy usa el modal—. El módulo ya nombra los dos
-(`CONTEXT_PURCHASE`, y `standalone` en su propio docblock); lo que falta es dejar de quemarlo.
+`REGISTER` manda `standalone` —el contexto que hoy usa el modal—.
+
+> ✅ **HECHO en A3 (2026-08-23).** El default quedó en **`standalone`**, y el criterio es de seguridad:
+> quien olvide pasarlo en el embudo verá al cliente parado en «revisa tu correo» —visible, y se
+> arregla—, mientras que el default contrario habría saltado la verificación de correo **en silencio**.
+> Es además el mismo que aplica el servidor cuando el campo no viaja.
+> ▶ **Y abrió un eslabón que ningún test veía**: que el EMBUDO declare `purchase`. El módulo tiene su
+> caso del default y el store el suyo del paso a través, pero el de arriba no lo miraba nadie — la
+> familia de `#117`/`#118`. Lo cierra `SidebarSignupContextTest`, medido mutando los dos extremos.
+> ▶ Verificado además **sobre el chunk construido**: `runRegister` defaultea a la constante de
+> `standalone` y la llamada del embudo lleva la de `purchase`. El fuente puede mentir sobre lo que se
+> sirve; el artefacto que descarga el navegador, no.
 
 ⚠️ **El techo de componentes es 40 líneas de código** (`SidebarComponentBudgetTest`).
 `AccountSection.vue` está hoy en **21** y las tres zonas le suman tres `import` → **24**. Cabe. Si
@@ -423,7 +433,7 @@ test exige para no convertir el refresco en una goma de borrar.
 
 | | Qué se prueba | Con qué |
 |---|---|---|
-| V1 | Las reglas de recuperar contraseña, incluidas **las dos respuestas indistinguibles** | `forgot.test.js` (futuro), `node --test` |
+| V1 ✅ | Las reglas de recuperar contraseña, incluidas **las dos respuestas indistinguibles** | `forgot.test.js`, `node --test` — **12 casos, hechos el 2026-08-23**. La no-enumeración se prueba **cruzando las dos respuestas** (§3.quater, trampa 4) y se midió con una mutación que hace depender el resultado del correo: la caza **solo** ese caso |
 | V2 | Las tres zonas existen, tienen rótulo y **son alcanzables** por su puerta | `navigation.test.js` (guarda nueva, §4.1) |
 | V3 | El mapa ruta→zona cubre las tres rutas y **cuadra con `navigation.js`** | `AccountDoorWiringTest` (casos nuevos) |
 | V4 ✅ | **Las tres URLs se sirven `noindex, nofollow`** y ninguna está en el sitemap | ✅ **HECHO el 2026-08-22**, contra el código de hoy: `SeoTest::test_the_auth_doors_are_never_indexable` + `…_are_not_advertised_in_the_sitemap`. **Medido por MUTACIÓN, las dos direcciones**: quitar `$authModal` del `<meta robots>` tumba el caso en su aserción, y forzar `noindex` en TODA la web tumba el **control negativo** —sin él, un layout que no distinguiera pasaría con matrícula—. El ancla es única (un solo `name="robots"` en el layout) y la restauración se comprobó por CONTENIDO y con `git status` limpio (`CONVENCIONES §3.quater`, trampas 1 y 2) |
@@ -475,7 +485,7 @@ test exige para no convertir el refresco en una goma de borrar.
 |---|---|---|
 | **A1** ✅ | **Cerrar el hueco del `noindex`** con su test, contra el código de HOY | El único que había que hacer **antes** de tocar nada: después del borrado ya no habría qué comparar (§1.3·3). **Hecho y medido por mutación el 2026-08-23**, ampliado a las cinco superficies de auth |
 | **A2** ✅ | **Mudar los 8 casos que sobreviven** de las dos paridades, y **re-mutarlos** allí | ⚠️ **PRIMERO**, y es la corrección de fondo del orden: uno de ellos asevera que el payload del invitado son exactamente `login` y `register`, así que **A3 lo pondría en rojo** (§4.7.bis). **Hecho el 2026-08-23**: 7 mudados a tres destinos, 1 retirado tras medir que ya estaba cubierto, y los 6 que quedan en las paridades siguen montando Livewire |
-| **A3** | `forgot.js`, **`context` como parámetro** (§4.3) y el estado en `stores/auth.js`, con `node --test` | Reglas antes que pantallas, como las ocho zonas anteriores |
+| **A3** ✅ | `forgot.js`, **`context` como parámetro** (§4.3) y el estado en `stores/auth.js`, con `node --test` | Reglas antes que pantallas, como las ocho zonas anteriores. **Hecho el 2026-08-23**: 12 casos de `forgot.js`, 2 del contexto en `register.js`, 7 del store y **una guarda de cableado nueva** (`SidebarSignupContextTest`) para el eslabón que ningún test veía — que el embudo declare `purchase`. Techo del chunk **190 → 191** (medido 190,5, +1,0) |
 | **A4** | Las tres zonas y la guarda de alcanzabilidad en su forma nueva | Ya hay a dónde ir |
 | **A5** | Las puertas: `AccountDoor` + `openAccount()` + los cinco puntos | Ya hay a dónde llegar. ⚠️ **Aquí viven DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4) |
 | **A6** | El aterrizaje: navegar a la puerta, **reiniciar la pila** (§4.10·3) y la pantalla de «revisa tu correo» **con reenvío y escape** (§4.10·2) | Cierra el camino completo antes de tocar el embudo |

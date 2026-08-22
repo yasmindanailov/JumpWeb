@@ -20,7 +20,7 @@ import { buildNotice } from '../paused.js';
 import { continueAfterIdentification, runCheckout } from '../admission.js';
 import { runConfirm } from '../pay.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from '../outcome.js';
-import { signupRequiresCaptcha } from '../register.js';
+import { signupRequiresCaptcha, CONTEXT_PURCHASE } from '../register.js';
 import { addLine, hasPendingEventFields, toApiItems } from '../cart.js';
 import Shell from '../Shell.vue';
 import CatalogStep from '../steps/CatalogStep.vue';
@@ -630,9 +630,16 @@ async function submitLogin() {
  * respuesta del alta es idéntica para un alta real y para un señuelo que actuó —si no lo fuera, un bot
  * distinguiría las dos de un vistazo—. Con sesión, la compra continúa como tras un login; sin ella, el
  * cajón va a «revisa tu correo», que es exactamente lo que hace la web con `registration-submitted`.
+ *
+ * ⚠️⚠️ **`CONTEXT_PURCHASE` va EXPLÍCITO desde el 2026-08-23**, y es lo que activa el pay-first en el
+ * servidor: sin correo de verificación y con sesión abierta, porque el pago la sustituye. Estaba
+ * quemado dentro de `register.js` mientras el embudo fue su único cliente; con el alta también en el
+ * área de cliente, dejarlo allí habría convertido el alta SUELTA en pay-first sin que nadie lo
+ * decidiera (`specs/auth-en-cajon.md` §4.3). Si esta línea pierde el contexto, el cliente que compra
+ * se queda en «revisa tu correo» en mitad del embudo.
  */
 async function submitRegister() {
-    const result = await tracked(authStore.register({ api, messages: props.messages, auth: props.auth }));
+    const result = await tracked(authStore.register({ api, messages: props.messages, auth: props.auth, context: CONTEXT_PURCHASE }));
 
     if (! result.ok) return;
 
