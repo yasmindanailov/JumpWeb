@@ -1,5 +1,9 @@
 import { defineStore } from 'pinia';
-import { clear as forgetStored, load as readStored, removeLine as removeCartLine, save as writeStored } from '../cart.js';
+import {
+    cartRows, clear as forgetStored, load as readStored, reconcile,
+    removeLine as removeCartLine, save as writeStored, toApiItems,
+} from '../cart.js';
+import { useCatalogStore } from './catalog.js';
 
 /**
  * El estado de la CESTA (reorganización del SPA, 2026-08-22).
@@ -54,6 +58,19 @@ export const useCartStore = defineStore('cart', {
         count: (state) => state.quote?.lines?.length ?? 0,
 
         isEmpty: (state) => state.lines.length === 0,
+
+        /**
+         * Las FILAS que pinta el carrito: el presupuesto del servidor emparejado con lo que hay en
+         * memoria y con las etiquetas del esquema de evento.
+         *
+         * ⚠️ **Las etiquetas salen del store del CATÁLOGO, y por eso este getter lo usa**: el
+         * presupuesto NO devuelve las respuestas del pack (RGPD, son datos de un menor) y sin las
+         * etiquetas no hay con qué emparejarlas. Un store puede leer otro; lo que no puede es
+         * duplicar el dato.
+         */
+        rows() {
+            return cartRows(this.quote?.lines ?? [], this.lines, useCatalogStore().fieldsByProduct);
+        },
     },
 
     actions: {
@@ -102,6 +119,20 @@ export const useCartStore = defineStore('cart', {
         },
 
         /**
+         * Vacía la cesta EN MEMORIA, sin tocar lo guardado.
+         *
+         * ⚠️ **Vaciar y olvidar son dos cosas distintas y no se pueden confundir**: al cambiar el
+         * titular hay que hacer las dos (`forget()` aparte), pero al crear la reserva hay que vaciar y
+         * **persistir vacío** — si solo se vaciara en memoria, una recarga resucitaría la cesta y el
+         * cliente acabaría comprando dos veces lo mismo.
+         */
+        empty() {
+            this.lines = [];
+            this.quote = null;
+            this.error = '';
+        },
+
+        /**
          * Quita una línea y persiste. **Devuelve `true` si la cesta se quedó vacía**, que es lo que
          * quien llama necesita para volver al catálogo — el store no navega.
          */
@@ -116,6 +147,43 @@ export const useCartStore = defineStore('cart', {
             }
 
             return false;
+        },
+
+        /**
+         * Vuelve a pedir el presupuesto de la cesta y reconcilia lo que el servidor haya podado.
+         *
+         * ⚠️⚠️ **Reconciliar y volver a presupuestar es UNA sola operación, y por eso se llama sola.**
+         * Podar desplaza los índices, y las filas y el botón de quitar se emparejan por el `index` del
+         * PRESUPUESTO: pintar el viejo sobre la cesta podada enseñaría las respuestas de otra línea y
+         * dejaría el botón mudo.
+         *
+         * ⚠️ El velo de carga NO se enciende aquí: lo envuelve quien llama, que es quien sabe si esto
+         * es algo que el cliente acaba de pedir o una consecuencia.
+         */
+        async refreshQuote({ api }) {
+            if (this.lines.length === 0) {
+                this.quote = null;
+
+                return;
+            }
+
+            const response = await api.post('/orders/quote', { items: toApiItems(this.lines) });
+
+            this.quote = response.ok ? response.data : null;
+
+            if (! response.ok) {
+                return;
+            }
+
+            const { lines, changed } = reconcile(this.lines, this.quote.lines ?? []);
+
+            if (changed) {
+                this.lines = lines;
+                this.persist();
+                this.quote = null;
+
+                await this.refreshQuote({ api });
+            }
         },
 
         /**

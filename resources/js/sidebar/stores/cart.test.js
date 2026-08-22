@@ -119,6 +119,68 @@ describe('el store de la cesta', () => {
         assert.equal(c.quote, null, 'sin líneas, el presupuesto anterior ya no significa nada');
     });
 
+    /**
+     * ⚠️ **Reconciliar y volver a presupuestar es UNA operación.** Si el servidor poda una línea, los
+     * índices se desplazan; pintar el presupuesto viejo sobre la cesta podada emparejaría las
+     * respuestas de OTRA línea y dejaría el botón de quitar mudo. Por eso la acción se llama sola.
+     */
+    test('si el servidor poda una línea, se vuelve a presupuestar sobre la cesta ya podada', async () => {
+        const c = store();
+        c.setLines([LINEA(), LINEA({ product_id: 4 })]);
+
+        // ⚠️ El presupuesto empareja por `index` y una línea sin `unit_price_cents` está PODADA: es
+        // la forma real que compone el servidor, no una inventada (`cart.js::reconcile()`).
+        let vuelta = 0;
+        const api = {
+            post: async () => {
+                vuelta += 1;
+
+                // La primera vez el servidor solo tarifica la línea 0: la 1 viene podada.
+                return { ok: true, status: 200, data: { lines: [{ index: 0, unit_price_cents: 1590, addons: [] }] } };
+            },
+        };
+
+        await c.refreshQuote({ api });
+
+        assert.equal(vuelta, 2, 'tras podar hay que volver a preguntar: el presupuesto viejo ya no vale');
+        assert.equal(c.lines.length, 1, 'y la cesta se queda con lo que el servidor admitió');
+        assert.equal(c.count, 1);
+    });
+
+    test('con la cesta vacía no se pregunta nada y el presupuesto se olvida', async () => {
+        const c = store();
+        c.setQuote({ lines: [{}] });
+
+        let llamadas = 0;
+        await c.refreshQuote({ api: { post: async () => { llamadas += 1; return { ok: true, data: {} }; } } });
+
+        assert.equal(llamadas, 0, 'preguntar por una cesta vacía es una petición regalada');
+        assert.equal(c.quote, null);
+    });
+
+    /**
+     * ⚠️ **Vaciar y OLVIDAR no son lo mismo, y confundirlos cuesta una compra doble.** Al crear la
+     * reserva hay que vaciar y **persistir vacío**: si solo se vaciara en memoria, una recarga
+     * resucitaría la cesta guardada y el cliente compraría dos veces lo mismo.
+     */
+    test('vaciar no borra lo guardado: son dos operaciones', () => {
+        const c = store();
+        c.setLines([LINEA()]);
+        c.persist();
+        c.setQuote({ lines: [{}] });
+        c.setError('algo');
+
+        c.empty();
+
+        assert.deepEqual(c.lines, []);
+        assert.equal(c.quote, null);
+        assert.equal(c.error, '');
+        assert.equal(c.restore('2026-09-01').lines.length, 1, 'lo GUARDADO sigue ahí: vaciar no olvida');
+
+        c.forget();
+        assert.equal(c.restore('2026-09-01').lines.length, 0, 'y olvidar sí');
+    });
+
     test('el tope de líneas solo acepta números', () => {
         const c = store();
 

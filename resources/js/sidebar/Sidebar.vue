@@ -20,7 +20,7 @@ import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runConfirm } from './pay.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
 import { signupRequiresCaptcha } from './register.js';
-import { addLine, cartRows, decideOwnership, hasPendingEventFields, reconcile, toApiItems } from './cart.js';
+import { addLine, decideOwnership, hasPendingEventFields, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
@@ -216,22 +216,22 @@ onMounted(async () => {
         refreshBookingStatus(),
     ]));
 
-    if (catalog.ok) catalogStore.sections = sectionsFrom(catalog.data?.data ?? []);
+    if (catalog.ok) catalogStore.setSections(sectionsFrom(catalog.data?.data ?? []));
 
     // El umbral lo decide el SERVIDOR y viaja con su operador en la descripción del contrato
     // (`total > umbral`): el cliente compara, no reinventa la regla.
     if (config.ok) {
         const threshold = config.data?.catalog_search_min_items;
-        catalogStore.searchEnabled = searchIsEnabled(catalogStore.sections, threshold);
+        catalogStore.setSearchEnabled(searchIsEnabled(catalogStore.sections, threshold));
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
-        if (typeof config.data?.cart_max_lines === 'number') cartStore.maxLines = config.data.cart_max_lines;
+        cartStore.setMaxLines(config.data?.cart_max_lines);
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
         // el cajón monta su propio widget de Turnstile con ella (`turnstile.js`, 4.4b·2).
         authStore.setSignupSiteKey(signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '');
         // El enlace de registro del parque, que solo pinta el paso 6. Llega ya SANEADO (`SEC-07`): lo
         // edita un operador y un cliente JSON no tiene escape de plantilla que remate la defensa.
-        outcomeStore.registration = config.data?.registration ?? null;
+        outcomeStore.setRegistration(config.data?.registration);
     }
 
     // ⚠️ **En paralelo y no en cadena**: son independientes, y con un desenlace en pantalla el cliente
@@ -258,7 +258,7 @@ async function restoreCart() {
         return;
     }
 
-    cartStore.lines = lines;
+    cartStore.setLines(lines);
 
     const ids = [...new Set(lines.map((line) => line.product_id))];
     const details = await tracked(Promise.all(ids.map((id) => api.get(`/catalog/products/${id}`))));
@@ -269,7 +269,7 @@ async function restoreCart() {
     });
     catalogStore.fieldsByProduct = fields;
 
-    await refreshQuote();
+    await tracked(cartStore.refreshQuote({ api }));
 
     // ⚠️ **El desenlace MANDA sobre la cesta, y el orden es el de Livewire**: su `mount()` coloca el
     // paso 4 si hay cesta y **después** deja que la vuelta de la pasarela lo pise. Aquí la cesta se
@@ -288,25 +288,17 @@ async function restoreCart() {
  * de ellos sí es presentación.
  */
 async function selectProduct(id) {
-    catalogStore.selectedId = id;
-    // El nombre y el tipo salen del CATÁLOGO, que ya está en memoria, y no de la ficha que se está
-    // pidiendo: la banda de progreso los enseña de inmediato al entrar en el calendario, y esperar a
-    // la ficha dejaría el contexto en blanco durante el viaje.
-    catalogStore.selectedRow = catalogStore.sections.flatMap((s) => s.items).find((item) => item.id === id) ?? null;
-    // La FICHA trae lo que el paso 3 necesita y el listado no lleva: el mínimo contratable y el
-    // esquema de campos del evento, ya resueltos al idioma. Se pide junto a los días, no después,
-    // porque los dos hacen falta antes de que el cliente pueda elegir nada.
-    catalogStore.product = null;
+    // ⚠️ La FILA del catálogo se resuelve del listado que YA está en memoria, no de la ficha que se
+    // está pidiendo: la banda de progreso enseña nombre y tipo de inmediato al entrar en el
+    // calendario, y esperar a la ficha dejaría el contexto en blanco durante el viaje.
+    catalogStore.select(id);
     dateStore.clearSelection();
     timeStore.clearSelection();
-    selectionStore.addons = { groups: [], singles: [] };
-    selectionStore.choices = [];
-    selectionStore.quantities = [];
-    selectionStore.line = null;
-    selectionStore.resolved = [];
-    selectionStore.eventData = {};
+    selectionStore.clear();
     store.go(STEPS.DATE);
 
+    // ⚠️ La ficha y los días se piden JUNTOS, no en cadena: los dos hacen falta antes de que el
+    // cliente pueda elegir nada, y encadenarlos sumaría dos esperas donde cabe una.
     const [dates, detail] = await tracked(Promise.all([
         api.get(`/availability/${id}/dates`),
         api.get(`/catalog/products/${id}`),
@@ -315,11 +307,8 @@ async function selectProduct(id) {
     dateStore.setOffer(dates.ok ? (dates.data?.data ?? []) : []);
 
     if (detail.ok) {
-        catalogStore.product = detail.data;
-        // Las ETIQUETAS del esquema del evento se guardan por producto porque el carrito las necesita
-        // más tarde, cuando ya se está mirando otra cosa: el presupuesto NO devuelve las respuestas
-        // del pack (RGPD, son datos de un menor) y sin las etiquetas no hay con qué emparejarlas.
-        catalogStore.fieldsByProduct = { ...catalogStore.fieldsByProduct, [id]: detail.data.event_fields ?? [] };
+        catalogStore.setProduct(detail.data);
+        catalogStore.rememberFields(id, detail.data.event_fields ?? []);
     }
 }
 
@@ -365,38 +354,9 @@ function today() {
  * ⚠️ El emparejado va por `index` y no por posición: una línea no vendible desaparece del presupuesto
  * y su hueco en la secuencia es la única señal de que existió.
  */
-const cartLines = computed(() => cartRows(cartStore.quote?.lines ?? [], cartStore.lines, catalogStore.fieldsByProduct));
 
 
 /** Pide el presupuesto de la cesta actual. Es la ÚNICA fuente de los importes del carrito. */
-async function refreshQuote() {
-    if (cartStore.lines.length === 0) {
-        cartStore.quote = null;
-
-        return;
-    }
-
-    const response = await tracked(api.post('/orders/quote', { items: toApiItems(cartStore.lines) }));
-
-    cartStore.quote = response.ok ? response.data : null;
-
-    if (! response.ok) {
-        return;
-    }
-
-    // ⚠️ **Reconciliar y volver a presupuestar es UNA sola operación.** Podar desplaza los índices, y
-    // las filas y el botón de quitar se emparejan por el `index` del PRESUPUESTO: pintar el viejo
-    // sobre la cesta podada enseñaría las respuestas de otra línea y dejaría el botón mudo.
-    const { lines, changed } = reconcile(cartStore.lines, cartStore.quote.lines ?? []);
-
-    if (changed) {
-        cartStore.lines = lines;
-        cartStore.persist();
-        cartStore.quote = null;
-
-        await refreshQuote();
-    }
-}
 
 
 
@@ -408,7 +368,7 @@ async function refreshQuote() {
  * paso 4 llega después; el cuerpo ya viaja con su clave para que no se olvide al añadirla.
  */
 async function selectDate(date) {
-    dateStore.selected = date;
+    dateStore.select(date);
     timeStore.clearSelection();
     store.go(STEPS.TIME);
 
@@ -428,7 +388,7 @@ async function selectTime(time) {
     timeStore.select(time);
     // ⚠️ La regla y su equivalencia con la del servidor —que PARECE distinta y no lo es— viven en
     // `offer.js` con la medición que lo demuestra.
-    selectionStore.quantity = initialQuantity(catalogStore.product, timeStore.offered, time);
+    selectionStore.setQuantity(initialQuantity(catalogStore.product, timeStore.offered, time));
 
     await refreshAddons();
 }
@@ -467,7 +427,7 @@ function changeQuantity(delta) {
     const next = selectionStore.quantity + delta;
     if (next < catalogStore.minQuantity || next > timeStore.maxQuantity) return;
 
-    selectionStore.quantity = next;
+    selectionStore.setQuantity(next);
     // La cantidad cambia lo que cuestan los complementos por-invitado: hay que volver a resolver.
     refreshAddons();
 }
@@ -554,14 +514,12 @@ function applyIdentity(newOwner) {
     const decision = decideOwnership(cartStore.owner, newOwner);
 
     if (decision === 'purge') {
-        cartStore.lines = [];
-        cartStore.quote = null;
-        cartStore.error = '';
+        cartStore.empty();
         cartStore.forget();
         store.enter(STEPS.CATALOG);
     }
 
-    cartStore.owner = newOwner;
+    cartStore.setOwner(newOwner);
 
     return decision;
 }
@@ -648,7 +606,7 @@ async function checkout() {
         cartCount: cartStore.lines.length,
         // ⚠️ La guarda de las líneas incompletas la aplica el módulo, ANTES de preguntar nada al
         // servidor (`#38(d)`, 4.5·1): una cesta que no se puede comprar todavía no gasta dos peticiones.
-        incompleteLines: hasPendingEventFields(cartLines.value),
+        incompleteLines: hasPendingEventFields(cartStore.rows),
         api,
         messages: props.messages,
         applyIdentity: applyIdentityFrom,
@@ -826,13 +784,11 @@ async function confirmReservation() {
 
         // La reserva es firme: la cesta se vacía y se persiste vacía, para que una recarga no la
         // resucite y el cliente acabe comprando dos veces lo mismo.
-        cartStore.lines = [];
-        cartStore.quote = null;
+        cartStore.empty();
         cartStore.persist();
 
-        cartStore.error = '';
-        outcomeStore.orderCode = result.orderCode;
-        outcomeStore.gateway = result.form;
+        outcomeStore.setOrderCode(result.orderCode);
+        outcomeStore.setGateway(result.form);
         store.go(STEPS.REDIRECTING);
     } finally {
         outcomeStore.confirming = false;
@@ -1060,7 +1016,7 @@ async function addToCart() {
     clearSelection();
     store.go(STEPS.CART);
 
-    await refreshQuote();
+    await tracked(cartStore.refreshQuote({ api }));
 }
 
 /**
@@ -1107,7 +1063,7 @@ async function removeLine(index) {
         return;
     }
 
-    await refreshQuote();
+    await tracked(cartStore.refreshQuote({ api }));
 }
 
 /** Contesta un campo del evento de una línea de la cesta. El porqué de que NO se persista, en el store. */
@@ -1124,27 +1080,16 @@ function updateCartField(index, key, value) {
  */
 function addAnother() {
     clearSelection();
-    outcomeStore.orderCode = '';
-    outcomeStore.gateway = null;
-    outcomeStore.confirmation = null;
-    outcomeStore.declinedReason = '';
+    outcomeStore.clear();
     store.enter(STEPS.CATALOG);
 }
 
 /** Deja la SELECCIÓN en blanco sin tocar la cesta. Espejo de `Purchase::clearSelection()`. */
 function clearSelection() {
-    catalogStore.selectedId = null;
-    catalogStore.selectedRow = null;
-    catalogStore.product = null;
+    catalogStore.clearSelection();
     dateStore.clearSelection();
     timeStore.clearSelection();
-    selectionStore.quantity = 0;
-    selectionStore.eventData = {};
-    selectionStore.choices = [];
-    selectionStore.quantities = [];
-    selectionStore.addons = { groups: [], singles: [] };
-    selectionStore.line = null;
-    selectionStore.resolved = [];
+    selectionStore.clear();
 }
 
 const t = (key) => translate(props.messages, key);
@@ -1158,7 +1103,7 @@ const tp = (key, params) => translateWith(props.messages, key, params);
 function goBack() {
     if (store.step === STEPS.TIME) {
         timeStore.clearSelection();
-        selectionStore.quantity = 0;
+        selectionStore.setQuantity(0);
         store.go(STEPS.DATE);
 
         return;
@@ -1216,7 +1161,7 @@ function goBack() {
 
         <CartStep
             v-else-if="store.step === STEPS.CART"
-            :lines="cartLines"
+            :lines="cartStore.rows"
             :error="cartStore.error"
             :messages="messages"
             :locale="locale"
@@ -1245,7 +1190,7 @@ function goBack() {
 
         <PayStep
             v-else-if="store.step === STEPS.PAY"
-            :lines="cartLines"
+            :lines="cartStore.rows"
             :error="cartStore.error"
             :messages="messages"
             :locale="locale"
