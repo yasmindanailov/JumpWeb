@@ -1670,8 +1670,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             test verde mintiendo—, y lo que no se puede sondear así se **declara aparte** en vez de
             fingirlo: a eso lo cubre la **congelación del esquema `Order`** del contrato.
             ⏳ **El fichero muere con la página**, y lo dice en su primera línea.
-      - [ ] **Tanda 2**: las cinco gestiones de cuenta (perfil, contraseña, otras sesiones, borrado y
-            export RGPD), que **no tienen ningún endpoint** (`#120(a)`). Es abrir API, no pintar.
+      - [x] **Tanda 2 · paso 6 — CONTRASEÑA Y OTRAS SESIONES** (✅ **HECHO** el 2026-08-22, 6a+6b).
+            La lógica baja a `Identity\Services\AccountCredentials` —con el limitador que la web no
+            tenía—, nacen `PUT /me/password` y `POST /me/sessions/revoke-others`, y sus dos pantallas
+            entran en el cajón. Navegador `V8`: **5/5 + 3/3**.
+            ⚠️ **La web heredó el limitador sin tocar la web** (`#120(o)`): dos de los cuatro sitios
+            que reconfirman contraseña, cubiertos de golpe. Ésa es la prueba de que bajar la lógica al
+            dominio no era ceremonia.
+            ⚠️ Y cazó dos duplicaciones antes de que crecieran: la **política de contraseñas** (seis
+            copias, `#120(n)`) y el **campo de contraseña con su toggle** (dos, y este paso iba a
+            hacer cuatro) — extraído sin cambiar **ni un nodo** del árbol, verificado por las
+            paridades (`#120(p)`).
+      - [ ] **Tanda 2 · pasos 7 y 8**: el perfil (con el ciclo de `pending_email`) y los dos derechos
+            RGPD (borrado y export). Su corte y su red, en `specs/area-cliente.md` §9.5.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

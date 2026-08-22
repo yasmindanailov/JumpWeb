@@ -110,3 +110,26 @@ export function tc(messages, key, count, locale, params = {}) {
 
     return interpolate(chosen ?? '', { count, ...params });
 }
+
+/**
+ * **El primer mensaje de un campo**, que es lo que un input puede enseñar.
+ *
+ * El servidor devuelve los errores por campo como LISTA —«mínimo 8 caracteres» y «aparece en
+ * filtraciones» pueden venir juntos—, y pegarlos todos bajo un input produce un párrafo que nadie
+ * lee. El resto sigue en el sobre para quien quiera pintarlos de otra forma.
+ *
+ * ⚠️ Acepta también una cadena suelta: algunas respuestas la devuelven así, y quien pinta no tiene
+ * por qué saber cuál de las dos formas le tocó.
+ *
+ * ⚠️ **Vive aquí y no en un módulo de dominio** porque la necesitaban dos —el login y las gestiones
+ * de credenciales— y estaba a punto de tener una segunda copia. `i18n.js` es la casa de las
+ * utilidades de TEXTO, y así ninguno de los dos dominios depende del otro.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function firstMessage(value) {
+    if (typeof value === 'string') return value;
+
+    return Array.isArray(value) && typeof value[0] === 'string' ? value[0] : '';
+}

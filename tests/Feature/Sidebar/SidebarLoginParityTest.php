@@ -264,7 +264,11 @@ class SidebarLoginParityTest extends TestCase
         $boot = $this->actingAs($user)->bootPayload();
 
         $this->assertSame(['login', 'register', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
-        $this->assertSame(['title'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'password', 'sessions'], array_keys($boot['account']['account'] ?? []));
+
+        // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
+        // diga lo mismo que la página web. Si desaparece, el cajón lo pintaría VACÍO y nada avisaría.
+        $this->assertNotSame('', (string) ($boot['account']['account']['password']['mismatch'] ?? ''));
         $this->assertSame(['upcoming_count'], array_keys($boot['account']['sidecart'] ?? []));
 
         $this->assertSame(
@@ -287,7 +291,7 @@ class SidebarLoginParityTest extends TestCase
         // sube a 2.560 con el mismo criterio que el anónimo —presupuesto, no objetivo— y con una
         // referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, cuatro veces esto.
         $this->assertLessThan(
-            2560, $bytes,
+            3072, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

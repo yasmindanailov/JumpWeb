@@ -524,7 +524,7 @@ anti-fuerza bruta en auth, y una re-autenticación **es** auth.
 | # | Paso | Por qué va ahí |
 |---|---|---|
 | **6a** | ✅ **HECHO 2026-08-22 · Contraseña + otras sesiones, en el SERVIDOR**: `AccountCredentials` + `CredentialChangeResult`, los dos componentes Livewire consumiéndolo, `PUT /me/password` y `POST /me/sessions/revoke-others` con su contrato | `MeCredentialsTest` (10 casos, **4 mutaciones**) · `ApiContractTest` |
-| **6b** | Las dos pantallas en el cajón: zonas `PASSWORD` y `SESSIONS` | `node --test` + navegador |
+| **6b** | ✅ **HECHO 2026-08-22 · Las dos pantallas**: zonas `PASSWORD` y `SESSIONS`, el índice pasa a ser **dato** (`HOME_ENTRIES`) y nace `steps/PasswordInput.vue` —el campo de contraseña estaba escrito dos veces y la tanda iba a añadir dos más | 17 casos de `node --test` · **navegador V8, 5/5 + 3/3** |
 | **7** | **El perfil** | El más grande con diferencia: el ciclo de `pending_email` entero, con sus dos notificaciones y su cooldown |
 | **8** | **Los dos derechos RGPD**: borrado y export | Irreversible uno y con PII el otro. Van juntos y **al final**, cuando el patrón ya esté rodado |
 

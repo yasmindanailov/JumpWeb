@@ -3,12 +3,15 @@ import { computed, watch } from 'vue';
 import { useAccountStore } from '../stores/account.js';
 import { useOrdersStore } from '../stores/orders.js';
 import { useReservationsStore } from '../stores/reservations.js';
+import { useCredentialsStore } from '../stores/credentials.js';
 import { ZONES, titleKeyOf } from '../account/navigation.js';
 import { orderRows, pageInfo } from '../account/orders.js';
 import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
 import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
 import OrdersZone from '../account/zones/OrdersZone.vue';
+import PasswordZone from '../account/zones/PasswordZone.vue';
+import SessionsZone from '../account/zones/SessionsZone.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
@@ -35,11 +38,15 @@ const props = defineProps({
 
     /** El grupo `account` PODADO (§4.5 de `sidebar-spa.md`): los rótulos de las zonas. */
     account: { type: Object, default: () => ({}) },
+
+    /** El grupo `auth`: de ahí sale el aviso del limitador, el MISMO texto que usa el login. */
+    auth: { type: Object, default: () => ({}) },
 });
 
 const store = useAccountStore();
 const orders = useOrdersStore();
 const reservations = useReservationsStore();
+const credentials = useCredentialsStore();
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
@@ -59,10 +66,25 @@ const page = computed(() => pageInfo(orders.payload, props.account));
 watch(() => store.zone, (zone) => {
     if (zone === ZONES.ORDERS) orders.ensure();
     if (zone === ZONES.HOME) reservations.ensure();
+
+    // ⚠️ Las gestiones **se limpian al entrar**, al revés que las listas: un aviso de «contraseña
+    // incorrecta» de hace cinco minutos leído sobre un formulario vacío diría algo falso del intento
+    // que el cliente aún no ha hecho.
+    if (zone === ZONES.PASSWORD || zone === ZONES.SESSIONS) credentials.reset();
 }, { immediate: true });
 
 /** Abre el modal de auth de la cabecera, que sigue siendo la puerta de entrada (spec §4.6). */
 const signIn = () => window.Alpine?.store('auth')?.open('login');
+
+/**
+ * Los diccionarios que las gestiones necesitan para traducir la respuesta del servidor.
+ *
+ * ⚠️ **Vaciar el formulario al salir bien NO se hace desde aquí**, y es deliberado: la sección
+ * tendría que guardar una `ref` por zona y un manejador por gestión, y eso la empujaba contra el
+ * techo de `SidebarComponentBudgetTest` —que existe justo para provocar esta pregunta—. Cada zona
+ * mira su propio `done` y se vacía sola, que además es quien sabe qué campos tiene.
+ */
+const ctx = computed(() => ({ messages: props.messages, auth: props.auth }));
 </script>
 
 <template>
@@ -94,6 +116,25 @@ const signIn = () => window.Alpine?.store('auth')?.open('login');
             :next="reservations.next"
             :upcoming="reservations.upcoming"
             @go="store.go" />
+
+        <PasswordZone
+            v-else-if="store.zone === ZONES.PASSWORD"
+            :account="account"
+            :busy="credentials.busy"
+            :fields="credentials.fields"
+            :notice="credentials.notice"
+            :done="credentials.done"
+            @submit="credentials.changePassword($event, ctx)"
+            @reset="credentials.reset()" />
+
+        <SessionsZone
+            v-else-if="store.zone === ZONES.SESSIONS"
+            :account="account"
+            :busy="credentials.busy"
+            :fields="credentials.fields"
+            :notice="credentials.notice"
+            :done="credentials.done"
+            @submit="credentials.revokeOtherSessions($event, ctx)" />
 
         <OrdersZone
             v-else-if="store.zone === ZONES.ORDERS"

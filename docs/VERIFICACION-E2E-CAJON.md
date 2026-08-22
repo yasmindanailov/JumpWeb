@@ -538,6 +538,34 @@ decorativo cuando hay un `x-on:click` al lado, y quitarlo no rompe ningún test 
 un botón que, mientras el chunk carga, **no falla y no hace nada**. Bloquear el chunk lo demuestra en
 vez de suponerlo.
 
+### V8 · LAS GESTIONES DE CREDENCIALES (tanda 2 · paso 6b)
+Cambiar la contraseña y cerrar las demás sesiones, desde el cajón.
+
+⚠️⚠️ **Restaura la contraseña del usuario de pruebas ANTES de cada pasada, desde el SERVIDOR**:
+`User::where('email','cliente.demo@jumpweb.test')->first()->update(['password' => 'password'])`.
+El recorrido la cambia de verdad, y hacerlo desde el propio script no basta —si algo falla antes, la
+restauración no llega—. **Costó dos ejecuciones en falso**, y el síntoma engaña: sin poder iniciar
+sesión, los textos del área **no viajan** (solo van CON sesión, §9) y **todo sale vacío**, como si el
+paso estuviera roto.
+
+✅ **MEDIDO el 2026-08-22 · 5/5 + 3/3:**
+· índice con **tres** entradas (reservas · contraseña · sesiones);
+· contraseña actual equivocada → «La contraseña actual no es correcta.» **bajo su campo**;
+· las dos copias de la nueva no coinciden → «La confirmación de Nueva contraseña no coincide.» y
+  **cero peticiones**: se corta antes de salir;
+· cambio correcto → el formulario **se vacía solo**;
+· sesiones: contraseña mal → error; bien → se vacía y **`GET /me` sigue devolviendo 200**.
+
+⚠️ **Ese `200` es lo que de verdad valía la pena mirar**: revocar «las demás» credenciales tiene que
+conservar la propia (`RGPD-06`). Si el titular se autoexpulsara al defenderse, el fallo se vería como
+un cajón que de pronto pide entrar — y el test de servidor no lo distingue, porque allí la credencial
+de la petición no es una cookie de navegador.
+
+⚠️ **Y una trampa de aserción que dio verde en falso a la primera**: el caso de «las copias no
+coinciden» solo comprobaba que **hubiera** error, y lo había — el del intento anterior, que seguía en
+pantalla. Se arregló en las dos puntas: la zona **limpia lo que dijo el servidor** al cortar el envío,
+y el caso exige ahora el texto exacto. Mirar «hay un error» nunca distingue el nuevo del viejo.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

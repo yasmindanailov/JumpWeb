@@ -229,6 +229,18 @@
                             // `account` completo son 9,6 kB.
                             ...(auth()->check() ? ['account' => [
                                 'title' => __('account.account.title'),
+                                // ⚠️ Los dos subgrupos que pintan las zonas de la tanda 2, ENTEROS y
+                                // no podados clave a clave: son 9 y 4 rótulos que la pantalla usa
+                                // todos —etiqueta, ayuda, botón y su estado «guardando»—, así que
+                                // recortarlos sería trabajo de mantenimiento sin ahorro.
+                                // ⚠️ El aviso de «no coinciden» se compone AQUÍ y no en el cliente:
+                                // es `validation.confirmed` de Laravel con su atributo interpolado,
+                                // así que dice exactamente lo mismo que la página web para el mismo
+                                // caso. Componerlo en JS habría sido una segunda redacción.
+                                'password' => __('account.account.password') + [
+                                    'mismatch' => __('validation.confirmed', ['attribute' => __('account.account.password.new')]),
+                                ],
+                                'sessions' => __('account.account.sessions'),
                             ], 'sidecart' => [
                                 // La lectura del contador de próximas reservas para lector de
                                 // pantalla. Misma clave que usa el bloque `.acct` del panel para lo

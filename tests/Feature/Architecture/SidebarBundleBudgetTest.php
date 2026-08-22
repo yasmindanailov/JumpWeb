@@ -145,10 +145,17 @@ class SidebarBundleBudgetTest extends TestCase
      * la que casi nunca se cumple: *un techo con margen sobrante deja de apretar*. El 174 se puso con
      * holgura para terminar los pasos que faltaban; medido al cerrar, el chunk son **172,7 KiB**, así
      * que 173 deja ~0,3 — la de un retoque, no la de una tanda.
-     * ▶ **La tanda 2** (las cinco gestiones de cuenta) tendrá que subirlo otra vez **con su medida**,
-     * y volver a bajarlo al cerrar. Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
+     * ⚠️ **173 → 178 el 2026-08-22, y lo paga la TANDA 2** (paso 6b: las pantallas de contraseña y
+     * sesiones). Medido: **177,5 KiB**, +4,8 sobre el cierre de la tanda 1.
+     * ▶ Y con un descuento que conviene apuntar: **el campo de contraseña con su botón de mostrar
+     * estaba escrito DOS veces** (`LoginForm`, `RegisterForm`) y la tanda 2 iba a añadir dos copias
+     * más. Extraerlo a `steps/PasswordInput.vue` hizo que las cuatro compartieran un solo bloque —con
+     * sus dos `<svg>` dentro—, así que el +4,8 ya viene neto de esa limpieza.
+     *
+     * ▶ Los pasos 7 y 8 volverán a moverlo **con su medida**, y al cerrar la tanda **se vuelve a
+     * bajar**. Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 173;
+    private const SIDEBAR_CHUNK_MAX_KB = 178;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

@@ -25,7 +25,7 @@
  * propósito para no revelar si el correo existe.
  */
 
-import { t, tp } from './i18n.js';
+import { t, tp, firstMessage } from './i18n.js';
 
 /** Los códigos del sobre que este formulario sabe distinguir. El resto cae en el aviso genérico. */
 export const INVALID_CREDENTIALS = 'invalid_credentials';
@@ -66,8 +66,8 @@ export function loginErrors(response, { messages = {}, auth = {} } = {}) {
         return {
             global: '',
             fields: {
-                ...(firstOf(fields.email) ? { email: firstOf(fields.email) } : {}),
-                ...(firstOf(fields.password) ? { password: firstOf(fields.password) } : {}),
+                ...(firstMessage(fields.email) ? { email: firstMessage(fields.email) } : {}),
+                ...(firstMessage(fields.password) ? { password: firstMessage(fields.password) } : {}),
             },
         };
     }
@@ -92,13 +92,6 @@ export function loginErrors(response, { messages = {}, auth = {} } = {}) {
     // paridad que respetar: se usa el genérico del cajón, cuyo consejo (esperar y reintentar) es el
     // correcto para los tres.
     return { global: t(messages, 'errors.try_later'), fields: {} };
-}
-
-/** El primer mensaje de un campo, que es lo que pinta `@error` en el Blade. */
-function firstOf(value) {
-    if (typeof value === 'string') return value;
-
-    return Array.isArray(value) && typeof value[0] === 'string' ? value[0] : '';
 }
 
 /**

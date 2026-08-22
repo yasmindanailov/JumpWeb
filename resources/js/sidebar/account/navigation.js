@@ -23,15 +23,23 @@
  * en `lang/`, que es donde vive: renombrar la zona a `reservations` la confundiría con
  * `GET /me/reservations`, que es otra cosa —las PRÓXIMAS— y alimenta el índice.
  *
- * ⚠️ **Las zonas de la tanda 2 —perfil, contraseña, sesiones, privacidad— NO se declaran aquí.**
- * Declararlas vacías «para dejarlo preparado» es exactamente el error que `#119` evitó a propósito:
- * sin pantallas, su forma es especulación. El modelo admite añadirlas sin tocarse.
+ * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `PASSWORD` y `SESSIONS` entran con el paso
+ * 6b —tienen endpoint desde el 6a—; `PROFILE` y `PRIVACY` **siguen sin declararse** hasta que los
+ * suyos existan. Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a
+ * propósito. ▶ Y el modelo no se ha tocado para añadirlas: entran en `ZONES` con su rótulo, que es
+ * exactamente lo que §4.2 prometía.
  */
 export const ZONES = {
     /** El índice: quién eres, tu próxima reserva y los accesos. Espeja `/mi-cuenta` + el bloque `.acct`. */
     HOME: 'home',
     /** «Mis reservas»: el historial con su detalle y el reintento. Espeja `/mi-cuenta/pedidos`. */
     ORDERS: 'orders',
+
+    /** Cambiar la contraseña (tanda 2 · paso 6b). Espeja el bloque de `/mi-cuenta`. */
+    PASSWORD: 'password',
+
+    /** Cerrar sesión en los demás dispositivos. */
+    SESSIONS: 'sessions',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -49,7 +57,18 @@ export const DEFAULT_ZONE = ZONES.HOME;
 export const ZONE_TITLE_KEYS = {
     [ZONES.HOME]: 'account.title',
     [ZONES.ORDERS]: 'orders.title',
+    [ZONES.PASSWORD]: 'account.password.title',
+    [ZONES.SESSIONS]: 'account.sessions.title',
 };
+
+/**
+ * **Las entradas del índice, en su orden.**
+ *
+ * ⚠️ **Es un DATO y no marcado**, y ese es el punto: añadir una zona al área de cliente pasa a ser
+ * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
+ * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
+ */
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PASSWORD, ZONES.SESSIONS];
 
 /** El camino del rótulo de una zona. Una zona desconocida cae en el del índice, nunca en `''`. */
 export function titleKeyOf(zone) {

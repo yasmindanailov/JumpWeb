@@ -5195,3 +5195,37 @@ copiado la lógica, habría dos superficies con defensas distintas y una ficha d
 ⚠️ Y **las rutas van sin `throttle` propio a propósito**: el techo lo pone el servicio contando **solo
 los fallos**. Un `throttle` de ruta contaría también los aciertos y castigaría a quien se equivoca una
 vez y acierta a la segunda.
+
+**(p) Tanda 2 · paso 6b — las dos pantallas, y otra duplicación cazada antes de crecer.** Nacen las
+zonas `PASSWORD` y `SESSIONS`, el módulo `account/credentials.js` (traduce la respuesta: los tres
+modos que **no** son «datos que corregir» —red caída, sesión perdida y límite— tienen salida propia) y
+`stores/credentials.js`.
+
+⚠️ **El campo de contraseña con su botón de mostrar estaba escrito DOS veces** —`LoginForm` y
+`RegisterForm`, dieciséis líneas con dos `<svg>` dentro— y este paso iba a añadir **dos copias más**.
+Se extrajo a `steps/PasswordInput.vue`. ▶ Y lo que hizo seguro el movimiento fue la red que ya
+existía: `SidebarDomContractTest` y las dos paridades de auth comparan el **árbol renderizado**, así
+que un nodo de más las habría puesto en rojo. **47 casos en verde sin tocar el manifiesto**: la
+extracción no cambió ni un nodo.
+
+⚠️ **El índice pasó a ser un DATO** (`HOME_ENTRIES`): añadir una zona es una línea, no dieciséis de
+marcado. Era la promesa de §4.2 y la tanda 2 la cobró — de una entrada a tres sin escribir marcado.
+
+⚠️⚠️ **Y tres cosas que solo aparecieron construyendo:**
+· **`defineModel()` devuelve la variable; usar la prop en el `v-model` NO compila.** Lo cazó el
+  **build**, no `npm run test:js` —que no compila componentes—. Es por eso que el build está en el
+  gate, y por eso va ANTES que la suite;
+· **el error del intento anterior se quedaba en pantalla** cuando el envío se cortaba localmente por
+  «las copias no coinciden». Peor: **el primer caso de navegador daba verde** porque solo miraba que
+  *hubiera* error, y lo había — el viejo. Se arregló en las dos puntas: la zona limpia lo que dijo el
+  servidor al cortar, y el caso exige el texto exacto. **Mirar «hay un error» nunca distingue el nuevo
+  del viejo**;
+· **el aviso de «no coinciden» lo compone el SERVIDOR** con `validation.confirmed` y su atributo
+  interpolado, así que dice literalmente lo mismo que la página web. Redactarlo en JS habría sido una
+  segunda versión del mismo mensaje.
+
+⚠️ **Y una trampa del andamio que costó dos ejecuciones**: el recorrido **cambia la contraseña de
+verdad**, así que la pasada siguiente no podía ni iniciar sesión — y como los textos del área **solo
+viajan con sesión**, todo salía vacío y parecía que el paso estuviera roto. Se restaura desde el
+servidor antes de cada pasada, no desde el propio script: si algo falla antes, la restauración no
+llega. Escrito en `VERIFICACION-E2E-CAJON.md` **V8**.

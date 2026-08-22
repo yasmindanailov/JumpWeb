@@ -30,8 +30,8 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2700 en verde** (15.469 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
-  **442 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
+- Suite **2700 en verde** (15.470 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+  **459 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -123,10 +123,13 @@ Cinco superficies nuevas sobre dominio que ya existe. **Empieza por ahí, no por
 que enseñó el paso 3, donde el contrato rechazó cinco intentos seguidos hasta que se actualizó
 `openapi/v1.yaml` (que manda sobre el código).
 
-✅ **Paso 6a HECHO**: `AccountCredentials` en el dominio, los dos componentes Livewire consumiéndolo y
-`PUT /me/password` + `POST /me/sessions/revoke-others` con su contrato. ⚠️ **Y la web heredó el
-limitador sin tocar la web**: dos de los cuatro sitios que reconfirman contraseña quedaron cubiertos
-de golpe (`#120(o)`). Lo siguiente es **6b**, sus dos pantallas en el cajón.
+✅ **Paso 6 COMPLETO (6a + 6b)**: `AccountCredentials` en el dominio, los dos componentes Livewire
+consumiéndolo, `PUT /me/password` + `POST /me/sessions/revoke-others` con su contrato, y **sus dos
+pantallas en el cajón** (navegador `V8`, 5/5 + 3/3).
+⚠️ **La web heredó el limitador sin tocar la web**: dos de los cuatro sitios que reconfirman
+contraseña quedaron cubiertos de golpe (`#120(o)`); los otros dos llegan solos con los pasos 7 y 8.
+▶ **Lo siguiente es el paso 7: EL PERFIL** —el más grande de la tanda, con el ciclo de `pending_email`
+entero: pedir, confirmar, cancelar y reenviar con su cooldown, más sus dos notificaciones—.
 
 ✅ **El diseño de la tanda 2 está escrito** (`specs/area-cliente.md` **§9**), con su corte en tres
 pasos —contraseña + otras sesiones · el perfil · los dos derechos RGPD— y una decisión de seguridad
