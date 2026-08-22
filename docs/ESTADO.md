@@ -30,7 +30,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2687 en verde** (15.408 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+- Suite **2690 en verde** (15.417 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
   **442 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -122,6 +122,11 @@ cambiar la contraseña, cerrar sesión en otros dispositivos, borrar la cuenta y
 Cinco superficies nuevas sobre dominio que ya existe. **Empieza por ahí, no por el cliente**: es lo
 que enseñó el paso 3, donde el contrato rechazó cinco intentos seguidos hasta que se actualizó
 `openapi/v1.yaml` (que manda sobre el código).
+
+✅ **El diseño de la tanda 2 está escrito** (`specs/area-cliente.md` **§9**), con su corte en tres
+pasos —contraseña + otras sesiones · el perfil · los dos derechos RGPD— y una decisión de seguridad
+que conviene no perder: **la web NO limita los intentos de `current_password`** en ninguna de las
+cuatro gestiones que lo piden, y **la API se abre CON limitador** (`#120(n)`, `DEUDA.md`).
 
 ⚠️ **La tanda 3 —retirar `/mi-cuenta/…`— tiene su condición 1 medida y VIGILADA**: `AccountPageCapture
 Test::GAPS` enumera las **cuatro** cosas que la página enseña y la API no publica. Mientras esa lista

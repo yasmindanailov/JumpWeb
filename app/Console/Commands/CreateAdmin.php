@@ -4,11 +4,11 @@ namespace App\Console\Commands;
 
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\PasswordPolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
  * Crea (o repara) la cuenta de acceso al panel. Es el **mecanismo canónico del primer admin**, que
@@ -187,7 +187,7 @@ class CreateAdmin extends Command
         // real (`Register`/`AuthRegistrationController`): mínimo 8 y no filtrada.
         $validator = Validator::make(
             ['password' => $explicit],
-            ['password' => ['required', 'string', PasswordRule::min(8)->uncompromised()]],
+            ['password' => PasswordPolicy::rules()],
         );
 
         if ($validator->fails()) {

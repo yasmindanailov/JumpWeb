@@ -458,3 +458,74 @@ divergencia de fechas. No es abrir dominio: son campos de presentación sobre da
 ⚠️ **El paso 1 va primero aunque no enseñe nada**, y es deliberado: es el único que toca el
 orquestador, y la lección de `#119(g)` es que ahí la única red es el navegador. Mezclarlo con las
 pantallas haría que un fallo de conmutación y uno de pintado llegaran juntos y sin poder separarlos.
+
+
+---
+
+## 9. TANDA 2 — las gestiones de cuenta
+
+> Estado: ✅ **diseño**, 2026-08-22. Alcance fijado por `DECISIONES #120(a)–(b)`.
+
+### 9.1 Qué falta, y por qué NO es «pintar»
+
+**MEDIDO** (`#120(a)`): las cinco gestiones **no tienen ningún endpoint**. Y al mirarlas de cerca, el
+trabajo tampoco es «abrir cinco rutas»: la lógica vive **dentro de los componentes Livewire**.
+
+| Gestión | Dónde vive hoy | Qué contiene, medido |
+|---|---|---|
+| Perfil | `Livewire\Account\UpdateProfile` | validación con **doble `unique`** (`email` y `pending_email`), el patrón **`pending_email`** entero —pedir, confirmar, cancelar, reenviar con cooldown—, **dos** notificaciones (al buzón nuevo y aviso al viejo, con el nuevo enmascarado), el manejo de la carrera de UNIQUE y el idioma de la sesión |
+| Contraseña | `Livewire\Account\UpdatePassword` | `current_password` + `Password::min(8)->uncompromised()` + `logoutOtherDevices` + `revokeOtherAccess()` |
+| Otras sesiones | `Livewire\Account\LogoutOtherDevices` | `current_password` + `logoutOtherDevices` + `revokeOtherAccess()` |
+| Borrar cuenta | `Livewire\Account\DeleteAccount` | `current_password` + **`User::anonymize()`** (`RGPD-01`) + cierre de sesión |
+| Exportar datos | `Http\Controllers\Account\AccountController::export` | composición del JSON de portabilidad (art. 20) |
+
+▶ **Exponerlas por API sin extraerlas sería DUPLICARLAS**, y eso convierte cada regla en dos sitios que
+divergen. Es exactamente lo que Fase 3 evitó con el login: `Identity\Services\PasswordLogin` nació
+para que la API y Livewire compartieran los limitadores de `SEC-06`, y el componente se quedó en
+**56 líneas** que solo traducen a su interfaz. **Ese es el patrón, y tiene precedente literal.**
+
+### 9.2 La forma: el servicio devuelve un RESULTADO, no lanza
+
+`PasswordLogin::attempt()` devuelve un `LoginResult` y **el componente decide** cómo enseñarlo
+—`ValidationException` en Livewire, sobre de error en la API—. Se mantiene: un servicio de dominio que
+lanzara excepciones de validación de Laravel estaría decidiendo por sus dos consumidores.
+
+### 9.3 Los endpoints
+
+| Método y ruta | Qué hace | Re-auth |
+|---|---|---|
+| `PATCH /me` | perfil (nombre, teléfono, idioma) y **solicitar** cambio de email | solo si cambia el email |
+| `DELETE /me/pending-email` | cancelar el cambio pedido | no |
+| `POST /me/pending-email/resend` | reenviar la confirmación (con su cooldown) | no |
+| `PUT /me/password` | cambiar la contraseña | **sí** |
+| `POST /me/sessions/revoke-others` | cerrar sesión en los demás dispositivos | **sí** |
+| `DELETE /me` | borrar la cuenta (art. 17) | **sí** |
+| `GET /me/export` | portabilidad (art. 20) | no |
+
+⚠️ **`PATCH` y no `PUT` para el perfil**: `PUT` significa «reemplaza el recurso entero», y aquí se
+envían los campos que el cliente edita. Y **`DELETE /me` no borra la fila**: llama a `anonymize()`,
+que es la purga central (`RGPD-01`) — el pedido y su historia contable se conservan sin PII.
+
+### 9.4 ⚠️ La decisión de seguridad, y es una MEJORA sobre la web
+
+**MEDIDO el 2026-08-22**: la web **no limita** los intentos de `current_password` en ninguna de las
+cuatro gestiones que lo piden. El endpoint de Livewire no lleva `throttle` propio y las rutas de
+`/mi-cuenta` tampoco. Con una sesión secuestrada, un atacante puede **probar contraseñas sin techo**
+antes de cambiarla o borrar la cuenta.
+
+▶ **La API se abre CON limitador**, y la regla del proyecto —«los mismos límites que ya aplica la web,
+no una copia con otros números»— no se rompe: esa regla existe para no inventar números distintos en
+superficies equivalentes, **no para propagar un hueco**. La doctrina que manda aquí es `SEC-06`:
+anti-fuerza bruta en auth, y una re-autenticación **es** auth.
+⚠️ Y queda anotado en `DEUDA.md` que **la web sigue sin él**: cerrar solo un lado deja el otro abierto.
+
+### 9.5 El corte, por dependencia y por riesgo
+
+| # | Paso | Por qué va ahí |
+|---|---|---|
+| **6** | **Contraseña + otras sesiones** | Son gemelas: comparten `current_password`, `logoutOtherDevices` y `revokeOtherAccess()`. Pequeñas y con el mismo servicio detrás — el sitio barato para estrenar el patrón y el limitador |
+| **7** | **El perfil** | El más grande con diferencia: el ciclo de `pending_email` entero, con sus dos notificaciones y su cooldown |
+| **8** | **Los dos derechos RGPD**: borrado y export | Irreversible uno y con PII el otro. Van juntos y **al final**, cuando el patrón ya esté rodado |
+
+⚠️ **Y dentro de cada paso, el orden que enseñó el paso 3**: primero el **dominio y el contrato**
+(`openapi/v1.yaml` manda sobre el código y rechaza lo que no declare), después el cliente.

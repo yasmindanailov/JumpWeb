@@ -3,9 +3,9 @@
 namespace App\Livewire\Auth;
 
 use App\Domain\Identity\Contracts\PasswordResetResult;
+use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\PasswordRecovery;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -35,7 +35,7 @@ class ResetPassword extends Component
         $this->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string', 'confirmed', PasswordRule::min(8)->uncompromised()],
+            'password' => [...PasswordPolicy::rules(), 'confirmed'],
         ]);
 
         // El limitador por IP, la rotación del `remember_token`, la invalidación de TODAS las

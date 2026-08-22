@@ -5149,3 +5149,24 @@ crece, hay que volver a la lista—, que es una red más floja y se dice.
 ▶ **Las tres las cazó la guarda de la guarda del propio test** (`test_every_probe_actually_measures_
 something`), escrita antes que el fixture. Es la lección de `#63` aplicada por adelantado: sin ella,
 tres sondas inertes habrían dejado la lista de huecos «verificada» sin verificar nada.
+
+**(n) Antes de abrir la tanda 2: la política de contraseñas estaba copiada en SEIS sitios.** Al medir
+qué haría falta para exponer el cambio de contraseña apareció que `Password::min(8)->uncompromised()`
+estaba escrito a mano en el registro (web y API), el restablecimiento (web y API), el cambio de
+contraseña de «Mi cuenta» y la contraseña explícita de `app:create-admin`. Es la misma familia que la
+fórmula del rótulo de día (`#120(j)`) **con un agravante: esto es seguridad**. El fallo que impide no
+es un error de programa, es una **erosión**: el día que la política suba, alguien tocará cinco de seis
+y el que quede será la puerta más floja del producto — sin romper nada y sin ponerse rojo.
+▶ Nace `Identity\Services\PasswordPolicy` y `PasswordPolicySingleSourceTest` la vigila. La
+contraseña **generada** de `app:create-admin` sigue fuera, con el motivo que ya tenía escrito: son 24
+caracteres aleatorios y comprobarlos contra Have I Been Pwned metería una llamada de red en el camino
+feliz del despliegue.
+⚠️ **Y `confirmed` NO entra en la política**, a propósito: repetir la contraseña es del FORMULARIO —la
+API de registro no lo pide y la web sí, y las dos están en lo cierto—. Meterlo obligaría a una de las
+dos a saltarse la fuente única.
+
+⚠️⚠️ **Y el caso que vigila el anti-filtración nació INERTE.** Comprobaba
+`json_encode((array) $rule)` buscando «uncompromised»; la propiedad es `protected` y no sale ahí, así
+que **pasaba igual con `uncompromised()` y sin él**. Lo descubrió la mutación —no la revisión— y hoy
+lo lee por reflexión. Es `#65` en su forma más pura, y van tres veces en esta fase: una aserción que
+no se ha visto fallar no prueba nada, por evidente que parezca lo que afirma.

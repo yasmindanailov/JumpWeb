@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\SignupResult;
+use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules\Password;
 
 /**
  * Fase 3 · paso 3c — alta pública y reenvío de verificación por API (`docs/specs/api-v1.md` §4.4).
@@ -59,7 +59,7 @@ class AuthRegistrationController extends Controller
             // qué se le cuenta al usuario y a quién se avisa por correo.
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'password' => ['required', 'string', Password::min(8)->uncompromised()],
+            'password' => PasswordPolicy::rules(),
             'accept_privacy' => ['accepted'],
             'accept_terms' => ['accepted'],
             'marketing' => ['sometimes', 'boolean'],

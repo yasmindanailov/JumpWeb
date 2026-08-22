@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\PasswordResetResult;
+use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\PasswordRecovery;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
@@ -11,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
  * Fase 3 · paso 3c — recuperación de contraseña por API (`docs/specs/api-v1.md` §4.4).
@@ -57,7 +57,7 @@ class PasswordRecoveryController extends Controller
         $data = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string', 'confirmed', PasswordRule::min(8)->uncompromised()],
+            'password' => [...PasswordPolicy::rules(), 'confirmed'],
         ]);
 
         $result = $recovery->reset($data['token'], $data['email'], $data['password'], (string) $request->ip());

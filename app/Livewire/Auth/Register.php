@@ -3,12 +3,12 @@
 namespace App\Livewire\Auth;
 
 use App\Domain\Identity\Contracts\SignupResult;
+use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Platform\Services\Turnstile;
 use App\Livewire\Concerns\ResetsOnModalClose;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -61,7 +61,7 @@ class Register extends Component
             // Sin `unique` a propósito: la existencia se gestiona sin revelarla (anti-enumeración).
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'password' => ['required', 'string', Password::min(8)->uncompromised()],
+            'password' => PasswordPolicy::rules(),
             'accept_privacy' => ['accepted'],
             'accept_terms' => ['accepted'],
             'marketing' => ['boolean'],

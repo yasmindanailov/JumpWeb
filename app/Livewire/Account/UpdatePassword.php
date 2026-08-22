@@ -3,6 +3,7 @@
 namespace App\Livewire\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\PasswordPolicy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
@@ -30,7 +31,7 @@ class UpdatePassword extends Component
     {
         $this->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->uncompromised()],
+            'password' => [...PasswordPolicy::rules(), 'confirmed'],
         ]);
 
         /** @var User $user */
