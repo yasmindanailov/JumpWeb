@@ -4862,3 +4862,67 @@ declaración, pero sí la duración y las 2-3 curvas», y esa mitad seguía pend
 `--dur-collapse`, `--dur-fade`, `--ease-panel` y `--ease-bounce`, y las **22** apariciones de las dos
 curvas del cajón pasan a token (mismo valor exacto → riesgo visual cero). El suelo de
 `SidebarTokenBudgetTest` sube de 71 a **72**, que es lo que su propio mensaje pide al subir el ratio.
+
+## #119 · 2026-08-22 · [DECIDIDO] El cajón se organiza en TRES capas y por SECCIONES, antes del área de cliente
+El owner paró el avance de funcionalidad con un argumento correcto —«si metemos «mi cuenta» en el
+cajón con la arquitectura de hoy, después será más difícil»— y pidió reorganizar primero. La
+reorganización se hizo **midiendo antes de decidir**, y la medición corrigió dos veces el plan.
+
+**(a) El punto de partida, medido.** `Sidebar.vue` eran **614 líneas de código —el 29% de todo el
+cajón (2.085 en 39 ficheros)— y 11 de sus 22 llamadas a la API**. Pero el problema NO era «hay lógica
+en el componente»: la lógica pura ya estaba fuera, en 18 módulos planos sanos. Eran **103
+declaraciones, 55 de estado y 48 funciones**, ninguna de más de 30 líneas. Anchura, no profundidad.
+Lo que no tenía casa era el ESTADO.
+
+**(b) ⚠️ Y la casa estaba decidida desde el principio, sin construir.** `#38c`: «la recomendación
+inicial era Vue SIN Pinia; el owner aportó el requisito que faltaba —tres dominios que comparten
+sesión— y con tres dominios **los stores separados** dejan de ser ceremonia». Había **un** store de 27
+líneas con `step` y `machine`, y 55 piezas de estado en el componente. La capa por la que se adoptó
+Pinia no existía.
+
+**(c) La primera corrección de la medición: el estado no es lo que pesa.** Extraído el primer dominio,
+la bajada fue de **catorce líneas**. Al medir por qué: el estado son **55 líneas de 614 (9%)** y las
+funciones **441 (72%)**. Mi estimación por dominio medía *proximidad*, no *movilidad*. Se reordenó el
+plan para ir donde estaban las funciones, y el dominio siguiente (`auth`) bajó 44 de golpe.
+
+**(d) El resultado: TRES capas con responsabilidades distintas.**
+- **módulos planos** (`calendar.js`, `cart.js`, `admission.js`…) — las REGLAS, probadas con
+  `node --test` y con paridad contra el servidor. No cambian.
+- **stores de Pinia** (`stores/`, **nueve**) — el ESTADO de cada dominio y las secuencias que no salen
+  de él, incluidas sus llamadas a la API. Se prueban sin DOM ni Vue.
+- **componentes** — pintan.
+
+    Sidebar.vue:  614 → 438 líneas · 11 → 2 llamadas a la API
+    y luego         438 →  16 líneas ·      0 llamadas   (al partirlo por secciones)
+
+**(e) La segunda decisión, y la que responde a la pregunta del owner: qué se hace AHORA y qué no.**
+Se midió función por función qué dominios toca cada secuencia pendiente. Las cinco que quedan
+—`addToCart`, `confirmReservation`, `retryPayment`, `poll`, `showLineProblems`— viven **íntegramente
+en el embudo**: el área de cliente no las rozará, así que **su coste no crece**. Son deuda SIN
+intereses y esperan (ficha en `DEUDA.md`).
+▶ Lo que sí decae, y por eso se hizo ahora:
+- **el GRAFO**: `TRANSITIONS` era el mapa explícito de los once pasos del embudo. Un área de cliente
+  **no es un embudo** —sus pantallas se navegan libremente— y colgarla ahí mezclaría dos modelos en un
+  mapa. Pasa a `FUNNEL_TRANSITIONS`, se exporta con `FUNNEL_STEPS` y una guarda falla si aparece un
+  paso ajeno. El nombre no es cosmético: a secas parecía «las transiciones del cajón».
+- **la RAÍZ**: eran once ramas `v-else-if` con ~9,5 líneas de cableado por pantalla en un fichero.
+  Cinco pantallas de cuenta habrían sido +45 líneas ahí más sus manejadores. El embudo pasa a
+  `sections/PurchaseSection.vue` y nace una raíz de 16 líneas que solo enruta.
+
+⚠️ **NO se ha inventado el modelo del área de cliente**, y es deliberado: sin pantallas sería
+especulación, y su diseño es trabajo de `#66` con el owner delante. Lo que se ha hecho es cerrar el
+embudo y darle casa propia, para que la cuenta pueda tener la suya.
+
+**(f) Lo que el refactor destapó, que es la mitad de su valor.** Tres fallos VIVOS que ninguna prueba
+veía —la navegación de mes muerta desde 4.2·2 (`SidebarEmitWiringTest`), y antes los enlaces
+profundos (`#117`) y las señales del panel (`#118`)— más **dos regresiones propias**, las dos cazadas
+al revisar sitios de llamada y verificadas en navegador: la navegación al purgar la cesta, perdida al
+mudar la identidad y **a punto de perderse otra vez** al partir la raíz.
+
+**(g) La lección que ordena a todas las anteriores.** `#113` («lo que un gate declara que no mira es
+un hueco»), `#115` («una comprobación que mide otra cosa es peor que no tenerla»), `#117` («probar los
+dos extremos no cablea el medio») y `#118` («que las piezas se llamen no significa que el valor
+llegue»). Esta fase añade la quinta: **el contrato de árbol NO ejerce `Sidebar.vue`** —el renderer no
+lo importa, y su propio comentario dice por qué—, así que en un refactor del orquestador **la única
+red real es el navegador**. Desde que se asumió, cada tramo se recorrió en uno, y ahí aparecieron los
+tres fallos vivos.
