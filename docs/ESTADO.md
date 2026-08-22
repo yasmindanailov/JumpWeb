@@ -2,8 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-22** (el ÁREA DE CLIENTE **TERMINADO**: las
-> tres tandas, y `/mi-cuenta/…` retirada — `#120(u)`).
+> aquí solo se enlaza. Última actualización: **2026-08-23** (arranca **la AUTH dentro del cajón**, el
+> último trozo de `#66`: spec escrita y revisada, y su paso A1 hecho).
 
 ## ▶ Dónde estamos
 
@@ -45,12 +45,14 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2675 en verde** (15.416 aserciones, `--parallel` **~70 s** medidos en el cierre del 2026-08-22) ·
+- Suite **2677 en verde** (15.432 aserciones, `--parallel` **~38 s** medidos el 2026-08-23) ·
   **525 tests JS** (`node --test`) · Pint limpio (835 ficheros) · `docs-check` verde ·
-  ⚠️ **El contador BAJA, y es la primera vez**: la retirada de `/mi-cuenta/…` se llevó **63 casos**
-  cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los que afirmaban del
-  dominio se extrajeron y los que la usaban de intermediario se re-apuntaron (`#120(u)`). Un contador
-  que solo puede subir acaba premiando el test que no se retira.
+  ⚠️ **2675 → 2677 el 2026-08-23**: los dos casos de `SeoTest` que fijan que las **cinco** superficies
+  de auth se sirven `noindex` y no están en el sitemap (`specs/auth-en-cajon.md` §8·A1).
+  ⚠️ **Y el cierre anterior fue la primera vez que el contador BAJÓ**: la retirada de `/mi-cuenta/…`
+  se llevó **63 casos** cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los
+  que afirmaban del dominio se extrajeron y los que la usaban de intermediario se re-apuntaron
+  (`#120(u)`). Un contador que solo puede subir acaba premiando el test que no se retira.
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -142,14 +144,29 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-▶▶ **EL ÁREA DE CLIENTE ESTÁ CERRADA. Lo que sigue lo decide el owner**, porque no queda nada
-obligado por dependencia. Tres candidatos, en el orden en que se abaratan entre sí:
+🟦 **EN CURSO: LA AUTH DENTRO DEL CAJÓN** — el owner lo eligió el 2026-08-23 de entre los tres
+candidatos que dejó abiertos el cierre del área de cliente. Es el **último trozo de `#66`**: cuando
+cierre, la gestión del cliente vivirá en UN solo sitio.
 
+▶ **El diseño está escrito y REVISADO**: `docs/specs/auth-en-cajon.md` (🟦; revisión adversarial del
+2026-08-23, que cambió la spec de fondo). **Lee su §8 antes de tocar nada**: son diez pasos y el orden
+es la mitad del trabajo.
+▶ **Hecho hasta ahora**: **A1** — las **cinco** superficies de auth quedan `noindex` con test propio,
+medido por mutación en las dos direcciones. Destapó de paso que `/restablecer-contrasena/{token}` —una
+URL con token dentro— y `/email/verificar` se servían `index, follow`.
+▶ **Lo que la revisión destapó y hay que saber antes de seguir** (detalle en la spec):
+· los textos del área **viajan solo con sesión**, así que quien entra dentro del cajón aterrizaría en
+un índice **en blanco** → se navega a la puerta (§3.3, decisión del owner);
+· `register.js` lleva **`context: 'purchase'` quemado**: reutilizar el alta tal cual convertiría el
+alta suelta en **pay-first**, sin correo de verificación (§4.3);
+· **el techo del payload del montaje vive dentro de `SidebarLoginParityTest`**, uno de los ficheros
+que se retiran — hay que mudarlo **antes**, y por eso es el paso A2 (§4.7.bis).
+
+⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |
 |---|---|---|
-| **1 · La AUTH dentro del cajón** | Entrar, darse de alta y recuperar contraseña siguen en el **modal de la cabecera**. El cajón ya tiene su propio login y alta (paso 5 del embudo), así que lo que falta es unificar y **retirar el modal de `layout.blade.php`** | Es lo último que impide decir que la gestión del cliente vive en UN sitio, que es lo que `#66` pedía. ⚠️ Y hay una atadura: el modo `embedded` de `auth.login`/`auth.register` es la REFERENCIA de dos paridades de árbol, que **mueren con este trabajo y no antes** (`#112(f)`) |
-| **2 · `account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas** y Alpine lo trae Livewire |
-| **3 · Fase 5** | Capa de contenido profesional: query services con caché, theming como paquete, contenido por API | Es la siguiente fase del tracker, y no depende de las dos de arriba |
+| **`account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas** y Alpine lo trae Livewire |
+| **Fase 5** | Capa de contenido profesional: query services con caché, theming como paquete, contenido por API | Es la siguiente fase del tracker, y no depende de la de arriba |
 
 ⚠️ **Y una decisión que quedó APLAZADA a propósito y ahora toca**: `specs/area-cliente.md` §3.4 dijo
 que lo de **cambiar la URL por zona** se reevaluaría «cuando existan las siete zonas y la página haya

@@ -5544,3 +5544,79 @@ de una invariante—. La segunda es la que importa.
 
 ▶ **Y es barato convertirlo en gate**: el mismo `grep` que lo encontró vale como comprobación
 mecánica. Queda anotado como el candidato más concreto de la ficha de `docs-check` en `DEUDA.md`.
+
+## #122 · 2026-08-23 · [DECIDIDO] La AUTH entra en el cajón — y el diseño lo cambió su REVISIÓN, no su autor
+
+El owner elige, de los tres candidatos que dejó abiertos el cierre del área de cliente, **traer la
+auth dentro del cajón y retirar el modal de la cabecera**: es el último trozo de `#66`. El diseño
+está en `specs/auth-en-cajon.md`; aquí quedan las decisiones y lo que costó averiguarlas.
+
+**(a) Las tres decisiones de PRODUCTO, del owner.** **1)** Quien entra o se da de alta desde la
+cabecera aterriza en **el índice de Mi cuenta**, no en el embudo ni cerrando el cajón. **2)** El paso
+5 del embudo **gana «he olvidado mi contraseña»** con vuelta a la compra: hoy no lo tiene —era una
+rama `@unless ($embedded)`— y quien compra sin recordar su contraseña **tiene que abandonar el
+cajón**, perdiendo de vista la cesta. **3)** El `noindex` que faltaba se cierra ya, aunque sea ajeno.
+
+**(b) El servidor no pone un solo obstáculo, y conviene decirlo porque no siempre es así.**
+`POST /api/v1/auth/password/forgot` y `/reset` existen desde Fase 3 · paso 3c sobre
+`Identity\Services\PasswordRecovery` —**el mismo servicio que consume el modal**—, con su limitador,
+su no-enumeración y su rotación de credenciales. Comparados los tests de API con los del componente
+uno a uno: **ninguna regla de dominio vive solo en los tests de Livewire**. Lo que falta es pantalla.
+
+**(c) Un HUECO vivo, cerrado el mismo día: tres URLs de auth `noindex` por ACCIDENTE, y dos que ni
+eso.** El `<meta robots>` de `/login`, `/registro` y `/recuperar-contrasena` no lo pone nadie a
+propósito: **es un efecto lateral del prop `authModal`**, el mismo que decide si se pinta el modal. O
+sea que retirar el modal —el objetivo de este trabajo— habría entregado tres URLs de auth al índice
+de Google **sin que ningún test fallara** (`grep -rn noindex tests/` daba **un** resultado, y era del
+503 de mantenimiento).
+▶ Y al fijarlo salió lo de al lado: **`/restablecer-contrasena/{token}` —una URL con un token de
+restablecimiento dentro— y `/email/verificar` se servían `index, follow`**, porque ponen `authModal`
+a `null`. Medido sobre HTTP real, no deducido.
+▶ Cerrado con `SeoTest::test_the_auth_doors_are_never_indexable` sobre **las cinco** superficies, con
+**control negativo** (la home sigue `index, follow`) y su gemelo del sitemap. **Medido por mutación
+en las dos direcciones**: quitar `$authModal` tumba el caso; forzar `noindex` en toda la web tumba el
+control. Sin ese control, un layout que no distinguiera pasaría con matrícula.
+▶ **La lección**: *una conducta que existe por efecto lateral no tiene dueño*. El día que se retire la
+causa, se va con ella. Es la familia de `#89`/`#93` —un dato que viaja al cliente cuyo único test
+conduce la superficie vieja— y de `#112` —una guarda en verde que dejó de medir—.
+
+**(d) La revisión adversarial cambió el diseño de fondo, y ese es el titular.** `CONVENCIONES §5`
+pide que otro agente revise la spec antes de escribir código. Aquí no fue un trámite: encontró **dos
+bloqueantes** que la habrían hecho fracasar en el navegador.
+· **Los textos del área viajan SOLO con sesión** —el montaje los envuelve en `auth()->check()`, igual
+que `locales`— y el cajón los recibe como props estáticas de esa carga. Quien consigue sesión DENTRO
+del cajón no recarga: aterrizaría en el índice con **el título y las seis entradas en blanco**,
+porque `i18n.js::t()` devuelve `''` cuando falta la clave. Es literalmente el fallo que
+`account/navigation.js` documenta. ▶ **Resuelto navegando a `route('account')`**, que ya es puerta:
+la página se recarga con sesión y el cajón **nace abierto** en el índice. Cero API nueva, cero bytes
+en las demás páginas. La alternativa —mandar el grupo `account` a todo el mundo— costaba **~660 B en
+cada página pública y para cada anónimo**, contra un presupuesto que está a 92 B de su techo.
+· **`register.js` lleva `context: 'purchase'` QUEMADO**, y ese campo es el que hace que el servidor
+no mande verificación e inicie sesión (`notifyByEmail: ! $inPurchase`). Reutilizar el formulario «tal
+cual» habría convertido **el alta suelta en pay-first** sin que nadie lo decidiera. ▶ `context` pasa
+a ser parámetro.
+
+**(e) Y una corrección de la propia spec, medida antes de que llegara la revisión.** La primera
+versión daba por muertos los **14** casos de las dos paridades de árbol. Son **6**: los otros ocho
+tienen sujeto propio —cinco fijan el **payload del montaje**, uno el bit del anti-bot, uno el señuelo
+(100 % API), y otro está partido en dos mitades—.
+⚠️⚠️ **Uno de esos cinco es el que más duele**: el **techo del payload del montaje** —4.708 B medidos,
+techo 4.800— **vive dentro de `SidebarLoginParityTest`**, no en un fichero de presupuestos. Borrar el
+fichero se habría llevado el único guardián de lo que viaja en el HTML de **todas** las páginas
+públicas, y nada habría fallado.
+▶ **Y de ahí salió una dependencia invertida en el orden**: ese caso asevera que el payload del
+invitado son exactamente `login` y `register`, así que **añadir los textos de recuperar lo pone en
+rojo**. La mudanza va PRIMERO (paso A2), no al final. Con el orden anterior, la suite habría estado
+en rojo desde el segundo paso hasta el penúltimo — la situación en la que un rojo deja de decir nada.
+
+**(f) Tres guardas más caen con el borrado, y ninguna estaba en el inventario inicial**:
+`ScrollLockOwnerTest` (itera la llave `auth`), `SpinnerTest` (monta `Livewire\Auth\Login`) y
+**`SidebarEntry::clear()`, que se queda sin su ÚNICO llamante** —`Livewire\Auth\Login::login`—: es la
+defensa de que a Bob no le aparezca el «pago denegado» de Alice en un dispositivo compartido. Se
+decide explícitamente, no se pierde por descuido.
+
+**(g) Lo que NO se toca, y por qué.** `/restablecer-contrasena/{token}` y `/email/verificar` siguen
+siendo **páginas**: se llega desde un correo, con token en la URL, y el cajón no es direccionable
+(`specs/area-cliente.md` §3.4). Las tres rutas puerta **sobreviven** —`route('login')` es el destino
+del middleware `auth` de Laravel—. Y `account-context` sigue en Livewire: es la otra ficha de
+`DEUDA.md`.
