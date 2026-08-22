@@ -73,6 +73,47 @@ export const useCatalogStore = defineStore('catalog', {
             this.fieldsByProduct = { ...this.fieldsByProduct, [id]: fields ?? [] };
         },
 
+        /**
+         * Trae la FICHA del producto y guarda de paso las etiquetas de su esquema de evento.
+         *
+         * ⚠️ La ficha lleva lo que el paso 3 necesita y el listado no: el mínimo contratable y el
+         * esquema de campos, ya resueltos al idioma.
+         */
+        async loadProduct({ api, id }) {
+            const response = await api.get(`/catalog/products/${id}`);
+
+            if (! response.ok) {
+                return false;
+            }
+
+            this.setProduct(response.data);
+            this.rememberFields(id, response.data.event_fields ?? []);
+
+            return true;
+        },
+
+        /**
+         * Trae las ETIQUETAS del esquema de evento de varios productos a la vez.
+         *
+         * Lo necesita la cesta restaurada: sus líneas pueden ser de productos que este cajón todavía
+         * no ha mirado, y sin las etiquetas no hay con qué emparejar las respuestas que el
+         * presupuesto no devuelve (RGPD).
+         *
+         * ⚠️ **En paralelo y no en cadena**: son N peticiones independientes y encadenarlas sumaría N
+         * esperas donde cabe una.
+         */
+        async loadFieldsFor({ api, ids }) {
+            const unique = [...new Set(ids ?? [])];
+            const details = await Promise.all(unique.map((id) => api.get(`/catalog/products/${id}`)));
+            const fields = { ...this.fieldsByProduct };
+
+            details.forEach((response, i) => {
+                if (response.ok) fields[unique[i]] = response.data.event_fields ?? [];
+            });
+
+            this.fieldsByProduct = fields;
+        },
+
         /** Deja la elección en blanco. ⚠️ Las etiquetas NO se borran: la cesta puede seguir necesitándolas. */
         clearSelection() {
             this.selectedId = null;

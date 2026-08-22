@@ -93,6 +93,15 @@ export const useDateStore = defineStore('date', {
             this.selected = date;
         },
 
+        /** Pide al servidor los días que se ofrecen de un producto y coloca el calendario. */
+        async loadOffer({ api, productId }) {
+            const response = await api.get(`/availability/${productId}/dates`);
+
+            this.setOffer(response.ok ? (response.data?.data ?? []) : []);
+
+            return response.ok;
+        },
+
         /** Mueve el mes visible. El tope lo ponen `canPrev`/`canNext`; esto no lo comprueba. */
         shift(delta) {
             this.month = shiftMonth(this.month, delta);

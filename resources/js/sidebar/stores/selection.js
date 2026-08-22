@@ -66,6 +66,41 @@ export const useSelectionStore = defineStore('selection', {
             this.resolved = Array.isArray(resolved) ? resolved : [];
         },
 
+        /**
+         * Pide al servidor los complementos del producto con la configuración actual, y guarda lo que
+         * el DOMINIO resolvió.
+         *
+         * ⚠️ **El dinero del paso 3 viene de aquí y NO se compone**: `line.total_cents` lo publica el
+         * endpoint desde 4.3·2 precisamente para que nadie sume `subtotal_cents` con
+         * `addons_total_cents` — salen de dos recorridos distintos del servidor y pueden divergir.
+         *
+         * ⚠️ Y la selección que se guarda es **la que el dominio acaba de resolver** —obligatorios
+         * inyectados, dependientes huérfanos podados—, no la que se pidió.
+         */
+        async loadAddons({ api, productId, date, time }) {
+            if (! productId || this.quantity < 1) {
+                return false;
+            }
+
+            const response = await api.post(`/catalog/products/${productId}/addons`, {
+                quantity: this.quantity,
+                date,
+                time,
+                addons: this.quantities,
+                choices: this.choices,
+            });
+
+            if (! response.ok) {
+                return false;
+            }
+
+            this.addons = { groups: response.data.groups, singles: response.data.singles };
+            this.line = response.data.line ?? null;
+            this.resolved = response.data.selection ?? [];
+
+            return true;
+        },
+
         /** Vacía la línea en construcción entera. Se llama al elegir otro producto y al añadir. */
         clear() {
             this.quantity = 0;

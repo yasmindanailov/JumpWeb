@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { maxQuantityFor, timeAt } from '../offer.js';
+import { toApiItems } from '../cart.js';
 
 /**
  * El estado del paso 3 — **la HORA** (reorganización del SPA, 2026-08-22).
@@ -32,6 +33,26 @@ export const useTimeStore = defineStore('time', {
     actions: {
         setOffer(times) {
             this.offered = Array.isArray(times) ? times : [];
+        },
+
+        /**
+         * Pide al servidor las horas de un día y las guarda.
+         *
+         * ⚠️⚠️ **La consulta LLEVA LA CESTA, y no es opcional** (`AFORO-02`): `offerableTimes()`
+         * descuenta los ocupantes que la propia cesta ya retiene, así que preguntar sin ella ofrece
+         * horas y topes que el checkout luego RECHAZARÍA. Hasta 4.3·2 iba vacía porque no había
+         * cesta; desde entonces va la de verdad, y por eso se recibe por parámetro en vez de leer el
+         * store del carrito: quien llama es quien sabe qué cesta está en juego.
+         */
+        async loadOffer({ api, productId, date, cartLines = [] }) {
+            const response = await api.post(`/availability/${productId}/times`, {
+                date,
+                items: toApiItems(cartLines),
+            });
+
+            this.setOffer(response.ok ? (response.data?.data ?? []) : []);
+
+            return response.ok;
         },
 
         select(time) {

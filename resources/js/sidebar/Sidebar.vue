@@ -260,14 +260,7 @@ async function restoreCart() {
 
     cartStore.setLines(lines);
 
-    const ids = [...new Set(lines.map((line) => line.product_id))];
-    const details = await tracked(Promise.all(ids.map((id) => api.get(`/catalog/products/${id}`))));
-
-    const fields = { ...catalogStore.fieldsByProduct };
-    details.forEach((response, i) => {
-        if (response.ok) fields[ids[i]] = response.data.event_fields ?? [];
-    });
-    catalogStore.fieldsByProduct = fields;
+    await tracked(catalogStore.loadFieldsFor({ api, ids: lines.map((line) => line.product_id) }));
 
     await tracked(cartStore.refreshQuote({ api }));
 
@@ -299,17 +292,10 @@ async function selectProduct(id) {
 
     // ⚠️ La ficha y los días se piden JUNTOS, no en cadena: los dos hacen falta antes de que el
     // cliente pueda elegir nada, y encadenarlos sumaría dos esperas donde cabe una.
-    const [dates, detail] = await tracked(Promise.all([
-        api.get(`/availability/${id}/dates`),
-        api.get(`/catalog/products/${id}`),
+    await tracked(Promise.all([
+        dateStore.loadOffer({ api, productId: id }),
+        catalogStore.loadProduct({ api, id }),
     ]));
-
-    dateStore.setOffer(dates.ok ? (dates.data?.data ?? []) : []);
-
-    if (detail.ok) {
-        catalogStore.setProduct(detail.data);
-        catalogStore.rememberFields(id, detail.data.event_fields ?? []);
-    }
 }
 
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
@@ -372,15 +358,13 @@ async function selectDate(date) {
     timeStore.clearSelection();
     store.go(STEPS.TIME);
 
-    // ⚠️ `AFORO-02`: la oferta de horas **lleva la cesta**. `offerableTimes()` descuenta los ocupantes
-    // que la propia cesta ya retiene, así que una consulta sin ella ofrece horas y topes que el
-    // checkout rechazaría. Hasta 4.3·2 iba vacía porque no había cesta; ahora va la de verdad.
-    const response = await tracked(api.post(`/availability/${catalogStore.selectedId}/times`, {
+    // ⚠️ La consulta LLEVA la cesta (`AFORO-02`); el porqué vive en la acción del store.
+    await tracked(timeStore.loadOffer({
+        api,
+        productId: catalogStore.selectedId,
         date,
-        items: toApiItems(cartStore.lines),
+        cartLines: cartStore.lines,
     }));
-
-    timeStore.setOffer(response.ok ? (response.data?.data ?? []) : []);
 }
 
 /** Elegir hora fija la cantidad en el mínimo contratable y resuelve los complementos. */
@@ -401,26 +385,12 @@ async function selectTime(time) {
  * trae además el dinero de la línea, para que un clic no cueste dos peticiones.
  */
 async function refreshAddons() {
-    if (! catalogStore.selectedId || selectionStore.quantity < 1) return;
-
-    const response = await tracked(api.post(`/catalog/products/${catalogStore.selectedId}/addons`, {
-        quantity: selectionStore.quantity,
+    await tracked(selectionStore.loadAddons({
+        api,
+        productId: catalogStore.selectedId,
         date: dateStore.selected,
         time: timeStore.selected,
-        addons: selectionStore.quantities,
-        choices: selectionStore.choices,
     }));
-
-    if (response.ok) {
-        selectionStore.addons = { groups: response.data.groups, singles: response.data.singles };
-        // ⚠️ **El dinero del paso 3 viene de aquí y no se compone.** `line.total_cents` lo publica el
-        // endpoint desde 4.3·2 precisamente para que nadie sume `subtotal_cents` con
-        // `addons_total_cents`: salen de dos recorridos distintos del servidor y pueden divergir.
-        selectionStore.line = response.data.line ?? null;
-        // Y la selección que hay que GUARDAR es la que el dominio acaba de resolver —obligatorios
-        // inyectados, dependientes huérfanos podados—, no la que se pidió.
-        selectionStore.resolved = response.data.selection ?? [];
-    }
 }
 
 function changeQuantity(delta) {
@@ -976,8 +946,8 @@ function goToCart() {
  * aviso que NOMBRA los campos que faltan.
  */
 async function addToCart() {
-    cartStore.error = '';
-    cartStore.fieldErrors = {};
+    cartStore.setError('');
+    cartStore.setFieldErrors({});
 
     const candidate = {
         product_id: catalogStore.selectedId,
@@ -990,15 +960,10 @@ async function addToCart() {
         addons: selectionStore.resolved,
     };
 
-    // ⚠️ La candidata NO va dentro de `items`: `items` es lo que YA retiene cupo, y meterla ahí la
-    // haría competir consigo misma y devolvería un tope menor del real.
-    const response = await tracked(api.post('/cart/validate-line', {
-        line: candidate,
-        items: toApiItems(cartStore.lines),
-    }));
+    const response = await tracked(cartStore.validateLine({ api, line: candidate }));
 
     if (! response.ok) {
-        cartStore.error = t('errors.choose_one');
+        cartStore.setError(t('errors.choose_one'));
 
         return;
     }
@@ -1011,7 +976,7 @@ async function addToCart() {
         return;
     }
 
-    cartStore.lines = addLine(cartStore.lines, candidate, verdict);
+    cartStore.setLines(addLine(cartStore.lines, candidate, verdict));
     cartStore.persist();
     clearSelection();
     store.go(STEPS.CART);

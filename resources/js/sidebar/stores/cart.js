@@ -119,6 +119,16 @@ export const useCartStore = defineStore('cart', {
         },
 
         /**
+         * Pregunta al servidor si una línea candidata es comprable, con la cesta actual como contexto.
+         *
+         * ⚠️⚠️ **La candidata NO va dentro de `items`, y confundirlo devuelve un tope MENOR del real**:
+         * `items` es lo que YA retiene cupo, así que meterla ahí la haría competir consigo misma.
+         */
+        async validateLine({ api, line }) {
+            return api.post('/cart/validate-line', { line, items: toApiItems(this.lines) });
+        },
+
+        /**
          * Vacía la cesta EN MEMORIA, sin tocar lo guardado.
          *
          * ⚠️ **Vaciar y olvidar son dos cosas distintas y no se pueden confundir**: al cambiar el

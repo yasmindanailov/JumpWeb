@@ -181,6 +181,30 @@ describe('el store de la cesta', () => {
         assert.equal(c.restore('2026-09-01').lines.length, 0, 'y olvidar sí');
     });
 
+    /**
+     * ⚠️⚠️ **La candidata NO va dentro de `items`, y confundirlo devuelve un tope MENOR del real.**
+     * `items` es lo que YA retiene cupo; meter ahí la línea que se está validando la haría competir
+     * consigo misma. Es un fallo de AFORO, no de presentación.
+     */
+    test('validar una línea manda la cesta en `items` y la candidata FUERA', async () => {
+        const c = store();
+        c.setLines([LINEA(), LINEA({ product_id: 4 })]);
+
+        let cuerpo = null;
+        const api = { post: async (url, body) => { cuerpo = { url, body }; return { ok: true, data: { valid: true } }; } };
+        const candidata = LINEA({ product_id: 99 });
+
+        await c.validateLine({ api, line: candidata });
+
+        assert.equal(cuerpo.url, '/cart/validate-line');
+        assert.equal(cuerpo.body.line.product_id, 99, 'la candidata va en `line`');
+        assert.equal(cuerpo.body.items.length, 2, 'y en `items` va SOLO lo que ya retiene cupo');
+        assert.ok(
+            ! cuerpo.body.items.some((i) => i.product_id === 99),
+            'la candidata dentro de `items` competiría consigo misma y daría un tope menor del real',
+        );
+    });
+
     test('el tope de líneas solo acepta números', () => {
         const c = store();
 

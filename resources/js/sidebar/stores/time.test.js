@@ -58,6 +58,40 @@ describe('el store de la hora', () => {
         assert.equal(h.current, null, 'una hora que no está en la oferta no existe');
     });
 
+    /**
+     * ⚠️⚠️ **`AFORO-02`: la consulta de horas LLEVA LA CESTA, y no es opcional.** `offerableTimes()`
+     * descuenta los ocupantes que la propia cesta ya retiene; preguntar sin ella ofrece horas y topes
+     * que el checkout luego RECHAZARÍA. El caso mira el CUERPO de la petición, no el resultado.
+     */
+    test('pedir las horas manda la cesta en el cuerpo', async () => {
+        const h = store();
+        const enviados = [];
+        const api = { post: async (url, body) => { enviados.push({ url, body }); return { ok: true, data: { data: OFERTA } }; } };
+
+        await h.loadOffer({
+            api,
+            productId: 7,
+            date: '2026-09-28',
+            cartLines: [{ product_id: 3, date: '2026-09-28', time: '10:00', quantity: 2, addons: [] }],
+        });
+
+        assert.equal(enviados[0].url, '/availability/7/times');
+        assert.equal(enviados[0].body.date, '2026-09-28');
+        assert.equal(enviados[0].body.items.length, 1, 'sin la cesta, el servidor ofrecería plazas que ya están retenidas');
+        assert.equal(h.offered.length, 2, 'y la oferta se guarda');
+    });
+
+    test('si la petición falla, la oferta se queda vacía y no con la anterior', async () => {
+        const h = store();
+        h.setOffer(OFERTA);
+        h.select('10:00');
+
+        await h.loadOffer({ api: { post: async () => ({ ok: false, status: 500 }) }, productId: 7, date: 'x' });
+
+        assert.deepEqual(h.offered, [], 'enseñar horas de otro día sería peor que no enseñar ninguna');
+        assert.equal(h.maxQuantity, 0);
+    });
+
     test('una oferta que no es lista no rompe nada', () => {
         const h = store();
 
