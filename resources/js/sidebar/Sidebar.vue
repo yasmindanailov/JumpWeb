@@ -2,10 +2,11 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './stores/purchase.js';
 import { useDateStore } from './stores/date.js';
+import { useTimeStore } from './stores/time.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
-import { initialQuantity, maxQuantityFor, minQuantityFor, timeAt } from './offer.js';
+import { initialQuantity, minQuantityFor } from './offer.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
@@ -302,7 +303,7 @@ async function selectProduct(id) {
     // porque los dos hacen falta antes de que el cliente pueda elegir nada.
     product.value = null;
     dateStore.clearSelection();
-    selectedTime.value = null;
+    timeStore.clearSelection();
     addons.value = { groups: [], singles: [] };
     addonChoices.value = [];
     addonQuantities.value = [];
@@ -328,8 +329,7 @@ async function selectProduct(id) {
 }
 
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
-const offeredTimes = ref([]);
-const selectedTime = ref(null);
+const timeStore = useTimeStore();
 /** La fila del CATÁLOGO del producto elegido (nombre y tipo), disponible sin esperar a la ficha. */
 const selectedProduct = ref(null);
 const quantity = ref(0);
@@ -446,9 +446,6 @@ const eventData = ref({});
 const addonChoices = ref([]);
 const addonQuantities = ref([]);
 
-/** La hora elegida, con sus dos números. ⚠️ El selector se acota con `max_quantity`, NO con `available`. */
-const offeredTime = computed(() => timeAt(offeredTimes.value, selectedTime.value));
-const maxQuantity = computed(() => maxQuantityFor(offeredTimes.value, selectedTime.value));
 const minQuantity = computed(() => minQuantityFor(product.value));
 
 
@@ -461,7 +458,7 @@ const minQuantity = computed(() => minQuantityFor(product.value));
  */
 async function selectDate(date) {
     dateStore.selected = date;
-    selectedTime.value = null;
+    timeStore.clearSelection();
     store.go(STEPS.TIME);
 
     // ⚠️ `AFORO-02`: la oferta de horas **lleva la cesta**. `offerableTimes()` descuenta los ocupantes
@@ -472,15 +469,15 @@ async function selectDate(date) {
         items: toApiItems(cart.value),
     }));
 
-    offeredTimes.value = response.ok ? (response.data?.data ?? []) : [];
+    timeStore.setOffer(response.ok ? (response.data?.data ?? []) : []);
 }
 
 /** Elegir hora fija la cantidad en el mínimo contratable y resuelve los complementos. */
 async function selectTime(time) {
-    selectedTime.value = time;
+    timeStore.select(time);
     // ⚠️ La regla y su equivalencia con la del servidor —que PARECE distinta y no lo es— viven en
     // `offer.js` con la medición que lo demuestra.
-    quantity.value = initialQuantity(product.value, offeredTimes.value, time);
+    quantity.value = initialQuantity(product.value, timeStore.offered, time);
 
     await refreshAddons();
 }
@@ -498,7 +495,7 @@ async function refreshAddons() {
     const response = await tracked(api.post(`/catalog/products/${selectedProductId.value}/addons`, {
         quantity: quantity.value,
         date: dateStore.selected,
-        time: selectedTime.value,
+        time: timeStore.selected,
         addons: addonQuantities.value,
         choices: addonChoices.value,
     }));
@@ -517,7 +514,7 @@ async function refreshAddons() {
 
 function changeQuantity(delta) {
     const next = quantity.value + delta;
-    if (next < minQuantity.value || next > maxQuantity.value) return;
+    if (next < minQuantity.value || next > timeStore.maxQuantity) return;
 
     quantity.value = next;
     // La cantidad cambia lo que cuestan los complementos por-invitado: hay que volver a resolver.
@@ -560,7 +557,7 @@ const progress = computed(() => buildProgress({
     isPack: selectedProduct.value?.is_pack ?? false,
     productName: selectedProduct.value?.name ?? '',
     date: dateStore.selected,
-    time: selectedTime.value,
+    time: timeStore.selected,
     messages: props.messages,
     locale,
 }));
@@ -647,7 +644,7 @@ const footer = computed(() => buildFooter({
     cartTotalCents: quote.value?.total_cents ?? 0,
     cartOnlineCents: quote.value?.online_amount_cents ?? 0,
     hasDate: dateStore.selected !== null,
-    hasTime: selectedTime.value !== null,
+    hasTime: timeStore.selected !== null,
     lineTotalCents: line.value?.total_cents ?? null,
     lineHasDeposit: line.value?.has_deposit ?? false,
     lineDepositCents: line.value?.deposit_cents ?? 0,
@@ -1189,7 +1186,7 @@ async function addToCart() {
     const candidate = {
         product_id: selectedProductId.value,
         date: dateStore.selected,
-        time: selectedTime.value,
+        time: timeStore.selected,
         quantity: quantity.value,
         event_data: { ...eventData.value },
         // Lo que se guarda es la selección que el dominio RESOLVIÓ (obligatorios inyectados,
@@ -1315,7 +1312,7 @@ function clearSelection() {
     selectedProduct.value = null;
     product.value = null;
     dateStore.clearSelection();
-    selectedTime.value = null;
+    timeStore.clearSelection();
     quantity.value = 0;
     eventData.value = {};
     addonChoices.value = [];
@@ -1335,7 +1332,7 @@ const tp = (key, params) => translateWith(props.messages, key, params);
  */
 function goBack() {
     if (store.step === STEPS.TIME) {
-        selectedTime.value = null;
+        timeStore.clearSelection();
         quantity.value = 0;
         store.go(STEPS.DATE);
 
@@ -1371,11 +1368,11 @@ function goBack() {
 
         <TimeStep
             v-else-if="store.step === STEPS.TIME"
-            :times="offeredTimes.map((t) => t.time)"
-            :selected-time="selectedTime"
+            :times="timeStore.offered.map((t) => t.time)"
+            :selected-time="timeStore.selected"
             :quantity="quantity"
             :min-quantity="minQuantity"
-            :max-quantity="maxQuantity"
+            :max-quantity="timeStore.maxQuantity"
             :is-pack="product?.type === 'pack'"
             :day-price-cents="dateStore.priceCents"
             :event-fields="product?.event_fields ?? []"
