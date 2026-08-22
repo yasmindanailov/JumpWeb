@@ -5518,3 +5518,29 @@ escrito, y aun así se repitió.
 ⚠️ **Los dos presupuestos, bajados a lo medido al cerrar**: payload del montaje **4.708 B** (techo
 4.800) y chunk **189,5 KiB** (techo 190, con 0,5 de holgura). El área de cliente entera —tres tandas,
 siete pantallas, once endpoints— ha costado **27,9 KiB** sobre el cierre de la reorganización.
+
+## #121 · 2026-08-22 · El barrido de cierre: una invariante llevaba un día citando un test muerto
+
+Cerrando la sesión de la tanda 3 se hizo una comprobación que no estaba en el protocolo: **que cada
+test citado en `INVARIANTES.md` exista**. Un `grep` de nombres de clase contra `tests/`, dos líneas.
+
+**Encontró dos, los dos en `PAY-04`** —el reintento de pago: supersede, extensión atómica del hold y
+el ORDEN entre ambos—: `PurchaseRetryAndPollingTest`, que murió con `Purchase.php` en `#112`
+(2026-08-21), y `PaymentRetryFromOrdersTest`, con la página en `#120(u)` (hoy).
+
+⚠️ **La cobertura estaba intacta**: los tres guardianes de dominio siguen ahí y la superficie la
+cubren `Api\V1\OrdersTest` y `Api\V1\PaymentStatusTest`. Lo que estaba viejo era **la cita**. Pero esa
+es exactamente la forma en que una invariante se queda sin red sin que nadie lo note: el día que
+alguien retire uno de los que sí existen, la columna seguirá nombrando cinco y solo habrá tres.
+
+⚠️⚠️ **Y por qué el gate no lo vio**: `docs-check` valida **rutas de fichero** citadas
+(`app/…/Foo.php`) y **no nombres de clase sueltos** (`FooTest`). Es la ficha de `DEUDA.md` que dice
+que el gate valida estructura y citas, no contenido — con un caso medido encima.
+
+▶ **La regla que deja para el protocolo de cierre**: al RETIRAR una superficie, el barrido de
+`§3.quater` no termina en los tests; hay que mirar **quién los nombraba**. Un test borrado deja dos
+huellas: la que el gate ve —su fichero— y la que no —su nombre, escrito en la columna «Verificación»
+de una invariante—. La segunda es la que importa.
+
+▶ **Y es barato convertirlo en gate**: el mismo `grep` que lo encontró vale como comprobación
+mecánica. Queda anotado como el candidato más concreto de la ficha de `docs-check` en `DEUDA.md`.

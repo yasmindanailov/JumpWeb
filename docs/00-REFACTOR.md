@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. ✅ **A7 verificado en navegador el 2026-08-22** —y destapó que la costura de intención **nunca se cableó** (`#117`), arreglado el mismo día— y **`4.7` VALIDADO POR EL OWNER**, que es la cuarta condición del DoD. ✅ **Y el cajón queda REORGANIZADO antes del área de cliente** (`#119`, a petición del owner): tres capas —módulos planos, nueve stores de Pinia, componentes—, el embudo fuera de la raíz (`sections/PurchaseSection.vue`, raíz de 16 líneas) y el grafo del embudo CERRADO con guarda. ⚠️ La fase sigue 🟦 por lo que viene: el **área de cliente** (`#66`), cuyo modelo de navegación está sin diseñar A PROPÓSITO. En `DEUDA.md`, declaradas: la mitad de ZONA del enlace profundo, las cinco secuencias transversales del embudo (deuda sin intereses: su coste no crece) y `account-context`, que sigue en Livewire
+### Fase 4 — Sidebar SPA ✅ — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. ✅ **A7 verificado en navegador el 2026-08-22** —y destapó que la costura de intención **nunca se cableó** (`#117`), arreglado el mismo día— y **`4.7` VALIDADO POR EL OWNER**, que es la cuarta condición del DoD. ✅ **Y el cajón queda REORGANIZADO antes del área de cliente** (`#119`, a petición del owner): tres capas —módulos planos, nueve stores de Pinia, componentes—, el embudo fuera de la raíz (`sections/PurchaseSection.vue`, raíz de 16 líneas) y el grafo del embudo CERRADO con guarda. ✅ **Y el ÁREA DE CLIENTE queda TERMINADA el 2026-08-22** (`#66`, `#120`), en tres tandas —leer, gestionar y retirar—: las cinco gestiones viven en el cajón, `/mi-cuenta/…` se retiró y **sus rutas sobreviven como PUERTA** que abre el cajón en su zona, porque 8 correos ya entregados apuntan ahí. ⚠️ **Con eso la fase CIERRA**: no queda ninguna casilla suya sin marcar. Lo que el área NO se llevó —la **auth**, que sigue en el modal de la cabecera, y **`account-context`**, que sigue en Livewire— quedó fuera de las tres tandas **a propósito** y tiene ficha propia en `DEUDA.md`, junto con las cinco secuencias transversales del embudo (deuda sin intereses: su coste no crece)
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -1579,10 +1579,12 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **Cerrado del todo**: Turnstile entregado (4.4b·2, `#108`), los caminos de navegador
       verificados en staging (`#110`) y el flag RETIRADO con el componente (`#112`) — hoy no hay dos
       motores que comparar porque solo queda uno.
-- [ ] **El cajón como ÁREA DE CLIENTE** (`DECISIONES #66`, decisión del owner) — **PENDIENTE**. Toda la
-      gestión del cliente dentro del cajón: entrar y darse de alta, sus entradas y reservas, y las
-      gestiones de cuenta. Hoy está repartida en TRES sitios —el cajón, el modal de auth de la cabecera
-      y las páginas `/mi-cuenta/…`— y el destino es UNO.
+- [x] **El cajón como ÁREA DE CLIENTE** (`DECISIONES #66`, decisión del owner) — ✅ **HECHO** el
+      2026-08-22, en TRES tandas (`#120`). La gestión del cliente vive dentro del cajón: sus entradas
+      y reservas, y las cinco gestiones de cuenta. De los TRES sitios en que estaba repartida quedan
+      **DOS**: `/mi-cuenta/…` se retiró (`#120(u)`) y el **modal de auth de la cabecera** sigue siendo
+      la puerta de quien no tiene sesión — con ficha propia en `DEUDA.md`, porque no era de ninguna
+      tanda.
       ✅ **El terreno se preparó a propósito antes de empezar** (`#119`, 2026-08-22): tres capas
       (módulos planos · nueve stores · componentes), el embudo fuera de la raíz como SECCIÓN y su grafo
       CERRADO con guarda, para que las pantallas de cuenta entren al lado y no dentro.
@@ -1754,9 +1756,10 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             (`OrderRetryEligibilityTest`, `MeOrdersFinancialsTest`).
             ✅ Navegador `V12` **13/13** y `V13` **6/6**. ⚠️ Y `V12` cazó el fallo de siempre: la zona
             se aplicaba en `open()`, y **el cajón que llega por una puerta nace abierto**.
-      - [ ] **Lo que el área de cliente NO se llevó**, y no es de ninguna tanda: la **auth** sigue en
-            el modal de la cabecera y **`account-context` sigue en Livewire**. Las dos con ficha en
-            `DEUDA.md`.
+      ⚠️ **Lo que el área de cliente NO se llevó, y NO es un entregable pendiente de esta fase**: la
+      **auth** sigue en el modal de la cabecera y **`account-context` sigue en Livewire**. Las dos
+      quedaron fuera de las tres tandas a propósito y tienen **ficha propia en `DEUDA.md`**; dejarlas
+      aquí como casilla sin marcar mantendría la fase abierta por trabajo que ninguna fase reclama.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

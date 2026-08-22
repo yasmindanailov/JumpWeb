@@ -7,13 +7,16 @@
 
 ## ▶ Dónde estamos
 
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) 🟦 — EN CURSO.**
+**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) ✅ — CERRADA el
+2026-08-22.** ▶ **La siguiente es la Fase 5** (capa de contenido profesional), o cualquiera de los
+dos trozos que el área de cliente dejó fuera a propósito. El detalle, en «Próximo paso».
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
-**4.7 ✅ (validado por el owner el 2026-08-22)** → **los ONCE pasos están transcritos**, el extremo a extremo con navegador
-y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging**
-(`#110`) y **`Purchase.php` está RETIRADO** (`#112`). El corte del diseño está en
-`docs/specs/sidebar-spa.md` §4.10.
+**4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
+**los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real se hizo
+(`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`),
+**`Purchase.php` está RETIRADO** (`#112`) y **`/mi-cuenta/…` también** (`#120(u)`). El corte del
+diseño está en `docs/specs/sidebar-spa.md` §4.10 y el del área, en `docs/specs/area-cliente.md`.
 
 ✅ **Las dos comprobaciones de navegador que faltaban están HECHAS y el owner ha validado el cajón**
 (2026-08-22). `4.7` está cerrado.
@@ -29,13 +32,20 @@ cabecera y **`account-context` sigue en Livewire**. Las dos con ficha en `DEUDA.
 `#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
 (verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
-✅ **STAGING está desplegado y al día**, sirviendo el cajón SPA con el anti-bot activo. Canal:
-`scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
+⚠️ **STAGING está desplegado pero YA NO al día**, y conviene saberlo antes de prometer nada sobre
+él: sirve el commit `9fc8922` (2026-08-20), y **`main` lleva 56 commits por delante** —el área de
+cliente entera— medido el 2026-08-22. Lo que hay allí es el cajón SPA con el anti-bot activo, sin
+ninguna de las tres tandas. Canal: `scripts/deploy.sh` (dry-run por defecto); detalle en
+`ENTORNOS.md` §4 y el porqué en `#105`–`#110`.
+▶ **Desplegarlo ahora es barato**: **cero migraciones nuevas** desde entonces (medido con
+`git diff --name-only 9fc8922..HEAD -- database/migrations/`), así que la nota de despliegue —migrar
+antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí hay que hacer es
+**construir los assets fuera y subirlos**: en staging no hay node/npm.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2675 en verde** (15.416 aserciones, `--parallel` ~50 s medidos el 2026-08-22) ·
+- Suite **2675 en verde** (15.416 aserciones, `--parallel` **~70 s** medidos en el cierre del 2026-08-22) ·
   **525 tests JS** (`node --test`) · Pint limpio (835 ficheros) · `docs-check` verde ·
   ⚠️ **El contador BAJA, y es la primera vez**: la retirada de `/mi-cuenta/…` se llevó **63 casos**
   cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los que afirmaban del
@@ -242,11 +252,13 @@ sitio y duplicarlas es lo que envejece esta foto—; se nombran para que no te p
   1. ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS** del sitio en el panel de Enhance — sin cron no hay envío de
      correo ni caducidad de pedidos (`#115`). La entrada exacta, en `ENTORNOS.md` §4.
   2. Un **token nuevo de la API del panel** para `scripts/provision.sh` (el de medir se retiró).
-  3. **Validar la spec del área de cliente** (`specs/area-cliente.md`): el modelo de navegación (§3.1)
-     y el modo `account` del panel (§3.3) son propuesta del agente y están 🟦 sin validar (`#120(d)`).
-  4. 2FA del panel · backlog de producto de Fase 6.
-  ✅ Resueltos: el acceso SSH del 2º puesto (2026-08-21) y **las dos comprobaciones de navegador que
-  cerraban `4.7`** (2026-08-22, validadas por el owner).
+  3. 2FA del panel · backlog de producto de Fase 6.
+  ✅ Resueltos: el acceso SSH del 2º puesto (2026-08-21) · **las dos comprobaciones de navegador que
+  cerraban `4.7`** (2026-08-22) · **la spec del área de cliente**, validada el 2026-08-22 —modelo de
+  navegación y modo `account`, `#120(d)`— · y las **cuatro decisiones de producto** que el área pidió
+  sobre la marcha: publicar la entrada de verdad en el export (`#120(s)`), no llevar «Cerrar sesión»
+  al índice, publicar los consentimientos y enseñar las respuestas del pack bajo demanda (`#120(t)`,
+  `#120(u)`).
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 

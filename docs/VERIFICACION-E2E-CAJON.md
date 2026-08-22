@@ -251,7 +251,9 @@ gate a propósito** —115 MB de navegador y un tercero en el camino crítico de
 decisión con coste, no un detalle— pero la receta es corta y reproducible:
 
 - **Dentro del contenedor**, que ya trae las librerías de Chromium (Sail las incluye para Dusk; el host
-  WSL NO las tiene): `mkdir /root/e2e && cd /root/e2e && npm i playwright && npx playwright install chromium`.
+  WSL NO las tiene): `mkdir /root/e2e && cd /root/e2e && npm init -y && npm i playwright && npx playwright install chromium`.
+  ⚠️ **NO sobrevive a recrear el contenedor** (medido el 2026-08-22: había que reinstalarlo). Son
+  ~115 MB y un par de minutos; el bloqueo no es el tiempo sino acordarse de que hay que hacerlo.
 - **Puente de puerto 8081→80** dentro del contenedor (15 líneas de Node con `net.createServer`): hace
   falta porque `APP_URL` es `http://localhost:8081` y de ahí salen las cookies, las URLs absolutas y la
   vuelta de Redsys. Sin él, la vuelta apunta a un puerto que dentro no existe.
