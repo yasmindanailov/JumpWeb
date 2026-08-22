@@ -7,6 +7,7 @@ import { useAuthStore } from './stores/auth.js';
 import { useCartStore } from './stores/cart.js';
 import { useOutcomeStore } from './stores/outcome.js';
 import { useCatalogStore } from './stores/catalog.js';
+import { useBookingStore } from './stores/booking.js';
 import { useSelectionStore } from './stores/selection.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
@@ -20,7 +21,7 @@ import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runConfirm } from './pay.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
 import { signupRequiresCaptcha } from './register.js';
-import { addLine, decideOwnership, hasPendingEventFields, toApiItems } from './cart.js';
+import { addLine, hasPendingEventFields, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
@@ -104,7 +105,7 @@ const selectionStore = useSelectionStore();
  * ⚠️ Es ESTADO y se relee; el objeto `notice` que trae viaja SIEMPRE, también con las reservas
  * abiertas, así que **el único bit de pausa es `reservations_paused`**.
  */
-const bookingStatus = ref(null);
+const bookingStore = useBookingStore();
 
 /**
  * Relee el estado de las reservas.
@@ -118,14 +119,8 @@ const bookingStatus = ref(null);
  * Un fallo de red NO inventa una pausa: se conserva lo último que se supo, que es la conducta segura
  * (el servidor rechaza igual al crear el pedido).
  */
-async function refreshBookingStatus() {
-    const response = await api.get('/booking/status');
-
-    if (response.ok) bookingStatus.value = response.data;
-
-    // Devuelve si se pudo releer: el paso al pago lo necesita para no dejar un clic mudo cuando el
-    // veredicto dice «pausa» y el estado que pintaría el cartel no llega.
-    return response.ok;
+function refreshBookingStatus() {
+    return bookingStore.refresh({ api });
 }
 
 /**
@@ -450,8 +445,8 @@ const progress = computed(() => buildProgress({
  * cualquier otro fallo se conserva la identidad conocida, porque purgar por un corte de red destruiría
  * la cesta de quien no ha hecho nada malo — y no habría manera de recuperarla.
  */
-async function refreshIdentity() {
-    return applyIdentityFrom(await api.get('/me'));
+function refreshIdentity() {
+    return cartStore.identify({ api });
 }
 
 /**
@@ -464,13 +459,6 @@ async function refreshIdentity() {
  *
  * @returns {'keep'|'purge'} qué se hizo con la cesta
  */
-function applyIdentityFrom(response) {
-    if (! response.ok && response.status !== 401) {
-        return 'keep';
-    }
-
-    return applyIdentity(response.ok ? (response.data?.id ?? null) : null);
-}
 
 /**
  * Aplica una identidad a la cesta que hay en memoria.
@@ -480,19 +468,6 @@ function applyIdentityFrom(response) {
  *
  * @returns {'keep'|'purge'}
  */
-function applyIdentity(newOwner) {
-    const decision = decideOwnership(cartStore.owner, newOwner);
-
-    if (decision === 'purge') {
-        cartStore.empty();
-        cartStore.forget();
-        store.enter(STEPS.CATALOG);
-    }
-
-    cartStore.setOwner(newOwner);
-
-    return decision;
-}
 
 defineExpose({ refreshBookingStatus, refreshIdentity });
 
@@ -503,7 +478,7 @@ defineExpose({ refreshBookingStatus, refreshIdentity });
  * aunque las reservas se hayan pausado entre medias.
  */
 const notice = computed(() => buildNotice({
-    status: bookingStatus.value,
+    status: bookingStore.status,
     step: store.step,
     messages: props.messages,
 }));
@@ -579,7 +554,7 @@ async function checkout() {
         incompleteLines: hasPendingEventFields(cartStore.rows),
         api,
         messages: props.messages,
-        applyIdentity: applyIdentityFrom,
+        applyIdentity: (response) => cartStore.applyIdentityResponse(response),
         // ⚠️ **La pausa se enseña releyendo el estado, no pintando un error**: el componente Livewire
         // escribe su mensaje en el bag y el cartel de mantenimiento lo tapa antes de que llegue a
         // pintarse (medido). Releer es además lo que cierra el residual de 4.3·3 — un cajón ya
@@ -671,7 +646,7 @@ async function submitRegister() {
  */
 async function enterWith(identity) {
     notifyLoggedIn();
-    applyIdentityFrom(identity);
+    cartStore.applyIdentityResponse(identity);
     authStore.reset();
 
     const verdict = await tracked(continueAfterIdentification({

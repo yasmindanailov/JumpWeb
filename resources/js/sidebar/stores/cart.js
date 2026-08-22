@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import {
-    cartRows, clear as forgetStored, load as readStored, reconcile,
+    cartRows, clear as forgetStored, decideOwnership, load as readStored, reconcile,
     removeLine as removeCartLine, save as writeStored, toApiItems,
 } from '../cart.js';
 import { useCatalogStore } from './catalog.js';
@@ -76,6 +76,52 @@ export const useCartStore = defineStore('cart', {
     actions: {
         setOwner(owner) {
             this.owner = owner ?? null;
+        },
+
+        /**
+         * Resuelve QUÉ hacer con la cesta cuando cambia el titular, y lo hace.
+         *
+         * ⚠️ Las cinco casillas —incluida la que el servidor no tiene, porque allí el logout vacía la
+         * sesión entera— las decide `cart.js::decideOwnership()`. Aquí solo se ejecuta la decisión.
+         *
+         * ⚠️ **Purgar es vaciar Y OLVIDAR**: dejar lo guardado devolvería la cesta del titular
+         * anterior en la siguiente carga. Devuelve la decisión para que quien llama navegue si toca —
+         * el store no mueve el paso.
+         */
+        applyIdentity(newOwner) {
+            const decision = decideOwnership(this.owner, newOwner);
+
+            if (decision === 'purge') {
+                this.empty();
+                this.forget();
+            }
+
+            this.setOwner(newOwner);
+
+            return decision;
+        },
+
+        /**
+         * Resuelve la identidad contra el SERVIDOR y la aplica.
+         *
+         * ⚠️ **La identidad sale SIEMPRE de `GET /me`, nunca de un parámetro**: el guard es quien la
+         * dice, y colgarse de un id que viaje por el bus de eventos del navegador sería confiar en el
+         * cliente para una defensa de seguridad.
+         *
+         * ⚠️ Un fallo que NO sea 401 devuelve `keep`: no se puede saber quién es, y purgar la cesta de
+         * alguien por un corte de red sería destruir su compra por un problema nuestro.
+         */
+        async identify({ api }) {
+            return this.applyIdentityResponse(await api.get('/me'));
+        },
+
+        /** Aplica una respuesta con forma de `GET /me` (el login devuelve el perfil con la misma). */
+        applyIdentityResponse(response) {
+            if (! response.ok && response.status !== 401) {
+                return 'keep';
+            }
+
+            return this.applyIdentity(response.ok ? (response.data?.id ?? null) : null);
         },
 
         setMaxLines(max) {

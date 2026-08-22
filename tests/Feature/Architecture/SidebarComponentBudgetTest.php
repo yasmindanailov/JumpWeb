@@ -65,7 +65,7 @@ class SidebarComponentBudgetTest extends TestCase
         // **72%** (441). Mover estado a stores da poco por sí solo; lo que baja el número de verdad es
         // sacar las secuencias — 184 líneas son de un solo dominio y pueden ser acciones de su store,
         // y 214 son transversales y piden el patrón `admission.js::runCheckout()`.
-        'sidebar/Sidebar.vue' => ['code' => 451, 'api' => 4],
+        'sidebar/Sidebar.vue' => ['code' => 434, 'api' => 2],
     ];
 
     /**

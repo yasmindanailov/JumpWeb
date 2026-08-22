@@ -33,8 +33,8 @@ seguro**.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2658 en verde** (15.276 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **362 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
+- Suite **2660 en verde** (15.278 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
+  **365 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -234,6 +234,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `stores/outcome.js` | El desenlace: formulario de la pasarela, código del pedido, resumen, motivo del rechazo | `stores/outcome.test.js` |
 | `stores/catalog.js` | El paso 1 y el producto elegido: secciones, fila del listado, ficha y etiquetas del evento | `stores/catalog.test.js` |
 | `stores/selection.js` | La LÍNEA en construcción: cantidad, complementos y respuestas del evento (**nunca se persiste**) | `stores/selection.test.js` |
+| `stores/booking.js` | Si las reservas están pausadas. Se PIDE, no se inyecta: la dueña acciona el interruptor con clientes dentro | `stores/booking.test.js` |
 
 Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
