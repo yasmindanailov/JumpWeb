@@ -41,14 +41,18 @@ class AccountOrdersPaginationTest extends TestCase
             ->get('/mi-cuenta/pedidos')
             ->assertOk()
             ->assertSee(__('account.orders.pagination.page', ['current' => 1, 'last' => 4]))
-            ->assertSee(__('account.orders.pagination.next'));
+            // ⚠️ `assertSeeText`/`assertDontSeeText` (`TESTING.md` §2.ter): desde el 2026-08-22 el
+            // `data-boot` del cajón lleva estos textos **para el cliente con sesión** —los pinta el
+            // área de cliente—, y esta página se sirve siempre con sesión. Un `assertSee` pasaría
+            // aquí pintara la página lo que pintara.
+            ->assertSeeText(__('account.orders.pagination.next'));
 
         // Página 2: "Anteriores" + "Siguientes".
         $this->actingAs($user)
             ->get('/mi-cuenta/pedidos?page=2')
             ->assertOk()
             ->assertSee(__('account.orders.pagination.page', ['current' => 2, 'last' => 4]))
-            ->assertSee(__('account.orders.pagination.prev'));
+            ->assertSeeText(__('account.orders.pagination.prev'));
     }
 
     public function test_no_pagination_control_with_a_single_page(): void
@@ -59,7 +63,7 @@ class AccountOrdersPaginationTest extends TestCase
         $this->actingAs($user)
             ->get('/mi-cuenta/pedidos')
             ->assertOk()
-            ->assertDontSee(__('account.orders.pagination.next'));
+            ->assertDontSeeText(__('account.orders.pagination.next'));
     }
 
     public function test_empty_message_when_user_has_no_orders(): void

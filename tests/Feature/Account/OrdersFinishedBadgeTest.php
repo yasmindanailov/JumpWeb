@@ -75,7 +75,9 @@ class OrdersFinishedBadgeTest extends TestCase
         $this->actingAs($user)
             ->get('/mi-cuenta/pedidos')
             ->assertOk()
-            ->assertDontSee('Finalizado');
+            // ⚠️ `assertDontSeeText` (`TESTING.md` §2.ter): «Finalizado» viaja desde el 2026-08-22 en
+            // el `data-boot` del cajón para el cliente con sesión, y esta página siempre la tiene.
+            ->assertDontSeeText('Finalizado');
     }
 
     public function test_finished_item_shows_finished_badge(): void

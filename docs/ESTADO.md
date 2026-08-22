@@ -30,8 +30,8 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2666 en verde** (15.306 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
-  **404 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
+- Suite **2672 en verde** (15.356 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+  **442 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -122,6 +122,13 @@ el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de na
 · **1 · el nivel SECCIÓN** (`V4`): conmutar y volver **no dispara ni una petición**, el embudo conserva
   su paso, el bloque de cuenta se colapsa con el modo **`account`** —y **no es alcanzable con Tab**— y
   el árbol oculto **no atrapa el foco** (12 focusables visibles → 0 ocultos).
+· **3b · los DATOS en el cliente**: `account/orders.js` + dos stores; el índice pinta la próxima
+  reserva y «Mis reservas» su detalle, señal, post-form, reintento y paginación. Red:
+  **`SidebarAccountParityTest` contra la respuesta REAL** de la API (no contra la página condenada) y
+  navegador **V6, 2/2** con **exactamente dos peticiones**.
+  ⚠️ Enseñó que **`paid_online_cents` incluye los complementos** (68,00 € y no 60,00 en el aviso de
+  señal) y que **los textos del área deben viajar solo CON SESIÓN**: 701 B para quien la tiene, **0**
+  en la ruta anónima de más tráfico (`#120(k)`).
 · **3a · el CONTRATO de presentación**: las etiquetas que el cliente **no puede** componer
   —`date_label`, `created_label`, `refunded_label`— y `guest_form_url`, con **fuente única**
   (`DisplayTime::dayLabel`, que unificó **cuatro copias** de la misma fórmula) y su guarda mutada.

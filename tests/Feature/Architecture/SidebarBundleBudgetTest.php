@@ -136,14 +136,19 @@ class SidebarBundleBudgetTest extends TestCase
      * · **paso 2** — la navegación de zonas (`account/navigation.js`, su store, dos zonas y el
      *   enrutado): **165,2 KiB**, +2,0.
      *
-     * 166 deja **0,8 KiB** de holgura: la de terminar el paso, no la de una tanda entera. Los pasos
-     * 3 a 6 volverán a moverlo, **cada uno con su medida**, que es la forma de que el coste del área
+     * · **paso 3b** — los datos en el cliente (`account/orders.js`, dos stores, las dos zonas
+     *   pintando): **172,7 KiB**, +7,5. Es el salto grande de la tanda, y era de esperar: aquí entra
+     *   la pantalla con más marcado del área (el historial con su detalle, su paginación y su
+     *   reintento) más la composición que la alimenta.
+     *
+     * 174 deja **1,3 KiB** de holgura: la de terminar la tanda, no la de una fase. Los pasos que
+     * queden volverán a moverlo, **cada uno con su medida**, que es la forma de que el coste del área
      * de cliente sea visible en vez de acumularse en un margen que nadie mira.
      * ▶ Y la otra mitad de la regla, que ya está escrita arriba y aquí se hereda: **cuando la tanda 1
      * cierre, este número se vuelve a BAJAR a lo medido**. Un techo con margen sobrante deja de
      * apretar.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 166;
+    private const SIDEBAR_CHUNK_MAX_KB = 174;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

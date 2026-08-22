@@ -225,25 +225,16 @@ class SidebarLoginParityTest extends TestCase
     {
         $boot = $this->bootPayload();
 
-        // ⚠️ **`account` se suma a la lista el 2026-08-22, y es UNA clave, no un subgrupo**
-        // (`specs/area-cliente.md`): el área de cliente pinta el título de su armazón y necesita
-        // `account.account.title`. El subgrupo completo lleva además los seis textos de privacidad,
-        // que no pinta ninguna zona de la tanda 1. Misma poda y mismo motivo que las otras dos.
+        // ⚠️⚠️ **Sin sesión, los textos del ÁREA DE CLIENTE no viajan**, y ésta es la mitad que más
+        // ahorra: la landing anónima es la ruta de más tráfico del sitio —la que `PERF-02` protege— y
+        // un invitado **no puede abrir** esa sección. Medido: son ~660 B por página que no pintaban
+        // nada (`specs/area-cliente.md`).
         $this->assertSame(
-            ['login', 'register', 'account', 'orders'], array_keys($boot['account'] ?? []),
-            'el grupo `account` del montaje ha dejado de estar podado: viaja en cada página pública'
+            ['login', 'register'], array_keys($boot['account'] ?? []),
+            'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
 
-        // ⚠️ **Los dos subgrupos del área de cliente van podados clave a clave, no enteros**, y esta
-        // es la mitad que de verdad aprieta: `account.account` lleva además los seis textos de
-        // privacidad y `account.orders` **22 claves** —el detalle del pedido, el reintento, el
-        // post-form—, que no pinta ninguna zona de la tanda 1. Sin esto, un `__('account.orders')` de
-        // conveniencia multiplicaría por diez el payload de todas las páginas públicas y nadie lo
-        // vería: el presupuesto de bytes de abajo tardaría en morder y el resto de la suite, nunca.
-        $this->assertSame(['title'], array_keys($boot['account']['account'] ?? []));
-        $this->assertSame(['title', 'empty'], array_keys($boot['account']['orders'] ?? []));
-
-        $bytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
+        $anonBytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
 
         // Medido: 1.671 B en español, 1.575 en inglés y 1.761 en francés, con los dos grupos que el
         // paso 5 pinta —`login` entero, `register` entero desde 4.4b·1 y `auth`—. El techo era 1.024
@@ -251,9 +242,54 @@ class SidebarLoginParityTest extends TestCase
         // formulario. La referencia que lo hace un presupuesto y no un número suelto: el grupo
         // `account` COMPLETO son 9,6 kB, seis veces esto, y viajaría en cada página pública.
         $this->assertLessThan(
-            2048, $bytes,
-            "Los textos de auth del montaje pesan {$bytes} B. Es un presupuesto, no un objetivo: si ".
-            'hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página pública.'
+            2048, $anonBytes,
+            "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
+            'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
+        );
+    }
+
+    /**
+     * **Y CON sesión llegan, pero podados clave a clave.**
+     *
+     * ⚠️ Ésta es la mitad que aprieta cuando el ahorro anónimo ya no aplica: `account.orders` son
+     * **22 claves** —el detalle del pedido, el bloque de gestión, el post-form— y las zonas de la
+     * tanda 1 pintan **doce**. Sin esta guarda, un `__('account.orders')` de conveniencia doblaría el
+     * payload de quien tiene sesión y **nadie lo vería**: el contrato no mira tamaños y el resto de la
+     * suite, tampoco.
+     */
+    public function test_the_mount_payload_of_a_signed_in_customer_is_pruned_key_by_key(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        $boot = $this->actingAs($user)->bootPayload();
+
+        $this->assertSame(['login', 'register', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['title'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['upcoming_count'], array_keys($boot['account']['sidecart'] ?? []));
+
+        $this->assertSame(
+            [
+                'title', 'subtitle', 'empty', 'pagination',
+                'item_finished', 'item_cancelled',
+                'retry_payment', 'retry_hint',
+                'guest_form_pending', 'guest_form_done',
+                'guest_form_past', 'guest_form_cancelled',
+            ],
+            array_keys($boot['account']['orders'] ?? []),
+            'el subgrupo `orders` ha dejado de estar podado a lo que las zonas pintan'
+        );
+
+        $bytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
+
+        // Medido el 2026-08-22: **2.309 B** en español con las doce claves de las zonas (el anónimo
+        // son 1.608, así que el área de cliente cuesta **701 B a quien tiene sesión y 0 al resto**).
+        // El techo se
+        // sube a 2.560 con el mismo criterio que el anónimo —presupuesto, no objetivo— y con una
+        // referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, cuatro veces esto.
+        $this->assertLessThan(
+            2560, $bytes,
+            "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
+            'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );
     }
 

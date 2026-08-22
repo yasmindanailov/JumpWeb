@@ -5073,3 +5073,26 @@ progreso, su paridad y su manifiesto dentro del paso del área de cliente mezcla
 regla que ha ordenado la fase entera—. Queda en `DEUDA.md`, anotada como **más barata** (el mecanismo
 ya existe) y **más urgente** (el área de cliente hace visible la incoherencia: el embudo pinta «Sáb 5
 sept» y la zona de reservas «Sáb. 5 sep.», en el mismo cajón).
+
+**(k) El paso 3b, y las tres cosas que enseñó al construirlo.**
+· **`paid_online_cents` incluye los complementos.** El aviso de señal de una reserva con un pack de
+  60,00 € y 8,00 € de calcetines dice «Señal **68,00 €** · 30,00 € en el parque», no 60,00. Lo fijó
+  `SidebarAccountParityTest` **contra la respuesta real** antes de que nadie lo viera en pantalla, y
+  después el navegador lo confirmó. Recomponer ese número en el cliente —que es lo que la spec
+  prohíbe— habría dado 60,00 € y **nadie lo habría notado**: es un importe plausible.
+· **Los textos del área de cliente viajan SOLO con sesión.** Un invitado no puede abrir esa sección,
+  así que sus bytes eran desperdicio **en la ruta de más tráfico del sitio**, que es justo la que
+  `PERF-02` existe para proteger. Medido: montaje anónimo **1.608 B**, con sesión **2.309** — el área
+  cuesta **701 B a quien tiene sesión y 0 al resto**. Lo vigila la guarda de poda, ahora con un caso
+  por cada estado de sesión.
+· **`TESTING.md` §2.ter volvió a morder, y esta vez estaba PREDICHO.** La nota que (h) añadió decía
+  «al añadir una clave al `data-boot`, audita quién asevera ese texto contra una página»; se hizo, y
+  aun así aparecieron dos aserciones más al correr la suite. Convertidas y **mutadas** — y la mutación
+  volvió a pagar: la primera apuntaba al fichero equivocado (la paginación vive en un componente
+  aparte, no en la vista) y habría dado por buena una comprobación que no medía nada.
+
+⚠️ **Y una decisión de arquitectura que se corrigió a mitad**: el store empezó importando `api` y así
+**no se podía doblar** —el resto de los stores del cajón la reciben por parámetro—. Hoy es inyectable
+**con el cliente real por defecto**, que resuelve las dos mitades: `node --test` puede doblarla y el
+componente no necesita conocer la API. Un componente que importa `api` para pasársela a un store ya
+está orquestando peticiones, que es lo que `SidebarComponentBudgetTest` existe para impedir.

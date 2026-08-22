@@ -215,17 +215,36 @@
                             // los seis textos de privacidad, que no pinta ninguna zona de la tanda 1.
                             // Misma poda y mismo motivo que arriba: el grupo completo son 9,6 kB en
                             // el HTML de todas las páginas públicas.
-                            'account' => ['title' => __('account.account.title')],
-                            // El rótulo de la zona «Mis reservas» y su estado vacío. ⚠️ **Se llama
-                            // `orders` en el código y «Mis reservas» de cara al cliente**, y es el
-                            // texto de `lang/` quien manda: `account.orders.title` es literalmente
-                            // «Mis reservas». El subgrupo entero son 22 claves —el detalle del
-                            // pedido, el reintento, el post-form— y llega con el paso 3, que es
-                            // quien las pinta.
-                            'orders' => [
-                                'title' => __('account.orders.title'),
-                                'empty' => __('account.orders.empty'),
-                            ],
+                            // ⚠️⚠️ **Los textos del ÁREA DE CLIENTE viajan SOLO con sesión, y es una
+                            // decisión medida** (`specs/area-cliente.md`). Un invitado no puede abrir
+                            // esa sección —la puerta solo se cablea con sesión (§4.6)—, así que sus
+                            // ~660 B serían puro desperdicio **en la ruta de más tráfico del sitio**,
+                            // que es justo la que `PERF-02` existe para proteger. Con sesión, el
+                            // ahorro no aplica y los textos hacen falta antes de que el cliente
+                            // pulse nada: pedirlos al abrir metería una petición en el camino.
+                            // Lo vigila `SidebarLoginParityTest::test_the_mount_payload_stays_pruned`.
+                            //
+                            // ⚠️ Y va PODADO clave a clave, no por subgrupos: `account.orders` entero
+                            // son 1.279 B y lo que estas zonas pintan, **659** — medido. El grupo
+                            // `account` completo son 9,6 kB.
+                            ...(auth()->check() ? ['account' => [
+                                'title' => __('account.account.title'),
+                            ], 'sidecart' => [
+                                // La lectura del contador de próximas reservas para lector de
+                                // pantalla. Misma clave que usa el bloque `.acct` del panel para lo
+                                // mismo: dos rótulos distintos para el mismo número es una
+                                // divergencia esperando su turno.
+                                'upcoming_count' => __('account.sidecart.upcoming_count', ['count' => ':count']),
+                            ], 'orders' => \Illuminate\Support\Arr::only(__('account.orders'), [
+                                // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda
+                                // el texto de `lang/` (`account.orders.title`), y el nombre técnico se
+                                // queda para no confundirlo con `GET /me/reservations`, que es otro.
+                                'title', 'subtitle', 'empty', 'pagination',
+                                'item_finished', 'item_cancelled',
+                                'retry_payment', 'retry_hint',
+                                'guest_form_pending', 'guest_form_done',
+                                'guest_form_past', 'guest_form_cancelled',
+                            ])] : []),
                         ],
                         'auth' => __('auth'),
                         'userId' => auth()->id(),

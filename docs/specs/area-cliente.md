@@ -422,7 +422,7 @@ Es la regla que ha ordenado la Fase 4 entera. Cada paso deja `main` verde y veri
 | **1** | ✅ **HECHO 2026-08-22 · El nivel SECCIÓN**: `section.js` + `stores/section.js`, la raíz enruta y publica las señales, el modo `account` con su regla CSS y el armazón `AccountSection.vue` sobre `Shell`. **Sin zonas** | 12 casos de `node --test` · guardas de arquitectura · **navegador**: `VERIFICACION-E2E-CAJON.md` **V4** |
 | **2** | ✅ **HECHO 2026-08-22 · La NAVEGACIÓN de zonas**: `account/navigation.js` (zonas, pila de retorno, rótulos) + `stores/account.js`, la sección enruta zonas y nacen `AccountHomeZone` y `OrdersZone`. **Sin datos** | 26 casos de `node --test`, **verificados por mutación** · **navegador**: **V5**, 7/7 |
 | **3a** | ✅ **HECHO 2026-08-22 · El CONTRATO**: las etiquetas de presentación que el cliente **no puede** componer (`date_label`, `created_label`, `refunded_label`) y la URL del post-form, con su fuente única `DisplayTime::dayLabel()` | `MeOrdersTest`/`MeReservationsTest` con VALOR · `ApiContractTest` · `DayLabelSingleSourceTest`, **mutado** |
-| **3b** | Los **datos en el cliente**: `account/orders.js` y su store; las zonas se llenan | sus `*.test.js` + `SidebarAccountParityTest` + navegador |
+| **3b** | ✅ **HECHO 2026-08-22 · Los DATOS en el cliente**: `account/orders.js`, `stores/orders.js` y `stores/reservations.js`; las dos zonas pintan | 38 casos de `node --test` **mutados** · **`SidebarAccountParityTest`** contra la respuesta REAL, mutado · **navegador V6, 2/2** |
 | **4** | La **puerta**: cablear `account-context` (con sesión → la sección; sin ella → el modal de hoy) | navegador |
 | **5** | **Captura de huecos**: `AccountPageCaptureTest` (temporal, con caducidad en su cabecera) | mutación |
 

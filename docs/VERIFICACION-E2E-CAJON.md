@@ -486,6 +486,37 @@ apunta al que está en `display: none` y el clic caduca a los 30 s. **Hay que ac
 `.purchase:visible .bk-back`. No es un fallo de la app —lo oculto no lo ve ni el cliente ni el
 tabulador (V4)— pero sí de cualquier script que no lo sepa.
 
+### V6 · «MIS RESERVAS» CON DATOS REALES (área de cliente · tanda 1 · paso 3b)
+La zona pinta lo que el servidor publica. Lo que aquí se mira es que **el valor LLEGUE** — la familia
+de fallos de `#117`, `#118` y `#119(f)`: piezas verdes por separado y el medio sin cablear.
+
+⚠️ **Hace falta un pedido en la BD de desarrollo, que viene VACÍA de pedidos.** Se siembra con tinker:
+un cliente verificado, un pedido `paid` con un **pack con `guest_fields`** (si no, no hay post-form),
+un complemento anidado y un **`OrderAdjustment` de tipo `deposit_remainder`** (la señal no es un campo
+del pedido: es un ajuste por línea). ▶ **Y la franja tiene que ser FUTURA de verdad**: con una de hoy
+cuya hora ya pasó no hay «próxima reserva» ni aviso de señal —`aCobrarPuerta` pasa a `cobradoPuerta`—
+y se lee como si el código fallara. Costó una ejecución.
+
+✅ **MEDIDO el 2026-08-22 · 2/2**, con sesión abierta por `POST /api/v1/auth/login` desde la propia
+página (cookie y CSRF los pone el cliente, como en producción):
+· **índice** → «Mi cuenta» · próxima reserva «Mié. 26 ago. · 10:00–12:00 · Cumpleaños Jump» · la fila
+  «Mis reservas» con su contador;
+· **zona** → 1 tarjeta · `DEMO-0001` · «Completado» · «Mié. 26 ago. · 10:00–12:00» · **98,00 €** ·
+  **«Señal 68,00 € · 30,00 € en el parque»** · «Completa el formulario de Cumpleaños Jump» enlazando a
+  `/reserva/3/datos-invitados`;
+· peticiones: **exactamente dos** —`GET /me/reservations` y `GET /me/orders?page=1`—, cada una en su
+  zona y ninguna repetida.
+
+⚠️ **El 68,00 € no es un error de redondeo y lo predijo la paridad**: `paid_online_cents` es lo pagado
+online **de la reserva completa** —la señal de 60,00 más los 8,00 del complemento—, no solo la señal.
+El contrato lo dice y `SidebarAccountParityTest` lo fijó antes de verlo en pantalla.
+
+⚠️ **Y una trampa de accesibilidad que solo se ve mirando**: el primer intento puso en el `sr-only` del
+contador el subtítulo de la zona, y un lector de pantalla leía «Mis reservas 1 Aquí tienes tus reservas
+y su estado» — que no dice qué es ese 1. Hoy usa la misma clave que el bloque `.acct`. ⚠️ Esa clave no
+tiene forma plural, así que dice «1 reservas próximas»: es **preexistente** y se reproduce a propósito
+(paridad). Ficha en `DEUDA.md`.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

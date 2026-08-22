@@ -1,7 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useAccountStore } from '../stores/account.js';
+import { useOrdersStore } from '../stores/orders.js';
+import { useReservationsStore } from '../stores/reservations.js';
 import { ZONES, titleKeyOf } from '../account/navigation.js';
+import { orderRows, pageInfo } from '../account/orders.js';
 import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
 import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
@@ -35,7 +38,31 @@ const props = defineProps({
 });
 
 const store = useAccountStore();
+const orders = useOrdersStore();
+const reservations = useReservationsStore();
+
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
+
+/**
+ * ⚠️ **La composición se hace aquí y no en el store**, y es lo que da red a las dos mitades: el store
+ * guarda la respuesta CRUDA —así se prueba sin diccionarios— y `account/orders.js` la compone donde
+ * los textos están —así se prueba sin store—. Ninguna de las dos necesita montar un componente.
+ */
+const rows = computed(() => orderRows(orders.payload, { messages: props.messages, account: props.account }));
+const page = computed(() => pageInfo(orders.payload, props.account));
+
+/**
+ * Cada zona pide lo suyo **al entrar, y solo si le falta** (`ensure`). Es la regla que sustituyó a
+ * `<KeepAlive>` (`DECISIONES #120(g)`): volver a una zona ya vista no repite su petición, sin pagar
+ * los 2,3 KiB de una caché del framework ni romper las template refs.
+ */
+watch(() => store.zone, (zone) => {
+    if (zone === ZONES.ORDERS) orders.ensure();
+    if (zone === ZONES.HOME) reservations.ensure();
+}, { immediate: true });
+
+/** Abre el modal de auth de la cabecera, que sigue siendo la puerta de entrada (spec §4.6). */
+const signIn = () => window.Alpine?.store('auth')?.open('login');
 </script>
 
 <template>
@@ -60,8 +87,24 @@ const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
         <h2 class="wiz__title">{{ title }}</h2>
 
-        <AccountHomeZone v-if="store.zone === ZONES.HOME" :account="account" @go="store.go" />
+        <AccountHomeZone
+            v-if="store.zone === ZONES.HOME"
+            :account="account"
+            :messages="messages"
+            :next="reservations.next"
+            :upcoming="reservations.upcoming"
+            @go="store.go" />
 
-        <OrdersZone v-else-if="store.zone === ZONES.ORDERS" :account="account" />
+        <OrdersZone
+            v-else-if="store.zone === ZONES.ORDERS"
+            :rows="rows"
+            :page="page"
+            :busy="orders.loading"
+            :error="orders.error"
+            :expired="orders.unauthenticated"
+            :account="account"
+            @go-page="(n) => orders.load(n)"
+            @retry="(code) => orders.retry(code, { messages })"
+            @sign-in="signIn" />
     </Shell>
 </template>

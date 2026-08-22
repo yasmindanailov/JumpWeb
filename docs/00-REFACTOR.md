@@ -1632,8 +1632,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             excepciones **con motivo** y **mutada tres veces** (`#120(j)`).
             ⚠️ La deuda de fechas del EMBUDO **no se cierra aquí a propósito** —mezclaría dos
             trabajos—, pero queda anotada como más barata y más urgente en `DEUDA.md`.
-      - [ ] **Tanda 1 · pasos 3b–5**: los datos en el cliente, la puerta de entrada y la captura de
-            huecos. El orden y su red, en `specs/area-cliente.md` §8.
+      - [x] **Tanda 1 · paso 3b — LOS DATOS EN EL CLIENTE** (✅ **HECHO** el 2026-08-22).
+            `account/orders.js` compone las filas, `stores/orders.js` y `stores/reservations.js` piden
+            —**«solo si no hay datos»**, que es la regla que sustituyó a `<KeepAlive>`— y las dos zonas
+            pintan: índice con la próxima reserva y «Mis reservas» con su detalle, señal, post-form,
+            reintento y paginación. **38 casos de `node --test`**, mutados uno a uno.
+            ✅ **`SidebarAccountParityTest`**: el módulo ejecutado en Node contra la **respuesta REAL**
+            de `GET /me/orders` —no contra la página condenada, que es el error que `#67` corrigió—,
+            con las expectativas compuestas por los MISMOS servicios de PHP que usa la web.
+            ⚠️ Y enseñó algo que nadie había escrito: **`paid_online_cents` incluye los complementos**
+            (68,00 € y no 60,00 en el aviso de señal). Recomponerlo en el cliente habría dado 60.
+            ✅ Navegador **V6, 2/2** con datos reales y **exactamente dos peticiones**.
+            ⚠️⚠️ **Los textos del área viajan SOLO con sesión**: un invitado no puede abrir esa sección,
+            así que sus ~700 B eran desperdicio en la ruta de más tráfico (`PERF-02`). Medido: anónimo
+            **1.608 B**, con sesión **2.309**.
+            ⚠️ Y volvió a morder `TESTING.md` §2.ter —ahora **predicho** por la propia nota—: dos
+            aserciones de página más, convertidas y **mutadas**.
+      - [ ] **Tanda 1 · pasos 4–5**: la puerta de entrada (`account-context`) y la captura de huecos.
+            El orden y su red, en `specs/area-cliente.md` §8.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.
