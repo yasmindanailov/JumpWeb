@@ -370,7 +370,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [ ] La EMISIÓN de tokens Bearer sigue siendo lo único abierto de la fase, y viaja a **Fase 6**
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
-### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. ✅ **A7 verificado en navegador el 2026-08-22** —y destapó que la costura de intención **nunca se cableó** (`#117`), arreglado el mismo día— y **`4.7` VALIDADO POR EL OWNER**, que es la cuarta condición del DoD. Queda en `DEUDA.md` la mitad de ZONA del enlace profundo (el cajón aterriza en «Entradas», no en la zona), que es decisión de producto porque toca el manifiesto de árbol congelado
+### Fase 4 — Sidebar SPA 🟦 — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. ✅ **A7 verificado en navegador el 2026-08-22** —y destapó que la costura de intención **nunca se cableó** (`#117`), arreglado el mismo día— y **`4.7` VALIDADO POR EL OWNER**, que es la cuarta condición del DoD. ✅ **Y el cajón queda REORGANIZADO antes del área de cliente** (`#119`, a petición del owner): tres capas —módulos planos, nueve stores de Pinia, componentes—, el embudo fuera de la raíz (`sections/PurchaseSection.vue`, raíz de 16 líneas) y el grafo del embudo CERRADO con guarda. ⚠️ La fase sigue 🟦 por lo que viene: el **área de cliente** (`#66`), cuyo modelo de navegación está sin diseñar A PROPÓSITO. En `DEUDA.md`, declaradas: la mitad de ZONA del enlace profundo, las cinco secuencias transversales del embudo (deuda sin intereses: su coste no crece) y `account-context`, que sigue en Livewire
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -1576,8 +1576,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 - [x] **Paridad funcional ANTES de retirarlo, con feature-flag por instalación** — HECHO: `sidebar.engine`
       (default `livewire`) permite comparar los dos motores en vivo, y la paridad son el diff de árbol
       contra manifiesto congelado (`#60`) más trece paridades de datos, textos e importes.
-      ⚠️ **Que la paridad esté cerrada NO significa que el flag esté activado**: falta Turnstile
-      (4.4b·2) y los tres caminos de navegador, ver `ESTADO.md`.
+      ✅ **Cerrado del todo**: Turnstile entregado (4.4b·2, `#108`), los caminos de navegador
+      verificados en staging (`#110`) y el flag RETIRADO con el componente (`#112`) — hoy no hay dos
+      motores que comparar porque solo queda uno.
+- [ ] **El cajón como ÁREA DE CLIENTE** (`DECISIONES #66`, decisión del owner) — **PENDIENTE**. Toda la
+      gestión del cliente dentro del cajón: entrar y darse de alta, sus entradas y reservas, y las
+      gestiones de cuenta. Hoy está repartida en TRES sitios —el cajón, el modal de auth de la cabecera
+      y las páginas `/mi-cuenta/…`— y el destino es UNO.
+      ✅ **El terreno se preparó a propósito antes de empezar** (`#119`, 2026-08-22): tres capas
+      (módulos planos · nueve stores · componentes), el embudo fuera de la raíz como SECCIÓN y su grafo
+      CERRADO con guarda, para que las pantallas de cuenta entren al lado y no dentro.
+      ✅ **El servidor ya está** (medido contra `openapi/v1.yaml`): `/auth/*`, `/me`, `/me/orders`,
+      `/me/reservations`, `/me/reservation-eligibility` y el post-form por firma. Hay que pintar, no
+      abrir dominio.
+      ⚠️ **Lo primero es el DISEÑO, no pintar**: el modelo de navegación de la sección de cuenta está
+      sin hacer A PROPÓSITO —un área de cliente no es un embudo y sin pantallas sería especulación—, y
+      se decide con el owner delante.
+      ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
+      y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
+      `#118`. Las dos tienen ficha en `DEUDA.md`.
 
 ### Fase 5 — Capa de contenido profesional ⬜
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché

@@ -1,6 +1,6 @@
 # Deuda técnica — registro único
 
-> Estado: vivo · Última actualización: 2026-08-21 (reconciliado contra el código tras `#112`/`#113`) ·
+> Estado: vivo · Última actualización: 2026-08-22 (tras la reorganización del cajón, `#119`) ·
 > **Reconciliado contra el CÓDIGO fila por fila el 2026-08-14** (no contra el tracker: se comprobó
 > cada afirmación con el árbol actual, no con lo que una fase dijo que iba a hacer) ·
 > Se invalida si: una fase retira un ítem sin actualizar su fila.
@@ -94,23 +94,36 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 
 ## Verificado y SIN cambios (reconciliación 2026-08-14)
 
-## ▶ Alta · `Sidebar.vue` es el segundo objeto-dios (2026-08-15, `DECISIONES #90`)
+## ▶ ~~Alta · `Sidebar.vue` es el segundo objeto-dios~~ **RETIRADA 2026-08-22** (`DECISIONES #119`)
 
-**Medido**, no estimado: **618 líneas de CÓDIGO** en su `<script>` (de 1.477 crudas; el resto es
-documentación) y **las 11 llamadas a la API del cajón**. Los otros 18 componentes suman 236 líneas
-entre todos, ninguno pasa de 24 y ninguno toca la API — o sea que **CE-6 lo cumplen 18 de 19**, y la
-violación es un fichero. Sus 41 funciones son los MISMOS métodos de `Purchase.php`: `selectProduct`,
-`addToCart`, `checkout`, `confirmReservation`, `retryPayment`, `goBack`…
+**Lo que era, medido** (2026-08-15, `#90`): **618 líneas de CÓDIGO** en su `<script>` y **las 11
+llamadas a la API del cajón**. Los otros 18 componentes sumaban 236 entre todos y ninguno tocaba la
+API — la violación de `CE-6` era **un fichero**, con los MISMOS métodos que el `Purchase.php` que se
+estaba retirando.
 
-- **Causa raíz, ya corregida**: CE-6 estaba escrito y **no lo vigilaba nada**. Desde `#90` lo vigila
-  `SidebarComponentBudgetTest`, con techo general y `Sidebar.vue` como excepción declarada que **solo
-  puede encoger**. La deuda deja de crecer y pasa a ser un número que baja.
-- **El camino ya existe y está probado**: `admission.js::runCheckout()` es una secuencia extraída a un
-  módulo plano, con sus dependencias por parámetro y sus casos en `admission.test.js`. Quedan ~10
-  secuencias (`selectProduct`, `addToCart`, `confirmReservation`, `poll`, `goBack`…).
-- **Y hay red para hacerlo**: el manifiesto de DOM compara el árbol byte a byte, así que refactorizar
-  el `<script>` sin tocar la plantilla se verifica solo.
-- **Sin plan de fase todavía**: no bloquea 4.7 y no se mezcla con la retirada.
+**Lo que es hoy**, tras la reorganización que el owner pidió antes de meter el área de cliente:
+
+    Sidebar.vue                    16 líneas · 0 llamadas a la API   ← enruta y expone
+    sections/PurchaseSection.vue  438 líneas · 2 llamadas            ← el embudo
+    stores/  (nueve)                                                 ← el estado, por dominio
+
+- **La causa raíz sigue vigilada**: `SidebarComponentBudgetTest`, con techo general por componente,
+  excepción declarada que solo encoge y —desde `#119`— una guarda de que **la raíz no vuelve a pintar
+  pantallas** ni a hablar con la API.
+- **Lo que QUEDA tiene ficha propia arriba** (las cinco secuencias transversales del embudo) y es
+  deuda **sin intereses**: tocan solo la compra, así que su coste no crece con el área de cliente.
+
+⚠️⚠️ **Y se corrige aquí una afirmación de esta misma ficha que era FALSA, porque es la que más daño
+podía hacer.** Decía: «hay red para hacerlo: el manifiesto de DOM compara el árbol byte a byte, así
+que refactorizar el `<script>` sin tocar la plantilla se verifica solo». **No es cierto**, y se midió
+el 2026-08-22: `scripts/render-sidebar.mjs` **no importa la raíz** —su propio comentario dice por qué:
+lee `window.Alpine` y el idioma del documento— y monta los ONCE componentes de paso con props
+construidas por los módulos planos. El contrato de árbol prueba que esos no cambian; **no ejerce el
+orquestador en absoluto**.
+▶ **En un refactor del orquestador la única red es el NAVEGADOR.** Confiar en la frase de arriba es
+exactamente lo que habría dejado pasar los tres fallos vivos que el refactor destapó (`#117`, `#118`,
+la navegación de mes) y las dos regresiones propias que se cazaron en un navegador y no en la suite.
+Receta del andamio, con sus trampas medidas: `VERIFICACION-E2E-CAJON.md` §5.bis y §5.quater.
 
 ## ▶ Media · seis colores CRUDOS en el CSS del cajón, ya localizados (2026-08-16, `DECISIONES #99`)
 

@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-21** (staging desplegado y el scheduler destapado).
+> aquí solo se enlaza. Última actualización: **2026-08-22** (4.7 validado por el owner · el cajón reorganizado en tres capas).
 
 ## ▶ Dónde estamos
 
@@ -20,32 +20,24 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
-`#110` verificó. Está **en `main`**. ⚠️ La rama `wip/4.7-2b-3-retirada-purchase` **está fusionada y no contiene nada
-que `main` no tenga** (`git log main..wip/… ` → 0): si `/arranque-sesion` la saca, esta línea es su
-explicación. Se conserva solo por si alguien quiere leer el tramo commit a commit; **borrarla es
-seguro**.
+`#110` verificó. Está **en `main`**. ⚠️ La rama `wip/4.7-2b-3-retirada-purchase` sigue en el remoto, **fusionada y sin nada propio**
+(`git log main..wip/…` → 0): si `/arranque-sesion` la saca, no es trabajo perdido. Borrarla es seguro.
 
-✅ **STAGING está desplegado, sirviendo el cajón SPA y con el anti-bot activo.** Canal de despliegue:
+✅ **STAGING está desplegado y al día**, sirviendo el cajón SPA con el anti-bot activo. Canal:
 `scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
-⚠️ **Pero lo que corre ALLÍ es anterior a los arreglos de hoy** —enlaces profundos e iconos—: ver
-«Hasta dónde llega hoy el motor SPA».
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2661 en verde** (15.282 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **366 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
+  **366 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
   la suite con lo que declara esta línea y **corta si no cuadran** (`DECISIONES #116`). Antes no lo
   vigilaba nadie —`docs-check` no lo mira— y derivó tres veces en un solo día.
-  ⚠️ **Sigue siendo el ÚNICO sitio donde vive**: si lo duplicas en otro documento, esa copia no la
-  guarda nadie.
-  ⚠️ **Bajó de 2773 a 2642 a propósito**: la retirada de `Purchase.php` se llevó 135 casos cuyo sujeto
-  era la superficie retirada, y entraron 4 nuevos (el velo de carga y los tres de la paridad de
-  iconos). Ninguno se borró sin localizar y EJECUTAR antes su sucesor (`#112(a)`). Los **+3** hasta
-  2645 son las guardas del canal de build (`#114`).
+  ⚠️ **Sigue siendo el ÚNICO sitio donde vive**: duplicarlo en otro documento crea una copia que no
+  guarda nadie. El histórico de cómo llegó hasta aquí está en `DECISIONES #112(a)` y `#116`.
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
   tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
   `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
@@ -74,12 +66,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES · *recibir* una entidad de
   otro módulo es costura de BD, *consultar* sus datos o *repetir* sus reglas exige contrato · las
   baselines del arch-test **solo encogen**.
-- ⚠️ **`Sidebar.vue` es el segundo objeto-dios, y ya está VIGILADO** (`DECISIONES #90`): concentra
-  **todas** las llamadas a la API del cajón y los otros 18 componentes no tocan ninguna, así que
-  **CE-6 lo cumplen 18 de 19**. Lo guarda `SidebarComponentBudgetTest` (techo por componente +
-  excepción declarada que **solo encoge**), y **las cifras vivas están en su `EXCEPTIONS`**, no aquí:
-  copiarlas a este documento es drift en espera, y ya había pasado. La extracción —patrón
-  `admission.js::runCheckout()`, ~10 secuencias— va en `DEUDA.md` como Alta.
+- ✅ **El segundo objeto-dios está DESMONTADO** (`DECISIONES #119`, 2026-08-22). `Sidebar.vue` pasó de
+  **614 líneas y 11 llamadas a la API** a **16 y 0**: el embudo vive en `sections/PurchaseSection.vue`
+  y el estado, en **nueve stores** de `stores/`. Lo siguen guardando `SidebarComponentBudgetTest`
+  (techo por componente + excepción declarada que solo encoge) y una guarda de que **la raíz no vuelve
+  a pintar pantallas**. ⚠️ **Las cifras vivas están en su `EXCEPTIONS`**, no aquí: copiarlas a este
+  documento es drift en espera, y ya pasó una vez.
 - ⚠️ **NOTA DE DESPLIEGUE permanente**: las migraciones corren **ANTES** de servir tráfico (el morphMap
   de Fase 2 es requisito) y hay que **drenar la cola + `queue:restart`** (los payloads serializados
   llevaban los FQCN viejos).
@@ -96,75 +88,75 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
   en el modal de la cabecera **está retirada**. ⚠️ Pero el modal **no se retira aquí ni en `4.7·2b·3`**:
   vive en `layout.blade.php`, no en `purchase.blade.php`, y sigue siendo la puerta de auth de la web
   fuera del cajón. Retirarlo es trabajo del área de cliente.
-- ⚠️ **Lo que obliga a NO hacer desde hoy**: `machine.js` modela once pasos NUMERADOS de un embudo. Un
-  área de cliente no es un embudo, así que **no se puede estrechar más la máquina** ni añadir supuestos
-  de «siempre se viene del paso anterior». Rediseñar los estados es el primer trabajo de esa fase.
+- ✅ **El terreno ya está preparado** (`DECISIONES #119`, 2026-08-22), y lo que hay que saber es dónde
+  NO meter la cuenta:
+  · el grafo del embudo es `FUNNEL_TRANSITIONS` y está **cerrado con guarda**: colgar ahí una pantalla
+    de cuenta pone el test en rojo. Un área de cliente **no es un embudo** — sus pantallas se navegan
+    libremente— así que va con su propio modelo, no con el de la compra;
+  · el embudo es una **sección** (`sections/PurchaseSection.vue`) y la raíz son 16 líneas que solo
+    enrutan: **la cuenta entra al lado, no dentro**;
+  · el estado de cada dominio ya tiene su store, así que una sección nueva pide el suyo y no necesita
+    que la raíz le pase nada por props.
+  ⚠️ **Lo que NO está hecho, y es deliberado**: el modelo de navegación del área de cliente. Sin
+  pantallas sería especulación; se diseña con el owner delante, y ese es el primer trabajo de la fase.
 - **El servidor ya está** (medido contra `openapi/v1.yaml`): `/auth/*`, `/me`, `/me/orders`,
   `/me/reservations`, `/me/reservation-eligibility` y el post-form por firma existen y están probados
   desde Fase 3. Hay que pintar, no abrir dominio.
+- ⚠️ **La última frontera es `account-context`**, que sigue siendo **Livewire y hermano** del punto de
+  montaje de Vue: el cajón SPA nunca lo ha pintado. Ahí murieron las señales de `#118`, y su fila está
+  en `DEUDA.md`. Traerlo a Vue es trabajo de esta fase.
 
 ## ▶ Próximo paso
 
-✅ **DESPLEGADO el 2026-08-21**: commit **`1977db7`** en staging, las **6 comprobaciones de salud en
-verde**, y verificado por fuera del script —bundle nuevo servido, API en 200, las 3 zonas, Turnstile
-todavía configurado y `Purchase.php` fuera del servidor—. 🟩 **El cajón SPA es ya el motor único
-también ALLÍ.**
+▶▶ **EL ÁREA DE CLIENTE** (`DECISIONES #66`): la gestión del cliente entera dentro del cajón. Ya no la
+ata nada —ni Turnstile (4.4b·2), ni `4.7`, ni la arquitectura— y el terreno se preparó a propósito el
+2026-08-22 (`#119`). **Empieza por el DISEÑO, no por pintar**: el modelo de navegación de la sección
+de cuenta es lo único que quedó sin hacer, y se decide con el owner delante.
 
-✅✅ **`4.7` VALIDADO POR EL OWNER el 2026-08-22** — probó el cajón en un navegador y funciona. Con eso
-se cumple la cuarta condición del DoD (`CONVENCIONES §3.bis`, la que solo puede dar una persona), y
-**`4.7` pasa a ✅**. Lo que quedaba de la verificación automática ya estaba medido:
+Lo que te vas a encontrar hecho, y lo que no:
 
-- ✅ **V1 · ICONOS**: 3 pantallas, 16 `<svg>`, **0 vacíos, 0 sin geometría**, y confirmado en captura.
-- ✅ **V2 · ENLACES PROFUNDOS**: fallaban porque **nunca se cablearon** (`#117`); arreglado el mismo día
-  con `intent.js` y su guarda. ⚠️ **La mitad de ZONA sigue abierta** y pasa a `DEUDA.md`: el cajón
-  aterriza en «Entradas» pero no en la zona pedida, porque `catalog.js::toItem()` descarta el campo
-  `zone`. No es un paso pendiente de `4.7`: es una decisión de producto que toca el manifiesto de
-  árbol congelado.
-- ✅ **La cuenta se oculta durante la compra** (`#118`, petición del owner), y al implementarlo salió
-  que `is-{modo}` e `identifying` **llegaban muertos** a `account-context` — el panel congelado en
-  `is-catalog` y los botones de invitado ACTIVOS durante la identificación. Arreglado y verificado en
-  staging (5/5 pasos).
+| | |
+|---|---|
+| Servidor | ✅ **listo**: `/auth/*`, `/me`, `/me/orders`, `/me/reservations`, `/me/reservation-eligibility`, post-form por firma. Hay que pintar, no abrir dominio |
+| Sitio donde entra | ✅ **una SECCIÓN nueva** al lado de `sections/PurchaseSection.vue`; la raíz (16 líneas) solo enruta |
+| Estado | ✅ un **store por dominio** en `stores/`; el de auth ya existe y lo compartiréis |
+| Navegación | ❌ **sin diseñar, a propósito**. El embudo tiene su grafo CERRADO (`FUNNEL_TRANSITIONS`, con guarda): la cuenta necesita el suyo |
+| `account-context` | ❌ sigue en **Livewire**, hermano del punto de montaje de Vue. Es la última frontera y su fila está en `DEUDA.md` |
 
-▶ **Siguiente por dependencia: el ÁREA DE CLIENTE** (`DECISIONES #66`). Ya no ata nada ni Turnstile ni
-`4.7`. Y `#118` le da su primer argumento medido: el bloque de cuenta del cajón es **Livewire y
-hermano** del punto de montaje de Vue, y esa frontera es donde murió la señal.
+⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
+del ORQUESTADOR, **el contrato de árbol no es red** —`render-sidebar.mjs` no importa la raíz y su
+comentario dice por qué—. La red es el NAVEGADOR. Receta del andamio, con sus trampas medidas, en
+`VERIFICACION-E2E-CAJON.md` §5.bis y §5.quater.
 
-❗❗ **BLOQUEO NUEVO Y SERIO, DEL OWNER: EL SCHEDULER NO CORRE EN STAGING** (`DECISIONES #115`). El
-crontab está instalado y correcto y `schedule:run` funciona a mano, pero **no hay demonio cron en el
-contenedor del sitio**: nadie lo invoca. Medido — 6 avisos con 24 h en `jobs` y `attempts = 0`, y un
-pedido 24 h sin caducar que `orders:expire` caducó al instante al lanzarlo a mano.
-⚠️ **Y el despliegue lo daba por SANO**: «5 tareas registradas» mide el REGISTRO, y `failed_jobs` es
-**ciego** a esto —un job que nunca se intenta nunca falla—. Ya no: `deploy.sh` mide ahora la EDAD del
-trabajo más viejo de la cola, con tres guardas mutadas en `DeployScriptGateTest`.
-▶ **Lo tiene que activar el owner en el panel de Enhance** (tareas programadas del sitio). Mientras
-tanto, en staging se dispara a mano: `ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
-▶ **Y obliga a releer `#110`**: sus cuatro caminos siguen valiendo —ninguno depende del cron— pero
-**allí nunca se ha ejercitado la caducidad de pedidos ni el envío diferido**.
+### ❗ Bloqueado, y lo desbloquea el owner
 
-✅ **Dos cosas más que se arreglaron por el camino, las dos de despliegue** (`#114`): el canal de build
-era «el npm que haya» y bajo WSL eso es el de **Windows**, que no puede construir (CMD.EXE no admite
-rutas UNC) — ahora el canal canónico es **Sail**, el mismo que usa el `pre-push`, y el fallo enseña su
-salida en vez de morir mudo. Y el **acceso SSH del 2º puesto**, que no existía: clave dedicada por
-puesto (nunca copiada del otro), `known_hosts` fijado —`BatchMode=yes` no pregunta, muere— y el alias
-por hostname para no clavar ninguna IP (`DECISIONES #1`).
+❗❗ **EL SCHEDULER NO CORRE EN STAGING** (`DECISIONES #115`). El crontab está instalado y correcto y
+`schedule:run` funciona a mano, pero **no hay demonio cron en el contenedor del sitio**. Medido: 6
+avisos con 24 h en `jobs` y `attempts = 0`, y un pedido 24 h sin caducar que `orders:expire` caducó al
+instante al lanzarlo a mano.
+▶ **La entrada exacta que hay que poner en el panel de Enhance, y cómo comprobar que funciona, están
+en `ENTORNOS.md` §4.** Mientras tanto se dispara a mano:
+`ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
+⚠️ Obliga a matizar `#110`: sus cuatro caminos siguen valiendo —ninguno depende del cron— pero **allí
+nunca se ha ejercitado la caducidad de pedidos ni el envío diferido de correo**.
 
-Luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el usado para medir
-lo retiró el owner.
+▶ Y luego, `scripts/provision.sh` (`#102(f)`), que necesita un token nuevo del panel: el que se usó
+para medir lo retiró el owner.
 
-**Después, el orden lo manda `#66`**: el **área de cliente** dentro del cajón. Ni Turnstile (4.4b·2)
-ni `4.7` atan ya nada.
-
-⚠️ **Tres trampas MEDIDAS que condicionan lo que venga.** No se explican aquí —cada una tiene su sitio
-y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
+⚠️ **CINCO trampas MEDIDAS que condicionan lo que venga.** No se explican aquí —cada una tiene su
+sitio y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
 - **Un `assertSee` de un texto del grupo `tickets` contra una página completa NO PRUEBA NADA**: el
   montaje del cajón lo lleva entero en cada página. Receta y porqué: `TESTING.md` **§2.ter**.
 - **Lo que un gate declara que NO mira es un hueco con nombre** — así se sirvieron 20 iconos vacíos:
   `TESTING.md` **§2.quater** y `DECISIONES #113`.
+- **Una comprobación que mide una cosa y se lee como otra es PEOR que no tenerla**: dos señales de
+  salud en verde con el scheduler muerto (`#115`).
+- **Que las piezas se llamen no significa que el valor LLEGUE**, y que los dos extremos estén probados
+  no significa que el medio esté cableado: `#117`, `#118` y `#119(f)` son tres fallos vivos distintos
+  de la misma familia, todos encontrados en un navegador y ninguno por la suite.
 - **El modo `embedded` de `auth.login`/`auth.register` ya no lo monta nadie en producción**, pero es
   la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`: muere cuando el área de
   cliente rehaga la auth dentro del cajón, no antes (`#112(f)`).
-- **Una comprobación que mide una cosa y se lee como otra es PEOR que no tenerla**, porque regala
-  confianza que no ha ganado. Dos señales de salud en verde con el scheduler muerto: `DECISIONES #115`.
 
 ### Lo que NO depende de nosotros
 
@@ -177,12 +169,14 @@ y duplicarlas es lo que envejece esta foto—; se nombran para que no te pillen:
   construyen fuera y se suben compilados.
   ⚠️ **El bucle de trabajo sigue siendo LOCAL**; staging se toca EN BLOQUE y con guion escrito
   (`VERIFICACION-E2E-CAJON.md` §5.ter).
-- **Pendiente del owner** (❗): ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS del sitio en el panel de Enhance**
-  — sin cron no hay envío de correo ni caducidad de pedidos (`DECISIONES #115`); es lo más grave de la
-  lista · 2FA del panel · backlog de producto de Fase 6 · un **token nuevo de la API del panel** para
-  `scripts/provision.sh` (el usado para medir se retiró) · y **las DOS comprobaciones de navegador**
-  de `VERIFICACION-E2E-CAJON.md` §5.quater, que son las que cierran `4.7`.
-  ✅ Resuelto el 2026-08-21: el acceso SSH del 2º puesto (clave propia, no copiada).
+- **Pendiente del owner** (❗), por gravedad:
+  1. ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS** del sitio en el panel de Enhance — sin cron no hay envío de
+     correo ni caducidad de pedidos (`#115`). La entrada exacta, en `ENTORNOS.md` §4.
+  2. Un **token nuevo de la API del panel** para `scripts/provision.sh` (el de medir se retiró).
+  3. **El modelo de navegación del área de cliente**, que es diseño de producto (`#66`).
+  4. 2FA del panel · backlog de producto de Fase 6.
+  ✅ Resueltos: el acceso SSH del 2º puesto (2026-08-21) y **las dos comprobaciones de navegador que
+  cerraban `4.7`** (2026-08-22, validadas por el owner).
 
 ## ▶ Hasta dónde llega hoy el motor SPA, dicho sin optimismo
 
@@ -191,15 +185,6 @@ cantidad → complementos → carrito → identificarse (entrar o **crear cuenta
 → auto-POST firmado a Redsys → y los **tres desenlaces** (reserva creada con su resumen, rechazo con su
 motivo y reintento, y el sondeo cada 5 s del terminal *data-less*). Con las reservas pausadas sustituye
 el flujo por el aviso de mantenimiento. La cesta sobrevive a la recarga.
-
-✅ **Y es el motor que se sirve en staging**, con el anti-bot activo y los cuatro caminos de navegador
-verificados (`#110`). 🟩 **Desde `#112` es el ÚNICO**: no queda flag, ni segundo motor, ni vuelta atrás
-sin desplegar.
-
-⚠️ **OJO con lo que hay ALLÍ ahora mismo**: staging sirve una versión **anterior** a los dos arreglos
-de esta sesión, así que **hoy tiene los enlaces profundos rotos y los iconos invisibles**. No es una
-regresión nueva: es lo que lleva desde que se puso el flag en `spa`. Se corrige al desplegar, y es
-justo lo que hay que mirar entonces (ver «Próximo paso»).
 
 ⚠️ **Residual de la pausa**: el estado se relee al cargar la página, en cada apertura del cajón y al
 pulsar «Ir a pagar». Un cajón ABIERTO y quieto no se entera del interruptor hasta cerrarlo, reabrirlo o
@@ -214,12 +199,17 @@ pintan.
 planos (las reglas, probados con `node --test`), los **stores de Pinia** (`stores/`, el estado de cada
 dominio) y los componentes (pintan). Y **el embudo ya no es la raíz**: `Sidebar.vue` son 16 líneas que
 solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CLIENTE (`#66`) entra como
-**otra sección**, al lado, no dentro. Esa separación es lo que hace que todo lo de abajo se pruebe con `node --test` y se compare
-contra el servidor desde PHP ejecutándolo en Node.
+**otra sección**, al lado, no dentro. Esa separación es lo que hace que todo lo de abajo se pruebe con
+`node --test` y se compare contra el servidor desde PHP ejecutándolo en Node.
+
+    Sidebar.vue                16 líneas · 0 llamadas a la API   ← enruta y expone hacia fuera
+    sections/PurchaseSection    438 líneas · 2 llamadas          ← el embudo entero
+    stores/  (nueve)                                             ← el estado, por dominio
+    steps/   (once)             3 a 33 líneas cada uno           ← pintan y solo pintan
 
 | Módulo | De qué responde | Su red |
 |---|---|---|
-| `machine.js` | En qué paso está el cajón y a cuál puede ir | `machine.test.js` · `SidebarProgressParityTest` |
+| `machine.js` | En qué paso está el cajón y a cuál puede ir. ⚠️ `FUNNEL_TRANSITIONS` está **cerrado**: una pantalla que no sea del embudo no va ahí (`#119`) | `machine.test.js` · `SidebarProgressParityTest` |
 | `api.js` | El cliente HTTP y sus cuatro trampas medidas (cookie, `Accept`, CSRF url-decodificado, reintento del 419) | — ⚠️ **sin test propio** |
 | `i18n.js` · `money.js` | Textos por CAMINO con plural de Laravel · importes que espejan `number_format` | `SidebarTextParityTest` · `SidebarMoneyParityTest` |
 | `catalog.js` | El paso 1: agrupar el catálogo en secciones y renombrar campos | `catalog.test.js` · **el diff de árbol lo EJECUTA** (`#67`) |
@@ -249,8 +239,17 @@ por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa cla
 —`href`, `action`, `method`, los `name` de un formulario, **el texto**, y **el interior de un
 `<svg>`**— el diff de árbol **lo da por bueno**. Si transcribes algo de esa clase necesita paridad
 propia. Demostrado por mutación en el paso 9.
-⚠️⚠️ **Y esa lista mordió**: los 20 iconos se sirvieron VACÍOS (`#113`). Hoy los cubre
-`SidebarIconParityTest`.
+⚠️⚠️ **Y esa lista mordió DOS veces**: los 20 iconos se sirvieron VACÍOS (`#113`, hoy los cubre
+`SidebarIconParityTest`) y los botones de mes **no emitían nada** desde 4.2·2 — un `@click` tampoco es
+un atributo del DOM, así que los dos botones salían idénticos con y sin cableado. Hoy lo cubre
+`SidebarEmitWiringTest` (`#119(f)`).
+
+⚠️⚠️⚠️ **Y hay un límite MAYOR que ese, y conviene saberlo antes de confiar en el contrato**:
+`scripts/render-sidebar.mjs` **NO importa la raíz del cajón** —no puede, lee `window.Alpine` y el
+idioma del documento— y monta los ONCE componentes de paso con props que construyen los módulos
+planos. O sea que el contrato prueba **los pasos y los módulos**, y **no ejerce el orquestador**.
+▶ Para un cambio en el orquestador (`sections/PurchaseSection.vue`, `Sidebar.vue`) la red es el
+NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.
 
 ## ▶ Lo que NO hay que reimplementar (el terreno del dinero está entero)
 
@@ -314,6 +313,8 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | 4.7·2b·3·0 | **Independizar el contrato de árbol ANTES de borrar** (el fixture salía del motor) | `#111` |
 | **4.7·2b·3 + ·3** | 🟩 **`Purchase.php` RETIRADO y el flag con él** · y tres guardas que estaban en verde **sin medir nada** | **`#112`** |
 | 4.7·2b·4 | **El cajón se servía SIN ICONOS**: 20 `<svg>` vacíos que el diff de árbol no podía ver | **`#113`** |
+| Verificación | **A7 y los iconos, en navegador**: los enlaces profundos **nunca se cablearon** · el bloque de cuenta se oculta en la compra, y el «modo» del panel llevaba muerto | `#117`, `#118` |
+| **Reorganización** | 🟩 **El cajón, en TRES capas y por secciones**: nueve stores, el embudo fuera de la raíz y el grafo cerrado — antes del área de cliente, a petición del owner | **`#119`** |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
 **una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de

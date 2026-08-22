@@ -116,13 +116,14 @@ class SidebarBundleBudgetTest extends TestCase
      * cajón tenga sitio propio, probable sin DOM y compartible con el ÁREA DE CLIENTE, que es lo que
      * `DECISIONES #38c` compró al elegir Pinia y nunca se llegó a construir.
      *
-     * El margen hasta 168 no es holgura gratis: la reorganización todavía tiene que sacar **doce
-     * secuencias transversales** a módulos planos, y cada módulo nuevo trae su propio andamiaje.
-     * ▶ **Al cerrar la reorganización hay que volver a medir y BAJAR este número** a lo que de verdad
-     * ocupe. Un techo con margen sobrante deja de apretar, que es justo lo que un presupuesto no debe
-     * hacer.
+     * ✅ **Y BAJA a 164 el mismo día, al cerrar la reorganización.** El 168 se puso con margen para las
+     * secuencias transversales que faltaban; se decidió dejarlas (`DEUDA.md`: tocan solo el embudo, su
+     * coste no crece), así que ese margen ya no tiene destino. Medido al cerrar: **161,6 KiB**, con lo
+     * que 164 deja ~2,4 de holgura — la de un paso nuevo legítimo, no la de una fase entera.
+     * ▶ La regla que deja esto escrito para la próxima: **un techo con margen sobrante deja de
+     * apretar**. Se sube con su motivo Y se vuelve a bajar cuando el motivo se agota.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 168;
+    private const SIDEBAR_CHUNK_MAX_KB = 164;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
