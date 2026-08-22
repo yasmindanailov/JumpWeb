@@ -58,9 +58,11 @@ const dayClasses = (cell) => [
 
     <div class="cal">
         <div class="cal__head">
-            <button type="button" class="cal__nav" :disabled="! canPrev" :aria-label="t('prev_month')">&lsaquo;</button>
+            <button type="button" class="cal__nav" :disabled="! canPrev" :aria-label="t('prev_month')"
+                    @click="$emit('prev-month')">&lsaquo;</button>
             <span class="cal__month">{{ monthLabel }}</span>
-            <button type="button" class="cal__nav" :disabled="! canNext" :aria-label="t('next_month')">&rsaquo;</button>
+            <button type="button" class="cal__nav" :disabled="! canNext" :aria-label="t('next_month')"
+                    @click="$emit('next-month')">&rsaquo;</button>
         </div>
         <div class="cal__grid cal__grid--head">
             <span v-for="wd in weekdayHeaders" :key="wd" class="cal__wd">{{ wd }}</span>

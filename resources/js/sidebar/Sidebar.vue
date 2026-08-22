@@ -4,6 +4,7 @@ import { usePurchaseStore } from './stores/purchase.js';
 import { useDateStore } from './stores/date.js';
 import { useTimeStore } from './stores/time.js';
 import { useAuthStore } from './stores/auth.js';
+import { useCartStore } from './stores/cart.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
@@ -16,10 +17,7 @@ import { continueAfterIdentification, runCheckout } from './admission.js';
 import { runConfirm } from './pay.js';
 import { declinedReasonText, loadConfirmation, loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
 import { signupRequiresCaptcha } from './register.js';
-import {
-    addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
-    load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
-} from './cart.js';
+import { addLine, cartRows, decideOwnership, hasPendingEventFields, reconcile, toApiItems } from './cart.js';
 import Shell from './Shell.vue';
 import CatalogStep from './steps/CatalogStep.vue';
 import DateStep from './steps/DateStep.vue';
@@ -226,7 +224,7 @@ onMounted(async () => {
         searchEnabled.value = searchIsEnabled(sections.value, threshold);
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
-        if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
+        if (typeof config.data?.cart_max_lines === 'number') cartStore.maxLines = config.data.cart_max_lines;
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
         // el cajón monta su propio widget de Turnstile con ella (`turnstile.js`, 4.4b·2).
         authStore.setSignupSiteKey(signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '');
@@ -253,17 +251,13 @@ onMounted(async () => {
  * ⚠️ Y como la web: con cesta, el cajón abre EN el carrito.
  */
 async function restoreCart() {
-    const { lines } = loadStoredCart(storage(), {
-        owner: cartOwner.value,
-        today: today(),
-        maxLines: maxCartLines.value,
-    });
+    const { lines } = cartStore.restore(today());
 
     if (lines.length === 0) {
         return;
     }
 
-    cart.value = lines;
+    cartStore.lines = lines;
 
     const ids = [...new Set(lines.map((line) => line.product_id))];
     const details = await tracked(Promise.all(ids.map((id) => api.get(`/catalog/products/${id}`))));
@@ -282,7 +276,7 @@ async function restoreCart() {
     // cesta vive en `localStorage`, así que otra pestaña puede haberla llenado mientras se pagaba en
     // ésta, y quien vuelve de pagar aterrizaría en un carrito en vez de en su reserva confirmada.
     // La precedencia vive en `machine.js` porque aquí dentro no tendría red (`CE-6`).
-    if (cart.value.length > 0 && ! isOutcome(store.step)) store.enter(STEPS.CART);
+    if (cartStore.lines.length > 0 && ! isOutcome(store.step)) store.enter(STEPS.CART);
 }
 
 /**
@@ -346,34 +340,14 @@ const resolvedSelection = ref([]);
 // identidad y su reconciliación contra el presupuesto— llega en 4.3·3, y por eso el módulo `cart.js`
 // no toca el almacén: se le pasará por parámetro.
 
-/** Las líneas tal y como viajan a la API (`product_id`, `quantity`). */
-const cart = ref([]);
-
 /**
- * De quién es la cesta que hay en memoria. Empieza siendo la del titular que pintó la página.
+ * La CESTA vive en su propio store (`stores/cart.js`, reorganización del 2026-08-22): las líneas, su
+ * dueño, el presupuesto que devolvió el servidor, los avisos y la persistencia.
  *
- * Se compara con la identidad de cada momento en `decideOwnership()`, que tiene las cinco casillas —
- * incluida la que el servidor no tiene, porque allí el logout vacía la sesión entera.
+ * ⚠️ La tarificación sigue siendo de `POST /orders/quote` (`PAY-12`) y el saneado, la propiedad y la
+ * caducidad de la cesta guardada, de `cart.js`. Mover el estado no movió ninguna regla.
  */
-const cartOwner = ref(props.userId ?? null);
-
-/** El tope de líneas lo publica `GET /config`; no se quema aquí (`cart_max_lines`). */
-const maxCartLines = ref(50);
-
-/**
- * El almacén del navegador, o `null` si no se puede usar.
- *
- * ⚠️ El acceso a la PROPIEDAD es lo que lanza (`SecurityError` con los datos de sitio bloqueados o en
- * un iframe sin `allow-same-origin`), no `getItem`. Por eso va dentro del `try` y el módulo de cesta
- * lo recibe por parámetro: así se puede doblar en las pruebas, donde no existe.
- */
-function storage() {
-    try {
-        return window.localStorage ?? null;
-    } catch {
-        return null;
-    }
-}
+const cartStore = useCartStore();
 
 /** El día de HOY en el huso del navegador, para caducar las líneas de días pasados. */
 function today() {
@@ -384,15 +358,6 @@ function today() {
 }
 
 /** Persiste la cesta. Nunca con `event_data`: eso lo garantiza el módulo (`DECISIONES #38(d)`). */
-function persist() {
-    saveCart(storage(), { owner: cartOwner.value, lines: cart.value });
-}
-/** El presupuesto de la cesta. Lo tarifica `POST /orders/quote`; aquí no se suma nada (`PAY-12`). */
-const quote = ref(null);
-/** El aviso de la cesta, ya traducido. Ocupa el sitio del `@error('cart')` del Blade. */
-const cartError = ref('');
-/** Errores por campo del evento, con la misma forma que el error bag de la web. */
-const fieldErrors = ref({});
 
 /**
  * El badge y el recuento salen del PRESUPUESTO, no de `cart.length`.
@@ -400,7 +365,7 @@ const fieldErrors = ref({});
  * ⚠️ Fue un fallo real de la web (P8): contar el array local incluye las líneas cuyo producto dejó de
  * venderse —que el presupuesto no tarifica— y el badge decía «1 artículo» sobre un total de 0,00 €.
  */
-const cartCount = computed(() => quote.value?.lines?.length ?? 0);
+
 
 /**
  * Las filas que pinta el carrito: cada línea tarificada con las respuestas del pack emparejadas.
@@ -408,22 +373,22 @@ const cartCount = computed(() => quote.value?.lines?.length ?? 0);
  * ⚠️ El emparejado va por `index` y no por posición: una línea no vendible desaparece del presupuesto
  * y su hueco en la secuencia es la única señal de que existió.
  */
-const cartLines = computed(() => cartRows(quote.value?.lines ?? [], cart.value, fieldsByProduct.value));
+const cartLines = computed(() => cartRows(cartStore.quote?.lines ?? [], cartStore.lines, fieldsByProduct.value));
 
 /** Etiquetas de los campos del evento por producto, para poder emparejarlas en el carrito. */
 const fieldsByProduct = ref({});
 
 /** Pide el presupuesto de la cesta actual. Es la ÚNICA fuente de los importes del carrito. */
 async function refreshQuote() {
-    if (cart.value.length === 0) {
-        quote.value = null;
+    if (cartStore.lines.length === 0) {
+        cartStore.quote = null;
 
         return;
     }
 
-    const response = await tracked(api.post('/orders/quote', { items: toApiItems(cart.value) }));
+    const response = await tracked(api.post('/orders/quote', { items: toApiItems(cartStore.lines) }));
 
-    quote.value = response.ok ? response.data : null;
+    cartStore.quote = response.ok ? response.data : null;
 
     if (! response.ok) {
         return;
@@ -432,12 +397,12 @@ async function refreshQuote() {
     // ⚠️ **Reconciliar y volver a presupuestar es UNA sola operación.** Podar desplaza los índices, y
     // las filas y el botón de quitar se emparejan por el `index` del PRESUPUESTO: pintar el viejo
     // sobre la cesta podada enseñaría las respuestas de otra línea y dejaría el botón mudo.
-    const { lines, changed } = reconcile(cart.value, quote.value.lines ?? []);
+    const { lines, changed } = reconcile(cartStore.lines, cartStore.quote.lines ?? []);
 
     if (changed) {
-        cart.value = lines;
-        persist();
-        quote.value = null;
+        cartStore.lines = lines;
+        cartStore.persist();
+        cartStore.quote = null;
 
         await refreshQuote();
     }
@@ -466,7 +431,7 @@ async function selectDate(date) {
     // checkout rechazaría. Hasta 4.3·2 iba vacía porque no había cesta; ahora va la de verdad.
     const response = await tracked(api.post(`/availability/${selectedProductId.value}/times`, {
         date,
-        items: toApiItems(cart.value),
+        items: toApiItems(cartStore.lines),
     }));
 
     timeStore.setOffer(response.ok ? (response.data?.data ?? []) : []);
@@ -600,17 +565,17 @@ function applyIdentityFrom(response) {
  * @returns {'keep'|'purge'}
  */
 function applyIdentity(newOwner) {
-    const decision = decideOwnership(cartOwner.value, newOwner);
+    const decision = decideOwnership(cartStore.owner, newOwner);
 
     if (decision === 'purge') {
-        cart.value = [];
-        quote.value = null;
-        cartError.value = '';
-        clearStoredCart(storage());
+        cartStore.lines = [];
+        cartStore.quote = null;
+        cartStore.error = '';
+        cartStore.forget();
         store.enter(STEPS.CATALOG);
     }
 
-    cartOwner.value = newOwner;
+    cartStore.owner = newOwner;
 
     return decision;
 }
@@ -640,9 +605,9 @@ const footer = computed(() => buildFooter({
     step: store.step,
     messages: props.messages,
     locale,
-    cartCount: cartCount.value,
-    cartTotalCents: quote.value?.total_cents ?? 0,
-    cartOnlineCents: quote.value?.online_amount_cents ?? 0,
+    cartCount: cartStore.count,
+    cartTotalCents: cartStore.quote?.total_cents ?? 0,
+    cartOnlineCents: cartStore.quote?.online_amount_cents ?? 0,
     hasDate: dateStore.selected !== null,
     hasTime: timeStore.selected !== null,
     lineTotalCents: line.value?.total_cents ?? null,
@@ -694,7 +659,7 @@ function goToVerdict(step) {
  */
 async function checkout() {
     const verdict = await tracked(runCheckout({
-        cartCount: cart.value.length,
+        cartCount: cartStore.lines.length,
         // ⚠️ La guarda de las líneas incompletas la aplica el módulo, ANTES de preguntar nada al
         // servidor (`#38(d)`, 4.5·1): una cesta que no se puede comprar todavía no gasta dos peticiones.
         incompleteLines: hasPendingEventFields(cartLines.value),
@@ -713,7 +678,7 @@ async function checkout() {
         return;
     }
 
-    cartError.value = verdict.error;
+    cartStore.error = verdict.error;
     goToVerdict(verdict.step);
 }
 
@@ -796,14 +761,14 @@ async function enterWith(identity) {
     authStore.reset();
 
     const verdict = await tracked(continueAfterIdentification({
-        cartCount: cart.value.length,
+        cartCount: cartStore.lines.length,
         me: identity,
         api,
         messages: props.messages,
         refreshStatus: refreshBookingStatus,
     }));
 
-    cartError.value = verdict.error;
+    cartStore.error = verdict.error;
     goToVerdict(verdict.step);
 }
 
@@ -854,7 +819,7 @@ async function confirmReservation() {
 
     try {
         const result = await tracked(runConfirm({
-            items: toApiItems(cart.value),
+            items: toApiItems(cartStore.lines),
             api,
             messages: props.messages,
         }));
@@ -864,7 +829,7 @@ async function confirmReservation() {
         }
 
         if (! result.ok) {
-            cartError.value = result.error;
+            cartStore.error = result.error;
             // Espejo del componente Livewire: cualquier «no» al confirmar devuelve al CARRITO, que es
             // donde el cliente puede arreglarlo —quitar una línea, cambiar una franja—.
             goToVerdict(STEPS.CART);
@@ -874,11 +839,11 @@ async function confirmReservation() {
 
         // La reserva es firme: la cesta se vacía y se persiste vacía, para que una recarga no la
         // resucite y el cliente acabe comprando dos veces lo mismo.
-        cart.value = [];
-        quote.value = null;
-        persist();
+        cartStore.lines = [];
+        cartStore.quote = null;
+        cartStore.persist();
 
-        cartError.value = '';
+        cartStore.error = '';
         orderCode.value = result.orderCode;
         gateway.value = result.form;
         store.go(STEPS.REDIRECTING);
@@ -1019,7 +984,7 @@ async function poll() {
     // Caducó antes de llegar la notificación. La plaza volvió al inventario, así que no hay nada que
     // reintentar: el cliente vuelve al catálogo con el mismo aviso que da la web.
     orderCode.value = '';
-    cartError.value = t('errors.retry_expired');
+    cartStore.error = t('errors.retry_expired');
     store.go(STEPS.CATALOG);
 }
 
@@ -1047,7 +1012,7 @@ async function retryPayment() {
 
         if (result.ok) {
             declinedReason.value = '';
-            cartError.value = '';
+            cartStore.error = '';
             gateway.value = result.form;
             store.go(STEPS.REDIRECTING);
 
@@ -1059,7 +1024,7 @@ async function retryPayment() {
         // denegado por pausa, por frecuencia o por la pasarela deja el botón mudo en los dos motores.
         // Medido, no supuesto. Está anotado como deuda de PRODUCTO en `DEUDA.md`: arreglarlo cambia la
         // web, no la transcripción.
-        cartError.value = result.error;
+        cartStore.error = result.error;
 
         if (result.goTo === 'catalog') {
             orderCode.value = '';
@@ -1085,7 +1050,7 @@ function goToTime() {
 
 /** Vuelve al carrito desde una compra en curso, si hay cesta. */
 function goToCart() {
-    if (cart.value.length > 0) store.go(STEPS.CART);
+    if (cartStore.lines.length > 0) store.go(STEPS.CART);
 }
 
 /**
@@ -1098,8 +1063,8 @@ function goToCart() {
  * aviso que NOMBRA los campos que faltan.
  */
 async function addToCart() {
-    cartError.value = '';
-    fieldErrors.value = {};
+    cartStore.error = '';
+    cartStore.fieldErrors = {};
 
     const candidate = {
         product_id: selectedProductId.value,
@@ -1116,11 +1081,11 @@ async function addToCart() {
     // haría competir consigo misma y devolvería un tope menor del real.
     const response = await tracked(api.post('/cart/validate-line', {
         line: candidate,
-        items: toApiItems(cart.value),
+        items: toApiItems(cartStore.lines),
     }));
 
     if (! response.ok) {
-        cartError.value = t('errors.choose_one');
+        cartStore.error = t('errors.choose_one');
 
         return;
     }
@@ -1133,8 +1098,8 @@ async function addToCart() {
         return;
     }
 
-    cart.value = addLine(cart.value, candidate, verdict);
-    persist();
+    cartStore.lines = addLine(cartStore.lines, candidate, verdict);
+    cartStore.persist();
     clearSelection();
     store.go(STEPS.CART);
 
@@ -1158,7 +1123,7 @@ function showLineProblems(problems) {
 
     for (const problem of problems) {
         if (problem.reason === 'event_field_required' && problem.field) {
-            fieldErrors.value = { ...fieldErrors.value, [problem.field]: t('errors.field_required') };
+            cartStore.fieldErrors = { ...cartStore.fieldErrors, [problem.field]: t('errors.field_required') };
 
             const label = (product.value?.event_fields ?? []).find((f) => f.key === problem.field)?.label;
             if (label) missing.push(label);
@@ -1166,23 +1131,20 @@ function showLineProblems(problems) {
             continue;
         }
 
-        cartError.value = problem.reason === 'cart_full'
+        cartStore.error = problem.reason === 'cart_full'
             ? t('errors.cart_too_large')
             : t('errors.choose_one');
     }
 
     if (missing.length > 0) {
-        cartError.value = tp('errors.fields_missing', { fields: missing.join(', ') });
+        cartStore.error = tp('errors.fields_missing', { fields: missing.join(', ') });
     }
 }
 
 /** Quita una línea. Con la cesta vacía se vuelve al catálogo, como hace la web. */
 async function removeLine(index) {
-    cart.value = removeCartLine(cart.value, index);
-    persist();
-
-    if (cart.value.length === 0) {
-        quote.value = null;
+    // El store dice si la cesta quedó VACÍA; a dónde ir con esa noticia es del embudo, no suyo.
+    if (cartStore.remove(index)) {
         store.enter(STEPS.CATALOG);
 
         return;
@@ -1191,21 +1153,9 @@ async function removeLine(index) {
     await refreshQuote();
 }
 
-/**
- * Contesta un campo del evento de una línea de la CESTA (Fase 4 · paso 4.5·1).
- *
- * ⚠️ **Estas respuestas viven SOLO en memoria y no se persisten nunca.** Es la razón de que haya que
- * volver a pedirlas: son el nombre de un menor, su edad y sus alergias (`#38(d)`, art. 9 del RGPD).
- * Por eso aquí **no se llama a `persist()`** — y no es un olvido: `saveCart()` las descartaría de
- * todos modos, y el canario de `cart.test.js` busca centinelas en el volcado entero del almacén.
- */
+/** Contesta un campo del evento de una línea de la cesta. El porqué de que NO se persista, en el store. */
 function updateCartField(index, key, value) {
-    const line = cart.value[index];
-    if (! line) return;
-
-    line.event_data = { ...(line.event_data ?? {}), [key]: value };
-    // La fila se recompone sola: `cartLines` es un computed sobre `cart`.
-    cartError.value = '';
+    cartStore.updateField(index, key, value);
 }
 
 /**
@@ -1296,7 +1246,7 @@ function goBack() {
             :event-fields="product?.event_fields ?? []"
             :period-label="product?.period_label ?? ''"
             :addons="addons"
-            :errors="fieldErrors"
+            :errors="cartStore.fieldErrors"
             :messages="messages"
             @select-time="selectTime"
             @inc="changeQuantity(1)"
@@ -1310,7 +1260,7 @@ function goBack() {
         <CartStep
             v-else-if="store.step === STEPS.CART"
             :lines="cartLines"
-            :error="cartError"
+            :error="cartStore.error"
             :messages="messages"
             :locale="locale"
             @remove="removeLine"
@@ -1339,7 +1289,7 @@ function goBack() {
         <PayStep
             v-else-if="store.step === STEPS.PAY"
             :lines="cartLines"
-            :error="cartError"
+            :error="cartStore.error"
             :messages="messages"
             :locale="locale"
             @back="goToCart" />
