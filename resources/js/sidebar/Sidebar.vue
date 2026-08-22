@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './stores/purchase.js';
 import { useDateStore } from './stores/date.js';
 import { useTimeStore } from './stores/time.js';
+import { useAuthStore } from './stores/auth.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
@@ -12,10 +13,9 @@ import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
 import { buildNotice } from './paused.js';
 import { continueAfterIdentification, runCheckout } from './admission.js';
-import { runLogin } from './login.js';
 import { runConfirm } from './pay.js';
 import { declinedReasonText, loadConfirmation, loadPaymentStatus, pollVerdict, runRetry } from './outcome.js';
-import { runRegister, signupRequiresCaptcha } from './register.js';
+import { signupRequiresCaptcha } from './register.js';
 import {
     addLine, cartRows, clear as clearStoredCart, decideOwnership, hasPendingEventFields,
     load as loadStoredCart, reconcile, removeLine as removeCartLine, save as saveCart, toApiItems,
@@ -229,7 +229,7 @@ onMounted(async () => {
         if (typeof config.data?.cart_max_lines === 'number') maxCartLines.value = config.data.cart_max_lines;
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
         // el cajón monta su propio widget de Turnstile con ella (`turnstile.js`, 4.4b·2).
-        signupSiteKey.value = signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '';
+        authStore.setSignupSiteKey(signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '');
         // El enlace de registro del parque, que solo pinta el paso 6. Llega ya SANEADO (`SEC-07`): lo
         // edita un operador y un cliente JSON no tiene escape de plantilla que remate la defensa.
         registration.value = config.data?.registration ?? null;
@@ -720,57 +720,17 @@ async function checkout() {
 // ── El paso 5: identificarse sin salir del cajón ──────────────────────────────────────────────
 
 /**
- * Los campos de los DOS formularios, en un solo objeto.
+ * Todo el paso 5 vive en `stores/auth.js` (reorganización del 2026-08-22): los campos de los dos
+ * formularios, los avisos del último intento, la pestaña activa, el bit del anti-bot y las dos
+ * secuencias de petición.
  *
- * Juntos y no en dos refs porque el paso es uno: al salir se limpian de una vez, y **la contraseña no
- * puede sobrevivir** a un cambio de pantalla en una tablet compartida.
- */
-const emptyForm = () => ({
-    email: '', password: '', remember: false,
-    name: '', phone: '', accept_privacy: false, accept_terms: false, marketing: false,
-    // El señuelo: un cliente legítimo lo deja vacío y el servidor finge un alta si llega relleno.
-    // Y el token del anti-bot, que escribe Cloudflare por callback (`turnstile.js`), no el usuario.
-    website: '', turnstile_token: '',
-});
-
-const form = ref(emptyForm());
-
-/** Lo que enseña cada formulario del último intento (`login.js` · `register.js`). */
-const loginError = ref({ global: '', fields: {} });
-const registerError = ref({ summary: [], fields: {} });
-
-/** `true` mientras hay una petición de auth en vuelo: el botón cambia de rótulo, como en la web. */
-const loggingIn = ref(false);
-
-/** La pestaña activa del paso 5. */
-const authMode = ref('login');
-
-/**
- * ¿El alta exige captcha en esta instalación? Sale de `GET /config` (`turnstile_site_key`).
+ * ⚠️ **Lo que se queda AQUÍ es lo de después**: avisar a Livewire, aplicar la identidad a la cesta y
+ * continuar el checkout cruzan tres dominios, así que son del embudo y no de la auth.
  *
- * ⚠️ **No nulo ⟺ el anti-bot está ACTIVO**, y esa equivalencia costó un arreglo del contrato: el
- * endpoint publicaba la clave pública aunque faltara la secreta, estado en el que la web **no pinta el
- * widget** y el servidor no verifica nada. Ahora el campo es el bit que decide.
+ * ▶ Y es el dominio que compartirá el ÁREA DE CLIENTE (`DECISIONES #66`): entrar y darse de alta
+ * serán suyos también, y encontrárselo ya fuera del componente del embudo era el objetivo.
  */
-const signupSiteKey = ref('');
-
-/**
- * Cambia de pestaña. Espejo de `Purchase::setAuthMode()`.
- *
- * ✅ **La delegación en el modal de Livewire se RETIRÓ en 4.4b·2**: el cajón monta su propio widget de
- * Turnstile (`turnstile.js` + `RegisterForm.vue`), así que ya pinta su formulario de alta también con
- * el anti-bot activo. Lo que había aquí era una degradación honesta mientras el widget no existía —sin
- * token, `SelfSignup` rechaza **todas** las altas con «no eres un robot», sin correo y sin log—, y su
- * único motivo era ese.
- * ⚠️ El modal de la cabecera NO desaparece con esto ni con `4.7·2b·3`: vive en `layout.blade.php`, no
- * en `purchase.blade.php`, y sigue siendo la puerta de auth de la web fuera del cajón.
- */
-function setAuthMode(mode) {
-    authMode.value = mode === 'register' ? 'register' : 'login';
-    // Los avisos son de un intento que ya no se ve: arrastrarlos entre pestañas confunde.
-    loginError.value = { global: '', fields: {} };
-    registerError.value = { summary: [], fields: {} };
-}
+const authStore = useAuthStore();
 
 /**
  * Envía las credenciales y, si entra, continúa la compra donde la dejó.
@@ -786,26 +746,11 @@ function setAuthMode(mode) {
  *     `proceed()`: quien se identifica con el tope de pendientes lleno tiene que enterarse aquí.
  */
 async function submitLogin() {
-    if (loggingIn.value) return;
+    const result = await tracked(authStore.login({ api, messages: props.messages, auth: props.auth }));
 
-    loggingIn.value = true;
+    if (! result.ok) return;
 
-    try {
-        const result = await tracked(runLogin({
-            credentials: form.value,
-            api,
-            messages: props.messages,
-            auth: props.auth,
-        }));
-
-        loginError.value = result.errors;
-
-        if (! result.ok) return;
-
-        await enterWith(result.response);
-    } finally {
-        loggingIn.value = false;
-    }
+    await enterWith(result.response);
 }
 
 /**
@@ -817,39 +762,19 @@ async function submitLogin() {
  * cajón va a «revisa tu correo», que es exactamente lo que hace la web con `registration-submitted`.
  */
 async function submitRegister() {
-    if (loggingIn.value) return;
+    const result = await tracked(authStore.register({ api, messages: props.messages, auth: props.auth }));
 
-    loggingIn.value = true;
+    if (! result.ok) return;
 
-    try {
-        const result = await tracked(runRegister({
-            form: form.value,
-            api,
-            messages: props.messages,
-            auth: props.auth,
-        }));
+    if (! result.identified) {
+        // El señuelo actuó: misma pantalla que ve un alta legítima sin sesión. No se distingue.
+        authStore.reset();
+        goToVerdict(STEPS.VERIFY_EMAIL);
 
-        registerError.value = result.errors;
-
-        // Vaciarlo es la señal de «pide otro» para el widget (`RegisterForm` lo observa). Va en
-        // CUALQUIER fallo, no solo en el del captcha: el token es de un solo uso y el servidor lo
-        // quema antes de comprobar si el correo ya existe, así que un segundo intento con el mismo
-        // token daría «no eres un robot» con el tick verde puesto. Y afinar más es imposible: los
-        // tres desenlaces llegan como `validation_failed` bajo `fields.email`, indistinguibles.
-        if (! result.ok) { form.value.turnstile_token = ''; return; }
-
-        if (! result.identified) {
-            // El señuelo actuó: misma pantalla que ve un alta legítima sin sesión. No se distingue.
-            resetAuthForm();
-            goToVerdict(STEPS.VERIFY_EMAIL);
-
-            return;
-        }
-
-        await enterWith(result.me);
-    } finally {
-        loggingIn.value = false;
+        return;
     }
+
+    await enterWith(result.me);
 }
 
 /**
@@ -868,7 +793,7 @@ async function submitRegister() {
 async function enterWith(identity) {
     notifyLoggedIn();
     applyIdentityFrom(identity);
-    resetAuthForm();
+    authStore.reset();
 
     const verdict = await tracked(continueAfterIdentification({
         cartCount: cart.value.length,
@@ -891,13 +816,6 @@ async function enterWith(identity) {
  */
 function notifyLoggedIn() {
     window.Livewire?.dispatch('logged-in');
-}
-
-/** Deja los dos formularios en blanco. La contraseña no se queda en memoria más de lo necesario. */
-function resetAuthForm() {
-    form.value = emptyForm();
-    loginError.value = { global: '', fields: {} };
-    registerError.value = { summary: [], fields: {} };
 }
 
 // ── El paso 8: confirmar y salir hacia la pasarela ────────────────────────────────────────────
@@ -1401,16 +1319,16 @@ function goBack() {
 
         <IdentifyStep
             v-else-if="store.step === STEPS.IDENTIFY"
-            v-model:form="form"
-            :mode="authMode"
-            :login-errors="loginError"
-            :register-errors="registerError"
-            :submitting="loggingIn"
+            v-model:form="authStore.form"
+            :mode="authStore.mode"
+            :login-errors="authStore.loginError"
+            :register-errors="authStore.registerError"
+            :submitting="authStore.busy"
             :messages="messages"
             :account="account"
-            :turnstile-site-key="signupSiteKey"
+            :turnstile-site-key="authStore.signupSiteKey"
             @back="goToCart"
-            @set-mode="setAuthMode"
+            @set-mode="authStore.setMode"
             @submit-login="submitLogin"
             @submit-register="submitRegister" />
 
