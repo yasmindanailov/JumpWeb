@@ -1,36 +1,50 @@
 <script setup>
+import { computed } from 'vue';
+import { useOrdersStore } from '../../stores/orders.js';
+import { orderRows, pageInfo } from '../orders.js';
+
 /**
  * **«Mis reservas»**: el historial de pedidos del cliente (`docs/specs/area-cliente.md` §4.2).
- * Espeja `/mi-cuenta/pedidos`, que de cara al cliente se titula así — medido en `lang/`.
+ * Espeja `/mi-cuenta/pedidos`, que de cara al cliente se titula así — medido en `lang/`:
+ * `account.orders.title` es literalmente «Mis reservas», no «Mis pedidos».
  *
- * **PINTA y nada más.** Qué se enseña de cada pedido lo compone `account/orders.js` y de dónde salen
- * los datos lo sabe `stores/orders.js`; los dos se prueban con `node --test`. Este componente no
- * conoce la API ni recompone ninguna regla (`CE-6`).
+ * **Pinta.** Qué se enseña de cada pedido lo compone `account/orders.js` y de dónde salen los datos
+ * lo sabe `stores/orders.js`; los dos se prueban con `node --test`. Aquí no hay ninguna regla y no se
+ * habla con la API (`CE-6`).
+ *
+ * ⚠️ **La zona pide lo suyo al MONTARSE, y compone sus propias filas.** Antes lo hacía la sección,
+ * con una cadena de `if` y un `computed` por zona que crecían con cada pantalla nueva: eso es
+ * conocimiento de LAS ZONAS, no del enrutado, y empujaba la sección contra el techo de
+ * `SidebarComponentBudgetTest` — que existe justo para provocar esta pregunta. `ensure()` garantiza
+ * que volver a entrar no repita la petición.
  */
-defineProps({
-    /** Las filas ya compuestas por `account/orders.js`. */
-    rows: { type: Array, default: () => [] },
-    /** La paginación ya compuesta, o `null` si todo cabe en una página. */
-    page: { type: Object, default: null },
-    busy: { type: Boolean, default: false },
-    error: { type: String, default: '' },
-    expired: { type: Boolean, default: false },
+const props = defineProps({
+    /** El grupo `account` podado: rótulos y textos de la zona. */
     account: { type: Object, default: () => ({}) },
+    /** El grupo `tickets`: estados del pedido y aviso de señal. */
+    messages: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['go-page', 'retry', 'sign-in']);
+defineEmits(['sign-in']);
+
+const store = useOrdersStore();
+
+store.ensure();
+
+const rows = computed(() => orderRows(store.payload, { messages: props.messages, account: props.account }));
+const page = computed(() => pageInfo(store.payload, props.account));
 </script>
 
 <template>
     <!-- La sesión caducó con el cajón abierto: se dice y se ofrece la puerta, en vez de una lista vacía. -->
-    <p v-if="expired" class="purchase__empty">
+    <p v-if="store.unauthenticated" class="purchase__empty">
         <button type="button" class="btn btn--zone" @click="$emit('sign-in')">{{ account?.login?.cta ?? '' }}</button>
     </p>
 
     <template v-else>
-        <p v-if="error" class="bk-error" role="alert">{{ error }}</p>
+        <p v-if="store.error" class="bk-error" role="alert">{{ store.error }}</p>
 
-        <p v-if="! rows.length && ! busy" class="purchase__empty">{{ account?.orders?.empty ?? '' }}</p>
+        <p v-if="! rows.length && ! store.busy" class="purchase__empty">{{ account?.orders?.empty ?? '' }}</p>
 
         <ul v-else class="orders">
             <li v-for="row in rows" :key="row.code" class="orders__card">
@@ -68,16 +82,16 @@ defineEmits(['go-page', 'retry', 'sign-in']);
                 </div>
 
                 <div v-if="row.canRetry" class="orders__retry">
-                    <button type="button" class="btn btn--zone" :disabled="busy" @click="$emit('retry', row.code)">{{ account?.orders?.retry_payment ?? '' }}</button>
+                    <button type="button" class="btn btn--zone" :disabled="store.busy" @click="store.retry(row.code, { messages })">{{ account?.orders?.retry_payment ?? '' }}</button>
                     <p class="orders__retry-hint">{{ account?.orders?.retry_hint ?? '' }}</p>
                 </div>
             </li>
         </ul>
 
         <nav v-if="page" class="orders__pagination" :aria-label="page.label">
-            <button type="button" class="btn btn--ghost" :disabled="! page.canPrev || busy" @click="$emit('go-page', page.current - 1)">{{ page.prevLabel }}</button>
+            <button type="button" class="btn btn--ghost" :disabled="! page.canPrev || store.busy" @click="store.load(page.current - 1)">{{ page.prevLabel }}</button>
             <span class="orders__pagination-page">{{ page.pageLabel }}</span>
-            <button type="button" class="btn btn--ghost" :disabled="! page.canNext || busy" @click="$emit('go-page', page.current + 1)">{{ page.nextLabel }}</button>
+            <button type="button" class="btn btn--ghost" :disabled="! page.canNext || store.busy" @click="store.load(page.current + 1)">{{ page.nextLabel }}</button>
         </nav>
     </template>
 </template>

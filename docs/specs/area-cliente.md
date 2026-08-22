@@ -526,7 +526,7 @@ anti-fuerza bruta en auth, y una re-autenticación **es** auth.
 | **6a** | ✅ **HECHO 2026-08-22 · Contraseña + otras sesiones, en el SERVIDOR**: `AccountCredentials` + `CredentialChangeResult`, los dos componentes Livewire consumiéndolo, `PUT /me/password` y `POST /me/sessions/revoke-others` con su contrato | `MeCredentialsTest` (10 casos, **4 mutaciones**) · `ApiContractTest` |
 | **6b** | ✅ **HECHO 2026-08-22 · Las dos pantallas**: zonas `PASSWORD` y `SESSIONS`, el índice pasa a ser **dato** (`HOME_ENTRIES`) y nace `steps/PasswordInput.vue` —el campo de contraseña estaba escrito dos veces y la tanda iba a añadir dos más | 17 casos de `node --test` · **navegador V8, 5/5 + 3/3** |
 | **7a** | ✅ **HECHO 2026-08-22 · El perfil, en el SERVIDOR**: `AccountProfile` (reglas, ciclo de `pending_email`, dos avisos, carrera de UNIQUE), `PATCH /me`, `DELETE /me/pending-email` y `POST /me/pending-email/resend` | `MeProfileTest` (11 casos, **6 mutaciones**) · contrato |
-| **7b** | La pantalla del perfil en el cajón: zona `PROFILE` | `node --test` + navegador |
+| **7b** | ✅ **HECHO 2026-08-22 · La pantalla del perfil**: zona `PROFILE` con el ciclo del correo pendiente. `account/credentials.js` se renombra a `form-outcome.js` —lo usan ya tres pantallas— y **la sección adelgaza de 38 a 20 líneas**: cada zona pide y compone lo suyo | 19 casos de `node --test`, **mutados** · **navegador V9, 7/7** |
 | **8** | **Los dos derechos RGPD**: borrado y export | Irreversible uno y con PII el otro. Van juntos y **al final**, cuando el patrón ya esté rodado |
 
 ⚠️ **Y dentro de cada paso, el orden que enseñó el paso 3**: primero el **dominio y el contrato**

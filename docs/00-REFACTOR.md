@@ -1693,8 +1693,17 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             ⚠️ Y dos veces habría cambiado producción escribir de memoria: `maskEmail()` reescrita
             salía distinta, y al moverla **desapareció del componente** con un controlador usándola —
             lo cazó la suite.
-      - [ ] **Tanda 2 · pasos 7b y 8**: la pantalla del perfil y los dos derechos RGPD (borrado y
-            export). Su corte y su red, en `specs/area-cliente.md` §9.5.
+      - [x] **Tanda 2 · paso 7b — LA PANTALLA DEL PERFIL** (✅ **HECHO** el 2026-08-22). Zona
+            `PROFILE` con el ciclo del correo pendiente; navegador `V9`, **7/7**.
+            ⚠️⚠️ **El techo de componentes obligó al rediseño que tocaba** (`#120(r)`): la sección
+            estaba en **38/40** porque conocía los datos de sus zonas —un `watch` con cadena de `if` y
+            un `computed` por lista, los dos creciendo con cada pantalla—. Hoy **cada zona pide y
+            compone lo suyo** y la sección bajó a **20**. No costó ni una petición: `ensure()` ya
+            garantizaba que volver a entrar no repitiera nada.
+            ⚠️ Dos duplicaciones más cazadas: `credentials.js` → `form-outcome.js` (lo usan tres
+            pantallas) y los **tres idiomas quemados en el marcado** → `SiteLocales::options()`.
+      - [ ] **Tanda 2 · paso 8**: los dos derechos RGPD —borrado (art. 17) y export (art. 20)—, que
+            cierran la tanda. Su red, en `specs/area-cliente.md` §9.5.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

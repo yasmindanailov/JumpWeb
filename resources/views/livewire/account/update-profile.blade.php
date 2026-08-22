@@ -67,9 +67,12 @@
         <div class="form__field">
             <label class="form__label" for="up-profile-locale">{{ __('account.account.profile.locale') }}</label>
             <select id="up-profile-locale" wire:model="locale">
-                <option value="es">Español</option>
-                <option value="en">English</option>
-                <option value="fr">Français</option>
+                {{-- ⚠️ La lista sale de `Platform\Services\SiteLocales` desde la tanda 2: estaba
+                     quemada aquí y el cajón necesitaba la misma. Dos listas de idiomas es cómo se
+                     acaba ofreciendo uno que la otra no reconoce. --}}
+                @foreach (\App\Domain\Platform\Services\SiteLocales::options() as $option)
+                    <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                @endforeach
             </select>
             @error('locale') <span class="form__error">{{ $message }}</span> @enderror
         </div>

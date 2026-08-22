@@ -1,36 +1,36 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { useAccountStore } from '../stores/account.js';
-import { useOrdersStore } from '../stores/orders.js';
-import { useReservationsStore } from '../stores/reservations.js';
-import { useCredentialsStore } from '../stores/credentials.js';
 import { ZONES, titleKeyOf } from '../account/navigation.js';
-import { orderRows, pageInfo } from '../account/orders.js';
 import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
 import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
 import OrdersZone from '../account/zones/OrdersZone.vue';
+import ProfileZone from '../account/zones/ProfileZone.vue';
 import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
  *
- * **Enruta ZONAS y pinta. Nada más.** La navegación —qué zonas hay, la pila de retorno, cuándo
- * «volver» significa salir— vive en `account/navigation.js` y en su store, que se prueban con
- * `node --test`. Aquí no hay ninguna regla, y por eso este componente cabe holgado en el techo de
- * `SidebarComponentBudgetTest` sin necesitar excepción declarada.
+ * **Enruta ZONAS y pinta el armazón. Nada más.** Cada zona pide lo suyo al montarse y habla con su
+ * propio store; la navegación —qué zonas hay, la pila de retorno, cuándo «volver» significa salir—
+ * vive en `account/navigation.js` y en su store, con `node --test`.
+ *
+ * ⚠️⚠️ **Y esta sección NO conoce los datos de sus zonas, aunque los conoció durante dos pasos.**
+ * Tenía un `watch` con una cadena de `if` —«al entrar en pedidos, pide pedidos»— y un `computed` por
+ * cada lista. Las dos cosas crecían con cada pantalla nueva y la empujaron a **38 de 40** líneas en el
+ * paso 7b: el techo de `SidebarComponentBudgetTest` hizo su trabajo, que es **provocar la pregunta**.
+ * ▶ La respuesta correcta no era subir el techo: era que **cada zona sepa qué necesita**. `ensure()`
+ * («pedir solo si no hay datos») ya garantizaba que volver a entrar no repitiera la petición, así que
+ * mover la carga a cada zona no costó ni una petición más.
  *
  * ⚠️ **Reutiliza `Shell.vue`, y se decidió midiendo** (spec §4.9). El panel se sostiene sobre una
- * cadena de HIJOS DIRECTOS —`.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll`,
- * todos `flex: 1; min-height: 0`— que el propio CSS avisa que **ningún diff de árbol puede ver**.
- * Escribirle a la cuenta su propia cadena habría sido duplicar CSS estructural en un segundo sitio
- * que mantener. Medido antes de decidirlo: con `progress`/`footer`/`notice` a `null`, `Shell` emite
- * exactamente `.purchase` + el velo de carga + `.purchase__scroll`, y `data-engine="spa"` no lo lee
- * nadie —ni CSS, ni test, ni servidor—.
+ * cadena de HIJOS DIRECTOS que el propio CSS avisa que **ningún diff de árbol puede ver**; escribirle
+ * a la cuenta su propia cadena habría duplicado CSS estructural en un segundo sitio.
  */
 const props = defineProps({
-    /** El grupo `tickets` del locale activo: de ahí sale el rótulo de «Volver». */
+    /** El grupo `tickets` del locale activo: de ahí sale el rótulo de «Volver» y los estados. */
     messages: { type: Object, default: () => ({}) },
 
     /** El grupo `ui` (el rótulo del velo de carga), que `Shell` necesita. */
@@ -41,50 +41,17 @@ const props = defineProps({
 
     /** El grupo `auth`: de ahí sale el aviso del limitador, el MISMO texto que usa el login. */
     auth: { type: Object, default: () => ({}) },
+
+    /** Los idiomas que ofrece el selector del perfil, con su nombre nativo (`SiteLocales`). */
+    locales: { type: Array, default: () => [] },
 });
 
 const store = useAccountStore();
-const orders = useOrdersStore();
-const reservations = useReservationsStore();
-const credentials = useCredentialsStore();
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
-/**
- * ⚠️ **La composición se hace aquí y no en el store**, y es lo que da red a las dos mitades: el store
- * guarda la respuesta CRUDA —así se prueba sin diccionarios— y `account/orders.js` la compone donde
- * los textos están —así se prueba sin store—. Ninguna de las dos necesita montar un componente.
- */
-const rows = computed(() => orderRows(orders.payload, { messages: props.messages, account: props.account }));
-const page = computed(() => pageInfo(orders.payload, props.account));
-
-/**
- * Cada zona pide lo suyo **al entrar, y solo si le falta** (`ensure`). Es la regla que sustituyó a
- * `<KeepAlive>` (`DECISIONES #120(g)`): volver a una zona ya vista no repite su petición, sin pagar
- * los 2,3 KiB de una caché del framework ni romper las template refs.
- */
-watch(() => store.zone, (zone) => {
-    if (zone === ZONES.ORDERS) orders.ensure();
-    if (zone === ZONES.HOME) reservations.ensure();
-
-    // ⚠️ Las gestiones **se limpian al entrar**, al revés que las listas: un aviso de «contraseña
-    // incorrecta» de hace cinco minutos leído sobre un formulario vacío diría algo falso del intento
-    // que el cliente aún no ha hecho.
-    if (zone === ZONES.PASSWORD || zone === ZONES.SESSIONS) credentials.reset();
-}, { immediate: true });
-
 /** Abre el modal de auth de la cabecera, que sigue siendo la puerta de entrada (spec §4.6). */
 const signIn = () => window.Alpine?.store('auth')?.open('login');
-
-/**
- * Los diccionarios que las gestiones necesitan para traducir la respuesta del servidor.
- *
- * ⚠️ **Vaciar el formulario al salir bien NO se hace desde aquí**, y es deliberado: la sección
- * tendría que guardar una `ref` por zona y un manejador por gestión, y eso la empujaba contra el
- * techo de `SidebarComponentBudgetTest` —que existe justo para provocar esta pregunta—. Cada zona
- * mira su propio `done` y se vacía sola, que además es quien sabe qué campos tiene.
- */
-const ctx = computed(() => ({ messages: props.messages, auth: props.auth }));
 </script>
 
 <template>
@@ -113,39 +80,31 @@ const ctx = computed(() => ({ messages: props.messages, auth: props.auth }));
             v-if="store.zone === ZONES.HOME"
             :account="account"
             :messages="messages"
-            :next="reservations.next"
-            :upcoming="reservations.upcoming"
             @go="store.go" />
+
+        <ProfileZone
+            v-else-if="store.zone === ZONES.PROFILE"
+            :messages="messages"
+            :auth="auth"
+            :account="account"
+            :locales="locales" />
 
         <PasswordZone
             v-else-if="store.zone === ZONES.PASSWORD"
-            :account="account"
-            :busy="credentials.busy"
-            :fields="credentials.fields"
-            :notice="credentials.notice"
-            :done="credentials.done"
-            @submit="credentials.changePassword($event, ctx)"
-            @reset="credentials.reset()" />
+            :messages="messages"
+            :auth="auth"
+            :account="account" />
 
         <SessionsZone
             v-else-if="store.zone === ZONES.SESSIONS"
-            :account="account"
-            :busy="credentials.busy"
-            :fields="credentials.fields"
-            :notice="credentials.notice"
-            :done="credentials.done"
-            @submit="credentials.revokeOtherSessions($event, ctx)" />
+            :messages="messages"
+            :auth="auth"
+            :account="account" />
 
         <OrdersZone
             v-else-if="store.zone === ZONES.ORDERS"
-            :rows="rows"
-            :page="page"
-            :busy="orders.loading"
-            :error="orders.error"
-            :expired="orders.unauthenticated"
+            :messages="messages"
             :account="account"
-            @go-page="(n) => orders.load(n)"
-            @retry="(code) => orders.retry(code, { messages })"
             @sign-in="signIn" />
     </Shell>
 </template>

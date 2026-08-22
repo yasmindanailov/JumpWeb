@@ -28,6 +28,8 @@ const props = defineProps({
     account: { type: Object, default: () => ({}) },
     /** El grupo `auth`, con los textos de login y alta. */
     auth: { type: Object, default: () => ({}) },
+    /** Los idiomas que ofrece el selector del perfil (`Platform\Services\SiteLocales`). */
+    locales: { type: Array, default: () => [] },
     /** Quién pintó la página, para que la cesta sepa de quién es antes de preguntar a nadie. */
     userId: { type: [Number, String], default: null },
     /** El pedido del que habla el desenlace. Llega ya CONSUMIDO por `Http\Sidebar\SidebarEntry`. */

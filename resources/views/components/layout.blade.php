@@ -241,6 +241,7 @@
                                     'mismatch' => __('validation.confirmed', ['attribute' => __('account.account.password.new')]),
                                 ],
                                 'sessions' => __('account.account.sessions'),
+                                'profile' => __('account.account.profile'),
                             ], 'sidecart' => [
                                 // La lectura del contador de próximas reservas para lector de
                                 // pantalla. Misma clave que usa el bloque `.acct` del panel para lo
@@ -258,6 +259,9 @@
                                 'guest_form_past', 'guest_form_cancelled',
                             ])] : []),
                         ],
+                        // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van
+                        // solo CON SESIÓN, como el resto de lo que solo pinta el área de cliente.
+                        ...(auth()->check() ? ['locales' => \App\Domain\Platform\Services\SiteLocales::options()] : []),
                         'auth' => __('auth'),
                         'userId' => auth()->id(),
                         // ⚠️ **Las rutas las compone el SERVIDOR, no el cajón** (Fase 4 · paso 4.6·2).

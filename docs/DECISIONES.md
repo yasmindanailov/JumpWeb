@@ -5272,3 +5272,38 @@ que las etiquetas de fecha (`#120(j)`).
 verde, porque la UNIQUE de la base captura el choque igual y el servicio lo traduce al **mismo 422**.
 Los dos caminos acaban en la misma respuesta, así que mirar la respuesta no dice cuál actuó. ▶ La regla
 se prueba ahora **donde vive**, validando directamente.
+
+**(r) Tanda 2 · paso 7b — la pantalla del perfil, y el techo de componentes obligó al rediseño que
+tocaba.** Nace la zona `PROFILE` con el ciclo del correo pendiente, `account/profile.js` (el
+formulario y los minutos que le quedan al enlace) y `stores/profile.js`.
+
+⚠️⚠️ **Lo importante pasó al llegar a 38 de 40 líneas en la sección.** `AccountSection` tenía un
+`watch` con una cadena de `if` —«al entrar en pedidos, pide pedidos»— y un `computed` por cada lista.
+Las dos cosas **crecían con cada pantalla**, y el paso 8 la habría reventado.
+▶ **La respuesta correcta no era subir el techo: era que cada zona sepa qué necesita.** Hoy cada zona
+llama a su `ensure()` al montarse y compone lo suyo; la sección **enruta y nada más**, y bajó de 38 a
+**20**. Y no costó ni una petición: `ensure()` («pedir solo si no hay datos») ya garantizaba que
+volver a entrar no repitiera nada. Ése es exactamente el trabajo que un presupuesto hace bien —
+**provocar la pregunta**, no cobrar un peaje.
+
+⚠️ **`account/credentials.js` se renombró a `form-outcome.js`**: no quedaba nada suyo que fuera de
+credenciales —es la traducción de CUALQUIER formulario del área— y el perfil iba a ser su segunda
+copia. Misma doctrina que el rótulo de día, la política de contraseñas y el campo de contraseña:
+**extraer antes de la segunda copia, no después de la cuarta**. Van cinco en esta tanda.
+
+⚠️ **Y una quinta duplicación cazada**: los tres idiomas estaban **quemados en el marcado** de
+`update-profile.blade.php` con sus nombres nativos. Suben a `Platform\Services\SiteLocales::options()`
+—que ya tenía la lista de códigos— y los usan la web y el cajón. Dos listas de idiomas es cómo se
+acaba ofreciendo uno que la otra no reconoce.
+
+⚠️ **`api.js` gana `PATCH` y `DELETE`**, que no tenía. Pasan por el MISMO `request()`, así que heredan
+las cuatro trampas ya resueltas —la cookie, el `Accept`, el CSRF url-decodificado y el reintento del
+419—: añadir un cliente aparte para dos verbos habría sido volver a pisarlas.
+
+⚠️ Y un fallo propio que cazó el test y no la revisión: la relectura tras cancelar o reenviar usaba el
+**cliente global** en vez del inyectado, porque a `run()` se le pasaba solo `{messages, auth}`. En
+`node --test` eso es una petición de verdad que nadie puede doblar.
+
+✅ **Verificado en navegador** (`V9`, 7/7). Lo que de verdad importaba mirar: tras pedir el cambio, el
+campo de email **vuelve a mostrar el VIGENTE** y el aviso dice «sigues usando …». Es la señal visible
+de que el titular no ha perdido el acceso a su cuenta.

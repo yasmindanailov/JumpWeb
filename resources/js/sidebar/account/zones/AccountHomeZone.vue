@@ -1,33 +1,29 @@
 <script setup>
+import { useReservationsStore } from '../../stores/reservations.js';
 import { HOME_ENTRIES, titleKeyOf } from '../navigation.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
 /**
  * **El índice del área de cliente**: quién eres, qué tienes por delante y desde dónde se llega a todo
- * lo demás (`docs/specs/area-cliente.md` §4.2). Espeja `/mi-cuenta` más el contexto que el bloque
- * `.acct` da en el panel.
+ * lo demás (`docs/specs/area-cliente.md` §4.2).
  *
  * ⚠️ **La próxima reserva se pinta aquí aunque `.acct` también la enseñe, y no es duplicación**:
  * medido en `VERIFICACION-E2E-CAJON.md` **V4**, dentro de esta sección ese bloque **se colapsa** —lo
  * hace el modo `account`— y su altura es 0. Dentro del área, esa información no se ve.
  *
  * ⚠️ **Las entradas salen de `HOME_ENTRIES`, no de marcado repetido**: añadir una zona es una línea
- * en `navigation.js`. Con la tanda 2 pasaron de una a tres —contraseña y sesiones tienen endpoint
- * desde el paso 6a—; **perfil y privacidad siguen fuera** hasta que los suyos existan, porque pintar
- * una fila que no lleva a ningún sitio es peor que no pintarla.
+ * en `navigation.js`.
  */
-defineProps({
-    /** El grupo `account` podado: de ahí salen los rótulos. */
+const props = defineProps({
     account: { type: Object, default: () => ({}) },
-    /** El grupo `tickets`, para el contexto de la próxima reserva. */
     messages: { type: Object, default: () => ({}) },
-    /** La próxima reserva tal cual la publica `GET /me/reservations`, o `null`. */
-    next: { type: Object, default: null },
-    /** Cuántas reservas quedan por delante (`meta.total`). */
-    upcoming: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(['go']);
+
+const store = useReservationsStore();
+
+store.ensure();
 </script>
 
 <template>
@@ -35,8 +31,8 @@ const emit = defineEmits(['go']);
       El contexto de cortesía. Va antes que los accesos porque es lo que el cliente viene a mirar:
       medido en la web, «¿cuándo es lo mío?» es la pregunta que trae aquí a la mayoría.
     -->
-    <p v-if="next" class="acct__sub">
-        {{ next.date_label }}<template v-if="next.time_window"> · {{ next.time_window }}</template> · {{ next.product_name }}
+    <p v-if="store.next" class="acct__sub">
+        {{ store.next.date_label }}<template v-if="store.next.time_window"> · {{ store.next.time_window }}</template> · {{ store.next.product_name }}
     </p>
 
     <div class="catalog">
@@ -51,8 +47,8 @@ const emit = defineEmits(['go']);
                       pantalla leía «Mis reservas 1 Aquí tienes tus reservas y su estado» — que no
                       dice qué es ese 1.
                     -->
-                    <span class="acct__count" aria-hidden="true">{{ upcoming }}</span>
-                    <span class="sr-only">{{ translateWith(account, 'sidecart.upcoming_count', { count: upcoming }) }}</span>
+                    <span class="acct__count" aria-hidden="true">{{ store.upcoming }}</span>
+                    <span class="sr-only">{{ translateWith(account, 'sidecart.upcoming_count', { count: store.upcoming }) }}</span>
                 </template>
             </span>
             <span class="catalog__go" aria-hidden="true">

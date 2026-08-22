@@ -70,6 +70,8 @@ export function mount(el, boot = {}) {
         // Los dos grupos que el paso de identificación necesita y que NO están en `tickets` (§4.5).
         account: boot.account ?? {},
         auth: boot.auth ?? {},
+        // Los idiomas del selector del perfil, que el servidor publica solo con sesión.
+        locales: boot.locales ?? [],
         userId: boot.userId ?? null,
         // ⚠️ **El pedido del que habla el desenlace.** Entre el clic de pagar y la vuelta hubo una
         // navegación completa a otro dominio, así que la memoria del cajón NO sobrevive: este código es

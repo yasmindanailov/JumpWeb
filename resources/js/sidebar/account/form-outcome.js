@@ -1,10 +1,16 @@
 /**
- * **De la respuesta de una gestión de credenciales a lo que la pantalla enseña**
- * (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
+ * **De la respuesta de un formulario del área de cliente a lo que la pantalla enseña**
+ * (`specs/area-cliente.md` §9).
  *
- * Las dos gestiones —cambiar la contraseña y cerrar las demás sesiones— responden con la misma
- * forma: `204` si salió, `422` con errores **por campo**, `429` con su espera, `401` si la sesión
- * caducó por el camino. Traducir eso es composición, no pintado: vive aquí, con `node --test`.
+ * Todas las gestiones responden con la misma forma: éxito, `422` con errores **por campo**, `429` con
+ * su espera, `401` si la sesión caducó por el camino y el corte de red aparte. Traducir eso es
+ * composición, no pintado: vive aquí, con `node --test`.
+ *
+ * ⚠️ **Se llamaba `credentials.js` y se renombró al estrenar la tercera pantalla** (el perfil, paso
+ * 7b): no queda nada aquí que sea de credenciales —es la traducción de CUALQUIER formulario de esta
+ * sección—, y el nombre viejo habría invitado a escribir una segunda copia para el perfil. Es la
+ * misma doctrina que ya se aplicó al rótulo de día, a la política de contraseñas y al campo de
+ * contraseña: extraer **antes** de la segunda copia, no después de la cuarta.
  *
  * ⚠️ **Ninguna regla vive en el cliente** (`CE-4`): si la contraseña es correcta, si la nueva cumple
  * la política y cuántos intentos quedan lo decide el SERVIDOR. Aquí solo se coloca lo que dijo.
@@ -21,7 +27,7 @@ function outcome({ ok = false, fields = {}, notice = '', expired = false } = {})
  * @param {{ok: boolean, status: number, error: object|null, offline: boolean}} response
  * @param {{messages: object, auth: object}} ctx  los diccionarios del montaje
  */
-export function credentialOutcome(response, { messages = {}, auth = {} } = {}) {
+export function formOutcome(response, { messages = {}, auth = {} } = {}) {
     if (response?.ok) return outcome({ ok: true });
 
     // ⚠️ **La red caída va PRIMERO y no se mezcla con un rechazo del servidor.** `api.js` los separa

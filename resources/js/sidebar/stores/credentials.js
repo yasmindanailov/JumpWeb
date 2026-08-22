@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
-import { credentialOutcome } from '../account/credentials.js';
+import { formOutcome } from '../account/form-outcome.js';
 
 /**
  * **El estado de las dos gestiones de credenciales** (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
@@ -82,7 +82,7 @@ export const useCredentialsStore = defineStore('credentials', {
             this.expired = false;
 
             try {
-                const outcome = credentialOutcome(await call(), ctx);
+                const outcome = formOutcome(await call(), ctx);
 
                 this.fields = outcome.fields;
                 this.notice = outcome.notice;

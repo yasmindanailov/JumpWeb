@@ -149,4 +149,11 @@ export const api = {
     get: (path, options = {}) => request(path, { ...options, method: 'GET' }),
     post: (path, body, options = {}) => request(path, { ...options, method: 'POST', body }),
     put: (path, body, options = {}) => request(path, { ...options, method: 'PUT', body }),
+    // ⚠️ `PATCH` y `DELETE` llegan con la tanda 2 (`specs/area-cliente.md` §9.3): el perfil se
+    // actualiza por partes —de ahí `PATCH` y no `PUT`, que significaría «reemplaza el recurso
+    // entero»— y el cambio de correo pendiente se descarta con `DELETE`. Pasan por el MISMO
+    // `request()`, así que heredan las cuatro trampas ya resueltas: la cookie, el `Accept`, el CSRF
+    // url-decodificado y el reintento del 419.
+    patch: (path, body, options = {}) => request(path, { ...options, method: 'PATCH', body }),
+    delete: (path, options = {}) => request(path, { ...options, method: 'DELETE' }),
 };

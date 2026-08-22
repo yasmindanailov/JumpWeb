@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { fieldError } from '../credentials.js';
+import { useCredentialsStore } from '../../stores/credentials.js';
+import { fieldError } from '../form-outcome.js';
 import { t as translate } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
 
@@ -16,13 +17,15 @@ import PasswordInput from '../../steps/PasswordInput.vue';
  */
 const props = defineProps({
     account: { type: Object, default: () => ({}) },
-    busy: { type: Boolean, default: false },
-    fields: { type: Object, default: () => ({}) },
-    notice: { type: String, default: '' },
-    done: { type: Boolean, default: false },
+    messages: { type: Object, default: () => ({}) },
+    auth: { type: Object, default: () => ({}) },
 });
 
-const emit = defineEmits(['submit', 'reset']);
+const store = useCredentialsStore();
+
+// Al entrar se limpia lo que dijo el servidor la vez anterior: un aviso de hace cinco minutos leído
+// sobre un formulario vacío diría algo falso del intento que aún no se ha hecho.
+store.reset();
 
 const current = ref('');
 const password = ref('');
@@ -39,22 +42,21 @@ function submit() {
         // contraseña actual y se equivoca repitiendo la nueva sigue viendo «la contraseña actual no
         // es correcta» —un aviso que ya no describe nada— junto al de «no coinciden». Medido en
         // navegador: pasaba, y el primer test no lo distinguía porque solo miraba que hubiera error.
-        emit('reset');
+        store.reset();
 
         return;
     }
 
-    emit('submit', { currentPassword: current.value, password: password.value });
+    store.changePassword({ currentPassword: current.value, password: password.value },
+        { messages: props.messages, auth: props.auth });
 }
 
-/**
- * ⚠️ **Al salir bien, el formulario se VACÍA solo**, y no es cosmético: dejar una contraseña escrita
- * en un campo visible es regalarla a quien mire por encima del hombro — y en un panel que se queda
- * abierto sobre la página, eso dura hasta que el cliente lo cierre.
- *
- * Lo mira la zona y no la sección: es quien sabe qué campos tiene.
- */
-watch(() => props.done, (done) => { if (done) { current.value = ''; password.value = ''; confirmation.value = ''; mismatch.value = false; } });
+// ⚠️ Al salir bien, el formulario se VACÍA solo: dejar una contraseña escrita en un campo visible es
+// regalarla a quien mire por encima del hombro — y en un panel que se queda abierto sobre la página,
+// eso dura hasta que el cliente lo cierre.
+watch(() => store.done, (done) => {
+    if (done) { current.value = ''; password.value = ''; confirmation.value = ''; mismatch.value = false; }
+});
 </script>
 
 <template>
@@ -64,20 +66,20 @@ watch(() => props.done, (done) => { if (done) { current.value = ''; password.val
         <!-- `novalidate` como el resto del cajón: quien valida es el servidor, con las mismas reglas
              para las dos superficies. La del navegador daría un tercer juego de mensajes. -->
         <form class="form auth__form" novalidate @submit.prevent="submit">
-            <div v-if="notice" class="auth__errors" role="alert"><p>{{ notice }}</p></div>
+            <div v-if="store.notice" class="auth__errors" role="alert"><p>{{ store.notice }}</p></div>
 
-            <p v-if="done" class="purchase__note" role="status">{{ a('account.password.title') }} ✓</p>
+            <p v-if="store.done" class="purchase__note" role="status">{{ a('account.password.title') }} ✓</p>
 
             <div class="form__field">
                 <label class="form__label" for="acct-current-password">{{ a('account.password.current') }}</label>
                 <PasswordInput :id="'acct-current-password'" v-model="current" autocomplete="current-password" />
-                <span v-if="fieldError(fields, 'current_password')" class="form__error">{{ fieldError(fields, 'current_password') }}</span>
+                <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
             </div>
 
             <div class="form__field">
                 <label class="form__label" for="acct-new-password">{{ a('account.password.new') }}</label>
                 <PasswordInput :id="'acct-new-password'" v-model="password" autocomplete="new-password" />
-                <span v-if="fieldError(fields, 'password')" class="form__error">{{ fieldError(fields, 'password') }}</span>
+                <span v-if="fieldError(store.fields, 'password')" class="form__error">{{ fieldError(store.fields, 'password') }}</span>
             </div>
 
             <div class="form__field">
@@ -86,8 +88,8 @@ watch(() => props.done, (done) => { if (done) { current.value = ''; password.val
                 <span v-if="mismatch" class="form__error">{{ a('account.password.mismatch') }}</span>
             </div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="busy">
-                {{ busy ? a('account.password.saving') : a('account.password.save') }}
+            <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">
+                {{ store.busy ? a('account.password.saving') : a('account.password.save') }}
             </button>
         </form>
     </div>

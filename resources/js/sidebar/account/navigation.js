@@ -23,9 +23,9 @@
  * en `lang/`, que es donde vive: renombrar la zona a `reservations` la confundiría con
  * `GET /me/reservations`, que es otra cosa —las PRÓXIMAS— y alimenta el índice.
  *
- * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `PASSWORD` y `SESSIONS` entran con el paso
- * 6b —tienen endpoint desde el 6a—; `PROFILE` y `PRIVACY` **siguen sin declararse** hasta que los
- * suyos existan. Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a
+ * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `PASSWORD` y `SESSIONS` entraron con el paso
+ * 6b y `PROFILE` con el 7b, cada una **después** de que su endpoint existiera; `PRIVACY` —el borrado
+ * y el export— **sigue sin declararse** hasta que los suyos existan (paso 8). Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a
  * propósito. ▶ Y el modelo no se ha tocado para añadirlas: entran en `ZONES` con su rótulo, que es
  * exactamente lo que §4.2 prometía.
  */
@@ -40,6 +40,9 @@ export const ZONES = {
 
     /** Cerrar sesión en los demás dispositivos. */
     SESSIONS: 'sessions',
+
+    /** Los datos del titular y el ciclo del cambio de correo (tanda 2 · paso 7b). */
+    PROFILE: 'profile',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -59,6 +62,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.ORDERS]: 'orders.title',
     [ZONES.PASSWORD]: 'account.password.title',
     [ZONES.SESSIONS]: 'account.sessions.title',
+    [ZONES.PROFILE]: 'account.profile.title',
 };
 
 /**
@@ -68,7 +72,7 @@ export const ZONE_TITLE_KEYS = {
  * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
  * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
  */
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PASSWORD, ZONES.SESSIONS];
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS];
 
 /** El camino del rótulo de una zona. Una zona desconocida cae en el del índice, nunca en `''`. */
 export function titleKeyOf(zone) {

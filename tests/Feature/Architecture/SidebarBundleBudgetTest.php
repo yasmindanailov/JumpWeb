@@ -152,10 +152,16 @@ class SidebarBundleBudgetTest extends TestCase
      * más. Extraerlo a `steps/PasswordInput.vue` hizo que las cuatro compartieran un solo bloque —con
      * sus dos `<svg>` dentro—, así que el +4,8 ya viene neto de esa limpieza.
      *
-     * ▶ Los pasos 7 y 8 volverán a moverlo **con su medida**, y al cerrar la tanda **se vuelve a
-     * bajar**. Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
+     * ⚠️ **178 → 183 el 2026-08-22** (paso 7b: la pantalla del perfil, con su formulario de cinco
+     * campos y el bloque del correo pendiente). Medido: **182,7 KiB**, +5,2.
+     * ▶ Y con un descuento apuntado: en este paso **la sección de cuenta ADELGAZÓ de 38 a 20 líneas**
+     * —cada zona pide lo suyo y compone lo suyo— y `account/credentials.js` se renombró a
+     * `form-outcome.js` en vez de duplicarse para el perfil. El +5,2 ya viene neto de las dos cosas.
+     *
+     * ▶ El paso 8 volverá a moverlo **con su medida**, y al cerrar la tanda **se vuelve a bajar**.
+     * Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 178;
+    private const SIDEBAR_CHUNK_MAX_KB = 183;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

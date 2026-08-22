@@ -566,6 +566,28 @@ coinciden» solo comprobaba que **hubiera** error, y lo había — el del intent
 pantalla. Se arregló en las dos puntas: la zona **limpia lo que dijo el servidor** al cortar el envío,
 y el caso exige ahora el texto exacto. Mirar «hay un error» nunca distingue el nuevo del viejo.
 
+### V9 · «TUS DATOS» y el ciclo del correo (tanda 2 · paso 7b)
+El perfil del titular dentro del cajón, con lo que de verdad hay que mirar: que **cambiar el correo
+NO lo cambia**.
+
+⚠️ Restaura el estado del usuario de pruebas antes de la pasada, **desde el servidor** (misma trampa
+que `V8`): contraseña `password`, sin `pending_email` y con sus datos.
+
+✅ **MEDIDO el 2026-08-22 · 7/7:**
+· índice con **cuatro** entradas · «Tus datos» con el perfil cargado y el selector con los tres
+  idiomas **por su nombre nativo** (`Español`, `English`, `Français`);
+· cambiar el teléfono **no pide contraseña** y guarda;
+· cambiar el correo **sí la pide** —el campo aparece solo entonces— y al confirmar deja el bloque:
+  «Te hemos enviado un enlace de confirmación a **otro.demo@…**. Caduca en **60 min**. Mientras tanto,
+  sigues usando **cliente.demo@…**»;
+· ⚠️⚠️ **y el campo de email vuelve a mostrar el VIGENTE**, no el pedido: es la señal visible de que
+  el cambio no se ha aplicado, y de que el titular no ha perdido el acceso a su cuenta;
+· cancelar quita el bloque.
+
+⚠️ El mensaje del pendiente lleva **los tres datos a propósito** —a dónde se envió, cuánto queda y
+cuál sigue valiendo—. Sin el tercero, el cliente puede creer que su correo ya cambió y que se ha
+quedado fuera.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

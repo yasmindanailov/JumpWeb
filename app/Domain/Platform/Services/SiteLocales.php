@@ -19,4 +19,30 @@ final class SiteLocales
 {
     /** En orden de preferencia: el primero es el que gana cuando no hay nada mejor. */
     public const SUPPORTED = ['es', 'en', 'fr'];
+
+    /**
+     * El nombre de cada idioma **en sí mismo**.
+     *
+     * ⚠️ **No se traducen, y es deliberado**: un francés que llegó por error a la versión española
+     * busca «Français», no «Francés». Es el estándar de cualquier selector de idioma, y por eso estos
+     * rótulos no viven en `lang/`.
+     *
+     * ⚠️ Estaban **quemados en el marcado** de `livewire/account/update-profile.blade.php` y suben
+     * aquí al necesitarlos también el cajón (tanda 2 · paso 7b): dos listas de idiomas es cómo se
+     * acaba ofreciendo uno que la otra no reconoce.
+     */
+    public const NAMES = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];
+
+    /**
+     * Los idiomas listos para pintar un selector: `[{value, label}]`, **en el orden de preferencia**.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public static function options(): array
+    {
+        return array_map(
+            static fn (string $code): array => ['value' => $code, 'label' => self::NAMES[$code] ?? $code],
+            self::SUPPORTED,
+        );
+    }
 }

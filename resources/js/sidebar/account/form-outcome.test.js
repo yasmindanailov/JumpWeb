@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { credentialOutcome, fieldError } from './credentials.js';
+import { formOutcome, fieldError } from './form-outcome.js';
 
 /**
  * La red de las gestiones de credenciales en el cliente.
@@ -21,13 +21,13 @@ const offline = () => ({ ok: false, status: 0, data: null, error: null, offline:
 
 describe('cuando sale bien', () => {
     test('no hay nada que enseñar', () => {
-        assert.deepEqual(credentialOutcome(ok(), CTX), { ok: true, fields: {}, notice: '', expired: false });
+        assert.deepEqual(formOutcome(ok(), CTX), { ok: true, fields: {}, notice: '', expired: false });
     });
 });
 
 describe('cuando el servidor rechaza los datos', () => {
     test('el error va POR CAMPO, tal cual lo mandó el servidor', () => {
-        const r = credentialOutcome(fail(422, {
+        const r = formOutcome(fail(422, {
             code: 'validation_failed',
             message: 'Revisa los datos que has enviado.',
             fields: { current_password: ['La contraseña actual no es correcta.'] },
@@ -41,7 +41,7 @@ describe('cuando el servidor rechaza los datos', () => {
     test('varios mensajes de un campo: se pinta el PRIMERO', () => {
         // El servidor puede mandar «mínimo 8 caracteres» y «aparece en filtraciones» juntos; pegarlos
         // bajo un input produce un párrafo que nadie lee.
-        const r = credentialOutcome(fail(422, {
+        const r = formOutcome(fail(422, {
             code: 'validation_failed',
             message: '',
             fields: { password: ['Mínimo 8 caracteres.', 'Aparece en filtraciones.'] },
@@ -59,7 +59,7 @@ describe('cuando el servidor rechaza los datos', () => {
 
 describe('los tres modos que NO son «datos que corregir»', () => {
     test('⚠️ la red caída se dice como tal, no como «revisa los datos»', () => {
-        const r = credentialOutcome(offline(), CTX);
+        const r = formOutcome(offline(), CTX);
 
         assert.equal(r.notice, MESSAGES.errors.try_later);
         assert.deepEqual(r.fields, {}, 'un corte de red no señala ningún campo');
@@ -67,14 +67,14 @@ describe('los tres modos que NO son «datos que corregir»', () => {
     });
 
     test('⚠️ la sesión perdida NO es un aviso: es volver a entrar', () => {
-        const r = credentialOutcome(fail(401, { code: 'unauthenticated', message: 'No autenticado.' }), CTX);
+        const r = formOutcome(fail(401, { code: 'unauthenticated', message: 'No autenticado.' }), CTX);
 
         assert.equal(r.expired, true);
         assert.equal(r.notice, '', 'un 401 con aviso genérico haría que el cliente reintentara en vano');
     });
 
     test('⚠️ el límite dice CUÁNTO falta, con el texto que ya usa el login', () => {
-        const r = credentialOutcome(fail(429, {
+        const r = formOutcome(fail(429, {
             code: 'too_many_requests',
             message: 'Demasiadas peticiones.',
             params: { retry_after: 42 },
@@ -85,7 +85,7 @@ describe('los tres modos que NO son «datos que corregir»', () => {
     });
 
     test('un 429 sin `retry_after` no pinta «undefined»', () => {
-        const r = credentialOutcome(fail(429, { code: 'too_many_requests', message: '' }), CTX);
+        const r = formOutcome(fail(429, { code: 'too_many_requests', message: '' }), CTX);
 
         assert.ok(r.notice.includes('0'), `el aviso quedó como «${r.notice}»`);
         assert.equal(r.notice.includes('undefined'), false);
@@ -94,13 +94,13 @@ describe('los tres modos que NO son «datos que corregir»', () => {
 
 describe('lo que no encaja en ninguna categoría', () => {
     test('se enseña lo que el servidor dijo, no una traducción inventada', () => {
-        const r = credentialOutcome(fail(500, { code: 'server_error', message: 'Algo ha ido mal.' }), CTX);
+        const r = formOutcome(fail(500, { code: 'server_error', message: 'Algo ha ido mal.' }), CTX);
 
         assert.equal(r.notice, 'Algo ha ido mal.');
     });
 
     test('y si no dijo nada, no se pinta «undefined»', () => {
-        const r = credentialOutcome(fail(503, null), CTX);
+        const r = formOutcome(fail(503, null), CTX);
 
         assert.equal(r.notice, '');
     });

@@ -31,7 +31,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2711 en verde** (15.526 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
-  **459 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
+  **478 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -134,7 +134,14 @@ la carrera de UNIQUE—, con `PATCH /me`, `DELETE /me/pending-email` y `POST /me
 servicio se llamaba `update` y confundía a `ApiBoundariesTest`; el servicio importaba un middleware
 —la lista de idiomas bajó a `Platform\Services\SiteLocales`—; y `/me` publica una lista CERRADA de
 campos que hubo que ampliar con su motivo.
-▶ **Lo siguiente es 7b**: la pantalla del perfil en el cajón (zona `PROFILE`).
+✅ **Paso 7b HECHO**: la zona `PROFILE` con el ciclo del correo pendiente. Verificado en navegador
+(`V9`, 7/7): tras pedir el cambio, **el campo de email vuelve a mostrar el VIGENTE** y el aviso dice
+«sigues usando …» — la señal visible de que el titular no ha perdido el acceso.
+⚠️ **Y el techo de componentes obligó al rediseño que tocaba** (`#120(r)`): la sección estaba en 38/40
+porque conocía los datos de sus zonas. Hoy **cada zona pide y compone lo suyo** y la sección bajó a
+**20**: enruta y nada más. No costó ni una petición.
+▶ **Lo siguiente es el paso 8**: los dos derechos RGPD —borrar la cuenta (art. 17) y exportar los
+datos (art. 20)—, que cierran la tanda 2.
 
 ✅ **El diseño de la tanda 2 está escrito** (`specs/area-cliente.md` **§9**), con su corte en tres
 pasos —contraseña + otras sesiones · el perfil · los dos derechos RGPD— y una decisión de seguridad
