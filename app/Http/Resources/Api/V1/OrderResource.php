@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -59,11 +60,18 @@ class OrderResource extends JsonResource
             'pending_at_gate_cents' => $summary->pendingAtGate(),
             'refund' => [
                 'refunded_at' => $order->refunded_at?->toIso8601String(),
+                // La fecha con la que la web anuncia el reembolso («Reembolsado el 23/08/2026»).
+                'refunded_label' => DisplayTime::format($order->refunded_at, 'd/m/Y'),
                 'amount_cents' => (int) ($order->refund_amount_cents ?? 0),
                 'fully_refunded' => $order->isFullyRefunded(),
             ],
             'can_be_retried' => $order->canBeRetried(),
             'created_at' => $order->created_at?->toIso8601String(),
+            // ⚠️ **Con la ZONA HORARIA de la instalación aplicada**, que es el motivo de fondo para
+            // que esta etiqueta la componga el servidor y no el cliente: `display_timezone` es un
+            // ajuste del panel y el navegador no lo conoce. Un cliente en otra zona vería una hora
+            // distinta de la que enseña el panel para el mismo pedido.
+            'created_label' => DisplayTime::format($order->created_at),
             'paid_at' => $order->paid_at?->toIso8601String(),
             // Cuándo se libera la retención de aforo de un pedido pendiente. `null` en un pedido
             // firme (`AFORO-10`: el default de `createPendingOrder` es un pedido que no caduca).

@@ -1617,15 +1617,25 @@ components:
     UpcomingReservation:
       type: object
       description: |
-        Una reserva futura. Los tres datos que el dominio expone fuera de Booking; la fecha viaja
-        cruda (`Y-m-d`) porque el formato es decisión de quien la muestra, y la ventana horaria ya
-        viene compuesta porque componerla —según la franja tenga fin o no— es regla del dominio.
-      required: [date, time_window, product_name]
+        Una reserva futura. La fecha viaja **cruda y etiquetada**: cruda para un cliente que quiera
+        formatear a su manera, y etiquetada porque el idioma de la abreviatura es del servidor. La
+        ventana horaria ya viene compuesta porque componerla —según la franja tenga fin o no— es
+        regla del dominio.
+      required: [date, date_label, time_window, product_name]
       additionalProperties: false
       properties:
         date:
           type: string
           format: date
+        date_label:
+          type: string
+          description: |
+            El día ya compuesto para mostrar, en el idioma de la petición: «Dom. 23 ago.».
+
+            ⚠️ **No lo recompongas en el cliente.** Medido el 2026-08-22: `Intl.DateTimeFormat` no
+            reproduce esta cadena en español —«Sáb 5 sept» frente a «Sáb. 5 sep.»: ICU no abrevia
+            con punto—, y reproducirla exigiría una tabla de meses traducidos en el cliente. Su
+            fuente única en el servidor es `Platform\Services\DisplayTime::dayLabel()`.
         time_window:
           type: string
           nullable: true
@@ -1660,6 +1670,7 @@ components:
         - refund
         - can_be_retried
         - created_at
+        - created_label
         - paid_at
         - expires_at
         - items
@@ -1699,6 +1710,15 @@ components:
           type: string
           format: date-time
           nullable: true
+        created_label:
+          type: string
+          description: |
+            Cuándo se hizo el pedido, ya compuesto para mostrar («23/08/2026 14:30») **en la zona
+            horaria de la instalación**.
+
+            ⚠️ Ese es el motivo de que viaje compuesto y no solo como instante: `display_timezone`
+            es un ajuste del panel, y un cliente en otra zona formatearía el mismo pedido con una
+            hora distinta de la que enseña el panel. Cadena vacía si no hay fecha.
         paid_at:
           type: string
           format: date-time
@@ -1725,13 +1745,16 @@ components:
       description: |
         El reembolso es una dimensión INDEPENDIENTE del estado: un pedido puede estar `paid` y
         parcialmente reembolsado a la vez.
-      required: [refunded_at, amount_cents, fully_refunded]
+      required: [refunded_at, refunded_label, amount_cents, fully_refunded]
       additionalProperties: false
       properties:
         refunded_at:
           type: string
           format: date-time
           nullable: true
+        refunded_label:
+          type: string
+          description: 'La fecha con la que se anuncia el reembolso («23/08/2026»). Vacía si no lo hay.'
         amount_cents:
           type: integer
         fully_refunded:
@@ -1744,6 +1767,7 @@ components:
         - id
         - product_name
         - date
+        - date_label
         - time_window
         - quantity
         - charged_subtotal_cents
@@ -1756,6 +1780,7 @@ components:
         - start_time
         - paid_online_cents
         - gate_remainder_cents
+        - guest_form_url
         - shows_deposit_note
       additionalProperties: false
       properties:
@@ -1768,6 +1793,13 @@ components:
           type: string
           format: date
           nullable: true
+        date_label:
+          type: string
+          description: |
+            El día de la reserva ya compuesto para mostrar («Dom. 23 ago.»), en el idioma de la
+            petición. Mismo criterio que `time_window`: el servidor publica el texto y el cliente no
+            lo recompone — `Intl` no reproduce esta cadena en español. Vacío si la reserva no tiene
+            franja. Fuente única: `Platform\Services\DisplayTime::dayLabel()`.
         time_window:
           type: string
           nullable: true
@@ -1814,6 +1846,18 @@ components:
         gate_remainder_cents:
           type: integer
           description: Lo que queda por cobrar en puerta **de esta reserva**. `0` si no queda nada.
+        guest_form_url:
+          type: string
+          nullable: true
+          description: |
+            Dónde rellenar los datos de los invitados de ESTA reserva, o `null` si no los admite —lo
+            decide el dominio (`acceptsGuestForm()`: pedido pagado y producto con invitados), no el
+            cliente—.
+
+            ⚠️ Es la ruta **web**, que acepta al dueño autenticado sin firma. La variante firmada de
+            la API (`reservations/{id}/guest-form`) la entrega `GuestFormResource`, y no vale aquí:
+            la firma cubre la URL EXACTA (§10.duodecies 64). La URL la compone el servidor porque
+            componerla en el cliente significaría quemar el enrutador en JavaScript.
         shows_deposit_note:
           type: boolean
           description: |

@@ -5,9 +5,8 @@ namespace App\Domain\Booking\Services;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Content\Services\ThemeSettings;
-use Illuminate\Support\Carbon;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Str;
 
 /**
  * Render de la SUBCARD de producto para los correos transaccionales (mejora visual #251).
@@ -82,7 +81,7 @@ final class EmailProductCard
 
         $meta = null;
         if ($item->slot && $item->slot->date) {
-            $date = Str::ucfirst(Carbon::parse($item->slot->date)->locale(app()->getLocale())->isoFormat('ddd D MMM'));
+            $date = DisplayTime::dayLabel($item->slot->date);
             $window = $item->displayTimeWindow();
             $meta = $window ? $date.' · '.$window : $date;
         }

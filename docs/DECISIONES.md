@@ -5038,3 +5038,38 @@ así de cara al cliente— y el vocabulario del cliente **no distingue** pedido 
 reserva, contador, aviso de post-form). ▶ Crear la zona separada habría sido **inventar producto** en
 una tanda cuyo criterio es la paridad; los dos endpoints se usan igual —`/me/orders` en la zona y
 `/me/reservations` en el índice—, que es donde esa información vive hoy.
+
+**(j) El paso 3 destapó que «hay que pintar» valía para los DATOS, no para su PRESENTACIÓN — y de
+paso, cuatro copias de la misma fórmula.** Medido el 2026-08-22 antes de escribir una línea de
+cliente: `me/orders` y `me/reservations` publicaban las fechas **crudas**, y el cliente **no puede**
+componer sus etiquetas.
+· **El día**: `Intl.DateTimeFormat` no reproduce lo que compone Carbon. ⚠️ Y el matiz importa, porque
+  la primera medición fue con el PREAJUSTE `{weekday, day, month}` —que en inglés invierte el orden—
+  y eso ya lo sabía el proyecto: `progress.js` lo evita fijando el patrón por partes, y con el patrón
+  fijado la divergencia queda **acotada al español** («Sáb 5 sept» de ICU frente a «Sáb. 5 sep.» de
+  Carbon). Está en `DEUDA.md` desde el 2026-08-14, **con esta misma solución escrita**: publicar la
+  etiqueta ya formateada.
+· **La hora del pedido**: `DisplayTime::format()` aplica `display_timezone`, un **ajuste del panel**.
+  Un cliente en otra zona formatearía el mismo pedido con una hora distinta de la que enseña el panel.
+▶ Por eso `date_label`, `created_label` y `refunded_label` viajan **al lado** de sus valores crudos —el
+mismo criterio que `time_window` lleva usando desde Fase 3— y `guest_form_url` la compone el servidor,
+porque componerla en el cliente es quemar el enrutador de Laravel en JavaScript.
+
+⚠️⚠️ **Y al buscar dónde vivía la fórmula apareció el hallazgo de verdad: estaba COPIADA en cuatro
+superficies públicas** —el bloque de cuenta del cajón, la página «Mis reservas», el post-form de
+invitados y la tarjeta de producto de los correos—, con el `Str::ucfirst(...isoFormat('ddd D MMM'))`
+escrito a mano en cada una. Es literalmente lo que `openapi/v1.yaml` describe para
+`shows_deposit_note`: «hay cuatro superficies pintando este bloque, y recomponerlo en cada una es como
+divergen». Nace `DisplayTime::dayLabel()` como fuente única, las cuatro pasan a usarla y
+`DayLabelSingleSourceTest` lo vigila con excepciones **con motivo** (el panel usa otro formato;
+`ScheduleDisplay` compone sin mayúscula). ▶ Cuatro copias no divergen el día que se escriben: divergen
+el día que alguien arregla una.
+⚠️ Con una trampa que tiene caso propio: **una fecha de franja es una fecha CIVIL, no un instante**, y
+`dayLabel()` **no** le aplica zona horaria — hacerlo pintaría el «23 de agosto» como 22 en cualquier
+zona al oeste de UTC. `format()` sí la aplica, porque un `created_at` sí es un instante.
+
+⚠️ **Lo que NO se hizo, y es deliberado**: cerrar la deuda de fechas del EMBUDO. Tocar la banda de
+progreso, su paridad y su manifiesto dentro del paso del área de cliente mezclaría dos trabajos —la
+regla que ha ordenado la fase entera—. Queda en `DEUDA.md`, anotada como **más barata** (el mecanismo
+ya existe) y **más urgente** (el área de cliente hace visible la incoherencia: el embudo pinta «Sáb 5
+sept» y la zona de reservas «Sáb. 5 sep.», en el mismo cajón).

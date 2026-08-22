@@ -5,6 +5,7 @@ namespace App\Domain\Platform\Services;
 use App\Domain\Platform\Models\Setting;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Formatea timestamps en la **zona horaria de presentación** del parque.
@@ -63,6 +64,43 @@ class DisplayTime
      * (`Europe/Madrid` por defecto). Si no, cerca de medianoche el "hoy" en UTC va 1-2 h por
      * detrás del día local y se ofrece/poda un día que en el parque ya terminó (auditoría Fase 1).
      */
+    /**
+     * **El rótulo de un DÍA para el cliente** («Dom. 23 ago.»), en el idioma activo.
+     *
+     * ⚠️ **Existe porque la fórmula estaba COPIADA en cuatro superficies públicas** —el bloque de
+     * cuenta del cajón, la página «Mis reservas», el post-form de invitados y la tarjeta de producto
+     * de los correos—, todas con el mismo `Str::ucfirst(...isoFormat('ddd D MMM'))` escrito a mano.
+     * Es literalmente el caso que `openapi/v1.yaml` describe para `shows_deposit_note`: «hay cuatro
+     * superficies pintando este bloque, y recomponerlo en cada una es como divergen».
+     * Lo vigila `DayLabelSingleSourceTest`.
+     *
+     * ⚠️⚠️ **NO aplica zona horaria, y esa es la diferencia con {@see format()}.** La fecha de una
+     * franja es una fecha CIVIL —un día de calendario—, no un instante: convertirla a otra zona la
+     * desplazaría, y en cualquier zona al oeste de UTC el «23 de agosto» se pintaría como el 22. Lo
+     * que sí lleva zona es un `created_at`, que es un instante de verdad, y para eso está `format()`.
+     *
+     * ⚠️ Y no se espeja en el cliente a propósito (`specs/area-cliente.md`): medido el 2026-08-22,
+     * `Intl.DateTimeFormat` **no produce este texto** —en inglés hasta invierte el orden, «Sun, Aug
+     * 23» frente a «Sun 23 Aug»—, así que la API publica la etiqueta ya compuesta, igual que hace
+     * con `time_window`.
+     */
+    public static function dayLabel(DateTimeInterface|string|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        try {
+            $carbon = $value instanceof DateTimeInterface
+                ? Carbon::instance($value)
+                : Carbon::parse($value);
+        } catch (\Throwable) {
+            return '';
+        }
+
+        return Str::ucfirst($carbon->locale(app()->getLocale())->isoFormat('ddd D MMM'));
+    }
+
     public static function now(): Carbon
     {
         return Carbon::now(self::timezone());

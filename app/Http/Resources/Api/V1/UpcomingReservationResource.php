@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Contracts\UpcomingReservation;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,9 @@ class UpcomingReservationResource extends JsonResource
     {
         return [
             'date' => $this->resource->date,
+            // La misma etiqueta que el bloque de cuenta lleva pintando desde `#221`, ahora desde su
+            // fuente única (`DisplayTime::dayLabel`) en vez de recompuesta en cada superficie.
+            'date_label' => DisplayTime::dayLabel($this->resource->date),
             'time_window' => $this->resource->timeWindow,
             'product_name' => $this->resource->productName,
         ];

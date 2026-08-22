@@ -1621,8 +1621,19 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             llevaba **inerte desde `#231 p8`** y que ni `assertSeeText` arreglaba: «Mi cuenta» sale
             dos veces en `/mi-cuenta` (título y footer), así que solo la mide una aserción
             estructural (`#120(h)`, `TESTING.md` §2.ter ampliada).
-      - [ ] **Tanda 1 · pasos 3–5**: los datos (`/me/orders` + `/me/reservations`), la puerta de
-            entrada y la captura de huecos. El orden y su red, en `specs/area-cliente.md` §8.
+      - [x] **Tanda 1 · paso 3a — EL CONTRATO DE PRESENTACIÓN** (✅ **HECHO** el 2026-08-22). La API
+            publicaba las fechas CRUDAS y el cliente **no puede** componer sus etiquetas: `Intl` no
+            reproduce en español lo que compone Carbon, y la del pedido lleva la **zona horaria de la
+            instalación** —un ajuste del panel—. Nacen `date_label`, `created_label`,
+            `refunded_label` y `guest_form_url`, con el contrato (`openapi/v1.yaml`) actualizado.
+            ⚠️⚠️ **Y destapó que la fórmula del rótulo estaba COPIADA en cuatro superficies
+            públicas** —bloque de cuenta, página «Mis reservas», post-form y correos—: nace
+            `DisplayTime::dayLabel()` como fuente única y `DayLabelSingleSourceTest` la vigila, con
+            excepciones **con motivo** y **mutada tres veces** (`#120(j)`).
+            ⚠️ La deuda de fechas del EMBUDO **no se cierra aquí a propósito** —mezclaría dos
+            trabajos—, pero queda anotada como más barata y más urgente en `DEUDA.md`.
+      - [ ] **Tanda 1 · pasos 3b–5**: los datos en el cliente, la puerta de entrada y la captura de
+            huecos. El orden y su red, en `specs/area-cliente.md` §8.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

@@ -29,7 +29,7 @@
                     @if ($reservation->slot)
                         <div class="gf-stub__cell">
                             <span class="k">{{ __('guestform.fact_when') }}</span>
-                            <span class="v">{{ \Illuminate\Support\Str::ucfirst(\Illuminate\Support\Carbon::parse($reservation->slot->date)->locale(app()->getLocale())->isoFormat('ddd D MMM')) }} · {{ $reservation->displayTimeWindow() }}</span>
+                            <span class="v">{{ \App\Domain\Platform\Services\DisplayTime::dayLabel($reservation->slot->date) }} · {{ $reservation->displayTimeWindow() }}</span>
                         </div>
                     @endif
                     <div class="gf-stub__cell">

@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\ReservationFinancials;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -59,6 +60,14 @@ class OrderItemResource extends JsonResource
             'id' => $item->id,
             'product_name' => (string) ($item->ticketType?->tr('name') ?? ''),
             'date' => $item->slot?->date?->toDateString(),
+            // ⚠️ **La ETIQUETA va al lado de la fecha cruda, y es el mismo criterio que ya rige para
+            // `time_window`**: el servidor publica el texto ya compuesto y el cliente no lo recompone.
+            // Medido el 2026-08-22 (`specs/area-cliente.md`): `Intl` **no reproduce** lo que Carbon
+            // compone en español —«Sáb 5 sept» frente a «Sáb. 5 sep.»: ICU no abrevia con punto—, y
+            // reproducirlo exigiría una tabla de meses traducidos en el cliente, que es justo lo que
+            // `i18n.js` existe para que no haya. La fecha cruda se conserva para un cliente NATIVO
+            // que prefiera formatear a su manera (Fase 6).
+            'date_label' => DisplayTime::dayLabel($item->slot?->date),
             'time_window' => $item->displayTimeWindow(),
             'quantity' => (int) $item->quantity,
             'charged_subtotal_cents' => $item->chargedSubtotalCents(),
@@ -89,6 +98,15 @@ class OrderItemResource extends JsonResource
             // compuestas en el dominio (`ReservationFinancials::showsDepositNote`): publicar solo
             // los números obligaría al cliente a recomponerlas, y es como divergen.
             'shows_deposit_note' => $financials->showsDepositNote($order, $item),
+            // ⚠️ **La URL del post-form la compone el SERVIDOR**, y `null` cuando esta reserva no lo
+            // admite —`acceptsGuestForm()` exige pedido PAGADO y producto con invitados—. Componerla
+            // en el cliente significaría quemar el enrutador de Laravel en JavaScript.
+            // ⚠️ Es la ruta WEB, no la firmada de la API: acepta al dueño autenticado sin firma, y en
+            // la tanda 1 el post-form se sigue abriendo como página, igual que hoy hace el bloque de
+            // cuenta (`specs/area-cliente.md` §4.7).
+            'guest_form_url' => $item->acceptsGuestForm()
+                ? route('reservation.guests', ['reservation' => $item])
+                : null,
         ];
     }
 }

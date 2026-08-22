@@ -30,7 +30,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2661 en verde** (15.286 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+- Suite **2666 en verde** (15.306 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
   **404 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -122,6 +122,11 @@ el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de na
 · **1 · el nivel SECCIÓN** (`V4`): conmutar y volver **no dispara ni una petición**, el embudo conserva
   su paso, el bloque de cuenta se colapsa con el modo **`account`** —y **no es alcanzable con Tab**— y
   el árbol oculto **no atrapa el foco** (12 focusables visibles → 0 ocultos).
+· **3a · el CONTRATO de presentación**: las etiquetas que el cliente **no puede** componer
+  —`date_label`, `created_label`, `refunded_label`— y `guest_form_url`, con **fuente única**
+  (`DisplayTime::dayLabel`, que unificó **cuatro copias** de la misma fórmula) y su guarda mutada.
+  ⚠️ Corrige el «hay que pintar, no abrir dominio»: valía para los datos, **no para su presentación**
+  (`#120(j)`).
 · **2 · la NAVEGACIÓN de zonas** (`V5`, **7/7**): índice + «Mis reservas», pila de retorno que **no
   crece al alternar**, «volver» sin historia **sale a la compra**, entrada directa a zona y reentrada
   con la historia vacía. **0 peticiones** en todo el recorrido.

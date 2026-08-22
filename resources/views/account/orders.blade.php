@@ -62,7 +62,7 @@
                                 <div @class(['orders__line', 'orders__line--cancelled' => $itemCancelled, 'orders__line--finished' => $itemFinished])>
                                     <span class="orders__line-name"><x-icons.product :is-pack="$item->ticketType?->isPack() ?? false" /><span class="orders__line-text">@if ($item->ticketType?->isPack()){{ __('tickets.guests_count', ['count' => $item->quantity]) }} · {{ $item->ticketType?->tr('name') }}@else{{ $item->quantity }}&times; {{ $item->ticketType?->tr('name') }}@endif</span></span>
                                     @if ($item->slot)
-                                        <span class="orders__line-when">{{ \Illuminate\Support\Str::ucfirst(\Illuminate\Support\Carbon::parse($item->slot->date)->locale(app()->getLocale())->isoFormat('ddd D MMM')) }} · {{ $item->displayTimeWindow() }}</span>
+                                        <span class="orders__line-when">{{ \App\Domain\Platform\Services\DisplayTime::dayLabel($item->slot->date) }} · {{ $item->displayTimeWindow() }}</span>
                                     @endif
                                     {{-- #172: badges de la línea agrupados a la DERECHA. Cancelado tiene
                                          prioridad sobre Finalizado; "Reembolsado" se añade si el item tiene

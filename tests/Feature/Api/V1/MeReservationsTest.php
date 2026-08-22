@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -85,7 +86,16 @@ class MeReservationsTest extends ApiTestCase
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.product_name', 'Salto 1 hora')
             ->assertJsonPath('data.0.date', now()->addDays(3)->toDateString())
+            // ⚠️ La etiqueta se compara contra su FUENTE ÚNICA, no contra un literal: es la misma que
+            // llevan pintando desde `#221` el bloque de cuenta, la página, el post-form y los correos
+            // (`DisplayTime::dayLabel`, vigilada por `DayLabelSingleSourceTest`).
+            ->assertJsonPath('data.0.date_label', DisplayTime::dayLabel(now()->addDays(3)->toDateString()))
             ->assertJsonPath('data.0.time_window', '10:00–11:00');
+
+        // Y no va vacía ni es la fecha cruda: el contrato admite cualquier cadena, incluida `''`.
+        $label = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations')->json('data.0.date_label');
+        $this->assertNotSame('', $label);
+        $this->assertNotSame(now()->addDays(3)->toDateString(), $label);
     }
 
     /** De la más próxima a la más lejana: el orden lo fija el dominio y la API lo respeta. */

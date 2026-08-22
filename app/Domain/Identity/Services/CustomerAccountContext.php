@@ -6,8 +6,7 @@ use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\UpcomingReservation;
 use App\Domain\Identity\Models\User;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use App\Domain\Platform\Services\DisplayTime;
 
 /**
  * Contexto de cuenta del cliente para la web pública (#221): saludo, próxima reserva, número de
@@ -83,9 +82,9 @@ class CustomerAccountContext
         }
 
         return [
-            'dateLabel' => Str::ucfirst(
-                Carbon::parse($next->date)->locale(app()->getLocale())->isoFormat('ddd D MMM')
-            ),
+            // ⚠️ Fuente ÚNICA del rótulo de día (`DisplayTime::dayLabel`): la fórmula estaba copiada
+            // en cuatro superficies públicas y divergir era cuestión de tiempo. `DayLabelSingleSourceTest`.
+            'dateLabel' => DisplayTime::dayLabel($next->date),
             'timeWindow' => $next->timeWindow,
             'productName' => $next->productName,
         ];

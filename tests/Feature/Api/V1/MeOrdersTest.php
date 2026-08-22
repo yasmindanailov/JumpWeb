@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -180,6 +181,10 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonCount(1, 'data.0.items')
             ->assertJsonPath('data.0.items.0.product_name', 'Salto 1 hora')
             ->assertJsonPath('data.0.items.0.date', '2026-06-10')
+            // ⚠️ La fecha viaja CRUDA y ETIQUETADA. La etiqueta se compara contra su fuente única, no
+            // contra un literal: si `DisplayTime::dayLabel()` cambia, cambian a la vez la web, los
+            // correos, el post-form y esto — y este caso lo dirá (`DayLabelSingleSourceTest`).
+            ->assertJsonPath('data.0.items.0.date_label', DisplayTime::dayLabel('2026-06-10'))
             ->assertJsonPath('data.0.items.0.time_window', '10:00–11:00')
             ->assertJsonPath('data.0.items.0.quantity', 2)
             ->assertJsonPath('data.0.items.0.status', 'finished')
@@ -188,7 +193,42 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonPath('data.0.items.0.guest_form_status', null)
             ->assertJsonCount(1, 'data.0.items.0.addons')
             ->assertJsonPath('data.0.items.0.addons.0.product_name', 'Calcetines')
-            ->assertJsonPath('data.0.items.0.addons.0.quantity', 2);
+            ->assertJsonPath('data.0.items.0.addons.0.quantity', 2)
+            // Una ENTRADA no admite post-form, así que no se le ofrece dónde rellenarlo.
+            ->assertJsonPath('data.0.items.0.guest_form_url', null);
+
+        // Y la etiqueta NO es la fecha cruda ni va vacía: sin esto, publicar `''` pasaría el contrato.
+        $this->assertNotSame('', $response->json('data.0.items.0.date_label'));
+        $this->assertNotSame('2026-06-10', $response->json('data.0.items.0.date_label'));
+    }
+
+    /**
+     * **Las etiquetas de presentación del pedido, con VALOR y no solo con forma** (2026-08-22).
+     *
+     * ⚠️ El contrato (`assertValidResponse`) comprueba que el campo existe y es una cadena; **una
+     * cadena vacía lo pasaría**. Estos casos existen porque el área de cliente pinta estas etiquetas
+     * y no puede recomponerlas: `Intl` no reproduce la del día en español, y la del pedido lleva la
+     * **zona horaria de la instalación**, que el navegador no conoce (`specs/area-cliente.md`).
+     */
+    public function test_it_publishes_the_presentation_labels_of_the_order(): void
+    {
+        $user = $this->verifiedUser();
+        $order = $this->makeOrder($user);
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/orders');
+
+        $response->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(
+            DisplayTime::format($order->created_at),
+            $response->json('data.0.created_label'),
+            'la fecha del pedido no espeja a `DisplayTime::format`, que es quien aplica `display_timezone`'
+        );
+        $this->assertNotSame('', $response->json('data.0.created_label'));
+
+        // Sin reembolso, la etiqueta va VACÍA y no ausente: el contrato la exige siempre presente,
+        // de modo que el cliente no tiene que distinguir «no hay» de «no vino».
+        $this->assertSame('', $response->json('data.0.refund.refunded_label'));
     }
 
     public function test_it_paginates_newest_first(): void
