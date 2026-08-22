@@ -6,6 +6,8 @@ import { useTimeStore } from './stores/time.js';
 import { useAuthStore } from './stores/auth.js';
 import { useCartStore } from './stores/cart.js';
 import { useOutcomeStore } from './stores/outcome.js';
+import { useCatalogStore } from './stores/catalog.js';
+import { useSelectionStore } from './stores/selection.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
@@ -93,8 +95,8 @@ const props = defineProps({
 
 const store = usePurchaseStore();
 
-const sections = ref([]);
-const searchEnabled = ref(false);
+const catalogStore = useCatalogStore();
+const selectionStore = useSelectionStore();
 
 /**
  * El estado de las reservas (`GET /booking/status`).
@@ -145,8 +147,6 @@ async function tracked(promise) {
     }
 }
 
-/** Lo que el paso 2 necesita. Llega de la API; ninguna regla de oferta se decide aquí (`AFORO-02`). */
-const selectedProductId = ref(null);
 
 /**
  * El DÍA vive en su propio store (`stores/date.js`, reorganización del 2026-08-22): los días
@@ -216,13 +216,13 @@ onMounted(async () => {
         refreshBookingStatus(),
     ]));
 
-    if (catalog.ok) sections.value = sectionsFrom(catalog.data?.data ?? []);
+    if (catalog.ok) catalogStore.sections = sectionsFrom(catalog.data?.data ?? []);
 
     // El umbral lo decide el SERVIDOR y viaja con su operador en la descripción del contrato
     // (`total > umbral`): el cliente compara, no reinventa la regla.
     if (config.ok) {
         const threshold = config.data?.catalog_search_min_items;
-        searchEnabled.value = searchIsEnabled(sections.value, threshold);
+        catalogStore.searchEnabled = searchIsEnabled(catalogStore.sections, threshold);
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
         if (typeof config.data?.cart_max_lines === 'number') cartStore.maxLines = config.data.cart_max_lines;
@@ -263,11 +263,11 @@ async function restoreCart() {
     const ids = [...new Set(lines.map((line) => line.product_id))];
     const details = await tracked(Promise.all(ids.map((id) => api.get(`/catalog/products/${id}`))));
 
-    const fields = { ...fieldsByProduct.value };
+    const fields = { ...catalogStore.fieldsByProduct };
     details.forEach((response, i) => {
         if (response.ok) fields[ids[i]] = response.data.event_fields ?? [];
     });
-    fieldsByProduct.value = fields;
+    catalogStore.fieldsByProduct = fields;
 
     await refreshQuote();
 
@@ -288,23 +288,23 @@ async function restoreCart() {
  * de ellos sí es presentación.
  */
 async function selectProduct(id) {
-    selectedProductId.value = id;
+    catalogStore.selectedId = id;
     // El nombre y el tipo salen del CATÁLOGO, que ya está en memoria, y no de la ficha que se está
     // pidiendo: la banda de progreso los enseña de inmediato al entrar en el calendario, y esperar a
     // la ficha dejaría el contexto en blanco durante el viaje.
-    selectedProduct.value = sections.value.flatMap((s) => s.items).find((item) => item.id === id) ?? null;
+    catalogStore.selectedRow = catalogStore.sections.flatMap((s) => s.items).find((item) => item.id === id) ?? null;
     // La FICHA trae lo que el paso 3 necesita y el listado no lleva: el mínimo contratable y el
     // esquema de campos del evento, ya resueltos al idioma. Se pide junto a los días, no después,
     // porque los dos hacen falta antes de que el cliente pueda elegir nada.
-    product.value = null;
+    catalogStore.product = null;
     dateStore.clearSelection();
     timeStore.clearSelection();
-    addons.value = { groups: [], singles: [] };
-    addonChoices.value = [];
-    addonQuantities.value = [];
-    line.value = null;
-    resolvedSelection.value = [];
-    eventData.value = {};
+    selectionStore.addons = { groups: [], singles: [] };
+    selectionStore.choices = [];
+    selectionStore.quantities = [];
+    selectionStore.line = null;
+    selectionStore.resolved = [];
+    selectionStore.eventData = {};
     store.go(STEPS.DATE);
 
     const [dates, detail] = await tracked(Promise.all([
@@ -315,25 +315,16 @@ async function selectProduct(id) {
     dateStore.setOffer(dates.ok ? (dates.data?.data ?? []) : []);
 
     if (detail.ok) {
-        product.value = detail.data;
+        catalogStore.product = detail.data;
         // Las ETIQUETAS del esquema del evento se guardan por producto porque el carrito las necesita
         // más tarde, cuando ya se está mirando otra cosa: el presupuesto NO devuelve las respuestas
         // del pack (RGPD, son datos de un menor) y sin las etiquetas no hay con qué emparejarlas.
-        fieldsByProduct.value = { ...fieldsByProduct.value, [id]: detail.data.event_fields ?? [] };
+        catalogStore.fieldsByProduct = { ...catalogStore.fieldsByProduct, [id]: detail.data.event_fields ?? [] };
     }
 }
 
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
 const timeStore = useTimeStore();
-/** La fila del CATÁLOGO del producto elegido (nombre y tipo), disponible sin esperar a la ficha. */
-const selectedProduct = ref(null);
-const quantity = ref(0);
-const product = ref(null);
-const addons = ref({ groups: [], singles: [] });
-/** El pie de la línea del paso 3, tal y como lo publica el endpoint de complementos. Nunca se suma. */
-const line = ref(null);
-/** La selección de complementos ya RESUELTA por el servidor: es lo que se guarda en la cesta. */
-const resolvedSelection = ref([]);
 
 // ── La CESTA ──────────────────────────────────────────────────────────────────────────────────
 //
@@ -374,10 +365,8 @@ function today() {
  * ⚠️ El emparejado va por `index` y no por posición: una línea no vendible desaparece del presupuesto
  * y su hueco en la secuencia es la única señal de que existió.
  */
-const cartLines = computed(() => cartRows(cartStore.quote?.lines ?? [], cartStore.lines, fieldsByProduct.value));
+const cartLines = computed(() => cartRows(cartStore.quote?.lines ?? [], cartStore.lines, catalogStore.fieldsByProduct));
 
-/** Etiquetas de los campos del evento por producto, para poder emparejarlas en el carrito. */
-const fieldsByProduct = ref({});
 
 /** Pide el presupuesto de la cesta actual. Es la ÚNICA fuente de los importes del carrito. */
 async function refreshQuote() {
@@ -408,11 +397,7 @@ async function refreshQuote() {
         await refreshQuote();
     }
 }
-const eventData = ref({});
-const addonChoices = ref([]);
-const addonQuantities = ref([]);
 
-const minQuantity = computed(() => minQuantityFor(product.value));
 
 
 /**
@@ -430,7 +415,7 @@ async function selectDate(date) {
     // ⚠️ `AFORO-02`: la oferta de horas **lleva la cesta**. `offerableTimes()` descuenta los ocupantes
     // que la propia cesta ya retiene, así que una consulta sin ella ofrece horas y topes que el
     // checkout rechazaría. Hasta 4.3·2 iba vacía porque no había cesta; ahora va la de verdad.
-    const response = await tracked(api.post(`/availability/${selectedProductId.value}/times`, {
+    const response = await tracked(api.post(`/availability/${catalogStore.selectedId}/times`, {
         date,
         items: toApiItems(cartStore.lines),
     }));
@@ -443,7 +428,7 @@ async function selectTime(time) {
     timeStore.select(time);
     // ⚠️ La regla y su equivalencia con la del servidor —que PARECE distinta y no lo es— viven en
     // `offer.js` con la medición que lo demuestra.
-    quantity.value = initialQuantity(product.value, timeStore.offered, time);
+    selectionStore.quantity = initialQuantity(catalogStore.product, timeStore.offered, time);
 
     await refreshAddons();
 }
@@ -456,44 +441,44 @@ async function selectTime(time) {
  * trae además el dinero de la línea, para que un clic no cueste dos peticiones.
  */
 async function refreshAddons() {
-    if (! selectedProductId.value || quantity.value < 1) return;
+    if (! catalogStore.selectedId || selectionStore.quantity < 1) return;
 
-    const response = await tracked(api.post(`/catalog/products/${selectedProductId.value}/addons`, {
-        quantity: quantity.value,
+    const response = await tracked(api.post(`/catalog/products/${catalogStore.selectedId}/addons`, {
+        quantity: selectionStore.quantity,
         date: dateStore.selected,
         time: timeStore.selected,
-        addons: addonQuantities.value,
-        choices: addonChoices.value,
+        addons: selectionStore.quantities,
+        choices: selectionStore.choices,
     }));
 
     if (response.ok) {
-        addons.value = { groups: response.data.groups, singles: response.data.singles };
+        selectionStore.addons = { groups: response.data.groups, singles: response.data.singles };
         // ⚠️ **El dinero del paso 3 viene de aquí y no se compone.** `line.total_cents` lo publica el
         // endpoint desde 4.3·2 precisamente para que nadie sume `subtotal_cents` con
         // `addons_total_cents`: salen de dos recorridos distintos del servidor y pueden divergir.
-        line.value = response.data.line ?? null;
+        selectionStore.line = response.data.line ?? null;
         // Y la selección que hay que GUARDAR es la que el dominio acaba de resolver —obligatorios
         // inyectados, dependientes huérfanos podados—, no la que se pidió.
-        resolvedSelection.value = response.data.selection ?? [];
+        selectionStore.resolved = response.data.selection ?? [];
     }
 }
 
 function changeQuantity(delta) {
-    const next = quantity.value + delta;
-    if (next < minQuantity.value || next > timeStore.maxQuantity) return;
+    const next = selectionStore.quantity + delta;
+    if (next < catalogStore.minQuantity || next > timeStore.maxQuantity) return;
 
-    quantity.value = next;
+    selectionStore.quantity = next;
     // La cantidad cambia lo que cuestan los complementos por-invitado: hay que volver a resolver.
     refreshAddons();
 }
 
 function chooseAddon(group, productId) {
-    addonChoices.value = [...addonChoices.value.filter((c) => c.group !== group), { group, product_id: productId }];
+    selectionStore.choices = [...selectionStore.choices.filter((c) => c.group !== group), { group, product_id: productId }];
     refreshAddons();
 }
 
 function setAddonQuantity(productId, qty) {
-    addonQuantities.value = [...addonQuantities.value.filter((a) => a.product_id !== productId), { product_id: productId, quantity: qty }];
+    selectionStore.quantities = [...selectionStore.quantities.filter((a) => a.product_id !== productId), { product_id: productId, quantity: qty }];
     refreshAddons();
 }
 
@@ -520,8 +505,8 @@ dateStore.setLocale(locale);
  */
 const progress = computed(() => buildProgress({
     step: store.step,
-    isPack: selectedProduct.value?.is_pack ?? false,
-    productName: selectedProduct.value?.name ?? '',
+    isPack: catalogStore.selectedRow?.is_pack ?? false,
+    productName: catalogStore.selectedRow?.name ?? '',
     date: dateStore.selected,
     time: timeStore.selected,
     messages: props.messages,
@@ -611,10 +596,10 @@ const footer = computed(() => buildFooter({
     cartOnlineCents: cartStore.quote?.online_amount_cents ?? 0,
     hasDate: dateStore.selected !== null,
     hasTime: timeStore.selected !== null,
-    lineTotalCents: line.value?.total_cents ?? null,
-    lineHasDeposit: line.value?.has_deposit ?? false,
-    lineDepositCents: line.value?.deposit_cents ?? 0,
-    lineGateRemainderCents: line.value?.gate_remainder_cents ?? 0,
+    lineTotalCents: selectionStore.line?.total_cents ?? null,
+    lineHasDeposit: selectionStore.line?.has_deposit ?? false,
+    lineDepositCents: selectionStore.line?.deposit_cents ?? 0,
+    lineGateRemainderCents: selectionStore.line?.gate_remainder_cents ?? 0,
 }));
 
 /**
@@ -1039,14 +1024,14 @@ async function addToCart() {
     cartStore.fieldErrors = {};
 
     const candidate = {
-        product_id: selectedProductId.value,
+        product_id: catalogStore.selectedId,
         date: dateStore.selected,
         time: timeStore.selected,
-        quantity: quantity.value,
-        event_data: { ...eventData.value },
+        quantity: selectionStore.quantity,
+        event_data: { ...selectionStore.eventData },
         // Lo que se guarda es la selección que el dominio RESOLVIÓ (obligatorios inyectados,
         // dependientes huérfanos podados), no la que se pidió.
-        addons: resolvedSelection.value,
+        addons: selectionStore.resolved,
     };
 
     // ⚠️ La candidata NO va dentro de `items`: `items` es lo que YA retiene cupo, y meterla ahí la
@@ -1097,7 +1082,7 @@ function showLineProblems(problems) {
         if (problem.reason === 'event_field_required' && problem.field) {
             cartStore.fieldErrors = { ...cartStore.fieldErrors, [problem.field]: t('errors.field_required') };
 
-            const label = (product.value?.event_fields ?? []).find((f) => f.key === problem.field)?.label;
+            const label = (catalogStore.product?.event_fields ?? []).find((f) => f.key === problem.field)?.label;
             if (label) missing.push(label);
 
             continue;
@@ -1148,18 +1133,18 @@ function addAnother() {
 
 /** Deja la SELECCIÓN en blanco sin tocar la cesta. Espejo de `Purchase::clearSelection()`. */
 function clearSelection() {
-    selectedProductId.value = null;
-    selectedProduct.value = null;
-    product.value = null;
+    catalogStore.selectedId = null;
+    catalogStore.selectedRow = null;
+    catalogStore.product = null;
     dateStore.clearSelection();
     timeStore.clearSelection();
-    quantity.value = 0;
-    eventData.value = {};
-    addonChoices.value = [];
-    addonQuantities.value = [];
-    addons.value = { groups: [], singles: [] };
-    line.value = null;
-    resolvedSelection.value = [];
+    selectionStore.quantity = 0;
+    selectionStore.eventData = {};
+    selectionStore.choices = [];
+    selectionStore.quantities = [];
+    selectionStore.addons = { groups: [], singles: [] };
+    selectionStore.line = null;
+    selectionStore.resolved = [];
 }
 
 const t = (key) => translate(props.messages, key);
@@ -1173,7 +1158,7 @@ const tp = (key, params) => translateWith(props.messages, key, params);
 function goBack() {
     if (store.step === STEPS.TIME) {
         timeStore.clearSelection();
-        quantity.value = 0;
+        selectionStore.quantity = 0;
         store.go(STEPS.DATE);
 
         return;
@@ -1188,8 +1173,8 @@ function goBack() {
            @back="goBack" @action="runAction">
         <CatalogStep
             v-if="store.step === STEPS.CATALOG"
-            :sections="sections"
-            :search-enabled="searchEnabled"
+            :sections="catalogStore.sections"
+            :search-enabled="catalogStore.searchEnabled"
             :messages="messages"
             @select="selectProduct" />
 
@@ -1210,24 +1195,24 @@ function goBack() {
             v-else-if="store.step === STEPS.TIME"
             :times="timeStore.offered.map((t) => t.time)"
             :selected-time="timeStore.selected"
-            :quantity="quantity"
-            :min-quantity="minQuantity"
+            :quantity="selectionStore.quantity"
+            :min-quantity="catalogStore.minQuantity"
             :max-quantity="timeStore.maxQuantity"
-            :is-pack="product?.type === 'pack'"
+            :is-pack="catalogStore.isPack"
             :day-price-cents="dateStore.priceCents"
-            :event-fields="product?.event_fields ?? []"
-            :period-label="product?.period_label ?? ''"
-            :addons="addons"
+            :event-fields="catalogStore.product?.event_fields ?? []"
+            :period-label="catalogStore.product?.period_label ?? ''"
+            :addons="selectionStore.addons"
             :errors="cartStore.fieldErrors"
             :messages="messages"
             @select-time="selectTime"
             @inc="changeQuantity(1)"
             @dec="changeQuantity(-1)"
-            @update-field="(key, value) => (eventData[key] = value)"
+            @update-field="selectionStore.answer"
             @choose-addon="chooseAddon"
-            @toggle-addon="(id) => setAddonQuantity(id, addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
-            @inc-addon="(id) => setAddonQuantity(id, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
-            @dec-addon="(id) => setAddonQuantity(id, Math.max(0, (addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) - 1))" />
+            @toggle-addon="(id) => setAddonQuantity(id, selectionStore.addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
+            @inc-addon="(id) => setAddonQuantity(id, (selectionStore.addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
+            @dec-addon="(id) => setAddonQuantity(id, Math.max(0, (selectionStore.addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) - 1))" />
 
         <CartStep
             v-else-if="store.step === STEPS.CART"

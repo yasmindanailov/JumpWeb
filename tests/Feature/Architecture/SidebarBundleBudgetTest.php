@@ -108,7 +108,21 @@ class SidebarBundleBudgetTest extends TestCase
      * cerrada, así que lo que viene —el ÁREA DE CLIENTE dentro del cajón (`DECISIONES #66`)— es una
      * fase nueva que tendrá que decidir su propio presupuesto, no colarse por el margen de esta.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 160;
+    /**
+     * ⚠️ **160 → 168 el 2026-08-22, por la reorganización del SPA en `stores/`, y con su coste MEDIDO.**
+     *
+     * Los **ocho** stores suman ~8,5 KB de fuente y el chunk pasó de **156,4 a 160,3 KiB**: unos
+     * **+3,9 KiB**, es decir **~0,5 KiB minificados por store**. Ese es el precio de que el estado del
+     * cajón tenga sitio propio, probable sin DOM y compartible con el ÁREA DE CLIENTE, que es lo que
+     * `DECISIONES #38c` compró al elegir Pinia y nunca se llegó a construir.
+     *
+     * El margen hasta 168 no es holgura gratis: la reorganización todavía tiene que sacar **doce
+     * secuencias transversales** a módulos planos, y cada módulo nuevo trae su propio andamiaje.
+     * ▶ **Al cerrar la reorganización hay que volver a medir y BAJAR este número** a lo que de verdad
+     * ocupe. Un techo con margen sobrante deja de apretar, que es justo lo que un presupuesto no debe
+     * hacer.
+     */
+    private const SIDEBAR_CHUNK_MAX_KB = 168;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
