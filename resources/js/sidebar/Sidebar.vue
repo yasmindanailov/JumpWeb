@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { usePurchaseStore } from './store.js';
+import { usePurchaseStore } from './stores/purchase.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import {

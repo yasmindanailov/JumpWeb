@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { isIdentifying, modeOf, STEPS } from './machine.js';
+import { isIdentifying, modeOf, STEPS } from '../machine.js';
 
 /**
  * El store del flujo de compra (Fase 4 · paso 4.1).

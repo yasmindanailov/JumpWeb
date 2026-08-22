@@ -1,8 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
-import { createMachine, STEPS } from './machine.js';
-import { usePurchaseStore } from './store.js';
+import { createMachine, STEPS } from '../machine.js';
+import { usePurchaseStore } from './purchase.js';
 
 /**
  * La red del STORE, y nace de un fallo REAL que estuvo a punto de irse a producción.

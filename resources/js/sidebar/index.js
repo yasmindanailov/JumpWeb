@@ -3,7 +3,7 @@ import { createPinia } from 'pinia';
 import Sidebar from './Sidebar.vue';
 import { createMachine, STEPS } from './machine.js';
 import { applyIntent as applyIntentToCatalog } from './intent.js';
-import { usePurchaseStore } from './store.js';
+import { usePurchaseStore } from './stores/purchase.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).

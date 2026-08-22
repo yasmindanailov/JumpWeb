@@ -226,7 +226,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `login.js` · `register.js` | Identificarse y darse de alta desde el cajón | sus `*.test.js` · `SidebarLoginParityTest` · `SidebarRegisterParityTest` |
 | `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `pay.test.js` · `SidebarPayParityTest` |
 | `outcome.js` | La VUELTA entera: resumen del 6, motivo del 10 con su reintento, sondeo del 11 | `outcome.test.js` · `SidebarOutcomeParityTest` |
-| `store.js` | El estado compartido (Pinia) y la secuencia de montaje | `store.test.js` (nace tras `#59`) |
+| `stores/purchase.js` | El paso y las dos señales que el cajón publica hacia fuera | `stores/purchase.test.js` (nace tras `#59`) |
 
 Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
