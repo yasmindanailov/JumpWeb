@@ -175,6 +175,59 @@ describe('al entrar en la zona', () => {
 
         store.reset();
 
-        assert.deepEqual(store.$state, { busy: false, fields: {}, notice: '', done: false, expired: false, savedAs: '' });
+        assert.deepEqual(store.$state, { busy: false, fields: {}, notice: '', done: false, expired: false, savedAs: '', consents: null });
+    });
+
+    /**
+     * ⚠️ **Los consentimientos NO se borran al entrar, y es deliberado**: son un DATO leído, no el
+     * resultado de un intento. Vaciarlos aquí obligaría a repedirlos cada vez que el titular abre la
+     * pantalla, que es justo lo que `ensureConsents()` existe para evitar.
+     */
+    test('pero los consentimientos ya leídos se conservan', async () => {
+        const store = usePrivacyStore();
+        const api = fakeApi({ '/me/consents': { ok: true, status: 200, data: { data: [], meta: { total: 0 } }, error: null } });
+
+        await store.ensureConsents({ api });
+        assert.equal(store.consentsLoaded, true);
+
+        store.reset();
+
+        assert.equal(store.consentsLoaded, true, 'reset ha tirado una lista que no cambia sola');
+    });
+});
+
+describe('la lista de consentimientos', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    test('se pide UNA vez y no se repite al volver a entrar', async () => {
+        const store = usePrivacyStore();
+        const api = fakeApi({ '/me/consents': { ok: true, status: 200, data: { data: [{ type: 'privacy' }], meta: { total: 1 } }, error: null } });
+
+        await store.ensureConsents({ api });
+        await store.ensureConsents({ api });
+
+        assert.equal(api.llamadas.length, 1, 'volver a entrar en la pantalla repite la petición');
+        assert.equal(store.consents.meta.total, 1);
+    });
+
+    /**
+     * ⚠️ **Un fallo NO se cuela en el aviso del formulario.** Esta lista es contexto; pintar «revisa
+     * los datos» encima del formulario de borrado porque no se pudo leer sería decirle al titular que
+     * su problema es otro.
+     */
+    test('si falla, la pantalla no anuncia un error que no es suyo', async () => {
+        const store = usePrivacyStore();
+        // ⚠️ Una respuesta fallida REAL trae cuerpo: `api.js` mete en `data` el sobre de error ya
+        // parseado. Doblarla con `data: null` haría que guardarla o no diera lo mismo, y el caso
+        // pasaría con las dos implementaciones — lo destapó una mutación.
+        const error = { code: 'server_error', message: 'Algo ha ido mal.' };
+
+        await store.ensureConsents({
+            api: fakeApi({ '/me/consents': { ok: false, status: 500, data: { error }, error, offline: false } }),
+        });
+
+        assert.equal(store.notice, '');
+        assert.equal(store.fields && Object.keys(store.fields).length, 0);
+        assert.equal(store.consentsLoaded, false, 'una respuesta fallida se ha guardado como lista');
     });
 });

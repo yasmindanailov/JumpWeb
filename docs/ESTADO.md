@@ -3,7 +3,7 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza. Última actualización: **2026-08-22** (el ÁREA DE CLIENTE: **tandas 1 y 2
-> COMPLETAS** — las cinco gestiones están en el cajón; queda la tanda 3, `#120(s)`).
+> COMPLETAS** y la **3 con sus condiciones de entrada cumplidas** — queda el borrado, `#120(t)`).
 
 ## ▶ Dónde estamos
 
@@ -20,8 +20,8 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 
 🟦 **La fase sigue abierta por el ÁREA DE CLIENTE** (`#66`, `#120`), que va por **tandas**:
 **1 (solo lectura) ✅ COMPLETA** · **2 (gestiones) ✅ COMPLETA** —las CINCO gestiones están en el
-cajón (`#120(s)`)— · **3 (retirar `/mi-cuenta/…`) ⬜**, con sus condiciones de entrada medidas y
-vigiladas, y **ninguna cumplida todavía**. El detalle, en «Próximo paso».
+cajón (`#120(s)`)— · **3 (retirar `/mi-cuenta/…`) 🟦 EN CURSO**: sus condiciones de entrada están
+**CUMPLIDAS** (`#120(t)`) y lo que queda es el borrado. El detalle, en «Próximo paso».
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -34,8 +34,8 @@ vigiladas, y **ninguna cumplida todavía**. El detalle, en «Próximo paso».
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2733 en verde** (15.677 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **502 tests JS** (`node --test`) · Pint limpio (844 ficheros) · `docs-check` verde ·
+- Suite **2735 en verde** (15.704 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
+  **517 tests JS** (`node --test`) · Pint limpio (845 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -126,8 +126,11 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 ## ▶ Próximo paso
 
 ▶▶ **TANDA 3 — RETIRAR `/mi-cuenta/…`**, que es lo único que le queda al área de cliente. El owner ya
-decidió que la página **desaparece** (`#120(c)`); lo que NO está decidido es cuándo, porque tiene
-**condiciones de entrada medidas y ninguna cumplida todavía**.
+decidió que la página **desaparece** (`#120(c)`).
+
+✅ **Sus condiciones de entrada están CUMPLIDAS** (pasos 9, 10 y 11 · `#120(t)`): el desglose
+financiero y los consentimientos ya se publican y se pintan en el cajón, y `V11` comprueba en vivo
+que las dos superficies dicen los mismos importes. **Lo que queda es el borrado.**
 
 ⚠️⚠️ **«Desaparecer» hay que decirlo con precisión**: muere la **VISTA**, **vive la RUTA** como puerta
 que abre el cajón en su zona —el patrón de `/entradas`, probado desde Fase 5.2—. **8 notificaciones
@@ -140,12 +143,12 @@ desenlace del pago, y el paso 8 estrenó la variante corta (dejar la despedida e
 
 | # | Condición | Estado |
 |---|---|---|
-| 1 | `AccountPageCaptureTest::GAPS` **vacía** | ❌ **cuatro** huecos del desglose financiero. La lista solo encoge, y ⏳ el fichero muere con la página |
-| 1.bis | La lista de **consentimientos** publicada | ❌ solo existe en la página. La API los lleva **únicamente dentro del export**, y llamar ahí para pintarla descargaría la PII más densa del producto. Ficha en `DEUDA.md` |
-| 2 | Las zonas pintadas con paridad de datos | 🟦 **cinco de las siete**: falta «cerrar sesión» y decidir si el índice lo ofrece |
+| 1 | El desglose financiero publicado | ✅ **los cuatro huecos CERRADOS** (paso 9). `AccountPageCaptureTest` hizo su trabajo y **se borró**; lo releva `AccountFinancialParityTest`, que compara los dos lados |
+| 1.bis | La lista de **consentimientos** publicada | ✅ `GET /me/consents` y la zona `PRIVACY` los pinta (paso 11). Sin IP: eso viaja en el export |
+| 2 | Las zonas pintadas con paridad de datos | ✅ **las cinco**. «Cerrar sesión» **no entra en el índice** —decisión del owner, `#120(t)`—: ya está en el nav y en el bloque `.acct`, siempre a la vista |
 | 3 | Los endpoints de gestión abiertos | ✅ **los cinco**, con su limitador |
-| 4 | `EmailChangeController` y el export con destino decidido | ❌ llegan desde un **correo**: no pueden depender de que el cajón esté abierto |
-| 5 | Recorrido en navegador de las zonas | 🟦 `V4`–`V10` cubren las cinco actuales |
+| 4 | `EmailChangeController` y el export con destino decidido | 🟦 **lo resuelve la propia retirada**: la ruta sobrevive como puerta, así que el `redirect()->with('status', …)` sigue aterrizando y el banner del layout lo pinta. El export es una DESCARGA, no una vista: no se toca |
+| 5 | Recorrido en navegador de las zonas | ✅ `V4`–`V11` |
 
 ⚠️ **La lección de `#111` aplica literal**: *independizar el contrato ANTES de borrar*. Antes de
 retirar la página hay que capturar de ella lo que aún no está capturado, o el borrado se lleva por

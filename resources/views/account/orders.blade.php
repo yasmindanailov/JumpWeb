@@ -197,7 +197,11 @@
                              (Alpine). El agregado y el caption SIEMPRE visibles. Como hasPendingAtGate ⟺
                              Σ(↳) > 0, el toggle siempre tiene contenido que mostrar. --}}
                         @if ($s->hasPendingAtGate())
-                            @php($gateLines = $order->pendingAtGateLines())
+                            {{-- Desde la tanda 3 la lista la compone el DOMINIO (`gateBreakdownLines`),
+                                 etiquetas incluidas: la del resto de la señal se montaba aquí juntando
+                                 dos claves de `lang/`, y publicarla por la API la habría duplicado
+                                 (`DECISIONES #120(j)`). El texto que se pinta es el mismo. --}}
+                            @php($gateLines = $order->gateBreakdownLines())
                             <div x-data="{ open: false }">
                                 <div class="orders__gate">
                                     <span class="orders__gate-label">{{ __('tickets.at_gate') }}</span>
@@ -208,13 +212,11 @@
                                     <span x-show="open" x-cloak>{{ __('tickets.hide_breakdown') }}</span>
                                 </button>
                                 <div x-show="open" x-cloak>
+                                    {{-- Los cargos por cambios y, detrás, el «Resto de la señal» POR
+                                         PRODUCTO (#225, feedback clienta): dos productos con señal →
+                                         dos líneas. Las dos familias llegan ya compuestas y en orden. --}}
                                     @foreach ($gateLines as $gateLine)
                                         <div class="orders__gate-line"><span>↳ {{ $gateLine['label'] }}</span><strong>+{{ $eur($gateLine['amount']) }}</strong></div>
-                                    @endforeach
-                                    {{-- #225 (feedback clienta): «Resto de la señal» DESGLOSADO POR PRODUCTO («de X»);
-                                         dos productos con señal → dos líneas. --}}
-                                    @foreach ($order->depositRemainderPendingByProduct() as $dr)
-                                        <div class="orders__gate-line"><span>↳ {{ __('tickets.deposit_remainder_line') }} {{ __('tickets.deposit_for_product', ['product' => $dr['name']]) }}</span><strong>+{{ $eur($dr['amount']) }}</strong></div>
                                     @endforeach
                                 </div>
                                 <p class="orders__gate-caption">{{ __($tieneSenal ? 'tickets.at_gate_caption_deposit' : 'tickets.at_gate_caption') }}</p>

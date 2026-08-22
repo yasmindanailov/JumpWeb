@@ -171,8 +171,19 @@ class SidebarBundleBudgetTest extends TestCase
      * la de un retoque y no la de una tanda. Con la tanda 2 cerrada, lo siguiente —la tanda 3, o
      * traer la auth al cajón— vuelve a subirlo con su motivo. *Sube con motivo, baja al agotarse el
      * motivo*: es la tercera vez que este fichero lo cumple, y por eso sigue apretando.
+     *
+     * ⚠️ **186 → 190 el 2026-08-22, y lo paga la TANDA 3** — exactamente lo que la línea de arriba
+     * anticipaba. Paso 10: el **ledger financiero** de «Mis reservas» dentro del cajón (subtotal,
+     * señal pagada, desglose de puerta plegable, devuelto, pendiente de devolver y total final).
+     * Medido: **187,8 KiB**, **+2,5** sobre el cierre de la tanda 2.
+     * ▶ Y con un descuento apuntado: el ledger **no calcula ni un importe**. Los seis los publica el
+     * servidor ya resueltos (paso 9), así que lo que entra aquí es marcado y la decisión de qué línea
+     * se enseña — no una segunda contabilidad. Un cliente que recompusiera esos números habría
+     * costado bastante más que 2,5 KiB, y habría podido divergir.
+     * ▶ 190 deja **2,2 KiB** para lo que queda de tanda: los consentimientos y las puertas de
+     * entrada. Al cerrarla, se vuelve a bajar.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 186;
+    private const SIDEBAR_CHUNK_MAX_KB = 190;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { usePrivacyStore } from '../../stores/privacy.js';
+import { consentRows } from '../privacy.js';
 import { fieldError } from '../form-outcome.js';
 import { t as translate } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
@@ -36,6 +37,11 @@ const store = usePrivacyStore();
 // Al entrar se limpia lo que dijo el servidor la vez anterior, como en las demás zonas.
 store.reset();
 
+// Y se piden los consentimientos, solo si no están: la lista es contexto, no cambia sola.
+store.ensureConsents();
+
+const consents = computed(() => consentRows(store.consents));
+
 const current = ref('');
 
 const a = (key) => translate(props.account, key);
@@ -54,6 +60,23 @@ async function remove() {
         <p class="purchase__note">{{ a('account.privacy.intro') }}</p>
 
         <div v-if="store.notice" class="auth__errors" role="alert"><p>{{ store.notice }}</p></div>
+
+        <!--
+          La prueba visible del art. 7.1: a qué dijo que sí, cuándo y sobre qué versión. Se publica
+          porque `/mi-cuenta` lo enseña y esa página se retira (tanda 3).
+          ⚠️ Sin IP, igual que la página: es parte de la prueba y viaja en el export, que es un acto
+          explícito del titular.
+        -->
+        <h3 class="account__subhead">{{ a('account.privacy.consents_title') }}</h3>
+
+        <p v-if="store.consentsLoaded && ! consents.length" class="purchase__note">{{ a('account.privacy.no_consents') }}</p>
+
+        <ul v-else-if="consents.length" class="account__consents">
+            <li v-for="consent in consents" :key="consent.key">
+                <span class="account__consent-type">{{ consent.label }}</span>
+                <span class="account__consent-meta">{{ consent.meta }}</span>
+            </li>
+        </ul>
 
         <!-- El derecho de PORTABILIDAD (art. 20). No pide contraseña: descargarse los datos propios
              no destruye ni cede nada, y es lo que hace hoy la web. -->

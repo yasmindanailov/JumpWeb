@@ -26,13 +26,43 @@ export const usePrivacyStore = defineStore('privacy', {
 
         /** El fichero que se acaba de entregar. Lo enseña la pantalla para confirmar la descarga. */
         savedAs: '',
+
+        /** La respuesta de `GET /me/consents`, cruda. `null` mientras no se haya pedido. */
+        consents: null,
     }),
 
+    getters: {
+        /** ¿Ya se pidió la lista de consentimientos? Distingue «no hay» de «aún no se sabe». */
+        consentsLoaded: (state) => state.consents !== null,
+    },
+
     actions: {
-        /** Deja el estado como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona. */
+        /**
+         * Deja el estado como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona.
+         *
+         * ⚠️ **No borra los consentimientos**, y es deliberado: son un DATO leído, no el resultado de
+         * un intento. Vaciarlos aquí obligaría a volver a pedirlos cada vez que el titular entra en
+         * la pantalla, que es justo lo que `ensureConsents()` existe para evitar.
+         */
         reset() {
             resetForm(this);
             this.savedAs = '';
+        },
+
+        /**
+         * Pide los consentimientos **solo si no los tiene**.
+         *
+         * ⚠️ **Un fallo NO se anuncia con el aviso del formulario.** Esta lista es contexto —a qué
+         * dijo que sí y cuándo— y no la acción de la pantalla; pintar «revisa los datos» encima del
+         * formulario de borrado porque no se pudo leer una lista sería decirle al titular que su
+         * problema es otro. Se queda sin lista, como hace el índice con la próxima reserva.
+         */
+        async ensureConsents({ api = httpClient } = {}) {
+            if (this.consentsLoaded || this.busy) return;
+
+            const response = await api.get('/me/consents');
+
+            if (response.ok) this.consents = response.data;
         },
 
         /**

@@ -1721,10 +1721,24 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             guarda sin que faltara nada.
             ✅ Navegador `V10`, **17/17** — y ahí apareció que tras borrar desde el cajón **la home
             salía muda**: la despedida se deja ahora en la sesión nueva, después de `invalidate()`.
-      - [ ] **Tanda 3 — retirar `/mi-cuenta/…`**: mueren las VISTAS, viven las RUTAS
-            (`specs/area-cliente.md` §4.8). ⚠️ **Sus condiciones de entrada NO están cumplidas**:
-            `AccountPageCaptureTest::GAPS` sigue con **cuatro** huecos del desglose financiero y la
-            lista de consentimientos solo existe en la página (las dos, con ficha en `DEUDA.md`).
+      - [x] **Tanda 3 · pasos 9, 10 y 11 — LAS CONDICIONES DE ENTRADA** (✅ **HECHO** el 2026-08-22,
+            `#120(t)`). La tanda no empieza borrando: primero se publica lo que solo sabía la página.
+            ✅ **Paso 9**: `Order` gana `pending_at_gate_lines`, `total_final_cents`,
+            `pending_refund_cents` y `has_deposit` — los **cuatro huecos cerrados**. Nace
+            `Order::gateBreakdownLines()` porque la etiqueta del resto de la señal **se componía en
+            Blade** y la API habría sido su segunda copia.
+            ⚠️ **`AccountPageCaptureTest` se BORRÓ, y lo pedía él mismo**; lo releva
+            `AccountFinancialParityTest`, que compara los DOS lados mientras convivan.
+            ⚠️ **El cuarto hueco, declarado «no sondeable», sí lo era**: lo que faltaba no era una
+            sonda mejor sino una fila de `payments` pagada en el fixture.
+            ✅ **Paso 10**: el ledger dentro del cajón, con el desglose plegado. No calcula ni un
+            importe: los seis los publicó el paso 9.
+            ✅ **Paso 11**: `GET /me/consents` y la lista en la zona `PRIVACY` — **sin la IP**, que
+            viaja solo en el export. El rótulo del documento lo publica el servidor.
+            ✅ Navegador `V11`, **22/22**: el cajón y la página dicen los mismos seis importes.
+      - [ ] **Tanda 3 · el BORRADO**: mueren las VISTAS, viven las RUTAS como puerta que abre el
+            cajón en su zona (`specs/area-cliente.md` §4.8, el patrón de `/entradas`). ⚠️ **8 correos
+            ya entregados** y **11 redirecciones** apuntan ahí: borrar en crudo los convierte en 404.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

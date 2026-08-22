@@ -84,6 +84,66 @@ export function depositNoteOf(item, messages) {
     });
 }
 
+/**
+ * **El bloque financiero de un pedido**: el mismo ledger que pinta `/mi-cuenta/pedidos`
+ * (tanda 3 · paso 10).
+ *
+ * ⚠️⚠️ **Ni un solo importe se calcula aquí.** Los seis los publica el servidor ya resueltos
+ * —`total_cents`, `online_amount_cents`, `pending_at_gate_cents` con su desglose y sus etiquetas,
+ * `pending_refund_cents` y `total_final_cents`—, y eso fue el trabajo del paso 9. Lo que esta función
+ * hace es DECIDIR QUÉ SE ENSEÑA, que es presentación: qué líneas aparecen y con qué rótulo.
+ *
+ * ⚠️ **Los tres rótulos condicionales son la parte delicada**, y están medidos contra la vista:
+ * · la primera línea dice «Subtotal» si hay desglose debajo y «Total» si no —enseñar «Total» arriba y
+ *   otro «Total» distinto abajo diría que se cobraron dos cosas—;
+ * · la leyenda del bloque de puerta cambia según el pedido lleve señal o no;
+ * · «Pagado online» solo sale con señal: en un pedido pagado entero repetiría el total.
+ *
+ * ⚠️ **`has_deposit` NO se deduce de que quede algo pendiente**: un pedido con señal cuyo resto ya se
+ * cobró en recepción sigue siendo un pedido con señal. Por eso el servidor lo publica aparte.
+ */
+export function financialsOf(order, messages) {
+    const gateCents = Number(order.pending_at_gate_cents ?? 0);
+    const pendingRefundCents = Number(order.pending_refund_cents ?? 0);
+    // Mismo predicado que la página: la columna de reembolso solo cuenta si además hay fecha.
+    const refundCents = order.refund?.refunded_at ? Number(order.refund.amount_cents ?? 0) : 0;
+    const hasBreakdown = gateCents > 0 || refundCents > 0 || pendingRefundCents > 0;
+    const hasDeposit = order.has_deposit === true;
+
+    return {
+        firstLabel: t(messages, hasBreakdown ? 'subtotal' : 'total'),
+        online: hasDeposit
+            ? { label: t(messages, 'deposit_paid_online'), amountLabel: money(order.online_amount_cents) }
+            : null,
+        gate: gateCents > 0
+            ? {
+                label: t(messages, 'at_gate'),
+                amountLabel: money(gateCents),
+                showLabel: t(messages, 'show_breakdown'),
+                hideLabel: t(messages, 'hide_breakdown'),
+                caption: t(messages, hasDeposit ? 'at_gate_caption_deposit' : 'at_gate_caption'),
+                // Las etiquetas llegan compuestas por el dominio, en el orden que la página usa.
+                lines: (order.pending_at_gate_lines ?? []).map((line) => ({
+                    label: line.label,
+                    amountLabel: money(line.amount_cents),
+                })),
+            }
+            : null,
+        pendingRefund: pendingRefundCents > 0
+            ? {
+                label: t(messages, 'pendiente_devolucion'),
+                amountLabel: money(pendingRefundCents),
+                caption: t(messages, 'pendiente_devolucion_caption'),
+            }
+            : null,
+        // ⚠️ El total final solo se pinta cuando hay algo que explicar: sin desglose sería el mismo
+        // número dos veces seguidas. Y **no es `total_cents`** en cuanto hay una cancelación.
+        final: hasBreakdown
+            ? { label: t(messages, 'total'), amountLabel: money(order.total_final_cents) }
+            : null,
+    };
+}
+
 /** Un complemento anidado, tal como la página lo pinta bajo su línea. */
 function addonRow(addon, account) {
     return {
@@ -134,6 +194,8 @@ export function orderRow(order, ctx) {
             ? { label: order.refund.refunded_label, amountLabel: money(order.refund.amount_cents) }
             : null,
         guestFormPending: order.guest_form_pending === true,
+        // El ledger entero (tanda 3 · paso 10): qué líneas se enseñan y con qué rótulo.
+        financials: financialsOf(order, ctx.messages),
         lines: (order.items ?? []).map((item) => lineRow(order, item, ctx)),
     };
 }

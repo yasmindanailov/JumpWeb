@@ -58,6 +58,26 @@ class OrderResource extends JsonResource
             // Lo que queda por pagar EN PUERTA (resto de la señal, extras de ediciones). No es deuda
             // online y no debe sumarse a la anterior.
             'pending_at_gate_cents' => $summary->pendingAtGate(),
+            // ⚠️ **El DESGLOSE de la línea de arriba** (tanda 3 · paso 9), que era el hueco más caro
+            // de los cuatro que `AccountPageCaptureTest` enumeraba: sin él, el cliente veía en el
+            // cajón «+31,00 € a cobrar en el parque» sin saber de qué. Lo compone el DOMINIO,
+            // etiquetas incluidas: la del resto de la señal se montaba en Blade y publicarla aquí la
+            // habría duplicado (`DECISIONES #120(j)`).
+            'pending_at_gate_lines' => array_map(
+                fn (array $line): array => ['label' => $line['label'], 'amount_cents' => (int) $line['amount']],
+                $order->gateBreakdownLines(),
+            ),
+            // ⚠️ **Se publica en vez de dejar que el cliente lo deduzca**: no equivale a
+            // `pending_at_gate_cents > 0` —un pedido con señal cuyo resto ya se cobró tiene 0
+            // pendiente y sigue siendo un pedido con señal— ni al `any()` de los avisos por línea.
+            'has_deposit' => $summary->depositRemainder > 0,
+            // ⚠️ **Lo que aún se DEBE devolver, que no es `refund` —lo ya devuelto—.** Confundirlos
+            // invierte el significado para el cliente.
+            'pending_refund_cents' => $summary->pendienteDevolucion(),
+            // ⚠️ **Lo que el cliente acaba pagando, y NO es `total_cents` en cuanto hay una
+            // cancelación**: `total` es inmutable (es lo facturado). Enseñar aquél tras cancelar una
+            // línea le diría al cliente que se le cobró de más.
+            'total_final_cents' => $summary->totalFinalNeto(),
             'refund' => [
                 'refunded_at' => $order->refunded_at?->toIso8601String(),
                 // La fecha con la que la web anuncia el reembolso («Reembolsado el 23/08/2026»).

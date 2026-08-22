@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { exportFilename, saveExport } from './privacy.js';
+import { consentRows, exportFilename, saveExport } from './privacy.js';
 
 /**
  * La red de la entrega del documento de portabilidad.
@@ -90,5 +90,49 @@ describe('la entrega', () => {
 
         assert.match(written, /^\{\n {4}"exported_at"/);
         assert.equal(link.download, 'mis-datos-2026-08-22.json');
+    });
+});
+
+describe('los consentimientos', () => {
+    const payload = {
+        data: [
+            { type: 'waiver', type_label: 'Descargo de responsabilidad (waiver)', accepted_at: '2026-06-01T10:00:00+02:00', accepted_label: '01/06/2026', version: '2026-06-01' },
+            { type: 'privacy', type_label: 'Política de privacidad', accepted_at: '2026-05-23T10:00:00+02:00', accepted_label: '23/05/2026', version: '2026-05-23' },
+        ],
+        meta: { total: 2 },
+    };
+
+    /** El nombre y la fecha llegan compuestos por el servidor: aquí solo se juntan fecha y versión. */
+    test('se pintan con lo que el servidor resolvió, en su orden', () => {
+        assert.deepEqual(consentRows(payload), [
+            { key: 'waiver-0', label: 'Descargo de responsabilidad (waiver)', meta: '01/06/2026 · v2026-06-01' },
+            { key: 'privacy-1', label: 'Política de privacidad', meta: '23/05/2026 · v2026-05-23' },
+        ]);
+    });
+
+    /**
+     * ⚠️ **La clave incluye el índice y no solo el tipo**: nada impide que un titular acepte dos
+     * versiones del mismo documento, y dos claves iguales en un `v-for` hacen que Vue reutilice el
+     * nodo equivocado — una fila enseñaría la fecha de la otra.
+     */
+    test('dos consentimientos del mismo tipo no comparten clave', () => {
+        const rows = consentRows({ data: [
+            { type: 'privacy', type_label: 'Política de privacidad', accepted_label: '01/06/2026', version: '2' },
+            { type: 'privacy', type_label: 'Política de privacidad', accepted_label: '23/05/2026', version: '1' },
+        ] });
+
+        assert.notEqual(rows[0].key, rows[1].key);
+    });
+
+    /** Sin versión no se pinta una «v» suelta, que no diría nada. */
+    test('una versión ausente no deja un separador colgando', () => {
+        const rows = consentRows({ data: [{ type: 'terms', type_label: 'Términos', accepted_label: '01/06/2026', version: '' }] });
+
+        assert.equal(rows[0].meta, '01/06/2026');
+    });
+
+    test('sin datos, no hay filas', () => {
+        assert.deepEqual(consentRows(null), []);
+        assert.deepEqual(consentRows({ data: [] }), []);
     });
 });

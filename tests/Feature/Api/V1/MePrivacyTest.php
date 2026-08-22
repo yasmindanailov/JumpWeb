@@ -415,6 +415,96 @@ class MePrivacyTest extends ApiTestCase
         $this->assertNotSame([], $fromApi['orders'], 'la comparación se ha hecho sobre un documento vacío');
     }
 
+    // ── GET /me/consents — la prueba visible del art. 7.1 ─────────────────────────────────────
+
+    /**
+     * ⚠️ **Existe porque `/mi-cuenta` los enseña y esa página se retira** (tanda 3): sin publicarlos,
+     * el borrado le quitaría al cliente información que hoy tiene.
+     */
+    public function test_it_lists_the_consents_newest_first(): void
+    {
+        $user = $this->holder();
+
+        $user->consents()->create([
+            'type' => 'privacy', 'accepted_at' => now()->subDays(3), 'ip' => '10.0.0.1', 'version' => '2026-05-23',
+        ]);
+        $user->consents()->create([
+            'type' => 'waiver', 'accepted_at' => now()->subDay(), 'ip' => '10.0.0.2', 'version' => '2026-06-01',
+        ]);
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/consents');
+
+        $response->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(['waiver', 'privacy'], array_column((array) $response->json('data'), 'type'), 'el orden no es del más reciente al más antiguo');
+        $this->assertSame(2, $response->json('meta.total'));
+        $this->assertSame('2026-06-01', $response->json('data.0.version'));
+        $this->assertNotSame('', (string) $response->json('data.0.accepted_label'), 'la fecha llega sin componer');
+    }
+
+    /**
+     * ⚠️ **El rótulo lo compone el SERVIDOR**, para que el cliente no lleve su propia tabla de cuatro
+     * nombres — una segunda lista que envejece sola el día que se añada un quinto tipo.
+     */
+    public function test_it_publishes_the_document_name_already_translated(): void
+    {
+        $user = $this->holder();
+        $user->consents()->create([
+            'type' => 'privacy', 'accepted_at' => now(), 'ip' => '10.0.0.1', 'version' => '1',
+        ]);
+
+        $label = $this->actingAs($user)->getJson(self::ROOT.'/me/consents')->assertOk()->json('data.0.type_label');
+
+        $this->assertSame(__('account.account.privacy.consent_types.privacy'), $label);
+        $this->assertNotSame('privacy', $label, 'se está publicando el identificador en vez del nombre');
+    }
+
+    /**
+     * ⚠️⚠️ **Un tipo desconocido devuelve su identificador, nunca cadena vacía ni la clave cruda.**
+     * `__()` sobre una clave que falta devuelve la clave entera —«account.account.privacy.
+     * consent_types.foo»—, que en pantalla se lee como un error; y `''` sería peor, porque una fila
+     * con fecha y sin nombre parece que no hay nada (familia de `DECISIONES #113`). Este caso es el
+     * único que lo distingue: con los cuatro tipos conocidos, las tres implementaciones coinciden.
+     */
+    public function test_an_unknown_consent_type_never_shows_a_raw_key_or_an_empty_label(): void
+    {
+        $user = $this->holder();
+        $user->consents()->create([
+            'type' => 'inventado', 'accepted_at' => now(), 'ip' => '10.0.0.1', 'version' => '1',
+        ]);
+
+        $label = (string) $this->actingAs($user)->getJson(self::ROOT.'/me/consents')->assertOk()->json('data.0.type_label');
+
+        $this->assertSame('inventado', $label);
+        $this->assertStringNotContainsString('account.account', $label);
+    }
+
+    /**
+     * ⚠️ **La IP NO sale**, igual que en la página: es parte de la prueba y viaja en el export, que
+     * es un acto explícito del titular. Publicarla aquí sería añadirla a una lista que se pinta sola.
+     */
+    public function test_the_consent_list_never_carries_the_ip(): void
+    {
+        $user = $this->holder();
+        $user->consents()->create([
+            'type' => 'privacy', 'accepted_at' => now(), 'ip' => '203.0.113.77', 'version' => '1',
+        ]);
+
+        $body = (string) $this->actingAs($user)->getJson(self::ROOT.'/me/consents')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('203.0.113.77', $body);
+
+        // Y sí está donde el titular la pide expresamente.
+        $export = (string) $this->actingAs($user)->getJson(self::ROOT.'/me/export')->assertOk()->getContent();
+
+        $this->assertStringContainsString('203.0.113.77', $export, 'la IP ha desaparecido también del export');
+    }
+
+    public function test_the_consent_list_rejects_an_anonymous_request(): void
+    {
+        $this->getJson(self::ROOT.'/me/consents')->assertStatus(401);
+    }
+
     public function test_the_export_rejects_an_anonymous_request(): void
     {
         $this->getJson(self::ROOT.'/me/export')->assertStatus(401);

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountPrivacy;
+use App\Http\Api\ApiCollection;
 use App\Http\Api\Concerns\TranslatesCredentialVerdicts;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\ConsentResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +51,28 @@ class MePrivacyController extends Controller
         $this->closeCurrentSession($request);
 
         return response()->json(status: 204);
+    }
+
+    /**
+     * `GET /me/consents` — los consentimientos otorgados por el titular.
+     *
+     * ⚠️ **Existe porque `/mi-cuenta` los enseña y esa página se retira** (tanda 3): sin publicarlos,
+     * el borrado le quitaría al cliente la prueba visible del art. 7.1 que hoy tiene. Era la
+     * condición 1.bis de la retirada.
+     *
+     * ⚠️ **Del más reciente al más antiguo, como la página.** El orden es contrato desde que esto es
+     * una respuesta de API: dejarlo al motor haría que MySQL y el SQLite de la suite pudieran no
+     * coincidir.
+     */
+    public function consents(Request $request): ApiCollection
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return new ApiCollection(
+            $user->consents()->orderByDesc('accepted_at')->orderByDesc('id')->get(),
+            ConsentResource::class,
+        );
     }
 
     /**

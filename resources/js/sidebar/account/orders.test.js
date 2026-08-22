@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { depositNoteOf, guestFormOf, lineBadgeOf, orderRow, orderRows, pageInfo } from './orders.js';
+import { depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, orderRows, pageInfo } from './orders.js';
 
 /**
  * La red de «Mis reservas» (`docs/specs/area-cliente.md` §4.4).
@@ -13,6 +13,18 @@ import { depositNoteOf, guestFormOf, lineBadgeOf, orderRow, orderRows, pageInfo 
 const MESSAGES = {
     statuses: { paid: 'Pagado', pending: 'Pendiente', cancelled: 'Cancelado', expired: 'Caducado', refunded: 'Reembolsado' },
     deposit_card_note: 'Señal :deposit · :rest en el parque',
+    // El ledger financiero (tanda 3 · paso 10). Claves REALES del grupo `tickets`, que viaja entero
+    // en el montaje: doblarlas con nombres inventados probaría algo que en producción no ocurre.
+    subtotal: 'Subtotal',
+    total: 'Total',
+    deposit_paid_online: 'Pagado online',
+    at_gate: 'A cobrar en el parque',
+    show_breakdown: 'Ver desglose',
+    hide_breakdown: 'Ocultar desglose',
+    at_gate_caption: 'Diferencia por cambios en el pedido.',
+    at_gate_caption_deposit: 'Resto a pagar en recepción. La señal ya quedó pagada online.',
+    pendiente_devolucion: 'Pendiente de devolución',
+    pendiente_devolucion_caption: 'Pagaste de más por un cambio en el pedido.',
 };
 
 const ACCOUNT = {
@@ -66,6 +78,10 @@ const order = (over = {}) => ({
     expires_at: null,
     items: [item()],
     guest_form_pending: false,
+    has_deposit: false,
+    pending_at_gate_lines: [],
+    pending_refund_cents: 0,
+    total_final_cents: 4500,
     ...over,
 });
 
@@ -237,5 +253,110 @@ describe('la paginación', () => {
 
         assert.equal(info.canPrev, true);
         assert.equal(info.canNext, false);
+    });
+});
+
+describe('el bloque financiero', () => {
+    /**
+     * ⚠️ **El caso más común es el que más fácil se estropea**: un pedido sin cambios ni señal debe
+     * enseñar UN solo total. Si la primera línea dijera «Subtotal» y debajo apareciera un «Total» con
+     * el mismo número, el cliente leería dos cobros.
+     */
+    test('un pedido normal enseña UN solo total y nada más', () => {
+        // ⚠️ `pending_at_gate_cents: 0` EXPLÍCITO: el fixture base lleva 1.500 pendientes en puerta
+        // —es un pedido con señal— y heredarlo aquí probaría el caso contrario al que dice el título.
+        const f = financialsOf(order({ pending_at_gate_cents: 0 }), MESSAGES);
+
+        assert.equal(f.firstLabel, 'Total');
+        assert.equal(f.final, null, 'se pinta el total dos veces');
+        assert.equal(f.online, null, 'un pedido sin señal no anuncia «Pagado online»');
+        assert.equal(f.gate, null);
+        assert.equal(f.pendingRefund, null);
+    });
+
+    test('con algo pendiente en puerta, la primera línea pasa a ser el SUBTOTAL', () => {
+        const f = financialsOf(order({ pending_at_gate_cents: 3100, total_final_cents: 4500 }), MESSAGES);
+
+        assert.equal(f.firstLabel, 'Subtotal');
+        assert.equal(f.gate.amountLabel, '31,00 €');
+        assert.deepEqual(f.final, { label: 'Total', amountLabel: '45,00 €' });
+    });
+
+    /** El desglose llega compuesto por el servidor: aquí solo se formatean los importes. */
+    test('el desglose se pinta en el orden que llega, con las etiquetas del servidor', () => {
+        const f = financialsOf(order({
+            pending_at_gate_cents: 4800,
+            pending_at_gate_lines: [
+                { label: '+1 Entrada suelta', amount_cents: 1700 },
+                { label: 'Resto de la señal de Cumple Jump', amount_cents: 3100 },
+            ],
+        }), MESSAGES);
+
+        assert.deepEqual(f.gate.lines, [
+            { label: '+1 Entrada suelta', amountLabel: '17,00 €' },
+            { label: 'Resto de la señal de Cumple Jump', amountLabel: '31,00 €' },
+        ]);
+    });
+
+    /**
+     * ⚠️⚠️ **La leyenda cambia con la señal, y decirlo mal engaña sobre lo ya pagado.** «Diferencia
+     * por cambios» en un pedido con señal le diría al cliente que le han cambiado el pedido cuando lo
+     * que hay es el resto de lo que él mismo dejó a deber.
+     */
+    test('la leyenda del bloque de puerta depende de que haya señal', () => {
+        const sin = financialsOf(order({ pending_at_gate_cents: 100 }), MESSAGES);
+        const con = financialsOf(order({ pending_at_gate_cents: 100, has_deposit: true }), MESSAGES);
+
+        assert.equal(sin.gate.caption, MESSAGES.at_gate_caption);
+        assert.equal(con.gate.caption, MESSAGES.at_gate_caption_deposit);
+    });
+
+    /**
+     * ⚠️⚠️ **`has_deposit` NO se deduce de que quede algo pendiente**, y este caso es el que lo
+     * distingue: un pedido con señal cuyo resto ya se cobró en recepción no tiene nada pendiente y
+     * **sigue** teniendo que enseñar lo que se pagó online.
+     */
+    test('un pedido con señal ya saldada sigue anunciando lo pagado online', () => {
+        const f = financialsOf(order({ has_deposit: true, pending_at_gate_cents: 0 }), MESSAGES);
+
+
+        assert.deepEqual(f.online, { label: 'Pagado online', amountLabel: '30,00 €' });
+        assert.equal(f.gate, null, 'no queda nada pendiente en puerta');
+    });
+
+    /**
+     * ⚠️ **Lo pendiente de devolver y lo ya devuelto son cosas distintas**, y cruzarlas invierte el
+     * mensaje: uno es dinero que el cliente va a recibir y el otro, dinero que ya recibió.
+     */
+    test('lo pendiente de devolver se enseña con su porqué', () => {
+        const f = financialsOf(order({ pending_at_gate_cents: 0, pending_refund_cents: 2300, total_final_cents: 2200 }), MESSAGES);
+
+        assert.equal(f.pendingRefund.amountLabel, '23,00 €');
+        assert.equal(f.pendingRefund.caption, MESSAGES.pendiente_devolucion_caption);
+        assert.equal(f.firstLabel, 'Subtotal', 'una devolución pendiente también abre desglose');
+        assert.equal(f.final.amountLabel, '22,00 €');
+    });
+
+    /** Un reembolso ya hecho abre desglose igual — pero solo si de verdad se procesó (tiene fecha). */
+    test('un reembolso sin fecha NO cuenta como desglose', () => {
+        const conFecha = financialsOf(order({
+            pending_at_gate_cents: 0,
+            refund: { refunded_at: '2026-06-02T10:00:00+02:00', refunded_label: '02/06/2026', amount_cents: 500, fully_refunded: false },
+        }), MESSAGES);
+        const sinFecha = financialsOf(order({
+            pending_at_gate_cents: 0,
+            refund: { refunded_at: null, refunded_label: '', amount_cents: 500, fully_refunded: false },
+        }), MESSAGES);
+
+        assert.equal(conFecha.firstLabel, 'Subtotal');
+        assert.equal(sinFecha.firstLabel, 'Total', 'un importe sin fecha de reembolso ha abierto el desglose');
+    });
+
+    /** Y el pedido compuesto lo lleva, para que la zona solo tenga que pintar. */
+    test('el pedido compuesto trae su ledger', () => {
+        const row = orderRow(order({ pending_at_gate_cents: 3100 }), CTX);
+
+        assert.equal(row.financials.firstLabel, 'Subtotal');
+        assert.equal(row.financials.gate.amountLabel, '31,00 €');
     });
 });

@@ -247,8 +247,13 @@
                                 // los CUATRO `consent_types`, y la lista de consentimientos **no la
                                 // pinta el cajón** — sigue solo en `/mi-cuenta`, y es un hueco con
                                 // nombre para la tanda 3 (`specs/area-cliente.md` §4.8).
+                                // ⚠️ `consents_title` y `no_consents` entran en la tanda 3 (paso 11):
+                                // la lista de consentimientos se retira de `/mi-cuenta` y pasa a esta
+                                // zona. Los CUATRO `consent_types` siguen fuera **a propósito**: el
+                                // rótulo del documento lo publica la API (`type_label`), para que el
+                                // cliente no lleve una segunda tabla que envejece sola.
                                 'privacy' => \Illuminate\Support\Arr::only(__('account.account.privacy'), [
-                                    'title', 'intro', 'export_btn',
+                                    'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                                     'delete_title', 'delete_intro', 'delete_password',
                                     'delete_confirm', 'delete_btn', 'deleting',
                                 ]),

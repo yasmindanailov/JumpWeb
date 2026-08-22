@@ -621,6 +621,31 @@ siguiente medía el estado de ANTES —dos rojos que parecían de la app y eran 
 desde `/entradas` para que la navegación sea real. Es `DECISIONES #115` dentro del propio andamio:
 *una comprobación que mide una cosa y se lee como otra es peor que no tenerla*.
 
+### V11 · EL LEDGER FINANCIERO Y LOS CONSENTIMIENTOS (tanda 3 · pasos 10 y 11)
+Lo que hay que mirar aquí **no es que se pinte algo**, sino que el cajón diga los MISMOS números que
+`/mi-cuenta/pedidos`: mientras las dos superficies convivan, una divergencia es dinero mal contado en
+pantalla.
+
+⚠️ **Necesita un pedido que ejercite el ledger entero**, y montarlo tiene una trampa medida: la franja
+del pedido tiene que ser **FUTURA**. Con una de hoy que ya terminó, los ajustes cuentan como
+**resueltos** —cobrados en recepción— y el desglose sale VACÍO sin que nada falle. Receta:
+un pack con `deposit_remainder` y `extra_due`, una línea **cancelada**, una segunda línea viva y una
+fila de `payments` **pagada** (sin ella, «pendiente de devolución» vale 0 contra cualquier pedido).
+
+✅ **MEDIDO el 2026-08-22 · 22/22:**
+· subtotal 133,00 € · pagado online · a cobrar en el parque **+48,00 €** · pendiente de devolución
+  **−23,00 €** · **Total 110,00 €** —distinto del facturado, que es lo que el campo existe para decir—;
+· el desglose entra **plegado** y al abrirlo salen las **dos** líneas, la segunda con su producto
+  («Resto de la señal de Cumpleaños Jump +31,00 €»);
+· la **página** dice los mismos seis importes;
+· la zona de privacidad lista los **dos consentimientos** con su nombre, su fecha y su versión — y
+  **sin la IP**.
+
+⚠️⚠️ **Y otra trampa del ANDAMIO, la segunda de la fase**: el guion buscaba `.orders__card` —la clase
+del **cajón**— dentro de la **página**, que usa `.orders__item`. Son dos marcados distintos **a
+propósito** (§1.3: aquí la paridad es de DATOS, no de árbol), y confundirlos dio seis rojos que
+parecían una divergencia de importes. **Al comparar dos superficies, cada una con su selector.**
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

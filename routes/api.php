@@ -216,6 +216,10 @@ Route::name('api.v1.')->group(function (): void {
         // middleware del grupo (`RGPD-04`), no por una cabecera escrita aquí.
         Route::delete('/me', [MePrivacyController::class, 'destroy'])->name('me.destroy');
         Route::get('/me/export', [MePrivacyController::class, 'export'])->name('me.export');
+        // Los consentimientos otorgados (tanda 3 · paso 11). Se abre porque `/mi-cuenta` los enseña
+        // y esa página se retira: sin esto, el borrado le quitaría al cliente la prueba visible del
+        // art. 7.1. NO publica la IP — eso viaja en el export, que es un acto explícito.
+        Route::get('/me/consents', [MePrivacyController::class, 'consents'])->name('me.consents.index');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');

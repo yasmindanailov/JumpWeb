@@ -16,6 +16,23 @@
 const INDENT = 4;
 
 /**
+ * **Los consentimientos, tal como la pantalla los pinta** (tanda 3 · paso 11).
+ *
+ * ⚠️ **Ni el nombre del documento ni la fecha se componen aquí**: el servidor publica `type_label`
+ * —para que el cliente no lleve su propia tabla de cuatro rótulos, que envejecería sola al añadirse
+ * un quinto tipo— y `accepted_label` con la zona horaria de la instalación aplicada. Lo único que
+ * ocurre aquí es juntar fecha y versión en una línea, que es la forma que la página lleva usando:
+ * «23/08/2026 · v2026-05-23».
+ */
+export function consentRows(payload) {
+    return (payload?.data ?? []).map((consent, index) => ({
+        key: consent.type + '-' + index,
+        label: consent.type_label,
+        meta: [consent.accepted_label, consent.version ? 'v' + consent.version : ''].filter(Boolean).join(' · '),
+    }));
+}
+
+/**
  * El nombre del fichero, derivado del propio documento.
  *
  * ⚠️ **Sale de `exported_at` y no de la fecha del navegador**, y la diferencia importa: el sello lo

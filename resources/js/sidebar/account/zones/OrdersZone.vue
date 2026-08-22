@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useOrdersStore } from '../../stores/orders.js';
 import { orderRows, pageInfo } from '../orders.js';
 
@@ -33,6 +33,16 @@ store.ensure();
 
 const rows = computed(() => orderRows(store.payload, { messages: props.messages, account: props.account }));
 const page = computed(() => pageInfo(store.payload, props.account));
+
+/**
+ * Qué desglose de puerta está abierto, por código de pedido. Uno cada vez.
+ *
+ * ⚠️ La página usa un `x-data` por tarjeta, así que ahí pueden estar varios abiertos; aquí es un
+ * acordeón. Es una diferencia de INTERACCIÓN y no de datos, que es lo que esta tanda protege
+ * (`specs/area-cliente.md` §1.3): en un panel estrecho, dos desgloses abiertos empujan el resto de
+ * pedidos fuera de la vista.
+ */
+const openBreakdown = ref('');
 </script>
 
 <template>
@@ -76,9 +86,58 @@ const page = computed(() => pageInfo(store.payload, props.account));
                     </li>
                 </ul>
 
+                <!--
+                  El LEDGER, en el mismo orden que `/mi-cuenta/pedidos`: subtotal → señal pagada →
+                  a cobrar en puerta (con su desglose plegado) → devuelto → pendiente de devolver →
+                  total final. Qué líneas salen lo decide `financialsOf`, con `node --test`; aquí no
+                  hay ninguna condición que no sea «¿hay dato?».
+                -->
                 <div class="orders__foot">
-                    <span class="orders__total">{{ row.totalLabel }}</span>
-                    <span v-if="row.refund" class="orders__refund">{{ row.refund.label }} · {{ row.refund.amountLabel }}</span>
+                    <div class="orders__total">
+                        <span>{{ row.financials.firstLabel }}</span>
+                        <strong>{{ row.totalLabel }}</strong>
+                    </div>
+
+                    <div v-if="row.financials.online" class="orders__gate">
+                        <span class="orders__gate-label">{{ row.financials.online.label }}</span>
+                        <strong>{{ row.financials.online.amountLabel }}</strong>
+                    </div>
+
+                    <div v-if="row.financials.gate">
+                        <div class="orders__gate">
+                            <span class="orders__gate-label">{{ row.financials.gate.label }}</span>
+                            <strong class="orders__gate-amount">+{{ row.financials.gate.amountLabel }}</strong>
+                        </div>
+                        <button type="button" class="orders__gate-toggle"
+                                :aria-expanded="openBreakdown === row.code ? 'true' : 'false'"
+                                @click="openBreakdown = openBreakdown === row.code ? '' : row.code">
+                            {{ openBreakdown === row.code ? row.financials.gate.hideLabel : row.financials.gate.showLabel }}
+                        </button>
+                        <div v-if="openBreakdown === row.code">
+                            <div v-for="(gateLine, i) in row.financials.gate.lines" :key="i" class="orders__gate-line">
+                                <span>↳ {{ gateLine.label }}</span><strong>+{{ gateLine.amountLabel }}</strong>
+                            </div>
+                        </div>
+                        <p class="orders__gate-caption">{{ row.financials.gate.caption }}</p>
+                    </div>
+
+                    <div v-if="row.refund" class="orders__refund">
+                        <span class="orders__refund-label">{{ row.refund.label }}</span>
+                        <strong class="orders__refund-amount">−{{ row.refund.amountLabel }}</strong>
+                    </div>
+
+                    <div v-if="row.financials.pendingRefund">
+                        <div class="orders__refund">
+                            <span class="orders__refund-label">{{ row.financials.pendingRefund.label }}</span>
+                            <strong class="orders__refund-amount">−{{ row.financials.pendingRefund.amountLabel }}</strong>
+                        </div>
+                        <p class="orders__gate-caption">{{ row.financials.pendingRefund.caption }}</p>
+                    </div>
+
+                    <div v-if="row.financials.final" class="orders__final">
+                        <span>{{ row.financials.final.label }}</span>
+                        <strong>{{ row.financials.final.amountLabel }}</strong>
+                    </div>
                 </div>
 
                 <div v-if="row.canRetry" class="orders__retry">

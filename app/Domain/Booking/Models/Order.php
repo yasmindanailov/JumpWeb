@@ -1039,6 +1039,40 @@ class Order extends Model
     }
 
     /**
+     * **El desglose ENTERO de «a cobrar en el parque», con sus etiquetas ya compuestas.**
+     *
+     * Es la suma de los dos buckets que el cliente ve como una sola lista: los cargos por cambios
+     * ({@see pendingAtGateLines}) y el resto de la señal por producto
+     * ({@see depositRemainderPendingByProduct}). Σ de los importes == `OrderFinancialSummary::
+     * pendingAtGate()`, que es el agregado que ya publican todas las superficies.
+     *
+     * ⚠️ **Nace en la tanda 3 del área de cliente (2026-08-22) y el motivo es una regla del proyecto,
+     * no una comodidad**: la etiqueta del resto de la señal —«Resto de la señal de Cumple Jump»— se
+     * componía **en Blade**, juntando dos claves de `lang/` en la propia plantilla. Publicarla por la
+     * API habría hecho que esa fórmula viviera en dos sitios, que es exactamente cómo divergieron las
+     * cuatro copias del rótulo de día (`DECISIONES #120(j)`). Aquí se compone UNA vez y la consumen
+     * la página y el contrato.
+     *
+     * ⚠️ **El orden importa y es el de la página**: primero los cambios, después el resto de la señal.
+     * Un cliente que las pinte en otro orden enseña un desglose distinto del que el cliente ya conoce.
+     *
+     * @return list<array{label:string, amount:int}>
+     */
+    public function gateBreakdownLines(): array
+    {
+        $lines = $this->pendingAtGateLines();
+
+        foreach ($this->depositRemainderPendingByProduct() as $remainder) {
+            $lines[] = [
+                'label' => __('tickets.deposit_remainder_line').' '.__('tickets.deposit_for_product', ['product' => $remainder['name']]),
+                'amount' => $remainder['amount'],
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
      * «Resto de la señal» pendiente DESGLOSADO POR PRODUCTO (#225, feedback clienta 2026-06-10).
      * Una línea por producto PRINCIPAL con señal cuyo resto sigue pendiente (no finalizado ni
      * cancelado): si hay dos packs con señal, salen dos líneas «Resto de la señal de X / de Y».

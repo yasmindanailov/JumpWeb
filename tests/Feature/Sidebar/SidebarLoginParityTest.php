@@ -272,12 +272,20 @@ class SidebarLoginParityTest extends TestCase
         // nombre para la tanda 3 (`specs/area-cliente.md` §4.8).
         $this->assertSame(
             [
-                'title', 'intro', 'export_btn',
+                'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                 'delete_title', 'delete_intro', 'delete_password',
                 'delete_confirm', 'delete_btn', 'deleting',
             ],
             array_keys($boot['account']['account']['privacy'] ?? []),
             'el subgrupo `privacy` ha dejado de estar podado a lo que la zona pinta'
+        );
+
+        // ⚠️ **Los cuatro `consent_types` siguen FUERA a propósito**: el rótulo del documento lo
+        // publica la API (`Consent.type_label`), para que el cajón no lleve una segunda tabla de
+        // nombres que envejece sola el día que se añada un quinto tipo de consentimiento.
+        $this->assertArrayNotHasKey(
+            'consent_types', $boot['account']['account']['privacy'] ?? [],
+            'el cajón ha empezado a llevar su propia tabla de rótulos de consentimiento'
         );
 
         // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
@@ -306,13 +314,21 @@ class SidebarLoginParityTest extends TestCase
         // estaba en 4.096 **subido a propósito y por adelantado** para que la tanda cupiera, y su
         // propia nota decía que al terminarla había que **bajarlo a lo medido** — que es lo que casi
         // nunca se cumple, y un presupuesto con margen de sobra deja de ser un presupuesto.
-        // ▶ Se fija en **4.608** (4,5 KiB): 85 B de holgura sobre lo medido. Es tan estrecho a
-        // propósito. No hay grasa que podar —las nueve claves las pinta la zona, una a una— así que
-        // lo que este número tiene que provocar la próxima vez es la pregunta correcta: ¿de verdad
-        // hace falta que este texto viaje en el HTML de cada página, o lo pide la pantalla al abrirse?
-        // Referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, el doble de esto.
+        // ▶ Se fijó en **4.608** (4,5 KiB): 85 B de holgura sobre lo medido. Era tan estrecho a
+        // propósito, para provocar la pregunta correcta la próxima vez: ¿de verdad hace falta que
+        // este texto viaje en el HTML de cada página, o lo pide la pantalla al abrirse?
+        //
+        // ⚠️⚠️ **Y la provocó a los dos pasos.** La TANDA 3 añade `consents_title` y `no_consents`
+        // —la lista de consentimientos se muda de `/mi-cuenta` al cajón— y el payload se pasa por
+        // **6 B**. La pregunta se hizo, y la respuesta fue mirar qué NO añadir: los cuatro
+        // `consent_types` se quedaron fuera y su rótulo lo publica la API (`Consent.type_label`),
+        // que además evita que el cajón lleve una segunda tabla de nombres. Sin esa decisión, esto
+        // habría crecido ~150 B en vez de 91.
+        // ▶ Techo **5.120** (5 KiB) mientras dure la tanda 3, y **se vuelve a bajar a lo medido al
+        // cerrarla** — es la mitad de la regla que casi nunca se cumple, y este fichero ya la ha
+        // cumplido dos veces. Referencia: el grupo `account` COMPLETO son 9,6 kB.
         $this->assertLessThan(
-            4608, $bytes,
+            5120, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

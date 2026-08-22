@@ -5384,3 +5384,69 @@ tiene caso propio y su mutación (ponerlo antes) lo tumba.
 borrado esperaba `waitForURL('/')` **estando ya en `/`**, así que la espera se cumplía al instante y
 la comprobación siguiente medía el estado de antes. Es `#115` dentro del propio guion de
 verificación. Se entra desde `/entradas` para que la navegación sea real.
+
+**(t) Tanda 3 · pasos 9, 10 y 11 — las CONDICIONES DE ENTRADA de la retirada, cumplidas.** La tanda 3
+no empieza borrando: `#111` dejó escrito *independizar el contrato ANTES de borrar*, y
+`AccountPageCaptureTest` lo había convertido en una lista ejecutable de **cuatro huecos**. Estos tres
+pasos la vacían.
+
+**Paso 9 — el desglose financiero baja al contrato.** `Order` publica cuatro campos nuevos:
+`pending_at_gate_lines` (el desglose de puerta, línea a línea y **con su etiqueta ya compuesta**),
+`total_final_cents` (lo que el cliente acaba pagando, que **no es** `total_cents` en cuanto hay una
+cancelación), `pending_refund_cents` (lo que aún se le debe, que **no es** `refund`, lo ya devuelto) y
+`has_deposit`.
+
+⚠️ **La etiqueta del resto de la señal se componía en BLADE**, juntando dos claves de `lang/` en la
+plantilla. Publicarla por la API habría hecho que esa fórmula viviera en dos sitios — el mismo
+mecanismo por el que divergieron las cuatro copias del rótulo de día (`#120(j)`). Nace
+`Order::gateBreakdownLines()` como fuente única y la consumen la página y el contrato.
+
+⚠️ **`has_deposit` NO se deduce de que quede algo pendiente**, y tiene caso frontera propio: un pedido
+con señal **cuya franja ya pasó** tiene el resto cobrado en recepción —nada pendiente— y **sigue
+siendo** un pedido con señal. Sin ese caso, publicar `pending_at_gate_cents > 0` en su lugar habría
+pasado toda la suite.
+
+⚠️⚠️ **Y el cuarto hueco, que el test declaraba «no sondeable», resultó sondeable.**
+`pendienteDevolucion()` vale 0 contra cualquier pedido normal, y por eso `AccountPageCaptureTest` lo
+dejó fuera de sus sondas. Lo que faltaba no era una sonda mejor: era **una fila de `payments`
+pagada**. Con el pago delante, el dinero de una línea cancelada sigue retenido y el campo mide.
+▶ La lección: *«no se puede sondear»* suele querer decir *«el fixture no reproduce el escenario»*.
+
+**`AccountPageCaptureTest` se BORRA, y lo pedía él mismo** —«si ya no quedan huecos, borra este
+fichero: su trabajo terminó»—. Lo releva `AccountFinancialParityTest`, temporal igual que aquél, con
+la mitad que NO terminó: mientras la página siga viva hay **dos superficies enseñando el mismo
+dinero**, y nada garantizaba que dijeran lo mismo.
+
+⚠️ **Y ahí una mutación destapó una comparación tautológica**: el caso del ORDEN comparaba la API
+contra **el mismo helper** que la alimenta, así que reordenar el helper movía las dos a la vez y
+pasaba. La referencia del orden pasa a ser el HTML de la página, con las posiciones de cada etiqueta.
+Es la misma familia que `#115`: algo que se lee como una comprobación y no lo es.
+
+**Paso 10 — el ledger en el cajón.** `financialsOf()` decide qué líneas se enseñan y con qué rótulo
+—«Subtotal» o «Total» arriba, y cuál de las dos leyendas acompaña al desglose— y **no calcula ni un
+importe**: los seis los publicó el paso 9. El desglose entra plegado, como en la web.
+
+**Paso 11 — los consentimientos**, que era el hueco que este trabajo descubrió y no estaba en la
+lista. `GET /me/consents` y la lista dentro de la zona `PRIVACY`.
+⚠️ **Sin la IP**, igual que la página: es parte de la prueba del art. 7.1 y viaja en el export, que es
+un acto explícito del titular. Publicarla en una lista que se pinta sola sería añadir un dato técnico
+a la pantalla sin decirle nada nuevo.
+⚠️ **El rótulo del documento lo publica el SERVIDOR** (`type_label`) para que el cajón no lleve una
+segunda tabla de cuatro nombres que envejece sola al añadirse un quinto tipo. Y **un tipo desconocido
+devuelve su identificador, nunca la clave cruda ni cadena vacía**: tiene caso propio porque con los
+cuatro tipos conocidos las tres implementaciones coinciden.
+
+**Dos decisiones del owner, tomadas al medirlas:**
+· **«Cerrar sesión» NO entra en el índice del cajón**: el botón ya existe dos veces fuera —en el nav y
+  en el bloque `.acct` del propio panel, siempre a la vista— y una tercera entrada llevaría a donde el
+  cliente ya puede ir con un clic. Retirar la página no pierde nada;
+· **los consentimientos SÍ se publican y se pintan**: sin ellos, el borrado le quitaría al cliente la
+  prueba visible de a qué dijo que sí.
+
+✅ **Verificado en navegador** (`V11`, **22/22**): el cajón y la página enseñan los **mismos seis
+importes** del mismo pedido, el desglose entra plegado y sale con sus dos líneas, y los
+consentimientos salen con su nombre y su fecha **y sin la IP**.
+⚠️ Y otra vez un rojo del ANDAMIO y no de la app: el guion buscaba `.orders__card` —la clase del
+cajón— en la PÁGINA, que usa `.orders__item`. Son dos marcados distintos **a propósito** (§1.3: aquí
+la paridad es de datos, no de árbol), y confundirlos dio seis rojos que parecían una divergencia de
+importes.

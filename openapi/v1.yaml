@@ -1436,6 +1436,42 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/consents:
+    get:
+      tags: [Cuenta]
+      operationId: getMyConsents
+      summary: Mis consentimientos
+      description: |
+        Los consentimientos legales que el titular ha otorgado, del más reciente al más antiguo: a
+        qué dijo que sí, cuándo y **sobre qué versión** del documento.
+
+        Es la prueba visible del **art. 7.1** que la web enseña hoy en «Privacidad y datos». Existe
+        porque retirar esa página sin publicarlo le quitaría al cliente información que ya tiene
+        (`DECISIONES #120(t)`).
+
+        ⚠️ **NO publica la IP**, y no es un descuido: la página tampoco la enseña. La IP forma parte
+        de la prueba y viaja en el export de portabilidad (`GET /me/export`), que es un acto
+        explícito del titular — repetirla en una lista que se pinta sola añade un dato técnico a la
+        pantalla sin decirle nada nuevo.
+
+        Lista corta por naturaleza: no se pagina, pero lleva `meta.total` como cualquier otra.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Los consentimientos otorgados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservations:
     get:
       tags: [Cuenta]
@@ -2174,6 +2210,49 @@ components:
           format: date-time
           nullable: true
 
+    ConsentList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Consent'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    Consent:
+      type: object
+      description: Un consentimiento otorgado, tal como el titular lo ve.
+      required: [type, type_label, accepted_at, accepted_label, version]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          description: '`privacy` · `terms` · `waiver` · `marketing`. El identificador, para programar.'
+        type_label:
+          type: string
+          description: |
+            El nombre del documento en el idioma negociado («Política de privacidad»).
+
+            ⚠️ **Lo compone el servidor** para que el cliente no tenga que llevar su propia tabla de
+            cuatro rótulos: sería una segunda lista que envejece sola el día que se añada un quinto
+            tipo de consentimiento. Un tipo desconocido devuelve su propio identificador, nunca
+            cadena vacía — un rótulo en blanco se lee como «no hay nada».
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        accepted_label:
+          type: string
+          description: |
+            La fecha ya compuesta («23/08/2026`»), **en la zona horaria de la instalación**, por el
+            mismo motivo que `created_label` en un pedido.
+        version:
+          type: string
+          description: Versión del documento que se aceptó. Es lo que dice a QUÉ se dijo que sí.
+
     UpcomingReservationList:
       type: object
       required: [data, meta]
@@ -2247,6 +2326,10 @@ components:
         - expires_at
         - items
         - guest_form_pending
+        - has_deposit
+        - pending_at_gate_lines
+        - pending_refund_cents
+        - total_final_cents
       additionalProperties: false
       properties:
         code:
@@ -2312,6 +2395,62 @@ components:
             ⚠️ **No es el `any()` de `items[].needs_guest_form`, y por eso se llama distinto.** El
             servidor descarta primero las líneas CANCELADAS: un cliente que agregara el campo de las
             líneas contaría una cancelada y prometería un formulario que nadie va a pedir.
+        has_deposit:
+          type: boolean
+          description: |
+            Si este pedido se compró con **señal** (una parte online y el resto en el parque).
+
+            ⚠️ **Se publica en vez de dejar que el cliente lo deduzca**, y no es equivalente a
+            `pending_at_gate_cents > 0`: un pedido con señal cuyo resto ya se cobró en recepción tiene
+            0 pendiente y **sigue siendo** un pedido con señal. Tampoco es el `any()` de
+            `items[].shows_deposit_note`, por el mismo motivo que `guest_form_pending` no lo es de su
+            campo por línea. De él dependen dos cosas que el cliente enseña: la línea «Pagado online»
+            y **cuál de las dos leyendas** acompaña al desglose de puerta.
+        pending_at_gate_lines:
+          type: array
+          description: |
+            El desglose de `pending_at_gate_cents`, **línea a línea y con su etiqueta ya compuesta**:
+            primero los cargos por cambios en el pedido, después el resto de la señal por producto.
+            Σ de sus importes == `pending_at_gate_cents`.
+
+            ⚠️ **El orden es el que el cliente ya conoce de la web**, y pintarlo en otro cambia el
+            desglose que ha visto siempre.
+
+            ⚠️ **Las etiquetas las compone el SERVIDOR** —«+2 Entrada suelta», «Cambio a Cumple Jump»,
+            «Resto de la señal de Cumple Jump»— porque salen de reglas de dominio y de `lang/`.
+            Recomponerlas en cada cliente es como divergieron las cuatro copias del rótulo de día.
+            Lista vacía si no hay nada pendiente en puerta.
+          items:
+            $ref: '#/components/schemas/OrderGateLine'
+        pending_refund_cents:
+          type: integer
+          description: |
+            Dinero pagado online que ya **no tiene producto detrás** —una cancelación o una reducción—
+            y que todavía **no se ha devuelto**.
+
+            ⚠️⚠️ **No es lo mismo que `refund.amount_cents`, y confundirlos invierte el significado**:
+            aquél es lo ya devuelto y esto es lo que aún se debe. En producción vuelve a 0 en cuanto
+            el reembolso se completa; queda >0 mientras está pendiente o ha fallado.
+        total_final_cents:
+          type: integer
+          description: |
+            Lo que el cliente **acaba pagando** por lo que queda vivo del pedido.
+
+            ⚠️⚠️ **No es `total_cents` en cuanto hay una cancelación o un cambio**: `total` es
+            INMUTABLE —es lo que se facturó— y esto es el valor actual de los productos. Un cliente
+            que enseñara `total_cents` tras una cancelación diría que se le cobró de más.
+    OrderGateLine:
+      type: object
+      description: Una línea del desglose de «a cobrar en el parque».
+      required: [label, amount_cents]
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          description: Ya compuesta por el servidor y en el idioma negociado.
+        amount_cents:
+          type: integer
+          description: Siempre positivo; es un cargo, no un descuento.
     OrderRefund:
       type: object
       description: |
