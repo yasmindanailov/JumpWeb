@@ -2,8 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-22** (4.7 validado por el owner · el cajón reorganizado en tres capas ·
-> el área de cliente DISEÑADA y partida en tandas, `#120`).
+> aquí solo se enlaza. Última actualización: **2026-08-22** (el ÁREA DE CLIENTE: tanda 1 completa y
+> tanda 2 con 2 de 3 pasos — falta el paso 8, los dos derechos RGPD, `#120`).
 
 ## ▶ Dónde estamos
 
@@ -16,8 +16,12 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 `docs/specs/sidebar-spa.md` §4.10.
 
 ✅ **Las dos comprobaciones de navegador que faltaban están HECHAS y el owner ha validado el cajón**
-(2026-08-22). La fase sigue 🟦 solo por lo que viene después —el área de cliente (`#66`)—, no por
-`4.7`: eso está cerrado.
+(2026-08-22). `4.7` está cerrado.
+
+🟦 **La fase sigue abierta por el ÁREA DE CLIENTE** (`#66`, `#120`), que va por **tandas**:
+**1 (solo lectura) ✅ COMPLETA** · **2 (gestiones) 🟦 2 de 3** —falta el paso 8: borrado y export— ·
+**3 (retirar `/mi-cuenta/…`) ⬜**, con su condición de entrada medida y vigilada. El detalle, en
+«Próximo paso».
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -30,8 +34,8 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2711 en verde** (15.526 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
-  **478 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
+- Suite **2711 en verde** (15.526 aserciones, `--parallel` ~50 s medidos el 2026-08-22) ·
+  **478 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -98,95 +102,75 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
     enrutan: **la cuenta entra al lado, no dentro**;
   · el estado de cada dominio ya tiene su store, así que una sección nueva pide el suyo y no necesita
     que la raíz le pase nada por props.
-  ✅ **Y el modelo de navegación ya está DISEÑADO** (`specs/area-cliente.md` §3.1, 2026-08-22): índice
-  + zonas libres con pila de retorno, con su propio modelo y sin tocar el grafo del embudo. 🟦 Pendiente
-  de que el owner lo valide, junto con el modo `account` del panel (`#120(d)`).
-- ⚠️ **El servidor está para LEER, NO para GESTIONAR** — y esta línea decía lo contrario hasta que se
-  midió endpoint por endpoint (`#120(a)`, 2026-08-22). ✅ Existen y están probados desde Fase 3:
-  `/auth/*`, `/me`, `/me/orders`, `/me/reservations`, `/me/reservation-eligibility` y el post-form por
-  firma. ❌ **No existe NADA** para cambiar el perfil, cambiar la contraseña, cerrar sesión en otros
-  dispositivos, borrar la cuenta ni exportar los datos: solo `App\Livewire\Account\*` y el controlador
-  web del export. Eso es lo que parte el área de cliente en dos tandas.
-- ⚠️ **La última frontera es `account-context`**, que sigue siendo **Livewire y hermano** del punto de
-  montaje de Vue: el cajón SPA nunca lo ha pintado. Ahí murieron las señales de `#118`, y su fila está
-  en `DEUDA.md`. Traerlo a Vue es trabajo de esta fase.
+  ✅ **Y el modelo de navegación está DISEÑADO, VALIDADO por el owner y CONSTRUIDO** (`#120(d)`,
+  `specs/area-cliente.md` §3.1): índice + zonas libres con pila de retorno, con su propio modelo y sin
+  tocar el grafo del embudo. Añadir una zona es **una línea** en `ZONES` más su rótulo.
+- **El servidor, al día de hoy** (`#120(a)` lo midió endpoint por endpoint, y por eso el área va en
+  tandas): ✅ **leer** —`/auth/*`, `/me`, `/me/orders`, `/me/reservations`,
+  `/me/reservation-eligibility` y el post-form por firma, desde Fase 3— y ✅ **gestionar contraseña,
+  sesiones y perfil**, abiertos en la tanda 2 con su limitador (`PUT /me/password`,
+  `POST /me/sessions/revoke-others`, `PATCH /me` y los dos del correo pendiente).
+  ❌ **Faltan solo los dos derechos RGPD**: borrar la cuenta y exportar los datos. Viven aún en
+  `App\Livewire\Account\DeleteAccount` y en el controlador web del export. **Es el paso 8.**
+- ⚠️ **`account-context` sigue siendo Livewire y hermano** del punto de montaje de Vue: el cajón SPA
+  nunca lo ha pintado. Se le **cableó la puerta** en la tanda 1 (su «Mis reservas» abre la sección),
+  pero migrarlo entero sigue pendiente. Ahí murieron las señales de `#118`; su fila está en `DEUDA.md`.
+- ⚠️ **El modal de auth de la cabecera sigue siendo la puerta de entrada** para quien no tiene sesión.
+  Traer la auth dentro del cajón **no está en ninguna de las tres tandas**: se decidió dejarlo fuera
+  para no doblar el tamaño de la tanda 2. Es trabajo aparte, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-▶▶ **TANDA 2 DEL ÁREA DE CLIENTE: LAS GESTIONES** (`DECISIONES #120(a)`). 🟩 **La tanda 1 —solo
-lectura— está COMPLETA**: los cinco pasos hechos, verificados en navegador y en `main`.
+▶▶ **PASO 8 — LOS DOS DERECHOS RGPD**, que CIERRAN la tanda 2: **borrar la cuenta** (art. 17) y
+**exportar los datos** (art. 20). Es lo único que falta de las cinco gestiones.
 
-⚠️ **Y la tanda 2 NO es pintar: es ABRIR API.** Medido endpoint por endpoint: cambiar el perfil,
-cambiar la contraseña, cerrar sesión en otros dispositivos, borrar la cuenta y exportar los datos
-**no tienen ninguno** — viven solo en `App\Livewire\Account\*` y en el controlador web del export.
-Cinco superficies nuevas sobre dominio que ya existe. **Empieza por ahí, no por el cliente**: es lo
-que enseñó el paso 3, donde el contrato rechazó cinco intentos seguidos hasta que se actualizó
-`openapi/v1.yaml` (que manda sobre el código).
+Lo que necesitas saber antes de empezar:
+- **El patrón está rodado**: la lógica baja a `Identity\Services\…` con un **veredicto** por
+  resultado (como `AccountCredentials` y `AccountProfile`), Livewire y la API lo consumen, y **primero
+  el contrato** (`openapi/v1.yaml` manda y rechaza lo que no declare).
+- **No reimplementes la purga**: `User::anonymize()` es la central y completa (`RGPD-01`), y
+  `revokeAllAccess()` el sitio único para invalidar credenciales (`RGPD-06`).
+- **Reutiliza `AccountCredentials::verify()`** para reconfirmar la contraseña. Con eso, los **dos
+  sitios que aún quedan sin limitador en la web** (`DeleteAccount` y el cambio de email del perfil ya
+  cubierto) se cierran solos — es lo que pasó en los pasos 6 y 7 (`#120(o)`).
+- **El export lleva PII** (art. 9: alergias de menores): `RGPD-04` exige `no-store`, y toda respuesta
+  autenticada de `/api/v1` ya lo lleva por defecto.
+- ⚠️ **`DELETE /me` NO borra la fila**: llama a `anonymize()`. El pedido y su historia contable se
+  conservan sin PII.
 
-✅ **Paso 6 COMPLETO (6a + 6b)**: `AccountCredentials` en el dominio, los dos componentes Livewire
-consumiéndolo, `PUT /me/password` + `POST /me/sessions/revoke-others` con su contrato, y **sus dos
-pantallas en el cajón** (navegador `V8`, 5/5 + 3/3).
-⚠️ **La web heredó el limitador sin tocar la web**: dos de los cuatro sitios que reconfirman
-contraseña quedaron cubiertos de golpe (`#120(o)`); los otros dos llegan solos con los pasos 7 y 8.
-✅ **Paso 7a HECHO**: `AccountProfile` en el dominio —reglas, ciclo de `pending_email`, dos avisos y
-la carrera de UNIQUE—, con `PATCH /me`, `DELETE /me/pending-email` y `POST /me/pending-email/resend`.
-⚠️ **Tres guardas de arquitectura mordieron y las tres tenían razón** (`#120(q)`): el método del
-servicio se llamaba `update` y confundía a `ApiBoundariesTest`; el servicio importaba un middleware
-—la lista de idiomas bajó a `Platform\Services\SiteLocales`—; y `/me` publica una lista CERRADA de
-campos que hubo que ampliar con su motivo.
-✅ **Paso 7b HECHO**: la zona `PROFILE` con el ciclo del correo pendiente. Verificado en navegador
-(`V9`, 7/7): tras pedir el cambio, **el campo de email vuelve a mostrar el VIGENTE** y el aviso dice
-«sigues usando …» — la señal visible de que el titular no ha perdido el acceso.
-⚠️ **Y el techo de componentes obligó al rediseño que tocaba** (`#120(r)`): la sección estaba en 38/40
-porque conocía los datos de sus zonas. Hoy **cada zona pide y compone lo suyo** y la sección bajó a
-**20**: enruta y nada más. No costó ni una petición.
-▶ **Lo siguiente es el paso 8**: los dos derechos RGPD —borrar la cuenta (art. 17) y exportar los
-datos (art. 20)—, que cierran la tanda 2.
+### Dónde está hoy «Mi cuenta», bloque a bloque
 
-✅ **El diseño de la tanda 2 está escrito** (`specs/area-cliente.md` **§9**), con su corte en tres
-pasos —contraseña + otras sesiones · el perfil · los dos derechos RGPD— y una decisión de seguridad
-que conviene no perder: **la web NO limita los intentos de `current_password`** en ninguna de las
-cuatro gestiones que lo piden, y **la API se abre CON limitador** (`#120(n)`, `DEUDA.md`).
+| Bloque de `/mi-cuenta` | En el cajón |
+|---|---|
+| Mis reservas · Tus datos · Contraseña · Sesiones | ✅ zonas `ORDERS`, `PROFILE`, `PASSWORD`, `SESSIONS` |
+| **Exportar mis datos** · **Borrar la cuenta** | ❌ **paso 8** |
+| Cerrar sesión | ❌ no está en el índice del cajón |
 
-⚠️ **La tanda 3 —retirar `/mi-cuenta/…`— tiene su condición 1 medida y VIGILADA**: `AccountPageCapture
-Test::GAPS` enumera las **cuatro** cosas que la página enseña y la API no publica. Mientras esa lista
-no esté vacía, borrar la página pierde información del cliente.
+⚠️ **Y dos cosas más siguen FUERA, y no son de la tanda 2**: la **auth** (entrar, registrarse,
+recuperar) vive en el modal de la cabecera —un invitado que pulsa «Mis reservas» va ahí—, y
+`account-context` sigue en **Livewire**. Las dos tienen ficha en `DEUDA.md`.
 
-✅ **LOS CINCO PASOS, hechos y verificados en navegador el 2026-08-22** (`V4`–`V7`):
+### Lo hecho, en una línea por tanda
 
-| # | Qué cerró | Lo que enseñó |
-|---|---|---|
-| **1** | El nivel **SECCIÓN**: `section.js` + su store, la raíz enruta y publica las señales, el modo `account` | `<KeepAlive>` **anula la template ref** de la que cuelga el puente de señales, y cuesta 2,3 KiB: fuera (`#120(g)`) |
-| **2** | La **NAVEGACIÓN de zonas**: pila de retorno que **no crece al alternar**, «volver» sin historia sale a la compra | Son **DOS zonas y no tres**: `account.orders.title` ya se llama «Mis reservas» de cara al cliente (`#120(i)`) |
-| **3a** | El **CONTRATO de presentación**: `date_label`, `created_label`, `refunded_label`, `guest_form_url` | «Hay que pintar, no abrir dominio» valía para los datos, **no para su presentación**. Y la fórmula del rótulo estaba **copiada en cuatro superficies** (`#120(j)`) |
-| **3b** | Los **DATOS en el cliente**: dos stores y las dos zonas pintando | **`paid_online_cents` incluye los complementos** (68,00 € y no 60,00), y los textos del área deben viajar **solo con sesión**: 701 B con ella, **0** sin ella (`#120(k)`) |
-| **4** | La **PUERTA**: «Mis reservas» abre la sección en vez de navegar, **conservando el `href`** | Medido **cortando el chunk del motor**: sin `href`, el botón «no falla, no hace nada». Y `SidebarAccountVisibilityTest` se había quedado corto (`#120(l)`) |
-| **5** ⏳ | La **CAPTURA DE HUECOS**: `AccountPageCaptureTest`, temporal, con su caducidad en la primera línea | Cuatro huecos con nombre, y **su lista vacía es la condición 1 de la tanda 3**. Tres sondas nacieron inertes y las cazó su propia guarda (`#120(m)`) |
+- 🟩 **Tanda 1 (solo lectura), COMPLETA**: cinco pasos, `V4`–`V7` en navegador. El detalle vive en
+  `00-REFACTOR.md` y en `DECISIONES #120(g)`–`(m)`.
+- 🟦 **Tanda 2 (gestiones), 2 de 3 pasos**: contraseña + sesiones (`#120(n)`–`(p)`, `V8`) y el perfil
+  (`#120(q)`–`(r)`, `V9`). Falta el paso 8.
+- ⚠️ **Tanda 3 (retirar `/mi-cuenta/…`) tiene su condición 1 medida y VIGILADA**:
+  `AccountPageCaptureTest::GAPS` enumera las **cuatro** cosas que la página enseña y la API no publica
+  —el desglose financiero—. Mientras no esté vacía, borrar la página pierde información del cliente.
+  ⏳ Ese fichero **muere con la página**, y lo dice en su primera línea.
 
-⚠️ **Lo que NO cambió, y es deliberado**: sin sesión, el botón sigue abriendo el modal de la cabecera.
-Traer la auth a la sección es tanda 2 — hacerlo aquí la habría metido entera por la puerta de atrás.
-
-⚠️ **Y lo primero que la spec midió corrige lo que esta foto venía repitiendo.** «El servidor ya está,
-hay que pintar» **solo vale para LEER**: las cinco gestiones de cuenta —perfil, contraseña, otras
-sesiones, borrado y export RGPD— **no tienen ningún endpoint** y viven solo en `App\Livewire\Account\*`.
-Por eso el trabajo va en tandas, y esta es la primera (`#120(a)`).
-
-Lo que te vas a encontrar hecho, y lo que no:
+### Seis cosas que condicionan lo que toques aquí
 
 | | |
 |---|---|
-| Diseño | ✅ **aprobado y EJECUTADO** (`specs/area-cliente.md`): tanda 1 cerrada, §8 con las cinco filas en ✅ |
-| Servidor para **LEER** | ✅ `/me`, `/me/orders`, `/me/reservations`, el reintento, y desde 3a las **etiquetas de presentación** |
-| Servidor para **GESTIONAR** | ❌ **no existe**: cinco superficies por abrir. **Es el trabajo de la tanda 2** |
-| La **sección** de cuenta | ✅ montada, con índice y «Mis reservas» pintando datos reales |
-| La **puerta** | ✅ cableada **con sesión**. ⚠️ Sin sesión sigue abriendo el modal: la auth es tanda 2 |
-| Navegación | ✅ zonas libres con pila de retorno. Añadir una zona nueva **no toca el modelo**: entra en `ZONES` con su rótulo |
+| **Servidor para GESTIONAR** | ✅ contraseña, sesiones y perfil, con su **limitador** en `AccountCredentials`. ❌ **falta el paso 8** (borrado y export) |
 | `/mi-cuenta/…` | 🟩 **condenado** (`#120(c)`, owner), tanda 3. ⚠️ Muere la **VISTA**, **vive la RUTA**: 8 correos ya entregados apuntan ahí y no se pueden editar |
-| Condición de la retirada | ⏳ **`AccountPageCaptureTest::GAPS` vacía** — hoy tiene **cuatro** entradas, y el test las enumera |
-| `account-context` | ❌ sigue en **Livewire**. Se le cableó la puerta; migrarlo es trabajo posterior |
 | ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): no hay original que copiar. Es paridad de DATOS contra **la API** —no contra la página condenada— + navegador |
 | ⚠️ **La cadena flex** | `.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll` son **hijos DIRECTOS**: un envoltorio router la parte y **ningún test lo ve** (`specs/area-cliente.md` §4.9) |
-| ⚠️ **El presupuesto** | El techo del bundle **bajó a 173 KiB al cerrar la tanda**, como manda su propia regla. La tanda 2 tendrá que subirlo **con su medida** y volver a bajarlo |
+| ⚠️ **Los presupuestos** | Bundle en **183 KiB** y payload del montaje en **4.096 B**, los dos subidos **con su medida** por la tanda 2. ▶ **Al cerrarla hay que BAJARLOS a lo medido**: está escrito en sus propias guardas y casi nunca se cumple |
+| ⚠️ **El techo de componentes** | 40 líneas por `.vue`. En el paso 7b llegó a 38 y **obligó al rediseño correcto** —cada zona pide y compone lo suyo, la sección solo enruta (`#120(r)`)—. Si vuelve a apretar, la pregunta es qué sobra ahí, no cuánto subirlo |
 
 ⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
 del ORQUESTADOR, **el contrato de árbol no es red** —`render-sidebar.mjs` no importa la raíz y su
