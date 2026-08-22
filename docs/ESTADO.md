@@ -2,7 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-22** (4.7 validado por el owner · el cajón reorganizado en tres capas).
+> aquí solo se enlaza. Última actualización: **2026-08-22** (4.7 validado por el owner · el cajón reorganizado en tres capas ·
+> el área de cliente DISEÑADA y partida en tandas, `#120`).
 
 ## ▶ Dónde estamos
 
@@ -29,8 +30,8 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2661 en verde** (15.282 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **366 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
+- Suite **2661 en verde** (15.286 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+  **404 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -97,31 +98,60 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
     enrutan: **la cuenta entra al lado, no dentro**;
   · el estado de cada dominio ya tiene su store, así que una sección nueva pide el suyo y no necesita
     que la raíz le pase nada por props.
-  ⚠️ **Lo que NO está hecho, y es deliberado**: el modelo de navegación del área de cliente. Sin
-  pantallas sería especulación; se diseña con el owner delante, y ese es el primer trabajo de la fase.
-- **El servidor ya está** (medido contra `openapi/v1.yaml`): `/auth/*`, `/me`, `/me/orders`,
-  `/me/reservations`, `/me/reservation-eligibility` y el post-form por firma existen y están probados
-  desde Fase 3. Hay que pintar, no abrir dominio.
+  ✅ **Y el modelo de navegación ya está DISEÑADO** (`specs/area-cliente.md` §3.1, 2026-08-22): índice
+  + zonas libres con pila de retorno, con su propio modelo y sin tocar el grafo del embudo. 🟦 Pendiente
+  de que el owner lo valide, junto con el modo `account` del panel (`#120(d)`).
+- ⚠️ **El servidor está para LEER, NO para GESTIONAR** — y esta línea decía lo contrario hasta que se
+  midió endpoint por endpoint (`#120(a)`, 2026-08-22). ✅ Existen y están probados desde Fase 3:
+  `/auth/*`, `/me`, `/me/orders`, `/me/reservations`, `/me/reservation-eligibility` y el post-form por
+  firma. ❌ **No existe NADA** para cambiar el perfil, cambiar la contraseña, cerrar sesión en otros
+  dispositivos, borrar la cuenta ni exportar los datos: solo `App\Livewire\Account\*` y el controlador
+  web del export. Eso es lo que parte el área de cliente en dos tandas.
 - ⚠️ **La última frontera es `account-context`**, que sigue siendo **Livewire y hermano** del punto de
   montaje de Vue: el cajón SPA nunca lo ha pintado. Ahí murieron las señales de `#118`, y su fila está
   en `DEUDA.md`. Traerlo a Vue es trabajo de esta fase.
 
 ## ▶ Próximo paso
 
-▶▶ **EL ÁREA DE CLIENTE** (`DECISIONES #66`): la gestión del cliente entera dentro del cajón. Ya no la
-ata nada —ni Turnstile (4.4b·2), ni `4.7`, ni la arquitectura— y el terreno se preparó a propósito el
-2026-08-22 (`#119`). **Empieza por el DISEÑO, no por pintar**: el modelo de navegación de la sección
-de cuenta es lo único que quedó sin hacer, y se decide con el owner delante.
+▶▶ **EL ÁREA DE CLIENTE — TANDA 1: SOLO LECTURA** (`DECISIONES #66`/`#120`). El diseño está
+**✅ APROBADO por el owner** (`docs/specs/area-cliente.md`) y **el paso 1 de los seis está HECHO**:
+el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de navegación de zonas
+(`account/navigation.js`); el orden completo y la red de cada paso, en la **§8** de la spec.
+
+✅ **Pasos 1 y 2 de CINCO, hechos y verificados en navegador el 2026-08-22.**
+· **1 · el nivel SECCIÓN** (`V4`): conmutar y volver **no dispara ni una petición**, el embudo conserva
+  su paso, el bloque de cuenta se colapsa con el modo **`account`** —y **no es alcanzable con Tab**— y
+  el árbol oculto **no atrapa el foco** (12 focusables visibles → 0 ocultos).
+· **2 · la NAVEGACIÓN de zonas** (`V5`, **7/7**): índice + «Mis reservas», pila de retorno que **no
+  crece al alternar**, «volver» sin historia **sale a la compra**, entrada directa a zona y reentrada
+  con la historia vacía. **0 peticiones** en todo el recorrido.
+⚠️ **Son DOS zonas y no tres, y lo decidió una medición de vocabulario**: `account.orders.title` es
+literalmente **«Mis reservas»** —la página de pedidos ya se llama así de cara al cliente— y
+`/me/reservations` alimenta el bloque de cuenta, no una pantalla. Una zona «próximas reservas» aparte
+habría sido inventar producto en una tanda cuyo criterio es la paridad (`specs/area-cliente.md` §4.2).
+⚠️ **El botón que lleva ahí NO está cableado todavía, y es a propósito**: la sección es hoy su armazón.
+Cablear la puerta antes de que haya habitación llevaría al cliente a una pantalla vacía si esto se
+despliega. Se cablea en el paso 5, con las zonas ya pintadas.
+
+⚠️ **Y lo primero que la spec midió corrige lo que esta foto venía repitiendo.** «El servidor ya está,
+hay que pintar» **solo vale para LEER**: las cinco gestiones de cuenta —perfil, contraseña, otras
+sesiones, borrado y export RGPD— **no tienen ningún endpoint** y viven solo en `App\Livewire\Account\*`.
+Por eso el trabajo va en tandas, y esta es la primera (`#120(a)`).
 
 Lo que te vas a encontrar hecho, y lo que no:
 
 | | |
 |---|---|
-| Servidor | ✅ **listo**: `/auth/*`, `/me`, `/me/orders`, `/me/reservations`, `/me/reservation-eligibility`, post-form por firma. Hay que pintar, no abrir dominio |
-| Sitio donde entra | ✅ **una SECCIÓN nueva** al lado de `sections/PurchaseSection.vue`; la raíz (16 líneas) solo enruta |
-| Estado | ✅ un **store por dominio** en `stores/`; el de auth ya existe y lo compartiréis |
-| Navegación | ❌ **sin diseñar, a propósito**. El embudo tiene su grafo CERRADO (`FUNNEL_TRANSITIONS`, con guarda): la cuenta necesita el suyo |
-| `account-context` | ❌ sigue en **Livewire**, hermano del punto de montaje de Vue. Es la última frontera y su fila está en `DEUDA.md` |
+| Diseño | ✅ **escrito** (`specs/area-cliente.md`): navegación, zonas, contrato de datos y plan de verificación. 🟦 dos puntos sin validar |
+| Servidor para **LEER** | ✅ `/me`, `/me/orders`, `/me/reservations` y el reintento por `POST /orders/{code}/payment` |
+| Servidor para **GESTIONAR** | ❌ **no existe**: cinco superficies de API por abrir. Tanda 2, no ésta |
+| Sitio donde entra | ✅ una **SECCIÓN** al lado de `sections/PurchaseSection.vue`; la raíz (16 líneas) solo enruta |
+| Estado | ✅ un **store por dominio**; las peticiones van AHÍ y no al componente (techo de 40 líneas, 0 llamadas) |
+| Navegación | ✅ **diseñada**: índice + zonas libres con pila de retorno. 🟦 sin validar. El grafo del embudo **no se toca** |
+| `/mi-cuenta/…` | 🟩 **condenado** (`#120(c)`, owner), tanda 3. ⚠️ Muere la **VISTA**, **vive la RUTA**: 8 correos ya entregados apuntan ahí y no se pueden editar |
+| `account-context` | ❌ sigue en **Livewire**. Aquí solo se le cablea la puerta; migrarlo es trabajo posterior |
+| ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): aquí no hay original que copiar. Es paridad de DATOS contra **la API** —no contra la página condenada— + navegador |
+| ⚠️ **La cadena flex** | `.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll` son **hijos DIRECTOS**: un envoltorio router la parte y **ningún test lo ve** (`specs/area-cliente.md` §4.9) |
 
 ⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
 del ORQUESTADOR, **el contrato de árbol no es red** —`render-sidebar.mjs` no importa la raíz y su
@@ -173,7 +203,8 @@ sitio y duplicarlas es lo que envejece esta foto—; se nombran para que no te p
   1. ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS** del sitio en el panel de Enhance — sin cron no hay envío de
      correo ni caducidad de pedidos (`#115`). La entrada exacta, en `ENTORNOS.md` §4.
   2. Un **token nuevo de la API del panel** para `scripts/provision.sh` (el de medir se retiró).
-  3. **El modelo de navegación del área de cliente**, que es diseño de producto (`#66`).
+  3. **Validar la spec del área de cliente** (`specs/area-cliente.md`): el modelo de navegación (§3.1)
+     y el modo `account` del panel (§3.3) son propuesta del agente y están 🟦 sin validar (`#120(d)`).
   4. 2FA del panel · backlog de producto de Fase 6.
   ✅ Resueltos: el acceso SSH del 2º puesto (2026-08-21) y **las dos comprobaciones de navegador que
   cerraban `4.7`** (2026-08-22, validadas por el owner).

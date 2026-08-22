@@ -1188,8 +1188,14 @@ body.no-scroll { overflow: hidden; }
                 opacity var(--dur-fade) ease,
                 visibility 0s;
 }
+/* ⚠️ `is-account` se suma a las dos de la compra el 2026-08-22 (`specs/area-cliente.md` §3.3): dentro
+   del área de cliente este bloque es redundante —sus botones llevan a donde el cliente YA está—, así
+   que se colapsa igual. Es un modo PROPIO y no `is-cart` reutilizado a propósito: `cart` también lo
+   colapsaría, pero haría que la señal dijera «carrito» con el cliente mirando sus pedidos, que es el
+   fallo de `DECISIONES #115` —una comprobación que mide una cosa y se lee como otra—. */
 .sidecart__panel.is-booking .acct,
-.sidecart__panel.is-cart .acct {
+.sidecart__panel.is-cart .acct,
+.sidecart__panel.is-account .acct {
     grid-template-rows: 0fr;
     padding-top: 0;
     padding-bottom: 0;
@@ -1207,7 +1213,8 @@ body.no-scroll { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .acct,
     .sidecart__panel.is-booking .acct,
-    .sidecart__panel.is-cart .acct { transition: none; }
+    .sidecart__panel.is-cart .acct,
+    .sidecart__panel.is-account .acct { transition: none; }
 }
 /* `.acct__tag` era la etiqueta que SOLO se veía con la cuenta minimizada. Sin ese estado ya no tiene
    dónde mostrarse, y se queda oculta. El `<span>` se conserva a propósito: `AccountContextTest`

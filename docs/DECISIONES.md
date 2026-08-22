@@ -4926,3 +4926,115 @@ llegue»). Esta fase añade la quinta: **el contrato de árbol NO ejerce `Sideba
 lo importa, y su propio comentario dice por qué—, así que en un refactor del orquestador **la única
 red real es el navegador**. Desde que se asumió, cada tramo se recorrió en uno, y ahí aparecieron los
 tres fallos vivos.
+
+## #120 · 2026-08-22 · [DECIDIDO] El área de cliente entra en DOS tandas, y `/mi-cuenta/…` desaparece
+Decisiones del owner tomadas al abrir el trabajo de `#66`, más lo que se midió antes de proponérselas.
+El diseño completo está en `docs/specs/area-cliente.md`; aquí queda lo que decidió el owner y por qué
+la propuesta llegó partida en dos.
+
+**(a) ⚠️ La medición que partió el trabajo: «el servidor ya está» solo es cierto A MEDIAS.** `#66(d)`,
+`ESTADO.md` y `00-REFACTOR.md` repiten que el área de cliente es «pintar, no abrir dominio». Medido
+endpoint por endpoint contra `routes/api.php` el 2026-08-22: **cierto para LEER** —`GET /me`,
+`/me/orders`, `/me/reservations`, `/me/reservation-eligibility`, `/auth/*` y el reintento por
+`POST /orders/{code}/payment` existen y están probados— y **falso para GESTIONAR**: cambiar el perfil,
+cambiar la contraseña, cerrar sesión en otros dispositivos, borrar la cuenta y exportar los datos **no
+tienen ningún endpoint**. Viven solo en `App\Livewire\Account\*` y en el controlador web del export.
+▶ Son dos trabajos de tamaño distinto —uno es pintar, el otro es abrir cinco superficies de API sobre
+dominio existente—, así que se presentaron por separado en vez de como «el área de cliente».
+
+**(b) La decisión de alcance: TANDA 1 = solo lectura.** «Mis reservas» y «Mis pedidos» dentro del
+cajón, con su acordeón de detalle y el reintento de pago. Las gestiones de cuenta y la auth dentro del
+cajón quedan para la tanda 2. El motivo de aceptar el corte es el de siempre en esta fase: **un paso
+que se puede terminar y verificar entero** vale más que uno que deja media superficie a medias.
+
+**(c) La decisión de destino: `/mi-cuenta/…` DESAPARECE.** No conviven; el cajón es el único sitio,
+que es lo que `#66(a)` decía y `#66(b)` dejó explícitamente sin decidir. Se decide ahora porque cambia
+el diseño: con las páginas condenadas, el área de cliente tiene que llegar a **paridad completa** —las
+siete zonas—, y eso descartó un modelo de navegación de pestañas que con dos zonas habría bastado.
+⚠️ **La retirada NO es la tanda 1.** Es la tanda 3, con cuatro condiciones de entrada escritas en la
+spec (§4.8), y hereda literalmente la lección de `#111`: **independizar el contrato ANTES de borrar**.
+⚠️⚠️ **Y «desaparecer» hay que decirlo con precisión, porque en crudo rompe cosas ya entregadas.**
+Medido después de tomar la decisión: **8 notificaciones por correo** apuntan a `route('account.orders')`
+—están en buzones de clientes y **un correo enviado no se puede editar**—, **11 redirecciones del
+servidor** aterrizan ahí con un `->with('status', …)` que la página pinta, y hay **27 referencias** en
+total. ▶ Lo que muere es la **VISTA**; la **RUTA sobrevive como puerta de entrada** que abre el cajón
+en su zona —el patrón de `/entradas`, probado desde la Fase 5.2— y el mensaje flash viaja por
+`Http\Sidebar\SidebarEntry`, que ya resuelve exactamente ese problema para el desenlace del pago.
+
+**(d) ✅ Lo que el owner validó, ese mismo día y tras la revisión de (f).** El **modelo de navegación**
+—índice + zonas libres con pila de retorno, `spec §3.1`—, el **modo `account`** del panel (`spec §3.3`)
+y **no tocar la URL del navegador en la tanda 1** (`spec §3.4`: el embudo tampoco lo hace, y meter un
+router solo en la cuenta crearía una asimetría difícil de defender; se reevalúa en la tanda 3, cuando
+existan las siete zonas). La spec pasa a **✅ APROBADA → a implementar**.
+
+**(e) Una diferencia de naturaleza con TODO lo hecho en la Fase 4, que cambia dónde está la red.** El
+embudo fue una transcripción: existía un original que pintaba en el mismo sitio, así que el contrato
+podía ser el ÁRBOL y el gate compararlos nodo a nodo. **El área de cliente no tiene original**:
+`/mi-cuenta/pedidos` es una página ancha y el destino es un panel estrecho. Un diff de árbol entre los
+dos sería un test que no se puede pasar sin romper el diseño.
+▶ Por eso la red de esta tanda es **paridad de DATOS y de REGLAS** —¿se enseña lo mismo, se ofrece lo
+mismo, se oculta lo mismo?— más el **navegador**, que es lo que `#119(g)` dejó dicho: el contrato de
+árbol no ejerce el orquestador porque `render-sidebar.mjs` no importa la raíz.
+
+**(f) La revisión crítica del propio diseño, el mismo día, y lo que cambió.** La v1 de la spec se
+revisó a petición del owner («¿es esta la mejor manera?») y **cuatro puntos no aguantaron la
+medición**:
+· **la conmutación de sección**: proponía `v-show`. Medido `PurchaseSection.vue` —**1 solo `ref` local,
+  pero cinco cargas en `onMounted`**— la forma correcta es **`<KeepAlive>`**: no repite el arranque, no
+  deja dos árboles dentro del mismo `role="dialog"` y **no emite nodo**, así que no parte la cadena
+  flex del panel. Con su trampa escrita: `onUnmounted` no corre al conmutar, y copiar
+  `onDeactivated(stopPolling)` por simetría **rompería la verificación del pago** de quien cambia de
+  sección mientras espera;
+· **la paridad de datos**: proponía comparar contra `/mi-cuenta/pedidos` — **una red alimentada por la
+  página que va a morir**, que es literalmente el error que `#67` corrigió. Se parte en dos: una
+  paridad **permanente contra la respuesta de la API** (la fuente que sobrevive) y una **captura
+  temporal con caducidad declarada** cuyo único valor es encontrar los huecos antes del borrado;
+· **la retirada**: ver (c) — 8 correos entregados no admiten un 404;
+· **la cadena flex del panel** (`.sidecart__body` → `#sidecart-spa` → `.purchase` →
+  `.purchase__scroll`, hijos DIRECTOS): no estaba en la v1 y **ningún test puede verla** —lo dice el
+  propio CSS—. Entra como requisito vinculante del enrutado y como comprobación explícita del
+  recorrido en navegador.
+▶ **La lección, que es de método**: las cuatro salieron de MEDIR el código, no de releer el diseño. Un
+spec revisado contra sí mismo solo encuentra incoherencias; contra el código encuentra defectos.
+
+**(g) Y una QUINTA corrección, que la trajo IMPLEMENTAR y no diseñar: `<KeepAlive>` se cayó.** La
+revisión (f) lo había elegido para conmutar de sección. Al escribir el paso 1 aparecieron dos cosas
+que ningún análisis de diseño podía ver:
+· **anula la template `ref`** de la sección desactivada, y de esa ref cuelga el puente de
+  `defineExpose` —`refreshBookingStatus` y `refreshIdentity`, que `index.js` invoca en CADA apertura
+  del cajón—: el `?.` se habría comido las dos señales **en silencio**;
+· **cuesta 2,3 KiB de chunk** (medido con y sin él), y él solo hacía saltar el techo de
+  `SidebarBundleBudgetTest` — cuyo propio comentario advierte que el área de cliente «tendrá que
+  decidir su propio presupuesto, no colarse por el margen de esta».
+▶ Lo elegido: **`v-show` en la compra** (nunca se desmonta ⇒ la ref y el puente intactos, y la trampa
+de `onUnmounted`/`onDeactivated` que (f) declaraba deja de existir) y **`v-if` a secas en la cuenta**,
+con «pedir solo si no hay datos» viviendo en su store —regla explícita y probable con `node --test`,
+en vez de una caché del framework—. Sin `KeepAlive`, el paso 1 **cabe en el presupuesto que ya
+existía** y no consume margen de nadie.
+▶ **La lección**: un diseño se valida midiendo el código; una decisión de framework, además,
+**construyendo**. El coste en KiB y la anulación de una ref no se leen en ninguna documentación de
+arquitectura: salen del build y del comportamiento.
+
+**(h) Lo que el paso 2 destapó, que es la mitad de su valor: TRES casos en verde falso y uno inerte
+desde hacía meses.** Añadir tres claves al `data-boot` del cajón —150 B para que el área de cliente
+pinte sus rótulos— tocó **cuatro aserciones de tres ficheros distintos**: una se puso **roja**
+(`AccountOrdersPaginationTest`, un `assertDontSee` que ya no podía pasar) y **tres quedaron en verde
+falso**, porque el texto que aseveraban pasó a viajar en cada página. Es `TESTING.md` §2.ter, que
+estaba escrito para el grupo `tickets` y **vale para todo lo que entre en el montaje**.
+⚠️⚠️ **Y al mutarlas una a una —que la regla exige— apareció lo que ningún cambio había destapado**:
+`AccountAccessTest::test_verified_users_can_view_the_account_page` **llevaba INERTE desde `#231 p8`**.
+Comprobaba que `/mi-cuenta` enseña su título, y `landing.footer.account_link` es literalmente el mismo
+texto —«Mi cuenta»— en el footer de esa misma página: con el `<h1>` borrado, el caso seguía verde,
+**y también seguía verde tras convertirlo a `assertSeeText`**. Solo lo mide una aserción estructural.
+▶ **La lección, que amplía la §2.ter**: `assertSeeText` arregla la colisión con un ATRIBUTO, no la
+colisión con un GEMELO visible. Y **convertir sin mutar cambia un verde falso por otro** (`#65`): las
+cuatro se mutaron, y la primera pasó igualmente — que es exactamente cómo se encontró.
+
+**(i) Y una corrección de ALCANCE que salió de leer `lang/`: son DOS zonas, no tres.** El diseño
+proponía `RESERVATIONS` («próximas») y `ORDERS` («mis pedidos») como pantallas distintas. Medido:
+**`account.orders.title` es literalmente «Mis reservas»** —la página `/mi-cuenta/pedidos` ya se llama
+así de cara al cliente— y el vocabulario del cliente **no distingue** pedido de reserva.
+`GET /me/reservations` no alimenta ninguna pantalla hoy: alimenta el **bloque de cuenta** (próxima
+reserva, contador, aviso de post-form). ▶ Crear la zona separada habría sido **inventar producto** en
+una tanda cuyo criterio es la paridad; los dos endpoints se usan igual —`/me/orders` en la zona y
+`/me/reservations` en el índice—, que es donde esa información vive hoy.

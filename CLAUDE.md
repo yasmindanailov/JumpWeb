@@ -56,6 +56,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 (RGPD) + §4 (SEC) · `docs/FLUJOS.md` (flujos 1–2) |
 | Landing / tema visual (tokens CSS) | `docs/ARQUITECTURA.md` (white-label) · `docs/MAPA-PAGINAS.md` |
+| Área de cliente en el cajón (mis pedidos / mis reservas) | `docs/specs/area-cliente.md` (**§1.2: la API cubre LEER, no gestionar** · §1.3: aquí la red NO es el diff de árbol) · `docs/DECISIONES.md` #66, #119, #120 |
 | Sidebar SPA (Fase 4) / Vue / tema por instalación | `docs/specs/sidebar-spa.md` (**§4.2: el contrato visual es el ÁRBOL, NO las clases** — medido: 90 de 292 selectores no se satisfacen emitiendo la clase correcta) · ⚠️ **el diff de árbol NO ve el interior de un `<svg>` ni el texto**: eso necesita paridad propia (`TESTING.md` §2.ter/§2.quater, `DECISIONES #113`) · `docs/specs/api-v1.md` §10 → §10.sexdecies |
 | CMS público (servicios, ofertas) | `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` (copiar) · `docs/CONVENCIONES.md` §5 |

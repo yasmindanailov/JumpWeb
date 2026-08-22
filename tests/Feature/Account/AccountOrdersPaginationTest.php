@@ -67,7 +67,9 @@ class AccountOrdersPaginationTest extends TestCase
         $this->actingAs($this->verifiedUser())
             ->get('/mi-cuenta/pedidos')
             ->assertOk()
-            ->assertSee(__('account.orders.empty'));
+            // ⚠️ `assertSeeText` (`TESTING.md` §2.ter): `account.orders.empty` viaja desde el
+            // 2026-08-22 en el `data-boot` del cajón, que va en TODAS las páginas.
+            ->assertSeeText(__('account.orders.empty'));
     }
 
     public function test_out_of_range_page_does_not_show_empty_message(): void
@@ -80,6 +82,7 @@ class AccountOrdersPaginationTest extends TestCase
         $this->actingAs($user)
             ->get('/mi-cuenta/pedidos?page=99')
             ->assertOk()
-            ->assertDontSee(__('account.orders.empty'));
+            // ⚠️ Y su simétrico: un `assertDontSee` fallaría SIEMPRE por la misma razón.
+            ->assertDontSeeText(__('account.orders.empty'));
     }
 }

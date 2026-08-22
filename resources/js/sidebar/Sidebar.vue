@@ -1,19 +1,19 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import PurchaseSection from './sections/PurchaseSection.vue';
+import AccountSection from './sections/AccountSection.vue';
+import { useSectionStore } from './stores/section.js';
+import { usePurchaseStore } from './stores/purchase.js';
+import { publishedIdentifying, publishedMode } from './section.js';
 
 /**
  * La RAÍZ del cajón: monta, enruta secciones y publica hacia fuera. Nada más.
  *
  * ⚠️⚠️ **Existe por una decisión de arquitectura, no por estética** (2026-08-22). `DECISIONES #66`
  * dice que el cajón hospedará también el **ÁREA DE CLIENTE** —sus pedidos, sus reservas, sus
- * ajustes—. Hasta hoy el embudo de compra ERA la raíz: 438 líneas y once ramas `v-else-if` en un
- * solo fichero. Añadir ahí las pantallas de cuenta habría metido **dos dominios en el mismo
+ * ajustes—. Hasta entonces el embudo de compra ERA la raíz: 438 líneas y once ramas `v-else-if` en
+ * un solo fichero. Añadir ahí las pantallas de cuenta habría metido **dos dominios en el mismo
  * componente**, y cada pantalla nueva habría hecho más caro separarlos después.
- *
- * ▶ La compra pasa a ser **una sección** (`sections/PurchaseSection.vue`) y la cuenta será otra. Esta
- * raíz se queda con lo único que es de verdad común: el montaje y las dos señales que el motor
- * publica al mundo de fuera del cajón.
  *
  * ⚠️ El movimiento fue posible **porque el estado ya vivía en stores**: una sección no necesita que
  * la raíz le pase su estado por props —lo pide con `useXStore()`—, así que partir el componente no
@@ -24,7 +24,7 @@ const props = defineProps({
     messages: { type: Object, default: () => ({}) },
     /** Textos de interfaz que no son del grupo `tickets` (velo de carga, etiquetas del armazón). */
     ui: { type: Object, default: () => ({}) },
-    /** El grupo `account`, podado a lo que el paso de identificación pinta. */
+    /** El grupo `account`, podado a lo que el paso de identificación y el área de cliente pintan. */
     account: { type: Object, default: () => ({}) },
     /** El grupo `auth`, con los textos de login y alta. */
     auth: { type: Object, default: () => ({}) },
@@ -37,18 +37,43 @@ const props = defineProps({
 });
 
 const purchase = ref(null);
+const section = useSectionStore();
+const purchaseStore = usePurchaseStore();
 
 /**
- * Las dos señales que el motor publica hacia FUERA del cajón, y que `index.js` invoca sobre la raíz.
+ * **El PUENTE de señales hacia fuera del cajón**, que sube aquí porque desde 2026-08-22 depende de
+ * DOS cosas: el paso del embudo y la sección activa (`specs/area-cliente.md` §4.5).
+ *
+ * ⚠️ Vivía en la sección de compra y ahí ya no puede vivir: un `watch` sobre el paso **no se dispara
+ * al conmutar de sección** —el paso no ha cambiado—, así que el panel se quedaría con el último modo
+ * de la compra mientras el cliente mira sus pedidos. Las reglas están en `section.js`, módulo plano
+ * con su `node --test`; aquí solo se conecta con el mundo.
+ *
+ * ⚠️⚠️ Sin esto, dos regresiones que **no se ven desde dentro del cajón**: el panel se queda en
+ * `is-catalog` para siempre y los botones de invitado siguen activos durante la identificación.
+ * Ninguna de las dos clases aparece en este marcado —viven en `layout.blade.php` y en
+ * `account-context`—, y por eso ya estuvieron muertas sin que nadie lo notara (`DECISIONES #118`).
+ */
+watch(
+    [() => section.active, () => purchaseStore.mode, () => purchaseStore.identifying],
+    ([active, mode, identifying]) => {
+        const alpine = window.Alpine?.store('purchase');
+        if (! alpine) return;
+
+        alpine.setMode(publishedMode(active, mode));
+        alpine.identifying = publishedIdentifying(active, identifying);
+    },
+    { immediate: true },
+);
+
+/**
+ * Las dos señales que el motor publica hacia FUERA, y que `index.js` invoca sobre la raíz.
  *
  * ⚠️⚠️ **Se REENVÍAN a la sección; la raíz NO las reimplementa, y ese matiz costó un fallo el mismo
- * día.** Al partir el componente escribí aquí un atajo que delegaba directo a los stores
+ * día.** Al partir el componente se escribió aquí un atajo que delegaba directo a los stores
  * (`cartStore.identify()`), y con él se perdía otra vez lo que hace `actOnIdentity()`: **si la cesta
  * se purga hay que volver al catálogo**. Reenviar hace que corra EXACTAMENTE el mismo código que
  * antes del movimiento, que es lo único que un renombrado debe garantizar.
- *
- * ▶ Cuando exista la sección de CUENTA, cada una decidirá qué hace con estas dos señales; la raíz
- * seguirá sin decidir nada.
  */
 defineExpose({
     refreshBookingStatus: () => purchase.value?.refreshBookingStatus(),
@@ -57,6 +82,31 @@ defineExpose({
 </script>
 
 <template>
-    <!-- Hoy el cajón solo tiene una sección. La de CUENTA entra aquí, al lado, no dentro. -->
-    <PurchaseSection ref="purchase" v-bind="props" />
+    <!--
+      ⚠️⚠️ **Las dos secciones se ocultan de formas DISTINTAS, y cada asimetría se decidió MIDIENDO**
+      (`specs/area-cliente.md` §4.1):
+
+      · la **compra** con `v-show`: es la sección por defecto y **su `ref` sostiene el puente de
+        `defineExpose`**. Si se desmontara —o se desactivara— Vue anula la template ref, y las dos
+        señales que `index.js` invoca en CADA apertura del cajón se las comería el `?.` **en
+        silencio**: la pausa dejaría de releerse y un cambio de titular no purgaría la cesta. Es la
+        familia de fallos que este proyecto ya ha pagado tres veces;
+
+      · la **cuenta** con `v-if` a secas: montarla siempre le regalaría a quien viene a comprar las
+        peticiones de `/me/*` en cada apertura del cajón.
+
+      ⚠️ **Aquí hubo un `<KeepAlive>` durante media hora, y lo quitó una medición.** Se puso para que
+      volver a la cuenta no repitiera su carga; medido, **costaba 2,3 KiB de chunk —él solo hacía
+      saltar el presupuesto de `SidebarBundleBudgetTest`— y no resolvía nada que no resuelva mejor su
+      store**: pedir solo si no hay datos es una regla explícita, probable con `node --test`, en vez
+      de una caché del framework que además rompe las template refs. Sin él, el chunk cabe en el
+      techo que ya había.
+
+      ⚠️ Y lo que NO se puede hacer aquí: envolver las secciones en un `<div>` de conveniencia.
+      Partiría la cadena de HIJOS DIRECTOS que sostiene el panel (§4.9) **sin que falte una sola
+      clase**, y ningún test puede verlo — lo dice el propio CSS.
+    -->
+    <PurchaseSection v-show="section.onPurchase" ref="purchase" v-bind="props" />
+
+    <AccountSection v-if="section.onAccount" v-bind="props" />
 </template>

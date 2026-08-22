@@ -21,6 +21,7 @@
 | `specs/api-v1.md` | 🟦 Diseño de la API v1 (Fase 3), v2 tras revisión adversarial. **EJECUTADO**: los 6 pasos del corte cerrados; §9 lleva el avance y §10 → §10.sexdecies lo que el código enseñó al implementar (83 puntos; los tres últimos lotes ya de Fase 4). |
 | `specs/checkout-orquestado.md` | ✅ Diseño APROBADO (v2, revisión adversarial ×3) del cierre de Fase 3: la secuencia «admitir → crear → abrir cobro» baja al dominio tras los puertos `ReservationCheckout` y `PaymentInitiation`. El segundo driver de pasarela queda para Fase 6. |
 | `specs/sidebar-spa.md` | 🟦 Diseño de Fase 4: el sidebar como SPA (Vue 3 + Pinia), primer consumidor real de la API v1. Alcance = solo el cajón; el tema es **tokens + hoja de estilos por instalación**, lo que convierte los nombres de clase del sidebar en un contrato público. |
+| `specs/area-cliente.md` | 🟦 Diseño del **área de cliente dentro del cajón** (`DECISIONES #66`/`#120`), tanda 1 = **solo lectura**. Mide que «el servidor ya está» solo vale para leer, elige el modelo de navegación (índice + zonas libres, NO el grafo del embudo) y declara por qué aquí **la red no es el diff de árbol** sino la paridad de datos y el navegador. |
 | `../openapi/v1.yaml` | El **contrato** de la API v1 (OpenAPI 3.0.3, escrito a mano). No vive en `docs/` porque no es documentación: es el artefacto contra el que se validan los tests y, en Fase 6, la app móvil. Manda sobre el código (`DECISIONES #21`). |
 
 ## Base heredada (adaptada del proyecto origen el 2026-08-12)

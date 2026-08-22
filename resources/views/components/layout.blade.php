@@ -210,6 +210,22 @@
                                 'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
                                 'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
                             ]),
+                            // ⚠️ El ÁREA DE CLIENTE (`specs/area-cliente.md`) entra con **una sola
+                            // clave**, no con el subgrupo `account.account` entero: ahí viven además
+                            // los seis textos de privacidad, que no pinta ninguna zona de la tanda 1.
+                            // Misma poda y mismo motivo que arriba: el grupo completo son 9,6 kB en
+                            // el HTML de todas las páginas públicas.
+                            'account' => ['title' => __('account.account.title')],
+                            // El rótulo de la zona «Mis reservas» y su estado vacío. ⚠️ **Se llama
+                            // `orders` en el código y «Mis reservas» de cara al cliente**, y es el
+                            // texto de `lang/` quien manda: `account.orders.title` es literalmente
+                            // «Mis reservas». El subgrupo entero son 22 claves —el detalle del
+                            // pedido, el reintento, el post-form— y llega con el paso 3, que es
+                            // quien las pinta.
+                            'orders' => [
+                                'title' => __('account.orders.title'),
+                                'empty' => __('account.orders.empty'),
+                            ],
                         ],
                         'auth' => __('auth'),
                         'userId' => auth()->id(),

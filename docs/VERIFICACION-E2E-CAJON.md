@@ -430,6 +430,62 @@ de fingir paridad; cerrarlo toca el manifiesto de árbol congelado y es una deci
 para cualquier gate y para un ojo que no sepa qué esperaba. Es la misma forma de fallo que los iconos
 vacíos, y las dos se colaron por el mismo sitio — cuatro caminos verificados y estos dos fuera.
 
+### V4 · EL NIVEL SECCIÓN (área de cliente · tanda 1 · paso 1, `specs/area-cliente.md`)
+El cajón deja de tener una sola sección. **Su red es ésta y solo ésta**: `render-sidebar.mjs` no
+importa la raíz, así que el contrato de árbol **no ejerce el orquestador** (`DECISIONES #119(g)`).
+
+| Qué | Cómo se comprueba | Por qué importa |
+|---|---|---|
+| Conmutar y volver | `spaHandle.showAccount()` / `showPurchase()` desde la consola | En el paso 1 el botón **no está cableado a propósito**: la sección de cuenta es su armazón, y una puerta a una habitación vacía es peor que ninguna |
+| **Memoria del embudo** | avanzar a la fecha, ir a la cuenta, volver | Volver debe dejar el paso y la cesta como estaban. Es lo que decidió `v-show` frente a `v-if` |
+| **Cero peticiones al conmutar** | contar `/api/v1` durante ida y vuelta | Un remontaje repetiría las cinco cargas del embudo y podría reabrir un desenlace ya visto |
+| **El bloque `.acct` colapsado** | tabular de verdad hasta él | `is-account` lo colapsa igual que `is-booking`/`is-cart`. Vive FUERA del cajón: **ningún diff de árbol lo ve** |
+| **La cadena flex** (§4.9) | `.purchase__scroll` con `overflow-y: auto` y altura > 0 | Un envoltorio de más la parte **sin que falte una clase**, y el propio CSS avisa de que no hay test que lo vea |
+| **El árbol oculto no atrapa el foco** | contar focusables del calendario y recorrer el panel con Tab | Es el riesgo que se le atribuyó a `v-show` al elegirlo |
+
+✅ **MEDIDO el 2026-08-22 en navegador, todo en verde:**
+· catálogo → `purchase` · `is-catalog` · bloque de cuenta visible y alcanzable con Tab;
+· fecha → paso **2** · `is-booking`;
+· cuenta → `account` · **`is-account`** · `.acct` a altura 0, `visibility: hidden` y **no alcanzable
+  con Tab** · la compra sigue en el DOM con `display: none` · `.purchase__scroll` de **841 px** con
+  `overflow-y: auto` · título «Mi cuenta» y botón de volver presentes;
+· vuelta → `purchase` · **paso 2 intacto** · `is-booking`;
+· **0 peticiones a `/api/v1`** en toda la ida y vuelta.
+
+⚠️⚠️ **Y el dato que zanjó una duda de diseño**: el calendario tiene **12 elementos focusables**
+cuando la compra está visible y **0 cuando está oculta**; el recorrido del tabulador por el panel
+entero solo pasa por la sección de cuenta y el botón de cerrar. **Cero fugas de foco.** El riesgo que
+se le atribuyó a `v-show` —«deja dos árboles dentro del mismo `role="dialog"`»— **no existe**:
+`display: none` saca del árbol de accesibilidad y del orden de tabulación. Se midió en vez de
+suponerlo, en las dos direcciones.
+
+⚠️ El primer intento de esta verificación dio un **falso rojo**: contaba `offsetWidth > 0` como
+«tabulable», y un bloque colapsado con `grid-template-rows: 0fr` conserva el tamaño intrínseco de sus
+hijos. **El criterio estaba mal, no la app.** Queda escrito porque es la trampa que hace perder media
+hora: para accesibilidad se mide **tabulando de verdad**, no midiendo cajas.
+
+### V5 · LA NAVEGACIÓN DE ZONAS (área de cliente · tanda 1 · paso 2)
+El área tiene índice y zonas, y **su modelo de navegación no es el del embudo**: se navega libre, con
+pila de retorno. Lo que aquí se mira es que la pila **haga lo que dice** en un navegador de verdad.
+
+| Qué | Qué DEBE pasar |
+|---|---|
+| Entrar al área | índice «Mi cuenta», con la fila «Mis reservas» y **sin** «volver» dentro del área |
+| Pulsar la fila | zona «Mis reservas» con su estado vacío, y ya **sí** hay «volver» |
+| «Volver» | al índice, **sin salir** de la sección |
+| «Volver» otra vez | **sale a la compra**, y el embudo sigue en su paso |
+| Entrada DIRECTA (`showAccount('orders')`) | aterriza en la zona, y el **primer** «volver» ya sale: no se inventa un índice que nadie visitó |
+| Reentrar | la historia está **vacía**: no se arrastra el recorrido de la visita anterior |
+
+✅ **MEDIDO el 2026-08-22 · 7/7 · 0 peticiones a `/api/v1` en todo el recorrido.** Con el embudo en el
+paso 2 antes de entrar y en el paso 2 al volver.
+
+⚠️ **La trampa del andamio, que costó una ejecución**: `.bk-back` **existe DOS veces en el DOM** —el
+de la banda de progreso de la compra oculta y el de la cuenta—, así que `locator('.bk-back').first()`
+apunta al que está en `display: none` y el clic caduca a los 30 s. **Hay que acotar al visible**:
+`.purchase:visible .bk-back`. No es un fallo de la app —lo oculto no lo ve ni el cliente ni el
+tabulador (V4)— pero sí de cualquier script que no lo sepa.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

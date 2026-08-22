@@ -123,7 +123,27 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ La regla que deja esto escrito para la próxima: **un techo con margen sobrante deja de
      * apretar**. Se sube con su motivo Y se vuelve a bajar cuando el motivo se agota.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 164;
+    /**
+     * ⚠️ **164 → 166 el 2026-08-22, y lo paga el ÁREA DE CLIENTE** (`specs/area-cliente.md`), que es
+     * exactamente lo que el bloque de arriba anticipaba: *«una fase nueva que tendrá que decidir su
+     * propio presupuesto, no colarse por el margen de ésta»*.
+     *
+     * Medido paso a paso, que es lo que hace de esto un presupuesto y no un número:
+     * · cierre de la reorganización (`#119`): **161,6 KiB**;
+     * · **paso 1** — el nivel sección (`section.js`, su store, la raíz enrutando, el armazón):
+     *   **163,2 KiB**, +1,6. ⚠️ Habrían sido **165,5** con `<KeepAlive>`: se midió, no aportaba nada
+     *   que su store no resuelva mejor, y se retiró (`DECISIONES #120(g)`);
+     * · **paso 2** — la navegación de zonas (`account/navigation.js`, su store, dos zonas y el
+     *   enrutado): **165,2 KiB**, +2,0.
+     *
+     * 166 deja **0,8 KiB** de holgura: la de terminar el paso, no la de una tanda entera. Los pasos
+     * 3 a 6 volverán a moverlo, **cada uno con su medida**, que es la forma de que el coste del área
+     * de cliente sea visible en vez de acumularse en un margen que nadie mira.
+     * ▶ Y la otra mitad de la regla, que ya está escrita arriba y aquí se hereda: **cuando la tanda 1
+     * cierre, este número se vuelve a BAJAR a lo medido**. Un techo con margen sobrante deja de
+     * apretar.
+     */
+    private const SIDEBAR_CHUNK_MAX_KB = 166;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

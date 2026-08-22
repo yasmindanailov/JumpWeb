@@ -1586,12 +1586,43 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       ✅ **El terreno se preparó a propósito antes de empezar** (`#119`, 2026-08-22): tres capas
       (módulos planos · nueve stores · componentes), el embudo fuera de la raíz como SECCIÓN y su grafo
       CERRADO con guarda, para que las pantallas de cuenta entren al lado y no dentro.
-      ✅ **El servidor ya está** (medido contra `openapi/v1.yaml`): `/auth/*`, `/me`, `/me/orders`,
-      `/me/reservations`, `/me/reservation-eligibility` y el post-form por firma. Hay que pintar, no
-      abrir dominio.
-      ⚠️ **Lo primero es el DISEÑO, no pintar**: el modelo de navegación de la sección de cuenta está
-      sin hacer A PROPÓSITO —un área de cliente no es un embudo y sin pantallas sería especulación—, y
-      se decide con el owner delante.
+      ✅ **El DISEÑO está escrito** (`docs/specs/area-cliente.md`, 2026-08-22): modelo de navegación
+      (índice + zonas libres con pila de retorno, **no** el grafo del embudo), zonas, contrato de datos
+      y plan de verificación. 🟦 Pendiente de que el owner valide §3.1 y §3.3 (`DECISIONES #120(d)`).
+      ⚠️⚠️ **Y el diseño destapó que «el servidor ya está» solo vale para LEER** (`#120(a)`, medido
+      endpoint por endpoint): ✅ `/auth/*`, `/me`, `/me/orders`, `/me/reservations`,
+      `/me/reservation-eligibility` y el post-form por firma; ❌ **cero endpoints** para perfil,
+      contraseña, otras sesiones, borrado y export RGPD —solo `App\Livewire\Account\*`—. Por eso va en
+      TANDAS: **1 = solo lectura** (mis reservas + mis pedidos), 2 = las gestiones (abre API nueva),
+      3 = la retirada de `/mi-cuenta/…`, que el owner ha decidido que **desaparece** (`#120(c)`).
+      ⚠️ **Aquí la red NO es el diff de árbol** (`#120(e)`): el embudo fue una transcripción con un
+      original que copiar y esto no lo tiene —una página ancha no es un panel estrecho—. La red es la
+      paridad de DATOS y de REGLAS más el NAVEGADOR.
+      - [x] **Tanda 1 · paso 1 — EL NIVEL SECCIÓN** (✅ **HECHO** el 2026-08-22). El cajón deja de tener
+            una sola sección: `section.js` (módulo plano) + `stores/section.js`, la raíz enruta —compra
+            con `v-show`, cuenta con `v-if`— y **sube a ella el puente de `mode`/`identifying`**, que
+            desde hoy depende de la sección además del paso. Nace el modo **`account`** con su regla
+            CSS y el armazón `AccountSection.vue` sobre `Shell` (9 líneas de código).
+            ⚠️ **Tres guardas EXISTENTES mordieron y las tres tenían razón**: el presupuesto de
+            componentes (`PurchaseSection` 438 → **431** al soltar el puente), el presupuesto de bundle
+            (`<KeepAlive>` costaba **2,3 KiB** y él solo lo hacía saltar → se retiró, `#120(g)`) y la
+            poda del payload del montaje (`SidebarLoginParityTest`, que exigía declarar la clave nueva).
+            ✅ Verificado en NAVEGADOR (`VERIFICACION-E2E-CAJON.md` **V4**): memoria del embudo intacta,
+            **0 peticiones al conmutar**, `.acct` colapsado y **no alcanzable con Tab**, la cadena flex
+            del panel entera y **0 fugas de foco** al árbol oculto (12 focusables visibles → 0 ocultos).
+      - [x] **Tanda 1 · paso 2 — LA NAVEGACIÓN DE ZONAS** (✅ **HECHO** el 2026-08-22).
+            `account/navigation.js` (zonas, pila de retorno con recorte, rótulos) + `stores/account.js`,
+            la sección enruta zonas y nacen `AccountHomeZone` y `OrdersZone`. **26 casos de
+            `node --test`, verificados por MUTACIÓN**; navegador **V5, 7/7 y 0 peticiones**.
+            ⚠️ **Son DOS zonas y no tres**: `account.orders.title` es literalmente «Mis reservas»
+            —el cliente no distingue pedido de reserva— y `/me/reservations` alimenta el bloque de
+            cuenta, no una pantalla (`#120(i)`).
+            ⚠️⚠️ **Y destapó cuatro aserciones tocadas, tres de ellas en VERDE FALSO** — más una que
+            llevaba **inerte desde `#231 p8`** y que ni `assertSeeText` arreglaba: «Mi cuenta» sale
+            dos veces en `/mi-cuenta` (título y footer), así que solo la mide una aserción
+            estructural (`#120(h)`, `TESTING.md` §2.ter ampliada).
+      - [ ] **Tanda 1 · pasos 3–5**: los datos (`/me/orders` + `/me/reservations`), la puerta de
+            entrada y la captura de huecos. El orden y su red, en `specs/area-cliente.md` §8.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

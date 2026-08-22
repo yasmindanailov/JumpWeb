@@ -109,7 +109,7 @@ peligroso es LOCAL y silencioso, justo mientras se itera sobre esos módulos.
 La guarda es `assertBundleIsNotStale()`: compara la fecha del artefacto con la de cada fuente que entra
 en él. Si añades un test que compare contra algo compilado, generado o congelado, ponle la suya.
 
-### 2.ter. En una página con el cajón, `assertSee` de un texto de `tickets` NO PRUEBA NADA
+### 2.ter. En una página con el cajón, `assertSee` de un texto del `data-boot` NO PRUEBA NADA
 ⚠️⚠️ **Medido el 2026-08-21** (`DECISIONES #112(e)`). El punto de montaje del cajón SPA va en
 **todas** las páginas públicas y lleva `__('tickets')` **entero** dentro de su atributo `data-boot`
 —unos 11 kB—, porque la SPA no tiene canal de i18n propio. Consecuencia: cualquier
@@ -123,12 +123,27 @@ literales que coinciden con valores del grupo, repartidos en 5 ficheros.
 es lo que esos casos querían decir. `assertSee` sigue siendo lo correcto para fragmentos de HTML
 —clases, `href`, `aria-*`—, que es justo lo que `assertSeeText` no puede ver.
 
-⚠️ **Dos avisos que costaron una medición cada uno:**
+⚠️⚠️ **Y NO es solo el grupo `tickets`: es TODO lo que viaje en el `data-boot`, que crece.** El
+2026-08-22, el área de cliente (`specs/area-cliente.md`) añadió al montaje `account.account.title`,
+`account.orders.title` y `account.orders.empty` — tres claves, 150 B— y con ellas **cuatro casos de
+tres ficheros distintos** quedaron tocados de golpe: uno rojo y **tres en verde falso**. El rojo
+avisa; los verdes falsos, no. ▶ **Al añadir una clave al `data-boot`, audita quién asevera ese texto
+contra una página**: `grep -rn "assertSee(__('grupo.clave')" tests/` y su literal.
+
+⚠️ **Tres avisos, uno por medición:**
 - **La colisión de subcadena sobrevive al cambio**: «Reembolsado» es prefijo de «Reembolsado el …»,
   así que el caso seguía verde con el distintivo borrado. Si el texto es prefijo de otro de la misma
   página, ancla además en algo estructural (su clase).
+- ⚠️⚠️ **Y la colisión de GEMELOS no la arregla `assertSeeText` en absoluto.** Medido el 2026-08-22:
+  `AccountAccessTest::test_verified_users_can_view_the_account_page` comprobaba que `/mi-cuenta`
+  enseña su título, y **llevaba inerte desde `#231 p8`** — `landing.footer.account_link` es
+  literalmente el mismo texto («Mi cuenta») y el footer va en esa misma página, así que el caso
+  pasaba por el ENLACE DEL PIE con el `<h1>` borrado. Lo destapó una mutación, no el cambio que lo
+  rodeaba. **Cuando el mismo texto sale dos veces en la página, la única aserción que mide algo es la
+  estructural**: `assertSee('<h1 class="page__title">'.__('…').'</h1>', false)`.
 - **No vale solo con convertirlo**: hay que MUTAR la vista y ver el caso caer. Convertir sin mutar
-  cambia un verde falso por otro (`#65`).
+  cambia un verde falso por otro (`#65`). Las cuatro conversiones del 2026-08-22 se mutaron una a una,
+  y **la primera pasó igualmente** — que es cómo se encontró lo del párrafo anterior.
 
 ### 2.quater. Lo que un gate declara que NO mira es un hueco CON NOMBRE
 ⚠️⚠️ **Medido el 2026-08-21** (`DECISIONES #113`): el cajón SPA se sirvió con sus **20 iconos

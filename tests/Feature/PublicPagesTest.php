@@ -74,7 +74,10 @@ class PublicPagesTest extends TestCase
     {
         // #231 p8: «Mi cuenta» en la columna Información del footer (Contacto vive en su columna).
         $this->get('/')->assertOk()
-            ->assertSee('Mi cuenta')
+            // ⚠️ `assertSeeText` (`TESTING.md` §2.ter): «Mi cuenta» viaja desde el 2026-08-22 en el
+            // `data-boot` del cajón. El `href` sí va con `assertSee`: es un fragmento de HTML, y eso
+            // es justo lo que `assertSeeText` no puede ver.
+            ->assertSeeText('Mi cuenta')
             ->assertSee(route('account'), false);
     }
 

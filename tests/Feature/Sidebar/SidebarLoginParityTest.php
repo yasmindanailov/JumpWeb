@@ -225,10 +225,23 @@ class SidebarLoginParityTest extends TestCase
     {
         $boot = $this->bootPayload();
 
+        // ⚠️ **`account` se suma a la lista el 2026-08-22, y es UNA clave, no un subgrupo**
+        // (`specs/area-cliente.md`): el área de cliente pinta el título de su armazón y necesita
+        // `account.account.title`. El subgrupo completo lleva además los seis textos de privacidad,
+        // que no pinta ninguna zona de la tanda 1. Misma poda y mismo motivo que las otras dos.
         $this->assertSame(
-            ['login', 'register'], array_keys($boot['account'] ?? []),
+            ['login', 'register', 'account', 'orders'], array_keys($boot['account'] ?? []),
             'el grupo `account` del montaje ha dejado de estar podado: viaja en cada página pública'
         );
+
+        // ⚠️ **Los dos subgrupos del área de cliente van podados clave a clave, no enteros**, y esta
+        // es la mitad que de verdad aprieta: `account.account` lleva además los seis textos de
+        // privacidad y `account.orders` **22 claves** —el detalle del pedido, el reintento, el
+        // post-form—, que no pinta ninguna zona de la tanda 1. Sin esto, un `__('account.orders')` de
+        // conveniencia multiplicaría por diez el payload de todas las páginas públicas y nadie lo
+        // vería: el presupuesto de bytes de abajo tardaría en morder y el resto de la suite, nunca.
+        $this->assertSame(['title'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'empty'], array_keys($boot['account']['orders'] ?? []));
 
         $bytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
 

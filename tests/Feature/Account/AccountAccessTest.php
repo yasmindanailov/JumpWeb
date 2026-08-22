@@ -35,7 +35,14 @@ class AccountAccessTest extends TestCase
         $this->actingAs($user)
             ->get('/mi-cuenta')
             ->assertOk()
-            ->assertSee(__('account.account.title'));
+            // ⚠️⚠️ **Anclado en su ESTRUCTURA, y no por gusto: este caso llevaba INERTE desde
+            // `#231 p8`.** `landing.footer.account_link` es literalmente el mismo texto —«Mi
+            // cuenta»— y el footer va en esta misma página, así que tanto `assertSee` como
+            // `assertSeeText` pasaban por el ENLACE DEL PIE aunque el `<h1>` no existiera. Medido
+            // por mutación el 2026-08-22: con el título borrado, el caso seguía verde.
+            // Es la colisión de subcadena que avisa `TESTING.md` §2.ter — «si el texto es prefijo
+            // (o gemelo) de otro de la misma página, ancla además en algo estructural».
+            ->assertSee('<h1 class="page__title">'.__('account.account.title').'</h1>', false);
     }
 
     public function test_authenticated_nav_shows_account_chip_and_reservations_link(): void

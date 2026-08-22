@@ -4,6 +4,9 @@ import Sidebar from './Sidebar.vue';
 import { createMachine, STEPS } from './machine.js';
 import { applyIntent as applyIntentToCatalog } from './intent.js';
 import { usePurchaseStore } from './stores/purchase.js';
+import { useSectionStore } from './stores/section.js';
+import { useAccountStore } from './stores/account.js';
+import { createNavigation } from './account/navigation.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -93,6 +96,16 @@ export function mount(el, boot = {}) {
     const store = usePurchaseStore(pinia);
     store.boot(machine);
 
+    // La sección activa (`specs/area-cliente.md` §4.1). Se resuelve aquí y no dentro de la raíz para
+    // que el handle pueda exponerla hacia fuera sin pasar por el componente.
+    const sectionStore = useSectionStore(pinia);
+
+    // La navegación del área de cliente (`specs/area-cliente.md` §4.2). Se arranca aquí, junto al
+    // resto del estado, para que `showAccount(zona)` pueda entrar directo a una zona sin que el
+    // componente tenga que existir todavía: la sección se monta con `v-if` en la primera entrada.
+    const accountStore = useAccountStore(pinia);
+    accountStore.boot(createNavigation());
+
     const root = app.mount(el);
 
     const handle = {
@@ -146,7 +159,27 @@ export function mount(el, boot = {}) {
                 scrollTo: (element) => element.scrollIntoView({ behavior: 'smooth', block: 'start' }),
             });
         },
+        /**
+         * **Pedir una SECCIÓN del cajón desde fuera** (`specs/area-cliente.md` §4.6).
+         *
+         * ⚠️ Va en el handle y no en el store de Alpine por lo mismo que la costura de intención: la
+         * landing no tiene por qué saber que dentro hay Pinia. Habla con el motor, y el motor con su
+         * estado — así el día que cambie el estado no hay que tocar ni un `@click` del Blade.
+         *
+         * ⚠️⚠️ **El botón de `account-context` NO se cablea aquí todavía, y es deliberado**: la
+         * sección de cuenta es hoy su armazón, sin zonas. Cablear la puerta antes de que haya
+         * habitación llevaría al cliente a una pantalla vacía si esto se despliega. Se cablea en el
+         * paso 5 de la tanda, cuando las zonas existan.
+         */
+        showAccount: (zone) => {
+            accountStore.enter(zone);
+
+            return sectionStore.showAccount();
+        },
+        showPurchase: () => sectionStore.showPurchase(),
         store,
+        section: sectionStore,
+        account: accountStore,
         machine,
     };
 

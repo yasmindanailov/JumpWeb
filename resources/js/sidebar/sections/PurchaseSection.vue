@@ -154,31 +154,25 @@ async function tracked(promise) {
 const dateStore = useDateStore();
 
 /**
- * El PUENTE de señales hacia fuera del cajón.
+ * **La celebración de la reserva confirmada.**
  *
- * ⚠️ Sin esto, dos regresiones silenciosas: el panel se queda en `is-catalog` para siempre y los
- * botones de invitado siguen activos durante la identificación. Ninguna de las dos clases aparece en
- * el marcado del cajón —viven en `layout.blade.php` y en `account-context`—, así que no se ve nada
- * roto aquí dentro. Lo escribe EL MOTOR, sea cual sea.
+ * ⚠️ **El confeti es del store de Alpine, no del cajón**, y por eso se dispara desde aquí:
+ * `celebrate()` respeta `prefers-reduced-motion` y saca sus colores de los tokens de marca, así que
+ * reimplementarlo en Vue sería una segunda celebración que se olvidaría de las dos cosas. Solo al
+ * ENTRAR en el paso: con `immediate` se repetiría en cada repintado, y el Blade lo ata a un `x-init`
+ * que corre una vez.
+ *
+ * ⚠️⚠️ **Aquí ESTABA también el puente de `mode`/`identifying`, y se subió a la raíz el 2026-08-22**
+ * (`specs/area-cliente.md` §4.5). Desde que el cajón tiene dos secciones, esas dos señales dependen
+ * de **la sección activa además del paso**, y un `watch` sobre el paso **no se dispara al conmutar**:
+ * el panel se habría quedado con el último modo de la compra mientras el cliente mira sus pedidos.
+ * Lo que se queda aquí es lo que de verdad es de la COMPRA — esto.
  */
-watch(
-    () => store.step,
-    (step, previous) => {
-        const alpine = window.Alpine?.store('purchase');
-        if (! alpine) return;
+watch(() => store.step, (step, previous) => {
+    if (step !== STEPS.CONFIRMED || previous === STEPS.CONFIRMED) return;
 
-        alpine.setMode(store.mode);
-        alpine.identifying = store.identifying;
-
-        // ⚠️ **El confeti también es del store de Alpine, no del cajón**, y por eso se dispara desde
-        // aquí: `celebrate()` respeta `prefers-reduced-motion` y saca sus colores de los tokens de
-        // marca, así que reimplementarlo en Vue sería una segunda celebración que se olvidaría de las
-        // dos cosas. Solo al ENTRAR en el paso: con `immediate` en el montaje se repetiría en cada
-        // repintado, y el Blade lo ata a un `x-init` que corre una vez.
-        if (step === STEPS.CONFIRMED && previous !== STEPS.CONFIRMED) alpine.celebrate?.();
-    },
-    { immediate: true },
-);
+    window.Alpine?.store('purchase')?.celebrate?.();
+});
 
 /**
  * ⚠️ **El sondeo se para al SALIR del paso 11, y va en su propio observador a propósito.**

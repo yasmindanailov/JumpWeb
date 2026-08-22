@@ -81,7 +81,11 @@ class SidebarComponentBudgetTest extends TestCase
         // nueva de **16 líneas y CERO llamadas a la API**, que no necesita excepción ninguna. Lo hizo
         // por el ÁREA DE CLIENTE (`DECISIONES #66`): sus pantallas entran como otra sección, al lado,
         // y no dentro del componente del embudo.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 438, 'api' => 2],
+        // ⚠️ **438 → 431 el 2026-08-22**, al subir el puente de `mode`/`identifying` a la raíz: desde
+        // que el cajón tiene dos SECCIONES esas señales dependen de cuál está activa, y un `watch`
+        // sobre el paso no se dispara al conmutar (`specs/area-cliente.md` §4.5). Aquí se queda el
+        // confeti, que sí es de la compra.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 431, 'api' => 2],
     ];
 
     /**
