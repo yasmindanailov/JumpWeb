@@ -588,6 +588,39 @@ que `V8`): contraseña `password`, sin `pending_email` y con sus datos.
 cuál sigue valiendo—. Sin el tercero, el cliente puede creer que su correo ya cambió y que se ha
 quedado fuera.
 
+### V10 · PRIVACIDAD Y DATOS (tanda 2 · paso 8)
+Los dos derechos RGPD dentro del cajón: descargarse los datos (art. 20) y **borrar la cuenta**
+(art. 17). Cierra la tanda 2.
+
+⚠️⚠️ **El caso del borrado necesita un titular DESECHABLE, y esto no es una comodidad**: anonimizar
+es irreversible, así que ejecutarlo contra `cliente.demo@` deja el entorno sin el usuario de `V6`,
+`V8` y `V9`. Se crea uno nuevo desde el servidor **antes de cada pasada**:
+`User::create([...'email' => 'borrame.demo@jumpweb.test'...])` con `email_verified_at`.
+
+⚠️ **Y hay que aceptar el diálogo nativo**: el borrado lleva `window.confirm`, y Playwright los
+**descarta** por defecto — sin `page.on('dialog', d => d.accept())` el caso da verde sin haber
+borrado nada. Es la trampa gemela de `reducedMotion`.
+
+✅ **MEDIDO el 2026-08-22 · 17/17:**
+· índice con **cinco** entradas (reservas · tus datos · contraseña · sesiones · **privacidad**);
+· la zona pinta los dos derechos y la advertencia de que el borrado no se puede deshacer;
+· descarga → fichero `mis-datos-2026-08-22.json`, con el perfil y los pedidos dentro, y **una sola
+  petición** a `GET /api/v1/me/export`. La pantalla confirma **qué** se descargó;
+· contraseña mal → error bajo su campo, `GET /me` sigue en **200** y el campo **conserva lo escrito**
+  (para poder corregir, como en las otras tres pantallas);
+· contraseña bien → sale a `/`, `GET /me` pasa a **401** y se ve el aviso de despedida.
+
+⚠️⚠️ **Lo que este recorrido encontró y ninguna suite vio**: tras borrar desde el cajón **la home
+salía MUDA**. La web termina en `redirect('/')->with('status', …)` y el layout pinta ese aviso; el
+cajón sale a `/` por su cuenta, así que la despedida hay que dejarla en la sesión NUEVA —después de
+`invalidate()`, que la vacía—. Hoy tiene caso propio y su mutación lo tumba.
+
+⚠️⚠️ **Y una trampa del ANDAMIO que costó una pasada**: el caso del borrado esperaba
+`waitForURL('/')` **estando ya en `/`**, así que la espera se cumplía al instante y la comprobación
+siguiente medía el estado de ANTES —dos rojos que parecían de la app y eran del guion—. Se entra
+desde `/entradas` para que la navegación sea real. Es `DECISIONES #115` dentro del propio andamio:
+*una comprobación que mide una cosa y se lee como otra es peor que no tenerla*.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

@@ -6,8 +6,7 @@ use App\Domain\Identity\Contracts\CredentialChangeResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\PasswordPolicy;
-use App\Http\Api\ApiErrorCode;
-use App\Http\Api\ApiErrorResponse;
+use App\Http\Api\Concerns\TranslatesCredentialVerdicts;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +24,8 @@ use Illuminate\Http\Request;
  */
 class MeCredentialsController extends Controller
 {
+    use TranslatesCredentialVerdicts;
+
     /**
      * `PUT /me/password`.
      *
@@ -71,11 +72,9 @@ class MeCredentialsController extends Controller
     /**
      * El veredicto, traducido a HTTP.
      *
-     * ⚠️ **La contraseña equivocada es un 422 POR CAMPO, no un 401**, y la diferencia con el login no
-     * es cosmética: aquí el cliente **sí está autenticado**, así que un 401 le diría «tu sesión no
-     * vale» cuando lo que pasa es que se ha equivocado escribiendo. El 422 por campo es además lo que
-     * la interfaz necesita para pintarlo bajo su input — mismo criterio que el registro cuando el
-     * correo ya existe.
+     * La denegación vive en {@see TranslatesCredentialVerdicts} desde el paso 8, cuando `DELETE me`
+     * la necesitó igual: sus dos decisiones —422 por campo y no 401, y `Retry-After` en el 429— son
+     * las que una copia habría dejado divergir sin ponerse roja.
      */
     private function respond(CredentialChangeResult $result): JsonResponse
     {
@@ -83,19 +82,6 @@ class MeCredentialsController extends Controller
             return response()->json(status: 204);
         }
 
-        if ($result->wasRateLimited()) {
-            return ApiErrorResponse::make(
-                ApiErrorCode::TooManyRequests,
-                429,
-                params: ['retry_after' => $result->retryAfter],
-                headers: ['Retry-After' => (string) $result->retryAfter],
-            );
-        }
-
-        return ApiErrorResponse::make(
-            ApiErrorCode::ValidationFailed,
-            422,
-            fields: ['current_password' => [__('account.account.wrong_password')]],
-        );
+        return $this->credentialDenial($result);
     }
 }

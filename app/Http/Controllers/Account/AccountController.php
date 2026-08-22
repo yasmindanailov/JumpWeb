@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountPrivacy;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,74 +42,25 @@ class AccountController extends Controller
 
     /**
      * RGPD (4.5b) — Descargar mis datos: copia legible por máquina (JSON) de los datos
-     * personales del usuario (derecho de portabilidad, art. 20). Incluye:
-     *  - perfil, consents, roles
-     *  - PEDIDOS (auditoría 2026-05-26, hallazgo I): código, estado, total y líneas (entrada/pack
-     *    con su franja + datos de evento, más sus complementos anidados). Los precios van en
-     *    céntimos para precisión y `currency` separado, igual que en BD.
+     * personales del usuario (derecho de portabilidad, art. 20).
+     *
+     * ⚠️ **La composición del documento ya no vive aquí**: bajó a
+     * `Identity\Services\AccountPrivacy` en la tanda 2 · paso 8, para que `GET /api/v1/me/export` no
+     * la reescribiera. Lo que queda es lo de ESTA superficie: servirlo como **descarga**, que es una
+     * decisión de navegador y no del documento (la API devuelve el cuerpo y su cliente decide).
+     *
+     * ⚠️ El `no-store` lo pone el alias de la ruta (`RGPD-04`): es un controlador plano, así que no
+     * recibe el que Livewire estampa en sus componentes.
      */
-    public function export(Request $request): Response
+    public function export(Request $request, AccountPrivacy $privacy): Response
     {
         /** @var User $user */
         $user = $request->user();
-        $user->loadMissing([
-            'consents', 'roles',
-            'orders.items.ticketType', 'orders.items.slot', 'orders.items.children.ticketType',
-            'orders.tickets',
-        ]);
 
-        $data = [
-            'exported_at' => now()->toIso8601String(),
-            'profile' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'pending_email' => $user->pending_email,
-                'pending_email_sent_at' => $user->pending_email_sent_at?->toIso8601String(),
-                'phone' => $user->phone,
-                'locale' => $user->locale,
-                'marketing_opt_in' => (bool) $user->marketing_opt_in,
-                'email_verified_at' => $user->email_verified_at?->toIso8601String(),
-                'created_at' => $user->created_at?->toIso8601String(),
-                'last_login_at' => $user->last_login_at?->toIso8601String(),
-            ],
-            'consents' => $user->consents->map(fn ($consent) => [
-                'type' => $consent->type,
-                'accepted_at' => $consent->accepted_at?->toIso8601String(),
-                'ip' => $consent->ip,
-                'version' => $consent->version,
-            ])->all(),
-            'roles' => $user->roles->pluck('name')->all(),
-            'orders' => $user->orders->map(fn ($order) => [
-                'code' => $order->code,
-                'status' => $order->status,
-                'subtotal_cents' => (int) $order->subtotal,
-                'tax_cents' => (int) $order->tax,
-                'total_cents' => (int) $order->total,
-                'currency' => $order->currency,
-                'created_at' => $order->created_at?->toIso8601String(),
-                'paid_at' => $order->paid_at?->toIso8601String(),
-                'expires_at' => $order->expires_at?->toIso8601String(),
-                'items' => $order->items->whereNull('parent_item_id')->values()->map(fn ($item) => [
-                    'product' => $item->ticketType?->tr('name'),
-                    'date' => $item->slot?->date?->toDateString(),
-                    'time' => $item->slot?->start_time,
-                    'quantity' => $item->quantity,
-                    'unit_price_cents' => (int) $item->unit_price,
-                    'seats' => $item->seats,
-                    'event_data' => $item->event_data ?: null,
-                    'addons' => $item->children->map(fn ($addon) => [
-                        'product' => $addon->ticketType?->tr('name'),
-                        'quantity' => $addon->quantity,
-                        'unit_price_cents' => (int) $addon->unit_price,
-                    ])->values()->all(),
-                ])->all(),
-                'tickets' => $order->tickets->map(fn ($ticket) => [
-                    'code' => $ticket->code ?? null,
-                ])->all(),
-            ])->all(),
-        ];
-
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = json_encode(
+            $privacy->exportFor($user),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
         $filename = 'mis-datos-'.now()->format('Y-m-d').'.json';
 
         return response($json, 200, [

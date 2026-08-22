@@ -242,6 +242,16 @@
                                 ],
                                 'sessions' => __('account.account.sessions'),
                                 'profile' => __('account.account.profile'),
+                                // ⚠️ Privacidad SÍ va podado clave a clave, al revés que los tres de
+                                // arriba: el subgrupo lleva además `consents_title`, `no_consents` y
+                                // los CUATRO `consent_types`, y la lista de consentimientos **no la
+                                // pinta el cajón** — sigue solo en `/mi-cuenta`, y es un hueco con
+                                // nombre para la tanda 3 (`specs/area-cliente.md` §4.8).
+                                'privacy' => \Illuminate\Support\Arr::only(__('account.account.privacy'), [
+                                    'title', 'intro', 'export_btn',
+                                    'delete_title', 'delete_intro', 'delete_password',
+                                    'delete_confirm', 'delete_btn', 'deleting',
+                                ]),
                             ], 'sidecart' => [
                                 // La lectura del contador de próximas reservas para lector de
                                 // pantalla. Misma clave que usa el bloque `.acct` del panel para lo

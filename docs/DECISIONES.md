@@ -5307,3 +5307,80 @@ las cuatro trampas ya resueltas —la cookie, el `Accept`, el CSRF url-decodific
 ✅ **Verificado en navegador** (`V9`, 7/7). Lo que de verdad importaba mirar: tras pedir el cambio, el
 campo de email **vuelve a mostrar el VIGENTE** y el aviso dice «sigues usando …». Es la señal visible
 de que el titular no ha perdido el acceso a su cuenta.
+
+**(s) Tanda 2 · paso 8 — los DOS derechos RGPD, y la tanda queda CERRADA.** Nace
+`Identity\Services\AccountPrivacy` con el borrado (art. 17) y el documento de portabilidad (art. 20);
+la web y `DELETE /me` + `GET /me/export` lo consumen sin reescribir nada. La purga sigue siendo
+`User::anonymize()` (`RGPD-01`) y la reconfirmación, `AccountCredentials::verify()`.
+
+⚠️ **Y con esto la web quedó con los CUATRO sitios limitados sin escribir una línea de limitador en
+la web.** Era la promesa de `(o)` —«los otros dos se cubrirán solos en los pasos 7 y 8, por el mismo
+mecanismo»— y se cumplió literal. Su ficha de `DEUDA.md` se cierra.
+
+⚠️⚠️ **El export exigió un CONTRATO nuevo, y ahí está la parte de diseño que no era obvia.** La
+composición vivía en `Http\Controllers\Account\AccountController`, que es capa de ENTREGA y por eso
+quedaba exenta del grafo de módulos; al bajarla a Identity esa exención desaparece y el servicio
+habría tenido que recorrer `Order`, `OrderItem`, `Slot` y `TicketType` a mano — justo lo que la regla
+de Fase 2 prohíbe (*consultar los datos de otro módulo exige contrato*). ▶ Nace
+`Booking\Contracts\CustomerOrderHistory` con su lector, hermano de `CustomerReservations` y con la
+misma forma: `int $userId`, para que Booking no importe un modelo de Identity.
+⚠️ **Devuelve el documento, no DTOs**, y se dice por escrito: un export de portabilidad **es** un
+documento, su forma la publica `openapi/v1.yaml` y la valida Spectator contra la respuesta REAL.
+Envolverlo en DTOs para aplanarlos otra vez al serializar pondría esa forma en dos sitios.
+
+⚠️ **`GET /me/export` devuelve el CUERPO y no un adjunto.** El `Content-Disposition` de la página web
+es presentación de navegador; la SPA lo convierte en fichero y un cliente nativo decide él. La guarda
+que sostiene que no haya dos versiones del documento es
+`MePrivacyTest::test_the_web_download_and_the_api_serve_the_same_document`: compara las dos
+respuestas campo a campo quitando solo el sello de la hora.
+
+**Y tres hallazgos que salieron de MEDIR, no de leer el diseño:**
+
+⚠️⚠️ **1. El export publicaba un campo MUERTO desde el commit fundacional.** El bloque `tickets`
+llevaba `code`, y **la tabla `tickets` no tiene esa columna** —ni el modelo un accesor—: el campo
+salía `null` siempre y lo único que comunicaba era cuántas entradas hay. Decidido por el owner:
+publicar lo que la entrada SÍ es (`status` e `issued_at`). **No se publica `qr_token`**: es la
+credencial que la canjea en la puerta, y un export es un fichero que el titular guarda y reenvía.
+▶ La regla que deja escrita: **un campo que nunca lleva valor es la familia de `#115`** —algo que se
+lee como un dato y no lo es—, y congelarlo en un contrato de API lo hace permanente. Se mira antes de
+publicar, no después.
+
+⚠️⚠️ **2. El limitador de la web estaba puesto y su aviso no se pintaba en ninguna parte.** Los
+cuatro componentes de «Mi cuenta» mandan el aviso del límite a la clave `_global` y **tres de las
+cuatro vistas no pintaban ninguna clave global**: agotar los cinco intentos dejaba el formulario sin
+hacer nada y sin decir nada. Es `#117` otra vez, y lo destapó escribir el cuarto. ▶ Nace
+`<x-ui.global-errors>` y un caso por vista, **mutado uno a uno**. `login`/`register` conservan su
+bloque a mano a propósito: son la referencia de las dos paridades de árbol (`#112(f)`).
+⚠️ Y al escribir esos tres casos apareció que **la aserción dependía del RELOJ**: el aviso lleva los
+segundos que quedan y `availableIn()` devuelve 59 en cuanto el bucle cruza un segundo. Con el reloj
+parado (`#64`) los tres son deterministas — sin eso habrían sido tres rojos intermitentes nuevos.
+
+⚠️ **3. El propio gate de componentes tenía un hueco sin declarar.** `SidebarComponentBudgetTest`
+contaba `api.get|post` y **no** `put|patch|delete`: el contador se escribió cuando `api.js` solo tenía
+dos verbos, y los otros tres llegaron en los pasos 6b y 7b sin que nadie volviera a mirar. Un
+componente que llamara a `api.delete(...)` pasaba la guarda sin que faltara nada — `TESTING.md`
+§2.quater, y encima sin declarar. Ampliado a los cinco (ningún componente los usaba, así que la
+baseline no se movió) **y con una guarda de la guarda** que enumera los verbos.
+
+⚠️ **Cuatro duplicaciones más cazadas antes de crecer**, que ya van diez en la tanda: la traducción
+del veredicto de credenciales a HTTP (`TranslatesCredentialVerdicts`, iba a ser la segunda copia), el
+guardián de los formularios del cajón (`account/form-run.js`, iba a ser la **tercera**), la clave del
+aviso de despedida (`AccountPrivacy::FAREWELL_STATUS`, la usan las dos superficies) y el banner de
+errores globales. La regla sigue siendo la misma: **antes de la segunda copia, no después de la
+cuarta**.
+
+⚠️⚠️ **Y una guarda que faltaba y este paso podía haber incumplido**: dentro del cajón **no hay URL**
+(§3.4), así que el índice es la ÚNICA puerta a una zona. Declararla en `ZONES` y olvidarla en
+`HOME_ENTRIES` la deja **inalcanzable** — código muerto que pasa todos los tests de navegación y al
+que ningún cliente llega. Ahora hay un caso que recorre `ZONES` entero y lo exige.
+
+✅ **Verificado en navegador** (`V10`, **17/17**), y ahí es donde apareció lo que ninguna suite vio:
+**tras borrar la cuenta desde el cajón, la home salía MUDA**. La web termina en
+`redirect('/')->with('status', 'account-deleted')` y el layout pinta ese aviso; el cajón sale a `/`
+por su cuenta, así que sin dejar la despedida en la sesión NUEVA el titular aterrizaba sin saber si
+su cuenta se había borrado de verdad. ▶ Se deja **después** de `invalidate()` —que vacía la sesión—,
+tiene caso propio y su mutación (ponerlo antes) lo tumba.
+⚠️ **Y dos de los tres rojos de la primera pasada eran del ANDAMIO, no de la app**: el caso del
+borrado esperaba `waitForURL('/')` **estando ya en `/`**, así que la espera se cumplía al instante y
+la comprobación siguiente medía el estado de antes. Es `#115` dentro del propio guion de
+verificación. Se entra desde `/entradas` para que la navegación sea real.

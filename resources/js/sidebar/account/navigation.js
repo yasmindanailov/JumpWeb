@@ -24,10 +24,10 @@
  * `GET /me/reservations`, que es otra cosa —las PRÓXIMAS— y alimenta el índice.
  *
  * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `PASSWORD` y `SESSIONS` entraron con el paso
- * 6b y `PROFILE` con el 7b, cada una **después** de que su endpoint existiera; `PRIVACY` —el borrado
- * y el export— **sigue sin declararse** hasta que los suyos existan (paso 8). Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a
- * propósito. ▶ Y el modelo no se ha tocado para añadirlas: entran en `ZONES` con su rótulo, que es
- * exactamente lo que §4.2 prometía.
+ * 6b, `PROFILE` con el 7b y `PRIVACY` con el 8, cada una **después** de que su endpoint existiera.
+ * Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a propósito.
+ * ▶ Y el modelo no se ha tocado para añadirlas: entran en `ZONES` con su rótulo, que es exactamente
+ * lo que §4.2 prometía. Con `PRIVACY` la tanda 2 queda cerrada y son **cinco zonas**.
  */
 export const ZONES = {
     /** El índice: quién eres, tu próxima reserva y los accesos. Espeja `/mi-cuenta` + el bloque `.acct`. */
@@ -43,6 +43,9 @@ export const ZONES = {
 
     /** Los datos del titular y el ciclo del cambio de correo (tanda 2 · paso 7b). */
     PROFILE: 'profile',
+
+    /** Los dos derechos RGPD: descargar los datos y borrar la cuenta (tanda 2 · paso 8). */
+    PRIVACY: 'privacy',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -63,6 +66,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.PASSWORD]: 'account.password.title',
     [ZONES.SESSIONS]: 'account.sessions.title',
     [ZONES.PROFILE]: 'account.profile.title',
+    [ZONES.PRIVACY]: 'account.privacy.title',
 };
 
 /**
@@ -72,7 +76,7 @@ export const ZONE_TITLE_KEYS = {
  * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
  * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
  */
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS];
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
 
 /** El camino del rótulo de una zona. Una zona desconocida cae en el del índice, nunca en `''`. */
 export function titleKeyOf(zone) {

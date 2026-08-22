@@ -206,6 +206,30 @@ class SidebarComponentBudgetTest extends TestCase
         }
     }
 
+    /**
+     * **Y la guarda de la guarda para el otro contador**: que ve los CINCO verbos de `api.js`.
+     *
+     * Sin este caso, el contador podría volver a quedarse corto al añadirse un verbo —que es
+     * exactamente lo que pasó entre el paso 6b y el 8— y los dos casos de arriba seguirían verdes
+     * contando de menos. Se enumeran a propósito uno a uno: leerlos del propio `api.js` haría que un
+     * verbo mal escrito allí se «comprobara» contra sí mismo.
+     */
+    public function test_the_api_counter_sees_every_verb_the_client_offers(): void
+    {
+        $sample = "<script setup>\n".
+            "api.get('/a'); api.post('/b', {}); api.put('/c', {}); api.patch('/d', {}); api.delete('/e');\n".
+            "</script>\n";
+
+        $path = tempnam(sys_get_temp_dir(), 'vue').'.vue';
+        file_put_contents($path, $sample);
+
+        try {
+            $this->assertSame(5, $this->apiCalls($path), 'el contador no ve alguno de los verbos de `api.js`');
+        } finally {
+            @unlink($path);
+        }
+    }
+
     /** @return iterable<string, array{string, array{code: int, api: int}}> */
     public static function exceptionProvider(): iterable
     {
@@ -306,8 +330,19 @@ class SidebarComponentBudgetTest extends TestCase
         return $lines;
     }
 
+    /**
+     * ⚠️⚠️ **Cuenta los CINCO verbos, y hasta el paso 8 solo miraba dos.** El contador se escribió
+     * cuando `api.js` únicamente tenía `get` y `post`; `put` llegó en el paso 6b y `patch`/`delete`
+     * en el 7b (`DECISIONES #120(r)`), y nadie volvió a mirar aquí. Un componente que llamara a
+     * `api.delete(...)` pasaba la guarda **sin que faltara nada** — la forma exacta de hueco que
+     * `TESTING.md` §2.quater describe, y encima sin declarar.
+     *
+     * Medido al ampliarlo: ningún componente usaba los tres verbos nuevos, así que la baseline de
+     * `PurchaseSection.vue` no se mueve. Es la diferencia entre cerrar un hueco y arreglar un fallo:
+     * esto era lo primero, y por eso se puede hacer sin tocar ningún número.
+     */
     private function apiCalls(string $path): int
     {
-        return preg_match_all('/\bapi\.(?:get|post)\s*\(/', (string) file_get_contents($path));
+        return preg_match_all('/\bapi\.(?:get|post|put|patch|delete)\s*\(/', (string) file_get_contents($path));
     }
 }

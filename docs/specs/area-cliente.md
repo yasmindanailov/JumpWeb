@@ -527,7 +527,26 @@ anti-fuerza bruta en auth, y una re-autenticación **es** auth.
 | **6b** | ✅ **HECHO 2026-08-22 · Las dos pantallas**: zonas `PASSWORD` y `SESSIONS`, el índice pasa a ser **dato** (`HOME_ENTRIES`) y nace `steps/PasswordInput.vue` —el campo de contraseña estaba escrito dos veces y la tanda iba a añadir dos más | 17 casos de `node --test` · **navegador V8, 5/5 + 3/3** |
 | **7a** | ✅ **HECHO 2026-08-22 · El perfil, en el SERVIDOR**: `AccountProfile` (reglas, ciclo de `pending_email`, dos avisos, carrera de UNIQUE), `PATCH /me`, `DELETE /me/pending-email` y `POST /me/pending-email/resend` | `MeProfileTest` (11 casos, **6 mutaciones**) · contrato |
 | **7b** | ✅ **HECHO 2026-08-22 · La pantalla del perfil**: zona `PROFILE` con el ciclo del correo pendiente. `account/credentials.js` se renombra a `form-outcome.js` —lo usan ya tres pantallas— y **la sección adelgaza de 38 a 20 líneas**: cada zona pide y compone lo suyo | 19 casos de `node --test`, **mutados** · **navegador V9, 7/7** |
-| **8** | **Los dos derechos RGPD**: borrado y export | Irreversible uno y con PII el otro. Van juntos y **al final**, cuando el patrón ya esté rodado |
+| **8** | ✅ **HECHO 2026-08-22 · Los dos derechos RGPD**: `AccountPrivacy` (borrado art. 17 + documento art. 20), `DELETE /me`, `GET /me/export` y la zona `PRIVACY`. El export baja con **contrato propio** (`Booking\Contracts\CustomerOrderHistory`): su composición era de Booking | `MePrivacyTest` (18 casos, **8 mutaciones**) · 20 casos de `node --test` **mutados** · **navegador V10, 17/17** |
 
 ⚠️ **Y dentro de cada paso, el orden que enseñó el paso 3**: primero el **dominio y el contrato**
 (`openapi/v1.yaml` manda sobre el código y rechaza lo que no declare), después el cliente.
+
+### 9.6 ✅ TANDA 2 CERRADA (2026-08-22) — y lo que deja abierto
+
+Las **cinco gestiones** viven en el cajón: perfil, contraseña, sesiones, borrado y export. Las cinco
+pasan por `Identity\Services\*` y la web las comparte, así que **hereda sus defensas sin tocarse** —de
+los cuatro sitios que reconfirmaban contraseña sin techo no queda ninguno (`DECISIONES #120(s)`)—.
+
+⚠️ **Lo que la tanda 2 NO cubre, y hay que decirlo antes de la 3:**
+
+| Sigue solo en `/mi-cuenta` | Por qué no entró | Qué hace falta |
+|---|---|---|
+| **«Tus consentimientos»** | La lista con su fecha, IP y versión. `spec §9.3` declara dos endpoints para el paso 8 y no un tercero de lectura; la API los publica **solo dentro del export**, y llamar ahí para pintar una lista descargaría la PII más densa del producto | Condición de la tanda 3, hermana del desglose financiero. Ficha en `DEUDA.md` |
+| **«Cerrar sesión»** | Nunca estuvo en el índice del cajón: el botón vive en el bloque `.acct` y en el nav | Decidir si el índice lo ofrece, en la tanda 3 |
+| **La auth** (entrar, registrarse, recuperar) | Fuera de las tres tandas **a propósito**: traerla habría doblado el tamaño de la tanda 2 | Trabajo aparte, con ficha propia |
+| **`account-context`** | Sigue en Livewire, hermano del punto de montaje | La última frontera |
+
+⚠️ **Y los dos presupuestos se BAJARON a lo medido al cerrar**, que es la mitad de la regla que casi
+nunca se cumple: chunk **185,3 KiB** (techo 186) y payload del montaje **4.523 B** (techo 4.608). Lo
+siguiente que entre vuelve a subirlos **con su motivo**.

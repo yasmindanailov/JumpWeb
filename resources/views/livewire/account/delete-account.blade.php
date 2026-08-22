@@ -3,6 +3,8 @@
     <p class="account__card-sub">{{ __('account.account.privacy.delete_intro') }}</p>
 
     <form wire:submit="destroy" wire:confirm="{{ __('account.account.privacy.delete_confirm') }}" class="form" novalidate>
+        <x-ui.global-errors :bag="$errors" />
+
         <div class="form__field">
             <label class="form__label" for="del-current_password">{{ __('account.account.privacy.delete_password') }}</label>
             <x-ui.password-input id="del-current_password" model="current_password" autocomplete="current-password" />

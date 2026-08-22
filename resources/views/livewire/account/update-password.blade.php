@@ -3,6 +3,8 @@
     <p class="account__card-sub">{{ __('account.account.password.intro') }}</p>
 
     <form wire:submit="save" class="form" novalidate>
+        <x-ui.global-errors :bag="$errors" />
+
         <div class="form__field">
             <label class="form__label" for="up-current_password">{{ __('account.account.password.current') }}</label>
             <x-ui.password-input id="up-current_password" model="current_password" autocomplete="current-password" />

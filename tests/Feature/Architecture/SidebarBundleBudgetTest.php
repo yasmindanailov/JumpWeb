@@ -158,10 +158,21 @@ class SidebarBundleBudgetTest extends TestCase
      * —cada zona pide lo suyo y compone lo suyo— y `account/credentials.js` se renombró a
      * `form-outcome.js` en vez de duplicarse para el perfil. El +5,2 ya viene neto de las dos cosas.
      *
-     * ▶ El paso 8 volverá a moverlo **con su medida**, y al cerrar la tanda **se vuelve a bajar**.
-     * Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
+     * ⚠️⚠️ **183 → 186 el 2026-08-22, y es el CIERRE de la tanda 2** (paso 8: la zona de privacidad,
+     * con el export y el borrado de cuenta). Medido: **185,3 KiB**, **+2,6** sobre el paso 7b — el
+     * salto más pequeño de la tanda, y tiene explicación: la pantalla es corta y todo lo que la
+     * sostiene ya estaba dentro (`PasswordInput`, `form-outcome`, el armazón de zona).
+     * ▶ Y con dos descuentos apuntados, que es lo que hace legible un `+2,6`: el guardián de los
+     * formularios se extrajo a `account/form-run.js` —era el mismo cuerpo en `credentials.js` y en
+     * `profile.js`, y el paso 8 iba a ser la tercera copia— y la zona nueva no trae ni un `<svg>`
+     * propio. El +2,6 ya viene neto de la extracción.
+     *
+     * ▶ **Y aquí es donde toca aplicar la otra mitad de la regla**: 186 deja **0,7 KiB** de holgura,
+     * la de un retoque y no la de una tanda. Con la tanda 2 cerrada, lo siguiente —la tanda 3, o
+     * traer la auth al cajón— vuelve a subirlo con su motivo. *Sube con motivo, baja al agotarse el
+     * motivo*: es la tercera vez que este fichero lo cumple, y por eso sigue apretando.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 183;
+    private const SIDEBAR_CHUNK_MAX_KB = 186;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

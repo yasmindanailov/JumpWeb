@@ -1702,8 +1702,29 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             garantizaba que volver a entrar no repitiera nada.
             ⚠️ Dos duplicaciones más cazadas: `credentials.js` → `form-outcome.js` (lo usan tres
             pantallas) y los **tres idiomas quemados en el marcado** → `SiteLocales::options()`.
-      - [ ] **Tanda 2 · paso 8**: los dos derechos RGPD —borrado (art. 17) y export (art. 20)—, que
-            cierran la tanda. Su red, en `specs/area-cliente.md` §9.5.
+      - [x] **Tanda 2 · paso 8 — LOS DOS DERECHOS RGPD** (✅ **HECHO** el 2026-08-22). Nace
+            `Identity\Services\AccountPrivacy` con el borrado (art. 17) y el documento de
+            portabilidad (art. 20); nacen `DELETE /me` y `GET /me/export`, y la zona `PRIVACY` los
+            pinta. **La tanda 2 queda CERRADA**: las cinco gestiones están en el cajón.
+            ⚠️ **El export exigió un CONTRATO nuevo** (`#120(s)`): su composición vivía en la capa de
+            ENTREGA —exenta del grafo— y al bajarla a Identity habría tenido que recorrer `Order`,
+            `OrderItem`, `Slot` y `TicketType` a mano. Nace `Booking\Contracts\CustomerOrderHistory`,
+            hermano de `CustomerReservations`.
+            ⚠️ **La guarda que sostiene el paso** es que la descarga de la web y `GET /me/export`
+            sirven el MISMO documento, comparado campo a campo: sin ella, la duplicación que este
+            paso evita podría volver sin que nada la delatara.
+            ⚠️⚠️ **Y salieron tres cosas de medir, no de leer**: el export publicaba `tickets[].code`
+            —**columna que no existe**, `null` desde el commit fundacional—; el limitador de la web
+            estaba puesto y **su aviso no se pintaba en ninguna parte** (tres vistas sin banner
+            `_global`, `#117` otra vez); y el propio `SidebarComponentBudgetTest` contaba **dos de
+            los cinco verbos** de `api.js`, así que un `api.delete()` en un componente pasaba la
+            guarda sin que faltara nada.
+            ✅ Navegador `V10`, **17/17** — y ahí apareció que tras borrar desde el cajón **la home
+            salía muda**: la despedida se deja ahora en la sesión nueva, después de `invalidate()`.
+      - [ ] **Tanda 3 — retirar `/mi-cuenta/…`**: mueren las VISTAS, viven las RUTAS
+            (`specs/area-cliente.md` §4.8). ⚠️ **Sus condiciones de entrada NO están cumplidas**:
+            `AccountPageCaptureTest::GAPS` sigue con **cuatro** huecos del desglose financiero y la
+            lista de consentimientos solo existe en la página (las dos, con ficha en `DEUDA.md`).
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

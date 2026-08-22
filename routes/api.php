@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
+use App\Http\Controllers\Api\V1\MePrivacyController;
 use App\Http\Controllers\Api\V1\MeProfileController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
@@ -206,6 +207,15 @@ Route::name('api.v1.')->group(function (): void {
         Route::put('/me/password', [MeCredentialsController::class, 'updatePassword'])->name('me.password.update');
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');
+
+        // ── Los dos derechos RGPD (tanda 2 · paso 8, `specs/area-cliente.md` §9.3) ─────────────
+        // ⚠️ `DELETE /me` **no borra la fila**: anonimiza (`RGPD-01`). La factura sigue vinculada y
+        // sin PII. Exige reconfirmar la contraseña y comparte el limitador de `PUT /me/password`,
+        // así que tampoco lleva `throttle` de ruta —contaría también los aciertos—.
+        // ⚠️ `GET /me/export` es el cuerpo con más PII del producto; sale con `no-store` por el
+        // middleware del grupo (`RGPD-04`), no por una cabecera escrita aquí.
+        Route::delete('/me', [MePrivacyController::class, 'destroy'])->name('me.destroy');
+        Route::get('/me/export', [MePrivacyController::class, 'export'])->name('me.export');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');

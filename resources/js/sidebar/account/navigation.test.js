@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, ZONES, ZONE_TITLE_KEYS, createNavigation, isZone, titleKeyOf } from './navigation.js';
+import { DEFAULT_ZONE, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, createNavigation, isZone, titleKeyOf } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -49,6 +49,34 @@ describe('el rótulo de cada zona', () => {
     test('una zona desconocida cae en el rótulo del índice, nunca en cadena vacía', () => {
         assert.equal(titleKeyOf('ajustes'), ZONE_TITLE_KEYS[DEFAULT_ZONE]);
         assert.equal(titleKeyOf(undefined), ZONE_TITLE_KEYS[DEFAULT_ZONE]);
+    });
+});
+
+describe('el índice', () => {
+    /**
+     * ⚠️⚠️ **Toda zona tiene que ser ALCANZABLE, y hasta el paso 8 nadie lo miraba.**
+     *
+     * Dentro del cajón no hay URL (`specs/area-cliente.md` §3.4), así que el índice es la única
+     * puerta a una zona: declararla en `ZONES` y olvidarla en `HOME_ENTRIES` la deja **inalcanzable**
+     * —código muerto que se pinta perfecto en un test de navegación y al que ningún cliente llega—.
+     * Es la misma familia que los 20 iconos vacíos (`#113`) y que el enlace profundo de `#117`: algo
+     * que «no falla y no hace nada».
+     */
+    test('TODAS las zonas se pueden alcanzar desde el índice', () => {
+        for (const zona of Object.values(ZONES)) {
+            if (zona === DEFAULT_ZONE) continue;
+
+            assert.ok(HOME_ENTRIES.includes(zona), `a la zona «${zona}» no se llega desde ningún sitio`);
+        }
+    });
+
+    test('y el índice no ofrece nada que no sea una zona, ni un enlace a sí mismo', () => {
+        for (const entrada of HOME_ENTRIES) {
+            assert.equal(isZone(entrada), true, `el índice ofrece «${entrada}», que no es una zona`);
+        }
+
+        assert.equal(HOME_ENTRIES.includes(DEFAULT_ZONE), false, 'el índice se enlaza a sí mismo');
+        assert.equal(new Set(HOME_ENTRIES).size, HOME_ENTRIES.length, 'el índice repite una entrada');
     });
 });
 

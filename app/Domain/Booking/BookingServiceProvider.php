@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AddonOffer;
 use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
+use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\ProductCatalog;
@@ -19,6 +20,7 @@ use App\Domain\Booking\Services\CartLineValidator;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
+use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
@@ -39,6 +41,10 @@ class BookingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(CustomerReservations::class, CustomerReservationsReader::class);
+        // Lo que Booking guarda de un cliente en forma PORTABLE (RGPD art. 20, tanda 2 · paso 8).
+        // Lo consume `Identity\Services\AccountPrivacy`, que compone el documento entero: sin este
+        // contrato, Identity tendría que recorrer `Order`/`OrderItem`/`Slot`/`TicketType` a mano.
+        $this->app->bind(CustomerOrderHistory::class, CustomerOrderHistoryReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
         // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);

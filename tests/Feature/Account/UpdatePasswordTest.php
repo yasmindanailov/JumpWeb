@@ -3,6 +3,7 @@
 namespace Tests\Feature\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountCredentials;
 use App\Livewire\Account\UpdatePassword;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -115,5 +116,34 @@ class UpdatePasswordTest extends TestCase
 
         $this->assertDatabaseHas('sessions', ['id' => $currentId]);
         $this->assertDatabaseMissing('sessions', ['id' => 'otra-sesion']);
+    }
+
+    /**
+     * ⚠️ **El limitador que la web heredó del dominio, y su aviso EN PANTALLA** (tanda 2 · paso 8).
+     * Ver el gemelo de `LogoutOtherDevicesTest` para el porqué: el techo llegó en el paso 6a y su
+     * mensaje no tenía dónde salir, así que agotar los intentos «no fallaba y no hacía nada».
+     */
+    public function test_the_limiter_denies_the_sixth_attempt_and_the_screen_says_why(): void
+    {
+        // Reloj PARADO: el aviso lleva los segundos que quedan (`DECISIONES #64`).
+        $this->freezeTime();
+
+        $user = User::factory()->create();
+        $component = Livewire::actingAs($user)->test(UpdatePassword::class)
+            ->set('password', 'una-frase-larga-y-unica-2026')
+            ->set('password_confirmation', 'una-frase-larga-y-unica-2026');
+
+        for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
+            $component->set('current_password', 'mal-'.$i)->call('save')->assertHasErrors('current_password');
+        }
+
+        $component->set('current_password', 'password')->call('save')
+            ->assertHasErrors('_global')
+            ->assertSee(__('auth.throttle', ['seconds' => 60]));
+
+        $this->assertTrue(
+            Hash::check('password', (string) $user->refresh()->password),
+            'el sexto intento ha cambiado la contraseña pese al bloqueo'
+        );
     }
 }

@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Platform\Models\AuditLog;
 use App\Livewire\Account\DeleteAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -261,6 +262,43 @@ class PrivacyTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'code' => 'JJ-TESTAB']);
+    }
+
+    /**
+     * ⚠️⚠️ **El limitador que la web heredó del dominio, y su aviso EN PANTALLA** (tanda 2 · paso 8).
+     *
+     * Éste era el ÚLTIMO de los cuatro sitios que reconfirman contraseña sin techo
+     * (`DECISIONES #120(o)`) y el más grave: lo que protege es la única acción irreversible del
+     * producto. Con una sesión secuestrada se podían probar contraseñas sin límite antes de borrar
+     * la cuenta ajena.
+     *
+     * ⚠️ Y el caso mira **las dos mitades**, porque la segunda faltaba: el mensaje del limitador va
+     * a `_global` y esta vista no pintaba ninguna clave global — al agotar los intentos, el
+     * formulario no hacía nada y no decía nada (`#117`).
+     */
+    public function test_the_delete_form_is_rate_limited_and_the_screen_says_why(): void
+    {
+        // ⚠️ **Con el reloj PARADO** (`DECISIONES #64`): el aviso lleva los segundos que quedan, y
+        // `availableIn()` devuelve 59 en cuanto el bucle cruza un segundo. Sin congelarlo, el caso
+        // pasa casi siempre y falla cuando la máquina va lenta — que es la peor clase de rojo.
+        $this->freezeTime();
+
+        $user = $this->userWithConsents();
+        $component = Livewire::actingAs($user)->test(DeleteAccount::class);
+
+        for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
+            $component->set('current_password', 'mal-'.$i)->call('destroy')->assertHasErrors('current_password');
+        }
+
+        // Con la contraseña BUENA también corta: el techo es del intento, no del acierto.
+        $component->set('current_password', 'password')->call('destroy')
+            ->assertHasErrors('_global')
+            ->assertSee(__('auth.throttle', ['seconds' => 60]));
+
+        $this->assertFalse(
+            User::find($user->id)->isAnonymized(),
+            'la cuenta se ha borrado durante el bloqueo del limitador'
+        );
     }
 
     public function test_email_is_free_after_anonymization(): void

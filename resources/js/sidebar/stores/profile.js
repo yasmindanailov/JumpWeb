@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
-import { formOutcome } from '../account/form-outcome.js';
+import { formState, runForm } from '../account/form-run.js';
 
 /**
  * **El perfil del titular y el ciclo del cambio de correo** (`specs/area-cliente.md` §9, paso 7b).
@@ -21,11 +21,7 @@ export const useProfileStore = defineStore('profile', {
         /** El perfil, tal cual lo publica `GET /me`. `null` mientras no se haya pedido. */
         user: null,
 
-        busy: false,
-        fields: {},
-        notice: '',
-        done: false,
-        expired: false,
+        ...formState(),
     }),
 
     getters: {
@@ -87,36 +83,22 @@ export const useProfileStore = defineStore('profile', {
          * pendiente, reenviar resella su caducidad— y quedarse con el perfil viejo lo pintaría mal.
          */
         async run(call, ctx, { reload = false } = {}) {
-            this.busy = true;
-            this.fields = {};
-            this.notice = '';
-            this.done = false;
-            this.expired = false;
+            return runForm(this, call, ctx, async (response) => {
+                if (! reload && response.data) {
+                    this.user = response.data;
 
-            try {
-                const response = await call();
-                const outcome = formOutcome(response, ctx);
-
-                this.fields = outcome.fields;
-                this.notice = outcome.notice;
-                this.expired = outcome.expired;
-                this.done = outcome.ok;
-
-                if (outcome.ok && ! reload && response.data) this.user = response.data;
-
-                if (outcome.ok && reload) {
-                    // ⚠️ **Con el MISMO cliente que hizo la llamada**, no con el global: pasarle solo
-                    // `{messages, auth}` dejaba la relectura usando el real, y en `node --test` eso es
-                    // una petición de verdad que nadie puede doblar. Lo cazó el test, no la revisión.
-                    const fresh = await (ctx.api ?? httpClient).get('/me');
-
-                    if (fresh.ok) this.user = fresh.data;
+                    return;
                 }
 
-                return outcome.ok;
-            } finally {
-                this.busy = false;
-            }
+                if (! reload) return;
+
+                // ⚠️ **Con el MISMO cliente que hizo la llamada**, no con el global: pasarle solo
+                // `{messages, auth}` dejaba la relectura usando el real, y en `node --test` eso es
+                // una petición de verdad que nadie puede doblar. Lo cazó el test, no la revisión.
+                const fresh = await (ctx.api ?? httpClient).get('/me');
+
+                if (fresh.ok) this.user = fresh.data;
+            });
         },
     },
 });

@@ -155,5 +155,9 @@ export const api = {
     // `request()`, así que heredan las cuatro trampas ya resueltas: la cookie, el `Accept`, el CSRF
     // url-decodificado y el reintento del 419.
     patch: (path, body, options = {}) => request(path, { ...options, method: 'PATCH', body }),
-    delete: (path, options = {}) => request(path, { ...options, method: 'DELETE' }),
+    // ⚠️ `delete` acepta CUERPO desde el paso 8: `DELETE /me` manda la contraseña de reconfirmación,
+    // que en `DELETE` es legal aunque poco común. La alternativa —pasarla por query— la dejaría
+    // escrita en los logs del servidor y en el historial del navegador, así que no se contempla.
+    // Sigue valiendo llamarlo sin cuerpo (`api.delete('/me/pending-email')`).
+    delete: (path, body = null, options = {}) => request(path, { ...options, method: 'DELETE', body }),
 };

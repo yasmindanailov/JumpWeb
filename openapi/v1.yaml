@@ -1183,6 +1183,51 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+    delete:
+      tags: [Cuenta]
+      operationId: deleteMe
+      summary: Borrar mi cuenta (derecho de supresión)
+      description: |
+        Ejerce el **art. 17** del RGPD sobre la cuenta de quien hace la petición.
+
+        ⚠️⚠️ **NO borra la fila: la ANONIMIZA.** La identidad se sobrescribe con valores neutros
+        —nombre, correo, teléfono y contraseña— y se purga la PII de terceros de sus pedidos
+        (nombres y alergias de los invitados). Lo que **se conserva** es la historia contable
+        —códigos, importes y fechas, ya sin identidad—, porque la ley fiscal obliga a guardar la
+        factura ≥4 años. Para el titular el efecto es el mismo: no puede volver a entrar, sus datos
+        personales han salido, y su correo queda **libre** para registrarse de nuevo.
+
+        ⚠️ **Es irreversible, y por eso exige reconfirmar la contraseña actual** — con el mismo
+        limitador por (titular, IP) que `PUT /me/password`: cinco fallos seguidos y responde `429`.
+
+        ⚠️ **Todas las credenciales del titular dejan de valer**, incluida la de esta petición: en el
+        art. 17 no hay ninguna que conservar. Un cliente por Bearer debe dar su token por muerto tras
+        el `204`; uno por cookie recibe además la sesión invalidada.
+
+        ⚠️ La petición lleva CUERPO, que en `DELETE` es legal pero poco común: un cliente que use una
+        capa HTTP que no lo permita tendrá que enviarlo igualmente — no hay variante por query, y no
+        la hay a propósito (una contraseña en la URL acabaría en los logs del servidor).
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordConfirmation'
+      responses:
+        '204':
+          description: La cuenta ha quedado anonimizada y todas sus credenciales revocadas.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservation-eligibility:
     get:
       tags: [Compra]
@@ -1338,6 +1383,54 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/export:
+    get:
+      tags: [Cuenta]
+      operationId: exportMyData
+      summary: Descargar mis datos (derecho de portabilidad)
+      description: |
+        Copia legible por máquina de los datos personales del titular (**art. 20**): perfil,
+        consentimientos, roles y el historial de pedidos con su detalle de líneas, complementos,
+        datos de evento y entradas emitidas.
+
+        ⚠️ **No exige reconfirmar la contraseña**, y es coherente con la web: descargarse los datos
+        propios no destruye ni cede nada, y poner fricción a un derecho que la ley quiere fácil de
+        ejercer solo consigue que no se ejerza.
+
+        ⚠️⚠️ **Es el cuerpo con más PII del producto** —incluye `event_data`: nombre y **alergias**
+        del homenajeado, dato de salud del art. 9—. Sale siempre con `Cache-Control: no-store`
+        (`RGPD-04`), que en `/api/v1` lo estampa el middleware del grupo en toda respuesta
+        autenticada. Un cliente que lo persista asume esa responsabilidad: la SPA del cajón **no lo
+        guarda** en `localStorage`, por la misma regla que excluye las respuestas del evento de la
+        cesta.
+
+        ⚠️ **Devuelve el documento, no un fichero adjunto.** El `Content-Disposition` de la página
+        web es presentación de navegador; aquí el cliente recibe el cuerpo y decide qué hacer con él.
+
+        ⚠️ Que `GET /me/orders` excluya `event_data` a propósito no contradice esto: allí es una
+        lista que se pinta sola en cada página, y aquí es el titular pidiendo expresamente su copia.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: El documento de portabilidad.
+          headers:
+            Cache-Control:
+              description: Siempre `no-store` (`RGPD-04`).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalDataExport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -1830,6 +1923,256 @@ components:
           description: |
             La nueva. Debe cumplir la política del producto —mínimo 8 caracteres y no aparecer en el
             corpus de filtraciones—, que vive en un solo sitio (`Identity\Services\PasswordPolicy`).
+
+    PersonalDataExport:
+      type: object
+      description: |
+        El documento de portabilidad del titular (**art. 20**). No es una vista ni un resumen: es lo
+        que hay guardado sobre él, con los importes en **céntimos** y las fechas en ISO-8601, igual
+        que en la base de datos — un resumen bonito no es portable, y redondear importes al
+        formatearlos pierde información.
+
+        Su forma la componen dos módulos: Identity pone perfil, consentimientos y roles, y Booking
+        pone `orders` por contrato (`Booking\Contracts\CustomerOrderHistory`) — porque son sus datos.
+      required: [exported_at, profile, consents, roles, orders]
+      additionalProperties: false
+      properties:
+        exported_at:
+          type: string
+          format: date-time
+          description: Cuándo se generó esta copia. No es un dato del titular; sitúa el documento.
+        profile:
+          $ref: '#/components/schemas/ExportedProfile'
+        consents:
+          type: array
+          description: Los consentimientos legales otorgados, con su prueba (art. 7.1).
+          items:
+            $ref: '#/components/schemas/ExportedConsent'
+        roles:
+          type: array
+          description: |
+            Roles asignados, por su nombre. Un cliente normal no tiene ninguno: la lista vacía es lo
+            esperable, y va igualmente porque es un dato que existe sobre él.
+          items:
+            type: string
+        orders:
+          type: array
+          description: Los pedidos del titular, del más antiguo al más reciente.
+          items:
+            $ref: '#/components/schemas/ExportedOrder'
+
+    ExportedProfile:
+      type: object
+      description: |
+        Los datos de la cuenta. ⚠️ **No es el mismo objeto que `User`**, y no debe unificarse: aquel
+        es una ALLOWLIST de lo que una pantalla necesita (`SEC-10`) y éste es un volcado de lo que
+        hay guardado — llevan `id` uno y `last_login_at` el otro por ese motivo, no por descuido.
+      required:
+        - name
+        - email
+        - pending_email
+        - pending_email_sent_at
+        - phone
+        - locale
+        - marketing_opt_in
+        - email_verified_at
+        - created_at
+        - last_login_at
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        pending_email:
+          type: string
+          nullable: true
+          description: Cambio de correo pedido y aún sin confirmar.
+        pending_email_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        locale:
+          type: string
+          nullable: true
+          description: |
+            El idioma guardado, tal cual. ⚠️ Sin `enum`, al revés que en `User`: aquí se vuelca lo
+            que hay en la fila, y una instalación que deje de servir un idioma no debe convertir el
+            export de quien lo tenía guardado en una respuesta inválida.
+        marketing_opt_in:
+          type: boolean
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExportedConsent:
+      type: object
+      description: |
+        Un consentimiento otorgado. La **IP** va incluida a propósito: es parte de la prueba del art.
+        7.1 y es un dato personal del titular, así que le pertenece.
+      required: [type, accepted_at, ip, version]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          description: '`privacy` · `terms` · `waiver` · `marketing`.'
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        ip:
+          type: string
+          nullable: true
+        version:
+          type: string
+          description: Versión del documento que se aceptó, para saber a QUÉ se dijo que sí.
+
+    ExportedOrder:
+      type: object
+      description: |
+        Un pedido con su detalle. ⚠️ **No es el mismo objeto que `Order`** (el de `GET /me/orders`) y
+        tampoco debe unificarse: aquél publica lo que una pantalla necesita —estado efectivo,
+        reembolsos, si se puede reintentar, etiquetas ya formateadas— y éste vuelca lo guardado.
+      required:
+        - code
+        - status
+        - subtotal_cents
+        - tax_cents
+        - total_cents
+        - currency
+        - created_at
+        - paid_at
+        - expires_at
+        - items
+        - tickets
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+        status:
+          type: string
+          description: |
+            El estado GUARDADO, sin el `expired` calculado que sí publica `GET /me/orders`: aquí se
+            entrega el dato, no su lectura.
+        subtotal_cents:
+          type: integer
+        tax_cents:
+          type: integer
+        total_cents:
+          type: integer
+        currency:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          description: Las líneas principales; los complementos van anidados en cada una.
+          items:
+            $ref: '#/components/schemas/ExportedOrderItem'
+        tickets:
+          type: array
+          description: Las entradas emitidas para este pedido.
+          items:
+            $ref: '#/components/schemas/ExportedTicket'
+
+    ExportedOrderItem:
+      type: object
+      required: [product, date, time, quantity, unit_price_cents, seats, event_data, addons]
+      additionalProperties: false
+      properties:
+        product:
+          type: string
+          nullable: true
+          description: Nombre del producto en el idioma de la instalación. `null` si ya no existe.
+        date:
+          type: string
+          format: date
+          nullable: true
+          description: La fecha de la franja, CIVIL — sin hora y sin zona horaria.
+        time:
+          type: string
+          nullable: true
+          description: Hora de inicio de la franja, `HH:MM:SS`.
+        quantity:
+          type: integer
+        unit_price_cents:
+          type: integer
+        seats:
+          type: integer
+          description: Plazas que ocupa la línea (cantidad × plazas por unidad).
+        event_data:
+          type: object
+          nullable: true
+          description: |
+            Las respuestas del formulario del pack, tal cual se guardaron.
+
+            ⚠️⚠️ **Aquí está el art. 9**: nombre y **alergias** del homenajeado. Va entero y en claro
+            porque es exactamente lo que el art. 20 obliga a entregarle al titular; lo que la ley
+            exige a cambio es no cachearlo (`no-store`), no recortarlo. Es también el motivo de que
+            `GET /me/orders` lo excluya y lo sirva aparte: una cosa es la lista que se pinta sola en
+            cada página y otra el titular pidiendo su copia.
+
+            Forma LIBRE: sus claves las definen los campos que el panel haya configurado para ese
+            producto, así que no se declaran aquí.
+        addons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportedOrderAddon'
+
+    ExportedOrderAddon:
+      type: object
+      description: 'Un complemento de la línea. No lleva franja: hereda la de su línea principal.'
+      required: [product, quantity, unit_price_cents]
+      additionalProperties: false
+      properties:
+        product:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        unit_price_cents:
+          type: integer
+
+    ExportedTicket:
+      type: object
+      description: |
+        Una entrada emitida.
+
+        ⚠️ **No lleva el `qr_token`**, y no es un olvido: ese token es la credencial que canjea la
+        entrada en la puerta, y un export es un fichero que el titular guarda, reenvía y a veces
+        pierde. Lo que se entrega es qué pasó con la entrada, no con qué se abre.
+      required: [status, issued_at]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          description: '`purchased` · `prepared` · `redeemed` · `void`.'
+        issued_at:
+          type: string
+          format: date-time
+          nullable: true
 
     UpcomingReservationList:
       type: object

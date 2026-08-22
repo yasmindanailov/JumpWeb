@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Domain\Identity\Services;
+
+use App\Domain\Booking\Contracts\CustomerOrderHistory;
+use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Models\User;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * **Los dos derechos RGPD del titular** (`specs/area-cliente.md` §9.5, tanda 2 · paso 8): borrar la
+ * cuenta (art. 17) y descargarse sus datos (art. 20).
+ *
+ * Cierra la tanda por el mismo motivo que la abrieron {@see AccountCredentials} y
+ * {@see AccountProfile}: la lógica vivía dentro de las superficies web —`Livewire\Account\
+ * DeleteAccount` y `Http\Controllers\Account\AccountController::export`— y exponerla por API sin
+ * bajarla al dominio la habría **duplicado**. Aquí no se reimplementa nada: la purga es
+ * {@see User::anonymize()} (`RGPD-01`) y la reconfirmación de contraseña es
+ * {@see AccountCredentials::verify()}, con su limitador.
+ *
+ * ⚠️ **Y ése es el efecto que justifica el paso, más allá de abrir dos rutas**: al pasar el borrado
+ * por aquí, la web hereda el limitador de `current_password` **sin tocar la web**. Eran cuatro los
+ * sitios que reconfirman contraseña y no lo tenían (`DECISIONES #120(o)`); con éste quedan **cero**.
+ *
+ * **Qué NO hace, a propósito** —igual que `AccountCredentials`—: tocar la sesión en curso ni decidir
+ * a dónde va el titular después. Eso es de quien atiende la petición: la web redirige a la home con
+ * su mensaje y la API responde `204`.
+ */
+class AccountPrivacy
+{
+    /**
+     * La clave del aviso de despedida que el titular ve tras borrar su cuenta.
+     *
+     * ⚠️ **Vive aquí porque la usan las DOS superficies** —la web al redirigir y la API al dejarla en
+     * la sesión nueva para que el cajón la encuentre al salir a la home— y el layout la traduce por
+     * `account.status.*`. Escrita a mano en los dos sitios sería la clase de duplicación que se
+     * descubre el día que alguien renombra una: el aviso simplemente dejaría de salir en una de las
+     * dos, sin romper nada.
+     */
+    public const FAREWELL_STATUS = 'account-deleted';
+
+    public function __construct(
+        private readonly AccountCredentials $credentials,
+        private readonly CustomerOrderHistory $orders,
+    ) {}
+
+    /**
+     * **Ejerce el derecho de supresión** (art. 17), previa reconfirmación de la contraseña.
+     *
+     * ⚠️ **Se llama `anonymize()` y no `delete()`, y no es capricho.** Por un lado es lo que de
+     * verdad ocurre —la fila de `users` sobrevive con datos neutros para que las facturas sigan
+     * vinculadas (AEAT, conservación ≥4 años) y el email original queda libre—; por otro,
+     * `ApiBoundariesTest` prohíbe `->delete()` en la capa HTTP y **no puede distinguir** un servicio
+     * de un modelo de Eloquent. Es la misma lección que renombró `AccountProfile::update()` a
+     * `apply()` (`DECISIONES #120(q)`): un nombre que provoca la confusión cada vez que alguien lo
+     * llama desde un controlador se cambia, no se le declara una excepción a la guarda.
+     *
+     * ⚠️ **La reconfirmación es obligatoria aquí y esto es irreversible**: es la única de las cinco
+     * gestiones que el titular no puede deshacer, así que la contraseña se pide siempre —no «solo
+     * si cambia algo sensible», como en el perfil—.
+     */
+    public function anonymize(User $user, string $currentPassword, string $ip): CredentialChangeResult
+    {
+        $verdict = $this->credentials->verify($user, $currentPassword, $ip);
+
+        if ($verdict->failed()) {
+            return $verdict;
+        }
+
+        $userId = $user->id;
+
+        // `anonymize()` es la purga CENTRAL y completa (`RGPD-01`): atómica, alcanza la PII de
+        // terceros de sus `order_items`, redacta los payloads legacy de `audit_logs`, borra el token
+        // de reset y **revoca TODAS las credenciales** —sesiones y tokens— por `revokeAllAccess()`
+        // (`RGPD-06`). No se reimplementa ni se completa desde fuera: si aparece PII nueva, se añade
+        // allí, que es donde las dos vías (panel y self-service) la ven.
+        $user->anonymize();
+
+        Log::info('account.anonymized', ['user_id' => $userId]);
+
+        return CredentialChangeResult::success();
+    }
+
+    /**
+     * **El documento de portabilidad** (art. 20): copia legible por máquina de los datos personales
+     * del titular.
+     *
+     * ⚠️ **Sin reconfirmar la contraseña, y es coherente con la web**: descargarse los propios datos
+     * no destruye ni cede nada, y exigirla convertiría en fricción un derecho que la ley quiere
+     * fácil de ejercer. Lo que sí es obligatorio es servirlo con `no-store` (`RGPD-04`): es la PII
+     * más densa del producto —perfil, consentimientos con IP y `event_data` con nombre y ALERGIAS de
+     * menores, art. 9—. En `/api/v1` lo lleva por defecto toda respuesta autenticada; la ruta web lo
+     * declara con su alias.
+     *
+     * ⚠️ **Los pedidos los compone BOOKING**, no esta clase: son sus datos y los pide por contrato
+     * ({@see CustomerOrderHistory}), como ya hace `CustomerAccountContext` con las reservas.
+     *
+     * @return array<string, mixed>
+     */
+    public function exportFor(User $user): array
+    {
+        $user->loadMissing(['consents', 'roles']);
+
+        return [
+            'exported_at' => now()->toIso8601String(),
+            'profile' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'pending_email' => $user->pending_email,
+                'pending_email_sent_at' => $user->pending_email_sent_at?->toIso8601String(),
+                'phone' => $user->phone,
+                'locale' => $user->locale,
+                'marketing_opt_in' => (bool) $user->marketing_opt_in,
+                'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+                'created_at' => $user->created_at?->toIso8601String(),
+                'last_login_at' => $user->last_login_at?->toIso8601String(),
+            ],
+            'consents' => $user->consents->map(fn ($consent): array => [
+                'type' => $consent->type,
+                'accepted_at' => $consent->accepted_at?->toIso8601String(),
+                'ip' => $consent->ip,
+                'version' => $consent->version,
+            ])->values()->all(),
+            'roles' => $user->roles->pluck('name')->values()->all(),
+            'orders' => $this->orders->exportFor((int) $user->id),
+        ];
+    }
+}

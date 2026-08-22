@@ -264,7 +264,21 @@ class SidebarLoginParityTest extends TestCase
         $boot = $this->actingAs($user)->bootPayload();
 
         $this->assertSame(['login', 'register', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
-        $this->assertSame(['title', 'password', 'sessions', 'profile'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
+
+        // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado**: lleva
+        // además `consents_title`, `no_consents` y los cuatro `consent_types`, y **la lista de
+        // consentimientos no la pinta el cajón** — sigue solo en `/mi-cuenta`, y es un hueco con
+        // nombre para la tanda 3 (`specs/area-cliente.md` §4.8).
+        $this->assertSame(
+            [
+                'title', 'intro', 'export_btn',
+                'delete_title', 'delete_intro', 'delete_password',
+                'delete_confirm', 'delete_btn', 'deleting',
+            ],
+            array_keys($boot['account']['account']['privacy'] ?? []),
+            'el subgrupo `privacy` ha dejado de estar podado a lo que la zona pinta'
+        );
 
         // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
         // diga lo mismo que la página web. Si desaparece, el cajón lo pintaría VACÍO y nada avisaría.
@@ -287,11 +301,18 @@ class SidebarLoginParityTest extends TestCase
 
         // Medido el 2026-08-22: **2.309 B** en español con las doce claves de las zonas (el anónimo
         // son 1.608, así que el área de cliente cuesta **701 B a quien tiene sesión y 0 al resto**).
-        // El techo se
-        // sube a 2.560 con el mismo criterio que el anónimo —presupuesto, no objetivo— y con una
-        // referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, cuatro veces esto.
+        //
+        // ⚠️⚠️ **4.523 B al CERRAR la tanda 2** (paso 8, las nueve claves de privacidad). El techo
+        // estaba en 4.096 **subido a propósito y por adelantado** para que la tanda cupiera, y su
+        // propia nota decía que al terminarla había que **bajarlo a lo medido** — que es lo que casi
+        // nunca se cumple, y un presupuesto con margen de sobra deja de ser un presupuesto.
+        // ▶ Se fija en **4.608** (4,5 KiB): 85 B de holgura sobre lo medido. Es tan estrecho a
+        // propósito. No hay grasa que podar —las nueve claves las pinta la zona, una a una— así que
+        // lo que este número tiene que provocar la próxima vez es la pregunta correcta: ¿de verdad
+        // hace falta que este texto viaje en el HTML de cada página, o lo pide la pantalla al abrirse?
+        // Referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, el doble de esto.
         $this->assertLessThan(
-            4096, $bytes,
+            4608, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

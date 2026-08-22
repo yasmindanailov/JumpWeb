@@ -9,6 +9,7 @@ import OrdersZone from '../account/zones/OrdersZone.vue';
 import ProfileZone from '../account/zones/ProfileZone.vue';
 import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
+import PrivacyZone from '../account/zones/PrivacyZone.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
@@ -97,6 +98,12 @@ const signIn = () => window.Alpine?.store('auth')?.open('login');
 
         <SessionsZone
             v-else-if="store.zone === ZONES.SESSIONS"
+            :messages="messages"
+            :auth="auth"
+            :account="account" />
+
+        <PrivacyZone
+            v-else-if="store.zone === ZONES.PRIVACY"
             :messages="messages"
             :auth="auth"
             :account="account" />

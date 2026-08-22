@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
-import { formOutcome } from '../account/form-outcome.js';
+import { formState, resetForm, runForm } from '../account/form-run.js';
 
 /**
  * **El estado de las dos gestiones de credenciales** (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
@@ -18,31 +18,12 @@ import { formOutcome } from '../account/form-outcome.js';
  * en memoria compartida— sería regalar una credencial a cualquier cosa que inspeccione el store.
  */
 export const useCredentialsStore = defineStore('credentials', {
-    state: () => ({
-        /** ¿Hay una petición en vuelo? */
-        busy: false,
-
-        /** Errores por campo, tal cual los mandó el servidor. */
-        fields: {},
-
-        /** Aviso general: red caída, límite alcanzado o un fallo que no señala campo. */
-        notice: '',
-
-        /** La última gestión salió bien. Lo lee la pantalla para confirmar y limpiarse. */
-        done: false,
-
-        /** La sesión se perdió por el camino: no se reintenta, se vuelve a entrar. */
-        expired: false,
-    }),
+    state: formState,
 
     actions: {
         /** Deja el estado como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona. */
         reset() {
-            this.busy = false;
-            this.fields = {};
-            this.notice = '';
-            this.done = false;
-            this.expired = false;
+            resetForm(this);
         },
 
         /**
@@ -68,31 +49,12 @@ export const useCredentialsStore = defineStore('credentials', {
         },
 
         /**
-         * El guardián común: limpia, llama, coloca el veredicto.
-         *
-         * ⚠️ **Limpia ANTES de llamar**, no después: si al reintentar quedara el error anterior en
-         * pantalla mientras la petición está en vuelo, el cliente lo leería como el resultado del
-         * intento nuevo.
+         * El guardián común vive en `account/form-run.js` desde el paso 8: era el mismo cuerpo aquí,
+         * en `profile.js` y en el borrado de cuenta, y la tercera copia es donde estas cosas empiezan
+         * a divergir. Lo que allí se protege es que se limpie **antes** de llamar.
          */
         async run(call, ctx) {
-            this.busy = true;
-            this.fields = {};
-            this.notice = '';
-            this.done = false;
-            this.expired = false;
-
-            try {
-                const outcome = formOutcome(await call(), ctx);
-
-                this.fields = outcome.fields;
-                this.notice = outcome.notice;
-                this.expired = outcome.expired;
-                this.done = outcome.ok;
-
-                return outcome.ok;
-            } finally {
-                this.busy = false;
-            }
+            return runForm(this, call, ctx);
         },
     },
 });

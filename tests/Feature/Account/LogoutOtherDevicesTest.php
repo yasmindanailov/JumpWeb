@@ -3,6 +3,7 @@
 namespace Tests\Feature\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountCredentials;
 use App\Livewire\Account\LogoutOtherDevices;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -58,5 +59,31 @@ class LogoutOtherDevicesTest extends TestCase
 
         $this->assertDatabaseHas('sessions', ['id' => $currentId]);
         $this->assertDatabaseMissing('sessions', ['id' => 'otra-sesion-id']);
+    }
+
+    /**
+     * ⚠️ **El limitador que la web heredó del dominio, y su aviso EN PANTALLA** (tanda 2 · paso 8).
+     *
+     * El techo llegó en el paso 6a sin tocar la web (`DECISIONES #120(o)`), pero su mensaje va a la
+     * clave `_global` —para no leerse como «esta contraseña está mal» bajo el input— y **esta vista
+     * no pintaba ninguna clave global**: al agotar los cinco intentos, el formulario no hacía nada y
+     * no decía nada. Es la familia de `#117`. Por eso el caso mira las DOS cosas: que el intento se
+     * deniegue y que el titular pueda LEER por qué.
+     */
+    public function test_the_limiter_denies_the_sixth_attempt_and_the_screen_says_why(): void
+    {
+        // Reloj PARADO: el aviso lleva los segundos que quedan (`DECISIONES #64`).
+        $this->freezeTime();
+
+        $user = User::factory()->create();
+        $component = Livewire::actingAs($user)->test(LogoutOtherDevices::class);
+
+        for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
+            $component->set('current_password', 'mal-'.$i)->call('confirm')->assertHasErrors('current_password');
+        }
+
+        $component->set('current_password', 'password')->call('confirm')
+            ->assertHasErrors('_global')
+            ->assertSee(__('auth.throttle', ['seconds' => 60]));
     }
 }
