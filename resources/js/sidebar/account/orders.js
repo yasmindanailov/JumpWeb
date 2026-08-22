@@ -194,6 +194,10 @@ export function orderRow(order, ctx) {
             ? { label: order.refund.refunded_label, amountLabel: money(order.refund.amount_cents) }
             : null,
         guestFormPending: order.guest_form_pending === true,
+        // ⚠️ Si alguna línea es un pack, el pedido PUEDE tener respuestas del evento — y solo
+        // entonces se ofrece el despliegue. Cuáles son no se sabe hasta pedirlas: no viajan en la
+        // lista a propósito (art. 9), que es justo lo que hace que haya que preguntar.
+        hasPack: (order.items ?? []).some((item) => item.is_pack === true),
         // El ledger entero (tanda 3 · paso 10): qué líneas se enseñan y con qué rótulo.
         financials: financialsOf(order, ctx.messages),
         lines: (order.items ?? []).map((item) => lineRow(order, item, ctx)),

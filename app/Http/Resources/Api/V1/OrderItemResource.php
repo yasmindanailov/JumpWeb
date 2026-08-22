@@ -78,7 +78,13 @@ class OrderItemResource extends JsonResource
             // decidir si enseña el aviso de formulario.
             'guest_form_status' => $item->guestFormStatus(),
             'needs_guest_form' => $item->needsGuestForm(),
-            'addons' => OrderItemAddonResource::collection($item->children)->resolve($request),
+            // ⚠️ **Sin los complementos FANTASMA**, por lo mismo que la lista de principales
+            // (`OrderResource`): un complemento cancelado que nunca se cobró ni se reembolsó es
+            // net-cero y las otras tres superficies lo ocultan. El predicado es el del dominio, no
+            // uno reescrito aquí.
+            'addons' => OrderItemAddonResource::collection(
+                $item->children->reject(fn ($child) => $order->isVoidedLeftoverItem($child))->values(),
+            )->resolve($request),
             // ── Añadidos en Fase 4 · paso 4.0b, para que el resumen de la reserva confirmada no
             //    tenga que adivinarse. Van a la COLA de la lista a propósito: `ApiContractTest`
             //    compara `required` con las propiedades **en el mismo orden**.

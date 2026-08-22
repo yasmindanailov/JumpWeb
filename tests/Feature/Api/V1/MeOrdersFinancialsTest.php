@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Account;
+namespace Tests\Feature\Api\V1;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
@@ -9,39 +9,32 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
-use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * # ⏳ TEST TEMPORAL — MUERE CON LA PÁGINA `/mi-cuenta/pedidos`
+ * **El desglose financiero de un pedido: la API publica exactamente lo que calcula el dominio.**
  *
- * **Fecha de caducidad: el final de la tanda 3 del área de cliente**, cuando esa página se retire
- * (`DECISIONES #120(c)`). Este fichero **se borra entero** ese día.
+ * ## De dónde viene, en dos relevos
  *
- * ## Por qué existe, y qué sustituye
+ * 1. `AccountPageCaptureTest` inventarió lo que `/mi-cuenta/pedidos` enseñaba y la API **no**
+ *    publicaba. Su lista de huecos —los cuatro del desglose— quedó vacía en el paso 9 y el fichero
+ *    se borró, como pedía su propia aserción.
+ * 2. `AccountFinancialParityTest` lo relevó con la otra mitad: mientras la página siguiera viva
+ *    había **dos superficies enseñando el mismo dinero**, y nada garantizaba que dijeran lo mismo.
+ *    Con la página retirada esa comparación se quedó sin un lado, y lo que sobrevive es esto.
  *
- * Es el relevo de `AccountPageCaptureTest`, que hizo su trabajo y **se borró en el paso 9**: aquél
- * inventariaba lo que la página enseñaba y la API **no** publicaba, y su lista de huecos —los cuatro
- * del desglose financiero— quedó **vacía** al publicarlos. Su propia aserción lo decía: *«si ya no
- * quedan huecos, borra este fichero: su trabajo terminó»*.
+ * ▶ Lo que queda vigilado es el **cableado del recurso**: seis importes que se parecen mucho entre
+ * sí y que, cruzados, invierten el mensaje para el cliente —`total_cents` es lo FACTURADO y
+ * `total_final_cents` lo que acaba pagando; `refund` es lo YA devuelto y `pending_refund_cents` lo
+ * que aún se le debe—.
  *
- * Lo que NO terminó es la otra mitad, y por eso hay relevo: mientras la página siga viva, hay **dos
- * superficies enseñando el mismo dinero**, y nada garantizaba que dijeran lo mismo. Esta guarda lo
- * exige en las dos direcciones:
- *
- *  1. la API publica **exactamente** lo que el dominio calcula —que es lo que la página pinta—;
- *  2. la página **sigue pintando** esos mismos importes.
- *
- * ▶ Cuando la página muera, esta comparación deja de tener dos lados y el fichero sobra. Lo que
- * sobrevive es el contrato (`openapi/v1.yaml`) y `MeOrdersTest`.
- *
- * ⚠️ **La guarda de la guarda va primero**: un fixture que no ejercitara el desglose dejaría todo esto
- * comparando ceros contra ceros y pasando para siempre. Es la lección de `DECISIONES #63`, y aquí es
- * especialmente fácil de pisar: **cuatro de los seis importes valen 0 en un pedido normal**.
+ * ⚠️ **La guarda de la guarda va primero**: un fixture que no ejercitara el desglose dejaría todo
+ * esto comparando ceros contra ceros y pasando para siempre. Es la lección de `DECISIONES #63`, y
+ * aquí es fácil de pisar: **cuatro de los seis importes valen 0 en un pedido normal**.
  */
-class AccountFinancialParityTest extends TestCase
+class MeOrdersFinancialsTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -122,18 +115,19 @@ class AccountFinancialParityTest extends TestCase
     }
 
     /**
-     * **El desglose de puerta: mismas líneas, mismas etiquetas y mismo ORDEN en los dos sitios.**
+     * **El desglose de puerta: las líneas del dominio, con sus etiquetas y en su ORDEN.**
      *
-     * ⚠️ El orden no es cosmético: la página lleva años enseñando primero los cargos por cambios y
-     * después el resto de la señal. Un cliente que los pinte al revés enseña un desglose distinto del
-     * que el cliente reconoce.
+     * ⚠️ El orden no es cosmético: primero los cargos por cambios y después el resto de la señal, que
+     * es como lo enseñó la web durante años. Pintarlo al revés cambia el desglose que el cliente
+     * reconoce.
+     * ⚠️ **La suma tiene que cuadrar con el agregado que se publica al lado**: un desglose que no
+     * sume `pending_at_gate_cents` deja al cliente con dos cifras que se contradicen.
      */
-    public function test_the_gate_breakdown_says_the_same_in_the_api_and_on_the_page(): void
+    public function test_the_gate_breakdown_is_the_one_the_domain_composes(): void
     {
         [$user, $order] = $this->orderWithEverything();
 
         $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
-        $html = (string) $this->actingAs($user)->get('/mi-cuenta/pedidos')->assertOk()->getContent();
 
         $expected = array_map(
             fn (array $line): array => ['label' => $line['label'], 'amount_cents' => (int) $line['amount']],
@@ -141,59 +135,11 @@ class AccountFinancialParityTest extends TestCase
         );
 
         $this->assertSame($expected, $json['pending_at_gate_lines'], 'el desglose publicado no es el del dominio');
-
-        // ⚠️⚠️ **La referencia del ORDEN es la PÁGINA, no el helper.** La aserción de arriba compara
-        // la API contra la misma fuente que la alimenta, así que sobre el orden no dice nada: una
-        // mutación que reordenara el helper movería las dos a la vez y pasaría. Lo comprobó una
-        // mutación real (`DECISIONES #120(t)`). Aquí se buscan las etiquetas **en el HTML** y se exige
-        // que aparezcan en el mismo orden.
-        $positions = [];
-
-        foreach ($expected as $line) {
-            $at = mb_strpos($html, $line['label']);
-
-            $this->assertNotFalse($at, "la página ya no pinta la etiqueta «{$line['label']}»");
-            // La página pinta importes FORMATEADOS y la API céntimos: el mismo dato, dos formas.
-            // Buscar céntimos en el HTML daría un rojo que se lee como «ya no lo pinta».
-            $this->assertStringContainsString(Money::format($line['amount_cents']), $html);
-
-            $positions[] = $at;
-        }
-
-        $sorted = $positions;
-        sort($sorted);
-
-        $this->assertSame($sorted, $positions, 'el desglose de la API va en otro orden que el de la página');
-
-        // Y ni una línea de más: una fantasma con importe 0 no movería la suma ni el agregado.
         $this->assertSame(
-            count($expected), mb_substr_count($html, 'orders__gate-line'),
-            'la página y la API no pintan el mismo NÚMERO de líneas de desglose'
+            $json['pending_at_gate_cents'], array_sum(array_column($json['pending_at_gate_lines'], 'amount_cents')),
+            'el desglose no suma el agregado que se publica al lado'
         );
-    }
 
-    /**
-     * **Y la página sigue pintando los totales que la API publica.** Es la mitad que protege la
-     * RETIRADA: mientras los dos números sean el mismo, borrar la vista no pierde nada.
-     */
-    public function test_the_page_still_paints_the_same_totals(): void
-    {
-        [$user, $order] = $this->orderWithEverything();
-        $summary = $order->financialSummary();
-
-        $html = (string) $this->actingAs($user)->get('/mi-cuenta/pedidos')->assertOk()->getContent();
-
-        foreach ([
-            'total final' => $summary->totalFinalNeto(),
-            'pendiente de devolución' => $summary->pendienteDevolucion(),
-            'a cobrar en el parque' => $summary->pendingAtGate(),
-        ] as $what => $cents) {
-            $this->assertStringContainsString(
-                Money::format($cents), $html,
-                "la página ya no pinta «{$what}». Si de verdad se ha retirado de ella, este fichero ".
-                'sobra: su trabajo es comparar DOS superficies.'
-            );
-        }
     }
 
     /**

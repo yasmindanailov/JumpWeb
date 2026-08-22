@@ -16,7 +16,6 @@ use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\Payments\RedsysReturnController;
-use App\Http\Controllers\Payments\RetryPaymentController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
@@ -43,25 +42,30 @@ Route::post('/email/verificar/reenviar', [EmailVerificationController::class, 'r
     ->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
 
-// Mi cuenta (Fase 4.5). Zona privada: requiere sesión y email verificado.
+// Mi cuenta. Zona privada: requiere sesión y email verificado.
+//
+// ⚠️⚠️ **Las VISTAS se retiraron en la tanda 3 del área de cliente y las RUTAS sobreviven como
+// PUERTA** (`specs/area-cliente.md` §4.8, `DECISIONES #120(u)`): sirven la home y el cajón se abre
+// solo en su zona, que es el mecanismo de `/entradas`. El mapa ruta→zona vive en
+// `Http\Sidebar\AccountDoor` y lo consume el layout.
+// ▶ Y no es cosmética: **8 notificaciones ya entregadas** apuntan a `account.orders` —un correo
+// enviado no se puede editar— y **11 redirecciones del servidor** aterrizan en `account` con un
+// `->with('status', …)` que el layout pinta. Borrar las rutas las convertiría en 404 para siempre.
+// ▶ El middleware se conserva TAL CUAL: la puerta sigue siendo zona privada, así que un invitado va
+// al login y uno sin verificar, al aviso de verificación.
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/mi-cuenta', [AccountController::class, 'index'])->name('account');
-    Route::get('/mi-cuenta/pedidos', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('/mi-cuenta', HomeController::class)->name('account');
+    Route::get('/mi-cuenta/pedidos', HomeController::class)->name('account.orders');
     // `no-store` (auditoría Fase 1, Sistema 5): el JSON de portabilidad RGPD lleva el perfil
     // completo, consentimientos con IP y `event_data` (nombre + ALERGIAS de menores, art. 9). Es
     // un controlador (no Livewire), así que NO recibe el `no-store` que Livewire estampa solo en
     // sus componentes → se aplica explícito, coherente con las demás superficies con PII (L1).
+    //
+    // ⚠️ **Esta NO es una vista: es una DESCARGA**, así que sobrevive intacta a la retirada. El
+    // cajón usa `GET /api/v1/me/export`, que sirve el mismo documento (`MePrivacyTest` lo compara).
     Route::get('/mi-cuenta/exportar', [AccountController::class, 'export'])
         ->middleware('no-store')
         ->name('account.export');
-
-    // Reintento de pago desde Mis pedidos (audit edge cases 2026-05-28). POST con CSRF
-    // estándar (la cookie SÍ viaja en navegación top-level desde la propia web, no es
-    // cross-site como la vuelta de Redsys). `throttle:6,1` ≈ 6 intentos/min por
-    // user/IP, suficiente para uso legítimo y bloquea botón machacado o scripts.
-    Route::post('/mi-cuenta/pedidos/{code}/reintentar-pago', RetryPaymentController::class)
-        ->middleware('throttle:6,1')
-        ->name('account.orders.retry');
 });
 
 // Confirmación del cambio de email (auditoría 2026-05-26, hallazgo A): enlace firmado del correo

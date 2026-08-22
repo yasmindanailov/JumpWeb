@@ -140,6 +140,61 @@ class MeOrdersTest extends ApiTestCase
     }
 
     /** Las líneas y sus complementos, con los datos que el dominio ya calcula para «Mis pedidos». */
+    /**
+     * ⚠️⚠️ **Los principales y complementos FANTASMA no se publican, y esto era un hueco real**
+     * (`DECISIONES #120(u)`).
+     *
+     * `Order::isVoidedLeftoverItem()` —un item cancelado que nunca se cobró ni se reembolsó,
+     * típicamente uno añadido en gestión por `extra_due` y sustituido después— lo aplicaban la
+     * página «Mis reservas», el panel y el PDF de reserva: **las tres superficies menos la API**. El
+     * cajón enseñaba líneas net-cero («0,00 € · Cancelada») que el producto decidió ocultar por
+     * confusas, y el único guardián del predicado conducía la página que se retira.
+     *
+     * ▶ Se descubrió auditando qué tests morían con la página (`CONVENCIONES §3.quater`): *si un dato
+     * viaja al cliente y su único test conduce la superficie vieja, el contrato NO lo está fijando*.
+     */
+    public function test_it_never_publishes_the_phantom_leftover_lines(): void
+    {
+        $user = $this->verifiedUser();
+        $order = $this->makeOrder($user, ['code' => 'R-GHOST1']);
+        $product = $this->product();
+
+        $real = $order->items()->create([
+            'ticket_type_id' => $product->id, 'quantity' => 1, 'unit_price' => 1000, 'seats' => 1,
+        ]);
+
+        $ghostType = TicketType::create([
+            'name' => ['es' => 'Producto fantasma'], 'type' => TicketType::TYPE_ENTRY,
+            'zone_id' => $product->zone_id, 'duration_min' => 60, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true,
+            'position' => (int) TicketType::max('position') + 1,
+        ]);
+
+        // Un principal fantasma y un complemento fantasma: la página oculta los DOS.
+        $order->items()->create([
+            'ticket_type_id' => $ghostType->id, 'quantity' => 1, 'unit_price' => 0, 'seats' => 1,
+            'cancelled_at' => now(),
+        ]);
+        $order->items()->create([
+            'ticket_type_id' => $ghostType->id, 'parent_item_id' => $real->id,
+            'quantity' => 1, 'unit_price' => 0, 'seats' => 0, 'cancelled_at' => now(),
+        ]);
+
+        // La guarda de la guarda: si el fixture dejara de producir fantasmas, lo de abajo pasaría
+        // sin medir nada.
+        $fresh = $order->fresh()->load('items.ticketType', 'items.children', 'adjustments', 'payments.refunds');
+        $this->assertSame(
+            2, $fresh->items->filter(fn ($i) => $fresh->isVoidedLeftoverItem($i))->count(),
+            'el fixture ya no monta líneas fantasma: este caso no mediría nada'
+        );
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk();
+
+        $this->assertCount(1, $response->json('data.0.items'), 'la API publica un principal fantasma');
+        $this->assertSame([], $response->json('data.0.items.0.addons'), 'la API publica un complemento fantasma');
+        $this->assertStringNotContainsString('Producto fantasma', (string) $response->getContent());
+    }
+
     public function test_it_serialises_lines_with_their_slot_and_addons(): void
     {
         $user = $this->verifiedUser();

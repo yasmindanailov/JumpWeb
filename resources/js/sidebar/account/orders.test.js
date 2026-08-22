@@ -360,3 +360,24 @@ describe('el bloque financiero', () => {
         assert.equal(row.financials.gate.amountLabel, '31,00 €');
     });
 });
+
+describe('el despliegue de las respuestas del pack', () => {
+    /**
+     * ⚠️ Solo se OFRECE si hay un pack: es lo único que el cliente puede saber sin pedir los datos,
+     * porque las respuestas no viajan en la lista (art. 9).
+     */
+    test('un pedido con pack lo ofrece; uno sin pack, no', () => {
+        assert.equal(orderRow(order({ items: [item({ is_pack: true })] }), CTX).hasPack, true);
+        assert.equal(orderRow(order({ items: [item({ is_pack: false })] }), CTX).hasPack, false);
+    });
+
+    test('con varias líneas basta una que lo sea', () => {
+        const row = orderRow(order({ items: [item({ id: 1, is_pack: false }), item({ id: 2, is_pack: true })] }), CTX);
+
+        assert.equal(row.hasPack, true);
+    });
+
+    test('un pedido sin líneas no lo ofrece', () => {
+        assert.equal(orderRow(order({ items: [] }), CTX).hasPack, false);
+    });
+});

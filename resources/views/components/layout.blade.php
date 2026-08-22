@@ -69,7 +69,12 @@
      el layout consumiera aquí, el motor se quedaría sin nada que enseñar. Quién consume
      depende del motor, y `Http\Sidebar\SidebarEntry` lo explica en un solo sitio. --}}
 <body data-auth-modal="{{ $authModal }}"
-      data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
+      data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
+      {{-- La ZONA del área de cliente con la que abrir, cuando se ha entrado por una de las rutas
+           que sobreviven a la retirada de `/mi-cuenta/…` (`AccountDoor`). Vacío = no es una puerta.
+           ⚠️ Se CONSUME al abrir: si no, cerrar y reabrir el cajón devolvería al cliente a la zona
+           una y otra vez — la misma trampa que `SidebarEntry` pagó en 4.0a. --}}
+      data-account-zone="{{ \App\Http\Sidebar\AccountDoor::zone() }}"
       {{-- Estado inicial del consentimiento de cookies (#219), calculado por el servidor → lo lee el
            store `cookies` de Alpine (app.js), igual que `purchase`/`auth`. --}}
       data-cookie-enabled="{{ ($cookieBannerEnabled ?? false) ? '1' : '' }}"
@@ -272,6 +277,8 @@
                                 'retry_payment', 'retry_hint',
                                 'guest_form_pending', 'guest_form_done',
                                 'guest_form_past', 'guest_form_cancelled',
+                                // Las respuestas del pack, bajo demanda (tanda 3).
+                                'event_data_show', 'event_data_hide',
                             ])] : []),
                         ],
                         // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van

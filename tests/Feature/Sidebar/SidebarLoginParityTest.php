@@ -294,7 +294,11 @@ class SidebarLoginParityTest extends TestCase
         $this->assertSame(['upcoming_count'], array_keys($boot['account']['sidecart'] ?? []));
 
         $this->assertSame(
+            // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`: aquél conserva
+            // el del array de origen. Escribirlo aquí como se escribió el filtro daba un rojo que se
+            // lee como «falta una clave» cuando lo único que pasa es que están en otro sitio.
             [
+                'event_data_show', 'event_data_hide',
                 'title', 'subtitle', 'empty', 'pagination',
                 'item_finished', 'item_cancelled',
                 'retry_payment', 'retry_hint',
@@ -324,11 +328,13 @@ class SidebarLoginParityTest extends TestCase
         // `consent_types` se quedaron fuera y su rótulo lo publica la API (`Consent.type_label`),
         // que además evita que el cajón lleve una segunda tabla de nombres. Sin esa decisión, esto
         // habría crecido ~150 B en vez de 91.
-        // ▶ Techo **5.120** (5 KiB) mientras dure la tanda 3, y **se vuelve a bajar a lo medido al
-        // cerrarla** — es la mitad de la regla que casi nunca se cumple, y este fichero ya la ha
-        // cumplido dos veces. Referencia: el grupo `account` COMPLETO son 9,6 kB.
+        // ▶ Techo **5.120** (5 KiB) mientras duró la tanda 3, y **bajado a lo medido al cerrarla**,
+        // que es la mitad de la regla que casi nunca se cumple: este fichero la ha cumplido ya tres
+        // veces. Medido al cerrar: **4.708 B** —los dos rótulos del despliegue de las respuestas del
+        // pack son los últimos que entraron—, así que el techo se fija en **4.800**: 92 B de holgura.
+        // Referencia que lo hace legible: el grupo `account` COMPLETO son 9,6 kB, el doble de esto.
         $this->assertLessThan(
-            5120, $bytes,
+            4800, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

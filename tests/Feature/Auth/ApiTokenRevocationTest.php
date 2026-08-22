@@ -4,9 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
-use App\Livewire\Account\DeleteAccount;
-use App\Livewire\Account\LogoutOtherDevices;
-use App\Livewire\Account\UpdatePassword;
 use App\Livewire\Auth\ResetPassword;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -60,7 +57,16 @@ class ApiTokenRevocationTest extends TestCase
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }
 
-    /** Y por la vía del panel es la misma llamada, así que tampoco puede olvidarse. */
+    /**
+     * Y por la vía del titular es la misma llamada, así que tampoco puede olvidarse.
+     *
+     * ⚠️ **Re-apuntado en la tanda 3** (`DECISIONES #120(u)`): estos tres casos conducían los
+     * componentes Livewire de «Mi cuenta», que se retiraron con la página. El SUJETO no cambia —cada
+     * vía que echa al titular tiene que llevarse sus tokens (`RGPD-06`)— y hoy la superficie que
+     * queda es la que usa el cajón. Es la tercera categoría de `CONVENCIONES §3.quater`: la vieja era
+     * un intermediario de una regla que sobrevive, y re-apuntar además **mejora el test**, porque
+     * ejercita la puerta que de verdad se sirve.
+     */
     public function test_the_self_service_deletion_revokes_every_api_token(): void
     {
         $this->seed(RoleSeeder::class);
@@ -69,30 +75,29 @@ class ApiTokenRevocationTest extends TestCase
         $user = $this->userWithTokens();
         $user->roles()->attach(Role::where('name', 'customer')->value('id'));
 
-        Livewire::actingAs($user)
-            ->test(DeleteAccount::class)
-            ->set('current_password', 'password')
-            ->call('destroy');
+        $this->actingAs($user)
+            ->deleteJson('/api/v1/me', ['current_password' => 'password'])
+            ->assertNoContent();
 
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }
 
     /**
      * Cambiar la contraseña por sospecha de robo no sirve de nada si el atacante conserva un
-     * Bearer. Desde la web caen TODOS: `currentAccessToken()` no devuelve un token persistido
-     * cuando la petición viene por sesión, y quien cambia su contraseña desde el navegador espera
-     * que cualquier app conectada deje de estarlo.
+     * Bearer. Por sesión caen TODOS: `currentAccessToken()` no devuelve un token persistido cuando
+     * la petición viene por cookie, y quien cambia su contraseña desde el navegador espera que
+     * cualquier app conectada deje de estarlo.
      */
-    public function test_changing_the_password_from_the_web_revokes_every_api_token(): void
+    public function test_changing_the_password_revokes_every_api_token(): void
     {
         $user = $this->userWithTokens();
 
-        Livewire::actingAs($user)
-            ->test(UpdatePassword::class)
-            ->set('current_password', 'password')
-            ->set('password', 'un-secreto-muy-largo-2026')
-            ->set('password_confirmation', 'un-secreto-muy-largo-2026')
-            ->call('save');
+        $this->actingAs($user)
+            ->putJson('/api/v1/me/password', [
+                'current_password' => 'password',
+                'password' => 'un-secreto-muy-largo-2026',
+            ])
+            ->assertNoContent();
 
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }
@@ -102,10 +107,9 @@ class ApiTokenRevocationTest extends TestCase
     {
         $user = $this->userWithTokens();
 
-        Livewire::actingAs($user)
-            ->test(LogoutOtherDevices::class)
-            ->set('current_password', 'password')
-            ->call('confirm');
+        $this->actingAs($user)
+            ->postJson('/api/v1/me/sessions/revoke-others', ['current_password' => 'password'])
+            ->assertNoContent();
 
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }

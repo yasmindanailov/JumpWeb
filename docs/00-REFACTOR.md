@@ -1736,9 +1736,27 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             ✅ **Paso 11**: `GET /me/consents` y la lista en la zona `PRIVACY` — **sin la IP**, que
             viaja solo en el export. El rótulo del documento lo publica el servidor.
             ✅ Navegador `V11`, **22/22**: el cajón y la página dicen los mismos seis importes.
-      - [ ] **Tanda 3 · el BORRADO**: mueren las VISTAS, viven las RUTAS como puerta que abre el
-            cajón en su zona (`specs/area-cliente.md` §4.8, el patrón de `/entradas`). ⚠️ **8 correos
-            ya entregados** y **11 redirecciones** apuntan ahí: borrar en crudo los convierte en 404.
+      - [x] **Tanda 3 · EL BORRADO** (✅ **HECHO** el 2026-08-22, `#120(u)`). Mueren las VISTAS
+            —`resources/views/account/`, los cuatro componentes Livewire de cuenta y
+            `RetryPaymentController`— y **viven las RUTAS** como puerta que abre el cajón en su zona
+            (`Http\Sidebar\AccountDoor`, el patrón de `/entradas`). **8 correos ya entregados** y
+            **11 redirecciones** siguen aterrizando donde deben.
+            ⚠️⚠️ **La AUDITORÍA fue la mitad del trabajo y encontró DOS huecos reales**
+            (`CONVENCIONES §3.quater`, mutando): el **reintento de la API no tenía techo vigilado**
+            —quitarle el `throttle` dejaba la suite entera verde— y **la API publicaba las líneas
+            FANTASMA** que la página, el panel y el PDF ocultan. Los dos, cerrados con su caso.
+            ⚠️ Y un tercero que decidió el owner: las **respuestas del pack** que la página pintaba en
+            línea se piden ahora **bajo demanda** (`GET orders/{code}/event-data`), que es para lo que
+            ese endpoint existe.
+            ▶ **63 casos menos y ninguno perdido por descuido**: los que conducían la vista mueren,
+            los que la usaban de intermediario se **re-apuntan** —incluidas las tres vías de `RGPD-06`
+            que pasaban por Livewire— y los que afirmaban del dominio se **extraen**
+            (`OrderRetryEligibilityTest`, `MeOrdersFinancialsTest`).
+            ✅ Navegador `V12` **13/13** y `V13` **6/6**. ⚠️ Y `V12` cazó el fallo de siempre: la zona
+            se aplicaba en `open()`, y **el cajón que llega por una puerta nace abierto**.
+      - [ ] **Lo que el área de cliente NO se llevó**, y no es de ninguna tanda: la **auth** sigue en
+            el modal de la cabecera y **`account-context` sigue en Livewire**. Las dos con ficha en
+            `DEUDA.md`.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

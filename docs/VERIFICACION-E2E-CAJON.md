@@ -646,6 +646,37 @@ del **cajón**— dentro de la **página**, que usa `.orders__item`. Son dos mar
 propósito** (§1.3: aquí la paridad es de DATOS, no de árbol), y confundirlos dio seis rojos que
 parecían una divergencia de importes. **Al comparar dos superficies, cada una con su selector.**
 
+### V12 · LAS PUERTAS (tanda 3 · la retirada)
+Muere la vista, vive la ruta. Lo que hay que ver aquí no es que la página ya no exista —eso lo dice la
+suite— sino que **quien llega desde uno de los 8 correos ya entregados acaba delante de su pantalla**.
+
+✅ **MEDIDO el 2026-08-22 · 13/13:** `/mi-cuenta/pedidos` responde 200, el cajón se abre **solo** y
+aterriza en «Mis reservas» · `/mi-cuenta` abre el **índice** con sus cinco entradas · al cerrar y
+reabrir **no vuelve a saltar** a la cuenta (la señal se consume) · la home no abre nada · `/entradas`
+sigue abriendo la **compra** · la descarga RGPD sigue respondiendo 200.
+
+⚠️⚠️ **Y aquí volvió a caer el fallo de siempre, en el mismo camino**: la zona se aplicaba en
+`open()`, y **el cajón que llega por una puerta NACE ABIERTO**, así que `open()` no se llama nunca —
+el cliente aterrizaba en el índice en vez de en sus reservas—. Es literalmente el camino de `#59(b)`,
+**documentado en el propio `app.js` tres párrafos más abajo de donde estaba el fallo**. Hoy se aplica
+en `bootSpaEngine()`, por donde pasan los dos caminos.
+▶ **La lección**: leer el aviso no es aplicarlo. Estaba escrito y aun así se repitió.
+
+⚠️ **Trampa del andamio**: hay que esperar por el MOTOR (`spaHandle.section.onAccount`) y no por el
+marcado — la sección de compra sigue en el DOM con `v-show`, así que sus selectores resuelven aunque
+la cuenta no haya montado. Costó una pasada.
+
+### V13 · LAS RESPUESTAS DEL PACK, BAJO DEMANDA (tanda 3 · cierre)
+Son datos de un MENOR (art. 9), así que el caj��n las pide **solo al desplegarlas**.
+
+✅ **MEDIDO el 2026-08-22 · 6/6:** al listar **no están en pantalla** y **no se ha pedido** el endpoint
+· la tarjeta ofrece el despliegue solo si hay un pack · al abrirlo llegan con su etiqueta («Nombre del
+homenajeado/a: …») y **entonces** se pide `GET /orders/{code}/event-data` · replegar y volver a abrir
+**no repite la petición**.
+
+⚠️ Para montarlo hace falta un pedido con un pack que tenga campos de evento **contestados**: el
+catálogo de demostración ya los trae, y la etiqueta que sale es la del panel, no la del fixture.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo

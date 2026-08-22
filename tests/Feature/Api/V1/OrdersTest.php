@@ -361,6 +361,33 @@ class OrdersTest extends ApiTestCase
             ->assertJsonPath('error.code', 'order_not_retryable');
     }
 
+    /**
+     * ⚠️⚠️ **El techo propio del reintento, que hasta la tanda 3 NO lo vigilaba nadie**
+     * (`DECISIONES #120(u)`). La ruta lleva `throttle:6,1` desde que se abrió, y su único guardián
+     * era un test de `/mi-cuenta/pedidos` — la página que se retira. Se midió por mutación: al
+     * quitarle el middleware, la suite **entera** seguía verde.
+     *
+     * ▶ Y el número no es decorativo: cada intento abre un cobro REAL contra la pasarela. El suelo
+     * genérico del grupo (`throttle:api`) es un orden de magnitud más laxo, así que sin este techo un
+     * botón machacado o un script abriría pagos en serie sobre el mismo pedido.
+     */
+    public function test_the_retry_has_its_own_ceiling_beyond_the_generic_one(): void
+    {
+        $this->actingAs($this->user)->postJson(self::PATH, $this->cart())->assertCreated();
+        $order = Order::firstOrFail();
+
+        // Seis pasan por el techo de la ruta; lo que respondan da igual —el pedido está `pending` y
+        // el reintento es legítimo—, lo que se mide es que el SÉPTIMO ya no entra.
+        for ($i = 0; $i < 6; $i++) {
+            $this->actingAs($this->user)->postJson(self::PATH.'/'.$order->code.'/payment');
+        }
+
+        $blocked = $this->actingAs($this->user)->postJson(self::PATH.'/'.$order->code.'/payment');
+
+        $blocked->assertStatus(429)->assertValidResponse(429);
+        $this->assertNotEmpty($blocked->headers->get('Retry-After'), 'sin `Retry-After` el cliente reintenta a ciegas');
+    }
+
     public function test_a_paused_installation_refuses_the_retry_without_touching_the_order(): void
     {
         $this->actingAs($this->user)->postJson(self::PATH, $this->cart())->assertCreated();

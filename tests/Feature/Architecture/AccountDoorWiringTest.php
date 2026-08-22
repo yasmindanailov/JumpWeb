@@ -80,6 +80,47 @@ class AccountDoorWiringTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️⚠️ **La segunda puerta: la que llega por RUTA, con el cajón NACIDO ABIERTO.**
+     *
+     * La retirada de `/mi-cuenta/…` (tanda 3, `DECISIONES #120(u)`) convirtió esas rutas en puertas:
+     * el servidor emite `data-account-zone` y el motor entra en esa zona. Su eslabón frágil es
+     * **dónde se aplica**, y lo cazó el navegador (`V12`): la primera versión lo hacía en `open()`,
+     * que en este camino **no se llama nunca** —el cajón ya nace abierto—, así que el cliente que
+     * venía de un correo aterrizaba en el índice en vez de en sus reservas.
+     *
+     * ▶ Es EXACTAMENTE el mismo camino que dejó el hueco vacío en `#59(b)`, y por eso este caso ancla
+     * en `bootSpaEngine`, que es el punto por donde pasan los dos: el que abre a mano y el que nace
+     * abierto.
+     */
+    public function test_the_route_door_applies_its_zone_where_both_paths_converge(): void
+    {
+        $alpine = $this->source(self::ALPINE);
+
+        $this->assertStringContainsString(
+            "accountZone: document.body.dataset.accountZone || ''", $alpine,
+            'El motor ha dejado de leer la zona que emite el servidor: las rutas de `/mi-cuenta/…` '.
+            'abrirían el cajón en el catálogo de compra, y los 8 correos ya entregados con ellas.'
+        );
+
+        // El bloque de `bootSpaEngine()`, que es por donde pasan los DOS caminos.
+        $boot = mb_substr($alpine, (int) mb_strpos($alpine, 'async bootSpaEngine()'));
+        $boot = mb_substr($boot, 0, (int) mb_strpos($boot, 'open() {'));
+
+        $this->assertStringContainsString(
+            'this.spaHandle.showAccount(this.accountZone)', $boot,
+            'La zona se aplica FUERA de `bootSpaEngine()`. Si vuelve a colgar solo de `open()`, el '.
+            'cajón que nace abierto —que es como llega toda puerta por ruta— no entrará en su zona: '.
+            'es el fallo que `#59(b)` ya pagó con el hueco vacío.'
+        );
+
+        $this->assertStringContainsString(
+            "this.accountZone = ''", $boot,
+            'La zona ya no se CONSUME. Sin vaciarla, cerrar y reabrir el cajón devolvería al cliente '.
+            'a esa pantalla una y otra vez, y no podría llegar al embudo sin recargar la página.'
+        );
+    }
+
     /** Y el motor lo publica. Sin esto, el puente llamaría a un método que no existe. */
     public function test_the_engine_publishes_the_entry_point(): void
     {

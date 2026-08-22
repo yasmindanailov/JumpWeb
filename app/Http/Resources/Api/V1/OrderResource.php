@@ -96,7 +96,16 @@ class OrderResource extends JsonResource
             // Cuándo se libera la retención de aforo de un pedido pendiente. `null` en un pedido
             // firme (`AFORO-10`: el default de `createPendingOrder` es un pedido que no caduca).
             'expires_at' => $order->expires_at?->toIso8601String(),
-            'items' => $order->items->whereNull('parent_item_id')->values()
+            // ⚠️⚠️ **Sin los principales FANTASMA**, y esto era un hueco real hasta la tanda 3
+            // (`DECISIONES #120(u)`). `isVoidedLeftoverItem()` es la autoridad ÚNICA del predicado
+            // —un item cancelado que nunca se cobró ni se reembolsó, típicamente uno añadido en
+            // gestión por `extra_due` y sustituido después— y la aplicaban la página, el panel y el
+            // PDF: **las tres superficies menos ésta**. El cajón enseñaba líneas net-cero que el
+            // producto decidió ocultar por confusas, y solo lo vigilaba un test de la página que
+            // está a punto de morir.
+            'items' => $order->items->whereNull('parent_item_id')
+                ->reject(fn ($item) => $order->isVoidedLeftoverItem($item))
+                ->values()
                 // El pedido baja a cada línea: `ReservationFinancials` lo necesita y navegarlo desde
                 // la línea sería una consulta por línea (Fase 4 · paso 4.0b).
                 ->map(fn ($item) => (new OrderItemResource($item))->within($order)->resolve($request))

@@ -100,18 +100,20 @@ class ScrollLockOwnerTest extends TestCase
     /**
      * Cada superpuesto pide su llave con un nombre PROPIO.
      *
-     * ⚠️ El caso que lo obliga: «Mis pedidos» pinta un modal por pedido, así que su llave lleva el id
-     * dentro. Con una llave compartida, abrir A, abrir B y cerrar A soltaría el scroll con B delante —
-     * el mismo fallo, dentro de una sola pantalla.
+     * ⚠️ El caso que lo obligaba: «Mis pedidos» pintaba un modal por pedido, así que su llave llevaba
+     * el id dentro (`order-manage:`). Con una llave compartida, abrir A, abrir B y cerrar A soltaría
+     * el scroll con B delante — el mismo fallo, dentro de una sola pantalla.
+     *
+     * ⚠️⚠️ **Ese superpuesto ya no existe**: la página se retiró en la tanda 3 del área de cliente
+     * (`DECISIONES #120(u)`) y su modal con ella. La lista baja a cuatro, MEDIDA. La regla que
+     * enseñó —una llave por instancia, no por tipo— sigue viva en el cerrojo y en su test de unidad;
+     * lo que se retira aquí es el inventario de un superpuesto que ya no se pinta.
      */
     public function test_every_overlay_asks_with_its_own_key(): void
     {
-        $sources = implode("\n", array_map(
-            fn (string $path): string => (string) file_get_contents(base_path($path)),
-            ['resources/js/app.js', 'resources/views/account/orders.blade.php'],
-        ));
+        $sources = (string) file_get_contents(base_path('resources/js/app.js'));
 
-        foreach (['sidecart', 'auth', 'nav', 'offers', 'order-manage:'] as $owner) {
+        foreach (['sidecart', 'auth', 'nav', 'offers'] as $owner) {
             $this->assertStringContainsString(
                 "'{$owner}",
                 $sources,

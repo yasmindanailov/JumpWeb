@@ -3,12 +3,18 @@
 namespace Tests\Feature\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Http\Sidebar\AccountDoor;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Fase 4.5a — Acceso a la zona privada (middleware `auth` + `verified`, regla 6 de SEGURIDAD).
+ * **Las PUERTAS de «Mi cuenta»: quién entra y a dónde llega.**
+ *
+ * ⚠️ **Las vistas se retiraron en la tanda 3 y las rutas sobrevivieron** (`DECISIONES #120(u)`), así
+ * que este fichero cambia de sujeto sin cambiar de sitio: antes comprobaba que la página se pintaba,
+ * ahora que la puerta **sigue siendo zona privada** y que **abre el cajón donde toca**. Lo segundo es
+ * lo que impide que la retirada convierta en un 404 útil-pero-mudo los 8 correos ya entregados.
  */
 class AccountAccessTest extends TestCase
 {
@@ -28,21 +34,64 @@ class AccountAccessTest extends TestCase
             ->assertRedirect(route('verification.notice'));
     }
 
-    public function test_verified_users_can_view_the_account_page(): void
+    /**
+     * ⚠️⚠️ **Las dos rutas ABREN EL CAJÓN en su zona, y cada una en la SUYA.**
+     *
+     * Es lo que sustituye a las páginas retiradas. Sin esto, un cliente que llega desde uno de los 8
+     * correos ya entregados aterrizaría en la home sin que pasara nada — la familia de fallos de
+     * `DECISIONES #117`, donde un camino «no falla y no hace nada».
+     *
+     * ⚠️ Se comprueban **los dos atributos**: `data-purchase-open` abre el panel y `data-account-zone`
+     * dice en qué pantalla. Con solo el primero, el cliente acabaría en el catálogo de compra.
+     */
+    public function test_the_surviving_routes_open_the_drawer_on_their_own_zone(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-            ->get('/mi-cuenta')
-            ->assertOk()
-            // ⚠️⚠️ **Anclado en su ESTRUCTURA, y no por gusto: este caso llevaba INERTE desde
-            // `#231 p8`.** `landing.footer.account_link` es literalmente el mismo texto —«Mi
-            // cuenta»— y el footer va en esta misma página, así que tanto `assertSee` como
-            // `assertSeeText` pasaban por el ENLACE DEL PIE aunque el `<h1>` no existiera. Medido
-            // por mutación el 2026-08-22: con el título borrado, el caso seguía verde.
-            // Es la colisión de subcadena que avisa `TESTING.md` §2.ter — «si el texto es prefijo
-            // (o gemelo) de otro de la misma página, ancla además en algo estructural».
-            ->assertSee('<h1 class="page__title">'.__('account.account.title').'</h1>', false);
+        foreach (['/mi-cuenta' => 'home', '/mi-cuenta/pedidos' => 'orders'] as $path => $zone) {
+            $html = (string) $this->actingAs($user)->get($path)->assertOk()->getContent();
+
+            $this->assertStringContainsString('data-purchase-open="1"', $html, "«{$path}» no abre el cajón");
+            $this->assertStringContainsString('data-account-zone="'.$zone.'"', $html, "«{$path}» no abre en su zona");
+        }
+    }
+
+    /**
+     * ⚠️ **Y ninguna otra página emite zona.** Un `data-account-zone` colgado en toda la web abriría
+     * el área de cliente en cada apertura del cajón, y quien viene a comprar no encontraría el
+     * catálogo. Es la trampa que `SidebarEntry` pagó en 4.0a con el desenlace del pago.
+     */
+    public function test_no_other_page_carries_an_account_zone(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        $html = (string) $this->actingAs(User::factory()->create())->get('/')->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-account-zone=""', $html, 'la home emite una zona de cuenta');
+    }
+
+    /**
+     * El mapa ruta→zona vive en un solo sitio, y sus zonas tienen que EXISTIR en el cajón.
+     *
+     * ⚠️ Una errata aquí no rompería nada visible —el cajón caería en el índice— y el cliente que
+     * viene de un correo aterrizaría en otra pantalla sin que nadie lo notara.
+     */
+    public function test_every_door_points_at_a_zone_the_drawer_knows(): void
+    {
+        $navigation = (string) file_get_contents(base_path('resources/js/sidebar/account/navigation.js'));
+
+        $this->assertNotSame([], AccountDoor::ZONE_BY_ROUTE, 'el mapa de puertas está vacío');
+
+        foreach (AccountDoor::ZONE_BY_ROUTE as $route => $zone) {
+            $this->assertTrue(
+                route($route, [], false) !== '',
+                "la ruta «{$route}» ya no existe: quita su entrada del mapa"
+            );
+            $this->assertStringContainsString(
+                ": '{$zone}',", $navigation,
+                "la puerta «{$route}» apunta a la zona «{$zone}», que el cajón no declara en `ZONES`"
+            );
+        }
     }
 
     public function test_authenticated_nav_shows_account_chip_and_reservations_link(): void

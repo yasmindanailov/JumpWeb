@@ -2,8 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-22** (el ÁREA DE CLIENTE: **tandas 1 y 2
-> COMPLETAS** y la **3 con sus condiciones de entrada cumplidas** — queda el borrado, `#120(t)`).
+> aquí solo se enlaza. Última actualización: **2026-08-22** (el ÁREA DE CLIENTE **TERMINADO**: las
+> tres tandas, y `/mi-cuenta/…` retirada — `#120(u)`).
 
 ## ▶ Dónde estamos
 
@@ -18,10 +18,11 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ✅ **Las dos comprobaciones de navegador que faltaban están HECHAS y el owner ha validado el cajón**
 (2026-08-22). `4.7` está cerrado.
 
-🟦 **La fase sigue abierta por el ÁREA DE CLIENTE** (`#66`, `#120`), que va por **tandas**:
-**1 (solo lectura) ✅ COMPLETA** · **2 (gestiones) ✅ COMPLETA** —las CINCO gestiones están en el
-cajón (`#120(s)`)— · **3 (retirar `/mi-cuenta/…`) 🟦 EN CURSO**: sus condiciones de entrada están
-**CUMPLIDAS** (`#120(t)`) y lo que queda es el borrado. El detalle, en «Próximo paso».
+🟩 **EL ÁREA DE CLIENTE ESTÁ TERMINADA** (`#66`, `#120`), y con ella la Fase 4 cierra su alcance:
+**1 (solo lectura) ✅** · **2 (gestiones) ✅** · **3 (retirar `/mi-cuenta/…`) ✅** — las páginas ya no
+existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u)`).
+⚠️ **Lo que el área NO se llevó, y no era de ninguna tanda**: la **auth** sigue en el modal de la
+cabecera y **`account-context` sigue en Livewire**. Las dos con ficha en `DEUDA.md`.
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -34,8 +35,12 @@ cajón (`#120(s)`)— · **3 (retirar `/mi-cuenta/…`) 🟦 EN CURSO**: sus con
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2735 en verde** (15.704 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
-  **517 tests JS** (`node --test`) · Pint limpio (845 ficheros) · `docs-check` verde ·
+- Suite **2675 en verde** (15.416 aserciones, `--parallel` ~50 s medidos el 2026-08-22) ·
+  **525 tests JS** (`node --test`) · Pint limpio (835 ficheros) · `docs-check` verde ·
+  ⚠️ **El contador BAJA, y es la primera vez**: la retirada de `/mi-cuenta/…` se llevó **63 casos**
+  cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los que afirmaban del
+  dominio se extrajeron y los que la usaban de intermediario se re-apuntaron (`#120(u)`). Un contador
+  que solo puede subir acaba premiando el test que no se retira.
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -64,9 +69,10 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers).
   **La lista viva de lo que exige `VERIFY_CONC=1` es el `CRITICAL_RE` de `.githooks/pre-push`** — no se
   copia aquí para que no envejezca, y `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
-  ⚠️ **El gate NO cubre la superficie web del reintento** (`RetryPaymentController`): córrelo igual
-  aunque el hook no lo pida. (Antes también quedaba fuera `Livewire\Tickets\Purchase`, retirado en
-  `#112`; la compra pasa hoy por `POST /api/v1/orders`, que sí entra por el `CRITICAL_RE`.)
+  ✅ **Y desde la tanda 3 el gate ya no deja fuera ninguna superficie de dinero** (`#120(u)`): el
+  reintento web —el último que quedaba sin cubrir— se retiró con la página que lo servía, porque el
+  cajón reintenta por `POST /api/v1/orders/{code}/payment`, que sí entra por el `CRITICAL_RE`. (La
+  compra la había dejado antes `#112`, al retirar `Livewire\Tickets\Purchase`.)
 - **Fase 2 dejó tres cosas que se usan al tocar código hoy** (el resto, en `specs/modulos-dominio.md`):
   `php scripts/module-deps.php [Clase…]` mide las dependencias INVISIBLES · *recibir* una entidad de
   otro módulo es costura de BD, *consultar* sus datos o *repetir* sus reglas exige contrato · las
@@ -85,9 +91,10 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 ## ▶ Decisión de producto VIGENTE que enmarca todo lo demás
 
 ⚠️ **El cajón es el ÁREA DE CLIENTE, no el embudo de compra** (`DECISIONES #66`, owner). Toda la
-gestión del cliente vivirá dentro del cajón: entrar y darse de alta, sus entradas y reservas, y las
-gestiones de cuenta. Hoy está repartido en tres sitios —el cajón, el modal de auth de la cabecera y las
-páginas `/mi-cuenta/…`— y el destino es UNO.
+gestión del cliente vive dentro del cajón: sus entradas y reservas, y las gestiones de cuenta.
+✅ **De los tres sitios en que estaba repartido, quedan DOS**: las páginas `/mi-cuenta/…` se retiraron
+(`#120(u)`) y el **modal de auth de la cabecera** sigue siendo la puerta de entrada de quien no tiene
+sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 - **El orden es dependencia, no preferencia**: **4.7** → **Turnstile** → **área de cliente**.
   ✅ **Turnstile ya no ata nada** (4.4b·2, 2026-08-20): el cajón monta su propio widget y la delegación
@@ -125,68 +132,61 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-▶▶ **TANDA 3 — RETIRAR `/mi-cuenta/…`**, que es lo único que le queda al área de cliente. El owner ya
-decidió que la página **desaparece** (`#120(c)`).
+▶▶ **EL ÁREA DE CLIENTE ESTÁ CERRADA. Lo que sigue lo decide el owner**, porque no queda nada
+obligado por dependencia. Tres candidatos, en el orden en que se abaratan entre sí:
 
-✅ **Sus condiciones de entrada están CUMPLIDAS** (pasos 9, 10 y 11 · `#120(t)`): el desglose
-financiero y los consentimientos ya se publican y se pintan en el cajón, y `V11` comprueba en vivo
-que las dos superficies dicen los mismos importes. **Lo que queda es el borrado.**
-
-⚠️⚠️ **«Desaparecer» hay que decirlo con precisión**: muere la **VISTA**, **vive la RUTA** como puerta
-que abre el cajón en su zona —el patrón de `/entradas`, probado desde Fase 5.2—. **8 notificaciones
-por correo ya entregadas** apuntan ahí y no se pueden editar, y **11 redirecciones del servidor**
-aterrizan con un `->with('status', …)` que la página pinta. Borrar en crudo las convierte en 404.
-▶ El mensaje flash ya tiene dueño: `Http\Sidebar\SidebarEntry` resuelve ese problema para el
-desenlace del pago, y el paso 8 estrenó la variante corta (dejar la despedida en la sesión nueva).
-
-**Las condiciones, con su estado MEDIDO el 2026-08-22:**
-
-| # | Condición | Estado |
+| | Qué es | Por qué importa |
 |---|---|---|
-| 1 | El desglose financiero publicado | ✅ **los cuatro huecos CERRADOS** (paso 9). `AccountPageCaptureTest` hizo su trabajo y **se borró**; lo releva `AccountFinancialParityTest`, que compara los dos lados |
-| 1.bis | La lista de **consentimientos** publicada | ✅ `GET /me/consents` y la zona `PRIVACY` los pinta (paso 11). Sin IP: eso viaja en el export |
-| 2 | Las zonas pintadas con paridad de datos | ✅ **las cinco**. «Cerrar sesión» **no entra en el índice** —decisión del owner, `#120(t)`—: ya está en el nav y en el bloque `.acct`, siempre a la vista |
-| 3 | Los endpoints de gestión abiertos | ✅ **los cinco**, con su limitador |
-| 4 | `EmailChangeController` y el export con destino decidido | 🟦 **lo resuelve la propia retirada**: la ruta sobrevive como puerta, así que el `redirect()->with('status', …)` sigue aterrizando y el banner del layout lo pinta. El export es una DESCARGA, no una vista: no se toca |
-| 5 | Recorrido en navegador de las zonas | ✅ `V4`–`V11` |
+| **1 · La AUTH dentro del cajón** | Entrar, darse de alta y recuperar contraseña siguen en el **modal de la cabecera**. El cajón ya tiene su propio login y alta (paso 5 del embudo), así que lo que falta es unificar y **retirar el modal de `layout.blade.php`** | Es lo último que impide decir que la gestión del cliente vive en UN sitio, que es lo que `#66` pedía. ⚠️ Y hay una atadura: el modo `embedded` de `auth.login`/`auth.register` es la REFERENCIA de dos paridades de árbol, que **mueren con este trabajo y no antes** (`#112(f)`) |
+| **2 · `account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas** y Alpine lo trae Livewire |
+| **3 · Fase 5** | Capa de contenido profesional: query services con caché, theming como paquete, contenido por API | Es la siguiente fase del tracker, y no depende de las dos de arriba |
 
-⚠️ **La lección de `#111` aplica literal**: *independizar el contrato ANTES de borrar*. Antes de
-retirar la página hay que capturar de ella lo que aún no está capturado, o el borrado se lleva por
-delante la única referencia que existía.
+⚠️ **Y una decisión que quedó APLAZADA a propósito y ahora toca**: `specs/area-cliente.md` §3.4 dijo
+que lo de **cambiar la URL por zona** se reevaluaría «cuando existan las siete zonas y la página haya
+muerto». Las dos cosas pasaron. Hoy la ruta es la única forma de LLEGAR a una zona —y funciona—, pero
+dentro del cajón el «atrás» del navegador sigue sin hacer nada y una zona no se puede enlazar. No es
+urgente; es una decisión pendiente con su contexto ya completo.
 
-### Dónde está hoy «Mi cuenta», bloque a bloque
+### Dónde está hoy «Mi cuenta»
 
-| Bloque de `/mi-cuenta` | En el cajón |
+🟩 **ENTERA en el cajón.** `/mi-cuenta` y `/mi-cuenta/pedidos` ya no pintan nada: sirven la home y el
+cajón se abre solo en su zona (`Http\Sidebar\AccountDoor`).
+
+| Zona del cajón | Qué cubre |
 |---|---|
-| Mis reservas · Tus datos · Contraseña · Sesiones · **Privacidad (export + borrado)** | ✅ zonas `ORDERS`, `PROFILE`, `PASSWORD`, `SESSIONS`, **`PRIVACY`** |
-| **Tus consentimientos** (la lista con fecha, IP y versión) | ❌ solo en la página — condición 1.bis de la tanda 3 |
-| Cerrar sesión | ❌ no está en el índice del cajón |
+| `ORDERS` | «Mis reservas»: historial, ledger financiero completo, reintento y **las respuestas del pack bajo demanda** |
+| `PROFILE` · `PASSWORD` · `SESSIONS` | Tus datos con el ciclo del correo pendiente · contraseña · cerrar las demás sesiones |
+| `PRIVACY` | Consentimientos · descargar mis datos (art. 20) · borrar la cuenta (art. 17) |
+| `HOME` | El índice, con su próxima reserva |
 
-⚠️ **Y dos cosas más siguen FUERA, y no son de ninguna tanda**: la **auth** (entrar, registrarse,
-recuperar) vive en el modal de la cabecera —un invitado que pulsa «Mis reservas» va ahí—, y
-`account-context` sigue en **Livewire**. Las dos tienen ficha en `DEUDA.md`.
+⚠️ **«Cerrar sesión» NO está en el índice, y es una decisión** (`#120(t)`, owner): ya existe dos veces
+fuera —en el nav y en el bloque `.acct` del propio panel—, siempre a la vista.
+
+⚠️ **Lo único que sobrevive de la web**: `GET /mi-cuenta/exportar`, que es una **DESCARGA** y no una
+vista. Sirve el MISMO documento que `GET /api/v1/me/export`, y hay un test que los compara campo a
+campo — es lo que impide que vuelvan a divergir.
 
 ### Lo hecho, en una línea por tanda
 
-- 🟩 **Tanda 1 (solo lectura), COMPLETA**: cinco pasos, `V4`–`V7` en navegador. El detalle vive en
-  `00-REFACTOR.md` y en `DECISIONES #120(g)`–`(m)`.
-- 🟩 **Tanda 2 (gestiones), COMPLETA**: contraseña + sesiones (`#120(n)`–`(p)`, `V8`), el perfil
-  (`#120(q)`–`(r)`, `V9`) y los dos derechos RGPD (`#120(s)`, `V10` 17/17).
-  ⚠️ **Su efecto de fondo, y es lo que justificó bajar la lógica al dominio**: de los **cuatro** sitios
-  de la web que reconfirmaban contraseña **sin techo**, no queda ninguno — y no se escribió una sola
-  línea de limitador en la web.
-- ⬜ **Tanda 3 (retirar `/mi-cuenta/…`)**: sus condiciones, arriba.
+- 🟩 **Tanda 1 (leer)**: cinco pasos, `V4`–`V7`. `#120(g)`–`(m)`.
+- 🟩 **Tanda 2 (gestionar)**: contraseña y sesiones, perfil, y los dos derechos RGPD. `V8`–`V10`.
+  `#120(n)`–`(s)`. ▶ **Su efecto de fondo**: de los **cuatro** sitios de la web que reconfirmaban
+  contraseña **sin techo**, no queda ninguno — y no se escribió una línea de limitador en la web.
+- 🟩 **Tanda 3 (retirar)**: primero se publicó lo que solo sabía la página —el desglose financiero y
+  los consentimientos— y **después** se borró. `V11`–`V13`. `#120(t)`, `#120(u)`.
+  ▶ **La auditoría fue la mitad del trabajo**: encontró **dos huecos reales** que nadie vigilaba —el
+  reintento de la API sin techo comprobado y las líneas fantasma que solo la API publicaba— y ambos
+  se cerraron antes de borrar nada.
 
-### Seis cosas que condicionan lo que toques aquí
+### Cinco cosas que condicionan lo que toques aquí
 
 | | |
 |---|---|
-| **Servidor para GESTIONAR** | ✅ **las cinco**, con su **limitador** en `AccountCredentials`: contraseña, sesiones, perfil, borrado y export |
-| `/mi-cuenta/…` | 🟩 **condenado** (`#120(c)`, owner), tanda 3. ⚠️ Muere la **VISTA**, **vive la RUTA**: 8 correos ya entregados apuntan ahí y no se pueden editar |
-| ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): no hay original que copiar. Es paridad de DATOS contra **la API** —no contra la página condenada— + navegador |
+| **Las PUERTAS** | `/mi-cuenta` y `/mi-cuenta/pedidos` abren el cajón en su zona. ⚠️ La zona se aplica en `bootSpaEngine()` **y no en `open()`**: el cajón que llega por una puerta **nace abierto**. Es el camino que ya dejó un hueco vacío en `#59(b)` y volvió a morder en `#120(u)` |
+| ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): es paridad de DATOS contra la API + navegador. `render-sidebar.mjs` no importa la raíz |
 | ⚠️ **La cadena flex** | `.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll` son **hijos DIRECTOS**: un envoltorio router la parte y **ningún test lo ve** (`specs/area-cliente.md` §4.9) |
-| ⚠️ **Los presupuestos** | ✅ **BAJADOS a lo medido al cerrar la tanda 2** (`#120(s)`): chunk **185,3 KiB** con techo **186**, payload del montaje **4.523 B** con techo **4.608**. Lo siguiente que entre los vuelve a subir **con su motivo**, y al cerrar se vuelven a bajar |
-| ⚠️ **El techo de componentes** | 40 líneas por `.vue`. En el paso 7b llegó a 38 y **obligó al rediseño correcto** —cada zona pide y compone lo suyo, la sección solo enruta (`#120(r)`)—. Si vuelve a apretar, la pregunta es qué sobra ahí, no cuánto subirlo |
+| ⚠️ **Los presupuestos** | ✅ **bajados a lo medido al cerrar**: chunk **189,5 KiB** (techo 190, quedan 0,5) y payload del montaje **4.708 B** (techo 4.800). El área entera costó **27,9 KiB**. Lo siguiente que entre los sube **a propósito y con su medida** |
+| ⚠️ **El techo de componentes** | 40 líneas por `.vue`. Ya obligó al rediseño correcto una vez (`#120(r)`): si vuelve a apretar, la pregunta es qué sobra ahí, no cuánto subirlo |
 
 ⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
 del ORQUESTADOR, **el contrato de árbol no es red** —`render-sidebar.mjs` no importa la raíz y su
@@ -396,6 +396,7 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | **Reorganización** | 🟩 **El cajón, en TRES capas y por secciones**: nueve stores, el embudo fuera de la raíz y el grafo cerrado — antes del área de cliente, a petición del owner | **`#119`** |
 | **Área · tanda 1** | 🟩 **Leer**: el nivel sección, las zonas, el contrato de presentación, los datos, la puerta y la captura de huecos | `#120(g)`–`(m)` |
 | **Área · tanda 2** | 🟩 **Gestionar**: contraseña y sesiones · el perfil y el ciclo del correo · **los dos derechos RGPD** — y la web heredó los cuatro limitadores que le faltaban | `#120(n)`–`(s)` |
+| **Área · tanda 3** | 🟩 **Retirar**: primero se publicó lo que solo sabía la página (desglose financiero, consentimientos) y **después** se borró. La auditoría destapó **dos huecos reales** que nadie vigilaba | `#120(t)`, `#120(u)` |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
 **una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de

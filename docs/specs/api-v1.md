@@ -34,7 +34,7 @@
   `OrderCreator` no contiene ninguna. Exponer `POST /orders` «delgado sobre `OrderCreator`»
   reabriría las dos. Es el mismo patrón que Fase 2 ya rescató con `MAX_LINES_PER_CART`.
 - **La ida del pago ya está DUPLICADA hoy**: `Purchase::retryPayment()` y
-  `RetryPaymentController` comparten casi línea a línea el UPDATE atómico de `expires_at`, el
+  el reintento web *(retirado en `#120(u)`)* compartían casi línea a línea el UPDATE atómico de `expires_at`, el
   `STATUS_SUPERSEDED`, `nextGatewayOrder()` y el audit. La API sería la **tercera** copia.
 - **El desenlace del pago está atado a la sesión web**: `RedsysReturnController` guarda el
   resultado en caché y redirige a la home con un token de un solo uso que `HomeController`
@@ -178,8 +178,8 @@ los expone sin guardar estado:
 ### 4.6 Extracciones que Fase 3 debe hacer ANTES de exponer nada
 No son refactors opcionales: sin ellas la API duplica reglas o las pierde.
 1. **Política de admisión** (pausa de reservas + tope de pending + rate por usuario) → servicio de
-   Booking consumido por `Purchase`, `RetryPaymentController` y la API.
-2. **Ida del pago** → `PaymentInitiator`, hoy duplicada entre `Purchase` y `RetryPaymentController`.
+   Booking consumido por `Purchase` y el reintento web, los dos ya retirados, y la API.
+2. **Ida del pago** → `PaymentInitiator`, entonces duplicada entre `Purchase` y el reintento web.
 3. **Auth**: limitadores, política de email existente, honeypot/Turnstile y consents del registro →
    servicios de Identity que devuelvan resultado y dejen los efectos de sesión al llamante (el
    anti-cesta-cruzada de `Login` es estado de sesión web y NO debe viajar al servicio).
@@ -308,7 +308,7 @@ Se corrige:
      enseñó: §10.ter.**
 2. ✅ **Refactor sin endpoints** (2026-08-13, `DECISIONES #28`): política de admisión
    (`Booking\Contracts\ReservationAdmission`) e ida de pago (`Payments\PaymentInitiator`)
-   extraídas de `Purchase` y de `RetryPaymentController` (§4.6.1–2), con los dos verificadores de
+   extraídas de `Purchase` y del reintento web (§4.6.1–2), con los dos verificadores de
    concurrencia verdes sobre MySQL. Las dos superficies aplicaban políticas DISTINTAS sin que
    nadie lo hubiera decidido; el owner resolvió las tres asimetrías. **Lo que el código enseñó:
    §10.quater.**

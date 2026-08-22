@@ -193,6 +193,10 @@ return [
     ],
 
     'orders' => [
+        // Las respuestas del pack, BAJO DEMANDA (tanda 3): son datos de un menor
+        // (art. 9) y por eso no se pintan solas ni viajan en la lista de pedidos.
+        'event_data_show' => 'Voir les données de l\'événement',
+        'event_data_hide' => 'Masquer les données de l\'événement',
         'eyebrow' => 'Tes réservations',
         'title' => 'Mes réservations',
         'subtitle' => 'Voici tes réservations et leur statut.',

@@ -186,3 +186,75 @@ describe('reintentar el pago desde la ficha', () => {
         assert.equal(store.unauthenticated, true);
     });
 });
+
+describe('las respuestas del pack, bajo demanda', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    /**
+     * ⚠️⚠️ **No llegan con la lista, y ésa es toda la razón de que esto exista**: son datos de un
+     * MENOR (art. 9) y `GET /me/orders` los excluye a propósito. Pedirlos es un acto explícito del
+     * titular, igual que en el resumen de la compra.
+     */
+    test('se piden al pedido concreto, y una sola vez', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({
+            '/orders/JW-0001/event-data': { ok: true, status: 200, data: { order_code: 'JW-0001', reservations: [] }, error: null },
+        });
+
+        await store.ensureEventData('JW-0001', { api });
+        await store.ensureEventData('JW-0001', { api });
+
+        assert.equal(api.llamadas.length, 1, 'desplegar dos veces repite la petición');
+        assert.equal(api.llamadas[0].url, '/orders/JW-0001/event-data');
+        assert.equal(store.eventData['JW-0001'].order_code, 'JW-0001');
+    });
+
+    test('cada pedido guarda las suyas', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({
+            '/orders/JW-0001/event-data': { ok: true, status: 200, data: { order_code: 'JW-0001', reservations: [] }, error: null },
+            '/orders/JW-0002/event-data': { ok: true, status: 200, data: { order_code: 'JW-0002', reservations: [] }, error: null },
+        });
+
+        await store.ensureEventData('JW-0001', { api });
+        await store.ensureEventData('JW-0002', { api });
+
+        assert.deepEqual(Object.keys(store.eventData), ['JW-0001', 'JW-0002']);
+    });
+
+    /** Un código con caracteres raros no puede romper la URL ni salirse de su ruta. */
+    test('el código va escapado en la URL', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({});
+
+        await store.ensureEventData('JW/0001 raro', { api });
+
+        assert.equal(api.llamadas[0].url, '/orders/JW%2F0001%20raro/event-data');
+    });
+
+    /**
+     * ⚠️ **Un fallo NO se anuncia con el error de la zona**: esto es un despliegue que el cliente
+     * pidió, no el contenido de la pantalla. Pintar «algo ha ido mal» sobre la lista entera porque no
+     * se pudo leer un bloque le diría al titular que su problema es otro.
+     */
+    test('si falla, ni se guarda nada ni se rompe la pantalla', async () => {
+        const store = useOrdersStore();
+        const error = { code: 'server_error', message: 'Algo ha ido mal.' };
+
+        await store.ensureEventData('JW-0001', {
+            api: fakeApi({ '/orders/JW-0001/event-data': { ok: false, status: 500, data: { error }, error, offline: false } }),
+        });
+
+        assert.deepEqual(store.eventData, {});
+        assert.equal(store.error, '');
+    });
+
+    test('sin código no se pide nada', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({});
+
+        await store.ensureEventData('', { api });
+
+        assert.equal(api.llamadas.length, 0);
+    });
+});

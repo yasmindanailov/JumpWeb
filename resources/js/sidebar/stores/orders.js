@@ -40,6 +40,19 @@ export const useOrdersStore = defineStore('orders', {
          * la zona en blanco sin decir por qué.
          */
         unauthenticated: false,
+
+        /**
+         * Las respuestas del pack, **por código de pedido y solo si el cliente las ha pedido**
+         * (tanda 3, `DECISIONES #120(u)`).
+         *
+         * ⚠️⚠️ **No llegan con la lista, y esa es toda la razón de que esto exista.** Son datos de un
+         * MENOR —nombre, edad y alergias, art. 9— y `GET /me/orders` los excluye a propósito para que
+         * listar el historial no los arrastre. Pedirlos es un acto explícito del titular, igual que en
+         * el resumen de la compra.
+         *
+         * ⚠️ Y como todo lo demás de esta zona, **vive en memoria**: nada de `localStorage`.
+         */
+        eventData: {},
     }),
 
     getters: {
@@ -62,6 +75,21 @@ export const useOrdersStore = defineStore('orders', {
          * con lo que ya tenía y un aviso, en vez de con una pantalla vacía que parece decir «no tienes
          * reservas» — que es justo lo contrario de lo que ha pasado.
          */
+        /**
+         * Pide las respuestas de un pedido **una sola vez**.
+         *
+         * ⚠️ **Un fallo no se anuncia con el error de la zona**: esto es un despliegue que el cliente
+         * ha pedido, no el contenido de la pantalla. Pintar «algo ha ido mal» sobre la lista entera
+         * porque no se pudo leer un bloque diría que el problema es otro.
+         */
+        async ensureEventData(code, { api = httpClient } = {}) {
+            if (! code || this.eventData[code]) return;
+
+            const response = await api.get('/orders/' + encodeURIComponent(code) + '/event-data');
+
+            if (response.ok) this.eventData = { ...this.eventData, [code]: response.data };
+        },
+
         async load(page = 1, { api = httpClient } = {}) {
             this.loading = true;
             this.error = '';

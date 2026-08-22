@@ -5450,3 +5450,71 @@ consentimientos salen con su nombre y su fecha **y sin la IP**.
 cajón— en la PÁGINA, que usa `.orders__item`. Son dos marcados distintos **a propósito** (§1.3: aquí
 la paridad es de datos, no de árbol), y confundirlos dio seis rojos que parecían una divergencia de
 importes.
+
+**(u) Tanda 3 — `/mi-cuenta/…` RETIRADA: mueren las VISTAS, viven las RUTAS.** Con las condiciones de
+entrada cumplidas en `(t)`, se borran `resources/views/account/`, los **cuatro** componentes Livewire
+de cuenta y `RetryPaymentController`. Las **rutas** siguen: sirven la home y el cajón se abre solo en
+su zona, que es el mecanismo de `/entradas` desde la Fase 5.2 — no se inventa nada. El mapa
+ruta→zona vive en `Http\Sidebar\AccountDoor`, con un test que cruza sus zonas contra las de
+`navigation.js`: una errata ahí no rompería nada visible y el cliente aterrizaría en otra pantalla.
+
+⚠️ **Por qué las rutas no se borran, dicho con números**: **8 notificaciones ya entregadas** apuntan a
+`account.orders` —un correo enviado no se puede editar— y **11 redirecciones del servidor** aterrizan
+en `account` con un `->with('status', …)` que el layout pinta. En crudo, todo eso sería un 404.
+
+**LA AUDITORÍA FUE LA MITAD DEL TRABAJO, y encontró DOS huecos reales.** `CONVENCIONES §3.quater`
+manda clasificar cada test por su SUJETO y buscar activamente «el tercero»: lo que usaba la superficie
+vieja como intermediario de una regla que sobrevive. Se hizo MUTANDO, y salieron dos cosas que nadie
+vigilaba:
+
+⚠️⚠️ **1. El reintento de pago de la API no tenía techo vigilado.** La ruta lleva `throttle:6,1` desde
+que se abrió y su único guardián era un test de la página que iba a morir. **Medido por mutación: al
+quitarle el middleware, la suite ENTERA seguía verde.** Cada intento abre un cobro real contra la
+pasarela, así que el hueco no era teórico. Hoy tiene caso propio en `OrdersTest`.
+
+⚠️⚠️ **2. La API publicaba las líneas FANTASMA que las otras tres superficies ocultan.**
+`Order::isVoidedLeftoverItem()` —un item cancelado que nunca se cobró ni se reembolsó— lo aplicaban la
+página, el panel y el PDF: **todas menos el recurso de API**. El cajón enseñaba líneas net-cero
+(«0,00 € · Cancelada») que el producto decidió esconder por confusas. Es literalmente el criterio de
+§3.quater: *si un dato viaja al cliente y su único test conduce la superficie vieja, el contrato NO lo
+está fijando*.
+
+**Y un TERCER hallazgo, que decidió el owner**: la página pintaba en línea las **respuestas del pack**
+(«Nombre del homenajeado/a: …») y el cajón no —la API las excluye de la lista a propósito, art. 9—.
+Sobrevivían en el post-form… **salvo si un pack tiene campos de evento y no tiene post-form**.
+▶ Se cerró: el cajón las pide **bajo demanda** con `GET orders/{code}/event-data`, que es exactamente
+para lo que ese endpoint existe. Se piden una vez por pedido y **solo si el titular las despliega**;
+no viajan con la lista y no se persisten.
+
+**Qué se retiró de la suite, y con qué criterio.** 63 casos menos, ninguno perdido por descuido:
+· **mueren** los que conducían la vista (la página de pedidos, su paginación, sus distintivos);
+· **se re-apuntan** los que usaban la superficie vieja como intermediario — y ahí está lo importante:
+  las **tres vías de `RGPD-06`** que pasaban por los componentes Livewire (`ApiTokenRevocationTest`),
+  el bloqueo del reintento por pausa, y los dos contadores de `ModuleContractsTest`, que bajan de 3
+  puertas a 2 y de 2 reintentos a 1;
+· **se extraen** los que afirmaban del dominio: `Order::canBeRetried()` y `displayStatus()` nacen como
+  `OrderRetryEligibilityTest`, y la mitad API↔dominio del desglose financiero como
+  `MeOrdersFinancialsTest`. Los dos ficheros temporales de captura y paridad mueren con la página,
+  como decía su primera línea.
+
+⚠️ **`AccountAccessTest` cambia de sujeto sin cambiar de sitio**: antes comprobaba que la página se
+pintaba, ahora que la puerta **sigue siendo zona privada** y **abre en su zona**. Y que **ninguna otra
+página emite zona** — un `data-account-zone` colgado en toda la web abriría la cuenta en cada apertura
+del cajón, que es la trampa que `SidebarEntry` pagó en 4.0a.
+
+✅ **Verificado en navegador**: `V12` **13/13** (las puertas) y `V13` **6/6** (las respuestas bajo
+demanda).
+
+⚠️⚠️ **Y el navegador volvió a cazar lo que ninguna suite vio, en el mismo camino de siempre**: la
+primera versión aplicaba la zona en `open()`, y **el cajón que llega por una puerta NACE ABIERTO**, así
+que `open()` no se llama nunca — el cliente que venía de un correo aterrizaba en el índice en vez de
+en sus reservas. Es literalmente el camino que dejó el hueco vacío en `#59(b)`, documentado en el
+propio `app.js` tres párrafos más abajo de donde estaba el fallo. Hoy la zona se aplica en
+`bootSpaEngine()`, que es por donde pasan los DOS caminos, y `AccountDoorWiringTest` lo ancla ahí con
+tres mutaciones.
+▶ **La lección, que es la de toda la fase**: leer el aviso no es lo mismo que aplicarlo. Estaba
+escrito, y aun así se repitió.
+
+⚠️ **Los dos presupuestos, bajados a lo medido al cerrar**: payload del montaje **4.708 B** (techo
+4.800) y chunk **189,5 KiB** (techo 190, con 0,5 de holgura). El área de cliente entera —tres tandas,
+siete pantallas, once endpoints— ha costado **27,9 KiB** sobre el cierre de la reorganización.

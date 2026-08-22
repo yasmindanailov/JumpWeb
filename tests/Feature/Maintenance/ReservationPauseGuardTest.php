@@ -142,17 +142,24 @@ class ReservationPauseGuardTest extends TestCase
         return $order;
     }
 
+    /**
+     * ⚠️ **Re-apuntado a la API en la tanda 3** (`DECISIONES #120(u)`): estos dos casos conducían el
+     * reintento desde «Mis pedidos», y esa superficie se retiró con la página. El SUJETO no cambia
+     * —la pausa bloquea un reintento y no abre cobro— y hoy la puerta que queda es la que usa el
+     * cajón. Es la tercera categoría de `CONVENCIONES §3.quater`: la superficie vieja era un
+     * intermediario de una regla que sobrevive.
+     */
     public function test_account_retry_is_blocked_when_paused(): void
     {
         $this->pause();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create(['email_verified_at' => now()]);
         $order = $this->makeRetryableOrder($user);
 
         $this->actingAs($user)
-            ->post(route('account.orders.retry', ['code' => $order->code]))
-            ->assertRedirect(route('account.orders'))
-            ->assertSessionHas('status', 'order-retry-paused');
+            ->postJson('/api/v1/orders/'.$order->code.'/payment')
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'reservations_paused');
 
         // No se inició un cobro nuevo (sigue habiendo un único Payment, el original).
         $this->assertSame(1, Payment::where('payable_id', $order->id)->count());
@@ -161,11 +168,11 @@ class ReservationPauseGuardTest extends TestCase
     public function test_account_retry_works_normally_when_open(): void
     {
         // Sanity: con las reservas abiertas, el reintento sigue funcionando (sin regresión).
-        $user = User::factory()->create();
+        $user = User::factory()->create(['email_verified_at' => now()]);
         $order = $this->makeRetryableOrder($user);
 
         $this->actingAs($user)
-            ->post(route('account.orders.retry', ['code' => $order->code]))
+            ->postJson('/api/v1/orders/'.$order->code.'/payment')
             ->assertOk();
 
         $this->assertSame(2, Payment::where('payable_id', $order->id)->count());

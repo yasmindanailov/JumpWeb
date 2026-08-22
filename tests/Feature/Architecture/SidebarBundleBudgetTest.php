@@ -182,6 +182,14 @@ class SidebarBundleBudgetTest extends TestCase
      * costado bastante más que 2,5 KiB, y habría podido divergir.
      * ▶ 190 deja **2,2 KiB** para lo que queda de tanda: los consentimientos y las puertas de
      * entrada. Al cerrarla, se vuelve a bajar.
+     *
+     * ✅ **Y al CERRAR la tanda 3 el techo se queda en 190, con lo medido pegado a él**: el chunk son
+     * **189,5 KiB** —los consentimientos, las puertas y el despliegue de las respuestas del pack
+     * cupieron en esos 2,2— así que quedan **0,5 KiB** de holgura. No hay nada que bajar: el número
+     * ya apreta. Lo siguiente que entre tendrá que subirlo **a propósito y con su medida**, que es
+     * exactamente el trabajo que un presupuesto hace bien.
+     * ▶ Y una referencia para quien lo suba: el área de cliente ENTERA —tres tandas, siete pantallas,
+     * once endpoints— ha costado **27,9 KiB** sobre el cierre de la reorganización (161,6 → 189,5).
      */
     private const SIDEBAR_CHUNK_MAX_KB = 190;
 

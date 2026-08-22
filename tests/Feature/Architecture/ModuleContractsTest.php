@@ -598,15 +598,13 @@ class ModuleContractsTest extends TestCase
 
         $user = User::factory()->create(['email_verified_at' => now()]);
 
-        // 1) «Mis pedidos»: el reintento se rechaza con el aviso de pausa que dictó el dominio.
-        $this->actingAs($user)
-            ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
-            ->assertRedirect(route('account.orders'))
-            ->assertSessionHas('status', 'order-retry-paused');
-
-        // 2) La API (Fase 3 · paso 4c): mismo veredicto, misma consecuencia. Se comprueba aquí y no
-        //    solo en su test de endpoint porque lo que se vigila es que pregunte al CONTRATO — si
-        //    volviera a comprobar los límites por su cuenta, este doble se quedaría sin usar y el
+        // ⚠️ **La puerta WEB del reintento («Mis pedidos») se retiró en la tanda 3** con la página
+        //    que la servía: `RetryPaymentController` no tenía ya ningún consumidor, porque el cajón
+        //    reintenta por la API. El contador de abajo baja con ella, MEDIDO.
+        //
+        // 1) y 2) La API (Fase 3 · paso 4c): mismo veredicto, misma consecuencia. Se comprueba aquí
+        //    y no solo en su test de endpoint porque lo que se vigila es que pregunte al CONTRATO —
+        //    si volviera a comprobar los límites por su cuenta, este doble se quedaría sin usar y el
         //    usuario limpio pasaría de largo.
         $this->actingAs($user)
             ->postJson('/api/v1/orders', ['items' => [[
@@ -621,16 +619,19 @@ class ModuleContractsTest extends TestCase
             ->assertJsonPath('error.code', 'reservations_paused');
 
         $this->assertSame(0, Order::query()->count(), 'un veredicto denegado no puede dejar un pedido creado');
-        $this->assertSame(3, $admission->calls, 'todas las superficies tienen que preguntar a la política');
+        $this->assertSame(2, $admission->calls, 'todas las superficies tienen que preguntar a la política');
     }
 
     /**
      * ENTREGA → BOOKING: la SECUENCIA de la compra la aplica el dominio, y **todas** las puertas de
      * entrada pasan por el mismo contrato (cierre de Fase 3; re-apuntado en 4.7·2b·3).
      *
-     * ⚠️ Eran CINCO puertas y hoy son TRES: las dos del componente Livewire —comprar y reintentar—
-     * se fueron con él en 4.7·2b·3, y el cajón SPA no añade puertas nuevas porque entra por las de
-     * API que ya se contaban aquí. Los contadores de abajo están MEDIDOS, no ajustados.
+     * ⚠️ Eran CINCO puertas, luego TRES y hoy son **DOS**: las dos del componente Livewire —comprar
+     * y reintentar— se fueron con él en 4.7·2b·3, y la del reintento desde «Mis pedidos» con la
+     * retirada de la página en la tanda 3 (`DECISIONES #120(u)`). El cajón SPA no añade puertas
+     * nuevas porque entra por las de API que ya se contaban aquí. Los contadores están MEDIDOS.
+     * ▶ Que este número solo BAJE es la señal de que la consolidación va en la dirección correcta:
+     * cada superficie retirada es una copia menos del orden que podía dejarse un paso.
      *
      * El doble deniega siempre y **no crea nada**: si alguna superficie conservara su propia
      * secuencia —admitir, crear el pedido, abrir el cobro—, este usuario limpio con una cesta
@@ -669,13 +670,7 @@ class ModuleContractsTest extends TestCase
 
         $user = User::factory()->create(['email_verified_at' => now()]);
 
-        // 1) «Mis pedidos» (web).
-        $this->actingAs($user)
-            ->post(route('account.orders.retry', ['code' => 'CUALQUIERA']))
-            ->assertRedirect(route('account.orders'))
-            ->assertSessionHas('status', 'order-retry-paused');
-
-        // 2) y 3) La API: crear y reintentar.
+        // 1) y 2) La API: crear y reintentar. La puerta web del reintento se retiró con la página.
         $this->actingAs($user)
             ->postJson('/api/v1/orders', ['items' => [[
                 'product_id' => 1, 'date' => '2026-06-08', 'time' => '10:00:00', 'quantity' => 1,
@@ -690,7 +685,7 @@ class ModuleContractsTest extends TestCase
 
         $this->assertSame(0, Order::query()->count(), 'ninguna superficie puede crear pedidos por su cuenta');
         $this->assertSame(1, $checkout->starts, 'la superficie que compra tiene que pedir la secuencia');
-        $this->assertSame(2, $checkout->retries, 'las que reintentan tienen que pedir la secuencia');
+        $this->assertSame(1, $checkout->retries, 'las que reintentan tienen que pedir la secuencia');
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

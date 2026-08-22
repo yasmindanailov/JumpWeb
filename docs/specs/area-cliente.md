@@ -284,6 +284,10 @@ componer rutas de Laravel en JavaScript es quemar el enrutador en el cliente.
 
 ### 4.8 La retirada de `/mi-cuenta/…` (tanda 3): mueren las VISTAS, viven las RUTAS
 
+> ✅ **HECHA el 2026-08-22** (`DECISIONES #120(t)` y `#120(u)`). Lo que sigue se conserva como el
+> DISEÑO que se ejecutó, no como pendiente. Lo que de verdad enseñó —los dos huecos que la auditoría
+> destapó y el fallo del cajón nacido abierto— está en `#120(u)`.
+
 El owner decidió que **desaparecen** (`#120(c)`). No aquí: retirar una superficie exige que la que la
 sustituye la cubra ENTERA, y la mitad de gestión ni siquiera tiene API (§1.2).
 

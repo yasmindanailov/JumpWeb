@@ -18,7 +18,7 @@ entrega. Medido con `grep -rn PaymentInitiator app/` el 2026-08-13 — **5 punto
 |---|---|---|
 | `Livewire\Tickets\Purchase` | `confirmReservation()` | crear |
 | `Livewire\Tickets\Purchase` | `retryPayment()` | reintento |
-| `Http\Controllers\Payments\RetryPaymentController` | `__invoke()` | reintento |
+| ~~`Http\Controllers\Payments\RetryPaymentController`~~ | `__invoke()` | reintento — ⏳ **RETIRADO** en la tanda 3 del área de cliente (`DECISIONES #120(u)`) con la página que lo servía: el cajón reintenta por la API |
 | `Http\Controllers\Api\V1\OrdersController` | `store()` | crear |
 | `Http\Controllers\Api\V1\OrderPaymentController` | `store()` | reintento |
 
@@ -278,7 +278,7 @@ del initiator.
   por el contrato y no case con el patrón por su nombre quedaría fuera del gate—.
   ⚠️ `CRITICAL_FILES` se asevera con `assertFileExists`: hook y test se amplían **en el mismo
   commit** que crea el fichero, o el test queda rojo.
-- ⚠️ **El gate nunca ha cubierto las superficies WEB** (`Purchase`, `RetryPaymentController`): un
+- ⚠️ **El gate nunca cubrió las superficies WEB** (`Purchase`, el reintento de «Mis pedidos»), y hoy **ya no existe ninguna**: la primera se retiró en `#112` y la segunda en `#120(u)`. Se conserva la nota porque explica por qué el `CRITICAL_RE` mira lo que mira: un
   commit que migre solo la web no lo dispararía. Se corren los verificadores igualmente.
 
 ### 4.7 La guarda ejecutable que sustituye a los greps (CE-1/CE-2)

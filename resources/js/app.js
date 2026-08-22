@@ -74,6 +74,14 @@ document.addEventListener('alpine:init', () => {
     // redirigir). El contenido (asistente paso a paso) es un componente Livewire `lazy`.
     window.Alpine.store('purchase', {
         isOpen: document.body.dataset.purchaseOpen === '1',
+        /**
+         * La ZONA del área de cliente con la que el servidor pide abrir (`AccountDoor`).
+         *
+         * Es lo que hace que las rutas de `/mi-cuenta/…` sigan llevando a algún sitio útil después de
+         * que sus vistas se retiraran: **8 correos ya entregados** apuntan ahí. Mismo mecanismo que
+         * `/entradas`, con una señal más.
+         */
+        accountZone: document.body.dataset.accountZone || '',
         // Se pone a true si el cliente inicia sesión DENTRO del sidebar (login embebido, #69):
         // el resto de la página (nav) se quedó con el estado de invitado y hay que refrescarlo.
         authChanged: false,
@@ -181,6 +189,20 @@ document.addEventListener('alpine:init', () => {
 
                 this.spaHandle = mod.mount(host, boot);
                 this.useIntentAdapter((intent) => this.spaHandle.applyIntent(intent));
+
+                // ⚠️⚠️ **La zona del área de cliente se aplica AQUÍ y no en `open()`, y esto lo cazó
+                // el navegador** (`V12`): el cajón que llega por una puerta **nace abierto**, así que
+                // `open()` no se llama nunca — es literalmente el mismo camino que dejó el hueco
+                // vacío en `#59(b)` y que el bloque de más abajo documenta. `bootSpaEngine()` es el
+                // punto por donde pasan los DOS.
+                //
+                // ⚠️ **Y se CONSUME**, igual que el desenlace del pago: sin vaciarla, cerrar y
+                // reabrir el cajón devolvería al cliente a la zona una y otra vez y no podría llegar
+                // al embudo sin recargar. Es la trampa que 4.0a pagó con `SidebarEntry`.
+                if (this.accountZone) {
+                    this.spaHandle.showAccount(this.accountZone);
+                    this.accountZone = '';
+                }
             } catch (e) {
                 // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
                 // el cajón abierto y mudo sin dejar rastro de por qué.

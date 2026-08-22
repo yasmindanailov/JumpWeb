@@ -9,17 +9,25 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
-use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Platform\Models\AuditLog;
-use App\Livewire\Account\DeleteAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Fase 4.5b — RGPD: descargar datos, ver consentimientos y borrar la cuenta
- * (borrado real, #53). Acciones tras `auth` + `verified`; el borrado exige contraseña.
+ * **RGPD: la DESCARGA de datos y la purga del art. 17.**
+ *
+ * ⚠️ **Adelgazado en la tanda 3** (`DECISIONES #120(u)`), y el criterio fue el de
+ * `CONVENCIONES §3.quater`: cada caso se clasifica por su SUJETO, no por la regla que menciona.
+ *  - lo que conducía el **componente Livewire de borrado** se fue con él: su superficie hoy es
+ *    `DELETE /api/v1/me`, y `MePrivacyTest` la cubre —incluido el limitador y el 422 por campo—;
+ *  - lo que conducía la **página** (la lista de consentimientos) también: hoy la pinta el cajón y la
+ *    publica `GET /api/v1/me/consents`;
+ *  - lo que afirma del **dominio** —qué purga `anonymize()` y qué conserva— se queda aquí, y se
+ *    re-apuntó para llamar al modelo en vez de a una pantalla que ya no existe. Es lo que
+ *    §3.quater llama «el tercero, que hay que buscar activamente»: la superficie vieja era un
+ *    intermediario de una regla que sobrevive.
+ *  - y **el export sigue siendo una ruta web viva**: es una DESCARGA, no una vista.
  */
 class PrivacyTest extends TestCase
 {
@@ -78,30 +86,12 @@ class PrivacyTest extends TestCase
         $this->get(route('account.export'))->assertRedirect(route('login'));
     }
 
-    public function test_account_page_lists_consents(): void
-    {
-        $user = $this->userWithConsents();
-
-        $this->actingAs($user)->get(route('account'))
-            ->assertOk()
-            ->assertSee(__('account.account.privacy.consent_types.privacy'))
-            ->assertSee(__('account.account.privacy.consent_types.waiver'));
-    }
-
-    public function test_delete_requires_correct_password(): void
-    {
-        $user = $this->userWithConsents();
-
-        Livewire::actingAs($user)
-            ->test(DeleteAccount::class)
-            ->set('current_password', 'incorrecta')
-            ->call('destroy')
-            ->assertHasErrors('current_password');
-
-        $this->assertDatabaseHas('users', ['id' => $user->id]);
-    }
-
-    public function test_delete_anonymizes_account_clears_consents_and_logs_out(): void
+    /**
+     * ⚠️ **Re-apuntado al DOMINIO en la tanda 3**: conducía el componente Livewire, que ya no existe.
+     * Lo que afirma —qué deja `anonymize()` detrás— no era del componente: es de `RGPD-01`, y por eso
+     * sobrevive. Que la API lo invoque bien lo comprueba `MePrivacyTest`.
+     */
+    public function test_anonymize_neutralises_the_account_and_clears_consents_and_roles(): void
     {
         // Auditoría 2026-05-26 (hallazgo C): NO se hace hard-delete. La cuenta se ANONIMIZA
         // (fila `users` conservada con datos neutros) para que las facturas (AEAT) sigan
@@ -111,11 +101,7 @@ class PrivacyTest extends TestCase
         $user->roles()->attach($role);
         $originalId = $user->id;
 
-        Livewire::actingAs($user)
-            ->test(DeleteAccount::class)
-            ->set('current_password', 'password')
-            ->call('destroy')
-            ->assertRedirect('/');
+        $user->anonymize();
 
         // La fila sigue existiendo, pero anonimizada.
         $this->assertDatabaseHas('users', ['id' => $originalId]);
@@ -130,9 +116,6 @@ class PrivacyTest extends TestCase
         // Consents y roles eliminados/desvinculados.
         $this->assertDatabaseMissing('consents', ['user_id' => $originalId]);
         $this->assertDatabaseMissing('role_user', ['user_id' => $originalId]);
-
-        // El cliente queda deslogueado y el email original libre.
-        $this->assertGuest();
     }
 
     public function test_anonymize_purges_guest_pii_sessions_and_reset_tokens(): void
@@ -255,50 +238,9 @@ class PrivacyTest extends TestCase
             'subtotal' => 1000, 'total' => 1000,
         ]);
 
-        Livewire::actingAs($user)
-            ->test(DeleteAccount::class)
-            ->set('current_password', 'password')
-            ->call('destroy')
-            ->assertRedirect('/');
+        $user->anonymize();
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'code' => 'JJ-TESTAB']);
-    }
-
-    /**
-     * ⚠️⚠️ **El limitador que la web heredó del dominio, y su aviso EN PANTALLA** (tanda 2 · paso 8).
-     *
-     * Éste era el ÚLTIMO de los cuatro sitios que reconfirman contraseña sin techo
-     * (`DECISIONES #120(o)`) y el más grave: lo que protege es la única acción irreversible del
-     * producto. Con una sesión secuestrada se podían probar contraseñas sin límite antes de borrar
-     * la cuenta ajena.
-     *
-     * ⚠️ Y el caso mira **las dos mitades**, porque la segunda faltaba: el mensaje del limitador va
-     * a `_global` y esta vista no pintaba ninguna clave global — al agotar los intentos, el
-     * formulario no hacía nada y no decía nada (`#117`).
-     */
-    public function test_the_delete_form_is_rate_limited_and_the_screen_says_why(): void
-    {
-        // ⚠️ **Con el reloj PARADO** (`DECISIONES #64`): el aviso lleva los segundos que quedan, y
-        // `availableIn()` devuelve 59 en cuanto el bucle cruza un segundo. Sin congelarlo, el caso
-        // pasa casi siempre y falla cuando la máquina va lenta — que es la peor clase de rojo.
-        $this->freezeTime();
-
-        $user = $this->userWithConsents();
-        $component = Livewire::actingAs($user)->test(DeleteAccount::class);
-
-        for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
-            $component->set('current_password', 'mal-'.$i)->call('destroy')->assertHasErrors('current_password');
-        }
-
-        // Con la contraseña BUENA también corta: el techo es del intento, no del acierto.
-        $component->set('current_password', 'password')->call('destroy')
-            ->assertHasErrors('_global')
-            ->assertSee(__('auth.throttle', ['seconds' => 60]));
-
-        $this->assertFalse(
-            User::find($user->id)->isAnonymized(),
-            'la cuenta se ha borrado durante el bloqueo del limitador'
-        );
     }
 
     public function test_email_is_free_after_anonymization(): void
@@ -307,10 +249,7 @@ class PrivacyTest extends TestCase
         // cuenta borrada que conserva su email).
         $user = $this->userWithConsents();
 
-        Livewire::actingAs($user)
-            ->test(DeleteAccount::class)
-            ->set('current_password', 'password')
-            ->call('destroy');
+        $user->anonymize();
 
         // Otra cuenta puede registrarse con el email original.
         $newUser = User::create([

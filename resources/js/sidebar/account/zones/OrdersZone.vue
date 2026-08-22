@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useOrdersStore } from '../../stores/orders.js';
 import { orderRows, pageInfo } from '../orders.js';
+import { answersByReservation } from '../../outcome.js';
 
 /**
  * **«Mis reservas»**: el historial de pedidos del cliente (`docs/specs/area-cliente.md` §4.2).
@@ -43,6 +44,30 @@ const page = computed(() => pageInfo(store.payload, props.account));
  * pedidos fuera de la vista.
  */
 const openBreakdown = ref('');
+
+/**
+ * Qué pedido tiene desplegadas las respuestas del pack.
+ *
+ * ⚠️⚠️ **Bajo demanda, y no es una preferencia de diseño**: son datos de un MENOR (art. 9) y la lista
+ * de pedidos no los trae — hay que pedirlos aparte, que es para lo que existe
+ * `GET orders/{code}/event-data`. La página retirada los pintaba solos bajo cada línea; enseñarlos
+ * solo cuando el titular los pide es lo que la separación de ese endpoint persigue.
+ */
+const openEvent = ref('');
+
+/** El mapa `reserva → respuestas`, con el MISMO módulo que usa el resumen de la compra. */
+const answersOf = (code) => answersByReservation(store.eventData[code]);
+
+function toggleEvent(code) {
+    if (openEvent.value === code) {
+        openEvent.value = '';
+
+        return;
+    }
+
+    openEvent.value = code;
+    store.ensureEventData(code);
+}
 </script>
 
 <template>
@@ -77,6 +102,16 @@ const openBreakdown = ref('');
                         </span>
 
                         <span v-if="line.depositNote" class="orders__product-deposit">{{ line.depositNote }}</span>
+
+                        <!--
+                          Las respuestas del pack, solo si el titular las ha desplegado. Una línea sin
+                          respuestas no pinta nada: un bloque vacío se lee como «no contestaste».
+                        -->
+                        <ul v-if="openEvent === row.code && (answersOf(row.code)[String(line.id)] ?? []).length" class="orders__event">
+                            <li v-for="answer in answersOf(row.code)[String(line.id)]" :key="answer.key">
+                                <span class="orders__event-label">{{ answer.label }}:</span> {{ answer.value }}
+                            </li>
+                        </ul>
 
                         <span v-if="line.guestForm" class="orders__product-form">
                             <button v-if="! line.guestForm.url" type="button" class="btn btn--ghost orders__guestform-btn" disabled>{{ line.guestForm.label }}</button>
@@ -139,6 +174,12 @@ const openBreakdown = ref('');
                         <strong>{{ row.financials.final.amountLabel }}</strong>
                     </div>
                 </div>
+
+                <button v-if="row.hasPack" type="button" class="orders__gate-toggle"
+                        :aria-expanded="openEvent === row.code ? 'true' : 'false'"
+                        @click="toggleEvent(row.code)">
+                    {{ openEvent === row.code ? account?.orders?.event_data_hide : account?.orders?.event_data_show }}
+                </button>
 
                 <div v-if="row.canRetry" class="orders__retry">
                     <button type="button" class="btn btn--zone" :disabled="store.busy" @click="store.retry(row.code, { messages })">{{ account?.orders?.retry_payment ?? '' }}</button>

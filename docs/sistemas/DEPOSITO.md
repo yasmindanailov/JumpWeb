@@ -350,7 +350,7 @@ o quedarse el depósito según T&C.
 | Cancelar item tras reembolso completo | Cancelar SIGUE disponible | §5.11 (D9) |
 | Cancelar pedido | Devolución de la señal = decisión del empleado | D4 (política, no código) |
 | Pedido manual | Cobra solo la señal; resto en el local; reembolso solo manual record-only | §5.7 + §5.10 |
-| Reintento de pago | Reintenta la señal | `onlineDueCents` en `RetryPaymentController` |
+| Reintento de pago | Reintenta la señal | `onlineDueCents` en `PaymentInitiator` (la puerta web se retiró en `DECISIONES #120(u)`; hoy entra por `POST /api/v1/orders/{code}/payment`) |
 | Caducidad (`orders:expire`) | Igual (no usa importe) | sin cambio |
 
 ---
@@ -420,7 +420,7 @@ o quedarse el depósito según T&C.
 `app/Domain/Booking/Services/OrderFinancialSummary.php` · `app/Domain/Booking/Services/ReservationFinancials.php` ·
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
 selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
-`app/Domain/Booking/Services/ManualOrderFulfiller.php` · `app/Http/Controllers/Payments/RetryPaymentController.php` ·
+`app/Domain/Booking/Services/ManualOrderFulfiller.php` ·
 `app/Domain/Booking/Services/CartPricer.php` (el desglose de la señal por línea; ⚠️ aquí vivía
 `Livewire\Tickets\Purchase::cartDepositCents()`, retirado en 4.7·2b·3 — hoy el cajón lo pide por
 `POST /api/v1/orders/quote`) ·
