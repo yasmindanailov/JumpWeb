@@ -33,8 +33,8 @@ seguro**.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2655 en verde** (15.272 aserciones, `--parallel` ~39 s medidos el 2026-08-21) ·
-  **314 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
+- Suite **2656 en verde** (15.274 aserciones, `--parallel` ~41 s medidos el 2026-08-22) ·
+  **322 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -227,6 +227,7 @@ contra el servidor desde PHP ejecutándolo en Node.
 | `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `pay.test.js` · `SidebarPayParityTest` |
 | `outcome.js` | La VUELTA entera: resumen del 6, motivo del 10 con su reintento, sondeo del 11 | `outcome.test.js` · `SidebarOutcomeParityTest` |
 | `stores/purchase.js` | El paso y las dos señales que el cajón publica hacia fuera | `stores/purchase.test.js` (nace tras `#59`) |
+| `stores/date.js` | El estado del paso 2: días ofrecidos, día elegido, mes visible y lo que de ahí se deriva | `stores/date.test.js` (nace en la reorganización, `#119`) |
 
 Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).

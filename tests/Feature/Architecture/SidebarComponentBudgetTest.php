@@ -58,7 +58,14 @@ class SidebarComponentBudgetTest extends TestCase
     private const EXCEPTIONS = [
         // 618 → 614 en 4.4b·2: retirar la delegación en el modal de Livewire quitó cuatro líneas y
         // el vaciado del token del anti-bot añadió una. La lógica del widget vive en `turnstile.js`.
-        'sidebar/Sidebar.vue' => ['code' => 614, 'api' => 11],
+        //
+        // 614 → 600 el 2026-08-22, primer clic del trinquete de la reorganización: el estado del DÍA
+        // se muda a `stores/date.js`. ⚠️ **La bajada es pequeña a propósito y el dato importa**: se
+        // midió que el ESTADO es solo el **9%** de este fichero (55 líneas de 614) y las FUNCIONES el
+        // **72%** (441). Mover estado a stores da poco por sí solo; lo que baja el número de verdad es
+        // sacar las secuencias — 184 líneas son de un solo dominio y pueden ser acciones de su store,
+        // y 214 son transversales y piden el patrón `admission.js::runCheckout()`.
+        'sidebar/Sidebar.vue' => ['code' => 600, 'api' => 11],
     ];
 
     /**

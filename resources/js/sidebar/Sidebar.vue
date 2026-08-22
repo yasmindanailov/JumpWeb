@@ -1,16 +1,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { usePurchaseStore } from './stores/purchase.js';
+import { useDateStore } from './stores/date.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
-import {
-    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel as composeMonthLabel,
-    offeredMonths as monthsWithOffer, shiftMonth, weekdayHeaders as composeWeekdayHeaders,
-} from './calendar.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
-import {
-    dayPriceCents as priceOfDay, initialQuantity, maxQuantityFor, minQuantityFor, timeAt,
-} from './offer.js';
+import { initialQuantity, maxQuantityFor, minQuantityFor, timeAt } from './offer.js';
 import { buildProgress } from './progress.js';
 import { t as translate, tp as translateWith } from './i18n.js';
 import { buildFooter } from './foot.js';
@@ -152,24 +147,16 @@ async function tracked(promise) {
 
 /** Lo que el paso 2 necesita. Llega de la API; ninguna regla de oferta se decide aquí (`AFORO-02`). */
 const selectedProductId = ref(null);
-const offeredDates = ref([]);
-const selectedDate = ref(null);
-const month = ref(null);
 
 /**
- * La rejilla del mes que se está viendo.
+ * El DÍA vive en su propio store (`stores/date.js`, reorganización del 2026-08-22): los días
+ * ofrecidos, el elegido, el mes visible y todo lo que de ahí se deriva —la rejilla, los meses
+ * navegables, los rótulos y el precio del día—.
  *
- * Repartir los días ofrecidos en semanas es PRESENTACIÓN —y por eso puede vivir aquí—, pero la
- * composición tiene que dar exactamente lo mismo que la del servidor o el cajón enseñaría otro
- * calendario. `SidebarCalendarParityTest` compara las dos dato a dato, incluidos un mes que empieza
- * en domingo y tres husos horarios distintos.
+ * ⚠️ La composición de la rejilla sigue siendo de `calendar.js`, y su paridad contra el servidor la
+ * fija `SidebarCalendarParityTest` dato a dato: mover el estado no mueve la regla.
  */
-const weeks = computed(() => (month.value ? buildWeeks(month.value, offeredDates.value, selectedDate.value) : []));
-
-/** Los meses navegables se acotan a los que tienen oferta: no se ofrece pasear por meses vacíos. */
-const offeredMonths = computed(() => monthsWithOffer(offeredDates.value));
-const canPrev = computed(() => canGoPrev(month.value, offeredMonths.value));
-const canNext = computed(() => canGoNext(month.value, offeredMonths.value));
+const dateStore = useDateStore();
 
 /**
  * El PUENTE de señales hacia fuera del cajón.
@@ -314,7 +301,7 @@ async function selectProduct(id) {
     // esquema de campos del evento, ya resueltos al idioma. Se pide junto a los días, no después,
     // porque los dos hacen falta antes de que el cliente pueda elegir nada.
     product.value = null;
-    selectedDate.value = null;
+    dateStore.clearSelection();
     selectedTime.value = null;
     addons.value = { groups: [], singles: [] };
     addonChoices.value = [];
@@ -329,7 +316,7 @@ async function selectProduct(id) {
         api.get(`/catalog/products/${id}`),
     ]));
 
-    offeredDates.value = dates.ok ? (dates.data?.data ?? []) : [];
+    dateStore.setOffer(dates.ok ? (dates.data?.data ?? []) : []);
 
     if (detail.ok) {
         product.value = detail.data;
@@ -338,10 +325,6 @@ async function selectProduct(id) {
         // del pack (RGPD, son datos de un menor) y sin las etiquetas no hay con qué emparejarlas.
         fieldsByProduct.value = { ...fieldsByProduct.value, [id]: detail.data.event_fields ?? [] };
     }
-    // El calendario abre en el PRIMER mes con oferta, no en el actual: si el producto no se vende
-    // hasta dentro de dos meses, abrir en «hoy» enseñaría una rejilla vacía. La regla —y su respaldo
-    // en horario LOCAL, que aquí se derivaba en UTC— vive en `calendar.js` desde 4.7·2b·2·B.
-    month.value = initialMonth(offeredDates.value);
 }
 
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
@@ -468,8 +451,6 @@ const offeredTime = computed(() => timeAt(offeredTimes.value, selectedTime.value
 const maxQuantity = computed(() => maxQuantityFor(offeredTimes.value, selectedTime.value));
 const minQuantity = computed(() => minQuantityFor(product.value));
 
-/** El precio del DÍA elegido. Lo trae la oferta de días; no se deriva del «desde» del catálogo. */
-const dayPriceCents = computed(() => priceOfDay(offeredDates.value, selectedDate.value));
 
 /**
  * Elegir día pide las HORAS, y la petición **lleva la cesta**.
@@ -479,7 +460,7 @@ const dayPriceCents = computed(() => priceOfDay(offeredDates.value, selectedDate
  * paso 4 llega después; el cuerpo ya viaja con su clave para que no se olvide al añadirla.
  */
 async function selectDate(date) {
-    selectedDate.value = date;
+    dateStore.selected = date;
     selectedTime.value = null;
     store.go(STEPS.TIME);
 
@@ -516,7 +497,7 @@ async function refreshAddons() {
 
     const response = await tracked(api.post(`/catalog/products/${selectedProductId.value}/addons`, {
         quantity: quantity.value,
-        date: selectedDate.value,
+        date: dateStore.selected,
         time: selectedTime.value,
         addons: addonQuantities.value,
         choices: addonChoices.value,
@@ -562,8 +543,9 @@ function setAddonQuantity(productId, qty) {
  */
 const locale = document.documentElement.lang || 'es';
 
-const weekdayHeaders = computed(() => composeWeekdayHeaders(locale));
-const monthLabel = computed(() => composeMonthLabel(month.value, locale));
+// El store NO lee el DOM a propósito —así se prueba con `node --test` sin navegador—, así que el
+// idioma se le INYECTA desde aquí, el único sitio del cajón que sí puede mirarlo.
+dateStore.setLocale(locale);
 
 /**
  * La banda de progreso de los pasos 2 y 3.
@@ -577,7 +559,7 @@ const progress = computed(() => buildProgress({
     step: store.step,
     isPack: selectedProduct.value?.is_pack ?? false,
     productName: selectedProduct.value?.name ?? '',
-    date: selectedDate.value,
+    date: dateStore.selected,
     time: selectedTime.value,
     messages: props.messages,
     locale,
@@ -664,7 +646,7 @@ const footer = computed(() => buildFooter({
     cartCount: cartCount.value,
     cartTotalCents: quote.value?.total_cents ?? 0,
     cartOnlineCents: quote.value?.online_amount_cents ?? 0,
-    hasDate: selectedDate.value !== null,
+    hasDate: dateStore.selected !== null,
     hasTime: selectedTime.value !== null,
     lineTotalCents: line.value?.total_cents ?? null,
     lineHasDeposit: line.value?.has_deposit ?? false,
@@ -1181,7 +1163,7 @@ async function retryPayment() {
 
 /** Del calendario a la hora. Espejo de `Purchase::goToTime()`: exige día elegido. */
 function goToTime() {
-    if (selectedDate.value === null) return;
+    if (dateStore.selected === null) return;
 
     store.go(STEPS.TIME);
 }
@@ -1206,7 +1188,7 @@ async function addToCart() {
 
     const candidate = {
         product_id: selectedProductId.value,
-        date: selectedDate.value,
+        date: dateStore.selected,
         time: selectedTime.value,
         quantity: quantity.value,
         event_data: { ...eventData.value },
@@ -1332,7 +1314,7 @@ function clearSelection() {
     selectedProductId.value = null;
     selectedProduct.value = null;
     product.value = null;
-    selectedDate.value = null;
+    dateStore.clearSelection();
     selectedTime.value = null;
     quantity.value = 0;
     eventData.value = {};
@@ -1376,16 +1358,16 @@ function goBack() {
 
         <DateStep
             v-else-if="store.step === STEPS.DATE"
-            :weeks="weeks"
-            :weekday-headers="weekdayHeaders"
-            :month-label="monthLabel"
-            :can-prev="canPrev"
-            :can-next="canNext"
-            :selected-date="selectedDate"
+            :weeks="dateStore.weeks"
+            :weekday-headers="dateStore.weekdayHeaders"
+            :month-label="dateStore.monthLabel"
+            :can-prev="dateStore.canPrev"
+            :can-next="dateStore.canNext"
+            :selected-date="dateStore.selected"
             :messages="messages"
             @select="selectDate"
-            @prev-month="month = shiftMonth(month, -1)"
-            @next-month="month = shiftMonth(month, 1)" />
+            @prev-month="dateStore.shift(-1)"
+            @next-month="dateStore.shift(1)" />
 
         <TimeStep
             v-else-if="store.step === STEPS.TIME"
@@ -1395,7 +1377,7 @@ function goBack() {
             :min-quantity="minQuantity"
             :max-quantity="maxQuantity"
             :is-pack="product?.type === 'pack'"
-            :day-price-cents="dayPriceCents"
+            :day-price-cents="dateStore.priceCents"
             :event-fields="product?.event_fields ?? []"
             :period-label="product?.period_label ?? ''"
             :addons="addons"
