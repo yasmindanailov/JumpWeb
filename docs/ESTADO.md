@@ -46,7 +46,7 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2678 en verde** (15.427 aserciones, `--parallel` **~41 s** medidos el 2026-08-23) ·
-  **546 tests JS** (`node --test`) · Pint limpio (837 ficheros) · `docs-check` verde ·
+  **553 tests JS** (`node --test`) · Pint limpio (837 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
   sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
@@ -174,6 +174,15 @@ los **6** casos que de verdad comparan motores, y todos siguen montando Livewire
 embudo manda `purchase` explícito; el default es `standalone`, el conservador. Verificado **sobre el
 chunk construido**, no sobre el fuente. ⚠️ El techo del chunk sube **190 → 191 KiB** (medido: 190,5,
 **+1,0**), y con criterio nuevo: **paso a paso con su medida**, no por adelantado para toda la tanda.
+▶ **A4 hecho el 2026-08-23**: viven en el cajón las zonas **`LOGIN` y `FORGOT`**, la guarda de
+alcanzabilidad cambia de forma —dos puertas declaradas, no una excepción a mano— y el aterrizaje es un
+módulo plano con el `window` por parámetro. **El primero de los cinco puntos que abrían el modal ya no
+lo abre**: el aviso de sesión caducada de «Mis reservas» lleva a la zona de entrar.
+⚠️ **A4 se recortó por DEPENDENCIA**: la zona de ALTA necesita su «revisa tu correo» con reenvío, que
+arrastra otro subgrupo de textos y otro endpoint, así que va en su paso (A5). Techos: chunk **191 →
+194 KiB** (medido 193,9) y payload del montaje **+449 B** en las dos caras (anónimo 2.120, con sesión
+5.157) — es `account.forgot` entero, y viaja sin sesión **a propósito**: sus pantallas son las que ve
+justo quien no ha entrado.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

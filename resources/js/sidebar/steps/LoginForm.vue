@@ -24,9 +24,22 @@ const props = defineProps({
 
     /** El grupo `account`, podado a `login`. */
     account: { type: Object, default: () => ({}) },
+
+    /**
+     * ¿Se ofrece «¿olvidaste tu contraseña?».
+     *
+     * ⚠️ **Apagado por defecto, y el default es lo que hace este cambio seguro**: el paso 5 del embudo
+     * compara su árbol contra el manifiesto congelado de `SidebarDomContractTest`, así que emitir el
+     * enlace sin querer lo pondría en rojo. Con el prop apagado, el árbol del embudo es **byte a byte
+     * el de ayer** y solo la zona de la cuenta lo enciende (`specs/auth-en-cajon.md` §4.3).
+     * ▶ El embudo lo enciende en su propio paso —A7—, que es cuando toca regenerar el manifiesto **y
+     * justificarlo en el commit**, que es la condición que ese test pone para no ser una goma de
+     * borrar.
+     */
+    withRecovery: { type: Boolean, default: false },
 });
 
-defineEmits(['submit']);
+defineEmits(['submit', 'recover']);
 
 const email = defineModel('email', { type: String, default: '' });
 const password = defineModel('password', { type: String, default: '' });
@@ -72,6 +85,12 @@ const fieldErrors = computed(() => props.errors?.fields ?? {});
                     <input v-model="remember" type="checkbox">
                     <span>{{ a('login.remember') }}</span>
                 </label>
+                <!-- Mismo sitio y misma clase que en el Blade de la web: dentro de `.auth__row`, a la
+                     derecha del «recuérdame». Lo que cambia es a dónde lleva — a una zona del cajón
+                     en vez de a un tercer modal. -->
+                <button v-if="withRecovery" type="button" class="auth__link" @click="$emit('recover')">
+                    {{ a('login.forgot') }}
+                </button>
             </div>
 
             <button type="submit" class="btn btn--zone auth__submit" :disabled="submitting">

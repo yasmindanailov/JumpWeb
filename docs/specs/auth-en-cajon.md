@@ -1,7 +1,7 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1, A2 y A3 EJECUTADOS** (§8) ·
+> Última actualización: 2026-08-23 · **A1–A4 EJECUTADOS** (§8; A4 recortado por dependencia) ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -375,11 +375,13 @@ adversarial del 2026-08-23 y todas están **verificadas en el código**.
    alta cuyo correo no llega queda **sin salida**: la página `/email/verificar` exige sesión y el alta
    suelta no la abre. El servidor ya lo cubre (`POST /api/v1/auth/email/resend`); el hueco es de
    pantalla.
-3. **La pila de retorno se queda con zonas de invitado dentro.** `navigation.js::go()` solo recorta
-   cuando la zona **ya** está en la pila. Camino real: sesión caducada en `ORDERS` → `LOGIN` → §3.3
-   lleva a `HOME`, y «volver» le enseña un formulario de login a alguien que **acaba de entrar**.
-   ▶ Al conseguir sesión se **reinicia la historia** (`enter(HOME)`), que es justo lo que ese método
-   existe para hacer.
+3. ~~**La pila de retorno se queda con zonas de invitado dentro.**~~ ✅ **DISUELTO por §3.3, no
+   arreglado** (2026-08-23). El riesgo era real —`navigation.js::go()` solo recorta cuando la zona ya
+   está en la pila, así que `ORDERS → LOGIN → HOME` dejaba un «volver» que enseñaba un formulario de
+   login a quien acababa de entrar—, pero **aterrizar es navegar**: la página se recarga, el cajón
+   monta de cero y la pila nace en `[HOME]`. No hay nada que reiniciar.
+   ▶ Se deja escrito, y no borrado, porque **es la clase de conducta que vuelve** el día que alguien
+   sustituya la navegación por un cambio de estado en caliente. Entonces el problema reaparece entero.
 4. **`openAccount(zone)` tiene una carrera.** `bootSpaEngine()` sale antes por
    `if (this.spaHandle || this.spaLoading)` y aplica la zona **después** del `await import()`: con el
    cajón cerrado y el motor a medio cargar, un `open()` seguido de `showAccount()` llamaría sobre
@@ -434,7 +436,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | | Qué se prueba | Con qué |
 |---|---|---|
 | V1 ✅ | Las reglas de recuperar contraseña, incluidas **las dos respuestas indistinguibles** | `forgot.test.js`, `node --test` — **12 casos, hechos el 2026-08-23**. La no-enumeración se prueba **cruzando las dos respuestas** (§3.quater, trampa 4) y se midió con una mutación que hace depender el resultado del correo: la caza **solo** ese caso |
-| V2 | Las tres zonas existen, tienen rótulo y **son alcanzables** por su puerta | `navigation.test.js` (guarda nueva, §4.1) |
+| V2 ✅ | Las tres zonas existen, tienen rótulo y **son alcanzables** por su puerta | `navigation.test.js`, guarda nueva (§4.1): toda zona está en el índice **o** en `GUEST_ZONES`, las dos listas **no se solapan**, y las de invitado tienen rótulo propio. **Medido** declarando una zona huérfana: la cazan dos casos |
 | V3 | El mapa ruta→zona cubre las tres rutas y **cuadra con `navigation.js`** | `AccountDoorWiringTest` (casos nuevos) |
 | V4 ✅ | **Las tres URLs se sirven `noindex, nofollow`** y ninguna está en el sitemap | ✅ **HECHO el 2026-08-22**, contra el código de hoy: `SeoTest::test_the_auth_doors_are_never_indexable` + `…_are_not_advertised_in_the_sitemap`. **Medido por MUTACIÓN, las dos direcciones**: quitar `$authModal` del `<meta robots>` tumba el caso en su aserción, y forzar `noindex` en TODA la web tumba el **control negativo** —sin él, un layout que no distinguiera pasaría con matrícula—. El ancla es única (un solo `name="robots"` en el layout) y la restauración se comprobó por CONTENIDO y con `git status` limpio (`CONVENCIONES §3.quater`, trampas 1 y 2) |
 | V5 | Los cinco puntos llevan su `href` **y** su cableado, y el invitado los RECIBE en el HTML | `AccountDoorWiringTest` — ⚠️ su caso «un invitado no recibe cableado» **se INVIERTE**, no se borra |
@@ -486,9 +488,9 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A1** ✅ | **Cerrar el hueco del `noindex`** con su test, contra el código de HOY | El único que había que hacer **antes** de tocar nada: después del borrado ya no habría qué comparar (§1.3·3). **Hecho y medido por mutación el 2026-08-23**, ampliado a las cinco superficies de auth |
 | **A2** ✅ | **Mudar los 8 casos que sobreviven** de las dos paridades, y **re-mutarlos** allí | ⚠️ **PRIMERO**, y es la corrección de fondo del orden: uno de ellos asevera que el payload del invitado son exactamente `login` y `register`, así que **A3 lo pondría en rojo** (§4.7.bis). **Hecho el 2026-08-23**: 7 mudados a tres destinos, 1 retirado tras medir que ya estaba cubierto, y los 6 que quedan en las paridades siguen montando Livewire |
 | **A3** ✅ | `forgot.js`, **`context` como parámetro** (§4.3) y el estado en `stores/auth.js`, con `node --test` | Reglas antes que pantallas, como las ocho zonas anteriores. **Hecho el 2026-08-23**: 12 casos de `forgot.js`, 2 del contexto en `register.js`, 7 del store y **una guarda de cableado nueva** (`SidebarSignupContextTest`) para el eslabón que ningún test veía — que el embudo declare `purchase`. Techo del chunk **190 → 191** (medido 190,5, +1,0) |
-| **A4** | Las tres zonas y la guarda de alcanzabilidad en su forma nueva | Ya hay a dónde ir |
-| **A5** | Las puertas: `AccountDoor` + `openAccount()` + los cinco puntos | Ya hay a dónde llegar. ⚠️ **Aquí viven DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4) |
-| **A6** | El aterrizaje: navegar a la puerta, **reiniciar la pila** (§4.10·3) y la pantalla de «revisa tu correo» **con reenvío y escape** (§4.10·2) | Cierra el camino completo antes de tocar el embudo |
+| **A4** ✅ | **`LOGIN` y `FORGOT`**, la guarda de alcanzabilidad en su forma nueva, `account.forgot` en el payload y **el aterrizaje** | Ya hay a dónde ir. ⚠️ **Recortado sobre la marcha, y por DEPENDENCIA**: la zona de alta necesita su pantalla de «revisa tu correo» con reenvío, que arrastra el subgrupo `account.verify` y otro endpoint. Meterla aquí habría dejado media pantalla construida — ver A5. **Hecho el 2026-08-23** |
+| **A5** | **`REGISTER`** con su «revisa tu correo» **con reenvío y escape** (§4.10·2), y las pestañas | Va junto porque va junto: sin la pantalla de después, el alta suelta —que NO abre sesión— no lleva a ninguna parte |
+| **A6** | Las puertas: `AccountDoor` + `openAccount()` + los cuatro puntos que quedan | Ya hay a dónde llegar. ⚠️ **Aquí viven DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4) |
 | **A7** | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6) |
 | **A8** | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después |
 | **A9** | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest`, `SpinnerTest` y la decisión sobre `SidebarEntry::clear()` | Cuando ya no queda nadie que dependa. Las cuatro caen a la vez: separarlas deja la suite roja sin dueño |

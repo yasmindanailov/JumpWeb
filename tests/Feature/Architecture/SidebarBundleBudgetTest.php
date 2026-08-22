@@ -199,8 +199,16 @@ class SidebarBundleBudgetTest extends TestCase
      * veces, pero deja un tramo largo en el que el presupuesto **no aprieta**. Este trabajo lo sube
      * paso a paso, con la medida de cada uno: las tres zonas de auth (A4) volverán a subirlo con la
      * suya. Cuesta un rojo más por paso y a cambio ningún tramo queda sin guardia.
+     *
+     * ⚠️ **191 → 194 el 2026-08-23 (A4): las dos primeras ZONAS de auth.** Entran `LoginZone` y
+     * `ForgotZone`, el módulo del aterrizaje (`account/after-auth.js`) y el enlace de recuperar en
+     * `LoginForm`. Medido: **193,9 KiB**, **+3,4** sobre A3.
+     * ▶ **Y el descuento vale la pena decirlo**: de las dos pantallas, la de entrar **no añade
+     * formulario** —reutiliza el `LoginForm` del paso 5, que ya estaba en el chunk—, así que esos 3,4
+     * KiB son casi todo la de recuperar, que sí es marcado nuevo. Copiar el formulario habría costado
+     * el doble y habría abierto la puerta a que las dos versiones divergieran.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 191;
+    private const SIDEBAR_CHUNK_MAX_KB = 194;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

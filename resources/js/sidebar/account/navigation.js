@@ -46,6 +46,22 @@ export const ZONES = {
 
     /** Los dos derechos RGPD: descargar los datos y borrar la cuenta (tanda 2 · paso 8). */
     PRIVACY: 'privacy',
+
+    // ── Las zonas de INVITADO (`specs/auth-en-cajon.md` §4.1) ─────────────────────────────────
+    //
+    // ⚠️⚠️ **Con ellas la sección de cuenta deja de ser «solo con sesión»**, que era un supuesto
+    // implícito de las seis de arriba. Son las tres pantallas de auth que hasta el 2026-08-23 vivían
+    // en el modal de la cabecera, y su presencia aquí es lo que permite retirarlo: `DECISIONES #66`
+    // pedía que la gestión del cliente viviera en UN sitio, y entrar es parte de gestionarse.
+
+    /** Identificarse. Es donde aterriza un invitado que entra al área. */
+    LOGIN: 'login',
+
+    /** Crear cuenta. Alta **suelta**: manda correo de verificación y no abre sesión (§4.3). */
+    REGISTER: 'register',
+
+    /** Pedir el enlace para restablecer la contraseña. */
+    FORGOT: 'forgot',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -67,7 +83,30 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.SESSIONS]: 'account.sessions.title',
     [ZONES.PROFILE]: 'account.profile.title',
     [ZONES.PRIVACY]: 'account.privacy.title',
+    [ZONES.LOGIN]: 'login.title',
+    [ZONES.REGISTER]: 'register.title',
+    [ZONES.FORGOT]: 'forgot.title',
 };
+
+/**
+ * **Las zonas a las que se llega SIN sesión** — y la razón de que esta lista exista.
+ *
+ * ⚠️⚠️ Hasta el 2026-08-23 la guarda de alcanzabilidad decía que **toda** zona tenía que estar en
+ * `HOME_ENTRIES`, porque «dentro del cajón no hay URL, así que el índice es la única puerta». Con las
+ * tres de auth **eso deja de ser cierto**: se llega a ellas por RUTA —las puertas de
+ * `Http\Sidebar\AccountDoor`— y entre sí, y **ninguna puede estar en el índice**, que solo lo ve
+ * quien ya tiene sesión.
+ *
+ * ▶ La guarda no se relaja: cambia de forma. Toda zona sigue teniendo que ser alcanzable, y ahora hay
+ * **dos** puertas declaradas en vez de una. Sin esta lista, «alcanzable» se habría convertido en una
+ * excepción escrita a mano en el test, que es donde se acaba metiendo cualquier cosa.
+ */
+export const GUEST_ZONES = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT];
+
+/** ¿Esta zona la ve alguien SIN sesión? Lo pregunta la sección para decidir por dónde entrar. */
+export function isGuestZone(value) {
+    return GUEST_ZONES.includes(value);
+}
 
 /**
  * **Las entradas del índice, en su orden.**

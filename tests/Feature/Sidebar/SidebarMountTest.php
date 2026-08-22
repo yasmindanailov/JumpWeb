@@ -258,8 +258,11 @@ class SidebarMountTest extends TestCase
         // ahorra: la landing anónima es la ruta de más tráfico del sitio —la que `PERF-02` protege— y
         // un invitado **no puede abrir** esa sección. Medido: son ~660 B por página que no pintaban
         // nada (`specs/area-cliente.md`).
+        // ⚠️ **`forgot` entra el 2026-08-23 y viaja SIN sesión a propósito**
+        // (`specs/auth-en-cajon.md` §4.1): las tres pantallas de auth son precisamente las que ve
+        // quien NO ha entrado, así que podarlas al invitado las dejaría con los rótulos en blanco.
         $this->assertSame(
-            ['login', 'register'], array_keys($boot['account'] ?? []),
+            ['login', 'register', 'forgot'], array_keys($boot['account'] ?? []),
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
 
@@ -270,8 +273,19 @@ class SidebarMountTest extends TestCase
         // cuando solo viajaba el rótulo de la pestaña de alta; subió **a propósito** al transcribir el
         // formulario. La referencia que lo hace un presupuesto y no un número suelto: el grupo
         // `account` COMPLETO son 9,6 kB, seis veces esto, y viajaría en cada página pública.
+        //
+        // ⚠️⚠️ **2.048 → 2.176 el 2026-08-23, y lo paga RECUPERAR CONTRASEÑA**
+        // (`specs/auth-en-cajon.md` §4.1). Medido: **2.120 B**, **+449** — que es exactamente el
+        // subgrupo `account.forgot` entero, sus 9 claves, todas pintadas por la zona: no hay nada que
+        // podar. Quedan 56 B de holgura.
+        // ▶ **Y la pregunta que este presupuesto existe para provocar se hizo**: ¿tiene que viajar en
+        // cada página pública para una pantalla que casi nadie abre? Sí, y no por comodidad: a la
+        // zona de recuperar se llega **sin sesión** —por su ruta puerta y desde la de entrar—, así
+        // que no hay condición bajo la que esconderla, y pedirla por un endpoint costaría una
+        // petición en el arranque para 449 B. Es además la misma decisión que ya se tomó con `login`
+        // y `register`, que llevan viajando así desde 4.4b·1.
         $this->assertLessThan(
-            2048, $anonBytes,
+            2176, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -292,7 +306,7 @@ class SidebarMountTest extends TestCase
 
         $boot = $this->bootPayload((string) $this->actingAs($user)->get('/')->assertOk()->getContent());
 
-        $this->assertSame(['login', 'register', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['login', 'register', 'forgot', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
         $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
@@ -351,8 +365,12 @@ class SidebarMountTest extends TestCase
         // ▶ Techo **5.120** mientras duró la tanda 3 y **bajado a lo medido al cerrarla**: **4.708 B**,
         //   así que **4.800**, 92 B de holgura. Referencia que lo hace legible: el grupo `account`
         //   COMPLETO son 9,6 kB, el doble de esto.
+        //
+        // ⚠️ **4.800 → 5.248 el 2026-08-23**, por el mismo `account.forgot` que sube el anónimo: son
+        // los MISMOS 449 B, porque las tres pantallas de auth viajan para todo el mundo. Medido:
+        // **5.157 B**, y el techo deja **91 B** — la misma holgura estrecha de siempre, a propósito.
         $this->assertLessThan(
-            4800, $bytes,
+            5248, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

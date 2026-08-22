@@ -10,6 +10,8 @@ import ProfileZone from '../account/zones/ProfileZone.vue';
 import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 import PrivacyZone from '../account/zones/PrivacyZone.vue';
+import LoginZone from '../account/zones/LoginZone.vue';
+import ForgotZone from '../account/zones/ForgotZone.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
@@ -45,14 +47,24 @@ const props = defineProps({
 
     /** Los idiomas que ofrece el selector del perfil, con su nombre nativo (`SiteLocales`). */
     locales: { type: Array, default: () => [] },
+
+    /** Las rutas que compone el servidor: la zona de entrar necesita la puerta del índice. */
+    urls: { type: Object, default: () => ({}) },
 });
 
 const store = useAccountStore();
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
-/** Abre el modal de auth de la cabecera, que sigue siendo la puerta de entrada (spec §4.6). */
-const signIn = () => window.Alpine?.store('auth')?.open('login');
+/**
+ * Lleva a IDENTIFICARSE. Lo pide la zona de pedidos cuando la sesión caduca con el cajón abierto.
+ *
+ * ⚠️ **Ya no abre el modal de la cabecera** (2026-08-23, `specs/auth-en-cajon.md` §4.5): entrar es
+ * una zona más de esta sección, así que el aviso de sesión caducada lleva a una pantalla que está
+ * **dentro del mismo cajón**, sin cerrarlo y sin perder de vista la cesta. Era uno de los cinco
+ * puntos que abrían el modal, y el primero en caer.
+ */
+const signIn = () => store.go(ZONES.LOGIN);
 </script>
 
 <template>
@@ -113,5 +125,20 @@ const signIn = () => window.Alpine?.store('auth')?.open('login');
             :messages="messages"
             :account="account"
             @sign-in="signIn" />
+
+        <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
+             pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera. -->
+        <LoginZone
+            v-else-if="store.zone === ZONES.LOGIN"
+            :account="account"
+            :messages="messages"
+            :auth="auth"
+            :urls="urls" />
+
+        <ForgotZone
+            v-else-if="store.zone === ZONES.FORGOT"
+            :account="account"
+            :messages="messages"
+            :auth="auth" />
     </Shell>
 </template>

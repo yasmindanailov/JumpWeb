@@ -81,8 +81,23 @@ export const useAuthStore = defineStore('auth', {
          */
         setMode(mode) {
             this.mode = mode === 'register' ? 'register' : 'login';
+            this.clearNotices();
+        },
+
+        /**
+         * Borra los avisos del intento anterior **sin tocar los campos**.
+         *
+         * ⚠️ Es lo que pide una zona de auth al montarse, y la diferencia con `reset()` importa: en el
+         * área de cliente las tres pantallas comparten formulario, así que quien escribe su correo,
+         * pulsa «he olvidado mi contraseña» y vuelve **no tiene que escribirlo otra vez**. Lo que no
+         * puede sobrevivir a un cambio de pantalla es un aviso —que describiría un intento que ya no
+         * se ve— ni el «ya te hemos enviado el enlace».
+         */
+        clearNotices() {
             this.loginError = NO_LOGIN_ERROR();
             this.registerError = NO_REGISTER_ERROR();
+            this.forgotError = NO_FORGOT_ERROR();
+            this.forgotSent = false;
         },
 
         setSignupSiteKey(key) {

@@ -215,6 +215,12 @@
                                 'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
                                 'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
                             ]),
+                            // ⚠️ **Recuperar contraseña viaja SIN sesión, igual que entrar y darse de
+                            // alta** (`specs/auth-en-cajon.md` §4.1): sus tres pantallas son
+                            // precisamente las que ve quien NO ha entrado, así que podarlas al
+                            // invitado dejaría la zona con los rótulos en blanco — que es el fallo
+                            // que `i18n.js` no puede avisar. El subgrupo entero son 9 claves.
+                            'forgot' => __('account.forgot'),
                             // ⚠️ El ÁREA DE CLIENTE (`specs/area-cliente.md`) entra con **una sola
                             // clave**, no con el subgrupo `account.account` entero: ahí viven además
                             // los seis textos de privacidad, que no pinta ninguna zona de la tanda 1.
@@ -295,6 +301,13 @@
                         'urls' => [
                             'contact' => route('contacto'),
                             'my_orders' => route('account.orders'),
+                            // ⚠️ **La PUERTA del índice, y es lo que hace posible aterrizar en «Mi
+                            // cuenta» tras entrar dentro del cajón** (`specs/auth-en-cajon.md` §3.3).
+                            // Los textos del área viajan solo con sesión, así que quien consigue
+                            // sesión SIN recargar aterrizaría en un índice en blanco: se navega aquí,
+                            // la página se recarga ya identificada y el cajón nace abierto en su
+                            // zona. La ruta la compone el SERVIDOR, como las otras dos.
+                            'account' => route('account'),
                         ],
                     ], JSON_UNESCAPED_UNICODE) }}">
                         {{-- ⚠️ **El velo de carga del cajón, y va DENTRO del hueco a propósito.**
