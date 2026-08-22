@@ -25,8 +25,8 @@ vigiladas, y **ninguna cumplida todavía**. El detalle, en «Próximo paso».
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
-`#110` verificó. Está **en `main`**. ⚠️ La rama `wip/4.7-2b-3-retirada-purchase` sigue en el remoto, **fusionada y sin nada propio**
-(`git log main..wip/…` → 0): si `/arranque-sesion` la saca, no es trabajo perdido. Borrarla es seguro.
+`#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
+(verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
 ✅ **STAGING está desplegado y al día**, sirviendo el cajón SPA con el anti-bot activo. Canal:
 `scripts/deploy.sh` (dry-run por defecto). Detalle en `ENTORNOS.md` §4; el porqué, en `#105`–`#110`.
