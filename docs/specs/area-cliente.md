@@ -423,7 +423,7 @@ Es la regla que ha ordenado la Fase 4 entera. Cada paso deja `main` verde y veri
 | **2** | ✅ **HECHO 2026-08-22 · La NAVEGACIÓN de zonas**: `account/navigation.js` (zonas, pila de retorno, rótulos) + `stores/account.js`, la sección enruta zonas y nacen `AccountHomeZone` y `OrdersZone`. **Sin datos** | 26 casos de `node --test`, **verificados por mutación** · **navegador**: **V5**, 7/7 |
 | **3a** | ✅ **HECHO 2026-08-22 · El CONTRATO**: las etiquetas de presentación que el cliente **no puede** componer (`date_label`, `created_label`, `refunded_label`) y la URL del post-form, con su fuente única `DisplayTime::dayLabel()` | `MeOrdersTest`/`MeReservationsTest` con VALOR · `ApiContractTest` · `DayLabelSingleSourceTest`, **mutado** |
 | **3b** | ✅ **HECHO 2026-08-22 · Los DATOS en el cliente**: `account/orders.js`, `stores/orders.js` y `stores/reservations.js`; las dos zonas pintan | 38 casos de `node --test` **mutados** · **`SidebarAccountParityTest`** contra la respuesta REAL, mutado · **navegador V6, 2/2** |
-| **4** | La **puerta**: cablear `account-context` (con sesión → la sección; sin ella → el modal de hoy) | navegador |
+| **4** | ✅ **HECHO 2026-08-22 · La PUERTA**: «Mis reservas» abre la sección en vez de navegar, **conservando el `href`** para cuando el motor aún no ha cargado | `AccountDoorWiringTest` (6 casos, **4 mutaciones**) · **navegador V7, 2/2**, con el chunk del motor cortado |
 | **5** | **Captura de huecos**: `AccountPageCaptureTest` (temporal, con caducidad en su cabecera) | mutación |
 
 ⚠️ **El plan pasó de seis pasos a cinco el 2026-08-22, al ejecutarlo.** La v1 separaba «el modelo de

@@ -40,7 +40,12 @@
         </div>
 
         @if ($acct['hasPendingForm'])
-            <a href="{{ $acct['pendingFormsCount'] === 1 ? $acct['pendingForms'][0]['url'] : route('account.orders') }}" class="acct__alert">
+            {{-- ⚠️ Con VARIOS formularios pendientes el aviso lleva a la lista, y esa lista ya vive
+                 dentro del cajón: se atiende sin navegar. Con UNO solo lleva al post-form, que en la
+                 tanda 1 sigue siendo una página (`specs/area-cliente.md` §4.7) → `null`, deja navegar.
+                 El `href` se conserva SIEMPRE: si el motor aún no ha cargado, el enlace funciona. --}}
+            <a href="{{ $acct['pendingFormsCount'] === 1 ? $acct['pendingForms'][0]['url'] : route('account.orders') }}" class="acct__alert"
+               x-on:click="$store.purchase.followAccountLink($event, {{ $acct['pendingFormsCount'] === 1 ? 'null' : "'orders'" }})">
                 <span class="acct__alert-ico" aria-hidden="true">!</span>
                 <span class="acct__alert-text">
                     @if ($acct['pendingFormsCount'] === 1)
@@ -58,7 +63,14 @@
                 @csrf
                 <button type="submit" class="acct__btn acct__btn--primary"><x-icons.logout /> {{ __('account.nav.sign_out') }}</button>
             </form>
-            <a href="{{ route('account.orders') }}" class="acct__btn acct__btn--ghost acct__btn--reservas">
+            {{-- ⚠️ **«Mis reservas» ya no navega: abre el ÁREA DE CLIENTE dentro del cajón**
+                 (`specs/area-cliente.md` §4.6, 2026-08-22). El `href` se conserva a propósito y NO es
+                 decorativo: hasta que el chunk del motor termina de cargar, `spaHandle` es `null` y el
+                 enlace tiene que seguir llevando a algún sitio — un botón que «no falla, no hace nada»
+                 es la familia de fallos de `DECISIONES #117`. También es lo que hace que funcione con
+                 el clic central o «abrir en pestaña nueva». --}}
+            <a href="{{ route('account.orders') }}" class="acct__btn acct__btn--ghost acct__btn--reservas"
+               x-on:click="$store.purchase.followAccountLink($event, 'orders')">
                 {{ __('tickets.my_reservations') }}
                 @if ($acct['upcomingCount'] > 0)<span class="acct__count" aria-hidden="true">{{ $acct['upcomingCount'] }}</span><span class="sr-only">{{ __('account.sidecart.upcoming_count', ['count' => $acct['upcomingCount']]) }}</span>@endif
             </a>

@@ -1648,8 +1648,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             **1.608 B**, con sesión **2.309**.
             ⚠️ Y volvió a morder `TESTING.md` §2.ter —ahora **predicho** por la propia nota—: dos
             aserciones de página más, convertidas y **mutadas**.
-      - [ ] **Tanda 1 · pasos 4–5**: la puerta de entrada (`account-context`) y la captura de huecos.
-            El orden y su red, en `specs/area-cliente.md` §8.
+      - [x] **Tanda 1 · paso 4 — LA PUERTA** (✅ **HECHO** el 2026-08-22). «Mis reservas» del bloque de
+            cuenta abre la SECCIÓN en vez de navegar, cruzando Blade/Livewire → Alpine → Vue.
+            ⚠️ **El `href` se conserva y no es decorativo**: entre abrir el panel y que el `import()`
+            del motor acabe hay una ventana real con `spaHandle` a `null`. Verificado **cortando el
+            chunk del motor** en el navegador (`V7`): el enlace lleva a `/mi-cuenta/pedidos`. Sin él
+            sería un botón que «no falla, no hace nada» — `#117` otra vez.
+            ✅ `AccountDoorWiringTest` vigila los CUATRO eslabones y el HTML servido, mutado uno a uno.
+            ⚠️⚠️ Y destapó que **`SidebarAccountVisibilityTest` se había quedado corto en el paso 1**:
+            su título decía «EXACTAMENTE los del proceso de compra» mientras la regla del CSS ya
+            cubría `is-account`, que no lo es. Pasaba **por omisión**. Corregido y mutado.
+      - [ ] **Tanda 1 · paso 5**: la captura de huecos (`AccountPageCaptureTest`, temporal y con
+            caducidad declarada). Su red, en `specs/area-cliente.md` §6.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

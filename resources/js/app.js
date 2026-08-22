@@ -140,6 +140,29 @@ document.addEventListener('alpine:init', () => {
         // ⚠️ Montar al ABRIR y no al cargar también evita el riesgo que sí toca `PERF-02`: una raíz
         // Vue ávida pidiendo catálogo en cada carga de landing añadiría una petición por visita en
         // la ruta de más tráfico del sitio.
+        /**
+         * **Un enlace del bloque de cuenta que el CAJÓN puede atender sin navegar**
+         * (`docs/specs/area-cliente.md` §4.6).
+         *
+         * ⚠️⚠️ **Se conserva el `href` y solo se previene el default si el motor se hace cargo**, y
+         * las dos mitades importan. El motor del cajón llega con un `import()` dinámico en la primera
+         * apertura: entre que el panel se abre y el chunk termina de cargar hay una ventana real en la
+         * que `spaHandle` es `null`. Sin `href`, un clic en esa ventana **no haría nada** —la familia
+         * de fallos de `DECISIONES #117`, donde un camino «no fallaba, no hacía nada»—; con él, el
+         * cliente acaba en la página de siempre, que sigue existiendo.
+         *
+         * ⚠️ `zone` a `null` significa «este enlace no es del cajón»: el aviso de UN solo formulario
+         * pendiente lleva al post-form, que en la tanda 1 se abre como página (§4.7).
+         *
+         * @param {MouseEvent} event
+         * @param {string|null} zone  la zona del área a la que llevar, o `null` para dejar navegar
+         */
+        followAccountLink(event, zone) {
+            if (! zone || ! this.spaHandle) return;
+
+            event.preventDefault();
+            this.spaHandle.showAccount(zone);
+        },
         spaHandle: null,
         spaLoading: false,
         async bootSpaEngine() {

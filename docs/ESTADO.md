@@ -30,7 +30,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2672 en verde** (15.356 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+- Suite **2678 en verde** (15.372 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
   **442 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -122,6 +122,9 @@ el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de na
 · **1 · el nivel SECCIÓN** (`V4`): conmutar y volver **no dispara ni una petición**, el embudo conserva
   su paso, el bloque de cuenta se colapsa con el modo **`account`** —y **no es alcanzable con Tab**— y
   el árbol oculto **no atrapa el foco** (12 focusables visibles → 0 ocultos).
+· **4 · la PUERTA**: «Mis reservas» del bloque de cuenta **abre la sección** en vez de navegar, y
+  **conserva su `href`** — medido cortando el chunk del motor: sin él, el enlace lleva a la página
+  (`V7`, 2/2). La cadena cruza Blade/Livewire → Alpine → Vue y la vigila `AccountDoorWiringTest`.
 · **3b · los DATOS en el cliente**: `account/orders.js` + dos stores; el índice pinta la próxima
   reserva y «Mis reservas» su detalle, señal, post-form, reintento y paginación. Red:
   **`SidebarAccountParityTest` contra la respuesta REAL** de la API (no contra la página condenada) y
@@ -141,9 +144,9 @@ el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de na
 literalmente **«Mis reservas»** —la página de pedidos ya se llama así de cara al cliente— y
 `/me/reservations` alimenta el bloque de cuenta, no una pantalla. Una zona «próximas reservas» aparte
 habría sido inventar producto en una tanda cuyo criterio es la paridad (`specs/area-cliente.md` §4.2).
-⚠️ **El botón que lleva ahí NO está cableado todavía, y es a propósito**: la sección es hoy su armazón.
-Cablear la puerta antes de que haya habitación llevaría al cliente a una pantalla vacía si esto se
-despliega. Se cablea en el paso 5, con las zonas ya pintadas.
+✅ **La puerta ya está cableada** (paso 4): con sesión, «Mis reservas» abre el área dentro del cajón.
+⚠️ **Sin sesión NO cambia nada**: el botón sigue abriendo el modal de la cabecera. Traer la auth a la
+sección de cuenta es tanda 2, y hacerlo aquí habría metido ese trabajo entero por la puerta de atrás.
 
 ⚠️ **Y lo primero que la spec midió corrige lo que esta foto venía repitiendo.** «El servidor ya está,
 hay que pintar» **solo vale para LEER**: las cinco gestiones de cuenta —perfil, contraseña, otras

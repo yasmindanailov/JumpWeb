@@ -51,11 +51,20 @@ class SidebarAccountVisibilityTest extends TestCase
     }
 
     /**
-     * Los modos que ocultan son EXACTAMENTE los del proceso de compra. El mapa paso→modo vive en
-     * `machine.js::modeOf()` y está bajo paridad con el servidor (`SidebarProgressParityTest`):
-     * aquí se comprueba que el CSS reacciona a los modos correctos, no se redefine el mapa.
+     * Los modos que ocultan son EXACTAMENTE tres, y **cada uno por un motivo distinto**.
+     *
+     * ⚠️⚠️ **Este caso se quedó corto el 2026-08-22 y hay que decirlo**: el paso 1 del área de cliente
+     * añadió `is-account` a la regla del CSS y **este test pasó por omisión** —solo aseveraba sobre
+     * cuatro modos, y el nuevo no era ninguno—. No estaba roto: es que su título decía «exactamente
+     * los del proceso de compra» mientras la regla ya cubría uno que no lo es. Una comprobación que
+     * mide una cosa y se lee como otra es peor que no tenerla (`DECISIONES #115`), así que ahora
+     * enumera **los tres** y sigue prohibiendo los dos que deben verse.
+     *
+     * El mapa paso→modo vive en `machine.js::modeOf()` y está bajo paridad con el servidor
+     * (`SidebarProgressParityTest`); el modo `account` lo publica `section.js`. Aquí se comprueba que
+     * el CSS reacciona a los modos correctos, no se redefine ningún mapa.
      */
-    public function test_the_account_block_is_hidden_exactly_during_the_purchase_flow(): void
+    public function test_the_account_block_is_hidden_exactly_in_the_three_modes_that_need_it(): void
     {
         $rule = $this->hideRule();
 
@@ -64,6 +73,14 @@ class SidebarAccountVisibilityTest extends TestCase
         $this->assertStringContainsString('.sidecart__panel.is-cart .acct', $rule,
             'Falta el modo `cart`. Es el que cubre carrito, identificación y pago — o sea la mitad '.
             'del embudo donde el bloque más estorba, y donde antes reaparecía entero.');
+
+        // Y el ÁREA DE CLIENTE, por un motivo distinto del de la compra: ahí el bloque no estorba,
+        // **sobra** — sus dos botones llevan exactamente a donde el cliente ya está.
+        $this->assertStringContainsString('.sidecart__panel.is-account .acct', $rule,
+            'Falta el modo `account`. Dentro del área de cliente el bloque es redundante: su botón '.
+            '«Mis reservas» lleva a la zona que se está mirando. Y sin esta regla, además, la próxima '.
+            'reserva se pintaría DOS veces —el bloque y el índice—, que es justo lo que el índice '.
+            'existe para evitar (`specs/area-cliente.md` §4.2).');
 
         $this->assertStringNotContainsString('.sidecart__panel.is-catalog .acct', $rule,
             'En el CATÁLOGO el bloque debe verse: el cliente aún no ha entrado en el proceso y ahí '.

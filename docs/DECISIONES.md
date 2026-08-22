@@ -5096,3 +5096,26 @@ sept» y la zona de reservas «Sáb. 5 sep.», en el mismo cajón).
 **con el cliente real por defecto**, que resuelve las dos mitades: `node --test` puede doblarla y el
 componente no necesita conocer la API. Un componente que importa `api` para pasársela a un store ya
 está orquestando peticiones, que es lo que `SidebarComponentBudgetTest` existe para impedir.
+
+**(l) El paso 4 —la puerta— y el test que se había quedado corto.** «Mis reservas» del bloque de
+cuenta abre ahora la sección dentro del cajón, cruzando tres piezas y **dos tecnologías**:
+Blade/Livewire → `$store.purchase.followAccountLink()` (Alpine) → `spaHandle.showAccount()` (Vue).
+Es la forma de cadena que `#117` dejó rota durante meses, así que se vigila **eslabón a eslabón**
+(`AccountDoorWiringTest`, cuatro mutaciones) y se verifica en navegador.
+
+⚠️ **El `href` del enlace se conserva, y eso se MIDIÓ en vez de suponerlo.** Entre que el panel se abre
+y el `import()` del motor termina hay una ventana real con `spaHandle` a `null`; en ella, un botón sin
+`href` **no falla y no hace nada**. Cortando el chunk del motor en el navegador
+(`route("**/assets/sidebar-*.js", abort)`), el clic navega a `/mi-cuenta/pedidos`, que es lo correcto.
+Ese `href` parece decorativo al lado de un `x-on:click`, y quitarlo no rompería ningún test de
+conducta: por eso tiene caso propio.
+
+⚠️⚠️ **Y destapó un test propio que se había quedado corto: `SidebarAccountVisibilityTest`.** Su
+título decía «los modos que ocultan son EXACTAMENTE los del proceso de compra», pero el paso 1 había
+añadido `is-account` a la regla del CSS y **el test pasó por omisión** —solo aseveraba sobre cuatro
+modos y el nuevo no era ninguno—. No estaba roto: **decía algo que ya no era verdad**, que es peor
+(`#115`). Ahora enumera los tres, cada uno con su motivo: en la compra el bloque **estorba**; en el
+área de cliente **sobra** —sus botones llevan a donde el cliente ya está— y además duplicaría la
+próxima reserva que el índice pinta.
+▶ **La lección**: al añadir un caso a una regla existente hay que releer **qué afirma su guarda**, no
+solo si sigue verde. Un test puede quedarse obsoleto sin ponerse rojo.

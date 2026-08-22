@@ -517,6 +517,27 @@ y su estado» — que no dice qué es ese 1. Hoy usa la misma clave que el bloqu
 tiene forma plural, así que dice «1 reservas próximas»: es **preexistente** y se reproduce a propósito
 (paridad). Ficha en `DEUDA.md`.
 
+### V7 · LA PUERTA del área de cliente (tanda 1 · paso 4)
+El botón «Mis reservas» del bloque de cuenta deja de navegar y abre la sección dentro del cajón. La
+cadena cruza tres piezas y **dos tecnologías** —Blade/Livewire → Alpine → el motor Vue—, que es
+justo la forma de fallo de `DECISIONES #117`: extremos probados y el medio sin cablear.
+
+| Qué | Qué DEBE pasar |
+|---|---|
+| Con sesión, pulsar «Mis reservas» | abre el área en la zona **sin cambiar la URL**, con la lista pintada y el bloque `.acct` colapsado |
+| **Con el motor CAÍDO** | el enlace **navega** a `/mi-cuenta/pedidos`, como siempre |
+
+✅ **MEDIDO el 2026-08-22 · 2/2:**
+· la URL se queda en `/entradas`, la sección pasa a `account`, la zona a `orders`, se pinta 1 tarjeta
+  y el bloque de cuenta queda a **altura 0**;
+· y **cortando el chunk del motor** con `route("**/assets/sidebar-*.js", abort)` —que reproduce la
+  ventana real entre abrir el panel y que el `import()` acabe—, el clic **navega a la página**.
+
+⚠️ **Esa segunda mitad es la que de verdad valía la pena medir.** El `href` del enlace parece
+decorativo cuando hay un `x-on:click` al lado, y quitarlo no rompe ningún test de conducta: solo deja
+un botón que, mientras el chunk carga, **no falla y no hace nada**. Bloquear el chunk lo demuestra en
+vez de suponerlo.
+
 ### V3 · Lo que se aprovecha estando dentro (opcional, pero barato)
 Ya que hay una sesión abierta y el motor es otro:
 - **Que el cajón entero siga vendiendo** con el motor único: catálogo → pagar → volver. `#110` lo
