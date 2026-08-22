@@ -52,6 +52,12 @@ class ApiContractTest extends TestCase
         // enviarlo. Lo que sigue mordiendo aquí es `additionalProperties: false`, que es lo que
         // impide colar un campo que el servidor ignoraría en silencio.
         'LoginRequest' => ['remember'],
+        // Cuerpo de PETICIÓN, y aquí la opcionalidad es CONDICIONAL: `current_password` solo hace
+        // falta si `email` cambia (tanda 2 · paso 7). Exigirla siempre obligaría a reconfirmar la
+        // contraseña para corregir una errata en el teléfono —que no defiende nada y hace que el
+        // titular acabe evitando la pantalla—, y OpenAPI 3.0 no sabe expresar «obligatorio si otro
+        // campo cambia»: quien lo decide es el servidor, que la exige cuando toca.
+        'ProfileUpdateRequest' => ['current_password'],
         // Mismo caso: cuerpo de PETICIÓN. `marketing` es un consentimiento opcional por definición
         // (exigirlo sería pedir una respuesta a algo que puede no contestarse), `context` tiene
         // valor por defecto, y los dos anti-bot solo los envía quien los tiene: el señuelo

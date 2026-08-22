@@ -74,6 +74,10 @@ class MeTest extends ApiTestCase
             'email_verified_at',
             'pending_email',
             'pending_email_sent_at',
+            // ⚠️ **Derivado, no una columna**: lo compone `AccountProfile::pendingEmailExpiresAt()`
+            // para que el cliente no tenga que quemar la ventana de validez en su código (tanda 2 ·
+            // paso 7). No añade PII — es un instante calculado sobre un campo que ya salía.
+            'pending_email_expires_at',
             'created_at',
         ], array_keys($response->json()));
     }

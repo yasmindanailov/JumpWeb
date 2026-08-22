@@ -5229,3 +5229,46 @@ verdad**, así que la pasada siguiente no podía ni iniciar sesión — y como l
 viajan con sesión**, todo salía vacío y parecía que el paso estuviera roto. Se restaura desde el
 servidor antes de cada pasada, no desde el propio script: si algo falla antes, la restauración no
 llega. Escrito en `VERIFICACION-E2E-CAJON.md` **V8**.
+
+**(q) Tanda 2 · paso 7a — el perfil baja al dominio, y tres guardas de arquitectura mordieron.**
+`Identity\Services\AccountProfile` reúne la gestión más grande de la tanda: las reglas —con la
+**doble** comprobación de unicidad, que mira también el `pending_email` de OTROS—, el ciclo de
+`pending_email` entero, las **dos** notificaciones y el manejo de la carrera de UNIQUE. Nacen
+`PATCH /me`, `DELETE /me/pending-email` y `POST /me/pending-email/resend`.
+
+⚠️ **La defensa de fondo, dicha entera**: el correo **no se cambia al guardar, se SOLICITA**. El
+vigente sigue valiendo hasta que el titular abra el enlace del buzón nuevo. Si alguien entra en una
+sesión ajena y pide el cambio, **el dueño no pierde el acceso** — y recibe un aviso al buzón viejo con
+la dirección nueva **enmascarada**. Tiene tres casos con mutación.
+
+⚠️ **Y algo que la reconfirmación protege y no era obvio**: al fallar la contraseña **tampoco se
+guardan los campos «inocentes»**. Si se aplicaran igual, bastaría adjuntar un cambio de correo fallido
+para editar el perfil ajeno sin saber la contraseña. Tiene caso y mutación.
+
+⚠️⚠️ **Tres guardas de arquitectura mordieron, y las tres tenían razón:**
+· **`ApiBoundariesTest`** vio `->update()` en un controlador de API y no puede distinguir un servicio
+  de un modelo de Eloquent. ▶ Se **renombró el método a `apply()`** en vez de declararle una
+  excepción: un método de servicio llamado `update` provoca esa confusión cada vez, y renombrarlo
+  cuesta una palabra y no debilita la guarda;
+· **`ModuleBoundariesTest`** vio un servicio de dominio importando `Http\Middleware\SetLocale`. ▶ La
+  lista de idiomas del sitio **no es una regla de HTTP**: baja a `Platform\Services\SiteLocales` y el
+  middleware la usa como alias. Si el dominio depende de la capa HTTP, deja de poder usarse fuera;
+· **`MeTest`** vigila que `/me` publique una lista CERRADA de campos (`SEC-10`), y el campo nuevo
+  —`pending_email_expires_at`— hubo que declararlo con su motivo.
+
+⚠️ **La caducidad se publica en vez de dejar que el cliente la calcule**, y de paso la ventana bajó al
+dominio: vivía en `EmailChangeController::HOLD_MINUTES` y la usan **tres** superficies. Mismo criterio
+que las etiquetas de fecha (`#120(j)`).
+
+⚠️⚠️ **Y dos veces esta sesión, escribir de memoria habría cambiado producción:**
+· `maskEmail()` se reescribió «igual» y salía distinta —dejaba visible también la última letra—, lo que
+  habría cambiado el texto de un correo que ya se envía, **sin que ningún test lo dijera**: la
+  notificación recibe la cadena ya enmascarada y no comprueba su forma. Se copió mirándola, y se
+  comprobó que las dos coinciden en cuatro casos incluidos los frontera;
+· y al mover el método, `maskEmail` **desapareció del componente** —se la llevó un reemplazo por
+  rango— con `EmailChangeController` usándola: **lo cazó la suite**, no la revisión.
+
+⚠️ Y una mutación que **no mordió a la primera**: quitar `Rule::unique('pending_email')` dejaba el test
+verde, porque la UNIQUE de la base captura el choque igual y el servicio lo traduce al **mismo 422**.
+Los dos caminos acaban en la misma respuesta, así que mirar la respuesta no dice cuál actuó. ▶ La regla
+se prueba ahora **donde vive**, validando directamente.

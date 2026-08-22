@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountProfile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -49,6 +50,10 @@ class UserResource extends JsonResource
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'pending_email' => $this->pending_email,
             'pending_email_sent_at' => $this->pending_email_sent_at?->toIso8601String(),
+            // ⚠️ **La caducidad se publica en vez de dejar que el cliente la calcule**: hacerlo
+            // exigiría quemar la ventana de 60 minutos en cada superficie, y el día que cambie una
+            // se quedaría atrás sin que nada avise. Mismo criterio que las etiquetas de fecha.
+            'pending_email_expires_at' => AccountProfile::pendingEmailExpiresAt($this->resource)?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

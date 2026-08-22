@@ -2,17 +2,12 @@
 
 namespace App\Livewire\Account;
 
+use App\Domain\Identity\Contracts\ProfileUpdateResult;
+use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
-use App\Http\Controllers\Account\EmailChangeController;
-use App\Http\Middleware\SetLocale;
-use App\Notifications\EmailChangeRequested;
-use App\Notifications\VerifyPendingEmail;
-use Illuminate\Database\QueryException;
+use App\Domain\Identity\Services\AccountProfile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -52,155 +47,90 @@ class UpdateProfile extends Component
         $this->locale = $user->locale ?: app()->getLocale();
     }
 
-    public function save()
+    public function save(AccountProfile $profile)
     {
         /** @var User $user */
         $user = Auth::user();
+
         $this->email = Str::lower(trim($this->email));
         $emailChanged = $this->email !== $user->email;
 
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30'],
-            'locale' => ['required', Rule::in(SetLocale::SUPPORTED)],
-            // `unique` mira tanto `email` (ya en uso) como `pending_email` de OTROS usuarios
-            // (alguien lo está reclamando). El ignore() permite re-pedir el propio pending.
-            'email' => [
-                'required', 'string', 'email:rfc', 'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-                Rule::unique('users', 'pending_email')->ignore($user->id),
-            ],
-        ];
+        $rules = AccountProfile::rules($user);
+
+        // ⚠️ **La reconfirmación solo se pide si cambia el correo**, y solo se valida su PRESENCIA:
+        // comprobarla es del servicio, que además cuenta el intento para el limitador. Dejar aquí la
+        // regla `current_password` la comprobaría dos veces y dejaría al limitador sin ver los fallos.
         if ($emailChanged) {
-            // Reconfirmar contraseña antes de pedir el cambio (acción sensible).
-            $rules['current_password'] = ['required', 'current_password'];
+            $rules['current_password'] = ['required', 'string'];
         }
+
         $this->validate($rules);
 
-        // Actualización de campos NO sensibles (siempre se aplican).
-        $user->name = $this->name;
-        $user->phone = $this->phone;
-        $user->locale = $this->locale;
+        // Todo lo demás —el patrón `pending_email`, las dos notificaciones, la carrera de UNIQUE y el
+        // rastro en el log— vive en `Identity\Services\AccountProfile` desde la tanda 2, y la API lo
+        // consume sin reescribirlo. Aquí queda lo que es de ESTA interfaz.
+        $result = $profile->apply($user, [
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'locale' => $this->locale,
+            'email' => $this->email,
+        ], $this->current_password, (string) request()->ip());
 
-        // Aplica el idioma elegido a la sesión en curso (independiente del cambio de email).
+        if ($result->failed()) {
+            throw ValidationException::withMessages(match (true) {
+                $result->wasRateLimited() => ['_global' => __('auth.throttle', ['seconds' => $result->retryAfter])],
+                $result->reason === ProfileUpdateResult::EMAIL_TAKEN => [
+                    'email' => __('validation.unique', ['attribute' => __('account.account.profile.email')]),
+                ],
+                default => ['current_password' => __('account.account.wrong_password')],
+            });
+        }
+
+        // El idioma elegido se aplica a la sesión EN CURSO. Es efecto de la sesión web y no del
+        // dominio: un cliente de API no tiene sesión que reetiquetar.
         session(['locale' => $this->locale]);
 
-        if ($emailChanged) {
-            // Patrón pending_email: NO sobrescribimos el email actual. Guardamos el solicitado
-            // y mandamos el enlace de confirmación al NUEVO buzón + aviso al viejo. La UNIQUE
-            // de pending_email puede chocar si otro pidió el mismo email en paralelo (race
-            // contra el Rule::unique anterior) → la BD bloquea, mostramos error específico.
-            $user->pending_email = $this->email;
-            $user->pending_email_sent_at = now();
-
-            try {
-                $user->save();
-            } catch (QueryException $e) {
-                if ($this->isUniqueConstraintViolation($e)) {
-                    throw ValidationException::withMessages([
-                        'email' => __('validation.unique', ['attribute' => __('account.account.profile.email')]),
-                    ]);
-                }
-                throw $e;
-            }
-
-            $user->notify(new VerifyPendingEmail);
-            // Aviso al EMAIL VIEJO. `notify` usa `email` (el actual, intacto) por defecto.
-            // Enmascaramos el nuevo para no exponer un email completo en un correo cruzado.
-            $user->notify(new EmailChangeRequested(self::maskEmail($this->email)));
-            Log::info('account.email_change_requested', ['user_id' => $user->id]);
-
-            return redirect()->route('account')->with('status', 'email-change-requested');
-        }
-
-        try {
-            $user->save();
-        } catch (QueryException $e) {
-            if ($this->isUniqueConstraintViolation($e)) {
-                throw ValidationException::withMessages([
-                    'email' => __('validation.unique', ['attribute' => __('account.account.profile.email')]),
-                ]);
-            }
-            throw $e;
-        }
-
-        Log::info('account.profile_updated', ['user_id' => $user->id]);
-
-        return redirect()->route('account')->with('status', 'profile-updated');
+        return redirect()->route('account')
+            ->with('status', $result->emailChangeRequested ? 'email-change-requested' : 'profile-updated');
     }
 
-    /** ¿La excepción de BD es por violación de UNIQUE? (MySQL 1062, SQLite UNIQUE constraint failed) */
-    private function isUniqueConstraintViolation(QueryException $e): bool
-    {
-        return ($e->errorInfo[1] ?? null) === 1062
-            || str_contains((string) $e->getMessage(), 'UNIQUE constraint failed');
-    }
-
-    /** Enmascara un email para mostrarlo en notificaciones (`ana@example.com` → `a***@example.com`). */
-    public static function maskEmail(string $email): string
-    {
-        $parts = explode('@', $email, 2);
-        if (count($parts) !== 2 || $parts[0] === '') {
-            return $email;
-        }
-
-        return $parts[0][0].str_repeat('*', max(1, mb_strlen($parts[0]) - 1)).'@'.$parts[1];
-    }
-
-    public function cancelEmailChange()
+    public function cancelEmailChange(AccountProfile $profile)
     {
         /** @var User $user */
-        $user = Auth::user();
-        if ($user->pending_email) {
-            $user->forceFill(['pending_email' => null, 'pending_email_sent_at' => null])->save();
-            Log::info('account.email_change_cancelled', ['user_id' => $user->id]);
-        }
+        $profile->cancelEmailChange(Auth::user());
 
         return redirect()->route('account')->with('status', 'email-change-cancelled');
     }
 
-    /**
-     * Reenvía el enlace de confirmación al `pending_email`, sin sobrescribir el envío inicial:
-     * solo reenvía la notificación. Cooldown server-side por usuario (1/min) para evitar abuso
-     * del buzón ajeno. Refresca `pending_email_sent_at` para extender la ventana de caducidad
-     * desde este momento (UX consistente con "el enlace que reenvío caduca en 60 min").
-     */
-    public function resendPendingEmail(): void
+    public function resendPendingEmail(AccountProfile $profile): void
     {
         /** @var User $user */
-        $user = Auth::user();
+        $result = $profile->resendPendingEmail(Auth::user());
 
-        if (! $user->pending_email) {
+        if ($result->sent) {
+            session()->flash('status', 'email-change-resent');
+
             return;
         }
 
-        $key = 'pending-email-resend:'.$user->id;
-        if (RateLimiter::tooManyAttempts($key, 1)) {
+        // ⚠️ «No había nada pendiente» **no se anuncia**: quien pulsa dos veces no ha hecho nada malo,
+        // y una alarma por eso sería ruido. Solo el cooldown tiene algo que decir.
+        if ($result->reason === ResendResult::THROTTLED) {
             $this->addError('current_password', __('account.account.profile.email_resend_throttle', [
-                'seconds' => RateLimiter::availableIn($key),
+                'seconds' => $result->retryAfter,
             ]));
-
-            return;
         }
-        RateLimiter::hit($key, 60);
-
-        $user->forceFill(['pending_email_sent_at' => now()])->save();
-        $user->notify(new VerifyPendingEmail);
-        Log::info('account.email_change_resent', ['user_id' => $user->id]);
-
-        session()->flash('status', 'email-change-resent');
     }
 
-    /** Minutos restantes hasta que caduque el enlace del pending. 0 si ya caducó o no hay. */
     public function pendingEmailMinutesLeft(): int
     {
         /** @var User $user */
         $user = Auth::user();
-        if (! $user->pending_email || ! $user->pending_email_sent_at) {
+        $expiresAt = AccountProfile::pendingEmailExpiresAt($user);
+
+        if ($expiresAt === null) {
             return 0;
         }
-
-        $expiresAt = $user->pending_email_sent_at->copy()->addMinutes(EmailChangeController::HOLD_MINUTES);
         $minutes = now()->diffInMinutes($expiresAt, false);
 
         return max(0, (int) $minutes);

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountProfile;
 use App\Http\Controllers\Controller;
-use App\Livewire\Account\UpdateProfile;
 use App\Notifications\EmailChangeCompleted;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +24,12 @@ use Illuminate\Support\Facades\Log;
 class EmailChangeController extends Controller
 {
     /** Cuántos minutos vive una solicitud de cambio de email (ventana de seguridad). */
-    public const HOLD_MINUTES = 60;
+    /**
+     * ⚠️ **La ventana vive en `Identity\Services\AccountProfile` desde la tanda 2** —es dominio, y
+     * la usan tres superficies—. Esta constante se conserva como ALIAS para no romper a quien la
+     * nombre, pero su valor sale de allí: dos números que hay que mantener a la vez es como divergen.
+     */
+    public const HOLD_MINUTES = AccountProfile::PENDING_EMAIL_HOLD_MINUTES;
 
     public function confirm(Request $request, int $id, string $hash): RedirectResponse
     {
@@ -71,7 +76,7 @@ class EmailChangeController extends Controller
         // fue tomada antes de que el atacante haga más daño. `previous_email` se inyecta como
         // atributo temporal para que la notificación rute al buzón correcto sin tocar `email`.
         $user->previous_email = $previousEmail;
-        $user->notify(new EmailChangeCompleted(UpdateProfile::maskEmail($newEmail)));
+        $user->notify(new EmailChangeCompleted(AccountProfile::maskEmail($newEmail)));
 
         Log::info('account.email_change_confirmed', ['user_id' => $user->id]);
 

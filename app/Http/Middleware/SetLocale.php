@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Platform\Services\SiteLocales;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,13 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetLocale
 {
-    public const SUPPORTED = ['es', 'en', 'fr'];
+    /**
+     * ⚠️ **La lista vive en `Platform\Services\SiteLocales` desde la tanda 2**: qué idiomas habla el
+     * sitio es configuración de la instalación, no una regla de HTTP, y la necesita también el
+     * dominio —la validación del perfil—. Esta constante se conserva como ALIAS para no romper a
+     * quien la nombre, pero su valor sale de allí.
+     */
+    public const SUPPORTED = SiteLocales::SUPPORTED;
 
     public function handle(Request $request, Closure $next): Response
     {

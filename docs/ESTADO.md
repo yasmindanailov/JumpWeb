@@ -30,7 +30,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2700 en verde** (15.470 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+- Suite **2711 en verde** (15.526 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
   **459 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -128,8 +128,13 @@ consumiéndolo, `PUT /me/password` + `POST /me/sessions/revoke-others` con su co
 pantallas en el cajón** (navegador `V8`, 5/5 + 3/3).
 ⚠️ **La web heredó el limitador sin tocar la web**: dos de los cuatro sitios que reconfirman
 contraseña quedaron cubiertos de golpe (`#120(o)`); los otros dos llegan solos con los pasos 7 y 8.
-▶ **Lo siguiente es el paso 7: EL PERFIL** —el más grande de la tanda, con el ciclo de `pending_email`
-entero: pedir, confirmar, cancelar y reenviar con su cooldown, más sus dos notificaciones—.
+✅ **Paso 7a HECHO**: `AccountProfile` en el dominio —reglas, ciclo de `pending_email`, dos avisos y
+la carrera de UNIQUE—, con `PATCH /me`, `DELETE /me/pending-email` y `POST /me/pending-email/resend`.
+⚠️ **Tres guardas de arquitectura mordieron y las tres tenían razón** (`#120(q)`): el método del
+servicio se llamaba `update` y confundía a `ApiBoundariesTest`; el servicio importaba un middleware
+—la lista de idiomas bajó a `Platform\Services\SiteLocales`—; y `/me` publica una lista CERRADA de
+campos que hubo que ampliar con su motivo.
+▶ **Lo siguiente es 7b**: la pantalla del perfil en el cajón (zona `PROFILE`).
 
 ✅ **El diseño de la tanda 2 está escrito** (`specs/area-cliente.md` **§9**), con su corte en tres
 pasos —contraseña + otras sesiones · el perfil · los dos derechos RGPD— y una decisión de seguridad

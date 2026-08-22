@@ -1681,8 +1681,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             copias, `#120(n)`) y el **campo de contraseña con su toggle** (dos, y este paso iba a
             hacer cuatro) — extraído sin cambiar **ni un nodo** del árbol, verificado por las
             paridades (`#120(p)`).
-      - [ ] **Tanda 2 · pasos 7 y 8**: el perfil (con el ciclo de `pending_email`) y los dos derechos
-            RGPD (borrado y export). Su corte y su red, en `specs/area-cliente.md` §9.5.
+      - [x] **Tanda 2 · paso 7a — EL PERFIL, en el servidor** (✅ **HECHO** el 2026-08-22).
+            `AccountProfile` reúne la gestión más grande: reglas con **doble** unicidad —también el
+            `pending_email` de otros—, el ciclo entero de `pending_email`, las **dos** notificaciones
+            y la carrera de UNIQUE. Nacen `PATCH /me`, `DELETE /me/pending-email` y
+            `POST /me/pending-email/resend`. **11 casos, 6 mutaciones.**
+            ⚠️ **Tres guardas de arquitectura mordieron** (`#120(q)`): `ApiBoundariesTest` (el método
+            se llamaba `update` → `apply()`), `ModuleBoundariesTest` (el servicio importaba un
+            middleware → la lista de idiomas baja a `Platform\Services\SiteLocales`) y `MeTest` (la
+            lista CERRADA de campos de `/me`).
+            ⚠️ Y dos veces habría cambiado producción escribir de memoria: `maskEmail()` reescrita
+            salía distinta, y al moverla **desapareció del componente** con un controlador usándola —
+            lo cazó la suite.
+      - [ ] **Tanda 2 · pasos 7b y 8**: la pantalla del perfil y los dos derechos RGPD (borrado y
+            export). Su corte y su red, en `specs/area-cliente.md` §9.5.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

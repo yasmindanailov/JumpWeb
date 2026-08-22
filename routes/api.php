@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
+use App\Http\Controllers\Api\V1\MeProfileController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\OrderEventDataController;
@@ -195,6 +196,13 @@ Route::name('api.v1.')->group(function (): void {
         // `AccountCredentials` por (titular, IP) y cuenta **solo los fallos**, no las llamadas. Un
         // `throttle` de ruta contaría también los aciertos y castigaría a quien se equivoca una vez y
         // acierta a la segunda. El `throttle:api` del grupo sigue siendo el suelo de todo.
+        // ── El PERFIL y el ciclo del cambio de correo (tanda 2 · paso 7) ───────────────────────
+        Route::patch('/me', [MeProfileController::class, 'update'])->name('me.update');
+        Route::delete('/me/pending-email', [MeProfileController::class, 'cancelEmailChange'])
+            ->name('me.pending-email.cancel');
+        Route::post('/me/pending-email/resend', [MeProfileController::class, 'resendPendingEmail'])
+            ->name('me.pending-email.resend');
+
         Route::put('/me/password', [MeCredentialsController::class, 'updatePassword'])->name('me.password.update');
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');

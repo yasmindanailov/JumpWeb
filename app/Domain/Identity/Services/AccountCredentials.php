@@ -79,12 +79,17 @@ class AccountCredentials
     }
 
     /**
-     * El guardián común: limitador → contraseña → acción.
+     * **Reconfirma la contraseña del titular, contando el intento.** Devuelve el veredicto.
+     *
+     * ⚠️ **Es público porque lo necesitan MÁS gestiones que las dos de esta clase**: el cambio de
+     * email del perfil y el borrado de cuenta piden lo mismo, y cada uno con su propio `Hash::check`
+     * sería el limitador copiado tres veces —y la copia que se olvide es la que queda sin techo—.
+     * Quien llama ejecuta su acción **solo si esto dice que sí**.
      *
      * ⚠️ **El contador se limpia al acertar**, como el limitador por (email, IP) del login: el dueño
      * legítimo que se equivocó dos veces no debe arrastrar esos fallos el resto del minuto.
      */
-    private function reauthenticated(User $user, string $currentPassword, string $ip, callable $action): CredentialChangeResult
+    public function verify(User $user, string $currentPassword, string $ip): CredentialChangeResult
     {
         $key = $this->key($user, $ip);
 
@@ -99,6 +104,18 @@ class AccountCredentials
         }
 
         RateLimiter::clear($key);
+
+        return CredentialChangeResult::success();
+    }
+
+    /** El guardián común de esta clase: reconfirmar y, si pasa, actuar. */
+    private function reauthenticated(User $user, string $currentPassword, string $ip, callable $action): CredentialChangeResult
+    {
+        $verdict = $this->verify($user, $currentPassword, $ip);
+
+        if ($verdict->failed()) {
+            return $verdict;
+        }
 
         $action();
 

@@ -1138,6 +1138,51 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+    patch:
+      tags: [Cuenta]
+      operationId: updateMyProfile
+      summary: Actualizar mi perfil
+      description: |
+        Nombre, teléfono, idioma y —si cambia— **solicitud** de cambio de correo.
+
+        ⚠️⚠️ **El correo NO se cambia aquí: se SOLICITA.** El vigente sigue intacto y el nuevo espera
+        en `pending_email` hasta que el titular abra el enlace que se le manda **al buzón nuevo**. Esa
+        es la defensa de fondo: si alguien entra en una sesión ajena y pide el cambio, el dueño **no
+        pierde el acceso** — y además recibe un aviso al buzón viejo, con la dirección nueva
+        enmascarada.
+
+        ⚠️ **Reconfirmar la contraseña solo hace falta si el correo cambia.** Pedirla para corregir
+        una errata en el teléfono no defiende nada y hace que el titular evite la pantalla. Cuando se
+        pide, cuenta para el **mismo limitador** que `PUT /me/password`.
+
+        La respuesta trae el perfil ya actualizado: su `email` sigue siendo **el viejo** —que es lo
+        que el cliente necesita ver para no creer que el cambio ya está hecho— y `pending_email` dice
+        qué se ha pedido.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Perfil actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservation-eligibility:
     get:
       tags: [Compra]
@@ -1173,6 +1218,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReservationEligibility'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/pending-email:
+    delete:
+      tags: [Cuenta]
+      operationId: cancelMyEmailChange
+      summary: Cancelar el cambio de correo pedido
+      description: |
+        Descarta la solicitud: el correo vigente no se toca en ningún momento.
+
+        ⚠️ **Es idempotente**: cancelar algo que ya no está pendiente responde igual. Quien pulsa dos
+        veces no ha hecho nada malo, y un `404` obligaría a cada cliente a distinguir dos situaciones
+        que para él son la misma.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Ya no hay ningún cambio pendiente.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/pending-email/resend:
+    post:
+      tags: [Cuenta]
+      operationId: resendMyEmailChange
+      summary: Reenviar la confirmación del cambio de correo
+      description: |
+        Vuelve a mandar el enlace al buzón nuevo y **resella la ventana de validez**: cuenta desde el
+        último envío, no desde el primero — si no, el enlace reenviado caducaría antes de llegar.
+
+        ⚠️ **Un reenvío por minuto.** Este limitador es aparte del de la contraseña: aquí no se está
+        adivinando nada, se está mandando correo, y lo que se protege es el buzón del destinatario.
+
+        ⚠️ Si no hay nada pendiente responde `204`, por lo mismo que la cancelación.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Reenviado (o no había nada pendiente).
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '429':
@@ -1615,6 +1708,7 @@ components:
         - email_verified_at
         - pending_email
         - pending_email_sent_at
+        - pending_email_expires_at
         - created_at
       additionalProperties: false
       properties:
@@ -1649,6 +1743,16 @@ components:
           type: string
           format: date-time
           nullable: true
+        pending_email_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Cuándo deja de valer el enlace de confirmación. `null` si no hay cambio pendiente.
+
+            ⚠️ **Se publica en vez de dejar que el cliente lo calcule**: hacerlo exigiría quemar la
+            ventana en cada superficie, y el día que cambie una se quedaría atrás sin que nada avise.
+            Su fuente única es `Identity\Services\AccountProfile::PENDING_EMAIL_HOLD_MINUTES`.
         created_at:
           type: string
           format: date-time
@@ -1671,6 +1775,34 @@ components:
           type: integer
         per_page:
           type: integer
+
+    ProfileUpdateRequest:
+      type: object
+      description: |
+        Los cuatro campos del perfil. `current_password` **solo hace falta si `email` cambia**.
+      required: [name, phone, locale, email]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 30
+        locale:
+          type: string
+          description: Uno de los idiomas que la instalación sirve.
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: |
+            El correo deseado. Si difiere del actual, **se solicita el cambio** y este valor NO pasa a
+            ser el email del titular hasta que confirme desde el buzón nuevo.
+        current_password:
+          type: string
+          format: password
+          description: Obligatoria **solo** cuando `email` cambia.
 
     PasswordConfirmation:
       type: object
