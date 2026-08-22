@@ -3,8 +3,9 @@
 namespace App\Livewire\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountCredentials;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 /**
@@ -17,35 +18,31 @@ class LogoutOtherDevices extends Component
 {
     public string $current_password = '';
 
-    public function confirm()
+    public function confirm(AccountCredentials $credentials)
     {
-        $this->validate([
-            'current_password' => ['required', 'current_password'],
-        ]);
+        // ⚠️ `current_password` sin la regla del framework: comprobar la contraseña es del servicio,
+        // que además **cuenta el intento** para el limitador (`specs/area-cliente.md` §9.4).
+        $this->validate(['current_password' => ['required', 'string']]);
 
         /** @var User $user */
         $user = Auth::user();
 
-        Auth::logoutOtherDevices($this->current_password);
+        $result = $credentials->revokeOtherSessions($user, $this->current_password, (string) request()->ip());
 
-        // Punto único de invalidación (Fase 3 · paso 3a): borra las demás filas de `sessions` y
-        // revoca los tokens de API. «Cerrar sesión en los demás dispositivos» tiene que alcanzar
-        // también a la app: para el titular, su móvil es otro dispositivo.
-        $user->revokeOtherAccess();
+        if ($result->failed()) {
+            throw ValidationException::withMessages($result->wasRateLimited()
+                ? ['_global' => __('auth.throttle', ['seconds' => $result->retryAfter])]
+                : ['current_password' => __('account.account.wrong_password')]);
+        }
 
         $this->reset('current_password');
-        Log::info('account.logout_other_devices', ['user_id' => $user->id]);
 
         return redirect()->route('account')->with('status', 'logged-out-others');
     }
 
-    /**
-     * @return array<string, string>
-     */
     protected function messages(): array
     {
         return [
-            'current_password.current_password' => __('account.account.wrong_password'),
         ];
     }
 

@@ -1180,6 +1180,76 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/password:
+    put:
+      tags: [Cuenta]
+      operationId: updateMyPassword
+      summary: Cambiar mi contraseña
+      description: |
+        Exige **reconfirmar la contraseña actual** y, al conseguirlo, **cierra las demás credenciales**
+        del titular —sesiones y tokens— conservando la que hace la petición. Es el caso de uso de quien
+        sospecha que alguien más entró: cambiar la contraseña sin revocar lo anterior no serviría de
+        nada si el intruso conserva una cookie viva o un Bearer.
+
+        ⚠️ **La contraseña nueva no se envía repetida.** Confirmar el campo es cosa de un formulario,
+        no del contrato: la web lo pide y un cliente nativo no tiene por qué.
+
+        ⚠️ **Los fallos están LIMITADOS** por (titular, IP): cinco seguidos y responde `429` con
+        `Retry-After`. El contador cuenta **solo los fallos** y se limpia al acertar, así que
+        equivocarse una vez no penaliza. Sin él, una sesión secuestrada permitiría probar contraseñas
+        sin techo antes de cambiarla.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '204':
+          description: Contraseña cambiada y demás credenciales revocadas.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/sessions/revoke-others:
+    post:
+      tags: [Cuenta]
+      operationId: revokeMyOtherSessions
+      summary: Cerrar sesión en los demás dispositivos
+      description: |
+        Cierra las demás sesiones del titular y revoca sus demás tokens; **la credencial en curso
+        sobrevive**, para que no se autoexpulse al defenderse.
+
+        Exige reconfirmar la contraseña actual, con el **mismo limitador** que `PUT /me/password`.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordConfirmation'
+      responses:
+        '204':
+          description: Las demás credenciales han dejado de valer.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservations:
     get:
       tags: [Cuenta]
@@ -1601,6 +1671,33 @@ components:
           type: integer
         per_page:
           type: integer
+
+    PasswordConfirmation:
+      type: object
+      description: |
+        La contraseña actual del titular, para reconfirmar una acción sensible. **No se envía junto a
+        ningún identificador**: quién la manda lo dice la credencial de la petición.
+      required: [current_password]
+      additionalProperties: false
+      properties:
+        current_password:
+          type: string
+          format: password
+    PasswordChangeRequest:
+      type: object
+      description: 'La contraseña actual —para reconfirmar— y la nueva.'
+      required: [current_password, password]
+      additionalProperties: false
+      properties:
+        current_password:
+          type: string
+          format: password
+        password:
+          type: string
+          format: password
+          description: |
+            La nueva. Debe cumplir la política del producto —mínimo 8 caracteres y no aparecer en el
+            corpus de filtraciones—, que vive en un solo sitio (`Identity\Services\PasswordPolicy`).
 
     UpcomingReservationList:
       type: object

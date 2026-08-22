@@ -5170,3 +5170,28 @@ dos a saltarse la fuente única.
 que **pasaba igual con `uncompromised()` y sin él**. Lo descubrió la mutación —no la revisión— y hoy
 lo lee por reflexión. Es `#65` en su forma más pura, y van tres veces en esta fase: una aserción que
 no se ha visto fallar no prueba nada, por evidente que parezca lo que afirma.
+
+**(o) Tanda 2 · paso 6a — el patrón queda estrenado, y la web heredó una defensa sin escribir nada.**
+`Identity\Services\AccountCredentials` reúne lo que era dominio dentro de `UpdatePassword` y
+`LogoutOtherDevices`, devuelve un **veredicto** (`CredentialChangeResult`) como hace `PasswordLogin`, y
+la API lo consume sin reescribirlo. Nacen `PUT /me/password` y `POST /me/sessions/revoke-others`.
+
+⚠️ **Lo que de verdad justifica bajarlo al dominio se vio al terminar**: al pasar los dos componentes
+por el servicio, **la web heredó el limitador de `current_password` sin tocar una línea de la web**.
+De los cuatro sitios que reconfirman contraseña, dos quedaron cubiertos de golpe; los otros dos —el
+perfil y el borrado— se cubrirán solos en los pasos 7 y 8, por el mismo mecanismo. Si la API hubiera
+copiado la lógica, habría dos superficies con defensas distintas y una ficha de deuda que nadie cierra.
+
+⚠️ **Tres decisiones que tienen caso propio porque podían salir al revés:**
+· **la contraseña equivocada es un 422 POR CAMPO, no un 401.** En el login, un 401 es correcto; aquí el
+  cliente **sí está autenticado**, y un 401 le diría «tu sesión no vale» cuando lo que pasa es que se
+  ha equivocado escribiendo. Mismo criterio que el registro cuando el correo ya existe;
+· **el formato se valida ANTES del limitador**: una contraseña nueva que no cumple la política no es un
+  intento de adivinar la actual, y gastar intento por ella bloquearía a quien solo escribe mal;
+· **un solo limitador, por (titular, IP), y no uno por IP sola como en el login.** Aquél existe porque
+  un atacante prueba una contraseña contra mil cuentas **sin tener sesión**; aquí cada intento exige ya
+  una sesión válida de esa cuenta. Se dice para que no se lea como un olvido.
+
+⚠️ Y **las rutas van sin `throttle` propio a propósito**: el techo lo pone el servicio contando **solo
+los fallos**. Un `throttle` de ruta contaría también los aciertos y castigaría a quien se equivoca una
+vez y acierta a la segunda.

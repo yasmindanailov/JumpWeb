@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MeCredentialsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
@@ -189,6 +190,15 @@ Route::name('api.v1.')->group(function (): void {
 
         // «Mis reservas» y «Mis pedidos» (paso 1, solo lectura). El scoping es por el guard en los
         // dos: ninguno acepta un identificador de titular por la petición.
+        // ── Gestiones de credenciales (tanda 2 · paso 6, `specs/area-cliente.md` §9.3) ─────────
+        // ⚠️ **Sin `throttle` de ruta a propósito, y no es un olvido**: el techo de estas dos lo pone
+        // `AccountCredentials` por (titular, IP) y cuenta **solo los fallos**, no las llamadas. Un
+        // `throttle` de ruta contaría también los aciertos y castigaría a quien se equivoca una vez y
+        // acierta a la segunda. El `throttle:api` del grupo sigue siendo el suelo de todo.
+        Route::put('/me/password', [MeCredentialsController::class, 'updatePassword'])->name('me.password.update');
+        Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
+            ->name('me.sessions.revoke-others');
+
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
 
