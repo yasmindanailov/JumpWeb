@@ -75,7 +75,13 @@ class SidebarComponentBudgetTest extends TestCase
         // catálogo, o el cliente se queda mirando un carrito vacío. Verificado en navegador entrando y
         // cerrando sesión: sin ellas, purga y se queda en el paso 4.
         // Una subida sin este párrafo detrás sería exactamente lo que la regla prohíbe.
-        'sidebar/Sidebar.vue' => ['code' => 438, 'api' => 2],
+        //
+        // ⚠️⚠️ **La excepción cambia de FICHERO el 2026-08-22, y ese es el titular**: el embudo dejó de
+        // ser la raíz. `Sidebar.vue` se renombró a `sections/PurchaseSection.vue` y nació una raíz
+        // nueva de **16 líneas y CERO llamadas a la API**, que no necesita excepción ninguna. Lo hizo
+        // por el ÁREA DE CLIENTE (`DECISIONES #66`): sus pantallas entran como otra sección, al lado,
+        // y no dentro del componente del embudo.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 438, 'api' => 2],
     ];
 
     /**
@@ -234,6 +240,46 @@ class SidebarComponentBudgetTest extends TestCase
      * o `*`— porque una guarda de arquitectura tiene que poder leerse de un vistazo. No intenta
      * quitar comentarios al final de una línea de código: esa línea SÍ es código.
      */
+    /**
+     * ⚠️⚠️ **La RAÍZ del cajón enruta; no pinta pantallas** (2026-08-22).
+     *
+     * Hasta hoy el embudo de compra ERA la raíz: 438 líneas y once ramas por paso en un solo fichero.
+     * `DECISIONES #66` dice que el cajón hospedará también el ÁREA DE CLIENTE, y meter sus pantallas
+     * ahí habría puesto **dos dominios en el mismo componente** — con cada pantalla nueva encareciendo
+     * la separación posterior.
+     *
+     * El techo general de 40 líneas ya la vigila por tamaño. Este caso vigila lo que el tamaño no
+     * dice: que **no vuelva a conocer los pasos del embudo ni a hablar con la API**. Una raíz con un
+     * `v-if="store.step === ..."` dentro es una raíz que ha vuelto a ser una pantalla.
+     */
+    public function test_the_root_routes_sections_and_does_not_paint_screens(): void
+    {
+        $relative = 'sidebar/Sidebar.vue';
+        $path = base_path('resources/js/'.$relative);
+
+        $this->assertFileExists($path, 'La raíz del cajón ha desaparecido.');
+
+        $this->assertArrayNotHasKey(
+            $relative, self::EXCEPTIONS,
+            'La raíz ha vuelto a necesitar una excepción de tamaño. Si ha crecido tanto es que ha '.
+            'vuelto a hacer trabajo de pantalla: ese trabajo va en una SECCIÓN.',
+        );
+
+        $this->assertSame(
+            0, $this->apiCalls($path),
+            'La raíz no habla con la API. Pedir datos es trabajo de una sección o de su store.',
+        );
+
+        $source = (string) file_get_contents($path);
+
+        $this->assertStringNotContainsString(
+            'STEPS.', $source,
+            'La raíz conoce los pasos del EMBUDO otra vez. Los pasos son de la sección de compra; una '.
+            'raíz que los conoce es una raíz que ha vuelto a ser una pantalla — y es exactamente lo '.
+            'que impide que el área de cliente entre al lado en vez de dentro.',
+        );
+    }
+
     private function codeLines(string $path): int
     {
         $source = (string) file_get_contents($path);

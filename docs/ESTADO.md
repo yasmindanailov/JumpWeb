@@ -33,7 +33,7 @@ seguro**.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2660 en verde** (15.278 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
+- Suite **2661 en verde** (15.282 aserciones, `--parallel` ~52 s medidos el 2026-08-22) ·
   **366 tests JS** (`node --test`) · Pint limpio (820 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -208,7 +208,13 @@ intentar pagar.
 ## ▶ El MAPA del cajón SPA (para no buscarlo a ciegas)
 
 `resources/js/sidebar/` — **la lógica vive en módulos PLANOS sin Vue** (`CE-6`), y los componentes solo
-pintan. Esa separación es lo que hace que todo lo de abajo se pruebe con `node --test` y se compare
+pintan.
+
+⚠️ **Desde la reorganización del 2026-08-22 hay TRES capas y conviene no confundirlas**: los módulos
+planos (las reglas, probados con `node --test`), los **stores de Pinia** (`stores/`, el estado de cada
+dominio) y los componentes (pintan). Y **el embudo ya no es la raíz**: `Sidebar.vue` son 16 líneas que
+solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CLIENTE (`#66`) entra como
+**otra sección**, al lado, no dentro. Esa separación es lo que hace que todo lo de abajo se pruebe con `node --test` y se compare
 contra el servidor desde PHP ejecutándolo en Node.
 
 | Módulo | De qué responde | Su red |
