@@ -75,11 +75,7 @@ class PrePushGateTest extends TestCase
             }
         }
 
-        // El MISMO patrón del script, expandido con el mismo criterio: un solo nivel.
-        $reachable = array_map(
-            fn (string $path): string => str_replace($root.'/', '', $path),
-            glob($root.'/*/*.test.js') ?: []
-        );
+        $reachable = $this->reachableByRunner($root);
 
         sort($onDisk);
         sort($reachable);
@@ -93,6 +89,70 @@ class PrePushGateTest extends TestCase
             "test en una subcarpeta no corre NUNCA y la suite dice «pass» igual.\n".
             '  en el árbol : '.implode(', ', array_diff($onDisk, $reachable))."\n".
             '  al alcance  : '.implode(', ', $reachable)
+        );
+    }
+
+    /**
+     * ⚠️ **El glob del runner tiene que expandirlo NODE, no `sh`** (2026-08-22).
+     *
+     * El glob del runner **sin comillas** lo expande la shell, y en `sh` el doble
+     * asterisco **no es recursivo**: vale exactamente un nivel. Medido con un canario en
+     * `sidebar/__probe/`: sin comillas el runner sigue diciendo 314 tests y el canario **no corre**;
+     * con comillas dice 315.
+     *
+     * No es teórico: la reorganización del cajón en `stores/` pone tests a dos niveles, y sin esto
+     * habrían quedado fuera de la suite **diciendo «pass» igual** — que es el peor modo de fallo
+     * posible en un gate.
+     */
+    public function test_the_js_runner_glob_is_expanded_by_node_and_not_by_the_shell(): void
+    {
+        $package = (string) file_get_contents(base_path('package.json'));
+
+        $this->assertStringContainsString(
+            'node --test \\"resources/js/**/*.test.js\\"',
+            $package,
+            'El glob de `test:js` ha perdido sus comillas. Sin ellas lo expande `sh`, donde `**` vale '.
+            'UN nivel: cualquier test en una subcarpeta deja de ejecutarse y la suite no se entera.',
+        );
+    }
+
+    /**
+     * Qué ficheros ejecuta de verdad `npm run test:js`, **derivado del script** y no copiado a mano.
+     *
+     * ⚠️ **Quién expande el glob decide el resultado, y por eso se modelan las DOS semánticas**:
+     * entrecomillado lo expande NODE, cuyo `**` baja por todo el árbol; sin comillas lo expande `sh`,
+     * donde vale exactamente UN nivel. Copiar aquí una de las dos a mano fue lo que dejó este caso
+     * describiendo el pasado cuando el script cambió.
+     *
+     * ⚠️ Y `glob()` de PHP **no sirve** para imitar a Node: su `**` tampoco es recursivo (medido: da
+     * exactamente lo mismo que `/*` y no ve un fichero a dos niveles).
+     *
+     * @return array<int, string>
+     */
+    private function reachableByRunner(string $root): array
+    {
+        $package = json_decode((string) file_get_contents(base_path('package.json')), true, 512, JSON_THROW_ON_ERROR);
+        $script = $package['scripts']['test:js'] ?? '';
+
+        $this->assertStringContainsString('node --test', $script, 'El script `test:js` ya no invoca al runner de Node.');
+
+        // Con comillas manda Node (recursivo); sin ellas, `sh` (un nivel).
+        if (str_contains($script, '"resources/js/')) {
+            $files = [];
+            $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+
+            foreach ($it as $file) {
+                if (str_ends_with($file->getFilename(), '.test.js')) {
+                    $files[] = str_replace($root.'/', '', $file->getPathname());
+                }
+            }
+
+            return $files;
+        }
+
+        return array_map(
+            fn (string $path): string => str_replace($root.'/', '', $path),
+            glob($root.'/*/*.test.js') ?: []
         );
     }
 
