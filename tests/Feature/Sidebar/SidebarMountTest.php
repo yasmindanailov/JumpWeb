@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sidebar;
 
 use App\Domain\Identity\Models\User;
+use App\Http\Middleware\SetLocale;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -161,9 +162,214 @@ class SidebarMountTest extends TestCase
         $this->get('/')->assertSee('data-purchase-open="1"', false);
     }
 
-    /** @return array<string, mixed> */
-    private function bootPayload(string $html): array
+    // ── La PODA del payload, y lo que tiene que llegar entero ─────────────────────────────────
+    //
+    // ⚠️⚠️ **Estos cinco casos vivían en `SidebarLoginParityTest` y `SidebarRegisterParityTest`, y
+    // se mudan aquí el 2026-08-23** (`specs/auth-en-cajon.md` §4.7.bis). No es orden: aquellos dos
+    // ficheros se retiran cuando la auth entre en el cajón —comparan el cajón con un modal que
+    // desaparece— y **estos casos no comparan nada**: afirman del `data-boot`, que sobrevive
+    // intacto. Clasificados por SUJETO, no por el fichero en que estaban (`CONVENCIONES §3.quater`).
+    //
+    // ⚠️⚠️⚠️ Y uno de ellos lleva dentro **el techo del payload del montaje**. Borrarlo con su
+    // fichero se habría llevado el ÚNICO guardián de lo que viaja en el HTML de todas las páginas
+    // públicas, sin que nada fallara — el cuño de `DECISIONES #112`.
+
+    /**
+     * ⚠️ **Lo que el paso de identificación pinta tiene que ESTAR en el payload**, y su ausencia es un
+     * fallo silencioso: `i18n.js` devuelve `''` cuando falta una clave —en producción un texto que
+     * falta no puede tumbar el cajón—, así que un grupo mal podado deja el formulario con rótulos
+     * VACÍOS y todo en verde.
+     *
+     * Se comprueba contra el `data-boot` REAL de la página, no contra una idea de él.
+     */
+    public function test_the_mount_payload_carries_every_text_the_login_step_paints(): void
     {
+        $boot = $this->bootPayload();
+
+        foreach (['cta', 'eyebrow', 'title', 'email', 'password', 'remember', 'submit', 'submitting'] as $key) {
+            $this->assertNotSame(
+                '', (string) ($boot['account']['login'][$key] ?? ''),
+                "El montaje no lleva `account.login.{$key}`, así que ese rótulo se pintaría VACÍO: ".
+                '`i18n.js` devuelve cadena vacía cuando falta una clave, y nada avisa.'
+            );
+        }
+
+        $this->assertNotSame('', (string) ($boot['account']['register']['cta'] ?? ''), 'falta el rótulo de la pestaña de registro');
+
+        foreach (['failed', 'throttle'] as $key) {
+            $this->assertNotSame('', (string) ($boot['auth'][$key] ?? ''), "El montaje no lleva `auth.{$key}`.");
+        }
+    }
+
+    /** Y lleva TODO lo que el formulario de ALTA pinta: una clave que falte se pinta VACÍA y nada avisa. */
+    public function test_the_mount_payload_carries_every_label_the_signup_form_paints(): void
+    {
+        $register = $this->bootPayload()['account']['register'] ?? [];
+
+        foreach ([
+            'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+            'password_hint', 'marketing', 'submit', 'submitting', 'leave_blank', 'fix_errors',
+        ] as $key) {
+            $this->assertNotSame(
+                '', (string) ($register[$key] ?? ''),
+                "El montaje no lleva `account.register.{$key}`, así que ese rótulo se pintaría VACÍO: ".
+                '`i18n.js` devuelve cadena vacía cuando falta una clave, y nada avisa.'
+            );
+        }
+    }
+
+    /**
+     * ⚠️ **Los dos textos legales viajan con su `<a href>` DENTRO y ya interpolado.**
+     *
+     * El Blade los pinta con `{!! !!}` y la URL la compone `route()`. Si viajaran sin interpolar, el
+     * cajón enseñaría un `:url` literal en medio de un texto legal; y partirlos en «texto + enlace»
+     * obligaría al cliente a recomponer una frase traducida que no ordena igual en cada idioma.
+     */
+    public function test_the_mount_payload_carries_the_legal_texts_with_their_links(): void
+    {
+        foreach (SetLocale::SUPPORTED as $locale) {
+            $this->app->setLocale($locale);
+
+            $register = $this->bootPayload()['account']['register'] ?? [];
+
+            foreach (['accept_privacy' => 'legal.privacidad', 'accept_terms' => 'legal.condiciones'] as $key => $route) {
+                $text = (string) ($register[$key] ?? '');
+
+                $this->assertStringContainsString('<a ', $text, "«{$key}» tiene que llevar su enlace dentro");
+                $this->assertStringNotContainsString(':url', $text, "«{$key}» viaja SIN interpolar: se vería el marcador");
+                $this->assertStringContainsString(
+                    parse_url(route($route), PHP_URL_PATH) ?: '', $text,
+                    "«{$key}» no apunta a la página legal que compone `route()`"
+                );
+            }
+        }
+    }
+
+    /**
+     * **Y NO lleva de más.** El grupo `account` entero son 9,6 kB en español —tanto como `tickets`— y
+     * viajaría en el HTML de **todas** las páginas públicas para pintar diez rótulos. La poda es la
+     * decisión; sin esta guarda, el día que alguien escriba `__('account')` nadie lo notaría.
+     */
+    public function test_the_mount_payload_stays_pruned(): void
+    {
+        $boot = $this->bootPayload();
+
+        // ⚠️⚠️ **Sin sesión, los textos del ÁREA DE CLIENTE no viajan**, y ésta es la mitad que más
+        // ahorra: la landing anónima es la ruta de más tráfico del sitio —la que `PERF-02` protege— y
+        // un invitado **no puede abrir** esa sección. Medido: son ~660 B por página que no pintaban
+        // nada (`specs/area-cliente.md`).
+        $this->assertSame(
+            ['login', 'register'], array_keys($boot['account'] ?? []),
+            'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
+        );
+
+        $anonBytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
+
+        // Medido: 1.671 B en español, 1.575 en inglés y 1.761 en francés, con los dos grupos que el
+        // paso 5 pinta —`login` entero, `register` entero desde 4.4b·1 y `auth`—. El techo era 1.024
+        // cuando solo viajaba el rótulo de la pestaña de alta; subió **a propósito** al transcribir el
+        // formulario. La referencia que lo hace un presupuesto y no un número suelto: el grupo
+        // `account` COMPLETO son 9,6 kB, seis veces esto, y viajaría en cada página pública.
+        $this->assertLessThan(
+            2048, $anonBytes,
+            "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
+            'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
+        );
+    }
+
+    /**
+     * **Y CON sesión llegan, pero podados clave a clave.**
+     *
+     * ⚠️ Ésta es la mitad que aprieta cuando el ahorro anónimo ya no aplica: `account.orders` son
+     * **22 claves** —el detalle del pedido, el bloque de gestión, el post-form— y las zonas pintan
+     * **doce**. Sin esta guarda, un `__('account.orders')` de conveniencia doblaría el payload de
+     * quien tiene sesión y **nadie lo vería**: el contrato de árbol no mira tamaños y el resto de la
+     * suite, tampoco.
+     */
+    public function test_the_mount_payload_of_a_signed_in_customer_is_pruned_key_by_key(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        $boot = $this->bootPayload((string) $this->actingAs($user)->get('/')->assertOk()->getContent());
+
+        $this->assertSame(['login', 'register', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
+
+        // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
+        $this->assertSame(
+            [
+                'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
+                'delete_title', 'delete_intro', 'delete_password',
+                'delete_confirm', 'delete_btn', 'deleting',
+            ],
+            array_keys($boot['account']['account']['privacy'] ?? []),
+            'el subgrupo `privacy` ha dejado de estar podado a lo que la zona pinta'
+        );
+
+        // ⚠️ **Los cuatro `consent_types` siguen FUERA a propósito**: el rótulo del documento lo
+        // publica la API (`Consent.type_label`), para que el cajón no lleve una segunda tabla de
+        // nombres que envejece sola el día que se añada un quinto tipo de consentimiento.
+        $this->assertArrayNotHasKey(
+            'consent_types', $boot['account']['account']['privacy'] ?? [],
+            'el cajón ha empezado a llevar su propia tabla de rótulos de consentimiento'
+        );
+
+        // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
+        // diga lo mismo que la página web. Si desaparece, el cajón lo pintaría VACÍO y nada avisaría.
+        $this->assertNotSame('', (string) ($boot['account']['account']['password']['mismatch'] ?? ''));
+        $this->assertSame(['upcoming_count'], array_keys($boot['account']['sidecart'] ?? []));
+
+        $this->assertSame(
+            // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`: aquél conserva
+            // el del array de origen. Escribirlo aquí como se escribió el filtro daba un rojo que se
+            // lee como «falta una clave» cuando lo único que pasa es que están en otro sitio.
+            [
+                'event_data_show', 'event_data_hide',
+                'title', 'subtitle', 'empty', 'pagination',
+                'item_finished', 'item_cancelled',
+                'retry_payment', 'retry_hint',
+                'guest_form_pending', 'guest_form_done',
+                'guest_form_past', 'guest_form_cancelled',
+            ],
+            array_keys($boot['account']['orders'] ?? []),
+            'el subgrupo `orders` ha dejado de estar podado a lo que las zonas pintan'
+        );
+
+        $bytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
+
+        // ⚠️⚠️ **EL TECHO DEL PAYLOAD DEL MONTAJE.** Historia de cómo llegó a 4.800, porque es lo que
+        // lo convierte en un presupuesto y no en un número suelto:
+        // · **2.309 B** al cerrar la tanda 1 (el anónimo son 1.608, así que el área cuesta **701 B a
+        //   quien tiene sesión y 0 al resto**);
+        // · **4.523 B** al cerrar la tanda 2. El techo estaba en 4.096, subido por adelantado para que
+        //   la tanda cupiera, y su propia nota decía que al terminar había que **bajarlo a lo medido**
+        //   — que es la mitad de la regla que casi nunca se cumple. Se fijó en **4.608**: 85 B de
+        //   holgura, tan estrecho a propósito para provocar la pregunta correcta la próxima vez;
+        // · y la provocó **a los dos pasos**: la tanda 3 añadió `consents_title` y `no_consents` y se
+        //   pasó por **6 B**. La respuesta fue mirar qué NO añadir —los cuatro `consent_types` se
+        //   quedaron fuera y su rótulo lo publica la API—, y creció 91 B en vez de ~150.
+        // ▶ Techo **5.120** mientras duró la tanda 3 y **bajado a lo medido al cerrarla**: **4.708 B**,
+        //   así que **4.800**, 92 B de holgura. Referencia que lo hace legible: el grupo `account`
+        //   COMPLETO son 9,6 kB, el doble de esto.
+        $this->assertLessThan(
+            4800, $bytes,
+            "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
+            'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
+        );
+    }
+
+    /**
+     * El `data-boot` que el layout inyecta de verdad.
+     *
+     * Sin argumento pide la home; con él, lee el HTML que se le pase — que es como lo usan los casos
+     * que necesitan una petición concreta (con sesión, con desenlace sembrado…).
+     *
+     * @return array<string, mixed>
+     */
+    private function bootPayload(?string $html = null): array
+    {
+        $html ??= (string) $this->get('/')->assertOk()->getContent();
+
         if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $html, $matches) !== 1) {
             $this->fail('no se ha encontrado el punto de montaje de la SPA en la página');
         }

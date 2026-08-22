@@ -1,7 +1,7 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1 EJECUTADO** (§8) ·
+> Última actualización: 2026-08-23 · **A1 y A2 EJECUTADOS** (§8) ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -298,7 +298,21 @@ tests/Feature/Sidebar/SidebarRegisterParityTest.php`). Clasificados por SUJETO
 | **El PAYLOAD del montaje** (que lleve cada texto que el paso pinta, que siga PODADO, la poda clave a clave del cliente con sesión, los dos textos legales con su enlace, los rótulos del alta) | **5** | **SE MUDAN.** Su sujeto es el `data-boot` del cajón, que sobrevive intacto → `SidebarMountTest` |
 | **El bit del anti-bot** (`GET /config` publica la clave pública ⟺ el anti-bot está activo) | **1** | **SE MUDA**: cruza la API con `signupRequiresCaptcha` en Node y **ni siquiera monta Livewire** |
 | **El señuelo indistinguible** | **1** | **SE MUDA**: verificado — es 100 % API (`POST /api/v1/auth/register` dos veces), sin una línea de Livewire. Su sujeto es SEC-06 |
-| **El alta embebida abre sesión y no manda correo** | **1** | **PARTIDO**: su mitad Livewire muere; **su mitad de API sobrevive y es justo la regla de `context` que §4.3 acaba de destapar** |
+| **El alta embebida abre sesión y no manda correo** | **1** | **MUERE SIN PÉRDIDA** — y eso se MIDIÓ, no se supuso: su mitad de API ya la cubre `AuthRegistrationTest::test_a_purchase_signup_opens_a_session_and_skips_the_verification_email`, y la suelta, el caso de al lado. Medir para no encontrar nada sigue siendo medir (`#94`) |
+
+> ✅ **A2 EJECUTADO el 2026-08-23.** Destinos reales, que resultaron ser **tres y no uno**: los cinco
+> del payload a `SidebarMountTest` (que ya era «el payload del montaje» y tenía el helper); el señuelo
+> a `Api\V1\AuthRegistrationTest`, porque es 100 % API y su sujeto es SEC-06; y el del anti-bot a un
+> **`SidebarAntiBotTest`** nuevo, con nombre que dice qué vigila.
+> ▶ **Re-mutados en su nuevo sitio**, que es lo que `#65` exige: podar `account.login`, meter una clave
+> de más, quitar un rótulo del alta y dejar los textos legales sin interpolar tumban cada uno **su**
+> caso y solo el suyo. El del señuelo se midió **haciendo que las dos respuestas difieran** —mutar una
+> rama de una propiedad de indistinguibilidad da un mutante equivalente por diseño (§3.quater, trampa
+> 4)— y además saltó el contrato OpenAPI.
+> ▶ **Y apareció una cita rancia**, que es la huella que `#121` enseñó a buscar: `layout.blade.php`
+> decía «lo vigila `SidebarLoginParityTest::test_the_mount_payload_stays_pruned`» y
+> `VERIFICACION-E2E-CAJON.md` daba la anti-enumeración del alta por cubierta en la paridad. Las dos
+> corregidas en el mismo commit.
 
 ⚠️⚠️ **Y uno de esos cinco es el que más duele perder**: el techo del payload del montaje —**4.708 B
 medidos, techo 4.800**— vive dentro de `SidebarLoginParityTest`, no en un fichero de presupuestos.
@@ -417,7 +431,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | V6 | SEC-06 sigue verificada desde la API | `AuthSessionTest`, `PasswordRecoveryTest`, `AuthRegistrationTest` |
 | V7 | Los 36 casos clasificados, **medidos por mutación** antes y después de re-apuntar | `CONVENCIONES §3.quater` |
 | V8 | **NAVEGADOR**: entrar desde la cabecera → índice **con sus rótulos** (§3.3) · alta suelta → **el correo de verificación SALE** (§4.3) y su pantalla ofrece reenvío (§4.10·2) · recuperar desde el paso 5 → volver **con la cesta intacta** · sesión caducada en `ORDERS` → login → tras entrar, **«volver» no enseña el login** (§4.10·3) · el clic **con el motor a medio cargar** (§4.10·4) · cerrar el cajón **no deja la contraseña en el campo** (§4.10·1) | `VERIFICACION-E2E-CAJON.md` §5.quater |
-| V9 | Los dos presupuestos, re-medidos y bajados a lo medido al cerrar | `SidebarBundleBudgetTest` (chunk, techo **190 KiB**) y el caso del payload del montaje, que ⚠️ **hoy vive dentro de `SidebarLoginParityTest`** y hay que mudar antes de borrarlo (§4.7.bis) |
+| V9 | Los dos presupuestos, re-medidos y bajados a lo medido al cerrar | `SidebarBundleBudgetTest` (chunk, techo **190 KiB**) y `SidebarMountTest::test_the_mount_payload_of_a_signed_in_customer_is_pruned_key_by_key` (payload, techo **4.800 B**) — ✅ ya mudado ahí en A2 |
 
 ---
 
@@ -460,7 +474,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | Paso | Qué | Por qué va aquí |
 |---|---|---|
 | **A1** ✅ | **Cerrar el hueco del `noindex`** con su test, contra el código de HOY | El único que había que hacer **antes** de tocar nada: después del borrado ya no habría qué comparar (§1.3·3). **Hecho y medido por mutación el 2026-08-23**, ampliado a las cinco superficies de auth |
-| **A2** | **Mudar a `SidebarMountTest` los 8 casos que sobreviven** de las dos paridades, y **re-mutarlos** allí | ⚠️ **PRIMERO**, y es la corrección de fondo del orden: uno de ellos asevera que el payload del invitado son exactamente `login` y `register`, así que **A3 lo pondría en rojo** (§4.7.bis) |
+| **A2** ✅ | **Mudar los 8 casos que sobreviven** de las dos paridades, y **re-mutarlos** allí | ⚠️ **PRIMERO**, y es la corrección de fondo del orden: uno de ellos asevera que el payload del invitado son exactamente `login` y `register`, así que **A3 lo pondría en rojo** (§4.7.bis). **Hecho el 2026-08-23**: 7 mudados a tres destinos, 1 retirado tras medir que ya estaba cubierto, y los 6 que quedan en las paridades siguen montando Livewire |
 | **A3** | `forgot.js`, **`context` como parámetro** (§4.3) y el estado en `stores/auth.js`, con `node --test` | Reglas antes que pantallas, como las ocho zonas anteriores |
 | **A4** | Las tres zonas y la guarda de alcanzabilidad en su forma nueva | Ya hay a dónde ir |
 | **A5** | Las puertas: `AccountDoor` + `openAccount()` + los cinco puntos | Ya hay a dónde llegar. ⚠️ **Aquí viven DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4) |

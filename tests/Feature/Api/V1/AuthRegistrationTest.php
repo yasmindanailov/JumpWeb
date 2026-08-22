@@ -156,6 +156,40 @@ class AuthRegistrationTest extends ApiTestCase
     }
 
     /**
+     * ⚠️⚠️ **Y son indistinguibles BYTE A BYTE, que es más fuerte que «los dos responden 201».**
+     *
+     * El caso de arriba dice que el señuelo finge éxito; éste dice que **un bot no puede notar la
+     * diferencia**, que es lo único para lo que sirve un señuelo. Lo que separa un alta real de una
+     * fingida es solo si hay sesión después — y por eso `register.js::runRegister()` tiene que
+     * preguntar por `GET /me` en vez de leer la respuesta.
+     *
+     * ⚠️ **Este caso no se puede medir mutando UNA rama** (`CONVENCIONES §3.quater`, trampa 4): las
+     * dos respuestas son iguales **por diseño**, así que un mutante de un solo lado es equivalente y
+     * su verde no dice nada. Se mide haciendo que **difieran**.
+     *
+     * ▶ Vivía en `SidebarRegisterParityTest` y se mudó aquí el 2026-08-23
+     * (`specs/auth-en-cajon.md` §4.7.bis): no comparaba dos motores —no monta Livewire por ningún
+     * lado—, es una propiedad de `POST /auth/register` y su sujeto es `INVARIANTES` SEC-06.
+     */
+    public function test_the_honeypot_is_indistinguishable_from_a_real_signup(): void
+    {
+        $real = $this->register(['email' => 'persona@jumpweb.test', 'context' => 'purchase']);
+
+        auth()->logout();
+
+        $bot = $this->register([
+            'email' => 'bot@jumpweb.test', 'website' => 'soy-un-bot', 'context' => 'purchase',
+        ]);
+
+        $this->assertSame($real->getStatusCode(), $bot->getStatusCode(), 'el estado tiene que ser el mismo');
+        $this->assertSame($real->getContent(), $bot->getContent(), 'y el cuerpo también, o el señuelo no sirve');
+
+        $this->assertFalse(auth()->check(), 'el señuelo no identifica a nadie');
+        $this->assertNull(User::where('email', 'bot@jumpweb.test')->first(), 'ni crea cuenta');
+        $this->assertNotNull(User::where('email', 'persona@jumpweb.test')->first(), 'el alta real sí');
+    }
+
+    /**
      * ⚠️ **El señuelo VACÍO es el caso normal, y hacía fallar el alta entera.**
      *
      * Un cliente legítimo manda `website: ""` —el campo existe en el formulario y viaja siempre—.

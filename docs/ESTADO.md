@@ -45,10 +45,13 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2677 en verde** (15.432 aserciones, `--parallel` **~38 s** medidos el 2026-08-23) ·
+- Suite **2676 en verde** (15.420 aserciones, `--parallel` **~43 s** medidos el 2026-08-23) ·
   **525 tests JS** (`node --test`) · Pint limpio (835 ficheros) · `docs-check` verde ·
-  ⚠️ **2675 → 2677 el 2026-08-23**: los dos casos de `SeoTest` que fijan que las **cinco** superficies
-  de auth se sirven `noindex` y no están en el sitemap (`specs/auth-en-cajon.md` §8·A1).
+  ⚠️ **2675 → 2677 → 2676 el 2026-08-23**: +2 por los casos de `SeoTest` que fijan que las **cinco**
+  superficies de auth se sirven `noindex` y no están en el sitemap (`specs/auth-en-cajon.md` §8·A1),
+  y −1 al mudar los supervivientes de las dos paridades (A2): el caso del alta embebida se retiró
+  **tras medir** que `Api\V1\AuthRegistrationTest` ya cubre su mitad de API. Medir para no encontrar
+  nada sigue siendo medir (`#94`).
   ⚠️ **Y el cierre anterior fue la primera vez que el contador BAJÓ**: la retirada de `/mi-cuenta/…`
   se llevó **63 casos** cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los
   que afirmaban del dominio se extrajeron y los que la usaban de intermediario se re-apuntaron
@@ -159,8 +162,12 @@ URL con token dentro— y `/email/verificar` se servían `index, follow`.
 un índice **en blanco** → se navega a la puerta (§3.3, decisión del owner);
 · `register.js` lleva **`context: 'purchase'` quemado**: reutilizar el alta tal cual convertiría el
 alta suelta en **pay-first**, sin correo de verificación (§4.3);
-· **el techo del payload del montaje vive dentro de `SidebarLoginParityTest`**, uno de los ficheros
-que se retiran — hay que mudarlo **antes**, y por eso es el paso A2 (§4.7.bis).
+· **el techo del payload del montaje vivía dentro de `SidebarLoginParityTest`**, uno de los ficheros
+que se retiran (§4.7.bis) — ✅ **ya mudado**, ver abajo.
+▶ **A2 hecho el 2026-08-23**: los ocho supervivientes de las dos paridades están en su sitio —cinco
+del payload en `SidebarMountTest`, el señuelo en `Api\V1\AuthRegistrationTest`, el anti-bot en el
+nuevo `SidebarAntiBotTest`— y **re-mutados allí** (`#65`). En los dos ficheros de paridad solo quedan
+los **6** casos que de verdad comparan motores, y todos siguen montando Livewire: mueren con el modal.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

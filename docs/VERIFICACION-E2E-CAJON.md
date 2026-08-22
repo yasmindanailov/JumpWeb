@@ -37,7 +37,7 @@ automática y repetirlos a mano es tiempo tirado:
 | Tope de pendientes · frecuencia | `SidebarAdmissionParityTest` (3 idiomas) | no |
 | Agotado · fuera de horario · fecha pasada | `SidebarPayParityTest` (enum entero) | no |
 | `NOT_RETRYABLE` (la DECISIÓN) | `SidebarOutcomeParityTest` | solo la pantalla |
-| Anti-enumeración del alta | `SidebarRegisterParityTest` | no |
+| Anti-enumeración del alta | `Api\V1\AuthRegistrationTest` (el señuelo, indistinguible byte a byte) | no |
 | Fusión de líneas · líneas fantasma | `cart.test.js` | no |
 | Los once árboles | `SidebarDomContractTest` | no |
 

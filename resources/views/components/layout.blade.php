@@ -227,7 +227,7 @@
                             // que es justo la que `PERF-02` existe para proteger. Con sesión, el
                             // ahorro no aplica y los textos hacen falta antes de que el cliente
                             // pulse nada: pedirlos al abrir metería una petición en el camino.
-                            // Lo vigila `SidebarLoginParityTest::test_the_mount_payload_stays_pruned`.
+                            // Lo vigila `SidebarMountTest::test_the_mount_payload_stays_pruned`.
                             //
                             // ⚠️ Y va PODADO clave a clave, no por subgrupos: `account.orders` entero
                             // son 1.279 B y lo que estas zonas pintan, **659** — medido. El grupo
