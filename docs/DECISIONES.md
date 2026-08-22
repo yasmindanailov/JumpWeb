@@ -5119,3 +5119,33 @@ modos y el nuevo no era ninguno—. No estaba roto: **decía algo que ya no era 
 próxima reserva que el índice pinta.
 ▶ **La lección**: al añadir un caso a una regla existente hay que releer **qué afirma su guarda**, no
 solo si sigue verde. Un test puede quedarse obsoleto sin ponerse rojo.
+
+**(m) El paso 5 cierra la tanda 1, y convierte una regla en un TEST.** `#111` dejó escrito
+*independizar el contrato ANTES de borrar*; hasta hoy eso era una nota que alguien tenía que acordarse
+de leer el día de la retirada. `AccountPageCaptureTest` lo hace ejecutable: inventaría lo que la página
+«Mis reservas» pinta y lo clasifica en tres —lo que la API **ya publica** (se asevera equivalencia,
+para que no se pierda antes del borrado), los **HUECOS con nombre** y lo que está fuera **a propósito**—
+y su lista de huecos **solo puede encoger**. ▶ **La lista vacía es la condición 1 de la tanda 3**: ya no
+hay que recordar qué faltaba, el test lo enumera.
+
+**Cuatro huecos medidos**, todos del desglose financiero: el resto de la señal **por producto**, el
+desglose de «a cobrar en el parque» con su etiqueta, el **total final** tras los cambios —que no es
+`total_cents`, porque `total` es inmutable— y el **pendiente de devolución**, distinto de `refund`.
+
+⚠️ **Se sondea por VALOR, no por nombre de campo**, y la diferencia importa: comprobar «no existe la
+clave `gate_lines`» dejaría el test verde el día que alguien la publique como `breakdown`. Se monta un
+pedido con importes **únicos** y se busca el número en el cuerpo de la respuesta — da igual con qué
+nombre se publique.
+⚠️ **Y lo que no se puede sondear así se declara aparte en vez de fingirlo.** `pendienteDevolucion()`
+exige un reembolso a medio procesar y con cualquier pedido normal vale 0: sondear con 0 daría verde
+contra cualquier respuesta. A ese lo cubre la **congelación del esquema `Order`** del contrato — si
+crece, hay que volver a la lista—, que es una red más floja y se dice.
+
+⚠️⚠️ **Y el fixture costó tres correcciones, todas del mismo tipo: sondas que no medían.**
+· la primera buscaba **céntimos en el HTML**, y la página pinta importes formateados;
+· la segunda daba `totalFinalNeto` por publicado **porque coincidía con `charged_subtotal_cents`** —con
+  una sola línea viva, la suma es esa línea—: hizo falta una segunda línea viva para desambiguar;
+· la tercera sondeaba `pendienteDevolucion` **con 0**, que cualquier respuesta contiene.
+▶ **Las tres las cazó la guarda de la guarda del propio test** (`test_every_probe_actually_measures_
+something`), escrita antes que el fixture. Es la lección de `#63` aplicada por adelantado: sin ella,
+tres sondas inertes habrían dejado la lista de huecos «verificada» sin verificar nada.

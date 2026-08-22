@@ -1658,8 +1658,20 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
             ⚠️⚠️ Y destapó que **`SidebarAccountVisibilityTest` se había quedado corto en el paso 1**:
             su título decía «EXACTAMENTE los del proceso de compra» mientras la regla del CSS ya
             cubría `is-account`, que no lo es. Pasaba **por omisión**. Corregido y mutado.
-      - [ ] **Tanda 1 · paso 5**: la captura de huecos (`AccountPageCaptureTest`, temporal y con
-            caducidad declarada). Su red, en `specs/area-cliente.md` §6.
+      - [x] **Tanda 1 · paso 5 — LA CAPTURA DE HUECOS** (✅ **HECHO** el 2026-08-22). `#111` dice
+            *independizar el contrato ANTES de borrar*, y esto lo hace **ejecutable**:
+            `AccountPageCaptureTest` inventaría lo que la página pinta y lo clasifica en tres —lo que
+            la API ya publica (se asevera equivalencia), los **HUECOS con nombre** (lista que **solo
+            encoge**) y lo que está fuera **a propósito** (`event_data`, art. 9)—.
+            ▶ **Cuatro huecos medidos**: el resto de señal por producto, el desglose de puerta con su
+            etiqueta, el total final tras los cambios y el pendiente de devolución. **La lista vacía
+            es la condición 1 de la tanda 3.**
+            ⚠️ Se sondea **por VALOR y no por nombre de campo** —publicarlo con otro nombre dejaría un
+            test verde mintiendo—, y lo que no se puede sondear así se **declara aparte** en vez de
+            fingirlo: a eso lo cubre la **congelación del esquema `Order`** del contrato.
+            ⏳ **El fichero muere con la página**, y lo dice en su primera línea.
+      - [ ] **Tanda 2**: las cinco gestiones de cuenta (perfil, contraseña, otras sesiones, borrado y
+            export RGPD), que **no tienen ningún endpoint** (`#120(a)`). Es abrir API, no pintar.
       ⚠️ **Y arrastra dos cosas**: retirar el modal de auth de la cabecera (vive en `layout.blade.php`)
       y traer `account-context` de Livewire a Vue — la última frontera, donde murieron las señales de
       `#118`. Las dos tienen ficha en `DEUDA.md`.

@@ -312,11 +312,25 @@ retirar la página hay que capturar de ella lo que aún no está capturado (sus 
 visibilidad), o el borrado se lleva por delante la única referencia que existía.
 
 Condiciones para abrir la tanda 3, todas verificables:
-1. las siete zonas pintadas y con paridad de datos;
-2. los cinco endpoints de gestión abiertos y probados;
-3. `EmailChangeController` y el export RGPD con destino decidido (llegan desde un **correo**: no pueden
+1. ⏳ **`AccountPageCaptureTest::GAPS` VACÍA.** Ya no es una nota que alguien tiene que acordarse de
+   leer: es un test que **enumera exactamente qué se perdería** al borrar la página, y que **solo
+   puede encoger**. Medido el 2026-08-22, faltan **cuatro** cosas por publicar:
+   · `Order::depositRemainderPendingByProduct()` — el resto de la señal **por producto** («Resto de la
+     señal de Cumple Jump: +31,00 €»). La API publica el agregado, no de qué se compone;
+   · `Order::pendingAtGateLines()` — el desglose de «a cobrar en el parque» con su **etiqueta**;
+   · `OrderFinancialSummary::totalFinalNeto()` — el «Total» tras los cambios, que **no es**
+     `total_cents` en cuanto hay una cancelación: `total` es inmutable;
+   · `OrderFinancialSummary::pendienteDevolucion()` — lo que se le debe al cliente y **aún no ha
+     salido**, distinto de `refund`, que es lo ya devuelto.
+   ⚠️ **`event_data` NO está en esa lista y no lo estará**: queda fuera **a propósito** (nombres y
+   alergias de menores, art. 9) y se pide aparte con `GET orders/{code}/event-data`. Publicarlo en la
+   lista paginada sería una regresión de privacidad, no un avance. El test lo declara aparte para que
+   nadie lo confunda con un hueco.
+2. las siete zonas pintadas y con paridad de datos;
+3. los cinco endpoints de gestión abiertos y probados;
+4. `EmailChangeController` y el export RGPD con destino decidido (llegan desde un **correo**: no pueden
    depender de que el cajón esté abierto);
-4. recorrido en navegador de las siete zonas (`VERIFICACION-E2E-CAJON.md` §5.bis).
+5. recorrido en navegador de las siete zonas (`VERIFICACION-E2E-CAJON.md` §5.bis).
 
 ### 4.9 ⚠️ La cadena flex del panel: un requisito estructural que NINGÚN test puede ver
 
@@ -424,7 +438,7 @@ Es la regla que ha ordenado la Fase 4 entera. Cada paso deja `main` verde y veri
 | **3a** | ✅ **HECHO 2026-08-22 · El CONTRATO**: las etiquetas de presentación que el cliente **no puede** componer (`date_label`, `created_label`, `refunded_label`) y la URL del post-form, con su fuente única `DisplayTime::dayLabel()` | `MeOrdersTest`/`MeReservationsTest` con VALOR · `ApiContractTest` · `DayLabelSingleSourceTest`, **mutado** |
 | **3b** | ✅ **HECHO 2026-08-22 · Los DATOS en el cliente**: `account/orders.js`, `stores/orders.js` y `stores/reservations.js`; las dos zonas pintan | 38 casos de `node --test` **mutados** · **`SidebarAccountParityTest`** contra la respuesta REAL, mutado · **navegador V6, 2/2** |
 | **4** | ✅ **HECHO 2026-08-22 · La PUERTA**: «Mis reservas» abre la sección en vez de navegar, **conservando el `href`** para cuando el motor aún no ha cargado | `AccountDoorWiringTest` (6 casos, **4 mutaciones**) · **navegador V7, 2/2**, con el chunk del motor cortado |
-| **5** | **Captura de huecos**: `AccountPageCaptureTest` (temporal, con caducidad en su cabecera) | mutación |
+| **5** | ✅ **HECHO 2026-08-22 · Captura de huecos**: `AccountPageCaptureTest`, temporal y **con su caducidad en la primera línea**. Inventaría la página, clasifica en publicado / hueco / fuera-a-propósito y **congela el contrato de `Order`** | 9 casos, **4 mutaciones** |
 
 ⚠️ **El plan pasó de seis pasos a cinco el 2026-08-22, al ejecutarlo.** La v1 separaba «el modelo de
 navegación» (2) de «las zonas» (4), y **eso violaba una regla del proyecto**: *extraer sin que el

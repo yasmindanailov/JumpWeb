@@ -30,7 +30,7 @@ y pasarela real se hizo (`#59`), **los cuatro caminos que `#100` exigía están 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2678 en verde** (15.372 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
+- Suite **2687 en verde** (15.408 aserciones, `--parallel` ~42 s medidos el 2026-08-22) ·
   **442 tests JS** (`node --test`) · Pint limpio (822 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
@@ -113,40 +113,33 @@ páginas `/mi-cuenta/…`— y el destino es UNO.
 
 ## ▶ Próximo paso
 
-▶▶ **EL ÁREA DE CLIENTE — TANDA 1: SOLO LECTURA** (`DECISIONES #66`/`#120`). El diseño está
-**✅ APROBADO por el owner** (`docs/specs/area-cliente.md`) y **el paso 1 de los seis está HECHO**:
-el cajón ya tiene DOS secciones. Lo que sigue es el **paso 2**, el modelo de navegación de zonas
-(`account/navigation.js`); el orden completo y la red de cada paso, en la **§8** de la spec.
+▶▶ **TANDA 2 DEL ÁREA DE CLIENTE: LAS GESTIONES** (`DECISIONES #120(a)`). 🟩 **La tanda 1 —solo
+lectura— está COMPLETA**: los cinco pasos hechos, verificados en navegador y en `main`.
 
-✅ **Pasos 1 y 2 de CINCO, hechos y verificados en navegador el 2026-08-22.**
-· **1 · el nivel SECCIÓN** (`V4`): conmutar y volver **no dispara ni una petición**, el embudo conserva
-  su paso, el bloque de cuenta se colapsa con el modo **`account`** —y **no es alcanzable con Tab**— y
-  el árbol oculto **no atrapa el foco** (12 focusables visibles → 0 ocultos).
-· **4 · la PUERTA**: «Mis reservas» del bloque de cuenta **abre la sección** en vez de navegar, y
-  **conserva su `href`** — medido cortando el chunk del motor: sin él, el enlace lleva a la página
-  (`V7`, 2/2). La cadena cruza Blade/Livewire → Alpine → Vue y la vigila `AccountDoorWiringTest`.
-· **3b · los DATOS en el cliente**: `account/orders.js` + dos stores; el índice pinta la próxima
-  reserva y «Mis reservas» su detalle, señal, post-form, reintento y paginación. Red:
-  **`SidebarAccountParityTest` contra la respuesta REAL** de la API (no contra la página condenada) y
-  navegador **V6, 2/2** con **exactamente dos peticiones**.
-  ⚠️ Enseñó que **`paid_online_cents` incluye los complementos** (68,00 € y no 60,00 en el aviso de
-  señal) y que **los textos del área deben viajar solo CON SESIÓN**: 701 B para quien la tiene, **0**
-  en la ruta anónima de más tráfico (`#120(k)`).
-· **3a · el CONTRATO de presentación**: las etiquetas que el cliente **no puede** componer
-  —`date_label`, `created_label`, `refunded_label`— y `guest_form_url`, con **fuente única**
-  (`DisplayTime::dayLabel`, que unificó **cuatro copias** de la misma fórmula) y su guarda mutada.
-  ⚠️ Corrige el «hay que pintar, no abrir dominio»: valía para los datos, **no para su presentación**
-  (`#120(j)`).
-· **2 · la NAVEGACIÓN de zonas** (`V5`, **7/7**): índice + «Mis reservas», pila de retorno que **no
-  crece al alternar**, «volver» sin historia **sale a la compra**, entrada directa a zona y reentrada
-  con la historia vacía. **0 peticiones** en todo el recorrido.
-⚠️ **Son DOS zonas y no tres, y lo decidió una medición de vocabulario**: `account.orders.title` es
-literalmente **«Mis reservas»** —la página de pedidos ya se llama así de cara al cliente— y
-`/me/reservations` alimenta el bloque de cuenta, no una pantalla. Una zona «próximas reservas» aparte
-habría sido inventar producto en una tanda cuyo criterio es la paridad (`specs/area-cliente.md` §4.2).
-✅ **La puerta ya está cableada** (paso 4): con sesión, «Mis reservas» abre el área dentro del cajón.
-⚠️ **Sin sesión NO cambia nada**: el botón sigue abriendo el modal de la cabecera. Traer la auth a la
-sección de cuenta es tanda 2, y hacerlo aquí habría metido ese trabajo entero por la puerta de atrás.
+⚠️ **Y la tanda 2 NO es pintar: es ABRIR API.** Medido endpoint por endpoint: cambiar el perfil,
+cambiar la contraseña, cerrar sesión en otros dispositivos, borrar la cuenta y exportar los datos
+**no tienen ninguno** — viven solo en `App\Livewire\Account\*` y en el controlador web del export.
+Cinco superficies nuevas sobre dominio que ya existe. **Empieza por ahí, no por el cliente**: es lo
+que enseñó el paso 3, donde el contrato rechazó cinco intentos seguidos hasta que se actualizó
+`openapi/v1.yaml` (que manda sobre el código).
+
+⚠️ **La tanda 3 —retirar `/mi-cuenta/…`— tiene su condición 1 medida y VIGILADA**: `AccountPageCapture
+Test::GAPS` enumera las **cuatro** cosas que la página enseña y la API no publica. Mientras esa lista
+no esté vacía, borrar la página pierde información del cliente.
+
+✅ **LOS CINCO PASOS, hechos y verificados en navegador el 2026-08-22** (`V4`–`V7`):
+
+| # | Qué cerró | Lo que enseñó |
+|---|---|---|
+| **1** | El nivel **SECCIÓN**: `section.js` + su store, la raíz enruta y publica las señales, el modo `account` | `<KeepAlive>` **anula la template ref** de la que cuelga el puente de señales, y cuesta 2,3 KiB: fuera (`#120(g)`) |
+| **2** | La **NAVEGACIÓN de zonas**: pila de retorno que **no crece al alternar**, «volver» sin historia sale a la compra | Son **DOS zonas y no tres**: `account.orders.title` ya se llama «Mis reservas» de cara al cliente (`#120(i)`) |
+| **3a** | El **CONTRATO de presentación**: `date_label`, `created_label`, `refunded_label`, `guest_form_url` | «Hay que pintar, no abrir dominio» valía para los datos, **no para su presentación**. Y la fórmula del rótulo estaba **copiada en cuatro superficies** (`#120(j)`) |
+| **3b** | Los **DATOS en el cliente**: dos stores y las dos zonas pintando | **`paid_online_cents` incluye los complementos** (68,00 € y no 60,00), y los textos del área deben viajar **solo con sesión**: 701 B con ella, **0** sin ella (`#120(k)`) |
+| **4** | La **PUERTA**: «Mis reservas» abre la sección en vez de navegar, **conservando el `href`** | Medido **cortando el chunk del motor**: sin `href`, el botón «no falla, no hace nada». Y `SidebarAccountVisibilityTest` se había quedado corto (`#120(l)`) |
+| **5** ⏳ | La **CAPTURA DE HUECOS**: `AccountPageCaptureTest`, temporal, con su caducidad en la primera línea | Cuatro huecos con nombre, y **su lista vacía es la condición 1 de la tanda 3**. Tres sondas nacieron inertes y las cazó su propia guarda (`#120(m)`) |
+
+⚠️ **Lo que NO cambió, y es deliberado**: sin sesión, el botón sigue abriendo el modal de la cabecera.
+Traer la auth a la sección es tanda 2 — hacerlo aquí la habría metido entera por la puerta de atrás.
 
 ⚠️ **Y lo primero que la spec midió corrige lo que esta foto venía repitiendo.** «El servidor ya está,
 hay que pintar» **solo vale para LEER**: las cinco gestiones de cuenta —perfil, contraseña, otras
@@ -157,16 +150,18 @@ Lo que te vas a encontrar hecho, y lo que no:
 
 | | |
 |---|---|
-| Diseño | ✅ **escrito** (`specs/area-cliente.md`): navegación, zonas, contrato de datos y plan de verificación. 🟦 dos puntos sin validar |
-| Servidor para **LEER** | ✅ `/me`, `/me/orders`, `/me/reservations` y el reintento por `POST /orders/{code}/payment` |
-| Servidor para **GESTIONAR** | ❌ **no existe**: cinco superficies de API por abrir. Tanda 2, no ésta |
-| Sitio donde entra | ✅ una **SECCIÓN** al lado de `sections/PurchaseSection.vue`; la raíz (16 líneas) solo enruta |
-| Estado | ✅ un **store por dominio**; las peticiones van AHÍ y no al componente (techo de 40 líneas, 0 llamadas) |
-| Navegación | ✅ **diseñada**: índice + zonas libres con pila de retorno. 🟦 sin validar. El grafo del embudo **no se toca** |
+| Diseño | ✅ **aprobado y EJECUTADO** (`specs/area-cliente.md`): tanda 1 cerrada, §8 con las cinco filas en ✅ |
+| Servidor para **LEER** | ✅ `/me`, `/me/orders`, `/me/reservations`, el reintento, y desde 3a las **etiquetas de presentación** |
+| Servidor para **GESTIONAR** | ❌ **no existe**: cinco superficies por abrir. **Es el trabajo de la tanda 2** |
+| La **sección** de cuenta | ✅ montada, con índice y «Mis reservas» pintando datos reales |
+| La **puerta** | ✅ cableada **con sesión**. ⚠️ Sin sesión sigue abriendo el modal: la auth es tanda 2 |
+| Navegación | ✅ zonas libres con pila de retorno. Añadir una zona nueva **no toca el modelo**: entra en `ZONES` con su rótulo |
 | `/mi-cuenta/…` | 🟩 **condenado** (`#120(c)`, owner), tanda 3. ⚠️ Muere la **VISTA**, **vive la RUTA**: 8 correos ya entregados apuntan ahí y no se pueden editar |
-| `account-context` | ❌ sigue en **Livewire**. Aquí solo se le cablea la puerta; migrarlo es trabajo posterior |
-| ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): aquí no hay original que copiar. Es paridad de DATOS contra **la API** —no contra la página condenada— + navegador |
+| Condición de la retirada | ⏳ **`AccountPageCaptureTest::GAPS` vacía** — hoy tiene **cuatro** entradas, y el test las enumera |
+| `account-context` | ❌ sigue en **Livewire**. Se le cableó la puerta; migrarlo es trabajo posterior |
+| ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): no hay original que copiar. Es paridad de DATOS contra **la API** —no contra la página condenada— + navegador |
 | ⚠️ **La cadena flex** | `.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll` son **hijos DIRECTOS**: un envoltorio router la parte y **ningún test lo ve** (`specs/area-cliente.md` §4.9) |
+| ⚠️ **El presupuesto** | El techo del bundle **bajó a 173 KiB al cerrar la tanda**, como manda su propia regla. La tanda 2 tendrá que subirlo **con su medida** y volver a bajarlo |
 
 ⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
 del ORQUESTADOR, **el contrato de árbol no es red** —`render-sidebar.mjs` no importa la raíz y su

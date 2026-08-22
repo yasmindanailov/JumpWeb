@@ -141,14 +141,14 @@ class SidebarBundleBudgetTest extends TestCase
      *   la pantalla con más marcado del área (el historial con su detalle, su paginación y su
      *   reintento) más la composición que la alimenta.
      *
-     * 174 deja **1,3 KiB** de holgura: la de terminar la tanda, no la de una fase. Los pasos que
-     * queden volverán a moverlo, **cada uno con su medida**, que es la forma de que el coste del área
-     * de cliente sea visible en vez de acumularse en un margen que nadie mira.
-     * ▶ Y la otra mitad de la regla, que ya está escrita arriba y aquí se hereda: **cuando la tanda 1
-     * cierre, este número se vuelve a BAJAR a lo medido**. Un techo con margen sobrante deja de
-     * apretar.
+     * ✅ **Y BAJA a 173 al CERRAR la tanda 1** (paso 5, 2026-08-22), que es la otra mitad de la regla y
+     * la que casi nunca se cumple: *un techo con margen sobrante deja de apretar*. El 174 se puso con
+     * holgura para terminar los pasos que faltaban; medido al cerrar, el chunk son **172,7 KiB**, así
+     * que 173 deja ~0,3 — la de un retoque, no la de una tanda.
+     * ▶ **La tanda 2** (las cinco gestiones de cuenta) tendrá que subirlo otra vez **con su medida**,
+     * y volver a bajarlo al cerrar. Ése es el ciclo: sube con motivo, baja al agotarse el motivo.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 174;
+    private const SIDEBAR_CHUNK_MAX_KB = 173;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
