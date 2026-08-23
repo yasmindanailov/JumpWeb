@@ -2,14 +2,15 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-23** (arranca **la AUTH dentro del cajón**, el
-> último trozo de `#66`: spec escrita y revisada, y su paso A1 hecho).
+> aquí solo se enlaza. Última actualización: **2026-08-23** (**la AUTH vive en el cajón y el modal está
+> retirado**: con eso `#66` queda cumplido — `DECISIONES #122`).
 
 ## ▶ Dónde estamos
 
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) ✅ — CERRADA el
-2026-08-22.** ▶ **La siguiente es la Fase 5** (capa de contenido profesional), o cualquiera de los
-dos trozos que el área de cliente dejó fuera a propósito. El detalle, en «Próximo paso».
+2026-08-22, y el 2026-08-23 se le añadió el último trozo de `#66`: la AUTH dentro del cajón.**
+▶ **Quedan DOS candidatos** —`account-context` a Vue y la Fase 5—, y los elige el owner. Detalle en
+«Próximo paso».
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -24,8 +25,8 @@ diseño está en `docs/specs/sidebar-spa.md` §4.10 y el del área, en `docs/spe
 🟩 **EL ÁREA DE CLIENTE ESTÁ TERMINADA** (`#66`, `#120`), y con ella la Fase 4 cierra su alcance:
 **1 (solo lectura) ✅** · **2 (gestiones) ✅** · **3 (retirar `/mi-cuenta/…`) ✅** — las páginas ya no
 existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u)`).
-⚠️ **Lo que el área NO se llevó, y no era de ninguna tanda**: la **auth** sigue en el modal de la
-cabecera y **`account-context` sigue en Livewire**. Las dos con ficha en `DEUDA.md`.
+⚠️ **De los dos trozos que el área dejó fuera a propósito, la AUTH ya está hecha** (`#122`,
+2026-08-23). Queda **`account-context`, todavía en Livewire**: ficha en `DEUDA.md`.
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -47,16 +48,11 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 
 - Suite **2648 en verde** (15.129 aserciones, `--parallel` **~44 s** medidos el 2026-08-23) ·
   **584 tests JS** (`node --test`) · Pint limpio (828 ficheros) · `docs-check` verde ·
-  ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
-  `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
-  sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
-  embebida se retiró **tras medir** que `Api\V1\AuthRegistrationTest` ya cubre su mitad de API —medir
-  para no encontrar nada sigue siendo medir (`#94`)—; y **+2 PHP / +21 JS** por `forgot.js`, el
-  contexto del alta y su guarda de cableado (A3).
-  ⚠️ **Y el cierre anterior fue la primera vez que el contador BAJÓ**: la retirada de `/mi-cuenta/…`
-  se llevó **63 casos** cuyo sujeto era la superficie borrada. Ninguno se perdió por descuido — los
-  que afirmaban del dominio se extrajeron y los que la usaban de intermediario se re-apuntaron
-  (`#120(u)`). Un contador que solo puede subir acaba premiando el test que no se retira.
+  ⚠️ **El contador ha BAJADO dos cierres seguidos, y las dos veces a propósito**: `/mi-cuenta/…` se
+  llevó 63 casos (`#120(u)`) y el modal de auth, 42 (`#122`). Ninguno se perdió por descuido — en el
+  segundo se midió **por mutación** cuáles cazaba también la API antes de borrar, y los tres que eran
+  guardián único se re-apuntaron. **Un contador que solo puede subir acaba premiando el test que no se
+  retira.**
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
   «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
   ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
@@ -142,9 +138,8 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 - ⚠️ **`account-context` sigue siendo Livewire y hermano** del punto de montaje de Vue: el cajón SPA
   nunca lo ha pintado. Se le **cableó la puerta** en la tanda 1 (su «Mis reservas» abre la sección),
   pero migrarlo entero sigue pendiente. Ahí murieron las señales de `#118`; su fila está en `DEUDA.md`.
-- ⚠️ **El modal de auth de la cabecera sigue siendo la puerta de entrada** para quien no tiene sesión.
-  Traer la auth dentro del cajón **no está en ninguna de las tres tandas**: se decidió dejarlo fuera
-  para no doblar el tamaño de la tanda 2. Es trabajo aparte, y su ficha está en `DEUDA.md`.
+- ✅ **La puerta de entrada de quien no tiene sesión es el CAJÓN** desde `#122` (2026-08-23): el modal
+  de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
 
@@ -164,107 +159,19 @@ URL**. Hoy el «atrás» del navegador no hace nada dentro del cajón y una zona
 
 ▶ **Si tocas la auth, lee `specs/auth-en-cajon.md`**: su valor no es el diseño sino lo que MIDIÓ —§8.bis
 es el método de la auditoría, y §4.10 las conductas que ningún test de árbol ve.
-▶ **Hecho hasta ahora**: **A1** — las **cinco** superficies de auth quedan `noindex` con test propio,
-medido por mutación en las dos direcciones. Destapó de paso que `/restablecer-contrasena/{token}` —una
-URL con token dentro— y `/email/verificar` se servían `index, follow`.
-▶ **Lo que la revisión destapó y hay que saber antes de seguir** (detalle en la spec):
-· los textos del área **viajan solo con sesión**, así que quien entra dentro del cajón aterrizaría en
-un índice **en blanco** → se navega a la puerta (§3.3, decisión del owner);
-· `register.js` lleva **`context: 'purchase'` quemado**: reutilizar el alta tal cual convertiría el
-alta suelta en **pay-first**, sin correo de verificación (§4.3);
-· **el techo del payload del montaje vivía dentro de `SidebarLoginParityTest`**, uno de los ficheros
-que se retiran (§4.7.bis) — ✅ **ya mudado**, ver abajo.
-▶ **A2 hecho el 2026-08-23**: los ocho supervivientes de las dos paridades están en su sitio —cinco
-del payload en `SidebarMountTest`, el señuelo en `Api\V1\AuthRegistrationTest`, el anti-bot en el
-nuevo `SidebarAntiBotTest`— y **re-mutados allí** (`#65`). En los dos ficheros de paridad solo quedan
-los **6** casos que de verdad comparan motores, y todos siguen montando Livewire: mueren con el modal.
-▶ **A3 hecho el 2026-08-23**: nace `forgot.js` —recuperar contraseña, con la no-enumeración probada
-**cruzando las dos respuestas** y no mirando una rama— y **`context` deja de estar quemado**. El
-embudo manda `purchase` explícito; el default es `standalone`, el conservador. Verificado **sobre el
-chunk construido**, no sobre el fuente. ⚠️ El techo del chunk sube **190 → 191 KiB** (medido: 190,5,
-**+1,0**), y con criterio nuevo: **paso a paso con su medida**, no por adelantado para toda la tanda.
-▶ **A4 hecho el 2026-08-23**: viven en el cajón las zonas **`LOGIN` y `FORGOT`**, la guarda de
-alcanzabilidad cambia de forma —dos puertas declaradas, no una excepción a mano— y el aterrizaje es un
-módulo plano con el `window` por parámetro. **El primero de los cinco puntos que abrían el modal ya no
-lo abre**: el aviso de sesión caducada de «Mis reservas» lleva a la zona de entrar.
-⚠️ **A4 se recortó por DEPENDENCIA**: la zona de ALTA necesita su «revisa tu correo» con reenvío, que
-arrastra otro subgrupo de textos y otro endpoint, así que fue en su paso (A5). Techos: chunk **191 →
-194 KiB** (medido 193,9) y payload del montaje **+449 B** en las dos caras (anónimo 2.120, con sesión
-5.157) — es `account.forgot` entero, y viaja sin sesión **a propósito**: sus pantallas son las que ve
-justo quien no ha entrado.
-▶ **A5 hecho el 2026-08-23: LAS TRES PANTALLAS DE AUTH YA VIVEN EN EL CAJÓN.** Entra la zona de ALTA
-con sus dos caras —formulario y «revisa tu correo» con **reenvío y escape**, que el cajón no tenía— y
-las pestañas, que navegan entre zonas en vez de cambiar un modo interno. El alta manda
-`context: standalone`, así que **sí manda el correo de verificación y no abre sesión**.
-⚠️ **Tres cosas que A5 dejó medidas y conviene no perder**:
-· **la cuenta atrás del reenvío espeja el limitador por IP del servidor** (30 s), porque el endpoint
-  responde **202 aunque descarte el envío**: una espera más corta ofrece un botón que no manda nada.
-  Lo cruza `SidebarResendCooldownTest`, que lee los DOS lados — y su primera versión leyó el número
-  equivocado, porque `register()` y `resendVerification()` usan la misma variable en el mismo fichero;
-· **el techo de componentes volvió a forzar el reparto correcto**: la zona llegó a **43 de 40** líneas
-  con el reloj dentro y bajó a **25** al mudar la secuencia al store;
-· **`resendGate` falla CERRADA** tras un fallo real: se le pasaba el store entero, el campo se llama
-  distinto y la puerta ignoraba la cuenta atrás **sin fallar**. Hoy un campo que no es un número deja
-  el botón deshabilitado, no habilitado.
-Techos de A5: chunk **194 → 199 KiB** (medido 198,3) y payload **+474 B** (anónimo 2.594, con sesión
-5.631) por `account.verify`, ya podado a **9 de sus 14** rótulos.
-✅ **VALIDADO POR EL OWNER en navegador el 2026-08-23, en DOS pasadas**: la primera con el modal aún
-presente y la segunda **ya sin él**. Es la cuarta condición del DoD (`CONVENCIONES §3.bis`).
-⚠️ **[PENDIENTE: owner]** — dijo que **hay detalles que pulir** y que los verá **al terminar todo el
-cajón**, sin concretar cuáles. No están escritos en ninguna parte: **el siguiente agente tiene que
-pedirle la lista antes de darlos por hechos**, no adivinarlos.
-⚠️ Lo que esas dos pasadas **no** cubrieron: el alta suelta con su reenvío (V17) y el paso 5 completo
-(V18). El guion entero está en `VERIFICACION-E2E-CAJON.md` **§5.quinquies**.
+▶ **Cómo se hizo, en una línea por si acaso**: diez pasos por DEPENDENCIA (`spec §8`), cada uno con
+su medición y su mutación. Lo que la ejecución encontró —y que no estaba en el diseño— vive en
+`DECISIONES #122(h)`–`(o)`: **no se repite aquí**, porque duplicarlo es crear una copia que nadie
+guarda.
 
-▶▶ **A6 hecho el 2026-08-23: YA NADIE ABRE EL MODAL.** Las tres rutas de auth son **puertas** —sirven
-la home y abren el cajón en su zona, igual que `/entradas` y `/mi-cuenta/…`— y los cuatro puntos que
-quedaban (los dos CTA de la cabecera y los dos del bloque de cuenta) llevan al cajón. Los CTA pasaron
-de `<button>` a `<a href>`: la ruta existe como puerta, así que el clic central, «abrir en pestaña
-nueva» y un navegador sin JS acaban en la misma pantalla. **El modal sigue renderizado pero es
-inalcanzable**: se retira en A9, después de auditar sus tests.
-⚠️ **Tres cosas que A6 dejó y conviene no perder**:
-· **la zona pendiente tiene UN SOLO consumidor** (`applyAccountZone`), porque la señal se vacía al
-  aplicarla y con dos sitios uno llega a una zona ya consumida — la trampa de 4.0a y de `#120(u)`;
-· **el puente de la cabecera cuelga de la PROMESA del motor**: entre el clic y el montaje `spaHandle`
-  es `null`, y aplicar la zona ahí sería aplicarla sobre nada (`#117`);
-· **una puerta de invitado CON sesión abre el índice**, no un formulario de entrar. Antes no hacía
-  falta escribirlo —el modal era `@guest`—; la puerta abre el cajón siempre.
-▶ **A7 hecho el 2026-08-23**: el **paso 5 del embudo gana «he olvidado mi contraseña»**, que es lo que
-`#122(a)` pedía. El diff del árbol congelado fue **un solo nodo** —verificado antes de regenerar el
-manifiesto, que es la condición que ese test pone para no ser una goma de borrar— y el presupuesto del
-chunk no se movió: el enlace ya estaba en el bundle desde A4 y solo cambió su prop.
-⚠️ **Y obligó a definir qué significa «volver» desde los TRES orígenes**, porque la pantalla de
-recuperar es una y su enlace de vuelta también: desde entrar deshace la pila; desde una **puerta por
-URL** se siembra `LOGIN` debajo —sin eso, «volver a iniciar sesión» sacaba al **catálogo de compra**—;
-y desde el **embudo** la pila queda vacía **a propósito**, que es lo que hace que «volver» salga de la
-sección y devuelva la compra donde estaba. La regla vive en `account/navigation.js::parentZoneFor()` y
-la decide quien llama, no `enter()`.
-▶▶ **A8 hecho el 2026-08-23: la auditoría destapó un HUECO DE SEGURIDAD vivo, no solo tests.** Se
-mutó cada regla de dominio y se apuntó quién la caza (15 mutaciones, 94 casos de base). Resultado:
-**32 de los 36 mueren** —redundantes con la API o con el servicio, o su sujeto es el modal—, **3 son
-guardián único y se re-apuntaron**, y **1 no guardaba nada porque la regla nunca existió en la API**.
-⚠️ **El hueco**: que entre otra persona **no descartaba el desenlace de pago de la anterior**.
-`SidebarEntry` vive en sesión y `regenerate()` conserva los datos, así que en un dispositivo
-compartido Bob se encontraba el cajón con el «pago denegado» de Alice y su código de pedido. La
-defensa vivía SOLO en el modal, y el login de la API —el que usa el cajón **desde 4.4a·2**— nunca la
-tuvo. Arreglada en `AuthSessionController::login`, con control negativo y medida por mutación.
-⚠️ Y dos huecos menores: la **validación del correo** de `POST /auth/password/forgot` no la
-comprobaba nadie —relajarla dejaba 96 casos en verde y el endpoint contestaba 202 a quien no escribió
-correo— y el **escape de «revisa tu correo»** del cajón tampoco. El detalle, en `specs/auth-en-cajon.md`
-§8.bis.
-▶▶ 🟩 **A9 hecho el 2026-08-23: EL MODAL DE AUTH ESTÁ RETIRADO.** Se van los tres componentes
-Livewire con sus plantillas, el bloque `@guest` del layout, el almacén `$store.auth` de Alpine, el
-prop `authModal`, el trait `ResetsOnModalClose` y las dos paridades de árbol. **Con eso `#66` queda
-cumplido**: la gestión del cliente vive en UN solo sitio.
-⚠️ La suite baja **2690 → 2648**, −42 exactos (36 casos del modal + 6 de paridad), y es la segunda vez
-que el contador baja: los que afirmaban del dominio ya estaban cubiertos —medido en A8— y los tres que
-eran guardián único se re-apuntaron antes de borrar.
-⚠️ **El barrido de citas destapó tres tests más** que el inventario no tenía —dos en `Detalles216Test`
-y uno en `HomePageTest`—, porque el `grep` de `$store.auth` se hizo sobre `resources/` y no sobre
-`tests/`. Se re-apuntaron: su sujeto es que el CTA existe y hace algo, no qué hace.
-⚠️ **Y una consecuencia que hay que saber**: `account-context` es ahora el **ÚNICO** componente
-Livewire que el layout renderiza, así que la redundancia que hace llegar `livewire.js` —y con él
-Alpine, y con Alpine el cajón entero— **cuelga de él**. Ficha actualizada en `DEUDA.md`.
+⚠️ **Las cuatro cosas que de verdad condicionan lo que toques encima**, y solo estas:
+
+| | |
+|---|---|
+| **La red NO es el diff de árbol** | `render-sidebar.mjs` no monta las zonas de la cuenta. Lo que las cubre son sus `node --test`, unas pocas guardas de cableado y **el navegador**: guion en `VERIFICACION-E2E-CAJON.md` §5.quinquies |
+| ⚠️ **El contexto del alta** | `register.js` **no** decide si el alta es *pay-first*: lo manda quien llama, y el default es el conservador. Quemarlo otra vez deja a las altas sueltas sin correo de verificación **sin que nada falle** (`SidebarSignupContextTest`) |
+| ⚠️ **La cuenta atrás del reenvío** | Espeja el limitador por IP del servidor porque el endpoint responde **202 aunque descarte el envío**. Acortarla ofrece un botón que no manda nada (`SidebarVerifyScreenTest` cruza los dos lados) |
+| ⚠️ **`account-context` es el ÚLTIMO Livewire del layout** | De él cuelga que llegue `livewire.js`, y con él Alpine y el cajón entero. Quien lo migre debe dejar `@livewireScripts` sí o sí |
 
 | | Qué es | Por qué importa |
 |---|---|---|
