@@ -127,7 +127,21 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertJsonStructure(['error' => ['fields' => ['email']]]);
 
         $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count(), 'no puede duplicar la cuenta');
-        Notification::assertSentTo($existing, AccountAlreadyExists::class);
+        // ⚠️⚠️ **Y el CTA de ese correo apunta a `login`, no a la home.** Se comprueba aquí desde la
+        // auditoría de A8 (`specs/auth-en-cajon.md` §8): vivía en `DuplicateEmailEdgeCaseTest`, que
+        // conducía el modal de Livewire, y **era su ÚNICO guardián** —el caso de al lado solo
+        // aseveraba que el correo se envía, no a dónde lleva—. El correo y su ruta sobreviven al
+        // modal, así que el caso se re-apunta en vez de irse con él (`CONVENCIONES §3.quater`).
+        // ▶ La decisión es de `#112`: sin ella el titular llegaba a `/` sin saber qué hacer. Y la
+        // ruta sigue existiendo porque `login` es hoy una PUERTA que abre el cajón en su zona.
+        Notification::assertSentTo($existing, AccountAlreadyExists::class, function ($notification) use ($existing) {
+            $mail = $notification->toMail($existing)->toArray();
+
+            $this->assertSame(route('login'), $mail['actionUrl'], 'el CTA del correo ya no lleva a identificarse');
+            $this->assertSame(__('account.exists_mail.action'), $mail['actionText']);
+
+            return true;
+        });
     }
 
     /** Y si existe SIN verificar, se le reenvía la verificación para que complete su alta. */

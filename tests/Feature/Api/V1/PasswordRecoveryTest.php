@@ -69,6 +69,39 @@ class PasswordRecoveryTest extends ApiTestCase
         Notification::assertNothingSent();
     }
 
+    /**
+     * **Un correo que falta o no lo es se rechaza con 422, no se «acepta» en silencio.**
+     *
+     * ⚠️ **Este caso nace de la auditoría de A8 y cierra un hueco REAL de la superficie que
+     * sobrevive** (`specs/auth-en-cajon.md` §8). Medido por mutación: relajar la regla del
+     * controlador a `sometimes` **no tumbaba ni un test de toda la suite** —los 96 del alcance
+     * seguían en verde—. La validación equivalente sí estaba probada, pero en
+     * `Auth\ForgotPasswordTest`, que conduce el **modal de Livewire** y se retira con él: el subject
+     * de aquel caso es la validación del componente, no la del endpoint.
+     *
+     * ▶ Es exactamente el criterio de `CONVENCIONES §3.quater`: *si un dato viaja al cliente y su
+     * único test conduce la superficie vieja, el contrato NO lo está fijando*. Aquí ni siquiera lo
+     * conducía — sencillamente no había nadie.
+     *
+     * ⚠️ Sin la regla, un `email` ausente llegaría a `PasswordRecovery::requestLink()` como cadena
+     * vacía y el endpoint respondería **202** — le diría «revisa tu correo» a quien no ha escrito
+     * ninguno, que es la peor forma de no fallar.
+     */
+    public function test_asking_for_the_link_validates_the_email(): void
+    {
+        $this->send('/auth/password/forgot', [])
+            ->assertStatus(422)
+            ->assertValidResponse(422)
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['fields' => ['email']]]);
+
+        $this->send('/auth/password/forgot', ['email' => 'no-es-un-correo'])
+            ->assertStatus(422)
+            ->assertJsonStructure(['error' => ['fields' => ['email']]]);
+
+        Notification::assertNothingSent();
+    }
+
     public function test_asking_for_the_link_is_rate_limited(): void
     {
         foreach (range(1, PasswordRecovery::MAX_LINK_REQUESTS) as $ignored) {

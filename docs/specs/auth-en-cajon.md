@@ -522,6 +522,54 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A5** ✅ | **`REGISTER`** con su «revisa tu correo» **con reenvío y escape** (§4.10·2), y las pestañas | Va junto porque va junto: sin la pantalla de después, el alta suelta —que NO abre sesión— no lleva a ninguna parte. **Hecho el 2026-08-23**, y dejó tres cosas medidas: el techo de componentes obligó a mudar la secuencia al store (43→25 líneas), la cuenta atrás quedó **cruzada con el limitador del servidor** en un test PHP, y `resendGate` pasó a **fallar cerrada** tras un fallo real |
 | **A6** ✅ | Las puertas: `AccountDoor` + `openAccount()` + los cuatro puntos que quedan | Ya hay a dónde llegar. ⚠️ **Aquí vivían DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4). **Hecho el 2026-08-23**: los dos cerrados, **nadie abre ya el modal** y apareció una regla que no estaba escrita —una puerta de invitado **con sesión** abre el índice, no un formulario de entrar— |
 | **A7** ✅ | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6). **Hecho el 2026-08-23**: el diff del árbol fue **un solo nodo** (`<button class=auth__link>`), verificado antes de regenerar. Y obligó a definir qué significa «volver» desde los **tres** orígenes (§3.4) |
-| **A8** | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después |
-| **A9** | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest`, `SpinnerTest` y la decisión sobre `SidebarEntry::clear()` | Cuando ya no queda nadie que dependa. Las cuatro caen a la vez: separarlas deja la suite roja sin dueño |
+| **A8** ✅ | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después. **Hecho el 2026-08-23** — resultado en §8.bis: **32 mueren, 3 se re-apuntan y 1 destapó un hueco de SEGURIDAD vivo** |
+| **A9** | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest` y `SpinnerTest` | Cuando ya no queda nadie que dependa. Caen a la vez: separarlas deja la suite roja sin dueño. ✅ `SidebarEntry::clear()` ya no es una decisión pendiente: A8 la resolvió (§8.bis) |
 | **A10** | Presupuestos re-medidos y **bajados a lo medido**, doc (`MAPA-PAGINAS`, `SEGURIDAD`, `FLUJOS`, `DEUDA`, `sistemas/UI-SPINNER`) y **NAVEGADOR** | El cierre, con evidencia |
+
+## 8.bis El resultado de la AUDITORÍA (A8), y cómo se obtuvo
+
+**No se clasificó leyendo.** Se mutó **cada regla de dominio compartida**, una por una, y se apuntó
+qué ficheros la cazaban: si la caza también un test de API o de servicio, el caso Livewire es
+redundante; si es el único, es el guardián y **no puede irse sin más**. Quince mutaciones sobre
+`PasswordLogin`, `SelfSignup`, `PasswordRecovery`, `AccountAlreadyExists` y los dos controladores,
+con el alcance acotado a los ocho ficheros implicados (**94 casos** en verde de base).
+
+⚠️ **El andamio también hubo que medirlo**: la primera tanda no aplicó ni una mutación porque
+`\Q…\E` de perl protege los metacaracteres **pero no impide la interpolación**, así que un ancla con
+`$ipKey` dentro se evaporaba y el `grep` de comprobación lo delató. Un mutador que no muta da
+exactamente el mismo verde que un test que no mide.
+
+| Grupo | Casos | Veredicto |
+|---|---|---|
+| **Reglas de dominio** — los dos limitadores del login, la normalización del correo, las credenciales, el señuelo, los dos limitadores del alta, el correo ya verificado, los consentimientos y el rol, el limitador y el envío de recuperar | **~20** | **MUEREN**: cada una la caza además `AuthSessionTest`, `AuthRegistrationTest`, `PasswordRecoveryTest` o `PasswordLoginTest`. Medido, no supuesto |
+| **La superficie del modal** — el modo `embedded`, los tres «al cerrar se limpia», el reenvío con su contador, los morphs de Livewire, la pantalla `sent` | **~12** | **MUEREN con ella.** ⚠️ La regla del contador y la espera **ya vive** en `account/verify.js` con sus casos; la de la tablet compartida sigue siendo §4.10·1 |
+| **`login_clears_cart_from_a_different_previous_user`** y su control | **2** | ⚠️ **GUARDIÁN ÚNICO → RE-APUNTADOS** a `AuthSessionTest`, y con un **arreglo de por medio** (abajo) |
+| **El CTA del correo `AccountAlreadyExists`** | **1** | ⚠️ **GUARDIÁN ÚNICO → RE-APUNTADO** a `AuthRegistrationTest`. El caso de al lado solo aseveraba que el correo se envía, **no a dónde lleva** |
+
+### ⚠️⚠️ Lo que la auditoría destapó, y no era un test: era un HUECO VIVO
+
+**Que entre otra persona no descartaba el desenlace de pago de la anterior.** `SidebarEntry` vive en
+SESIÓN y `Session::regenerate()` **conserva los datos**, así que en un dispositivo compartido Bob se
+encontraba el cajón abierto con el «pago denegado» de Alice y su código de pedido.
+
+▶ La defensa existía **solo en `Livewire\Auth\Login`** —el modal que se retira— y su único guardián
+era un test que se iba con él: la mutación tumbaba **un** caso de toda la suite. El login de la API,
+que es el que usa el cajón **desde 4.4a·2**, nunca la tuvo; el propio controlador lo daba por sabido
+en un comentario («el sidebar Livewire hace lo mismo, más lo suyo con la cesta») sin que nadie lo
+leyera como el hueco que era. Arreglado en `AuthSessionController::login`, con su control negativo —a
+la misma persona no se le borra la confirmación de su propia compra— y medido por mutación.
+
+⚠️ **Y un segundo hueco, más pequeño**: la validación del correo de `POST /auth/password/forgot`
+**no la comprobaba nadie**. Relajarla a `sometimes` dejaba los 96 casos del alcance en verde: el
+endpoint habría respondido **202** —«revisa tu correo»— a quien no escribió ninguno. Lo que sí estaba
+probado era la validación del **componente**, que se va con él.
+
+⚠️ **Un tercero, del lado del cajón**: el escape «¿ya tienes cuenta?» de «revisa tu correo»
+**no lo guardaba nadie**. `SidebarMountTest` asevera que el texto VIAJA en el payload, no que la
+pantalla lo pinte — y un texto que viaja y no se pinta es exactamente el hueco de los 20 iconos
+vacíos (`#113`). Hoy lo cubre `SidebarVerifyScreenTest`, que además comprueba que el escape queda
+**fuera** de la rama de los reenvíos: quien los agota es justo quien más necesita salir.
+
+▶ **La lección, que es la de `#89`/`#93` con un caso nuevo**: *un test que conduce la superficie
+vieja no fija el contrato de la que sobrevive* — y a veces no fija nada, porque la que sobrevive
+nunca tuvo la regla.

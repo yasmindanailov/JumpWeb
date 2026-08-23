@@ -45,7 +45,7 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2685 en verde** (15.483 aserciones, `--parallel` **~59 s** medidos el 2026-08-23) ·
+- Suite **2690 en verde** (15.509 aserciones, `--parallel` **~71 s** medidos el 2026-08-23) ·
   **584 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
@@ -227,6 +227,19 @@ URL** se siembra `LOGIN` debajo —sin eso, «volver a iniciar sesión» sacaba 
 y desde el **embudo** la pila queda vacía **a propósito**, que es lo que hace que «volver» salga de la
 sección y devuelva la compra donde estaba. La regla vive en `account/navigation.js::parentZoneFor()` y
 la decide quien llama, no `enter()`.
+▶▶ **A8 hecho el 2026-08-23: la auditoría destapó un HUECO DE SEGURIDAD vivo, no solo tests.** Se
+mutó cada regla de dominio y se apuntó quién la caza (15 mutaciones, 94 casos de base). Resultado:
+**32 de los 36 mueren** —redundantes con la API o con el servicio, o su sujeto es el modal—, **3 son
+guardián único y se re-apuntaron**, y **1 no guardaba nada porque la regla nunca existió en la API**.
+⚠️ **El hueco**: que entre otra persona **no descartaba el desenlace de pago de la anterior**.
+`SidebarEntry` vive en sesión y `regenerate()` conserva los datos, así que en un dispositivo
+compartido Bob se encontraba el cajón con el «pago denegado» de Alice y su código de pedido. La
+defensa vivía SOLO en el modal, y el login de la API —el que usa el cajón **desde 4.4a·2**— nunca la
+tuvo. Arreglada en `AuthSessionController::login`, con control negativo y medida por mutación.
+⚠️ Y dos huecos menores: la **validación del correo** de `POST /auth/password/forgot` no la
+comprobaba nadie —relajarla dejaba 96 casos en verde y el endpoint contestaba 202 a quien no escribió
+correo— y el **escape de «revisa tu correo»** del cajón tampoco. El detalle, en `specs/auth-en-cajon.md`
+§8.bis.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

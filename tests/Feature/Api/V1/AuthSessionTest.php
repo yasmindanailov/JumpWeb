@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\PasswordLogin;
+use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
@@ -56,6 +57,61 @@ class AuthSessionTest extends ApiTestCase
             ->assertJsonPath('id', $user->id);
 
         $this->assertAuthenticatedAs($user->fresh());
+    }
+
+    /**
+     * ⚠️⚠️ **Que entre OTRA persona descarta el desenlace de pago de la anterior.**
+     *
+     * `Http\Sidebar\SidebarEntry` guarda EN SESIÓN en qué quedó el último pago —confirmado, denegado
+     * o verificando— para que el cajón lo enseñe al volver de la pasarela. `Session::regenerate()`
+     * **conserva los datos**, así que sin este descarte, en un dispositivo compartido Bob se
+     * encontraría el cajón abierto con el «pago denegado» de Alice y su código de pedido.
+     *
+     * ▶ **Este caso nace de la auditoría de A8** (`specs/auth-en-cajon.md` §8), y lo que destapó es
+     * que la defensa vivía SOLO en `Livewire\Auth\Login` —el modal que se retira— y que su único
+     * guardián era un test que se va con él. Medido por mutación: desactivarla tumbaba **un** test de
+     * toda la suite. El login de la API, que es el que usa el cajón **desde 4.4a·2**, nunca la tuvo;
+     * el propio controlador lo decía en un comentario («el sidebar Livewire hace lo mismo, más lo
+     * suyo con la cesta») sin que nadie lo leyera como el hueco que era.
+     *
+     * ⚠️ El marcador es **quién estaba autenticado antes**, no la clave de sesión `purchase.user_id`
+     * que usaba el modal: esa clave ya no la lee nadie —su consumidor era el `Purchase.php` que
+     * `#112` retiró— y resucitarla habría sido inventar un segundo estado para decir lo mismo.
+     */
+    public function test_a_login_by_someone_else_discards_the_previous_payment_outcome(): void
+    {
+        $alice = $this->customer('alice@jumpweb.test');
+        $bob = $this->customer('bob@jumpweb.test');
+
+        $this->actingAs($alice);
+        SidebarEntry::failed('R-DE-ALICE');
+
+        $this->fromSpa('/auth/login', ['email' => $bob->email, 'password' => 'password'])->assertOk();
+
+        $this->assertAuthenticatedAs($bob->fresh());
+        $this->assertFalse(
+            SidebarEntry::peek()->pending(),
+            'Bob se encuentra el desenlace del pago de Alice: el cajón se le abriría con el pedido de otra persona'
+        );
+    }
+
+    /**
+     * **Y a la MISMA persona no se le descarta nada**, que es la otra mitad de la regla.
+     *
+     * ⚠️ Sin este control, «descartar siempre» pasaría el caso de arriba con matrícula — y le
+     * borraría la confirmación de su compra a quien vuelve a identificarse en mitad del flujo, que es
+     * justo lo que `SidebarEntry` existe para no perder.
+     */
+    public function test_and_the_same_person_keeps_it(): void
+    {
+        $alice = $this->customer('alice@jumpweb.test');
+
+        $this->actingAs($alice);
+        SidebarEntry::confirmed('R-DE-ALICE');
+
+        $this->fromSpa('/auth/login', ['email' => $alice->email, 'password' => 'password'])->assertOk();
+
+        $this->assertTrue(SidebarEntry::peek()->pending(), 'se ha perdido el desenlace de su propia compra');
     }
 
     /** El correo se normaliza en servidor: quien lo escribe con mayúsculas entra igual. */
