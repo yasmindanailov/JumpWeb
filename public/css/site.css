@@ -600,7 +600,14 @@
 .form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 560px) { .form__row { grid-template-columns: 1fr; } }
 .form__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-.form__field > span { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--fg); }
+/* ⚠️⚠️ **El selector cubre también `.form__label`, y desde el 2026-08-23** (`specs/account-context-vue.md`).
+   Esta regla se escribió para un `<span>` porque así lo pintaba la web; al transcribir el cajón, las
+   etiquetas pasaron a ser `<label class="form__label" for="…">` —que es lo CORRECTO: un `<span>` no
+   asocia nada con su campo ni lo activa al pulsarlo— pero **el estilo no siguió al marcado**, así que
+   cinco zonas del área servían sus etiquetas sin tamaño, sin peso y sin color. Una mejora de
+   accesibilidad que perdió su aspecto por el camino, y que ningún gate veía. */
+.form__field > span,
+.form__field > .form__label { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--fg); }
 .form__field input,
 .form__field textarea {
     font-family: var(--font-body); font-size: 15px; color: var(--fg);
@@ -1001,6 +1008,11 @@
     letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: 8px 0 0;
 }
 .auth__sub { margin: 8px 0 0; color: var(--fg-mute); font-size: 14px; line-height: 1.5; }
+
+/* ⚠️ **La confirmación del alta: «te hemos escrito a …»**, y va con más peso que el consejo de spam
+   que lleva debajo. Sin regla —como estuvo hasta el 2026-08-23— las dos frases se leían igual y el
+   correo, que es el DATO que el titular tiene que reconocer, se perdía entre ellas. */
+.auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
 .auth__form { max-width: none; margin-top: 18px; }
 .auth__submit { width: 100%; justify-content: center; margin-top: 6px; }
 .form__hint { color: var(--fg-mute); font-size: 12px; }
@@ -1082,6 +1094,13 @@
 /* ====================================================================
    Sidebar de compra de entradas (Fase 5.2): asistente paso a paso.
    ==================================================================== */
+/* ⚠️⚠️ **El bloqueo va en los DOS, y el `<body>` solo no bastaba** (2026-08-23). Cuando el elemento
+   que scrollea es el DOCUMENTO —lo normal si el `<body>` no acota su altura, y prácticamente siempre
+   en táctil— `overflow: hidden` sobre el body recorta su desbordamiento pero **no congela la
+   página**: al hacer scroll dentro del cajón, el fondo se movía. La clase la pone su dueño ÚNICO
+   (`ui/scroll-lock.js`), que ahora la escribe en los dos elementos — sigue habiendo un solo escritor
+   y un solo nombre de clase, que es lo que `DECISIONES #58` compró. */
+html.no-scroll,
 body.no-scroll { overflow: hidden; }
 .sidecart { position: fixed; inset: 0; z-index: 160; visibility: hidden; }
 .sidecart.is-open { visibility: visible; }
@@ -1109,7 +1128,13 @@ body.no-scroll { overflow: hidden; }
 /* Asistente (wizard): solo se muestra el paso activo. Sidebar v2: columna flex que llena el
    cuerpo; el contenido scrollea en `.purchase__scroll` y el footer queda pinned debajo. */
 .purchase { display: flex; flex-direction: column; position: relative; flex: 1; min-height: 0; }
-.purchase__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--sp-20); }
+/* ⚠️ **`overscroll-behavior: contain` corta el ENCADENAMIENTO**, y es la otra mitad del bloqueo del
+   fondo: congelar el documento no impide que el gesto se PROPAGUE. Sin esto, al llegar al tope de
+   este scroll el navegador pasa el desplazamiento al ancestro y arrastra la página de detrás.
+   Hasta el 2026-08-23 esta propiedad no aparecía ni una vez en el repo.
+   ▶ Va aquí y no en `.sidecart__panel` porque **éste es el único contenedor que scrollea** dentro del
+   cajón, y lo comparten el embudo y el área de cliente (los dos montan sobre `Shell.vue`). */
+.purchase__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--sp-20); }
 .purchase__scroll::-webkit-scrollbar { width: 10px; }
 .purchase__scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); border: 3px solid var(--bg); }
 .wiz__title { margin: 0 0 14px; font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
@@ -1209,6 +1234,30 @@ body.no-scroll { overflow: hidden; }
                 /* el retardo IGUALA a la duración del colapso: se va del foco justo al terminar */
                 visibility 0s var(--dur-collapse);
 }
+/* ⚠️⚠️ **EL HUECO ANTES DE QUE LLEGUE EL MOTOR** (`specs/account-context-vue.md` §4.1). Desde el
+   2026-08-23 el bloque lo pinta Vue, que llega con un `import()` en la primera apertura: hasta
+   entonces el hueco lleva dentro solo el SUELO —el formulario de cerrar sesión— y se mantiene
+   colapsado, porque una franja crema con un botón suelto se lee como un fallo. Lo expande
+   `account/host.js`: `takeOver()` al montar (vaciando el suelo) o `reveal()` si el motor no llega.
+
+   ⚠️ **Se escribe con DOS clases (`.acct.acct--pending`) y es obligatorio.** `.acct` está declarada
+   en dos bloques de esta hoja —la rejilla aquí arriba y la caja en «Bloque de cuenta del sidebar»,
+   más abajo—; con especificidad (0,1,0) el orden de fuente decidiría, y el segundo le devolvería el
+   padding y el borde. El resultado sería justo la franja que esto evita, y **ningún test la vería**.
+
+   ⚠️ **`visibility: hidden` no es de adorno**: el hueco YA NO está vacío. Sin él, el botón del suelo
+   sería invisible pero TABULABLE dentro de la trampa de foco del panel —y `a11yPanel.focusFirst()`
+   hace `querySelector` sin filtro de visibilidad, así que además se llevaría el foco al abrir.
+   Ocultar sin sacar del foco no es ocultar (mismo argumento que el colapso por modo, arriba). */
+.acct.acct--pending {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
 /* La preferencia del sistema manda: se oculta igual, pero sin recorrido. */
 @media (prefers-reduced-motion: reduce) {
     .acct,
@@ -1216,12 +1265,13 @@ body.no-scroll { overflow: hidden; }
     .sidecart__panel.is-cart .acct,
     .sidecart__panel.is-account .acct { transition: none; }
 }
-/* `.acct__tag` era la etiqueta que SOLO se veía con la cuenta minimizada. Sin ese estado ya no tiene
-   dónde mostrarse, y se queda oculta. El `<span>` se conserva a propósito: `AccountContextTest`
-   comprueba que su texto viaja en el HTML, y retirarlo es una limpieza aparte (marcado Livewire +
-   clave de idioma en tres idiomas). Con él se fue la transición de `.acct__avatar`, que solo servía
-   para animar el encogido del avatar al minimizarse. */
-.acct__tag { display: none; font-size: 12.5px; font-weight: 600; color: var(--fg-mute); }
+/* ⚠️ **Aquí vivía `.acct__tag`, y se RETIRÓ el 2026-08-23** (`specs/account-context-vue.md` §4.9).
+   Era la etiqueta que solo se veía con la cuenta minimizada; al desaparecer ese estado se quedó en
+   `display: none` **incondicional**, y su propio comentario admitía que el `<span>` se conservaba
+   «porque `AccountContextTest` comprueba que su texto viaja en el HTML». Un elemento muerto sostenido
+   por su propio test — que es exactamente lo que la limpieza de este trabajo tenía que deshacer.
+   Con el bloque migrado a Vue se fueron a la vez el marcado, esta regla y la clave `account.sidecart.tag`
+   en los tres idiomas. */
 
 /* (2) Stepper detallado — banda STICKY (flex-shrink:0, fuera del scroll) pegada bajo «Mi cuenta»,
    con fondo `--bg-soft` (igual que la cuenta → bloque cohesivo, distinto del contenido `--bg`) y un
@@ -1236,6 +1286,14 @@ body.no-scroll { overflow: hidden; }
    el contenedor. flex-shrink:0 evita que la punta se aplaste en cajas estrechas. */
 .arrow-ico { vertical-align: middle; flex-shrink: 0; }
 .bk-back:hover { gap: var(--sp-11); }
+
+/* ⚠️ **El «Volver» del ÁREA lleva su propio aire abajo.** `.bk-back` es la base compartida y no debe
+   traer margen —en el embudo vive dentro de la banda de progreso, cuyo `gap` ya lo separa—, así que
+   el espaciado lo pone quien lo COLOCA. Mismo patrón que `.purchase__back` en el paso de pago.
+   ▶ Nace de un fallo real: sin él, el ritmo del armazón dependía de que la pantalla siguiente
+   empezara por un bloque con margen. El día que una dejó de traer título, «Volver» y las pestañas
+   quedaron pegados. Un elemento que no se separa solo acaba dependiendo del que venga detrás. */
+.account__back { margin-bottom: var(--sp-14); }
 .bk-step-count { font-family: var(--font-mono); font-size: var(--fs-11); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-mute); flex-shrink: 0; }
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
@@ -1482,6 +1540,12 @@ body.no-scroll { overflow: hidden; }
 }
 .catalog__info { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1; min-width: 0; }
 .catalog__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); display: flex; align-items: center; gap: var(--sp-7); flex-wrap: wrap; }
+
+/* ⚠️ El icono de cada entrada del índice de «Mi cuenta». `flex: none` para que no lo aplaste un
+   rótulo largo —el contenedor es flex— y `margin-right` porque el `gap` de `.catalog__item` separa
+   sus HIJOS, y esto va dentro del rótulo. */
+.catalog__ico { flex: none; margin-right: var(--sp-10); color: var(--fg-mute); }
+.catalog__item:hover .catalog__ico { color: var(--zone-1); }
 .catalog__badge {
     font-size: var(--fs-9); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
     background: var(--zone-1); color: var(--on-brand); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
@@ -1649,7 +1713,17 @@ body.no-scroll { overflow: hidden; }
 .purchase__party { font-size: 40px; line-height: 1; margin-bottom: 4px; }
 .cart--summary { margin: 14px 0; text-align: left; }
 .purchase__code { margin: 12px 0 0; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
-.purchase__authtabs { margin-bottom: 16px; }
+/* ⚠️⚠️ **La barra de pestañas del CAJÓN manda sobre su propio ancho, y no lo hereda del viewport**
+   (2026-08-23). `.zone-tabs` nace `inline-flex` porque en la landing vive dentro de contenedores que
+   la centran (`.ticket-prices__tabs`, `.rides__controls`); la regla que la pone a ancho completo vive
+   **dentro de un media query de MÓVIL**, escrito para aquella pantalla.
+   ▶ El cajón no es una pantalla: es un **panel estrecho a cualquier viewport**, así que depender del
+   ancho de la ventana le daba dos aspectos distintos para el mismo sitio — y, sin un bloque delante,
+   dejaba las pestañas **compartiendo línea con el botón «Volver»**, que es `inline-flex` también. El
+   `<h2>` del armazón lo tapaba por accidente hasta que dejó de pintarse en las zonas de auth.
+   ▶ Se arregla aquí, en el modificador que el cajón YA tenía para este componente, y no tocando
+   `.zone-tabs`: la landing sigue exactamente como estaba. */
+.purchase__authtabs { display: flex; width: 100%; margin-bottom: var(--sp-16); }
 
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.
@@ -2595,6 +2669,11 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg-card); box-shadow: none; }
 .acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--line-strong); }
+/* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
+   salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
+   lo deja cuadrado sin fijarle un tamaño, así que sigue creciendo con el padding del sistema. */
+.acct__btn--icon { flex: none; gap: 0; padding-left: 0; padding-right: 0; aspect-ratio: 1; }
+
 .acct__btn--reservas { position: relative; }
 
 /* Press feedback (:active) de la familia cta-* / sidecart / cuenta. Antes solo la lista

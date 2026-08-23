@@ -781,3 +781,77 @@ Ya que hay una sesión abierta y el motor es otro:
 - Que tras entrar desde la cabecera se aterriza en **el índice de Mi cuenta con sus rótulos**, no con
   los títulos en blanco: es el bloqueante que la revisión de la spec destapó y el motivo de que el
   aterrizaje NAVEGUE en vez de quedarse.
+
+## §5.sexies · EL BLOQUE DE CUENTA EN VUE — ✅ recorrido y validado por el owner (2026-08-23)
+
+> `specs/account-context-vue.md`, `DECISIONES #123`. El bloque `.acct` dejó de ser Livewire.
+> ⚠️⚠️ **Esto es lo único que puede decir que el cableado FUNCIONA.** El diff de árbol no ve nada de
+> aquí: `render-sidebar.mjs` **no importa la raíz**, así que un `<Teleport>` colgado de ella le es
+> invisible — y el `href`, el texto y el interior de un `<svg>` tampoco son atributos de contrato.
+> Cliente de prueba en local: `cliente.demo@jumpweb.test` (una reserva futura y un formulario pendiente).
+
+### V20 · El bloque, sus dos caras y su colapso
+
+1. Sin sesión, abre el cajón. ▶ «Hola, saltador/a» con sus dos botones, y **entra deslizando**: ni un
+   tirón, ni una franja crema vacía antes.
+2. Con sesión. ▶ Avatar con la inicial, saludo con el nombre, la próxima reserva **con su fecha**, el
+   aviso de formulario y el contador.
+3. Avanza a día y hora. ▶ Se **pliega**, no desaparece de golpe. Vuelve al catálogo: reaparece.
+4. Entra en «Mis reservas». ▶ Dentro del área también se pliega (ahí el bloque **sobra**: sus botones
+   llevan a donde el cliente ya está).
+5. Con el bloque plegado, **tabula**. ▶ No se puede llegar a sus botones. Es lo que `visibility:
+   hidden` compra, y sin ello serían invisibles pero tabulables dentro de la trampa de foco.
+6. Repite el punto 1 con **«reducir movimiento»** activado. ▶ Aparece **sin animación**, y eso es lo
+   correcto — no es un fallo. (⚠️ El andamio headless declara `reduce` por defecto: §5.bis.)
+
+### V21 · El repintado SIN recargar — el caso que justifica el endpoint entero
+
+1. Sin sesión, llena la cesta y llega al paso 5. **Entra.**
+2. **Vuelve al catálogo sin recargar.** ▶ El bloque saluda **por tu nombre**, trae la próxima reserva
+   y **el aviso de formulario pendiente**. Es lo único que prueba que `enterWith()` avisa de verdad:
+   ninguna guarda estática puede decirlo, y por eso este paso no es opcional.
+3. Ahí mismo, **cierra sesión**. ▶ Sale de verdad y aterriza en la home.
+   ⚠️ **Éste es el que daba 419 con el diseño anterior**: `session()->regenerate()` rota el `_token`,
+   así que un `<form>` pintado por Vue leería el `<meta>` caducado. Se pide por la API a propósito.
+4. Entra otra vez y abre «Mi cuenta». ▶ El índice trae **tus** reservas, no viene vacío: eso es
+   `invalidate()` sobre el store del índice, que sin él seguiría con el «no hay nada» del invitado.
+
+### V22 · El cajón que NACE ABIERTO — el camino que ya dejó un hueco vacío DOS veces
+
+1. Con sesión, entra directo a `/mi-cuenta`. ▶ El cajón nace abierto en el área, y el bloque **no
+   entra deslizando para plegarse acto seguido**: `--pending` y el modo `is-account` compiten en el
+   mismo tick, y es el único sitio donde se ve.
+2. Igual con `/login` sin sesión.
+   ▶ Es el camino de `#59(b)` y `#120(u)`: el cajón que nace abierto **no pasa por `open()`**.
+
+### El caso feo · SIN motor
+
+1. Con sesión y el cajón cerrado, pon el navegador **sin conexión** y abre el cajón. ▶ Aparece **solo
+   el «Cerrar sesión» servido**, y funciona. La consola dice por qué
+   (`[sidebar] no se pudo cargar el motor SPA`).
+   ⚠️ **Medido: `route('logout')` aparece UNA sola vez en toda la aplicación**, y es ese suelo. Sin él,
+   un fallo de red deja al titular sin poder salir — y en un dispositivo compartido eso no es una
+   molestia.
+
+### V23 · EL PULIDO — ⚠️ **pendiente de recorrer** (`DECISIONES #124`)
+
+> Cambia el ASPECTO de pantallas ya validadas, y **ningún test de este repo ve un cambio visual**.
+
+1. **El bloque de cuenta**: tres botones en fila —«Ver mis reservas» · «Mi cuenta» · el icono de
+   salir—, el de salir **sin texto y sin estirarse**. ▶ Pasa el ratón por encima: debe decir «Cerrar
+   sesión». Con lector de pantalla, debe anunciarse igual.
+2. **Cierra el cajón estando en «Mi cuenta» o en el paso de la fecha, y reábrelo.** ▶ El bloque
+   **sigue plegado**. Era el fallo del modo del panel.
+3. **Haz scroll dentro del cajón hasta el tope.** ▶ La página de detrás **no se mueve**. Pruébalo
+   también en móvil, que es donde el bloqueo solo del `<body>` no bastaba.
+4. **«Mis reservas»**: cada pedido en su **tarjeta** —borde, fondo y padding— y la paginación
+   centrada. Antes salía todo plano.
+5. **Privacidad**: las dos secciones en **tarjetas separadas**, la de borrar con su borde de peligro.
+6. **Entra en cada zona**: mientras cargan debe verse el **spinner**, no una zona en blanco ni un «no
+   tienes nada» falso.
+7. **Índice de «Mi cuenta»**: un **icono** a la izquierda de cada una de las cinco entradas.
+8. **Entrar / Crear cuenta**: el título sale **una sola vez**, y las pestañas ocupan **el ancho
+   completo**. ⚠️ Mira también el **paso 5 del embudo**: comparte esa barra y ahora es ancho completo
+   siempre (antes cambiaba con el tamaño de ventana).
+9. **Crea una cuenta desde el cajón.** ▶ En «revisa tu correo» **no hay pestañas**: la salida es el
+   enlace «¿ya tienes cuenta?». Antes, tocar la pestaña destruía la pantalla.

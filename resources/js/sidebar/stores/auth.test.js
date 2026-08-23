@@ -500,3 +500,29 @@ describe('pedir el enlace de recuperar contraseña', () => {
         assert.equal(a.form.email, '');
     });
 });
+
+describe('el alta esperando verificación', () => {
+    test('lo dice mientras hay un correo pendiente', () => {
+        const a = store();
+
+        assert.equal(a.awaitingVerification, false, 'nace sin nada esperando');
+
+        a.awaitVerification('nuevo@ejemplo.test');
+
+        assert.equal(a.awaitingVerification, true);
+    });
+
+    /**
+     * ⚠️ Lo consume el armazón del área para NO pintar la barra de pestañas mientras esa pantalla
+     * está delante: pulsarlas salía de la zona, y salir borra el correo pendiente a propósito (PII).
+     * La salida deliberada sigue viva dentro de la propia pantalla.
+     */
+    test('deja de decirlo cuando se sale de la pantalla', () => {
+        const a = store();
+        a.awaitVerification('nuevo@ejemplo.test');
+
+        a.clearNotices();
+
+        assert.equal(a.awaitingVerification, false);
+    });
+});

@@ -98,13 +98,49 @@ class SidebarIconParityTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **LA GUARDA DE LA GUARDA: que este fichero MIRE todos los componentes del cajón.**
+     *
+     * Nace de que no los miraba. El descubrimiento era `glob('js/sidebar/**\/*.vue')` y dejaba fuera
+     * **10 de 32** —las diez zonas de `sidebar/account/zones/`, con un `<svg>` ya sin paridad—,
+     * porque `**` no es recursivo en el `glob()` de PHP. **El resto del fichero seguía verde**: un
+     * conjunto más pequeño pasa igual de bien.
+     *
+     * ▶ Por eso ancla en un fichero de **TRES** niveles de profundidad y no en un recuento: un número
+     * hay que actualizarlo cada vez que nace un componente —y quien lo actualiza sin mirar lo sube y
+     * ya está—, mientras que el ancla se rompe justo cuando el patrón deja de descender. Verificado
+     * por mutación: con el `glob` anterior este caso es **rojo**.
+     */
+    public function test_the_parity_actually_looks_at_every_component_of_the_drawer(): void
+    {
+        $vistos = array_map(
+            fn (string $ruta): string => str_replace(resource_path('js/'), '', $ruta),
+            $this->drawerComponents(),
+        );
+
+        $this->assertContains(
+            'sidebar/account/zones/AccountHomeZone.vue', $vistos,
+            'La paridad de iconos ha dejado de descender hasta las zonas del área de cliente. Con el '.
+            'descubrimiento ciego, un `<svg>` vacío en cualquiera de ellas se sirve sin que nada '.
+            'falle — que es literalmente `DECISIONES #113` repitiéndose en el mismo repo.'
+        );
+
+        $this->assertContains('sidebar/Sidebar.vue', $vistos, 'ha dejado de mirar la raíz del cajón');
+        $this->assertContains('sidebar/steps/CatalogStep.vue', $vistos, 'ha dejado de mirar los pasos');
+    }
+
+    /**
      * Los iconos del sistema de diseño que el cajón usa tienen que seguir estando: si alguien retira
      * un componente `<x-icons.*>`, la copia del cajón se quedaría sin fuente contra la que compararse
      * y el test de arriba dejaría de significar nada (pasaría a validar contra un conjunto más chico).
      */
     public function test_the_design_system_icons_the_drawer_copies_still_exist(): void
     {
-        foreach (['ic-e5', 'ic-b1', 'ic-b7', 'ticket-tear-off', 'arrow-left', 'arrow-right'] as $icono) {
+        // ⚠️ Los cinco de abajo son los del ÍNDICE de «Mi cuenta» (`account/ZoneIcon.vue`), copiados del
+        // sistema de diseño el 2026-08-23. Si alguno desaparece, esa copia se queda sin fuente.
+        foreach ([
+            'ic-e5', 'ic-b1', 'ic-b7', 'ticket-tear-off', 'arrow-left', 'arrow-right',
+            'calendar', 'user', 'lock', 'devices', 'shield', 'login', 'logout',
+        ] as $icono) {
             $this->assertFileExists(
                 resource_path("views/components/icons/{$icono}.blade.php"),
                 "El cajón lleva una copia del dibujo de `{$icono}`; si el componente desaparece, esa ".
@@ -122,9 +158,7 @@ class SidebarIconParityTest extends TestCase
      */
     private function drawerSvgs(): array
     {
-        $ficheros = glob(resource_path('js/sidebar/**/*.vue')) ?: [];
-        $ficheros = array_merge($ficheros, glob(resource_path('js/sidebar/*.vue')) ?: []);
-        sort($ficheros);
+        $ficheros = $this->drawerComponents();
 
         $this->assertNotEmpty($ficheros, 'no se han encontrado componentes del cajón');
 
@@ -143,6 +177,45 @@ class SidebarIconParityTest extends TestCase
         }
 
         return $out;
+    }
+
+    /**
+     * TODOS los `.vue` del cajón, a cualquier profundidad, ordenados.
+     *
+     * ⚠️⚠️ **Esto era un `glob('js/sidebar/**\/*.vue')` y dejaba fuera 10 de los 32 ficheros** —las
+     * DIEZ zonas del área de cliente, `sidebar/account/zones/`—, con un `<svg>` ya sirviéndose sin
+     * ninguna paridad. `**` **no es recursivo en el `glob()` de PHP**: se comporta como un `*`, así
+     * que el patrón solo alcanzaba UN nivel de subdirectorio y el `array_merge` de al lado añadía la
+     * raíz. Ese `array_merge` era además la señal de que el patrón no bastaba, y nadie la leyó.
+     *
+     * ▶ **Es el modo de fallo exacto de `DECISIONES #113`**, que es lo que este fichero existe para
+     * impedir: un gate que declara cubrir los iconos del cajón mientras un tercio de sus componentes
+     * no lo mira nadie. Un test que mide menos de lo que su nombre dice es peor que no tenerlo
+     * (`DECISIONES #115`).
+     *
+     * Se usa el mismo recorrido que los otros cuatro gates del cajón
+     * (`SidebarComponentBudgetTest::components()`), en vez de un patrón que ya demostró no cubrir.
+     *
+     * @return list<string>
+     */
+    private function drawerComponents(): array
+    {
+        $root = resource_path('js/sidebar');
+        $found = [];
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($files as $file) {
+            if ($file->getExtension() === 'vue') {
+                $found[] = $file->getPathname();
+            }
+        }
+
+        sort($found);
+
+        return $found;
     }
 
     /**

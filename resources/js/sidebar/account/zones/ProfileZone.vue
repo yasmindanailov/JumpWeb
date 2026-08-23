@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile.js';
+import ZoneLoading from '../ZoneLoading.vue';
 import { fieldError } from '../form-outcome.js';
 import { pendingNotice, profileForm } from '../profile.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
@@ -18,6 +19,8 @@ import PasswordInput from '../../steps/PasswordInput.vue';
  */
 const props = defineProps({
     account: { type: Object, default: () => ({}) },
+    /** El grupo `ui`: el rótulo del spinner mientras la zona trae sus datos. */
+    ui: { type: Object, default: () => ({}) },
     messages: { type: Object, default: () => ({}) },
     auth: { type: Object, default: () => ({}) },
     /** Los idiomas del selector, con su nombre nativo (`Platform\Services\SiteLocales`). */
@@ -46,6 +49,8 @@ const pending = computed(() => pendingNotice(store.user, props.account, Date.now
 </script>
 
 <template>
+    <ZoneLoading v-if="store.busy && ! store.loaded" :ui="ui" />
+
     <div class="auth">
         <p class="purchase__note">{{ a('account.profile.intro') }}</p>
 

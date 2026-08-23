@@ -109,6 +109,22 @@ export const useAuthStore = defineStore('auth', {
         signupSiteKey: '',
     }),
 
+    getters: {
+        /**
+         * **¿Hay un alta esperando que el titular abra su correo?**
+         *
+         * ⚠️ Lo consume el ARMAZÓN del área para no pintar la barra de pestañas mientras esa pantalla
+         * está delante (`sections/AccountSection.vue`), y esa es toda su razón de ser: ofrecer
+         * «Entrar / Crear cuenta» junto a un «acabas de crear tu cuenta, revisa tu correo» invita a
+         * abandonar un paso a medias — y **pulsarlo destruía la pantalla**, porque salir de la zona
+         * borra el correo pendiente a propósito (es PII de un cliente que puede no ser el siguiente
+         * en usar el dispositivo).
+         *
+         * ▶ Esa defensa NO se toca: lo que se retira es la forma ACCIDENTAL de dispararla. La salida
+         * deliberada sigue existiendo, dentro de la propia pantalla («¿ya tienes cuenta?»).
+         */
+        awaitingVerification: (state) => state.pendingEmail !== '',
+    },
     actions: {
         /**
          * Cambia de pestaña.

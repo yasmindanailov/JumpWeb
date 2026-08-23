@@ -216,8 +216,45 @@ class SidebarBundleBudgetTest extends TestCase
      * nuevo es la segunda cara, que la web no tenía en el cajón.
      * ▶ **199 deja 0,7 KiB.** El siguiente paso —las puertas— es cableado, no pantallas, así que
      * debería caber; si no cabe, sube con su medida como los tres anteriores.
+     *
+     * ⚠️⚠️ **199 → 208 el 2026-08-23: EL BLOQUE DE CUENTA DEL PANEL**
+     * (`specs/account-context-vue.md` §4.12). Entra `account/AccountPanel.vue` con sus dos caras y sus
+     * dos iconos, más cuatro módulos: `account/panel.js` (las reglas), `stores/accountContext.js`,
+     * `account/sign-out.js` y `ui/account-host.js`.
+     *
+     * ▶ **Medido construyendo, no estimando: 198,77 → 207,02 KiB, o sea +8,25.** Es el salto más
+     * grande del ledger —la tanda más cara del área de cliente fueron +7,5— y conviene decir por qué
+     * no se recorta: lo que entra **no es una pantalla nueva, es una que se retira de otro sitio**.
+     * A cambio, el HTML de **cada página pública** adelgaza: medido sobre la home anónima real,
+     * **170.753 → 169.341 B, −1.412 B netos por visita**, y eso se paga en CADA visita mientras que
+     * el chunk se paga una vez y solo si el cliente abre el cajón.
+     *
+     * ⚠️ **Y el punto de partida iba 0,47 KiB optimista**: la entrada de A5 dice 198,3 y el build real
+     * daba **198,77**. Se corrigió al medir este salto, para que el delta sea honesto.
+     *
+     * ▶ **208 deja 0,98 KiB**, que es la holgura estrecha de siempre. Lo que quede de este trabajo
+     * —retirar `logged-in`, `followAccountLink` y el evento— solo puede BAJARLO.
+     *
+     * ⚠️ **208 → 209 el 2026-08-23, en el pulido**: entra `account/ZoneLoading.vue` —el spinner que
+     * las cuatro zonas que piden datos pintan mientras llegan, porque hasta ahora salían **en
+     * blanco**— y `navigation.js::bringsOwnHeading()`, la regla que impide que el título de las
+     * pantallas de auth se pinte DOS veces. Medido: **207,27 → 208,24 KiB, +0,97**.
+     * ▶ **209 deja 0,76 KiB.** Y conviene decir de dónde NO sale este coste: el spinner **no trae CSS
+     * nuevo** —reutiliza `.jj-spinner`, que la página ya carga como hoja estática— ni marcado propio
+     * más allá del que el velo del armazón ya usaba.
+     *
+     * ⚠️ **209 → 211 el 2026-08-23: LOS ICONOS.** Entran `account/ZoneIcon.vue` con los **cinco**
+     * dibujos del índice de «Mi cuenta» y el tercer botón del bloque. Medido: **208,33 → 210,83 KiB,
+     * +2,50**, que encaja con el coste conocido de un icono en este chunk —`DECISIONES #113` lo midió
+     * en ~0,36 KiB— más el marcado de la fila de botones.
+     * ▶ **Y los dibujos NO se escribieron a mano**: se generaron desde el render real de los
+     * `<x-icons.*>`, que es lo que permite a `SidebarIconParityTest` compararlos con su fuente. Cuatro
+     * de los cinco son componentes NUEVOS del sistema de diseño (`calendar`, `lock`, `devices`,
+     * `shield`): no había iconos pequeños para esas tres zonas, y `ticket-tear-off` es la ilustración
+     * del CTA de compra —viewBox 60×36 y con texto— que a 18 px no se lee.
+     * ▶ **211 deja 0,17 KiB**, que es lo más estrecho que ha estado. Lo siguiente que entre lo mide.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 199;
+    private const SIDEBAR_CHUNK_MAX_KB = 211;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -354,11 +391,19 @@ class SidebarBundleBudgetTest extends TestCase
         // limitadores de `SEC-06` viven en `Identity\Services\PasswordLogin`, que es el MISMO servicio
         // que usa el modal de la web: el cajón no puede tener su propia copia de nada de eso.
         '/auth/login' => 'identificar al cliente contra el servicio que también usa la web',
-        // ⚠️ Y el aviso al resto de la página. Fuera del cajón, `account-context` es un componente
-        // Livewire que escucha `logged-in` para repintar «Hola, saltador/a»; sin el puente, el panel
-        // seguiría ofreciendo «Entrar» a quien acaba de entrar — y ningún test del repo lo vería,
-        // porque el cambio ocurre en OTRO componente y en el navegador.
-        'logged-in' => 'avisar a Livewire de que ya hay sesión',
+        // ⚠️⚠️ **Aquí el centinela era `logged-in`, y CAMBIÓ el 2026-08-23**
+        // (`specs/account-context-vue.md` §4.6): ese evento murió con el componente Livewire que lo
+        // escuchaba. El motor ya no avisa por un bus — pide el contexto al servidor y repinta el
+        // bloque él mismo.
+        //
+        // ⚠️ **Y este centinela dice MENOS de lo que decía aquél, así que conviene no leerlo de más**:
+        // prueba que el motor SABE pedir el contexto —si el store dejara de importarse, Rollup lo
+        // podaría y la cadena desaparecería—, pero **no** que se pida al conseguir sesión. Eso no lo
+        // puede decir ninguna cadena: `refresh()` es una acción de Pinia dentro de `defineStore` y no
+        // se poda por no usarse. Es la misma frontera que `turnstile_token` documenta aquí abajo.
+        // ▶ Que exista un consumidor en PRODUCCIÓN lo cubre `SidebarIntentWiringTest`; que el efecto
+        // se vea, solo el navegador (`V21`).
+        '/me/account-context' => 'traer el contexto de cuenta para repintar el bloque del panel',
         // ⚠️ 4.4b·1: el alta embebida. `context` es lo que activa el **pay-first** en el servidor —sin
         // él manda un correo de verificación y no abre sesión—, así que su ausencia no rompería nada
         // visible: dejaría al cliente esperando un correo en mitad de una compra.

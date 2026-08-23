@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import PurchaseSection from './sections/PurchaseSection.vue';
 import AccountSection from './sections/AccountSection.vue';
+import AccountPanel from './account/AccountPanel.vue';
 import { useSectionStore } from './stores/section.js';
 import { usePurchaseStore } from './stores/purchase.js';
 import { publishedIdentifying, publishedMode } from './section.js';
@@ -117,4 +118,23 @@ defineExpose({
     <PurchaseSection v-show="section.onPurchase" ref="purchase" v-bind="props" />
 
     <AccountSection v-if="section.onAccount" v-bind="props" />
+
+    <!--
+      ⚠️⚠️ **El bloque de cuenta NO es una sección: es CROMO del panel**, y por eso se teletransporta
+      (`specs/account-context-vue.md` §4.2). Vive FUERA de `.sidecart__body` —hermano del hueco donde
+      monta esta app—, así que no puede ser un hijo más de esta raíz.
+
+      ⚠️ Va aquí y no dentro de `AccountSection` por un motivo concreto: aquélla monta con `v-if`, y
+      el bloque tiene que existir con la sección de cuenta apagada — que es la mayoría del tiempo.
+
+      ⚠️ Las props van UNA A UNA y no con `v-bind="props"`: lo segundo le pasaría también `auth`,
+      `locales`, `userId` y `orderCode`, que este componente no declara y que Vue volcaría como
+      ATRIBUTOS sobre su raíz. Saldrían en el DOM del cliente.
+
+      ⚠️ El destino lo emite el servidor ya colapsado y con el suelo de «cerrar sesión» dentro; quien
+      lo vacía y lo expande es `account/host.js`, su dueño ÚNICO.
+    -->
+    <Teleport to="#sidecart-account">
+        <AccountPanel :account="account" :messages="messages" :urls="urls" />
+    </Teleport>
 </template>

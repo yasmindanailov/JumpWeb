@@ -137,6 +137,31 @@ export function parentZoneFor(zone) {
  */
 export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
 
+/**
+ * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.
+ *
+ * ⚠️⚠️ **Existe porque el título salía DOS VECES.** Las tres pantallas de auth reutilizan
+ * `steps/LoginForm.vue` y `steps/RegisterForm.vue` del paso 5 del embudo —donde no hay armazón que
+ * ponga título, así que el formulario trae el suyo— y `AccountSection` ponía además el de la zona,
+ * con el MISMO literal: «Inicia sesión» encima de «Inicia sesión».
+ *
+ * ▶ **Se declara aquí y no como un `v-if` en la plantilla** por lo mismo que `ZONE_TITLE_KEYS`: es un
+ * dato de la navegación, un test puede recorrerlo entero, y el día que nazca una cuarta pantalla con
+ * encabezado propio se añade una línea en vez de descubrirse mirando.
+ *
+ * ⚠️ `titleKeyOf()` **sigue devolviendo su clave** para estas zonas, y a propósito: el rótulo se usa
+ * en más sitios que el encabezado —el índice pinta las entradas con él— y devolver `null` habría
+ * atado dos cosas que no son la misma.
+ *
+ * @var {string[]}
+ */
+const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT];
+
+/** ¿Esta zona pinta ya su encabezado, y el armazón debe callarse? */
+export function bringsOwnHeading(zone) {
+    return ZONES_WITH_OWN_HEADING.includes(zone);
+}
+
 /** El camino del rótulo de una zona. Una zona desconocida cae en el del índice, nunca en `''`. */
 export function titleKeyOf(zone) {
     return ZONE_TITLE_KEYS[zone] ?? ZONE_TITLE_KEYS[DEFAULT_ZONE];

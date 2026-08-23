@@ -51,5 +51,18 @@ export const useReservationsStore = defineStore('reservations', {
                 this.loading = false;
             }
         },
+
+        /**
+         * **Olvida lo que sabía**, para que el siguiente `ensure()` vuelva a preguntar.
+         *
+         * ⚠️ **Existe por el cambio de titular** (2026-08-23, `specs/account-context-vue.md` §4.6).
+         * `ensure()` pide «solo si no las tiene», que es lo correcto mientras el titular no cambia; y
+         * quien entra en el paso 5 del embudo **no recarga la página**, así que sin esto abriría «Mi
+         * cuenta» y encontraría el índice del invitado —vacío— **sin que nada fallara**. Lo llama
+         * `account/session-gained.js`, que es el único sitio donde se sabe que hubo un cambio.
+         */
+        invalidate() {
+            this.payload = null;
+        },
     },
 });

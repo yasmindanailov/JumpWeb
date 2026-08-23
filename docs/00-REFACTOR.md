@@ -1768,10 +1768,45 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       de los 36 tests del modal destapó **un hueco de seguridad vivo** (el desenlace de pago de otra
       persona sobrevivía a un login en dispositivo compartido) más dos huecos de guardia.
       El método —clasificar **mutando**, no leyendo— está en `#122(j)`.
-      ⚠️ **Lo que sigue fuera del cajón**: `account-context`, todavía en Livewire y hoy el **ÚNICO**
-      componente Livewire del layout — de él cuelga que llegue `livewire.js`, y con él Alpine y el
-      cajón entero. Ficha en `DEUDA.md`; dejarlo aquí como casilla sin marcar mantendría la fase
-      abierta por trabajo que ninguna fase reclama.
+- [x] **El BLOQUE DE CUENTA, a Vue — el último Livewire del layout** (2026-08-23, `DECISIONES #123`;
+      diseño en `specs/account-context-vue.md`, ✅ EJECUTADO y validado por el owner en navegador).
+      El bloque `.acct` lo pinta `sidebar/account/AccountPanel.vue`, teletransportado desde la raíz al
+      hueco que emite el layout; la clase Livewire y su Blade se retiran y la página sirve **0
+      atributos `wire:`**. Nace `GET /api/v1/me/account-context` —el agregado que la web ya componía y
+      la API no publicaba— y la **semilla del montaje sale del MISMO Resource**, así que el store ve
+      una sola forma venga de la carga de página o del refresco.
+      ⚠️ **Livewire NO se retira**: sigue trayendo Alpine, así que `@livewireScripts` se queda. Lo que
+      cambia es que pasa a ser la **fuente única** y su guarda **por fin discrimina** — medido: hasta
+      ese día el caso pasaba igual sin la directiva.
+      ⚠️⚠️ **Y lo que encontró vale más que lo que migró.** La revisión adversarial ×3 declaró el
+      diseño **INSUFICIENTE** y destapó dos cosas que nadie vigilaba: el **`no-store` de TODAS las
+      páginas web lo ponía un accidente de Livewire** —un hook de componente encendía el flag que un
+      middleware global del paquete usaba, así que retirar el último lo habría borrado del sitio
+      entero **con la suite en verde**, porque ninguna de sus 12 aserciones miraba una página del
+      layout— y **`route('logout')` aparece UNA sola vez en toda la aplicación**, dentro del bloque
+      que se retiraba (lo que desmiente la premisa escrita de `#120(t)`). De propina,
+      `SidebarIconParityTest` estaba **ciego a 10 de los 32 `.vue`**.
+      Suite **2669 verde** · **624 tests JS** · chunk 207,2/208 KiB · la home anónima adelgaza
+      **−1.412 B por visita**.
+- [x] **El PULIDO del cajón, y lo que destapó** (2026-08-23, a petición del owner tras validar el
+      relevo en navegador). Nueve puntos, de los que **cuatro no eran cosméticos**:
+      · **el bloque de cuenta reaparecía al reabrir el cajón** — `close()` escribía el modo del panel
+        a pelo, saltándose el puente del motor, y el `watch` no lo corregía porque nada reactivo
+        cambiaba. Era herencia del motor Livewire, donde reabrir provocaba un round-trip;
+      · **«Mis reservas» se servía SIN TARJETAS y privacidad con sus dos derechos pegados**: la
+        transcripción a Vue **inventó nombres de clase** (`orders__card`, `orders__pagination`,
+        `bk-error`, un `auth` de envoltorio) y **ninguno tenía una sola regla**. Las reglas existían
+        desde siempre con el nombre de la página retirada. Nace `SidebarStyleWiringTest`;
+      · **el scroll del cajón arrastraba la página**: el bloqueo solo alcanzaba al `<body>` y
+        `overscroll-behavior` **no aparecía ni una vez en el repo**;
+      · **el título de las pantallas de auth salía DOS veces**, porque reutilizan el formulario del
+        paso 5 —que trae el suyo— y el armazón ponía además el de la zona, con el mismo literal.
+      ▶ Y lo demás: los tres botones del bloque (reservas · cuenta · salir solo icono), **cinco iconos
+      en el índice** con cuatro componentes nuevos del sistema de diseño, un spinner en las cuatro
+      zonas que piden datos —el velo existía y el área nunca lo cableó— y las pestañas de auth
+      **ocultas durante la verificación**, que era la forma accidental de destruir esa pantalla.
+      ⚠️ **La defensa de PII que borra el correo pendiente NO se tocó**: está decidida por escrito.
+      Suite **2678 verde** · **633 tests JS** · chunk 210,8/211 KiB.
 
 ### Fase 5 — Capa de contenido profesional ⬜
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché

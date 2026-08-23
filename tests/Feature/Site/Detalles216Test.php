@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Site;
 
-use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,24 +43,15 @@ class Detalles216Test extends TestCase
 
     // ── (3) «Ver mis reservas» en el sidebar de compra ──────────────────────
 
-    public function test_sidecart_my_reservations_link_for_guest_and_auth(): void
-    {
-        // Invitado: el texto está y NO lleva directo a /mi-cuenta/pedidos — primero hay que entrar.
-        //
-        // ⚠️ **Abría el modal de login y desde el 2026-08-23 lleva a la ZONA de entrar del cajón**
-        // (`DECISIONES #122`), sin cerrarlo: así el cliente no pierde de vista su cesta, que es
-        // justamente lo que cerrar el cajón le hacía perder.
-        $this->get('/')
-            ->assertOk()
-            ->assertSeeText(__('tickets.my_reservations'))
-            ->assertSee("openAccount(\$event, 'login')", false);
-
-        // Con sesión: enlaza a la página de pedidos del cliente.
-        $this->actingAs(User::factory()->create())
-            ->get('/')
-            ->assertOk()
-            ->assertSee(route('account.orders'), false);
-    }
+    // ⚠️⚠️ **Aquí vivía `test_sidecart_my_reservations_link_for_guest_and_auth`, y se RETIRÓ el
+    // 2026-08-23** (`specs/account-context-vue.md` §4.9). Aseveraba sobre el HTML servido que el
+    // «Mis reservas» del bloque de cuenta llevaba a entrar sin sesión y a los pedidos con ella; el
+    // bloque lo pinta ahora Vue, así que ese marcado ya no viaja en la página.
+    // ▶ **No se perdió su sujeto**: los dos botones de invitado los CUENTA
+    // `AccountDoorWiringTest::test_a_guest_now_gets_wiring_because_signing_in_lives_in_the_drawer`,
+    // el destino con sesión lo asevera el mismo fichero, y qué pinta cada cara,
+    // `account/panel.test.js`. Se comprobó antes de borrar, que es lo que `CONVENCIONES §3.quater`
+    // pide y lo que `DECISIONES #112` costó no hacer.
 
     // ── (6a) CTA «Registro» del header ──────────────────────────────────────
 

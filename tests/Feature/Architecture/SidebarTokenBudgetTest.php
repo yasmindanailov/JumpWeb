@@ -195,6 +195,53 @@ class SidebarTokenBudgetTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **EL CAJÓN NO HEREDA SU ANCHO DEL VIEWPORT** (2026-08-23).
+     *
+     * `.zone-tabs` nace `inline-flex` porque en la landing vive dentro de contenedores que la centran,
+     * y la regla que la pone a ancho completo está **dentro de un media query de MÓVIL**. El cajón no
+     * es una pantalla: es un **panel estrecho a cualquier viewport**, así que heredar de la ventana le
+     * daba dos aspectos para el mismo sitio.
+     *
+     * ▶ **Y el síntoma no fue estético**: sin un bloque delante, la barra de pestañas compartía línea
+     * con el botón «Volver» —`inline-flex` también—, y durante meses lo tapó por accidente el `<h2>`
+     * del armazón. El día que ese título dejó de pintarse en las zonas de auth, quedó a la vista.
+     *
+     * ⚠️ Se asevera que la declaración está **fuera de cualquier `@media`**: dentro volvería a atar el
+     * aspecto del panel al tamaño de la ventana, que es exactamente el fallo.
+     */
+    public function test_the_drawer_tabs_do_not_depend_on_the_viewport(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        // Fuera todo lo que viva dentro de un `@media { … }`: lo que quede es incondicional.
+        $sinMedia = (string) preg_replace('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $css);
+
+        $this->assertMatchesRegularExpression(
+            '/\.purchase__authtabs\s*\{[^}]*display:\s*flex[^}]*width:\s*100%/s',
+            $sinMedia,
+            "La barra de pestañas del cajón ha vuelto a depender del viewport.\n".
+            "⚠️ `.zone-tabs` es `inline-flex` por defecto —está pensada para la landing— y el cajón es\n".
+            "un panel estrecho SIEMPRE. Sin esta declaración incondicional, en escritorio las pestañas\n".
+            'comparten línea con el botón «Volver», que también es `inline-flex`.'
+        );
+    }
+
+    /**
+     * ⚠️ **Y el «Volver» del área lleva su propio aire**, en vez de depender de que la pantalla
+     * siguiente empiece por un bloque con margen. Así estuvo hasta el 2026-08-23, y se rompió en
+     * cuanto una zona dejó de traer título.
+     */
+    public function test_the_area_back_button_owns_its_spacing(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/\.account__back\s*\{[^}]*margin-bottom/',
+            (string) file_get_contents(public_path('css/site.css')),
+            'El «Volver» del área ha dejado de separarse solo: su ritmo vuelve a depender de lo que '.
+            'venga detrás, que es como se pegó a las pestañas de auth.'
+        );
+    }
+
+    /**
      * **El hueco donde monta el motor SPA es un eslabón de la cadena flex del panel, y sin regla
      * propia la parte** (Fase 4 · paso 4.3·1).
      *

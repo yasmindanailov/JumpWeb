@@ -106,6 +106,48 @@ class SidebarAccountVisibilityTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **EL HUECO TAMBIÉN SE COLAPSA, Y TAMBIÉN TIENE QUE SACAR DEL FOCO** (2026-08-23,
+     * `specs/account-context-vue.md` §4.1).
+     *
+     * Antes de que el motor llegue, el bloque no existe: lo que hay es el hueco con el **suelo**
+     * dentro —el formulario de cerrar sesión— y la clase `acct--pending`, que lo mantiene plegado
+     * para que no se vea una franja crema con un botón suelto.
+     *
+     * ⚠️ **Y este colapso oculta ALGO, al revés que una medición previa que lo daba por vacío.** Sin
+     * `visibility: hidden`, ese botón sería invisible pero TABULABLE dentro de la trampa de foco del
+     * panel — y `a11yPanel.focusFirst()` hace `querySelector` **sin filtro de visibilidad**, así que
+     * además se llevaría el foco al abrir el cajón. Es el mismo argumento del caso de arriba, y por
+     * eso va aquí y no en otro fichero.
+     *
+     * ⚠️ **Se exige la regla con DOS clases (`.acct.acct--pending`)**: `.acct` está declarada en dos
+     * bloques de la hoja, así que con especificidad (0,1,0) el orden de fuente decidiría y el segundo
+     * le devolvería el padding y el borde. El síntoma sería la franja que esto evita, y **ningún test
+     * de esta suite podría verla**.
+     */
+    public function test_the_pending_hole_is_collapsed_and_out_of_the_focus_trap(): void
+    {
+        $css = $this->css();
+
+        $this->assertMatchesRegularExpression(
+            '/\.acct\.acct--pending\s*\{/', $css,
+            'La regla del hueco tiene que llevar las DOS clases. Con `.acct--pending` a secas empata '.
+            'en especificidad con `.acct` y el segundo bloque de la hoja le devuelve la caja: una '.
+            'franja crema vacía que ningún test puede ver.'
+        );
+
+        $regla = mb_substr($css, (int) mb_strpos($css, '.acct.acct--pending {'));
+        $regla = mb_substr($regla, 0, (int) mb_strpos($regla, '}'));
+
+        $this->assertStringContainsString('grid-template-rows: 0fr', $regla, 'el hueco tiene que nacer plegado');
+        $this->assertStringContainsString(
+            'visibility: hidden', $regla,
+            'Sin `visibility: hidden`, el botón de cerrar sesión del SUELO es invisible pero '.
+            'TABULABLE dentro de la trampa de foco del panel — y `focusFirst()` se lo llevaría al '.
+            'abrir. Ocultar sin sacar del foco no es ocultar.'
+        );
+    }
+
+    /**
      * ⚠️ **La costura de la técnica de colapso, vigilada por los DOS extremos** — que es la lección de
      * `#117`. La animación usa `grid-template-rows: 1fr → 0fr` (el idioma que este repo ya usa en
      * `.catalog-acc__body`), y eso **exige** que el contenido cuelgue de un hijo con `overflow:
@@ -117,11 +159,26 @@ class SidebarAccountVisibilityTest extends TestCase
      */
     public function test_the_collapse_technique_is_wired_at_both_ends(): void
     {
-        $blade = (string) file_get_contents(resource_path('views/livewire/site/account-context.blade.php'));
+        // ⚠️⚠️ **Re-apuntado el 2026-08-23**: el marcado ya no es un Blade de Livewire sino el
+        // componente Vue que lo sustituye (`specs/account-context-vue.md` §4.9). El sujeto es el
+        // mismo —que el envoltorio que recorta siga existiendo— y por eso el caso se muda en vez de
+        // morir; lo que cambia es dónde vive el marcado.
+        // ⚠️ Se nombra el fichero CONCRETO y no «algún .vue»: el bloque podría partirse en dos
+        // componentes, y una guarda que buscara en todos quedaría satisfecha por el que no toca.
+        $marcado = (string) file_get_contents(resource_path('js/sidebar/account/AccountPanel.vue'));
 
-        $this->assertStringContainsString('class="acct__inner"', $blade,
+        $this->assertStringContainsString('class="acct__inner"', $marcado,
             'Falta el envoltorio `.acct__inner` en el marcado. La técnica `1fr → 0fr` necesita un '.
             'hijo que recorte: sin él el bloque desaparece de golpe en vez de plegarse.');
+
+        // ⚠️ **Y el SUELO servido también cuelga de un `.acct__inner`**, porque el hueco que lo
+        // contiene lleva la clase `.acct` y por tanto se colapsa igual. Sin envoltorio, el botón de
+        // cerrar sesión se saldría de la fila colapsada mientras dura la animación.
+        $layout = (string) file_get_contents(resource_path('views/components/layout.blade.php'));
+
+        $this->assertStringContainsString('class="acct__inner"', $layout,
+            'El suelo servido del hueco ha perdido su envoltorio, y el hueco se colapsa igual que el '.
+            'bloque: su contenido se saldría de la fila durante la animación.');
 
         $css = $this->css();
 

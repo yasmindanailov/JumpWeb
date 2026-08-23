@@ -51,15 +51,36 @@ class CustomerReservationsReader implements CustomerReservations
      * no recorrer el histórico de entradas. Un pack sin franja (`isFinishedInPractice` → false)
      * sigue avisando.
      *
+     * ⚠️⚠️ **La consulta está DIRIGIDA por fecha desde el 2026-08-23, y antes no lo estaba.** Traía
+     * **todo el histórico** de pedidos con pack —con sus ítems, tipos y franjas eager-loaded— y hacía
+     * el corte de «ya celebrado» **entero en PHP**, mientras que su hermana `upcomingFor()` sí acotaba
+     * por SQL. Un cliente con cinco años de cumpleaños materializaba los cinco años **en cada página
+     * pública**, porque el nav pide este contexto siempre que hay sesión.
+     * ▶ Lo destapó la revisión adversarial de `specs/account-context-vue.md` §4.4 al preguntarse qué
+     * pasaba si esto se publicaba como endpoint —repetible bajo `throttle:api`—; el arreglo, sin
+     * embargo, **vale igual sin endpoint**: el coste ya se pagaba.
+     *
+     * ⚠️ **El suelo tiene que dejar pasar el pack SIN FRANJA**, o cambiaría la conducta: un pack sin
+     * franja da `isFinishedInPractice() === false` y **sigue avisando** (lo dice el párrafo de
+     * arriba, y hay caso que lo fija). De ahí el `whereNull('slot_id') OR fecha >= suelo`, sobre el
+     * MISMO ítem — no sobre el pedido—, para que un pedido con un pack viejo y otro futuro siga
+     * entrando y el corte fino lo siga dando PHP.
+     *
      * @return list<PendingGuestForm>
      */
     public function pendingGuestFormsFor(int $userId): array
     {
+        // Mismo colchón de un día y por el mismo motivo que `upcomingItems()`: la fecha de franja es
+        // naive `Y-m-d` y el corte exacto lo hace PHP.
+        $floor = Carbon::now()->subDay()->toDateString();
+
         $orders = Order::query()
             ->where('user_id', $userId)
             ->where('status', Order::STATUS_PAID)
             ->whereHas('items', fn ($q) => $q->whereNull('cancelled_at')
-                ->whereHas('ticketType', fn ($t) => $t->where('type', TicketType::TYPE_PACK)))
+                ->whereHas('ticketType', fn ($t) => $t->where('type', TicketType::TYPE_PACK))
+                ->where(fn ($i) => $i->whereNull('slot_id')
+                    ->orWhereHas('slot', fn ($s) => $s->whereDate('date', '>=', $floor))))
             ->with(['items.ticketType', 'items.slot'])
             ->get();
 

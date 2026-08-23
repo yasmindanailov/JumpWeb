@@ -7,6 +7,7 @@ use App\Http\Middleware\Api\ApiLocale;
 use App\Http\Middleware\Api\NoStoreWhenAuthenticated;
 use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
+use App\Http\Middleware\NoStoreWebResponses;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -41,6 +42,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // subdominios (deriva de la config, así que vale para cualquier dominio que ponga la clienta).
         // El propio middleware es NO-OP en `local` y bajo tests (`shouldSpecifyTrustedHosts`).
         $middleware->trustHosts();
+
+        // ── `no-store` en la web (`RGPD-04`), 2026-08-23 ────────────────────────────────────────
+        // Repone una cabecera que hasta hoy ponía un ACCIDENTE: no la emitía ningún middleware de
+        // este proyecto sino **Livewire**, cuyo hook de componente enciende un flag que un
+        // middleware global del paquete usa para estamparla. O sea que el sitio entero llevaba
+        // `no-store` porque el layout renderizaba un componente Livewire — y el último que queda se
+        // retira en `specs/account-context-vue.md`. Medido A/B: sin componente, `no-cache, private`.
+        //
+        // ⚠️ **GLOBAL y no en el grupo `web`, y lo decidió la medición**: un middleware de grupo solo
+        // corre en rutas que CASAN, y un 404 de URI desconocida no entra en `web` **pero sí pinta el
+        // layout**, o sea el nav con el nombre del titular. Con él en el grupo, la tabla de verdad
+        // daba un rojo justo ahí. El propio middleware lleva el detalle y la puerta de `/api/v1`,
+        // que decide por identidad a propósito (`PERF-02`).
+        $middleware->append(NoStoreWebResponses::class);
 
         $middleware->web(append: [
             SetLocale::class,

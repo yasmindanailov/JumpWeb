@@ -2,15 +2,16 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-23** (**la AUTH vive en el cajón y el modal está
-> retirado**: con eso `#66` queda cumplido — `DECISIONES #122`).
+> aquí solo se enlaza. Última actualización: **2026-08-23** (**el bloque de cuenta ya es Vue, no queda
+> ningún Livewire en el layout, y el cajón está PULIDO** — `DECISIONES #123` y `#124`).
 
 ## ▶ Dónde estamos
 
 **Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) ✅ — CERRADA el
 2026-08-22, y el 2026-08-23 se le añadió el último trozo de `#66`: la AUTH dentro del cajón.**
-▶ **Quedan DOS candidatos** —`account-context` a Vue y la Fase 5—, y los elige el owner. Detalle en
-«Próximo paso».
+🟩 **Y el 2026-08-23 cae `account-context`**: el bloque de cuenta lo pinta Vue, la clase Livewire y su
+Blade **ya no existen** y la página sirve **0 atributos `wire:`** (`DECISIONES #123`).
+▶ **Queda UN candidato: la Fase 5.** Detalle en «Próximo paso».
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -25,8 +26,8 @@ diseño está en `docs/specs/sidebar-spa.md` §4.10 y el del área, en `docs/spe
 🟩 **EL ÁREA DE CLIENTE ESTÁ TERMINADA** (`#66`, `#120`), y con ella la Fase 4 cierra su alcance:
 **1 (solo lectura) ✅** · **2 (gestiones) ✅** · **3 (retirar `/mi-cuenta/…`) ✅** — las páginas ya no
 existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u)`).
-⚠️ **De los dos trozos que el área dejó fuera a propósito, la AUTH ya está hecha** (`#122`,
-2026-08-23). Queda **`account-context`, todavía en Livewire**: ficha en `DEUDA.md`.
+✅ **Los DOS trozos que el área dejó fuera a propósito están HECHOS**: la AUTH (`#122`) y
+**`account-context`** (`#123`), los dos el 2026-08-23. Sus fichas de `DEUDA.md` quedan cerradas.
 
 🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
 `sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
@@ -48,8 +49,19 @@ hay diferencia de código, así que no hace falta volver a desplegar por eso.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2648 en verde** (15.129 aserciones, `--parallel` **~44 s** medidos el 2026-08-23) ·
-  **584 tests JS** (`node --test`) · Pint limpio (828 ficheros) · `docs-check` verde ·
+- Suite **2678 en verde** (15.260 aserciones, `--parallel` **~34 s** medidos el 2026-08-23) ·
+  ▶ **+30 sobre el cierre anterior, y la mayoría son GUARDAS QUE FALTABAN**, no cobertura de código
+  nuevo. Las del relevo:
+  **5** de `NoStoreWebResponsesTest` (nadie aseveraba `no-store` en una página web: la ponía un
+  accidente de Livewire), **1** de `SidebarIconParityTest` (la paridad de iconos no miraba 10 de 32
+  componentes), y **2** en `CustomerAccountContextTest` — un pack **sin franja** seguía avisando solo
+  porque lo decía un comentario, y nadie medía que la consulta de formularios pendientes **no
+  materializara el histórico**. Las otras 15 cubren `GET /me/account-context` y su semilla en el montaje.
+  ▶ Y las del PULIDO (`#124`): **4** de `SidebarStyleWiringTest` —toda clase que el cajón emite tiene
+  una regla, el `#113` aplicado al CSS—, **3** del scroll y del modo del panel, y **2** del encabezado
+  propio de una zona. Ninguna cubre código nuevo: todas cierran un hueco que ya existía.
+  **633 tests JS** (`node --test`) · Pint
+  limpio (834 ficheros) · `docs-check` verde ·
   ⚠️ **El contador ha BAJADO dos cierres seguidos, y las dos veces a propósito**: `/mi-cuenta/…` se
   llevó 63 casos (`#120(u)`) y el modal de auth, 42 (`#122`). Ninguno se perdió por descuido — en el
   segundo se midió **por mutación** cuáles cazaba también la API antes de borrar, y los tres que eran
@@ -137,63 +149,53 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   ⚠️ **`GET /me/export` es el cuerpo con más PII del producto** —lleva `event_data` en claro: nombre
   y alergias de un menor, art. 9— y por eso `RGPD-04` exige `no-store`, que en `/api/v1` va por
   defecto en toda respuesta autenticada.
-- ⚠️ **`account-context` sigue siendo Livewire y hermano** del punto de montaje de Vue: el cajón SPA
-  nunca lo ha pintado. Se le **cableó la puerta** en la tanda 1 (su «Mis reservas» abre la sección),
-  pero migrarlo entero sigue pendiente. Ahí murieron las señales de `#118`; su fila está en `DEUDA.md`.
+- ✅ **`account-context` YA ES VUE** (`#123`, 2026-08-23): el bloque lo pinta
+  `sidebar/account/AccountPanel.vue`, teletransportado al hueco que emite el layout, y la frontera
+  Livewire↔Vue del cajón **desaparece**. ⚠️ **Pero Livewire NO se puede retirar**: sigue trayendo
+  Alpine, así que `@livewireScripts` se queda — lo que cambia es que ahora es la **fuente única**, y
+  su guarda por fin discrimina (medido: retirarla la pone roja; hasta hoy no).
 - ✅ **La puerta de entrada de quien no tiene sesión es el CAJÓN** desde `#122` (2026-08-23): el modal
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
 
-🟩 **LA AUTH DENTRO DEL CAJÓN: TERMINADA el 2026-08-23** (`DECISIONES #122`,
-`docs/specs/auth-en-cajon.md`). Con ella **`#66` queda cumplido**: la gestión del cliente vive en UN
-solo sitio. Entrar, darse de alta y recuperar contraseña son zonas del cajón; el modal de la cabecera
-está retirado; las tres rutas sobreviven como PUERTAS; y el paso 5 del embudo ofrece «he olvidado mi
-contraseña» con vuelta a la compra.
+🟩 **EL CAJÓN ESTÁ COMPLETO Y PULIDO.** El bloque de cuenta es Vue (`#123`), el layout no renderiza
+**ningún** componente Livewire, y los nueve retoques que el owner pidió tras validarlo están hechos
+(`#124`). Las dos specs están ✅ EJECUTADAS.
 
-❗ **[PENDIENTE: owner] — HAY DETALLES DEL CAJÓN POR PULIR, Y NO ESTÁN ESCRITOS.** El owner validó la
-auth en navegador el 2026-08-23 (dos pasadas: con modal y sin él) y dijo que **hay detalles que pulir,
-que verá al terminar todo el cajón**, sin concretar cuáles.
-▶ **Pídele la lista antes de dar el cajón por acabado — no la adivines.** Es lo único de esta sesión
-que vive solo en la cabeza del owner.
-⚠️ Y **dos casos del guion de navegador siguen sin recorrer**: `V17` (el alta suelta con su reenvío)
-y `V18` (el paso 5 completo), en `VERIFICACION-E2E-CAJON.md` **§5.quinquies**. Las dos pasadas del
-owner no los tocaron, y son justo los que ningún test de este repo puede cubrir.
+⚠️⚠️ **LO QUE ESE TRABAJO ENCONTRÓ, y condiciona lo que venga. Léelo antes de tocar el cajón:**
+- **El `no-store` de TODAS las páginas web lo ponía un accidente de Livewire** —un hook de componente
+  encendía el flag que usaba un middleware global del paquete—, así que retirar el último componente
+  lo habría borrado del sitio entero **con la suite en verde**: ninguna de sus 12 aserciones miraba
+  una página del layout. Hoy lo pone `NoStoreWebResponses` (global, con puerta para `/api/v1`).
+- **`route('logout')` aparece UNA sola vez en toda la aplicación**, y vive como **suelo servido dentro
+  del hueco** del bloque: colapsado e invisible mientras todo va bien, a la vista si el motor no
+  llega. Desmiente la premisa escrita de `#120(t)`, ya corregida.
+- **Ocho clases se emitían sin una sola regla** —entre ellas la tarjeta de «Mis reservas»—, porque la
+  transcripción a Vue **inventó nombres** en vez de reutilizar los de las páginas retiradas. Ahora lo
+  vigila `SidebarStyleWiringTest`, que además dejó **seis huecos del EMBUDO declarados con nombre**:
+  `cart__pending`, `catalog__per`, los tres de complementos y el motivo del pago denegado. **Están sin
+  arreglar a propósito** —son pantallas ya validadas— y son el candidato natural a un pulido del
+  embudo.
+- **`SidebarIconParityTest` estaba ciego a 10 de los 32 `.vue`** (`**` no es recursivo en `glob()`).
 
-▶▶ **LO SIGUIENTE lo decide el owner**, y quedan **dos** candidatos (antes eran tres):
-**1 · `account-context` a Vue** — la última pieza fuera del cajón, y hoy el **ÚNICO** componente
-Livewire del layout: de él cuelga que llegue `livewire.js` y con él Alpine y el cajón entero. Ficha en
-`DEUDA.md`.
-**2 · Fase 5** — capa de contenido profesional. No depende de la anterior.
+⚠️ **Antes de añadir NADA al cajón, mira su presupuesto**: el chunk está en **210,8 de 211 KiB**, la
+holgura más estrecha de todo el ledger. Lo siguiente que entre lo mide y sube el techo con su párrafo.
+
+▶▶ **LO SIGUIENTE: la Fase 5** — capa de contenido profesional (query services con caché e
+invalidación por evento, theming como paquete, contenido por API). Es lo único que queda en el
+tracker antes de Fase 6.
+
 ⚠️ Y sigue abierta la decisión aplazada de `specs/area-cliente.md` §3.4: **si la zona activa cambia la
 URL**. Hoy el «atrás» del navegador no hace nada dentro del cajón y una zona no se puede enlazar.
 
-▶ **Si tocas la auth, lee `specs/auth-en-cajon.md`**: su valor no es el diseño sino lo que MIDIÓ —§8.bis
-es el método de la auditoría, y §4.10 las conductas que ningún test de árbol ve.
-▶ **Cómo se hizo, en una línea por si acaso**: diez pasos por DEPENDENCIA (`spec §8`), cada uno con
-su medición y su mutación. Lo que la ejecución encontró —y que no estaba en el diseño— vive en
-`DECISIONES #122(h)`–`(o)`: **no se repite aquí**, porque duplicarlo es crear una copia que nadie
-guarda.
+⚠️ **Dos casos del guion de navegador siguen sin recorrer**: `V17` (el alta suelta con su reenvío) y
+`V18` (el paso 5 completo), en `VERIFICACION-E2E-CAJON.md` §5.quinquies. Son de `#122`, no de `#123`.
 
-⚠️ **Las cuatro cosas que de verdad condicionan lo que toques encima**, y solo estas:
-
-| | |
-|---|---|
-| **La red NO es el diff de árbol** | `render-sidebar.mjs` no monta las zonas de la cuenta. Lo que las cubre son sus `node --test`, unas pocas guardas de cableado y **el navegador**: guion en `VERIFICACION-E2E-CAJON.md` §5.quinquies |
-| ⚠️ **El contexto del alta** | `register.js` **no** decide si el alta es *pay-first*: lo manda quien llama, y el default es el conservador. Quemarlo otra vez deja a las altas sueltas sin correo de verificación **sin que nada falle** (`SidebarSignupContextTest`) |
-| ⚠️ **La cuenta atrás del reenvío** | Espeja el limitador por IP del servidor porque el endpoint responde **202 aunque descarte el envío**. Acortarla ofrece un botón que no manda nada (`SidebarVerifyScreenTest` cruza los dos lados) |
-| ⚠️ **`account-context` es el ÚLTIMO Livewire del layout** | De él cuelga que llegue `livewire.js`, y con él Alpine y el cajón entero. Quien lo migre debe dejar `@livewireScripts` sí o sí |
-
-| | Qué es | Por qué importa |
-|---|---|---|
-| **`account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas**— y desde `#122` es además **el único componente Livewire del layout**: quien lo migre tiene que dejar `@livewireScripts` sí o sí, o la web se queda sin Alpine y sin cajón |
-| **Fase 5** | Capa de contenido profesional: query services con caché, theming como paquete, contenido por API | Es la siguiente fase del tracker, y no depende de la de arriba |
-
-⚠️ **Y una decisión que quedó APLAZADA a propósito y ahora toca**: `specs/area-cliente.md` §3.4 dijo
-que lo de **cambiar la URL por zona** se reevaluaría «cuando existan las siete zonas y la página haya
-muerto». Las dos cosas pasaron. Hoy la ruta es la única forma de LLEGAR a una zona —y funciona—, pero
-dentro del cajón el «atrás» del navegador sigue sin hacer nada y una zona no se puede enlazar. No es
-urgente; es una decisión pendiente con su contexto ya completo.
+⚠️⚠️ **Y una pasada visual PENDIENTE**: el pulido de `#124` cambia el aspecto de pantallas que el
+owner ya había validado —los tres botones del bloque, el índice con iconos, «Mis reservas» en
+tarjetas, privacidad en dos, los spinners, el título de auth y las pestañas a ancho completo—.
+**Ningún test de este repo ve un cambio visual.** Guion en `VERIFICACION-E2E-CAJON.md` §5.sexies.
 
 ### Dónde está hoy «Mi cuenta»
 
@@ -207,8 +209,11 @@ cajón se abre solo en su zona (`Http\Sidebar\AccountDoor`).
 | `PRIVACY` | Consentimientos · descargar mis datos (art. 20) · borrar la cuenta (art. 17) |
 | `HOME` | El índice, con su próxima reserva |
 
-⚠️ **«Cerrar sesión» NO está en el índice, y es una decisión** (`#120(t)`, owner): ya existe dos veces
-fuera —en el nav y en el bloque `.acct` del propio panel—, siempre a la vista.
+⚠️ **«Cerrar sesión» NO está en el índice, y es una decisión** (`#120(t)`, owner): sigue vigente.
+⚠️⚠️ **Pero su premisa era FALSA y se corrigió el 2026-08-23**: decía «ya existe dos veces fuera, en el
+nav y en el bloque `.acct`». Medido: **existe UNA**, la del bloque — `route('logout')` sale una sola
+vez en toda la aplicación, y con sesión el nav es un botón que solo abre el cajón. La decisión no
+cambia; el riesgo sí, y lo resuelve `specs/account-context-vue.md` §4.8.
 
 ⚠️ **Lo único que sobrevive de la web**: `GET /mi-cuenta/exportar`, que es una **DESCARGA** y no una
 vista. Sirve el MISMO documento que `GET /api/v1/me/export`, y hay un test que los compara campo a
@@ -233,7 +238,7 @@ campo — es lo que impide que vuelvan a divergir.
 | **Las PUERTAS** | `/mi-cuenta` y `/mi-cuenta/pedidos` abren el cajón en su zona. ⚠️ La zona se aplica en `bootSpaEngine()` **y no en `open()`**: el cajón que llega por una puerta **nace abierto**. Es el camino que ya dejó un hueco vacío en `#59(b)` y volvió a morder en `#120(u)` |
 | ⚠️ **La red** | **NO es el diff de árbol** (`#120(e)`): es paridad de DATOS contra la API + navegador. `render-sidebar.mjs` no importa la raíz |
 | ⚠️ **La cadena flex** | `.sidecart__body` → `#sidecart-spa` → `.purchase` → `.purchase__scroll` son **hijos DIRECTOS**: un envoltorio router la parte y **ningún test lo ve** (`specs/area-cliente.md` §4.9) |
-| ⚠️ **Los presupuestos** | ✅ **bajados a lo medido al cerrar**: chunk **189,5 KiB** (techo 190, quedan 0,5) y payload del montaje **4.708 B** (techo 4.800). El área entera costó **27,9 KiB**. Lo siguiente que entre los sube **a propósito y con su medida** |
+| ⚠️ **Los presupuestos** | ⚠️⚠️ **NO se copian aquí los números: viven en su test y esta tabla ya envejeció una vez.** Decía 190/4.800 cuando el código llevaba un día en **199 KiB** y **5.720 B** —la sesión de la auth los subió y nadie refrescó esta fila (medido el 2026-08-23)—. Los VIVOS son `SidebarBundleBudgetTest::SIDEBAR_CHUNK_MAX_KB` y los dos techos de `SidebarMountTest` (anónimo y con sesión), cada uno con su ledger al lado. Lo siguiente que entre los sube **a propósito, con su medida y su párrafo**, y al cerrar **baja a lo medido** |
 | ⚠️ **El techo de componentes** | 40 líneas por `.vue`. Ya obligó al rediseño correcto una vez (`#120(r)`): si vuelve a apretar, la pregunta es qué sobra ahí, no cuánto subirlo |
 
 ⚠️ **Y una regla de trabajo que esta fase dejó pagada con tres fallos**: en un refactor o una feature
@@ -452,6 +457,7 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | **Área · tanda 1** | 🟩 **Leer**: el nivel sección, las zonas, el contrato de presentación, los datos, la puerta y la captura de huecos | `#120(g)`–`(m)` |
 | **Área · tanda 2** | 🟩 **Gestionar**: contraseña y sesiones · el perfil y el ciclo del correo · **los dos derechos RGPD** — y la web heredó los cuatro limitadores que le faltaban | `#120(n)`–`(s)` |
 | **Área · tanda 3** | 🟩 **Retirar**: primero se publicó lo que solo sabía la página (desglose financiero, consentimientos) y **después** se borró. La auditoría destapó **dos huecos reales** que nadie vigilaba | `#120(t)`, `#120(u)` |
+| **Bloque de cuenta** | 🟩 **El ÚLTIMO Livewire del layout, a Vue**: hueco con suelo servido, `<Teleport>`, endpoint `GET /me/account-context` y la semilla del montaje por el MISMO Resource. Lo que ENCONTRÓ: el `no-store` accidental de todo el sitio, la única salida de sesión de la app y un gate de iconos ciego a un tercio de sus componentes | **`#123`** |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
 **una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de

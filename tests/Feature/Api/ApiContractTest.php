@@ -214,6 +214,49 @@ class ApiContractTest extends TestCase
     }
 
     /**
+     * ⚠️ **Y la reserva próxima del contexto de cuenta, por lo MISMO** (2026-08-23,
+     * `specs/account-context-vue.md` §4.4).
+     *
+     * `AccountContext.next_reservation` es anulable y tiene que ser exactamente lo que publica
+     * `/me/reservations`, así que se probó primero con `allOf: [$ref] + nullable`. **Falla igual que
+     * en la zona**: medido, una reserva presente da «The data (object) must match the type: null».
+     * O sea que el hallazgo de `DECISIONES #27` no era del catálogo — es del validador— y se resuelve
+     * igual: objeto entero escrito, con su `nullable`, y esta guarda como precio.
+     *
+     * ▶ **En tiempo de EJECUCIÓN lo cubre otra cosa distinta**, y las dos hacen falta:
+     * `MeAccountContextTest::test_the_next_reservation_is_byte_for_byte_what_me_reservations_publishes`
+     * compara las dos RESPUESTAS reales. Aquélla caza que el código divergiera; ésta, que divergiera
+     * el CONTRATO —que en este repo manda sobre el código— dejando pasar una respuesta que el otro
+     * endpoint no aceptaría.
+     */
+    public function test_the_inlined_upcoming_reservation_says_the_same_as_the_component(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $component = $schemas['UpcomingReservation'] ?? null;
+
+        $this->assertIsArray($component, 'falta el componente `UpcomingReservation`');
+
+        $inline = $schemas['AccountContext']['properties']['next_reservation'] ?? null;
+
+        $this->assertIsArray($inline, '`AccountContext` ya no declara la reserva próxima inline');
+        $this->assertTrue(
+            $inline['nullable'] ?? false,
+            'la reserva próxima tiene que ser anulable: un cliente sin reservas es el caso normal'
+        );
+        $this->assertSame(
+            $component['properties'],
+            $inline['properties'] ?? null,
+            '`AccountContext.next_reservation` ha divergido de `UpcomingReservation`: sus propiedades '.
+            'ya no coinciden, así que los dos endpoints han dejado de prometer lo mismo'
+        );
+        $this->assertSame(
+            $component['required'],
+            $inline['required'] ?? null,
+            '`AccountContext.next_reservation` ha divergido de `UpcomingReservation` en sus campos obligatorios'
+        );
+    }
+
+    /**
      * La zona anidada en un producto está escrita INLINE y no como `$ref`, y esta guarda es el
      * precio de esa decisión.
      *

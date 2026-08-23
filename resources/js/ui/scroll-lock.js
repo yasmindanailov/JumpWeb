@@ -76,5 +76,17 @@ export function createScrollLock(apply) {
  * tests importan `createScrollLock`, nunca esto.
  */
 export function installScrollLock() {
-    return createScrollLock((locked) => document.body.classList.toggle('no-scroll', locked));
+    // ⚠️⚠️ **La clase va en el `<html>` TAMBIÉN, y desde el 2026-08-23**. Con `overflow: hidden` solo
+    // en el `<body>` el fondo seguía moviéndose: cuando el elemento que scrollea es el DOCUMENTO —lo
+    // normal si el `<body>` no acota su altura, y prácticamente siempre en táctil— esa regla recorta
+    // el desbordamiento del body pero no congela el documento. Es el fallo clásico de los
+    // superpuestos, y aquí se veía al hacer scroll dentro del cajón: la página de detrás se movía.
+    //
+    // ⚠️ **Sigue habiendo UN dueño y UNA clase**: lo que cambia es que la pone en dos elementos. Un
+    // segundo módulo tocando `no-scroll` sería exactamente lo que `#58` desmontó —seis escritores, y
+    // el último en cerrar mandaba— y lo que `ScrollLockOwnerTest` vigila.
+    return createScrollLock((locked) => {
+        document.documentElement.classList.toggle('no-scroll', locked);
+        document.body.classList.toggle('no-scroll', locked);
+    });
 }

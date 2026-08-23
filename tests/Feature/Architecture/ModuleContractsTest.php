@@ -325,10 +325,15 @@ class ModuleContractsTest extends TestCase
 
         $this->assertSame('Ada', $context['firstName']);
         $this->assertSame(2, $context['upcomingCount']);
-        $this->assertSame('Pack cumpleaños', $context['nextReservation']['productName']);
-        $this->assertSame('10:00–12:00', $context['nextReservation']['timeWindow']);
-        // La ETIQUETA de fecha la compone Identity (idioma activo); el contrato solo lleva `Y-m-d`.
-        $this->assertNotSame('', $context['nextReservation']['dateLabel']);
+        // ⚠️ **La próxima reserva sale como el DTO del contrato, no como un array formateado**
+        // (2026-08-23): Identity ya no compone la etiqueta de día —lo hace quien la pinta, con
+        // `DisplayTime::dayLabel`— así que lo que se asevera aquí es que el DTO llega ENTERO y sin
+        // recodificar. Aseverar la etiqueta desde aquí volvería a mezclar contrato y presentación,
+        // que es lo que este caso existe para separar.
+        $this->assertInstanceOf(UpcomingReservation::class, $context['nextReservation']);
+        $this->assertSame('Pack cumpleaños', $context['nextReservation']->productName);
+        $this->assertSame('10:00–12:00', $context['nextReservation']->timeWindow);
+        $this->assertSame('2026-08-20', $context['nextReservation']->date, 'el contrato lleva `Y-m-d`, sin formatear');
 
         $this->assertTrue($context['hasPendingForm']);
         $this->assertSame(1, $context['pendingFormsCount']);

@@ -85,7 +85,16 @@ class SidebarComponentBudgetTest extends TestCase
         // que el cajón tiene dos SECCIONES esas señales dependen de cuál está activa, y un `watch`
         // sobre el paso no se dispara al conmutar (`specs/area-cliente.md` §4.5). Aquí se queda el
         // confeti, que sí es de la compra.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 431, 'api' => 2],
+        // ⚠️ **431 → 432 el 2026-08-23, y es UNA línea: el `import` de `account/session-gained.js`**
+        // (`specs/account-context-vue.md` §4.6). El evento `logged-in` de Livewire murió con el
+        // bloque de cuenta, y lo que hay que hacer al conseguir sesión —repintar el bloque, invalidar
+        // las próximas reservas y marcar `authChanged`— se fue a un módulo plano con su `node --test`.
+        // ▶ **Aquí subió a 436 y se BAJÓ a 432 antes de commitear**, que es la mitad de la regla que
+        // casi nunca se cumple: la primera versión pasaba los dos stores desde el componente —dos
+        // imports y dos instanciaciones que no son suyos—, y el módulo los resuelve él por defecto
+        // (mismo patrón que `api = httpClient`). El gate hizo justo lo que existe para hacer:
+        // **provocar la pregunta**.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 432, 'api' => 2],
     ];
 
     /**

@@ -98,6 +98,61 @@ class ScrollLockOwnerTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **EL FONDO NO SE MUEVE, Y ESO SON DOS COSAS, NO UNA** (2026-08-23).
+     *
+     * Se abrió el cajón, se hizo scroll dentro y **la página de detrás se movía**. Medido, había dos
+     * causas independientes y arreglar solo una deja el síntoma:
+     *
+     *  1. **el bloqueo estaba incompleto**: solo `body.no-scroll { overflow: hidden }`. Cuando el
+     *     elemento que scrollea es el DOCUMENTO —lo normal si el `<body>` no acota su altura, y
+     *     prácticamente siempre en táctil— esa regla recorta el desbordamiento del body pero **no
+     *     congela la página**;
+     *  2. **el gesto se ENCADENA**: al llegar al tope del scroll interno, el navegador se lo pasa al
+     *     ancestro. Congelar el documento no lo impide; lo corta `overscroll-behavior: contain`, que
+     *     hasta ese día **no aparecía ni una vez en todo el repo**.
+     *
+     * ⚠️ Se asevera sobre el CSS y no sobre una conducta porque **ningún test de esta suite puede
+     * hacer scroll**: no hay navegador. Lo que sí puede es exigir que las dos piezas estén.
+     */
+    public function test_the_background_is_frozen_and_the_scroll_does_not_chain(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/html\.no-scroll\s*,\s*\n?\s*body\.no-scroll\s*\{[^}]*overflow:\s*hidden/',
+            $css,
+            "El bloqueo ha vuelto a aplicarse solo al `<body>`.\n".
+            '⚠️ No basta: cuando quien scrollea es el documento —casi siempre en táctil— la página de '.
+            'detrás sigue moviéndose con el cajón abierto.'
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/\.purchase__scroll\s*\{[^}]*overscroll-behavior:\s*contain/',
+            $css,
+            "El scroll del cajón ha vuelto a ENCADENARSE con el de la página.\n".
+            '⚠️ Congelar el fondo no lo impide: al llegar al tope de este contenedor, el navegador le '.
+            'pasa el gesto al ancestro. Es la OTRA mitad del arreglo, y sin ella el síntoma vuelve.'
+        );
+    }
+
+    /**
+     * ⚠️ **Y el dueño escribe la clase en los DOS elementos.** Sigue siendo un solo escritor y un solo
+     * nombre —que es lo que `DECISIONES #58` compró—, pero si volviera a escribirla solo en el
+     * `<body>`, la regla de arriba quedaría inerte: estaría en el CSS sin que nadie la encienda.
+     */
+    public function test_the_owner_locks_the_document_too(): void
+    {
+        $owner = (string) file_get_contents(base_path(self::OWNER));
+
+        $this->assertMatchesRegularExpression(
+            '/documentElement\.classList\s*\.\s*toggle\(\s*[\'"`]no-scroll/',
+            $owner,
+            'El dueño ha dejado de bloquear el DOCUMENTO. La regla `html.no-scroll` del CSS se queda '.
+            'entonces sin nadie que la encienda: presente y muerta.'
+        );
+    }
+
+    /**
      * Cada superpuesto pide su llave con un nombre PROPIO.
      *
      * ⚠️ El caso que lo obligaba: «Mis pedidos» pintaba un modal por pedido, así que su llave llevaba

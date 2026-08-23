@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { DEFAULT_ZONE, createNavigation } from '../account/navigation.js';
+import { DEFAULT_ZONE, createNavigation, parentZoneFor } from '../account/navigation.js';
 import { useSectionStore } from './section.js';
 
 /**
@@ -90,6 +90,27 @@ export const useAccountStore = defineStore('account', {
         enter(zone = DEFAULT_ZONE, { under = null } = {}) {
             this.nav.reset(zone, under);
             this.sync();
+        },
+
+        /**
+         * **Abrir el área EN una zona, viniendo de fuera de ella** — sembrando su vuelta y conmutando
+         * de sección de una vez.
+         *
+         * ⚠️ **Existe para que haya UNA implementación y no dos.** Lo piden dos sitios que llegan por
+         * caminos distintos y necesitan exactamente lo mismo: el `showAccount()` que `index.js`
+         * expone hacia fuera —las puertas por URL y los botones de la cabecera— y el **bloque de
+         * cuenta del panel**, que desde el 2026-08-23 lo pinta Vue dentro del propio cajón
+         * (`specs/account-context-vue.md` §4.9). Escribirlo dos veces dejaría dos sitios donde
+         * recordar que hay que sembrar `under`, y olvidarlo en uno saca al cliente de la sección al
+         * pulsar «volver».
+         *
+         * ⚠️ **Siembra siempre**, porque quien llega así **no tiene historia dentro del área**: la
+         * regla y sus tres casos viven en `account/navigation.js::parentZoneFor()`.
+         */
+        openZone(zone = DEFAULT_ZONE) {
+            this.enter(zone, { under: parentZoneFor(zone) });
+
+            return useSectionStore().showAccount();
         },
     },
 });

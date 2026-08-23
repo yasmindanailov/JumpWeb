@@ -19,7 +19,6 @@ return [
         'no_upcoming' => 'No upcoming bookings.',
         'upcoming_count' => ':count upcoming bookings',
         // Sidebar v2 — subtle tag shown when the account minimises on entering the flow.
-        'tag' => 'Finish your booking',
     ],
 
     'account' => [

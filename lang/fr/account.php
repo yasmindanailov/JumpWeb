@@ -19,7 +19,6 @@ return [
         'no_upcoming' => 'Aucune réservation à venir.',
         'upcoming_count' => ':count réservations à venir',
         // Sidebar v2 — petit tag affiché quand le compte se réduit à l'entrée du flux.
-        'tag' => 'Finalise ta réservation',
     ],
 
     'account' => [

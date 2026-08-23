@@ -1,4 +1,5 @@
 import { installScrollLock } from './ui/scroll-lock.js';
+import { reveal } from './ui/account-host.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -108,29 +109,15 @@ document.addEventListener('alpine:init', () => {
         // ⚠️ Montar al ABRIR y no al cargar también evita el riesgo que sí toca `PERF-02`: una raíz
         // Vue ávida pidiendo catálogo en cada carga de landing añadiría una petición por visita en
         // la ruta de más tráfico del sitio.
-        /**
-         * **Un enlace del bloque de cuenta que el CAJÓN puede atender sin navegar**
-         * (`docs/specs/area-cliente.md` §4.6).
-         *
-         * ⚠️⚠️ **Se conserva el `href` y solo se previene el default si el motor se hace cargo**, y
-         * las dos mitades importan. El motor del cajón llega con un `import()` dinámico en la primera
-         * apertura: entre que el panel se abre y el chunk termina de cargar hay una ventana real en la
-         * que `spaHandle` es `null`. Sin `href`, un clic en esa ventana **no haría nada** —la familia
-         * de fallos de `DECISIONES #117`, donde un camino «no fallaba, no hacía nada»—; con él, el
-         * cliente acaba en la página de siempre, que sigue existiendo.
-         *
-         * ⚠️ `zone` a `null` significa «este enlace no es del cajón»: el aviso de UN solo formulario
-         * pendiente lleva al post-form, que en la tanda 1 se abre como página (§4.7).
-         *
-         * @param {MouseEvent} event
-         * @param {string|null} zone  la zona del área a la que llevar, o `null` para dejar navegar
-         */
-        followAccountLink(event, zone) {
-            if (! zone || ! this.spaHandle) return;
-
-            event.preventDefault();
-            this.spaHandle.showAccount(zone);
-        },
+        // ⚠️⚠️ **Aquí vivía `followAccountLink()`, y se retiró el 2026-08-23**
+        // (`specs/account-context-vue.md` §4.9). Era el puente para un clic dado **mientras el chunk
+        // del motor todavía cargaba**: conservaba el `href` y solo se tragaba el clic si el motor ya
+        // estaba. Sus ÚNICOS dos llamantes eran los `@click` del bloque de cuenta, y ese bloque lo
+        // pinta ahora Vue **dentro** del cajón — o sea que solo existe con el motor ya montado, y la
+        // ventana que el puente cubría dejó de existir. Medido antes de borrar: cero llamantes.
+        //
+        // ⚠️ **`openAccount()` NO se fue, y la asimetría es la que ya estaba escrita**: aquél lo usan
+        // los CTA del NAV, donde el cajón está CERRADO y el motor puede no existir todavía.
         /**
          * **Abre el cajón EN una zona de la cuenta, desde fuera de él.**
          *
@@ -212,6 +199,15 @@ document.addEventListener('alpine:init', () => {
                 // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
                 // el cajón abierto y mudo sin dejar rastro de por qué.
                 console.error('[sidebar] no se pudo cargar el motor SPA', e);
+                // ⚠️⚠️ **Y se REVELA el suelo del bloque de cuenta** (`specs/account-context-vue.md`
+                // §4.8). El hueco nace colapsado con el formulario de cerrar sesión dentro; si el
+                // motor no llega, esto es lo único que le queda al cliente para salir — medido,
+                // `route('logout')` aparece UNA sola vez en toda la aplicación y es ésa. Sin esta
+                // línea, un fallo de red deja a un titular sin poder cerrar sesión, y en un
+                // dispositivo compartido eso no es una molestia.
+                // ⚠️ Lo hace el dueño ÚNICO del hueco (`ui/account-host.js`), no un `classList` suelto
+                // aquí: repartir esa clase entre dos escritores es la receta de `body.no-scroll`.
+                reveal(document.getElementById('sidecart-account'));
                 // Y tampoco puede dejar el velo girando para siempre: normalmente lo retira Vue al
                 // montar (`container.textContent = ''`), pero si no hay montaje nadie lo haría. Un
                 // spinner eterno MIENTE —dice «esto va a llegar»—; vaciarlo devuelve el cajón al
@@ -239,7 +235,18 @@ document.addEventListener('alpine:init', () => {
         },
         close() {
             this.isOpen = false;
-            this.mode = 'catalog';
+            // ⚠️⚠️ **Aquí se hacía `this.mode = 'catalog'`, y se RETIRÓ el 2026-08-23 porque era un
+            // SEGUNDO ESCRITOR de una señal con dueño único.** El modo lo publica el motor —el `watch`
+            // de `Sidebar.vue`, a partir de la sección activa y el paso del embudo— y escribirlo aquí
+            // lo desincronizaba: al reabrir, el panel decía `is-catalog` mientras el cajón seguía en
+            // «mi cuenta» o en el paso de la fecha, así que **el bloque de cuenta reaparecía** en
+            // pantallas donde el CSS lo colapsa. Y el `watch` no lo corregía: no había cambiado nada
+            // reactivo, así que no se volvía a disparar.
+            // ▶ Era herencia del motor Livewire, donde reabrir provocaba un round-trip y el `x-effect`
+            // re-publicaba el modo. Con la SPA ese round-trip no existe.
+            // ▶ Es el mismo razonamiento que el párrafo de abajo lleva escrito para `identifying`
+            // desde 4.0a — solo que a `mode` no se le aplicó.
+            //
             // OJO: `identifying` NO se resetea aquí (ver su declaración). Si se pusiera a false, al
             // reabrir el sidebar sin round-trip Livewire el x-effect no re-dispararía y el botón de
             // login quedaría desbloqueado en pleno paso de identificación.
@@ -1025,14 +1032,11 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
-// Login EMBEBIDO en el sidebar (#69): a propósito NO recarga la página, así que el nav se queda
-// con el estado de invitado. Marcamos el cambio para refrescar al CERRAR el sidebar (ver el
-// almacén 'purchase'). El login del modal normal sí redirige, así que no necesita esto.
-document.addEventListener('livewire:init', () => {
-    window.Livewire.on('logged-in', () => {
-        const purchase = window.Alpine?.store('purchase');
-        if (purchase) {
-            purchase.authChanged = true;
-        }
-    });
-});
+// ⚠️⚠️ **Aquí escuchaba el evento `logged-in` de Livewire, y se retiró el 2026-08-23**
+// (`specs/account-context-vue.md` §4.6). Ese bus existía porque el bloque de cuenta era un componente
+// Livewire FUERA del motor; con el bloque dentro del cajón, el propio motor marca `authChanged` sin
+// dar la vuelta por un bus de eventos (`sidebar/account/session-gained.js`).
+//
+// Lo que hacía **no se ha perdido**, que es lo único que importa: el login embebido sigue sin recargar
+// la página, el nav sigue quedándose con el estado de invitado, y cerrar el cajón sigue recargando.
+// Medido al retirarlo: tras esto **nadie emite ni escucha `logged-in`** en el repo.

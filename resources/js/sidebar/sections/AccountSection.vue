@@ -1,7 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { useAccountStore } from '../stores/account.js';
-import { ZONES, titleKeyOf } from '../account/navigation.js';
+import { useAuthStore } from '../stores/auth.js';
+import { ZONES, bringsOwnHeading, titleKeyOf } from '../account/navigation.js';
 import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
 import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
@@ -55,6 +56,7 @@ const props = defineProps({
 });
 
 const store = useAccountStore();
+const auth = useAuthStore();
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
@@ -79,7 +81,7 @@ const signIn = () => store.go(ZONES.LOGIN);
           la zona anterior, y solo cuando no hay historia significa salir a la compra. Esa decisión
           vive en el store (probada con `node --test`), no aquí — un componente pinta.
         -->
-        <button type="button" class="bk-back" @click="store.back()">
+        <button type="button" class="bk-back account__back" @click="store.back()">
             <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
                  aria-hidden="true" focusable="false">
@@ -89,12 +91,22 @@ const signIn = () => store.go(ZONES.LOGIN);
             <span>{{ translate(messages, 'back') }}</span>
         </button>
 
-        <h2 class="wiz__title">{{ title }}</h2>
+        <!--
+          ⚠️⚠️ **Las tres pantallas de AUTH traen su propio encabezado, así que aquí no se pone**
+          (2026-08-23). `LoginForm` y `RegisterForm` se reutilizan del paso 5 del embudo —donde no hay
+          armazón que ponga título— y pintan su `auth__title` con el MISMO literal que este `title`:
+          el cliente veía «Inicia sesión» o «Crea tu cuenta» **dos veces**, una encima de otra.
+          ▶ La regla vive en `account/navigation.js::bringsOwnHeading()`, con su `node --test`, y no
+          como una lista de zonas escrita aquí: una condición en una plantilla envejece en silencio en
+          cuanto nace la cuarta pantalla que traiga encabezado propio.
+        -->
+        <h2 v-if="! bringsOwnHeading(store.zone)" class="wiz__title">{{ title }}</h2>
 
         <AccountHomeZone
             v-if="store.zone === ZONES.HOME"
             :account="account"
             :messages="messages"
+            :ui="ui"
             @go="store.go" />
 
         <ProfileZone
@@ -102,7 +114,8 @@ const signIn = () => store.go(ZONES.LOGIN);
             :messages="messages"
             :auth="auth"
             :account="account"
-            :locales="locales" />
+            :locales="locales"
+            :ui="ui" />
 
         <PasswordZone
             v-else-if="store.zone === ZONES.PASSWORD"
@@ -120,12 +133,14 @@ const signIn = () => store.go(ZONES.LOGIN);
             v-else-if="store.zone === ZONES.PRIVACY"
             :messages="messages"
             :auth="auth"
-            :account="account" />
+            :account="account"
+            :ui="ui" />
 
         <OrdersZone
             v-else-if="store.zone === ZONES.ORDERS"
             :messages="messages"
             :account="account"
+            :ui="ui"
             @sign-in="signIn" />
 
         <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
@@ -135,8 +150,18 @@ const signIn = () => store.go(ZONES.LOGIN);
              repetirlas en las dos habría dejado dos sitios que mantener sincronizados. `FORGOT` no
              las lleva a propósito — no es una tercera pestaña, es una pantalla a la que se entra
              desde entrar y de la que se vuelve. -->
+        <!--
+          ⚠️⚠️ **Las pestañas DESAPARECEN mientras hay un alta esperando verificación** (2026-08-23).
+          Ofrecer «Entrar / Crear cuenta» junto a un «acabas de crear tu cuenta, revisa tu correo»
+          invita a abandonar un paso a medias — y **pulsarlas destruía la pantalla**: salir de la zona
+          borra el correo pendiente **a propósito**, porque es PII de alguien que puede no ser el
+          siguiente en usar el dispositivo (lo fija `stores/auth.test.js`).
+          ▶ Esa defensa no se toca. Lo que se retira es la forma ACCIDENTAL de dispararla: la salida
+          deliberada sigue estando dentro de la propia pantalla («¿ya tienes cuenta?»), que además es
+          la única que sabe a dónde lleva.
+        -->
         <AuthTabs
-            v-if="store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER"
+            v-if="(store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER) && ! auth.awaitingVerification"
             :account="account"
             :active="store.zone" />
 

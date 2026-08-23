@@ -2,6 +2,8 @@
 import { useReservationsStore } from '../../stores/reservations.js';
 import { HOME_ENTRIES, titleKeyOf } from '../navigation.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
+import ZoneLoading from '../ZoneLoading.vue';
+import ZoneIcon from '../ZoneIcon.vue';
 
 /**
  * **El índice del área de cliente**: quién eres, qué tienes por delante y desde dónde se llega a todo
@@ -16,6 +18,8 @@ import { t as translate, tp as translateWith } from '../../i18n.js';
  */
 const props = defineProps({
     account: { type: Object, default: () => ({}) },
+    /** El grupo `ui`: el rótulo del spinner mientras la zona trae sus datos. */
+    ui: { type: Object, default: () => ({}) },
     messages: { type: Object, default: () => ({}) },
 });
 
@@ -31,13 +35,18 @@ store.ensure();
       El contexto de cortesía. Va antes que los accesos porque es lo que el cliente viene a mirar:
       medido en la web, «¿cuándo es lo mío?» es la pregunta que trae aquí a la mayoría.
     -->
-    <p v-if="store.next" class="acct__sub">
+    <ZoneLoading v-if="store.loading && ! store.loaded" :ui="ui" />
+
+    <p v-else-if="store.next" class="acct__sub">
         {{ store.next.date_label }}<template v-if="store.next.time_window"> · {{ store.next.time_window }}</template> · {{ store.next.product_name }}
     </p>
 
     <div class="catalog">
         <button v-for="zone in HOME_ENTRIES" :key="zone" type="button" class="catalog__item" @click="emit('go', zone)">
             <span class="catalog__name">
+                <!-- ⚠️ El icono va DENTRO del rótulo, no como tercer hijo de `.catalog__item`: ése es
+                     `space-between` y un hijo más dejaría el texto flotando en el medio. -->
+                <ZoneIcon :zone="zone" />
                 {{ translate(account, titleKeyOf(zone)) }}
                 <template v-if="zone === HOME_ENTRIES[0] && upcoming > 0">
                     <!--

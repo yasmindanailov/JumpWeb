@@ -19,9 +19,10 @@
  * «volver» no puede enseñar un formulario de login a quien acaba de entrar; y el formulario muere con
  * la página, así que la contraseña no sobrevive en un campo para el siguiente que use el dispositivo.
  *
- * ⚠️ **No hace falta avisar a Livewire** (`logged-in`), y conviene decirlo para que nadie lo añada
- * «por simetría» con el embudo: ese evento existe para repintar el bloque de cuenta **sin recargar**,
- * que es justo lo que aquí no ocurre. Una navegación completa hace más de lo que el evento podría.
+ * ⚠️ **No hace falta avisar de nada** (`account/session-gained.js`), y conviene decirlo para que nadie
+ * lo añada «por simetría» con el embudo: ese aviso existe para repintar el bloque de cuenta y releer
+ * las reservas **sin recargar**, que es justo lo que aquí no ocurre. Una navegación completa hace más
+ * de lo que el aviso podría. (Hasta el 2026-08-23 el aviso era un evento de Livewire, `logged-in`.)
  *
  * Módulo PLANO con el `window` **por parámetro** (`CE-6`, mismo patrón que `account/privacy.js`): es
  * lo que permite probarlo con `node --test` sin navegador.

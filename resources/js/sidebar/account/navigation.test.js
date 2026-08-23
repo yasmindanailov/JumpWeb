@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
+import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -294,5 +294,41 @@ describe('salir y volver a entrar', () => {
         nav.reset('ajustes');
 
         assert.equal(nav.zone, ZONES.HOME);
+    });
+});
+
+describe('el encabezado propio de una zona', () => {
+    /**
+     * ⚠️⚠️ Nace de que el título salía DOS VECES: las tres pantallas de auth reutilizan el formulario
+     * del paso 5 del embudo —que trae su propio `auth__title` porque allí no hay armazón— y la
+     * sección ponía además el de la zona, con el MISMO literal.
+     */
+    test('lo traen exactamente las tres pantallas de auth', () => {
+        assert.equal(bringsOwnHeading(ZONES.LOGIN), true);
+        assert.equal(bringsOwnHeading(ZONES.REGISTER), true);
+        assert.equal(bringsOwnHeading(ZONES.FORGOT), true);
+    });
+
+    /** Y ninguna otra: las zonas con sesión dependen del armazón para tener título. */
+    test('ninguna zona con sesión lo trae', () => {
+        for (const zone of [ZONES.HOME, ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY]) {
+            assert.equal(bringsOwnHeading(zone), false, `${zone} se quedaría SIN título`);
+        }
+    });
+
+    /**
+     * ⚠️ **`titleKeyOf()` sigue devolviendo su clave para las tres**, y a propósito: el rótulo se usa
+     * en más sitios que el encabezado. Atar las dos cosas dejaría sin nombre a quien solo quiere el
+     * rótulo.
+     */
+    test('pero su rótulo sigue existiendo', () => {
+        for (const zone of [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT]) {
+            assert.ok(titleKeyOf(zone), `${zone} perdió su clave de rótulo`);
+        }
+    });
+
+    /** Una zona que no existe no trae encabezado propio: el armazón pone el suyo por defecto. */
+    test('una zona desconocida no lo trae', () => {
+        assert.equal(bringsOwnHeading('lo-que-sea'), false);
     });
 });

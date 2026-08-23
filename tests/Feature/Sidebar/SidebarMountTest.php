@@ -2,10 +2,15 @@
 
 namespace Tests\Feature\Sidebar;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Http\Middleware\SetLocale;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -62,30 +67,26 @@ class SidebarMountTest extends TestCase
      *    componente Livewire llegó a renderizarse** (`SupportAutoInjectedAssets`:
      *    `$hasRenderedAComponentThisRequest`).
      *
-     * ⚠️⚠️ **Y desde el 2026-08-23 el layout renderiza UNO, no cuatro** (`DECISIONES #122`): los tres
-     * modales de auth se retiraron y solo queda `account-context`. La redundancia sigue existiendo,
-     * pero **colgando de un solo hilo**: el día que `account-context` migre a Vue —la última ficha de
-     * `DEUDA.md`— la directiva pasa a ser la fuente ÚNICA, y retirarla dejará la web sin Alpine y con
-     * ella el cajón entero. Este caso es el que se pondrá rojo entonces, y por eso asevera el
-     * RESULTADO y no la directiva.
+     * ⚠️⚠️⚠️ **Y EL DÍA QUE ESTE CASO ANUNCIABA LLEGÓ: EL 2026-08-23 EL LAYOUT NO RENDERIZA NINGUNO.**
+     * `account-context` —el último— migró a Vue (`specs/account-context-vue.md`), así que la
+     * auto-inyección de Livewire **ya no dispara** y `@livewireScripts` es la **FUENTE ÚNICA**.
+     * Retirarla deja la web sin Alpine, y con Alpine se caen `$store.purchase` —lo que ABRE el cajón
+     * desde los once puntos de la landing— y el cajón entero.
      *
-     * Tabla medida el 2026-08-21 sobre este mismo caso:
-     * directiva SÍ + componentes SÍ → verde (estado real) · directiva NO + componentes SÍ → **verde**
-     * · directiva SÍ + componentes NO → **verde** · directiva NO + componentes NO → **ROJO**.
+     * Tabla medida el 2026-08-21, cuando aún quedaba un componente:
+     * directiva SÍ + componentes SÍ → verde · directiva NO + componentes SÍ → **verde** ·
+     * directiva SÍ + componentes NO → verde · directiva NO + componentes NO → **ROJO**.
      *
-     * ▶ De ahí las dos consecuencias que importan al siguiente que pase por aquí:
-     *  1. **Retirar hoy `@livewireScripts` NO rompe nada** —la auto-inyección lo tapa—, así que la
-     *     nota de `layout.blade.php` que lo daba por fatal estaba equivocada y se ha corregido.
-     *  2. **El peligro real es el ÁREA DE CLIENTE** (`DECISIONES #66`): ese trabajo retira el modal
-     *     de auth de la cabecera y puede llevarse `account-context`. El día que caiga el último
-     *     componente Livewire del layout, la directiva pasa a ser la **fuente única** y retirarla sí
-     *     deja la web sin Alpine. Este caso es el que se pondrá rojo entonces, y por eso asevera el
-     *     resultado y no la directiva.
+     * ▶ **Y RE-MEDIDA el 2026-08-23, ya sin componentes: retirar la directiva pone este caso ROJO.**
+     * O sea que **hasta hoy no discriminaba y desde hoy sí**. Es la fila que el propio caso llevaba
+     * anunciando desde que se escribió, y por eso asevera el RESULTADO (`livewire.js` en la página) y
+     * no la directiva: una guarda escrita sobre la directiva habría estado verde y muerta dos días.
      *
-     * Eran dos casos —uno por motor— porque Livewire memoiza que ya emitió sus assets y ese estado
-     * estático sobrevive entre peticiones del mismo test (familia `SUITE-02`): con los dos modos en
-     * un solo caso, el segundo `get()` no los emitía. Con un motor único basta una petición, así que
-     * el motivo de partirlos se fue con el flag.
+     * ⚠️ **Y una trampa de la MUTACIÓN, medida al comprobarlo**: un `sed` sobre `@livewireScripts`
+     * sustituye **también** la mención que hay dentro de un comentario del layout, y si el reemplazo
+     * lleva `--}}` cierra ese comentario antes de tiempo y filtra su texto —que nombra
+     * `livewire.js`— al HTML. El caso pasa en verde por el motivo equivocado. **Mutar la línea, no
+     * la cadena.**
      */
     public function test_livewire_scripts_are_still_served(): void
     {
@@ -267,9 +268,39 @@ class SidebarMountTest extends TestCase
         // ⚠️ **`forgot` entra el 2026-08-23 y viaja SIN sesión a propósito**
         // (`specs/auth-en-cajon.md` §4.1): las tres pantallas de auth son precisamente las que ve
         // quien NO ha entrado, así que podarlas al invitado las dejaría con los rótulos en blanco.
+        // ⚠️⚠️ **`nav` y `sidecart` entran el 2026-08-23 y viajan SIN sesión a propósito**
+        // (`specs/account-context-vue.md` §4.12): son los rótulos del bloque de cuenta, que desde hoy
+        // pinta Vue y **cambia de cara sin recargar**. Quien entra en el paso 5 del embudo tiene en
+        // memoria este payload de invitado y el bloque pasa a saludarle por su nombre en ese mismo
+        // instante: podarlos por sesión le dejaría el saludo, la sub-línea y el aviso **en blanco**,
+        // y nada avisaría. Es el mismo motivo por el que ya viajaban `login`, `register` y `forgot`.
         $this->assertSame(
-            ['login', 'register', 'forgot', 'verify'], array_keys($boot['account'] ?? []),
+            ['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify'], array_keys($boot['account'] ?? []),
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
+        );
+
+        // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los TRES botones del
+        // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en
+        // blanco**: `i18n.js` devuelve cadena vacía cuando falta una clave y nada avisa. Con sesión
+        // el subgrupo entero lo sustituye —y lleva esta misma clave—, así que el cajón lee un solo
+        // camino haya sesión o no.
+        $this->assertSame(
+            ['title'], array_keys($boot['account']['account'] ?? []),
+            'sin sesión, del subgrupo `account` solo debe viajar el rótulo que el bloque pinta'
+        );
+
+        // Y los dos entran PODADOS clave a clave, no enteros.
+        $this->assertSame(
+            // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
+            ['hello', 'login', 'sign_out'], array_keys($boot['account']['nav'] ?? []),
+            'el subgrupo `nav` ha dejado de estar podado a los tres rótulos que el bloque pinta'
+        );
+        $this->assertSame(
+            // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
+            ['next', 'form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'no_upcoming', 'upcoming_count'],
+            array_keys($boot['account']['sidecart'] ?? []),
+            'el subgrupo `sidecart` ha dejado de estar podado. ⚠️ `tag` NO entra: se retiró por muerta '.
+            '(`display: none` incondicional, sostenida solo por su propio test)'
         );
 
         // ⚠️ **Y `verify` va podado clave a clave**, al revés que `login`, `register` y `forgot`: sus
@@ -318,8 +349,23 @@ class SidebarMountTest extends TestCase
         // (20 %): `login` 294, `register` 1.217, `forgot` 456 y `verify` 481. O sea que esta subida es
         // un **+3,8 %** del payload del cajón, no un salto de orden. Reproducible leyendo el
         // `data-boot` de la home y midiendo cada rama.
+        // ⚠️ **Re-medido el 2026-08-23 tras los TRES botones**: **3.137 B**, **+35** sobre los 3.102 de
+        // abajo — es `account.title`, el rótulo del botón de «Mi cuenta». **El techo NO sube**: los
+        // 3.200 puestos entonces lo absorben y quedan 63 B.
+        //
+        // ⚠️⚠️ **2.688 → 3.200 el 2026-08-23: los RÓTULOS DEL BLOQUE DE CUENTA.** Medido: **3.102 B**,
+        // **+508** —`nav` podado a tres y `sidecart` a siete—, con **98 B** de holgura. Es la subida
+        // más grande desde que existe este presupuesto, y hay que decir por qué se paga entera en el
+        // montaje anónimo: el bloque cambia de cara **sin recargar**, así que sus dos caras tienen que
+        // viajar siempre (ver el párrafo de las claves, arriba).
+        // ▶ **Y el balance es negativo, que es lo que la hace legible**: con estos rótulos se retira
+        // el marcado del bloque Livewire, que pesaba ~2,2 kB de HTML en cada página pública —de los
+        // que ~0,7 eran andamiaje `wire:*`—. **Medido sobre la home anónima real, antes y después:
+        // 170.753 B → 169.341 B, o sea −1.412 B netos por visita**, en la ruta que `PERF-02` protege.
+        // (El neto no es la resta directa: entran también el hueco servido, `urls.home` y la clave
+        // `accountContext`.)
         $this->assertLessThan(
-            2688, $anonBytes,
+            3200, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -340,7 +386,7 @@ class SidebarMountTest extends TestCase
 
         $boot = $this->bootPayload((string) $this->actingAs($user)->get('/')->assertOk()->getContent());
 
-        $this->assertSame(['login', 'register', 'forgot', 'verify', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders'], array_keys($boot['account'] ?? []));
         $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
@@ -365,7 +411,13 @@ class SidebarMountTest extends TestCase
         // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
         // diga lo mismo que la página web. Si desaparece, el cajón lo pintaría VACÍO y nada avisaría.
         $this->assertNotSame('', (string) ($boot['account']['account']['password']['mismatch'] ?? ''));
-        $this->assertSame(['upcoming_count'], array_keys($boot['account']['sidecart'] ?? []));
+        // ⚠️ `sidecart` ya NO es «solo el contador»: desde el 2026-08-23 lleva los rótulos del bloque
+        // de cuenta y viaja **sin sesión también**, así que su contenido se asevera arriba, en el caso
+        // del montaje anónimo. Aquí solo se comprueba que con sesión no ha crecido de más.
+        $this->assertSame(
+            ['next', 'form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'no_upcoming', 'upcoming_count'],
+            array_keys($boot['account']['sidecart'] ?? []),
+        );
 
         $this->assertSame(
             // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`: aquél conserva
@@ -407,11 +459,279 @@ class SidebarMountTest extends TestCase
         // ⚠️ **5.248 → 5.720 el 2026-08-23 (A5)**, por el mismo `account.verify` que sube el anónimo:
         // los MISMOS 474 B, porque las pantallas de auth viajan para todo el mundo. Medido: **5.631
         // B**, con **89 B** de holgura.
+        // ⚠️⚠️ **5.720 → 6.272 el 2026-08-23**, por los MISMOS rótulos que suben el anónimo: el bloque
+        // de cuenta viaja para todo el mundo. Medido: **6.160 B**, **+529**, con **112 B** de holgura.
         $this->assertLessThan(
-            5720, $bytes,
+            6272, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );
+    }
+
+    /**
+     * ⚠️⚠️ **RESCATADO de `Site\AccountContextTest` al retirarlo el 2026-08-23**
+     * (`specs/account-context-vue.md` §4.11).
+     *
+     * Aquel fichero murió con su sujeto —el componente Livewire del bloque de cuenta—, pero uno de
+     * sus cuatro casos era de sujeto MIXTO: además del tag muerto, era **el ÚNICO sitio de la suite
+     * que aseveraba el puente de la clase de modo del panel**, que vive en `layout.blade.php` y
+     * **sobrevive intacto**. Dejarlo morir habría quitado esa guarda sin que nada se pusiera rojo.
+     *
+     * ▶ Es exactamente lo que ya pasó al borrar el motor Livewire (`DECISIONES #111`), y por eso
+     * `CONVENCIONES §3.quater` manda clasificar por SUJETO y no por fichero.
+     *
+     * ⚠️ Lo que ese puente sostiene: `is-{modo}` es lo que COLAPSA el bloque de cuenta en tres modos
+     * —y desde hoy el bloque lo pinta Vue, así que depende de una clase que escribe Alpine sobre un
+     * elemento del layout. Sin el puente, el panel se queda en `is-catalog` para siempre y el bloque
+     * no se colapsa nunca (`DECISIONES #118`).
+     */
+    public function test_the_panel_still_bridges_its_mode_class_to_the_store(): void
+    {
+        $this->get(route('entradas'))
+            ->assertOk()
+            ->assertSee("'is-' + \$store.purchase.mode", false);
+    }
+
+    /**
+     * ⚠️⚠️ **EL MODO DEL PANEL TIENE UN SOLO ESCRITOR: EL MOTOR** (2026-08-23).
+     *
+     * `is-{modo}` es lo que colapsa el bloque de cuenta en tres pantallas, y lo publica el `watch` de
+     * `Sidebar.vue` a partir de la sección activa y el paso del embudo. **Hasta hoy `close()` lo
+     * pisaba**: escribía `mode = 'catalog'` directamente en el store de Alpine, así que al reabrir el
+     * panel decía «catálogo» mientras el cajón seguía en «mi cuenta» o en el paso de la fecha — y **el
+     * bloque de cuenta reaparecía** en pantallas donde el CSS lo colapsa.
+     *
+     * ▶ **Y el `watch` no lo corregía**, que es lo que lo hacía silencioso: no había cambiado nada
+     * REACTIVO, así que no se volvía a disparar. El estado de Vue y el de Alpine quedaban divergidos
+     * hasta el siguiente cambio de paso.
+     *
+     * ▶ Era herencia del motor Livewire, donde reabrir provocaba un round-trip y el `x-effect`
+     * re-publicaba el modo. Es exactamente el argumento que el propio `close()` lleva escrito desde
+     * 4.0a para `identifying` — solo que a `mode` no se le aplicó.
+     *
+     * ⚠️ Se asevera sobre el FUENTE porque el síntoma solo se ve en un navegador: cerrar, reabrir y
+     * mirar si el bloque está donde debía estar colapsado.
+     */
+    public function test_only_the_engine_publishes_the_panel_mode(): void
+    {
+        // ⚠️⚠️ **Se quitan los COMENTARIOS antes de contar, y no es pulcritud.** El propio `close()`
+        // explica en prosa qué línea se retiró y la cita literalmente; contarla como código haría que
+        // esta guarda fallara por documentar su propio arreglo. Es la misma lección que
+        // `SidebarEntryTest` dejó escrita —allí tres docblocks citaban las claves de sesión a
+        // propósito— y la que costó una mutación en falso al medir `@livewireScripts`: **mirar el
+        // código, no el texto**.
+        $alpine = (string) preg_replace(
+            ['#/\\*.*?\\*/#s', '#^\\s*//.*$#m'],
+            '',
+            (string) file_get_contents(base_path('resources/js/app.js')),
+        );
+
+        $this->assertSame(
+            1, preg_match_all('/this\.mode\s*=/', $alpine),
+            "Alguien ha vuelto a escribir el modo del panel fuera de `setMode()`.\n".
+            "⚠️ El modo lo publica el MOTOR (`Sidebar.vue`), y un segundo escritor lo desincroniza sin \n".
+            "que nada falle: al reabrir el cajón, el panel dice «catálogo» y el bloque de cuenta \n".
+            'reaparece en pantallas donde el CSS lo colapsa. La única asignación legítima es la de '.
+            '`setMode()`, que es por donde entra el motor.'
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/close\(\)\s*\{(?:(?!\}\s*,).)*?scrollLock\.unlock/s',
+            $alpine,
+            'no se encuentra el `close()` del cajón: esta guarda mira el fichero equivocado'
+        );
+
+        $close = mb_substr($alpine, (int) mb_strpos($alpine, 'close() {'));
+        $close = mb_substr($close, 0, (int) mb_strpos($close, 'celebrate()'));
+
+        $this->assertStringNotContainsString(
+            "this.mode = 'catalog'", $close,
+            'CERRAR el cajón ha vuelto a resetear el modo del panel. Es lo que hacía que el bloque de '.
+            'cuenta reapareciera al reabrir — y el propio `close()` explica, para `identifying`, por '.
+            'qué eso no se hace aquí.'
+        );
+    }
+
+    // ── La SEMILLA del contexto de cuenta ─────────────────────────────────────────────────────
+    //
+    // ⚠️⚠️ **Es la ÚNICA rama del montaje cuyo tamaño depende de los DATOS del cliente**, no de los
+    // textos de la instalación. Todo lo demás son rótulos: si crecen, crecen para todos y se ven en
+    // el diff. Esto crece con los años de cliente, y por eso necesita techo propio — los dos que ya
+    // existen miden `[$boot['account'], $boot['auth']]` y **no lo verían nunca**.
+
+    /**
+     * Sin sesión no viaja el contexto, pero **la clave sí**, con `null`.
+     *
+     * Cuesta 24 B medidos en la ruta de más tráfico del sitio, y a cambio ningún consumidor tiene que
+     * distinguir «no está» de «está vacío» — el mismo argumento que `BookingStatusResource` escribe
+     * para su aviso, y el mismo patrón que `userId` y `outcome`.
+     */
+    public function test_an_anonymous_mount_carries_the_key_with_null(): void
+    {
+        $boot = $this->bootPayload();
+
+        $this->assertArrayHasKey('accountContext', $boot, 'la clave tiene que estar siempre');
+        $this->assertNull($boot['accountContext']);
+    }
+
+    /**
+     * ⚠️⚠️ **LA SEMILLA Y EL ENDPOINT SON LA MISMA FORMA**, y esto lo compara sobre respuestas reales.
+     *
+     * Los dos salen de `AccountContextResource` a propósito (`Http\Sidebar\AccountContextSeed`).
+     * Escribir la semilla «a mano» en el Blade es una tentación de cinco líneas, y dejaría al store
+     * del cajón normalizando **dos formas** del mismo dato: una al cargar la página y otra al
+     * refrescar tras entrar sin recargar. Una de las dos envejecería sin que nadie lo notara.
+     *
+     * ⚠️ Se compara con **un solo** formulario pendiente a propósito: es el único caso en que las dos
+     * formas deben coincidir ENTERAS. La diferencia con varios es de cardinalidad y la fija el caso
+     * de abajo.
+     */
+    public function test_the_seed_is_the_same_shape_as_the_endpoint(): void
+    {
+        $user = $this->customerWithPendingPacks(1);
+
+        $semilla = $this->bootPayload($this->actingAs($user)->get('/')->getContent())['accountContext'];
+        $endpoint = $this->actingAs($user)->getJson('/api/v1/me/account-context')->assertOk()->json();
+
+        $this->assertSame(
+            $endpoint, $semilla,
+            "La semilla del montaje ha dejado de ser lo que publica `GET /me/account-context`.\n".
+            '⚠️ Las dos tienen que salir del MISMO Resource, o el store del cajón acaba normalizando '.
+            'dos formas del mismo dato y una de ellas envejece sola.'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **La lista de formularios pendientes viaja PODADA a uno, y el contador NO.**
+     *
+     * Es la única parte del contexto **sin cota**: un cliente con ocho packs pendientes arrastraría
+     * ocho nombres de producto y ocho URLs de post-form —PII— en el HTML de **cada** página que
+     * abriera. El bloque solo pinta uno: con varios, su aviso lleva al listado y usa el CONTADOR.
+     *
+     * ▶ Y se poda **por cardinalidad, nunca por campo**: de `next_reservation` no se quita nada
+     * aunque el bloque no pinte `time_window`, porque eso sí daría dos formas del mismo objeto.
+     */
+    public function test_the_seed_prunes_the_pending_forms_by_cardinality_and_keeps_the_count(): void
+    {
+        $user = $this->customerWithPendingPacks(3);
+
+        $seed = $this->bootPayload($this->actingAs($user)->get('/')->getContent())['accountContext'];
+
+        $this->assertCount(
+            1, $seed['pending_forms'],
+            'la semilla lleva más de un formulario pendiente: son nombre + URL por cada uno, en el '.
+            'HTML de cada página'
+        );
+        $this->assertSame(3, $seed['pending_forms_count'], 'el CONTADOR no se poda: es lo que pinta el aviso');
+
+        // Y `next_reservation` va ENTERA: no se poda por campo.
+        $this->assertSame(
+            ['date', 'date_label', 'time_window', 'product_name'],
+            array_keys($seed['next_reservation']),
+            'se ha podado un campo de `next_reservation`: eso da dos formas del mismo objeto según '.
+            'venga de la semilla o del refresco'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **EL TECHO DE LA SEMILLA — y lo que este techo NO puede cazar, dicho aquí.**
+     *
+     * Es la única rama del montaje cuyo tamaño depende de los DATOS del cliente y no de los textos de
+     * la instalación: varía con la longitud de los nombres de producto y con el dominio. Eso lo hace
+     * un instrumento **débil** para lo estructural —un campo nuevo cabe de sobra dentro de la holgura
+     * que la variación de datos obliga a dejar— y **fuerte** para lo que de verdad importa aquí: que
+     * no vuelva a entrar nada SIN COTA.
+     *
+     * ▶ Por eso van los dos, y cada uno mide lo suyo:
+     *  · **el juego de claves**, que es exacto y caza un campo nuevo el día que se añade;
+     *  · **el techo en bytes**, que caza que algo crezca con el cliente — una lista que se dejó de
+     *    podar, un campo que resultó ser un array.
+     *
+     * Medido el 2026-08-23 con este fixture (próxima reserva + 3 packs pendientes, podados a 1):
+     * **320 B**. El techo deja holgura deliberada para un dominio de instalación largo y nombres de
+     * producto largos, que son las dos partes que varían de cliente a cliente y que **no deben
+     * producir un rojo que no viene de un cambio** — el fallo que esta suite ya pagó dos veces por
+     * otra vía (`DECISIONES #64`, `#97`).
+     *
+     * ▶ **Referencia que lo hace legible**: el bloque Blade que esta migración retira pesaba **~2,2 kB
+     * de HTML** en cada página pública. La semilla es un séptimo de eso, y solo con sesión.
+     */
+    public function test_the_seed_stays_within_its_budget(): void
+    {
+        $user = $this->customerWithPendingPacks(3);
+
+        $seed = $this->bootPayload($this->actingAs($user)->get('/')->getContent())['accountContext'];
+
+        // (1) Lo ESTRUCTURAL, que es lo que discrimina de verdad.
+        $this->assertSame(
+            ['first_name', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count'],
+            array_keys($seed),
+            'La semilla ha cambiado de forma. Cada campo nuevo viaja en el HTML de TODA página con '.
+            'sesión: si hace falta, que entre a propósito — y comprueba antes que el endpoint lo '.
+            'publica igual, o habrá dos formas del mismo dato.'
+        );
+
+        // (2) Y el techo, como red contra lo que crece con el cliente.
+        $bytes = strlen((string) json_encode($seed, JSON_UNESCAPED_UNICODE));
+
+        $this->assertLessThan(
+            512, $bytes,
+            "La semilla del contexto de cuenta pesa {$bytes} B en el HTML de cada página con sesión, ".
+            "sobre 320 medidos.\n".
+            '⚠️ Mira primero si lo que ha crecido es una LISTA: la de formularios pendientes se poda '.
+            'por cardinalidad justamente porque no tiene cota. Subir el techo sin mirar eso es '.
+            'subirlo para que el histórico del cliente quepa.'
+        );
+    }
+
+    /**
+     * Un cliente con `n` packs pendientes y su próxima reserva.
+     *
+     * ⚠️ **UNA sola lectura del reloj** para el fixture: con dos, el cruce de medianoche entre ellas
+     * daría un rojo que no viene del código (`DECISIONES #64`, `#97`).
+     */
+    private function customerWithPendingPacks(int $n): User
+    {
+        $user = User::factory()->create(['name' => 'Cliente Demo', 'email_verified_at' => now()]);
+
+        $zone = Zone::create([
+            'slug' => 'jump', 'name' => ['es' => 'Jump'], 'accent' => 'jump',
+            'color' => '#FF5B22', 'position' => 1, 'is_active' => true,
+        ]);
+
+        $date = now()->addDays(3)->toDateString();
+
+        for ($i = 1; $i <= $n; $i++) {
+            $type = TicketType::create([
+                'name' => ['es' => "Cumpleaños Jump {$i}"], 'type' => TicketType::TYPE_PACK,
+                'zone_id' => $zone->id, 'duration_min' => 120, 'seats_per_unit' => 1,
+                'is_sellable' => true, 'is_active' => true,
+                'guest_fields' => [
+                    ['key' => 'nombre', 'label' => ['es' => 'Nombre'], 'type' => 'text', 'phase' => 'booking', 'required' => true],
+                ],
+                'position' => (int) TicketType::max('position') + 1,
+            ]);
+
+            $order = Order::create([
+                'user_id' => $user->id, 'code' => 'R-'.Str::upper(Str::random(6)),
+                'status' => Order::STATUS_PAID, 'subtotal' => 1000, 'tax' => 0, 'total' => 1000,
+                'currency' => 'EUR', 'paid_at' => now(),
+            ]);
+
+            // ⚠️ Una franja por pack, con hora distinta: `slots` es único por (zona, fecha, inicio).
+            $slot = Slot::create([
+                'zone_id' => $zone->id, 'date' => $date,
+                'start_time' => sprintf('%02d:00:00', 9 + $i), 'end_time' => '23:00:00',
+                'capacity' => 10, 'online_capacity' => 10,
+            ]);
+
+            $order->items()->create([
+                'ticket_type_id' => $type->id, 'slot_id' => $slot->id, 'parent_item_id' => null,
+                'quantity' => 2, 'seats' => 2, 'unit_price' => 1000,
+            ]);
+        }
+
+        return $user;
     }
 
     /**

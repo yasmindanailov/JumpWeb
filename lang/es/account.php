@@ -19,7 +19,6 @@ return [
         'no_upcoming' => 'No tienes reservas próximas.',
         'upcoming_count' => ':count reservas próximas',
         // Sidebar v2 — tag sutil que muestra la cuenta cuando se minimiza al entrar en el flujo.
-        'tag' => 'Finaliza tu reserva',
     ],
 
     'account' => [

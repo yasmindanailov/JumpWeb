@@ -5440,6 +5440,13 @@ cuatro tipos conocidos las tres implementaciones coinciden.
 · **«Cerrar sesión» NO entra en el índice del cajón**: el botón ya existe dos veces fuera —en el nav y
   en el bloque `.acct` del propio panel, siempre a la vista— y una tercera entrada llevaría a donde el
   cliente ya puede ir con un clic. Retirar la página no pierde nada;
+  ⚠️⚠️ **CORRECCIÓN DE HECHO (2026-08-23): «dos veces» era FALSO — existe UNA.** Medido con
+  `git grep "route('logout')" -- ':!tests' ':!docs'`: **un solo resultado**, el del bloque `.acct`.
+  La rama con sesión de `nav.blade.php` es un `<button>` que solo abre el cajón: ni `href` ni salida.
+  **La decisión no cambia** —una tercera entrada seguiría siendo redundante— pero su premisa sí, y
+  con ella el riesgo: la única salida de sesión del sitio vive dentro de un cajón que solo abre con
+  JavaScript. Lo destapó la revisión adversarial de `specs/account-context-vue.md` §4.8, que es donde
+  se resuelve;
 · **los consentimientos SÍ se publican y se pintan**: sin ellos, el borrado le quitaría al cliente la
   prueba visible de a qué dijo que sí.
 
@@ -5690,3 +5697,100 @@ que renderiza el layout, así que la redundancia que hace llegar `livewire.js` �
 Alpine el cajón entero— **cuelga de él**. El día que migre a Vue, `@livewireScripts` pasa a ser la
 fuente única y retirarla deja la web sin cajón. Anotado en su ficha de `DEUDA.md`, en el layout y en
 `SidebarMountTest`.
+
+## #123 · 2026-08-23 · [DECIDIDO] El bloque de cuenta pasa a Vue — y lo que encontró vale más que lo que se migró
+
+**Qué se decidió** (owner): migrar `account-context` —el ÚLTIMO componente Livewire del layout— a Vue,
+en la forma **«solo Vue»** (sin conservar el Blade bajo paridad) y con un **endpoint nuevo**
+`GET /api/v1/me/account-context`. Diseño en `docs/specs/account-context-vue.md`.
+
+⚠️ **La revisión adversarial paró la v1 del diseño, y con razón.** Tres revisores independientes:
+*sólida-con-cambios · sólida-con-cambios · **INSUFICIENTE***. Cuatro afirmaciones del autor no salían
+del código, el inventario de guardas se dejaba la mitad —incluido el **guardián único de
+`identifying`**— y **no vio el efecto colateral más grave del trabajo**. La lista completa, en §8.1 de
+la spec.
+
+**Los DOS hallazgos que justifican la sesión, y ninguno es del trabajo pedido:**
+
+· ⚠️⚠️ **El `no-store` de TODAS las páginas web lo ponía un ACCIDENTE de Livewire.** No lo emitía
+  ningún middleware del proyecto: `SupportDisablingBackButtonCache::boot()` es un hook de componente
+  que enciende un flag, y un middleware global del paquete estampa la cabecera **solo si un componente
+  Livewire llegó a renderizarse**. Retirar el último la habría borrado del sitio entero — con la suite
+  en verde, porque **ninguna de las 12 aserciones de `no-store` miraba una página web del layout**.
+  Medido A/B: con componente `…no-store, private`; sin él, `no-cache, private`. Nace
+  `NoStoreWebResponses` (**global**, con la puerta de `/api/v1` para no romper la caché del catálogo
+  anónimo) y `NoStoreWebResponsesTest` con su **tabla de verdad de cinco combinaciones**, que deja
+  escrito que hasta hoy el caso pasaría igual sin el middleware.
+
+· ⚠️⚠️ **`route('logout')` aparece UNA sola vez en toda la aplicación**, y era el bloque que se
+  retiraba. Eso desmiente la premisa escrita de `#120(t)` («ya existe dos veces fuera, en el nav y en
+  el bloque»): existe una, y está dentro de un cajón que solo abre con JavaScript. **El owner descartó
+  subirla al nav** —`#66`: toda la gestión del cliente vive dentro del cajón— y el suelo va **dentro
+  del hueco**: el servidor pinta ahí el formulario de salir y nada más, colapsado, y solo se ve si el
+  motor no llega.
+
+**Y un tercero, ajeno a este trabajo:** `SidebarIconParityTest` estaba **ciego a 10 de los 32 `.vue`**
+—las diez zonas del área de cliente— porque `**` no es recursivo en el `glob()` de PHP. Es el modo de
+fallo exacto de `#113`, en el fichero que existe para impedirlo. Arreglado, con guarda de la guarda.
+
+**Cómo se hizo**: siete pasos por DEPENDENCIA (spec §6.1), cada uno con su medición y su mutación. Lo
+que la ejecución encontró y no estaba en el diseño vive en la propia spec (§6.0); no se repite aquí.
+
+⚠️ **Lo que este trabajo NO compra, y hay que decirlo**: no ahorra `livewire.js` —Alpine lo trae
+Livewire— así que la directiva se queda. Y no elimina «la frontera», elimina **una de las dos**: la
+costura Vue↔Alpine sigue viva y aquí gana un escritor.
+
+**Lo medido, de un vistazo**: chunk del motor **198,77 → 207,21 KiB** (techo 208) · HTML de la home
+anónima **−1.412 B por visita** · techos de texto **2.688 → 3.200** y **5.720 → 6.272**, los dos con su
+medida · suite **2669** y **624 tests JS** · **0 atributos `wire:`** en la página. Validado por el
+owner en navegador (`VERIFICACION-E2E-CAJON.md` §5.sexies, `V20`–`V22`).
+
+## #124 · 2026-08-23 · El PULIDO del cajón — cuatro de los nueve puntos no eran cosméticos
+
+**Qué pidió el owner**, tras validar el relevo en navegador: nueve retoques de interfaz del cajón.
+**Qué resultaron ser**: cuatro fallos reales, y tres de ellos de la misma familia que este repo ya ha
+pagado —una pieza que se emite y nada la recoge—.
+
+⚠️⚠️ **El bloque de cuenta reaparecía al reabrir el cajón** (punto 3). `close()` escribía
+`this.mode = 'catalog'` directamente en el store de Alpine, **saltándose el puente del motor** que es
+su dueño único. Al reabrir, el panel decía «catálogo» mientras el cajón seguía en «mi cuenta» o en el
+paso de la fecha, y **el `watch` no lo corregía**: no había cambiado nada reactivo. Era herencia del
+motor Livewire, donde reabrir provocaba un round-trip que re-publicaba el modo — y el propio `close()`
+llevaba escrito desde 4.0a por qué `identifying` NO se resetea ahí. A `mode` nadie se lo aplicó.
+
+⚠️⚠️ **«Mis reservas» se servía SIN TARJETAS, y privacidad con sus dos derechos pegados** (puntos 2 y
+4). No había que diseñar nada: **la transcripción a Vue inventó nombres de clase** —`orders__card`,
+`orders__pagination`, `bk-error`, un `auth` de envoltorio— y **ninguno tenía una sola regla en ninguna
+hoja**. Las reglas existían desde siempre con el nombre de la página que el cajón sustituyó
+(`orders__item`, `pagination`, `auth__errors`, `account__card`). Y **ningún gate podía verlo**: el
+contrato de árbol compara ESTRUCTURA, y un nodo con una clase muerta es idéntico a uno con la buena.
+▶ Nace `SidebarStyleWiringTest`: **toda clase que el cajón emite tiene una regla que la vista**. Es el
+`#113` aplicado al CSS. Encontró **seis huecos más en el EMBUDO**, anteriores a este trabajo, que
+quedan **declarados con nombre y motivo** en vez de tocados: son pantallas ya validadas.
+
+⚠️⚠️ **El scroll del cajón arrastraba la página** (punto 9). Dos causas, y arreglar una sola deja el
+síntoma: el bloqueo era solo `body.no-scroll { overflow: hidden }` —insuficiente cuando quien scrollea
+es el DOCUMENTO, que es lo normal en táctil— y el gesto **se encadenaba** al llegar al tope.
+`overscroll-behavior` **no aparecía ni una vez en todo el repo**. Se respeta el dueño único: una
+clase, un escritor, dos elementos.
+
+⚠️ **El título de auth salía dos veces** (punto 7): esas pantallas reutilizan el formulario del paso 5
+—que trae su encabezado porque allí no hay armazón— y el armazón ponía además el de la zona, con el
+MISMO literal. La regla vive en `navigation.js::bringsOwnHeading()`, no como un `v-if` que envejece.
+
+**Y lo que sí era interfaz**: los TRES botones del bloque —reservas · cuenta · salir **solo icono**,
+con su `aria-label`, sin peso visual y al final porque es la única acción de la que no se vuelve—;
+**cinco iconos en el índice**, con **cuatro componentes nuevos** del sistema de diseño (`calendar`,
+`lock`, `devices`, `shield`) y las copias del cajón **generadas desde el render real de Blade**, no a
+ojo; un **spinner** en las cuatro zonas que piden datos —el velo estaba diseñado y el área nunca lo
+cableó—; y las pestañas de auth **ocultas durante la verificación**.
+
+⚠️ **Una decisión que NO se tocó**, y conviene decirlo: que salir de la pantalla borre el correo
+pendiente es **deliberado y está defendido por escrito** (es PII de alguien que puede no ser el
+siguiente en usar el dispositivo). Lo que se retiró es la forma **accidental** de dispararla — las
+pestañas —, no la defensa. La salida deliberada sigue dentro de la propia pantalla.
+
+**Lo medido**: suite **2678** · **633 tests JS** · chunk **207,3 → 210,8 KiB** (techo 211, con su
+ledger) · textos del montaje **3.137 B** anónimo (techo 3.200) y **6.160** con sesión (techo 6.272).
+Cada arreglo con su guarda y **verificado por mutación**.
+

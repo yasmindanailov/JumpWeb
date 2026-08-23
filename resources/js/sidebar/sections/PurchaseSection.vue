@@ -22,6 +22,7 @@ import { runConfirm } from '../pay.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from '../outcome.js';
 import { signupRequiresCaptcha, CONTEXT_PURCHASE } from '../register.js';
 import { addLine, hasPendingEventFields, toApiItems } from '../cart.js';
+import { sessionGained } from '../account/session-gained.js';
 import Shell from '../Shell.vue';
 import CatalogStep from '../steps/CatalogStep.vue';
 import DateStep from '../steps/DateStep.vue';
@@ -606,9 +607,11 @@ const authStore = useAuthStore();
  * Envía las credenciales y, si entra, continúa la compra donde la dejó.
  *
  * ⚠️ **Tres cosas pasan al entrar, y ninguna sobra**:
- *  1. **se avisa a Livewire** (`logged-in`). Fuera del cajón, `account-context` es un componente
- *     Livewire que escucha ese evento para repintar «Hola, saltador/a»; sin el aviso, el panel seguiría
- *     ofreciendo «Entrar» a alguien que acaba de entrar, y ningún test de este repo lo vería;
+ *  1. **se avisa de que hay sesión** (`account/session-gained.js`): repinta el bloque de cuenta, que
+ *     hasta ese instante saluda como invitado, e invalida las próximas reservas del titular anterior.
+ *     Sin esto el panel seguiría ofreciendo «Entrar» a alguien que acaba de entrar, y **ningún test
+ *     de este repo lo vería** — solo el navegador. (Hasta el 2026-08-23 era un `dispatch('logged-in')`
+ *     por el bus de Livewire, porque quien escuchaba vivía fuera del motor.);
  *  2. **se aplica la identidad** con la respuesta del propio login —`POST auth/login` devuelve el
  *     perfil con la misma forma que `GET /me` justo para esto—, así que la cesta de invitado se queda
  *     con su nuevo dueño sin una petición más;
@@ -658,9 +661,11 @@ async function submitRegister() {
  * Lo que pasa cuando el cajón acaba de conseguir una sesión, venga de un login o de un alta.
  *
  * ⚠️ **Tres cosas, y ninguna sobra**:
- *  1. **se avisa a Livewire** (`logged-in`). Fuera del cajón, `account-context` es un componente
- *     Livewire que escucha ese evento para repintar «Hola, saltador/a»; sin el aviso, el panel seguiría
- *     ofreciendo «Entrar» a alguien que acaba de entrar, y ningún test de este repo lo vería;
+ *  1. **se avisa de que hay sesión** (`account/session-gained.js`): repinta el bloque de cuenta, que
+ *     hasta ese instante saluda como invitado, e invalida las próximas reservas del titular anterior.
+ *     Sin esto el panel seguiría ofreciendo «Entrar» a alguien que acaba de entrar, y **ningún test
+ *     de este repo lo vería** — solo el navegador. (Hasta el 2026-08-23 era un `dispatch('logged-in')`
+ *     por el bus de Livewire, porque quien escuchaba vivía fuera del motor.);
  *  2. **se aplica la identidad** con la respuesta que ya se tiene —`POST auth/login` devuelve el perfil
  *     con la misma forma que `GET /me`, y el alta lo consulta—, así que la cesta de invitado se queda
  *     con su nuevo dueño sin una petición más;
@@ -668,7 +673,10 @@ async function submitRegister() {
  *     a `proceed()`: quien entra con el tope de pendientes lleno tiene que enterarse aquí.
  */
 async function enterWith(identity) {
-    notifyLoggedIn();
+    // ⚠️ Se ESPERA a propósito: el bloque de cuenta pide su contexto al servidor, y quien vuelve al
+    // catálogo justo después tiene que encontrarse ya su nombre. No bloquea nada visible — el embudo
+    // sigue en el paso 5 mientras tanto.
+    await notifyLoggedIn();
     actOnIdentity(cartStore.applyIdentityResponse(identity));
     authStore.reset();
 
@@ -685,14 +693,18 @@ async function enterWith(identity) {
 }
 
 /**
- * Avisa al resto de la página de que hay sesión.
+ * Avisa de que hay sesión: al bloque de cuenta, al índice del área y al resto de la página.
  *
- * ⚠️ **El bus es el de Livewire y no un `CustomEvent` propio**: quien escucha es `account-context`, un
- * componente Livewire con `#[On('logged-in')]`, y Livewire solo atiende su propio canal. Con la SPA
- * montada, este motor ocupa el sitio del componente `Purchase`, que era quien lo emitía.
+ * ⚠️⚠️ **Aquí se despachaba `logged-in` por el bus de Livewire, y ese evento MURIÓ el 2026-08-23**
+ * (`specs/account-context-vue.md` §4.6). Existía porque quien escuchaba era `account-context`, un
+ * componente Livewire **fuera** del motor: con el bloque ya dentro del cajón, el estado está a un
+ * store de distancia y la vuelta por el bus no tenía sentido.
+ *
+ * Las tres cosas que hay que hacer —y por qué ninguna sobra— viven en `account/session-gained.js`,
+ * módulo plano con su `node --test`. Aquí solo se le da acceso al mundo.
  */
 function notifyLoggedIn() {
-    window.Livewire?.dispatch('logged-in');
+    return sessionGained();
 }
 
 // ── El paso 8: confirmar y salir hacia la pasarela ────────────────────────────────────────────

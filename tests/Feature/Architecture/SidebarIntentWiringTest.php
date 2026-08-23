@@ -70,6 +70,49 @@ class SidebarIntentWiringTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **Y lo mismo con el aviso de «hay sesión»** (2026-08-23,
+     * `specs/account-context-vue.md` §4.6).
+     *
+     * Es la MISMA familia de fallo y por eso vive aquí: una pieza declarada en un sitio, usada en
+     * otro, y el medio sin comprobar. `account/session-gained.js` hace tres cosas —repintar el bloque
+     * de cuenta, invalidar las próximas reservas y marcar `authChanged`—, y su `node --test` prueba
+     * que las hace **cuando se le pide**. Lo que ese test **no puede decir** es que alguien se lo
+     * pida: si `enterWith()` dejara de llamarlo, el módulo seguiría siendo correcto y su suite verde.
+     *
+     * ▶ Y tampoco lo dice el centinela del bundle: `/me/account-context` está en el chunk mientras el
+     * store se importe, porque `refresh()` es una acción de Pinia y Rollup no la poda por no usarse.
+     *
+     * ⚠️ **El síntoma de que faltara sería silencioso**: quien entra en el paso 5 del embudo y vuelve
+     * al catálogo seguiría viendo «Hola, saltador/a» y un botón de «Entrar» — y cerrar el cajón
+     * dejaría de recargar, así que el nav se quedaría de invitado. Nada fallaría. Es literalmente el
+     * fallo que hizo que este bloque fuera Livewire en 2026-06-14.
+     */
+    public function test_something_in_production_actually_announces_the_gained_session(): void
+    {
+        $modulo = 'account/session-gained.js';
+        $consumers = [];
+
+        foreach ($this->productionSources() as $path => $code) {
+            if (str_contains($path, $modulo)) {
+                continue;   // su propia definición no cuenta como uso
+            }
+
+            if (str_contains($code, 'sessionGained')) {
+                $consumers[] = $path;
+            }
+        }
+
+        $this->assertNotEmpty(
+            $consumers,
+            "NADIE avisa de que el cajón ha conseguido sesión, en código de producción.\n".
+            "El módulo existe y su `node --test` está verde, pero probar los dos extremos de una\n".
+            "costura no la cablea (`DECISIONES #117`). Sin llamante: el bloque de cuenta sigue\n".
+            "saludando como invitado a quien acaba de entrar, el índice del área sale vacío y cerrar\n".
+            'el cajón deja de recargar la página. Y nada falla.',
+        );
+    }
+
+    /**
      * ⚠️ EL CASO. Alguien de PRODUCCIÓN tiene que consumir la intención, o la costura entera —cinco
      * eslabones, un paso de fase y una decisión de diseño— no sirve para nada y nadie se entera.
      */

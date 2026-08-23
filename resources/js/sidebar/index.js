@@ -6,7 +6,9 @@ import { applyIntent as applyIntentToCatalog } from './intent.js';
 import { usePurchaseStore } from './stores/purchase.js';
 import { useSectionStore } from './stores/section.js';
 import { useAccountStore } from './stores/account.js';
-import { createNavigation, parentZoneFor } from './account/navigation.js';
+import { createNavigation } from './account/navigation.js';
+import { useAccountContextStore } from './stores/accountContext.js';
+import { takeOver } from '../ui/account-host.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -108,6 +110,17 @@ export function mount(el, boot = {}) {
     const accountStore = useAccountStore(pinia);
     accountStore.boot(createNavigation());
 
+    // El contexto que pinta el bloque de cuenta del panel. Llega SEMBRADO por el servidor
+    // (`Http\Sidebar\AccountContextSeed`), así que el bloque se pinta sin pedirle nada a nadie; solo
+    // se refresca cuando el cajón consigue sesión SIN recargar (`specs/account-context-vue.md` §4.3).
+    useAccountContextStore(pinia).seed(boot.accountContext ?? null);
+
+    // ⚠️⚠️ **El hueco del bloque se vacía ANTES de montar, y el orden no es negociable**: `<Teleport>`
+    // **anexa y no vacía** —al revés que `app.mount()`, que sí limpia su contenedor—, así que sin esto
+    // el suelo servido y el bloque de Vue convivirían y el cliente vería DOS botones de cerrar sesión.
+    // El dueño único del hueco es `ui/account-host.js`; aquí solo se le da el elemento.
+    takeOver(document.getElementById('sidecart-account'));
+
     const root = app.mount(el);
 
     const handle = {
@@ -127,9 +140,10 @@ export function mount(el, boot = {}) {
          * Vuelve a resolver QUIÉN es el titular, y purga la cesta si ha cambiado.
          *
          * ⚠️ La identidad sale SIEMPRE del servidor (`GET /me` la toma del guard, nunca de un
-         * parámetro). El evento `logged-in` de Livewire solo DISPARA esta llamada: no trae el id
-         * —`dispatch('logged-in')` va sin payload— y colgarse de un id que viaje por el bus de eventos
-         * del navegador sería confiar en el cliente para una defensa de seguridad.
+         * parámetro). Quien llama a esto solo DISPARA la pregunta: nunca le pasa un identificador,
+         * porque colgar de un id que viaje por el cliente sería confiar en él para una defensa de
+         * seguridad. (Hasta el 2026-08-23 quien disparaba era el evento `logged-in` de Livewire, que
+         * ya no existe: ahora es `app.js` al abrir el cajón.)
          */
         refreshIdentity() {
             return root.refreshIdentity?.();
@@ -173,15 +187,12 @@ export function mount(el, boot = {}) {
          * habitación llevaría al cliente a una pantalla vacía si esto se despliega. Se cablea en el
          * paso 5 de la tanda, cuando las zonas existan.
          */
-        showAccount: (zone) => {
-            // ⚠️ Esta es la entrada **desde fuera del cajón** —las puertas por URL y los botones de la
-            // cabecera—, y por eso siembra: quien llega así no tiene historia dentro del área, y sin
-            // nada debajo «volver» le sacaría de la sección. La regla y sus tres casos, en
-            // `account/navigation.js::parentZoneFor()`.
-            accountStore.enter(zone, { under: parentZoneFor(zone) });
-
-            return sectionStore.showAccount();
-        },
+        // ⚠️ Esta es la entrada **desde fuera del cajón** —las puertas por URL y los botones de la
+        // cabecera—. Delega en `accountStore.openZone()` y no repite la secuencia: desde el
+        // 2026-08-23 el **bloque de cuenta del panel** necesita exactamente lo mismo desde DENTRO
+        // (`specs/account-context-vue.md` §4.9), y dos copias serían dos sitios donde recordar que
+        // hay que sembrar la vuelta.
+        showAccount: (zone) => accountStore.openZone(zone),
         showPurchase: () => sectionStore.showPurchase(),
         store,
         section: sectionStore,

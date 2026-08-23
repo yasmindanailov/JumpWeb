@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GuestFormController;
+use App\Http\Controllers\Api\V1\MeAccountContextController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
@@ -223,6 +224,15 @@ Route::name('api.v1.')->group(function (): void {
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
+
+        // **El contexto de cuenta en UN viaje**: saludo, próxima reserva, contador y formularios
+        // pendientes (`specs/account-context-vue.md` §4.4). Lo consume el bloque de cuenta del cajón
+        // cuando tiene que repintarse tras conseguir sesión **sin recargar** —en mitad de una
+        // compra—, y de las tres cosas la última no se puede componer bien desde fuera: `me/orders`
+        // PAGINA, así que contar pendientes sobre una página cuenta mal.
+        // Sin parámetros a propósito: la única fuente de identidad es el guard.
+        Route::get('/me/account-context', MeAccountContextController::class)
+            ->name('me.account-context.show');
 
         // Aviso TEMPRANO de «¿puedo reservar?» (Fase 4 · paso 4.0b). Consulta pura: pregunta a
         // `mayReserve()`, que NO consume ficha del limitador — usar `admitReservation()` aquí haría

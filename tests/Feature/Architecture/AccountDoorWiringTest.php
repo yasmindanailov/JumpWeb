@@ -30,19 +30,31 @@ class AccountDoorWiringTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const BLADE = 'resources/views/livewire/site/account-context.blade.php';
+    /**
+     * ⚠️ El bloque de cuenta ya no es un Blade de Livewire: desde el 2026-08-23 lo pinta este
+     * componente Vue, teletransportado al hueco que el layout emite
+     * (`specs/account-context-vue.md` §4.2).
+     */
+    private const PANEL = 'resources/js/sidebar/account/AccountPanel.vue';
 
     private const ALPINE = 'resources/js/app.js';
 
     private const ENTRY = 'resources/js/sidebar/index.js';
 
-    /** El marcado del bloque de cuenta llama al puente de Alpine, y con la zona correcta. */
+    /**
+     * El bloque de cuenta pide la zona de pedidos al abrir «Mis reservas».
+     *
+     * ⚠️⚠️ **Re-apuntado el 2026-08-23** (`specs/account-context-vue.md` §4.9): el bloque ya no es un
+     * Blade de Livewire sino un componente Vue **dentro** del cajón, así que no necesita el puente de
+     * Alpine —que existía para la ventana en la que el motor aún no había cargado— y pide la zona
+     * directamente al store. El SUJETO no cambia: que ese botón abra el área en vez de navegar.
+     */
     public function test_the_account_block_asks_the_drawer_for_the_orders_zone(): void
     {
-        $blade = $this->source(self::BLADE);
+        $panel = $this->source(self::PANEL);
 
         $this->assertStringContainsString(
-            "followAccountLink(\$event, 'orders')", $blade,
+            'account.openZone(ZONES.ORDERS)', $panel,
             'El botón «Mis reservas» ha dejado de pedirle la zona al cajón. Sin esto vuelve a navegar '.
             'a la página, que es exactamente lo que el área de cliente existe para sustituir.'
         );
@@ -54,32 +66,34 @@ class AccountDoorWiringTest extends TestCase
      */
     public function test_the_link_still_degrades_to_the_page_when_the_engine_is_not_there(): void
     {
-        $this->assertStringContainsString(
-            "href=\"{{ route('account.orders') }}\"", $this->source(self::BLADE),
-            'Se ha perdido el `href` del botón de cuenta. Con el motor a medio cargar, un clic ahí '.
-            'ya no hace NADA — y eso no falla, no avisa y no se ve.'
+        // ⚠️ **Sigue siendo un `<a href>`, y el motivo cambió pero no desapareció**: ya no hay ventana
+        // «motor a medio cargar» —el bloque solo existe con el motor montado— pero el `href` es lo
+        // que hace funcionar el **clic central** y «abrir en pestaña nueva». Sin él, esos dos gestos
+        // no harían nada (`DECISIONES #117`). La URL la compone el SERVIDOR y llega en `urls`.
+        $this->assertMatchesRegularExpression(
+            '/<a\s+:href="urls\.my_orders"/', $this->source(self::PANEL),
+            'Se ha perdido el `href` del botón de cuenta. Con el clic central o «abrir en pestaña '.
+            'nueva» ya no hace NADA — y eso no falla, no avisa y no se ve.'
         );
     }
 
-    /** El puente de Alpine existe y **previene la navegación solo cuando el motor se hace cargo**. */
-    public function test_the_alpine_bridge_exists_and_only_swallows_the_click_when_it_can(): void
-    {
-        $alpine = $this->source(self::ALPINE);
-
-        $this->assertStringContainsString('followAccountLink(event, zone)', $alpine, 'no existe el puente');
-
-        $this->assertStringContainsString(
-            'if (! zone || ! this.spaHandle) return;', $alpine,
-            'El puente ha dejado de comprobar que el motor esté. Sin esa guarda, se traga el clic y '.
-            'no lleva a ninguna parte mientras el chunk carga.'
-        );
-
-        $this->assertStringContainsString(
-            'this.spaHandle.showAccount(zone)', $alpine,
-            'El puente ya no llama al motor: la cadena se rompe en el penúltimo eslabón, que es '.
-            'literalmente lo que pasó con la costura de intención en `#117`.'
-        );
-    }
+    // ⚠️⚠️ **Aquí vivía `test_the_alpine_bridge_exists_and_only_swallows_the_click_when_it_can`, y
+    // MURIÓ CON SU SUJETO el 2026-08-23** (`specs/account-context-vue.md` §4.9).
+    //
+    // Vigilaba `$store.purchase.followAccountLink()`: que existiera, que comprobara `spaHandle` antes
+    // de tragarse el clic, y que llamara al motor. Ese puente cubría una ventana concreta —un clic
+    // dado **mientras el chunk del motor todavía cargaba**— y esa ventana **dejó de existir**: sus
+    // dos únicos llamantes eran los `@click` del bloque de cuenta, que ahora pinta Vue **dentro** del
+    // cajón, o sea solo cuando el motor ya está montado. Medido antes de retirar: cero llamantes.
+    //
+    // ▶ **No se pierde nada de lo que vigilaba**, y se comprobó pieza a pieza antes de borrar: que el
+    // botón pida la zona lo asevera el primer caso de este fichero, contra el componente; que
+    // conserve su `href` —para el clic central y «abrir en pestaña nueva»—, el segundo; y que el
+    // motor se haga cargo, `account/panel.test.js` más el propio store de cuenta.
+    //
+    // ⚠️ **`openAccount()` NO se retiró y sigue con sus dos guardas** aquí abajo: aquél lo usan los
+    // CTA del NAV, donde el cajón está CERRADO y el motor puede no existir todavía. Fundir los dos
+    // habría dejado ese caso sin cubrir, que es lo que su propio docblock avisaba.
 
     /**
      * ⚠️⚠️ **La segunda puerta: la que llega por RUTA, con el cajón NACIDO ABIERTO.**
@@ -194,18 +208,30 @@ class AccountDoorWiringTest extends TestCase
      * podría dejar de renderizarse —o renderizar otra rama— sin que el fichero cambie. Esto mira lo
      * que el cliente RECIBE.
      */
-    public function test_the_served_html_carries_the_wiring_for_a_signed_in_customer(): void
+    /**
+     * **El extremo del servidor**, y desde el 2026-08-23 lo que sirve es OTRA COSA
+     * (`specs/account-context-vue.md` §4.8).
+     *
+     * El bloque lo pinta Vue, así que su cableado ya no viaja en el HTML — lo cubre el caso de
+     * arriba, sobre el componente. Lo que el servidor sigue sirviendo, y lo que este caso vigila, es
+     * el **hueco con su SUELO**: el formulario de cerrar sesión, colapsado, para el cliente al que el
+     * motor no le llegue.
+     *
+     * ⚠️⚠️ **Es la única salida de sesión de la aplicación**, medido: `route('logout')` aparece **una
+     * sola vez** en todo el código, y es ésta. Si desaparece, un fallo de red deja al titular sin
+     * poder salir — y en un dispositivo compartido eso no es una molestia.
+     */
+    public function test_the_served_html_carries_the_floor_for_a_signed_in_customer(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $html = (string) $this->actingAs($user)->get('/')->assertOk()->getContent();
 
-        $this->assertStringContainsString('acct__btn--reservas', $html, 'no se está sirviendo el botón de cuenta');
-        // ⚠️ Se asevera sobre el HTML **tal cual se sirve**, con sus comillas simples sin escapar:
-        // Blade no escapa el contenido de un atributo escrito a mano, y dar por hecha una entidad
-        // (`&#039;`) haría que este caso fallara por una razón que no es la que vigila.
-        $this->assertStringContainsString("followAccountLink(\$event, 'orders')", $html,
-            'el botón llega al navegador SIN su cableado: navegaría a la página en vez de abrir el área');
+        $this->assertStringContainsString('id="sidecart-account"', $html, 'no se está sirviendo el hueco del bloque');
+        $this->assertStringContainsString('acct--pending', $html, 'el hueco tiene que nacer colapsado');
+        $this->assertStringContainsString(route('logout'), $html,
+            'el SUELO ha desaparecido: sin él, un cliente al que no le llegue el motor se queda sin '.
+            'ninguna forma de cerrar sesión — y es la única de toda la aplicación');
     }
 
     /**
@@ -225,10 +251,21 @@ class AccountDoorWiringTest extends TestCase
 
         $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $this->assertStringContainsString(
-            "openAccount(\$event, 'login')", $html,
-            'El bloque de cuenta de un invitado ya no lleva al cajón: habría vuelto a depender de un '.
-            'modal que este trabajo retira.'
+        // ⚠️⚠️ **Re-apuntado el 2026-08-23**: el bloque de cuenta de un invitado ya no viaja en el
+        // HTML —lo pinta Vue— así que su cableado se comprueba sobre el componente. El SUJETO
+        // sobrevive: que quien no ha entrado tenga a dónde ir, y que sea una ZONA del propio cajón y
+        // no un modal. Lo que sigue mirando el HTML son los CTA del NAV, aquí abajo.
+        // ⚠️⚠️ **Se CUENTAN los dos, y el recuento no es adorno**: la cara de invitado tiene dos
+        // botones —«Iniciar sesión» y «Ver mis reservas»— y los dos llevan a entrar. Con
+        // `assertStringContainsString` bastaría uno, y quitarle el cableado al segundo pasaría en
+        // verde: es la trampa 3 de `CONVENCIONES §3.quater`, la misma por la que los CTA de alta de
+        // aquí abajo se cuentan en vez de buscarse.
+        // ▶ Este recuento **hereda el sujeto** de `Detalles216Test::test_sidecart_my_reservations_…`,
+        // que se retiró al pintarse el bloque en Vue (2026-08-23).
+        $this->assertSame(
+            2, substr_count($this->source(self::PANEL), 'account.openZone(ZONES.LOGIN)'),
+            'La cara de invitado tiene DOS botones y los dos llevan a la zona de entrar. Si solo uno '.
+            'la pide, el otro «no falla y no hace nada» (`DECISIONES #117`).'
         );
 
         // ⚠️⚠️ **Se CUENTAN los dos CTA de alta, y el recuento no es adorno: la primera versión de

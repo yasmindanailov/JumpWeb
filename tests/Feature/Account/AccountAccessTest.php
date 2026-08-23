@@ -152,10 +152,17 @@ class AccountAccessTest extends TestCase
             ->get('/')
             ->assertOk()
             ->assertSee('Hola, Mara')                      // chip de cuenta en el nav
-            ->assertSee('nav__acct', false)                // el chip abre el sidebar
-            ->assertSeeText(__('tickets.my_reservations'))     // «Mis reservas» en el bloque del sidecart
-            ->assertSee(route('account.orders'), false);   // enlaza a su página de pedidos
+            ->assertSee('nav__acct', false);               // el chip abre el sidebar
     }
+
+    // ⚠️⚠️ **Este caso era de sujeto MIXTO y se PARTIÓ el 2026-08-23** (`CONVENCIONES §3.quater`,
+    // trampa 1): aseveraba el chip del NAV —que sobrevive y sigue aquí— y, en las mismas líneas,
+    // «Mis reservas» y el enlace a pedidos del **bloque de cuenta del cajón**, que desde
+    // `specs/account-context-vue.md` ya no viaja en el HTML porque lo pinta Vue.
+    // ▶ Dónde vive ahora esa mitad: que los rótulos y la ruta lleguen en el montaje lo asevera
+    // `SidebarMountTest`; que el botón abra el área, `AccountDoorWiringTest`; y qué pinta cada cara,
+    // `account/panel.test.js`. Borrarlas sin re-apuntarlas habría dejado tres guardas menos sin que
+    // nada se pusiera rojo.
 
     public function test_guest_nav_does_not_show_the_account_menu(): void
     {

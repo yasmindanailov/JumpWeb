@@ -1472,6 +1472,53 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/account-context:
+    get:
+      tags: [Cuenta]
+      operationId: getMyAccountContext
+      summary: Mi contexto de cuenta
+      description: |
+        Cómo saludar al titular, qué tiene por delante y qué le falta por rellenar, **en una sola
+        petición**.
+
+        Es el agregado que pintan el bloque de cuenta del cajón y el chip del nav desde `#221`, y sale
+        del mismo servicio que ya los alimenta (`Identity\Services\CustomerAccountContext`), que a su
+        vez pide las reservas al contrato de Booking. **Este endpoint no decide ninguna regla**: qué
+        cuenta como próxima reserva y qué formulario está pendiente lo decide el dominio.
+
+        ⚠️ **Por qué no basta componerlo desde `/me`, `/me/reservations` y `/me/orders`**:
+        `GET /me/orders` **pagina**, así que contar formularios pendientes sobre una página cuenta
+        mal, y `upcoming_count` no sale de ahí. Además el consumidor real lo necesita **en un viaje**:
+        el bloque se repinta tras conseguir sesión sin recargar, en mitad de una compra.
+
+        **No exige el correo verificado**, igual que `/me` y `/me/reservations`: el registro
+        *pay-first* crea cuentas sin verificar y esas cuentas también tienen bloque que pintar.
+
+        ⚠️ **Es defensivo por diseño**: ante un fallo al leer las reservas, el servicio devuelve un
+        contexto vacío seguro y esto responde `200` con los campos a cero. Una cortesía de interfaz no
+        tumba una pantalla — un `200` vacío es una respuesta legítima, no un error silenciado.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contexto de cuenta del titular.
+          headers:
+            Cache-Control:
+              description: Siempre `no-store` en respuestas autenticadas (`RGPD-04`).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountContext'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/reservations:
     get:
       tags: [Cuenta]
@@ -2252,6 +2299,103 @@ components:
         version:
           type: string
           description: Versión del documento que se aceptó. Es lo que dice a QUÉ se dijo que sí.
+
+    AccountContext:
+      type: object
+      description: |
+        El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
+        de invitados están pendientes.
+      required: [first_name, upcoming_count, next_reservation, pending_forms, pending_forms_count]
+      additionalProperties: false
+      properties:
+        first_name:
+          type: string
+          description: |
+            El nombre de pila, ya recortado. **Puede ser cadena vacía** —un titular cuyo nombre son
+            solo espacios—, y el cliente debe tratarlo: es lo que evita saludar con «Hola,   ».
+        upcoming_count:
+          type: integer
+          minimum: 0
+          description: Cuántas reservas futuras tiene. Es el mismo total que `meta.total` de `/me/reservations`.
+        next_reservation:
+          type: object
+          nullable: true
+          description: |
+            La más próxima, o `null` si no tiene ninguna. **Misma forma exacta que un elemento de
+            `/me/reservations`**, y no por casualidad: la compone el mismo recurso
+            (`UpcomingReservationResource`), para que no haya dos definiciones de «reserva próxima»
+            en esta API.
+
+            ⚠️⚠️ **Va escrito INLINE y es una COPIA VIGILADA de `UpcomingReservation`, no un
+            `$ref`.** En OpenAPI 3.0 un `$ref` no admite `nullable` a su lado, y la forma canónica
+            —`allOf: [$ref]` con `nullable: true`— **no funciona con el validador**: medido aquí el
+            2026-08-23, con ella una reserva presente falla con «The data (object) must match the
+            type: null». Es el mismo hallazgo que ya documentó `DECISIONES #27` para la zona del
+            catálogo, y se resuelve igual. Que las dos definiciones no diverjan lo vigila
+            `ApiContractTest`.
+          required: [date, date_label, time_window, product_name]
+          additionalProperties: false
+          properties:
+            date:
+              type: string
+              format: date
+            date_label:
+              type: string
+              description: |
+                El día ya compuesto para mostrar, en el idioma de la petición: «Dom. 23 ago.».
+
+                ⚠️ **No lo recompongas en el cliente.** Medido el 2026-08-22: `Intl.DateTimeFormat` no
+                reproduce esta cadena en español —«Sáb 5 sept» frente a «Sáb. 5 sep.»: ICU no abrevia
+                con punto—, y reproducirla exigiría una tabla de meses traducidos en el cliente. Su
+                fuente única en el servidor es `Platform\Services\DisplayTime::dayLabel()`.
+            time_window:
+              type: string
+              nullable: true
+              description: '«10:00–12:00», «10:00 – sin límite», o `null` si la franja no tiene hora.'
+            product_name:
+              type: string
+        pending_forms:
+          type: array
+          description: |
+            Un elemento por RESERVA con formulario de invitados pendiente (#217) cuya franja aún no ha
+            terminado — no por pedido: un pedido puede llevar dos packs.
+
+            ⚠️ **Lista completa y sin paginar**, porque es corta por naturaleza. Quien la siembra en
+            un HTML puede podarla; el contrato no.
+          items:
+            $ref: '#/components/schemas/PendingGuestForm'
+        pending_forms_count:
+          type: integer
+          minimum: 0
+          description: |
+            Cuántos hay. Va aparte y **no es `pending_forms.length`** para el cliente que reciba la
+            lista podada: es el número que decide si el aviso lleva a un formulario concreto o al
+            listado.
+
+    PendingGuestForm:
+      type: object
+      description: Una reserva cuyo formulario de invitados está por rellenar.
+      required: [product_name, url]
+      additionalProperties: false
+      properties:
+        product_name:
+          type: string
+          description: Nombre del producto en el idioma de la petición.
+        url:
+          type: string
+          format: uri
+          description: |
+            La página WEB del formulario, **sin firmar**. La autoriza la sesión del titular
+            (`Http\Concerns\AuthorizesGuestForm` acepta firma **o** titularidad), y es el mismo valor
+            que `guest_form_url` en `/me/orders`.
+
+            ⚠️⚠️ **Nunca es la URL firmada del correo.** Ésa es una credencial portadora que abre y
+            **reescribe** nombres y alergias de menores (art. 9) sin sesión y durante días; publicarla
+            en un agregado que además se siembra en HTML sería repartirla.
+
+            ⚠️ **Un cliente por Bearer no puede seguirla**: al abrirla recibiría `403`, porque quien
+            la autoriza es la sesión web. Un cliente nativo que necesite el formulario tendrá su
+            propio campo firmado cuando llegue.
 
     UpcomingReservationList:
       type: object

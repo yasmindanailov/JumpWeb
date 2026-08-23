@@ -136,9 +136,37 @@
                 <span class="sidecart__title">{{ __('tickets.title') }}</span>
                 <button type="button" class="sidecart__close" @click="$store.purchase.close()" aria-label="{{ __('account.close') }}">&times;</button>
             </header>
-            {{-- Bloque de cuenta del sidebar (#221): saludo, «mis reservas», próxima reserva y aviso
-                 de formulario pendiente con sesión; «Iniciar sesión» + «Mis reservas» sin ella. --}}
-            <livewire:site.account-context />
+            {{-- ⚠️⚠️ **El HUECO del bloque de cuenta** (`specs/account-context-vue.md` §4.1). Hasta el
+                 2026-08-23 aquí vivía el componente Livewire `site.account-context`, el ÚLTIMO
+                 Livewire que renderizaba este layout; ahora lo pinta Vue y la raíz del cajón lo
+                 teletransporta aquí dentro.
+
+                 ⚠️ **La clase `.acct` va en el HUECO y no en lo teletransportado**: `.acct` es el
+                 *flex item* del panel —lleva su fondo, su padding y su borde— y además la rejilla de
+                 una fila que se colapsa en tres modos. Un envoltorio duplicaría la caja.
+
+                 ⚠️⚠️ **Nace COLAPSADO (`acct--pending`) y con un SUELO dentro**, y las dos cosas son
+                 deliberadas. Colapsado, porque hasta que el motor llega no hay nada que enseñar y una
+                 franja crema vacía se lee como un fallo. Con suelo, porque si el motor NO llega
+                 —red caída, despliegue a media navegación— este formulario es **la única forma que le
+                 queda al cliente de cerrar sesión**: medido, `route('logout')` aparece **una sola vez
+                 en toda la aplicación** y es ésta. Quien decide cuál de las dos cosas se ve es
+                 `account/host.js`, su dueño ÚNICO: `takeOver()` al montar, `reveal()` en el `catch`.
+
+                 ⚠️ El suelo va SIN datos y sin PII a propósito: no es una copia del bloque, es el
+                 suelo. --}}
+            <div id="sidecart-account" class="acct acct--pending">
+                @auth
+                    <div class="acct__inner">
+                        <div class="acct__cta">
+                            <form method="POST" action="{{ route('logout') }}" class="acct__logout-form">
+                                @csrf
+                                <button type="submit" class="acct__btn acct__btn--primary"><x-icons.logout /> {{ __('account.nav.sign_out') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                @endauth
+            </div>
             <div class="sidecart__body">
                 {{-- ⚠️ **Lo que no se puede perder aquí es que el bundle de Livewire llegue a la
                      página**, aunque en este cajón ya no quede ningún componente Livewire de compra
@@ -217,6 +245,29 @@
                             // invitado dejaría la zona con los rótulos en blanco — que es el fallo
                             // que `i18n.js` no puede avisar. El subgrupo entero son 9 claves.
                             'forgot' => __('account.forgot'),
+                            // ⚠️⚠️ **Los rótulos del BLOQUE DE CUENTA viajan para TODO EL MUNDO, y no
+                            // es comodidad** (`specs/account-context-vue.md` §4.12). El bloque cambia
+                            // de cara **sin recargar**: quien entra en el paso 5 del embudo tiene en
+                            // memoria el payload de INVITADO, y el bloque pasa a saludarle por su
+                            // nombre en ese mismo instante. Podarlos por sesión le dejaría el saludo,
+                            // la sub-línea y el aviso **en blanco** —`i18n.js` devuelve cadena vacía
+                            // cuando falta una clave y en producción un texto ausente no puede tumbar
+                            // el cajón—, y **nada avisaría**. Es exactamente el bloqueante que la
+                            // revisión de `specs/auth-en-cajon.md` paró con los textos del área.
+                            // ▶ Misma decisión y mismo motivo que `login`, `register` y `forgot`.
+                            // ⚠️ Podados clave a clave: de `nav` se pintan tres de sus rótulos, y de
+                            // `sidecart` cinco — `tag` se retiró por muerta.
+                            'nav' => \Illuminate\Support\Arr::only(__('account.nav'), ['hello', 'sign_out', 'login']),
+                            'sidecart' => \Illuminate\Support\Arr::only(__('account.sidecart'), [
+                                'guest_hello', 'guest_sub', 'next', 'no_upcoming',
+                                'form_pending_one', 'form_pending_many', 'upcoming_count',
+                            ]),
+                            // ⚠️ **El rótulo de «Mi cuenta» viaja SIEMPRE, por lo mismo que los de
+                            // arriba**: es uno de los tres botones del bloque, y el bloque cambia de
+                            // cara **sin recargar**. Con sesión, el subgrupo entero lo sustituye más
+                            // abajo —y lleva esta misma clave—, así que el cajón lee un solo camino
+                            // (`account.account.title`) haya sesión o no.
+                            'account' => ['title' => __('account.account.title')],
                             // ⚠️ **Podado clave a clave**: el subgrupo `verify` son 14 rótulos y esta
                             // pantalla pinta **nueve**. Los cinco que se quedan fuera —`intro` y los
                             // tres `notice_resend_*`— son de la PÁGINA de verificación de la web
@@ -278,12 +329,6 @@
                                     'delete_title', 'delete_intro', 'delete_password',
                                     'delete_confirm', 'delete_btn', 'deleting',
                                 ]),
-                            ], 'sidecart' => [
-                                // La lectura del contador de próximas reservas para lector de
-                                // pantalla. Misma clave que usa el bloque `.acct` del panel para lo
-                                // mismo: dos rótulos distintos para el mismo número es una
-                                // divergencia esperando su turno.
-                                'upcoming_count' => __('account.sidecart.upcoming_count', ['count' => ':count']),
                             ], 'orders' => \Illuminate\Support\Arr::only(__('account.orders'), [
                                 // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda
                                 // el texto de `lang/` (`account.orders.title`), y el nombre técnico se
@@ -302,6 +347,18 @@
                         ...(auth()->check() ? ['locales' => \App\Domain\Platform\Services\SiteLocales::options()] : []),
                         'auth' => __('auth'),
                         'userId' => auth()->id(),
+                        // ⚠️ **El contexto de cuenta que pinta el bloque `.acct`** (§4.3 de
+                        // `specs/account-context-vue.md`). Viaja con el HTML y no por la API por lo
+                        // mismo que `messages`: el servidor ya lo tiene resuelto al pintar la
+                        // página, y pedirlo al montar metería una petición en la primera apertura
+                        // del cajón. Sale del MISMO Resource que `GET /me/account-context`, así que
+                        // el store ve UNA forma venga de donde venga.
+                        // ⚠️ Podado por CARDINALIDAD y nunca por campo: la lista de formularios
+                        // pendientes llega con como mucho uno —es la única parte sin cota, y lleva
+                        // PII—, pero `next_reservation` va entera. El porqué, en el propio fichero.
+                        // ⚠️ `null` para el anónimo, no ausente: cuesta 24 B medidos y evita que cada
+                        // consumidor distinga «no está» de «está vacío».
+                        'accountContext' => \App\Http\Sidebar\AccountContextSeed::forCurrentRequest(),
                         // ⚠️ **Las rutas las compone el SERVIDOR, no el cajón** (Fase 4 · paso 4.6·2).
                         // Las pintan las pantallas de desenlace —«escribirnos» y «ver mis reservas»— y
                         // quemarlas en el JS sería la segunda fuente de una URL que ya decide
@@ -318,6 +375,13 @@
                             // la página se recarga ya identificada y el cajón nace abierto en su
                             // zona. La ruta la compone el SERVIDOR, como las otras dos.
                             'account' => route('account'),
+                            // ⚠️ A dónde va quien cierra sesión DESDE el cajón. Es la misma
+                            // redirección que hace `LogoutController` en la web, y por el mismo
+                            // motivo: la ruta actual puede ser una PUERTA (`/mi-cuenta`) y recargarla
+                            // reabriría el cajón en una zona que ya no se puede ver. La compone el
+                            // SERVIDOR — un «/» quemado en el cliente fallaría en una instalación con
+                            // prefijo de idioma.
+                            'home' => route('home'),
                         ],
                     ], JSON_UNESCAPED_UNICODE) }}">
                         {{-- ⚠️ **El velo de carga del cajón, y va DENTRO del hueco a propósito.**

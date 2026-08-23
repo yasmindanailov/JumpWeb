@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useOrdersStore } from '../../stores/orders.js';
+import ZoneLoading from '../ZoneLoading.vue';
 import { orderRows, pageInfo } from '../orders.js';
 import { answersByReservation } from '../../outcome.js';
 
@@ -22,6 +23,8 @@ import { answersByReservation } from '../../outcome.js';
 const props = defineProps({
     /** El grupo `account` podado: rótulos y textos de la zona. */
     account: { type: Object, default: () => ({}) },
+    /** El grupo `ui`: el rótulo del spinner mientras la zona trae sus datos. */
+    ui: { type: Object, default: () => ({}) },
     /** El grupo `tickets`: estados del pedido y aviso de señal. */
     messages: { type: Object, default: () => ({}) },
 });
@@ -71,18 +74,32 @@ function toggleEvent(code) {
 </script>
 
 <template>
+    <!--
+      ⚠️⚠️ **Las clases de esta zona son las de la página que sustituye, no unas nuevas** (2026-08-23).
+      La transcripción original inventó `orders__card`, `orders__pagination`, `orders__pagination-page`
+      y `bk-error`, y **ninguna de las cuatro tenía una sola regla**: cada pedido se pintaba sin borde,
+      sin fondo y sin padding —plano— y la paginación sin alinear. Las reglas existían desde siempre,
+      con otro nombre (`orders__item`, `pagination`, `pagination__info`, `auth__errors`), porque son
+      las que `/mi-cuenta/pedidos` usaba antes de retirarse.
+      ▶ Ningún gate lo veía: el contrato de árbol compara ESTRUCTURA, y una clase sin regla es un nodo
+      idéntico a uno con ella. Desde hoy lo vigila `SidebarStyleWiringTest`.
+    -->
     <!-- La sesión caducó con el cajón abierto: se dice y se ofrece la puerta, en vez de una lista vacía. -->
     <p v-if="store.unauthenticated" class="purchase__empty">
         <button type="button" class="btn btn--zone" @click="$emit('sign-in')">{{ account?.login?.cta ?? '' }}</button>
     </p>
 
     <template v-else>
-        <p v-if="store.error" class="bk-error" role="alert">{{ store.error }}</p>
+        <p v-if="store.error" class="auth__errors" role="alert">{{ store.error }}</p>
 
-        <p v-if="! rows.length && ! store.busy" class="purchase__empty">{{ account?.orders?.empty ?? '' }}</p>
+        <!-- ⚠️ Primero el spinner, y solo DESPUÉS el «no tienes nada»: mientras se pide, decir que no
+             hay nada es decir algo falso. -->
+        <ZoneLoading v-if="store.loading && ! store.loaded" :ui="ui" />
+
+        <p v-else-if="! rows.length" class="purchase__empty">{{ account?.orders?.empty ?? '' }}</p>
 
         <ul v-else class="orders">
-            <li v-for="row in rows" :key="row.code" class="orders__card">
+            <li v-for="row in rows" :key="row.code" class="orders__item">
                 <div class="orders__head">
                     <span class="orders__code">{{ row.code }}</span>
                     <span class="orders__status" :class="'orders__status--' + row.status">{{ row.statusLabel }}</span>
@@ -127,7 +144,7 @@ function toggleEvent(code) {
                   total final. Qué líneas salen lo decide `financialsOf`, con `node --test`; aquí no
                   hay ninguna condición que no sea «¿hay dato?».
                 -->
-                <div class="orders__foot">
+                <div>
                     <div class="orders__total">
                         <span>{{ row.financials.firstLabel }}</span>
                         <strong>{{ row.totalLabel }}</strong>
@@ -188,9 +205,9 @@ function toggleEvent(code) {
             </li>
         </ul>
 
-        <nav v-if="page" class="orders__pagination" :aria-label="page.label">
+        <nav v-if="page" class="pagination" :aria-label="page.label">
             <button type="button" class="btn btn--ghost" :disabled="! page.canPrev || store.busy" @click="store.load(page.current - 1)">{{ page.prevLabel }}</button>
-            <span class="orders__pagination-page">{{ page.pageLabel }}</span>
+            <span class="pagination__info">{{ page.pageLabel }}</span>
             <button type="button" class="btn btn--ghost" :disabled="! page.canNext || store.busy" @click="store.load(page.current + 1)">{{ page.nextLabel }}</button>
         </nav>
     </template>
