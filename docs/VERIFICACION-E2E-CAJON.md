@@ -46,7 +46,7 @@ automática y repetirlos a mano es tiempo tirado:
 1. El **auto-envío** del paso 9 (`onMounted` no corre en SSR: el gate compara el marcado sin dispararlo).
 2. La **vuelta real** de la pasarela: OK, KO y *data-less*.
 3. El **sondeo vivo** del paso 11 y su transición al 6.
-4. El **puente hacia Livewire**: `account-context` repintando tras el login del cajón, y los modales de auth.
+4. El **puente hacia Livewire**: `account-context` repintando tras el login del cajón. ⚠️ Los modales de auth estaban aquí hasta `DECISIONES #122` (2026-08-23): se retiraron, y hoy ese bloque es el ÚNICO componente Livewire del layout.
 5. El **confeti**, el **bloqueo de scroll** y el **foco** — nada de eso deja rastro en un árbol.
 6. La **cesta cruzada entre pestañas**, que es la defensa que `localStorage` introdujo.
 
@@ -303,8 +303,8 @@ decisión con coste, no un detalle— pero la receta es corta y reproducible:
 ### T1 · El widget del anti-bot DENTRO del cajón
 1. Abre la web **en ventana de incógnito** (sin sesión) y abre el cajón.
 2. Llega al paso de identificarse y pulsa la pestaña **«Crear cuenta»**.
-   ▶ **Antes delegaba en el modal de la cabecera; ahora NO debe.** Si se abre el modal, la delegación
-   no se retiró y hay regresión.
+   ▶ **Antes delegaba en el modal de la cabecera; ahora NO debe.** ⚠️ Desde `DECISIONES #122` ese modal
+   ya no existe, así que este caso solo puede fallar hacia el otro lado: que el widget NO se pinte.
 3. **Mira que el widget se pinte dentro del cajón** y complete su comprobación.
    ⚠️ Si aparece un hueco vacío: abre la consola. El módulo avisa (`[turnstile] no cargó …`) — es el
    único sitio donde ese fallo deja rastro: `Turnstile::verify('')` corta antes del POST a Cloudflare
@@ -702,3 +702,82 @@ Ya que hay una sesión abierta y el motor es otro:
   comprobar si el correo ya existe, así que reenviar sin reset da «no eres un robot» con el tick verde
   puesto. El reset está implementado y probado con dobles, pero **contra Cloudflare real no lo ha
   visto nadie**.
+
+---
+
+## 5.quinquies · LA AUTH DENTRO DEL CAJÓN (2026-08-23) — guion de `DECISIONES #122`
+
+> **Por qué existe este bloque.** La red de este trabajo **no es el diff de árbol**: el contrato
+> congelado cubre los once pasos del embudo, y las zonas de la cuenta **no las monta**
+> `scripts/render-sidebar.mjs`. Lo que aquí se recorre es exactamente lo que ningún test de este repo
+> puede ver.
+>
+> ✅ **Validado por el owner el 2026-08-23** en dos pasadas: la primera con el modal aún presente (el
+> login del cajón) y la segunda **ya sin él**. Lo que sigue se conserva como el guion completo — hay
+> casos que esas dos pasadas no tocaron, y están marcados.
+>
+> ⚠️ **Todo en ventana de incógnito**, salvo donde diga lo contrario: la mitad de estos casos dependen
+> de no tener sesión.
+
+### V14 · LAS TRES PUERTAS por URL
+
+1. Abre `/login`, `/registro` y `/recuperar-contrasena`, una a una.
+   ▶ Cada una tiene que **servir la home con el cajón YA ABIERTO** en su zona: identificarse, crear
+   cuenta y recuperar contraseña respectivamente.
+   ⚠️ Si abre el catálogo de compra, la zona no llegó: mira `data-account-zone` en el `<body>`.
+2. **Cierra el cajón y vuelve a abrirlo** desde el carrito.
+   ▶ Tiene que abrir en la COMPRA. Si vuelve a la zona de auth, la señal no se consumió — es la
+   trampa que 4.0a pagó con el desenlace del pago y `#120(u)` con la puerta por ruta.
+3. Con SESIÓN iniciada, abre `/login`.
+   ▶ Tiene que llevar al **índice de Mi cuenta**, no a un formulario de entrar.
+
+### V15 · LOS CUATRO PUNTOS que abrían el modal
+
+1. En la cabecera, pulsa **«Registrarse»**. ▶ Se abre el CAJÓN en la zona de alta. **No debe aparecer
+   ningún modal** — si aparece, algo resucitó `$store.auth`.
+2. Repite en **móvil**, desde el cajón de navegación. ▶ El menú se cierra y se abre el de la cuenta:
+   los dos superpuestos no pueden quedarse a la vez.
+3. **Clic central** sobre ese mismo botón. ▶ Abre `/registro` en una pestaña nueva. Es el `href` que
+   sobrevive, y lo único que responde si el JS no ha cargado.
+4. Abre el cajón y, en el bloque de cuenta, pulsa **«Iniciar sesión»** y **«Mis reservas»**.
+   ▶ Los dos llevan a la zona de entrar **sin cerrar el cajón**. Si se cierra, se pierde de vista la
+   cesta — que es justo lo que este trabajo arregla.
+
+### V16 · RECUPERAR CONTRASEÑA, y su «volver» desde los TRES orígenes
+
+1. Desde la zona de entrar, pulsa **«¿Olvidaste tu contraseña?»** → pide el enlace con un correo
+   **que exista**. ▶ Pantalla «revisa tu correo». Comprueba que **el correo llega**.
+2. Repite con un correo **que NO exista**. ▶ **La pantalla tiene que ser idéntica**: es `SEC-06`, y
+   cualquier diferencia visible convierte esto en un oráculo de qué correos están registrados.
+3. Insiste hasta agotar el limitador. ▶ El aviso sale **bajo el campo**, no en un banner.
+4. **El «volver» de esta pantalla, desde sus tres orígenes** — es lo que más fácil se rompe:
+   · desde la zona de entrar → vuelve a **entrar**;
+   · desde `/recuperar-contrasena` → vuelve a **entrar** (se siembra por debajo);
+   · desde el **paso 5 del embudo** → vuelve a **la compra, con la cesta intacta**.
+
+### V17 · EL ALTA SUELTA y su «revisa tu correo» — ⚠️ **no recorrido todavía**
+
+1. Crea una cuenta desde `/registro`. ▶ **Tiene que llegar el correo de verificación** y **NO** debe
+   abrirse sesión: es `context: standalone`, al revés que el alta del embudo.
+   ⚠️ Si entras directo sin recibir correo, el contexto se quemó otra vez y el alta suelta pasó a ser
+   *pay-first* — un cambio de política que ninguna pantalla delata.
+2. En «revisa tu correo»: el botón de reenviar **nace deshabilitado** con su cuenta atrás de 30 s.
+   ▶ Espera y pulsa. **Comprueba que el segundo correo llega de verdad**: el endpoint responde 202
+   aunque el servidor descarte el envío, así que esto solo se ve aquí.
+3. Agota los cuatro reenvíos. ▶ El botón desaparece y sale el aviso de límite —y **el escape «¿ya
+   tienes cuenta?» sigue estando**: quien agota los reenvíos es quien más necesita salir.
+4. Pulsa el escape. ▶ Lleva a la zona de entrar.
+
+### V18 · EL PASO 5 DEL EMBUDO sigue vendiendo — ⚠️ **el más caro de romper**
+
+1. Con la cesta llena, llega al paso de identificarse y **entra**. ▶ La compra continúa donde estaba.
+2. Repite creando cuenta desde ahí. ▶ **Pay-first**: abre sesión, **no** manda correo y sigue al pago.
+3. Y desde ese mismo paso, ve a recuperar contraseña y vuelve. ▶ **La cesta sigue ahí.**
+
+### V19 · Lo que se mira de reojo
+
+- Que **no queda ni un `.modal`** de auth en el DOM de ninguna página.
+- Que el **bloque de cuenta se repinta** tras entrar (saludo con el nombre), sin recargar a mano.
+- Que tras entrar desde la cabecera se aterriza en **el índice de Mi cuenta con sus rótulos**, no con
+  los títulos en blanco: es el bloqueante que la revisión de la spec destapó y el motivo de que el
+  aterrizaje NAVEGUE en vez de quedarse.

@@ -88,6 +88,8 @@ Criterios de éxito, todos medibles:
 
 - Las **gestiones de cuenta** (perfil, contraseña, otras sesiones, borrado, export): §1.2, tanda 2.
 - **La auth dentro de la sección de cuenta**: un invitado sigue yendo al modal de la cabecera (§4.6).
+  ✅ **Dejó de estar fuera de alcance el 2026-08-23** (`DECISIONES #122`): entró con su propia spec,
+  `specs/auth-en-cajon.md`, y con ella el modal se retiró.
 - **Retirar `/mi-cuenta/…` y el modal**: decidido por el owner que desaparecen (`#120`), pero es tanda 3
   y tiene condiciones de entrada propias (§4.8).
 - **Traer `account-context` a Vue**: la última frontera. Aquí solo se le cablea la puerta (§4.6).
@@ -259,7 +261,13 @@ La raíz sigue sin decidir nada (`#119`). Lo que cambia es **quién** las escrib
 
 ### 4.6 La puerta de entrada (y por qué NO trae la auth)
 
-**MEDIDO**: los dos botones de `account-context` hacen hoy cosas distintas según la sesión —con sesión,
+> ⚠️ **SUPERADO el 2026-08-23 por `DECISIONES #122`** (`specs/auth-en-cajon.md`). Lo que sigue describe
+> el estado en el que se diseñó esta tanda y **por qué la auth se dejó fuera a propósito**, que es lo
+> que conserva valor. Hoy **no hay modal**: las tres pantallas de auth son zonas de esta misma sección,
+> los dos botones de invitado llevan a la de entrar sin cerrar el cajón, y la sesión caducada aterriza
+> ahí en vez de en un modal.
+
+**MEDIDO** (en su momento): los dos botones de `account-context` hacían cosas distintas según la sesión —con sesión,
 `Mis reservas` navega a `route('account.orders')`; sin ella, los dos abren el modal de login—.
 
 ▶ **Con sesión** → el botón abre el cajón en la sección `account`, zona `RESERVATIONS`. Se cablea por el

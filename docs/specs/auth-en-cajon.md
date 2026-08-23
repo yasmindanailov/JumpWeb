@@ -1,9 +1,11 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
-> Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1–A9 EJECUTADOS** (§8; A4 recortado por dependencia) ·
-> 🟩 **EL MODAL DE AUTH ESTÁ RETIRADO**: la gestión del cliente vive por fin en UN solo sitio, que es
-> lo que `DECISIONES #66` pedía. Queda **A10**: presupuestos, doc y **navegador** ·
+> Estado: ✅ **EJECUTADA ENTERA** (A1–A10) el 2026-08-23 · Última actualización: 2026-08-23 ·
+> 🟩 **EL MODAL DE AUTH ESTÁ RETIRADO** y con él `DECISIONES #66` queda cumplido: la gestión del
+> cliente vive en UN solo sitio. **Validada por el owner en navegador**, en dos pasadas ·
+> ⚠️ **Este documento se conserva por lo que MIDIÓ, no por el diseño**: §8.bis es el método de la
+> auditoría de tests, §4.10 las conductas que ningún test de árbol ve, y §7 lo que la revisión
+> adversarial cambió. Lo que la ejecución encontró está en `DECISIONES #122(h)`–`(o)` ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -524,7 +526,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A7** ✅ | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6). **Hecho el 2026-08-23**: el diff del árbol fue **un solo nodo** (`<button class=auth__link>`), verificado antes de regenerar. Y obligó a definir qué significa «volver» desde los **tres** orígenes (§3.4) |
 | **A8** ✅ | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después. **Hecho el 2026-08-23** — resultado en §8.bis: **32 mueren, 3 se re-apuntan y 1 destapó un hueco de SEGURIDAD vivo** |
 | **A9** ✅ | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest` y `SpinnerTest` | Cuando ya no queda nadie que dependa. **Hecho el 2026-08-23**: la suite baja **2690 → 2648** (−42 exactos: 36 + 6). ⚠️ El barrido de citas destapó **tres tests más** que nadie había inventariado —dos en `Detalles216Test` y uno en `HomePageTest`— porque el `grep` de `$store.auth` se hizo sobre `resources/` y no sobre `tests/`. Se re-apuntaron: su sujeto es que el CTA existe y hace algo, no qué |
-| **A10** | Presupuestos re-medidos y **bajados a lo medido**, doc (`MAPA-PAGINAS`, `SEGURIDAD`, `FLUJOS`, `DEUDA`, `sistemas/UI-SPINNER`) y **NAVEGADOR** | El cierre, con evidencia |
+| **A10** ✅ | Presupuestos re-medidos y **bajados a lo medido**, doc y **NAVEGADOR** | El cierre, con evidencia. **Hecho el 2026-08-23**: los presupuestos ya estaban pegados a lo medido —chunk **198,8 KiB** de 199, payload **2.594 B** de 2.688— porque este trabajo los subió paso a paso en vez de por adelantado, así que **no hubo nada que bajar**. Doc actualizada en `FLUJOS`, `MAPA-PAGINAS`, `INVARIANTES`, `DEUDA`, `README`, `00-REFACTOR`, `area-cliente`, `sidebar-spa` y `VERIFICACION-E2E-CAJON`. El guion de navegador es **§5.quinquies** (V14–V19) |
 
 ## 8.bis El resultado de la AUDITORÍA (A8), y cómo se obtuvo
 

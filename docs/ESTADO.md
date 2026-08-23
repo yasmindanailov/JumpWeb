@@ -148,13 +148,22 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-🟦 **EN CURSO: LA AUTH DENTRO DEL CAJÓN** — el owner lo eligió el 2026-08-23 de entre los tres
-candidatos que dejó abiertos el cierre del área de cliente. Es el **último trozo de `#66`**: cuando
-cierre, la gestión del cliente vivirá en UN solo sitio.
+🟩 **LA AUTH DENTRO DEL CAJÓN: TERMINADA el 2026-08-23** (`DECISIONES #122`,
+`docs/specs/auth-en-cajon.md`). Con ella **`#66` queda cumplido**: la gestión del cliente vive en UN
+solo sitio. Entrar, darse de alta y recuperar contraseña son zonas del cajón; el modal de la cabecera
+está retirado; las tres rutas sobreviven como PUERTAS; y el paso 5 del embudo ofrece «he olvidado mi
+contraseña» con vuelta a la compra.
 
-▶ **El diseño está escrito y REVISADO**: `docs/specs/auth-en-cajon.md` (🟦; revisión adversarial del
-2026-08-23, que cambió la spec de fondo). **Lee su §8 antes de tocar nada**: son diez pasos y el orden
-es la mitad del trabajo.
+▶▶ **LO SIGUIENTE lo decide el owner**, y quedan **dos** candidatos (antes eran tres):
+**1 · `account-context` a Vue** — la última pieza fuera del cajón, y hoy el **ÚNICO** componente
+Livewire del layout: de él cuelga que llegue `livewire.js` y con él Alpine y el cajón entero. Ficha en
+`DEUDA.md`.
+**2 · Fase 5** — capa de contenido profesional. No depende de la anterior.
+⚠️ Y sigue abierta la decisión aplazada de `specs/area-cliente.md` §3.4: **si la zona activa cambia la
+URL**. Hoy el «atrás» del navegador no hace nada dentro del cajón y una zona no se puede enlazar.
+
+▶ **Si tocas la auth, lee `specs/auth-en-cajon.md`**: su valor no es el diseño sino lo que MIDIÓ —§8.bis
+es el método de la auditoría, y §4.10 las conductas que ningún test de árbol ve.
 ▶ **Hecho hasta ahora**: **A1** — las **cinco** superficies de auth quedan `noindex` con test propio,
 medido por mutación en las dos direcciones. Destapó de paso que `/restablecer-contrasena/{token}` —una
 URL con token dentro— y `/email/verificar` se servían `index, follow`.
@@ -199,10 +208,13 @@ las pestañas, que navegan entre zonas en vez de cambiar un modo interno. El alt
   el botón deshabilitado, no habilitado.
 Techos de A5: chunk **194 → 199 KiB** (medido 198,3) y payload **+474 B** (anónimo 2.594, con sesión
 5.631) por `account.verify`, ya podado a **9 de sus 14** rótulos.
-✅ **VALIDADO POR EL OWNER en navegador el 2026-08-23**: el cajón con el login, probado y correcto.
-Es la cuarta condición del DoD (`CONVENCIONES §3.bis`) para lo construido hasta A6. ⚠️ Lo que **no**
-cubre esa prueba: el alta suelta con su reenvío, recuperar contraseña de punta a punta y las tres
-puertas por URL — siguen pendientes del guion de `VERIFICACION-E2E-CAJON.md` §5.quater en A10.
+✅ **VALIDADO POR EL OWNER en navegador el 2026-08-23, en DOS pasadas**: la primera con el modal aún
+presente y la segunda **ya sin él**. Es la cuarta condición del DoD (`CONVENCIONES §3.bis`).
+⚠️ **[PENDIENTE: owner]** — dijo que **hay detalles que pulir** y que los verá **al terminar todo el
+cajón**, sin concretar cuáles. No están escritos en ninguna parte: **el siguiente agente tiene que
+pedirle la lista antes de darlos por hechos**, no adivinarlos.
+⚠️ Lo que esas dos pasadas **no** cubrieron: el alta suelta con su reenvío (V17) y el paso 5 completo
+(V18). El guion entero está en `VERIFICACION-E2E-CAJON.md` **§5.quinquies**.
 
 ▶▶ **A6 hecho el 2026-08-23: YA NADIE ABRE EL MODAL.** Las tres rutas de auth son **puertas** —sirven
 la home y abren el cajón en su zona, igual que `/entradas` y `/mi-cuenta/…`— y los cuatro puntos que
@@ -254,10 +266,9 @@ y uno en `HomePageTest`—, porque el `grep` de `$store.auth` se hizo sobre `res
 Livewire que el layout renderiza, así que la redundancia que hace llegar `livewire.js` —y con él
 Alpine, y con Alpine el cajón entero— **cuelga de él**. Ficha actualizada en `DEUDA.md`.
 
-⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |
 |---|---|---|
-| **`account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas** y Alpine lo trae Livewire |
+| **`account-context` a Vue** | El bloque de cuenta del panel sigue siendo **Livewire**, hermano del punto de montaje | Es «la última frontera»: ahí murieron las señales de `#118`. ⚠️ No es local — `$store.purchase` lo consumen **11 vistas**— y desde `#122` es además **el único componente Livewire del layout**: quien lo migre tiene que dejar `@livewireScripts` sí o sí, o la web se queda sin Alpine y sin cajón |
 | **Fase 5** | Capa de contenido profesional: query services con caché, theming como paquete, contenido por API | Es la siguiente fase del tracker, y no depende de la de arriba |
 
 ⚠️ **Y una decisión que quedó APLAZADA a propósito y ahora toca**: `specs/area-cliente.md` §3.4 dijo

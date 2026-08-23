@@ -19,7 +19,11 @@ redirección a Redsys**.
 
 ## Flujo 1 — Registro (cuenta + waiver, todo en uno)
 
-1. El usuario pulsa "Registrarse" (o se le pide al ir a pagar). → 🪟 **modal de registro**.
+1. El usuario pulsa "Registrarse" (o se le pide al ir a pagar). → 🪟 **el CAJÓN, en su zona de alta**.
+   ⚠️ **Era un modal sobre la home hasta el 2026-08-23** (`DECISIONES #122`): entrar, darse de alta y
+   recuperar la contraseña son ahora **zonas del cajón**, de modo que la gestión del cliente vive en
+   un solo sitio (`#66`). La ruta `/registro` sobrevive como **puerta**: sirve la home y abre el
+   cajón ahí. Lo que se rellena y lo que se guarda **no cambia**.
 2. Rellena lo mínimo: **nombre, email, teléfono y contraseña** (los cuatro obligatorios).
 3. Marca las casillas obligatorias: **acepto privacidad**, **acepto términos**, **acepto el
    waiver** (cada una enlaza a su 📄 página legal; textos = contenido gestionado en BD,
@@ -34,8 +38,18 @@ redirección a Redsys**.
 
 ## Flujo 2 — Iniciar sesión / recuperar contraseña
 
-1. "Entrar" → 🪟 **modal de login** (email + contraseña).
-2. "¿Olvidaste tu contraseña?" → 🪟 modal: pide email → ✉️ enlace de recuperación.
+1. "Entrar" → 🪟 **el CAJÓN, en su zona de identificarse** (email + contraseña). Rutas puerta:
+   `/login` — que además es el destino del middleware `auth` de Laravel, así que no es opcional.
+2. "¿Olvidaste tu contraseña?" → 🪟 **zona de recuperar** del mismo cajón: pide email → ✉️ enlace.
+   ⚠️ **Y el PASO 5 del embudo de compra también lo ofrece desde `#122`**: hasta entonces, quien
+   estaba comprando y no recordaba su contraseña tenía que abandonar el cajón —y perdía de vista su
+   cesta—. «Volver» le devuelve a la compra donde estaba.
+3. El enlace del correo lleva a `/restablecer-contrasena/{token}`, que **sí es una 📄 página**: trae
+   un token en la URL y el cajón no es direccionable. Lo mismo `/email/verificar`.
+
+> ⚠️ **Las tres pantallas eran modales sobre la home hasta el 2026-08-23** (`DECISIONES #122`). Sus
+> rutas sobreviven como **puertas** (`Http\Sidebar\AccountDoor`): sirven la home y abren el cajón en
+> la zona que toque, igual que `/entradas` y `/mi-cuenta/…`.
 
 ## Flujo 3 — Comprar entradas (el flujo principal)
 
@@ -44,8 +58,11 @@ redirección a Redsys**.
 2. **Paso 1 — Día y franja:** elige fecha y franja horaria. Se muestran las **plazas libres**
    (aforo). Franja llena → deshabilitada.
 3. **Paso 2 — Entradas:** elige tipo (adulto/niño…) y cantidad. Total actualizándose en vivo.
-4. **Paso 3 — Identificación:** si no ha iniciado sesión, 🪟 modal de login/registro
-   (Flujo 1). Si ya está dentro, se salta.
+4. **Paso 3 — Identificación:** si no ha iniciado sesión, el propio cajón pide entrar o crear cuenta
+   **sin salir del panel** (Flujo 1). Si ya está dentro, se salta.
+   ⚠️ El alta de aquí es **pay-first** (`DECISIONES #31`): abre sesión y **no** manda correo de
+   verificación, porque el pago la sustituye —un bot no paga—. El alta suelta del Flujo 1 hace lo
+   contrario, y lo que separa las dos es un campo (`context`).
 5. **Paso 4 — Resumen:** revisa día, franja, entradas y total. Acepta condiciones de compra.
 6. Pulsa **"Pagar"**. → 📄 **redirección a Redsys**, introduce la tarjeta en el banco.
 7. **Vuelta del pago:**

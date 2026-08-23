@@ -5620,3 +5620,73 @@ siendo **páginas**: se llega desde un correo, con token en la URL, y el cajón 
 (`specs/area-cliente.md` §3.4). Las tres rutas puerta **sobreviven** —`route('login')` es el destino
 del middleware `auth` de Laravel—. Y `account-context` sigue en Livewire: es la otra ficha de
 `DEUDA.md`.
+
+---
+
+### #122 · EJECUTADO (A1–A10, 2026-08-23) — y lo que la ejecución encontró que el diseño no vio
+
+El corte de `specs/auth-en-cajon.md` §8 se recorrió entero en el día. Lo que sigue **no repite el
+diseño**: recoge lo que solo apareció al construirlo y al medirlo, que es lo que tiene valor para
+quien venga después.
+
+**(h) ⚠️⚠️ UN HUECO DE SEGURIDAD VIVO, destapado por la auditoría de tests.** Que entrara OTRA persona
+**no descartaba el desenlace de pago de la anterior**. `SidebarEntry` vive en SESIÓN y
+`Session::regenerate()` **conserva los datos**, así que en un dispositivo compartido Bob se encontraba
+el cajón abierto con el «pago denegado» de Alice y su código de pedido.
+▶ La defensa vivía **solo en `Livewire\Auth\Login`** y su único guardián era un test que se iba con
+él: la mutación tumbaba **un** caso de toda la suite. **El login de la API nunca la tuvo, y es el que
+usa el cajón desde 4.4a·2**, así que el hueco llevaba abierto desde entonces. El propio controlador lo
+daba por sabido en un comentario —«el sidebar Livewire hace lo mismo, más lo suyo con la cesta»— sin
+que nadie lo leyera como el hueco que era. Arreglado en `AuthSessionController::login` con su control
+negativo, y medido por mutación.
+▶ **La lección**: *una defensa que solo tiene una superficie no es una defensa del sistema*. Y su
+corolario para retirar código: **antes de borrar un test, mide qué caza; no leas qué dice**.
+
+**(i) Dos huecos más, ambos en la superficie que SOBREVIVE.** La **validación del correo** de
+`POST /auth/password/forgot` no la comprobaba nadie —relajarla a `sometimes` dejaba los 96 casos del
+alcance en verde, y el endpoint habría contestado 202 «revisa tu correo» a quien no escribió ninguno—;
+y el **escape «¿ya tienes cuenta?»** de la pantalla de verificación del cajón tampoco: `SidebarMountTest`
+asevera que el texto VIAJA en el payload, **no que la pantalla lo pinte**, que es exactamente el hueco
+de los 20 iconos vacíos (`#113`).
+
+**(j) El método de la auditoría, que es reutilizable.** Los 36 casos no se clasificaron leyendo: se
+**mutó cada regla de dominio compartida** —quince mutaciones sobre los tres servicios de Identity, la
+notificación y los dos controladores— y se apuntó **qué ficheros la cazaban**. Redundante con la API →
+muere; único → es el guardián y se re-apunta. Resultado: **32 mueren, 3 se re-apuntan, 1 no guardaba
+nada**. La suite baja de 2690 a 2648, −42 exactos.
+⚠️ **Y el andamio también hubo que medirlo**: la primera tanda no aplicó ni una mutación, porque
+`\Q…\E` de perl protege los metacaracteres **pero no impide la interpolación**. Lo delató el `grep` de
+comprobación. *Un mutador que no muta da el mismo verde que un test que no mide.*
+
+**(k) Tres presupuestos hicieron su trabajo, y uno cambió de criterio.** El techo de componentes paró
+la zona de alta en **43 de 40** líneas y la respuesta correcta no fue subirlo (`#120(r)`): fue mudar la
+secuencia al store, donde se prueba con `node --test`; bajó a 25. El del chunk subió **190 → 199 KiB**
+y el del payload **+923 B**, siempre con su medida.
+▶ **El criterio nuevo**: este trabajo subió los techos **paso a paso**, no por adelantado para toda la
+tanda. Cuesta un rojo más por paso y a cambio **ningún tramo queda sin guardia** — que es lo que pasaba
+con el patrón anterior entre la subida preventiva y la bajada del cierre.
+
+**(l) Dos fallos propios, y los dos los cazó el propio método.** Una guarda aseveraba «el HTML contiene
+el `href`» y una mutación que se lo quitó al CTA de escritorio **pasó en verde**, porque el del cajón
+móvil lo conservaba (ancla no única, trampa 3 de `§3.quater`). Y `resendGate()` recibía el store entero
+cuando esperaba otros nombres de campo: **ignoraba la cuenta atrás sin fallar**. Hoy esa función
+**falla cerrada** — un campo que no es un número deja el botón deshabilitado, no habilitado.
+
+**(m) Lo que «volver» significa, que no era una sola cosa.** La pantalla de recuperar contraseña se
+alcanza desde tres sitios y cada uno necesita algo distinto: desde entrar deshace la pila; desde una
+**puerta por URL** hay que sembrar `LOGIN` debajo —sin eso, «volver a iniciar sesión» sacaba al
+**catálogo de compra**—; y desde el **paso 5 del embudo** la pila queda vacía **a propósito**, porque
+de donde viene no es una zona y «volver» tiene que devolver la compra donde estaba, con su cesta.
+▶ La regla vive en `account/navigation.js::parentZoneFor()` y **la decide quien llama**, no `enter()`.
+
+**(n) El barrido de citas de `#121` volvió a pagar.** `INVARIANTES` SEC-06 nombraba dos tests que
+dejaban de existir; **tres tests más** no estaban en el inventario porque el `grep` de `$store.auth` se
+hizo sobre `resources/` y no sobre `tests/`; y siete citas de código y doc describían un modal
+retirado. ▶ **Ampliación de la regla**: el barrido se hace sobre **todo el repo**, no sobre las
+carpetas donde uno espera encontrarlo.
+
+**(o) Consecuencia que hereda quien siga.** `account-context` es ahora el **ÚNICO** componente Livewire
+que renderiza el layout, así que la redundancia que hace llegar `livewire.js` —y con él Alpine, y con
+Alpine el cajón entero— **cuelga de él**. El día que migre a Vue, `@livewireScripts` pasa a ser la
+fuente única y retirarla deja la web sin cajón. Anotado en su ficha de `DEUDA.md`, en el layout y en
+`SidebarMountTest`.
