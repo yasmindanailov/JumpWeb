@@ -42,6 +42,8 @@ Comprobado además a mano sobre HTTP: las tres puertas de auth emiten su zona y 
 cuatro puntos llegan cableados y **no queda rastro del modal**.
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
+⚠️ `main` va **un commit por delante** de lo desplegado y es **solo doc** (el cierre de la sesión): no
+hay diferencia de código, así que no hace falta volver a desplegar por eso.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
@@ -148,6 +150,15 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 solo sitio. Entrar, darse de alta y recuperar contraseña son zonas del cajón; el modal de la cabecera
 está retirado; las tres rutas sobreviven como PUERTAS; y el paso 5 del embudo ofrece «he olvidado mi
 contraseña» con vuelta a la compra.
+
+❗ **[PENDIENTE: owner] — HAY DETALLES DEL CAJÓN POR PULIR, Y NO ESTÁN ESCRITOS.** El owner validó la
+auth en navegador el 2026-08-23 (dos pasadas: con modal y sin él) y dijo que **hay detalles que pulir,
+que verá al terminar todo el cajón**, sin concretar cuáles.
+▶ **Pídele la lista antes de dar el cajón por acabado — no la adivines.** Es lo único de esta sesión
+que vive solo en la cabeza del owner.
+⚠️ Y **dos casos del guion de navegador siguen sin recorrer**: `V17` (el alta suelta con su reenvío)
+y `V18` (el paso 5 completo), en `VERIFICACION-E2E-CAJON.md` **§5.quinquies**. Las dos pasadas del
+owner no los tocaron, y son justo los que ningún test de este repo puede cubrir.
 
 ▶▶ **LO SIGUIENTE lo decide el owner**, y quedan **dos** candidatos (antes eran tres):
 **1 · `account-context` a Vue** — la última pieza fuera del cajón, y hoy el **ÚNICO** componente
