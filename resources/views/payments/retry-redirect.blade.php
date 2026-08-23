@@ -1,4 +1,4 @@
-<x-layout :title="__('tickets.pay_redirecting_title')" :auth-modal="null">
+<x-layout :title="__('tickets.pay_redirecting_title')">
 <div x-data="landing">
     <x-site.nav />
 

@@ -11,11 +11,12 @@
     Blade, `$errors` de un componente Livewire no es una variable compartida con la que se pueda
     contar. Explícito es una palabra más y una duda menos.
 
-    ⚠️ `login.blade.php` y `register.blade.php` conservan su bloque escrito a mano **a propósito**:
-    son la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`, que comparan el árbol
-    renderizado nodo a nodo, y no se tocan hasta que el área de cliente rehaga la auth dentro del
-    cajón (`DECISIONES #112(f)`). El de `register` es además otro bloque: resumen de TODOS los
-    errores para un formulario largo, no solo los globales.
+    ⚠️ **Aquí decía que `login.blade.php` y `register.blade.php` conservaban su bloque a mano porque
+    eran la REFERENCIA de dos paridades de árbol** (`DECISIONES #112(f)`). Las tres plantillas del
+    modal —y las dos paridades con ellas— **se retiraron el 2026-08-23** al traer la auth al cajón
+    (`DECISIONES #122`), así que esa excepción ya no existe: quien escriba un formulario nuevo puede
+    usar este componente sin mirar a nadie.
+    ▶ Del cajón no hay nada que temer aquí: sus pantallas de auth son Vue y no pasan por este Blade.
 --}}
 @props(['bag'])
 

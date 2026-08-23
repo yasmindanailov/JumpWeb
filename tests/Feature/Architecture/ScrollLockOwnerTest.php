@@ -108,12 +108,18 @@ class ScrollLockOwnerTest extends TestCase
      * (`DECISIONES #120(u)`) y su modal con ella. La lista baja a cuatro, MEDIDA. La regla que
      * enseñó —una llave por instancia, no por tipo— sigue viva en el cerrojo y en su test de unidad;
      * lo que se retira aquí es el inventario de un superpuesto que ya no se pinta.
+     *
+     * ⚠️⚠️ **Y baja a TRES el 2026-08-23** (`DECISIONES #122`): el modal de auth se retiró porque
+     * entrar, darse de alta y recuperar la contraseña son ahora zonas del cajón. Su llave se va con
+     * él — y la que importa, la de `sidecart`, es justamente la que ahora cubre esos tres casos.
+     * ▶ El inventario encoge, la regla no: sigue habiendo una llave por superpuesto, y el cerrojo
+     * sigue siendo el ÚNICO que toca `body.no-scroll` (`DECISIONES #58`).
      */
     public function test_every_overlay_asks_with_its_own_key(): void
     {
         $sources = (string) file_get_contents(base_path('resources/js/app.js'));
 
-        foreach (['sidecart', 'auth', 'nav', 'offers'] as $owner) {
+        foreach (['sidecart', 'nav', 'offers'] as $owner) {
             $this->assertStringContainsString(
                 "'{$owner}",
                 $sources,

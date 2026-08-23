@@ -46,11 +46,15 @@ class Detalles216Test extends TestCase
 
     public function test_sidecart_my_reservations_link_for_guest_and_auth(): void
     {
-        // Invitado: el texto está y NO es un enlace directo a /mi-cuenta/pedidos (abre login).
+        // Invitado: el texto está y NO lleva directo a /mi-cuenta/pedidos — primero hay que entrar.
+        //
+        // ⚠️ **Abría el modal de login y desde el 2026-08-23 lleva a la ZONA de entrar del cajón**
+        // (`DECISIONES #122`), sin cerrarlo: así el cliente no pierde de vista su cesta, que es
+        // justamente lo que cerrar el cajón le hacía perder.
         $this->get('/')
             ->assertOk()
             ->assertSeeText(__('tickets.my_reservations'))
-            ->assertSee("auth.open('login')", false);
+            ->assertSee("openAccount(\$event, 'login')", false);
 
         // Con sesión: enlaza a la página de pedidos del cliente.
         $this->actingAs(User::factory()->create())
@@ -99,12 +103,20 @@ class Detalles216Test extends TestCase
             ->assertSee('cta-ghost__s', false);
     }
 
-    public function test_register_cta_falls_back_to_modal_when_no_url(): void
+    /**
+     * **Sin URL externa configurada, el CTA cae al alta INTERNA** — que es la mitad del `#216` que
+     * este caso vigila: sin ella, quitar la URL del panel dejaría el botón sin destino.
+     *
+     * ⚠️ Ese destino era el modal de registro y desde el 2026-08-23 es la **zona de alta del cajón**
+     * (`DECISIONES #122`). Cambia a dónde cae, no que caiga: por eso el caso se re-apunta en vez de
+     * irse (`CONVENCIONES §3.quater`).
+     */
+    public function test_register_cta_falls_back_to_the_internal_signup_when_no_url(): void
     {
-        // Sin URL: el CTA mantiene el comportamiento actual (abre el modal de registro interno).
         $this->get('/')
             ->assertOk()
-            ->assertSee("auth.open('register')", false);
+            ->assertSee("openAccount(\$event, 'register')", false)
+            ->assertSee('href="'.route('registro').'"', false);
     }
 
     // ── (7) Footer: 5 legales + contacto + registro ─────────────────────────

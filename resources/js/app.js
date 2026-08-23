@@ -16,59 +16,19 @@ document.addEventListener('alpine:init', () => {
     const scrollLock = installScrollLock();
     window.Alpine.store('scrollLock', scrollLock);
 
-    // Almacén global del modal de autenticación (login/registro).
-    // El valor inicial puede venir de la URL (p. ej. /registro) vía data-attr.
-    window.Alpine.store('auth', {
-        modal: document.body.dataset.authModal || null,
-        completed: false, // un registro se completó en este modal (datos sensibles en pantalla)
-        open(name) {
-            // Defensa por si quedó una confirmación previa sin cerrar (tablet compartida).
-            if (this.completed) {
-                window.location.reload();
-
-                return;
-            }
-            this.modal = name;
-            // T4.4 — bloquea el scroll del body mientras el modal está abierto (consistente
-            // con el sidebar de compra que ya lo hacía). Con su llave desde el dueño único.
-            scrollLock.lock('auth');
-        },
-        close() {
-            const wasCompleted = this.completed;
-            this.completed = false;
-            scrollLock.unlock('auth');
-            // Si hubo un registro completado (muestra el email del cliente), recargamos
-            // para no dejar datos al siguiente cliente (tablet compartida).
-            if (wasCompleted) {
-                this.modal = null;
-                window.location.reload();
-
-                return;
-            }
-            // Limpieza VISUAL instantánea (no esperamos al round-trip de Livewire, que en
-            // local puede ir lento): vaciamos campos y quitamos los mensajes de error.
-            this.clearModalUi();
-            this.modal = null;
-            // Reset autoritativo en el servidor (propiedades + bag de validación) en segundo
-            // plano, para dejar el estado coherente. El usuario ya ve el modal limpio.
-            if (window.Livewire) {
-                window.Livewire.dispatch('auth-modal-closed');
-            }
-        },
-        clearModalUi() {
-            document.querySelectorAll('.modal__panel input').forEach((el) => {
-                if (el.type === 'checkbox' || el.type === 'radio') {
-                    el.checked = false;
-                } else {
-                    el.value = '';
-                }
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-            document
-                .querySelectorAll('.modal__panel .form__error, .modal__panel .auth__errors')
-                .forEach((el) => el.remove());
-        },
-    });
+    // ⚠️⚠️ **Aquí vivía `$store.auth`, el almacén del modal de autenticación, y se retiró el
+    // 2026-08-23** (`specs/auth-en-cajon.md`, `DECISIONES #122`). Con él se van su llave del cerrojo,
+    // el `data-auth-modal` que lo abría por URL, el vaciado visual de sus campos y el evento
+    // `auth-modal-closed` que reseteaba los tres componentes Livewire en servidor.
+    //
+    // ⚠️ **Lo que hacía y NO tiene sucesor todavía**: la defensa de la tablet compartida. Aquel
+    // almacén vaciaba los campos al cerrar y recargaba la página tras un alta, para que el siguiente
+    // cliente no encontrara el correo del anterior en pantalla. En el cajón, el equivalente es
+    // `stores/auth.js::reset()` —que ya limpia los tres formularios y el correo pendiente— pero
+    // **nadie lo llama al CERRAR el cajón**: hoy solo se limpia al cambiar de zona. Está anotado en
+    // `DEUDA.md` y en `specs/auth-en-cajon.md` §4.10·1.
+    // ▶ El camino más frecuente sí queda cubierto por otra vía: al conseguir sesión el cajón NAVEGA
+    // (`account/after-auth.js`), y una carga de página nueva se lleva el formulario entero.
 
     // Sidebar de compra de entradas (Fase 5.2): se abre sobre la página actual (sin
     // redirigir). El contenido (asistente paso a paso) es un componente Livewire `lazy`.
@@ -481,12 +441,15 @@ document.addEventListener('alpine:init', () => {
     // ⚠️ (2) El bloqueo de scroll también es del dueño único, y aquí había una asimetría: el modal de
     // auth abierto al cargar (`/registro`) no bloqueaba nada, porque el `x-init` que lo hacía vivía
     // solo en el cajón. Pedir la llave aquí arregla los dos casos y retira ese sexto escritor.
+    //
+    // ⚠️ **Desde el 2026-08-23 el caso del modal ya no existe** (`DECISIONES #122`): `/registro` y sus
+    // dos hermanas son PUERTAS que abren el CAJÓN, así que quien pide la llave al cargar es la rama
+    // de arriba. Se retiró la segunda línea, no la explicación: la asimetría que documenta es la
+    // razón de que esta llave se pida aquí y no en una plantilla.
     if (window.Alpine.store('purchase').isOpen) {
         scrollLock.lock('sidecart');
         window.Alpine.store('purchase').bootSpaEngine();
     }
-
-    if (window.Alpine.store('auth').modal) scrollLock.lock('auth');
 
     window.Alpine.data('a11yPanel', (openExpr) => ({
         _focusableSelector:

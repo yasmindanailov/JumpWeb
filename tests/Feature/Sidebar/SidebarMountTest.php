@@ -60,8 +60,14 @@ class SidebarMountTest extends TestCase
      *  · la **auto-inyección** de Livewire (`inject_assets`, default del paquete: el proyecto no
      *    publica `config/livewire.php`), que inyecta el bundle al terminar la petición **solo si un
      *    componente Livewire llegó a renderizarse** (`SupportAutoInjectedAssets`:
-     *    `$hasRenderedAComponentThisRequest`). Hoy el layout renderiza cuatro: los tres modales de
-     *    auth y `account-context`.
+     *    `$hasRenderedAComponentThisRequest`).
+     *
+     * ⚠️⚠️ **Y desde el 2026-08-23 el layout renderiza UNO, no cuatro** (`DECISIONES #122`): los tres
+     * modales de auth se retiraron y solo queda `account-context`. La redundancia sigue existiendo,
+     * pero **colgando de un solo hilo**: el día que `account-context` migre a Vue —la última ficha de
+     * `DEUDA.md`— la directiva pasa a ser la fuente ÚNICA, y retirarla dejará la web sin Alpine y con
+     * ella el cajón entero. Este caso es el que se pondrá rojo entonces, y por eso asevera el
+     * RESULTADO y no la directiva.
      *
      * Tabla medida el 2026-08-21 sobre este mismo caso:
      * directiva SÍ + componentes SÍ → verde (estado real) · directiva NO + componentes SÍ → **verde**

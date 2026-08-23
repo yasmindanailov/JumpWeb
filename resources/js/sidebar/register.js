@@ -84,7 +84,8 @@ function clean() {
  * login. Y es correcto en los dos sitios: el registro publica en `fields.email` exactamente
  * `account.register.already_exists`, `exists_unverified` o `bot_check_failed` —los mismos que pinta el
  * Blade—, mientras que el login publica un `message` propio que NO coincide con `auth.failed`.
- * Comprobado campo a campo en `SidebarRegisterParityTest`.
+ * ⚠️ Lo comprobaba campo a campo `SidebarRegisterParityTest`, que se retiró con el modal
+ * (`DECISIONES #122`); hoy los literales los fija `Api\V1\AuthRegistrationTest` desde el servidor.
  *
  * @param {{ok: boolean, status: number, data: any, error: object|null}} response
  * @param {{messages: object, auth: object}} texts

@@ -1,7 +1,7 @@
 {{-- `noindex`: es una superficie de AUTH y no tiene nada que buscar en un índice. Lo llevaban las
      tres puertas del modal por efecto lateral del prop `authModal`, y estas dos páginas —que no
      abren modal— se quedaban fuera sin que nadie lo mirara. Fijado en `SeoTest`. --}}
-<x-layout :title="__('account.verify.title')" :auth-modal="null" :noindex="true">
+<x-layout :title="__('account.verify.title')" :noindex="true">
 <div x-data="landing">
     <x-site.nav />
 

@@ -190,13 +190,21 @@ class HomePageTest extends TestCase
 
     public function test_guest_nav_renders_register_ghost_cta(): void
     {
-        // Ghost CTA: solo guests; abre el modal de registro (#46, Fase 4.2).
-        // Selector `nav-cta-ghost` + handler `$store.auth.open('register')` son contrato.
+        // Ghost CTA: solo guests (#46, Fase 4.2). Selector `nav-cta-ghost` + su cableado son contrato.
+        //
+        // ⚠️ **Abría el modal de registro y desde el 2026-08-23 abre el CAJÓN** (`DECISIONES #122`):
+        // el alta es una zona más, así que el CTA lleva a ella sin sacar al cliente de la página. El
+        // sujeto de este caso —que el invitado reciba el CTA con su cableado— no ha cambiado; sí lo
+        // que ese cableado invoca (`CONVENCIONES §3.quater`).
         $response = $this->get('/')->assertOk();
 
         $response->assertSee('nav-cta-ghost', false);
         $response->assertSee('cta-ghost__t', false);
-        $response->assertSee("\$store.auth.open('register')", false);
+        $response->assertSee("openAccount(\$event, 'register')", false);
+        // ⚠️ Y su `href`: la ruta existe como PUERTA, así que el clic central, «abrir en pestaña
+        // nueva» y un navegador sin JS acaban en la misma pantalla. Con el `<button>` de antes esos
+        // tres casos no hacían nada.
+        $response->assertSee('href="'.route('registro').'"', false);
         $response->assertSee('Registrarse'); // copy ES de `nav.reserve`
     }
 

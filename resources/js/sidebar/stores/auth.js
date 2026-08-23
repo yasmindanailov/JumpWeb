@@ -11,9 +11,11 @@ import { useSectionStore } from './section.js';
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
  *
  * ⚠️ **Ninguna regla de auth vive aquí.** Qué credenciales valen, qué errores se enseñan y si un alta
- * consiguió sesión lo deciden `login.js` y `register.js` —módulos planos con sus casos y su paridad
- * contra el servidor (`SidebarLoginParityTest`, `SidebarRegisterParityTest`)—. Este store guarda los
- * campos, los avisos del último intento y la pestaña activa, y ofrece las dos secuencias de petición.
+ * consiguió sesión lo deciden `login.js`, `register.js` y `forgot.js` —módulos planos con sus casos de
+ * `node --test`—; y los literales que el servidor manda los fijan `Api\V1\AuthSessionTest` y
+ * `Api\V1\AuthRegistrationTest`. ⚠️ Hasta el 2026-08-23 los comparaban además dos paridades de árbol
+ * contra el modal de Livewire, que se retiró con él (`DECISIONES #122`). Este store guarda los campos,
+ * los avisos del último intento y la pestaña activa, y ofrece las secuencias de petición.
  *
  * ⚠️⚠️ **Lo que NO hace, y es el corte deliberado**: lo que pasa DESPUÉS de conseguir sesión —avisar a
  * Livewire, aplicar la identidad a la cesta y continuar el checkout— cruza tres dominios y se queda en

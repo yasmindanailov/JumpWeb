@@ -9,8 +9,10 @@ use Livewire\Component;
  * Bloque de cuenta del sidebar de compra (#221). Es un componente Livewire (no un componente
  * Blade estático) por un motivo concreto: el login/registro EMBEBIDO en el sidebar (#69) NO recarga
  * la página, así que un saludo renderizado en el servidor para un invitado se quedaba obsoleto
- * («Hola, saltador/a» tras iniciar sesión). Como Livewire, escucha el evento `logged-in` (que disparan
- * `Auth\Login` y `Auth\Register` embebidos) y se RE-RENDERIZA en vivo con la sesión nueva, sin recarga
+ * («Hola, saltador/a» tras iniciar sesión). Como Livewire, escucha el evento `logged-in` —que hoy
+ * dispara el CAJÓN al conseguir sesión dentro del embudo; los componentes `Auth\Login` y
+ * `Auth\Register` que lo emitían se retiraron con el modal (`DECISIONES #122`)— y se RE-RENDERIZA en
+ * vivo con la sesión nueva, sin recarga
  * — imprescindible para el flujo pay-first (recargar perdería el paso de pago del sidebar).
  *
  * Los datos los provee `App\Domain\Identity\Services\CustomerAccountContext` (memoizado, defensivo); la vista los lee.

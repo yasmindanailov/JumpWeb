@@ -6,9 +6,11 @@ import { loginErrors, runLogin } from './login.js';
  * Fase 4 · paso 4.4a·2 — la red del login embebido (criterio CE-6).
  *
  * Lo que se fija aquí es **de dónde sale cada texto y dónde se pinta**. Que los literales coincidan
- * con los del componente Livewire lo compara `SidebarLoginParityTest` contra `__()` real; esto cubre
- * lo que esa paridad no puede: los estados degradados y el REPARTO entre el banner y el campo, que es
- * el hallazgo L-02 de la auditoría del origen.
+ * lo comparaba `SidebarLoginParityTest` contra `__()` real; ese fichero se retiró con el modal
+ * (`DECISIONES #122`) y hoy los códigos y el sobre los fija `Api\V1\AuthSessionTest`.
+ *
+ * ▶ Esto cubre lo que aquella paridad no podía: los estados degradados y el REPARTO entre el banner y
+ * el campo, que es el hallazgo L-02 de la auditoría del origen.
  */
 
 const MESSAGES = { errors: { try_later: 'Demasiados intentos seguidos. Espera un minuto antes de volver a intentarlo.' } };

@@ -45,8 +45,8 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2690 en verde** (15.509 aserciones, `--parallel` **~71 s** medidos el 2026-08-23) ·
-  **584 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
+- Suite **2648 en verde** (15.129 aserciones, `--parallel` **~44 s** medidos el 2026-08-23) ·
+  **584 tests JS** (`node --test`) · Pint limpio (828 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
   sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
@@ -240,6 +240,19 @@ tuvo. Arreglada en `AuthSessionController::login`, con control negativo y medida
 comprobaba nadie —relajarla dejaba 96 casos en verde y el endpoint contestaba 202 a quien no escribió
 correo— y el **escape de «revisa tu correo»** del cajón tampoco. El detalle, en `specs/auth-en-cajon.md`
 §8.bis.
+▶▶ 🟩 **A9 hecho el 2026-08-23: EL MODAL DE AUTH ESTÁ RETIRADO.** Se van los tres componentes
+Livewire con sus plantillas, el bloque `@guest` del layout, el almacén `$store.auth` de Alpine, el
+prop `authModal`, el trait `ResetsOnModalClose` y las dos paridades de árbol. **Con eso `#66` queda
+cumplido**: la gestión del cliente vive en UN solo sitio.
+⚠️ La suite baja **2690 → 2648**, −42 exactos (36 casos del modal + 6 de paridad), y es la segunda vez
+que el contador baja: los que afirmaban del dominio ya estaban cubiertos —medido en A8— y los tres que
+eran guardián único se re-apuntaron antes de borrar.
+⚠️ **El barrido de citas destapó tres tests más** que el inventario no tenía —dos en `Detalles216Test`
+y uno en `HomePageTest`—, porque el `grep` de `$store.auth` se hizo sobre `resources/` y no sobre
+`tests/`. Se re-apuntaron: su sujeto es que el CTA existe y hace algo, no qué hace.
+⚠️ **Y una consecuencia que hay que saber**: `account-context` es ahora el **ÚNICO** componente
+Livewire que el layout renderiza, así que la redundancia que hace llegar `livewire.js` —y con él
+Alpine, y con Alpine el cajón entero— **cuelga de él**. Ficha actualizada en `DEUDA.md`.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |
@@ -329,9 +342,10 @@ sitio y duplicarlas es lo que envejece esta foto—; se nombran para que no te p
 - **Que las piezas se llamen no significa que el valor LLEGUE**, y que los dos extremos estén probados
   no significa que el medio esté cableado: `#117`, `#118` y `#119(f)` son tres fallos vivos distintos
   de la misma familia, todos encontrados en un navegador y ninguno por la suite.
-- **El modo `embedded` de `auth.login`/`auth.register` ya no lo monta nadie en producción**, pero es
-  la REFERENCIA de `SidebarLoginParityTest`/`SidebarRegisterParityTest`: muere cuando el área de
-  cliente rehaga la auth dentro del cajón, no antes (`#112(f)`).
+- ✅ **El modo `embedded` de `auth.login`/`auth.register` MURIÓ el 2026-08-23** (`#122`), como `#112(f)`
+  anticipó: era la referencia de dos paridades de árbol y las dos se fueron con él. De sus 14 casos,
+  **8 no comparaban superficies** y están mudados a `SidebarMountTest`, `Api\V1\AuthRegistrationTest`
+  y `SidebarAntiBotTest` — uno de ellos llevaba dentro el techo del payload del montaje.
 
 ### Lo que NO depende de nosotros
 
@@ -397,7 +411,7 @@ solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CL
 | `cart.js` | Cesta: saneado, persistencia con su dueño, reconciliación y **qué respuestas faltan** | `cart.test.js` · `SidebarCartParityTest` · `SidebarPendingFieldsParityTest` |
 | `paused.js` | El aviso de reservas en pausa y en qué pasos tapa | `paused.test.js` · `SidebarPausedParityTest` |
 | `admission.js` | El paso del carrito al pago: identidad + elegibilidad + destino | `admission.test.js` · `SidebarAdmissionParityTest` |
-| `login.js` · `register.js` | Identificarse y darse de alta desde el cajón | sus `*.test.js` · `SidebarLoginParityTest` · `SidebarRegisterParityTest` |
+| `login.js` · `register.js` · `forgot.js` | Identificarse, darse de alta y recuperar contraseña desde el cajón. ⚠️ `register.js` NO decide el contexto: lo manda quien llama (`#122`) | sus `*.test.js` · los literales los fijan `Api\V1\AuthSessionTest` y `Api\V1\AuthRegistrationTest` desde el servidor — las dos paridades de árbol murieron con el modal |
 | `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `pay.test.js` · `SidebarPayParityTest` |
 | `outcome.js` | La VUELTA entera: resumen del 6, motivo del 10 con su reintento, sondeo del 11 | `outcome.test.js` · `SidebarOutcomeParityTest` |
 | `stores/purchase.js` | El paso y las dos señales que el cajón publica hacia fuera | `stores/purchase.test.js` (nace tras `#59`) |

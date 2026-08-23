@@ -13,7 +13,6 @@ use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
-use App\Livewire\Auth\Register;
 use DOMDocument;
 use DOMElement;
 use DOMNode;

@@ -1,4 +1,8 @@
-@props(['title' => null, 'fullTitle' => null, 'description' => null, 'authModal' => null, 'hasHero' => false, 'noindex' => false])
+{{-- ⚠️ **El prop `authModal` se retiró el 2026-08-23 con el modal** (`DECISIONES #122`). Decía DOS
+     cosas a la vez —qué modal abrir y si la página se indexa— y esa segunda, que nadie había puesto
+     ahí a propósito, era la que había que rescatar: hoy las tres puertas de auth declaran su
+     `noindex` por el prop de abajo, que solo significa una cosa. --}}
+@props(['title' => null, 'fullTitle' => null, 'description' => null, 'hasHero' => false, 'noindex' => false])
 @php
     // `fullTitle` (si se pasa) es el <title> COMPLETO verbatim (lo usa la home con el «Título web»
     // editable, #215, p. ej. «MI PARQUE - Parque de saltos»). Si no, se compone
@@ -19,7 +23,7 @@
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $metaDescription }}">
     <link rel="canonical" href="{{ $canonical }}">
-    <meta name="robots" content="{{ ($authModal || $noindex) ? 'noindex, nofollow' : 'index, follow' }}">
+    <meta name="robots" content="{{ $noindex ? 'noindex, nofollow' : 'index, follow' }}">
 
     {{-- Favicon / icono de la web: SVG (navegadores modernos) + PNG (iOS/legacy). --}}
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
@@ -68,8 +72,7 @@
      `lazy`, así que su `mount()` corre en una petición POSTERIOR a este render (medido). Si
      el layout consumiera aquí, el motor se quedaría sin nada que enseñar. Quién consume
      depende del motor, y `Http\Sidebar\SidebarEntry` lo explica en un solo sitio. --}}
-<body data-auth-modal="{{ $authModal }}"
-      data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
+<body data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
       {{-- La ZONA del área de cliente con la que abrir, cuando se ha entrado por una de las rutas
            que sobreviven a la retirada de `/mi-cuenta/…` (`AccountDoor`). Vacío = no es una puerta.
            ⚠️ Se CONSUME al abrir: si no, cerrar y reabrir el cajón devolvería al cliente a la zona
@@ -108,25 +111,15 @@
 
     {{ $slot }}
 
-    {{-- Modales de autenticación (Fase 4). Solo para visitantes no autenticados. --}}
-    @guest
-        <div x-data="a11yPanel('$store.auth.modal')" x-cloak x-show="$store.auth.modal" class="modal"
-             @keydown.escape.window="$store.auth.close()" @keydown="trap($event)">
-            <div class="modal__backdrop" @click="$store.auth.close()"></div>
-            <div class="modal__panel" role="dialog" aria-modal="true">
-                <button type="button" class="modal__close" @click="$store.auth.close()" aria-label="{{ __('account.close') }}">&times;</button>
-                <div x-show="$store.auth.modal === 'register'">
-                    @livewire('auth.register')
-                </div>
-                <div x-show="$store.auth.modal === 'login'" x-cloak>
-                    @livewire('auth.login')
-                </div>
-                <div x-show="$store.auth.modal === 'forgot'" x-cloak>
-                    @livewire('auth.forgot-password')
-                </div>
-            </div>
-        </div>
-    @endguest
+    {{-- ⚠️⚠️ **Aquí vivían los TRES MODALES DE AUTH, y se retiraron el 2026-08-23**
+         (`specs/auth-en-cajon.md`, `DECISIONES #122`). Entrar, darse de alta y recuperar la
+         contraseña son ahora ZONAS del cajón, así que la gestión del cliente vive por fin en UN solo
+         sitio — que es lo que `DECISIONES #66` pedía y el último trozo que le faltaba.
+         ▶ Las rutas `/login`, `/registro` y `/recuperar-contrasena` **siguen existiendo** como
+         PUERTAS (`Http\Sidebar\AccountDoor`): sirven esta misma página y abren el cajón en su zona.
+         `login` además no es opcional — es el destino del middleware `auth` de Laravel.
+         ▶ Lo que NO se fue: `/restablecer-contrasena/{token}` y `/email/verificar` siguen siendo
+         PÁGINAS, porque se llega a ellas desde un correo y el cajón no es direccionable. --}}
 
     {{-- Sidebar de compra de entradas (Fase 5.2): asistente paso a paso sobre la página actual. --}}
     {{-- ⚠️ El bloqueo de scroll YA NO se pone aquí (`sidebar-spa.md` §6): lo pide el dueño único desde
@@ -156,10 +149,13 @@
 
                      ⚠️ Pero **hoy llegan DOS fuentes redundantes**, y conviene saberlo antes de
                      tocar: `@livewireScripts` emite incondicionalmente, y la auto-inyección de
-                     Livewire lo inyecta igual **si algún componente Livewire se renderizó** —hoy se
-                     renderizan cuatro: los tres modales de auth y `account-context`—. **Medido**
-                     (2026-08-21): retirar solo la directiva NO rompe nada; lo fatal es quedarse sin
-                     las dos. La tabla de verdad completa y el porqué están en
+                     Livewire lo inyecta igual **si algún componente Livewire se renderizó**.
+                     **Medido** (2026-08-21): retirar solo la directiva NO rompe nada; lo fatal es
+                     quedarse sin las dos.
+                     ⚠️⚠️ **Y desde el 2026-08-23 ese «algún componente» es UNO SOLO** (`#122`): con
+                     los tres modales de auth retirados solo queda `account-context`. La redundancia
+                     cuelga de un hilo — el día que ése migre a Vue, la directiva será la fuente
+                     única. La tabla de verdad y el porqué están en
                      `SidebarMountTest::test_livewire_scripts_are_still_served`, la única aserción de
                      `livewire.js` de la suite. --}}
                     {{-- El hueco del motor SPA. Va VACÍO: el entry se trae con `import()` en la

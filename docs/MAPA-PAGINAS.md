@@ -74,9 +74,9 @@ de datos.
 
 | Ruta | Qué es | Acceso · Tipo |
 |---|---|---|
-| `/registro` | Alta: datos mínimos + aceptar privacidad, términos y **waiver**. | 🌐 · 🪟 modal |
-| `/login` · `POST /logout` | Iniciar / cerrar sesión. | 🌐 · 🪟 modal |
-| `/recuperar-contrasena` | Petición de recuperación (nombre de ruta `password.request`). | 🌐 · 🪟 modal |
+| `/registro` | Alta: datos mínimos + aceptar privacidad, términos y **waiver**. ⚠️ **PUERTA desde `#122`**: sirve la home y abre el cajón en su zona de alta | 🌐 · 🪟 zona del cajón |
+| `/login` · `POST /logout` | Iniciar / cerrar sesión. ⚠️ **PUERTA desde `#122`**; la ruta no es opcional: es el destino del middleware `auth` de Laravel | 🌐 · 🪟 zona del cajón |
+| `/recuperar-contrasena` | Petición de recuperación (nombre de ruta `password.request`). ⚠️ **PUERTA desde `#122`** | 🌐 · 🪟 zona del cajón |
 | `/restablecer-contrasena/{token}` | Form de reset desde el email. | enlace email · 📄 |
 | `/email/verificar` (+ `/{id}/{hash}` + `POST …/reenviar`) | Verificación de email. | 🔑 · 📄 |
 | `/mi-cuenta` | Resumen del área privada (mínima). | 🔑 · 📄 |

@@ -1,9 +1,9 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1–A7 EJECUTADOS** (§8; A4 recortado por dependencia) ·
-> **Las tres pantallas de auth viven en el cajón, nadie abre ya el modal y el embudo tiene su enlace
-> de recuperar**: queda auditar los tests del modal y retirarlo (A8–A10) ·
+> Última actualización: 2026-08-23 · **A1–A9 EJECUTADOS** (§8; A4 recortado por dependencia) ·
+> 🟩 **EL MODAL DE AUTH ESTÁ RETIRADO**: la gestión del cliente vive por fin en UN solo sitio, que es
+> lo que `DECISIONES #66` pedía. Queda **A10**: presupuestos, doc y **navegador** ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -316,8 +316,8 @@ re-apuntado puede quedarse inerte sin que nadie lo note).
 ### 4.7.bis ⚠️ Las dos «paridades» NO son 14 casos de paridad: son 6
 
 Esta spec dijo primero que las dos paridades morían enteras. **Es falso, y medirlo lo destapó**
-(2026-08-22, `grep -n 'public function test_' tests/Feature/Sidebar/SidebarLoginParityTest.php
-tests/Feature/Sidebar/SidebarRegisterParityTest.php`). Clasificados por SUJETO
+(2026-08-22, listando los nombres de caso de los dos ficheros de paridad —hoy retirados, `#122`—).
+Clasificados por SUJETO
 (`CONVENCIONES §3.quater`):
 
 | Sujeto | Casos | Qué pasa |
@@ -523,7 +523,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A6** ✅ | Las puertas: `AccountDoor` + `openAccount()` + los cuatro puntos que quedan | Ya hay a dónde llegar. ⚠️ **Aquí vivían DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4). **Hecho el 2026-08-23**: los dos cerrados, **nadie abre ya el modal** y apareció una regla que no estaba escrita —una puerta de invitado **con sesión** abre el índice, no un formulario de entrar— |
 | **A7** ✅ | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6). **Hecho el 2026-08-23**: el diff del árbol fue **un solo nodo** (`<button class=auth__link>`), verificado antes de regenerar. Y obligó a definir qué significa «volver» desde los **tres** orígenes (§3.4) |
 | **A8** ✅ | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después. **Hecho el 2026-08-23** — resultado en §8.bis: **32 mueren, 3 se re-apuntan y 1 destapó un hueco de SEGURIDAD vivo** |
-| **A9** | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest` y `SpinnerTest` | Cuando ya no queda nadie que dependa. Caen a la vez: separarlas deja la suite roja sin dueño. ✅ `SidebarEntry::clear()` ya no es una decisión pendiente: A8 la resolvió (§8.bis) |
+| **A9** ✅ | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest` y `SpinnerTest` | Cuando ya no queda nadie que dependa. **Hecho el 2026-08-23**: la suite baja **2690 → 2648** (−42 exactos: 36 + 6). ⚠️ El barrido de citas destapó **tres tests más** que nadie había inventariado —dos en `Detalles216Test` y uno en `HomePageTest`— porque el `grep` de `$store.auth` se hizo sobre `resources/` y no sobre `tests/`. Se re-apuntaron: su sujeto es que el CTA existe y hace algo, no qué |
 | **A10** | Presupuestos re-medidos y **bajados a lo medido**, doc (`MAPA-PAGINAS`, `SEGURIDAD`, `FLUJOS`, `DEUDA`, `sistemas/UI-SPINNER`) y **NAVEGADOR** | El cierre, con evidencia |
 
 ## 8.bis El resultado de la AUDITORÍA (A8), y cómo se obtuvo

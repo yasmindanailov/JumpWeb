@@ -255,21 +255,19 @@ class AccountDoorWiringTest extends TestCase
         // acaba de abrirse en la misma zona—, que es el estado a medias que este paso existe para no
         // dejar.
         //
-        // ⚠️ Se mira **en los ficheros que abrían el modal**, y no en el HTML entero, y el matiz es
-        // real: las plantillas del propio modal siguen renderizándose para un invitado y sus enlaces
-        // internos («¿no tienes cuenta?», «volver a entrar») todavía nombran el store. Son código
-        // MUERTO —a ese modal no llega nadie— y se van con él cuando se retire. Aseverar sobre el HTML
-        // entero daría un rojo por algo que no es lo que este caso vigila.
-        foreach (['resources/views/components/site/nav.blade.php',
-            'resources/views/livewire/site/account-context.blade.php'] as $opener) {
-            $this->assertStringNotContainsString(
-                '$store.auth.open(', $this->source($opener),
-                "«{$opener}» ha vuelto a abrir el modal de auth en vez de llevar al cajón."
-            );
-        }
+        // ⚠️ **El 2026-08-23 este control se endureció**, y por una razón que es el propio progreso
+        // del trabajo: cuando se escribió, las plantillas del modal seguían renderizándose y sus
+        // enlaces internos nombraban el store, así que había que mirar fichero a fichero para no dar
+        // un rojo por código muerto. **Con el modal retirado (`DECISIONES #122`) ya no hay excepción
+        // que hacer**: el almacén no existe, y nombrarlo desde cualquier sitio es un `undefined`.
+        $this->assertStringNotContainsString(
+            '$store.auth', $html,
+            'Ha vuelto a aparecer el almacén del modal de auth. Ya no existe: cualquier plantilla que '.
+            'lo nombre está llamando a `undefined`, y eso no falla en pantalla — no hace nada.'
+        );
 
-        // Y por URL tampoco: sin `data-auth-modal` con valor, ninguna ruta lo despierta al cargar.
-        $this->assertStringContainsString('data-auth-modal=""', $html, 'una ruta sigue abriendo el modal al cargar');
+        // Y por URL tampoco: sin el atributo que lo abría, ninguna ruta puede despertarlo al cargar.
+        $this->assertStringNotContainsString('data-auth-modal', $html, 'el layout sigue emitiendo el atributo del modal');
     }
 
     private function source(string $relative): string

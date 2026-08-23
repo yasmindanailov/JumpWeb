@@ -27,11 +27,14 @@ class AccountAlreadyExists extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        // CTA al modal de login (decisión #112, 2026-05-28): antes apuntaba a la home y
-        // dejaba al usuario buscando dónde entrar. `route('login')` carga la home con el
-        // modal de login ya abierto (HomeController inyecta `authModal='login'`). Si el
-        // usuario abandonó una compra a mitad, la cesta sigue en sesión: al iniciar
-        // sesión vuelve directamente al sidebar (#75/#79).
+        // CTA a la pantalla de identificarse (decisión #112, 2026-05-28): antes apuntaba a la
+        // home y dejaba al titular buscando dónde entrar.
+        // ⚠️ **Adónde lleva `route('login')` cambió el 2026-08-23** (`DECISIONES #122`) y el
+        // destino sigue siendo el correcto: ya no abre un modal, sino que sirve la home y el
+        // CAJÓN se abre solo en su zona de entrar — es una PUERTA (`Http\Sidebar\AccountDoor`).
+        // La ruta sobrevive por eso y porque es el destino del middleware `auth` de Laravel.
+        // ⚠️ Que este CTA apunte aquí lo fija `Api\V1\AuthRegistrationTest`, y era **guardián
+        // único** en un test del modal hasta que la auditoría de A8 lo re-apuntó.
         $park = (string) Setting::value('business.name', config('app.name'));
 
         return (new MailMessage)

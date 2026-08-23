@@ -6,7 +6,9 @@ import { registerErrors, runRegister, signupRequiresCaptcha, CONTEXT_PURCHASE, C
  * Fase 4 · paso 4.4b·1 — la red del alta embebida (criterio CE-6).
  *
  * Lo que se fija aquí es **la secuencia y el reparto de los avisos**. Que los literales coincidan con
- * los del componente Livewire lo compara `SidebarRegisterParityTest` contra `__()` real.
+ * los del servidor lo comparaba `SidebarRegisterParityTest` contra `__()` real; ese fichero se retiró
+ * con el modal (`DECISIONES #122`) y hoy los literales los fija `Api\V1\AuthRegistrationTest`, que es
+ * quien los publica.
  *
  * ⚠️ El caso central es `el 201 no dice si hubo cuenta`: la respuesta del alta es **idéntica** para un
  * alta real y para un señuelo que actuó —si no lo fuera, un bot distinguiría las dos de un vistazo—,
