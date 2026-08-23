@@ -33,15 +33,15 @@ existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u
 `#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
 (verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
-⚠️ **STAGING está desplegado pero YA NO al día**, y conviene saberlo antes de prometer nada sobre
-él: sirve el commit `9fc8922` (2026-08-20), y **`main` lleva 56 commits por delante** —el área de
-cliente entera— medido el 2026-08-22. Lo que hay allí es el cajón SPA con el anti-bot activo, sin
-ninguna de las tres tandas. Canal: `scripts/deploy.sh` (dry-run por defecto); detalle en
-`ENTORNOS.md` §4 y el porqué en `#105`–`#110`.
-▶ **Desplegarlo ahora es barato**: **cero migraciones nuevas** desde entonces (medido con
-`git diff --name-only 9fc8922..HEAD -- database/migrations/`), así que la nota de despliegue —migrar
-antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí hay que hacer es
-**construir los assets fuera y subirlos**: en staging no hay node/npm.
+✅ **STAGING ESTÁ AL DÍA**: sirve `b6fadf5` desde el 2026-08-23 — el salto de 69 commits que traía el
+área de cliente entera y la auth en el cajón. Canal: `scripts/deploy.sh` (dry-run por defecto; detalle
+en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
+▶ **El despliegue se auto-verifica y salió limpio**: `/up` y `/` en 200, guarda del `robots.txt`,
+`redsys_environment = 'test'`, 0 migraciones pendientes, 0 `failed_jobs` y 0 jobs varados.
+Comprobado además a mano sobre HTTP: las tres puertas de auth emiten su zona y siguen `noindex`, los
+cuatro puntos llegan cableados y **no queda rastro del modal**.
+⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
+staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
@@ -236,6 +236,10 @@ comentario dice por qué—. La red es el NAVEGADOR. Receta del andamio, con sus
 `schedule:run` funciona a mano, pero **no hay demonio cron en el contenedor del sitio**. Medido: 6
 avisos con 24 h en `jobs` y `attempts = 0`, y un pedido 24 h sin caducar que `orders:expire` caducó al
 instante al lanzarlo a mano.
+⚠️ **RE-CONFIRMADO el 2026-08-23** en el despliegue de hoy: el propio `deploy.sh` reinstaló el crontab
+—«1 entrada, sin duplicados»— y su verificación de salud volvió a avisar de que **no se ve ningún
+demonio cron**. Las cinco tareas están REGISTRADAS en la app y no hay jobs varados, así que lo único
+que falta es quien las dispare.
 ▶ **La entrada exacta que hay que poner en el panel de Enhance, y cómo comprobar que funciona, están
 en `ENTORNOS.md` §4.** Mientras tanto se dispara a mano:
 `ssh jumpweb-staging "cd ~/public_html && php artisan schedule:run"`.
