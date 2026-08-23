@@ -92,7 +92,13 @@ defineExpose({
         `defineExpose`**. Si se desmontara —o se desactivara— Vue anula la template ref, y las dos
         señales que `index.js` invoca en CADA apertura del cajón se las comería el `?.` **en
         silencio**: la pausa dejaría de releerse y un cambio de titular no purgaría la cesta. Es la
-        familia de fallos que este proyecto ya ha pagado tres veces;
+        familia de fallos que este proyecto ya ha pagado tres veces.
+        ⚠️⚠️ **Y desde el 2026-08-23 hay un SEGUNDO motivo, que no se adivina leyendo esto**
+        (`specs/auth-en-cajon.md` §4.3): el `onMounted` de esa sección es **el único sitio que pide
+        `GET /config`**, y de ahí sale la clave del anti-bot — que usa también el ALTA del área de
+        cliente. Desmontarla dejaría el formulario de registro **sin widget**, y el servidor
+        rechazaría cada alta con «no eres un robot», sin correo y sin una línea de log. Lo vigila
+        `SidebarComponentBudgetTest::test_the_root_routes_sections_and_does_not_paint_screens`;
 
       · la **cuenta** con `v-if` a secas: montarla siempre le regalaría a quien viene a comprar las
         peticiones de `/me/*` en cada apertura del cajón.

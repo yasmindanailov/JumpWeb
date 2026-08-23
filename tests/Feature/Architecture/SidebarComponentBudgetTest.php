@@ -306,6 +306,23 @@ class SidebarComponentBudgetTest extends TestCase
             'raíz que los conoce es una raíz que ha vuelto a ser una pantalla — y es exactamente lo '.
             'que impide que el área de cliente entre al lado en vez de dentro.',
         );
+
+        // ⚠️⚠️ **La sección de compra se OCULTA, no se desmonta — y desde el 2026-08-23 hay DOS
+        // motivos, no uno.** El primero lleva escrito en la raíz desde `#119`: su `ref` sostiene el
+        // puente de `defineExpose`, y sin él las dos señales que `index.js` invoca en cada apertura
+        // se las come el `?.` en silencio. El segundo lo trajo la auth (`specs/auth-en-cajon.md`
+        // §4.3): el `onMounted` de esa sección es **el único** que pide `GET /config`, y de ahí sale
+        // la clave del anti-bot que usa también el ALTA del área de cliente. Con `v-if`, un invitado
+        // que entrara directo a la zona de registro montaría el formulario **sin widget** y el
+        // servidor rechazaría su alta con «no eres un robot» — sin correo, sin log y sin nada en
+        // pantalla que lo explique (`DECISIONES #108`).
+        $this->assertMatchesRegularExpression(
+            '/<PurchaseSection\s+v-show=/', $source,
+            "La sección de compra ha dejado de ocultarse con `v-show`.\n".
+            "⚠️ Con `v-if` se DESMONTA, y con ella se van dos cosas que no se ven desde el marcado: el\n".
+            "puente de señales hacia fuera del cajón, y el `GET /config` del que sale la clave del\n".
+            'anti-bot que necesita el alta del área de cliente.',
+        );
     }
 
     private function codeLines(string $path): int

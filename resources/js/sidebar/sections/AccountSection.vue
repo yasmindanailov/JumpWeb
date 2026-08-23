@@ -11,7 +11,9 @@ import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 import PrivacyZone from '../account/zones/PrivacyZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
+import RegisterZone from '../account/zones/RegisterZone.vue';
 import ForgotZone from '../account/zones/ForgotZone.vue';
+import AuthTabs from '../account/zones/AuthTabs.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
@@ -127,9 +129,26 @@ const signIn = () => store.go(ZONES.LOGIN);
             @sign-in="signIn" />
 
         <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
-             pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera. -->
+             pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera.
+
+             ⚠️ Las pestañas NO están dentro de cada zona: son el conmutador ENTRE dos de ellas, y
+             repetirlas en las dos habría dejado dos sitios que mantener sincronizados. `FORGOT` no
+             las lleva a propósito — no es una tercera pestaña, es una pantalla a la que se entra
+             desde entrar y de la que se vuelve. -->
+        <AuthTabs
+            v-if="store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER"
+            :account="account"
+            :active="store.zone" />
+
         <LoginZone
-            v-else-if="store.zone === ZONES.LOGIN"
+            v-if="store.zone === ZONES.LOGIN"
+            :account="account"
+            :messages="messages"
+            :auth="auth"
+            :urls="urls" />
+
+        <RegisterZone
+            v-else-if="store.zone === ZONES.REGISTER"
             :account="account"
             :messages="messages"
             :auth="auth"

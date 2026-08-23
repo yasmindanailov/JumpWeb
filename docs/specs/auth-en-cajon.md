@@ -1,7 +1,8 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1–A4 EJECUTADOS** (§8; A4 recortado por dependencia) ·
+> Última actualización: 2026-08-23 · **A1–A5 EJECUTADOS** (§8; A4 recortado por dependencia) ·
+> **Las tres pantallas de auth ya viven en el cajón**; falta cablear las puertas y retirar el modal ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -368,13 +369,22 @@ adversarial del 2026-08-23 y todas están **verificadas en el código**.
    `app.js::close()` solo recarga si hubo login. La contraseña de Alice se quedaría en el campo para
    Bob. ▶ **`reset()` cuelga del cierre del cajón y del cambio de zona**, y su caso se escribe: tres de
    los 36 (`test_closing_modal_resets_*`) se re-apuntan justo aquí.
-2. **Falta la SALIDA de «revisa tu correo».** El modal ofrece **reenviar** (`Register::resend()`, con
-   su contador de reenvíos y los dos cooldowns del servicio) y un enlace «¿ya tienes cuenta?».
-   `VerifyStep.vue` no tiene ninguno de los dos, y su comentario dice «no lleva salida, y eso es
-   fiel» — fiel al alta **embebida**, no a la suelta, que es la que esta spec estrena. Sin ellos, un
-   alta cuyo correo no llega queda **sin salida**: la página `/email/verificar` exige sesión y el alta
-   suelta no la abre. El servidor ya lo cubre (`POST /api/v1/auth/email/resend`); el hueco es de
-   pantalla.
+2. ~~**Falta la SALIDA de «revisa tu correo».**~~ ✅ **CERRADO en A5** (2026-08-23). El modal ofrecía
+   **reenviar** y un enlace «¿ya tienes cuenta?»; `VerifyStep.vue` no tiene ninguno de los dos, y su
+   comentario dice «no lleva salida, y eso es fiel» — fiel al alta **embebida**, no a la suelta.
+   Ahora la zona de alta tiene su propia segunda cara, con las dos salidas.
+   ⚠️ **Y al construirla salieron tres cosas que no estaban en el diseño:**
+   · **la cuenta atrás no es un número de UI**: espeja el limitador por IP de
+     `SelfSignup::resendVerification()`, porque el endpoint responde **202 aunque descarte el envío**.
+     Una espera más corta ofrece un botón que no manda nada. Lo cruza `SidebarResendCooldownTest`,
+     que lee los dos lados — y cuya primera versión **leyó el número equivocado**, porque `register()`
+     y `resendVerification()` usan la misma variable en el mismo fichero (§3.quater, trampa 1);
+   · **el techo de componentes volvió a hacer su trabajo**: con el reloj y el desenlace dentro, la
+     zona llegó a **43 de 40** líneas. La respuesta fue mudar la secuencia al store —donde se prueba
+     con `node --test`— y bajó a **25** (`#120(r)`: la pregunta es qué sobra, no cuánto subirlo);
+   · **`resendGate` pasó a fallar CERRADA** tras un fallo real: se le pasaba el store entero y el
+     campo se llama distinto, así que la puerta ignoraba la cuenta atrás **sin fallar**. Hoy un campo
+     que no es un número deja el botón deshabilitado en vez de habilitado.
 3. ~~**La pila de retorno se queda con zonas de invitado dentro.**~~ ✅ **DISUELTO por §3.3, no
    arreglado** (2026-08-23). El riesgo era real —`navigation.js::go()` solo recorta cuando la zona ya
    está en la pila, así que `ORDERS → LOGIN → HOME` dejaba un «volver» que enseñaba un formulario de
@@ -489,7 +499,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A2** ✅ | **Mudar los 8 casos que sobreviven** de las dos paridades, y **re-mutarlos** allí | ⚠️ **PRIMERO**, y es la corrección de fondo del orden: uno de ellos asevera que el payload del invitado son exactamente `login` y `register`, así que **A3 lo pondría en rojo** (§4.7.bis). **Hecho el 2026-08-23**: 7 mudados a tres destinos, 1 retirado tras medir que ya estaba cubierto, y los 6 que quedan en las paridades siguen montando Livewire |
 | **A3** ✅ | `forgot.js`, **`context` como parámetro** (§4.3) y el estado en `stores/auth.js`, con `node --test` | Reglas antes que pantallas, como las ocho zonas anteriores. **Hecho el 2026-08-23**: 12 casos de `forgot.js`, 2 del contexto en `register.js`, 7 del store y **una guarda de cableado nueva** (`SidebarSignupContextTest`) para el eslabón que ningún test veía — que el embudo declare `purchase`. Techo del chunk **190 → 191** (medido 190,5, +1,0) |
 | **A4** ✅ | **`LOGIN` y `FORGOT`**, la guarda de alcanzabilidad en su forma nueva, `account.forgot` en el payload y **el aterrizaje** | Ya hay a dónde ir. ⚠️ **Recortado sobre la marcha, y por DEPENDENCIA**: la zona de alta necesita su pantalla de «revisa tu correo» con reenvío, que arrastra el subgrupo `account.verify` y otro endpoint. Meterla aquí habría dejado media pantalla construida — ver A5. **Hecho el 2026-08-23** |
-| **A5** | **`REGISTER`** con su «revisa tu correo» **con reenvío y escape** (§4.10·2), y las pestañas | Va junto porque va junto: sin la pantalla de después, el alta suelta —que NO abre sesión— no lleva a ninguna parte |
+| **A5** ✅ | **`REGISTER`** con su «revisa tu correo» **con reenvío y escape** (§4.10·2), y las pestañas | Va junto porque va junto: sin la pantalla de después, el alta suelta —que NO abre sesión— no lleva a ninguna parte. **Hecho el 2026-08-23**, y dejó tres cosas medidas: el techo de componentes obligó a mudar la secuencia al store (43→25 líneas), la cuenta atrás quedó **cruzada con el limitador del servidor** en un test PHP, y `resendGate` pasó a **fallar cerrada** tras un fallo real |
 | **A6** | Las puertas: `AccountDoor` + `openAccount()` + los cuatro puntos que quedan | Ya hay a dónde llegar. ⚠️ **Aquí viven DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4) |
 | **A7** | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6) |
 | **A8** | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después |

@@ -207,8 +207,17 @@ class SidebarBundleBudgetTest extends TestCase
      * formulario** —reutiliza el `LoginForm` del paso 5, que ya estaba en el chunk—, así que esos 3,4
      * KiB son casi todo la de recuperar, que sí es marcado nuevo. Copiar el formulario habría costado
      * el doble y habría abierto la puerta a que las dos versiones divergieran.
+     *
+     * ⚠️ **194 → 199 el 2026-08-23 (A5): la zona de ALTA con su «revisa tu correo».** Medido: **198,3
+     * KiB**, **+4,4** sobre A4. Entra la zona, sus dos caras —formulario y pantalla de verificación
+     * con reenvío—, las dos pestañas y las reglas de `account/verify.js`.
+     * ▶ **Con un descuento medido**: la mitad del coste esperado no llegó a existir porque el
+     * formulario de alta se REUTILIZA del paso 5, igual que el de entrar en A4. Lo que sí es marcado
+     * nuevo es la segunda cara, que la web no tenía en el cajón.
+     * ▶ **199 deja 0,7 KiB.** El siguiente paso —las puertas— es cableado, no pantallas, así que
+     * debería caber; si no cabe, sube con su medida como los tres anteriores.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 194;
+    private const SIDEBAR_CHUNK_MAX_KB = 199;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

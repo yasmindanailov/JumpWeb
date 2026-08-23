@@ -1,7 +1,8 @@
-import { test, describe } from 'node:test';
+import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
 import { useAuthStore } from './auth.js';
+import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, resendGate } from '../account/verify.js';
 
 /**
  * La red del store de IDENTIFICARSE.
@@ -12,11 +13,27 @@ import { useAuthStore } from './auth.js';
  */
 const MENSAJES = { errors: { try_later: 'Espera un minuto.' } };
 
+/**
+ * ⚠️ **El último store creado se guarda para poder pararle el reloj pase lo que pase.**
+ *
+ * Desde que la pantalla de verificación tiene cuenta atrás, un caso que falle ANTES de llamar a
+ * `stopResendCountdown()` deja un `setInterval` vivo — y con un temporizador abierto **`node --test`
+ * no termina**: el runner se queda colgado y el fallo real ni se llega a leer. Pasó al escribir estos
+ * casos. Con `afterEach` no puede volver a pasar.
+ */
+let ultimoStore = null;
+
 function store() {
     setActivePinia(createPinia());
+    ultimoStore = useAuthStore();
 
-    return useAuthStore();
+    return ultimoStore;
 }
+
+afterEach(() => {
+    ultimoStore?.stopResendCountdown?.();
+    ultimoStore = null;
+});
 
 /** Un `api` de mentira que responde lo que se le diga y cuenta lo que le piden. */
 function fakeApi(respuestas) {
@@ -188,6 +205,186 @@ describe('el CONTEXTO del alta, que decide quien llama', () => {
         await a.register({ api, messages: MENSAJES, auth: {} });
 
         assert.equal(api.llamadas[0].body.context, 'standalone');
+    });
+});
+
+describe('el alta SUELTA y su «revisa tu correo»', () => {
+    /** Un alta sin sesión: es el camino normal fuera de la compra. */
+    function apiDeAltaSuelta() {
+        return fakeApi({
+            '/auth/register': { ok: true, status: 201, data: null },
+            '/me': { ok: false, status: 401, data: null },
+            '/auth/email/resend': { ok: true, status: 202, data: null },
+        });
+    }
+
+    test('manda el contexto suelto y deja la pantalla esperando con el correo', async () => {
+        const a = store();
+        a.form.email = 'nuevo@ejemplo.test';
+        a.form.password = 'un-secreto-muy-largo';
+
+        const api = apiDeAltaSuelta();
+        await a.registerStandalone({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(api.llamadas[0].body.context, 'standalone', 'el alta suelta NO puede ser pay-first');
+        assert.equal(a.pendingEmail, 'nuevo@ejemplo.test');
+
+    });
+
+    /**
+     * ⚠️ **La contraseña no sobrevive, y el correo SÍ.** `reset()` vacía el formulario —en una tablet
+     * compartida esa contraseña se queda a la vista— pero el correo hace falta para reenviar, así que
+     * se copia antes a `pendingEmail`. Sin esa copia, el botón de reenviar no tendría a quién.
+     */
+    test('vacía el formulario pero conserva el correo al que reenviar', async () => {
+        const a = store();
+        a.form.email = 'nuevo@ejemplo.test';
+        a.form.password = 'un-secreto-muy-largo';
+
+        await a.registerStandalone({ api: apiDeAltaSuelta(), messages: MENSAJES, auth: {} });
+
+        assert.equal(a.form.password, '', 'la contraseña no puede quedarse en un campo visible');
+        assert.equal(a.form.email, '');
+        assert.equal(a.pendingEmail, 'nuevo@ejemplo.test');
+
+    });
+
+    /**
+     * ⚠️⚠️ **Nace ESPERANDO.** El alta que acaba de ocurrir ya gastó el limitador por IP del servidor,
+     * así que ofrecer el botón al llegar sería ofrecer un no-op: el servidor descartaría el reenvío y
+     * contestaría 202 igual, y al cliente no le llegaría nada.
+     */
+    test('la pantalla nace con la cuenta atrás llena y los reenvíos intactos', async () => {
+        const a = store();
+        a.form.email = 'nuevo@ejemplo.test';
+
+        await a.registerStandalone({ api: apiDeAltaSuelta(), messages: MENSAJES, auth: {} });
+
+        assert.equal(a.resendSeconds, RESEND_COOLDOWN_SECONDS);
+        assert.equal(a.resendsLeft, MAX_RESENDS);
+
+        // ⚠️ Los campos van por NOMBRE. Pasar el store entero fue el fallo que destapó este caso: la
+        // puerta se quedaba sin `secondsLeft` y ofrecía el botón siempre (ver `account/verify.js`).
+        assert.equal(
+            resendGate({ secondsLeft: a.resendSeconds, resendsLeft: a.resendsLeft }).canResend, false,
+            'el botón no puede ofrecerse recién llegado'
+        );
+    });
+
+    test('si el alta consigue sesión NO se queda en «revisa tu correo»', async () => {
+        const a = store();
+        a.form.email = 'nuevo@ejemplo.test';
+
+        const api = fakeApi({
+            '/auth/register': { ok: true, status: 201, data: null },
+            '/me': { ok: true, status: 200, data: { id: 9 } },
+        });
+
+        const r = await a.registerStandalone({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(r.identified, true);
+        assert.equal(a.pendingEmail, '', 'con sesión se aterriza; esta pantalla no pinta nada');
+    });
+
+    test('un alta rechazada no lleva a la pantalla de verificación', async () => {
+        const a = store();
+        a.form.email = 'nuevo@ejemplo.test';
+
+        const api = fakeApi({
+            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'x', fields: { email: ['Ya existe'] } } },
+        });
+
+        await a.registerStandalone({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(a.pendingEmail, '');
+        assert.equal(a.form.email, 'nuevo@ejemplo.test', 'un rechazo no puede borrar lo que el cliente escribió');
+    });
+});
+
+describe('el reenvío del correo de verificación', () => {
+    function pantallaLista() {
+        const a = store();
+        a.awaitVerification('nuevo@ejemplo.test');
+        a.resendSeconds = 0;
+
+        return a;
+    }
+
+    test('reenvía al correo pendiente, descuenta y vuelve a esperar', async () => {
+        const a = pantallaLista();
+        const api = fakeApi({ '/auth/email/resend': { ok: true, status: 202, data: null } });
+
+        const r = await a.resendVerification({ api });
+
+        assert.equal(r.ok, true);
+        assert.deepEqual(api.llamadas[0].body, { email: 'nuevo@ejemplo.test' });
+        assert.equal(a.resendsLeft, MAX_RESENDS - 1);
+        assert.equal(a.resendSeconds, RESEND_COOLDOWN_SECONDS);
+
+    });
+
+    /**
+     * ⚠️ **Se descuenta PASE LO QUE PASE**, igual que en `Register::resend()` de la web. El endpoint
+     * responde 202 aunque descarte el envío, así que condicionar el descuento a «que haya ido bien»
+     * dejaría al cliente insistiendo sin tope sobre un servidor que ya lo está tirando. Con un corte
+     * de red vale lo mismo: lo que se protege es el buzón, no el contador.
+     */
+    test('un fallo de red también gasta el reenvío', async () => {
+        const a = pantallaLista();
+        const api = fakeApi({ '/auth/email/resend': { ok: false, status: 0, data: null, offline: true } });
+
+        const r = await a.resendVerification({ api });
+
+        assert.equal(r.ok, false);
+        assert.equal(a.resendsLeft, MAX_RESENDS - 1, 'un reintento sin tope sobre un fallo bombardea el buzón');
+
+    });
+
+    test('no se puede reenviar mientras corre la cuenta atrás', async () => {
+        const a = store();
+        a.awaitVerification('nuevo@ejemplo.test');
+        const api = fakeApi({});
+
+        const r = await a.resendVerification({ api });
+
+        assert.deepEqual(r, { ok: false, skipped: true });
+        assert.equal(api.llamadas.length, 0, 'el servidor lo descartaría en silencio: ni se le pide');
+        assert.equal(a.resendsLeft, MAX_RESENDS, 'un intento que no sale no puede gastar reenvío');
+    });
+
+    test('ni cuando se han agotado, por mucho que la cuenta atrás esté a cero', async () => {
+        const a = pantallaLista();
+        a.resendsLeft = 0;
+        const api = fakeApi({});
+
+        assert.deepEqual(await a.resendVerification({ api }), { ok: false, skipped: true });
+        assert.equal(api.llamadas.length, 0);
+    });
+
+    /** ⚠️ Dos relojes sobre el mismo número consumirían la espera al doble de velocidad. */
+    test('arrancar la cuenta atrás dos veces no deja dos relojes', () => {
+        const a = store();
+        a.awaitVerification('nuevo@ejemplo.test');
+
+        a.startResendCountdown();
+        const primero = a.resendTicker;
+        a.startResendCountdown();
+
+        assert.notEqual(a.resendTicker, primero, 'el reloj anterior tiene que morir antes de nacer el nuevo');
+
+        a.stopResendCountdown();
+
+        assert.equal(a.resendTicker, null, 'parar tiene que dejar el campo limpio, o `afterEach` no sabría qué parar');
+    });
+
+    test('salir de la pantalla borra el correo pendiente, que es PII', () => {
+        const a = store();
+        a.awaitVerification('nuevo@ejemplo.test');
+
+        a.clearNotices();
+
+        assert.equal(a.pendingEmail, '', 'el correo del cliente anterior no puede quedarse en pantalla');
+        assert.equal(a.resendsLeft, 0);
     });
 });
 

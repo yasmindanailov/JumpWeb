@@ -45,8 +45,8 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2678 en verde** (15.427 aserciones, `--parallel` **~41 s** medidos el 2026-08-23) ·
-  **553 tests JS** (`node --test`) · Pint limpio (837 ficheros) · `docs-check` verde ·
+- Suite **2681 en verde** (15.449 aserciones, `--parallel` **~55 s** medidos el 2026-08-23) ·
+  **576 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
   sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
@@ -179,10 +179,26 @@ alcanzabilidad cambia de forma —dos puertas declaradas, no una excepción a ma
 módulo plano con el `window` por parámetro. **El primero de los cinco puntos que abrían el modal ya no
 lo abre**: el aviso de sesión caducada de «Mis reservas» lleva a la zona de entrar.
 ⚠️ **A4 se recortó por DEPENDENCIA**: la zona de ALTA necesita su «revisa tu correo» con reenvío, que
-arrastra otro subgrupo de textos y otro endpoint, así que va en su paso (A5). Techos: chunk **191 →
+arrastra otro subgrupo de textos y otro endpoint, así que fue en su paso (A5). Techos: chunk **191 →
 194 KiB** (medido 193,9) y payload del montaje **+449 B** en las dos caras (anónimo 2.120, con sesión
 5.157) — es `account.forgot` entero, y viaja sin sesión **a propósito**: sus pantallas son las que ve
 justo quien no ha entrado.
+▶ **A5 hecho el 2026-08-23: LAS TRES PANTALLAS DE AUTH YA VIVEN EN EL CAJÓN.** Entra la zona de ALTA
+con sus dos caras —formulario y «revisa tu correo» con **reenvío y escape**, que el cajón no tenía— y
+las pestañas, que navegan entre zonas en vez de cambiar un modo interno. El alta manda
+`context: standalone`, así que **sí manda el correo de verificación y no abre sesión**.
+⚠️ **Tres cosas que A5 dejó medidas y conviene no perder**:
+· **la cuenta atrás del reenvío espeja el limitador por IP del servidor** (30 s), porque el endpoint
+  responde **202 aunque descarte el envío**: una espera más corta ofrece un botón que no manda nada.
+  Lo cruza `SidebarResendCooldownTest`, que lee los DOS lados — y su primera versión leyó el número
+  equivocado, porque `register()` y `resendVerification()` usan la misma variable en el mismo fichero;
+· **el techo de componentes volvió a forzar el reparto correcto**: la zona llegó a **43 de 40** líneas
+  con el reloj dentro y bajó a **25** al mudar la secuencia al store;
+· **`resendGate` falla CERRADA** tras un fallo real: se le pasaba el store entero, el campo se llama
+  distinto y la puerta ignoraba la cuenta atrás **sin fallar**. Hoy un campo que no es un número deja
+  el botón deshabilitado, no habilitado.
+Techos de A5: chunk **194 → 199 KiB** (medido 198,3) y payload **+474 B** (anónimo 2.594, con sesión
+5.631) por `account.verify`, ya podado a **9 de sus 14** rótulos.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

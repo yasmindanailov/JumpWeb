@@ -221,6 +221,20 @@
                             // invitado dejaría la zona con los rótulos en blanco — que es el fallo
                             // que `i18n.js` no puede avisar. El subgrupo entero son 9 claves.
                             'forgot' => __('account.forgot'),
+                            // ⚠️ **Podado clave a clave**: el subgrupo `verify` son 14 rótulos y esta
+                            // pantalla pinta **nueve**. Los cinco que se quedan fuera —`intro` y los
+                            // tres `notice_resend_*`— son de la PÁGINA de verificación de la web
+                            // (`/email/verificar`), que sobrevive intacta y no la pinta el cajón.
+                            // ⚠️ `resending` NO entra, aunque la web lo pinte: allí el botón enseña
+                            // «Reenviando…» mientras Livewire da la vuelta al servidor. Aquí no hay
+                            // vuelta que esperar —el botón se deshabilita y arranca la cuenta atrás
+                            // en el acto—, así que ese rótulo no lo pinta nadie. Un texto que viaja
+                            // en cada página para no pintarse nunca es exactamente lo que este
+                            // presupuesto existe para cazar.
+                            'verify' => \Illuminate\Support\Arr::only(__('account.verify'), [
+                                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend',
+                                'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
+                            ]),
                             // ⚠️ El ÁREA DE CLIENTE (`specs/area-cliente.md`) entra con **una sola
                             // clave**, no con el subgrupo `account.account` entero: ahí viven además
                             // los seis textos de privacidad, que no pinta ninguna zona de la tanda 1.

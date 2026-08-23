@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { runLogin } from '../login.js';
 import { runRegister, CONTEXT_STANDALONE } from '../register.js';
 import { runForgot } from '../forgot.js';
+import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '../account/verify.js';
 
 /**
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
@@ -57,6 +58,36 @@ export const useAuthStore = defineStore('auth', {
          */
         forgotSent: false,
 
+        /**
+         * El correo del alta que está **esperando verificación**, y la pantalla que lo pinta.
+         *
+         * ⚠️ **Existe porque el alta SUELTA no abre sesión** (§4.3): tras ella no hay a dónde navegar,
+         * así que el cajón se queda en «revisa tu correo» — y para reenviar hace falta el correo, que
+         * es lo único que pide `POST /auth/email/resend`. En el embudo no hacía falta: allí el alta es
+         * pay-first, abre sesión y la compra sigue.
+         *
+         * ⚠️⚠️ **Es PII y se limpia con los avisos**, no solo en `reset()`: dejarlo escrito en pantalla
+         * es enseñarle el correo del cliente anterior al siguiente que use una tablet compartida. Es
+         * la defensa que en la web hacía `$store.auth.completed` con su recarga.
+         */
+        pendingEmail: '',
+
+        /** Reenvíos que quedan desde esta pantalla, y segundos hasta poder pulsar (`account/verify.js`). */
+        resendsLeft: 0,
+        resendSeconds: 0,
+
+        /**
+         * El temporizador de la cuenta atrás.
+         *
+         * ⚠️ **Vive en el store y no en el componente, y no es estilo: es el techo de componentes
+         * haciendo su trabajo.** Con el reloj arriba, la pantalla del alta pasaba de 40 líneas de
+         * código y `SidebarComponentBudgetTest` la paró (`DECISIONES #120(r)`: cuando aprieta, la
+         * pregunta es qué sobra ahí, no cuánto subir el techo). Lo que sobraba era la SECUENCIA —
+         * arrancar, descontar, parar—, que además así se prueba con `node --test` en vez de montar un
+         * componente.
+         */
+        resendTicker: null,
+
         /** `true` mientras hay una petición en vuelo: el botón cambia de rótulo, como en la web. */
         busy: false,
 
@@ -98,6 +129,48 @@ export const useAuthStore = defineStore('auth', {
             this.registerError = NO_REGISTER_ERROR();
             this.forgotError = NO_FORGOT_ERROR();
             this.forgotSent = false;
+            this.pendingEmail = '';
+            this.resendsLeft = 0;
+            this.resendSeconds = 0;
+        },
+
+        /**
+         * Deja la pantalla de «revisa tu correo» lista para ese correo.
+         *
+         * ⚠️ **Nace ESPERANDO, con la cuenta atrás llena**, y no es un detalle de presentación: el alta
+         * que acaba de ocurrir ya ha gastado el limitador por IP del servidor, así que ofrecer el botón
+         * al llegar sería ofrecer un no-op —el servidor descartaría el reenvío y contestaría 202
+         * igual—. El porqué completo, en `account/verify.js`.
+         */
+        awaitVerification(email) {
+            this.pendingEmail = email || '';
+            this.resendsLeft = MAX_RESENDS;
+            this.resendSeconds = RESEND_COOLDOWN_SECONDS;
+        },
+
+        /** Descuenta un segundo de la cuenta atrás. La regla —el suelo en cero— vive en el módulo. */
+        tickResend() {
+            this.resendSeconds = nextSecond(this.resendSeconds);
+        },
+
+        /**
+         * Arranca (o reinicia) la cuenta atrás.
+         *
+         * ⚠️ **Siempre para la anterior primero.** Sin eso, pulsar «reenviar» dejaría dos relojes
+         * corriendo sobre el mismo número y la espera se consumiría al doble de velocidad — un botón
+         * que se ofrece antes de tiempo, que es justo lo que el servidor va a descartar en silencio.
+         */
+        startResendCountdown() {
+            this.stopResendCountdown();
+            this.resendTicker = setInterval(() => this.tickResend(), 1000);
+        },
+
+        /** Para el reloj. Lo llama la pantalla al desmontarse: un temporizador huérfano no muere solo. */
+        stopResendCountdown() {
+            if (this.resendTicker !== null) {
+                clearInterval(this.resendTicker);
+                this.resendTicker = null;
+            }
         },
 
         setSignupSiteKey(key) {
@@ -113,10 +186,7 @@ export const useAuthStore = defineStore('auth', {
          */
         reset() {
             this.form = emptyForm();
-            this.loginError = NO_LOGIN_ERROR();
-            this.registerError = NO_REGISTER_ERROR();
-            this.forgotError = NO_FORGOT_ERROR();
-            this.forgotSent = false;
+            this.clearNotices();
         },
 
         /**
@@ -197,6 +267,68 @@ export const useAuthStore = defineStore('auth', {
          * a la vez desde el mismo cajón no es un estado que nadie quiera razonar. Vive aquí y no en el
          * botón porque `disabled` es presentación y un `Enter` repetido no pasa por él.
          */
+        /**
+         * **El alta SUELTA, con su desenlace.** La usa el área de cliente; el embudo llama a
+         * `register()` con su propio contexto.
+         *
+         * ⚠️⚠️ **La secuencia vive aquí y no en la pantalla**, y es la misma razón por la que el reloj
+         * está en el store: son cuatro decisiones encadenadas —qué contexto, si hubo sesión, qué
+         * limpiar y qué dejar en pantalla— y encadenarlas dentro de un `.vue` las deja sin red, porque
+         * los componentes se comparan por su ÁRBOL y un árbol no dice qué se llamó ni en qué orden.
+         *
+         * ⚠️ **El correo se captura ANTES de llamar**: `reset()` vacía el formulario —la contraseña no
+         * puede sobrevivir a un cambio de pantalla— y sin esa copia no quedaría a quién reenviarle.
+         *
+         * ⚠️⚠️ **Y el desenlace es el MISMO para un alta buena y para un señuelo que actuó.** El 201
+         * del servidor es idéntico en los dos casos y `runRegister()` lo desempata preguntando por
+         * `GET /me`; sin sesión se enseña «revisa tu correo», que es exactamente lo que hace la web.
+         * Cualquier rama extra aquí delataría el señuelo.
+         */
+        async registerStandalone({ api, messages, auth }) {
+            const email = this.form.email;
+            const result = await this.register({ api, messages, auth, context: CONTEXT_STANDALONE });
+
+            if (! result.ok || result.identified) {
+                return result;
+            }
+
+            this.reset();
+            this.awaitVerification(email);
+            this.startResendCountdown();
+
+            return result;
+        },
+
+        /**
+         * Reenvía el correo de verificación.
+         *
+         * ⚠️⚠️ **Se descuenta el reenvío PASE LO QUE PASE, y se reinicia la espera igual.** Es lo que
+         * hace `Register::resend()` en la web y por el mismo motivo: el endpoint responde **202
+         * siempre** —no dice si envió— así que condicionar el descuento a «que haya ido bien» dejaría
+         * al cliente insistiendo sin tope sobre un servidor que ya lo está descartando. Con un fallo de
+         * red pasa lo mismo: lo que se protege es el buzón, no el contador.
+         *
+         * ⚠️ La guarda de reentrada es la del propio `gate`: si no se puede reenviar, no se pide.
+         */
+        async resendVerification({ api }) {
+            // ⚠️ **Los campos se pasan por NOMBRE y no `resendGate(this)`**, aunque tiente: el store
+            // los llama `resendSeconds`/`resendsLeft` y el módulo espera `secondsLeft`/`resendsLeft`.
+            // Pasarle el store entero **no falla** —`secondsLeft` llega `undefined`, cae al default y
+            // la puerta ignora la cuenta atrás—, así que el botón se ofrecería siempre y el servidor
+            // descartaría el reenvío en silencio. Lo cazaron los casos de este store, no el ojo.
+            if (! resendGate({ secondsLeft: this.resendSeconds, resendsLeft: this.resendsLeft }).canResend) {
+                return { ok: false, skipped: true };
+            }
+
+            this.resendsLeft -= 1;
+            this.resendSeconds = RESEND_COOLDOWN_SECONDS;
+            this.startResendCountdown();
+
+            const response = await api.post('/auth/email/resend', { email: this.pendingEmail });
+
+            return { ok: response.ok === true, response };
+        },
+
         async requestPasswordLink({ api, messages, auth }) {
             if (this.busy) {
                 return { ok: false, skipped: true };

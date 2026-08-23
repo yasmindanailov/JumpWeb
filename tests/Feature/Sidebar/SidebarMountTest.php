@@ -262,9 +262,25 @@ class SidebarMountTest extends TestCase
         // (`specs/auth-en-cajon.md` §4.1): las tres pantallas de auth son precisamente las que ve
         // quien NO ha entrado, así que podarlas al invitado las dejaría con los rótulos en blanco.
         $this->assertSame(
-            ['login', 'register', 'forgot'], array_keys($boot['account'] ?? []),
+            ['login', 'register', 'forgot', 'verify'], array_keys($boot['account'] ?? []),
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
+
+        // ⚠️ **Y `verify` va podado clave a clave**, al revés que `login`, `register` y `forgot`: sus
+        // 14 rótulos incluyen los de la PÁGINA de verificación de la web, que el cajón no pinta.
+        $this->assertSame(
+            [
+                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend',
+                'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
+            ],
+            array_keys($boot['account']['verify'] ?? []),
+            'el subgrupo `verify` ha dejado de estar podado a lo que la zona de alta pinta'
+        );
+
+        // ⚠️ **`resending` fuera a propósito**: la web lo pinta mientras Livewire da la vuelta al
+        // servidor; aquí no hay vuelta que esperar. Un texto que viaja en cada página para no
+        // pintarse nunca es lo que este presupuesto existe para cazar.
+        $this->assertArrayNotHasKey('resending', $boot['account']['verify'] ?? []);
 
         $anonBytes = strlen((string) json_encode([$boot['account'], $boot['auth']], JSON_UNESCAPED_UNICODE));
 
@@ -284,8 +300,20 @@ class SidebarMountTest extends TestCase
         // que no hay condición bajo la que esconderla, y pedirla por un endpoint costaría una
         // petición en el arranque para 449 B. Es además la misma decisión que ya se tomó con `login`
         // y `register`, que llevan viajando así desde 4.4b·1.
+        //
+        // ⚠️ **2.176 → 2.688 el 2026-08-23 (A5): «revisa tu correo» del alta suelta.** Medido:
+        // **2.594 B**, **+474** — y ya viene PODADO: de los 14 rótulos de `account.verify` viajan
+        // nueve. Se dejaron fuera `intro` y los tres `notice_resend_*`, que son de la PÁGINA de
+        // verificación de la web, y también `resending`, que la web pinta esperando a Livewire y aquí
+        // no pinta nadie. Quedan 94 B de holgura.
+        // ▶ **La referencia que hace legible el número**, medida sobre el `data-boot` real del
+        // 2026-08-23: el montaje entero son **12.712 B**, de los que `messages` —el grupo `tickets`,
+        // que viaja incondicionalmente desde 4.3·1— son **9.743** (77 %) y TODA la auth, **2.497**
+        // (20 %): `login` 294, `register` 1.217, `forgot` 456 y `verify` 481. O sea que esta subida es
+        // un **+3,8 %** del payload del cajón, no un salto de orden. Reproducible leyendo el
+        // `data-boot` de la home y midiendo cada rama.
         $this->assertLessThan(
-            2176, $anonBytes,
+            2688, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -306,7 +334,7 @@ class SidebarMountTest extends TestCase
 
         $boot = $this->bootPayload((string) $this->actingAs($user)->get('/')->assertOk()->getContent());
 
-        $this->assertSame(['login', 'register', 'forgot', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['login', 'register', 'forgot', 'verify', 'account', 'sidecart', 'orders'], array_keys($boot['account'] ?? []));
         $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
@@ -369,8 +397,12 @@ class SidebarMountTest extends TestCase
         // ⚠️ **4.800 → 5.248 el 2026-08-23**, por el mismo `account.forgot` que sube el anónimo: son
         // los MISMOS 449 B, porque las tres pantallas de auth viajan para todo el mundo. Medido:
         // **5.157 B**, y el techo deja **91 B** — la misma holgura estrecha de siempre, a propósito.
+        //
+        // ⚠️ **5.248 → 5.720 el 2026-08-23 (A5)**, por el mismo `account.verify` que sube el anónimo:
+        // los MISMOS 474 B, porque las pantallas de auth viajan para todo el mundo. Medido: **5.631
+        // B**, con **89 B** de holgura.
         $this->assertLessThan(
-            5248, $bytes,
+            5720, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );
