@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, createNavigation, isGuestZone, isZone, titleKeyOf } from './navigation.js';
+import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -113,6 +113,66 @@ describe('el índice', () => {
 
         assert.equal(HOME_ENTRIES.includes(DEFAULT_ZONE), false, 'el índice se enlaza a sí mismo');
         assert.equal(new Set(HOME_ENTRIES).size, HOME_ENTRIES.length, 'el índice repite una entrada');
+    });
+});
+
+describe('qué significa «volver» según por dónde se entró', () => {
+    /**
+     * ⚠️⚠️ **Los tres orígenes de «recuperar contraseña» necesitan cosas distintas, y por eso esta
+     * regla existe** (`specs/auth-en-cajon.md` §3.4):
+     *  · desde la pantalla de ENTRAR hay historia de verdad y `go()` la apila;
+     *  · desde una PUERTA por URL el cliente llega en frío: sin nada debajo, «volver a iniciar
+     *    sesión» le sacaría al catálogo de compra, que no es lo que el rótulo promete;
+     *  · desde el PASO 5 del EMBUDO es al revés: de donde viene **no es una zona**, así que la pila
+     *    tiene que quedar vacía para que «volver» salga de la sección y devuelva la compra donde
+     *    estaba, con su cesta.
+     */
+    test('una zona de invitado que no es entrar se siembra CON entrar debajo', () => {
+        assert.equal(parentZoneFor(ZONES.FORGOT), ZONES.LOGIN);
+        assert.equal(parentZoneFor(ZONES.REGISTER), ZONES.LOGIN);
+    });
+
+    test('entrar no se siembra a sí misma', () => {
+        assert.equal(parentZoneFor(ZONES.LOGIN), null, 'una pila `[login, login]` dejaría «volver» sin efecto');
+    });
+
+    test('las zonas de la CUENTA no siembran nada: su portada es el índice', () => {
+        for (const zona of HOME_ENTRIES) {
+            assert.equal(parentZoneFor(zona), null, `«${zona}» no puede colgar de la pantalla de entrar`);
+        }
+    });
+
+    test('sembrar deja UNA zona debajo, y «volver» la alcanza', () => {
+        const nav = createNavigation();
+        nav.reset(ZONES.FORGOT, ZONES.LOGIN);
+
+        assert.deepEqual(nav.trail, [ZONES.LOGIN, ZONES.FORGOT]);
+        assert.equal(nav.canBack, true);
+        assert.equal(nav.back(), true);
+        assert.equal(nav.zone, ZONES.LOGIN);
+    });
+
+    /** ⚠️ Sin sembrar, «volver» NO se mueve dentro del área — y eso es lo que la hace salir. */
+    test('sin sembrar, la pila queda vacía y «volver» significa SALIR', () => {
+        const nav = createNavigation();
+        nav.reset(ZONES.FORGOT);
+
+        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
+        assert.equal(nav.canBack, false);
+        assert.equal(nav.back(), false, '`false` es lo que el store traduce en salir a la compra');
+    });
+
+    test('sembrar la misma zona, o una que no existe, no ensucia la pila', () => {
+        const nav = createNavigation();
+
+        nav.reset(ZONES.LOGIN, ZONES.LOGIN);
+        assert.deepEqual(nav.trail, [ZONES.LOGIN], 'una pila `[x, x]` dejaría «volver» sin efecto visible');
+
+        nav.reset(ZONES.FORGOT, 'inventada');
+        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
+
+        nav.reset(ZONES.FORGOT, null);
+        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
     });
 });
 

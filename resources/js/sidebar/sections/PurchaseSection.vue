@@ -1145,7 +1145,8 @@ function goBack() {
             @back="goToCart"
             @set-mode="authStore.setMode"
             @submit-login="submitLogin"
-            @submit-register="submitRegister" />
+            @submit-register="submitRegister"
+            @recover="authStore.startPasswordRecovery()" />
 
         <VerifyStep
             v-else-if="store.step === STEPS.VERIFY_EMAIL"

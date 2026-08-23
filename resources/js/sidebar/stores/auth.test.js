@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
 import { useAuthStore } from './auth.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, resendGate } from '../account/verify.js';
+import { createNavigation } from '../account/navigation.js';
+import { useAccountStore } from './account.js';
+import { useSectionStore } from './section.js';
 
 /**
  * La red del store de IDENTIFICARSE.
@@ -205,6 +208,43 @@ describe('el CONTEXTO del alta, que decide quien llama', () => {
         await a.register({ api, messages: MENSAJES, auth: {} });
 
         assert.equal(api.llamadas[0].body.context, 'standalone');
+    });
+});
+
+describe('ir a recuperar la contraseña desde el EMBUDO', () => {
+    /**
+     * ⚠️⚠️ **Lo que se fija aquí es que la pila quede VACÍA, y no es un detalle**
+     * (`specs/auth-en-cajon.md` §3.4). El cliente viene del paso 5 de la compra, que **no es una
+     * zona**: con la pila vacía, «volver» sale de la sección y la compra reaparece donde estaba, con
+     * su cesta. Si esto sembrara `LOGIN` debajo —que es lo correcto cuando se llega por una PUERTA—
+     * el cliente que estaba comprando acabaría en el área de cliente con su compra abandonada.
+     */
+    test('lleva a recuperar y deja «volver» significando SALIR a la compra', () => {
+        const a = store();
+        const cuenta = useAccountStore();
+        cuenta.boot(createNavigation());
+
+        a.startPasswordRecovery();
+
+        assert.equal(cuenta.zone, 'forgot');
+        assert.equal(useSectionStore().onAccount, true, 'no ha conmutado de sección: seguiría viéndose el embudo');
+        assert.equal(cuenta.canBack, false, 'con algo debajo, «volver» dejaría al cliente en el área en vez de en su compra');
+
+        // Y «volver» devuelve de verdad a la compra.
+        assert.equal(cuenta.back(), false);
+        assert.equal(useSectionStore().onPurchase, true);
+    });
+
+    test('y limpia los avisos del intento anterior sin borrar el correo escrito', () => {
+        const a = store();
+        useAccountStore().boot(createNavigation());
+        a.form.email = 'cliente@ejemplo.test';
+        a.loginError = { global: 'Credenciales incorrectas', fields: {} };
+
+        a.startPasswordRecovery();
+
+        assert.equal(a.loginError.global, '', 'un aviso del login sobre la pantalla de recuperar no describe nada');
+        assert.equal(a.form.email, 'cliente@ejemplo.test', 'volver a teclear el correo aquí sería hostil');
     });
 });
 

@@ -1,7 +1,6 @@
 <script setup>
 import { useAuthStore } from '../../stores/auth.js';
 import { useAccountStore } from '../../stores/account.js';
-import { ZONES } from '../navigation.js';
 import { api } from '../../api.js';
 import { t as translate } from '../../i18n.js';
 
@@ -78,8 +77,16 @@ const submit = () => store.requestPasswordLink({ api, messages: props.messages, 
                     {{ store.busy ? a('forgot.submitting') : a('forgot.submit') }}
                 </button>
 
+                <!-- ⚠️⚠️ **`back()` y no `go(LOGIN)`, y la diferencia es lo que hace que este enlace
+                     no mienta desde ninguno de sus tres orígenes** (`account/navigation.js`,
+                     `parentZoneFor`). Con `go(LOGIN)` siempre iría a la pantalla de entrar de la
+                     cuenta — correcto si vienes de ahí, pero **falso si vienes del paso 5 del
+                     embudo**: al cliente que estaba comprando lo dejaría en el área de cliente, con
+                     su cesta detrás y su compra abandonada. `back()` deshace lo que hizo cada
+                     origen: vuelve a entrar si venías de entrar, y **devuelve la compra donde
+                     estaba** si venías de ella. -->
                 <p class="auth__switch">
-                    <button type="button" @click="nav.go(ZONES.LOGIN)">{{ a('forgot.back_to_login') }}</button>
+                    <button type="button" @click="nav.back()">{{ a('forgot.back_to_login') }}</button>
                 </p>
             </form>
         </template>

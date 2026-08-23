@@ -6,7 +6,7 @@ import { applyIntent as applyIntentToCatalog } from './intent.js';
 import { usePurchaseStore } from './stores/purchase.js';
 import { useSectionStore } from './stores/section.js';
 import { useAccountStore } from './stores/account.js';
-import { createNavigation } from './account/navigation.js';
+import { createNavigation, parentZoneFor } from './account/navigation.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -174,7 +174,11 @@ export function mount(el, boot = {}) {
          * paso 5 de la tanda, cuando las zonas existan.
          */
         showAccount: (zone) => {
-            accountStore.enter(zone);
+            // ⚠️ Esta es la entrada **desde fuera del cajón** —las puertas por URL y los botones de la
+            // cabecera—, y por eso siembra: quien llega así no tiene historia dentro del área, y sin
+            // nada debajo «volver» le sacaría de la sección. La regla y sus tres casos, en
+            // `account/navigation.js::parentZoneFor()`.
+            accountStore.enter(zone, { under: parentZoneFor(zone) });
 
             return sectionStore.showAccount();
         },

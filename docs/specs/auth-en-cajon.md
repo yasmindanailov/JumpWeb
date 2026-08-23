@@ -1,9 +1,9 @@
 # [SPEC] La AUTH dentro del cajón — y la retirada del modal de la cabecera
 
 > Estado: diseño (🟦 **revisada** el 2026-08-23 — ver §7; falta el visto bueno final para pasar a ✅) ·
-> Última actualización: 2026-08-23 · **A1–A6 EJECUTADOS** (§8; A4 recortado por dependencia) ·
-> **Las tres pantallas de auth viven en el cajón y NADIE abre ya el modal**: queda auditar sus tests
-> y retirarlo (A7–A10) ·
+> Última actualización: 2026-08-23 · **A1–A7 EJECUTADOS** (§8; A4 recortado por dependencia) ·
+> **Las tres pantallas de auth viven en el cajón, nadie abre ya el modal y el embudo tiene su enlace
+> de recuperar**: queda auditar los tests del modal y retirarlo (A8–A10) ·
 > Verificado contra código: 2026-08-23 (modal, componentes Livewire de auth, rutas puerta,
 > zonas del área, endpoints de `/api/v1/auth/*`, el payload del montaje y los tests que los cubren) ·
 > Se invalida si: se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor`
@@ -145,6 +145,22 @@ texto del grupo `account`.
 **Sí, con vuelta a la compra.** Hoy no lo ofrece: en el Blade era una rama `@unless ($embedded)`, así
 que el cliente que está comprando **no tiene salida** sin abandonar el cajón. El enlace lleva a la
 zona `FORGOT` y «volver» devuelve al paso 5 **con la cesta intacta**.
+
+> ✅ **HECHO en A7 (2026-08-23), y obligó a definir «volver» para los TRES orígenes.** No se puede
+> resolver solo para el embudo, porque la pantalla de recuperar es una y su enlace de vuelta es uno:
+> · **desde la pantalla de entrar** hay historia de verdad → `go()` la apila y `back()` la deshace;
+> · **desde una PUERTA por URL** el cliente llega en frío → se siembra `LOGIN` debajo, porque sin
+>   nada «volver a iniciar sesión» le sacaría al **catálogo de compra**, que no es lo que promete;
+> · **desde el paso 5 del embudo** es al revés → la pila queda **vacía a propósito**, y así `back()`
+>   sale de la sección y la compra reaparece donde estaba.
+> ▶ La regla vive en `account/navigation.js::parentZoneFor()` —módulo plano, con sus casos— y **la
+> decide quien llama**, no `enter()`: es lo único que permite que el mismo método sirva a los tres.
+> ▶ Y el enlace de la propia pantalla pasó de `go(LOGIN)` a **`back()`**: con `go(LOGIN)` habría
+> dejado en el área de cliente, con la compra abandonada, a quien vino del embudo.
+> ⚠️ **La acción vive en `stores/auth.js`, no en el componente del embudo**, por dos motivos medidos:
+> `PurchaseSection.vue` está clavado en su presupuesto de 431 líneas y los tres `import` lo habrían
+> roto; y el embudo **no tiene por qué saber de zonas de cuenta** — enseñarle ese vocabulario es
+> volver a mezclar los dos dominios que `#119` separó.
 
 ---
 
@@ -505,7 +521,7 @@ test exige para no convertir el refresco en una goma de borrar.
 | **A4** ✅ | **`LOGIN` y `FORGOT`**, la guarda de alcanzabilidad en su forma nueva, `account.forgot` en el payload y **el aterrizaje** | Ya hay a dónde ir. ⚠️ **Recortado sobre la marcha, y por DEPENDENCIA**: la zona de alta necesita su pantalla de «revisa tu correo» con reenvío, que arrastra el subgrupo `account.verify` y otro endpoint. Meterla aquí habría dejado media pantalla construida — ver A5. **Hecho el 2026-08-23** |
 | **A5** ✅ | **`REGISTER`** con su «revisa tu correo» **con reenvío y escape** (§4.10·2), y las pestañas | Va junto porque va junto: sin la pantalla de después, el alta suelta —que NO abre sesión— no lleva a ninguna parte. **Hecho el 2026-08-23**, y dejó tres cosas medidas: el techo de componentes obligó a mudar la secuencia al store (43→25 líneas), la cuenta atrás quedó **cruzada con el limitador del servidor** en un test PHP, y `resendGate` pasó a **fallar cerrada** tras un fallo real |
 | **A6** ✅ | Las puertas: `AccountDoor` + `openAccount()` + los cuatro puntos que quedan | Ya hay a dónde llegar. ⚠️ **Aquí vivían DOS fallos silenciosos**: el clic con el motor ya montado (§4.5) y la carrera con el motor a medio cargar (§4.10·4). **Hecho el 2026-08-23**: los dos cerrados, **nadie abre ya el modal** y apareció una regla que no estaba escrita —una puerta de invitado **con sesión** abre el índice, no un formulario de entrar— |
-| **A7** | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6) |
+| **A7** ✅ | El paso 5 gana el enlace de recuperar, con vuelta | Toca el embudo, que es el camino del dinero: va **después**, solo, y con el manifiesto regenerado y justificado (§6). **Hecho el 2026-08-23**: el diff del árbol fue **un solo nodo** (`<button class=auth__link>`), verificado antes de regenerar. Y obligó a definir qué significa «volver» desde los **tres** orígenes (§3.4) |
 | **A8** | **Auditar los 36 casos**, mutando | Antes de borrar, nunca después |
 | **A9** | **Retirar**: modal, tres componentes, `$store.auth`, `authModal`, el trait — y **en el MISMO commit** SEC-06, `ScrollLockOwnerTest`, `SpinnerTest` y la decisión sobre `SidebarEntry::clear()` | Cuando ya no queda nadie que dependa. Las cuatro caen a la vez: separarlas deja la suite roja sin dueño |
 | **A10** | Presupuestos re-medidos y **bajados a lo medido**, doc (`MAPA-PAGINAS`, `SEGURIDAD`, `FLUJOS`, `DEUDA`, `sistemas/UI-SPINNER`) y **NAVEGADOR** | El cierre, con evidencia |

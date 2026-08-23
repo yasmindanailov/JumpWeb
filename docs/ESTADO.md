@@ -46,7 +46,7 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2685 en verde** (15.483 aserciones, `--parallel` **~59 s** medidos el 2026-08-23) ·
-  **576 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
+  **584 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
   sitemap (A1); **−1** al mudar los supervivientes de las dos paridades (A2), porque el caso del alta
@@ -199,6 +199,11 @@ las pestañas, que navegan entre zonas en vez de cambiar un modo interno. El alt
   el botón deshabilitado, no habilitado.
 Techos de A5: chunk **194 → 199 KiB** (medido 198,3) y payload **+474 B** (anónimo 2.594, con sesión
 5.631) por `account.verify`, ya podado a **9 de sus 14** rótulos.
+✅ **VALIDADO POR EL OWNER en navegador el 2026-08-23**: el cajón con el login, probado y correcto.
+Es la cuarta condición del DoD (`CONVENCIONES §3.bis`) para lo construido hasta A6. ⚠️ Lo que **no**
+cubre esa prueba: el alta suelta con su reenvío, recuperar contraseña de punta a punta y las tres
+puertas por URL — siguen pendientes del guion de `VERIFICACION-E2E-CAJON.md` §5.quater en A10.
+
 ▶▶ **A6 hecho el 2026-08-23: YA NADIE ABRE EL MODAL.** Las tres rutas de auth son **puertas** —sirven
 la home y abren el cajón en su zona, igual que `/entradas` y `/mi-cuenta/…`— y los cuatro puntos que
 quedaban (los dos CTA de la cabecera y los dos del bloque de cuenta) llevan al cajón. Los CTA pasaron
@@ -212,6 +217,16 @@ inalcanzable**: se retira en A9, después de auditar sus tests.
   es `null`, y aplicar la zona ahí sería aplicarla sobre nada (`#117`);
 · **una puerta de invitado CON sesión abre el índice**, no un formulario de entrar. Antes no hacía
   falta escribirlo —el modal era `@guest`—; la puerta abre el cajón siempre.
+▶ **A7 hecho el 2026-08-23**: el **paso 5 del embudo gana «he olvidado mi contraseña»**, que es lo que
+`#122(a)` pedía. El diff del árbol congelado fue **un solo nodo** —verificado antes de regenerar el
+manifiesto, que es la condición que ese test pone para no ser una goma de borrar— y el presupuesto del
+chunk no se movió: el enlace ya estaba en el bundle desde A4 y solo cambió su prop.
+⚠️ **Y obligó a definir qué significa «volver» desde los TRES orígenes**, porque la pantalla de
+recuperar es una y su enlace de vuelta también: desde entrar deshace la pila; desde una **puerta por
+URL** se siembra `LOGIN` debajo —sin eso, «volver a iniciar sesión» sacaba al **catálogo de compra**—;
+y desde el **embudo** la pila queda vacía **a propósito**, que es lo que hace que «volver» salga de la
+sección y devuelva la compra donde estaba. La regla vive en `account/navigation.js::parentZoneFor()` y
+la decide quien llama, no `enter()`.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

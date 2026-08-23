@@ -3,6 +3,9 @@ import { runLogin } from '../login.js';
 import { runRegister, CONTEXT_STANDALONE } from '../register.js';
 import { runForgot } from '../forgot.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '../account/verify.js';
+import { ZONES } from '../account/navigation.js';
+import { useAccountStore } from './account.js';
+import { useSectionStore } from './section.js';
 
 /**
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
@@ -267,6 +270,31 @@ export const useAuthStore = defineStore('auth', {
          * a la vez desde el mismo cajón no es un estado que nadie quiera razonar. Vive aquí y no en el
          * botón porque `disabled` es presentación y un `Enter` repetido no pasa por él.
          */
+        /**
+         * **Lleva a RECUPERAR la contraseña sin salir del cajón** (`specs/auth-en-cajon.md` §3.4).
+         *
+         * ⚠️ **Cierra un atasco real**: hasta hoy, quien estaba comprando y no recordaba su
+         * contraseña **tenía que abandonar el cajón** —el enlace era una rama `@unless ($embedded)`
+         * que dentro de la compra no se pintaba—, y con él perdía de vista su cesta.
+         *
+         * ⚠️⚠️ **Entra SIN sembrar nada debajo, y eso es lo que hace que «volver» funcione.** De donde
+         * viene el cliente —el paso 5 del embudo— **no es una zona**, así que no hay ninguna a la que
+         * volver: con la pila vacía, `back()` sale de la sección y la compra reaparece donde estaba,
+         * con su cesta. Sembrar `LOGIN` aquí —que es lo correcto cuando se llega por una PUERTA— le
+         * dejaría en el área de cliente. La regla, con sus tres casos, en `parentZoneFor()`.
+         *
+         * ▶ **Y vive en el STORE y no en el componente del embudo por dos razones**, las dos medidas:
+         * `sections/PurchaseSection.vue` está clavado en su presupuesto de 431 líneas y los tres
+         * `import` que esto necesita lo habrían roto; y, sobre todo, **el embudo no tiene por qué
+         * saber de zonas de cuenta** — enseñarle ese vocabulario es volver a mezclar los dos dominios
+         * que `DECISIONES #119` separó.
+         */
+        startPasswordRecovery() {
+            this.clearNotices();
+            useAccountStore().enter(ZONES.FORGOT);
+            useSectionStore().showAccount();
+        },
+
         /**
          * **El alta SUELTA, con su desenlace.** La usa el área de cliente; el embudo llama a
          * `register()` con su propio contexto.

@@ -46,7 +46,7 @@ const props = defineProps({
     turnstileSiteKey: { type: String, default: '' },
 });
 
-defineEmits(['back', 'set-mode', 'submit-login', 'submit-register']);
+defineEmits(['back', 'set-mode', 'submit-login', 'submit-register', 'recover']);
 
 /**
  * Los campos de los dos formularios, en un solo objeto.
@@ -90,7 +90,9 @@ const a = (key) => translate(props.account, key);
         :errors="loginErrors"
         :submitting="submitting"
         :account="account"
-        @submit="$emit('submit-login')" />
+        :with-recovery="true"
+        @submit="$emit('submit-login')"
+        @recover="$emit('recover')" />
 
     <RegisterForm
         v-else

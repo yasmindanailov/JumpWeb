@@ -81,9 +81,14 @@ export const useAccountStore = defineStore('account', {
          *
          * Un recorrido de hace media hora no describe nada de lo que el cliente tiene delante ahora,
          * y dejarlo haría que «volver» le llevara a una pantalla que no pidió (§4.2).
+         *
+         * ⚠️ **`under` deja una zona DEBAJO**, y quién lo pide lo decide `parentZoneFor()`: quien
+         * llega por una PUERTA a recuperar contraseña necesita que «volver» le lleve a entrar, y
+         * quien llega desde el paso 5 del embudo necesita justo lo contrario —salir de la sección y
+         * encontrarse la compra donde la dejó—. Con la pila vacía, «volver» sale.
          */
-        enter(zone = DEFAULT_ZONE) {
-            this.nav.reset(zone);
+        enter(zone = DEFAULT_ZONE, { under = null } = {}) {
+            this.nav.reset(zone, under);
             this.sync();
         },
     },

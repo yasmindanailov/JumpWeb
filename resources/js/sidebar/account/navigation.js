@@ -109,6 +109,26 @@ export function isGuestZone(value) {
 }
 
 /**
+ * **La zona que debe quedar DEBAJO al entrar de fuera, o `null` si no hay ninguna.**
+ *
+ * ⚠️⚠️ Existe porque «volver» tiene que significar lo correcto desde los **tres** sitios por los que
+ * se llega a recuperar contraseña, y no son el mismo caso:
+ *
+ *  · **desde la pantalla de entrar** — hay historia de verdad: `go()` la apila y «volver» la deshace;
+ *  · **desde una PUERTA por URL** (`/recuperar-contrasena`) — el cliente llega en frío, sin historia
+ *    dentro del cajón. Sin nada debajo, «volver a iniciar sesión» le sacaría al catálogo de compra, y
+ *    ése no es el sitio que el rótulo promete. Se siembra `LOGIN`, que es la portada del invitado
+ *    igual que `HOME` lo es de quien tiene sesión;
+ *  · **desde el PASO 5 del embudo** — aquí lo correcto es justo lo contrario: no hay zona a la que
+ *    volver, porque de donde viene **no es una zona**. Con la pila vacía, «volver» sale de la sección
+ *    y devuelve la compra donde estaba, con su cesta. Por eso quien entra así **no siembra nada**, y
+ *    por eso esta decisión es del que llama y no de `enter()`.
+ */
+export function parentZoneFor(zone) {
+    return isGuestZone(zone) && zone !== ZONES.LOGIN ? ZONES.LOGIN : null;
+}
+
+/**
  * **Las entradas del índice, en su orden.**
  *
  * ⚠️ **Es un DATO y no marcado**, y ese es el punto: añadir una zona al área de cliente pasa a ser
@@ -199,8 +219,13 @@ export function createNavigation({ zone = DEFAULT_ZONE } = {}) {
          * modo que quien vuelve a entrar no arrastra el recorrido de la visita anterior — que ya no
          * describe nada de lo que tiene delante.
          */
-        reset(next = DEFAULT_ZONE) {
-            trail = [isZone(next) ? next : DEFAULT_ZONE];
+        reset(next = DEFAULT_ZONE, under = null) {
+            const target = isZone(next) ? next : DEFAULT_ZONE;
+
+            // ⚠️ `under` deja UNA zona debajo, para que «volver» signifique algo dentro del área en
+            // vez de salir de ella. Quién lo pide y por qué, en `parentZoneFor()`. Se ignora si no es
+            // una zona o si es la misma —una pila `[x, x]` haría que «volver» no se moviera—.
+            trail = isZone(under) && under !== target ? [under, target] : [target];
         },
     };
 }
