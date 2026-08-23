@@ -106,7 +106,7 @@
              • Ghost: Crear cuenta — peso bajo (2/5). Findable, no protagonista. Solo guest.
              • Filled medio: Comprar entradas — peso alto (4/5). Anclaje "desde X €" data-driven.
              Sustituye al icono `nav__scan` y al botón `nav__reserve` previos: los handlers
-             (`$store.purchase.open()` y `$store.auth.open('register')`) se conservan EXACTOS;
+             (`$store.purchase.open()` y —desde el 2026-08-23— `$store.purchase.openAccount()`);
              solo cambia el tratamiento visual y el copy. --}}
         @guest
             {{-- #216: «Registro» del parque. Si hay URL externa configurada (Ajustes → Registro), el
@@ -124,11 +124,19 @@
                     <span class="cta-ghost__arrow" aria-hidden="true">→</span>
                 </a>
             @else
-                <button type="button" class="cta-ghost nav-cta-ghost" @click="$store.auth.open('register')">
+                {{-- ⚠️⚠️ **Pasa de `<button>` a `<a href>` el 2026-08-23** (`specs/auth-en-cajon.md`
+                     §4.5), y el `href` no es decorativo: `/registro` es una PUERTA que sirve la home
+                     y abre el cajón en la zona de alta, así que el clic central, «abrir en pestaña
+                     nueva» y un navegador sin JS acaban en la misma pantalla por el camino largo. Con
+                     el `<button>` de antes esos tres casos no hacían nada.
+                     ⚠️ La clase no cambia y el CSS ya la soporta sobre un ancla: la rama de al lado
+                     —el registro externo del parque— lleva usándola así desde `#216`. --}}
+                <a href="{{ route('registro') }}" class="cta-ghost nav-cta-ghost"
+                   x-on:click="$store.purchase.openAccount($event, 'register')">
                     <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
                     <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
                     <span class="cta-ghost__arrow" aria-hidden="true">→</span>
-                </button>
+                </a>
             @endif
         @else
             {{-- Cliente con sesión (#221): la cuenta vive en el bloque del sidebar de compra. El nav
@@ -241,7 +249,11 @@
                 @if (! empty($site['registration_url']))
                     <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="btn btn--zone" @click="mobileOpen = false">{{ $site['registration_label'] }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @else
-                    <button type="button" class="btn btn--zone" @click="mobileOpen = false; $store.auth.open('register')">{{ __('landing.nav.reserve') }}<x-icons.arrow-right :width="15" :height="15" /></button>
+                    {{-- Mismo cambio que el CTA de escritorio, y aquí el `href` importa aún más: en
+                         móvil el «abrir en pestaña nueva» es un gesto habitual. Se cierra el cajón de
+                         navegación ANTES de abrir el de la cuenta, o quedarían dos superpuestos. --}}
+                    <a href="{{ route('registro') }}" class="btn btn--zone"
+                       x-on:click="mobileOpen = false; $store.purchase.openAccount($event, 'register')">{{ __('landing.nav.reserve') }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @endif
             </div>
         @endguest

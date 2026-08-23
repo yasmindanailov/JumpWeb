@@ -3,6 +3,7 @@
 namespace Tests\Feature\Architecture;
 
 use App\Domain\Identity\Models\User;
+use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -108,16 +109,71 @@ class AccountDoorWiringTest extends TestCase
         $boot = mb_substr($boot, 0, (int) mb_strpos($boot, 'open() {'));
 
         $this->assertStringContainsString(
-            'this.spaHandle.showAccount(this.accountZone)', $boot,
+            'this.applyAccountZone(this.spaHandle)', $boot,
             'La zona se aplica FUERA de `bootSpaEngine()`. Si vuelve a colgar solo de `open()`, el '.
             'cajón que nace abierto —que es como llega toda puerta por ruta— no entrará en su zona: '.
             'es el fallo que `#59(b)` ya pagó con el hueco vacío.'
         );
+    }
+
+    /**
+     * ⚠️⚠️ **La zona tiene UN SOLO consumidor, y eso es lo que impide que llegue tarde.**
+     *
+     * Desde que los botones de la cabecera abren el cajón (`specs/auth-en-cajon.md` §4.5) hay **dos**
+     * caminos que necesitan aplicarla: el que nace abierto por una ruta y el que la pide con el clic.
+     * Escribir la consumición en los dos habría dejado dos sitios que **vacían la misma señal**, y con
+     * eso uno llega a una zona ya consumida — o, si a alguien se le olvida vaciarla, cerrar y reabrir
+     * el cajón devuelve al cliente a esa pantalla una y otra vez (la trampa de 4.0a y de `#120(u)`).
+     */
+    public function test_the_zone_is_consumed_in_exactly_one_place(): void
+    {
+        $alpine = $this->source(self::ALPINE);
+
+        $this->assertSame(
+            1, substr_count($alpine, 'showAccount(this.accountZone)'),
+            'Hay más de un sitio que aplica la zona pendiente. La señal se VACÍA al aplicarla, así '.
+            'que con dos consumidores uno de los dos llega tarde y su pantalla no se abre.'
+        );
 
         $this->assertStringContainsString(
-            "this.accountZone = ''", $boot,
+            "this.accountZone = ''", $alpine,
             'La zona ya no se CONSUME. Sin vaciarla, cerrar y reabrir el cajón devolvería al cliente '.
             'a esa pantalla una y otra vez, y no podría llegar al embudo sin recargar la página.'
+        );
+    }
+
+    /**
+     * **El puente de la CABECERA: abre el cajón y además lo lleva a su zona.**
+     *
+     * ⚠️ Es distinto de `followAccountLink()` y las dos cosas hacen falta. Aquél lo usan botones que
+     * viven DENTRO del cajón —ya está abierto, solo hay que conmutar—; éste, los de fuera, donde el
+     * cajón está **cerrado y el motor puede no existir todavía**. Por eso cuelga de la PROMESA: entre
+     * el clic y el montaje hay una ventana real en la que `spaHandle` es `null`, y aplicar la zona
+     * ahí sería aplicarla sobre nada — el clic «no fallaría y no haría nada» (`DECISIONES #117`).
+     */
+    public function test_the_header_bridge_opens_the_drawer_and_waits_for_the_engine(): void
+    {
+        $alpine = $this->source(self::ALPINE);
+
+        $this->assertStringContainsString('openAccount(event, zone)', $alpine, 'no existe el puente de la cabecera');
+
+        // ⚠️ El corte termina en la DEFINICIÓN del consumidor (`applyAccountZone(handle) {`), no en su
+        // nombre a secas: el puente lo LLAMA, así que cortar por el nombre dejaba fuera justo la línea
+        // que este caso quiere leer. La primera versión de esto falló por eso.
+        $bridge = mb_substr($alpine, (int) mb_strpos($alpine, 'openAccount(event, zone)'));
+        $bridge = mb_substr($bridge, 0, (int) mb_strpos($bridge, 'applyAccountZone(handle) {'));
+
+        $this->assertStringContainsString(
+            'this.open()', $bridge,
+            'El puente de la cabecera ya no ABRE el cajón: conmutaría la sección de un panel que '.
+            'sigue cerrado, y el clic no enseñaría nada.'
+        );
+
+        $this->assertStringContainsString(
+            'this.applyAccountZone(handle)', $bridge,
+            "El puente aplica la zona SIN esperar al motor.\n".
+            '⚠️ El chunk se trae con `import()`: en esa ventana `spaHandle` es `null` y la zona se '.
+            'aplicaría sobre nada. El clic no fallaría y no haría nada.'
         );
     }
 
@@ -152,13 +208,68 @@ class AccountDoorWiringTest extends TestCase
             'el botón llega al navegador SIN su cableado: navegaría a la página en vez de abrir el área');
     }
 
-    /** Y un invitado no lo recibe: su botón abre el modal, que es la puerta de hoy (§4.6). */
-    public function test_a_guest_gets_no_wiring_because_there_is_nothing_to_open(): void
+    /**
+     * **Y un invitado SÍ recibe cableado — se INVIRTIÓ el 2026-08-23** (`specs/auth-en-cajon.md` §4.5).
+     *
+     * ⚠️ Este caso decía lo contrario, y era correcto entonces: sin sesión no había área que abrir, así
+     * que sus botones abrían el modal de la cabecera. Con las tres pantallas de auth dentro del cajón,
+     * **identificarse ES una zona**, así que el invitado tiene a dónde ir y su botón tiene que
+     * llevarle — sin cerrar el cajón, que es lo que le hacía perder de vista la cesta.
+     *
+     * ▶ Se conserva el caso en vez de borrarlo porque su SUJETO sobrevive: qué recibe un invitado en
+     * el HTML. Lo que cambió es la respuesta correcta (`CONVENCIONES §3.quater`).
+     */
+    public function test_a_guest_now_gets_wiring_because_signing_in_lives_in_the_drawer(): void
     {
+        $this->seed(LandingContentSeeder::class);
+
         $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('followAccountLink', $html,
-            'Un invitado no puede abrir el área de cliente: su botón sigue abriendo el modal de login.');
+        $this->assertStringContainsString(
+            "openAccount(\$event, 'login')", $html,
+            'El bloque de cuenta de un invitado ya no lleva al cajón: habría vuelto a depender de un '.
+            'modal que este trabajo retira.'
+        );
+
+        // ⚠️⚠️ **Se CUENTAN los dos CTA de alta, y el recuento no es adorno: la primera versión de
+        // este caso aseveraba «contiene el href» y una mutación que se lo quitó al CTA de ESCRITORIO
+        // pasó en verde**, porque el del cajón móvil seguía teniéndolo. Es la trampa 3 de
+        // `CONVENCIONES §3.quater`: un ancla que no es única mide la mitad que no falla.
+        $this->assertSame(
+            2, substr_count($html, "openAccount(\$event, 'register')"),
+            'Los CTA de alta son DOS —escritorio y cajón móvil— y no llegan los dos cableados. '.
+            '⚠️ Si el fixture configurara un registro EXTERNO, el de escritorio sería otro enlace: '.
+            'este recuento también lo delata.'
+        );
+
+        // ⚠️ Y el `href` de los dos sobrevive: es lo que responde sin JS, con el clic central y al
+        // abrir en pestaña nueva. La ruta existe como PUERTA justo para eso.
+        $this->assertSame(
+            2, substr_count($html, 'href="'.route('registro').'"'),
+            'Alguno de los dos CTA de alta perdió su `href`: sin él, ese clic no hace NADA cuando el '.
+            'motor todavía no ha cargado, y «abrir en pestaña nueva» deja de funcionar.'
+        );
+
+        // ⚠️⚠️ **Control negativo: ya no queda NADIE que abra el modal.** Sin esto, el caso pasaría
+        // igual con los dos caminos vivos a la vez —un clic abriría el modal ENCIMA del cajón que
+        // acaba de abrirse en la misma zona—, que es el estado a medias que este paso existe para no
+        // dejar.
+        //
+        // ⚠️ Se mira **en los ficheros que abrían el modal**, y no en el HTML entero, y el matiz es
+        // real: las plantillas del propio modal siguen renderizándose para un invitado y sus enlaces
+        // internos («¿no tienes cuenta?», «volver a entrar») todavía nombran el store. Son código
+        // MUERTO —a ese modal no llega nadie— y se van con él cuando se retire. Aseverar sobre el HTML
+        // entero daría un rojo por algo que no es lo que este caso vigila.
+        foreach (['resources/views/components/site/nav.blade.php',
+            'resources/views/livewire/site/account-context.blade.php'] as $opener) {
+            $this->assertStringNotContainsString(
+                '$store.auth.open(', $this->source($opener),
+                "«{$opener}» ha vuelto a abrir el modal de auth en vez de llevar al cajón."
+            );
+        }
+
+        // Y por URL tampoco: sin `data-auth-modal` con valor, ninguna ruta lo despierta al cargar.
+        $this->assertStringContainsString('data-auth-modal=""', $html, 'una ruta sigue abriendo el modal al cargar');
     }
 
     private function source(string $relative): string

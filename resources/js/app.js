@@ -171,6 +171,49 @@ document.addEventListener('alpine:init', () => {
             event.preventDefault();
             this.spaHandle.showAccount(zone);
         },
+        /**
+         * **Abre el cajón EN una zona de la cuenta, desde fuera de él.**
+         *
+         * ⚠️ Es distinto de `followAccountLink()` y las dos hacen falta. Aquél lo usan botones que
+         * viven DENTRO del cajón —ya está abierto, solo hay que conmutar de sección—; éste lo usan
+         * los de la cabecera, donde el cajón está **cerrado y el motor puede no existir todavía**.
+         * Fundirlos habría dejado el caso de la cabecera abriendo una sección de un cajón invisible.
+         *
+         * ⚠️⚠️ **El `href` se conserva y solo se previene el default aquí**, igual que en el otro
+         * puente: las tres rutas de auth siguen existiendo como PUERTA, así que un clic central, un
+         * «abrir en pestaña nueva» o un navegador sin JS acaban en la misma pantalla por el camino
+         * largo. Sin `href`, esos tres casos no harían **nada** (`DECISIONES #117`).
+         *
+         * ⚠️⚠️⚠️ **Y la zona se aplica colgando de la PROMESA, no después de `open()`.** El motor se
+         * trae con `import()`: entre el clic y el montaje hay una ventana real en la que `spaHandle`
+         * es `null`, así que aplicarla a continuación sería aplicarla sobre nada — el clic «no
+         * fallaría y no haría nada». Se guarda en `accountZone` y la consume un único sitio.
+         *
+         * @param {MouseEvent} event
+         * @param {string} zone
+         */
+        openAccount(event, zone) {
+            if (! zone) return;
+
+            event.preventDefault();
+            this.accountZone = zone;
+            this.open();
+            this.bootSpaEngine()?.then?.((handle) => this.applyAccountZone(handle));
+        },
+        /**
+         * **El ÚNICO sitio que consume `accountZone`.**
+         *
+         * ⚠️ Un solo consumidor no es estilo: la señal se **vacía** al aplicarla, y con dos sitios que
+         * la lean uno acabaría llegando tarde a una zona ya consumida —o, peor, sin vaciarla, cerrar y
+         * reabrir el cajón devolvería al cliente a esa pantalla una y otra vez—. Es la trampa que
+         * 4.0a pagó con el desenlace del pago y que `#120(u)` volvió a pagar con la puerta por ruta.
+         */
+        applyAccountZone(handle) {
+            if (! this.accountZone || ! handle) return;
+
+            handle.showAccount(this.accountZone);
+            this.accountZone = '';
+        },
         spaHandle: null,
         spaLoading: false,
         async bootSpaEngine() {
@@ -199,10 +242,12 @@ document.addEventListener('alpine:init', () => {
                 // ⚠️ **Y se CONSUME**, igual que el desenlace del pago: sin vaciarla, cerrar y
                 // reabrir el cajón devolvería al cliente a la zona una y otra vez y no podría llegar
                 // al embudo sin recargar. Es la trampa que 4.0a pagó con `SidebarEntry`.
-                if (this.accountZone) {
-                    this.spaHandle.showAccount(this.accountZone);
-                    this.accountZone = '';
-                }
+                //
+                // ⚠️ Desde el 2026-08-23 la consumición vive en `applyAccountZone()` y no en línea:
+                // los clics de la cabecera abren el cajón con el motor a medio cargar y necesitan el
+                // mismo camino, y **dos sitios que vacíen la misma señal es la receta de que uno
+                // llegue tarde**.
+                this.applyAccountZone(this.spaHandle);
             } catch (e) {
                 // Que el chunk no cargue (red caída, despliegue a media navegación) no puede dejar
                 // el cajón abierto y mudo sin dejar rastro de por qué.

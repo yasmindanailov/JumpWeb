@@ -45,7 +45,7 @@ antes de servir tráfico y drenar la cola— no aplica a este salto. Lo que sí 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2681 en verde** (15.449 aserciones, `--parallel` **~55 s** medidos el 2026-08-23) ·
+- Suite **2685 en verde** (15.483 aserciones, `--parallel` **~59 s** medidos el 2026-08-23) ·
   **576 tests JS** (`node --test`) · Pint limpio (838 ficheros) · `docs-check` verde ·
   ⚠️ **2675 → 2678 y 525 → 546 JS el 2026-08-23**, en tres pasos de la auth: **+2** por los casos de
   `SeoTest` que fijan que las **cinco** superficies de auth se sirven `noindex` y no están en el
@@ -199,6 +199,19 @@ las pestañas, que navegan entre zonas en vez de cambiar un modo interno. El alt
   el botón deshabilitado, no habilitado.
 Techos de A5: chunk **194 → 199 KiB** (medido 198,3) y payload **+474 B** (anónimo 2.594, con sesión
 5.631) por `account.verify`, ya podado a **9 de sus 14** rótulos.
+▶▶ **A6 hecho el 2026-08-23: YA NADIE ABRE EL MODAL.** Las tres rutas de auth son **puertas** —sirven
+la home y abren el cajón en su zona, igual que `/entradas` y `/mi-cuenta/…`— y los cuatro puntos que
+quedaban (los dos CTA de la cabecera y los dos del bloque de cuenta) llevan al cajón. Los CTA pasaron
+de `<button>` a `<a href>`: la ruta existe como puerta, así que el clic central, «abrir en pestaña
+nueva» y un navegador sin JS acaban en la misma pantalla. **El modal sigue renderizado pero es
+inalcanzable**: se retira en A9, después de auditar sus tests.
+⚠️ **Tres cosas que A6 dejó y conviene no perder**:
+· **la zona pendiente tiene UN SOLO consumidor** (`applyAccountZone`), porque la señal se vacía al
+  aplicarla y con dos sitios uno llega a una zona ya consumida — la trampa de 4.0a y de `#120(u)`;
+· **el puente de la cabecera cuelga de la PROMESA del motor**: entre el clic y el montaje `spaHandle`
+  es `null`, y aplicar la zona ahí sería aplicarla sobre nada (`#117`);
+· **una puerta de invitado CON sesión abre el índice**, no un formulario de entrar. Antes no hacía
+  falta escribirlo —el modal era `@guest`—; la puerta abre el cajón siempre.
 
 ⚠️ **Los otros dos candidatos siguen abiertos y no dependen de esto**:
 | | Qué es | Por qué importa |

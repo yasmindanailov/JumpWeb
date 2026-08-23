@@ -57,6 +57,52 @@ class AccountAccessTest extends TestCase
     }
 
     /**
+     * **Las TRES rutas de auth son puertas igual que las de «Mi cuenta»** (`specs/auth-en-cajon.md`
+     * §4.4, 2026-08-23).
+     *
+     * ⚠️ Antes servían la home con un `data-auth-modal` que despertaba el modal de la cabecera. Ahora
+     * abren el cajón en su zona, que es el mismo mecanismo de `/entradas` y de `/mi-cuenta/…` — y el
+     * que permite retirar el modal sin convertir estas URL en páginas que no hacen nada.
+     */
+    public function test_the_auth_routes_are_doors_too(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        foreach (['/login' => 'login', '/registro' => 'register', '/recuperar-contrasena' => 'forgot'] as $path => $zone) {
+            $html = (string) $this->get($path)->assertOk()->getContent();
+
+            $this->assertStringContainsString('data-purchase-open="1"', $html, "«{$path}» no abre el cajón");
+            $this->assertStringContainsString('data-account-zone="'.$zone.'"', $html, "«{$path}» no abre en su zona");
+        }
+    }
+
+    /**
+     * ⚠️⚠️ **Y con SESIÓN llevan al índice, no a un formulario de entrar.**
+     *
+     * Quien ya ha entrado y aterriza en `/login` —desde un marcador, un enlace viejo o el «atrás» del
+     * navegador— no puede encontrarse un formulario pidiéndole algo que ya ha hecho.
+     *
+     * ▶ **Antes de las puertas este caso no existía y no hacía falta**: el modal era `@guest`, así que
+     * a un cliente con sesión sencillamente no se le renderizaba. La puerta, en cambio, abre el cajón
+     * SIEMPRE, así que la regla hay que escribirla — es una de esas conductas que se pierden al
+     * cambiar el mecanismo porque nadie las había tenido que decir en voz alta.
+     */
+    public function test_an_auth_door_with_a_session_lands_on_the_account_index(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        foreach (['/login', '/registro', '/recuperar-contrasena'] as $path) {
+            $html = (string) $this->actingAs($user)->get($path)->assertOk()->getContent();
+
+            $this->assertStringContainsString(
+                'data-account-zone="home"', $html,
+                "«{$path}» le enseña una pantalla de auth a alguien que ya tiene sesión"
+            );
+        }
+    }
+
+    /**
      * ⚠️ **Y ninguna otra página emite zona.** Un `data-account-zone` colgado en toda la web abriría
      * el área de cliente en cada apertura del cajón, y quien viene a comprar no encontraría el
      * catálogo. Es la trampa que `SidebarEntry` pagó en 4.0a con el desenlace del pago.

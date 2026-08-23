@@ -86,21 +86,27 @@
             </span>
         </div>
         <div class="acct__cta">
-            {{-- En el PASO DE IDENTIFICACIÓN del flujo (paso 5: login/registro embebido) este botón se
-                 BLOQUEA: el flujo ya pide identificarse abajo, así que abrir el modal de login encima
-                 sería redundante. La señal `$store.purchase.identifying` la fija el puente reactivo de
-                 purchase.blade (← `$wire.step`). `disabled` corta el click de forma nativa; el guard del
-                 `@click` es defensa extra. Fuera de ese paso (o con el flujo cerrado) el botón vale. --}}
+            {{-- ⚠️⚠️ **Desde el 2026-08-23 estos dos botones NO cierran el cajón ni abren un modal**
+                 (`specs/auth-en-cajon.md` §4.5): identificarse es una ZONA del propio cajón, así que
+                 se conmuta de sección y el cliente **no pierde de vista su cesta** — que es justo lo
+                 que cerrarlo le hacía perder.
+                 ⚠️ Se usa `openAccount()` y no `followAccountLink()` aunque el cajón ya esté abierto,
+                 y la diferencia importa: aquél cuelga de la promesa del motor, así que un clic dado
+                 **mientras el chunk todavía carga** se atiende igual. `followAccountLink()` se
+                 desentiende en esa ventana a propósito, porque sus enlaces tienen `href` que toma el
+                 relevo; estos botones no lo tienen —ni les hace falta: viven dentro de un panel que
+                 solo existe si el JS corre—, así que ahí el clic no haría NADA (`DECISIONES #117`).
+                 ⚠️ El bloqueo durante el PASO 5 del embudo se conserva tal cual: el flujo ya está
+                 pidiendo identificarse abajo, y ofrecer lo mismo arriba sigue siendo redundante. --}}
             <button type="button" class="acct__btn acct__btn--primary"
                     x-bind:disabled="$store.purchase.identifying"
-                    @click="if (! $store.purchase.identifying) { $store.purchase.close(); $store.auth.open('login') }">
+                    @click="if (! $store.purchase.identifying) { $store.purchase.openAccount($event, 'login') }">
                 <x-icons.login /> {{ __('account.nav.login') }}
             </button>
-            {{-- «Ver mis reservas» también abre el modal de login (invitado) → se bloquea igual que
-                 «Iniciar sesión» en el paso de identificación del flujo. --}}
+            {{-- «Ver mis reservas» sin sesión lleva al mismo sitio: primero hay que entrar. --}}
             <button type="button" class="acct__btn acct__btn--ghost"
                     x-bind:disabled="$store.purchase.identifying"
-                    @click="if (! $store.purchase.identifying) { $store.purchase.close(); $store.auth.open('login') }">
+                    @click="if (! $store.purchase.identifying) { $store.purchase.openAccount($event, 'login') }">
                 {{ __('tickets.my_reservations') }}
             </button>
         </div>

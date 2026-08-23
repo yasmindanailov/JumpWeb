@@ -11,6 +11,7 @@ use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\LandingComplementResolver;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
+use App\Http\Sidebar\AccountDoor;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -62,13 +63,16 @@ class HomeController extends Controller
                 ->with(['zone', 'prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get(),
             'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
             'rules' => VenueRule::where('is_active', true)->orderBy('position')->get(),
-            // /registro, /login y /recuperar-contrasena abren su modal sobre la home.
-            'authModal' => match (true) {
-                $request->routeIs('registro') => 'register',
-                $request->routeIs('login') => 'login',
-                $request->routeIs('password.request') => 'forgot',
-                default => null,
-            },
+            // ⚠️⚠️ **`/registro`, `/login` y `/recuperar-contrasena` ya NO abren un modal**
+            // (`specs/auth-en-cajon.md` §4.4, 2026-08-23): son PUERTAS que sirven la home y abren el
+            // cajón en su zona de auth, exactamente como `/entradas` y `/mi-cuenta/…`. El mapa
+            // ruta→zona vive entero en `Http\Sidebar\AccountDoor` y lo consume el layout.
+            //
+            // ⚠️ **Lo único que había que rescatar del prop que desaparece es el `<meta robots>`.** El
+            // `noindex` de estas tres URL era un efecto lateral de `authModal` —el mismo valor decidía
+            // si se pintaba el modal y si se indexaba—, así que sin esta línea se habrían quedado
+            // indexables sin que nada fallara. Lo fija `SeoTest::test_the_auth_doors_are_never_indexable`.
+            'noindex' => AccountDoor::isAuthDoor(),
         ]);
     }
 

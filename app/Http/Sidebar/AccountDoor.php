@@ -2,6 +2,7 @@
 
 namespace App\Http\Sidebar;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -37,7 +38,29 @@ final readonly class AccountDoor
     public const ZONE_BY_ROUTE = [
         'account' => 'home',
         'account.orders' => 'orders',
+
+        // ── Las puertas de AUTH (`specs/auth-en-cajon.md` §4.4) ──────────────────────────────
+        //
+        // ⚠️⚠️ **Las tres rutas sobreviven, y `login` no es opcional**: es el destino al que Laravel
+        // redirige desde el middleware `auth`, así que borrarla rompería `/mi-cuenta` y toda ruta
+        // autenticada. Las otras dos se conservan por lo mismo que las de arriba: son enlaces que ya
+        // están escritos fuera de este repo.
+        // ▶ Y no nace un segundo mapa para ellas **a propósito**: un `AuthDoor` aparte sería otro
+        // sitio donde equivocarse, y este ya lo cruza `AccountAccessTest` contra las zonas del cajón.
+        'registro' => 'register',
+        'login' => 'login',
+        'password.request' => 'forgot',
     ];
+
+    /**
+     * Las puertas que solo tienen sentido SIN sesión.
+     *
+     * Se declaran aparte del mapa porque el mapa dice *a dónde lleva cada ruta* y esto dice *para
+     * quién*. Cruzarlas es lo que permite las dos reglas de abajo sin escribir la lista dos veces.
+     *
+     * @var list<string>
+     */
+    public const GUEST_ROUTES = ['registro', 'login', 'password.request'];
 
     /**
      * La zona con la que abrir el cajón en la petición actual, o `''` si esta ruta no es una puerta.
@@ -47,7 +70,34 @@ final readonly class AccountDoor
      */
     public static function zone(): string
     {
-        return self::ZONE_BY_ROUTE[(string) Route::currentRouteName()] ?? '';
+        $route = (string) Route::currentRouteName();
+        $zone = self::ZONE_BY_ROUTE[$route] ?? '';
+
+        // ⚠️ **Una puerta de invitado con SESIÓN abre el índice, no el formulario.** Quien ya ha
+        // entrado y aterriza en `/login` —desde un marcador, un enlace viejo o el «atrás» del
+        // navegador— no puede encontrarse un formulario de identificarse: sería pedirle algo que ya
+        // ha hecho. Se le lleva a su cuenta, que es lo que venía a buscar.
+        // ▶ Antes de esto no pasaba nada en ese caso, porque el modal era `@guest` y no se
+        // renderizaba. La puerta sí abre el cajón siempre, así que la regla hay que escribirla.
+        if ($zone !== '' && in_array($route, self::GUEST_ROUTES, true) && Auth::check()) {
+            return self::ZONE_BY_ROUTE['account'];
+        }
+
+        return $zone;
+    }
+
+    /**
+     * ¿Esta petición es una puerta de AUTH? Lo pregunta `HomeController` para no indexarla.
+     *
+     * ⚠️ **Existe porque su `noindex` se quedaba sin dueño.** Hasta el 2026-08-23 las tres se servían
+     * `noindex, nofollow` por un **efecto lateral**: el prop `authModal` del layout decidía a la vez
+     * si se pintaba el modal y qué robots emitir. Al dejar de emitir ese prop —el modal ya no lo abre
+     * nadie— el `noindex` se habría ido con él y las tres URL de auth habrían entrado en el índice de
+     * Google sin que nada fallara. Lo fija `SeoTest::test_the_auth_doors_are_never_indexable`.
+     */
+    public static function isAuthDoor(): bool
+    {
+        return in_array((string) Route::currentRouteName(), self::GUEST_ROUTES, true);
     }
 
     /** ¿Esta petición es una de las puertas? Lo pregunta el layout para abrir el cajón. */
