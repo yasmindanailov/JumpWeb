@@ -2718,7 +2718,7 @@ components:
         mitad del asunto: hasta la tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como
         restas dentro de la columna del valor, **de la que no restan** — y por eso la columna dejaba
         de leerse en cuanto pasaba cualquier cosa.
-      required: [value, cash, invoiced_cents, gate_lines, has_deposit, is_consistent, note]
+      required: [value, cash, invoiced_cents, invoiced_hint, gate_lines, has_deposit, is_consistent, note]
       additionalProperties: false
       properties:
         value:
@@ -2733,6 +2733,27 @@ components:
 
             ⚠️ Pintarlo como primera línea de la columna —lo que hacía el «Subtotal»— apila dos bases
             distintas sin decirlo, y es lo que hacía el bloque ilegible tras una cancelación.
+        invoiced_hint:
+          type: string
+          nullable: true
+          description: |
+            **La frase que acompaña a `invoiced_cents`: dirección e importe**, ya compuesta y
+            traducida (`DECISIONES #133`, defecto `L6`).
+
+                «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale
+                 60,00 € menos.»   (y «… 60,00 € más» cuando sube)
+
+            ⚠️⚠️ **Antes era una frase FIJA en el cliente**, y decía *que* el pedido había cambiado
+            sin decir **en qué dirección ni cuánto** — que es justo lo que quiere saber quien ve
+            180,00 € donde espera 120,00 €. Una BAJADA no dejaba más rastro que ese número mudo.
+
+            ⚠️ **El importe que nombra es la DIFERENCIA, no el valor**: el valor ya viaja en
+            `value.total_cents` y repetirlo aquí no añadiría nada.
+
+            ⚠️⚠️ **`null` ES la condición de enseñar la línea**, y por eso se publica en vez de
+            dejar que el cliente compare `invoiced_cents` con `value.total_cents`: vale `null`
+            exactamente cuando son iguales. Re-derivar aquí una condición del dominio es lo que dejó
+            al cliente sin ver el ancla de caja durante toda la vida del producto (`L1`).
         gate_lines:
           type: array
           description: |
@@ -3024,6 +3045,7 @@ components:
             `charged_online_cents` y `held_cents` van a `0`. Lo que sí es de la reserva es su parte
             devuelta y su pendiente de devolución, que viajan en su sitio.
             ⚠️ `invoiced_cents` iguala a `value.total_cents`: una reserva no se factura por separado.
+            Y por eso `invoiced_hint` es `null`: sin base propia no hay diferencia que explicar.
             ⚠️ `note` es `null`: la frase explica el estado del PEDIDO, y repetirla por reserva la
             multiplicaría tantas veces como líneas tenga.
         guest_form_url:

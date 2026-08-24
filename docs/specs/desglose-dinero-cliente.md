@@ -1,12 +1,15 @@
 # [SPEC] El DESGLOSE de dinero que ve el cliente — auditoría y marco
 
-> Estado: **🟦 en revisión** (auditoría CERRADA · **marco COMPLETO y DECIDIDO**, §10) ·
-> Última actualización: 2026-08-24 · Decisiones asociadas: `DECISIONES #127` y **`#128`**.
+> Estado: **✅ EJECUTADA** (auditoría CERRADA · marco COMPLETO, §10 · **las tres tandas y los cinco
+> defectos de lectura, hechos**) · Última actualización: 2026-08-24 ·
+> Decisiones asociadas: `DECISIONES #127` → **`#134`**.
 >
-> ✅ **TANDAS A y B EJECUTADAS** (§15, §16) y ✅ **los tres defectos de LECTURA, también** (§17.1 →
-> **§18**): el ancla de caja se ve siempre que haya habido un cobro —con su método y su fecha—, la
-> cantidad va con su sustantivo y la nota de la reserva dejó de llamar «señal» a lo que no lo es.
-> ▶ **Lo que queda es la TANDA C** (§14.4), que es pantalla y no toca dinero.
+> ✅ **TANDAS A, B y C EJECUTADAS** (§15, §16, §19) y ✅ **los defectos de LECTURA, también**: `L1`,
+> `L2` y `L3` (§17.1 → **§18**), y **`L6` el último** (§22.2 → **§23**, `#134`). El ancla de caja se
+> ve siempre que haya habido un cobro, la cantidad va con su sustantivo, la nota de la reserva dejó
+> de llamar «señal» a lo que no lo es y **«Importe al reservar» dice hacia dónde y cuánto se movió**.
+> ▶ **Con `L6` esta spec queda CERRADA.** `L4` está aparcado y `L5` **retirado: no era un defecto**
+> (§22.2, `#133`).
 >
 > ✅ **EL MARCO YA ESTÁ ENTERO** (§10, decidido el 2026-08-24), que es la condición que el owner puso
 > para tocar esto. **Empieza por §9 y §10**: la tercera auditoría encontró **cuatro defectos de
@@ -1641,10 +1644,11 @@ frase diga **dirección e importe**, compuesta por el DOMINIO como ya se compone
     «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
     (y «… 60,00 € más» cuando sube — donde el desglose ↳ ya enseña de qué)
 
-⚠️ **NO implementado todavía** (decisión del owner: en la sesión siguiente). **Ni una línea nueva, ni
-un bloque, ni un concepto**: misma línea y misma frase, diciendo algo útil. Los importes salen de
-`facturado` y `valor`, que el ledger ya publica; las claves a tocar son `tickets.ledger.invoiced_hint`
-(que pasa a ser dos, una por dirección) en ES/EN/FR, y quien las elige es `OrderLedger`.
+✅ **EJECUTADO el 2026-08-24** (`DECISIONES #134` · **§23**), con la redacción acordada y sin añadir
+ninguna línea. Y el trabajo movió además la **CONDICIÓN**: `invoiced_hint` es `null` exactamente
+cuando no hay nada que trazar, así que la pantalla dejó de comparar los dos importes por su cuenta
+(§23.2). Medido sobre el corpus por HTTP real: **11 de 26 pedidos publican frase, 0 se quedan
+cortos y 0 se pasan**.
 
 ### 22.3 ⚠️⚠️ CUATRO trampas de método que la receta de §12.6 no recogía
 
@@ -1675,3 +1679,100 @@ ESTE pedido esté bien ahora**, y es la segunda pregunta la que ve el cliente.
 ▶ **Tres mutaciones, las tres muerden.**
 ⚠️ **Lo que esto NO resuelve**: el aviso dice que algo está mal, no QUÉ. Un pedido roto sigue
 necesitando que alguien lo mire — lo que cambia es que ahora **hay alguien a quien avisar**.
+
+---
+
+## 23. `L6` · EJECUTADO — «Importe al reservar» dice hacia DÓNDE y CUÁNTO
+
+> `DECISIONES #134` (ejecución de `#133`). Lo único que la auditoría de las 25 acciones dejó
+> aprobado, con su redacción ya acordada por el owner. **Con esto el desglose queda CERRADO.**
+
+### 23.1 Qué cambia, exactamente
+
+La línea del pie ya existía; lo que era fijo era su frase, y decía *que* el pedido había cambiado:
+
+    ANTES   Importe al reservar                                          180,00 €
+            Es lo que se facturó al hacer la reserva. Si no coincide con el
+            valor de arriba es porque el pedido cambió después.
+
+    AHORA   Importe al reservar                                          180,00 €
+            Al reservar se facturaron 180,00 €. El pedido cambió después y
+            ahora vale 60,00 € menos.
+
+**Ni una línea nueva, ni un bloque, ni un concepto** — el criterio del owner. Lo que se movió es
+**quién compone la frase**: pasa del diccionario del cajón al DOMINIO (`OrderLedger`), igual que la
+frase de estado, porque elegir entre «más» y «menos» es decidir qué caso es.
+
+| Pieza | Antes | Ahora |
+|---|---|---|
+| La frase | `tickets.ledger.invoiced_hint`, fija, leída en JavaScript | `tickets.ledger.invoiced_hint_more` / `_less`, elegidas por `OrderLedger::invoicedNoteFor()` |
+| El importe que nombra | ninguno | la **DIFERENCIA**, `abs(valor − facturado)` |
+| Quién decide si la línea se ve | el cliente, comparando `invoiced_cents` con `value.total_cents` | el dominio: `invoiced_hint` es `null` cuando no hay nada que trazar |
+| El contrato | — | `Ledger.invoiced_hint`, cadena **anulable** y obligatoria |
+
+### 23.2 ⚠️ La CONDICIÓN se movió con la frase, y ése es el trozo que importa
+
+Publicar la frase habría bastado para cumplir el encargo. Lo que se hizo además fue **retirarle al
+cliente la comparación**: `invoiced_hint` vale `null` exactamente cuando `facturado === valor`, así
+que la pantalla ya no pregunta «¿difieren los importes?» sino «¿me han mandado frase?».
+
+Es la lección de `L1` aplicada antes de que cueste (`§18.1`): allí la condición de enseñar el ancla
+de caja existía en el dominio, **ninguna superficie la llamaba**, y las dos que la re-derivaban
+divergieron en 19 de 58 pedidos sin que nada fallara. Aquí los dos importes siguen viajando en el
+mismo objeto, así que una recaída daría **el mismo resultado en todos los casos normales** — y solo
+se notaría el día que las dos definiciones dejaran de coincidir.
+
+### 23.3 Medido, no afirmado
+
+Sobre el corpus de las 25 acciones, **servido por HTTP real** y compuesto por el módulo REAL del
+cajón con el diccionario REAL:
+
+    26 pedidos servidos por `GET /me/orders`
+    11 publican frase · 6 subidas · 5 bajadas
+     0 pedidos con importes distintos y SIN frase   ← la condición no se queda corta
+     0 pedidos con importes iguales y CON frase     ← ni se pasa
+
+Los dos casos canónicos que §22 dejó apuntados salen literalmente como los aprobó el owner:
+
+    R-LVWTRS  facturado 180,00 · valor 120,00 → «… y ahora vale 60,00 € menos.»
+    R-NKEASV  facturado 120,00 · valor 180,00 → «… y ahora vale 60,00 € más.»
+    R-UYYQ1F  facturado 19,80 · valor 19,80  → (sin línea)
+
+### 23.4 [DECIDIDO owner] El pedido que se queda en 0 usa la MISMA frase
+
+Tres de los 11 no son un «cambio» en el sentido corriente: dos cancelados y uno vaciado por un
+reembolso, los tres con valor 0. Ahí la frase dice «el pedido cambió después y ahora vale 19,80 €
+menos», justo debajo de «Tu reserva se canceló el 24/08/2026».
+
+▶ **Se queda así** (owner, consultado antes de implementar). Una tercera variante sería un concepto
+más en tres idiomas para decir lo que la frase de estado **ya dice una línea más arriba**, que es
+exactamente lo que `#133` vino a evitar.
+
+### 23.5 Las guardas, y sus CINCO mutaciones
+
+| Guarda | Qué fija |
+|---|---|
+| `MeOrdersFinancialsTest::the_invoiced_line_says_which_way_the_order_moved_and_by_how_much` | dirección **e** importe, en los dos sentidos, con la diferencia y no el valor |
+| `…::the_invoiced_hint_is_null_when_there_is_nothing_to_trace` | `null` es la condición, no un hueco |
+| `…::both_directions_exist_in_every_locale` | las dos claves existen **de verdad** en ES/EN/FR y llevan sus dos huecos |
+| `SidebarAccountParityTest::the_invoiced_hint_travels_from_the_domain_to_the_screen` | extremo a extremo: dominio → API → pantalla, **y sin frase no hay línea** |
+| `orders.test.js` ×2 | la frase llega del servidor, y la condición también |
+
+Las cinco mutaciones muerden: publicar `valor` en vez de la diferencia · una sola clave para los dos
+sentidos · que el cliente re-derive la comparación · que el cliente lea la frase del diccionario ·
+que a un idioma le falte una clave.
+
+### 23.6 ⚠️⚠️ Y una guarda que NACIÓ DECORATIVA: el respaldo de idioma la dejaba verde
+
+La primera versión de la guarda de idiomas comprobaba el resultado de `__('…', [], 'fr')` y miraba
+que no fuera la clave en crudo. **Borrando `invoiced_hint_more` de `lang/fr` seguía en verde.**
+
+El motivo es que Laravel cae al `fallback_locale`: una clave que falta **no se manifiesta como una
+clave en crudo**, se manifiesta como un cliente francés leyendo castellano en su pantalla de dinero —
+que es un fallo más silencioso todavía, porque parece texto. La comprobación correcta es
+`Lang::has($clave, $locale, false)`, cuyo tercer argumento apaga ese respaldo.
+
+▶ **La lección, que no es sobre idiomas**: una frase que compone el DOMINIO falla distinto que una
+del cliente, y la guarda tiene que mirar el mecanismo del fallo real. Es la cuarta vez en esta spec
+que una comprobación escrita «de sentido común» resulta no medir nada (§16.5, §18.5, §19.6) — y las
+cuatro se descubrieron **rompiendo el código a propósito**, nunca leyendo el test.

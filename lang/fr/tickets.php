@@ -180,7 +180,10 @@ return [
         'refunded' => 'Déjà remboursé',
         'pending_refund' => 'Reste à vous rembourser',
         'invoiced' => 'Montant à la réservation',
-        'invoiced_hint' => "C'est ce qui a été facturé au moment de la réservation. S'il diffère de la valeur ci-dessus, la commande a changé ensuite.",
+        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). Las elige el
+        // DOMINIO, y `:difference` es la DIFERENCIA, no el valor.
+        'invoiced_hint_more' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de plus.',
+        'invoiced_hint_less' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de moins.',
     ],
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser

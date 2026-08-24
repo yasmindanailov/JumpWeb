@@ -214,12 +214,20 @@ export function financialsOf(order, messages) {
             : null,
         // La FRASE que explica el estado. La compone el servidor: decidir qué caso es, es regla.
         note: l.note ?? null,
-        // Trazabilidad: solo si lo facturado ya no es lo que vale.
-        invoiced: l.invoiced_cents !== v.total_cents
+        // ⚠️⚠️ **Trazabilidad, y su frase la compone el SERVIDOR** (`L6`, `DECISIONES #133`). Era
+        // una cadena fija del diccionario —«…es porque el pedido cambió después»— que decía QUE el
+        // pedido había cambiado y **no en qué dirección ni cuánto**: una bajada de 12 a 8 invitados
+        // no dejaba más rastro que un número mudo al pie. Elegir entre «vale X más» y «vale X menos»
+        // es decidir qué caso es, y eso es regla de dominio, igual que la frase de estado.
+        //
+        // ⚠️ **Y la CONDICIÓN también llega publicada**: `invoiced_hint` es `null` exactamente cuando
+        // lo facturado coincide con el valor. Comparar aquí los dos importes sería re-derivar una
+        // condición del dominio, que es lo que dejó al cliente sin ver el ancla de caja (`L1`).
+        invoiced: l.invoiced_hint
             ? {
                 label: t(messages, 'ledger.invoiced'),
                 amountLabel: money(l.invoiced_cents),
-                hint: t(messages, 'ledger.invoiced_hint'),
+                hint: l.invoiced_hint,
             }
             : null,
     };

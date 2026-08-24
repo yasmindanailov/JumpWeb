@@ -1868,10 +1868,10 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > le enseña en rojo, y el parque se entera por log.
 > ❗ **DECIDIDO por el owner** (`#133` · §22.2): de las tres cosas planteadas, **`L5` NO era un defecto**
 > —«Resto de la señal de X» ya es correcto: X es la RESERVA, no el producto— y **`L4` se aparca**.
-> ▶ **Queda `L6`, y es lo único**: que la frase de «Importe al reservar» diga **dirección e importe**
-> («…y ahora vale 60,00 € menos»), compuesta por el dominio. Ni una línea nueva. **Sin implementar a
-> propósito**: el owner lo dejó para la sesión siguiente. Detalle y casos de prueba en `ESTADO.md`.
-> ▶ **Con esto la sección queda CERRADA salvo esa frase.** Después, la Fase 5.
+> ✅ **Y `L6` EJECUTADO** (`#134` · §23): «Importe al reservar» dice **hacia dónde y cuánto** se movió
+> el pedido, con la frase compuesta por el DOMINIO y nombrando la **diferencia**. ⚠️ Y con ella se
+> movió la **condición**: la pantalla dejó de comparar los dos importes por su cuenta.
+> ▶ 🟩 **CON ESTO LA SECCIÓN QUEDA CERRADA.** Después, la Fase 5.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
 > la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.
@@ -1909,8 +1909,24 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
       pedidos medidos por HTTP real.
       ▶ `LedgerSingleSourceTest` prohíbe el MECANISMO —derivar un canal restando otros— aunque el
       resultado sea correcto hoy. **Verificado por mutación, 5/5.**
-- [ ] **`L6` · que «Importe al reservar» diga dirección e importe** (owner, `#133` · §22.2). Lo único
-      que queda del desglose. Ni una línea nueva: la misma frase, compuesta por el dominio.
+- ✅ **`L6` · «Importe al reservar» dice hacia DÓNDE y CUÁNTO — EJECUTADO** (2026-08-24 · spec **§23**
+      · `DECISIONES #134`). Lo último que quedaba del desglose, con la redacción acordada y **sin
+      añadir ninguna línea**: la frase pasa del diccionario del cajón al DOMINIO y nombra la
+      **diferencia**, no el valor —«Al reservar se facturaron 180,00 €. El pedido cambió después y
+      ahora vale 60,00 € menos.»—.
+      ▶ ⚠️⚠️ **Y la CONDICIÓN se movió con la frase**, que es el trozo que importa: `invoiced_hint`
+      es `null` exactamente cuando no hay nada que trazar, así que la pantalla **dejó de comparar los
+      dos importes por su cuenta**. Es `L1` aplicado antes de que cueste — allí la condición
+      re-derivada divergió en 19 de 58 pedidos sin que nada fallara.
+      ▶ **Medido por HTTP real y compuesto por el módulo REAL**: 26 pedidos, **11 publican frase**
+      (6 subidas, 5 bajadas), **0 se quedan cortos y 0 se pasan**. `R-LVWTRS` y `R-NKEASV` salen
+      literales.
+      ▶ **[DECIDIDO owner]** el pedido que se queda en 0 —dos cancelados y uno vaciado— usa la MISMA
+      frase: una tercera variante diría en tres idiomas lo que la frase de estado ya dice encima.
+      ▶ ⚠️⚠️ **Y una guarda NACIÓ DECORATIVA**: la de idiomas salía verde con la clave francesa
+      borrada, porque Laravel **cae al idioma de respaldo** — una clave que falta no se ve como una
+      clave en crudo, se ve como un francés leyendo castellano. Se arregló con
+      `Lang::has(…, false)`. **5 mutaciones, las cinco muerden.**
 - ✅ **`L1`·`L2`·`L3` · los TRES defectos de LECTURA — EJECUTADOS** (2026-08-24 · spec **§18** ·
       `DECISIONES #128`). Salieron de que el owner mirara un pedido REAL en pantalla —`R-L6UTIA`,
       §17—, y **el desglose pasa de LEGIBLE a VERIFICABLE**.

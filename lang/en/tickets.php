@@ -180,7 +180,10 @@ return [
         'refunded' => 'Already refunded',
         'pending_refund' => 'Still to be refunded to you',
         'invoiced' => 'Amount when booked',
-        'invoiced_hint' => 'This is what was invoiced when the booking was made. If it differs from the value above, the order changed afterwards.',
+        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). Las elige el
+        // DOMINIO, y `:difference` es la DIFERENCIA, no el valor.
+        'invoiced_hint_more' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference more.',
+        'invoiced_hint_less' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference less.',
     ],
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser

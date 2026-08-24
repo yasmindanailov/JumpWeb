@@ -13,6 +13,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
@@ -208,6 +209,151 @@ class MeOrdersFinancialsTest extends TestCase
             $json['ledger']['note'],
             'la frase no nombra el importe que se le debe',
         );
+    }
+
+    /**
+     * ⚠️⚠️ **`L6` — «Importe al reservar» dice EN QUÉ DIRECCIÓN y CUÁNTO** (`DECISIONES #133`,
+     * `specs/desglose-dinero-cliente.md` §22.2).
+     *
+     * La frase era FIJA y decía *que* el pedido había cambiado: «si no coincide con el valor de
+     * arriba es porque el pedido cambió después». Quien ve 180,00 € donde espera 120,00 € no
+     * necesita saber que cambió —ya lo está viendo—, necesita saber **hacia dónde y cuánto**. Una
+     * BAJADA no dejaba más rastro que ese número mudo.
+     *
+     * ⚠️ **Lo que se compara es la DIFERENCIA, no el valor**, y por eso el fixture exige que los tres
+     * importes sean distintos entre sí: publicar `valor` daría una frase que suena bien y repite el
+     * número que el cliente ya tiene dos líneas más arriba. Con `facturado`, `valor` y su diferencia
+     * confundibles, esa mutación pasaría inadvertida.
+     */
+    public function test_the_invoiced_line_says_which_way_the_order_moved_and_by_how_much(): void
+    {
+        [$user, $order] = $this->orderWithEverything();
+
+        $facturado = (int) $order->total;
+        $valor = $order->financialSummary()->totalFinalNeto();
+        $diferencia = abs($valor - $facturado);
+
+        // La guarda de la guarda: sin tres importes DISTINTOS, publicar el valor en vez de la
+        // diferencia dejaría este caso en verde.
+        $this->assertLessThan($facturado, $valor, 'el fixture no ejercita una BAJADA');
+        $this->assertNotSame($diferencia, $valor, 'diferencia y valor coinciden: la mutación no se vería');
+        $this->assertNotSame($diferencia, $facturado, 'diferencia y facturado coinciden: la mutación no se vería');
+
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertSame(
+            __('tickets.ledger.invoiced_hint_less', [
+                'invoiced' => Money::amount($facturado).' €',
+                'difference' => Money::amount($diferencia).' €',
+            ]),
+            $ledger['invoiced_hint'],
+            'la frase no dice la dirección y el importe del cambio',
+        );
+
+        // ── Y AL REVÉS: un pedido que vale MÁS de lo facturado cambia de frase ────────────────
+        //
+        // ⚠️ La forma de una SUBIDA es la que deja el panel al subir invitados: **el precio de la
+        // línea sube** y el delta se cobra en puerta con un `extra_due`. Un `extra_due` suelto NO
+        // vale como fixture —no toca el valor, solo el bucket de puerta—, y montarlo así habría
+        // probado un pedido que ningún flujo produce.
+        [$otro, $subido] = $this->orderWithSettledDeposit();
+        $linea = $subido->items->first();
+
+        $linea->forceFill(['unit_price' => (int) $linea->unit_price + 2500])->save();
+        OrderAdjustment::create([
+            'order_id' => $subido->id, 'order_item_id' => $linea->id,
+            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'amount_cents' => 2500, 'currency' => 'EUR', 'applied_by' => $otro->id,
+            'reason' => 'Dos invitados más',
+        ]);
+
+        $subido = $subido->fresh()->load('items.ticketType', 'items.children', 'items.slot', 'adjustments', 'payments.refunds');
+        $facturadoArriba = (int) $subido->total;
+        $valorArriba = $subido->financialSummary()->totalFinalNeto();
+
+        $this->assertGreaterThan($facturadoArriba, $valorArriba, 'el fixture no ejercita una SUBIDA');
+        $this->assertNotSame($valorArriba - $facturadoArriba, $facturadoArriba, 'diferencia y facturado coinciden');
+        $this->assertNotSame($valorArriba - $facturadoArriba, $valorArriba, 'diferencia y valor coinciden');
+
+        $arriba = $this->actingAs($otro)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        // ⚠️ Y el pedido de la subida tiene que CUADRAR: sobre un desglose roto el cliente ni siquiera
+        // vería esta línea (`#132`), así que el caso estaría midiendo otra cosa.
+        $this->assertTrue($arriba['is_consistent'], 'el fixture de la subida no cierra: el caso no mide lo que dice');
+
+        $this->assertSame(
+            __('tickets.ledger.invoiced_hint_more', [
+                'invoiced' => Money::amount($facturadoArriba).' €',
+                'difference' => Money::amount($valorArriba - $facturadoArriba).' €',
+            ]),
+            $arriba['invoiced_hint'],
+            'un pedido que vale MÁS se explica con la frase de una bajada',
+        );
+
+        // ⚠️ Y las dos frases tienen que ser DISTINTAS: una sola clave para los dos sentidos volvería
+        // a dejar al cliente sin saber hacia dónde se movió su pedido.
+        $this->assertNotSame($ledger['invoiced_hint'], $arriba['invoiced_hint'],
+            'subir y bajar se explican con la misma frase');
+    }
+
+    /**
+     * ⚠️⚠️ **`null` NO es un hueco: ES la condición de enseñar la línea** (`L6`, `DECISIONES #133`).
+     *
+     * Se publica en vez de dejar que cada superficie compare `invoiced_cents` con `total_cents`,
+     * porque una condición re-derivada es una divergencia con retraso — es literalmente lo que dejó
+     * al cliente sin ver el ancla de caja durante toda la vida del producto (`L1`, `#128`).
+     */
+    public function test_the_invoiced_hint_is_null_when_there_is_nothing_to_trace(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+
+        $this->assertSame(
+            (int) $order->total, $order->financialSummary()->totalFinalNeto(),
+            'el fixture ya no vale: en él lo facturado difiere del valor',
+        );
+
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertNull($ledger['invoiced_hint'], 'se explica un cambio que no ha habido');
+        $this->assertSame((int) $order->total, $ledger['invoiced_cents'], 'y el importe sigue viajando');
+    }
+
+    /**
+     * **Las dos direcciones existen en los TRES idiomas, y las dos llevan sus dos huecos.**
+     *
+     * ⚠️⚠️ **`Lang::has(…, false)` y no `__()`, y la diferencia es la que hace que esta guarda
+     * exista.** Medido por mutación al escribirla: borrando `invoiced_hint_more` de `lang/fr`, la
+     * versión que comparaba el resultado de `__()` **seguía verde** — porque Laravel cae al idioma de
+     * respaldo y devolvía la frase en CASTELLANO. Una clave que falta no se manifiesta como una clave
+     * en crudo: se manifiesta como un cliente francés leyendo español en su pantalla de dinero, que
+     * es un fallo más silencioso todavía. El tercer argumento `false` es el que apaga ese respaldo.
+     *
+     * ⚠️ Y si a una clave le faltara un hueco, la frase se quedaría sin el importe —que es justo lo
+     * que `L6` vino a poner— sin que nada más lo notara.
+     */
+    public function test_both_directions_exist_in_every_locale(): void
+    {
+        foreach (['es', 'en', 'fr'] as $locale) {
+            foreach (['invoiced_hint_more', 'invoiced_hint_less'] as $clave) {
+                $this->assertTrue(
+                    Lang::has('tickets.ledger.'.$clave, $locale, false),
+                    "[$locale] falta la clave `$clave`: ese idioma serviría la frase del locale de respaldo",
+                );
+
+                $frase = __('tickets.ledger.'.$clave, [], $locale);
+
+                foreach ([':invoiced', ':difference'] as $hueco) {
+                    $this->assertStringContainsString($hueco, $frase,
+                        "[$locale] `$clave` no lleva `$hueco`: la frase pierde el importe que `L6` vino a poner");
+                }
+            }
+
+            $this->assertNotSame(
+                __('tickets.ledger.invoiced_hint_more', [], $locale),
+                __('tickets.ledger.invoiced_hint_less', [], $locale),
+                "[$locale] las dos direcciones dicen lo mismo",
+            );
+        }
     }
 
     /**

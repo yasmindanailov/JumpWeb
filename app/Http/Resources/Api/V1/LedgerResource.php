@@ -51,6 +51,10 @@ class LedgerResource extends JsonResource
             ],
             // Trazabilidad: lo facturado al reservar. FUERA de la suma, a propósito.
             'invoiced_cents' => $l->facturado,
+            // ⚠️ Y su frase, con DIRECCIÓN E IMPORTE (`L6`, `DECISIONES #133`). `null` cuando no hay
+            // diferencia: **es la condición de enseñar la línea**, publicada en vez de dejar que cada
+            // superficie re-derive `invoiced_cents !== value.total_cents` — la misma lección de `L1`.
+            'invoiced_hint' => $l->facturadoNota,
             'gate_lines' => $l->gateLines,
             'has_deposit' => $l->hasDeposit,
             // ⚠️⚠️ **Si esto es `false`, el desglose por canales NO es cierto** y el cliente no debe

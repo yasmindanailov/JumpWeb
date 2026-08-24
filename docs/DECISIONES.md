@@ -6617,3 +6617,56 @@ y el que ordena las tres decisiones.
 
 ⚠️ **NO se implementa en esta sesión** (decisión del owner: «será en el siguiente chat»). Queda como
 el próximo paso, con su redacción ya acordada.
+
+## #134 · 2026-08-24 · `L6` EJECUTADO — «Importe al reservar» dice hacia DÓNDE y CUÁNTO, y la condición se va con la frase
+
+**Qué se hizo.** Lo único que `#133` dejó aprobado, con la redacción ya acordada por el owner y sin
+añadir ninguna línea: la frase del pie del desglose pasa a decir **dirección e importe**.
+
+    ANTES  «Es lo que se facturó al hacer la reserva. Si no coincide con el valor de arriba
+            es porque el pedido cambió después.»                       (fija, en JavaScript)
+    AHORA  «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale
+            60,00 € menos.»                        (compuesta por el DOMINIO, dos claves)
+
+La compone `OrderLedger::invoicedNoteFor()` y viaja publicada como `Ledger.invoiced_hint`, igual que
+la frase de estado: elegir entre «más» y «menos» es decidir qué caso es, y eso es regla.
+⚠️ **El importe que nombra es la DIFERENCIA, no el valor.** El valor ya está dos líneas más arriba;
+publicarlo otra vez daría una frase que suma bien y no dice nada.
+
+**⚠️⚠️ Y lo que de verdad importa: la CONDICIÓN se movió con la frase.** Publicar la frase habría
+bastado para cumplir el encargo. Lo que se hizo además fue quitarle al cliente la comparación:
+`invoiced_hint` vale `null` **exactamente** cuando lo facturado coincide con el valor, así que la
+pantalla ya no pregunta «¿difieren los importes?» sino «¿me han mandado frase?».
+▶ Es `L1` aplicado antes de que cueste (`#128`): allí el predicado existía en el dominio, **ninguna
+superficie lo llamaba**, y las dos que lo re-derivaban divergieron en **19 de 58** pedidos sin que
+nada fallara. Aquí los dos importes siguen viajando en el mismo objeto, así que una recaída daría el
+mismo resultado en todos los casos normales — y solo se notaría cuando ya hubiera divergido.
+
+**Medido, no afirmado**, sobre el corpus de las 25 acciones servido por HTTP real y compuesto por el
+módulo REAL del cajón con el diccionario REAL: **26 pedidos, 11 publican frase** (6 subidas, 5
+bajadas), **0 con importes distintos y sin frase**, **0 con importes iguales y con frase**. Los dos
+casos canónicos salen literales: `R-LVWTRS` (180 → 120) «… vale 60,00 € menos» y `R-NKEASV`
+(120 → 180) «… vale 60,00 € más».
+
+**[DECIDIDO owner] El pedido que se queda en 0 usa la MISMA frase.** Tres de los 11 son cancelados o
+vaciados por un reembolso, y ahí se lee «ahora vale 19,80 € menos» justo debajo de «Tu reserva se
+canceló el 24/08/2026». Consultado antes de implementar: **una tercera variante sería un concepto más
+en tres idiomas para decir lo que la frase de estado ya dice una línea antes**, que es exactamente lo
+que `#133` vino a evitar.
+
+**⚠️⚠️ Y una guarda que NACIÓ DECORATIVA, que es lo que este trabajo enseñó.** La primera versión de
+la comprobación de idiomas miraba el resultado de `__('…', [], 'fr')` y verificaba que no fuera la
+clave en crudo. **Borrando `invoiced_hint_more` de `lang/fr` seguía en verde**: Laravel cae al
+`fallback_locale`, así que una clave que falta **no se manifiesta como una clave en crudo** sino como
+un cliente francés leyendo castellano en su pantalla de dinero — un fallo más silencioso todavía,
+porque parece texto. La comprobación correcta es `Lang::has($clave, $locale, false)`.
+▶ La lección no es sobre idiomas: **una frase que compone el dominio falla distinto que una del
+cliente**, y la guarda tiene que mirar el mecanismo del fallo real. Va por la cuarta vez en esta
+spec, y las cuatro se descubrieron rompiendo el código a propósito.
+
+**Guardas: +4 PHP y +2 JS, y las CINCO mutaciones muerden** — publicar el valor en vez de la
+diferencia · una sola clave para los dos sentidos · que el cliente re-derive la comparación · que el
+cliente lea la frase del diccionario · que a un idioma le falte una clave.
+
+**▶ Con esto el DESGLOSE DE DINERO DEL CLIENTE queda CERRADO.** `L4` aparcado y `L5` retirado
+(`#133`). Detalle en `specs/desglose-dinero-cliente.md` **§23**.

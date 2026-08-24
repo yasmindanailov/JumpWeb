@@ -43,8 +43,10 @@ const MESSAGES = {
         charged_desk: 'Cobrado en recepción',
         refunded: 'Ya devuelto',
         pending_refund: 'Pendiente de devolverte',
+        // ⚠️ `invoiced_hint` NO está aquí a propósito: desde `L6` la compone el DOMINIO y llega en la
+        // respuesta (`DECISIONES #133`). Dejarla en el diccionario mantendría viva la cadena fija
+        // que este trabajo vino a retirar, y una recaída pasaría inadvertida.
         invoiced: 'Importe al reservar',
-        invoiced_hint: 'Es lo que se facturó al hacer la reserva.',
     },
 };
 
@@ -93,6 +95,8 @@ const ledger = (over = {}) => {
         ...(over.value ?? {}),
     };
 
+    const invoiced = over.invoiced_cents ?? 4500;
+
     return {
         value,
         // ⚠️ `has_cash` se DERIVA aquí con la MISMA regla que `OrderLedger::hasCash()` en vez de
@@ -112,7 +116,18 @@ const ledger = (over = {}) => {
         // ⚠️ El servidor publica si el desglose CIERRA (`DECISIONES #132`); el doble lo respeta y por
         // defecto dice que sí, que es el caso de todo pedido sano.
         is_consistent: over.is_consistent ?? true,
-        invoiced_cents: over.invoiced_cents ?? 4500,
+        invoiced_cents: invoiced,
+        // ⚠️ La FRASE de «Importe al reservar» también la publica el servidor, y **su nulidad es la
+        // condición de enseñar la línea** (`L6`, `DECISIONES #133`). El doble la deriva con la misma
+        // regla que `OrderLedger::invoicedNoteFor()` —hay frase solo si lo facturado difiere del
+        // valor— para seguir siendo fiel cuando un caso sobrescribe los importes.
+        // ⚠️ `in` y no `??`: un caso tiene que poder pedir `null` EXPLÍCITAMENTE —importes distintos
+        // y sin frase— para probar que la zona obedece al servidor en vez de re-derivar.
+        invoiced_hint: 'invoiced_hint' in over
+            ? over.invoiced_hint
+            : (invoiced !== value.total_cents
+                ? 'Al reservar se facturaron '+(invoiced / 100).toFixed(2).replace('.', ',')+' €. El pedido cambió después.'
+                : null),
         gate_lines: over.gate_lines ?? [],
         has_deposit: over.has_deposit ?? false,
         note: over.note ?? null,
@@ -658,6 +673,44 @@ describe('el bloque financiero', () => {
         assert.equal(igual.invoiced, null);
         assert.equal(distinto.invoiced.amountLabel, '133,00 €');
         assert.equal(distinto.invoiced.label, 'Importe al reservar');
+    });
+
+    /**
+     * ⚠️⚠️ **LA FRASE DE «Importe al reservar» LA COMPONE EL SERVIDOR** (`L6`, `DECISIONES #133`).
+     *
+     * Era una cadena FIJA del diccionario —«…es porque el pedido cambió después»— y decía *que* el
+     * pedido había cambiado sin decir **en qué dirección ni cuánto**. Elegir entre «vale X más» y
+     * «vale X menos» es decidir qué caso es: regla de dominio, igual que la frase de estado.
+     */
+    test('⚠️ la frase de lo facturado llega del servidor, no del diccionario', () => {
+        const f = financialsOf(order({
+            ledger: ledger({
+                invoiced_cents: 18000,
+                invoiced_hint: 'Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 135,00 € menos.',
+            }),
+        }), MESSAGES);
+
+        assert.equal(
+            f.invoiced.hint,
+            'Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 135,00 € menos.',
+            'la zona ha vuelto a componer la frase por su cuenta en vez de transportar la del servidor',
+        );
+    });
+
+    /**
+     * ⚠️⚠️ **Y la CONDICIÓN de enseñar la línea también es del servidor.**
+     *
+     * `invoiced_hint` vale `null` exactamente cuando no hay diferencia que explicar. Si la zona
+     * volviera a comparar `invoiced_cents` con `total_cents` por su cuenta, este caso —dos importes
+     * distintos, sin frase— pintaría un pie con un número y sin explicación. Es la misma forma de
+     * divergencia que dejó al cliente sin el ancla de caja (`L1`).
+     */
+    test('⚠️ sin frase del servidor no hay línea, aunque los importes difieran', () => {
+        const f = financialsOf(order({
+            ledger: ledger({ invoiced_cents: 13300, invoiced_hint: null }),
+        }), MESSAGES);
+
+        assert.equal(f.invoiced, null, 'la zona re-deriva la condición en vez de obedecer al servidor');
     });
 
     /**

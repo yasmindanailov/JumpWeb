@@ -205,7 +205,14 @@ return [
         'refunded' => 'Ya devuelto',
         'pending_refund' => 'Pendiente de devolverte',
         'invoiced' => 'Importe al reservar',
-        'invoiced_hint' => 'Es lo que se facturó al hacer la reserva. Si no coincide con el valor de arriba es porque el pedido cambió después.',
+        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). La frase anterior
+        // era una sola y fija —«…es porque el pedido cambió después»—: decía QUE el pedido cambió y
+        // no en qué sentido ni cuánto, que es justo lo que quiere saber quien ve 180,00 € donde
+        // espera 120,00 €. Una BAJADA no dejaba más rastro que ese número.
+        // ⚠️ Las elige el DOMINIO (`Booking\Services\OrderLedger`), como la frase de estado.
+        // ⚠️ `:difference` es la DIFERENCIA, no el valor: el valor ya está dos líneas más arriba.
+        'invoiced_hint_more' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference más.',
+        'invoiced_hint_less' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference menos.',
     ],
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser

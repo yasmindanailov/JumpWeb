@@ -217,6 +217,57 @@ class SidebarAccountParityTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **`L6` EXTREMO A EXTREMO: la frase de «Importe al reservar» la compone el DOMINIO y la
+     * pantalla solo la transporta** (`DECISIONES #133`, `specs/desglose-dinero-cliente.md` §22.2).
+     *
+     * Era una cadena FIJA del diccionario del cajón —«…es porque el pedido cambió después»—: decía
+     * *que* el pedido había cambiado y **no en qué dirección ni cuánto**, que es justo lo que quiere
+     * saber quien ve un número distinto del que esperaba. Una BAJADA no dejaba más rastro que ese
+     * número mudo.
+     *
+     * ⚠️ **Y la CONDICIÓN viaja con ella**: la línea se enseña exactamente cuando el servidor manda
+     * frase. Que la pantalla vuelva a comparar `invoiced_cents` con `total_cents` por su cuenta es la
+     * misma forma de divergencia que dejó al cliente sin el ancla de caja (`L1`) — y esa recaída no
+     * la ve la composición en JavaScript, porque allí los dos importes también están.
+     */
+    public function test_the_invoiced_hint_travels_from_the_domain_to_the_screen(): void
+    {
+        [$user, $order] = $this->richOrder();
+
+        // Cancelar el complemento: el pedido pasa a valer 8,00 € menos de lo que se facturó. Es la
+        // forma real de una bajada, y deja los tres importes distintos (98,00 · 90,00 · 8,00).
+        $addon = $order->items()->whereNotNull('parent_item_id')->first();
+        $addon->forceFill(['cancelled_at' => Carbon::now()])->save();
+
+        $respuesta = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
+        $publicado = $respuesta['data'][0]['ledger'];
+
+        $this->assertSame(
+            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '98,00 €', 'difference' => '8,00 €']),
+            $publicado['invoiced_hint'],
+            'el dominio ha dejado de decir la dirección y el importe del cambio',
+        );
+
+        $fila = $this->purchasesInNode($respuesta)[0];
+
+        $this->assertSame(
+            $publicado['invoiced_hint'], $fila['financials']['invoiced']['hint'],
+            'la pantalla compone la frase por su cuenta en vez de transportar la del servidor',
+        );
+        $this->assertSame(Money::format(9800), $fila['financials']['invoiced']['amountLabel']);
+
+        // ⚠️ La guarda de la guarda: **sin frase no hay línea**. Es lo que distingue obedecer al
+        // servidor de re-derivar la comparación — los dos importes siguen viajando en el mismo
+        // objeto, así que una recaída daría exactamente el mismo resultado en el caso de arriba.
+        $respuesta['data'][0]['ledger']['invoiced_hint'] = null;
+
+        $this->assertNull(
+            $this->purchasesInNode($respuesta)[0]['financials']['invoiced'],
+            'la pantalla re-deriva la condición en vez de obedecer al servidor',
+        );
+    }
+
+    /**
      * ⚠️⚠️ **«Ver pedido» tiene que ABRIR LA PANTALLA EN ESE PEDIDO, y sólo el servidor sabe en qué
      * página cae** (owner, spec §5·2 · `#129`). Con 12 pedidos y 5 por página, el de la reserva más
      * antigua está en la tercera: abrir la primera no fallaría nada y **no cumpliría la decisión**.

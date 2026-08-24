@@ -120,7 +120,7 @@ class LedgerSingleSourceTest extends TestCase
     {
         $canales = ['valor', 'pagadoOnline', 'pendienteOnline', 'pagadoPuerta', 'pendientePuerta',
             'compensado', 'cobradoOnline', 'devuelto', 'retenido', 'pendienteDevolucion',
-            'facturado', 'gateLines', 'hasDeposit', 'nota'];
+            'facturado', 'facturadoNota', 'gateLines', 'hasDeposit', 'nota'];
 
         $ref = new \ReflectionClass(OrderLedger::class);
         $presentes = array_map(fn ($p) => $p->getName(), $ref->getProperties());

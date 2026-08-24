@@ -74,6 +74,21 @@ final readonly class OrderLedger
         // ── Trazabilidad y contexto ────────────────────────────────────────────────
         /** `Order.total`: lo facturado al reservar. **Fuera de la suma**, y solo se enseña si difiere. */
         public int $facturado,
+        /**
+         * La frase que acompaña a «Importe al reservar», o `null` si no hay nada que trazar.
+         *
+         * ⚠️⚠️ **Era una frase FIJA, y ése era el defecto `L6`** (`DECISIONES #133`,
+         * `specs/desglose-dinero-cliente.md` §22.2). Decía *que* el pedido había cambiado —«Si no
+         * coincide con el valor de arriba es porque el pedido cambió después»— y **no en qué
+         * dirección ni cuánto**, que es justo lo que quiere saber quien ve 180,00 € donde espera
+         * 120,00 €. Una bajada no dejaba más rastro que ese número mudo.
+         *
+         * ▶ La compone el DOMINIO, como ya hace con {@see self::$nota}: elegir entre «vale X más» y
+         * «vale X menos» es decidir qué caso es, y eso es regla. Y **su nulidad ES la condición de
+         * enseñar la línea**: sin ella cada superficie tendría que re-derivar `facturado !== valor`,
+         * que es exactamente la forma de divergencia que costó `L1` (`hasCash()`).
+         */
+        public ?string $facturadoNota,
         /** El desglose ↳ de lo pendiente en puerta, con sus etiquetas ya compuestas. */
         public array $gateLines,
         /** ¿El pedido llevaba señal? No se deduce de que quede algo pendiente. */
@@ -195,6 +210,7 @@ final readonly class OrderLedger
             cobroMetodo: $order->chargeMethod(),
             cobroFecha: $order->chargedAtLabel(),
             facturado: $s->totalOriginal,
+            facturadoNota: self::invoicedNoteFor($order, $s->totalOriginal, $s->totalFinalNeto()),
             gateLines: array_map(
                 fn (array $l): array => ['label' => $l['label'], 'amount_cents' => (int) $l['amount']],
                 $order->gateBreakdownLines(),
@@ -234,6 +250,10 @@ final readonly class OrderLedger
             cobroMetodo: $order->chargeMethod(),
             cobroFecha: null,
             facturado: $rf->valor,          // sin base propia: la reserva no se factura por separado
+            // ⚠️ Y por eso aquí NO hay nada que trazar: sin base propia, `facturado` y `valor` son el
+            // mismo número y el compositor devuelve `null`. Se llama igualmente —en vez de escribir
+            // `null` a mano— para que la regla siga viviendo en un solo sitio el día que cambie.
+            facturadoNota: self::invoicedNoteFor($order, $rf->valor, $rf->valor),
             gateLines: array_map(
                 fn (array $l): array => ['label' => $l['label'], 'amount_cents' => (int) $l['amount']],
                 $order->reservationGateLines($principal),
@@ -262,6 +282,48 @@ final readonly class OrderLedger
     }
 
     /**
+     * **La frase de «Importe al reservar»: dirección e importe, no un número mudo** (`L6`,
+     * `DECISIONES #133`).
+     *
+     *     «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
+     *
+     * ⚠️ **Lo que viaja es la DIFERENCIA, no el valor.** Poner ahí `valor` daría una frase que suma
+     * bien y no dice nada: el cliente ya tiene ese número dos líneas más arriba («Valor del pedido»),
+     * y lo que no tiene es cuánto se movió. Los dos importes coinciden solo cuando el pedido se
+     * queda a cero, que es el caso en que menos se nota el error.
+     *
+     * ⚠️ `null` cuando no hay diferencia: es la señal de que la línea entera sobra. Repetir lo
+     * facturado al lado del valor cuando son el mismo número es el ruido que enseña a saltarse el pie.
+     *
+     * ▶ **Una sola regla para los dos sentidos**, y también para el pedido que se queda en 0 —una
+     * cancelación es una bajada de todo su valor— (decisión del owner, `#133`): la frase de estado
+     * que va encima ya dice que se canceló, así que una tercera variante añadiría un concepto para
+     * decir lo que ya está dicho.
+     */
+    private static function invoicedNoteFor(Order $order, int $facturado, int $valor): ?string
+    {
+        if ($facturado === $valor) {
+            return null;
+        }
+
+        return __($valor > $facturado ? 'tickets.ledger.invoiced_hint_more' : 'tickets.ledger.invoiced_hint_less', [
+            'invoiced' => self::importe($order, $facturado),
+            'difference' => self::importe($order, abs($valor - $facturado)),
+        ]);
+    }
+
+    /**
+     * Un importe con su símbolo, para las frases que compone el dominio.
+     *
+     * ⚠️ Está aquí y no duplicado en cada frase por el mismo motivo que existe toda esta clase: dos
+     * copias de la misma composición son dos rótulos que pueden divergir.
+     */
+    private static function importe(Order $order, int $cents): string
+    {
+        return Money::amount($cents).' '.($order->currency === 'EUR' ? '€' : (string) $order->currency);
+    }
+
+    /**
      * La frase de estado, en el orden en que importa: primero lo que el cliente tiene que saber.
      *
      * ⚠️ **El orden de los casos ES la regla.** Un pedido cancelado con dinero pendiente de devolver
@@ -280,7 +342,7 @@ final readonly class OrderLedger
 
         $cancelado = $order->status === Order::STATUS_CANCELLED;
         $fechaCancel = DisplayTime::format($order->refunded_at ?? $order->updated_at, 'd/m/Y');
-        $importe = fn (int $c): string => Money::amount($c).' '.($order->currency === 'EUR' ? '€' : (string) $order->currency);
+        $importe = fn (int $c): string => self::importe($order, $c);
 
         // 1 · Se le debe dinero. Va primero SIEMPRE: es lo único que el cliente necesita saber.
         if ($s->pendienteDevolucion() > 0) {

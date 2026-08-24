@@ -2,13 +2,15 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > ❗ **2026-08-24 · lo primero que tienes que saber**: los pedidos de la BD de desarrollo **se
-> borraron y se reconstruyeron** (25, uno por acción accionable — ver «Próximo paso»), y lo único que
-> queda del desglose es **`L6`**, una frase, con su redacción ya acordada por el owner.
+> borraron y se reconstruyeron** (25, uno por acción accionable — ver el índice de `specs/
+> desglose-dinero-cliente.md` §22), y 🟩 **el DESGLOSE DE DINERO DEL CLIENTE queda CERRADO**: `L6`
+> está ejecutado (`#134` · §23). **Lo siguiente es la Fase 5** — y su primer punto no es implementable
+> tal como está escrito: empieza por una decisión de infraestructura del owner, no por código.
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza. Última actualización: **2026-08-24** (**el DESGLOSE de dinero del cliente,
-> CERRADO salvo una frase**: tandas A, B y C ejecutadas, los tres defectos de lectura arreglados, la
-> auditoría de las 25 acciones pasada y un desglose que no cuadra ya no se sirve como si nada.
-> `DECISIONES #127` a **`#133`**; `specs/desglose-dinero-cliente.md` §15 → **§22**).
+> CERRADO**: tandas A, B y C ejecutadas, los CUATRO defectos de lectura arreglados, la auditoría de
+> las 25 acciones pasada y un desglose que no cuadra ya no se sirve como si nada.
+> `DECISIONES #127` a **`#134`**; `specs/desglose-dinero-cliente.md` §15 → **§23**).
 
 ## ▶ Dónde estamos
 
@@ -54,12 +56,26 @@ por `Log::warning('ledger.no_cuadra', …)`.
 los flujos REALES, **un pedido por acción accionable**. Resultado: **25/25 identidades cierran**,
 **25/25 lo que la pantalla lista suma el total**, 0 acciones fallaron y las 2 que deben bloquearse lo
 hacen con su audit. Los 25 pedidos están en la BD de desarrollo para mirarlos en el navegador.
-❗ **Lo que la auditoría dejó PLANTEADO** (§22.2, decisiones de producto, no de dominio): «Compensación
-devuelta» como única línea del valor · el resto de señal de un complemento escondido en la línea del
-principal · una BAJADA que no deja más rastro que «Importe al reservar».
+✅ **Lo que la auditoría dejó planteado, RESUELTO** (§22.2 · `#133` decide, `#134` ejecuta): «Compensación
+devuelta» como única línea del valor → **`L4` APARCADO** · el resto de señal de un complemento
+escondido en la línea del principal → **`L5` RETIRADO, no era un defecto** · una BAJADA que no deja
+más rastro que «Importe al reservar» → **`L6` HECHO**.
 🟩 **Y el 2026-08-24 se cierra con la AUDITORÍA DE LAS 25 ACCIONES y su decisión** (`#132`, `#133`).
-▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO salvo `L6`**, que es una frase. Después, la
-**Fase 5**.
+🟩 **Y ese mismo 2026-08-24 se EJECUTA `L6`, que era lo último** (`DECISIONES #134` · spec §23): la
+línea «Importe al reservar» decía *que* el pedido había cambiado y ahora dice **hacia dónde y
+cuánto** —«Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»—,
+compuesta por el DOMINIO y nombrando la **diferencia**, no el valor. Sin una línea nueva.
+▶ ⚠️⚠️ **Y con la frase se movió la CONDICIÓN**, que es el trozo que importa: `invoiced_hint` es
+`null` exactamente cuando no hay nada que trazar, así que la pantalla **dejó de comparar los dos
+importes por su cuenta**. Es `L1` aplicado *antes* de que cueste — allí la condición re-derivada
+divergió en 19 de 58 pedidos sin que nada fallara.
+▶ Medido por HTTP real y compuesto por el módulo REAL del cajón: **26 pedidos, 11 publican frase**
+(6 subidas, 5 bajadas), **0 se quedan cortos y 0 se pasan**.
+▶ ⚠️⚠️ **Y una guarda NACIÓ DECORATIVA**: la de idiomas salía verde con la clave francesa borrada,
+porque Laravel **cae al idioma de respaldo** — una clave que falta no se ve como una clave en crudo,
+se ve como un cliente francés leyendo castellano en su pantalla de dinero. Arreglada con
+`Lang::has(…, false)`.
+▶ 🟩 **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO.** Después, la **Fase 5**.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -110,7 +126,7 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2743 en verde** (15.986 aserciones, `--parallel` **~33 s** medidos el 2026-08-24) ·
+- Suite **2747 en verde** (16.033 aserciones, `--parallel` **~34 s** medidos el 2026-08-24) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.
@@ -165,8 +181,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   El neto es +1 porque esa guarda ya existía y lo que hizo falta fue **re-apuntarla**, no duplicarla.
   ▶ Y las de `#126` (**+25**): **13** del REPARTO de los dos ámbitos en el dominio —incluida la que
   asevera la propiedad, `upcoming + past = total` y sin solapamiento— y **12** del endpoint nuevo.
-  **648 tests JS** (`node --test`) · Pint
-  limpio (837 ficheros) · `docs-check` verde ·
+  **670 tests JS** (`node --test`) · Pint
+  limpio (842 ficheros) · `docs-check` verde ·
+  ⚠️ **Esta cifra de JS decía 648 y llevaba VEINTIDÓS cierres de retraso** —los deltas de arriba ya
+  cantaban 666, 667 y 668—: corregida el 2026-08-24. **El `pre-push` solo vigila el contador de PHP**
+  (`DECISIONES #116`), así que el de JS depende de que alguien lo mire; si vuelve a divergir, mídelo
+  con `npm run test:js` en vez de sumar los deltas.
   ⚠️ **El contador ha BAJADO dos cierres seguidos, y las dos veces a propósito**: `/mi-cuenta/…` se
   llevó 63 casos (`#120(u)`) y el modal de auth, 42 (`#122`). Ninguno se perdió por descuido — en el
   segundo se midió **por mutación** cuáles cazaba también la API antes de borrar, y los tres que eran
@@ -264,31 +284,27 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ LO SIGUIENTE ES **`L6`**, Y ES LO ÚNICO QUE ENTRA
+# ❗ EL DESGLOSE ESTÁ CERRADO. LO SIGUIENTE ES LA **FASE 5** — Y NO EMPIEZA POR CÓDIGO
 
-**Decisión del owner del 2026-08-24** (`DECISIONES #133` · `specs/desglose-dinero-cliente.md` §22.2).
-De las tres cosas que la auditoría dejó planteadas, **`L5` no era un defecto** y **`L4` se aparca**;
-`L6` está **aprobado con su redacción ya acordada** y **sin implementar a propósito** (el owner lo
-dejó para la sesión siguiente).
+✅ **`L6` EJECUTADO el 2026-08-24** (`DECISIONES #134` · `specs/desglose-dinero-cliente.md` §23), y
+con él **se cierra el desglose de dinero del cliente**. De las tres cosas que la auditoría de las 25
+acciones dejó planteadas: `L6` hecho, **`L4` aparcado** y **`L5` retirado porque no era un defecto**
+(`#133`, §22.2 — queda escrito para que nadie lo «arregle»).
 
-**Qué hay que hacer, exactamente:** la línea «Importe al reservar» del desglose del cliente dice *que*
-el pedido cambió, pero no **en qué dirección ni cuánto** — y eso es justo lo que quiere saber quien ve
-180,00 € donde espera 120,00 €. La frase pasa a componerla el **DOMINIO** (como ya compone la frase de
-estado) con dirección e importe:
+**❗ Lo siguiente es la Fase 5 (capa de contenido profesional), y su PRIMER punto no es implementable
+tal como está escrito** — medido el 2026-08-23, y sigue siendo cierto:
 
-    «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
-    (y «… 60,00 € más» cuando sube)
+- pide caché **etiquetada** (`Cache::tags(...)`) y el store configurado es `database`, que **lanza**
+  `BadMethodCallException` en cuanto se usan tags;
+- **no hay Redis** en el stack local, ni en staging, ni una línea en la doc que lo contemple.
 
-- **Ni una línea nueva, ni un bloque, ni un concepto.** Ése es el criterio del owner —«que lo entienda
-  sin complicación ni fricción»— y es lo que ordena las tres decisiones.
-- Los importes salen de `facturado` y `valor`, que `OrderLedger` **ya publica**.
-- A tocar: `tickets.ledger.invoiced_hint` en **ES/EN/FR** (pasa a ser dos claves, una por dirección) y
-  quien elige entre ellas, que es `OrderLedger`. El cliente lo pinta ya (`financials.invoiced.hint`).
-- **Caso de prueba listo en la BD**: `B-06` (bajada 12→8 invitados, facturado 180,00 · valor 120,00) y
-  `B-05` (subida, facturado 120,00 · valor 180,00). Sus códigos, en el índice de §22.
+▶ **Empieza por una decisión de INFRAESTRUCTURA del owner** —añadir Redis, o invalidar por versión de
+clave— y no por código. Escribir el primer `Cache::tags()` antes de esa decisión es escribir algo que
+revienta en la primera petición.
 
-⚠️ **Lo que NO hay que hacer**: `L5` está **retirado como defecto** —«Resto de la señal de X» ya es
-correcto, X es la RESERVA y no el producto— y queda escrito en §22.2 para que nadie lo «arregle».
+⚠️ **Y antes de verificar NADA en staging**: sirve `b6fadf5`, que es **anterior a todo el desglose**
+(`#123` a `#134`). Cualquier comprobación del dinero contra staging hoy mide el sistema anterior — el
+que miente. La distancia se mide, no se copia (ver «Dónde estamos»).
 
 ---
 
@@ -326,6 +342,9 @@ salían 55 distintos: dos repetidos y **dos invisibles para su dueño**—. Arre
   `PAY-16` y `PAY-17`; la tarifa al mover la fecha, `PAY-18`.
 - ⚠️ **`online_amount_cents` NO es una dimensión del ledger**: es «cuánto se te cobrará si pagas
   ahora», lo que consume el reintento. Leerlo como «lo pagado» es el defecto original.
+- ⚠️ **Y desde `#134` eso incluye «Importe al reservar»**: la frase (`invoiced_hint`) la compone el
+  dominio con **dirección e importe**, y **su nulidad ES la condición de enseñar la línea**. Comparar
+  `invoiced_cents` con `value.total_cents` en una superficie es re-derivarla otra vez.
 - ⚠️⚠️ **Las CONDICIONES también las decide el dominio, no solo los importes** (`#128`). Cuándo se
   enseña el eje de caja (`has_cash`), cómo se cobró (`charged_method`) y cuándo (`charged_at_label`)
   **viajan publicados**. `hasCash()` existía y **ninguna superficie lo llamaba**: cada una re-derivaba
