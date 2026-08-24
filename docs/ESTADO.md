@@ -226,6 +226,15 @@ en `ZONES` más su rótulo, y hoy ya existen `ORDERS` y `ORDERS_HISTORY`.
 - ⚠️ **`online_amount_cents` NO es una dimensión del ledger**: es «cuánto se te cobrará si pagas
   ahora», lo que consume el reintento. Leerlo como «lo pagado» es el defecto original.
 
+❗ **Y si alguien te enseña un pedido cuyo desglose «no se entiende», mira PRIMERO la spec §17.**
+Hay un caso canónico —`R-L6UTIA`— que parece un fallo del desglose y es un **dato roto**: dice
+«Pagado por web 114,00 €» cuando el pago real fueron 30,00 €. La aritmética cierra porque cierra
+sobre una mentira que está en la BD. ⚠️ **Regla: comprueba si el dato es real antes de buscar el
+fallo en el código** (`grossPaidOnline` contra `pagadoOnline`).
+▶ Y §17.1 recoge **tres defectos de LECTURA que sí son nuestros** y siguen sin arreglar, el más
+importante: **el ancla de caja no se enseña si no hay devoluciones**, así que en un pedido normal el
+cliente nunca ve cuánto salió de su banco. Van con la tanda C — son de pantalla, no de dinero.
+
 ⚠️ **Y una trampa que este trabajo pagó CUATRO veces**: un fixture que no reproduce el flujo real
 **inventa defectos tan bien como los oculta**. Los cuatro casos —un pedido `paid` sin `paid_at`, otro
 sin ninguna fila `Payment`, un reembolso que escribe la columna sin la fila— aparecían como fallos del

@@ -1110,3 +1110,46 @@ hecho meses después. Es el mismo razonamiento que ya había llevado lo pendient
 `Booking` no puede nombrar un modelo de `Payments` —la intención del reembolso llega ahora como
 cadena desde `Order`—, y la de estilo, las cinco clases nuevas sin una sola regla CSS. Ninguna de las
 dos habría fallado en la suite ni se habría visto en el navegador hasta mucho después.
+
+---
+
+## 17. ⚠️ `R-L6UTIA` — el pedido que parece un fallo del desglose y es un DATO ROTO
+
+**Si alguien te enseña esta pantalla y te pregunta «¿esto está bien?», la respuesta está aquí.**
+
+    Cumpleaños Jump · 8×216,00 €
+    Señal 114,00 € · 102,00 € en el parque
+    ...
+    Pagado por web                    114,00 €
+    Pendiente de pagar en el parque   102,00 €
+      ↳ Cumpleaños Jump                12,00 €
+      ↳ Resto de la señal              90,00 €
+    Valor del pedido                  216,00 €
+    Importe al reservar               132,00 €
+
+**El desglose está bien; el DATO no.** Medido: el pago real de ese pedido fueron **30,00 €**, no
+114,00 €. Es uno de los **21 pedidos de auditoría** de la BD local, montado por un guion anterior que
+subió el precio del ítem **84,00 €** y solo registró **12,00 €** de `extra_due` — algo que el flujo
+real del panel **no puede producir**, porque `ViewOrder` registra el diff ENTERO (§9.4).
+
+▶ **La aritmética cierra (114 + 102 = 216) porque cierra sobre una mentira que está en la base de
+datos**, no en el cálculo. Y la guarda lo dice: `R-L6UTIA` es uno de los **20 pedidos que incumplen
+`PAY-17`** (§15.3), y el único de su clase.
+
+⚠️ **Regla general, que vale para cualquier pedido raro que aparezca**: cuando el desglose enseñe algo
+que no cuadra con la realidad, **comprueba primero si el dato es real** —`grossPaidOnline` contra
+`pagadoOnline`— antes de buscar el fallo en el código. Es la trampa que este trabajo pagó CUATRO veces
+con fixtures irreales (§16.5).
+
+### 17.1 Pero al mirarlo en pantalla salieron TRES defectos de lectura que sí son nuestros
+
+Independientes del dato roto, y **ninguno arreglado todavía**:
+
+| | Qué se ve | Por qué está mal |
+|---|---|---|
+| **L1** | El **ancla de caja no aparece** | El bloque «Tu dinero» solo se pinta si hay devoluciones, así que **en un pedido normal el cliente nunca ve cuánto salió de su banco**. ⚠️ Es lo único que puede cotejar con su extracto — y aquí habría delatado el problema al instante: «cobrado por web 30,00 €» junto a «pagado por web 114,00 €». **Es un fallo de diseño, no del dato**: el ancla debería verse siempre que haya habido un cobro |
+| **L2** | `8×216,00 €` | Se lee como «8 unidades a 216 € cada una» = 1.728 €. Son **8 invitados y 216 € en total**. La línea de la reserva no distingue cantidad de importe |
+| **L3** | «Señal 114,00 €» | Ni es la señal (fueron 30,00 €) ni la palabra es correcta: es «lo pagado por web de esta reserva» (§4.4). **El rótulo sigue pendiente de decisión del owner** (§6.3), por eso no se tocó en la tanda B |
+
+▶ **Los tres son de PANTALLA, no de dinero**, y caben con la tanda C. `L1` es el que más valor tiene:
+convierte el desglose en algo que el cliente puede **verificar**, en vez de solo leer.
