@@ -202,7 +202,15 @@ identidad** (antes 3).
 propósito — eso es la tanda B. Y el contador subió de 18 a 19, que es buena noticia: cancelar un
 pedido antes «se leía bien» porque **mentía en silencio**, y ahora dice la verdad mal maquetada.
 
-❗ **LO SIGUIENTE ES LA TANDA B — la PROYECCIÓN**, en las OCHO superficies (spec §14.1 y §14.3).
+🟩 **Y LA TANDA B TAMBIÉN ESTÁ EJECUTADA** (spec §16): **el desglose ya es LEGIBLE**. Lo compone un
+único value object que leen las ocho superficies, el contrato lo publica en **dos ejes** y cada estado
+lleva **su frase**. ▶ **La medida que lo cierra**: la matriz de las 23 acciones del panel →
+**0 de 23 dejan la columna ilegible** (antes 18), y el eje del valor **cierra en 50 de 50** pedidos
+por HTTP real. `LedgerSingleSourceTest` prohíbe que ninguna superficie vuelva a componerlo por su
+cuenta, **aunque acierte**.
+
+❗ **LO SIGUIENTE ES LA TANDA C**: «Mis pedidos» como pantalla propia y el «Ver pedido» de cada
+reserva llevando a ella (spec §5 y §14.4). ⚠️ Es la única de las tres que **no toca dinero**.
 
 ❗❗ **EL DESGLOSE DE DINERO QUE VE EL CLIENTE va ANTES de Fase 5.**
 Spec: `specs/desglose-dinero-cliente.md` 🟦 — **el MARCO YA ESTÁ ENTERO Y DECIDIDO** (§10,

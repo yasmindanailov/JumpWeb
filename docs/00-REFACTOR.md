@@ -1868,13 +1868,19 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
       creado por un flujo real cumple.** Y la matriz del panel: **23 acciones, 0 rompen ninguna
       identidad** (antes 3).
       ⚠️ **NO fue «riesgo cero»**, como prometía la vieja tanda 1: cambió conducta, que era el punto.
-- [ ] **Tanda B · PROYECCIÓN** — cuatro defectos, no uno (§9.3). Publicar los **cinco canales** + el
-      ancla de caja + la frase de estado, por reserva y agregados; partir la columna en los **dos
-      bloques**; retirar «Subtotal» de la columna; dejar de **ocultar** «Pagado por web».
-      `openapi/v1.yaml` **primero**. Aquí sí es escribible la guarda «lo publicado tiene que sumar».
-      ⚠️ **La promesa «sin tocar un número del panel» era imposible**: el panel miente en los mismos
-      cuatro casos. Cambian 3 pedidos de los creados por flujos reales, los tres a mejor.
-      ⚠️ Publicar `devuelto` por reserva está **BLOQUEADO** hasta arreglar el defecto 4 (tanda A).
+- ✅ **Tanda B · la PROYECCIÓN — EJECUTADA** (2026-08-24 · spec §16). **El desglose ya es LEGIBLE.**
+      El defecto de fondo era estructural: las ocho superficies componían **cada una la suya**. Ahora
+      lo compone `Booking\Services\OrderLedger` y todas pintan; el contrato lo publica en **dos ejes**
+      (`Ledger`/`LedgerValue`/`LedgerCash`) y los seis campos sueltos de la raíz se van dentro.
+      ▶ **Los cuatro defectos de proyección, cerrados**: aparece «Pagado en el parque» · el eje de
+      caja sale de la columna del valor · «Subtotal» pasa a «Importe al reservar», al pie y solo si
+      difiere · y «Pagado por web» deja de ocultarse. Más **la FRASE** que explica el estado, que es
+      lo que un número no puede decir — y que elige el MOTIVO que registró la tanda A.
+      ▶ **LA MEDIDA QUE LO CIERRA**: la matriz de las 23 acciones del panel, re-corrida entera →
+      **0 de 23 dejan la columna ilegible** (antes 18). Y el eje del valor **cierra en 50 de 50**
+      pedidos medidos por HTTP real.
+      ▶ `LedgerSingleSourceTest` prohíbe el MECANISMO —derivar un canal restando otros— aunque el
+      resultado sea correcto hoy. **Verificado por mutación, 5/5.**
 - [ ] **Tanda C · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
       cada reserva llevando a ella (decisiones del owner en la spec §5).
 - ✅ **El sandbox de Redsys, VERIFICADO en su integración** (2026-08-24, credenciales del owner:

@@ -1036,3 +1036,77 @@ anclado a CAJA a nivel de pedido y se REPARTE por reserva — una sola fórmula,
 sin `paid_at`, otro `paid` sin ninguna fila `Payment`, y un reembolso que escribía la fila sin
 actualizar la columna agregada. Es la cuarta vez que esta spec anota lo mismo: **un fixture que no
 reproduce el flujo real inventa defectos tan bien como los oculta.**
+
+---
+
+## 16. TANDA B · EJECUTADA — el desglose ya es LEGIBLE
+
+> 2026-08-24 · dos commits · `DECISIONES #127`.
+> **Estado: ✅ el dominio dice la verdad (tanda A) y ahora se entiende.** Falta la tanda C (pantalla).
+
+### 16.1 El defecto de fondo era ESTRUCTURAL, no de rótulos
+
+Las ocho superficies componían **cada una su desglose** a partir de campos sueltos. Por eso
+divergían. La tanda B lo cambia por construcción:
+
+- **`Booking\Services\OrderLedger`** compone el desglose —del pedido y de la reserva— y las ocho
+  superficies **pintan**: no derivan, no deciden, no rotulan un importe con otro nombre.
+- **El contrato lo publica en DOS EJES** (`Ledger` / `LedgerValue` / `LedgerCash`), y los seis campos
+  sueltos de la raíz se van dentro. Un número, un sitio.
+- **`LedgerSingleSourceTest`** prohíbe el MECANISMO: una superficie que vuelva a restar canales a
+  mano cae **aunque su resultado sea correcto hoy** — porque «correcto hoy» fue exactamente el estado
+  del que salió todo esto.
+
+⚠️ **`online_amount_cents` se queda FUERA del ledger a propósito**: es «cuánto se te cobrará si pagas
+ahora», lo que consume el reintento. Leerlo como «lo pagado» es lo que hacía que un pedido sin pagar
+anunciara «Pagado online 11,90 €».
+
+### 16.2 Los cuatro defectos de proyección, cerrados
+
+| | Estaba | Ahora |
+|---|---|---|
+| **P1** | Faltaba «Pagado en el parque»: la columna no sumaba en el **100 %** de los pedidos con algo cobrado en puerta | Es un canal publicado. El eje del valor **cierra en 50 de 50** pedidos, medido por HTTP real |
+| **P2** | «Devuelto» y «Pdte. de devolución» se pintaban como **restas dentro de la columna del valor**, de la que no restan | Bloque propio. **La separación es la corrección**, no un retoque visual |
+| **P3** | «Subtotal» (lo facturado) y «Total» (el valor) apilados sin decirlo | «Importe al reservar» sale de la columna, va al pie con su explicación y **solo si difiere** |
+| **P4** | «Pagado online» **se ocultaba** sin señal: 7 de 50 pedidos en los que el cliente no veía cuánto había pagado | Se enseña siempre, y partido en cobrado/pendiente |
+
+### 16.3 Y la FRASE, que es lo que un número no puede decir
+
+La compone el dominio porque decidir qué caso es —se le debe dinero, se canceló, caducó sin cobro, se
+le devolvió y conserva la reserva— **es regla, no presentación**. ⚠️ **El orden de los casos es parte
+de la regla**: lo que se le debe al cliente va SIEMPRE primero. Y `null` es un estado real: una frase
+de relleno enseña a ignorar las que sí importan.
+
+    Cancelar el pedido      → «Tu reserva se canceló el … Tenemos pendiente devolverte 24,00 €.»
+    Bajar la cantidad       → «Tenemos pendiente devolverte 12,00 €.»
+    Reembolsar sin cancelar → «Te devolvimos 30,00 € y conservas tu reserva: no tienes que pagar nada más.»
+    Caducar sin pagar       → «Esta reserva caducó sin completarse el pago. No se te ha cobrado nada.»
+
+⚠️ La última frase la elige el **motivo** que la tanda A registra: sin él solo se podría decir «te
+devolvimos X €», que no responde a lo único que el cliente necesita saber — **si sigue debiendo**.
+
+### 16.4 LA MEDIDA QUE CIERRA LA TANDA
+
+La matriz de §12, re-corrida entera con el criterio del modelo nuevo:
+
+    23 acciones · 0 fallaron · 0 rompen ninguna identidad
+    dejan la columna ILEGIBLE:  0 de 23      (antes: 18 de 23)
+
+Y el ejemplo que más dolía, `P1 · cancelar el pedido`:
+
+    ANTES    Total 19,80 €          ← y nada más. El parque retenía el dinero y el cliente no lo sabía.
+    AHORA    Valor del pedido 0,00 €
+             Tu dinero · cobrado por web 24,00 € · pendiente de devolverte 24,00 €
+             «Tu reserva se canceló el 01/06/2026. Tenemos pendiente devolverte 24,00 €.»
+
+### 16.5 Dos cosas que la ejecución enseñó
+
+⚠️ **Los CORREOS tenían el mismo problema y por otra razón: se REENVÍAN.** `onlineDueCents()` es «lo
+que se cobraría al pagar ahora» y `Order.total` es lo facturado; los dos envejecen mal en un reenvío
+hecho meses después. Es el mismo razonamiento que ya había llevado lo pendiente en puerta a
+`pendingAtGate()`, aplicado a los otros dos importes del correo.
+
+⚠️ **Dos guardas de arquitectura cazaron cosas que yo no vi**: la de fronteras de módulos, que
+`Booking` no puede nombrar un modelo de `Payments` —la intención del reembolso llega ahora como
+cadena desde `Order`—, y la de estilo, las cinco clases nuevas sin una sola regla CSS. Ninguna de las
+dos habría fallado en la suite ni se habría visto en el navegador hasta mucho después.

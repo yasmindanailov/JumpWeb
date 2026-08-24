@@ -6242,3 +6242,38 @@ cumple.** Un invariante que solo se queja de lo que ya estaba roto es exactament
 noticia**: cancelar el pedido antes «se leía bien» porque mentía en silencio —«Total 19,80 €» y nada
 más—; ahora dice la verdad («pendiente de devolverte 19,80 €») y lo que falla es la maquetación, que
 es lo que arregla la tanda B.
+
+### #127(f) · 2026-08-24 · TANDA B ejecutada — el defecto era ESTRUCTURAL, no de rótulos
+
+Detalle en `specs/desglose-dinero-cliente.md` §16. Lo que la ejecución dejó claro:
+
+⚠️⚠️ **El problema nunca fue cómo se llamaban las líneas: era que OCHO superficies componían cada
+una su desglose.** Cambiar rótulos habría dejado el mecanismo intacto y la divergencia habría vuelto
+con la siguiente pantalla. La corrección es que `Booking\Services\OrderLedger` lo compone y las ocho
+**pintan**; el contrato lo publica en **dos ejes** y los seis campos sueltos de la raíz se van dentro.
+
+▶ **Y la guarda vigila el MECANISMO, no el síntoma**: `LedgerSingleSourceTest` tumba a una superficie
+que vuelva a derivar un canal restando otros **aunque su resultado sea correcto hoy** — porque
+«correcto hoy» era exactamente el estado del panel, que calculaba `pagadoOnline = valorFinal −
+aCobrar − pagadoPuerta` mientras la API usaba otra fórmula. Coincidían por álgebra.
+
+▶ **La medida que cierra la tanda**: la matriz de las 23 acciones del panel, re-corrida entera →
+**0 de 23 dejan la columna ilegible**, cuando eran 18. Y el eje del valor **cierra en 50 de 50**
+pedidos medidos por HTTP real.
+
+**Tres cosas que solo se supieron al hacerlo:**
+1. **Los CORREOS tenían el mismo defecto por otra razón: se REENVÍAN.** `onlineDueCents()` es «lo que
+   se cobraría al pagar ahora» y `Order.total` es lo facturado; los dos envejecen mal en un reenvío
+   hecho meses después. El propio código ya lo había razonado para lo pendiente en puerta y no lo
+   había aplicado a los otros dos importes del mismo correo.
+2. **Dos guardas de ARQUITECTURA cazaron cosas que el autor no vio**: la de fronteras de módulos
+   —`Booking` no puede nombrar un modelo de `Payments`, así que la intención del reembolso llega como
+   cadena desde `Order`— y la de estilo, con cinco clases nuevas sin una sola regla CSS. Ninguna de
+   las dos habría fallado en la suite ni se habría visto en el navegador hasta mucho después.
+3. **Y el cuarto fixture irreal de esta serie**: escribía la columna de reembolso a mano dejando una
+   fila del importe completo. Es la cuarta vez que se anota lo mismo en este trabajo — **un fixture
+   que no reproduce el flujo real inventa defectos tan bien como los oculta**.
+
+⚠️ **Una desviación consciente de la tabla de vocabulario de §10.4**: el ledger que ve el cliente es
+el del PEDIDO —se abre desde «Ver pedido»— así que su total se rotula «Valor del pedido» y no «Valor
+de tu reserva», que engañaría en un pedido con dos reservas.
