@@ -91,6 +91,9 @@ final readonly class ReservationFinancials
         // `RedsysReturnHandler` (web) y `ManualOrderFulfiller` (taquilla), y sobrevive a la
         // cancelación y al reembolso.
         $collected = $order->paid_at !== null;
+        // Segunda capa de «un pedido cancelado no tiene valor vivo» (`DECISIONES #127`): la cascada
+        // al cancelar deja el dato explícito, y esto lo hace cierto también sobre filas anteriores.
+        $orderCancelled = $order->status === Order::STATUS_CANCELLED;
 
         $valor = 0;
         $online = 0;
@@ -108,7 +111,7 @@ final readonly class ReservationFinancials
             // producto, no solo en el total del pedido.
             $pendienteReembolso += $order->itemPendingRefundCents($item);
 
-            if ($item->isCancelled()) {
+            if ($item->isCancelled() || $orderCancelled) {
                 // Un cancelado no es producto actual: fuera del valor/pagado/puerta.
                 continue;
             }

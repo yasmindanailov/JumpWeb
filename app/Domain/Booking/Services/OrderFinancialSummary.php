@@ -97,6 +97,10 @@ final readonly class OrderFinancialSummary
         // `ManualOrderFulfiller` (taquilla)— y sobrevive a la cancelación y al reembolso, que es
         // justo lo que hace falta para no borrar la historia contable de un pedido cancelado.
         $orderCollected = $order->paid_at !== null;
+        // Un pedido CANCELADO no tiene valor vivo ni cargos de puerta que cobrar (`DECISIONES #127`).
+        // Segunda capa: la cascada al cancelar deja el dato explícito, esto lo hace cierto también
+        // sobre filas anteriores a la cascada.
+        $orderCancelled = $order->status === Order::STATUS_CANCELLED;
 
         $totalRefunded = 0;
         foreach ($order->payments as $payment) {
@@ -129,7 +133,7 @@ final readonly class OrderFinancialSummary
             // cuenta ni en el total con cambios ni en lo pendiente. Distinto de un item
             // FINALIZADO (abajo), que sí se asume cobrado. Requiere que el ajuste se ate a SU
             // item (no al principal) para que cancelarlo lo anule.
-            if ($item !== null && $item->isCancelled()) {
+            if (($item !== null && $item->isCancelled()) || $orderCancelled) {
                 continue;
             }
 
@@ -165,7 +169,7 @@ final readonly class OrderFinancialSummary
         $productsValue = 0;
         $onlineBacking = 0;
         foreach ($order->items as $item) {
-            if ($item->isCancelled()) {
+            if ($item->isCancelled() || $orderCancelled) {
                 continue;
             }
             // Suma TODOS los items no cancelados (principales + complementos: la

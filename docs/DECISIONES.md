@@ -6207,3 +6207,38 @@ maquinaria de dinero que ya existe, sin añadir ninguna:
 cargos y abonos**, y que `computeEditPricing` resuelva el precio por fecha en ese caso. El previo del
 operador se arregla solo: comparte ese mismo cómputo, que es justo por lo que hoy **afirma** «sin
 cambio de precio».
+
+### #127(e) · 2026-08-24 · TANDA A ejecutada — y tres cosas que solo se supieron al hacerla
+
+Los seis arreglos y sus guardas están en `specs/desglose-dinero-cliente.md` §15. Aquí lo que la
+ejecución ENSEÑÓ, que es lo que no estaba en el plan:
+
+1. ⚠️⚠️ **Una guarda sobre el helper suelto NO ve el cableado.** La mutación de «cancelar el pedido
+   cancela sus reservas» **no mordió**: el escenario llamaba a `cancelLiveItems()` directamente en
+   vez de conducir las acciones del panel. Es la trampa nº1 de `CONVENCIONES §3.quater` —comprobar
+   DÓNDE cayó la mutación— y costó dos guardas nuevas que conducen las acciones REALES. **Sin
+   verificar por mutación, ese arreglo habría quedado sin red y nadie lo habría sabido.**
+2. ⚠️⚠️ **`compensado` NO se puede definir por línea**, y se intentó. La versión por-línea
+   sobre-reporta cuando la pérdida de valor no deja huella en el ítem —un cambio a producto más
+   barato deja un `unit_price` nuevo, así que «cantidad_original × unit_price» miente—, que es
+   exactamente el caso que `#225` arregló anclando `pendienteDevolucion` a caja. Rompía su test. Va
+   anclado a CAJA a nivel de pedido y se REPARTE por reserva: una sola fórmula, un solo número.
+3. ⚠️ **La identidad `D` cazó un defecto que acababa de introducir el propio arreglo**: al exigir
+   «cobrado» para resolver las cestas de puerta, el desglose ↳ se quedó con el predicado viejo y dejó
+   de sumar su titular. Son TRES sitios que tienen que decir lo mismo, no dos. Justo para eso existe.
+
+▶ **Y una decisión de robustez tomada al medir**: «un pedido cancelado no tiene valor vivo» se aplica
+**en dos capas** —la cascada al cancelar deja el dato explícito, y una segunda capa de lectura lo hace
+cierto también sobre filas anteriores—. Sin la segunda, la regla dependería del camino de escritura,
+que es literalmente el hallazgo ALTO («coinciden por disciplina, no por construcción») del que nació
+todo este fichero de invariantes.
+
+▶ **Verificado sobre datos reales, no solo fixtures**: las dos identidades cierran en los 58 pedidos
+de MySQL salvo en 20, y los 20 son datos escritos a mano —18 `paid` sin fila `Payment`, 1 con la
+columna de reembolso a mano y 1 artefacto de un guion viejo—. **Todo pedido creado por un flujo real
+cumple.** Un invariante que solo se queja de lo que ya estaba roto es exactamente lo que se buscaba.
+
+⚠️ **Y el contador de columnas ilegibles de la matriz del panel subió de 18 a 19, que es BUENA
+noticia**: cancelar el pedido antes «se leía bien» porque mentía en silencio —«Total 19,80 €» y nada
+más—; ahora dice la verdad («pendiente de devolverte 19,80 €») y lo que falla es la maquetación, que
+es lo que arregla la tanda B.

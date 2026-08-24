@@ -1570,7 +1570,12 @@ class Order extends Model
     {
         $refunded = $this->itemRefundedCents($item);
 
-        if ($item->isCancelled()) {
+        // ⚠️ La línea de un pedido CANCELADO cuenta como cancelada aunque su `cancelled_at` esté
+        // vacío (`DECISIONES #127`): es la misma segunda capa que aplican `OrderFinancialSummary` y
+        // `ReservationFinancials`, y si este helper no la aplicara, el pedido diría «pendiente de
+        // devolver X €» y la línea diría 0 — la divergencia que el cruce B4 existe para cazar (y que
+        // cazó al introducir la regla).
+        if ($item->isCancelled() || $this->status === self::STATUS_CANCELLED) {
             return max(0, $this->itemCollectedCents($item) - $refunded);
         }
 

@@ -963,3 +963,76 @@ Zona nueva (`ZONES` + rótulo + componente) y el «Ver pedido» de cada reserva 
 - **`Order.total` sigue siendo inmutable**: es lo facturado. Cambia dónde se enseña, no lo que vale.
 - **Las voces**: el panel habla en tercera persona y el cliente en segunda.
 - **`FUNNEL_TRANSITIONS`, el grafo del embudo y el presupuesto del cajón**: nada de esto es del embudo.
+
+---
+
+## 15. TANDA A · EJECUTADA — lo que quedó hecho, y lo que midió
+
+> 2026-08-24 · `DECISIONES #127`, `#127(c)`, `#127(d)` · dos commits.
+> **Estado: ✅ el dominio dice la verdad y tiene guardas.** Falta la PROYECCIÓN (tanda B).
+
+### 15.1 Los seis arreglos
+
+| | Qué | Cómo se verificó |
+|---|---|---|
+| **A1** | **Mover la fecha RE-TARIFICA** al precio de hoy del día destino. Sube → cargo de puerta; baja → abono. Con su LÍMITE: solo al cambiar la fecha | `ItemDateChangeRetariffTest` (6 casos: las dos direcciones, el mismo tipo de día, el límite, el control del cambio de producto y el previo del operador). **Mutación 3/3**, incluida la que pierde el límite |
+| **A2** | **Un pedido cancelado no tiene valor vivo.** Los dos caminos cancelan sus reservas, **y además la regla es cierta por construcción** —una segunda capa de lectura la aplica también sobre filas anteriores a la cascada— | Dos guardas que conducen las ACCIONES REALES del panel. **Mutación 3/3** |
+| **A3** | **Sin cobro no hay cobro**: las cestas de puerta solo se resuelven si `paid_at !== null`, en los **tres** sitios que deben decir lo mismo | **Mutación 3/3.** ⚠️ La identidad `D` cazó el tercero, que se había quedado atrás |
+| **A4** | **Todo reembolso se atribuye a su reserva**, también el total, a prorrata de lo aportado online y por **resto mayor** (Σ exacta, sin fuga de céntimos) | **Mutación 1/1** + un caso que asevera la PROPIEDAD (importe impar sobre tres líneas), no una foto |
+| **A5** | **El MOTIVO del reembolso** (migración aditiva y nullable), preguntado **solo cuando hace falta**: si además se cancela, es evidente y se registra solo | Tres guardas: se registra · no se pregunta lo obvio · un valor inventado no se guarda |
+| **A8** | El **docblock** de `refundItem` (afirmaba lo contrario del código) y el **control negativo** de `redsys:verify-sandbox`, que salía en VERDE | **Contra el sandbox REAL** con las credenciales del owner: clave buena → `SIS0054`, salida 0; clave mala → `SIS0042`, salida 1 |
+
+### 15.2 Las guardas: 5 invariantes → 13, y 6 escenarios → 11
+
+`PAY-16` (eje valor, cinco canales) · `PAY-17` (eje caja) · `PAY-18` (la tarifa al mover la fecha).
+Más los cuatro cruces que faltaban (`B3`, `B5`, `C`, `D`), la **exclusión mutua** de los dos canales
+web, la **no-negatividad** de cada canal —que asevera que los `max(0,…)` del dominio no están tapando
+nada— y la **guarda de construcción** «la columna de reembolso es siempre Σ filas», que sustituye a la
+legacy-safety sin retirarle el cinturón.
+
+⚠️ **Los cinco escenarios nuevos son el trabajo de verdad.** Los seis viejos pasaban ya antes de los
+arreglos: su hueco no estaba en la aserción, estaba en el FIXTURE.
+
+### 15.3 Verificado sobre los 58 pedidos REALES (MySQL), no solo sobre fixtures
+
+    PAY-16 · eje VALOR por reserva : cierra en los 58  ✓
+    ningún canal negativo          : en los 58        ✓
+    las DOS identidades            : las cumplen 38 de 58
+
+▶ **Y los 20 que no las cumplen son EXACTAMENTE los datos escritos a mano**, clasificados por causa:
+
+| Causa | Cuántos | ¿Lo produce algún flujo? |
+|---|---|---|
+| pedido `paid` **sin ninguna fila `Payment`** | 18 (`DEMO-*`) | **No.** Ningún seeder crea pedidos (§9.7); son datos de sesiones antiguas |
+| columna de reembolso **escrita a mano** | 1 (`R-LTZWAE`) | **No.** Los dos escritores la derivan de las filas |
+| dice 114,00 € cobrados online con un pago de 30,00 € | 1 (`R-L6UTIA`) | **No.** Es el artefacto de §9.4: una subida de 84,00 € con 12,00 € registrados |
+
+▶ **Todo pedido creado por un flujo real cumple las dos identidades.** Un invariante que solo se
+queja de lo que ya estaba roto es exactamente lo que se buscaba.
+
+### 15.4 La matriz del panel, re-corrida entera
+
+    23 acciones · 0 fallaron · 0 rompen ninguna identidad   (antes: 3 rompían B5)
+    19 siguen dejando la columna del cliente ilegible       → eso es la TANDA B
+
+⚠️ **Y el contador de columnas ilegibles subió de 18 a 19, que es una BUENA noticia**: `P1` (cancelar
+el pedido) antes «se leía bien» porque **mentía en silencio** —decía «Total 19,80 €» y nada más—.
+Ahora dice la verdad («pendiente de devolverte 19,80 €») y lo que falla es la maquetación, que es
+justo lo que la tanda B arregla.
+
+### 15.5 Tres cosas medidas que conviene no volver a descubrir
+
+⚠️ **Una guarda sobre el helper suelto NO ve el cableado.** La mutación de A2 **no mordió** al
+principio porque el escenario llamaba a `cancelLiveItems()` directamente en vez de conducir las
+acciones del panel. Es la trampa nº1 de `CONVENCIONES §3.quater` —comprobar DÓNDE cayó la mutación— y
+costó dos guardas nuevas.
+
+⚠️ **`compensado` NO se puede definir por línea.** Se intentó, y rompía el caso que `#225` fijó: la
+versión por-línea sobre-reporta cuando la pérdida de valor no deja huella en el ítem (un cambio a
+producto más barato deja un `unit_price` nuevo, así que «cantidad_original × unit_price» miente). Va
+anclado a CAJA a nivel de pedido y se REPARTE por reserva — una sola fórmula, un solo número.
+
+⚠️ **Tres fixtures irreales corregidos, y los tres inventaban o tapaban defectos**: un pedido `paid`
+sin `paid_at`, otro `paid` sin ninguna fila `Payment`, y un reembolso que escribía la fila sin
+actualizar la columna agregada. Es la cuarta vez que esta spec anota lo mismo: **un fixture que no
+reproduce el flujo real inventa defectos tan bien como los oculta.**

@@ -1848,22 +1848,26 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > ⚠️⚠️ **Las TRES tandas de aquí estaban MAL DIMENSIONADAS y se sustituyen** (2026-08-24, tercera
 > auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**).
 
-- [ ] **Tanda A · DOMINIO + INVARIANTES**, en el mismo paso: un arreglo de dinero y su guarda no se
-      separan. ❗ **Incluye cerrar el AGUJERO DE INGRESOS de la spec §13**: mover la fecha **re-tarifica**
-      al catálogo del día destino (hoy no, y el panel afirma «sin cambio de precio») — decidido por el
-      owner en `#127(c)`. Más los **cuatro defectos** de la spec §9.2 —un pedido cancelado que no anuncia lo que se
-      debe devolver · un reembolso total que deja el valor intacto · un pedido nunca pagado que declara
-      dinero cobrado · un reembolso total sin atribuir a ninguna reserva— más los **dos ejes cerrados**
-      de §10.1 como invariante (`PAY-16` valor, `PAY-17` caja), los cruces que faltaban (`B3`, `B5`,
-      `C`, `D`) y la retirada de la legacy-safety como código muerto. **Verificado por mutación.**
-      ⚠️ **NO es «riesgo cero»**, como decía la tanda 1: cambia conducta, y es lo que hay que cambiar.
-      ▶ **Y lo que destapó la matriz del panel** (spec §12–§13, `DECISIONES #127(b)`, `#127(c)`):
-      corregir el **docblock** de `refundItem` (afirma `alsoCancelItem=true`; el código pasa `false`, y
-      **la conducta es deliberada** — el owner mantiene reembolso y cancelación independientes);
-      arreglar el verificador del sandbox de Redsys, que **da verde a su propio control negativo**;
-      y **registrar el MOTIVO** de reembolsar-sin-cancelar y de cancelar-sin-reembolsar (migración
-      aditiva en `payment_refunds`, que hoy no tiene dónde) — sin ese dato, «Pendiente de devolverte»
-      puede prometer algo que la política del parque no va a cumplir.
+- ✅ **Tanda A · el DOMINIO y sus guardas — EJECUTADA**
+      (2026-08-24 · `specs/desglose-dinero-cliente.md` §15 · `DECISIONES #127`, `#127(c)`, `#127(d)`). **El dominio dice la verdad y tiene guardas.** Seis arreglos, todos
+      **verificados por mutación**:
+      · **la fecha RE-TARIFICA** al precio del día destino, con su límite (solo al mover el día) —
+        cierra el agujero de ingresos de §13, y el previo del operador deja de afirmar «sin cambio»;
+      · **un pedido cancelado no tiene valor vivo**, por los dos caminos **y por construcción**;
+      · **sin cobro no hay cobro** (las cestas de puerta exigen `paid_at`), en los TRES sitios;
+      · **todo reembolso se atribuye a su reserva**, también el total, sin fuga de céntimos;
+      · el **MOTIVO** del reembolso, preguntado solo cuando hace falta;
+      · el **docblock** de `refundItem` y el **control negativo** de `redsys:verify-sandbox`, que
+        salía en verde — ahora verificado contra el sandbox REAL (comercio del owner, terminal 45).
+      ▶ **Guardas: 5 invariantes → 13, y 6 escenarios → 11.** `PAY-16` (eje valor, cinco canales),
+      `PAY-17` (eje caja) y `PAY-18` (la tarifa). Los cinco escenarios nuevos son el trabajo de
+      verdad: los seis viejos ya pasaban porque su hueco estaba en el FIXTURE, no en la aserción.
+      ▶ **Medido sobre datos reales, no solo fixtures**: las dos identidades cierran en los 58
+      pedidos de MySQL salvo en 20, y **los 20 son datos escritos a mano** (18 `paid` sin fila
+      `Payment`, 1 con la columna de reembolso a mano, 1 artefacto de un guion viejo). **Todo pedido
+      creado por un flujo real cumple.** Y la matriz del panel: **23 acciones, 0 rompen ninguna
+      identidad** (antes 3).
+      ⚠️ **NO fue «riesgo cero»**, como prometía la vieja tanda 1: cambió conducta, que era el punto.
 - [ ] **Tanda B · PROYECCIÓN** — cuatro defectos, no uno (§9.3). Publicar los **cinco canales** + el
       ancla de caja + la frase de estado, por reserva y agregados; partir la columna en los **dos
       bloques**; retirar «Subtotal» de la columna; dejar de **ocultar** «Pagado por web».

@@ -62,9 +62,19 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2704 en verde** (15.368 aserciones, `--parallel` **~32 s** medidos el 2026-08-23) ·
-  ▶ **+30 sobre el cierre anterior, y la mayoría son GUARDAS QUE FALTABAN**, no cobertura de código
-  nuevo. Las del relevo:
+- Suite **2721 en verde** (15.749 aserciones, `--parallel` **~35 s** medidos el 2026-08-24) ·
+  ▶ **+17 sobre el cierre anterior, y son las guardas de la TANDA A** (`DECISIONES #127`): **5**
+  escenarios nuevos de `OrderFinancialInvariantsTest` —los que ejercitan los cuatro defectos que se
+  arreglaron; los seis viejos ya pasaban porque su hueco estaba en el FIXTURE—, **6** de
+  `ItemDateChangeRetariffTest` (la re-tarificación al mover la fecha, con su límite y su control),
+  **2** que conducen las ACCIONES REALES del panel para la cascada de cancelación —una guarda sobre
+  el helper suelto NO veía el cableado, medido por mutación—, **3** del motivo del reembolso y **1**
+  que asevera que el reparto del reembolso total no pierde céntimos.
+  ▶ Y el fichero de invariantes pasa de **5 aserciones cruzadas a 13**: las dos identidades del
+  modelo, los cuatro cruces que faltaban, la exclusión mutua de los canales web, la no-negatividad de
+  cada canal y la guarda de construcción de la columna de reembolso.
+  ▶ Las del cierre ANTERIOR (2026-08-23), que siguen dentro: **+30, y la mayoría GUARDAS QUE
+  FALTABAN**, no cobertura de código nuevo. Las del relevo:
   **5** de `NoStoreWebResponsesTest` (nadie aseveraba `no-store` en una página web: la ponía un
   accidente de Livewire), **1** de `SidebarIconParityTest` (la paridad de iconos no miraba 10 de 32
   componentes), y **2** en `CustomerAccountContextTest` — un pack **sin franja** seguía avisando solo
@@ -176,7 +186,20 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-❗❗ **LO SIGUIENTE ES EL DESGLOSE DE DINERO QUE VE EL CLIENTE, y va ANTES de Fase 5.**
+🟩 **LA TANDA A ESTÁ EJECUTADA** (2026-08-24, `DECISIONES #127`, `#127(c)`, `#127(d)` ·
+`specs/desglose-dinero-cliente.md` §15): **el dominio dice la verdad y tiene guardas.**
+▶ Se cerró el **agujero de ingresos** —mover la fecha ya re-tarifica— y los cuatro defectos que la
+tercera auditoría destapó. **13 invariantes sobre 11 escenarios**, todas verificadas por mutación, y
+las dos identidades **cierran en los 58 pedidos reales de MySQL** salvo en los 20 de datos escritos a
+mano, que quedan clasificados por causa. La matriz del panel: **23 acciones, 0 rompen ninguna
+identidad** (antes 3).
+⚠️ **Lo que la tanda A NO toca es la PANTALLA**: las 19 columnas ilegibles de la matriz siguen ahí a
+propósito — eso es la tanda B. Y el contador subió de 18 a 19, que es buena noticia: cancelar un
+pedido antes «se leía bien» porque **mentía en silencio**, y ahora dice la verdad mal maquetada.
+
+❗ **LO SIGUIENTE ES LA TANDA B — la PROYECCIÓN**, en las OCHO superficies (spec §14.1 y §14.3).
+
+❗❗ **EL DESGLOSE DE DINERO QUE VE EL CLIENTE va ANTES de Fase 5.**
 Spec: `specs/desglose-dinero-cliente.md` 🟦 — **el MARCO YA ESTÁ ENTERO Y DECIDIDO** (§10,
 `DECISIONES #127`, 2026-08-24), que era la condición del owner para tocar esto. El plan revisado son
 **tres tandas: A dominio+invariantes · B proyección · C pantalla** (spec §11 y el tracker).
