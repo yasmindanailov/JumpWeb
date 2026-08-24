@@ -53,12 +53,15 @@ Comprobado además a mano sobre HTTP: las tres puertas de auth emiten su zona y 
 cuatro puntos llegan cableados y **no queda rastro del modal**.
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
-❗❗ **STAGING SE HA QUEDADO ATRÁS, y esta línea decía lo contrario.** Afirmaba «`main` va un commit
-por delante y es solo doc: no hay diferencia de código». **Medido el 2026-08-23**: eran ya **3 commits
-y 68 ficheros de código** (`b6fadf5..HEAD` excluyendo `docs/`), y con `#125` y `#126` encima son
-bastantes más. Staging **no lleva `#123`, `#124`, `#125` ni `#126`**: sirve un cajón sin el bloque de
-cuenta en Vue, sin el `no-store` global, sin los arreglos del reenvío y del velo, y sin «Mis reservas»
-por reserva.
+❗❗ **STAGING SE HA QUEDADO MUY ATRÁS, y esta línea llegó a decir lo contrario.** Afirmaba «`main` va
+un commit por delante y es solo doc: no hay diferencia de código», y ya entonces (2026-08-23) eran
+**3 commits y 68 ficheros**. Staging **no lleva `#123`, `#124`, `#125`, `#126` ni `#127`**: sirve un
+cajón sin el bloque de cuenta en Vue, sin el `no-store` global, sin los arreglos del reenvío y del
+velo, sin «Mis reservas» por reserva —y, lo más importante, **sin nada del desglose de dinero**.
+❗❗ **CONSECUENCIA QUE HAY QUE LEER ANTES DE VERIFICAR NADA ALLÍ**: staging sirve el desglose
+**VIEJO**, el que miente. Un pedido cancelado seguirá diciendo «Total 19,80 €» sin anunciar lo que se
+debe devolver, mover la fecha seguirá siendo gratis y el campo de motivo del reembolso no existe.
+**Cualquier comprobación del dinero contra staging hoy mide el sistema anterior**, no éste.
 ▶ **La cifra NO se copia aquí** —fue precisamente una cifra copiada la que mintió—. Se mide:
 `git log --oneline b6fadf5..HEAD` y `git diff --stat b6fadf5..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`,
 sustituyendo `b6fadf5` por lo que sirva staging.
