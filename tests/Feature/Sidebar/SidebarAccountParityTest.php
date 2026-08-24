@@ -164,6 +164,82 @@ class SidebarAccountParityTest extends TestCase
     }
 
     /**
+     * **«MIS PEDIDOS», alimentada por la respuesta REAL de `GET /me/orders`**
+     * (`specs/desglose-dinero-cliente.md` §19, `DECISIONES #129`).
+     *
+     * ⚠️⚠️ **Lo que esta paridad protege es que las DOS pantallas digan lo mismo del mismo dinero.**
+     * El pedido que se veía desplegado dentro de una reserva y el de esta lista son el mismo, y los
+     * sirve el mismo `OrderResource` por dos rutas distintas —`/orders/{code}` y `/me/orders`—. Si
+     * alguna vez dejaran de componerse igual, sería la novena superficie de dinero y nadie lo notaría:
+     * las dos pantallas se leen perfectamente por separado.
+     */
+    public function test_the_purchases_zone_says_the_same_as_the_order_it_lists(): void
+    {
+        [$user, $order] = $this->richOrder();
+
+        $lista = $this->purchasesInNode(
+            $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json()
+        );
+
+        $this->assertCount(1, $lista, 'la respuesta real no ha producido una fila de pedido');
+        $fila = $lista[0];
+
+        $this->assertSame($order->code, $fila['code']);
+        $this->assertSame(__('tickets.statuses.paid'), $fila['statusLabel']);
+        $this->assertSame(DisplayTime::format($order->created_at), $fila['createdLabel']);
+        $this->assertSame(Money::format((int) $order->total), $fila['totalLabel']);
+
+        // Las reservas del pedido, con su cantidad ya compuesta (`L2`). Son DOS: el pack vivo y la
+        // línea cancelada — al revés que «Mis reservas», que las reparte en dos pantallas, aquí el
+        // pedido las lleva todas porque su dinero las incluye a todas.
+        $this->assertCount(2, $fila['lines'], 'el pedido no lista todas sus reservas');
+        $this->assertSame(__('tickets.guests_count', ['count' => 1]), $fila['lines'][0]['quantityLabel']);
+
+        // ⚠️⚠️ **EL MISMO desglose que se veía dentro de la reserva, campo a campo.** No es una
+        // aserción de conveniencia: es la que caza el día que alguien componga el dinero aquí.
+        $porCodigo = $this->ledgerInNode(
+            $this->actingAs($user)->getJson(self::ROOT.'/orders/'.$order->code)->assertOk()->json()
+        );
+
+        $this->assertSame(
+            $porCodigo['financials'], $fila['financials'],
+            'la lista de pedidos y el pedido suelto componen el dinero de forma distinta'
+        );
+
+        // Y el ancla de caja llega con la lista: no hace falta desplegar nada para verla (`L1`).
+        $this->assertSame(
+            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $fila['financials']['cash']['rows'][0]['label']
+        );
+        $this->assertSame(Money::format(6800), $fila['financials']['cash']['rows'][0]['amountLabel']);
+    }
+
+    /**
+     * ⚠️⚠️ **«Ver pedido» tiene que ABRIR LA PANTALLA EN ESE PEDIDO, y sólo el servidor sabe en qué
+     * página cae** (owner, spec §5·2 · `#129`). Con 12 pedidos y 5 por página, el de la reserva más
+     * antigua está en la tercera: abrir la primera no fallaría nada y **no cumpliría la decisión**.
+     */
+    public function test_opening_an_order_from_a_reservation_lands_on_the_page_that_holds_it(): void
+    {
+        [$user, $order] = $this->richOrder();
+
+        // Once pedidos MÁS RECIENTES por delante: el rico queda el último de la lista.
+        for ($i = 0; $i < 11; $i++) {
+            $this->order($user, ['code' => 'R-NEW'.$i])->forceFill(['created_at' => Carbon::now()->addMinutes($i + 1)])->save();
+        }
+
+        $payload = $this->actingAs($user)
+            ->getJson(self::ROOT.'/me/orders?per_page=5&containing='.$order->code)
+            ->assertOk()->json();
+
+        $this->assertSame(3, $payload['meta']['current_page'], 'el servidor no ha devuelto la página que lo contiene');
+        $this->assertContains(
+            $order->code, array_column($this->purchasesInNode($payload), 'code'),
+            'la pantalla se abriría SIN el pedido que el cliente pulsó'
+        );
+    }
+
+    /**
      * ⚠️ **Una reserva ya disfrutada**, que es donde el estado depende del RELOJ y donde el rótulo
      * cambia. Va en su propio caso porque el pedido rico lo tiene todo en futuro a propósito: mezclar
      * los dos ejes en un solo caso haría que un fallo de cualquiera se leyera como el otro.
@@ -463,6 +539,26 @@ class SidebarAccountParityTest extends TestCase
                 process.stdout.write(JSON.stringify({ out: orderRow(payload, ctx) }));
             });
             JS, ['payload' => $order, 'ctx' => $this->dictionaries()], 'account-ledger.mjs')['out'];
+    }
+
+    /**
+     * La página de «Mis pedidos», compuesta por el módulo REAL.
+     *
+     * @param  array<string, mixed>  $payload  la respuesta de `GET /me/orders`
+     * @return list<array<string, mixed>>
+     */
+    private function purchasesInNode(array $payload): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { purchaseRows } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                const { payload, ctx } = JSON.parse(raw);
+                process.stdout.write(JSON.stringify({ out: purchaseRows(payload, ctx) }));
+            });
+            JS, ['payload' => $payload, 'ctx' => $this->dictionaries()], 'account-purchases.mjs')['out'];
     }
 
     /**

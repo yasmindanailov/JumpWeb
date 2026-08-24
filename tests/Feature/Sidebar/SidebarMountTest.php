@@ -386,7 +386,16 @@ class SidebarMountTest extends TestCase
 
         $boot = $this->bootPayload((string) $this->actingAs($user)->get('/')->assertOk()->getContent());
 
-        $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders'], array_keys($boot['account'] ?? []));
+        // ⚠️ `purchases` entra el 2026-08-24 con «Mis pedidos» (`DECISIONES #129`) y va ENTERO, al
+        // revés que `orders`: son 8 rótulos y la pantalla los usa todos, así que podarlo clave a
+        // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
+        // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
+        $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
+        $this->assertSame(
+            ['title', 'empty', 'ref', 'show', 'hide', 'reservations', 'pagination'],
+            array_keys($boot['account']['purchases'] ?? []),
+            'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
+        );
         $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
@@ -425,13 +434,17 @@ class SidebarMountTest extends TestCase
             // lee como «falta una clave» cuando lo único que pasa es que están en otro sitio.
             [
                 'event_data_show', 'event_data_hide',
-                'title', 'subtitle', 'empty', 'pagination',
+                // ⚠️ `subtitle` sale el 2026-08-24: NINGUNA superficie lo pintaba y viajaba en cada
+                // página con sesión. Lo mismo `order_hide` —«Ver pedido» ya no pliega, lleva a «Mis
+                // pedidos»— y `history.back`. Son 139 B que se pagaban por costumbre, y podarlos es
+                // lo que esta guarda pide ANTES de subir ningún techo (`DECISIONES #129`).
+                'title', 'empty', 'pagination',
                 'item_finished', 'item_cancelled',
                 // ⚠️ El historial y la referencia del pedido entran el 2026-08-23
                 // (`specs/mis-reservas-por-reserva.md`). La poda es clave a clave, así que una clave
                 // que no esté en `Arr::only` **viaja vacía** y su botón se pinta SIN TEXTO: pasó al
                 // escribir la pantalla y solo se vio en el navegador.
-                'history', 'order_ref', 'order_show', 'order_hide',
+                'history', 'order_ref', 'order_show',
                 'retry_payment', 'retry_hint',
                 'guest_form_pending', 'guest_form_done',
                 'guest_form_past', 'guest_form_cancelled',
@@ -466,8 +479,15 @@ class SidebarMountTest extends TestCase
         // B**, con **89 B** de holgura.
         // ⚠️⚠️ **5.720 → 6.272 el 2026-08-23**, por los MISMOS rótulos que suben el anónimo: el bloque
         // de cuenta viaja para todo el mundo. Medido: **6.160 B**, **+529**, con **112 B** de holgura.
+        //
+        // ⚠️ **6.272 → 6.600 el 2026-08-24: «Mis pedidos»** (`DECISIONES #129`). Y primero se PODÓ,
+        // que es lo que este mensaje pide: fuera `orders.subtitle`, `orders.order_hide` y
+        // `orders.history.back` —**medido: ninguna superficie del repo los lee**, y viajaban en cada
+        // página con sesión—. Eso devolvió **205 B**. El grupo nuevo son **298 B** de rótulos que la
+        // pantalla sí pinta, así que el neto es **+93**: de 6.382 a **6.475 B**, con **125 B** de
+        // holgura. Sin la poda habrían sido 6.680.
         $this->assertLessThan(
-            6272, $bytes,
+            6600, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

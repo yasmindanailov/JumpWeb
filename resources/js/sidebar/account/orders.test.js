@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardRow, cardRows, depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, pageInfo } from './orders.js';
+import { cardRow, cardRows, depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, pageInfo, purchaseRows } from './orders.js';
 
 /**
  * La red de «Mis reservas» (`docs/specs/area-cliente.md` §4.4).
@@ -60,6 +60,11 @@ const ACCOUNT = {
         guest_form_past: 'Datos de :product',
         guest_form_cancelled: ':product cancelada',
         pagination: { label: 'Paginación', prev: 'Anteriores', next: 'Siguientes', page: 'Página :current de :last' },
+    },
+    // ⚠️ «Mis pedidos» tiene su PROPIO grupo de rótulos: una barra que dijera «Paginación de
+    // reservas» sobre una lista de pedidos sería un texto falso que ninguna composición ve.
+    purchases: {
+        pagination: { label: 'Paginación de pedidos', prev: 'Anteriores', next: 'Siguientes', page: 'Página :current de :last' },
     },
 };
 
@@ -656,5 +661,45 @@ describe('el despliegue de las respuestas del pack', () => {
 
     test('un pedido sin líneas no lo ofrece', () => {
         assert.equal(orderRow(order({ items: [] }), CTX).hasPack, false);
+    });
+});
+
+/**
+ * **«Mis pedidos»: una fila por PEDIDO** (`specs/desglose-dinero-cliente.md` §19).
+ *
+ * ⚠️⚠️ Lo que se protege aquí es que **NO nazca una segunda composición del dinero**. El pedido de
+ * esta lista y el que se desplegaba desde una reserva son el mismo, servidos por el mismo
+ * `OrderResource`; componerlos distinto sería la novena superficie.
+ */
+describe('la lista de pedidos', () => {
+    test('⚠️ cada fila es `orderRow()` EXACTA, no una composición nueva', () => {
+        const pedido = order({ code: 'R-1' });
+        const filas = purchaseRows({ data: [pedido] }, CTX);
+
+        assert.deepEqual(filas, [orderRow(pedido, CTX)], 'la lista compone el dinero por su cuenta');
+    });
+
+    test('una respuesta vacía no inventa filas', () => {
+        assert.deepEqual(purchaseRows({ data: [] }, CTX), []);
+        assert.deepEqual(purchaseRows(null, CTX), []);
+    });
+
+    test('lleva el desglose entero de cada pedido', () => {
+        const [fila] = purchaseRows({ data: [order()] }, CTX);
+
+        assert.equal(fila.financials.value.total.amountLabel, '45,00 €');
+        assert.notEqual(fila.financials.cash, null, 'el ancla de caja tiene que viajar con la fila');
+    });
+
+    /**
+     * ⚠️ **La barra habla de PEDIDOS y no de reservas.** Los dos grupos de rótulos existen y el que
+     * se usa es un parámetro: sin él, esta pantalla anunciaría «Paginación de reservas» sobre una
+     * lista de pedidos, y eso no lo ve ningún test de composición ni el diff de árbol.
+     */
+    test('⚠️ la paginación usa los rótulos de SU grupo', () => {
+        const payload = { meta: { current_page: 1, last_page: 3 } };
+
+        assert.equal(pageInfo(payload, ACCOUNT, 'purchases').label, 'Paginación de pedidos');
+        assert.equal(pageInfo(payload, ACCOUNT).label, 'Paginación', 'el grupo por defecto ha cambiado');
     });
 });

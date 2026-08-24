@@ -71,6 +71,25 @@ export const ZONES = {
      * tercera puerta en vez de escribir una excepción a mano en la guarda.
      */
     ORDERS_HISTORY: 'orders-history',
+
+    /**
+     * **«Mis pedidos»: el dinero, por PEDIDO** (`specs/desglose-dinero-cliente.md` §5 y §19).
+     *
+     * ⚠️⚠️ **LA TRAMPA DE NOMBRES, y hay que leerla antes de tocar nada aquí.** El valor `orders` de
+     * arriba **NO** es esta pantalla: es «Mis reservas», y se llama así porque su ruta web es
+     * `account.orders` (`/mi-cuenta/pedidos`), a la que apuntan **8 notificaciones por correo ya
+     * entregadas** que no se pueden editar (`Http\Sidebar\AccountDoor::ZONE_BY_ROUTE`). Ese valor es
+     * un contrato publicado y **no se puede reasignar**: hacerlo mandaría a esos clientes a otra
+     * pantalla sin que nada fallara. Por eso la zona nueva se llama `purchases`.
+     *
+     * ▶ La regla para no equivocarse: **el nombre técnico dice de dónde salen los datos**.
+     * `ORDERS`/`ORDERS_HISTORY` se alimentan de `GET /me/reservations/{scope}` y `PURCHASES` de
+     * `GET /me/orders`. Los rótulos del cliente son los contrarios, y viven en `lang/`.
+     *
+     * ⚠️ Está en `HOME_ENTRIES` **y** se llega desde una reserva: las dos puertas las pidió el owner
+     * (§5·3). La segunda no necesita `ZONE_PARENTS` porque la primera ya la hace alcanzable.
+     */
+    PURCHASES: 'purchases',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -96,6 +115,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
     [ZONES.ORDERS_HISTORY]: 'orders.history.title',
+    [ZONES.PURCHASES]: 'purchases.title',
 };
 
 /**
@@ -175,7 +195,7 @@ export function parentZoneFor(zone) {
  * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
  * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
  */
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
 
 /**
  * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.

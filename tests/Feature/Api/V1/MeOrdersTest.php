@@ -313,6 +313,160 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonCount(2, 'data');
     }
 
+    /**
+     * ⚠️⚠️ **EL ORDEN TIENE QUE SER TOTAL, o la paginación PIERDE pedidos** (`DECISIONES #129`).
+     *
+     * Ordenar solo por `created_at` deja sin orden a los pedidos creados **en el mismo segundo**, y
+     * `LIMIT/OFFSET` puede entonces cortar por un sitio distinto en cada página: uno sale dos veces y
+     * otro no sale nunca. **Medido en MySQL sobre los 57 pedidos reales del cliente demo** —grupos de
+     * hasta 11 compartiendo `created_at`—: 57 filas recorridas, **55 distintas**, y dos pedidos
+     * invisibles por muchas páginas que pasara su dueño.
+     *
+     * ⚠️ **Este caso recorre TODAS las páginas y compara conjuntos**, que es la única forma de ver el
+     * defecto: cada página, mirada por separado, se lee perfectamente. Es la misma familia que
+     * `specs/mis-reservas-por-reserva.md` §3.4 — «una lista sin una fila se lee perfectamente».
+     *
+     * ⚠️ Su pareja es {@see test_the_pagination_order_is_total_by_construction}: la suite corre en
+     * SQLite y **el motor puede no reproducir la inestabilidad**, así que este caso documenta la
+     * intención y aquél es el que muerde en cualquier motor.
+     */
+    public function test_no_order_is_lost_or_repeated_when_many_share_a_timestamp(): void
+    {
+        $user = $this->verifiedUser();
+        $instant = now()->subDay();
+
+        // Todos en el MISMO segundo: es la condición que deja el orden sin desempatar.
+        foreach (range(1, 12) as $i) {
+            $this->makeOrder($user, ['code' => 'R-T'.str_pad((string) $i, 5, '0', STR_PAD_LEFT)])
+                ->forceFill(['created_at' => $instant])->save();
+        }
+
+        $vistos = [];
+        foreach ([1, 2, 3] as $page) {
+            foreach ($this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&page='.$page)->assertOk()->json('data') as $order) {
+                $vistos[] = $order['code'];
+            }
+        }
+
+        $this->assertCount(12, $vistos, 'el barrido no ha recorrido los 12 pedidos');
+        $this->assertSame(
+            12, count(array_unique($vistos)),
+            'un pedido sale en DOS páginas, así que otro no sale en ninguna: el orden no es total'
+        );
+        $this->assertEqualsCanonicalizing(
+            $user->orders()->pluck('code')->all(), $vistos,
+            'hay pedidos del cliente que no aparecen en ninguna página'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **La guarda que SÍ muerde en cualquier motor**: el orden de la paginación incluye una
+     * columna ÚNICA.
+     *
+     * Su hermana de arriba comprueba la conducta, pero la suite corre en SQLite y un motor puede
+     * devolver los empates en un orden estable por casualidad —y entonces el caso quedaría verde con
+     * el defecto dentro—. Esto no depende del motor: mira el SQL que se va a ejecutar y exige que
+     * termine desempatando por `id`. Es la misma familia que la regresión por query log de `AFORO-01`.
+     */
+    public function test_the_pagination_order_is_total_by_construction(): void
+    {
+        $user = $this->verifiedUser();
+        $this->makeOrder($user);
+
+        $sql = '';
+        \DB::listen(function ($query) use (&$sql) {
+            if (str_contains($query->sql, 'order by') && ! str_contains($query->sql, 'count(')) {
+                $sql = $query->sql;
+            }
+        });
+
+        $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk();
+
+        $this->assertStringContainsString('order by', $sql, 'no se ha capturado la consulta de la página');
+        $this->assertMatchesRegularExpression(
+            '/order by.*"?created_at"?\s+desc.*"?id"?\s+desc/is',
+            $sql,
+            'el orden de la paginación no desempata por una columna ÚNICA: con dos pedidos del mismo '.
+            'segundo, `LIMIT/OFFSET` corta por donde quiera y un pedido deja de ser visible'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **`containing` devuelve la página que CONTIENE ese pedido, no la primera.**
+     *
+     * «Ver pedido» de una reserva abre esta pantalla en ese pedido (`specs/desglose-dinero-cliente.md`
+     * §5·2), y **solo el servidor sabe en qué página cae**. Sin este parámetro la pantalla se abriría
+     * siempre en la primera y **no fallaría nada**: la decisión del owner quedaría incumplida en
+     * silencio, que es la clase de defecto que este trabajo lleva persiguiendo.
+     */
+    public function test_containing_returns_the_page_that_holds_that_order(): void
+    {
+        $user = $this->verifiedUser();
+        foreach (range(1, 12) as $i) {
+            $this->makeOrder($user, ['code' => 'R-C'.str_pad((string) $i, 5, '0', STR_PAD_LEFT)])
+                ->forceFill(['created_at' => now()->subDays(20 - $i)])->save();
+        }
+
+        // Con 5 por página y del más reciente al más antiguo: R-C00012…R-C00008 · R-C00007…R-C00003 · resto.
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&containing=R-C00006')
+            ->assertOk()
+            ->assertValidRequest()
+            ->assertValidResponse(200)
+            ->assertJsonPath('meta.current_page', 2);
+
+        $this->assertContains(
+            'R-C00006', array_column($response->json('data'), 'code'),
+            'la página que dice contenerlo no lo contiene'
+        );
+
+        // Y el borde: el primero de la página 3 es el que abre la tercera rebanada.
+        $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&containing=R-C00002')
+            ->assertOk()->assertJsonPath('meta.current_page', 3);
+    }
+
+    /**
+     * ⚠️ **Un código ajeno o inexistente NO se distingue: los dos caen en la primera página.**
+     *
+     * Responder distinto convertiría el parámetro en un **oráculo de códigos de pedido** —probar
+     * códigos hasta que uno devolviera otra página—, que es justo lo que `GET /orders/{code}` evita
+     * dando 404 en los dos casos. Como la consulta ya está acotada por el guard, «ajeno» e
+     * «inexistente» son literalmente el mismo caso aquí.
+     */
+    public function test_containing_never_becomes_an_oracle_of_order_codes(): void
+    {
+        $user = $this->verifiedUser();
+        foreach (range(1, 12) as $i) {
+            $this->makeOrder($user, ['code' => 'R-O'.str_pad((string) $i, 5, '0', STR_PAD_LEFT)])
+                ->forceFill(['created_at' => now()->subDays(20 - $i)])->save();
+        }
+
+        $ajeno = $this->makeOrder($this->verifiedUser(), ['code' => 'R-AJENO1']);
+
+        $deOtro = $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&containing='.$ajeno->code)
+            ->assertOk()->assertJsonPath('meta.current_page', 1)->json('data');
+
+        $inexistente = $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&containing=R-NADA00')
+            ->assertOk()->assertJsonPath('meta.current_page', 1)->json('data');
+
+        $this->assertSame(
+            array_column($deOtro, 'code'), array_column($inexistente, 'code'),
+            'un código ajeno y uno inexistente dan respuestas distintas: el parámetro es un oráculo'
+        );
+    }
+
+    /** `page` es explícito y gana: pedir las dos cosas a la vez es una contradicción. */
+    public function test_an_explicit_page_wins_over_containing(): void
+    {
+        $user = $this->verifiedUser();
+        foreach (range(1, 12) as $i) {
+            $this->makeOrder($user, ['code' => 'R-W'.str_pad((string) $i, 5, '0', STR_PAD_LEFT)])
+                ->forceFill(['created_at' => now()->subDays(20 - $i)])->save();
+        }
+
+        $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5&page=1&containing=R-W00002')
+            ->assertOk()->assertJsonPath('meta.current_page', 1);
+    }
+
     public function test_it_honours_a_smaller_page_size(): void
     {
         $user = $this->verifiedUser();

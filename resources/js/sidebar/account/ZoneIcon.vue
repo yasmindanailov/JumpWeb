@@ -63,4 +63,14 @@ defineProps({
              class="catalog__ico" aria-hidden="true" focusable="false">
             <path d="M12 3.1 19.2 6v5.5c0 4.3-3 7.6-7.2 9.4-4.2-1.8-7.2-5.1-7.2-9.4V6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
         </svg>
+
+        <!-- `receipt` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
+             ⚠️ Nace con la zona, como `shield` nació con privacidad: no había ningún icono pequeño
+             que dijera «pedido», y reusar el `calendar` de «Mis reservas» habría dejado dos entradas
+             del índice con el MISMO dibujo, que es donde el cliente elige entre las dos. -->
+        <svg v-else-if="zone === ZONES.PURCHASES" width="18" height="18" viewBox="0 0 24 24" fill="none"
+             class="catalog__ico" aria-hidden="true" focusable="false">
+            <path d="M5.4 3.6h13.2v16.8l-2.64-1.5-2.64 1.5-2.64-1.5-2.64 1.5-2.64-1.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+            <path d="M8.8 8.4h6.4M8.8 12.2h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+        </svg>
 </template>

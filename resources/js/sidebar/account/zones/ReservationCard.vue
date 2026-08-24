@@ -18,12 +18,8 @@
 defineProps({
     /** La fila ya compuesta por `cardRow()`. */
     row: { type: Object, required: true },
-    /** El pedido entero, ya compuesto por `orderRow()`, o `null` si no se ha desplegado. */
-    order: { type: Object, default: null },
     /** Las respuestas del pack de ESTA reserva, o lista vacía. */
     answers: { type: Array, default: () => [] },
-    /** ¿Está desplegado el pedido de esta tarjeta? */
-    openOrder: { type: Boolean, default: false },
     /** ¿Están desplegadas sus respuestas? */
     openEvent: { type: Boolean, default: false },
     /** ¿Va atenuada? Lo decide la pantalla. */
@@ -34,7 +30,7 @@ defineProps({
     messages: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['toggle-order', 'toggle-event', 'retry']);
+defineEmits(['open-order', 'toggle-event', 'retry']);
 </script>
 
 <template>
@@ -85,89 +81,22 @@ defineEmits(['toggle-order', 'toggle-event', 'retry']);
         </ul>
 
         <!--
-          ⚠️ **La referencia del pedido y su desglose, plegados.** El ledger es del PEDIDO: enseñarlo
-          entero en cada tarjeta lo repetiría tantas veces como reservas tenga ese pedido, con
-          importes que no cuadran con la tarjeta que los rodea. Se pide al desplegar.
+          ⚠️⚠️ **La referencia del pedido, y «Ver pedido» LLEVA A LA PANTALLA DE PEDIDOS**
+          (decisión del owner, `specs/desglose-dinero-cliente.md` §5·2 · `DECISIONES #129`).
+
+          Hasta el 2026-08-24 desplegaba el desglose aquí dentro, y eso era el defecto: el ledger es
+          del PEDIDO, así que en un pedido con tres reservas se pintaba tres veces y en dos de ellas
+          los importes no cuadraban con la tarjeta que los rodeaba. Ahora vive en su propia pantalla
+          y esta tarjeta solo dice a qué pedido pertenece — que es lo que sí es de la reserva.
         -->
         <div class="orders__order">
             <span class="orders__code">{{ (account?.orders?.order_ref ?? '').replace(':code', row.orderCode ?? '') }}</span>
             <span class="orders__status" :class="'orders__status--' + row.orderStatus">{{ row.orderStatusLabel }}</span>
         </div>
 
-        <button type="button" class="orders__gate-toggle" :aria-expanded="openOrder ? 'true' : 'false'"
-                @click="$emit('toggle-order')">
-            {{ openOrder ? account?.orders?.order_hide : account?.orders?.order_show }}
+        <button type="button" class="orders__gate-toggle" @click="$emit('open-order')">
+            {{ account?.orders?.order_show }}
         </button>
-
-        <div v-if="openOrder && order">
-            <div class="orders__meta">{{ order.createdLabel }}</div>
-
-            <!--
-              ⚠️⚠️ **DOS BLOQUES, y no se mezclan** (`DECISIONES #127`). Arriba lo que vale y por qué
-              canal se paga —cierra siempre—; abajo qué ha pasado con su dinero. Hasta la tanda B,
-              «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la columna del
-              valor, de la que NO restan, y por eso dejaba de leerse.
-            -->
-            <div class="orders__ledger">
-                <p class="orders__ledger-title">{{ order.financials.value.title }}</p>
-
-                <div v-for="(row, i) in order.financials.value.rows" :key="'v' + i" class="orders__gate">
-                    <span class="orders__gate-label">{{ row.label }}</span>
-                    <strong>{{ row.amountLabel }}</strong>
-                </div>
-
-                <div v-if="order.financials.value.gate">
-                    <div class="orders__gate">
-                        <span class="orders__gate-label">{{ order.financials.value.gate.label }}</span>
-                        <strong class="orders__gate-amount">{{ order.financials.value.gate.amountLabel }}</strong>
-                    </div>
-                    <div v-for="(gateLine, i) in order.financials.value.gate.lines" :key="i" class="orders__gate-line">
-                        <span>↳ {{ gateLine.label }}</span><strong>{{ gateLine.amountLabel }}</strong>
-                    </div>
-                    <p class="orders__gate-caption">{{ order.financials.value.gate.caption }}</p>
-                </div>
-
-                <div class="orders__final">
-                    <span>{{ order.financials.value.total.label }}</span>
-                    <strong>{{ order.financials.value.total.amountLabel }}</strong>
-                </div>
-            </div>
-
-            <!--
-              ⚠️⚠️ **EL ANCLA DE CAJA, que ahora se ve siempre que haya habido un cobro** (`L1`,
-              `DECISIONES #128`). Se pintaba solo si había devoluciones, así que en un pedido normal
-              el cliente NUNCA veía cuánto había salido de su banco — lo único que puede cotejar con
-              su extracto. La condición la decide el dominio (`ledger.cash.has_cash`), no esta zona.
-            -->
-            <div v-if="order.financials.cash" class="orders__ledger orders__ledger--cash">
-                <p class="orders__ledger-title">{{ order.financials.cash.title }}</p>
-                <!--
-                  ⚠️ El ancla va NEUTRA: las filas de este bloque heredaban el color de reembolso, y
-                  un cargo corriente en ámbar se lee como «te devolvimos algo».
-                -->
-                <div v-for="(row, i) in order.financials.cash.rows" :key="'c' + i"
-                     class="orders__refund" :class="{ 'orders__refund--anchor': row.anchor }">
-                    <span class="orders__refund-label">{{ row.label }}</span>
-                    <strong class="orders__refund-amount">{{ row.amountLabel }}</strong>
-                </div>
-                <p class="orders__gate-caption">{{ order.financials.cash.caption }}</p>
-            </div>
-
-            <!--
-              ⚠️ **La FRASE, no un número.** Era el encargo: que el cliente entienda su situación ante
-              cualquier situación. La compone el servidor, que es quien sabe qué caso es.
-            -->
-            <p v-if="order.financials.note" class="orders__ledger-note">{{ order.financials.note }}</p>
-
-            <!-- Trazabilidad: lo facturado al reservar, solo si ya no es lo que vale. -->
-            <div v-if="order.financials.invoiced" class="orders__ledger-invoiced">
-                <div class="orders__gate">
-                    <span class="orders__gate-label">{{ order.financials.invoiced.label }}</span>
-                    <strong>{{ order.financials.invoiced.amountLabel }}</strong>
-                </div>
-                <p class="orders__gate-caption">{{ order.financials.invoiced.hint }}</p>
-            </div>
-        </div>
 
         <!--
           ⚠️ El reintento va FUERA del desplegable: un pedido a medio pagar es lo más urgente de la

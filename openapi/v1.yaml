@@ -1635,6 +1635,12 @@ paths:
         estados**. Incluir los `pending` es deliberado: es la única forma de que un cliente que
         perdió el estado recupere un pedido a medio pagar mientras su retención de aforo sigue
         viva (`expires_at` dice hasta cuándo, `online_amount_cents` por cuánto).
+
+        ⚠️⚠️ **El orden es TOTAL, y hasta el 2026-08-24 no lo era** (`DECISIONES #129`). Ordenaba solo
+        por fecha de creación, así que dos pedidos creados **en el mismo segundo** no tenían orden
+        entre sí y `LIMIT/OFFSET` cortaba por un sitio distinto en cada página. **Medido sobre 57
+        pedidos reales**: dos salían repetidos en dos páginas y otros dos **no salían en ninguna** —
+        invisibles para su dueño por muchas páginas que pasara. El desempate es el `id`, que es único.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -1655,6 +1661,28 @@ paths:
             minimum: 1
             maximum: 50
             default: 10
+        - name: containing
+          in: query
+          required: false
+          description: |
+            **El código de un pedido: devuelve la página que lo CONTIENE**, en vez de la primera.
+
+            Existe porque «Ver pedido» de una reserva abre la pantalla de pedidos **en ese pedido**
+            (`specs/desglose-dinero-cliente.md` §5·2), y **solo el servidor sabe en qué página cae**:
+            el orden y el tamaño de página son suyos. Sin esto, el cliente tendría que pedir páginas
+            hasta encontrarlo —N peticiones y sin cota— o abrir siempre la primera, que es la forma
+            silenciosa de incumplir la decisión: no falla nada y no hace lo que promete.
+
+            ⚠️ **Un código que no sea del cliente se comporta como si no se hubiera enviado** (primera
+            página), no como un 404. Distinguir «no es tuyo» de «no existe» convertiría el parámetro
+            en un **oráculo de códigos de pedido**, que es justo lo que `GET /orders/{code}` evita
+            respondiendo 404 en los dos casos.
+
+            ⚠️ Se ignora si viene junto a `page`: pedir a la vez una página concreta y la página que
+            contiene algo es una contradicción, y `page` es el parámetro explícito.
+          schema:
+            type: string
+            maxLength: 32
       responses:
         '200':
           description: Página del historial de pedidos.

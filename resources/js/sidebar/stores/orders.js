@@ -5,6 +5,8 @@ import { STEPS } from '../machine.js';
 import { usePurchaseStore } from './purchase.js';
 import { useOutcomeStore } from './outcome.js';
 import { useSectionStore } from './section.js';
+import { useAccountStore } from './account.js';
+import { ZONES } from '../account/navigation.js';
 
 /**
  * **El estado de «Mis reservas»**: qué página se ha pedido, qué respondió y qué falló
@@ -39,13 +41,26 @@ export const useOrdersStore = defineStore('orders', {
         pages: { upcoming: null, past: null },
 
         /**
-         * El pedido COMPLETO, por código, **pedido bajo demanda** al desplegar «Ver pedido».
+         * La respuesta de `GET /me/orders`: **«Mis pedidos»**, la pantalla del DINERO
+         * (`specs/desglose-dinero-cliente.md` §19). `null` mientras no se haya pedido nunca.
          *
-         * ⚠️ El ledger no viaja con las tarjetas a propósito: es del pedido y se repetiría tantas
-         * veces como reservas tenga (`ReservationCardResource`). Se pide con `GET /orders/{code}`,
-         * que ya existe y ya está acotado por `user_id`. Mismo patrón que `eventData`.
+         * ⚠️⚠️ **Es otra lista, no otra vista de la de arriba.** Aquélla lista RESERVAS y ésta
+         * PEDIDOS, y son unidades distintas: un pedido puede llevar tres reservas de tres fechas.
+         * Aplanar una en la otra en el navegador daría un orden que solo es cierto dentro de la
+         * página —el motivo por el que `#126` descartó exactamente eso—, así que cada pantalla pide
+         * la suya y el servidor ordena y pagina las dos.
          */
-        orders: {},
+        purchases: null,
+
+        /**
+         * **El pedido que hay que abrir DESPLEGADO al entrar en «Mis pedidos»**, o `''`.
+         *
+         * ⚠️ Lo siembra «Ver pedido» de una reserva (decisión del owner, spec §5·2) y lo consume la
+         * zona **una sola vez**: es una intención de navegación, no un estado de la pantalla. Si no
+         * se vaciara, volver a entrar por el índice reabriría el pedido de la visita anterior, que
+         * ya no describe nada de lo que el cliente tiene delante.
+         */
+        focus: '',
 
         /** ¿Hay una petición en vuelo? */
         loading: false,
@@ -88,19 +103,77 @@ export const useOrdersStore = defineStore('orders', {
         },
 
         /**
-         * Pide el pedido entero de una tarjeta, **una sola vez**.
+         * **Abre «Mis pedidos» en un pedido concreto.** Lo llama «Ver pedido» de una reserva.
          *
-         * ⚠️ **Un fallo no se anuncia con el error de la zona**, igual que con las respuestas del
-         * pack: esto es un despliegue que el cliente ha pedido, no el contenido de la pantalla.
-         * Pintar «algo ha ido mal» sobre la lista entera porque no se pudo leer un bloque diría que
-         * el problema es otro.
+         * ⚠️⚠️ **Las TRES cosas pasan aquí y no repartidas entre el store y el componente**: sembrar
+         * el pedido, invalidar la página y NAVEGAR. La primera versión dejaba la navegación en
+         * `OrdersZone.vue`, y eso partía una regla en dos mitades de las que **una no tiene red** —un
+         * componente pinta y no se prueba con `node --test` (`CE-6`)—. El precedente es `retry()`,
+         * que también conmuta de sección desde aquí.
+         *
+         * ⚠️⚠️ **Invalida la página que hubiera**, y no es una optimización: la página cargada puede
+         * ser cualquiera, y el pedido buscado estar en otra. Sin este borrado, `ensurePurchases()`
+         * —que pide «solo si no hay datos»— se quedaría con la que ya tiene y la pantalla se abriría
+         * **sin el pedido dentro**, sin fallar nada. Es la forma silenciosa de incumplir la decisión
+         * del owner, que es justo la que este trabajo lleva persiguiendo.
          */
-        async ensureOrder(code, { api = httpClient } = {}) {
-            if (! code || this.orders[code]) return;
+        openPurchase(code) {
+            this.focus = String(code ?? '');
+            this.purchases = null;
+            useAccountStore().go(ZONES.PURCHASES);
+        },
 
-            const response = await api.get('/orders/' + encodeURIComponent(code));
+        /** Consume la intención: la zona la lee UNA vez y la vacía. Ver {@see focus}. */
+        takeFocus() {
+            const code = this.focus;
 
-            if (response.ok) this.orders = { ...this.orders, [code]: response.data };
+            this.focus = '';
+
+            return code;
+        },
+
+        /**
+         * Pide la página de «Mis pedidos» **solo si hace falta**. Se llama al entrar en la zona.
+         *
+         * ⚠️ Si hay un pedido que enfocar, la página la elige el SERVIDOR con `containing`: el orden
+         * y el tamaño de página son suyos, así que es el único que sabe en cuál cae (`#129`).
+         */
+        async ensurePurchases(deps) {
+            if (this.purchases !== null || this.loading) return;
+
+            // ⚠️ La intención se consume AQUÍ y no en la zona: un componente pinta, no orquesta
+            // (`CE-6`). Y es seguro consumirla dentro del `if` porque `openPurchase()` deja la
+            // página en `null`, así que sembrar el foco garantiza que esta carga ocurre.
+            await this.loadPurchases(1, { ...deps, containing: this.takeFocus() });
+        },
+
+        async loadPurchases(page = 1, { api = httpClient, containing = '' } = {}) {
+            this.loading = true;
+            this.error = '';
+            this.unauthenticated = false;
+
+            try {
+                const query = containing
+                    ? 'containing=' + encodeURIComponent(containing)
+                    : 'page=' + encodeURIComponent(page);
+                const response = await api.get('/me/orders?per_page=5&' + query);
+
+                if (response.ok) {
+                    this.purchases = response.data;
+
+                    return;
+                }
+
+                if (response.status === 401) {
+                    this.unauthenticated = true;
+
+                    return;
+                }
+
+                this.error = response.error?.message ?? '';
+            } finally {
+                this.loading = false;
+            }
         },
 
         /**

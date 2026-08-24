@@ -1842,7 +1842,7 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
-### El DESGLOSE de dinero que ve el cliente 🟦 — **lo CRÍTICO está cerrado; queda la PANTALLA**
+### El DESGLOSE de dinero que ve el cliente ✅ — **CERRADO: las tres tandas y los tres defectos de lectura**
 > Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
 > `(b)`–`(f)`. **Va ANTES de Fase 5.**
 > ✅ **Tandas A y B EJECUTADAS el 2026-08-24**: el dominio dice la verdad y el desglose se entiende.
@@ -1852,7 +1852,9 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > **Medido al cerrar**: la matriz de las 23 acciones del panel deja **0 columnas ilegibles** (eran
 > 18), el eje del valor **cierra en 50 de 50** pedidos por HTTP real y el eje de caja **se enseña en
 > 37 de 58** (el cliente solo lo veía en 9 de 38 sanos).
-> ▶ **Solo queda la tanda C**, que es la única de las tres que **no toca dinero**.
+> ✅ **Y la TANDA C también** (`#129`): «Mis pedidos» es pantalla propia. ⚠️ Prometía no tocar dinero
+> y lo primero que encontró fue que **`GET /me/orders` perdía dos pedidos de 57**.
+> ▶ **Con esto la sección queda CERRADA.** Lo siguiente sí es la Fase 5.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
 > la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.
@@ -1916,8 +1918,26 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
       ▶ **Coste**: el techo del bundle cede `214,5 → 215,5 KiB` (medido +1,01) — el caso exacto para
       el que su comentario dice que debe ceder: **corrección medida, no «una pantalla más»**.
       ⚠️ **Pendiente de veto del owner**: tres cadenas (§18.6), una palabra cada una.
-- [ ] **Tanda C · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
-      cada reserva llevando a ella (decisiones del owner en la spec §5).
+- ✅ **Tanda C · «Mis pedidos» como pantalla aparte — EJECUTADA** (2026-08-24 · spec **§19** ·
+      `DECISIONES #129`). Zona propia (`ZONES.PURCHASES`), en el índice **y** alcanzable desde la
+      reserva; el desglose **se MUDA** allí y «Ver pedido» lleva a la pantalla con ese pedido abierto.
+      ⚠️⚠️ **Prometía ser la única tanda que no toca dinero, y lo primero que encontró fue que
+      `GET /me/orders` PERDÍA PEDIDOS**: ordenaba solo por `created_at`, así que con pedidos creados
+      en el mismo segundo `LIMIT/OFFSET` cortaba por donde quisiera. **Medido sobre los 57 reales**:
+      57 filas recorridas, **55 distintas**, dos repetidos y **dos invisibles para su dueño**. El
+      patrón del arreglo ya existía un fichero más allá (`CustomerReservationsReader::ordered()`).
+      Después: **57 de 57, 0 repetidos, 0 invisibles**.
+      ⚠️⚠️ **Y la guarda de conducta salía VERDE en SQLite**: hizo falta una estructural —el `ORDER BY`
+      termina en columna única— para que muerda en cualquier motor (`TESTING.md` §2.sexies).
+      · **`containing`**: la página que contiene un pedido la elige el SERVIDOR. Medido: `R-L6UTIA`
+        está en la **página 7 de 12**; abrir la primera no falla nada y **no cumple la decisión**.
+        Con dos reglas: un código ajeno se comporta como si no se hubiera enviado —si no, sería un
+        **oráculo de códigos**— y `page` explícito gana.
+      · **Sin segunda superficie de dinero**: es `orderRow()` tal cual, y la paridad compara los
+        `financials` de las dos rutas campo a campo. Se retira `ensureOrder()`, que no tenía pruebas.
+      · **Se PODÓ antes de subir techos**: tres rótulos que viajaban en cada página con sesión y que
+        **ninguna superficie leía** (205 B); el neto del grupo nuevo es **+93 B** en vez de +298.
+      ▶ **8 mutaciones, todas muerden.** Chunk: `215,5 → 219,5 KiB` (+4,10 medido).
 - ✅ **El sandbox de Redsys, VERIFICADO en su integración** (2026-08-24, credenciales del owner:
       comercio `263100000`, terminal 45): firma `HMAC_SHA512_V2` **aceptada por el banco**
       (`SIS0054` = denegación esperada sobre operación inexistente; el control `--bad-key` da

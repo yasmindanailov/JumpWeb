@@ -6362,3 +6362,62 @@ devoluciones eso era coherente; con el ancla visible en **todo** pedido cobrado,
 lee como «te devolvimos algo» — el mismo error de fondo que la tanda B quitó del eje del valor,
 reaparecido por herencia de estilo. **Hacer visible algo que estaba oculto hereda las decisiones que
 se tomaron para el caso oculto**, y ninguna de ellas aparece en el cambio.
+
+---
+
+## #129 · 2026-08-24 · [DECIDIDO] «Mis pedidos» como pantalla propia — y el suelo sobre el que se iba a construir PERDÍA PEDIDOS
+
+**Contexto.** Última de las tres tandas del desglose (`#127` §11). El owner ya tenía sus decisiones
+tomadas: «Ver pedido» de una reserva **abre la pantalla de pedidos EN ese pedido, desplegado**; «Mis
+pedidos» entra en el índice **y** se llega desde la reserva; «Mis reservas» se queda como está y el
+desglose **se muda**. Era, sobre el papel, la única tanda que no toca dinero.
+
+⚠️⚠️ **Y lo primero que apareció no fue la pantalla: fue que `GET /me/orders` perdía pedidos.**
+Ordenaba con `->latest()`, o sea **solo por `created_at`**, así que dos pedidos creados en el mismo
+segundo no tienen orden entre sí y `LIMIT/OFFSET` corta por donde quiera. **Medido en MySQL sobre los
+57 pedidos reales del cliente demo**, con grupos de hasta 11 compartiendo `created_at`: recorriendo
+las 6 páginas salían **57 filas y 55 distintas** — dos repetidos y **dos pedidos que su dueño no podía
+ver por muchas páginas que pasara** (`R-3FLAXW`, `R-Z167AI`). El arreglo no se inventa:
+`CustomerReservationsReader::ordered()` ya cerraba su orden con `order_items.id` por esta razón, un
+fichero más allá. Después: **57 de 57, 0 repetidos, 0 invisibles.**
+
+⚠️⚠️ **Y la guarda de CONDUCTA no basta, medido.** La suite corre en SQLite y el barrido sale **verde
+sin el desempate**: ese motor devuelve los empates en un orden estable por casualidad. Hizo falta una
+guarda **estructural** —el `ORDER BY` de la paginación termina en una columna única— para que muerda
+en cualquier motor. Sin ella el caso habría quedado verde con el defecto dentro, que es exactamente el
+tipo de red que este proyecto lleva desmontando. Lección en `TESTING.md` §2.sexies.
+
+**`containing`: la página la elige el SERVIDOR.** «Ver pedido» tiene que abrir la pantalla en ese
+pedido, y solo el servidor sabe en qué página cae. **Medido**: `R-L6UTIA` está en la **página 7 de
+12**; abrir la primera **no falla nada** y deja la decisión incumplida por seis páginas — la forma
+silenciosa de no hacer lo que se prometió. Dos reglas de diseño lo acompañan: un código **ajeno o
+inexistente se comporta como si no se hubiera enviado** (si respondiera distinto sería un **oráculo de
+códigos de pedido**, justo lo que `GET /orders/{code}` evita dando 404 en los dos casos), y **`page`
+explícito gana** sobre `containing`.
+
+**El desglose se MUDA, no se copia.** El marcado del ledger sale de `ReservationCard` y entra en
+`PurchaseCard`; la composición **no se toca**: es `orderRow()` tal cual, porque el pedido que se
+desplegaba desde una reserva y el de esta lista son **el mismo**, servidos por el MISMO
+`OrderResource` por dos rutas. Una segunda composición habría sido la **novena** superficie de dinero,
+y la paridad lo asevera comparando los `financials` de las dos rutas campo a campo. Con ello se retira
+`ensureOrder()` y su caché por código, que no tenían ninguna prueba.
+
+⚠️ **La trampa de nombres, que NO se pudo arreglar y por eso se documenta donde se cae en ella.** La
+zona nueva no puede llamarse `orders`: ese valor ya es «Mis reservas» porque es la ruta
+`/mi-cuenta/pedidos`, a la que apuntan **8 correos ya entregados** (`AccountDoor`). Reasignarlo
+mandaría a esos clientes a otra pantalla sin que nada fallara. Se llama **`purchases`**, y la regla
+para no equivocarse queda escrita en `navigation.js`: **el nombre técnico dice de dónde salen los
+datos** (`orders` ← `/me/reservations`, `purchases` ← `/me/orders`).
+
+**Se PODÓ antes de subir ningún techo**, que es lo que el propio mensaje del presupuesto pide. Medido:
+`orders.subtitle`, `orders.order_hide` y `orders.history.back` viajaban en **cada página con sesión** y
+**ninguna superficie del repo los leía** — 205 B devueltos. El grupo nuevo son 298 B que la pantalla sí
+pinta, así que el neto es **+93 B** en vez de +298.
+
+**Las OCHO mutaciones matan a su guarda.** Y una decisión de forma que salió de ahí: **la navegación se
+movió al STORE**. La primera versión repartía «sembrar el pedido» y «navegar» entre el store y
+`OrdersZone.vue`, y la mitad del componente **no tiene red** (un componente pinta y no se prueba con
+`node --test`). El precedente es `retry()`, que ya conmuta de sección desde el store.
+
+**Coste**: el chunk del cajón sube `215,5 → 219,5 KiB` (medido +4,10) — es una pantalla entera, y el
+desglose no se duplicó: se mudó.

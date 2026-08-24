@@ -198,11 +198,9 @@ return [
         'event_data_hide' => 'Hide the event details',
         'eyebrow' => 'Your bookings',
         'title' => 'My bookings',
-        'subtitle' => 'Here are your bookings and their status.',
         'intro' => 'Check your bookings, their code and status.',
         'view' => 'View my bookings',
         'empty' => 'You don’t have any bookings yet.',
-        'back' => 'Back to My account',
         // #179: orders list pagination.
         'pagination' => [
             'label' => 'Bookings pagination',
@@ -216,11 +214,9 @@ return [
             'title' => 'Booking history',
             'cta' => 'View booking history',
             'empty' => 'Your past and cancelled bookings will appear here.',
-            'back' => 'Back to My bookings',
         ],
         'order_ref' => 'Order :code',
         'order_show' => 'View order',
-        'order_hide' => 'Hide order',
         'retry_payment' => 'Retry payment',
         'retry_hint' => 'We are holding your booking for a few more minutes in case you want to complete the payment.',
         'guest_form_pending' => 'Complete the :product form',
@@ -233,5 +229,23 @@ return [
         'manage_intro' => 'Any change to your booking (date or time, cancellation, guest count or any other issue) is handled directly with our team so we can assess your case and offer you the best possible solution.',
         'manage_note' => 'Write down or copy this number and provide it when you contact us so we can help you quickly.',
         'manage_cta' => 'Go to contact',
+    ],
+
+    /** **My orders** — the MONEY, per order. Own screen: the breakdown belongs to the ORDER, and a
+     * booking is not its unit. ⚠️ Mind the name: the `orders` group above is «My bookings» (its web
+     * route is `/mi-cuenta/pedidos`), so this screen's group has to be called something else. */
+    'purchases' => [
+        'title' => 'My orders',
+        'empty' => 'You do not have any orders yet.',
+        'ref' => 'Order :code',
+        'show' => 'Show the breakdown',
+        'hide' => 'Hide the breakdown',
+        'reservations' => 'Bookings in this order',
+        'pagination' => [
+            'label' => 'Order pagination',
+            'prev' => 'Previous',
+            'next' => 'Next',
+            'page' => 'Page :current of :last',
+        ],
     ],
 ];

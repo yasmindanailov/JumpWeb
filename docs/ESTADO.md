@@ -27,8 +27,12 @@ importe (`8×216,00 €` se lee como 1.728 €) y la nota de la reserva llamaba 
 Medido: el eje de caja pasa de **9 de 38** pedidos sanos a **37 de 58**, y la divergencia
 panel↔cliente sobre ese número —**19 pedidos**— desaparece. El desglose pasa de LEGIBLE a
 **VERIFICABLE**.
-▶ **Lo siguiente NO es la Fase 5**: es la **tanda C** del mismo trabajo (la pantalla de «Mis
-pedidos»), que es la única que no toca dinero. Detalle en «Próximo paso» y alcance en el tracker.
+🟩 **Y el 2026-08-24 se cierra la TANDA C: «Mis pedidos» es una pantalla propia** (`DECISIONES #129`).
+⚠️ Prometía ser «la única que no toca dinero» y lo primero que encontró fue que **`GET /me/orders`
+PERDÍA PEDIDOS**: ordenaba solo por `created_at` y, medido sobre los 57 reales del cliente demo, dos
+salían repetidos y **dos no salían en ninguna página**. Arreglado y guardado.
+▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** (tandas A, B, C + los tres defectos de lectura).
+Lo siguiente sí es la **Fase 5**.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -79,8 +83,13 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2730 en verde** (15.921 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
-  ▶ **+4 sobre el corte anterior: los TRES defectos de LECTURA** (`DECISIONES #128`) — el ancla de
+- Suite **2737 en verde** (15.964 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+  ▶ **+7 con la TANDA C** (`DECISIONES #129`): el orden total de la paginación —uno de conducta y
+  **uno estructural, porque el de conducta sale verde en SQLite**—, `containing` con su caso del
+  **oráculo** y el de `page` explícito, y las dos paridades extremo a extremo de «Mis pedidos» (que la
+  lista y el pedido suelto compongan el MISMO dinero, y que abrir desde una reserva aterrice en la
+  página que lo contiene). En `node --test`, **668** casos.
+  ▶ **+4 en el corte anterior: los TRES defectos de LECTURA** (`DECISIONES #128`) — el ancla de
   caja publicada sin devoluciones, el pedido nunca cobrado que no la enseña, el cobrado en TAQUILLA
   que no dice «por web», y la cantidad con su sustantivo. ⚠️ **Y varios casos que ya existían miden
   ahora más**: la paridad extremo a extremo del cajón fija `L1`, `L2` y `L3` sobre la respuesta REAL
@@ -227,10 +236,15 @@ defectos de LECTURA** que destapó mirar un pedido real en pantalla (`DECISIONES
   desaparece y el cambio de condición **no altera el panel en ninguno de los 58**;
 - **20 mutaciones** verificadas entre las tres entregas (13 + 7): todas muerden.
 
-❗ **LO SIGUIENTE ES LA TANDA C**, y es lo único que queda de este trabajo: **«Mis pedidos» como
-pantalla propia** y el «Ver pedido» de cada reserva llevando a ella (spec §5, §14.4 · `#120(d)` para
-el modelo de zonas). ⚠️ **Es la única de las tres que NO toca dinero**: añadir una zona es una línea
-en `ZONES` más su rótulo, y hoy ya existen `ORDERS` y `ORDERS_HISTORY`.
+✅ **LA TANDA C ESTÁ HECHA** (2026-08-24 · `DECISIONES #129` · spec §19): «Mis pedidos» es una zona
+propia (`ZONES.PURCHASES`), entra en el índice y «Ver pedido» de una reserva **lleva a ella con ese
+pedido desplegado**. El desglose se MUDÓ allí; la tarjeta de la reserva ya no lo despliega.
+⚠️⚠️ **Y decía «es la única que NO toca dinero». No era cierto**: lo primero que encontró fue que
+`GET /me/orders` **perdía pedidos** —solo ordenaba por `created_at`, y medido sobre los 57 reales
+salían 55 distintos: dos repetidos y **dos invisibles para su dueño**—. Arreglado con desempate por
+`id`, y guardado con una comprobación **estructural** porque la de conducta sale VERDE en SQLite.
+▶ **La página la elige el SERVIDOR** (`?containing=`): medido, `R-L6UTIA` está en la **página 7 de
+12**, así que abrir la primera habría incumplido la decisión del owner sin que nada fallara.
 
 ⚠️⚠️ **Lo que hay que saber antes de tocar el desglose, y no es negociable:**
 - **Lo compone UN solo sitio**, `Booking\Services\OrderLedger`, y lo leen las **OCHO** superficies

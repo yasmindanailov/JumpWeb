@@ -7,6 +7,7 @@ import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
 import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
 import OrdersZone from '../account/zones/OrdersZone.vue';
+import PurchasesZone from '../account/zones/PurchasesZone.vue';
 import ProfileZone from '../account/zones/ProfileZone.vue';
 import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
@@ -159,6 +160,19 @@ const signIn = () => store.go(ZONES.LOGIN);
             :ui="ui"
             @sign-in="signIn"
             @go="store.go" />
+
+        <!--
+          ⚠️ **«Mis pedidos» es OTRA zona y no un ámbito más de la de arriba**: aquélla lista RESERVAS
+          y ésta PEDIDOS, que son unidades distintas y vienen de endpoints distintos. Compartir el
+          componente habría exigido un `v-if` por cada bloque, que es la forma de acabar con dos
+          pantallas dentro de una (`DECISIONES #129`).
+        -->
+        <PurchasesZone
+            v-else-if="store.zone === ZONES.PURCHASES"
+            :messages="messages"
+            :account="account"
+            :ui="ui"
+            @sign-in="signIn" />
 
         <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
              pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera.

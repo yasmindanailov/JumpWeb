@@ -88,7 +88,7 @@ El ledger (subtotal, señal, a cobrar en puerta, devuelto, total final), el esta
 
 | Opción | Por qué |
 |---|---|
-| **(a) En la tarjeta, plegado tras «Ver pedido»** ✅ | Cada tarjeta enseña su propio importe y la referencia; el ledger completo y el reintento aparecen al desplegar. No se pierde nada y no se repite en pantalla. **ELEGIDA.** |
+| **(a) En la tarjeta, plegado tras «Ver pedido»** ✅ | Cada tarjeta enseña su propio importe y la referencia; el ledger completo y el reintento aparecen al desplegar. No se pierde nada y no se repite en pantalla. **ELEGIDA.** ⚠️ **SUPERADA el 2026-08-24** (`DECISIONES #129`, decisión del owner en `desglose-dinero-cliente.md` §5·2): el ledger **se muda a «Mis pedidos»**, su propia pantalla, y «Ver pedido» LLEVA allí en vez de desplegar. El motivo es el que esta misma tabla anticipaba en la opción (b) y que la opción (a) solo aplazaba: el desglose es del PEDIDO, y plegarlo dentro de cada reserva lo repetía igual —una vez por tarjeta— con importes que no cuadraban con lo que las rodeaba. |
 | (b) Completo en cada tarjeta | Un pedido con 3 reservas imprime el mismo «Total» tres veces, y los importes no cuadran con la tarjeta que los rodea. Descartada. |
 | (c) Agrupar por pedido, ordenar por su reserva más próxima | No resuelve el caso del encargo: un pedido con reservas en fechas lejanas sigue saliendo como un bloque. Descartada. |
 
@@ -191,6 +191,11 @@ manejador sobre un solo predicado**.
   cajón pide 5, y un cliente que sincroniza necesita otro orden de magnitud.
 - Recurso: `ReservationCardResource`, que **anida** a `OrderItemResource` y le añade el contexto
   mínimo del pedido: `code`, `status`, `created_label`, `can_be_retried`.
+
+⚠️ **SUPERADO el 2026-08-24**: el ledger ya no se pide al desplegar porque **ya no se despliega aquí**
+— vive en «Mis pedidos» (`ZONES.PURCHASES`), que lo recibe con su lista. Lo que sigue vigente de este
+párrafo es su razón, que es la que acabó mudando la pantalla entera. `stores/orders.js::ensureOrder()`
+se retiró con el cambio (`DECISIONES #129`).
 
 ⚠️⚠️ **El LEDGER no viaja con la tarjeta, y esa decisión salió al implementar.** El diseño lo metía
 dentro; medirlo contra el caso real lo desmontó: `DEMO-LEDGER` tiene **tres** reservas, así que el

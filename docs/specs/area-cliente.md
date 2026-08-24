@@ -184,6 +184,14 @@ funcionando exactamente como el día que se escribió.
 | `HOME` | el índice: quién eres, tu próxima reserva y los accesos | `GET /me` + `GET /me/reservations` | `/mi-cuenta` + el bloque `.acct` |
 | `ORDERS` | «Mis reservas»: historial paginado, con acordeón de detalle y reintento | `GET /me/orders` | `/mi-cuenta/pedidos` |
 
+⚠️ **Esta tabla es de la TANDA 1 y hoy hay más zonas.** Las cuatro de la tanda 2 (`PROFILE`,
+`PASSWORD`, `SESSIONS`, `PRIVACY`), las tres de invitado (`auth-en-cajon.md`), `ORDERS_HISTORY`
+(`mis-reservas-por-reserva.md`) y **`PURCHASES`** —«Mis pedidos», `DECISIONES #129`—. Y dos cosas de
+arriba cambiaron: `ORDERS` se alimenta hoy de `GET /me/reservations/{scope}`, no de `GET /me/orders`,
+que es el que alimenta a `PURCHASES`. La lista viva es `ZONES` en `account/navigation.js`, que además
+explica **la inversión de nombres** (`orders` = reservas · `purchases` = pedidos) y por qué no se puede
+arreglar: el valor `orders` es la ruta a la que apuntan 8 correos ya entregados.
+
 ⚠️⚠️ **Son DOS zonas y no tres, y lo decidió una medición de vocabulario** (2026-08-22). La v2 de esta
 spec proponía una zona `RESERVATIONS` («próximas reservas») separada de `ORDERS` («mis pedidos»).
 Medido en `lang/`: **`account.orders.title` es literalmente «Mis reservas»** — la página

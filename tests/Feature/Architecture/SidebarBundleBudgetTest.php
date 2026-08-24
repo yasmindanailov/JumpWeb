@@ -291,8 +291,19 @@ class SidebarBundleBudgetTest extends TestCase
      * de cantidad **llegan compuestos por el dominio**; la zona solo elige qué pinta. Recomponer
      * cualquiera de los cuatro aquí habría costado menos bytes y una divergencia.
      * ▶ **215,5 deja 0,92 KiB**, la holgura habitual: lo siguiente que entre lo mide.
+     *
+     * ⚠️ **215,5 → 219,5 el 2026-08-24: «MIS PEDIDOS» como pantalla propia**, la tanda C
+     * (`specs/desglose-dinero-cliente.md` §19, `DECISIONES #129`). Medido: **214,58 → 218,68 KiB,
+     * +4,10**. Es la subida más grande desde que existe este techo, y es una PANTALLA entera: zona
+     * con su lista, su paginación, su vacío y su spinner (`PurchasesZone`), la tarjeta de un pedido
+     * con los dos ejes del desglose (`PurchaseCard`), las acciones del store y el icono de la entrada.
+     * ▶ **Y de dónde NO sale**: el desglose no se ha duplicado, se ha **MUDADO** desde
+     * `ReservationCard` —que adelgaza—, y la composición es `orderRow()` tal cual, la misma que ya
+     * componía ese pedido cuando se desplegaba dentro de una reserva. Una segunda forma de pintar los
+     * dos ejes habría costado el doble y una divergencia.
+     * ▶ **219,5 deja 0,82 KiB.** Lo siguiente que entre lo mide.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 215.5;
+    private const SIDEBAR_CHUNK_MAX_KB = 219.5;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

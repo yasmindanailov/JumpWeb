@@ -7,6 +7,8 @@ import { useOrdersStore } from './orders.js';
 import { useSectionStore } from './section.js';
 import { usePurchaseStore } from './purchase.js';
 import { useOutcomeStore } from './outcome.js';
+import { useAccountStore } from './account.js';
+import { createNavigation, ZONES } from '../account/navigation.js';
 
 /**
  * La red del store de «Mis reservas».
@@ -256,5 +258,141 @@ describe('las respuestas del pack, bajo demanda', () => {
         await store.ensureEventData('', { api });
 
         assert.equal(api.llamadas.length, 0);
+    });
+});
+
+/**
+ * **«Mis pedidos»** (`specs/desglose-dinero-cliente.md` §19, `DECISIONES #129`).
+ *
+ * ⚠️ Lo que hay que proteger aquí no es que pida una URL: es que **abrir la pantalla desde una
+ * reserva llegue con ese pedido dentro**. Es lo único de esta tanda que puede fallar en silencio —una
+ * lista de pedidos se lee perfectamente aunque el que el cliente buscaba esté en otra página—.
+ */
+describe('«Mis pedidos»', () => {
+    // ⚠️ El área se ARRANCA, porque «Ver pedido» solo es alcanzable desde dentro de ella: es la
+    // precondición real, y montarla aquí es lo que permite probar que la navegación también ocurre.
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        useAccountStore().boot(createNavigation({ zone: ZONES.ORDERS }));
+    });
+
+    /**
+     * ⚠️⚠️ **Sembrar el pedido y NAVEGAR son la misma regla**, y por eso viven las dos aquí. Repartir
+     * una mitad al componente dejaba la navegación sin red: un componente pinta y no se prueba con
+     * `node --test`. Sin esta aserción, «Ver pedido» podría quedarse sin llevar a ningún sitio.
+     */
+    test('⚠️ «Ver pedido» siembra el pedido Y lleva a la pantalla de pedidos', () => {
+        const store = useOrdersStore();
+
+        store.openPurchase('R-L6UTIA');
+
+        assert.equal(store.focus, 'R-L6UTIA');
+        assert.equal(useAccountStore().zone, ZONES.PURCHASES, '«Ver pedido» no lleva a ninguna parte');
+    });
+
+    test('la primera carga pide la página 1 y guarda la respuesta CRUDA', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/me/orders?per_page=5&page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'R-1' }] }) } });
+
+        await store.ensurePurchases({ api });
+
+        assert.deepEqual(store.purchases.data, [{ code: 'R-1' }]);
+        assert.equal(api.llamadas.length, 1);
+    });
+
+    test('⚠️ `ensurePurchases()` NO repite la petición al volver a la zona', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/me/orders?per_page=5&page=1': { ok: true, status: 200, data: PAGE() } });
+
+        await store.ensurePurchases({ api });
+        await store.ensurePurchases({ api });
+
+        assert.equal(api.llamadas.length, 1, 'volver a la zona ha vuelto a pedir la lista');
+    });
+
+    /**
+     * ⚠️⚠️ **La página la elige el SERVIDOR con `containing`, y ésta es la mitad que importa.**
+     * El orden y el tamaño de página son suyos, así que es el único que sabe en cuál cae el pedido.
+     * Pedir la página 1 y confiar en que esté dentro es la forma silenciosa de incumplir la decisión
+     * del owner: no falla nada y la pantalla se abre sin el pedido.
+     */
+    test('⚠️ abrir desde una reserva pide LA PÁGINA QUE CONTIENE ese pedido', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/me/orders?per_page=5&containing=R-L6UTIA': { ok: true, status: 200, data: PAGE({ meta: { current_page: 3, last_page: 6 } }) } });
+
+        store.openPurchase('R-L6UTIA');
+        await store.ensurePurchases({ api });
+
+        assert.equal(api.llamadas[0].url, '/me/orders?per_page=5&containing=R-L6UTIA');
+        assert.equal(store.purchases.meta.current_page, 3);
+    });
+
+    /**
+     * ⚠️⚠️ **Y por eso `openPurchase()` INVALIDA la página cargada.** Sin ese borrado,
+     * `ensurePurchases()` —que pide «solo si no hay datos»— se quedaría con la que ya tuviera y la
+     * pantalla se abriría **sin el pedido dentro**. Es el caso real: el cliente entra por el índice,
+     * vuelve, abre una reserva y pulsa «Ver pedido».
+     */
+    test('⚠️ abrir desde una reserva descarta la página que ya estuviera cargada', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({
+            '/me/orders?per_page=5&page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'R-1' }] }) },
+            '/me/orders?per_page=5&containing=R-LEJOS': { ok: true, status: 200, data: PAGE({ data: [{ code: 'R-LEJOS' }], meta: { current_page: 4, last_page: 6 } }) },
+        });
+
+        await store.ensurePurchases({ api });
+        store.openPurchase('R-LEJOS');
+        await store.ensurePurchases({ api });
+
+        assert.equal(api.llamadas.length, 2, 'se ha quedado con la página vieja: el pedido no sale');
+        assert.deepEqual(store.purchases.data, [{ code: 'R-LEJOS' }]);
+    });
+
+    /** La intención se consume UNA vez: si no, volver a entrar reabriría el pedido de la visita anterior. */
+    test('⚠️ el foco se consume: la segunda entrada ya no lo arrastra', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({
+            '/me/orders?per_page=5&containing=R-1': { ok: true, status: 200, data: PAGE() },
+            '/me/orders?per_page=5&page=1': { ok: true, status: 200, data: PAGE() },
+        });
+
+        store.openPurchase('R-1');
+        await store.ensurePurchases({ api });
+
+        assert.equal(store.focus, '', 'el foco no se ha consumido');
+
+        store.purchases = null;
+        await store.ensurePurchases({ api });
+
+        assert.equal(api.llamadas[1].url, '/me/orders?per_page=5&page=1');
+    });
+
+    test('pasar de página pide su número, y no arrastra el foco', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/me/orders?per_page=5&page=2': { ok: true, status: 200, data: PAGE({ meta: { current_page: 2, last_page: 3 } }) } });
+
+        await store.loadPurchases(2, { api });
+
+        assert.equal(api.llamadas[0].url, '/me/orders?per_page=5&page=2');
+    });
+
+    test('⚠️ un 401 se distingue del error genérico: la salida es entrar, no reintentar', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/me/orders?per_page=5&page=1': { ok: false, status: 401, data: null, error: null } });
+
+        await store.ensurePurchases({ api });
+
+        assert.equal(store.unauthenticated, true);
+        assert.equal(store.error, '');
+    });
+
+    test('el código va escapado en la URL', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({});
+
+        store.openPurchase('R-A B/C');
+        await store.ensurePurchases({ api });
+
+        assert.equal(api.llamadas[0].url, '/me/orders?per_page=5&containing=R-A%20B%2FC');
     });
 });

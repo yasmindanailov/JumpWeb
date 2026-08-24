@@ -178,6 +178,23 @@ módulo del cajón pone el caso en rojo.
 ⚠️ **Y el corolario**: una excepción que no se puede comprobar es una señal de que la guarda está mal
 formulada, no de que el caso sea especial.
 
+### 2.sexies. Si el MOTOR de la suite no reproduce el defecto, la guarda de conducta no muerde
+⚠️⚠️ **Medido el 2026-08-24** (`DECISIONES #129`). `GET /me/orders` ordenaba solo por `created_at`, así
+que con pedidos creados en el mismo segundo `LIMIT/OFFSET` cortaba por donde quisiera: **medido en
+MySQL sobre 57 pedidos reales, dos salían repetidos y dos no salían en ninguna página**. Se escribió el
+caso obvio —recorrer todas las páginas y comparar conjuntos— y **en SQLite sale VERDE sin el arreglo**:
+ese motor devuelve los empates en un orden estable por casualidad.
+
+**La regla**: cuando un defecto dependa del MOTOR, la guarda de conducta documenta la intención pero no
+es la red. La red es una guarda **estructural** sobre lo que el código construye —aquí, que el
+`ORDER BY` de la paginación termine en una columna única—, que muerde en cualquier motor. Las dos, y
+cada una diciendo para qué está.
+
+⚠️ **Y el corolario, que es lo que hace falta recordar**: una mutación que deja el caso en verde **no
+significa que el caso sea malo**; puede significar que el motor de la suite no es el de producción.
+Hay que preguntárselo antes de dar la guarda por buena — la suite corre en SQLite y producción en
+MySQL, y esa diferencia ya tenía ficha en `SUITE-04` para los locks.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

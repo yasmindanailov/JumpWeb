@@ -1285,3 +1285,118 @@ owner delegó explícitamente el rótulo que §6.3 llevaba parado desde `#127`:
 | `tickets.reservation_paid_note` | «Pagado por web :paid · :rest en el parque» |
 | `tickets.reservation_paid_note_desk` | «Ya pagado :paid · :rest en el parque» |
 | `tickets.ledger.cash_caption` | «Es el dinero que ya te hemos cobrado por este pedido. Puedes cotejarlo con tu extracto bancario.» |
+
+---
+
+## 19. TANDA C · EJECUTADA — «Mis pedidos» como pantalla propia
+
+> [DECIDIDO 2026-08-24] · `DECISIONES #129`. Cierra las tres tandas de §11 y con ellas esta spec.
+> Decisiones del owner que la gobiernan: **§5·2** («Ver pedido» abre la pantalla de pedidos EN ese
+> pedido, desplegado), **§5·3** (entra en el índice Y se llega desde la reserva) y **§5·4** («Mis
+> reservas» se queda como está; el desglose **se muda**).
+
+### 19.1 ⚠️⚠️ Lo primero que apareció no era la pantalla: era que `/me/orders` PERDÍA PEDIDOS
+
+Antes de construir encima había que mirar el suelo, y el suelo estaba roto. `MeOrdersController`
+ordenaba con `->latest()`, es decir **solo por `created_at`**. Dos pedidos creados en el mismo segundo
+no tienen orden entre sí, así que `LIMIT/OFFSET` puede cortar por un sitio distinto en cada página.
+
+**Medido en MySQL sobre los 57 pedidos reales del cliente demo**, con grupos de hasta **11**
+compartiendo `created_at`:
+
+    barrido de las 6 páginas → 57 filas · 55 DISTINTAS · 57 pedidos del cliente
+      repetidos en dos páginas : R-KPVXG2, R-O8FQNS
+      INVISIBLES en todas      : R-3FLAXW, R-Z167AI
+
+▶ **Dos pedidos que su dueño no podía ver por muchas páginas que pasara.** Y cada página, mirada por
+separado, se lee perfectamente — es literalmente la familia de `mis-reservas-por-reserva.md` §3.4.
+
+▶ **El arreglo no se inventa**: `CustomerReservationsReader::ordered()` ya cerraba su orden con
+`order_items.id` por esta misma razón, un fichero más allá. Aquí faltaba. **Después: 57 filas, 57
+distintas, 0 repetidos, 0 invisibles.**
+
+⚠️⚠️ **Y la guarda de conducta NO basta, medido.** La suite corre en SQLite y allí el barrido sale
+**verde sin el desempate**: el motor devuelve los empates en un orden estable por casualidad. Por eso
+la pareja es una guarda **estructural** —el `ORDER BY` de la paginación tiene que terminar en una
+columna única— que muerde en cualquier motor. Sin ella, el caso habría quedado verde con el defecto
+dentro. Lección general en `TESTING.md` §2.sexies.
+
+### 19.2 `containing`: la página la elige el SERVIDOR, y sin eso la decisión se incumple en silencio
+
+«Ver pedido» tiene que abrir la pantalla **en ese pedido**. Solo el servidor sabe en qué página cae:
+el orden y el tamaño de página son suyos. **Medido con datos reales**: `R-L6UTIA` está en la **página
+7 de 12**. Abrir la primera **no falla nada** y deja la decisión del owner incumplida por seis páginas.
+
+▶ `GET /me/orders?containing=<code>` devuelve la página que lo contiene. Aditivo, y con dos reglas que
+son parte del diseño:
+
+- **un código ajeno o inexistente se comporta como si no se hubiera enviado** (primera página), no
+  como un 404: distinguirlos convertiría el parámetro en un **oráculo de códigos de pedido**, que es
+  justo lo que `GET /orders/{code}` evita respondiendo 404 en los dos casos;
+- **`page` explícito gana**: pedir a la vez una página concreta y la que contiene algo es una
+  contradicción, y resolverla en favor del parámetro implícito sería la sorpresa.
+
+### 19.3 El desglose se MUDA, no se copia
+
+`ReservationCard` desplegaba el ledger dentro de la tarjeta. Se retira de ahí y el marcado **se mueve**
+a `PurchaseCard`. El motivo es el que el owner puso en §5·4 y que `#126` §3.3 ya había rozado: el
+ledger es del PEDIDO, así que en un pedido con tres reservas se pintaba tres veces con importes que no
+cuadraban con la tarjeta que los rodeaba.
+
+▶ **Y la composición no se toca: es `orderRow()` tal cual.** El pedido que se desplegaba desde una
+reserva y el de esta lista **son el mismo**, servidos por el MISMO `OrderResource` por dos rutas
+(`/orders/{code}` y `/me/orders`). Escribir una segunda composición «porque ahora la pantalla es otra»
+habría creado la **novena** superficie de dinero. Lo asevera la paridad: los `financials` de las dos
+rutas se comparan campo a campo.
+
+▶ Consecuencia: `stores/orders.js::ensureOrder()` y su caché por código **se retiran** — la tarjeta ya
+no pide el pedido suelto. No tenían ninguna prueba, lo que de paso dice cuánto valía esa rama.
+
+### 19.4 ⚠️ La TRAMPA DE NOMBRES, y por qué no se pudo arreglar
+
+La zona nueva **no puede llamarse `orders`**: ese valor ya es «Mis reservas», y no por descuido. Es la
+ruta web `account.orders` (`/mi-cuenta/pedidos`), a la que apuntan **8 notificaciones por correo ya
+entregadas** que no se pueden editar (`AccountDoor::ZONE_BY_ROUTE`). Reasignarlo mandaría a esos
+clientes a otra pantalla **sin que nada fallara**.
+
+▶ Se llama **`purchases`**, con su grupo `account.purchases.*` propio. La inversión —`orders` es
+«reservas» y `purchases` es «pedidos»— queda documentada en el sitio donde se cae en ella
+(`account/navigation.js`), con la regla para no equivocarse: **el nombre técnico dice de dónde salen
+los datos**.
+
+### 19.5 Lo que se PODÓ antes de subir ningún techo
+
+El presupuesto del montaje con sesión avisa por escrito: «poda antes de subir el techo». Medido: tres
+rótulos viajaban en **cada página con sesión** y **ninguna superficie del repo los leía** —
+`orders.subtitle`, `orders.order_hide` (ya no hay toggle: «Ver pedido» lleva a otra pantalla) y
+`orders.history.back`—. Son **205 B** devueltos. El grupo nuevo son **298 B** que la pantalla sí pinta,
+así que el neto es **+93 B** en vez de +298.
+
+### 19.6 Las guardas, y sus OCHO mutaciones
+
+| Mutación | Qué cae |
+|---|---|
+| quitar el desempate del `ORDER BY` | la guarda estructural del orden total |
+| `containing` devuelve siempre la primera página | la página que lo contiene (API y paridad) |
+| un código ajeno responde distinto | el caso del oráculo |
+| `openPurchase()` no invalida la página | «se ha quedado con la página vieja: el pedido no sale» |
+| `ensurePurchases()` ignora el foco | 4 casos del store |
+| `openPurchase()` no navega | «Ver pedido» no lleva a ninguna parte |
+| `pageInfo()` ignora el grupo | la barra vuelve a decir «Paginación de reservas» |
+| `purchaseRows()` compone su propio dinero | la igualdad con `orderRow()` |
+
+⚠️ **La navegación se movió al STORE para que tuviera red.** La primera versión repartía «sembrar el
+pedido» y «navegar» entre el store y `OrdersZone.vue`, y la mitad del componente **no se prueba** —un
+componente pinta y no tiene `node --test` (`CE-6`)—. El precedente es `retry()`, que también conmuta
+de sección desde el store.
+
+### 19.7 Verificado sobre datos REALES, no solo fixtures
+
+    containing=R-L6UTIA  → página 7 de 12, y el pedido está dentro          ✓
+    barrido de las 12 páginas → 57 filas · 57 distintas · 0 invisibles      ✓
+    la pantalla, compuesta por el módulo REAL con la respuesta REAL:
+      Pedido R-L6UTIA · Completado · 24/08/2026 07:47 · 216,00 €
+        Cumpleaños Jump · Mar. 25 ago. · 11:00–13:00 · 8 invitados  216,00 €
+        Qué vale este pedido → Pagado por web 114,00 · Pendiente en el parque 102,00 · Valor 216,00
+        Tu dinero            → Cobrado por web · 24/08/2026   30,00 €
+        » Te quedan 102,00 € por pagar en recepción al llegar.

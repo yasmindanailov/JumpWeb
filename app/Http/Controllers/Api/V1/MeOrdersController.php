@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Identity\Models\User;
 use App\Http\Api\ApiCollection;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\OrderResource;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
@@ -40,9 +44,12 @@ class MeOrdersController extends Controller
         $request->validate([
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::PER_PAGE_MAX],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'containing' => ['sometimes', 'string', 'max:32'],
         ]);
 
-        $orders = $request->user()->orders()
+        $perPage = (int) $request->integer('per_page', self::PER_PAGE_DEFAULT);
+
+        $orders = $this->ordered($request)
             // Mismo eager-load que «Mis pedidos» en web, y por el mismo motivo: sin él, pintar el
             // estado de reembolso y los subtotales realmente cobrados dispara N+1 por cada línea.
             ->with([
@@ -50,10 +57,75 @@ class MeOrdersController extends Controller
                 'items.children.ticketType',
                 'payments.refunds', 'adjustments',
             ])
-            ->latest()
-            ->paginate((int) $request->integer('per_page', self::PER_PAGE_DEFAULT))
+            ->paginate($perPage, ['*'], 'page', $this->pageFor($request, $perPage))
             ->withQueryString();
 
         return new ApiCollection($orders, OrderResource::class);
+    }
+
+    /**
+     * El historial del cliente con **ORDEN TOTAL**: fecha de creación y, para desempatar, el `id`.
+     *
+     * ⚠️⚠️ **El desempate no es pulcritud: sin él la paginación PIERDE pedidos** (`DECISIONES #129`).
+     * `latest()` ordena solo por `created_at`, así que dos pedidos creados en el mismo segundo no
+     * tienen orden entre sí y `LIMIT/OFFSET` puede cortar por un sitio distinto en cada página.
+     * **Medido sobre los 57 pedidos reales del cliente demo** —con grupos de hasta 11 compartiendo
+     * `created_at`—: recorriendo las 6 páginas salían 57 filas pero solo **55 distintas**; dos
+     * repetidas y **dos que no aparecían en ninguna página**, invisibles para su dueño.
+     *
+     * ▶ Y el patrón no se inventa: `CustomerReservationsReader::ordered()` ya cierra su orden con
+     * `order_items.id` por esta misma razón, un fichero más allá. Aquí faltaba.
+     *
+     * @return HasMany<Order, User>
+     */
+    private function ordered(Request $request): HasMany
+    {
+        return $request->user()->orders()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+    }
+
+    /**
+     * Qué página servir: la pedida, o **la que CONTIENE el pedido de `containing`**.
+     *
+     * «Ver pedido» de una reserva abre esta pantalla en ese pedido concreto, y **solo el servidor
+     * sabe en qué página cae**: el orden y el tamaño de página son suyos. La posición se cuenta con
+     * el MISMO orden total de {@see ordered()} —cuántos pedidos van por delante— porque calcularla
+     * con otro criterio daría una página que no lo contiene, y eso no lo notaría nadie.
+     *
+     * ⚠️ **Un código que no es del cliente cae en la primera página, como si no se hubiera enviado.**
+     * No es descuido: responder distinto según exista o no convertiría el parámetro en un oráculo de
+     * códigos de pedido, que es exactamente lo que `GET /orders/{code}` evita dando 404 en los dos
+     * casos. Como la consulta ya está acotada por el guard, «ajeno» e «inexistente» son el mismo caso.
+     */
+    private function pageFor(Request $request, int $perPage): int
+    {
+        $code = trim((string) $request->query('containing', ''));
+
+        // `page` es explícito y gana: pedir a la vez una página concreta y la que contiene algo es
+        // una contradicción, y resolverla en favor del parámetro implícito sería la sorpresa.
+        if ($code === '' || $request->has('page')) {
+            return max(1, (int) $request->integer('page', 1));
+        }
+
+        $target = $request->user()->orders()
+            ->where('code', $code)
+            ->first(['id', 'created_at']);
+
+        if ($target === null) {
+            return 1;
+        }
+
+        // Cuántos van POR DELANTE con el orden total: más recientes, o del mismo instante con `id`
+        // mayor. Es la traducción exacta de `orderByDesc('created_at')->orderByDesc('id')`.
+        $ahead = $request->user()->orders()
+            ->where(fn (Builder $q) => $q
+                ->where('created_at', '>', $target->created_at)
+                ->orWhere(fn (Builder $tie) => $tie
+                    ->where('created_at', '=', $target->created_at)
+                    ->where('id', '>', $target->id)))
+            ->count();
+
+        return intdiv($ahead, $perPage) + 1;
     }
 }

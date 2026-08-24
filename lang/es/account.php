@@ -200,11 +200,9 @@ return [
         'event_data_hide' => 'Ocultar los datos del evento',
         'eyebrow' => 'Tus reservas',
         'title' => 'Mis reservas',
-        'subtitle' => 'Aquí tienes tus reservas y su estado.',
         'intro' => 'Consulta tus reservas, su código y su estado.',
         'view' => 'Ver mis reservas',
         'empty' => 'Todavía no tienes reservas.',
-        'back' => 'Volver a Mi cuenta',
         // #179: paginación de la lista de pedidos.
         'pagination' => [
             'label' => 'Paginación de reservas',
@@ -222,13 +220,11 @@ return [
             'title' => 'Historial de reservas',
             'cta' => 'Ver historial de reservas',
             'empty' => 'Aquí aparecerán tus reservas pasadas y las canceladas.',
-            'back' => 'Volver a Mis reservas',
         ],
         // El desglose del PEDIDO, bajo demanda: es del pedido y no de la reserva, así que se pide
         // al desplegarlo en vez de repetirlo en cada tarjeta.
         'order_ref' => 'Pedido :code',
         'order_show' => 'Ver pedido',
-        'order_hide' => 'Ocultar pedido',
         'retry_payment' => 'Reintentar el pago',
         'retry_hint' => 'Mantenemos tu reserva unos minutos más por si quieres completar el pago.',
         'guest_form_pending' => 'Completa el formulario de :product',
@@ -242,5 +238,30 @@ return [
         'manage_intro' => 'Cualquier cambio en tu reserva (modificar fecha u hora, cancelar, ajustar invitados o cualquier otra incidencia) lo gestionamos directamente con nuestro equipo para poder valorar tu caso y darte la mejor solución posible.',
         'manage_note' => 'Anota o copia este número y proporciónalo al contactar con nosotros para que podamos ayudarte rápidamente.',
         'manage_cta' => 'Ir a contacto',
+    ],
+
+    /**
+     * **«Mis pedidos»** — el DINERO, por pedido (`specs/desglose-dinero-cliente.md` §19,
+     * `DECISIONES #129`). Pantalla propia porque el desglose es del PEDIDO y una reserva no es su
+     * unidad: un pedido puede llevar tres reservas de tres fechas, y repetir el mismo total en las
+     * tres decía algo falso en dos de ellas.
+     *
+     * ⚠️ Ojo al nombre: el grupo `orders` de arriba es «MIS RESERVAS» —su ruta web es
+     * `/mi-cuenta/pedidos` y por ahí entran 8 correos ya enviados—, así que el grupo de esta pantalla
+     * tiene que llamarse de otra forma. Lo mismo pasa con la zona del cajón (`ZONES.PURCHASES`).
+     */
+    'purchases' => [
+        'title' => 'Mis pedidos',
+        'empty' => 'Todavía no tienes ningún pedido.',
+        'ref' => 'Pedido :code',
+        'show' => 'Ver el desglose',
+        'hide' => 'Ocultar el desglose',
+        'reservations' => 'Reservas de este pedido',
+        'pagination' => [
+            'label' => 'Paginación de pedidos',
+            'prev' => 'Anteriores',
+            'next' => 'Siguientes',
+            'page' => 'Página :current de :last',
+        ],
     ],
 ];

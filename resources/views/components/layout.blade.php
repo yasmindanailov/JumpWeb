@@ -333,7 +333,7 @@
                                 // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda
                                 // el texto de `lang/` (`account.orders.title`), y el nombre técnico se
                                 // queda para no confundirlo con `GET /me/reservations`, que es otro.
-                                'title', 'subtitle', 'empty', 'pagination',
+                                'title', 'empty', 'pagination',
                                 'item_finished', 'item_cancelled',
                                 'retry_payment', 'retry_hint',
                                 'guest_form_pending', 'guest_form_done',
@@ -346,8 +346,16 @@
                                 // devuelve `''` cuando falta y el botón se pinta SIN TEXTO, sin que
                                 // nada avise. Medido en navegador al escribir la pantalla: el «Ver
                                 // pedido» salió mudo y la referencia del pedido, en blanco.
-                                'history', 'order_ref', 'order_show', 'order_hide',
-                            ])] : []),
+                                'history', 'order_ref', 'order_show',
+                            ]),
+                            // ⚠️ **«Mis pedidos» tiene grupo PROPIO y va ENTERO** (`DECISIONES #129`):
+                            // son 8 rótulos y la pantalla los usa todos, así que podarlo clave a clave
+                            // sería mantenimiento sin ahorro. El grupo se llama `purchases` y no
+                            // `orders` porque aquél ya es el de «Mis reservas» — la misma inversión de
+                            // nombres que documenta `account/navigation.js`, y por el mismo motivo:
+                            // la ruta `/mi-cuenta/pedidos` es un contrato que no se puede reasignar.
+                            'purchases' => __('account.purchases'),
+                            ] : []),
                         ],
                         // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van
                         // solo CON SESIÓN, como el resto de lo que solo pinta el área de cliente.

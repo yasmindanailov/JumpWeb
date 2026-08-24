@@ -321,12 +321,31 @@ export function cardRows(payload, ctx) {
 }
 
 /**
+ * **La página de «Mis pedidos»**: una fila por PEDIDO (`specs/desglose-dinero-cliente.md` §19).
+ *
+ * ⚠️⚠️ **Es `orderRow()` sin una línea propia, y ahí está el punto.** El pedido que se despliega
+ * desde una reserva y el pedido de esta lista **son el mismo pedido**, servidos por el MISMO
+ * `OrderResource` —`GET /orders/{code}` y `GET /me/orders` lo comparten—, así que componerlo aquí
+ * otra vez habría creado la novena superficie de dinero. Lo que cambia es la pantalla que lo pinta.
+ *
+ * @param {{data?: Array<object>}} payload  la respuesta de `GET /me/orders`
+ * @param {{messages: object, account: object}} ctx  los diccionarios del montaje
+ */
+export function purchaseRows(payload, ctx) {
+    return (payload?.data ?? []).map((order) => orderRow(order, ctx));
+}
+
+/**
  * La paginación, o `null` cuando cabe en una sola página.
  *
  * ⚠️ **`null` es un estado real y no un descuido**: la página tampoco pinta la barra con un único
  * resultado, y pintarla deshabilitada anunciaría un recorrido que no existe.
+ *
+ * ⚠️ **El GRUPO de rótulos es un parámetro** desde que hay dos listas paginadas: «Mis reservas» habla
+ * de reservas y «Mis pedidos» de pedidos, y una barra que dijera «Paginación de reservas» sobre una
+ * lista de pedidos sería un texto falso que ningún test de composición vería.
  */
-export function pageInfo(payload, account) {
+export function pageInfo(payload, account, group = 'orders') {
     const meta = payload?.meta ?? {};
     const current = Number(meta.current_page ?? 1);
     const last = Number(meta.last_page ?? 1);
@@ -338,9 +357,9 @@ export function pageInfo(payload, account) {
         last,
         canPrev: current > 1,
         canNext: current < last,
-        label: t(account, 'orders.pagination.label'),
-        prevLabel: t(account, 'orders.pagination.prev'),
-        nextLabel: t(account, 'orders.pagination.next'),
-        pageLabel: tp(account, 'orders.pagination.page', { current, last }),
+        label: t(account, group + '.pagination.label'),
+        prevLabel: t(account, group + '.pagination.prev'),
+        nextLabel: t(account, group + '.pagination.next'),
+        pageLabel: tp(account, group + '.pagination.page', { current, last }),
     };
 }

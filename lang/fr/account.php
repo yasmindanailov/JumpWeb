@@ -198,11 +198,9 @@ return [
         'event_data_hide' => 'Masquer les données de l\'événement',
         'eyebrow' => 'Tes réservations',
         'title' => 'Mes réservations',
-        'subtitle' => 'Voici tes réservations et leur statut.',
         'intro' => 'Consulte tes réservations, leur code et leur statut.',
         'view' => 'Voir mes réservations',
         'empty' => 'Tu n’as pas encore de réservations.',
-        'back' => 'Retour à Mon compte',
         // #179: pagination de la liste des commandes.
         'pagination' => [
             'label' => 'Pagination des réservations',
@@ -216,11 +214,9 @@ return [
             'title' => 'Historique des réservations',
             'cta' => 'Voir l\'historique des réservations',
             'empty' => 'Vos réservations passées et annulées apparaîtront ici.',
-            'back' => 'Retour à Mes réservations',
         ],
         'order_ref' => 'Commande :code',
         'order_show' => 'Voir la commande',
-        'order_hide' => 'Masquer la commande',
         'retry_payment' => 'Réessayer le paiement',
         'retry_hint' => 'Nous gardons ta réservation encore quelques minutes au cas où tu voudrais finaliser le paiement.',
         'guest_form_pending' => 'Complétez le formulaire de :product',
@@ -233,5 +229,23 @@ return [
         'manage_intro' => 'Tout changement sur ta réservation (modifier la date ou l’heure, annuler, ajuster le nombre d’invités ou tout autre incident) est traité directement avec notre équipe afin de pouvoir évaluer ton cas et te proposer la meilleure solution possible.',
         'manage_note' => 'Note ou copie ce numéro et fournis-le lorsque tu nous contactes pour que nous puissions t’aider rapidement.',
         'manage_cta' => 'Aller au contact',
+    ],
+
+    /** **Mes commandes** — l'ARGENT, par commande. Écran propre : le détail est celui de la COMMANDE
+     * et une réservation n'en est pas l'unité. ⚠️ Attention au nom : le groupe `orders` ci-dessus est
+     * « Mes réservations » (sa route web est `/mi-cuenta/pedidos`). */
+    'purchases' => [
+        'title' => 'Mes commandes',
+        'empty' => "Tu n'as encore aucune commande.",
+        'ref' => 'Commande :code',
+        'show' => 'Voir le détail',
+        'hide' => 'Masquer le détail',
+        'reservations' => 'Réservations de cette commande',
+        'pagination' => [
+            'label' => 'Pagination des commandes',
+            'prev' => 'Précédentes',
+            'next' => 'Suivantes',
+            'page' => 'Page :current sur :last',
+        ],
     ],
 ];

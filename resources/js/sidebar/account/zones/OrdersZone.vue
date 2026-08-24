@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useOrdersStore } from '../../stores/orders.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import ReservationCard from './ReservationCard.vue';
-import { cardRows, orderRow, pageInfo } from '../orders.js';
+import { cardRows, pageInfo } from '../orders.js';
 import { answersByReservation } from '../../outcome.js';
 import { ZONES } from '../navigation.js';
 
@@ -17,8 +17,10 @@ import { ZONES } from '../navigation.js';
  * dejaría las dos pantallas discrepando sin que nada fallara.
  *
  * ⚠️ **Lista por RESERVA, no por pedido**: un pedido puede llevar tres reservas de tres fechas
- * distintas y enseñarlas juntas no le dice nada a quien solo quiere saber qué tiene. El ledger sigue
- * siendo del pedido y se pide al desplegarlo (`ReservationCard`).
+ * distintas y enseñarlas juntas no le dice nada a quien solo quiere saber qué tiene. El DINERO es del
+ * pedido y desde el 2026-08-24 vive en su propia pantalla (`ZONES.PURCHASES`): aquí «Ver pedido»
+ * lleva allí, en vez de desplegar un desglose que en un pedido de tres reservas se pintaba tres veces
+ * con importes que no cuadraban con la tarjeta que los rodeaba (`DECISIONES #129`).
  *
  * **Pinta.** Qué se enseña lo componen `account/orders.js` y de dónde salen los datos lo sabe
  * `stores/orders.js`; los dos con `node --test`. Aquí no hay reglas ni API (`CE-6`).
@@ -45,26 +47,17 @@ const page = computed(() => pageInfo(store.pages[props.scope], props.account));
 const past = computed(() => props.scope === 'past');
 const emptyText = computed(() => (past.value ? props.account?.orders?.history?.empty : props.account?.orders?.empty) ?? '');
 
-/** Qué tarjeta tiene desplegado su pedido, y cuál sus respuestas. Uno cada vez: el panel es estrecho. */
-const openOrder = ref(0);
+/** Qué tarjeta tiene desplegadas sus respuestas. Una cada vez: el panel es estrecho. */
 const openEvent = ref(0);
 
-const orderOf = (code) => (store.orders[code] ? orderRow(store.orders[code], { messages: props.messages, account: props.account }) : null);
 const answersOf = (row) => (answersByReservation(store.eventData[row.orderCode])[String(row.id)] ?? []);
 
-function toggle(which, row) {
-    const target = which === 'order' ? openOrder : openEvent;
+function toggleEvent(row) {
+    openEvent.value = openEvent.value === row.id ? 0 : row.id;
 
-    if (target.value === row.id) {
-        target.value = 0;
-
-        return;
-    }
-
-    target.value = row.id;
-    if (which === 'order') store.ensureOrder(row.orderCode);
-    else store.ensureEventData(row.orderCode);
+    if (openEvent.value) store.ensureEventData(row.orderCode);
 }
+
 </script>
 
 <template>
@@ -86,16 +79,14 @@ function toggle(which, row) {
                 v-for="row in rows"
                 :key="row.id"
                 :row="row"
-                :order="orderOf(row.orderCode)"
                 :answers="answersOf(row)"
-                :open-order="openOrder === row.id"
                 :open-event="openEvent === row.id"
                 :dimmed="past"
                 :busy="store.loading"
                 :account="account"
                 :messages="messages"
-                @toggle-order="toggle('order', row)"
-                @toggle-event="toggle('event', row)"
+                @open-order="store.openPurchase(row.orderCode)"
+                @toggle-event="toggleEvent(row)"
                 @retry="store.retry(row.orderCode, { messages })" />
         </ul>
 
