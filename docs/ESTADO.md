@@ -98,30 +98,30 @@ existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u
 `#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
 (verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
-⚠️ **STAGING sirve `b6fadf5`** desde el 2026-08-23 —el salto de 69 commits que traía el área de cliente
-entera y la auth en el cajón— y **desde entonces se ha quedado atrás** (ver abajo). Canal:
-`scripts/deploy.sh` (dry-run por defecto; detalle en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
+✅ **STAGING SIRVE `0e5b885`** desde el **2026-08-25**: el salto de **21 commits y 130 ficheros de
+código** que traía `#123` → `#134` —el bloque de cuenta en Vue, el `no-store` global, «Mis reservas»
+por reserva y **el desglose de dinero ENTERO**—. Canal: `scripts/deploy.sh` (dry-run por defecto;
+detalle en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
 ▶ **El despliegue se auto-verifica y salió limpio**: `/up` y `/` en 200, guarda del `robots.txt`,
-`redsys_environment = 'test'`, 0 migraciones pendientes, 0 `failed_jobs` y 0 jobs varados.
-Comprobado además a mano sobre HTTP: las tres puertas de auth emiten su zona y siguen `noindex`, los
-cuatro puntos llegan cableados y **no queda rastro del modal**.
+`redsys_environment = 'test'`, **1 migración aplicada** (`add_intent_to_payment_refunds`, aditiva),
+0 pendientes, 0 `failed_jobs`, 0 jobs varados y las 5 tareas del scheduler registradas.
+▶ **Y se comprobó que llegó LO DE ESTA SESIÓN, no solo que el sitio arranca**: las dos claves de `L6`
+en los tres idiomas, `invoicedNoteFor()` en el dominio, el campo en `LedgerResource` y el cliente ya
+sin componer la frase. Sobre los datos reales de staging, `R-S9XDYB` la publica:
+«Al reservar se facturaron 202,20 €. El pedido cambió después y ahora vale 13,00 € menos.»
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
-❗❗ **STAGING SE HA QUEDADO MUY ATRÁS, y esta línea llegó a decir lo contrario.** Afirmaba «`main` va
-un commit por delante y es solo doc: no hay diferencia de código», y ya entonces (2026-08-23) eran
-**3 commits y 68 ficheros**. Staging **no lleva `#123`, `#124`, `#125`, `#126` ni `#127`**: sirve un
-cajón sin el bloque de cuenta en Vue, sin el `no-store` global, sin los arreglos del reenvío y del
-velo, sin «Mis reservas» por reserva —y, lo más importante, **sin nada del desglose de dinero**
-(`#127` ni `#128`: sirve la columna vieja, sin los dos ejes y sin el ancla de caja).
-❗❗ **CONSECUENCIA QUE HAY QUE LEER ANTES DE VERIFICAR NADA ALLÍ**: staging sirve el desglose
-**VIEJO**, el que miente. Un pedido cancelado seguirá diciendo «Total 19,80 €» sin anunciar lo que se
-debe devolver, mover la fecha seguirá siendo gratis y el campo de motivo del reembolso no existe.
-**Cualquier comprobación del dinero contra staging hoy mide el sistema anterior**, no éste.
-▶ **La cifra NO se copia aquí** —fue precisamente una cifra copiada la que mintió—. Se mide:
-`git log --oneline b6fadf5..HEAD` y `git diff --stat b6fadf5..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`,
-sustituyendo `b6fadf5` por lo que sirva staging.
-⚠️ **Consecuencia práctica**: cualquier verificación contra staging hoy mide el motor VIEJO. Las dos
-comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **exigen desplegar antes**.
+⚠️ **El único aviso del despliegue**: el script **no ve ningún demonio cron** en el servidor, así que
+el crontab instalado puede no ejecutarse nunca. Se comprueba en el panel del hosting, no por SSH
+(`DECISIONES #115`). No es nuevo de este despliegue.
+❗ **LA REGLA QUE ESTA LÍNEA PAGÓ DOS VECES: la revisión NO se copia, se MIDE.** Llegó a afirmar «no
+hay diferencia de código» cuando ya eran 3 commits y 68 ficheros, y después «sirve el desglose viejo»
+durante todo el día siguiente. Antes de creerte lo de arriba:
+`git log --oneline 0e5b885..HEAD` y
+`git diff --stat 0e5b885..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `0e5b885` por lo
+que sirva staging de verdad.
+▶ **Consecuencia práctica**: las dos comprobaciones que quedan y piden dispositivo (`V23·3` en móvil,
+`V20·6`) **ya no están bloqueadas por el despliegue**.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
@@ -302,9 +302,10 @@ tal como está escrito** — medido el 2026-08-23, y sigue siendo cierto:
 clave— y no por código. Escribir el primer `Cache::tags()` antes de esa decisión es escribir algo que
 revienta en la primera petición.
 
-⚠️ **Y antes de verificar NADA en staging**: sirve `b6fadf5`, que es **anterior a todo el desglose**
-(`#123` a `#134`). Cualquier comprobación del dinero contra staging hoy mide el sistema anterior — el
-que miente. La distancia se mide, no se copia (ver «Dónde estamos»).
+✅ **Staging ya está al día**: sirve `0e5b885` desde el 2026-08-25, con el desglose entero (`#123` a
+`#134`) y verificado allí sobre datos reales. ⚠️ Pero **la distancia se mide, no se copia** —esta
+línea ya mintió dos veces—: antes de creértelo, `git log --oneline 0e5b885..HEAD` (ver «Dónde
+estamos»).
 
 ---
 
