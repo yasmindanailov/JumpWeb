@@ -677,7 +677,7 @@ class Order extends Model
      *   failure_message?:?string,
      * }
      */
-    public function executeFullRefund(User $by, string $mode, bool $alsoCancel): array
+    public function executeFullRefund(User $by, string $mode, bool $alsoCancel, ?string $intent = null): array
     {
         $payment = $this->paidPayment();
         if ($payment === null) {
@@ -687,7 +687,7 @@ class Order extends Model
         // Txn 1: lock + revalidate + create pending row. Serializa contra clicks
         // concurrentes y materializa la "intención" antes de la REST call.
         try {
-            $refund = DB::transaction(function () use ($by, $mode, $payment) {
+            $refund = DB::transaction(function () use ($by, $mode, $intent, $payment) {
                 /** @var Order $locked */
                 $locked = self::query()->lockForUpdate()->find($this->id);
 
@@ -711,6 +711,10 @@ class Order extends Model
                     'currency' => $payment->currency,
                     'status' => PaymentRefund::STATUS_PENDING,
                     'mode' => $mode,
+                    // POR QUÉ se devuelve (`DECISIONES #127(c)`): sin esto, a un cliente que conserva
+                    // su reserva solo se le puede decir «te devolvimos X €», sin lo único que
+                    // necesita saber — si sigue debiendo ese dinero.
+                    'intent' => $intent,
                     'gateway_order' => $payment->gateway_order,
                     'requested_by' => $by->id,
                     'requested_at' => now(),
@@ -1838,6 +1842,7 @@ class Order extends Model
         string $mode,
         bool $alsoCancelItem,
         array $context = [],
+        ?string $intent = null,
     ): array {
         if ($amountCents <= 0) {
             return ['ok' => false, 'reason' => 'invalid_amount'];
@@ -1854,7 +1859,7 @@ class Order extends Model
         // Txn 1: lock + revalidate + create pending row. Serializa contra clicks
         // concurrentes y materializa la intención antes de la REST call.
         try {
-            $refund = DB::transaction(function () use ($item, $amountCents, $by, $mode, $payment) {
+            $refund = DB::transaction(function () use ($item, $amountCents, $by, $mode, $intent, $payment) {
                 /** @var Order $locked */
                 $locked = self::query()->lockForUpdate()->find($this->id);
 
@@ -1907,6 +1912,9 @@ class Order extends Model
                     'currency' => $payment->currency,
                     'status' => PaymentRefund::STATUS_PENDING,
                     'mode' => $mode,
+                    // POR QUÉ se devuelve (`DECISIONES #127(c)`), para que el desglose pueda explicar
+                    // en vez de adivinar. `null` = no consta, que es la verdad de las filas viejas.
+                    'intent' => $intent,
                     'gateway_order' => $payment->gateway_order,
                     'requested_by' => $by->id,
                     'requested_at' => now(),
@@ -2065,6 +2073,7 @@ class Order extends Model
         User $by,
         string $mode,
         bool $alsoCancelItems = false,
+        ?string $intent = null,
     ): array {
         $succeeded = [];
         $failed = [];
@@ -2135,6 +2144,7 @@ class Order extends Model
                 by: $by,
                 mode: $mode,
                 alsoCancelItem: $alsoCancelItems,
+                intent: $intent,
             );
 
             if (! ($result['ok'] ?? false)) {

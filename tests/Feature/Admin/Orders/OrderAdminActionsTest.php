@@ -278,6 +278,79 @@ class OrderAdminActionsTest extends TestCase
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // El MOTIVO del reembolso (`DECISIONES #127(c)`)
+    //
+    // ⚠️⚠️ Reembolsar y cancelar son independientes A PROPÓSITO, y esa flexibilidad crea un estado
+    // que el desglose no puede narrar sin adivinar: al cliente se le devolvió el dinero y conserva
+    // su reserva. ¿Es una compensación —no debe nada— o pagará en taquilla? Sin este dato solo se le
+    // puede decir «te devolvimos X €», que es honesto pero no dice lo único que necesita saber.
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function test_a_refund_without_cancelling_records_why_the_money_went_back(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refund', data: [
+                'mode' => PaymentRefund::MODE_MANUAL,
+                'also_cancel' => false,
+                'intent' => PaymentRefund::INTENT_PAID_IN_PERSON,
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(
+            PaymentRefund::INTENT_PAID_IN_PERSON,
+            PaymentRefund::latest('id')->first()->intent,
+            'el motivo tiene que quedar registrado con el reembolso, no perderse en el modal',
+        );
+    }
+
+    /**
+     * Si además se CANCELA, el motivo es evidente —desapareció el producto— y no se le pregunta al
+     * operador: se registra solo. Preguntar lo obvio en una acción de dinero es ruido.
+     */
+    public function test_a_refund_that_also_cancels_records_the_value_returned_without_asking(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refund', data: [
+                'mode' => PaymentRefund::MODE_MANUAL,
+                'also_cancel' => true,
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(
+            PaymentRefund::INTENT_VALUE_RETURNED,
+            PaymentRefund::latest('id')->first()->intent,
+        );
+    }
+
+    /** Un valor inventado por un cliente manipulado NO se guarda: se normaliza a «no consta». */
+    public function test_an_unknown_intent_is_not_stored(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refund', data: [
+                'mode' => PaymentRefund::MODE_MANUAL,
+                'also_cancel' => false,
+                'intent' => 'lo-que-sea',
+            ]);
+
+        $this->assertNull(PaymentRefund::latest('id')->first()?->intent);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // Cancel — visibility
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -655,6 +728,9 @@ class OrderAdminActionsTest extends TestCase
             ->callAction('refund', data: [
                 'mode' => PaymentRefund::MODE_MANUAL,
                 'also_cancel' => false,
+                // Sin cancelar, el motivo es OBLIGATORIO (`DECISIONES #127(c)`): el cliente conserva
+                // su reserva y su desglose tiene que poder decirle si sigue debiendo el importe.
+                'intent' => PaymentRefund::INTENT_COMPENSATION,
             ])
             ->assertHasNoActionErrors();
 

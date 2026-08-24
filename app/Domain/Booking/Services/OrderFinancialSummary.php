@@ -289,6 +289,26 @@ final readonly class OrderFinancialSummary
         return max($this->totalRefunded, $this->refundColumn);
     }
 
+    /**
+     * ¿La columna agregada dice algo que las filas no? **Nunca debería.**
+     *
+     * ⚠️⚠️ Es lo que sustituye a la «legacy-safety» como mecanismo (`DECISIONES #127`). Medido: los
+     * DOS únicos escritores de `Order.refund_amount_cents` —`executeFullRefund` y
+     * `executePartialRefund`— la derivan de `totalRefundedCents()`, y no hay ninguno en
+     * `app/Filament` ni en `app/Http`. Con la decisión del owner de que **JumpWeb solo instala
+     * limpio**, ninguna base tiene datos pre-#142, así que el `max()` de {@see effectiveRefunded} es
+     * código muerto: no protege de nada que pueda ocurrir.
+     *
+     * No se retira el `max()` —quitar un cinturón de dinero no compra nada—, se **vigila**: el test
+     * de invariantes asevera que esto es siempre `false`. El día que alguien escriba la columna a
+     * mano, la guarda lo dice en vez de que la divergencia viva escondida en las tarjetas, como pasó
+     * durante toda la vida del reembolso total.
+     */
+    public function refundColumnDivergesFromRows(): bool
+    {
+        return $this->refundColumn !== $this->totalRefunded;
+    }
+
     public function pendingAtGate(): int
     {
         // Ambos buckets de puerta: el delta de ediciones (`extraDue`) y el resto de la

@@ -88,7 +88,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
       **`MODELO-DATOS.md` regenerado desde el código** (30 modelos y las 71 migraciones de
       entonces; el recuento vivo lo verifica `docs-check`) ·
-      **`INVARIANTES.md`** destilado (54 entonces; hoy **55 invariantes de no-regresión**, el
+      **`INVARIANTES.md`** destilado (54 entonces; hoy **58 invariantes de no-regresión**, el
       recuento vivo lo verifica `docs-check`). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.

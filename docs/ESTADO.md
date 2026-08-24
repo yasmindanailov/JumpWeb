@@ -602,7 +602,7 @@ reproduce el flujo real.**
 
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
-Recuento VIVO: 30 modelos · 72 migraciones · 17 Filament Resources. La migración añadida es
+Recuento VIVO: 30 modelos · 73 migraciones · 17 Filament Resources. La migración añadida es
 `personal_access_tokens` (Sanctum).
 ⚠️ **El contador de tests NO se repite aquí**: vive arriba, en «Dónde estamos», con su contexto.
 `docs-check` vigila los tres números de esta línea y las invariantes —son sus cuatro patrones—, pero

@@ -141,6 +141,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id],
@@ -200,6 +201,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$pack->id],
                 ],
                 arguments: ['item' => $pack->id],
@@ -248,6 +250,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$addonA->id],
                 ],
                 arguments: ['item' => $pack->id],
@@ -278,6 +281,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [],  // vacío
                 ],
                 arguments: ['item' => $item->id],
@@ -315,6 +319,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$otherItem->id],  // item de otro Order
                     'optimistic_token' => (string) $pack->updated_at->getTimestamp(),
                     'expected_capacity_cents' => $order->refundableCapacityCents(),
@@ -342,6 +347,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_MANUAL,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id],
@@ -385,6 +391,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id],
@@ -411,6 +418,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$item->id],
                     'optimistic_token' => 'STALE',
                 ],
@@ -472,6 +480,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$addonA->id, $addonB->id],
                 ],
                 arguments: ['item' => $pack->id],
@@ -508,6 +517,7 @@ class RefundItemActionTest extends TestCase
             ->callAction('refundItem',
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
                     'items_to_refund' => [$item->id],
                     'expected_capacity_cents' => 9999999,
                 ],

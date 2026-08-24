@@ -41,6 +41,14 @@ class VerifyRedsysSandbox extends Command
     /** Clave pública del sandbox de Redsys (HMAC_SHA512_V2). La misma para SHA-256/512. */
     private const SANDBOX_KEY = 'sq7HjrUOBfKmC576ILgskD5srU870gJ7';
 
+    /**
+     * Códigos con los que Redsys rechaza por FIRMA (no por negocio). Verificado con el sandbox del
+     * owner el 2026-08-24: firmar con una clave errónea devuelve `SIS0042`, frente al `SIS0054` de
+     * una operación inexistente. Que estos salgan en ROJO es lo que hace que `--bad-key` sea un
+     * control negativo de verdad.
+     */
+    private const SIGNATURE_ERROR_CODES = ['SIS0042', 'SIS0319', 'SIS0435'];
+
     public function handle(): int
     {
         if ($this->getLaravel()->isProduction()) {
@@ -138,10 +146,24 @@ class VerifyRedsysSandbox extends Command
 
         // Distinguir «integración OK pero sin operación original» de «integración rota».
         $reason = $result->failureReason;
+
+        // ⚠️⚠️ **La FIRMA rechazada es un FALLO, no una integración válida** (`DECISIONES #127(b)`).
+        // Hasta esta corrección, `gateway_denied` se bendecía en bloque, así que `--bad-key` —el
+        // control negativo que existe para demostrar que esta comprobación PUEDE fallar— salía en
+        // VERDE, y encima imprimiendo un texto que se contradecía: «una firma errónea daría SIS0042,
+        // no esto», mostrando SIS0042. **Una guarda cuyo control negativo no falla no es una guarda.**
+        if ($reason === 'gateway_denied' && in_array($result->dsResponse, self::SIGNATURE_ERROR_CODES, true)) {
+            $this->error('❌ FIRMA RECHAZADA por Redsys ('.$result->dsResponse.'): la petición llegó, '
+                .'pero el banco NO aceptó la firma. Revisar la clave secreta, el comercio y el terminal. '
+                .'(Si has pasado `--bad-key`, esto es EXACTAMENTE lo que se esperaba: el control negativo funciona.)');
+
+            return self::FAILURE;
+        }
+
         if ($reason === 'gateway_denied') {
             $this->info('✅ INTEGRACIÓN VÁLIDA: Redsys respondió con el código '.($result->dsResponse ?? '—').'. '
-                .'La firma HMAC_SHA512_V2 de la PETICIÓN fue ACEPTADA (una firma errónea daría SIS0042, no esto), '
-                .'la petición es correcta y la respuesta se parseó. '
+                .'La firma HMAC_SHA512_V2 de la PETICIÓN fue ACEPTADA (una firma errónea daría un código de '
+                .'firma, que este comando trata como FALLO), la petición es correcta y la respuesta se parseó. '
                 .($real
                     ? 'Pero la devolución fue DENEGADA por la pasarela — revisar el código en el portal.'
                     : 'SIS0054 = la denegación ESPERADA al devolver una operación inexistente. Para un 0900 real, pasa --gateway-order de una autorización previa del sandbox.'));

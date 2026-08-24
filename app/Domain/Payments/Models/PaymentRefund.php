@@ -45,6 +45,29 @@ class PaymentRefund extends Model
     /** Marcador de gateway_response_code para reembolsos registrados como manuales. */
     public const MANUAL_RESPONSE_MARKER = 'MANUAL';
 
+    // ─── POR QUÉ se devolvió el dinero (`DECISIONES #127(c)`) ──────────────────────────────
+    //
+    // ⚠️⚠️ Reembolsar y cancelar son INDEPENDIENTES a propósito, y esa flexibilidad crea estados
+    // que el desglose no puede narrar sin adivinar. La intención es lo que convierte un número en
+    // una explicación: sin ella, a un cliente al que se le devolvió el dinero y conserva su reserva
+    // solo se le puede decir «te devolvimos X € y tu reserva sigue en pie» — que es honesto pero no
+    // dice lo único que necesita saber: **si sigue debiendo ese dinero**.
+
+    /** El producto desapareció (cancelación, bajada): la devolución sigue a una pérdida de valor. */
+    public const INTENT_VALUE_RETURNED = 'value_returned';
+
+    /** Compensación: el cliente conserva su reserva y **no debe nada**. */
+    public const INTENT_COMPENSATION = 'compensation';
+
+    /** Canje en persona: se le devuelve lo cobrado online porque **pagará en taquilla**. */
+    public const INTENT_PAID_IN_PERSON = 'paid_in_person';
+
+    /** @return list<string> */
+    public static function intents(): array
+    {
+        return [self::INTENT_VALUE_RETURNED, self::INTENT_COMPENSATION, self::INTENT_PAID_IN_PERSON];
+    }
+
     protected $guarded = [];
 
     protected $casts = [

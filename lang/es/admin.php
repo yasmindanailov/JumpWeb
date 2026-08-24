@@ -516,6 +516,11 @@ return [
                 'mode_rest_desc' => 'Devolvemos el dinero en el banco del cliente. Si el banco confirma, actualizamos el pedido y le mandamos el email. Si hubiera algún problema, el pedido se queda como estaba y te decimos qué ha pasado.',
                 'mode_manual' => 'Solo registrar (ya devuelto fuera)',
                 'mode_manual_desc' => 'Usa esta opción solo si ya devolviste el dinero por otro sitio (por ejemplo desde el portal del banco). Aquí solo lo dejamos apuntado y mandamos el email al cliente.',
+                'intent_label' => '¿Por qué se le devuelve el dinero?',
+                'intent_compensation' => 'Es una compensación: no nos debe nada',
+                'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva sin tener que pagar nada más. Es lo que verá en su desglose.',
+                'intent_paid_in_person' => 'Lo pagará en persona, en recepción',
+                'intent_paid_in_person_desc' => 'Le devolvemos lo que pagó por la web porque abonará el importe al llegar. En su desglose aparecerá como pendiente de pagar en el parque.',
 
                 'also_cancel' => 'También cancelar el pedido',
                 'also_cancel_help' => 'Si lo dejas activo, el pedido también queda cancelado. Desactívalo solo si quedasteis con el cliente en que se quedaba con el servicio (por ejemplo, canje en persona por entradas físicas).',
@@ -907,6 +912,11 @@ return [
             'mode_rest_desc' => 'Devolvemos el dinero al banco del cliente. Si algo falla, te avisamos y no se modifica nada del resto.',
             'mode_manual' => 'Solo registrar (ya devuelto fuera)',
             'mode_manual_desc' => 'Solo lo dejamos apuntado (úsalo si ya devolviste el dinero por otro sitio: portal del banco, efectivo, etc.).',
+            'intent_label' => '¿Por qué se le devuelve el dinero?',
+            'intent_compensation' => 'Es una compensación: no nos debe nada',
+            'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva sin tener que pagar nada más. Es lo que verá en su desglose.',
+            'intent_paid_in_person' => 'Lo pagará en persona, en recepción',
+            'intent_paid_in_person_desc' => 'Le devolvemos lo que pagó por la web porque abonará el importe al llegar. En su desglose aparecerá como pendiente de pagar en el parque.',
 
             'items_label' => 'Productos a reembolsar',
             'items_help' => 'Solo aparecen los productos que aún tienen importe pendiente de devolver. Si un producto ya se ha reembolsado completamente, no se lista.',

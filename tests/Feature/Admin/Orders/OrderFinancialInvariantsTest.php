@@ -348,8 +348,8 @@ class OrderFinancialInvariantsTest extends TestCase
         // ⚠️ La columna agregada del reembolso es SIEMPRE Σ de las filas. Es la guarda de construcción
         // que sustituye a la «legacy-safety»: mientras se cumpla, el `max()` de `effectiveRefunded()`
         // es código muerto (`DECISIONES #127`: JumpWeb solo instala limpio).
-        $this->assertSame(
-            $summary->totalRefunded, $summary->refundColumn,
+        $this->assertFalse(
+            $summary->refundColumnDivergesFromRows(),
             "$label · la columna `refund_amount_cents` diverge de Σ payment_refunds",
         );
     }

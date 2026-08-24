@@ -273,7 +273,26 @@ class ViewOrder extends ViewRecord
                     // tiene AMBOS permisos. La defensa real vive en el handler (re-fuerza false).
                     ->visible(fn (?Order $record): bool => ($record?->canBeCancelled() ?? false)
                         && (auth()->user()?->hasPermission('orders.cancel') ?? false))
+                    // Reactivo: el motivo aparece o desaparece según se cancele o no.
+                    ->live()
                     ->default(true),
+                // ⚠️⚠️ **Por qué se devuelve, y solo cuando hace falta preguntarlo**
+                // (`DECISIONES #127(c)`). Si además se cancela, el motivo es evidente —desapareció el
+                // producto— y preguntarlo sería ruido. Si NO se cancela, el cliente conserva su
+                // reserva y el dinero vuelve: sin esta respuesta, su desglose no puede decirle lo
+                // único que necesita saber, **si sigue debiendo ese importe**.
+                Radio::make('intent')
+                    ->label(__('admin.orders.actions.refund.intent_label'))
+                    ->options([
+                        PaymentRefund::INTENT_COMPENSATION => __('admin.orders.actions.refund.intent_compensation'),
+                        PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.actions.refund.intent_paid_in_person'),
+                    ])
+                    ->descriptions([
+                        PaymentRefund::INTENT_COMPENSATION => __('admin.orders.actions.refund.intent_compensation_desc'),
+                        PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.actions.refund.intent_paid_in_person_desc'),
+                    ])
+                    ->visible(fn (Get $get): bool => ! (bool) $get('also_cancel'))
+                    ->required(fn (Get $get): bool => ! (bool) $get('also_cancel')),
             ])
             ->action(function (Order $record, array $data): void {
                 $record = $record->fresh();
@@ -301,10 +320,19 @@ class ViewOrder extends ViewRecord
                     $alsoCancelRequested = false;
                 }
 
+                // Si se cancela, la intención es evidente y no se pregunta: el producto desapareció.
+                $intent = $alsoCancelRequested
+                    ? PaymentRefund::INTENT_VALUE_RETURNED
+                    : ($data['intent'] ?? null);
+                if (! in_array($intent, PaymentRefund::intents(), true)) {
+                    $intent = null;
+                }
+
                 $result = $record->executeFullRefund(
                     by: auth()->user(),
                     mode: $mode,
                     alsoCancel: $alsoCancelRequested,
+                    intent: $intent,
                 );
 
                 if (! ($result['ok'] ?? false)) {
@@ -1137,6 +1165,20 @@ class ViewOrder extends ViewRecord
      *
      * @return array{old:int, unit:int, new:?int, diff:?int}
      */
+    /**
+     * Precio unitario de CATÁLOGO del producto del item para una fecha, o `null` si ese día no tiene
+     * precio para su tarifa. Es la misma fuente que usa la compra (`RateResolver`), así que el panel
+     * y la web no pueden divergir sobre lo que cuesta un día.
+     */
+    private function catalogUnitPriceFor(OrderItem $item, ?string $dateStr): ?int
+    {
+        if ($dateStr === null || $dateStr === '' || $item->ticketType === null) {
+            return null;
+        }
+
+        return app(RateResolver::class)->priceCents($item->ticketType, Carbon::parse($dateStr));
+    }
+
     private function computeEditPricing(OrderItem $item, int $newTypeId, int $newQty, ?string $dateStr): array
     {
         $newQty = max(1, $newQty);
@@ -1144,7 +1186,18 @@ class ViewOrder extends ViewRecord
         $productChanged = $newTypeId !== (int) $item->ticket_type_id;
 
         if (! $productChanged) {
-            $unit = (int) $item->unit_price;
+            // ⚠️⚠️ **Si la FECHA lleva a un día de otro precio, manda el catálogo de ESE día**
+            // (`DECISIONES #127(d)`): «pagas el precio del día que elijas». Antes se conservaba
+            // siempre la tarifa pagada, y eso convertía el cambio de fecha en un arbitraje —comprar
+            // el día barato y pedir el cambio al caro salía gratis—.
+            // El LÍMITE está en el llamante: `dateStr` solo trae un día DISTINTO cuando la fecha
+            // cambia de verdad, así que una subida de cantidad sin mover el día sigue conservando la
+            // tarifa histórica del ítem, como siempre.
+            $catalogo = $this->catalogUnitPriceFor($item, $dateStr);
+            $movedDay = $dateStr !== null && $dateStr !== ''
+                && $item->slot?->date?->toDateString() !== $dateStr;
+
+            $unit = ($movedDay && $catalogo !== null) ? $catalogo : (int) $item->unit_price;
         } else {
             $newType = TicketType::find($newTypeId);
             $date = $dateStr !== null && $dateStr !== '' ? Carbon::parse($dateStr) : Carbon::today();
@@ -3125,7 +3178,21 @@ class ViewOrder extends ViewRecord
         $addonEdits = $this->normalizeAddonEdits($data);
         $addonsChanged = $this->addonEditsPresent($item, $addonEdits);
 
-        if ($productChanged || $quantityChanged || $addonsChanged) {
+        // ⚠️⚠️ **Mover la FECHA re-tarifica** (`DECISIONES #127(d)`). Un cambio de día cuya tarifa
+        // difiere TOCA DINERO, así que tiene que entrar por el handler unificado —el que ya sabe
+        // cobrar en puerta y acreditar— en vez de por `executeItemSlotChange`, que no roza el precio.
+        //
+        // Sin esto, comprar el día barato y pedir el cambio al sábado salía GRATIS: el descuento era
+        // exactamente la diferencia de tarifa, y el previo del operador afirmaba «sin cambio de
+        // precio». No era una política, era un arbitraje abierto.
+        //
+        // ⚠️ El LÍMITE: solo re-tarifica el cambio de FECHA. Una edición que no mueve el día conserva
+        // la tarifa histórica del ítem, como siempre.
+        $tariffChanged = $slotChanged && ! $productChanged
+            && $this->catalogUnitPriceFor($item, $newDate) !== null
+            && $this->catalogUnitPriceFor($item, $newDate) !== (int) $item->unit_price;
+
+        if ($productChanged || $quantityChanged || $addonsChanged || $tariffChanged) {
             $this->executeItemEdit(
                 $order, $item, $data, $newDate, $newTime, $slotChanged,
                 $newProductId, $newQty, $eventDataCandidate, $addonEdits,
@@ -4460,8 +4527,14 @@ class ViewOrder extends ViewRecord
      *  - Items que ya tienen TODO su importe refundado quedan FUERA de la
      *    lista (sin opción de double-refund).
      *
-     * Cada item marcado → `executePartialRefund` con `alsoCancelItem=true`
-     * (devolver = el operador entiende que ese item ya no se entrega).
+     * ⚠️⚠️ **Cada item marcado → `executePartialRefund` con `alsoCancelItem=FALSE`: reembolsar NO
+     * cancela la línea.** Es deliberado (`DECISIONES #127(c)`, owner): reembolsar y cancelar son
+     * independientes para que el operador tenga flexibilidad al entenderse con el cliente en las
+     * instalaciones. ⚠️ Este docblock **afirmaba lo contrario** —`alsoCancelItem=true`, «devolver =
+     * ese ítem ya no se entrega»— mientras el código pasaba `false`: la conducta era correcta y el
+     * texto no, que en dinero es como el siguiente lector escribe mal.
+     * ▶ Y por eso el MOTIVO es obligatorio aquí: la reserva sigue viva y el dinero vuelve, así que
+     * sin él el desglose no puede decirle al cliente si sigue debiendo ese importe.
      * Modo `rest`/`manual` aplica al batch entero.
      *
      * Atomicidad parcial: si la REST call falla en mitad del batch, los
@@ -4549,6 +4622,21 @@ class ViewOrder extends ViewRecord
                         ->required()
                         ->bulkToggleable()
                         ->columns(1),
+                    // ⚠️⚠️ **Por qué se devuelve** (`DECISIONES #127(c)`). Aquí es SIEMPRE obligatorio:
+                    // este camino no cancela la reserva, así que el cliente se queda con ella y con su
+                    // dinero de vuelta — y sin esta respuesta su desglose no puede decirle lo único
+                    // que necesita saber, si sigue debiendo ese importe.
+                    Radio::make('intent')
+                        ->label(__('admin.orders.refund_item.intent_label'))
+                        ->options([
+                            PaymentRefund::INTENT_COMPENSATION => __('admin.orders.refund_item.intent_compensation'),
+                            PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.refund_item.intent_paid_in_person'),
+                        ])
+                        ->descriptions([
+                            PaymentRefund::INTENT_COMPENSATION => __('admin.orders.refund_item.intent_compensation_desc'),
+                            PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.refund_item.intent_paid_in_person_desc'),
+                        ])
+                        ->required(),
                 ];
             })
             ->action(function (array $data): void {
@@ -4848,11 +4936,21 @@ class ViewOrder extends ViewRecord
         // que se cancele el servicio; si quiere cancelar, usa el botón 🗑️
         // del sub-card por separado (que ahora cancela el producto entero
         // con cascada a sus complementos).
+        // ⚠️ Este camino **NO cancela la línea** (`alsoCancelItems: false`), a propósito: reembolsar y
+        // cancelar son independientes (`DECISIONES #127(c)`, owner). Por eso el motivo es OBLIGATORIO
+        // aquí — la reserva sigue viva y el dinero vuelve, así que sin él el desglose no puede decirle
+        // al cliente si sigue debiendo ese importe.
+        $intent = $data['intent'] ?? null;
+        if (! in_array($intent, PaymentRefund::intents(), true)) {
+            $intent = null;
+        }
+
         $batchResult = $order->executePartialRefundBatch(
             itemIds: $selectedIds,
             by: $user,
             mode: $mode,
             alsoCancelItems: false,
+            intent: $intent,
         );
 
         $this->renderBatchResult($batchResult, $order, $mode);
