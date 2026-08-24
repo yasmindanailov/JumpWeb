@@ -994,6 +994,11 @@ return [
             'pagado_online' => 'Pagado online',
             // P1/P10: si el cobro fue manual (efectivo/datáfono) y no por la web, no se dice «online».
             'cobrado_manual' => 'Cobrado (efectivo/datáfono)',
+            // ⚠️ Los tres conceptos que la tanda B añade (`DECISIONES #127`). MISMOS conceptos que
+            // ve el cliente, en tercera persona — que es la voz del operador y no se toca.
+            'pendiente_online' => 'Pendiente de cobro online',
+            'compensado' => 'Compensación devuelta',
+            'cobrado_web' => 'Cobrado por web (extracto)',
             'pagado_puerta' => 'Pagado en el parque',
             // Ancla del importe bruto pagado por web (conciliación con el banco),
             // en el detalle de "Pendiente de devolución".

@@ -382,15 +382,35 @@
                  cobrar en puerta se destaca aparte en la caja inferior; aquí solo
                  explicitamos lo ya pagado online (y lo cobrado en puerta si finalizó). --}}
             @php $rf = $slip->financials(); @endphp
-            @if ($rf->aCobrarPuerta > 0 || $rf->cobradoPuerta > 0 || $rf->devuelto > 0 || $rf->pendienteReembolso > 0)
-                <tr>
-                    <td class="t-label">{{ __('admin.orders.item_financial.paid_online') }}</td>
-                    <td class="t-value">{{ $fmt($rf->pagadoOnline) }}</td>
-                </tr>
+            {{-- ⚠️ Los DOS canales nuevos entran en la condición (`DECISIONES #127`): sin ellos, una
+                 reserva SIN cobrar o con una compensación no abría desglose y la hoja enseñaba solo
+                 el total — que es justo el caso en que hace falta explicarlo. --}}
+            @if ($rf->aCobrarPuerta > 0 || $rf->cobradoPuerta > 0 || $rf->devuelto > 0 || $rf->pendienteReembolso > 0 || $rf->pendienteOnline > 0 || $rf->compensado > 0)
+                @if ($rf->pagadoOnline > 0)
+                    <tr>
+                        <td class="t-label">{{ __('admin.orders.item_financial.paid_online') }}</td>
+                        <td class="t-value">{{ $fmt($rf->pagadoOnline) }}</td>
+                    </tr>
+                @endif
+                {{-- ⚠️ Lo que TODAVÍA no se ha cobrado online. Ir en la misma línea que lo pagado
+                     hacía que una reserva sin cobrar anunciara «Pagado online» en la hoja que se
+                     entrega en recepción — el peor sitio para decirlo mal. --}}
+                @if ($rf->pendienteOnline > 0)
+                    <tr>
+                        <td class="t-label">{{ __('admin.orders.order_financial.pendiente_online') }}</td>
+                        <td class="t-value">{{ $fmt($rf->pendienteOnline) }}</td>
+                    </tr>
+                @endif
                 @if ($rf->cobradoPuerta > 0)
                     <tr>
                         <td class="t-label">{{ __('admin.orders.item_financial.collected_at_gate') }}</td>
                         <td class="t-value">{{ $fmt($rf->cobradoPuerta) }}</td>
+                    </tr>
+                @endif
+                @if ($rf->compensado > 0)
+                    <tr>
+                        <td class="t-label">{{ __('admin.orders.order_financial.compensado') }}</td>
+                        <td class="t-value">{{ $fmt($rf->compensado) }}</td>
                     </tr>
                 @endif
             @endif

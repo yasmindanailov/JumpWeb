@@ -980,8 +980,12 @@ class OrderInfolistEnrichedTest extends TestCase
         $customer = User::factory()->create();
         $order = $this->makeOrderForCustomer($customer, ['total' => 10000]); // 100,00 €
         $payment = $this->makePaymentForOrder($order);
-        $this->makeSuccessfulRestRefund($payment, $this->staff());
-        // Refund parcial: solo 25 € del total de 100 €.
+        // ⚠️ Refund PARCIAL de 25 € sobre 100 €, con la FILA y la columna coherentes: los dos
+        // escritores reales derivan `refund_amount_cents` de `totalRefundedCents()` en la misma
+        // transacción, y la guarda de construcción de `DECISIONES #127` lo asevera. El fixture
+        // escribía la columna a mano dejando una fila del importe COMPLETO — un estado que ningún
+        // reembolso puede producir.
+        $this->makeSuccessfulRestRefund($payment, $this->staff())->update(['amount_cents' => 2500]);
         $order->update([
             'refunded_at' => now(),
             'refund_amount_cents' => 2500,

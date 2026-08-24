@@ -46,29 +46,30 @@
         'items.children.ticketType',
     ]);
 
-    // ── Agregados autoritativos (OrderFinancialSummary) ──
-    $valorFinal = $s->totalFinalNeto();        // = Σ valor de las cards (= productsValue)
-    $aCobrar = $s->pendingAtGate();            // extra pendiente de cobrar en puerta
-    // Cobrado en puerta (reservas finalizadas): extra de ediciones + resto de la señal (#225).
-    $pagadoPuerta = (int) $s->extraDueResolved + (int) $s->depositRemainderResolved;
-    // Pagado online que RESPALDA productos (= Σ itemCollectedCents). Derivado de la
-    // identidad valorFinal = pagadoOnline + aCobrar + pagadoPuerta → cuadra exacto.
-    $pagadoOnline = max(0, $valorFinal - $aCobrar - $pagadoPuerta);
-    // "Devuelto": fuente LEGACY-SAFE (`Order.refund_amount_cents` + `refunded_at`).
-    // Hay refunds pre-#142 sin fila `payment_refunds`; `OrderFinancialSummary` solo
-    // lee `payment_refunds` y los perdería, así que para esta dimensión usamos la
-    // columna agregada del Order (igual que el bloque anterior).
-    $devuelto = (int) ($record->refund_amount_cents ?? 0);
-    $hasRefund = $record->refunded_at !== null || $devuelto > 0;
-    $aDevolver = $s->pendienteDevolucion();    // pagado online sin producto, pendiente
-    // Bruto realmente pagado por web (ancla de conciliación con el banco). Deposit-aware (#225):
-    // es lo COBRADO ONLINE (Σ payments pagados), NO `Order.total` (que con señal es el valor
-    // pleno, no lo que entró por web → el caption decía «pagó 180» cuando solo se cobró la señal).
-    $brutoOnline = (int) $record->payments->where('status', \App\Domain\Payments\Models\Payment::STATUS_PAID)->sum('amount');
+    // ── EL DESGLOSE, del value object ÚNICO (`DECISIONES #127`) ──
+    //
+    // ⚠️⚠️ **Ni un solo importe se deriva ya aquí.** Los componía este blade por su cuenta —y el
+    // cliente, el PDF y los correos, cada uno el suyo— y así es como divergieron: medido, 18 de 23
+    // gestiones del panel dejaban la columna del cliente ilegible. Ahora los ocho sitios leen
+    // `Booking\Services\OrderLedger`, el MISMO. Este blade decide qué líneas enseña y con qué voz
+    // —tercera persona, que es la del operador—, no qué valen.
+    $l = \App\Domain\Booking\Services\OrderLedger::forOrder($record);
 
-    // Incluye el pendiente en puerta de la SEÑAL (#225): un pedido de solo-señal también
-    // tiene desglose (Pagado online / A cobrar en el parque), no «solo Total».
-    $hasBreakdown = $s->hasExtraDue() || $hasRefund || $s->hasPendienteDevolucion() || $s->hasPendingAtGate();
+    $valorFinal = $l->valor;
+    $aCobrar = $l->pendientePuerta;
+    $pagadoPuerta = $l->pagadoPuerta;
+    // ⚠️ Antes se DERIVABA (`valorFinal − aCobrar − pagadoPuerta`), que era una segunda fórmula del
+    // mismo importe: coincidía por álgebra, no por construcción, y no restaba la compensación.
+    $pagadoOnline = $l->pagadoOnline;
+    $pendienteOnline = $l->pendienteOnline;
+    $compensado = $l->compensado;
+    $devuelto = $l->devuelto;
+    $hasRefund = $record->refunded_at !== null || $devuelto > 0;
+    $aDevolver = $l->pendienteDevolucion;
+    // Ancla de conciliación con el banco: lo REALMENTE cobrado por web.
+    $brutoOnline = $l->cobradoOnline;
+
+    $hasBreakdown = $l->hasBreakdown() || $hasRefund;
 
     // ── Detalle ↳ por reserva (mismas cifras que las cards) ──
     $reservations = $record->reservationFinancialsByPrincipal();
@@ -222,6 +223,26 @@
                 @endif
             @endif
 
+            {{-- ⚠️ PENDIENTE DE COBRO ONLINE. Es el canal que faltaba: un pedido sin cobrar tenía su
+                 importe en «Pagado online», leído en pasado — el operador veía «pagado» algo que
+                 nadie había pagado (`DECISIONES #127`). --}}
+            @if ($pendienteOnline > 0)
+                <div class="flex items-center justify-between gap-3 pl-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+                    <span>{{ __('admin.orders.order_financial.pendiente_online') }}</span>
+                    <span>{{ $fmt($pendienteOnline) }}</span>
+                </div>
+            @endif
+
+            {{-- ⚠️ COMPENSACIÓN: dinero devuelto SIN que desapareciera producto. No es un canal de
+                 cobro ni una bajada de valor — es su propio término, y por eso la «ley de caja»
+                 arrastraba una excepción que en realidad era esta línea. --}}
+            @if ($compensado > 0)
+                <div class="flex items-center justify-between gap-3 pl-3 text-sm text-gray-700 dark:text-gray-300">
+                    <span>{{ __('admin.orders.order_financial.compensado') }}</span>
+                    <span>{{ $fmt($compensado) }}</span>
+                </div>
+            @endif
+
             {{-- Devuelto. Detalle ↳ por producto. --}}
             @if ($hasRefund)
                 <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1.5 text-sm text-amber-700 dark:border-white/10 dark:text-amber-300">
@@ -261,6 +282,16 @@
                     <p class="text-xs leading-snug text-gray-500 dark:text-gray-400">
                         {{ __('admin.orders.order_financial.pendiente_devolucion_caption_web', ['total' => $fmt($brutoOnline), 'pendiente' => $fmt($aDevolver)]) }}
                     </p>
+                </div>
+            @endif
+
+            {{-- ⚠️ EL ANCLA DE CAJA: lo realmente cobrado por web. Es lo único que el operador puede
+                 cotejar con el extracto del banco, y hasta la tanda B solo existía dentro de un
+                 caption (`DECISIONES #127`). --}}
+            @if ($brutoOnline > 0)
+                <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1.5 text-xs text-gray-500 dark:border-white/10 dark:text-gray-400">
+                    <span>{{ __('admin.orders.order_financial.cobrado_web') }}</span>
+                    <span>{{ $fmt($brutoOnline) }}</span>
                 </div>
             @endif
 

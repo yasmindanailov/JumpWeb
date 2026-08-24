@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Bus\Queueable;
@@ -54,19 +55,26 @@ class OrderConfirmation extends Notification implements ShouldQueue
         // Predicado canónico `depositRemainder > 0` (NO `online < total`, que se encendería por
         // una línea cancelada en un pedido sin señal). El pendiente sale de `pendingAtGate()`
         // (robusto a ediciones/cancelaciones en un reenvío), no de `total − online`.
-        $this->order->loadMissing(['items.ticketType', 'adjustments', 'payments.refunds']);
+        $this->order->loadMissing(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds']);
         $summary = $this->order->financialSummary();
+        // ⚠️ Los importes salen del LEDGER, no de `onlineDueCents()` ni de `Order.total`
+        // (`DECISIONES #127`). Es el mismo motivo por el que lo pendiente ya salía de
+        // `pendingAtGate()`: **este correo se REENVÍA desde el panel**, y para entonces el pedido
+        // puede haber cambiado. `onlineDueCents()` es «lo que se cobraría al pagar ahora» y
+        // `Order.total` es lo facturado: los dos envejecen mal en un reenvío. `pagadoOnline` es lo
+        // realmente pagado que respalda producto, y `valor` lo que vale hoy.
+        $ledger = OrderLedger::forOrder($this->order);
         if ($summary->depositRemainder > 0) {
             $message
                 ->line(__('emails.order_confirmation.deposit_paid', [
-                    'amount' => number_format($this->order->onlineDueCents() / 100, 2, ',', '.'),
+                    'amount' => number_format($ledger->pagadoOnline / 100, 2, ',', '.'),
                 ]))
                 ->line(__('emails.order_confirmation.pending_at_park', [
-                    'amount' => number_format($summary->pendingAtGate() / 100, 2, ',', '.'),
+                    'amount' => number_format($ledger->pendientePuerta / 100, 2, ',', '.'),
                 ]));
         } else {
             $message->line(__('emails.order_confirmation.total', [
-                'amount' => number_format((int) $this->order->total / 100, 2, ',', '.'),
+                'amount' => number_format($ledger->valor / 100, 2, ',', '.'),
             ]));
         }
 

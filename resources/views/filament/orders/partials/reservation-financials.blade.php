@@ -26,10 +26,28 @@
     {{-- Split del total en pagado online + lo de puerta (solo si hay actividad,
          para no recargar un producto pagado 100% online). --}}
     @if ($rf->hasActivity())
-        <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
-            <span>{{ __('admin.orders.item_financial.paid_online') }}</span>
-            <span>{{ $fmt($rf->pagadoOnline) }}</span>
-        </div>
+        {{-- ⚠️ Solo si hay algo cobrado: un pedido SIN pagar tiene su importe en «pendiente», no
+             aquí. Publicarlo en un solo campo hacía que se leyera en pasado (`DECISIONES #127`). --}}
+        @if ($rf->pagadoOnline > 0)
+            <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('admin.orders.item_financial.paid_online') }}</span>
+                <span>{{ $fmt($rf->pagadoOnline) }}</span>
+            </div>
+        @endif
+        {{-- El canal que faltaba: lo que TODAVÍA no se ha cobrado online. --}}
+        @if ($rf->pendienteOnline > 0)
+            <div class="flex items-center justify-between gap-3 pl-3 text-xs font-medium text-amber-700 dark:text-amber-300">
+                <span>{{ __('admin.orders.order_financial.pendiente_online') }}</span>
+                <span>{{ $fmt($rf->pendienteOnline) }}</span>
+            </div>
+        @endif
+        {{-- Compensación: devuelto sin que desapareciera producto. Ni canal de cobro ni bajada. --}}
+        @if ($rf->compensado > 0)
+            <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('admin.orders.order_financial.compensado') }}</span>
+                <span>{{ $fmt($rf->compensado) }}</span>
+            </div>
+        @endif
         @if ($rf->aCobrarPuerta > 0)
             {{-- Desglose ↳ de los componentes del cargo de puerta (#225 F2): cargos de edición
                  ("+N producto") + «Resto de la señal». Σ == aCobrarPuerta (cuadra por construcción,

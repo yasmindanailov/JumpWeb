@@ -62,8 +62,13 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2721 en verde** (15.749 aserciones, `--parallel` **~35 s** medidos el 2026-08-24) ·
-  ▶ **+17 sobre el cierre anterior, y son las guardas de la TANDA A** (`DECISIONES #127`): **5**
+- Suite **2726 en verde** (15.861 aserciones, `--parallel` **~35 s** medidos el 2026-08-24) ·
+  ▶ **+22 sobre el cierre anterior: 17 de la TANDA A y 5 de la TANDA B.** Las de la B son la
+  guarda que faltaba desde el principio —**que lo PUBLICADO sume**, recorrida sobre escenarios—,
+  la frase de estado, y `LedgerSingleSourceTest`, que prohíbe **el mecanismo**: ninguna superficie
+  puede volver a derivar un canal restando otros. ⚠️ Esa última lleva su propia guarda-de-la-guarda,
+  porque un `grep` mal escrito queda verde para siempre sin mirar nada.
+  ▶ Las de la TANDA A (`DECISIONES #127`): **5**
   escenarios nuevos de `OrderFinancialInvariantsTest` —los que ejercitan los cuatro defectos que se
   arreglaron; los seis viejos ya pasaban porque su hueco estaba en el FIXTURE—, **6** de
   `ItemDateChangeRetariffTest` (la re-tarificación al mover la fecha, con su límite y su control),
