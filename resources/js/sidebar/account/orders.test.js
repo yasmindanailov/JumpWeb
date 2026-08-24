@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardRow, cardRows, depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, pageInfo, purchaseRows } from './orders.js';
+import { cardRow, cardRows, financialsOf, guestFormOf, lineBadgeOf, orderRow, pageInfo, purchaseRows } from './orders.js';
 
 /**
  * La red de «Mis reservas» (`docs/specs/area-cliente.md` §4.4).
@@ -12,12 +12,9 @@ import { cardRow, cardRows, depositNoteOf, financialsOf, guestFormOf, lineBadgeO
 
 const MESSAGES = {
     statuses: { paid: 'Pagado', pending: 'Pendiente', cancelled: 'Cancelado', expired: 'Caducado', refunded: 'Reembolsado' },
-    deposit_card_note: 'Señal :deposit · :rest en el parque',
-    // ⚠️ La nota de una reserva YA COMPRADA tiene clave PROPIA desde `DECISIONES #128` (`L3`): la de
-    // la cesta dice «Señal» y allí es correcto; aquí el primer importe es lo pagado por web de esa
-    // reserva, que no siempre es la señal — y llamarlo así mentía.
-    reservation_paid_note: 'Pagado por web :paid · :rest en el parque',
-    reservation_paid_note_desk: 'Ya pagado :paid · :rest en el parque',
+    // ⚠️ La nota de señal de la CESTA sigue existiendo (`deposit_card_note`), pero la de la tarjeta
+    // de una reserva ya comprada MURIÓ con ella el 2026-08-24 (`DECISIONES #130`): esa pantalla ya no
+    // enseña dinero. `depositNoteOf()` y sus dos claves se retiraron con su sujeto.
     // El ledger financiero (tanda 3 · paso 10). Claves REALES del grupo `tickets`, que viaja entero
     // en el montaje: doblarlas con nombres inventados probaría algo que en producción no ocurre.
     subtotal: 'Subtotal',
@@ -86,25 +83,31 @@ const ledger = (over = {}) => {
         ...(over.cash ?? {}),
     };
 
+    const value = {
+        total_cents: 4500,
+        paid_online_cents: 3000,
+        pending_online_cents: 0,
+        paid_at_gate_cents: 0,
+        pending_at_gate_cents: 1500,
+        compensated_cents: 0,
+        ...(over.value ?? {}),
+    };
+
     return {
-        value: {
-            total_cents: 4500,
-            paid_online_cents: 3000,
-            pending_online_cents: 0,
-            paid_at_gate_cents: 0,
-            pending_at_gate_cents: 1500,
-            compensated_cents: 0,
-            ...(over.value ?? {}),
-        },
-        // ⚠️ `has_cash` se DERIVA aquí con la misma regla que `OrderLedger::hasCash()` en vez de
+        value,
+        // ⚠️ `has_cash` se DERIVA aquí con la MISMA regla que `OrderLedger::hasCash()` en vez de
         // fijarse a un valor: el doble tiene que seguir siendo fiel cuando un caso sobrescribe los
-        // importes de caja. Un `true` fijo dejaría verdes casos que en producción no se pintan.
+        // importes. Un `true` fijo dejaría verdes casos que en producción no se pintan.
+        // ⚠️ La regla es «¿dice algo que el eje del valor no diga ya?» (`DECISIONES #130`): hubo
+        // devolución, se debe una, o **lo cobrado no coincide con lo pagado** —que en un pedido sano
+        // no puede pasar (`PAY-17`) y en uno con el dato roto sí—.
         // ⚠️ Y un caso puede forzarlo: es lo que permite probar que la zona **obedece** al servidor
         // en vez de re-derivar la condición, que fue el origen de `L1`.
         cash: {
             ...cash,
             has_cash: over.cash?.has_cash
-                ?? (cash.charged_online_cents > 0 || cash.refunded_cents > 0 || cash.pending_refund_cents > 0),
+                ?? (cash.refunded_cents > 0 || cash.pending_refund_cents > 0
+                    || cash.charged_online_cents !== value.paid_online_cents),
         },
         invoiced_cents: over.invoiced_cents ?? 4500,
         gate_lines: over.gate_lines ?? [],
@@ -325,53 +328,6 @@ describe('el distintivo de la línea', () => {
     });
 });
 
-describe('el aviso de señal', () => {
-    test('lo decide el SERVIDOR, no se recompone de las tres condiciones', () => {
-        assert.equal(depositNoteOf(item({ shows_deposit_note: false }), MESSAGES), null);
-
-        assert.equal(
-            depositNoteOf(item({ shows_deposit_note: true }), MESSAGES),
-            'Pagado por web 30,00 € · 15,00 € en el parque',
-        );
-    });
-
-    /**
-     * ⚠️⚠️ **`L3`**: el rótulo decía «Señal» y el importe NO es la señal — es lo pagado por web de
-     * esa reserva. En `R-L6UTIA` eso rotulaba «Señal 114,00 €» sobre una señal real de 30,00 €.
-     * La palabra tiene que ser la MISMA que la de su línea del desglose (§10.4).
-     */
-    test('⚠️ `L3` el rótulo NO dice «Señal»: dice lo mismo que la línea del desglose', () => {
-        const nota = depositNoteOf(item({ shows_deposit_note: true }), MESSAGES);
-
-        assert.ok(! nota.includes('Señal'), 'el rótulo vuelve a llamar señal a algo que no lo es');
-        assert.ok(nota.startsWith(MESSAGES.ledger.paid_online), 'el concepto tiene que llamarse igual en las dos superficies');
-    });
-
-    /**
-     * ⚠️ Y el MÉTODO manda: en un pedido cobrado en taquilla, «por web» sería falso. El importe es
-     * el mismo —el eje de caja no mira el `provider`—, así que la mentira estaría solo en la palabra.
-     */
-    test('⚠️ `L3` un pedido cobrado en taquilla no dice «por web»', () => {
-        const nota = depositNoteOf(item({
-            shows_deposit_note: true,
-            ledger: ledger({ cash: { charged_method: 'desk' } }),
-        }), MESSAGES);
-
-        assert.equal(nota, 'Ya pagado 30,00 € · 15,00 € en el parque');
-    });
-
-    test('⚠️ con `shows_deposit_note` en true se pinta aunque el resto parezca decir otra cosa', () => {
-        // Es la mitad que protege de la divergencia: si esta función mirara el importe de puerta por
-        // su cuenta, sería la quinta superficie recomponiendo la misma regla de tres condiciones.
-        const note = depositNoteOf(item({
-            shows_deposit_note: true,
-            ledger: ledger({ value: { paid_online_cents: 3000, pending_at_gate_cents: 0 } }),
-        }), MESSAGES);
-
-        assert.equal(note, 'Pagado por web 30,00 € · 0,00 € en el parque');
-    });
-});
-
 describe('el bloque del post-form', () => {
     const paid = (over) => guestFormOf(order(), item({ guest_form_status: 'pending', guest_form_url: '/reserva/1/datos-invitados', ...over }), ACCOUNT);
 
@@ -493,7 +449,7 @@ describe('el bloque financiero', () => {
         }), MESSAGES);
 
         assert.equal(f.value.total.amountLabel, '22,00 €');
-        assert.deepEqual(f.value.rows.map((r) => r.label), ['Pagado por web'], 'el eje de caja se ha colado en el valor');
+        assert.deepEqual(f.value.rows.map((r) => r.label), ['Pagado por web · 01/06/2026'], 'el eje de caja se ha colado en el valor');
         assert.deepEqual(
             f.cash.rows.map((r) => [r.label, r.amountLabel]),
             [['Cobrado por web · 01/06/2026', '45,00 €'], ['Pendiente de devolverte', '23,00 €']],
@@ -501,27 +457,64 @@ describe('el bloque financiero', () => {
     });
 
     /**
-     * ⚠️⚠️ **`L1` — el ancla de caja se ve en cuanto ha habido un cobro, no solo si hubo
-     * devoluciones** (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1).
+     * ⚠️⚠️ **En un pedido CORRIENTE el eje de caja no aparece, y lo verificable va en su sitio**
+     * (`DECISIONES #130`).
      *
-     * Es lo ÚNICO que el cliente puede cotejar con su extracto bancario, y esconderlo en el caso
-     * normal dejaba el desglose legible pero **no verificable**: en `R-L6UTIA` habría puesto
-     * «cobrado por web 30,00 €» junto a «pagado por web 114,00 €» y el dato roto salta a la vista.
-     * Medido el 2026-08-24: el panel lo enseñaba en 28 de 38 pedidos sanos y el cliente en 9.
+     * `#128` lo enseñaba siempre que hubiera habido un cobro, y el owner leyó la pantalla y no la
+     * entendió: el mismo importe salía dos veces, como «Pagado por web 30,00 €» arriba y «Cobrado por
+     * web 30,00 €» abajo. Son la misma frase con las palabras en otro orden, y un bloque que repite
+     * lo de arriba enseña a saltarse el bloque que sí importa.
+     *
+     * ▶ Lo que hacía falta conservar —que el importe se pueda **cotejar con el banco**— no era el
+     * bloque: era la FECHA. Y ahora va pegada a la línea del canal, como el panel ya hacía.
      */
-    test('⚠️ `L1` el ancla de caja se enseña aunque no haya ninguna devolución', () => {
+    test('⚠️ un pedido corriente NO repite el importe: la fecha va en la línea del canal', () => {
         const f = financialsOf(order(), MESSAGES);
 
-        assert.notEqual(f.cash, null, 'sin este bloque el cliente no puede cotejar NADA con su banco');
+        assert.equal(f.value.rows[0].label, 'Pagado por web · 01/06/2026', 'sin fecha, el importe no se busca en un extracto');
+        assert.equal(f.cash, null, 'el eje de caja repite un número que el de arriba ya dice');
+    });
+
+    /**
+     * ⚠️⚠️ **Y LO QUE `#128` VINO A ARREGLAR SIGUE ENTERO**: cuando lo cobrado NO coincide con lo
+     * pagado, el bloque aparece y la contradicción se ve.
+     *
+     * En un pedido sano los dos importes coinciden **por construcción** (`PAY-17`), así que solo
+     * difieren cuando el dato está roto — que es exactamente el caso `R-L6UTIA`: 30,00 € cobrados
+     * de verdad contra 114,00 € que el desglose llama «pagados». Sin este término, esa pantalla
+     * volvería a leerse como si no pasara nada.
+     */
+    test('⚠️ si lo COBRADO no cuadra con lo pagado, el eje de caja aparece y lo enseña', () => {
+        const f = financialsOf(order({
+            ledger: ledger({
+                value: { total_cents: 21600, paid_online_cents: 11400, pending_at_gate_cents: 10200 },
+                cash: { charged_online_cents: 3000, held_cents: 3000, refunded_cents: 0, pending_refund_cents: 0 },
+            }),
+        }), MESSAGES);
+
+        assert.notEqual(f.cash, null, 'el dato roto vuelve a pasar desapercibido');
         assert.deepEqual(
             f.cash.rows.map((r) => [r.label, r.amountLabel]),
             [['Cobrado por web · 01/06/2026', '30,00 €']],
         );
-        assert.equal(f.cash.caption, MESSAGES.ledger.cash_caption, 'un número sin explicación no es transparencia');
+        assert.equal(f.value.rows[0].amountLabel, '114,00 €', 'los dos importes tienen que verse a la vez para que salte');
+    });
 
-        // ⚠️ Y va marcada como ANCLA: las filas de este bloque se pintan en el color de reembolso, y
-        // un cargo corriente en ámbar se lee como «te devolvimos algo».
-        assert.equal(f.cash.rows[0].anchor, true, 'el ancla vuelve a pintarse como si fuera una devolución');
+    /**
+     * ⚠️ Y el MÉTODO manda en el rótulo: el eje de caja suma todos los pagos cobrados sin mirar el
+     * `provider`, así que un pedido de taquilla que dijera «por web» mentiría sobre dinero entregado
+     * en mano. El panel ya lo distinguía desde `P1/P10` y el cliente no.
+     */
+    test('⚠️ un pedido cobrado en taquilla no dice «web» en ninguno de los dos ejes', () => {
+        const conDevolucion = financialsOf(order({
+            ledger: ledger({
+                value: { total_cents: 2200, paid_online_cents: 2200, pending_at_gate_cents: 0 },
+                cash: { charged_online_cents: 4500, refunded_cents: 2300, held_cents: 2200, pending_refund_cents: 0, charged_method: 'desk' },
+            }),
+        }), MESSAGES);
+
+        assert.equal(conDevolucion.value.rows[0].label, 'Pagado en recepción · 01/06/2026');
+        assert.equal(conDevolucion.cash.rows[0].label, 'Cobrado en recepción · 01/06/2026');
     });
 
     /**
@@ -550,18 +543,6 @@ describe('el bloque financiero', () => {
     });
 
     /**
-     * ⚠️ Y el MÉTODO manda también en el eje del VALOR: el panel ya distinguía web de taquilla desde
-     * `P1/P10` y el cliente no. Con el ancla siempre visible, esa divergencia pasaba a decirle al
-     * cliente «por web» de un dinero cobrado en efectivo.
-     */
-    test('⚠️ `L1` un pedido cobrado en taquilla rotula los DOS ejes sin decir «web»', () => {
-        const f = financialsOf(order({ ledger: ledger({ cash: { charged_method: 'desk' } }) }), MESSAGES);
-
-        assert.equal(f.value.rows[0].label, 'Pagado en recepción');
-        assert.equal(f.cash.rows[0].label, 'Cobrado en recepción · 01/06/2026');
-    });
-
-    /**
      * ⚠️⚠️ **«Pagado por web» ya NO se oculta.** Se ocultaba cuando el producto no llevaba señal, así
      * que en un pedido con cualquier incidencia el cliente **no veía cuánto había pagado**. Medido:
      * pasaba en 7 de 50 pedidos reales.
@@ -569,7 +550,7 @@ describe('el bloque financiero', () => {
     test('⚠️ lo pagado por web se enseña SIEMPRE, lleve señal o no', () => {
         const f = financialsOf(order({ ledger: ledger({ has_deposit: false }) }), MESSAGES);
 
-        assert.deepEqual(f.value.rows[0], { label: 'Pagado por web', amountLabel: '30,00 €' });
+        assert.deepEqual(f.value.rows[0], { label: 'Pagado por web · 01/06/2026', amountLabel: '30,00 €' });
     });
 
     /**
@@ -684,11 +665,41 @@ describe('la lista de pedidos', () => {
         assert.deepEqual(purchaseRows(null, CTX), []);
     });
 
+    /**
+     * ⚠️⚠️ **LO QUE SE LISTA TIENE QUE SUMAR LO QUE DICE EL TOTAL.** Es la única promesa de esta
+     * pantalla, y se rompió el primer día: `PurchaseCard` pintaba los principales y **no sus
+     * complementos**, así que en `R-UPFQAB` las reservas ponían 120,00 € y «Valor del pedido»
+     * 124,00 € — con 4,00 € de calcetines que la API publicaba y la lista se comía. Un desglose al
+     * que le falta una línea cuadra por dentro y **no cuadra para quien lo lee**.
+     *
+     * ⚠️ Se suman solo las líneas VIVAS: una cancelada se pinta con su distintivo pero ya no vale.
+     */
+    test('⚠️ las líneas VIVAS que se listan suman el valor del pedido, complementos incluidos', () => {
+        const conAddon = order({
+            items: [item({
+                charged_subtotal_cents: 12000,
+                addons: [{ id: 9, product_name: 'Calcetines', quantity: 2, quantity_label: '2 unidades', charged_subtotal_cents: 400, cancelled: false, status: 'active' }],
+            })],
+            ledger: ledger({ value: { total_cents: 12400, paid_online_cents: 3000, pending_at_gate_cents: 9400 } }),
+        });
+
+        const [fila] = purchaseRows({ data: [conAddon] }, CTX);
+        const centimos = (etiqueta) => Number(String(etiqueta).replace(/[^\d]/g, ''));
+        const sumado = fila.lines
+            .filter((l) => ! l.badge || l.badge.key !== 'cancelled')
+            .reduce((acc, l) => acc + centimos(l.priceLabel) + l.addons.reduce((a, x) => a + centimos(x.priceLabel), 0), 0);
+
+        assert.equal(
+            sumado, 12400,
+            'lo que la pantalla lista no suma el total: falta una línea, y el cliente ve el hueco sin explicación',
+        );
+    });
+
     test('lleva el desglose entero de cada pedido', () => {
         const [fila] = purchaseRows({ data: [order()] }, CTX);
 
         assert.equal(fila.financials.value.total.amountLabel, '45,00 €');
-        assert.notEqual(fila.financials.cash, null, 'el ancla de caja tiene que viajar con la fila');
+        assert.equal(fila.financials.value.rows[0].label, 'Pagado por web · 01/06/2026', 'la fila no lleva la fecha del cobro');
     });
 
     /**

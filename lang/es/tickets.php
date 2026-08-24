@@ -154,15 +154,6 @@ return [
     'total_pay_now' => 'Total a pagar ahora',
     'deposit_catalog' => 'Señal :amount',
     'deposit_card_note' => 'Señal :deposit · :rest en el parque',
-    // ⚠️⚠️ La MISMA frase en «Mis pedidos» decía una MENTIRA, y por eso tiene clave propia
-    // (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1 · `L3`). En la CESTA los dos
-    // números son la señal y su resto, así que «Señal» es correcto y `deposit_card_note` se queda
-    // como está. En la tarjeta de una reserva YA COMPRADA el primer número es **lo pagado por web de
-    // esa reserva** —que en un pack con complementos cobrados íntegros NO es la señal— y llamarlo
-    // «Señal» engañaba: en `R-L6UTIA` rotulaba «Señal 114,00 €» sobre una señal de 30,00 €.
-    // El rótulo es ahora el MISMO que el de la línea del desglose (§10.4: un concepto, un nombre).
-    'reservation_paid_note' => 'Pagado por web :paid · :rest en el parque',
-    'reservation_paid_note_desk' => 'Ya pagado :paid · :rest en el parque',
     'pay_at_park' => 'En el parque',
     'paid_online_confirmed' => 'Pagado online',
     'pending_at_park' => 'Pendiente en el parque',

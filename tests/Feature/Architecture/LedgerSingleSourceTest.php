@@ -127,4 +127,55 @@ class LedgerSingleSourceTest extends TestCase
 
         $this->assertSame([], array_diff($canales, $presentes), 'falta un canal del desglose');
     }
+
+    /**
+     * **LA TARJETA DE UNA RESERVA NO PINTA DINERO** (2026-08-24, `DECISIONES #130`, owner).
+     *
+     * «Mis reservas» responde a «¿qué tengo y cuándo?». El dinero es del PEDIDO y vive entero en «Mis
+     * pedidos», a un clic: tener aquí el importe de la línea y la nota de la señal repetía media
+     * contabilidad en la pantalla que menos la necesita y competía con lo único que el cliente viene
+     * a mirar, la fecha.
+     *
+     * ⚠️⚠️ **La guarda mira el MARCADO y no la composición, y no hay alternativa**: `lineRow()` sigue
+     * componiendo `priceLabel` porque **«Mis pedidos» la pinta** —las dos pantallas comparten la
+     * composición a propósito, para que no nazcan dos—. Lo que se decidió es qué pinta cada una, y
+     * eso solo se ve en su plantilla. Es un hueco con nombre convertido en guarda (`TESTING.md`
+     * §2.quater).
+     */
+    public function test_the_reservation_card_paints_no_money(): void
+    {
+        $marcado = (string) file_get_contents(base_path('resources/js/sidebar/account/zones/ReservationCard.vue'));
+
+        foreach (['priceLabel', 'depositNote', 'totalLabel', 'financials'] as $prohibido) {
+            $this->assertStringNotContainsString(
+                $prohibido, $marcado,
+                "`ReservationCard.vue` vuelve a pintar dinero (`{$prohibido}`). Esa pantalla es «qué ".
+                'tengo y cuándo»; el desglose vive en «Mis pedidos» (`PurchaseCard.vue`).'
+            );
+        }
+    }
+
+    /**
+     * **La guarda de la guarda**: la pantalla que SÍ pinta el dinero sigue pintándolo.
+     *
+     * Sin este caso, borrar el desglose de las dos pantallas dejaría el de arriba en verde — y el
+     * cliente sin ningún sitio donde ver su dinero, que es exactamente lo contrario de lo decidido.
+     */
+    public function test_the_order_card_still_paints_the_whole_breakdown(): void
+    {
+        $marcado = (string) file_get_contents(base_path('resources/js/sidebar/account/zones/PurchaseCard.vue'));
+
+        // ⚠️ `line.addons` está en la lista porque **su ausencia no la caza nada más**: la guarda de
+        // composición mira `purchaseRows()`, que sí compone los complementos, así que un `v-for` que
+        // dejara de recorrerlos la deja verde. Medido por mutación el 2026-08-24 — y el síntoma sería
+        // el de `R-UPFQAB`: la reserva pone 120,00 € y el total 124,00 €, sin nada que lo explique.
+        foreach (['financials.value.total', 'financials.cash', 'financials.note', 'financials.invoiced',
+            'priceLabel', 'line.addons'] as $obligatorio) {
+            $this->assertStringContainsString(
+                $obligatorio, $marcado,
+                "`PurchaseCard.vue` ha dejado de pintar `{$obligatorio}`: el cliente se queda sin esa ".
+                'parte de su dinero y ninguna otra pantalla la enseña.'
+            );
+        }
+    }
 }

@@ -137,11 +137,6 @@ return [
     'total_pay_now' => 'Total to pay now',
     'deposit_catalog' => 'Deposit :amount to book',
     'deposit_card_note' => 'Deposit :deposit · :rest at the park',
-    // ⚠️ Own key on purpose: in the CART both numbers really are the deposit and its remainder, so
-    // "Deposit" is right there. On a BOOKED reservation the first number is what was paid online for
-    // that reservation — not necessarily the deposit — and calling it "Deposit" lied.
-    'reservation_paid_note' => 'Paid online :paid · :rest at the park',
-    'reservation_paid_note_desk' => 'Already paid :paid · :rest at the park',
     'pay_at_park' => 'At the park',
     'paid_online_confirmed' => 'Paid online',
     'pending_at_park' => 'Pending at the park',

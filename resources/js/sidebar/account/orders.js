@@ -70,35 +70,6 @@ export function lineBadgeOf(item, account) {
 }
 
 /**
- * El pie financiero de una reserva con señal, o `null`.
- *
- * ⚠️ **La condición la decide el SERVIDOR** (`shows_deposit_note`), que la compone de tres —pedido
- * pagado, producto con señal y algo pendiente en puerta—. Aquí solo se pintan los dos importes.
- *
- * ⚠️⚠️ **El rótulo ya no dice «Señal», y ése era el defecto `L3`** (`DECISIONES #128`,
- * `specs/desglose-dinero-cliente.md` §17.1). El primer importe es **lo pagado por web de ESTA
- * reserva**, que en un pack con complementos cobrados íntegros NO es la señal — y en `R-L6UTIA`
- * rotulaba «Señal 114,00 €» sobre una señal real de 30,00 €. Ahora lleva el MISMO nombre que su
- * línea del desglose (§10.4: un concepto, un nombre), y el MÉTODO decide cuál: en un pedido cobrado
- * en taquilla, «por web» sería falso.
- *
- * ⚠️ La clave de la CESTA (`deposit_card_note`) no se toca: allí los dos números sí son la señal y
- * su resto, y «Señal» es la palabra correcta.
- */
-export function depositNoteOf(item, messages) {
-    if (! item.shows_deposit_note) return null;
-
-    const key = item.ledger.cash.charged_method === 'desk'
-        ? 'reservation_paid_note_desk'
-        : 'reservation_paid_note';
-
-    return tp(messages, key, {
-        paid: money(item.ledger.value.paid_online_cents),
-        rest: money(item.ledger.value.pending_at_gate_cents),
-    });
-}
-
-/**
  * **EL ANCLA DE CAJA**: la fila «cobrado», con su método y su fecha — o `null` si no se cobró nada.
  *
  * ⚠️ **La fecha es la mitad de lo que la hace conciliable**: «cobrado 30,00 €» no se busca en un
@@ -147,6 +118,19 @@ export function financialsOf(order, messages) {
     const v = l.value;
     const c = l.cash;
     const line = (key, cents) => (cents > 0 ? { label: t(messages, 'ledger.' + key), amountLabel: money(cents) } : null);
+    /**
+     * ⚠️⚠️ **La línea del canal de cobro LLEVA SU FECHA** (`DECISIONES #130`). Es lo que hace que el
+     * importe se pueda buscar en un extracto bancario —«30,00 €» no se busca; «30,00 € el
+     * 24/08/2026» sí— y lo que permite que el bloque «Tu dinero» **deje de repetir el mismo número**
+     * en un pedido corriente. El panel ya lo hacía así desde `P1/P10`; aquí faltaba.
+     */
+    const paidLine = (key, cents) => {
+        const fila = line(key, cents);
+
+        if (fila && c.charged_at_label) fila.label += ' · ' + c.charged_at_label;
+
+        return fila;
+    };
     // ⚠️ El MÉTODO decide el rótulo de los DOS canales de cobro adelantado (`DECISIONES #128`). El
     // eje de caja suma todo lo cobrado sin mirar el `provider`, así que el importe es correcto y el
     // nombre no puede quemarse: un pedido de taquilla que dijera «por web» mentiría. El panel ya lo
@@ -169,7 +153,7 @@ export function financialsOf(order, messages) {
         value: {
             title: t(messages, 'ledger.value_title'),
             rows: [
-                line(desk ? 'paid_desk' : 'paid_online', v.paid_online_cents),
+                paidLine(desk ? 'paid_desk' : 'paid_online', v.paid_online_cents),
                 line('pending_online', v.pending_online_cents),
                 line('paid_at_gate', v.paid_at_gate_cents),
                 line('compensated', v.compensated_cents),
@@ -241,7 +225,6 @@ function lineRow(order, item, { messages, account }) {
         isPack: item.is_pack,
         priceLabel: money(item.charged_subtotal_cents),
         badge: lineBadgeOf(item, account),
-        depositNote: depositNoteOf(item, messages),
         guestForm: guestFormOf(order, item, account),
         addons: (item.addons ?? []).map((addon) => addonRow(addon, account)),
     };

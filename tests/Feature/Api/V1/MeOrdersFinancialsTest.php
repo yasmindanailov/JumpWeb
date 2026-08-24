@@ -265,32 +265,60 @@ class MeOrdersFinancialsTest extends TestCase
     }
 
     /**
-     * ⚠️⚠️ **`L1` — EL ANCLA DE CAJA SE PUBLICA COMO VISIBLE AUNQUE NO HAYA DEVOLUCIONES**
-     * (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1).
+     * ⚠️⚠️ **EL EJE DE CAJA SOLO SE PUBLICA CUANDO DICE ALGO QUE EL DEL VALOR NO DIGA YA**
+     * (`DECISIONES #130`, `specs/desglose-dinero-cliente.md` §20).
      *
-     * `hasCash()` omitía el primer término, así que en un pedido normal el bloque no se pintaba y
-     * **el cliente nunca veía cuánto había salido de su banco**. Es lo único que puede cotejar con su
-     * extracto: sin ello el desglose es legible pero **no verificable**, que es justo lo que hizo
-     * indescifrable el caso `R-L6UTIA` —«pagado por web 114,00 €» con un cobro real de 30,00 €—.
+     * `#128` lo puso en «siempre que haya habido un cobro», y el owner leyó la pantalla y no la
+     * entendió: en un pedido corriente el MISMO importe salía dos veces, como «Pagado por web» y como
+     * «Cobrado por web». Un bloque que repite lo de arriba no se lee como reconciliación: enseña a
+     * saltarse el bloque que sí importa.
      *
-     * ⚠️ El caso usa el pedido **con la señal ya saldada**: no tiene reembolsos ni nada pendiente de
-     * devolver, así que con la condición vieja el ancla sería invisible. Es el pedido corriente.
+     * ▶ Lo que hacía falta conservar —que el importe se pueda cotejar con el banco— no era el bloque,
+     * era la **fecha**, y ahora va en la línea del canal. Lo que `#128` vino a arreglar sigue entero
+     * en el otro caso: cuando lo cobrado NO coincide con lo pagado.
      */
-    public function test_the_cash_anchor_is_published_even_without_any_refund(): void
+    public function test_the_cash_axis_stays_quiet_when_it_would_only_repeat_the_value_row(): void
     {
         [$user, $order] = $this->orderWithSettledDeposit();
         $summary = $order->financialSummary();
 
         $this->assertSame(0, $summary->effectiveRefunded(), 'el fixture tiene devoluciones: no mide lo que dice medir');
         $this->assertSame(0, $summary->pendienteDevolucion(), 'el fixture debe dinero: no mide lo que dice medir');
-        $this->assertGreaterThan(0, $summary->grossPaidOnline, 'sin cobro real no hay ancla que enseñar');
+        $this->assertSame($summary->grossPaidOnline, $summary->pagadoOnline(), 'el fixture no es un pedido sano');
 
-        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-        $this->assertTrue($c['has_cash'], 'el cliente vuelve a quedarse sin el único número que puede cotejar con su banco');
-        $this->assertSame($summary->grossPaidOnline, $c['charged_online_cents']);
-        $this->assertSame('web', $c['charged_method']);
-        $this->assertNotNull($c['charged_at_label'], 'un importe sin fecha no se busca en un extracto bancario');
+        $this->assertFalse($ledger['cash']['has_cash'], 'el eje de caja repite el importe que el del valor ya dice');
+        // ⚠️ Pero los DATOS siguen publicados: es la interfaz la que decide no pintar el bloque, y la
+        // fecha —que es lo verificable— viaja igual para la línea del canal.
+        $this->assertSame($summary->grossPaidOnline, $ledger['cash']['charged_online_cents']);
+        $this->assertSame('web', $ledger['cash']['charged_method']);
+        $this->assertNotNull($ledger['cash']['charged_at_label'], 'un importe sin fecha no se busca en un extracto bancario');
+    }
+
+    /**
+     * ⚠️⚠️ **Y LO QUE `#128` VINO A ARREGLAR SIGUE ENTERO**: si lo cobrado no coincide con lo pagado,
+     * el eje de caja aparece y la contradicción se ve.
+     *
+     * En un pedido sano los dos importes coinciden **por construcción** (`PAY-17`), así que solo
+     * difieren cuando el dato está roto — que es el caso `R-L6UTIA`: 30,00 € cobrados de verdad
+     * contra 114,00 € que el desglose llama «pagados». Sin este término esa pantalla volvería a
+     * leerse como si no pasara nada.
+     */
+    public function test_the_cash_axis_appears_when_what_was_charged_does_not_match_what_was_paid(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+
+        // Un cobro MAYOR que lo que respalda producto: la forma que tiene un dato roto de delatarse.
+        $order->payments()->update(['amount' => 999]);
+
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertNotSame(
+            $ledger['value']['paid_online_cents'], $ledger['cash']['charged_online_cents'],
+            'el fixture no llega a descuadrar: el caso no mide lo que dice medir'
+        );
+        $this->assertTrue($ledger['cash']['has_cash'], 'el dato roto vuelve a pasar desapercibido');
     }
 
     /** Sin ningún cobro no hay ancla: el eje de caja no tiene nada que contar. */
@@ -323,8 +351,8 @@ class MeOrdersFinancialsTest extends TestCase
         $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
 
         $this->assertSame('desk', $c['charged_method']);
-        $this->assertTrue($c['has_cash'], 'el dinero se cobró igual: lo que cambia es cómo se llama');
-        $this->assertSame($order->financialSummary()->grossPaidOnline, $c['charged_online_cents']);
+        $this->assertSame($order->financialSummary()->grossPaidOnline, $c['charged_online_cents'],
+            'el dinero se cobró igual: lo que cambia es cómo se llama');
     }
 
     /**

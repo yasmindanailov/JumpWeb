@@ -6,9 +6,16 @@
  * predicado del servidor. Un componente por pantalla habría duplicado el ledger, el post-form y las
  * respuestas del pack en dos sitios que arreglar.
  *
- * **Pinta y no decide.** Qué se enseña de la reserva lo compone `account/orders.js::cardRow()`, el
- * ledger del pedido `financialsOf()` y de dónde salen los datos lo sabe `stores/orders.js`; los tres
- * se prueban con `node --test`. Aquí no hay ninguna regla y no se habla con la API (`CE-6`).
+ * ⚠️⚠️ **AQUÍ NO SE PINTA DINERO** (2026-08-24, `DECISIONES #130`, decisión del owner). Esta pantalla
+ * responde a «¿qué tengo y cuándo?»; el desglose es del PEDIDO y vive entero en «Mis pedidos», a un
+ * clic de «Ver pedido». Tener aquí el importe de la línea y la nota de la señal repetía media
+ * contabilidad en la pantalla que menos la necesita, y competía con lo único que el cliente viene a
+ * mirar: la fecha. Lo vigila `LedgerSingleSourceTest`, **sobre este marcado** — porque la composición
+ * sigue teniendo el importe, que es lo que pinta la otra pantalla.
+ *
+ * **Pinta y no decide.** Qué se enseña de la reserva lo compone `account/orders.js::cardRow()` y de
+ * dónde salen los datos lo sabe `stores/orders.js`; los dos se prueban con `node --test`. Aquí no hay
+ * ninguna regla y no se habla con la API (`CE-6`).
  *
  * ⚠️ **La atenuación llega por PROP, no se deduce.** Es propiedad de la pantalla —el historial atenúa
  * lo que pinta— y calcularla aquí sería una segunda definición del predicado que reparte los dos
@@ -40,23 +47,23 @@ defineEmits(['open-order', 'toggle-event', 'retry']);
             <span v-if="row.badge" class="orders__line-badge" :class="'orders__line-badge--' + row.badge.key">{{ row.badge.label }}</span>
         </div>
 
+        <!--
+          ⚠️⚠️ **AQUÍ NO HAY DINERO, y es una decisión del owner** (2026-08-24, `DECISIONES #130`).
+          Esta pantalla responde a «¿qué tengo y cuándo?»; el dinero es del PEDIDO y vive entero en
+          «Mis pedidos», a un clic. Tener aquí el importe de la línea y la nota de la señal repetía
+          media contabilidad en la pantalla que menos la necesita, y competía con lo único que el
+          cliente viene a mirar: la fecha.
+          ⚠️ La cantidad se queda —dice de cuántos es la reserva— con su SUSTANTIVO (`L2`).
+        -->
         <div class="orders__meta">
             {{ row.whenLabel }}
-            <!--
-              ⚠️⚠️ **La cantidad va con su SUSTANTIVO** («8 invitados»), no como `8×` pegado al
-              importe: eso se leía como 8 × 216 € = 1.728 € cuando son 8 invitados y 216 € en total
-              (`specs/desglose-dinero-cliente.md` §17.1 · `L2`). La compone el servidor.
-            -->
             <span class="orders__line-unit">· {{ row.quantityLabel }}</span>
-            <span class="orders__line-price">· {{ row.priceLabel }}</span>
         </div>
 
-        <p v-if="row.depositNote" class="orders__product-deposit">{{ row.depositNote }}</p>
-
+        <!-- Qué llevas contratado, SIN precio: es parte de «qué tengo», no de «cuánto cuesta». -->
         <ul v-if="row.addons.length" class="orders__lines">
             <li v-for="addon in row.addons" :key="addon.id" class="orders__line">
                 <span class="orders__line-name">+ {{ addon.name }} <span class="orders__line-unit">· {{ addon.quantityLabel }}</span></span>
-                <span class="orders__line-price">{{ addon.priceLabel }}</span>
             </li>
         </ul>
 

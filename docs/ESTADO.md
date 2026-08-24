@@ -31,8 +31,16 @@ panel↔cliente sobre ese número —**19 pedidos**— desaparece. El desglose p
 ⚠️ Prometía ser «la única que no toca dinero» y lo primero que encontró fue que **`GET /me/orders`
 PERDÍA PEDIDOS**: ordenaba solo por `created_at` y, medido sobre los 57 reales del cliente demo, dos
 salían repetidos y **dos no salían en ninguna página**. Arreglado y guardado.
-▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** (tandas A, B, C + los tres defectos de lectura).
-Lo siguiente sí es la **Fase 5**.
+🟩 **Y una SEGUNDA VUELTA con el owner delante** (`DECISIONES #130` · spec §20), que cambió dos cosas
+y destapó una tercera: **«Mis reservas» ya no enseña dinero** —es «qué tengo y cuándo»; el desglose
+está a un clic—, **el eje de caja solo aparece cuando dice algo que la columna de arriba no diga ya**
+—el mismo importe salía dos veces con dos nombres casi iguales— y ⚠️ **a «Mis pedidos» le faltaba una
+línea**: los complementos no se pintaban, así que un pedido REAL ponía 120,00 € en la reserva y
+124,00 € de total sin nada que explicara los 4,00 €.
+▶ ⚠️ **Los dos defectos pasaban la suite entera**: uno porque la guarda miraba la composición y el
+fallo estaba en el marcado; el otro porque **no hay test que mida si algo se entiende**.
+▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** (tandas A, B, C + los tres de lectura + esta
+vuelta). Lo siguiente sí es la **Fase 5**.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -83,7 +91,12 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2737 en verde** (15.964 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+- Suite **2740 en verde** (15.970 aserciones, `--parallel` **~37 s** medidos el 2026-08-24) ·
+  ▶ **+3 con la segunda vuelta** (`DECISIONES #130`): el eje de caja **callado** cuando repetiría, el
+  eje de caja **presente** cuando lo cobrado no cuadra con lo pagado, y **DOS guardas sobre el
+  MARCADO** —que la tarjeta de la reserva no pinte dinero y que la del pedido siga pintándolo entero,
+  complementos incluidos—. Esas dos miran la plantilla porque el defecto que las trajo **no se ve en
+  la composición**. En `node --test`, **666** casos (se fueron con su sujeto los de la nota de señal).
   ▶ **+7 con la TANDA C** (`DECISIONES #129`): el orden total de la paginación —uno de conducta y
   **uno estructural, porque el de conducta sale verde en SQLite**—, `containing` con su caso del
   **oráculo** y el de `page` explícito, y las dos paridades extremo a extremo de «Mis pedidos» (que la

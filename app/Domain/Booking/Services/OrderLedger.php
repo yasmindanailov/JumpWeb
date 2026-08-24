@@ -115,10 +115,31 @@ final readonly class OrderLedger
      *
      * ⚠️ En el desglose POR RESERVA `cobradoOnline` es 0 a propósito (el cobro es del PEDIDO), así
      * que este predicado sigue valiendo lo mismo que antes allí: cambia el pedido, no la reserva.
+     *
+     * ## ⚠️⚠️ 2026-08-24 · SEGUNDA VUELTA: «cuando ha habido un cobro» era demasiado (`#130`)
+     *
+     * `#128` lo dejó en `cobradoOnline > 0`, y el owner leyó la pantalla y no la entendió: en un
+     * pedido corriente **el mismo importe salía dos veces**, como «Pagado por web 30,00 €» en el eje
+     * del valor y como «Cobrado por web 30,00 €» aquí. Para quien lo lee son la misma frase con las
+     * palabras cambiadas de orden, y un bloque entero que repite lo de arriba **no se lee como una
+     * reconciliación: se lee como ruido**, y enseña a saltarse el bloque que sí importa.
+     *
+     * ▶ **La regla correcta es «¿dice algo que el eje del valor NO diga ya?»**, y son tres cosas:
+     * que se haya devuelto dinero, que se deba devolver, o **que lo cobrado no coincida con lo
+     * pagado**. Ese tercer término es el que conserva entero lo que `#128` vino a arreglar: en un
+     * pedido SANO los dos importes coinciden por construcción (`PAY-17`), así que solo difieren
+     * cuando el dato está roto — y ahí el bloque aparece y la contradicción se ve. Medido sobre
+     * `R-L6UTIA`: 30,00 € cobrados contra 114,00 € «pagados», y el bloque sale.
+     *
+     * ▶ **Y lo verificable NO se pierde**: la fecha del cobro se muda a la línea del eje del valor
+     * («Pagado por web · 24/08/2026»), que es exactamente lo que el PANEL ya hacía desde `P1/P10`.
+     * Las dos superficies convergen otra vez, ahora en la forma buena.
      */
     public function hasCash(): bool
     {
-        return $this->cobradoOnline > 0 || $this->devuelto > 0 || $this->pendienteDevolucion > 0;
+        return $this->devuelto > 0
+            || $this->pendienteDevolucion > 0
+            || $this->cobradoOnline !== $this->pagadoOnline;
     }
 
     /** El desglose de un PEDIDO entero. */

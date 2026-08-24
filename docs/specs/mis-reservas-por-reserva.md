@@ -196,6 +196,8 @@ manejador sobre un solo predicado**.
 — vive en «Mis pedidos» (`ZONES.PURCHASES`), que lo recibe con su lista. Lo que sigue vigente de este
 párrafo es su razón, que es la que acabó mudando la pantalla entera. `stores/orders.js::ensureOrder()`
 se retiró con el cambio (`DECISIONES #129`).
+▶ Y desde **`#130`** esta pantalla **no enseña NINGÚN importe**: ni el de la línea ni la nota de la
+señal. Es «qué tengo y cuándo»; el dinero está a un clic. `depositNoteOf()` murió con la nota.
 
 ⚠️⚠️ **El LEDGER no viaja con la tarjeta, y esa decisión salió al implementar.** El diseño lo metía
 dentro; medirlo contra el caso real lo desmontó: `DEMO-LEDGER` tiene **tres** reservas, así que el

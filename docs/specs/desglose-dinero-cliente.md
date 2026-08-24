@@ -1400,3 +1400,101 @@ de sección desde el store.
         Qué vale este pedido → Pagado por web 114,00 · Pendiente en el parque 102,00 · Valor 216,00
         Tu dinero            → Cobrado por web · 24/08/2026   30,00 €
         » Te quedan 102,00 € por pagar en recepción al llegar.
+
+---
+
+## 20. SEGUNDA VUELTA con el owner delante — dos cosas que solo se ven MIRANDO
+
+> [DECIDIDO 2026-08-24] · `DECISIONES #130`. El owner leyó las dos pantallas terminadas y dijo dos
+> cosas: que «Mis reservas» no debe enseñar dinero, y que **seguía sin entender el desglose**. Las dos
+> tenían razón, y una de ellas destapó además un defecto que ninguna guarda veía.
+
+### 20.1 ⚠️ El defecto: a «Mis pedidos» le faltaba una línea
+
+Medido sobre `R-UPFQAB`, un pedido **REAL y correcto**:
+
+    Reservas de este pedido
+      Cumpleaños Jump · 8 invitados        120,00 €
+    Valor del pedido                       124,00 €      ← faltan 4,00 € y nada los explica
+
+Los 4,00 € son un complemento —«Calcetines antideslizantes · 2 unidades»— que la API **sí publica** y
+que `PurchaseCard` no pintaba: la lista recorría los principales y no sus `addons`. La tarjeta de la
+reserva sí los pintaba; al mudar el desglose se quedaron por el camino.
+
+▶ **Un desglose al que le falta una línea no es un desglose**: cuadra por dentro —`PAY-16` cerraba, la
+suite estaba verde— y **no cuadra para quien lo lee**, que es la única promesa de esta pantalla.
+
+⚠️⚠️ **Y la guarda tuvo que ir al MARCADO, porque ninguna otra lo veía.** La de composición mira
+`purchaseRows()`, que **sí** compone los complementos; un `v-for` que dejara de recorrerlos la deja
+verde. Medido por mutación: `v-for="addon in []"` pasaba los 2.740 casos. `LedgerSingleSourceTest`
+exige ahora que `PurchaseCard.vue` nombre `line.addons`.
+
+### 20.2 «Mis reservas» deja de enseñar dinero — [DECIDIDO owner]
+
+La tarjeta de una reserva enseñaba el importe de la línea y la nota «Pagado por web X · Y en el
+parque». Se van los dos: esa pantalla responde a **«¿qué tengo y cuándo?»**, y el dinero es del PEDIDO
+y vive entero en «Mis pedidos», a un clic. Tenerlo aquí repetía media contabilidad en la pantalla que
+menos la necesita y competía con lo único que el cliente viene a mirar: la fecha.
+
+**Se queda**: fecha y hora, cantidad con su sustantivo, los complementos **sin precio** (dicen qué
+llevas contratado, que es «qué tengo»), el post-form, los datos del evento, la referencia del pedido y
+«Ver pedido».
+
+⚠️ **Con ello muere `depositNoteOf()` y las dos claves de `L3`.** El rótulo que `#128` arregló —y cuya
+palabra estaba pendiente de tu veto (§18.6)— **se queda sin sujeto en el cliente**: esa nota ya no se
+pinta. La de la CESTA (`deposit_card_note`) sigue viva y sigue diciendo «Señal», que allí es correcto.
+▶ Y `shows_deposit_note` **sigue publicado** en el contrato: es un hecho de dominio y la API v1 la
+consume también la app móvil de la Fase 6. Queda como hueco CON NOMBRE, no como rot.
+
+⚠️ **La guarda de esto mira el MARCADO y no la composición**, y no hay alternativa: `lineRow()` sigue
+componiendo `priceLabel` porque **«Mis pedidos» la pinta** —las dos pantallas comparten composición a
+propósito—. Lo que se decidió es qué pinta cada una, y eso solo se ve en su plantilla.
+
+### 20.3 «Sigo sin entender el desglose»: el mismo importe salía DOS veces
+
+    Qué vale este pedido
+      Pagado por web          30,00 €
+      …
+    Tu dinero
+      Cobrado por web         30,00 €      ← el mismo número, con las palabras en otro orden
+
+`#128` (`L1`) puso el eje de caja en «siempre que haya habido un cobro». Era demasiado: en un pedido
+corriente los dos importes **coinciden por construcción** (`PAY-17`), así que el bloque repetía lo de
+arriba. Y un bloque que repite lo de arriba **no se lee como una reconciliación: se lee como ruido**,
+y enseña a saltarse el bloque el día que sí importa.
+
+▶ **La regla correcta es «¿dice algo que el eje del valor NO diga ya?»**, y son tres términos: hubo
+devolución, se debe una, o **lo cobrado no coincide con lo pagado**.
+
+▶ **Y lo que `L1` vino a arreglar sigue entero**, porque ese tercer término es exactamente el que lo
+conserva: en un pedido sano los dos importes no pueden diferir, así que **solo difieren cuando el dato
+está roto**. Medido sobre `R-L6UTIA`: el bloque sale, con 30,00 € cobrados frente a 114,00 € «pagados».
+
+▶ **Y lo verificable no se pierde: la FECHA se muda a la línea del canal.** «30,00 €» no se busca en
+un extracto bancario; «Pagado por web · 24/08/2026 — 30,00 €», sí. ⚠️ **Es lo que el PANEL ya hacía**
+desde `P1/P10`: las dos superficies convergen otra vez, ahora en la forma buena.
+
+### 20.4 Cómo quedan las dos pantallas, con datos REALES
+
+    ════ MIS RESERVAS ════                 ════ MIS PEDIDOS ════
+    Cumpleaños Jump                        Pedido R-UPFQAB   Completado
+      Mar. 25 ago. · 11:00–13:00             24/08/2026 07:49 · 124,00 €
+      · 8 invitados                          Reservas de este pedido
+      [Completa el formulario…]                Cumpleaños Jump · 8 invitados   120,00 €
+      [Ver los datos del evento]               + Calcetines · 2 unidades         4,00 €
+      Pedido R-L6UTIA   Completado           Qué vale este pedido
+      [Ver pedido]                             Pagado por web · 24/08/2026      30,00 €
+                                               Pagado en el parque              94,00 €
+    (ni un importe)                            Valor del pedido                124,00 €
+                                             (sin «Tu dinero»: no diría nada nuevo)
+
+### 20.5 Lo que esto enseña, y no es sobre estas dos pantallas
+
+⚠️⚠️ **Una redundancia que el autor justifica como «reconciliación» hay que MEDIRLA con un lector
+delante.** Al diseñar `L1` quedó escrito que el número repetido «es la prueba de que todo cuadra». El
+owner lo leyó y no entendió la pantalla. La conclusión no es que la redundancia fuera mala idea: es
+que **el autor no puede decidir solo si algo se lee**, y en una pantalla de dinero eso no es opinión.
+
+⚠️ **Y los dos defectos de esta vuelta —la línea que falta y el número repetido— tienen algo en
+común**: los dos pasaban la suite entera. El primero porque la guarda miraba la composición y el
+defecto estaba en el marcado; el segundo porque no hay test que mida si algo se entiende.

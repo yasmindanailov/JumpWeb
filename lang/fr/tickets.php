@@ -137,11 +137,6 @@ return [
     'total_pay_now' => 'Total à régler maintenant',
     'deposit_catalog' => 'Acompte :amount pour réserver',
     'deposit_card_note' => 'Acompte :deposit · :rest au parc',
-    // ⚠️ Clé propre à dessein : dans le PANIER les deux montants sont bien l'acompte et son reste,
-    // donc « Acompte » y est juste. Sur une réservation DÉJÀ ACHETÉE, le premier montant est ce qui
-    // a été payé en ligne pour cette réservation — pas forcément l'acompte — et le mot mentait.
-    'reservation_paid_note' => 'Payé en ligne :paid · :rest au parc',
-    'reservation_paid_note_desk' => 'Déjà payé :paid · :rest au parc',
     'pay_at_park' => 'Au parc',
     'paid_online_confirmed' => 'Payé en ligne',
     'pending_at_park' => 'En attente au parc',

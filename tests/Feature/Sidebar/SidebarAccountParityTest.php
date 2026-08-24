@@ -93,26 +93,13 @@ class SidebarAccountParityTest extends TestCase
         // (`specs/desglose-dinero-cliente.md` §17.1).
         $this->assertSame(__('tickets.guests_count', ['count' => 1]), $pack['quantityLabel']);
 
-        // El aviso de señal, con sus DOS importes: lo decide el servidor y aquí solo se comprueba
-        // que los números que se pintan son los que él publica.
-        //
-        // ⚠️ **6.800 y no 6.000, y este caso lo enseñó**: `paid_online_cents` es lo pagado online **de
-        // esta reserva, principal MÁS sus complementos** —el contrato lo dice, y esta paridad lo
-        // confirmó contra la respuesta real—. La señal del pack son 6.000 y los calcetines 800; en el
-        // aviso van juntos porque el cliente pagó los dos por adelantado. Recomponer el número aquí
-        // habría dado 6.000 y nadie lo habría notado.
-        //
-        // ⚠️⚠️ **Y el rótulo ya NO dice «Señal», que era `L3`**: 6.800 no es la señal (6.000), es lo
-        // pagado por web de esta reserva. La clave de la CESTA (`deposit_card_note`) sigue diciendo
-        // «Señal» porque allí sí lo es; ésta es otra.
-        $this->assertSame(
-            __('tickets.reservation_paid_note', ['paid' => Money::format(6800), 'rest' => Money::format(3000)]),
-            $pack['depositNote']
-        );
-        $this->assertStringNotContainsStringIgnoringCase(
-            'señal', (string) $pack['depositNote'],
-            'el rótulo vuelve a llamar «señal» a un importe que no lo es'
-        );
+        // ⚠️⚠️ **AQUÍ YA NO HAY DINERO** (2026-08-24, `DECISIONES #130`, decisión del owner): el
+        // importe de la línea y la nota de la señal se fueron a «Mis pedidos», que es donde el dinero
+        // cuadra con lo que lo rodea. La nota ya ni se compone —`depositNoteOf()` murió con ella—.
+        // ⚠️ Que la PLANTILLA no pinte importes **no puede aseverarse aquí**: esto mira la
+        // composición, y `priceLabel` sigue existiendo porque `lineRow()` la comparte con «Mis
+        // pedidos», que sí la pinta. Esa mitad la vigila `LedgerSingleSourceTest`, sobre el marcado.
+        $this->assertArrayNotHasKey('depositNote', $pack, 'la nota de señal ha vuelto a la tarjeta de la reserva');
 
         // El post-form pendiente, con la URL que compone el servidor (nunca el cliente).
         $this->assertSame('pending', $pack['guestForm']['state']);
@@ -122,10 +109,11 @@ class SidebarAccountParityTest extends TestCase
         );
         $this->assertStringContainsString('/datos-invitados', (string) $pack['guestForm']['url']);
 
-        // El complemento va anidado con su propio importe.
+        // ⚠️ El complemento SÍ se queda —dice qué llevas contratado— pero **sin precio**: es parte de
+        // «qué tengo», no de «cuánto cuesta» (owner, `#130`).
         $this->assertCount(1, $pack['addons']);
         $this->assertSame('Calcetines', $pack['addons'][0]['name']);
-        $this->assertSame(Money::format(800), $pack['addons'][0]['priceLabel']);
+        $this->assertSame('2 unidades', $pack['addons'][0]['quantityLabel'], 'el complemento dice QUÉ llevas, no cuánto cuesta');
 
         // ── La línea CANCELADA está en el historial, no aquí ───────────────────────────────────
         $historial = $this->composeInNode(
@@ -135,7 +123,7 @@ class SidebarAccountParityTest extends TestCase
         $this->assertCount(1, $historial, 'la reserva cancelada no ha caído en el historial');
         $this->assertSame('cancelled', $historial[0]['badge']['key']);
         $this->assertSame(__('account.orders.item_cancelled'), $historial[0]['badge']['label']);
-        $this->assertNull($historial[0]['depositNote'], 'una línea cancelada no debe nada en puerta');
+        $this->assertArrayNotHasKey('depositNote', $historial[0], 'la nota de señal ha vuelto al historial');
 
         // ── Y el LEDGER, por el camino que la tarjeta usa de verdad: bajo demanda ──────────────
         $ledger = $this->ledgerInNode(
@@ -146,21 +134,24 @@ class SidebarAccountParityTest extends TestCase
         $this->assertNull($ledger['refund'], 'sin reembolso no hay bloque de reembolso');
         $this->assertSame(__('tickets.statuses.paid'), $ledger['statusLabel']);
 
-        // ⚠️⚠️ **`L1` — EL ANCLA DE CAJA, en un pedido SIN NINGUNA DEVOLUCIÓN.** Se pintaba solo si
-        // había devoluciones, así que en el caso normal —éste— el cliente **nunca veía cuánto había
-        // salido de su banco**: lo único que puede cotejar con su extracto, y lo que convierte el
-        // desglose en verificable en vez de solo legible (`specs/desglose-dinero-cliente.md` §17.1).
-        // Medido el 2026-08-24: el panel lo enseñaba en 28 de 38 pedidos sanos y el cliente en 9.
-        $caja = $ledger['financials']['cash'];
-
-        $this->assertNotNull($caja, 'sin el ancla el cliente no puede cotejar NADA con su banco');
+        // ⚠️⚠️ **LO VERIFICABLE VA EN LA LÍNEA DEL CANAL** (`DECISIONES #130`). `#128` lo puso en un
+        // bloque aparte que se enseñaba siempre que hubiera habido un cobro, y el owner leyó la
+        // pantalla y no la entendió: el mismo importe salía dos veces, arriba como «Pagado por web» y
+        // abajo como «Cobrado por web». Lo que hacía falta conservar no era el bloque, era la FECHA
+        // — «30,00 €» no se busca en un extracto bancario; «30,00 € el 24/08/2026», sí—.
         $this->assertSame(
-            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
-            $caja['rows'][0]['label'],
-            'el ancla necesita su MÉTODO y su FECHA: un importe suelto no se busca en un extracto'
+            __('tickets.ledger.paid_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $ledger['financials']['value']['rows'][0]['label'],
+            'la línea del canal ha perdido la fecha: el importe deja de ser conciliable'
         );
-        $this->assertSame(Money::format(6800), $caja['rows'][0]['amountLabel']);
-        $this->assertSame(__('tickets.ledger.cash_caption'), $caja['caption']);
+
+        // ⚠️ Y el bloque «Tu dinero» NO aparece en un pedido corriente, porque no diría nada nuevo.
+        // Lo que `#128` vino a arreglar sigue entero: aparece en cuanto lo cobrado no coincide con lo
+        // pagado —que en un pedido sano no puede pasar (`PAY-17`) y en uno con el dato roto sí—.
+        $this->assertNull(
+            $ledger['financials']['cash'],
+            'el eje de caja vuelve a repetir el importe que la línea de arriba ya dice'
+        );
     }
 
     /**
@@ -195,6 +186,13 @@ class SidebarAccountParityTest extends TestCase
         $this->assertCount(2, $fila['lines'], 'el pedido no lista todas sus reservas');
         $this->assertSame(__('tickets.guests_count', ['count' => 1]), $fila['lines'][0]['quantityLabel']);
 
+        // ⚠️⚠️ **Y el COMPLEMENTO viaja con su línea.** Omitirlo rompía la única promesa de esta
+        // pantalla: medido sobre `R-UPFQAB`, las reservas ponían 120,00 € y «Valor del pedido»
+        // 124,00 €, y los 4,00 € que faltaban eran unos calcetines que la API sí publica. Un
+        // desglose al que le falta una línea cuadra por dentro y no cuadra para quien lo lee.
+        $this->assertSame('Calcetines', $fila['lines'][0]['addons'][0]['name'] ?? null);
+        $this->assertSame(Money::format(800), $fila['lines'][0]['addons'][0]['priceLabel'] ?? null);
+
         // ⚠️⚠️ **EL MISMO desglose que se veía dentro de la reserva, campo a campo.** No es una
         // aserción de conveniencia: es la que caza el día que alguien componga el dinero aquí.
         $porCodigo = $this->ledgerInNode(
@@ -206,12 +204,16 @@ class SidebarAccountParityTest extends TestCase
             'la lista de pedidos y el pedido suelto componen el dinero de forma distinta'
         );
 
-        // Y el ancla de caja llega con la lista: no hace falta desplegar nada para verla (`L1`).
+        // ⚠️⚠️ **Lo VERIFICABLE llega con la lista, y va en la línea del canal** (`DECISIONES #130`):
+        // el importe con la FECHA del cobro, que es lo que se busca en un extracto bancario. El
+        // bloque «Tu dinero» **no aparece** en un pedido corriente porque no diría nada que esta
+        // línea no diga ya — repetirlo enseñaba a saltarse el bloque que sí importa.
         $this->assertSame(
-            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
-            $fila['financials']['cash']['rows'][0]['label']
+            __('tickets.ledger.paid_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $fila['financials']['value']['rows'][0]['label']
         );
-        $this->assertSame(Money::format(6800), $fila['financials']['cash']['rows'][0]['amountLabel']);
+        $this->assertSame(Money::format(6800), $fila['financials']['value']['rows'][0]['amountLabel']);
+        $this->assertNull($fila['financials']['cash'], 'el eje de caja repite lo que la línea de arriba ya dice');
     }
 
     /**

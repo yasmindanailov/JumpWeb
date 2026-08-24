@@ -50,14 +50,27 @@ defineEmits(['toggle', 'retry']);
             -->
             <p class="orders__ledger-title">{{ account?.purchases?.reservations ?? '' }}</p>
             <ul class="orders__lines">
-                <li v-for="line in row.lines" :key="line.id" class="orders__line">
-                    <span class="orders__line-name">
-                        {{ line.name }}
-                        <span class="orders__line-unit">· {{ line.whenLabel }} · {{ line.quantityLabel }}</span>
-                        <span v-if="line.badge" class="orders__line-badge" :class="'orders__line-badge--' + line.badge.key">{{ line.badge.label }}</span>
-                    </span>
-                    <span class="orders__line-price">{{ line.priceLabel }}</span>
-                </li>
+                <template v-for="line in row.lines" :key="line.id">
+                    <li class="orders__line">
+                        <span class="orders__line-name">
+                            {{ line.name }}
+                            <span class="orders__line-unit">· {{ line.whenLabel }} · {{ line.quantityLabel }}</span>
+                            <span v-if="line.badge" class="orders__line-badge" :class="'orders__line-badge--' + line.badge.key">{{ line.badge.label }}</span>
+                        </span>
+                        <span class="orders__line-price">{{ line.priceLabel }}</span>
+                    </li>
+                    <!--
+                      ⚠️⚠️ **Los COMPLEMENTOS también, y omitirlos rompía la única promesa de esta
+                      pantalla.** Medido sobre `R-UPFQAB`: la reserva pone 120,00 € y «Valor del
+                      pedido» pone 124,00 €, y los 4,00 € que faltan son unos calcetines que la API
+                      publica y esta lista no pintaba. Un desglose al que le falta una línea **no es
+                      un desglose**: cuadra por dentro y no cuadra para quien lo lee.
+                    -->
+                    <li v-for="addon in line.addons" :key="'a' + addon.id" class="orders__line">
+                        <span class="orders__line-name">+ {{ addon.name }} <span class="orders__line-unit">· {{ addon.quantityLabel }}</span></span>
+                        <span class="orders__line-price">{{ addon.priceLabel }}</span>
+                    </li>
+                </template>
             </ul>
 
             <!--
@@ -92,9 +105,13 @@ defineEmits(['toggle', 'retry']);
             </div>
 
             <!--
-              ⚠️⚠️ **EL ANCLA DE CAJA** (`L1`, `DECISIONES #128`): se enseña siempre que haya habido un
-              cobro, no solo si hubo devoluciones. Es lo único que el cliente puede cotejar con su
-              extracto. La condición la decide el dominio (`ledger.cash.has_cash`), no esta pantalla.
+              ⚠️⚠️ **EL EJE DE CAJA, solo cuando dice algo que la columna de arriba NO diga ya**
+              (`DECISIONES #130`): hubo una devolución, se debe una, o **lo cobrado no coincide con lo
+              pagado** —que en un pedido sano no puede pasar (`PAY-17`) y en uno con el dato roto sí—.
+              Enseñarlo siempre repetía el mismo importe con dos nombres casi iguales, y eso enseña a
+              saltarse el bloque que sí importa. Lo verificable —la FECHA del cobro— va arriba, en la
+              línea del canal. La condición la decide el dominio (`ledger.cash.has_cash`), no esta
+              pantalla: derivarla aquí fue el origen de `L1`.
             -->
             <div v-if="row.financials.cash" class="orders__ledger orders__ledger--cash">
                 <p class="orders__ledger-title">{{ row.financials.cash.title }}</p>
