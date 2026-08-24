@@ -275,8 +275,24 @@ class SidebarBundleBudgetTest extends TestCase
      * composición de la reserva **es la misma `lineRow()`** que ya pintaba la línea dentro del
      * pedido. Una segunda zona con su propia tarjeta y su propio ledger habría costado el doble.
      * ▶ **214,5 deja 0,93 KiB**, otra vez la holgura más estrecha del ledger.
+     *
+     * ⚠️ **214,5 → 215,5 el 2026-08-24: los tres defectos de LECTURA del desglose** (`L1`, `L2`, `L3`
+     * de `specs/desglose-dinero-cliente.md` §17.1, `DECISIONES #128`). Medido: **213,57 → 214,53 KiB,
+     * +1,01**. Lo que entra es el ancla de caja con su método, su fecha y su marca de neutralidad
+     * (`chargedLine()` y su caption), el rótulo por método en los dos ejes y la etiqueta de cantidad
+     * en la línea y en el complemento.
+     * ▶ **Y es exactamente el caso en que este techo debe ceder**, según lo que él mismo dice arriba:
+     * no cede por «una pantalla más», cede por **corrección medida**. Los tres salieron de mirar un
+     * pedido REAL en pantalla —`R-L6UTIA`— y los tres eran afirmaciones falsas o ilegibles sobre el
+     * dinero del cliente. El más caro, `L1`, es el que convierte el desglose en algo que el cliente
+     * puede **verificar** contra su banco en vez de solo leer.
+     * ▶ **Y conviene decir de dónde NO sale este coste**: ni un solo importe ni una sola condición se
+     * calculan en el cliente. La condición del ancla (`has_cash`), el método, la fecha y la etiqueta
+     * de cantidad **llegan compuestos por el dominio**; la zona solo elige qué pinta. Recomponer
+     * cualquiera de los cuatro aquí habría costado menos bytes y una divergencia.
+     * ▶ **215,5 deja 0,92 KiB**, la holgura habitual: lo siguiente que entre lo mide.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 214.5;
+    private const SIDEBAR_CHUNK_MAX_KB = 215.5;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

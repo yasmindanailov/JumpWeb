@@ -75,17 +75,52 @@ export function lineBadgeOf(item, account) {
  * ⚠️ **La condición la decide el SERVIDOR** (`shows_deposit_note`), que la compone de tres —pedido
  * pagado, producto con señal y algo pendiente en puerta—. Aquí solo se pintan los dos importes.
  *
- * ⚠️ El primer importe es **lo pagado por web de ESTA reserva**, no «la señal»: en un pack con
- * complementos cobrados íntegros, los dos números no coinciden y llamarlo señal engaña
- * (`specs/desglose-dinero-cliente.md` §4.4). El rótulo lo dice desde la tanda B.
+ * ⚠️⚠️ **El rótulo ya no dice «Señal», y ése era el defecto `L3`** (`DECISIONES #128`,
+ * `specs/desglose-dinero-cliente.md` §17.1). El primer importe es **lo pagado por web de ESTA
+ * reserva**, que en un pack con complementos cobrados íntegros NO es la señal — y en `R-L6UTIA`
+ * rotulaba «Señal 114,00 €» sobre una señal real de 30,00 €. Ahora lleva el MISMO nombre que su
+ * línea del desglose (§10.4: un concepto, un nombre), y el MÉTODO decide cuál: en un pedido cobrado
+ * en taquilla, «por web» sería falso.
+ *
+ * ⚠️ La clave de la CESTA (`deposit_card_note`) no se toca: allí los dos números sí son la señal y
+ * su resto, y «Señal» es la palabra correcta.
  */
 export function depositNoteOf(item, messages) {
     if (! item.shows_deposit_note) return null;
 
-    return tp(messages, 'deposit_card_note', {
-        deposit: money(item.ledger.value.paid_online_cents),
+    const key = item.ledger.cash.charged_method === 'desk'
+        ? 'reservation_paid_note_desk'
+        : 'reservation_paid_note';
+
+    return tp(messages, key, {
+        paid: money(item.ledger.value.paid_online_cents),
         rest: money(item.ledger.value.pending_at_gate_cents),
     });
+}
+
+/**
+ * **EL ANCLA DE CAJA**: la fila «cobrado», con su método y su fecha — o `null` si no se cobró nada.
+ *
+ * ⚠️ **La fecha es la mitad de lo que la hace conciliable**: «cobrado 30,00 €» no se busca en un
+ * extracto bancario; «30,00 € · 24/08/2026» sí. La compone el servidor (`charged_at_label`), como
+ * todas las fechas de esta zona. El separador es el mismo «·» que ya usa la línea de la reserva.
+ *
+ * ⚠️⚠️ **`anchor` no es decoración: el bloque entero heredaba el color de REEMBOLSO.** Mientras solo
+ * se pintaba cuando había devoluciones eso pasaba desapercibido; en cuanto el ancla se enseña en todo
+ * pedido cobrado, un cargo corriente se leería en ámbar **como si algo se hubiera devuelto** — el
+ * mismo error de fondo que la tanda B quitó del eje del valor. La marca deja que la hoja lo pinte
+ * neutro sin tocar las dos filas que sí son de devolución.
+ */
+function chargedLine(messages, cash, desk) {
+    if (cash.charged_online_cents <= 0) return null;
+
+    const label = t(messages, desk ? 'ledger.charged_desk' : 'ledger.charged_online');
+
+    return {
+        label: cash.charged_at_label ? label + ' · ' + cash.charged_at_label : label,
+        amountLabel: money(cash.charged_online_cents),
+        anchor: true,
+    };
 }
 
 /**
@@ -112,6 +147,11 @@ export function financialsOf(order, messages) {
     const v = l.value;
     const c = l.cash;
     const line = (key, cents) => (cents > 0 ? { label: t(messages, 'ledger.' + key), amountLabel: money(cents) } : null);
+    // ⚠️ El MÉTODO decide el rótulo de los DOS canales de cobro adelantado (`DECISIONES #128`). El
+    // eje de caja suma todo lo cobrado sin mirar el `provider`, así que el importe es correcto y el
+    // nombre no puede quemarse: un pedido de taquilla que dijera «por web» mentiría. El panel ya lo
+    // distinguía desde `P1/P10` y el cliente no — ésa era la divergencia.
+    const desk = c.charged_method === 'desk';
 
     const gate = v.pending_at_gate_cents > 0
         ? {
@@ -129,7 +169,7 @@ export function financialsOf(order, messages) {
         value: {
             title: t(messages, 'ledger.value_title'),
             rows: [
-                line('paid_online', v.paid_online_cents),
+                line(desk ? 'paid_desk' : 'paid_online', v.paid_online_cents),
                 line('pending_online', v.pending_online_cents),
                 line('paid_at_gate', v.paid_at_gate_cents),
                 line('compensated', v.compensated_cents),
@@ -137,13 +177,21 @@ export function financialsOf(order, messages) {
             gate,
             total: { label: t(messages, 'ledger.value_total'), amountLabel: money(v.total_cents) },
         },
-        // El eje de caja solo aparece cuando tiene algo que contar. Un bloque de ceros enseña a
-        // ignorar el que sí importa.
-        cash: (c.refunded_cents > 0 || c.pending_refund_cents > 0)
+        // ⚠️⚠️ **El eje de caja se enseña en cuanto el parque ha cobrado algo, y ése era el defecto
+        // `L1`** (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1). Esta condición se
+        // derivaba AQUÍ y le faltaba justo el ancla, así que en un pedido normal —sin devoluciones—
+        // el cliente **nunca veía cuánto había salido de su banco**: lo único que puede cotejar con
+        // su extracto, y lo que convierte el desglose en algo VERIFICABLE en vez de solo legible.
+        // Medido el 2026-08-24: el panel lo enseñaba en 28 de 38 pedidos sanos y el cliente en 9.
+        //
+        // ⚠️ Ahora la condición **la decide el dominio** (`OrderLedger::hasCash()`) y llega
+        // publicada. Re-derivarla aquí es lo que la hizo divergir la primera vez.
+        cash: c.has_cash
             ? {
                 title: t(messages, 'ledger.cash_title'),
+                caption: t(messages, 'ledger.cash_caption'),
                 rows: [
-                    line('charged_online', c.charged_online_cents),
+                    chargedLine(messages, c, desk),
                     line('refunded', c.refunded_cents),
                     line('pending_refund', c.pending_refund_cents),
                 ].filter(Boolean),
@@ -167,7 +215,10 @@ function addonRow(addon, account) {
     return {
         id: addon.id,
         name: addon.product_name,
-        quantity: addon.quantity,
+        // ⚠️ La etiqueta, no el número pelado: el complemento sufría el MISMO defecto `L2` que la
+        // línea principal —`· 2×` pegado al importe de la línea— y arreglar solo el principal habría
+        // dejado la ambigüedad viva una fila más abajo. La compone el servidor.
+        quantityLabel: addon.quantity_label,
         priceLabel: money(addon.charged_subtotal_cents),
         badge: lineBadgeOf(addon, account),
     };
@@ -181,7 +232,12 @@ function lineRow(order, item, { messages, account }) {
         // Ya compuestos por el servidor los dos: el día porque `Intl` no lo reproduce, la ventana
         // porque componerla —según la franja tenga fin o no— es regla del dominio.
         whenLabel: [item.date_label, item.time_window].filter(Boolean).join(' · '),
-        quantity: item.quantity,
+        // ⚠️⚠️ **La cantidad con su SUSTANTIVO, y ése era el defecto `L2`** (`DECISIONES #128`,
+        // `specs/desglose-dinero-cliente.md` §17.1). La tarjeta pintaba `8×` seguido del importe de
+        // la línea —`8×216,00 €`—, que se lee como «8 unidades a 216 € cada una» = 1.728 € cuando
+        // son **8 invitados y 216 € en total**. La compone el servidor porque el sustantivo depende
+        // del tipo de producto y del idioma (`OrderItem::displayQuantityLabel()`).
+        quantityLabel: item.quantity_label,
         isPack: item.is_pack,
         priceLabel: money(item.charged_subtotal_cents),
         badge: lineBadgeOf(item, account),

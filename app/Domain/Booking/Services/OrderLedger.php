@@ -58,6 +58,17 @@ final readonly class OrderLedger
         public int $retenido,
         /** Lo retenido que ya no respalda producto y hay que devolver. */
         public int $pendienteDevolucion,
+        /**
+         * **CÓMO se cobró**: `'web'` (pasarela), `'desk'` (taquilla) o `null` si no se ha cobrado.
+         *
+         * ⚠️ Llega como CADENA desde `Order::chargeMethod()` —la frontera de módulos prohíbe que
+         * `Booking\Services` nombre `Payments\Models\Payment`—, igual que la intención del reembolso.
+         * Es un ENUM y no un rótulo a propósito: el panel habla en tercera persona y el cliente en
+         * segunda (§10.4), así que la voz la pone cada superficie.
+         */
+        public ?string $cobroMetodo,
+        /** **CUÁNDO se cobró**, ya formateado. Sin fecha, el ancla no se puede cotejar con el banco. */
+        public ?string $cobroFecha,
 
         // ── Trazabilidad y contexto ────────────────────────────────────────────────
         /** `Order.total`: lo facturado al reservar. **Fuera de la suma**, y solo se enseña si difiere. */
@@ -85,10 +96,29 @@ final readonly class OrderLedger
             || $this->facturado !== $this->valor;
     }
 
-    /** ¿El eje de caja tiene algo que contar? */
+    /**
+     * ¿El eje de caja tiene algo que contar? **Sí en cuanto el parque ha cobrado algo.**
+     *
+     * ⚠️⚠️ **Éste era el defecto `L1`, y tenía DOS mitades** (`DECISIONES #128`,
+     * `specs/desglose-dinero-cliente.md` §17.1):
+     *
+     *  1. **le faltaba el primer término.** Sin `cobradoOnline`, en un pedido normal —sin
+     *     devoluciones— el bloque no se pintaba y **el cliente nunca veía cuánto había salido de su
+     *     banco**. Es lo único que puede cotejar con su extracto, y es lo que convierte el desglose
+     *     en algo VERIFICABLE en vez de solo legible: en `R-L6UTIA` habría puesto «cobrado por web
+     *     30,00 €» al lado de «pagado por web 114,00 €» y el dato roto salta a la vista;
+     *  2. **nadie lo llamaba.** El predicado existía aquí y las superficies lo re-derivaban por su
+     *     cuenta —el cliente en JavaScript, el panel en su blade—, que es exactamente la forma de
+     *     divergencia que esta clase existe para cerrar. Medido el 2026-08-24 sobre los 58 pedidos:
+     *     el panel enseñaba el ancla en **28** de 38 pedidos sanos y el cliente en **9**; divergían
+     *     en **19**. Ahora los dos preguntan aquí.
+     *
+     * ⚠️ En el desglose POR RESERVA `cobradoOnline` es 0 a propósito (el cobro es del PEDIDO), así
+     * que este predicado sigue valiendo lo mismo que antes allí: cambia el pedido, no la reserva.
+     */
     public function hasCash(): bool
     {
-        return $this->devuelto > 0 || $this->pendienteDevolucion > 0;
+        return $this->cobradoOnline > 0 || $this->devuelto > 0 || $this->pendienteDevolucion > 0;
     }
 
     /** El desglose de un PEDIDO entero. */
@@ -107,6 +137,8 @@ final readonly class OrderLedger
             devuelto: $s->effectiveRefunded(),
             retenido: $s->retenidoOnline(),
             pendienteDevolucion: $s->pendienteDevolucion(),
+            cobroMetodo: $order->chargeMethod(),
+            cobroFecha: $order->chargedAtLabel(),
             facturado: $s->totalOriginal,
             gateLines: array_map(
                 fn (array $l): array => ['label' => $l['label'], 'amount_cents' => (int) $l['amount']],
@@ -139,6 +171,12 @@ final readonly class OrderLedger
             devuelto: $rf->devuelto,
             retenido: 0,
             pendienteDevolucion: $rf->pendienteReembolso,
+            // El MÉTODO sí viaja por reserva aunque el importe no: es un hecho del pedido, y la
+            // tarjeta de la reserva rotula con él lo pagado por adelantado («Pagado por web 30,00 €
+            // · 90,00 € en el parque»). Sin él, esa nota afirmaría «por web» en un pedido cobrado en
+            // taquilla. La FECHA no viaja: sin importe al lado no explica nada.
+            cobroMetodo: $order->chargeMethod(),
+            cobroFecha: null,
             facturado: $rf->valor,          // sin base propia: la reserva no se factura por separado
             gateLines: array_map(
                 fn (array $l): array => ['label' => $l['label'], 'amount_cents' => (int) $l['amount']],

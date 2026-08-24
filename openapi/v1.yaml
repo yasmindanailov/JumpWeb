@@ -2794,14 +2794,20 @@ components:
       description: |
         **Qué ha pasado con el dinero del cliente.** Es OTRO eje: no resta del valor, y pintarlo como
         si restara es lo que hacía la columna ilegible.
-      required: [charged_online_cents, refunded_cents, held_cents, pending_refund_cents]
+      required: [charged_online_cents, refunded_cents, held_cents, pending_refund_cents, has_cash, charged_method, charged_at_label]
       additionalProperties: false
       properties:
         charged_online_cents:
           type: integer
           description: |
-            Lo REALMENTE cobrado por web. **Es el ancla**: lo único que el cliente puede cotejar con
-            su extracto bancario. Hasta la tanda B solo existía dentro de un caption del panel.
+            Lo REALMENTE cobrado por adelantado. **Es el ancla**: lo único que el cliente puede
+            cotejar con su extracto bancario. Hasta la tanda B solo existía dentro de un caption del
+            panel.
+
+            ⚠️ **Suma TODOS los pagos cobrados, sea cual sea el canal** — la web (Redsys) o la
+            taquilla (`ManualOrderFulfiller`, efectivo/datáfono) —, porque el eje de caja mide dinero
+            movido, no medios. Cómo se cobró lo dice `charged_method`, y por eso el rótulo NO puede
+            quemarse en la interfaz.
         refunded_cents:
           type: integer
           description: Lo ya devuelto.
@@ -2815,6 +2821,44 @@ components:
 
             ⚠️⚠️ **No es lo mismo que `refunded_cents`, y confundirlos invierte el significado**:
             aquél es lo ya devuelto y esto es lo que aún se debe.
+        has_cash:
+          type: boolean
+          description: |
+            ¿El eje de caja tiene algo que enseñar? **Cierto en cuanto el parque ha cobrado algo**
+            (`charged_online_cents > 0`), no solo cuando hay devoluciones.
+
+            ⚠️⚠️ **Se publica en vez de dejar que el cliente lo derive, y ése era el defecto `L1`.**
+            El predicado existía en el dominio y **ninguna superficie lo usaba**: el cliente
+            reimplementaba la condición en JavaScript —y le faltaba justo el primer término—, así que
+            en un pedido sin devoluciones **el cliente nunca veía cuánto había salido de su banco**.
+            Es lo único que puede cotejar con su extracto. Medido el 2026-08-24: el panel enseñaba el
+            ancla en 28 de 38 pedidos sanos y el cliente en 9 → **divergían en 19**.
+
+            ⚠️ En el desglose POR RESERVA el eje de caja no existe (el cobro es del PEDIDO: hay un
+            solo `Payment`), así que aquí solo puede ser cierto por una devolución atribuida.
+        charged_method:
+          type: string
+          nullable: true
+          enum: [web, desk, null]
+          description: |
+            **Cómo se cobró** el dinero de `charged_online_cents`: `web` (la pasarela) o `desk` (la
+            taquilla: efectivo o datáfono). `null` mientras no se haya cobrado nada.
+
+            ⚠️⚠️ **Es un ENUM y no un rótulo, a propósito.** El panel habla en tercera persona y el
+            cliente en segunda (§10.4): componer aquí el texto obligaría a elegir una voz. Lo que no
+            puede pasar es que la interfaz asuma «web» —el panel ya distingue el método desde `P1/P10`
+            y el cliente no—, porque entonces un pedido cobrado en taquilla le dice al cliente
+            «Cobrado por web» de un dinero que nunca pasó por la web.
+        charged_at_label:
+          type: string
+          nullable: true
+          description: |
+            La fecha del cobro ya compuesta para mostrar (`d/m/Y`), o `null` si no se ha cobrado.
+            Mismo criterio que `date_label` y las etiquetas de `gate_lines`: la compone el servidor.
+
+            ⚠️ Sin fecha, el importe **no es conciliable**: «cobrado 30,00 €» no se busca en un
+            extracto bancario, «30,00 € el 24/08/2026» sí. Es la mitad de lo que hace verificable al
+            ancla.
     OrderGateLine:
       type: object
       description: Una línea del desglose de «a cobrar en el parque».
@@ -2868,6 +2912,7 @@ components:
         - ledger
         - guest_form_url
         - shows_deposit_note
+        - quantity_label
       additionalProperties: false
       properties:
         id:
@@ -2958,13 +3003,27 @@ components:
             Son TRES condiciones compuestas por el servidor —el pedido está pagado, el producto usa
             señal y queda algo en puerta—. Se publica el resultado y no las piezas a propósito: hay
             cuatro superficies pintando este bloque, y recomponerlo en cada una es como divergen.
+        quantity_label:
+          type: string
+          description: |
+            La cantidad ya compuesta con su NOMBRE («8 invitados», «2 entradas»), en el idioma de la
+            petición. Mismo criterio que `date_label` y `time_window`.
+
+            ⚠️⚠️ **Publicarla arregla el defecto `L2`**: el cliente pintaba `quantity` y el importe de
+            la línea pegados —`8×216,00 €`—, que se lee como «8 unidades a 216 € cada una» = 1.728 €
+            cuando son **8 invitados y 216 € en total**. El número solo no distingue cantidad de
+            importe, y el sustantivo es lo que lo desambigua.
+
+            ⚠️ Y no se compone en el cliente porque el sustantivo depende del TIPO de producto (pack
+            → invitados, entrada → entradas, con plural) y del idioma: era la quinta copia de una
+            regla que el dominio ya tenía.
     OrderItemAddon:
       type: object
       description: |
         Complemento contratado dentro de una línea. Deliberadamente con menos campos: no tiene
         franja ni post-form propios —los hereda del padre— y repetirlos invitaría a leerlos del
         sitio equivocado.
-      required: [id, product_name, quantity, charged_subtotal_cents, free_quantity]
+      required: [id, product_name, quantity, charged_subtotal_cents, free_quantity, quantity_label]
       additionalProperties: false
       properties:
         id:
@@ -2982,6 +3041,13 @@ components:
             Unidades que van INCLUIDAS sin cargo. Sin este número, «2 incluidas + 1 extra» y «3 de
             pago» se pintan igual, y el importe cobrado no basta para distinguirlas cuando el extra
             vale 0.
+        quantity_label:
+          type: string
+          description: |
+            La cantidad ya compuesta con su nombre («2 unidades»), por lo mismo que en la línea
+            principal (`OrderItem.quantity_label`): el complemento sufría el MISMO defecto `L2`
+            —`· 2×` pegado al importe de la línea—, y arreglar solo el principal habría dejado la
+            ambigüedad viva una fila más abajo.
 
     OrderEventData:
       type: object

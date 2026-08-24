@@ -20,6 +20,13 @@ tandas: el **dominio** dejó de mentir en cuatro casos que ninguna auditoría an
 —y de paso se cerró un **agujero de ingresos**: mover la fecha de una reserva no re-tarificaba— y la
 **proyección** pasó a componerse en un solo sitio, en dos ejes y con una frase que explica cada
 estado. Medido: **0 de 23** gestiones del panel dejan la columna ilegible, cuando eran 18.
+🟩 **Y ese mismo 2026-08-24, mirando un pedido REAL en pantalla, salieron TRES defectos de LECTURA y
+también están arreglados** (`DECISIONES #128`): el **ancla de caja** —lo único que el cliente puede
+cotejar con su banco— **no se enseñaba si no había devoluciones**, la cantidad se pintaba pegada al
+importe (`8×216,00 €` se lee como 1.728 €) y la nota de la reserva llamaba «señal» a lo que no lo es.
+Medido: el eje de caja pasa de **9 de 38** pedidos sanos a **37 de 58**, y la divergencia
+panel↔cliente sobre ese número —**19 pedidos**— desaparece. El desglose pasa de LEGIBLE a
+**VERIFICABLE**.
 ▶ **Lo siguiente NO es la Fase 5**: es la **tanda C** del mismo trabajo (la pantalla de «Mis
 pedidos»), que es la única que no toca dinero. Detalle en «Próximo paso» y alcance en el tracker.
 
@@ -57,7 +64,8 @@ staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
 un commit por delante y es solo doc: no hay diferencia de código», y ya entonces (2026-08-23) eran
 **3 commits y 68 ficheros**. Staging **no lleva `#123`, `#124`, `#125`, `#126` ni `#127`**: sirve un
 cajón sin el bloque de cuenta en Vue, sin el `no-store` global, sin los arreglos del reenvío y del
-velo, sin «Mis reservas» por reserva —y, lo más importante, **sin nada del desglose de dinero**.
+velo, sin «Mis reservas» por reserva —y, lo más importante, **sin nada del desglose de dinero**
+(`#127` ni `#128`: sirve la columna vieja, sin los dos ejes y sin el ancla de caja).
 ❗❗ **CONSECUENCIA QUE HAY QUE LEER ANTES DE VERIFICAR NADA ALLÍ**: staging sirve el desglose
 **VIEJO**, el que miente. Un pedido cancelado seguirá diciendo «Total 19,80 €» sin anunciar lo que se
 debe devolver, mover la fecha seguirá siendo gratis y el campo de motivo del reembolso no existe.
@@ -71,8 +79,13 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2726 en verde** (15.861 aserciones, `--parallel` **~35 s** medidos el 2026-08-24) ·
-  ▶ **+22 sobre el cierre anterior: 17 de la TANDA A y 5 de la TANDA B.** Las de la B son la
+- Suite **2730 en verde** (15.921 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+  ▶ **+4 sobre el corte anterior: los TRES defectos de LECTURA** (`DECISIONES #128`) — el ancla de
+  caja publicada sin devoluciones, el pedido nunca cobrado que no la enseña, el cobrado en TAQUILLA
+  que no dice «por web», y la cantidad con su sustantivo. ⚠️ **Y varios casos que ya existían miden
+  ahora más**: la paridad extremo a extremo del cajón fija `L1`, `L2` y `L3` sobre la respuesta REAL
+  del servidor, y `SidebarTextParityTest` pasó de conceder su excepción a **demostrarla**.
+  ▶ **+22 en el corte anterior: 17 de la TANDA A y 5 de la TANDA B.** Las de la B son la
   guarda que faltaba desde el principio —**que lo PUBLICADO sume**, recorrida sobre escenarios—,
   la frase de estado, y `LedgerSingleSourceTest`, que prohíbe **el mecanismo**: ninguna superficie
   puede volver a derivar un canal restando otros. ⚠️ Esa última lleva su propia guarda-de-la-guarda,
@@ -201,14 +214,18 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 ## ▶ Próximo paso
 
 🟩 **EL DESGLOSE DE DINERO DEL CLIENTE: tandas A y B EJECUTADAS el 2026-08-24** (`DECISIONES #127`
-y sus apartados `(b)`–`(f)` · `specs/desglose-dinero-cliente.md` §15 y §16). **El dominio dice la
-verdad y el desglose se entiende.**
+y sus apartados `(b)`–`(f)` · `specs/desglose-dinero-cliente.md` §15 y §16), **y con ellas los TRES
+defectos de LECTURA** que destapó mirar un pedido real en pantalla (`DECISIONES #128` · §18).
+**El dominio dice la verdad, el desglose se entiende — y ahora además se puede VERIFICAR.**
 
 **Medido al cerrar, no afirmado:**
 - la matriz de las **23 acciones reales del panel** deja **0 columnas ilegibles** (eran 18) y
   **0 rompen ninguna identidad** (eran 3);
 - el **eje del valor cierra en 50 de 50** pedidos servidos por HTTP real;
-- **13 mutaciones** verificadas entre las dos tandas: todas muerden.
+- el **eje de caja se enseña en 37 de 58** pedidos —los 37 que han movido dinero—, cuando el cliente
+  solo lo veía en **9 de 38** sanos; la divergencia panel↔cliente sobre ese número (**19 pedidos**)
+  desaparece y el cambio de condición **no altera el panel en ninguno de los 58**;
+- **20 mutaciones** verificadas entre las tres entregas (13 + 7): todas muerden.
 
 ❗ **LO SIGUIENTE ES LA TANDA C**, y es lo único que queda de este trabajo: **«Mis pedidos» como
 pantalla propia** y el «Ver pedido» de cada reserva llevando a ella (spec §5, §14.4 · `#120(d)` para
@@ -225,20 +242,36 @@ en `ZONES` más su rótulo, y hoy ya existen `ORDERS` y `ORDERS_HISTORY`.
   `PAY-16` y `PAY-17`; la tarifa al mover la fecha, `PAY-18`.
 - ⚠️ **`online_amount_cents` NO es una dimensión del ledger**: es «cuánto se te cobrará si pagas
   ahora», lo que consume el reintento. Leerlo como «lo pagado» es el defecto original.
+- ⚠️⚠️ **Las CONDICIONES también las decide el dominio, no solo los importes** (`#128`). Cuándo se
+  enseña el eje de caja (`has_cash`), cómo se cobró (`charged_method`) y cuándo (`charged_at_label`)
+  **viajan publicados**. `hasCash()` existía y **ninguna superficie lo llamaba**: cada una re-derivaba
+  la condición, y por eso el panel enseñaba el ancla en 28 de 38 pedidos sanos y el cliente en 9.
+  Una condición re-derivada es una divergencia con retraso.
+- ⚠️ **`charged_online_cents` NO es «lo cobrado por web»: es lo cobrado por ADELANTADO**, por el canal
+  que sea —la taquilla también escribe `Payment`—. El rótulo sale de `charged_method`; quemarlo le
+  dice al cliente que pagó por internet un dinero que entregó en mano.
 
 ❗ **Y si alguien te enseña un pedido cuyo desglose «no se entiende», mira PRIMERO la spec §17.**
 Hay un caso canónico —`R-L6UTIA`— que parece un fallo del desglose y es un **dato roto**: dice
 «Pagado por web 114,00 €» cuando el pago real fueron 30,00 €. La aritmética cierra porque cierra
 sobre una mentira que está en la BD. ⚠️ **Regla: comprueba si el dato es real antes de buscar el
 fallo en el código** (`grossPaidOnline` contra `pagadoOnline`).
-▶ Y §17.1 recoge **tres defectos de LECTURA que sí son nuestros** y siguen sin arreglar, el más
-importante: **el ancla de caja no se enseña si no hay devoluciones**, así que en un pedido normal el
-cliente nunca ve cuánto salió de su banco. Van con la tanda C — son de pantalla, no de dinero.
+✅ **Y los TRES defectos de LECTURA que ese caso destapó están ARREGLADOS** (2026-08-24,
+`DECISIONES #128`, spec **§18**): el **ancla de caja se ve siempre que haya habido un cobro** —con su
+método y su fecha, para que se pueda cotejar con el banco—, la cantidad va **con su sustantivo**
+(«8 invitados · 216,00 €», no `8×216,00 €`) y la nota de la reserva **dejó de llamar «señal»** a lo
+que no lo es. Medido: el eje de caja pasa de verse en **9 de 38** pedidos sanos a **37 de 58**, y la
+divergencia panel↔cliente sobre ese número —**19 pedidos**, la mitad del corpus— desaparece.
+▶ ⚠️ **Y hacerlo visible obligó a publicar el MÉTODO de cobro**: el eje de caja suma todos los pagos
+sin mirar el `provider`, así que un pedido de **taquilla** habría dicho «Cobrado por web». Ahora el
+dominio publica `charged_method` y cada superficie pone su voz.
+▶ **Pendiente de veto del owner**: tres cadenas (§18.6), una palabra cada una.
 
-⚠️ **Y una trampa que este trabajo pagó CUATRO veces**: un fixture que no reproduce el flujo real
-**inventa defectos tan bien como los oculta**. Los cuatro casos —un pedido `paid` sin `paid_at`, otro
-sin ninguna fila `Payment`, un reembolso que escribe la columna sin la fila— aparecían como fallos del
-código y eran del fixture. Si una guarda de dinero se pone roja, **mira primero si el dato es real**.
+⚠️ **Y una trampa que este trabajo pagó CINCO veces**: un fixture que no reproduce el flujo real
+**inventa defectos tan bien como los oculta**. Los casos —un pedido `paid` sin `paid_at`, otros sin
+ninguna fila `Payment` (el quinto, en la propia paridad del cajón), un reembolso que escribe la
+columna sin la fila— aparecían como fallos del código y eran del fixture. Si una guarda de dinero se
+pone roja, **mira primero si el dato es real**.
 
 ❗ **DOS COSAS PENDIENTES DEL OWNER** (fichas en `DEUDA.md`):
 1. **Un `Ds_Response=0900` REAL de Redsys**: exige un pago de prueba con tarjeta en el sandbox desde

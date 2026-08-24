@@ -46,15 +46,20 @@ defineEmits(['toggle-order', 'toggle-event', 'retry']);
 
         <div class="orders__meta">
             {{ row.whenLabel }}
-            <span v-if="row.quantity > 1" class="orders__line-unit">· {{ row.quantity }}×</span>
-            <span class="orders__line-price">{{ row.priceLabel }}</span>
+            <!--
+              ⚠️⚠️ **La cantidad va con su SUSTANTIVO** («8 invitados»), no como `8×` pegado al
+              importe: eso se leía como 8 × 216 € = 1.728 € cuando son 8 invitados y 216 € en total
+              (`specs/desglose-dinero-cliente.md` §17.1 · `L2`). La compone el servidor.
+            -->
+            <span class="orders__line-unit">· {{ row.quantityLabel }}</span>
+            <span class="orders__line-price">· {{ row.priceLabel }}</span>
         </div>
 
         <p v-if="row.depositNote" class="orders__product-deposit">{{ row.depositNote }}</p>
 
         <ul v-if="row.addons.length" class="orders__lines">
             <li v-for="addon in row.addons" :key="addon.id" class="orders__line">
-                <span class="orders__line-name">+ {{ addon.name }} <span class="orders__line-unit">· {{ addon.quantity }}×</span></span>
+                <span class="orders__line-name">+ {{ addon.name }} <span class="orders__line-unit">· {{ addon.quantityLabel }}</span></span>
                 <span class="orders__line-price">{{ addon.priceLabel }}</span>
             </li>
         </ul>
@@ -128,12 +133,24 @@ defineEmits(['toggle-order', 'toggle-event', 'retry']);
                 </div>
             </div>
 
+            <!--
+              ⚠️⚠️ **EL ANCLA DE CAJA, que ahora se ve siempre que haya habido un cobro** (`L1`,
+              `DECISIONES #128`). Se pintaba solo si había devoluciones, así que en un pedido normal
+              el cliente NUNCA veía cuánto había salido de su banco — lo único que puede cotejar con
+              su extracto. La condición la decide el dominio (`ledger.cash.has_cash`), no esta zona.
+            -->
             <div v-if="order.financials.cash" class="orders__ledger orders__ledger--cash">
                 <p class="orders__ledger-title">{{ order.financials.cash.title }}</p>
-                <div v-for="(row, i) in order.financials.cash.rows" :key="'c' + i" class="orders__refund">
+                <!--
+                  ⚠️ El ancla va NEUTRA: las filas de este bloque heredaban el color de reembolso, y
+                  un cargo corriente en ámbar se lee como «te devolvimos algo».
+                -->
+                <div v-for="(row, i) in order.financials.cash.rows" :key="'c' + i"
+                     class="orders__refund" :class="{ 'orders__refund--anchor': row.anchor }">
                     <span class="orders__refund-label">{{ row.label }}</span>
                     <strong class="orders__refund-amount">{{ row.amountLabel }}</strong>
                 </div>
+                <p class="orders__gate-caption">{{ order.financials.cash.caption }}</p>
             </div>
 
             <!--

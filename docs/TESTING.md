@@ -163,6 +163,21 @@ cayeron sin ruido. Hoy la tienen: `SidebarIconParityTest`.
 posición, sino que exige que el cajón **no invente dibujos** — cada geometría que emite es la de un
 `<x-icons.*>` o está declarada como propia con su motivo.
 
+### 2.quinquies. Una lista blanca que nadie verifica es una PROMESA, no una guarda
+⚠️ **Medido el 2026-08-24** (`DECISIONES #128`). `SidebarTextParityTest` exige que ninguna clave del
+grupo `tickets` lleve una barra vertical, porque el cajón solo resuelve `singular|plural` para
+`cart_items` y cualquier otra se pintaría con la barra dentro. Al añadir dos claves pluralizadas que
+**compone el servidor** —la cantidad con su sustantivo—, la salida fácil era ampliar la lista blanca:
+«éstas no las pinta el cliente». Eso es una promesa que caduca el día que alguien las pinte.
+
+**La regla**: cuando una guarda necesite una excepción, **la excepción se demuestra en el mismo
+test**. Aquí se comprueba sobre las FUENTES del cajón que la clave exenta no se nombra ahí; el día que
+alguien la use, la exención se cae sola y el test lo dice. Verificado por mutación: nombrarla en un
+módulo del cajón pone el caso en rojo.
+
+⚠️ **Y el corolario**: una excepción que no se puede comprobar es una señal de que la guarda está mal
+formulada, no de que el caso sea especial.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

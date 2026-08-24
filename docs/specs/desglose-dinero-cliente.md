@@ -1,7 +1,12 @@
 # [SPEC] El DESGLOSE de dinero que ve el cliente — auditoría y marco
 
 > Estado: **🟦 en revisión** (auditoría CERRADA · **marco COMPLETO y DECIDIDO**, §10) ·
-> Última actualización: 2026-08-24 · Decisión asociada: `DECISIONES #127`.
+> Última actualización: 2026-08-24 · Decisiones asociadas: `DECISIONES #127` y **`#128`**.
+>
+> ✅ **TANDAS A y B EJECUTADAS** (§15, §16) y ✅ **los tres defectos de LECTURA, también** (§17.1 →
+> **§18**): el ancla de caja se ve siempre que haya habido un cobro —con su método y su fecha—, la
+> cantidad va con su sustantivo y la nota de la reserva dejó de llamar «señal» a lo que no lo es.
+> ▶ **Lo que queda es la TANDA C** (§14.4), que es pantalla y no toca dinero.
 >
 > ✅ **EL MARCO YA ESTÁ ENTERO** (§10, decidido el 2026-08-24), que es la condición que el owner puso
 > para tocar esto. **Empieza por §9 y §10**: la tercera auditoría encontró **cuatro defectos de
@@ -1143,7 +1148,8 @@ con fixtures irreales (§16.5).
 
 ### 17.1 Pero al mirarlo en pantalla salieron TRES defectos de lectura que sí son nuestros
 
-Independientes del dato roto, y **ninguno arreglado todavía**:
+Independientes del dato roto. ✅ **Los tres EJECUTADOS el 2026-08-24** (`DECISIONES #128`); lo que
+quedó hecho y lo que midió, en **§18**.
 
 | | Qué se ve | Por qué está mal |
 |---|---|---|
@@ -1151,5 +1157,131 @@ Independientes del dato roto, y **ninguno arreglado todavía**:
 | **L2** | `8×216,00 €` | Se lee como «8 unidades a 216 € cada una» = 1.728 €. Son **8 invitados y 216 € en total**. La línea de la reserva no distingue cantidad de importe |
 | **L3** | «Señal 114,00 €» | Ni es la señal (fueron 30,00 €) ni la palabra es correcta: es «lo pagado por web de esta reserva» (§4.4). **El rótulo sigue pendiente de decisión del owner** (§6.3), por eso no se tocó en la tanda B |
 
-▶ **Los tres son de PANTALLA, no de dinero**, y caben con la tanda C. `L1` es el que más valor tiene:
-convierte el desglose en algo que el cliente puede **verificar**, en vez de solo leer.
+▶ **Los tres son de PANTALLA, no de dinero.** `L1` es el que más valor tiene: convierte el desglose en
+algo que el cliente puede **verificar**, en vez de solo leer.
+
+---
+
+## 18. `L1`·`L2`·`L3` · EJECUTADOS — el desglose pasa de LEGIBLE a VERIFICABLE
+
+> [DECIDIDO 2026-08-24] · `DECISIONES #128`. Owner: «*nada de chapuzas … transparentes con el cliente
+> sobre su dinero y la gestión de la reserva, y que lo entienda de manera sencilla; la gestión de una
+> reserva es muy flexible y cada movimiento mueve ese desglose*».
+
+### 18.1 `L1` no era un fallo de diseño: eran DOS, y el segundo es el que importa
+
+1. **Al predicado le faltaba un término.** `OrderLedger::hasCash()` miraba devoluciones y no el cobro.
+2. **Y nadie llamaba al predicado.** Existía en el dominio y **ninguna superficie lo usaba**: el
+   cliente re-derivaba la condición en JavaScript y el panel en su blade. Es exactamente la forma de
+   divergencia que `OrderLedger` existe para cerrar, viva dentro de la clase que la cierra.
+
+**Medido sobre los 58 pedidos, antes:**
+
+    panel enseña el ancla de caja  : 28 de 38 pedidos SANOS
+    cliente enseña el eje de caja  :  9 de 38
+    DIVERGEN (panel sí, cliente no): 19   ← la mitad del corpus
+
+**Después:** la condición se publica (`ledger.cash.has_cash`) y las dos superficies preguntan al mismo
+sitio. **37 de 58 pedidos enseñan el eje de caja** —exactamente los 37 que han movido dinero— y el
+cambio de condición **no altera el panel en ninguno de los 58** (verificado antes de tocarlo).
+
+### 18.2 Hacer visible el ancla obligó a arreglar algo LATENTE: el método de cobro
+
+⚠️⚠️ `grossPaidOnline` suma **todos** los pagos cobrados sin mirar el `provider`, y eso es correcto —el
+eje de caja mide dinero movido, no medios—. Pero el rótulo decía «Cobrado por **web**», así que un
+pedido cobrado en **taquilla** (`ManualOrderFulfiller`: efectivo o datáfono) le habría dicho al cliente
+que pagó por internet un dinero que entregó en mano. **El panel ya distinguía el método** desde
+`P1/P10`; el cliente no. Con el ancla escondida la divergencia era inocua; **con el ancla visible pasa
+a ser una afirmación falsa en pantalla**, y en la superficie que este trabajo existe para hacer honesta.
+
+▶ Se publica **`charged_method` como ENUM y no como rótulo** (`web` | `desk` | `null`): el panel habla
+en tercera persona y el cliente en segunda (§10.4), así que la voz la pone cada superficie. Y el
+método manda en **los dos ejes**: rotula el canal del VALOR («Pagado por web» / «Pagado en recepción»)
+y el ancla de CAJA.
+▶ Y con él **`charged_at_label`**: «cobrado 30,00 €» no se busca en un extracto bancario; «30,00 € el
+24/08/2026» sí. **Sin fecha el ancla no es conciliable**, que era el objetivo entero.
+▶ Y el panel deja de derivarlo: tenía `provider === 'redsys'` como literal suelto. Ahora es
+`Payment::PROVIDER_REDSYS` y la regla vive en `Order::chargeMethod()`.
+
+### 18.3 Lo que se ve ahora — el MISMO pedido, medido por el camino real
+
+La composición REAL del cliente alimentada con la respuesta REAL del servidor para `R-L6UTIA`:
+
+    Cumpleaños Jump
+      Mar. 25 ago. · 11:00–13:00 · 8 invitados · 216,00 €        ← L2 (era «8×216,00 €»)
+      Pagado por web 114,00 € · 102,00 € en el parque            ← L3 (era «Señal 114,00 €»)
+
+    ── Qué vale este pedido ──
+      Pagado por web                          114,00 €
+      Pendiente de pagar en el parque         102,00 €
+        ↳ Cumpleaños Jump                      12,00 €
+        ↳ Resto de la señal de Cumpleaños Jump  90,00 €
+      Valor del pedido                        216,00 €
+
+    ── Tu dinero ──                                             ← L1: ANTES NO SE PINTABA
+      Cobrado por web · 24/08/2026             30,00 €
+      (Es el dinero que ya te hemos cobrado por este pedido.
+       Puedes cotejarlo con tu extracto bancario.)
+
+▶ **Y ahí está el valor de `L1` en una línea**: «Cobrado por web 30,00 €» queda justo debajo de
+«Pagado por web 114,00 €». El dato roto de §17 **ya no hace falta auditarlo**: se ve.
+
+### 18.4 Las guardas, y sus SIETE mutaciones
+
+Ninguna guarda de dinero entra sin mutación (§14.0·2). Las siete matan a la suya:
+
+| Mutación | Qué cae |
+|---|---|
+| `hasCash()` vuelve a la regla vieja | 2 de API + la paridad extremo a extremo |
+| `chargeMethod()` devuelve siempre `web` | el caso de taquilla (API y cliente) |
+| `chargedAtLabel()` devuelve `null` | el ancla de API + la paridad |
+| `displayQuantityLabel()` devuelve el número pelado | `L2` en API y en la paridad |
+| la nota vuelve a `deposit_card_note` | 4 casos de `L3` en el cliente |
+| el cliente re-deriva `has_cash` | el caso «no se re-deriva» |
+| el cliente nombra una clave pluralizada | `SidebarTextParityTest` |
+
+⚠️ **La red que más pesa es `SidebarAccountParityTest`**, porque no dobla nada: la entrada la produce
+el servidor y la composición la hace el módulo real en Node. Un campo mal entendido no puede salir
+verde en las dos mitades a la vez.
+
+### 18.5 Cuatro cosas que la ejecución enseñó
+
+⚠️⚠️ **El fixture de la paridad tenía la forma exacta de los 18 `DEMO-*` sucios**: pedido `paid` **sin
+ninguna fila `Payment`**, que el flujo real no puede producir y que `PAY-17` marca como imposible. Con
+esa forma el ancla vale 0 y el caso **no podía ejercitarla**. Es la **quinta** vez que este trabajo
+tropieza con lo mismo (§16.5, §9.4): un fixture irreal oculta defectos tan bien como los inventa.
+
+⚠️⚠️ **`SidebarTextParityTest` cazó un defecto real en la clave nueva** —`entries_count` se escribió
+con la sintaxis de RANGOS de Laravel (`{1}…|[2,*]…`), que el cajón **no resuelve** y habría pintado con
+las llaves dentro—. Y su segunda mitad (solo `cart_items` puede llevar barra) obligó a algo mejor que
+una excepción: **la exención se DEMUESTRA** comprobando sobre las fuentes del cliente que la clave no
+se nombra ahí. Una lista blanca que nadie verifica es una promesa, no una guarda.
+
+⚠️⚠️ **Y una que NO se ve en el código, solo al RENDERIZAR: el eje de caja heredaba el color de
+REEMBOLSO.** Las tres filas usan `.orders__refund-amount`, que pinta en ámbar. Mientras el bloque solo
+aparecía habiendo devoluciones eso era coherente; **en cuanto el ancla se enseña en todo pedido
+cobrado, un cargo corriente se lee en ámbar como si algo se hubiera devuelto** — el mismo error de
+fondo que la tanda B quitó del eje del valor, reaparecido por herencia de estilo. El ancla va marcada
+y se pinta neutra. ▶ **La lección**: hacer visible algo que estaba oculto **hereda decisiones tomadas
+para el caso oculto**, y ninguna de ellas está en el diff.
+
+⚠️ **El techo del bundle cedió: `214,5 → 215,5 KiB`** (medido `213,57 → 214,58`, **+1,01**). Su propio
+comentario dice que **no cede por «una pantalla más», cede por corrección medida**, y estos tres
+salieron de mirar un pedido real. Ni un importe ni una condición se calculan en el cliente:
+recomponerlos habría costado menos bytes y una divergencia.
+
+⚠️ **`L3` NO se resolvió cambiando el rótulo compartido, sino separando la clave.** En la CESTA los dos
+importes **sí** son la señal y su resto, así que «Señal» es correcto allí y `deposit_card_note` se
+queda como está. Cambiar la clave común habría arreglado una pantalla y roto otra — y el diff habría
+parecido más limpio.
+
+### 18.6 Lo que queda pendiente de decisión del owner
+
+Tres cadenas, **una palabra cada una y un solo sitio donde se cambian**. Se decidieron aquí porque el
+owner delegó explícitamente el rótulo que §6.3 llevaba parado desde `#127`:
+
+| Clave | Dice hoy |
+|---|---|
+| `tickets.reservation_paid_note` | «Pagado por web :paid · :rest en el parque» |
+| `tickets.reservation_paid_note_desk` | «Ya pagado :paid · :rest en el parque» |
+| `tickets.ledger.cash_caption` | «Es el dinero que ya te hemos cobrado por este pedido. Puedes cotejarlo con tu extracto bancario.» |

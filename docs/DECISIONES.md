@@ -6277,3 +6277,88 @@ pedidos medidos por HTTP real.
 ⚠️ **Una desviación consciente de la tabla de vocabulario de §10.4**: el ledger que ve el cliente es
 el del PEDIDO —se abre desde «Ver pedido»— así que su total se rotula «Valor del pedido» y no «Valor
 de tu reserva», que engañaría en un pedido con dos reservas.
+
+---
+
+## #128 · 2026-08-24 · [DECIDIDO] Los TRES defectos de lectura del desglose — y el ancla que lo hace VERIFICABLE, no solo legible
+
+**Contexto.** `#127` dejó el desglose cerrado en dos ejes y legible. El owner miró entonces un pedido
+REAL en pantalla —`R-L6UTIA`— y no lo entendió. **Tenía razón en no entenderlo**: decía «Pagado por
+web 114,00 €» sobre un cobro real de 30,00 €. El dato está roto en la BD (un guion de auditoría subió
+el precio 96,00 € y registró 12,00 € de `extra_due`; el flujo real no puede producirlo, y `PAY-17` ya
+lo marcaba). Pero mirarlo en pantalla destapó **tres defectos de LECTURA que sí eran nuestros**, y los
+tres estaban en la superficie del cliente. Detalle en `specs/desglose-dinero-cliente.md` §17 y §18.
+
+**`L1` — el ancla de caja no se enseñaba si no había devoluciones.** Es el grave. «Cobrado por web»
+es **lo único que el cliente puede cotejar con su extracto bancario**, y en un pedido normal no lo
+veía nunca: el desglose era legible pero **no verificable**. Y no era solo un fallo de diseño, eran
+dos cosas:
+
+1. **al predicado le faltaba un término**: `OrderLedger::hasCash()` miraba devoluciones y no el cobro;
+2. **nadie llamaba al predicado.** Existía en el dominio y cada superficie re-derivaba la condición
+   por su cuenta —el cliente en JavaScript, el panel en su blade—, que es la forma de divergencia que
+   `OrderLedger` existe para cerrar. **Medido sobre los 58 pedidos: el panel enseñaba el ancla en 28
+   de 38 pedidos sanos y el cliente en 9 → divergían en 19, la mitad del corpus.**
+
+▶ Ahora la condición se **publica** (`ledger.cash.has_cash`) y las dos superficies preguntan al mismo
+sitio. Medido después: **37 de 58 pedidos enseñan el eje de caja** —exactamente los 37 que han movido
+dinero— y el cambio de condición **no altera el panel en ninguno de los 58**.
+
+⚠️ **Y hacerlo visible obligó a arreglar algo que estaba latente: el MÉTODO.** El eje de caja suma
+**todos** los pagos cobrados sin mirar el `provider` —eso es correcto: mide dinero movido, no medios—,
+así que un pedido cobrado en **taquilla** (efectivo o datáfono, `ManualOrderFulfiller`) habría dicho
+«Cobrado por web» de un dinero entregado en mano. El panel ya distinguía el método desde `P1/P10`; el
+cliente no. Con el ancla escondida la divergencia era inocua; con el ancla visible pasaba a ser una
+**afirmación falsa en pantalla**. Se publica `charged_method` como **enum y no como rótulo**: el panel
+habla en tercera persona y el cliente en segunda (§10.4), así que la voz la pone cada superficie.
+▶ Y con él la **fecha** (`charged_at_label`): «cobrado 30,00 €» no se busca en un extracto bancario;
+«30,00 € el 24/08/2026» sí. Sin fecha el ancla no es conciliable, que era el objetivo entero.
+
+**`L2` — `8×216,00 €`.** La tarjeta pintaba el número de cantidad pegado al importe de la LÍNEA, y eso
+se lee como «8 unidades a 216 € cada una» = 1.728 € cuando son **8 invitados y 216 € en total**. Un
+número sin sustantivo no distingue cantidad de importe. Se publica `quantity_label` compuesta por el
+dominio (`OrderItem::displayQuantityLabel()`), por el mismo criterio que `date_label` y `time_window`:
+el sustantivo depende del tipo de producto y del idioma, y **era la quinta copia** de una regla que el
+panel ya rehacía en cuatro blades y un widget. El complemento tenía el mismo defecto una fila más
+abajo, y se arregla con él.
+
+**`L3` — «Señal 114,00 €» no es la señal.** El primer importe de la nota es **lo pagado por web de esa
+reserva**, que en un pack con complementos cobrados íntegros no coincide con la señal. Se resuelve con
+una **clave propia**: la de la CESTA (`deposit_card_note`) se queda diciendo «Señal» porque allí los
+dos números **sí** son la señal y su resto; la de una reserva ya comprada pasa a llamar al concepto
+como lo llama su línea del desglose (§10.4: un concepto, un nombre), y el método decide cuál.
+
+**Cómo se verificó.** Los tres arreglos van con guarda y **las siete mutaciones matan a su guarda**:
+revertir `hasCash()`, quemar el método, quitar la fecha, devolver el número pelado, volver al rótulo
+«Señal», re-derivar la condición en el cliente y hacer que el cliente nombre una clave pluralizada.
+La red más fuerte es `SidebarAccountParityTest`, que alimenta la composición REAL del cliente con la
+respuesta REAL del servidor.
+
+**Cuatro cosas que solo se supieron al hacerlo:**
+1. **Un fixture de la paridad tenía la forma exacta de los 18 `DEMO-*` sucios**: `paid` **sin ninguna
+   fila `Payment`**, que el flujo real no puede producir. Con esa forma el ancla vale 0 y el caso no
+   podía ejercitarla. Es la **quinta** vez que este trabajo tropieza con lo mismo.
+2. **`SidebarTextParityTest` cazó un defecto real de la clave nueva**: `entries_count` se escribió con
+   la sintaxis de RANGOS de Laravel (`{1}…|[2,*]…`), que el cajón **no resuelve** y habría pintado con
+   las llaves dentro. Y su segunda mitad —solo `cart_items` puede llevar barra— obligó a algo mejor
+   que una excepción: la exención **se demuestra** comprobando sobre las fuentes del cliente que la
+   clave no se nombra ahí. Una lista blanca que nadie verifica es una promesa.
+3. **El techo del bundle cedió, y es el caso para el que se escribió**: `214,5 → 215,5 KiB` (medido
+   `213,57 → 214,53`, **+0,96**). Su propio comentario dice que **no cede por «una pantalla más», cede
+   por corrección medida** — y estos tres salieron de mirar un pedido real. Ni un importe ni una
+   condición se calculan en el cliente: recomponerlos habría costado menos bytes y una divergencia.
+4. **El panel tenía el método escrito como literal suelto** (`provider === 'redsys'`) y el cliente no
+   lo tenía en absoluto: dos definiciones de la misma regla. Ahora la decide el dominio y las dos la
+   leen; el literal es una constante (`Payment::PROVIDER_REDSYS`).
+
+⚠️ **Pendiente de veto del owner (una palabra, un sitio cada una)**: `tickets.reservation_paid_note`
+(«Pagado por web … · … en el parque»), su variante de taquilla («Ya pagado …») y
+`tickets.ledger.cash_caption`. Se decidieron aquí porque el owner delegó explícitamente el rótulo de
+§6.3, que llevaba parado desde `#127`.
+
+▶ **Y una quinta cosa, que no está en ningún diff: el eje de caja heredaba el color de REEMBOLSO.**
+Sus tres filas usan `.orders__refund-amount`, en ámbar. Con el bloque apareciendo solo cuando había
+devoluciones eso era coherente; con el ancla visible en **todo** pedido cobrado, un cargo corriente se
+lee como «te devolvimos algo» — el mismo error de fondo que la tanda B quitó del eje del valor,
+reaparecido por herencia de estilo. **Hacer visible algo que estaba oculto hereda las decisiones que
+se tomaron para el caso oculto**, y ninguna de ellas aparece en el cambio.

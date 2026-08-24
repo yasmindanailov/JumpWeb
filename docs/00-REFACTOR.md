@@ -1846,8 +1846,12 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
 > `(b)`–`(f)`. **Va ANTES de Fase 5.**
 > ✅ **Tandas A y B EJECUTADAS el 2026-08-24**: el dominio dice la verdad y el desglose se entiende.
+> ✅ **Y los TRES defectos de LECTURA (`L1`·`L2`·`L3`) también** (`DECISIONES #128` · spec §18): el
+> desglose pasa de **legible** a **VERIFICABLE** — el cliente ya ve qué salió de su banco, cuándo y
+> por qué canal.
 > **Medido al cerrar**: la matriz de las 23 acciones del panel deja **0 columnas ilegibles** (eran
-> 18) y el eje del valor **cierra en 50 de 50** pedidos por HTTP real.
+> 18), el eje del valor **cierra en 50 de 50** pedidos por HTTP real y el eje de caja **se enseña en
+> 37 de 58** (el cliente solo lo veía en 9 de 38 sanos).
 > ▶ **Solo queda la tanda C**, que es la única de las tres que **no toca dinero**.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
@@ -1886,6 +1890,32 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
       pedidos medidos por HTTP real.
       ▶ `LedgerSingleSourceTest` prohíbe el MECANISMO —derivar un canal restando otros— aunque el
       resultado sea correcto hoy. **Verificado por mutación, 5/5.**
+- ✅ **`L1`·`L2`·`L3` · los TRES defectos de LECTURA — EJECUTADOS** (2026-08-24 · spec **§18** ·
+      `DECISIONES #128`). Salieron de que el owner mirara un pedido REAL en pantalla —`R-L6UTIA`,
+      §17—, y **el desglose pasa de LEGIBLE a VERIFICABLE**.
+      · **`L1` el ancla de caja se ve siempre que haya habido un cobro.** «Cobrado por web» es lo
+        ÚNICO que el cliente puede cotejar con su extracto, y en un pedido normal no lo veía nunca.
+        ⚠️ **No era un fallo, eran dos**: al predicado (`hasCash()`) le faltaba el término del cobro,
+        **y ninguna superficie lo llamaba** —el cliente re-derivaba la condición en JS y el panel en
+        su blade—. Ahora se publica (`ledger.cash.has_cash`) y las dos preguntan al mismo sitio.
+      · ⚠️ **Y hacerlo visible obligó a publicar el MÉTODO**: el eje de caja suma todos los pagos sin
+        mirar el `provider`, así que un pedido de **taquilla** habría dicho «Cobrado por web» de un
+        dinero entregado en mano. `charged_method` viaja como **enum y no como rótulo** (dos voces,
+        §10.4), y con él la **fecha**: sin ella el importe no se busca en un extracto.
+      · **`L2`** la cantidad va con su sustantivo («8 invitados · 216,00 €»), compuesta por el
+        dominio: `8×216,00 €` se lee como 1.728 €. El complemento tenía el mismo defecto.
+      · **`L3`** la nota de la reserva deja de decir «Señal» a lo que no lo es — con **clave propia**:
+        en la CESTA sí es la señal, y cambiar la clave común habría roto la otra pantalla.
+      ▶ **Medido**: el eje de caja pasa de verse en **9 de 38** pedidos sanos a **37 de 58**; la
+      divergencia panel↔cliente sobre ese número (**19 pedidos**) desaparece; el cambio de condición
+      **no altera el panel en ninguno de los 58**. **7 mutaciones, todas muerden.**
+      ▶ ⚠️ **Y una cosa que solo el RENDERIZADO enseñó**: el eje de caja heredaba el color de
+      REEMBOLSO, así que el ancla se habría pintado en ámbar **como si algo se hubiera devuelto**.
+      Hacer visible lo que estaba oculto hereda decisiones tomadas para el caso oculto, y ninguna
+      está en el diff.
+      ▶ **Coste**: el techo del bundle cede `214,5 → 215,5 KiB` (medido +1,01) — el caso exacto para
+      el que su comentario dice que debe ceder: **corrección medida, no «una pantalla más»**.
+      ⚠️ **Pendiente de veto del owner**: tres cadenas (§18.6), una palabra cada una.
 - [ ] **Tanda C · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
       cada reserva llevando a ella (decisiones del owner en la spec §5).
 - ✅ **El sandbox de Redsys, VERIFICADO en su integración** (2026-08-24, credenciales del owner:

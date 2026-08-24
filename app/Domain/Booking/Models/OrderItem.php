@@ -106,6 +106,34 @@ class OrderItem extends Model
     }
 
     /**
+     * La cantidad de esta línea **con su nombre**, en la voz del CLIENTE: «8 invitados» para un
+     * pack, «2 entradas» para entradas y complementos («1 unidad» / «3 unidades»).
+     *
+     * ⚠️⚠️ **Existe por el defecto `L2`** (`DECISIONES #128`,
+     * `specs/desglose-dinero-cliente.md` §17.1). La tarjeta del cliente pintaba el número pelado
+     * seguido del importe de la línea —`8×216,00 €`—, que se lee como «8 unidades a 216 € cada una»
+     * = 1.728 € **cuando son 8 invitados y 216 € en total**. Un número sin sustantivo no distingue
+     * cantidad de importe, y en dinero esa ambigüedad no es un detalle de estilo.
+     *
+     * ⚠️ Va en el DOMINIO y se publica compuesta, como `displayTimeWindow()`: el sustantivo depende
+     * del tipo de producto y del idioma, y era la quinta copia de la misma regla —el panel la
+     * rehacía en cuatro blades y el widget, cada uno con su matiz—. La voz es la del cliente
+     * (`tickets.*`): el panel conserva la suya, que es tercera persona (§10.4).
+     */
+    public function displayQuantityLabel(): string
+    {
+        $cantidad = (int) $this->quantity;
+
+        if ($this->parent_item_id !== null) {
+            return trans_choice('tickets.units_count', $cantidad, ['count' => $cantidad]);
+        }
+
+        return $this->ticketType?->isPack()
+            ? __('tickets.guests_count', ['count' => $cantidad])
+            : trans_choice('tickets.entries_count', $cantidad, ['count' => $cantidad]);
+    }
+
+    /**
      * Importe REAL cobrado por esta línea, en céntimos: `(quantity − free_quantity) × unit_price`.
      *
      * `free_quantity` son las unidades INCLUIDAS gratis (complementos incluidos en un pack: la

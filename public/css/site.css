@@ -1799,6 +1799,11 @@ body.no-scroll { overflow: hidden; }
 .orders__refund { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
 .orders__refund-label { color: var(--fg-mute); }
 .orders__refund-amount { color: var(--refund); font-weight: 700; }
+/* EL ANCLA DE CAJA (`DECISIONES #128`): lo REALMENTE cobrado, con su método y su fecha. Va NEUTRA
+   porque no es una devolución — el bloque entero heredaba el color de reembolso, y mientras solo se
+   pintaba habiendo devoluciones no se notaba; desde que el ancla se enseña en todo pedido cobrado,
+   un cargo corriente en ámbar se leería como «te devolvimos algo». */
+.orders__refund--anchor .orders__refund-amount { color: var(--fg); }
 .orders__net { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 /* Desglose detallado en Mis pedidos (#196): "A cobrar en el parque" (naranja,
    lo que el cliente pagará en recepción) + su caption, y "Total final" (lo que

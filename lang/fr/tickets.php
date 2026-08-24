@@ -33,6 +33,10 @@ return [
     'guests' => 'Invités',
     'guests_left' => ':count places restantes',
     'guests_count' => ':count invités',
+    // La quantité AVEC son substantif, qui est ce qui la distingue du montant (`DECISIONES #128`) :
+    // « 8×216,00 € » se lit comme 8 × 216 = 1 728 € ; « 8 invités · 216,00 € », non.
+    'entries_count' => ':count billet|:count billets',
+    'units_count' => ':count unité|:count unités',
     'per_child' => 'par enfant',
     'step_complements' => 'Compléments',
     'complements_intro' => 'Ajoute des extras à ta réservation (facultatif).',
@@ -133,6 +137,11 @@ return [
     'total_pay_now' => 'Total à régler maintenant',
     'deposit_catalog' => 'Acompte :amount pour réserver',
     'deposit_card_note' => 'Acompte :deposit · :rest au parc',
+    // ⚠️ Clé propre à dessein : dans le PANIER les deux montants sont bien l'acompte et son reste,
+    // donc « Acompte » y est juste. Sur une réservation DÉJÀ ACHETÉE, le premier montant est ce qui
+    // a été payé en ligne pour cette réservation — pas forcément l'acompte — et le mot mentait.
+    'reservation_paid_note' => 'Payé en ligne :paid · :rest au parc',
+    'reservation_paid_note_desk' => 'Déjà payé :paid · :rest au parc',
     'pay_at_park' => 'Au parc',
     'paid_online_confirmed' => 'Payé en ligne',
     'pending_at_park' => 'En attente au parc',
@@ -165,8 +174,11 @@ return [
         'paid_at_gate' => 'Payé au parc',
         'pending_at_gate' => 'Reste à payer au parc',
         'compensated' => 'Remboursé en geste commercial',
+        'paid_desk' => "Payé à l'accueil",
         'cash_title' => 'Votre argent',
+        'cash_caption' => "C'est l'argent que nous vous avons déjà encaissé pour cette commande. Vous pouvez le comparer avec votre relevé bancaire.",
         'charged_online' => 'Encaissé en ligne',
+        'charged_desk' => "Encaissé à l'accueil",
         'refunded' => 'Déjà remboursé',
         'pending_refund' => 'Reste à vous rembourser',
         'invoiced' => 'Montant à la réservation',

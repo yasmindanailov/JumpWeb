@@ -33,6 +33,10 @@ return [
     'guests' => 'Guests',
     'guests_left' => ':count spots left',
     'guests_count' => ':count guests',
+    // Quantity WITH its noun — that is what tells it apart from the amount (`DECISIONES #128`):
+    // "8×216,00 €" reads as 8 × 216 = 1,728 €; "8 guests · 216,00 €" does not.
+    'entries_count' => ':count ticket|:count tickets',
+    'units_count' => ':count unit|:count units',
     'per_child' => 'per child',
     'step_complements' => 'Add-ons',
     'complements_intro' => 'Add extras to your booking (optional).',
@@ -133,6 +137,11 @@ return [
     'total_pay_now' => 'Total to pay now',
     'deposit_catalog' => 'Deposit :amount to book',
     'deposit_card_note' => 'Deposit :deposit · :rest at the park',
+    // ⚠️ Own key on purpose: in the CART both numbers really are the deposit and its remainder, so
+    // "Deposit" is right there. On a BOOKED reservation the first number is what was paid online for
+    // that reservation — not necessarily the deposit — and calling it "Deposit" lied.
+    'reservation_paid_note' => 'Paid online :paid · :rest at the park',
+    'reservation_paid_note_desk' => 'Already paid :paid · :rest at the park',
     'pay_at_park' => 'At the park',
     'paid_online_confirmed' => 'Paid online',
     'pending_at_park' => 'Pending at the park',
@@ -165,8 +174,11 @@ return [
         'paid_at_gate' => 'Paid at the park',
         'pending_at_gate' => 'Left to pay at the park',
         'compensated' => 'Refunded as compensation',
+        'paid_desk' => 'Paid at the desk',
         'cash_title' => 'Your money',
+        'cash_caption' => 'This is the money we have already charged you for this order. You can check it against your bank statement.',
         'charged_online' => 'Charged online',
+        'charged_desk' => 'Charged at the desk',
         'refunded' => 'Already refunded',
         'pending_refund' => 'Still to be refunded to you',
         'invoiced' => 'Amount when booked',

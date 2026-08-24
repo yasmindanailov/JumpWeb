@@ -34,6 +34,14 @@ return [
     'guests' => 'Invitados',
     'guests_left' => 'quedan :count plazas',
     'guests_count' => ':count invitados',
+    // La cantidad CON su sustantivo, que es lo que la desambigua del importe (`DECISIONES #128`):
+    // «8×216,00 €» se lee como 8 × 216 = 1.728 €, y «8 invitados · 216,00 €» no. Las compone
+    // `OrderItem::displayQuantityLabel()`, en la voz del cliente — el panel tiene la suya.
+    // ⚠️ Forma `singular|plural` y NO la de rangos (`{1}…|[2,*]…`): el grupo `tickets` viaja entero
+    // al cajón y su `i18n.js` solo resuelve la primera — pintaría las llaves. Lo dijo
+    // `SidebarTextParityTest` en cuanto se intentó, que es exactamente para lo que existe.
+    'entries_count' => ':count entrada|:count entradas',
+    'units_count' => ':count unidad|:count unidades',
     'per_child' => 'por niño',
     'step_complements' => 'Complementos',
     'complements_intro' => 'Añade extras a tu reserva (opcional).',
@@ -146,6 +154,15 @@ return [
     'total_pay_now' => 'Total a pagar ahora',
     'deposit_catalog' => 'Señal :amount',
     'deposit_card_note' => 'Señal :deposit · :rest en el parque',
+    // ⚠️⚠️ La MISMA frase en «Mis pedidos» decía una MENTIRA, y por eso tiene clave propia
+    // (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1 · `L3`). En la CESTA los dos
+    // números son la señal y su resto, así que «Señal» es correcto y `deposit_card_note` se queda
+    // como está. En la tarjeta de una reserva YA COMPRADA el primer número es **lo pagado por web de
+    // esa reserva** —que en un pack con complementos cobrados íntegros NO es la señal— y llamarlo
+    // «Señal» engañaba: en `R-L6UTIA` rotulaba «Señal 114,00 €» sobre una señal de 30,00 €.
+    // El rótulo es ahora el MISMO que el de la línea del desglose (§10.4: un concepto, un nombre).
+    'reservation_paid_note' => 'Pagado por web :paid · :rest en el parque',
+    'reservation_paid_note_desk' => 'Ya pagado :paid · :rest en el parque',
     'pay_at_park' => 'En el parque',
     'paid_online_confirmed' => 'Pagado online',
     'pending_at_park' => 'Pendiente en el parque',
@@ -183,8 +200,13 @@ return [
         'paid_at_gate' => 'Pagado en el parque',
         'pending_at_gate' => 'Pendiente de pagar en el parque',
         'compensated' => 'Compensación devuelta',
+        // ⚠️ El MÉTODO manda en el rótulo (`DECISIONES #128`): el eje de caja suma todos los pagos
+        // cobrados, y en un pedido de taquilla «por web» sería falso. El panel ya lo distinguía.
+        'paid_desk' => 'Pagado en recepción',
         'cash_title' => 'Tu dinero',
+        'cash_caption' => 'Es el dinero que ya te hemos cobrado por este pedido. Puedes cotejarlo con tu extracto bancario.',
         'charged_online' => 'Cobrado por web',
+        'charged_desk' => 'Cobrado en recepción',
         'refunded' => 'Ya devuelto',
         'pending_refund' => 'Pendiente de devolverte',
         'invoiced' => 'Importe al reservar',

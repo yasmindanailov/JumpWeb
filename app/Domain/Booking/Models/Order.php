@@ -13,6 +13,7 @@ use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -1167,6 +1168,69 @@ class Order extends Model
         }
 
         return $ultima?->intent;
+    }
+
+    /**
+     * El PAGO cobrado de este pedido, resuelto sobre la colección ya cargada.
+     *
+     * ⚠️ No es {@see paidPayment()}: aquél consulta la BD y el desglose se compone **por pedido en
+     * una lista**, donde una query por fila es un N+1 garantizado. Mismo criterio y misma forma que
+     * {@see lastRefundIntent()}, que ya itera `$this->payments`.
+     */
+    private function collectedPayment(): ?Payment
+    {
+        $ultimo = null;
+        foreach ($this->payments as $payment) {
+            if ($payment->status !== Payment::STATUS_PAID) {
+                continue;
+            }
+            if ($ultimo === null || $payment->id > $ultimo->id) {
+                $ultimo = $payment;
+            }
+        }
+
+        return $ultimo;
+    }
+
+    /**
+     * **CÓMO se cobró** el dinero de este pedido: `web` (la pasarela) o `desk` (la taquilla:
+     * efectivo o datáfono). `null` mientras no se haya cobrado nada.
+     *
+     * ⚠️⚠️ **Es regla, no presentación, y por eso vive en el dominio** (`DECISIONES #128`). El eje
+     * de caja suma TODOS los pagos cobrados, sean del canal que sean —`grossPaidOnline` no mira el
+     * `provider`—, así que el importe es correcto y **el rótulo no puede quemarse**: un pedido de
+     * taquilla que dijera «Cobrado por web» mentiría sobre dinero que nunca pasó por la web. El
+     * panel ya distinguía el método (`P1/P10`) y el cliente no: ésa era la divergencia.
+     *
+     * ⚠️ Vive aquí y no en `OrderLedger` por la frontera de módulos, exactamente como
+     * {@see lastRefundIntent()}: `Booking\Services` no puede nombrar `Payments\Models\Payment`; el
+     * ledger recibe una cadena.
+     */
+    public function chargeMethod(): ?string
+    {
+        $pago = $this->collectedPayment();
+        if ($pago === null) {
+            return null;
+        }
+
+        return $pago->provider === Payment::PROVIDER_REDSYS ? 'web' : 'desk';
+    }
+
+    /**
+     * **CUÁNDO se cobró**, ya formateado (`d/m/Y`), o `null` si no se ha cobrado.
+     *
+     * ⚠️ Sin fecha el ancla de caja **no es conciliable**: «cobrado 30,00 €» no se busca en un
+     * extracto bancario; «30,00 € el 24/08/2026» sí. Se prefiere el `paid_at` del pago —el sello del
+     * cobro— y se cae a su `created_at` en el pago de taquilla histórico que no lo trajera.
+     */
+    public function chargedAtLabel(): ?string
+    {
+        $pago = $this->collectedPayment();
+        if ($pago === null) {
+            return null;
+        }
+
+        return DisplayTime::format($pago->paid_at ?? $pago->created_at, 'd/m/Y');
     }
 
     /** Σ de lo devuelto sobre una RESERVA entera (principal + sus complementos). */

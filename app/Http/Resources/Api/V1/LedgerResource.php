@@ -36,11 +36,18 @@ class LedgerResource extends JsonResource
                 'compensated_cents' => $l->compensado,
             ],
             // EJE CAJA — `held = paid_online + pending_refund` (`PAY-17`). NO resta del valor.
+            //
+            // ⚠️ `has_cash` viaja publicado y no derivado (`DECISIONES #128`): la condición de
+            // enseñar el ancla la decide el dominio. Derivarla en la interfaz es lo que dejó al
+            // cliente sin ver, en un pedido normal, cuánto había salido de su banco.
             'cash' => [
                 'charged_online_cents' => $l->cobradoOnline,
                 'refunded_cents' => $l->devuelto,
                 'held_cents' => $l->retenido,
                 'pending_refund_cents' => $l->pendienteDevolucion,
+                'has_cash' => $l->hasCash(),
+                'charged_method' => $l->cobroMetodo,
+                'charged_at_label' => $l->cobroFecha,
             ],
             // Trazabilidad: lo facturado al reservar. FUERA de la suma, a propósito.
             'invoiced_cents' => $l->facturado,

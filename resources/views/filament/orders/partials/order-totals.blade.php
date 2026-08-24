@@ -115,7 +115,10 @@
     // Online → fecha del cobro (`paid_at`); manual → fecha de creación del pedido (no hay timestamp
     // fiable del cobro presencial). Si no hay pago confirmado → pendiente.
     $paidPayment = $record->payments->firstWhere('status', \App\Domain\Payments\Models\Payment::STATUS_PAID);
-    $isPaidOnline = $paidPayment && $paidPayment->provider === 'redsys';
+    // ⚠️ El MÉTODO lo decide el DOMINIO (`DECISIONES #128`). Estaba escrito aquí como literal
+    // —`provider === 'redsys'`— y el cliente no lo distinguía en absoluto: dos definiciones de la
+    // misma regla, que es como empiezan las divergencias que `OrderLedger` existe para cerrar.
+    $isPaidOnline = $l->cobroMetodo === 'web';
     $paymentDate = $paidPayment
         ? ($isPaidOnline ? ($paidPayment->paid_at ?? $paidPayment->created_at) : $record->created_at)
         : null;
@@ -287,8 +290,11 @@
 
             {{-- ⚠️ EL ANCLA DE CAJA: lo realmente cobrado por web. Es lo único que el operador puede
                  cotejar con el extracto del banco, y hasta la tanda B solo existía dentro de un
-                 caption (`DECISIONES #127`). --}}
-            @if ($brutoOnline > 0)
+                 caption (`DECISIONES #127`).
+                 ⚠️ La condición la decide el DOMINIO (`hasCash()`), no este blade: el cliente
+                 derivaba la suya y le faltaba justo este término (`DECISIONES #128` · `L1`).
+                 Medido sobre los 58 pedidos: el cambio de condición no altera el panel en ninguno. --}}
+            @if ($l->hasCash())
                 <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1.5 text-xs text-gray-500 dark:border-white/10 dark:text-gray-400">
                     <span>{{ __('admin.orders.order_financial.cobrado_web') }}</span>
                     <span>{{ $fmt($brutoOnline) }}</span>

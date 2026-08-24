@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ManualOrderFulfiller;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\Money;
@@ -115,6 +116,8 @@ class MeOrdersFinancialsTest extends TestCase
         $this->assertSame($summary->effectiveRefunded(), $c['refunded_cents'], 'lo ya devuelto');
         $this->assertSame($summary->retenidoOnline(), $c['held_cents'], 'lo que el parque retiene');
         $this->assertSame($summary->pendienteDevolucion(), $c['pending_refund_cents'], 'lo que aún se debe devolver');
+        $this->assertSame($order->chargeMethod(), $c['charged_method'], 'cómo se cobró');
+        $this->assertSame($order->chargedAtLabel(), $c['charged_at_label'], 'cuándo se cobró');
 
         $this->assertSame((int) $order->total, $json['ledger']['invoiced_cents'], 'lo facturado al reservar');
         $this->assertSame($order->onlineDueCents(), $json['online_amount_cents'], 'lo que se cobraría al pagar ahora');
@@ -259,6 +262,101 @@ class MeOrdersFinancialsTest extends TestCase
         $this->assertTrue($json['ledger']['has_deposit'], 'un pedido con señal ya saldada ha dejado de declararse con señal');
         $this->assertSame(0, $json['ledger']['value']['pending_at_gate_cents']);
         $this->assertSame([], $json['ledger']['gate_lines'], 'sin nada pendiente, el desglose va vacío');
+    }
+
+    /**
+     * ⚠️⚠️ **`L1` — EL ANCLA DE CAJA SE PUBLICA COMO VISIBLE AUNQUE NO HAYA DEVOLUCIONES**
+     * (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1).
+     *
+     * `hasCash()` omitía el primer término, así que en un pedido normal el bloque no se pintaba y
+     * **el cliente nunca veía cuánto había salido de su banco**. Es lo único que puede cotejar con su
+     * extracto: sin ello el desglose es legible pero **no verificable**, que es justo lo que hizo
+     * indescifrable el caso `R-L6UTIA` —«pagado por web 114,00 €» con un cobro real de 30,00 €—.
+     *
+     * ⚠️ El caso usa el pedido **con la señal ya saldada**: no tiene reembolsos ni nada pendiente de
+     * devolver, así que con la condición vieja el ancla sería invisible. Es el pedido corriente.
+     */
+    public function test_the_cash_anchor_is_published_even_without_any_refund(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+        $summary = $order->financialSummary();
+
+        $this->assertSame(0, $summary->effectiveRefunded(), 'el fixture tiene devoluciones: no mide lo que dice medir');
+        $this->assertSame(0, $summary->pendienteDevolucion(), 'el fixture debe dinero: no mide lo que dice medir');
+        $this->assertGreaterThan(0, $summary->grossPaidOnline, 'sin cobro real no hay ancla que enseñar');
+
+        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+
+        $this->assertTrue($c['has_cash'], 'el cliente vuelve a quedarse sin el único número que puede cotejar con su banco');
+        $this->assertSame($summary->grossPaidOnline, $c['charged_online_cents']);
+        $this->assertSame('web', $c['charged_method']);
+        $this->assertNotNull($c['charged_at_label'], 'un importe sin fecha no se busca en un extracto bancario');
+    }
+
+    /** Sin ningún cobro no hay ancla: el eje de caja no tiene nada que contar. */
+    public function test_an_order_never_charged_publishes_no_cash_axis(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+        $order->payments()->delete();
+        $order->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
+
+        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+
+        $this->assertFalse($c['has_cash']);
+        $this->assertNull($c['charged_method'], 'sin cobro no hay método que rotular');
+        $this->assertNull($c['charged_at_label']);
+    }
+
+    /**
+     * ⚠️⚠️ **El MÉTODO no se puede quemar en la interfaz.** El eje de caja suma TODOS los pagos
+     * cobrados sin mirar el `provider` —eso es correcto: mide dinero movido, no medios—, así que un
+     * pedido cobrado en TAQUILLA (efectivo o datáfono) publica el mismo importe. Si el rótulo
+     * asumiera «web», ese pedido le diría al cliente que pagó por internet un dinero que entregó en
+     * mano. El panel ya distinguía el método desde `P1/P10`; el cliente no, y con el ancla siempre
+     * visible esa divergencia pasaba a ser una afirmación falsa en pantalla.
+     */
+    public function test_an_order_charged_at_the_desk_does_not_claim_it_was_charged_online(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+        $order->payments()->update(['provider' => ManualOrderFulfiller::METHOD_DATAFONO]);
+
+        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+
+        $this->assertSame('desk', $c['charged_method']);
+        $this->assertTrue($c['has_cash'], 'el dinero se cobró igual: lo que cambia es cómo se llama');
+        $this->assertSame($order->financialSummary()->grossPaidOnline, $c['charged_online_cents']);
+    }
+
+    /**
+     * ⚠️⚠️ **`L2` — la cantidad viaja con su SUSTANTIVO, compuesta por el servidor.**
+     *
+     * El cliente pintaba `quantity` pegado al importe de la línea —`8×216,00 €`—, que se lee como
+     * «8 unidades a 216 € cada una» = 1.728 € cuando son 8 invitados y 216 € en total. El sustantivo
+     * depende del TIPO de producto y del idioma, así que componerlo en la interfaz sería la quinta
+     * copia de una regla que el dominio ya tiene.
+     */
+    public function test_the_quantity_travels_with_its_noun(): void
+    {
+        [$user, $order] = $this->orderWithEverything();
+
+        $line = $order->items->firstWhere('parent_item_id', null);
+        $line->forceFill(['quantity' => 8])->save();
+
+        $items = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.items');
+
+        $pack = collect($items)->firstWhere('is_pack', true);
+        $entrada = collect($items)->firstWhere('is_pack', false);
+
+        $this->assertSame(__('tickets.guests_count', ['count' => 8]), $pack['quantity_label']);
+        $this->assertSame(trans_choice('tickets.entries_count', 1, ['count' => 1]), $entrada['quantity_label']);
+
+        // ⚠️ Y el sustantivo cambia con el NÚMERO: «1 entrada» y «2 entradas». Una clave sin plural
+        // escribiría «1 entradas», que es la clase de descuido que resta credibilidad a una cuenta.
+        $this->assertNotSame(
+            trans_choice('tickets.entries_count', 1, ['count' => 1]),
+            trans_choice('tickets.entries_count', 2, ['count' => 2]),
+            'la clave no distingue singular de plural'
+        );
     }
 
     /**

@@ -126,15 +126,75 @@ class SidebarTextParityTest extends TestCase
                     'O se reescribe la clave, o el módulo tiene que aprender los rangos.'
                 );
 
-                if (str_contains($text, '|')) {
-                    $this->assertSame(
-                        'cart_items', $key,
-                        "La clave `tickets.{$key}` ({$locale}) tiene DOS formas y el cajón SPA solo llama a ".
-                        '`tc()` para `cart_items`. Quien la pinte con `t()` verá la barra vertical en pantalla.'
-                    );
+                if (! str_contains($text, '|')) {
+                    continue;
                 }
+
+                if (in_array($key, self::PLURALISED_BY_CLIENT, true)) {
+                    continue;
+                }
+
+                // ⚠️⚠️ **La excepción no se concede: se DEMUESTRA** (`DECISIONES #128`). Una clave
+                // con dos formas que el cajón no resuelva con `tc()` enseñaría la barra vertical en
+                // pantalla. Que la componga el servidor no basta como promesa —lo sería solo hasta
+                // que alguien la pinte—, así que se comprueba sobre las FUENTES del cliente: si la
+                // clave aparece ahí, la exención se cae y este test lo dice.
+                $this->assertContains(
+                    $key, self::PLURALISED_BY_SERVER,
+                    "La clave `tickets.{$key}` ({$locale}) tiene DOS formas y el cajón SPA solo llama a ".
+                    '`tc()` para las de `PLURALISED_BY_CLIENT`. Quien la pinte con `t()` verá la barra '.
+                    'vertical en pantalla: o se resuelve con `tc()`, o la compone el servidor.'
+                );
+
+                $this->assertNotContains(
+                    $key, $this->keysReferencedByTheClient(),
+                    "La clave `tickets.{$key}` está declarada como compuesta por el SERVIDOR pero el ".
+                    'cliente la nombra: o la resuelve con `tc()` y entra en `PLURALISED_BY_CLIENT`, o '.
+                    'deja de nombrarla. Con `t()` pintaría «1 entrada|2 entradas».'
+                );
             }
         }
+    }
+
+    /**
+     * Las claves de `tickets` **con dos formas** que el cajón resuelve él mismo, con `tc()`.
+     *
+     * @var list<string>
+     */
+    private const PLURALISED_BY_CLIENT = ['cart_items'];
+
+    /**
+     * Las que tienen dos formas pero **las resuelve el SERVIDOR** y viajan ya compuestas: la cantidad
+     * con su sustantivo de cada línea de pedido (`OrderItem::displayQuantityLabel()`, `DECISIONES
+     * #128` · `L2`). Viven en `tickets` porque son la VOZ DEL CLIENTE —el panel tiene la suya— y el
+     * grupo viaja entero al montaje, así que su forma se vigila igual.
+     *
+     * @var list<string>
+     */
+    private const PLURALISED_BY_SERVER = ['entries_count', 'units_count'];
+
+    /**
+     * Toda cadena entrecomillada que las fuentes del cajón nombran, para poder demostrar que una
+     * clave exenta NO se pinta en el cliente.
+     *
+     * @return list<string>
+     */
+    private function keysReferencedByTheClient(): array
+    {
+        $nombradas = [];
+        $raiz = base_path('resources/js');
+
+        /** @var \SplFileInfo $fichero */
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($raiz)) as $fichero) {
+            if (! $fichero->isFile() || ! in_array($fichero->getExtension(), ['js', 'vue'], true)) {
+                continue;
+            }
+
+            preg_match_all('/[\'"`]([A-Za-z0-9_.]+)[\'"`]/', (string) file_get_contents($fichero->getPathname()), $m);
+            $nombradas = array_merge($nombradas, $m[1]);
+        }
+
+        return array_values(array_unique($nombradas));
     }
 
     /**

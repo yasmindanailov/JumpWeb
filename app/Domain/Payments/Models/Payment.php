@@ -13,6 +13,16 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Payment extends Model
 {
+    /**
+     * La pasarela. Es el ÚNICO proveedor que significa «cobrado por web»: los demás valores de
+     * `provider` los escribe la taquilla (`ManualOrderFulfiller::METHODS`, efectivo/datáfono).
+     *
+     * ⚠️ Existe como constante desde `DECISIONES #128` porque la distinción **web vs. taquilla**
+     * decide un RÓTULO de dinero en dos superficies (el panel y el cliente), y estaba escrita como
+     * literal suelto en una de ellas. Un literal repetido es media divergencia.
+     */
+    public const PROVIDER_REDSYS = 'redsys';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_AUTHORIZED = 'authorized';

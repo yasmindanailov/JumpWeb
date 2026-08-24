@@ -106,6 +106,12 @@ class OrderItemResource extends JsonResource
             // compuestas en el dominio (`ReservationFinancials::showsDepositNote`): publicar solo
             // los números obligaría al cliente a recomponerlas, y es como divergen.
             'shows_deposit_note' => $financials->showsDepositNote($order, $item),
+            // ⚠️ **La cantidad, ya compuesta con su sustantivo** («8 invitados», «2 entradas»), por el
+            // mismo criterio que `date_label` y `time_window`. Sin ella el cliente pintaba `quantity`
+            // pegado al importe de la línea —`8×216,00 €`— y eso se lee como 8 × 216 = 1.728 €
+            // (`specs/desglose-dinero-cliente.md` §17.1 · `L2`). Va a la COLA: `ApiContractTest`
+            // compara `required` con las propiedades EN ORDEN.
+            'quantity_label' => $item->displayQuantityLabel(),
             // ⚠️ **La URL del post-form la compone el SERVIDOR**, y `null` cuando esta reserva no lo
             // admite —`acceptsGuestForm()` exige pedido PAGADO y producto con invitados—. Componerla
             // en el cliente significaría quemar el enrutador de Laravel en JavaScript.

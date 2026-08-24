@@ -30,6 +30,10 @@ class OrderItemAddonResource extends JsonResource
             // «2 incluidas + 1 extra» se pinta igual que una de «3 de pago», y el importe cobrado
             // no basta para distinguirlas cuando el extra vale 0.
             'free_quantity' => (int) $this->resource->free_quantity,
+            // La cantidad con su sustantivo («2 unidades»), por lo mismo que en la línea principal:
+            // el complemento sufría el MISMO defecto `L2` —`· 2×` pegado al importe— y arreglar solo
+            // el principal habría dejado la ambigüedad viva una fila más abajo.
+            'quantity_label' => $this->resource->displayQuantityLabel(),
         ];
     }
 }

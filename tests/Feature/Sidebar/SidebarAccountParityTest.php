@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,6 +87,12 @@ class SidebarAccountParityTest extends TestCase
         $this->assertSame(Money::format(9000), $pack['priceLabel']);
         $this->assertNull($pack['badge'], 'una reserva futura y viva no lleva distintivo');
 
+        // ⚠️⚠️ **`L2`**: la cantidad se pinta CON su sustantivo, y la compone el servidor. El número
+        // pelado seguido del importe —`1×90,00 €`— no distingue cantidad de importe: con 8 invitados
+        // se lee 8 × 216 € = 1.728 € cuando son 216 € en total
+        // (`specs/desglose-dinero-cliente.md` §17.1).
+        $this->assertSame(__('tickets.guests_count', ['count' => 1]), $pack['quantityLabel']);
+
         // El aviso de señal, con sus DOS importes: lo decide el servidor y aquí solo se comprueba
         // que los números que se pintan son los que él publica.
         //
@@ -94,9 +101,17 @@ class SidebarAccountParityTest extends TestCase
         // confirmó contra la respuesta real—. La señal del pack son 6.000 y los calcetines 800; en el
         // aviso van juntos porque el cliente pagó los dos por adelantado. Recomponer el número aquí
         // habría dado 6.000 y nadie lo habría notado.
+        //
+        // ⚠️⚠️ **Y el rótulo ya NO dice «Señal», que era `L3`**: 6.800 no es la señal (6.000), es lo
+        // pagado por web de esta reserva. La clave de la CESTA (`deposit_card_note`) sigue diciendo
+        // «Señal» porque allí sí lo es; ésta es otra.
         $this->assertSame(
-            __('tickets.deposit_card_note', ['deposit' => Money::format(6800), 'rest' => Money::format(3000)]),
+            __('tickets.reservation_paid_note', ['paid' => Money::format(6800), 'rest' => Money::format(3000)]),
             $pack['depositNote']
+        );
+        $this->assertStringNotContainsStringIgnoringCase(
+            'señal', (string) $pack['depositNote'],
+            'el rótulo vuelve a llamar «señal» a un importe que no lo es'
         );
 
         // El post-form pendiente, con la URL que compone el servidor (nunca el cliente).
@@ -130,6 +145,22 @@ class SidebarAccountParityTest extends TestCase
         $this->assertSame(Money::format((int) $order->total), $ledger['totalLabel']);
         $this->assertNull($ledger['refund'], 'sin reembolso no hay bloque de reembolso');
         $this->assertSame(__('tickets.statuses.paid'), $ledger['statusLabel']);
+
+        // ⚠️⚠️ **`L1` — EL ANCLA DE CAJA, en un pedido SIN NINGUNA DEVOLUCIÓN.** Se pintaba solo si
+        // había devoluciones, así que en el caso normal —éste— el cliente **nunca veía cuánto había
+        // salido de su banco**: lo único que puede cotejar con su extracto, y lo que convierte el
+        // desglose en verificable en vez de solo legible (`specs/desglose-dinero-cliente.md` §17.1).
+        // Medido el 2026-08-24: el panel lo enseñaba en 28 de 38 pedidos sanos y el cliente en 9.
+        $caja = $ledger['financials']['cash'];
+
+        $this->assertNotNull($caja, 'sin el ancla el cliente no puede cotejar NADA con su banco');
+        $this->assertSame(
+            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $caja['rows'][0]['label'],
+            'el ancla necesita su MÉTODO y su FECHA: un importe suelto no se busca en un extracto'
+        );
+        $this->assertSame(Money::format(6800), $caja['rows'][0]['amountLabel']);
+        $this->assertSame(__('tickets.ledger.cash_caption'), $caja['caption']);
     }
 
     /**
@@ -316,6 +347,18 @@ class SidebarAccountParityTest extends TestCase
             'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
             'quantity' => 1, 'unit_price' => 9000, 'seats' => 1,
             'cancelled_at' => Carbon::now(),
+        ]);
+
+        // ⚠️⚠️ **El COBRO REAL, que este fixture no tenía** (`DECISIONES #128`). Sin fila `Payment`
+        // el pedido tiene la forma exacta de los 18 `DEMO-*` sucios —`paid` sin que nadie haya
+        // pagado—, que el flujo real **no puede producir** y que `PAY-17` marca como imposible. Con
+        // esa forma el ancla de caja vale 0 y este caso no podía ejercitarla: un fixture irreal
+        // oculta defectos tan bien como los inventa (`specs/desglose-dinero-cliente.md` §16.5).
+        // 6.800 = la señal del pack (6.000) + los calcetines (800), que es lo que se cobra online.
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'provider' => Payment::PROVIDER_REDSYS, 'amount' => 6800, 'currency' => 'EUR',
+            'status' => Payment::STATUS_PAID, 'paid_at' => Carbon::now(),
         ]);
 
         return [$user, $order->fresh()];
