@@ -6583,3 +6583,37 @@ cliente ignore `is_consistent`.
 
 ⚠️ **Y la deuda que esto NO paga**: el aviso dice que algo está mal, no QUÉ. Un pedido roto sigue
 necesitando que alguien lo mire. Lo que cambia es que ahora **hay alguien a quien avisar**.
+
+---
+
+## #133 · 2026-08-24 · [DECIDIDO, owner] De las tres cosas que la auditoría dejó planteadas, solo entra UNA — y una NO era un defecto
+
+**Contexto.** §22.2 dejó tres asuntos de legibilidad planteados tras la auditoría de las 25 acciones,
+con el encargo explícito del owner de **no añadir más complicación**. Recomendación pedida y dada; la
+decisión, tomada.
+
+**⚠️ `L5` NO ERA UN DEFECTO, y el que leyó mal fue el agente.** «Resto de la señal de Cumpleaños Jump
+94,00 €» parecía esconder los 4,00 € de unos calcetines dentro de la línea del pack. Medido sobre el
+pedido real (`R-FTC08J`): la línea agrega el principal (90,00) **y sus complementos** (4,00), y
+«Cumpleaños Jump» ahí **no es el producto de 120,00 €: es la RESERVA**, que es exactamente como el
+cliente la ve listada arriba («Cumpleaños Jump · Mar. 25 ago. · 8 invitados»). La etiqueta ya es
+correcta. Separarla habría añadido una línea de 4,00 € a una pantalla de dinero.
+▶ **Se queda como está.** Y queda escrito para que nadie vuelva a «arreglarlo».
+
+**`L4` se APARCA.** «Compensación devuelta» como única línea del valor sigue leyéndose como un canal
+de pago, y la propuesta era cambiar un rótulo («Ya no tienes que pagarlo»). El owner decide **dejarlo
+como está por ahora**: la frase de estado ya dice lo que el cliente necesita («Te devolvimos X y
+conservas tu reserva: no tienes que pagar nada más»).
+
+**✅ `L6` ENTRA, y es lo único que entra.** La línea «Importe al reservar» dice *que* el pedido cambió
+pero no **en qué dirección ni cuánto**, y es justo lo que el cliente quiere saber al ver 180,00 €
+donde espera 120,00 €. La frase pasa a componerla el DOMINIO con dirección e importe:
+
+    «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
+
+▶ **Ni una línea nueva, ni un bloque nuevo, ni un concepto nuevo**: la misma línea y la misma frase,
+diciendo algo útil. Es el criterio que el owner puso —«que lo entienda sin complicación ni fricción»—
+y el que ordena las tres decisiones.
+
+⚠️ **NO se implementa en esta sesión** (decisión del owner: «será en el siguiente chat»). Queda como
+el próximo paso, con su redacción ya acordada.

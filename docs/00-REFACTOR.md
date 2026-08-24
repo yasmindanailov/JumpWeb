@@ -1866,8 +1866,12 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > 25/25 lo que se pinta suma**. Y `PAY-16`/`PAY-17` pasan de guarda de TEST a comprobación **en
 > ejecución**: al cliente se le oculta la descomposición y se le da una frase honesta, al operador se
 > le enseña en rojo, y el parque se entera por log.
-> ❗ **Lo que queda planteado son TRES cosas de PRODUCTO** (§22.2), no de dominio.
-> ▶ **Con esto la sección queda CERRADA.** Lo siguiente sí es la Fase 5.
+> ❗ **DECIDIDO por el owner** (`#133` · §22.2): de las tres cosas planteadas, **`L5` NO era un defecto**
+> —«Resto de la señal de X» ya es correcto: X es la RESERVA, no el producto— y **`L4` se aparca**.
+> ▶ **Queda `L6`, y es lo único**: que la frase de «Importe al reservar» diga **dirección e importe**
+> («…y ahora vale 60,00 € menos»), compuesta por el dominio. Ni una línea nueva. **Sin implementar a
+> propósito**: el owner lo dejó para la sesión siguiente. Detalle y casos de prueba en `ESTADO.md`.
+> ▶ **Con esto la sección queda CERRADA salvo esa frase.** Después, la Fase 5.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
 > la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.
@@ -1905,6 +1909,8 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
       pedidos medidos por HTTP real.
       ▶ `LedgerSingleSourceTest` prohíbe el MECANISMO —derivar un canal restando otros— aunque el
       resultado sea correcto hoy. **Verificado por mutación, 5/5.**
+- [ ] **`L6` · que «Importe al reservar» diga dirección e importe** (owner, `#133` · §22.2). Lo único
+      que queda del desglose. Ni una línea nueva: la misma frase, compuesta por el dominio.
 - ✅ **`L1`·`L2`·`L3` · los TRES defectos de LECTURA — EJECUTADOS** (2026-08-24 · spec **§18** ·
       `DECISIONES #128`). Salieron de que el owner mirara un pedido REAL en pantalla —`R-L6UTIA`,
       §17—, y **el desglose pasa de LEGIBLE a VERIFICABLE**.

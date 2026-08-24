@@ -1,11 +1,14 @@
 # Estado del proyecto — foto viva
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
+> ❗ **2026-08-24 · lo primero que tienes que saber**: los pedidos de la BD de desarrollo **se
+> borraron y se reconstruyeron** (25, uno por acción accionable — ver «Próximo paso»), y lo único que
+> queda del desglose es **`L6`**, una frase, con su redacción ya acordada por el owner.
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-24** (**el DESGLOSE de dinero del cliente:
-> tandas A y B EJECUTADAS** — el dominio dice la verdad y el desglose se entiende. `DECISIONES #127`
-> y sus apartados `(b)`–`(f)`; `specs/desglose-dinero-cliente.md` §15 y §16. **Queda la tanda C**,
-> que no toca dinero).
+> aquí solo se enlaza. Última actualización: **2026-08-24** (**el DESGLOSE de dinero del cliente,
+> CERRADO salvo una frase**: tandas A, B y C ejecutadas, los tres defectos de lectura arreglados, la
+> auditoría de las 25 acciones pasada y un desglose que no cuadra ya no se sirve como si nada.
+> `DECISIONES #127` a **`#133`**; `specs/desglose-dinero-cliente.md` §15 → **§22**).
 
 ## ▶ Dónde estamos
 
@@ -54,7 +57,8 @@ hacen con su audit. Los 25 pedidos están en la BD de desarrollo para mirarlos e
 ❗ **Lo que la auditoría dejó PLANTEADO** (§22.2, decisiones de producto, no de dominio): «Compensación
 devuelta» como única línea del valor · el resto de señal de un complemento escondido en la línea del
 principal · una BAJADA que no deja más rastro que «Importe al reservar».
-▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** salvo esa decisión. Lo siguiente sí es la
+🟩 **Y el 2026-08-24 se cierra con la AUDITORÍA DE LAS 25 ACCIONES y su decisión** (`#132`, `#133`).
+▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO salvo `L6`**, que es una frase. Después, la
 **Fase 5**.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
@@ -106,7 +110,10 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2743 en verde** (15.986 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+- Suite **2743 en verde** (15.986 aserciones, `--parallel` **~33 s** medidos el 2026-08-24) ·
+  ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
+  (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
+  siguiente no lo persiga creyéndolo nuevo.
   ▶ **+2 con `#132`**: que un desglose que NO cierra se publique como tal, se avise por log y cambie
   la frase; y su control, que un pedido sano siga diciendo que cuadra. En `node --test`, **668** casos
   —con el que fija que el cliente **no descompone** un desglose que no cuadra—.
@@ -257,6 +264,34 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
+# ❗ LO SIGUIENTE ES **`L6`**, Y ES LO ÚNICO QUE ENTRA
+
+**Decisión del owner del 2026-08-24** (`DECISIONES #133` · `specs/desglose-dinero-cliente.md` §22.2).
+De las tres cosas que la auditoría dejó planteadas, **`L5` no era un defecto** y **`L4` se aparca**;
+`L6` está **aprobado con su redacción ya acordada** y **sin implementar a propósito** (el owner lo
+dejó para la sesión siguiente).
+
+**Qué hay que hacer, exactamente:** la línea «Importe al reservar» del desglose del cliente dice *que*
+el pedido cambió, pero no **en qué dirección ni cuánto** — y eso es justo lo que quiere saber quien ve
+180,00 € donde espera 120,00 €. La frase pasa a componerla el **DOMINIO** (como ya compone la frase de
+estado) con dirección e importe:
+
+    «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
+    (y «… 60,00 € más» cuando sube)
+
+- **Ni una línea nueva, ni un bloque, ni un concepto.** Ése es el criterio del owner —«que lo entienda
+  sin complicación ni fricción»— y es lo que ordena las tres decisiones.
+- Los importes salen de `facturado` y `valor`, que `OrderLedger` **ya publica**.
+- A tocar: `tickets.ledger.invoiced_hint` en **ES/EN/FR** (pasa a ser dos claves, una por dirección) y
+  quien elige entre ellas, que es `OrderLedger`. El cliente lo pinta ya (`financials.invoiced.hint`).
+- **Caso de prueba listo en la BD**: `B-06` (bajada 12→8 invitados, facturado 180,00 · valor 120,00) y
+  `B-05` (subida, facturado 120,00 · valor 180,00). Sus códigos, en el índice de §22.
+
+⚠️ **Lo que NO hay que hacer**: `L5` está **retirado como defecto** —«Resto de la señal de X» ya es
+correcto, X es la RESERVA y no el producto— y queda escrito en §22.2 para que nadie lo «arregle».
+
+---
+
 🟩 **EL DESGLOSE DE DINERO DEL CLIENTE: tandas A y B EJECUTADAS el 2026-08-24** (`DECISIONES #127`
 y sus apartados `(b)`–`(f)` · `specs/desglose-dinero-cliente.md` §15 y §16), **y con ellas los TRES
 defectos de LECTURA** que destapó mirar un pedido real en pantalla (`DECISIONES #128` · §18).
@@ -327,10 +362,24 @@ pone roja, **mira primero si el dato es real**.
    el navegador (staging) y después `redsys:verify-sandbox --gateway-order=…`. Todo lo demás de la
    cadena está verificado con las credenciales del owner. ⚠️ Una medición anterior dio el sandbox por
    inalcanzable y **era un error**: se probó el puerto 443 y Redsys sirve el suyo en el **25443**.
-2. **Los 21 pedidos de auditoría** de la BD local (más 19 de datos sucios anteriores). El owner pidió
-   **no borrarlos todavía**: se barren tras la auditoría final de las tres tandas. ⚠️ Retienen aforo
-   de franjas reales y llevan `event_data` ficticio marcado como tal. Los 19 sucios son un **control
-   negativo útil**: son los únicos que incumplen `PAY-17`, y por causas que ningún flujo produce.
+2. ~~**Los 21 pedidos de auditoría** de la BD local~~ **HECHO el 2026-08-24**: el owner pidió borrarlos
+   y reconstruir el corpus acción por acción (`DECISIONES #132`).
+
+⚠️⚠️ **EL ESTADO DE LA BD DE DESARROLLO, que hay que saber antes de mirar nada:**
+- **Los 58 pedidos anteriores YA NO EXISTEN.** Se borraron enteros —pedidos, líneas, ajustes, pagos,
+  reembolsos y tickets— el 2026-08-24. **La copia de seguridad NO sobrevive a la sesión** (vivía en el
+  scratchpad, fuera del repo): lo que hay es lo que hay.
+- **Lo que hay son 25 pedidos**, uno por acción accionable, construidos por los **flujos REALES**
+  (`OrderCreator` → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
+  `cliente.demo@jumpweb.test`. **Los 25 cuadran** — ya no queda ningún pedido con el desglose roto,
+  así que el aviso de `#132` **no se puede ver en pantalla con estos datos**: para verlo hay que
+  romper uno a mano (p. ej. cambiar el `amount` de su `Payment`).
+- **El índice de los 25 casos, con su código y la acción que representa, está en `specs/desglose-dinero-cliente.md` §22.**
+  ⚠️ Y §22.3 recoge **cuatro trampas para conducir el panel** desde un test: la peor, que el cambio de
+  FECHA lo mueve el CALENDARIO y no el formulario —con `slot_date` solo, la acción se ejecuta, **no da
+  error y no cambia nada**—.
+- La sonda que los creó **no está en el repo** a propósito (instrumento de medida, no guarda: §12.6).
+  Su receta corregida sí, en §22.3.
 
 ▶ **Y DESPUÉS, la Fase 5** — capa de contenido profesional. ⚠️ Su primer punto **no es implementable
 tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`,

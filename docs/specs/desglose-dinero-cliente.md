@@ -1596,6 +1596,10 @@ vuelta de Redsys FIRMADA → acciones del panel conducidas con Livewire—, **un
 
 ### 22.2 ⚠️ Lo que la auditoría dejó claro que FALTA — tres cosas de LEGIBILIDAD
 
+> **[DECIDIDO 2026-08-24, owner · `DECISIONES #133`]** De las tres, **solo entra `L6`** — y **`L5` no
+> era un defecto**. El criterio del owner: *«que el cliente lo entienda sin complicación ni fricción;
+> no quiero añadir más complicación»*. Estado de cada una, al final de su apartado.
+
 Ninguna es de aritmética. Las tres se ven leyendo la pantalla, que es lo que la suite no mide.
 
 **L4 · «Compensación devuelta» como ÚNICA línea del valor.** En los tres reembolsos-sin-cancelar el
@@ -1610,17 +1614,37 @@ No hay línea «Pagado por web» —vale 0, porque la compensación la consumió
 **semánticamente opaco**: el rótulo se lee como un canal de pago. La frase de abajo sí lo explica
 («Te devolvimos 19,80 € y conservas tu reserva: no tienes que pagar nada más»), pero la columna no.
 
+▶ **APARCADO** (owner, `#133`). La propuesta era cambiar un rótulo —«Compensación devuelta» → «Ya no
+tienes que pagarlo»—, sin líneas nuevas. Se deja como está por ahora: la frase de estado ya responde a
+la única pregunta del cliente («¿debo algo?»).
+
 **L5 · El resto de la señal de un COMPLEMENTO se esconde dentro de la línea del principal.** Con 5
 calcetines (10,00 €) sobre un pack, el cliente ve `+3 Calcetines 6,00 €` y `Resto de la señal de
 Cumpleaños Jump 94,00 €` — donde 4,00 € son calcetines. La palabra «Calcetines» no aparece en los
 94,00. Está documentado como deliberado (agrega al principal para que Σ↳ cuadre), y para el TOTAL es
 correcto; **para leerlo, no**.
 
+▶ ⚠️⚠️ **RETIRADO: NO ERA UN DEFECTO, y el que leyó mal fue el agente** (`#133`). Medido sobre el
+pedido real `R-FTC08J`: la línea agrega el principal (90,00) **y sus complementos** (4,00), y
+«Cumpleaños Jump» ahí **no es el producto de 120,00 €: es la RESERVA** — que es exactamente como el
+cliente la ve listada arriba («Cumpleaños Jump · Mar. 25 ago. · 8 invitados»). Los calcetines son
+parte de esa reserva, así que **la etiqueta ya es correcta**. Separarla habría añadido una línea de
+4,00 € a una pantalla de dinero. **Se queda como está; queda escrito para que nadie lo «arregle».**
+
 **L6 · Una BAJADA no deja rastro.** Bajar de 12 a 8 invitados, o quitar un complemento, solo se nota
 en «Importe al reservar», con una nota genérica. El cliente no ve que se quitó algo ni que ahora debe
 menos.
 
-⚠️ Las tres son de PRODUCTO, no de dominio: quedan planteadas, no resueltas.
+▶ ✅ **APROBADO, y es lo ÚNICO que entra** (owner, `#133`). La línea ya existe; lo que cambia es que su
+frase diga **dirección e importe**, compuesta por el DOMINIO como ya se compone la frase de estado:
+
+    «Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»
+    (y «… 60,00 € más» cuando sube — donde el desglose ↳ ya enseña de qué)
+
+⚠️ **NO implementado todavía** (decisión del owner: en la sesión siguiente). **Ni una línea nueva, ni
+un bloque, ni un concepto**: misma línea y misma frase, diciendo algo útil. Los importes salen de
+`facturado` y `valor`, que el ledger ya publica; las claves a tocar son `tickets.ledger.invoiced_hint`
+(que pasa a ser dos, una por dirección) en ES/EN/FR, y quien las elige es `OrderLedger`.
 
 ### 22.3 ⚠️⚠️ CUATRO trampas de método que la receta de §12.6 no recogía
 
