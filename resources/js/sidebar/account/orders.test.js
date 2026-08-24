@@ -109,6 +109,9 @@ const ledger = (over = {}) => {
                 ?? (cash.refunded_cents > 0 || cash.pending_refund_cents > 0
                     || cash.charged_online_cents !== value.paid_online_cents),
         },
+        // ⚠️ El servidor publica si el desglose CIERRA (`DECISIONES #132`); el doble lo respeta y por
+        // defecto dice que sí, que es el caso de todo pedido sano.
+        is_consistent: over.is_consistent ?? true,
         invoiced_cents: over.invoiced_cents ?? 4500,
         gate_lines: over.gate_lines ?? [],
         has_deposit: over.has_deposit ?? false,
@@ -552,6 +555,26 @@ describe('el bloque financiero', () => {
         }), MESSAGES);
 
         assert.equal(f.cash, null, 'la zona ha vuelto a decidir por su cuenta cuándo se pinta el eje de caja');
+    });
+
+    /**
+     * ⚠️⚠️ **UN DESGLOSE QUE NO CIERRA NO SE DESCOMPONE** (`DECISIONES #132`).
+     *
+     * Si las identidades del dominio fallan, ninguna línea por canal es cierta: pintarlas es poner
+     * delante del cliente dos importes que se contradicen sin decirle nada. Lo que sigue siendo un
+     * hecho es lo que vale el pedido y lo que se le cobró, y eso se queda.
+     */
+    test('⚠️ si el desglose NO CIERRA, no se pinta la descomposición por canales', () => {
+        const f = financialsOf(order({
+            ledger: ledger({ is_consistent: false, note: 'Estamos revisando el detalle de este pedido.' }),
+        }), MESSAGES);
+
+        assert.deepEqual(f.value.rows, [], 'se siguen pintando canales que no son ciertos');
+        assert.equal(f.value.gate, null, 'se sigue pintando el desglose de puerta');
+        assert.equal(f.value.total.amountLabel, '45,00 €', 'lo que VALE el pedido sí es un hecho: se queda');
+        assert.equal(f.cash.rows[0].amountLabel, '30,00 €', 'lo COBRADO también es un hecho: se queda');
+        assert.equal(f.note, 'Estamos revisando el detalle de este pedido.');
+        assert.equal(f.invoiced, null, 'la trazabilidad sobra cuando el desglose no se puede leer');
     });
 
     /** Sin ningún cobro no hay ancla que enseñar: un bloque de ceros enseña a ignorar los que importan. */

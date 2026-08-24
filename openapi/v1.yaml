@@ -2718,7 +2718,7 @@ components:
         mitad del asunto: hasta la tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como
         restas dentro de la columna del valor, **de la que no restan** — y por eso la columna dejaba
         de leerse en cuanto pasaba cualquier cosa.
-      required: [value, cash, invoiced_cents, gate_lines, has_deposit, note]
+      required: [value, cash, invoiced_cents, gate_lines, has_deposit, is_consistent, note]
       additionalProperties: false
       properties:
         value:
@@ -2754,6 +2754,21 @@ components:
             ⚠️ **Se publica en vez de dejar que el cliente lo deduzca**, y no equivale a
             `value.pending_at_gate_cents > 0`: un pedido con señal cuyo resto ya se cobró tiene 0
             pendiente y **sigue siendo** un pedido con señal.
+        is_consistent:
+          type: boolean
+          description: |
+            **¿El desglose CIERRA?** Las dos identidades (`PAY-16` y `PAY-17`) evaluadas **en
+            ejecución**, sobre ESTE pedido y AHORA.
+
+            ⚠️⚠️ **Existían solo como guarda de TEST, y ésa era la mitad que faltaba**
+            (`DECISIONES #132`). Un test dice que el código está bien HOY; esto dice que este pedido
+            concreto está bien AHORA — y es la segunda pregunta la que ve el cliente. Medido sobre un
+            pedido con el dato corrupto: la pantalla enseñaba «pagado por web 114,00 €» junto a
+            «cobrado por web 30,00 €», sin aviso y con una frase que hablaba de otra cosa.
+
+            ⚠️ **Cuando es `false`, un cliente NO debe pintar el desglose por canales**: si los números
+            no cierran, ninguna descomposición es cierta. Lo que sí sigue siendo un hecho es el valor
+            y lo realmente cobrado. `note` trae en ese caso la frase de revisión.
         note:
           type: string
           nullable: true

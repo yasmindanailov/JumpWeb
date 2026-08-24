@@ -1566,3 +1566,88 @@ Los tres defectos de esta serie —la línea que faltaba (§20.1), la fecha ment
 **pasaban la suite entera**, y los tres salieron de **mirar una pantalla concreta con datos reales**.
 Las guardas cubren que los números cuadren; **ninguna cubre que lo que se lee sea cierto**. Y dos de
 los tres los introdujo el propio trabajo que venía a arreglar la legibilidad.
+
+---
+
+## 22. LA AUDITORÍA DE LAS 25 ACCIONES — corpus borrado y reconstruido acción por acción
+
+> `DECISIONES #132`. Encargo del owner: borrar todos los pedidos y **volver a crearlos ejecutando cada
+> acción que se pueda hacer sobre una reserva y sobre un pedido**, y revisar después si el desglose se
+> entiende — para el cliente y para el operador.
+
+### 22.1 Qué se midió, y el resultado
+
+Corpus **borrado entero** (58 pedidos) y reconstruido **por los flujos reales** —`OrderCreator` →
+vuelta de Redsys FIRMADA → acciones del panel conducidas con Livewire—, **un pedido por acción**:
+
+    A · 5 estados base      entrada · pack con señal · con complementos · pendiente · franja pasada
+    B · 13 sobre la RESERVA fecha (misma tarifa · más cara · más barata) · producto · invitados ↑↓ ·
+                            complemento (añadir · cambiar · quitar) · datos del evento ·
+                            cancelar · reembolsar (REST · manual)
+    C · 5 sobre el PEDIDO   cancelar · reembolsar (REST+cancelar · manual sin cancelar) · taquilla ×2
+    D · 2 que DEBEN fallar  cancelar y reembolsar un complemento suelto
+
+    25 casos · 0 acciones fallaron · las 2 bloqueadas dejaron su audit (`item_is_addon`)
+    25/25 · las DOS identidades cierran
+    25/25 · lo que la pantalla LISTA suma el total, y los CANALES suman el total
+
+▶ **Es la primera vez que esto se mide sobre un corpus construido acción por acción**, y el modelo de
+§10 aguanta las 25. Los códigos quedan en la BD de desarrollo para mirarlos en el navegador.
+
+### 22.2 ⚠️ Lo que la auditoría dejó claro que FALTA — tres cosas de LEGIBILIDAD
+
+Ninguna es de aritmética. Las tres se ven leyendo la pantalla, que es lo que la suite no mide.
+
+**L4 · «Compensación devuelta» como ÚNICA línea del valor.** En los tres reembolsos-sin-cancelar el
+cliente lee:
+
+    Qué vale este pedido
+      Compensación devuelta      19,80 €
+      Valor del pedido           19,80 €
+
+No hay línea «Pagado por web» —vale 0, porque la compensación la consumió— así que el pedido parece
+«valer» una devolución. Es aritméticamente necesario (`compensado` es un término de la identidad) y
+**semánticamente opaco**: el rótulo se lee como un canal de pago. La frase de abajo sí lo explica
+(«Te devolvimos 19,80 € y conservas tu reserva: no tienes que pagar nada más»), pero la columna no.
+
+**L5 · El resto de la señal de un COMPLEMENTO se esconde dentro de la línea del principal.** Con 5
+calcetines (10,00 €) sobre un pack, el cliente ve `+3 Calcetines 6,00 €` y `Resto de la señal de
+Cumpleaños Jump 94,00 €` — donde 4,00 € son calcetines. La palabra «Calcetines» no aparece en los
+94,00. Está documentado como deliberado (agrega al principal para que Σ↳ cuadre), y para el TOTAL es
+correcto; **para leerlo, no**.
+
+**L6 · Una BAJADA no deja rastro.** Bajar de 12 a 8 invitados, o quitar un complemento, solo se nota
+en «Importe al reservar», con una nota genérica. El cliente no ve que se quitó algo ni que ahora debe
+menos.
+
+⚠️ Las tres son de PRODUCTO, no de dominio: quedan planteadas, no resueltas.
+
+### 22.3 ⚠️⚠️ CUATRO trampas de método que la receta de §12.6 no recogía
+
+| Trampa | Qué pasaba |
+|---|---|
+| **El cambio de FECHA lo conduce el CALENDARIO** | Con `slot_date`/`slot_time` solo en `data`, la acción se ejecuta, **no da error y no cambia nada**. Hay que poner tres propiedades Livewire: `calendarItemId`, `calendarSelectedDate`, `calendarSelectedTime` |
+| **Un doble con la firma equivocada mata el proceso** | La firma real es `RefundGateway::executeRefund(Payment, int)`. Con otra, PHPUnit dice «Premature end of PHP process»: sin clase, sin línea y sin pista |
+| **El MOTIVO del reembolso es obligatorio** y `refundItem` solo acepta DOS de los tres | `value_returned` no es opción ahí — esa acción no cancela la línea, así que «se devolvió el valor» no aplica |
+| **QUINTA puerta de `OrderCreator`: rechaza una fecha PASADA** | Para «franja ya disfrutada» hay que crear en su día real y **mover el reloj al leer**, no fabricar la fila |
+
+⚠️ Y una de repetición: **cada corrida consume aforo**. Sin borrar antes y sin repartir los packs por
+horas distintas, la segunda muere con `pack_sold_out_line`.
+
+### 22.4 [DECIDIDO] Un desglose que NO CUADRA deja de servirse como si nada — resuelve §21.3
+
+`PAY-16` y `PAY-17` eran guardas **de TEST**. Un test dice que el CÓDIGO está bien hoy; **no dice que
+ESTE pedido esté bien ahora**, y es la segunda pregunta la que ve el cliente.
+
+▶ **Las dos identidades se evalúan ahora EN EJECUCIÓN** (`OrderLedger::cuadra`, publicado como
+`ledger.is_consistent`), con **asimetría deliberada**:
+
+| Quién | Qué ve |
+|---|---|
+| **Cliente** | **NO se descompone.** Se queda lo que sí es un hecho —el valor y lo cobrado, con su fecha— y la frase «*Estamos revisando el detalle de este pedido…*», que va **la primera** en `noteFor()`: sobre un desglose roto ninguna otra puede ser cierta |
+| **Operador** | **Se le ENSEÑA**, en rojo sobre el bloque de totales. Es quien puede arreglarlo; esconderle la contradicción sería quitarle el dato que necesita |
+| **El parque** | `Log::warning('ledger.no_cuadra', …)` con el código y las dos identidades. Aviso y no excepción: el desglose se compone **al pintar**, y reventar dejaría al cliente sin pantalla por un dato que ya estaba mal |
+
+▶ **Tres mutaciones, las tres muerden.**
+⚠️ **Lo que esto NO resuelve**: el aviso dice que algo está mal, no QUÉ. Un pedido roto sigue
+necesitando que alguien lo mire — lo que cambia es que ahora **hay alguien a quien avisar**.

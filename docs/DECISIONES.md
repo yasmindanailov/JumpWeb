@@ -6518,3 +6518,68 @@ se entera. Lo único que no admite discusión es que **hoy no se entera nadie**.
 `#130`, la fecha mentirosa y la etiqueta muda— **pasaban la suite entera**, y los tres salieron de
 mirar una pantalla concreta con datos reales. Las guardas cubren que los números cuadren; **ninguna
 cubre que lo que se lee sea cierto**.
+
+---
+
+## #132 · 2026-08-24 · [DECIDIDO] Un desglose que NO CUADRA deja de servirse como si nada — y la auditoría de las 25 acciones
+
+**Contexto.** El owner pidió dos cosas: borrar todos los pedidos y **reconstruirlos ejecutando cada
+acción accionable** para ver qué falta, y resolver lo que `#131` §21.3 dejó planteado —qué ve un
+cliente cuyo desglose no cuadra y cómo se entera el parque—.
+
+### La auditoría: 25 casos por los flujos REALES
+
+Se borró el corpus entero (58 pedidos) y se reconstruyó **por los flujos reales** —`OrderCreator` →
+vuelta de Redsys FIRMADA → acciones del panel conducidas con Livewire—, un pedido por acción:
+5 estados base · 13 acciones sobre la RESERVA · 5 sobre el PEDIDO · 2 que deben bloquearse.
+
+    25 casos · 0 acciones fallaron · 2 bloqueadas correctamente (complemento suelto), con su audit
+    25/25 · las DOS identidades cierran
+    25/25 · lo que la pantalla LISTA suma el total, y los CANALES suman el total
+
+▶ **Es la primera vez que se mide sobre un corpus construido acción por acción**, y el modelo aguanta.
+
+⚠️⚠️ **Cuatro trampas de MÉTODO que costaron cuatro corridas** y que la receta de §12.6 no recogía:
+
+| Trampa | Qué pasaba |
+|---|---|
+| **El cambio de FECHA lo conduce el CALENDARIO, no el formulario** | Con `slot_date`/`slot_time` en `data`, la acción se ejecuta, **no da error y no cambia nada**. Hay que poner tres propiedades Livewire (`calendarItemId`, `calendarSelectedDate`, `calendarSelectedTime`) |
+| **Un doble con la firma equivocada = «Premature end of PHP process»** | `RefundGateway::executeRefund(Payment, int)`, no `refund(string, int, string)`. PHPUnit lo reporta sin clase, sin línea y sin pista |
+| **El MOTIVO del reembolso es obligatorio** (`#127(c)`) y `refundItem` solo acepta DOS de los tres | `value_returned` no es opción ahí: esa acción no cancela la línea |
+| **QUINTA puerta de `OrderCreator`**: rechaza una fecha PASADA | Para el caso «franja ya disfrutada» hay que crear en su día real y mover el reloj al leer |
+
+⚠️ Y una de repetición: **cada corrida consume aforo**. Sin borrar antes y sin repartir los packs por
+horas distintas, la segunda corrida muere con `pack_sold_out_line`.
+
+### Lo que la auditoría dejó claro que FALTA (spec §22.2)
+
+Tres cosas de LEGIBILIDAD, ninguna de aritmética: **«Compensación devuelta» como única línea de un
+pedido de 19,80 €** —el cliente lee que su pedido «vale» una devolución—, **el resto de la señal de un
+complemento escondido dentro de la línea del principal**, y **una bajada que no deja más rastro que
+«Importe al reservar»**. Quedan planteadas, no resueltas: son decisiones de producto.
+
+### La decisión: qué se enseña cuando el desglose no cierra
+
+`PAY-16` y `PAY-17` eran guardas **de TEST**. Un test dice que el CÓDIGO está bien hoy; **no dice que
+ESTE pedido esté bien ahora**, y es la segunda pregunta la que ve el cliente. Un pedido con el dato
+corrupto se servía con dos importes que se contradicen, sin aviso, y con una frase que hablaba de otra
+cosa. Ni log, ni campo en el contrato, ni nada: **no se enteraba nadie**.
+
+▶ **Ahora las dos identidades se evalúan EN EJECUCIÓN** (`OrderLedger::cuadra`, publicado como
+`ledger.is_consistent`) y hay **asimetría deliberada**:
+
+- **al CLIENTE se le oculta la descomposición**: si los números no cierran, ninguna línea por canal es
+  cierta. Se queda lo que **sí es un hecho** —lo que vale el pedido y lo que se le cobró, con su
+  fecha— y una frase honesta: «*Estamos revisando el detalle de este pedido…*». Esa frase va **la
+  primera** en `noteFor()`, antes que todas: sobre un desglose roto, ninguna otra puede ser cierta;
+- **al OPERADOR se le ENSEÑA**, con un aviso en rojo sobre el bloque de totales: es quien puede
+  arreglarlo, y esconderle la contradicción sería quitarle justo el dato que necesita;
+- **y el parque se entera**: `Log::warning('ledger.no_cuadra', …)` con el código y las dos identidades.
+  Va como aviso y no como excepción porque el desglose se compone **al pintar**: reventar dejaría al
+  cliente sin pantalla por un dato que ya estaba mal.
+
+▶ **Tres mutaciones, las tres muerden**: dar `cuadra` por cierto, quitar la frase de revisión, y que el
+cliente ignore `is_consistent`.
+
+⚠️ **Y la deuda que esto NO paga**: el aviso dice que algo está mal, no QUÉ. Un pedido roto sigue
+necesitando que alguien lo mire. Lo que cambia es que ahora **hay alguien a quien avisar**.

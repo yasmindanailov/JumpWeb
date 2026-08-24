@@ -183,6 +183,9 @@ return [
         'invoiced_hint' => "C'est ce qui a été facturé au moment de la réservation. S'il diffère de la valeur ci-dessus, la commande a changé ensuite.",
     ],
     'ledger_note' => [
+        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
+        // cierta (`DECISIONES #132`).
+        'under_review' => "Nous vérifions le détail de cette commande. Le montant qui t'a été encaissé est celui indiqué ci-dessous ; en cas de doute, écris-nous et nous le regarderons ensemble.",
         'owing' => 'Nous devons encore vous rembourser :amount.',
         'cancelled_owing' => 'Votre réservation a été annulée le :date. Nous devons encore vous rembourser :amount.',
         'cancelled_refunded' => 'Votre réservation a été annulée et nous vous avons remboursé :amount le :date.',

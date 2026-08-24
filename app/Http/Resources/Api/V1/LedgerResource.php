@@ -53,6 +53,10 @@ class LedgerResource extends JsonResource
             'invoiced_cents' => $l->facturado,
             'gate_lines' => $l->gateLines,
             'has_deposit' => $l->hasDeposit,
+            // ⚠️⚠️ **Si esto es `false`, el desglose por canales NO es cierto** y el cliente no debe
+            // pintarlo (`DECISIONES #132`). Se publica en vez de dejar que cada superficie recomponga
+            // las identidades: son dos y ya se escribían en un solo sitio.
+            'is_consistent' => $l->cuadra,
             'note' => $l->nota,
         ];
     }

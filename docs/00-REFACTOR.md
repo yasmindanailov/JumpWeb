@@ -1861,9 +1861,13 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > ✅ **Y una TERCERA, revisando `R-L6UTIA` a fondo** (`#131` · §21): la fecha del cobro se pegaba a un
 > importe que **no se cobró ese día** (7 pedidos, **6 sanos**) y la línea del cargo por cambios **no
 > decía por qué se cobra** — en los OCHO `extra_due` de la BD, cinco del flujo real.
-> ❗ **Queda UNA decisión del owner**: `PAY-16`/`PAY-17` son guardas de TEST, no de ejecución; un
-> desglose que no cierra se sirve al cliente como si nada y el parque no se entera (§21.3).
-> ▶ **Con esto la sección queda CERRADA salvo esa decisión.** Lo siguiente sí es la Fase 5.
+> ✅ **Y la AUDITORÍA DE LAS 25 ACCIONES + la decisión que faltaba** (`#132` · §22): corpus borrado y
+> reconstruido por los flujos REALES, un pedido por acción accionable → **25/25 identidades cierran y
+> 25/25 lo que se pinta suma**. Y `PAY-16`/`PAY-17` pasan de guarda de TEST a comprobación **en
+> ejecución**: al cliente se le oculta la descomposición y se le da una frase honesta, al operador se
+> le enseña en rojo, y el parque se entera por log.
+> ❗ **Lo que queda planteado son TRES cosas de PRODUCTO** (§22.2), no de dominio.
+> ▶ **Con esto la sección queda CERRADA.** Lo siguiente sí es la Fase 5.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
 > la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.

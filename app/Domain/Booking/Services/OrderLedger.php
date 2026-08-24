@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
+use Illuminate\Support\Facades\Log;
 
 /**
  * **EL DESGLOSE, compuesto una sola vez** (`DECISIONES #127`, `specs/desglose-dinero-cliente.md` §10).
@@ -78,6 +79,19 @@ final readonly class OrderLedger
         /** ¿El pedido llevaba señal? No se deduce de que quede algo pendiente. */
         public bool $hasDeposit,
         /**
+         * **¿El desglose CIERRA?** Las dos identidades (`PAY-16` y `PAY-17`), evaluadas en EJECUCIÓN.
+         *
+         * ⚠️⚠️ **Existía solo como guarda de TEST, y esa era la mitad que faltaba** (`DECISIONES
+         * #132`). Un pedido cuyo desglose no cierra se servía al cliente **como si nada**: dos
+         * importes que se contradicen, sin aviso, y una frase que hablaba de otra cosa. Medido sobre
+         * `R-L6UTIA`: 3.000 € retenidos contra 11.400 € «pagados», y la pantalla decía «Te quedan
+         * 102,00 € por pagar en recepción».
+         *
+         * ▶ Un test dice que el código está bien HOY; esto dice que **este pedido concreto** está
+         * bien AHORA. No son la misma pregunta, y la segunda es la que ve el cliente.
+         */
+        public bool $cuadra,
+        /**
          * La FRASE que explica el estado, o `null` si no hay nada que explicar.
          *
          * ⚠️⚠️ **Un número no explica.** Era el encargo del owner: «trazabilidad y explicación ante
@@ -147,6 +161,26 @@ final readonly class OrderLedger
     {
         $s = $order->financialSummary();
 
+        // ⚠️ Las dos identidades, evaluadas AQUÍ y no en un test. Se calculan antes de construir
+        // porque la FRASE depende de ellas: un pedido que no cuadra no puede explicarse con la frase
+        // de un pedido normal.
+        $cuadra = self::cierra($s);
+
+        if (! $cuadra) {
+            // ⚠️⚠️ **El parque tiene que ENTERARSE.** Hasta `#132` no se enteraba nadie: ni un log, ni
+            // un aviso, ni un campo en el contrato. Va como `warning` y no como excepción porque el
+            // desglose se compone al PINTAR: reventar dejaría al cliente sin pantalla por un dato que
+            // ya está mal, y el objetivo es lo contrario — que se vea y se pueda arreglar.
+            Log::warning('ledger.no_cuadra', [
+                'order' => $order->code,
+                'valor' => $s->totalFinalNeto(),
+                'canales' => $s->pagadoOnline() + $s->pendienteOnline() + $s->cobradoPuerta() + $s->pendingAtGate() + $s->compensado(),
+                'retenido' => $s->retenidoOnline(),
+                'pagado_mas_pendiente' => $s->pagadoOnline() + $s->pendienteDevolucion(),
+                'columna_reembolso_diverge' => $s->refundColumnDivergesFromRows(),
+            ]);
+        }
+
         return new self(
             valor: $s->totalFinalNeto(),
             pagadoOnline: $s->pagadoOnline(),
@@ -166,7 +200,8 @@ final readonly class OrderLedger
                 $order->gateBreakdownLines(),
             ),
             hasDeposit: $s->depositRemainder > 0,
-            nota: self::noteFor($order, $s),
+            cuadra: $cuadra,
+            nota: self::noteFor($order, $s, $cuadra),
         );
     }
 
@@ -204,8 +239,26 @@ final readonly class OrderLedger
                 $order->reservationGateLines($principal),
             ),
             hasDeposit: $principal->ticketType?->hasDeposit() ?? false,
+            // ⚠️ El desglose POR RESERVA no tiene eje de caja propio, así que su identidad es la del
+            // PEDIDO. Se calcula con el mismo predicado —no llamando a `forOrder()`, que volvería a
+            // avisar por cada tarjeta de la lista y convertiría un aviso en ruido—.
+            cuadra: self::cierra($order->financialSummary()),
             nota: null,
         );
+    }
+
+    /**
+     * **Las DOS identidades, en una sola expresión y en un solo sitio** (`PAY-16` + `PAY-17`, más la
+     * guarda de construcción de la columna de reembolso).
+     *
+     * Escribirla dos veces —una por superficie— sería exactamente la clase de duplicado del que este
+     * módulo nació para librarse.
+     */
+    private static function cierra(OrderFinancialSummary $s): bool
+    {
+        return $s->totalFinalNeto() === $s->pagadoOnline() + $s->pendienteOnline() + $s->cobradoPuerta() + $s->pendingAtGate() + $s->compensado()
+            && $s->retenidoOnline() === $s->pagadoOnline() + $s->pendienteDevolucion()
+            && ! $s->refundColumnDivergesFromRows();
     }
 
     /**
@@ -215,8 +268,16 @@ final readonly class OrderLedger
      * cumple varias condiciones a la vez, y anunciar «caducó» o «te devolvimos» antes que «tenemos
      * pendiente devolverte» le escondería lo único que le importa.
      */
-    private static function noteFor(Order $order, OrderFinancialSummary $s): ?string
+    private static function noteFor(Order $order, OrderFinancialSummary $s, bool $cuadra = true): ?string
     {
+        // ⚠️⚠️ **0 · El desglose no cuadra. Va ANTES QUE TODO** (`DECISIONES #132`). Si los números no
+        // cierran, ninguna de las frases de abajo puede ser cierta: decirle «te quedan 102,00 € por
+        // pagar» a quien tiene el desglose roto es afirmar algo que no se sabe. Lo honesto es decir
+        // que se está mirando, y que el importe cobrado —que sí es un hecho— sigue a la vista.
+        if (! $cuadra) {
+            return __('tickets.ledger_note.under_review');
+        }
+
         $cancelado = $order->status === Order::STATUS_CANCELLED;
         $fechaCancel = DisplayTime::format($order->refunded_at ?? $order->updated_at, 'd/m/Y');
         $importe = fn (int $c): string => Money::amount($c).' '.($order->currency === 'EUR' ? '€' : (string) $order->currency);

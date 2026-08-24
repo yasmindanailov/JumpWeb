@@ -976,6 +976,11 @@ return [
         // diferenciado del "item_financial" del sub-card de cada producto.
         'order_financial' => [
             'heading' => 'Totales del pedido',
+            // ⚠️⚠️ El desglose NO CIERRA (`DECISIONES #132`). Al operador se le ENSEÑA —es quien
+            // puede arreglarlo—; al cliente se le oculta la descomposición y se le da una frase
+            // honesta. Hasta esa decisión no se enteraba ninguno de los dos.
+            'no_cuadra_title' => 'Este desglose no cuadra.',
+            'no_cuadra_body' => 'Las cifras de abajo no cierran entre sí, así que alguna es falsa: revisa los pagos, los reembolsos y los ajustes de este pedido antes de fiarte de ellas. El cliente NO ve este desglose: ve el importe que se le cobró y un aviso de que lo estamos revisando.',
             // 7.2e.3 (pulido #168): diferencia pendiente de cobrar en el parque
             // por una edición del producto que subió el importe.
             'pending_at_gate' => 'Falta por cobrar',

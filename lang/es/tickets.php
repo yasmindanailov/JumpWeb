@@ -208,6 +208,9 @@ return [
         'invoiced_hint' => 'Es lo que se facturó al hacer la reserva. Si no coincide con el valor de arriba es porque el pedido cambió después.',
     ],
     'ledger_note' => [
+        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
+        // cierta (`DECISIONES #132`).
+        'under_review' => 'Estamos revisando el detalle de este pedido. El importe que te hemos cobrado es el que ves abajo; si tienes cualquier duda, escríbenos y lo miramos contigo.',
         'owing' => 'Tenemos pendiente devolverte :amount.',
         'cancelled_owing' => 'Tu reserva se canceló el :date. Tenemos pendiente devolverte :amount.',
         'cancelled_refunded' => 'Tu reserva se canceló y te devolvimos :amount el :date.',

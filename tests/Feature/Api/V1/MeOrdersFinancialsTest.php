@@ -13,6 +13,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -353,6 +354,42 @@ class MeOrdersFinancialsTest extends TestCase
         $this->assertSame('desk', $c['charged_method']);
         $this->assertSame($order->financialSummary()->grossPaidOnline, $c['charged_online_cents'],
             'el dinero se cobró igual: lo que cambia es cómo se llama');
+    }
+
+    /**
+     * ⚠️⚠️ **UN DESGLOSE QUE NO CIERRA NO SE DESCOMPONE, Y SE AVISA** (`DECISIONES #132`).
+     *
+     * `PAY-16` y `PAY-17` eran guardas de TEST: decían que el CÓDIGO está bien hoy, no que ESTE
+     * pedido esté bien ahora. Un pedido con el dato corrupto se servía al cliente como si nada —dos
+     * importes que se contradicen, sin aviso, y una frase que hablaba de otra cosa—, y el parque no
+     * se enteraba: ni log, ni campo en el contrato, ni nada.
+     */
+    public function test_a_ledger_that_does_not_close_is_published_as_inconsistent_and_logged(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
+
+        // Un cobro que no respalda nada: la forma que tiene un dato roto de romper la identidad.
+        $order->payments()->update(['amount' => 999]);
+
+        Log::shouldReceive('warning')->atLeast()->once()
+            ->with('ledger.no_cuadra', \Mockery::on(fn (array $ctx): bool => $ctx['order'] === $order->code));
+
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertFalse($ledger['is_consistent'], 'el desglose roto se publica como si cerrara');
+        $this->assertSame(__('tickets.ledger_note.under_review'), $ledger['note'],
+            'la frase sigue hablando de otra cosa sobre un desglose que no cuadra');
+    }
+
+    /** Y el caso normal sigue diciendo que cuadra: sin esto, lo de arriba pasaría con todo roto. */
+    public function test_a_healthy_ledger_is_published_as_consistent(): void
+    {
+        [$user] = $this->orderWithEverything();
+
+        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertTrue($ledger['is_consistent']);
+        $this->assertNotSame(__('tickets.ledger_note.under_review'), $ledger['note']);
     }
 
     /**

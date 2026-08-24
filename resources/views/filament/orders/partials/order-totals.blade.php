@@ -135,6 +135,17 @@
         {{ __('admin.orders.order_financial.heading') }}
     </div>
 
+    {{-- ⚠️⚠️ **EL DESGLOSE NO CIERRA** (`DECISIONES #132`). Al operador se le ENSEÑA —es quien puede
+         arreglarlo— mientras que al cliente se le oculta la descomposición y se le da una frase
+         honesta: la asimetría es deliberada. Hasta hoy no se enteraba ninguno de los dos. --}}
+    @unless ($l->cuadra)
+        <div class="mb-2 rounded-md bg-danger-50 p-2 text-xs leading-snug text-danger-700 ring-1 ring-danger-600/20 dark:bg-danger-500/10 dark:text-danger-300"
+             role="alert">
+            <span class="font-semibold">{{ __('admin.orders.order_financial.no_cuadra_title') }}</span>
+            {{ __('admin.orders.order_financial.no_cuadra_body') }}
+        </div>
+    @endunless
+
     @unless ($hasBreakdown)
         {{-- Caso SIMPLE: pedido sin cambios ni devoluciones → total + cómo/cuándo se pagó. --}}
         <div class="flex items-center justify-between gap-3 text-base font-semibold">

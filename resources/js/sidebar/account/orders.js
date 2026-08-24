@@ -159,6 +159,27 @@ export function financialsOf(order, messages) {
         }
         : null;
 
+    // ⚠️⚠️ **Si el desglose NO CIERRA, no se descompone** (`DECISIONES #132`). Cuando las identidades
+    // del dominio fallan, ninguna de las líneas por canal es cierta: enseñarlas es poner delante del
+    // cliente dos importes que se contradicen sin decirle nada. Lo que SÍ sigue siendo un hecho es lo
+    // que vale el pedido y lo que se le cobró, así que eso se queda — y la frase explica el resto.
+    // La condición la decide el SERVIDOR (`is_consistent`); derivarla aquí sería la novena vez.
+    if (l.is_consistent === false) {
+        return {
+            value: {
+                title: t(messages, 'ledger.value_title'),
+                rows: [],
+                gate: null,
+                total: { label: t(messages, 'ledger.value_total'), amountLabel: money(v.total_cents) },
+            },
+            cash: chargedLine(messages, c, desk)
+                ? { title: t(messages, 'ledger.cash_title'), caption: t(messages, 'ledger.cash_caption'), rows: [chargedLine(messages, c, desk)] }
+                : null,
+            note: l.note ?? null,
+            invoiced: null,
+        };
+    }
+
     return {
         value: {
             title: t(messages, 'ledger.value_title'),

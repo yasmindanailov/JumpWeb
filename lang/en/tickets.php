@@ -183,6 +183,9 @@ return [
         'invoiced_hint' => 'This is what was invoiced when the booking was made. If it differs from the value above, the order changed afterwards.',
     ],
     'ledger_note' => [
+        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
+        // cierta (`DECISIONES #132`).
+        'under_review' => 'We are reviewing the breakdown of this order. The amount charged to you is the one shown below; if you have any doubt, write to us and we will look at it with you.',
         'owing' => 'We still owe you :amount.',
         'cancelled_owing' => 'Your booking was cancelled on :date. We still owe you :amount.',
         'cancelled_refunded' => 'Your booking was cancelled and we refunded :amount on :date.',

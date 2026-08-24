@@ -43,9 +43,17 @@ fallo estaba en el marcado; el otro porque **no hay test que mida si algo se ent
 del cobro se pegaba a un importe que no se cobró ese día** —medido: **7 pedidos, 6 SANOS**— y la línea
 «↳ Cumpleaños Jump 12,00 €» **no decía por qué se cobra**, cosa que pasa en los OCHO `extra_due` de la
 BD, cinco de ellos escritos por el flujo REAL del panel.
-❗ **PENDIENTE DE DECISIÓN DEL OWNER**: `PAY-16`/`PAY-17` son guardas **de test, no de ejecución**. Un
-pedido cuyo desglose no cierra se sirve al cliente **como si nada** —dos importes que se contradicen,
-sin aviso— y **el parque no se entera**. Hay que decidir qué se enseña y cómo se avisa (§21.3).
+✅ **RESUELTO el 2026-08-24** (`DECISIONES #132` · spec §22.4): las dos identidades se evalúan **en
+EJECUCIÓN** y hay asimetría deliberada — al **cliente** se le oculta la descomposición (se queda el
+valor, lo cobrado y una frase honesta), al **operador** se le ENSEÑA en rojo, y el parque se entera
+por `Log::warning('ledger.no_cuadra', …)`.
+🟩 **Y ANTES se hizo la AUDITORÍA DE LAS 25 ACCIONES** (§22): corpus borrado entero y reconstruido por
+los flujos REALES, **un pedido por acción accionable**. Resultado: **25/25 identidades cierran**,
+**25/25 lo que la pantalla lista suma el total**, 0 acciones fallaron y las 2 que deben bloquearse lo
+hacen con su audit. Los 25 pedidos están en la BD de desarrollo para mirarlos en el navegador.
+❗ **Lo que la auditoría dejó PLANTEADO** (§22.2, decisiones de producto, no de dominio): «Compensación
+devuelta» como única línea del valor · el resto de señal de un complemento escondido en la línea del
+principal · una BAJADA que no deja más rastro que «Importe al reservar».
 ▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** salvo esa decisión. Lo siguiente sí es la
 **Fase 5**.
 
@@ -98,7 +106,10 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2741 en verde** (15.976 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+- Suite **2743 en verde** (15.986 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+  ▶ **+2 con `#132`**: que un desglose que NO cierra se publique como tal, se avise por log y cambie
+  la frase; y su control, que un pedido sano siga diciendo que cuadra. En `node --test`, **668** casos
+  —con el que fija que el cliente **no descompone** un desglose que no cuadra—.
   ▶ **+1 con la tercera vuelta** (`DECISIONES #131`): que el respaldo de la etiqueta de puerta
   **explique** en vez de nombrar, y su control de que no se coma las tres ramas precisas. En
   `node --test`, **667** casos — con el que fija que la fecha **no** se pega a un importe que no se
