@@ -2,8 +2,9 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-23** (**el bloque de cuenta ya es Vue, no queda
-> ningún Livewire en el layout, y el cajón está PULIDO** — `DECISIONES #123` y `#124`).
+> aquí solo se enlaza. Última actualización: **2026-08-24** (**«Mis reservas» se lista por RESERVA** y
+> **el desglose de dinero del cliente queda AUDITADO** — `DECISIONES #125`, `#126` y
+> `specs/desglose-dinero-cliente.md` 🟦, que es por donde se sigue).
 
 ## ▶ Dónde estamos
 
@@ -11,7 +12,10 @@
 2026-08-22, y el 2026-08-23 se le añadió el último trozo de `#66`: la AUTH dentro del cajón.**
 🟩 **Y el 2026-08-23 cae `account-context`**: el bloque de cuenta lo pinta Vue, la clase Livewire y su
 Blade **ya no existen** y la página sirve **0 atributos `wire:`** (`DECISIONES #123`).
-▶ **Queda UN candidato: la Fase 5.** Detalle en «Próximo paso».
+🟩 **Y el 2026-08-23 «Mis reservas» pasa a listarse POR RESERVA**, con el pasado en su propia pantalla
+(`DECISIONES #126`).
+▶ **Lo siguiente NO es la Fase 5**: es el **desglose de dinero que ve el cliente**, ya auditado y con
+sus tres tandas acordadas. Detalle en «Próximo paso» y alcance en el tracker.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -34,22 +38,31 @@ existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u
 `#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
 (verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
-✅ **STAGING ESTÁ AL DÍA**: sirve `b6fadf5` desde el 2026-08-23 — el salto de 69 commits que traía el
-área de cliente entera y la auth en el cajón. Canal: `scripts/deploy.sh` (dry-run por defecto; detalle
-en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
+⚠️ **STAGING sirve `b6fadf5`** desde el 2026-08-23 —el salto de 69 commits que traía el área de cliente
+entera y la auth en el cajón— y **desde entonces se ha quedado atrás** (ver abajo). Canal:
+`scripts/deploy.sh` (dry-run por defecto; detalle en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
 ▶ **El despliegue se auto-verifica y salió limpio**: `/up` y `/` en 200, guarda del `robots.txt`,
 `redsys_environment = 'test'`, 0 migraciones pendientes, 0 `failed_jobs` y 0 jobs varados.
 Comprobado además a mano sobre HTTP: las tres puertas de auth emiten su zona y siguen `noindex`, los
 cuatro puntos llegan cableados y **no queda rastro del modal**.
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
-⚠️ `main` va **un commit por delante** de lo desplegado y es **solo doc** (el cierre de la sesión): no
-hay diferencia de código, así que no hace falta volver a desplegar por eso.
+❗❗ **STAGING SE HA QUEDADO ATRÁS, y esta línea decía lo contrario.** Afirmaba «`main` va un commit
+por delante y es solo doc: no hay diferencia de código». **Medido el 2026-08-23**: eran ya **3 commits
+y 68 ficheros de código** (`b6fadf5..HEAD` excluyendo `docs/`), y con `#125` y `#126` encima son
+bastantes más. Staging **no lleva `#123`, `#124`, `#125` ni `#126`**: sirve un cajón sin el bloque de
+cuenta en Vue, sin el `no-store` global, sin los arreglos del reenvío y del velo, y sin «Mis reservas»
+por reserva.
+▶ **La cifra NO se copia aquí** —fue precisamente una cifra copiada la que mintió—. Se mide:
+`git log --oneline b6fadf5..HEAD` y `git diff --stat b6fadf5..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`,
+sustituyendo `b6fadf5` por lo que sirva staging.
+⚠️ **Consecuencia práctica**: cualquier verificación contra staging hoy mide el motor VIEJO. Las dos
+comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **exigen desplegar antes**.
 
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2678 en verde** (15.260 aserciones, `--parallel` **~34 s** medidos el 2026-08-23) ·
+- Suite **2704 en verde** (15.368 aserciones, `--parallel` **~32 s** medidos el 2026-08-23) ·
   ▶ **+30 sobre el cierre anterior, y la mayoría son GUARDAS QUE FALTABAN**, no cobertura de código
   nuevo. Las del relevo:
   **5** de `NoStoreWebResponsesTest` (nadie aseveraba `no-store` en una página web: la ponía un
@@ -60,8 +73,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   ▶ Y las del PULIDO (`#124`): **4** de `SidebarStyleWiringTest` —toda clase que el cajón emite tiene
   una regla, el `#113` aplicado al CSS—, **3** del scroll y del modo del panel, y **2** del encabezado
   propio de una zona. Ninguna cubre código nuevo: todas cierran un hueco que ya existía.
-  **633 tests JS** (`node --test`) · Pint
-  limpio (834 ficheros) · `docs-check` verde ·
+  ▶ Y la de `#125`: **+1** en `SidebarVerifyScreenTest` —cuál de los DOS cooldowns del reenvío ata—.
+  El neto es +1 porque esa guarda ya existía y lo que hizo falta fue **re-apuntarla**, no duplicarla.
+  ▶ Y las de `#126` (**+25**): **13** del REPARTO de los dos ámbitos en el dominio —incluida la que
+  asevera la propiedad, `upcoming + past = total` y sin solapamiento— y **12** del endpoint nuevo.
+  **648 tests JS** (`node --test`) · Pint
+  limpio (837 ficheros) · `docs-check` verde ·
   ⚠️ **El contador ha BAJADO dos cierres seguidos, y las dos veces a propósito**: `/mi-cuenta/…` se
   llevó 63 casos (`#120(u)`) y el modal de auth, 42 (`#122`). Ninguno se perdió por descuido — en el
   segundo se midió **por mutación** cuáles cazaba también la API antes de borrar, y los tres que eran
@@ -159,9 +176,40 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-🟩 **EL CAJÓN ESTÁ COMPLETO Y PULIDO.** El bloque de cuenta es Vue (`#123`), el layout no renderiza
-**ningún** componente Livewire, y los nueve retoques que el owner pidió tras validarlo están hechos
-(`#124`). Las dos specs están ✅ EJECUTADAS.
+❗❗ **LO SIGUIENTE ES EL DESGLOSE DE DINERO QUE VE EL CLIENTE, y va ANTES de Fase 5.**
+Spec: `specs/desglose-dinero-cliente.md` 🟦 · **las tres tandas, con su alcance, están en el tracker**
+(`00-REFACTOR.md`, sección «ABIERTO Y CRÍTICO»). Acordado con el owner el 2026-08-24: **empezar por la
+tanda 1**, que asegura el dominio sin tocar pantalla y no depende de ninguna decisión pendiente.
+
+▶ **Lo único que hay que retener antes de abrir la spec**, porque cambia cómo se aborda:
+**la aritmética NO está mal.** Medido sobre **11 pedidos reales creados por los flujos reales** —
+`OrderCreator`, vuelta de Redsys FIRMADA, reembolsos REST y MANUAL—: **8 de 9 identidades se cumplen en
+los once**, la novena (ley de caja) tiene **dos excepciones legítimas**, y el panel y el cliente
+enseñan **el mismo número bajo el mismo rótulo** en los once. **No hay dos fuentes de verdad.**
+▶ El riesgo está en la **PROYECCIÓN**: la API publica 2 de las 6 dimensiones que el dominio calcula.
+⚠️⚠️ **Y el descuadre que el cliente puede ver solo aparece CUANDO LA FRANJA YA PASÓ** —falta la línea
+«Pagado en el parque»—, o sea **justo cuando entra a repasar lo que pagó**. Con franja futura cuadra,
+y por eso nadie lo había visto. El número, los casos y las cuatro reglas de método están en la spec.
+
+⚠️ **Tres trampas de MÉTODO que esta auditoría pagó tres veces**, y que el siguiente agente va a
+volver a pisar si no las lee: un `extra_due` sin subir el precio del ítem, un pago que no se sincroniza
+a `Σ itemCollectedCents`, y `unit_price` tratado como total cuando es POR UNIDAD. **Las tres fabricaron
+defectos que no existen.** Spec §2, §4.bis.3 y §4.ter.
+
+▶ **Y DESPUÉS, la Fase 5** — capa de contenido profesional. ⚠️ Su primer punto **no es implementable
+tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`, que
+**lanza** `BadMethodCallException` al usar tags; no hay Redis en el stack local, ni en staging, ni una
+línea en la doc que lo contemple. Empieza por una decisión de infraestructura del owner —Redis, o
+invalidación por versión de clave—, no por código. El detalle está en el tracker.
+
+---
+
+### El estado del cajón, para lo que venga
+
+🟩 **EL CAJÓN ESTÁ COMPLETO, PULIDO Y VERIFICADO EN NAVEGADOR.** El bloque de cuenta es Vue (`#123`),
+el layout no renderiza **ningún** componente Livewire, los nueve retoques que el owner pidió están
+hechos (`#124`) y el guion de navegador que quedaba **se recorrió el 2026-08-23** (`#125`). Las cuatro
+specs del cajón están ✅ EJECUTADAS.
 
 ⚠️⚠️ **LO QUE ESE TRABAJO ENCONTRÓ, y condiciona lo que venga. Léelo antes de tocar el cajón:**
 - **El `no-store` de TODAS las páginas web lo ponía un accidente de Livewire** —un hook de componente
@@ -179,23 +227,32 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   embudo.
 - **`SidebarIconParityTest` estaba ciego a 10 de los 32 `.vue`** (`**` no es recursivo en `glob()`).
 
-⚠️ **Antes de añadir NADA al cajón, mira su presupuesto**: el chunk está en **210,8 de 211 KiB**, la
-holgura más estrecha de todo el ledger. Lo siguiente que entre lo mide y sube el techo con su párrafo.
+⚠️ **Antes de añadir NADA al cajón, mira su presupuesto.** Es la holgura más estrecha de todo el
+ledger, y **la cifra viva NO se copia aquí**: vive en `SidebarBundleBudgetTest::SIDEBAR_CHUNK_MAX_KB`
+con su ledger al lado —ya envejeció una vez en esta tabla—. El techo subió dos veces el 2026-08-23
+(`#125` y `#126`), las dos con su medición y su párrafo, y las dos por **corrección**, no por features:
+ése es el único caso en que debe ceder.
 
-▶▶ **LO SIGUIENTE: la Fase 5** — capa de contenido profesional (query services con caché e
-invalidación por evento, theming como paquete, contenido por API). Es lo único que queda en el
-tracker antes de Fase 6.
+🟩 **«MIS RESERVAS» SE LISTA POR RESERVA** (`DECISIONES #126`, `specs/mis-reservas-por-reserva.md` ✅):
+una tarjeta por reserva con la referencia de su pedido, las vivas de la más próxima a la más lejana, el
+historial en su propia zona tras un CTA y atenuado, **5 por página ordenadas en el SERVIDOR**
+(`GET /api/v1/me/reservations/{scope}`).
+⚠️⚠️ **Lo que no se puede no saber antes de tocarlo**: los dos ámbitos son **los dos lados de UN
+predicado** (`where`/`whereNot` sobre la misma expresión), **no dos consultas**. Si alguien las separa,
+una reserva puede **no salir en ninguna de las dos pantallas** — y eso no falla, no avisa y no se ve:
+una lista a la que le falta una fila se lee perfectamente. Lo sostiene `Sales\CustomerReservationsPageTest`,
+que asevera la PROPIEDAD y no una lista de casos.
+⚠️ **El ledger NO viaja con la tarjeta**: es del pedido y se repetiría tantas veces como reservas tenga.
+Se pide con `GET /orders/{code}` al desplegar «Ver pedido».
 
 ⚠️ Y sigue abierta la decisión aplazada de `specs/area-cliente.md` §3.4: **si la zona activa cambia la
 URL**. Hoy el «atrás» del navegador no hace nada dentro del cajón y una zona no se puede enlazar.
 
-⚠️ **Dos casos del guion de navegador siguen sin recorrer**: `V17` (el alta suelta con su reenvío) y
-`V18` (el paso 5 completo), en `VERIFICACION-E2E-CAJON.md` §5.quinquies. Son de `#122`, no de `#123`.
-
-⚠️⚠️ **Y una pasada visual PENDIENTE**: el pulido de `#124` cambia el aspecto de pantallas que el
-owner ya había validado —los tres botones del bloque, el índice con iconos, «Mis reservas» en
-tarjetas, privacidad en dos, los spinners, el título de auth y las pestañas a ancho completo—.
-**Ningún test de este repo ve un cambio visual.** Guion en `VERIFICACION-E2E-CAJON.md` §5.sexies.
+✅ **EL GUION DE NAVEGADOR ESTÁ AL DÍA** (2026-08-23, `#125`): `V17`, `V18` y `V23` —los tres que
+`#122` y `#124` dejaron sin recorrer— **están HECHOS y en 60/60** tras arreglar los dos fallos reales
+que destaparon. El qué pasó, en el tracker; el guion, en `VERIFICACION-E2E-CAJON.md` §5.septies.
+⚠️ **Lo único que queda pide un DISPOSITIVO**: `V23·3` en **móvil real** (el scroll que arrastraba la
+página) y `V20·6` con «reducir movimiento». Los dos necesitan staging — que **no lleva `#123`–`#126`**.
 
 ### Dónde está hoy «Mi cuenta»
 
@@ -300,6 +357,11 @@ sitio y duplicarlas es lo que envejece esta foto—; se nombran para que no te p
   1. ❗❗ **ACTIVAR LAS TAREAS PROGRAMADAS** del sitio en el panel de Enhance — sin cron no hay envío de
      correo ni caducidad de pedidos (`#115`). La entrada exacta, en `ENTORNOS.md` §4.
   2. Un **token nuevo de la API del panel** para `scripts/provision.sh` (el de medir se retiró).
+  3. ❗ **Una pasada por el SANDBOX de Redsys para el reembolso REST de punta a punta**: que
+     `Redsys::executeRefund()` hable de verdad con la pasarela y su respuesta se parsee bien. La
+     auditoría del desglose lo dobló a propósito —una auditoría de dinero no hace llamadas externas—
+     y **local no lo puede probar**. Herramienta canónica: `php artisan redsys:verify-sandbox`
+     (`PAY-08`). Es el único hueco de esa auditoría que no se cerró.
   3. 2FA del panel · backlog de producto de Fase 6.
   ✅ Resueltos: el acceso SSH del 2º puesto (2026-08-21) · **las dos comprobaciones de navegador que
   cerraban `4.7`** (2026-08-22) · **la spec del área de cliente**, validada el 2026-08-22 —modelo de
@@ -457,6 +519,9 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 | **Área · tanda 1** | 🟩 **Leer**: el nivel sección, las zonas, el contrato de presentación, los datos, la puerta y la captura de huecos | `#120(g)`–`(m)` |
 | **Área · tanda 2** | 🟩 **Gestionar**: contraseña y sesiones · el perfil y el ciclo del correo · **los dos derechos RGPD** — y la web heredó los cuatro limitadores que le faltaban | `#120(n)`–`(s)` |
 | **Área · tanda 3** | 🟩 **Retirar**: primero se publicó lo que solo sabía la página (desglose financiero, consentimientos) y **después** se borró. La auditoría destapó **dos huecos reales** que nadie vigilaba | `#120(t)`, `#120(u)` |
+| **Pulido** | 🟩 **Nueve retoques del owner, y CUATRO no eran cosméticos**: el modo del panel se saltaba el puente del motor, «Mis reservas» se servía sin tarjetas porque la transcripción inventó nombres de clase, el scroll arrastraba la página y el título de auth salía dos veces | **`#124`** |
+| **Verificación** | 🟩 **El guion pendiente, recorrido**: `V17`, `V18` y `V23`. **Dos fallos reales** — el reenvío prometía correos que el servidor tiraba (4 reenvíos, 2 correos) y el velo de privacidad no se pintaba nunca | **`#125`** |
+| **Mis reservas** | 🟩 **Se lista POR RESERVA, y el pasado a su propia pantalla**: endpoint por ámbito con los dos lados de UN predicado, el ledger bajo demanda y la tarjeta compartida. Lo que ENCONTRÓ: el escáner de CSS estaba ciego a los modificadores de `:class`, y la poda del payload dejó cuatro textos viajando vacíos | **`#126`** |
 | **Bloque de cuenta** | 🟩 **El ÚLTIMO Livewire del layout, a Vue**: hueco con suelo servido, `<Teleport>`, endpoint `GET /me/account-context` y la semilla del montaje por el MISMO Resource. Lo que ENCONTRÓ: el `no-store` accidental de todo el sitio, la única salida de sesión de la app y un gate de iconos ciego a un tercio de sus componentes | **`#123`** |
 
 ⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
@@ -466,7 +531,16 @@ verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice
 incluye el tiempo hay que tomarla con el reloj parado** (`#64`) · **un test que compara contra un
 artefacto tiene que comprobar que no está rancio** (`#69`) · **al re-apuntar un caso hay que volver a
 mutarlo** (`#65`: pasó a ser inerte sin que nadie lo notara) · **el caso frontera se elige por el
-MECANISMO del fallo, no por el síntoma** (`#68`).
+MECANISMO del fallo, no por el síntoma** (`#68`) ·
+**una guarda puede existir, cruzar las dos fuentes y estar bien razonada, y aun así leer el número
+equivocado** (`#125`: al auditar una guarda la pregunta no es «¿mira algo?» sino «¿mira TODO lo que hay
+ahí?») · **lo que un gate declara que no mira puede ser justo su caso principal** (`#126`: el escáner de
+CSS se saltaba `:class`, que es donde vive un modificador) ·
+⚠️⚠️ **y un FIXTURE IRREAL fabrica defectos igual de bien que los oculta** — la auditoría del desglose
+de dinero lo pagó **tres veces** (`specs/desglose-dinero-cliente.md` §2, §4.bis.3, §4.ter): un
+`extra_due` sin subir el precio, un pago sin sincronizar a `Σ itemCollectedCents`, y `unit_price`
+tratado como total cuando es POR UNIDAD. **Antes de acusar al código, comprueba que el fixture
+reproduce el flujo real.**
 
 ## Entorno (local)
 

@@ -1807,8 +1807,25 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       **ocultas durante la verificación**, que era la forma accidental de destruir esa pantalla.
       ⚠️ **La defensa de PII que borra el correo pendiente NO se tocó**: está decidida por escrito.
       Suite **2678 verde** · **633 tests JS** · chunk 210,8/211 KiB.
+- [x] **`#125` · Recorrer el guion de navegador que `#122` y `#124` dejaron pendiente** (2026-08-23).
+      `V17`, `V18` y `V23`: **60 comprobaciones, 58 verdes y 2 rojas**, y las dos rojas eran fallos
+      reales — el reenvío del correo prometía envíos que el servidor tiraba (4 reenvíos, 2 correos) y
+      el velo de la zona de privacidad no se pintaba nunca—. Los dos arreglados y **60/60**.
+      ⚠️ **Su lección transversal**: la guarda del reenvío **existía, cruzaba las dos fuentes y estaba
+      bien razonada**, y aun así leía el limitador equivocado. Al auditar una guarda la pregunta no es
+      «¿mira algo?» sino **«¿mira TODO lo que hay ahí?»**.
+- [x] **`#126` · «Mis reservas» se lista POR RESERVA, con el pasado en su propia pantalla**
+      (2026-08-23, encargo del owner). Endpoint `GET /me/reservations/{scope}` con los **dos ámbitos
+      como los dos lados de UN predicado** —si se separan, una reserva puede no salir en ninguna de las
+      dos pantallas y eso no falla, no avisa y no se ve—. Suite **2704** · **648 tests JS** ·
+      **16/16** en navegador · chunk 213,57/214,5 KiB.
 
 ### Fase 5 — Capa de contenido profesional ⬜
+⚠️⚠️ **Su primer punto NO es implementable tal como está escrito** (medido el 2026-08-23): pide caché
+**etiquetada** y el store es `database`, que **lanza** `BadMethodCallException` al usar tags. No hay
+Redis en el stack local, ni en staging, ni una línea en la doc que lo contemple. Fase 5 empieza por una
+decisión de infraestructura del owner —Redis, o invalidación por versión de clave—, no por código.
+⚠️ Y **no es lo siguiente**: antes va el desglose de dinero del cliente (ver abajo).
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
@@ -1824,6 +1841,28 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       revocación están hechas y probadas desde Fase 3 · paso 3a (`DECISIONES #29`).
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
+
+### ❗ ABIERTO Y CRÍTICO — el DESGLOSE de dinero que ve el cliente 🟦
+> Spec: `docs/specs/desglose-dinero-cliente.md` (auditoría **CERRADA**, diseño pendiente).
+> **Va ANTES de Fase 5** y se ejecuta en TRES tandas ya acordadas con el owner (2026-08-24).
+
+- [ ] **Tanda 1 · asegurar el DOMINIO, sin tocar pantalla.** Cerrar en
+      `Admin\Orders\OrderFinancialInvariantsTest` los tres cruces que faltan (`Σ cobradoPuerta`,
+      `Σ devuelto` —hoy una variable muerta— y las DOS fórmulas del importe online), añadir la **ley de
+      caja** con sus dos excepciones y los escenarios que la auditoría destapó. Invariante nueva en
+      `INVARIANTES.md`. Verificado por mutación. **Riesgo cero: no cambia conducta.**
+- [ ] **Tanda 2 · arreglar la PROYECCIÓN.** Publicar lo ya cobrado en puerta y el bruto online, añadir
+      la línea «Pagado en el parque» que falta, reencuadrar «Subtotal»/«Total», corregir «Pagado
+      online» en un pedido sin pagar y renombrar la nota «Señal». **Sin tocar un número del panel.**
+- [ ] **Tanda 3 · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
+      cada reserva llevando a ella (decisiones del owner en la spec §5).
+- [ ] **Pendiente del owner**: una pasada por el **sandbox de Redsys** para el reembolso REST de punta
+      a punta. Local no lo puede probar y es el único hueco de la auditoría que no se cerró aquí.
+
+⚠️ **Lo que la auditoría ya dejó demostrado, para no repetirla**: **NO hay dos fuentes de verdad** —el
+dominio reconcilia en 8 de 9 identidades sobre **11 pedidos reales creados por los flujos reales**, y la
+novena (ley de caja) tiene dos excepciones legítimas—, y el panel y el cliente enseñan **el mismo número
+bajo el mismo rótulo** en los once. El riesgo está en la PROYECCIÓN, no en la aritmética.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
