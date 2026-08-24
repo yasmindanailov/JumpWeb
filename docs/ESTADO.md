@@ -105,8 +105,8 @@ formateador de consola de Symfony se come la barra— y esa contraseña **se ens
 owner quedaba fuera de su propio panel sin recuperación. Medido: **1.263 de 200.000 (0,63 %), una de
 cada 158**. Arreglado (salida RAW) y guardado con un caso DETERMINISTA — el que existía sorteaba.
 
-✅ **STAGING SIRVE `0e5b885`** desde el **2026-08-25**: el salto de **21 commits y 130 ficheros de
-código** que traía `#123` → `#134` —el bloque de cuenta en Vue, el `no-store` global, «Mis reservas»
+✅ **STAGING SIRVE `e551851`** desde el **2026-08-25**: el salto de **22 commits y 132 ficheros de
+código** que traía `#123` → `#135` —el bloque de cuenta en Vue, el `no-store` global, «Mis reservas»
 por reserva y **el desglose de dinero ENTERO**—. Canal: `scripts/deploy.sh` (dry-run por defecto;
 detalle en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
 ▶ **El despliegue se auto-verifica y salió limpio**: `/up` y `/` en 200, guarda del `robots.txt`,
@@ -124,8 +124,8 @@ el crontab instalado puede no ejecutarse nunca. Se comprueba en el panel del hos
 ❗ **LA REGLA QUE ESTA LÍNEA PAGÓ DOS VECES: la revisión NO se copia, se MIDE.** Llegó a afirmar «no
 hay diferencia de código» cuando ya eran 3 commits y 68 ficheros, y después «sirve el desglose viejo»
 durante todo el día siguiente. Antes de creerte lo de arriba:
-`git log --oneline 0e5b885..HEAD` y
-`git diff --stat 0e5b885..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `0e5b885` por lo
+`git log --oneline e551851..HEAD` y
+`git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 ▶ **Consecuencia práctica**: las dos comprobaciones que quedan y piden dispositivo (`V23·3` en móvil,
 `V20·6`) **ya no están bloqueadas por el despliegue**.
@@ -309,9 +309,9 @@ tal como está escrito** — medido el 2026-08-23, y sigue siendo cierto:
 clave— y no por código. Escribir el primer `Cache::tags()` antes de esa decisión es escribir algo que
 revienta en la primera petición.
 
-✅ **Staging ya está al día**: sirve `0e5b885` desde el 2026-08-25, con el desglose entero (`#123` a
+✅ **Staging ya está al día**: sirve `e551851` desde el 2026-08-25, con el desglose entero (`#123` a
 `#134`) y verificado allí sobre datos reales. ⚠️ Pero **la distancia se mide, no se copia** —esta
-línea ya mintió dos veces—: antes de creértelo, `git log --oneline 0e5b885..HEAD` (ver «Dónde
+línea ya mintió dos veces—: antes de creértelo, `git log --oneline e551851..HEAD` (ver «Dónde
 estamos»).
 
 ---
