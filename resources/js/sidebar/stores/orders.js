@@ -25,8 +25,27 @@ import { useSectionStore } from './section.js';
  */
 export const useOrdersStore = defineStore('orders', {
     state: () => ({
-        /** La respuesta de `GET /me/orders`, cruda. `null` mientras no se haya pedido nunca. */
-        payload: null,
+        /**
+         * Las respuestas de `GET /me/reservations/{scope}`, crudas y **por ámbito**. `null` mientras
+         * ese ámbito no se haya pedido nunca.
+         *
+         * ⚠️⚠️ **Los dos ámbitos viven en UN store, y no es comodidad** (2026-08-23,
+         * `specs/mis-reservas-por-reserva.md` §4.4). «Mis reservas» y «Historial» son dos pantallas
+         * de la MISMA lista partida por un predicado del servidor; con un store cada una, las dos
+         * podrían tener versiones distintas del mismo pedido —una reserva reintentada en una y
+         * caducada en la otra— y nadie lo notaría hasta ver los dos números discrepar. Aquí una
+         * recarga invalida lo que tenga que invalidar en los dos.
+         */
+        pages: { upcoming: null, past: null },
+
+        /**
+         * El pedido COMPLETO, por código, **pedido bajo demanda** al desplegar «Ver pedido».
+         *
+         * ⚠️ El ledger no viaja con las tarjetas a propósito: es del pedido y se repetiría tantas
+         * veces como reservas tenga (`ReservationCardResource`). Se pide con `GET /orders/{code}`,
+         * que ya existe y ya está acotado por `user_id`. Mismo patrón que `eventData`.
+         */
+        orders: {},
 
         /** ¿Hay una petición en vuelo? */
         loading: false,
@@ -56,16 +75,32 @@ export const useOrdersStore = defineStore('orders', {
     }),
 
     getters: {
-        /** ¿Ya se pidió alguna vez? Lo mira `ensure()` para no repetir la petición al volver. */
-        loaded: (state) => state.payload !== null,
+        /** ¿Ya se pidió ese ámbito? Lo mira `ensure()` para no repetir la petición al volver. */
+        loaded: (state) => (scope) => state.pages[scope] !== null,
     },
 
     actions: {
-        /** Pide la primera página **solo si hace falta**. Es lo que se llama al entrar en la zona. */
-        async ensure(deps) {
-            if (this.loaded || this.loading) return;
+        /** Pide la primera página de un ámbito **solo si hace falta**. Se llama al entrar en la zona. */
+        async ensure(scope, deps) {
+            if (this.loaded(scope) || this.loading) return;
 
-            await this.load(1, deps);
+            await this.load(scope, 1, deps);
+        },
+
+        /**
+         * Pide el pedido entero de una tarjeta, **una sola vez**.
+         *
+         * ⚠️ **Un fallo no se anuncia con el error de la zona**, igual que con las respuestas del
+         * pack: esto es un despliegue que el cliente ha pedido, no el contenido de la pantalla.
+         * Pintar «algo ha ido mal» sobre la lista entera porque no se pudo leer un bloque diría que
+         * el problema es otro.
+         */
+        async ensureOrder(code, { api = httpClient } = {}) {
+            if (! code || this.orders[code]) return;
+
+            const response = await api.get('/orders/' + encodeURIComponent(code));
+
+            if (response.ok) this.orders = { ...this.orders, [code]: response.data };
         },
 
         /**
@@ -90,16 +125,16 @@ export const useOrdersStore = defineStore('orders', {
             if (response.ok) this.eventData = { ...this.eventData, [code]: response.data };
         },
 
-        async load(page = 1, { api = httpClient } = {}) {
+        async load(scope, page = 1, { api = httpClient } = {}) {
             this.loading = true;
             this.error = '';
             this.unauthenticated = false;
 
             try {
-                const response = await api.get(`/me/orders?page=${encodeURIComponent(page)}`);
+                const response = await api.get(`/me/reservations/${encodeURIComponent(scope)}?page=${encodeURIComponent(page)}`);
 
                 if (response.ok) {
-                    this.payload = response.data;
+                    this.pages = { ...this.pages, [scope]: response.data };
 
                     return;
                 }
@@ -116,9 +151,9 @@ export const useOrdersStore = defineStore('orders', {
             }
         },
 
-        /** Vuelve a pedir la página que se está viendo (tras un reintento, o tras un fallo). */
-        async reload(deps) {
-            await this.load(Number(this.payload?.meta?.current_page ?? 1), deps);
+        /** Vuelve a pedir la página que se está viendo de un ámbito (tras un reintento, o un fallo). */
+        async reload(scope, deps) {
+            await this.load(scope, Number(this.pages[scope]?.meta?.current_page ?? 1), deps);
         },
 
         /**

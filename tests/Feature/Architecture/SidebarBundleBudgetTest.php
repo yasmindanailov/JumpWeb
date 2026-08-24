@@ -253,8 +253,30 @@ class SidebarBundleBudgetTest extends TestCase
      * `shield`): no había iconos pequeños para esas tres zonas, y `ticket-tear-off` es la ilustración
      * del CTA de compra —viewBox 60×36 y con texto— que a 18 px no se lee.
      * ▶ **211 deja 0,17 KiB**, que es lo más estrecho que ha estado. Lo siguiente que entre lo mide.
+     *
+     * ⚠️ **211 → 212 el 2026-08-23, y los 0,17 KiB de holgura se agotaron con DOS arreglos**
+     * (`DECISIONES #125`). Medido: **210,83 → 211,02 KiB, +0,19 (190 bytes exactos)**, repartidos
+     * entre `navigation.js::replace()` —conmutar de pestaña deja de apilar, para que «Volver» salga
+     * del área en vez de cambiar de pestaña— y la bandera `consentsLoading` de `stores/privacy.js`,
+     * que es la que hace que el velo de la zona de privacidad se pinte de una vez.
+     * ▶ **Ninguno de los dos es una feature**: son el precio de dos fallos encontrados en NAVEGADOR
+     * (`V23·6` y la revisión de UX del owner), y ese es exactamente el caso en que este techo debe
+     * ceder — no cede por «una pantalla más», cede por corrección medida.
+     * ▶ **212 deja 0,98 KiB.** Sigue siendo la holgura más estrecha del ledger: lo siguiente que entre
+     * lo mide, y al cerrar se baja a lo medido.
+     *
+     * ⚠️ **212 → 214,5 el 2026-08-23: «Mis reservas» pasa a listarse POR RESERVA**
+     * (`specs/mis-reservas-por-reserva.md`). Medido: **211,02 → 213,57 KiB, +2,55**. Lo que entra es
+     * `ReservationCard.vue` —la tarjeta que comparten las DOS pantallas— más `cardRow()`, el estado
+     * por ámbito y el pedido bajo demanda en `stores/orders.js`.
+     * ▶ **Y conviene decir de dónde NO sale este coste**, porque podría haber sido mucho mayor: el
+     * historial **no trae componente propio** —es la misma zona con un `scope` por prop—, el ledger
+     * **no se duplicó** —se reutiliza `orderRow()` sobre `GET /orders/{code}`, que ya existía— y la
+     * composición de la reserva **es la misma `lineRow()`** que ya pintaba la línea dentro del
+     * pedido. Una segunda zona con su propia tarjeta y su propio ledger habría costado el doble.
+     * ▶ **214,5 deja 0,93 KiB**, otra vez la holgura más estrecha del ledger.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 211;
+    private const SIDEBAR_CHUNK_MAX_KB = 214.5;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

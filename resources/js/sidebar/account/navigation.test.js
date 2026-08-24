@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
+import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_PARENTS, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -68,14 +68,41 @@ describe('el índice', () => {
      * dos listas** — no que haya una excepción escrita a mano, que es donde se acaba metiendo
      * cualquier cosa.
      */
-    test('TODAS las zonas se pueden alcanzar por alguna de las DOS puertas', () => {
+    test('TODAS las zonas se pueden alcanzar por alguna de las TRES puertas', () => {
         for (const zona of Object.values(ZONES)) {
             if (zona === DEFAULT_ZONE) continue;
 
             assert.ok(
-                HOME_ENTRIES.includes(zona) || GUEST_ZONES.includes(zona),
-                `a la zona «${zona}» no se llega desde ningún sitio: ni el índice ni una puerta de invitado`
+                HOME_ENTRIES.includes(zona) || GUEST_ZONES.includes(zona) || zona in ZONE_PARENTS,
+                `a la zona «${zona}» no se llega desde ningún sitio: ni el índice, ni una puerta de invitado, ni otra zona`
             );
+        }
+    });
+
+    /**
+     * ⚠️⚠️ **La tercera puerta no puede ser una excepción encubierta** (2026-08-23,
+     * `specs/mis-reservas-por-reserva.md` §4.3). Declarar «esta zona cuelga de aquella» solo vale si
+     * el padre EXISTE y es alcanzable a su vez; si no, la lista se convierte en el sitio donde
+     * esconder una zona muerta, que es exactamente lo que la regla lleva dos versiones evitando.
+     */
+    test('y una zona que cuelga de otra tiene un padre REAL y alcanzable', () => {
+        for (const [zona, padre] of Object.entries(ZONE_PARENTS)) {
+            assert.ok(isZone(zona), `«${zona}» está declarada con padre pero no es una zona`);
+            assert.ok(isZone(padre), `el padre de «${zona}» («${padre}») no es una zona`);
+            assert.notEqual(padre, zona, `«${zona}» se declara padre de sí misma`);
+
+            assert.ok(
+                HOME_ENTRIES.includes(padre) || GUEST_ZONES.includes(padre) || padre === DEFAULT_ZONE,
+                `«${zona}» cuelga de «${padre}», que a su vez no se alcanza desde ninguna puerta: la cadena no llega a ningún sitio`
+            );
+        }
+    });
+
+    /** Y no está a la vez colgada de otra zona y en una puerta: dos caminos, dos sitios que mantener. */
+    test('una zona con padre no está ADEMÁS en el índice ni entre las de invitado', () => {
+        for (const zona of Object.keys(ZONE_PARENTS)) {
+            assert.equal(HOME_ENTRIES.includes(zona), false, `«${zona}» está en el índice Y colgada de otra zona`);
+            assert.equal(GUEST_ZONES.includes(zona), false, `«${zona}» es de invitado Y cuelga de otra zona`);
         }
     });
 
@@ -127,9 +154,27 @@ describe('qué significa «volver» según por dónde se entró', () => {
      *    tiene que quedar vacía para que «volver» salga de la sección y devuelva la compra donde
      *    estaba, con su cesta.
      */
-    test('una zona de invitado que no es entrar se siembra CON entrar debajo', () => {
+    test('recuperar contraseña se siembra CON entrar debajo', () => {
         assert.equal(parentZoneFor(ZONES.FORGOT), ZONES.LOGIN);
-        assert.equal(parentZoneFor(ZONES.REGISTER), ZONES.LOGIN);
+    });
+
+    /**
+     * ⚠️⚠️ **Crear cuenta NO se siembra, y hasta el 2026-08-23 sí** (`DECISIONES #125`, owner).
+     *
+     * `LOGIN` y `REGISTER` no son dos pantallas: son las dos caras de una, conmutadas por una barra
+     * de pestañas que las presenta al mismo nivel. Con la siembra, «Volver» desde «Crear cuenta»
+     * cambiaba de pestaña —mismo armazón, misma barra, otro formulario— y se leía como un botón que
+     * no hace nada.
+     *
+     * ⚠️ **Recuperar contraseña sigue sembrando, y la diferencia no es de gusto**: se llega a ella
+     * por un ENLACE dentro de «entrar», no por una pestaña, y no tiene sitio en la barra. Es una
+     * pantalla aparte de verdad.
+     */
+    test('crear cuenta NO se siembra: es la otra cara de entrar, no una pantalla debajo', () => {
+        assert.equal(
+            parentZoneFor(ZONES.REGISTER), null,
+            'con entrar sembrada debajo, «volver» desde el alta cambia de pestaña en vez de salir del área',
+        );
     });
 
     test('entrar no se siembra a sí misma', () => {
@@ -266,6 +311,68 @@ describe('la pila de retorno', () => {
         leida.length = 0;
 
         assert.deepEqual(nav.trail, [ZONES.HOME, ZONES.ORDERS]);
+    });
+});
+
+/**
+ * **Conmutar de pestaña no es navegar** (`DECISIONES #125`, 2026-08-23).
+ *
+ * ⚠️⚠️ El síntoma que esto cierra tiene DOS causas, y arreglar una sola lo deja vivo: la siembra
+ * (`parentZoneFor`) ponía «entrar» debajo del alta, y `go()` apilaba al pulsar la pestaña. Con
+ * cualquiera de las dos, «Volver» desde «Crear cuenta» cambiaba de pestaña en vez de salir del área
+ * — mismo armazón, misma barra, otro formulario—. Por eso los dos tienen caso propio.
+ */
+describe('conmutar entre las dos caras de una pantalla', () => {
+    test('sustituye la cima en vez de apilar: la pila NO crece', () => {
+        const nav = createNavigation({ zone: ZONES.LOGIN });
+
+        assert.equal(nav.replace(ZONES.REGISTER), true);
+        assert.deepEqual(nav.trail, [ZONES.REGISTER]);
+        assert.equal(nav.canBack, false, '«volver» ha dejado de significar «sal del área»');
+    });
+
+    test('y por eso «volver» desde el alta SALE, en vez de cambiar de pestaña', () => {
+        const nav = createNavigation({ zone: ZONES.LOGIN });
+        nav.replace(ZONES.REGISTER);
+
+        assert.equal(nav.back(), false, 'quien llama traduce este false en salir del área');
+        assert.equal(nav.zone, ZONES.REGISTER, 'la zona no puede moverse sola al no haber a dónde volver');
+    });
+
+    test('ida y vuelta cien veces deja la pila donde estaba', () => {
+        const nav = createNavigation({ zone: ZONES.LOGIN });
+
+        for (let i = 0; i < 100; i++) nav.replace(i % 2 ? ZONES.LOGIN : ZONES.REGISTER);
+
+        assert.equal(nav.trail.length, 1, 'conmutar de pestaña ha hecho crecer la historia');
+    });
+
+    /**
+     * ⚠️ **Lo que hay DEBAJO no es suyo y no se toca.** Quien llegó a «entrar» desde recuperar
+     * contraseña —o por la puerta que la siembra— conserva su vuelta al conmutar de pestaña:
+     * sustituir la cima nunca puede borrar historia ajena.
+     */
+    test('conserva lo que hay debajo: no borra historia que no es suya', () => {
+        const nav = createNavigation();
+        nav.reset(ZONES.FORGOT, ZONES.LOGIN);
+        nav.back();
+
+        assert.deepEqual(nav.trail, [ZONES.LOGIN]);
+
+        nav.reset(ZONES.LOGIN, ZONES.HOME);
+        assert.equal(nav.replace(ZONES.REGISTER), true);
+
+        assert.deepEqual(nav.trail, [ZONES.HOME, ZONES.REGISTER]);
+        assert.equal(nav.back(), true);
+        assert.equal(nav.zone, ZONES.HOME);
+    });
+
+    test('conmutar a la zona en la que ya se está no cuenta, y una inventada se rechaza', () => {
+        const nav = createNavigation({ zone: ZONES.LOGIN });
+
+        assert.equal(nav.replace(ZONES.LOGIN), false);
+        assert.equal(nav.replace('inventada'), false);
+        assert.deepEqual(nav.trail, [ZONES.LOGIN]);
     });
 });
 

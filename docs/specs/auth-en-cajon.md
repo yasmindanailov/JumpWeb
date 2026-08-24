@@ -114,6 +114,27 @@ compartir». Lo único que el cajón no sabe hacer es **recuperar la contraseña
   `go(zona)`. ✅ **ELEGIDA.** El mapa ruta→zona sigue siendo uno y plano, y la regla de miga de pan de
   la pila impide que alternar entre pestañas haga crecer la historia (`navigation.js`, `go()`).
 
+⚠️⚠️ **[DECIDIDO] 2026-08-23, owner — que sean dos zonas es CÓMO se sirven, no cómo se navegan**
+(`DECISIONES #125`). La opción (b) sigue elegida, pero **las pestañas conmutan con `replace()`, no con
+`go()`**, y `parentZoneFor(REGISTER)` pasa a devolver `null`.
+
+**El porqué, medido en navegador**: «Volver» desde «Crear cuenta» cambiaba de pestaña —mismo armazón,
+misma barra, otro formulario— y se leía como un botón que no hace nada. Para quien mira, `LOGIN` y
+`REGISTER` **no son dos pantallas: son las dos caras de una**, porque la barra las presenta al mismo
+nivel. Que internamente sean zonas es una decisión de enrutado, y esta spec la confundió con una de
+navegación.
+
+⚠️ **El síntoma tenía DOS causas y arreglar una sola lo deja vivo**: la siembra de `parentZoneFor()`
+ponía `LOGIN` debajo, y `go()` apilaba. La regla de miga de pan que este párrafo citaba **acotaba** la
+pila, que es otra cosa que no dejarla crecer: con `[login, register]` el «volver» seguía existiendo.
+
+⚠️ **`FORGOT` conserva su siembra**, y la diferencia no es de gusto: se llega a ella por un ENLACE
+dentro de «entrar», no por una pestaña, y no tiene sitio en la barra. Es una pantalla aparte de
+verdad. Su «volver» sigue llevando a «entrar» desde los tres orígenes de §3.4.
+
+▶ **Efecto secundario aceptado**: llegar en frío a `/registro` y pulsar «Volver» ahora sale al
+catálogo en vez de a «entrar». Guion: `VERIFICACION-E2E-CAJON.md` §5.septies (`V26`).
+
 ### 3.3 ¿Dónde aterriza quien entra desde la cabecera? — **[DECIDIDO] 2026-08-22, owner**
 
 **El índice de Mi cuenta** (zona `HOME`). Descartadas: volver al embudo (deja al cliente en un

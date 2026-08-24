@@ -175,7 +175,10 @@ describe('al entrar en la zona', () => {
 
         store.reset();
 
-        assert.deepEqual(store.$state, { busy: false, fields: {}, notice: '', done: false, expired: false, savedAs: '', consents: null });
+        // ⚠️ `consentsLoading` entra en esta foto el 2026-08-23 y NO es cosmético: es la bandera del
+        // velo, y este `deepEqual` es lo que asevera que `reset()` no la toca —si algún día se colara
+        // en `resetForm()`, reentrar en la zona apagaría el velo con la petición en vuelo—.
+        assert.deepEqual(store.$state, { busy: false, fields: {}, notice: '', done: false, expired: false, savedAs: '', consents: null, consentsLoading: false });
     });
 
     /**
@@ -208,6 +211,58 @@ describe('la lista de consentimientos', () => {
 
         assert.equal(api.llamadas.length, 1, 'volver a entrar en la pantalla repite la petición');
         assert.equal(store.consents.meta.total, 1);
+    });
+
+    /**
+     * ⚠️⚠️ **El caso que NINGÚN test de este fichero podía ver hasta hoy** (2026-08-23): el estado
+     * MIENTRAS la petición está en vuelo. Los demás hacen `await` y solo miran el desenlace, así que
+     * `ensureConsents()` llevaba desde su commit fundacional **sin levantar ninguna bandera** y nadie
+     * lo notaba: el `v-if` del velo (`consentsLoading && ! consentsLoaded`) era falso, el
+     * `v-else-if` del «no hay consentimientos» también, y la tarjeta se pintaba **vacía** durante
+     * toda la espera. Encontrado en NAVEGADOR reteniendo `GET /me/consents` 2.500 ms (`V23·6`).
+     *
+     * ▶ Por eso este caso no se escribe con `await`: se retiene la promesa a propósito y se mira el
+     * estado intermedio, que es el único sitio donde el fallo existía.
+     */
+    test('mientras la lista está EN VUELO, la zona sabe que está cargando', async () => {
+        const store = usePrivacyStore();
+        let soltar;
+        const enVuelo = new Promise((resolve) => { soltar = resolve; });
+        const api = { get: () => enVuelo };
+
+        const pendiente = store.ensureConsents({ api });
+
+        assert.equal(store.consentsLoading, true, 'la zona no sabe que hay una petición en vuelo: el velo no se pinta');
+        assert.equal(store.consentsLoaded, false, 'se da por leída una lista que aún no ha llegado');
+
+        soltar({ ok: true, status: 200, data: { data: [], meta: { total: 0 } }, error: null });
+        await pendiente;
+
+        assert.equal(store.consentsLoading, false, 'la bandera se queda encendida y el velo no se va nunca');
+        assert.equal(store.consentsLoaded, true);
+    });
+
+    /**
+     * ⚠️ **Y la bandera es PROPIA, no `busy`.** `busy` es el estado de los dos formularios de esta
+     * pantalla; usarlo para una lectura de cortesía bloquearía «Descargar mis datos» y el borrado
+     * mientras se lee una lista — y, peor, `reset()` llama a `resetForm()`, que lo pone a `false`:
+     * reentrar en la zona con una carga en vuelo apagaría el velo a mitad.
+     */
+    test('leer la lista NO bloquea los dos derechos, y reentrar no apaga el velo', async () => {
+        const store = usePrivacyStore();
+        let soltar;
+        const api = { get: () => new Promise((resolve) => { soltar = resolve; }) };
+
+        const pendiente = store.ensureConsents({ api });
+
+        assert.equal(store.busy, false, 'leer una lista ha bloqueado exportar y borrar');
+
+        store.reset();
+
+        assert.equal(store.consentsLoading, true, 'reentrar en la zona ha apagado el velo con la petición en vuelo');
+
+        soltar({ ok: true, status: 200, data: { data: [], meta: { total: 0 } }, error: null });
+        await pendiente;
     });
 
     /**

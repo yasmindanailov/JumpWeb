@@ -215,6 +215,20 @@ return [
         // Fase 7.1b (#127): badge cuando la fecha+hora del producto ya pasó.
         'item_finished' => 'Finalizado',
         'item_cancelled' => 'Cancelado',
+        // ── El HISTORIAL, en su propia pantalla (`specs/mis-reservas-por-reserva.md`) ─────────
+        // Lo pasado no se mezcla con lo vivo: la lista principal responde a «¿qué tengo?» y el
+        // historial de un cliente veterano la empujaría fuera de la primera página.
+        'history' => [
+            'title' => 'Historial de reservas',
+            'cta' => 'Ver historial de reservas',
+            'empty' => 'Aquí aparecerán tus reservas pasadas y las canceladas.',
+            'back' => 'Volver a Mis reservas',
+        ],
+        // El desglose del PEDIDO, bajo demanda: es del pedido y no de la reserva, así que se pide
+        // al desplegarlo en vez de repetirlo en cada tarjeta.
+        'order_ref' => 'Pedido :code',
+        'order_show' => 'Ver pedido',
+        'order_hide' => 'Ocultar pedido',
         'retry_payment' => 'Reintentar el pago',
         'retry_hint' => 'Mantenemos tu reserva unos minutos más por si quieres completar el pago.',
         'guest_form_pending' => 'Completa el formulario de :product',

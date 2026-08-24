@@ -23,6 +23,7 @@ use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
+use App\Domain\Booking\Contracts\ReservationScope;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Contracts\RetryOutcome;
 use App\Domain\Booking\Contracts\SeasonWindow;
@@ -58,6 +59,7 @@ use App\Domain\Payments\Services\Redsys;
 use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -318,6 +320,18 @@ class ModuleContractsTest extends TestCase
             public function pendingGuestFormsFor(int $userId): array
             {
                 return [new PendingGuestForm(4242, 'Pack cumpleaños')];
+            }
+
+            /**
+             * ⚠️ **Este doble NO se usa para el historial, y lanzar es lo correcto.** El contrato
+             * ganó `pageFor()` el 2026-08-23 (historial por reserva) y este caso solo ejerce el
+             * contexto de cuenta. Devolver un paginador vacío haría que un futuro consumidor que
+             * llegara hasta aquí por error viera «no tienes reservas» en vez de un fallo — que es
+             * exactamente la clase de silencio que este fichero existe para impedir.
+             */
+            public function pageFor(int $userId, ReservationScope $scope, int $perPage, int $page): LengthAwarePaginator
+            {
+                throw new \LogicException('este doble no sirve el historial: es del contexto de cuenta');
             }
         });
 

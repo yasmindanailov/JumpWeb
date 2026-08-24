@@ -95,18 +95,27 @@ describe('la cuenta atrás', () => {
 
 describe('los dos números, que NO son arbitrarios', () => {
     /**
-     * ⚠️⚠️ **Los 30 s espejan el limitador por IP de `SelfSignup::resendVerification()`.**
+     * ⚠️⚠️ **Los 60 s espejan `SelfSignup::RESEND_EMAIL_COOLDOWN_SECONDS`**, que es el cooldown que
+     * ATA en `resendVerification()` — el servicio aplica dos, por IP (30 s) y por CORREO (60), y
+     * manda el mayor.
      *
      * El endpoint responde 202 aunque descarte el envío, así que una cuenta atrás **más corta** deja
      * el botón disponible mientras el servidor tira el reenvío a la basura: el cliente pulsa, ve
-     * «reenviado» y no le llega nada, sin una sola línea de log del lado del cliente. Es la familia de
-     * `DECISIONES #115` — una señal que dice una cosa y significa otra.
+     * «reenviado», **gasta uno de sus cuatro reenvíos** y no le llega nada, sin una sola línea de log
+     * del lado del cliente. Es la familia de `DECISIONES #115` — una señal que dice una cosa y
+     * significa otra.
      *
-     * Este caso no puede leer el PHP, así que lo que fija es el **valor acordado**: si alguien lo baja
-     * «porque 30 s es mucho», este rojo le manda a mirar el servicio antes de tocarlo.
+     * ⚠️ **Y aquí ponía 30, espejando el de IP** (corregido el 2026-08-23, `DECISIONES #125`). Medido
+     * en navegador dos veces: cuatro reenvíos, **dos correos**. Los de 63 s y 123 s los tiró el
+     * limitador por correo con HTTP 202. En el alta SUELTA el titular es el destinatario, así que ese
+     * limitador le ata a él.
+     *
+     * Este caso no puede leer el PHP, así que lo que fija es el **valor acordado**; quien cruza de
+     * verdad las dos fuentes es `SidebarVerifyScreenTest`. Si alguien lo baja «porque 60 s es mucho»,
+     * este rojo le manda a mirar el servicio antes de tocarlo.
      */
-    test('la espera espeja el limitador del servidor y no se acorta por comodidad', () => {
-        assert.equal(RESEND_COOLDOWN_SECONDS, 30, 'el limitador por IP de `SelfSignup` son 30 s: bajarlo aquí ofrece un botón que no envía');
+    test('la espera espeja el cooldown que ATA en el servidor y no se acorta por comodidad', () => {
+        assert.equal(RESEND_COOLDOWN_SECONDS, 60, 'el cooldown por CORREO de `SelfSignup` son 60 s: bajarlo aquí ofrece un botón que no envía');
         assert.ok(RESEND_COOLDOWN_SECONDS > 0);
     });
 

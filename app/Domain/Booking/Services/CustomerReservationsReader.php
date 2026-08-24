@@ -4,10 +4,13 @@ namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\PendingGuestForm;
+use App\Domain\Booking\Contracts\ReservationScope;
 use App\Domain\Booking\Contracts\UpcomingReservation;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -102,6 +105,122 @@ class CustomerReservationsReader implements CustomerReservations
         }
 
         return $pending;
+    }
+
+    /**
+     * Una página del historial de reservas, ordenada para presentación
+     * (`docs/specs/mis-reservas-por-reserva.md` §4.1).
+     *
+     * ⚠️⚠️ **Los dos ámbitos salen del MISMO predicado** ({@see terminated}), aplicado con `where` en
+     * un lado y `whereNot` en el otro. No son dos consultas que se complementan de casualidad: son
+     * una partición por construcción, y eso es lo que impide que una reserva no salga en ninguna de
+     * las dos pantallas que consumen esto. Lo asevera `MeReservationScopeTest`.
+     *
+     * ⚠️ **El `leftJoin` a `slots` no es una optimización: es lo que permite ORDENAR en SQL.** Sin él
+     * habría que traer el histórico entero y ordenarlo en PHP para poder paginarlo — el coste que
+     * `pendingGuestFormsFor()` acaba de dejar de pagar. `left` y no `join` porque una reserva **sin
+     * franja** tiene que seguir apareciendo.
+     *
+     * @return LengthAwarePaginator<int, OrderItem>
+     */
+    public function pageFor(int $userId, ReservationScope $scope, int $perPage, int $page): LengthAwarePaginator
+    {
+        $query = OrderItem::query()
+            // ⚠️ Sin este `select` explícito, el `join` mezcla columnas de `orders` y `slots` con las
+            // del ítem y Eloquent hidrata un `OrderItem` con el `id` equivocado.
+            ->select('order_items.*')
+            ->whereNull('order_items.parent_item_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('slots', 'slots.id', '=', 'order_items.slot_id')
+            ->where('orders.user_id', $userId)
+            // Mismo eager-load que `MeOrdersController`, y por el mismo motivo: sin él, pintar la
+            // tarjeta con su ledger y su post-form dispara N+1 por cada fila de la página.
+            ->with([
+                'ticketType', 'slot', 'children.ticketType',
+                'order.items.ticketType', 'order.items.slot', 'order.payments.refunds', 'order.adjustments',
+            ]);
+
+        $query = $scope === ReservationScope::PAST
+            ? $query->where(fn (Builder $q) => $this->terminated($q))
+            : $query->whereNot(fn (Builder $q) => $this->terminated($q));
+
+        return $this->ordered($query, $scope)->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * **El predicado ÚNICO: qué es una reserva terminada.** Se escribe aquí y en ningún otro sitio.
+     *
+     * ⚠️⚠️ **Cada rama es NULL-SAFE, y no es pulcritud: es la condición para que `whereNot()` sea el
+     * complemento de verdad.** En SQL, `slots.date < '2026-08-23'` con `slots.date` a NULL no vale
+     * *false* sino *unknown*, y `NOT unknown` sigue siendo *unknown* → la fila se cae de los DOS
+     * lados. **Medido**: sin la guarda, una reserva sin franja desaparece de la aplicación entera y la
+     * partición pasa de 9 a 8 sin que falle nada más.
+     *
+     * ⚠️ **Y la guarda es UNA, no dos, a propósito.** La primera versión ponía
+     * `whereNotNull('slots.date')` **y** `whereNotNull('slots.end_time')`, que suena más defensivo y
+     * en realidad es peor: como `slots.date` y `slots.end_time` son `NOT NULL` en el esquema, las dos
+     * solo valen NULL a la vez —cuando el `leftJoin` no encuentra franja—, así que **cada una tapa a
+     * la otra y ninguna se puede medir mutándola**. Comprobado: quitar cualquiera de las dos dejaba
+     * el test en verde. Es literalmente `DECISIONES #112` —«una guarda con dos fuentes redundantes no
+     * se puede medir mutando una sola»—, y por eso se conserva la que espeja el `end_time === null`
+     * de `OrderItem::isFinishedInPractice()`, que es la que tiene significado.
+     *
+     * ⚠️ **El corte de «disfrutada» es EXACTO, no por día.** Espeja `OrderItem::isFinishedInPractice()`
+     * —«hay hora de fin y ya pasó»— con una comparación de dos columnas en vez de concatenar fecha y
+     * hora, que es lo que la haría depender del dialecto de la BD (la suite corre en SQLite y
+     * producción en MySQL). Un slot **sin `end_time` nunca está finalizado**, igual que allí, y por
+     * eso la primera guarda de esa rama es `whereNotNull('slots.end_time')`.
+     * ▶ Comparar por día habría hecho que esta partición y `upcomingFor()` **discreparan**: una franja
+     * de ayer sin hora de fin es «próxima» para el bloque de cuenta y sería «pasada» aquí.
+     *
+     * ⚠️ **La caducidad de un pedido también es de hecho, no de columna**: `orders:expire` corre por
+     * cron y puede ir por detrás, así que se espeja `Order::isExpiredInPractice()`.
+     */
+    private function terminated(Builder $query): Builder
+    {
+        $now = Carbon::now();
+
+        return $query
+            ->whereNotNull('order_items.cancelled_at')
+            ->orWhereIn('orders.status', [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED, Order::STATUS_EXPIRED])
+            ->orWhere(fn (Builder $q) => $q
+                ->where('orders.status', Order::STATUS_PENDING)
+                ->whereNotNull('orders.expires_at')
+                ->where('orders.expires_at', '<', $now))
+            ->orWhere(fn (Builder $q) => $q
+                ->whereNotNull('slots.end_time')
+                ->where(fn (Builder $e) => $e
+                    ->whereDate('slots.date', '<', $now->toDateString())
+                    ->orWhere(fn (Builder $sameDay) => $sameDay
+                        ->whereDate('slots.date', '=', $now->toDateString())
+                        ->where('slots.end_time', '<', $now->format('H:i:s')))));
+    }
+
+    /**
+     * El orden de cada ámbito.
+     *
+     * ⚠️ **El desempate por `id` no es cosmético**: sin un orden total, dos reservas del mismo día y
+     * hora pueden intercambiarse entre dos peticiones y hacer que una **desaparezca al pasar de
+     * página** mientras otra sale dos veces. Es el fallo clásico de paginar con orden no determinista.
+     *
+     * ⚠️ **`CASE WHEN … IS NULL` en vez de `NULLS FIRST/LAST`**: eso último no existe en MySQL, y la
+     * suite corre en SQLite. El `CASE` funciona igual en los dos.
+     *
+     * @param  Builder<OrderItem>  $query
+     * @return Builder<OrderItem>
+     */
+    private function ordered(Builder $query, ReservationScope $scope): Builder
+    {
+        // Las que NO tienen franja van primero en «próximas» —normalmente esperan algo del cliente— y
+        // al final en el historial, donde no hay fecha por la que colocarlas.
+        $noSlotFirst = $scope === ReservationScope::UPCOMING;
+        $direction = $scope === ReservationScope::UPCOMING ? 'asc' : 'desc';
+
+        return $query
+            ->orderByRaw('CASE WHEN slots.date IS NULL THEN '.($noSlotFirst ? '0 ELSE 1' : '1 ELSE 0').' END')
+            ->orderBy('slots.date', $direction)
+            ->orderBy('slots.start_time', $direction)
+            ->orderBy('order_items.id', $direction);
     }
 
     /** @return Collection<int, OrderItem> */

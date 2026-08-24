@@ -79,6 +79,18 @@ class SidebarStyleWiringTest extends TestCase
         $this->assertGreaterThan(200, count($emitted), 'el escaneo no está leyendo las plantillas del cajón');
         $this->assertArrayHasKey('acct__inner', $emitted, 'no ve el bloque de cuenta');
         $this->assertArrayHasKey('orders__item', $emitted, 'no ve la zona de «Mis reservas»');
+
+        // ⚠️⚠️ **Y ve los MODIFICADORES de un `:class`, que es donde vive el caso principal de esta
+        // guarda** (2026-08-23). `DECISIONES #124` encontró ocho clases servidas sin regla y varias
+        // eran modificadores; un escáner que solo mirase el `class` estático estaría ciego justo
+        // para ellas. Sin esta línea, la ampliación podría volverse inerte y nadie lo notaría.
+        $this->assertArrayHasKey(
+            'orders__item--past', $emitted,
+            'el escaneo no ve los literales de un `:class`: los modificadores vuelven a ser un punto ciego'
+        );
+
+        // Y sigue SIN ver lo que de verdad se compone al vuelo, que es el hueco que sí declara.
+        $this->assertArrayNotHasKey('pending', $emitted, 'un operando de comparación se está contando como clase');
     }
 
     /** Y que las hojas se lean de verdad: si el CSS llegara vacío, «todo tiene regla» sería trivial. */
@@ -182,24 +194,73 @@ class SidebarStyleWiringTest extends TestCase
             // guarda el mismo punto ciego que la paridad de iconos tenía con `glob('**')`.
             $template = (string) preg_replace('/(<svg\b[^>]*>).*?<\/svg>/s', '$1</svg>', $template);
 
-            // ⚠️ `(?<![:\w-])class=` deja fuera `:class` y `v-bind:class`: esas se componen en
-            // ejecución y exigirles regla obligaría a enumerar valores que solo están en los datos.
+            $name = basename($file->getPathname());
+
+            // El `class` estático de siempre.
             preg_match_all('/(?<![:\w-])class="([^"{}]+)"/', $template, $matches);
 
             foreach ($matches[1] as $attribute) {
                 foreach (preg_split('/\s+/', trim($attribute)) ?: [] as $class) {
-                    if ($class === '') {
-                        continue;
+                    if ($class !== '') {
+                        $found[$class] = array_values(array_unique([...($found[$class] ?? []), $name]));
                     }
-
-                    $name = basename($file->getPathname());
-                    $found[$class] = array_values(array_unique([...($found[$class] ?? []), $name]));
                 }
+            }
+
+            // ⚠️⚠️ **Y los LITERALES de un `:class`, que hasta el 2026-08-23 este escáner no miraba**
+            // (`specs/mis-reservas-por-reserva.md` §4.4). Su comentario declaraba el hueco —«esas se
+            // componen en ejecución»— y eso es cierto solo a medias: `:class="{ 'orders__item--past':
+            // dimmed }"` lleva el nombre **escrito entero**, y es exactamente la forma en que se
+            // emite un MODIFICADOR — que es lo que `DECISIONES #124` encontró servido sin regla.
+            // Dejarlo fuera convertía esta guarda en ciega justo para su caso principal.
+            // ▶ Lo que sigue fuera es lo que de verdad se compone: `'orders__status--' + estado`
+            // no tiene nombre completo en ninguna parte, así que un literal acabado en `-` se
+            // descarta por ser un PREFIJO y no una clase. Es la parte que el gate declara que no
+            // mira, ahora acotada a lo que de verdad no puede mirar.
+            foreach ($this->boundClassLiterals($template) as $class) {
+                $found[$class] = array_values(array_unique([...($found[$class] ?? []), $name]));
             }
         }
 
         ksort($found);
 
         return $found;
+    }
+
+    /**
+     * Los nombres de clase escritos ENTEROS dentro de un `:class` / `v-bind:class`.
+     *
+     * ⚠️ Se descarta lo que acaba en `-`: es un prefijo de una clase que se compone al vuelo
+     * (`'orders__status--' + estado`), y exigirle regla obligaría a enumerar valores que solo están
+     * en los datos. Y se descarta lo que no parece una clase —espacios, mayúsculas, rutas— para no
+     * arrastrar cadenas sueltas de una expresión.
+     *
+     * @return list<string>
+     */
+    private function boundClassLiterals(string $template): array
+    {
+        preg_match_all('/(?::|v-bind:)class="([^"]*)"/', $template, $bound);
+
+        $classes = [];
+
+        foreach ($bound[1] as $expression) {
+            // ⚠️⚠️ **Se acota por POSICIÓN sintáctica, no por aspecto.** Una expresión de `:class`
+            // lleva literales que NO son clases: `estado === 'pending' ? …` compara, no pinta. La
+            // primera versión de esto los recogía todos y declaraba huérfanas `.login`, `.register`
+            // y `.pending` —tres operandos—, que es peor que no mirar: un test que grita por algo
+            // que no existe se acaba silenciando entero.
+            // ▶ Un literal es una clase si es **clave de objeto** (`{ 'x': cond }`) o **rama de un
+            //   ternario** (`cond ? 'x' : 'y'`). Un operando de comparación no es ninguna de las dos.
+            preg_match_all("/'([^']+)'\s*:/", $expression, $keys);
+            preg_match_all("/[?:]\s*'([^']+)'/", $expression, $branches);
+
+            foreach ([...$keys[1], ...$branches[1]] as $literal) {
+                if (preg_match('/^[a-z][a-z0-9]*(?:[-_]+[a-z0-9]+)*$/', $literal) === 1 && ! str_ends_with($literal, '-')) {
+                    $classes[] = $literal;
+                }
+            }
+        }
+
+        return array_values(array_unique($classes));
     }
 }

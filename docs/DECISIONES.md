@@ -5794,3 +5794,182 @@ pestañas —, no la defensa. La salida deliberada sigue dentro de la propia pan
 ledger) · textos del montaje **3.137 B** anónimo (techo 3.200) y **6.160** con sesión (techo 6.272).
 Cada arreglo con su guarda y **verificado por mutación**.
 
+
+## #125 · 2026-08-23 · [DECIDIDO] Dos fallos que solo el navegador podía ver — y una guarda bien escrita que miraba el número equivocado
+
+**De dónde salen**: de recorrer `V17` y `V23`, los dos casos del guion de navegador que `#122` y `#124`
+dejaron marcados como «no recorrido» (`VERIFICACION-E2E-CAJON.md` §5.quinquies y §5.sexies). **60
+comprobaciones en navegador, 58 en verde y 2 rojas.** Las dos rojas eran fallos reales.
+
+### 1 · El botón de reenviar prometía correos que el servidor tiraba
+
+**Medido, dos veces idéntico**, con la bandeja de Mailpit como único oráculo:
+
+    reenvio 1 a los  32s — HTTP 202 — bandeja 1 -> 2
+    reenvio 2 a los  63s — HTTP 202 — bandeja 2 -> 2   <<< NO SALIÓ NINGÚN CORREO
+    reenvio 3 a los  93s — HTTP 202 — bandeja 2 -> 3
+    reenvio 4 a los 123s — HTTP 202 — bandeja 3 -> 3   <<< NO SALIÓ NINGÚN CORREO
+
+`SelfSignup::resendVerification()` aplica **DOS** cooldowns —por IP (30 s) y por CORREO destinatario
+(60 s)— y `verify.js` espejaba el de IP, **el más corto**. El endpoint responde **202 mande o no
+mande** (`SEC-06`), así que el titular pulsa, lee «reenviado», **gasta uno de sus cuatro reenvíos** y
+no le llega nada. Quien no recibe el correo puede quemar la mitad de sus intentos en vano y acabar en
+«has alcanzado el límite de reenvíos».
+
+⚠️⚠️ **Lo grave no es el número: es que había una guarda escrita para esto exactamente, y también
+eligió mal.** `SidebarVerifyScreenTest` **cruzaba las dos fuentes** en vez de copiar una —su propio
+comentario dice «un test que solo aseverara 30 se quedaría en verde el día que alguien suba el
+limitador del servidor a 60»— y llevaba una defensa razonada para no confundirse de `$ipKey`, porque
+`SelfSignup` tiene dos limitadores por IP. Y aun así **no vio el segundo limitador**, que estaba tres
+líneas más abajo con otra variable. ▶ **Un `preg_match` acotado a un nombre solo encuentra lo que ya
+sabías que buscabas**, y por eso el arreglo no es cambiar el número: los dos cooldowns se promueven a
+constantes con nombre, el test lee las CONSTANTES en vez del código, toma **el máximo** —no el primero
+que encuentra— y hay un caso nuevo que vigila **cuál de los dos ata**, porque si algún día el de
+correo cayera por debajo del de IP la aserción seguiría verde y la defensa del buzón ajeno habría
+desaparecido.
+
+**Descartadas dos alternativas, y las dos por el mismo sitio**: bajar el cooldown del servidor a 30 s
+debilita lo único que impide bombardear el buzón de un tercero con IPs rotativas; y hacer que el
+servidor diga la verdad (429 / `Retry-After`) choca con `SEC-06`, que es la razón de que sea mudo.
+
+**Verificado**: 4 reenvíos → **bandeja 1 → 2 → 3 → 4 → 5**. Ni uno se pierde. Y por mutación en los
+dos lados: volver el cliente a 30 pone el test rojo; bajar el cooldown por correo a 15, también.
+
+### 2 · El spinner de Privacidad no se pintaba nunca
+
+`#124` puso velo en «las cuatro zonas que piden datos». En `privacy` **no aparecía**: el `v-if` era
+`store.busy && ! store.consentsLoaded` y `ensureConsents()` **no levantaba ninguna bandera**, así que
+las tres ramas del `v-if/v-else-if` eran falsas a la vez y la tarjeta se pintaba **vacía**. Medido
+reteniendo `GET /me/consents`: **2,6 s** con solo el título y el botón de exportar.
+
+Es bandera **propia** (`consentsLoading`) y no `busy`, por dos razones y **la segunda es la que cierra
+la elección**: `busy` es el estado de los dos FORMULARIOS de la pantalla —bloquearlos por leer una
+lista de cortesía es un efecto que nadie pidió—, y `reset()` llama a `resetForm()`, que pone `busy` a
+`false`: **reentrar en la zona con una carga en vuelo apagaría el velo a mitad**. Es el mismo patrón
+que `stores/orders.js` y `stores/reservations.js`; el outlier era esta pantalla.
+
+⚠️ **Ningún test podía verlo, y tampoco por descuido**: los de `privacy.test.js` hacen `await` y solo
+miran el desenlace. El caso nuevo **retiene la promesa a propósito** y mira el estado intermedio, que
+es el único sitio donde el fallo existía.
+
+### 3 · Las pestañas de auth, 50/50 — `#124` había aplicado media regla
+
+Medido: la barra ocupaba sus 400 px y dentro los botones salían a **103 y 156 px**, dimensionados por
+la longitud del rótulo. En `landing.css` las dos mitades van juntas —`.zone-tabs { width: 100% }` y
+`.zone-tab { flex: 1 }`, con un comentario que dice «los 2 botones repartidos 50/50»— y `#124` sacó del
+media query de móvil **solo la primera**. Hoy son **193 y 193 px**.
+
+### 4 · [DECIDIDO, owner] Conmutar de pestaña no es navegar
+
+«Volver» desde «Crear cuenta» cambiaba de pestaña: mismo armazón, misma barra, otro formulario — un
+botón que aparentaba no hacer nada. **`LOGIN` y `REGISTER` no son dos pantallas: son las dos caras de
+una**, presentadas al mismo nivel por `AuthTabs`.
+
+El síntoma tenía **DOS causas y arreglar una sola lo deja vivo**: `parentZoneFor()` sembraba `LOGIN`
+debajo del alta, y las pestañas llamaban a `go()`, que apila. Ahora la siembra queda **solo para
+recuperar contraseña** —que sí es una pantalla aparte: se llega por un enlace dentro de «entrar» y no
+tiene sitio en la barra— y nace `navigation.js::replace()`, que **sustituye la cima sin cambiar el
+tamaño de la pila** y conserva lo que hay debajo, para que quien llegó con historia ajena no la pierda
+al conmutar.
+
+⚠️ **Efecto secundario aceptado por el owner**: llegar en frío a `/registro` y pulsar «Volver» ahora
+sale al catálogo en vez de a «entrar».
+
+### Lo medido
+
+Suite **2679** (15.268 aserciones) · **641 tests JS** · chunk **210,83 → 211,02 KiB**, +190 bytes
+exactos: se agotaron los 0,17 KiB de holgura y **el techo sube a 212 con su párrafo en el ledger**.
+Los 190 bytes son el precio de `replace()` y de `consentsLoading` — **ninguno es una feature**: son dos
+fallos, que es el único caso en que este techo debe ceder.
+**60/60 en navegador** tras el arreglo: `V17` 15/15 · `V18` 11/11 · `V23` 22/22 · tanda A 12/12.
+
+## #126 · 2026-08-23 · [DECIDIDO] «Mis reservas» se lista POR RESERVA, y el pasado se va a su propia pantalla
+
+**Encargo del owner**, con sus decisiones tomadas: listar por reserva individual con la referencia del
+pedido · el ledger y el reintento plegados tras «Ver pedido» · ordenar y paginar **en el servidor** ·
+**5** tarjetas por página · las terminadas **fuera** de la lista principal, tras un CTA «Ver historial
+de reservas» y de la más reciente a la más antigua · las reservas **sin franja, arriba del todo**.
+Spec: `docs/specs/mis-reservas-por-reserva.md` (✅ EJECUTADA).
+
+**Qué dolía, medido** sobre el cliente de desarrollo: `GET /me/orders` ordena con `->latest()` —fecha
+de creación del PEDIDO—, así que se servían **tres reservas ya pasadas por encima de la única que aún
+no había llegado**, y una de ellas cancelada sin distinción visual. Un pedido puede llevar tres
+reservas de tres fechas distintas y para el cliente eso no es una unidad: es un detalle contable.
+
+### 1 · Partir la pantalla en dos quita un problema y pone otro peor
+
+Con una lista mezclada, un predicado mal calculado da un **mal orden** — se ve. Con dos listas
+alimentadas por **dos consultas independientes**, da una reserva que **no sale en ninguna de las dos**,
+y eso no lo nota nadie: una lista a la que le falta una fila se lee perfectamente.
+
+▶ Por eso el ámbito es un **enum sobre UN predicado** (`Booking\Contracts\ReservationScope`) y no dos
+métodos: `where` en un lado, `whereNot` en el otro. La partición es exhaustiva y disjunta **por
+construcción**, no por coincidencia. Y lo sostiene una guarda que no comprueba listas sino la
+PROPIEDAD: `upcoming.total + past.total === total de reservas` y ninguna id en los dos.
+
+⚠️⚠️ **Y la NULL-safety no es pulcritud: sin ella se pierde una fila.** `whereNot()` sobre una
+comparación con columna NULLable devuelve *unknown*, y `NOT unknown` sigue siendo *unknown*: la reserva
+sin franja se cae de los DOS lados. **Medido: la partición pasa de 9 a 8 y nada más falla.**
+
+⚠️⚠️ **Y una lección que costó tres mutaciones.** La primera versión guardaba con `whereNotNull` las
+**dos** columnas del slot. Como en el esquema las dos son `NOT NULL` y solo valen NULL a la vez
+—cuando el `leftJoin` no encuentra franja—, **cada una tapaba a la otra y ninguna se podía medir
+mutándola**: quitar cualquiera dejaba el test en verde. Es `#112` otra vez —«una guarda con dos
+fuentes redundantes no se puede medir mutando una sola»— y se descubrió porque **las mutaciones se
+corrieron de verdad**, no porque se leyera el código.
+
+### 2 · El corte de «disfrutada» resultó ser EXACTO, y el diseño lo daba por perdido
+
+La spec proponía agrupar por DÍA y aceptar 24 h de discrepancia, dando por hecho que el corte fino de
+`isFinishedInPractice()` no era expresable en SQL sin concatenar fecha y hora —lo que ataría la
+consulta al dialecto, con la suite en SQLite y producción en MySQL—. **Comparando DOS COLUMNAS no hace
+falta concatenar**: `date < hoy OR (date = hoy AND end_time < ahora)`.
+▶ Y no es un detalle: con precisión de día, esta partición y `upcomingFor()` —que alimenta el bloque
+de cuenta— **habrían discrepado**, y el panel diría «1 reserva próxima» de algo que la pantalla enseña
+en el historial. Hay caso que lo fija.
+
+### 3 · Tres cosas que la implementación quitó del diseño, y las tres a mejor
+
+- **El LEDGER no viaja con la tarjeta.** El caso real `DEMO-LEDGER` tiene **tres** reservas: el
+  desglose viajaría tres veces con importes que no cuadran con la tarjeta que los rodea. Se pide al
+  desplegar con **`GET /orders/{code}`, que YA EXISTÍA**. Efecto que vale más que el ahorro: **no nace
+  una segunda superficie de dinero** — se reutiliza `financialsOf()`/`orderRow()` tal cual.
+- **Ni store nuevo ni módulo nuevo.** `stores/orders.js` se repurpone —`pages` por ámbito, más
+  `ensureOrder()`— y `account/orders.js` gana `cardRow()`, que **reutiliza `lineRow()` entera**: una
+  reserva suelta y una reserva dentro de su pedido son la misma cosa.
+- **Ni zona nueva de componente.** `OrdersZone.vue` sirve las DOS pantallas con un `scope` por prop:
+  lo único que las distingue es qué ámbito piden, si atenúan y si ofrecen el CTA.
+- **`is_terminated` se descartó** aunque el diseño lo pedía: sería un eco del ámbito que el cliente
+  acaba de pedir, o una segunda definición del predicado que reparte las pantallas.
+
+### 4 · Dos guardas que hubo que cambiar de FORMA, no relajar
+
+⚠️ **La alcanzabilidad de zonas.** La regla empezó siendo «toda zona está en `HOME_ENTRIES`», el
+2026-08-23 pasó a «en el índice o en `GUEST_ZONES`», y el historial no cabe en ninguna: se llega a él
+desde «Mis reservas». Nace `ZONE_PARENTS` —la tercera puerta, declarada como DATO— con casos de que el
+padre exista, sea alcanzable y no haya ciclos. La alternativa era una excepción escrita a mano dentro
+del test, y ahí es «donde se acaba metiendo cualquier cosa».
+
+⚠️⚠️ **Y `SidebarStyleWiringTest` estaba CIEGO justo para su caso principal.** Su escáner declaraba
+que no mira `:class` «porque se componen en ejecución», y eso es cierto solo a medias:
+`:class="{ 'orders__item--past': dimmed }"` lleva el nombre **escrito entero**, y así es exactamente
+como se emite un MODIFICADOR — que es lo que `#124` encontró servido sin regla. Ahora lee los
+literales que son **clave de objeto** o **rama de un ternario**, y sigue sin leer lo que de verdad se
+compone (`'orders__status--' + estado`). ▶ La primera versión los recogía TODOS y declaraba huérfanas
+`.login`, `.register` y `.pending` —tres operandos de comparación—: un test que grita por algo que no
+existe se acaba silenciando entero.
+
+### 5 · Un fallo que solo vio el navegador
+
+La poda del payload del montaje es **clave a clave** (`Arr::only`), así que las cuatro claves nuevas
+viajaban vacías: `i18n.js` devuelve `''` cuando falta una y **el botón «Ver pedido» se pintó mudo y la
+referencia del pedido en blanco**, sin que nada fallara. La suite estaba entera en verde. Es la misma
+familia de los 20 iconos vacíos (`#113`).
+
+### Lo medido
+
+Suite **2704** (15.368 aserciones, +25: 13 del reparto en el dominio y 12 del endpoint) · **648 tests
+JS** · chunk **211,02 → 213,57 KiB**, techo a **214,5** con su ledger · payload del montaje dentro de
+su techo. **16/16 en navegador** con datos sembrados para ver paginación en los dos ámbitos, y las
+tres tandas anteriores re-corridas sin regresión (`V23` 22/22 · `V18` 11/11 · tanda A 12/12).
+Cada guarda **verificada por mutación**; dos de ellas resultaron no medir nada y se rehicieron.

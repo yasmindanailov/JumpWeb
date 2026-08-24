@@ -84,7 +84,7 @@ async function remove() {
 
                 <!-- ⚠️ El spinner ANTES del «no hay consentimientos»: mientras se piden, decir que no hay
                  es decir algo falso. -->
-            <ZoneLoading v-if="store.busy && ! store.consentsLoaded" :ui="ui" />
+            <ZoneLoading v-if="store.consentsLoading && ! store.consentsLoaded" :ui="ui" />
 
             <p v-else-if="store.consentsLoaded && ! consents.length" class="account__card-sub">{{ a('account.privacy.no_consents') }}</p>
 

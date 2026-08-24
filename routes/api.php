@@ -223,6 +223,19 @@ Route::name('api.v1.')->group(function (): void {
         Route::get('/me/consents', [MePrivacyController::class, 'consents'])->name('me.consents.index');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
+
+        // **El historial POR RESERVA**, que es como lo lee un cliente: un pedido puede llevar tres
+        // reservas de tres fechas distintas y enseñarlas juntas no le dice nada
+        // (`specs/mis-reservas-por-reserva.md`). Dos URLs porque son dos pantallas del cajón —«Mis
+        // reservas» y «Historial»—, un solo manejador y, sobre todo, **un solo predicado**: el
+        // reparto lo hace `CustomerReservations::pageFor()` con `where`/`whereNot` sobre la misma
+        // expresión, para que ninguna reserva pueda caerse entre las dos (§3.4).
+        //
+        // ⚠️ Va DESPUÉS de `/me/reservations` a propósito: con el orden inverso, `{scope}` no llega a
+        // capturar nada porque la ruta literal ya no existiría, pero un `{scope}` declarado antes sí
+        // se comería cualquier segmento futuro que colgara de aquí.
+        Route::get('/me/reservations/{scope}', [MeReservationsController::class, 'page'])
+            ->name('me.reservations.page');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
 
         // **El contexto de cuenta en UN viaje**: saludo, próxima reserva, contador y formularios

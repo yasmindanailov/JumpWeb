@@ -136,12 +136,29 @@ const signIn = () => store.go(ZONES.LOGIN);
             :account="account"
             :ui="ui" />
 
+        <!--
+          ⚠️ **La MISMA zona para las dos pantallas, con su ámbito por prop**
+          (`specs/mis-reservas-por-reserva.md` §4.4): «Mis reservas» y «Historial» son la misma lista
+          partida por un predicado del servidor, así que un componente por pantalla habría duplicado
+          el ledger, el post-form y el reintento en dos sitios que arreglar.
+        -->
         <OrdersZone
             v-else-if="store.zone === ZONES.ORDERS"
+            scope="upcoming"
             :messages="messages"
             :account="account"
             :ui="ui"
-            @sign-in="signIn" />
+            @sign-in="signIn"
+            @go="store.go" />
+
+        <OrdersZone
+            v-else-if="store.zone === ZONES.ORDERS_HISTORY"
+            scope="past"
+            :messages="messages"
+            :account="account"
+            :ui="ui"
+            @sign-in="signIn"
+            @go="store.go" />
 
         <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
              pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera.

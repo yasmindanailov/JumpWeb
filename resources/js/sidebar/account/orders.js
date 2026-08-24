@@ -205,13 +205,45 @@ export function orderRow(order, ctx) {
 }
 
 /**
- * La página de pedidos entera.
+ * **Una TARJETA DE RESERVA**: una línea principal con el contexto mínimo de su pedido
+ * (`docs/specs/mis-reservas-por-reserva.md` §4.4).
  *
- * @param {{data?: Array<object>}} payload  la respuesta de `GET /me/orders`
+ * ⚠️⚠️ **Reutiliza `lineRow()` entera, y ahí está el punto.** Una reserva pintada suelta y una
+ * reserva pintada dentro de su pedido son **la misma cosa**: el mismo nombre, la misma ventana
+ * horaria, el mismo distintivo, el mismo aviso de señal, el mismo post-form y los mismos
+ * complementos. Escribir una segunda composición «porque ahora la tarjeta es de la reserva» habría
+ * creado dos sitios donde arreglar el mismo fallo — y este fichero ya lleva escrito, para el ledger,
+ * por qué eso no se hace.
+ *
+ * ⚠️ **El estado del PEDIDO llega resuelto** (`order.status` es el de HECHO, no la columna) y aquí
+ * solo se traduce con `tickets.statuses.*`, el mismo diccionario de siempre.
+ *
+ * ⚠️ **Y no se decide si la tarjeta va atenuada.** Eso es propiedad de la PANTALLA —el historial
+ * atenúa lo que pinta— y no de la fila: recomponerlo aquí sería una segunda definición del predicado
+ * que reparte los dos ámbitos, que vive en SQL. El distintivo «cancelada» / «disfrutada», que sí es
+ * de la reserva, lo pone `lineBadgeOf()` con los datos que sí viajan.
+ */
+export function cardRow(card, ctx) {
+    const order = card.order ?? {};
+
+    return {
+        ...lineRow({ status: order.status }, card.reservation ?? {}, ctx),
+        orderCode: order.code,
+        orderStatus: order.status,
+        orderStatusLabel: t(ctx.messages, 'statuses.' + order.status),
+        orderCreatedLabel: order.created_label,
+        canRetry: order.can_be_retried === true,
+    };
+}
+
+/**
+ * La página de tarjetas entera.
+ *
+ * @param {{data?: Array<object>}} payload  la respuesta de `GET /me/reservations/{scope}`
  * @param {{messages: object, account: object}} ctx  los diccionarios del montaje
  */
-export function orderRows(payload, ctx) {
-    return (payload?.data ?? []).map((order) => orderRow(order, ctx));
+export function cardRows(payload, ctx) {
+    return (payload?.data ?? []).map((card) => cardRow(card, ctx));
 }
 
 /**

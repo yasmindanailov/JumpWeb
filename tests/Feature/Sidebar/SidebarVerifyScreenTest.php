@@ -48,8 +48,20 @@ class SidebarVerifyScreenTest extends TestCase
     // JS se quedaría en verde el día que alguien suba el limitador del servidor a 60 — que es justo
     // cuando más falta hace el rojo. Mismo cuño que `AccountDoorWiringTest`, que cruza el mapa de
     // puertas de PHP con las zonas de `navigation.js`.
+    //
+    // ⚠️⚠️ **Y esta guarda estaba MIRANDO EL LIMITADOR EQUIVOCADO** (corregido el 2026-08-23,
+    // `DECISIONES #125`). El reenvío tiene DOS cooldowns —por IP y por CORREO destinatario— y este
+    // caso leía solo el de IP, el más CORTO de los dos. Lo mismo hacía `verify.js`, que descartaba
+    // por escrito el de correo como «protege al buzón de una víctima, no a este cliente»: en el alta
+    // SUELTA el cliente **es** el destinatario, así que ese limitador le ata igual.
+    // ▶ **Medido en navegador, dos veces** (`V17·2`, `docs/VERIFICACION-E2E-CAJON.md` §5.quinquies):
+    // con 30 s en el cajón, cuatro reenvíos produjeron **DOS correos**. Los pulsados a los 32 s y
+    // 93 s salieron; los de 63 s y 123 s los tiró el limitador por correo. HTTP **202** en los
+    // cuatro, y la pantalla descontando «te quedan N» en los cuatro.
+    // ▶ La guarda estaba bien construida y bien razonada: **eligió mal cuál de los dos números
+    // manda**. Ahora lee el que ATA, que es el mayor, y hay un caso que vigila cuál es.
 
-    /** La espera del cajón no puede ser MENOR que el limitador por IP del servicio. */
+    /** La espera del cajón no puede ser MENOR que el cooldown que ATA en el servidor. */
     public function test_the_drawer_waits_at_least_as_long_as_the_server_throttles(): void
     {
         $client = $this->secondsInModule();
@@ -57,10 +69,29 @@ class SidebarVerifyScreenTest extends TestCase
 
         $this->assertGreaterThanOrEqual(
             $server, $client,
-            "La cuenta atrás del cajón son {$client} s y el limitador por IP del servidor, {$server} s.\n".
+            "La cuenta atrás del cajón son {$client} s y el cooldown que ATA en el servidor, {$server} s.\n".
             "⚠️ Con la del cajón más corta, el botón de reenviar se ofrece mientras el servidor DESCARTA\n".
             "el envío — y responde 202 igual, porque es mudo a propósito (anti-enumeración). El cliente\n".
-            'pulsa, lee «reenviado» y no le llega nada: ni error, ni aviso, ni rastro.'
+            "pulsa, lee «reenviado», GASTA uno de sus cuatro reenvíos y no le llega nada: ni error, ni\n".
+            'aviso, ni rastro. Medido así el 2026-08-23: 4 reenvíos, 2 correos (`DECISIONES #125`).'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **Y cuál de los dos cooldowns ata no puede cambiar sin que nadie se entere.**
+     *
+     * El de CORREO es el que protege el buzón de alguien que no ha pedido nada: sin él, con IPs
+     * rotativas se bombardea una dirección ajena a verificaciones. Si algún día quedara por debajo
+     * del de IP, el caso de arriba seguiría verde —sigue leyendo el máximo— y la defensa habría
+     * desaparecido en silencio. Esto es lo único que lo dice.
+     */
+    public function test_the_per_email_cooldown_is_the_one_that_binds(): void
+    {
+        $this->assertGreaterThanOrEqual(
+            SelfSignup::RESEND_IP_COOLDOWN_SECONDS,
+            SelfSignup::RESEND_EMAIL_COOLDOWN_SECONDS,
+            'El cooldown por CORREO ha quedado por debajo del de IP. No es un ajuste de cadencia: es '.
+            'la única defensa contra bombardear el buzón de un tercero con IPs rotativas.'
         );
     }
 
@@ -173,19 +204,50 @@ class SidebarVerifyScreenTest extends TestCase
     }
 
     /**
-     * Los segundos del limitador por IP **del REENVÍO**.
+     * Los segundos del cooldown que **ATA** en el reenvío: el mayor de los dos que aplica el
+     * servicio (por IP y por CORREO destinatario).
      *
-     * ⚠️⚠️ **Se acota al CUERPO de su método, y no es una precaución teórica: la primera versión de
-     * este caso leyó el número equivocado.** `SelfSignup` tiene dos limitadores por IP con la misma
-     * variable —`register()` usa 60 s y `resendVerification()`, 30—, así que un `preg_match` sobre el
-     * fichero entero devuelve el del ALTA y se habría comparado la cuenta atrás del reenvío contra un
-     * límite que no es el suyo. Es la trampa 1 de `CONVENCIONES §3.quater`: un nombre puede aparecer
-     * dos veces en el fichero.
+     * ⚠️⚠️ **Se leen las CONSTANTES, no el código fuente, y ese cambio es la mitad del arreglo de
+     * `#125`.** La versión anterior hacía `preg_match` de `RateLimiter::hit($ipKey, 30)` sobre el
+     * cuerpo del método, con toda una defensa escrita para no confundirse de `$ipKey` — y aun así
+     * **no vio el segundo limitador**, el de correo, que estaba tres líneas más abajo con otra
+     * variable. Un regex acotado a un nombre solo encuentra lo que ya sabías que buscabas.
+     * ▶ Con los dos cooldowns promovidos a constantes con nombre, la ambigüedad desaparece **por
+     * construcción**: aquí se toma el máximo y no hay nada que elegir a ciegas.
      *
-     * ▶ Y por eso se exige además que dentro del método haya **exactamente uno**: si mañana aparece un
-     * segundo, este caso volvería a elegir a ciegas.
+     * ⚠️ Lo que sí sigue haciendo falta es comprobar que las constantes son las que el método USA:
+     * una constante que nadie aplica es una foto, no una regla.
      */
     private function secondsInService(): int
+    {
+        $body = $this->resendBody();
+
+        foreach (['RESEND_IP_COOLDOWN_SECONDS', 'RESEND_EMAIL_COOLDOWN_SECONDS'] as $constant) {
+            $this->assertStringContainsString(
+                'self::'.$constant, $body,
+                "El reenvío ya no aplica `{$constant}`: la constante existe pero no gobierna nada, ".
+                'así que comparar contra ella sería comparar contra una foto.'
+            );
+        }
+
+        // ⚠️ Y que no haya aparecido un TERCER cooldown con su número suelto: sería justo el que este
+        // caso no miraría, que es exactamente cómo se coló el de correo hasta el 2026-08-23.
+        $literals = preg_match_all('/RateLimiter::hit\([^,]+,\s*\d+\s*\)/', $body);
+
+        $this->assertSame(
+            0, $literals,
+            "En el cuerpo del reenvío hay {$literals} limitador(es) con el número escrito a mano. ".
+            'Promuévelo a constante en `SelfSignup` o este caso volverá a mirar solo una parte.'
+        );
+
+        return max(
+            SelfSignup::RESEND_IP_COOLDOWN_SECONDS,
+            SelfSignup::RESEND_EMAIL_COOLDOWN_SECONDS,
+        );
+    }
+
+    /** El cuerpo de `resendVerification()`, acotado a su método. */
+    private function resendBody(): string
     {
         $source = $this->source(self::SERVICE);
         $start = mb_strpos($source, 'function resendVerification(');
@@ -193,17 +255,8 @@ class SidebarVerifyScreenTest extends TestCase
         $this->assertNotFalse($start, 'ha cambiado la firma del reenvío: este caso ya no mira lo que cree');
 
         $next = mb_strpos($source, "\n    public function ", $start + 1);
-        $body = mb_substr($source, $start, $next === false ? null : $next - $start);
 
-        $found = preg_match_all('/RateLimiter::hit\(\$ipKey,\s*(\d+)\)/', $body, $matches);
-
-        $this->assertSame(
-            1, $found,
-            "En el cuerpo del reenvío hay {$found} limitadores por IP, no uno. Con más de uno este caso ".
-            'elegiría a ciegas cuál comparar, que es la trampa 1 de `CONVENCIONES §3.quater`.'
-        );
-
-        return (int) $matches[1][0];
+        return mb_substr($source, $start, $next === false ? null : $next - $start);
     }
 
     private function source(string $relative): string

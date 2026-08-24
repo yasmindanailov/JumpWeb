@@ -42,48 +42,48 @@ describe('pedir el historial', () => {
 
     test('la primera carga guarda la respuesta CRUDA', async () => {
         const store = useOrdersStore();
-        const api = fakeApi({ '/me/orders?page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'JW-1' }] }) } });
+        const api = fakeApi({ '/me/reservations/upcoming?page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'JW-1' }] }) } });
 
-        await store.load(1, { api });
+        await store.load('upcoming', 1, { api });
 
         assert.equal(store.loading, false);
-        assert.equal(store.loaded, true);
-        assert.deepEqual(store.payload.data, [{ code: 'JW-1' }], 'el store no compone: eso es del módulo');
+        assert.equal(store.loaded('upcoming'), true);
+        assert.deepEqual(store.pages.upcoming.data, [{ code: 'JW-1' }], 'el store no compone: eso es del módulo');
     });
 
     test('⚠️ `ensure()` NO repite la petición al volver a la zona', async () => {
         // Es la regla que sustituyó a `<KeepAlive>` (`DECISIONES #120(g)`): pedir solo si no hay datos
         // cuesta cero KiB y se puede probar, al revés que una caché del framework.
         const store = useOrdersStore();
-        const api = fakeApi({ '/me/orders?page=1': { ok: true, status: 200, data: PAGE() } });
+        const api = fakeApi({ '/me/reservations/upcoming?page=1': { ok: true, status: 200, data: PAGE() } });
 
-        await store.ensure({ api });
-        await store.ensure({ api });
-        await store.ensure({ api });
+        await store.ensure('upcoming', { api });
+        await store.ensure('upcoming', { api });
+        await store.ensure('upcoming', { api });
 
         assert.equal(api.llamadas.length, 1, 'volver a la zona ha vuelto a pedir el historial');
     });
 
     test('pedir otra página sí llama, y con su número', async () => {
         const store = useOrdersStore();
-        const api = fakeApi({ '/me/orders?page=2': { ok: true, status: 200, data: PAGE({ meta: { current_page: 2, last_page: 3 } }) } });
+        const api = fakeApi({ '/me/reservations/upcoming?page=2': { ok: true, status: 200, data: PAGE({ meta: { current_page: 2, last_page: 3 } }) } });
 
-        await store.load(2, { api });
+        await store.load('upcoming', 2, { api });
 
-        assert.equal(api.llamadas[0].url, '/me/orders?page=2');
-        assert.equal(store.payload.meta.current_page, 2);
+        assert.equal(api.llamadas[0].url, '/me/reservations/upcoming?page=2');
+        assert.equal(store.pages.upcoming.meta.current_page, 2);
     });
 
     test('`reload()` vuelve a pedir LA PÁGINA QUE SE ESTÁ VIENDO, no la primera', async () => {
         const store = useOrdersStore();
         const api = fakeApi({
-            '/me/orders?page=3': { ok: true, status: 200, data: PAGE({ meta: { current_page: 3, last_page: 3 } }) },
+            '/me/reservations/upcoming?page=3': { ok: true, status: 200, data: PAGE({ meta: { current_page: 3, last_page: 3 } }) },
         });
 
-        await store.load(3, { api });
-        await store.reload({ api });
+        await store.load('upcoming', 3, { api });
+        await store.reload('upcoming', { api });
 
-        assert.deepEqual(api.llamadas.map((l) => l.url), ['/me/orders?page=3', '/me/orders?page=3']);
+        assert.deepEqual(api.llamadas.map((l) => l.url), ['/me/reservations/upcoming?page=3', '/me/reservations/upcoming?page=3']);
     });
 });
 
@@ -94,19 +94,19 @@ describe('cuando algo falla', () => {
         // Vaciar la lista al fallar diría «no tienes reservas», que es justo lo contrario de lo que
         // ha pasado. Se conserva la página anterior y se añade el aviso.
         const store = useOrdersStore();
-        const ok = fakeApi({ '/me/orders?page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'JW-1' }] }) } });
+        const ok = fakeApi({ '/me/reservations/upcoming?page=1': { ok: true, status: 200, data: PAGE({ data: [{ code: 'JW-1' }] }) } });
 
-        await store.load(1, { api: ok });
-        await store.load(2, { api: fakeApi({}) });
+        await store.load('upcoming', 1, { api: ok });
+        await store.load('upcoming', 2, { api: fakeApi({}) });
 
-        assert.deepEqual(store.payload.data, [{ code: 'JW-1' }], 'se ha perdido la página que ya estaba');
+        assert.deepEqual(store.pages.upcoming.data, [{ code: 'JW-1' }], 'se ha perdido la página que ya estaba');
         assert.equal(store.loading, false, 'el velo se queda girando para siempre');
     });
 
     test('⚠️ un 401 se distingue del error genérico: la salida es entrar, no reintentar', async () => {
         const store = useOrdersStore();
 
-        await store.load(1, { api: fakeApi({ '/me/orders?page=1': { ok: false, status: 401, data: null, error: null } }) });
+        await store.load('upcoming', 1, { api: fakeApi({ '/me/reservations/upcoming?page=1': { ok: false, status: 401, data: null, error: null } }) });
 
         assert.equal(store.unauthenticated, true);
         assert.equal(store.error, '', 'un 401 no es «algo ha ido mal»: es «tu sesión ha caducado»');
@@ -115,8 +115,8 @@ describe('cuando algo falla', () => {
     test('una carga nueva limpia el aviso anterior', async () => {
         const store = useOrdersStore();
 
-        await store.load(1, { api: fakeApi({ '/me/orders?page=1': { ok: false, status: 401, data: null } }) });
-        await store.load(1, { api: fakeApi({ '/me/orders?page=1': { ok: true, status: 200, data: PAGE() } }) });
+        await store.load('upcoming', 1, { api: fakeApi({ '/me/reservations/upcoming?page=1': { ok: false, status: 401, data: null } }) });
+        await store.load('upcoming', 1, { api: fakeApi({ '/me/reservations/upcoming?page=1': { ok: true, status: 200, data: PAGE() } }) });
 
         assert.equal(store.unauthenticated, false);
         assert.equal(store.error, '');

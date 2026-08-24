@@ -62,6 +62,15 @@ export const ZONES = {
 
     /** Pedir el enlace para restablecer la contraseña. */
     FORGOT: 'forgot',
+
+    /**
+     * **El historial**: lo cancelado y lo ya disfrutado (`specs/mis-reservas-por-reserva.md`).
+     *
+     * ⚠️ **No está en `HOME_ENTRIES` a propósito**: se llega desde «Mis reservas», que es donde
+     * tiene sentido preguntarse por lo anterior. Por eso existe `ZONE_PARENTS` — declarar la
+     * tercera puerta en vez de escribir una excepción a mano en la guarda.
+     */
+    ORDERS_HISTORY: 'orders-history',
 };
 
 /** Donde aterriza quien entra al área sin pedir nada concreto. */
@@ -86,6 +95,27 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.LOGIN]: 'login.title',
     [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
+    [ZONES.ORDERS_HISTORY]: 'orders.history.title',
+};
+
+/**
+ * **La TERCERA puerta: zonas a las que se llega desde OTRA zona**, y quién las ofrece.
+ *
+ * ⚠️⚠️ **Nace porque la guarda de alcanzabilidad tenía que cambiar de FORMA otra vez, no relajarse**
+ * (`specs/mis-reservas-por-reserva.md` §4.3). La regla empezó siendo «toda zona está en
+ * `HOME_ENTRIES`» cuando el índice era la única puerta; el 2026-08-23 pasó a «en el índice o en
+ * `GUEST_ZONES`» al nacer las tres pantallas de auth. El historial no cabe en ninguna de las dos: no
+ * va en el índice —se pregunta por lo pasado desde donde se mira lo presente— y no es de invitado.
+ *
+ * ▶ La alternativa era una excepción escrita a mano dentro del test, y eso es «donde se acaba
+ * metiendo cualquier cosa»: la segunda excepción ya no la discute nadie. Declararlo como DATO deja la
+ * regla igual de estricta —toda zona sigue teniendo que ser alcanzable— y además comprobable: el
+ * padre tiene que existir y ser alcanzable a su vez, sin ciclos.
+ *
+ * @var {Record<string, string>}
+ */
+export const ZONE_PARENTS = {
+    [ZONES.ORDERS_HISTORY]: ZONES.ORDERS,
 };
 
 /**
@@ -123,9 +153,19 @@ export function isGuestZone(value) {
  *    volver, porque de donde viene **no es una zona**. Con la pila vacía, «volver» sale de la sección
  *    y devuelve la compra donde estaba, con su cesta. Por eso quien entra así **no siembra nada**, y
  *    por eso esta decisión es del que llama y no de `enter()`.
+ *
+ * ⚠️⚠️ **`REGISTER` dejó de sembrar el 2026-08-23** (`DECISIONES #125`, decisión del owner), y con eso
+ * la regla pasa de «toda zona de invitado que no sea entrar» a **solo recuperar contraseña**. El
+ * motivo es que `LOGIN` y `REGISTER` **no son dos pantallas**: son las dos caras de una, conmutadas
+ * por una barra de pestañas que las presenta al mismo nivel. Con la siembra, «Volver» desde «Crear
+ * cuenta» cambiaba de pestaña — el mismo armazón, la misma barra, otro formulario— y se leía como un
+ * botón que no hace nada. Recuperar contraseña **sí** es una pantalla aparte, se llega a ella desde
+ * un enlace dentro de «entrar» y no tiene pestaña: por eso conserva su siembra.
+ * ▶ Su pareja es `replace()`: conmutar de pestaña tampoco APILA. Las dos mitades hacen falta —sembrar
+ * y apilar son caminos distintos hacia el mismo síntoma— y `navigation.test.js` cubre cada una.
  */
 export function parentZoneFor(zone) {
-    return isGuestZone(zone) && zone !== ZONES.LOGIN ? ZONES.LOGIN : null;
+    return zone === ZONES.FORGOT ? ZONES.LOGIN : null;
 }
 
 /**
@@ -217,6 +257,32 @@ export function createNavigation({ zone = DEFAULT_ZONE } = {}) {
             const seen = trail.indexOf(next);
 
             trail = seen === -1 ? [...trail, next] : trail.slice(0, seen + 1);
+
+            return true;
+        },
+
+        /**
+         * **Conmuta a una zona SIN dejar rastro**: sustituye la actual en vez de apilarla.
+         *
+         * ⚠️⚠️ **Existe porque una barra de pestañas no es navegación** (2026-08-23, `DECISIONES
+         * #125`). «Entrar» y «Crear cuenta» son dos caras de una misma pantalla, presentadas al mismo
+         * nivel por `AuthTabs`; con `go()`, pulsar una pestaña apilaba, y «Volver» deshacía **la
+         * pestaña** en vez de salir del área: mismo armazón, misma barra, otro formulario. Para quien
+         * mira, el botón no hacía nada.
+         *
+         * ▶ **Y no basta con no apilar**: hay que sustituir. Un `go()` que ignorase la repetición
+         * dejaría la pila creciendo igual al alternar entre las dos pestañas, y una pestaña que no
+         * hiciera nada dejaría la pantalla muerta. Aquí la pila **no cambia de tamaño**, que es
+         * exactamente lo que hace que «Volver» siga significando lo mismo desde las dos caras.
+         *
+         * ⚠️ Lo que hay DEBAJO se conserva a propósito: quien llegó a «entrar» por el enlace de
+         * recuperar contraseña —`[login, forgot]`— y conmuta a «crear cuenta» sigue teniendo su
+         * vuelta. Sustituir la cima nunca borra historia ajena.
+         */
+        replace(next) {
+            if (! isZone(next) || next === this.zone) return false;
+
+            trail = [...trail.slice(0, -1), next];
 
             return true;
         },

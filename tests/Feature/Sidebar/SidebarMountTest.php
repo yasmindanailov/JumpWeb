@@ -427,6 +427,11 @@ class SidebarMountTest extends TestCase
                 'event_data_show', 'event_data_hide',
                 'title', 'subtitle', 'empty', 'pagination',
                 'item_finished', 'item_cancelled',
+                // ⚠️ El historial y la referencia del pedido entran el 2026-08-23
+                // (`specs/mis-reservas-por-reserva.md`). La poda es clave a clave, así que una clave
+                // que no esté en `Arr::only` **viaja vacía** y su botón se pinta SIN TEXTO: pasó al
+                // escribir la pantalla y solo se vio en el navegador.
+                'history', 'order_ref', 'order_show', 'order_hide',
                 'retry_payment', 'retry_hint',
                 'guest_form_pending', 'guest_form_done',
                 'guest_form_past', 'guest_form_cancelled',

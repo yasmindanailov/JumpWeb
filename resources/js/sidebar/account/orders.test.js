@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, orderRows, pageInfo } from './orders.js';
+import { cardRow, cardRows, depositNoteOf, financialsOf, guestFormOf, lineBadgeOf, orderRow, pageInfo } from './orders.js';
 
 /**
  * La red de «Mis reservas» (`docs/specs/area-cliente.md` §4.4).
@@ -115,10 +115,78 @@ describe('el pedido', () => {
         assert.equal(orderRow(order({ status: 'pending', can_be_retried: true }), CTX).canRetry, true);
     });
 
+});
+
+/**
+ * **La TARJETA por reserva** (`specs/mis-reservas-por-reserva.md` §4.4).
+ *
+ * ⚠️ Lo que se comprueba aquí no es que «pinta los campos», sino que **reutiliza la composición de
+ * la línea** en vez de escribir una segunda: el nombre, la ventana, el distintivo, el aviso de señal
+ * y el post-form salen de `lineRow()`, y una tarjeta que los recompusiera daría lo mismo hoy y
+ * divergiría al primer arreglo que se hiciera en un solo sitio.
+ */
+describe('la tarjeta de una reserva', () => {
+    // ⚠️ La reserva lleva post-form a propósito: es lo único de la línea cuya composición depende
+    // del estado del PEDIDO, así que sin él el caso de abajo no mediría nada.
+    const conFormulario = { guest_form_status: 'pending', needs_guest_form: true, guest_form_url: '/reserva/1/invitados' };
+
+    const card = (over = {}) => ({
+        reservation: item(conFormulario),
+        order: { code: 'JJ-9', status: 'paid', created_label: '10/06/2026 12:00', can_be_retried: false },
+        ...over,
+    });
+
+    test('lleva la reserva compuesta igual que dentro de su pedido', () => {
+        const fila = cardRow(card(), CTX);
+        const dentro = orderRow(order({ items: [item(conFormulario)] }), CTX).lines[0];
+
+        assert.equal(fila.name, dentro.name);
+        assert.equal(fila.whenLabel, dentro.whenLabel);
+        assert.equal(fila.priceLabel, dentro.priceLabel);
+        assert.deepEqual(fila.badge, dentro.badge);
+        assert.deepEqual(fila.guestForm, dentro.guestForm);
+    });
+
+    test('y añade la referencia de su pedido, con el estado ya traducido', () => {
+        const fila = cardRow(card(), CTX);
+
+        assert.equal(fila.orderCode, 'JJ-9');
+        assert.equal(fila.orderStatus, 'paid');
+        assert.equal(fila.orderStatusLabel, 'Pagado');
+        assert.equal(fila.orderCreatedLabel, '10/06/2026 12:00');
+    });
+
+    /**
+     * ⚠️⚠️ **El post-form depende del estado del PEDIDO, no del de la reserva**, y por eso la tarjeta
+     * tiene que pasárselo: `guestFormOf()` no ofrece enlace si el pedido no está pagado. Con un
+     * pedido vacío la tarjeta enseñaría un botón que da 404 — lo destapó escribir este caso.
+     */
+    test('el post-form se decide con el estado del pedido que trae la tarjeta', () => {
+        assert.notEqual(cardRow(card(), CTX).guestForm, null);
+        assert.equal(
+            cardRow(card({ order: { code: 'JJ-9', status: 'pending', can_be_retried: true } }), CTX).guestForm,
+            null,
+            'un pedido a medio pagar ofrece post-form: daría 404'
+        );
+    });
+
+    test('el reintento sale del pedido, no se deduce del estado', () => {
+        assert.equal(cardRow(card(), CTX).canRetry, false);
+        assert.equal(cardRow(card({ order: { code: 'JJ-9', status: 'pending', can_be_retried: true } }), CTX).canRetry, true);
+    });
+
     test('una respuesta vacía da una lista vacía, no revienta', () => {
-        assert.deepEqual(orderRows({ data: [] }, CTX), []);
-        assert.deepEqual(orderRows({}, CTX), []);
-        assert.deepEqual(orderRows(null, CTX), []);
+        assert.deepEqual(cardRows({ data: [] }, CTX), []);
+        assert.deepEqual(cardRows({}, CTX), []);
+        assert.deepEqual(cardRows(null, CTX), []);
+    });
+
+    /** Y una tarjeta a medio llegar no tumba la pantalla: `t()` ya devuelve '' cuando falta la clave. */
+    test('una tarjeta sin pedido no revienta', () => {
+        const fila = cardRow({ reservation: item(conFormulario) }, CTX);
+
+        assert.equal(fila.orderCode, undefined);
+        assert.equal(fila.canRetry, false);
     });
 });
 

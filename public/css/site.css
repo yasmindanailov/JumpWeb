@@ -1724,12 +1724,47 @@ body.no-scroll { overflow: hidden; }
    ▶ Se arregla aquí, en el modificador que el cajón YA tenía para este componente, y no tocando
    `.zone-tabs`: la landing sigue exactamente como estaba. */
 .purchase__authtabs { display: flex; width: 100%; margin-bottom: var(--sp-16); }
+/* ⚠️⚠️ **Y los BOTONES se reparten ese ancho 50/50** (2026-08-23, `DECISIONES #125`). La regla de
+   arriba sacó del media query de móvil la mitad de `.zone-tabs` y dejó fuera la otra mitad del par:
+   en `landing.css` las dos van juntas —`.zone-tabs { width: 100% }` **y** `.zone-tab { flex: 1 }`,
+   con un comentario que dice literalmente «los 2 botones repartidos 50/50, sin hueco vacío»—, y aquí
+   solo se trajo la primera. Resultado medido en navegador: la barra ocupaba sus 400 px y dentro los
+   botones salían a **103 px y 156 px**, dimensionados por la longitud de su rótulo, con el hueco
+   sobrante a la derecha. Dos pestañas hermanas de anchos distintos se leen como una jerarquía que no
+   existe: «Entrar» parecía menos que «Crear cuenta».
+   ▶ Va acotado a `.purchase__authtabs` por lo mismo que la regla de arriba: la landing sigue
+   exactamente como estaba, y el cajón no depende del ancho de la ventana. */
+.purchase__authtabs .zone-tab { flex: 1; text-align: center; }
 
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.
    ==================================================================== */
 .orders { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
 .orders__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: 18px 20px; }
+/* ⚠️⚠️ **La CORTINA del historial** (2026-08-23, `specs/mis-reservas-por-reserva.md`). Lo cancelado
+   y lo ya disfrutado vive en su propia pantalla y se sirve atenuado: la lista principal responde a
+   «¿qué tengo?» y el pasado no debe competir visualmente con lo vivo.
+   ▶ **`opacity` sobre la tarjeta entera y no colores propios**: con colores nuevos habría que
+   redefinir el estado, el distintivo, el precio y el post-form uno a uno —y el primero que se
+   olvidara saltaría a la vista—. Atenuar el conjunto conserva la jerarquía interna de la tarjeta.
+   ▶ **Vuelve a opacidad plena al pasar por encima y al enfocar dentro**: una tarjeta atenuada
+   sigue siendo interactiva —tiene su desglose y su post-form— y dejarla apagada mientras se usa la
+   haría parecer deshabilitada. `:focus-within` es la mitad que se olvida: quien navega con teclado
+   no pasa el ratón.
+   ⚠️ La atenuación **no baja del contraste que exige WCAG AA** sobre el fondo de la tarjeta: 0.72
+   es lo más bajo que lo mantiene con `--fg-mute`, medido; por debajo el texto secundario deja de
+   leerse. */
+.orders__item--past { opacity: 0.72; transition: opacity var(--dur-fade) ease; }
+.orders__item--past:hover,
+.orders__item--past:focus-within { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .orders__item--past { transition: none; } }
+
+/* La referencia del pedido dentro de la tarjeta de una reserva: la tarjeta ya no ES el pedido, así
+   que su código va en una fila propia y discreta, no en el encabezado. */
+.orders__order { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* El paso al historial, DESPUÉS de la paginación: lo pasado no compite con lo vivo. */
+.orders__history-cta { display: flex; justify-content: center; margin: 4px 0 0; }
 .orders__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .orders__code { font-family: var(--font-body); font-size: 14px; color: var(--fg); }
 .orders__status { font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 999px; background: var(--bg-soft); color: var(--fg-mute); }

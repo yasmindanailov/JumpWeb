@@ -12,13 +12,25 @@
  * exactamente lo que hace el modal de la web —`Register::resend()` lleva su propio contador y el
  * Blade su propia cuenta atrás—. Aquí se transcriben, no se inventan.
  *
- * ⚠️⚠️ **Y los 30 segundos NO son un número redondo: son los del servidor.**
- * `SelfSignup::resendVerification()` aplica un limitador por IP de **30 s** (y otro por correo de 60,
- * que protege al buzón de una víctima, no a este cliente). Una cuenta atrás más corta ofrecería el
+ * ⚠️⚠️ **Y los 60 segundos NO son un número redondo: son los del servidor.**
+ * `SelfSignup::resendVerification()` aplica DOS cooldowns —por IP y por CORREO destinatario— y hay
+ * que espejar **el que ATA, que es el más largo de los dos**. Una cuenta atrás más corta ofrece el
  * botón mientras el servidor **descarta el envío en silencio y responde 202 igual**: el cliente
- * pulsaría, vería «reenviado» y no llegaría nada. Es literalmente la familia de `DECISIONES #115`
- * —una señal que dice una cosa y significa otra— y la razón de que este valor esté aquí con su
- * porqué y no suelto en un componente.
+ * pulsa, ve «reenviado» y no le llega nada. Es literalmente la familia de `DECISIONES #115` —una
+ * señal que dice una cosa y significa otra— y la razón de que este valor esté aquí con su porqué y
+ * no suelto en un componente.
+ *
+ * ⚠️⚠️ **Y este fichero ya razonaba exactamente eso, y aun así escogió mal** (corregido el
+ * 2026-08-23): decía «son los del servidor» apuntando al de **IP (30 s)** y descartaba el de correo
+ * —60 s— como «protege al buzón de una víctima, no a este cliente». En el alta SUELTA el cliente
+ * **es** el destinatario, así que ese limitador le ata igual, y es el que manda por ser el mayor.
+ * ▶ **Medido en navegador, dos veces** (`V17·2`, `VERIFICACION-E2E-CAJON.md` §5.quinquies): con 30 s
+ * aquí, cuatro reenvíos produjeron **DOS correos**. La pantalla decía «te quedan N» y luego «has
+ * alcanzado el límite» con la mitad de los envíos tirados. Ningún test de este repo podía verlo: el
+ * único oráculo de si el correo salió es la bandeja.
+ * ▶ Lo vigila `VerifyResendCooldownParityTest`, que lee este fichero y lo compara con
+ * `SelfSignup::RESEND_EMAIL_COOLDOWN_SECONDS`. Los dos números no pueden volver a divergir en
+ * silencio.
  *
  * Módulo PLANO, sin Vue (`CE-6`): reglas puras, sin temporizador. El reloj lo pone el componente,
  * como el sondeo del desenlace pone el suyo.
@@ -27,10 +39,11 @@
 /**
  * Los segundos que hay que esperar entre reenvíos.
  *
- * ⚠️ **Espeja el limitador por IP del servidor.** Si allí cambia, aquí también: bajarlo por su cuenta
- * devuelve el botón que no hace nada.
+ * ⚠️ **Espeja `SelfSignup::RESEND_EMAIL_COOLDOWN_SECONDS`**, que es el limitador que ata a quien está
+ * mirando esta pantalla. Si allí cambia, aquí también: bajarlo por su cuenta devuelve el botón que no
+ * hace nada. La paridad que lo vigila lee este mismo literal.
  */
-export const RESEND_COOLDOWN_SECONDS = 30;
+export const RESEND_COOLDOWN_SECONDS = 60;
 
 /**
  * Cuántas veces se puede reenviar desde esta pantalla.

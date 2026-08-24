@@ -340,6 +340,13 @@
                                 'guest_form_past', 'guest_form_cancelled',
                                 // Las respuestas del pack, bajo demanda (tanda 3).
                                 'event_data_show', 'event_data_hide',
+                                // ⚠️ **El historial y la referencia del pedido** (2026-08-23,
+                                // `specs/mis-reservas-por-reserva.md`). Esta poda es clave a clave, así
+                                // que una clave nueva que no se añada aquí **viaja vacía**: `i18n.js`
+                                // devuelve `''` cuando falta y el botón se pinta SIN TEXTO, sin que
+                                // nada avise. Medido en navegador al escribir la pantalla: el «Ver
+                                // pedido» salió mudo y la referencia del pedido, en blanco.
+                                'history', 'order_ref', 'order_show', 'order_hide',
                             ])] : []),
                         ],
                         // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van

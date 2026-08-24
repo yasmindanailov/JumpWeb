@@ -755,7 +755,13 @@ Ya que hay una sesión abierta y el motor es otro:
    · desde `/recuperar-contrasena` → vuelve a **entrar** (se siembra por debajo);
    · desde el **paso 5 del embudo** → vuelve a **la compra, con la cesta intacta**.
 
-### V17 · EL ALTA SUELTA y su «revisa tu correo» — ⚠️ **no recorrido todavía**
+### V17 · EL ALTA SUELTA y su «revisa tu correo» — ✅ **recorrido el 2026-08-23** (`DECISIONES #125`)
+
+> ⚠️⚠️ **Y destapó el fallo que el punto 2 llevaba escrito.** Con la cuenta atrás en 30 s, cuatro
+> reenvíos produjeron **DOS correos**: los pulsados a los 63 s y 123 s los tiró el limitador por
+> CORREO del servidor (60 s) y el endpoint devolvió **202** en los cuatro, así que la pantalla siguió
+> descontando «te quedan N». Arreglado subiendo la cuenta atrás a 60 s —el cooldown que ATA— y
+> re-verificado: bandeja **1 → 2 → 3 → 4 → 5**, ni uno se pierde.
 
 1. Crea una cuenta desde `/registro`. ▶ **Tiene que llegar el correo de verificación** y **NO** debe
    abrirse sesión: es `context: standalone`, al revés que el alta del embudo.
@@ -768,7 +774,11 @@ Ya que hay una sesión abierta y el motor es otro:
    tienes cuenta?» sigue estando**: quien agota los reenvíos es quien más necesita salir.
 4. Pulsa el escape. ▶ Lleva a la zona de entrar.
 
-### V18 · EL PASO 5 DEL EMBUDO sigue vendiendo — ⚠️ **el más caro de romper**
+### V18 · EL PASO 5 DEL EMBUDO sigue vendiendo — ✅ **recorrido el 2026-08-23**, 11/11
+
+> «El más caro de romper», y no se rompió: entrar continúa la compra (paso 5 → 8 con la cesta
+> intacta), el alta desde el embudo es *pay-first* (sesión abierta, **0 correos**, sigue al pago) y
+> recuperar contraseña vuelve a la compra con su línea.
 
 1. Con la cesta llena, llega al paso de identificarse y **entra**. ▶ La compra continúa donde estaba.
 2. Repite creando cuenta desde ahí. ▶ **Pay-first**: abre sesión, **no** manda correo y sigue al pago.
@@ -833,7 +843,17 @@ Ya que hay una sesión abierta y el motor es otro:
    un fallo de red deja al titular sin poder salir — y en un dispositivo compartido eso no es una
    molestia.
 
-### V23 · EL PULIDO — ⚠️ **pendiente de recorrer** (`DECISIONES #124`)
+### V23 · EL PULIDO — ✅ **recorrido el 2026-08-23**, 22/22 (`DECISIONES #124`, `#125`)
+
+> ⚠️⚠️ **El punto 6 salió ROJO y era un fallo real**: la zona de privacidad **no pintaba el spinner**
+> —`ensureConsents()` no levantaba ninguna bandera, así que las tres ramas del `v-if/v-else-if` eran
+> falsas a la vez y la tarjeta se servía vacía 2,6 s—. Arreglado en `#125` con una bandera propia.
+>
+> ⚠️ **Tres trampas del andamio, medidas aquí y que dieron tres falsos rojos.** `<KeepAlive>` deja el
+> embudo montado, así que **`.purchase__scroll`, `.bk-back`, `.jj-spinner` y `.catalog__item` están
+> DUPLICADAS** en el DOM y `querySelector` devuelve la del embudo, oculta o a 0×0: hay que filtrar por
+> `offsetParent !== null` o por tamaño. Y **`.zone-tabs` colisiona con el conmutador de zonas de la
+> landing** —cuatro pestañas en la home—: las del cajón son `.purchase__authtabs`.
 
 > Cambia el ASPECTO de pantallas ya validadas, y **ningún test de este repo ve un cambio visual**.
 
@@ -855,3 +875,80 @@ Ya que hay una sesión abierta y el motor es otro:
    siempre (antes cambiaba con el tamaño de ventana).
 9. **Crea una cuenta desde el cajón.** ▶ En «revisa tu correo» **no hay pestañas**: la salida es el
    enlace «¿ya tienes cuenta?». Antes, tocar la pestaña destruía la pantalla.
+
+## §5.septies · LOS ARREGLOS DE `#125` — ✅ recorrido el 2026-08-23, 12/12
+
+> Los tres cambios de `DECISIONES #125` que **ningún test de este repo puede ver**: un velo en vuelo,
+> una geometría y una navegación percibida. El cuarto —el reenvío— se verifica en `V17`, porque su
+> único oráculo es la bandeja.
+
+### V24 · El velo de PRIVACIDAD
+
+1. Con sesión, entra en «Privacidad y datos» **reteniendo `GET /me/consents`** (en el andamio,
+   `page.route` con un retardo; a mano, estrangulando la red).
+   ▶ Tiene que verse el **spinner**, no una tarjeta con solo su título.
+2. Mientras carga, mira «Descargar mis datos» y el formulario de borrado.
+   ▶ **No pueden estar bloqueados**: leer una lista de cortesía no es una gestión del titular.
+   ⚠️ Es lo que se rompería si el velo colgara de `busy` en vez de su bandera propia.
+3. Al llegar los datos: el velo se va y sale la lista de consentimientos.
+
+### V25 · Las pestañas 50/50
+
+1. Abre `/login`. ▶ Las dos pestañas miden **lo mismo** y su texto va centrado. Medido: 193 y 193 px
+   de una barra de 400 (antes, 103 y 156).
+2. Mira también el **paso 5 del embudo**: comparte el componente y tiene que verse igual.
+
+### V26 · «Volver» desde «Crear cuenta»
+
+1. En `/login`, pulsa la pestaña **«Crear cuenta»** y luego **«Volver»**.
+   ▶ **Sale del área** —vuelve a la compra o al catálogo—, no cambia de pestaña.
+   ⚠️ Si vuelve a «Entrar», o la siembra ha regresado o las pestañas han vuelto a `go()`. Son **dos**
+   causas distintas del mismo síntoma y hay que mirar las dos.
+2. Entra en frío a `/registro` y pulsa «Volver». ▶ Lo mismo: sale. Es el efecto secundario aceptado.
+3. Entra en frío a `/recuperar-contrasena` y pulsa «Volver». ▶ **Aquí SÍ lleva a «entrar»**: no es una
+   pestaña, es una pantalla aparte a la que se llega por un enlace de dentro. Si esto también saliera
+   del área, la siembra se ha retirado de más.
+
+## §5.octies · «MIS RESERVAS» POR RESERVA — ✅ recorrido el 2026-08-23, 16/16
+
+> `specs/mis-reservas-por-reserva.md`, `DECISIONES #126`.
+> ⚠️ **Necesita datos que el fixture no tiene.** `cliente.demo@` traía 4 reservas: no basta para ver
+> paginación en ninguno de los dos ámbitos. Se sembraron 11 más (6 futuras y 5 pasadas) y quedan en la
+> BD de desarrollo con códigos `DEMO-U*` / `DEMO-P*` — reutilízalas en vez de volver a sembrar.
+
+### V27 · Una tarjeta por RESERVA, no por pedido
+
+1. Con sesión, entra en «Mis reservas». ▶ **Cinco tarjetas**, cada una con **una** reserva y la
+   referencia de su pedido debajo («Pedido DEMO-…»).
+2. Busca `DEMO-LEDGER`, que tiene **tres** reservas. ▶ Tienen que salir **por separado** y en su sitio
+   por fecha, no agrupadas en un bloque. Es el caso que motivó todo el trabajo.
+3. Mira el orden: **de la más próxima a la más lejana**. Una reserva **sin fecha asignada** va arriba
+   del todo.
+
+### V28 · La paginación, y que el orden se sostenga ENTRE páginas
+
+1. Pulsa «Siguientes». ▶ Otras cinco, y **ninguna repetida**.
+   ⚠️ Que la última de la página 1 no sea posterior a la primera de la 2 es lo único que distingue
+   esta solución de aplanar en el cliente: aplanando, el orden solo sería cierto dentro de una página.
+2. Comprueba en la pestaña de red que pide `GET /api/v1/me/reservations/upcoming?page=N`.
+
+### V29 · El historial, en su propia pantalla
+
+1. Al final de la lista, **después de la paginación**, hay «Ver historial de reservas». Púlsalo.
+   ▶ Pide `/me/reservations/past` y las tarjetas salen **atenuadas** (opacidad 0,72).
+2. ▶ De la **más reciente a la más antigua**, y con su distintivo «Cancelada» o «Finalizado».
+3. Pasa el ratón por una tarjeta, y luego **tabula dentro de ella**. ▶ Recupera opacidad plena en los
+   dos casos: una tarjeta atenuada sigue siendo interactiva, y quien navega con teclado no pasa el
+   ratón. Es la mitad que se olvida.
+4. Pulsa «Volver». ▶ Vuelve a **«Mis reservas»**, no fuera del área: el historial es una zona y tiene
+   su sitio en la pila.
+
+### V30 · El pedido, bajo demanda
+
+1. En cualquier tarjeta, pulsa **«Ver pedido»**. ▶ Pide `GET /api/v1/orders/{code}` **en ese momento**
+   —no antes— y entonces aparece el ledger: subtotal, señal, a cobrar en puerta, devuelto, total final.
+   ⚠️ Si el ledger ya estuviera ahí antes de pulsar, alguien lo ha metido en la lista: se repetiría
+   tantas veces como reservas tenga el pedido, con importes que no cuadran con la tarjeta que los rodea.
+2. **Un pedido a medio pagar**: su reserva tiene que estar en «Mis reservas» —no en el historial— y su
+   botón de reintentar **fuera** del desplegable. Es el único camino que le queda al cliente para no
+   perder la plaza, y esconderlo tras un clic sería enterrarlo.

@@ -29,6 +29,24 @@ export const usePrivacyStore = defineStore('privacy', {
 
         /** La respuesta de `GET /me/consents`, cruda. `null` mientras no se haya pedido. */
         consents: null,
+
+        /**
+         * ¿Está la lista de consentimientos en vuelo?
+         *
+         * ⚠️⚠️ **Bandera PROPIA y no `busy`, por dos razones y la segunda es la que cierra la
+         * elección** (2026-08-23). La primera es semántica: `busy` es el estado de los FORMULARIOS de
+         * esta pantalla —exportar y borrar—, y bloquear los dos botones mientras se lee una lista de
+         * cortesía sería un efecto que nadie pidió. La segunda es mecánica: `reset()` llama a
+         * `resetForm()`, que pone `busy` a `false`; entrar en la zona con una carga anterior en vuelo
+         * **borraría la bandera a mitad**. Un campo propio no lo sufre.
+         *
+         * ▶ Es el MISMO patrón que `stores/orders.js` y `stores/reservations.js` para lo mismo. El
+         * outlier era esta pantalla: hasta hoy `ensureConsents()` no levantaba ninguna bandera, así
+         * que las tres ramas del `v-if/v-else-if` eran falsas a la vez y **no se pintaba nada**
+         * durante toda la petición — ni el spinner que `DECISIONES #124` puso, ni un marcador.
+         * Medido en navegador el 2026-08-23: 2,6 s de tarjeta con solo su título.
+         */
+        consentsLoading: false,
     }),
 
     getters: {
@@ -58,11 +76,17 @@ export const usePrivacyStore = defineStore('privacy', {
          * problema es otro. Se queda sin lista, como hace el índice con la próxima reserva.
          */
         async ensureConsents({ api = httpClient } = {}) {
-            if (this.consentsLoaded || this.busy) return;
+            if (this.consentsLoaded || this.consentsLoading) return;
 
-            const response = await api.get('/me/consents');
+            this.consentsLoading = true;
 
-            if (response.ok) this.consents = response.data;
+            try {
+                const response = await api.get('/me/consents');
+
+                if (response.ok) this.consents = response.data;
+            } finally {
+                this.consentsLoading = false;
+            }
         },
 
         /**

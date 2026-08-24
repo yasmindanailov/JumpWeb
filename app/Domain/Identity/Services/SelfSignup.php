@@ -46,6 +46,33 @@ class SelfSignup
     public const MAX_PER_EMAIL = 3;
 
     /**
+     * Segundos entre dos reenvíos de verificación **desde la misma IP**.
+     *
+     * Frena el reenvío en ráfaga desde un origen. **No es el que ata a quien acaba de darse de
+     * alta**: ése es el de abajo. Ver el aviso de {@see self::RESEND_EMAIL_COOLDOWN_SECONDS}.
+     */
+    public const RESEND_IP_COOLDOWN_SECONDS = 30;
+
+    /**
+     * Segundos entre dos reenvíos de verificación **al mismo CORREO**.
+     *
+     * Protege el buzón de alguien que no ha pedido nada: sin él, con IPs rotativas se puede
+     * bombardear una dirección ajena a verificaciones.
+     *
+     * ⚠️⚠️ **Es el cooldown que ATA de verdad, y una pantalla que ofrezca reenviar antes de esto
+     * miente** (2026-08-23). El endpoint responde **202 mande o no mande** —`SEC-06`, la misma
+     * anti-enumeración del alta—, así que el cliente no puede enterarse de que su reenvío se
+     * descartó: ve «reenviado», gasta uno de sus intentos y no le llega nada.
+     * ▶ **Medido en navegador, dos veces**: con la cuenta atrás del cajón en 30 s, cuatro reenvíos
+     * produjeron **dos correos** —los pulsados a los 32 s y 93 s salieron; los de 63 s y 123 s los
+     * tiró este limitador—.
+     * ▶ Por eso `resources/js/sidebar/account/verify.js` espeja **ESTE** número y no el de IP, y hay
+     * una paridad que lo vigila (`VerifyResendCooldownParityTest`): bajarlo allí por su cuenta
+     * devuelve el botón que no hace nada.
+     */
+    public const RESEND_EMAIL_COOLDOWN_SECONDS = 60;
+
+    /**
      * @param  array{name:string,email:string,phone:string,password:string,marketing?:bool}  $data  ya validado por el llamante
      * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
      *                               el pago la sustituye, y un bot no paga)
@@ -120,7 +147,7 @@ class SelfSignup
         if (RateLimiter::tooManyAttempts($ipKey, 1)) {
             return false;
         }
-        RateLimiter::hit($ipKey, 30);
+        RateLimiter::hit($ipKey, self::RESEND_IP_COOLDOWN_SECONDS);
 
         $emailKey = 'verify-resend-email:'.self::emailHash($email);
         if (RateLimiter::tooManyAttempts($emailKey, 1)) {
@@ -128,7 +155,7 @@ class SelfSignup
 
             return false;
         }
-        RateLimiter::hit($emailKey, 60);
+        RateLimiter::hit($emailKey, self::RESEND_EMAIL_COOLDOWN_SECONDS);
 
         $user = User::where('email', Str::lower(trim($email)))->first();
         if ($user && ! $user->hasVerifiedEmail()) {

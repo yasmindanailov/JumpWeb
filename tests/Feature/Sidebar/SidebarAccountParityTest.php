@@ -66,20 +66,18 @@ class SidebarAccountParityTest extends TestCase
     {
         [$user, $order] = $this->richOrder();
 
-        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
+        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/upcoming')->assertOk()->json();
         $rows = $this->composeInNode($payload);
 
+        // ⚠️ **DOS tarjetas y no una**: el pedido rico lleva un pack y una línea cancelada, y desde
+        // el 2026-08-23 la pantalla lista por RESERVA. La cancelada cae en el otro ámbito, así que
+        // aquí llega una sola — y eso ya es una aserción sobre el reparto del servidor.
         $this->assertCount(1, $rows, 'la respuesta real no ha producido una fila');
-        $row = $rows[0];
+        $pack = $rows[0];
 
-        $this->assertSame($order->code, $row['code']);
-        $this->assertSame(__('tickets.statuses.paid'), $row['statusLabel'], 'el rótulo del estado no sale del diccionario de la web');
-        $this->assertSame(DisplayTime::format($order->created_at), $row['createdLabel']);
-        $this->assertSame(Money::format((int) $order->total), $row['totalLabel']);
-        $this->assertNull($row['refund'], 'sin reembolso no hay bloque de reembolso');
-
-        // ── La línea del pack ──────────────────────────────────────────────────────────────────
-        $pack = $row['lines'][0];
+        $this->assertSame($order->code, $pack['orderCode']);
+        $this->assertSame(__('tickets.statuses.paid'), $pack['orderStatusLabel'], 'el rótulo del estado no sale del diccionario de la web');
+        $this->assertSame(DisplayTime::format($order->created_at), $pack['orderCreatedLabel']);
 
         $this->assertSame(
             DisplayTime::dayLabel('2026-06-10').' · 10:00–11:00', $pack['whenLabel'],
@@ -114,12 +112,24 @@ class SidebarAccountParityTest extends TestCase
         $this->assertSame('Calcetines', $pack['addons'][0]['name']);
         $this->assertSame(Money::format(800), $pack['addons'][0]['priceLabel']);
 
-        // ── La línea cancelada ─────────────────────────────────────────────────────────────────
-        $cancelled = $row['lines'][1];
+        // ── La línea CANCELADA está en el historial, no aquí ───────────────────────────────────
+        $historial = $this->composeInNode(
+            $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/past')->assertOk()->json()
+        );
 
-        $this->assertSame('cancelled', $cancelled['badge']['key']);
-        $this->assertSame(__('account.orders.item_cancelled'), $cancelled['badge']['label']);
-        $this->assertNull($cancelled['depositNote'], 'una línea cancelada no debe nada en puerta');
+        $this->assertCount(1, $historial, 'la reserva cancelada no ha caído en el historial');
+        $this->assertSame('cancelled', $historial[0]['badge']['key']);
+        $this->assertSame(__('account.orders.item_cancelled'), $historial[0]['badge']['label']);
+        $this->assertNull($historial[0]['depositNote'], 'una línea cancelada no debe nada en puerta');
+
+        // ── Y el LEDGER, por el camino que la tarjeta usa de verdad: bajo demanda ──────────────
+        $ledger = $this->ledgerInNode(
+            $this->actingAs($user)->getJson(self::ROOT.'/orders/'.$order->code)->assertOk()->json()
+        );
+
+        $this->assertSame(Money::format((int) $order->total), $ledger['totalLabel']);
+        $this->assertNull($ledger['refund'], 'sin reembolso no hay bloque de reembolso');
+        $this->assertSame(__('tickets.statuses.paid'), $ledger['statusLabel']);
     }
 
     /**
@@ -131,8 +141,11 @@ class SidebarAccountParityTest extends TestCase
     {
         [$user] = $this->pastOrder();
 
-        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
-        $line = $this->composeInNode($payload)[0]['lines'][0];
+        // ⚠️ **Por el ámbito `past`, y eso ya es media aserción**: desde el 2026-08-23 una reserva
+        // disfrutada no está en «Mis reservas». Pedirla por `upcoming` devolvería una lista vacía y
+        // el caso reventaría con un índice — que es lo que enseñó que el reparto funciona.
+        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/past')->assertOk()->json();
+        $line = $this->composeInNode($payload)[0];
 
         $this->assertSame('finished', $line['badge']['key']);
         $this->assertSame(__('account.orders.item_finished'), $line['badge']['label']);
@@ -155,13 +168,14 @@ class SidebarAccountParityTest extends TestCase
             'paid_at' => null,
             'expires_at' => Carbon::now()->addMinutes(10),
         ]);
+        $this->reservationIn($order, '2026-06-20');
 
-        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
+        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/upcoming')->assertOk()->json();
         $row = $this->composeInNode($payload)[0];
 
-        $this->assertSame($payload['data'][0]['can_be_retried'], $row['canRetry']);
-        $this->assertSame(__('tickets.statuses.pending'), $row['statusLabel']);
-        $this->assertNotSame('', $row['statusLabel'], 'un estado sin rótulo se pintaría en blanco');
+        $this->assertSame($payload['data'][0]['order']['can_be_retried'], $row['canRetry']);
+        $this->assertSame(__('tickets.statuses.pending'), $row['orderStatusLabel']);
+        $this->assertNotSame('', $row['orderStatusLabel'], 'un estado sin rótulo se pintaría en blanco');
     }
 
     /** Sin pedidos, la zona no inventa filas ni paginación. */
@@ -169,7 +183,7 @@ class SidebarAccountParityTest extends TestCase
     {
         $user = $this->user();
 
-        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
+        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/upcoming')->assertOk()->json();
 
         $this->assertSame([], $this->composeInNode($payload));
         $this->assertNull($this->paginateInNode($payload));
@@ -183,11 +197,14 @@ class SidebarAccountParityTest extends TestCase
     {
         $user = $this->user();
 
+        // ⚠️ **Con su RESERVA dentro, y no solo el pedido**: la pantalla pagina reservas desde el
+        // 2026-08-23, así que doce pedidos vacíos darían cero filas y la barra no existiría —el caso
+        // pasaría a no medir nada—. Cada uno con su día para que además el orden tenga sentido.
         for ($i = 0; $i < 12; $i++) {
-            $this->order($user, ['code' => 'R-PAG'.$i]);
+            $this->reservationIn($this->order($user, ['code' => 'R-PAG'.$i]), '2026-06-'.str_pad((string) ($i + 10), 2, '0', STR_PAD_LEFT));
         }
 
-        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/orders?per_page=5')->assertOk()->json();
+        $payload = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/upcoming?per_page=5')->assertOk()->json();
         $page = $this->paginateInNode($payload);
 
         $this->assertNotNull($page, 'con 12 pedidos y 5 por página tiene que haber barra');
@@ -215,6 +232,26 @@ class SidebarAccountParityTest extends TestCase
             'subtotal' => 9800, 'tax' => 0, 'total' => 9800,
             'currency' => 'EUR', 'paid_at' => Carbon::now(),
         ], $attributes));
+    }
+
+    /** Una reserva de libro dentro de un pedido: lo mínimo para que la pantalla pinte una tarjeta. */
+    private function reservationIn(Order $order, string $date): void
+    {
+        $zone = Zone::first() ?? $this->zone();
+
+        $order->items()->create([
+            'ticket_type_id' => TicketType::create([
+                'name' => ['es' => 'Entrada '.$date], 'type' => TicketType::TYPE_ENTRY,
+                'zone_id' => $zone->id, 'duration_min' => 60, 'seats_per_unit' => 1,
+                'is_sellable' => true, 'is_active' => true,
+                'position' => (int) TicketType::max('position') + 1,
+            ])->id,
+            'slot_id' => Slot::firstOrCreate(
+                ['zone_id' => $zone->id, 'date' => $date, 'start_time' => '10:00:00'],
+                ['end_time' => '11:00:00', 'capacity' => 20, 'online_capacity' => 20],
+            )->id,
+            'quantity' => 1, 'unit_price' => 9800, 'seats' => 1,
+        ]);
     }
 
     private function zone(): Zone
@@ -348,15 +385,41 @@ class SidebarAccountParityTest extends TestCase
     private function composeInNode(array $payload): array
     {
         return $this->runInNode(<<<'JS'
-            import { orderRows } from 'file://__MODULE__';
+            import { cardRows } from 'file://__MODULE__';
             let raw = '';
             process.stdin.setEncoding('utf8');
             process.stdin.on('data', (c) => { raw += c; });
             process.stdin.on('end', () => {
                 const { payload, ctx } = JSON.parse(raw);
-                process.stdout.write(JSON.stringify({ out: orderRows(payload, ctx) }));
+                process.stdout.write(JSON.stringify({ out: cardRows(payload, ctx) }));
             });
             JS, ['payload' => $payload, 'ctx' => $this->dictionaries()], 'account-rows.mjs')['out'];
+    }
+
+    /**
+     * El LEDGER, tal como lo compone la tarjeta al desplegar «Ver pedido»: `orderRow()` sobre la
+     * respuesta de `GET /orders/{code}`, que es exactamente lo que hace `store.ensureOrder()`.
+     *
+     * ⚠️ Va por su propio camino y no dentro de la tarjeta porque **el ledger no viaja con la
+     * lista** (`specs/mis-reservas-por-reserva.md` §4.2): es del pedido y se repetiría tantas veces
+     * como reservas tenga. Comparar aquí lo que la pantalla pide de verdad es lo que impide que esta
+     * paridad se quede probando un camino que ya no existe — el error de `#67`.
+     *
+     * @param  array<string, mixed>  $order
+     * @return array<string, mixed>
+     */
+    private function ledgerInNode(array $order): array
+    {
+        return $this->runInNode(<<<'JS'
+            import { orderRow } from 'file://__MODULE__';
+            let raw = '';
+            process.stdin.setEncoding('utf8');
+            process.stdin.on('data', (c) => { raw += c; });
+            process.stdin.on('end', () => {
+                const { payload, ctx } = JSON.parse(raw);
+                process.stdout.write(JSON.stringify({ out: orderRow(payload, ctx) }));
+            });
+            JS, ['payload' => $order, 'ctx' => $this->dictionaries()], 'account-ledger.mjs')['out'];
     }
 
     /**
