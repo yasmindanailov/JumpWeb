@@ -2,9 +2,10 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-24** (**«Mis reservas» se lista por RESERVA** y
-> **el desglose de dinero del cliente queda AUDITADO** — `DECISIONES #125`, `#126` y
-> `specs/desglose-dinero-cliente.md` 🟦, que es por donde se sigue).
+> aquí solo se enlaza. Última actualización: **2026-08-24** (**el DESGLOSE de dinero del cliente:
+> tandas A y B EJECUTADAS** — el dominio dice la verdad y el desglose se entiende. `DECISIONES #127`
+> y sus apartados `(b)`–`(f)`; `specs/desglose-dinero-cliente.md` §15 y §16. **Queda la tanda C**,
+> que no toca dinero).
 
 ## ▶ Dónde estamos
 
@@ -14,8 +15,13 @@
 Blade **ya no existen** y la página sirve **0 atributos `wire:`** (`DECISIONES #123`).
 🟩 **Y el 2026-08-23 «Mis reservas» pasa a listarse POR RESERVA**, con el pasado en su propia pantalla
 (`DECISIONES #126`).
-▶ **Lo siguiente NO es la Fase 5**: es el **desglose de dinero que ve el cliente**, ya auditado y con
-sus tres tandas acordadas. Detalle en «Próximo paso» y alcance en el tracker.
+🟩 **Y el 2026-08-24 se arregla el DESGLOSE DE DINERO que ve el cliente** (`DECISIONES #127`), en dos
+tandas: el **dominio** dejó de mentir en cuatro casos que ninguna auditoría anterior había construido
+—y de paso se cerró un **agujero de ingresos**: mover la fecha de una reserva no re-tarificaba— y la
+**proyección** pasó a componerse en un solo sitio, en dos ejes y con una frase que explica cada
+estado. Medido: **0 de 23** gestiones del panel dejan la columna ilegible, cuando eran 18.
+▶ **Lo siguiente NO es la Fase 5**: es la **tanda C** del mismo trabajo (la pantalla de «Mis
+pedidos»), que es la única que no toca dinero. Detalle en «Próximo paso» y alcance en el tracker.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -191,91 +197,52 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-🟩 **LA TANDA A ESTÁ EJECUTADA** (2026-08-24, `DECISIONES #127`, `#127(c)`, `#127(d)` ·
-`specs/desglose-dinero-cliente.md` §15): **el dominio dice la verdad y tiene guardas.**
-▶ Se cerró el **agujero de ingresos** —mover la fecha ya re-tarifica— y los cuatro defectos que la
-tercera auditoría destapó. **13 invariantes sobre 11 escenarios**, todas verificadas por mutación, y
-las dos identidades **cierran en los 58 pedidos reales de MySQL** salvo en los 20 de datos escritos a
-mano, que quedan clasificados por causa. La matriz del panel: **23 acciones, 0 rompen ninguna
-identidad** (antes 3).
-⚠️ **Lo que la tanda A NO toca es la PANTALLA**: las 19 columnas ilegibles de la matriz siguen ahí a
-propósito — eso es la tanda B. Y el contador subió de 18 a 19, que es buena noticia: cancelar un
-pedido antes «se leía bien» porque **mentía en silencio**, y ahora dice la verdad mal maquetada.
+🟩 **EL DESGLOSE DE DINERO DEL CLIENTE: tandas A y B EJECUTADAS el 2026-08-24** (`DECISIONES #127`
+y sus apartados `(b)`–`(f)` · `specs/desglose-dinero-cliente.md` §15 y §16). **El dominio dice la
+verdad y el desglose se entiende.**
 
-🟩 **Y LA TANDA B TAMBIÉN ESTÁ EJECUTADA** (spec §16): **el desglose ya es LEGIBLE**. Lo compone un
-único value object que leen las ocho superficies, el contrato lo publica en **dos ejes** y cada estado
-lleva **su frase**. ▶ **La medida que lo cierra**: la matriz de las 23 acciones del panel →
-**0 de 23 dejan la columna ilegible** (antes 18), y el eje del valor **cierra en 50 de 50** pedidos
-por HTTP real. `LedgerSingleSourceTest` prohíbe que ninguna superficie vuelva a componerlo por su
-cuenta, **aunque acierte**.
+**Medido al cerrar, no afirmado:**
+- la matriz de las **23 acciones reales del panel** deja **0 columnas ilegibles** (eran 18) y
+  **0 rompen ninguna identidad** (eran 3);
+- el **eje del valor cierra en 50 de 50** pedidos servidos por HTTP real;
+- **13 mutaciones** verificadas entre las dos tandas: todas muerden.
 
-❗ **LO SIGUIENTE ES LA TANDA C**: «Mis pedidos» como pantalla propia y el «Ver pedido» de cada
-reserva llevando a ella (spec §5 y §14.4). ⚠️ Es la única de las tres que **no toca dinero**.
+❗ **LO SIGUIENTE ES LA TANDA C**, y es lo único que queda de este trabajo: **«Mis pedidos» como
+pantalla propia** y el «Ver pedido» de cada reserva llevando a ella (spec §5, §14.4 · `#120(d)` para
+el modelo de zonas). ⚠️ **Es la única de las tres que NO toca dinero**: añadir una zona es una línea
+en `ZONES` más su rótulo, y hoy ya existen `ORDERS` y `ORDERS_HISTORY`.
 
-❗❗ **EL DESGLOSE DE DINERO QUE VE EL CLIENTE va ANTES de Fase 5.**
-Spec: `specs/desglose-dinero-cliente.md` 🟦 — **el MARCO YA ESTÁ ENTERO Y DECIDIDO** (§10,
-`DECISIONES #127`, 2026-08-24), que era la condición del owner para tocar esto. El plan revisado son
-**tres tandas: A dominio+invariantes · B proyección · C pantalla** (spec §11 y el tracker).
-▶ **Se empieza por la tanda A**, y **no** por la vieja «tanda 1»: aquélla se anunciaba como «riesgo
-cero» y no lo era.
+⚠️⚠️ **Lo que hay que saber antes de tocar el desglose, y no es negociable:**
+- **Lo compone UN solo sitio**, `Booking\Services\OrderLedger`, y lo leen las **OCHO** superficies
+  (panel: bloque, sub-tarjeta, calendario, lista y taquilla · PDF · correos · cliente). Componerlo
+  otra vez en una superficie es el defecto que costó tres auditorías: `LedgerSingleSourceTest` lo
+  tumba **aunque el resultado sea correcto hoy**.
+- **Son DOS EJES y no se mezclan**: `valor = pagadoWeb + pendienteWeb + pagadoParque +
+  pendienteParque + compensado`, y `retenido = pagadoWeb + pendienteDevolución`. Los guardan
+  `PAY-16` y `PAY-17`; la tarifa al mover la fecha, `PAY-18`.
+- ⚠️ **`online_amount_cents` NO es una dimensión del ledger**: es «cuánto se te cobrará si pagas
+  ahora», lo que consume el reintento. Leerlo como «lo pagado» es el defecto original.
 
-⚠️⚠️ **Lo que hay que retener antes de abrir la spec, porque contradice lo que decía este documento.**
-La tercera auditoría —**58 pedidos en MySQL** (22 creados por los flujos reales) **+ 6 en MariaDB**, y
-la proyección medida **por HTTP**— confirmó que **no hay dos fuentes de verdad** (64 de 64), pero
-encontró **CUATRO defectos de DOMINIO** que las dos anteriores no llegaron a construir:
-- un **pedido cancelado sin reembolsar** no anuncia nada pendiente de devolver: el parque retiene el
-  dinero, el panel ya no puede devolverlo desde ahí y el cliente lee «Total 19,80 €» y ni una palabra.
-  ⚠️ **Ninguna identidad lo caza, ni la ley de caja**;
-- un **reembolso total** deja el valor intacto y no se atribuye a ninguna reserva;
-- un pedido **que nunca se pagó** declara «Pagado en el parque 90,00 €» con 0,00 € cobrados
-  (lo destapó STAGING, se reprodujo en local con el `orders:expire` real).
-▶ Y la proyección **no es un defecto, son cuatro**: medido por HTTP, **30 de 50 columnas se leen sin
-ambigüedad, 20 no**. Entre ellos uno que no estaba escrito en ninguna parte: **«Pagado online» se
-OCULTA** cuando el producto no lleva señal.
+⚠️ **Y una trampa que este trabajo pagó CUATRO veces**: un fixture que no reproduce el flujo real
+**inventa defectos tan bien como los oculta**. Los cuatro casos —un pedido `paid` sin `paid_at`, otro
+sin ninguna fila `Payment`, un reembolso que escribe la columna sin la fila— aparecían como fallos del
+código y eran del fixture. Si una guarda de dinero se pone roja, **mira primero si el dato es real**.
 
-▶ **Y la MATRIZ DEL PANEL, medida sobre las 23 acciones REALES** (spec §12, `#127(b)`):
-**18 de 23 dejan la columna del cliente ILEGIBLE** y las 10 ediciones enseñan «Subtotal ≠ Total» sin
-excepción. **Casi cualquier gestión ordinaria del operador rompe el desglose.** Y destapó un defecto
-más: **`refundItem` no cancela la línea aunque su docblock diga que sí** — se devuelve la señal de un
-pack, la reserva sigue viva y las dos superficies siguen contando ese dinero como pagado.
-▶ **La prueba más limpia de todo esto**: cancelar la RESERVA deja el desglose correcto y cancelar el
-PEDIDO no. **La conducta correcta ya existe un nivel más abajo.**
-
-❗❗ **Y un AGUJERO DE INGRESOS que la matriz destapó**: **mover la fecha de una reserva NO re-tarifica**
-—conserva el precio pagado—, así que comprar el día barato y pedir el cambio al sábado **sale gratis**.
-Medido: 16,00 € de diferencia en las dos direcciones, y el panel **afirma «sin cambio de precio»**.
-▶ **[DECIDIDO por el owner]: la regla cambia — mover la fecha re-tarifica al catálogo del día destino**
-(`#127(c)`). Va en la tanda A.
-
-▶ **El PLAN DE EJECUCIÓN detallado está en la spec §14**, con **las OCHO superficies** que enseñan este
-dinero (panel: bloque, sub-tarjeta, calendario, lista y taquilla · **PDF** · **emails** · cliente).
-⚠️ «Sin divergencias» significa que **las ocho se mueven juntas**.
-
-▶ **El modelo decidido**: dos ejes cerrados —`valor = pagadoWeb + pendienteWeb + pagadoParque +
-pendienteParque + compensado` y `cobradoWeb − devuelto = pagadoWeb + pendienteDevolución`—,
-**verificados en 58 de 58 antes de escribir producción**. Los detalles, en la spec §10.
-
-⚠️ **Seis trampas de MÉTODO que estas auditorías pagaron** y que el siguiente agente va a volver a
-pisar si no las lee: un `extra_due` sin subir el precio del ítem (y **al revés**: `R-L6UTIA` parecía un
-defecto y era un artefacto), un pago que no se sincroniza a `Σ itemCollectedCents`, `unit_price`
-tratado como total, **la excepción de la ley de caja escrita a medias — dos veces, y cada versión
-floja excusó un defecto real**, y `dates()`/`times()` de `AvailabilityOffer` devolviendo value objects.
-Spec §2, §4.bis.3, §4.ter y **§9.4**.
-
-✅ **El sandbox de Redsys queda VERIFICADO en su integración** (2026-08-24, credenciales del owner:
-comercio `263100000`, **terminal 45**): la firma `HMAC_SHA512_V2` la **acepta el banco**.
-⚠️⚠️ **Y este documento llegó a afirmar que el sandbox era inalcanzable: era un ERROR DE MEDIDA** —se
-probó el puerto **443** y Redsys sirve el sandbox en el **25443**, que es el que el código usa. Medir
-contra un puerto que el código no usa inventa un problema de infraestructura que no existe.
-❗ **Lo que queda de `PAY-08`** es un `0900` REAL (exige una autorización previa con tarjeta en el
-sandbox → navegador sobre staging), y **arreglar el propio verificador: su control negativo sale en
-verde** (`report()` bendice cualquier `gateway_denied`, incluido el `SIS0042` de firma rechazada).
+❗ **DOS COSAS PENDIENTES DEL OWNER** (fichas en `DEUDA.md`):
+1. **Un `Ds_Response=0900` REAL de Redsys**: exige un pago de prueba con tarjeta en el sandbox desde
+   el navegador (staging) y después `redsys:verify-sandbox --gateway-order=…`. Todo lo demás de la
+   cadena está verificado con las credenciales del owner. ⚠️ Una medición anterior dio el sandbox por
+   inalcanzable y **era un error**: se probó el puerto 443 y Redsys sirve el suyo en el **25443**.
+2. **Los 21 pedidos de auditoría** de la BD local (más 19 de datos sucios anteriores). El owner pidió
+   **no borrarlos todavía**: se barren tras la auditoría final de las tres tandas. ⚠️ Retienen aforo
+   de franjas reales y llevan `event_data` ficticio marcado como tal. Los 19 sucios son un **control
+   negativo útil**: son los únicos que incumplen `PAY-17`, y por causas que ningún flujo produce.
 
 ▶ **Y DESPUÉS, la Fase 5** — capa de contenido profesional. ⚠️ Su primer punto **no es implementable
-tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`, que
-**lanza** `BadMethodCallException` al usar tags; no hay Redis en el stack local, ni en staging, ni una
-línea en la doc que lo contemple. Empieza por una decisión de infraestructura del owner —Redis, o
-invalidación por versión de clave—, no por código. El detalle está en el tracker.
+tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`,
+que **lanza** `BadMethodCallException` al usar tags; no hay Redis en el stack local, ni en staging, ni
+una línea en la doc que lo contemple. Empieza por una decisión de infraestructura del owner —Redis, o
+invalidación por versión de clave—, no por código.
 
 ---
 

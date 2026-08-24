@@ -1842,11 +1842,16 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
-### ❗ ABIERTO Y CRÍTICO — el DESGLOSE de dinero que ve el cliente 🟦
-> Spec: `docs/specs/desglose-dinero-cliente.md` (auditoría **CERRADA** · **marco COMPLETO y DECIDIDO**,
-> §10) · Decisión: `DECISIONES #127`. **Va ANTES de Fase 5.**
-> ⚠️⚠️ **Las TRES tandas de aquí estaban MAL DIMENSIONADAS y se sustituyen** (2026-08-24, tercera
-> auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**).
+### El DESGLOSE de dinero que ve el cliente 🟦 — **lo CRÍTICO está cerrado; queda la PANTALLA**
+> Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
+> `(b)`–`(f)`. **Va ANTES de Fase 5.**
+> ✅ **Tandas A y B EJECUTADAS el 2026-08-24**: el dominio dice la verdad y el desglose se entiende.
+> **Medido al cerrar**: la matriz de las 23 acciones del panel deja **0 columnas ilegibles** (eran
+> 18) y el eje del valor **cierra en 50 de 50** pedidos por HTTP real.
+> ▶ **Solo queda la tanda C**, que es la única de las tres que **no toca dinero**.
+> ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
+> (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
+> la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.
 
 - ✅ **Tanda A · el DOMINIO y sus guardas — EJECUTADA**
       (2026-08-24 · `specs/desglose-dinero-cliente.md` §15 · `DECISIONES #127`, `#127(c)`, `#127(d)`). **El dominio dice la verdad y tiene guardas.** Seis arreglos, todos
