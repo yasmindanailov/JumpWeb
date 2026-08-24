@@ -974,7 +974,15 @@ class Order extends Model
             return $entry['positives'][0]->breakdownLabel();
         }
 
-        return $name;
+        // ⚠️⚠️ **El respaldo dice POR QUÉ se cobra, no solo de qué producto** (`DECISIONES #131`).
+        // Devolvía el nombre pelado, y bajo «Pendiente de pagar en el parque» eso se lee como «te
+        // cobramos 96,00 € de Cumpleaños Jump» sin decir de dónde sale ese importe — mientras su
+        // línea hermana, «Resto de la señal de X», sí se explica sola.
+        // ▶ **Y no es un caso raro**: medido sobre toda la BD, las DOS únicas líneas de puerta por
+        // ediciones caían aquí, incluida la de un pedido correctamente registrado (`R-XCACFO`, 96,00 €
+        // de una subida de precio). Las otras dos ramas se explican solas —«+4 X», «Cambio a X»—;
+        // ésta era la única muda, y es la que sale cuando el cargo no es múltiplo del precio unitario.
+        return __('tickets.gate_change_line', ['product' => $name]);
     }
 
     /**

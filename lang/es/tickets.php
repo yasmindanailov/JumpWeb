@@ -172,6 +172,10 @@ return [
     'deposit_paid_online' => 'Pagado online',
     // #225 F2: línea ↳ del resto de la señal dentro de "A cobrar en el parque".
     'deposit_remainder_line' => 'Resto de la señal',
+    // ⚠️ El cargo de puerta por una EDICIÓN, cuando no se puede decir «+4 X» ni «Cambio a X»
+    // (`DECISIONES #131`). Antes salía el nombre pelado del producto y no decía por qué se cobra,
+    // mientras su línea hermana —el resto de la señal— sí se explicaba sola.
+    'gate_change_line' => 'Diferencia por cambios en :product',
     'at_gate_caption_deposit' => 'Resto a pagar en recepción al llegar. La señal ya quedó pagada online.',
     'pendiente_devolucion' => 'Pendiente de devolución',
     'pendiente_devolucion_caption' => 'Pagaste de más por un cambio en el pedido (se redujo o quitó un producto) y está pendiente de devolvértelo.',

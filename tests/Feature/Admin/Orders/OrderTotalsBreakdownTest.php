@@ -109,23 +109,48 @@ class OrderTotalsBreakdownTest extends TestCase
         $this->assertSame('+2 Calcetines, +1 Gorro', $label);
     }
 
-    public function test_breakdown_label_legacy_keys_only_falls_back_to_item_name(): void
+    /**
+     * ⚠️⚠️ **El respaldo EXPLICA, no solo nombra** (2026-08-24, `DECISIONES #131`).
+     *
+     * Devolvía el nombre pelado del producto, y bajo «Pendiente de pagar en el parque» eso se lee
+     * como «te cobramos 96,00 € de Cumpleaños Jump» sin decir de dónde sale ese importe — mientras su
+     * línea hermana, «Resto de la señal de X», sí se explica sola.
+     *
+     * ▶ **Y no es una rama de datos sucios**: medido sobre los OCHO `extra_due` de la BD de
+     * desarrollo, **los ocho** caían aquí, incluidos los cinco escritos por el flujo REAL del panel
+     * —que guarda `context = {"changes": []}`, con lo que ninguna rama de arriba puede decir nada—.
+     * Es decir: **es la etiqueta que sale en producción**, no la excepción.
+     */
+    public function test_breakdown_label_legacy_keys_only_explains_the_change(): void
     {
         $item = $this->makeItem();
 
         // Formato legacy: context guardaba solo las CLAVES (lista de strings).
         $label = $this->labelFor($item, ['changes' => ['quantity_change']]);
 
-        $this->assertSame($this->jumpType->tr('name'), $label);
+        $this->assertSame(__('tickets.gate_change_line', ['product' => $this->jumpType->tr('name')]), $label);
+        $this->assertNotSame($this->jumpType->tr('name'), $label, 'la etiqueta vuelve a ser el nombre pelado');
     }
 
-    public function test_breakdown_label_null_context_falls_back_to_item_name(): void
+    public function test_breakdown_label_null_context_explains_the_change(): void
     {
         $item = $this->makeItem();
 
         $label = $this->labelFor($item, null);
 
-        $this->assertSame($this->jumpType->tr('name'), $label);
+        $this->assertSame(__('tickets.gate_change_line', ['product' => $this->jumpType->tr('name')]), $label);
+    }
+
+    /** ⚠️ Y el respaldo NO se come las tres ramas que sí saben describir el cambio. */
+    public function test_the_explanatory_fallback_does_not_swallow_the_precise_labels(): void
+    {
+        $item = $this->makeItem();
+
+        $this->assertStringStartsWith('+2 ', $this->labelFor($item, ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]));
+        $this->assertSame(
+            __('admin.orders.order_financial.breakdown.product_change', ['name' => 'Pack Kids']),
+            $this->labelFor($item, ['changes' => ['product_change' => ['new' => 'Pack Kids']]])
+        );
     }
 
     // ─── Render del partial: "A cobrar en el parque" ────────────────────

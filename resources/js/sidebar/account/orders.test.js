@@ -449,7 +449,10 @@ describe('el bloque financiero', () => {
         }), MESSAGES);
 
         assert.equal(f.value.total.amountLabel, '22,00 €');
-        assert.deepEqual(f.value.rows.map((r) => r.label), ['Pagado por web · 01/06/2026'], 'el eje de caja se ha colado en el valor');
+        // ⚠️ Aquí la fecha NO va arriba: con una devolución de por medio, `paid_online` ya no es lo
+        // que se cobró ese día, y pegarle la fecha convertía la línea en una afirmación falsa
+        // (`DECISIONES #131`). La fecha viaja abajo, con el importe que sí se cobró.
+        assert.deepEqual(f.value.rows.map((r) => r.label), ['Pagado por web'], 'la fecha se ha pegado a un importe que no se cobró ese día');
         assert.deepEqual(
             f.cash.rows.map((r) => [r.label, r.amountLabel]),
             [['Cobrado por web · 01/06/2026', '45,00 €'], ['Pendiente de devolverte', '23,00 €']],
@@ -468,6 +471,28 @@ describe('el bloque financiero', () => {
      * ▶ Lo que hacía falta conservar —que el importe se pueda **cotejar con el banco**— no era el
      * bloque: era la FECHA. Y ahora va pegada a la línea del canal, como el panel ya hacía.
      */
+    /**
+     * ⚠️⚠️ **LA FECHA VA DONDE EL IMPORTE ES EL QUE SE COBRÓ, Y EN NINGÚN OTRO SITIO**
+     * (`DECISIONES #131`).
+     *
+     * `#130` la pegó a la línea del canal para hacer el importe conciliable con el banco. Pero
+     * `paid_online` es el canal del VALOR y, en cuanto hay una devolución, **deja de ser lo que se
+     * cobró ese día**. Medido sobre los 58 pedidos: en **7** la pantalla afirmaba «Pagado por web ·
+     * 24/08/2026 — 9,90 €» cuando ese día se cobraron 19,80 €, y **6 de los 7 eran pedidos SANOS**.
+     * Justo lo contrario de conciliable: el cliente miraría su extracto y no encontraría ese importe.
+     */
+    test('⚠️ con una devolución de por medio, la fecha NO se pega al importe del valor', () => {
+        const f = financialsOf(order({
+            ledger: ledger({
+                value: { total_cents: 2200, paid_online_cents: 2200, pending_at_gate_cents: 0 },
+                cash: { charged_online_cents: 4500, refunded_cents: 2300, held_cents: 2200, pending_refund_cents: 0 },
+            }),
+        }), MESSAGES);
+
+        assert.equal(f.value.rows[0].label, 'Pagado por web', 'la fecha vuelve a pegarse a un importe que no se cobró ese día');
+        assert.equal(f.cash.rows[0].label, 'Cobrado por web · 01/06/2026', 'la fecha tiene que ir con el importe que SÍ se cobró');
+    });
+
     test('⚠️ un pedido corriente NO repite el importe: la fecha va en la línea del canal', () => {
         const f = financialsOf(order(), MESSAGES);
 
@@ -513,7 +538,7 @@ describe('el bloque financiero', () => {
             }),
         }), MESSAGES);
 
-        assert.equal(conDevolucion.value.rows[0].label, 'Pagado en recepción · 01/06/2026');
+        assert.equal(conDevolucion.value.rows[0].label, 'Pagado en recepción', 'con devolución, la fecha no va arriba');
         assert.equal(conDevolucion.cash.rows[0].label, 'Cobrado en recepción · 01/06/2026');
     });
 

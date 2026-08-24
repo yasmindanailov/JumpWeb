@@ -130,6 +130,14 @@ class OrderAdjustment extends Model
             }
         }
 
-        return $itemName;
+        // ⚠️⚠️ **El respaldo dice POR QUÉ se cobra, no solo de qué producto** (`DECISIONES #131`).
+        // Devolvía el nombre pelado, y bajo «Pendiente de pagar en el parque» eso se lee como «te
+        // cobramos 96,00 € de Cumpleaños Jump» sin decir de dónde sale — mientras su línea hermana,
+        // «Resto de la señal de X», sí se explica sola.
+        // ▶ **Y no es un caso raro ni de datos sucios**: medido el 2026-08-24 sobre TODOS los
+        // `extra_due` de la BD —8, cinco de ellos escritos por el flujo REAL del panel—, **los ocho**
+        // caían aquí. El flujo real guarda `context = {"changes": []}`, así que ninguna de las ramas
+        // de arriba puede decir nada y ésta es la que sale en producción.
+        return __('tickets.gate_change_line', ['product' => $itemName]);
     }
 }

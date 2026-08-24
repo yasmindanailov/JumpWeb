@@ -39,8 +39,15 @@ línea**: los complementos no se pintaban, así que un pedido REAL ponía 120,00
 124,00 € de total sin nada que explicara los 4,00 €.
 ▶ ⚠️ **Los dos defectos pasaban la suite entera**: uno porque la guarda miraba la composición y el
 fallo estaba en el marcado; el otro porque **no hay test que mida si algo se entiende**.
-▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** (tandas A, B, C + los tres de lectura + esta
-vuelta). Lo siguiente sí es la **Fase 5**.
+🟩 **Y una TERCERA vuelta, revisando `R-L6UTIA` a fondo** (`DECISIONES #131` · spec §21): la **fecha
+del cobro se pegaba a un importe que no se cobró ese día** —medido: **7 pedidos, 6 SANOS**— y la línea
+«↳ Cumpleaños Jump 12,00 €» **no decía por qué se cobra**, cosa que pasa en los OCHO `extra_due` de la
+BD, cinco de ellos escritos por el flujo REAL del panel.
+❗ **PENDIENTE DE DECISIÓN DEL OWNER**: `PAY-16`/`PAY-17` son guardas **de test, no de ejecución**. Un
+pedido cuyo desglose no cierra se sirve al cliente **como si nada** —dos importes que se contradicen,
+sin aviso— y **el parque no se entera**. Hay que decidir qué se enseña y cómo se avisa (§21.3).
+▶ **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO** salvo esa decisión. Lo siguiente sí es la
+**Fase 5**.
 
 **Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
 **4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
@@ -91,7 +98,11 @@ comprobaciones que quedan y piden dispositivo (`V23·3` en móvil, `V20·6`) **e
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2740 en verde** (15.970 aserciones, `--parallel` **~37 s** medidos el 2026-08-24) ·
+- Suite **2741 en verde** (15.976 aserciones, `--parallel` **~40 s** medidos el 2026-08-24) ·
+  ▶ **+1 con la tercera vuelta** (`DECISIONES #131`): que el respaldo de la etiqueta de puerta
+  **explique** en vez de nombrar, y su control de que no se coma las tres ramas precisas. En
+  `node --test`, **667** casos — con el que fija que la fecha **no** se pega a un importe que no se
+  cobró ese día.
   ▶ **+3 con la segunda vuelta** (`DECISIONES #130`): el eje de caja **callado** cuando repetiría, el
   eje de caja **presente** cuando lo cobrado no cuadra con lo pagado, y **DOS guardas sobre el
   MARCADO** —que la tarjeta de la reserva no pinte dinero y que la del pedido siga pintándolo entero,

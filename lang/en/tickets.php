@@ -150,6 +150,9 @@ return [
     'deposit_paid_online' => 'Paid online',
     // #225 F2: ↳ line for the deposit balance within "To pay at the park".
     'deposit_remainder_line' => 'Remaining balance',
+    // ⚠️ A gate charge from an EDIT, when neither "+4 X" nor "Change to X" applies. It used to be the
+    // bare product name, which did not say WHY it is charged (`DECISIONES #131`).
+    'gate_change_line' => 'Difference from changes to :product',
     'at_gate_caption_deposit' => 'Remainder to pay at reception on arrival. The deposit has already been paid online.',
     'pendiente_devolucion' => 'Refund pending',
     'pendiente_devolucion_caption' => 'You overpaid because of a change to your order (a product was reduced or removed) and it is pending refund.',

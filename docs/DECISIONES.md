@@ -6472,3 +6472,49 @@ se lee**, y en una pantalla de dinero eso no es una cuestión de gusto.
 ▶ Y los dos defectos de esta vuelta tienen algo en común: **los dos pasaban la suite entera**. El
 primero porque la guarda miraba la composición y el defecto estaba en el marcado; el segundo porque
 no hay test que mida si algo se entiende.
+
+---
+
+## #131 · 2026-08-24 · Revisar `R-L6UTIA` a fondo destapó DOS defectos más — y uno lo había metido yo el día anterior
+
+**Contexto.** El owner pidió revisar con rigor el pedido cuyo desglose «no se entiende». Ya estaba
+escrito que el DATO está roto (`#128` §17). Mirarlo otra vez, línea por línea y sin dar nada por
+bueno, encontró **dos defectos de producto que nada tienen que ver con ese dato**, y uno de ellos era
+una regresión de `#130`.
+
+**⚠️⚠️ 1 · LA FECHA SE PEGABA A UN IMPORTE QUE NO SE COBRÓ ESE DÍA.** `#130` mudó la fecha del cobro a
+la línea «Pagado por web» para que el importe se pudiera buscar en un extracto. Pero `paid_online` es
+el canal del VALOR —«lo cobrado por web que respalda producto vivo, **neto de compensación**»—, así
+que **en cuanto hay una devolución deja de ser lo que se cobró ese día**.
+▶ **Medido sobre los 58 pedidos: pasaba en 7, y SEIS estaban SANOS.** `R-BEMOOI` decía «Pagado por web
+· 24/08/2026 — 9,90 €» cuando ese día se cobraron 19,80 € y se devolvieron 9,90 €. El cliente miraría
+su extracto y **no encontraría ese importe** — justo lo contrario de lo que la fecha venía a lograr.
+▶ **La regla**: la fecha acompaña al importe **solo cuando coinciden**, que es exactamente cuando el
+bloque «Tu dinero» no se pinta (`!has_cash` ⟹ `charged_online === paid_online`, porque ese término es
+uno de los tres del predicado). Cuando difieren, la fecha va abajo, con el importe que sí se cobró.
+**Un solo predicado del dominio gobierna las dos mitades.**
+
+**⚠️⚠️ 2 · «↳ Cumpleaños Jump 12,00 €» no dice POR QUÉ se cobra.** Bajo «Pendiente de pagar en el
+parque», el nombre pelado del producto se lee como «te cobramos 12,00 € de Cumpleaños Jump» sin decir
+de dónde sale — mientras su línea hermana, «Resto de la señal de X», sí se explica sola. Y la única
+leyenda que se pinta es la de la señal, así que el cargo por cambios **se queda sin explicación**.
+▶ **Y no es una rama de datos sucios, que es lo que parecía**: medido sobre los OCHO `extra_due` de la
+BD, **los ocho** caen en ese respaldo — incluidos los **cinco escritos por el flujo REAL del panel**,
+que guarda `context = {"changes": []}` y por tanto no permite a ninguna rama describir el cambio. Es
+decir: **es la etiqueta que sale en producción**, no la excepción.
+▶ Pasa a ser «Diferencia por cambios en X». Las otras tres ramas —«+4 X», «Cambio a X», la lista de
+complementos— se explican solas y no se tocan; hay caso que lo asevera para que el respaldo no se las
+coma.
+
+**⚠️ 3 · Y una tercera cosa, que NO se ha tocado porque es decisión de producto.** `PAY-16` y `PAY-17`
+son guardas **de test, no de ejecución**: un pedido cuyo desglose no cierra —`R-L6UTIA`: 3.000 ≠
+11.400— se sirve al cliente **como si nada**, con dos importes que se contradicen y una frase que
+habla de otra cosa. Ni se registra, ni se avisa, ni el contrato lo publica. Medido: el `LedgerResource`
+no lleva ningún campo de consistencia y `nota` dice «Te quedan 102,00 € por pagar en recepción».
+▶ Queda planteado al owner: qué se le enseña a un cliente cuando su desglose no cuadra, y si el parque
+se entera. Lo único que no admite discusión es que **hoy no se entera nadie**.
+
+⚠️ **Lo que esto enseña, y es la tercera vez en dos días**: los tres defectos —la línea que faltaba de
+`#130`, la fecha mentirosa y la etiqueta muda— **pasaban la suite entera**, y los tres salieron de
+mirar una pantalla concreta con datos reales. Las guardas cubren que los números cuadren; **ninguna
+cubre que lo que se lee sea cierto**.

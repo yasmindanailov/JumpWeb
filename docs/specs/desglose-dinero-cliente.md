@@ -1498,3 +1498,71 @@ que **el autor no puede decidir solo si algo se lee**, y en una pantalla de dine
 ⚠️ **Y los dos defectos de esta vuelta —la línea que falta y el número repetido— tienen algo en
 común**: los dos pasaban la suite entera. El primero porque la guarda miraba la composición y el
 defecto estaba en el marcado; el segundo porque no hay test que mida si algo se entiende.
+
+---
+
+## 21. `R-L6UTIA` revisado a fondo — DOS defectos más, y uno era una regresión del día anterior
+
+> `DECISIONES #131`. El owner pidió revisar el pedido «raro» con rigor. El DATO ya estaba escrito
+> (§17); lo que apareció al mirarlo **línea por línea** son dos defectos de producto que no dependen
+> de ese dato, y una tercera cosa que queda planteada.
+
+### 21.1 La fecha se pegaba a un importe que NO se cobró ese día — **en 7 pedidos, 6 SANOS**
+
+§20.3 mudó la fecha del cobro a la línea «Pagado por web» para hacerla conciliable con el banco. Pero
+`paid_online` es el canal del **valor** —neto de compensación—, así que en cuanto hay una devolución
+**deja de ser lo que se cobró ese día**.
+
+    R-BEMOOI (SANO)  «Pagado por web · 24/08/2026 — 9,90 €»   y ese día se cobraron 19,80 €
+    DEMO-LEDGER      «Pagado por web · 22/08/2026 — 62,00 €»  y ese día se cobraron 85,00 €
+    R-L6UTIA (ROTO)  «Pagado por web · 24/08/2026 — 114,00 €» y ese día se cobraron  30,00 €
+
+▶ **7 de 33 pedidos con cobro**, y **6 de los 7 sanos**. El cliente miraría su extracto y no
+encontraría ese importe: exactamente lo contrario de lo que la fecha venía a lograr.
+
+▶ **La regla**: la fecha acompaña al importe **solo cuando coinciden** — que es exactamente cuando el
+bloque «Tu dinero» no se pinta. `!has_cash` ⟹ `charged_online === paid_online`, porque ese término es
+uno de los tres del predicado, así que **un solo predicado del dominio gobierna las dos mitades** y no
+nace una segunda condición en el cliente.
+
+### 21.2 «↳ Cumpleaños Jump 12,00 €» no dice por qué se cobra — y sale en PRODUCCIÓN
+
+Bajo «Pendiente de pagar en el parque», el nombre pelado se lee como «te cobramos 12,00 € de
+Cumpleaños Jump». Su línea hermana sí se explica sola («Resto de la señal de X»), y la única leyenda
+que se pinta es la de la señal: **el cargo por cambios se queda sin explicación ninguna**.
+
+⚠️⚠️ **Y parecía cosa del dato roto, y NO lo es.** Medido sobre los OCHO `extra_due` de la BD, **los
+ocho** caen en ese respaldo — incluidos los **cinco escritos por el flujo REAL del panel**, que guarda
+`context = {"changes": []}` y por tanto no deja a ninguna rama describir el cambio.
+
+▶ Pasa a «Diferencia por cambios en X». Las otras tres ramas —«+4 X», «Cambio a X» y la lista de
+complementos— se explican solas y **no se tocan**; hay un caso que lo asevera para que el respaldo no
+se las coma.
+
+### 21.3 ⚠️ PENDIENTE DE DECISIÓN: nadie se entera de que el desglose no cierra
+
+`PAY-16` y `PAY-17` son guardas **de test, no de ejecución**. `R-L6UTIA` no cierra —3.000 ≠ 11.400— y
+se sirve al cliente **como si nada**: dos importes que se contradicen, sin aviso, y una frase que
+habla de otra cosa («Te quedan 102,00 € por pagar en recepción»). Medido: el `LedgerResource` no lleva
+ningún campo de consistencia, no se registra nada y el parque no se entera.
+
+▶ **Lo que hay que decidir** (owner): qué ve un cliente cuyo desglose no cuadra, y cómo se entera el
+parque. Lo que no admite discusión es que **hoy no se entera nadie**.
+
+### 21.4 Cómo quedan las dos, con datos reales
+
+    Pedido R-UPFQAB (SANO)                    Pedido R-L6UTIA (DATO ROTO)
+      Pagado por web · 24/08/2026   30,00 €     Pagado por web            114,00 €   ← sin fecha
+      Pagado en el parque           94,00 €     Pendiente en el parque    102,00 €
+      Valor del pedido             124,00 €       ↳ Diferencia por cambios en Cumpleaños Jump  12,00 €
+    (sin «Tu dinero»: nada nuevo)                 ↳ Resto de la señal de Cumpleaños Jump       90,00 €
+                                                Valor del pedido          216,00 €
+                                              ── Tu dinero ──
+                                                Cobrado por web · 24/08/2026  30,00 €
+
+### 21.5 La lección, que ya va por la tercera vez en dos días
+
+Los tres defectos de esta serie —la línea que faltaba (§20.1), la fecha mentirosa y la etiqueta muda—
+**pasaban la suite entera**, y los tres salieron de **mirar una pantalla concreta con datos reales**.
+Las guardas cubren que los números cuadren; **ninguna cubre que lo que se lee sea cierto**. Y dos de
+los tres los introdujo el propio trabajo que venía a arreglar la legibilidad.

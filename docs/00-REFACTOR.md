@@ -1858,7 +1858,12 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 > dinero, el eje de caja solo aparece cuando dice algo NUEVO —repetía el mismo importe con dos nombres
 > casi iguales— y ⚠️ **se arregló una línea que faltaba**: los complementos no se pintaban en «Mis
 > pedidos», así que un pedido real ponía 120,00 € en la reserva y 124,00 € de total.
-> ▶ **Con esto la sección queda CERRADA.** Lo siguiente sí es la Fase 5.
+> ✅ **Y una TERCERA, revisando `R-L6UTIA` a fondo** (`#131` · §21): la fecha del cobro se pegaba a un
+> importe que **no se cobró ese día** (7 pedidos, **6 sanos**) y la línea del cargo por cambios **no
+> decía por qué se cobra** — en los OCHO `extra_due` de la BD, cinco del flujo real.
+> ❗ **Queda UNA decisión del owner**: `PAY-16`/`PAY-17` son guardas de TEST, no de ejecución; un
+> desglose que no cierra se sirve al cliente como si nada y el parque no se entera (§21.3).
+> ▶ **Con esto la sección queda CERRADA salvo esa decisión.** Lo siguiente sí es la Fase 5.
 > ⚠️⚠️ **Las tres tandas ORIGINALES de esta sección estaban MAL DIMENSIONADAS y se sustituyeron**
 > (tercera auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**):
 > la vieja «tanda 1» se anunciaba como «riesgo cero» y en realidad tapaba cuatro defectos de dominio.

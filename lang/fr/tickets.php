@@ -150,6 +150,9 @@ return [
     'deposit_paid_online' => 'Payé en ligne',
     // #225 F2 : ligne ↳ du solde de l’acompte dans « À régler au parc ».
     'deposit_remainder_line' => 'Solde restant',
+    // ⚠️ Frais à l'accueil issus d'une MODIFICATION, quand ni « +4 X » ni « Changement vers X » ne
+    // s'appliquent. C'était le nom du produit tout seul, qui ne disait pas POURQUOI (`#131`).
+    'gate_change_line' => 'Différence liée aux changements sur :product',
     'at_gate_caption_deposit' => 'Solde à régler à l’accueil à l’arrivée. L’acompte a déjà été réglé en ligne.',
     'pendiente_devolucion' => 'Remboursement en attente',
     'pendiente_devolucion_caption' => 'Vous avez trop payé suite à un changement de la commande (un produit a été réduit ou retiré) ; le remboursement est en attente.',

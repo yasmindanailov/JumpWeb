@@ -119,15 +119,25 @@ export function financialsOf(order, messages) {
     const c = l.cash;
     const line = (key, cents) => (cents > 0 ? { label: t(messages, 'ledger.' + key), amountLabel: money(cents) } : null);
     /**
-     * ⚠️⚠️ **La línea del canal de cobro LLEVA SU FECHA** (`DECISIONES #130`). Es lo que hace que el
-     * importe se pueda buscar en un extracto bancario —«30,00 €» no se busca; «30,00 € el
-     * 24/08/2026» sí— y lo que permite que el bloque «Tu dinero» **deje de repetir el mismo número**
-     * en un pedido corriente. El panel ya lo hacía así desde `P1/P10`; aquí faltaba.
+     * ⚠️⚠️ **La fecha va donde el importe ES el que se cobró, y en ningún otro sitio**
+     * (`DECISIONES #131`).
+     *
+     * `#130` la pegó a la línea del canal para que el importe se pudiera buscar en un extracto
+     * —«30,00 €» no se busca; «30,00 € el 24/08/2026» sí—. Pero `paid_online` es el canal del VALOR
+     * («lo cobrado por web que respalda producto vivo, neto de compensación»), y en cuanto hay una
+     * devolución **deja de ser lo que se cobró ese día**. Medido sobre los 58 pedidos: en **7** la
+     * pantalla afirmaba «Pagado por web · 24/08/2026 — 9,90 €» cuando ese día se cobraron 19,80 € —
+     * y **6 de los 7 eran pedidos SANOS**. Justo lo contrario de conciliable.
+     *
+     * ▶ La regla: la fecha solo acompaña al importe **cuando coinciden**, que es exactamente cuando
+     * el bloque «Tu dinero» no se pinta (`!has_cash` ⟹ `charged_online === paid_online`, porque ese
+     * término es uno de los tres del predicado). Cuando difieren, la fecha va abajo, pegada al
+     * importe que sí se cobró. **Un solo predicado del dominio gobierna las dos mitades.**
      */
     const paidLine = (key, cents) => {
         const fila = line(key, cents);
 
-        if (fila && c.charged_at_label) fila.label += ' · ' + c.charged_at_label;
+        if (fila && ! c.has_cash && c.charged_at_label) fila.label += ' · ' + c.charged_at_label;
 
         return fila;
     };
