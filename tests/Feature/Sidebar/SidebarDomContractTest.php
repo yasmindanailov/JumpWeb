@@ -614,7 +614,7 @@ class SidebarDomContractTest extends TestCase
 
         $this->assertSame(Order::STATUS_PAID, $order->status, 'el caso necesita el pedido PAGADO, o no hay desglose');
         $this->assertGreaterThan(
-            0, (int) ($this->confirmedApiPayload()['order']['pending_at_gate_cents'] ?? 0),
+            0, (int) ($this->confirmedApiPayload()['order']['ledger']['value']['pending_at_gate_cents'] ?? 0),
             'y algo pendiente en el parque, o no hay desglose que comparar'
         );
         $this->assertNotNull(RegistrationLink::current(), 'y el enlace de registro configurado');

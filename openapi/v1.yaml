@@ -2596,9 +2596,8 @@ components:
         - code
         - status
         - currency
-        - total_cents
         - online_amount_cents
-        - pending_at_gate_cents
+        - ledger
         - refund
         - can_be_retried
         - created_at
@@ -2607,10 +2606,6 @@ components:
         - expires_at
         - items
         - guest_form_pending
-        - has_deposit
-        - pending_at_gate_lines
-        - pending_refund_cents
-        - total_final_cents
       additionalProperties: false
       properties:
         code:
@@ -2625,18 +2620,23 @@ components:
             reembolso vive en `refund`, no aquí.
         currency:
           type: string
-        total_cents:
-          type: integer
-          description: Lo facturado.
         online_amount_cents:
           type: integer
           description: |
             Importe que se cobra ONLINE: la señal si el producto la usa, el total si no. **No** es
             «lo pendiente»: un pedido ya pagado informa el mismo importe. Es la misma fuente que
             usará el reintento de pago, así que el cliente puede anticipar el cargo sin recalcularlo.
-        pending_at_gate_cents:
-          type: integer
-          description: Lo que queda por pagar EN PUERTA (resto de la señal, extras). No se suma a lo anterior.
+        ledger:
+          allOf:
+            - $ref: '#/components/schemas/Ledger'
+          description: |
+            **EL DESGLOSE, y es el único sitio donde vive.** Hasta la tanda B cada superficie
+            componía el suyo con campos sueltos de esta raíz, y así es como divergieron: medido,
+            18 de 23 gestiones del panel dejaban la columna del cliente ilegible.
+
+            ⚠️ `online_amount_cents` se queda FUERA a propósito: es «cuánto se te cobrará si pagas
+            ahora» —lo que consume el reintento—, no una dimensión del ledger. Leerlo como si fuera
+            «lo pagado» es lo que hacía que un pedido SIN pagar anunciara «Pagado online 11,90 €».
         refund:
           $ref: '#/components/schemas/OrderRefund'
         can_be_retried:
@@ -2676,50 +2676,145 @@ components:
             ⚠️ **No es el `any()` de `items[].needs_guest_form`, y por eso se llama distinto.** El
             servidor descarta primero las líneas CANCELADAS: un cliente que agregara el campo de las
             líneas contaría una cancelada y prometería un formulario que nadie va a pedir.
+    Ledger:
+      type: object
+      description: |
+        **El desglose de dinero, en DOS EJES que no se mezclan** (`DECISIONES #127`).
+
+            EJE VALOR   value.total = paid_online + pending_online + paid_at_gate
+                                    + pending_at_gate + compensated
+            EJE CAJA    cash.held (= charged_online − refunded) = value.paid_online
+                                    + cash.pending_refund
+
+        Los dos cierran **por construcción** y los vigilan `PAY-16` y `PAY-17`. Que sean DOS es la
+        mitad del asunto: hasta la tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como
+        restas dentro de la columna del valor, **de la que no restan** — y por eso la columna dejaba
+        de leerse en cuanto pasaba cualquier cosa.
+      required: [value, cash, invoiced_cents, gate_lines, has_deposit, note]
+      additionalProperties: false
+      properties:
+        value:
+          $ref: '#/components/schemas/LedgerValue'
+        cash:
+          $ref: '#/components/schemas/LedgerCash'
+        invoiced_cents:
+          type: integer
+          description: |
+            Lo que se facturó AL RESERVAR (`Order.total`, inmutable). **No es un canal y no entra en
+            la suma**: es trazabilidad, y solo merece enseñarse cuando difiere de `value.total_cents`.
+
+            ⚠️ Pintarlo como primera línea de la columna —lo que hacía el «Subtotal»— apila dos bases
+            distintas sin decirlo, y es lo que hacía el bloque ilegible tras una cancelación.
+        gate_lines:
+          type: array
+          description: |
+            El desglose de `value.pending_at_gate_cents`, **línea a línea y con su etiqueta ya
+            compuesta**: primero los cargos por cambios, después el resto de la señal por producto.
+            Σ de sus importes == `value.pending_at_gate_cents`.
+
+            ⚠️ **El orden es el que el cliente ya conoce de la web**, y pintarlo en otro cambia el
+            desglose que ha visto siempre. ⚠️ **Las etiquetas las compone el SERVIDOR**, porque salen
+            de reglas de dominio y de `lang/`: recomponerlas en cada cliente es como divergieron las
+            cuatro copias del rótulo de día. Lista vacía si no hay nada pendiente en puerta.
+          items:
+            $ref: '#/components/schemas/OrderGateLine'
         has_deposit:
           type: boolean
           description: |
             Si este pedido se compró con **señal** (una parte online y el resto en el parque).
 
-            ⚠️ **Se publica en vez de dejar que el cliente lo deduzca**, y no es equivalente a
-            `pending_at_gate_cents > 0`: un pedido con señal cuyo resto ya se cobró en recepción tiene
-            0 pendiente y **sigue siendo** un pedido con señal. Tampoco es el `any()` de
-            `items[].shows_deposit_note`, por el mismo motivo que `guest_form_pending` no lo es de su
-            campo por línea. De él dependen dos cosas que el cliente enseña: la línea «Pagado online»
-            y **cuál de las dos leyendas** acompaña al desglose de puerta.
-        pending_at_gate_lines:
-          type: array
+            ⚠️ **Se publica en vez de dejar que el cliente lo deduzca**, y no equivale a
+            `value.pending_at_gate_cents > 0`: un pedido con señal cuyo resto ya se cobró tiene 0
+            pendiente y **sigue siendo** un pedido con señal.
+        note:
+          type: string
+          nullable: true
           description: |
-            El desglose de `pending_at_gate_cents`, **línea a línea y con su etiqueta ya compuesta**:
-            primero los cargos por cambios en el pedido, después el resto de la señal por producto.
-            Σ de sus importes == `pending_at_gate_cents`.
+            **La frase que explica el estado**, ya compuesta y traducida, o `null` si no hay nada que
+            explicar.
 
-            ⚠️ **El orden es el que el cliente ya conoce de la web**, y pintarlo en otro cambia el
-            desglose que ha visto siempre.
+            ⚠️⚠️ **Un número no explica.** La compone el DOMINIO porque decide qué caso es —se le debe
+            dinero, se canceló, caducó sin cobro, se le devolvió y conserva la reserva…— y eso es
+            regla, no presentación. El orden de los casos ES parte de la regla: lo que se le debe al
+            cliente va SIEMPRE primero.
 
-            ⚠️ **Las etiquetas las compone el SERVIDOR** —«+2 Entrada suelta», «Cambio a Cumple Jump»,
-            «Resto de la señal de Cumple Jump»— porque salen de reglas de dominio y de `lang/`.
-            Recomponerlas en cada cliente es como divergieron las cuatro copias del rótulo de día.
-            Lista vacía si no hay nada pendiente en puerta.
-          items:
-            $ref: '#/components/schemas/OrderGateLine'
+            ⚠️ `null` es un estado real: una frase de relleno enseña a ignorar las que sí importan.
+    LedgerValue:
+      type: object
+      description: |
+        **Cuánto vale lo que sigue vivo, y por qué canal se paga.** Los cinco canales suman
+        `total_cents`, siempre.
+      required:
+        - total_cents
+        - paid_online_cents
+        - pending_online_cents
+        - paid_at_gate_cents
+        - pending_at_gate_cents
+        - compensated_cents
+      additionalProperties: false
+      properties:
+        total_cents:
+          type: integer
+          description: |
+            Lo que el cliente **acaba pagando** por lo que queda vivo del pedido. ⚠️ **No es
+            `invoiced_cents` en cuanto hay una cancelación o un cambio.**
+        paid_online_cents:
+          type: integer
+          description: |
+            Lo ya pagado POR WEB que respalda producto vivo, **neto de compensación**.
+            `0` mientras el pedido no se haya cobrado — entonces su importe está en el campo de al lado.
+        pending_online_cents:
+          type: integer
+          description: |
+            Lo que falta por pagar POR WEB. `0` en cuanto el pedido se cobra.
+
+            ⚠️⚠️ **Excluyente con `paid_online_cents`**, y separarlos es lo que arregla un defecto
+            real: el importe cobrable se publicaba en un solo campo y la pantalla lo leía **en
+            pasado**, así que un pedido que nadie había pagado anunciaba «Pagado online 11,90 €».
+        paid_at_gate_cents:
+          type: integer
+          description: |
+            Lo ya pagado EN RECEPCIÓN. ⚠️ **Ésta es la línea que faltaba**: sin ella la columna del
+            cliente dejaba de sumar en cuanto disfrutaba su reserva — justo cuando entra a repasar lo
+            que pagó. Medido: fallaba en el 100 % de los pedidos que tenían algo cobrado en puerta.
+        pending_at_gate_cents:
+          type: integer
+          description: Lo que queda por pagar EN RECEPCIÓN (resto de la señal, cargos por cambios).
+        compensated_cents:
+          type: integer
+          description: |
+            Dinero devuelto **sin que desapareciera producto**: una compensación, o un reembolso sin
+            cancelar la reserva.
+
+            ⚠️ No es un canal de cobro ni una bajada de valor: **es su propio término**, y por eso la
+            «ley de caja» arrastraba una excepción que en realidad era este campo. Qué se le dice al
+            cliente lo resuelve `note`, que sí conoce la intención del reembolso.
+    LedgerCash:
+      type: object
+      description: |
+        **Qué ha pasado con el dinero del cliente.** Es OTRO eje: no resta del valor, y pintarlo como
+        si restara es lo que hacía la columna ilegible.
+      required: [charged_online_cents, refunded_cents, held_cents, pending_refund_cents]
+      additionalProperties: false
+      properties:
+        charged_online_cents:
+          type: integer
+          description: |
+            Lo REALMENTE cobrado por web. **Es el ancla**: lo único que el cliente puede cotejar con
+            su extracto bancario. Hasta la tanda B solo existía dentro de un caption del panel.
+        refunded_cents:
+          type: integer
+          description: Lo ya devuelto.
+        held_cents:
+          type: integer
+          description: Lo que el parque retiene ahora mismo (`charged_online − refunded`).
         pending_refund_cents:
           type: integer
           description: |
-            Dinero pagado online que ya **no tiene producto detrás** —una cancelación o una reducción—
-            y que todavía **no se ha devuelto**.
+            Lo retenido que ya **no tiene producto detrás** y todavía no se ha devuelto.
 
-            ⚠️⚠️ **No es lo mismo que `refund.amount_cents`, y confundirlos invierte el significado**:
-            aquél es lo ya devuelto y esto es lo que aún se debe. En producción vuelve a 0 en cuanto
-            el reembolso se completa; queda >0 mientras está pendiente o ha fallado.
-        total_final_cents:
-          type: integer
-          description: |
-            Lo que el cliente **acaba pagando** por lo que queda vivo del pedido.
-
-            ⚠️⚠️ **No es `total_cents` en cuanto hay una cancelación o un cambio**: `total` es
-            INMUTABLE —es lo que se facturó— y esto es el valor actual de los productos. Un cliente
-            que enseñara `total_cents` tras una cancelación diría que se le cobró de más.
+            ⚠️⚠️ **No es lo mismo que `refunded_cents`, y confundirlos invierte el significado**:
+            aquél es lo ya devuelto y esto es lo que aún se debe.
     OrderGateLine:
       type: object
       description: Una línea del desglose de «a cobrar en el parque».
@@ -2737,7 +2832,9 @@ components:
       description: |
         El reembolso es una dimensión INDEPENDIENTE del estado: un pedido puede estar `paid` y
         parcialmente reembolsado a la vez.
-      required: [refunded_at, refunded_label, amount_cents, fully_refunded]
+        ⚠️ **Aquí va CUÁNDO y si fue total; el IMPORTE vive en `ledger.cash.refunded_cents`.** Un
+        número, un sitio: tenerlo en dos era la clase de duplicado del que nacen las divergencias.
+      required: [refunded_at, refunded_label, fully_refunded]
       additionalProperties: false
       properties:
         refunded_at:
@@ -2747,8 +2844,6 @@ components:
         refunded_label:
           type: string
           description: 'La fecha con la que se anuncia el reembolso («23/08/2026»). Vacía si no lo hay.'
-        amount_cents:
-          type: integer
         fully_refunded:
           type: boolean
 
@@ -2770,8 +2865,7 @@ components:
         - addons
         - is_pack
         - start_time
-        - paid_online_cents
-        - gate_remainder_cents
+        - ledger
         - guest_form_url
         - shows_deposit_note
       additionalProperties: false
@@ -2830,14 +2924,20 @@ components:
           description: |
             Hora de inicio en crudo (`HH:MM:SS`), o `null` si la reserva no tiene franja.
             `time_window` es un texto YA compuesto para mostrar; esto evita tener que partirlo.
-        paid_online_cents:
-          type: integer
+        ledger:
+          allOf:
+            - $ref: '#/components/schemas/Ledger'
           description: |
-            Lo pagado online **de esta reserva** (principal + sus complementos), no del pedido. En
-            una cesta mixta entrada+pack, el agregado del pedido no sirve para etiquetar una línea.
-        gate_remainder_cents:
-          type: integer
-          description: Lo que queda por cobrar en puerta **de esta reserva**. `0` si no queda nada.
+            El desglose **de esta reserva** (principal + sus complementos), con la misma forma que el
+            del pedido: en una cesta mixta entrada+pack, el agregado del pedido no sirve para
+            etiquetar una línea.
+
+            ⚠️ **El eje de CAJA es del PEDIDO, no de la reserva** —hay un solo cobro—, así que aquí
+            `charged_online_cents` y `held_cents` van a `0`. Lo que sí es de la reserva es su parte
+            devuelta y su pendiente de devolución, que viajan en su sitio.
+            ⚠️ `invoiced_cents` iguala a `value.total_cents`: una reserva no se factura por separado.
+            ⚠️ `note` es `null`: la frase explica el estado del PEDIDO, y repetirla por reserva la
+            multiplicaría tantas veces como líneas tenga.
         guest_form_url:
           type: string
           nullable: true

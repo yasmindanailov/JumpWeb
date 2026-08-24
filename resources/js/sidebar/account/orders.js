@@ -70,76 +70,94 @@ export function lineBadgeOf(item, account) {
 }
 
 /**
- * El pie financiero de una reserva con señal («Señal X · Y en el parque»), o `null`.
+ * El pie financiero de una reserva con señal, o `null`.
  *
  * ⚠️ **La condición la decide el SERVIDOR** (`shows_deposit_note`), que la compone de tres —pedido
  * pagado, producto con señal y algo pendiente en puerta—. Aquí solo se pintan los dos importes.
+ *
+ * ⚠️ El primer importe es **lo pagado por web de ESTA reserva**, no «la señal»: en un pack con
+ * complementos cobrados íntegros, los dos números no coinciden y llamarlo señal engaña
+ * (`specs/desglose-dinero-cliente.md` §4.4). El rótulo lo dice desde la tanda B.
  */
 export function depositNoteOf(item, messages) {
     if (! item.shows_deposit_note) return null;
 
     return tp(messages, 'deposit_card_note', {
-        deposit: money(item.paid_online_cents),
-        rest: money(item.gate_remainder_cents),
+        deposit: money(item.ledger.value.paid_online_cents),
+        rest: money(item.ledger.value.pending_at_gate_cents),
     });
 }
 
 /**
- * **El bloque financiero de un pedido**: el mismo ledger que pinta `/mi-cuenta/pedidos`
- * (tanda 3 · paso 10).
+ * **El desglose de un pedido, en DOS BLOQUES** (`DECISIONES #127`, spec §10.3).
  *
- * ⚠️⚠️ **Ni un solo importe se calcula aquí.** Los seis los publica el servidor ya resueltos
- * —`total_cents`, `online_amount_cents`, `pending_at_gate_cents` con su desglose y sus etiquetas,
- * `pending_refund_cents` y `total_final_cents`—, y eso fue el trabajo del paso 9. Lo que esta función
- * hace es DECIDIR QUÉ SE ENSEÑA, que es presentación: qué líneas aparecen y con qué rótulo.
+ * ⚠️⚠️ **Ni un solo importe se calcula aquí, y ahora tampoco se DECIDE cuál es cuál.** El servidor
+ * publica el ledger entero en `order.ledger`, compuesto por `Booking\Services\OrderLedger` — la
+ * MISMA composición que leen el panel, la sub-card, el PDF y los correos. Aquí solo se elige qué
+ * líneas tienen algo que enseñar.
  *
- * ⚠️ **Los tres rótulos condicionales son la parte delicada**, y están medidos contra la vista:
- * · la primera línea dice «Subtotal» si hay desglose debajo y «Total» si no —enseñar «Total» arriba y
- *   otro «Total» distinto abajo diría que se cobraron dos cosas—;
- * · la leyenda del bloque de puerta cambia según el pedido lleve señal o no;
- * · «Pagado online» solo sale con señal: en un pedido pagado entero repetiría el total.
+ * ⚠️⚠️ **Los dos bloques NO se mezclan, y ésa es la corrección de fondo.** Arriba, el EJE VALOR:
+ * cinco canales que suman el valor, siempre. Abajo, el EJE CAJA: qué ha pasado con su dinero. Hasta
+ * ahora «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la columna del
+ * valor —de la que **no restan**— y por eso la columna dejaba de leerse: medido, 18 de 23 gestiones
+ * del panel la dejaban ilegible.
  *
- * ⚠️ **`has_deposit` NO se deduce de que quede algo pendiente**: un pedido con señal cuyo resto ya se
- * cobró en recepción sigue siendo un pedido con señal. Por eso el servidor lo publica aparte.
+ * ⚠️ **«Importe al reservar» sale de la columna** y va al pie, solo si difiere: era el «Subtotal»,
+ * que apilaba dos bases distintas sin decirlo.
+ * ⚠️ Y **«Pagado por web» ya no se oculta** cuando el producto no lleva señal — se ocultaba, y el
+ * cliente no veía cuánto había pagado.
  */
 export function financialsOf(order, messages) {
-    const gateCents = Number(order.pending_at_gate_cents ?? 0);
-    const pendingRefundCents = Number(order.pending_refund_cents ?? 0);
-    // Mismo predicado que la página: la columna de reembolso solo cuenta si además hay fecha.
-    const refundCents = order.refund?.refunded_at ? Number(order.refund.amount_cents ?? 0) : 0;
-    const hasBreakdown = gateCents > 0 || refundCents > 0 || pendingRefundCents > 0;
-    const hasDeposit = order.has_deposit === true;
+    const l = order.ledger;
+    const v = l.value;
+    const c = l.cash;
+    const line = (key, cents) => (cents > 0 ? { label: t(messages, 'ledger.' + key), amountLabel: money(cents) } : null);
+
+    const gate = v.pending_at_gate_cents > 0
+        ? {
+            label: t(messages, 'ledger.pending_at_gate'),
+            amountLabel: money(v.pending_at_gate_cents),
+            showLabel: t(messages, 'show_breakdown'),
+            hideLabel: t(messages, 'hide_breakdown'),
+            caption: t(messages, l.has_deposit ? 'at_gate_caption_deposit' : 'at_gate_caption'),
+            // Las etiquetas llegan compuestas por el dominio, en el orden que la página usa.
+            lines: (l.gate_lines ?? []).map((gl) => ({ label: gl.label, amountLabel: money(gl.amount_cents) })),
+        }
+        : null;
 
     return {
-        firstLabel: t(messages, hasBreakdown ? 'subtotal' : 'total'),
-        online: hasDeposit
-            ? { label: t(messages, 'deposit_paid_online'), amountLabel: money(order.online_amount_cents) }
-            : null,
-        gate: gateCents > 0
+        value: {
+            title: t(messages, 'ledger.value_title'),
+            rows: [
+                line('paid_online', v.paid_online_cents),
+                line('pending_online', v.pending_online_cents),
+                line('paid_at_gate', v.paid_at_gate_cents),
+                line('compensated', v.compensated_cents),
+            ].filter(Boolean),
+            gate,
+            total: { label: t(messages, 'ledger.value_total'), amountLabel: money(v.total_cents) },
+        },
+        // El eje de caja solo aparece cuando tiene algo que contar. Un bloque de ceros enseña a
+        // ignorar el que sí importa.
+        cash: (c.refunded_cents > 0 || c.pending_refund_cents > 0)
             ? {
-                label: t(messages, 'at_gate'),
-                amountLabel: money(gateCents),
-                showLabel: t(messages, 'show_breakdown'),
-                hideLabel: t(messages, 'hide_breakdown'),
-                caption: t(messages, hasDeposit ? 'at_gate_caption_deposit' : 'at_gate_caption'),
-                // Las etiquetas llegan compuestas por el dominio, en el orden que la página usa.
-                lines: (order.pending_at_gate_lines ?? []).map((line) => ({
-                    label: line.label,
-                    amountLabel: money(line.amount_cents),
-                })),
+                title: t(messages, 'ledger.cash_title'),
+                rows: [
+                    line('charged_online', c.charged_online_cents),
+                    line('refunded', c.refunded_cents),
+                    line('pending_refund', c.pending_refund_cents),
+                ].filter(Boolean),
             }
             : null,
-        pendingRefund: pendingRefundCents > 0
+        // La FRASE que explica el estado. La compone el servidor: decidir qué caso es, es regla.
+        note: l.note ?? null,
+        // Trazabilidad: solo si lo facturado ya no es lo que vale.
+        invoiced: l.invoiced_cents !== v.total_cents
             ? {
-                label: t(messages, 'pendiente_devolucion'),
-                amountLabel: money(pendingRefundCents),
-                caption: t(messages, 'pendiente_devolucion_caption'),
+                label: t(messages, 'ledger.invoiced'),
+                amountLabel: money(l.invoiced_cents),
+                hint: t(messages, 'ledger.invoiced_hint'),
             }
-            : null,
-        // ⚠️ El total final solo se pinta cuando hay algo que explicar: sin desglose sería el mismo
-        // número dos veces seguidas. Y **no es `total_cents`** en cuanto hay una cancelación.
-        final: hasBreakdown
-            ? { label: t(messages, 'total'), amountLabel: money(order.total_final_cents) }
             : null,
     };
 }
@@ -186,13 +204,13 @@ export function orderRow(order, ctx) {
         status: order.status,
         statusLabel: t(ctx.messages, 'statuses.' + order.status),
         createdLabel: order.created_label,
-        totalLabel: money(order.total_cents),
+        totalLabel: money(order.ledger.value.total_cents),
         canRetry: order.can_be_retried === true,
         // El reembolso es un eje INDEPENDIENTE del estado: un pedido puede estar pagado y
         // parcialmente reembolsado a la vez (`openapi/v1.yaml`).
-        refund: order.refund?.refunded_at
-            ? { label: order.refund.refunded_label, amountLabel: money(order.refund.amount_cents) }
-            : null,
+        // ⚠️ CUÁNDO se devolvió. **El importe vive en el bloque de caja del ledger**: tenerlo en dos
+        // sitios era la clase de duplicado del que nacen las divergencias.
+        refund: order.refund?.refunded_at ? { label: order.refund.refunded_label } : null,
         guestFormPending: order.guest_form_pending === true,
         // ⚠️ Si alguna línea es un pack, el pedido PUEDE tener respuestas del evento — y solo
         // entonces se ofrece el despliegue. Cuáles son no se sabe hasta pedirlas: no viajan en la

@@ -126,7 +126,7 @@ class OrdersTest extends ApiTestCase
         $order = Order::firstOrFail();
         $response->assertJsonPath('order.code', $order->code)
             ->assertJsonPath('order.status', 'pending')
-            ->assertJsonPath('order.total_cents', 1980)
+            ->assertJsonPath('order.ledger.invoiced_cents', 1980)
             ->assertJsonPath('order.online_amount_cents', 1980)
             ->assertJsonPath('payment.provider', 'redsys')
             ->assertJsonPath('payment.method', 'POST');

@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
@@ -98,8 +99,9 @@ class OrderItemResource extends JsonResource
             'start_time' => $item->slot?->start_time,
             // Desglose de la RESERVA (principal + sus complementos), no del pedido: en una cesta
             // mixta entrada+pack, etiquetar el agregado como «señal pagada» engaña (#225 F3).
-            'paid_online_cents' => $financials->pagadoOnline,
-            'gate_remainder_cents' => $financials->aCobrarPuerta,
+            // ⚠️ Misma forma que el del pedido y compuesto por el MISMO value object: si la reserva
+            // publicara su propia selección de campos, volveríamos a tener dos desgloses.
+            'ledger' => LedgerResource::make(OrderLedger::forReservation($order, $item))->resolve($request),
             // Y si procede enseñar «señal pagada · resto en el parque». Son TRES condiciones
             // compuestas en el dominio (`ReservationFinancials::showsDepositNote`): publicar solo
             // los números obligaría al cliente a recomponerlas, y es como divergen.

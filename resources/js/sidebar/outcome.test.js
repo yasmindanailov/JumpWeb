@@ -39,10 +39,17 @@ const order = (over = {}) => ({
     code: 'R-ABC123',
     status: 'paid',
     currency: 'EUR',
-    total_cents: 30000,
     online_amount_cents: 3000,
-    pending_at_gate_cents: 27000,
-    refund: { refunded_at: null, amount_cents: 0, fully_refunded: false },
+    // El LEDGER, que desde la tanda B es el único sitio donde vive el desglose (`DECISIONES #127`).
+    ledger: {
+        value: {
+            total_cents: 30000, paid_online_cents: 3000, pending_online_cents: 0,
+            paid_at_gate_cents: 0, pending_at_gate_cents: 27000, compensated_cents: 0,
+        },
+        cash: { charged_online_cents: 3000, refunded_cents: 0, held_cents: 3000, pending_refund_cents: 0 },
+        invoiced_cents: 30000, gate_lines: [], has_deposit: true, note: null,
+    },
+    refund: { refunded_at: null, fully_refunded: false },
     can_be_retried: false,
     created_at: null,
     paid_at: null,
@@ -118,7 +125,15 @@ test('la nota de señal sale del campo COMPUESTO por el servidor, no de los impo
 
 test('el pendiente en puerta se PINTA, no se resta del total', () => {
     // `total − online` no es `pending_at_gate`: hay ajustes que no viven en ninguno de los dos.
-    const built = buildConfirmation(order({ total_cents: 30000, online_amount_cents: 3000, pending_at_gate_cents: 25000 }));
+    const built = buildConfirmation(order({
+        online_amount_cents: 3000,
+        ledger: {
+            value: { total_cents: 30000, paid_online_cents: 5000, pending_online_cents: 0,
+                paid_at_gate_cents: 0, pending_at_gate_cents: 25000, compensated_cents: 0 },
+            cash: { charged_online_cents: 5000, refunded_cents: 0, held_cents: 5000, pending_refund_cents: 0 },
+            invoiced_cents: 30000, gate_lines: [], has_deposit: true, note: null,
+        },
+    }));
 
     assert.equal(built.park_cents, 25000);
 });

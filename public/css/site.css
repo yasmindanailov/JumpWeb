@@ -1816,6 +1816,20 @@ body.no-scroll { overflow: hidden; }
 .orders__gate-toggle:hover { color: var(--warn-hover); }
 .orders__gate-caption { margin: 2px 0 0; font-family: var(--font-body); font-size: 12px; line-height: 1.4; color: var(--fg-mute); }
 .orders__final { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+/* ⚠️⚠️ LOS DOS BLOQUES del desglose (`DECISIONES #127`). Arriba lo que vale y por qué canal se
+   paga; abajo qué ha pasado con su dinero. **La separación es la corrección**: hasta la tanda B,
+   «Devuelto» y «Pendiente de devolverte» se pintaban como restas dentro de la columna del valor —de
+   la que NO restan— y por eso la columna dejaba de leerse. El aire entre bloques y su rótulo son lo
+   que hace que se lean como dos cosas distintas, no como una resta más. */
+.orders__ledger { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.orders__ledger--cash { margin-top: 16px; }
+.orders__ledger-title { margin: 0 0 6px; font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute); }
+/* La FRASE que explica el estado. Destacada sobre fondo suave: es lo primero que hay que leer
+   cuando algo se sale de lo normal, y un párrafo más de texto gris se pierde. */
+.orders__ledger-note { margin: 12px 0 0; padding: 10px 12px; border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--fg); }
+/* Trazabilidad: lo facturado al reservar. Atenuado y al pie porque NO es un canal — pintarlo
+   arriba, como hacía el «Subtotal», apilaba dos bases distintas sin decirlo. */
+.orders__ledger-invoiced { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); opacity: 0.85; }
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
    es ni positivo ni negativo, simplemente "ya pasó". */

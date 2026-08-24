@@ -53,7 +53,7 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonPath('data.0.code', 'R-AAA111')
             ->assertJsonPath('data.0.status', 'paid')
             ->assertJsonPath('data.0.currency', 'EUR')
-            ->assertJsonPath('data.0.total_cents', 1000)
+            ->assertJsonPath('data.0.ledger.invoiced_cents', 1000)
             ->assertJsonPath('meta.total', 1);
     }
 

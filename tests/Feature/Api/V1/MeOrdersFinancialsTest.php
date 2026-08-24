@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -100,18 +101,109 @@ class MeOrdersFinancialsTest extends TestCase
 
         $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
 
-        $this->assertSame((int) $order->total, $json['total_cents'], 'lo facturado');
-        $this->assertSame($order->onlineDueCents(), $json['online_amount_cents'], 'lo cobrado online');
-        $this->assertSame($summary->pendingAtGate(), $json['pending_at_gate_cents'], 'el agregado de puerta');
-        $this->assertSame($summary->totalFinalNeto(), $json['total_final_cents'], 'el total final tras los cambios');
-        $this->assertSame($summary->pendienteDevolucion(), $json['pending_refund_cents'], 'lo que aún se debe devolver');
-        $this->assertSame($summary->depositRemainder > 0, $json['has_deposit'], 'si el pedido llevaba señal');
-        $this->assertSame((int) ($order->refund_amount_cents ?? 0), $json['refund']['amount_cents'], 'lo ya devuelto');
+        $v = $json['ledger']['value'];
+        $c = $json['ledger']['cash'];
+
+        $this->assertSame($summary->totalFinalNeto(), $v['total_cents'], 'el valor de lo que sigue vivo');
+        $this->assertSame($summary->pagadoOnline(), $v['paid_online_cents'], 'lo ya pagado por web');
+        $this->assertSame($summary->pendienteOnline(), $v['pending_online_cents'], 'lo que falta por pagar por web');
+        $this->assertSame($summary->cobradoPuerta(), $v['paid_at_gate_cents'], 'lo ya pagado en recepción');
+        $this->assertSame($summary->pendingAtGate(), $v['pending_at_gate_cents'], 'lo que queda en recepción');
+        $this->assertSame($summary->compensado(), $v['compensated_cents'], 'lo devuelto sin quitar producto');
+
+        $this->assertSame($summary->grossPaidOnline, $c['charged_online_cents'], 'el ancla de caja');
+        $this->assertSame($summary->effectiveRefunded(), $c['refunded_cents'], 'lo ya devuelto');
+        $this->assertSame($summary->retenidoOnline(), $c['held_cents'], 'lo que el parque retiene');
+        $this->assertSame($summary->pendienteDevolucion(), $c['pending_refund_cents'], 'lo que aún se debe devolver');
+
+        $this->assertSame((int) $order->total, $json['ledger']['invoiced_cents'], 'lo facturado al reservar');
+        $this->assertSame($order->onlineDueCents(), $json['online_amount_cents'], 'lo que se cobraría al pagar ahora');
+        $this->assertSame($summary->depositRemainder > 0, $json['ledger']['has_deposit'], 'si el pedido llevaba señal');
 
         // ⚠️ Los dos campos que más fácil sería cruzar, y cruzarlos invierte el significado para el
-        // cliente: `total` es INMUTABLE y `refund` es lo YA devuelto.
-        $this->assertNotSame($json['total_cents'], $json['total_final_cents']);
-        $this->assertNotSame($json['refund']['amount_cents'], $json['pending_refund_cents']);
+        // cliente: lo facturado es INMUTABLE y lo devuelto NO es lo que se debe devolver.
+        $this->assertNotSame($json['ledger']['invoiced_cents'], $v['total_cents']);
+        $this->assertNotSame($c['refunded_cents'], $c['pending_refund_cents']);
+    }
+
+    /**
+     * ⚠️⚠️ **LA GUARDA QUE FALTABA: lo que se PUBLICA tiene que sumar.**
+     *
+     * Hasta la tanda B ninguna aserción miraba lo que la PANTALLA puede pintar: se verificaba que
+     * cada cifra coincidía con el dominio —cableado— pero no que las cifras publicadas cerraran entre
+     * sí. Y no cerraban: la API publicaba 2 de las 6 dimensiones, así que la columna del cliente
+     * **no podía** sumar, y de hecho no sumaba en el 100 % de los pedidos con algo cobrado en puerta.
+     *
+     * Se recorre sobre los escenarios que el dominio sabe distinguir, no sobre un pedido: el hueco
+     * de la versión anterior no estaba en la aserción, estaba en el fixture.
+     */
+    public function test_what_is_published_adds_up_in_every_scenario(): void
+    {
+        $escenarios = [
+            'con señal, cambios y una cancelación' => fn () => $this->orderWithEverything(),
+            'con la señal ya cobrada en recepción' => fn () => $this->orderWithSettledDeposit(),
+        ];
+
+        foreach ($escenarios as $nombre => $montar) {
+            [$user, $order] = $montar();
+            $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
+            $v = $json['ledger']['value'];
+            $c = $json['ledger']['cash'];
+
+            // PAY-16 · el eje del VALOR cierra con lo publicado.
+            $this->assertSame(
+                $v['total_cents'],
+                $v['paid_online_cents'] + $v['pending_online_cents'] + $v['paid_at_gate_cents']
+                    + $v['pending_at_gate_cents'] + $v['compensated_cents'],
+                "$nombre · los cinco canales publicados no suman el valor",
+            );
+            // PAY-17 · el eje de CAJA cierra con lo publicado.
+            $this->assertSame(
+                $c['held_cents'], $c['charged_online_cents'] - $c['refunded_cents'],
+                "$nombre · lo retenido no es lo cobrado menos lo devuelto",
+            );
+            $this->assertSame(
+                $c['held_cents'], $v['paid_online_cents'] + $c['pending_refund_cents'],
+                "$nombre · lo retenido ni respalda producto ni se debe devolver",
+            );
+            // Los dos canales web son excluyentes: publicar el mismo importe en los dos sería
+            // exactamente el defecto que separarlos vino a arreglar.
+            $this->assertTrue(
+                $v['paid_online_cents'] === 0 || $v['pending_online_cents'] === 0,
+                "$nombre · «pagado por web» y «pendiente de pagar por web» a la vez",
+            );
+            // Y el desglose ↳ suma su titular.
+            $this->assertSame(
+                $v['pending_at_gate_cents'],
+                array_sum(array_column($json['ledger']['gate_lines'], 'amount_cents')),
+                "$nombre · el desglose de puerta no suma su titular",
+            );
+
+            // ⚠️ La guarda de la guarda: que el escenario EJERCITE los canales, o compararía ceros.
+            $this->assertGreaterThan(0, $v['paid_online_cents'] + $v['paid_at_gate_cents'],
+                "$nombre · el fixture no ejercita ningún canal cobrado");
+        }
+    }
+
+    /**
+     * **La FRASE de estado la compone el servidor**, y dice lo que el número no dice.
+     *
+     * ⚠️ Es el encargo del owner: «trazabilidad y explicación ante cualquier situación». Un pedido
+     * con dinero pendiente de devolver tiene que DECIRLO, no dejar que el cliente lo deduzca de una
+     * línea negativa.
+     */
+    public function test_the_ledger_explains_the_state_in_words(): void
+    {
+        [$user, $order] = $this->orderWithEverything();
+        $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
+
+        $this->assertGreaterThan(0, $json['ledger']['cash']['pending_refund_cents'], 'el fixture no debe dinero');
+        $this->assertNotNull($json['ledger']['note'], 'un pedido con dinero pendiente de devolver no lo dice');
+        $this->assertStringContainsString(
+            Money::amount($json['ledger']['cash']['pending_refund_cents']),
+            $json['ledger']['note'],
+            'la frase no nombra el importe que se le debe',
+        );
     }
 
     /**
@@ -134,9 +226,10 @@ class MeOrdersFinancialsTest extends TestCase
             $order->gateBreakdownLines(),
         );
 
-        $this->assertSame($expected, $json['pending_at_gate_lines'], 'el desglose publicado no es el del dominio');
+        $this->assertSame($expected, $json['ledger']['gate_lines'], 'el desglose publicado no es el del dominio');
         $this->assertSame(
-            $json['pending_at_gate_cents'], array_sum(array_column($json['pending_at_gate_lines'], 'amount_cents')),
+            $json['ledger']['value']['pending_at_gate_cents'],
+            array_sum(array_column($json['ledger']['gate_lines'], 'amount_cents')),
             'el desglose no suma el agregado que se publica al lado'
         );
 
@@ -163,9 +256,9 @@ class MeOrdersFinancialsTest extends TestCase
 
         $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
 
-        $this->assertTrue($json['has_deposit'], 'un pedido con señal ya saldada ha dejado de declararse con señal');
-        $this->assertSame(0, $json['pending_at_gate_cents']);
-        $this->assertSame([], $json['pending_at_gate_lines'], 'sin nada pendiente, el desglose va vacío');
+        $this->assertTrue($json['ledger']['has_deposit'], 'un pedido con señal ya saldada ha dejado de declararse con señal');
+        $this->assertSame(0, $json['ledger']['value']['pending_at_gate_cents']);
+        $this->assertSame([], $json['ledger']['gate_lines'], 'sin nada pendiente, el desglose va vacío');
     }
 
     /**
@@ -319,6 +412,15 @@ class MeOrdersFinancialsTest extends TestCase
             'order_id' => $order->id, 'order_item_id' => $line->id,
             'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
             'amount_cents' => 3100, 'currency' => 'EUR', 'applied_by' => $user->id,
+        ]);
+        // ⚠️ El cobro de la SEÑAL, que es lo que este pedido tuvo de verdad: 60,00 € por web y el
+        // resto en recepción. Un pedido `paid` sin ninguna fila `Payment` no lo produce ningún cobro
+        // real, y hace que el eje de caja (`PAY-17`) compare contra un cobro de 0,00 €.
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => 6000, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => Carbon::now()->subMonth(),
+            'gateway_order' => '0000900001',
         ]);
 
         return [$user, $order->fresh()->load('items.ticketType', 'items.children', 'items.slot', 'adjustments', 'payments.refunds')];

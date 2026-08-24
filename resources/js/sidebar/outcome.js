@@ -106,11 +106,15 @@ export function buildConfirmation(order, eventData = {}) {
     return {
         code: String(order?.code ?? ''),
         status: String(order?.status ?? ''),
-        total_cents: Number(order?.total_cents ?? 0),
+        // ⚠️ Del LEDGER, que es el único sitio donde vive el desglose desde la tanda B
+        // (`DECISIONES #127`). Aquí se enseña lo que la reserva VALE, no lo facturado: en el paso 6
+        // los dos coinciden —el pedido acaba de nacer— pero leer el campo correcto es lo que hace
+        // que siga siendo cierto cuando el pedido cambie después.
+        total_cents: Number(order?.ledger?.value?.total_cents ?? 0),
         online_cents: Number(order?.online_amount_cents ?? 0),
         // Lo que queda por cobrar EN PUERTA. **No se resta de nada**: el servidor lo publica compuesto
         // y `total − online` no es lo mismo (hay ajustes que no viven en ninguno de los dos).
-        park_cents: Number(order?.pending_at_gate_cents ?? 0),
+        park_cents: Number(order?.ledger?.value?.pending_at_gate_cents ?? 0),
         has_guest_form: order?.guest_form_pending === true,
         lines: items.map((item) => confirmationLine(item, answers[String(item?.id)] ?? [])),
     };

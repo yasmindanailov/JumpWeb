@@ -150,6 +150,40 @@ return [
     'pendiente_devolucion' => 'Refund pending',
     'pendiente_devolucion_caption' => 'You overpaid because of a change to your order (a product was reduced or removed) and it is pending refund.',
     'total_final' => 'Final total',
+    // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
+    // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
+    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
+    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
+    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
+    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
+    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
+    'ledger' => [
+        'value_title' => 'What this order is worth',
+        'value_total' => 'Order value',
+        'paid_online' => 'Paid online',
+        'pending_online' => 'Left to pay online',
+        'paid_at_gate' => 'Paid at the park',
+        'pending_at_gate' => 'Left to pay at the park',
+        'compensated' => 'Refunded as compensation',
+        'cash_title' => 'Your money',
+        'charged_online' => 'Charged online',
+        'refunded' => 'Already refunded',
+        'pending_refund' => 'Still to be refunded to you',
+        'invoiced' => 'Amount when booked',
+        'invoiced_hint' => 'This is what was invoiced when the booking was made. If it differs from the value above, the order changed afterwards.',
+    ],
+    'ledger_note' => [
+        'owing' => 'We still owe you :amount.',
+        'cancelled_owing' => 'Your booking was cancelled on :date. We still owe you :amount.',
+        'cancelled_refunded' => 'Your booking was cancelled and we refunded :amount on :date.',
+        'cancelled' => 'Your booking was cancelled on :date.',
+        'expired' => 'This booking expired before the payment was completed. You have not been charged.',
+        'pending_payment' => 'The :amount payment has not been completed yet. Your slot is held until it expires.',
+        'compensated' => 'We refunded :amount and you keep your booking: there is nothing left to pay.',
+        'refunded_pay_in_person' => 'We refunded :amount because you will pay at reception on arrival.',
+        'refunded_still_booked' => 'We refunded :amount and your booking still stands.',
+        'pending_at_gate' => 'You have :amount left to pay at reception on arrival.',
+    ],
     'errors' => [
         'choose_one' => 'Choose at least one ticket to continue.',
         'cart_empty' => 'Add at least one visit to continue.',

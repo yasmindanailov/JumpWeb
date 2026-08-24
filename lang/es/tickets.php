@@ -168,6 +168,40 @@ return [
     'pendiente_devolucion' => 'Pendiente de devolución',
     'pendiente_devolucion_caption' => 'Pagaste de más por un cambio en el pedido (se redujo o quitó un producto) y está pendiente de devolvértelo.',
     'total_final' => 'Total final',
+    // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
+    // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
+    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
+    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
+    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
+    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
+    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
+    'ledger' => [
+        'value_title' => 'Qué vale este pedido',
+        'value_total' => 'Valor del pedido',
+        'paid_online' => 'Pagado por web',
+        'pending_online' => 'Pendiente de pagar por web',
+        'paid_at_gate' => 'Pagado en el parque',
+        'pending_at_gate' => 'Pendiente de pagar en el parque',
+        'compensated' => 'Compensación devuelta',
+        'cash_title' => 'Tu dinero',
+        'charged_online' => 'Cobrado por web',
+        'refunded' => 'Ya devuelto',
+        'pending_refund' => 'Pendiente de devolverte',
+        'invoiced' => 'Importe al reservar',
+        'invoiced_hint' => 'Es lo que se facturó al hacer la reserva. Si no coincide con el valor de arriba es porque el pedido cambió después.',
+    ],
+    'ledger_note' => [
+        'owing' => 'Tenemos pendiente devolverte :amount.',
+        'cancelled_owing' => 'Tu reserva se canceló el :date. Tenemos pendiente devolverte :amount.',
+        'cancelled_refunded' => 'Tu reserva se canceló y te devolvimos :amount el :date.',
+        'cancelled' => 'Tu reserva se canceló el :date.',
+        'expired' => 'Esta reserva caducó sin completarse el pago. No se te ha cobrado nada.',
+        'pending_payment' => 'Todavía no se ha completado el pago de :amount. Tu plaza sigue reservada hasta que caduque.',
+        'compensated' => 'Te devolvimos :amount y conservas tu reserva: no tienes que pagar nada más.',
+        'refunded_pay_in_person' => 'Te devolvimos :amount porque abonarás el importe en recepción al llegar.',
+        'refunded_still_booked' => 'Te devolvimos :amount y tu reserva sigue en pie.',
+        'pending_at_gate' => 'Te quedan :amount por pagar en recepción al llegar.',
+    ],
     'errors' => [
         'choose_one' => 'Elige al menos una entrada para continuar.',
         'cart_empty' => 'Añade al menos una visita para continuar.',

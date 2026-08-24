@@ -165,12 +165,12 @@ class OrderSummaryFieldsTest extends ApiTestCase
         $items = collect($this->show($order)->json('items'))->keyBy('product_name');
 
         // La entrada: pagada entera, nada en puerta, sin aviso de señal.
-        $this->assertSame(0, $items['Entrada · 1 hora']['gate_remainder_cents']);
+        $this->assertSame(0, $items['Entrada · 1 hora']['ledger']['value']['pending_at_gate_cents']);
         $this->assertFalse($items['Entrada · 1 hora']['shows_deposit_note']);
 
         // El pack: parte online y parte en puerta, con su aviso.
-        $this->assertGreaterThan(0, $items['Cumpleaños']['gate_remainder_cents']);
-        $this->assertGreaterThan(0, $items['Cumpleaños']['paid_online_cents']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['pending_at_gate_cents']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['paid_online_cents']);
         $this->assertTrue($items['Cumpleaños']['shows_deposit_note']);
     }
 
@@ -187,7 +187,7 @@ class OrderSummaryFieldsTest extends ApiTestCase
         $this->assertSame(Order::STATUS_PENDING, $order->fresh()->status);
         $this->assertFalse($items['Cumpleaños']['shows_deposit_note']);
         // Los NÚMEROS sí viajan: es el aviso lo que no procede, no el desglose.
-        $this->assertGreaterThan(0, $items['Cumpleaños']['gate_remainder_cents']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['pending_at_gate_cents']);
     }
 
     /** Un producto sin señal nunca lo enseña, por pagado que esté el pedido. */

@@ -1145,6 +1145,30 @@ class Order extends Model
      * Importe ya devuelto a este Order (suma de `payment_refunds.succeeded`).
      * Atajo defensivo para no recalcular en sitios que ya saben qué buscan.
      */
+    /**
+     * La INTENCIÓN del último reembolso con éxito, o `null` si no consta (`DECISIONES #127(c)`).
+     *
+     * ⚠️ Vive aquí y no en `OrderLedger` por la frontera de módulos: `Booking` no puede nombrar
+     * `Payments\Models\PaymentRefund` —lo dice `ModuleBoundariesTest`, y lo dijo en cuanto se
+     * intentó—. `Order` sí puede: está en la baseline legacy. El ledger recibe una cadena.
+     */
+    public function lastRefundIntent(): ?string
+    {
+        $ultima = null;
+        foreach ($this->payments as $payment) {
+            foreach ($payment->refunds as $refund) {
+                if ($refund->status !== PaymentRefund::STATUS_SUCCEEDED || $refund->intent === null) {
+                    continue;
+                }
+                if ($ultima === null || $refund->id > $ultima->id) {
+                    $ultima = $refund;
+                }
+            }
+        }
+
+        return $ultima?->intent;
+    }
+
     /** Σ de lo devuelto sobre una RESERVA entera (principal + sus complementos). */
     public function reservationRefundedCents(OrderItem $principal): int
     {

@@ -150,6 +150,40 @@ return [
     'pendiente_devolucion' => 'Remboursement en attente',
     'pendiente_devolucion_caption' => 'Vous avez trop payé suite à un changement de la commande (un produit a été réduit ou retiré) ; le remboursement est en attente.',
     'total_final' => 'Total final',
+    // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
+    // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
+    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
+    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
+    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
+    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
+    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
+    'ledger' => [
+        'value_title' => 'Ce que vaut cette commande',
+        'value_total' => 'Valeur de la commande',
+        'paid_online' => 'Payé en ligne',
+        'pending_online' => 'Reste à payer en ligne',
+        'paid_at_gate' => 'Payé au parc',
+        'pending_at_gate' => 'Reste à payer au parc',
+        'compensated' => 'Remboursé en geste commercial',
+        'cash_title' => 'Votre argent',
+        'charged_online' => 'Encaissé en ligne',
+        'refunded' => 'Déjà remboursé',
+        'pending_refund' => 'Reste à vous rembourser',
+        'invoiced' => 'Montant à la réservation',
+        'invoiced_hint' => "C'est ce qui a été facturé au moment de la réservation. S'il diffère de la valeur ci-dessus, la commande a changé ensuite.",
+    ],
+    'ledger_note' => [
+        'owing' => 'Nous devons encore vous rembourser :amount.',
+        'cancelled_owing' => 'Votre réservation a été annulée le :date. Nous devons encore vous rembourser :amount.',
+        'cancelled_refunded' => 'Votre réservation a été annulée et nous vous avons remboursé :amount le :date.',
+        'cancelled' => 'Votre réservation a été annulée le :date.',
+        'expired' => 'Cette réservation a expiré avant la fin du paiement. Aucun montant ne vous a été prélevé.',
+        'pending_payment' => "Le paiement de :amount n'est pas encore terminé. Votre place est retenue jusqu'à expiration.",
+        'compensated' => 'Nous vous avons remboursé :amount et vous gardez votre réservation : il ne reste rien à payer.',
+        'refunded_pay_in_person' => "Nous vous avons remboursé :amount car vous réglerez à l'accueil à votre arrivée.",
+        'refunded_still_booked' => 'Nous vous avons remboursé :amount et votre réservation reste valable.',
+        'pending_at_gate' => "Il vous reste :amount à régler à l'accueil à votre arrivée.",
+    ],
     'errors' => [
         'choose_one' => 'Choisis au moins un billet pour continuer.',
         'cart_empty' => 'Ajoute au moins une visite pour continuer.',

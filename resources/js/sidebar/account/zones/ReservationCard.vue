@@ -97,43 +97,58 @@ defineEmits(['toggle-order', 'toggle-event', 'retry']);
         <div v-if="openOrder && order">
             <div class="orders__meta">{{ order.createdLabel }}</div>
 
-            <div class="orders__total">
-                <span>{{ order.financials.firstLabel }}</span>
-                <strong>{{ order.totalLabel }}</strong>
+            <!--
+              ⚠️⚠️ **DOS BLOQUES, y no se mezclan** (`DECISIONES #127`). Arriba lo que vale y por qué
+              canal se paga —cierra siempre—; abajo qué ha pasado con su dinero. Hasta la tanda B,
+              «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la columna del
+              valor, de la que NO restan, y por eso dejaba de leerse.
+            -->
+            <div class="orders__ledger">
+                <p class="orders__ledger-title">{{ order.financials.value.title }}</p>
+
+                <div v-for="(row, i) in order.financials.value.rows" :key="'v' + i" class="orders__gate">
+                    <span class="orders__gate-label">{{ row.label }}</span>
+                    <strong>{{ row.amountLabel }}</strong>
+                </div>
+
+                <div v-if="order.financials.value.gate">
+                    <div class="orders__gate">
+                        <span class="orders__gate-label">{{ order.financials.value.gate.label }}</span>
+                        <strong class="orders__gate-amount">{{ order.financials.value.gate.amountLabel }}</strong>
+                    </div>
+                    <div v-for="(gateLine, i) in order.financials.value.gate.lines" :key="i" class="orders__gate-line">
+                        <span>↳ {{ gateLine.label }}</span><strong>{{ gateLine.amountLabel }}</strong>
+                    </div>
+                    <p class="orders__gate-caption">{{ order.financials.value.gate.caption }}</p>
+                </div>
+
+                <div class="orders__final">
+                    <span>{{ order.financials.value.total.label }}</span>
+                    <strong>{{ order.financials.value.total.amountLabel }}</strong>
+                </div>
             </div>
 
-            <div v-if="order.financials.online" class="orders__gate">
-                <span class="orders__gate-label">{{ order.financials.online.label }}</span>
-                <strong>{{ order.financials.online.amountLabel }}</strong>
+            <div v-if="order.financials.cash" class="orders__ledger orders__ledger--cash">
+                <p class="orders__ledger-title">{{ order.financials.cash.title }}</p>
+                <div v-for="(row, i) in order.financials.cash.rows" :key="'c' + i" class="orders__refund">
+                    <span class="orders__refund-label">{{ row.label }}</span>
+                    <strong class="orders__refund-amount">{{ row.amountLabel }}</strong>
+                </div>
             </div>
 
-            <div v-if="order.financials.gate">
+            <!--
+              ⚠️ **La FRASE, no un número.** Era el encargo: que el cliente entienda su situación ante
+              cualquier situación. La compone el servidor, que es quien sabe qué caso es.
+            -->
+            <p v-if="order.financials.note" class="orders__ledger-note">{{ order.financials.note }}</p>
+
+            <!-- Trazabilidad: lo facturado al reservar, solo si ya no es lo que vale. -->
+            <div v-if="order.financials.invoiced" class="orders__ledger-invoiced">
                 <div class="orders__gate">
-                    <span class="orders__gate-label">{{ order.financials.gate.label }}</span>
-                    <strong class="orders__gate-amount">+{{ order.financials.gate.amountLabel }}</strong>
+                    <span class="orders__gate-label">{{ order.financials.invoiced.label }}</span>
+                    <strong>{{ order.financials.invoiced.amountLabel }}</strong>
                 </div>
-                <div v-for="(gateLine, i) in order.financials.gate.lines" :key="i" class="orders__gate-line">
-                    <span>↳ {{ gateLine.label }}</span><strong>+{{ gateLine.amountLabel }}</strong>
-                </div>
-                <p class="orders__gate-caption">{{ order.financials.gate.caption }}</p>
-            </div>
-
-            <div v-if="order.refund" class="orders__refund">
-                <span class="orders__refund-label">{{ order.refund.label }}</span>
-                <strong class="orders__refund-amount">−{{ order.refund.amountLabel }}</strong>
-            </div>
-
-            <div v-if="order.financials.pendingRefund">
-                <div class="orders__refund">
-                    <span class="orders__refund-label">{{ order.financials.pendingRefund.label }}</span>
-                    <strong class="orders__refund-amount">−{{ order.financials.pendingRefund.amountLabel }}</strong>
-                </div>
-                <p class="orders__gate-caption">{{ order.financials.pendingRefund.caption }}</p>
-            </div>
-
-            <div v-if="order.financials.final" class="orders__final">
-                <span>{{ order.financials.final.label }}</span>
-                <strong>{{ order.financials.final.amountLabel }}</strong>
+                <p class="orders__gate-caption">{{ order.financials.invoiced.hint }}</p>
             </div>
         </div>
 

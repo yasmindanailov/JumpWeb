@@ -85,7 +85,7 @@ class MeReservationsPageTest extends ApiTestCase
 
         $card = $this->actingAs($user)->getJson(self::ROOT.'/me/reservations/upcoming')->json('data.0.order');
 
-        foreach (['total_cents', 'pending_at_gate_cents', 'pending_at_gate_lines', 'total_final_cents', 'refund', 'items'] as $campo) {
+        foreach (['ledger', 'refund', 'items'] as $campo) {
             $this->assertArrayNotHasKey($campo, $card, "«{$campo}» se ha colado en la tarjeta: el ledger es del pedido y se pide aparte");
         }
     }
