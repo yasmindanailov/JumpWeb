@@ -1843,26 +1843,52 @@ decisión de infraestructura del owner —Redis, o invalidación por versión de
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
 ### ❗ ABIERTO Y CRÍTICO — el DESGLOSE de dinero que ve el cliente 🟦
-> Spec: `docs/specs/desglose-dinero-cliente.md` (auditoría **CERRADA**, diseño pendiente).
-> **Va ANTES de Fase 5** y se ejecuta en TRES tandas ya acordadas con el owner (2026-08-24).
+> Spec: `docs/specs/desglose-dinero-cliente.md` (auditoría **CERRADA** · **marco COMPLETO y DECIDIDO**,
+> §10) · Decisión: `DECISIONES #127`. **Va ANTES de Fase 5.**
+> ⚠️⚠️ **Las TRES tandas de aquí estaban MAL DIMENSIONADAS y se sustituyen** (2026-08-24, tercera
+> auditoría sobre **58 pedidos en MySQL + 6 en MariaDB**, proyección medida **por HTTP**).
 
-- [ ] **Tanda 1 · asegurar el DOMINIO, sin tocar pantalla.** Cerrar en
-      `Admin\Orders\OrderFinancialInvariantsTest` los tres cruces que faltan (`Σ cobradoPuerta`,
-      `Σ devuelto` —hoy una variable muerta— y las DOS fórmulas del importe online), añadir la **ley de
-      caja** con sus dos excepciones y los escenarios que la auditoría destapó. Invariante nueva en
-      `INVARIANTES.md`. Verificado por mutación. **Riesgo cero: no cambia conducta.**
-- [ ] **Tanda 2 · arreglar la PROYECCIÓN.** Publicar lo ya cobrado en puerta y el bruto online, añadir
-      la línea «Pagado en el parque» que falta, reencuadrar «Subtotal»/«Total», corregir «Pagado
-      online» en un pedido sin pagar y renombrar la nota «Señal». **Sin tocar un número del panel.**
-- [ ] **Tanda 3 · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
+- [ ] **Tanda A · DOMINIO + INVARIANTES**, en el mismo paso: un arreglo de dinero y su guarda no se
+      separan. ❗ **Incluye cerrar el AGUJERO DE INGRESOS de la spec §13**: mover la fecha **re-tarifica**
+      al catálogo del día destino (hoy no, y el panel afirma «sin cambio de precio») — decidido por el
+      owner en `#127(c)`. Más los **cuatro defectos** de la spec §9.2 —un pedido cancelado que no anuncia lo que se
+      debe devolver · un reembolso total que deja el valor intacto · un pedido nunca pagado que declara
+      dinero cobrado · un reembolso total sin atribuir a ninguna reserva— más los **dos ejes cerrados**
+      de §10.1 como invariante (`PAY-16` valor, `PAY-17` caja), los cruces que faltaban (`B3`, `B5`,
+      `C`, `D`) y la retirada de la legacy-safety como código muerto. **Verificado por mutación.**
+      ⚠️ **NO es «riesgo cero»**, como decía la tanda 1: cambia conducta, y es lo que hay que cambiar.
+      ▶ **Y lo que destapó la matriz del panel** (spec §12–§13, `DECISIONES #127(b)`, `#127(c)`):
+      corregir el **docblock** de `refundItem` (afirma `alsoCancelItem=true`; el código pasa `false`, y
+      **la conducta es deliberada** — el owner mantiene reembolso y cancelación independientes);
+      arreglar el verificador del sandbox de Redsys, que **da verde a su propio control negativo**;
+      y **registrar el MOTIVO** de reembolsar-sin-cancelar y de cancelar-sin-reembolsar (migración
+      aditiva en `payment_refunds`, que hoy no tiene dónde) — sin ese dato, «Pendiente de devolverte»
+      puede prometer algo que la política del parque no va a cumplir.
+- [ ] **Tanda B · PROYECCIÓN** — cuatro defectos, no uno (§9.3). Publicar los **cinco canales** + el
+      ancla de caja + la frase de estado, por reserva y agregados; partir la columna en los **dos
+      bloques**; retirar «Subtotal» de la columna; dejar de **ocultar** «Pagado por web».
+      `openapi/v1.yaml` **primero**. Aquí sí es escribible la guarda «lo publicado tiene que sumar».
+      ⚠️ **La promesa «sin tocar un número del panel» era imposible**: el panel miente en los mismos
+      cuatro casos. Cambian 3 pedidos de los creados por flujos reales, los tres a mejor.
+      ⚠️ Publicar `devuelto` por reserva está **BLOQUEADO** hasta arreglar el defecto 4 (tanda A).
+- [ ] **Tanda C · «Mis pedidos» como pantalla aparte**, con el desglose completo, y el «Ver pedido» de
       cada reserva llevando a ella (decisiones del owner en la spec §5).
-- [ ] **Pendiente del owner**: una pasada por el **sandbox de Redsys** para el reembolso REST de punta
-      a punta. Local no lo puede probar y es el único hueco de la auditoría que no se cerró aquí.
+- ✅ **El sandbox de Redsys, VERIFICADO en su integración** (2026-08-24, credenciales del owner:
+      comercio `263100000`, terminal 45): firma `HMAC_SHA512_V2` **aceptada por el banco**
+      (`SIS0054` = denegación esperada sobre operación inexistente; el control `--bad-key` da
+      `SIS0042`). ⚠️ **Una medición anterior lo dio por inalcanzable y era un ERROR**: se probó el
+      puerto 443 y Redsys sirve el sandbox en el **25443**, que es el que el código usa.
+- [ ] **Lo que queda de `PAY-08`**: un `Ds_Response=0900` REAL, que exige una autorización previa en
+      el sandbox (pago de prueba con tarjeta) y después `--gateway-order=`. Es navegador sobre staging.
+- [ ] ⚠️ **Y arreglar el verificador: su CONTROL NEGATIVO sale en verde.** `report()` da
+      «✅ INTEGRACIÓN VÁLIDA» a cualquier `gateway_denied`, incluido el `SIS0042` de firma rechazada.
+      Va en la tanda A (spec §9.5).
 
-⚠️ **Lo que la auditoría ya dejó demostrado, para no repetirla**: **NO hay dos fuentes de verdad** —el
-dominio reconcilia en 8 de 9 identidades sobre **11 pedidos reales creados por los flujos reales**, y la
-novena (ley de caja) tiene dos excepciones legítimas—, y el panel y el cliente enseñan **el mismo número
-bajo el mismo rótulo** en los once. El riesgo está en la PROYECCIÓN, no en la aritmética.
+⚠️ **Lo que las tres auditorías dejan demostrado, para no repetirlas**: **NO hay dos fuentes de
+verdad** —panel y cliente enseñan el mismo «Pagado online» en **64 de 64**—, la rama **legacy es
+inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos identidades en 58 de 58**
+pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
+solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

@@ -77,6 +77,12 @@ final readonly class OrderFinancialSummary
         public int $depositRemainderResolved = 0,
         public int $grossPaidOnline = 0,
         public int $onlineBacking = 0,
+        /**
+         * ¿Ha entrado dinero por este pedido alguna vez? (`paid_at !== null`). Reparte
+         * {@see $onlineBacking} entre {@see pagadoOnline()} y {@see pendienteOnline()}, y decide si
+         * las cestas de puerta pueden darse por cobradas.
+         */
+        public bool $collected = false,
     ) {}
 
     /**
@@ -86,6 +92,12 @@ final readonly class OrderFinancialSummary
      */
     public static function fromOrder(Order $order): self
     {
+        // ⚠️ «Sin cobro no hay cobro» (`DECISIONES #127`). `paid_at` es el predicado, no el `status`:
+        // lo escriben los DOS canales de cobro reales —`RedsysReturnHandler` (web) y
+        // `ManualOrderFulfiller` (taquilla)— y sobrevive a la cancelación y al reembolso, que es
+        // justo lo que hace falta para no borrar la historia contable de un pedido cancelado.
+        $orderCollected = $order->paid_at !== null;
+
         $totalRefunded = 0;
         foreach ($order->payments as $payment) {
             foreach ($payment->refunds as $refund) {
@@ -125,7 +137,14 @@ final readonly class OrderFinancialSummary
             // Item FINALIZADO (pasó su franja) → cobrado en puerta implícitamente
             // (decisión clienta): cuenta en el total con cambios, pero ya NO en lo pendiente.
             // Si el ajuste no tiene item asociado (caso teórico v2) se deja siempre pendiente.
-            $resolved = $item !== null && $item->isFinishedInPractice();
+            //
+            // ⚠️⚠️ **Y el pedido tiene que haberse COBRADO** (`DECISIONES #127`): que la franja haya
+            // pasado no cobra nada en el parque si nadie llegó a pagar el pedido. Sin esta condición
+            // un checkout abandonado cuya franja pasa declara «Pagado en el parque X €» de dinero que
+            // no existe — medido en staging (`R-VYXKRD`) y reproducido en local con `orders:expire`.
+            // Es la MISMA condición que {@see ReservationFinancials::showsDepositNote} ya aplicaba
+            // tres líneas más abajo en la misma clase hermana.
+            $resolved = $item !== null && $item->isFinishedInPractice() && $orderCollected;
 
             if ($isExtraDue) {
                 // Delta de EDICIONES (sube `totalWithChanges`).
@@ -181,7 +200,74 @@ final readonly class OrderFinancialSummary
             depositRemainderResolved: $depositRemainderResolved,
             grossPaidOnline: $grossPaidOnline,
             onlineBacking: $onlineBacking,
+            collected: $orderCollected,
         );
+    }
+
+    /**
+     * Dinero que ENTRÓ por web y **ya no respalda producto**: `cobrado − lo que respalda`. Es la
+     * medida de cuánta devolución está justificada por una pérdida de valor (una cancelación, una
+     * bajada, un cambio a producto más barato).
+     */
+    public function unbackedOnline(): int
+    {
+        return max(0, $this->grossPaidOnline - $this->onlineBacking);
+    }
+
+    /**
+     * **EJE VALOR · COMPENSACIÓN** — dinero devuelto SIN que desapareciera producto
+     * (`DECISIONES #127`): la cortesía, o un reembolso sin cancelar. No baja el valor y no es un
+     * canal de cobro: es su propio término, y por eso la «ley de caja» arrastraba una excepción que
+     * en realidad era un término que faltaba.
+     *
+     * ⚠️⚠️ **Está anclado a CAJA, no reconstruido por línea, y eso es deliberado.** La versión
+     * por-línea sobre-reporta cuando la bajada no se puede reconstruir desde el ítem —exactamente el
+     * caso que `#225` arregló anclando `pendienteDevolucion` a lo realmente cobrado: un cambio a
+     * producto más barato deja `unit_price` nuevo, así que `cantidad_original × unit_price` miente—.
+     * Medido: definirlo por línea rompía `test_pendiente_devolucion_cleared_by_succeeded_refund`,
+     * que es justo un caso de valor perdido sin huella en el ítem.
+     */
+    public function compensado(): int
+    {
+        return max(0, $this->effectiveRefunded() - $this->unbackedOnline());
+    }
+
+    /**
+     * **EJE VALOR · canal WEB COBRADO**: lo cobrado por web que respalda producto vivo, NETO de
+     * compensación. `0` mientras el pedido no se haya cobrado — su importe está entonces en
+     * {@see pendienteOnline()}.
+     */
+    public function pagadoOnline(): int
+    {
+        return $this->collected ? $this->onlineBacking - $this->compensado() : 0;
+    }
+
+    /**
+     * **EJE VALOR · canal WEB PENDIENTE**: lo que falta por cobrar POR WEB. `0` en cuanto el pedido
+     * se cobra.
+     *
+     * ⚠️ Es el importe que la API publicaba como `online_amount_cents` y la pantalla leía **en
+     * pasado** («Pagado online 11,90 €» en un pedido que nadie ha pagado). Separar cobrado de
+     * pendiente mata ese defecto de raíz.
+     */
+    public function pendienteOnline(): int
+    {
+        return $this->collected ? 0 : $this->onlineBacking;
+    }
+
+    /** **EJE VALOR · canal PUERTA COBRADA**: los dos buckets ya resueltos. */
+    public function cobradoPuerta(): int
+    {
+        return $this->extraDueResolved + $this->depositRemainderResolved;
+    }
+
+    /**
+     * **EJE CAJA · lo RETENIDO**: el dinero del cliente que sigue en la caja del parque.
+     * `cobrado por web − devuelto`. Es el ancla que el cliente puede cotejar con su banco.
+     */
+    public function retenidoOnline(): int
+    {
+        return $this->grossPaidOnline - $this->effectiveRefunded();
     }
 
     public function netOnline(): int
@@ -251,9 +337,10 @@ final readonly class OrderFinancialSummary
      */
     public function pendienteDevolucion(): int
     {
-        $heldOnline = max(0, $this->grossPaidOnline - $this->effectiveRefunded());
-
-        return max(0, $heldOnline - $this->onlineBacking);
+        // ⚠️ Se descuenta el PAGADO ONLINE NETO, no `onlineBacking` en crudo (`DECISIONES #127`): un
+        // reembolso de cortesía sobre producto vivo baja lo retenido **y** baja lo que ese producto
+        // tiene pagado, así que no deja nada pendiente. Restar el bruto lo contaría dos veces.
+        return max(0, $this->retenidoOnline() - $this->pagadoOnline());
     }
 
     public function hasPendienteDevolucion(): bool

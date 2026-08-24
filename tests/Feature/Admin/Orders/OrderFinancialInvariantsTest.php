@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Orders;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
@@ -156,6 +157,102 @@ class OrderFinancialInvariantsTest extends TestCase
         $this->assertSame(800, $summary->pendienteDevolucion());   // P2 cancelado, por devolver
     }
 
+    // ─── Los escenarios que la TERCERA auditoría destapó ───────────────────
+    //
+    // ⚠️ Los seis de arriba pasaban ya antes de `DECISIONES #127`: su hueco no estaba en la
+    // aserción, estaba en el FIXTURE. Estos cinco son los que ejercitan los defectos que se
+    // arreglaron, y sin ellos las guardas nuevas no verían nada.
+
+    public function test_cancelled_order_has_no_live_value_and_owes_the_money_back(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder();
+        $this->attachActiveItem($order, unitPrice: 1000);
+        $this->syncTotalToOnline($order);
+
+        // El camino del panel: cancelar el PEDIDO. Antes de #127 dejaba las líneas VIVAS.
+        $order = $this->freshOrder($order);
+        $order->update(['status' => Order::STATUS_CANCELLED]);
+        $order->cancelLiveItems($by);
+
+        $this->assertReconciles($order, 'pedido CANCELADO sin reembolsar');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(0, $summary->totalFinalNeto(), 'un pedido cancelado no tiene valor vivo');
+        $this->assertSame(1000, $summary->pendienteDevolucion(), 'y lo cobrado aflora como pendiente de devolver');
+    }
+
+    public function test_an_order_never_collected_claims_no_money_even_after_its_slot_passes(): void
+    {
+        $order = $this->makePaidOrder();
+        $item = $this->attachItemWithPastSlot($order);          // franja PASADA
+        $order->applyExtraDue($item, 400, User::factory()->create());
+        $this->syncTotalToOnline($order);
+        // Nadie llegó a pagarlo: ni `paid_at` ni pago cobrado. Es el checkout abandonado cuya
+        // franja pasa — el caso que destapó STAGING.
+        $this->freshOrder($order)->update(['status' => Order::STATUS_PENDING, 'paid_at' => null]);
+        $order->payments()->delete();
+
+        $this->assertReconciles($order, 'pedido NUNCA cobrado con la franja ya pasada');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(0, $summary->cobradoPuerta(), 'sin cobro no se cobró nada en el parque');
+        $this->assertSame(0, $summary->pagadoOnline(), 'ni se pagó nada por web');
+        $this->assertGreaterThan(0, $summary->pendienteOnline(), 'lo cobrable sigue PENDIENTE, no pagado');
+    }
+
+    public function test_a_full_refund_is_attributed_to_its_reservation(): void
+    {
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order, unitPrice: 1000);
+        $this->syncTotalToOnline($order);
+        $payment = $this->freshOrder($order)->payments->firstWhere('status', Payment::STATUS_PAID);
+        // Un reembolso TOTAL se escribe SIN atar a ninguna línea: es la operación sobre el `Payment`.
+        $this->attachSucceededRefund($payment, 1000, null);
+
+        $this->assertReconciles($order, 'reembolso TOTAL, sin atar a línea');
+
+        $order = $this->freshOrder($order);
+        $this->assertSame(
+            1000, (int) $order->reservationFinancialsByPrincipal()[0]['rf']->devuelto,
+            'la reserva tiene que ver el reembolso total, no un 0,00 €',
+        );
+        $this->assertSame(1000, $order->itemRefundedCents($order->items->firstWhere('id', $item->id)));
+    }
+
+    public function test_a_deposit_pack_whose_slot_passed_collects_the_rest_at_the_gate(): void
+    {
+        $order = $this->makePaidOrder();
+        $item = $this->attachItemWithPastSlot($order);          // 1000, franja pasada
+        $this->attachDepositRemainder($order, $item, 700);      // señal 300, resto 700 en puerta
+        $this->syncTotalToOnline($order);
+
+        $this->assertReconciles($order, 'pack con señal cuya franja YA PASÓ');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(700, $summary->cobradoPuerta(), 'el resto de la señal se cobró en el parque');
+        $this->assertSame(0, $summary->pendingAtGate());
+        $this->assertSame(300, $summary->pagadoOnline());
+    }
+
+    public function test_a_pending_order_owes_its_money_online_not_paid_it(): void
+    {
+        $order = Order::create([
+            'user_id' => User::factory()->create()->id,
+            'code' => 'JJ-IVP'.str_pad((string) ++$this->counter, 3, '0', STR_PAD_LEFT),
+            'status' => Order::STATUS_PENDING,
+            'subtotal' => 1000, 'tax' => 0, 'total' => 1000, 'currency' => 'EUR',
+        ]);
+        $this->attachActiveItem($order, unitPrice: 1000);
+
+        $this->assertReconciles($order, 'pedido PENDIENTE, todavía sin cobrar');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(0, $summary->pagadoOnline());
+        $this->assertSame(1000, $summary->pendienteOnline(), 'es lo que FALTA por pagar, no lo pagado');
+        $this->assertSame(0, $summary->retenidoOnline(), 'el parque no retiene nada suyo');
+    }
+
     // ─── Aserción de reconciliación ────────────────────────────────────────
 
     private function assertReconciles(Order $order, string $label): void
@@ -164,28 +261,97 @@ class OrderFinancialInvariantsTest extends TestCase
         $summary = $order->financialSummary();
         $cards = $order->reservationFinancialsByPrincipal();
 
-        $sumValor = $sumPend = $sumDev = $sumPendReemb = 0;
+        $sumValor = $sumOnline = $sumPendOnline = $sumPend = $sumCobrado = 0;
+        $sumDev = $sumPendReemb = $sumComp = 0;
         foreach ($cards as $card) {
             $rf = $card['rf'];
-            // Invariante por reserva (documentado en ReservationFinancials).
+
+            // ── PAY-16 · EJE VALOR por reserva: los CINCO canales cierran el valor.
             $this->assertSame(
-                $rf->pagadoOnline + $rf->aCobrarPuerta + $rf->cobradoPuerta,
+                $rf->pagadoOnline + $rf->pendienteOnline + $rf->aCobrarPuerta + $rf->cobradoPuerta + $rf->compensado,
                 $rf->valor,
-                "$label · reserva: pagadoOnline+aCobrarPuerta+cobradoPuerta == valor",
+                "$label · PAY-16 reserva: pagadoOnline+pendienteOnline+aCobrarPuerta+cobradoPuerta+compensado == valor",
             );
+            // ⚠️ Los dos canales web son EXCLUYENTES: el mismo importe está en uno o en otro.
+            $this->assertTrue(
+                $rf->pagadoOnline === 0 || $rf->pendienteOnline === 0,
+                "$label · reserva: «pagado por web» y «pendiente de pagar por web» no pueden convivir",
+            );
+            // ⚠️ Y ningún canal es negativo. Los `max(0, …)` del dominio existen como cinturón; esto
+            // asevera que NO están tapando nada — un clamp que muerde es un defecto escondido.
+            foreach (['pagadoOnline', 'pendienteOnline', 'aCobrarPuerta', 'cobradoPuerta', 'compensado'] as $canal) {
+                $this->assertGreaterThanOrEqual(0, $rf->{$canal}, "$label · reserva: «{$canal}» negativo");
+            }
+
             $sumValor += $rf->valor;
+            $sumOnline += $rf->pagadoOnline;
+            $sumPendOnline += $rf->pendienteOnline;
             $sumPend += $rf->aCobrarPuerta;
+            $sumCobrado += $rf->cobradoPuerta;
             $sumDev += $rf->devuelto;
             $sumPendReemb += $rf->pendienteReembolso;
+            $sumComp += $rf->compensado;
         }
 
         $this->assertSame($summary->totalFinalNeto(), $sumValor, "$label · Σ valor cards == Total final");
         $this->assertSame($summary->pendingAtGate(), $sumPend, "$label · Σ aCobrarPuerta cards == pendingAtGate");
         $this->assertSame($summary->pendienteDevolucion(), $sumPendReemb, "$label · Σ pendienteReembolso cards == pendienteDevolucion");
 
+        // ── Los CUATRO cruces que faltaban (`specs/desglose-dinero-cliente.md` §4.5, §9).
+        $this->assertSame(
+            $summary->cobradoPuerta(), $sumCobrado,
+            "$label · B3 · Σ cobradoPuerta cards == extraDueResolved + depositRemainderResolved",
+        );
+        $this->assertSame(
+            $summary->effectiveRefunded(), $sumDev,
+            "$label · B5 · Σ devuelto cards == reembolso efectivo del pedido",
+        );
+        $this->assertSame(
+            $summary->compensado(), $sumComp,
+            "$label · Σ compensado cards == compensación del pedido",
+        );
+        $this->assertSame($summary->pagadoOnline(), $sumOnline, "$label · Σ pagadoOnline cards == pagadoOnline del pedido");
+        $this->assertSame($summary->pendienteOnline(), $sumPendOnline, "$label · Σ pendienteOnline cards == pendienteOnline del pedido");
+        // C · las DOS derivaciones del importe online coinciden — hasta hoy solo por álgebra.
+        $this->assertSame(
+            $summary->totalFinalNeto() - $summary->pendingAtGate() - $summary->cobradoPuerta() - $summary->compensado(),
+            $summary->pagadoOnline() + $summary->pendienteOnline(),
+            "$label · C · las dos fórmulas del importe online coinciden",
+        );
+        // D · el desglose ↳ de puerta suma su titular.
+        $this->assertSame(
+            $summary->pendingAtGate(),
+            (int) array_sum(array_column($order->gateBreakdownLines(), 'amount')),
+            "$label · D · Σ líneas del desglose de puerta == pendingAtGate",
+        );
+
+        // ── PAY-16 · EJE VALOR agregado.
+        $this->assertSame(
+            $summary->pagadoOnline() + $summary->pendienteOnline() + $summary->pendingAtGate()
+                + $summary->cobradoPuerta() + $summary->compensado(),
+            $summary->totalFinalNeto(),
+            "$label · PAY-16 pedido: los cinco canales cierran el valor final",
+        );
+
+        // ── PAY-17 · EJE CAJA: todo euro retenido respalda producto o se debe devolver.
+        $this->assertSame(
+            $summary->pagadoOnline() + $summary->pendienteDevolucion(),
+            $summary->retenidoOnline(),
+            "$label · PAY-17: retenido == pagadoOnline + pendienteDevolucion",
+        );
+        $this->assertGreaterThanOrEqual(0, $summary->retenidoOnline(), "$label · PAY-17: retenido negativo (se devolvió más de lo cobrado)");
+
         // Hallazgo ALTO del audit: la TERCERA fuente (por ítem, directa) también coincide.
         $directPending = (int) $order->items->sum(fn (OrderItem $i) => $order->itemPendingRefundCents($i));
         $this->assertSame($summary->pendienteDevolucion(), $directPending, "$label · Σ itemPendingRefundCents == pendienteDevolucion");
+
+        // ⚠️ La columna agregada del reembolso es SIEMPRE Σ de las filas. Es la guarda de construcción
+        // que sustituye a la «legacy-safety»: mientras se cumpla, el `max()` de `effectiveRefunded()`
+        // es código muerto (`DECISIONES #127`: JumpWeb solo instala limpio).
+        $this->assertSame(
+            $summary->totalRefunded, $summary->refundColumn,
+            "$label · la columna `refund_amount_cents` diverge de Σ payment_refunds",
+        );
     }
 
     // ─── Fixtures (patrón de OrderPerItemHelpersTest) ──────────────────────
@@ -205,6 +371,15 @@ class OrderFinancialInvariantsTest extends TestCase
         // #225: «pendiente de devolución» se ancla al dinero REALMENTE cobrado por web (no a
         // `Order.total` como proxy). El pago se crea ANTES de añadir items en estos fixtures, así
         // que aquí lo sincronizamos a lo cobrado online tras montarlos — como en un pedido real.
+        //
+        // ⚠️⚠️ **Y si no había pago, se crea**: un pedido marcado `paid` SIN ninguna fila `Payment`
+        // no lo produce ningún cobro real —ni el web ni el de taquilla— y hace que el eje de caja
+        // (`PAY-17`) compare contra un cobro de 0,00 €. Es el mismo defecto de datos que la auditoría
+        // encontró en los pedidos sembrados a mano (`specs/desglose-dinero-cliente.md` §9.7): un
+        // fixture irreal inventa defectos tan bien como los oculta.
+        if ($order->payments()->where('status', Payment::STATUS_PAID)->doesntExist()) {
+            $this->attachPaidPayment($order);
+        }
         $order->payments()->where('status', Payment::STATUS_PAID)->update(['amount' => $online]);
     }
 
@@ -250,9 +425,15 @@ class OrderFinancialInvariantsTest extends TestCase
         ]);
     }
 
+    /**
+     * ⚠️ Crea la fila **y actualiza la columna agregada**, que es lo que hace el flujo real: los dos
+     * únicos escritores (`executeFullRefund`, `executePartialRefund`) derivan
+     * `Order.refund_amount_cents` de `totalRefundedCents()` en la misma transacción. Un fixture que
+     * escriba solo la fila fabrica una divergencia que ningún reembolso puede producir.
+     */
     private function attachSucceededRefund(Payment $payment, int $amount, ?int $itemId = null): PaymentRefund
     {
-        return PaymentRefund::create([
+        $row = PaymentRefund::create([
             'payment_id' => $payment->id,
             'order_item_id' => $itemId,
             'amount_cents' => $amount,
@@ -265,6 +446,14 @@ class OrderFinancialInvariantsTest extends TestCase
             'requested_at' => now(),
             'processed_at' => now(),
         ]);
+
+        $order = Order::with('payments.refunds')->findOrFail($payment->payable_id);
+        $order->forceFill([
+            'refunded_at' => now(),
+            'refund_amount_cents' => $order->totalRefundedCents(),
+        ])->save();
+
+        return $row;
     }
 
     private function attachActiveItem(Order $order, int $quantity = 1, int $unitPrice = 1000): OrderItem
@@ -300,6 +489,19 @@ class OrderFinancialInvariantsTest extends TestCase
             'ticket_type_id' => $this->jumpType->id,
             'slot_id' => $slot->id,
             'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
+        ]);
+    }
+
+    /** Resto de la SEÑAL (#225): la parte del valor que no se cobra online y se paga en el parque. */
+    private function attachDepositRemainder(Order $order, OrderItem $item, int $cents): void
+    {
+        OrderAdjustment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'amount_cents' => $cents,
+            'currency' => 'EUR',
+            'applied_by' => User::factory()->create()->id,
         ]);
     }
 

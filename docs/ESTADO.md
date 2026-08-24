@@ -177,24 +177,63 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 ## ▶ Próximo paso
 
 ❗❗ **LO SIGUIENTE ES EL DESGLOSE DE DINERO QUE VE EL CLIENTE, y va ANTES de Fase 5.**
-Spec: `specs/desglose-dinero-cliente.md` 🟦 · **las tres tandas, con su alcance, están en el tracker**
-(`00-REFACTOR.md`, sección «ABIERTO Y CRÍTICO»). Acordado con el owner el 2026-08-24: **empezar por la
-tanda 1**, que asegura el dominio sin tocar pantalla y no depende de ninguna decisión pendiente.
+Spec: `specs/desglose-dinero-cliente.md` 🟦 — **el MARCO YA ESTÁ ENTERO Y DECIDIDO** (§10,
+`DECISIONES #127`, 2026-08-24), que era la condición del owner para tocar esto. El plan revisado son
+**tres tandas: A dominio+invariantes · B proyección · C pantalla** (spec §11 y el tracker).
+▶ **Se empieza por la tanda A**, y **no** por la vieja «tanda 1»: aquélla se anunciaba como «riesgo
+cero» y no lo era.
 
-▶ **Lo único que hay que retener antes de abrir la spec**, porque cambia cómo se aborda:
-**la aritmética NO está mal.** Medido sobre **11 pedidos reales creados por los flujos reales** —
-`OrderCreator`, vuelta de Redsys FIRMADA, reembolsos REST y MANUAL—: **8 de 9 identidades se cumplen en
-los once**, la novena (ley de caja) tiene **dos excepciones legítimas**, y el panel y el cliente
-enseñan **el mismo número bajo el mismo rótulo** en los once. **No hay dos fuentes de verdad.**
-▶ El riesgo está en la **PROYECCIÓN**: la API publica 2 de las 6 dimensiones que el dominio calcula.
-⚠️⚠️ **Y el descuadre que el cliente puede ver solo aparece CUANDO LA FRANJA YA PASÓ** —falta la línea
-«Pagado en el parque»—, o sea **justo cuando entra a repasar lo que pagó**. Con franja futura cuadra,
-y por eso nadie lo había visto. El número, los casos y las cuatro reglas de método están en la spec.
+⚠️⚠️ **Lo que hay que retener antes de abrir la spec, porque contradice lo que decía este documento.**
+La tercera auditoría —**58 pedidos en MySQL** (22 creados por los flujos reales) **+ 6 en MariaDB**, y
+la proyección medida **por HTTP**— confirmó que **no hay dos fuentes de verdad** (64 de 64), pero
+encontró **CUATRO defectos de DOMINIO** que las dos anteriores no llegaron a construir:
+- un **pedido cancelado sin reembolsar** no anuncia nada pendiente de devolver: el parque retiene el
+  dinero, el panel ya no puede devolverlo desde ahí y el cliente lee «Total 19,80 €» y ni una palabra.
+  ⚠️ **Ninguna identidad lo caza, ni la ley de caja**;
+- un **reembolso total** deja el valor intacto y no se atribuye a ninguna reserva;
+- un pedido **que nunca se pagó** declara «Pagado en el parque 90,00 €» con 0,00 € cobrados
+  (lo destapó STAGING, se reprodujo en local con el `orders:expire` real).
+▶ Y la proyección **no es un defecto, son cuatro**: medido por HTTP, **30 de 50 columnas se leen sin
+ambigüedad, 20 no**. Entre ellos uno que no estaba escrito en ninguna parte: **«Pagado online» se
+OCULTA** cuando el producto no lleva señal.
 
-⚠️ **Tres trampas de MÉTODO que esta auditoría pagó tres veces**, y que el siguiente agente va a
-volver a pisar si no las lee: un `extra_due` sin subir el precio del ítem, un pago que no se sincroniza
-a `Σ itemCollectedCents`, y `unit_price` tratado como total cuando es POR UNIDAD. **Las tres fabricaron
-defectos que no existen.** Spec §2, §4.bis.3 y §4.ter.
+▶ **Y la MATRIZ DEL PANEL, medida sobre las 23 acciones REALES** (spec §12, `#127(b)`):
+**18 de 23 dejan la columna del cliente ILEGIBLE** y las 10 ediciones enseñan «Subtotal ≠ Total» sin
+excepción. **Casi cualquier gestión ordinaria del operador rompe el desglose.** Y destapó un defecto
+más: **`refundItem` no cancela la línea aunque su docblock diga que sí** — se devuelve la señal de un
+pack, la reserva sigue viva y las dos superficies siguen contando ese dinero como pagado.
+▶ **La prueba más limpia de todo esto**: cancelar la RESERVA deja el desglose correcto y cancelar el
+PEDIDO no. **La conducta correcta ya existe un nivel más abajo.**
+
+❗❗ **Y un AGUJERO DE INGRESOS que la matriz destapó**: **mover la fecha de una reserva NO re-tarifica**
+—conserva el precio pagado—, así que comprar el día barato y pedir el cambio al sábado **sale gratis**.
+Medido: 16,00 € de diferencia en las dos direcciones, y el panel **afirma «sin cambio de precio»**.
+▶ **[DECIDIDO por el owner]: la regla cambia — mover la fecha re-tarifica al catálogo del día destino**
+(`#127(c)`). Va en la tanda A.
+
+▶ **El PLAN DE EJECUCIÓN detallado está en la spec §14**, con **las OCHO superficies** que enseñan este
+dinero (panel: bloque, sub-tarjeta, calendario, lista y taquilla · **PDF** · **emails** · cliente).
+⚠️ «Sin divergencias» significa que **las ocho se mueven juntas**.
+
+▶ **El modelo decidido**: dos ejes cerrados —`valor = pagadoWeb + pendienteWeb + pagadoParque +
+pendienteParque + compensado` y `cobradoWeb − devuelto = pagadoWeb + pendienteDevolución`—,
+**verificados en 58 de 58 antes de escribir producción**. Los detalles, en la spec §10.
+
+⚠️ **Seis trampas de MÉTODO que estas auditorías pagaron** y que el siguiente agente va a volver a
+pisar si no las lee: un `extra_due` sin subir el precio del ítem (y **al revés**: `R-L6UTIA` parecía un
+defecto y era un artefacto), un pago que no se sincroniza a `Σ itemCollectedCents`, `unit_price`
+tratado como total, **la excepción de la ley de caja escrita a medias — dos veces, y cada versión
+floja excusó un defecto real**, y `dates()`/`times()` de `AvailabilityOffer` devolviendo value objects.
+Spec §2, §4.bis.3, §4.ter y **§9.4**.
+
+✅ **El sandbox de Redsys queda VERIFICADO en su integración** (2026-08-24, credenciales del owner:
+comercio `263100000`, **terminal 45**): la firma `HMAC_SHA512_V2` la **acepta el banco**.
+⚠️⚠️ **Y este documento llegó a afirmar que el sandbox era inalcanzable: era un ERROR DE MEDIDA** —se
+probó el puerto **443** y Redsys sirve el sandbox en el **25443**, que es el que el código usa. Medir
+contra un puerto que el código no usa inventa un problema de infraestructura que no existe.
+❗ **Lo que queda de `PAY-08`** es un `0900` REAL (exige una autorización previa con tarjeta en el
+sandbox → navegador sobre staging), y **arreglar el propio verificador: su control negativo sale en
+verde** (`report()` bendice cualquier `gateway_denied`, incluido el `SIS0042` de firma rechazada).
 
 ▶ **Y DESPUÉS, la Fase 5** — capa de contenido profesional. ⚠️ Su primer punto **no es implementable
 tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`, que

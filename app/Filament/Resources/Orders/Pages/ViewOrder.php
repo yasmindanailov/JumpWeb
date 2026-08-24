@@ -183,9 +183,19 @@ class ViewOrder extends ViewRecord
 
                 $previousStatus = $record->status;
 
-                DB::transaction(function () use ($record, $previousStatus): void {
+                $operator = auth()->user();
+
+                DB::transaction(function () use ($record, $previousStatus, $operator): void {
                     $record->status = Order::STATUS_CANCELLED;
                     $record->save();
+
+                    // ⚠️⚠️ **Cancelar el PEDIDO cancela sus RESERVAS** (`DECISIONES #127`). Éste es el
+                    // camino MÁS común del operador y hasta ahora dejaba las líneas vivas: el parque
+                    // retenía el dinero, el panel ya no podía devolverlo desde aquí
+                    // (`refundBlockedReason` bloquea los cancelados) y el cliente leía «Total 19,80 €»
+                    // sin una palabra sobre lo que se le debe. Con la cascada, lo cobrado sin producto
+                    // detrás aflora como «pendiente de devolución» y **el cliente se entera**.
+                    $record->cancelLiveItems($operator);
 
                     AuditLogger::log(
                         action: 'orders.cancelled',

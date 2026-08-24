@@ -290,20 +290,60 @@ class OrderPerItemHelpersTest extends TestCase
         $this->assertSame(800, $order->totalRefundedCents());
     }
 
-    public function test_item_refunded_cents_filters_by_order_item_id(): void
+    /**
+     * **Un reembolso atado a su línea va entero a ella; uno SIN atar se reparte a prorrata.**
+     *
+     * ⚠️⚠️ Este caso fijaba la conducta CONTRARIA —«los no atados no se asignan a nadie»— y esa era
+     * exactamente la divergencia de `DECISIONES #127`: el reembolso TOTAL se escribe con
+     * `order_item_id = null`, así que la sub-card del panel y la hoja PDF decían «devuelto 0,00 €»
+     * mientras el pedido decía el importe completo. La regla nueva reparte a prorrata de lo que cada
+     * línea aportó ONLINE, que es de donde salió el dinero.
+     */
+    public function test_item_refunded_cents_attributes_and_prorates_unattributed_refunds(): void
     {
         $order = $this->makePaidOrder();
         $payment = $this->attachPaidPayment($order);
-        $itemA = $this->attachActiveItem($order);
-        $itemB = $this->attachActiveItem($order);
+        $itemA = $this->attachActiveItem($order);   // 1000 online
+        $itemB = $this->attachActiveItem($order);   // 1000 online
 
         $this->attachSucceededRefund($payment, 400, $itemA->id);
         $this->attachSucceededRefund($payment, 600, $itemB->id);
-        $this->attachSucceededRefund($payment, 100, null);   // total — no asignable a item.
+        $this->attachSucceededRefund($payment, 100, null);   // TOTAL — sin atar a ninguna línea.
 
         $order->refresh()->load('payments.refunds');
-        $this->assertSame(400, $order->itemRefundedCents($itemA));
-        $this->assertSame(600, $order->itemRefundedCents($itemB));
+        // Lo atado, entero a su línea; los 100 sin atar, mitad y mitad (aportaron lo mismo).
+        $this->assertSame(450, $order->itemRefundedCents($itemA));
+        $this->assertSame(650, $order->itemRefundedCents($itemB));
+    }
+
+    /**
+     * **El reparto no pierde ni un céntimo**, ni siquiera cuando no divide exacto.
+     *
+     * ⚠️ Es la propiedad que importa: si la Σ de las partes no fuera el importe devuelto, el eje de
+     * caja dejaría de cerrar por redondeo y nadie lo vería. Se prueba con un importe IMPAR sobre tres
+     * líneas —el peor caso del reparto— en vez de con una foto de importes.
+     */
+    public function test_unattributed_refund_shares_add_up_to_the_exact_amount(): void
+    {
+        $order = $this->makePaidOrder();
+        $payment = $this->attachPaidPayment($order);
+        $items = [
+            $this->attachActiveItem($order),
+            $this->attachActiveItem($order),
+            $this->attachActiveItem($order),
+        ];
+
+        $this->attachSucceededRefund($payment, 1000, null);   // 1000 / 3 no divide exacto
+
+        $order->refresh()->load('payments.refunds');
+        $shares = array_map(fn ($i) => $order->itemRefundedCents($i), $items);
+
+        $this->assertSame(1000, array_sum($shares), 'el reparto pierde o inventa céntimos');
+        // Y ninguna parte se desvía más de un céntimo de su porción exacta.
+        foreach ($shares as $share) {
+            $this->assertGreaterThanOrEqual(333, $share);
+            $this->assertLessThanOrEqual(334, $share);
+        }
     }
 
     public function test_refundable_capacity_subtracts_existing_refunds(): void

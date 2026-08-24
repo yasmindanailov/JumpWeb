@@ -209,6 +209,74 @@ class OrderAdminActionsTest extends TestCase
         ]);
     }
 
+    /** Una reserva VIVA (franja futura) sobre la que comprobar la cascada de cancelación. */
+    private function attachLiveItem(Order $order): OrderItem
+    {
+        $this->ensureTicketTypeSetup();
+
+        return OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => null,
+            'ticket_type_id' => $this->jumpType->id,
+            'slot_id' => $this->makeSlot(now()->addDays(7)->toDateString())->id,
+            'quantity' => 1, 'seats' => 1, 'unit_price' => $order->total,
+        ]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Cancelar el PEDIDO cancela sus RESERVAS (`DECISIONES #127`)
+    //
+    // ⚠️⚠️ Son DOS caminos y los dos dejaban las líneas vivas: el parque retenía el dinero, el panel
+    // ya no podía devolverlo desde ahí —`refundBlockedReason` bloquea los cancelados— y el cliente
+    // leía «Total 19,80 €» sin una palabra sobre lo que se le debe. Se conducen las ACCIONES REALES:
+    // una guarda sobre el helper suelto no ve el cableado, y de hecho no lo vio (mutación).
+    // ═══════════════════════════════════════════════════════════════════════
+
+    public function test_cancelling_the_order_from_the_panel_cancels_its_reservations(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+        $item = $this->attachLiveItem($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('cancel')
+            ->assertHasNoActionErrors();
+
+        $this->assertTrue($item->fresh()->isCancelled(), 'la reserva sigue viva en un pedido cancelado');
+
+        $summary = $order->fresh(['items.slot', 'payments.refunds', 'adjustments'])->financialSummary();
+        $this->assertSame(0, $summary->totalFinalNeto(), 'un pedido cancelado no tiene valor vivo');
+        $this->assertSame(
+            (int) $order->total, $summary->pendienteDevolucion(),
+            'y lo cobrado tiene que aflorar como pendiente de devolver — que es lo que el cliente lee',
+        );
+    }
+
+    public function test_a_full_refund_that_also_cancels_cancels_its_reservations(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+        $item = $this->attachLiveItem($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refund', data: [
+                'mode' => PaymentRefund::MODE_MANUAL,
+                'also_cancel' => true,
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(Order::STATUS_CANCELLED, $order->fresh()->status);
+        $this->assertTrue($item->fresh()->isCancelled(), 'la reserva sigue viva tras reembolsar y cancelar');
+
+        $summary = $order->fresh(['items.slot', 'payments.refunds', 'adjustments'])->financialSummary();
+        $this->assertSame(0, $summary->totalFinalNeto());
+        $this->assertSame(0, $summary->pendienteDevolucion(), 'se devolvió todo: no queda nada pendiente');
+        $this->assertSame(0, $summary->retenidoOnline(), 'ni el parque retiene nada');
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // Cancel — visibility
     // ═══════════════════════════════════════════════════════════════════════

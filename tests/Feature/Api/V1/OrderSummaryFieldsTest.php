@@ -158,7 +158,9 @@ class OrderSummaryFieldsTest extends ApiTestCase
     public function test_the_deposit_breakdown_is_per_reservation_in_a_mixed_cart(): void
     {
         $order = $this->order([$this->entryLine(), $this->packLine()]);
-        $order->forceFill(['status' => Order::STATUS_PAID])->save();
+        // ⚠️ `paid_at` va CON el estado: es el predicado de «este pedido se cobró» (`DECISIONES #127`)
+        // y lo escriben los dos canales reales. Un pedido `paid` sin `paid_at` no lo produce nadie.
+        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
 
         $items = collect($this->show($order)->json('items'))->keyBy('product_name');
 
@@ -192,7 +194,9 @@ class OrderSummaryFieldsTest extends ApiTestCase
     public function test_a_product_without_deposit_never_shows_the_note(): void
     {
         $order = $this->order([$this->entryLine()]);
-        $order->forceFill(['status' => Order::STATUS_PAID])->save();
+        // ⚠️ `paid_at` va CON el estado: es el predicado de «este pedido se cobró» (`DECISIONES #127`)
+        // y lo escriben los dos canales reales. Un pedido `paid` sin `paid_at` no lo produce nadie.
+        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
 
         $this->show($order)->assertJsonPath('items.0.shows_deposit_note', false);
     }

@@ -728,7 +728,7 @@ class Order extends Model
             : null;
 
         // Txn 2: finalizar refund + actualizar Order o registrar fallo.
-        return DB::transaction(function () use ($mode, $alsoCancel, $payment, $refund, $restResult): array {
+        return DB::transaction(function () use ($by, $mode, $alsoCancel, $payment, $refund, $restResult): array {
             /** @var Order $order */
             $order = self::query()->lockForUpdate()->find($this->id);
             $now = now();
@@ -791,6 +791,15 @@ class Order extends Model
                 $order->status = self::STATUS_CANCELLED;
             }
             $order->save();
+
+            // ⚠️⚠️ **Cancelar el PEDIDO cancela sus RESERVAS** (`DECISIONES #127`). Sin esto el
+            // pedido queda cancelado pero sus líneas vivas, así que `productsValue` las sigue
+            // sumando y el cliente lee «Total 19,80 €» sobre un pedido cancelado cuyo dinero el
+            // parque retiene. La conducta correcta ya existía un nivel más abajo —cancelar la
+            // RESERVA sí deja el desglose correcto—; esto la sube al nivel del pedido.
+            if ($alsoCancelApplied) {
+                $order->cancelLiveItems($by);
+            }
 
             AuditLogger::log(
                 action: 'orders.refunded',
@@ -909,7 +918,7 @@ class Order extends Model
             // o anulado: no pendiente. Mismo criterio que pendingAtGate(). Usamos el
             // resolvedor SIN N+1 (el parent de un complemento se busca en `items`, ya
             // cargada, no vía la relación perezosa `parent`).
-            if ($item !== null && ($this->itemFinishedInPractice($item) || $item->isCancelled())) {
+            if ($item !== null && ($this->itemGateResolved($item) || $item->isCancelled())) {
                 continue;
             }
             $key = $itemId ?? 'order';
@@ -978,6 +987,23 @@ class Order extends Model
         }
 
         return $item->isFinishedInPractice();
+    }
+
+    /**
+     * ¿El cargo de puerta de este item está RESUELTO, es decir, ya cobrado en el parque?
+     *
+     * ⚠️⚠️ Son DOS condiciones y hay que cumplirlas las dos: que su franja haya pasado **y que el
+     * pedido se haya cobrado** (`DECISIONES #127`). Un checkout abandonado cuya franja pasa no cobró
+     * nada en recepción, y darlo por cobrado hacía que el panel anunciara «Pagado en el parque X €»
+     * de dinero que nunca existió.
+     *
+     * ⚠️ Este predicado y el de {@see OrderFinancialSummary} tienen que decir LO MISMO: si divergen,
+     * el desglose ↳ deja de sumar su titular. La identidad `D` del test de invariantes lo caza —de
+     * hecho lo cazó al introducir esta regla, cuando solo se había corregido el agregado—.
+     */
+    private function itemGateResolved(OrderItem $item): bool
+    {
+        return $this->itemFinishedInPractice($item) && $this->paid_at !== null;
     }
 
     /**
@@ -1091,7 +1117,7 @@ class Order extends Model
     {
         $lines = [];
         foreach ($this->items as $item) {
-            if ($item->parent_item_id !== null || $item->isCancelled() || $this->itemFinishedInPractice($item)) {
+            if ($item->parent_item_id !== null || $item->isCancelled() || $this->itemGateResolved($item)) {
                 continue;
             }
             // Resto-señal del principal + el de SUS complementos no cancelados (el principal, no
@@ -1115,6 +1141,74 @@ class Order extends Model
      * Importe ya devuelto a este Order (suma de `payment_refunds.succeeded`).
      * Atajo defensivo para no recalcular en sitios que ya saben qué buscan.
      */
+    /** Σ de lo devuelto sobre una RESERVA entera (principal + sus complementos). */
+    public function reservationRefundedCents(OrderItem $principal): int
+    {
+        $sum = $this->itemRefundedCents($principal);
+        foreach ($principal->children as $child) {
+            $sum += $this->itemRefundedCents($child);
+        }
+
+        return $sum;
+    }
+
+    /**
+     * La parte de la COMPENSACIÓN del pedido que le toca a ESTA reserva.
+     *
+     * La compensación —dinero devuelto sin que desapareciera producto— se define **a nivel de
+     * PEDIDO y anclada a caja** ({@see OrderFinancialSummary::compensado}), porque la versión
+     * por-línea sobre-reporta cuando la pérdida de valor no deja huella en el ítem (`#225`). Aquí se
+     * REPARTE, no se redefine: **una sola fórmula, un solo número**.
+     *
+     * Reparto en CASCADA por `id` de principal, tomando cada reserva como mucho lo que ella misma
+     * tiene devuelto. Es exacto —la compensación nunca supera el total devuelto— y determinista.
+     * Con una sola reserva, que es el caso normal, se la lleva entera.
+     */
+    public function reservationCompensatedCents(OrderItem $principal): int
+    {
+        $remaining = $this->financialSummary()->compensado();
+        if ($remaining <= 0) {
+            return 0;
+        }
+
+        foreach ($this->items->whereNull('parent_item_id')->sortBy('id') as $p) {
+            $take = min($remaining, $this->reservationRefundedCents($p));
+            if ((int) $p->id === (int) $principal->id) {
+                return $take;
+            }
+            $remaining -= $take;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cancela las RESERVAS vivas de este pedido — la cascada que faltaba al cancelar el PEDIDO.
+     *
+     * ⚠️⚠️ **Un pedido cancelado no tiene valor vivo** (`DECISIONES #127`). Hasta esta corrección,
+     * cancelar el pedido —por la acción del panel o por un reembolso total con «también cancelar»—
+     * dejaba sus líneas ACTIVAS: `productsValue` las seguía sumando, el cliente leía «Total 19,80 €»
+     * sobre un pedido cancelado, y **nada anunciaba que el parque retenía ese dinero**. Medido: la
+     * MISMA operación un nivel más abajo (cancelar la reserva) sí dejaba el desglose correcto.
+     *
+     * Reusa {@see OrderItem::markCancelled}, que es idempotente y preserva la fecha de la primera
+     * cancelación, así que una línea ya cancelada a mano conserva la suya. Los complementos se
+     * cancelan explícitamente porque `isCancelled()` mira su propia columna, no la del principal.
+     *
+     * No toca Redsys ni ajustes: el lado financiero lo resuelven las dimensiones al recalcularse
+     * (lo cobrado online sin producto detrás aflora como «pendiente de devolución»).
+     */
+    public function cancelLiveItems(User $by): void
+    {
+        $this->load('items');
+        foreach ($this->items as $item) {
+            if (! $item->isCancelled()) {
+                $item->markCancelled($by);
+            }
+        }
+        $this->load('items');
+    }
+
     public function totalRefundedCents(): int
     {
         $sum = 0;
@@ -1148,16 +1242,90 @@ class Order extends Model
     public function itemRefundedCents(OrderItem $item): int
     {
         $sum = 0;
+        $unattributed = 0;
         foreach ($this->payments as $payment) {
             foreach ($payment->refunds as $refund) {
-                if ($refund->status === PaymentRefund::STATUS_SUCCEEDED
-                    && (int) $refund->order_item_id === (int) $item->id) {
+                if ($refund->status !== PaymentRefund::STATUS_SUCCEEDED) {
+                    continue;
+                }
+                if ($refund->order_item_id === null) {
+                    $unattributed += (int) $refund->amount_cents;
+                } elseif ((int) $refund->order_item_id === (int) $item->id) {
                     $sum += (int) $refund->amount_cents;
                 }
             }
         }
 
-        return $sum;
+        return $sum + $this->unattributedRefundShareFor($item, $unattributed);
+    }
+
+    /**
+     * Parte que le toca a ESTE item de los reembolsos que no se ataron a ninguna línea.
+     *
+     * ⚠️⚠️ **El reembolso TOTAL se escribe con `order_item_id = null`** —es una operación sobre el
+     * `Payment` entero, no sobre una línea— y hasta esta corrección eso dejaba a las reservas
+     * diciendo «devuelto 0,00 €» mientras el pedido decía 19,80 € (`DECISIONES #127`). No es un
+     * hueco teórico: lo consumen la sub-card del panel y la hoja PDF.
+     *
+     * **Se reparte a prorrata de lo que cada línea aportó ONLINE** ({@see itemCollectedCents}), que es
+     * exactamente de dónde salió el dinero devuelto. Reparto por RESTO MAYOR: los enteros se asignan
+     * por defecto y el céntimo sobrante va a la línea con el resto más grande (desempate por `id`,
+     * para que sea determinista) → **la Σ de las partes es EXACTAMENTE el importe devuelto**, sin
+     * fugas de redondeo.
+     *
+     * ⚠️ Incluye las líneas CANCELADAS en la base: su importe también entró en el cobro, así que
+     * también sale en la devolución.
+     * ⚠️ Si nada aportó online (base 0) no hay a quién repartir y devuelve 0; la invariante del eje
+     * de caja lo destaparía si alguna vez ocurriera con dinero de por medio.
+     *
+     * Vive aquí, en {@see itemRefundedCents}, y no en cada superficie: así el tope de capacidad
+     * ({@see itemRefundableRemainderCents}), el pendiente por línea, la sub-card, el PDF y el
+     * cliente leen la MISMA atribución. Como efecto colateral corrige el tope, que tras un reembolso
+     * total seguía diciendo que quedaba todo por devolver.
+     */
+    private function unattributedRefundShareFor(OrderItem $item, int $unattributed): int
+    {
+        if ($unattributed <= 0) {
+            return 0;
+        }
+
+        $weights = [];
+        $base = 0;
+        foreach ($this->items as $line) {
+            $w = $this->itemCollectedCents($line);
+            if ($w > 0) {
+                $weights[(int) $line->id] = $w;
+                $base += $w;
+            }
+        }
+        if ($base <= 0 || ! isset($weights[(int) $item->id])) {
+            return 0;
+        }
+
+        $shares = [];
+        $assigned = 0;
+        foreach ($weights as $id => $w) {
+            $exact = $unattributed * $w / $base;
+            $shares[$id] = (int) floor($exact);
+            $assigned += $shares[$id];
+        }
+
+        // Resto mayor: el sobrante se reparte de céntimo en céntimo, empezando por la fracción más
+        // grande. Determinista por `id` en el desempate.
+        $remainders = [];
+        foreach ($weights as $id => $w) {
+            $remainders[$id] = ($unattributed * $w) % $base;
+        }
+        arsort($remainders);
+        foreach (array_keys($remainders) as $id) {
+            if ($assigned >= $unattributed) {
+                break;
+            }
+            $shares[$id]++;
+            $assigned++;
+        }
+
+        return $shares[(int) $item->id];
     }
 
     /**

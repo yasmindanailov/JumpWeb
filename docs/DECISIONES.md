@@ -5973,3 +5973,237 @@ JS** · chunk **211,02 → 213,57 KiB**, techo a **214,5** con su ledger · payl
 su techo. **16/16 en navegador** con datos sembrados para ver paginación en los dos ámbitos, y las
 tres tandas anteriores re-corridas sin regresión (`V23` 22/22 · `V18` 11/11 · tanda A 12/12).
 Cada guarda **verificada por mutación**; dos de ellas resultaron no medir nada y se rehicieron.
+
+---
+
+## #127 · 2026-08-24 · [DECIDIDO] El desglose del cliente son DOS EJES CERRADOS — y la auditoría encontró CUATRO defectos de dominio que nadie había construido
+
+**Contexto.** `#125` cerró una auditoría del desglose con un veredicto tranquilizador: «la aritmética
+no está mal, el riesgo está en la proyección». El owner pidió una tercera vuelta —auditar **todo**,
+en local **y en staging**, con pruebas de verdad— y fijó los objetivos de producto: *que el cliente
+entienda la situación económica de su pedido, con trazabilidad y explicación ante cualquier
+situación, y que la entienda fácilmente*. Con esos objetivos delante, delegó la decisión en el agente.
+
+**Corpus medido**: 58 pedidos en local (MySQL; 36 preexistentes + **22 creados por los flujos
+reales**: `OrderCreator` → vuelta de Redsys FIRMADA → edición del panel → reembolsos REST/manual/total
+→ `orders:expire`) y 6 en staging (**MariaDB**). La proyección, **por HTTP** contra
+`GET /api/v1/me/orders` con token Bearer, no leyendo el Resource.
+
+**Lo que se confirmó de `#125`**: no hay dos fuentes de verdad —panel y cliente enseñan el mismo
+«Pagado online» en **64 de 64**—, y siete de las nueve identidades se cumplen en los dos motores.
+
+**⚠️⚠️ Lo que `#125` no vio, porque no llegó a construirlo.** Cuatro defectos de DOMINIO, ninguno
+legacy, todos producidos por el flujo ordinario (detalle en `specs/desglose-dinero-cliente.md` §9.2):
+
+1. **Un pedido cancelado sin reembolsar no anuncia nada pendiente de devolver.** El parque retiene el
+   dinero y el cliente lee «Total 19,80 €» y ni una palabra. **Ninguna identidad lo caza, ni la ley de
+   caja**: el dominio cree que el producto sigue vivo, así que la caja cuadra. Causa: cancelar el
+   PEDIDO no cancela sus LÍNEAS, ni por la acción del panel (`ViewOrder`) ni por `executeFullRefund`.
+   ▶ Y su alcance operativo es peor: `cancellationBlockedReason()` **permite** cancelar un pedido ya
+   cobrado, y después `refundBlockedReason()` **bloquea el reembolso sobre cancelados**. Un clic deja
+   el dinero retenido, sin camino de vuelta en el panel y sin avisar al cliente.
+2. **Un pedido reembolsado ENTERO sigue diciendo que su total es el precio completo.** Misma causa.
+   Incumple lo que `openapi/v1.yaml` promete para `total_final_cents` («lo que el cliente acaba pagando»).
+3. **Un pedido que nunca se pagó declara dinero cobrado**: «Pagado online 30,00 € + Pagado en el
+   parque 90,00 €» con **0,00 € realmente cobrados**. Lo destapó `R-VYXKRD` en STAGING y se reprodujo
+   en local con el `orders:expire` real. Causa: las cestas de puerta se resuelven solo con que la
+   franja haya pasado. ⚠️ La comprobación **ya existía tres líneas más arriba**, en `showsDepositNote()`.
+4. **Un reembolso total no se atribuye a ninguna reserva** (`order_item_id => null`): la tarjeta dice
+   «devuelto 0,00 €» con 19,80 € devueltos. ⚠️ **Corregido el 2026-08-24: SÍ se ve hoy** — lo consumen
+   la sub-tarjeta por reserva del panel y la hoja PDF; solo el bloque de totales del pedido lo esquiva
+   a mano. La primera lectura lo dio por latente y era una divergencia viva.
+
+**Y la proyección no es un defecto, son cuatro** (§9.3): falta «Pagado en el parque» (falla en el
+**100 %** de los que tienen algo cobrado en puerta, no en 1 de 11); el eje de la caja se pinta como
+resta dentro de la columna del valor; «Subtotal» y «Total» son bases distintas; y **«Pagado online» se
+OCULTA** cuando el producto no lleva señal —defecto que no estaba registrado en ningún documento—.
+Medido por HTTP: **30 de 50 columnas se leen sin ambigüedad, 20 no**.
+
+**LA DECISIÓN — dos ejes cerrados, y cada euro con su línea.** El principio: el desglose no se deriva
+en ninguna superficie; el dominio publica un desglose **cerrado** y las superficies solo pintan.
+
+    EJE VALOR   valor = pagadoWeb + pendienteWeb + pagadoParque + pendienteParque + compensado
+    EJE CAJA    cobradoWeb − devuelto = pagadoWeb + pendienteDevolución
+
+▶ **El eje del valor tiene CINCO canales, no tres**, y los dos que aparecen resuelven defectos viejos:
+**`pendienteWeb`** separa cobrado de pendiente y mata el «Pagado online 11,90 €» de un pedido que nadie
+pagó; **`compensado`** —dinero devuelto sin quitar producto— era la «excepción» de la ley de caja, que
+en realidad **era un término que faltaba**. Y el eje de la caja se ancla en lo REALMENTE cobrado, que
+es lo único que el cliente puede cotejar con su banco.
+
+**⚠️ Verificado ANTES de escribir producción**: las dos identidades **cierran en 58 de 58** pedidos
+reales, y el único estado que el modelo declara imposible (`pendienteDevolución < 0`) dispara
+**exactamente** sobre los 19 de datos sucios y sobre **ninguno** de los 22 creados por flujos reales.
+
+**Consecuencias que hay que aceptar, y por qué son correctas:**
+- **La tanda 1 NO era «riesgo cero»**: sus invariantes nacían en rojo sobre los cuatro defectos.
+- **La tanda 2 no podía cumplir «sin tocar un número del panel»**: el panel miente en los mismos
+  cuatro casos. Cambian **3** pedidos de los creados por flujos reales, los tres de un número falso a
+  uno cierto, y el reparto por canal en todos los no cobrados.
+- **Publicar `devuelto` por reserva está BLOQUEADO** hasta arreglar el defecto 4.
+
+**Decisiones de producto que quedan cerradas con esto**: §6.1 (se añade lo que falta, sin cambiar el
+concepto del panel), §6.2 («Subtotal» sale de la columna y pasa a línea de trazabilidad), §6.3 y §6.4
+(una lista única de conceptos, dos voces — tabla en §10.4). Y **cada estado lleva su FRASE**, compuesta
+por el dominio: un número no explica, y explicar era el encargo.
+
+**Y dos cosas medidas que corrigen la doc anterior:**
+- ⚠️ **El sandbox de Redsys es INALCANZABLE desde los tres entornos** — `sis-t.redsys.es:443` da
+  timeout de TCP desde local, desde el contenedor y desde staging, mientras `github.com:443` responde
+  en los tres. **Redsys filtra por IP de origen.** El pendiente del tracker no es «una pasada por el
+  sandbox»: es que **el banco autorice la IP**. Acción del owner.
+- ⚠️ **No hay ninguna semilla que arreglar** (la §8 de la spec lo daba por hecho): **ningún seeder del
+  repo crea pedidos**. Los `DEMO-*` son datos escritos a mano en sesiones anteriores, y una
+  instalación limpia no tiene ninguno.
+- ✅ **La rama LEGACY de reembolso es código muerto** y se retira: ningún escritor la produce, y el
+  owner decidió que **JumpWeb solo instala limpio**. Se sustituye por una guarda de construcción —«la
+  columna es siempre Σ filas»— en vez de debilitar el invariante con una excepción.
+
+**Plan revisado (§11): TRES tandas correctamente dimensionadas** — **A** dominio + invariantes (los
+cuatro arreglos y sus guardas en el mismo paso: un arreglo de dinero y su guarda no se separan) ·
+**B** proyección (contrato primero) · **C** pantalla.
+
+⚠️ **Tres correcciones de MÉTODO que esta auditoría pagó** (§9.4): la excepción de la ley de caja se
+escribió mal DOS veces y cada versión floja excusó un defecto real —la condición correcta es «no ha
+movido dinero», ni entró por web ni el dominio afirma haber cobrado en puerta—; `R-L6UTIA` **parecía**
+un defecto y es un artefacto de un guion anterior (la trampa de §2 al revés); y `dates()`/`times()` de
+`AvailabilityOffer` devuelven **value objects**, no arrays.
+
+### #127(b) · 2026-08-24 · La MATRIZ DE GESTIÓN DEL PANEL, medida sobre las acciones REALES
+
+El owner pidió, antes de arrancar la tanda A, listar **toda** la gestión que un admin puede accionar
+sobre un pedido y sobre una reserva y medir cómo afecta al desglose. Se hizo **conduciendo las
+acciones reales del panel** (Livewire sobre `ViewOrder`), no replicando su lógica. Detalle en
+`specs/desglose-dinero-cliente.md` §12.
+
+    23 acciones medidas · 0 fallaron
+     2 bloqueadas legítimamente (un COMPLEMENTO no se cancela ni se reembolsa suelto)
+     2 sin efecto financiero, correctamente (cambiar la franja)
+     3 rompen la identidad B5 (los tres reembolsos a nivel de pedido)
+    18 dejan la columna del cliente ILEGIBLE
+     0 rompen las dos identidades del modelo decidido en #127
+
+▶ **Eso reencuadra la urgencia**: no falla un caso raro — **casi cualquier gestión ordinaria del
+operador rompe el desglose del cliente**. «Subtotal ≠ Total» aparece en **las 10 ediciones, sin
+excepción**.
+
+**La prueba más limpia del defecto D1**, porque es la MISMA operación a dos niveles: cancelar la
+RESERVA deja `valor 24,00 → 0,00` y `pendiente de devolución 0,00 → 24,00` (correcto); cancelar el
+PEDIDO deja `valor 24,00 → 24,00` y `pendiente 0,00` (falso). **La conducta correcta ya existe un
+nivel más abajo**: no hay que inventarla.
+
+⚠️⚠️ **Y un defecto NUEVO que la matriz destapó: `refundItem` no cancela la línea, y su propio
+docblock afirma que sí** («*devolver = el operador entiende que ese item ya no se entrega*»); el
+código llama `executePartialRefundBatch(alsoCancelItems: false)`. Código y documentación se
+contradicen **en dinero**. Medido sobre un pack con señal: se devuelven los 30,00 € de la señal, la
+reserva sigue viva y las DOS superficies siguen contando esos 30,00 € como «pagados online».
+▶ Detrás hay una decisión de producto: «reembolsar sin cancelar» cubre **dos** situaciones —
+compensación de cortesía y canje en persona— y el sistema **no distingue cuál**, así que ni el ledger
+ni la puerta saben si el cliente sigue debiendo el dinero.
+
+**Tres trampas de método más** (§12.5): el `slot_time` del payload **se ignora** (las propiedades del
+calendario tienen prioridad y `mountUsing` las rellena, así que el fallback «para automatización» de
+su docblock nunca se alcanza) · las franjas del fixture deben ser **contiguas y abiertas a venta
+online** o toda edición se bloquea con un falso `insufficient_capacity_at_save` · y `Order.total` de
+un pedido con señal es el **valor completo**, no la señal.
+
+⚠️ **Corrección a la propia `#127`**: afirmó que el sandbox de Redsys era inalcanzable desde los tres
+entornos. **Era un error de medida** —se probó el puerto 443 y Redsys sirve el sandbox en el
+**25443**, que es el que usa `Redsys::REST_URL_TEST`—. Con las credenciales del owner (comercio
+`263100000`, terminal 45) la integración queda **VERIFICADA**: firma `HMAC_SHA512_V2` aceptada por el
+banco (`SIS0054`), y el control `--bad-key` da `SIS0042`. ⚠️ Pero **el verificador tiene un defecto:
+su control negativo sale en VERDE** — `report()` bendice cualquier `gateway_denied`, incluido el
+`SIS0042` de firma rechazada. Una guarda cuyo control negativo no falla no es una guarda; se arregla
+en la tanda A.
+
+### #127(c) · 2026-08-24 · La TARIFA al cambiar de fecha, y el campo de MOTIVO del reembolso
+
+**La pregunta del owner**: «si un producto tiene un precio el sábado y se cambia la fecha a lunes, el
+precio debería cambiar. ¿No está reflejado? ¿Es un hueco?». Medido (spec §13): **no es un olvido, es
+una regla** —«producto SIN cambio → conserva el `unit_price` HISTÓRICO … sin sorpresas»— pero **vive
+solo en un docblock de `ViewOrder` y en dos aserciones de test**. Una regla que mueve dinero en las
+dos direcciones y no está en el registro de decisiones.
+
+**Medido con dos tarifas reales (12,00 laborable / 20,00 fin de semana) y la acción real del panel:**
+
+    Sábado → Lunes : unit_price 20,00 → 20,00 (catálogo del destino: 12,00)  +16,00 € a favor del PARQUE
+    Lunes → Sábado : unit_price 12,00 → 12,00 (catálogo del destino: 20,00)  −16,00 € a favor del CLIENTE
+    Y el desglose del cliente es IDÉNTICO antes y después: ni una línea lo menciona.
+    Control: cambiar de PRODUCTO sí re-tarifica al catálogo del día (25,00 el sábado) → la sonda mide.
+
+⚠️⚠️ **Lo grave no es la regla, es que el panel AFIRMA que no hay diferencia.** `priceDiffPreview`
+comparte el cómputo con el guardado y muestra **«sin cambio de precio» (0,00 €)** cuando la diferencia
+real de catálogo son 16,00 €. **No es silencio: es una afirmación falsa**, y el operador mueve la
+reserva creyéndola.
+
+⚠️ **Y hay una INCONSISTENCIA dentro del mismo formulario**: con la misma fecha destino, cambiar el
+PRODUCTO re-tarifica y cambiar solo la FECHA no. Dos reglas distintas en el mismo modal.
+
+▶ **[DECIDIDO, owner] LA REGLA CAMBIA: mover la fecha RE-TARIFICA al catálogo del día destino.**
+El agente propuso conservarla («política defendible») y **el owner la revocó** con el argumento que la
+cierra: *«si el cliente elige un día más caro, se le cobra; el cliente elige el día sabiendo su precio.
+Imagínate a todos comprando el día barato y llamando para cambiarlo a sábado porque no se les cobra
+nada. Esto es inviable.»* **No es una política, es un arbitraje abierto**: el descuento es exactamente
+la diferencia de tarifa, y la regla solo sería defendible si el precio no dependiera del día — y aquí
+depende por diseño. Se acaba además la asimetría del mismo formulario (cambiar de producto ya
+re-tarificaba). ▶ Va en la **tanda A**: cambia importes y es la que cierra el agujero. El previo
+honesto del operador y la trazabilidad del cliente la acompañan.
+
+**Reembolsar y cancelar siguen siendo INDEPENDIENTES** [DECIDIDO, owner 2026-08-24]: se puede
+reembolsar sin cancelar y cancelar sin reembolsar, a propósito, para que el operador tenga
+flexibilidad al entenderse con el cliente en las instalaciones. Se revisará cuando haya clientes
+reales. ⚠️ **Eso convierte en incorrecta la lectura de `#127(b)` que trataba `refundItem` como un
+defecto**: la conducta es deliberada. **Lo que sigue siendo defecto es el docblock**, que afirma
+`alsoCancelItem=true` cuando el código pasa `false` — la doc, no el código.
+
+⚠️⚠️ **Pero esa flexibilidad tiene una consecuencia que el desglose no puede resolver solo, y la
+descubrió el propio diseño de `#127`**: el modelo enseña «Pendiente de devolverte X €» en un pedido
+cancelado sin reembolsar. Si la política del parque es «cancelar no da derecho a devolución», esa
+línea **promete algo que no va a pasar**. Y en el caso simétrico —reembolsar sin cancelar— ni el
+cliente ni la puerta saben si sigue debiendo el dinero.
+▶ **Decisión: se añade el MOTIVO, y es el owner quien lo autorizó a prueba.** Dos intenciones, una por
+acción, obligatorias porque son acciones de dinero:
+- al **reembolsar sin cancelar**: ¿*compensación* (no debe nada) o *lo pagará en persona* (sigue debiendo)?
+- al **cancelar sin reembolsar**: ¿*se le devolverá* o *no procede devolución*?
+▶ **Coste medido**: `payment_refunds` **no tiene** columna para esto (solo `failure_reason`, que es del
+gateway) → una migración aditiva y nullable. `order_adjustments` sí tiene `reason`/`context`.
+▶ **Reparto**: la tanda A **registra** el motivo (es un hecho del dominio); la tanda B lo **enseña**
+como frase. Sin ese dato, la frase del cliente solo puede ser vaga — y «que lo entienda claramente»
+era el encargo.
+
+### #127(d) · 2026-08-24 · [DECIDIDO] La regla de TARIFA al mover la fecha, cerrada en sus tres direcciones
+
+Cerrando el agujero de `#127(c)`, el owner fija las tres reglas que faltaban. **Las tres son
+decisiones suyas, tomadas con el riesgo de cada opción escrito delante.**
+
+1. **El precio que se aplica es el de HOY del DÍA DESTINO.** «Pagas el precio del día que elijas» — la
+   regla más simple de explicar al cliente y de vigilar con una guarda.
+   ⚠️ **Efecto lateral ACEPTADO, para que nadie lo redescubra como un fallo**: si el parque sube
+   precios y un cliente mueve su reserva de un sábado a OTRO sábado, **se le cobra la subida** aunque
+   no haya cambiado de tipo de día; y **un descuento previo se pierde** al cambiar de fecha. Se
+   descartó la alternativa —cobrar solo la diferencia entre el tipo de día de origen y el de destino,
+   que habría respetado precio y descuento— por ser más difícil de explicar y de guardar.
+   ⚠️ **Y el límite de la regla, que hay que escribir para que no se desborde**: se re-tarifica
+   **SOLO cuando cambia la FECHA**. Una edición que no mueve el día (subir cantidad, añadir
+   complemento) **conserva la tarifa histórica del ítem**, como hoy. Aplicar el catálogo actual a
+   toda edición sería un cambio mucho mayor que nadie ha pedido.
+2. **Al mover a un día MÁS CARO, la diferencia se cobra EN EL PARQUE**, exactamente como cualquier
+   otra subida (subir cantidad, añadir complemento, cambiar de producto). No toca la pasarela: el
+   segundo cobro online se descartó a propósito por su fricción (PSD2/SCA). **Cero mecanismos nuevos.**
+3. **Al mover a un día MÁS BARATO, se le abona la diferencia** y aflora como «pendiente de
+   devolución», igual que cualquier bajada de valor. Simétrico.
+   ▶ **Se evaluó el «arbitraje espejo» y NO existe**: comprar sábado y moverse a lunes deja una
+   reserva de lunes a precio de lunes, que es lo que se habría comprado directamente — no hay
+   ganancia. El único coste real es **operativo**: el reembolso lo ejecuta un operador a mano, como
+   toda bajada (`#225` D8: bajar = solo cancelar, el reembolso va aparte).
+
+**Dónde se toca, medido** (spec §14.2·A1). El despacho del modal está localizado y el arreglo REUSA la
+maquinaria de dinero que ya existe, sin añadir ninguna:
+
+    si (producto || cantidad || complementos cambiaron) → executeItemEdit()       ← ya cobra y abona
+    si no, y solo cambió la fecha                       → executeItemSlotChange() ← hoy NO roza el precio
+
+▶ Basta con que **un cambio de fecha cuya tarifa difiere entre por el camino que ya sabe aplicar
+cargos y abonos**, y que `computeEditPricing` resuelva el precio por fecha en ese caso. El previo del
+operador se arregla solo: comparte ese mismo cómputo, que es justo por lo que hoy **afirma** «sin
+cambio de precio».
