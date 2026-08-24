@@ -68,6 +68,7 @@ Vista de conjunto con severidad; el detalle vive en el doc citado (aquí no se d
 
 | Ítem | Qué (medido) | Dónde muerde | La retira |
 |---|---|---|---|
+| `app:set-setting` pasa su eco de VERIFICACIÓN por el formateador de consola | Mismo mecanismo que `#135`: `«comprobado en BD: …»` sale por `info()`, y Symfony se come la barra de `\<` / `\>`. Con un valor que las lleve, el eco enseña algo distinto de lo guardado | Es un eco de **verificación**: el operador lo lee para creerse que la clave quedó bien. No bloquea (los secretos van enmascarados y el valor lo escribe él), pero **puede mentir justo cuando se le consulta** | Decisión del owner: mismo arreglo de una línea que `#135` (salida RAW) o dejarlo |
 | Hueco test: throttle rutas Redsys | `throttle:120,1` vigente; 0 asserts | Quitarlo pasa verde → amplificación en el retorno de pago | Sin plan (PAY-15 ⚠️) |
 | Hueco test: `after_commit` de la cola | `after_commit => true` vigente; 0 asserts | Si regresa: emails de pedidos cuya txn rollbackea | Sin plan (PAY-14) |
 | Hueco test: frontera de fecha UTC↔Madrid | `DisplayTimeTest` no cruza medianoche UTC | Bug latente de «hoy operativo» 22:00–00:00 Madrid en verano | Sin plan (AFORO-09 ⚠️) |

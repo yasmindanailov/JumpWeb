@@ -6670,3 +6670,50 @@ cliente lea la frase del diccionario · que a un idioma le falte una clave.
 
 **▶ Con esto el DESGLOSE DE DINERO DEL CLIENTE queda CERRADO.** `L4` aparcado y `L5` retirado
 (`#133`). Detalle en `specs/desglose-dinero-cliente.md` **§23**.
+
+## #135 · 2026-08-25 · `app:create-admin` imprimía una contraseña que NO era la que abría el panel — 1 de cada 158
+
+**Cómo apareció.** El `pre-push` del despliegue a staging se puso **rojo** en
+`CreateAdminTest::the_printed_password_is_the_one_that_actually_authenticates`, un test que había
+pasado en verde toda la sesión anterior. Corriéndolo solo: verde. En paralelo: verde. Tenía toda la
+pinta de un test intermitente al que se le vuelve a dar a «empujar».
+
+**⚠️⚠️ No era un test intermitente: era un DEFECTO DEL PRODUCTO que solo se manifiesta el 0,63 % de
+las veces.** El formateador de consola de Symfony trata `\<` y `\>` como delimitadores de etiqueta
+**escapados** y se come la barra invertida. `Str::password(24)` —la que genera este comando— incluye
+`\`, `<` y `>` en su alfabeto, así que una contraseña con esa pareja **se imprimía distinta de como
+se guardaba**.
+
+    generada: [i[xTz&5|Ud\<8n8}]VR-;Md
+    impresa:  [i[xTz&5|Ud<8n8}]VR-;Md      ← ésta es la que lee el operador, y NO abre
+
+▶ **Medido: 200.000 contraseñas generadas, 1.263 (0,63 %) no sobreviven a la consola.** Una de cada
+**158**.
+
+**Por qué importa, y no es cosmético.** `app:create-admin` es el mecanismo canónico del PRIMER ADMIN
+de una instalación (`#103`, `deploy.sh --go --admin-email=…`). La contraseña **se enseña una sola vez
+y no queda guardada en claro en ningún sitio**. En esos casos el owner se quedaba **fuera de su
+propio panel sin ninguna forma de recuperarlo** salvo volver a lanzar el comando — que es
+literalmente el modo de fallo que el docblock del test dice vigilar.
+
+**El arreglo**: la contraseña se escribe en **RAW** (`OutputInterface::OUTPUT_RAW`) en vez de por
+`line()`, que la pasa por el formateador. El rótulo y el usuario siguen igual.
+
+**⚠️ Y la guarda existía y era la EQUIVOCADA.** `the_printed_password_is_the_one_that_actually_
+authenticates` genera la contraseña al azar, así que **acertaba el 0,63 % de las veces**: no
+protegía, sorteaba. Y su forma de fallar —roja de vez en cuando, verde al re-lanzar— es la que
+**enseña a ignorarla**. Se le añade al lado `the_printed_password_survives_the_console_formatter`,
+que fija la pareja `\<` y `\>` en la cadena en vez de esperar a que salga premiada.
+▶ **Verificado por mutación: con el defecto puesto, la guarda nueva cae 10 de 10 y la vieja pasa
+10 de 10.**
+
+**▶ La lección, que no es sobre consolas**: un test que solo falla a veces está diciendo algo, y lo
+primero que hay que preguntarle es **qué es lo que varía entre corridas**. Aquí lo que variaba era el
+dato, y el dato era el producto. Re-lanzar el `pre-push` habría enterrado un fallo que deja al
+cliente sin panel.
+
+**⚠️ Pendiente, del mismo tipo pero sin bloquear** (queda anotado, no arreglado): `app:set-setting`
+imprime «comprobado en BD: «…»» pasando el valor por el mismo formateador. Es un eco de
+VERIFICACIÓN, así que con un valor que lleve `\<` mostraría algo distinto de lo guardado. Los
+secretos van enmascarados, y el operador escribe el valor él mismo, así que no hay bloqueo — pero un
+eco de verificación que puede mentir merece decidirse, no ignorarse.

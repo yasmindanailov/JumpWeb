@@ -98,6 +98,13 @@ existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u
 `#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
 (verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
 
+❗ **Y el propio despliegue destapó un defecto de instalación** (`DECISIONES #135`, 2026-08-25): el
+`pre-push` se puso rojo en un test que parecía intermitente, y no lo era. **`app:create-admin`
+imprimía una contraseña distinta de la que guardaba** cuando la generada llevaba `\<` o `\>` —el
+formateador de consola de Symfony se come la barra— y esa contraseña **se enseña una sola vez**: el
+owner quedaba fuera de su propio panel sin recuperación. Medido: **1.263 de 200.000 (0,63 %), una de
+cada 158**. Arreglado (salida RAW) y guardado con un caso DETERMINISTA — el que existía sorteaba.
+
 ✅ **STAGING SIRVE `0e5b885`** desde el **2026-08-25**: el salto de **21 commits y 130 ficheros de
 código** que traía `#123` → `#134` —el bloque de cuenta en Vue, el `no-store` global, «Mis reservas»
 por reserva y **el desglose de dinero ENTERO**—. Canal: `scripts/deploy.sh` (dry-run por defecto;
@@ -126,7 +133,7 @@ que sirva staging de verdad.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2747 en verde** (16.033 aserciones, `--parallel` **~34 s** medidos el 2026-08-24) ·
+- Suite **2748 en verde** (16.036 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.

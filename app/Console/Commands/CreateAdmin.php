@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Crea (o repara) la cuenta de acceso al panel. Es el **mecanismo canónico del primer admin**, que
@@ -200,13 +201,27 @@ class CreateAdmin extends Command
         return (string) $explicit;
     }
 
-    /** La contraseña se enseña UNA vez: no se guarda en claro en ningún sitio. */
+    /**
+     * La contraseña se enseña UNA vez: no se guarda en claro en ningún sitio.
+     *
+     * ⚠️⚠️ **Se imprime en RAW, y no con `line()`, porque `line()` la CORROMPÍA** (2026-08-25).
+     * El formateador de Symfony trata `\<` y `\>` como delimitadores de etiqueta **escapados** y se
+     * come la barra, así que una contraseña con esa pareja se imprimía **distinta de como se
+     * guarda**. `Str::password(24)` incluye `\`, `<` y `>` en su alfabeto: medido sobre **200.000
+     * contraseñas generadas, 1.263 (0,63 %) no sobreviven a la consola** — una de cada 158.
+     *
+     * ▶ **Y esto no era un detalle cosmético**: es el comando del PRIMER ADMIN de una instalación
+     * (`deploy.sh --go --admin-email=…`), la contraseña se enseña una sola vez y no queda en ningún
+     * sitio. En esos casos el owner se quedaba **fuera de su propio panel sin recuperación**, que es
+     * exactamente el modo de fallo que `CreateAdminTest` dice vigilar — y lo vigilaba, pero solo
+     * acertaba el 0,63 % de las veces, así que se leía como un test intermitente.
+     */
     private function reportPassword(string $email, string $plain): void
     {
         $this->newLine();
         $this->warn('  ⚠️  Contraseña (se muestra UNA sola vez, no queda guardada en claro):');
         $this->line("      usuario:     {$email}");
-        $this->line("      contraseña:  {$plain}");
+        $this->getOutput()->writeln("      contraseña:  {$plain}", OutputInterface::OUTPUT_RAW);
         $this->newLine();
     }
 }

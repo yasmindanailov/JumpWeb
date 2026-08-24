@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
+use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
@@ -80,6 +81,55 @@ class CreateAdminTest extends TestCase
             Hash::check($printed, $user->password),
             'La contraseña IMPRESA no es la que abre la cuenta: el admin quedaría fuera sin recuperación.',
         );
+    }
+
+    /**
+     * ⚠️⚠️ **Y la contraseña sobrevive a la CONSOLA, que es donde se rompía** (2026-08-25).
+     *
+     * El caso de arriba genera la contraseña al azar y por eso **solo cazaba este fallo el 0,63 % de
+     * las veces**: se leía como un test intermitente —tumbó un `pre-push`— cuando lo que denunciaba
+     * era un defecto real. El formateador de Symfony trata `\<` y `\>` como delimitadores de etiqueta
+     * **escapados** y se come la barra, y `Str::password(24)` incluye `\`, `<` y `>` en su alfabeto:
+     * medido sobre 200.000 generadas, **1.263 se imprimían distintas de como se guardan**. Una de
+     * cada 158 instalaciones dejaba al owner fuera de su panel sin recuperación posible.
+     *
+     * ▶ Este caso fija la pareja EXACTA en vez de esperar a que salga en un sorteo. Un test que solo
+     * acierta a veces no es una guarda: es ruido que enseña a re-lanzar el `pre-push`.
+     */
+    public function test_the_printed_password_survives_the_console_formatter(): void
+    {
+        // El control anti-filtración (HIBP) no debe llamar a la red: `TestCase` corta las peticiones
+        // sueltas, y una contraseña VÁLIDA llega hasta esa comprobación (una inválida corta antes).
+        $this->app->instance(UncompromisedVerifier::class, new class implements UncompromisedVerifier
+        {
+            public function verify($data): bool
+            {
+                return true;
+            }
+        });
+
+        // ⚠️ Las dos parejas que el formateador destruye, en la misma cadena. Sin `\<` NI `\>` este
+        // caso pasaría con el defecto puesto.
+        $password = 'Zx9\\<qW7\\>rT4mNb2';
+
+        $exit = Artisan::call('app:create-admin', [
+            '--email' => 'jefa@cliente.tld',
+            '--password' => $password,
+        ]);
+
+        $this->assertSame(0, $exit, 'el fixture ya no vale: esa contraseña no pasa la política');
+
+        preg_match('/contraseña:\s*(\S+)/u', Artisan::output(), $m);
+
+        $this->assertSame(
+            $password, $m[1] ?? '',
+            'la consola ha alterado la contraseña impresa: el admin quedaría fuera sin recuperación',
+        );
+
+        // Y lo impreso sigue siendo lo que ABRE — que es la garantía, no que las cadenas coincidan.
+        $user = User::whereRaw('LOWER(email) = ?', ['jefa@cliente.tld'])->firstOrFail();
+
+        $this->assertTrue(Hash::check($m[1] ?? '', $user->password));
     }
 
     public function test_it_does_not_print_a_password_when_it_did_not_set_one(): void
