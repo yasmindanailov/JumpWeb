@@ -50,8 +50,16 @@ reservas de packs distintos con gente real (`#139`).
 obligaciones —el pase de Redsys fuera de la caché y Redis en el stack local y en la suite— están
 **hechas**. Detalle de la máquina en `ENTORNOS.md` §4.
 
-✅ **STAGING SIRVE `e551851`** desde el 2026-08-25 (`#123` → `#135`), auto-verificado y comprobado a
-mano. Canal: `scripts/deploy.sh`, dry-run por defecto.
+✅ **STAGING SIRVE `6437c48`** desde el 2026-08-25 — el salto de **16 commits y 64 ficheros de código**
+que trae la tanda A del tema, el icono por producto, las dos migraciones nuevas
+(`zones.color_secondary`, `ticket_types.icon`) y el registro del pedido legible (`#145`).
+Auto-verificado: `/up` y `/` en 200, guarda del `robots.txt`, `redsys_environment = 'test'`,
+0 migraciones pendientes, 0 `failed_jobs`, 0 jobs varados, 5 tareas registradas y 1.420 franjas
+generadas. Canal: `scripts/deploy.sh`, dry-run por defecto.
+▶ **Y `#145` se comprobó ALLÍ, sobre el pedido real `R-S9XDYB`**: las mismas filas que el owner vio
+en crudo ahora dicen «Abono sobre lo pendiente en el parque · Importe: −24,00 € · Motivo: bajada por
+editar el producto» y «Producto editado · Precio unitario: 18,90 € → 15,90 € · Diferencia: −24,00 € ·
+Cambió: la fecha y la hora», con el badge «Pedido» en vez de «Producto».
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
 ⚠️ **El único aviso del despliegue**: el script no ve ningún demonio cron, así que el crontab instalado
