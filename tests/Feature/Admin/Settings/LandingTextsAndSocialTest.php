@@ -82,7 +82,7 @@ class LandingTextsAndSocialTest extends TestCase
                 'registration.url' => 'https://registro.ejemplo.com/alta',
                 'registration.label.es' => 'Registro',
                 'registration.subtitle.es' => 'Registro para el parque',
-                'puerta.waiver_check_enabled' => false,
+                'waiver.mode' => 'desactivado',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -91,7 +91,9 @@ class LandingTextsAndSocialTest extends TestCase
         $this->assertSame('https://registro.ejemplo.com/alta', Setting::value('registration.url'));
         $this->assertSame('Registro', Setting::value('registration.label.es'));
         $this->assertSame('Registro para el parque', Setting::value('registration.subtitle.es'));
-        $this->assertSame('0', Setting::value('puerta.waiver_check_enabled'), 'el toggle persiste como string booleano');
+        // Fase 6 · waiver: el toggle de #216 es ahora el MODO; el ajuste heredado se escribe como espejo.
+        $this->assertSame('desactivado', Setting::value('waiver.mode'));
+        $this->assertSame('0', Setting::value('puerta.waiver_check_enabled'), 'el espejo heredado sigue al modo');
     }
 
     public function test_unrecognized_social_feed_is_not_saved(): void

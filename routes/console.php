@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\WaiverSignature;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -37,8 +38,14 @@ Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
  * > 24 meses, la vida del consentimiento). Diario es de sobra: el plazo es de meses. Acota el
  * crecimiento de la tabla y cumple la minimización / limitación del plazo de conservación del RGPD
  * para un dato de acreditación con IP/User-Agent. Requiere el mismo cron `schedule:run` (Fase 9).
+ *
+ * Fase 6 · waiver (`specs/waiver-probatorio.md` §4.6) — en la MISMA tarea, la poda del registro de
+ * firmas al vencer su plazo. `WaiverSignature` es Prunable: sin `waiver.retention_months` fijado NO
+ * poda nada (la conservación sin plazo se decide, no se improvisa); con plazo, borra las firmas del
+ * TITULAR más antiguas que él. Es la única vía de borrado que su guarda de inmutabilidad autoriza.
+ * Una sola entrada para las dos podas: la salud del despliegue cuenta tareas registradas.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class]])
     ->daily()
     ->withoutOverlapping();
 

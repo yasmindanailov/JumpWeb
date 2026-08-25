@@ -76,6 +76,13 @@
                             <p class="mt-1 text-sm text-green-700/80 dark:text-green-300/80">
                                 {{ __('admin.puerta.validar.waiver_date', ['date' => $result['date']]) }}
                             </p>
+                            {{-- Fase 6 · waiver (§4.8): firma de una versión ANTERIOR del texto — se señala y se
+                                 deja pasar; la re-firma se pide en la siguiente compra o inicio de sesión. --}}
+                            @if ($result['outdated'] ?? false)
+                                <p class="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+                                    {{ __('admin.waiver.gate_outdated') }}
+                                </p>
+                            @endif
                         </div>
                     </div>
                     @break

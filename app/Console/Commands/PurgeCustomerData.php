@@ -119,6 +119,12 @@ class PurgeCustomerData extends Command
                 ->where('tokenable_type', (new User)->getMorphClass())
                 ->whereIn('tokenable_id', $purgedIds)
                 ->delete();
+            // 4.bis Fase 6 · waiver: `waiver_signatures.user_id` es RESTRICT a propósito (la prueba
+            //    sobrevive al titular, `specs/waiver-probatorio.md` §8.6), así que va ANTES que los
+            //    usuarios. Esta limpieza de go-live es —con el verificador de cadena— la única que
+            //    borra firmas, y lo hace por `DB::table` porque el modelo es append-only y rechaza
+            //    `delete()`. `legal_document_versions.published_by` es nullOnDelete: las versiones quedan.
+            DB::table('waiver_signatures')->whereIn('user_id', $purgedIds)->delete();
             // 5. Usuarios → cascada consents/role_user; nullOnDelete audit_logs/cookie_consent_logs/tickets/order_items.
             User::whereNotIn('id', $keptIds)->delete();
         });

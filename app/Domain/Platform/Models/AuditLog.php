@@ -184,6 +184,11 @@ class AuditLog extends Model
         'users.anonymized',
         'users.password_reset_sent',
         'users.send_reset_blocked',
+
+        // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────
+        'legal.version_published',          // target = LegalDocumentVersion (la fila del 1.er idioma)
+        'waiver.declared',                  // firma DECLARADA por un operador (alta presencial)
+        'waiver.signed',                    // firma del titular (web/API); target = User
     ];
 
     /**

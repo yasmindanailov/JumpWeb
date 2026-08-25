@@ -273,7 +273,13 @@ verificarlas de verdad hay herramientas **on-demand** (no parte de la suite, exi
 docker compose exec -u sail laravel.test php artisan redsys:verify-concurrency --workers=16   # doble-cobro (handler)
 docker compose exec -u sail laravel.test php artisan purchase:verify-oversell  --workers=16   # sobreventa (compra)
 docker compose exec -u sail laravel.test php artisan redsys:verify-sandbox                    # reembolso REST (sandbox real)
+docker compose exec -u sail laravel.test php artisan waiver:verify-chain      --workers=16   # cadena de firmas del waiver (Fase 6)
 ```
+
+- **`waiver:verify-chain`** (Fase 6, `specs/waiver-probatorio.md` §8.5/§9.3): N firmas del MISMO
+  titular en paralelo → verifica que el `lockForUpdate` de su fila en `WaiverSigner` serializa la
+  cadena de hashes: N filas, cada `prev_hash` enlaza con la anterior y ninguno se repite. **Visto
+  fallar** sin el lock (3 de 3: 1, 9 y 15 `prev_hash` repetidos). Correr tras tocar `WaiverSigner`.
 
 - **`redsys:verify-concurrency`**: N notificaciones Redsys en **paralelo real (`pcntl_fork`)**
   sobre el mismo pago → verifica que el `lockForUpdate` del handler serializa: 1 cobro,

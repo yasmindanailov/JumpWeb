@@ -52,9 +52,13 @@ class PuertaSettings
      * estados (registrado / no registrado), para cuando el waiver lo gestiona el sistema externo
      * de la clienta. Default ON = comportamiento histórico; un valor ausente/inválido NO desactiva
      * la comprobación (fallback no destructivo): solo el literal '0' la apaga.
+     *
+     * Fase 6 · waiver: el interruptor pasó a ser el MODO `waiver.mode` (externo · interno ·
+     * desactivado, `DECISIONES #142`), y este helper delega en él. El literal '0' del ajuste
+     * heredado sigue apagando la comprobación cuando no hay modo fijado.
      */
     public static function waiverCheckEnabled(): bool
     {
-        return (string) Setting::value('puerta.waiver_check_enabled', '1') !== '0';
+        return WaiverSettings::isEnabled();
     }
 }

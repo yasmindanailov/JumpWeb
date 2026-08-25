@@ -25,7 +25,7 @@
   Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
-  `AppServiceProvider` con alias snake_case para los 30 modelos — las columnas polimórficas
+  `AppServiceProvider` con alias snake_case para los 32 modelos — las columnas polimórficas
   (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan
   ALIAS (`order`, `ticket_type`…), nunca FQCN; los datos legacy los convirtió la migración
   `convert_morph_types_to_aliases`. Renombrar/mover modelos ya NO rompe datos. Regla:
@@ -235,13 +235,15 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 | `phone` | nullable en BD, obligatorio en registro web (validación form) |
 | `locale` (default `es`) | idioma del CLIENTE (web + emails) · `panel_locale` nullable = idioma del panel admin, **separado** (soporta `es`/`zh_CN`) |
 | `last_login_at`, `marketing_opt_in` | — |
-| `privacy_accepted_at`,`terms_accepted_at`,`waiver_accepted_at` | sellos; la prueba detallada vive en `consents` |
+| `privacy_accepted_at`,`terms_accepted_at`,`waiver_accepted_at` | sellos; la prueba detallada vive en `consents`. ⚠️ **Fase 6**: para el waiver en modo `interno` la PRUEBA vive en `waiver_signatures`; el sello es presentación (lo escribe `WaiverSigner`, lo nulifica `anonymize()`) |
 
 `User::anonymize()` = supresión RGPD compatible con obligación fiscal (~4 años factura):
 conserva la fila y los pedidos; pisa PII, borra consents, detach roles, vacía
 `guest_data`/`event_data` de sus pedidos (PII de menores/salud), redacta payloads legacy de
 `audit_logs`, nulifica ip/user_agent donde fue ACTOR, borra token de reset e invalida sesiones
 DB. Email anonimizado = `deleted_{id}@deleted.local` (`isAnonymized()`).
+⚠️ **Fase 6 · waiver: NO toca `waiver_signatures`** — conservación con tratamiento restringido y
+plazo (art. 17.3.e + 18; `RGPD-01`, `specs/waiver-probatorio.md` §4.6, `WaiverRetentionTest`).
 Permisos: `hasRole()`, `hasPermission()` (rol `admin` = super-admin, puede todo);
 `canAccessPanel()` = admin|staff.
 
@@ -263,6 +265,27 @@ Prueba del consentimiento de cookies (sujeto puede ser ANÓNIMO): `user_id` null
 `nullOnDelete` · `categories` JSON (`{"maps":bool,"social":bool}`) · `version`
 (`App\Domain\Identity\Services\CookieConsent::POLICY_VERSION`) · `ip` · `user_agent`(512) · `accepted_at`
 (index). Poda automática > 24 meses (`model:prune` en `routes/console.php`).
+
+### `legal_document_versions` (LegalDocumentVersion, **INMUTABLE**) — Fase 6 · waiver
+Una fila por (`slug`, `locale`, `version`) —unique—: `title` · `body` JSON `[{h,p}]` **ya interpolado**
+(lo que se ENSEÑÓ a quien firmó) · `body_hash` (sha256 canónico de título + secciones) ·
+`published_by` FK users nullOnDelete · `published_at` · `created_at` (sin `updated_at`). Publicar
+CREA fila (`Identity\Services\LegalDocumentPublisher`; acción «Publicar versión firmable» de la página
+`waiver` en el panel); `updating`/`deleting` LANZAN (`ImmutableRecordException`). Vive en Identity
+porque es «lo que el titular aceptó» e Identity no puede mirar a Content. Un texto con
+`[PENDIENTE…]` no se publica. Lectura: `LegalDocuments::current(slug, locale)` (respaldo → `es`).
+
+### `waiver_signatures` (WaiverSignature, **append-only + Prunable**) — Fase 6 · waiver
+`user_id` FK **RESTRICT** (la prueba sobrevive al titular) · `subject_type` (`holder|dependent`) +
+`subject_id` nullable · `legal_document_version_id` FK restrict · `document_hash` (copia del de la
+versión) · `accepted_at` + `accepted_tz` · `ip` · `user_agent`(512) · `channel` (`web|api|panel`) ·
+`declared_by_user_id` FK users nullOnDelete (alta presencial: firma DECLARADA por el operador) ·
+`prev_hash` · `hash` unique · `created_at`. `hash` = sha256 del JSON canónico de
+`WaiverSignature::HASHED_FIELDS` en ese orden; `prev_hash` encadena POR TITULAR, serializado con el
+`lockForUpdate()` de su fila de `users` en `WaiverSigner` (único escritor); `waiver:verify-chain` lo
+mide sobre MySQL. **Sobrevive a `anonymize()`.** Poda por `waiver.retention_months` (sin valor → no
+se poda nada; solo `subject_type = holder`) vía el mismo `model:prune` diario. Fuera de la poda solo
+borran `PurgeCustomerData` (go-live) y el verificador, por `DB::table`.
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·
@@ -294,7 +317,9 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 `sales.purchase_horizon_months`, `packs.max_per_slot`/`max_guests_per_slot`/`prep_blocks_cupo`
 (globales, overrideables por zona), `theme.brand`, `payment.tax_rate`, `maintenance.*`,
 `cookies.banner_enabled`, `security.turnstile_*`, `registration.*`, `reservations.*`,
-`display_timezone`, `incidents.alert_email`, `puerta.waiver_check_enabled`.
+`display_timezone`, `incidents.alert_email`, `puerta.waiver_check_enabled` (heredado de #216; hoy
+espejo que escribe el panel y respaldo de `WaiverSettings::mode()`), `waiver.mode`
+(`externo|interno|desactivado`, Fase 6) y `waiver.retention_months` (vacío → sin poda).
 
 ---
 

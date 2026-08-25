@@ -27,9 +27,11 @@ use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Payments\Models\Payment;
@@ -95,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
             'cookie_consent_log' => CookieConsentLog::class,
             'faq' => Faq::class,
             'landing_service' => LandingService::class,
+            'legal_document_version' => LegalDocumentVersion::class,
             'offer' => Offer::class,
             'opening_hour' => OpeningHour::class,
             'order' => Order::class,
@@ -118,6 +121,7 @@ class AppServiceProvider extends ServiceProvider
             'ticket' => Ticket::class,
             'ticket_type' => TicketType::class,
             'user' => User::class,
+            'waiver_signature' => WaiverSignature::class,
             'zone' => Zone::class,
         ]);
 

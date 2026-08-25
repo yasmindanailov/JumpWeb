@@ -1838,7 +1838,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
-### Fase 6 — Móvil + features nuevas ⬜
+### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25
 - [ ] **Segundo driver de pasarela** (Stripe u otros) sobre el puerto `Booking\Contracts\
       PaymentInitiation` que dejó el cierre de Fase 3: selección de driver por configuración, e
       imprescindible para instalar un cliente fuera de España. Se aplazó aquí a propósito
@@ -1849,7 +1849,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
-#### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados, sin implementar
+#### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados; **B (waiver) en ejecución**
 
 > Decisión que los enmarca: **`DECISIONES #142`** (2026-08-25, sesión de arquitectura con el owner).
 > La app móvil existe para **fidelizar**, y de ese propósito salen cuatro subsistemas.
@@ -1867,6 +1867,19 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 > ❗ **Ninguna spec está aprobada todavía**: las cuatro siguen 🟦 esperando el **✅ del owner**.
 
 - [ ] **B · Waiver con valor probatorio** — `docs/specs/waiver-probatorio.md`.
+      ▶ 🟦 **EN EJECUCIÓN (agente A, desde el 2026-08-25, `#160`)** — el detalle vive en la spec **§9**.
+      Tres tandas: **1 · el NÚCLEO** ✅ · 2 · el panel (PDF del snapshot, ficha del usuario con
+      permiso propio y consulta auditada, alta presencial declarada) · 3 · el cliente (API, casilla en
+      el alta, zona de privacidad del cajón, re-firma en el siguiente momento natural).
+  - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
+        `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
+        texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado
+        + cadena POR TITULAR serializada con el lock de su fila), `WaiverStatus` con los TRES modos
+        (`waiver.mode`, que hereda el interruptor de #216 sin cambiar conducta), la puerta señala «versión
+        anterior» y deja pasar (§4.8), `anonymize()` conserva la prueba y sigue purgando lo demás (§6·3),
+        poda por `waiver.retention_months` (sin valor: nada) y la acción «Publicar versión firmable» en la
+        página del waiver. **`waiver:verify-chain` sobre MySQL con 8 y 16 procesos: cadena lineal — y
+        visto FALLAR sin el lock, 3 de 3 (1, 9 y 15 `prev_hash` repetidos).**
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
       modos** (externo / interno / desactivado). ⚠️ **Y modifica `INVARIANTES` §3 (RGPD-01)**: el
       registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.

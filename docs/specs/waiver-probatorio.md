@@ -1,12 +1,15 @@
 # [SPEC] El waiver con valor probatorio
 
-> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> Estado: 🟦 **EN EJECUCIÓN** — revisada (**§8**) y **tanda 1 (el núcleo) HECHA el 2026-08-25 (§9,
+> `DECISIONES #160`)**; el ✅ final espera al owner (plazo de conservación y texto definitivo) ·
 > Última actualización: 2026-08-25 ·
 > Verificado contra código: 2026-08-24 (consents, SelfSignup, Page, User::anonymize, SecurityHeaders)
 > y **re-verificado el 2026-08-25 por la revisión** (§8.0) ·
 > Decisión asociada: `DECISIONES #142`, revisión en `DECISIONES #156` ·
 > Se invalida si: cambia el modo de gestión del waiver, o el owner fija el plazo de conservación.
 >
+> ❗❗ **Si vas a tocar código, LEE §9 PRIMERO**: dice qué existe ya, en qué TRES cosas la ejecución se
+> apartó del cuerpo (y por qué) y qué quedó medido. **Después §8, antes que el cuerpo.**
 > ❗❗ **LEE §8 ANTES QUE EL CUERPO.** La revisión encontró **un bloqueante que no es de diseño** —el
 > texto del waiver es literalmente un borrador y publicar es irreversible (§8.1)— y **dos piezas que
 > hay que decidir antes de la primera línea**: cómo se serializa la cadena de hashes (§8.5) y dónde
@@ -378,3 +381,114 @@ masivo. **Elegirlo ahora es barato; migrar una cadena después es rehacerla.**
 al diseño (§8.1, el texto legal), dos son piezas que faltan y hay que decidir antes de la primera
 línea (§8.5 la serialización, §8.6 la tabla), uno es una decisión de producto ya resuelta (§8.4), y
 el resto son correcciones de inventario que ahorran descubrirlas tarde.
+
+---
+
+## 9. Ejecución — tanda 1, el NÚCLEO (2026-08-25, `DECISIONES #160`)
+
+> Lo que hay en el árbol, dicho sin optimismo. Tres tandas: **1 · el núcleo** (esta) · **2 · el panel**
+> (PDF del snapshot, ficha del usuario con permiso propio y consulta auditada, alta presencial
+> declarada desde `CustomerRegistrar`) · **3 · el cliente** (API `legal/waiver` + `me/waiver`, casilla
+> en el alta, zona de privacidad del cajón, re-firma en el siguiente momento natural). **No hay
+> ninguna versión publicada** en ninguna instalación: §8.1 sigue vigente y ahora es mecanismo (§9.2).
+
+### 9.1 Qué existe (todo en Identity; la capa de entrega solo lo consume)
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `legal_document_versions` · `LegalDocumentVersion` | `app/Domain/Identity/Models/LegalDocumentVersion.php` | Una fila por (slug, idioma, versión), **inmutable** (`updating`/`deleting` lanzan), con `body_hash`. Sin `updated_at`: no hay ni columna con la que cambiar |
+| `waiver_signatures` · `WaiverSignature` | `app/Domain/Identity/Models/WaiverSignature.php` | El registro probatorio, **append-only** + `Prunable`. `hash` canónico (`HASHED_FIELDS`, `CANONICAL_VERSION`), `prev_hash` por titular, `document_hash`, `accepted_tz`, `channel`, `declared_by_user_id` |
+| `LegalDocumentPublisher` | `app/Domain/Identity/Services/LegalDocumentPublisher.php` | Publicar = crear la versión N+1 en cada idioma con cuerpo; **rechaza `[PENDIENTE…]`** en cualquier caja; audita `legal.version_published` sin el texto |
+| `LegalDocuments` | `app/Domain/Identity/Services/LegalDocuments.php` | `current(slug, locale)`: la vigente en el idioma pedido, con respaldo → `es` (el mismo que aplica la web al pintar) |
+| `WaiverSigner` · `WaiverSignatureRequest` | `app/Domain/Identity/Services/WaiverSigner.php` · `…/WaiverSignatureRequest.php` | El ÚNICO escritor: lock de la fila del titular como PRIMERA sentencia, `prev_hash` de su última firma, la fila visible de `consents` (`v1·es`) y el sello — los dos últimos solo si el sujeto es el titular |
+| `WaiverStatus` | `app/Domain/Identity/Services/WaiverStatus.php` | «¿Tiene waiver, y de qué versión?» según el MODO: `externo` → sello · `interno` → registro (+ `isOutdated()`) · `desactivado` → no hay pregunta |
+| `WaiverSettings` | `app/Domain/Identity/Services/WaiverSettings.php` | `waiver.mode` (hereda `puerta.waiver_check_enabled`: '0' → desactivado, si no → externo) · `waiver.retention_months` (vacío/inválido → `null` → NO se poda) |
+| `WaiverChain` | `app/Domain/Identity/Services/WaiverChain.php` | Verifica la cadena de un titular: cada fila da su hash y enlaza con la anterior |
+| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | N firmas simultáneas del MISMO titular (`pcntl_fork`, MySQL) → una cadena lineal. Se limpia solo (`DB::table`) |
+| La puerta | `app/Livewire/Admin/Puerta/ValidarRegistro.php` + su vista | Lee `WaiverStatus`; en interno señala «versión anterior» en ámbar y **deja pasar** (§4.8) |
+| Ajustes | `app/Filament/Pages/Settings.php` | `Select` de modo (hidratado con el EFECTIVO para que Guardar no cambie conducta) + plazo; el toggle de #216 ya no se edita: `save()` lo escribe como espejo |
+| Publicar | `app/Filament/Resources/Pages/Pages/EditPage.php` | Acción «Publicar versión firmable», solo en `waiver` y con `content.manage`; congela lo GUARDADO con los tokens fiscales resueltos |
+| `anonymize()` | `app/Domain/Identity/Models/User.php` | **No toca** `waiver_signatures`; sigue nulificando el sello (presentación) y borrando `consents` |
+| Poda | `routes/console.php` | `WaiverSignature` en el mismo `model:prune` diario que `CookieConsentLog` (una tarea, no dos: la salud del despliegue cuenta tareas) |
+| Go-live | `app/Console/Commands/PurgeCustomerData.php` | Borra firmas ANTES que usuarios (`RESTRICT`), por `DB::table` |
+
+Además: dos alias morph (`legal_document_version`, `waiver_signature`), tres acciones de auditoría
+(`legal.version_published`, `waiver.signed`, `waiver.declared`) y el bloque `admin.waiver.*` de
+`lang/es/admin.php`. Recuentos del gate: **32 modelos · 76 migraciones**.
+
+### 9.2 Las TRES cosas en que la ejecución se apartó del cuerpo, y por qué
+
+1. **No hay columna `retención_hasta`** (§4.3 la listaba). El plazo es un ajuste por instalación y
+   **retroactivo**: una columna que hubiera que reescribir cuando el owner lo fije —o lo cambie— no
+   cabe en una fila que por definición no se actualiza. El plazo se aplica **al podar**
+   (`WaiverSignature::prunable()`), y sin plazo la consulta es `1 = 0`: no se poda nada.
+2. **Las dos tablas viven en Identity, no en Content**, aunque el texto se redacta en Content
+   (`Page`). Medido contra `ModuleBoundariesTest`: Identity puede mirar a Platform y a los contratos
+   de Booking/Payments, **no a Content**. La versión es «lo que el titular aceptó» —Identity—, y el
+   texto llega a `LegalDocumentPublisher` como datos planos **ya interpolados** desde la capa de
+   entrega (`EditPage`, que sí puede mirar a los dos). Consecuencia buena: el snapshot es lo que se
+   ENSEÑÓ, con los datos fiscales resueltos, no la plantilla con tokens.
+3. **El sello `waiver_accepted_at` es presentación, no prueba** — y así se resuelve §8.2 sin
+   exceptuar nada en `anonymize()`: `WaiverSigner` lo sigue escribiendo (lo leen el infolist del
+   pedido y la puerta en modo externo), `anonymize()` lo sigue nulificando, y en modo **interno** la
+   puerta **no lo lee**: lee el registro. ⚠️ Consecuencia explícita, y aseverada
+   (`WaiverGateTest`): al pasar una instalación de externo a interno, **un sello sin registro no
+   cuenta** — quien no firmó aquí tiene que firmar. Es lo que significa «manda el registro».
+
+Y dos recomendaciones de la revisión que pasaron a ser diseño: **cadena por titular** (§8.5), con el
+`lockForUpdate()` de su fila de `users` como primera sentencia de la transacción; y **tabla propia**
+con `user_id` RESTRICT (§8.6). §8.1 pasó a ser **mecanismo**: `[pendiente` en minúsculas —caza el
+marcador del seeder y el `[pendiente]` neutro que deja `LegalIdentity::interpolate` sin datos
+fiscales— rechaza la publicación entera, sin dejar ningún idioma a medias.
+
+### 9.3 Lo medido
+
+- **Suite**: 47 casos nuevos en `tests/Feature/Waiver/` (6 ficheros); todos los existentes que tocan
+  lo mismo, verdes (`ValidarRegistroTest`, `LandingTextsAndSocialTest` —su toggle pasó a ser el
+  Select del modo—, `PrivacyTest`, `AnonymizeUserActionTest`, `MorphMapTest`, `AuditActionCatalogTest`,
+  `ModuleBoundariesTest`, `PageResourceTest`, `CriticalPathGateTest`…).
+- **`waiver:verify-chain` sobre MySQL real** (BD de desarrollo migrada): `--workers=8` → 9 filas,
+  0 `prev_hash` repetidos, cadena OK · `--workers=16` → 17 filas, 0 repetidos, OK. Restos en BD tras
+  limpiar: 0 firmas, 0 versiones, 0 titulares de prueba.
+- ❗❗ **Y el instrumento se vio FALLAR**: con el `lockForUpdate()` retirado de `WaiverSigner`, tres
+  ejecuciones de 16 firmas dieron **3, 11 y 17 filas con 1, 9 y 15 `prev_hash` repetidos** y la
+  cadena ROTA las tres veces. Es la bifurcación silenciosa de §8.5, cazada. Fichero restaurado y
+  comprobado por `cmp`.
+- **Cinco mutaciones, las cinco muerden** (cada una contra su test, con el control en verde y los
+  ficheros restaurados por `cmp`): sin guarda de borrador → `test_a_text_with_a_draft_marker_is_refused`
+  cae · poda sin plazo → `test_nothing_is_pruned_while_the_retention_period_is_not_set` cae ·
+  `anonymize()` borrando la prueba → `test_anonymize_keeps_the_waiver_signature…` cae · firmas sin
+  `prev_hash` → `test_the_chain_links…` cae · versión publicada borrable →
+  `test_a_published_version_cannot_be_deleted` cae.
+- **La serialización canónica está FIJADA como literal** en `WaiverSignatureChainTest`: cambiar un
+  campo, su orden o su formato pone el test en rojo — y tiene que ponerlo, porque lo ya firmado
+  dejaría de verificar (§4.7).
+
+### 9.4 Lo que la ejecución enseñó (trampas para las tandas 2 y 3)
+
+- **La única salida legítima de una firma es la poda, y solo por el camino fila a fila**: la guarda
+  de `deleting` la levanta `pruning()` justo antes de `delete()`. Pasar el modelo a `MassPrunable`
+  la saltaría entera. Las dos limpiezas que borran por `DB::table` (go-live y verificador) lo dicen en
+  su comentario; si aparece una tercera, tiene que decirlo también.
+- **La poda mueve el inicio de la cadena**: al irse la firma más antigua, la siguiente apunta a un
+  hash que ya no existe. `WaiverChain::verify()` no comprueba el enlace de la PRIMERA fila que
+  queda; sí el contenido de todas. Un auditor que pida «la cadena entera» tiene que saber que el
+  plazo la recorta por delante.
+- **`Setting` invalida su memo al guardar** (`saved`/`deleted` → `flushMemo()`), así que leer →
+  escribir → releer funciona dentro de un mismo test. `tests/TestCase.php` lo vacía en `setUp()`.
+- **El verificador publica una v1 de prueba si no hay ninguna** y la retira al limpiar por
+  `DB::table` (la versión también es inmutable). Sobre una instalación con versiones publicadas usa
+  la vigente y no crea ninguna.
+- **Un `[x]` bajo Fase 6 obliga a poner 🟦 en su cabecera** (`docs-check`, coherencia de marcadores):
+  el tracker ya lo lleva.
+
+### 9.5 Lo que queda ABIERTO tras la tanda 1
+
+- ❗ `[PENDIENTE: owner]` **el plazo** (§4.6): hoy `waiver.retention_months` vacío = no se poda nada.
+- ❗ `[PENDIENTE: owner]` **el texto definitivo** (§8.1): la maquinaria rechaza publicar el borrador.
+- **`RGPD-01`, paso (2)** —la restricción del waiver— se escribe **sobre la corrección (1) del agente
+  B** (`ESTADO`, reparto del 2026-08-25), citando `WaiverRetentionTest`. **`RGPD-04`** se amplía en la
+  tanda 2 con el PDF.
+- Tanda 2 y tanda 3, en el orden de arriba. La casilla del alta (§4.4) y la re-firma «en el siguiente
+  momento natural» (§4.8) no existen todavía: hoy solo se puede firmar por servicio y por el
+  verificador.

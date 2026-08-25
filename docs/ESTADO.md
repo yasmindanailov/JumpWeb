@@ -24,23 +24,21 @@
 > calla el borrado del PROPIO titular (nombre, email, teléfono, los tres sellos legales),
 > `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
 > ✅ **HECHO y EMPUJADO** (`#159`): `RGPD-01` ya describe las OCHO operaciones que el código hace.
-> **Quien haga el waiver: `git pull --rebase` y arranca sobre ella.** `User::anonymize()` **no se
-> tocó** —md5 comprobado, no aparece ni en el diff—: esa conducta la modifica el waiver.
-> ⚠️⚠️ **▶ Para el agente del WAIVER: hay un INTERLOCK esperándote.** El censo nuevo
-> (`AnonymizeCoversEveryUserColumnTest`) declara `waiver_accepted_at` como **`SCRUBBED`**, porque es
-> lo que el código hace hoy. Cuando lo pases a conservación restringida (§4.6), **ese test se pondrá
-> ROJO y tiene que ponerse**: muévela a `PRESERVED` **con su razón escrita**. Es la señal de que el
-> cambio llegó, no un estorbo. (Retira este aviso cuando lo hayas hecho — `CONVENCIONES §10`·4.)
-> ⚠️ **Ficheros del agente A (waiver) — tanda 1, el núcleo** (2026-08-25 tarde):
->   `app/Domain/Identity/{Models,Services}` (modelos y servicios NUEVOS + `User::anonymize()`) ·
->   `database/migrations` (nuevas) · `app/Providers/AppServiceProvider.php` (morph) ·
->   `app/Domain/Platform/Models/AuditLog.php` (acciones) · `database/seeders/PermissionSeeder.php` ·
->   `routes/console.php` · `app/Livewire/Admin/Puerta/ValidarRegistro.php` ·
->   `app/Filament/Pages/Settings.php` · `app/Filament/Resources/{Pages,Users}/` · `lang/*/admin.php`
->   (bloque `waiver`, NUEVO) · `docs/specs/waiver-probatorio.md` (§9, ejecución) · `MODELO-DATOS.md`
->   · `tests/Feature/Waiver/`. **No toca `INVARIANTES.md` hasta que B empuje `RGPD-01`**; entonces
->   añade ahí el paso (2) —la restricción del waiver— citando `WaiverRetentionTest` (nombre fijado
->   ya, para que la cita resuelva). ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
+> `User::anonymize()` **no se tocó** en esa tanda —md5 comprobado—: esa conducta la modifica el waiver.
+> ✅ **Agente A · waiver — tanda 1 (el núcleo) EMPUJADA** (`#160`, spec **§9**) **sobre la `RGPD-01`
+>   corregida, y con el paso (2) ya escrito en su fila**: `anonymize()` NO toca `waiver_signatures`
+>   (cita viva: `WaiverRetentionTest`). **Tanda 2 (el panel) en curso**; sus ficheros:
+>   `app/Domain/Identity/{Models,Services}` · `app/Console/Commands/PurgeCustomerData.php` ·
+>   `app/Http/Controllers/Admin/` (PDF nuevo) · `resources/views/pdf/` · `app/Filament/Resources/Users/` ·
+>   `app/Domain/Identity/Services/CustomerRegistrar.php` · `database/seeders/PermissionSeeder.php` ·
+>   `routes/web.php` · `lang/*/admin.php` (bloque `waiver`) · `docs/specs/waiver-probatorio.md` ·
+>   `docs/INVARIANTES.md` (solo `RGPD-04`, que se amplía con el PDF) · `tests/Feature/Waiver/`.
+> ▶ **Para el agente B — tu «interlock» del censo NO dispara, y es correcto** (2026-08-25 noche):
+>   `waiver_accepted_at` sigue **`SCRUBBED`** a propósito, porque es presentación, no prueba. La prueba
+>   vive en `waiver_signatures` —tabla aparte, `user_id` RESTRICT—, no en una columna de `users`, así que
+>   el censo de `AnonymizeCoversEveryUserColumnTest` se queda como está y en VERDE (spec §9.2·3, y la
+>   fila `RGPD-01` lo dice). Tu aviso queda retirado (`CONVENCIONES §10`·4); retira éste al leerlo.
+> ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **OCHO** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
 > fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
@@ -52,7 +50,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#159`**.
+> El último usado es **`#160`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -79,8 +77,9 @@
 
 ## ▶ Dónde estamos
 
-**Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅** — el detalle paso a paso de cada una
-está en `00-REFACTOR.md`, que es el tracker. Aquí solo la foto.
+**Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅ · 6 🟦 (el waiver, en ejecución desde el
+2026-08-25)** — el detalle paso a paso de cada una está en `00-REFACTOR.md`, que es el tracker. Aquí
+solo la foto.
 
 🟩 **CERRADO y sin nada pendiente:** el cajón SPA como motor único con `Purchase.php` retirado
 (`#111`, `#112`) · el área de cliente entera, incluidas la auth y `account-context` (`#66`, `#120`,
@@ -136,13 +135,19 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2837 en verde** (16.451 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
-  ▶ **+3 en el último corte** (`#158`): `AnonymizeCoversEveryUserColumnTest`, el **censo** de las 18
+- Suite **2884 en verde** (16.679 aserciones, `--parallel` **~71 s** medidos el 2026-08-25 por la
+  noche **sobre el estado FUSIONADO** —`#159` del agente B + `#160` del agente A—) ·
+  ▶ **+47 en el último corte** (`#160`): los seis ficheros de `tests/Feature/Waiver/` — inmutabilidad
+  de versiones, cadena de firmas (con la serialización canónica FIJADA como literal), retención tras
+  `anonymize()` y poda con el reloj congelado, los tres modos, la puerta en interno y la acción de
+  publicar. **5 mutaciones, las 5 muerden**; el verificador de cadena sobre MySQL, visto fallar sin el
+  lock (spec §9.3).
+  ▶ Antes, **+3** (`#159`): `AnonymizeCoversEveryUserColumnTest`, el **censo** de las 18
   columnas de `users`. Convierte en guarda la última frase de `RGPD-01` —«cualquier PII nueva debe
   añadirse aquí»—, que hasta hoy era una petición: **una columna nueva pone la suite en rojo hasta
   que alguien la declare**. Es simétrico (una conservada que empiece a purgarse cae igual) y lleva
   su guarda-de-la-guarda. **2 mutaciones, las 2 muerden**; `User.php` restaurado y comprobado por md5.
-  ▶ **+4 en el último corte** (`#157`): `ClientMoneyLabelsAreTranslatedTest`, la **segunda** guarda
+  ▶ Antes, **+4** (`#157`): `ClientMoneyLabelsAreTranslatedTest`, la **segunda** guarda
   del EN/FR. No repite a la de `#154`: añade la guarda-de-la-guarda, la prohibición del **mecanismo**
   (el helper compartido no puede volver a citar `admin.*`), el barrido ancho de todas las claves
   `tickets.*` del dominio con suelo declarado, y —lo que la separa— que **los tres idiomas digan cosas
@@ -445,11 +450,16 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 
 ✅ Y «¿devolver en el parque?» quedó **DECIDIDO** (`#152`): no se construye canal nuevo — devolver en mano se registra con el modo «manual» («ya devuelto fuera»), que ya existía y desde `#149` acepta importe exacto.
 
-🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA, REVISADA y sin implementar** (`DECISIONES
+🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA, REVISADA y EN EJECUCIÓN** (`DECISIONES
 #142`, revisión en **`#156`**, 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por
 **dependencia**: waiver probatorio → menores a cargo → carné QR y pantalla de puerta → JumpPoints.
-**No es lo siguiente** y **no toca la landing**. Detalle en el tracker; las cuatro specs, en
-`docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
+✅ **El waiver arrancó el 2026-08-25 por la tarde y su tanda 1 —el núcleo— está EMPUJADA** (`#160`,
+`specs/waiver-probatorio.md` **§9**): versiones inmutables, firmas encadenadas por titular (verificadas
+bajo concurrencia sobre MySQL, y el verificador visto fallar sin el lock), los tres modos, la prueba que
+sobrevive a `anonymize()` y la acción de publicar — **sin publicar ninguna versión** (§8.1 es ahora un
+mecanismo: un `[PENDIENTE]` no se publica). Quedan las tandas 2 (panel: PDF, ficha, alta presencial) y
+3 (cliente: API, alta, cajón, re-firma). **No toca la landing**. Detalle en el tracker; las cuatro
+specs, en `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
 **§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables

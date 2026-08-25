@@ -8542,3 +8542,44 @@ secciones asumí que las de `INVARIANTES` eran familias (`PAY`, `RGPD`) y son **
 ▶ **Verificado por mutación, en las tres direcciones.** Un `CONVENCIONES §99` roto → cae (ejemplo).
 Un `INVARIANTES §99` roto → cae (ejemplo). Y el caso que lo motivó —`REDSYS §14` junto a
 `CONVENCIONES §4` en la misma línea (ejemplo)— **queda verde**.
+
+## #160 · 2026-08-25 · El waiver probatorio, tanda 1 — el NÚCLEO en el árbol: versiones inmutables, firmas encadenadas por titular, los tres modos y la prueba que sobrevive al art. 17
+
+**Qué se hizo** (agente A, spec `specs/waiver-probatorio.md` **§9**): la maquinaria del subsistema B
+de Fase 6 sin publicar ninguna versión — que es exactamente la línea que la revisión trazó (`#156`
+§8.1: «la maquinaria se puede construir; publicar la v1, no»). Dos tablas inmutables en Identity,
+`LegalDocumentPublisher` (publicar es un acto con fecha), `WaiverSigner` (hash canónico fijado +
+cadena POR TITULAR con el lock de su fila como primera sentencia), `WaiverStatus` con los TRES modos
+de `#142`, la puerta que señala «versión anterior» y deja pasar, `anonymize()` que conserva la
+prueba, la poda por plazo y la acción «Publicar versión firmable» en la página del waiver.
+
+**Tres decisiones de ingeniería, dentro del margen de la spec** (detalle y porqué en §9.2):
+1. **Sin `retención_hasta`**: el plazo es retroactivo y por instalación → se aplica al podar; sin plazo
+   fijado no se poda nada.
+2. **Las tablas en Identity, no en Content**: `ModuleBoundariesTest` no deja a Identity mirar a
+   Content; el texto llega ya interpolado desde la capa de entrega, así que el snapshot es lo que se
+   ENSEÑÓ, no la plantilla.
+3. **El sello ≠ la prueba**: en modo interno la puerta lee el registro, no `waiver_accepted_at`. Y
+   por eso **un sello sin registro no cuenta** al pasar a interno — aseverado.
+
+**§8.1 dejó de ser un aviso y pasó a ser un MECANISMO**: un texto con `[pendiente` (el marcador del
+seeder o el neutro que deja la interpolación sin datos fiscales) no se publica, en ningún idioma.
+
+**Lo medido, que es lo que vale**: 47 casos nuevos · `waiver:verify-chain` sobre MySQL con 8 y 16
+procesos, cadena lineal · **y visto FALLAR sin el lock, 3 de 3** (1, 9 y 15 `prev_hash` repetidos) ·
+**cinco mutaciones, las cinco muerden** (§9.3) · la serialización canónica fijada como literal.
+
+**`RGPD-01`, paso (2), escrito sobre la corrección (1) de `#159`** (el agente B empujó primero; según
+`CONVENCIONES §10`, quien empuja segundo escribe la restricción): `anonymize()` **no toca
+`waiver_signatures`** — conservación vinculada con tratamiento restringido y plazo—, y la cita viva es
+`WaiverRetentionTest`. ▶ **Y el «interlock» que `#159` dejó esperando NO dispara, y es correcto**: su
+censo declara `waiver_accepted_at` como purgada, y **sigue purgándose a propósito** — el sello es
+presentación; la prueba vive en su propia tabla (`user_id` RESTRICT), no en una columna de `users`.
+El censo se queda como está y en verde.
+
+**Lo que NO se decidió aquí**: el plazo de conservación y el texto definitivo (`[PENDIENTE: owner]`,
+los dos).
+
+Verificación: suite verde sobre el estado FUSIONADO (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓
+(32 modelos · 76 migraciones, con los checks nuevos de `#159`) · BD MySQL de desarrollo migrada ·
+verificador de cadena y mutaciones con su salida en §9.3.

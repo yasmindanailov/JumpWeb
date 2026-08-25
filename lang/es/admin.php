@@ -2387,4 +2387,27 @@ return [
             'view' => 'Ver en la web',
         ],
     ],
+
+    // ─── Fase 6 · waiver con valor probatorio (`specs/waiver-probatorio.md`) ───────────────────
+    'waiver' => [
+        'settings_mode' => 'Gestión del waiver',
+        'settings_mode_hint' => 'Externo: lo gestiona vuestro sistema y aquí solo se guarda el sello (como hasta ahora). Interno: el cliente lo firma en esta web y queda el registro probatorio; exige publicar una versión del texto desde «Páginas». Desactivado: la puerta no lo comprueba.',
+        'modes' => [
+            'externo' => 'Externo (sistema propio del parque)',
+            'interno' => 'Interno (se firma en esta web)',
+            'desactivado' => 'Desactivado (no se comprueba)',
+        ],
+        'settings_retention' => 'Conservación del registro firmado (meses)',
+        'settings_retention_hint' => 'Cuántos meses se conserva cada firma desde su fecha, también después de borrar la cuenta (conservación con tratamiento restringido). Vacío = no se purga nada hasta que se fije el plazo.',
+        'gate_outdated' => 'Su waiver es de una versión anterior del texto: puede pasar. Se le pedirá la firma nueva en su próxima compra o inicio de sesión, no en el mostrador.',
+        'publish' => [
+            'label' => 'Publicar versión firmable',
+            'heading' => 'Publicar el texto guardado como versión :next',
+            'description' => 'Se congela el texto tal y como está GUARDADO ahora (idiomas: :locales) como la versión :next, la que firmarán los clientes a partir de este momento. Una versión publicada NO se puede editar ni borrar: es la prueba de lo que cada persona aceptó. Si el texto todavía lleva un marcador [PENDIENTE], la publicación se rechaza.',
+            'confirm' => 'Publicar versión :next',
+            'done' => 'Versión :version publicada (:locales).',
+            'refused_draft' => 'No se ha publicado: el texto sigue siendo un borrador',
+            'nothing' => 'No hay texto que publicar: el cuerpo está vacío en todos los idiomas.',
+        ],
+    ],
 ];

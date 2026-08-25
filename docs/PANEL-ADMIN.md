@@ -67,6 +67,12 @@ buscando por **email o teléfono**:
 - Resultado: **solo** un estado → ✅ «Registrado · waiver aceptado (fecha)» o ❌ «No registrado».
 - **No se muestran datos personales** (ni nombre completo, ni dirección, ni historial). Solo
   el estado. *(RGPD: minimización de datos.)*
+- **Fase 6 · waiver** (`specs/waiver-probatorio.md`): el ajuste «Gestión del waiver» (Ajustes →
+  Puerta) tiene TRES modos. En **interno** la puerta lee el **registro firmado**, no el sello, y si la
+  firma es de una **versión anterior** del texto lo SEÑALA en ámbar pero deja pasar — la re-firma se
+  pide en la siguiente compra o inicio de sesión, nunca en el mostrador. El texto se publica como
+  versión firmable desde «Páginas → waiver → Publicar versión firmable»: es **irreversible** (una
+  versión publicada no se edita ni se borra) y un borrador con `[PENDIENTE]` se rechaza.
 - Si la entrada se compró online, además se valida su **QR** (§2.4).
 - Si la persona **no está registrada**, se registra en el momento: **desde su móvil**
   (QR/enlace en la entrada) **o en una tablet** del local (ambas opciones, decidido).

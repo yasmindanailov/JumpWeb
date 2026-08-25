@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Puerta;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\PuertaSettings;
+use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PhoneNormalizer;
@@ -132,15 +133,19 @@ class ValidarRegistro extends Component
             return;
         }
 
-        // #216: si la comprobación de waiver está DESACTIVADA (lo gestiona el sistema externo),
-        // colapsamos a 2 estados — solo importa si el cliente tiene cuenta o no.
-        if (! PuertaSettings::waiverCheckEnabled()) {
+        // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.1, §4.8): el estado sale de `WaiverStatus`,
+        // que sabe en qué MODO está la instalación — `desactivado` colapsa a 2 estados (#216);
+        // `externo` lee el sello, como siempre; `interno` lee el REGISTRO firmado, y si es de una
+        // versión anterior del texto lo SEÑALA pero deja pasar: la re-firma se pide en la siguiente
+        // compra o inicio de sesión, nunca en el mostrador.
+        $status = WaiverStatus::for($user);
+        if (! $status->isEnabled()) {
             $this->result = ['status' => self::STATUS_REGISTERED, 'query' => $raw];
 
             return;
         }
 
-        if ($user->waiver_accepted_at === null) {
+        if (! $status->signed) {
             $this->result = ['status' => self::STATUS_REGISTERED_NO_WAIVER, 'query' => $raw];
 
             return;
@@ -149,7 +154,8 @@ class ValidarRegistro extends Component
         $this->result = [
             'status' => self::STATUS_REGISTERED_WITH_WAIVER,
             'query' => $raw,
-            'date' => DisplayTime::format($user->waiver_accepted_at, 'd/m/Y'),
+            'date' => DisplayTime::format($status->acceptedAt, 'd/m/Y'),
+            'outdated' => $status->isOutdated(),
         ];
     }
 

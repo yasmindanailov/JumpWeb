@@ -6,6 +6,7 @@ use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Services\PuertaSettings;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
@@ -65,15 +66,16 @@ class Settings extends Page
     public ?array $data = [];
 
     /** Ajustes booleanos (se guardan como '1'/'0'). */
-    private const BOOL_KEYS = ['packs.prep_blocks_cupo', 'puerta.waiver_check_enabled', 'cookies.banner_enabled'];
+    private const BOOL_KEYS = ['packs.prep_blocks_cupo', 'cookies.banner_enabled'];
 
     /**
      * Toggles cuyo DEFAULT de runtime es ON (sus helpers defensivos devuelven true sin fila). Si la
      * fila falta, `mount()` debe hidratar el toggle en ON para no mostrar OFF y, con un Save, apagar
      * el comportamiento por accidente (mismatch UI↔runtime). Coincide con `CookieConsent::bannerEnabled`
-     * y `PuertaSettings::waiverCheckEnabled` (#219).
+     * (#219). El interruptor del waiver dejó de ser un toggle en Fase 6: es el MODO `waiver.mode`,
+     * que `mount()` hidrata con el valor EFECTIVO por la misma razón.
      */
-    private const BOOL_DEFAULT_ON = ['puerta.waiver_check_enabled', 'cookies.banner_enabled'];
+    private const BOOL_DEFAULT_ON = ['cookies.banner_enabled'];
 
     /**
      * Claves gestionadas → su `group` en la tabla (fuente única para cargar y guardar).
@@ -135,9 +137,12 @@ class Settings extends Page
         'sales.purchase_horizon_months' => 'payment',
         'sales.order_prefix' => 'payment',
         'puerta.validate_rate_limit_per_minute' => 'puerta',
-        // Comprobación de waiver en la puerta (#216): ON = 3 estados (con/sin waiver); OFF = 2
-        // estados (registrado / no), para cuando el waiver lo gestiona el sistema externo.
-        'puerta.waiver_check_enabled' => 'puerta',
+        // Fase 6 · waiver (`DECISIONES #142`): el MODO sustituye al interruptor de #216 —externo (el
+        // sistema del parque; aquí solo el sello) · interno (se firma aquí) · desactivado— y el
+        // plazo de conservación del registro firmado (vacío = no se poda; `[PENDIENTE: owner]`).
+        // `puerta.waiver_check_enabled` ya no se edita: `save()` lo escribe como espejo del modo.
+        'waiver.mode' => 'waiver',
+        'waiver.retention_months' => 'waiver',
         'payment.tax_rate' => 'payment',
         'packs.max_per_slot' => 'packs',
         'packs.max_guests_per_slot' => 'packs',
@@ -195,6 +200,11 @@ class Settings extends Page
         foreach (array_keys(self::MANAGED) as $key) {
             // Los toggles con default ON se hidratan en ON si falta la fila (espejo de su helper).
             $raw = Setting::value($key, in_array($key, self::BOOL_DEFAULT_ON, true) ? '1' : null);
+            // El modo del waiver se hidrata con el EFECTIVO (derivado del interruptor heredado si no
+            // hay fila), por la misma razón que los toggles: que un Guardar no cambie la conducta.
+            if ($key === WaiverSettings::KEY_MODE) {
+                $raw = WaiverSettings::mode();
+            }
             $value = in_array($key, self::BOOL_KEYS, true)
                 ? ((string) $raw === '1')
                 : ($raw ?? '');
@@ -318,6 +328,13 @@ class Settings extends Page
 
             Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => $group]);
         }
+
+        // Espejo del interruptor heredado `puerta.waiver_check_enabled` (#216): ya no se edita, pero
+        // sigue en BD y `WaiverSettings::mode()` lo usa como respaldo. Se mantiene coherente con el modo.
+        Setting::updateOrCreate(
+            ['key' => WaiverSettings::LEGACY_KEY_CHECK_ENABLED],
+            ['value' => ($flat[WaiverSettings::KEY_MODE] ?? null) === WaiverSettings::MODE_OFF ? '0' : '1', 'group' => 'puerta'],
+        );
 
         if ($changes !== []) {
             AuditLogger::log('settings.updated', null, ['changed' => $changes]);
@@ -712,7 +729,7 @@ class Settings extends Page
             ]);
     }
 
-    /** Puerta (técnico): freno anti-abuso de validaciones + comprobación de waiver. Colapsada. */
+    /** Puerta (técnico): freno anti-abuso de validaciones + modo y conservación del waiver. Colapsada. */
     private function doorSection(): Section
     {
         return Section::make(__('admin.settings.section_door'))
@@ -728,9 +745,23 @@ class Settings extends Page
                     ->minValue(PuertaSettings::VALIDATE_RATE_LIMIT_MIN)
                     ->maxValue(PuertaSettings::VALIDATE_RATE_LIMIT_MAX)
                     ->required(),
-                Toggle::make('puerta.waiver_check_enabled')
-                    ->label(__('admin.settings.puerta_waiver_check'))
-                    ->helperText(__('admin.settings.puerta_waiver_check_hint')),
+                // Fase 6 · waiver: los TRES modos (`DECISIONES #142`) en lugar del toggle de #216.
+                Select::make(WaiverSettings::KEY_MODE)
+                    ->label(__('admin.waiver.settings_mode'))
+                    ->helperText(__('admin.waiver.settings_mode_hint'))
+                    ->options([
+                        WaiverSettings::MODE_EXTERNAL => __('admin.waiver.modes.externo'),
+                        WaiverSettings::MODE_INTERNAL => __('admin.waiver.modes.interno'),
+                        WaiverSettings::MODE_OFF => __('admin.waiver.modes.desactivado'),
+                    ])
+                    ->native(false)
+                    ->required(),
+                TextInput::make(WaiverSettings::KEY_RETENTION_MONTHS)
+                    ->label(__('admin.waiver.settings_retention'))
+                    ->helperText(__('admin.waiver.settings_retention_hint'))
+                    ->integer()
+                    ->minValue(WaiverSettings::RETENTION_MIN)
+                    ->maxValue(WaiverSettings::RETENTION_MAX),
             ]);
     }
 

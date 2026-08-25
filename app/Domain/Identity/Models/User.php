@@ -196,6 +196,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         DB::transaction(function () use ($originalEmail) {
             // Consentimientos: ya no son trazables a un titular real → se eliminan (RGPD).
             // Los roles: desvincular (la cuenta no debe tener permisos tras anonimizar).
+            // ⚠️ Fase 6 · waiver: el registro PROBATORIO (`waiver_signatures`) NO se toca, a propósito
+            // —conservación con tratamiento restringido y plazo, art. 17.3.e + 18 (`RGPD-01`,
+            // `specs/waiver-probatorio.md` §4.6, `WaiverRetentionTest`)—. Un documento sin titular
+            // vinculado no probaría nada; el sello `waiver_accepted_at` de abajo sí se nulifica,
+            // porque es presentación, no prueba.
             $this->consents()->delete();
             $this->roles()->detach();
 
@@ -288,6 +293,19 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function consents(): HasMany
     {
         return $this->hasMany(Consent::class);
+    }
+
+    /**
+     * Fase 6 · waiver — el registro PROBATORIO de las firmas del titular (y, en su nombre, de sus
+     * menores a cargo): `specs/waiver-probatorio.md` §4.3. Append-only y **sobrevive a
+     * `anonymize()`** bajo régimen restringido: NO se lista en ninguna superficie normal (bloque de
+     * cuenta, `GET /me/consents`, export del art. 20). Lo que el titular VE es `consents()`.
+     *
+     * @return HasMany<WaiverSignature, $this>
+     */
+    public function waiverSignatures(): HasMany
+    {
+        return $this->hasMany(WaiverSignature::class);
     }
 
     /**
