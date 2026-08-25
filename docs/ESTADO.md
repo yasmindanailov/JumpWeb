@@ -30,6 +30,16 @@
 > ⚠️ **Ficheros del agente B en esta tanda**: `docs/INVARIANTES.md` (fila `RGPD-01` y la columna
 > «Verificación» de `PAY-04`/`SEC-06`), `scripts/docs-check.sh` y un test nuevo. **No toca
 > `User::anonymize()`**: esa conducta la modifica el waiver, no esta tanda.
+> ⚠️ **Ficheros del agente A (waiver) — tanda 1, el núcleo** (2026-08-25 tarde):
+>   `app/Domain/Identity/{Models,Services}` (modelos y servicios NUEVOS + `User::anonymize()`) ·
+>   `database/migrations` (nuevas) · `app/Providers/AppServiceProvider.php` (morph) ·
+>   `app/Domain/Platform/Models/AuditLog.php` (acciones) · `database/seeders/PermissionSeeder.php` ·
+>   `routes/console.php` · `app/Livewire/Admin/Puerta/ValidarRegistro.php` ·
+>   `app/Filament/Pages/Settings.php` · `app/Filament/Resources/{Pages,Users}/` · `lang/*/admin.php`
+>   (bloque `waiver`, NUEVO) · `docs/specs/waiver-probatorio.md` (§9, ejecución) · `MODELO-DATOS.md`
+>   · `tests/Feature/Waiver/`. **No toca `INVARIANTES.md` hasta que B empuje `RGPD-01`**; entonces
+>   añade ahí el paso (2) —la restricción del waiver— citando `WaiverRetentionTest` (nombre fijado
+>   ya, para que la cita resuelva). ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **SIETE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
 > fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
@@ -40,7 +50,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#157`**.
+> El último usado es **`#158`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -272,6 +282,12 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 modal nuevo de «Reembolsar» en navegador con sus 9 pedidos-sonda (decidió conservarlos para eso).
 
 # ❗ LO SIGUIENTE: **`testimonials`** — lo único de la landing que NO está bloqueado
+
+⏸️ **[DECIDIDO owner, 2026-08-25 tarde] APLAZADO hasta que la landing esté terminada** (`#158`): el
+owner no puede visualizarlo ahora, y una sección que no se puede ver no se puede validar (cuarta
+condición del DoD, `CONVENCIONES §3.bis`). Lo que SÍ está en marcha es **Fase 6 · waiver** (agente A)
+y **`RGPD-01`** (agente B): el reparto de arriba. Lo que sigue de este apartado describe el trabajo
+tal y como quedó MEDIDO, para cuando toque.
 
 ⏸️ **Por qué no es «seguir con la tanda B»**: el owner está **rehaciendo el sistema visual** en Claude
 Design y ha dicho que **los datos y textos del mockup NO son fidedignos** —«lo que hay que llevarse es

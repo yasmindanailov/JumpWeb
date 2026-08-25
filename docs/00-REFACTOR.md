@@ -2175,7 +2175,8 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         día que un cliente pida un número que el dominio no sepa.
         ▶ Lo que sí falta de ahí son las **ETIQUETAS** editables («m² de parque» vs «M² de diversión»),
         y eso baja con el copy.
-  - [ ] **B · `testimonials`** — SÍ se construye, y no solo para la landing: es el **respaldo de las
+  - [ ] ⏸️ **B · `testimonials`** — **APLAZADO por el owner (2026-08-25 tarde, `#158`) hasta que la
+        landing esté terminada y se pueda VISUALIZAR**. SÍ se construye, y no solo para la landing: es el **respaldo de las
         reseñas de Google** (`specs/google-reviews.md` §4.4.bis). Campos medidos del mockup:
         `texto`/`nombre`/`meta` + valoración. ⚠️ **Su ayuda en el panel NO puede decir «por si Google
         falla»**: es lo que ve **todo visitante que no acepta cookies de terceros**, cada día.

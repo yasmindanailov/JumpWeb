@@ -132,7 +132,8 @@ presentación · **convivencia**: no romper supuestos del sector origen document
 - No commitear con la suite rota. Si hay que aparcar, rama `wip/…` y anotarlo en `ESTADO.md`.
 - **El gate de pre-push aplica solo a `main`** (`DECISIONES #10`): las ramas `wip/…` pueden
   empujarse en rojo como copia de seguridad — nunca se mergean a `main` sin pasar el gate.
-- **Una sola sesión de escritura a la vez** sobre el repo; subagentes de solo-lectura exentos.
+- **Una sola sesión de escritura a la vez** sobre cada CLON del repo; subagentes de solo-lectura
+  exentos. Dos agentes = dos clones, y su coordinación es **§10**.
 - **El commit de cierre lleva la evidencia** en el cuerpo: «Verificación: suite N tests /
   M aserciones (Xs) · Pint ✓ · docs-check ✓ · build ✓/N-A» — `git log` como bitácora falsable.
 
@@ -146,3 +147,24 @@ en el tracker) ante cualquiera de estos:
 5. Decisiones de producto/alcance: features, precios, textos legales, marca.
 6. Cualquier gasto (infra, servicios, licencias).
 Feature visible → además validación del owner antes del ✅ definitivo (§3.bis).
+
+## §10 Dos agentes sobre `main` — el canal es el REPO
+`[DECIDIDO owner, 2026-08-25]`. Nace del precio pagado en dos días: **siete** colisiones de número
+en `DECISIONES.md` y **un defecto arreglado dos veces** en paralelo (`DECISIONES #157`, `#158`).
+No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sabe.**
+1. **Antes de planificar**: `git fetch` y leer el bloque «REPARTO VIGENTE» de `ESTADO.md`.
+2. **Reclamar = EMPUJAR**: una tarea es tuya cuando tu fila del reparto está en `origin/main`
+   (un commit solo de doc vale; pasa el gate igual). Hasta entonces el otro puede tomarla.
+3. **Carriles por FICHERO, no por tema**: cada fila del reparto lista los ficheros/carpetas que
+   toca. Entrar en un fichero del carril ajeno exige avisarlo en el reparto ANTES (línea con fecha
+   y destinatario) y `git pull --rebase` en cuanto el otro empuje.
+4. **Los mensajes entre agentes** van en ese bloque de `ESTADO.md` («▶ Para el agente del X: …»).
+   Quien lo lee y actúa **lo retira** en su siguiente push: un aviso resuelto que se queda es ruido.
+5. **Empujar PRONTO** —cada unidad de trabajo verde, no solo al cierre— y **`git pull --rebase`
+   antes de cada push**. Cada hora en local es una hora en la que el otro decide sin verte.
+6. **El número de `DECISIONES.md` se fija al EMPUJAR**, mirando `origin/main` justo antes, y el
+   «último usado» de `ESTADO.md` se actualiza en el mismo commit.
+7. **Defectos y fichas de `DEUDA.md`**: antes de abrir uno, mira si está en la fila del otro. Si
+   cae en la frontera de los dos carriles, el reparto dice quién lo lleva; no se arregla dos veces.
+8. **Al cerrar un carril** se retira su fila: el bloque de reparto es una FOTO, no un histórico
+   (el histórico es `DECISIONES`).

@@ -8394,3 +8394,27 @@ estructural de doc —toca el recuento del gate y la tabla de enrutado—, así 
 
 Verificación: suite verde sobre el estado FUSIONADO · Pint limpio · `docs-check` verde · las dos
 mutaciones ejecutadas y con su salida arriba.
+
+## #158 · 2026-08-25 · [DECIDIDO, owner] Dos agentes sobre `main` a la vez: el canal es el REPO y el protocolo es `CONVENCIONES §10` — y `testimonials` se APLAZA detrás de la landing
+
+**Qué decidió el owner** (2026-08-25 por la tarde): dos agentes trabajan **a la vez** sobre `main`,
+cada uno con UNA tarea, y se comunican **por la doc, al hacer push**. Reparto de esta tarde:
+**agente A → Fase 6 · waiver** (`specs/waiver-probatorio.md`) y después menores a cargo;
+**agente B → `RGPD-01`** (primero la VERDAD de lo que `anonymize()` ya hace, sin tocar conducta) +
+la ficha `#121` de `DEUDA.md` (`docs-check` valida que las clases de test citadas en `INVARIANTES`
+existan — medido esta tarde: **4 citas muertas de 64**, en `PAY-04` y `SEC-06`).
+▶ Y **`testimonials` se APLAZA** hasta que la landing esté terminada: el owner no puede visualizarlo
+ahora y una sección que no se puede ver no se puede validar (cuarta condición del DoD,
+`CONVENCIONES §3.bis`). `ESTADO` lo decía como «LO SIGUIENTE» y ya no lo es.
+
+**Por qué un protocolo y no otro aviso en `ESTADO`**: el precio ya pagado —siete renumeraciones y un
+defecto arreglado dos veces (`#157`)— salió con el aviso puesto. Lo que faltaba no era énfasis sino
+**mecanismo**: reclamar = empujar, carriles por FICHERO, mensajes con destinatario que se retiran al
+leerse, número al empujar, `pull --rebase` antes de cada push. Vive en `CONVENCIONES §10`; §8 pasa a
+decir «una sesión de escritura por CLON», que es lo que siempre quiso decir.
+
+**La dependencia que ordena esta tarde** (la fijó B en `ESTADO`): `RGPD-01` **no contiene hoy la
+frase que el waiver modifica** (`waiver-probatorio.md` §8.3). B la corrige primero; el waiver **no
+toca esa fila** hasta que B empuje, y entonces añade el paso (2) citando `WaiverRetentionTest`.
+
+Verificación: `docs-check` ✓ (el ancla `§10` resuelve) · gate del `pre-push` en el push de esta entrada.
