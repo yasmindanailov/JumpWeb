@@ -43,19 +43,27 @@
     $orderCancelled = $record->status === \App\Domain\Booking\Models\Order::STATUS_CANCELLED;
     $orderFullyRefunded = $record->isFullyRefunded();
     $showCoherenceBanner = $orderCancelled || $orderFullyRefunded;
+    // `#152`: un pedido cancelado CON deuda ya no bloquea el reembolso por línea — el banner
+    // deja de afirmar «ya no aplican» y pasa a decir cuánto se debe y por dónde se devuelve.
+    $cancelledDebtCents = $orderCancelled ? $record->financialSummary()->pendienteDevolucion() : 0;
 @endphp
 
 @if ($showCoherenceBanner)
     @php
         $coherenceKey = $orderCancelled
-            ? 'admin.orders.item_actions.banner.order_cancelled'
+            ? ($cancelledDebtCents > 0
+                ? 'admin.orders.item_actions.banner.order_cancelled_with_debt'
+                : 'admin.orders.item_actions.banner.order_cancelled')
             : 'admin.orders.item_actions.banner.order_fully_refunded';
+        $coherenceParams = $cancelledDebtCents > 0
+            ? ['pendiente' => number_format($cancelledDebtCents / 100, 2, ',', '.').' €']
+            : [];
     @endphp
     <div class="mb-3 flex items-start gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-800 ring-1 ring-red-600/20 dark:bg-red-400/10 dark:text-red-300 dark:ring-red-400/30">
         <svg class="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
         </svg>
-        <p>{{ __($coherenceKey) }}</p>
+        <p>{{ __($coherenceKey, $coherenceParams) }}</p>
     </div>
 @endif
 

@@ -12,12 +12,13 @@
 > · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
 > ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
 > DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
-> El último usado es **`#151`**.
+> El último usado es **`#152`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
-> CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. Lo que QUEDA son cuatro fichas de
-> `DEUDA.md` —la peor: **un pedido CANCELADO no tiene NINGUNA vía de reembolso en el panel**— y
-> una ratificación del owner («¿devolver en el parque?» → recomendado NO, `#149`). Punto **0.bis**.
+> CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
+> CANCELADO sin vía de reembolso— está **CERRADA** (`#152`, owner: la línea se abre para
+> cancelados con deuda), y «¿devolver en el parque?» **DECIDIDO** (modo manual, sin canal nuevo).
+> Quedan TRES fichas menores en `DEUDA.md`. Punto **0.bis**.
 >
 > ✅ **Lo segundo quedó DECIDIDO por el owner** (`#151`): el consumo que `#148` midió —una fiesta
 > consume plazas de su franja— **es CORRECTO**. La regla: **la independencia de cupos se hace POR
@@ -92,9 +93,11 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2822 en verde** (16.361 aserciones, `--parallel` **~67 s** medidos el 2026-08-25 tras
-  fusionar las dos líneas de trabajo — dinero del agente A + aforo del agente B) ·
-  ▶ **+10 en el último corte**: `ItemPriceChangeReconstructionTest` (`#150`) — los CUATRO caminos de
+- Suite **2824 en verde** (16.379 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
+  ▶ **+2 en el último corte** (`#152`): el e2e del pedido CANCELADO con deuda reembolsado por
+  línea hasta dejar el «pendiente de devolverte» a CERO, el candado del cancelado sin deuda y
+  los dos banners. **2 mutaciones, las 2 muerden.**
+  ▶ Antes, **+10**: `ItemPriceChangeReconstructionTest` (`#150`) — los CUATRO caminos de
   `#146` (bajar cantidad · bajar precio · las dos · cancelar tras bajada) más la cadena de ediciones,
   el pedido cancelado sin vía, las etiquetas y los toasts. **6 mutaciones, las 6 muerden.**
   ▶ Antes, **+8**: `RefundItemCustomAmountTest` (`#149`) — el escenario del owner de punta a punta
@@ -352,12 +355,12 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 
 | | Ficha | Estado |
 |---|---|---|
-| 1 | ⚠️ **Un pedido CANCELADO no tiene NINGUNA vía de reembolso en el panel** (total `already_cancelled` + línea `order_not_paid`; el dominio SÍ sabe). Hoy: reembolsar ANTES de cancelar, o en UNA acción | **Decisión de producto** — recomendación en `#150`: abrir la vía por línea para cancelados con deuda |
+| 1 | ~~Un pedido CANCELADO no tenía vía de reembolso~~ — ✅ **CERRADA** (`#152`, owner): la LÍNEA se abre para cancelados con deuda (topes intactos; el TOTAL sigue vetado a propósito) y el banner dice cuánto se debe y por dónde | ✅ hecha |
 | 2 | El reembolso a nivel PEDIDO sin cancelar devuelve siempre el total (regala — medido `#149`) | Sin plan; diseño apuntado en `#149` |
 | 3 | El cliente EN/FR ve claves en crudo en su desglose (breakdown solo-ES) | Sin plan |
 | 4 | El email de una BAJADA no menciona el dinero que se le debe | Sin plan; la causa ya viaja desde `#150` |
 
-⚠️ Y la ratificación del owner sobre «¿devolver en el parque?» — recomendado **NO** en `#149`.
+✅ Y «¿devolver en el parque?» quedó **DECIDIDO** (`#152`): no se construye canal nuevo — devolver en mano se registra con el modo «manual» («ya devuelto fuera»), que ya existía y desde `#149` acepta importe exacto.
 
 🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →

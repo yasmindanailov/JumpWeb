@@ -8080,3 +8080,41 @@ la landing del 2º cliente, ahora con la regla decidida en vez de abierta.)
 Sin código: la decisión CONFIRMA el comportamiento existente. Se actualizan los tres sitios que
 decían «pendiente de decisión» (el 1.bis de `ESTADO`, el docblock de `PackAvailability` y el del
 test).
+
+## #152 · 2026-08-25 · [DECIDIDO, owner] Un pedido CANCELADO con deuda se reembolsa POR LÍNEA — y «devolver fuera» ya tenía su vía
+
+**Las dos decisiones del owner (2026-08-25), sobre las fichas que `#149`/`#150` dejaron:**
+
+**1 · Los pedidos cancelados con deuda se reembolsan POR LÍNEA.** Hasta hoy, un pedido cancelado
+no tenía NINGUNA vía de panel (total `already_cancelled` + línea `order_not_paid`, medido en
+`#150`): el cliente leía «tenemos pendiente devolverte X €» para siempre. La regla nueva: cancelar
+cancela el PRODUCTO; el dinero cobrado se sigue debiendo y se devuelve con «Reembolsar» por línea
+— con la elección de importe de `#149` incluida. **El TOTAL sigue vetado a propósito**: devolvería
+`payment.amount` entero sin preguntar, y la atribución por línea es la que explica el desglose.
+
+**2 · «¿Marcar a devolver en el parque?» — no hace falta construir NADA: ya existe.** La pregunta
+del owner («se deja una línea de que está devuelto fuera y ya está, ¿no?») es exactamente el modo
+**«Solo registrar (ya devuelto fuera)»** del modal, cuyo texto lleva «efectivo» desde el origen y
+que desde `#149` acepta importe exacto. Queda decidido: devolver en mano se REGISTRA con el modo
+manual; no se construye ningún canal automático de salida de dinero en puerta (los motivos, en
+`#149`). ⚠️ El único matiz: un reembolso en efectivo no aparece en el extracto bancario del
+cliente — el registro del panel es su único rastro.
+
+### La ejecución de la 1
+
+- `GuardsItemRefunds::refundItemBlockedReason` acepta `CANCELLED` además de `PAID`. **Ningún tope
+  cambia**: capacidad del pedido y remanente por línea siguen mandando bajo lock (`PAY-09`), y un
+  cancelado con TODO devuelto sigue bloqueado (`already_fully_refunded`). Un `pending` sigue
+  siendo `order_not_paid`.
+- **El banner del pedido cancelado deja de ser el cartel del callejón.** Decía «reembolsar ya no
+  aplica» — con deuda ahora dice **cuánto se debe y por dónde se devuelve** (importe delante); sin
+  deuda conserva el texto cerrado, que ahí sí es verdad.
+- El botón por línea se abre solo (su visibilidad ya preguntaba a `canRefundItem`).
+
+**Lo medido**: suite **2822 → 2824** (+2, 16.361 → 16.379) — el caso e2e del cancelado con deuda
+(bajada → cancelar pedido → reembolsar línea → 40,00 fuera y «pendiente de devolverte» a CERO), el
+candado del cancelado sin deuda, y los dos banners · **2 mutaciones, las 2 muerden** (guard a
+solo-PAID → 3 rojos · banner ciego a la deuda → 1 rojo) · Pint ✓ · docs-check ✓.
+⚠️ Método: el «icono ↩ por línea» ya no existe en la lista (#171) — la entrada es el pie del modal
+Gestionar, gateado por `canRefundItem`; las guardas de UI se aseveran sobre ESE contrato, no sobre
+un marcado que ya no se emite.

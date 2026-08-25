@@ -11,7 +11,6 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
-use App\Domain\Payments\Concerns\GuardsItemRefunds;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
@@ -253,18 +252,19 @@ class ItemPriceChangeReconstructionTest extends TestCase
     }
 
     /**
-     * ⚠️ Y la REALIDAD del pedido CANCELADO, medida para que no cambie en silencio: con el PEDIDO
-     * entero cancelado el panel no tiene NINGUNA vía — el total se bloquea (`already_cancelled`) y
-     * la línea también (`order_not_paid`, {@see GuardsItemRefunds}).
-     * El dominio SÍ sabe reembolsar ese pedido (lo midió `#149` por el batch); es el panel quien lo
-     * veta. Ficha en `DEUDA.md` (`#150`): decidir si la línea se abre para cancelados con deuda.
-     * Mientras tanto, la vía operativa es reembolsar ANTES de cancelar, o en UNA acción.
+     * ⚠️⚠️ **Un pedido CANCELADO con deuda SE PUEDE reembolsar POR LÍNEA** (`DECISIONES #152`,
+     * owner). Hasta `#152` no tenía NINGUNA vía de panel —el total bloqueado
+     * (`already_cancelled`) y la línea también (`order_not_paid`)— y el cliente leía «tenemos
+     * pendiente devolverte X €» para siempre. Cancelar cancela el PRODUCTO; el dinero se sigue
+     * debiendo y esta es la vía. El TOTAL sigue bloqueado a propósito: devolvería
+     * `payment.amount` entero sin preguntar, y la atribución por línea es la que explica.
      */
-    public function test_a_cancelled_order_still_has_no_panel_refund_route(): void
+    public function test_a_cancelled_order_with_debt_is_refundable_line_by_line(): void
     {
-        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);
+        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);   // 40,00 cobrados
+        $payment = $order->payments()->firstOrFail();
 
-        $this->moveTo($order, $item, $this->monday);
+        $this->moveTo($order, $item, $this->monday);                     // valor 24,00 · deuda 16,00
 
         Livewire::actingAs($this->staff(['orders.view', 'orders.cancel']))
             ->test(ViewOrder::class, ['record' => $order->code])
@@ -273,8 +273,55 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $this->assertSame(Order::STATUS_CANCELLED, $fresh->status);
         $this->assertSame(4000, $fresh->financialSummary()->pendienteDevolucion());
 
-        $this->assertSame('order_not_paid', $fresh->refundItemBlockedReason($item->fresh()));
+        // La LÍNEA se abre; el TOTAL sigue vetado (devolvería el pago entero sin preguntar).
+        $this->assertNull($fresh->refundItemBlockedReason($item->fresh()));
         $this->assertSame('already_cancelled', $fresh->refundBlockedReason());
+
+        Http::fake([
+            Redsys::REST_URL_TEST => Http::response(
+                $this->fakeRedsysRefundResponse(PaymentRefund::REDSYS_REFUND_SUCCESS_CODE, $payment->gateway_order),
+                200,
+            ),
+        ]);
+        Livewire::actingAs($this->staff(['orders.view', 'orders.refund_item']))
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refundItem',
+                data: [
+                    'mode' => PaymentRefund::MODE_REST,
+                    'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'items_to_refund' => [$item->id],
+                ],
+                arguments: ['item' => $item->id])
+            ->assertHasNoActionErrors();
+
+        $refund = PaymentRefund::where('order_item_id', $item->id)->latest()->firstOrFail();
+        $this->assertSame(PaymentRefund::STATUS_SUCCEEDED, $refund->status);
+        $this->assertSame(4000, (int) $refund->amount_cents, 'sale TODO el dinero del cliente');
+        $this->assertSame(0, $this->fresh($order)->financialSummary()->pendienteDevolucion(),
+            'y el «pendiente de devolverte» del cliente queda a CERO');
+    }
+
+    /** Y el candado que la apertura NO afloja: un cancelado SIN deuda sigue sin ofrecer nada. */
+    public function test_a_cancelled_order_with_nothing_left_stays_blocked(): void
+    {
+        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);
+        $payment = $order->payments()->firstOrFail();
+
+        Http::fake([
+            Redsys::REST_URL_TEST => Http::response(
+                $this->fakeRedsysRefundResponse(PaymentRefund::REDSYS_REFUND_SUCCESS_CODE, $payment->gateway_order),
+                200,
+            ),
+        ]);
+        // Reembolso TOTAL con cancelación en una acción: no queda deuda.
+        Livewire::actingAs($this->staff(['orders.view', 'orders.refund', 'orders.cancel']))
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('refund', data: ['mode' => PaymentRefund::MODE_REST, 'also_cancel' => true]);
+
+        $fresh = $this->fresh($order);
+        $this->assertSame(Order::STATUS_CANCELLED, $fresh->status);
+        $this->assertSame(0, $fresh->financialSummary()->pendienteDevolucion());
+        $this->assertSame('already_fully_refunded', $fresh->refundItemBlockedReason($item->fresh()));
     }
 
     /**

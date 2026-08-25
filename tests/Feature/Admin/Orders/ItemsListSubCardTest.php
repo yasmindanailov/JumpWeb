@@ -142,10 +142,8 @@ class ItemsListSubCardTest extends TestCase
 
     public function test_banner_appears_for_non_operational_order(): void
     {
-        // Order cancelled → banner de coherencia Order ↔ Item específico
-        // (`item_actions.banner.order_cancelled`): explica que las acciones
-        // individuales (cancelar/reembolsar producto) están bloqueadas, para que
-        // el operador entienda por qué no ve iconos en cada sub-card.
+        // Order cancelled CON deuda → banner de coherencia (`#152`): ya NO dice «reembolsar no
+        // aplica» — dice CUÁNTO se debe y que se devuelve POR LÍNEA. Cancelar sí sigue bloqueado.
         $order = $this->makePaidOrder();
         $order->status = Order::STATUS_CANCELLED;
         $order->save();
@@ -156,14 +154,46 @@ class ItemsListSubCardTest extends TestCase
             ->get('/admin/orders/'.$order->code)
             ->assertOk();
 
-        // Banner explicativo de coherencia Order cancelled → items bloqueados.
-        $response->assertSee(__('admin.orders.item_actions.banner.order_cancelled'));
+        // Banner de deuda, con el importe delante (`#152`). El texto viejo («reembolsar ya no
+        // aplica») era el cartel del callejón que `#150` midió.
+        $pendiente = number_format($order->fresh()->financialSummary()->pendienteDevolucion() / 100, 2, ',', '.').' €';
+        $response->assertSee(__('admin.orders.item_actions.banner.order_cancelled_with_debt', ['pendiente' => $pendiente]));
+        $response->assertDontSee(__('admin.orders.item_actions.banner.order_cancelled'));
 
-        // Iconos cancel/refund: cancelados todos porque Order cancelled bloquea
-        // tanto `canCancelItem` (vía editItemBlockedReason → order_not_operational)
-        // como `canRefundItem` (vía status !== paid).
+        // Cancelar producto sigue bloqueado (order_not_operational); Reembolsar SE OFRECE — su
+        // punto de entrada es el pie del modal Gestionar (#171), gateado por `canRefundItem`.
         $response->assertDontSee("mountAction('cancelItem', { item: {$item->id}", escape: false);
-        $response->assertDontSee("mountAction('refundItem', { item: {$item->id}", escape: false);
+        $this->assertTrue($order->fresh()->canRefundItem($item->fresh()));
+    }
+
+    public function test_cancelled_order_without_debt_keeps_the_closed_banner(): void
+    {
+        // Cancelado y TODO devuelto → el banner viejo sigue siendo verdad: no queda nada que
+        // devolver y ninguna acción individual aplica.
+        $order = $this->makePaidOrder();
+        $order->status = Order::STATUS_CANCELLED;
+        $order->save();
+        $payment = $this->attachPaidPayment($order);
+        $item = $this->attachActiveItem($order);
+        PaymentRefund::create([
+            'payment_id' => $payment->id,
+            'order_item_id' => $item->id,
+            'amount_cents' => (int) $payment->amount,
+            'currency' => 'EUR',
+            'status' => PaymentRefund::STATUS_SUCCEEDED,
+            'mode' => PaymentRefund::MODE_MANUAL,
+            'gateway_order' => $payment->gateway_order,
+            'requested_by' => $this->admin()->id,
+            'requested_at' => now(),
+            'processed_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->staffWithFullItemPermissions())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk();
+
+        $response->assertSee(__('admin.orders.item_actions.banner.order_cancelled'));
+        $this->assertFalse($order->fresh()->canRefundItem($item->fresh()));
     }
 
     public function test_totals_section_renders_principal_addons_total_and_refund_badges(): void

@@ -49,7 +49,14 @@ trait GuardsItemRefunds
         if ($item->parent_item_id !== null) {
             return 'item_is_addon';
         }
-        if ($this->status !== self::STATUS_PAID) {
+        // ⚠️⚠️ **Un pedido CANCELADO con deuda TAMBIÉN se reembolsa por línea** (`DECISIONES #152`,
+        // owner). Aquí decía `!== STATUS_PAID` y eso, combinado con que el reembolso TOTAL se
+        // bloquea sobre cancelados (`refundBlockedReason` → `already_cancelled`), dejaba al pedido
+        // cancelado SIN NINGUNA vía de panel: el cliente leía «tenemos pendiente devolverte X €»
+        // para siempre (medido en `#150`). Cancelar cancela el PRODUCTO; el dinero cobrado sigue
+        // debiéndose, y esta es la vía para devolverlo. Los topes de PAY-09 no cambian: lo que
+        // queda por debajo (capacidad, remanente por línea) sigue mandando bajo lock.
+        if (! in_array($this->status, [self::STATUS_PAID, self::STATUS_CANCELLED], true)) {
             return 'order_not_paid';
         }
         if ($this->displayStatus() === self::STATUS_EXPIRED) {

@@ -1098,7 +1098,11 @@ return [
             // visualmente que las acciones cancel/refund por producto YA NO
             // aplican (el backend también bloquea, esto es UX explicativo).
             'banner' => [
-                'order_cancelled' => 'Este pedido está cancelado. Las acciones individuales de cancelar o reembolsar productos ya no aplican — el pedido entero se canceló como bloque.',
+                'order_cancelled' => 'Este pedido está cancelado y no queda nada por devolver. Las acciones individuales de cancelar o reembolsar productos ya no aplican.',
+                // `#152`: cancelar cancela el PRODUCTO; el dinero cobrado se sigue debiendo, y se
+                // devuelve por LÍNEA. El texto viejo afirmaba «reembolsar ya no aplica» y era el
+                // cartel del callejón medido en `#150`.
+                'order_cancelled_with_debt' => 'Este pedido está cancelado y quedan :pendiente por devolver al cliente. Usa «Reembolsar» (↩️) en cada línea para devolverlo — puedes elegir el importe. Cancelar productos ya no aplica.',
                 'order_fully_refunded' => 'Este pedido se ha reembolsado por completo: ya no queda importe que reembolsar. Cancelar productos sí sigue disponible (cancelar ≠ reembolsar).',
             ],
 
