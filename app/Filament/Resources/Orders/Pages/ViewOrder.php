@@ -231,10 +231,14 @@ class ViewOrder extends ViewRecord
             // Descripción contextual: si el servicio ya finalizó (#141), explicitamos
             // que solo se ofrece reembolso (sin opción de cancelar). Si el servicio
             // sigue activo, el texto estándar describe el flujo combinable.
+            // `#153`: el importe SE NOMBRA — esta acción devuelve el pago ENTERO (cuando es
+            // alcanzable nunca hay reembolsos previos: `refundBlockedReason` bloquea tras
+            // cualquier parcial), y el operador tiene que leer CUÁNTO antes de confirmarlo.
             ->modalDescription(fn (Order $record): string => __(
                 $record->canBeCancelled()
                     ? 'admin.orders.actions.refund.modal_description'
-                    : 'admin.orders.actions.refund.modal_description_finished_service'
+                    : 'admin.orders.actions.refund.modal_description_finished_service',
+                ['amount' => $this->eurosFromCents((int) ($record->paidPayment()?->amount ?? 0))],
             ))
             ->modalSubmitActionLabel(__('admin.orders.actions.refund.submit'))
             // El Toggle "También cancelar" SOLO se ofrece si el Order admite todavía
@@ -244,6 +248,15 @@ class ViewOrder extends ViewRecord
             // como array estable (no closure raíz) para no romper la inicialización
             // de Filament; la condicional vive en el `->visible()` del Toggle.
             ->schema([
+                // `#153` (owner): sin campo de importe AQUÍ a propósito — el parcial se devuelve
+                // por LÍNEA (atribución que explica el desglose). Lo que sí hay es la señal: si el
+                // operador NO va a cancelar, probablemente busca devolver una PARTE, y este aviso
+                // le dice dónde se hace. Con «también cancelar» activo no aparece: devolver todo
+                // y cancelar es el uso correcto de esta acción.
+                Placeholder::make('partial_hint')
+                    ->hiddenLabel()
+                    ->content(__('admin.orders.actions.refund.partial_hint'))
+                    ->visible(fn (Get $get): bool => ! (bool) $get('also_cancel')),
                 // Modo del refund (#142): por defecto vía REST de Redsys (cierra el
                 // bucle automáticamente). Manual es opt-in para casos en los que el
                 // operador ya devolvió desde el portal banco y solo quiere registrar.

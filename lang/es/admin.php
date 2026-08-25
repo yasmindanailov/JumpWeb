@@ -506,8 +506,12 @@ return [
                 // #143: lenguaje operativo simple, sin jerga técnica. El empleado lee
                 // qué pasa con el cliente y con el dinero, no cómo se implementa.
                 'modal_heading' => '¿Reembolsar este pedido?',
-                'modal_description' => 'Devolvemos el importe al cliente y le mandamos un aviso por email cuando se confirme.',
-                'modal_description_finished_service' => 'El cliente ya ha disfrutado del servicio (todos los productos finalizaron). Esta acción le devuelve el importe; el pedido se queda como pagado con el reembolso anotado.',
+                // `#153`: el importe SE NOMBRA. Medido en `#149`: el operador usó esta acción para
+                // devolver una diferencia de 10,00 € y salieron los 40,00 del pago entero — el
+                // texto no decía cuánto iba a devolver.
+                'modal_description' => 'Se devolverán :amount € — TODO lo cobrado de este pedido — y le mandamos un aviso por email cuando se confirme.',
+                'modal_description_finished_service' => 'El cliente ya ha disfrutado del servicio (todos los productos finalizaron). Se le devolverán :amount € — todo lo cobrado —; el pedido se queda como pagado con el reembolso anotado.',
+                'partial_hint' => '⚠️ Esto devuelve el pedido ENTERO. Si solo quieres devolver una parte (una diferencia de precio, una línea), cierra esto y usa «Reembolsar» dentro de «Gestionar» del producto: allí eliges el importe exacto.',
                 'submit' => 'Reembolsar',
 
                 // Modo (#142, simplificado #143).

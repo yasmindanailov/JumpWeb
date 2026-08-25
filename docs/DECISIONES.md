@@ -8118,3 +8118,31 @@ solo-PAID → 3 rojos · banner ciego a la deuda → 1 rojo) · Pint ✓ · docs
 ⚠️ Método: el «icono ↩ por línea» ya no existe en la lista (#171) — la entrada es el pie del modal
 Gestionar, gateado por `canRefundItem`; las guardas de UI se aseveran sobre ESE contrato, no sobre
 un marcado que ya no se emite.
+
+## #153 · 2026-08-25 · [DECIDIDO, owner] El reembolso a nivel PEDIDO se queda SIN campo de importe — pero NOMBRA lo que va a devolver y señala la vía de los parciales
+
+**La ficha**: «Reembolsar el pedido» SIN cancelar devolvía siempre `payment.amount` entero — medido
+en `#149` con los números del owner: devolvió 40,00 debiendo 10,00 (30,00 regalados como
+`compensado`). El modal ni siquiera decía CUÁNTO iba a devolver.
+
+**La decisión (owner, 2026-08-25)**: **aviso claro, sin campo**. El uso legítimo de esta acción sin
+cancelar es el canje —devolver todo lo pagado online porque el cliente pagará en recepción, donde
+el total ES lo correcto—; para devolver una DIFERENCIA ya está la línea (`#149`), cuya atribución
+es la que explica el desglose. Duplicar el campo a nivel pedido añadía mecanismo con peor
+atribución (el parcial de pedido se reparte a prorrata).
+
+**La ejecución**:
+- El `modalDescription` **nombra el importe exacto**: «Se devolverán 18,15 € — TODO lo cobrado de
+  este pedido…» (las dos variantes, con y sin servicio prestado). Cuando esta acción es alcanzable
+  nunca hay reembolsos previos (`refundBlockedReason` bloquea tras cualquier parcial), así que el
+  importe es siempre el pago entero.
+- Con «también cancelar» DESACTIVADO —la forma exacta del error medido— aparece el aviso:
+  «devuelve el pedido ENTERO; para una parte usa Reembolsar dentro de Gestionar del producto».
+  Con el toggle activo no estorba: devolver todo y cancelar es el uso correcto.
+
+**Lo medido**: suite **2824 → 2826** (+2, 16.379 → 16.387) · **2 mutaciones, las 2 muerden**
+(descripción sin importe · aviso nunca visible) · Pint ✓ · docs-check ✓.
+⚠️ Método: **el HTML de un modal de acción NO viaja en el render del page-component** (Filament
+v4) — `assertSee` sobre la página sale vacío aunque el texto exista. La descripción se asevera
+sobre `getMountedAction()->getModalDescription()` y la visibilidad del aviso con
+`assertSchemaComponentHidden/Visible`, que evalúan el objeto real.

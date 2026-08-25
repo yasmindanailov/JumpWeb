@@ -12,7 +12,7 @@
 > · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
 > ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
 > DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
-> El último usado es **`#152`**.
+> El último usado es **`#153`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -93,8 +93,10 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2824 en verde** (16.379 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
-  ▶ **+2 en el último corte** (`#152`): el e2e del pedido CANCELADO con deuda reembolsado por
+- Suite **2826 en verde** (16.387 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
+  ▶ **+2 en el último corte** (`#153`): el modal del reembolso de PEDIDO nombra el importe
+  exacto y, sin «también cancelar», señala la vía de los parciales. **2 mutaciones muerden.**
+  ▶ Antes, **+2** (`#152`): el e2e del pedido CANCELADO con deuda reembolsado por
   línea hasta dejar el «pendiente de devolverte» a CERO, el candado del cancelado sin deuda y
   los dos banners. **2 mutaciones, las 2 muerden.**
   ▶ Antes, **+10**: `ItemPriceChangeReconstructionTest` (`#150`) — los CUATRO caminos de
@@ -356,7 +358,7 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 | | Ficha | Estado |
 |---|---|---|
 | 1 | ~~Un pedido CANCELADO no tenía vía de reembolso~~ — ✅ **CERRADA** (`#152`, owner): la LÍNEA se abre para cancelados con deuda (topes intactos; el TOTAL sigue vetado a propósito) y el banner dice cuánto se debe y por dónde | ✅ hecha |
-| 2 | El reembolso a nivel PEDIDO sin cancelar devuelve siempre el total (regala — medido `#149`) | Sin plan; diseño apuntado en `#149` |
+| 2 | ~~El reembolso a nivel PEDIDO regalaba sin avisar~~ — ✅ **CERRADA** (`#153`, owner): sin campo (los parciales van por línea); el modal nombra el importe exacto y avisa de la vía de los parciales al desactivar «también cancelar» | ✅ hecha |
 | 3 | El cliente EN/FR ve claves en crudo en su desglose (breakdown solo-ES) | Sin plan |
 | 4 | El email de una BAJADA no menciona el dinero que se le debe | Sin plan; la causa ya viaja desde `#150` |
 

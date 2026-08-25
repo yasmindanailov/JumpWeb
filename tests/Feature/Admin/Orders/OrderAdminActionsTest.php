@@ -584,6 +584,50 @@ class OrderAdminActionsTest extends TestCase
             ->assertActionVisible('refund');
     }
 
+    /**
+     * `#153` (owner): el modal NOMBRA el importe exacto que va a devolver. Medido en `#149`: el
+     * operador usó esta acción para devolver una diferencia de 10,00 € y salieron los 40,00 del
+     * pago entero — el texto no decía cuánto.
+     */
+    public function test_refund_modal_names_the_exact_amount_it_will_return(): void
+    {
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);   // 18,15 €
+
+        // ⚠️ El HTML del modal no viaja en el render del page-component (v4): se asevera sobre la
+        // ACCIÓN montada, que es el objeto que el modal pinta.
+        $testable = Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->mountAction('refund');
+
+        $this->assertSame(
+            __('admin.orders.actions.refund.modal_description', ['amount' => '18,15']),
+            (string) $testable->instance()->getMountedAction()->getModalDescription(),
+        );
+    }
+
+    /**
+     * `#153` (owner): SIN campo de importe aquí a propósito — pero si el operador desactiva
+     * «también cancelar» (la forma del error medido en `#149`), el modal le señala la vía de los
+     * parciales: «Reembolsar» por línea. Con el toggle activo, el aviso no estorba.
+     */
+    public function test_refund_modal_points_partials_to_the_line_when_not_cancelling(): void
+    {
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+
+        $page = Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->mountAction('refund');
+
+        // Default: también cancelar → devolver TODO es el uso correcto; sin aviso.
+        $page->assertSchemaComponentHidden('partial_hint');
+
+        // Sin cancelar → el aviso aparece.
+        $page->setActionData(['also_cancel' => false])
+            ->assertSchemaComponentVisible('partial_hint');
+    }
+
     public function test_refund_hidden_when_pending(): void
     {
         $order = $this->makePendingOrder();
