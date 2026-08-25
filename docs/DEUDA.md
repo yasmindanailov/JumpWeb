@@ -136,20 +136,38 @@ exactamente lo que habría dejado pasar los tres fallos vivos que el refactor de
 la navegación de mes) y las dos regresiones propias que se cazaron en un navegador y no en la suite.
 Receta del andamio, con sus trampas medidas: `VERIFICACION-E2E-CAJON.md` §5.bis y §5.quater.
 
-## ▶ Media · seis colores CRUDOS en el CSS del cajón, ya localizados (2026-08-16, `DECISIONES #99`)
+## ▶ Baja · los colores en crudo que QUEDAN, todos porque cambiarlos mueve píxeles (2026-08-25, `DECISIONES #143`)
 
-No los ve ninguna instalación como suyos: un color escrito a mano no se puede cambiar desde el panel.
-Estaban invisibles porque el presupuesto de tokens rascaba `purchase.blade.php` y estas clases solo
-viven en los `.vue`. Ahora el ámbito es por familias y los seis están **nombrados** en
-`SidebarTokenBudgetTest::MAX_RAW_COLOURS`:
+⚠️ **Esta ficha decía «seis colores crudos en el CSS del cajón», y ése era también su ámbito. Ya no.**
+El barrido de la tanda A midió las **dos hojas enteras** —234 ocurrencias— y convirtió las **144** que
+repetían un token ya existente. Lo que queda es lo que el owner dejó fuera **a propósito**, y no es
+deuda de descuido: es la lista de decisiones de diseño que nadie ha tomado todavía.
 
-`.cal__day--normal` · `.cal__day--special .cal__day-price` · `.addons__badge--included` ·
-`.addons-mini__badge` · `.addons-mini__badge--included` · `.purchase__note--guestform`
+**a) Blanco y negro puros — 39 ocurrencias.** No tienen token, y **darles uno los repinta**:
+- el **blanco de papel** (polaroids, tarjetas de evento, la de invitación, el post-form, `.bd-card`)
+  no es `--bg`, que es crema `#F4EFE3`. Pediría un `--paper` propio;
+- el **blanco sobre acento** (`rgba(255,255,255,.72)` de los CTA) tampoco es `--on-brand`: ése sigue
+  al acento y **sobre un acento claro es tinta oscura**. Convertirlo cambiaría esos textos en toda
+  zona clara, que es justo lo que la promesa de «píxel idéntico» excluía;
+- el **negro de `mask`/`mask-image`** (8) no es un color visible, es un recorte. **Se queda.**
 
-- **No se tocan en un refactor de tests**: cambiar un color cambia PÍXELES y eso exige verificación
-  visual (DoD §4). Es tarea propia y pequeña, con los seis ya localizados.
-- El tope es un **trinquete estricto**: bajarlo es parte del commit que tokenice cada uno.
-- **Sin plan de fase**: no bloquea nada.
+**b) Nueve huérfanos con nombre**, casi todos del envoltorio de regalo (`.offw-*`, que ya tiene su
+paleta local `--box`/`--ribbon`): `#F0B33F` ×3 escapado de `--ribbon-dk`, `#FFF7EC`,
+`rgba(255,247,236,.95)`, `rgba(255,196,140,.55)`, `#FDFBF4` y `#1A1915`.
+
+**c) ❗ Y uno que además es un DEFECTO de coherencia, no solo deuda de tema:**
+`.addons-mini__badge` pinta `color: var(--ok)` sobre `background: rgba(34,197,94,.15)` — **un verde de
+otra familia**. Sus dos hermanas (`--included`, `--free`) sí usan `--ok`/`--ok-bg`. Cambiar `--ok`
+mueve el texto y deja el fondo quieto. ▶ Arreglarlo es **una línea**, cambia píxeles (los dos verdes
+no son el mismo) y por eso está aquí y no hecho: es decisión de producto, no refactor.
+
+- **Ninguno se toca en un refactor**: cambiar un color exige verificación visual (DoD §4).
+- `SidebarTokenBudgetTest::MAX_RAW_COLOURS` (hoy **5**, era 6) es un **trinquete estricto** sobre el
+  ámbito del cajón: bajarlo es parte del commit que tokenice cada uno.
+- ✅ **Lo que ya NO es deuda**: un literal *nuevo* que repita un token existente ya no puede entrar
+  —`RawColourIsNotATokenTest` lo caza, y compara por VALOR RGB, no por nombre de token—.
+- **Sin plan de fase**: no bloquea nada. Candidato natural a la tanda B, con el segundo cliente
+  delante, que es cuando se sabrá si un `--paper` hace falta de verdad.
 
 ## ▶ Media · la suite sigue sin auditar contra la FECHA (2026-08-16, `DECISIONES #97`)
 

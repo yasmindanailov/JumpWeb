@@ -76,16 +76,59 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
   y el panel la reescribe a `group=registration` (sin efecto: se lee por `key`).
 
 ## 4 · Tema y marca
-- Color global: setting `theme.brand` → `ThemeSettings` tematiza web, panel y emails
-  (contraste WCAG automático). Color/acento por zona: columnas de `zones` en el panel.
+
+El tema son **TRES mecanismos**, no uno (`specs/landing-white-label.md` §4.5), y cada cosa entra
+por el suyo. Meterla por el que no es funciona a medias, que es peor que no funcionar.
+
+**a) Valores → el PANEL (BD).** Color global: setting `theme.brand` (+ `theme.brand_secondary`)
+→ `ThemeSettings` tematiza web, panel y emails, con el contraste WCAG calculado por luminancia.
+Color/acento por zona: columnas `color` y `color_secondary` de `zones`, en el panel.
+▶ Es lo único que cruza al **panel y a los correos**, donde el CSS del cliente no llega. Por eso el
+tema en BD se queda en COLOR: tipografía y radios van en (b) (`[DECIDIDO owner]`, §4.5.5 de la spec).
+
+**b) Estructura y detalle → `public/css/client.css`** (`DECISIONES #143`).
+Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cuatro** —después de
+`landing.css`, del tema inyectado y de `site.css`—, así que redefinir un token ahí gana en cascada:
+
+```css
+/* public/css/client.css — el paquete de tema de esta instalación */
+:root {
+    --bg: #0E0E10;  --bg-soft: #17171B;  --bg-card: #1D1D22;
+    --fg: #F2F2F0;  --fg-mute: #9A9A94;
+    --font-display: "Su Fuente", system-ui, sans-serif;
+    --r: 4px;  --r-lg: 8px;   /* radios: aquí, no en el panel */
+}
+```
+
+⚠️ **Con eso se retiñe la web entera**, incluidas las 145 sombras, bordes y velos que hasta el
+2026-08-25 estaban escritos a mano en el color del primer cliente (`#143`). Lo vigila
+`RawColourIsNotATokenTest`: un literal nuevo que repita un token existente pone la suite en rojo.
+
+⚠️⚠️ **Tres cosas que hay que saber de esta hoja, y las tres muerden:**
+- **NO se versiona** (`.gitignore`): este repo es el PRODUCTO y no lleva la marca de nadie.
+- **NO viaja por `deploy.sh`**: se copia a mano al servidor **una vez**. El `rsync --delete` la
+  excluye a propósito —igual que `public/uploads/`—; **sin esa exclusión el primer despliegue la
+  borraría y la web volvería al tema del producto en silencio**. Lo asevera `ClientThemePackageTest`.
+- **El orden importa más que el contenido**: si alguien la mueve por delante de `site.css`, carga
+  perfectamente y **no pinta nada**. Ese síntoma es indistinguible de un fichero que no carga.
+
+**c) Ficheros y dibujos → assets.**
 - Assets de `public/` a sustituir: `favicon.svg/.ico/-64.png` · `apple-touch-icon.png` ·
   `og-image.jpg` · vídeo del hero (+ póster) · `images/attractions/*.webp` (27 usados por
   el seed; 40 en disco — 4 sin referencia alguna, candidatos a borrar en Fase 1) ·
   `images/historia-seguridad.png`.
+- **El dibujo del SPINNER** se sustituye desde `client.css`, redefiniendo solo la mitad §B de
+  `spinner.css`. Receta con ejemplo completo y las cuatro reglas que respetar:
+  `sistemas/UI-SPINNER.md` **§3.bis**.
+- **Los iconos de producto** son un set CURADO (`[DECIDIDO owner]`, spec §4.6): `ticket_types.icon`
+  guarda la clave de un icono del sistema de diseño y el panel lo ofrece con vista previa. Un set
+  propio va en el paquete del cliente; **no hay subida libre de SVG** (un SVG es código ejecutable).
+
 - Marca en código: RESUELTO en Fase 1 — panel, wordmark de emails, PDFs y título de puerta
   leen `business.name` (BD) con fallback al nombre de producto; tema mail = `brand.css`.
   Los tokens estáticos de `public/css/*.css` (paleta/tipografías por defecto) siguen siendo
-  el design system base del producto.
+  el design system base del producto — y desde `#143` son de verdad el único sitio donde vive
+  cada color, que es lo que hace que (b) sirva para algo.
 
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de

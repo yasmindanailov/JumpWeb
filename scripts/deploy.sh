@@ -324,6 +324,9 @@ RSYNC_EXCLUDES=(
     --exclude='/storage/'            # logs y cachés DEL SERVIDOR + basura de test + storage/ssr
     --exclude='/public/hot'          # si llega, Vite sirve todo desde localhost:5274 y la web queda muda
     --exclude='/public/uploads/'     # subidas del panel: excluirlas las salva del --delete
+    --exclude='/public/css/client.css'  # paquete de tema DEL CLIENTE (#143): gitignorado, vive solo
+                                        # en el servidor. Sin esta línea el --delete se lo lleva en el
+                                        # primer despliegue y la web vuelve al tema del producto
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'
@@ -331,7 +334,7 @@ RSYNC_EXCLUDES=(
     --exclude='/package-lock.json'
     --exclude='/design_mockup/'
 )
-dim "excluidos: .env · .git · vendor · node_modules · tests · docs · openapi · storage · public/hot · public/uploads · bootstrap/cache"
+dim "excluidos: .env · .git · vendor · node_modules · tests · docs · openapi · storage · public/hot · public/uploads · public/css/client.css · bootstrap/cache"
 dim "SÍ viajan: app · bootstrap · config · database · lang · public (con build) · resources · routes · artisan · composer.*"
 
 rsync_run() {  # $1 = extra flags

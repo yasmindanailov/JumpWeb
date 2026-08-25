@@ -4,9 +4,10 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-25**.
 >
-> ❗ **Lo primero que tienes que saber**: se está en la **tanda A de `specs/landing-white-label.md`**,
-> con **3 de 5 cortes hechos** — quedan el inventario de colores en crudo y el spinner. Redis ya no
-> bloquea nada (`#137`) y el desglose de dinero está CERRADO (`#127`→`#134`).
+> ❗ **Lo primero que tienes que saber**: la **tanda A de `specs/landing-white-label.md` está
+> CERRADA** (`#138`→`#143`). Lo siguiente es la **tanda B** (contenido y el segundo cliente como
+> primer paquete de tema). Redis ya no bloquea nada (`#137`) y el desglose de dinero está CERRADO
+> (`#127`→`#134`).
 >
 > ⚠️ **Y este documento ADELGAZÓ el 2026-08-25, de 824 líneas a menos de la mitad.** Se retiró el
 > índice de la Fase 4 —83 líneas que duplicaban el tracker de una fase CERRADA—, se movió el mapa del
@@ -30,9 +31,16 @@ contador de tests JS.
 
 🟦 **EN CURSO: la landing white-label** (`specs/landing-white-label.md`, `#136`). Nace del mockup del
 **segundo cliente**. La línea: **data-driven el DATO, no la PÁGINA**.
-▶ **Tanda A, 3 de 5**: el acento de zona sale del nombre de la clase (`#138`), la paleta del primer
-cliente sale del producto (`#139`) y el icono por producto (`#140`). **Faltan** el inventario de los 76
-colores en crudo y el spinner rebrandeable.
+▶ ✅ **Tanda A CERRADA** (`#138`→`#143`): el acento de zona ya no viaja por el nombre de la clase, la
+paleta del primer cliente sale del producto, el icono por producto ya no es un booleano, **los 144
+literales que repetían un token existente pasan a `var()`/`color-mix`**, el **spinner es sustituible
+por instalación** y —lo que faltaba para que todo lo anterior sirviera— **existe el hueco por donde
+entra el paquete de tema del cliente**.
+⚠️ **Lo que la tanda A enseñó y no se puede no saber**: tres afirmaciones de la propia spec eran
+falsas y las tres se creyeron hasta medirlas. La última (`#143` §8): **el «76 colores en crudo» salió
+de un `grep` línea a línea que no veía ni los `rgba()` ni los valores multilínea — y el primer
+instrumento que se escribió para corregirlo tenía EL MISMO defecto.** Eran 234, y en las 12 que
+faltaban estaban las dos fugas de marca del hero.
 ▶ **B** (contenido y copy) y **C** (servicios como producto real) sin empezar. ⚠️ **C toca AFORO y PAY
 y necesita spec propia.**
 ⏸️ **APARCADO por el owner**: zonas y cupos se quedan como están hasta ver cómo se comportan las
@@ -54,7 +62,7 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2764 en verde** (16.066 aserciones, `--parallel` **~32 s** medidos el 2026-08-25) ·
+- Suite **2780 en verde** (16.157 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
   **671 tests JS** (`node --test`) · Pint limpio (848 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
@@ -161,30 +169,56 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ LO SIGUIENTE: TERMINAR LA **TANDA A** DE `specs/landing-white-label.md`
+# ❗ LO SIGUIENTE: LA **TANDA B** DE `specs/landing-white-label.md` — el CONTENIDO
 
-**Quedan dos cosas, las dos de presentación y ninguna toca dominio:**
+**La tanda A ya dejó el terreno con qué pintar** (`#143`): hay tokens que sobrevivan a un cambio de
+paleta, un spinner sustituible y —lo que faltaba— **un hueco por donde entra el paquete del cliente**
+(`public/css/client.css`, cargado el último; `INSTALACION-CLIENTE.md` §4).
 
-1. **El inventario de los 76 colores en crudo** — 58 en `public/css/site.css` y 18 en
-   `public/css/landing.css`. Decidir cuáles suben a token para que el paquete de tema de un cliente
-   pueda sobrescribirlos, y cuáles se quedan (no todo color es marca: `--attn`, los de error/éxito y
-   los grises estructurales tienen significado propio).
-2. **El spinner rebrandeable** — ya es **un fichero, una clase `.jj-spinner` y tres tokens** (tamaño,
-   color, velocidad), referenciado desde 17 sitios. Cambiar color o velocidad ya funciona; falta el
-   camino para **sustituir el DIBUJO** por instalación.
+**Tanda B, tres cortes:**
+1. **Los dos modelos que faltan** — números del hero y testimonios (spec §4.2).
+2. **El copy que baja de `lang/` al CMS** — **142 claves**, hoy en el repo (spec §4.3).
+   ⚠️ **NO todo el copy baja**: el apartado dice cuál se queda y por qué.
+3. **La landing del segundo cliente como PRIMER PAQUETE DE TEMA**, que es su medida de éxito y está
+   escrita en la spec §6·6: **montarla tiene que costar CERO migraciones y CERO líneas de dominio.**
+   Si no es cero, la línea de §4.1 está mal puesta y **se corrige la spec antes que el código**.
 
-▶ **Después**: tanda **B** (los dos modelos que faltan, el copy que baja de `lang/` al CMS y la landing
-del segundo cliente como primer paquete de tema) y tanda **C** (servicios como producto real).
+▶ **Después**: tanda **C** (servicios como producto real).
 ⚠️⚠️ **C necesita SPEC PROPIA antes de una línea de código**: toca `AFORO-01/02/03` y las identidades
 de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni en SQLite ni en staging** (MariaDB).
 
-⚠️ **Antes de tocar el tema, lee `specs/landing-white-label.md` §4.5.1.** Ese apartado afirmaba «cero
-variables se inyectan desde BD» y **era falso** — el tema SÍ se inyecta desde `theme.brand`, con el
-contraste calculado por luminancia, y lo consumen también el panel y los correos. El error fue de
-medición: un `grep` que no encuentra **no demuestra que no exista**. Es la lección que esta semana se
-ha pagado tres veces.
+⚠️⚠️ **Antes de tocar el tema, lee la spec §4.5.1 y §4.5.2 — LAS DOS LLEVAN UNA CORRECCIÓN.** La
+primera afirmaba «cero variables se inyectan desde BD» (falso: el tema sí se inyecta desde
+`theme.brand`). La segunda, «cambiar el dibujo del spinner es sustituir un fichero; no hay que
+construir nada» (falso: eran dos pseudo-elementos y un `@keyframes`, y la doc del propio sistema decía
+que esa hoja no se modifica).
+❗ **La lección que esta semana se ha pagado CUATRO veces, y la última en el mismo trabajo que la
+escribió**: un `grep` que no encuentra no demuestra que no exista, y **un instrumento que no ve una
+parte del corpus da un inventario que parece completo y no lo es**. Cuando dos medidas del mismo
+corpus no coinciden, la que sobra **no es la que da más: es la que no puede explicar la diferencia**.
 
 ---
+
+### Lo que la tanda A dejó montado, y hay que saber ANTES de tocar CSS
+
+- 🆕 **`public/css/client.css` es el paquete de tema de la instalación** (`#143`). Se carga **el
+  último**, **no se versiona** y **`deploy.sh` lo excluye del `rsync --delete`**. ⚠️ **Las tres cosas
+  son el mecanismo**, no tres detalles: por delante de `site.css` carga y no pinta nada; sin la
+  exclusión, el primer despliegue lo borra **en silencio**. `ClientThemePackageTest`.
+- 🆕 **Un literal que repita un token existente ya no puede entrar**: `RawColourIsNotATokenTest`
+  compara **por VALOR RGB, no por nombre de token** — que es el hueco por el que dos acentos del
+  primer cliente sobrevivieron a `#139` escritos en decimal dentro de un degradado.
+  ⚠️ Su lista de excepciones (`ALLOWED_SELECTORS`) **solo encoge**, y hay un caso que tumba una
+  entrada que se quede sin sujeto.
+- 🆕 **`spinner.css` tiene dos mitades y la frontera es un marcador de máquina** (`>>> SPINNER:… >>>`).
+  §A contrato, §B dibujo. Meter geometría en §A pone `SpinnerTest` en rojo, y con razón: es lo que
+  hace sustituible el dibujo.
+- ⚠️ **Blanco y negro NO se tokenizaron, y es decisión del owner**: el blanco de papel no es `--bg`
+  (crema) y el blanco sobre acento no es `--on-brand` (sobre un acento claro es tinta oscura).
+  Convertirlos **cambia píxeles**. Ficha con los tres grupos en `DEUDA.md`.
+- 🐛 **Y queda un defecto de coherencia de una línea**: `.addons-mini__badge` pinta `color: var(--ok)`
+  sobre un fondo verde de otra familia. Cambiar `--ok` mueve el texto y deja el fondo quieto. Está
+  en `DEUDA.md` porque arreglarlo cambia píxeles: es decisión de producto, no refactor.
 
 ## ▶ Lo que está ABIERTO y no es de la tanda A
 

@@ -78,20 +78,27 @@ class SidebarTokenBudgetTest extends TestCase
     /**
      * Los colores escritos a mano que quedan en el ámbito REAL del cajón, medidos el 2026-08-16
      * (`DECISIONES #99`). Igual que arriba: **no es comparable con el 3 anterior**, que se medía sobre
-     * un ámbito más estrecho. Son estos seis, y están nombrados para que se ataquen por su nombre:
+     * un ámbito más estrecho. Eran SEIS y están nombrados para que se ataquen por su nombre.
      *
-     *   · `.cal__day--normal`                    `background: rgba(20, 19, 15, 0.05)`
+     * ⚠️ **BAJA a 5 el 2026-08-25** (`DECISIONES #143`): el barrido de color de la tanda A se llevó
+     * `.cal__day--normal` (`background: rgba(20,19,15,0.05)`), que era `--fg` al 5 % escrito a mano.
+     * No se eligió: entró con las otras 143 porque coincidía EXACTAMENTE con un token existente, y el
+     * trinquete de abajo es quien avisó de que había que bajar el número. Los cinco que quedan:
+     *
      *   · `.cal__day--special .cal__day-price`   `background: rgba(255, 255, 255, 0.55)`
      *   · `.addons__badge--included`             `color: #fff`
      *   · `.addons-mini__badge`                  `background: rgba(34, 197, 94, 0.15)`
      *   · `.addons-mini__badge--included`        `color: #fff`
      *   · `.purchase__note--guestform`           `background: color-mix(…, #fff)`
      *
-     * ⚠️ **No se tokenizan aquí a propósito**: cambiar un color cambia PÍXELES, y eso exige
-     * verificación visual (DoD §4). Meterlo en un refactor de tests sería colar un cambio de interfaz
-     * sin mirarlo. Queda como tarea propia, con los seis ya localizados. Ficha en `DEUDA.md`.
+     * ⚠️ **Los cinco CAMBIAN PÍXEL si se tocan, y por eso siguen aquí.** Cuatro son blanco puro, que
+     * no es `--bg` (crema) ni `--on-brand` (sigue al acento, y sobre un acento claro es tinta oscura):
+     * darles cualquiera de los dos tokens los repinta. El quinto es un verde de otra familia que el
+     * texto de al lado ya no comparte —`color: var(--ok)` con `background` de otro verde—, así que es
+     * además un defecto de coherencia. Cambiar un color exige verificación visual (DoD §4).
+     * Ficha en `DEUDA.md`.
      */
-    private const MAX_RAW_COLOURS = 6;
+    private const MAX_RAW_COLOURS = 5;
 
     /** @var ?list<array{property: string, value: string}> */
     private ?array $declarations = null;
@@ -394,7 +401,13 @@ class SidebarTokenBudgetTest extends TestCase
             }
         }
 
-        return $memo = $declarations;
+        // ⚠️ `return $memo = $declarations;` — así estaba hasta el 2026-08-25, y `$memo` era una
+        // variable LOCAL que se descartaba al salir: el memo de instancia nunca se rellenaba y la
+        // guarda de arriba (`$this->declarations !== null`) nunca daba positivo. Los dos ficheros se
+        // releían y se re-parseaban en cada caso. No falseaba ningún resultado —de ahí que durara—,
+        // pero el párrafo de arriba explica con detalle por qué el memo es de instancia y no `static`
+        // sobre un memo que no existía.
+        return $this->declarations = $declarations;
     }
 
     /** @param  list<string>  $classes */

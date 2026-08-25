@@ -7240,3 +7240,150 @@ proyecto de dinero con `VERIFY_CONC=1`, no una feature de marketing.
 3. **Revisión adversarial de las cuatro specs** por otro agente, que `CONVENCIONES` §5 exige y que en
    este proyecto ha parado bloqueantes reales tres veces (`#122` encontró dos; `#123` declaró el
    diseño INSUFICIENTE).
+---
+
+## #143 · 2026-08-25 · TANDA A CERRADA · El color que ya tenía token dejaba de tenerlo al escribirse a mano — y el paquete del cliente no tenía por dónde entrar
+
+Cierra los **dos últimos cortes de la tanda A** de `specs/landing-white-label.md` (`#136`): el
+inventario de colores en crudo y el spinner rebrandeable. Y los dos empezaron desmintiendo lo que la
+propia spec afirmaba.
+
+### 1 · La pregunta del inventario era la pregunta equivocada
+
+La spec decía **«58 colores en crudo en `site.css` y 18 en `landing.css`»** y planteaba la tarea como
+«decidir cuáles suben a token». Medido con un instrumento que ve además los `rgba()` y los valores
+**multilínea**: **234 ocurrencias**, 86 formas distintas. Y el reparto no era el que la pregunta
+suponía:
+
+| | |
+|---|---|
+| **144** | **tokens que YA existían, reescritos a mano.** 114 eran `--fg` escrito `rgba(20,19,15,α)` con **28 alfas distintas** |
+| 34 | *declaraciones* de token (`--ok: #1f7a3d`…): su único sitio legítimo |
+| 8 | `#000` en `mask`: no es color, es un recorte |
+| 48 | huérfanos de verdad — 39 son blanco y negro puros |
+
+▶ **Lo que le pasaba a un cliente**: cambiaba `--fg` en su paquete de tema y **113 sombras y bordes
+seguían siendo del primer cliente**. Nada fallaba, nada avisaba, y por eso duró desde el commit
+fundacional.
+▶ **No hacía falta ningún token nuevo.** Hacía falta que los que ya existían dejaran de reescribirse.
+
+**[DECIDIDO owner]** de las tres opciones ofrecidas: **todo lo que ya tiene token** (ni solo los
+defectos, ni además tokens nuevos para el blanco). Blanco y negro quedan fuera **a propósito**: el
+blanco de una polaroid no es `--bg` (crema) ni `--on-brand` (sigue al acento, y sobre un acento claro
+es tinta oscura), así que darles cualquiera de los dos **repinta**. Ficha en `DEUDA.md`.
+
+### 2 · Dos fugas de marca VIVAS que `#139` no podía ver
+
+`.hero__stage-placeholder` —el fondo tras el vídeo del hero— llevaba **los acentos de las DOS zonas
+del primer cliente**, escritos **en decimal** dentro de un `background` de tres líneas:
+`rgba(255,91,34,.22)` (el naranja de Jump) y `rgba(198,255,58,.16)` (la lima de Kids).
+
+⚠️ **`#139` retiró `--jump-*`/`--kids-*` y `ZoneAccentIsNotAClassNameTest` vigila que no vuelvan POR
+SU NOMBRE. El valor sobrevivió a las dos cosas**: al barrido y al inventario, porque aquel `grep` de
+`#hex` iba línea a línea y esto es un `rgba()` en la segunda línea de un valor.
+▶ Y había una tercera, más callada: `.map-pin` pintaba el fondo con `var(--zone-1)` y el halo con
+`rgba(255,91,34,.18)`. Cambias la marca y **el pin sale bicolor** — el mismo defecto que `#138`.
+
+**La lima NO tenía token equivalente**, así que pasa a `--zone-2` y ése es el único sitio donde el
+píxel se mueve a propósito: el segundo radial del hero deja de ser lima y pasa al amarillo de marca.
+Quien la quiera, la pone en `--zone-2`. Es el white-label funcionando.
+
+### 3 · El hueco que no existía
+
+Todo lo anterior daba por supuesto que un cliente puede traer su hoja. **Medido: no había hueco.** El
+layout cargaba `landing.css` → `<style id="jj-theme">` → `spinner.css` → `site.css` y ahí se acababa.
+**Tokenizar sin ese hueco es trabajo que ningún cliente puede usar.**
+
+**[DECIDIDO owner]**: se abre en esta tanda. `public/css/client.css`, cargado **el último** si existe.
+⚠️ **Y el mecanismo son TRES piezas, no una** —las tres pueden faltar por separado y con dos parece
+que funciona—: el `<link>` va el último (por delante de `site.css` carga y **no pinta nada**) · la
+hoja **no se versiona** (este repo es el producto) · `deploy.sh` la **excluye del `rsync --delete`**
+(sin eso, el primer despliegue la borra del servidor **en silencio**).
+
+❗ **La aserción de la tercera nació ROTA y la cazó su propia mutación.** Comprobaba que el texto
+`--exclude='/public/css/client.css'` apareciera en el script; con la línea **comentada** seguía en
+verde. Un `--exclude` comentado no excluye nada. Es el modo de fallo que este repo lleva escrito
+—«un grep mal escrito queda verde para siempre sin mirar nada»— y **volvió a pasar, en la guarda que
+lo estaba previniendo**. La misma trampa tenía la del `.gitignore`. Las dos van ancladas a principio
+de línea, y hay un caso que comprueba que **rechazan una línea comentada**.
+
+### 4 · El spinner: el dibujo no era un fichero
+
+La spec: «cambiar el dibujo es sustituir un fichero. No hay que construir nada: hay que usarlo».
+**Falso en las dos mitades.** El dibujo son **dos pseudo-elementos y un `@keyframes`** dentro de
+`spinner.css` — y `UI-SPINNER.md` §3 decía además que esa hoja **«no se modifica»**, o sea que el
+producto llevaba escrito que el encargo no se podía hacer.
+
+**[DECIDIDO owner]** de tres opciones: **punto de sustitución declarado** (ni máscara SVG —perdería
+el salto de dos piezas— ni set curado de variantes —un despliegue por variante y ningún cliente
+pidiéndola—). La hoja se parte por un marcador de máquina en **§A CONTRATO** y **§B DIBUJO**; una
+instalación redefine §B desde `client.css` y nada más.
+
+⚠️⚠️ **Y al separarlos apareció un defecto de accesibilidad real.** `prefers-reduced-motion` apagaba
+`.jj-spinner::before`, que es **exactamente la única pieza que anima el dibujo del PRIMER cliente**.
+En cuanto una instalación traiga un dibujo que anime `::after` o el propio elemento, quien pidió
+reducir movimiento **lo sigue viendo girar**: no falla, no avisa, y no se ve desde el producto.
+▶ **Un contrato de accesibilidad que solo cubre el dibujo de quien lo escribió no es un contrato.**
+Hoy cubre los tres selectores con `!important` —`client.css` carga después y no debe poder
+reactivarlo por descuido— y el `transform` de reposo, que sí es del dibujo, baja a §B.
+
+### 5 · Lo que se midió, y con qué
+
+- **Aritmética**: las 144 sustituciones verificadas componente a componente. `color-mix(in srgb, C
+  p%, transparent)` **premultiplica**, así que rinde exactamente `rgba(C, p)`. **144 de 144 exactas.**
+- **Estructura**: `postcss` antes y después. `site.css` **1144 reglas / 4370 declaraciones** las dos
+  veces; `landing.css` **665 / 2644** las dos veces. Ni una declaración perdida — que es como se
+  detecta un `color-mix` mal escrito, porque el navegador lo descarta **sin avisar**.
+- **NAVEGADOR** (`VERIFICACION-E2E-CAJON.md` §5.bis, Playwright en el contenedor), capturas a página
+  completa antes/después de `/`, `/servicios`, `/entradas` y `/aviso-legal`:
+  **fuera del hero, `0` píxeles distintos.** `/servicios` y `/aviso-legal`, 0 en la página entera.
+  ⚠️ **Y con su control de RUIDO, que es lo que hace la medida interpretable**: el hero lleva vídeo, y
+  **dos capturas del MISMO código** difieren ahí en 520.551 px — más que las 92.000 de mi cambio. Sin
+  ese control, el diff del hero se habría leído como una regresión.
+  ▶ El único cambio real se aisló bloqueando el vídeo: `rgb(30,31,19) → rgb(32,30,20)`, el radial
+  pasando de lima a amarillo. Del signo esperado y de ±2/255.
+- **Mutación**: 4 sobre `RawColourIsNotATokenTest`, 3 sobre `ClientThemePackageTest` y 6 sobre el
+  contrato del spinner. **Todas caen, y cada una solo en su aserción.**
+
+### 6 · Las guardas, y lo que el trinquete ya existente hizo solo
+
+- **`RawColourIsNotATokenTest`** (nueva) — prohíbe el MECANISMO: ningún literal puede repetir un
+  color que ya tiene token. ⚠️ **Compara por VALOR RGB y no por nombre**, que es el hueco por el que
+  se coló el hero. Lee los valores del `:root` en tiempo de test para no describir una paleta que el
+  CSS ya no tenga. Con guarda-de-la-guarda por partida doble: que el escaneo ve el corpus y que el
+  detector caza sus propios ejemplos —**incluido el `rgba()` multilínea dentro de un
+  `radial-gradient()`**, que es el que el primer instrumento no veía—.
+- **`ClientThemePackageTest`** (nueva) — las tres piezas del hueco, más el caso que comprueba que sus
+  dos aserciones de fichero rechazan una línea comentada.
+- **`SpinnerTest`** — cinco casos nuevos: el dibujo vive entero bajo la línea, el contrato conserva
+  sus piezas, reducir movimiento cubre CUALQUIER dibujo, el producto no se da especificidad de más
+  (si la tuviera, el paquete del cliente **cargaría y no pintaría**) y el dibujo pinta con el token.
+- ✅ **`SidebarTokenBudgetTest::MAX_RAW_COLOURS` baja 6 → 5 SOLO.** Nadie eligió tocar
+  `.cal__day--normal`: entró con las otras 143 por coincidir con `--fg` al 5 %, y **fue el trinquete
+  quien avisó**. Es exactamente para lo que `#99` lo hizo estricto.
+- 🐛 **Y ese mismo fichero llevaba un memo que no memoizaba**: `return $memo = $declarations;`
+  asignaba a una variable **local** que se descartaba, así que `$this->declarations` seguía `null` y
+  los dos CSS se releían en cada caso. No falseaba nada —de ahí que durara— pero encima de él había
+  un párrafo explicando con detalle por qué el memo era de instancia y no `static`.
+
+### 7 · Cuatro afirmaciones falsas retiradas del código
+
+Ninguna rompía nada; todas describían un producto que ya no existe, y un agente siguiente las habría
+dado por buenas:
+1. `site.css:3` — «El CSS del mockup (`landing.css`) se mantiene intacto». **Cuatro commits lo han
+   tocado**, `#138` y `#139` entre ellos (la paleta del primer cliente vivía dentro).
+2. `layout.blade.php` — citaba `--jump-1`/`--kids-1` como «color de cada zona». Los retiró `#139`.
+3. `UI-SPINNER.md` §3 — «es copia fiel del mockup: no se modifica».
+4. La spec §4.5.2 — «no hay que construir nada: hay que usarlo».
+
+### 8 · La lección de método, que se pagó DOS veces en la misma sesión
+
+**Un instrumento que no ve una parte del corpus da un inventario que parece completo y no lo es.**
+▶ El «76» de la spec salió de un `grep` de `#hex` línea a línea: no contaba `rgba()` —que era la
+mayoría— ni valores multilínea.
+▶ Y **el primer instrumento que se escribió aquí tenía el mismo defecto**: también iba línea a línea
+y no vio 12 ocurrencias, entre ellas **las dos fugas de marca del hero**. Solo se supo al cruzarlo
+con un `grep` que sí encontraba lo que él no. Reescrito por offsets absolutos: 234 en vez de 222, y
+**cero falsos positivos** respecto al primero.
+▶ Corolario para quien venga: **cuando dos medidas del mismo corpus no coinciden, la que sobra no es
+la que da más — es la que no puede explicar la diferencia.**

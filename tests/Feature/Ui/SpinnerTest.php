@@ -15,6 +15,11 @@ use Tests\TestCase;
  * Pruebas de RENDERIZADO: que el spinner / velo se inyecta donde toca, con el
  * objetivo (wire:target) correcto y de forma accesible. El comportamiento en vivo
  * de wire:loading lo aporta Livewire y se valida en pantalla.
+ *
+ * ⚠️ **Y desde `DECISIONES #143`, el CONTRATO de su hoja** (§B de este fichero). `spinner.css` tiene
+ * dos mitades y la línea entre ellas es lo que permite que una instalación traiga su propio dibujo:
+ * el contrato arriba, el dibujo del primer cliente abajo. Sin guarda, esa línea se borra sola —
+ * basta con que alguien meta una regla de geometría en el sitio equivocado.
  */
 class SpinnerTest extends TestCase
 {
@@ -118,6 +123,203 @@ class SpinnerTest extends TestCase
         $this->assertStringContainsString('purchase-loading', $inner, 'el velo tiene que estar DENTRO del hueco: es Vue quien lo retira al montar');
         $this->assertStringContainsString('jj-spinner', $inner);
         $this->assertStringContainsString(__('ui.loading'), $inner);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════════════════════════
+    // §B · EL CONTRATO DE LA HOJA — lo que hace SUSTITUIBLE el dibujo (`DECISIONES #143`)
+    //
+    // `specs/landing-white-label.md` §4.5.2 decía que cambiar el dibujo del spinner «es sustituir un
+    // fichero» y que «no hay que construir nada». Medido: el dibujo NO es un fichero — son dos
+    // pseudo-elementos y un `@keyframes` dentro de `spinner.css`, y `UI-SPINNER.md` §3 decía además
+    // que ese fichero «no se modifica». No había punto de sustitución ninguno.
+    // ═════════════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Las dos mitades de `spinner.css`, partidas por el marcador del contrato.
+     *
+     * ⚠️ Se parte por un MARCADOR de máquina (`>>> SPINNER:CONTRACT >>>`) y no por el rótulo
+     * legible. La primera versión de este método buscaba «§A · CONTRATO» y encontraba la **prosa de
+     * la cabecera**, que describe las dos mitades antes de que existan: partía el fichero por donde
+     * no era y las tres aserciones de abajo medían un texto que no era CSS. Un rótulo que un humano
+     * puede escribir dos veces no sirve de frontera.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function stylesheetHalves(): array
+    {
+        $css = (string) file_get_contents(public_path('css/spinner.css'));
+
+        $contractAt = strpos($css, '>>> SPINNER:CONTRACT >>>');
+        $drawingAt = strpos($css, '>>> SPINNER:DRAWING >>>');
+
+        $this->assertNotFalse($contractAt, 'ha desaparecido el marcador de §A: la hoja ya no declara su contrato');
+        $this->assertNotFalse($drawingAt, 'ha desaparecido el marcador de §B: la hoja ya no declara dónde empieza el dibujo sustituible');
+        $this->assertGreaterThan($contractAt, $drawingAt, 'el dibujo (§B) tiene que ir DESPUÉS del contrato (§A)');
+        $this->assertSame(1, substr_count($css, '>>> SPINNER:CONTRACT >>>'), 'el marcador de §A está duplicado: la frontera deja de ser una');
+        $this->assertSame(1, substr_count($css, '>>> SPINNER:DRAWING >>>'), 'el marcador de §B está duplicado: la frontera deja de ser una');
+
+        // ⚠️ El marcador vive DENTRO de un comentario, así que cortar justo ahí deja cada mitad
+        // empezando a media prosa: sin su `/*` de apertura, el `preg_replace` de `rulesOnly()` ya no
+        // la reconoce y el rótulo se lee como si fuera un selector. Se avanza hasta su cierre.
+        $contractAt = (int) strpos($css, '*/', $contractAt) + 2;
+        $drawingEnd = (int) strpos($css, '*/', $drawingAt) + 2;
+
+        return [substr($css, $contractAt, $drawingAt - $contractAt), substr($css, $drawingEnd)];
+    }
+
+    /** Un trozo de hoja sin comentarios — lo que el navegador aplica de verdad. */
+    private function rulesOnly(string $css): string
+    {
+        return (string) preg_replace('#/\*.*?\*/#s', '', $css);
+    }
+
+    /**
+     * **El dibujo vive ENTERO por debajo de la línea de sustitución.**
+     *
+     * Es la aserción que sostiene el mecanismo: lo que quede en §A no lo puede cambiar una
+     * instalación sin pisar el contrato. Una regla de geometría colada arriba no rompe nada hoy y
+     * deja el spinner medio sustituible mañana — el peor de los dos estados, porque parece que
+     * funciona.
+     */
+    public function test_the_drawing_lives_entirely_below_the_substitution_line(): void
+    {
+        [$contract, $drawing] = $this->stylesheetHalves();
+
+        foreach (['.jj-spinner::after', '.jj-spinner::before', '@keyframes jjSpinnerHop'] as $piece) {
+            $this->assertStringContainsString(
+                $piece, $drawing,
+                "«{$piece}» es DIBUJO y tiene que vivir en §B, que es lo que una instalación redefine.",
+            );
+        }
+
+        // En §A solo puede haber pseudo-elementos dentro de la garantía de reducir movimiento, que
+        // es contrato: se comprueba que ninguna REGLA de §A los pinte.
+        preg_match_all('/([^{}]*\.jj-spinner::(?:before|after)[^{}]*)\{([^{}]*)\}/', $this->rulesOnly($contract), $rules, PREG_SET_ORDER);
+
+        $this->assertNotEmpty($rules, 'no se ve la regla de reducir movimiento en §A: ¿ha cambiado el contrato?');
+
+        foreach ($rules as $rule) {
+            $this->assertMatchesRegularExpression(
+                '/^\s*animation:\s*none\s*!important;?\s*$/', $rule[2],
+                'una regla de §A pinta un pseudo-elemento del spinner: '.trim($rule[1])." { {$rule[2]} }\n".
+                '▶ Los pseudo-elementos son EL punto de sustitución. Todo lo que los dibuje va en §B.',
+            );
+        }
+    }
+
+    /**
+     * **El contrato conserva sus piezas**: los tres tokens, los cinco tamaños, el texto para lector
+     * de pantalla y el velo. Son las 31 referencias que hay repartidas por 9 ficheros.
+     */
+    public function test_the_contract_keeps_every_piece_its_consumers_rely_on(): void
+    {
+        [$contract] = $this->stylesheetHalves();
+
+        foreach ([
+            '--jj-spinner-size', '--jj-spinner-color', '--jj-spinner-speed',
+            '.jj-spinner--xs', '.jj-spinner--sm', '.jj-spinner--md', '.jj-spinner--lg', '.jj-spinner--xl',
+            '.jj-spinner__sr', '.jj-spinner-overlay', '.jj-spinner-with-label',
+        ] as $piece) {
+            $this->assertStringContainsString(
+                $piece, $contract,
+                "el contrato ha perdido «{$piece}», y sus consumidores lo esperan.",
+            );
+        }
+    }
+
+    /**
+     * ⚠️⚠️ **La garantía de «reducir movimiento» cubre CUALQUIER dibujo, no solo el del producto.**
+     *
+     * Hasta el 2026-08-25 la regla era `.jj-spinner::before { animation: none }`, y `::before` es
+     * exactamente la única pieza que anima el dibujo del PRIMER cliente. En cuanto una instalación
+     * traiga un dibujo que anime `::after` o el propio elemento, quien pidió reducir movimiento
+     * seguiría viéndolo girar: no falla, no avisa, y no se ve desde aquí.
+     *
+     * Un contrato de accesibilidad que solo cubre el dibujo de quien lo escribió no es un contrato.
+     * El `!important` es deliberado: el paquete de un cliente carga DESPUÉS y no debe poder ganarlo
+     * por descuido.
+     */
+    public function test_reduced_motion_covers_any_drawing_and_not_just_the_products(): void
+    {
+        [$contract] = $this->stylesheetHalves();
+
+        preg_match('/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{(.*?)\n\}/s', $contract, $block);
+
+        $this->assertNotEmpty(
+            $block,
+            'el contrato ya no lleva la regla de `prefers-reduced-motion`: la accesibilidad del '.
+            'spinner pasaría a depender de qué dibujo traiga cada instalación.',
+        );
+
+        foreach (['.jj-spinner,', '.jj-spinner::before,', '.jj-spinner::after'] as $selector) {
+            $this->assertStringContainsString(
+                $selector, $block[1],
+                "la garantía de reducir movimiento ya no cubre «{$selector}».\n".
+                '▶ Cubrir solo `::before` es cubrir solo el dibujo del primer cliente.',
+            );
+        }
+
+        $this->assertStringContainsString(
+            'animation: none !important', $block[1],
+            'la garantía ha perdido el `!important`: `client.css` carga DESPUÉS y una instalación '.
+            'podría reactivar la animación sin querer.',
+        );
+    }
+
+    /**
+     * **El dibujo se puede GANAR desde `client.css`.**
+     *
+     * La sustitución se apoya en el orden de carga (lo asevera `ClientThemePackageTest`) **y** en que
+     * el producto no se dé especificidad de más: con `.jj-spinner.jj-spinner::before` el paquete del
+     * cliente perdería aunque cargara después, y el síntoma sería «he redefinido el spinner y no
+     * pasa nada» — indistinguible de un fichero que no carga.
+     */
+    public function test_the_drawing_does_not_outrank_a_client_override(): void
+    {
+        [, $drawing] = $this->stylesheetHalves();
+
+        // Sin comentarios y sin el cuerpo de los `@media`/`@keyframes`, que no son selectores.
+        $rules = (string) preg_replace('/@(?:media|keyframes|supports)[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $this->rulesOnly($drawing));
+
+        preg_match_all('/([^{}]+)\{/', $rules, $selectors);
+        $found = array_filter(array_map('trim', $selectors[1]));
+
+        $this->assertNotEmpty($found, 'no se ve ninguna regla en §B: el dibujo ha desaparecido o el escaneo está roto');
+
+        foreach ($found as $selector) {
+            $this->assertMatchesRegularExpression(
+                '/^\.jj-spinner::(?:before|after)$/', $selector,
+                "el dibujo usa el selector «{$selector}», que no es el mínimo.\n".
+                '▶ Una instalación redefine `.jj-spinner::before` / `::after`. Cualquier especificidad '.
+                "extra aquí hace que su paquete cargue y NO pinte.\n".
+                '▶ Si hace falta un selector nuevo, documenta en §B qué tiene que escribir el cliente.',
+            );
+        }
+    }
+
+    /**
+     * **El dibujo pinta con el token de color, no con un color escrito a mano.**
+     *
+     * `--jj-spinner-color` vale `currentColor` por defecto, que es lo que hace que el spinner de un
+     * botón herede el color del botón. Un literal ahí lo desengancharía de los 31 sitios que lo usan.
+     */
+    public function test_the_drawing_paints_with_the_colour_token(): void
+    {
+        [, $drawing] = $this->stylesheetHalves();
+
+        // Sin comentarios: el rótulo de §B nombra `--jj-spinner-color` en prosa.
+        $rules = (string) preg_replace('#/\*.*?\*/#s', '', $drawing);
+
+        $this->assertSame(
+            0, preg_match_all('/#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*\d/', $rules),
+            'el dibujo del spinner lleva un color escrito a mano. Tiene que salir de '.
+            '`var(--jj-spinner-color)`, que por defecto es `currentColor`.',
+        );
+
+        $this->assertGreaterThanOrEqual(
+            2, substr_count($rules, 'var(--jj-spinner-color)'),
+            'las dos piezas del dibujo tienen que tomar su color del token.',
+        );
     }
 
     /*

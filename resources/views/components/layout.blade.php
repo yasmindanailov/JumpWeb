@@ -49,18 +49,37 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link rel="stylesheet" href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,600,700,800|space-grotesk:400,500,600,700|jetbrains-mono:400,500">
 
-    {{-- CSS del mockup servido tal cual (sin minificar, copia exacta) --}}
+    {{-- CSS base del producto (sin minificar).
+         ⚠️ El encabezado de `site.css` dice «el CSS del mockup se mantiene intacto» y **eso ya no
+         es cierto**: `#138`, `#139` y `#143` lo han tocado (la paleta del primer cliente vivía
+         dentro). Se conserva el nombre, no la promesa. --}}
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ @filemtime(public_path('css/landing.css')) }}">
-    {{-- Color de marca white-label (Fase 7.10 iter.2): sobreescribe los tokens de color del
-         mockup con los valores editables en el panel. Va DESPUÉS de landing.css para ganar al
-         `:root` por defecto. `--zone-1` = marca global (lo genérico de la web); `--jump-1`/
-         `--kids-1` = color de cada zona (tarjetas de la sección «Zonas»). El acento de la
-         sección «Atracciones» se aplica scoped a `#rides` desde `app.js`. --}}
+    {{-- Color de marca white-label: sobreescribe los tokens de color del `:root` por defecto con los
+         valores editables en el panel, y por eso va DESPUÉS de landing.css.
+         `--brand`/`--brand-2` = marca global · `--zone-1`/`--zone-2` la siguen · `--on-brand` sale
+         por contraste WCAG. **Cada zona re-escopa lo suyo EN LÍNEA** sobre su elemento con
+         `ThemeSettings::zoneStyle()`; el acento de «Atracciones» va scoped a `#rides` desde `app.js`.
+         ⚠️ Aquí se citaban `--jump-1`/`--kids-1` como «color de cada zona»: los retiró `#139` y este
+         comentario los sobrevivió. Las zonas son DATOS y pueden ser dos, cinco o llamarse de otra forma. --}}
     <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
-    {{-- Spinner de marca (copia del mockup, estático; ver docs/UI-SPINNER.md) --}}
+    {{-- Spinner de marca (estático, no por Vite: su minificador rompe `backdrop-filter`).
+         Su DIBUJO es sustituible por instalación desde `client.css`; ver docs/UI-SPINNER.md §3.bis. --}}
     <link rel="stylesheet" href="{{ asset('css/spinner.css') }}?v={{ @filemtime(public_path('css/spinner.css')) }}">
-    {{-- Estilos propios añadidos (no tocan el CSS del mockup) --}}
+    {{-- Estilos propios del producto sobre la base --}}
     <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) }}">
+    {{-- ── EL PAQUETE DE TEMA DE ESTA INSTALACIÓN (`DECISIONES #143`) ────────────────────────────
+         Hoja OPCIONAL del cliente. Va la ÚLTIMA de las cuatro a propósito: es lo único que hace
+         que redefinir un token gane a lo que trae el producto. Sin este hueco, tokenizar el CSS
+         era trabajo que ningún cliente podía usar — no había por dónde entrar.
+         ⚠️ `@filemtime` hace de las DOS cosas —existencia y cache-busting— en una sola llamada a
+         disco: devuelve `false` si el fichero no está, así que no hay `file_exists` aparte.
+         ⚠️ NO se versiona (es del cliente, no del producto) y el `rsync --delete` de `deploy.sh`
+         lo EXCLUYE: sin esa exclusión, el primer despliegue se lo llevaría por delante y la web
+         volvería al tema del producto en silencio. Ver `INSTALACION-CLIENTE.md` §4. --}}
+    @php($clientTheme = @filemtime(public_path('css/client.css')))
+    @if ($clientTheme)
+        <link rel="stylesheet" href="{{ asset('css/client.css') }}?v={{ $clientTheme }}">
+    @endif
     @livewireStyles
     @vite(['resources/js/app.js'])
 </head>

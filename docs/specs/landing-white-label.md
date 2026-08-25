@@ -325,8 +325,34 @@ no casa con ninguno. **Un `grep` que no encuentra no demuestra que no exista** �
 existían reglas para `jump` y `kids` (§4.5.4), el color secundario no tenía casa en BD, y la tipografía
 y los radios no se tematizan — y **no deben**, por la decisión del owner de §4.5.5.
 
-⚠️ Quedan **58 colores en crudo** en `site.css` y **18** en `public/css/landing.css`: el inventario
-de cuáles suben a variable es parte de la tanda, no un pulido posterior.
+❗❗ **SEGUNDA CORRECCIÓN (2026-08-25, `DECISIONES #143`): «58 colores en crudo en `site.css` y 18 en
+`landing.css`» también estaba mal, y la pregunta que planteaba —«cuáles suben a variable»— era la
+pregunta equivocada.**
+
+Medido con un instrumento que ve además los `rgba()` y los valores **multilínea**: **234
+ocurrencias**, 86 formas distintas. Y el reparto cambia la naturaleza de la tarea:
+
+| | |
+|---|---|
+| **144** | **No necesitaban ningún token nuevo: eran tokens que YA existían, reescritos a mano.** 114 eran `--fg` escrito como `rgba(20,19,15,α)` con **28 alfas distintas** |
+| 34 | Son **declaraciones** de token (`--ok: #1f7a3d`…). Están en su único sitio legítimo |
+| 8 | `#000` en `mask`/`mask-image`: no es un color visible, es un recorte |
+| 48 | Huérfanos de verdad — 39 son blanco y negro puros, que **no** son `--bg` (crema) ni `--on-brand` (sigue al acento). Quedan fuera a propósito: convertirlos CAMBIA píxeles |
+
+▶ **Lo que le pasaba a un cliente**: cambiaba `--fg` desde su paquete y **113 sombras y bordes
+seguían siendo del primer cliente**. Nada fallaba, nada avisaba.
+▶ **Ejecutado**: las 144 pasan a `var()`/`color-mix(…, transparent)`, que premultiplica y rinde
+EXACTAMENTE el mismo color. Verificado por aritmética (144/144) **y en navegador**: fuera del hero,
+**0 píxeles de diferencia** en cuatro páginas.
+▶ **Y destapó dos fugas de marca vivas** que `#139` no pudo ver: en `.hero__stage-placeholder` los
+acentos de las DOS zonas del primer cliente estaban escritos **en decimal**, dentro de un
+`background` de tres líneas —`rgba(255,91,34,.22)` y `rgba(198,255,58,.16)`—. `#139` retiró
+`--jump-*`/`--kids-*` **por su nombre**; el valor sobrevivió. Hoy lo cierra
+`RawColourIsNotATokenTest`, que compara por VALOR RGB y no por nombre de token.
+▶ **La lección de método**: el inventario que decía «76» se hizo con un `grep` de `#hex` línea a
+línea. **Un instrumento que no ve una parte del corpus da un inventario que parece completo y no lo
+es** — y el primero que escribí aquí tenía el mismo defecto: no veía los valores multilínea, y solo
+se supo al cruzarlo con un `grep` que sí encontraba lo que él no.
 
 #### 4.5.4 ✅ EJECUTADO — el acento de zona sale del nombre de la clase (`#138`)
 
@@ -347,13 +373,48 @@ propia cabe sin pedirle permiso a una lista curada.
 
 #### 4.5.2 Ficheros → **assets por instalación**
 
-Logo, imágenes y **el dibujo del spinner**. Aquí la costura también está hecha y conviene decirlo:
-`public/css/spinner.css` es **un fichero de 123 líneas, una clase (`.jj-spinner`) y 17 ficheros que
-la referencian**, y ya expone tres tokens (`--jj-spinner-size`, `--jj-spinner-color`,
-`--jj-spinner-speed`).
+Logo, imágenes y **el dibujo del spinner**. `public/css/spinner.css` es un fichero de una clase
+(`.jj-spinner`) con **31 referencias repartidas por 9 ficheros**, y ya exponía tres tokens
+(`--jj-spinner-size`, `--jj-spinner-color`, `--jj-spinner-speed`).
 
-▶ Cambiar color o velocidad **ya es un token**; cambiar el dibujo es sustituir un fichero. No hay que
-construir nada: hay que usarlo.
+❗❗ **CORRECCIÓN (2026-08-25, `DECISIONES #143`): «cambiar el dibujo es sustituir un fichero; no hay
+que construir nada, hay que usarlo» era FALSO en las dos mitades.**
+▶ El dibujo **no era un fichero**: son dos pseudo-elementos y un `@keyframes` dentro de
+`spinner.css`. No había nada que sustituir.
+▶ Y `sistemas/UI-SPINNER.md` §3 decía además que esa hoja **«no se modifica»**, o sea que el propio
+producto llevaba escrito que el encargo no se podía hacer.
+
+▶ **Ejecutado** (`[DECIDIDO owner]`: punto de sustitución declarado, ni máscara SVG ni set curado):
+la hoja se parte en **§A CONTRATO** —caja, tokens, tamaños, texto de lector de pantalla, velo y la
+garantía de «reducir movimiento»— y **§B DIBUJO** —los dos pseudo-elementos y su animación—. Una
+instalación redefine §B desde `client.css` y nada más. Guarda en `SpinnerTest`, con seis mutaciones.
+
+⚠️⚠️ **Y al separarlos apareció un defecto de accesibilidad real**: `prefers-reduced-motion` apagaba
+`.jj-spinner::before`, que es **exactamente la única pieza que anima el dibujo del PRIMER cliente**.
+Un dibujo sustituto que animara `::after` o el propio elemento habría dejado a quien pidió reducir
+movimiento viéndolo girar, sin fallo y sin aviso. **Un contrato de accesibilidad que solo cubre el
+dibujo de quien lo escribió no es un contrato**: hoy cubre los tres selectores con `!important`,
+porque `client.css` carga después y no debe poder reactivarlo por descuido.
+
+#### 4.5.6 ✅ EJECUTADO — el hueco por donde entra el paquete del cliente (`#143`)
+
+⚠️ **Todo lo anterior daba por supuesto que un cliente podía traer su hoja. Medido: no había hueco.**
+El layout cargaba `landing.css` → `<style id="jj-theme">` → `spinner.css` → `site.css`, y ahí se
+acababa. **Tokenizar el CSS sin ese hueco es trabajo que ningún cliente puede usar.**
+
+▶ Hoy el layout carga `public/css/client.css` **si existe**, la última de las cuatro. El mecanismo
+tiene **tres piezas**, no una —las tres se aseveran en `ClientThemePackageTest` porque las tres
+pueden faltar por separado y con dos parece que funciona—:
+1. el `<link>` va **el último**: por delante de `site.css` cargaría sin pintar nada, y ese síntoma es
+   indistinguible de un fichero que no carga;
+2. la hoja **no se versiona**: este repo es el producto y no lleva la marca de nadie;
+3. `deploy.sh` la **excluye del `rsync --delete`**: sin eso, el primer despliegue la borra del
+   servidor y la web vuelve al tema del producto **en silencio**.
+
+⚠️ **La aserción de (3) nació ROTA y la cazó su propia mutación**: comprobaba que el texto
+`--exclude='/public/css/client.css'` apareciera en el script, y con la línea **comentada** seguía en
+verde. Un `--exclude` comentado no excluye nada. Es el modo de fallo que este repo ya tenía escrito
+—«un grep mal escrito queda verde para siempre sin mirar nada»— y volvió a pasar.
 
 #### 4.5.3 Dibujos compartidos → **el sistema de iconos, que YA EXISTE y ya está guardado**
 

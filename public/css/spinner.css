@@ -1,8 +1,26 @@
 /* ====================================================================
    JumpWeb — Spinner
    --------------------------------------------------------------------
-   Self-contained loading indicator. The dot hops on top of a rotated
-   foam-block — same brand mark as the logo wordmark, isolated.
+   EL FICHERO TIENE DOS MITADES, y la línea entre ellas es un CONTRATO
+   (`DECISIONES #143`, `docs/sistemas/UI-SPINNER.md` §3.bis):
+
+     §A · CONTRATO — la caja, los tokens, los tamaños, el texto para
+          lector de pantalla, el velo y la garantía de «reducir
+          movimiento». Lo consumen 9 ficheros y 31 referencias.
+          **Una instalación NO lo redefine.**
+
+     §B · DIBUJO — dos pseudo-elementos y una animación. Es la marca
+          del PRIMER cliente: un punto que salta sobre un bloque de
+          espuma, el mismo vocabulario que su logo.
+          **Es el punto de sustitución de una instalación.**
+
+   Un cliente que no sea un parque de saltos redefine §B —y solo §B—
+   desde `public/css/client.css`, que el layout carga DESPUÉS de esta
+   hoja. No hay que tocar este fichero ni desplegar nada del producto.
+   Receta con ejemplo completo: `docs/sistemas/UI-SPINNER.md` §3.bis.
+
+   ⚠️ Va estático y NO por Vite: su minificador rompe `backdrop-filter`,
+   que usa el velo de §A (decisión heredada del origen).
 
    USAGE
      <span class="jj-spinner" role="status" aria-label="Loading"></span>
@@ -10,7 +28,7 @@
      <span class="jj-spinner jj-spinner--lg"></span>
      <span class="jj-spinner jj-spinner--xl"></span>
      <!-- color override (any CSS color or var) -->
-     <span class="jj-spinner" style="--jj-spinner-color: #FF5B22"></span>
+     <span class="jj-spinner" style="--jj-spinner-color: var(--zone-1)"></span>
      <!-- speed override -->
      <span class="jj-spinner" style="--jj-spinner-speed: 1.6s"></span>
 
@@ -19,6 +37,13 @@
      --jj-spinner-color  ink color of both shapes           default currentColor
      --jj-spinner-speed  full loop duration                 default 1.4s
    ==================================================================== */
+
+/* >>> SPINNER:CONTRACT >>>
+   ════════════════════════════════════════════════════════════════════
+   §A · CONTRATO — lo que una instalación NO redefine
+   ⚠️ El marcador de arriba lo lee `SpinnerTest`: es lo que parte la hoja en dos. No lo borres ni
+   lo dupliques —la cabecera describe las mitades en prosa a propósito SIN escribirlo—.
+   ════════════════════════════════════════════════════════════════════ */
 
 .jj-spinner {
   /* tokens */
@@ -46,6 +71,69 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* sizes */
+.jj-spinner--xs { --jj-spinner-size: 20px; }
+.jj-spinner--sm { --jj-spinner-size: 28px; }
+.jj-spinner--md { --jj-spinner-size: 36px; }   /* default */
+.jj-spinner--lg { --jj-spinner-size: 56px; }
+.jj-spinner--xl { --jj-spinner-size: 88px; }
+
+/* full-screen overlay variant */
+.jj-spinner-overlay {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* inline label below */
+.jj-spinner-with-label {
+  display: inline-flex; flex-direction: column;
+  align-items: center; gap: 14px;
+}
+.jj-spinner-with-label .jj-spinner-label {
+  font-family: var(--font-display, "Bricolage Grotesque", system-ui, sans-serif);
+  font-stretch: 75%; font-weight: 700;
+  font-size: 14px; letter-spacing: -0.005em;
+  color: var(--jj-spinner-color);
+  opacity: 0.7;
+}
+
+/* accessibility — respect reduced motion.
+   ⚠️ **Cubre el elemento Y sus DOS pseudo-elementos, y lleva `!important` a propósito.**
+   Hasta el 2026-08-25 esta regla apagaba solo `.jj-spinner::before`, que es la única pieza que
+   anima EL DIBUJO DEL PRODUCTO (§B). En cuanto una instalación sustituye el dibujo por otro que
+   anime `::after` o el propio elemento, la garantía desaparece **en silencio**: nada falla, el
+   spinner gira igual, y quien pidió reducir movimiento no lo obtiene.
+   Un contrato de accesibilidad que solo cubre el dibujo de quien lo escribió no es un contrato:
+   por eso vive en §A y por eso el paquete de un cliente no lo puede ganar por descuido.
+   ▶ El `transform` de reposo SÍ es del dibujo y vive abajo, en §B. */
+@media (prefers-reduced-motion: reduce) {
+  .jj-spinner,
+  .jj-spinner::before,
+  .jj-spinner::after { animation: none !important; }
+}
+
+/* >>> SPINNER:DRAWING >>>
+   ════════════════════════════════════════════════════════════════════
+   §B · DIBUJO — EL PUNTO DE SUSTITUCIÓN DE UNA INSTALACIÓN
+   --------------------------------------------------------------------
+   Todo lo que hay debajo de esta línea es la marca del primer cliente.
+   Para traer otro dibujo, redefine en `public/css/client.css` los dos
+   pseudo-elementos y su animación; se cargan después y ganan por orden
+   de cascada, sin tocar el producto.
+
+   · Apagar una pieza que no uses:  .jj-spinner::after { content: none; }
+   · La geometría se compone sobre `--jj-spinner-size`, así que los
+     cinco tamaños de §A siguen funcionando gratis.
+   · El color sale de `--jj-spinner-color`; no lo escribas a mano o el
+     spinner dejará de seguir al contexto que lo pinta.
+   · No declares aquí `animation` sin comprobar §A: la garantía de
+     «reducir movimiento» ya la cubre el contrato.
+   ════════════════════════════════════════════════════════════════════ */
 
 /* foam-block — base (static) */
 .jj-spinner::after {
@@ -87,37 +175,9 @@
   92%, 100%{ transform: translateY(0)    scale(1,    1   ); }
 }
 
-/* sizes */
-.jj-spinner--xs { --jj-spinner-size: 20px; }
-.jj-spinner--sm { --jj-spinner-size: 28px; }
-.jj-spinner--md { --jj-spinner-size: 36px; }   /* default */
-.jj-spinner--lg { --jj-spinner-size: 56px; }
-.jj-spinner--xl { --jj-spinner-size: 88px; }
-
-/* full-screen overlay variant */
-.jj-spinner-overlay {
-  position: fixed; inset: 0;
-  z-index: 9999;
-  display: grid; place-items: center;
-  background: rgba(244, 239, 227, 0.86);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-/* inline label below */
-.jj-spinner-with-label {
-  display: inline-flex; flex-direction: column;
-  align-items: center; gap: 14px;
-}
-.jj-spinner-with-label .jj-spinner-label {
-  font-family: var(--font-display, "Bricolage Grotesque", system-ui, sans-serif);
-  font-stretch: 75%; font-weight: 700;
-  font-size: 14px; letter-spacing: -0.005em;
-  color: var(--jj-spinner-color);
-  opacity: 0.7;
-}
-
-/* accessibility — respect reduced motion */
+/* La postura de REPOSO del dibujo cuando se ha pedido reducir movimiento: el punto se queda a
+   media altura en vez de pegado al bloque. Es del dibujo, no del contrato — un dibujo sustituto
+   traerá la suya (o ninguna: §A ya ha parado la animación). */
 @media (prefers-reduced-motion: reduce) {
-  .jj-spinner::before { animation: none; transform: translateY(-30%); }
+  .jj-spinner::before { transform: translateY(-30%); }
 }

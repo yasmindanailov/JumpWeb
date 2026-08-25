@@ -36,15 +36,65 @@ Spinner autocontenido. Hereda el color del texto (`currentColor`) y respeta
 ## 3. Dónde vive el código
 
 - **CSS del spinner = estático** en **`public/css/spinner.css`**, enlazado en el layout junto
-  a `landing.css`/`site.css`. Es copia fiel del mockup de diseño del origen (el mockup no está
-  en este repo): **no se modifica**. Va estático —no por Vite— porque el minificador de Vite
+  a `landing.css`/`site.css`. Va estático —no por Vite— porque el minificador de Vite
   rompe `backdrop-filter`, que usa el overlay (decisión heredada del origen).
+  ⚠️ **Aquí decía «es copia fiel del mockup del origen: no se modifica»**, y esa frase bloqueaba
+  precisamente el encargo de que el dibujo fuera sustituible por instalación. Desde `#143` el
+  fichero **sí se toca**, pero solo por su mitad de arriba y con guarda (§3.bis).
 - **Añadidos propios de integración** (velo local sobre un panel, ajustes del spinner dentro
   de un botón) → **`public/css/site.css`** (nunca en `spinner.css`).
 - **Componentes Blade reutilizables**: `resources/views/components/ui/` → `<x-ui.spinner>`
   (inline) y `<x-ui.loading-overlay>` (velo con spinner + etiqueta).
 - **Textos** (i18n es/en/fr): `lang/{es,en,fr}/ui.php` (p. ej. `ui.loading` = «Cargando»).
   Los botones reutilizan sus propios textos de «enviando» (p. ej. `account.login.submitting`).
+
+## 3.bis El DIBUJO es sustituible por instalación (`DECISIONES #143`)
+
+⚠️ **`specs/landing-white-label.md` §4.5.2 afirmaba que cambiar el dibujo «es sustituir un fichero»
+y que «no hay que construir nada: hay que usarlo». Medido el 2026-08-25: era FALSO.** El dibujo no
+era ningún fichero — son **dos pseudo-elementos y un `@keyframes`** dentro de `spinner.css`, y este
+mismo documento decía que esa hoja no se modifica. No había punto de sustitución ninguno.
+
+▶ **La hoja tiene ahora DOS MITADES**, separadas por un marcador que lee `SpinnerTest`:
+
+| | Qué hay | ¿Lo toca una instalación? |
+|---|---|---|
+| **§A · `>>> SPINNER:CONTRACT >>>`** | la caja, los 3 tokens, los 5 tamaños, `.jj-spinner__sr`, el velo, la variante con etiqueta y la **garantía de «reducir movimiento»** | **No.** Son las 31 referencias repartidas por 9 ficheros |
+| **§B · `>>> SPINNER:DRAWING >>>`** | `::before`, `::after` y `@keyframes jjSpinnerHop` — el punto que salta sobre el bloque de espuma, o sea la marca del PRIMER cliente | **Sí. Es el punto de sustitución** |
+
+**Cómo se sustituye**, desde `public/css/client.css` (§4 de `INSTALACION-CLIENTE.md`), que el layout
+carga la última y por eso gana en cascada:
+
+```css
+/* Un aro girando, en vez del salto */
+.jj-spinner::after  { content: none; }              /* apagar la pieza que no se usa */
+.jj-spinner::before {
+    content: ""; position: absolute; inset: 0;
+    border: calc(var(--jj-spinner-size) * 0.12) solid currentColor;
+    border-top-color: transparent; border-radius: 50%;
+    background: none;                                /* el dibujo del producto pinta fondo */
+    animation: miGiro var(--jj-spinner-speed) linear infinite;
+    translate: 0 0;                                  /* el producto centra con translate: -50% 0 */
+}
+@keyframes miGiro { to { transform: rotate(360deg); } }
+```
+
+⚠️ **Cuatro cosas que el dibujo sustituto tiene que respetar**, y las cuatro las vigila `SpinnerTest`:
+1. **La geometría se compone sobre `--jj-spinner-size`** — así los cinco tamaños siguen funcionando
+   sin escribir una regla por tamaño.
+2. **El color sale de `var(--jj-spinner-color)`**, que por defecto es `currentColor`: es lo que hace
+   que el spinner de un botón herede el color del botón. Un literal ahí lo desengancha de los 31 sitios.
+3. **Los selectores del producto son los mínimos** (`.jj-spinner::before` / `::after`). Si el producto
+   se diera especificidad de más, el paquete del cliente **cargaría y no pintaría** — y ese síntoma es
+   indistinguible de un fichero que no carga.
+4. **No hace falta declarar nada para «reducir movimiento»**: lo garantiza §A.
+
+⚠️⚠️ **Y esa garantía se arregló al hacer esto.** Hasta el 2026-08-25 la regla era
+`.jj-spinner::before { animation: none }` — exactamente la única pieza que anima **el dibujo del
+primer cliente**. Un dibujo sustituto que animara `::after` o el propio elemento habría dejado a quien
+pidió reducir movimiento viéndolo girar: sin fallo, sin aviso y sin forma de verlo desde el producto.
+Hoy cubre `.jj-spinner`, `::before` y `::after` con `!important`, porque `client.css` carga DESPUÉS y
+no debe poder reactivar la animación por descuido.
 
 ## 4. Las tres reglas de uso (por contexto)
 

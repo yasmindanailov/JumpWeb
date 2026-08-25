@@ -20,6 +20,11 @@
 /auth.json
 /node_modules
 /public/build
+# El paquete de tema de la instalación (`DECISIONES #143`): es del CLIENTE, no del producto.
+# Este repo es el PRODUCTO y no lleva la marca de nadie, así que su hoja no se versiona aquí.
+# ⚠️ `deploy.sh` la excluye del `rsync --delete` por el mismo motivo que `public/uploads/`:
+# no está en local, y sin la exclusión el primer despliegue la borraría del servidor.
+/public/css/client.css
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

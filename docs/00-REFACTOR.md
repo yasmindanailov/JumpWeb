@@ -2037,7 +2037,7 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### La LANDING white-label 🟦 — **tanda A a medias (3 de 5), B y C sin empezar**
+### La LANDING white-label 🟦 — **tanda A CERRADA (6 de 6), B y C sin empezar**
 
 > Spec: `specs/landing-white-label.md` · Decisiones `#136` (el marco) y `#138`–`#140` (la ejecución).
 > **La línea es: data-driven el DATO, no la PÁGINA.** Nace del mockup del SEGUNDO cliente.
@@ -2059,10 +2059,30 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       así que un catálogo entero se repartía en **dos dibujos**. Ahora `ticket_types.icon` (set curado,
       decisión del owner), resuelto por el dominio, publicado en el contrato y con un registro en el
       cajón que **retira las cuatro copias de geometría**.
-- [ ] **A · el inventario de los 76 colores en crudo** (58 en `site.css`, 18 en `landing.css`): cuáles
-      suben a token para que el paquete de un cliente pueda sobrescribirlos.
-- [ ] **A · el spinner rebrandeable.** Ya es un fichero, una clase y tres tokens (tamaño, color,
-      velocidad); falta el camino para **sustituir el dibujo** por instalación.
+- ✅ **A · el inventario de colores en crudo** (2026-08-25, `#143`). ⚠️ **Eran 234 ocurrencias, no 76**:
+      la cifra de la spec salió de un `grep` de `#hex` línea a línea, que no contaba `rgba()` —la
+      mayoría— ni valores multilínea. Y la pregunta («cuáles suben a token») era la equivocada:
+      **144 no necesitaban ningún token nuevo, eran tokens que YA existían reescritos a mano** —114
+      de ellas `--fg` como `rgba(20,19,15,α)` con 28 alfas—. Convertidas a `var()`/`color-mix`, que
+      premultiplica y rinde el mismo color: **0 píxeles de diferencia fuera del hero**, medido en
+      navegador sobre cuatro páginas.
+      ▶ **Destapó dos fugas de marca VIVAS**: en `.hero__stage-placeholder` los acentos de las dos
+      zonas del primer cliente estaban en DECIMAL dentro de un `background` de tres líneas. `#139`
+      los retiró **por su nombre**; el valor sobrevivió. Lo cierra `RawColourIsNotATokenTest`,
+      que compara por VALOR RGB.
+      ▶ Blanco y negro quedan FUERA por decisión del owner: convertirlos cambia píxeles. `DEUDA.md`.
+- ✅ **A · el hueco del paquete de tema del cliente** (2026-08-25, `#143`). ⚠️ **No existía.** El
+      layout no tenía por dónde entrar una hoja de instalación, así que tokenizar era trabajo que
+      ningún cliente podía usar. Hoy carga `public/css/client.css` **la última**, y el mecanismo son
+      **tres piezas** —el orden, el `.gitignore` y la exclusión del `rsync --delete`—, las tres
+      aseveradas porque las tres pueden faltar por separado y con dos parece que funciona.
+- ✅ **A · el spinner rebrandeable** (2026-08-25, `#143`). ⚠️ **El dibujo NO era un fichero**: dos
+      pseudo-elementos y un `@keyframes` dentro de `spinner.css`, cuya doc decía además que «no se
+      modifica». Hoy la hoja se parte en **§A contrato** y **§B dibujo**, y una instalación redefine
+      §B desde `client.css`.
+      ▶ **Y al separarlos apareció un defecto de accesibilidad real**: `prefers-reduced-motion`
+      apagaba solo `::before`, la única pieza que anima el dibujo del PRIMER cliente. Cualquier
+      dibujo sustituto se habría seguido moviendo, sin fallo y sin aviso.
 - [ ] **B · el contenido**: los dos modelos que faltan (números del hero y testimonios), el copy que
       baja de `lang/` al CMS —**142 claves**, hoy en el repo— y la landing del segundo cliente como
       primer paquete de tema.
