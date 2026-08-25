@@ -80,7 +80,19 @@ siempre mejora el test). El tercero hay que buscarlo activamente.
   canónicos usan formas fijas que `docs-check` verifica contra el código: `N modelos ·
   N migraciones`, `N Filament Resources`, `N invariantes de no-regresión`; un aproximado
   deliberado lleva `~`. Rutas de código aún no existentes o de ejemplo: marca la línea con
-  `(futuro)` o `(ejemplo)` para eximirla del gate.
+  `(futuro)` o `(ejemplo)` para eximirla del gate. ⚠️ **El escape es POR LÍNEA**, así que una
+  explicación que ocupe tres líneas lo lleva en las tres. Desde `#159` lo honran también el check
+  de anclas y el de citas de test: una entrada que EXPLICA un ancla rota o un test retirado tiene
+  que poder escribirlo sin que el gate la castigue.
+- **Citas de test en `INVARIANTES.md`: una cita viva es un nombre existente; una mención
+  HISTÓRICA va TACHADA** (`~~ClaseTest~~`). La columna «Verificación» es el mapa que lleva a
+  la red de cada invariante: si apunta a una clase retirada, la invariante se queda **sin red
+  sin hacer ruido** —la cobertura puede seguir viva con otro nombre, pero nadie la encuentra—.
+  Ya pasó dos veces (`PAY-04` en `#121`, `SEC-06` al retirar el modal en `#122`).
+  ⚠️ **El tachado no es cosmético: es lo que separa las dos cosas para la máquina**, porque en
+  prosa se escriben igual. `docs-check` (check 8) lo exige. Solo aplica a `INVARIANTES.md`:
+  `DECISIONES` y las specs son narrativa histórica y están llenas de nombres retirados a
+  propósito.
 - Datos de negocio desconocidos → placeholder + `[PENDIENTE]`; los valores reales viven en
   BD/panel (data-driven), jamás quemados en código.
 - Documentos cortos y enfocados: la doc es contexto de agentes; cada token cuenta.

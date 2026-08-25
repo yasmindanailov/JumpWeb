@@ -8418,3 +8418,127 @@ frase que el waiver modifica** (`waiver-probatorio.md` §8.3). B la corrige prim
 toca esa fila** hasta que B empuje, y entonces añade el paso (2) citando `WaiverRetentionTest`.
 
 Verificación: `docs-check` ✓ (el ancla `§10` resuelve) · gate del `pre-push` en el push de esta entrada.
+
+## #159 · 2026-08-25 · `RGPD-01` describía CINCO operaciones y el código hacía OCHO — y la frase «cualquier PII nueva debe añadirse aquí» pasa de petición a guarda
+
+Lo destapó la revisión adversarial del waiver (`#156`, `waiver-probatorio.md` §8.3): la spec decía
+«**`RGPD-01` SE MODIFICA**» y, al ir a buscar la frase que había que modificar, **no estaba**. Esta
+entrada la escribe, y de paso convierte en mecanismo lo que era una petición escrita.
+
+### El desfase, medido contra el código
+
+`User::anonymize()` hace **ocho** grupos de operaciones. La invariante enumeraba **cinco**. Callaba
+las tres que un lector daría por supuestas y por eso nadie echó de menos:
+
+1. **El borrado del PROPIO titular** — 14 columnas: nombre, email, teléfono, correo pendiente y su
+   sello, `last_login_at`, `email_verified_at`, `remember_token`, `locale`, `marketing_opt_in`, la
+   contraseña (un `Str::random(60)` que el cast `hashed` vuelve inservible) y **los TRES sellos
+   legales**. La celda que se llama a sí misma «la purga CENTRAL y completa» **no mencionaba la purga
+   del titular**.
+2. `consents()->delete()` y `roles()->detach()`.
+3. La **idempotencia**: sobre una cuenta ya anónima devuelve `false` sin ejecutar nada.
+
+❗ **Y lo importante para calibrar la gravedad: los tests SÍ las cubrían.**
+`PrivacyTest::test_anonymize_neutralises_the_account_and_clears_consents_and_roles` asevera las tres.
+▶ **Así que el agujero era el MAPA, no la red.** En un repo que desarrollan solo agentes eso no es
+menor: `RGPD-01` es lo que se lee **antes** de tocar el borrado, y su última línea —«cualquier PII
+nueva que se persista debe añadirse aquí»— la convierte en una **lista de comprobación**. Una lista de
+comprobación a la que le falta el punto principal enseña a comprobar mal.
+
+### El censo: la frase, hecha ejecutable
+
+`AnonymizeCoversEveryUserColumnTest` declara **columna a columna** de `users` qué se purga
+(`SCRUBBED`), qué se conserva y **por qué** (`PRESERVED`), y qué cambia por el mero hecho de guardar
+(`INCIDENTAL`). Tres propiedades, y las tres son el diseño:
+
+- **Una columna NUEVA pone la suite en ROJO hasta que alguien la declare.** Eso es lo que faltaba: el
+  art. 17 no se incumple con un fallo ruidoso, se incumple con una columna que nadie recordó.
+- **Es simétrico**: una `SCRUBBED` que deje de limpiarse cae, y una `PRESERVED` que empiece a
+  limpiarse **también**. Un censo de una sola dirección se degrada a comentario.
+- Lleva **su guarda de la guarda**: un caso que comprueba que la comparación discrimina y que la purga
+  es idempotente. Sin él, un `anonymize()` que devolviera `false` en silencio dejaría verde el resto.
+
+▶ **Verificado por mutación**: retirar `panel_locale` del censo → cae el caso del censo; **quitar
+`'phone' => null` de `anonymize()`** → cae el del comportamiento, nombrando la columna. `User.php`
+restaurado y comprobado **por md5 y por `git status`**.
+
+⚠️⚠️ **Y el censo deja armado un interlock con el trabajo del waiver**: `waiver_accepted_at` está hoy
+en `SCRUBBED` **porque es lo que el código hace**, no lo que debería. Cuando el waiver la mueva a
+conservación restringida (`waiver-probatorio.md` §4.6), **este test se pondrá rojo, y tiene que
+ponerse**: es la señal de que el cambio llegó, y obliga a moverla de lista **con su razón escrita** en
+vez de que la conducta cambie en silencio.
+
+### Y una columna que nadie había declarado nunca
+
+Construir el censo obligó a mirar las 18 columnas de `users` una a una, y apareció **`panel_locale`**:
+`anonymize()` no la toca y **nadie lo había decidido** — simplemente no estaba en la lista de nadie.
+▶ Queda **declarada como `PRESERVED` con su razón**: es la preferencia de idioma del PANEL, y sobre
+una fila ya anonimizada no identifica a nadie. **No se cambia conducta aquí a propósito**: el método
+lo va a tocar el waiver, y meter un cambio de comportamiento en una tanda que se llama «hacer que la
+doc diga la verdad» sería exactamente la chapuza que este proyecto no hace.
+⚠️ Su asimetría con `locale` —que sí se normaliza a «es»— queda escrita como **incidental**: `locale`
+se toca por higiene de la fila neutra, no por privacidad.
+
+---
+
+## Y la segunda mitad: el MAPA que lleva a las guardas
+
+`DEUDA.md` tenía en **Alta** un candidato «acotado, barato y ya MEDIDO» (`#121`): que cada nombre de
+clase de test citado por una invariante exista de verdad.
+
+❗❗ **Al medirlo, mi primer instrumento dio CUATRO citas muertas y era FALSO.** Tenía dos defectos, y
+los dos daban de más: contaba **menciones históricas** como citas vivas, y partía las filas por `|`
+sin respetar los `\|` escapados, así que en `SEC-06` leía la columna equivocada.
+▶ **La medida correcta: hoy hay CERO citas muertas.** `PAY-04` re-apuntó las suyas el 2026-08-22 y
+`SEC-06` las suyas el 23, las dos con su mutación. Las cuatro «muertas» eran los nombres retirados que
+esas mismas celdas nombran **como historia**, y lo dicen con todas las letras.
+⚠️ Es la regla de la casa aplicada a mí mismo: *cuando dos medidas del mismo corpus no coinciden, la
+que sobra no es la que da más — es la que no puede explicar la diferencia.*
+
+### Por qué ese gate no existía, y qué lo hace posible
+
+**Una mención histórica y una cita viva se escriben igual.** Ése era el obstáculo real, no la falta de
+ganas: cualquier comprobación automática las confunde, y por eso `#121` se quedó en «candidato».
+
+▶ **La convención que las separa: el TACHADO.** Un test retirado que se nombra como historia se
+escribe `~~ClaseTest~~`. Se lee bien para una persona y es inequívoco para la máquina.
+▶ Con eso, `docs-check` gana su **check 8**: toda clase `*Test` citada entre backticks en
+`INVARIANTES.md` tiene que existir en `tests/`, salvo que vaya tachada. **Push bloqueado si no.**
+⚠️ **Alcance deliberado: solo `INVARIANTES.md`.** `DECISIONES` y las specs son narrativa histórica y
+están llenas de nombres retirados a propósito; exigirles el tachado sería ruido, no señal.
+
+▶ **Verificado por mutación, en sus dos mitades**: renombrar una cita VIVA (`PrivacyTest` →
+`PrivacyRenombradoTest`) pone el gate en rojo; y **quitarle el tachado a una mención histórica**,
+también. La segunda importa tanto como la primera: demuestra que lo que hace el trabajo es la
+convención, no la casualidad de que esos cuatro nombres estén donde están.
+
+▶ La fila de `DEUDA.md` **no se cierra**: `docs-check` sigue sin validar CONTENIDO —las 794
+afirmaciones de `#103` siguen sin instrumento—. Lo que se cierra es su candidato acotado, que era la
+mitad barata y la que protege las invariantes.
+
+Verificación: suite **2837 / 16.451** verde (era 2834: +3 del censo) · Pint limpio (858 ficheros) ·
+`docs-check` verde **con el check 8 nuevo** · las cuatro mutaciones ejecutadas y con su salida arriba
+· `User::anonymize()` **sin cambios** (md5 comprobado).
+
+### Y un tercer hallazgo, que salió de usar el gate contra mí mismo
+
+Al escribir la fila de `DEUDA.md` de esta misma entrada, **`docs-check` me dio un error que era suyo,
+no mío**: decía «ancla rota — `§14` no existe en CONVENCIONES/INVARIANTES» (ejemplo), y ese `§14`
+era una cita **preexistente y correcta** a `REDSYS §14` (ejemplo). Saltó porque mi texto metió la
+palabra «CONVENCIONES» en la misma línea.
+
+▶ **La causa**: el check 2 validaba **por LÍNEA**, no por cita —su propio comentario lo decía—, así
+que una línea que nombra dos documentos empareja el `§N` con el equivocado.
+❗ **Y esto no es un error benigno**: un gate que da falsos positivos **enseña a reescribir la doc para
+contentarlo**. El agente siguiente no arregla el ancla —no hay nada que arreglar—: mueve la frase de
+sitio. Eso es peor que no tener el check, porque degrada la doc y encima parece rigor.
+
+▶ **Arreglado**: cada `§N` se ata ahora al documento que lo **PRECEDE** en la línea; si el dueño es
+otro documento, el check no opina; y si no hay ninguno delante, cae al criterio viejo para no perder
+cobertura.
+⚠️ **Y el arreglo tuvo su propia regresión, cazada por el propio gate**: al reconstruir el mapa de
+secciones asumí que las de `INVARIANTES` eran familias (`PAY`, `RGPD`) y son **numéricas**
+(`## 3 · RGPD / PII`). Tres specs salieron en rojo al instante. Corregido y re-verificado.
+▶ **Verificado por mutación, en las tres direcciones.** Un `CONVENCIONES §99` roto → cae (ejemplo).
+Un `INVARIANTES §99` roto → cae (ejemplo). Y el caso que lo motivó —`REDSYS §14` junto a
+`CONVENCIONES §4` en la misma línea (ejemplo)— **queda verde**.

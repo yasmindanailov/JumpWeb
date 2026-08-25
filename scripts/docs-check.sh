@@ -12,8 +12,11 @@
 #   6. Las citas «DECISIONES #N» apuntan a entradas que existen.
 #   7. Los marcadores de fase de 00-REFACTOR.md son coherentes con sus checkboxes
 #      y con ESTADO.md (precedencia: el tracker manda).
+#   8. Las clases de test citadas por una invariante existen en tests/ (una mención
+#      HISTÓRICA se escribe tachada: `~~ClaseTest~~`).
 # Escape (CONVENCIONES §4): una línea con «(futuro)» o «(ejemplo)» queda exenta de los
-# checks 3-4 — para specs de diseño y ejemplos pedagógicos.
+# checks 2-4 y 8 — para specs de diseño y ejemplos pedagógicos. Una entrada que EXPLICA un
+# ancla rota o un test retirado necesita escribirlo, y el gate no puede castigar eso.
 # Alcance: docs/ + CLAUDE.md + README.md. No escanea código (los punteros fantasma de los
 # comentarios heredados tienen tabla de equivalencias en docs/README.md).
 
@@ -43,32 +46,55 @@ while IFS= read -r raw; do
     fi
 done < <(grep -ohE '(^|[^/A-Za-z0-9_.-])(docs|sistemas|specs)/[A-Za-z0-9_/.-]+\.md' "${DOCS[@]}" | sort -u)
 
-# ── 2 · Anclas §N hacia CONVENCIONES / INVARIANTES (por línea, cualquier forma) ───────
-conv_ok() { grep -qE "^## §${1//./\\.}([^0-9]|$)" docs/CONVENCIONES.md; }
-inv_ok()  { grep -qE "^## ${1%%.*} ·" docs/INVARIANTES.md; }
-
-while IFS= read -r hit; do
-    file="${hit%%:*}"; rest="${hit#*:}"; ln="${rest%%:*}"; line="${rest#*:}"
-    has_conv=0; has_inv=0
-    [[ "$line" == *CONVENCIONES* ]] && has_conv=1
-    [[ "$line" == *INVARIANTES* ]] && has_inv=1
-    while IFS= read -r sec; do
-        [[ -z "$sec" ]] && continue
-        ok=0
-        [[ $has_conv -eq 1 ]] && conv_ok "$sec" && ok=1
-        [[ $ok -eq 0 && $has_inv -eq 1 ]] && inv_ok "$sec" && ok=1
-        if [[ $ok -eq 0 ]]; then
-            dest='CONVENCIONES/INVARIANTES'
-            [[ $has_conv -eq 1 && $has_inv -eq 0 ]] && dest='CONVENCIONES'
-            [[ $has_conv -eq 0 && $has_inv -eq 1 ]] && dest='INVARIANTES'
-            err "ancla rota en $file:$ln — «§${sec}» no existe en $dest"
-        fi
-    done < <(grep -oE '§[0-9]+(\.[a-z]+)?' <<<"$line" | sed 's/§//g' | sort -u)
-done < <(grep -Hn -e CONVENCIONES -e INVARIANTES "${DOCS[@]}" | grep '§[0-9]' || true)
-
-if grep -qr '§Verificación' docs/ CLAUDE.md README.md 2>/dev/null; then
-    err 'ancla prohibida: «§Verificación» (usar «CONVENCIONES §7»)'
-fi
+# ── 2 · Anclas §N hacia CONVENCIONES / INVARIANTES ───────────────────────────────────
+# ⚠️ Cada «§N» se ata al documento que lo PRECEDE en la línea, no a la línea entera. Antes se
+# miraba si la línea nombraba CONVENCIONES o INVARIANTES «en algún sitio», y una línea que
+# citara dos documentos validaba el ancla contra el equivocado: un `REDSYS §14` legítimo salía
+# como ancla rota en cuanto alguien mencionaba CONVENCIONES en la misma frase (`#158`). Un gate
+# que da FALSOS POSITIVOS enseña a reescribir la doc para contentarlo, que es peor que no tenerlo.
+# Si ningún documento precede al «§N», se cae al criterio viejo (la línea) para no perder cobertura.
+anchor_errors=$(perl -e '
+    my ($conv_path, $inv_path, @docs) = @ARGV;
+    my %conv; open(my $c, "<", $conv_path) or die;
+    while (<$c>) { $conv{$1} = 1 if /^## §([0-9]+(?:\.[a-z]+)?)(?:[^0-9]|$)/ }
+    my %inv;  open(my $i, "<", $inv_path)  or die;
+    while (<$i>)  { $inv{$1} = 1 if /^## ([0-9]+) ·/ }   # las secciones de INVARIANTES son numéricas
+    for my $f (@docs) {
+        open(my $fh, "<", $f) or next;
+        my $n = 0;
+        while (my $line = <$fh>) {
+            $n++;
+            next unless $line =~ /§[0-9]/;
+            next unless $line =~ /CONVENCIONES|INVARIANTES/;
+            next if $line =~ /\((?:futuro|ejemplo)\)/;   # escape de CONVENCIONES §4: ejemplos pedagógicos
+            # Tokens de documento y de sección, con su posición en la línea.
+            my @tok;
+            while ($line =~ /(CONVENCIONES|INVARIANTES|[A-Za-z0-9_-]+\.md|`[A-Z][A-Za-z0-9_-]*`)/g) {
+                push @tok, [pos($line), $1];
+            }
+            while ($line =~ /§([0-9]+(?:\.[a-z]+)?)/g) {
+                my ($at, $sec) = (pos($line), $1);
+                my $owner = "";
+                for my $t (@tok) { $owner = $t->[1] if $t->[0] <= $at }
+                my ($want_conv, $want_inv);
+                if ($owner =~ /CONVENCIONES/) { $want_conv = 1 }
+                elsif ($owner =~ /INVARIANTES/) { $want_inv = 1 }
+                elsif ($owner eq "") {   # ningún documento delante: criterio viejo, por línea
+                    $want_conv = ($line =~ /CONVENCIONES/) ? 1 : 0;
+                    $want_inv  = ($line =~ /INVARIANTES/)  ? 1 : 0;
+                } else { next }          # el «§N» es de OTRO documento: no es asunto de este check
+                my $ok = 0;
+                $ok = 1 if $want_conv && $conv{$sec};
+                $ok = 1 if $want_inv  && $inv{(split /\./, $sec)[0]};
+                next if $ok;
+                my $dest = $want_conv && $want_inv ? "CONVENCIONES/INVARIANTES"
+                         : $want_conv ? "CONVENCIONES" : "INVARIANTES";
+                print "ancla rota en $f:$n — «§$sec» no existe en $dest\n";
+            }
+        }
+    }
+' docs/CONVENCIONES.md docs/INVARIANTES.md "${DOCS[@]}" | sort -u)
+[[ -n "$anchor_errors" ]] && while IFS= read -r e; do err "$e"; done <<<"$anchor_errors"
 
 # ── 3 · Rutas de código citadas existen (escape: líneas «(futuro)»/«(ejemplo)») ───────
 while IFS= read -r path; do
@@ -145,6 +171,25 @@ while IFS= read -r m; do
     grep -qE "^### Fase ${n}[^0-9].*✅" docs/00-REFACTOR.md \
         || err "ESTADO.md dice «${m}» pero la cabecera de esa fase en 00-REFACTOR.md no es ✅ (el tracker manda — DECISIONES #10)"
 done < <(grep -oiE 'Fase [0-9]+[^.]{0,60}COMPLETA' docs/ESTADO.md | sort -u || true)
+
+# ── 8 · Las clases de test citadas por una invariante EXISTEN ─────────────────────────
+# `INVARIANTES.md` es el mapa que lleva a la red: cada invariante dice en qué test se
+# comprueba. Si esa cita apunta a una clase que ya no existe, la invariante se queda SIN
+# RED SIN HACER RUIDO — la cobertura puede seguir viva con otro nombre, pero el siguiente
+# agente no la encuentra. Ya pasó dos veces (`PAY-04` en `#121`, `SEC-06` al retirar el
+# modal en `#122`): las dos se re-apuntaron a mano, y nada impedía la tercera.
+#
+# ⚠️ El motivo por el que este check no existía: una MENCIÓN histórica y una CITA viva se
+# escriben igual. La convención que las separa —y que este check exige— es el TACHADO:
+# un test retirado que se nombra como historia va `~~ClaseTest~~`. Se lee bien en la doc
+# y es inequívoco para la máquina.
+# Alcance: solo `INVARIANTES.md`. DECISIONES y las specs son narrativa histórica y están
+# llenas de nombres retirados a propósito; exigirles el tachado sería ruido, no señal.
+while IFS= read -r cls; do
+    [[ -z "$cls" ]] && continue
+    find tests -name "${cls}.php" -print -quit 2>/dev/null | grep -q . \
+        || err "INVARIANTES.md cita \`${cls}\`, que no existe en tests/. Si la cobertura se mudó, re-apunta la cita; si el test se retiró y lo nombras como historia, escríbelo tachado: ~~${cls}~~"
+done < <(perl -ne 'next if /\((?:futuro|ejemplo)\)/; while (/(~~)?`[A-Za-z0-9\\]*?([A-Z][A-Za-z0-9]*Test)`/g) { print "$2\n" unless $1 }' docs/INVARIANTES.md | sort -u)
 
 if [[ $FAIL -eq 0 ]]; then
     echo "✓ docs-check: doc coherente (${real_models} modelos · ${real_migrations} migraciones · ${real_invariants} invariantes · ${real_resources} Resources)."

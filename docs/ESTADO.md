@@ -23,13 +23,14 @@
 > modificar**. La invariante enumera CINCO operaciones de `anonymize()` y el código hace **OCHO** —
 > calla el borrado del PROPIO titular (nombre, email, teléfono, los tres sellos legales),
 > `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
-> ▶ **Por eso el agente B corrige `RGPD-01` PRIMERO** —solo la VERDAD de lo que el código hace hoy,
-> **sin tocar conducta**— y el waiver parte de ahí para restringirla. **Quien haga el waiver:
-> `git pull --rebase` y arranca sobre la `RGPD-01` corregida**; si la editas antes, chocamos en la
-> misma fila de `INVARIANTES.md`.
-> ⚠️ **Ficheros del agente B en esta tanda**: `docs/INVARIANTES.md` (fila `RGPD-01` y la columna
-> «Verificación» de `PAY-04`/`SEC-06`), `scripts/docs-check.sh` y un test nuevo. **No toca
-> `User::anonymize()`**: esa conducta la modifica el waiver, no esta tanda.
+> ✅ **HECHO y EMPUJADO** (`#159`): `RGPD-01` ya describe las OCHO operaciones que el código hace.
+> **Quien haga el waiver: `git pull --rebase` y arranca sobre ella.** `User::anonymize()` **no se
+> tocó** —md5 comprobado, no aparece ni en el diff—: esa conducta la modifica el waiver.
+> ⚠️⚠️ **▶ Para el agente del WAIVER: hay un INTERLOCK esperándote.** El censo nuevo
+> (`AnonymizeCoversEveryUserColumnTest`) declara `waiver_accepted_at` como **`SCRUBBED`**, porque es
+> lo que el código hace hoy. Cuando lo pases a conservación restringida (§4.6), **ese test se pondrá
+> ROJO y tiene que ponerse**: muévela a `PRESERVED` **con su razón escrita**. Es la señal de que el
+> cambio llegó, no un estorbo. (Retira este aviso cuando lo hayas hecho — `CONVENCIONES §10`·4.)
 > ⚠️ **Ficheros del agente A (waiver) — tanda 1, el núcleo** (2026-08-25 tarde):
 >   `app/Domain/Identity/{Models,Services}` (modelos y servicios NUEVOS + `User::anonymize()`) ·
 >   `database/migrations` (nuevas) · `app/Providers/AppServiceProvider.php` (morph) ·
@@ -41,16 +42,17 @@
 >   añade ahí el paso (2) —la restricción del waiver— citando `WaiverRetentionTest` (nombre fijado
 >   ya, para que la cita resuelva). ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
-> Ha colisionado **SIETE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
+> Ha colisionado **OCHO** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
 > fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
-> porque el agente A empujó **seis veces** mientras se escribían.
+> porque el agente A empujó **seis veces** mientras se escribían — y la octava fue `#158`, tomado
+> mientras se escribía esta misma tanda.
 > ❗ **La regla, corregida por el precio pagado**: el número **no se fija al escribir, se fija al
 > EMPUJAR** — se vuelve a mirar el remoto justo antes del push. **Corolario: empujar PRONTO.**
 > ❗❗ **Y el 2026-08-25 el precio dejó de ser solo el número**: los DOS agentes arreglaron **el mismo
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#158`**.
+> El último usado es **`#159`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -134,8 +136,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2834 en verde** (16.429 aserciones, `--parallel` **~43 s** medidos el 2026-08-25 **sobre el
-  estado FUSIONADO** — dinero del agente A + revisión/i18n del agente B) ·
+- Suite **2837 en verde** (16.451 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+  ▶ **+3 en el último corte** (`#158`): `AnonymizeCoversEveryUserColumnTest`, el **censo** de las 18
+  columnas de `users`. Convierte en guarda la última frase de `RGPD-01` —«cualquier PII nueva debe
+  añadirse aquí»—, que hasta hoy era una petición: **una columna nueva pone la suite en rojo hasta
+  que alguien la declare**. Es simétrico (una conservada que empiece a purgarse cae igual) y lleva
+  su guarda-de-la-guarda. **2 mutaciones, las 2 muerden**; `User.php` restaurado y comprobado por md5.
   ▶ **+4 en el último corte** (`#157`): `ClientMoneyLabelsAreTranslatedTest`, la **segunda** guarda
   del EN/FR. No repite a la de `#154`: añade la guarda-de-la-guarda, la prohibición del **mecanismo**
   (el helper compartido no puede volver a citar `admin.*`), el barrido ancho de todas las claves
