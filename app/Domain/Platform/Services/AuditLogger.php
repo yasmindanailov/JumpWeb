@@ -77,8 +77,40 @@ class AuditLogger
         );
     }
 
+    /**
+     * **Toda acción registrada tiene que estar en el catálogo** (`AuditLog::ACTIONS`, `DECISIONES
+     * #143`). Lanza FUERA de producción; en producción acepta en silencio.
+     *
+     * ⚠️ **Va ANTES del `try` de {@see write()}, y eso NO es un detalle de colocación**: ese
+     * `try` se traga cualquier `Throwable` a propósito —una auditoría caída no puede tumbar el
+     * panel ni un cobro— así que una validación metida dentro quedaría muda para siempre. La
+     * guarda que no se puede disparar es peor que no tenerla.
+     *
+     * ⚠️ **Y en producción NO lanza, por el mismo motivo que
+     * `Model::preventSilentlyDiscardingAttributes()` solo está activo fuera de producción**: una
+     * acción sin catalogar es un fallo de mantenimiento de la doc, no una razón para romper el
+     * flujo de un cliente que está pagando.
+     *
+     * El coste es el que da valor: la SUITE es quien lo caza. Tres acciones se construyen
+     * concatenando y dos llegan por constante dentro de un array, así que ningún escaneo estático
+     * del código las ve — solo ejecutarlas.
+     */
+    private static function assertKnownAction(string $action): void
+    {
+        if (in_array($action, AuditLog::ACTIONS, true) || app()->isProduction()) {
+            return;
+        }
+
+        throw new \LogicException(
+            "Acción de auditoría no catalogada: «{$action}». Añádela a `AuditLog::ACTIONS` y dale "
+            .'etiqueta en `lang/es/admin.php` si es de pedido (lo exige `AuditActionCatalogTest`).'
+        );
+    }
+
     private static function write(string $action, ?Model $target, ?array $payload, string $payloadHash, bool $system = false): ?AuditLog
     {
+        self::assertKnownAction($action);
+
         try {
             // En modo sistema NO se mira la petición: ni actor ni IP/UA (minimización RGPD).
             $request = (! $system && app()->bound('request')) ? app(Request::class) : null;

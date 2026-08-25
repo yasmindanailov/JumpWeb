@@ -178,6 +178,22 @@
                 <span class="text-gray-900 dark:text-gray-100">{{ $fmt($valorFinal) }}</span>
             </div>
 
+            {{-- ⚠️ **«Al reservar se facturaron X. El pedido cambió después y ahora vale Y menos.»**
+                 (`DECISIONES #145`). El CLIENTE ya leía esta frase en «Mis pedidos» y el operador
+                 —que es quien tiene que explicar el cargo con el cliente delante— no tenía nada
+                 equivalente: veía el valor final y ninguna pista de que antes fue otro. Era una
+                 inversión rara, y arreglarla no cuesta un cálculo.
+                 ▶ **La compone `OrderLedger::invoicedNoteFor`, no este blade**: es la MISMA frase que
+                 publica `LedgerResource::invoiced_hint`, así que no hay dos redacciones que puedan
+                 divergir (`LedgerSingleSourceTest`).
+                 ▶ ⚠️ **La condición es que la frase EXISTA, no comparar importes** — es la lección de
+                 `#134`/`L6`: `facturadoNota` es `null` exactamente cuando no hay nada que contar, y
+                 re-derivarlo aquí con `facturado !== valor` es el defecto que aquel punto cerró.
+                 No va como fila de la columna a propósito: no es un canal del desglose. --}}
+            @if ($l->facturadoNota !== null)
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $l->facturadoNota }}</p>
+            @endif
+
             {{-- Pagado online / Cobrado (P1/P10: etiqueta según método + fecha). Detalle ↳ por reserva. --}}
             <div class="flex items-center justify-between gap-3 pl-3 text-sm text-gray-700 dark:text-gray-300">
                 <span>@if ($paidPayment){{ $paidLabel }} <span class="text-gray-400 dark:text-gray-500">· {{ $paidDateStr }}</span>@else{{ __('admin.orders.order_financial.pagado_online') }}@endif</span>

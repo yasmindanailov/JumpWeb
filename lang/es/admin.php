@@ -713,32 +713,84 @@ return [
             'diff_added' => '· :label añadido: «:new»',
             'diff_removed' => '· :label eliminado (era «:old»)',
 
+            // Detalle de una edición de reserva (`DECISIONES #145`). El registro guardaba estos
+            // datos desde el principio y no los pintaba nadie.
+            'slot_move' => 'Fecha y hora: :from → :to',
+            'unit_price_move' => 'Precio unitario: :from → :to',
+            'price_diff' => 'Diferencia: :amount',
+            'adjustment_amount' => 'Importe: :amount',
+            'changed_what' => 'Cambió: :what',
+            'change_kinds' => [
+                'slot_change' => 'la fecha y la hora',
+                'product_change' => 'el producto',
+                'quantity_change' => 'la cantidad',
+                'addon_change' => 'los complementos',
+            ],
+
             // Acciones traducidas. Estructura anidada por subject (`orders` y
             // `order_items`) para que `__('admin.orders.audit_modal.actions.orders.cancelled')`
             // resuelva correctamente — Laravel descompone por `.`.
+            //
+            // ⚠️⚠️ **El grupo tiene que casar con el PREFIJO REAL de la acción que el código
+            // emite, no con el tipo del target** (`DECISIONES #145`). Cuatro etiquetas vivían
+            // bajo `order_items.*` mientras el código escribía `orders.item_*`, así que estaban
+            // escritas y no se usaban NUNCA: el registro enseñaba la clave cruda teniendo la
+            // traducción a un palmo. Solo `event_data_*` se emite de verdad con prefijo
+            // `order_items.`.
+            //
+            // ⚠️ **La lista completa la impone `AuditActionCatalogTest`** contra
+            // `AuditLog::orderActions()`, en las dos direcciones: ninguna acción sin etiqueta y
+            // ninguna etiqueta sin acción. Se retiraron cuatro que etiquetaban un ciclo ya
+            // retirado (preparado / sin preparar) y un evento que nadie audita
+            // (`processed_after_expiration`: lo que se registra es la incidencia de cobro).
             'actions' => [
                 'orders' => [
                     'cancelled' => 'Pedido cancelado',
                     'cancel_blocked' => 'Intento de cancelación bloqueado',
+                    'created_manual' => 'Pedido creado a mano',
+                    'customer_registered' => 'Cliente dado de alta con el pedido',
                     'refunded' => 'Reembolso confirmado',
                     'refund_blocked' => 'Intento de reembolso bloqueado',
                     'refund_failed' => 'Reembolso fallido',
                     'email_resent' => 'Email reenviado',
                     'email_resent_blocked' => 'Reenvío de email bloqueado',
-                    'processed_after_expiration' => 'Pago procesado después de caducar (C1)',
+                    'guest_form_submitted' => 'Formulario de invitados enviado',
+                    'payment_init_failed' => 'No se pudo iniciar el cobro',
                     'slip_printed' => 'Hoja de reserva impresa',
-                ],
-                'order_items' => [
-                    'prepared' => 'Producto marcado como preparado',
-                    'unprepared' => 'Producto marcado como sin preparar',
-                    'toggle_blocked' => 'Cambio de preparación bloqueado',
-                    'event_data_updated' => 'Datos del evento actualizados',
-                    'event_data_blocked' => 'Edición de datos del evento bloqueada',
+
+                    // Dinero de puerta. Los tres mueven «A cobrar en el parque» y son los que el
+                    // operador tiene que poder explicar con el cliente delante.
+                    'extra_due_applied' => 'Cargo añadido a cobrar en el parque',
+                    'gate_credit_applied' => 'Abono sobre lo pendiente en el parque',
+                    'deposit_remainder_credit_applied' => 'Abono sobre el resto de la señal',
+
+                    // Reservas dentro del pedido. ⚠️ El código las emite con prefijo `orders.`
+                    // aunque hablen de un producto, y el target es el PEDIDO.
+                    'item_edited' => 'Producto editado',
+                    'item_cancelled' => 'Producto cancelado',
                     'item_refunded' => 'Producto reembolsado',
+                    'item_slot_changed' => 'Fecha y hora del producto cambiadas',
+                    'item_edit_blocked' => 'Edición de producto bloqueada',
                     'item_cancel_blocked' => 'Cancelación de producto bloqueada',
                     'item_refund_blocked' => 'Reembolso de producto bloqueado',
                     'item_refund_failed' => 'Reembolso de producto fallido',
                 ],
+                'order_items' => [
+                    'event_data_updated' => 'Datos del evento actualizados',
+                    'event_data_blocked' => 'Edición de datos del evento bloqueada',
+                ],
+            ],
+
+            // Motivo de un ajuste de dinero, legible. Antes se pintaba la clave en crudo
+            // («Motivo: item_edit_reduction»), que es lo que el owner encontró en `R-S9XDYB`.
+            // Un motivo sin entrada aquí cae a su propia clave, nunca rompe.
+            'reasons' => [
+                'item_edit' => 'subida por editar el producto',
+                'item_edit_reduction' => 'bajada por editar el producto',
+                'addon_edit' => 'cambio de complementos',
+                'addon_per_guest_rescale' => 'reajuste de complementos por invitado',
+                'addon_per_guest_rescale_reduction' => 'bajada por reajuste de complementos por invitado',
+                'deposit_remainder' => 'resto de la señal, a pagar en el parque',
             ],
         ],
 
@@ -1011,6 +1063,10 @@ return [
             // #171: etiqueta compacta de las sub-líneas del desglose.
             'breakdown' => [
                 'product_change' => 'Cambio a :name',
+                // `DECISIONES #145`. Antes de esto, un ajuste nacido de mover la fecha llegaba con
+                // el contexto vacío y caía al texto de respaldo, así que tres líneas seguidas
+                // repetían la misma frase muda sin decir qué había cambiado.
+                'slot_change' => 'Cambio de fecha a :when',
             ],
         ],
 

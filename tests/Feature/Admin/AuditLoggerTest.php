@@ -83,7 +83,10 @@ class AuditLoggerTest extends TestCase
     {
         Auth::logout();
 
-        $log = AuditLogger::log('orders.expired', payload: ['code' => 'JJ-TEST']);
+        // Acción REAL del catálogo (`AuditLog::ACTIONS`) y además del sistema: `PaymentInitiator`
+        // la escribe sin sesión. Antes era `orders.expired`, que NADIE emite — el catálogo de
+        // `#145` lo destapó al validar en tiempo de ejecución.
+        $log = AuditLogger::log('orders.payment_init_failed', payload: ['code' => 'JJ-TEST']);
 
         $this->assertNotNull($log);
         $this->assertNull($log->user_id, 'Acciones del sistema (scheduler/jobs) tienen user_id null.');
@@ -93,7 +96,9 @@ class AuditLoggerTest extends TestCase
     {
         // El modelo no tiene timestamps automáticos: no debe modificarse `created_at`
         // al actualizar el modelo, y no existe `updated_at` en absoluto.
-        $log = AuditLogger::log('test.action', payload: ['a' => 1]);
+        // Acción REAL del catálogo: `test.action` no existía en ninguna parte del producto y el
+        // catálogo de `#145` la rechaza. La inmutabilidad que se asevera no depende de cuál sea.
+        $log = AuditLogger::log('settings.updated', payload: ['a' => 1]);
         $this->assertFalse($log->timestamps,
             'AuditLog debe deshabilitar `timestamps` para no aceptar updated_at.');
     }

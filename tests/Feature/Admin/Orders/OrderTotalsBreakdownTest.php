@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -174,6 +175,86 @@ class OrderTotalsBreakdownTest extends TestCase
 
         $this->assertStringContainsString('+2 '.$this->jumpType->tr('name'), $html);
         $this->assertStringContainsString('24,00', $html);
+    }
+
+    /**
+     * **La causa del ajuste llega al desglose cuando fue un cambio de FECHA** (`DECISIONES #145`).
+     *
+     * Antes caía al texto de respaldo y tres líneas seguidas repetían la misma frase muda, porque
+     * `executeItemEdit` filtraba `slot_change` fuera del contexto (medido en `R-S9XDYB`).
+     */
+    public function test_gate_breakdown_subline_says_it_was_a_date_change(): void
+    {
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order);
+        OrderAdjustment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'amount_cents' => 2400,
+            'currency' => 'EUR',
+            'reason' => 'item_edit',
+            'context' => ['changes' => ['slot_change' => ['old' => 'sáb 5 sep 18:00', 'new' => 'mié 2 sep 19:00']]],
+            'applied_by' => User::factory()->create()->id,
+        ]);
+
+        $html = $this->renderTotals($order);
+
+        $this->assertStringContainsString(
+            __('admin.orders.order_financial.breakdown.slot_change', ['when' => 'mié 2 sep 19:00']),
+            $html,
+            'El desglose tiene que decir que el cargo viene de mover la fecha, y a cuándo.',
+        );
+    }
+
+    /**
+     * **«Al reservar se facturaron X; ahora vale Y menos» también en el PANEL** (`DECISIONES #145`).
+     *
+     * El cliente ya leía esta frase en «Mis pedidos» y el operador —que es quien la tiene que
+     * explicar con el cliente delante— no tenía nada equivalente.
+     *
+     * ⚠️ Se asevera contra `OrderLedger::facturadoNota`, **no contra un literal ni contra una
+     * comparación de importes**: la frase la compone el dominio y su `null` ES la condición de
+     * enseñarla (`#134`/`L6`). Re-derivarla aquí repetiría el defecto que aquel punto cerró.
+     */
+    public function test_the_panel_shows_the_invoiced_note_when_the_order_changed_after_booking(): void
+    {
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order);
+        $item->markCancelled(User::factory()->create());
+
+        $ledger = OrderLedger::forOrder($order->fresh());
+
+        $this->assertNotNull(
+            $ledger->facturadoNota,
+            'Guarda del escenario: si el montaje no produce la nota, este caso pasaría sin comprobar nada.',
+        );
+
+        $this->assertStringContainsString($ledger->facturadoNota, $this->renderTotals($order->fresh()));
+    }
+
+    /**
+     * Control negativo: sin cambios no hay nota, y el panel no se inventa una.
+     *
+     * ⚠️ **Dos ítems, no uno, y el motivo importa**: `makePaidOrder()` factura 20,00 € y
+     * `attachActiveItem()` añade 10,00 €, así que con un solo ítem el pedido nace DESCUADRADO y la
+     * nota aparece con razón. Sería un rojo del fixture leído como un defecto del código — la
+     * trampa que este proyecto ya pagó cuatro veces (`specs/desglose-dinero-cliente.md`): *un
+     * fixture que no reproduce el flujo real inventa defectos tan bien como los oculta*.
+     */
+    public function test_the_panel_shows_no_invoiced_note_on_an_untouched_order(): void
+    {
+        $order = $this->makePaidOrder();
+        $this->attachActiveItem($order);
+        $this->attachActiveItem($order); // 2 × 10,00 € = los 20,00 € facturados
+
+        $ledger = OrderLedger::forOrder($order->fresh());
+
+        $this->assertNull($ledger->facturadoNota, 'Un pedido intacto no tiene nada que contar.');
+        $this->assertStringNotContainsString(
+            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '', 'difference' => '']),
+            $this->renderTotals($order->fresh()),
+        );
     }
 
     public function test_gate_breakdown_subline_hidden_when_item_finished(): void

@@ -7461,3 +7461,123 @@ siquiera comentados.
   `test_a_zone_with_measurements_still_shows_them`, ocultar el bloque SIEMPRE también habría pasado.
 - **Mutación**: devolver el `number_format` sin guarda → caen 2 · ocultar siempre → caen 2 · duplicar
   otra vez el marcado en la rama sin foto → cae 1. **Cada una solo en su aserción.**
+
+## #145 · 2026-08-25 · El registro de un pedido no decía NADA — y el dato estaba entero desde el principio
+
+**De dónde sale.** El owner abrió el registro del pedido `R-S9XDYB` en staging, después de mover una
+reserva a un día más barato, y encontró esto **completo**:
+
+    Producto
+    orders.gate_credit_applied
+    Motivo: item_edit_reduction
+
+Sin importe, sin fechas, sin precios. Y con el badge equivocado. *«Con eso yo no entiendo ni hago
+nada.»*
+
+⚠️⚠️ **El defecto NUNCA fue de datos.** La entrada hermana `orders.item_edited` guardaba, desde el
+primer día, `from_unit_price 1890 → to_unit_price 1590`, `price_diff_cents -2400` y
+`changes: ["slot_change"]`; y `orders.item_slot_changed`, las fechas de origen y destino. **El
+registro tenía todo y no pintaba nada.**
+
+### Los SEIS defectos, todos medidos sobre `R-S9XDYB`
+
+· **1 · El contexto del ajuste tiraba `slot_change` a la basura.** `executeItemEdit` filtraba a
+  `array_flip(['product_change', 'quantity_change'])`, así que el ajuste se guardaba con
+  `context = {"changes": []}` mientras su hermano del registro llevaba `["slot_change"]`. El mismo
+  hecho, dos registros, y **el pobre era el que colgaba del dinero**.
+  ⚠️ **Causa raíz con fechas**: ese filtro es del **commit fundacional (2026-08-12)**, cuando mover
+  la fecha **no re-tarificaba** — un cambio de franja no podía generar diferencia de precio y no
+  había nada que anotar. **`PAY-18` (`#131`, 2026-08-24) creó esa causa nueva y nadie extendió el
+  filtro.** Es también lo que `#131` no llegó a ver: allí se midió que «los ocho `extra_due` caían
+  al texto de respaldo» y se mejoró **ese texto**; esto quita la necesidad de recurrir a él.
+
+· **2 · Casi ninguna acción tenía etiqueta.** Medido sobre las acciones **realmente emitidas en
+  staging**: de las **9 de pedido, 8 salían como clave cruda**. Solo `orders.slip_printed` tenía.
+
+· **3 · El renderizador conocía seis formas y ninguna era la de estas acciones.** `item_edited`
+  traía precios y diferencia → **nada**. `item_slot_changed` traía las fechas → **nada**.
+  `gate_credit_applied` traía motivo **e importe** → pintaba el motivo en crudo y **ocultaba el
+  importe**.
+
+· **4 · De las 18 etiquetas escritas, 8 no se usaban.** Y no todas por el mismo motivo: **4 estaban
+  MAL ARCHIVADAS** —bajo `order_items.*` mientras el código emite `orders.item_*`—, o sea escritas,
+  correctas y **jamás mostradas**; y 4 etiquetaban cosas que nadie emite.
+
+· **5 · ⚠️ El badge decía «Producto» SIEMPRE.** `$isOrderLevel = $entry->target_type === Order::class`
+  no puede ser cierto: la columna guarda el **alias del morphMap** (`order`). `enforceMorphMap` entró
+  el **2026-08-12**, el mismo día que se escribió el blade, así que **llevaba casi dos semanas
+  mintiendo** — y arrastraba que la otra rama buscara un `OrderItem` con el **id del pedido**.
+
+· **6 · El cliente veía MÁS que el operador.** El cajón decía «Al reservar se facturaron 202,20 €. El
+  pedido cambió después y ahora vale 37,00 € menos» y el panel **no tenía nada equivalente** — siendo
+  el operador quien lo explica con el cliente delante.
+
+### Qué se hizo
+
+**A + B + C + D, las cuatro** (decisión del owner), más la guarda.
+
+- **Catálogo `AuditLog::ACTIONS`** (87 acciones) y **validación en `AuditLogger`**: lanza fuera de
+  producción, acepta en silencio dentro. ⚠️ **La validación va ANTES del `try` de `write()`**, que se
+  traga cualquier `Throwable` a propósito: metida dentro habría quedado muda para siempre.
+- **Etiquetas**: las que faltaban, las 4 misarchivadas movidas a su grupo real, las 4 muertas fuera.
+  Y los **motivos** dejan de salir en crudo.
+- **Renderizador**: precio unitario antes/después, la diferencia con signo y color, qué cambió en
+  palabras, el importe del ajuste y las fechas del cambio de franja.
+- **`slot_change` viaja al contexto** del ajuste, y `breakdownLabel()` lo dice. Va **el último** de
+  las tres ramas a propósito: producto y cantidad explican el importe mejor, y no se desplaza
+  ninguna etiqueta que hoy funcione.
+- **La frase de resumen, en el panel.** ⚠️ **La compone `OrderLedger`, no el blade**: es la MISMA que
+  publica `LedgerResource::invoiced_hint`, y **la condición es que la frase exista**, no comparar
+  importes — la lección de `#134`/`L6`.
+
+### ⚠️ Lo que la guarda cazó, incluida una equivocación mía
+
+**Un escaneo estático NO puede enumerar las acciones**: tres se construyen concatenando
+(`'orders.item_'.$actionKey.'_blocked'`) y dos llegan por constante dentro de un array. La primera
+extracción de la sesión se dejó `orders.refund_blocked`, que viaja por un helper.
+
+▶ Al activar la validación, **la suite cazó en el acto tres acciones que ningún grep había visto**:
+`order_items.prepared`, `orders.expired` y `test.action` —las tres escritas por **tests** como
+fixture—, y en la segunda vuelta una cuarta, `order_items.unprepared`. **Yo había declarado
+`order_items.prepared` «etiqueta muerta»**: en producción lo es, pero había código escribiéndola, y
+eso solo se ve ejecutando. Las cuatro fixtures pasan a usar acciones reales, que además hace esos
+tests más fieles.
+
+### Por qué esto convivió tanto tiempo sin que nada lo dijera
+
+⚠️ **`OrderAuditModalTest` tiene once casos y NINGUNO renderiza el modal**: todos ejercitan el
+paginador. Es cobertura buena de la CONSULTA y ciega a la PRESENTACIÓN — la misma familia de hueco
+que `#113` (veinte iconos servidos vacíos) y `#119(f)` (los botones de mes sin cablear). Nace
+`OrderAuditReadabilityTest`, que **renderiza el partial de verdad**.
+
+### ❗ Un SÉPTIMO defecto encontrado y NO arreglado, con nombre
+
+Al escribir el test del cableado salió esto: en un pedido **pagado íntegro online**, mover la fecha a
+un día más barato **no crea ningún ajuste** —la bajada aflora como «pendiente de devolución»— y el
+marcador de reducción que existe justo para dejar rastro solo se dispara
+`if isset($itemEditContext['quantity_change'])`. **Otra condición que `PAY-18` dejó atrás.**
+Consecuencia: en ese caso el desglose no tiene ninguna fila que explique la bajada; el registro sí.
+▶ **Queda `[PENDIENTE: owner]`**: extenderlo añade una fila de 0 € donde hoy no hay ninguna, y eso
+cambia lo que ve el operador en todos los pedidos pagados íntegros cuya fecha se mueva. Es una
+decisión de producto, no una corrección obvia.
+
+### Lo que esta guarda declara que NO mira
+
+⚠️⚠️ **Solo el español — y la primera versión de esta entrada daba un motivo FALSO.** Decía que
+`lang/es/admin.php` era el único `admin.php` del repo. Existe también **`lang/zh_CN/admin.php`**
+(112 KB, versionado) y el chino **es un idioma soportado del panel** (`SetAdminLocale::SUPPORTED`).
+La medición había mirado solo `es`, `en` y `fr`. **Es la segunda vez en esta misma sesión que un
+`grep` de alcance corto produce una conclusión de más** — la primera fue el catálogo de acciones,
+que la validación en ejecución desmintió.
+▶ **El motivo real, y la decisión del owner (2026-08-25)**: el chino es herencia del origen y **no lo
+usa nadie**, así que se arregla solo el español y el chino queda como **hueco con nombre**. Medido:
+de las 25 acciones, `zh_CN` etiqueta 18 → **15 saldrían en crudo** y **8 son huérfanas** (las mismas
+que tenía el español). Ficha en `DEUDA.md`.
+⚠️ **Solo el registro DEL PEDIDO**: el visor global de incidencias usa otro espacio de nombres y solo
+etiqueta las 8 acciones críticas, que son las que filtra por defecto. El resto sale en crudo allí, y
+es un hueco con nombre.
+
+**Lo medido**: suite **2764 → 2778** (+14) y **16.066 → 16.098** aserciones · **7 mutaciones, las 7
+muerden** (verificadas por CONTENIDO, no por código de salida: dos dieron «no se aplicó» y «muerde» a
+la vez, que es la trampa de `#92`) · y el partial renderizado con **los payloads exactos de
+`R-S9XDYB`** para comprobar qué habría visto el owner.

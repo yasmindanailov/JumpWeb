@@ -62,8 +62,13 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2783 en verde** (16.167 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
-  **671 tests JS** (`node --test`) · Pint limpio (848 ficheros) · `docs-check` verde ·
+- Suite **2797 en verde** (16.199 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+  ▶ **+14 sobre el cierre anterior, y ninguno cubre código nuevo**: son las guardas que faltaban para
+  que el registro de un pedido se pueda leer (`DECISIONES #145`). **5** de `AuditActionCatalogTest`
+  —catálogo ↔ etiquetas en las dos direcciones—, **5** de `OrderAuditReadabilityTest` —que
+  **renderiza el modal**, cosa que ninguno de los once casos que ya había hacía—, **3** del bloque de
+  totales y **1** del cableado del contexto al mover la fecha.
+  **671 tests JS** (`node --test`) · Pint limpio (852 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
   runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.
@@ -221,6 +226,17 @@ corpus no coinciden, la que sobra **no es la que da más: es la que no puede exp
   en `DEUDA.md` porque arreglarlo cambia píxeles: es decisión de producto, no refactor.
 
 ## ▶ Lo que está ABIERTO y no es de la tanda A
+
+❗ **0.bis · `[PENDIENTE: owner]` — el rastro que falta cuando la bajada NO deja ajuste**
+(`DECISIONES #145`, séptimo defecto). En un pedido **pagado íntegro online**, mover la fecha a un día
+más barato **no crea ninguna fila de ajuste**: la bajada aflora como «pendiente de devolución». Y el
+marcador de reducción que existe justo para dejar rastro solo se dispara
+`if isset($itemEditContext['quantity_change'])` — **otra condición que `PAY-18` dejó atrás**, como el
+filtro del contexto que `#145` sí arregló. Consecuencia: en ese caso el desglose no tiene ninguna fila
+que explique la bajada (el registro del pedido sí la tiene, desde `#145`).
+▶ **No se arregla de oficio**: extenderlo añade una fila de 0 € donde hoy no hay ninguna, y eso cambia
+lo que ve el operador en **todos** los pedidos pagados íntegros cuya fecha se mueva. Es decisión de
+producto.
 
 🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →

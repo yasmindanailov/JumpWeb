@@ -128,6 +128,16 @@ class OrderAdjustment extends Model
                     return '+'.$delta.' '.$itemName;
                 }
             }
+
+            // ⚠️ **Cambio de FECHA — va el ÚLTIMO de los tres a propósito** (`DECISIONES #145`).
+            // Producto y cantidad explican el importe mejor que la franja («+2 Pulsera Jump» dice
+            // de dónde salen los euros); la fecha solo habla cuando es la única causa, que es
+            // exactamente el caso que llegaba mudo. Ponerlo antes desplazaría etiquetas que hoy
+            // funcionan, y este cambio no está para eso.
+            $slot = $changes['slot_change'] ?? null;
+            if (is_array($slot) && isset($slot['new'])) {
+                return __('admin.orders.order_financial.breakdown.slot_change', ['when' => $slot['new']]);
+            }
         }
 
         // ⚠️⚠️ **El respaldo dice POR QUÉ se cobra, no solo de qué producto** (`DECISIONES #131`).

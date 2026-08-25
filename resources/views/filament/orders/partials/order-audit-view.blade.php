@@ -37,7 +37,16 @@
         <ol class="space-y-2">
             @foreach ($paginator as $entry)
                 @php
-                    $isOrderLevel = $entry->target_type === Order::class;
+                    // ⚠️ Comparar contra el ALIAS del morphMap, no contra el FQCN (`DECISIONES
+                    // #143`). `enforceMorphMap` entró el 2026-08-12 y desde ese día la columna
+                    // guarda `order`, no `App\Domain\Booking\Models\Order`: la comparación con
+                    // `Order::class` era SIEMPRE falsa, así que TODAS las entradas —también las
+                    // del pedido— salían etiquetadas «Producto» en gris, y la rama de abajo
+                    // buscaba un OrderItem usando el id del PEDIDO. Llevaba casi dos semanas
+                    // mintiendo y ningún test lo miraba.
+                    // `getMorphClass()` devuelve el alias si hay morphMap y el FQCN si no, así que
+                    // es correcto en los dos mundos.
+                    $isOrderLevel = $entry->target_type === (new Order)->getMorphClass();
                     $targetTypeKey = $isOrderLevel
                         ? 'admin.orders.audit_modal.target_order'
                         : 'admin.orders.audit_modal.target_item';
@@ -100,11 +109,105 @@
                     @php
                         $hasReason = isset($payload['reason']);
                         $hasDiff = isset($payload['diff']) && is_array($payload['diff']);
+
+                        // ⚠️ Las TRES formas que faltaban (`DECISIONES #145`). El registro ya
+                        // guardaba el dato completo —precio unitario antes y después, la diferencia
+                        // en céntimos, la franja de origen y destino, el importe del ajuste— y este
+                        // renderizador conocía seis formas, ninguna de ellas ésta, así que lo
+                        // pintaba TODO como nada. Medido sobre el pedido `R-S9XDYB` de staging:
+                        // seis entradas, y lo único visible era la clave cruda y un motivo sin
+                        // traducir.
+                        $priceFrom = $payload['from_unit_price'] ?? null;
+                        $priceTo = $payload['to_unit_price'] ?? null;
+                        $priceDiff = $payload['price_diff_cents'] ?? null;
+                        $hasPriceMove = is_int($priceFrom) && is_int($priceTo) && $priceFrom !== $priceTo;
+                        $hasPriceDiff = is_int($priceDiff) && $priceDiff !== 0;
+
+                        $hasSlotMove = isset($payload['from_date'], $payload['to_date']);
+
+                        // Importe de un ajuste de puerta. `array_key_exists` y no `isset`: un
+                        // marcador de reducción se registra con 0 a propósito, e `isset` lo
+                        // escondería justo cuando el operador se pregunta por qué no cambió nada.
+                        $hasAdjustmentAmount = array_key_exists('amount_cents', $payload) && is_int($payload['amount_cents']);
+
+                        $changeKeys = is_array($payload['changes'] ?? null) ? array_values($payload['changes']) : [];
+
+                        $euros = fn (int $cents): string => \App\Domain\Platform\Services\Money::amount($cents).' €';
+                        $signed = fn (int $cents): string => ($cents > 0 ? '+' : '').$euros($cents);
+                        $when = function (?string $date, ?string $time): string {
+                            if (! $date) {
+                                return '—';
+                            }
+                            $d = \Illuminate\Support\Carbon::parse($date)->isoFormat('ddd D MMM YYYY');
+
+                            return $time ? $d.' '.\Illuminate\Support\Str::substr($time, 0, 5) : $d;
+                        };
                         $hasPreviousStatus = isset($payload['previous_status']);
                         $hasPreviousPreparedAt = array_key_exists('previous_prepared_at', $payload);
                         $hasRefundDetails = isset($payload['refund_amount_cents']) || isset($payload['mode']);
                         $hasResendType = isset($payload['type']);
                     @endphp
+
+                    {{-- Cambio de FECHA Y HORA: el que el owner no podía leer. --}}
+                    @if ($hasSlotMove)
+                        <p class="mt-1 text-xs text-gray-700 dark:text-gray-300">
+                            {{ __('admin.orders.audit_modal.slot_move', [
+                                'from' => $when($payload['from_date'] ?? null, $payload['from_time'] ?? null),
+                                'to' => $when($payload['to_date'] ?? null, $payload['to_time'] ?? null),
+                            ]) }}
+                        </p>
+                    @endif
+
+                    {{-- Movimiento de PRECIO UNITARIO y su diferencia. Es lo que convierte
+                         «el pedido cambió» en «y por esto vale menos». --}}
+                    @if ($hasPriceMove)
+                        <p class="mt-1 text-xs text-gray-700 dark:text-gray-300">
+                            {{ __('admin.orders.audit_modal.unit_price_move', [
+                                'from' => $euros($priceFrom),
+                                'to' => $euros($priceTo),
+                            ]) }}
+                        </p>
+                    @endif
+
+                    @if ($hasPriceDiff)
+                        <p @class([
+                            'mt-1 text-xs font-medium',
+                            'text-danger-600 dark:text-danger-400' => $priceDiff > 0,
+                            'text-success-600 dark:text-success-400' => $priceDiff < 0,
+                        ])>
+                            {{ __('admin.orders.audit_modal.price_diff', ['amount' => $signed($priceDiff)]) }}
+                        </p>
+                    @endif
+
+                    {{-- QUÉ cambió, en palabras. Una clave sin etiqueta cae a sí misma: nunca
+                         rompe y deja pista de que falta traducirla. --}}
+                    @if ($changeKeys !== [])
+                        <p class="mt-1 text-xs text-gray-700 dark:text-gray-300">
+                            {{ __('admin.orders.audit_modal.changed_what', [
+                                'what' => collect($changeKeys)
+                                    ->map(function ($k) {
+                                        $key = 'admin.orders.audit_modal.change_kinds.'.$k;
+
+                                        return \Illuminate\Support\Facades\Lang::has($key) ? __($key) : (string) $k;
+                                    })
+                                    ->implode(', '),
+                            ]) }}
+                        </p>
+                    @endif
+
+                    {{-- IMPORTE del ajuste de puerta. Estaba en el payload desde el primer día y
+                         no lo pintaba nadie: el operador veía «Motivo: item_edit_reduction» y ni
+                         siquiera cuánto. --}}
+                    @if ($hasAdjustmentAmount)
+                        <p @class([
+                            'mt-1 text-xs font-medium',
+                            'text-danger-600 dark:text-danger-400' => $payload['amount_cents'] > 0,
+                            'text-success-600 dark:text-success-400' => $payload['amount_cents'] < 0,
+                            'text-gray-700 dark:text-gray-300' => $payload['amount_cents'] === 0,
+                        ])>
+                            {{ __('admin.orders.audit_modal.adjustment_amount', ['amount' => $signed($payload['amount_cents'])]) }}
+                        </p>
+                    @endif
 
                     @if ($hasDiff)
                         <ul class="mt-2 space-y-0.5 text-xs text-gray-700 dark:text-gray-300">
@@ -120,9 +223,19 @@
                         </ul>
                     @endif
 
+                    {{-- El MOTIVO, legible. Antes se pintaba la clave en crudo
+                         («Motivo: item_edit_reduction»), que es literalmente lo que el owner
+                         encontró en `R-S9XDYB`. Un motivo sin entrada cae a su propia clave: no
+                         rompe, y deja la pista de que falta traducirlo. --}}
                     @if ($hasReason)
+                        @php
+                            $reasonKey = 'admin.orders.audit_modal.reasons.'.$payload['reason'];
+                            $reasonText = \Illuminate\Support\Facades\Lang::has($reasonKey)
+                                ? __($reasonKey)
+                                : (string) $payload['reason'];
+                        @endphp
                         <p class="mt-1 text-xs text-gray-700 dark:text-gray-300">
-                            {{ __('admin.orders.audit_modal.reason', ['reason' => $payload['reason']]) }}
+                            {{ __('admin.orders.audit_modal.reason', ['reason' => $reasonText]) }}
                         </p>
                     @endif
 

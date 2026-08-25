@@ -139,6 +139,55 @@ class ItemDateChangeRetariffTest extends TestCase
     }
 
     /**
+     * **El ajuste que nace de mover la fecha DICE que fue la fecha** (`DECISIONES #145`).
+     *
+     * ⚠️ Este caso conduce la ACCIÓN REAL del panel a propósito, y no comprueba `breakdownLabel()`
+     * sobre un ajuste montado a mano: el defecto no estaba en el helper —que ya sabía leer
+     * `changes`— sino en **quién lo alimenta**. `executeItemEdit` filtraba el contexto a
+     * `product_change` y `quantity_change`, así que un cambio de franja llegaba con
+     * `context = {"changes": []}`. Un test sobre el helper suelto habría salido verde con el
+     * defecto vivo: es la lección que `#127` pagó midiendo por mutación.
+     *
+     * ▶ El filtro es del commit fundacional, cuando mover la fecha NO re-tarificaba; `PAY-18`
+     * (2026-08-24) creó la causa nueva y nadie lo extendió. Medido en `R-S9XDYB` (staging): tres
+     * líneas de ajuste con la MISMA etiqueta muda.
+     */
+    public function test_a_date_move_leaves_a_trace_of_why_the_money_changed(): void
+    {
+        // ⚠️ Se mueve a un día MÁS CARO a propósito. La subida crea siempre un `extra_due`, que es
+        // la fila cuya etiqueta el operador lee. La bajada solo crea ajuste si hay dinero de puerta
+        // contra el que acreditar: en un pedido pagado íntegro online aflora como «pendiente de
+        // devolución» y NO deja fila — ver la nota al final de esta clase.
+        [$order, $item] = $this->paidOrderOn($this->monday, qty: 2);
+
+        $this->moveTo($order, $item, $this->saturday);
+
+        $adjustment = $this->fresh($order)->adjustments()
+            ->where('order_item_id', $item->id)
+            ->where('amount_cents', '>', 0)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($adjustment, 'una subida de precio deja un ajuste a cobrar en puerta');
+
+        $this->assertArrayHasKey(
+            'slot_change',
+            $adjustment->context['changes'] ?? [],
+            'El ajuste tiene que llevar la CAUSA. Sin ella el contexto llega vacío y la etiqueta '
+            .'del desglose cae al texto de respaldo, que es lo que el operador leía tres veces seguidas.',
+        );
+
+        $this->assertSame(
+            __('admin.orders.order_financial.breakdown.slot_change', [
+                'when' => $adjustment->context['changes']['slot_change']['new'],
+            ]),
+            $adjustment->breakdownLabel(),
+            'Y el desglose «A cobrar en el parque» tiene que decir que fue un cambio de fecha, '
+            .'no repetir el nombre del producto.',
+        );
+    }
+
+    /**
      * ⚠️ El EFECTO LATERAL aceptado a sabiendas (`DECISIONES #127(d)`): mover de un sábado a otro día
      * del MISMO tipo de tarifa aplica igualmente el precio de catálogo de HOY. Si el parque subió
      * precios desde la compra, se cobra la subida. Se descartó la alternativa —cobrar solo la

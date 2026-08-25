@@ -173,7 +173,7 @@ class OrderAuditModalTest extends TestCase
             payload: ['order_code' => $order->code, 'previous_status' => 'paid'],
         );
         AuditLogger::log(
-            action: 'order_items.prepared',
+            action: 'order_items.event_data_updated',
             target: $item,
             payload: ['order_code' => $order->code, 'ticket_type_id' => $item->ticket_type_id],
         );
@@ -187,7 +187,7 @@ class OrderAuditModalTest extends TestCase
 
         $actions = $paginator->getCollection()->pluck('action')->all();
         $this->assertContains('orders.cancelled', $actions);
-        $this->assertContains('order_items.prepared', $actions);
+        $this->assertContains('order_items.event_data_updated', $actions);
     }
 
     public function test_paginator_does_not_leak_entries_from_other_orders(): void
@@ -196,7 +196,7 @@ class OrderAuditModalTest extends TestCase
         [$orderB, $itemB] = $this->makeOrderWithItem();
 
         AuditLogger::log(action: 'orders.cancelled', target: $orderB, payload: []);
-        AuditLogger::log(action: 'order_items.prepared', target: $itemB, payload: []);
+        AuditLogger::log(action: 'order_items.event_data_updated', target: $itemB, payload: []);
 
         $component = Livewire::actingAs($this->staff())
             ->test(ViewOrder::class, ['record' => $orderA->code]);
@@ -211,7 +211,7 @@ class OrderAuditModalTest extends TestCase
         [, $itemFromB] = $this->makeOrderWithItem();
 
         // Entrada de un OrderItem que NO pertenece al Order A.
-        AuditLogger::log(action: 'order_items.prepared', target: $itemFromB, payload: []);
+        AuditLogger::log(action: 'order_items.event_data_updated', target: $itemFromB, payload: []);
 
         $component = Livewire::actingAs($this->staff())
             ->test(ViewOrder::class, ['record' => $orderA->code]);
@@ -230,7 +230,7 @@ class OrderAuditModalTest extends TestCase
         // el default de 5 por página (decisión #151bis): 13 / 5 = 3 páginas.
         for ($i = 0; $i < 13; $i++) {
             AuditLogger::log(
-                action: 'order_items.prepared',
+                action: 'order_items.event_data_updated',
                 target: $item,
                 payload: ['order_code' => $order->code, 'ticket_type_id' => $item->ticket_type_id, 'i' => $i],
             );
@@ -256,8 +256,8 @@ class OrderAuditModalTest extends TestCase
     {
         [$order, $item] = $this->makeOrderWithItem();
 
-        $first = AuditLogger::log(action: 'order_items.prepared', target: $item, payload: ['n' => 1]);
-        $second = AuditLogger::log(action: 'order_items.unprepared', target: $item, payload: ['n' => 2]);
+        $first = AuditLogger::log(action: 'order_items.event_data_updated', target: $item, payload: ['n' => 1]);
+        $second = AuditLogger::log(action: 'order_items.event_data_blocked', target: $item, payload: ['n' => 2]);
         $third = AuditLogger::log(action: 'orders.cancelled', target: $order, payload: ['n' => 3]);
 
         $component = Livewire::actingAs($this->staff())
@@ -306,7 +306,7 @@ class OrderAuditModalTest extends TestCase
         [$order, $item] = $this->makeOrderWithItem();
 
         AuditLogger::log(
-            action: 'order_items.prepared',
+            action: 'order_items.event_data_updated',
             target: $item,
             payload: ['order_code' => $order->code, 'ticket_type_id' => $item->ticket_type_id],
         );

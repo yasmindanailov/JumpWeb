@@ -45,6 +45,165 @@ class AuditLog extends Model
         'registrations.validate_rate_limited', // abuso: rate-limit en la puerta
     ];
 
+    /**
+     * **CATÁLOGO COMPLETO de acciones auditables** (`DECISIONES #145`).
+     *
+     * Existe porque el registro del pedido llevaba meses enseñando la CLAVE CRUDA de casi todas
+     * sus acciones: medido el 2026-08-25 sobre staging, de las **9 acciones de pedido realmente
+     * emitidas allí, 8 no tenían etiqueta**. Y al revés: de las 18 etiquetas que había, **4 estaban
+     * archivadas bajo un grupo que el código no emite** (`order_items.item_refunded` cuando lo que
+     * se escribe es `orders.item_refunded`) y **4 etiquetaban un ciclo retirado** (preparado /
+     * sin preparar). El fichero de idioma describía un vocabulario que el código ya no usaba.
+     *
+     * ⚠️ **Un catálogo estático NO basta por sí solo, y por eso está también la validación en
+     * `AuditLogger`**: tres acciones se construyen CONCATENANDO
+     * (`'orders.item_'.$actionKey.'_blocked'`, con `$actionKey` ∈ `edit|cancel|refund`) y dos
+     * llegan por CONSTANTE dentro de un array de incidencia (`RedsysReturnHandler`). Un escaneo
+     * estático del código no las ve — se comprobó: la primera extracción de esta misma sesión se
+     * dejó `orders.refund_blocked`, que se pasa a través de un helper. Lo único que las caza es
+     * ejecutar el código, que es lo que hace la suite con la validación activa.
+     *
+     * ⚠️ **El orden no importa; la pertenencia sí.** Añadir una acción nueva sin registrarla aquí
+     * lanza FUERA de producción (ver `AuditLogger::assertKnownAction`), y en producción se acepta
+     * en silencio: una etiqueta que falta no puede tumbar un flujo de cobro.
+     *
+     * @var array<int,string>
+     */
+    public const ACTIONS = [
+        // ── Accesos y roles ────────────────────────────────────────────────────────────────
+        'access.role_permissions_updated',
+        'access.user_roles_update_blocked',
+        'access.user_roles_updated',
+
+        // ── Calendario ─────────────────────────────────────────────────────────────────────
+        'calendar.day_summary_printed',
+
+        // ── Catálogo ───────────────────────────────────────────────────────────────────────
+        'catalog.addon_attached',
+        'catalog.addon_configured',
+        'catalog.addon_detached',
+        'catalog.created',
+        'catalog.delete_blocked',
+        'catalog.deleted',
+        'catalog.prices_updated',
+        'catalog.update_blocked',
+        'catalog.updated',
+
+        // ── Contenido / CMS ────────────────────────────────────────────────────────────────
+        'content.attraction_created',
+        'content.attraction_deleted',
+        'content.attraction_updated',
+        'content.faq_created',
+        'content.faq_deleted',
+        'content.faq_updated',
+        'content.landing_service_created',
+        'content.landing_service_deleted',
+        'content.landing_service_updated',
+        'content.offer_created',
+        'content.offer_deleted',
+        'content.offer_updated',
+        'content.page_updated',
+        'content.rule_created',
+        'content.rule_deleted',
+        'content.rule_updated',
+        'content.zone_created',
+        'content.zone_delete_blocked',
+        'content.zone_deleted',
+        'content.zone_updated',
+
+        // ── Mantenimiento ──────────────────────────────────────────────────────────────────
+        'maintenance.updated',
+
+        // ── Reservas (target = OrderItem) ──────────────────────────────────────────────────
+        'order_items.event_data_blocked',
+        'order_items.event_data_updated',
+
+        // ── Pedidos (target = Order) ───────────────────────────────────────────────────────
+        'orders.cancel_blocked',
+        'orders.cancelled',
+        'orders.created_manual',
+        'orders.customer_registered',
+        'orders.deposit_remainder_credit_applied',
+        'orders.email_resent',
+        'orders.email_resent_blocked',
+        'orders.extra_due_applied',
+        'orders.gate_credit_applied',
+        'orders.guest_form_submitted',
+        'orders.item_cancel_blocked',   // ⚠️ construida: 'orders.item_'.$actionKey.'_blocked'
+        'orders.item_cancelled',
+        'orders.item_edit_blocked',     // ⚠️ construida
+        'orders.item_edited',
+        'orders.item_refund_blocked',   // ⚠️ construida
+        'orders.item_refund_failed',
+        'orders.item_refunded',
+        'orders.item_slot_changed',
+        'orders.payment_init_failed',
+        'orders.refund_blocked',
+        'orders.refund_failed',
+        'orders.refunded',
+        'orders.slip_printed',
+
+        // ── Panel ──────────────────────────────────────────────────────────────────────────
+        'panel.locale_changed',
+
+        // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
+        self::ACTION_DUPLICATE_CAPTURE,
+        self::ACTION_OVERBOOKED_CAPTURE,
+
+        // ── Precios y tarifas ──────────────────────────────────────────────────────────────
+        'prices.rate_created',
+        'prices.rate_delete_blocked',
+        'prices.rate_deleted',
+        'prices.rate_updated',
+        'prices.special_date_created',
+        'prices.special_date_deleted',
+        'prices.special_date_updated',
+
+        // ── Puerta ─────────────────────────────────────────────────────────────────────────
+        'registrations.validate_rate_limited',
+        'registrations.validated',
+
+        // ── Ajustes ────────────────────────────────────────────────────────────────────────
+        'settings.updated',
+
+        // ── Franjas y horario ──────────────────────────────────────────────────────────────
+        'slot_templates.generated',
+        'slots.capacity_override_cleared',
+        'slots.regenerated',
+        'slots.season_created',
+        'slots.season_deleted',
+        'slots.season_updated',
+        'slots.slot_updated',
+        'slots.template_created',
+        'slots.template_deleted',
+        'slots.template_updated',
+        'slots.weekly_schedule_updated',
+
+        // ── Usuarios ───────────────────────────────────────────────────────────────────────
+        'users.anonymize_blocked',
+        'users.anonymized',
+        'users.password_reset_sent',
+        'users.send_reset_blocked',
+    ];
+
+    /**
+     * Las acciones que pueden aparecer en el REGISTRO DE UN PEDIDO, y que por tanto **deben**
+     * tener etiqueta en `admin.orders.audit_modal.actions.*`.
+     *
+     * Se derivan por PREFIJO y no a mano: el registro del pedido consulta por `target_type`
+     * (`order` / `order_item`), así que cualquier acción de esas dos familias puede salir ahí.
+     * Derivarlo evita la deriva que este catálogo existe para cerrar.
+     *
+     * @return array<int,string>
+     */
+    public static function orderActions(): array
+    {
+        return array_values(array_filter(
+            self::ACTIONS,
+            static fn (string $a): bool => str_starts_with($a, 'orders.') || str_starts_with($a, 'order_items.'),
+        ));
+    }
+
     public $timestamps = false;
 
     protected $fillable = [

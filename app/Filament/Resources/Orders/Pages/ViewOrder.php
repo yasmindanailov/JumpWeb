@@ -3600,7 +3600,17 @@ class ViewOrder extends ViewRecord
         // Context ESTRUCTURADO (no solo claves) para el desglose "A cobrar en el parque" (#171).
         $extraDueCents = null;
         $reducedCents = null;
-        $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change']));
+        // ⚠️⚠️ **`slot_change` ENTRA aquí desde `DECISIONES #145`, y su ausencia era un defecto con
+        // fecha.** Este filtro es del commit fundacional (2026-08-12), cuando mover la fecha NO
+        // re-tarificaba: un cambio de franja no podía generar diferencia de precio, así que no había
+        // nada que anotar. **`PAY-18` (2026-08-24) creó esa causa nueva y nadie extendió el filtro**,
+        // de modo que el ajuste se guardaba con `context = {"changes": []}` mientras su hermano del
+        // registro guardaba `"changes": ["slot_change"]` con los precios de origen y destino. El mismo
+        // hecho, dos registros, y el pobre era el que colgaba del dinero.
+        // ▶ Medido en `R-S9XDYB` (staging): tres líneas de ajuste con la MISMA etiqueta muda.
+        // ▶ Es también la causa que `#131` no llegó a ver: allí se midió que «los ocho `extra_due`»
+        //   caían al texto de respaldo y se mejoró ESE texto; esto quita la necesidad de recurrir a él.
+        $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change', 'slot_change']));
         if ($diff > 0) {
             $order->applyExtraDue($item->fresh(), $diff, $user, 'item_edit', ['changes' => $itemEditContext]);
             $extraDueCents = $diff;
