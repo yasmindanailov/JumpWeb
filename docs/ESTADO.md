@@ -1,211 +1,75 @@
 # Estado del proyecto — foto viva
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
-> ❗ **2026-08-24 · lo primero que tienes que saber**: los pedidos de la BD de desarrollo **se
-> borraron y se reconstruyeron** (25, uno por acción accionable — ver el índice de `specs/
-> desglose-dinero-cliente.md` §22), y 🟩 **el DESGLOSE DE DINERO DEL CLIENTE queda CERRADO**: `L6`
-> está ejecutado (`#134` · §23). **Lo siguiente es la Fase 5** — y su primer punto no es implementable
-> tal como está escrito: empieza por una decisión de infraestructura del owner, no por código.
-> El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza. Última actualización: **2026-08-24** (**el DESGLOSE de dinero del cliente,
-> CERRADO**: tandas A, B y C ejecutadas, los CUATRO defectos de lectura arreglados, la auditoría de
-> las 25 acciones pasada y un desglose que no cuadra ya no se sirve como si nada.
-> `DECISIONES #127` a **`#134`**; `specs/desglose-dinero-cliente.md` §15 → **§23**).
+> **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
+> aquí solo se enlaza.** Última actualización: **2026-08-25**.
+>
+> ❗ **Lo primero que tienes que saber**: se está en la **tanda A de `specs/landing-white-label.md`**,
+> con **3 de 5 cortes hechos** — quedan el inventario de colores en crudo y el spinner. Redis ya no
+> bloquea nada (`#137`) y el desglose de dinero está CERRADO (`#127`→`#134`).
+>
+> ⚠️ **Y este documento ADELGAZÓ el 2026-08-25, de 824 líneas a menos de la mitad.** Se retiró el
+> índice de la Fase 4 —83 líneas que duplicaban el tracker de una fase CERRADA—, se movió el mapa del
+> cajón a `specs/sidebar-spa.md` §8 y se borró el histórico de deltas de tests, que ya vive en cada
+> `DECISIONES`. `CONVENCIONES` dice que esta foto **resume** el tracker y nunca lo contradice: con 824
+> líneas eso era imposible de sostener, y de hecho **había contradicciones vivas** —afirmaba que la
+> Fase 5 seguía bloqueada por falta de Redis horas después de haberlo activado y verificado—.
 
 ## ▶ Dónde estamos
 
-**Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 (API v1) ✅ · Fase 4 (sidebar SPA) ✅ — CERRADA el
-2026-08-22, y el 2026-08-23 se le añadió el último trozo de `#66`: la AUTH dentro del cajón.**
-🟩 **Y el 2026-08-23 cae `account-context`**: el bloque de cuenta lo pinta Vue, la clase Livewire y su
-Blade **ya no existen** y la página sirve **0 atributos `wire:`** (`DECISIONES #123`).
-🟩 **Y el 2026-08-23 «Mis reservas» pasa a listarse POR RESERVA**, con el pasado en su propia pantalla
-(`DECISIONES #126`).
-🟩 **Y el 2026-08-24 se arregla el DESGLOSE DE DINERO que ve el cliente** (`DECISIONES #127`), en dos
-tandas: el **dominio** dejó de mentir en cuatro casos que ninguna auditoría anterior había construido
-—y de paso se cerró un **agujero de ingresos**: mover la fecha de una reserva no re-tarificaba— y la
-**proyección** pasó a componerse en un solo sitio, en dos ejes y con una frase que explica cada
-estado. Medido: **0 de 23** gestiones del panel dejan la columna ilegible, cuando eran 18.
-🟩 **Y ese mismo 2026-08-24, mirando un pedido REAL en pantalla, salieron TRES defectos de LECTURA y
-también están arreglados** (`DECISIONES #128`): el **ancla de caja** —lo único que el cliente puede
-cotejar con su banco— **no se enseñaba si no había devoluciones**, la cantidad se pintaba pegada al
-importe (`8×216,00 €` se lee como 1.728 €) y la nota de la reserva llamaba «señal» a lo que no lo es.
-Medido: el eje de caja pasa de **9 de 38** pedidos sanos a **37 de 58**, y la divergencia
-panel↔cliente sobre ese número —**19 pedidos**— desaparece. El desglose pasa de LEGIBLE a
-**VERIFICABLE**.
-🟩 **Y el 2026-08-24 se cierra la TANDA C: «Mis pedidos» es una pantalla propia** (`DECISIONES #129`).
-⚠️ Prometía ser «la única que no toca dinero» y lo primero que encontró fue que **`GET /me/orders`
-PERDÍA PEDIDOS**: ordenaba solo por `created_at` y, medido sobre los 57 reales del cliente demo, dos
-salían repetidos y **dos no salían en ninguna página**. Arreglado y guardado.
-🟩 **Y una SEGUNDA VUELTA con el owner delante** (`DECISIONES #130` · spec §20), que cambió dos cosas
-y destapó una tercera: **«Mis reservas» ya no enseña dinero** —es «qué tengo y cuándo»; el desglose
-está a un clic—, **el eje de caja solo aparece cuando dice algo que la columna de arriba no diga ya**
-—el mismo importe salía dos veces con dos nombres casi iguales— y ⚠️ **a «Mis pedidos» le faltaba una
-línea**: los complementos no se pintaban, así que un pedido REAL ponía 120,00 € en la reserva y
-124,00 € de total sin nada que explicara los 4,00 €.
-▶ ⚠️ **Los dos defectos pasaban la suite entera**: uno porque la guarda miraba la composición y el
-fallo estaba en el marcado; el otro porque **no hay test que mida si algo se entiende**.
-🟩 **Y una TERCERA vuelta, revisando `R-L6UTIA` a fondo** (`DECISIONES #131` · spec §21): la **fecha
-del cobro se pegaba a un importe que no se cobró ese día** —medido: **7 pedidos, 6 SANOS**— y la línea
-«↳ Cumpleaños Jump 12,00 €» **no decía por qué se cobra**, cosa que pasa en los OCHO `extra_due` de la
-BD, cinco de ellos escritos por el flujo REAL del panel.
-✅ **RESUELTO el 2026-08-24** (`DECISIONES #132` · spec §22.4): las dos identidades se evalúan **en
-EJECUCIÓN** y hay asimetría deliberada — al **cliente** se le oculta la descomposición (se queda el
-valor, lo cobrado y una frase honesta), al **operador** se le ENSEÑA en rojo, y el parque se entera
-por `Log::warning('ledger.no_cuadra', …)`.
-🟩 **Y ANTES se hizo la AUDITORÍA DE LAS 25 ACCIONES** (§22): corpus borrado entero y reconstruido por
-los flujos REALES, **un pedido por acción accionable**. Resultado: **25/25 identidades cierran**,
-**25/25 lo que la pantalla lista suma el total**, 0 acciones fallaron y las 2 que deben bloquearse lo
-hacen con su audit. Los 25 pedidos están en la BD de desarrollo para mirarlos en el navegador.
-✅ **Lo que la auditoría dejó planteado, RESUELTO** (§22.2 · `#133` decide, `#134` ejecuta): «Compensación
-devuelta» como única línea del valor → **`L4` APARCADO** · el resto de señal de un complemento
-escondido en la línea del principal → **`L5` RETIRADO, no era un defecto** · una BAJADA que no deja
-más rastro que «Importe al reservar» → **`L6` HECHO**.
-🟩 **Y el 2026-08-24 se cierra con la AUDITORÍA DE LAS 25 ACCIONES y su decisión** (`#132`, `#133`).
-🟩 **Y ese mismo 2026-08-24 se EJECUTA `L6`, que era lo último** (`DECISIONES #134` · spec §23): la
-línea «Importe al reservar» decía *que* el pedido había cambiado y ahora dice **hacia dónde y
-cuánto** —«Al reservar se facturaron 180,00 €. El pedido cambió después y ahora vale 60,00 € menos.»—,
-compuesta por el DOMINIO y nombrando la **diferencia**, no el valor. Sin una línea nueva.
-▶ ⚠️⚠️ **Y con la frase se movió la CONDICIÓN**, que es el trozo que importa: `invoiced_hint` es
-`null` exactamente cuando no hay nada que trazar, así que la pantalla **dejó de comparar los dos
-importes por su cuenta**. Es `L1` aplicado *antes* de que cueste — allí la condición re-derivada
-divergió en 19 de 58 pedidos sin que nada fallara.
-▶ Medido por HTTP real y compuesto por el módulo REAL del cajón: **26 pedidos, 11 publican frase**
-(6 subidas, 5 bajadas), **0 se quedan cortos y 0 se pasan**.
-▶ ⚠️⚠️ **Y una guarda NACIÓ DECORATIVA**: la de idiomas salía verde con la clave francesa borrada,
-porque Laravel **cae al idioma de respaldo** — una clave que falta no se ve como una clave en crudo,
-se ve como un cliente francés leyendo castellano en su pantalla de dinero. Arreglada con
-`Lang::has(…, false)`.
-▶ 🟩 **CON ESTO EL DESGLOSE DE DINERO QUEDA CERRADO.** Después, la **Fase 5**.
+**Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅** — el detalle paso a paso de cada una
+está en `00-REFACTOR.md`, que es el tracker. Aquí solo la foto.
 
-**Fase 4**: 4.0a–4.0c ✅ · 4.1 ✅ · 4.2 ✅ · 4.3 ✅ · 4.4a ✅ · **4.4b ✅ (·1 y ·2)** · 4.5 ✅ · 4.6 ✅ ·
-**4.7 ✅ (validado por el owner el 2026-08-22)** · **ÁREA DE CLIENTE ✅ (tres tandas, `#120`)** →
-**los ONCE pasos están transcritos**, el extremo a extremo con navegador y pasarela real se hizo
-(`#59`), **los cuatro caminos que `#100` exigía están VERIFICADOS en staging** (`#110`),
-**`Purchase.php` está RETIRADO** (`#112`) y **`/mi-cuenta/…` también** (`#120(u)`). El corte del
-diseño está en `docs/specs/sidebar-spa.md` §4.10 y el del área, en `docs/specs/area-cliente.md`.
+🟩 **CERRADO y sin nada pendiente:** el cajón SPA como motor único con `Purchase.php` retirado
+(`#111`, `#112`) · el área de cliente entera, incluidas la auth y `account-context` (`#66`, `#120`,
+`#122`, `#123`) · «Mis reservas» por reserva (`#126`) · **el desglose de dinero del cliente**, las tres
+tandas y los cuatro defectos de lectura (`#127`→`#134`, `specs/desglose-dinero-cliente.md`).
+⚠️ **No se resume aquí lo que pasó en cada uno**: está en el tracker y en su decisión. Repetirlo en la
+foto viva es crear una segunda verdad que envejece sola — ya pasó con la revisión de staging y con el
+contador de tests JS.
 
-✅ **Las dos comprobaciones de navegador que faltaban están HECHAS y el owner ha validado el cajón**
-(2026-08-22). `4.7` está cerrado.
+🟦 **EN CURSO: la landing white-label** (`specs/landing-white-label.md`, `#136`). Nace del mockup del
+**segundo cliente**. La línea: **data-driven el DATO, no la PÁGINA**.
+▶ **Tanda A, 3 de 5**: el acento de zona sale del nombre de la clase (`#138`), la paleta del primer
+cliente sale del producto (`#139`) y el icono por producto (`#140`). **Faltan** el inventario de los 76
+colores en crudo y el spinner rebrandeable.
+▶ **B** (contenido y copy) y **C** (servicios como producto real) sin empezar. ⚠️ **C toca AFORO y PAY
+y necesita spec propia.**
+⏸️ **APARCADO por el owner**: zonas y cupos se quedan como están hasta ver cómo se comportan las
+reservas de packs distintos con gente real (`#139`).
 
-🟩 **EL ÁREA DE CLIENTE ESTÁ TERMINADA** (`#66`, `#120`), y con ella la Fase 4 cierra su alcance:
-**1 (solo lectura) ✅** · **2 (gestiones) ✅** · **3 (retirar `/mi-cuenta/…`) ✅** — las páginas ya no
-existen y **sus rutas viven como PUERTA** que abre el cajón en su zona (`#120(u)`).
-✅ **Los DOS trozos que el área dejó fuera a propósito están HECHOS**: la AUTH (`#122`) y
-**`account-context`** (`#123`), los dos el 2026-08-23. Sus fichas de `DEUDA.md` quedan cerradas.
+✅ **Redis: requisito DURO y solo para CACHÉ** (`#137`), activado y verificado en staging. Sus dos
+obligaciones —el pase de Redsys fuera de la caché y Redis en el stack local y en la suite— están
+**hechas**. Detalle de la máquina en `ENTORNOS.md` §4.
 
-🟩 **EL CAJÓN SPA ES EL MOTOR ÚNICO.** Con el componente se fueron su blade, el placeholder y el flag
-`sidebar.engine`: **no hay vuelta atrás sin desplegar**, que es lo que `#100` pedía asegurar antes y
-`#110` verificó. Está **en `main`**. ✅ La rama `wip/4.7-2b-3-retirada-purchase` **ya no existe**
-(verificado el 2026-08-22: el remoto solo tiene `main`), así que `/arranque-sesion` no la sacará.
-
-❗ **Y el propio despliegue destapó un defecto de instalación** (`DECISIONES #135`, 2026-08-25): el
-`pre-push` se puso rojo en un test que parecía intermitente, y no lo era. **`app:create-admin`
-imprimía una contraseña distinta de la que guardaba** cuando la generada llevaba `\<` o `\>` —el
-formateador de consola de Symfony se come la barra— y esa contraseña **se enseña una sola vez**: el
-owner quedaba fuera de su propio panel sin recuperación. Medido: **1.263 de 200.000 (0,63 %), una de
-cada 158**. Arreglado (salida RAW) y guardado con un caso DETERMINISTA — el que existía sorteaba.
-
-✅ **STAGING SIRVE `e551851`** desde el **2026-08-25**: el salto de **22 commits y 132 ficheros de
-código** que traía `#123` → `#135` —el bloque de cuenta en Vue, el `no-store` global, «Mis reservas»
-por reserva y **el desglose de dinero ENTERO**—. Canal: `scripts/deploy.sh` (dry-run por defecto;
-detalle en `ENTORNOS.md` §4 y el porqué en `#105`–`#110`).
-▶ **El despliegue se auto-verifica y salió limpio**: `/up` y `/` en 200, guarda del `robots.txt`,
-`redsys_environment = 'test'`, **1 migración aplicada** (`add_intent_to_payment_refunds`, aditiva),
-0 pendientes, 0 `failed_jobs`, 0 jobs varados y las 5 tareas del scheduler registradas.
-▶ **Y se comprobó que llegó LO DE ESTA SESIÓN, no solo que el sitio arranca**: las dos claves de `L6`
-en los tres idiomas, `invoicedNoteFor()` en el dominio, el campo en `LedgerResource` y el cliente ya
-sin componer la frase. Sobre los datos reales de staging, `R-S9XDYB` la publica:
-«Al reservar se facturaron 202,20 €. El pedido cambió después y ahora vale 13,00 € menos.»
+✅ **STAGING SIRVE `e551851`** desde el 2026-08-25 (`#123` → `#135`), auto-verificado y comprobado a
+mano. Canal: `scripts/deploy.sh`, dry-run por defecto.
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
-⚠️ **El único aviso del despliegue**: el script **no ve ningún demonio cron** en el servidor, así que
-el crontab instalado puede no ejecutarse nunca. Se comprueba en el panel del hosting, no por SSH
-(`DECISIONES #115`). No es nuevo de este despliegue.
-❗ **LA REGLA QUE ESTA LÍNEA PAGÓ DOS VECES: la revisión NO se copia, se MIDE.** Llegó a afirmar «no
-hay diferencia de código» cuando ya eran 3 commits y 68 ficheros, y después «sirve el desglose viejo»
-durante todo el día siguiente. Antes de creerte lo de arriba:
+⚠️ **El único aviso del despliegue**: el script no ve ningún demonio cron, así que el crontab instalado
+puede no ejecutarse nunca. Se comprueba en el panel del hosting (`#115`). No es nuevo.
+❗ **LA REGLA QUE ESTA LÍNEA PAGÓ DOS VECES: la revisión NO se copia, se MIDE.** Llegó a decir «no hay
+diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de arriba:
 `git log --oneline e551851..HEAD` y
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
-▶ **Consecuencia práctica**: las dos comprobaciones que quedan y piden dispositivo (`V23·3` en móvil,
-`V20·6`) **ya no están bloqueadas por el despliegue**.
-
-⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
-El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
 - Suite **2764 en verde** (16.066 aserciones, `--parallel` **~32 s** medidos el 2026-08-25) ·
-  ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
-  (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
-  siguiente no lo persiga creyéndolo nuevo.
-  ▶ **+2 con `#132`**: que un desglose que NO cierra se publique como tal, se avise por log y cambie
-  la frase; y su control, que un pedido sano siga diciendo que cuadra. En `node --test`, **668** casos
-  —con el que fija que el cliente **no descompone** un desglose que no cuadra—.
-  ▶ **+1 con la tercera vuelta** (`DECISIONES #131`): que el respaldo de la etiqueta de puerta
-  **explique** en vez de nombrar, y su control de que no se coma las tres ramas precisas. En
-  `node --test`, **667** casos — con el que fija que la fecha **no** se pega a un importe que no se
-  cobró ese día.
-  ▶ **+3 con la segunda vuelta** (`DECISIONES #130`): el eje de caja **callado** cuando repetiría, el
-  eje de caja **presente** cuando lo cobrado no cuadra con lo pagado, y **DOS guardas sobre el
-  MARCADO** —que la tarjeta de la reserva no pinte dinero y que la del pedido siga pintándolo entero,
-  complementos incluidos—. Esas dos miran la plantilla porque el defecto que las trajo **no se ve en
-  la composición**. En `node --test`, **666** casos (se fueron con su sujeto los de la nota de señal).
-  ▶ **+7 con la TANDA C** (`DECISIONES #129`): el orden total de la paginación —uno de conducta y
-  **uno estructural, porque el de conducta sale verde en SQLite**—, `containing` con su caso del
-  **oráculo** y el de `page` explícito, y las dos paridades extremo a extremo de «Mis pedidos» (que la
-  lista y el pedido suelto compongan el MISMO dinero, y que abrir desde una reserva aterrice en la
-  página que lo contiene). En `node --test`, **668** casos.
-  ▶ **+4 en el corte anterior: los TRES defectos de LECTURA** (`DECISIONES #128`) — el ancla de
-  caja publicada sin devoluciones, el pedido nunca cobrado que no la enseña, el cobrado en TAQUILLA
-  que no dice «por web», y la cantidad con su sustantivo. ⚠️ **Y varios casos que ya existían miden
-  ahora más**: la paridad extremo a extremo del cajón fija `L1`, `L2` y `L3` sobre la respuesta REAL
-  del servidor, y `SidebarTextParityTest` pasó de conceder su excepción a **demostrarla**.
-  ▶ **+22 en el corte anterior: 17 de la TANDA A y 5 de la TANDA B.** Las de la B son la
-  guarda que faltaba desde el principio —**que lo PUBLICADO sume**, recorrida sobre escenarios—,
-  la frase de estado, y `LedgerSingleSourceTest`, que prohíbe **el mecanismo**: ninguna superficie
-  puede volver a derivar un canal restando otros. ⚠️ Esa última lleva su propia guarda-de-la-guarda,
-  porque un `grep` mal escrito queda verde para siempre sin mirar nada.
-  ▶ Las de la TANDA A (`DECISIONES #127`): **5**
-  escenarios nuevos de `OrderFinancialInvariantsTest` —los que ejercitan los cuatro defectos que se
-  arreglaron; los seis viejos ya pasaban porque su hueco estaba en el FIXTURE—, **6** de
-  `ItemDateChangeRetariffTest` (la re-tarificación al mover la fecha, con su límite y su control),
-  **2** que conducen las ACCIONES REALES del panel para la cascada de cancelación —una guarda sobre
-  el helper suelto NO veía el cableado, medido por mutación—, **3** del motivo del reembolso y **1**
-  que asevera que el reparto del reembolso total no pierde céntimos.
-  ▶ Y el fichero de invariantes pasa de **5 aserciones cruzadas a 13**: las dos identidades del
-  modelo, los cuatro cruces que faltaban, la exclusión mutua de los canales web, la no-negatividad de
-  cada canal y la guarda de construcción de la columna de reembolso.
-  ▶ Las del cierre ANTERIOR (2026-08-23), que siguen dentro: **+30, y la mayoría GUARDAS QUE
-  FALTABAN**, no cobertura de código nuevo. Las del relevo:
-  **5** de `NoStoreWebResponsesTest` (nadie aseveraba `no-store` en una página web: la ponía un
-  accidente de Livewire), **1** de `SidebarIconParityTest` (la paridad de iconos no miraba 10 de 32
-  componentes), y **2** en `CustomerAccountContextTest` — un pack **sin franja** seguía avisando solo
-  porque lo decía un comentario, y nadie medía que la consulta de formularios pendientes **no
-  materializara el histórico**. Las otras 15 cubren `GET /me/account-context` y su semilla en el montaje.
-  ▶ Y las del PULIDO (`#124`): **4** de `SidebarStyleWiringTest` —toda clase que el cajón emite tiene
-  una regla, el `#113` aplicado al CSS—, **3** del scroll y del modo del panel, y **2** del encabezado
-  propio de una zona. Ninguna cubre código nuevo: todas cierran un hueco que ya existía.
-  ▶ Y la de `#125`: **+1** en `SidebarVerifyScreenTest` —cuál de los DOS cooldowns del reenvío ata—.
-  El neto es +1 porque esa guarda ya existía y lo que hizo falta fue **re-apuntarla**, no duplicarla.
-  ▶ Y las de `#126` (**+25**): **13** del REPARTO de los dos ámbitos en el dominio —incluida la que
-  asevera la propiedad, `upcoming + past = total` y sin solapamiento— y **12** del endpoint nuevo.
-  **671 tests JS** (`node --test`) · Pint
-  limpio (848 ficheros) · `docs-check` verde ·
-  ⚠️ **Esta cifra de JS decía 648 y llevaba VEINTIDÓS cierres de retraso** —los deltas de arriba ya
-  cantaban 666, 667 y 668—: corregida el 2026-08-24. **El `pre-push` solo vigila el contador de PHP**
-  (`DECISIONES #116`), así que el de JS depende de que alguien lo mire; si vuelve a divergir, mídelo
-  con `npm run test:js` en vez de sumar los deltas.
-  ⚠️ **El contador ha BAJADO dos cierres seguidos, y las dos veces a propósito**: `/mi-cuenta/…` se
-  llevó 63 casos (`#120(u)`) y el modal de auth, 42 (`#122`). Ninguno se perdió por descuido — en el
-  segundo se midió **por mutación** cuáles cazaba también la API antes de borrar, y los tres que eran
-  guardián único se re-apuntaron. **Un contador que solo puede subir acaba premiando el test que no se
-  retira.**
-  `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK. El contador
-  «PHPUnit Notices: 1» sale solo en la paralela completa y es del runner (ver `TESTING.md`).
-  ✅ **Y desde el 2026-08-21 este número YA TIENE GUARDA**: el `pre-push` compara lo que acaba de dar
-  la suite con lo que declara esta línea y **corta si no cuadran** (`DECISIONES #116`). Antes no lo
-  vigilaba nadie —`docs-check` no lo mira— y derivó tres veces en un solo día.
-  ⚠️ **Sigue siendo el ÚNICO sitio donde vive**: duplicarlo en otro documento crea una copia que no
-  guarda nadie. El histórico de cómo llegó hasta aquí está en `DECISIONES #112(a)` y `#116`.
+  **671 tests JS** (`node --test`) · Pint limpio (848 ficheros) · `docs-check` verde ·
+  `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
+  ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
+  runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.
+  ✅ **El contador de PHP tiene GUARDA**: el `pre-push` compara lo que acaba de dar la suite con lo que
+  declara esta línea y **corta si no cuadran** (`#116`). Antes derivó tres veces en un solo día.
+  ⚠️ **El de JS NO la tiene**, y por eso llegó a llevar **22 cierres de retraso**: si dudas, mídelo con
+  `npm run test:js` en vez de sumar deltas.
+  ⚠️ **Éste es el ÚNICO sitio donde vive el contador**: duplicarlo en otro documento crea una copia que
+  no guarda nadie.
+  ⚠️ **Y puede BAJAR a propósito**: `/mi-cuenta/…` se llevó 63 casos y el modal de auth 42, ninguno por
+  descuido —se midió por mutación cuáles cazaba también la API antes de borrar—. **Un contador que solo
+  puede subir acaba premiando al test que no se retira.**
+  ▶ El histórico de qué aportó cada corte vive en su entrada de `DECISIONES`, no aquí.
+
 - ⚠️ **La suite NO está auditada contra la FECHA, y ya mordió DOS veces** (`DECISIONES #64`, `#97`):
   tres casos amanecieron rojos sin que nadie tocara nada, y el **2026-08-16 a las 00:02 de Madrid** el
   `pre-push` cayó con **1 fallo** en el cruce de medianoche; el reintento salió verde.
@@ -227,6 +91,12 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers).
   **La lista viva de lo que exige `VERIFY_CONC=1` es el `CRITICAL_RE` de `.githooks/pre-push`** — no se
   copia aquí para que no envejezca, y `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
+  ❗❗ **«Verdes» NO quiere decir «cubren todo»**: `purchase:verify-oversell` **solo ejercita ENTRADAS**.
+  El aforo de PACKS —pool propio, dos topes por franja— **no lo prueba ningún verificador**
+  (`DEUDA.md`, medido el 2026-08-25). Ver «Lo que está ABIERTO».
+  ✅ **Y desde `#141` los dos CONTADORES de aforo disparan el gate**: `SlotAvailability` y
+  `PackAvailability` llevaban fuera desde el principio — el gate vigilaba a quien LLAMA y no a quien
+  CUENTA. Verificado por mutación, y con `ProductAvailability` como control negativo declarado.
   ✅ **Y desde la tanda 3 el gate ya no deja fuera ninguna superficie de dinero** (`#120(u)`): el
   reintento web —el último que quedaba sin cubrir— se retiró con la página que lo servía, porque el
   cajón reintenta por `POST /api/v1/orders/{code}/payment`, que sí entra por el `CRITICAL_RE`. (La
@@ -291,165 +161,70 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ LO SIGUIENTE ES LA **TANDA A** DE `specs/landing-white-label.md` — EL TEMA, DE VERDAD
+# ❗ LO SIGUIENTE: TERMINAR LA **TANDA A** DE `specs/landing-white-label.md`
 
-✅ **El desglose de dinero está CERRADO** (`L6` ejecutado el 2026-08-24, `DECISIONES #134` ·
-`specs/desglose-dinero-cliente.md` §23). `L4` aparcado y `L5` retirado porque no era un defecto.
+**Quedan dos cosas, las dos de presentación y ninguna toca dominio:**
 
-🟦 **Y el 2026-08-25 se DISEÑA la landing white-label** (`DECISIONES #136` ·
-**`specs/landing-white-label.md`**), a raíz del mockup del **segundo cliente**. La decisión del owner:
-**data-driven el DATO, no la PÁGINA** — todo lo que la landing enseña sale del dominio o del CMS, y la
-composición de la página es un **paquete de tema por cliente, en código**. Maquetador visual,
-descartado.
-⚠️⚠️ **Léela por §1**, porque tres de los cinco problemas enunciados NO eran lo que parecían: el CMS
-**solo necesita 2 modelos más** (los otros ya existen), el copy **vive en el REPO** —142 claves en
-`lang/`, así que un cliente no puede cambiar su titular sin desplegar— y `/servicios` tiene **0
-productos vinculados y 2 tablas de precios TECLEADAS a mano**.
+1. **El inventario de los 76 colores en crudo** — 58 en `public/css/site.css` y 18 en
+   `public/css/landing.css`. Decidir cuáles suben a token para que el paquete de tema de un cliente
+   pueda sobrescribirlos, y cuáles se quedan (no todo color es marca: `--attn`, los de error/éxito y
+   los grises estructurales tienen significado propio).
+2. **El spinner rebrandeable** — ya es **un fichero, una clase `.jj-spinner` y tres tokens** (tamaño,
+   color, velocidad), referenciado desde 17 sitios. Cambiar color o velocidad ya funciona; falta el
+   camino para **sustituir el DIBUJO** por instalación.
 
-**El orden acordado, y por qué:**
+▶ **Después**: tanda **B** (los dos modelos que faltan, el copy que baja de `lang/` al CMS y la landing
+del segundo cliente como primer paquete de tema) y tanda **C** (servicios como producto real).
+⚠️⚠️ **C necesita SPEC PROPIA antes de una línea de código**: toca `AFORO-01/02/03` y las identidades
+de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni en SQLite ni en staging** (MariaDB).
 
-- **TANDA A · el tema, de verdad.** Es lo siguiente. Inyectar los tokens desde BD —la costura ya
-  existe: **28 variables y 1.271 usos de `var()`**, y **nada las alimenta**—, inventariar los **76
-  colores en crudo**, dejar el spinner rebrandeable y darle **icono propio a cada producto** (set
-  curado, `#136`). No toca dominio y es lo que la plantilla del cliente nuevo necesita para pintar.
-- **TANDA B · el contenido**: los dos modelos que faltan, el copy que baja de `lang/` al CMS y la
-  landing del segundo cliente como primer paquete de tema.
-- ⚠️⚠️ **TANDA C · los servicios como PRODUCTO REAL** (encargo explícito del owner: que estén en el
-  sistema de reservas de verdad, no maquillados en la página). **Va la última y NECESITA SPEC PROPIA**:
-  toca `AFORO-01/02/03` y las identidades de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni
-  en SQLite ni en staging** (MariaDB).
-
-✅ **Y la Fase 5 ya NO está bloqueada** (`DECISIONES #137`, 2026-08-25): **Redis, requisito DURO y solo
-para CACHÉ**, activado y verificado en staging. Instancia propia por sitio dentro del contenedor PHP,
-`127.0.0.1:6379` sin contraseña, y **Laravel conecta sin tocar una sola variable** —sus valores por
-defecto ya coinciden—. Los **tags funcionan contra el Redis real**, también por el camino WEB.
-✅ **Y sus DOS obligaciones están HECHAS** (2026-08-25, mismo `#137`):
-- **el pase de la vuelta de Redsys SALIÓ de la caché** — `RedsysReturnController::handoff()` es el
-  único sitio donde se decide el store, y lo leen el que escribe y el que consume. Guardado con un
-  caso que **vacía la caché y comprueba que el pase sigue ahí**: es el único que caza la regresión,
-  porque en los tests el store por defecto es `array` y nada lo vacía;
-- **Redis está en el `compose.yaml` local**, clavado a **7.0.15** —la misma versión que staging, no
-  `redis:alpine`— y la suite ejercita los tags **contra él**, no contra `array`.
-  ⚠️ Y hay una **guarda que se activa sola**: hoy nadie usa `Cache::tags()` y duerme; el día que
-  aparezca el primero, **exige que `deploy.sh` garantice un store que los soporte**. Sin ella, ese
-  commit dejaría una instalación con `CACHE_STORE=database` sirviendo un 500.
-▶ **Tres mutaciones, las tres muerden**: devolver el pase al store por defecto · apagar Redis (el
-caso **falla**, no se salta) · y colar un `Cache::tags()` en `app/`.
-⚠️ **Lo que la primera versión de esa guarda enseñó**: buscaba la cadena `CACHE_STORE` en
-`deploy.sh` y **habría pasado siempre**, porque la plantilla del `.env` ya la nombra. Ahora exige la
-línea `guard_errors+=(… CACHE_STORE …)`, que es la guarda y no la palabra.
-⚠️ **Sesión y cola se quedan en BD**: Redis vive DENTRO del contenedor PHP y cada reinicio se lo lleva
-—incluido el botón del panel—. Para una caché es un arranque en frío; para las sesiones sería echar a
-todos a la vez, incluido quien esté pagando.
-❗ **Y con `CACHE_STORE=redis`, si Redis no responde el sitio da 500** (medido: 0,14 s, falla rápido).
-Es la consecuencia aceptada del requisito duro.
-▶ Detalle de la máquina en `ENTORNOS.md` §4 · ⚠️ **el `redis.conf` sigue de fábrica a propósito**
-(sin techo de memoria y para de escribir si falla un volcado): ficha abierta en `DEUDA.md`.
-
-✅ **Staging ya está al día**: sirve `e551851` desde el 2026-08-25, con el desglose entero (`#123` a
-`#134`) y verificado allí sobre datos reales. ⚠️ Pero **la distancia se mide, no se copia** —esta
-línea ya mintió dos veces—: antes de creértelo, `git log --oneline e551851..HEAD` (ver «Dónde
-estamos»).
+⚠️ **Antes de tocar el tema, lee `specs/landing-white-label.md` §4.5.1.** Ese apartado afirmaba «cero
+variables se inyectan desde BD» y **era falso** — el tema SÍ se inyecta desde `theme.brand`, con el
+contraste calculado por luminancia, y lo consumen también el panel y los correos. El error fue de
+medición: un `grep` que no encuentra **no demuestra que no exista**. Es la lección que esta semana se
+ha pagado tres veces.
 
 ---
 
-🟩 **EL DESGLOSE DE DINERO DEL CLIENTE: tandas A y B EJECUTADAS el 2026-08-24** (`DECISIONES #127`
-y sus apartados `(b)`–`(f)` · `specs/desglose-dinero-cliente.md` §15 y §16), **y con ellas los TRES
-defectos de LECTURA** que destapó mirar un pedido real en pantalla (`DECISIONES #128` · §18).
-**El dominio dice la verdad, el desglose se entiende — y ahora además se puede VERIFICAR.**
+## ▶ Lo que está ABIERTO y no es de la tanda A
 
-**Medido al cerrar, no afirmado:**
-- la matriz de las **23 acciones reales del panel** deja **0 columnas ilegibles** (eran 18) y
-  **0 rompen ninguna identidad** (eran 3);
-- el **eje del valor cierra en 50 de 50** pedidos servidos por HTTP real;
-- el **eje de caja se enseña en 37 de 58** pedidos —los 37 que han movido dinero—, cuando el cliente
-  solo lo veía en **9 de 38** sanos; la divergencia panel↔cliente sobre ese número (**19 pedidos**)
-  desaparece y el cambio de condición **no altera el panel en ninguno de los 58**;
-- **20 mutaciones** verificadas entre las tres entregas (13 + 7): todas muerden.
+❗ **1 · El aforo de PACKS nunca se ha probado bajo concurrencia** (ficha en `DEUDA.md`, medida el
+2026-08-25). `purchase:verify-oversell` siembra **una entrada** con `online_capacity = 1` y forka N
+compras; los packs se cuentan por **otro camino entero** —`PackAvailability`, con pool propio y los dos
+topes por franja— y **ningún verificador lo ejecuta**.
+▶ Traducido: **no hay ninguna evidencia de que dos cumpleaños simultáneos por la última plaza no se
+vendan los dos.** La suite lo da por bueno porque SQLite no reproduce esas carreras. La receta está en
+la ficha: un `--scenario=pack` que reutilice el `forkWorkers`/`evaluate` que ya existen.
+✅ Lo que sí se cerró el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del
+`pre-push`, con su control negativo y verificado por mutación.
 
-✅ **LA TANDA C ESTÁ HECHA** (2026-08-24 · `DECISIONES #129` · spec §19): «Mis pedidos» es una zona
-propia (`ZONES.PURCHASES`), entra en el índice y «Ver pedido» de una reserva **lleva a ella con ese
-pedido desplegado**. El desglose se MUDÓ allí; la tarjeta de la reserva ya no lo despliega.
-⚠️⚠️ **Y decía «es la única que NO toca dinero». No era cierto**: lo primero que encontró fue que
-`GET /me/orders` **perdía pedidos** —solo ordenaba por `created_at`, y medido sobre los 57 reales
-salían 55 distintos: dos repetidos y **dos invisibles para su dueño**—. Arreglado con desempate por
-`id`, y guardado con una comprobación **estructural** porque la de conducta sale VERDE en SQLite.
-▶ **La página la elige el SERVIDOR** (`?containing=`): medido, `R-L6UTIA` está en la **página 7 de
-12**, así que abrir la primera habría incumplido la decisión del owner sin que nada fallara.
+❗ **2 · Pendiente del OWNER: un `Ds_Response=0900` REAL de Redsys.** Exige un pago de prueba con
+tarjeta en el sandbox desde el navegador (staging) y después `redsys:verify-sandbox --gateway-order=…`.
+Todo lo demás de la cadena está verificado con sus credenciales. ⚠️ Una medición anterior dio el
+sandbox por inalcanzable y **era un error de medida**: se probó el 443 y Redsys sirve el suyo en el
+**25443**.
 
-⚠️⚠️ **Lo que hay que saber antes de tocar el desglose, y no es negociable:**
-- **Lo compone UN solo sitio**, `Booking\Services\OrderLedger`, y lo leen las **OCHO** superficies
-  (panel: bloque, sub-tarjeta, calendario, lista y taquilla · PDF · correos · cliente). Componerlo
-  otra vez en una superficie es el defecto que costó tres auditorías: `LedgerSingleSourceTest` lo
-  tumba **aunque el resultado sea correcto hoy**.
-- **Son DOS EJES y no se mezclan**: `valor = pagadoWeb + pendienteWeb + pagadoParque +
-  pendienteParque + compensado`, y `retenido = pagadoWeb + pendienteDevolución`. Los guardan
-  `PAY-16` y `PAY-17`; la tarifa al mover la fecha, `PAY-18`.
-- ⚠️ **`online_amount_cents` NO es una dimensión del ledger**: es «cuánto se te cobrará si pagas
-  ahora», lo que consume el reintento. Leerlo como «lo pagado» es el defecto original.
-- ⚠️ **Y desde `#134` eso incluye «Importe al reservar»**: la frase (`invoiced_hint`) la compone el
-  dominio con **dirección e importe**, y **su nulidad ES la condición de enseñar la línea**. Comparar
-  `invoiced_cents` con `value.total_cents` en una superficie es re-derivarla otra vez.
-- ⚠️⚠️ **Las CONDICIONES también las decide el dominio, no solo los importes** (`#128`). Cuándo se
-  enseña el eje de caja (`has_cash`), cómo se cobró (`charged_method`) y cuándo (`charged_at_label`)
-  **viajan publicados**. `hasCash()` existía y **ninguna superficie lo llamaba**: cada una re-derivaba
-  la condición, y por eso el panel enseñaba el ancla en 28 de 38 pedidos sanos y el cliente en 9.
-  Una condición re-derivada es una divergencia con retraso.
-- ⚠️ **`charged_online_cents` NO es «lo cobrado por web»: es lo cobrado por ADELANTADO**, por el canal
-  que sea —la taquilla también escribe `Payment`—. El rótulo sale de `charged_method`; quemarlo le
-  dice al cliente que pagó por internet un dinero que entregó en mano.
+⚠️ **3 · El `redis.conf` de staging sigue de fábrica**, aplazado a propósito por el owner: sin techo de
+memoria y **deja de aceptar escrituras si falla un volcado**. Contenido acordado y riesgo medido en su
+ficha de `DEUDA.md`; aplicarlo exige reiniciar el contenedor PHP desde el panel.
 
-❗ **Y si alguien te enseña un pedido cuyo desglose «no se entiende», mira PRIMERO la spec §17.**
-Hay un caso canónico —`R-L6UTIA`— que parece un fallo del desglose y es un **dato roto**: dice
-«Pagado por web 114,00 €» cuando el pago real fueron 30,00 €. La aritmética cierra porque cierra
-sobre una mentira que está en la BD. ⚠️ **Regla: comprueba si el dato es real antes de buscar el
-fallo en el código** (`grossPaidOnline` contra `pagadoOnline`).
-✅ **Y los TRES defectos de LECTURA que ese caso destapó están ARREGLADOS** (2026-08-24,
-`DECISIONES #128`, spec **§18**): el **ancla de caja se ve siempre que haya habido un cobro** —con su
-método y su fecha, para que se pueda cotejar con el banco—, la cantidad va **con su sustantivo**
-(«8 invitados · 216,00 €», no `8×216,00 €`) y la nota de la reserva **dejó de llamar «señal»** a lo
-que no lo es. Medido: el eje de caja pasa de verse en **9 de 38** pedidos sanos a **37 de 58**, y la
-divergencia panel↔cliente sobre ese número —**19 pedidos**, la mitad del corpus— desaparece.
-▶ ⚠️ **Y hacerlo visible obligó a publicar el MÉTODO de cobro**: el eje de caja suma todos los pagos
-sin mirar el `provider`, así que un pedido de **taquilla** habría dicho «Cobrado por web». Ahora el
-dominio publica `charged_method` y cada superficie pone su voz.
-▶ **Pendiente de veto del owner**: tres cadenas (§18.6), una palabra cada una.
+---
 
-⚠️ **Y una trampa que este trabajo pagó CINCO veces**: un fixture que no reproduce el flujo real
-**inventa defectos tan bien como los oculta**. Los casos —un pedido `paid` sin `paid_at`, otros sin
-ninguna fila `Payment` (el quinto, en la propia paridad del cajón), un reembolso que escribe la
-columna sin la fila— aparecían como fallos del código y eran del fixture. Si una guarda de dinero se
-pone roja, **mira primero si el dato es real**.
+## ▶ El estado de la BD de desarrollo, antes de mirar nada
 
-❗ **DOS COSAS PENDIENTES DEL OWNER** (fichas en `DEUDA.md`):
-1. **Un `Ds_Response=0900` REAL de Redsys**: exige un pago de prueba con tarjeta en el sandbox desde
-   el navegador (staging) y después `redsys:verify-sandbox --gateway-order=…`. Todo lo demás de la
-   cadena está verificado con las credenciales del owner. ⚠️ Una medición anterior dio el sandbox por
-   inalcanzable y **era un error**: se probó el puerto 443 y Redsys sirve el suyo en el **25443**.
-2. ~~**Los 21 pedidos de auditoría** de la BD local~~ **HECHO el 2026-08-24**: el owner pidió borrarlos
-   y reconstruir el corpus acción por acción (`DECISIONES #132`).
-
-⚠️⚠️ **EL ESTADO DE LA BD DE DESARROLLO, que hay que saber antes de mirar nada:**
-- **Los 58 pedidos anteriores YA NO EXISTEN.** Se borraron enteros —pedidos, líneas, ajustes, pagos,
-  reembolsos y tickets— el 2026-08-24. **La copia de seguridad NO sobrevive a la sesión** (vivía en el
-  scratchpad, fuera del repo): lo que hay es lo que hay.
-- **Lo que hay son 25 pedidos**, uno por acción accionable, construidos por los **flujos REALES**
-  (`OrderCreator` → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
-  `cliente.demo@jumpweb.test`. **Los 25 cuadran** — ya no queda ningún pedido con el desglose roto,
-  así que el aviso de `#132` **no se puede ver en pantalla con estos datos**: para verlo hay que
-  romper uno a mano (p. ej. cambiar el `amount` de su `Payment`).
-- **El índice de los 25 casos, con su código y la acción que representa, está en `specs/desglose-dinero-cliente.md` §22.**
-  ⚠️ Y §22.3 recoge **cuatro trampas para conducir el panel** desde un test: la peor, que el cambio de
-  FECHA lo mueve el CALENDARIO y no el formulario —con `slot_date` solo, la acción se ejecuta, **no da
-  error y no cambia nada**—.
-- La sonda que los creó **no está en el repo** a propósito (instrumento de medida, no guarda: §12.6).
-  Su receta corregida sí, en §22.3.
-
-▶ **Y DESPUÉS, la Fase 5** — capa de contenido profesional. ⚠️ Su primer punto **no es implementable
-tal como está escrito** (medido el 2026-08-23): pide caché **etiquetada** y el store es `database`,
-que **lanza** `BadMethodCallException` al usar tags; no hay Redis en el stack local, ni en staging, ni
-una línea en la doc que lo contemple. Empieza por una decisión de infraestructura del owner —Redis, o
-invalidación por versión de clave—, no por código.
+- **Hay 25 pedidos**, uno por acción accionable, construidos por los **flujos REALES** (`OrderCreator`
+  → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
+  `cliente.demo@jumpweb.test`. Los 58 anteriores **se borraron** el 2026-08-24 y no hay copia.
+- **Los 25 cuadran**, así que el aviso de «desglose que no cierra» (`#132`) **no se puede ver en
+  pantalla con estos datos**: para verlo hay que romper uno a mano.
+- **El índice de los 25, con su código y su acción, está en `specs/desglose-dinero-cliente.md` §22.**
+  ⚠️ Y §22.3 recoge cuatro trampas para conducir el panel desde un test — la peor: el cambio de FECHA
+  lo mueve el CALENDARIO y no el formulario, y con `slot_date` solo la acción **no da error y no cambia
+  nada**.
+- La sonda que los creó **no está en el repo** a propósito (instrumento de medida, no guarda). Su
+  receta sí, en §22.3.
+- ⚠️ Dos productos llevan icono propio desde `#140` (tirolina → confeti, calcetines → calcetines); el
+  resto usa el de su tipo.
 
 ---
 
@@ -558,7 +333,8 @@ comentario dice por qué—. La red es el NAVEGADOR. Receta del andamio, con sus
 `schedule:run` funciona a mano, pero **no hay demonio cron en el contenedor del sitio**. Medido: 6
 avisos con 24 h en `jobs` y `attempts = 0`, y un pedido 24 h sin caducar que `orders:expire` caducó al
 instante al lanzarlo a mano.
-⚠️ **RE-CONFIRMADO el 2026-08-23** en el despliegue de hoy: el propio `deploy.sh` reinstaló el crontab
+⚠️ **RE-CONFIRMADO en los DOS despliegues del 2026-08-25** (y antes el 2026-08-23): el propio
+`deploy.sh` reinstaló el crontab
 —«1 entrada, sin duplicados»— y su verificación de salud volvió a avisar de que **no se ve ningún
 demonio cron**. Las cinco tareas están REGISTRADAS en la app y no hay jobs varados, así que lo único
 que falta es quien las dispare.
@@ -631,75 +407,11 @@ el flujo por el aviso de mantenimiento. La cesta sobrevive a la recarga.
 pulsar «Ir a pagar». Un cajón ABIERTO y quieto no se entera del interruptor hasta cerrarlo, reabrirlo o
 intentar pagar.
 
-## ▶ El MAPA del cajón SPA (para no buscarlo a ciegas)
+## ▶ El MAPA del cajón SPA — **movido**
 
-`resources/js/sidebar/` — **la lógica vive en módulos PLANOS sin Vue** (`CE-6`), y los componentes solo
-pintan.
-
-⚠️ **Desde la reorganización del 2026-08-22 hay TRES capas y conviene no confundirlas**: los módulos
-planos (las reglas, probados con `node --test`), los **stores de Pinia** (`stores/`, el estado de cada
-dominio) y los componentes (pintan). Y **el embudo ya no es la raíz**: `Sidebar.vue` son 16 líneas que
-solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CLIENTE (`#66`) entra como
-**otra sección**, al lado, no dentro. Esa separación es lo que hace que todo lo de abajo se pruebe con
-`node --test` y se compare contra el servidor desde PHP ejecutándolo en Node.
-
-    Sidebar.vue                16 líneas · 0 llamadas a la API   ← enruta y expone hacia fuera
-    sections/PurchaseSection    438 líneas · 2 llamadas          ← el embudo entero
-    stores/  (nueve)                                             ← el estado, por dominio
-    steps/   (once)             3 a 33 líneas cada uno           ← pintan y solo pintan
-
-| Módulo | De qué responde | Su red |
-|---|---|---|
-| `machine.js` | En qué paso está el cajón y a cuál puede ir. ⚠️ `FUNNEL_TRANSITIONS` está **cerrado**: una pantalla que no sea del embudo no va ahí (`#119`) | `machine.test.js` · `SidebarProgressParityTest` |
-| `api.js` | El cliente HTTP y sus cuatro trampas medidas (cookie, `Accept`, CSRF url-decodificado, reintento del 419) | — ⚠️ **sin test propio** |
-| `i18n.js` · `money.js` | Textos por CAMINO con plural de Laravel · importes que espejan `number_format` | `SidebarTextParityTest` · `SidebarMoneyParityTest` |
-| `catalog.js` | El paso 1: agrupar el catálogo en secciones y renombrar campos | `catalog.test.js` · **el diff de árbol lo EJECUTA** (`#67`) |
-| `calendar.js` | La rejilla del mes, los meses navegables y el mes en que abre | `calendar.test.js` (18 casos, `#68`) · el diff lo EJECUTA |
-| `offer.js` | El paso 3: hora elegida, suelo y techo del selector, precio del día | `offer.test.js` (`#69`) · el diff lo EJECUTA |
-| `progress.js` · `foot.js` | La banda de fases · el pie de cada paso | sus `*.test.js` · **el diff los EJECUTA desde `#71`** · `SidebarCartParityTest` |
-| `cart.js` | Cesta: saneado, persistencia con su dueño, reconciliación y **qué respuestas faltan** | `cart.test.js` · `SidebarCartParityTest` · `SidebarPendingFieldsParityTest` |
-| `paused.js` | El aviso de reservas en pausa y en qué pasos tapa | `paused.test.js` · `SidebarPausedParityTest` |
-| `admission.js` | El paso del carrito al pago: identidad + elegibilidad + destino | `admission.test.js` · `SidebarAdmissionParityTest` |
-| `login.js` · `register.js` · `forgot.js` | Identificarse, darse de alta y recuperar contraseña desde el cajón. ⚠️ `register.js` NO decide el contexto: lo manda quien llama (`#122`) | sus `*.test.js` · los literales los fijan `Api\V1\AuthSessionTest` y `Api\V1\AuthRegistrationTest` desde el servidor — las dos paridades de árbol murieron con el modal |
-| `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `pay.test.js` · `SidebarPayParityTest` |
-| `outcome.js` | La VUELTA entera: resumen del 6, motivo del 10 con su reintento, sondeo del 11 | `outcome.test.js` · `SidebarOutcomeParityTest` |
-| `stores/purchase.js` | El paso y las dos señales que el cajón publica hacia fuera | `stores/purchase.test.js` (nace tras `#59`) |
-| `stores/date.js` | El estado del paso 2: días ofrecidos, día elegido, mes visible y lo que de ahí se deriva | `stores/date.test.js` (nace en la reorganización, `#119`) |
-| `stores/time.js` | El estado del paso 3: horas ofrecidas, hora elegida y el tope del selector (**`max_quantity`, no `available`**) | `stores/time.test.js` |
-| `stores/auth.js` | El paso 5 entero: los dos formularios, sus avisos, la pestaña, el bit del anti-bot y las dos peticiones | `stores/auth.test.js` |
-| `stores/cart.js` | La cesta: líneas, dueño, presupuesto, avisos y persistencia (**las respuestas del evento NO se guardan**, RGPD) | `stores/cart.test.js` |
-| `stores/outcome.js` | El desenlace: formulario de la pasarela, código del pedido, resumen, motivo del rechazo | `stores/outcome.test.js` |
-| `stores/catalog.js` | El paso 1 y el producto elegido: secciones, fila del listado, ficha y etiquetas del evento | `stores/catalog.test.js` |
-| `stores/selection.js` | La LÍNEA en construcción: cantidad, complementos y respuestas del evento (**nunca se persiste**) | `stores/selection.test.js` |
-| `stores/booking.js` | Si las reservas están pausadas. Se PIDE, no se inyecta: la dueña acciona el interruptor con clientes dentro | `stores/booking.test.js` |
-
-**El ÁREA DE CLIENTE tiene su propio juego**, con la misma separación en tres capas y sin una fila por
-módulo aquí —cada uno lleva su `*.test.js` al lado, que es donde se lee su porqué—:
-`account/navigation.js` (zonas, pila de retorno y rótulos; **el índice `HOME_ENTRIES` es la ÚNICA
-puerta a una zona**, y hay guarda de que ninguna quede inalcanzable) · `orders.js` · `profile.js` ·
-`privacy.js` (el fichero que el titular se descarga, con el DOM **por parámetro** para poder probarlo)
-· `form-outcome.js` (traduce la respuesta de CUALQUIER formulario) · `form-run.js` (el guardián común:
-limpia **antes** de llamar) · y los stores `section`, `account`, `orders`, `reservations`,
-`credentials`, `profile` y `privacy`, uno por dominio. Las zonas viven en `account/zones/`.
-
-Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
-por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
-
-⚠️ **La regla que enseñaron las paridades**: cuando algo NO es atributo de contrato del normalizador
-—`href`, `action`, `method`, los `name` de un formulario, **el texto**, y **el interior de un
-`<svg>`**— el diff de árbol **lo da por bueno**. Si transcribes algo de esa clase necesita paridad
-propia. Demostrado por mutación en el paso 9.
-⚠️⚠️ **Y esa lista mordió DOS veces**: los 20 iconos se sirvieron VACÍOS (`#113`, hoy los cubre
-`SidebarIconParityTest`) y los botones de mes **no emitían nada** desde 4.2·2 — un `@click` tampoco es
-un atributo del DOM, así que los dos botones salían idénticos con y sin cableado. Hoy lo cubre
-`SidebarEmitWiringTest` (`#119(f)`).
-
-⚠️⚠️⚠️ **Y hay un límite MAYOR que ese, y conviene saberlo antes de confiar en el contrato**:
-`scripts/render-sidebar.mjs` **NO importa la raíz del cajón** —no puede, lee `window.Alpine` y el
-idioma del documento— y monta los ONCE componentes de paso con props que construyen los módulos
-planos. O sea que el contrato prueba **los pasos y los módulos**, y **no ejerce el orquestador**.
-▶ Para un cambio en el orquestador (`sections/PurchaseSection.vue`, `Sidebar.vue`) la red es el
-NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.
+Vive en `docs/specs/sidebar-spa.md` §8 desde el 2026-08-25. Un mapa de ficheros es referencia para
+quien toca el cajón, no «dónde estamos»: en la foto viva solo engordaba la carga obligatoria de cada
+arranque.
 
 ## ▶ Lo que NO hay que reimplementar (el terreno del dinero está entero)
 
@@ -738,87 +450,11 @@ EXACTA**, así que las URLs de API se firman aparte (§10.duodecies 64).
 sondeando** `payment-status`, y eso exige `redsys_merchant_url` configurada — sin ella y con terminal
 data-less, el pedido caducaría con la tarjeta ya cobrada (`PAY-02`).
 
-## ▶ Índice de la Fase 4, paso a paso
+## ▶ Índice de la Fase 4 — **retirado**
 
-El «qué se hizo y qué enseñó» de cada paso NO se repite aquí: vive en `00-REFACTOR.md` (checklist
-verificable) y en `DECISIONES.md` (el porqué, con sus mediciones). Este índice es solo para llegar.
+⚠️ Eran 83 líneas que **duplicaban `00-REFACTOR.md`**, y la Fase 4 está CERRADA. Verificado antes de
+borrar: los once pasos (`4.0a` … `4.7`) están en el tracker, cada uno con más detalle del que había
+aquí. Una foto viva que repite el tracker es una segunda verdad esperando a divergir —y `CONVENCIONES`
+dice que ESTADO **resume** el tracker y nunca lo contradice—.
 
-| Paso | Qué cerró | Decisión |
-|---|---|---|
-| 4.0a–4.0c | La costura, los seis huecos de API, la tokenización de `site.css` | `#39`–`#42` |
-| 4.1 · 4.2 | Cimientos SPA · los tres primeros pasos con paridad de árbol | `#43`–`#46` |
-| 4.3·1 → ·4 | Armazón y textos · pie y cesta · aviso de pausa · persistencia | `#47`–`#50` |
-| 4.4a·1 · ·2 | El CTA de pagar decide · la pantalla de identificación | `#51`, `#52` |
-| 4.4b·1 | El alta desde el cajón (y tres bugs de servidor que destapó) | `#53` |
-| 4.5·1 · ·2 | La cesta pide lo que le falta · pagar y salir a la pasarela | `#54`, `#55` |
-| 4.6·1 · ·2 | La reserva creada · denegado y verificando | `#56`, `#57` |
-| §6 | Bloqueo de scroll con dueño único · **el extremo a extremo con navegador** | `#58`, `#59` |
-| 4.7·1 · ·2a | El manifiesto congelado · el inventario deja de crecer | `#60`, `#61` |
-| 4.7·2b·1 | El contador medía 25 de 32 · la suite dependía de la fecha | `#63`, `#64` |
-| 4.7·2b·2 | Re-apuntar al servidor: `RedsysIdaTest`, `ModuleContractsTest`, `SidebarPayParityTest` | `#65`, `#75` |
-| 4.7·2b·2·B | **El diff de árbol se alimenta del SERVIDOR** en los once pasos y el armazón | `#67`–`#73` |
-| 4.7·2b·2·C | Los dependientes que no son paridades · el inventario queda CLASIFICADO | `#86`–`#98` |
-| 4.4b·2 | **El widget del anti-bot en el cajón**, y dos centinelas que no mordían | `#108` |
-| Staging | Despliegue (`deploy.sh`) · la guarda del dinero en verde falso · los CUATRO caminos verificados | `#105`–`#110` |
-| 4.7·2b·3·0 | **Independizar el contrato de árbol ANTES de borrar** (el fixture salía del motor) | `#111` |
-| **4.7·2b·3 + ·3** | 🟩 **`Purchase.php` RETIRADO y el flag con él** · y tres guardas que estaban en verde **sin medir nada** | **`#112`** |
-| 4.7·2b·4 | **El cajón se servía SIN ICONOS**: 20 `<svg>` vacíos que el diff de árbol no podía ver | **`#113`** |
-| Verificación | **A7 y los iconos, en navegador**: los enlaces profundos **nunca se cablearon** · el bloque de cuenta se oculta en la compra, y el «modo» del panel llevaba muerto | `#117`, `#118` |
-| **Reorganización** | 🟩 **El cajón, en TRES capas y por secciones**: nueve stores, el embudo fuera de la raíz y el grafo cerrado — antes del área de cliente, a petición del owner | **`#119`** |
-| **Área · tanda 1** | 🟩 **Leer**: el nivel sección, las zonas, el contrato de presentación, los datos, la puerta y la captura de huecos | `#120(g)`–`(m)` |
-| **Área · tanda 2** | 🟩 **Gestionar**: contraseña y sesiones · el perfil y el ciclo del correo · **los dos derechos RGPD** — y la web heredó los cuatro limitadores que le faltaban | `#120(n)`–`(s)` |
-| **Área · tanda 3** | 🟩 **Retirar**: primero se publicó lo que solo sabía la página (desglose financiero, consentimientos) y **después** se borró. La auditoría destapó **dos huecos reales** que nadie vigilaba | `#120(t)`, `#120(u)` |
-| **Pulido** | 🟩 **Nueve retoques del owner, y CUATRO no eran cosméticos**: el modo del panel se saltaba el puente del motor, «Mis reservas» se servía sin tarjetas porque la transcripción inventó nombres de clase, el scroll arrastraba la página y el título de auth salía dos veces | **`#124`** |
-| **Verificación** | 🟩 **El guion pendiente, recorrido**: `V17`, `V18` y `V23`. **Dos fallos reales** — el reenvío prometía correos que el servidor tiraba (4 reenvíos, 2 correos) y el velo de privacidad no se pintaba nunca | **`#125`** |
-| **Mis reservas** | 🟩 **Se lista POR RESERVA, y el pasado a su propia pantalla**: endpoint por ámbito con los dos lados de UN predicado, el ledger bajo demanda y la tarjeta compartida. Lo que ENCONTRÓ: el escáner de CSS estaba ciego a los modificadores de `:class`, y la poda del payload dejó cuatro textos viajando vacíos | **`#126`** |
-| **Bloque de cuenta** | 🟩 **El ÚLTIMO Livewire del layout, a Vue**: hueco con suelo servido, `<Teleport>`, endpoint `GET /me/account-context` y la semilla del montaje por el MISMO Resource. Lo que ENCONTRÓ: el `no-store` accidental de todo el sitio, la única salida de sesión de la app y un gate de iconos ciego a un tercio de sus componentes | **`#123`** |
-
-⚠️ **Las lecciones transversales que más se repiten**, por si solo lees esto:
-**una guarda con DOS fuentes redundantes no se puede medir mutando una sola** (`#112`: la aserción de
-`livewire.js` llevaba tiempo inerte y la doc la daba por crítica) ·
-**verde no es funciona** (`#59`: la fase entera transcrita y el motor no vendía) · **una foto que
-incluye el tiempo hay que tomarla con el reloj parado** (`#64`) · **un test que compara contra un
-artefacto tiene que comprobar que no está rancio** (`#69`) · **al re-apuntar un caso hay que volver a
-mutarlo** (`#65`: pasó a ser inerte sin que nadie lo notara) · **el caso frontera se elige por el
-MECANISMO del fallo, no por el síntoma** (`#68`) ·
-**una guarda puede existir, cruzar las dos fuentes y estar bien razonada, y aun así leer el número
-equivocado** (`#125`: al auditar una guarda la pregunta no es «¿mira algo?» sino «¿mira TODO lo que hay
-ahí?») · **lo que un gate declara que no mira puede ser justo su caso principal** (`#126`: el escáner de
-CSS se saltaba `:class`, que es donde vive un modificador) ·
-⚠️⚠️ **y un FIXTURE IRREAL fabrica defectos igual de bien que los oculta** — la auditoría del desglose
-de dinero lo pagó **tres veces** (`specs/desglose-dinero-cliente.md` §2, §4.bis.3, §4.ter): un
-`extra_due` sin subir el precio, un pago sin sincronizar a `Σ itemCollectedCents`, y `unit_price`
-tratado como total cuando es POR UNIDAD. **Antes de acusar al código, comprueba que el fixture
-reproduce el flujo real.**
-
-## Entorno (local)
-
-- Docker (Sail) en WSL2, repo en `~/proyectos/jumpweb`. Web `localhost:8081` · MySQL `localhost:3308` ·
-  Mailpit `localhost:8028`. **Siempre `-u sail` en `exec`** (como root deja ficheros de root en
-  `storage/` → 500 por permisos).
-- BD dev sembrada con SaltoPark: `admin@jumpweb.test` / `empleado@jumpweb.test`, contraseña `password`.
-  ⚠️ La BD dev arrastra ADEMÁS el par `…@jumpingjump.test` del import, así que `User::first()` devuelve
-  uno del origen — usa el email completo al probar a mano.
-  ⚠️ **Eso es de la máquina donde se hizo el import, no del producto**: un clon nuevo sembrado con
-  `migrate --seed` NO tiene ese par (medido el 2026-08-19 al montar el segundo puesto de trabajo).
-  Si `User::first()` te devuelve un usuario limpio no es un fallo: es que estás en un clon nuevo.
-- ⚠️ Si clonas de cero, comprueba que **`APP_URL` coincide con `APP_PORT`** en el `.env` (no versionado):
-  con el puerto desalineado salen mal los enlaces absolutos de correo, las URLs firmadas y la derivación
-  de CORS y de los dominios stateful de Sanctum.
-- **El push exige `VERIFY_CONC=1`** —tras correr los dos comandos de `INVARIANTES §6`— si tocas el
-  núcleo de dinero/aforo.
-
-## Herencia
-
-Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
-sandbox y suite **2132** verde al importarla.
-Recuento VIVO: 30 modelos · 75 migraciones · 17 Filament Resources. Las migraciones añadidas son
-`personal_access_tokens` (Sanctum), `payment_refunds.intent` (`#127(c)`), `zones.color_secondary`
-(`#138`) y `ticket_types.icon` (`#140`).
-⚠️ **El contador de tests NO se repite aquí**: vive arriba, en «Dónde estamos», con su contexto.
-`docs-check` vigila los tres números de esta línea y las invariantes —son sus cuatro patrones—, pero
-**«N tests» no casa con ninguno**, así que repetirlo es drift en espera. Ya mordió: esta línea decía
-**2715** mientras el cuerpo y la suite decían **2642** (medido el 2026-08-21, no ajustado). Misma
-doctrina que se aplicó a las líneas de `Sidebar.vue`: una foto sin receta que la vigile, se retira.
-Stack: Laravel **13.25** · Filament **5.7** · Livewire **4.4** · PHPUnit 12.5 · Sanctum **4.3** ·
-Spectator **3.0** (dev) · Vite **8.2** · 0 avisos de seguridad (`composer audit` y `npm audit`).
+▶ Para el detalle paso a paso: `docs/00-REFACTOR.md`, sección **Fase 4**.

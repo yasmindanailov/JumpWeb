@@ -580,3 +580,79 @@ verificaron contra el código antes de incorporarlos; los que cambian el diseño
 coherencia, veredicto SÓLIDO-CON-CAMBIOS) actuó de facto como revisión de la v2 en su parte de API.
 Las partes de §4.2 (contrato de DOM) y §4.8 (red de la máquina de estados) **no se han vuelto a
 revisar** desde la v2. **Entrada final**: `DECISIONES #38`.
+
+---
+
+## 8. El MAPA del cajón — dónde vive cada cosa
+
+> ⚠️ **Trasladado desde `ESTADO.md` el 2026-08-25.** Vivía en la foto viva, que por contrato
+> «resume y nunca contradice» al tracker (`CONVENCIONES`) y debe ser CORTA: un mapa de ficheros no
+> es «dónde estamos», es referencia para quien toca el cajón. Su sitio es esta spec.
+
+`resources/js/sidebar/` — **la lógica vive en módulos PLANOS sin Vue** (`CE-6`), y los componentes solo
+pintan.
+
+⚠️ **Desde la reorganización del 2026-08-22 hay TRES capas y conviene no confundirlas**: los módulos
+planos (las reglas, probados con `node --test`), los **stores de Pinia** (`stores/`, el estado de cada
+dominio) y los componentes (pintan). Y **el embudo ya no es la raíz**: `Sidebar.vue` son 16 líneas que
+solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CLIENTE (`#66`) entra como
+**otra sección**, al lado, no dentro. Esa separación es lo que hace que todo lo de abajo se pruebe con
+`node --test` y se compare contra el servidor desde PHP ejecutándolo en Node.
+
+    Sidebar.vue                16 líneas · 0 llamadas a la API   ← enruta y expone hacia fuera
+    sections/PurchaseSection    438 líneas · 2 llamadas          ← el embudo entero
+    stores/  (nueve)                                             ← el estado, por dominio
+    steps/   (once)             3 a 33 líneas cada uno           ← pintan y solo pintan
+
+| Módulo | De qué responde | Su red |
+|---|---|---|
+| `machine.js` | En qué paso está el cajón y a cuál puede ir. ⚠️ `FUNNEL_TRANSITIONS` está **cerrado**: una pantalla que no sea del embudo no va ahí (`#119`) | `machine.test.js` · `SidebarProgressParityTest` |
+| `api.js` | El cliente HTTP y sus cuatro trampas medidas (cookie, `Accept`, CSRF url-decodificado, reintento del 419) | — ⚠️ **sin test propio** |
+| `i18n.js` · `money.js` | Textos por CAMINO con plural de Laravel · importes que espejan `number_format` | `SidebarTextParityTest` · `SidebarMoneyParityTest` |
+| `catalog.js` | El paso 1: agrupar el catálogo en secciones y renombrar campos | `catalog.test.js` · **el diff de árbol lo EJECUTA** (`#67`) |
+| `calendar.js` | La rejilla del mes, los meses navegables y el mes en que abre | `calendar.test.js` (18 casos, `#68`) · el diff lo EJECUTA |
+| `offer.js` | El paso 3: hora elegida, suelo y techo del selector, precio del día | `offer.test.js` (`#69`) · el diff lo EJECUTA |
+| `progress.js` · `foot.js` | La banda de fases · el pie de cada paso | sus `*.test.js` · **el diff los EJECUTA desde `#71`** · `SidebarCartParityTest` |
+| `cart.js` | Cesta: saneado, persistencia con su dueño, reconciliación y **qué respuestas faltan** | `cart.test.js` · `SidebarCartParityTest` · `SidebarPendingFieldsParityTest` |
+| `paused.js` | El aviso de reservas en pausa y en qué pasos tapa | `paused.test.js` · `SidebarPausedParityTest` |
+| `admission.js` | El paso del carrito al pago: identidad + elegibilidad + destino | `admission.test.js` · `SidebarAdmissionParityTest` |
+| `login.js` · `register.js` · `forgot.js` | Identificarse, darse de alta y recuperar contraseña desde el cajón. ⚠️ `register.js` NO decide el contexto: lo manda quien llama (`#122`) | sus `*.test.js` · los literales los fijan `Api\V1\AuthSessionTest` y `Api\V1\AuthRegistrationTest` desde el servidor — las dos paridades de árbol murieron con el modal |
+| `pay.js` | Crear el pedido y componer el formulario firmado de la pasarela | `pay.test.js` · `SidebarPayParityTest` |
+| `outcome.js` | La VUELTA entera: resumen del 6, motivo del 10 con su reintento, sondeo del 11 | `outcome.test.js` · `SidebarOutcomeParityTest` |
+| `stores/purchase.js` | El paso y las dos señales que el cajón publica hacia fuera | `stores/purchase.test.js` (nace tras `#59`) |
+| `stores/date.js` | El estado del paso 2: días ofrecidos, día elegido, mes visible y lo que de ahí se deriva | `stores/date.test.js` (nace en la reorganización, `#119`) |
+| `stores/time.js` | El estado del paso 3: horas ofrecidas, hora elegida y el tope del selector (**`max_quantity`, no `available`**) | `stores/time.test.js` |
+| `stores/auth.js` | El paso 5 entero: los dos formularios, sus avisos, la pestaña, el bit del anti-bot y las dos peticiones | `stores/auth.test.js` |
+| `stores/cart.js` | La cesta: líneas, dueño, presupuesto, avisos y persistencia (**las respuestas del evento NO se guardan**, RGPD) | `stores/cart.test.js` |
+| `stores/outcome.js` | El desenlace: formulario de la pasarela, código del pedido, resumen, motivo del rechazo | `stores/outcome.test.js` |
+| `stores/catalog.js` | El paso 1 y el producto elegido: secciones, fila del listado, ficha y etiquetas del evento | `stores/catalog.test.js` |
+| `stores/selection.js` | La LÍNEA en construcción: cantidad, complementos y respuestas del evento (**nunca se persiste**) | `stores/selection.test.js` |
+| `stores/booking.js` | Si las reservas están pausadas. Se PIDE, no se inyecta: la dueña acciona el interruptor con clientes dentro | `stores/booking.test.js` |
+
+**El ÁREA DE CLIENTE tiene su propio juego**, con la misma separación en tres capas y sin una fila por
+módulo aquí —cada uno lleva su `*.test.js` al lado, que es donde se lee su porqué—:
+`account/navigation.js` (zonas, pila de retorno y rótulos; **el índice `HOME_ENTRIES` es la ÚNICA
+puerta a una zona**, y hay guarda de que ninguna quede inalcanzable) · `orders.js` · `profile.js` ·
+`privacy.js` (el fichero que el titular se descarga, con el DOM **por parámetro** para poder probarlo)
+· `form-outcome.js` (traduce la respuesta de CUALQUIER formulario) · `form-run.js` (el guardián común:
+limpia **antes** de llamar) · y los stores `section`, `account`, `orders`, `reservations`,
+`credentials`, `profile` y `privacy`, uno por dominio. Las zonas viven en `account/zones/`.
+
+Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
+por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
+
+⚠️ **La regla que enseñaron las paridades**: cuando algo NO es atributo de contrato del normalizador
+—`href`, `action`, `method`, los `name` de un formulario, **el texto**, y **el interior de un
+`<svg>`**— el diff de árbol **lo da por bueno**. Si transcribes algo de esa clase necesita paridad
+propia. Demostrado por mutación en el paso 9.
+⚠️⚠️ **Y esa lista mordió DOS veces**: los 20 iconos se sirvieron VACÍOS (`#113`, hoy los cubre
+`SidebarIconParityTest`) y los botones de mes **no emitían nada** desde 4.2·2 — un `@click` tampoco es
+un atributo del DOM, así que los dos botones salían idénticos con y sin cableado. Hoy lo cubre
+`SidebarEmitWiringTest` (`#119(f)`).
+
+⚠️⚠️⚠️ **Y hay un límite MAYOR que ese, y conviene saberlo antes de confiar en el contrato**:
+`scripts/render-sidebar.mjs` **NO importa la raíz del cajón** —no puede, lee `window.Alpine` y el
+idioma del documento— y monta los ONCE componentes de paso con props que construyen los módulos
+planos. O sea que el contrato prueba **los pasos y los módulos**, y **no ejerce el orquestador**.
+▶ Para un cambio en el orquestador (`sections/PurchaseSection.vue`, `Sidebar.vue`) la red es el
+NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.

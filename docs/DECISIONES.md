@@ -7048,7 +7048,25 @@ ficheros ya escritos en disco.** Ésos eran los restos.
 
 ⚠️ **Regla que conviene dejar escrita**: tras un `/rewind`, el árbol puede llevar trabajo huérfano de
 una rama de conversación que ya no existe. No se firma por parecido de estilo — **se verifica y se
-completa, o se descarta**. Se comprobó que no había más restos: solo esos dos ficheros.
+completa, o se descarta**.
+
+❗❗ **CORRECCIÓN (mismo día, antes de cerrar): esta entrada decía «se comprobó que no había más restos:
+solo esos dos ficheros» y ERA FALSO. Eran TRES.** `docs/DEUDA.md` llevaba también una fila huérfana —la
+del verificador de sobreventa, ver abajo— y **se coló en el commit `762f299`** (el del icono), cuyo
+mensaje no la menciona. El agente la vio en la misma ventana horaria al buscar restos y **dio por hecho
+que era suya de esa mañana** sin comprobarlo.
+▶ La lección es la misma que el resto de la semana, aplicada al propio método de verificar: **un
+`find` por fecha te da los candidatos, no la autoría**. Lo que distingue es `git log -S` sobre el
+contenido, que es lo que acabó respondiéndolo.
+
+**Y lo que la rama perdida estaba haciendo de verdad, reconstruido de su propio rastro**: no era la
+tanda A, era una **auditoría de los verificadores de concurrencia**. Su fila de `DEUDA.md` lo dice y
+está medida: **`purchase:verify-oversell` solo ejercita ENTRADAS** —siembra un `TYPE_ENTRY` con
+`online_capacity = 1` y forka N compras— y **el aforo de PACKS no lo ejecuta ningún verificador**.
+Editó el gate porque, auditando eso, encontró que los dos contadores ni siquiera lo disparaban.
+▶ **Ese hallazgo sigue ABIERTO y es el mayor de los dos**: no hay ninguna evidencia de que dos
+cumpleaños simultáneos por la última plaza no se vendan los dos. La suite lo da por bueno porque
+SQLite no reproduce esas carreras. Ficha con receta en `DEUDA.md`.
 
 **El cambio, verificado y correcto.** `SlotAvailability` y `PackAvailability` entran al `CRITICAL_RE`
 del hook. Son **los dos contadores de aforo** —quienes deciden cuántas plazas quedan— y dependencias

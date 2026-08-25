@@ -1849,7 +1849,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
-### El DESGLOSE de dinero que ve el cliente ✅ — **CERRADO: las tres tandas y los tres defectos de lectura**
+### El DESGLOSE de dinero que ve el cliente ✅ — **CERRADO: las tres tandas y los CUATRO defectos de lectura**
 > Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
 > `(b)`–`(f)`. **Va ANTES de Fase 5.**
 > ✅ **Tandas A y B EJECUTADAS el 2026-08-24**: el dominio dice la verdad y el desglose se entiende.
@@ -1996,6 +1996,47 @@ verdad** —panel y cliente enseñan el mismo «Pagado online» en **64 de 64**�
 inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos identidades en 58 de 58**
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
+
+### La LANDING white-label 🟦 — **tanda A a medias (3 de 5), B y C sin empezar**
+
+> Spec: `specs/landing-white-label.md` · Decisiones `#136` (el marco) y `#138`–`#140` (la ejecución).
+> **La línea es: data-driven el DATO, no la PÁGINA.** Nace del mockup del SEGUNDO cliente.
+> ⚠️ **Empieza por §1 de la spec**: de los cinco problemas que enunció el owner, tres NO eran lo que
+> parecían — y uno de los que la propia spec afirmaba también resultó falso (§4.5.1).
+
+- ✅ **A · el acento de zona sale del nombre de la clase** (2026-08-25, `#138`). Diez clases
+      `.x--{accent}` retiradas; cada zona pinta su color en línea con `ThemeSettings::zoneStyle()`.
+      ⚠️ **Arregló un defecto VIVO**: dos zonas con el mismo `accent` y distinto `color` divergían
+      —`cap` salía naranja en la tarjeta y lima en la pestaña— y un acento desconocido **no se pintaba
+      en absoluto**. Con ello entran `zones.color_secondary`, el ajuste `theme.brand_secondary` y el
+      token semántico `--attn`.
+- ✅ **A · la paleta del primer cliente sale del producto** (2026-08-25, `#139`). El acento de un pack
+      se deducía **buscando «kids» en su NOMBRE**; ahora sale de su zona. Se van tres ternarios del
+      diseñador de invitaciones, dos botones con «Jump»/«Kids» escritos dentro, **una copia de la
+      fórmula de contraste en JavaScript** y los `--jump-*`/`--kids-*` del `:root`.
+      ▶ `ZoneAccentIsNotAClassNameTest` queda **absoluta**: su lista de excepciones, vacía.
+- ✅ **A · el icono por producto** (2026-08-25, `#140`). Lo decidía un booleano escrito **tres veces**,
+      así que un catálogo entero se repartía en **dos dibujos**. Ahora `ticket_types.icon` (set curado,
+      decisión del owner), resuelto por el dominio, publicado en el contrato y con un registro en el
+      cajón que **retira las cuatro copias de geometría**.
+- [ ] **A · el inventario de los 76 colores en crudo** (58 en `site.css`, 18 en `landing.css`): cuáles
+      suben a token para que el paquete de un cliente pueda sobrescribirlos.
+- [ ] **A · el spinner rebrandeable.** Ya es un fichero, una clase y tres tokens (tamaño, color,
+      velocidad); falta el camino para **sustituir el dibujo** por instalación.
+- [ ] **B · el contenido**: los dos modelos que faltan (números del hero y testimonios), el copy que
+      baja de `lang/` al CMS —**142 claves**, hoy en el repo— y la landing del segundo cliente como
+      primer paquete de tema.
+- [ ] ⚠️⚠️ **C · los servicios como PRODUCTO REAL.** Toca `AFORO` y `PAY`, exige `VERIFY_CONC=1` y
+      **NO se diseña desde la spec de la landing**: necesita la suya. Medido: los tres servicios de
+      `/servicios` tienen **0 productos vinculados** y dos llevan **tablas de precios TECLEADAS**.
+      ▶ **Y su alcance ENCOGIÓ**: lo de «franjas fuera del horario de apertura» era una afirmación
+      falsa —`SlotGenerator` lee solo `slot_templates`; `opening_hours` es presentación—, así que ya se
+      pueden crear. Queda el eje de **precio por tramo de cantidad**, que es la misma pieza que el
+      sistema de promociones que el owner quiere.
+- ⏸️ **APARCADO por el owner (2026-08-25): zonas y cupos se quedan como están** hasta ver cómo se
+      comportan las reservas de packs distintos con gente real. Lo medido en esa conversación —que una
+      zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
+      queda en la spec §4.4 para no volver a deducirlo.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
