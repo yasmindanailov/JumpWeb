@@ -66,6 +66,11 @@ class QuoteResource extends JsonResource
                     'free_quantity' => $addon->freeQuantity,
                     'subtotal_cents' => $addon->subtotalCents,
                 ], $line->addons),
+                // ⚠️ El icono va a la COLA a propósito: `ApiContractTest` compara `required` con las
+                // propiedades **en el mismo orden**. Y viaja resuelto por el dominio, no derivado de
+                // `is_pack`: derivarlo en el cliente es lo que tenía la regla escrita tres veces
+                // (`DECISIONES #140`).
+                'icon' => $line->icon,
             ], $this->resource->lines),
             'total_cents' => $this->resource->totalCents,
             'online_amount_cents' => $this->resource->onlineAmountCents,

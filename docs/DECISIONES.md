@@ -6980,3 +6980,59 @@ toca el catálogo, y **no se decide sobre la marcha**.
 ⚠️ Consecuencia visible mientras tanto: los dos packs de cumpleaños se pintan del color de su zona
 (magenta) en vez de naranja y lima. Es lo coherente con el modelo de hoy —«el color va con la zona»—
 y se revierte solo cuando el pack tenga identidad propia, si el owner decide dárseela.
+
+## #140 · 2026-08-25 · TANDA A · El icono de un producto deja de ser un BOOLEANO
+
+**Contexto.** Tercer corte de la tanda A y el hueco que el owner señaló al decidir el tema
+(`#136` §4.6): *«los iconos de los productos»*. Con la decisión ya tomada de **set curado, no subida
+libre**.
+
+**El defecto, medido.** El icono lo decidía esto:
+
+    @if ($isPack)  <x-icons.ic-b1 />          {{-- tarta --}}
+    @else          <x-icons.ticket-tear-off /> {{-- entrada --}}
+
+Un **booleano**, y escrito **tres veces**: en `components/icons/product.blade.php` —que además **no
+tenía ni un llamante en todo el repo**— y, con **la geometría entera copiada dentro**, en
+`CartStep.vue` y en `SummaryLine.vue`. Cuatro copias de dos dibujos.
+
+▶ **Y la regla era peor que la duplicación**: reparte un catálogo entero en **dos dibujos**. La
+tirolina, la tarta y los calcetines son «no-pack», así que los tres salían como un ticket — teniendo
+el set un icono de calcetines desde siempre.
+
+**Lo que se hizo:**
+
+- **`ticket_types.icon`** (migración aditiva, nullable): la CLAVE de un icono del set. `null` ⇒ el que
+  le toca por su tipo, o sea **ninguna fila cambia de aspecto al migrar**.
+- **`Booking\Services\ProductIcon`**: la decisión, en un solo sitio, con la lista ofrecida —**un
+  subconjunto deliberado**: solo los iconos de marca del catálogo, para que nadie marque un producto
+  con un candado—. Defensivo como `ThemeSettings`: una clave corrupta degrada al icono por tipo en vez
+  de servir un `<svg>` vacío.
+- **Se PUBLICA** (`OrderItem.icon`, `QuoteLine.icon` en el contrato) para que el cajón deje de
+  derivarlo. Es el mismo criterio que `charged_method`, `quantity_label` o `invoiced_hint`.
+- **`sidebar/ProductIcon.vue`**: un registro clave → dibujo que **retira las cuatro copias**.
+- **El panel** ofrece el desplegable, y `components/icons/product.blade.php` —muerto— se retira.
+
+**⚠️ Una decisión de diseño que la guarda obligó a corregir.** El registro tenía un `v-else` genérico,
+así que `ticket-tear-off` **no aparecía escrito en ninguna rama** y la comprobación «el cajón sabe
+dibujar todo lo que el panel ofrece» no podía verificarlo: añadir una opción al desplegable habría
+servido el genérico sin que nada fallara. Ahora la clave se **normaliza** en el `script` y las seis
+ramas son explícitas.
+
+**Guardas: +5, con su guarda-de-la-guarda.** `ProductIconSingleSourceTest` prohíbe el **mecanismo**
+—que una superficie elija el dibujo mirando `is_pack`—, comprueba que **toda clave ofrecida existe en
+el set** y que **el cajón sabe dibujarlas todas** (que es lo que la paridad de iconos NO cubre: aquélla
+compara lo que el cajón dibuja, no lo que el panel deja elegir).
+
+**⚠️ Y dos gates hicieron su trabajo por el camino, los dos correctamente:**
+
+1. **`SidebarDomContractTest` cazó un bundle SSR RANCIO**: había construido el de cliente y no el de
+   SSR, así que la comparación de árboles habría corrido contra código viejo. 31 casos en rojo con el
+   mensaje exacto de qué hacer.
+2. **`SidebarBundleBudgetTest` cazó el techo del chunk.** Medido **218,68 → 220,78 KiB (+2,10)**, y el
+   desglose importa: **salen dos geometrías duplicadas** y **entran cuatro dibujos nuevos** que el
+   cajón no sabía pintar. Se podó antes de subir el techo, como en `#129`; **219,5 → 221,5**, que deja
+   0,72 KiB.
+
+**Verificado sobre HTTP real**: con la tirolina puesta en «cañón de confeti» y los calcetines en su
+icono, `GET /me/orders` publica `icon` por línea y los productos sin elegir conservan el suyo.

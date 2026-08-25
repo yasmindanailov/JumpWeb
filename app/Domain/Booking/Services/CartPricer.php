@@ -114,6 +114,8 @@ class CartPricer implements CartPricing
                 productId: (int) $type->id,
                 name: (string) $type->tr('name'),
                 isPack: $type->isPack(),
+                // El icono lo resuelve el producto, no la superficie (`DECISIONES #140`).
+                icon: $type->iconKey(),
                 date: $line['date'],
                 time: $line['time'],
                 quantity: $quantity,

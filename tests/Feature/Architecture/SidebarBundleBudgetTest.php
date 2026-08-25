@@ -301,9 +301,20 @@ class SidebarBundleBudgetTest extends TestCase
      * `ReservationCard` —que adelgaza—, y la composición es `orderRow()` tal cual, la misma que ya
      * componía ese pedido cuando se desplegaba dentro de una reserva. Una segunda forma de pintar los
      * dos ejes habría costado el doble y una divergencia.
-     * ▶ **219,5 deja 0,82 KiB.** Lo siguiente que entre lo mide.
+     * ▶ **219,5 dejaba 0,82 KiB.** Lo siguiente que entre lo mide.
+     *
+     * ⚠️ **219,5 → 221,5 el 2026-08-25: el ICONO POR PRODUCTO** (`DECISIONES #140`). Medido:
+     * **218,68 → 220,78 KiB, +2,10**, y el desglose importa porque no es todo coste:
+     *  · **SALEN dos geometrías DUPLICADAS**: la tarta y la entrada estaban escritas a mano, enteras,
+     *    en `CartStep.vue` **y** en `SummaryLine.vue` —cuatro copias de dos dibujos—. En fuente son
+     *    −1.458 y −1.314 bytes.
+     *  · **ENTRAN cuatro dibujos que el cajón no sabía pintar** (confeti, par de entradas, taco de
+     *    entradas y calcetines). Ése es el coste real, y es la funcionalidad: sin ellos, el panel
+     *    ofrecería iconos que la cesta serviría como un ticket genérico.
+     * ▶ **Se podó ANTES de subir el techo**, como en `#129`: la subida neta es de cuatro iconos, no
+     * de seis. **221,5 deja 0,72 KiB.**
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 219.5;
+    private const SIDEBAR_CHUNK_MAX_KB = 221.5;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

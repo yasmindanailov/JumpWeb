@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
@@ -121,6 +122,11 @@ class OrderItemResource extends JsonResource
             'guest_form_url' => $item->acceptsGuestForm()
                 ? route('reservation.guests', ['reservation' => $item])
                 : null,
+            // ⚠️ **El icono que marca el producto, resuelto por el DOMINIO** (`DECISIONES #140`). El
+            // cajón lo derivaba de `is_pack` con la geometría copiada dentro, así que un catálogo
+            // entero se pintaba con dos dibujos. Va a la COLA: `ApiContractTest` compara `required`
+            // con las propiedades EN ORDEN.
+            'icon' => $item->ticketType?->iconKey() ?? ProductIcon::DEFAULT_OTHER,
         ];
     }
 }

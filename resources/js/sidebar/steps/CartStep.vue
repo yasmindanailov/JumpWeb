@@ -1,6 +1,7 @@
 <script setup>
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
+import ProductIcon from '../ProductIcon.vue';
 import { shortDate } from '../progress.js';
 
 /**
@@ -73,29 +74,11 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
             <li v-for="line in lines" :key="line.index" class="cart__item">
                 <div class="cart__head">
                     <span class="cart__when">
-                        <span v-if="line.is_pack" class="icon ic-b1 prod-ico" aria-hidden="true">
-                            <svg viewBox="0 0 40 40" width="20" height="20">
-                                <path d="M 7 33 L 33 33" />
-                                <path d="M 10 33 L 10 25 Q 10 22 13 22 L 27 22 Q 30 22 30 25 L 30 33" />
-                                <path d="M 11.5 27.5 L 28.5 27.5" class="dashed thin" />
-                                <path d="M 20 22 L 20 15" />
-                                <path class="flame accent-fill" d="M 20 14.5 Q 22.4 11.6 20 8.6 Q 17.6 11.6 20 14.5 Z" />
-                            </svg>
-                        </span>
-                        <span v-else class="tk prod-ico" aria-hidden="true">
-                            <svg viewBox="0 0 60 36" width="22" height="13" fill="none">
-                                <g class="body">
-                                    <path d="M 4 4 L 42 4 L 42 8 A 1.4 1.4 0 0 0 42 12 L 42 16 A 1.4 1.4 0 0 0 42 20 L 42 24 A 1.4 1.4 0 0 0 42 28 L 42 32 L 4 32 L 4 28 A 1.4 1.4 0 0 0 4 24 L 4 20 A 1.4 1.4 0 0 0 4 16 L 4 12 A 1.4 1.4 0 0 0 4 8 Z" />
-                                    <line x1="14" y1="14" x2="34" y2="14" class="thin" />
-                                    <line x1="14" y1="20" x2="34" y2="20" class="thin" />
-                                </g>
-                                <path class="dashed" d="M 42 5.5 L 42 30.5" />
-                                <g class="stub">
-                                    <path d="M 42 4 L 56 4 L 56 8 A 1.4 1.4 0 0 0 56 12 L 56 16 A 1.4 1.4 0 0 0 56 20 L 56 24 A 1.4 1.4 0 0 0 56 28 L 56 32 L 42 32 L 42 28 A 1.4 1.4 0 0 1 42 24 L 42 20 A 1.4 1.4 0 0 1 42 16 L 42 12 A 1.4 1.4 0 0 1 42 8 Z" />
-                                    <text class="stubnum" x="49" y="22.5" text-anchor="middle">1</text>
-                                </g>
-                            </svg>
-                        </span>
+                        <!-- ⚠️ El icono lo manda el SERVIDOR (`line.icon`, `DECISIONES #140`). Aquí vivía un
+                             `v-if="line.is_pack"` con la geometría entera escrita dentro, y el mismo bloque
+                             estaba copiado en el otro paso: cuatro copias de dos dibujos, y un catálogo
+                             entero repartido en esos dos. -->
+                        <ProductIcon :icon="line.icon" />
                         <template v-if="line.is_pack">{{ tp('guests_count', { count: line.quantity }) }} · {{ line.product_name }}</template>
                         <template v-else>{{ line.quantity }}&times; {{ line.product_name }}</template>
                     </span>

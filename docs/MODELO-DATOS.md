@@ -69,7 +69,7 @@ Tres tipos (constantes de código, NO tabla): `entry` (entrada con franja),
 
 | Grupo | Campos |
 |---|---|
-| Display | `name`,`description`,`period_label`,`features`,`conditions`,`badge` (JSON i18n) · `featured` · `position` · `is_active` |
+| Display | `name`,`description`,`period_label`,`features`,`conditions`,`badge` (JSON i18n) · `featured` · `position` · `is_active` · `icon` = clave del set de diseño que marca el producto (`DECISIONES #140`); `null` ⇒ el que le toca por su tipo. **No es un fichero**: lista curada, para que la paridad de dibujos entre superficies siga siendo comprobable |
 | Venta | `type` (indexed, default `entry`) · `is_sellable` (default false) · `zone_id` (**uint indexado SIN FK real**, nullable = ambas zonas) · `duration_min` (null = ilimitada) · `tax_rate` decimal(5,2) · `wristband_color` · `seats_per_unit` (default 1; **en packs SIEMPRE 1**, normalizado por migración) |
 | Ventana | `available_after_open_min`/`available_before_close_min` (offsets sobre apertura/cierre del día) · `min_advance_value` + `min_advance_unit` (`days` calendario / `hours` rodante; ver `meetsMinAdvance()`) · `prep_before_min`/`prep_after_min` (solo packs: montaje/limpieza) |
 | Pack | `min_qty`/`max_qty` (invitados) · `deposit_type` (`none`\|`percent`\|`fixed`) + `deposit_value` (señal; calculador `depositCents()`) · `event_fields` JSON (esquema de campos del evento por pack: `{key,label i18n,type,required}`) · `guest_fields` JSON (esquema por-invitado; default 4 columnas `DEFAULT_GUEST_FIELDS`) |

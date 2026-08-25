@@ -502,7 +502,10 @@ class LandingContentSeeder extends Seeder
         $packs = TicketType::ofType(TicketType::TYPE_PACK)->pluck('id')->all();
 
         $addons = [
-            ['position' => 20, 'applies' => 'all', 'price' => 200,
+            // ⚠️ `icon`: el marcador propio del producto (`DECISIONES #140`). Sin él, los calcetines
+            // se pintaban como «un ticket» —igual que la tarta y la tirolina—, porque el dibujo lo
+            // decidía un booleano `is_pack`. El set ya tenía el suyo desde siempre.
+            ['position' => 20, 'applies' => 'all', 'price' => 200, 'icon' => 'socks',
                 'name' => ['es' => 'Calcetines antideslizantes', 'en' => 'Grip socks', 'fr' => 'Chaussettes antidérapantes']],
             ['position' => 21, 'applies' => 'all', 'price' => 200,
                 'name' => ['es' => 'Taquilla', 'en' => 'Locker', 'fr' => 'Casier']],
@@ -518,6 +521,7 @@ class LandingContentSeeder extends Seeder
                 [
                     'name' => $a['name'],
                     'type' => TicketType::TYPE_ADDON,
+                    'icon' => $a['icon'] ?? null,
                     'tax_rate' => 21,
                     'is_sellable' => true,
                     'is_active' => true,

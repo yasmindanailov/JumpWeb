@@ -70,6 +70,11 @@ export function confirmationLine(item, answers = []) {
     return {
         product_name: String(item?.product_name ?? ''),
         is_pack: item?.is_pack === true,
+        // ⚠️ El icono que marca el producto, tal cual lo manda el servidor (`DECISIONES #140`). No se
+        // deriva de `is_pack`: derivarlo aquí sería la tercera copia de la regla que este trabajo
+        // vino a retirar, y dejaría el resumen de la reserva creada pintando un ticket genérico
+        // sobre un producto que sí eligió el suyo.
+        icon: item?.icon ?? undefined,
         quantity: Number(item?.quantity ?? 0),
         date: item?.date ?? null,
         // `start_time` y no `time_window`: el segundo es un texto YA compuesto para mostrar

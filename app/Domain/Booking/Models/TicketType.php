@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Platform\Concerns\HasTranslations;
 use App\Domain\Platform\Services\Money;
@@ -154,6 +155,22 @@ class TicketType extends Model
     public function isPack(): bool
     {
         return $this->type === self::TYPE_PACK;
+    }
+
+    /**
+     * **La clave del icono que marca este producto** (`DECISIONES #140`).
+     *
+     * ⚠️ Lo decide {@see ProductIcon}, no cada superficie. La regla era un booleano —tarta si es
+     * pack, entrada si no— escrito TRES veces: en un componente Blade sin llamantes y, con la
+     * geometría entera copiada dentro, en dos componentes del cajón. Con ella, la tirolina, la tarta
+     * y los calcetines eran los tres «un ticket».
+     *
+     * Nunca devuelve `null`: quien pinta un marcador siempre necesita uno, y dejar que cada
+     * superficie resuelva su propio respaldo es exactamente cómo se llegó a las tres copias.
+     */
+    public function iconKey(): string
+    {
+        return ProductIcon::forProduct($this->icon, $this->isPack());
     }
 
     /**

@@ -133,7 +133,7 @@ que sirva staging de verdad.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2759 en verde** (16.041 aserciones, `--parallel` **~40 s** medidos el 2026-08-25) ·
+- Suite **2764 en verde** (16.062 aserciones, `--parallel` **~40 s** medidos el 2026-08-25) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.
@@ -188,8 +188,8 @@ El detalle de cada corte está en el tracker; el índice de abajo enlaza cada un
   El neto es +1 porque esa guarda ya existía y lo que hizo falta fue **re-apuntarla**, no duplicarla.
   ▶ Y las de `#126` (**+25**): **13** del REPARTO de los dos ámbitos en el dominio —incluida la que
   asevera la propiedad, `upcoming + past = total` y sin solapamiento— y **12** del endpoint nuevo.
-  **670 tests JS** (`node --test`) · Pint
-  limpio (842 ficheros) · `docs-check` verde ·
+  **671 tests JS** (`node --test`) · Pint
+  limpio (848 ficheros) · `docs-check` verde ·
   ⚠️ **Esta cifra de JS decía 648 y llevaba VEINTIDÓS cierres de retraso** —los deltas de arriba ya
   cantaban 666, 667 y 668—: corregida el 2026-08-24. **El `pre-push` solo vigila el contador de PHP**
   (`DECISIONES #116`), así que el de JS depende de que alguien lo mire; si vuelve a divergir, mídelo
@@ -812,9 +812,9 @@ reproduce el flujo real.**
 
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
-Recuento VIVO: 30 modelos · 74 migraciones · 17 Filament Resources. Las migraciones añadidas son
-`personal_access_tokens` (Sanctum), `payment_refunds.intent` (`#127(c)`) y `zones.color_secondary`
-(`#138`).
+Recuento VIVO: 30 modelos · 75 migraciones · 17 Filament Resources. Las migraciones añadidas son
+`personal_access_tokens` (Sanctum), `payment_refunds.intent` (`#127(c)`), `zones.color_secondary`
+(`#138`) y `ticket_types.icon` (`#140`).
 ⚠️ **El contador de tests NO se repite aquí**: vive arriba, en «Dónde estamos», con su contexto.
 `docs-check` vigila los tres números de esta línea y las invariantes —son sus cuatro patrones—, pero
 **«N tests» no casa con ninguno**, así que repetirlo es drift en espera. Ya mordió: esta línea decía

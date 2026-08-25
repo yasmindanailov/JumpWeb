@@ -216,10 +216,17 @@ tramo de tamaño de grupo**. No es un pack de cumpleaños ni una entrada suelta.
    tarifa (`Booking\Services\RateResolver`); las demás superficies siguen leyendo el precio base y
    rotulan «desde». Cambiar los 18 sitios a la vez sería la clase de tanda mal dimensionada que
    `specs/desglose-dinero-cliente.md` §11 documenta.
-2. **Franjas FUERA del horario de apertura.** Las franjas se generan de `opening_hours` +
-   `slot_templates`, así que hoy **no existe** una franja a las 22:00 si el parque cierra a las 21:00.
-   ⚠️ Esto es lo que hace la tanda cara y lo que la mete en terreno de `AFORO`: una reserva privada
-   **ocupa la zona entera** y tiene que impedir cualquier otra venta en ese tramo.
+2. ❗❗ **CORREGIDO (2026-08-25): las franjas fuera del horario de apertura YA SE PUEDEN CREAR.**
+   Este punto decía que las franjas se generan de `opening_hours` + `slot_templates` y que por eso
+   «no existe» una franja a las 22:00 si el parque cierra a las 21:00. **Es falso.** Medido:
+   `SlotGenerator` lee **solo `slot_templates`**, y `opening_hours` no lo consulta **nadie** del
+   dominio de reservas — sus únicos consumidores son el chip del hero, el bloque de horario de la
+   landing, los datos estructurados de SEO y la pantalla del panel.
+   ▶ **La rejilla reservable es `slot_templates`; `opening_hours` es presentación.** Añadir una
+   plantilla a las 22:00 basta. **Esta extensión sobra**, y con ella una de las tres que encarecían
+   la tanda.
+   ⚠️ Lo que SÍ queda en terreno de `AFORO` es lo otro: una reserva privada **ocupa la zona entera**
+   y tiene que impedir cualquier otra venta en ese tramo — ver la nota sobre el cupo, más abajo.
 3. **No es autoservicio, pero sí es un pedido.** Se reserva con petición y confirmación del
    operador. Se apoya en lo que ya existe (`ManualOrderFulfiller` crea pedidos firmes sin hold,
    `AFORO-10`), no en un flujo nuevo de checkout.
@@ -242,6 +249,29 @@ pack destacado y el resto en `/servicios`, **alternable**.
 ▶ **No hace falta un cambio de arquitectura: hace falta hacer EXPLÍCITO lo que ya es implícito** —la
 conmutación por ausencia de `LandingService`— y **desacoplar el vocabulario**. Es trabajo de esta
 tanda C, y **se diseña en su spec propia**, no aquí.
+
+##### ⚠️ Y lo que la conversación del 2026-08-25 dejó medido sobre el CUPO (owner: **aparcado**)
+
+Se planteó una «familia de pack» para agrupar el catálogo. **Retirada**: el owner señaló que puede
+crear el pack y una zona propia con su cupo y sus plantillas de franja, y **tiene razón** —
+`show_in_landing` desacopla operar de mostrarse, así que una zona operativa que no se anuncia ya es
+posible—.
+
+**Lo que sí quedó medido, y es lo que habrá que mirar cuando se retome:**
+
+- **Una zona hace CINCO cosas**, no una: es el espacio, **la dueña de la rejilla** (`slot_templates`),
+  **la unidad de BLOQUEO** anti-sobreventa (`lockSlots` por `zone_id` + día, `AFORO-01`), el
+  interruptor operativo (`inOperationalZone`) y donde vive el cupo. Decir «la zona solo gestiona el
+  cupo» es falso, y las dos que se escapan son las que no se mueven a la ligera.
+- **Dos zonas = dos pozos independientes, y el sistema no sabe que comparten suelo.** Modelar una
+  línea comercial como zona propia es correcto si tiene espacio o horario propio; si dos líneas
+  ocupan el mismo suelo a la vez, **se puede vender dos veces la misma pista sin que nada avise**.
+- **La capa que faltaría** es un *pozo de cupo* **dentro** de la zona —para que el cerrojo existente
+  siga cubriéndolo— con sus propios topes, al que las líneas de producto se suscriben, y con el techo
+  de la zona por encima como hecho físico.
+
+▶ **[APARCADO por el owner, 2026-08-25]**: zonas y cupos se quedan como están hasta ver cómo se
+comportan las reservas de packs distintos con gente real. Queda escrito para no volver a deducirlo.
 
 #### Y entonces `/servicios` deja de tener datos propios
 
@@ -321,6 +351,11 @@ se puede hacer hoy**, se hace una sola vez y hay un test que impide que las dos 
 Hoy el icono de un producto lo decide un **booleano**: `components/icons/product.blade.php` pinta la
 tarta si es pack y el ticket si no. Y `ticket_types` **no tiene ninguna columna de icono ni imagen**
 (solo `wristband_color`). Ni el cliente puede cambiarlos ni «Tirolina aérea» puede tener el suyo.
+
+✅ **EJECUTADO el 2026-08-25** (`DECISIONES #140`): `ticket_types.icon` con desplegable en el panel,
+la decisión en `Booking\Services\ProductIcon`, publicada en el contrato y con un registro en el cajón
+que **retira las cuatro copias de geometría** que había. `null` ⇒ el icono de su tipo, así que ninguna
+fila cambió de aspecto.
 
 ▶ **[DECIDIDO owner, 2026-08-25] Set CURADO, no subida libre.** `ticket_types.icon` (futuro) guarda
 la **clave** de un icono del sistema de diseño y el panel lo ofrece con vista previa. Cada cliente

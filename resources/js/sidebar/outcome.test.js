@@ -29,6 +29,9 @@ const item = (over = {}) => ({
     needs_guest_form: false,
     addons: [],
     is_pack: true,
+    // ⚠️ El servidor manda el icono resuelto (`DECISIONES #140`); el doble lo refleja. Un fixture
+    // sin él probaría un sobre que la API ya no emite.
+    icon: 'ic-b1',
     paid_online_cents: 3000,
     gate_remainder_cents: 27000,
     shows_deposit_note: true,
@@ -102,6 +105,7 @@ test('traduce la línea del pedido a la forma del presupuesto', () => {
     assert.deepEqual(line, {
         product_name: 'Cumpleaños',
         is_pack: true,
+        icon: 'ic-b1',
         quantity: 6,
         date: '2026-08-15',
         // ⚠️ `start_time` y no `time_window`: el segundo es un texto ya compuesto para MOSTRAR.
@@ -113,6 +117,16 @@ test('traduce la línea del pedido a la forma del presupuesto', () => {
         addons: [{ product_name: 'Tarta', quantity: 2, free_quantity: 1, subtotal_cents: 1000 }],
         event: [{ key: 'celebrant', label: 'Homenajeado', value: 'Mara' }],
     });
+});
+
+test('⚠️ el icono se TRANSPORTA, no se deduce de is_pack', () => {
+    // La regla «pack ⇒ tarta, lo demás ⇒ entrada» repartía un catálogo entero en dos dibujos, y
+    // estaba escrita tres veces (`DECISIONES #140`). Un producto que eligió el suyo lo conserva,
+    // aunque siga siendo un pack.
+    assert.equal(confirmationLine(item({ icon: 'socks', is_pack: true })).icon, 'socks');
+
+    // Y sin icono del servidor NO se inventa uno: el componente aplica su respaldo, no esta capa.
+    assert.equal(confirmationLine(item({ icon: undefined })).icon, undefined);
 });
 
 test('la nota de señal sale del campo COMPUESTO por el servidor, no de los importes', () => {

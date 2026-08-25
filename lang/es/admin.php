@@ -1331,6 +1331,17 @@ return [
         'is_sellable_hint' => 'Debe tener precio para poder venderse.',
         'field_featured' => 'Destacado',
         'featured_hint' => 'Resalta el producto en la web.',
+        'field_icon' => 'Icono del producto',
+        'icon_placeholder' => 'El que le toca por su tipo',
+        'icon_hint' => 'Marca el producto en la cesta, en el resumen y en «Mis pedidos». Si lo dejas vacío se usa el de su tipo: tarta para los packs y entrada para el resto.',
+        'icon_option' => [
+            'ic-b1' => 'Tarta de cumpleaños',
+            'ic-b7' => 'Cañón de confeti',
+            'ic-e2' => 'Par de entradas',
+            'ic-e5' => 'Taco de entradas',
+            'ticket-tear-off' => 'Entrada troquelada',
+            'socks' => 'Calcetines',
+        ],
 
         'zone_hint' => 'Zona a la que da acceso.',
         'zone_locked_sold' => 'No se puede cambiar la zona: el producto ya tiene ventas (movería su aforo).',

@@ -2,6 +2,8 @@
 
 namespace App\Domain\Booking\Contracts;
 
+use App\Domain\Booking\Services\ProductIcon;
+
 /**
  * Una línea de la cesta ya tarificada ({@see CartQuote}).
  *
@@ -61,6 +63,14 @@ final readonly class CartQuoteLine
          * complementos íntegros (Opción A de #225). Cero si la línea no cobra señal.
          */
         public int $gateRemainderCents,
+        /**
+         * **La clave del icono que marca el producto** (`DECISIONES #140`).
+         *
+         * ⚠️ Viaja resuelta por el DOMINIO, como `is_pack` o las etiquetas ya compuestas. Antes el
+         * cajón la derivaba de `is_pack` con la geometría copiada dentro, dos veces — así que un
+         * catálogo entero se pintaba con dos dibujos y elegir otro exigía tocar Vue.
+         */
+        public string $icon = ProductIcon::DEFAULT_OTHER,
     ) {}
 
     /** Lo que suman los complementos cobrados de la línea. */

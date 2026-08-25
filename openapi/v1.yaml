@@ -2977,6 +2977,7 @@ components:
         - guest_form_url
         - shows_deposit_note
         - quantity_label
+        - icon
       additionalProperties: false
       properties:
         id:
@@ -3082,6 +3083,21 @@ components:
             ⚠️ Y no se compone en el cliente porque el sustantivo depende del TIPO de producto (pack
             → invitados, entrada → entradas, con plural) y del idioma: era la quinta copia de una
             regla que el dominio ya tenía.
+        icon:
+          type: string
+          description: |
+            **Clave del icono que marca este producto** en el sistema de diseño (`ic-b1`,
+            `ticket-tear-off`, `socks`…). Siempre presente: si el producto no ha elegido, el dominio
+            resuelve el que le toca por su tipo.
+
+            ⚠️⚠️ **Se publica para que el cliente NO lo derive de `is_pack`**, que es lo que hacía —y
+            con la geometría del dibujo copiada dentro, en dos componentes distintos—. Con esa regla
+            un catálogo entero se reparte en DOS dibujos: la tirolina, la tarta y los calcetines son
+            «no-pack», así que los tres salen como un ticket (`DECISIONES #140`).
+
+            ⚠️ Es una CLAVE de un set curado, no una URL ni un SVG: el cliente la mapea a su propio
+            dibujo. Así cada instalación puede llevar su set sin que el contrato cambie, y la paridad
+            de dibujos entre superficies sigue siendo comprobable.
     OrderItemAddon:
       type: object
       description: |
@@ -3536,6 +3552,7 @@ components:
         - deposit_cents
         - gate_remainder_cents
         - addons
+        - icon
       additionalProperties: false
       properties:
         index:
@@ -3584,6 +3601,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/QuoteLineAddon'
+        icon:
+          type: string
+          description: |
+            **Clave del icono que marca el producto** en el sistema de diseño. Siempre presente: si
+            el producto no ha elegido, el dominio resuelve el que le toca por su tipo.
+
+            ⚠️⚠️ Se publica para que el cliente **no lo derive de `is_pack`**, que es lo que hacía —y
+            con la geometría copiada dentro, en dos componentes—: con esa regla la tirolina, la tarta
+            y los calcetines son los tres «un ticket» (`DECISIONES #140`).
 
     QuoteLineAddon:
       type: object

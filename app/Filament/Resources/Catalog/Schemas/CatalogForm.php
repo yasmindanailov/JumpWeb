@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Catalog\Schemas;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ProductIcon;
 use App\Filament\Resources\Catalog\CatalogResource;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -125,6 +126,23 @@ class CatalogForm
                         ->default(false)
                         ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ENTRY)
                         ->helperText(__('admin.catalog.featured_hint')),
+
+                    // ⚠️ El icono que marca el producto en la cesta, el resumen y «Mis pedidos»
+                    // (`DECISIONES #140`). Lo decidía un booleano —tarta si es pack, entrada si no—,
+                    // así que la tirolina, la tarta y los calcetines eran los tres «un ticket».
+                    // ⚠️ Lista CURADA, no subida de ficheros (owner, `specs/landing-white-label.md`
+                    // §4.6): un SVG subido es código ejecutable y rompería la paridad de dibujos
+                    // entre el cajón y la landing, que hoy es comprobable byte a byte.
+                    // Vacío ⇒ el que le toca por su tipo, que es el aspecto actual.
+                    Select::make('icon')
+                        ->label(__('admin.catalog.field_icon'))
+                        ->options(array_combine(
+                            ProductIcon::CHOICES,
+                            array_map(fn (string $k): string => __('admin.catalog.icon_option.'.$k), ProductIcon::CHOICES),
+                        ))
+                        ->native(false)
+                        ->placeholder(__('admin.catalog.icon_placeholder'))
+                        ->helperText(__('admin.catalog.icon_hint')),
                 ]),
             ]);
     }
