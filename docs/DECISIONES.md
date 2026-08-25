@@ -7089,3 +7089,154 @@ verde**. El gate se había ampliado **sin red**: cualquiera podía encogerlo ma�
 — que es exactamente el modo de fallo que este repo lleva documentando toda la semana.
 ▶ Con la lista completa, las **dos mutaciones muerden** y con el mensaje exacto: «El gate de pre-push
 ya NO cubre …: un cambio ahí se empujaría sin correr los verificadores de concurrencia».
+
+## #142 · 2026-08-25 · [DECIDIDO, owner] La visión de producto de Fase 6 — cuatro subsistemas, y las DOS reversiones que traen
+
+**Qué se decidió** (owner, en sesión de arquitectura del 2026-08-24/25): la app móvil que motivó la
+API v1 tiene un propósito de negocio —**fidelizar**— y de ahí salen cuatro subsistemas nuevos que
+entran en **Fase 6** («features nuevas», que es donde el tracker ya los esperaba). No son una
+feature: son cuatro, con perfiles de riesgo muy distintos, y se ordenan **por dependencia**:
+
+| | Subsistema | Spec | Riesgo dominante |
+|---|---|---|---|
+| **B** | Waiver con valor probatorio | `specs/waiver-probatorio.md` | **Legal** |
+| **C** | Menores a cargo | `specs/menores-a-cargo.md` | RGPD (datos de menores) |
+| **A** | Carné QR + pantalla de puerta | `specs/identidad-qr-puerta.md` | Fuga de PII de terceros |
+| **D** | JumpPoints y vales | `specs/lealtad-jumppoints.md` | Concurrencia (no dinero) |
+
+**El orden es B → C → A → D**, y no es preferencia: B define el modelo de consentimiento del que
+cuelga C; A solo tiene sentido cuando hay waiver propio y menores que enseñar; D necesita el carné de
+A para canjear. Es la misma regla que ordenó toda la Fase 4.
+
+⚠️ **Ninguno toca la landing**, así que no solapan con `specs/landing-white-label.md` (`#136`): el
+único punto de contacto es que el carné del subsistema A viaja en el correo de confirmación.
+
+### Las DOS reversiones, que es lo que hay que leer antes de nada
+
+⚠️ **1 · El waiver deja de ser EXTERNO.** Hoy lo gestiona el sistema de la clienta: el alta lo sacó
+del flujo a propósito (comentario dentro de `Identity\Services\SelfSignup`),
+`PuertaSettings::waiverCheckEnabled()` existe para apagarlo y `INSTALACION-CLIENTE.md` lo trata como
+opcional por instalación. Pasa a poder gestionarse **dentro**. Para no romper el white-label son
+**TRES modos** —externo / interno / desactivado—, no dos: el mecanismo de opcionalidad ya existe y se
+amplía, no se sustituye.
+
+⚠️ **2 · La puerta deja de ser «privacy-by-design mínima».** El docblock de
+`Livewire\Admin\Puerta\ValidarRegistro` dice hoy, literalmente: «devuelve únicamente el estado del
+waiver — **sin nombre**, sin email/phone completo, **sin historial**». La pantalla nueva enseña
+nombre, reservas, menores a cargo, waivers y vales. Es legítimo —la operativa nueva no es la de hoy—
+pero **es una reversión**, y sin esta entrada alguien leería ese docblock dentro de seis meses sin
+saber cuál de los dos manda.
+
+### Las decisiones del owner, una a una
+
+**Waiver (B)**
+- ⚠️ **Se CONSERVA al borrar la cuenta**, y no como «anonimizado»: eso lo inutilizaría como prueba.
+  Es **conservación con tratamiento restringido** (RGPD art. 17.3.e + art. 18): vinculado, con permiso
+  propio, auditado, fuera de toda superficie normal, **y con plazo configurable y purga automática**.
+  ❗ **El PLAZO está `[PENDIENTE: owner]`**: sale de criterio jurídico, no técnico, y en un menor puede
+  empezar a contar cuando cumple 18. Esto **modifica `INVARIANTES` §3 (RGPD-01)**, que hoy borra los
+  consentimientos en `User::anonymize()`.
+- **Sin geolocalización de navegador.** Se guarda IP, user-agent, fecha/hora con zona, versión y
+  **hash del texto**. Medido: `SecurityHeaders` emite `Permissions-Policy: geolocation=()`, así que
+  hoy el navegador no la concede ni con permiso del usuario — y probatoriamente no aporta: no
+  demuestra que la persona estuviera en el recinto.
+- **Snapshot, no referencia**: versiones inmutables de documento legal. Arregla de paso un defecto
+  VIVO —`Consent::CURRENT_VERSION` es una constante escrita a mano mientras el texto es una `Page`
+  editable desde el panel, así que **hoy nadie puede reconstruir qué texto firmó nadie**.
+- **eIDAS: hoy no.** Pero el **hash canónico y el `prev_hash` se dejan puestos desde el primer
+  commit**, porque anclar más tarde sobre registros que no puedes demostrar que no tocaste no vale
+  nada. Misma doctrina que `#37` con el puerto de pasarela.
+- **RETIRADO**: la obligación de abrir un modal para poder registrarse. Un booleano que envía el
+  navegador no prueba nada, **nada prueba que lo leyó**, y bloquear un botón hasta abrir un modal
+  rompe el flujo de teclado. Lo que sí se conserva: casilla separada, desmarcada, y el servidor emite
+  la aceptación **solo si la petición trae el identificador de versión que él sirvió**.
+
+**Menores a cargo (C)**
+- **Nombre y fecha de nacimiento, nada más.** La edad se **deriva**, nunca se persiste.
+- **Tope 20 por cuenta**, configurable por instalación. No es ilimitado: misma doctrina que `PAY-12`
+  (el tope del carrito es invariante de servidor, no de interfaz).
+- **«Quitar» es desvincular, no borrar**, si hay waiver o reservas detrás. Mismo patrón que
+  `DELETE /me`, que no borra la fila.
+- **La asignación de una entrada a un menor va EN EL EMBUDO**, al elegir la cantidad.
+- **RETIRADO**: los grupos escolares (alta manual de menores por un admin, estado «pendiente de
+  waiver», correo de aviso, aceptación en bloque). Se retira **por criterio del owner**: un profesor
+  no ostenta la patria potestad, así que el registro que produciría ese mecanismo puede no valer lo
+  que aparenta — y un sistema que hace *sentir* protegido al negocio sin protegerlo es peor que no
+  tenerlo. Se lleva cinco piezas del subsistema.
+
+**Carné QR (A)**
+- **Uno estable por usuario, opaco y rotable.** Sin número de socio visible.
+- **Escanear NO autentica: busca.** La autoridad la pone la sesión del empleado, como hoy.
+- **Rotar mata el carné viejo en el acto** (nada de ventana de gracia: una credencial que el titular
+  pidió revocar y sigue valiendo no está revocada).
+- **La búsqueda por email/teléfono también abre la ficha completa** — decisión del owner, tomada
+  sobre la alternativa de reservarla al QR escaneado. Va con contrapesos obligatorios (spec §4.6).
+- **La pantalla enseña también el importe ya pagado**, además del pendiente en puerta.
+- **Sin historial propio de búsquedas**, CTA de reinicio, **velo por inactividad** y **cierre a los
+  5 minutos** con vuelta a la búsqueda.
+
+**JumpPoints (D)**
+- **El vale se canjea EN PUERTA, no en el checkout.** Ésa es la decisión que mantiene todo el
+  subsistema fuera del núcleo de dinero.
+- **Recompensa en especie**, no importe en euros: así el vale no tiene valor monetario, no entra en
+  el desglose financiero y no arrastra implicaciones contables.
+- **Los puntos se abren DESPUÉS de la visita.** Elimina **por construcción** el agujero de
+  comprar → canjear → reembolsar, y **no necesita tarea programada** (se deriva).
+- **Caducan por inactividad**, configurable. ❗ Esta pieza —y solo ésta— **depende del cron**.
+  ⚠️ Y `#137` (Redis) **no lo desbloquea**: Redis entró solo para CACHÉ, las colas siguen en base de
+  datos y el demonio cron de staging sigue sin verse (`#115`).
+
+### Lo que la sesión MIDIÓ, y condiciona lo que venga
+
+- ⚠️ **`Ticket.qr_token` es una credencial MUERTA**: se genera en `TicketIssuer`, es aleatoria e
+  impredecible, y **no la lee ni la publica nadie** (0 consumidores; el ciclo de canje se retiró). La
+  doc y el contrato la describen como «la credencial que canjea la entrada en la puerta» y no hay
+  puerta que canjee. El carné personal es terreno virgen, y **no debe ser el mismo objeto**.
+- ⚠️ **`RGPD-06` es la trampa que este subsistema va a repetir si nadie avisa**: la invariante nació
+  porque la purga de sesiones estaba copiada en cuatro ficheros y **ninguna revocaba tokens de
+  Sanctum, porque Sanctum llegó después**. Un carné QR es exactamente la siguiente credencial que
+  llega después → **entra en `User::revokeAllAccess()` en el primer commit**, con su caso.
+- ⚠️ **Booking NO puede mirar a Identity.** Medido en el grafo de `ModuleBoundariesTest`: Booking solo
+  ve `Platform` y `Payments\Contracts`. Una FK a menores en `order_items` pone el arch-test en rojo.
+  La salida ya la inventó este repo (`specs/modulos-dominio.md` §4.bis, hallazgo 4): **Identity posee
+  la asignación y referencia el ítem por su id ENTERO**, no por su clase.
+- **Tamaño del QR, medido con la librería ya vendorizada**: un token de 13 caracteres en mayúsculas
+  con ECC **H** da **versión 2** (25×25 módulos); una URL de 33 caracteres da **versión 4** (33×33).
+  Para el mismo tamaño impreso, cada módulo es un ~32% más pequeño. **El payload es el token pelado.**
+- **PNG para el correo sin dependencia nueva**: el contenedor trae **GD e Imagick** y
+  `chillerlan/php-qrcode` ya vendorizada incluye salida PNG. ⚠️ Pendiente: verificar GD en staging, y
+  medir el soporte de SVG en clientes de correo antes de dar por buena ninguna de las dos vías.
+- **RFC 3161 sin dependencia nueva**: el contenedor trae **OpenSSL 3.0.13 con el subcomando `ts`** y
+  la extensión `openssl` de PHP. ⚠️ Verificar que `shell_exec` no está capado en el hosting.
+- ⚠️ **`QrCode::svg()` usa `quietzoneSize = 0` A PROPÓSITO** (el marco de la tarjeta de la landing
+  hace de margen). Para un lector de mostrador eso es un riesgo real: **el carné necesita su propio
+  perfil de generación**, no reutilizar ese método.
+- ⚠️ **El escáner del recinto es un *keyboard wedge***: escribe lo que lee y pulsa Enter. Por eso el
+  alfabeto es **mayúsculas y dígitos** (las teclas que no cambian entre distribuciones) y por eso el
+  payload **no puede ser una URL**.
+- **Presupuesto del cajón**: el techo vivo es `SidebarBundleBudgetTest::SIDEBAR_CHUNK_MAX_KB` y la
+  holgura al diseñar esto era **inferior a 1 KiB**. Los cuatro subsistemas suben ese techo, cada uno
+  con su medición y su párrafo. ⚠️ La cifra NO se copia aquí: vive en su test.
+
+⚠️ **Las diez afirmaciones de arriba se RE-VERIFICARON contra `main` el 2026-08-25**, tras los 14
+commits del otro puesto de trabajo: las diez siguen siendo ciertas.
+
+### Lo aplazado a propósito
+
+**Un sistema de promociones** (descuento porcentual sobre productos, sobre el total y sobre
+complementos, con caducidad por tiempo o por número de usos) queda **fuera de estas cuatro specs**, y
+la razón importa: **un descuento sobre el precio NO tiene la salida que tuvo la lealtad.** Los vales
+salieron del núcleo de dinero canjeándose en puerta; un descuento entra de lleno en `PAY-12`, en
+`OrderCreator`, en los dos ejes del ledger y en la pregunta de si un reembolso devuelve el precio con
+descuento o sin él. Y «hasta gastarse N veces» es **otra carrera**: el uso N+1 en paralelo. Es un
+proyecto de dinero con `VERIFY_CONC=1`, no una feature de marketing.
+▶ **La excepción son los REFERIDOS**, que son lealtad pura y caben en el ledger de puntos de **D**.
+
+### ❗ Pendiente del owner antes de implementar
+
+1. **El plazo de conservación del waiver** (criterio jurídico).
+2. **El cron de staging** (`#115`): sin él no se puede verificar la caducidad de puntos ni ningún
+   envío diferido.
+3. **Revisión adversarial de las cuatro specs** por otro agente, que `CONVENCIONES` §5 exige y que en
+   este proyecto ha parado bloqueantes reales tres veces (`#122` encontró dos; `#123` declaró el
+   diseño INSUFICIENTE).

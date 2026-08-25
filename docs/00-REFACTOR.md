@@ -1849,6 +1849,46 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
+#### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados, sin implementar
+
+> Decisión que los enmarca: **`DECISIONES #142`** (2026-08-25, sesión de arquitectura con el owner).
+> La app móvil existe para **fidelizar**, y de ese propósito salen cuatro subsistemas.
+> ⚠️ **El orden es por DEPENDENCIA, no por atractivo** — la regla que ordenó toda la Fase 4:
+> **B → C → A → D**.
+> ⚠️ **Ninguno toca la landing**: no solapan con `specs/landing-white-label.md` (`#136`). El único
+> punto de contacto es que el carné de **A** viaja en el correo de confirmación.
+> ❗ **Ninguna spec está aprobada**: las cuatro están 🟦 y esperan **revisión adversarial por otro
+> agente**, que `CONVENCIONES` §5 exige. En este proyecto esa revisión ha parado bloqueantes reales
+> tres veces (`#122` encontró dos; `#123` declaró un diseño INSUFICIENTE).
+
+- [ ] **B · Waiver con valor probatorio** — `docs/specs/waiver-probatorio.md`.
+      ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
+      modos** (externo / interno / desactivado). ⚠️ **Y modifica `INVARIANTES` §3 (RGPD-01)**: el
+      registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.
+      ❗ El **plazo** está `[PENDIENTE: owner]` — sale de criterio jurídico.
+      ▶ Arregla de paso un defecto VIVO: hoy nadie puede reconstruir qué texto firmó nadie.
+- [ ] **C · Menores a cargo** — `docs/specs/menores-a-cargo.md`. Nombre y fecha de nacimiento, tope 20
+      configurable, la edad **derivada y nunca persistida**. La asignación de una entrada a un menor va
+      en el embudo, **por dos puertas** (con sesión en el paso 3; sin ella, tras identificarse en el 5).
+      ⚠️ Los **grupos escolares quedaron FUERA** por decisión del owner.
+- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
+      ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
+      `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
+      commit — es literalmente el modo de fallo que esa invariante existe para impedir.
+- [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
+      derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
+      lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de
+      concurrencia sobre MySQL real. ❗ Su **caducidad de puntos depende del cron** (`#115`), que
+      `#137` **no desbloquea** —Redis entró solo para caché—, así que va la última.
+
+⚠️ **Aplazado a propósito: un sistema de PROMOCIONES** (descuento porcentual sobre productos, sobre el
+total y sobre complementos, con caducidad por tiempo o por número de usos). No se parece a la lealtad:
+los vales salieron del núcleo de dinero canjeándose en puerta, pero **un descuento sobre el precio no
+tiene esa salida** — entra en `PAY-12`, en `OrderCreator`, en los dos ejes del ledger y en la pregunta
+de si un reembolso devuelve el precio con descuento o sin él. Y «hasta gastarse N veces» es otra
+carrera. Es un proyecto de dinero. ▶ **Los REFERIDOS son la excepción**: son lealtad pura y caben en el
+ledger de puntos de **D**.
+
 ### El DESGLOSE de dinero que ve el cliente ✅ — **CERRADO: las tres tandas y los CUATRO defectos de lectura**
 > Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
 > `(b)`–`(f)`. **Va ANTES de Fase 5.**

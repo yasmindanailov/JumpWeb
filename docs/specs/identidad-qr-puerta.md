@@ -1,0 +1,314 @@
+# [SPEC] El carné QR del cliente y la pantalla de puerta
+
+> Estado: diseño 🟦 en revisión (pendiente de revisión adversarial por otro agente) ·
+> Última actualización: 2026-08-24 ·
+> Verificado contra código: 2026-08-24 (ValidarRegistro, QrCode, TicketIssuer, User::revokeAllAccess, SecurityHeaders) ·
+> Decisión asociada: `DECISIONES #142` ·
+> Se invalida si: cambia el hardware de lectura del recinto, o el modo de waiver de `waiver-probatorio.md`.
+
+Subsistema **A** de la visión de Fase 6. Va **después** de `waiver-probatorio.md` y
+`menores-a-cargo.md`: la pantalla solo tiene sentido cuando hay waiver propio y menores que enseñar.
+
+---
+
+## 1. Contexto y problema
+
+El cliente llega al recinto y el empleado tiene que resolver dos cosas en segundos: **¿está cubierto?**
+y **¿qué le entrego?**. Hoy solo puede resolver la primera, y a medias.
+
+**Lo que hay, verificado el 2026-08-24:**
+
+- `Livewire\Admin\Puerta\ValidarRegistro` busca por email o teléfono y devuelve **solo el estado del
+  waiver**. Su docblock lo dice con estas palabras: *«sin nombre, sin email/phone completo, sin
+  historial»*. Re-autoriza el permiso en **cada** petición (`SEC-04`), limita a 100/min **por empleado**
+  —no por IP, porque comparten red en el recinto— y audita con el identificador en **sha256**.
+- La búsqueda por teléfono es de **coincidencia exacta** sobre el valor normalizado a dígitos: **no se
+  puede pescar con fragmentos**. El input ya lleva `autocomplete="off"`, y la ruta es **una sola URL
+  sin parámetro**, así que el dato buscado **nunca entra en el historial del navegador**.
+- ⚠️⚠️ **`Ticket.qr_token` es una credencial MUERTA.** Se genera en `TicketIssuer`, es aleatoria e
+  impredecible, y **no la lee ni la publica nadie** — medido: 0 consumidores; `CustomerOrderHistoryReader`
+  y `openapi/v1.yaml` declaran expresamente que **no se publica**, describiéndola como «la credencial
+  que canjea la entrada en la puerta»… y no hay puerta que canjee, porque el ciclo de canje se retiró.
+- **Ningún correo lleva un QR.** El único QR del producto es el de la landing, que apunta al sistema de
+  registro **externo**.
+
+## 2. Objetivo
+
+Que el cliente se identifique con **un** artefacto, y que el empleado vea de un vistazo lo que necesita
+para atenderle — **sin que el artefacto por sí solo dé acceso a nada**.
+
+**Criterios de éxito medibles:**
+- Un escaneo resuelve la ficha completa en **una lectura compuesta**, con presupuesto de consultas.
+- El carné entra en `User::revokeAllAccess()` — mutación: sacarlo pone el test rojo.
+- El escaneo **nunca** devuelve el nombre de un menor.
+- La ficha **caduca en servidor**: recargar o restaurar una pestaña dormida **no la resucita**.
+- El QR escanea con el lector real del recinto, medido con el hardware, no con un móvil.
+
+**FUERA de alcance:**
+- Canje digital de entradas (el ciclo de `Ticket` sigue amputado; es otro trabajo).
+- Modo sin conexión. §4.9 dice por qué y qué se hace en su lugar.
+- Integración con el sistema de pulseras del fabricante (`OPERATIVA-SECTOR-ORIGEN.md` §5).
+
+## 3. Opciones consideradas
+
+**A · Identificador estable de la cuenta (ELEGIDA).** Un carné: opaco, rotable, que viaja por correo.
+
+**B · Credencial rotatoria tipo TOTP.** DESCARTADA: **mata el requisito de que el QR viaje en el correo
+de confirmación**, exige la app, añade sincronía de reloj — y resuelve una amenaza que aquí casi no
+existe, porque el escaneo no autentica (§4.2).
+
+**C · El QR contiene una URL.** DESCARTADA **con medida**. Generado con la librería ya vendorizada:
+
+| Contenido | ECC | Módulos | Versión |
+|---|---|---|---|
+| Token de 13 caracteres en mayúsculas | **H** | 25×25 | **2** |
+| El mismo token | M | 21×21 | 1 |
+| URL de 33 caracteres | H | **33×33** | **4** |
+
+Para el mismo tamaño impreso, cada módulo es un **~32 % más pequeño** → escanea peor justo en el
+escenario malo (carné rayado, pantalla sucia, poca luz). Y un lector configurado para abrir URLs haría
+cosas raras. **El payload es el token pelado.**
+
+**D · Reutilizar `Ticket.qr_token`.** DESCARTADA: identifica una **admisión**, no a una **persona**. Son
+objetos distintos con ciclos de vida distintos.
+
+## 4. Diseño elegido
+
+### 4.1 Un carné estable, opaco y rotable
+
+Uno por titular. **Sin número de socio visible** (decisión del owner): mezclar «identificador legible
+que se dice por teléfono» con «token opaco rotable» produce un identificador que no se puede rotar
+porque está impreso, o uno que nadie puede leer en voz alta.
+
+### 4.2 Escanear NO autentica: busca
+
+**Es la clave que relaja todo el diseño.** El escaneo no inicia sesión: es una **búsqueda**. La
+autoridad la pone **la sesión del empleado** con su permiso, exactamente como hoy. **Poseer el QR no da
+acceso a nada.** Por eso puede ser estable, viajar por correo e imprimirse.
+
+⚠️ El reverso es igual de importante: como el escaneo revela waiver, reservas, menores y vales, **una
+foto del QR de otro es una fuga de datos personales de terceros**. Las tres defensas que ya existen
+—permiso, límite por empleado, auditoría con hash— **no son opcionales**, y §4.6 las endurece.
+
+### 4.3 La forma del código
+
+**13 caracteres: 2 de prefijo + 10 aleatorios + 1 de control.**
+
+- **Mayúsculas y alfabeto reducido** (Crockford Base32: sin `I`, `L`, `O`, `U`). Tres razones distintas:
+  entra en el **modo alfanumérico** del QR, que es el más compacto; **A-Z y 0-9 son las teclas que no
+  cambian entre distribuciones de teclado** —y el escáner del recinto es un *keyboard wedge*, así que
+  con el lector en US y el equipo en ES un guion o un subrayado salen mal—; y no hay ambigüedad visual
+  si alguien lo dicta o lo teclea como plan B.
+- **Entropía**: 32¹⁰ ≈ 1,1×10¹⁵.
+- **Carácter de control**: un escaneo defectuoso falla en el navegador, no contra la base de datos.
+- **ECC = H.** Medido arriba: con 13 caracteres la redundancia máxima cuesta pasar de versión 1 a 2.
+  Es el mejor cambio de relación calidad/precio del diseño.
+- ⚠️ **Zona de silencio ≥ 4 módulos.** `Platform\Services\QrCode::svg()` usa `quietzoneSize = 0` **a
+  propósito** —el marco de la tarjeta de la landing hace de margen visual—, y eso vale para un adorno
+  que se escanea con el móvil. Para un lector de mostrador es un riesgo real: **el carné necesita su
+  propio perfil de generación, no reutilizar ese método.**
+
+### 4.4 Dónde vive el token, y la trampa que este repo ya pagó
+
+⚠️⚠️ **`RGPD-06` es la invariante que decide esto.** Dice que invalidar el acceso de un titular tiene
+**un solo sitio** (`User::revokeAllAccess()`), y cuenta por qué nació: la purga de sesiones estaba
+**copiada en cuatro ficheros** y **ninguna revocaba tokens de Sanctum, porque Sanctum llegó después**.
+
+**Un carné QR es exactamente la siguiente credencial que llega después.** Si nace como columna suelta
+en `users` y no entra en `revokeAllAccess()`, se repite ese bug punto por punto.
+
+**Por eso: tabla propia, con `revoked_at`, y entra en `revokeAllAccess()` en el primer commit, con su
+caso de prueba.** La tabla propia da además dos cosas que una columna no: **historial de rotación**
+—una auditoría de «se escaneó el carné X» tiene que resolverse aunque el carné se haya rotado— y la
+puerta abierta a un carné físico impreso conviviendo con el digital.
+
+### 4.5 Cómo se guarda
+
+Hacen falta dos cosas que se contradicen: **buscar por él** (escaneo) y **volver a pintarlo** (cada
+correo de confirmación). Hashearlo como Sanctum impide lo segundo; guardarlo en claro entrega todos los
+carnés en un volcado.
+
+**Se tienen las dos**: `token_hash` (sha256, único, indexado) para buscar, y el token con el cast
+`encrypted` para repintar. Coste en ejecución: cero. Y degrada bien: si rota `APP_KEY`, **el escaneo
+sigue funcionando** —el hash sobrevive— y solo se pierde el repintado; se rota el carné.
+
+En logs, nunca: se audita con el patrón `logSensitive` que la puerta ya usa.
+
+**Rotación**: la dispara el titular desde su cuenta, el admin desde el panel, y `revokeAllAccess()`.
+⚠️ **Mata el carné viejo en el acto** (decisión del owner). Ante uno revocado, la pantalla dice «carné
+caducado — busca por email», que es un camino que **ya existe**. Una ventana de gracia suena amable y
+en realidad es una credencial revocada que sigue valiendo.
+
+### 4.6 La ficha, y los contrapesos que exige
+
+**Qué muestra**, ordenado por lo que el empleado necesita primero:
+
+| | Bloque | Contenido |
+|---|---|---|
+| 1 | **Identidad** | Nombre del titular · waiver: fecha, y marca si es de una versión antigua (**deja pasar igual**, `waiver-probatorio.md` §4.8) |
+| 2 | **HOY** | Reservas de hoy —**en plural**— con tipo, franja, cantidad y complementos · **pendiente de cobrar en puerta** · importe pagado · cuándo la hizo y cuándo pagó |
+| 3 | **Menores a cargo** | **Solo edad**, nunca el nombre · estado del waiver de cada uno |
+| 4 | **JumpPoints** | Vales activos, con acción de **marcarlos usados** · saldo |
+| 5 | **Ventana ±N días** | En segundo plano, configurable. Cubre al que llega un día tarde **y al que llega un día antes**, que es el caso más frecuente |
+
+**Qué NUNCA muestra**: email o teléfono completos, dirección, historial de importes, **nombres de
+menores**, y ⚠️ **alergias** — están en `guest_data`, son art. 9, y las necesita **la cocina**, no la
+puerta. La hoja de reserva ya las imprime para quien las necesita.
+
+**Los tres estados que tiene que decir en voz alta**, porque son los que rompen la operativa:
+1. **Sin reserva hoy** → dicho con claridad. Con el modelo de cupo online (`OPERATIVA-SECTOR-ORIGEN.md`
+   §4) esa persona **puede comprar en puerta**, y la pantalla no puede parecer un error.
+2. **Tiene reserva, pero otro día** → distinto de «no tiene nada»; evita una discusión en el mostrador.
+3. **Adulto con menores no asignados** → «0 menores a cargo» es una respuesta **válida**. El empleado
+   resuelve fuera del sistema, como hoy.
+
+⚠️ **La búsqueda por email/teléfono TAMBIÉN abre la ficha completa** — decisión del owner, tomada sobre
+la alternativa de reservarla al QR escaneado. **El riesgo es real y hay que nombrarlo**: convierte la
+puerta en un oráculo, porque tecleando correos se obtienen perfiles. Va con **cuatro contrapesos
+obligatorios**:
+
+1. ⚠️ **Dos acciones, dos limitadores.** Escanear un QR es alto volumen y legítimo (una cola entera);
+   teclear un correo debería ser raro («me he dejado el móvil»). **La búsqueda tecleada lleva su propio
+   límite, mucho más bajo**, del orden de decenas por hora. Un empleado que teclea cincuenta correos en
+   una hora no está atendiendo.
+2. **La coincidencia exacta se conserva.** Ya lo es hoy; el riesgo es romperla al reescribir.
+3. **Se audita la DIVULGACIÓN, no solo la búsqueda** — acción propia, para poder distinguir en el visor
+   una consulta de una extracción.
+4. **El aviso al operador ya está construido**: `AuditLog::CRITICAL_ACTIONS` **ya incluye**
+   `registrations.validate_rate_limited` con el comentario «abuso: rate-limit en la puerta», y las
+   acciones críticas ya van al visor de incidencias **y al correo del operador**. Con el limitador
+   nuevo, el aviso se hereda gratis.
+
+**Y un permiso propio**, separado de `registrations.validate`: eso significaba «¿está registrado?»,
+y esto es otra cosa. El catálogo ya distingue matices así (existe `users.search_minimal`).
+
+### 4.7 El dinero de la ficha
+
+Al enseñar importes, **la pantalla de puerta pasa a ser una superficie más del ledger**:
+
+- Los importes salen de **`Booking\Services\OrderLedger`** (`pagadoOnline`, `pendientePuerta`) y
+  **nunca se recomponen**. `LedgerSingleSourceTest` lo tumba **aunque el resultado sea correcto hoy**,
+  y lleva la lista de superficies: añadir la puerta es parte del cambio.
+- ⚠️ **Y hay un aviso vivo que aquí importa más que en ningún sitio.** Existe un caso canónico —
+  `R-L6UTIA`, en `specs/desglose-dinero-cliente.md` — donde el desglose dice «Pagado por web 114,00 €»
+  y el pago real fueron 30: es un **dato roto en la base de datos**, no un fallo del código. Hasta
+  ahora ese número lo veía un administrador; a partir de aquí **lo ve un empleado con un cliente
+  delante**. La regla —*comprueba si el dato es real antes de buscar el fallo en el código*— tiene que
+  estar también aquí.
+- **El pendiente en puerta no es opcional**: el producto tiene sistema de señal (`sistemas/DEPOSITO.md`),
+  y si el empleado no ve cuánto queda por cobrar, **el negocio no cobra**.
+
+### 4.8 Sin historial, dos relojes, y por qué el navegador no basta
+
+**Sin historial propio de búsquedas**, y hay tres cosas que lo hacen verdad o mentira:
+
+- **`autocomplete="off"` ya está** en el input. Sin él, el autocompletado del navegador **es** el
+  historial de búsquedas, y en una tablet compartida cualquiera lo despliega.
+- ⚠️ **La ficha se pinta sin cambiar de URL.** Hoy la ruta no lleva parámetro. Si la pantalla nueva
+  usara una URL por cliente, **el historial del navegador pasaría a ser el registro de a quién se ha
+  mirado**.
+- ⚠️ **«Sin historial» ≠ «sin rastro».** El empleado no puede consultar a quién ha mirado; **el
+  operador sí**, por `audit_logs`. Que quede con estas palabras: si no, alguien leerá «no guarda
+  historial» y concluirá que no hay que auditar.
+
+**Dos relojes, no uno.** El riesgo no es el empleado, es **la cola**: una pantalla de mostrador se lee
+de reojo, y ahora lleva nombre, edades de menores e importes.
+
+| Reloj | Cuándo | Qué hace |
+|---|---|---|
+| **Velo por inactividad** | ~60 s | Tapa el contenido; un toque lo devuelve. No se pierde el contexto |
+| **Cierre** | **5 min** | Descarta la ficha y vuelve a la búsqueda |
+
+Cualquier interacción **reinicia los dos** — si no, el cierre corta al empleado justo cuando marca un
+vale como usado. Y el CTA de «volver a buscar» es el `clear()` que ya existe y ya re-autoriza.
+
+⚠️⚠️ **Un temporizador en el navegador NO es una garantía.** Si la pestaña se va a segundo plano, el
+equipo se suspende o el JS se pausa, puede no dispararse — y el dato ya está en el DOM. Lo que lo hace
+real es que **la ficha caduque en el SERVIDOR**: se re-valida su frescura **en cada ida y vuelta** y
+devuelve nada si expiró. Es literalmente `SEC-04` aplicado al tiempo en vez de al permiso.
+▶ Lo comprobable: **recargar la página o restaurar una pestaña dormida no resucita la ficha.** Eso es
+lo que hay que verificar por mutación, no que el temporizador exista.
+
+### 4.9 El plan B (caída de red)
+
+⚠️ **No se construye software para esto todavía**, y es una decisión con doctrina detrás: `PERF-07`
+dice *«no añadir keep-warm de OPcache ni tuning especulativo de servidor sin medir primero»*. Aquí
+igual — **¿cuántas veces al año se cae la red del recinto y cuánto dura?**
+
+- **Descartado: un programa local de escritorio.** Sería un segundo código base, con su propio canal de
+  actualización en cada máquina y **un segundo sitio donde viven datos personales de menores**. Rompe
+  el modelo del producto (`DECISIONES #2`) y **sigue teniendo que resolver la misma sincronización**.
+- **Recomendado: redundancia de conexión + papel.** Si el problema es que se cae la red, la solución es
+  que no se caiga.
+- **Lo que sí se hace ahora y cuesta horas**: que la pantalla **degrade con dignidad** — si no hay red,
+  lo dice y recuerda el camino de papel, en vez de quedarse girando.
+- Si algún día se midiera que hace falta, sería una PWA, no un ejecutable. ⚠️ Y arrastraría su propia
+  decisión de RGPD: cachear «quién tiene waiver» es **una copia de datos personales en un dispositivo
+  del recinto**.
+
+### 4.10 El QR en el correo de confirmación
+
+- **Medido el 2026-08-24**: el contenedor trae **GD e Imagick**, y `chillerlan/php-qrcode` ya
+  vendorizada incluye salida PNG. Se puede generar PNG **sin dependencia nueva** (`CONVENCIONES` §9 no
+  se dispara).
+- **Y hace falta**: el QR actual es SVG inline, y los clientes de correo mayoritarios no lo renderizan.
+  ⚠️ **Esto no está medido en este repo** — es conocimiento general y hay que comprobarlo con Mailpit y
+  con cuentas reales antes de decidir. El diseño seguro es **PNG adjunto en línea**, no imagen remota:
+  los clientes bloquean imágenes remotas por defecto y un adjunto se ve sin permiso y sin conexión.
+- ⚠️ **Pendiente de verificar**: si staging tiene GD. No tiene node/npm, y las extensiones de PHP no se
+  han inventariado (`ENTORNOS.md` §4).
+- ⚠️ El correo con carné **es PII**: hay que decidir si se puede reenviar desde el panel y con qué
+  permiso.
+
+### 4.11 Arquitectura
+
+**Un servicio de dominio que compone la ficha entera en una lectura**, con su **presupuesto de
+consultas** en un test. Es la forma que este repo ya resolvió una vez: `GET /me/account-context` nació
+porque *«`me/orders` PAGINA, así que contar pendientes sobre una página cuenta mal»*, y
+`CustomerAccountContext` memoiza por petición. Un escaneo pide siete u ocho cosas y en hora punta se
+escanean decenas.
+
+**Y ese servicio es lo que abre el futuro**: si la ficha la ensambla el componente, cuando llegue una
+app nativa de escaneo hay que reescribirla; si la compone un servicio, el endpoint de API lo envuelve.
+
+**Tecnología**: para el primer corte se queda **server-rendered como hoy** (Livewire con su layout
+propio de puerta). Es una pantalla de staff, de un solo golpe, que tiene que ser rápida y aburrida — y
+Livewire se queda en el stack de todas formas porque es quien trae Alpine (`DECISIONES #123`).
+
+## 5. Impacto en invariantes
+
+| ID | Impacto |
+|---|---|
+| **RGPD-06** | ⚠️ **Se AMPLÍA**: el carné es una credencial y entra en `revokeAllAccess()`. Es el motivo por el que la invariante existe |
+| **RGPD-04** | Se AMPLÍA: la ficha y el correo con carné llevan PII y van con `no-store` |
+| **SEC-04** | Se APLICA **al tiempo**: la ficha re-valida su frescura en cada petición, no solo al abrirse |
+| **SEC-05** | Se conserva y se endurece: el rechazo por límite se sigue auditando, y ahora hay dos limitadores |
+| **PERF-01/02** | Se CITAN: la ficha se compone en una lectura, con presupuesto de consultas |
+| — | **Ninguna se relaja.** Lo que cambia es una decisión de producto (`DECISIONES #142`, reversión 2), no una invariante |
+
+## 6. Plan de verificación empírica
+
+**Guardas ejecutables:**
+1. **El carné entra en `revokeAllAccess()`** — mutación: sacarlo pone el test rojo.
+2. **El escaneo no devuelve nunca el nombre de un menor.**
+3. **La ficha caduca en servidor** — recargar tras el plazo no la resucita.
+4. **La búsqueda tecleada tiene su propio limitador**, distinto del escaneo.
+5. **Los importes salen del ledger** — `LedgerSingleSourceTest` lo cubre al añadir la superficie.
+6. **Presupuesto de consultas** de la ficha compuesta.
+
+**Comprobación empírica (nada de esto lo ve la suite):**
+- ⚠️ **Escanear con el LECTOR REAL del recinto**, no con un móvil: es la única forma de saber si la
+  distribución de teclado, la zona de silencio y el tamaño impreso funcionan.
+- Abrir el correo de confirmación en **Gmail, Outlook y un cliente de móvil** y comprobar que el QR
+  se ve. Es donde el diseño tiene su supuesto no medido.
+- Dejar la ficha abierta y comprobar el velo y el cierre **con reloj de verdad**, y después **recargar**
+  para comprobar que no resucita.
+- Rotar un carné y comprobar que **un correo antiguo deja de valer en el acto**.
+
+## 7. Revisión y decisión
+
+Diseñado en sesión de arquitectura con el owner el 2026-08-24 (`DECISIONES #142`).
+
+❗ **PENDIENTE de revisión adversarial por otro agente** (`CONVENCIONES` §5). ⚠️ Esta spec contiene la
+**segunda reversión** de `#142` —la puerta deja de ser privacy-by-design mínima— y es la que más
+merece un revisor hostil.
