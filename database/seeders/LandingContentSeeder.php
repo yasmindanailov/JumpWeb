@@ -174,6 +174,9 @@ class LandingContentSeeder extends Seeder
             'image' => 'images/attractions/park_jump.webp',
             'accent' => 'jump',
             'color' => '#FF5B22',
+            // Acento secundario de la zona (`DECISIONES #138`): antes vivía en `landing.css` como
+            // `--jump-2`, o sea la paleta del primer cliente quemada para toda instalación.
+            'color_secondary' => '#FFE14A',
             'position' => 1,
         ]);
 
@@ -196,6 +199,7 @@ class LandingContentSeeder extends Seeder
             'image' => 'images/attractions/kids_zone.webp',
             'accent' => 'kids',
             'color' => '#C6FF3A',
+            'color_secondary' => '#FF77C7',
             'position' => 2,
         ]);
 

@@ -22,6 +22,14 @@
     --fw-bold: 700;
     --fw-black: 800;
 
+    /* ⚠️ ATENCIÓN — «esto es distinto», ni error ni éxito: el día de tarifa especial del calendario
+       y el pedido a medio pagar. Tenía token propio desde `DECISIONES #138`; antes los tres sitios
+       tomaban prestado `--jump-2`, el AMARILLO SECUNDARIO DE UNA ZONA del primer cliente. Nada
+       fallaba: simplemente, una instalación sin una zona llamada «jump» perdía el color, y cambiar la
+       paleta de esa zona repintaba el calendario y el estado de un pedido sin que nadie lo pidiera.
+       Un color con significado no puede vivir en la paleta de una zona. */
+    --attn: #FFE14A;
+
     --wrap-gutter: max(40px, calc((100% - 1380px) / 2));
     /* Inset lateral (móvil) COMPARTIDO por el CTA flotante de reserva (`.book-bar`) y el CTA del
        hero, para que ambos tengan EXACTAMENTE el mismo ancho y el float deslice sobre el hueco que
@@ -472,13 +480,11 @@
    (mismo patrón que `.ticket-prices`). Los tokens --kids-1/--jump-1/--on-kids/--on-jump salen de
    `zones.color` (data-driven): si la clienta cambia el color de una zona, la pestaña lo respeta. */
 .svc-rates .zone-tabs { margin-bottom: 22px; }
-.svc-rates .zone-tab--kids.active { background: var(--kids-1); color: var(--on-kids); }
-.svc-rates .zone-tab--jump.active { background: var(--jump-1); color: var(--on-jump); }
+/* ⚠️ La pestaña activa y el panel toman su color de `--zone-1`/`--on-brand`, que el SERVIDOR pinta
+   en línea por zona (`DECISIONES #138`). Aquí había cuatro reglas —dos por acento— y solo existían
+   para `jump` y `kids`: cualquier otro acento se quedaba sin color, en silencio. `.zone-tab.active`
+   ya es genérica en `landing.css`, así que no hace falta ninguna. */
 .svc-rates__panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 18px 26px; }
-/* Cada panel re-escopa --zone-1/--on-brand a SU color de zona → el chip del caption «KIDS 2H»/«JUMP 2H»
-   sale con fondo del color de la zona y texto legible (--on-kids/--on-jump). */
-.svc-rates__panel--kids { --zone-1: var(--kids-1); --on-brand: var(--on-kids); }
-.svc-rates__panel--jump { --zone-1: var(--jump-1); --on-brand: var(--on-jump); }
 .svc-rates__table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .svc-rates__table caption { text-align: left; padding-bottom: 12px; }
 /* Chip del caption (duración por zona): FONDO del color de zona + texto legible (arregla el bajo
@@ -1080,16 +1086,11 @@
 /* el switcher de precios reutiliza .zone-tabs/.zone-tab; aquí solo lo centramos */
 .ticket-prices__tabs { display: flex; justify-content: center; margin-bottom: 28px; }
 
-/* color activo POR ZONA (como el switcher de zonas), pero sin re-tematizar la página.
-   Scope .ticket-prices para ganar a `.zone-tab.active` sin depender del orden de carga. */
-.ticket-prices .zone-tab--jump.active { background: var(--jump-1); color: var(--on-jump); }
-.ticket-prices .zone-tab--kids.active { background: var(--kids-1); color: var(--on-kids); }
-
-/* La rejilla de cada zona re-escopa los tokens de acento: así la tarjeta "Top"
-   (.price--feat), su insignia y los acentos adoptan el color de la zona, sin afectar
-   al resto de la página. */
-.ticket-prices .pricing__grid--jump { --zone-1: var(--jump-1); --zone-2: var(--jump-2); --on-brand: var(--on-jump); }
-.ticket-prices .pricing__grid--kids { --zone-1: var(--kids-1); --zone-2: var(--kids-2); --on-brand: var(--on-kids); }
+/* ⚠️ El color activo POR ZONA y los acentos de su rejilla —la tarjeta «Top», su insignia— llegan
+   INLINE desde el servidor como `--zone-1`/`--zone-2`/`--on-brand` (`DECISIONES #138`). Aquí había
+   cuatro reglas escritas para `jump` y `kids`, los acentos del PRIMER cliente; con ellas, una
+   instalación con otras zonas perdía el tinte sin que nada fallara. `.zone-tab.active` de
+   `landing.css` ya consume esos tokens, así que la re-tematización local sobra. */
 
 /* ====================================================================
    Sidebar de compra de entradas (Fase 5.2): asistente paso a paso.
@@ -1422,7 +1423,7 @@ body.no-scroll { overflow: hidden; }
 .cal__day.is-out { opacity: 0.4; }
 .cal__day.is-disabled { color: var(--fg-mute); opacity: 0.4; cursor: default; }
 .cal__day--normal { background: rgba(20, 19, 15, 0.05); }
-.cal__day--special { background: var(--jump-2); }
+.cal__day--special { background: var(--attn); }
 .cal__day--normal:hover, .cal__day--special:hover { box-shadow: 0 0 0 2px var(--fg) inset; }
 /* Día elegido (Sidebar v2): como ya no se auto-avanza, el día seleccionado queda MARCADO con el
    acento de zona + anillo, hasta pulsar «Continuar». Tinta oscura sobre el acento = contraste
@@ -1459,7 +1460,7 @@ body.no-scroll { overflow: hidden; }
 .cal__legend-item { display: inline-flex; align-items: center; gap: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .cal__dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 .cal__dot--normal { background: color-mix(in srgb, var(--fg) 12%, transparent); }
-.cal__dot--special { background: var(--jump-2); }
+.cal__dot--special { background: var(--attn); }
 
 /* "desde" delante del precio de referencia (el precio del día se aplica en la compra) */
 .price__from {
@@ -1769,7 +1770,7 @@ body.no-scroll { overflow: hidden; }
 .orders__code { font-family: var(--font-body); font-size: 14px; color: var(--fg); }
 .orders__status { font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 999px; background: var(--bg-soft); color: var(--fg-mute); }
 .orders__status--paid { background: var(--ok-bg); color: var(--ok); }
-.orders__status--pending { background: var(--jump-2); color: var(--fg); }
+.orders__status--pending { background: var(--attn); color: var(--fg); }
 .orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--err-strong); }
 /* Badge secundario "Reembolsado" (#146): tono ámbar para diferenciarlo del estado
    principal del pedido. Aparece junto a `.orders__status` cuando hay reembolso

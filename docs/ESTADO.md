@@ -133,7 +133,7 @@ que sirva staging de verdad.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2752 en verde** (16.047 aserciones, `--parallel` **~39 s** medidos el 2026-08-25) ·
+- Suite **2759 en verde** (16.043 aserciones, `--parallel` **~40 s** medidos el 2026-08-25) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.
@@ -812,8 +812,9 @@ reproduce el flujo real.**
 
 Base heredada del origen (2026-08-12): 30 modelos, 71 migraciones, 17 Filament Resources, Redsys en
 sandbox y suite **2132** verde al importarla.
-Recuento VIVO: 30 modelos · 73 migraciones · 17 Filament Resources. La migración añadida es
-`personal_access_tokens` (Sanctum).
+Recuento VIVO: 30 modelos · 74 migraciones · 17 Filament Resources. Las migraciones añadidas son
+`personal_access_tokens` (Sanctum), `payment_refunds.intent` (`#127(c)`) y `zones.color_secondary`
+(`#138`).
 ⚠️ **El contador de tests NO se repite aquí**: vive arriba, en «Dónde estamos», con su contexto.
 `docs-check` vigila los tres números de esta línea y las invariantes —son sus cuatro patrones—, pero
 **«N tests» no casa con ninguno**, así que repetirlo es drift en espera. Ya mordió: esta línea decía

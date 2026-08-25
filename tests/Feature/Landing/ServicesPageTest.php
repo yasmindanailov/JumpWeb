@@ -4,6 +4,7 @@ namespace Tests\Feature\Landing;
 
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Services\ThemeSettings;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -62,8 +63,11 @@ class ServicesPageTest extends TestCase
             ->assertOk()
             ->assertSee('svc-rates__table', false)         // el bloque de tarifas se renderiza
             ->assertSee(__('services.rates.title'))        // «Tarifas de grupo»
-            ->assertSee('zone-tab--kids', false)           // pestañas = sistema canónico + tinte por color de zona
-            ->assertSee('zone-tab--jump', false)
+            // ⚠️ El tinte se aseveraba por el NOMBRE DE LA CLASE, que solo decía que la plantilla
+            // escribió el acento. Desde `#138` el color llega en línea: se asevera EL COLOR de cada
+            // zona, que es lo que se ve, y funciona con cualquier acento (antes solo con jump/kids).
+            ->assertSee(ThemeSettings::zoneStyleForAccent('kids'), false)
+            ->assertSee(ThemeSettings::zoneStyleForAccent('jump'), false)
             ->assertSee('Kids 2H')                         // caption «{zona} {N}H» (en mayúsculas por CSS)
             ->assertSee('Jump 3H')
             ->assertSee('10 €')                            // Kids · 2 h · L–V · 100 niños (precio mínimo, único)

@@ -125,7 +125,11 @@
                     </a>
                 @else
                     {{-- Fallback: card de zona sin foto (diseño actual con número de marca de fondo). --}}
-                    <a class="zone-intro__card zone-intro__card--{{ $zone->accent }}" href="#rides"
+                    {{-- ⚠️ El color va INLINE, no en una clase `--{accent}` (`DECISIONES #138`): esas
+                         reglas solo existían para `jump` y `kids`, y una zona con otro acento se
+                         quedaba sin color en silencio. Lo compone `ThemeSettings::zoneStyle()`. --}}
+                    <a class="zone-intro__card" href="#rides"
+                       style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
                        @click.prevent="goToRides('{{ $zone->accent }}')"
                        aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
                         <div class="zone-intro__bg">{{ $zone->tr('name') }}</div>

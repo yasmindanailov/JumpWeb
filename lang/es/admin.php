@@ -1707,6 +1707,8 @@ return [
 
         'theme_brand' => 'Color de marca',
         'theme_brand_hint' => 'Color principal de la marca (formato #RRGGBB). No afecta a los colores de zona, que se configuran por zona.',
+        'theme_brand_secondary' => 'Color de marca secundario',
+        'theme_brand_secondary_hint' => 'Acento que acompaña al principal en detalles y decoraciones (formato #RRGGBB). Si lo dejas vacío se usa el del diseño por defecto.',
 
         'cookies_banner_enabled' => 'Mostrar el banner de cookies',
         'cookies_banner_enabled_hint' => 'Si lo desactivas, NO se oculta el bloqueo previo: el mapa y el feed social siguen sin cargarse hasta que el visitante consienta; solo se oculta el aviso. Déjalo activado salvo que gestiones el consentimiento por otra vía.',

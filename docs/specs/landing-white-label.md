@@ -240,12 +240,38 @@ binario falso.
 
 #### 4.5.1 Valores → **tokens desde BD**
 
-Color, `border-radius`, tipografía, velocidad del spinner. **La costura ya existe** —28 variables y
-1.271 usos de `var()` en `public/css/site.css`— y lo único que falta es que algo las alimente por
-instalación. Es el trozo barato.
+❗❗ **CORRECCIÓN (2026-08-25, `DECISIONES #138`): este apartado afirmaba «cero variables se inyectan
+desde BD» y ERA FALSO.** El tema **sí** se inyecta —`<style id="jj-theme">:root{…}</style>` en el
+layout, alimentado por `ThemeSettings::cssRootDeclarations()` desde el ajuste `theme.brand`, con el
+contraste calculado por luminancia y consumido también por el panel Filament, los correos y los
+avatares—.
+▶ **El error fue de MEDICIÓN**: el `grep` buscaba `style="--`, `--c-` y `setProperty`, y la forma real
+no casa con ninguno. **Un `grep` que no encuentra no demuestra que no exista** — la misma lección que
+`#135` y `#137`. Queda escrito porque es el tipo de afirmación que un agente siguiente daría por buena.
+
+**Lo que SÍ faltaba, ya con nombres**: el acento de zona viajaba por el nombre de la clase y solo
+existían reglas para `jump` y `kids` (§4.5.4), el color secundario no tenía casa en BD, y la tipografía
+y los radios no se tematizan — y **no deben**, por la decisión del owner de §4.5.5.
 
 ⚠️ Quedan **58 colores en crudo** en `site.css` y **18** en `public/css/landing.css`: el inventario
 de cuáles suben a variable es parte de la tanda, no un pulido posterior.
+
+#### 4.5.4 ✅ EJECUTADO — el acento de zona sale del nombre de la clase (`#138`)
+
+Medido: el color viajaba por **dos caminos** y divergía. La tarjeta usaba `zones.color` —el suyo— y la
+pestaña una regla `.zone-tab--{accent}` que leía el color de **la primera zona con ese acento**. Con
+`cap` (`accent=kids`, `color=#FF5B22`) la tarjeta salía naranja y la pestaña lima.
+▶ Las **diez** clases acopladas desaparecen; cada superficie pinta el color en línea con
+`ThemeSettings::zoneStyle()`. Y **quita CSS**: `.zone-tab.active` ya era genérica.
+▶ Con ello entran `zones.color_secondary`, el ajuste `theme.brand_secondary` y el token semántico
+`--attn` —tres sitios usaban el amarillo de Jump para significar «atención»—.
+
+#### 4.5.5 [DECIDIDO owner] Tipografía y radios NO van al panel
+
+Van en el **paquete CSS del cliente**, al instalar. El tema en BD se queda en **color**, que es lo que
+el operador retoca de verdad y **lo único que tiene que cruzar al panel y a los correos**, donde el CSS
+del cliente no llega. Menos mandos que mantener, y un cliente con una fuente de marca con licencia
+propia cabe sin pedirle permiso a una lista curada.
 
 #### 4.5.2 Ficheros → **assets por instalación**
 

@@ -6844,3 +6844,69 @@ un almacén: `maxmemory 0` (sin techo), `noeviction`, snapshots activos y
 acordado, para cuando toque: `maxmemory 256mb` · `maxmemory-policy allkeys-lru` · `save ""`. Ficha
 abierta en `DEUDA.md` con su riesgo medido.
 ⚠️ Aplicarlo exige **reiniciar el contenedor PHP desde el panel**, que es acción del owner.
+
+## #138 · 2026-08-25 · TANDA A · El acento de zona deja de viajar por el nombre de una clase
+
+**Contexto.** Primer corte de la tanda A de `specs/landing-white-label.md`. Y lo primero que la
+medición hizo fue **desmentir a la propia spec**.
+
+**⚠️⚠️ LA SPEC AFIRMABA «cero variables se inyectan desde BD», Y ERA FALSO.** El tema **sí** se
+inyecta: `layout.blade.php` y `focused-layout.blade.php` emiten `<style id="jj-theme">:root{…}</style>`
+con `ThemeSettings::cssRootDeclarations()`, hay un ajuste `theme.brand` editable en el panel, el
+contraste se calcula por luminancia (`onBrand()`) y lo consumen también el panel Filament, el botón de
+los correos y los avatares.
+▶ **El error fue de MEDICIÓN, no de lectura**: el `grep` buscaba `style="--`, `--c-` y `setProperty`,
+y la forma real no casa con ninguno. Un `grep` que no encuentra **no demuestra que no exista** — es la
+misma lección que el `pre-push` de `#135` y la guarda decorativa de `#137`, tres veces en dos días.
+
+**El defecto REAL, y estaba vivo.** El color de una zona viajaba por **dos caminos**:
+
+- la **tarjeta** lo tomaba de `zones.color` —el suyo—, saneado por `colorForAccent()`;
+- la **pestaña** lo tomaba de una regla `.zone-tab--{accent}` que leía `--kids-1`, o sea **el color de
+  la PRIMERA zona con ese acento**.
+
+▶ Medido sobre la BD de desarrollo: las zonas `cap` y `cap2` tienen `accent=kids` y `color=#FF5B22`,
+así que **su tarjeta salía naranja y su pestaña lima**. El mismo sitio, dos colores, y nada fallaba.
+
+**Y la otra mitad era peor para un producto white-label:** esas reglas **solo existían para `jump` y
+`kids`** —los acentos del primer cliente—, en **diez clases** repartidas por dos hojas. Una
+instalación con zonas propias perdía el tinte **en silencio**: sin error, solo una landing sosa.
+
+**▶ DECIDIDO (owner): el acento se generaliza a «acento de la zona activa».** Las diez clases
+desaparecen y cada superficie **pinta el color en línea**, compuesto una sola vez por
+`ThemeSettings::zoneStyle()` — `--zone-1`, `--zone-2` y `--on-brand`, que es exactamente lo que esas
+reglas re-escopaban a mano. Misma lección que `OrderLedger`: una composición, N superficies que la
+pintan.
+⚠️ Y **quita CSS en vez de añadirlo**: `.zone-tab.active` ya era genérica en `landing.css`, así que las
+seis reglas que la sobrescribían por acento sobraban.
+
+**Tres cosas más que la medición obligó a arreglar:**
+
+1. **`zones.color_secondary`** (migración aditiva, nullable). La paleta de una zona son DOS colores y
+   solo el primero tenía casa; el segundo estaba escrito en `landing.css` como `--jump-2`/`--kids-2`.
+   ⚠️ Vacío ⇒ **se usa el primario**, nunca el de otra zona: una zona sin paleta doble se pinta plana,
+   que es correcto, en vez de pedir prestado un acento ajeno.
+2. **`theme.brand_secondary`** (ajuste nuevo, ColorPicker). El `--zone-2` de página valía
+   `var(--jump-2)`: el amarillo de una zona del primer cliente, quemado para toda instalación.
+3. **Un color con significado no puede vivir en la paleta de una zona.** `.cal__day--special`,
+   `.cal__dot--special` y `.orders__status--pending` usaban `--jump-2` como «atención». Pasan a
+   `--attn`, con token propio: cambiar la paleta de Jump repintaba el calendario y el estado de un
+   pedido sin que nadie lo pidiera.
+
+**⚠️ Una trampa de Blade que costó una vista rota, y conviene no volver a pagarla.** Blade **no
+compila `@endif` cuando va pegado a un carácter de palabra**: `style="…@if (! $loop->first)display:none@endif"`
+compila el `@if` y **deja el `@endif` como texto**, y el error sale como `ParseError: unexpected token
+"endforeach"` en la vista COMPILADA, lejos del sitio. El estilo se compone ahora en PHP.
+
+**Guardas: +7, y las mutaciones muerden.** `ZoneAccentIsNotAClassNameTest` prohíbe el **mecanismo**
+—ninguna plantilla mete el acento en un nombre de clase— con su guarda-de-la-guarda, y lleva una
+**lista que solo ENCOGE** de los ficheros que aún nombran la paleta del primer cliente (queda el
+diseñador de invitaciones, `.bd-*`). En `ThemeColorTest`, los cuatro casos de conducta: dos zonas con
+el mismo acento ya no comparten color, un acento desconocido igual se pinta, el secundario cae a su
+propio primario y el secundario de marca llega al `:root`.
+⚠️ **Y dos tests existentes aseveraban el NOMBRE DE LA CLASE** (`zone-tab--jump`): decía que la
+plantilla escribió el acento, no que llegara el color. Ahora aseveran **el color**, que es lo que se
+ve — más fuerte, y válido para cualquier acento.
+
+**Verificado sobre HTTP real**: `/precios` sirve un estilo por zona con su color propio —`cap` ya sale
+naranja en pestaña **y** tarjeta— y **cero clases acopladas a zona** en el HTML servido.

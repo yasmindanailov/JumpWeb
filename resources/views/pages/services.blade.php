@@ -89,12 +89,19 @@
                                         <span class="svc-rates__title">{{ __('services.rates.title') }}</span>
                                         {{-- Pestañas de zona SOLO si hay >1 zona (mismo criterio que el switcher de precios y los
                                              tabs de cumpleaños). Con UNA sola zona (p. ej. Empresas = solo Jump) NO hay toggle: se
-                                             pinta su panel directamente. La pestaña activa se tinta con SU color de zona vía
-                                             `.zone-tab--{accent}` + reglas scoped en site.css (--kids-1/--jump-1 desde `zones.color`). --}}
+                                             pinta su panel directamente.
+                                             ⚠️ El tinte va INLINE desde `#138`: las reglas `.zone-tab--{accent}` solo existían para
+                                             `jump` y `kids`, así que cualquier otro acento se quedaba sin color. Se resuelve UNA vez
+                                             por acento —consulta la BD— y no dentro de los bucles. --}}
+                                    @php($zoneStyles = collect($service->price_table['zones'])
+                                        ->pluck('accent')->filter()->unique()
+                                        ->mapWithKeys(fn (string $a): array => [$a => \App\Domain\Content\Services\ThemeSettings::zoneStyleForAccent($a)])
+                                        ->all())
                                         @if (count($service->price_table['zones']) > 1)
                                             <div class="zone-tabs" role="tablist" aria-label="{{ __('services.rates.title') }}">
                                                 @foreach ($service->price_table['zones'] as $z => $zone)
-                                                    <button type="button" role="tab" class="zone-tab zone-tab--{{ $zone['accent'] ?? '' }}"
+                                                    <button type="button" role="tab" class="zone-tab"
+                                                            style="{{ $zoneStyles[$zone['accent'] ?? ''] ?? '' }}"
                                                             :class="rz === {{ $z }} && 'active'"
                                                             :aria-selected="rz === {{ $z }} ? 'true' : 'false'"
                                                             @click="rz = {{ $z }}">{{ $zone['label'] }}</button>
@@ -102,8 +109,12 @@
                                             </div>
                                         @endif
                                         @foreach ($service->price_table['zones'] as $z => $zone)
-                                            <div class="svc-rates__panel svc-rates__panel--{{ $zone['accent'] ?? '' }}" role="tabpanel"
-                                                 x-show="rz === {{ $z }}" @if (! $loop->first) style="display:none" @endif>
+                                            {{-- ⚠️ El estilo se compone en PHP: Blade no compila un `@endif` pegado a un
+                                                 carácter de palabra, y el `@if` suelto rompe la vista compilada. --}}
+                                            @php($panelStyle = ($zoneStyles[$zone['accent'] ?? ''] ?? '').($loop->first ? '' : 'display:none'))
+                                            <div class="svc-rates__panel" role="tabpanel"
+                                                 style="{{ $panelStyle }}"
+                                                 x-show="rz === {{ $z }}">
                                                 @foreach ($zone['durations'] as $dur)
                                                     <table class="svc-rates__table">
                                                         <caption><span class="svc-rates__cap">{{ $zone['label'] }} {{ intdiv((int) $dur['minutes'], 60) }}H</span></caption>

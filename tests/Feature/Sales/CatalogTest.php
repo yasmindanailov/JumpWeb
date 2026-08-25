@@ -3,7 +3,9 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\RateResolver;
+use App\Domain\Content\Services\ThemeSettings;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -83,9 +85,16 @@ class CatalogTest extends TestCase
         $response->assertSee('desde');           // etiqueta de precio "desde" (ES)
         $response->assertSee('Entradas JUMP');   // label del switcher (zona Jump)
         $response->assertSee('Entradas KIDS');   // label del switcher (zona Kids)
-        $response->assertSee('zone-tab--jump');     // color activo del switcher por zona (Jump)
-        $response->assertSee('zone-tab--kids');     // color activo del switcher por zona (Kids)
-        $response->assertSee('pricing__grid--kids'); // la rejilla recolorea la tarjeta "Top" por zona
+        // ⚠️ El tinte por zona se comprobaba por el NOMBRE DE LA CLASE (`zone-tab--jump`), que solo
+        // decía que la plantilla escribió el acento — no que llegara el color. Desde `DECISIONES #138`
+        // el color viaja en línea, así que aquí se asevera EL COLOR de cada zona, que es lo que el
+        // visitante ve: más fuerte que lo anterior y sin acoplar el CSS a los datos.
+        foreach (Zone::where('show_in_landing', true)->get() as $zone) {
+            $response->assertSee(
+                ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent),
+                false,
+            );
+        }
         $response->assertSee('Jump · 1 hora');   // entradas de la zona Jump en el DOM
         $response->assertSee('Kids · 1 hora');   // entradas de la zona Kids en el DOM
     }

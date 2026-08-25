@@ -62,9 +62,13 @@
   --kids-1: #C6FF3A;
   --kids-2: #FF77C7;
 
-  /* active zone (set by JS) */
-  --zone-1: var(--jump-1);
-  --zone-2: var(--jump-2);
+  /* Acento ACTIVO. Lo fija el servidor en `<style id="jj-theme">` desde `theme.brand` y
+     `theme.brand_secondary` (`ThemeSettings`), y cada zona lo re-escopa en línea sobre su elemento.
+     ⚠️ Estos literales son solo el respaldo de si el tema no llegara a inyectarse: antes eran
+     `var(--jump-1)` / `var(--jump-2)`, o sea la paleta de una zona del PRIMER cliente heredada por
+     toda instalación (`DECISIONES #138`). */
+  --zone-1: #FF5B22;
+  --zone-2: #FFE14A;
 
   /* --on-brand: el texto/icono SOBRE el acento. Blanco sobre la marca (look pedido por la
      clienta); si el acento es muy claro (p. ej. la lima de Kids) el blanco no contrasta y se
@@ -770,8 +774,11 @@ img { display: block; max-width: 100%; }
   transform: translateY(-6px);
   box-shadow: 0 22px 48px -16px rgba(20,19,15,0.20);
 }
-.zone-intro__card--jump { background: var(--jump-1); --on-brand: var(--on-jump); color: var(--on-brand); }
-.zone-intro__card--kids { background: var(--kids-1); --on-brand: var(--on-kids); color: var(--on-brand); }
+/* El color de la zona llega INLINE desde el servidor (`--zone-1`/`--on-brand`, `DECISIONES #138`).
+   Antes había una regla por acento y solo existían para `jump` y `kids`: una zona con cualquier otro
+   acento se quedaba sin color, y dos zonas con el MISMO acento y distinto color divergían según la
+   superficie (la tarjeta usaba el suyo y la pestaña el de la primera zona de ese acento). */
+.zone-intro__card { background: var(--zone-1); color: var(--on-brand); }
 .zone-intro__top { display: flex; justify-content: space-between; align-items: start; }
 .zone-intro__tag {
   font-family: var(--font-body); font-size: 11px; font-weight: 700;

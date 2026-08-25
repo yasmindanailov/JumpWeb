@@ -155,6 +155,7 @@ class Settings extends Page
         // Tema (white-label, #7.10 iter.2): color de marca global. Los colores POR ZONA viven
         // en `zones.color` (#210) y se editan en cada zona, no aquí.
         'theme.brand' => 'theme',
+        'theme.brand_secondary' => 'theme',
         // Cookies (#219): mostrar el banner de consentimiento. Apagarlo NO desactiva el bloqueo
         // previo de los iframes de tercero (siguen gateados) — solo oculta el banner.
         'cookies.banner_enabled' => 'cookies',
@@ -643,6 +644,12 @@ class Settings extends Page
                     // Hex #RRGGBB estricto, o vacío (vacío → `ThemeSettings` usa el color por
                     // defecto). NO required: el helper garantiza siempre un color válido, así que
                     // dejarlo en blanco no rompe ninguna superficie.
+                    ->regex('/^$|^#[0-9a-fA-F]{6}$/'),
+                // Acento SECUNDARIO de marca (`DECISIONES #138`): las decoraciones que acompañan al
+                // primario. Antes valía el amarillo de una zona del primer cliente, quemado en el CSS.
+                ColorPicker::make('theme.brand_secondary')
+                    ->label(__('admin.settings.theme_brand_secondary'))
+                    ->helperText(__('admin.settings.theme_brand_secondary_hint'))
                     ->regex('/^$|^#[0-9a-fA-F]{6}$/'),
                 TextInput::make('seo.og_image')
                     ->label(__('admin.settings.seo_og_image'))

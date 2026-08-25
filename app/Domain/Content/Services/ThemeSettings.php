@@ -24,6 +24,15 @@ class ThemeSettings
     /** Acento histórico de la web (mockup `--zone-1` por defecto = Jump). */
     public const DEFAULT_BRAND = '#FF5B22';
 
+    /**
+     * Acento SECUNDARIO de marca (`--zone-2`), para las decoraciones que acompañan al primario.
+     *
+     * ⚠️ Existe desde `DECISIONES #138` porque hasta entonces `--zone-2` valía `var(--jump-2)` en el
+     * `:root` de `landing.css`: **el amarillo de una zona del primer cliente**, quemado para toda
+     * instalación. Nada fallaba, y por eso duró.
+     */
+    public const DEFAULT_BRAND_SECONDARY = '#FFE14A';
+
     /** Defaults del mockup para los acentos por zona (landing.css), si una zona no tiene color. */
     private const ZONE_DEFAULTS = ['jump' => '#FF5B22', 'kids' => '#C6FF3A'];
 
@@ -31,6 +40,12 @@ class ThemeSettings
     public static function brand(): string
     {
         return self::hex(self::raw('theme.brand'), self::DEFAULT_BRAND);
+    }
+
+    /** Acento secundario de marca. Vacío ⇒ el default del mockup, nunca el de una zona. */
+    public static function brandSecondary(): string
+    {
+        return self::hex(self::raw('theme.brand_secondary'), self::DEFAULT_BRAND_SECONDARY);
     }
 
     /** Color de una zona por su `accent` (jump/kids/…), con fallback al default del mockup. */
@@ -50,6 +65,62 @@ class ThemeSettings
     public static function colorForAccent(?string $value, string $accent): string
     {
         return self::hex($value, self::ZONE_DEFAULTS[$accent] ?? self::DEFAULT_BRAND);
+    }
+
+    /**
+     * **EL ESTILO DE UNA ZONA, compuesto UNA sola vez** (`DECISIONES #138`).
+     *
+     * ⚠️⚠️ **Nació de una divergencia REAL, no de una simetría bonita.** El color de una zona viajaba
+     * por DOS caminos: la tarjeta lo tomaba de `zones.color` —el suyo— y la pestaña de una regla CSS
+     * `.zone-tab--{accent}` que leía `--kids-1`, o sea **el color de la PRIMERA zona con ese acento**.
+     * Medido sobre la BD de desarrollo: las zonas `cap` y `cap2` tienen `accent=kids` y
+     * `color=#FF5B22`, así que su tarjeta salía naranja y su pestaña lima. El mismo sitio, dos
+     * colores, y nada fallaba.
+     *
+     * ▶ Y la otra mitad del defecto era peor para un producto white-label: **esas reglas solo existían
+     * para `jump` y `kids`**, los acentos del primer cliente. Una zona con cualquier otro acento se
+     * quedaba sin color, en silencio.
+     *
+     * Aquí se compone el trío que esas diez reglas re-escopaban a mano —`--zone-1`, `--zone-2` y
+     * `--on-brand`— para que cada superficie lo PINTE en línea sobre su elemento, en vez de tener una
+     * regla por acento. Es la misma lección de `Booking\Services\OrderLedger`: una composición, N
+     * superficies que la pintan.
+     *
+     * @param  ?string  $color  `zones.color` — el primario de ESA zona, no el de su acento
+     * @param  ?string  $secondary  `zones.color_secondary`; vacío ⇒ se usa el primario (plano, nunca prestado)
+     */
+    public static function zoneStyle(?string $color, ?string $secondary, string $accent): string
+    {
+        $primary = self::colorForAccent($color, $accent);
+        $second = self::secondaryForAccent($secondary, $accent, $primary);
+
+        return "--zone-1:{$primary};--zone-2:{$second};--on-brand:".self::onBrand($primary).';';
+    }
+
+    /**
+     * El mismo trío, para una superficie que **solo conoce el acento** y no la fila de la zona.
+     *
+     * ⚠️ Lo usa `/servicios`, cuyas zonas salen hoy de la tabla de precios escrita a mano —sin
+     * color— y no de `zones`. Consulta la BD por acento, así que **el llamante debe resolverlo una
+     * vez por acento** y no dentro de un bucle anidado. Cuando la tanda C convierta esos servicios en
+     * productos reales, esta variante se queda sin sujeto y se retira con ella.
+     */
+    public static function zoneStyleForAccent(string $accent): string
+    {
+        $primary = self::zoneColor($accent);
+
+        return "--zone-1:{$primary};--zone-2:{$primary};--on-brand:".self::onBrand($primary).';';
+    }
+
+    /**
+     * El SEGUNDO color de una zona, saneado.
+     *
+     * ⚠️ Sin valor **cae al primario**, no al amarillo de Jump: una zona sin paleta doble se pinta
+     * plana —que es correcto— en vez de pedirle prestado el acento a la marca de otro cliente.
+     */
+    public static function secondaryForAccent(?string $value, string $accent, ?string $primary = null): string
+    {
+        return self::hex($value, $primary ?? self::colorForAccent(null, $accent));
     }
 
     /** Color primario del panel admin = marca global. */
@@ -74,7 +145,8 @@ class ThemeSettings
         $onJump = self::onBrand($jump);
         $onKids = self::onBrand($kids);
 
-        return "--brand:{$brand};--zone-1:var(--brand);--on-brand:{$onBrand};"
+        return "--brand:{$brand};--brand-2:".self::brandSecondary().';'
+            .'--zone-1:var(--brand);--zone-2:var(--brand-2);'."--on-brand:{$onBrand};"
             ."--jump-1:{$jump};--kids-1:{$kids};--on-jump:{$onJump};--on-kids:{$onKids};";
     }
 

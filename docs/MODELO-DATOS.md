@@ -46,7 +46,7 @@
 | `area_sqm`,`rides_count` | uint nullable (display) |
 | `max_per_slot`,`max_guests_per_slot`,`prep_blocks_cupo` | **override por zona del cupo de packs**; `null` = usa settings globales `packs.*` (resuelve `App\Domain\Booking\Services\PackAvailability`) |
 | `image` | ruta relativa a `public/` nullable |
-| `accent` | string default `jump` (token de tema) · `color` char(7) hex nullable (panel/calendario) |
+| `accent` | string default `jump` — **agrupación semántica, NO el color** (`DECISIONES #138`) · `color` char(7) hex nullable = el PRIMARIO de esta zona · `color_secondary` char(7) hex nullable = el acompañante; vacío ⇒ se usa el primario, **nunca el de otra zona** |
 | `is_active` | la zona OPERA (vende) · `show_in_landing` = se muestra en la landing (flags desacoplados) |
 | `position` | orden |
 

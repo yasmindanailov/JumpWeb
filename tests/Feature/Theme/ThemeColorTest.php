@@ -157,6 +157,84 @@ class ThemeColorTest extends TestCase
         $this->assertStringContainsString('background-color: #0A0B0C', $html, 'el botón del email sigue la marca');
     }
 
+    // ─────────── El acento de zona deja de viajar por el nombre de la clase (`#138`) ───────────
+
+    /**
+     * ⚠️⚠️ **DOS ZONAS CON EL MISMO `accent` Y DISTINTO `color` YA NO COMPARTEN COLOR.**
+     *
+     * Éste es el defecto que motivó `#138`, y estaba VIVO: el color viajaba por dos caminos. La
+     * tarjeta lo tomaba de `zones.color` —el suyo— y la pestaña de una regla `.zone-tab--{accent}`
+     * que leía `--kids-1`, o sea **el color de la PRIMERA zona con ese acento**. Medido sobre la BD
+     * de desarrollo: `cap` tenía `accent=kids` y `color=#FF5B22`, así que su tarjeta salía naranja y
+     * su pestaña lima. El mismo sitio, dos colores, y nada fallaba.
+     */
+    public function test_two_zones_sharing_an_accent_no_longer_share_a_colour(): void
+    {
+        $primera = Zone::where('accent', 'kids')->firstOrFail();
+        $primera->update(['color' => '#C6FF3A']);
+
+        $segunda = Zone::create([
+            'slug' => 'kids-2', 'name' => ['es' => 'Kids 2'], 'accent' => 'kids',
+            'color' => '#0000FF', 'position' => 99, 'is_active' => true, 'show_in_landing' => true,
+        ]);
+
+        $this->assertStringContainsString(
+            '--zone-1:#0000FF',
+            ThemeSettings::zoneStyle($segunda->color, $segunda->color_secondary, $segunda->accent),
+            'la zona no pinta SU color: vuelve a viajar por el acento',
+        );
+
+        $this->assertStringNotContainsString(
+            '#C6FF3A',
+            ThemeSettings::zoneStyle($segunda->color, $segunda->color_secondary, $segunda->accent),
+            'se ha colado el color de la otra zona del mismo acento',
+        );
+    }
+
+    /**
+     * ⚠️ **Y una zona con un acento QUE EL CSS NO CONOCE también se pinta.**
+     *
+     * Las reglas por acento solo existían para `jump` y `kids` —los del primer cliente—, así que una
+     * instalación con zonas propias perdía el tinte **en silencio**. Es el modo de fallo que peor
+     * envejece en un producto white-label: no hay error, solo una landing sosa.
+     */
+    public function test_a_zone_with_an_unknown_accent_still_gets_its_colour(): void
+    {
+        $zona = Zone::create([
+            'slug' => 'adrenalina', 'name' => ['es' => 'Adrenalina'], 'accent' => 'adrenalina',
+            'color' => '#123456', 'position' => 98, 'is_active' => true, 'show_in_landing' => true,
+        ]);
+
+        $estilo = ThemeSettings::zoneStyle($zona->color, $zona->color_secondary, $zona->accent);
+
+        $this->assertStringContainsString('--zone-1:#123456', $estilo);
+        $this->assertStringContainsString('--on-brand:#FFFFFF', $estilo, 'sin contraste calculado el texto sería ilegible');
+    }
+
+    /**
+     * **El secundario cae al PRIMARIO de su zona, nunca al de otra marca.**
+     *
+     * ⚠️ Antes `--zone-2` valía `var(--jump-2)`: el amarillo de una zona del primer cliente. Una zona
+     * sin paleta doble se pinta plana —correcto— en vez de pedir prestado un acento ajeno.
+     */
+    public function test_a_zone_without_a_secondary_falls_back_to_its_own_primary(): void
+    {
+        $estilo = ThemeSettings::zoneStyle('#123456', null, 'adrenalina');
+
+        $this->assertStringContainsString('--zone-2:#123456', $estilo);
+        $this->assertStringNotContainsString(ThemeSettings::DEFAULT_BRAND_SECONDARY, $estilo);
+    }
+
+    /** Y el acento SECUNDARIO de la marca global también sale de un ajuste, no del CSS. */
+    public function test_the_brand_secondary_is_a_setting_and_reaches_the_root(): void
+    {
+        Setting::updateOrCreate(['key' => 'theme.brand_secondary'], ['value' => '#ABCDEF', 'group' => 'theme']);
+
+        $this->assertStringContainsString('--brand-2:#ABCDEF', ThemeSettings::cssRootDeclarations());
+        $this->assertStringContainsString('--zone-2:var(--brand-2)', ThemeSettings::cssRootDeclarations());
+        $this->get('/')->assertOk()->assertSee('--brand-2:#ABCDEF', false);
+    }
+
     // ───────────────── Cobertura adicional (revisión adversarial) ─────────────────
 
     public function test_landing_sliders_carry_validated_zone_color(): void

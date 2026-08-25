@@ -20,7 +20,11 @@
     <div class="ticket-prices__tabs">
         <div class="zone-tabs" role="tablist" aria-label="{{ __('landing.pricing.pick_zone') }}">
             @foreach ($zones as $zone)
-                <button type="button" class="zone-tab zone-tab--{{ $zone->accent }}"
+                {{-- ⚠️ El color de la pestaña activa va INLINE (`DECISIONES #138`). `.zone-tab.active`
+                     ya es genérica en `landing.css` —consume `--zone-1`/`--on-brand`—, así que esto
+                     RETIRA las reglas `.zone-tab--jump/--kids` en vez de añadir otra. --}}
+                <button type="button" class="zone-tab"
+                    style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
                     :class="priceZone === @js($zone->slug) && 'active'"
                     @click="priceZone = @js($zone->slug)"
                     role="tab" :aria-selected="priceZone === @js($zone->slug) ? 'true' : 'false'">{{ __('landing.pricing.tab') }} {{ $zone->tr('name') }}</button>
@@ -31,9 +35,15 @@
     @foreach ($zones as $zone)
         @php $zoneCount = ($grouped->get($zone->id)?->count() ?? 0) + $shared->count(); @endphp
         @if ($hasReg && $zoneCount >= 4) @php $fullZoneSlugs[] = $zone->slug; @endphp @endif
-        <div class="pricing__grid pricing__grid--{{ $zone->accent }}{{ $hasReg && $zoneCount <= 3 ? ' pricing__grid--with-reg' : '' }}" role="tabpanel"
-            x-show="priceZone === @js($zone->slug)"
-            @if (! $loop->first) style="display:none" @endif>
+        {{-- ⚠️ El estilo se compone en PHP y NO con un `@if` dentro del atributo: Blade **no compila
+             `@endif` pegado a un carácter de palabra** (`display:none@endif`) —el `@if` sí se compila
+             y el cierre no—, y el resultado es un error de sintaxis en la vista compilada, lejos de
+             aquí. Pagado el 2026-08-25. --}}
+        @php($gridStyle = \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent)
+            .($loop->first ? '' : 'display:none'))
+        <div class="pricing__grid{{ $hasReg && $zoneCount <= 3 ? ' pricing__grid--with-reg' : '' }}" role="tabpanel"
+            style="{{ $gridStyle }}"
+            x-show="priceZone === @js($zone->slug)">
             @foreach ($grouped[$zone->id] ?? [] as $ticket)
                 <x-site.price-card :ticket="$ticket" />
             @endforeach
