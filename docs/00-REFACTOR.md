@@ -1857,9 +1857,14 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 > **B → C → A → D**.
 > ⚠️ **Ninguno toca la landing**: no solapan con `specs/landing-white-label.md` (`#136`). El único
 > punto de contacto es que el carné de **A** viaja en el correo de confirmación.
-> ❗ **Ninguna spec está aprobada**: las cuatro están 🟦 y esperan **revisión adversarial por otro
-> agente**, que `CONVENCIONES` §5 exige. En este proyecto esa revisión ha parado bloqueantes reales
-> tres veces (`#122` encontró dos; `#123` declaró un diseño INSUFICIENTE).
+> ✅ **La revisión adversarial que `CONVENCIONES` §5 exige está HECHA** (2026-08-25, **`#156`**): cada
+> spec tiene su **§8** con los hallazgos. **Ninguna hay que rehacerla**, y de todas sus afirmaciones
+> verificables sobre el código **ninguna resultó falsa**.
+> ❗❗ **Dos BLOQUEANTES, y el peor no es de ingeniería**: (1) el **texto del waiver es literalmente un
+> borrador** y publicar una versión es irreversible por diseño — `[PENDIENTE: owner]` nuevo; (2)
+> **JumpPoints descansaba sobre un hecho no observable** (nadie sabe si un cliente vino), **resuelto
+> por el owner** con puntos por FUENTE.
+> ❗ **Ninguna spec está aprobada todavía**: las cuatro siguen 🟦 esperando el **✅ del owner**.
 
 - [ ] **B · Waiver con valor probatorio** — `docs/specs/waiver-probatorio.md`.
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
@@ -1867,19 +1872,48 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.
       ❗ El **plazo** está `[PENDIENTE: owner]` — sale de criterio jurídico.
       ▶ Arregla de paso un defecto VIVO: hoy nadie puede reconstruir qué texto firmó nadie.
+      ❗❗ **REVISADA (`#156`, §8): BLOQUEADA para publicar.** El texto del waiver dice de sí mismo que
+      es un borrador pendiente de asesor legal, y publicar una versión es **irreversible por diseño**:
+      la maquinaria se construye, el acto de publicar la v1 **no**. Segundo `[PENDIENTE: owner]`.
+      ⚠️ **Y tres piezas se deciden antes de la primera línea**: la cadena de hashes **se bifurca en
+      silencio** bajo concurrencia (recomendación: cadena **por titular**) · el registro va en **tabla
+      propia**, no ampliando `consents` (`cascadeOnDelete`) · el **alta presencial** también escribe
+      consentimientos y produce una firma **declarada por el operador** (`[DECIDIDO owner]`).
+      ⚠️ `RGPD-01` **no contiene hoy la frase que hay que modificar**: primero se le añade lo que el
+      código ya hace y ella calla, y **después** se restringe.
 - [ ] **C · Menores a cargo** — `docs/specs/menores-a-cargo.md`. Nombre y fecha de nacimiento, tope 20
       configurable, la edad **derivada y nunca persistida**. La asignación de una entrada a un menor va
       en el embudo, **por dos puertas** (con sesión en el paso 3; sin ella, tras identificarse en el 5).
       ⚠️ Los **grupos escolares quedaron FUERA** por decisión del owner.
+      ✅ **REVISADA (`#156`, §8): sin bloqueantes, se implementa tal cual.** Es la que menos hallazgos
+      tuvo, y el principal es **buena noticia**: el mecanismo que protege los datos del menor
+      (`cart.js::save()` es una **lista blanca**, no un filtro) es más fuerte de lo que ella creía —
+      pero está en `cart.js`, no en `selection.js`, que es donde la spec mandaba a mirar.
 - [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
       commit — es literalmente el modo de fallo que esa invariante existe para impedir.
+      ✅ **REVISADA (`#156`, §8): sólida.** Dos hallazgos acotados —la rotación de `APP_KEY` **lanza**,
+      no degrada; y la entropía del carné (`2⁵⁰` en sha256 sin sal) hay que **decidirla o justificarla**—
+      ❗ **y una responsabilidad NUEVA**: esta pantalla es donde se **acredita la visita** de un cliente
+      y de ahí salen sus JumpPoints (`[DECIDIDO owner]`). ⚠️ **No puede colgar de «se abrió la ficha»**:
+      la ficha se abre varias veces por cliente y también tecleando un correo.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de
       concurrencia sobre MySQL real. ❗ Su **caducidad de puntos depende del cron** (`#115`), que
       `#137` **no desbloquea** —Redis entró solo para caché—, así que va la última.
+      ❗❗ **REVISADA (`#156`, §8): su §4.2 descansaba sobre un hecho NO OBSERVABLE.** El sistema no
+      sabe si un cliente vino —`tickets` tiene las columnas del ciclo y **cero escritores**—, así que
+      «los puntos se abren después de la visita» no tenía de dónde colgar.
+      ✅ **Resuelto por el owner**: los puntos tienen **FUENTES configurables** — la **visita**,
+      acreditada en la pantalla de puerta, y la **compra**, al confirmarse el pago. El ledger lo
+      aguanta sin cambios (`available_from` ya era por apunte).
+      ⚠️⚠️ **Y de ahí sale lo que no se puede perder**: la fuente «compra» **reabre el agujero de
+      ingresos** si sus puntos se abren al instante. **Lo configurable es CUÁNTOS puntos da cada
+      fuente, no CUÁNDO se abren.**
+      ⚠️ **El orden `A → D` pasa de preferencia a DEPENDENCIA DURA**: sin la pantalla de puerta no hay
+      fuente «visita».
 
 ⚠️ **Aplazado a propósito: un sistema de PROMOCIONES** (descuento porcentual sobre productos, sobre el
 total y sobre complementos, con caducidad por tiempo o por número de usos). No se parece a la lealtad:

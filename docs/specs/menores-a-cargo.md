@@ -1,7 +1,12 @@
 # [SPEC] Menores a cargo
 
-> Estado: diseño 🟦 en revisión (pendiente de revisión adversarial por otro agente) ·
-> Última actualización: 2026-08-24 ·
+> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> Última actualización: 2026-08-25 ·
+> ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
+> persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
+> la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
+>
+> Última actualización anterior: 2026-08-24 ·
 > Verificado contra código: 2026-08-24 (ModuleBoundariesTest, machine.js, stores/selection.js, cart.js) ·
 > Decisión asociada: `DECISIONES #142` ·
 > Se invalida si: cambia el modelo de waiver de `waiver-probatorio.md`, o el embudo gana un paso.
@@ -230,4 +235,77 @@ este spec no finge que lo sea.
 
 Diseñado en sesión de arquitectura con el owner el 2026-08-24 (`DECISIONES #142`).
 
-❗ **PENDIENTE de revisión adversarial por otro agente** (`CONVENCIONES` §5).
+✅ **REVISADA el 2026-08-25** por un segundo agente (`CONVENCIONES` §5) — **§8**. Veredicto: el diseño
+es correcto y se implementa tal cual, aplicando §8.1 y §8.2. **Ningún bloqueante.**
+⚠️ Su única dependencia externa es la decisión de `waiver-probatorio.md` §8.6 (tabla propia), sin la
+cual §4.3 no encaja. Ver §8.3.
+
+---
+
+## 8. Revisión adversarial — 2026-08-25
+
+> Segundo agente, `CONVENCIONES` §5. **Solo hallazgos**: lo que no aparece aquí se verificó y es
+> cierto.
+
+### 8.0 Lo que aguantó
+
+Verificado ejecutando: el grafo de `ModuleBoundariesTest::ALLOWED` dice
+`'Identity' => ['Platform', 'Booking\Contracts', 'Payments\Contracts']`, así que **§4.6 es correcta**
+—Identity puede mirar a `Booking\Contracts` y la asignación por id entero no crea ninguna flecha— ·
+el mapa de `machine.js` es exactamente `CATALOG(1) → DATE(2) → TIME(3) → CART(4) → IDENTIFY(5)`, así
+que §4.7 acierta al decir que identificarse es el paso 5 · `FUNNEL_TRANSITIONS` está donde dice ·
+`guest_data`/`event_data` se vacían en `anonymize()` como describe §1.
+
+### 8.1 §4.8 apunta al fichero equivocado — y el mecanismo bueno está en otro sitio
+
+§4.8 dice: *«las respuestas del evento … viven en `stores/selection.js`, que **no se persiste
+nunca**»*. Medido: **viven en los dos sitios**.
+
+- `stores/selection.js` las tiene mientras se construye la línea — y ahí es cierto, no se persiste.
+- **En cuanto se añade a la cesta viajan a `stores/cart.js`**, dentro de `line.event_data`. Y
+  `cart.js` **SÍ es el almacén persistido**.
+
+▶ **Lo que las salva no es dónde viven, es cómo se guarda.** `cart.js::save()` (en
+`resources/js/sidebar/cart.js`) **no filtra: reconstruye**. Cada línea se vuelve a componer con
+exactamente cinco campos —`product_id`, `date`, `time`, `quantity`, `addons`—, así que todo lo demás
+**no puede salir** aunque alguien lo meta en la línea. Es una **lista blanca**, que es más fuerte que
+lo que la spec prometía. Y hay un canario en `cart.test.js` que busca centinelas en el volcado entero
+del almacén, no en el campo esperado.
+
+⚠️ **Por qué importa la corrección**: el implementador que siga §4.8 irá a `selection.js` a añadir el
+id del dependiente y **no encontrará nada que tocar**. La lista blanca de `save()` es el sitio, y
+tiene una consecuencia que la spec no anticipa pero que juega a favor: **si no se añade
+explícitamente, el id no se persiste**. La condición 1 de §4.8 («viaja el id y nunca el nombre») queda
+garantizada **por construcción**, no por disciplina.
+
+### 8.2 La trampa que §4.8 no nombra: el sobre está VERSIONADO
+
+`resources/js/sidebar/cart.js` guarda un sobre con `STORAGE_VERSION = 1`, y al leerlo:
+
+    if (payload.v !== STORAGE_VERSION || ! Array.isArray(payload.lines)) return null;
+
+⚠️ **Descarta el sobre ENTERO si la versión no coincide.** Añadir el hueco de asignación obliga a
+elegir, y las dos opciones tienen precio:
+- **Subir la versión** → todas las cestas vivas de todos los visitantes **se purgan en silencio** el
+  día del despliegue. No falla, no avisa; el cliente se encuentra la cesta vacía.
+- **Mantener `v: 1`** → conviven sobres con y sin el campo, y `reconcile` tiene que tratar el campo
+  ausente como «sin asignar», que es lo mismo que ya exige la condición 2 de §4.8.
+
+▶ **Recomendación del revisor: mantener `v: 1`.** La condición 2 («la línea se queda sin asignar, no
+se rompe») ya obliga a tolerar el hueco vacío, así que tolerar su ausencia sale gratis — y purgar la
+cesta de todo el mundo para añadir una etiqueta es un precio que no se paga.
+
+### 8.3 Un apunte sobre §4.3 que hereda del waiver
+
+§4.3 dice que la firma del menor «cuelga del par (titular, dependiente), que es exactamente lo que
+cubre el campo `sujeto`… **sin mecanismo nuevo**». Es correcto, pero **depende de una decisión que
+`waiver-probatorio.md` §4.3 dejó abierta** («amplía `consents` o nace al lado — lo decide la
+revisión»). La revisión la resolvió en `waiver-probatorio.md` §8.6: **tabla propia con `RESTRICT`**.
+Con esa respuesta, §4.3 se sostiene tal cual. Con la otra —ampliar `consents`— no: `consents.user_id`
+es `cascadeOnDelete` y un `sujeto` que apunta a un dependiente no tendría dónde encajar.
+
+### 8.4 Veredicto
+
+**El diseño es correcto y se puede implementar tal cual**, con §8.1 y §8.2 aplicadas. Es la spec de
+las cuatro con menos hallazgos, y la única cuyo hallazgo principal resultó ser una **buena noticia**:
+el mecanismo que protege los datos del menor es más fuerte de lo que ella misma creía.

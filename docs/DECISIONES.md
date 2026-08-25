@@ -8197,3 +8197,135 @@ el importe · `toMail` pierde la línea · borrar la clave FR) · Pint ✓ · do
 
 **Con esta entrada, las CUATRO fichas derivadas de `#146` están cerradas** (`#152`–`#155`). De la
 línea del cambio de precio no queda nada abierto salvo lo ya decidido y lo aparcado con nombre.
+
+## #156 · 2026-08-25 · La revisión adversarial de los CUATRO subsistemas de Fase 6: dos bloqueantes, y el peor no era de ingeniería
+
+> ⚠️⚠️ **Esta entrada nació como `#149`, pasó por `#152`, `#154` y `#155`, y acabó en `#156`** — CINCO renumeraciones
+> en una tarde, porque el agente A fue tomando `#149`→`#153` en sesiones que se solapaban con ésta.
+> El aviso de `ESTADO` («elige el número mirando el REMOTO») **funciona y aun así no basta**: los
+> números se eligieron contra un remoto correcto **en ese instante**, y dejó de serlo mientras se
+> escribía la entrada.
+> ❗ **La regla que hay que sacar de esto, y ya está en `ESTADO`**: con dos agentes vivos, el número
+> **no se fija al escribir: se fija al EMPUJAR**, y entre lo uno y lo otro se vuelve a mirar. Corolario
+> del mismo precio: **empujar pronto**. Cada hora que un commit se queda en local es una hora en la que
+> el otro agente elige números y toca ficheros sin poder verlo.
+> ▶ **Y traía una SEGUNDA entrada que se ha RETIRADO**: la decisión del owner sobre el aforo («una
+> fiesta consume plazas de entrada — es correcto») la registró el agente A en **`#151`**, con las
+> palabras literales del owner y derivando la regla general —**la independencia de cupos se hace POR
+> ZONA**—, además de dejar hechos los dos docblocks. **Manda `#151`**; duplicarla aquí habría creado
+> exactamente la segunda verdad que este proyecto persigue.
+
+`CONVENCIONES` §5 exige que **otro agente revise una spec antes de que se escriba código**. Las cuatro
+specs de `#142` llevaban desde el 2026-08-24 esperándolo. Ésta es esa revisión.
+
+**Método, y es la mitad del valor**: no se leyeron las specs buscando errores de razonamiento — se
+intentó **refutar cada afirmación suya sobre el repo, ejecutando**. La regla de la casa: *la revisión
+no se copia, se MIDE*.
+
+▶ **Resultado global: las cuatro specs son sólidas y ninguna hay que rehacerla.** De todas sus
+afirmaciones verificables sobre el código, **ninguna resultó falsa** —lo que en este proyecto no es lo
+normal: `#143` encontró tres falsas en una sola spec—. Lo que salió son **huecos**, no errores.
+
+### Los dos bloqueantes
+
+1. ❗❗ **El waiver: el texto que se publicaría es literalmente un borrador.**
+   `LandingContentSeeder` lo sirve, en ES/EN/FR, con la cláusula *«Este texto es un borrador y será
+   revisado por un asesor legal antes de su publicación. [PENDIENTE: redacción definitiva]»*. Y el
+   diseño hace que **publicar sea irreversible**: una versión publicada no se edita ni se borra —que
+   es justo lo que le da valor probatorio—. Publicar la v1 sobre ese texto **graba un borrador en la
+   cadena para siempre**, y la regla de re-firma («deja pasar») hace que quien lo firmó siga entrando
+   con él. ▶ **La maquinaria se puede construir; el acto de publicar, no.** Es un `[PENDIENTE: owner]`
+   nuevo, anterior al del plazo de conservación, y **no estaba escrito en ninguna parte**.
+
+2. ❗❗ **JumpPoints: «después de la visita» no era un hecho observable.** Toda la defensa del agujero
+   *comprar → ganar → canjear → reembolsar* colgaba de ese instante. Medido: `tickets` **tiene** las
+   columnas del ciclo (`prepared_at`, `redeemed_at`, `status`) y **nadie las escribe** —cero
+   escritores en `app/`, `resources/` y `routes/`—; el ciclo de canje se retiró y la spec del carné QR
+   lo declara **fuera de su alcance**. El único sustituto era «ya pasó la hora de la franja», que es
+   otro hecho: **un no-show cobraría puntos**, lo contrario de lo que el programa dice premiar.
+
+### La resolución del owner, que reencuadra JumpPoints
+
+✅ **[DECIDIDO owner]**: los puntos tienen **FUENTES configurables**. Una es la **visita**, acreditada
+cuando el cliente enseña el QR y el empleado abre su ficha en la pantalla de puerta; otra es la
+**compra**, al confirmarse el pago.
+
+▶ Eso **hace observable la visita** —la observa la pantalla de puerta, que es el subsistema **A**— y
+convierte el orden `A → D` del tracker en una **dependencia dura**.
+▶ Y el modelo del ledger lo aguanta **sin cambios**: `available_from` ya era **por apunte**.
+⚠️⚠️ **Pero abre un frente nuevo que queda escrito antes de construir nada**: la fuente «compra»
+**reabre el agujero** si sus puntos son gastables al instante —`#146` midió un reembolso que devolvió
+36,00 € donde se debían 4,00; **ese defecto ya está arreglado (`#149`)**, pero la lección de que el
+dinero puede volver en cantidades que nadie previó **sigue en pie**—. **Lo configurable es CUÁNTOS
+puntos da cada fuente, no
+CUÁNDO se abren**: un ajuste que permita «compra → disponible ya» reabre el agujero desde un
+formulario, sin que nada falle y sin que nadie lo revise.
+⚠️ **Y la acreditación no puede colgar de «se abrió la ficha»**: la ficha se abre varias veces por
+cliente y también tecleando un correo, así que el saldo dependería de cuántas veces mire el empleado.
+Acto explícito, **idempotente por cliente y día**, auditado.
+
+### Los huecos de mecanismo (no bloquean, pero se deciden ANTES de la primera línea)
+
+- **La cadena de hashes del waiver no tiene punto de serialización.** Pide `hash` + `prev_hash`
+  append-only y **no menciona la concurrencia**. Dos firmas simultáneas escriben el mismo `prev_hash`
+  y **bifurcan la cadena en silencio** — y una cadena bifurcada no prueba nada, que es la única
+  propiedad por la que existe. ▶ Recomendación: **cadena POR TITULAR**, no global: serializa sin lock
+  en el camino del alta y es la unidad que se audita de verdad. **Migrar una cadena después es
+  rehacerla.**
+- **Dónde vive el registro de firma**, que la spec dejó explícitamente «a la revisión»: **tabla
+  propia**, no ampliar `consents`. Tres razones medidas, y la primera es que `consents.user_id` es
+  `cascadeOnDelete` —hoy inofensivo, porque el panel **no borra usuarios**, solo anonimiza— y una
+  tabla cuyo propósito es sobrevivir no cuelga de un CASCADE.
+- **El alta PRESENCIAL también escribe consentimientos.** `CustomerRegistrar` crea la fila de
+  `privacy` con «el operador confirma haber informado al cliente en persona» — y la spec solo conocía
+  `SelfSignup`. Choca con dos reglas suyas a la vez: exige «la versión que el servidor sirvió» (en el
+  mostrador no hay petición del cliente) y dice que la re-firma no se pide «nunca en el mostrador»
+  (que es donde vive `CustomerRegistrar`). ✅ **[DECIDIDO owner]: el alta presencial produce una firma
+  DECLARADA POR EL OPERADOR**, como hoy con `privacy`, con `created_by` guardado y **el PDF diciéndolo
+  con todas las letras** — es más débil que el resto del diseño y fingir lo contrario es peor que
+  decirlo.
+
+### Dos correcciones que afectan a doc ya escrita
+
+- ⚠️ **`RGPD-01` no contiene la frase que la spec del waiver dice modificar.** La invariante enumera
+  **cinco** operaciones de `anonymize()` y **el borrado de consentimientos no está entre ellas**
+  (tampoco `roles()->detach()` ni la nulificación de las columnas legales). Es un desfase
+  **preexistente**, exactamente la familia que `DEUDA.md` describe: *el gate documental valida
+  estructura, no contenido*. ▶ El orden correcto son **dos pasos**: añadir a `RGPD-01` lo que el
+  código ya hace y la invariante calla, y **después** restringir la parte del waiver.
+- ⚠️ **`anonymize()` borra la prueba del waiver en DOS sitios, no en uno.** Además de
+  `consents()->delete()`, hace `'waiver_accepted_at' => null` — **y ése es el sello que la puerta lee
+  de verdad** (`ValidarRegistro` decide sobre esa columna). Exceptuar solo el primero deja al titular
+  anonimizado como `REGISTERED_NO_WAIVER` en el mostrador, con la prueba conservada y la puerta
+  diciendo que no existe.
+
+### Y dos hallazgos del carné QR
+
+- **«Si rota `APP_KEY` solo se pierde el repintado» no sale gratis**: el cast `encrypted` **lanza
+  `DecryptException`**, no devuelve `null`, así que cualquier superficie que toque el token da **500**
+  en vez de degradar. La degradación elegante hay que construirla.
+- **La entropía es fina para lo que ese carné dura**: 10 caracteres Crockford = `32¹⁰ ≈ 2⁵⁰`, en
+  **sha256 sin sal** (rápido por diseño, porque tiene que servir para buscar). Un volcado permite
+  enumerar el espacio entero. ▶ Hoy lo salva la mejor decisión de esa spec —**escanear no autentica**,
+  así que poseer el carné no da acceso a nada— pero es una credencial impresa que vive años. **O se
+  sube la longitud con la misma tabla de módulos que ya usaron para descartar la URL, o se escribe por
+  qué 2⁵⁰ basta.** Lo que no puede es quedarse sin decidir pareciendo decidido.
+
+### Lo que se verificó y ERA CIERTO (para no re-medirlo)
+
+`consents` sin user-agent ni hash · `CURRENT_VERSION` a mano · `PuertaSettings::waiverCheckEnabled()`
+con su fallback no destructivo · la `Page` del waiver dentro de `Page::PROTECTED_ACTIVE_SLUGS` ·
+`CookieConsentLog` con `Prunable` y su `model:prune` en `routes/console.php` · **OpenSSL 3.0.13 con
+subcomando `ts`** y `openssl` de PHP · **GD e Imagick** presentes · `chillerlan/php-qrcode`
+vendorizada · los cinco pasos de `machine.js` exactos · `Identity → Booking\Contracts` permitido por
+el grafo (así que la asignación por id entero no crea ninguna flecha) · `ALLOWED` +
+`test_every_module_declares_its_allowed_arrows` hacen que `Loyalty` cueste **una línea** ·
+`ValidarRegistro` con sus tres defensas · **`Ticket.qr_token` muerta de verdad** (0 consumidores) ·
+`QrCode::svg()` con `quietzoneSize = 0` · `AuditLog::CRITICAL_ACTIONS` ya trae
+`registrations.validate_rate_limited` · `users.search_minimal` existe · `seats_taken` es el contador
+muerto que describen · **0 artefactos de lealtad** en todo el árbol.
+
+▶ **Detalle completo en el §8 de cada spec.** Ninguna de las cuatro pasa a ✅: siguen 🟦 esperando el
+✅ del owner, que ahora tiene **dos** cosas más que decidir (la redacción legal del waiver y el plazo
+de conservación) y **una** que ya decidió aquí (las fuentes de puntos).
+

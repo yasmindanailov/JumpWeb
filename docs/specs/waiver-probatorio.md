@@ -1,10 +1,17 @@
 # [SPEC] El waiver con valor probatorio
 
-> Estado: diseño 🟦 en revisión (pendiente de revisión adversarial por otro agente) ·
-> Última actualización: 2026-08-24 ·
-> Verificado contra código: 2026-08-24 (consents, SelfSignup, Page, User::anonymize, SecurityHeaders) ·
-> Decisión asociada: `DECISIONES #142` ·
+> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> Última actualización: 2026-08-25 ·
+> Verificado contra código: 2026-08-24 (consents, SelfSignup, Page, User::anonymize, SecurityHeaders)
+> y **re-verificado el 2026-08-25 por la revisión** (§8.0) ·
+> Decisión asociada: `DECISIONES #142`, revisión en `DECISIONES #156` ·
 > Se invalida si: cambia el modo de gestión del waiver, o el owner fija el plazo de conservación.
+>
+> ❗❗ **LEE §8 ANTES QUE EL CUERPO.** La revisión encontró **un bloqueante que no es de diseño** —el
+> texto del waiver es literalmente un borrador y publicar es irreversible (§8.1)— y **dos piezas que
+> hay que decidir antes de la primera línea**: cómo se serializa la cadena de hashes (§8.5) y dónde
+> vive el registro (§8.6, que §4.3 dejó abierto a propósito). §8.2, §8.3 y §8.4 **corrigen
+> afirmaciones del cuerpo**: léelas antes que el texto que corrigen.
 
 Subsistema **B** de la visión de Fase 6. Es el **primero por dependencia**: define el modelo de
 consentimiento del que cuelgan los menores a cargo (`menores-a-cargo.md`) y el estado que enseña la
@@ -235,8 +242,139 @@ login—, **nunca en el mostrador**.
 Diseñado en sesión de arquitectura con el owner el 2026-08-24. Decisiones del owner recogidas en
 `DECISIONES #142`.
 
-❗ **PENDIENTE de revisión adversarial por otro agente**, que `CONVENCIONES` §5 exige antes de escribir
-código. En este proyecto esa revisión ha parado bloqueantes reales: `#122` encontró dos y `#123`
-declaró el diseño **INSUFICIENTE**.
+✅ **REVISADA el 2026-08-25** por un segundo agente (`CONVENCIONES` §5). Los ocho hallazgos y el
+veredicto están en **§8**: el diseño se sostiene y no hay que rehacerlo.
 
-❗ **PENDIENTE del owner**: el plazo de conservación (§4.6).
+❗ **PENDIENTE del owner**, y ahora son DOS cosas:
+1. El **plazo de conservación** (§4.6).
+2. 🆕 **La redacción legal definitiva del waiver** (§8.1). El texto que hay hoy dice de sí mismo que
+   es un borrador, y publicar una versión es irreversible por diseño. **La maquinaria se puede
+   construir sin esto; el acto de publicar la v1, no.**
+
+---
+
+## 8. Revisión adversarial — 2026-08-25
+
+> Hecha por un segundo agente, como exige `CONVENCIONES` §5. **Método**: no se leyó la spec, se
+> intentó **refutar** cada afirmación suya sobre el repo ejecutando contra el código. Lo que sigue
+> son solo los hallazgos; **todo lo que no aparece aquí se verificó y es cierto**.
+
+### 8.0 Lo que aguantó (para no re-medirlo)
+
+Verificado ejecutando el 2026-08-25: `consents` es exactamente `user_id · type · accepted_at · ip ·
+version`, **sin user-agent, sin texto y sin hash** · `Consent::CURRENT_VERSION = '2026-05-23'` es una
+constante de código · `PuertaSettings::waiverCheckEnabled()` existe con su fallback no destructivo ·
+la `Page` del waiver está en `Page::PROTECTED_ACTIVE_SLUGS`, así que SEC-09 ya la protege ·
+`CookieConsentLog` usa `Prunable` y lo dispara `model:prune` en `routes/console.php` · y §4.7 se
+re-midió **hoy** dentro del contenedor: **OpenSSL 3.0.13 con subcomando `ts`** y la extensión
+`openssl` de PHP presentes. No hace falta dependencia nueva.
+
+### 8.1 ❗ BLOQUEANTE — el texto que se publicaría es, literalmente, un borrador
+
+`database/seeders/LandingContentSeeder.php` sirve el waiver con esta cláusula, **en los tres
+idiomas**:
+
+    «Este texto es un borrador y será revisado por un asesor legal antes de su publicación.
+     [PENDIENTE: redacción definitiva].»
+
+Y §4.2 hace que **publicar sea irreversible**: una versión publicada no se edita ni se borra, y eso
+es justo lo que le da valor. Publicar el primer snapshot sobre este texto **graba un borrador en la
+cadena probatoria para siempre**, y §4.8 hace que quien lo firmó siga entrando con él («deja pasar»)
+hasta que vuelva por su propio pie.
+
+▶ **La maquinaria se puede construir hoy; PUBLICAR no.** Se separa en dos: el mecanismo (tabla,
+inmutabilidad, PDF, régimen restringido) no depende del texto; el acto de publicar la v1 sí.
+❗ **`[PENDIENTE: owner]` — la redacción legal definitiva.** §7 solo listaba el plazo de conservación;
+esto es anterior y no estaba escrito en ninguna parte.
+
+### 8.2 `anonymize()` borra la prueba en DOS sitios, no en uno
+
+§1·3 y §4.6 nombran `$this->consents()->delete()`. Medido: `User::anonymize()` **también** hace
+`'waiver_accepted_at' => null` (`app/Domain/Identity/Models/User.php`, en el `forceFill` final).
+
+⚠️ **Y ése es el sello que la puerta lee de verdad**: `Livewire\Admin\Puerta\ValidarRegistro` decide
+sobre `$user->waiver_accepted_at === null`, no sobre `consents`. Exceptuar solo el borrado de
+consentimientos deja al titular anonimizado como **`REGISTERED_NO_WAIVER`** en el mostrador, con la
+prueba conservada y la puerta diciendo que no existe.
+
+### 8.3 `RGPD-01` no contiene la frase que la spec dice modificar
+
+§5 dice «**RGPD-01 SE MODIFICA**». Medido contra `INVARIANTES.md`: la invariante enumera **cinco**
+operaciones —`guest_data`/`event_data`, `revokeAllAccess()`, `password_reset_tokens`, redacción de
+payloads legacy y nulificación de IP/user-agent de `audit_logs`— y **el borrado de consentimientos no
+está entre ellas.** Tampoco el `roles()->detach()` ni la nulificación de las columnas legales.
+
+▶ **Consecuencia práctica**: un agente que vaya a «modificar RGPD-01» no encontrará qué cambiar, y el
+gate documental no lo detecta porque valida estructura, no contenido (`DEUDA.md`, fila alta).
+▶ **El orden correcto son dos pasos**: (1) **añadir** a `RGPD-01` lo que el código ya hace y la
+invariante calla —es un desfase preexistente, no de esta spec—; (2) **entonces** restringir la parte
+del waiver. Hacer solo (2) deja la invariante describiendo mal el código en dos direcciones.
+
+### 8.4 Hay DOS escritores de consentimientos — y el segundo es el mostrador
+
+§1 nombra solo `Identity\Services\SelfSignup`. Medido: **`Identity\Services\CustomerRegistrar`**
+—el alta **presencial** que hace un operador desde el panel— también crea una fila de `consents`
+(`type = 'privacy'`, con `Consent::CURRENT_VERSION`), con este comentario dentro: *«el operador
+confirma haber informado al cliente en persona»*.
+
+Eso choca con dos reglas de la spec a la vez:
+- **§4.4** exige que «el servidor solo emite la aceptación si la petición trae el identificador de la
+  versión que él sirvió». En el mostrador **no hay tal petición**: no hay navegador del cliente.
+- **§4.8** dice que la re-firma se pide en el siguiente momento natural, «**nunca en el mostrador**».
+  Pero `CustomerRegistrar` **es** el mostrador.
+
+✅ **[DECIDIDO owner, 2026-08-25] — el alta presencial produce una firma DECLARADA POR EL OPERADOR**,
+igual que hace hoy con `privacy`. Con dos condiciones que la decisión lleva dentro:
+1. El registro guarda **quién la declaró** (`created_by`), y no finge ser una firma del titular.
+2. ⚠️ **El PDF tiene que decirlo con todas las letras.** Es sustancialmente más débil que el resto
+   del diseño —dice «el operador declara que el cliente aceptó»— y §4.5 ya fijó la doctrina para
+   esto: *«el dato lo declara el titular y no está verificado… fingir lo contrario es peor que
+   decirlo»*. Aquí ni siquiera lo declara el titular.
+
+### 8.5 La cadena de hashes no tiene punto de serialización
+
+§4.3 pide `hash` **y `prev_hash`** append-only «desde el PRIMER commit», y §4.7 explica bien por qué.
+Lo que no aparece en toda la spec es la palabra **concurrencia**.
+
+⚠️ Dos firmas simultáneas que lean la misma cabeza de cadena escriben **dos filas con el mismo
+`prev_hash`**: la cadena se **bifurca en silencio**, y una cadena bifurcada no demuestra nada — que
+es exactamente la propiedad por la que se construye. No falla, no avisa, y se descubre el día que hay
+que enseñarla.
+
+▶ Este repo ya tiene doctrina para esto (`AFORO-01`: el lock es la primera sentencia de la
+transacción) y ya sabe lo que pasa cuando falta (`#147`: 8 fiestas donde cabía 1, con el
+`lockForUpdate()` retirado). **Un sábado por la tarde las firmas son concurrentes.**
+
+▶ **Recomendación del revisor: cadena POR TITULAR, no global.** Serializa sin lock global, la
+contención cae a cero, y además es la unidad que se audita de verdad («enséñame la cadena de esta
+persona»). Una cadena global obliga a un lock en el camino del alta, que es superficie de registro
+masivo. **Elegirlo ahora es barato; migrar una cadena después es rehacerla.**
+
+### 8.6 Dónde vive el registro: la spec lo dejó a esta revisión
+
+§4.3 dice «Amplía lo que hoy es `consents`, o nace al lado — **lo decide la revisión**».
+
+▶ **Recomendación: tabla propia, no ampliar `consents`.** Tres razones medidas:
+1. **`consents.user_id` es `->constrained()->cascadeOnDelete()`.** Hoy no muerde —verificado: el
+   recurso de usuarios del panel **no tiene acción de borrado**, solo anonimizar— pero una tabla cuyo
+   propósito es sobrevivir no debe colgar de un CASCADE. En la tabla nueva, `RESTRICT`.
+2. `consents` la escriben dos servicios con reglas distintas (§8.4) y la lee el bloque de privacidad
+   del cajón. El registro probatorio debe estar **fuera de toda superficie normal** (§4.6): meterlo
+   dentro obliga a filtrar en cada consumidor, y basta olvidarse en uno.
+3. La forma es distinta: `sujeto`, `prev_hash`, `retención_hasta` y `created_by` no tienen sentido en
+   una fila de `marketing`.
+
+### 8.7 Precisiones menores de §1 (no cambian el diseño)
+
+- El alta escribe hasta **tres** tipos de consentimiento, no dos: `privacy`, `terms` y **`marketing`**
+  si el usuario opta.
+- `waiver_accepted_at` lo leen **dos** superficies, no solo la puerta: también
+  `Filament\Resources\Orders\Schemas\OrderInfolist`, que pinta el estado del waiver en la ficha del
+  pedido. Migrar a un registro versionado toca las dos.
+
+### 8.8 Veredicto
+
+**El diseño se sostiene y no hay que rehacerlo.** De los ocho hallazgos, uno es bloqueante y externo
+al diseño (§8.1, el texto legal), dos son piezas que faltan y hay que decidir antes de la primera
+línea (§8.5 la serialización, §8.6 la tabla), uno es una decisión de producto ya resuelta (§8.4), y
+el resto son correcciones de inventario que ahorran descubrirlas tarde.

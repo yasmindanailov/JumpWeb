@@ -1,6 +1,11 @@
 # [SPEC] El carné QR del cliente y la pantalla de puerta
 
-> Estado: diseño 🟦 en revisión (pendiente de revisión adversarial por otro agente) ·
+> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> ❗ **§8.3 AMPLÍA el alcance**: esta pantalla pasa a ser el sitio donde se **acredita la visita** de
+> un cliente, y de ahí salen sus JumpPoints (`[DECIDIDO owner]`). No es un detalle: si el punto cae al
+> **abrir** la ficha, el saldo depende de cuántas veces mire el empleado. Léelo antes de §4.6.
+>
+> Estado anterior: diseño 🟦 en revisión ·
 > Última actualización: 2026-08-24 ·
 > Verificado contra código: 2026-08-24 (ValidarRegistro, QrCode, TicketIssuer, User::revokeAllAccess, SecurityHeaders) ·
 > Decisión asociada: `DECISIONES #142` ·
@@ -309,6 +314,94 @@ Livewire se queda en el stack de todas formas porque es quien trae Alpine (`DECI
 
 Diseñado en sesión de arquitectura con el owner el 2026-08-24 (`DECISIONES #142`).
 
-❗ **PENDIENTE de revisión adversarial por otro agente** (`CONVENCIONES` §5). ⚠️ Esta spec contiene la
+✅ **REVISADA el 2026-08-25** por un segundo agente (`CONVENCIONES` §5) — **§8**. Veredicto: sólida;
+dos hallazgos acotados (§8.1 la rotación de `APP_KEY`, §8.2 la entropía del carné) y **una
+responsabilidad NUEVA** que le llega desde JumpPoints: **esta pantalla es donde se acredita la
+visita** (§8.3), y eso exige idempotencia y auditoría desde el primer commit.
+
+⚠️ Esta spec contiene la
 **segunda reversión** de `#142` —la puerta deja de ser privacy-by-design mínima— y es la que más
 merece un revisor hostil.
+
+---
+
+## 8. Revisión adversarial — 2026-08-25
+
+> Segundo agente, `CONVENCIONES` §5. Esta spec pedía «un revisor hostil» por ser la segunda reversión
+> de `#142`; lo que sigue es el resultado. **Solo hallazgos**: lo que no aparece se verificó y es
+> cierto.
+
+### 8.0 Lo que aguantó — y es casi todo
+
+Verificado ejecutando el 2026-08-25: `ValidarRegistro` tiene sus tres defensas tal cual las describe
+(permiso re-autorizado en cada petición, límite por `user_id` del staff y auditoría con sha256) ·
+**`Ticket.qr_token` está muerta de verdad**: se escribe en `TicketIssuer`, se comprueba su unicidad,
+y **no la lee ni la publica nadie** —`CustomerOrderHistoryReader` y `openapi/v1.yaml` declaran
+expresamente que no se publica— · `Platform\Services\QrCode::svg()` usa `quietzoneSize = 0`, así que
+§4.3 acierta al exigir perfil propio para el carné · `AuditLog::CRITICAL_ACTIONS` **ya incluye**
+`registrations.validate_rate_limited` · el permiso `users.search_minimal` existe en
+`PermissionSeeder`, así que el catálogo ya distingue matices como pide §4.6 ·
+`LedgerSingleSourceTest` existe · y **re-medido hoy en el contenedor**: **GD e Imagick presentes** y
+`chillerlan/php-qrcode` vendorizada. §4.10 no dispara `CONVENCIONES` §9.
+
+### 8.1 «Si rota `APP_KEY`… solo se pierde el repintado» no sale gratis
+
+§4.5 dice que el diseño **degrada bien**: el hash sobrevive, el escaneo sigue, solo se pierde volver a
+pintar el carné.
+
+⚠️ Con el cast `encrypted` de Laravel, leer el atributo con la clave rotada **lanza
+`DecryptException`** — no devuelve `null`. Así que cualquier superficie que **toque** el token
+(un listado del panel, un recurso que serialice el modelo, un `toArray()`) responde **500**, no
+degradado. La degradación elegante que la spec promete **hay que construirla**: acceso al token
+siempre por un método que capture y devuelva `null`, y ninguna superficie leyendo el atributo directo.
+
+▶ Es barato, pero si no se escribe aquí se descubre el día que se rote la clave — que es exactamente
+el día en que nadie quiere descubrir nada.
+
+### 8.2 La entropía del carné es fina para lo que ese carné dura
+
+§4.3 fija **10 caracteres aleatorios** de Crockford Base32 → `32¹⁰ ≈ 1,1×10¹⁵ ≈ 2⁵⁰`, y §4.5 los
+guarda como **sha256 sin sal** (rápido por diseño: tiene que servir para buscar).
+
+⚠️ **2⁵⁰ con un hash rápido y sin sal es un espacio enumerable.** Ante un volcado de base de datos, se
+recorre entero en el orden de un día de GPU — y entonces se tienen **todos** los carnés del parque, no
+uno. Compárese con Sanctum, cuyo modelo se cita como referencia: sus tokens son de 40 caracteres.
+
+▶ **Lo que salva el diseño hoy es §4.2**, y hay que decirlo: como escanear **no autentica**, poseer un
+carné no da acceso a nada sin la sesión de un empleado. Esa decisión es la que convierte esto en un
+riesgo acotado en vez de una brecha.
+▶ **Pero el carné se imprime y vive años**, y §4.6 hace que un escaneo abra la ficha completa. La
+recomendación no es rediseñar: es **decidirlo explícitamente**. O se sube la longitud —con la misma
+tabla de módulos que §3 ya usó para descartar la URL, midiendo si 16 o 20 caracteres siguen cabiendo
+en versión 2 con ECC H— o **se escribe en la spec por qué 2⁵⁰ basta**. Lo que no puede quedarse es sin
+decidir, porque parece decidido y no lo está.
+
+### 8.3 🆕 Esta pantalla gana una responsabilidad nueva: es donde se ganan puntos
+
+✅ **[DECIDIDO owner, 2026-08-25]**, al revisar `lealtad-jumppoints.md`: **abrir la ficha del cliente
+tras escanear su QR es el acto que le acredita la visita**, y de ahí salen sus puntos.
+
+Eso convierte esta pantalla en el **único observador de la visita** que el producto tendrá (el ciclo
+de canje de `Ticket` sigue amputado, §1). Consecuencias que esta spec tiene que absorber:
+
+1. ⚠️⚠️ **Ganar puntos NO puede colgar de «se abrió la ficha».** La ficha se abre por muchas razones
+   —comprobar un waiver, buscar una reserva, mirar un vale, y **§4.6 la abre también tecleando un
+   correo**—, y varias veces por el mismo cliente. Si el punto cae al abrir, **el saldo depende de
+   cuántas veces mire el empleado**. Tiene que ser un **acto explícito y acotado** (un botón
+   «registrar visita», idempotente **por cliente y día**), no un efecto secundario de pintar.
+2. La acreditación de la visita es un **evento auditable** y entra en el mismo régimen que el resto de
+   §4.8: se audita la acción, no solo la búsqueda.
+3. Refuerza §4.11: si la ficha la ensambla el componente y no un servicio, este acto se queda dentro
+   de Livewire y la app nativa no lo puede disparar.
+
+▶ **El detalle del modelo de puntos vive en `lealtad-jumppoints.md` §8.1.** Aquí queda escrito porque
+es **esta** pantalla la que lo tiene que ofrecer, y porque la dependencia va en el orden correcto:
+**A antes que D**, como ya fijaba el tracker.
+
+### 8.4 Veredicto
+
+**La spec es sólida y su autoconciencia es real** — nombra sus propios riesgos, incluido el que la
+convierte en un oráculo (§4.6), y trae los contrapesos. Los dos hallazgos técnicos (§8.1, §8.2) son
+acotados y no tocan la arquitectura. El cambio de fondo es §8.3: la pantalla deja de ser solo consulta
+y pasa a **escribir** algo que vale puntos, y eso exige idempotencia y auditoría desde el primer
+commit.

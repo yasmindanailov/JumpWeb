@@ -9,10 +9,20 @@
 > · **Agente A (panel/dinero)** — **`#146` CERRADO ENTERO**: D5 en `#149` y D4+D3+D2 (más el
 >   sexto sitio y el pack CON señal medido) en `#150`, todo verificado en vivo sobre MySQL.
 >   Toca `Order.php`, `ViewOrder.php` y `lang/es/admin.php`. **NO entrar ahí.**
-> · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
-> ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
-> DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
-> El último usado es **`#155`**.
+> · **Agente B (landing/aforo/i18n)** — Última sesión: `#143`, `#144`, `#147`, `#148`, **`#156`** (la
+>   revisión adversarial de las cuatro specs de Fase 6) y **`#157`** (lo que le faltaba a la guarda
+>   del EN/FR).
+> ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
+> Ha colisionado **SIETE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
+> fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
+> porque el agente A empujó **seis veces** mientras se escribían.
+> ❗ **La regla, corregida por el precio pagado**: el número **no se fija al escribir, se fija al
+> EMPUJAR** — se vuelve a mirar el remoto justo antes del push. **Corolario: empujar PRONTO.**
+> ❗❗ **Y el 2026-08-25 el precio dejó de ser solo el número**: los DOS agentes arreglaron **el mismo
+> defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
+> coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
+> la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
+> El último usado es **`#157`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -235,7 +245,17 @@ la estructura, las formas, los botones, los colores y los layouts; los datos son
 ahora»—. Maquetar ahora es trabajo que se tira.
 
 **`testimonials` sí se puede hacer entero hoy**, y hace falta decida lo que decida el owner sobre las
-reseñas: es el **respaldo** de `specs/google-reviews.md` (§4.4.bis). Tabla + modelo + recurso de panel
+reseñas: es el **respaldo** de `specs/google-reviews.md` (§4.4.bis).
+✅ **[DECIDIDO owner, 2026-08-25]: va DETRÁS del contrato `Content\Contracts\SocialProof`** que diseña
+`google-reviews.md` §4.1, no como clon liso de `faqs`. Cuesta una interfaz más y evita retrofitear la
+vista el día que Google se encienda — que es la rama que, por definición, solo se ejecuta cuando algo
+va mal.
+⚠️ **Medido el 2026-08-25**: `testimonial` no aparece en **ningún** fichero de `app/`, `database/`,
+`resources/`, `routes/`, `lang/`, `config/` ni `tests/`. Es construcción desde cero.
+⚠️ **Y roza `lang/es/admin.php`, que es del agente A**: el recurso necesita sus claves, y su bloque de
+pedidos vive en la misma zona del fichero. **`git pull --rebase` antes de empujar** — esta sesión ya
+pagó ese peaje seis veces con los números de `DECISIONES`, y una séptima con un arreglo duplicado.
+▶ Tabla + modelo + recurso de panel
 + sección, siguiendo el patrón exacto de `faqs` (permiso `content.manage`, grupo «Contenido», campos
 i18n en JSON con `HasTranslations`). Campos medidos del mockup: `texto` · `nombre` · `meta` +
 valoración.
@@ -369,17 +389,39 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 
 ✅ Y «¿devolver en el parque?» quedó **DECIDIDO** (`#152`): no se construye canal nuevo — devolver en mano se registra con el modo «manual» («ya devuelto fuera»), que ya existía y desde `#149` acepta importe exacto.
 
-🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
-2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →
-menores a cargo → carné QR y pantalla de puerta → JumpPoints. **No es lo siguiente** y **no toca la
-landing**; se anota aquí para que no se pierda. Detalle en el tracker; las cuatro specs, en
+🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA, REVISADA y sin implementar** (`DECISIONES
+#142`, revisión en **`#156`**, 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por
+**dependencia**: waiver probatorio → menores a cargo → carné QR y pantalla de puerta → JumpPoints.
+**No es lo siguiente** y **no toca la landing**. Detalle en el tracker; las cuatro specs, en
 `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
-⚠️ **Dos cosas de ahí tienen consecuencias fuera de su alcance**: el waiver **modifica `RGPD-01`**
-(el registro firmado se conserva al borrar la cuenta, restringido y con plazo `[PENDIENTE: owner]`)
-y el carné QR **entra en `User::revokeAllAccess()`** desde el primer commit — es el modo de fallo
-exacto que `RGPD-06` existe para impedir.
-❗ **Ninguna de las cuatro está aprobada**: esperan revisión adversarial por otro agente
-(`CONVENCIONES` §5).
+
+✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
+**§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables
+sobre el código, **ninguna resultó falsa** — lo que aquí no es lo normal (`#143` encontró tres falsas
+en una sola spec).
+❗❗ **Pero destapó DOS bloqueantes, y el peor no es de ingeniería:**
+1. **El texto del waiver es literalmente un borrador** —lo dice él mismo, en los tres idiomas— y
+   **publicar una versión es irreversible por diseño**. La maquinaria se puede construir; publicar la
+   v1, no. Es un `[PENDIENTE: owner]` NUEVO y anterior al del plazo de conservación.
+2. **JumpPoints descansaba sobre un hecho que el sistema no podía observar**: nadie sabe si un
+   cliente vino (`tickets` tiene las columnas del ciclo y **cero escritores**). ✅ **Resuelto por el
+   owner**: los puntos tienen **FUENTES configurables** — visita acreditada en la pantalla de puerta
+   + compra pagada. Eso convierte el orden `A → D` en **dependencia dura**.
+   ⚠️⚠️ **Y lo que no se puede perder**: la fuente «compra» **reabre el agujero de ingresos** si sus
+   puntos se abren al instante. **Lo configurable es CUÁNTOS puntos da cada fuente, no CUÁNDO se
+   abren** — un ajuste que permita «compra → disponible ya» lo reabre desde un formulario, sin que
+   nada falle y sin que nadie lo revise.
+⚠️ **Tres huecos de mecanismo que se deciden ANTES de la primera línea** (todos en `#156`): la cadena
+de hashes del waiver **no tiene punto de serialización** —se bifurca en silencio bajo concurrencia, y
+una cadena bifurcada no prueba nada—; el registro de firma va en **tabla propia**, no ampliando
+`consents` (`cascadeOnDelete`); y el **alta presencial** también escribe consentimientos, así que
+produce una firma **declarada por el operador** (`[DECIDIDO owner]`), que el PDF tiene que decir con
+todas las letras.
+⚠️ **Dos cosas tienen consecuencias fuera de su alcance**: el waiver **modifica `RGPD-01`** —⚠️ **y
+`RGPD-01` no contiene hoy la frase que hay que modificar**: hay que añadirle primero lo que el código
+ya hace y la invariante calla— y el carné QR **entra en `User::revokeAllAccess()`** desde el primer
+commit, que es el modo de fallo exacto que `RGPD-06` existe para impedir.
+❗ **Ninguna de las cuatro está aprobada todavía**: siguen 🟦 esperando el **✅ del owner**.
 
 ✅ **1 · El aforo, VERIFICADO bajo concurrencia — los CINCO caminos** (2026-08-25, `#147` + `#148`).
 Era el mayor riesgo abierto: `purchase:verify-oversell` solo sembraba **entradas**, y los cumpleaños

@@ -1,6 +1,12 @@
 # [SPEC] JumpPoints — puntos de fidelización y vales
 
-> Estado: diseño 🟦 en revisión (pendiente de revisión adversarial por otro agente) ·
+> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> ❗❗ **§8 REESCRIBE el encuadre de §4.2 y hay que leerlo ANTES**: no hay una regla global de
+> disponibilidad, hay **una por FUENTE** (`[DECIDIDO owner]`). La visita se acredita en la pantalla de
+> puerta; la compra conserva el retardo. **§8.2: abrir los puntos de compra al instante reabre el
+> agujero de ingresos desde un campo del panel.**
+>
+> Estado anterior: diseño 🟦 en revisión ·
 > Última actualización: 2026-08-24 ·
 > Verificado contra código: 2026-08-24 (ModuleBoundariesTest, OrderLedger, AuditLog, CRITICAL_RE del pre-push) ·
 > Decisión asociada: `DECISIONES #142` ·
@@ -236,6 +242,118 @@ proyecto; conviene saberlo ahora y no con el gate en rojo. ⚠️ La cifra no se
 
 Diseñado en sesión de arquitectura con el owner el 2026-08-24 (`DECISIONES #142`).
 
-❗ **PENDIENTE de revisión adversarial por otro agente** (`CONVENCIONES` §5). ⚠️ Lo que más merece un
+✅ **REVISADA el 2026-08-25** por un segundo agente (`CONVENCIONES` §5) — **§8**. La revisión encontró
+que **§4.2 descansaba sobre un hecho que el sistema no podía observar** (nadie sabe si un cliente
+vino) y el owner resolvió el modelo: **puntos por FUENTE, configurables** — visita acreditada en
+puerta + compra pagada. ❗ **§8.2 es lo que no se puede perder**: la fuente «compra» reabre el agujero
+de ingresos si se abre al instante.
+
+⚠️ Lo que más merece un
 revisor hostil aquí es §4.2: si el modelo de disponibilidad tiene un hueco, es un **agujero de
 ingresos**, que es la familia de fallo que este proyecto acaba de pagar dos veces.
+
+---
+
+## 8. Revisión adversarial — 2026-08-25
+
+> Segundo agente, `CONVENCIONES` §5. La spec pedía revisor hostil sobre **§4.2**, «porque si el modelo
+> de disponibilidad tiene un hueco es un agujero de ingresos». Lo tenía, y no donde se buscaba.
+
+### 8.0 Lo que aguantó
+
+Re-medido el 2026-08-25: **cero artefactos de puntos, vales o recompensas** en `app/`,
+`database/migrations`, `resources/js` y `routes/` — sigue siendo construcción desde cero ·
+`slots.seats_taken` es exactamente el contador muerto que §3·A usa de escarmiento (la migración lo
+llama «cache de display (verdad = pedidos)» y `SlotResource` avisa de que **está muerta**) · y §4.7 es
+correcta: `ModuleBoundariesTest::ALLOWED` es un mapa declarativo y
+`test_every_module_declares_its_allowed_arrows` **obliga** a registrar el módulo nuevo, así que
+`Loyalty` cuesta **una línea**.
+
+### 8.1 ❗ El hallazgo: «después de la visita» no era un hecho observable
+
+§4.2 hace descansar **toda** la defensa del agujero *comprar → ganar → canjear → reembolsar* en un
+instante: el de la visita. Medido el 2026-08-25: **el sistema no sabe si alguien vino.**
+
+- `tickets` **tiene** las columnas del ciclo (`status` con `purchased|prepared|redeemed|void`,
+  `prepared_at`/`prepared_by`, `redeemed_at`/`redeemed_by`)…
+- …y **nadie las escribe**: cero escritores en `app/`, `resources/` y `routes/`. Lo confirma la spec
+  hermana: *«no hay puerta que canjee, porque el ciclo de canje se retiró»*
+  (`identidad-qr-puerta.md` §1), que además declara el canje digital **fuera de su alcance**.
+
+▶ El único sustituto disponible era «ya pasó la hora de la franja», que **es otro hecho**: un
+*no-show* cobraría puntos, justo lo contrario de lo que §4.3 dice que el programa premia.
+
+#### ✅ [DECIDIDO owner, 2026-08-25] — los puntos tienen FUENTES, y son configurables
+
+> «El cliente recibirá JumpPoints de manera diferente, será configurable. Un caso es: el cliente viene
+> al parque, enseña su QR, al enseñar su QR el empleado abre su página de identificación en el panel
+> de admin de empleado, entonces ahí se cuentan puntos. Cuando el cliente compra cualquier producto y
+> el pago es satisfactorio, ahí se apuntan “x” puntos.»
+
+Eso **reencuadra §4.2**: no hay una regla global de disponibilidad, hay **una regla por fuente**.
+
+| Fuente | Cuándo nace el apunte | Cuándo es gastable | Riesgo de reversión |
+|---|---|---|---|
+| **Visita** | Cuando el empleado **acredita** la visita desde la pantalla de puerta | **Ya** — la visita es un hecho consumado | **Ninguno.** No se puede deshacer haber venido |
+| **Compra** | Al confirmarse el pago | ⚠️ **NO inmediatamente** — ver §8.2 | Reembolso |
+
+▶ **La buena noticia**: el modelo del ledger **ya lo aguanta sin cambios**. §4.2 ya dice que
+`available_from` es **por apunte, no una regla global**, y ya previó «las fuentes sin visita». Lo que
+cambia no es la tabla: es que la regla de apertura deja de ser una y pasa a ser una por fuente.
+▶ **Y la visita ya no es invisible**: la acredita la pantalla de puerta. Eso está escrito en
+`identidad-qr-puerta.md` §8.3, con la guarda que exige — **acto explícito e idempotente por cliente y
+día, nunca un efecto secundario de abrir la ficha**, porque la ficha se abre varias veces por cliente
+y también tecleando un correo.
+❗ **Consecuencia de orden**: JumpPoints pasa a **depender de la pantalla de puerta** para su fuente
+principal. El tracker ya ponía **A antes que D**; ahora es una dependencia dura, no una preferencia.
+
+### 8.2 ⚠️ Y la fuente «compra» REABRE el agujero que §4.2 cerraba
+
+Con puntos al confirmarse el pago y gastables al instante, la secuencia vuelve entera:
+
+> compra → gana → **canjea** → pide el reembolso → el vale ya está emitido y el saldo se va a negativo.
+
+**No es hipotético en este repo**: `#146` acaba de medir un reembolso que devolvió **36,00 € donde se
+debían 4,00**. El dinero vuelve; el vale en especie ya salió por la puerta.
+
+▶ **La salida no exige inventar nada** — es el mismo dispositivo de §4.2, aplicado solo a esta fuente:
+el apunte de compra nace con `available_from` **posterior al momento en que el dinero deja de poder
+volver**. Con el modelo de dos fuentes, lo natural es la **fecha de la franja** (y §4.2·2 ya resolvió
+que se mira **la reserva**, con un join en la lectura, para que mover la fecha mueva la apertura sin
+tocar el ledger).
+
+❗❗ **Y de aquí sale una regla de producto que hay que escribir antes de construir el panel**: lo
+configurable es **cuántos** puntos da cada fuente, **no cuándo se abren**. Un ajuste que permita
+«compra → disponible ya» reabre el agujero desde un formulario, sin que nadie lo revise y sin que nada
+falle. Si el owner quiere esa opción, es una decisión con precio medido — no un campo más.
+
+### 8.3 Consecuencias en cadena de las dos fuentes (que la spec debe absorber)
+
+1. **§4.3 «sobre qué base» se parte en dos.** `pagadoOnline + pagadoPuerta` desde `OrderLedger` sigue
+   siendo la base de la fuente **compra**. La fuente **visita** no tiene base monetaria: es una
+   cantidad fija por visita acreditada. Escribirlo evita que alguien intente derivar la segunda del
+   ledger, que no tiene de dónde.
+2. **Los reembolsos solo revierten los puntos de COMPRA.** Los de visita no se tocan: vino. Esto sale
+   gratis del modelo y cierra el caso «reembolso posterior a la visita» de §4.2 mucho mejor que el
+   ajuste manual que allí se proponía — el ajuste queda para el residuo, no para el caso normal.
+3. **El aviso de §4.4 se refuerza**: si los puntos de visita son fáciles de ganar, el catálogo de
+   recompensas es stock que alguien repone. «Cuántos vales hay emitidos sin usar» deja de ser un
+   informe cómodo y pasa a ser operativo.
+
+### 8.4 Precisión: «lo mata por construcción» está sobrevendido
+
+§4.2 dice que la salida elegida «elimina el problema **por construcción**». Con una sola fuente
+cerraba la ventana **anterior** a la visita; la **posterior** la resolvía «un ajuste con motivo y
+aviso al operador», que es una excepción operativa, no una construcción. Con dos fuentes la frase es
+más cierta que antes (§8.3·2), pero conviene decirla con su alcance: **cierra la ventana de la fuente
+que puede revertirse, y solo mientras la apertura no sea configurable** (§8.2).
+
+⚠️ La fila de enrutado de `CLAUDE.md` repetía la versión sin matizar. Corregida.
+
+### 8.5 Veredicto
+
+**El ledger, el vale en especie, el canje en puerta y la disciplina de concurrencia de §4.5 son
+correctos y no se tocan.** Lo que la revisión cambia es §4.2: deja de ser una regla global y pasa a
+ser **una regla por fuente**, con la fuente «visita» apoyada en la pantalla de puerta y la fuente
+«compra» conservando el retardo que impide el agujero de ingresos. **§8.2 es lo que no se puede
+perder**: es la línea entre un programa de fidelización y un grifo.
