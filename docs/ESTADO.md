@@ -291,23 +291,39 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ EL DESGLOSE ESTÁ CERRADO. LO SIGUIENTE ES LA **FASE 5** — Y NO EMPIEZA POR CÓDIGO
+# ❗ LO SIGUIENTE ES LA **TANDA A** DE `specs/landing-white-label.md` — EL TEMA, DE VERDAD
 
-✅ **`L6` EJECUTADO el 2026-08-24** (`DECISIONES #134` · `specs/desglose-dinero-cliente.md` §23), y
-con él **se cierra el desglose de dinero del cliente**. De las tres cosas que la auditoría de las 25
-acciones dejó planteadas: `L6` hecho, **`L4` aparcado** y **`L5` retirado porque no era un defecto**
-(`#133`, §22.2 — queda escrito para que nadie lo «arregle»).
+✅ **El desglose de dinero está CERRADO** (`L6` ejecutado el 2026-08-24, `DECISIONES #134` ·
+`specs/desglose-dinero-cliente.md` §23). `L4` aparcado y `L5` retirado porque no era un defecto.
 
-**❗ Lo siguiente es la Fase 5 (capa de contenido profesional), y su PRIMER punto no es implementable
-tal como está escrito** — medido el 2026-08-23, y sigue siendo cierto:
+🟦 **Y el 2026-08-25 se DISEÑA la landing white-label** (`DECISIONES #136` ·
+**`specs/landing-white-label.md`**), a raíz del mockup del **segundo cliente**. La decisión del owner:
+**data-driven el DATO, no la PÁGINA** — todo lo que la landing enseña sale del dominio o del CMS, y la
+composición de la página es un **paquete de tema por cliente, en código**. Maquetador visual,
+descartado.
+⚠️⚠️ **Léela por §1**, porque tres de los cinco problemas enunciados NO eran lo que parecían: el CMS
+**solo necesita 2 modelos más** (los otros ya existen), el copy **vive en el REPO** —142 claves en
+`lang/`, así que un cliente no puede cambiar su titular sin desplegar— y `/servicios` tiene **0
+productos vinculados y 2 tablas de precios TECLEADAS a mano**.
 
-- pide caché **etiquetada** (`Cache::tags(...)`) y el store configurado es `database`, que **lanza**
-  `BadMethodCallException` en cuanto se usan tags;
-- **no hay Redis** en el stack local, ni en staging, ni una línea en la doc que lo contemple.
+**El orden acordado, y por qué:**
 
-▶ **Empieza por una decisión de INFRAESTRUCTURA del owner** —añadir Redis, o invalidar por versión de
-clave— y no por código. Escribir el primer `Cache::tags()` antes de esa decisión es escribir algo que
-revienta en la primera petición.
+- **TANDA A · el tema, de verdad.** Es lo siguiente. Inyectar los tokens desde BD —la costura ya
+  existe: **28 variables y 1.271 usos de `var()`**, y **nada las alimenta**—, inventariar los **76
+  colores en crudo**, dejar el spinner rebrandeable y darle **icono propio a cada producto** (set
+  curado, `#136`). No toca dominio y es lo que la plantilla del cliente nuevo necesita para pintar.
+- **TANDA B · el contenido**: los dos modelos que faltan, el copy que baja de `lang/` al CMS y la
+  landing del segundo cliente como primer paquete de tema.
+- ⚠️⚠️ **TANDA C · los servicios como PRODUCTO REAL** (encargo explícito del owner: que estén en el
+  sistema de reservas de verdad, no maquillados en la página). **Va la última y NECESITA SPEC PROPIA**:
+  toca `AFORO-01/02/03` y las identidades de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni
+  en SQLite ni en staging** (MariaDB).
+
+⚠️ **Y la Fase 5 tal como está escrita en el tracker sigue sin ser implementable**: su primer punto
+pide caché **etiquetada** y el store es `database`, que **lanza** `BadMethodCallException` al usar
+tags; no hay Redis en local, ni en staging, ni en la doc. Eso sigue necesitando una decisión de
+INFRAESTRUCTURA del owner —Redis, o invalidación por versión de clave—, y **es independiente** de las
+tres tandas de arriba.
 
 ✅ **Staging ya está al día**: sirve `e551851` desde el 2026-08-25, con el desglose entero (`#123` a
 `#134`) y verificado allí sobre datos reales. ⚠️ Pero **la distancia se mide, no se copia** —esta

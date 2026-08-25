@@ -6717,3 +6717,67 @@ imprime «comprobado en BD: «…»» pasando el valor por el mismo formateador.
 VERIFICACIÓN, así que con un valor que lleve `\<` mostraría algo distinto de lo guardado. Los
 secretos van enmascarados, y el operador escribe el valor él mismo, así que no hay bloqueo — pero un
 eco de verificación que puede mentir merece decidirse, no ignorarse.
+
+## #136 · 2026-08-25 · [DECIDIDO, owner] La landing white-label: data-driven el DATO, no la PÁGINA
+
+**Contexto.** Preparando la landing del **segundo cliente**, el owner enunció cinco problemas: el CMS
+incompleto, lógica de reservas escrita en la landing, datos duplicados entre landing y CMS, `/servicios`
+sin leer del sistema de reservas, y que cada cliente quiere otra organización y otro diseño. Se
+midieron los cinco contra el código antes de diseñar nada. Spec: `specs/landing-white-label.md`.
+
+**⚠️⚠️ Tres de los cinco no eran lo que parecían, y eso cambió el diseño:**
+
+- **«El CMS está incompleto» era PARCIALMENTE FALSO.** De todo lo que pide el mockup del cliente
+  nuevo, **solo faltan DOS modelos** (los números del hero y los testimonios): `zones` ya tiene
+  `age_range`, `area_sqm` y `rides_count`; `attractions` ya tiene `age` y `badge`; `ticket_types` ya
+  tiene `min_qty`/`max_qty`, `deposit_*` y `features`. El trabajo no es construir un CMS: es
+  **enchufar la landing a lo que ya sabe**.
+- **«Datos de la landing duplicados en el CMS» era AL REVÉS**: el copy vive en el REPO — **142 claves**
+  en `lang/es|en|fr/landing.php`—, así que un cliente **no puede cambiar su titular sin desplegar**.
+- **«/servicios no lee del sistema» era CIERTO y peor.** Los tres servicios tienen **0 productos
+  vinculados** y dos llevan una tabla de precios **tecleada a mano** (`landing_services.price_table`).
+  ▶ Y se midió el porqué: de los tres ejes de esa tabla el catálogo ya expresa dos —la duración es un
+  producto, entre semana/finde es un `rate_type`— y **no expresa el tramo por tamaño de grupo**. Por
+  ese único hueco se copió la tabla entera, y los precios de finde quedaron en dos sitios que pueden
+  separarse sin que nada avise.
+
+**La medida que da la línea.** Secciones de la landing actual contra las del mockup nuevo: `zones ·
+rides · pricing · info · gallery · reserve` frente a `zonas · cumpleaños · normas · info · opiniones ·
+reservar`. **Coinciden 3 de 6, y son exactamente las tres que cuelgan del motor de reservas.** La
+mitad estable es la del dominio; la volátil es editorial.
+
+**▶ DECIDIDO: data-driven el DATO, no la PÁGINA.** Todo lo que la landing enseñe sale del dominio o
+del CMS; la composición de la página es un **paquete de tema por cliente, en código**. Cliente nuevo =
+plantilla nueva, no modelo de datos nuevo.
+⚠️ **Descartado un maquetador visual**: es lo más caro de construir y mantener, y **no resolvería el
+caso que lo motiva** —el mockup trae minijuego, menú de velas y hero propio; ningún maquetador
+genérico produce eso—.
+
+**⚠️ Y el TEMA no es un binario: son TRES mecanismos.** Fue el owner quien corrigió el encuadre.
+Valores (color, radio, tipografía) → **tokens desde BD**: la costura existe —28 variables y 1.271 usos
+de `var()`— y **nada las alimenta**. Ficheros (logo, dibujo del spinner) → **assets por instalación**:
+`spinner.css` ya es un fichero, una clase y 15 consumidores, con tres tokens propios. Dibujos
+compartidos cajón↔landing → **el sistema de iconos, que YA EXISTE**: 22 iconos usados por las dos
+superficies, y `SidebarIconParityTest` impide que se separen —nació de que el cajón se sirvió con 20
+`<svg>` VACÍOS sin que ningún gate se enterara—.
+▶ **Lo que el owner temía imposible ya se puede hacer hoy**, una sola vez y con guarda.
+
+**[DECIDIDO] El icono por producto: SET CURADO, no subida libre.** Hoy lo decide un booleano (tarta si
+es pack, ticket si no) y `ticket_types` no tiene columna de icono. Pasa a ser una clave del sistema de
+diseño, elegible en el panel. A cambio de que añadir uno nuevo sea un despliegue, el catálogo no se ve
+descuidado, **la paridad cajón↔landing sigue pudiendo comprobar el dibujo** —con SVG subidos sería
+imposible— y se evita sanear código ejecutable subido por el operador.
+
+**[DECIDIDO] Los servicios pasan al sistema de reservas DE VERDAD**, no se maquillan en la página. Los
+tres son la misma forma de producto: **reserva de grupo privada fuera del horario de apertura**, con
+precio por persona y por tramo de grupo.
+⚠️⚠️ **Y por eso va en su propia tanda y necesita su propia spec**: toca `AFORO-01`, `AFORO-02`,
+`AFORO-03` y las identidades de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar en SQLite ni en
+staging** (MariaDB). Medido: **18 ficheros** tocan la resolución de precio, así que el tramo se
+consulta solo donde se cobra y las demás superficies siguen rotulando «desde». Anunciarla como «tres
+extensiones aditivas» sería repetir el error de dimensionado que `specs/desglose-dinero-cliente.md`
+§11 ya documenta.
+
+**Orden acordado**: **A** el tema (barato, no toca dominio) · **B** el contenido y la landing del
+segundo cliente como primer paquete de tema · **C** los servicios como producto real, la última y con
+spec propia.
