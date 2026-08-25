@@ -103,8 +103,17 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2830 en verde** (16.414 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
-  ▶ **+3 en el último corte** (`#155`): el email de una bajada cuenta el dinero — e2e con la
+- Suite **2834 en verde** (16.429 aserciones, `--parallel` **~43 s** medidos el 2026-08-25 **sobre el
+  estado FUSIONADO** — dinero del agente A + revisión/i18n del agente B) ·
+  ▶ **+4 en el último corte** (`#157`): `ClientMoneyLabelsAreTranslatedTest`, la **segunda** guarda
+  del EN/FR. No repite a la de `#154`: añade la guarda-de-la-guarda, la prohibición del **mecanismo**
+  (el helper compartido no puede volver a citar `admin.*`), el barrido ancho de todas las claves
+  `tickets.*` del dominio con suelo declarado, y —lo que la separa— que **los tres idiomas digan cosas
+  DISTINTAS**. ❗ **Medido**: con `lang/fr` relleno de castellano, la guarda de `#154` **pasa con 23
+  verdes** y ésta cae. **2 mutaciones, las 2 muerden.**
+  ⚠️ **Y las dos nacieron del MISMO defecto arreglado dos veces en paralelo** por los dos agentes sin
+  saberlo (`#157`): se tiró el arreglo duplicado y se quedó lo que no coincidía.
+  ▶ Antes, **+3** (`#155`): el email de una bajada cuenta el dinero — e2e con la
   línea renderizada, la variante absorbida y la guarda de idiomas. **3 mutaciones muerden.**
   ▶ Antes, **+1** (`#154`): las etiquetas del cargo de puerta que lee el CLIENTE
   viven en `tickets.*` con sus TRES idiomas — guarda `Lang::has(..., false)` + composición bajo

@@ -8329,3 +8329,68 @@ muerto que describen · **0 artefactos de lealtad** en todo el árbol.
 ✅ del owner, que ahora tiene **dos** cosas más que decidir (la redacción legal del waiver y el plazo
 de conservación) y **una** que ya decidió aquí (las fuentes de puntos).
 
+
+## #157 · 2026-08-25 · Los DOS agentes arreglaron el mismo defecto a la vez — se salvó la mitad que no coincidía
+
+⚠️⚠️ **Esto es, sobre todo, una entrada de MÉTODO.** El arreglo del desglose EN/FR lo hicieron **los
+dos agentes en paralelo, sin saberlo**, en la misma tarde. El del panel lo empujó como `#154`; el de
+landing lo tenía commiteado en local. Al fusionar, **el arreglo duplicado se tiró entero** y solo
+sobrevivió lo que no coincidía: la guarda.
+
+### Cómo pasó, sin adornos
+
+La ficha la abrió `#149` en `DEUDA.md` y la dejó anotada **porque no era de su carril** (es i18n de
+cara al cliente, no panel/dinero). El agente de landing la leyó ahí, la midió y la arregló. El del
+panel, que la había escrito, volvió sobre ella y la arregló también.
+▶ **El reparto por carriles no falló: falló su borde.** Una ficha que un agente abre *fuera* de su
+carril es exactamente la que los dos creen suya.
+❗ **La regla que sale de aquí, y ya está en `ESTADO`**: antes de abrir una ficha de `DEUDA.md`,
+**mirar si el otro agente la tiene abierta** — y decirlo en la foto viva al empezarla, no al cerrarla.
+
+### Qué se tiró y qué se quedó, y por qué
+
+**Se tiró el arreglo entero del agente de landing.** Los dos habían llegado al mismo diagnóstico
+—`OrderAdjustment::breakdownLabel()` lo comparten panel y cliente, y traducía desde `admin.*`, que
+solo existe en ES— y a la misma decisión: mudar las claves a `tickets.*`.
+▶ **Y las suyas eran mejores**: `gate_change_line_slot` / `gate_change_line_product` siguen a la
+hermana que ya vivía ahí (`gate_change_line`), mientras que `breakdown_*` inventaba una familia
+nueva. Cuando dos soluciones son equivalentes, **manda la que ya está en `main`**; discutir el nombre
+habría costado más que el defecto.
+
+**Se quedó la guarda**, porque **no coincidía**. `OrderTotalsBreakdownTest` (`#154`) comprueba que las
+tres claves existen en ES/EN/FR con `Lang::has(…, false)` y que la composición real bajo `en` devuelve
+la frase inglesa. `ClientMoneyLabelsAreTranslatedTest` añade **cuatro cosas que aquélla no puede ver**:
+
+1. **La guarda de la guarda** — que `Lang::has()` sepa decir que NO. Sin ella, un instrumento roto
+   deja verde todo lo demás sin mirar nada.
+2. ❗❗ **Que los tres idiomas digan cosas DISTINTAS.** Es el modo de fallo que **el propio docblock de
+   `#154` nombra** —«un cliente francés leyendo castellano, que parece texto y no falla nada»— **y que
+   su test no asevera**: rellenar `lang/fr` con el texto español deja verde cualquier comprobación de
+   existencia. Y ése es justo el arreglo que hace quien tiene prisa por poner un test en verde.
+3. **El MECANISMO**: el helper compartido no puede volver a citar `admin.*`, exista o no la traducción
+   ese día.
+4. **El barrido ANCHO**: toda clave `tickets.*` que cite el dominio, no solo las tres de hoy — con
+   **suelo declarado**, porque un escáner que deje de encontrar nada daría verde sin mirar el corpus
+   (`#143` §8).
+
+### ❗ La prueba de que no es un duplicado, ejecutada
+
+No se afirma: se midió. Con `lang/fr` relleno con el texto castellano —la mutación del punto 2—:
+
+    OrderTotalsBreakdownTest        → 23 passed  ✅ (no lo ve)
+    ClientMoneyLabelsAreTranslated  →  1 failed  ⨯  (lo caza)
+
+▶ Y la otra mutación —devolver la clave al espacio `admin.*`— tumba la del mecanismo, con la
+traducción presente: cae por dónde lee, no por qué lee.
+▶ **Ésta es la única razón por la que la guarda sobrevivió a la fusión**: sin esa medida, la decisión
+honesta habría sido tirarla también.
+
+### Lo que NO se decidió aquí
+
+⚠️ Si esto merece **invariante propia** («lo que lee un cliente se traduce desde un espacio que existe
+en los tres idiomas; el dominio nunca traduce desde `admin.*`»). Hoy la regla vive en dos docblocks,
+en esta entrada y en dos guardas. Crear una **familia nueva** en `INVARIANTES.md` es un cambio
+estructural de doc —toca el recuento del gate y la tabla de enrutado—, así que **se deja al owner**.
+
+Verificación: suite verde sobre el estado FUSIONADO · Pint limpio · `docs-check` verde · las dos
+mutaciones ejecutadas y con su salida arriba.
