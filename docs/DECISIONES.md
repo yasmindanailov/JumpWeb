@@ -7581,3 +7581,88 @@ es un hueco con nombre.
 muerden** (verificadas por CONTENIDO, no por código de salida: dos dieron «no se aplicó» y «muerde» a
 la vez, que es la trampa de `#92`) · y el partial renderizado con **los payloads exactos de
 `R-S9XDYB`** para comprobar qué habría visto el owner.
+
+## #146 · 2026-08-25 · La AUDITORÍA del cambio de precio: `PAY-18` creó una causa nueva y CINCO sitios siguen contando la vieja
+
+**De dónde sale.** El owner preguntó lo que parecía una duda de producto —*«si el cliente pagó el
+total y cambio a una fecha más barata, ¿qué pasa con la diferencia? ¿se reembolsa? ¿cómo se la
+devuelvo sin cancelar el pedido?»*— y midiéndolo salieron **cuatro defectos más** del mismo tronco
+que `#145`. Ninguno está arreglado: esta entrada existe para que no se pierdan.
+
+⚠️⚠️ **El tronco, dicho una vez**: `PAY-18` (`#131`, 2026-08-24) hizo que **mover la fecha
+re-tarifique**. Antes de eso, **la única forma de que el valor de una línea bajara era bajar la
+cantidad**. Cinco sitios se escribieron sobre esa premisa y ninguno se revisó al cambiarla.
+
+### Lo que SÍ funciona (medido, no supuesto)
+
+**Subida** (2 × 20,00 → 2 × 24,00): impecable. `pendientePuerta = 8,00` → «Falta pagar en el
+parque», el cliente lee «…ahora vale 8,00 € más», y desde `#145` la línea del desglose dice
+**«Cambio de fecha a 06/06/2026 10:00»**. Nada que tocar.
+
+**Bajada, el ledger**: los dos ejes cierran y los importes son correctos. `facturado 40,00 ·
+valor 36,00 · cobradoOnline 40,00 · pendienteDevolucion 4,00`, y la nota al cliente dice «…ahora
+vale 4,00 € menos». **El dinero está bien contado.** Lo que falla es lo que se puede HACER con él.
+
+### Los cuatro defectos abiertos
+
+· **D2 · Dos textos cuentan la causa vieja.** El aviso al operador tras la edición dice
+  «✓ Producto actualizado: **unidades canceladas**» —no se canceló ninguna unidad— y el pie de
+  «Pendiente de devolución» dice que la causa fue «**una reducción de cantidad o una cancelación**»
+  —fue un cambio de fecha—. Los lee **cada vez** que se mueve una fecha a la baja.
+
+· **D3 · El marcador de reducción no se dispara.** `recordReductionMarker` solo se llama
+  `if isset($itemEditContext['quantity_change'])`. Medido en la bajada por fecha: **«(ninguna fila
+  de ajuste)»** — el desglose no tiene ni una línea que explique de dónde salen los 4,00 €.
+  ⚠️ **Y NO es cosmético, como se creyó al abrirlo**: su propio comentario dice que el marcador
+  existe «para que `itemOriginalOnlineCents` reconstruya la cantidad original y el sobre-cobro
+  aflore». Es el mecanismo del que depende D4.
+
+· **D4 · ⚠️ El tope de reembolso por línea es INCORRECTO tras un cambio de precio.**
+  `itemOriginalOnlineCents` reconstruye lo cobrado por la línea **solo si encuentra un
+  `quantity_change`**; si no, cae a lo cobrado ACTUAL — que la re-tarificación ya sobrescribió. Su
+  docblock avisa de que es «aproximado solo si hubo cambio de PRODUCTO»: **no menciona la fecha,
+  porque cuando se escribió la fecha no cambiaba el precio.**
+  ▶ **Medido**: pagó 40,00 → movido a día barato (24,00) → **cancelada la reserva entera**. El panel
+  dice que se le deben **40,00** y el tope por línea se queda en **24,00**: hay 16,00 € del propio
+  dinero del cliente que **no salen por esa vía**. El tope del PEDIDO sí es correcto (40,00), así
+  que hay salida — pero nada le dice al operador que la vía por línea se queda corta.
+
+· **D5 · ⚠️⚠️ «Reembolsar» no deja elegir el importe, y eso puede regalar dinero.** El lote hace
+  `$amountCents = $this->fresh()->…->itemRefundableRemainderCents($item)`: **devuelve siempre el
+  remanente entero de la línea**. No hay campo de importe.
+  ▶ **Medido ejecutándolo**: se le debían **4,00 €**; el operador pulsa «Reembolsar» en esa línea y
+  se le devuelven **36,00 €**. Después, la reserva **sigue viva y vale 36,00** y el cliente ha
+  pagado 4,00. El parque ha regalado **32,00 €**, que el ledger registra —honestamente— como
+  `compensado: 32,00`. Los dos ejes siguen cerrando: **el ledger dice la verdad sobre un error.**
+  ▶ **No es una trampa oculta**: el modal avisa («se devolverá su importe completo») y el radio de
+  intención dice «conserva su reserva sin tener que pagar nada más». El sistema **declara lo que va
+  a hacer**; simplemente **no ofrece hacer lo que hace falta**.
+  ▶ **Y el dominio SÍ sabe**: `Order::executePartialRefund(OrderItem, int $amountCents, …)` acepta
+  cualquier importe. **Falta un campo en el panel, no un mecanismo.**
+
+### La respuesta a la pregunta del owner, en una línea
+
+**Hoy no se pueden devolver esos 4,00 € desde el panel sin cancelar.** El único botón por línea
+devuelve 36,00.
+
+### El cumpleaños (pack con señal): distinto, y normalmente ni hace falta
+
+La bajada acredita **en cascada**: primero el `extra_due` de ediciones, luego el resto de la señal,
+y **solo lo que cae por debajo de lo ya cobrado online** aflora como «pendiente de devolución». Es
+decir: en un pack con señal, una bajada pequeña **se absorbe contra lo que quedaba por pagar en el
+parque** y el cliente simplemente paga menos al llegar — sin reembolso ninguno.
+⚠️ **Leído en el código, NO ejecutado.** Antes de darlo por bueno hay que medirlo con un pack real,
+como se hizo con los otros dos casos.
+
+### El orden que propongo
+
+**D4 y D3 se arreglan con el mismo cambio**: que `itemOriginalOnlineCents` sepa reconstruir también
+por **precio unitario original**, no solo por cantidad. El dato ya existe —el registro guarda
+`from_unit_price`/`to_unit_price` desde `#145`, y el ajuste lleva el `slot_change` en su contexto—.
+Con eso, **D2** se arregla de paso porque ya se sabe la causa correcta.
+**D5 va aparte y primero**: es el único que puede costar dinero de verdad, y es un campo de
+formulario más el paso del importe elegido a `executePartialRefund`, que ya lo acepta.
+
+⚠️ Toca `Order.php`, que es dinero. **NO entra en el `CRITICAL_RE`** (comprobado), así que no exige
+`VERIFY_CONC`, pero sí exige escenarios por los cuatro caminos —bajar cantidad, bajar precio, las
+dos a la vez, y cancelar después de una bajada— con su mutación cada uno.

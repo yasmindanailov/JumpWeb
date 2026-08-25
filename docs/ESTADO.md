@@ -4,10 +4,15 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-25**.
 >
-> ❗ **Lo primero que tienes que saber**: la **tanda A de `specs/landing-white-label.md` está
-> CERRADA** (`#138`→`#143`). Lo siguiente es la **tanda B** (contenido y el segundo cliente como
+> ❗❗ **LO PRIMERO, y es de DINERO**: hay **cuatro defectos ABIERTOS** del cambio de precio
+> (`DECISIONES #146`, sin arreglar), y uno de ellos —**«Reembolsar» devuelve siempre la línea
+> entera**— puede **regalar dinero**: medido, se debían 4,00 € y devolvió 36,00 €. Están en
+> «Lo que está ABIERTO», punto **0.bis**, con su orden de ataque. **Léelo antes de planificar nada.**
+>
+> ❗ **Y lo segundo**: la **tanda A de `specs/landing-white-label.md` está CERRADA**
+> (`#138`→`#143`). Lo siguiente de esa línea es la **tanda B** (contenido y el segundo cliente como
 > primer paquete de tema). Redis ya no bloquea nada (`#137`) y el desglose de dinero está CERRADO
-> (`#127`→`#134`).
+> (`#127`→`#134`) — **cerrado el DESGLOSE, no el cambio de precio: eso es `#146`**.
 >
 > ⚠️ **Y este documento ADELGAZÓ el 2026-08-25, de 824 líneas a menos de la mitad.** Se retiró el
 > índice de la Fase 4 —83 líneas que duplicaban el tracker de una fase CERRADA—, se movió el mapa del
@@ -235,16 +240,40 @@ corpus no coinciden, la que sobra **no es la que da más: es la que no puede exp
 
 ## ▶ Lo que está ABIERTO y no es de la tanda A
 
-❗ **0.bis · `[PENDIENTE: owner]` — el rastro que falta cuando la bajada NO deja ajuste**
-(`DECISIONES #145`, séptimo defecto). En un pedido **pagado íntegro online**, mover la fecha a un día
-más barato **no crea ninguna fila de ajuste**: la bajada aflora como «pendiente de devolución». Y el
-marcador de reducción que existe justo para dejar rastro solo se dispara
-`if isset($itemEditContext['quantity_change'])` — **otra condición que `PAY-18` dejó atrás**, como el
-filtro del contexto que `#145` sí arregló. Consecuencia: en ese caso el desglose no tiene ninguna fila
-que explique la bajada (el registro del pedido sí la tiene, desde `#145`).
-▶ **No se arregla de oficio**: extenderlo añade una fila de 0 € donde hoy no hay ninguna, y eso cambia
-lo que ve el operador en **todos** los pedidos pagados íntegros cuya fecha se mueva. Es decisión de
-producto.
+❗❗ **0.bis · CUATRO defectos ABIERTOS del cambio de precio — y uno puede REGALAR DINERO**
+(`DECISIONES #146`, 2026-08-25. Todo medido ejecutando; **nada arreglado**.)
+
+⚠️⚠️ **El tronco, en una frase**: `PAY-18` (`#131`) hizo que **mover la fecha re-tarifique**. Antes de
+eso **la única forma de que bajara el valor de una línea era bajar la cantidad**, y **cinco sitios se
+escribieron sobre esa premisa**. `#145` arregló uno; quedan cuatro.
+
+▶ **Lo que SÍ funciona, para no perseguirlo**: la SUBIDA es impecable (8,00 € a «Falta pagar en el
+parque», con su línea «Cambio de fecha a …» desde `#145`), y en la BAJADA **el ledger cuenta bien**:
+`facturado 40,00 · valor 36,00 · cobradoOnline 40,00 · pendienteDevolucion 4,00`. **El dinero está
+bien contado. Lo que falla es lo que se puede HACER con él.**
+
+| | Defecto | Gravedad |
+|---|---|---|
+| **D5** | ⚠️⚠️ **«Reembolsar» no deja elegir importe**: devuelve siempre el remanente entero de la línea. **Medido: se debían 4,00 € y devolvió 36,00 €**, dejando una reserva viva de 36,00 pagada con 4,00 → **32,00 € regalados** | **Puede costar dinero** |
+| **D4** | El tope de reembolso por línea es incorrecto tras cambiar el precio: pagó 40,00, se le deben 40,00 y el tope se queda en 24,00 | 16,00 € que no salen por esa vía |
+| **D3** | El marcador de reducción no se dispara con `slot_change` → **«(ninguna fila de ajuste)»** en el desglose | Sin rastro |
+| **D2** | Dos textos dicen «unidades canceladas» / «reducción de cantidad o cancelación» cuando fue un cambio de fecha | Confunde al operador |
+
+❗ **La respuesta a la pregunta del owner, literal: HOY NO SE PUEDEN devolver 4,00 € desde el panel sin
+cancelar el pedido.** El único botón por línea devuelve 36,00.
+▶ **Y el dominio SÍ sabe**: `Order::executePartialRefund(OrderItem, int $amountCents, …)` acepta
+cualquier importe. **Falta un campo en el panel, no un mecanismo.**
+
+▶ **Orden propuesto**: **D5 primero y aparte** (es el único que sangra, y es un campo de formulario más
+pasar el importe). **D4 + D3 con el mismo cambio**: que `itemOriginalOnlineCents` reconstruya también
+por **precio unitario original**, no solo por cantidad — el dato ya existe (`from_unit_price` /
+`to_unit_price` en el registro, desde `#145`). **D2 cae de paso**, con la causa ya en el ajuste.
+⚠️ Toca `Order.php` (dinero). **NO entra en el `CRITICAL_RE`** —comprobado—, así que no exige
+`VERIFY_CONC`, pero sí escenarios por los CUATRO caminos —bajar cantidad, bajar precio, las dos, y
+cancelar tras una bajada— con su mutación.
+⚠️ **Y el PACK (cumpleaños) está sin medir**: leyendo el código, la bajada se absorbe en cascada contra
+lo que quedaba por pagar en el parque y normalmente **no hace falta reembolsar** — pero eso **no se ha
+ejecutado**. Medirlo antes de diseñar nada sobre ello.
 
 🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →
