@@ -1,7 +1,7 @@
 # [SPEC] Reseñas de Google en la landing — la prueba social que el parque NO controla
 
-> Estado: **⬜ borrador — para revisión del owner** · Última actualización: 2026-08-25 ·
-> Decisión asociada: `DECISIONES «#N»` al aprobarse.
+> Estado: **🟦 en revisión — §3 DECIDIDA por el owner, §4 cerrada, falta su ✅ para implementar** ·
+> Última actualización: 2026-08-25 · Decisión asociada: `DECISIONES «#N»` al aprobarse.
 >
 > ⚠️⚠️ **Empieza por §1.3.** Esta integración tiene **cinco restricciones DURAS** que no son
 > negociables con Google y que cambian el diseño, no lo decoran. Tres de ellas chocan de frente con
@@ -11,6 +11,15 @@
 > ⚠️ **Nace de un encargo del owner** (2026-08-25), al dimensionar la tanda B de
 > `specs/landing-white-label.md`: los testimonios del segundo cliente **no se teclean, se traen de
 > Google**.
+>
+> ❗❗ **Lo que hay que saber si solo se leen tres líneas:**
+> 1. **Google es la fuente de verdad y el parque NO elige qué sale en su portada** (§1.4). Está
+>    decidido y asumido, pero es una cesión de control real.
+> 2. **De las dos opciones de respaldo del owner, el «snapshot de Google» NO se puede hacer**: la
+>    política lo prohíbe y no hay excepción de 30 días (§3.2). El respaldo son reseñas propias.
+> 3. **El respaldo NO es para cuando Google falle**: es lo que ve **todo visitante que no acepta
+>    cookies de terceros**, cada día (§3.3). Si se documenta como plan de emergencia, el parque lo
+>    dejará vacío.
 
 ---
 
@@ -94,70 +103,95 @@ Criterios de éxito, todos medibles:
 
 ---
 
-## 3. ❗ Las TRES decisiones que necesita el owner, y no puede tomar el agente
+## 3. Las tres decisiones — **RESUELTAS por el owner el 2026-08-25**
 
-Van primero porque **el diseño de §4 cambia entero según se respondan**.
+### 3.1 ✅ [DECIDIDO owner] **Google es la FUENTE DE VERDAD; el CMS es el respaldo**
 
-### 3.1 `[DECISION-PENDIENTE]` ¿Google es la ÚNICA fuente, o el parque conserva voz?
+> «Google será la fuente de verdad, y nosotros tendremos fallback si algo falla, algunas reseñas
+> escritas a mano, o un snapshot de las de Google.»
 
-| | Qué implica |
+▶ Se asume lo que §1.4 describe: **el parque no elige qué reseñas de Google salen**. A cambio gana la
+autoridad de la fuente, que es lo que el mockup enseña en grande.
+▶ Y el respaldo son **reseñas propias escritas a mano en el CMS** (§3.2 explica por qué el snapshot
+no puede ser).
+
+### 3.2 ✅ [DECIDIDO, con una CORRECCIÓN medida] Caché corta SÍ · snapshot NO
+
+⚠️⚠️ **De las dos opciones de respaldo que planteó el owner, una NO es viable.** Verificado contra
+los *Google Maps Platform Service Terms* el 2026-08-25:
+
+| | Veredicto |
 |---|---|
-| **A · Solo Google** | Lo que §1.4 describe, con todas sus consecuencias. Cero mantenimiento editorial |
-| **B · Solo CMS** | El parque elige y ordena. Cero coste, cero dependencia. Pierde la autoridad de «en Google» |
-| **C · Google para la CIFRA, CMS para las tarjetas** | La cabecera «4,8 · 320 reseñas» sale de Google (barato: campos `rating`+`userRatingCount`, **SKU más económico que `reviews`**) y las tarjetas las elige el parque. ⚠️ **Riesgo declarado**: un visitante puede leer las citas y no encontrarlas en Google |
-| **D · Las dos, separadas y rotuladas** | «Destacadas por el parque» + «Últimas en Google». Honesto y completo; **es el doble de superficie** y hay que decidir qué manda |
+| **Caché corta en memoria** | ✅ **PERMITIDA**, y explícitamente: hay excepción para *«temporary caching for immediate performance optimization»* — caché de corta duración, en memoria, refrescada con regularidad. Es lo que resuelve el coste de R5 |
+| **Snapshot persistente de las reseñas de Google** | ❌ **PROHIBIDO.** «Reseñas y ratings» están en la lista de contenido **no cacheable**, y la excepción anterior es explícitamente **«NO para almacenamiento persistente»**. **No hay ningún límite de 30 días** que lo habilite: el `place_id` es la única excepción indefinida |
+| **Reseñas escritas a mano en el CMS** | ✅ Sin restricción: es **contenido propio**, no contenido de Places |
 
-▶ **Recomendación del agente: C.** Da la autoridad de la cifra (que es lo que el mockup enseña
-grande) por el SKU barato, conserva el control editorial de la portada, y deja la puerta abierta a
-traer las 5 de Google más adelante sin rehacer nada. Es además lo único que **no** depende de
-resolver §3.2.
+▶ **Por eso el respaldo es el CMS y no un snapshot.** No es una preferencia de diseño: es la única de
+las dos opciones que se puede sostener.
 
-### 3.2 `[DECISION-PENDIENTE]` ⚠️ La caché, que es el nudo legal y económico
+⚠️⚠️ **Y una trampa medida en este repo que aplica de lleno** (`DECISIONES #137`): Redis está con
+**`allkeys-lru`**, así que **puede EVICTAR una clave antes de su TTL** — fue el motivo por el que el
+pase de Redsys se sacó de la caché. Traducido: la caché de reseñas **se evapora cuando le toque**, y
+el diseño trata «no está» como el caso NORMAL, no como el fallo.
 
-R2 prohíbe cachear «más allá de las excepciones permitidas», y la sección de política **no documenta
-ninguna excepción temporal para `reviews`**. Eso deja tres caminos, y **ninguno es gratis**:
+### 3.3 ✅ [RESUELTO por construcción] El avatar: es lo que ata el respaldo al consentimiento
 
-| | Qué pasa |
-|---|---|
-| **Sin caché** | Cumple la letra. **Cada visita a la home es una llamada al SKU más caro.** El coste escala con el tráfico y un pico de visitas es un pico de factura |
-| **Caché corta (p. ej. 15 min) en Redis** | Es lo que hace todo el mundo, y `#137` ya dejó Redis como requisito duro **solo para caché**. ⚠️ Pero es una interpretación de la política, no una autorización escrita: **exige leer los Service Specific Terms y decidirlo con conocimiento** |
-| **Snapshot diario servido desde nuestro almacenamiento** | El más barato y el más rápido. **Es exactamente lo que R2 prohíbe.** Se descarta salvo que Google lo autorice por escrito |
-
-⚠️⚠️ **Y hay una trampa medida en este repo que aplica aquí de lleno** (`DECISIONES #137`): Redis
-está con **`allkeys-lru`**, así que **puede EVICTAR una clave antes de su TTL**. Fue el motivo por el
-que el pase de Redsys se sacó de la caché. Traducido: **la caché de reseñas se puede evaporar en
-cualquier momento**, y el diseño tiene que tratar «no está» como el caso normal, no como el fallo.
-
-▶ **Lo que el agente NO puede resolver y necesita del owner**: si se acepta la caché corta, hace
-falta la lectura de los *Google Maps Platform Service Specific Terms* y, si hay duda, confirmación de
-Google. **Esto es cumplimiento, no ingeniería.**
-
-### 3.3 `[DECISION-PENDIENTE]` El avatar del autor: CSP y consentimiento
-
-R3 exige mostrar la foto del autor, que vive en `lh3.googleusercontent.com`. Medido en el código:
-la directiva `img-src` de `Http\Middleware\SecurityHeaders::contentSecurityPolicy()` vale hoy
+R3 exige mostrar la foto del autor, que vive en `lh3.googleusercontent.com`. Medido: la directiva
+`img-src` de `Http\Middleware\SecurityHeaders::contentSecurityPolicy()` vale hoy
 
     img-src 'self' data:      ← la bloquea
 
-Y cargarla es **una petición del visitante a Google**, que es exactamente lo que `RGPD-05` gestiona
-hoy con la categoría «mapa» (el iframe nace con `data-src` hasta que se consiente).
+Y cargarla es **una petición del visitante a Google**, exactamente lo que `RGPD-05` gestiona con la
+categoría «mapa» (el iframe nace con `data-src` hasta que se consiente).
 
-| | Qué implica |
+Las tres salidas posibles y por qué solo una cierra:
+
+| | Veredicto |
 |---|---|
-| **Ampliar `img-src`** a `https://*.googleusercontent.com` | Cumple R3. ⚠️ Abre la CSP a un comodín de subdominio de Google, y **sigue siendo una petición a un tercero** → hay que decidir si entra en el consentimiento |
-| **Bloquear hasta consentir**, como el mapa | Coherente con `RGPD-05` y con la política de cookies ya publicada. Sin consentimiento, la sección se ve **sin avatares** — que **incumple R3** |
-| **Proxear las fotos** por nuestro servidor | Resuelve CSP y consentimiento de una vez. ⚠️ **Es «store» de contenido de Places (R2)** y además nos pone a servir imágenes de terceros |
+| **Proxear las fotos** por nuestro servidor | ❌ Es «store» de contenido de Places, y la política nombra **las fotos** entre lo no cacheable |
+| **Servir las reseñas SIN avatar** cuando no hay consentimiento | ❌ Incumple R3: la atribución con foto es obligatoria, no recomendada |
+| **Ampliar `img-src` + servir las de Google SOLO con consentimiento** | ✅ **La única que cumple las dos normas a la vez** |
 
-▶ **Recomendación del agente**: si se elige la opción **C** de §3.1, **este problema desaparece**: la
-cifra agregada no lleva autor ni foto, así que no hay R3 que cumplir ni tercero que cargar. Es la
-razón más fuerte a favor de C.
+▶ **Y aquí es donde el respaldo deja de ser un plan B.** Sin consentimiento no se pueden servir las
+reseñas de Google **en absoluto** —ni con avatar (CSP/RGPD) ni sin él (R3)—, así que el visitante que
+no consiente ve **las del CMS**, que son contenido propio y no piden permiso a nadie.
+
+❗❗ **Consecuencia que cambia el encuadre del trabajo: el respaldo NO es para cuando Google falle.**
+Cubre **tres** casos, y el tercero pasa todos los días:
+
+1. Google caído, cuota agotada o sin `place_id` configurado;
+2. la caché evictada por `allkeys-lru` y la llamada aún en vuelo;
+3. **el visitante no ha aceptado cookies de terceros** — que es un porcentaje real del tráfico, no
+   una excepción.
+
+⚠️ **Traducido para el operador**: las reseñas escritas a mano **no son un adorno de emergencia**; son
+lo que ve una parte de sus visitantes cada día. El panel tiene que decirlo con esas palabras, o el
+parque las dejará vacías creyendo que nunca se usan.
+⚠️ **No medible todavía**: `cookie_consent_logs` tiene **1 fila** (desarrollo), así que el porcentaje
+real de consentimiento **no se conoce**. Se mide en producción antes de dar por buena ninguna
+suposición sobre cuánta gente ve una u otra fuente.
 
 ---
 
-## 4. Diseño elegido — **pendiente de §3**
+## 4. Diseño elegido
 
-> ⚠️ Este apartado se completa **cuando el owner responda §3.1–§3.3**. Lo que sigue es lo que **no
-> cambia** con ninguna de las respuestas, y por tanto ya se puede fijar.
+### 4.0 La regla que ordena todo lo demás
+
+**Google manda cuando puede; el CMS responde siempre.** En una sola frase:
+
+    ¿hay consentimiento de terceros?  ─no→  CMS
+              │sí
+    ¿hay place_id y clave?            ─no→  CMS
+              │sí
+    ¿la caché tiene reseñas frescas?  ─sí→  Google (0 llamadas)
+              │no
+    ¿Google responde a tiempo?        ─no→  CMS
+              │sí
+              └─→ Google, y a la caché corta
+
+⚠️ **Ninguna de las cuatro salidas hacia el CMS es un error**, y ninguna se registra como tal: son
+los cuatro estados normales del sistema. Un log de error por visitante sin consentimiento llenaría el
+log de ruido y escondería los fallos de verdad.
 
 ### 4.1 La forma, sea cual sea la fuente
 
@@ -165,18 +199,26 @@ razón más fuerte a favor de C.
 este repo (`Booking\Contracts\*`, `Payments\Contracts\*`) y lo que hace que la landing no sepa de
 dónde vienen los datos:
 
-    Content\Contracts\SocialProof            (futuro)  ← lo que la landing pide
-      ├─ rating(): ?Rating                             la cifra agregada (valor, recuento, enlace)
-      └─ testimonials(): Collection                    las tarjetas, vengan de donde vengan
+    Content\Contracts\SocialProof            (futuro)  ← lo ÚNICO que la landing conoce
+      ├─ rating(): ?Rating                             cifra agregada: valor, recuento, enlace, fuente
+      └─ testimonials(): Collection<Testimonial>       tarjetas: texto, autor, avatar?, fecha, enlace?
 
-    Content\Services\GoogleSocialProof        (futuro)  ← implementación Places
-    Content\Services\CmsSocialProof           (futuro)  ← implementación CMS
-    Content\Services\NullSocialProof          (futuro)  ← sin configurar: todo vacío, cero llamadas
+    Content\Services\GoogleSocialProof        (futuro)  ← Places, con caché corta
+    Content\Services\CmsSocialProof           (futuro)  ← el respaldo, desde `testimonials` (futuro)
+    Content\Services\FallingBackSocialProof   (futuro)  ← EL DE ARRIBA con el de abajo detrás
 
 ▶ **Por qué así y no un `GoogleReviewsService` a secas**: `#136` fijó que la landing consume DATOS,
-no proveedores. Con el contrato, cambiar de fuente —o combinarlas, §3.1·D— es una línea del
-contenedor y **no toca ni una vista**. Y `ModuleContractsTest` ya vigila que un contrato tenga
-consumidor real.
+no proveedores. Con el contrato, la vista **no sabe de dónde vienen** ni tiene un `@if` por fuente, y
+`ModuleContractsTest` ya vigila que un contrato tenga consumidor real.
+
+⚠️⚠️ **Y el respaldo es un DECORADOR, no un `if` repartido por la vista.** `FallingBackSocialProof`
+recibe los otros dos y aplica la cascada de §4.0 en **un solo sitio**. Es deliberado: un respaldo
+escrito como condicional en la plantilla acaba con una rama sin cubrir —y la rama sin cubrir de un
+respaldo es, por definición, la que solo se ejecuta cuando algo va mal—.
+
+▶ **Cada `Testimonial` lleva de dónde viene** (`source`: `google` | `cms`). No es metadato ocioso:
+**la atribución que R3 exige depende de ello** y la vista tiene que poder pintar el avatar y el
+enlace solo cuando toca. Que el dato lo diga evita que la vista lo deduzca.
 
 ### 4.2 ⚠️ FUERA del camino de render, sin excepción
 
@@ -208,6 +250,23 @@ estrellas vacías. Un hueco que promete algo que no llega es peor que no estar.
 | **API key** de Google | **`.env`**, nunca en BD | `SEC-11`: los secretos no son legibles ni editables desde el panel. ⚠️ El secret de Turnstile **sí** vive hoy en BD y es una **contradicción abierta** documentada en `INSTALACION-CLIENTE.md` §0 — no se repite aquí |
 | **`place_id`** | Ajuste del panel (`social.google_place_id`) | Es la única cosa que la política **exime** de las restricciones de caché (R2), y cambia por instalación |
 | El enlace a la ficha | Derivado del `place_id` | ⚠️ Pasa por `safeExternalUrl` como el resto (`SEC-07`) |
+
+### 4.4.bis El respaldo del CMS: `testimonials` (futuro)
+
+La tabla que la tanda B iba a construir de todos modos, con los campos **medidos del mockup**
+(`{{ o.texto }}`, `{{ o.nombre }}`, `{{ o.meta }}` + cinco estrellas):
+
+    testimonials (futuro)   text (json i18n) · author · meta · rating · position · is_active · timestamps
+
+Sigue el patrón exacto de `faqs`/`park_rules` —campos i18n en JSON, `position`, `is_active`— y el
+recurso del panel el de `FaqResource` (permiso `content.manage`, grupo «Contenido»).
+
+⚠️ **Su ayuda en el panel NO puede decir «por si Google falla»**, porque sería falso: por §3.3 esto
+es lo que ve **todo visitante que no acepta cookies de terceros**, cada día.
+
+⚠️ **`rating` aquí es del testimonio, no la cifra agregada.** La cifra («4,8 sobre 5 · 320 reseñas»)
+**solo** existe si viene de Google: inventarla a mano sería atribuir a Google un número que Google no
+ha dado. Sin consentimiento o sin API, **la cabecera no se pinta** y las tarjetas del CMS salen solas.
 
 ### 4.5 La restricción de la que nadie se acuerda: R4 y el diseño de la tarjeta
 
@@ -246,10 +305,16 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
    que compruebe que el fake SÍ explota cuando se le llama, o el test estaría verde sin mirar nada.
 2. **Presupuesto de consultas de la home, medido ANTES y DESPUÉS** contra `HomePageTest`. El número
    no puede subir. Es la red de `PERF-02`.
-3. **Degradación, los CUATRO caminos** (futuro): sin `place_id` · con la API caída (timeout) · con
-   error de cuota (429) · con la clave inválida (403). **En los cuatro: 200 y sección ausente.**
-   ⚠️ No vale probar solo el camino feliz y uno de error: los cuatro tienen tratamiento distinto y
-   el de cuota es el que va a pasar de verdad.
+3. **La CASCADA de §4.0, sus CINCO salidas** (futuro), y ninguna se da por buena sin ejercitarla:
+   sin consentimiento · sin `place_id` · con la API caída (timeout) · con cuota agotada (429) · con
+   clave inválida (403). **En las cinco: 200, y se sirven las del CMS.**
+   ⚠️ **Y la sexta, que es la que se olvida**: sin consentimiento **Y** sin testimonios en el CMS →
+   200 y **sección ausente**, sin hueco ni esqueleto.
+   ⚠️ No vale probar el camino feliz y un error: las salidas tienen tratamiento distinto, y la de
+   consentimiento es la que ocurre a diario.
+3.bis **La atribución NO viaja cuando la fuente es el CMS** (futuro): un testimonio propio no puede
+   salir con el avatar ni el enlace de Google. Es el defecto que un decorador mal escrito produce
+   —hereda la vista de la otra fuente— y que la suite verde no vería.
 4. **La atribución no se puede apagar** (futuro): si se sirve una reseña, el HTML lleva autor y
    enlace. Es un requisito legal, así que se asevera como tal y no como estilo.
 5. **`VERIFY` manual en el SANDBOX de Google, una vez, con el `place_id` real**, y su salida pegada
@@ -265,11 +330,24 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
 - **Medido por el agente** el 2026-08-25 contra la documentación oficial de Places API (estructura
   de `Review`, máximo de 5, política de caché y de atribución) y contra el código del repo (la CSP de
   `SecurityHeaders`, el consentimiento de `RGPD-05`, el presupuesto de `PERF-02` y Redis en `#137`).
-- ⚠️ **Lo que el agente NO ha podido verificar y hace falta**:
-  1. si los *Service Specific Terms* permiten la caché corta de §3.2 — **es cumplimiento, no
-     ingeniería**;
-  2. el coste real por 1.000 llamadas del SKU Enterprise + Atmosphere, que cambia con la tarifa
-     vigente y el volumen;
-  3. si el segundo cliente tiene **ficha de Google verificada** y su `place_id`.
-- **Pendiente del owner**: las tres decisiones de §3.
+- **Decidido por el owner** el 2026-08-25: **Google es la fuente de verdad, con respaldo propio**
+  (§3.1). ⚠️ **Y una de sus dos opciones de respaldo se corrigió con la política delante**: el
+  «snapshot de las de Google» está prohibido y no hay excepción de 30 días (§3.2). El respaldo son
+  reseñas escritas a mano, que además es lo único que funciona sin consentimiento (§3.3).
+- ✅ **Resuelto sobre la marcha, sin necesidad de decisión**: el avatar (§3.3). De las tres salidas
+  posibles solo una cumple R3 y `RGPD-05` a la vez, así que no había nada que elegir — y de ahí sale
+  el hallazgo que reencuadra el trabajo: **el respaldo se usa a diario, no en emergencias**.
+- ⚠️ **Lo que el agente NO ha podido verificar, y hace falta ANTES de implementar**:
+  1. el **`place_id`** del segundo cliente y si su ficha de Google está **verificada** — sin eso no
+     hay nada que traer;
+  2. una **clave de API** de Google Maps Platform con Places habilitado, para la verificación §6·5:
+     una integración externa **no se da por buena sin haber hablado con el tercero de verdad**
+     (misma regla que `redsys:verify-sandbox`);
+  3. el **coste real** por 1.000 llamadas del SKU Enterprise + Atmosphere con la tarifa vigente, y el
+     **techo de gasto** que el owner quiere poner en la consola de Google. Un coste que escala con el
+     tráfico **se acota antes de encenderlo, no después de la primera factura**.
+- ❗ **Bloqueo heredado que conviene no descubrir tarde** (§4.2): el refresco va por comando
+  programado, y `DECISIONES #115` dice que **el scheduler no corre en staging**. Allí habrá que
+  dispararlo a mano hasta que el owner active las tareas en el panel del hosting.
+- **Pendiente del owner**: el ✅ a esta spec y los tres datos de arriba.
 - **Entrada final**: `DECISIONES «#N»`.
