@@ -12,6 +12,24 @@
 > · **Agente B (landing/aforo/i18n)** — Última sesión: `#143`, `#144`, `#147`, `#148`, **`#156`** (la
 >   revisión adversarial de las cuatro specs de Fase 6) y **`#157`** (lo que le faltaba a la guarda
 >   del EN/FR).
+>
+> ❗❗ **REPARTO VIGENTE desde el 2026-08-25 por la tarde — LÉELO ANTES DE ELEGIR TAREA.**
+> · **Agente A** → **Fase 6, subsistemas B y C**: primero el **waiver** (`specs/waiver-probatorio.md`)
+>   y después **menores a cargo** (`specs/menores-a-cargo.md`). `[DECIDIDO owner]`.
+> · **Agente B** → **`RGPD-01` y el mapa que lleva a las guardas** (esta nota).
+>
+> ⚠️⚠️ **Y hay una DEPENDENCIA entre las dos, en este orden**: la revisión
+> (`waiver-probatorio.md` §8.3) midió que **`RGPD-01` NO contiene hoy la frase que el waiver dice
+> modificar**. La invariante enumera CINCO operaciones de `anonymize()` y el código hace **OCHO** —
+> calla el borrado del PROPIO titular (nombre, email, teléfono, los tres sellos legales),
+> `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
+> ▶ **Por eso el agente B corrige `RGPD-01` PRIMERO** —solo la VERDAD de lo que el código hace hoy,
+> **sin tocar conducta**— y el waiver parte de ahí para restringirla. **Quien haga el waiver:
+> `git pull --rebase` y arranca sobre la `RGPD-01` corregida**; si la editas antes, chocamos en la
+> misma fila de `INVARIANTES.md`.
+> ⚠️ **Ficheros del agente B en esta tanda**: `docs/INVARIANTES.md` (fila `RGPD-01` y la columna
+> «Verificación» de `PAY-04`/`SEC-06`), `scripts/docs-check.sh` y un test nuevo. **No toca
+> `User::anonymize()`**: esa conducta la modifica el waiver, no esta tanda.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **SIETE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
 > fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
