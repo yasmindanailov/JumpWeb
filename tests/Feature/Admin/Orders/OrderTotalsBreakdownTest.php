@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
 /**
@@ -52,13 +53,45 @@ class OrderTotalsBreakdownTest extends TestCase
         $this->assertSame('+2 '.$this->jumpType->tr('name'), $label);
     }
 
+    /**
+     * **Estas etiquetas las lee TAMBIÉN el CLIENTE** (`#154`): viajan en `gate_lines` del ledger,
+     * así que viven en `tickets.*` con sus TRES idiomas. Antes vivían en `admin.*` (solo ES) y un
+     * cliente EN/FR recibía la clave literal en su desglose de dinero — medido por HTTP en `#149`.
+     *
+     * ⚠️ `Lang::has(..., fallback: false)` a propósito (la lección de `#134` §23.6): una clave que
+     * falta NO se manifiesta como clave en crudo — se manifiesta como un cliente francés leyendo
+     * castellano en su pantalla de dinero, que parece texto y no falla nada.
+     */
+    public function test_the_gate_change_labels_exist_in_every_client_locale(): void
+    {
+        foreach (['gate_change_line', 'gate_change_line_slot', 'gate_change_line_product'] as $key) {
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $this->assertTrue(
+                    Lang::has('tickets.'.$key, $locale, false),
+                    "tickets.{$key} falta en «{$locale}» — el cliente leería otro idioma (o la clave en crudo)",
+                );
+            }
+        }
+
+        // Y la COMPOSICIÓN real bajo un locale de cliente no-ES: si la etiqueta volviera al
+        // espacio `admin.*`, esto devolvería la clave en crudo y no la frase.
+        $item = $this->makeItem();
+        app()->setLocale('en');
+        try {
+            $label = $this->labelFor($item, ['changes' => ['slot_change' => ['old' => 'x', 'new' => '05/09/2026 10:00']]]);
+            $this->assertSame('Date changed to 05/09/2026 10:00', $label);
+        } finally {
+            app()->setLocale('es');
+        }
+    }
+
     public function test_breakdown_label_product_change_shows_target_product(): void
     {
         $item = $this->makeItem();
 
         $label = $this->labelFor($item, ['changes' => ['product_change' => ['old' => 'Pack Jump', 'new' => 'Pack Kids']]]);
 
-        $this->assertSame(__('admin.orders.order_financial.breakdown.product_change', ['name' => 'Pack Kids']), $label);
+        $this->assertSame(__('tickets.gate_change_line_product', ['name' => 'Pack Kids']), $label);
     }
 
     public function test_breakdown_label_product_change_takes_priority_over_quantity(): void
@@ -70,7 +103,7 @@ class OrderTotalsBreakdownTest extends TestCase
             'quantity_change' => ['old' => 1, 'new' => 2],
         ]]);
 
-        $this->assertSame(__('admin.orders.order_financial.breakdown.product_change', ['name' => 'Pack Kids']), $label);
+        $this->assertSame(__('tickets.gate_change_line_product', ['name' => 'Pack Kids']), $label);
     }
 
     public function test_breakdown_label_addon_added_shows_qty_and_name(): void
@@ -149,7 +182,7 @@ class OrderTotalsBreakdownTest extends TestCase
 
         $this->assertStringStartsWith('+2 ', $this->labelFor($item, ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]));
         $this->assertSame(
-            __('admin.orders.order_financial.breakdown.product_change', ['name' => 'Pack Kids']),
+            __('tickets.gate_change_line_product', ['name' => 'Pack Kids']),
             $this->labelFor($item, ['changes' => ['product_change' => ['new' => 'Pack Kids']]])
         );
     }
@@ -201,7 +234,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $html = $this->renderTotals($order);
 
         $this->assertStringContainsString(
-            __('admin.orders.order_financial.breakdown.slot_change', ['when' => 'mié 2 sep 19:00']),
+            __('tickets.gate_change_line_slot', ['when' => 'mié 2 sep 19:00']),
             $html,
             'El desglose tiene que decir que el cargo viene de mover la fecha, y a cuándo.',
         );

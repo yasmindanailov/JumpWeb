@@ -8146,3 +8146,29 @@ atribución (el parcial de pedido se reparte a prorrata).
 v4) — `assertSee` sobre la página sale vacío aunque el texto exista. La descripción se asevera
 sobre `getMountedAction()->getModalDescription()` y la visibilidad del aviso con
 `assertSchemaComponentHidden/Visible`, que evalúan el objeto real.
+
+## #154 · 2026-08-25 · El cliente EN/FR deja de leer claves en CRUDO — la etiqueta que lee el cliente vive en el espacio del cliente
+
+**La ficha** (`#149`): las etiquetas específicas del cargo de puerta —«Cambio de fecha a :when» y
+«Cambio a :name»— vivían en `admin.orders.order_financial.breakdown.*`, que solo existe en ESPAÑOL
+(el panel es es+zh). Pero `breakdownLabel()` alimenta también las `gate_lines` del ledger del
+CLIENTE — medido por HTTP: un cliente en inglés recibía
+`admin.orders.order_financial.breakdown.slot_change` LITERAL como etiqueta en su desglose de dinero.
+
+**El arreglo es una mudanza, no una traducción suelta**: etiqueta que lee el cliente ⇒ espacio del
+cliente. Las dos claves pasan a `tickets.gate_change_line_slot` / `_product`, junto a su hermana de
+respaldo (`gate_change_line`, `#131`), **en los tres idiomas** (ES/EN/FR). El panel comparte el
+texto, que es neutro de voz. Las claves de `admin.*` se retiran (muertas — la lección de `#145`).
+
+**La guarda aplica la lección de `#134` §23.6**: `Lang::has(clave, locale, fallback: false)` por
+clave × idioma —una clave que falta NO sale en crudo: sale un francés leyendo castellano en su
+pantalla de dinero— **más la composición real bajo `en`** («Date changed to …»), que es la que
+muere si la etiqueta vuelve al espacio admin.
+
+**Lo medido**: suite **2826 → 2827** (+1, 16.387 → 16.403) · **2 mutaciones, las 2 muerden**
+(borrar la clave EN → rojo · volver al espacio `admin.*` → rojo) · Pint ✓ · docs-check ✓.
+⚠️ zh_CN queda como estaba: hueco con nombre (`#145`, owner) — un panel en chino lee ahora el
+respaldo EN en vez de la clave cruda, que es estrictamente mejor.
+⚠️ Método: en una cadena PHP entre comillas dobles, «`$locale»`» se parsea como UNA variable — los
+bytes multibyte son válidos en identificadores. Interpolación con llaves siempre que haya
+tipografía pegada.

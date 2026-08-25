@@ -176,6 +176,12 @@ return [
     // (`DECISIONES #131`). Antes salía el nombre pelado del producto y no decía por qué se cobra,
     // mientras su línea hermana —el resto de la señal— sí se explicaba sola.
     'gate_change_line' => 'Diferencia por cambios en :product',
+    // `#154`: las etiquetas ESPECÍFICAS del cargo de puerta vivían en `admin.*` (solo ES) y el
+    // CLIENTE las consume — medido por HTTP: un cliente en inglés recibía la clave literal
+    // `admin.orders.order_financial.breakdown.slot_change` en su desglose de dinero. Etiqueta que
+    // lee el cliente ⇒ espacio del cliente, en sus tres idiomas.
+    'gate_change_line_slot' => 'Cambio de fecha a :when',
+    'gate_change_line_product' => 'Cambio a :name',
     'at_gate_caption_deposit' => 'Resto a pagar en recepción al llegar. La señal ya quedó pagada online.',
     'pendiente_devolucion' => 'Pendiente de devolución',
     'pendiente_devolucion_caption' => 'Pagaste de más por un cambio en el pedido (se redujo o quitó un producto) y está pendiente de devolvértelo.',

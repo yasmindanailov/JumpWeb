@@ -12,7 +12,7 @@
 > · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
 > ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
 > DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
-> El último usado es **`#153`**.
+> El último usado es **`#154`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -93,8 +93,11 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2826 en verde** (16.387 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
-  ▶ **+2 en el último corte** (`#153`): el modal del reembolso de PEDIDO nombra el importe
+- Suite **2827 en verde** (16.403 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
+  ▶ **+1 en el último corte** (`#154`): las etiquetas del cargo de puerta que lee el CLIENTE
+  viven en `tickets.*` con sus TRES idiomas — guarda `Lang::has(..., false)` + composición bajo
+  `en`. **2 mutaciones muerden.**
+  ▶ Antes, **+2** (`#153`): el modal del reembolso de PEDIDO nombra el importe
   exacto y, sin «también cancelar», señala la vía de los parciales. **2 mutaciones muerden.**
   ▶ Antes, **+2** (`#152`): el e2e del pedido CANCELADO con deuda reembolsado por
   línea hasta dejar el «pendiente de devolverte» a CERO, el candado del cancelado sin deuda y
@@ -359,7 +362,7 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 |---|---|---|
 | 1 | ~~Un pedido CANCELADO no tenía vía de reembolso~~ — ✅ **CERRADA** (`#152`, owner): la LÍNEA se abre para cancelados con deuda (topes intactos; el TOTAL sigue vetado a propósito) y el banner dice cuánto se debe y por dónde | ✅ hecha |
 | 2 | ~~El reembolso a nivel PEDIDO regalaba sin avisar~~ — ✅ **CERRADA** (`#153`, owner): sin campo (los parciales van por línea); el modal nombra el importe exacto y avisa de la vía de los parciales al desactivar «también cancelar» | ✅ hecha |
-| 3 | El cliente EN/FR ve claves en crudo en su desglose (breakdown solo-ES) | Sin plan |
+| 3 | ~~El cliente EN/FR veía claves en crudo~~ — ✅ **CERRADA** (`#154`): las etiquetas viven en `tickets.*` (ES/EN/FR) con guarda `Lang::has` sin respaldo | ✅ hecha |
 | 4 | El email de una BAJADA no menciona el dinero que se le debe | Sin plan; la causa ya viaja desde `#150` |
 
 ✅ Y «¿devolver en el parque?» quedó **DECIDIDO** (`#152`): no se construye canal nuevo — devolver en mano se registra con el modo «manual» («ya devuelto fuera»), que ya existía y desde `#149` acepta importe exacto.

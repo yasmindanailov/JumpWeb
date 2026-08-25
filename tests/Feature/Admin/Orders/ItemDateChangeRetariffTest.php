@@ -178,7 +178,7 @@ class ItemDateChangeRetariffTest extends TestCase
         );
 
         $this->assertSame(
-            __('admin.orders.order_financial.breakdown.slot_change', [
+            __('tickets.gate_change_line_slot', [
                 'when' => $adjustment->context['changes']['slot_change']['new'],
             ]),
             $adjustment->breakdownLabel(),

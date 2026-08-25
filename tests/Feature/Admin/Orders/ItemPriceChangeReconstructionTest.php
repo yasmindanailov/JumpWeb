@@ -340,7 +340,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $this->assertSame(4000, (int) $lines[0]['amount']);
         $adj = $this->fresh($order)->adjustments()->where('amount_cents', '>', 0)->latest('id')->firstOrFail();
         $this->assertSame(
-            __('admin.orders.order_financial.breakdown.slot_change', [
+            __('tickets.gate_change_line_slot', [
                 'when' => $adj->context['changes']['slot_change']['new'],
             ]),
             $lines[0]['label'],

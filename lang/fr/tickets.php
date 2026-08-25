@@ -153,6 +153,10 @@ return [
     // ⚠️ Frais à l'accueil issus d'une MODIFICATION, quand ni « +4 X » ni « Changement vers X » ne
     // s'appliquent. C'était le nom du produit tout seul, qui ne disait pas POURQUOI (`#131`).
     'gate_change_line' => 'Différence liée aux changements sur :product',
+    // `#154` : les libellés spécifiques des frais à l'accueil vivaient dans `admin.*` (ES
+    // uniquement) alors que le CLIENT les consomme — un client FR recevait la clé brute.
+    'gate_change_line_slot' => 'Nouvelle date : :when',
+    'gate_change_line_product' => 'Remplacé par :name',
     'at_gate_caption_deposit' => 'Solde à régler à l’accueil à l’arrivée. L’acompte a déjà été réglé en ligne.',
     'pendiente_devolucion' => 'Remboursement en attente',
     'pendiente_devolucion_caption' => 'Vous avez trop payé suite à un changement de la commande (un produit a été réduit ou retiré) ; le remboursement est en attente.',

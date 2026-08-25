@@ -1083,14 +1083,9 @@ return [
             // Ancla del importe bruto pagado por web (conciliación con el banco),
             // en el detalle de "Pendiente de devolución".
             'pendiente_devolucion_caption_web' => 'El cliente pagó :total por web; tras una reducción, una cancelación o una bajada de precio se le devuelven :pendiente.',
-            // #171: etiqueta compacta de las sub-líneas del desglose.
-            'breakdown' => [
-                'product_change' => 'Cambio a :name',
-                // `DECISIONES #145`. Antes de esto, un ajuste nacido de mover la fecha llegaba con
-                // el contexto vacío y caía al texto de respaldo, así que tres líneas seguidas
-                // repetían la misma frase muda sin decir qué había cambiado.
-                'slot_change' => 'Cambio de fecha a :when',
-            ],
+            // #171→`#154`: las etiquetas compactas de las sub-líneas del desglose VIAJAN AL CLIENTE
+            // (gate_lines del ledger), así que viven en `tickets.*` con sus tres idiomas — aquí solo
+            // había español y un cliente EN/FR recibía la clave en crudo (medido por HTTP).
         ],
 
         // Razones de bloqueo per-item (compartidas entre cancel_item y refund_item).

@@ -117,9 +117,13 @@ class OrderAdjustment extends Model
         // Item: cambio de producto tiene prioridad sobre el de cantidad.
         $changes = $ctx['changes'] ?? null;
         if (is_array($changes)) {
+            // ⚠️⚠️ **Estas etiquetas las lee TAMBIÉN el CLIENTE** (viajan en `gate_lines` del ledger,
+            // `#154`): viven en `tickets.*` —ES/EN/FR— y no en `admin.*`, que solo existe en
+            // español. Medido por HTTP antes del cambio: un cliente en inglés recibía la clave
+            // literal en su desglose de dinero. El panel comparte el texto, que es neutro de voz.
             $product = $changes['product_change'] ?? null;
             if (is_array($product) && isset($product['new'])) {
-                return __('admin.orders.order_financial.breakdown.product_change', ['name' => $product['new']]);
+                return __('tickets.gate_change_line_product', ['name' => $product['new']]);
             }
             $qty = $changes['quantity_change'] ?? null;
             if (is_array($qty) && isset($qty['old'], $qty['new'])) {
@@ -136,7 +140,7 @@ class OrderAdjustment extends Model
             // funcionan, y este cambio no está para eso.
             $slot = $changes['slot_change'] ?? null;
             if (is_array($slot) && isset($slot['new'])) {
-                return __('admin.orders.order_financial.breakdown.slot_change', ['when' => $slot['new']]);
+                return __('tickets.gate_change_line_slot', ['when' => $slot['new']]);
             }
         }
 
