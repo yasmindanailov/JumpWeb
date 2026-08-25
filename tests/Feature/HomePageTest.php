@@ -440,6 +440,76 @@ class HomePageTest extends TestCase
         }
     }
 
+    /* ====================================================================
+       Las MÉTRICAS de una zona — `DECISIONES #144`
+       ==================================================================== */
+
+    /**
+     * ⚠️⚠️ **Una métrica sin dato NO se pinta, y la home servía «0 m²».**
+     *
+     * `zones.area_sqm` y `zones.rides_count` son NULLABLE y opcionales en el panel. Las dos
+     * superficies que las pintan hacían `number_format($zone->area_sqm, …)` a pelo, y
+     * `number_format(null)` devuelve **«0»**: medido sobre la BD de desarrollo el 2026-08-25, dos
+     * zonas visibles en la landing (`cap`, `cap2`) tenían las dos columnas a `null` y la portada
+     * anunciaba **«0 m²»** y la etiqueta «Atracciones» sin número.
+     *
+     * ▶ **Un cero no es un hueco: afirma algo, y es falso.** Un cliente que aún no ha rellenado los
+     * metros de una zona estaba publicando que mide cero.
+     * ▶ Y no era solo cosmético: `number_format(null)` es `DEPRECATED` en PHP 8 y **TypeError en
+     * PHP 9** — hoy un aviso en el log, mañana un 500 en la portada.
+     */
+    public function test_a_zone_without_measurements_does_not_advertise_zero(): void
+    {
+        Zone::where('slug', 'jump')->update(['area_sqm' => null, 'rides_count' => null]);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString(
+            '<span class="v">0 m²</span>', (string) $html,
+            'La home vuelve a anunciar «0 m²» para una zona sin metros configurados.',
+        );
+
+        // Y la métrica desaparece ENTERA, etiqueta incluida: media fila es peor que ninguna.
+        $this->assertSame(
+            0, preg_match_all('/<span class="v"><\/span>/', (string) $html),
+            'Ha quedado una métrica con su etiqueta y el valor vacío.',
+        );
+    }
+
+    /**
+     * **El contrapunto, que es lo que impide «arreglarlo» ocultándolo todo.**
+     *
+     * La misma comprobación al revés: con dato, la métrica se pinta y con su formato de miles.
+     * Sin este caso, dejar de emitir el bloque entero también pasaría el test de arriba.
+     */
+    public function test_a_zone_with_measurements_still_shows_them(): void
+    {
+        Zone::where('slug', 'jump')->update(['area_sqm' => 5000, 'rides_count' => 15]);
+
+        $this->get('/')->assertOk()
+            ->assertSee('<span class="v">5.000 m²</span>', false)
+            ->assertSee('<span class="v">15</span>', false);
+    }
+
+    /**
+     * ⚠️ **Y cubre las DOS superficies, que es donde vivía el defecto duplicado.**
+     *
+     * El bucle de zonas tiene dos ramas —`.zone-photo-card__meta` si la zona tiene foto,
+     * `.zone-intro__meta` si no— y el mismo marcado estaba escrito en las dos. Arreglar una y
+     * olvidar la otra era el resultado más probable, así que hoy las dos pintan el mismo
+     * componente (`<x-site.zone-metrics>`) y este caso ejercita la rama SIN foto.
+     */
+    public function test_the_no_photo_zone_card_uses_the_same_metrics_component(): void
+    {
+        Zone::where('slug', 'jump')->update(['image' => null, 'area_sqm' => null, 'rides_count' => 7]);
+
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringContainsString('zone-intro__meta', $html, 'no se está ejercitando la rama sin foto');
+        $this->assertStringNotContainsString('<span class="v">0 m²</span>', $html);
+        $this->assertStringContainsString('<span class="v">7</span>', $html);
+    }
+
     /**
      * Precio mínimo (céntimos) de entrada vendible en el catálogo actual.
      * Se calcula en vivo del seeder activo para que los tests sigan funcionando

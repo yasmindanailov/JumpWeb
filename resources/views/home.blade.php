@@ -116,10 +116,7 @@
                             <span class="zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                             <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
                             <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
-                            <div class="zone-photo-card__meta">
-                                <div><span class="v">{{ number_format($zone->area_sqm, 0, ',', '.') }} m²</span><span class="l">{{ __('landing.zones.surface') }}</span></div>
-                                <div><span class="v">{{ $zone->rides_count }}</span><span class="l">{{ __('landing.zones.rides') }}</span></div>
-                            </div>
+                            <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
                             <span class="zone-photo-card__cta">{{ __('landing.zones.see_rides') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></span>
                         </div>
                     </a>
@@ -141,10 +138,7 @@
                             <p class="zone-intro__sub">{{ $zone->tr('subtitle') }}</p>
                             <p class="zone-intro__copy">{{ $zone->tr('description') }}</p>
                         </div>
-                        <div class="zone-intro__meta" style="position:relative; z-index:1">
-                            <div><span class="v">{{ number_format($zone->area_sqm, 0, ',', '.') }} m²</span><span class="l">{{ __('landing.zones.surface') }}</span></div>
-                            <div><span class="v">{{ $zone->rides_count }}</span><span class="l">{{ __('landing.zones.rides') }}</span></div>
-                        </div>
+                        <x-site.zone-metrics :zone="$zone" class="zone-intro__meta" style="position:relative; z-index:1" />
                         <span class="zone-intro__cta" style="position:relative; z-index:1">{{ __('landing.zones.see_rides') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></span>
                     </a>
                 @endif

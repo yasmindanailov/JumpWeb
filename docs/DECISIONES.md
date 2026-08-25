@@ -7387,3 +7387,77 @@ con un `grep` que sí encontraba lo que él no. Reescrito por offsets absolutos:
 **cero falsos positivos** respecto al primero.
 ▶ Corolario para quien venga: **cuando dos medidas del mismo corpus no coinciden, la que sobra no es
 la que da más — es la que no puede explicar la diferencia.**
+
+---
+
+## #144 · 2026-08-25 · TANDA B · La home anunciaba «0 m²» — y el defecto vivía DOS veces porque el marcado estaba escrito dos veces
+
+Apareció **midiendo, no buscando**: al contar las consultas de la home para dimensionar la tanda B,
+el runner escupió un `number_format(): Passing null to parameter #1` que no venía de ningún trabajo
+reciente.
+
+### Lo que se estaba sirviendo, medido en el HTML de la portada
+
+`zones.area_sqm` y `zones.rides_count` son **NULLABLE** y opcionales en el panel, y las dos
+superficies que las pintan hacían `number_format($zone->area_sqm, 0, ',', '.')` a pelo.
+`number_format(null)` **no falla: devuelve «0»**.
+
+▶ Medido sobre la BD de desarrollo: de las **cuatro** zonas con `show_in_landing = true`, **dos
+(`cap`, `cap2`) tenían las dos columnas a `null`**, y la portada anunciaba literalmente:
+
+    <span class="v">0 m²</span><span class="l">Superficie</span>
+    <span class="v"></span><span class="l">Atracciones</span>
+
+**Un cero no es un hueco: afirma algo, y es falso.** Un cliente que aún no ha rellenado los metros de
+una zona estaba publicando que mide cero — que es exactamente lo contrario de lo que quiere un
+producto white-label recién instalado, donde lo normal es que falten datos.
+
+⚠️ **Y no era solo cosmético**: `number_format(null)` es `DEPRECATED` en PHP 8 y **TypeError en
+PHP 9**. Hoy un aviso en el log; mañana, un 500 en la portada.
+
+### [DECIDIDO owner] Sin dato, no se pinta la métrica
+
+De tres opciones —ocultar, guion, ficha en deuda— se eligió **ocultar**, y es el patrón que el
+producto ya usaba: `heroStatus` vale `null` si no hay horario configurado y entonces la vista no
+pinta el chip. Aquí igual, **contenedor incluido**: media fila es peor que ninguna.
+
+### ⚠️⚠️ Vivía DOS veces, y ésa es la parte que importa
+
+El bucle de zonas tiene dos ramas —`.zone-photo-card__meta` si la zona tiene foto,
+`.zone-intro__meta` si no— y **el mismo marcado estaba escrito en las dos**. El primer arreglo tocó
+solo una: al medirlo en el navegador salieron las zonas con dato pintando bien y **las de la otra
+rama sin pintar nada**, que es el resultado más probable de arreglar un defecto duplicado.
+
+▶ Por eso nace `<x-site.zone-metrics>`, **compartido desde el primer commit**. Es la misma lección
+de `ThemeSettings::zoneStyle()` (`#138`) y de `Booking\Services\OrderLedger`: **una composición, N
+superficies que la pintan**. Un defecto que vive en dos sitios es un defecto que volverá.
+
+### ❗ Y una trampa de Blade que costó un 500 y conviene dejar escrita
+
+El primer intento usó `@php(…)` de una línea con un array multilínea: Blade **no cierra bien los
+paréntesis** y la vista muere con «syntax error, unexpected end of file» — o sea, 500 en la portada.
+Al pasarlo a bloque, el 500 cambió de forma: `Undefined variable $zoneMetrics`.
+
+⚠️⚠️ **La causa era el COMENTARIO.** Dentro del bloque había un comentario PHP que decía, en prosa,
+«usa un bloque `@php … @endphp`, no `@php(…)`». **Blade sustituye esas directivas también dentro de
+un comentario**, así que compiló el `@endphp` de la prosa a `?>` y **cerró el bloque en la primera
+línea**: la asignación quedó fuera y se emitió como texto.
+
+    // ⚠️ Bloque `@php … ?>`, NO `<?php(…)`:      ← el bloque muere AQUÍ
+    $zoneMetrics = collect([…]);                   ← esto ya es HTML
+
+▶ Es **exactamente** el modo de fallo que este repo ya tenía documentado para CSS en
+`SidebarTokenBudgetTest::test_no_stylesheet_rule_is_swallowed_by_a_broken_comment` —«un comentario
+mal cerrado no rompe el CSS: se come la regla siguiente, en silencio»—, aquí con Blade y con un 500
+en vez de en silencio. **No escribas `@php`/`@endphp` literales dentro de un bloque Blade**, ni
+siquiera comentados.
+
+### Verificación
+
+- **Navegador**, contra la portada servida: antes `<span class="v">0 m²</span>` ×2; después **0**, y
+  las dos zonas CON dato (`5.000 m²`/`15`, `2.000 m²`/`8`) **intactas byte a byte**.
+- **El `DEPRECATED` desaparece del log** (era el síntoma que lo destapó).
+- **Tres casos en `HomePageTest`, y el segundo es el que impide el arreglo perezoso**: sin
+  `test_a_zone_with_measurements_still_shows_them`, ocultar el bloque SIEMPRE también habría pasado.
+- **Mutación**: devolver el `number_format` sin guarda → caen 2 · ocultar siempre → caen 2 · duplicar
+  otra vez el marcado en la rama sin foto → cae 1. **Cada una solo en su aserción.**

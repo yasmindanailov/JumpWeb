@@ -62,7 +62,7 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2780 en verde** (16.157 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+- Suite **2783 en verde** (16.167 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
   **671 tests JS** (`node --test`) · Pint limpio (848 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del

@@ -2083,9 +2083,33 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       ▶ **Y al separarlos apareció un defecto de accesibilidad real**: `prefers-reduced-motion`
       apagaba solo `::before`, la única pieza que anima el dibujo del PRIMER cliente. Cualquier
       dibujo sustituto se habría seguido moviendo, sin fallo y sin aviso.
-- [ ] **B · el contenido**: los dos modelos que faltan (números del hero y testimonios), el copy que
-      baja de `lang/` al CMS —**142 claves**, hoy en el repo— y la landing del segundo cliente como
-      primer paquete de tema.
+- 🟦 **B · el contenido** — EN CURSO. ⚠️ **Los tres cortes se midieron antes de empezar y NINGUNO era
+      lo que la spec decía** (`#144`):
+  - ✅ **B · la home anunciaba «0 m²»** (2026-08-25, `#144`). Apareció midiendo las consultas, no
+        buscándolo: `area_sqm`/`rides_count` son NULLABLE y `number_format(null)` devuelve «0», así
+        que **dos de las cuatro zonas visibles publicaban que miden cero**. Sin dato ya no se pinta la
+        métrica. ⚠️ **Vivía DOS veces** —las dos ramas del bucle de zonas tenían el mismo marcado
+        copiado— y el primer arreglo tocó solo una: ahora es un componente compartido.
+        ▶ Y en PHP 9 `number_format(null)` deja de ser un aviso y pasa a ser un **500 en la portada**.
+  - [ ] **B · los dos modelos.** ⚠️ **`park_stats` NO es «los números del hero»**: medido, el hero no
+        tiene números y los de la sección de zonas son **CALCULADOS del dominio**
+        (`$zones->sum('area_sqm')`…). El único bloque tecleado que existe, `landing.hero.stats`, **no
+        lo usa nadie: es copy muerto en tres lenguas**. ▶ `[DECIDIDO owner]`: `park_stats` guarda
+        **solo lo NO derivable**, con guarda que impida teclear un número que el dominio ya sabe.
+        ▶ Y medido contra el mockup del 2º cliente: sus tres `statsParque` **son justo los tres que el
+        dominio ya calcula**, así que su `park_stats` nace VACÍO. `testimonials` sí es construcción
+        limpia: campos `texto`/`nombre`/`meta` + valoración, medidos del mockup.
+  - [ ] **B · el copy al CMS.** ⚠️ **244 claves, no 142**; 174 referenciadas en **24 ficheros**, no en
+        `home.blade.php` — entre ellos el footer de los **CORREOS**, las páginas de **error** y cuatro
+        servicios PHP. Y hay claves **dinámicas** (`__('landing.info.weekdays.'.$dow)`) que ningún
+        grep estático ve: bajarlas al CMS las rompe sin que nada falle.
+  - [ ] **B · la landing del 2º cliente** como primer paquete de tema (medida de éxito: §6·6).
+        ✅ **El mockup ya está localizado y medido** (artifact «Landing page parque trampolines»):
+        secciones `zonas · cumpleanos · antes · info · opiniones · reservar`, paleta FRÍA
+        (`#ECF3F7` fondo · `#101113` tinta · `#2FB6DE`/`#FFC20E` acentos).
+        ▶ **Y la tanda A ya se validó contra ella**: con un `client.css` de esa paleta, `/aviso-legal`
+        retiñe al **100 % con 0 px del primer cliente** y la home al 84 % — lo que sobrevive es
+        `zones.color`, que es **dato del panel**, no código.
 - [ ] ⚠️⚠️ **C · los servicios como PRODUCTO REAL.** Toca `AFORO` y `PAY`, exige `VERIFY_CONC=1` y
       **NO se diseña desde la spec de la landing**: necesita la suya. Medido: los tres servicios de
       `/servicios` tienen **0 productos vinculados** y dos llevan **tablas de precios TECLEADAS**.
