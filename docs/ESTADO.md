@@ -4,15 +4,27 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-25**.
 >
-> ❗❗ **LO PRIMERO, y es de DINERO**: hay **cuatro defectos ABIERTOS** del cambio de precio
-> (`DECISIONES #146`, sin arreglar), y uno de ellos —**«Reembolsar» devuelve siempre la línea
-> entera**— puede **regalar dinero**: medido, se debían 4,00 € y devolvió 36,00 €. Están en
-> «Lo que está ABIERTO», punto **0.bis**, con su orden de ataque. **Léelo antes de planificar nada.**
+> ❗❗ **ATENCIÓN: hay DOS AGENTES trabajando sobre `main` a la vez.** Antes de planificar nada,
+> `git fetch` y mira qué hay de nuevo. Reparto vigente el 2026-08-25:
+> · **Agente A (panel/dinero)** — los defectos del cambio de precio (`#146`). **`D5` cerrado**
+>   (informado por el owner; puede no estar empujado todavía) y **`D4`+`D3` en curso**. Toca
+>   `Order.php`, `ViewOrder.php` y `lang/es/admin.php`. **NO entrar ahí.**
+> · **Agente B (landing/aforo)** — lo de esta foto. Última sesión: `#143`, `#144`, `#147`, `#148`.
+> ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
+> una vez (`#142` duplicado). El último usado aquí es **`#148`**.
 >
-> ❗ **Y lo segundo**: la **tanda A de `specs/landing-white-label.md` está CERRADA**
-> (`#138`→`#143`). Lo siguiente de esa línea es la **tanda B** (contenido y el segundo cliente como
-> primer paquete de tema). Redis ya no bloquea nada (`#137`) y el desglose de dinero está CERRADO
-> (`#127`→`#134`) — **cerrado el DESGLOSE, no el cambio de precio: eso es `#146`**.
+> ❗ **LO PRIMERO que es de DINERO**: quedan **tres** defectos abiertos del cambio de precio
+> (`#146`: `D4`, `D3`, `D2`), en «Lo que está ABIERTO» punto **0.bis**. Los lleva el agente A.
+>
+> ❗ **Lo segundo, y es una DECISIÓN de producto que espera al owner**: `#148` midió que **una fiesta
+> consume plazas de entrada** (franja de 10 plazas + cumpleaños de 8 niños = quedan **2**), y el
+> docblock del dominio afirmaba lo contrario desde `#82`. **Puede ser correcto** —los niños están en
+> el parque— **o un defecto**. Hasta que se decida, el comportamiento está FIJADO por test.
+>
+> ▶ **Landing**: tanda A CERRADA (`#138`→`#143`), tanda B **PARADA a la espera del diseño** — el
+> owner está rehaciendo el sistema visual. **Lo medido del mockup viejo sobre COLOR está caducado.**
+> Redis ya no bloquea nada (`#137`) y el desglose de dinero está CERRADO (`#127`→`#134`) — **cerrado
+> el DESGLOSE, no el cambio de precio: eso es `#146`**.
 >
 > ⚠️ **Y este documento ADELGAZÓ el 2026-08-25, de 824 líneas a menos de la mitad.** Se retiró el
 > índice de la Fase 4 —83 líneas que duplicaban el tracker de una fase CERRADA—, se movió el mapa del
@@ -46,8 +58,10 @@ falsas y las tres se creyeron hasta medirlas. La última (`#143` §8): **el «76
 de un `grep` línea a línea que no veía ni los `rgba()` ni los valores multilínea — y el primer
 instrumento que se escribió para corregirlo tenía EL MISMO defecto.** Eran 234, y en las 12 que
 faltaban estaban las dos fugas de marca del hero.
-▶ **B** (contenido y copy) y **C** (servicios como producto real) sin empezar. ⚠️ **C toca AFORO y PAY
-y necesita spec propia.**
+▶ 🟦 **Tanda B EN CURSO (1 de 4)**: el «0 m²» hecho (`#144`); `park_stats` **descartada con su medida**
+(`[DECIDIDO owner]`), y quedan `testimonials`, el copy y la landing del 2º cliente.
+⏸️ **Y B está PARADA a la espera del DISEÑO**: el owner rehace el sistema visual. Ver «Próximo paso».
+▶ **C** (servicios como producto real) sin empezar. ⚠️ **Toca AFORO y PAY y necesita spec propia.**
 ⏸️ **APARCADO por el owner**: zonas y cupos se quedan como están hasta ver cómo se comportan las
 reservas de packs distintos con gente real (`#139`).
 
@@ -82,7 +96,7 @@ que sirva staging de verdad.
   entrada NO consume cupo de fiestas).
   ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y por eso vive en un comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
-  **671 tests JS** (`node --test`) · Pint limpio (852 ficheros) · `docs-check` verde ·
+  **671 tests JS** (`node --test`) · Pint limpio (854 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
   runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.
@@ -194,21 +208,83 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ LO SIGUIENTE: LA **TANDA B** DE `specs/landing-white-label.md` — el CONTENIDO
+# ❗ LO SIGUIENTE: **`testimonials`** — lo único de la landing que NO está bloqueado
 
-**La tanda A ya dejó el terreno con qué pintar** (`#143`): hay tokens que sobrevivan a un cambio de
-paleta, un spinner sustituible y —lo que faltaba— **un hueco por donde entra el paquete del cliente**
-(`public/css/client.css`, cargado el último; `INSTALACION-CLIENTE.md` §4).
+⏸️ **Por qué no es «seguir con la tanda B»**: el owner está **rehaciendo el sistema visual** en Claude
+Design y ha dicho que **los datos y textos del mockup NO son fidedignos** —«lo que hay que llevarse es
+la estructura, las formas, los botones, los colores y los layouts; los datos son los que tenemos
+ahora»—. Maquetar ahora es trabajo que se tira.
 
-**Tanda B, tres cortes:**
-1. **Los dos modelos que faltan** — números del hero y testimonios (spec §4.2).
-2. **El copy que baja de `lang/` al CMS** — **142 claves**, hoy en el repo (spec §4.3).
-   ⚠️ **NO todo el copy baja**: el apartado dice cuál se queda y por qué.
-3. **La landing del segundo cliente como PRIMER PAQUETE DE TEMA**, que es su medida de éxito y está
-   escrita en la spec §6·6: **montarla tiene que costar CERO migraciones y CERO líneas de dominio.**
-   Si no es cero, la línea de §4.1 está mal puesta y **se corrige la spec antes que el código**.
+**`testimonials` sí se puede hacer entero hoy**, y hace falta decida lo que decida el owner sobre las
+reseñas: es el **respaldo** de `specs/google-reviews.md` (§4.4.bis). Tabla + modelo + recurso de panel
++ sección, siguiendo el patrón exacto de `faqs` (permiso `content.manage`, grupo «Contenido», campos
+i18n en JSON con `HasTranslations`). Campos medidos del mockup: `texto` · `nombre` · `meta` +
+valoración.
+⚠️ **Su ayuda en el panel NO puede decir «por si Google falla»**: por `google-reviews.md` §3.3, es lo
+que ve **todo visitante que no acepta cookies de terceros**, cada día. Si se documenta como plan de
+emergencia, el parque lo dejará vacío creyendo que nunca se usa.
 
-▶ **Después**: tanda **C** (servicios como producto real).
+### El orden acordado con el owner para cuando el diseño esté listo
+
+1. **Cimientos visuales** — la paleta del cliente + los patrones de forma que faltan. Van ANTES que el
+   armazón porque el nav y el footer los consumen: hacerlos después obliga a rehacerlos.
+2. **El armazón** — nav/menú, logo y footer, **con NUESTROS elementos**. Es lo que se ve en todas las
+   páginas y fija los patrones de botón que luego reutilizan las secciones.
+3. **`<x-page>` + una página de ejemplo** — pedido explícitamente por el owner («las dos cosas»).
+   Medido: las 6 páginas re-maquetan su cabecera a mano (`page__head` ×4, `page__title` ×4,
+   `page__body` ×3, `page__back` ×3). No hay nada entre «el armazón del sitio» y «el contenido».
+4. **Sección por sección**, con los datos reales de ahora.
+
+⚠️ **Y el minijuego del castillo ENTRA** (`[DECIDIDO owner]`), idéntico, pero se acepta hacerlo más
+eficiente. Medido en el mockup: **52 `setState` en el bucle de animación** —re-renderiza el árbol 60
+veces por segundo, y ahí está el coste, no en las 105 llamadas de canvas—, **~66 KB de JS** que hoy
+pagaría todo visitante, y **`tabindex` 0 · `role` 0 · `aria-label` 0**. Las tres cosas se arreglan sin
+mover un píxel: estado fuera del ciclo de render, chunk con carga diferida y accesibilidad.
+
+▶ **Después**: el copy al CMS (que gana esperando a la landing) y luego la tanda **C**.
+
+### ❗ El sistema de color NUEVO, ya leído y medido — y lo que cambia
+
+Vive en el **canvas de Claude Design del owner, NO en el repo**. Para leerlo:
+
+    DesignSync · method=list_files · projectId=8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad
+    DesignSync · method=get_file  · path="Colores de Marca PJP.dc.html"
+
+⚠️ **No sirve WebFetch** (da 403) ni `Artifact action:read` (no es un artifact publicado): **solo el
+MCP `DesignSync`**. Los `.jpg` de `assets/` vienen en base64 y **truncados a 256 KiB**, pero un JPEG
+parcial se decodifica y se ve.
+▶ El canvas tiene **14 artboards**: además del de color, `Logotipo variantes`, `Menu PJP`,
+`Boton Reservar variantes`, `Hero PJP variantes`, `Info PJP variantes`, `Landing PJP Modos`,
+`Elementos Fachada`, `App PJP`, `Marquesina Castillo`, `Salta la Ciudad`, `Tag Lorca`.
+▶ Y hay un artifact aparte, **«Landing page parque trampolines»**, con el mockup completo de la
+landing — **pero lleva la paleta VIEJA** (ver el aviso de abajo).
+
+⚠️⚠️ **Lo primero: la paleta que se midió del mockup de la landing está CADUCADA.** Su propia tabla de
+migración lo dice —`#2FB6DE` → `#1AA9DE`, «se iba de claro y perdía 0,4 de contraste sobre tinta»—.
+
+**No es una paleta: es un sistema con 15 secciones**, derivado de la fachada real con la masa
+cromática medida (46 % azules, 36 % naranjas, 13 % verdes), con **8 colores de núcleo** (cada uno con
+`hover`, `press` y su variante oscura), **9 neutros**, roles por elemento, **auditoría WCAG de 20
+pares** y prohibiciones explícitas.
+
+▶ **La buena noticia: encaja casi 1:1 con los tokens que ya existen** — Tinta`#101418`→`--fg`,
+Papel`#F4F4F1`→`--bg`, Cian`#1AA9DE`→`--brand`, Verde Salta→`--ok`, Rojo Goteo→`--err`,
+Amarillo Aviso→`--attn`. **Cuatro cosas no tienen token**: Lima Bote (precios y cifras), Azul Muro
+(el único azul legible sobre claro), Magenta Chispa y los `hover`/`press` de cada color.
+
+❗❗ **Y DOS cosas que no son «otra paleta», son otra ARQUITECTURA:**
+1. **«La marca es oscura por naturaleza: el color vive sobre negro.»** El sistema alterna **dos
+   fondos por sección** —tinta y papel— con la regla «nunca dos papeles seguidos». Nuestro CSS asume
+   fondo claro. **Eso no se resuelve redefiniendo tokens: es un MODO**, y hay un artboard llamado
+   precisamente «Landing PJP Modos».
+2. **«Texto secundario: dos grises distintos — el claro falla en papel.»** Nosotros tenemos **un
+   solo** `--fg-mute`. Con un único gris sobre los dos fondos, uno de los dos incumple AA. El sistema
+   ya lo trae medido: Humo `#626A72` (4,98 en papel) y Humo Claro `#9AA1A8` (7,08 en tinta).
+
+▶ Y del sistema de FORMA: sombra **dura** `5px 5px 0` «o ninguna», borde 2px solo en la pieza
+protagonista, y escala de radios `0 · 6 · 10 · 16 · 24 · 999` (la nuestra es otra).
+⚠️ Medido en el producto: **68 declaraciones `box-shadow`, 58 formas distintas y CERO tokens**, y solo
+el 26 % se repite. **No hay escala de elevación de facto**: habría que decidirla, no extraerla.
 ⚠️⚠️ **C necesita SPEC PROPIA antes de una línea de código**: toca `AFORO-01/02/03` y las identidades
 de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni en SQLite ni en staging** (MariaDB).
 
@@ -248,7 +324,13 @@ corpus no coinciden, la que sobra **no es la que da más: es la que no puede exp
 ## ▶ Lo que está ABIERTO y no es de la tanda A
 
 ❗❗ **0.bis · CUATRO defectos ABIERTOS del cambio de precio — y uno puede REGALAR DINERO**
-(`DECISIONES #146`, 2026-08-25. Todo medido ejecutando; **nada arreglado**.)
+(`DECISIONES #146`, 2026-08-25. Todo medido ejecutando.)
+
+> ⚠️ **ACTUALIZACIÓN al cierre del 2026-08-25, y NO está verificada en el repo**: el owner informa de
+> que **`D5` (el que regala dinero) ya está CERRADO** por el agente del panel, que sigue con
+> **`D4`+`D3`**. **Al escribir esto no había llegado al remoto**, así que la tabla de abajo y este
+> párrafo pueden discrepar: **manda lo que diga `git log`.** Se anota aquí en vez de editar la tabla
+> —que es del otro agente— para no pisarle el trabajo ni afirmar algo sin haberlo medido.
 
 ⚠️⚠️ **El tronco, en una frase**: `PAY-18` (`#131`) hizo que **mover la fecha re-tarifique**. Antes de
 eso **la única forma de que bajara el valor de una línea era bajar la cantidad**, y **cinco sitios se
@@ -294,30 +376,33 @@ exacto que `RGPD-06` existe para impedir.
 ❗ **Ninguna de las cuatro está aprobada**: esperan revisión adversarial por otro agente
 (`CONVENCIONES` §5).
 
-✅ **1 · El aforo de PACKS ya está VERIFICADO bajo concurrencia** (2026-08-25, `DECISIONES #147`).
-Era el mayor riesgo abierto del sistema: `purchase:verify-oversell` solo sembraba **entradas**, y los
-cumpleaños se cuentan por otro camino entero —`PackAvailability`, pool propio y dos topes por franja—
-que **no ejercitaba ningún verificador**. Hoy son **tres escenarios** (`entry` · `pack` ·
-`pack-guests`) y los tres pasan sobre MySQL con 8 y 16 procesos: 1 compra creada, N−1 `sold_out`.
-❗❗ **El verde vale porque el instrumento se vio FALLAR**: con el `lockForUpdate()` retirado de
-`OrderCreator::lockSlots`, el mismo comando cazó **8 fiestas donde cabía 1** y **48 invitados donde
-caben 10**. `OrderCreator` se restauró y se comprobó por md5 y por `git status`.
-✅ **Y los tres huecos que aquello dejó escritos están CERRADOS** (`#148`): son **cinco** escenarios
-—se añaden `pack-prep` (tramo multi-franja **con montaje y limpieza ACTIVOS**, la configuración por
-defecto de producción, y compradores pidiendo horas distintas que se pisan) y `mixed` (los dos pools
-compitiendo a la vez)—. Los cinco pasan con 8 y 16 procesos, y los dos nuevos tienen su control
-negativo: sin lock, **8 fiestas donde cabía 1** y **4 entradas + 4 fiestas donde cabía 1 de cada**.
-❗❗ **Y `mixed` DESTAPÓ algo que nadie buscaba: los dos aforos NO son independientes.** Medido en
-frío: franja de 10 plazas + una fiesta de 8 invitados → quedan **2** plazas de entrada. Una entrada
-no consume cupo de fiestas, pero **una fiesta sí consume asientos de entrada**, porque
-`SlotAvailability::occupancyMap()` suma los `seats` de TODOS los items sin filtrar por tipo.
-▶ **El docblock de `PackAvailability` afirmaba lo contrario** desde `#82` («un cumpleaños no resta
-plazas de entrada ni viceversa»). Corregido.
-⚠️ **PENDIENTE DEL OWNER, y es de PRODUCTO**: ¿debe una fiesta ocupar plazas de entrada? Puede ser lo
-correcto —los niños están en el parque— o un defecto. Lo fija `PackConsumesEntrySeatsTest`, que **no
-juzga**: deja el comportamiento medido para que el día que cambie, cambie porque alguien lo decidió.
+✅ **1 · El aforo, VERIFICADO bajo concurrencia — los CINCO caminos** (2026-08-25, `#147` + `#148`).
+Era el mayor riesgo abierto: `purchase:verify-oversell` solo sembraba **entradas**, y los cumpleaños
+se cuentan por otro camino entero (`PackAvailability`, pool propio y dos topes) que **no ejercitaba
+ningún verificador**. Hoy son cinco escenarios —`entry` · `pack` · `pack-guests` · `pack-prep`
+(tramo multi-franja **con montaje y limpieza ACTIVOS**, que es la configuración de producción) ·
+`mixed` (los dos pools a la vez)— y **los cinco pasan** sobre MySQL con 8 y 16 procesos.
+❗❗ **El verde vale porque el instrumento se vio FALLAR.** Con el `lockForUpdate()` retirado, el
+mismo comando cazó **8 fiestas donde cabía 1**, **48 invitados donde caben 10** y **4 entradas + 4
+fiestas donde cabía 1 de cada**. `OrderCreator` restaurado y comprobado por md5 y `git status`.
 ▶ Lo guarda `OversellVerifierCoversEveryQuotaTest`: si alguien retira un escenario, quita un contador
 o mueve la guarda del instrumento a después del fork, la suite cae.
+▶ **El detalle, las dos lecciones de método y lo que sigue sin medir están en `#147` y `#148`.**
+
+❗❗ **1.bis · Y ahí salió una DECISIÓN DE PRODUCTO que espera al owner** (`#148`): **una fiesta
+consume plazas de entrada**. Medido en frío: franja de **10 plazas** + cumpleaños de **8 invitados**
+→ quedan **2**. `SlotAvailability::occupancyMap()` suma los `seats` de todos los items sin filtrar
+por tipo; la asimetría es que una entrada **no** consume cupo de fiestas, pero una fiesta **sí**
+consume asientos de entrada.
+▶ **El docblock de `PackAvailability` afirmaba lo contrario desde `#82`** («un cumpleaños no resta
+plazas de entrada ni viceversa»). Ya está corregido.
+⚠️ **Puede ser lo correcto** —los niños están físicamente en el parque y ocupan sitio— **o un
+defecto**; si lo es, el arreglo es filtrar por tipo en `occupancyMap`, no en `PackAvailability`.
+Hasta que se decida, `PackConsumesEntrySeatsTest` **fija el comportamiento sin juzgarlo**, para que
+el día que cambie, cambie porque alguien lo decidió.
+⚠️ **Y afecta a la landing del 2º cliente**: al configurar sus aforos hay que saber que un cumpleaños
+le come plazas de entrada a su franja.
+
 ✅ Y antes, el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del
 `pre-push`, con su control negativo y verificado por mutación.
 

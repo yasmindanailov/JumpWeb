@@ -2037,12 +2037,19 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### La LANDING white-label 🟦 — **tanda A CERRADA (6 de 6), B y C sin empezar**
+### La LANDING white-label 🟦 — **tanda A CERRADA (6 de 6) · B EN CURSO (1 de 4) · C sin empezar**
 
-> Spec: `specs/landing-white-label.md` · Decisiones `#136` (el marco) y `#138`–`#140` (la ejecución).
+> Spec: `specs/landing-white-label.md` · Decisiones `#136` (el marco), `#138`–`#140`, `#143`
+> (el barrido de color y el paquete de tema) y `#144` (el «0 m²»).
 > **La línea es: data-driven el DATO, no la PÁGINA.** Nace del mockup del SEGUNDO cliente.
 > ⚠️ **Empieza por §1 de la spec**: de los cinco problemas que enunció el owner, tres NO eran lo que
-> parecían — y uno de los que la propia spec afirmaba también resultó falso (§4.5.1).
+> parecían — y **tres afirmaciones de la propia spec** también resultaron falsas al medirlas
+> (§4.5.1 ×2 y §4.5.2). Lee cada corrección antes que el texto que corrige.
+>
+> ⏸️ **B está PARADA a la espera del DISEÑO, y es lo primero que hay que saber** (2026-08-25): el
+> owner está rehaciendo el sistema visual en Claude Design y **los datos del mockup NO son
+> fidedignos** —«lo que hay que llevarse es la estructura, las formas, los botones, los colores y
+> los layouts; los datos son los que tenemos ahora»—. Detalle y orden acordado en `ESTADO.md`.
 
 - ✅ **A · el acento de zona sale del nombre de la clase** (2026-08-25, `#138`). Diez clases
       `.x--{accent}` retiradas; cada zona pinta su color en línea con `ThemeSettings::zoneStyle()`.
@@ -2091,25 +2098,37 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         métrica. ⚠️ **Vivía DOS veces** —las dos ramas del bucle de zonas tenían el mismo marcado
         copiado— y el primer arreglo tocó solo una: ahora es un componente compartido.
         ▶ Y en PHP 9 `number_format(null)` deja de ser un aviso y pasa a ser un **500 en la portada**.
-  - [ ] **B · los dos modelos.** ⚠️ **`park_stats` NO es «los números del hero»**: medido, el hero no
-        tiene números y los de la sección de zonas son **CALCULADOS del dominio**
-        (`$zones->sum('area_sqm')`…). El único bloque tecleado que existe, `landing.hero.stats`, **no
-        lo usa nadie: es copy muerto en tres lenguas**. ▶ `[DECIDIDO owner]`: `park_stats` guarda
-        **solo lo NO derivable**, con guarda que impida teclear un número que el dominio ya sabe.
-        ▶ Y medido contra el mockup del 2º cliente: sus tres `statsParque` **son justo los tres que el
-        dominio ya calcula**, así que su `park_stats` nace VACÍO. `testimonials` sí es construcción
-        limpia: campos `texto`/`nombre`/`meta` + valoración, medidos del mockup.
+  - ⛔ **B · `park_stats` NO SE CONSTRUYE** — `[DECIDIDO owner, 2026-08-25]`, y por una medida.
+        ⚠️ **`park_stats` NO era «los números del hero»**: el hero no tiene números, y los de la
+        sección de zonas son **CALCULADOS del dominio** (`$zones->sum('area_sqm')`…). El único bloque
+        tecleado que existe, `landing.hero.stats`, **no lo usa nadie: es copy muerto en tres lenguas**.
+        ▶ Y medido contra el mockup del 2º cliente: sus tres `statsParque` **son exactamente los tres
+        que el dominio ya calcula**, así que la tabla nacería VACÍA. §6·6 mide el éxito en **CERO
+        migraciones**: crear una que nadie usa va en contra. **Ficha en `DEUDA.md`**; se construye el
+        día que un cliente pida un número que el dominio no sepa.
+        ▶ Lo que sí falta de ahí son las **ETIQUETAS** editables («m² de parque» vs «M² de diversión»),
+        y eso baja con el copy.
+  - [ ] **B · `testimonials`** — SÍ se construye, y no solo para la landing: es el **respaldo de las
+        reseñas de Google** (`specs/google-reviews.md` §4.4.bis). Campos medidos del mockup:
+        `texto`/`nombre`/`meta` + valoración. ⚠️ **Su ayuda en el panel NO puede decir «por si Google
+        falla»**: es lo que ve **todo visitante que no acepta cookies de terceros**, cada día.
   - [ ] **B · el copy al CMS.** ⚠️ **244 claves, no 142**; 174 referenciadas en **24 ficheros**, no en
         `home.blade.php` — entre ellos el footer de los **CORREOS**, las páginas de **error** y cuatro
         servicios PHP. Y hay claves **dinámicas** (`__('landing.info.weekdays.'.$dow)`) que ningún
         grep estático ve: bajarlas al CMS las rompe sin que nada falle.
+        ⏸️ **Conviene esperar al diseño**: es la landing la que dice qué copy necesita ser editable.
   - [ ] **B · la landing del 2º cliente** como primer paquete de tema (medida de éxito: §6·6).
-        ✅ **El mockup ya está localizado y medido** (artifact «Landing page parque trampolines»):
-        secciones `zonas · cumpleanos · antes · info · opiniones · reservar`, paleta FRÍA
-        (`#ECF3F7` fondo · `#101113` tinta · `#2FB6DE`/`#FFC20E` acentos).
-        ▶ **Y la tanda A ya se validó contra ella**: con un `client.css` de esa paleta, `/aviso-legal`
-        retiñe al **100 % con 0 px del primer cliente** y la home al 84 % — lo que sobrevive es
-        `zones.color`, que es **dato del panel**, no código.
+        ⏸️ **PARADA: el owner está rehaciendo el sistema visual.** El mockup que se midió el
+        2026-08-25 lleva la paleta **ANTERIOR** —su propia tabla de migración lo dice: `#2FB6DE` →
+        `#1AA9DE`—, así que **todo lo medido de él sobre color está CADUCADO**.
+        ✅ **Lo que sigue valiendo**: sus secciones (`zonas · cumpleanos · antes · info · opiniones ·
+        reservar`) y que **la tanda A ya se validó contra su paleta**: con un `client.css` de esa
+        gama, `/aviso-legal` retiñó al **100 % con 0 px del primer cliente** y la home al 84 % — lo que
+        sobrevivía es `zones.color`, que es **dato del panel**, no código.
+        ▶ **El sistema de color NUEVO ya está leído y medido**: artboard «Colores de Marca PJP» del
+        canvas de diseño, con 8 colores de núcleo, 9 neutros, roles por elemento, auditoría WCAG de
+        20 pares y tabla de migración. Encaja **casi 1:1** con los tokens que ya existen. Resumen y
+        los dos huecos que abre, en `ESTADO.md`.
 - [ ] ⚠️⚠️ **C · los servicios como PRODUCTO REAL.** Toca `AFORO` y `PAY`, exige `VERIFY_CONC=1` y
       **NO se diseña desde la spec de la landing**: necesita la suya. Medido: los tres servicios de
       `/servicios` tienen **0 productos vinculados** y dos llevan **tablas de precios TECLEADAS**.
