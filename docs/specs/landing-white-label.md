@@ -94,6 +94,29 @@ horario/ubicación y el cajón). Las tres que cambian son las editoriales.
 castillo hinchable y otro hero. Cualquier diseño que asuma «mismo esqueleto, otra marca» es falso
 antes de empezar.
 
+### 1.bis Una medida que no salió del enunciado, y acota el diseño
+
+Aportada desde la otra sesión de arquitectura del 2026-08-25 (`DECISIONES #142`), al valorar si
+alguna entidad de contenido podía **retirarse** en vez de enchufarse.
+
+⚠️⚠️ **`Attraction` no es «una tarjeta de la home»: el contrato `Booking\Contracts\PublishableCatalog`
+existe SOLO para servirla.** Medido: sus dos únicos consumidores son
+`Attraction::complementIsPurchasable()` (unitaria) y `Content\Services\LandingComplementResolver`
+(en lote), y el único consumidor de ese segundo es `HomeController`.
+
+▶ **Consecuencia**: retirar `Attraction` dejaría el contrato, su DTO `ComplementPlacement` y su
+implementación `PublishableCatalogReader` **sin ningún consumidor**, y `ModuleContractsTest`
+—que sustituye cada contrato por un doble y exige que el consumidor real cambie de conducta— **se
+pondría rojo**. No sería una limpieza de landing: sería retirar un contrato de Fase 2.
+
+▶ **Y se llevaría por delante la regla que ese contrato unificó.** Su docblock lo dice: la
+comprabilidad vivía DUPLICADA en dos consultas distintas que **podían divergir en silencio**, y el
+contrato las unificó en una. Es la misma forma de defecto que §1.3 describe para `price_table`, pero
+ya resuelta.
+
+▶ **Refuerza §1.1**: `attractions` no solo tiene casa, **es la casa de una regla del dominio**. La
+dirección correcta es enchufarla, no retirarla.
+
 ---
 
 ## 2. Objetivo
