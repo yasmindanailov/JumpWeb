@@ -188,6 +188,18 @@ ha pagado tres veces.
 
 ## ▶ Lo que está ABIERTO y no es de la tanda A
 
+🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
+2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →
+menores a cargo → carné QR y pantalla de puerta → JumpPoints. **No es lo siguiente** y **no toca la
+landing**; se anota aquí para que no se pierda. Detalle en el tracker; las cuatro specs, en
+`docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
+⚠️ **Dos cosas de ahí tienen consecuencias fuera de su alcance**: el waiver **modifica `RGPD-01`**
+(el registro firmado se conserva al borrar la cuenta, restringido y con plazo `[PENDIENTE: owner]`)
+y el carné QR **entra en `User::revokeAllAccess()`** desde el primer commit — es el modo de fallo
+exacto que `RGPD-06` existe para impedir.
+❗ **Ninguna de las cuatro está aprobada**: esperan revisión adversarial por otro agente
+(`CONVENCIONES` §5).
+
 ❗ **1 · El aforo de PACKS nunca se ha probado bajo concurrencia** (ficha en `DEUDA.md`, medida el
 2026-08-25). `purchase:verify-oversell` siembra **una entrada** con `online_capacity = 1` y forka N
 compras; los packs se cuentan por **otro camino entero** —`PackAvailability`, con pool propio y los dos
