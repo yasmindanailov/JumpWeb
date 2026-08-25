@@ -1821,11 +1821,18 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       **16/16** en navegador · chunk 213,57/214,5 KiB.
 
 ### Fase 5 — Capa de contenido profesional ⬜
-⚠️⚠️ **Su primer punto NO es implementable tal como está escrito** (medido el 2026-08-23): pide caché
-**etiquetada** y el store es `database`, que **lanza** `BadMethodCallException` al usar tags. No hay
-Redis en el stack local, ni en staging, ni una línea en la doc que lo contemple. Fase 5 empieza por una
-decisión de infraestructura del owner —Redis, o invalidación por versión de clave—, no por código.
-⚠️ Y **no es lo siguiente**: antes va el desglose de dinero del cliente (ver abajo).
+✅ **DESBLOQUEADO el 2026-08-25** (`DECISIONES #137`): su primer punto pedía caché **etiquetada** y
+llevaba dos días declarado no implementable —el store es `database`, que **lanza** al usar tags—. El
+owner decide **Redis, requisito DURO, y SOLO para caché**. Activado y **verificado en staging**:
+instancia propia por sitio dentro del contenedor PHP, Laravel conecta **sin tocar una sola variable**,
+y los **tags funcionan contra el Redis real** —también por el camino WEB, no solo por la CLI—.
+⚠️⚠️ **Y trae dos obligaciones que no son opcionales**: el token de la vuelta de Redsys **sale de la
+caché** (un pase de un solo uso no puede vivir donde algo puede desalojarlo) y **Redis entra en el
+stack local y en la suite** —medido: `array` soporta tags y `database` lanza, así que hoy un test con
+tags **sale VERDE y revienta en producción**, la misma trampa de `#129`—.
+⚠️ Sesión y cola **se quedan en base de datos**: Redis vive dentro del contenedor PHP y cada reinicio
+se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a todos a la vez.
+⚠️ Y **no es lo siguiente**: el orden acordado en `#136` es tema → contenido → servicios.
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).

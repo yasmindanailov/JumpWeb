@@ -127,6 +127,39 @@ Inventario en solo lectura, para no volver a suponerlo:
 | **Demonio cron** | ❗ **NO HAY** (medido 2026-08-21) | sí | ⚠️⚠️ **sí — el scheduler NO corre** |
 | rsync · git · unzip · crontab · mysql | ✅ todos en PATH | — | `deploy.sh` no necesita instalar nada |
 | Disco | 423 GB libres de 467 GB | — | holgado (el árbol + `vendor` ≈ 200 MB) |
+| **Redis** | ✅ **7.0.15, activado el 2026-08-25** — instancia PROPIA del sitio, dentro de su contenedor PHP | ❌ **NO está en `compose.yaml`** | ⚠️⚠️ **sí — ver «Redis» abajo** |
+| Redis: cómo se conecta | `127.0.0.1:6379`, **sin contraseña** (solo alcanzable dentro del contenedor) | — | ✅ **coincide con los valores por defecto de Laravel: 0 variables que tocar** |
+| `phpredis` | ✅ **6.3.0** | ✅ presente | ⚠️ **compilado SIN igbinary**: configurar ese serializador revienta |
+
+### ⚠️ REDIS en Enhance, MEDIDO (2026-08-25, `DECISIONES #137`)
+
+La doc pública de Enhance solo dice «Advanced → Developer tools → Redis → On». Lo demás está medido
+sobre la máquina, porque **una inferencia razonable resultó falsa**: el host tiene una unidad
+`redis-server@.service` (instancia por sitio con socket unix), y **no es así como funciona**.
+
+| Qué | Medido |
+|---|---|
+| Dónde corre | **Dentro del contenedor PHP del sitio** (`pid 4`), no en el host |
+| Aislamiento | Instancia **propia**: `config_file` = `<HOME>/redis.conf`, keyspace vacío al arrancar |
+| Conexión | TCP `127.0.0.1:6379`, sin contraseña — no sale del contenedor |
+| Config y log | `<HOME>/redis.conf` y `<HOME>/redis.log`, **fuera de `public_html`** → el `rsync` del deploy NO los toca |
+| Volcado RDB | `dir` = `<HOME>`, `dbfilename dump.rdb` |
+| Laravel | Conecta **sin cambiar ninguna variable**: sus valores por defecto ya son `127.0.0.1:6379` y `REDIS_CACHE_DB=1` |
+| Tags | ✅ **Verificados contra el Redis REAL** (escribir con tags, leer, `flush()` de un tag → invalida) |
+| Camino web | ✅ Verificado: una petición HTTP real dejó `cta.min_price_cents` en la db 1 vía PHP-FPM |
+
+⚠️⚠️ **Reiniciar el contenedor PHP se lleva Redis por delante** —y el propio panel ofrece ese botón
+para aplicar cambios de `redis.conf`—. Para una caché es un arranque en frío; **es el motivo por el
+que la SESIÓN y la COLA se quedan en base de datos** (`#137`).
+
+❗❗ **Y con `CACHE_STORE=redis`, si Redis no responde el sitio devuelve 500.** Medido apuntando a un
+puerto muerto: **500 en 0,14 s** — falla rápido, que es la menos mala de las dos formas, pero es una
+dependencia DURA. Es la consecuencia aceptada de usar tags: `database` **lanza** al usarlos.
+
+⚠️ **El `redis.conf` de fábrica son 14 bytes (`bind 127.0.0.1`) y se comporta como un almacén, no como
+una caché**: `maxmemory 0` (sin techo), `maxmemory-policy noeviction`, snapshots activos y
+`stop-writes-on-bgsave-error yes` —o sea que si falla un volcado **deja de aceptar escrituras**—.
+Ficha abierta en `DEUDA.md`; el contenido acordado está en `DECISIONES #137`.
 
 ⚠️ **TRES diferencias con local que condicionan el procedimiento, y ninguna es cosmética:**
 

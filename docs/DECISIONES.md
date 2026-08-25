@@ -6781,3 +6781,66 @@ extensiones aditivas» sería repetir el error de dimensionado que `specs/desglo
 **Orden acordado**: **A** el tema (barato, no toca dominio) · **B** el contenido y la landing del
 segundo cliente como primer paquete de tema · **C** los servicios como producto real, la última y con
 spec propia.
+
+## #137 · 2026-08-25 · [DECIDIDO, owner] Redis: SÍ, requisito DURO, y SOLO para caché
+
+**Contexto.** El primer punto de la Fase 5 pedía caché **etiquetada** y llevaba desde el 2026-08-23
+declarado no implementable: el store es `database`, que **lanza** al usar tags. El owner decide usar
+Redis («el hosting EnhanceCP lo permite») y pide valorarlo **con medida, no con suposición**. Detalle
+de la máquina en `ENTORNOS.md` §4.
+
+**⚠️⚠️ Y lo primero medido fue que una inferencia razonable era FALSA.** El host tiene una unidad
+`redis-server@.service` —la plantilla de Debian: instancia por sitio, `port 0`, socket unix en
+`/run/redis-<sitio>/`— y **Enhance no la usa**. El panel arranca el demonio **dentro del contenedor
+PHP del sitio**, en `127.0.0.1:6379` y sin contraseña. Leer la plantilla del sistema y dar por hecho
+que era el mecanismo habría llevado a configurar una conexión por socket que no existe.
+
+**Lo verificado, punto por punto** (staging, 2026-08-25):
+
+| Qué | Resultado |
+|---|---|
+| Aislamiento | **Instancia propia** — `config_file` = `<HOME>/redis.conf`, `pid 4`, keyspace vacío |
+| Configuración de Laravel | **Cero variables que tocar**: los valores por defecto (`127.0.0.1:6379`, `REDIS_CACHE_DB=1`) ya coinciden |
+| **Tags contra el Redis REAL** | ✅ escribir con tags, leer, `flush()` de UN tag → invalida la entrada |
+| **Camino WEB** (no solo la CLI) | ✅ una petición HTTP real dejó `cta.min_price_cents` en la db 1 vía PHP-FPM |
+| `phpredis` | **6.3.0, SIN igbinary** — configurar ese serializador reventaría |
+| **Redis caído** | ❗ **500 en 0,14 s** — falla rápido, pero es dependencia DURA |
+
+**[DECIDIDO] Requisito DURO: sin Redis no se instala un cliente.** Es la consecuencia honesta de usar
+tags —no hay repliegue: `database` lanza—. `deploy.sh` gana guarda (`CACHE_STORE=redis` + un PING en
+vivo **antes** de servir tráfico) y `INSTALACION-CLIENTE.md` lo declara. Sube el listón de dónde se
+puede vender, y lo sube de verdad.
+⚠️ Se descartó el camino blando (dos rutas, tags o versión de clave) porque **hay que mantener las
+dos y la que casi nunca se usa es la que se rompe sin que nadie lo note**.
+
+**[DECIDIDO] SOLO caché. Sesión y cola se quedan en base de datos**, y el argumento que lo cierra
+salió de medir, no del manual: **Redis vive DENTRO del contenedor PHP**, así que cualquier reinicio
+—incluido el botón del propio panel para aplicar `redis.conf`— se lo lleva por delante.
+
+- Para una **caché** eso es un arranque en frío y ya está.
+- Para las **sesiones** sería cerrar la sesión de todos a la vez en cada reinicio, incluido quien esté
+  en el paso de pago.
+- Para la **cola** sería perder jobs encolados: los correos de pedido pagado (`PAY-14`), y además
+  `deploy.sh` tiene la `GUARDA 6` exigiendo `QUEUE_CONNECTION=database`.
+
+▶ Y moverlas después cuesta **una variable de entorno y una guarda**: no se cierra ninguna puerta.
+
+**⚠️⚠️ DOS COSAS QUE ESTO OBLIGA, y no son opcionales:**
+
+1. **El token de la vuelta de Redsys SALE de la caché.** `Cache::put('redsys.return:…', …, 5 min)` es
+   un pase de un solo uso que decide si quien acaba de pagar ve «¡Reserva creada!» o la home vacía.
+   Hoy vive en `database`, donde **no se puede desalojar**; en una caché con `allkeys-lru`, sí. Pasa a
+   `Cache::store('database')` **explícitamente**: tres líneas, cero esquema nuevo. Poner `noeviction`
+   para protegerlo sería peor —la caché daría error al llenarse en vez de desalojar—.
+2. **Redis en el stack LOCAL y en la suite, o los tags no se pueden verificar.** Medido ejecutándolo:
+   `array` **soporta tags** y `database`/`file` **lanzan**. La suite corre en `array`, así que
+   **un test con tags saldría VERDE y reventaría en la primera petición de producción**. Es la misma
+   trampa que `#129` («la guarda de conducta salía VERDE en SQLite»), y sin cerrarla no hay forma de
+   saber si funciona hasta que lo descubra un cliente.
+
+**⚠️ APLAZADO a propósito (owner): afinar `redis.conf`.** De fábrica son 14 bytes y se comporta como
+un almacén: `maxmemory 0` (sin techo), `noeviction`, snapshots activos y
+`stop-writes-on-bgsave-error yes` —si falla un volcado, **deja de aceptar escrituras**—. El contenido
+acordado, para cuando toque: `maxmemory 256mb` · `maxmemory-policy allkeys-lru` · `save ""`. Ficha
+abierta en `DEUDA.md` con su riesgo medido.
+⚠️ Aplicarlo exige **reiniciar el contenedor PHP desde el panel**, que es acción del owner.

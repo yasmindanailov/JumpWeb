@@ -319,11 +319,24 @@ productos vinculados y 2 tablas de precios TECLEADAS a mano**.
   toca `AFORO-01/02/03` y las identidades de `PAY`, exige `VERIFY_CONC=1` y **no se puede verificar ni
   en SQLite ni en staging** (MariaDB).
 
-⚠️ **Y la Fase 5 tal como está escrita en el tracker sigue sin ser implementable**: su primer punto
-pide caché **etiquetada** y el store es `database`, que **lanza** `BadMethodCallException` al usar
-tags; no hay Redis en local, ni en staging, ni en la doc. Eso sigue necesitando una decisión de
-INFRAESTRUCTURA del owner —Redis, o invalidación por versión de clave—, y **es independiente** de las
-tres tandas de arriba.
+✅ **Y la Fase 5 ya NO está bloqueada** (`DECISIONES #137`, 2026-08-25): **Redis, requisito DURO y solo
+para CACHÉ**, activado y verificado en staging. Instancia propia por sitio dentro del contenedor PHP,
+`127.0.0.1:6379` sin contraseña, y **Laravel conecta sin tocar una sola variable** —sus valores por
+defecto ya coinciden—. Los **tags funcionan contra el Redis real**, también por el camino WEB.
+⚠️⚠️ **Dos obligaciones que trae, y no son opcionales:**
+- **el token de la vuelta de Redsys SALE de la caché** (`Cache::store('database')` explícito): es un
+  pase de un solo uso que decide si quien pagó ve «¡Reserva creada!» o la home vacía, y no puede
+  vivir donde algo puede desalojarlo;
+- **Redis entra en el stack LOCAL y en la suite.** Medido ejecutándolo: `array` **soporta** tags y
+  `database`/`file` **lanzan**, y la suite corre en `array` — o sea que hoy **un test con tags sale
+  VERDE y revienta en la primera petición de producción**. Es la trampa de `#129` otra vez.
+⚠️ **Sesión y cola se quedan en BD**: Redis vive DENTRO del contenedor PHP y cada reinicio se lo lleva
+—incluido el botón del panel—. Para una caché es un arranque en frío; para las sesiones sería echar a
+todos a la vez, incluido quien esté pagando.
+❗ **Y con `CACHE_STORE=redis`, si Redis no responde el sitio da 500** (medido: 0,14 s, falla rápido).
+Es la consecuencia aceptada del requisito duro.
+▶ Detalle de la máquina en `ENTORNOS.md` §4 · ⚠️ **el `redis.conf` sigue de fábrica a propósito**
+(sin techo de memoria y para de escribir si falla un volcado): ficha abierta en `DEUDA.md`.
 
 ✅ **Staging ya está al día**: sirve `e551851` desde el 2026-08-25, con el desglose entero (`#123` a
 `#134`) y verificado allí sobre datos reales. ⚠️ Pero **la distancia se mide, no se copia** —esta
