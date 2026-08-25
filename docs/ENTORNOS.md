@@ -127,7 +127,7 @@ Inventario en solo lectura, para no volver a suponerlo:
 | **Demonio cron** | ❗ **NO HAY** (medido 2026-08-21) | sí | ⚠️⚠️ **sí — el scheduler NO corre** |
 | rsync · git · unzip · crontab · mysql | ✅ todos en PATH | — | `deploy.sh` no necesita instalar nada |
 | Disco | 423 GB libres de 467 GB | — | holgado (el árbol + `vendor` ≈ 200 MB) |
-| **Redis** | ✅ **7.0.15, activado el 2026-08-25** — instancia PROPIA del sitio, dentro de su contenedor PHP | ❌ **NO está en `compose.yaml`** | ⚠️⚠️ **sí — ver «Redis» abajo** |
+| **Redis** | ✅ **7.0.15, activado el 2026-08-25** — instancia PROPIA del sitio, dentro de su contenedor PHP | ✅ **`redis:7.0-alpine` en `compose.yaml`** (puerto propio `6382`) | ⚠️⚠️ **sí — ver «Redis» abajo** |
 | Redis: cómo se conecta | `127.0.0.1:6379`, **sin contraseña** (solo alcanzable dentro del contenedor) | — | ✅ **coincide con los valores por defecto de Laravel: 0 variables que tocar** |
 | `phpredis` | ✅ **6.3.0** | ✅ presente | ⚠️ **compilado SIN igbinary**: configurar ese serializador revienta |
 
@@ -155,6 +155,12 @@ que la SESIÓN y la COLA se quedan en base de datos** (`#137`).
 ❗❗ **Y con `CACHE_STORE=redis`, si Redis no responde el sitio devuelve 500.** Medido apuntando a un
 puerto muerto: **500 en 0,14 s** — falla rápido, que es la menos mala de las dos formas, pero es una
 dependencia DURA. Es la consecuencia aceptada de usar tags: `database` **lanza** al usarlos.
+
+✅ **Y el local está IGUALADO a propósito**: `redis:7.0-alpine`, no `redis:alpine` —que hoy sirve otra
+rama mayor—. Probar tags contra una versión que producción no ejecuta es la otra mitad del mismo
+error que hace falsa la suite. La suite lo ejercita con `CacheTaggingContractTest`, y ese caso
+**FALLA si Redis no está levantado**, en vez de saltarse: Redis es requisito duro, así que un `skip`
+quedaría verde para siempre justo en la máquina donde importa.
 
 ⚠️ **El `redis.conf` de fábrica son 14 bytes (`bind 127.0.0.1`) y se comporta como un almacén, no como
 una caché**: `maxmemory 0` (sin techo), `maxmemory-policy noeviction`, snapshots activos y

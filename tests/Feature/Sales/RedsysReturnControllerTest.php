@@ -179,11 +179,49 @@ class RedsysReturnControllerTest extends TestCase
         $token = $query['redsys'] ?? null;
         $this->assertNotEmpty($token);
 
-        $cached = Cache::get(RedsysReturnController::cacheKey($token));
+        $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token));
         $this->assertIsArray($cached);
         $this->assertSame($user->id, $cached['user_id']);
         $this->assertSame($payment->payable->code, $cached['order_code']);
         $this->assertSame('authorized', $cached['outcome']);
+    }
+
+    /**
+     * ⚠️⚠️ **EL PASE SOBREVIVE A UN VACIADO DE LA CACHÉ, y desde `#137` eso es lo que hay que fijar.**
+     *
+     * No es un dato cacheado: es un pase de un solo uso que decide si quien acaba de pagar ve
+     * «¡Reserva creada!» o una home vacía. Mientras el store por defecto fue `database` nadie podía
+     * desalojarlo y la distinción no se notaba. Con Redis y `allkeys-lru` **sí puede desaparecer**
+     * bajo presión de memoria — y precisamente en el pico de reservas, que es cuando más pases hay.
+     *
+     * ▶ Esta comprobación es la que caza la regresión, porque **el resto de la suite pasaría igual**
+     * si el pase volviera al store por defecto: en los tests ese store es `array` y nada lo vacía.
+     * Aquí se vacía a propósito.
+     */
+    public function test_the_handoff_pass_survives_the_cache_being_flushed(): void
+    {
+        [$payment, $user] = $this->setupPaidableOrder();
+        $response = $this->post(route('payments.redsys.return.ok'), $this->makePayload($payment, '0000'));
+
+        parse_str(parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY) ?? '', $query);
+        $token = $query['redsys'] ?? null;
+        $this->assertNotEmpty($token, 'la vuelta no ha emitido pase');
+
+        // Lo que hace una caché al llenarse, o al reiniciarse el contenedor que la aloja.
+        Cache::flush();
+
+        $this->assertIsArray(
+            RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token)),
+            'el pase se fue con la caché: quien pagó volvería del banco sin su confirmación',
+        );
+
+        // Y sigue sirviendo de verdad: la home lo consume y deja el pedido confirmado.
+        $this->actingAs($user)->get(route('home', ['redsys' => $token]))->assertOk();
+
+        $this->assertNull(
+            RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token)),
+            'el pase es de UN solo uso y no se ha consumido',
+        );
     }
 
     public function test_invalid_signature_returns_400_without_generating_a_token(): void
@@ -301,7 +339,7 @@ class RedsysReturnControllerTest extends TestCase
         $this->actingAs(User::factory()->create())->get('/?redsys='.$token)->assertOk();
 
         $this->assertNotNull(
-            Cache::get(RedsysReturnController::cacheKey($token)),
+            RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token)),
             'un tercero no puede consumir el token: el dueño todavía no lo ha usado'
         );
 
@@ -324,7 +362,7 @@ class RedsysReturnControllerTest extends TestCase
         $this->actingAs($user)->get('/?redsys='.$token)->assertOk();
 
         $this->assertNull(
-            Cache::get(RedsysReturnController::cacheKey($token)),
+            RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token)),
             'tras aplicarse, el token tiene que desaparecer de la cache'
         );
     }
@@ -414,7 +452,7 @@ class RedsysReturnControllerTest extends TestCase
         $this->assertStringContainsString('redsys=', $redirect);
 
         $token = $this->tokenFromRedirect($response);
-        $cached = Cache::get(RedsysReturnController::cacheKey($token));
+        $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token));
         $this->assertSame('idempotent_paid', $cached['outcome']);
     }
 

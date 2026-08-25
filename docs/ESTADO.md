@@ -133,7 +133,7 @@ que sirva staging de verdad.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2748 en verde** (16.036 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+- Suite **2752 en verde** (16.047 aserciones, `--parallel` **~39 s** medidos el 2026-08-25) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.
@@ -323,13 +323,21 @@ productos vinculados y 2 tablas de precios TECLEADAS a mano**.
 para CACHÉ**, activado y verificado en staging. Instancia propia por sitio dentro del contenedor PHP,
 `127.0.0.1:6379` sin contraseña, y **Laravel conecta sin tocar una sola variable** —sus valores por
 defecto ya coinciden—. Los **tags funcionan contra el Redis real**, también por el camino WEB.
-⚠️⚠️ **Dos obligaciones que trae, y no son opcionales:**
-- **el token de la vuelta de Redsys SALE de la caché** (`Cache::store('database')` explícito): es un
-  pase de un solo uso que decide si quien pagó ve «¡Reserva creada!» o la home vacía, y no puede
-  vivir donde algo puede desalojarlo;
-- **Redis entra en el stack LOCAL y en la suite.** Medido ejecutándolo: `array` **soporta** tags y
-  `database`/`file` **lanzan**, y la suite corre en `array` — o sea que hoy **un test con tags sale
-  VERDE y revienta en la primera petición de producción**. Es la trampa de `#129` otra vez.
+✅ **Y sus DOS obligaciones están HECHAS** (2026-08-25, mismo `#137`):
+- **el pase de la vuelta de Redsys SALIÓ de la caché** — `RedsysReturnController::handoff()` es el
+  único sitio donde se decide el store, y lo leen el que escribe y el que consume. Guardado con un
+  caso que **vacía la caché y comprueba que el pase sigue ahí**: es el único que caza la regresión,
+  porque en los tests el store por defecto es `array` y nada lo vacía;
+- **Redis está en el `compose.yaml` local**, clavado a **7.0.15** —la misma versión que staging, no
+  `redis:alpine`— y la suite ejercita los tags **contra él**, no contra `array`.
+  ⚠️ Y hay una **guarda que se activa sola**: hoy nadie usa `Cache::tags()` y duerme; el día que
+  aparezca el primero, **exige que `deploy.sh` garantice un store que los soporte**. Sin ella, ese
+  commit dejaría una instalación con `CACHE_STORE=database` sirviendo un 500.
+▶ **Tres mutaciones, las tres muerden**: devolver el pase al store por defecto · apagar Redis (el
+caso **falla**, no se salta) · y colar un `Cache::tags()` en `app/`.
+⚠️ **Lo que la primera versión de esa guarda enseñó**: buscaba la cadena `CACHE_STORE` en
+`deploy.sh` y **habría pasado siempre**, porque la plantilla del `.env` ya la nombra. Ahora exige la
+línea `guard_errors+=(… CACHE_STORE …)`, que es la guarda y no la palabra.
 ⚠️ **Sesión y cola se quedan en BD**: Redis vive DENTRO del contenedor PHP y cada reinicio se lo lleva
 —incluido el botón del panel—. Para una caché es un arranque en frío; para las sesiones sería echar a
 todos a la vez, incluido quien esté pagando.

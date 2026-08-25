@@ -24,6 +24,7 @@ services:
         depends_on:
             - mysql
             - mailpit
+            - redis
     mysql:
         image: 'mysql:8.4'
         ports:
@@ -56,6 +57,34 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    # ⚠️⚠️ REDIS EN LOCAL NO ES COMODIDAD: es la única forma de VERIFICAR los tags
+    # (`DECISIONES #137`). Medido ejecutándolo: el store `array` —el que usa la suite—
+    # SOPORTA tags, y `database`/`file` LANZAN. Sin un Redis real, un test con
+    # `Cache::tags()` sale VERDE aquí y revienta en la primera petición de producción,
+    # que es exactamente la trampa de `#129` («la guarda salía verde en SQLite»).
+    #
+    # ⚠️ La versión está CLAVADA a la de staging (7.0.15, medida el 2026-08-25) y no en
+    # `redis:alpine`, que hoy sirve una rama mayor distinta: probar contra una versión que
+    # producción no ejecuta es la otra mitad del mismo error.
+    #
+    # ⚠️ Puerto propio (como web 8081, MySQL 3308 y Mailpit 8028): esta máquina puede tener
+    # otro Redis escuchando en el 6379.
+    redis:
+        image: 'redis:7.0-alpine'
+        ports:
+            - '${FORWARD_REDIS_PORT:-6382}:6379'
+        # Sin volumen a propósito: es una CACHÉ. Persistirla entre reinicios haría que un
+        # test dependiera de lo que dejó otro, que es la clase de acoplamiento que
+        # `SUITE-02` persigue con los memos estáticos.
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
 networks:
     sail:
         driver: bridge

@@ -19,7 +19,6 @@ use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderProcessedAfterExpiration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -364,7 +363,7 @@ class RedsysNotificationEndpointTest extends TestCase
         // 3. El token de la vuelta debe ser de tipo idempotent_paid (no authorized de nuevo).
         parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $query);
         $token = $query['redsys'] ?? null;
-        $cached = Cache::get(RedsysReturnController::cacheKey($token));
+        $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token));
         $this->assertSame('idempotent_paid', $cached['outcome']);
 
         // 4. NO se emite segundo ticket ni segundo email.

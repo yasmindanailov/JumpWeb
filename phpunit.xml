@@ -22,7 +22,17 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
+        <!-- ⚠️⚠️ `array` SOPORTA tags y `database`/`file` LANZAN (medido, `DECISIONES #137`), así que
+             la suite NO puede decidir por sí sola si un `Cache::tags()` funcionará en producción.
+             El store por defecto se queda en `array` —rápido y aislado por test—, y quien ejercita
+             los tags contra un Redis REAL es `CacheTaggingContractTest`, que apunta aquí abajo. -->
         <env name="CACHE_STORE" value="array"/>
+        <!-- El Redis del `compose.yaml`, alcanzable por nombre de servicio dentro de la red `sail`.
+             ⚠️ NO es opcional: los casos que miden los tags FALLAN si no está, a propósito. Redis es
+             requisito DURO de la instalación (`#137`), así que un `skip` silencioso sería una guarda
+             decorativa que quedaría verde para siempre en la máquina que no lo tenga. -->
+        <env name="REDIS_HOST" value="redis"/>
+        <env name="REDIS_PORT" value="6379"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

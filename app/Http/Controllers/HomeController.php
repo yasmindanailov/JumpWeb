@@ -14,7 +14,6 @@ use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Sidebar\AccountDoor;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -108,8 +107,12 @@ class HomeController extends Controller
         }
 
         $key = RedsysReturnController::cacheKey($token);
+        // ⚠️ El pase NO vive en la caché por defecto (`DECISIONES #137`): con Redis y `allkeys-lru`
+        // podría desalojarse justo en el pico de reservas. Quién lo guarda decide dónde, y aquí solo
+        // se le pregunta — la clave y el store salen los dos del mismo sitio.
+        $handoff = RedsysReturnController::handoff();
 
-        $entry = Cache::get($key);
+        $entry = $handoff->get($key);
         if (! is_array($entry) || ! isset($entry['user_id'], $entry['order_code'], $entry['outcome'])) {
             return;
         }
@@ -126,7 +129,7 @@ class HomeController extends Controller
         }
 
         // Un solo uso: se consume aquí, cuando ya se sabe que va a aplicarse.
-        Cache::pull($key);
+        $handoff->pull($key);
 
         if ($outcome->isSuccess()) {
             SidebarEntry::confirmed((string) $entry['order_code']);

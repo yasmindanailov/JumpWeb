@@ -8,6 +8,7 @@ use App\Domain\Payments\Services\RedsysReturnHandler;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Controller;
 use App\Http\Sidebar\SidebarEntry;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -195,7 +196,7 @@ class RedsysReturnController extends Controller
     private function redirectWithToken(int $userId, string $orderCode, RedsysReturnOutcome $outcome): RedirectResponse
     {
         $token = Str::random(40);
-        Cache::put(self::cacheKey($token), [
+        self::handoff()->put(self::cacheKey($token), [
             'user_id' => $userId,
             'order_code' => $orderCode,
             'outcome' => $outcome->value,
@@ -207,5 +208,27 @@ class RedsysReturnController extends Controller
     public static function cacheKey(string $token): string
     {
         return 'redsys.return:'.$token;
+    }
+
+    /**
+     * **DÓNDE vive el pase de la vuelta — y NO es la caché por defecto** (`DECISIONES #137`).
+     *
+     * ⚠️⚠️ Esto no es un dato cacheado: es un **pase de un solo uso** que decide si quien acaba de
+     * pagar ve «¡Reserva creada!» o una home vacía. Vivía en el store por defecto, y ahí estuvo bien
+     * mientras ese store fue `database` —donde nada desaloja—. Con Redis y `allkeys-lru` **puede
+     * desaparecer bajo presión de memoria**, justo en el pico de reservas en que más pases hay: el
+     * cliente pagaría, volvería del banco y no encontraría su confirmación.
+     *
+     * ▶ Poner `noeviction` en Redis para protegerlo sería peor: la caché empezaría a **dar error** al
+     * llenarse en vez de desalojar, y un fallo de caché se convertiría en un fallo de la web.
+     *
+     * ⚠️ Está aquí, en UN sitio, y no repetido en cada consumidor. El que lo escribe y el que lo
+     * consume son clases distintas (`HomeController` lo lee), y dos `Cache::store('…')` sueltos son
+     * dos sitios donde se puede cambiar uno y olvidar el otro — que es exactamente cómo se pierde un
+     * pase: sin error, sin log y sin que ninguna prueba lo note.
+     */
+    public static function handoff(): Repository
+    {
+        return Cache::store('database');
     }
 }
