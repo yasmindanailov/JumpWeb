@@ -420,9 +420,14 @@ ficha de `DEUDA.md`; aplicarlo exige reiniciar el contenedor PHP desde el panel.
 
 ## ▶ El estado de la BD de desarrollo, antes de mirar nada
 
-- **Hay 25 pedidos**, uno por acción accionable, construidos por los **flujos REALES** (`OrderCreator`
-  → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
+- **El corpus se construyó con 25 pedidos**, uno por acción accionable, por los **flujos REALES**
+  (`OrderCreator` → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
   `cliente.demo@jumpweb.test`. Los 58 anteriores **se borraron** el 2026-08-24 y no hay copia.
+  ⚠️ **MEDIDO el 2026-08-25 al cerrar: hay 26, no 25.** Los 26 son de `cliente.demo` y **ninguno se
+  creó ese día** (0 pedidos del 25/08, 0 de usuarios `@deleted.local`), así que **no vienen de los
+  verificadores de concurrencia**, que limpian lo que crean. El desfase es anterior y **no se ha
+  determinado su origen**: puede ser un pedido de prueba de otra sesión o que el índice de §22 esté
+  incompleto. Se anota como medida, no como explicación. **Antes de fiarte del índice, cuenta.**
 - **Los 25 cuadran**, así que el aviso de «desglose que no cierra» (`#132`) **no se puede ver en
   pantalla con estos datos**: para verlo hay que romper uno a mano.
 - **El índice de los 25, con su código y su acción, está en `specs/desglose-dinero-cliente.md` §22.**
