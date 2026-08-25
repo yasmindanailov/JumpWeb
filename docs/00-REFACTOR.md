@@ -2071,6 +2071,39 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
+### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
+
+> El tronco: `PAY-18` (`#131`) hizo que mover la fecha RE-TARIFIQUE y **seis sitios** seguían
+> escritos sobre la premisa vieja («el valor solo baja si baja la cantidad»). Todo medido
+> ejecutando (sondas sobre MySQL con los flujos reales), arreglado con mutaciones que muerden
+> (**16 en total**, todas verificadas mordiendo) y verificado en vivo.
+
+- ✅ **`#145`** · el registro del pedido legible (sesión anterior; verificado en staging).
+- ✅ **`#149`** · la auditoría de los 3 escenarios del owner (6 pedidos-sonda) **+ D5**:
+      «Reembolsar» pregunta CUÁNTO — radio remanente/otro importe, sugerencia = «pendiente de
+      devolución», topes bajo lock intactos (`PAY-09`). Verificado en vivo: deuda de 10,00 →
+      devueltos 10,00 exactos.
+- ✅ **`#150`** · **D4+D3+D2 y el sexto sitio**: el cambio de precio viaja estructurado
+      (`unit_price_change`), la reconstrucción calcula `cantidad_original × precio_original`
+      (primer cambio de cada clase, desempate por `id`), el marcador se dispara con cualquier
+      causa, los textos dicen la verdad y «+N producto» exige un `quantity_change` real.
+      **El callejón del dinero atrapado, cerrado** — y **el pack CON señal, MEDIDO** (la cascada
+      absorbe; cero reembolsos).
+- ✅ **`#151`** `[DECIDIDO owner]` · la independencia de cupos se hace **POR ZONA** — el consumo
+      que `#148` midió es correcto; `PackConsumesEntrySeatsTest` pasa a guarda de la regla.
+- ✅ **`#152`** `[DECIDIDO owner]` · un pedido **CANCELADO con deuda se reembolsa POR LÍNEA**
+      (antes: ninguna vía de panel) y «devolver fuera» se registra con el modo manual, sin canal
+      nuevo. El banner del cancelado dice cuánto se debe y por dónde.
+- ✅ **`#153`** `[DECIDIDO owner]` · el reembolso de PEDIDO **nombra el importe exacto** y, sin
+      «también cancelar», señala la vía de los parciales. Sin campo aquí a propósito.
+- ✅ **`#154`** · las etiquetas del cargo de puerta que lee el CLIENTE viven en `tickets.*`
+      (ES/EN/FR) — un cliente EN recibía la clave LITERAL en su desglose (medido por HTTP).
+- ✅ **`#155`** · el email de una BAJADA cuenta el dinero: la deuda que aflora («pendientes de
+      devolverte», mismo vocabulario que la pantalla) y lo absorbido en puerta.
+- [ ] **Ver en navegador** el modal nuevo de «Reembolsar» (reactividad del campo) — todo lo demás
+      está verificado por Livewire + mutación. El owner tiene **9 pedidos-sonda** en su BD local
+      para probarlo (`ESTADO.md` § BD de desarrollo).
+
 ### La LANDING white-label 🟦 — **tanda A CERRADA (6 de 6) · B EN CURSO (1 de 4) · C sin empezar**
 
 > Spec: `specs/landing-white-label.md` · Decisiones `#136` (el marco), `#138`–`#140`, `#143`

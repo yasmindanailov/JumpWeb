@@ -83,16 +83,19 @@ reservas de packs distintos con gente real (`#139`).
 obligaciones —el pase de Redsys fuera de la caché y Redis en el stack local y en la suite— están
 **hechas**. Detalle de la máquina en `ENTORNOS.md` §4.
 
-✅ **STAGING SIRVE `6437c48`** desde el 2026-08-25 — el salto de **16 commits y 64 ficheros de código**
-que trae la tanda A del tema, el icono por producto, las dos migraciones nuevas
-(`zones.color_secondary`, `ticket_types.icon`) y el registro del pedido legible (`#145`).
-Auto-verificado: `/up` y `/` en 200, guarda del `robots.txt`, `redsys_environment = 'test'`,
-0 migraciones pendientes, 0 `failed_jobs`, 0 jobs varados, 5 tareas registradas y 1.420 franjas
-generadas. Canal: `scripts/deploy.sh`, dry-run por defecto.
-▶ **Y `#145` se comprobó ALLÍ, sobre el pedido real `R-S9XDYB`**: las mismas filas que el owner vio
-en crudo ahora dicen «Abono sobre lo pendiente en el parque · Importe: −24,00 € · Motivo: bajada por
-editar el producto» y «Producto editado · Precio unitario: 18,90 € → 15,90 € · Diferencia: −24,00 € ·
-Cambió: la fecha y la hora», con el badge «Pedido» en vez de «Producto».
+✅ **STAGING SIRVE `7776370`** desde el 2026-08-25 (cierre del agente A) — trae la línea entera del
+cambio de precio (`#149`→`#155`: el importe elegido en «Reembolsar», la reconstrucción por precio
+original, cancelados con deuda reembolsables, etiquetas EN/FR y el email de la bajada) más el
+verificador de aforo de 5 escenarios del agente B. **Sin migraciones nuevas** («Nothing to
+migrate» — las tres de la ola anterior ya estaban).
+Auto-verificado por el script: `/up` y `/` en 200, guarda del `robots.txt`,
+`redsys_environment = 'test'`, 0 migraciones pendientes, 0 `failed_jobs`, 0 jobs varados, 5 tareas
+registradas y 1.420 franjas. Canal: `scripts/deploy.sh`, dry-run por defecto.
+⚠️ **Lo de esta ola es PANEL y EMAIL**: no hay nada nuevo que ver en la web pública de staging; el
+modal nuevo de «Reembolsar» se prueba con login de admin (y la BD de staging tiene sus 6 pedidos
+de siempre, no las sondas locales).
+▶ El histórico del salto anterior (`6437c48`, con `#145` verificado sobre `R-S9XDYB`) queda en
+`DECISIONES` y en el tracker.
 ⚠️ **Lo que hay que recordar del canal**: los assets se construyen AQUÍ y se suben compilados —en
 staging no hay node/npm— y el `.env` **nunca viaja**: se lee y se valida.
 ⚠️ **El único aviso del despliegue**: el script no ve ningún demonio cron, así que el crontab instalado
@@ -245,6 +248,10 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
+
+▶ **La línea de panel/dinero (agente A) está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en
+`7776370`): no hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el
+modal nuevo de «Reembolsar» en navegador con sus 9 pedidos-sonda (decidió conservarlos para eso).
 
 # ❗ LO SIGUIENTE: **`testimonials`** — lo único de la landing que NO está bloqueado
 
@@ -501,9 +508,9 @@ apartado dice del corpus aplica a UNA máquina; antes de fiarte de nada, cuenta 
 - 🆕 **Además viven 9 pedidos de las SONDAS `#149`/`#150`** (los 6 escenarios del owner, la
   verificación de D5 y las de D4/pack-señal: `R-P4NA2I` `R-DKKV3J` `R-REM7YW` `R-ITHNOJ` `R-MOTEHE`
   `R-8STAH6` `R-VLRYUV` `R-ZDRAYL` `R-DWFRDP`), con su zona, productos y usuarios `sonda146*`.
-  **Se dejaron a propósito para inspeccionarlos en el panel**; se borran enteros con la sonda de
-  limpieza que quedó en `storage/app/` (sonda146-clean, vía tinker; no versionada — instrumento,
-  no guarda) cuando el owner termine.
+  ✅ **[DECIDIDO owner, cierre 2026-08-25]: SE QUEDAN — los usa para probar el panel** (el modal
+  nuevo de «Reembolsar» incluido). **NO limpiar.** La sonda de limpieza queda en `storage/app/`
+  (sonda146-clean, vía tinker; no versionada) para cuando ÉL diga.
   ⚠️ Los de `#149` retratan defectos que ENTONCES estaban abiertos (dinero regalado/atrapado): no
   son corpus, no cuadran como él. Los de `#150` (`R-VLRYUV`, `R-ZDRAYL`, `R-DWFRDP`) retratan el
   comportamiento ARREGLADO.
