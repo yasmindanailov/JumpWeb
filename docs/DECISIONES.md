@@ -7835,3 +7835,248 @@ dar **2**. **Parecía una sobreventa y era un fallo de la medida.** Hoy `liveLin
 `ticket_types.type` y su docblock lo explica.
 ▶ La regla que esto deja: cuando un verificador da un número raro, **lo primero que hay que dudar es
 del contador**, no del sistema.
+## #149 · 2026-08-25 · [DECIDIDO] Los escenarios del owner, MEDIDOS con sus números — y D5 EJECUTADO: «Reembolsar» ya pregunta CUÁNTO
+
+**De dónde sale.** El owner bajó `#146` a tres casos concretos —entrada de 40 € movida a un día de
+30 € · movida a uno de 50 € · cumpleaños pagado entero SIN señal— y pidió saber qué ve el operador,
+qué ve el cliente, qué email llega, si el dinero «sale en el parque» o por Redsys, y si cancelar y
+reembolsar el total devuelve 40 ó 30. **Todo se midió ejecutando** (sonda sobre el MySQL local:
+`OrderCreator` → vuelta de Redsys FIRMADA → acciones del panel por Livewire; pasarela doblada,
+emails capturados con `Notification::fake`), y después **se arregló D5** con su red y sus mutaciones.
+
+### La medición, con los números del owner (7 pedidos, quedan en la BD local)
+
+**BAJADA 40→30 (entrada, pagada entera online).** El previo del operador dice la verdad
+(`40,00 → 30,00 · −10,00`); al guardar, el ledger cuenta bien (`valor 30 · cobradoWeb 40 ·
+pendienteDevolucion 10`) y la pantalla del cliente es honesta («Cobrado por web 40,00 · Tenemos
+pendiente devolverte 10,00 €», más la frase de `#134`). Lo roto era la caja de herramientas:
+- **D2 confirmado**: el toast dice «unidades canceladas» y el pie «reducción de cantidad o
+  cancelación» — fue un cambio de fecha.
+- **D3 confirmado**: «(ninguna fila de ajuste)» — ni una línea explica los 10 €.
+- **D5 medido con estos números**: «Reembolsar» la línea devolvía **30,00** debiendo 10,00 →
+  **20,00 € regalados** (`compensado 20`, y el cliente leía «Te devolvimos 20,00 € y conservas tu
+  reserva»). ⚠️⚠️ **Y no es solo la línea**: «Reembolsar el pedido» SIN cancelar devuelve SIEMPRE
+  `payment.amount` — medido: devolvió **40,00** debiendo 10,00 (**30,00 regalados**). `#146` listaba
+  D5 solo en la línea; **son las DOS acciones**.
+- **Los 10 € NO «salen en el parque»**: no existe ningún mecanismo de pagar en puerta al cliente
+  (los créditos de puerta solo REDUCEN lo pendiente de cobrar allí, y aquí es 0). La única vía es el
+  panel → Redsys (REST) o «manual».
+- **¿Cancelar y reembolsar el total: 40 ó 30?** En UNA acción («Reembolsar el pedido» + «también
+  cancelar»): **40,00 €, correcto**. ⚠️⚠️ **Si se CANCELA PRIMERO, callejón sin salida medido**: el
+  total queda bloqueado para siempre (`already_cancelled`), la línea devuelve solo 30,00 (el tope
+  reconstruye por el precio YA re-tarificado — **D4** con estos números) y **los 10,00 restantes
+  quedan ATRAPADOS**: línea a 0, total bloqueado, también en manual. El cliente lee «Tenemos
+  pendiente devolverte 10,00 €» **eternamente**. El orden de dos clics decide entre correcto e
+  irreversible.
+  ⚠️⚠️ **CORREGIDO en `#150`**: los 30,00 «que devolvía la línea» salieron del DOMINIO (el batch,
+  que es donde esta sonda midió al no completar Livewire la acción en tinker). **En el PANEL, un
+  pedido CANCELADO no tiene NI ESA vía**: `refundItemBlockedReason` devuelve `order_not_paid` sobre
+  cancelados — con el pedido entero cancelado, el panel no puede devolver NADA (ficha en `DEUDA.md`).
+  El callejón real de D4 era vía **cancelar la RESERVA** (pedido sigue `paid`), y ése es el que
+  `#150` cierra.
+- ❗ **HALLAZGO NUEVO — el email de la bajada no menciona el dinero**: `OrderItemModified` dice solo
+  «Nueva fecha y hora: … → …». La línea de importe existe para la subida (`extra_due`) y la de
+  reembolso va cableada a `null` desde D8. El cliente solo se entera de que le deben 10 € si entra
+  a su desglose. Ficha en `DEUDA.md`.
+
+**SUBIDA 40→50 (entrada).** Impecable, como decía `#146`: previo `+10,00`, ajuste con causa
+(«Cambio de fecha a …»), cliente «ahora vale 10,00 € más» + «Te quedan 10,00 € por pagar en
+recepción», y **el email SÍ lleva la línea** («Pendiente de pago al llegar al parque: 10,00 €»).
+Cancelar + reembolso total después: **40,00** (los 10 nunca se cobraron; su cargo muere con la
+cancelación). Sin nada que arreglar.
+
+**CUMPLEAÑOS pagado entero SIN señal (40→30 y 40→50).** **Idéntico a la entrada en los dos
+sentidos** — todo lo anterior aplica — con un defecto extra que llega al CLIENTE:
+- ❗ **HALLAZGO NUEVO (el SEXTO sitio del tronco `PAY-18`)**: la línea de puerta de la subida dice
+  **«+2 S146 Pack SUBE»** — narra un cambio de FECHA como si se hubieran añadido 2 packs. Es la
+  heurística de `Order::gateLineLabel` («importe múltiplo del precio unitario ⇒ cambio de
+  cantidad»), escrita cuando solo la cantidad podía crear cargos; con la re-tarificación por fecha
+  en packs dispara casi siempre (diff = invitados × Δprecio). `#146` contó cinco sitios; éste es el
+  sexto. Ficha en `DEUDA.md`.
+⚠️ El pack **CON señal** (los reales llevan `deposit fixed`) **sigue sin medir**: la cascada absorbe
+contra lo pendiente del parque y es otro comportamiento.
+
+### Más hallazgos de la sonda
+
+- ❗ **El cliente EN/FR ve claves en crudo en su desglose**: `admin.orders.order_financial.breakdown.
+  slot_change`/`product_change` existen **solo en ES** (`Lang::has`, verificado), y la etiqueta de
+  las líneas de puerta del CLIENTE se compone con ese espacio de nombres del ADMIN — medido por
+  HTTP: un cliente en inglés recibe la clave literal como etiqueta. La guarda del retariff no lo
+  caza porque compara `__()` contra `__()` (la lección de `#134` §23.6, otra vez). Ficha en `DEUDA.md`.
+- La nota del cliente tras estos reembolsos narra solo la parte de compensación («Te devolvimos
+  20,00 €» cuando salieron 30,00) — el eje de caja enseña el total; la frase se queda corta.
+  Observación de producto, menor.
+- ⚠️ **La BD local llevaba TRES migraciones sin aplicar** (`payment_refunds.intent` —de `#131`—,
+  `zones.color_secondary`, `ticket_types.icon`): el panel de reembolsos ni siquiera podía escribir.
+  Aplicadas. Si el panel local hace cosas raras tras un pull: `migrate:status` ANTES de depurar.
+- Método, pagado tres veces: **el kernel in-process contamina el locale del proceso** (una petición
+  API sin `Accept-Language` deja `en` y los `__()` posteriores salen crudos — parecía un defecto del
+  panel y era de la sonda) · **la action `refundItem` no completa bajo Livewire en tinker** (capa de
+  form de Filament; el resto de acciones sí) — el dinero se midió en el punto EXACTO que llama el
+  panel, `executePartialRefundBatch(alsoCancelItems: false)` · **`git restore` en mitad de una
+  mutación borra el trabajo sin commitear** — las mutaciones se deshacen con `sed`, no con git.
+
+### D5 EJECUTADO — el diseño y sus porqués
+
+Un `Radio` «¿Cuánto devolvemos?» con dos opciones — **el remanente completo** (la conducta de
+siempre, ahora dicha en voz alta) y **«otro importe» con campo** — más la SUGERENCIA delante del
+operador: el pie del campo dice cuánto tiene el pedido «pendiente de devolución», y el campo llega
+pre-rellenado con esa cifra. Decisiones dentro del diseño:
+1. **El importe elegido exige UNA línea.** Con varias sería ambiguo a cuál se atribuye, y la
+   atribución por línea es lo que el eje de caja (`PAY-17`) explota para explicar el desglose.
+2. **Ningún tope se relaja**: el form valida, el handler re-valida server-side (con su audit de
+   bloqueo por capa, como el resto de la acción) y `executePartialRefund` re-valida BAJO LOCK el
+   remanente del item y la capacidad del pedido (`PAY-09` intacto). Exceder el remanente **falla en
+   voz alta**, no se capa en silencio: devolver menos de lo tecleado sería un error callado.
+3. **El default sigue siendo el remanente** — el payload viejo (sin `amount_mode`) se comporta
+   idéntico; hay caso que lo fija.
+4. ⚠️ De paso cayó **una mentira preexistente del propio modal**: `modal_description` decía «cada
+   uno se marcará como cancelado» — FALSO desde `#157` (reembolsar no cancela; esta sonda lo midió).
+   El operador leía una cancelación que no iba a ocurrir. Es de la familia D2 y no estaba contada.
+
+**Medido**: suite **2801 → 2809** (+8, `RefundItemCustomAmountTest`) y **16.211 → 16.264**
+aserciones · **5 mutaciones, las 5 muerden** (ignorar el override → 2 rojos · quitar el tope por
+línea bajo lock → 1 · permitir multi+override → 1 · perder el ×100 al parsear euros → 2 · quitar el
+pre-check del handler → 1, cazado por la capa del dominio) · Pint ✓ · **y verificación empírica
+sobre MySQL real con el flujo real** (`R-ZDRAYL`: cobrados 40,00 → movida a día de 30,00 →
+devueltos EXACTAMENTE 10,00 → `pendienteDevolucion 0 · compensado 0 · devuelto 10` — nada regalado,
+nada atrapado; el cliente lee «devuelto 10,00» con su frase de `#134` e `is_consistent: true`).
+
+### Las preguntas del owner sobre el diseño, respondidas
+
+- *«¿Podré devolver el resto de la entrada, o se devolverá el total?»* — **Ya puedes devolver el
+  resto exacto** (es el caso de `R-ZDRAYL`). El reembolso del PEDIDO sigue devolviendo el total
+  cobrado — su variante sin cancelar sigue sin preguntar importe (ficha en `DEUDA.md`).
+- *«¿Sería mejor marcarlo como a devolver en el parque?»* — **Recomendación: NO**, y queda
+  [PENDIENTE: owner ratificar]. Sería un canal de dinero NUEVO contra `PAY-16`/`PAY-17` (hoy la
+  puerta solo cobra), con caja física sin rastro bancario — rompe el ancla de conciliación de `#128`
+  («puedes cotejarlo con tu extracto»)—, y con la superficie de fraude/descuadre de pagar efectivo
+  en puerta. Redsys ya devuelve a la MISMA tarjeta, trazable. Si el negocio quiere «te lo dejamos
+  como saldo para otra visita», eso es la spec de JumpPoints/vales (Fase 6, `#142`), no un apaño en
+  el reembolso.
+
+### Lo que queda ABIERTO de esta línea
+
+**D4 + D3 con el mismo cambio** (que `itemOriginalOnlineCents` reconstruya también por precio
+unitario original; el dato existe desde `#145`) y **D2 de paso** — el plan de `#146` no cambia. Más
+las fichas nuevas: el «+2» de `gateLineLabel` (sexto sitio) · las claves de desglose solo-ES
+servidas al cliente EN/FR · el email de bajada mudo · el importe en el reembolso a nivel PEDIDO.
+El callejón cancelar-primero **lo cierra D4** (con el tope correcto, la línea podrá devolver los
+40,00 enteros). Y el pack CON señal, sin medir. ⚠️ El modal nuevo está verificado por Livewire y
+mutación; **verlo en navegador** (reactividad del campo) queda para el siguiente pase de panel.
+
+## #150 · 2026-08-25 · D4+D3+D2 CERRADOS — la reconstrucción sobrevive al cambio de PRECIO, y el pack CON señal queda MEDIDO
+
+**De dónde sale.** El owner aprobó continuar el plan de `#146` tras `#149`. Esta entrada cierra los
+tres defectos restantes del tronco `PAY-18` **y el sexto sitio** que `#149` encontró, con la
+verificación empírica sobre MySQL y la medición que faltaba (pack con señal).
+
+### El arreglo, en una frase
+
+**El cambio de precio unitario viaja como cambio ESTRUCTURADO** (`unit_price_change: {old, new}`)
+en el contexto de los ajustes — igual que ya viajaban cantidad, producto y franja — y todo lo que
+antes solo sabía leer cantidad ahora lee las dos causas:
+
+- **D3** · `recordReductionMarker` se dispara con CUALQUIER cambio reconstruible (cantidad o
+  precio), no solo `quantity_change`. Una bajada por fecha en un pedido pagado íntegro deja su
+  marcador de 0 € con la causa entera — medido en vivo: `changes=[slot_change,unit_price_change]`,
+  etiqueta «Cambio de fecha a 07/09/2026 12:00». Se acabó el «(ninguna fila de ajuste)».
+- **D4** · `itemOriginalOnlineCents` reconstruye `cantidad_original × precio_original`, cada
+  término del **PRIMER** cambio de su clase (con desempate por `id`: dos ediciones pueden caer en
+  el mismo segundo y el orden de una relación sin `orderBy` no es contrato). Los topes de línea
+  vuelven a decir lo que se COBRÓ: medido en vivo (`R-VLRYUV`): 40→30, `originalOnline=40 · tope
+  línea=40 · pendiente de línea=10` — antes 30/30/0.
+- **El SEXTO sitio** (`#149`, «+2 Pack») · la etiqueta «+N producto» de `gateLineLabel` **exige un
+  `quantity_change` real** además de la divisibilidad. Medido en vivo sobre `R-8STAH6` (pedido
+  PRE-arreglo): la línea que el cliente leía como «+2 S146 Pack SUBE» ahora dice «Cambio de fecha a
+  05/09/2026 10:00» — también para ajustes viejos, porque el contexto de `#145` ya llevaba el
+  `slot_change`. ⚠️ Cargos ANTERIORES a `#145` (contexto vacío) caen al respaldo honesto
+  («Diferencia por cambios en X») en vez de a una cantidad inventada.
+- **D2** · el toast elige la variante que es VERDAD (la causa ya viaja): bajada de cantidad →
+  «unidades canceladas» (cierto ahí); bajada de precio → clave nueva `success_edited_reduced_price`
+  («el nuevo precio es más bajo y la diferencia queda pendiente de devolver…»). Y los TRES pies de
+  «pendiente de devolución» añaden la causa que faltaba («…o un cambio a un precio menor»). El
+  registro del pedido etiqueta el cambio nuevo (`change_kinds.unit_price_change`).
+
+### ⚠️⚠️ EL CALLEJÓN, cerrado — y una CORRECCIÓN a `#149`
+
+El camino «cancelar tras una bajada» que atrapaba dinero era vía **cancelar la RESERVA** (el pedido
+sigue `paid`): ahora el tope alcanza y la línea devuelve TODO. Medido en vivo (`R-VLRYUV`): bajada
+40→30 → cancelar reserva → «Reembolsar» → **40,00 devueltos, pendiente 0, nada atrapado**, con el
+cliente leyendo «te devolvimos 40,00» e `is_consistent: true`.
+
+⚠️⚠️ **La corrección**: `#149` afirmó que con el PEDIDO entero cancelado «la línea devuelve 30,00».
+Eso lo midió en el DOMINIO (el batch). **En el panel, un pedido CANCELADO no tiene NINGUNA vía**:
+el total se bloquea (`already_cancelled`) y la línea también (`refundItemBlockedReason` →
+`order_not_paid`, y el banner lo declara). El dominio sí sabe; el panel lo veta. Hay un caso de
+suite que FIJA esta realidad para que no cambie en silencio, y una ficha nueva en `DEUDA.md`:
+decidir si la línea se abre para cancelados con deuda (recomendación: sí, es la mitad que le falta
+al arreglo de D1 en `#127` — el cliente se entera de la deuda pero el parque no puede pagarla desde
+el panel). Mientras tanto, la vía operativa es **reembolsar ANTES de cancelar, o en UNA acción**.
+
+### El pack CON señal, MEDIDO (lo que `#146` dejó sin ejecutar)
+
+`R-DWFRDP` (señal fija 15,00 sobre 40,00; cobrados 15,00 online, 25,00 al parque) movido a un día
+de 30,00: **la cascada absorbe** — crédito de −10,00 contra el resto de la señal (con su causa:
+«Cambio de fecha a …»), el resto del parque baja a 15,00, `pendienteDevolucion 0` y el cliente
+simplemente paga menos al llegar («Te quedan 15,00 € por pagar en recepción»). **No hace falta
+reembolsar nada**, las dos identidades cierran, y la reconstrucción respeta la señal
+(`originalOnline = 15,00`, el tope de línea también). Lo que `#146` leyó en el código es lo que
+pasa.
+
+### Método — tres trampas nuevas, pagadas aquí
+
+- **`callMountedAction($data)` NO rellena el form**: su parámetro son ARGUMENTS. Los datos van por
+  `setActionData()`. El override de cantidad se ignoraba en silencio y el caso combinado probaba
+  otra cosa (el fixture del retariff no lo sufría porque `mountUsing` pre-rellena).
+- **Un `Http::fake()` pelado registrado ANTES se come el fake específico posterior**: el catch-all
+  respondía 200 vacío a la REST de Redsys y el reembolso salía `failed` sin que nada explicara por
+  qué.
+- **Con el reloj CONGELADO, «el primero» y «el último» degeneran al orden de iteración**: la
+  mutación earliest→latest salía VERDE porque los dos ajustes compartían `created_at`. El caso de
+  la cadena adelanta el reloj entre ediciones — y el código desempata por `id`.
+
+### Lo medido
+
+Suite **2809 → 2819** (+10, `ItemPriceChangeReconstructionTest`: los CUATRO caminos de `#146` —
+bajar cantidad · bajar precio · las dos · cancelar tras bajada— más la cadena de ediciones, el
+pedido cancelado sin vía, las dos etiquetas y los dos toasts) y **16.264 → 16.352** aserciones ·
+**6 mutaciones, las 6 muerden** (ignorar el precio → 4 rojos · coger el último → 1 · marcador solo
+cantidad → 3 · filtro sin la clave → 4 · etiqueta por divisibilidad → 1 · toast sin causa → 1) ·
+Pint ✓ · verificación en vivo sobre MySQL con los flujos reales (`R-VLRYUV`, `R-8STAH6`,
+`R-DWFRDP`).
+
+### Lo que queda ABIERTO de esta línea (fichas en `DEUDA.md`)
+
+El importe en el reembolso a nivel PEDIDO (regala si no se cancela) · el pedido CANCELADO sin vía
+de panel (decisión de producto, recomendación escrita) · las claves de desglose solo-ES al cliente
+EN/FR · el email de bajada sin la línea de dinero · y la ratificación del owner sobre «a devolver
+en el parque» (`#149`, recomendado NO).
+
+## #151 · 2026-08-25 · [DECIDIDO, owner] La independencia de cupos se hace POR ZONA — el consumo medido en `#148` es CORRECTO
+
+**La pregunta que `#148` dejó esperando**: una fiesta de 8 invitados en una franja de 10 plazas
+deja 2 plazas de entrada — ¿correcto o defecto?
+
+**La decisión del owner (2026-08-25), literal**: *«La configuración está diseñada así para que esos
+cupos los separe la ZONA; más adelante crearé otro producto —excursiones de colegio— y su zona,
+para gestionar las plazas independientes de entradas o cumpleaños.»*
+
+▶ **Traducido a regla**:
+1. **Dentro de una zona, `seats` cuenta ocupación FÍSICA real, sea del producto que sea.** Que una
+   fiesta consuma asientos de su zona no es un defecto: es el contador diciendo la verdad del suelo.
+2. **La independencia de cupos se consigue con ZONAS, no filtrando por tipo.** Un producto que
+   necesite plazas propias se lleva a su zona — exactamente como está configurado hoy (cumpleaños
+   en `cumpleanos`, entradas en `jump`/`kids`) y como se hará con el siguiente (excursiones de
+   colegio → zona propia). `SlotAvailability::occupancyMap()` **no se toca**.
+3. `PackConsumesEntrySeatsTest` deja de ser «comportamiento fijado sin juzgar» y pasa a ser **la
+   guarda de la regla decidida**.
+
+▶ **Consecuencia para instalar/configurar (white-label)**: productos que comparten zona comparten
+sitio físico. Si al montar un cliente se quiere que un pack no muerda las plazas de las entradas,
+la respuesta es «zona propia», no un ajuste ni un filtro. (Es la advertencia que `#148` dejó para
+la landing del 2º cliente, ahora con la regla decidida en vez de abierta.)
+
+Sin código: la decisión CONFIRMA el comportamiento existente. Se actualizan los tres sitios que
+decían «pendiente de decisión» (el 1.bis de `ESTADO`, el docblock de `PackAvailability` y el del
+test).

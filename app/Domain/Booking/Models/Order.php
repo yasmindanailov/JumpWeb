@@ -928,12 +928,17 @@ class Order extends Model
             }
             $key = $itemId ?? 'order';
             if (! isset($byItem[$key])) {
-                $byItem[$key] = ['amount' => 0, 'item' => $item, 'hasProductChange' => false, 'positives' => []];
+                $byItem[$key] = ['amount' => 0, 'item' => $item, 'hasProductChange' => false, 'hasQuantityChange' => false, 'positives' => []];
             }
             $byItem[$key]['amount'] += (int) $adj->amount_cents;
             $ctx = is_array($adj->context) ? $adj->context : [];
             if (isset($ctx['changes']['product_change'])) {
                 $byItem[$key]['hasProductChange'] = true;
+            }
+            // `#150` (el sexto sitio de `PAY-18`, medido en `#149`): la etiqueta «+N producto» ya no
+            // se ADIVINA por divisibilidad — exige que algún cargo lleve un cambio de cantidad real.
+            if (isset($ctx['changes']['quantity_change'])) {
+                $byItem[$key]['hasQuantityChange'] = true;
             }
             if ((int) $adj->amount_cents > 0) {
                 $byItem[$key]['positives'][] = $adj;
@@ -955,7 +960,7 @@ class Order extends Model
      * Etiqueta de una línea neteada del desglose de puerta. Ver el contrato en
      * {@see pendingAtGateLines()}.
      *
-     * @param  array{amount:int, item:?OrderItem, hasProductChange:bool, positives:array<int,OrderAdjustment>}  $entry
+     * @param  array{amount:int, item:?OrderItem, hasProductChange:bool, hasQuantityChange:bool, positives:array<int,OrderAdjustment>}  $entry
      */
     private function gateLineLabel(array $entry): string
     {
@@ -965,7 +970,14 @@ class Order extends Model
 
         // "+N producto" con la cantidad NETA cuando el cargo deriva de cambios de
         // cantidad (no de producto) y el neto es múltiplo exacto del precio actual.
-        if (! $entry['hasProductChange'] && $unit > 0 && $entry['amount'] % $unit === 0) {
+        // ⚠️⚠️ **`#150`: además EXIGE un `quantity_change` real en el contexto** — la divisibilidad
+        // sola era el SEXTO sitio escrito sobre la premisa que `PAY-18` rompió: una subida por
+        // CAMBIO DE FECHA cuyo diff es múltiplo del precio (en packs, casi siempre: invitados ×
+        // Δprecio) se narraba como «+2 Cumpleaños» — cantidad inventada, y la leía el CLIENTE
+        // (medido en `#149`, pack 40→50: «+2 S146 Pack SUBE»). Los cargos anteriores a `#145` con
+        // contexto vacío caen ahora al respaldo honesto («Diferencia por cambios en X»), que no
+        // afirma nada que no sepa.
+        if (! $entry['hasProductChange'] && $entry['hasQuantityChange'] && $unit > 0 && $entry['amount'] % $unit === 0) {
             return '+'.intdiv($entry['amount'], $unit).' '.$name;
         }
 
@@ -1571,20 +1583,38 @@ class Order extends Model
      * el item ya no guarda su cantidad original.
      *
      * Reglas (deterministas, sin tocar BD si `adjustments` está eager-loaded):
-     *  - Si tiene cambios de CANTIDAD en su histórico → `cantidad_original × unit_price`
-     *    (cantidad_original = `old` del PRIMER `quantity_change`). EXACTO para subir/bajar
-     *    cantidad (caso de JJ-WIMWJW).
+     *  - Si tiene cambios de CANTIDAD o de PRECIO UNITARIO en su histórico →
+     *    `cantidad_original × precio_unitario_original`, donde cada término sale del PRIMER
+     *    cambio de su clase (el `old` más antiguo es el valor pre-edición). EXACTO para
+     *    subir/bajar cantidad, y —desde `#150` (D4 de `#146`)— también para la
+     *    RE-TARIFICACIÓN de `PAY-18` (fecha/producto): antes solo reconstruía la cantidad y
+     *    multiplicaba por el `unit_price` ACTUAL, que la re-tarificación ya había
+     *    sobrescrito — el tope de reembolso caía al precio nuevo y, cancelado el pedido,
+     *    la diferencia quedaba ATRAPADA sin vía de panel (medido en `#149`: 40/30/10).
      *  - En otro caso → `itemCollectedCents` (lo cobrado online ACTUAL): correcto para una
      *    línea sin editar (= su importe) y para un complemento añadido en puerta (= 0, su
      *    `collected` es 0). Así un addon de puerta nunca cuenta como "pendiente de
-     *    devolución". (Aproximado solo si hubo cambio de PRODUCTO sin cambio de cantidad.)
+     *    devolución". (Queda aproximado el cambio de PRODUCTO anterior a `#150`, cuyo
+     *    contexto no llevaba el precio.)
      */
     public function itemOriginalOnlineCents(OrderItem $item): int
     {
-        $earliestAt = null;
+        // «Primero» con desempate por id: dos ediciones pueden caer en el MISMO segundo y el orden
+        // de una relación sin `orderBy` no es un contrato — sin el id, el «primer cambio» sería el
+        // azar del driver.
+        $isEarlier = function ($adj, $bestAt, $bestId): bool {
+            return $bestAt === null
+                || $adj->created_at < $bestAt
+                || ($adj->created_at == $bestAt && (int) $adj->id < $bestId);
+        };
+        $earliestQtyAt = null;
+        $earliestQtyId = 0;
         $originalQty = null;
+        $earliestUnitAt = null;
+        $earliestUnitId = 0;
+        $originalUnit = null;
         foreach ($this->adjustments as $adj) {
-            // El `quantity_change` de una bajada lo porta el ajuste que la registró: el crédito de
+            // Los cambios de una edición los porta el ajuste que la registró: el cargo o crédito de
             // puerta (`extra_due`), el crédito del resto-señal (`deposit_remainder`, #225/D8) o el
             // marcador de reconstrucción de una bajada puramente-online ({@see recordReductionMarker}).
             $isGateBucket = $adj->type === OrderAdjustment::TYPE_EXTRA_DUE
@@ -1594,14 +1624,24 @@ class Order extends Model
             }
             $ctx = is_array($adj->context) ? $adj->context : [];
             $old = $ctx['changes']['quantity_change']['old'] ?? null;
-            if ($old !== null && ($earliestAt === null || $adj->created_at < $earliestAt)) {
-                $earliestAt = $adj->created_at;
+            if ($old !== null && $isEarlier($adj, $earliestQtyAt, $earliestQtyId)) {
+                $earliestQtyAt = $adj->created_at;
+                $earliestQtyId = (int) $adj->id;
                 $originalQty = (int) $old;
+            }
+            // ⚠️ El PRIMER cambio de precio lleva en su `old` el precio ORIGINAL — cada término se
+            // rastrea por separado: una edición puede tocar solo la cantidad y la siguiente solo el
+            // precio, y el original es el par (primer qty.old, primer unit.old), no el de una fila.
+            $oldUnit = $ctx['changes']['unit_price_change']['old'] ?? null;
+            if ($oldUnit !== null && $isEarlier($adj, $earliestUnitAt, $earliestUnitId)) {
+                $earliestUnitAt = $adj->created_at;
+                $earliestUnitId = (int) $adj->id;
+                $originalUnit = (int) $oldUnit;
             }
         }
 
-        if ($originalQty !== null) {
-            $originalValue = $originalQty * (int) $item->unit_price;
+        if ($originalQty !== null || $originalUnit !== null) {
+            $originalValue = ($originalQty ?? (int) $item->quantity) * ($originalUnit ?? (int) $item->unit_price);
 
             // #225 (auditoría Fase 1 · P1): un COMPLEMENTO de un pack CON señal se cobró ÍNTEGRO en
             // PUERTA (Opción A, {@see OrderCreator}: se le creó un `deposit_remainder` por su importe
@@ -1870,15 +1910,17 @@ class Order extends Model
     }
 
     /**
-     * Marcador de reconstrucción de una BAJADA de cantidad (#225, D8). Una bajada de un producto
-     * pagado ÍNTEGRO online (sin señal ni cargos de puerta que crediten) no deja ninguna fila que
-     * porte el `quantity_change`. Sin ese dato, {@see itemOriginalOnlineCents} no puede reconstruir
-     * la cantidad ORIGINAL y el sobre-cobro (cobrado online sin producto detrás) quedaría INVISIBLE
-     * en vez de aflorar como «pendiente de devolución» (cancelar ≠ reembolsar: el operador lo
-     * devuelve aparte). Registramos un ajuste de **0 €** que SOLO porta el contexto: amount 0 → no
-     * afecta a `extraDue`/`pendingAtGate`/líneas de puerta ni a ningún total.
+     * Marcador de reconstrucción de una BAJADA (#225 D8 · ampliado en `#150` para D3 de `#146`).
+     * Una bajada de un producto pagado ÍNTEGRO online (sin señal ni cargos de puerta que crediten)
+     * no deja ninguna fila que porte el cambio. Sin ese dato, {@see itemOriginalOnlineCents} no
+     * puede reconstruir lo cobrado ORIGINAL y el sobre-cobro (cobrado online sin producto detrás)
+     * quedaría INVISIBLE en vez de aflorar como «pendiente de devolución» (cancelar ≠ reembolsar:
+     * el operador lo devuelve aparte). Registramos un ajuste de **0 €** que SOLO porta el contexto:
+     * amount 0 → no afecta a `extraDue`/`pendingAtGate`/líneas de puerta ni a ningún total.
+     * ⚠️ La bajada puede venir de CANTIDAD o de PRECIO (re-tarificación por fecha/producto,
+     * `PAY-18`): el contexto porta `quantity_change` y/o `unit_price_change`.
      *
-     * @param  array<string,mixed>  $context  diff estructurado (debe incluir `changes.quantity_change`)
+     * @param  array<string,mixed>  $context  diff estructurado (`changes.quantity_change` y/o `changes.unit_price_change`)
      */
     public function recordReductionMarker(OrderItem $item, User $by, array $context = []): OrderAdjustment
     {
@@ -2145,8 +2187,14 @@ class Order extends Model
      * El parámetro `alsoCancelItems=true` queda para clientes programáticos
      * o futuras actions que necesiten la cancelación atómica con el refund.
      *
-     * El importe es siempre el remanente refundable de cada item
-     * (`itemRefundableRemainderCents`) — no importe libre.
+     * El importe por defecto es el remanente refundable de cada item
+     * (`itemRefundableRemainderCents`). ⚠️ **`$amountCentsOverride` existe por `#146`/D5**: sin él,
+     * el panel no podía devolver una DIFERENCIA (medido: se debían 10,00 € tras mover la fecha a un
+     * día más barato y el botón devolvía los 30,00 € de la línea — 20,00 € regalados). Solo tiene
+     * sentido sobre UNA línea: con varias sería ambiguo a cuál se atribuye, y la atribución por
+     * línea es lo que el eje de caja (`PAY-17`) explota para explicar el desglose. Los topes NO se
+     * relajan: `executePartialRefund` re-valida bajo lock el remanente del item y la capacidad del
+     * pedido (`PAY-09`), pase lo que pase aquí.
      *
      * **Atomicidad parcial**: cada item es una transacción independiente
      * (cada call a `executePartialRefund` tiene su propio 2-txn pattern). Si
@@ -2175,6 +2223,7 @@ class Order extends Model
         string $mode,
         bool $alsoCancelItems = false,
         ?string $intent = null,
+        ?int $amountCentsOverride = null,
     ): array {
         $succeeded = [];
         $failed = [];
@@ -2182,6 +2231,24 @@ class Order extends Model
 
         if ($itemIds === []) {
             return ['succeeded' => $succeeded, 'failed' => $failed, 'aborted' => $aborted];
+        }
+
+        // D5 (`#146`): un importe elegido exige UNA línea y un valor positivo. Se rechaza el batch
+        // ENTERO antes de tocar nada — un importe ambiguo no es un caso degradado, es un error.
+        if ($amountCentsOverride !== null && ($amountCentsOverride <= 0 || count($itemIds) !== 1)) {
+            return [
+                'succeeded' => $succeeded,
+                'failed' => [[
+                    'item' => new OrderItem(['id' => (int) ($itemIds[0] ?? 0)]),
+                    'reason' => $amountCentsOverride <= 0
+                        ? 'invalid_custom_amount'
+                        : 'custom_amount_requires_single_item',
+                    'gateway_response_code' => null,
+                    'failure_message' => null,
+                    'refund' => null,
+                ]],
+                'aborted' => [],
+            ];
         }
 
         // Pre-validación: todos los items deben existir, pertenecer al Order,
@@ -2225,9 +2292,14 @@ class Order extends Model
         foreach ($itemIds as $idx => $id) {
             array_shift($pending);  // este ya entra en la iteración
             $item = $items->get($id);
-            $amountCents = $this->fresh()->load('payments.refunds')->itemRefundableRemainderCents($item);
+            $remainderCents = $this->fresh()->load('payments.refunds')->itemRefundableRemainderCents($item);
+            // D5 (`#146`): el importe elegido manda si viene; el remanente sigue siendo el default.
+            // Si excede el remanente, `executePartialRefund` lo rechaza bajo lock
+            // (`exceeds_item_refundable`) — aquí no se capa en silencio a propósito: devolver
+            // MENOS de lo que el operador tecleó sería un error callado sobre dinero.
+            $amountCents = $amountCentsOverride ?? $remainderCents;
 
-            if ($amountCents <= 0) {
+            if ($remainderCents <= 0) {
                 $failed[] = [
                     'item' => $item,
                     'reason' => 'item_already_fully_refunded',

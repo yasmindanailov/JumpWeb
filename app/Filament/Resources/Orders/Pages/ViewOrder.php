@@ -652,7 +652,7 @@ class ViewOrder extends ViewRecord
     /**
      * Action nativa de Filament para abrir el modal "Gestionar producto" del
      * OrderItem (sub-fase 7.2e.2, decisión #159 — rename y reestructura de
-     * `viewItemDetailAction` entregada en 7.2c/#147ter/#148bis).
+     * `viewItemDetailAction` entregada en 7.2c/#147ter/#149bis).
      *
      * Estructura del modal (abre directo en las tabs; la card-resumen superior
      * se eliminó en #171 por ser redundante con el Tab 1):
@@ -3068,7 +3068,7 @@ class ViewOrder extends ViewRecord
      *
      * Permiso: hereda de `orders.view` (cualquier staff con acceso al Order
      * puede ver su audit). NO requiere `audit.view` específico — la operativa
-     * documentada (#149) implica que el staff debe poder defender al cliente
+     * documentada (#150) implica que el staff debe poder defender al cliente
      * sobre qué pasó con su pedido.
      */
     public function viewOrderHistoryAction(): Action
@@ -3445,6 +3445,16 @@ class ViewOrder extends ViewRecord
         if ($newQty !== $oldQty) {
             $changes['quantity_change'] = ['old' => $oldQty, 'new' => $newQty];
         }
+        // ⚠️⚠️ **El cambio de PRECIO UNITARIO viaja como cambio estructurado desde `#150`** (D4/D3 de
+        // `#146`). La re-tarificación (`PAY-18`) puede bajar el valor SIN tocar la cantidad, y
+        // `itemOriginalOnlineCents` solo sabía reconstruir por cantidad: tras una bajada por fecha,
+        // el tope de reembolso caía al precio YA re-tarificado (medido con los números del owner en
+        // `#149`: pagó 40,00, se le debían 40,00 y el tope decía 30,00 — y con el pedido cancelado,
+        // 10,00 quedaban ATRAPADOS sin vía de panel). Con el `old` en el contexto del ajuste, la
+        // reconstrucción vuelve a saber lo que se cobró de verdad.
+        if ($newUnit !== $oldUnit) {
+            $changes['unit_price_change'] = ['old' => $oldUnit, 'new' => $newUnit];
+        }
         if (($addonPricing['changes']['addon_change'] ?? null) !== null) {
             $changes['addon_change'] = $addonPricing['changes']['addon_change'];
         }
@@ -3589,7 +3599,7 @@ class ViewOrder extends ViewRecord
         );
 
         // Lado financiero por SIGNO del diff de Tab 1.
-        //  - SUBIDA (#149): el incremento se cobra en puerta (`applyExtraDue`); la señal se congela.
+        //  - SUBIDA (#150): el incremento se cobra en puerta (`applyExtraDue`); la señal se congela.
         //  - BAJADA (#225, D8): «bajar cantidad = SOLO cancelar». Acreditamos los DOS buckets de
         //    puerta del item (primero el `extra_due` de ediciones, luego el resto de la señal
         //    `deposit_remainder`) para que «a cobrar en el parque» refleje la reserva menor. NO se
@@ -3610,7 +3620,7 @@ class ViewOrder extends ViewRecord
         // ▶ Medido en `R-S9XDYB` (staging): tres líneas de ajuste con la MISMA etiqueta muda.
         // ▶ Es también la causa que `#131` no llegó a ver: allí se midió que «los ocho `extra_due`»
         //   caían al texto de respaldo y se mejoró ESE texto; esto quita la necesidad de recurrir a él.
-        $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change', 'slot_change']));
+        $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change', 'slot_change', 'unit_price_change']));
         if ($diff > 0) {
             $order->applyExtraDue($item->fresh(), $diff, $user, 'item_edit', ['changes' => $itemEditContext]);
             $extraDueCents = $diff;
@@ -3629,9 +3639,14 @@ class ViewOrder extends ViewRecord
             // SIN reembolso automático (D8): el remanente por debajo de lo cobrado online queda
             // como «pendiente de devolución», a reembolsar aparte. Si NO se creó ningún crédito de
             // puerta (bajada de un producto pagado íntegro online), dejamos un marcador 0 € que
-            // porta el quantity_change para que itemOriginalOnlineCents reconstruya la cantidad
-            // original y el sobre-cobro aflore como «pendiente de devolución» (si no, sería invisible).
-            if ($extraCredit === 0 && $depositCredit === 0 && isset($itemEditContext['quantity_change'])) {
+            // porta el cambio para que itemOriginalOnlineCents reconstruya lo cobrado ORIGINAL y el
+            // sobre-cobro aflore como «pendiente de devolución» (si no, sería invisible).
+            // ⚠️⚠️ **La condición era `isset(quantity_change)` y era D3 de `#146`**: una bajada por
+            // RE-TARIFICACIÓN (fecha o producto, `PAY-18`) no lleva cambio de cantidad y el marcador
+            // no se disparaba — «(ninguna fila de ajuste)», y el tope de D4 sin dato del que tirar.
+            // Se dispara con CUALQUIER cambio reconstruible: cantidad o precio unitario.
+            if ($extraCredit === 0 && $depositCredit === 0
+                && (isset($itemEditContext['quantity_change']) || isset($itemEditContext['unit_price_change']))) {
                 $order->recordReductionMarker($item->fresh(), $user, ['changes' => $itemEditContext]);
             }
             $reducedCents = $reduction;
@@ -3721,7 +3736,7 @@ class ViewOrder extends ViewRecord
             refundedCents: null,
         ));
 
-        $this->editSuccessNotification($extraDueCents, $reducedCents);
+        $this->editSuccessNotification($extraDueCents, $reducedCents, $itemEditContext);
     }
 
     /**
@@ -3781,10 +3796,17 @@ class ViewOrder extends ViewRecord
      * auto-reembolsa: solo cancela unidades → el mensaje avisa de que NO se ha reembolsado y de
      * que el reembolso, si procede, se hace aparte con «Reembolsar» (cancelar ≠ reembolsar).
      */
-    private function editSuccessNotification(?int $extraDueCents, ?int $reducedCents): void
+    private function editSuccessNotification(?int $extraDueCents, ?int $reducedCents, array $itemEditContext = []): void
     {
         $hasExtra = $extraDueCents !== null && $extraDueCents > 0;
         $hasReduced = $reducedCents !== null && $reducedCents > 0;
+
+        // ⚠️ D2 (`#146`): «unidades canceladas» era MENTIRA cuando la bajada venía de una
+        // RE-TARIFICACIÓN (`PAY-18`) sin tocar la cantidad — el operador leía una cancelación que no
+        // había ocurrido, cada vez que movía una fecha a la baja. La causa ya viaja en el contexto;
+        // el texto elige la variante que es VERDAD: cantidad si la cantidad bajó, precio si no.
+        $qty = $itemEditContext['quantity_change'] ?? null;
+        $quantityDropped = is_array($qty) && (int) ($qty['new'] ?? 0) < (int) ($qty['old'] ?? 0);
 
         // Subida (cobro en puerta) + bajada (cancelación) en la misma edición: un mensaje que cita
         // el cobro y recuerda que la bajada no se reembolsó.
@@ -3799,10 +3821,12 @@ class ViewOrder extends ViewRecord
             return;
         }
 
-        // Bajada (cancelación de unidades): NO se reembolsa automáticamente.
+        // Bajada: NO se reembolsa automáticamente, y el motivo se dice sin inventar.
         if ($hasReduced) {
             Notification::make()
-                ->title(__('admin.orders.manage_item.success_edited_reduced'))
+                ->title(__($quantityDropped
+                    ? 'admin.orders.manage_item.success_edited_reduced'
+                    : 'admin.orders.manage_item.success_edited_reduced_price'))
                 ->warning()
                 ->send();
 
@@ -4595,12 +4619,22 @@ class ViewOrder extends ViewRecord
                     ? [$item->id]
                     : [];
 
+                // D5 (`#146`): si el pedido DEBE dinero, el importe sugerido es esa deuda — no el
+                // remanente de la línea. Es el caso que este campo existe para resolver: una bajada
+                // de precio (p. ej. por cambio de fecha) deja «pendiente de devolución» y el botón
+                // devolvía la línea entera (medido: se debían 10,00 € y devolvía 30,00 €).
+                $pendingCents = $order->financialSummary()->pendienteDevolucion();
+
                 return [
                     'item_id' => (int) ($arguments['item'] ?? 0),
                     'optimistic_token' => (string) ($item?->updated_at?->getTimestamp() ?? ''),
                     'expected_capacity_cents' => (int) $order->refundableCapacityCents(),
                     'mode' => PaymentRefund::MODE_REST,
                     'items_to_refund' => $defaultSelection,
+                    'amount_mode' => 'remainder',
+                    'custom_amount' => $pendingCents > 0
+                        ? number_format($pendingCents / 100, 2, '.', '')
+                        : null,
                 ];
             })
             ->schema(function (array $arguments): array {
@@ -4632,6 +4666,43 @@ class ViewOrder extends ViewRecord
                         ->required()
                         ->bulkToggleable()
                         ->columns(1),
+                    // ⚠️⚠️ **CUÁNTO se devuelve** (`#146`/D5). Sin esta elección, el botón devolvía
+                    // SIEMPRE el remanente entero de la línea — y tras una bajada de precio eso
+                    // REGALA dinero (medido: se debían 10,00 € y devolvía 30,00 €, dejando una
+                    // reserva viva de 30,00 pagada con 10,00). El dominio siempre supo devolver un
+                    // importe arbitrario (`executePartialRefund`); lo que faltaba era preguntarlo.
+                    Radio::make('amount_mode')
+                        ->label(__('admin.orders.refund_item.amount_mode_label'))
+                        ->options([
+                            'remainder' => __('admin.orders.refund_item.amount_mode_remainder'),
+                            'custom' => __('admin.orders.refund_item.amount_mode_custom'),
+                        ])
+                        ->descriptions([
+                            'remainder' => __('admin.orders.refund_item.amount_mode_remainder_desc'),
+                            'custom' => __('admin.orders.refund_item.amount_mode_custom_desc'),
+                        ])
+                        ->default('remainder')
+                        ->live()
+                        ->required(),
+                    TextInput::make('custom_amount')
+                        ->label(__('admin.orders.refund_item.custom_amount_label'))
+                        ->helperText(function (): string {
+                            /** @var Order $order */
+                            $order = $this->record;
+                            $pending = $order->financialSummary()->pendienteDevolucion();
+
+                            return $pending > 0
+                                ? __('admin.orders.refund_item.custom_amount_help_pending', [
+                                    'pending' => $this->eurosFromCents($pending),
+                                ])
+                                : __('admin.orders.refund_item.custom_amount_help');
+                        })
+                        ->suffix('€')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->step(0.01)
+                        ->visible(fn (Get $get): bool => $get('amount_mode') === 'custom')
+                        ->required(fn (Get $get): bool => $get('amount_mode') === 'custom'),
                     // ⚠️⚠️ **Por qué se devuelve** (`DECISIONES #127(c)`). Aquí es SIEMPRE obligatorio:
                     // este camino no cancela la reserva, así que el cliente se queda con ella y con su
                     // dinero de vuelta — y sin esta respuesta su desglose no puede decirle lo único
@@ -4955,12 +5026,50 @@ class ViewOrder extends ViewRecord
             $intent = null;
         }
 
+        // D5 (`#146`): importe elegido por el operador. Server-side entero — el form es UI, no
+        // defensa. Exige UNA línea (la atribución por línea es lo que el eje de caja explota para
+        // explicar), un valor positivo y no exceder el remanente de esa línea; el dominio re-valida
+        // los topes bajo lock igualmente (`PAY-09`). Cada bloqueo deja su audit, como el resto de
+        // capas de esta acción.
+        $amountOverrideCents = null;
+        if (($data['amount_mode'] ?? 'remainder') === 'custom') {
+            if (count($selectedIds) !== 1) {
+                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'custom_amount_requires_single_item', [
+                    'selected_count' => count($selectedIds),
+                ]);
+                $this->itemActionBlockedNotification('refund', 'custom_amount_requires_single_item');
+
+                return;
+            }
+            $amountOverrideCents = (int) round(((float) ($data['custom_amount'] ?? 0)) * 100);
+            if ($amountOverrideCents <= 0) {
+                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'invalid_custom_amount', [
+                    'submitted_amount' => (string) ($data['custom_amount'] ?? ''),
+                ]);
+                $this->itemActionBlockedNotification('refund', 'invalid_custom_amount');
+
+                return;
+            }
+            $selectedItem = OrderItem::find($selectedIds[0]);
+            $selectedRemainder = $selectedItem !== null ? $order->itemRefundableRemainderCents($selectedItem) : 0;
+            if ($amountOverrideCents > $selectedRemainder) {
+                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'exceeds_item_refundable', [
+                    'amount_cents' => $amountOverrideCents,
+                    'item_remainder_cents' => $selectedRemainder,
+                ]);
+                $this->itemActionBlockedNotification('refund', 'exceeds_item_refundable');
+
+                return;
+            }
+        }
+
         $batchResult = $order->executePartialRefundBatch(
             itemIds: $selectedIds,
             by: $user,
             mode: $mode,
             alsoCancelItems: false,
             intent: $intent,
+            amountCentsOverride: $amountOverrideCents,
         );
 
         $this->renderBatchResult($batchResult, $order, $mode);

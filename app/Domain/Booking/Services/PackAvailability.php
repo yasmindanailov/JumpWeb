@@ -23,11 +23,13 @@ use Illuminate\Support\Collection;
  * `order_items` de la zona/día **sin filtrar por tipo**, y una línea de pack lleva `seats` como
  * cualquier otra. Así que la independencia es **de una sola dirección**: una entrada no consume
  * cupo de fiestas, pero **una fiesta sí consume asientos de entrada**.
- * ▶ **Puede ser lo correcto** —los niños de un cumpleaños están físicamente en el parque y ocupan
- * sitio—, pero **no estaba dicho en ninguna parte y el texto afirmaba lo contrario**. Si se decide
- * que no debe ser así, el arreglo es filtrar por tipo en `occupancyMap`, no aquí.
+ * ▶ ✅ **[DECIDIDO owner, `#151` (2026-08-25)]: es lo CORRECTO, y la regla es «la independencia de
+ * cupos se hace POR ZONA».** Dentro de una zona, `seats` cuenta ocupación física real sea del
+ * producto que sea; un producto que necesite plazas propias se lleva a su zona (cumpleaños en la
+ * suya hoy; excursiones de colegio con la suya mañana). `occupancyMap` NO se filtra por tipo.
  * ▶ Lo destapó el escenario `mixed` de `purchase:verify-oversell`, cuyo número de ganadores VARÍA
- * entre ejecuciones justo por esto. Lo fija `PackConsumesEntrySeatsTest`.
+ * entre ejecuciones justo por esto. Lo guarda `PackConsumesEntrySeatsTest` — ya como regla
+ * decidida, no como comportamiento fijado a la espera.
  *   - `packs.max_per_slot`        → nº de cumpleaños por franja (0 = sin tope).
  *   - `packs.max_guests_per_slot` → nº de niños totales por franja (0 = sin tope).
  *

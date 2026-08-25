@@ -29,10 +29,12 @@ use Tests\TestCase;
  * ▶ **La asimetría, dicha en una frase**: una entrada no consume cupo de fiestas, pero **una fiesta
  * sí consume asientos de entrada**.
  *
- * ⚠️ **Este fichero NO juzga si eso está bien.** Puede ser exactamente lo correcto —los niños de un
- * cumpleaños están en el parque y ocupan sitio real— o puede ser un defecto. **Es decisión de
- * producto.** Lo que hace es **fijar el comportamiento medido** para que, el día que cambie, cambie
- * porque alguien lo decidió y no por un efecto lateral de tocar `occupancyMap`.
+ * ✅ **[DECIDIDO owner, `#151` (2026-08-25)]: es lo CORRECTO.** La regla: **la independencia de
+ * cupos se hace POR ZONA** — dentro de una zona, `seats` cuenta ocupación física real sea del
+ * producto que sea, y un producto que necesite plazas propias se lleva a su zona (cumpleaños hoy;
+ * excursiones de colegio mañana). Este fichero pasa de «fijar el comportamiento sin juzgarlo» a
+ * ser **la guarda de la regla decidida**: si algún día `occupancyMap` filtra por tipo, esto se
+ * pone en rojo y quien lo toque tiene que pasar por `#151`.
  */
 class PackConsumesEntrySeatsTest extends TestCase
 {

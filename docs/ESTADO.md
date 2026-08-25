@@ -6,20 +6,23 @@
 >
 > ❗❗ **ATENCIÓN: hay DOS AGENTES trabajando sobre `main` a la vez.** Antes de planificar nada,
 > `git fetch` y mira qué hay de nuevo. Reparto vigente el 2026-08-25:
-> · **Agente A (panel/dinero)** — los defectos del cambio de precio (`#146`). **`D5` cerrado**
->   (informado por el owner; puede no estar empujado todavía) y **`D4`+`D3` en curso**. Toca
->   `Order.php`, `ViewOrder.php` y `lang/es/admin.php`. **NO entrar ahí.**
-> · **Agente B (landing/aforo)** — lo de esta foto. Última sesión: `#143`, `#144`, `#147`, `#148`.
+> · **Agente A (panel/dinero)** — **`#146` CERRADO ENTERO**: D5 en `#149` y D4+D3+D2 (más el
+>   sexto sitio y el pack CON señal medido) en `#150`, todo verificado en vivo sobre MySQL.
+>   Toca `Order.php`, `ViewOrder.php` y `lang/es/admin.php`. **NO entrar ahí.**
+> · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
 > ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
-> una vez (`#142` duplicado). El último usado aquí es **`#148`**.
+> DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
+> El último usado es **`#151`**.
 >
-> ❗ **LO PRIMERO que es de DINERO**: quedan **tres** defectos abiertos del cambio de precio
-> (`#146`: `D4`, `D3`, `D2`), en «Lo que está ABIERTO» punto **0.bis**. Los lleva el agente A.
+> ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
+> CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. Lo que QUEDA son cuatro fichas de
+> `DEUDA.md` —la peor: **un pedido CANCELADO no tiene NINGUNA vía de reembolso en el panel**— y
+> una ratificación del owner («¿devolver en el parque?» → recomendado NO, `#149`). Punto **0.bis**.
 >
-> ❗ **Lo segundo, y es una DECISIÓN de producto que espera al owner**: `#148` midió que **una fiesta
-> consume plazas de entrada** (franja de 10 plazas + cumpleaños de 8 niños = quedan **2**), y el
-> docblock del dominio afirmaba lo contrario desde `#82`. **Puede ser correcto** —los niños están en
-> el parque— **o un defecto**. Hasta que se decida, el comportamiento está FIJADO por test.
+> ✅ **Lo segundo quedó DECIDIDO por el owner** (`#151`): el consumo que `#148` midió —una fiesta
+> consume plazas de su franja— **es CORRECTO**. La regla: **la independencia de cupos se hace POR
+> ZONA** (cumpleaños en la suya; el futuro «excursiones de colegio» tendrá la suya). Detalle en
+> el punto **1.bis** de «Lo que está ABIERTO».
 >
 > ▶ **Landing**: tanda A CERRADA (`#138`→`#143`), tanda B **PARADA a la espera del diseño** — el
 > owner está rehaciendo el sistema visual. **Lo medido del mockup viejo sobre COLOR está caducado.**
@@ -89,12 +92,18 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2804 en verde** (16.220 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
-  ▶ **+7 en los dos últimos cortes** (`#147`, `#148`): **4** de `OversellVerifierCoversEveryQuotaTest`
-  —la guarda de que el verificador de sobreventa **no encoja**— y **3** de
-  `PackConsumesEntrySeatsTest`, que fija que **una fiesta SÍ consume asientos de entrada** (y una
-  entrada NO consume cupo de fiestas).
-  ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y por eso vive en un comando.
+- Suite **2822 en verde** (16.361 aserciones, `--parallel` **~67 s** medidos el 2026-08-25 tras
+  fusionar las dos líneas de trabajo — dinero del agente A + aforo del agente B) ·
+  ▶ **+10 en el último corte**: `ItemPriceChangeReconstructionTest` (`#150`) — los CUATRO caminos de
+  `#146` (bajar cantidad · bajar precio · las dos · cancelar tras bajada) más la cadena de ediciones,
+  el pedido cancelado sin vía, las etiquetas y los toasts. **6 mutaciones, las 6 muerden.**
+  ▶ Antes, **+8**: `RefundItemCustomAmountTest` (`#149`) — el escenario del owner de punta a punta
+  (40 € → día de 30 € por el CALENDARIO → devolver exactamente 10) más las guardas del importe
+  elegido en las TRES capas (form, handler, dominio bajo lock). **5 mutaciones, las 5 muerden.**
+  ▶ Antes, **+3**: `PackConsumesEntrySeatsTest` (`#148`), que fija que **una fiesta SÍ consume
+  asientos de entrada** (y una entrada NO consume cupo de fiestas), y **+4**:
+  `OversellVerifierCoversEveryQuotaTest` (`#147`), la guarda de que el verificador de sobreventa
+  **no encoja**. ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y vive en comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
   **671 tests JS** (`node --test`) · Pint limpio (854 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
@@ -323,46 +332,32 @@ corpus no coinciden, la que sobra **no es la que da más: es la que no puede exp
 
 ## ▶ Lo que está ABIERTO y no es de la tanda A
 
-❗❗ **0.bis · CUATRO defectos ABIERTOS del cambio de precio — y uno puede REGALAR DINERO**
-(`DECISIONES #146`, 2026-08-25. Todo medido ejecutando.)
+✅ **0.bis · Los CUATRO defectos del cambio de precio están CERRADOS — y lo que queda son fichas
+con nombre** (`DECISIONES #146` → `#149` → `#150`, 2026-08-25. Todo medido ejecutando, arreglado y
+verificado en vivo sobre MySQL. La nota del cierre del agente B «D5 informado, no verificado»
+queda superada: manda `git log`, y ahora el arreglo entero está en el árbol.)
 
-> ⚠️ **ACTUALIZACIÓN al cierre del 2026-08-25, y NO está verificada en el repo**: el owner informa de
-> que **`D5` (el que regala dinero) ya está CERRADO** por el agente del panel, que sigue con
-> **`D4`+`D3`**. **Al escribir esto no había llegado al remoto**, así que la tabla de abajo y este
-> párrafo pueden discrepar: **manda lo que diga `git log`.** Se anota aquí en vez de editar la tabla
-> —que es del otro agente— para no pisarle el trabajo ni afirmar algo sin haberlo medido.
+⚠️⚠️ **El tronco, para la historia**: `PAY-18` (`#131`) hizo que **mover la fecha re-tarifique**, y
+**SEIS sitios** estaban escritos sobre la premisa vieja («el valor solo baja si baja la cantidad»).
+`#145` arregló el filtro del contexto · `#149` D5 (el importe elegido en «Reembolsar», con el
+«pendiente de devolución» sugerido delante) · `#150` D4 (la reconstrucción calcula
+`cantidad_original × precio_original`), D3 (el marcador se dispara con cualquier cambio
+reconstruible), D2 (toast y pies dicen la causa verdadera) y el sexto («+N producto» exige un
+`quantity_change` real). **El callejón del dinero atrapado está cerrado**: bajada → cancelar la
+RESERVA → la línea devuelve TODO (verificado en vivo, `R-VLRYUV`: 40,00 fuera, pendiente 0).
+✅ **Y el pack CON señal quedó MEDIDO** (`R-DWFRDP`): la cascada absorbe la bajada contra el resto
+de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146` leyó es lo que pasa.
 
-⚠️⚠️ **El tronco, en una frase**: `PAY-18` (`#131`) hizo que **mover la fecha re-tarifique**. Antes de
-eso **la única forma de que bajara el valor de una línea era bajar la cantidad**, y **cinco sitios se
-escribieron sobre esa premisa**. `#145` arregló uno; quedan cuatro.
+❗ **Lo que QUEDA de esta línea, todo en `DEUDA.md`:**
 
-▶ **Lo que SÍ funciona, para no perseguirlo**: la SUBIDA es impecable (8,00 € a «Falta pagar en el
-parque», con su línea «Cambio de fecha a …» desde `#145`), y en la BAJADA **el ledger cuenta bien**:
-`facturado 40,00 · valor 36,00 · cobradoOnline 40,00 · pendienteDevolucion 4,00`. **El dinero está
-bien contado. Lo que falla es lo que se puede HACER con él.**
-
-| | Defecto | Gravedad |
+| | Ficha | Estado |
 |---|---|---|
-| **D5** | ⚠️⚠️ **«Reembolsar» no deja elegir importe**: devuelve siempre el remanente entero de la línea. **Medido: se debían 4,00 € y devolvió 36,00 €**, dejando una reserva viva de 36,00 pagada con 4,00 → **32,00 € regalados** | **Puede costar dinero** |
-| **D4** | El tope de reembolso por línea es incorrecto tras cambiar el precio: pagó 40,00, se le deben 40,00 y el tope se queda en 24,00 | 16,00 € que no salen por esa vía |
-| **D3** | El marcador de reducción no se dispara con `slot_change` → **«(ninguna fila de ajuste)»** en el desglose | Sin rastro |
-| **D2** | Dos textos dicen «unidades canceladas» / «reducción de cantidad o cancelación» cuando fue un cambio de fecha | Confunde al operador |
+| 1 | ⚠️ **Un pedido CANCELADO no tiene NINGUNA vía de reembolso en el panel** (total `already_cancelled` + línea `order_not_paid`; el dominio SÍ sabe). Hoy: reembolsar ANTES de cancelar, o en UNA acción | **Decisión de producto** — recomendación en `#150`: abrir la vía por línea para cancelados con deuda |
+| 2 | El reembolso a nivel PEDIDO sin cancelar devuelve siempre el total (regala — medido `#149`) | Sin plan; diseño apuntado en `#149` |
+| 3 | El cliente EN/FR ve claves en crudo en su desglose (breakdown solo-ES) | Sin plan |
+| 4 | El email de una BAJADA no menciona el dinero que se le debe | Sin plan; la causa ya viaja desde `#150` |
 
-❗ **La respuesta a la pregunta del owner, literal: HOY NO SE PUEDEN devolver 4,00 € desde el panel sin
-cancelar el pedido.** El único botón por línea devuelve 36,00.
-▶ **Y el dominio SÍ sabe**: `Order::executePartialRefund(OrderItem, int $amountCents, …)` acepta
-cualquier importe. **Falta un campo en el panel, no un mecanismo.**
-
-▶ **Orden propuesto**: **D5 primero y aparte** (es el único que sangra, y es un campo de formulario más
-pasar el importe). **D4 + D3 con el mismo cambio**: que `itemOriginalOnlineCents` reconstruya también
-por **precio unitario original**, no solo por cantidad — el dato ya existe (`from_unit_price` /
-`to_unit_price` en el registro, desde `#145`). **D2 cae de paso**, con la causa ya en el ajuste.
-⚠️ Toca `Order.php` (dinero). **NO entra en el `CRITICAL_RE`** —comprobado—, así que no exige
-`VERIFY_CONC`, pero sí escenarios por los CUATRO caminos —bajar cantidad, bajar precio, las dos, y
-cancelar tras una bajada— con su mutación.
-⚠️ **Y el PACK (cumpleaños) está sin medir**: leyendo el código, la bajada se absorbe en cascada contra
-lo que quedaba por pagar en el parque y normalmente **no hace falta reembolsar** — pero eso **no se ha
-ejecutado**. Medirlo antes de diseñar nada sobre ello.
+⚠️ Y la ratificación del owner sobre «¿devolver en el parque?» — recomendado **NO** en `#149`.
 
 🟦 **0 · La VISIÓN DE PRODUCTO de la app está DISEÑADA y sin implementar** (`DECISIONES #142`,
 2026-08-25). Cuatro subsistemas en Fase 6, ordenados por **dependencia**: waiver probatorio →
@@ -389,19 +384,15 @@ fiestas donde cabía 1 de cada**. `OrderCreator` restaurado y comprobado por md5
 o mueve la guarda del instrumento a después del fork, la suite cae.
 ▶ **El detalle, las dos lecciones de método y lo que sigue sin medir están en `#147` y `#148`.**
 
-❗❗ **1.bis · Y ahí salió una DECISIÓN DE PRODUCTO que espera al owner** (`#148`): **una fiesta
-consume plazas de entrada**. Medido en frío: franja de **10 plazas** + cumpleaños de **8 invitados**
-→ quedan **2**. `SlotAvailability::occupancyMap()` suma los `seats` de todos los items sin filtrar
-por tipo; la asimetría es que una entrada **no** consume cupo de fiestas, pero una fiesta **sí**
-consume asientos de entrada.
-▶ **El docblock de `PackAvailability` afirmaba lo contrario desde `#82`** («un cumpleaños no resta
-plazas de entrada ni viceversa»). Ya está corregido.
-⚠️ **Puede ser lo correcto** —los niños están físicamente en el parque y ocupan sitio— **o un
-defecto**; si lo es, el arreglo es filtrar por tipo en `occupancyMap`, no en `PackAvailability`.
-Hasta que se decida, `PackConsumesEntrySeatsTest` **fija el comportamiento sin juzgarlo**, para que
-el día que cambie, cambie porque alguien lo decidió.
-⚠️ **Y afecta a la landing del 2º cliente**: al configurar sus aforos hay que saber que un cumpleaños
-le come plazas de entrada a su franja.
+✅ **1.bis · [DECIDIDO owner, `#151`] El consumo medido en `#148` es CORRECTO: la independencia de
+cupos se hace POR ZONA.** Una fiesta de 8 en una franja de 10 deja 2 plazas de entrada — y eso es
+el contador diciendo la verdad física: **dentro de una zona, `seats` cuenta ocupación real, sea del
+producto que sea**. Un producto que necesite plazas propias se lleva a SU zona (así está hoy:
+cumpleaños en `cumpleanos`, entradas en `jump`/`kids`; y así irá el siguiente — excursiones de
+colegio → zona propia). `occupancyMap()` **no se filtra por tipo**, y `PackConsumesEntrySeatsTest`
+pasa de «fijar sin juzgar» a **guarda de la regla decidida**.
+▶ **Regla de instalación (white-label)**: productos que comparten zona comparten sitio físico;
+independencia ⟹ zona propia. Es lo que hay que saber al configurar los aforos del 2º cliente.
 
 ✅ Y antes, el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del
 `pre-push`, con su control negativo y verificado por mutación.
@@ -419,6 +410,14 @@ ficha de `DEUDA.md`; aplicarlo exige reiniciar el contenedor PHP desde el panel.
 ---
 
 ## ▶ El estado de la BD de desarrollo, antes de mirar nada
+
+❗❗ **«LA» BD de desarrollo no existe: hay DOS, una por máquina, y NO comparten datos.** Medido el
+2026-08-25 al fusionar las dos líneas de trabajo (`#150`): **el corpus documentado abajo vive SOLO
+en la máquina del agente B** (26 pedidos de `cliente.demo`). En la máquina del agente A hay **24
+pedidos de `admin@jumpweb.test` con CERO solapamiento** con los códigos que cita la spec —ni uno—,
+más los 9 de las sondas `#149`/`#150`. Es también la razón de que esa máquina llevara TRES
+migraciones sin aplicar (`#149`): el trabajo de corpus nunca pasó por ella. **Todo lo que este
+apartado dice del corpus aplica a UNA máquina; antes de fiarte de nada, cuenta en la tuya.**
 
 - **El corpus se construyó con 25 pedidos**, uno por acción accionable, por los **flujos REALES**
   (`OrderCreator` → vuelta de Redsys FIRMADA → acciones del panel por Livewire). Titular:
@@ -438,6 +437,18 @@ ficha de `DEUDA.md`; aplicarlo exige reiniciar el contenedor PHP desde el panel.
   receta sí, en §22.3.
 - ⚠️ Dos productos llevan icono propio desde `#140` (tirolina → confeti, calcetines → calcetines); el
   resto usa el de su tipo.
+- 🆕 **Además viven 9 pedidos de las SONDAS `#149`/`#150`** (los 6 escenarios del owner, la
+  verificación de D5 y las de D4/pack-señal: `R-P4NA2I` `R-DKKV3J` `R-REM7YW` `R-ITHNOJ` `R-MOTEHE`
+  `R-8STAH6` `R-VLRYUV` `R-ZDRAYL` `R-DWFRDP`), con su zona, productos y usuarios `sonda146*`.
+  **Se dejaron a propósito para inspeccionarlos en el panel**; se borran enteros con la sonda de
+  limpieza que quedó en `storage/app/` (sonda146-clean, vía tinker; no versionada — instrumento,
+  no guarda) cuando el owner termine.
+  ⚠️ Los de `#149` retratan defectos que ENTONCES estaban abiertos (dinero regalado/atrapado): no
+  son corpus, no cuadran como él. Los de `#150` (`R-VLRYUV`, `R-ZDRAYL`, `R-DWFRDP`) retratan el
+  comportamiento ARREGLADO.
+- ⚠️ **La BD local llevaba TRES migraciones sin aplicar** (`payment_refunds.intent`,
+  `zones.color_secondary`, `ticket_types.icon`) — el panel de reembolsos ni podía escribir. Aplicadas
+  el 2026-08-25 (`#149`). **Tras un pull: `migrate:status` antes de depurar nada raro del panel.**
 
 ---
 

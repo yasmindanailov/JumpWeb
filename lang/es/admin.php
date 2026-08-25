@@ -341,7 +341,7 @@ return [
             // Caja prominente de devolución pendiente (#200), simétrica a la de
             // "A cobrar en puerta" — solo si queda algo por devolver.
             'pending_refund' => 'Pendiente de devolución',
-            'pending_refund_caption' => 'Importe pagado de más (por una reducción o cancelación), pendiente de devolver al cliente.',
+            'pending_refund_caption' => 'Importe pagado de más (por una reducción, una cancelación o un cambio a un precio menor), pendiente de devolver al cliente.',
             'cancelled_notice' => 'Reserva cancelada',
         ],
 
@@ -585,7 +585,7 @@ return [
             'tab_details' => 'Detalles',
             'tab_history' => 'Historial',
             // Tab "Datos del evento" — solo aparece si el item es pack con
-            // eventFields configurados Y el operador tiene permiso (decisión #148).
+            // eventFields configurados Y el operador tiene permiso (decisión #149).
             'tab_event_data' => 'Datos del evento',
             // Sufijo de la cantidad en items que NO son packs (entradas
             // estándar): "3 × entradas" en el header del summary del modal.
@@ -600,7 +600,7 @@ return [
             'details_ticket_type' => 'Tipo',
             'details_zone' => 'Zona',
             'details_duration' => 'Duración',
-            // Formato humanizado de duración (decisión #148 iter — `App\Domain\Platform\Services\Duration::formatHumane`):
+            // Formato humanizado de duración (decisión #149 iter — `App\Domain\Platform\Services\Duration::formatHumane`):
             // el empleado piensa en horas, no en minutos. "1h", "1h 30min", "45 min".
             'duration' => [
                 'hours_only' => ':hoursh',
@@ -725,6 +725,8 @@ return [
                 'product_change' => 'el producto',
                 'quantity_change' => 'la cantidad',
                 'addon_change' => 'los complementos',
+                // `#150`: la re-tarificación viaja como cambio estructurado propio.
+                'unit_price_change' => 'el precio unitario',
             ],
 
             // Acciones traducidas. Estructura anidada por subject (`orders` y
@@ -923,6 +925,9 @@ return [
             'success_edited_refund_failed' => '⚠ Producto actualizado, pero el reembolso de :amount € NO se completó. Reintenta con el botón ↩ de la lista de productos y revisa el historial.',
             // #225 (D8): una bajada solo cancela; el reembolso, si procede, es aparte.
             'success_edited_reduced' => '✓ Producto actualizado: unidades canceladas. NO se ha reembolsado nada automáticamente. Para devolver el importe, usa «Reembolsar». Le hemos avisado al cliente por email.',
+            // `#150` (D2 de `#146`): la bajada por RE-TARIFICACIÓN no cancela ninguna unidad — decir
+            // «unidades canceladas» era mentira cada vez que se movía una fecha a la baja.
+            'success_edited_reduced_price' => '✓ Producto actualizado: el nuevo precio es más bajo y la diferencia queda pendiente de devolver. NO se ha reembolsado nada automáticamente. Para devolverla, usa «Reembolsar». Le hemos avisado al cliente por email.',
             'success_edited_mixed_reduced' => '✓ Producto actualizado. Se cobrarán :extra € en puerta; las unidades retiradas se cancelaron SIN reembolso automático (usa «Reembolsar» si procede). Le hemos avisado por email.',
         ],
 
@@ -956,7 +961,10 @@ return [
             'label' => 'Reembolsar este producto',
             'tooltip' => 'Reembolsar este producto',
             'modal_heading' => '¿Reembolsar este producto?',
-            'modal_description' => 'Marca qué productos quieres devolver al cliente. Cada uno se marcará como cancelado y se devolverá su importe completo. Si marcas el producto principal, sus complementos quedarán también marcados (no tiene sentido devolver el producto pero entregar sus extras).',
+            // ⚠️ Este texto decía «cada uno se marcará como cancelado» y era FALSO desde la decisión
+            // #157 (reembolsar NO cancela; se midió en `#149`): el operador leía una cancelación que
+            // no iba a ocurrir. Corregido al escribir la elección de importe (D5, `#146`).
+            'modal_description' => 'Marca qué productos devolver y elige cuánto. Reembolsar NO cancela la reserva: el cliente la conserva (cancelar tiene su propio botón). Si marcas el producto principal, sus complementos quedarán también marcados.',
             'submit' => 'Reembolsar lo seleccionado',
 
             'mode_label' => '¿Cómo procesamos la devolución?',
@@ -972,6 +980,17 @@ return [
 
             'items_label' => 'Productos a reembolsar',
             'items_help' => 'Solo aparecen los productos que aún tienen importe pendiente de devolver. Si un producto ya se ha reembolsado completamente, no se lista.',
+
+            // D5 (`#146`): CUÁNTO se devuelve. Sin esta elección el botón devolvía siempre el
+            // remanente entero de la línea — y tras una bajada de precio eso regalaba dinero.
+            'amount_mode_label' => '¿Cuánto devolvemos?',
+            'amount_mode_remainder' => 'Todo lo que queda de las líneas marcadas',
+            'amount_mode_remainder_desc' => 'El remanente completo de cada línea (el importe que ves junto a cada una).',
+            'amount_mode_custom' => 'Otro importe (solo con UNA línea marcada)',
+            'amount_mode_custom_desc' => 'Escribe el importe exacto — por ejemplo, la diferencia que se le debe tras cambiar a una fecha más barata. Nunca puede superar el remanente de la línea.',
+            'custom_amount_label' => 'Importe a devolver',
+            'custom_amount_help_pending' => 'Este pedido tiene :pending € pendiente de devolución: eso es lo que se le debe al cliente.',
+            'custom_amount_help' => 'Este pedido no tiene nada pendiente de devolución: lo que devuelvas será una compensación.',
 
             // Resultados — todos OK
             'success_all_rest' => '✓ Devueltos :count producto(s) al cliente · Total :amount €. Le hemos avisado por email.',
@@ -1015,7 +1034,7 @@ return [
             'refunded_label' => 'Devuelto',
             'pending_refund_label' => 'Pendiente de devolución',
             // Robustez del desglose (#198): explica el PORQUÉ del pendiente en la card.
-            'pending_refund_caption' => 'El cliente pagó de más por un cambio en este producto (una reducción de cantidad o una cancelación) y está pendiente de devolvérselo.',
+            'pending_refund_caption' => 'El cliente pagó de más por un cambio en este producto (una reducción de cantidad, una cancelación o un cambio a un precio menor) y está pendiente de devolvérselo.',
 
             // Claves legacy de 7.2e.1bis (badges sueltos arriba); se conservan
             // por compat retro si algún partial las usa todavía.
@@ -1043,7 +1062,7 @@ return [
             // (reducción/cancelación con reembolso fallido o pendiente) + total
             // final neto = lo que el cliente acaba pagando (= valor de productos).
             'pendiente_devolucion' => 'Pendiente de devolución',
-            'pendiente_devolucion_caption' => 'El cliente pagó de más por un cambio en el pedido (una reducción de cantidad o una cancelación) y está pendiente de devolvérselo.',
+            'pendiente_devolucion_caption' => 'El cliente pagó de más por un cambio en el pedido (una reducción de cantidad, una cancelación o un cambio a un precio menor) y está pendiente de devolvérselo.',
             // Rediseño valor-primero (sesión 2026-06-06): el bloque del pedido pasa a
             // ser la SUMA de las cards de producto, con el MISMO vocabulario →
             // Valor final = Pagado online + A cobrar en el parque + Pagado en el parque.
@@ -1059,7 +1078,7 @@ return [
             'pagado_puerta' => 'Pagado en el parque',
             // Ancla del importe bruto pagado por web (conciliación con el banco),
             // en el detalle de "Pendiente de devolución".
-            'pendiente_devolucion_caption_web' => 'El cliente pagó :total por web; tras una reducción o cancelación se le devuelven :pendiente.',
+            'pendiente_devolucion_caption_web' => 'El cliente pagó :total por web; tras una reducción, una cancelación o una bajada de precio se le devuelven :pendiente.',
             // #171: etiqueta compacta de las sub-líneas del desglose.
             'breakdown' => [
                 'product_change' => 'Cambio a :name',
@@ -1101,6 +1120,10 @@ return [
                 'capacity_changed' => 'la capacidad de devolución del pedido cambió mientras tenías el modal abierto; ciérralo y vuelve a intentarlo',
                 'no_items_selected' => 'no has marcado ningún producto para reembolsar',
                 'invalid_item_selection' => 'la selección de productos a reembolsar no es válida; ciérralo y vuelve a intentarlo',
+                // D5 (`#146`): el importe elegido del modal Reembolsar.
+                'custom_amount_requires_single_item' => 'para elegir el importe marca UNA sola línea (con varias no sabríamos a cuál atribuir la devolución)',
+                'invalid_custom_amount' => 'el importe a devolver tiene que ser mayor que cero',
+                'exceeds_item_refundable' => 'el importe supera lo que queda por devolver de esa línea',
 
                 // Sub-fase 7.2e.2 (decisión #159): razones específicas del
                 // cambio fecha/hora (manageItemAction). Reusan la convención
