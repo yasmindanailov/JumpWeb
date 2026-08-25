@@ -139,6 +139,9 @@ return [
         'addon_change' => 'Add-ons updated.',
         'extra_due' => 'Still to pay when you arrive at the park: :amount €',
         'refunded' => 'Amount refunded to your card: :amount € (3-5 business days).',
+        // `#155`: a price reduction is money too — same vocabulary as the screen.
+        'reduction_pending_refund' => 'This change leaves :amount € pending refund to you. You can see it in “My bookings”, and we will email you once the refund is processed.',
+        'reduction_gate_credit' => 'With the new price you will pay :amount € less on arrival at the park.',
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',
         'product_fallback' => 'product :id',

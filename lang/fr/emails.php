@@ -139,6 +139,10 @@ return [
         'addon_change' => 'Compléments mis à jour.',
         'extra_due' => 'À régler à l’arrivée au parc : :amount €',
         'refunded' => 'Montant remboursé sur ta carte : :amount € (3-5 jours ouvrés).',
+        // `#155` : une baisse de prix, c'est aussi de l'argent — même vocabulaire que l'écran.
+        'reduction_gate_credit' => 'Avec le nouveau prix, tu paieras :amount € de moins à ton arrivée au parc.',
+        'reduction_pending_refund' => 'Ce changement laisse :amount € à te rembourser. Tu le verras dans « Mes réservations » et nous t’écrirons dès que le remboursement sera traité.',
+
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',

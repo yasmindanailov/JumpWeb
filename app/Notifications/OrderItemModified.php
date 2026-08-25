@@ -51,6 +51,13 @@ class OrderItemModified extends Notification implements ShouldQueue
         public array $changes = [],
         public ?int $extraDueCents = null,
         public ?int $refundedCents = null,
+        // ⚠️⚠️ **La BAJADA también es dinero, y este email no la contaba** (`#155`; medido en
+        // `#149`: tras mover la fecha a un día más barato, el cliente al que se le debían 10,00 €
+        // recibía un email sin un solo importe). Dos términos porque una bajada tiene dos destinos
+        // (`#150`): lo que se le debe (aflora como «pendiente de devolución») y lo que se absorbe
+        // contra lo que iba a pagar en el parque (packs con señal).
+        public ?int $pendingRefundCents = null,
+        public ?int $gateCreditedCents = null,
     ) {}
 
     /**
@@ -113,6 +120,18 @@ class OrderItemModified extends Notification implements ShouldQueue
         if ($this->refundedCents !== null && $this->refundedCents > 0) {
             $message->line(__('emails.order_item_modified.refunded', [
                 'amount' => number_format($this->refundedCents / 100, 2, ',', '.'),
+            ]));
+        }
+        // `#155`: la bajada, contada — el mismo vocabulario que la pantalla («pendiente de
+        // devolverte») para que el email y «Mis reservas» digan lo mismo.
+        if ($this->pendingRefundCents !== null && $this->pendingRefundCents > 0) {
+            $message->line(__('emails.order_item_modified.reduction_pending_refund', [
+                'amount' => number_format($this->pendingRefundCents / 100, 2, ',', '.'),
+            ]));
+        }
+        if ($this->gateCreditedCents !== null && $this->gateCreditedCents > 0) {
+            $message->line(__('emails.order_item_modified.reduction_gate_credit', [
+                'amount' => number_format($this->gateCreditedCents / 100, 2, ',', '.'),
             ]));
         }
 

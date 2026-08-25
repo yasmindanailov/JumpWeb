@@ -158,6 +158,10 @@ return [
         'addon_change' => 'Complementos actualizados.',
         'extra_due' => 'Pendiente de pago al llegar al parque: :amount €',
         'refunded' => 'Importe devuelto a tu tarjeta: :amount € (3-5 días laborables).',
+        // `#155`: la BAJADA también es dinero — mismo vocabulario que la pantalla («pendiente de
+        // devolverte») para que el email y «Mis reservas» digan lo mismo.
+        'reduction_pending_refund' => 'Este cambio deja :amount € pendientes de devolverte. Lo verás en «Mis reservas» y te avisaremos por email cuando procesemos la devolución.',
+        'reduction_gate_credit' => 'Con el nuevo precio pagarás :amount € menos al llegar al parque.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',

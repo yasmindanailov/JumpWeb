@@ -15,11 +15,13 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
+use App\Notifications\OrderItemModified;
 use Carbon\Carbon;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -376,6 +378,65 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $this->editQty($order, $item, 1)
             ->assertNotified(__('admin.orders.manage_item.success_edited_reduced'));
+    }
+
+    /**
+     * `#155`: el email de una BAJADA cuenta el dinero. Medido en `#149`: el cliente al que se le
+     * debían 10,00 € tras mover la fecha recibía un email que solo decía la fecha nueva — la línea
+     * de reembolso iba cableada a `null` desde D8 y la de «pendiente de devolverte» no existía.
+     * Mismo vocabulario que la pantalla, para que el email y «Mis reservas» digan lo mismo.
+     */
+    public function test_the_reduction_email_tells_the_client_about_the_money(): void
+    {
+        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);   // 40,00 cobrados
+
+        $this->moveTo($order, $item, $this->monday);                     // valor 24,00 · deuda 16,00
+
+        Notification::assertSentTo(
+            $order->user,
+            OrderItemModified::class,
+            function (OrderItemModified $n) use ($order): bool {
+                $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+
+                return $n->pendingRefundCents === 1600
+                    && $lines->contains(__('emails.order_item_modified.reduction_pending_refund', ['amount' => '16,00']));
+            },
+        );
+    }
+
+    /**
+     * La otra mitad de una bajada (`#150`): la parte ABSORBIDA contra lo que iba a pagar en el
+     * parque (packs con señal) se cuenta como lo que es — «pagarás X € menos al llegar».
+     */
+    public function test_the_absorbed_reduction_email_says_you_will_pay_less_at_the_park(): void
+    {
+        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);
+
+        $n = new OrderItemModified(
+            order: $order, item: $item, changes: [], gateCreditedCents: 1000,
+        );
+        $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+
+        $this->assertTrue(
+            $lines->contains(__('emails.order_item_modified.reduction_gate_credit', ['amount' => '10,00'])),
+            'la bajada absorbida en puerta tiene que contarse en el email',
+        );
+    }
+
+    /**
+     * ⚠️ `Lang::has(..., fallback: false)` (la lección de `#134` §23.6): una clave que falte en
+     * EN/FR no sale en crudo — sale un cliente leyendo castellano en su email de dinero.
+     */
+    public function test_the_reduction_email_lines_exist_in_every_client_locale(): void
+    {
+        foreach (['reduction_pending_refund', 'reduction_gate_credit'] as $key) {
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $this->assertTrue(
+                    Lang::has('emails.order_item_modified.'.$key, $locale, false),
+                    "emails.order_item_modified.{$key} falta en «{$locale}»",
+                );
+            }
+        }
     }
 
     // ── helpers (fixture del retariff: `ItemDateChangeRetariffTest`) ────────────────────────────

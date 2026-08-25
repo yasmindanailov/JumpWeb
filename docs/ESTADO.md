@@ -12,7 +12,7 @@
 > · **Agente B (landing/aforo)** — Última sesión: `#143`, `#144`, `#147`, `#148`.
 > ⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, no el fichero local**: ya colisionó
 > DOS veces (`#142` duplicado; y `#148` — el agente A renumeró a `#149`/`#150` al fusionar).
-> El último usado es **`#154`**.
+> El último usado es **`#155`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -93,8 +93,10 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2827 en verde** (16.403 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
-  ▶ **+1 en el último corte** (`#154`): las etiquetas del cargo de puerta que lee el CLIENTE
+- Suite **2830 en verde** (16.414 aserciones, `--parallel` **~68 s** medidos el 2026-08-25) ·
+  ▶ **+3 en el último corte** (`#155`): el email de una bajada cuenta el dinero — e2e con la
+  línea renderizada, la variante absorbida y la guarda de idiomas. **3 mutaciones muerden.**
+  ▶ Antes, **+1** (`#154`): las etiquetas del cargo de puerta que lee el CLIENTE
   viven en `tickets.*` con sus TRES idiomas — guarda `Lang::has(..., false)` + composición bajo
   `en`. **2 mutaciones muerden.**
   ▶ Antes, **+2** (`#153`): el modal del reembolso de PEDIDO nombra el importe
@@ -356,14 +358,14 @@ RESERVA → la línea devuelve TODO (verificado en vivo, `R-VLRYUV`: 40,00 fuera
 ✅ **Y el pack CON señal quedó MEDIDO** (`R-DWFRDP`): la cascada absorbe la bajada contra el resto
 de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146` leyó es lo que pasa.
 
-❗ **Lo que QUEDA de esta línea, todo en `DEUDA.md`:**
+✅ **Las CUATRO fichas derivadas quedaron CERRADAS el mismo día (`#152`–`#155`):**
 
 | | Ficha | Estado |
 |---|---|---|
 | 1 | ~~Un pedido CANCELADO no tenía vía de reembolso~~ — ✅ **CERRADA** (`#152`, owner): la LÍNEA se abre para cancelados con deuda (topes intactos; el TOTAL sigue vetado a propósito) y el banner dice cuánto se debe y por dónde | ✅ hecha |
 | 2 | ~~El reembolso a nivel PEDIDO regalaba sin avisar~~ — ✅ **CERRADA** (`#153`, owner): sin campo (los parciales van por línea); el modal nombra el importe exacto y avisa de la vía de los parciales al desactivar «también cancelar» | ✅ hecha |
 | 3 | ~~El cliente EN/FR veía claves en crudo~~ — ✅ **CERRADA** (`#154`): las etiquetas viven en `tickets.*` (ES/EN/FR) con guarda `Lang::has` sin respaldo | ✅ hecha |
-| 4 | El email de una BAJADA no menciona el dinero que se le debe | Sin plan; la causa ya viaja desde `#150` |
+| 4 | ~~El email de una BAJADA no mencionaba el dinero~~ — ✅ **CERRADA** (`#155`): cuenta la deuda que aflora Y lo absorbido en puerta, en tres idiomas con guarda | ✅ hecha |
 
 ✅ Y «¿devolver en el parque?» quedó **DECIDIDO** (`#152`): no se construye canal nuevo — devolver en mano se registra con el modo «manual» («ya devuelto fuera»), que ya existía y desde `#149` acepta importe exacto.
 

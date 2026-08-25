@@ -3623,6 +3623,10 @@ class ViewOrder extends ViewRecord
         // Context ESTRUCTURADO (no solo claves) para el desglose "A cobrar en el parque" (#171).
         $extraDueCents = null;
         $reducedCents = null;
+        // `#155`: el REPARTO de una bajada, para que el email lo cuente — lo absorbido en puerta
+        // (créditos) y lo que aflora como «pendiente de devolución».
+        $gateCreditedCents = null;
+        $pendingRefundCents = null;
         // ⚠️⚠️ **`slot_change` ENTRA aquí desde `DECISIONES #145`, y su ausencia era un defecto con
         // fecha.** Este filtro es del commit fundacional (2026-08-12), cuando mover la fecha NO
         // re-tarificaba: un cambio de franja no podía generar diferencia de precio, así que no había
@@ -3663,6 +3667,8 @@ class ViewOrder extends ViewRecord
                 $order->recordReductionMarker($item->fresh(), $user, ['changes' => $itemEditContext]);
             }
             $reducedCents = $reduction;
+            $gateCreditedCents = $extraCredit + $depositCredit;
+            $pendingRefundCents = max(0, $reduction - $gateCreditedCents);
         }
 
         // Sub-fase 7.2e.4 (#170): el upcharge de COMPLEMENTOS es un MOVIMIENTO
@@ -3740,13 +3746,17 @@ class ViewOrder extends ViewRecord
             }
         }
 
-        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa → `refundedCents` null.
+        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa → `refundedCents` null —
+        // pero desde `#155` SÍ se cuenta: cuánto queda pendiente de devolverle y cuánto pagará de
+        // menos en el parque. Antes el email de una bajada no llevaba un solo importe.
         $order->notifyCustomer(new OrderItemModified(
             order: $order->fresh(),
             item: $item->fresh(),
             changes: $changes,
             extraDueCents: $extraDueCents,
             refundedCents: null,
+            pendingRefundCents: $pendingRefundCents,
+            gateCreditedCents: $gateCreditedCents,
         ));
 
         $this->editSuccessNotification($extraDueCents, $reducedCents, $itemEditContext);

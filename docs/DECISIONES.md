@@ -8172,3 +8172,28 @@ respaldo EN en vez de la clave cruda, que es estrictamente mejor.
 ⚠️ Método: en una cadena PHP entre comillas dobles, «`$locale»`» se parsea como UNA variable — los
 bytes multibyte son válidos en identificadores. Interpolación con llaves siempre que haya
 tipografía pegada.
+
+## #155 · 2026-08-25 · El email de una BAJADA ya cuenta el dinero — con el mismo vocabulario que la pantalla
+
+**La ficha** (`#149`): tras mover la fecha a un día más barato, el cliente al que se le debían
+10,00 € recibía un email que solo decía la fecha nueva — la línea de reembolso de
+`OrderItemModified` iba cableada a `null` desde D8 (la bajada ya no auto-reembolsa) y no existía
+ninguna línea para «lo que se te debe».
+
+**El arreglo cuenta las DOS mitades de una bajada** (el reparto real que `#150` midió):
+- lo que AFLORA como deuda → «Este cambio deja :amount € pendientes de devolverte. Lo verás en
+  «Mis reservas» y te avisaremos por email cuando procesemos la devolución.» — el MISMO
+  vocabulario que la pantalla, para que email y desglose digan lo mismo;
+- lo ABSORBIDO contra el parque (packs con señal) → «Con el nuevo precio pagarás :amount € menos
+  al llegar al parque.»
+El reparto lo calcula el call-site del panel con los créditos REALES aplicados
+(`reduction − extraCredit − depositCredit`), no re-derivándolo; en ES/EN/FR, con la voz de cada
+fichero de emails.
+
+**Lo medido**: suite **2827 → 2830** (+3, 16.403 → 16.414) — el e2e de la bajada online (la
+notificación porta 16,00 y la línea se RENDERIZA), la variante absorbida, y la guarda de idiomas
+`Lang::has(..., false)` × 3 (§23.6) · **3 mutaciones, las 3 muerden** (el call-site deja de pasar
+el importe · `toMail` pierde la línea · borrar la clave FR) · Pint ✓ · docs-check ✓.
+
+**Con esta entrada, las CUATRO fichas derivadas de `#146` están cerradas** (`#152`–`#155`). De la
+línea del cambio de precio no queda nada abierto salvo lo ya decidido y lo aparcado con nombre.
