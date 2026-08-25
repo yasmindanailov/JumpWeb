@@ -133,7 +133,7 @@ que sirva staging de verdad.
 ⚠️ **Los pasos se parten por DEPENDENCIA, no por pantalla** — es la regla que ha ordenado toda la fase.
 El detalle de cada corte está en el tracker; el índice de abajo enlaza cada uno con su decisión.
 
-- Suite **2764 en verde** (16.062 aserciones, `--parallel` **~40 s** medidos el 2026-08-25) ·
+- Suite **2764 en verde** (16.066 aserciones, `--parallel` **~32 s** medidos el 2026-08-25) ·
   ⚠️ Sale con **1 `PHPUnit Notice`**, y **NO es de este trabajo**: estaba ya al arrancar la sesión
   (medido en la primera corrida, con 2.726 casos). No se ha investigado; queda anotado para que el
   siguiente no lo persiga creyéndolo nuevo.

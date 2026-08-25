@@ -58,6 +58,20 @@ class CriticalPathGateTest extends TestCase
         // incoherente: los dos leen `SlotOffer` a través del mismo contrato, y la suite corre sobre
         // SQLite, que no ve carreras. El patrón se amplió con `Cart` en este paso.
         'app/Http/Controllers/Api/V1/CartLineController.php',
+        // ⚠️⚠️ **LOS DOS CONTADORES DE AFORO**, dentro desde el 2026-08-25 y fuera desde el principio.
+        // Son quienes deciden cuántas plazas quedan, y dependencias DIRECTAS del constructor de
+        // `OrderCreator`. El docblock de `PackAvailability` describe literalmente el contrato que los
+        // verificadores existen para comprobar —«pensado para correr bajo `lockForUpdate` en
+        // `OrderCreator` (anti-sobreventa): el bloqueo de las franjas de la zona/día serializa las
+        // compras concurrentes»— y aun así tocarlo no disparaba nada. Mismo modo de fallo que
+        // `SlotOffer`: el gate vigilaba a quien LLAMA y no a quien CUENTA.
+        //
+        // ⚠️ **Y entran AQUÍ, no solo en el patrón del hook.** Añadirlos al `CRITICAL_RE` sin añadirlos
+        // a esta lista deja el gate sin red: medido por mutación el 2026-08-25, quitar
+        // `PackAvailability` del hook dejaba este fichero **en verde**. La lista es lo que impide que
+        // el patrón encoja en silencio.
+        'app/Domain/Booking/Services/SlotAvailability.php',
+        'app/Domain/Booking/Services/PackAvailability.php',
     ];
 
     /**
@@ -67,6 +81,13 @@ class CriticalPathGateTest extends TestCase
      * @var list<string>
      */
     private const NON_CRITICAL_FILES = [
+        // ⚠️ El control negativo AFILADO: el vecino de al lado de los dos que acaban de entrar.
+        // `ProductAvailability` es la tercera dependencia de aforo de `OrderCreator`, pero NO
+        // cuenta plazas: solo pregunta si una hora cae dentro de la ventana del día
+        // (`OperatingSchedule` → apertura/cierre/offsets). No hay nada que una carrera pueda
+        // corromper ahí y la suite lo cubre entera sobre SQLite. Si algún día empieza a contar,
+        // este test se pondrá rojo y obligará a decidirlo a conciencia en vez de por inercia.
+        'app/Domain/Booking/Services/ProductAvailability.php',
         'app/Http/Controllers/Api/V1/MeController.php',
         'app/Http/Controllers/HomeController.php',
         'app/Domain/Identity/Models/User.php',

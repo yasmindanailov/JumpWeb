@@ -7036,3 +7036,38 @@ compara lo que el cajón dibuja, no lo que el panel deja elegir).
 
 **Verificado sobre HTTP real**: con la tirolina puesta en «cañón de confeti» y los calcetines en su
 icono, `GET /me/orders` publica `icon` por línea y los productos sin elegir conservan el suyo.
+
+## #141 · 2026-08-25 · Los DOS CONTADORES de aforo entran al gate de `pre-push` — y la mitad que faltaba
+
+**Cómo apareció, porque importa para el protocolo.** Al preparar el commit de `#140` aparecieron dos
+ficheros modificados que **el agente no recordaba haber tocado**: `.githooks/pre-push` y
+`CriticalPathGateTest`. Se dejaron FUERA del commit y se preguntó al owner antes de firmarlos.
+▶ La explicación: el owner pulsó **compact** sin querer, la sesión continuó trabajando sobre el
+contexto compactado, y después hizo **`/rewind`**. **El `/rewind` deshace la conversación, no los
+ficheros ya escritos en disco.** Ésos eran los restos.
+
+⚠️ **Regla que conviene dejar escrita**: tras un `/rewind`, el árbol puede llevar trabajo huérfano de
+una rama de conversación que ya no existe. No se firma por parecido de estilo — **se verifica y se
+completa, o se descarta**. Se comprobó que no había más restos: solo esos dos ficheros.
+
+**El cambio, verificado y correcto.** `SlotAvailability` y `PackAvailability` entran al `CRITICAL_RE`
+del hook. Son **los dos contadores de aforo** —quienes deciden cuántas plazas quedan— y dependencias
+DIRECTAS del constructor de `OrderCreator`. El docblock de `PackAvailability` describe literalmente el
+contrato que los verificadores existen para comprobar —«pensado para correr bajo `lockForUpdate` en
+`OrderCreator` (anti-sobreventa): el bloqueo de las franjas de la zona/día serializa las compras
+concurrentes»— y **aun así tocarlo no disparaba nada**. Mismo modo de fallo que `SlotOffer` en su día:
+el gate vigilaba a quien LLAMA y no a quien CUENTA.
+
+⚠️ **Y el control negativo se afila**: `ProductAvailability`, la tercera dependencia de aforo, se
+declara explícitamente NO crítica. Comprobado ejecutándolo: su único constructor es
+`OperatingSchedule` y su único método es `allowsStart()` — **no cuenta plazas ni cupo**, solo si una
+hora cae en la ventana del día. Nada que una carrera pueda corromper.
+
+**❗ Y le faltaba la mitad, que es lo que este corte añade.** Los ficheros se habían añadido al patrón
+del hook y al control negativo, **pero no a `CRITICAL_FILES`**, que es la lista con la que el test
+comprueba que el gate sigue cubriendo el núcleo.
+▶ **Medido por mutación**: quitar `PackAvailability` del hook dejaba `CriticalPathGateTest` **en
+verde**. El gate se había ampliado **sin red**: cualquiera podía encogerlo mañana y nadie se enteraba
+— que es exactamente el modo de fallo que este repo lleva documentando toda la semana.
+▶ Con la lista completa, las **dos mutaciones muerden** y con el mensaje exacto: «El gate de pre-push
+ya NO cubre …: un cambio ahí se empujaría sin correr los verificadores de concurrencia».

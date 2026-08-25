@@ -42,7 +42,18 @@ touched_critical=''
 # no lo hacía. Es la fuente ÚNICA de oferta (`AFORO-02`) y `OrderCreator` la llama como backstop del
 # corte intra-día (`passesIntradayFloor`), así que un cambio suyo puede mover lo que
 # `purchase:verify-oversell` comprueba.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+#
+# `SlotAvailability` y `PackAvailability` entran el 2026-08-25, y llevaban fuera desde el principio.
+# Son los DOS CONTADORES de aforo y dependencias DIRECTAS del constructor de `OrderCreator`: quienes
+# deciden cuántas plazas quedan. El docblock de `PackAvailability` describe literalmente el contrato
+# que estos verificadores existen para comprobar —«pensado para correr bajo `lockForUpdate` en
+# OrderCreator (anti-sobreventa): el bloqueo de las franjas de la zona/día serializa las compras
+# concurrentes»— y aun así tocarlo no disparaba nada. Mismo modo de fallo que `SlotOffer`: el gate
+# vigilaba a quien LLAMA y no a quien CUENTA.
+# ⚠️ No entra `ProductAvailability`, la tercera dependencia de aforo de `OrderCreator`: no cuenta
+# plazas, solo mira si la hora cae en la ventana del día. La suite (SQLite) lo cubre entero, y
+# `CriticalPathGateTest` lo fija como control negativo para que el gate no se vuelva un comodín.
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue
