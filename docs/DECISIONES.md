@@ -7666,3 +7666,90 @@ formulario más el paso del importe elegido a `executePartialRefund`, que ya lo 
 ⚠️ Toca `Order.php`, que es dinero. **NO entra en el `CRITICAL_RE`** (comprobado), así que no exige
 `VERIFY_CONC`, pero sí exige escenarios por los cuatro caminos —bajar cantidad, bajar precio, las
 dos a la vez, y cancelar después de una bajada— con su mutación cada uno.
+
+---
+
+## #147 · 2026-08-25 · El aforo de PACKS nunca se había probado bajo concurrencia — ahora sí, y el instrumento sabe cazar
+
+**El hueco, dicho como estaba.** `purchase:verify-oversell` llevaba desde el origen siendo la prueba
+de que dos compras simultáneas de la última plaza no sobrevenden. Medido el 2026-08-25: sembraba
+**una entrada** con `online_capacity = 1` y forkaba N compras. Eso cubre **uno** de los **tres**
+aforos del producto.
+
+⚠️⚠️ Los cumpleaños se cuentan por **otro camino entero** —`PackAvailability`, con **pool propio** y
+**dos** topes por franja (`zones.max_per_slot` fiestas y `zones.max_guests_per_slot` invitados)— y
+**ningún verificador lo ejecutaba**.
+▶ Traducido: **no había ninguna evidencia de que dos cumpleaños simultáneos por la última plaza no se
+vendieran los dos.** Y el silencio no era prueba: la suite corre en SQLite, que no reproduce las
+carreras de InnoDB (`SUITE-04`).
+
+### Lo que se construyó
+
+**`--scenario=entry | pack | pack-guests`**, y son **tres y no uno mixto** porque son **tres
+invariantes distintos**: un cupo de fiestas correcto no dice nada del de invitados, y en un escenario
+mezclado el que se rompiera se escondería detrás del que aguantara.
+
+⚠️ **El escenario de packs se aísla en una ZONA propia**, no en los ajustes globales: los dos topes y
+`prep_blocks_cupo` se pueden fijar por zona (`zones.*`, con fallback a `packs.*`). Así el verificador
+**no toca la configuración de la BD de desarrollo**, que tiene pedidos reales.
+
+⚠️ **`prep_blocks_cupo` se apaga y la fiesta dura una sola franja, a propósito.** Este comando existe
+para medir **la carrera**, no la aritmética del tramo —que sí cubre la suite—. Menos superficie donde
+un fallo de siembra pueda disfrazarse de «no hubo sobreventa».
+
+### ❗ La guarda del instrumento, que es la mitad del trabajo
+
+**Un verificador que no consigue vender ni una vez sale verde por construcción.** Si el escenario está
+mal sembrado —el pack no cabe en la rejilla, falta el precio de la tarifa del día, la hora cae fuera
+del horario— los N compradores son rechazados por un motivo que **no es la carrera**, y el resultado
+se lee como «nadie sobrevendió».
+
+▶ **No es hipotético**: la primera ejecución de este comando en JumpWeb falló exactamente así, por un
+precio ausente. Allí lo delató el conteo; con packs hay tramo, preparación y dos topes, así que ahora
+se comprueba **explícitamente y ANTES de forkar** que el dominio ofrece hueco para lo que se va a
+pedir. Y `OversellVerifierCoversEveryQuotaTest` asevera que esa llamada sigue estando **antes** del
+fork: después ya no distingue un escenario mal sembrado de una carrera bien serializada.
+
+### Lo MEDIDO, que es lo que esta entrada viene a dejar escrito
+
+Sobre **MySQL real** (no SQLite), con `pcntl_fork`:
+
+| Escenario | 8 workers | 16 workers |
+|---|---|---|
+| `entry` | 1 compra · 7 `sold_out` · asientos = 1 | 1 · 15 · asientos = 1 |
+| `pack` | 1 compra · 7 `sold_out` · **1 fiesta viva** | 1 · 15 · 1 fiesta |
+| `pack-guests` | 1 compra · 7 `sold_out` · **6 invitados** | 1 · 15 · 6 invitados |
+
+▶ **El aforo de packs aguanta.** `lockSlots` bloquea **todas** las franjas de la zona×fecha —no solo
+las de la cesta—, así que serializa igual de bien un cumpleaños multi-franja que una entrada.
+
+### ❗❗ Y el CONTROL NEGATIVO, sin el cual el verde de arriba no significaría nada
+
+Se retiró el `lockForUpdate()` de `OrderCreator::lockSlots` y se repitieron los dos escenarios de
+pack. El instrumento **cazó las dos sobreventas**, y con margen:
+
+| Escenario | Esperado | Con el lock retirado |
+|---|---|---|
+| `pack` | 1 fiesta | **8 fiestas vendidas donde cabía 1** |
+| `pack-guests` | 6 invitados | **48 invitados donde caben 10** |
+
+▶ `OrderCreator.php` se restauró y se verificó **por md5 y por `git status`**: sin cambios respecto a
+git y con su único `lockForUpdate()` en su sitio.
+▶ **Ésta es la parte que convierte el verde en evidencia.** Un verificador que nunca se ha visto
+fallar no ha demostrado que pueda.
+
+### Lo que esto cambia en la doc
+
+- `DEUDA.md`: la ficha «el aforo de PACKS nunca se ha probado bajo concurrencia» **se retira**, con su
+  medición.
+- `INVARIANTES.md` `AFORO-01` y `SUITE-04`: el comando ya no es «uno», son **tres escenarios**, y
+  tocar el aforo de packs obliga a correr los suyos.
+- ⚠️ **Lo que NO cambia**: `Order.php` y `ViewOrder.php` siguen fuera del `CRITICAL_RE` (comprobado
+  con control negativo: `OrderCreator.php` sí lo dispara).
+
+### Lo que sigue SIN medir, dicho para que no se dé por hecho
+
+- **El tramo multi-franja bajo concurrencia**: el escenario usa una sola franja a propósito. Que
+  `lockSlots` bloquee zona×fecha lo hace muy improbable, pero **improbable no es medido**.
+- **La mezcla**: una cesta con entrada + pack a la vez, compitiendo por dos pools distintos.
+- **`prep_blocks_cupo` activo**, que es el valor por defecto en producción.

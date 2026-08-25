@@ -75,12 +75,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2797 en verde** (16.199 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
-  ▶ **+14 sobre el cierre anterior, y ninguno cubre código nuevo**: son las guardas que faltaban para
-  que el registro de un pedido se pueda leer (`DECISIONES #145`). **5** de `AuditActionCatalogTest`
-  —catálogo ↔ etiquetas en las dos direcciones—, **5** de `OrderAuditReadabilityTest` —que
-  **renderiza el modal**, cosa que ninguno de los once casos que ya había hacía—, **3** del bloque de
-  totales y **1** del cableado del contexto al mover la fecha.
+- Suite **2801 en verde** (16.211 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+  ▶ **+4 en el último corte**: `OversellVerifierCoversEveryQuotaTest`, la guarda de que el verificador
+  de sobreventa **no encoja** (`#147`). ⚠️ **No cubren la carrera** —eso exige MySQL y `pcntl_fork`, y
+  por eso vive en un comando—: vigilan que sigan existiendo los tres escenarios, que cada uno mida su
+  propio invariante y que la guarda del instrumento corra **antes** del fork.
+  ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
   **671 tests JS** (`node --test`) · Pint limpio (852 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
@@ -117,9 +117,15 @@ que sirva staging de verdad.
 - **Los dos verificadores de concurrencia: VERDES sobre MySQL real** (2026-08-14, 8+8 workers).
   **La lista viva de lo que exige `VERIFY_CONC=1` es el `CRITICAL_RE` de `.githooks/pre-push`** — no se
   copia aquí para que no envejezca, y `CriticalPathGateTest` vigila que siga cubriendo lo que debe.
-  ❗❗ **«Verdes» NO quiere decir «cubren todo»**: `purchase:verify-oversell` **solo ejercita ENTRADAS**.
-  El aforo de PACKS —pool propio, dos topes por franja— **no lo prueba ningún verificador**
-  (`DEUDA.md`, medido el 2026-08-25). Ver «Lo que está ABIERTO».
+  ✅ **Y desde `#147` `purchase:verify-oversell` cubre los TRES aforos, no uno**: `--scenario=entry`
+  (asientos) · `pack` (cupo de FIESTAS) · `pack-guests` (cupo de INVITADOS). Hasta el 2026-08-25 solo
+  existía el primero, y el aforo de packs **no lo probaba nadie**. Medido sobre MySQL con 8 y 16
+  procesos: **los tres aguantan**.
+  ❗❗ **Y su verde vale porque el instrumento se vio FALLAR**: retirando el `lockForUpdate()` de
+  `OrderCreator::lockSlots`, el mismo comando cazó **8 fiestas donde cabía 1** y **48 invitados donde
+  caben 10**. Un verificador que nunca se ha visto fallar no ha demostrado que pueda.
+  ⚠️ **Lo que sigue SIN medir y no se da por hecho**: el tramo multi-franja bajo concurrencia, la
+  cesta MIXTA entrada+pack, y `prep_blocks_cupo` **activo** (el valor por defecto en producción).
   ✅ **Y desde `#141` los dos CONTADORES de aforo disparan el gate**: `SlotAvailability` y
   `PackAvailability` llevaban fuera desde el principio — el gate vigilaba a quien LLAMA y no a quien
   CUENTA. Verificado por mutación, y con `ProductAvailability` como control negativo declarado.
@@ -287,14 +293,21 @@ exacto que `RGPD-06` existe para impedir.
 ❗ **Ninguna de las cuatro está aprobada**: esperan revisión adversarial por otro agente
 (`CONVENCIONES` §5).
 
-❗ **1 · El aforo de PACKS nunca se ha probado bajo concurrencia** (ficha en `DEUDA.md`, medida el
-2026-08-25). `purchase:verify-oversell` siembra **una entrada** con `online_capacity = 1` y forka N
-compras; los packs se cuentan por **otro camino entero** —`PackAvailability`, con pool propio y los dos
-topes por franja— y **ningún verificador lo ejecuta**.
-▶ Traducido: **no hay ninguna evidencia de que dos cumpleaños simultáneos por la última plaza no se
-vendan los dos.** La suite lo da por bueno porque SQLite no reproduce esas carreras. La receta está en
-la ficha: un `--scenario=pack` que reutilice el `forkWorkers`/`evaluate` que ya existen.
-✅ Lo que sí se cerró el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del
+✅ **1 · El aforo de PACKS ya está VERIFICADO bajo concurrencia** (2026-08-25, `DECISIONES #147`).
+Era el mayor riesgo abierto del sistema: `purchase:verify-oversell` solo sembraba **entradas**, y los
+cumpleaños se cuentan por otro camino entero —`PackAvailability`, pool propio y dos topes por franja—
+que **no ejercitaba ningún verificador**. Hoy son **tres escenarios** (`entry` · `pack` ·
+`pack-guests`) y los tres pasan sobre MySQL con 8 y 16 procesos: 1 compra creada, N−1 `sold_out`.
+❗❗ **El verde vale porque el instrumento se vio FALLAR**: con el `lockForUpdate()` retirado de
+`OrderCreator::lockSlots`, el mismo comando cazó **8 fiestas donde cabía 1** y **48 invitados donde
+caben 10**. `OrderCreator` se restauró y se comprobó por md5 y por `git status`.
+⚠️ **Lo que sigue SIN medir**, y no se da por hecho: el tramo **multi-franja** bajo concurrencia (el
+escenario usa una sola franja a propósito, para que un fallo de siembra no se disfrace de «no hubo
+sobreventa»), la cesta **MIXTA** entrada+pack compitiendo por dos pools, y **`prep_blocks_cupo`
+activo**, que es el valor por defecto en producción.
+▶ Lo guarda `OversellVerifierCoversEveryQuotaTest`: si alguien retira un escenario, quita un contador
+o mueve la guarda del instrumento a después del fork, la suite cae.
+✅ Y antes, el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del
 `pre-push`, con su control negativo y verificado por mutación.
 
 ❗ **2 · Pendiente del OWNER: un `Ds_Response=0900` REAL de Redsys.** Exige un pago de prueba con
