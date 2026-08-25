@@ -75,11 +75,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2801 en verde** (16.211 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
-  ▶ **+4 en el último corte**: `OversellVerifierCoversEveryQuotaTest`, la guarda de que el verificador
-  de sobreventa **no encoja** (`#147`). ⚠️ **No cubren la carrera** —eso exige MySQL y `pcntl_fork`, y
-  por eso vive en un comando—: vigilan que sigan existiendo los tres escenarios, que cada uno mida su
-  propio invariante y que la guarda del instrumento corra **antes** del fork.
+- Suite **2804 en verde** (16.220 aserciones, `--parallel` **~33 s** medidos el 2026-08-25) ·
+  ▶ **+7 en los dos últimos cortes** (`#147`, `#148`): **4** de `OversellVerifierCoversEveryQuotaTest`
+  —la guarda de que el verificador de sobreventa **no encoja**— y **3** de
+  `PackConsumesEntrySeatsTest`, que fija que **una fiesta SÍ consume asientos de entrada** (y una
+  entrada NO consume cupo de fiestas).
+  ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y por eso vive en un comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
   **671 tests JS** (`node --test`) · Pint limpio (852 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
@@ -301,10 +302,20 @@ que **no ejercitaba ningún verificador**. Hoy son **tres escenarios** (`entry` 
 ❗❗ **El verde vale porque el instrumento se vio FALLAR**: con el `lockForUpdate()` retirado de
 `OrderCreator::lockSlots`, el mismo comando cazó **8 fiestas donde cabía 1** y **48 invitados donde
 caben 10**. `OrderCreator` se restauró y se comprobó por md5 y por `git status`.
-⚠️ **Lo que sigue SIN medir**, y no se da por hecho: el tramo **multi-franja** bajo concurrencia (el
-escenario usa una sola franja a propósito, para que un fallo de siembra no se disfrace de «no hubo
-sobreventa»), la cesta **MIXTA** entrada+pack compitiendo por dos pools, y **`prep_blocks_cupo`
-activo**, que es el valor por defecto en producción.
+✅ **Y los tres huecos que aquello dejó escritos están CERRADOS** (`#148`): son **cinco** escenarios
+—se añaden `pack-prep` (tramo multi-franja **con montaje y limpieza ACTIVOS**, la configuración por
+defecto de producción, y compradores pidiendo horas distintas que se pisan) y `mixed` (los dos pools
+compitiendo a la vez)—. Los cinco pasan con 8 y 16 procesos, y los dos nuevos tienen su control
+negativo: sin lock, **8 fiestas donde cabía 1** y **4 entradas + 4 fiestas donde cabía 1 de cada**.
+❗❗ **Y `mixed` DESTAPÓ algo que nadie buscaba: los dos aforos NO son independientes.** Medido en
+frío: franja de 10 plazas + una fiesta de 8 invitados → quedan **2** plazas de entrada. Una entrada
+no consume cupo de fiestas, pero **una fiesta sí consume asientos de entrada**, porque
+`SlotAvailability::occupancyMap()` suma los `seats` de TODOS los items sin filtrar por tipo.
+▶ **El docblock de `PackAvailability` afirmaba lo contrario** desde `#82` («un cumpleaños no resta
+plazas de entrada ni viceversa»). Corregido.
+⚠️ **PENDIENTE DEL OWNER, y es de PRODUCTO**: ¿debe una fiesta ocupar plazas de entrada? Puede ser lo
+correcto —los niños están en el parque— o un defecto. Lo fija `PackConsumesEntrySeatsTest`, que **no
+juzga**: deja el comportamiento medido para que el día que cambie, cambie porque alguien lo decidió.
 ▶ Lo guarda `OversellVerifierCoversEveryQuotaTest`: si alguien retira un escenario, quita un contador
 o mueve la guarda del instrumento a después del fork, la suite cae.
 ✅ Y antes, el 2026-08-25 (`#141`): los dos contadores de aforo **ya disparan el gate** del

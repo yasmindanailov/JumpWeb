@@ -18,6 +18,7 @@ use App\Domain\Identity\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -47,20 +48,26 @@ class VerifyPurchaseConcurrency extends Command
      * verificador lo ejecutaba**. Traducido: no había ninguna evidencia de que dos cumpleaños
      * simultáneos por la última plaza no se vendieran los dos.
      *
-     * De ahí los tres escenarios, y son tres porque **son tres invariantes distintos**:
+     * De ahí los escenarios, y son varios porque **son invariantes distintos**:
      *  · `entry`       — el pool de asientos de una franja (`SlotAvailability`).
      *  · `pack`        — el tope de **FIESTAS** por franja (`zones.max_per_slot`).
      *  · `pack-guests` — el tope de **NIÑOS** por franja (`zones.max_guests_per_slot`).
+     *  · `pack-prep`   — el mismo tope de fiestas pero con la fiesta **abarcando varias franjas**
+     *                    (duración + montaje + limpieza) y compradores pidiendo **horas DISTINTAS**
+     *                    que se pisan. ⚠️ Es la configuración **por defecto en producción**, y hasta
+     *                    el 2026-08-25 se medía siempre con la preparación APAGADA.
+     *  · `mixed`       — una entrada y un cumpleaños **compitiendo a la vez** en la misma zona y
+     *                    franja. ⚠️ **Su nº de ganadores VARÍA entre ejecuciones y es correcto**:
+     *                    mide TOPES, no ganadores (ver {@see self::evaluateMixed()}).
      *
-     * El segundo y el tercero se separan a propósito: un cupo de fiestas correcto no dice nada
-     * sobre el de invitados, y viceversa. Con un solo escenario mixto, el que se rompiera se
-     * escondería detrás del que aguantara.
+     * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
+     * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed'];
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -95,9 +102,11 @@ class VerifyPurchaseConcurrency extends Command
         File::cleanDirectory($resultsDir);
 
         $this->line("Escenario <options=bold>{$scenario}</>: sembrando el último hueco + {$workers} compradores…");
-        $seed = $scenario === 'entry'
-            ? $this->seedEntryScenario($workers)
-            : $this->seedPackScenario($workers, $scenario);
+        $seed = match ($scenario) {
+            'entry' => $this->seedEntryScenario($workers),
+            'mixed' => $this->seedMixedScenario($workers),
+            default => $this->seedPackScenario($workers, $scenario),
+        };
 
         // ⚠️⚠️ **La guarda del propio instrumento, y no es opcional.** Si el escenario está mal
         // montado —el pack no cabe en la rejilla, falta precio ese día, la franja quedó fuera de
@@ -145,21 +154,55 @@ class VerifyPurchaseConcurrency extends Command
      */
     private function probeSellsOnce(array $seed): bool
     {
-        $qty = (int) $seed['probe_qty'];
+        $scenario = $seed['scenario'];
 
-        $available = $seed['scenario'] === 'entry'
-            ? app(SlotAvailability::class)->availableFor($seed['slot'], $seed['type']->duration_min)
-            : app(PackAvailability::class)->availableGuestsFor($seed['slot'], $seed['type']);
+        // ⚠️ Se comprueba CADA pool que el escenario pone en juego, no «el» hueco. En `mixed` hay
+        // dos —asientos y cupo de fiestas— y con uno solo verificado el otro podría estar cerrado
+        // sin que se notara: sus compradores serían rechazados por siembra, no por la carrera.
+        $checks = [];
+        if ($scenario === 'entry' || $scenario === 'mixed') {
+            $checks['entrada'] = [
+                app(SlotAvailability::class)->availableFor($seed['slot'], $seed['type']->duration_min),
+                1,
+            ];
+        }
+        if ($scenario !== 'entry') {
+            $pack = $seed['pack'] ?? $seed['type'];
+            $checks['cumpleaños'] = [
+                app(PackAvailability::class)->availableGuestsFor($seed['slot'], $pack),
+                $scenario === 'mixed' ? 8 : (int) $seed['probe_qty'],
+            ];
+        }
 
-        if ($available >= $qty) {
-            $this->line("<fg=gray>Guarda del instrumento: el hueco admite {$available} (se pedirán {$qty}). ✓</>");
+        // ⚠️ Y en `pack-prep` los compradores piden DOS horas distintas: si la segunda no vendiera
+        // (rejilla corta, fuera de horario), la mitad de los workers serían rechazados por siembra
+        // y el resultado —«1 ganador»— saldría verde por el motivo equivocado.
+        if ($scenario === 'pack-prep') {
+            $second = Carbon::parse($seed['time'])->addHour()->format('H:i:s');
+            $slot2 = Slot::where('zone_id', $seed['zone']->id)
+                ->where('date', $seed['date'])->where('start_time', $second)->first();
+            $checks['cumpleaños @'.$second] = [
+                $slot2 === null ? 0 : app(PackAvailability::class)->availableGuestsFor($slot2->fresh('zone'), $seed['type']),
+                (int) $seed['probe_qty'],
+            ];
+        }
 
+        $failed = [];
+        foreach ($checks as $what => [$available, $needed]) {
+            if ($available >= $needed) {
+                $this->line("<fg=gray>Guarda del instrumento · {$what}: el hueco admite {$available} (se pedirán {$needed}). ✓</>");
+            } else {
+                $failed[] = "{$what}: ofrece {$available}, se piden {$needed}";
+            }
+        }
+
+        if ($failed === []) {
             return true;
         }
 
         $this->error(
-            "El escenario NO permite vender ni una vez: el dominio ofrece {$available} y cada comprador pide {$qty}.\n".
-            "▶ Los N compradores serían rechazados por un motivo que NO es la carrera, y el resultado\n".
+            "El escenario NO permite vender ni una vez en:\n  · ".implode("\n  · ", $failed)."\n".
+            "▶ Esos compradores serían rechazados por un motivo que NO es la carrera, y el resultado\n".
             '  se leería como «no hubo sobreventa». Revisa la siembra antes de creer ningún veredicto.'
         );
 
@@ -223,11 +266,12 @@ class VerifyPurchaseConcurrency extends Command
             }
 
             $cart = [['ticket_type_id' => $type->id, 'date' => $date, 'time' => $time, 'qty' => 1]];
+            $carts = array_fill(0, $workers, $cart);   // todos pujan por la misma plaza
             $scenario = 'entry';
             $probe_qty = 1;
             $expected_winners = 1;
 
-            return compact('zone', 'type', 'slot', 'users', 'date', 'time', 'cart',
+            return compact('zone', 'type', 'slot', 'users', 'date', 'time', 'cart', 'carts',
                 'scenario', 'probe_qty', 'expected_winners');
         });
     }
@@ -263,23 +307,33 @@ class VerifyPurchaseConcurrency extends Command
             //  · `pack`        → 1 fiesta por franja, invitados de sobra: gana el tope de FIESTAS.
             //  · `pack-guests` → sin tope de fiestas, 10 niños por franja y cada uno pide 6:
             //                    dos fiestas NO caben (12 > 10) aunque el cupo de fiestas lo permita.
-            $guestsPerBuyer = $scenario === 'pack-guests' ? 6 : 8;
+            //  · `pack-prep`   → 1 fiesta, y la fiesta ABARCA VARIAS FRANJAS: 120 min de duración
+            //                    más 60 de montaje y 60 de limpieza. Ver el docblock del método.
+            $isGuests = $scenario === 'pack-guests';
+            $isPrep = $scenario === 'pack-prep';
+
+            $guestsPerBuyer = $isGuests ? 6 : 8;
             $zone = Zone::create([
                 'slug' => 'pack-probe-'.Str::lower(Str::random(6)),
                 'name' => ['es' => 'Pack Probe'],
                 'is_active' => true,
-                'max_per_slot' => $scenario === 'pack-guests' ? 0 : 1,
-                'max_guests_per_slot' => $scenario === 'pack-guests' ? 10 : 0,
-                'prep_blocks_cupo' => false,
+                'max_per_slot' => $isGuests ? 0 : 1,
+                'max_guests_per_slot' => $isGuests ? 10 : 0,
+                // ⚠️ `true` en `pack-prep` porque **es el valor por defecto en producción**: hasta
+                // ahora se medía siempre con la preparación APAGADA, o sea con una configuración
+                // que ningún parque usa.
+                'prep_blocks_cupo' => $isPrep,
             ]);
 
             $schedule = app(OperatingSchedule::class);
             [$date, $time] = $this->firstOpenSlotMoment($schedule);
 
-            // Varias franjas consecutivas: la fiesta cabe entera aunque la rejilla se consulte por
-            // tramo, y el lock de zona×fecha las cubre todas igualmente.
+            // Franjas consecutivas suficientes para que la fiesta quepa entera. Con preparación la
+            // ventana se extiende una hora ANTES del inicio, así que la rejilla empieza antes.
+            $firstHour = $isPrep ? -1 : 0;
+            $lastHour = $isPrep ? 5 : 2;
             $slot = null;
-            for ($h = 0; $h < 3; $h++) {
+            for ($h = $firstHour; $h <= $lastHour; $h++) {
                 $start = Carbon::parse($time)->addHours($h)->format('H:i:s');
                 $created = Slot::create([
                     'zone_id' => $zone->id, 'date' => $date,
@@ -287,15 +341,17 @@ class VerifyPurchaseConcurrency extends Command
                     'end_time' => Carbon::parse($start)->addHour()->format('H:i:s'),
                     'capacity' => 100, 'online_capacity' => 100,
                 ]);
-                $slot ??= $created;
+                if ($start === $time) {
+                    $slot = $created;
+                }
             }
 
             $type = TicketType::create([
                 'name' => ['es' => 'Cumple Probe'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zone->id,
-                'duration_min' => 60, 'is_sellable' => true, 'is_active' => true,
+                'duration_min' => $isPrep ? 120 : 60, 'is_sellable' => true, 'is_active' => true,
                 'seats_per_unit' => 1, 'position' => 1,
                 'min_qty' => 1, 'max_qty' => 20,
-                'prep_before_min' => 0, 'prep_after_min' => 0,
+                'prep_before_min' => $isPrep ? 60 : 0, 'prep_after_min' => $isPrep ? 60 : 0,
                 'event_fields' => [],   // sin campos obligatorios: se mide el aforo, no la validación
             ]);
 
@@ -314,17 +370,128 @@ class VerifyPurchaseConcurrency extends Command
                 ]);
             }
 
-            $cart = [[
-                'ticket_type_id' => $type->id, 'date' => $date, 'time' => $time,
+            $line = fn (string $at): array => [[
+                'ticket_type_id' => $type->id, 'date' => $date, 'time' => $at,
                 'qty' => $guestsPerBuyer, 'event_data' => [],
             ]];
 
+            // ⚠️⚠️ **En `pack-prep` los compradores piden HORAS DISTINTAS.** Una fiesta de las 11:00
+            // ocupa de 10:00 a 14:00 (montaje + 2 h + limpieza) y otra de las 12:00 ocuparía de 11:00
+            // a 15:00: **se pisan sin compartir hora de inicio**. Es el caso que ningún escenario
+            // anterior podía expresar, porque todos los workers compartían una única cesta.
+            $secondTime = Carbon::parse($time)->addHour()->format('H:i:s');
+            $carts = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $carts[$i] = $line($isPrep && $i % 2 === 1 ? $secondTime : $time);
+            }
+
             return [
                 'zone' => $zone, 'type' => $type, 'slot' => $slot->fresh('zone'), 'users' => $users,
-                'date' => $date, 'time' => $time, 'cart' => $cart,
+                'date' => $date, 'time' => $time, 'cart' => $line($time), 'carts' => $carts,
                 'scenario' => $scenario,
                 'probe_qty' => $guestsPerBuyer,
                 'expected_winners' => 1,
+            ];
+        });
+    }
+
+    /**
+     * **Escenario MIXTO: los DOS pools compitiendo en la misma tanda.**
+     *
+     * Es el caso más parecido a la realidad y el único que ninguno de los otros cuatro puede
+     * expresar: en la misma zona, la misma franja y el mismo instante, la mitad de los compradores
+     * pujan por **la última plaza de ENTRADA** y la otra mitad por **el último hueco de FIESTA**.
+     *
+     * ⚠️⚠️ **El invariante aquí tiene DOS ganadores, no uno**, y ésa es exactamente la propiedad que
+     * se mide: los pools son independientes —un cumpleaños no resta plazas de entrada ni al revés—,
+     * así que **debe entrar una de cada**. Un solo ganador significaría que un pool está robando
+     * cupo al otro; tres o más, que alguno se sobrevendió.
+     *
+     * ⚠️ Los dos productos comparten **zona y franja** a propósito. Con zonas separadas el `lockSlots`
+     * bloquearía conjuntos distintos y la carrera no llegaría a existir: no habría nada que medir.
+     *
+     * @return array{zone:Zone, type:TicketType, pack:TicketType, slot:Slot, users:array<int,User>, date:string, time:string, cart:array<int,array<string,mixed>>, carts:array<int,array<int,array<string,mixed>>>, scenario:string, probe_qty:int, expected_winners:int}
+     */
+    private function seedMixedScenario(int $workers): array
+    {
+        return DB::transaction(function () use ($workers): array {
+            $rateId = (int) (RateType::firstOrCreate(
+                ['key' => RateType::KEY_NORMAL],
+                ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0],
+            )->id);
+
+            $zone = Zone::create([
+                'slug' => 'mixed-probe-'.Str::lower(Str::random(6)),
+                'name' => ['es' => 'Mixed Probe'],
+                'is_active' => true,
+                'max_per_slot' => 1,            // UN cumpleaños
+                'max_guests_per_slot' => 0,
+                'prep_blocks_cupo' => false,
+            ]);
+
+            $schedule = app(OperatingSchedule::class);
+            [$date, $time] = $this->firstOpenSlotMoment($schedule);
+
+            $slot = null;
+            for ($h = 0; $h <= 2; $h++) {
+                $start = Carbon::parse($time)->addHours($h)->format('H:i:s');
+                $created = Slot::create([
+                    'zone_id' => $zone->id, 'date' => $date,
+                    'start_time' => $start,
+                    'end_time' => Carbon::parse($start)->addHour()->format('H:i:s'),
+                    'capacity' => 1, 'online_capacity' => 1,   // UNA plaza de entrada
+                ]);
+                if ($start === $time) {
+                    $slot = $created;
+                }
+            }
+
+            $entry = TicketType::create([
+                'name' => ['es' => 'Entrada Mixed'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
+                'duration_min' => 60, 'is_sellable' => true, 'is_active' => true,
+                'seats_per_unit' => 1, 'position' => 1,
+            ]);
+            $pack = TicketType::create([
+                'name' => ['es' => 'Cumple Mixed'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zone->id,
+                'duration_min' => 60, 'is_sellable' => true, 'is_active' => true,
+                'seats_per_unit' => 1, 'position' => 2,
+                'min_qty' => 1, 'max_qty' => 20,
+                'prep_before_min' => 0, 'prep_after_min' => 0,
+                'event_fields' => [],
+            ]);
+
+            $dayRateId = (int) app(RateResolver::class)->for(Carbon::parse($date))->id;
+            foreach ([[$entry, 1000], [$pack, 15000]] as [$product, $cents]) {
+                $product->prices()->create(['rate_type_id' => $dayRateId, 'amount_cents' => $cents]);
+                if ($dayRateId !== $rateId) {
+                    $product->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => $cents]);
+                }
+            }
+
+            $users = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $users[] = User::forceCreate([
+                    'name' => 'Mixed Buyer '.$i,
+                    'email' => 'mixed-buyer-'.Str::random(8).'@deleted.local',
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+            }
+
+            // Pares → entrada · impares → cumpleaños. Con `--workers` par, mitad y mitad.
+            $carts = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $carts[$i] = $i % 2 === 0
+                    ? [['ticket_type_id' => $entry->id, 'date' => $date, 'time' => $time, 'qty' => 1]]
+                    : [['ticket_type_id' => $pack->id, 'date' => $date, 'time' => $time, 'qty' => 8, 'event_data' => []]];
+            }
+
+            return [
+                'zone' => $zone, 'type' => $entry, 'pack' => $pack, 'slot' => $slot->fresh('zone'),
+                'users' => $users, 'date' => $date, 'time' => $time,
+                'cart' => $carts[0], 'carts' => $carts,
+                'scenario' => 'mixed',
+                'probe_qty' => 1,
+                'expected_winners' => 2,   // ⚠️ UNA entrada Y UN cumpleaños: dos pools, dos ganadores
             ];
         });
     }
@@ -358,10 +525,18 @@ class VerifyPurchaseConcurrency extends Command
     }
 
     /**
-     * Forka N procesos; cada uno intenta comprar la última plaza al mismo instante. Cada hijo
+     * Forka N procesos; cada uno intenta comprar el último hueco al mismo instante. Cada hijo
      * escribe su outcome (created / sold_out / error) a un fichero.
      *
-     * @param  array{users:array<int,User>, cart:array<int,array<string,mixed>>}  $seed
+     * ⚠️ **Cada worker lleva SU PROPIA cesta** (`$seed['carts'][$i]`), no una compartida. Los tres
+     * primeros escenarios reparten N cestas idénticas —todos pujan por el mismo hueco—, pero hay dos
+     * que no podrían existir con una sola:
+     *  · `pack-prep` — los compradores piden **horas DISTINTAS** que se solapan por el montaje y la
+     *    limpieza. Con una cesta común no habría forma de expresar «11:00 contra 12:00».
+     *  · `mixed`     — mitad compra una entrada y mitad un cumpleaños, para que **dos pools
+     *    distintos** compitan dentro de la misma tanda.
+     *
+     * @param  array{users:array<int,User>, carts:array<int,array<int,array<string,mixed>>>}  $seed
      */
     private function forkWorkers(array $seed, float $startAt, string $resultsDir): void
     {
@@ -384,7 +559,7 @@ class VerifyPurchaseConcurrency extends Command
                 $outcome = 'ERROR';
                 try {
                     $buyer = User::find($user->id);
-                    $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['cart']);
+                    $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['carts'][$i]);
                     $outcome = 'created:'.$order->id;
                 } catch (ReservationException $e) {
                     $outcome = 'sold_out:'.$e->getMessage();
@@ -437,6 +612,19 @@ class VerifyPurchaseConcurrency extends Command
         $scenario = $seed['scenario'] ?? 'entry';
         $winners = (int) ($seed['expected_winners'] ?? 1);
 
+        // ⚠️⚠️ **`mixed` no tiene un número fijo de ganadores, y descubrirlo fue el hallazgo.**
+        // Medido: dos ejecuciones idénticas dieron 2 y 1 ganadores. No es un fallo — es que los dos
+        // pools **se estorban en una dirección**: `SlotAvailability::occupancyMap` suma los `seats`
+        // de TODOS los items de la franja, packs incluidos, así que una fiesta de 8 invitados llena
+        // una franja de 1 plaza. Si la entrada llega primero, entran las dos; si llega primero el
+        // cumpleaños, la entrada se queda fuera.
+        // ▶ Pedirle «exactamente 2 ganadores» sería exigir determinismo a una carrera legítima. Lo
+        //   que SÍ debe cumplirse siempre es que **ningún tope se supere** y que **alguien venda**
+        //   (si no vendiera nadie, el escenario no habría medido nada).
+        if ($scenario === 'mixed') {
+            return $this->evaluateMixed($seed, $workers, $created, $soldOut, $errors);
+        }
+
         // ⚠️ **El invariante DURO es distinto en cada escenario, y ésa es la razón de separarlos.**
         // No basta con contar cuántas compras «crearon»: lo que importa es lo que quedó ESCRITO en la
         // BD, porque una sobreventa se ve ahí aunque los outcomes parezcan correctos.
@@ -446,6 +634,14 @@ class VerifyPurchaseConcurrency extends Command
                 'Fiestas vivas en la franja',
                 (int) $seed['zone']->max_per_slot,
                 $this->livePackLinesInSlot($seed['slot']),
+            ],
+            // ⚠️ Con preparación, las fiestas se pisan SIN compartir hora de inicio: contar solo la
+            // franja sembrada dejaría fuera a la ganadora de la hora siguiente y el invariante daría
+            // verde con DOS fiestas vendidas. Se cuentan las de todo el DÍA en la zona.
+            'pack-prep' => [
+                'Fiestas vivas en el día (se pisan por el montaje)',
+                1,
+                $this->livePackLinesInZoneDay($seed['zone']->id, $seed['date']),
             ],
             // Cupo de INVITADOS: suma de `quantity` de las fiestas vivas ≤ `zones.max_guests_per_slot`.
             'pack-guests' => [
@@ -486,24 +682,117 @@ class VerifyPurchaseConcurrency extends Command
         return $pass;
     }
 
+    /**
+     * **Evaluación del escenario MIXTO: se miden TOPES, no un número de ganadores.**
+     *
+     * ⚠️⚠️ Nació de una medida que contradijo el diseño inicial: dos ejecuciones idénticas dieron
+     * **2 y 1 ganadores**. Investigado, la causa está en `SlotAvailability::occupancyMap`, que suma
+     * los `seats` de **todos** los items de la franja —los packs también—, así que un cumpleaños de
+     * 8 invitados llena una franja de 1 plaza. El orden de llegada decide.
+     *
+     * ▶ **Y eso contradice lo que el propio dominio afirma**: el docblock de `PackAvailability` dice
+     * «POOL PROPIO … un cumpleaños **no resta plazas de entrada** ni viceversa». Medido en frío
+     * (10 plazas → una fiesta de 8 → quedan 2): **sí las resta**. La afirmación es falsa en esa
+     * dirección. Si es lo deseado —los niños ocupan sitio real— hay que decirlo en la doc; si no, es
+     * un defecto. **Es decisión de producto, no del verificador**, y por eso aquí solo se mide.
+     *
+     * @param  Collection<int,string>  $created
+     * @param  Collection<int,string>  $soldOut
+     * @param  Collection<int,string>  $errors
+     */
+    private function evaluateMixed(array $seed, int $workers, $created, $soldOut, $errors): bool
+    {
+        $entries = $this->liveEntryLinesInSlot($seed['slot']);
+        $parties = $this->livePackLinesInSlot($seed['slot']);
+        $maxEntries = (int) $seed['slot']->online_capacity;
+        $maxParties = (int) $seed['zone']->max_per_slot;
+
+        $this->newLine();
+        $this->table(
+            ['Invariante', 'Esperado', 'Real', 'OK'],
+            [
+                ['Entradas vivas en la franja', '≤ '.$maxEntries, (string) $entries, $this->ok($entries <= $maxEntries)],
+                ['Fiestas vivas en la franja', '≤ '.$maxParties, (string) $parties, $this->ok($parties <= $maxParties)],
+                ['Alguien vendió (el escenario midió algo)', '≥ 1', (string) $created->count(), $this->ok($created->count() >= 1)],
+                ['Creadas + rechazadas = compradores', (string) $workers, (string) ($created->count() + $soldOut->count()), $this->ok($created->count() + $soldOut->count() === $workers)],
+                ['Errores inesperados', '0', (string) $errors->count(), $this->ok($errors->isEmpty())],
+            ]
+        );
+
+        $pass = $entries <= $maxEntries
+            && $parties <= $maxParties
+            && $created->count() >= 1
+            && $created->count() + $soldOut->count() === $workers
+            && $errors->isEmpty();
+
+        $this->newLine();
+        if ($pass) {
+            $this->info("✅ PASA [mixed]: con {$workers} compradores pujando a la vez por DOS pools distintos, ninguno de los dos topes se superó ({$entries} entrada(s), {$parties} fiesta(s)).");
+            $this->line('<fg=gray>⚠ El nº de ganadores VARÍA entre ejecuciones y es correcto: una fiesta ocupa asientos '.
+                'de la franja, así que si llega primero deja fuera a la entrada. Ver `DECISIONES #148`.</>');
+        } else {
+            $this->error('❌ FALLA [mixed]: se ha superado alguno de los dos topes, o alguien terminó con un error inesperado.');
+        }
+
+        return $pass;
+    }
+
     /** Líneas de PACK vivas (pedido pagado o pendiente no caducado) que empiezan en esta franja. */
     private function livePackLinesInSlot(Slot $slot): int
     {
-        return (int) $this->livePackLines($slot)->count();
+        return (int) $this->liveLines($slot, TicketType::TYPE_PACK)->count();
+    }
+
+    /** Líneas de ENTRADA vivas que empiezan en esta franja. */
+    private function liveEntryLinesInSlot(Slot $slot): int
+    {
+        return (int) $this->liveLines($slot, TicketType::TYPE_ENTRY)->count();
     }
 
     /** Invitados (suma de `quantity`) de las fiestas vivas de esta franja. */
     private function livePackGuestsInSlot(Slot $slot): int
     {
-        return (int) $this->livePackLines($slot)->sum('order_items.quantity');
+        return (int) $this->liveLines($slot, TicketType::TYPE_PACK)->sum('order_items.quantity');
     }
 
-    /** @return Builder<OrderItem> */
-    private function livePackLines(Slot $slot)
+    /**
+     * Fiestas vivas de TODA la zona en un día, sin importar en qué franja empiecen.
+     *
+     * ⚠️ Es el contador que exige `pack-prep`: con la preparación bloqueando cupo, dos fiestas se
+     * pisan **sin compartir hora de inicio**. Contar solo la franja sembrada dejaría fuera a la de
+     * la hora siguiente y el invariante saldría verde con dos cumpleaños vendidos.
+     */
+    private function livePackLinesInZoneDay(int $zoneId, string $date): int
+    {
+        return (int) OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('slots', 'slots.id', '=', 'order_items.slot_id')
+            ->where('slots.zone_id', $zoneId)
+            ->where('slots.date', $date)
+            ->whereNull('order_items.cancelled_at')
+            ->where(fn ($q) => $q->where('orders.status', Order::STATUS_PAID)
+                ->orWhere(fn ($q2) => $q2->where('orders.status', Order::STATUS_PENDING)
+                    ->where(fn ($q3) => $q3->whereNull('orders.expires_at')->orWhere('orders.expires_at', '>', now()))))
+            ->count();
+    }
+
+    /**
+     * Líneas VIVAS de un TIPO concreto en una franja.
+     *
+     * ⚠️⚠️ **El filtro por `ticket_types.type` no es cosmético.** Sin él, en `mixed` el contador daba
+     * **2** donde debía dar **1**: la entrada y el cumpleaños viven en la misma franja, y sumarlos
+     * mezcla los dos pools que ese escenario existe justamente para separar. Se vio en la primera
+     * ejecución, y el número —11— parecía una sobreventa siendo un defecto del instrumento.
+     *
+     * @return Builder<OrderItem>
+     */
+    private function liveLines(Slot $slot, string $type)
     {
         return OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('ticket_types', 'ticket_types.id', '=', 'order_items.ticket_type_id')
             ->where('order_items.slot_id', $slot->id)
+            ->where('ticket_types.type', $type)
             ->whereNull('order_items.cancelled_at')
             ->where(fn ($q) => $q->where('orders.status', Order::STATUS_PAID)
                 ->orWhere(fn ($q2) => $q2->where('orders.status', Order::STATUS_PENDING)
@@ -525,11 +814,17 @@ class VerifyPurchaseConcurrency extends Command
 
         OrderItem::whereIn('order_id', $orderIds)->delete();
         Order::whereIn('id', $orderIds)->delete();
-        $seed['type']->prices()->delete();
-        // ⚠️ Por ZONA, no por el id de la franja sembrada: el escenario de packs crea VARIAS y
+
+        // ⚠️ TODOS los productos de la zona, no solo `type`: el escenario `mixed` crea DOS (una
+        // entrada y un pack) y borrar uno dejaría el otro huérfano con su precio.
+        $products = TicketType::where('zone_id', $seed['zone']->id)->get();
+        foreach ($products as $product) {
+            $product->prices()->delete();
+        }
+        // ⚠️ Por ZONA, no por el id de la franja sembrada: los escenarios de packs crean VARIAS y
         // borrar solo la primera dejaría basura en la BD de desarrollo tras cada ejecución.
         Slot::where('zone_id', $seed['zone']->id)->delete();
-        TicketType::where('id', $seed['type']->id)->delete();
+        TicketType::whereIn('id', $products->pluck('id'))->delete();
         User::whereIn('id', $userIds)->delete();
         Zone::where('id', $seed['zone']->id)->delete();
         $this->line('<fg=gray>Datos de prueba borrados.</>');

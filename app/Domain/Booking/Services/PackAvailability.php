@@ -12,10 +12,22 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Aforo de PACKS (cumpleaños) por CUPO configurable por franja (#82), con POOL PROPIO:
- * independiente de las plazas de entradas (jump/kids), un cumpleaños no resta plazas de
- * entrada ni viceversa. Es el gemelo de {@see SlotAvailability}, pero con DOS topes por
- * franja en lugar de uno:
+ * Aforo de PACKS (cumpleaños) por CUPO configurable por franja (#82), con POOL PROPIO para
+ * DECIDIR si cabe una fiesta: este servicio no mira los asientos de la franja, solo su cupo.
+ * Es el gemelo de {@see SlotAvailability}, pero con DOS topes por franja en lugar de uno:
+ *
+ * ❗❗ **CORRECCIÓN (2026-08-25, `DECISIONES #148`): aquí decía «un cumpleaños no resta plazas de
+ * entrada ni viceversa», y la mitad de esa frase es FALSA.** Medido en frío: una franja con 10
+ * plazas y una fiesta de 8 invitados deja **2 plazas de entrada**, no 10.
+ * ▶ La causa: {@see SlotAvailability::occupancyMap()} suma los `seats` de **todos** los
+ * `order_items` de la zona/día **sin filtrar por tipo**, y una línea de pack lleva `seats` como
+ * cualquier otra. Así que la independencia es **de una sola dirección**: una entrada no consume
+ * cupo de fiestas, pero **una fiesta sí consume asientos de entrada**.
+ * ▶ **Puede ser lo correcto** —los niños de un cumpleaños están físicamente en el parque y ocupan
+ * sitio—, pero **no estaba dicho en ninguna parte y el texto afirmaba lo contrario**. Si se decide
+ * que no debe ser así, el arreglo es filtrar por tipo en `occupancyMap`, no aquí.
+ * ▶ Lo destapó el escenario `mixed` de `purchase:verify-oversell`, cuyo número de ganadores VARÍA
+ * entre ejecuciones justo por esto. Lo fija `PackConsumesEntrySeatsTest`.
  *   - `packs.max_per_slot`        → nº de cumpleaños por franja (0 = sin tope).
  *   - `packs.max_guests_per_slot` → nº de niños totales por franja (0 = sin tope).
  *

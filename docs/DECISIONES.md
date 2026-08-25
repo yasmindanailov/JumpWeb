@@ -7753,3 +7753,85 @@ fallar no ha demostrado que pueda.
   `lockSlots` bloquee zona×fecha lo hace muy improbable, pero **improbable no es medido**.
 - **La mezcla**: una cesta con entrada + pack a la vez, compitiendo por dos pools distintos.
 - **`prep_blocks_cupo` activo**, que es el valor por defecto en producción.
+
+---
+
+## #148 · 2026-08-25 · Los tres huecos que `#147` dejó escritos, cerrados — y uno destapó que los DOS aforos no son independientes
+
+`#147` cerró el aforo de packs bajo concurrencia y dejó **tres cosas escritas como no medidas**, a
+propósito, para que nadie las diera por hechas. Ésta las cierra. **Y una de ellas encontró algo.**
+
+### Los dos escenarios nuevos
+
+- **`pack-prep`** — la fiesta abarca **varias franjas** (120 min de duración + 60 de montaje + 60 de
+  limpieza) y los compradores piden **horas DISTINTAS que se pisan**: una fiesta de las 11:00 ocupa
+  de 10:00 a 14:00 y otra de las 12:00 ocuparía de 11:00 a 15:00.
+  ⚠️⚠️ **Y `prep_blocks_cupo` va ACTIVO, que es el valor por defecto en producción.** Hasta ahora se
+  medía siempre con la preparación apagada — o sea, con una configuración que ningún parque usa.
+  ▶ **Exigió que cada worker lleve su PROPIA cesta**: con una cesta común no hay forma de expresar
+  «11:00 contra 12:00», y ése era el caso que ningún escenario podía representar.
+  ▶ Y su contador cuenta las fiestas **de todo el día en la zona**, no las de la franja sembrada: al
+  pisarse sin compartir hora de inicio, contar una sola franja habría dado verde con dos vendidas.
+
+- **`mixed`** — una entrada y un cumpleaños compitiendo **a la vez**, en la misma zona y franja.
+
+### ❗❗ Lo que `mixed` destapó, y no se buscaba
+
+**Dos ejecuciones idénticas dieron 2 y 1 ganadores.** No es un fallo del verificador: es que **los
+dos aforos NO son independientes**, y lo son **en una sola dirección**.
+
+▶ **Medido en frío**, sin concurrencia: franja de **10 plazas** → se crea una fiesta de **8
+invitados** → quedan **2 plazas de entrada**.
+▶ **La causa**: `SlotAvailability::occupancyMap()` suma los `seats` de **todos** los `order_items` de
+la zona/día **sin filtrar por tipo**, y una línea de pack lleva `seats` como cualquier otra.
+▶ **La asimetría**: una entrada **no** consume cupo de fiestas; una fiesta **sí** consume asientos
+de entrada. Por eso el orden de llegada decide, y por eso el nº de ganadores varía.
+
+❗ **Y contradecía la doc.** El docblock de `PackAvailability` afirmaba: «POOL PROPIO … un cumpleaños
+**no resta plazas de entrada** ni viceversa». **La mitad de esa frase era falsa** y llevaba ahí desde
+`#82`. Corregida, con la medida y la causa dentro.
+
+⚠️ **PENDIENTE DEL OWNER, y es de producto, no de ingeniería**: ¿debe una fiesta ocupar plazas de
+entrada? **Puede ser lo correcto** —los niños están físicamente en el parque y ocupan sitio— y
+entonces solo faltaba decirlo. O puede ser un defecto, y el arreglo sería filtrar por tipo en
+`occupancyMap`. **El verificador no decide eso: lo mide y lo deja escrito.**
+▶ Lo fija `PackConsumesEntrySeatsTest`, que **no juzga**: fija el comportamiento medido en sus dos
+direcciones para que el día que cambie, cambie porque alguien lo decidió.
+
+### Y por qué `mixed` mide TOPES y no ganadores
+
+El primer diseño exigía «exactamente 2 ganadores» y **falló**, correctamente: pedía determinismo a
+una carrera legítima. El invariante bueno es el que se cumple siempre:
+**ningún tope superado** (`entradas ≤ online_capacity`, `fiestas ≤ max_per_slot`) **y al menos una
+venta** —si no vendiera nadie, el escenario no habría medido nada—.
+▶ Es la misma lección que la guarda del instrumento de `#147`, aplicada al invariante en vez de a la
+siembra: **un criterio que no puede fallar tampoco puede demostrar nada.**
+
+### Lo MEDIDO
+
+Sobre **MySQL real**, `pcntl_fork`, 8 y 16 workers — los **cinco** escenarios:
+
+| Escenario | Resultado |
+|---|---|
+| `entry` · `pack` · `pack-guests` | 1 compra · N−1 `sold_out` (sin cambios respecto a `#147`) |
+| **`pack-prep`** | **1 fiesta viva en el día**, aunque los compradores pedían dos horas distintas |
+| **`mixed`** | ningún tope superado; **ganadores 2, 2 y 1 en tres ejecuciones** — y es correcto |
+
+### El CONTROL NEGATIVO de los dos nuevos
+
+Retirado el `lockForUpdate()` de `OrderCreator::lockSlots`:
+
+| Escenario | Con el lock retirado |
+|---|---|
+| `pack-prep` | **8 fiestas donde cabía 1** |
+| `mixed` | **4 entradas y 4 fiestas**, donde cabía **1 de cada** — los dos pools sobrevendidos |
+
+▶ `OrderCreator` restaurado y verificado por **md5** y por **`git status`**.
+
+### Un defecto del instrumento que se vio y se arregló
+
+El primer contador de `mixed` sumaba asientos y líneas sin filtrar por tipo, y dio **11** donde debía
+dar **2**. **Parecía una sobreventa y era un fallo de la medida.** Hoy `liveLines()` filtra por
+`ticket_types.type` y su docblock lo explica.
+▶ La regla que esto deja: cuando un verificador da un número raro, **lo primero que hay que dudar es
+del contador**, no del sistema.

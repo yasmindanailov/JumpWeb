@@ -38,6 +38,9 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
         'entry' => 'asientos de la franja (SlotAvailability)',
         'pack' => 'cupo de FIESTAS por franja (zones.max_per_slot)',
         'pack-guests' => 'cupo de INVITADOS por franja (zones.max_guests_per_slot)',
+        'pack-prep' => 'cupo de fiestas con la fiesta abarcando VARIAS franjas — montaje y limpieza '.
+            'ACTIVOS, que es la configuración por defecto en producción',
+        'mixed' => 'los DOS pools compitiendo a la vez en la misma zona y franja',
     ];
 
     public function test_the_verifier_declares_a_scenario_for_every_quota(): void
@@ -79,6 +82,10 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
         foreach ([
             'livePackLinesInSlot' => 'cuenta FIESTAS vivas en la franja',
             'livePackGuestsInSlot' => 'suma los INVITADOS vivos de la franja',
+            'liveEntryLinesInSlot' => 'cuenta ENTRADAS vivas en la franja (escenario mixto)',
+            'livePackLinesInZoneDay' => 'cuenta las fiestas de TODO EL DÍA, que es lo que exige el '.
+                'escenario con montaje: dos fiestas se pisan sin compartir hora de inicio',
+            'evaluateMixed' => 'evalúa el escenario mixto por TOPES y no por nº de ganadores',
         ] as $method => $what) {
             $this->assertTrue(
                 $class->hasMethod($method),
