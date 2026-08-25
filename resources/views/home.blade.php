@@ -175,7 +175,15 @@
         </div>
 
         @foreach ($zones as $zone)
-            <div class="slider" x-ref="slider_{{ $zone->accent }}" data-zone="{{ $zone->accent }}" data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}" x-show="zone==='{{ $zone->accent }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
+            {{-- ⚠️ El slider lleva la PALETA YA COMPUESTA (`data-zone-style`, `DECISIONES #139`).
+                 `data-color` traía solo el primario, así que el JS tenía que (a) quemar el secundario
+                 a la paleta del primer cliente y (b) **repetir la fórmula de contraste de
+                 `ThemeSettings::onBrand()`** en JavaScript. Dos definiciones de la misma regla es
+                 como empiezan las divergencias que el tema existe para cerrar. --}}
+            <div class="slider" x-ref="slider_{{ $zone->accent }}" data-zone="{{ $zone->accent }}"
+                 data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}"
+                 data-zone-style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
+                 x-show="zone==='{{ $zone->accent }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
                 @foreach ($zone->attractions as $ride)
                     <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
                         <div class="ride-card__viz">

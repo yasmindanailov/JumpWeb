@@ -500,9 +500,13 @@ document.addEventListener('alpine:init', () => {
         age: cfg.age ?? '',
         date: '',
         time: cfg.time || '17:00',
-        // Color de la tarjeta (#231): selector independiente del pack (swatches Jump/Kids).
-        // El blade lo lee para fijar --inv/--inv2 de la `.bd-card`.
-        invZone: cfg.invZone || 'jump',
+        // Color de la tarjeta (#231): selector INDEPENDIENTE del pack.
+        // ⚠️ Guardaba la cadena `'jump'` y el blade la comparaba con ternarios, así que solo sabía
+        // pintar dos zonas —las del primer cliente— y un parque con otras se quedaba con una sola
+        // opción y un color ajeno (`DECISIONES #139`). Ahora es la CLAVE de una paleta y el estilo
+        // completo llega en `invStyles`: el blade solo lo transporta, sin decidir nada.
+        invZone: cfg.invZone || '',
+        invStyles: cfg.invStyles || {},
         busy: false,
         park: cfg.park || '',
         labels: cfg.labels || {},
@@ -812,28 +816,32 @@ document.addEventListener('alpine:init', () => {
             this.$nextTick(() => this.updateProgress());
         },
 
-        // Tiñe la sección de atracciones con el color de la zona activa (white-label: el color
-        // sale del `data-color` del slider, que lo trae de `zones.color`). Scoped a #rides para
-        // no recolorear toda la página (el resto se queda en la marca global). El secundario
-        // sigue el acento del mockup (amarillo Jump / rosa Kids).
+        /**
+         * Tiñe la sección de atracciones con la paleta de la zona activa. Scoped a `#rides` para no
+         * recolorear la página entera (el resto se queda en la marca global).
+         *
+         * ⚠️⚠️ **Aquí se calculaba el contraste a mano y se quemaba el secundario**
+         * (`DECISIONES #139`). Eran dos defectos con la misma causa: el servidor mandaba solo el
+         * color primario, así que este método tenía que (a) elegir `--zone-2` con un ternario entre
+         * las dos zonas del PRIMER cliente y (b) **repetir la fórmula de luminancia de
+         * `ThemeSettings::onBrand()`** en JavaScript. Una regla escrita dos veces son dos reglas: el
+         * día que una cambie, la otra no se entera y nadie lo nota hasta que un color queda ilegible.
+         *
+         * ▶ Ahora el slider trae la paleta **ya compuesta** por el dominio y aquí solo se aplica.
+         */
         applyZoneAccent() {
             const rides = document.getElementById('rides');
             if (!rides) return;
             const slider = rides.querySelector('.slider[data-zone="' + this.zone + '"]');
-            const color = slider && slider.dataset.color;
-            if (color) {
-                rides.style.setProperty('--zone-1', color);
-                // --on-brand de la zona (mirror de ThemeSettings::onBrand): blanco salvo que el
-                // color sea tan claro que el blanco no contraste → la lima de Kids recibe oscuro.
-                const m = /^#?([0-9a-fA-F]{6})$/.exec(color.trim());
-                if (m) {
-                    const n = parseInt(m[1], 16);
-                    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-                    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
-                    rides.style.setProperty('--on-brand', 1.05 / (L + 0.05) >= 3 ? '#FFFFFF' : '#14130F');
-                }
+            const style = slider && slider.dataset.zoneStyle;
+            if (!style) return;
+
+            for (const decl of style.split(';')) {
+                const i = decl.indexOf(':');
+                if (i < 1) continue;
+                const prop = decl.slice(0, i).trim();
+                if (prop.startsWith('--')) rides.style.setProperty(prop, decl.slice(i + 1).trim());
             }
-            rides.style.setProperty('--zone-2', this.zone === 'kids' ? 'var(--kids-2)' : 'var(--jump-2)');
         },
 
         goToRides(z) {

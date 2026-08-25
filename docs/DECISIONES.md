@@ -6910,3 +6910,73 @@ ve — más fuerte, y válido para cualquier acento.
 
 **Verificado sobre HTTP real**: `/precios` sirve un estilo por zona con su color propio —`cap` ya sale
 naranja en pestaña **y** tarjeta— y **cero clases acopladas a zona** en el HTML servido.
+
+## #139 · 2026-08-25 · TANDA A · La paleta del primer cliente sale del producto — y el acento de un pack deja de deducirse de su NOMBRE
+
+**Contexto.** Segundo corte de la tanda A, continuación de `#138`. Cierra lo que aquél dejó anotado:
+el diseñador de invitaciones era **lo último** que nombraba la paleta del cliente origen.
+
+**⚠️⚠️ Y lo que había debajo era peor que el CSS.** El acento de un pack se decidía así:
+
+    $packAccent = fn ($p) => str_contains(Str::lower($p->tr('name')), 'kids') ? 'kids' : 'jump';
+
+**Buscar una subcadena en el NOMBRE del producto.** Funcionaba con los dos packs del primer cliente y
+con nadie más: en una instalación cuyos packs se llamen de otra forma **todos** caían al acento
+`jump` y la sección entera se pintaba con el naranja de una marca ajena, sin que nada fallara. Y la
+respuesta estaba en la BD todo el tiempo — un pack tiene `zone_id`, y las dos rutas que pintan esa
+sección ya cargaban la relación.
+
+**Lo que se retira, y ya no vuelve:**
+
+- el heurístico del nombre → la paleta sale de la **zona del pack**, compuesta por `zoneStyle()`;
+- **tres ternarios** en el diseñador de invitaciones que nombraban las cuatro variables de las dos
+  zonas del origen → la paleta se pinta en el escenario y la tarjeta la repite en línea (html2canvas
+  la captura resolviendo `--inv`/`--inv2` sobre ella);
+- **dos botones escritos a mano** con las palabras «Jump» y «Kids» dentro → **uno por zona con pack**;
+- ⚠️ **una copia de la fórmula de contraste en JavaScript.** `applyZoneAccent()` recibía solo el color
+  primario, así que tenía que elegir `--zone-2` con un ternario **y repetir la luminancia de
+  `ThemeSettings::onBrand()`**. Ahora el slider trae la paleta ya compuesta (`data-zone-style`) y el
+  JS solo la aplica: una regla escrita dos veces son dos reglas, y la segunda no se entera cuando la
+  primera cambia;
+- y del `:root`, `--jump-1`/`--kids-1`/`--on-jump`/`--on-kids`. **Que `cssRootDeclarations()` tuviera
+  que conocer los nombres de las zonas de alguien era la señal de que el color viajaba por el sitio
+  equivocado.**
+
+▶ **`ZoneAccentIsNotAClassNameTest` pasa a ser ABSOLUTA**: su lista de excepciones queda **vacía**.
+
+**⚠️ DOS trampas de tokenización pagadas, de la misma familia que el `@endif` de `#138`:**
+
+1. **PHP admite los bytes altos en los identificadores**, así que `"…«$acento»…"` se lee como la
+   variable `$acento»` y da «Undefined variable». Con llaves, `{$acento}`, resuelto.
+2. **La guarda saltaba con sus PROPIOS COMENTARIOS**: el `grep` casaba la nota que explica por qué
+   esos tokens se retiraron. Una guarda que se dispara con su documentación obliga a borrar el
+   porqué y acaba silenciada — ahora se limpian los comentarios antes de mirar.
+
+**❗ LO QUE ESTE CORTE DESTAPÓ Y NO SE DECIDE AQUÍ: el color de un pack, y por debajo, el
+acoplamiento pack↔zona.**
+
+Medido: los dos packs de cumpleaños **comparten la zona `cumpleanos`** (magenta), así que con el
+acento tomado de la zona **salen del mismo color** — el heurístico del nombre los distinguía en
+naranja y lima. No hay dónde apoyarse: `wristband_color` es texto libre en castellano («Naranja»,
+«Verde») para la pulsera física y **no lo consume ningún código**.
+
+▶ **Planteado por el owner** (2026-08-25): el modelo que quiere es *entrada por zona, con el cupo de
+la zona* y *pack con cupo PROPIO*, y no solo de cumpleaños —excursión de colegio, comunión…—, con la
+landing anunciando **un** pack y el resto en `/servicios`, **alternable**.
+
+⚠️⚠️ **Y la medición cambia el diagnóstico: la mayor parte YA ESTÁ CONSTRUIDA.**
+
+| Lo que el owner pide | Estado medido |
+|---|---|
+| El pack tiene cupo **propio**, distinto del de las entradas | ✅ ya: `packs.max_per_slot` y `packs.max_guests_per_slot`, con **override por zona** (`zones.max_per_slot`, `zones.max_guests_per_slot`) |
+| Poder **alternar** qué pack va a la landing y cuál a `/servicios` | ✅ ya existe… **pero por AUSENCIA**: `birthdaySurfacePacks()` filtra `whereDoesntHave('landingService')`, o sea que crear una ficha de servicio **mueve el pack de sitio**. Nadie lo adivinaría |
+| Packs que no sean de cumpleaños | ⚠️ el MODELO aguanta N tipos; lo que está casado con «cumpleaños» es el **vocabulario y la superficie**: el scope, la sección y los textos |
+| El acento del pack | ⚠️ va con la zona, y por eso duele: la zona es dónde se celebra, no la identidad comercial del pack |
+
+▶ **Conclusión honesta: no hace falta un cambio de arquitectura, hace falta hacer EXPLÍCITO lo que ya
+es implícito** —la conmutación por ausencia de `LandingService`— y **desacoplar el vocabulario**
+(«cumpleaños» → «pack destacado en la landing»). Queda como entrada de la **tanda C**, que es la que
+toca el catálogo, y **no se decide sobre la marcha**.
+⚠️ Consecuencia visible mientras tanto: los dos packs de cumpleaños se pintan del color de su zona
+(magenta) en vez de naranja y lima. Es lo coherente con el modelo de hoy —«el color va con la zona»—
+y se revierte solo cuando el pack tenga identidad propia, si el owner decide dárseela.

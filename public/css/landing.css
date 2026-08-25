@@ -54,13 +54,11 @@
   --line: rgba(20, 19, 15, 0.10);
   --line-strong: rgba(20, 19, 15, 0.22);
 
-  /* Jump zone accents */
-  --jump-1: #FF5B22;
-  --jump-2: #FFE14A;
-
-  /* Kids zone accents */
-  --kids-1: #C6FF3A;
-  --kids-2: #FF77C7;
+  /* ⚠️ AQUÍ VIVÍAN `--jump-1/2` y `--kids-1/2`: la paleta de las dos zonas del PRIMER CLIENTE,
+     escrita en el CSS del producto y heredada por toda instalación. Se retiraron el 2026-08-25
+     (`DECISIONES #139`), cuando dejó de consumirlas nadie: el acento de cada zona lo pinta el
+     servidor en línea como `--zone-1`/`--zone-2`, sacado de `zones.color` y `zones.color_secondary`.
+     No las devuelvas: `ZoneAccentIsNotAClassNameTest` las persigue. */
 
   /* Acento ACTIVO. Lo fija el servidor en `<style id="jj-theme">` desde `theme.brand` y
      `theme.brand_secondary` (`ThemeSettings`), y cada zona lo re-escopa en línea sobre su elemento.
@@ -1851,7 +1849,10 @@ input[type="radio"]:focus-visible,
    03 proceso. Acento `--bda` = pack activo (lo fija el blade inline). Omitidos
    del mockup: `.bd-day` (decisión clienta), `.bd-toast`/`.bd-main` (demo).
    ==================================================================== */
-.bd-page { --bda: var(--jump-1); }
+/* ⚠️ `--bda` es un ALIAS del acento activo (`DECISIONES #139`). Valía `var(--jump-1)`: la paleta de
+   una zona del primer cliente, así que una instalación sin una zona con ese acento perdía el color de
+   toda la sección de cumpleaños. El acento por pack lo pinta el blade en línea. */
+.bd-page { --bda: var(--zone-1); }
 
 /* ---- 01 · CUMPLEAÑOS — banda ---- */
 .bd-sec1 { padding: 64px 0 0; }
@@ -2049,8 +2050,9 @@ input[type="radio"]:focus-visible,
 }
 .bd-swatch:hover { transform: translateY(-2px); }
 .bd-swatch .dot { width: 12px; height: 12px; border-radius: 50%; }
-.bd-swatch--jump .dot { background: var(--jump-1); }
-.bd-swatch--kids .dot { background: var(--kids-1); }
+/* El punto del swatch toma el acento que la propia paleta pinta en línea. Antes había una regla por
+   zona —`--jump` y `--kids`— y un parque con otras zonas se quedaba con puntos invisibles. */
+.bd-swatch .dot { background: var(--zone-1); }
 .bd-swatch.is-active { border-color: var(--fg); background: var(--fg); color: var(--bg); }
 .bd-editor__actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: auto; }
 .bd-btn { display: inline-flex; align-items: center; gap: 9px; border-radius: var(--r-btn); padding: 13px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.25s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
@@ -2063,9 +2065,11 @@ input[type="radio"]:focus-visible,
 .bd-btn:active:not(:disabled) { transform: translateY(0) scale(0.97); transition: transform 0.08s ease; }
 .bd-editor__hint { font-size: 11.5px; color: var(--fg-mute); margin: 0; }
 .bd-stage { background: var(--bg-soft); border-radius: var(--r-lg); border: 1px solid var(--line); display: grid; place-items: center; padding: clamp(32px, 4vw, 56px); position: relative; overflow: hidden; }
-.bd-stage__shape { position: absolute; pointer-events: none; background: var(--bda); transition: background-color 0.45s ease; }
+.bd-stage__shape { position: absolute; pointer-events: none; background: var(--zone-1); transition: background-color 0.45s ease; }
 .bd-card {
-  --inv: var(--bda); --inv2: var(--bda);
+  /* La tarjeta usa la paleta COMPLETA de la zona elegida: `--inv2` valía lo mismo que `--inv`
+     porque el segundo color no tenía dónde vivir hasta `#138`. */
+  --inv: var(--zone-1); --inv2: var(--zone-2);
   width: min(560px, 100%); background: #FFFFFF; border-radius: 18px;
   box-shadow: 0 30px 60px -16px rgba(20,19,15,0.30), 0 6px 16px rgba(20,19,15,0.10);
   transform: rotate(-2deg); position: relative; overflow: hidden;

@@ -81,22 +81,40 @@ class ThemeColorTest extends TestCase
         $this->assertSame('#FF5B22', ThemeSettings::zoneColor('inexistente'));
     }
 
-    public function test_css_root_declarations_contains_brand_and_zone_accents(): void
+    /**
+     * ⚠️ **El `:root` lleva LA MARCA, y solo la marca** (`DECISIONES #139`).
+     *
+     * Emitía además `--jump-1`, `--kids-1`, `--on-jump` y `--on-kids`: los acentos de las dos zonas
+     * del PRIMER cliente, con sus nombres, en toda instalación. Que este método tuviera que conocer
+     * los nombres de las zonas de alguien era la señal de que el color viajaba por el sitio
+     * equivocado — las zonas son datos, y pueden ser dos, cinco o llamarse de otra forma.
+     */
+    public function test_css_root_declarations_carry_the_brand_and_nothing_zone_specific(): void
     {
         Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
         Zone::where('accent', 'jump')->update(['color' => '#111111']);
-        Zone::where('accent', 'kids')->update(['color' => '#222222']);
 
         $css = ThemeSettings::cssRootDeclarations();
         $this->assertStringContainsString('--brand:#0A0B0C', $css);
         $this->assertStringContainsString('--zone-1:var(--brand)', $css, 'lo genérico de la web sigue la marca');
-        $this->assertStringContainsString('--jump-1:#111111', $css, 'el acento Jump deriva del color de la zona');
-        $this->assertStringContainsString('--kids-1:#222222', $css);
+        $this->assertStringContainsString('--zone-2:var(--brand-2)', $css);
+
+        foreach (['jump', 'kids'] as $acento) {
+            $this->assertStringNotContainsString(
+                $acento, $css,
+                // ⚠️ `{$acento}` con llaves y no `$acento»`: PHP admite los bytes altos en los
+                // identificadores, así que la comilla angular se traga dentro del nombre de la
+                // variable y sale «Undefined variable». Misma familia que la trampa del `@endif`
+                // pegado de `#138`: un carácter contiguo cambia la tokenización.
+                "el `:root` vuelve a nombrar la zona «{$acento}»: una instalación con otras zonas hereda una marca ajena",
+            );
+        }
     }
 
     // ─────────────────────────── Web ────────────────────────────────
 
-    public function test_landing_injects_theme_into_root(): void
+    /** El tema global llega al `:root`, y el color de CADA zona llega en su propio elemento. */
+    public function test_landing_injects_the_brand_into_root_and_each_zone_paints_its_own(): void
     {
         Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
         Zone::where('accent', 'jump')->update(['color' => '#111111']);
@@ -104,7 +122,10 @@ class ThemeColorTest extends TestCase
         $res = $this->get('/')->assertOk();
         $res->assertSee('--brand:#0A0B0C', false);
         $res->assertSee('--zone-1:var(--brand)', false);
-        $res->assertSee('--jump-1:#111111', false);
+
+        // El acento de la zona ya no viaja por el `:root`: viaja con la zona.
+        $jump = Zone::where('accent', 'jump')->firstOrFail();
+        $res->assertSee(ThemeSettings::zoneStyle($jump->color, $jump->color_secondary, $jump->accent), false);
     }
 
     // ───────────────────────── Settings ─────────────────────────────

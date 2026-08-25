@@ -81,18 +81,23 @@ class ZoneAccentIsNotAClassNameTest extends TestCase
      * no es la suya. La lista de abajo es lo que falta por retirar, con su motivo; **quitar una
      * entrada está bien, añadirla no**.
      *
+     * ✅ **VACÍA desde el 2026-08-25** (`DECISIONES #139`): el diseñador de invitaciones era el último
+     * y ya no nombra ninguna zona. A partir de aquí la guarda es absoluta — cualquier reaparición
+     * cae, sin excepciones que negociar.
+     *
      * @var array<string,string>
      */
-    private const PALETA_HEREDADA_PENDIENTE = [
-        'public/css/landing.css' => 'el diseñador de invitaciones (`.bd-*`) sigue con dos zonas fijas',
-    ];
+    private const PALETA_HEREDADA_PENDIENTE = [];
 
     public function test_the_first_clients_palette_only_shrinks(): void
     {
         $conReferencias = [];
 
         foreach (glob(base_path('public/css/*.css')) ?: [] as $ruta) {
-            $codigo = (string) file_get_contents($ruta);
+            // ⚠️ Se miran las REGLAS, no los comentarios. Sin esto la guarda saltaba con la nota que
+            // explica por qué esos tokens se retiraron: una guarda que se dispara con su propia
+            // documentación obliga a borrar el porqué, y acaba silenciada.
+            $codigo = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents($ruta));
             $n = preg_match_all('/var\(--(?:jump|kids)-\d/', $codigo);
 
             if ($n > 0) {

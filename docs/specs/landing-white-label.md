@@ -224,6 +224,25 @@ tramo de tamaño de grupo**. No es un pack de cumpleaños ni una entrada suelta.
    operador. Se apoya en lo que ya existe (`ManualOrderFulfiller` crea pedidos firmes sin hold,
    `AFORO-10`), no en un flujo nuevo de checkout.
 
+#### ⚠️ Y ENTRA UNA SEGUNDA MITAD, planteada por el owner el 2026-08-25 (`DECISIONES #139`)
+
+El modelo de catálogo que quiere: **entrada por zona, con el cupo de la zona**, y **pack con cupo
+PROPIO** —y no solo de cumpleaños: excursión de colegio, comunión…—, con la landing anunciando **un**
+pack destacado y el resto en `/servicios`, **alternable**.
+
+⚠️⚠️ **Medido, y cambia el diagnóstico: la mayor parte ya está construida.**
+
+| Lo que pide | Estado medido |
+|---|---|
+| Pack con cupo propio | ✅ `packs.max_per_slot` / `packs.max_guests_per_slot`, con **override por zona** |
+| Alternar landing ↔ `/servicios` | ✅ existe… **por AUSENCIA**: `birthdaySurfacePacks()` filtra `whereDoesntHave('landingService')`, así que **crear una ficha de servicio mueve el pack de sitio**. Nadie lo adivinaría |
+| Packs que no sean de cumpleaños | ⚠️ el MODELO aguanta N tipos; lo casado con «cumpleaños» es el **vocabulario y la superficie** (scope, sección, textos) |
+| Identidad visual del pack | ⚠️ va con la ZONA — que es dónde se celebra, no lo que el pack ES comercialmente |
+
+▶ **No hace falta un cambio de arquitectura: hace falta hacer EXPLÍCITO lo que ya es implícito** —la
+conmutación por ausencia de `LandingService`— y **desacoplar el vocabulario**. Es trabajo de esta
+tanda C, y **se diseña en su spec propia**, no aquí.
+
 #### Y entonces `/servicios` deja de tener datos propios
 
 `landing_services` se queda con lo **editorial** (`title`, `body`, `image`, `accent_word`, `slug`) y

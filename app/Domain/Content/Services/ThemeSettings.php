@@ -130,24 +130,25 @@ class ThemeSettings
     }
 
     /**
-     * Declaraciones CSS para el `:root` que inyecta el layout público (sobre `landing.css`):
-     *  - `--brand` y `--zone-1 = var(--brand)`: lo genérico de la web sigue la marca global.
-     *  - `--jump-1`/`--kids-1`: los acentos por zona derivan de `zones.color` (las tarjetas de
-     *    la sección «Zonas» los consumen). El swap de la sección «Atracciones» se hace aparte
-     *    (scoped a `#rides`), no aquí.
+     * Declaraciones CSS para el `:root` que inyecta el layout público (sobre `landing.css`).
+     *
+     * **La MARCA, y solo la marca**: `--brand` / `--brand-2` y los `--zone-*` de página, que las
+     * siguen. Lo genérico de la web se tiñe con la marca global; **cada zona re-escopa lo suyo en
+     * línea** sobre su elemento con {@see self::zoneStyle()}.
+     *
+     * ⚠️⚠️ **Aquí se emitían además `--jump-1`, `--kids-1`, `--on-jump` y `--on-kids`**, o sea los
+     * acentos de las DOS zonas del primer cliente, con sus nombres, para toda instalación
+     * (`DECISIONES #139`). Se fueron cuando dejó de consumirlas nadie. Que este método deba conocer
+     * los nombres de las zonas de alguien es la señal de que el color viaja por el sitio equivocado:
+     * las zonas son DATOS y pueden ser dos, cinco o llamarse de otra forma.
      */
     public static function cssRootDeclarations(): string
     {
         $brand = self::brand();
-        $onBrand = self::onBrand($brand);
-        $jump = self::zoneColor('jump');
-        $kids = self::zoneColor('kids');
-        $onJump = self::onBrand($jump);
-        $onKids = self::onBrand($kids);
 
         return "--brand:{$brand};--brand-2:".self::brandSecondary().';'
-            .'--zone-1:var(--brand);--zone-2:var(--brand-2);'."--on-brand:{$onBrand};"
-            ."--jump-1:{$jump};--kids-1:{$kids};--on-jump:{$onJump};--on-kids:{$onKids};";
+            .'--zone-1:var(--brand);--zone-2:var(--brand-2);'
+            .'--on-brand:'.self::onBrand($brand).';';
     }
 
     /**

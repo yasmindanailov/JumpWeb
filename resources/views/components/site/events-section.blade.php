@@ -17,7 +17,36 @@
      más»/opciones a elegir) y la tarjeta de invitación editable (`birthdayInvite` + html2canvas).
      El acento `--bda` (y `--zone-1/2` para los complementos) lo fija el pack seleccionado. --}}
 @php
-    $packAccent = fn ($p) => str_contains(\Illuminate\Support\Str::lower($p->tr('name')), 'kids') ? 'kids' : 'jump';
+    /**
+     * ⚠️⚠️ **La paleta de un pack sale de SU ZONA, no de su nombre** (`DECISIONES #139`).
+     *
+     * Aquí vivía `$packAccent`, que buscaba la subcadena «kids» en el nombre del producto para
+     * decidir su acento. Funcionaba con los dos packs del primer cliente y **con nadie más**: en una
+     * instalación cuyos packs se llamen de otra forma, TODOS caían al acento `jump` y la sección
+     * entera se pintaba con el naranja de una marca ajena, sin que nada fallara.
+     *
+     * Un pack tiene `zone_id` y las dos rutas que pintan esta sección ya cargan la relación, así que
+     * la respuesta estaba en la BD todo el tiempo. La composición es la ÚNICA del tema.
+     */
+    $packStyle = fn ($p): string => \App\Domain\Content\Services\ThemeSettings::zoneStyle(
+        $p->zone?->color, $p->zone?->color_secondary, (string) ($p->zone?->accent ?? ''),
+    );
+
+    /**
+     * Las paletas que ofrece el selector de color de la invitación: **una por zona con pack**, no
+     * dos fijas. Antes eran dos botones escritos a mano, con las palabras «Jump» y «Kids» dentro.
+     */
+    $invitePalettes = $packages
+        ->map(fn ($p) => $p->zone)
+        ->filter()
+        ->unique('id')
+        ->values()
+        ->map(fn ($z): array => [
+            'key' => (string) $z->id,
+            'label' => $z->tr('name'),
+            'style' => \App\Domain\Content\Services\ThemeSettings::zoneStyle($z->color, $z->color_secondary, (string) $z->accent),
+        ]);
+
     $firstPack = $packages->first();
     // Foto de la zona cumpleaños (#231): todos los packs comparten la zona operativa «cumpleanos».
     $cumpleImage = $firstPack?->zone?->image;
@@ -38,6 +67,12 @@
     $inviteCfg = [
         'park' => $parkName,
         'time' => '17:00',
+        // ⚠️ La paleta inicial y el mapa de paletas salen de las ZONAS, no de dos claves fijas
+        // (`DECISIONES #139`). `invZone` guardaba la cadena `'jump'` y el blade la comparaba con un
+        // ternario: con eso, un parque sin una zona llamada así se quedaba con una sola opción y el
+        // color de otra marca.
+        'invZone' => (string) ($invitePalettes->first()['key'] ?? ''),
+        'invStyles' => $invitePalettes->mapWithKeys(fn (array $p): array => [$p['key'] => $p['style']])->all(),
         'name' => __('landing.events.invite.sample_name'),
         'age' => 7,
         'labels' => [
@@ -49,12 +84,13 @@
     ];
 @endphp
 
-{{-- El pack se identifica por su ID ÚNICO (#194); el accent solo decide el color del bloque. --}}
+{{-- El pack se identifica por su ID ÚNICO (#194).
+     ⚠️ El color del bloque llega YA COMPUESTO por pack (`DECISIONES #139`): antes había un ternario
+     que preguntaba «¿el acento es kids?» y escribía a mano seis tokens, así que solo sabía pintar dos
+     zonas. Ahora es un mapa `id → estilo`, y `--bda` es un alias de `--zone-1` en el CSS. --}}
 <div class="bd-page"
-     x-data="{ pack: '{{ $firstPack->id }}', accents: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => $packAccent($p)])), bons: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::zoneColor($packAccent($p)))])), minq: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => (int) $p->min_qty])) }"
-     :style="(accents[pack] === 'kids'
-        ? '--bda: var(--kids-1); --zone-1: var(--kids-1); --zone-2: var(--kids-2)'
-        : '--bda: var(--jump-1); --zone-1: var(--jump-1); --zone-2: var(--jump-2)') + '; --on-brand: ' + bons[pack]">
+     x-data="{ pack: '{{ $firstPack->id }}', packStyles: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => $packStyle($p)])), minq: @js($packages->mapWithKeys(fn ($p) => [(string) $p->id => (int) $p->min_qty])) }"
+     :style="packStyles[pack]">
 
     {{-- ============ 01 · CUMPLEAÑOS ============ --}}
     <section class="wrap bd-sec1" id="events">
@@ -233,8 +269,15 @@
                     <div class="bd-field bd-field--full">
                         <label>{{ __('landing.events.invite.color_label') }}</label>
                         <div class="bd-swatches">
-                            <button type="button" class="bd-swatch bd-swatch--jump" :class="invZone === 'jump' && 'is-active'" @click="invZone = 'jump'"><span class="dot"></span>Jump</button>
-                            <button type="button" class="bd-swatch bd-swatch--kids" :class="invZone === 'kids' && 'is-active'" @click="invZone = 'kids'"><span class="dot"></span>Kids</button>
+                            {{-- ⚠️ UNA por zona con pack, no dos escritas a mano con las palabras
+                                 «Jump» y «Kids» dentro (`DECISIONES #139`). El punto de color toma
+                                 el `--zone-1` que la propia paleta pinta en línea. --}}
+                            @foreach ($invitePalettes as $palette)
+                                <button type="button" class="bd-swatch"
+                                        style="{{ $palette['style'] }}"
+                                        :class="invZone === @js($palette['key']) && 'is-active'"
+                                        @click="invZone = @js($palette['key'])"><span class="dot"></span>{{ $palette['label'] }}</button>
+                            @endforeach
                         </div>
                     </div>
                     <div class="bd-editor__actions">
@@ -250,12 +293,18 @@
                     <p class="bd-editor__hint">{{ __('landing.events.invite.hint') }}</p>
                 </div>
 
-                <div class="bd-stage">
-                    <span class="bd-stage__shape" style="width:34px;height:34px;top:40px;left:48px;border-radius:8px;transform:rotate(18deg)" :style="invZone === 'jump' ? 'background: var(--jump-1)' : 'background: var(--kids-1)'"></span>
-                    <span class="bd-stage__shape" style="width:18px;height:18px;bottom:60px;right:70px;border-radius:5px;transform:rotate(-20deg)" :style="invZone === 'jump' ? 'background: var(--jump-2)' : 'background: var(--kids-2)'"></span>
+                {{-- ⚠️ La paleta se pinta en el ESCENARIO y las formas la heredan: eran tres ternarios
+                     que nombraban las cuatro variables de las dos zonas del primer cliente. --}}
+                <div class="bd-stage" :style="invStyles[invZone]">
+                    <span class="bd-stage__shape" style="width:34px;height:34px;top:40px;left:48px;border-radius:8px;transform:rotate(18deg)"></span>
+                    <span class="bd-stage__shape" style="width:18px;height:18px;bottom:60px;right:70px;border-radius:5px;transform:rotate(-20deg);background:var(--zone-2)"></span>
                     <span class="bd-stage__shape" style="width:24px;height:24px;top:90px;right:140px;border-radius:6px;transform:rotate(35deg);background:var(--fg)"></span>
 
-                    <div class="bd-card" x-ref="card" :style="invZone === 'jump' ? '--inv: var(--jump-1); --inv2: var(--jump-2)' : '--inv: var(--kids-1); --inv2: var(--kids-2)'">
+                    {{-- ⚠️ La tarjeta repite la paleta EN LÍNEA a propósito, aunque la heredaría del
+                         escenario: `_render()` la captura con html2canvas y resuelve `--inv`/`--inv2`
+                         sobre ella. Tenerla aquí deja el color a un salto de distancia y no a merced
+                         de qué ancestro sobreviva a un clon. --}}
+                    <div class="bd-card" x-ref="card" :style="invStyles[invZone]">
                         <div class="bd-card__bunting" aria-hidden="true">
                             @for ($i = 0; $i < 11; $i++)<span class="flag"></span>@endfor
                         </div>
