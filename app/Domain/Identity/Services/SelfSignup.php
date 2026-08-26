@@ -240,13 +240,17 @@ class SelfSignup
             // (`WaiverAcceptance::currentDocument`) y lo pasa aquí resuelto: esta transacción no
             // puede fallar por un texto caducado después de haber creado la cuenta. Mismo `WaiverSigner`
             // que las demás puertas — una firma es una firma, entre por donde entre.
+            // `[DECIDIDO owner, 2026-08-26]` (spec §7·5, `#179`): el alta YA NO FIRMA — se firma con el
+            // correo verificado. Aquí queda la aceptación PENDIENTE (qué texto, por qué canal), y la
+            // convierte en firma `SignPendingWaiverOnVerification` al verificar, si el texto sigue
+            // vigente. Hasta `#179` la firma nacía con `email_verified_at = null` (revisión `#169`
+            // §10.2·3): cualquiera podía aceptar «en nombre» del correo de un tercero.
             $waiver = $data['waiver'] ?? null;
             if (is_array($waiver) && ($waiver['document'] ?? null) instanceof LegalDocumentVersion) {
-                app(WaiverSigner::class)->sign($user, $waiver['document'], new WaiverSignatureRequest(
-                    channel: (string) ($waiver['channel'] ?? WaiverSignature::CHANNEL_WEB),
-                    ip: $ip,
-                    userAgent: isset($waiver['user_agent']) ? (string) $waiver['user_agent'] : null,
-                ));
+                $user->forceFill([
+                    'waiver_pending_document_id' => (int) $waiver['document']->getKey(),
+                    'waiver_pending_channel' => (string) ($waiver['channel'] ?? WaiverSignature::CHANNEL_WEB),
+                ])->save();
             }
 
             return $user;

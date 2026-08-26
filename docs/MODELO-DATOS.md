@@ -235,6 +235,7 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 | `phone` | nullable en BD, obligatorio en registro web (validación form) |
 | `locale` (default `es`) | idioma del CLIENTE (web + emails) · `panel_locale` nullable = idioma del panel admin, **separado** (soporta `es`/`zh_CN`) |
 | `last_login_at`, `marketing_opt_in` | — |
+| `waiver_pending_document_id` (FK `legal_document_versions`, RESTRICT) + `waiver_pending_channel` | la aceptación marcada en el ALTA, a la espera del correo verificado (`#179`, spec §7·5): al verificar, `SignPendingWaiverOnVerification` la convierte en firma si el texto sigue vigente y las nulifica; `anonymize()` también las nulifica |
 | `privacy_accepted_at`,`terms_accepted_at`,`waiver_accepted_at` | sellos; la prueba detallada vive en `consents`. ⚠️ **Fase 6**: para el waiver en modo `interno` la PRUEBA vive en `waiver_signatures`; el sello es presentación (lo escribe `WaiverSigner`, lo nulifica `anonymize()`) |
 
 `User::anonymize()` = supresión RGPD compatible con obligación fiscal (~4 años factura):

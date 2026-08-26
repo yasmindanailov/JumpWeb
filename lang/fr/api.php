@@ -43,6 +43,7 @@ return [
         'guest_form_closed' => 'Cette réservation a déjà eu lieu : ses informations sont consultables mais ne sont plus modifiables.',
         'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
         'waiver_document_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
+        'waiver_email_unverified' => 'Vérifiez votre adresse e-mail avant de signer la décharge.',
     ],
 
     'register' => [

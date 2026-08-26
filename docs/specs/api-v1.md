@@ -1108,3 +1108,5 @@ El documento se sirve igual que al operador (mismo `WaiverProof`, misma vista), 
 `/api/v1` para que la app nativa lo descargue con su Bearer. Spectator no valida binarios; la prueba de
 la respuesta es la cabecera `%PDF-`, el `content-type` y el `no-store` del grupo, como en la hoja de
 reserva.
+
+**93. El waiver se firma con el correo VERIFICADO — y el alta ya no firma: deja la aceptación pendiente.** `[DECIDIDO owner, 2026-08-26]` (spec §7·5, `#179`). `POST /auth/register` con `accept_waiver` guarda `users.waiver_pending_document_id` + `waiver_pending_channel` y responde 201 sin firmar; al abrir el enlace de verificación (`Verified`) un listener firma con el canal del alta —si el texto sigue vigente— o descarta la pendiente. `POST /me/waiver` con `email_verified_at = null` → `409 waiver_email_unverified`. La guarda vive en `WaiverSigner` (dominio), salvo firma declarada en mostrador. ⚠️ `accepted_at` es el momento de la verificación, no el del alta.

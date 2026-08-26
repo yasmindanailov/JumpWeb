@@ -159,6 +159,12 @@ enum ApiErrorCode: string
      */
     case WaiverDocumentStale = 'waiver_document_stale';
 
+    /**
+     * 409 — el titular no tiene el correo verificado: el waiver solo se firma con él (`[DECIDIDO
+     * owner]`, spec §7·5, `#179`). La aceptación marcada en el alta espera a la verificación.
+     */
+    case WaiverEmailUnverified = 'waiver_email_unverified';
+
     /** Clave i18n del mensaje legible. Indirección deliberada: el código público no la conoce. */
     public function messageKey(): string
     {

@@ -262,6 +262,8 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'privacy_accepted_at' => null,
                 'terms_accepted_at' => null,
                 'waiver_accepted_at' => null,
+                'waiver_pending_document_id' => null,   // la aceptación pendiente es PII del alta (#179)
+                'waiver_pending_channel' => null,
             ])->save();
 
             // A2: invalida TODAS las credenciales del titular —sesiones y tokens de API—. El cambio

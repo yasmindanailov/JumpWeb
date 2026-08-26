@@ -112,6 +112,8 @@ class VerifyWaiverChainConcurrency extends Command
                 'locale' => 'es',
                 'marketing_opt_in' => false,
             ]);
+            // Desde `#179` el titular firma solo con el correo verificado.
+            $user->forceFill(['email_verified_at' => now()])->save();
 
             $version = LegalDocuments::current(WaiverSettings::SLUG, 'es');
             $created = false;

@@ -43,6 +43,7 @@ return [
         'guest_form_closed' => 'That booking has already taken place: its details can be viewed but no longer edited.',
         'waiver_not_internal' => 'The waiver is not signed on this website.',
         'waiver_document_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
+        'waiver_email_unverified' => 'Verify your email address before signing the waiver.',
     ],
 
     'register' => [

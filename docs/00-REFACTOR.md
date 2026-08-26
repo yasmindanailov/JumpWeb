@@ -1904,7 +1904,12 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         y **la casilla del alta MANUAL** (texto vigente a la vista + `waiver_declared`; sin ella
         `CustomerRegistrar` no firma, también por el camino sin email). +6 tests PHP, +1 JS, **4
         mutaciones, las 4 muerden**; headless 4c 5/5 y 4b 3/3 — y el navegador cazó un 500 del modal
-        que la suite no veía (`wire:partial`), ahora con red directa. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
+        que la suite no veía (`wire:partial`), ahora con red directa.
+  - [x] **Tanda 4 · (4a) correo verificado para firmar** (2026-08-26 noche, `#179`, carril A): la guarda
+        en `WaiverSigner` (fila bloqueada, salvo firma declarada), la aceptación PENDIENTE del alta en
+        `users` y su firma al verificar (`SignPendingWaiverOnVerification`) o su descarte si el texto
+        cambió; `409 waiver_email_unverified`; `anonymize()` + censo. `VERIFY_CONC` con
+        `waiver:verify-chain` 8/16. ▶ Queda (5) el texto del PDF. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
         `VERIFY_CONC`) y (5) el texto del PDF.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un

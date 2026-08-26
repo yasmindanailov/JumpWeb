@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
+use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Exceptions\WaiverNotInternalException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -61,6 +62,8 @@ class MeWaiverController extends Controller
             return ApiErrorResponse::make(ApiErrorCode::WaiverNotInternal, 409);
         } catch (WaiverDocumentStaleException) {
             return ApiErrorResponse::make(ApiErrorCode::WaiverDocumentStale, 409);
+        } catch (WaiverEmailUnverifiedException) {
+            return ApiErrorResponse::make(ApiErrorCode::WaiverEmailUnverified, 409);
         }
 
         return (new WaiverStatusResource($user->fresh()))->response($request)->setStatusCode(201);

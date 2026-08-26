@@ -18,6 +18,7 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -446,7 +447,12 @@ class AuthRegistrationTest extends ApiTestCase
         ])->first();
     }
 
-    public function test_accepting_the_waiver_at_signup_signs_it_with_the_served_document(): void
+    /**
+     * `[DECIDIDO owner, 2026-08-26]` (spec §7·5, `#179`): el alta con la casilla NO firma al crear la
+     * cuenta — deja la aceptación pendiente y la firma se registra al VERIFICAR el correo, con el
+     * canal del alta. Hasta entonces la firma nacía con `email_verified_at = null` (revisión `#169`).
+     */
+    public function test_accepting_the_waiver_at_signup_defers_the_signature_until_the_email_is_verified(): void
     {
         $document = $this->internalWaiver();
 
@@ -455,13 +461,50 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertValidRequest();
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count(), 'sin correo verificado NO hay firma');
+        $this->assertSame($document->id, $user->waiver_pending_document_id);
+        $this->assertSame('web', $user->waiver_pending_channel);
+        $this->assertNull($user->waiver_accepted_at);
+
+        $this->verifyEmail($user);
+
+        $user->refresh();
         $signature = WaiverSignature::where('user_id', $user->id)->firstOrFail();
         $this->assertSame($document->id, $signature->legal_document_version_id);
-        $this->assertSame('web', $signature->channel, 'con cookie de sesión el canal es la web');
+        $this->assertSame('web', $signature->channel, 'el canal es el del ALTA, no el del clic de verificación');
         $this->assertSame('Ana Pérez', $signature->holder_name);
         $this->assertTrue($signature->verifyHash());
         $this->assertSame(['privacy', 'terms', 'waiver'], $user->consents->pluck('type')->sort()->values()->all());
         $this->assertNotNull($user->waiver_accepted_at);
+        $this->assertNull($user->waiver_pending_document_id, 'la pendiente se limpia al firmar');
+        $this->assertDatabaseHas('audit_logs', ['action' => 'waiver.signed']);
+    }
+
+    /** Abre el enlace firmado del correo, como hace la persona; el controlador abre sesión y aquí se cierra. */
+    private function verifyEmail(User $user): void
+    {
+        $url = URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $user->id, 'hash' => sha1((string) $user->email)]);
+        $this->get($url)->assertRedirect();
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        auth()->logout();
+    }
+
+    /** Si el texto cambió entre el alta y la verificación, la aceptación pendiente se DESCARTA: nada se firma sin releer. */
+    public function test_a_stale_pending_acceptance_is_dropped_at_verification(): void
+    {
+        $old = $this->internalWaiver();
+        $this->register(['accept_waiver' => true, 'waiver_document_id' => $old->id])->assertCreated();
+        app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Texto nuevo.']]],
+        ]);
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+
+        $this->verifyEmail($user);
+
+        $user->refresh();
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
+        $this->assertNull($user->waiver_pending_document_id, 'la pendiente caducada no se queda colgada');
+        $this->assertNull($user->waiver_accepted_at);
     }
 
     /** Desmarcada por defecto, y fuera del modo interno OPCIONAL: sin la casilla el alta es la de siempre, sin waiver. */
@@ -532,6 +575,8 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertCreated();
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame('api', $user->waiver_pending_channel);
+        $this->verifyEmail($user);
         $this->assertSame('api', WaiverSignature::where('user_id', $user->id)->value('channel'));
     }
 
@@ -545,6 +590,7 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertCreated();
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->verifyEmail($user);
         $this->assertSame('web', WaiverSignature::where('user_id', $user->id)->value('channel'));
     }
 

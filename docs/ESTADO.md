@@ -43,9 +43,10 @@
 >   `store.upcoming`; JS 700, 5 mutaciones muerden; chunk 226,21 → techo 226,5 por corrección;
 >   verificado en headless con anti-bot) →
 >   (4) las tres decisiones del owner que son código: ✅ **casilla del alta manual** y ✅ **casilla
->   obligatoria en interno** (`#176`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ⏳ **correo
->   verificado para firmar** (4a: toca `WaiverSigner`, push aparte con `VERIFY_CONC`) → (5) el
->   texto del PDF (§10.6). Cada unidad se empuja
+>   obligatoria en interno** (`#176`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ✅ **correo
+>   verificado para firmar** (`#179`: guarda en `WaiverSigner`, aceptación pendiente del alta firmada
+>   al verificar, `409 waiver_email_unverified`; 5 mutaciones muerden; `waiver:verify-chain` 8/16) →
+>   (5) el texto del PDF (§10.6). Cada unidad se empuja
 >   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
 >   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
 >   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
@@ -109,7 +110,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#178`**.
+> El último usado es **`#179`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -194,9 +195,13 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2956 en verde** (17.033 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2959 en verde** (17.061 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+6 tests PHP y +1 JS en el último corte** (`#178`, decisiones 4b/4c del waiver): la casilla del
+  ▶ **+4 tests PHP en el último corte** (`#179`, correo verificado para firmar): la firma del alta
+  se aplaza a la verificación (y con el canal del alta), la pendiente caducada se descarta, sin
+  verificar no se firma ni desde la cuenta (409), y la declarada en mostrador sí. **5 mutaciones, las
+  5 muerden**; `waiver:verify-chain` 8/16 con la guarda ·
+  ▶ **+6 tests PHP y +1 JS en el corte anterior** (`#178`, decisiones 4b/4c del waiver): la casilla del
   alta obligatoria en interno (422 sobre `accept_waiver`; opcional en externo e interno sin versión)
   y la casilla del alta manual (con ella firma declarada; sin ella nada, también sin email); JS
   **700 → 701**. **4 mutaciones, las 4 muerden**. ⚠️ El navegador cazó un **500 al abrir el modal**

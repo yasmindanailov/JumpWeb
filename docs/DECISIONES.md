@@ -9579,3 +9579,46 @@ pinta, no al componente · las guardas del cajón tras
 
 Verificación: suite (contador en `ESTADO.md`) · `node --test` · headless 4b/4c (spec §9.11) ·
 Pint ✓ · docs-check ✓.
+
+## #179 · 2026-08-26 · Tanda 4 · el waiver se firma con el correo VERIFICADO: el alta deja la aceptación pendiente y la firma nace al verificar — la guarda vive en el dominio
+
+**Qué se hizo** (carril A; spec **§7·5**, `[DECIDIDO owner, 2026-08-26]`; §9.11): la revisión `#169`
+§10.2·3 midió que la firma del alta nacía con `email_verified_at = null` —§4.7 decía «cuenta con
+correo verificado» y era falso— y que cualquiera podía aceptar «en nombre» del correo de un tercero.
+El owner eligió exigir el correo verificado (frente a guardar el estado en la fila, o dejarlo).
+
+1. **La guarda vive en `WaiverSigner`, sobre la fila BLOQUEADA**: `email_verified_at === null` →
+   `WaiverEmailUnverifiedException`, **salvo firma declarada** (mostrador, §8.4): ahí la identidad la
+   asegura el operador y el cliente de agenda puede no tener correo. Un único escritor, una única
+   regla — ninguna superficie puede olvidarla.
+2. **El alta ya no firma**: `SelfSignup::createAccount()` guarda la aceptación PENDIENTE —qué texto y
+   por qué canal— en dos columnas nuevas de `users` (`waiver_pending_document_id`, FK RESTRICT a la
+   versión inmutable, y `waiver_pending_channel`). Responde 201 igual que antes.
+3. **La firma nace al verificar**: `SignPendingWaiverOnVerification` (evento `Verified`; vive en
+   `Identity\Listeners` y lo registra `AppServiceProvider` — el arch-test no deja dominio fuera de `app/Domain`) limpia la pendiente ANTES de nada —una segunda verificación no firma dos
+   veces— y firma con el canal del alta y la IP/UA del clic **si el texto sigue vigente**
+   (`WaiverAcceptance::currentDocument`); si se publicó otra versión entre medias, la descarta sin
+   firmar: nada se firma sin releer, y el índice de la cuenta pedirá el nuevo. Un fallo aquí se
+   registra y no impide la verificación. ⚠️ Consecuencia dicha: `accepted_at` es el momento de la
+   verificación, no el del alta — es cuando la persona demostró ser dueña del buzón que la firma copia.
+4. **La API dice por qué**: `POST /me/waiver` sin correo verificado → `409 waiver_email_unverified`
+   (código nuevo en el enum del contrato, mensaje en es/en/fr).
+5. **La pendiente es PII del alta**: `anonymize()` la nulifica y el censo de
+   `AnonymizeCoversEveryUserColumnTest` la declara (su fixture la siembra con una versión real: el
+   censo cazó la columna sin sembrar a la primera, que es exactamente para lo que existe).
+   `MODELO-DATOS` e `INVARIANTES` (RGPD-01) al día. `waiver:verify-chain` siembra el titular verificado.
+
+**Lo medido**: +4 tests (`AuthRegistrationTest`: aplazada hasta verificar · pendiente caducada
+descartada · los dos del canal verifican antes; `MeWaiverTest`: 409; `WaiverSignatureChainTest`:
+sin verificar no firma, declarada sí) · **5 mutaciones, las 5 muerden** (sin guarda · el alta no
+guarda la pendiente · el listener firma sin comprobar vigencia · no limpia la pendiente · `anonymize()`
+no la purga), restaurado por `cmp` · `waiver:verify-chain` **8 y 16, lineal** sobre MySQL con la guarda
+(`VERIFY_CONC=1`: es lo que aplica; el push no toca `OrderCreator` ni Redsys) · contrato en verde ·
+migración aplicada en la BD local · Pint · docs-check.
+
+**Lo que enseñó**: **un censo que siembra cada columna con un valor es una guarda que muerde en la
+dirección correcta**: no bastó con declarar las columnas nuevas, hubo que sembrarlas — y eso es lo que
+prueba que `anonymize()` las toca de verdad.
+
+Verificación: suite (contador en `ESTADO.md`) · `VERIFY_CONC=1` con `waiver:verify-chain` ·
+headless (alta con casilla → sin firma hasta verificar → firma tras el enlace) · Pint ✓ · docs-check ✓.

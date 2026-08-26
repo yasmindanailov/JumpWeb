@@ -317,4 +317,21 @@ class MeWaiverTest extends ApiTestCase
         $this->assertStringNotContainsString($signature->document_hash, $json);
         $this->assertStringNotContainsString('waiver_signatures', $json);
     }
+
+    /** `[DECIDIDO owner]` (spec §7·5, `#179`): sin correo verificado no se firma — tampoco desde la cuenta. */
+    public function test_an_unverified_holder_cannot_accept_the_waiver(): void
+    {
+        $this->mode('interno');
+        $document = $this->publish();
+        $user = User::factory()->create(['email_verified_at' => null]);
+
+        $this->actingAs($user)
+            ->withHeader('Origin', (string) config('app.url'))
+            ->postJson(self::PATH, ['document_id' => $document->id])
+            ->assertStatus(409)
+            ->assertValidResponse(409)
+            ->assertJsonPath('error.code', 'waiver_email_unverified');
+
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
+    }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Waiver;
 
 use App\Domain\Identity\Exceptions\ImmutableRecordException;
+use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -316,5 +317,24 @@ class WaiverSignatureChainTest extends TestCase
         $this->assertNotSame($own->getKey(), $forDependent->getKey());
         $this->assertSame($forDependent->getKey(), $forDependentAgain->getKey());
         $this->assertSame(2, WaiverSignature::where('user_id', $holder->id)->count());
+    }
+
+    /** `#179` (spec §7·5): el titular firma solo con el correo verificado; la firma DECLARADA en mostrador queda fuera. */
+    public function test_an_unverified_holder_cannot_sign_unless_the_signature_is_declared(): void
+    {
+        $holder = User::factory()->create(['email_verified_at' => null]);
+        $version = $this->version();
+
+        try {
+            $this->sign($holder, $version);
+            $this->fail('sin correo verificado no se firma');
+        } catch (WaiverEmailUnverifiedException) {
+        }
+        $this->assertSame(0, WaiverSignature::where('user_id', $holder->id)->count());
+
+        $operator = User::factory()->create();
+        $declared = $this->sign($holder, $version, WaiverSignatureRequest::declaredAtCounter($operator, '10.0.0.7'));
+
+        $this->assertSame($operator->id, $declared->declared_by_user_id, 'el mostrador declara: la identidad la asegura el operador');
     }
 }

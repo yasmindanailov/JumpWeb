@@ -287,6 +287,11 @@ hallazgos y veredicto en **§10**; el guion de navegador, en headless, en **§9.
    correo verificado para firmar**. El alta con casilla **deja de firmar al crear la cuenta y firma al
    VERIFICAR** (la aceptación se conserva hasta entonces); `POST /me/waiver` exige cuenta verificada.
    ⚠️ Cambia §9.8 (fila «El alta») y `AuthRegistrationTest::test_accepting_the_waiver_at_signup…`.
+   ✅ **HECHO** (`#179`, §9.11): `WaiverSigner` exige `email_verified_at` sobre la fila BLOQUEADA salvo
+   firma declarada; el alta guarda la aceptación en `users.waiver_pending_document_id` +
+   `waiver_pending_channel` y `SignPendingWaiverOnVerification` (evento `Verified`) la convierte en
+   firma si el texto sigue vigente —si no, la descarta—; `POST /me/waiver` sin correo verificado →
+   `409 waiver_email_unverified`. `anonymize()` purga las dos columnas y el censo las declara.
 6. 🆕 **El ✅ en navegador** (§9.10): el guion está recorrido en headless; falta su ojo — ⚠️ con el
    anti-bot apagado o el defecto de §9.10 arreglado, porque con Turnstile activo el alta suelta no
    termina. `[DECIDIDO owner, 2026-08-26]`: **ese defecto lo arregla el carril A, lo primero de su
@@ -469,7 +474,7 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 Además: dos alias morph (`legal_document_version`, `waiver_signature`), tres acciones de auditoría
 (`legal.version_published`, `waiver.signed`, `waiver.declared`) y el bloque `admin.waiver.*` de
-`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 77 migraciones**.
+`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 78 migraciones**.
 
 ### 9.2 Las TRES cosas en que la ejecución se apartó del cuerpo, y por qué
 
@@ -613,7 +618,7 @@ el texto, aceptarlo y ver la prueba, **sin tocar todavía una línea de Vue**. C
 | `GET /me/waiver` | `app/Http/Controllers/Api/V1/MeWaiverController.php` · `app/Http/Resources/Api/V1/WaiverStatusResource.php` | Estado según el modo (`signed`, `outdated`, `current_document_id`) y mis firmas con su PDF; sin ip, UA ni hashes |
 | `POST /me/waiver` | ídem + `app/Domain/Identity/Services/WaiverAcceptance.php` | Aceptar con el `document_id` servido → 201 con el estado nuevo; `409 waiver_document_stale` si el texto cambió, `409 waiver_not_internal` fuera del modo interno. Sirve para la re-firma (§4.8) |
 | `GET /me/waiver/{signature}/pdf` | ídem | El PDF PROPIO (§4.5), scoping por el guard (404 si no es mía), auditado, `no-store` por el grupo |
-| El alta | `app/Http/Controllers/Api/V1/AuthRegistrationController.php` · `app/Domain/Identity/Services/SelfSignup.php` | `accept_waiver` (opt-in, desmarcada) + `waiver_document_id` (`required_if_accepted`); la vigencia se comprueba **antes** de crear la cuenta (422 sobre el campo); `createAccount()` firma con el `WaiverSigner` de siempre |
+| El alta | `app/Http/Controllers/Api/V1/AuthRegistrationController.php` · `app/Domain/Identity/Services/SelfSignup.php` | `accept_waiver` (opt-in, desmarcada) + `waiver_document_id` (`required_if_accepted`); la vigencia se comprueba **antes** de crear la cuenta (422 sobre el campo); ⚠️ desde `#179` `createAccount()` **NO firma**: deja la aceptación pendiente (`waiver_pending_document_id` + canal) y la firma la registra `SignPendingWaiverOnVerification` al verificar el correo, si el texto sigue vigente |
 | El contexto de cuenta | `app/Domain/Identity/Services/CustomerAccountContext.php` · `app/Http/Resources/Api/V1/AccountContextResource.php` | `waiver: {mode, required, outdated, document_id}` — el sitio de la re-firma «en el siguiente momento natural»; viaja también en la semilla del montaje (`AccountContextSeed`) |
 | Códigos de error | `app/Http/Api/ApiErrorCode.php` · `lang/{es,en,fr}/api.php` | `waiver_not_internal` · `waiver_document_stale` (409), en el `enum` del contrato |
 
@@ -804,8 +809,13 @@ Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y s
   casilla del alta MANUAL** (§7·4, `#178`): el operador ve el texto vigente y declara; sin la casilla
   `CustomerRegistrar` no firma, también por el camino del cliente sin email. ⚠️ **El navegador cazó
   un 500 al abrir el modal** (`$version->sections` como propiedad) con la suite en verde —el modal es
-  un `wire:partial`—: `counterWaiverText()` es público y se prueba directo · ⏳ **4a · correo
-  verificado para firmar** (§7·5): toca `WaiverSigner` → push aparte con `VERIFY_CONC`.
+  un `wire:partial`—: `counterWaiverText()` es público y se prueba directo · ✅ **4a · correo
+  verificado para firmar** (§7·5, `#179`): la guarda vive en el DOMINIO (`WaiverSigner`, sobre la fila
+  bloqueada, salvo firma declarada); el alta deja la aceptación **pendiente** en dos columnas de
+  `users` y un listener de `Verified` la convierte en firma al verificar —con el canal del alta, la IP
+  y el UA del clic— o la descarta si el texto ya no es el vigente; `409 waiver_email_unverified` en la
+  API. ⚠️ `accepted_at` pasa a ser el momento de la verificación, no el del alta: es cuando la persona
+  demostró ser dueña del buzón que la firma copia. `waiver:verify-chain` siembra el titular verificado.
 - ⏳ **Unidad 5 · el texto del PDF** (§10.6).
 
 ---

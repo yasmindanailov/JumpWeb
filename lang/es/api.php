@@ -45,6 +45,7 @@ return [
         'guest_form_closed' => 'Esa reserva ya se ha celebrado: sus datos se pueden consultar, pero ya no se editan.',
         'waiver_not_internal' => 'El waiver no se firma en esta web.',
         'waiver_document_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
+        'waiver_email_unverified' => 'Para firmar el waiver primero hay que verificar el correo.',
     ],
 
     // Avisos POR CAMPO del alta (`POST /auth/register`) que solo emite el servidor en el 422.

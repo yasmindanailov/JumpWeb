@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -46,6 +47,14 @@ final class WaiverSigner
             // aquí; las de titulares distintos no se estorban. Misma doctrina que `AFORO-01`, y el
             // mismo instrumento para verla fallar: `waiver:verify-chain` sobre MySQL real.
             $locked = User::query()->whereKey($holder->getKey())->lockForUpdate()->firstOrFail();
+
+            // `[DECIDIDO owner, 2026-08-26]` (spec §7·5, `#179`): la firma del TITULAR exige el correo
+            // verificado — es lo que prueba que quien acepta es dueño del buzón que la firma copia.
+            // La firma DECLARADA en mostrador (§8.4) queda fuera: ahí la identidad la asegura el
+            // operador, y el cliente de agenda puede no tener correo. Sobre la fila BLOQUEADA.
+            if ($request->declaredBy === null && $locked->email_verified_at === null) {
+                throw new WaiverEmailUnverifiedException;
+            }
 
             $previous = WaiverSignature::query()
                 ->where('user_id', $locked->getKey())

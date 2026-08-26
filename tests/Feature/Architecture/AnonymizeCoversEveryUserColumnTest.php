@@ -3,6 +3,7 @@
 namespace Tests\Feature\Architecture;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -60,6 +61,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'privacy_accepted_at',
         'terms_accepted_at',
         'waiver_accepted_at',
+        'waiver_pending_document_id',
+        'waiver_pending_channel',
         'email_verified_at',
         'password',
         'remember_token',
@@ -184,7 +187,15 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
             'marketing_opt_in' => true,
         ]);
 
+        // Fase 6 · waiver (#179): la aceptación PENDIENTE del alta también es PII y se purga; la FK exige
+        // una versión firmable real.
+        $version = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+
         $user->forceFill([
+            'waiver_pending_document_id' => $version->getKey(),
+            'waiver_pending_channel' => 'web',
             'pending_email' => 'ana.nueva@example.com',
             'pending_email_sent_at' => now()->subHour(),
             'panel_locale' => 'en',

@@ -25,6 +25,7 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\LegalDocumentVersion;
@@ -38,11 +39,13 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -83,6 +86,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fase 6 · waiver (`#179`): la aceptación pendiente del alta se firma al VERIFICAR el correo. El
+        // listener vive en Identity (el arch-test no deja dominio fuera de `app/Domain`) y se registra aquí.
+        Event::listen(Verified::class, SignPendingWaiverOnVerification::class);
+
         // morphMap FORZADO (Fase 2, prerequisito de la modularización — DEUDA §Alta): las columnas
         // polimórficas (`payments.payable_type`, `prices.priceable_type`, `audit_logs.target_type`)
         // guardan ALIAS estables, no FQCN → renombrar/mover un modelo ya no rompe datos. `enforce`

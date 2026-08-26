@@ -1547,7 +1547,8 @@ paths:
         (`specs/waiver-probatorio.md` §4.4): **el servidor solo emite la aceptación si la petición trae
         el identificador de la versión vigente**. Si el texto se publicó de nuevo entre servirlo y
         aceptarlo, responde `409 waiver_document_stale` y el cliente vuelve a pedir `GET /legal/waiver`
-        y a presentarlo. Fuera del modo interno, `409 waiver_not_internal`.
+        y a presentarlo. Fuera del modo interno, `409 waiver_not_internal`. Y **solo con el correo
+        verificado**: sin él, `409 waiver_email_unverified` (`#179`, spec §7·5).
 
         Es la firma del titular desde su propio dispositivo: se guarda con su ip, su user-agent y el
         canal (`web` con cookie de sesión, `api` con un token personal REAL: una cabecera
@@ -1973,6 +1974,7 @@ components:
                 # Fase 6 · waiver — aceptar el texto (409): no se firma aquí, o el texto cambió.
                 - waiver_not_internal
                 - waiver_document_stale
+                - waiver_email_unverified
             message:
               type: string
               description: Mensaje legible en el idioma negociado.
@@ -4625,7 +4627,8 @@ components:
             El `document.id` que `GET /legal/waiver` sirvió. **Obligatorio si `accept_waiver` es
             `true`**: aceptar sin decir qué texto se leyó no prueba nada. Si el texto se publicó de
             nuevo entre medias, 422 sobre este campo y el cliente vuelve a presentarlo — **antes** de
-            crear la cuenta, nunca después.
+            crear la cuenta, nunca después. ⚠️ Desde `#179` el alta **no firma**: deja la aceptación
+            pendiente y la firma se registra al VERIFICAR el correo, si ese texto sigue vigente.
 
     WaiverDocument:
       type: object
