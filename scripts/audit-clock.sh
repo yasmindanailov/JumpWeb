@@ -90,7 +90,10 @@ for i in "${!ETIQUETAS[@]}"; do
         php artisan test "${local_args[@]}" > "$log" 2>&1
     code=$?
 
-    resumen=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -aoE 'Tests:.*' | tail -1)
+    # PHPUnit resume «Tests: N, Assertions: M…» SOLO cuando hay issues y «OK (N tests, M assertions)»
+    # cuando no (la misma lección que el `pre-push`, `#183`): desde que el único notice se retiró,
+    # solo la segunda forma existe. El ✓/✗ lo decide el código de salida; esto es el resumen.
+    resumen=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -aoE 'Tests:.*|OK \([0-9]+ tests?.*' | tail -1)
     [[ -z "$resumen" ]] && resumen='(la suite no llegó a informar — mira el log)'
 
     if [[ $code -eq 0 ]]; then
@@ -137,7 +140,7 @@ if [[ -z "$FILTER" ]]; then
         docker compose exec -u sail -T -e TEST_CLOCK_START="$inicio" laravel.test \
             php artisan test --parallel > "$log" 2>&1
         code=$?
-        resumen=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -aoE 'Tests:.*' | tail -1)
+        resumen=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -aoE 'Tests:.*|OK \([0-9]+ tests?.*' | tail -1)
         [[ -z "$resumen" ]] && resumen='(la suite no llegó a informar — mira el log)'
         if [[ $code -eq 0 ]]; then
             printf '%s %s ✓ %s\n' "$(pad "$etiqueta" 24)" "$(pad "$inicio" 21)" "$resumen"

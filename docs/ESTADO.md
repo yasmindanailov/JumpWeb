@@ -71,46 +71,27 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (el portátil) → 🟦 SESIÓN RETOMADA el 2026-08-26 a las 23:00: la extracción 4b EN
->   EJECUCIÓN** (`[DECIDIDO owner]`: «procede según tu valoración profesional»). El plan refinado
->   con el código delante está en la spec **§9.6** (`#182`): cuatro servicios por forma
->   transaccional + `ZoneDaySlotLock` compartido con `OrderCreator` + outcome, orden A0→H.
->   ✅ **A0 y A HECHOS** (`#184`, 2026-08-27 00:30): migraciones aplicadas, 6/6 escenarios + Redsys en
->   verde, y lo PURO en el dominio — `ItemEditPricing` + la mitad pura de `OrderItemEditor`;
->   `ViewOrder` en **3.350** líneas (de 3.907); **11 mutaciones, 11 muerden** (una tras ganar su
->   test: la regla de bloqueo per-invitado/grupo no tenía ninguno).
->   ✅ **B HECHO** (`#185`, 01:30): `OrderItemEventDataWriter` + el contrato `ItemActionOutcome`;
->   `ViewOrder` en **3.173**; **6 mutaciones, 6 muerden** — tres solo tras ganar su test DIRECTO,
->   porque la página no alcanza la regla (Filament valida antes; el despachador filtra el permiso).
->   ✅ **C0 HECHO** (`#186`, 02:15, `VERIFY_CONC`): `ZoneDaySlotLock` — la receta anti-sobreventa
->   UNA vez, compartida por `OrderCreator` y el panel; 6/6 escenarios PASAN y **con el helper sin
->   `FOR UPDATE` FALLAN `entry` Y `panel-edit`** (una mutación, dos puertas rojas). `ZoneDaySlotLock`
->   y `OrderItemEditor` en el `CRITICAL_RE` desde hoy. Fósil retirado: un docblock de `lockSlots`
->   describía la subconsulta que `AFORO-01` prohíbe.
->   ✅ **C HECHO** (`#187`, 03:30, `VERIFY_CONC`): `OrderItemEditor::changeSlot()` con
->   `withZoneDayLock()` como punto ÚNICO de lock; el instrumento `panel-edit` invoca el servicio por
->   contrato y **FALLA con el lock retirado, PASA con el real**; `ViewOrder` en **3.008**; 8/8
->   mutaciones observables muerden — tres tras ganar su test (huella propia en ENTRADAS, destino
->   lleno bajo el lock, audit del rechazo anidado).
->   ✅ **D + E HECHOS** (`#188`, 05:00): `OrderItemCanceller` y `OrderItemRefunder` (+ el contrato
->   `ItemRefundRequest`; E sin `PaymentRefund`: modo e intención los resuelve la página); `ViewOrder` en
->   **2.848**; **16/16 mutaciones muerden** — cinco tras ganar su test directo (los dos permisos y tres
->   guardas de E que la red de página no distinguía del dominio).
->   ✅ **F + G + H(agente) HECHOS** (`#189`, 07:00, `VERIFY_CONC`): `OrderItemEditor::edit()` con las
->   cuatro fases de §4.3 intactas, el waterfall como UNA pieza (`creditReduction`) y `withZoneDayLock()`
->   como punto único —guardado por `OrderItemEditorSingleLockPointTest`—; **16/16 mutaciones
->   muerden** (tres tras ganar su test). **`ViewOrder` en 2.355 líneas y 50 métodos: cifra FINAL.**
->   **EL DESMONTAJE, DE AGENTE, TERMINÓ.** ❗ Sigue 🟦 por lo único humano: **la pasada de NAVEGADOR
->   del owner por las 10 acciones del panel (spec §6·5)** — la suite no ve un formulario de Filament
->   que deje de montarse. Detalle: spec §9.6.1.
->   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
->   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
->   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
->   `app/Domain/Booking/Services/OrderCreator.php` (SOLO `lockSlots`, sub-paso C0) ·
->   `app/Console/Commands/VerifyPurchaseConcurrency.php` (el instrumento re-apuntado) ·
->   **`.githooks/pre-push` (`CRITICAL_RE`) · `tests/Feature/Architecture/CriticalPathGateTest.php` ·
->   `docs/INVARIANTES.md`** (los tres que el A tocó esta semana por el waiver: si vuelve a ellos
->   antes de mi push, rebase mío).
+> · **Agente B (el portátil) → SESIÓN CERRADA el 2026-08-27 a las 07:30. ✅ Nada a medias: la
+>   extracción 4b ENTERA empujada y verde en seis tandas** (`#182` plan · `#184` A · `#185` B ·
+>   `#186` C0 · `#187` C · `#188` D+E · `#189` F+G) **— el desmontaje de `ViewOrder`, de agente,
+>   TERMINÓ**: 2.355 líneas y 50 métodos (de 5.280 y 98), sin ninguna orquestación de dinero/aforo;
+>   todo vive en `Booking\Services\{OrderItemEditor,ItemEditPricing,OrderItemEventDataWriter,
+>   OrderItemCanceller,OrderItemRefunder,ZoneDaySlotLock}` con `ItemActionOutcome`/`ItemRefundRequest`
+>   como contratos. **74 mutaciones, 74 muerden; 15 tests nuevos son reglas que la página no podía
+>   alcanzar.** Detalle sub-paso a sub-paso y cifras: spec **§9.6.1**.
+>   ❗ **Lo que queda es del OWNER: la pasada de NAVEGADOR por las 10 acciones del panel** (spec
+>   §6·5) — la suite no ve un formulario de Filament que deje de montarse. Hasta ese ✅ el desmontaje
+>   sigue 🟦. ⚠️ En el portátil el panel de un pedido necesita las migraciones del waiver aplicadas
+>   (hechas el 26/08 en A0); tras un pull, `migrate:status`.
+>   ▶ **Siguiente trabajo de agente en este carril**: ninguno pendiente del desmontaje. Lo que hay
+>   abierto está en «Lo que NO depende de nosotros» y en `DEUDA.md`; o lo que el owner diga.
+>   Ficheros del carril B, para el reparto: `app/Filament/Resources/Orders/**` (⚠️ `#174` del waiver
+>   entró en `Schemas/OrderInfolist.php`: es del A) · `app/Domain/Booking/Services/{OrderItemEditor,
+>   ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder,ZoneDaySlotLock}.php`
+>   · `app/Domain/Booking/Contracts/{ItemActionOutcome,ItemRefundRequest}.php` ·
+>   `app/Console/Commands/VerifyPurchaseConcurrency.php` · `tests/Feature/Admin/Orders/**` ·
+>   `tests/Feature/Architecture/{CriticalPathGateTest,OrderItemEditorSingleLockPointTest}.php` ·
+>   `docs/specs/desmontar-view-order.md`.
 >   ▶ **Para el agente del A**: `#174` entró en `app/Filament/Resources/Orders/Schemas/OrderInfolist.php`
 >   (directorio del B). No choca con la 4b —no toco `Schemas/`—; sigue limitándote a ese fichero ahí.
 >   Las 3 migraciones del waiver estaban PENDIENTES en el portátil (aplicadas en A0): no es un choque,
@@ -485,10 +466,12 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-26, tarde): LOS DOS CARRILES ESTÁN OCUPADOS
+# ❗ SI ENTRAS NUEVO (2026-08-27, mañana): LOS DOS CARRILES ESTÁN CERRADOS, y ninguno dejó nada a medias
 
-**Lo que está EN MARCHA no es tuyo**: el reparto de la cabecera es el único vigente y sus dos filas
-tienen dueño. `git fetch` antes de nada.
+**Los dos carriles cerraron sesión el 2026-08-27** (el A a primera hora, el B a las 07:30) con todo
+empujado y verde; el reparto de la cabecera sigue siendo el único vigente y dice qué toca cada uno si
+vuelve. `git fetch` antes de nada, y **lee las dos filas antes de elegir tarea**: lo que queda en las
+dos es del OWNER (su ojo en navegador, el texto del waiver, el plazo), no de agente.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
@@ -513,12 +496,15 @@ casi todo lo que queda lo desbloquea el owner.
    ⚠️ En la máquina del carril A hay **v1→v9 publicadas** localmente por las dos pasadas del guion y
    los sondeos (y cuentas `e2e-waiver-*@jumpweb.test` / `probe-*@jumpweb.test`); en la del portátil,
    no. Tras un pull en el portátil: **`migrate`** (`#183` añade una migración).
-2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ revisión
-   (`#167`) + correcciones (`#168`) + **✅ del owner y EJECUCIÓN casi completa el mismo día**
-   (`#170` · `#172` · `#173` · `#176` · `#177`): `ViewOrder` en 3.907 líneas y ya no compone
-   ninguna oferta. ❗ **Queda SOLO la extracción 4b** (el dinero) — handoff en la spec **§9.5**,
-   la retoma el carril B en su siguiente sesión. `[DECIDIDO owner]` (`#181`): con la 4b, el
-   desmontaje TERMINA.
+2. ✅ **El desmontaje de `ViewOrder`, de agente, está TERMINADO** → **carril B, 2026-08-27**
+   (`#165` spec · `#167`/`#168` revisión · `#170`→`#177` paso 0 a instrumento · **`#182`→`#189` la
+   extracción 4b entera en una noche**): `ViewOrder` en **2.355 líneas y 50 métodos** (de 5.280 y
+   98), sin orquestación de dinero ni de aforo — seis servicios y dos contratos en
+   `app/Domain/Booking/`, la receta anti-sobreventa UNA vez (`ZoneDaySlotLock`, compartida con la
+   compra), 74/74 mutaciones, 6/6 escenarios + Redsys, y **15 tests nuevos de reglas que la página
+   no podía alcanzar**. `[DECIDIDO owner]` (`#181`): no se parte más. **Lo que queda es del owner y
+   solo del owner**: la pasada de NAVEGADOR por las 10 acciones del panel (spec §6·5). ▶ Siguiente
+   trabajo de agente en este carril: ninguno del desmontaje; ver `DEUDA.md` o lo que el owner diga.
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
