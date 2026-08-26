@@ -9498,3 +9498,37 @@ y la de `AFORO-09` actualizadas). Detalle completo en la spec **§9.4**.
 Verificación: suite **2950 / 17.012 en verde** (+2 tests sobre el corte del carril A) · sonda A/B
 27/27 sin divergencias · mutación 4/4 · `VERIFY_CONC` ganado con los dos verificadores en verde ·
 Pint ✓ · docs-check ✓ · `INVARIANTES.md` al día.
+
+## #177 · 2026-08-26 · El instrumento de la extracción 4: `panel-edit`, el escenario que ejecuta el lock que se va a mudar — visto FALLAR antes de creerle el verde
+
+Quinta tanda de la ejecución (`#170` · `#172` · `#173` · `#176`), y la condición previa del paso 4
+(spec §6·4): **los verificadores existentes no ejecutan el código que el paso 4 muda**, así que
+antes de mover el dinero se construyó el instrumento que sí. Detalle en la spec **§9.5**.
+
+**Qué es**: `purchase:verify-oversell --scenario=panel-edit` — N ediciones de panel CONCURRENTES
+por el camino real (`ViewOrder::executeItemSlotChange` entero: permiso, capas, lock zona/día,
+revalidación bajo lock), con ítems de 120 min hacia dos destinos cuyas ventanas pisan una franja
+intermedia de UNA plaza. Es el hueco de `AFORO-05` y la forma exacta del bug L3 que motivó
+`lockZoneDaySlots`.
+
+**La evidencia que lo hace creíble:**
+- Con el lock real: **PASA** (1 comprometido · 7 bloqueados · franja intermedia 1/1).
+- **Visto FALLAR** con el lock mutado a solo-la-fila-destino: **2 comprometidos donde cabía 1**
+  (2/1 en la franja intermedia). La regla de `#147`: un verificador que nunca ha fallado no ha
+  demostrado que pueda.
+- Su guarda propia mueve y deshace por el camino entero antes de forkar; el personal y su rol son
+  DESECHABLES (el rol `staff` global no se toca) y cada ejecución deja **cero restos** (comprobado
+  contando).
+
+**Y un defecto PREEXISTENTE del comando, pagado en vivo y arreglado**: una guarda de instrumento
+fallida salía por `return` antes del `finally` y **fugaba la siembra entera** a la BD de
+desarrollo — se midió con una zona, un rol y nueve pedidos huérfanos tras un fallo de sonda. La
+guarda vive ahora dentro del `try`, y la fuga se limpió.
+
+▶ **Lo que queda del desmontaje es solo la 4b** (spec §9.5): mover las cuatro fases de §4.3 al
+servicio de dominio, con este instrumento como red de concurrencia y el navegador del owner al
+cerrar. `ViewOrder` está hoy en **3.907 líneas** (de 5.280).
+
+Verificación: escenario nuevo PASA en limpio y FALLA con la mutación (md5 de la restauración) ·
+suite **2950 / 17.013 en verde** (+1 aserción: el inventario de la guarda) · Pint ✓ · docs-check ✓
+· `OversellVerifierCoversEveryQuotaTest` al día · cero restos `pe-probe` en la BD.

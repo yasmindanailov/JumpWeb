@@ -41,6 +41,10 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
         'pack-prep' => 'cupo de fiestas con la fiesta abarcando VARIAS franjas — montaje y limpieza '.
             'ACTIVOS, que es la configuración por defecto en producción',
         'mixed' => 'los DOS pools compitiendo a la vez en la misma zona y franja',
+        'panel-edit' => 'el lock zona/día de las EDICIONES del panel (`AFORO-05`): N ediciones '.
+            'concurrentes hacia dos destinos cuyas ventanas pisan una franja intermedia con una '.
+            'plaza — el instrumento de la extracción 4 del desmontaje de `ViewOrder`, visto FALLAR '.
+            'con el lock mutado a solo-la-fila-destino (2 comprometidos donde cabía 1)',
     ];
 
     public function test_the_verifier_declares_a_scenario_for_every_quota(): void

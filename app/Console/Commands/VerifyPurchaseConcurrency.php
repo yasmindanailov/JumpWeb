@@ -14,11 +14,16 @@ use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\AuditLog;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -59,11 +64,18 @@ class VerifyPurchaseConcurrency extends Command
      *  · `mixed`       — una entrada y un cumpleaños **compitiendo a la vez** en la misma zona y
      *                    franja. ⚠️ **Su nº de ganadores VARÍA entre ejecuciones y es correcto**:
      *                    mide TOPES, no ganadores (ver {@see self::evaluateMixed()}).
+     *  · `panel-edit`  — N EDICIONES DE PANEL concurrentes (`ViewOrder::executeItemSlotChange`)
+     *                    moviendo ítems multi-franja a DOS destinos distintos cuyas ventanas pisan
+     *                    una franja intermedia con UNA plaza. Es el hueco que `AFORO-05` documenta
+     *                    («el ALCANCE zona/día del lock no tiene assert») y el instrumento que la
+     *                    extracción 4 del desmontaje de `ViewOrder` exige (spec §6·4): con
+     *                    `lockZoneDaySlots` real gana UNO; con un lock de solo-la-fila-destino los
+     *                    dos destinos no comparten fila y la franja intermedia se sobrevende.
      *
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit'];
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
@@ -105,21 +117,25 @@ class VerifyPurchaseConcurrency extends Command
         $seed = match ($scenario) {
             'entry' => $this->seedEntryScenario($workers),
             'mixed' => $this->seedMixedScenario($workers),
+            'panel-edit' => $this->seedPanelEditScenario($workers),
             default => $this->seedPackScenario($workers, $scenario),
         };
 
-        // ⚠️⚠️ **La guarda del propio instrumento, y no es opcional.** Si el escenario está mal
-        // montado —el pack no cabe en la rejilla, falta precio ese día, la franja quedó fuera de
-        // horario— los N compradores son rechazados por un motivo que NO es la carrera, y el
-        // verificador informaría de «0 sobreventas» sin haber probado nada. Un verificador que no
-        // puede vender ni una sola vez sale verde por construcción.
-        if (! $this->probeSellsOnce($seed)) {
-            return self::FAILURE;
-        }
-
-        $this->line("Disparando <fg=yellow>{$workers}</> compras <options=bold>CONCURRENTES</> del último hueco sobre {$driver}…");
-
         try {
+            // ⚠️⚠️ **La guarda del propio instrumento, y no es opcional.** Si el escenario está mal
+            // montado —el pack no cabe en la rejilla, falta precio ese día, la franja quedó fuera de
+            // horario— los N compradores son rechazados por un motivo que NO es la carrera, y el
+            // verificador informaría de «0 sobreventas» sin haber probado nada. Un verificador que no
+            // puede vender ni una sola vez sale verde por construcción.
+            // ⚠️ Va DENTRO del try: hasta el 2026-08-26 una guarda fallida salía por `return` ANTES
+            // del finally y FUGABA la siembra entera a la BD de desarrollo (medido: una zona, un rol
+            // y nueve pedidos huérfanos tras un fallo de sonda del escenario `panel-edit`).
+            if (! $this->probeSellsOnce($seed)) {
+                return self::FAILURE;
+            }
+
+            $this->line("Disparando <fg=yellow>{$workers}</> compras <options=bold>CONCURRENTES</> del último hueco sobre {$driver}…");
+
             $this->forkWorkers($seed, microtime(true) + 0.5, $resultsDir);
 
             DB::reconnect();
@@ -155,6 +171,14 @@ class VerifyPurchaseConcurrency extends Command
     private function probeSellsOnce(array $seed): bool
     {
         $scenario = $seed['scenario'];
+
+        // El escenario de PANEL no compra: MUEVE. Su guarda es distinta — el camino ENTERO de la
+        // edición (permiso, validación, lock zona/día, save) tiene que poder actuar una vez, y
+        // deshacerse, antes de forkar. Si no puede, los N workers serían bloqueados por siembra
+        // (permiso ausente, hora fuera de ventana…) y el «no hubo sobreventa» no mediría nada.
+        if ($scenario === 'panel-edit') {
+            return $this->probePanelEditActs($seed);
+        }
 
         // ⚠️ Se comprueba CADA pool que el escenario pone en juego, no «el» hueco. En `mixed` hay
         // dos —asientos y cupo de fiestas— y con uno solo verificado el otro podría estar cerrado
@@ -558,9 +582,13 @@ class VerifyPurchaseConcurrency extends Command
                 }
                 $outcome = 'ERROR';
                 try {
-                    $buyer = User::find($user->id);
-                    $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['carts'][$i]);
-                    $outcome = 'created:'.$order->id;
+                    if (($seed['scenario'] ?? '') === 'panel-edit') {
+                        $outcome = $this->panelEditMove($seed, $i);
+                    } else {
+                        $buyer = User::find($user->id);
+                        $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['carts'][$i]);
+                        $outcome = 'created:'.$order->id;
+                    }
                 } catch (ReservationException $e) {
                     $outcome = 'sold_out:'.$e->getMessage();
                 } catch (\Throwable $e) {
@@ -582,6 +610,10 @@ class VerifyPurchaseConcurrency extends Command
      */
     private function evaluate(array $seed, int $workers, string $resultsDir): bool
     {
+        if (($seed['scenario'] ?? '') === 'panel-edit') {
+            return $this->evaluatePanelEdit($seed, $workers, $resultsDir);
+        }
+
         $outcomes = collect(File::files($resultsDir))
             ->map(fn ($f): string => trim(File::get($f->getPathname())));
 
@@ -799,6 +831,265 @@ class VerifyPurchaseConcurrency extends Command
                     ->where(fn ($q3) => $q3->whereNull('orders.expires_at')->orWhere('orders.expires_at', '>', now()))));
     }
 
+    // ─── Escenario `panel-edit`: el lock zona/día de las EDICIONES bajo carrera (AFORO-05) ────
+    // Instrumento exigido por la extracción 4 del desmontaje de `ViewOrder`
+    // (`docs/specs/desmontar-view-order.md` §6·4): los otros escenarios conducen `OrderCreator`,
+    // y el lock que la extracción muda (`lockZoneDaySlots`) no lo ejecutaba NINGÚN verificador.
+
+    /**
+     * Siembra del escenario de EDICIÓN DE PANEL concurrente.
+     *
+     * Geometría (entradas de 120 min → la ventana de un ítem cubre DOS franjas horarias):
+     *
+     *     T (cap 10) ── destino A          T+3h (parking, cap N+1) ── ítems aparcados
+     *     T+1h (cap 1) ─ el MEDIO, y también destino B
+     *     T+2h (cap 10) ─ cola de la ventana de B
+     *
+     * Los workers pares mueven su ítem al destino A (ventana [T, T+2h): PISA el medio) y los
+     * impares al MEDIO mismo (ventana [T+1h, T+3h)). El medio admite UNA plaza: con el lock
+     * zona/día real solo UN movimiento puede comprometerla; con un lock de solo-la-fila-destino,
+     * A y B no comparten fila bloqueada, los dos revalidan contra el mismo hueco y el medio acaba
+     * con DOS — la sobreventa exacta que motivó `lockZoneDaySlots` (L3, `AFORO-05`).
+     *
+     * ⚠️ El personal es un usuario DESECHABLE con un rol DESECHABLE que lleva el permiso
+     * `orders.edit_item` EXISTENTE: no se toca el rol `staff` global ni se crean permisos.
+     */
+    private function seedPanelEditScenario(int $workers): array
+    {
+        return DB::transaction(function () use ($workers): array {
+            $permissionId = Permission::where('name', 'orders.edit_item')->value('id');
+            if ($permissionId === null) {
+                throw new \RuntimeException('La BD no tiene el permiso `orders.edit_item` (¿PermissionSeeder sin correr?): el escenario no puede actuar.');
+            }
+
+            $zone = Zone::create([
+                'slug' => 'pe-probe-'.Str::lower(Str::random(6)),
+                'name' => ['es' => 'PanelEdit Probe'],
+                'is_active' => true,
+            ]);
+
+            $schedule = app(OperatingSchedule::class);
+            [$date, $time] = $this->firstOpenSlotMoment($schedule);
+            $hour = fn (int $n): string => Carbon::parse($time)->addHours($n)->format('H:i:s');
+
+            $mk = fn (string $start, int $cap): Slot => Slot::create([
+                'zone_id' => $zone->id, 'date' => $date,
+                'start_time' => $start,
+                'end_time' => Carbon::parse($start)->addHour()->format('H:i:s'),
+                'capacity' => $cap, 'online_capacity' => $cap,
+                'online_sales_open' => true, 'status' => Slot::STATUS_OPEN,
+            ]);
+
+            $slotA = $mk($time, 10);          // destino A: su ventana [T, T+2h) pisa el medio
+            $mid = $mk($hour(1), 1);          // el MEDIO con UNA plaza — y también destino B
+            $mk($hour(2), 10);                // cola de la ventana de B (sin ella, B no cabría nunca)
+            $parking = $mk($hour(3), $workers + 1); // aparcamiento: su ventana no toca el medio
+            $mk($hour(4), $workers + 1);            // cola de la ventana del parking (los ítems son de 120 min)
+
+            $type = TicketType::create([
+                'name' => ['es' => 'Entrada PE 120'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
+                'duration_min' => 120, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
+            ]);
+
+            $role = Role::create([
+                'name' => 'pe-probe-'.Str::lower(Str::random(6)),
+                'label' => 'PanelEdit Probe (desechable)',
+            ]);
+            $role->permissions()->sync([$permissionId]);
+            $staff = User::forceCreate([
+                'name' => 'PE Staff',
+                'email' => 'pe-staff-'.Str::random(8).'@deleted.local',
+                'password' => bcrypt(Str::random(32)),
+            ]);
+            $staff->roles()->sync([$role->id]);
+
+            $users = [];
+            $itemIds = [];
+            $mkHolder = function (int $i) use ($type, $parking): array {
+                $buyer = User::forceCreate([
+                    'name' => 'PE Holder '.$i,
+                    'email' => 'pe-holder-'.Str::random(8).'@deleted.local',
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+                $order = Order::create([
+                    'user_id' => $buyer->id,
+                    'code' => 'PE-'.Str::upper(Str::random(6)),
+                    'status' => Order::STATUS_PAID,
+                    'subtotal' => 1000, 'total' => 1000, 'currency' => 'EUR',
+                    'paid_at' => now(),
+                ]);
+                $item = OrderItem::create([
+                    'order_id' => $order->id,
+                    'parent_item_id' => null,
+                    'ticket_type_id' => $type->id,
+                    'slot_id' => $parking->id,
+                    'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
+                ]);
+
+                return [$buyer, $item];
+            };
+
+            for ($i = 0; $i < $workers; $i++) {
+                [$buyer, $item] = $mkHolder($i);
+                $users[] = $buyer;
+                $itemIds[] = $item->id;
+            }
+            [$probeBuyer, $probeItem] = $mkHolder($workers); // el ítem SONDA de la guarda
+
+            return [
+                'scenario' => 'panel-edit',
+                'zone' => $zone, 'type' => $type,
+                'slot' => $mid, 'slot_a_id' => $slotA->id, 'mid_id' => $mid->id,
+                'parking_id' => $parking->id, 'parking_time' => $hour(3),
+                'date' => $date, 'time' => $time,
+                'dests' => [
+                    ['date' => $date, 'time' => $time],     // A: pisa el medio desde la franja anterior
+                    ['date' => $date, 'time' => $hour(1)],  // B: el medio mismo
+                ],
+                'users' => $users, 'item_ids' => $itemIds,
+                'staff_id' => $staff->id, 'role_id' => $role->id,
+                'extra_user_ids' => [$probeBuyer->id, $staff->id],
+                'probe_item_id' => $probeItem->id,
+                'probe_qty' => 1, 'expected_winners' => 1,
+            ];
+        });
+    }
+
+    /** Un movimiento de panel REAL — el camino entero de `executeItemSlotChange` — del worker $i. */
+    private function panelEditMove(array $seed, int $i): string
+    {
+        return $this->panelEditMoveItem(
+            $seed,
+            OrderItem::query()->findOrFail($seed['item_ids'][$i]),
+            $seed['dests'][$i % 2],
+        );
+    }
+
+    /**
+     * Ejecuta `ViewOrder::executeItemSlotChange` de verdad (permiso, capas de validación, lock
+     * zona/día, revalidación bajo lock, save) contra `$dest`, como lo haría el operador.
+     *
+     * @param  array{date:string, time:string}  $dest
+     */
+    private function panelEditMoveItem(array $seed, OrderItem $item, array $dest): string
+    {
+        // El hijo no debe encolar nada que sobreviva al escenario (email del cambio → array).
+        config(['mail.default' => 'array', 'queue.default' => 'sync']);
+        Auth::login(User::findOrFail($seed['staff_id']));
+
+        $from = (int) $item->slot_id;
+        $order = Order::query()->findOrFail($item->order_id);
+        $page = new ViewOrder;
+        $page->record = $order;
+
+        $method = new \ReflectionMethod(ViewOrder::class, 'executeItemSlotChange');
+        $method->invoke($page, $order, $item, [
+            'optimistic_token' => (string) ($item->updated_at?->getTimestamp() ?? ''),
+        ], $dest['date'], $dest['time'], null);
+
+        $now = (int) $item->fresh()->slot_id;
+
+        return $now !== $from ? 'moved:'.$now : 'blocked:'.$now;
+    }
+
+    /**
+     * La guarda del instrumento para `panel-edit`: el camino del panel tiene que poder MOVER una
+     * vez (sonda → destino A) y DESHACER (sonda → parking), dejando el medio VACÍO antes de la
+     * carrera. Si no puede, los N workers serían bloqueados por siembra —permiso, ventana del
+     * producto, horario— y el «no hubo sobreventa» no habría medido nada.
+     */
+    private function probePanelEditActs(array $seed): bool
+    {
+        $probe = OrderItem::query()->findOrFail($seed['probe_item_id']);
+
+        $in = $this->panelEditMoveItem($seed, $probe, $seed['dests'][0]);
+        if (! str_starts_with($in, 'moved:')) {
+            $this->error(
+                "La guarda del instrumento no pudo MOVER ni una vez (resultado: {$in}).\n".
+                '▶ Los workers serían bloqueados por un motivo que NO es la carrera. Revisa la siembra.'
+            );
+
+            return false;
+        }
+
+        $back = $this->panelEditMoveItem($seed, $probe->fresh(), ['date' => $seed['date'], 'time' => $seed['parking_time']]);
+        if (! str_starts_with($back, 'moved:')) {
+            $this->error("La sonda no pudo VOLVER al parking (resultado: {$back}): el medio arrancaría ocupado y la carrera no mediría nada.");
+
+            return false;
+        }
+
+        $this->line('<fg=gray>Guarda del instrumento · el camino del panel MUEVE y DESHACE. ✓</>');
+
+        return true;
+    }
+
+    /**
+     * Evaluación de `panel-edit`. La prueba DURA es la ocupación REAL de la franja intermedia:
+     * un ítem de 120 min la pisa si empieza en ella o en la anterior, así que se suman los
+     * asientos vivos de las DOS franjas. Con el lock correcto: exactamente 1.
+     */
+    private function evaluatePanelEdit(array $seed, int $workers, string $resultsDir): bool
+    {
+        $outcomes = collect(File::files($resultsDir))
+            ->map(fn ($f): string => trim(File::get($f->getPathname())));
+
+        $moved = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'moved:'));
+        $blocked = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'blocked:'));
+        $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'moved:') || str_starts_with($o, 'blocked:'));
+
+        $midSeats = $this->liveSeatsInSlots([$seed['slot_a_id'], $seed['mid_id']]);
+
+        $this->newLine();
+        $this->line('<options=bold>Resultados de los operadores concurrentes:</>');
+        $this->line('  '.$moved->count().'× movimiento comprometido');
+        $this->line('  '.$blocked->count().'× bloqueado (sin plaza al revalidar)');
+        if ($errors->isNotEmpty()) {
+            $this->line('  <fg=red>'.$errors->count().'× error inesperado</>');
+            $errors->each(fn ($e) => $this->line('     '.$e));
+        }
+
+        $winners = (int) $seed['expected_winners'];
+
+        $this->newLine();
+        $this->table(
+            ['Invariante', 'Esperado', 'Real', 'OK'],
+            [
+                ['Asientos vivos pisando la franja intermedia (cap 1)', '1', (string) $midSeats, $this->ok($midSeats === 1)],
+                ['Movimientos comprometidos', (string) $winners, (string) $moved->count(), $this->ok($moved->count() === $winners)],
+                ['Movimientos bloqueados', (string) ($workers - $winners), (string) $blocked->count(), $this->ok($blocked->count() === $workers - $winners)],
+                ['Errores inesperados', '0', (string) $errors->count(), $this->ok($errors->isEmpty())],
+            ]
+        );
+
+        $pass = $midSeats === 1
+            && $moved->count() === $winners
+            && $blocked->count() === $workers - $winners
+            && $errors->isEmpty();
+
+        $this->newLine();
+        if ($pass) {
+            $this->info("✅ PASA [panel-edit]: bajo {$workers} ediciones de panel concurrentes hacia la última plaza, `lockZoneDaySlots` serializó — UNA se comprometió, SIN sobreventa de la franja intermedia. Verificado sobre InnoDB real.");
+        } else {
+            $this->error('❌ FALLA [panel-edit]: SOBREVENTA o invariante roto. Revisar que `lockZoneDaySlots` bloquee TODA la zona/día y sea la PRIMERA sentencia de la transacción de la edición.');
+        }
+
+        return $pass;
+    }
+
+    /** Asientos vivos (mismo criterio de vida que el resto de contadores) en un conjunto de franjas. */
+    private function liveSeatsInSlots(array $slotIds): int
+    {
+        return (int) OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('order_items.slot_id', $slotIds)
+            ->whereNull('order_items.cancelled_at')
+            ->where(fn ($q) => $q->where('orders.status', Order::STATUS_PAID)
+                ->orWhere(fn ($q2) => $q2->where('orders.status', Order::STATUS_PENDING)
+                    ->where(fn ($q3) => $q3->whereNull('orders.expires_at')->orWhere('orders.expires_at', '>', now()))))
+            ->sum('order_items.seats');
+    }
+
     private function ok(bool $b): string
     {
         return $b ? '<fg=green>✓</>' : '<fg=red>✗</>';
@@ -810,6 +1101,26 @@ class VerifyPurchaseConcurrency extends Command
     private function cleanup(array $seed): void
     {
         $userIds = collect($seed['users'])->pluck('id')->all();
+        // `panel-edit` crea además la sonda, el staff, un rol desechable y audit logs del panel
+        // (cambios y bloqueos): todo se borra ANTES del barrido general, con los ids aún vivos.
+        if (($seed['scenario'] ?? '') === 'panel-edit') {
+            $userIds = array_merge($userIds, $seed['extra_user_ids']);
+
+            $peOrderIds = Order::whereIn('user_id', $userIds)->pluck('id')->all();
+            $peItemIds = OrderItem::whereIn('order_id', $peOrderIds)->pluck('id')->all();
+            AuditLog::query()
+                ->where(fn ($q) => $q
+                    ->where(fn ($q2) => $q2->where('target_type', (new Order)->getMorphClass())->whereIn('target_id', $peOrderIds))
+                    ->orWhere(fn ($q2) => $q2->where('target_type', (new OrderItem)->getMorphClass())->whereIn('target_id', $peItemIds)))
+                ->delete();
+
+            $role = Role::find($seed['role_id']);
+            if ($role !== null) {
+                $role->permissions()->detach();
+                $role->users()->detach();
+                $role->delete();
+            }
+        }
         $orderIds = Order::whereIn('user_id', $userIds)->pluck('id')->all();
 
         OrderItem::whereIn('order_id', $orderIds)->delete();

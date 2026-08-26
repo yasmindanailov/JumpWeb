@@ -72,8 +72,12 @@
 >   ocultas, que NO tenía red y la ganó — y **`VERIFY_CONC` corrido y en verde**: 5/5 escenarios de
 >   oversell + Redsys sobre MySQL). `ViewOrder` en **3.907 líneas** (de 5.280, −26 %) y **ya no
 >   compone ninguna oferta** (`AFORO-02`/`AFORO-09` al día).
->   ▶ **Siguiente y ÚLTIMA: extracción 4 — la orquestación del dinero** (§4.3: el mapa
->   transaccional real; el instrumento nuevo de §6·4).
+>   ▶ **Y el INSTRUMENTO de la extracción 4 ya existe y se vio FALLAR** (`#177`, spec §9.5):
+>   `purchase:verify-oversell --scenario=panel-edit` ejecuta el camino REAL de la edición de panel
+>   bajo carrera — con el lock real PASA (1/1) y con el lock mutado caza **2 donde cabía 1**. De
+>   paso arregló una FUGA preexistente del comando (guarda fallida saltaba el `finally`).
+>   ▶ **Siguiente y ÚLTIMA: extracción 4b — mover la orquestación del dinero** (§4.3: el mapa
+>   transaccional real; el instrumento ya en mano; navegador del owner al cerrar, §6·5).
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
 >   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
 >   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
@@ -103,7 +107,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#176`**.
+> El último usado es **`#177`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -188,9 +192,11 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2950 en verde** (17.012 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2950 en verde** (17.013 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+2 tests PHP en el último corte** (`#176`, extracción 3 del desmontaje): el del ancla del parque
+  ▶ **+0 tests y +1 aserción en el último corte** (`#177`, el instrumento de la extracción 4): el
+  inventario de `OversellVerifierCoversEveryQuotaTest` conoce el escenario `panel-edit` ·
+  ▶ **+2 tests PHP en el corte anterior** (`#176`, extracción 3 del desmontaje): el del ancla del parque
   que CRUZA la frontera UTC↔Madrid (el caso que `AFORO-09` no tenía) y el de «horas sin aforo se
   ocultan», cuya regla existía desde el origen y su mutación salía VERDE — 4 mutaciones del
   servicio, las 4 muerden ·

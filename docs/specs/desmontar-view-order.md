@@ -724,4 +724,32 @@ Livewire. `AFORO-02` queda aplicada al panel: **`ViewOrder` no compone ninguna o
 - Suite **2938 / 16.966 en verde** (+2 tests: el nocturno del ancla y el de ocultar) · Pint ✓ ·
   `php -l` ✓ · `AFORO-02`/`AFORO-09` actualizadas en `INVARIANTES.md`.
 
-### 9.5 Extracción 4 · La orquestación de dinero — PENDIENTE (la última)
+### 9.5 Extracción 4 · La orquestación de dinero — EL INSTRUMENTO HECHO; el movimiento, pendiente
+
+**4a · El instrumento PRIMERO (2026-08-26) — §6·4 cumplido antes de tocar una línea de dinero.**
+`purchase:verify-oversell` gana el escenario **`panel-edit`**: N ediciones de panel concurrentes
+(`executeItemSlotChange` REAL, por reflexión, con un staff desechable y un rol desechable — el rol
+`staff` global no se toca) moviendo ítems de 120 min hacia DOS destinos cuyas ventanas pisan una
+franja intermedia con UNA plaza. Es el hueco exacto de `AFORO-05` («el alcance zona/día del lock no
+tiene assert») y del docblock de `lockZoneDaySlots` (L3: dos ediciones con tramos solapados sin
+fila compartida).
+
+- **Con el lock real: PASA** — 1 comprometido, 7 bloqueados, franja intermedia con 1 asiento.
+- **❗ VISTO FALLAR** (la regla de `#147`): con `lockZoneDaySlots` mutado a solo-la-fila-destino,
+  el instrumento cazó **2 comprometidos donde cabía 1** (franja intermedia 2/1). Restauración
+  verificada por md5.
+- **Su guarda propia**: la sonda MUEVE y DESHACE por el camino entero del panel antes de forkar —
+  sin eso, un fallo de siembra (permiso, ventana, tramo sin franja) se leería como «no hubo
+  sobreventa».
+- ⚠️ **Defecto PREEXISTENTE del comando, encontrado y arreglado**: una guarda fallida salía por
+  `return` ANTES del `finally` y **fugaba la siembra entera** a la BD de desarrollo (medido: una
+  zona, un rol y nueve pedidos huérfanos). La sonda va ahora dentro del `try`, y los restos de la
+  fuga se limpiaron.
+- `OversellVerifierCoversEveryQuotaTest` conoce el escenario nuevo (inventario al día).
+- Suite **2950 / 17.013 en verde** · Pint ✓ · cero restos en la BD tras cada ejecución (comprobado).
+
+**4b · El MOVIMIENTO — PENDIENTE (tanda propia, la última)**: las cuatro fases de §4.3 a un
+servicio de dominio (dueño de la txn de aforo + orquestador de la secuencia financiera), el
+waterfall de créditos como pieza única, las guardas por sus DOS traits, la decisión del
+`CRITICAL_RE` para el servicio nuevo, y al cerrar: los verificadores (incluido `panel-edit`) + el
+navegador del owner (§6·5).
