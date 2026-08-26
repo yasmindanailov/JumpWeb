@@ -33,6 +33,33 @@ abstract class TestCase extends BaseTestCase
     private const CLOCK_ENV = 'TEST_CLOCK';
 
     /**
+     * **El otro modo: reloj DESPLAZADO pero EN MARCHA** (`DECISIONES #164`).
+     *
+     * ⚠️⚠️ `TEST_CLOCK` congela, y con el reloj congelado **el tiempo no avanza nunca**: por
+     * construcción no puede reproducir el modo de fallo en que la suite **cruza la medianoche a
+     * mitad de ejecución** —un test que lee `today()` dos veces y obtiene días distintos—, que es
+     * justo la hipótesis que se le dio a `#97` y que nadie había probado.
+     *
+     * Con `TEST_CLOCK_START` el proceso calcula UNA vez el desfase entre ese instante y el reloj
+     * real, y a partir de ahí el tiempo **corre normal, desplazado**. Poniendo el arranque unos
+     * segundos antes de una medianoche, la suite la cruza mientras corre.
+     *
+     *     docker compose exec -u sail -T -e TEST_CLOCK_START='2026-08-27 23:59:20' laravel.test \
+     *         php artisan test --parallel
+     *
+     * ⚠️ El desfase se calcula **una vez por proceso** (`self::$clockOffset`). Si se recalculara en
+     * cada `setUp`, cada test volvería al instante de arranque y el reloj no avanzaría nunca — que
+     * es exactamente el modo que este modo existe para NO tener.
+     * ⚠️ Y la clausura no puede usar fábricas de Carbon que consulten el «ahora» de prueba
+     * (`createFromTimestamp`): se llaman a sí mismas. **Medido: segfault por recursión infinita.**
+     * Por eso construye con `DateTimeImmutable` puro y solo después envuelve.
+     */
+    private const CLOCK_START_ENV = 'TEST_CLOCK_START';
+
+    /** Desfase en segundos del modo «en marcha». Se fija en el primer `setUp` del proceso. */
+    private static ?int $clockOffset = null;
+
+    /**
      * El cliente HTTP de testing de Laravel envía por defecto
      * `Accept-Language: en-us,en;q=0.5`. Como el middleware `SetLocale` autodetecta
      * por ese header (2026-05-26, auto-detect), todos los tests sin override
@@ -76,8 +103,26 @@ abstract class TestCase extends BaseTestCase
     private function applyAuditClock(): void
     {
         $raw = getenv(self::CLOCK_ENV);
+        $start = getenv(self::CLOCK_START_ENV);
 
-        if ($raw === false || trim($raw) === '') {
+        $frozen = $raw !== false && trim($raw) !== '';
+        $running = $start !== false && trim($start) !== '';
+
+        if ($frozen && $running) {
+            throw new RuntimeException(
+                self::CLOCK_ENV.' y '.self::CLOCK_START_ENV.' son EXCLUYENTES: uno congela el reloj y '
+                .'el otro lo deja correr desplazado. Con los dos puestos, el resultado dependería del '
+                .'orden en que se apliquen, y una medición así no dice nada.'
+            );
+        }
+
+        if ($running) {
+            $this->applyRunningClock(trim($start));
+
+            return;
+        }
+
+        if (! $frozen) {
             return;
         }
 
@@ -94,5 +139,29 @@ abstract class TestCase extends BaseTestCase
         }
 
         Carbon::setTestNow($at);
+    }
+
+    /**
+     * Reloj desplazado y EN MARCHA. Ver {@see self::CLOCK_START_ENV}.
+     */
+    private function applyRunningClock(string $raw): void
+    {
+        if (self::$clockOffset === null) {
+            try {
+                self::$clockOffset = Carbon::parse($raw, 'UTC')->getTimestamp() - time();
+            } catch (\Throwable $e) {
+                throw new RuntimeException(
+                    self::CLOCK_START_ENV." = «{$raw}» no es un instante que Carbon entienda. "
+                    .'Usa algo como «2026-08-27 23:59:20» (se interpreta en UTC).',
+                    0, $e
+                );
+            }
+        }
+
+        $offset = self::$clockOffset;
+
+        Carbon::setTestNow(static fn (): Carbon => Carbon::instance(
+            new \DateTimeImmutable('@'.(time() + $offset))
+        )->setTimezone('UTC'));
     }
 }

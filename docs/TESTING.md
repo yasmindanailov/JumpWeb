@@ -212,8 +212,24 @@ un instrumento que se autodesactiva al no entender su entrada da un verde que no
 `PHPUnit\Framework\TestCase` por convención (`CONVENCIONES §3.ter`) y el reloj **no les llega**.
 Medido el 2026-08-26: son 4 y ninguno depende de la fecha.
 
-**El barrido.** `bash scripts/audit-clock.sh` corre la suite entera en diez fronteras y lista los
-culpables. ⚠️ **No entra en el `pre-push`** (son diez pases completos): se corre a mano, y **conviene
+❗❗ **Y hay un SEGUNDO modo, porque el primero no puede cubrirlo todo: `TEST_CLOCK_START`.**
+Congelar el reloj significa que **el tiempo no avanza nunca**, así que por construcción `TEST_CLOCK`
+**no puede** reproducir el modo en que la suite **cruza la medianoche mientras corre** —un test que
+lee `today()` dos veces y obtiene días distintos—. Ésa era la hipótesis que se le dio a `#97` y no la
+había probado nadie. Con `TEST_CLOCK_START` el proceso calcula una vez el desfase y el tiempo **corre
+desplazado**; arrancando ~30 s antes de una medianoche, la suite la cruza a mitad de pase.
+
+    docker compose exec -u sail -T -e TEST_CLOCK_START='2026-08-27 23:59:30' laravel.test \
+        php artisan test --parallel
+
+⚠️ Los dos son **excluyentes** y ponerlos a la vez explota: con ambos, el resultado dependería del
+orden en que se apliquen, y una medición así no dice nada.
+⚠️ Y un detalle de implementación que costó un **segfault**: la clausura del reloj en marcha no puede
+usar fábricas de Carbon que consulten el «ahora» de prueba (`createFromTimestamp`), porque se llaman a
+sí mismas. Construye con `DateTimeImmutable` puro y envuelve después.
+
+**El barrido.** `bash scripts/audit-clock.sh` corre la suite entera en diez fronteras congeladas
+**más los dos cruces de medianoche**, y lista los culpables. ⚠️ **No entra en el `pre-push`** (son diez pases completos): se corre a mano, y **conviene
 al cerrar cualquier tanda que añada fixtures con calendario**.
 ⚠️⚠️ **Sus fechas se calculan RELATIVAS a hoy, y eso es el diseño**: una lista fija caduca igual que
 los fixtures que persigue.
@@ -236,6 +252,19 @@ tests nuevos:
   estaba bien** (`calendarPrevMonth()` es correcto): el que dependía del calendario era el test.
   ▶ Si necesitas aritmética de meses en un fixture, **congela en un día ≤ 28** o usa
   `addMonthsNoOverflow()`.
+
+### Y la sonda de ORDEN, que no es del reloj pero es de la misma familia
+
+Un test que depende de **en qué orden** corren los demás falla «a veces» igual que uno que depende del
+día. PHPUnit 12 lo prueba con una semilla reproducible:
+
+    docker compose exec -u sail -T laravel.test php artisan test --order-by=random --random-order-seed=4242
+
+⚠️ **Antes de creerte el verde, comprueba que la aleatorización SE APLICA**: corre dos semillas sobre
+un subconjunto y mira que el orden de los casos CAMBIE. `artisan test` reenvía las opciones que no
+conoce a PHPUnit, y una opción que no llega deja una sonda que mide nada. Medido el 2026-08-26: llega.
+⚠️ No se combina con `--parallel` (paratest reparte por fichero y tiene su propio orden), así que el
+pase es en serie y tarda bastante más.
 
 ⚠️ **Y el residuo, dicho sin adornos**: esto vale mientras alguien lo ejecute. No hay CI que lo dispare
 —`DEUDA.md` lo recoge—, así que el barrido depende de que se corra al cerrar. La alternativa medida

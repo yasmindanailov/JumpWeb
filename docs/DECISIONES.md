@@ -8783,3 +8783,73 @@ sin empezar.
 
 Verificación: suite verde sobre el estado FUSIONADO con `#162` (contador en `ESTADO`) · Pint ✓ ·
 `docs-check` ✓ · mutaciones con su salida en §9.8.
+
+## #164 · 2026-08-26 · La caza del fallo sin nombre de `#97`: el reloj queda EXONERADO, y el gate pasa a decir dónde está su propia salida
+
+`#162` auditó la suite contra el reloj y **no reprodujo `#97`** —el rojo del 2026-08-16 a las 00:02
+de Madrid cuya causa nunca se supo—. Esta entrada cierra la caza: qué se descartó, qué queda vivo, y
+el arreglo que sí tiene sentido cuando la causa no se puede reproducir.
+
+### Lo primero: el instrumento de `#162` NO podía cubrir la hipótesis que se le atribuía a `#97`
+
+⚠️⚠️ **`TEST_CLOCK` CONGELA el reloj, y con el reloj congelado el tiempo no avanza nunca.** Así que
+por construcción no puede reproducir el modo en que la suite **cruza la medianoche a mitad de pase**
+—un test que lee `today()` dos veces y obtiene días distintos—, que es exactamente lo que la doc
+llevaba desde agosto suponiendo. **Una auditoría que no puede fallar por la causa que investiga no ha
+investigado nada.**
+
+▶ De ahí sale el **segundo modo, `TEST_CLOCK_START`**: el proceso calcula UNA vez el desfase con el
+reloj real y a partir de ahí el tiempo **corre desplazado**. Arrancando ~30 s antes de una medianoche,
+la suite la cruza mientras corre.
+⚠️ **Costó un segfault entenderlo**: la clausura no puede usar fábricas de Carbon que consulten el
+«ahora» de prueba (`createFromTimestamp`) porque se llaman a sí mismas — **recursión infinita,
+exit 139**. Se construye con `DateTimeImmutable` puro y se envuelve después.
+⚠️ Y el desfase se fija **una vez por proceso**: recalcularlo en cada `setUp` devolvería el reloj al
+instante de arranque en cada test, y el tiempo no avanzaría nunca — el modo que este modo existe para
+NO tener.
+
+### La caza, y su resultado NEGATIVO
+
+| Hipótesis | Prueba | Resultado |
+|---|---|---|
+| El reloj en un **instante** frontera | 10 fronteras congeladas, suite entera (`#162`) | verde en las 10 |
+| El reloj **cruzando** la medianoche a mitad de pase | 4 pases con `TEST_CLOCK_START` (Madrid ×2, UTC ×2) | **verde en los 4** |
+| **Dependencia de ORDEN** entre tests | suite entera con `--order-by=random`, semillas 4242 y 1337 | **verde en las 2** |
+
+❗ **`#97` NO se reproduce, y el reloj queda exonerado.** La explicación que la doc le daba —«el cruce
+de medianoche»— **no sobrevive a la medición**, ni congelando el instante ni cruzándolo en marcha. La
+aritmética ya lo sugería (00:02 de Madrid son las 22:02 UTC, que no es medianoche de nada en UTC),
+pero una sospecha no es una medida.
+▶ **Medir para no encontrar nada sigue siendo medir** (`#94`): lo que queda descartado son las dos
+familias más probables, y eso estrecha lo que queda.
+⚠️ **Y la sonda de orden se verificó ANTES de creerle el verde**: dos semillas sobre un subconjunto,
+comprobando que el orden de los casos CAMBIA. `artisan test` reenvía a PHPUnit las opciones que no
+conoce, y una opción que no llegara habría dejado una sonda que mide nada.
+
+### El arreglo que sí procede cuando la causa no se puede reproducir
+
+**La razón por la que `#97` sigue sin nombre no es que fuera indetectable: es que se perdió la
+salida.** Y eso, mirado de cerca, era un defecto del propio gate:
+
+- El `pre-push` ya escribía la suite a un fichero (`tee "$suite_log"`).
+- Con `set -euo pipefail`, un rojo mata el script en esa línea, así que el `rm -f` final **no llega a
+  ejecutarse** y el fichero **sobrevivía**…
+- …y **nadie decía su nombre**. Lo único que veía el operador era la salida por pantalla, que es justo
+  lo que se pierde al hacer scroll o cerrar la terminal.
+
+▶ **Ahora un `trap` lo anuncia al caer**, con la ruta y la advertencia de no borrarlo — «si reintentas
+y sale verde, ese fichero es la única prueba de qué falló». Y el `rm -f` solo se ejecuta por el camino
+bueno: **un log que se borra en el camino de error es un log que no existe.**
+▶ Verificado en aislamiento simulando la suite en rojo: imprime la ruta y sale con 1.
+⚠️ **Alcance honesto**: el `trap` se arma en el paso de la suite. Un fallo anterior (docs-check, Pint,
+los dos builds, los tests JS) sale antes y su salida es corta y cabe en pantalla.
+⚠️ **Y un detalle que casi se cuela**: el cuerpo del `trap` va entre comillas simples, pero sus `echo`
+llevan comillas dobles — unos backticks dentro se habrían ejecutado como comando al dispararse.
+Retirados antes de probarlo.
+
+### Lo que queda vivo
+
+⚠️ **`#97` sigue sin causa.** Descartados el reloj y el orden, lo que queda son hipótesis que no se
+pueden provocar a voluntad (un recurso del contenedor, una carrera rarísima). **No se persigue más
+por ahora**: la próxima vez que ocurra, el gate dejará su log con nombre y la pregunta se responderá
+con datos en vez de con suposiciones. Es el cambio de «no se supo» a «se sabrá».

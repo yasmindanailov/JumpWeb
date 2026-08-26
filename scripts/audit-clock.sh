@@ -117,6 +117,39 @@ for i in "${!ETIQUETAS[@]}"; do
     fi
 done
 
+# ── Segunda fase: el CRUCE de medianoche a mitad de ejecución ────────────────
+# ⚠️⚠️ Las diez fronteras de arriba CONGELAN el reloj, y con el reloj congelado el tiempo
+# no avanza nunca: por construcción **no pueden** reproducir el modo en que la suite cruza
+# la medianoche MIENTRAS corre —un test que lee `today()` dos veces y obtiene días
+# distintos—. Ésa era la hipótesis que se le dio a `#97` y no la había probado nadie.
+# Con `TEST_CLOCK_START` el reloj corre desplazado: arrancando ~30 s antes de una
+# medianoche, la suite la cruza a mitad de pase.
+if [[ -z "$FILTER" ]]; then
+    echo
+    printf '%s %s %s\n' "$(pad 'CRUCE A MITAD DE PASE' 24)" "$(pad 'ARRANQUE (UTC)' 21)" 'RESULTADO'
+    printf '%s\n' '----------------------------------------------------------------------------------'
+
+    # 23:59:30 de Madrid en el offset de mañana (en verano, 21:59:30 UTC) y 23:59:30 UTC.
+    madrid_utc=$(date -u -d "$(TZ=Europe/Madrid date -d 'tomorrow 23:59:30' '+%Y-%m-%d %H:%M:%S') $(TZ=Europe/Madrid date -d 'tomorrow' '+%z')" '+%Y-%m-%d %H:%M:%S')
+    for par in "cruza medianoche MADRID|$madrid_utc" "cruza medianoche UTC|$(d 'tomorrow 23:59:30')"; do
+        etiqueta="${par%%|*}"; inicio="${par#*|}"
+        log="$(mktemp)"
+        docker compose exec -u sail -T -e TEST_CLOCK_START="$inicio" laravel.test \
+            php artisan test --parallel > "$log" 2>&1
+        code=$?
+        resumen=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -aoE 'Tests:.*' | tail -1)
+        [[ -z "$resumen" ]] && resumen='(la suite no llegó a informar — mira el log)'
+        if [[ $code -eq 0 ]]; then
+            printf '%s %s ✓ %s\n' "$(pad "$etiqueta" 24)" "$(pad "$inicio" 21)" "$resumen"
+            rm -f "$log"
+        else
+            FAIL=1
+            printf '%s %s ✗ %s\n' "$(pad "$etiqueta" 24)" "$(pad "$inicio" 21)" "$resumen"
+            echo "   ▶ log completo: $log"
+        fi
+    done
+fi
+
 echo
 if [[ $FAIL -eq 0 ]]; then
     echo '✓ audit-clock: la suite es verde en todas las fronteras.'

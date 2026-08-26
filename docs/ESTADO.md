@@ -23,6 +23,11 @@
 >   aritmética de meses de PHP desborda** (`2026-08-31 +3 meses = 2026-12-01`). Los dos arreglados.
 >   ▶ **Al cerrar una tanda que toque fixtures con calendario: `bash scripts/audit-clock.sh`**
 >   (está en `/cierre-sesion`; NO en el `pre-push`, son diez pases).
+>   ✅ **Y la caza de `#97` está cerrada** (`#164`): el reloj **queda EXONERADO** —10 fronteras
+>   congeladas + **4 cruces de medianoche a mitad de pase** (modo nuevo `TEST_CLOCK_START`) + la suite
+>   entera en **2 órdenes aleatorios**: todo verde—. ❗ **La causa sigue SIN NOMBRE**, pero el
+>   `pre-push` ya **dice la ruta de su log al caer**: antes sobrevivía y nadie lo anunciaba, que es
+>   por lo que `#97` se quedó sin diagnóstico. De «no se supo» a «se sabrá».
 >   **Ficheros**: `tests/TestCase.php` (hook opt-in por variable de entorno, **sin cambiar la
 >   conducta por defecto**) · los ficheros de test que resulten fallar —**excluyendo
 >   `tests/Feature/Api/V1/` y `tests/Feature/Waiver/`, que son del carril del waiver**— ·

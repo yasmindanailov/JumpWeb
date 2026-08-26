@@ -134,6 +134,23 @@ docker compose exec -u sail -T laravel.test npm run test:js
 
 echo '→ pre-push: suite completa (--parallel)…'
 suite_log="$(mktemp)"
+
+# ⚠️⚠️ **Si el gate cae, DICE DÓNDE ESTÁ SU SALIDA.** `DECISIONES #97`: el 2026-08-16 a las 00:02
+# el pre-push cayó con 1 fallo, el reintento salió verde y **nunca se supo qué había fallado** —la
+# salida se perdió—. El log ya existía (`tee` de aquí abajo) y `set -e` hace que el `rm` final no
+# llegue a ejecutarse, así que el fichero SOBREVIVÍA… y nadie decía su nombre. Un rojo transitorio
+# sin nombre no se puede arreglar: se reintenta, sale verde y la causa queda suelta para siempre.
+# ⚠️ Y no basta con que el `tee` lo pinte en pantalla: eso es justo lo que se pierde al hacer scroll
+# o al cerrar la terminal.
+# `#164` midió que el reloj y el orden NO explican `#97`, así que la causa sigue viva: la próxima vez
+# tiene que quedar capturada.
+trap 'estado=$?; if [[ $estado -ne 0 && -s "${suite_log:-}" ]]; then
+        echo "" >&2
+        echo "▶ pre-push: la salida COMPLETA de la suite está en: ${suite_log}" >&2
+        echo "  NO la borres antes de mirarla. Si reintentas y sale verde, ese fichero es la única" >&2
+        echo "  prueba de qué falló (DECISIONES #97 se quedó sin ella)." >&2
+      fi' EXIT
+
 docker compose exec -u sail -T laravel.test php artisan test --parallel 2>&1 | tee "$suite_log"
 
 # ── El CONTADOR de la suite en ESTADO.md, que hasta hoy no vigilaba nadie ─────────────────────
@@ -147,7 +164,10 @@ ran_tests=$(grep -a 'Tests:' "$suite_log" | grep -oE 'Tests:[[:space:]]+[0-9]+' 
 ran_asserts=$(grep -a 'Assertions:' "$suite_log" | grep -oE 'Assertions:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
 doc_tests=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\*' docs/ESTADO.md | grep -oE '[0-9]+' | head -1 || true)
 doc_asserts=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\* \([0-9.]+ aserciones' docs/ESTADO.md | grep -oE '\([0-9.]+' | tr -d '(.' | head -1 || true)
+# Solo se borra si el gate va bien: si algo falla, el `trap` de arriba lo anuncia y el fichero
+# se queda. Un log que se borra en el camino de error es un log que no existe.
 rm -f "$suite_log"
+trap - EXIT
 
 if [[ -z "$ran_tests" || -z "$ran_asserts" || -z "$doc_tests" || -z "$doc_asserts" ]]; then
     echo '✗ pre-push: no he podido leer el contador de la suite o el que declara `docs/ESTADO.md`.' >&2
