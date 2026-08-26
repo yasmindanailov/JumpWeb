@@ -28,6 +28,13 @@
 >   entera en **2 órdenes aleatorios**: todo verde—. ❗ **La causa sigue SIN NOMBRE**, pero el
 >   `pre-push` ya **dice la ruta de su log al caer**: antes sobrevivía y nadie lo anunciaba, que es
 >   por lo que `#97` se quedó sin diagnóstico. De «no se supo» a «se sabrá».
+>   ✅ **ESCRITA: la SPEC para desmontar `ViewOrder`** (`docs/specs/desmontar-view-order.md`) (`[DECIDIDO owner, 2026-08-26]`), la mayor
+>   deuda estructural con «sin plan». ⚠️ **Solo DISEÑO, ni una línea de código**: el proceso exige
+>   spec revisada antes de tocar el fichero más peligroso del producto (`CONVENCIONES §5`).
+>   ⚠️ **Cifra caducada corregida al medir**: son **5.280** líneas, no las 5.029 que declaraba
+>   `DEUDA.md` desde el 2026-08-14 — creció 251 sin que nadie mirara.
+>   **Ficheros**: `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md` · `docs/README.md` ·
+>   `CLAUDE.md` (fila de enrutado). **No toca `app/`.**
 >   **Ficheros**: `tests/TestCase.php` (hook opt-in por variable de entorno, **sin cambiar la
 >   conducta por defecto**) · los ficheros de test que resulten fallar —**excluyendo
 >   `tests/Feature/Api/V1/` y `tests/Feature/Waiver/`, que son del carril del waiver**— ·

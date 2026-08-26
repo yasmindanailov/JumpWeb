@@ -74,6 +74,7 @@ Laravel 13 + MySQL · Blade SSR (landing) · Livewire v4 (sidebar, en migración
 | Panel admin / puerta / operación diaria | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` (fixture: §datos de prueba) · `docs/CONVENCIONES.md` (§3.bis/§3.ter) |
+| **Desmontar `ViewOrder`** · el god-class del panel · tocar edición/reembolso/calendario de un pedido | `docs/specs/desmontar-view-order.md` 🟦 (**§1.3: es GRANDE pero NO enmarañado** — solo 5 propiedades públicas, 4 del calendario, así que son extracciones acotadas y no una reescritura · **§1.4: el panel tiene su PROPIA disponibilidad**, cero `Booking\Contracts\*` y `Slot::query()` a mano · **§4.2: sustituirla puede destapar una diferencia de CONDUCTA** —es un hallazgo, no un error de la mudanza, y se mide ANTES de mover· §4.1: cuatro extracciones **por riesgo creciente**, el dinero la última · ⚠️ §5: `AFORO-01` es el más expuesto, y hoy `ViewOrder` **no** está en el `CRITICAL_RE`) · `docs/DEUDA.md` |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` **§3.quater** (clasificar por sujeto + las cuatro trampas de la mutación) |
 | Staging / desplegar / aprovisionar | `docs/ENTORNOS.md` §4 (**medido**: API del panel, orden del docroot, `robots.txt`) |
 | Vocabulario de dominio (término ↔ código) | `docs/GLOSARIO.md` |

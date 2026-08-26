@@ -8853,3 +8853,85 @@ Retirados antes de probarlo.
 pueden provocar a voluntad (un recurso del contenedor, una carrera rarísima). **No se persigue más
 por ahora**: la próxima vez que ocurra, el gate dejará su log con nombre y la pregunta se responderá
 con datos en vez de con suposiciones. Es el cambio de «no se supo» a «se sabrá».
+
+## #165 · 2026-08-26 · La spec para desmontar `ViewOrder` — y lo que la medición cambió del diagnóstico
+
+`DEUDA.md` tiene el god-class del panel en **Alta** con «sin plan» desde el 2026-08-14. Esta entrada
+le pone plan. **Solo diseño: no se ha tocado una línea de `app/`**, y no debe tocarse hasta que otro
+agente revise la spec y el owner la apruebe — es el fichero más cerca del dinero y del aforo que
+tiene el producto.
+
+### Lo primero que apareció al abrirlo: la ficha mentía en su única cifra
+
+    DEUDA.md decía   5.029 líneas   (medido el 2026-08-14)
+    medido hoy       5.280 líneas   → +251 en doce días
+
+Y no crece solo: crece **porque cada tanda de dinero entra por ahí** (`#146`, `#149`, `#150`). La
+regla de la casa aplicada a la casa: *una fila que nombra una cifra hay que abrirla, no creerla*.
+
+### ❗ El dato que cambió el diseño: es GRANDE, no está ENMARAÑADO
+
+Iba a diseñar una reescritura. La medición dijo otra cosa: **el fichero tiene CINCO propiedades
+públicas de Livewire, y cuatro son del calendario**. La composición de la ficha ya vive fuera
+(`Schemas/OrderInfolist.php`).
+
+▶ **El estado mutable compartido es mínimo**, así que las 5.280 líneas no están entrelazadas: están
+amontonadas. Eso convierte el trabajo en **una serie de extracciones acotadas** en vez de una
+reescritura — un god-class con veinte propiedades compartidas habría sido otro proyecto, y con otro
+riesgo.
+▶ Y hay **red**: 16 ficheros de test y **~285 casos** conducen la clase. Sin eso, desmontarla sería
+temerario; con eso, cada extracción se verifica por mutación.
+
+### El reparto medido, que es lo que ordena el plan
+
+    1.699 líneas (32 %) · 14 métodos → orquestación de DOMINIO (execute/compute/validate/save)
+    1.223 líneas (23 %) · 20 métodos → acciones y composición de Filament   ← entrega legítima
+      524 líneas ( 9 %) · 13 métodos → calendario (y las 4 propiedades)     ← estado de UI
+      ~460 líneas ( 9 %)             → presentación y notificaciones        ← entrega legítima
+      ~219 líneas ( 4 %) ·  3 métodos → lecturas de disponibilidad
+      ~1.150 (22 %)                  → ayudantes, de las dos naturalezas
+
+`executeItemEdit` sola tiene **475 líneas**. Los doce métodos mayores suman **el 39 % del fichero**.
+
+### Y un hallazgo que no se buscaba
+
+**`ViewOrder` no usa ni un solo `Booking\Contracts\*`** —cero referencias— y compone su propia
+disponibilidad con **`Slot::query()` a mano**. Fase 3 creó `AvailabilityOffer` justo para que web y app
+ofrecieran las mismas fechas; **el panel se quedó fuera**. Es la misma familia que la ficha «cuarta
+copia de la aritmética de cesta», en otro fichero.
+
+⚠️ **Matiz medido antes de acusar**: no todo está duplicado. `computeAddonPricing()` **sí** reutiliza
+las primitivas del dominio (`AddonResolver`, `RateResolver`); lo que compone por su cuenta es la
+orquestación. La duplicación completa es **solo** la de disponibilidad.
+
+### El plan: cuatro extracciones por RIESGO CRECIENTE
+
+Calendario (mínimo, y es el ensayo del método) → presentación → **disponibilidad, sustituyéndola por
+el contrato que ya existe** → **la orquestación de dinero, la última**, con el método ya rodado tres
+veces.
+
+⚠️⚠️ **El paso de la disponibilidad puede destapar una diferencia de CONDUCTA** entre el panel y el
+contrato: llevan meses evolucionando por separado. **Eso es un hallazgo, no un error de la mudanza**,
+y la spec fija que solo tiene una salida válida —medir cuál de las dos es correcta y decidirlo— y que
+la comparación se hace **ANTES** de mover nada. Si difieren, el paso se para.
+
+### Dos descartes con medida detrás
+
+- ⛔ **Partirlo en traits por tamaño**: mueve líneas, no responsabilidades. El dominio seguiría en la
+  capa de entrega, ahora repartido en cinco sitios donde se ve peor.
+- ⛔ **Mover la orquestación al modelo `Order`**: `Order.php` ya tiene **2.349 líneas**. Cambiaría un
+  god-class de entrega por un god-model, que es peor porque al modelo lo usa todo el mundo.
+
+### Lo que la spec NO decide, a propósito
+
+El **nombre y la forma exacta del contrato** del paso 4. Sale de lo que enseñen las tres extracciones
+anteriores; fijarlo hoy sería especulación — misma doctrina que `#37` con el segundo driver de
+pasarela. Y si `ViewOrder` debe seguir siendo una sola clase al final: se decide **con la cifra en la
+mano**.
+
+❗ **Y una decisión que queda abierta y es de gate**: hoy `ViewOrder` **no** está en el `CRITICAL_RE`
+del `pre-push`, así que tocarlo no exige `VERIFY_CONC`. Si su orquestación de dinero pasa a un
+servicio de dominio, **ese servicio probablemente sí deba entrar**. Se decide en el paso 4.
+
+Verificación: docs-check ✓ · solo doc (`app/` intacto) · spec registrada en `docs/README.md` y en la
+tabla de enrutado de `CLAUDE.md`, como exige `CONVENCIONES §5`.
