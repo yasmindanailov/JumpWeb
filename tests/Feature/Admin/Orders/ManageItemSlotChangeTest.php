@@ -215,6 +215,116 @@ class ManageItemSlotChangeTest extends TestCase
         $this->assertSame($target->id, (int) $item->fresh()->slot_id); // se movió (sin auto-bloqueo)
     }
 
+    /**
+     * `AFORO-06` para la rama de ENTRADA (la de arriba cubre la de pack): una entrada de 120 min con
+     * 10 plazas llena por sí sola las franjas de las 10:00 y las 11:00 (capacidad 10). Moverla a las
+     * 11:00 solapa su propia huella: sin `excludeItemId` se contaría a sí misma y se bloquearía
+     * siempre. Ganó su test en la extracción 4b: la mutación «sin excluir la huella» en la rama de
+     * entrada salía VERDE (solo el pack la tenía).
+     */
+    public function test_entry_can_be_moved_to_overlapping_slot_when_its_own_seats_fill_the_gap(): void
+    {
+        $twoHours = TicketType::create([
+            'name' => ['es' => 'Jump 2h'],
+            'zone_id' => $this->zone->id,
+            'duration_min' => 120,
+            'is_sellable' => true,
+            'is_active' => true,
+            'seats_per_unit' => 1,
+            'position' => 3,
+        ]);
+        [$order, $item] = $this->makePaidEntryOrder('10:00:00', seats: 10);
+        $item->update(['ticket_type_id' => $twoHours->id]);
+        $target = $this->slotAt($this->todayPlus7, '11:00:00');
+
+        Livewire::actingAs($this->staffWithEdit())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->set('calendarItemId', $item->id)
+            ->set('calendarSelectedDate', $this->todayPlus7)
+            ->set('calendarSelectedTime', '11:00:00')
+            ->callAction('manageItem',
+                data: $this->formData($item->fresh(), ['slot_date' => $this->todayPlus7, 'slot_time' => '11:00:00']),
+                arguments: ['item' => $item->id],
+            )
+            ->assertHasNoActionErrors();
+
+        $this->assertSame($target->id, (int) $item->fresh()->slot_id);
+        $this->assertNull(AuditLog::where('action', 'orders.item_edit_blocked')->first());
+    }
+
+    /**
+     * La revalidación de aforo DENTRO del lock es la última defensa: la validación previa de la
+     * franja (`validateNewSlot`) no mira plazas, así que un destino LLENO llega hasta la
+     * transacción y se rechaza allí con `insufficient_capacity_at_save`. Ganó su test en la
+     * extracción 4b: la mutación «sin revalidar aforo bajo el lock» salía VERDE.
+     */
+    public function test_move_to_a_full_slot_is_blocked_at_save_with_audit(): void
+    {
+        Notification::fake();
+        [$order, $item] = $this->makePaidEntryOrder('10:00:00');
+        $this->makePaidEntryOrder('11:00:00', seats: 10); // otro pedido llena las 11:00 (capacidad 10)
+        $oldSlotId = $item->slot_id;
+
+        Livewire::actingAs($this->staffWithEdit())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->set('calendarItemId', $item->id)
+            ->set('calendarSelectedDate', $this->todayPlus7)
+            ->set('calendarSelectedTime', '11:00:00')
+            ->callAction('manageItem',
+                data: $this->formData($item, ['slot_date' => $this->todayPlus7, 'slot_time' => '11:00:00']),
+                arguments: ['item' => $item->id],
+            );
+
+        $this->assertSame($oldSlotId, $item->fresh()->slot_id);
+        $log = AuditLog::where('action', 'orders.item_edit_blocked')->latest()->first();
+        $this->assertNotNull($log);
+        $this->assertSame('insufficient_capacity_at_save', $log->payload['reason']);
+        $this->assertNull(AuditLog::where('action', 'orders.item_slot_changed')->first());
+        Notification::assertNothingSentTo($order->user);
+    }
+
+    /**
+     * Los datos del evento anidados en un cambio de franja: si se rechazan (aquí, un obligatorio
+     * vacío — que el formulario de Filament nunca deja pasar, por eso se llama al servicio), el
+     * cambio de franja SE MANTIENE, el rechazo queda auditado como siempre lo estuvo en esta ruta
+     * y el email no cita `event_data_change`. Ganó su test en la extracción 4b: la mutación «sin
+     * audit del rechazo anidado» salía VERDE.
+     */
+    public function test_change_slot_audits_a_rejected_event_data_but_still_moves_the_item(): void
+    {
+        Notification::fake();
+        $this->zone->update(['max_per_slot' => 5, 'max_guests_per_slot' => 100]);
+        $this->packType->update(['event_fields' => [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
+        ]]);
+        [$order, $item] = $this->makePaidPackOrder('10:00:00', guests: 8);
+        $item->update(['event_data' => ['celebrant' => 'Mateo']]);
+        $item = $item->fresh(['ticketType', 'slot']);
+        $target = $this->slotAt($this->todayPlus7, '11:00:00');
+
+        $outcome = app(OrderItemEditor::class)->changeSlot(
+            $order,
+            $item,
+            $this->todayPlus7,
+            '11:00:00',
+            (string) $item->updated_at->getTimestamp(),
+            ['celebrant' => ''],
+            $this->staffWithEdit(),
+        );
+
+        $this->assertFalse($outcome->isBlocked());
+        $this->assertFalse($outcome->extra['event_data_changed']);
+        $this->assertSame($target->id, (int) $item->fresh()->slot_id);
+        $this->assertSame(['celebrant' => 'Mateo'], $item->fresh()->event_data);
+        $blocked = AuditLog::where('action', 'order_items.event_data_blocked')->latest()->first();
+        $this->assertNotNull($blocked);
+        $this->assertSame('required_missing', $blocked->payload['reason']);
+        $this->assertSame(['celebrant'], $blocked->payload['missing_keys']);
+        Notification::assertSentTo($order->user, OrderItemModified::class, function (OrderItemModified $n): bool {
+            return ! array_key_exists('event_data_change', $n->changes);
+        });
+    }
+
     public function test_save_with_same_slot_is_noop_no_email_no_audit(): void
     {
         Notification::fake();

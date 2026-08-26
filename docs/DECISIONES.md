@@ -9853,3 +9853,33 @@ una, la otra derivaba en silencio.
 Verificación: suite **2973 / 17.145 en verde** (mismos tests; +6 aserciones del gate) · Pint global ✓
 · `php -l` ✓ · `bash -n` del hook ✓ · `purchase:verify-oversell` 6/6 · mutación vista FALLAR en `entry` y `panel-edit`
 (restauración por md5) · `redsys:verify-concurrency` PASA · empujado con `VERIFY_CONC=1`.
+
+## #187 · 2026-08-27 · Extracción 4b · sub-paso C: el cambio de franja al dominio con UN punto de lock — y el instrumento invoca el servicio por su contrato
+
+Cuarto sub-paso del plan de `#182` (spec §9.6.1). `OrderItemEditor::changeSlot()` es la operación
+entera —las cinco capas, la transacción bajo **`withZoneDayLock()`** (abre la txn y toma
+`ZoneDaySlotLock` como PRIMERA sentencia; será el mismo punto para `edit()` en F, así que el
+escenario `panel-edit` vigila las dos), el audit, los datos del evento con el token refrescado y el
+email—; la página traduce el outcome. `ViewOrder` pasa de 3.173 a **3.008 líneas**.
+
+**Lo que enseñó:**
+1. **El instrumento ya no necesita la página.** `purchase:verify-oversell --scenario=panel-edit`
+   invoca `changeSlot()` por contrato (sin `ReflectionMethod`, sin `new ViewOrder`, sin
+   `Auth::login`) y **FALLA con `withZoneDayLock` sin tomar el lock, PASA con el lock real** sobre
+   MySQL. Es la red de concurrencia de C y de F.
+2. **Tres reglas sin red, otra vez** (la constante de la 4b): la huella propia excluida solo tenía
+   test para el PACK (`AFORO-06`), no para la entrada multi-franja; la revalidación de aforo bajo el
+   lock la prometía el docblock del fichero de tests («aforo insuficiente — blocked») y no la probaba
+   nadie; y el audit del rechazo anidado de `event_data` era inalcanzable desde Filament. Tres
+   tests nuevos y las mutaciones muerden: 8 de 8 observables.
+3. **Una mutación INOBSERVABLE es un ahorro, no una conducta**: sin el atajo «misma franja = no-op»,
+   la misma franja pasa la revalidación con la huella excluida y guarda lo mismo. No se prueba.
+4. **Dos desviaciones más de §9.5·G, medidas**: `humanSlotLabel` se PERSISTE (contexto de los
+   ajustes y audit) → dominio; el audit del rechazo anidado es parte del rastro de la operación →
+   `OrderItemEventDataWriter::auditBlocked()`, público para la página y el editor.
+5. **Trampa de instrumento**: `perl 's/\Q$this->…\E/'` interpola `$this` antes de `\Q` y la mutación
+   «no cambia nada» — el diff vacío lo delató; la sustitución va por `$ENV`.
+
+Verificación: suite **2976 / 17.168 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · `panel-edit`
+FALLA mutado / PASA real (MySQL, 8 workers) · 7 mutaciones más sobre la red SQLite, todas muerden ·
+fidelidad por diferencia de conjuntos: cero lógica · empujado con `VERIFY_CONC=1`.

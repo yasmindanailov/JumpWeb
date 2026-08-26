@@ -56,7 +56,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
@@ -1878,8 +1877,8 @@ class ViewOrder extends ViewRecord
         $changes = [];
         if ($slotChanged) {
             $changes['slot_change'] = [
-                'old' => $this->humanSlotLabel($oldSlot),
-                'new' => $this->humanSlotLabel($effectiveSlot),
+                'old' => OrderItemEditor::humanSlotLabel($oldSlot),
+                'new' => OrderItemEditor::humanSlotLabel($effectiveSlot),
             ];
         }
         if ($productChanged) {
@@ -2206,28 +2205,12 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Ejecuta el cambio de slot del item con defense in depth 5 capas
-     * (sub-fase 7.2e.2, decisión #159).
-     *
-     * Capas:
-     *  1. Permission `orders.edit_item` (capa 1 desplazada del handler
-     *     porque mountUsing no la valida — el modal puede ser viewer).
-     *  2. Re-check `editItemBlockedReason` con fila fresca + audit log
-     *     de bloqueos.
-     *  3. Optimistic lock vs `item.updated_at`.
-     *  4. Validar new_slot: existe + zone match + futuro + park open +
-     *     product window OK + aforo suficiente con la SEMÁNTICA SIN
-     *     CONTAR EL ITEM ACTUAL (ya está fuera de su slot conceptual).
-     *  5. `DB::transaction` lockForUpdate sobre NEW slot + revalidar
-     *     aforo + update `slot_id` atómico. Si en paralelo otro Order
-     *     consume el aforo, el lock serializa y vemos el aforo real
-     *     dentro de la txn.
-     *
-     * Sub-fase 7.2e.2 NO actualiza event_data en la misma txn aunque
-     * `$eventDataCandidate` sea non-null — lo procesa tras la txn con
-     * la lógica de 7.2c. La integración atómica multi-campo llega en
-     * 7.2e.3+ cuando el handler maneje quantity/product en la misma txn.
-     * Para 7.2e.2 ambos cambios disparan UN solo email consolidado.
+     * Cambio de slot del item (sub-fase 7.2e.2, decisión #159): la operación
+     * entera —las cinco capas de defense in depth, la transacción bajo el
+     * lock de zona/día, el audit, los datos del evento y el email— vive en
+     * `OrderItemEditor::changeSlot()` desde la extracción 4b. Esta capa
+     * traduce el desenlace: el rechazo a su audit + aviso (el permiso, sin
+     * audit, como siempre) y el éxito a su toast.
      */
     private function executeItemSlotChange(
         Order $order,
@@ -2237,164 +2220,35 @@ class ViewOrder extends ViewRecord
         string $newTime,
         ?array $eventDataCandidate,
     ): void {
-        $user = auth()->user();
-
-        // Capa 1: permission.
-        if (! ($user?->hasPermission('orders.edit_item') ?? false)) {
-            Notification::make()
-                ->title(__('admin.orders.manage_item.permission_denied'))
-                ->danger()
-                ->send();
-
-            return;
-        }
-
-        // Capa 2: revalidar bloqueo del item con fila fresca.
-        $reason = $order->editItemBlockedReason($item);
-        if ($reason !== null) {
-            $this->logManageItemBlocked($order, $item, 'edit', $reason);
-            $this->manageItemBlockedNotification($reason);
-
-            return;
-        }
-
-        // Capa 3: optimistic.
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($item->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->logManageItemBlocked($order, $item, 'edit', 'stale_item_version');
-            $this->manageItemBlockedNotification('stale_item_version');
-
-            return;
-        }
-
-        // Capa 4: validar el slot elegido.
-        $newSlot = $this->itemEditor()->resolveSlotForItem($item, $newDate, $newTime);
-        $validationReason = $this->itemEditor()->validateNewSlot($item, $newSlot);
-        if ($validationReason !== null) {
-            $this->logManageItemBlocked($order, $item, 'edit', $validationReason);
-            $this->manageItemBlockedNotification($validationReason);
-
-            return;
-        }
-
-        $oldSlot = $item->slot;
-        $oldLabel = $this->humanSlotLabel($oldSlot);
-        $newLabel = $this->humanSlotLabel($newSlot);
-
-        // Capa 5: txn con lockForUpdate sobre el NEW slot + revalidate aforo.
-        $committed = false;
-        DB::transaction(function () use ($item, $newSlot, &$committed): void {
-            // Lock sobre TODA la zona/día de destino (L3) — serializa contra compras y otras
-            // ediciones de panel concurrentes que pudieran agotar plazas mientras procesamos.
-            $this->lockZoneDaySlots($newSlot);
-            /** @var OrderItem $locked */
-            $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
-
-            // Re-check defensivo: el item podría haber sido cancelado
-            // entre capa 2 y este lock. `markCancelled` es terminal.
-            if ($locked->isCancelled()) {
-                return;
-            }
-
-            // Sub-fase 7.2e.2bis10 (#164): si el item YA está en este slot
-            // (caso defensivo — el handler debería filtrar este caso antes
-            // de entrar), mantenerlo es no-op y no consume aforo nuevo:
-            // commit sin validación de capacity.
-            if ($locked->slot_id === $newSlot->id) {
-                $committed = true;
-
-                return;
-            }
-
-            // Aforo revalidado DENTRO del lock: si entre capa 4 y aquí otro
-            // Order consumió plazas, vemos el aforo REAL y abortamos si no hay
-            // capacity. EXCLUYE la huella propia del item (auditoría Fase 1 · P3):
-            // un pack/entrada multi-franja cuya ventana de cupo SOLAPA con la del
-            // slot destino (recolocar media hora/una hora) se contaría a sí mismo
-            // y se bloquearía siempre (fail-closed). Mismo `excludeItemId` que el
-            // path unificado `executeItemEdit` (de ahí su divergencia previa).
-            $available = $locked->ticketType?->isPack()
-                ? app(PackAvailability::class)->availableGuestsFor($newSlot, $locked->ticketType, [], $locked->id)
-                : app(SlotAvailability::class)->availableFor($newSlot, $locked->ticketType?->duration_min, [], $locked->id);
-            if ($available < (int) $locked->seats) {
-                return; // committed se queda false → fallo silencioso post-txn.
-            }
-
-            $locked->forceFill(['slot_id' => $newSlot->id])->save();
-            $committed = true;
-        });
-
-        if (! $committed) {
-            $this->logManageItemBlocked($order, $item, 'edit', 'insufficient_capacity_at_save');
-            $this->manageItemBlockedNotification('insufficient_capacity_at_save');
-
-            return;
-        }
-
-        // Audit log del cambio de slot.
-        AuditLogger::log(
-            action: 'orders.item_slot_changed',
-            target: $order,
-            payload: [
-                'order_code' => $order->code,
-                'order_item_id' => $item->id,
-                'ticket_type_id' => $item->ticket_type_id,
-                'from_slot_id' => $oldSlot?->id,
-                'from_date' => $oldSlot?->date?->toDateString(),
-                'from_time' => $oldSlot?->start_time,
-                'to_slot_id' => $newSlot->id,
-                'to_date' => $newDate,
-                'to_time' => $newTime,
-            ],
+        $outcome = $this->itemEditor()->changeSlot(
+            $order,
+            $item,
+            $newDate,
+            $newTime,
+            (string) ($data['optimistic_token'] ?? ''),
+            $eventDataCandidate,
+            auth()->user(),
         );
 
-        // Si el form también traía event_data y aplica al item, procesar a
-        // continuación con la lógica de 7.2c (su propio audit + email).
-        // Sub-fase 7.2e.2 mantiene los dos paths separados; la integración
-        // unificada se hará en 7.2e.3+ junto a quantity/product.
-        $eventDataEmailFlag = false;
-        if ($eventDataCandidate !== null) {
-            // Refrescar el optimistic_token: el save del slot bumpeó el
-            // updated_at del item, el siguiente save necesita el nuevo token.
-            $fresh = $item->fresh();
-            $data['optimistic_token'] = (string) ($fresh?->updated_at?->getTimestamp() ?? '');
-            $eventDataEmailFlag = $this->saveItemEventDataReturningDiffPresence(
-                $order,
-                $item->fresh(),
-                $data,
-            );
-        }
+        if ($outcome->isBlocked()) {
+            if ($outcome->reason === 'permission_denied') {
+                Notification::make()
+                    ->title(__('admin.orders.manage_item.permission_denied'))
+                    ->danger()
+                    ->send();
 
-        // Email consolidado de cambio de slot (+ event_data si aplica).
-        $changes = ['slot_change' => ['old' => $oldLabel, 'new' => $newLabel]];
-        if ($eventDataEmailFlag) {
-            $changes['event_data_change'] = true;
-        }
+                return;
+            }
+            $this->logManageItemBlocked($order, $item, 'edit', $outcome->reason);
+            $this->manageItemBlockedNotification($outcome->reason);
 
-        $order->notifyCustomer(new OrderItemModified(
-            order: $order->fresh(),
-            item: $item->fresh(),
-            changes: $changes,
-        ));
+            return;
+        }
 
         Notification::make()
             ->title(__('admin.orders.manage_item.success_slot_changed'))
             ->success()
             ->send();
-    }
-
-    /**
-     * Etiqueta humana de un slot para mostrar en email/audit ("dd/mm/YYYY HH:MM").
-     * Devuelve "—" si el slot es null (defensivo: items sin slot).
-     */
-    private function humanSlotLabel(?Slot $slot): string
-    {
-        if ($slot === null) {
-            return '—';
-        }
-
-        return $slot->date->format('d/m/Y').' '.Str::substr($slot->start_time, 0, 5);
     }
 
     /**
@@ -2440,7 +2294,7 @@ class ViewOrder extends ViewRecord
 
         if ($outcome->isBlocked()) {
             if (in_array($outcome->reason, ['stale_version', 'required_missing'], true)) {
-                $this->logItemEventDataBlocked($order, $item, reason: $outcome->reason, extra: $outcome->extra);
+                $this->eventDataWriter()->auditBlocked($order, $item, $outcome->reason, $outcome->extra);
             }
 
             return false;
@@ -2492,7 +2346,7 @@ class ViewOrder extends ViewRecord
             if ($outcome->reason === 'permission_denied') {
                 abort(403); // Inalcanzable tras la puerta de arriba; se conserva el contrato (SEC-04).
             }
-            $this->logItemEventDataBlocked($order, $item, reason: $outcome->reason, extra: $outcome->extra);
+            $this->eventDataWriter()->auditBlocked($order, $item, $outcome->reason, $outcome->extra);
             if ($outcome->reason === 'required_missing') {
                 Notification::make()
                     ->title(__('admin.orders.item_detail.flash_required_missing', [
@@ -2521,23 +2375,6 @@ class ViewOrder extends ViewRecord
             ->title(__('admin.orders.item_detail.flash_saved'))
             ->success()
             ->send();
-    }
-
-    /**
-     * @param  array<string,mixed>  $extra
-     */
-    private function logItemEventDataBlocked(Order $order, OrderItem $item, string $reason, array $extra = []): void
-    {
-        AuditLogger::log(
-            action: 'order_items.event_data_blocked',
-            target: $item,
-            payload: array_merge([
-                'order_code' => $order->code,
-                'order_status' => $order->displayStatus(),
-                'ticket_type_id' => $item->ticket_type_id,
-                'reason' => $reason,
-            ], $extra),
-        );
     }
 
     // ─── Sub-fase 7.2e.1bis — cancelar / reembolsar item (decisión #154) ─────

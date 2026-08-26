@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\OrderCreator;
+use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
@@ -18,12 +19,10 @@ use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
-use App\Filament\Resources\Orders\Pages\ViewOrder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -64,13 +63,15 @@ class VerifyPurchaseConcurrency extends Command
      *  · `mixed`       — una entrada y un cumpleaños **compitiendo a la vez** en la misma zona y
      *                    franja. ⚠️ **Su nº de ganadores VARÍA entre ejecuciones y es correcto**:
      *                    mide TOPES, no ganadores (ver {@see self::evaluateMixed()}).
-     *  · `panel-edit`  — N EDICIONES DE PANEL concurrentes (`ViewOrder::executeItemSlotChange`)
-     *                    moviendo ítems multi-franja a DOS destinos distintos cuyas ventanas pisan
-     *                    una franja intermedia con UNA plaza. Es el hueco que `AFORO-05` documenta
-     *                    («el ALCANCE zona/día del lock no tiene assert») y el instrumento que la
-     *                    extracción 4 del desmontaje de `ViewOrder` exige (spec §6·4): con
-     *                    `lockZoneDaySlots` real gana UNO; con un lock de solo-la-fila-destino los
-     *                    dos destinos no comparten fila y la franja intermedia se sobrevende.
+     *  · `panel-edit`  — N EDICIONES DE PANEL concurrentes (`OrderItemEditor::changeSlot()`, la
+     *                    operación del panel desde la extracción 4b) moviendo ítems multi-franja a
+     *                    DOS destinos distintos cuyas ventanas pisan una franja intermedia con UNA
+     *                    plaza. Es el hueco que `AFORO-05` documenta («el ALCANCE zona/día del lock
+     *                    no tiene assert») y el instrumento que la extracción 4 del desmontaje de
+     *                    `ViewOrder` exige (spec §6·4): con `ZoneDaySlotLock` real (tomado por
+     *                    `withZoneDayLock`, el punto ÚNICO de lock del editor) gana UNO; sin él, o
+     *                    con un lock de solo-la-fila-destino, los dos destinos no comparten fila y
+     *                    la franja intermedia se sobrevende.
      *
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
@@ -79,7 +80,7 @@ class VerifyPurchaseConcurrency extends Command
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -834,7 +835,8 @@ class VerifyPurchaseConcurrency extends Command
     // ─── Escenario `panel-edit`: el lock zona/día de las EDICIONES bajo carrera (AFORO-05) ────
     // Instrumento exigido por la extracción 4 del desmontaje de `ViewOrder`
     // (`docs/specs/desmontar-view-order.md` §6·4): los otros escenarios conducen `OrderCreator`,
-    // y el lock que la extracción muda (`lockZoneDaySlots`) no lo ejecutaba NINGÚN verificador.
+    // y el lock que la extracción mudó (hoy `ZoneDaySlotLock`, tomado por
+    // `OrderItemEditor::withZoneDayLock`) no lo ejecutaba NINGÚN verificador.
 
     /**
      * Siembra del escenario de EDICIÓN DE PANEL concurrente.
@@ -849,7 +851,7 @@ class VerifyPurchaseConcurrency extends Command
      * impares al MEDIO mismo (ventana [T+1h, T+3h)). El medio admite UNA plaza: con el lock
      * zona/día real solo UN movimiento puede comprometerla; con un lock de solo-la-fila-destino,
      * A y B no comparten fila bloqueada, los dos revalidan contra el mismo hueco y el medio acaba
-     * con DOS — la sobreventa exacta que motivó `lockZoneDaySlots` (L3, `AFORO-05`).
+     * con DOS — la sobreventa exacta que motivó el lock de zona/día del panel (L3, `AFORO-05`).
      *
      * ⚠️ El personal es un usuario DESECHABLE con un rol DESECHABLE que lleva el permiso
      * `orders.edit_item` EXISTENTE: no se toca el rol `staff` global ni se crean permisos.
@@ -966,8 +968,10 @@ class VerifyPurchaseConcurrency extends Command
     }
 
     /**
-     * Ejecuta `ViewOrder::executeItemSlotChange` de verdad (permiso, capas de validación, lock
-     * zona/día, revalidación bajo lock, save) contra `$dest`, como lo haría el operador.
+     * Ejecuta `OrderItemEditor::changeSlot()` de verdad (permiso, capas de validación, lock
+     * zona/día, revalidación bajo lock, save) contra `$dest`, como lo haría el operador desde el
+     * panel — desde la extracción 4b (`#187`) la operación vive en el dominio y se invoca por su
+     * contrato, sin reflexión ni página.
      *
      * @param  array{date:string, time:string}  $dest
      */
@@ -975,17 +979,19 @@ class VerifyPurchaseConcurrency extends Command
     {
         // El hijo no debe encolar nada que sobreviva al escenario (email del cambio → array).
         config(['mail.default' => 'array', 'queue.default' => 'sync']);
-        Auth::login(User::findOrFail($seed['staff_id']));
 
         $from = (int) $item->slot_id;
         $order = Order::query()->findOrFail($item->order_id);
-        $page = new ViewOrder;
-        $page->record = $order;
 
-        $method = new \ReflectionMethod(ViewOrder::class, 'executeItemSlotChange');
-        $method->invoke($page, $order, $item, [
-            'optimistic_token' => (string) ($item->updated_at?->getTimestamp() ?? ''),
-        ], $dest['date'], $dest['time'], null);
+        app(OrderItemEditor::class)->changeSlot(
+            $order,
+            $item,
+            $dest['date'],
+            $dest['time'],
+            (string) ($item->updated_at?->getTimestamp() ?? ''),
+            null,
+            User::findOrFail($seed['staff_id']),
+        );
 
         $now = (int) $item->fresh()->slot_id;
 
@@ -1069,9 +1075,9 @@ class VerifyPurchaseConcurrency extends Command
 
         $this->newLine();
         if ($pass) {
-            $this->info("✅ PASA [panel-edit]: bajo {$workers} ediciones de panel concurrentes hacia la última plaza, `lockZoneDaySlots` serializó — UNA se comprometió, SIN sobreventa de la franja intermedia. Verificado sobre InnoDB real.");
+            $this->info("✅ PASA [panel-edit]: bajo {$workers} ediciones de panel concurrentes hacia la última plaza, `ZoneDaySlotLock` serializó — UNA se comprometió, SIN sobreventa de la franja intermedia. Verificado sobre InnoDB real.");
         } else {
-            $this->error('❌ FALLA [panel-edit]: SOBREVENTA o invariante roto. Revisar que `lockZoneDaySlots` bloquee TODA la zona/día y sea la PRIMERA sentencia de la transacción de la edición.');
+            $this->error('❌ FALLA [panel-edit]: SOBREVENTA o invariante roto. Revisar que `OrderItemEditor::withZoneDayLock` tome `ZoneDaySlotLock` de TODA la zona/día como PRIMERA sentencia de la transacción de la edición.');
         }
 
         return $pass;

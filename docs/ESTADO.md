@@ -86,8 +86,13 @@
 >   UNA vez, compartida por `OrderCreator` y el panel; 6/6 escenarios PASAN y **con el helper sin
 >   `FOR UPDATE` FALLAN `entry` Y `panel-edit`** (una mutación, dos puertas rojas). `ZoneDaySlotLock`
 >   y `OrderItemEditor` en el `CRITICAL_RE` desde hoy. Fósil retirado: un docblock de `lockSlots`
->   describía la subconsulta que `AFORO-01` prohíbe. ▶ **Siguiente: C** (`changeSlot()` al editor y
->   el instrumento `panel-edit` re-apuntado al servicio). Detalle: spec §9.6.1.
+>   describía la subconsulta que `AFORO-01` prohíbe.
+>   ✅ **C HECHO** (`#187`, 03:30, `VERIFY_CONC`): `OrderItemEditor::changeSlot()` con
+>   `withZoneDayLock()` como punto ÚNICO de lock; el instrumento `panel-edit` invoca el servicio por
+>   contrato y **FALLA con el lock retirado, PASA con el real**; `ViewOrder` en **3.008**; 8/8
+>   mutaciones observables muerden — tres tras ganar su test (huella propia en ENTRADAS, destino
+>   lleno bajo el lock, audit del rechazo anidado). ▶ **Siguiente: D** (`OrderItemCanceller`) y E
+>   (`OrderItemRefunder`), luego F (`edit()`, el monstruo). Detalle: spec §9.6.1.
 >   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
 >   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
 >   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
@@ -142,7 +147,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#186`**.
+> El último usado es **`#187`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -236,9 +241,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **2973 en verde** (17.145 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+- Suite **2976 en verde** (17.168 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+0 tests, +6 aserciones en el último corte** (`#186`, C0 de la 4b: `CriticalPathGateTest` vigila
+  ▶ **+3 tests PHP en el último corte** (`#187`, C de la 4b): la huella propia excluida al mover una
+  ENTRADA que se solapa a sí misma, el destino LLENO rechazado bajo el lock con su audit, y el
+  rechazo anidado de `event_data` auditado sin deshacer el cambio de franja — tres mutaciones que
+  salían verdes. Antes:
+  ▶ **+0 tests, +6 aserciones** (`#186`, C0 de la 4b: `CriticalPathGateTest` vigila
   cuatro ficheros más — dos críticos, dos controles negativos). Antes:
   ▶ **+3 tests PHP en el último corte** (`#185`, sub-paso B de la 4b): tres reglas de
   `OrderItemEventDataWriter` que la página NO alcanza (obligatorios ausentes —Filament valida

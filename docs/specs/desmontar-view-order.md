@@ -963,3 +963,36 @@ texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el inst
   cero restos en la BD.
 - Suite **2973 / 17.145 en verde** (mismos tests; +6 aserciones de `CriticalPathGateTest` por las
   cuatro entradas nuevas) · Pint global ✓ · `php -l` ✓ · `bash -n` del hook ✓.
+
+**C · HECHO (2026-08-27, 03:30 — `#187`, `VERIFY_CONC`).** El cambio de franja vive en el dominio:
+- **`OrderItemEditor::changeSlot(Order, OrderItem, date, time, token, ?eventData, ?User)`**: las
+  cinco capas → la transacción bajo **`withZoneDayLock()`, EL punto único de lock del editor** (abre
+  la txn, `ZoneDaySlotLock` como PRIMERA sentencia, ejecuta el cuerpo) → audit `orders.item_slot_changed`
+  → los datos del evento con el token refrescado (`saveEventDataAfterMutation`) → UN email. Devuelve
+  `done(['event_data_changed' => bool])` o `blocked(reason)`; la página traduce (permiso sin audit,
+  el resto audit + aviso, éxito → toast). `ViewOrder` en **3.008** (de 3.173; −165); el editor, 679.
+- **El instrumento `panel-edit` invoca el servicio por su contrato** — sin reflexión, sin `new
+  ViewOrder`, sin `Auth::login` (el `$by` va explícito). Sus mensajes y la ayuda de `--scenario`
+  (que no listaba `panel-edit`) dicen ahora dónde vive el lock.
+- **Dos desviaciones más de §9.5·G, medidas**: `humanSlotLabel` NO es solo presentación — su salida se
+  PERSISTE en `order_adjustments.context` (`slot_change.old/new`) y en el audit → `public static` del
+  editor (la página lo llama para `edit()` hasta F). Y el audit del rechazo ANIDADO de `event_data`
+  (`order_items.event_data_blocked`) es parte del rastro de la operación → `OrderItemEventDataWriter::
+  auditBlocked()`, público, que usan la página (acción suelta) y el editor (anidado).
+- **Mutación: 8 de 8 observables muerden — MC1 sobre MySQL**: `withZoneDayLock` sin tomar el lock →
+  `panel-edit` **FALLA** («SOBREVENTA o invariante roto»); con el lock real, PASA. Y en la red SQLite:
+  sin `excludeItemId` en el pack → rojo · sin optimistic lock → rojo · nombre del audit → 3 errores ·
+  sin email → 2 rojos · **tres que salían VERDES y ganaron su test**: sin `excludeItemId` en la rama
+  de ENTRADA (solo el pack tenía test, `AFORO-06`) → `test_entry_can_be_moved_to_overlapping_slot…`
+  (entrada de 120 min con 10 plazas que llena sola dos franjas) · sin revalidar aforo bajo el lock
+  (la clase docblock del fichero prometía «aforo insuficiente — blocked» y no lo probaba nadie) →
+  `test_move_to_a_full_slot_is_blocked_at_save_with_audit` · sin audit del rechazo anidado →
+  `test_change_slot_audits_a_rejected_event_data_but_still_moves_the_item` (directo al servicio, con un
+  obligatorio vacío que Filament nunca dejaría pasar). **MC7 (el no-op de la misma franja) es
+  INOBSERVABLE**: sin el atajo, la misma franja pasa la revalidación con la huella excluida y guarda lo
+  mismo — es un ahorro de consulta, no una conducta; no se prueba.
+- ⚠️ **Trampa de instrumento, pagada**: `perl -pi 's/\Q$this->…\E/…/'` interpola `$this` como variable
+  ANTES de `\Q`: la primera MC1 «no cambió nada» y habría pasado por verde de no comprobar el diff.
+  La sustitución va por `$ENV{A}`, como en la función `mutate`.
+- Suite **2976 / 17.168 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · Admin/Orders 598 ·
+  Architecture 197 · `panel-edit` PASA con el lock real.

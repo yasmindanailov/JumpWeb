@@ -120,6 +120,28 @@ class OrderItemEventDataWriter
     }
 
     /**
+     * Audit estructurado de un intento RECHAZADO de guardar los datos del evento
+     * (`order_items.event_data_blocked`). Lo escribe quien traduce el rechazo: la página en la
+     * acción suelta, y `OrderItemEditor` cuando el guardado viene anidado en un cambio de franja o
+     * una edición (donde solo la versión rancia y los obligatorios ausentes dejan rastro).
+     *
+     * @param  array<string,mixed>  $extra
+     */
+    public function auditBlocked(Order $order, OrderItem $item, string $reason, array $extra = []): void
+    {
+        AuditLogger::log(
+            action: 'order_items.event_data_blocked',
+            target: $item,
+            payload: array_merge([
+                'order_code' => $order->code,
+                'order_status' => $order->displayStatus(),
+                'ticket_type_id' => $item->ticket_type_id,
+                'reason' => $reason,
+            ], $extra),
+        );
+    }
+
+    /**
      * @param  array<string,scalar>  $before
      * @param  array<string,scalar>  $after
      * @return array{changed:array<string,array{0:string,1:string}>,added:array<string,string>,removed:array<string,string>}
