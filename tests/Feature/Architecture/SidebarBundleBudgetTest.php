@@ -335,8 +335,13 @@ class SidebarBundleBudgetTest extends TestCase
      * acepta funciones para el nodo y la clave y espera a que existan, que es lo que faltaba para
      * que el alta suelta de `/registro` funcionara con el anti-bot encendido—. El techo no se toca:
      * **quedan 0,15 KiB.**
+     * ▶ **2026-08-26 (noche, `#175`): 225,85 → 226,21, +0,36 por CORRECCIONES, y el techo sube a
+     * 226,5** por la regla escrita (cede por correcciones, con su medida): el store del waiver acepta
+     * el id del texto ENSEÑADO y relee cuando el estado dice otro (CAJ-1), el 422 del alta relee y
+     * desmarca (CAJ-2), la casilla se desmarca tras el 409 (CAJ-3) y el contador de reservas del
+     * índice vuelve a pintarse (CAJ-5). **Quedan 0,29 KiB.** Lo siguiente que entre lo mide.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 226;
+    private const SIDEBAR_CHUNK_MAX_KB = 226.5;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -422,7 +427,7 @@ class SidebarBundleBudgetTest extends TestCase
         $this->assertLessThanOrEqual(
             self::SIDEBAR_CHUNK_MAX_KB, $kb,
             sprintf(
-                'El chunk del cajón pesa %.1f kB (techo: %d kB). Se descarga en la primera apertura, '.
+                'El chunk del cajón pesa %.2f kB (techo: %s kB). Se descarga en la primera apertura, '.
                 'así que su peso es tiempo de espera del cliente justo cuando quiere comprar.',
                 $kb, self::SIDEBAR_CHUNK_MAX_KB
             )

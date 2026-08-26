@@ -2,6 +2,7 @@ import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
 import { useAuthStore } from './auth.js';
+import { useWaiverStore } from './waiver.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, resendGate } from '../account/verify.js';
 import { createNavigation } from '../account/navigation.js';
 import { useAccountStore } from './account.js';
@@ -524,5 +525,52 @@ describe('el alta esperando verificación', () => {
         a.clearNotices();
 
         assert.equal(a.awaitingVerification, false);
+    });
+});
+
+/**
+ * `#175` (revisión `#169` §10.3, CAJ-2): el alta con la casilla del waiver marcada y un texto que ya no
+ * es el vigente vuelve como 422 sobre `waiver_document_id` («vuelve a leerlo»). Hasta hoy el texto
+ * plegado seguía siendo el viejo y cada reenvío mandaba el mismo id: un callejón sin salida.
+ */
+describe('el alta cuyo texto del waiver caducó', () => {
+    test('un 422 sobre waiver_document_id desmarca la casilla y RELEE el texto', async () => {
+        const a = store();
+        const waiver = useWaiverStore();
+        const v2 = { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v2' }], published_at: null } };
+        const v3 = { mode: 'interno', document: { id: 9, version: 3, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v3' }], published_at: null } };
+        const legal = [v2, v3];
+        const api = fakeApi({
+            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { waiver_document_id: ['El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.'] } } },
+        });
+        api.get = async (url) => { api.llamadas.push({ url }); return url === '/legal/waiver' ? { ok: true, status: 200, data: legal.shift() ?? v3 } : { ok: false, status: 500, data: null }; };
+
+        await waiver.ensureLegal({ api });
+        a.form.accept_waiver = true;
+        const r = await a.register({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(r.ok, false);
+        assert.equal(api.llamadas.find((c) => c.url === '/auth/register').body.waiver_document_id, 7, 'se mandó el id del texto que se había leído');
+        assert.equal(a.form.accept_waiver, false, 'lo que se leyó ya no es lo que se firma');
+        assert.equal(waiver.document.version, 3, 'el texto plegado es ahora el vigente');
+        assert.equal(waiver.reread, true);
+        assert.equal(a.registerError.fields.waiver_document_id, 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.');
+    });
+
+    test('un 422 por OTRO campo no toca el texto ni la casilla', async () => {
+        const a = store();
+        const waiver = useWaiverStore();
+        const api = fakeApi({
+            '/legal/waiver': { ok: true, status: 200, data: { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Exención', sections: [], published_at: null } } },
+            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { email: ['Ya existe'] } } },
+        });
+
+        await waiver.ensureLegal({ api });
+        a.form.accept_waiver = true;
+        await a.register({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(a.form.accept_waiver, true);
+        assert.equal(waiver.reread, false);
+        assert.equal(api.llamadas.filter((c) => c.url === '/legal/waiver').length, 1);
     });
 });

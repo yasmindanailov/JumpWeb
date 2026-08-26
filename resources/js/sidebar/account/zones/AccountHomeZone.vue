@@ -60,7 +60,9 @@ const context = useAccountContextStore();
                      `space-between` y un hijo más dejaría el texto flotando en el medio. -->
                 <ZoneIcon :zone="zone" />
                 {{ translate(account, titleKeyOf(zone)) }}
-                <template v-if="zone === HOME_ENTRIES[0] && upcoming > 0">
+                <!-- `store.upcoming`, no `upcoming`: sin el prefijo resolvía a `undefined` y el
+                     contador NO se pintaba nunca (revisión `#169` §10.3, CAJ-5). -->
+                <template v-if="zone === HOME_ENTRIES[0] && store.upcoming > 0">
                     <!--
                       ⚠️ El número va `aria-hidden` y su lectura la da el `sr-only` de al lado, con la
                       MISMA clave que usa el bloque `.acct` del panel para lo mismo. Medido en

@@ -13,11 +13,13 @@ import { formState, resetForm, runForm } from '../account/form-run.js';
  *  · `POST /me/waiver` — aceptar el texto vigente. Va por `runForm`, como el resto de formularios del
  *    área: `busy`, `notice`, `done`.
  *
- * ⚠️⚠️ **El identificador que se acepta es SIEMPRE el que el servidor sirvió**, y el cliente no lo
- * inventa ni lo recuerda de otra sesión: sale de la respuesta que tiene en memoria. Si el texto se
- * publicó de nuevo entre medias, el servidor responde `409 waiver_document_stale`; aquí se descarta lo
- * leído y se vuelve a pedir, para que la pantalla enseñe el texto NUEVO. Aceptar sin releer sería
- * exactamente lo que la spec prohíbe.
+ * ⚠️⚠️ **El identificador que se acepta es SIEMPRE el del texto que se ENSEÑA**, y el cliente no lo
+ * inventa ni lo recuerda de otra sesión: sale de `GET /legal/waiver` en memoria. Si el estado propio
+ * dice que el vigente es otro, se relee ANTES de que nadie firme (`#175`: hasta entonces el id salía
+ * del estado y el texto de otra respuesta, y podían divergir). Si el texto se publicó de nuevo entre
+ * medias, el servidor responde `409 waiver_document_stale`; aquí se descarta lo leído y se vuelve a
+ * pedir, para que la pantalla enseñe el texto NUEVO — y `reread` le dice a la pantalla que desmarque
+ * la casilla. Aceptar sin releer sería exactamente lo que la spec prohíbe.
  *
  * ⚠️ **Un fallo de lectura no se anuncia** (`legal`/`status` se quedan en `null`): es el mismo criterio
  * que `stores/privacy.js::ensureConsents()` — una lista de cortesía no tumba una pantalla—. Y las dos
@@ -35,6 +37,13 @@ export const useWaiverStore = defineStore('waiver', {
         /** `GET /me/waiver` crudo. `null` mientras no se haya pedido (o falló). */
         status: null,
         statusLoading: false,
+
+        /**
+         * `true` cuando el texto en pantalla se acaba de RELEER porque el que había ya no era el
+         * vigente (409 al aceptar, 422 del alta, o el estado propio apuntando a otro id). La pantalla
+         * lo usa para desmarcar «he leído y acepto»: lo que se leyó ya no es lo que se firma (CAJ-3).
+         */
+        reread: false,
     }),
 
     getters: {
@@ -46,16 +55,27 @@ export const useWaiverStore = defineStore('waiver', {
         signatures: (state) => state.status?.signatures ?? [],
 
         /**
-         * El `id` que se manda al aceptar. El del estado propio manda (es el vigente en MI idioma
-         * negociado al pedirlo); si aún no se pidió, el del texto público.
+         * El `id` que se manda al aceptar: el del texto ENSEÑADO, y solo ese. Hasta `#175` prefería
+         * `status.current_document_id` —otra respuesta, pedida en otro momento— y en la ruta del
+         * embudo (alta en el paso 5 → sesión sin recarga → Privacidad) podía enseñar la versión vieja
+         * y firmar la nueva sin que el servidor viera nada raro (revisión `#169` §10.3, CAJ-1). Si el
+         * estado dice que el vigente es otro, `ensureStatus()` relee el texto ANTES.
          */
-        currentDocumentId: (state) => state.status?.current_document_id ?? state.legal?.document?.id ?? null,
+        currentDocumentId: (state) => state.legal?.document?.id ?? null,
     },
 
     actions: {
         /** Deja los formularios como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona. */
         reset() {
             resetForm(this);
+            this.reread = false;
+        },
+
+        /** Olvida el texto en pantalla, lo vuelve a pedir, y deja dicho que se releyó. */
+        async reloadLegal({ api = httpClient } = {}) {
+            this.legal = null;
+            this.reread = true;
+            await this.ensureLegal({ api });
         },
 
         /** Pide el texto firmable **solo si no lo tiene**. */
@@ -90,6 +110,14 @@ export const useWaiverStore = defineStore('waiver', {
             } finally {
                 this.statusLoading = false;
             }
+
+            // El texto en pantalla puede venir de otra página (el alta lo cachea): si el estado propio
+            // dice que el vigente es OTRO, se relee antes de que nadie lo firme (CAJ-1).
+            const current = this.status?.current_document_id ?? null;
+
+            if (current !== null && this.legal !== null && current !== (this.legal?.document?.id ?? null)) {
+                await this.reloadLegal({ api });
+            }
         },
 
         /**
@@ -118,13 +146,12 @@ export const useWaiverStore = defineStore('waiver', {
                     return response;
                 },
                 { messages, auth },
-                (response) => { this.status = response.data; },
+                (response) => { this.status = response.data; this.reread = false; },
             );
 
             if (! ok && stale) {
-                this.legal = null;
                 this.status = null;
-                await Promise.all([this.ensureLegal({ api }), this.ensureStatus({ api })]);
+                await Promise.all([this.reloadLegal({ api }), this.ensureStatus({ api })]);
             }
 
             return ok;

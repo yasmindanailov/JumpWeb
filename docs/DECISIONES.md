@@ -9420,3 +9420,48 @@ la conducta.
 
 Verificación: suite (el contador vive en `ESTADO.md`) · `VERIFY_CONC=1` con `waiver:verify-chain`
 (8/16, y visto fallar) · Pint ✓ · docs-check ✓ · `php -l` ✓.
+
+## #175 · 2026-08-26 · Tanda 4 · unidad 3 del waiver: lo que se ENSEÑA es lo que se FIRMA — el cajón cierra sus tres grietas, y un test antiguo era la grieta escrita
+
+**Qué se hizo** (carril A; CAJ-1/2/3 y CAJ-5 de la revisión `#169` §10.3; spec **§9.11**):
+
+1. **El id que se acepta es el del texto ENSEÑADO, y solo ese** (CAJ-1). `currentDocumentId` prefería
+   `status.current_document_id` —otra respuesta, pedida en otro momento— y en la ruta del embudo
+   (alta en el paso 5 → sesión sin recarga → Privacidad) podía enseñar la versión vieja y firmar la
+   nueva sin que el servidor viera nada raro. Hoy sale de `legal.document.id`, y si el estado propio
+   dice que el vigente es OTRO, `ensureStatus()` **relee el texto antes** de que nadie lo firme; si esa
+   relectura falla, **no queda ningún id** que aceptar (el del estado no vale: nadie lo ha leído).
+   ⚠️ **Un test afirmaba lo contrario** —«el estado propio manda sobre el texto público para el id que
+   se acepta»— y pasaba: era la grieta, escrita como test. Se reescribió, y el caso que faltaba (la
+   relectura fallida) fue el que hizo morder a la primera mutación, que con los otros dos pasaba.
+2. **El 422 del alta relee y desmarca** (CAJ-2). «Vuelve a leerlo y acéptalo de nuevo» solo se puede
+   cumplir si se RELEE: `stores/auth.js::register()` ve el 422 sobre `waiver_document_id`, desmarca
+   `accept_waiver` y pide `reloadLegal()`; el texto plegado pasa a ser el vigente y el reenvío lleva
+   el id nuevo. Un 422 por otro campo no toca nada.
+3. **Tras el 409 la casilla se desmarca** (CAJ-3): el store deja `reread = true` en toda relectura
+   (409, 422, estado apuntando a otro id) y lo apaga al firmar bien; `PrivacyZone` desmarca solo si
+   hubo relectura — un fallo de red no obliga a marcar otra vez. Es lo que el guion V34 vio fallar por
+   la tarde (2 ✗), ahora ✓.
+4. **`store.upcoming`** (CAJ-5): una palabra en `AccountHomeZone.vue`; el contador de reservas del
+   índice compilaba a `t.upcoming>0` (`undefined`) y no se pintaba nunca. Verificado en el bundle:
+   ahora compara con el store.
+
+**El techo del chunk sube de 226 a 226,5 KiB por CORRECCIÓN** (225,85 → 226,21, +0,36), por la
+regla escrita —cede por correcciones, con su medida— y con su párrafo en el ledger de
+`SidebarBundleBudgetTest`. Quedan 0,29 KiB.
+
+**Lo medido**: `npm run test:js` **695 → 700** · **5 mutaciones, las 5 muerden** (id desde el estado ·
+sin relectura ante otro id · `reloadLegal` sin marcar · el 422 del alta sin releer · —y la primera
+solo mordió tras añadir el caso de la relectura fallida—), ficheros restaurados por `cmp` · guardas
+del cajón 69/69 tras `build` + `build:ssr` (componentes ≤ 40 líneas: `PrivacyZone` sigue en 38) ·
+**headless con el anti-bot ENCENDIDO, 14 de 14**: alta con texto caducado → `422 waiver_document_id`
+→ `GET /legal/waiver` → casilla desmarcada, texto nuevo en pantalla, banner → reenvío con el id nuevo
+→ `201` → cuenta verificada; Privacidad con casilla marcada → se publica otra versión → «Firmar» →
+`409` → **casilla desmarcada y botón deshabilitado**, texto nuevo → marcar y firmar → `201`.
+
+**Lo que enseñó**: **un test puede ser la descripción fiel de un defecto**. «El estado manda» se
+escribió como intención y era el mecanismo por el que se firmaba lo no leído. Cuando un cambio de
+conducta rompe un test, antes de arreglar el test hay que preguntarse cuál de los dos tenía razón.
+
+Verificación: `node --test` 700/700 ✓ · guardas del cajón ✓ · headless 14/14 ✓ · docs-check ✓ · Pint ✓
+(el contador PHP vive en `ESTADO.md`, sin cambios en PHP salvo el ledger del techo).

@@ -73,8 +73,10 @@ waiver.ensureLegal();
 const acceptWaiver = ref(false);
 const waiverText = computed(() => translateWith(props.account, waiverStatusKey(waiver.status), { version: waiver.status?.version ?? '' }));
 
+// Tras un fallo, la casilla solo se desmarca si el texto se RELEYÓ (409 `waiver_document_stale`): lo
+// que se leyó ya no es lo que se firma, y un segundo clic no puede firmar sin volver a marcar (CAJ-3).
 async function sign() {
-    if (! await waiver.accept(ctx())) return;
+    if (! await waiver.accept(ctx())) { if (waiver.reread) acceptWaiver.value = false; return; }
     acceptWaiver.value = false;
     useAccountContextStore().refresh();
 }

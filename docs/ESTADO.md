@@ -38,7 +38,10 @@
 >   idempotencia por versión y sujeto DENTRO del lock, guarda de borrador con los tres marcadores +
 >   aviso de palabras, badge del pedido por `WaiverStatus`, throttles con prefijo, `WaiverSigner` en
 >   el `CRITICAL_RE`; +12 tests, 7 mutaciones muerden; `waiver:verify-chain` lineal con 8/16 y visto
->   fallar sin el lock) → (3) cajón: las tres grietas (id enseñado, 422 del alta, casilla tras el 409) →
+>   fallar sin el lock) → (3) ✅ **cajón — HECHO** (`#175`: id enseñado = id firmado con relectura si
+>   el estado dice otro, el 422 del alta relee y desmarca, casilla desmarcada tras el 409,
+>   `store.upcoming`; JS 700, 5 mutaciones muerden; chunk 226,21 → techo 226,5 por corrección;
+>   verificado en headless con anti-bot) →
 >   (4) las tres decisiones del owner que son código: correo verificado para firmar, casilla del alta
 >   manual, casilla obligatoria en interno → (5) el texto del PDF (§10.6). Cada unidad se empuja
 >   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
@@ -98,7 +101,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#174`**.
+> El último usado es **`#175`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -201,6 +204,10 @@ que sirva staging de verdad.
   ▶ **+1 test en el corte anterior** (2026-08-26, tras `#166`, sin número: un fix con su guarda):
   `SeededSettingsAreSaveableTest` — lo que siembra `db:seed` tiene que poder guardarse desde Ajustes;
   el owner lo pilló en navegador (`DEUDA.md` · Baja: «Guardar» mudo por un `#` sembrado) ·
+  ▶ **+0 tests PHP y +5 JS en el corte de la unidad 3 del waiver** (`#175`, el cajón): `npm run
+  test:js` **695 → 700** (el store del waiver: id enseñado, relectura, `reread`; el store de auth: el
+  422 del alta); **5 mutaciones, las 5 muerden**; chunk del cajón **226,21 KiB y el techo sube a
+  226,5 por CORRECCIÓN** (ledger en `SidebarBundleBudgetTest`) ·
   ▶ **+0 tests PHP y +5 JS en el corte del 26/08 por la noche** (`#171`, el anti-bot del alta suelta):
   `npm run test:js` **690 → 695**; chunk del cajón 225,72 → 225,85 KiB (corrección, techo intacto) ·
   ▶ **+0 tests y +1 aserción en el corte anterior** (`#166`, la 3b del waiver): lo nuevo es JS —

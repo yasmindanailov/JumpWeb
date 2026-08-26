@@ -1893,6 +1893,11 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         y `WaiverSigner` en el `CRITICAL_RE`. +12 tests, **7 mutaciones, las 7 muerden**;
         `waiver:verify-chain` (un menor por proceso) lineal con 8 y 16 y visto fallar sin el lock.
         Spec **§9.11**. ▶ Siguen (3) el cajón, (4) las decisiones del owner, (5) el texto del PDF.
+  - [x] **Tanda 4 · (3) el cajón** (2026-08-26 noche, `#175`, carril A): el id que se firma es el
+        del texto ENSEÑADO (y se relee si el estado dice otro), el 422 del alta relee y desmarca, la
+        casilla se desmarca tras el 409, y `store.upcoming`. JS 695 → 700, **5 mutaciones, las 5
+        muerden**; chunk 226,21 → techo 226,5 por corrección. Verificado en headless con anti-bot.
+        ▶ Siguen (4) las decisiones del owner y (5) el texto del PDF.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado

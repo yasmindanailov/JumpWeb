@@ -280,6 +280,15 @@ export const useAuthStore = defineStore('auth', {
                     this.clearCaptchaToken();
                 }
 
+                // El servidor rechazó el texto del waiver (caducó, o el modo cambió): «vuelve a leerlo»
+                // solo se puede cumplir si se RELEE — el texto plegado era de una sola lectura y cada
+                // reenvío mandaba el mismo id (revisión `#169` §10.3, CAJ-2). Y la casilla se desmarca:
+                // lo que se leyó ya no es lo que se firma.
+                if (result.errors?.fields?.waiver_document_id) {
+                    this.form.accept_waiver = false;
+                    await useWaiverStore().reloadLegal({ api });
+                }
+
                 return result;
             } finally {
                 this.busy = false;

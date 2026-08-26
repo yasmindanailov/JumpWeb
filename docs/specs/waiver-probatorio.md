@@ -788,8 +788,16 @@ Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y s
     `DEUDA.md`;
   · **`WaiverSigner` en el `CRITICAL_RE`** y en `CriticalPathGateTest` (con `WaiverAcceptance` de
     control negativo); el aviso del hook nombra `waiver:verify-chain`.
-- ⏳ **Unidad 3 · el cajón** (CAJ-1/2/3) · ⏳ **Unidad 4 · las tres decisiones del owner** (§7·4, §7·5,
-  §7·7) · ⏳ **Unidad 5 · el texto del PDF** (§10.6).
+- ✅ **Unidad 3 · el cajón** (`#175`): el id que se acepta es **el del texto ENSEÑADO** y solo ese
+  (`currentDocumentId` ya no mira `status`); si el estado propio dice que el vigente es otro,
+  `ensureStatus()` **relee antes** (CAJ-1) · el 422 `waiver_document_id` del alta **relee el texto y
+  desmarca la casilla** (CAJ-2) · tras el 409 el store deja `reread` y la tarjeta **desmarca** (CAJ-3)
+  · y `store.upcoming` (CAJ-5, una palabra). ⚠️ Un test antiguo afirmaba «el estado manda sobre el
+  texto para el id que se acepta»: era la grieta, escrita como test; se reescribió. **Chunk 226,21
+  KiB: el techo sube a 226,5 por CORRECCIÓN** (ledger en `SidebarBundleBudgetTest`). Verificado en
+  headless con el anti-bot encendido.
+- ⏳ **Unidad 4 · las tres decisiones del owner** (§7·4, §7·5, §7·7) · ⏳ **Unidad 5 · el texto del
+  PDF** (§10.6).
 
 ---
 
@@ -1026,8 +1034,9 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
 1. **Decisión de producto** (§10.1): la casilla del waiver en el alta manual, o no firmar en mostrador.
 2. **Decisión** (§10.2·3): exigir correo verificado para firmar, o registrar el estado en la fila.
 3. **Código, pequeño y acotado** — la TANDA 4, en marcha desde la noche del 26/08 (§9.11): ✅ canal
-   por guard (API-1, `#174`) · ✅ idempotencia por versión (API-3, `#174`) · ⏳ `legal` invalidado en
-   el 422 del alta y en el 409, casilla desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3) ·
+   por guard (API-1, `#174`) · ✅ idempotencia por versión (API-3, `#174`) · ✅ `legal` releído en
+   el 422 del alta y en el 409, casilla desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3,
+   `#175`) ·
    ✅ tres marcadores en la guarda + aviso de palabras (§10.4, `#174`) · ✅ el infolist por
    `WaiverStatus` (PAN-5, `#174`) · ✅ throttles con prefijo en las dos rutas del waiver (API-2,
    `#174`; el del pago queda en `DEUDA`) · ✅ **el widget del anti-bot en el alta suelta** (`#171`) ·
