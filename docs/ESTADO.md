@@ -13,23 +13,34 @@
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
 > · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → Fase 6 · waiver: CERRARLO SIN
->   ESCRIBIR CÓDIGO DE PRODUCTO** (`[DECIDIDO owner, 2026-08-26]`). Las cuatro tandas están
->   empujadas (`#160` · `#161` · `#163` · `#166`); lo que queda es (1) el guion
->   `VERIFICACION-E2E-CAJON.md` **§5.sexies** recorrido en **navegador headless** (Playwright dentro
->   del contenedor, receta §5.bis, **fuera del repo**) con evidencia —red, BD, `waiver:verify-chain`—
->   y **después** el ✅ del owner en su navegador; (2) la **revisión adversarial del waiver entero**
->   (`CONVENCIONES §5`: refutar la spec §9 contra el código, resultado en un §10 de la spec); (3) las
->   tres decisiones del owner planteadas con su medida: el texto definitivo (§8.1), la retención y
->   el aviso de re-firma en el paso de pagar (§9.9·1). Ficheros: `docs/specs/waiver-probatorio.md` ·
->   `docs/VERIFICACION-E2E-CAJON.md` · `docs/ESTADO.md` · `docs/00-REFACTOR.md` · `docs/DECISIONES.md`
->   (número al empujar) · `docs/DEUDA.md` (fichas del waiver, si salen) · `docs/TESTING.md` (si la
->   prueba enseña una trampa). ❗ **`app/`, `resources/`, `lang/`, `tests/` NO se tocan desde este
->   carril**: un defecto que destape la prueba o la revisión se anota con su reproducción y se decide
->   quién lo arregla. «Menores a cargo» (subsistema C) queda DETRÁS de esto.
->   ⚠️ **La BD local de esta máquina ya está preparada para el guion** (medido al arrancar):
->   `waiver.mode = interno`, v1 publicada en es/en/fr el 26/08 a las 14:42 por `admin@jumpweb.test`
->   —con el marcador `[PENDIENTE…]` retirado a mano pero la frase «Este texto es un borrador…»
->   dentro—, **0 firmas**, 0 consentimientos.
+>   ESCRIBIR CÓDIGO DE PRODUCTO** (`[DECIDIDO owner, 2026-08-26]`) — **HECHO lo que era de agente**
+>   (`#169`, tarde del 26/08): (1) ✅ el guion `VERIFICACION-E2E-CAJON.md` **§5.nonies** (antes
+>   «5.sexies», ancla duplicada) recorrido en **navegador headless**: 99 comprobaciones, 94 ✓, 5 PDF
+>   leídos, `waiver:verify-chain` lineal sobre MySQL; los dos ✗ reales son **un defecto del cajón**
+>   (tras el 409 la casilla sigue marcada) · (2) ✅ la **revisión adversarial del subsistema entero**
+>   (spec **§10**: 1 alta · 21 medias · 15 bajas · 3 refutados · 68 afirmaciones que aguantaron) ·
+>   (3) ✅ las decisiones del owner **planteadas con su medida** (spec §7, ahora SEIS) — y **CUATRO
+>   ya DECIDIDAS al cierre** (`#169`): el anti-bot lo arregla este carril lo primero · casilla del
+>   waiver en el alta manual · **correo verificado para firmar** (el alta firma al verificar) · sin
+>   aviso en el paso de pagar. Quedan el texto, el plazo y su ojo en navegador.
+>   ❗❗ **Y lo más grave del día NO es del waiver: con el anti-bot activo, el alta suelta de
+>   `/registro` NO TERMINA** —el widget de Turnstile nunca se monta porque `RegisterForm` se monta
+>   antes de que `GET /config` traiga la clave— y **staging tiene claves** (`DEUDA.md` Alta, spec
+>   §9.10). El arreglo es del carril A (`resources/js/sidebar/`) y esta sesión no escribía código.
+>   ▶ **Lo siguiente de este carril, en orden**: el código acotado que exige la spec **§10.11** (el
+>   widget del alta suelta primero; canal por guard, idempotencia, las tres grietas del cajón, la
+>   guarda de borrador, el badge del pedido, throttles con nombre, `WaiverSigner` en el `CRITICAL_RE`)
+>   → las respuestas del owner → «menores a cargo» (C), que además hereda NUC-3 (la poda con firmas de
+>   menor intercaladas rompe la cadena). Ficheros del carril: los de siempre del waiver y el cajón
+>   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
+>   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
+>   del waiver · `routes/api.php`) más `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md`
+>   · `docs/VERIFICACION-E2E-CAJON.md`.
+>   ⚠️ **La BD local de esta máquina tras la prueba**: `waiver.mode = interno`, **v1→v3** publicadas
+>   en es/en/fr (v2/v3 llevan marcadores `[E2E-vN]` en el texto), **7 firmas `web`** de 6 cuentas
+>   `e2e-waiver-*@jumpweb.test`, y el anti-bot **restaurado** (claves de prueba de Cloudflare). ⚠️
+>   Para el ojo del owner en `/registro` hay que **vaciar `security.turnstile_secret`** o arreglar el
+>   defecto: si no, el alta muere con «no eres un robot».
 >   ⚠️ **El techo del chunk del cajón cedió por una FEATURE el 2026-08-26 (221,5 → 226)**: la regla
 >   escrita decía «solo por correcciones» y por eso **lo decidió el owner**, con el número delante.
 >   Quedan 0,28 KiB. Lo siguiente que entre lo mide (`SidebarBundleBudgetTest`).
@@ -63,11 +74,17 @@
 > que renumerar a `#164` **con el número ya escrito dentro de dos ficheros**.
 > ❗ **La regla, corregida por el precio pagado**: el número **no se fija al escribir, se fija al
 > EMPUJAR** — se vuelve a mirar el remoto justo antes del push. **Corolario: empujar PRONTO.**
+> ⚠️ **Y la DÉCIMA, el 26/08 por la tarde, con la regla aplicada**: el carril A miró el remoto (`#167`),
+> escribió `#168`, y en los veinte minutos hasta el push el portátil empujó SU `#168`. El rebase chocó
+> en `ESTADO.md` y `DECISIONES.md` y hubo que renumerar a `#169` en ocho ficheros. ▶ Lo que ahorra
+> tiempo: renumerar **solo las líneas AÑADIDAS** (`git diff HEAD` filtra las del otro) con un script de
+> diez líneas, y **no confiar en «El último usado»** del fichero: mirar `origin/main` en el mismo
+> comando que empuja.
 > ❗❗ **Y el 2026-08-25 el precio dejó de ser solo el número**: los DOS agentes arreglaron **el mismo
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#168`**.
+> El último usado es **`#169`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -335,11 +352,14 @@ bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que N
 casi todo lo que queda lo desbloquea el owner.
 
 ▶ **Las dos cosas que eran trabajo de agente YA TIENEN CARRIL** (reparto de la cabecera):
-1. **Revisar el waiver entero** de forma adversarial + recorrer su guion en headless → **carril A**,
-   en curso desde el 2026-08-26 por la tarde (desbloqueada por `#166`: las cuatro tandas empujadas).
+1. ✅ **Revisar el waiver entero** de forma adversarial + recorrer su guion en headless → **carril A,
+   HECHO el 2026-08-26 (`#169`)**: spec §9.10 (el guion: 94/99 ✓) y §10 (la revisión: 37 hallazgos
+   confirmados, 1 alta). Lo que queda es del owner (spec §7, seis decisiones) y **código acotado**
+   (spec §10.11, fichas en `DEUDA.md`) — el primero, **el alta suelta rota por el anti-bot**, que no
+   es del waiver y afecta a staging.
    ⚠️ La nota anterior de este punto («sondeado por encima el 26/08: el texto borrador no se ha
-   publicado») era de la máquina del portátil: en la del carril A **sí hay una v1 local publicada**
-   para el guion, sin marcador y con la frase de borrador dentro.
+   publicado») era de la máquina del portátil: en la del carril A **sí hay versiones locales**
+   (v1→v3) publicadas para el guion.
 2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ **revisión
    adversarial HECHA (`#167`) y correcciones INCORPORADAS (`#168`)**, 2026-08-26: el cuerpo ya
    describe el código real y §8 conserva el registro. ❗ **Pendiente SOLO el ✅ del owner**; después,
@@ -523,9 +543,13 @@ alta y `waiver` en el contexto de cuenta. ✅ **Y la 3b —el cajón— también
 casilla del alta (opt-in, y **solo si hay documento servido**), la tarjeta de Privacidad con firmar /
 re-firmar y los PDF, y el aviso del índice; el store RE-LEE ante `409 waiver_document_stale`. Los
 textos del montaje se **podaron antes de subir** (−508 B) y el chunk subió su techo **por decisión del
-owner**. **El código del waiver está COMPLETO**; sigue 🟦 por lo humano: el ✅ en navegador (§5.sexies),
-el texto y la retención. **No toca la landing**. Detalle en el tracker; las cuatro specs, en
-`docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
+owner**. **El código del waiver está COMPLETO**, ✅ **el guion §5.nonies está recorrido en headless
+y el subsistema REVISADO de forma adversarial** (`#169`, 2026-08-26: spec §9.10 y §10); sigue 🟦 por
+lo humano —el ojo del owner en navegador, el texto, la retención y las decisiones nuevas de §7— y por
+el código acotado de §10.11 (`DEUDA.md`). ❗ La revisión dejó **una alta de producto** (el alta manual
+del panel registra una firma «declarada» sin que el operador declare nada) y el guion, **un defecto
+fuera del waiver** (el alta suelta no termina con el anti-bot activo). **No toca la landing**. Detalle
+en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
 **§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables

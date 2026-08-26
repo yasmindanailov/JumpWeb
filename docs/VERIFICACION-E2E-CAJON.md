@@ -953,13 +953,24 @@ Ya que hay una sesión abierta y el motor es otro:
    botón de reintentar **fuera** del desplegable. Es el único camino que le queda al cliente para no
    perder la plaza, y esconderlo tras un clic sería enterrarlo.
 
-## 5.sexies · EL WAIVER EN EL CAJÓN (2026-08-26) — guion de `DECISIONES #166`
+## §5.nonies · EL WAIVER EN EL CAJÓN (2026-08-26) — guion de `DECISIONES #166` — ✅ **recorrido en headless el 2026-08-26** (`#169`) · ⬜ **pendiente del OJO del owner**
 
+> ⚠️ Este bloque nació llamándose «5.sexies», **el mismo ordinal que el bloque de cuenta en Vue** de
+> más arriba (validado el 23/08): dos familias de citas compartían el ancla con sentidos opuestos. Es
+> `§5.nonies` desde el 26/08; las citas vivas se corrigieron (`DECISIONES #166` conserva la vieja).
+>
 > **Por qué existe este bloque.** El diff de árbol **no ve** la casilla del waiver: cuelga de un
 > documento que en SSR no existe, así que el manifiesto congelado del alta sigue en verde con la
 > casilla rota o sin ella. Y las zonas de la cuenta **no las monta** `scripts/render-sidebar.mjs`.
 > Lo que aquí se recorre es exactamente lo que ningún test del repo puede ver
-> (`specs/waiver-probatorio.md` §9.9). ⬜ **Pendiente del owner.**
+> (`specs/waiver-probatorio.md` §9.9). ✅ **Recorrido en navegador headless** (abajo, «Resultado») ·
+> ⬜ **Pendiente del OJO del owner** (`CONVENCIONES §3.bis`: un headless mide, no valida).
+>
+> ⚠️⚠️ **Antes de recorrerlo en TU navegador: el anti-bot.** Con claves de Turnstile en `settings`,
+> el alta suelta de `/registro` **no termina** —el widget nunca se monta y el servidor responde «no
+> eres un robot»— y no es culpa del guion: es un defecto real (`DEUDA.md` · Alta, spec §9.10). Hasta
+> que se arregle, vacía `security.turnstile_secret` en local (el anti-bot se autodesactiva y
+> `/config` deja de publicar la clave) y restáuralo al terminar.
 >
 > ⚠️⚠️ **Preparación, y SOLO EN LOCAL (`localhost:8081`), nunca en staging ni en producción**:
 > publicar una versión es **irreversible** y el texto del waiver **sigue siendo un borrador** (§8.1).
@@ -968,6 +979,55 @@ Ya que hay una sesión abierta y el motor es otro:
 > Sin (1) no hay casilla ni tarjeta que firmar; sin (2), `GET /legal/waiver` devuelve `document: null`
 > y el alta de siempre no cambia — **compruébalo antes**: en ventana de incógnito, `/registro` **no**
 > tiene que enseñar la casilla mientras no haya versión publicada.
+
+### Resultado de la ejecución HEADLESS (2026-08-26, carril A — `DECISIONES #169`)
+
+> **Andamio**: Playwright 1.62 + Chromium 151 dentro del contenedor (`/root/e2e`, receta §5.bis con lo
+> que se añade abajo), Mailpit por su API (`http://mailpit:8025`), los PDF leídos con `pdf-parse`, el
+> panel conducido por su UI real (login, edición del texto, **la acción «Publicar versión firmable» con
+> su modal**, Ajustes → Avanzado → Puerta → `Gestión del waiver`, y la puerta). Cuatro pasadas: la 1ª
+> murió en el alta por el anti-bot (**hallazgo**, no fallo del andamio); la 2ª y la 3ª cayeron por
+> fallos del propio script (textos ES usados contra la tarjeta FR; el `h2` del formulario leído como
+> el de «revisa tu correo»; `button.catalog__item` es también la clase de los productos del EMBUDO y
+> hay que acotarlo con `:visible`); la 4ª: **86/90 ✓** hasta V35, y V31·4 suelto **8/9 ✓**.
+> **Total: 99 comprobaciones, 94 ✓; de los 5 ✗, 2 del script (los textos coincidían letra por letra
+> con los FR esperados), 1 una aserción que el guion no pide, y 2 REALES** (abajo, V34).
+
+| V | Resultado | Lo medido |
+|---|---|---|
+| **V31·1** | ✅ | Casilla «He leído y acepto la exención…» desmarcada bajo la contraseña; «Leer el texto completo» plegado; al desplegar, **5 secciones = las 5 de `GET /legal/waiver`** (es, v1 id 7) |
+| **V31·2** | ✅ | Alta sin marcar → `POST /auth/register` 201 con `accept_waiver=false · waiver_document_id=null`; cara «Confirma tu email»; correo «Verifica tu dirección de email» en Mailpit; su enlace abre sesión y aterriza en `/mi-cuenta/pedidos`; índice con «Tienes pendiente… · Firmarla»; Privacidad «Todavía no la has firmado.» con «Firmar» |
+| **V31·3** | ✅ | Alta marcándola → en red `accept_waiver=true · waiver_document_id=7` (el servido); Privacidad «Firmada, versión vigente (v1).», 1 firma `v1·es` con «PDF»; `GET /me/waiver/{id}/pdf` → 200 `application/pdf`, `no-store`, 1,1 MB, **leído**: nombre, correo y «Conocimiento del riesgo» (ES), sin «Awareness of risk» |
+| **V31·4** | ✅ 8/9 | `waiver.mode` → externo **por Ajustes** (`button[role=combobox]`, «Configuración guardada») → `GET /legal/waiver` `mode=externo, document=null`; `/registro` en incógnito **sin casilla** (3 casillas); índice sin aviso; Privacidad «La gestiona el parque fuera de esta web.» sin formulario; vuelta a interno → v3. ⚠️ **Observación** (no la pide el guion): en externo la tarjeta **sigue listando las firmas ya registradas** con su PDF. Decidir si es lo deseado |
+| **V32·1–2** | ✅ | Botón «Firmar» **deshabilitado** sin casilla, habilitado al marcar; textos del botón `["Firmar","Firmando…"]` → «Firma registrada ✓»; red `POST /me/waiver 201 · GET /me/account-context 200`; estado «(v1)»; 1 firma; **de vuelta al índice sin recargar, el aviso ha desaparecido** |
+| **V33·1–3** | ✅ | v2 publicada **desde el panel** (texto ES editado con un marcador, «Guardado», acción → modal → «Publicar versión 2» → «Versión 2 publicada») → API v2; el aviso **vuelve**; Privacidad «La firmaste en una versión anterior…» con el texto **nuevo** (marcador) plegado; firma → «(v2)», **dos** firmas `v2·es`/`v1·es`; **el PDF de la v1 sigue enseñando el v1** (sin marcador) y el de la v2 lleva el marcador |
+| **V34·1–3** | ✅ / ✗✗ | A3 en **FR**: Privacidad con v2 en memoria; v3 publicada (ES+FR) desde el panel; marcar y «Signer» → **`POST /me/waiver → 409 waiver_document_stale` · `GET /me/waiver` · `GET /legal/waiver`**, sin «Signature enregistrée ✓», **texto recargado: v3** ✓. ❌ **Pero la casilla sigue MARCADA y el botón habilitado** tras la recarga (2 ✗: es `CAJ-3` de la revisión, spec §10.3, `PrivacyZone.vue:73-80`). Segunda firma → «Signée, version en vigueur (v3).» y **PDF en FR** («Conscience du risque», marcador v3, nombre) |
+| **V35·1** | ✅ | `/registro` con la web en EN: «Read the full text», API `locale=en`, 5 secciones EN; A2 (firmó v1 en ES) en EN: aviso «Your liability waiver is pending. Sign it», tarjeta «You signed an earlier version…», texto EN plegado, y **su PDF v1 sigue en ES**; en FR, «Vous avez signé une version antérieure…» |
+| **V35·2** | ✅ | Puerta (`/admin/puerta/validar`): A3 (v3 vigente) → «Registrado · Waiver aceptado el 26/08/2026.»; A2 (v1) → «Registrado · Waiver aceptado el… · **Su waiver es de una versión anterior del texto: puede pasar**…» |
+| **BD** | ✅ | 7 firmas, todas `channel=web`, `subject=holder`, `holder_name/email` copiados, `accepted_tz=Europe/Madrid`; A1: `prev_hash` de la v2 = `hash` de la v1; `WaiverChain::verify()` OK en los 6 titulares; **`waiver:verify-chain --workers=8` sobre MySQL: 9 filas, 0 repetidos, lineal** |
+
+**Desviaciones declaradas**: el anti-bot se apagó durante la prueba (clave secreta vacía) y se
+restauró al terminar · V34 se recorrió en FR (así hay una firma en un idioma distinto del ES para
+V35·1) · los marcadores de versión (`[E2E-v2]`, `[E2E-v3]`) quedan en el texto de la BD local.
+**Artefactos**: capturas, textos de los PDF y `resultado.json` en `/root/e2e/out` del contenedor
+(copiados al scratchpad de la sesión; **no sobreviven a recrear el contenedor**).
+
+**Lo que este recorrido añade a la receta de §5.bis** (para no volver a pagarlo):
+- El puente 8081→80 tiene que escuchar en **todas** las interfaces (`localhost` resuelve a `::1` en el
+  contenedor) y arrancarse con `docker compose exec -d` — un `nohup … &` dentro de `exec -T` muere con
+  la sesión.
+- `npm i pdf-parse` para **leer** los PDF (no hay `pdftotext` en el contenedor).
+- `button.catalog__item` es la clase de los productos del embudo Y de las entradas del índice de la
+  cuenta: acotar con `:visible`. La segunda cara del alta se espera por `p.auth__sent[role=status]`,
+  no por `h2.auth__title` (el del formulario ya existe).
+- Filament: los rótulos obligatorios llevan `*` (`getByText(…, {exact:true})` no casa); el campo del
+  modo es `#form\.waiver\.mode` (`button[role=combobox]` → `getByRole('option')`); la sección es
+  `form h2.fi-section-header-heading`; las pestañas del texto son `getByRole('tab', {name: 'Español'})`
+  y el último `textarea:visible` es la última sección; el modal de publicar se confirma con
+  `getByRole('button', {name: 'Publicar versión N'})`.
+- Turnstile con claves de prueba **no ayuda**: el widget no se monta en el alta suelta (defecto, arriba).
+- El enlace de verificación del correo **abre sesión** y aterriza en `/mi-cuenta/pedidos`: no hace
+  falta pasar por el login para entrar en Mi cuenta.
 
 ### V31 · La casilla del ALTA (ventana de incógnito)
 

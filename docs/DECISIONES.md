@@ -9101,3 +9101,133 @@ Lo que cambió DE VERDAD el plan (el resto son cifras y matices):
 `app/` intacto también en esta tanda.
 
 Verificación: docs-check ✓ · solo doc.
+
+## #169 · 2026-08-26 · El waiver, cerrado hasta donde llega un agente: el guion recorrido en headless, el subsistema entero revisado de forma adversarial — y el alta suelta ROTA por el anti-bot, que no era del waiver y ninguna lente podía ver
+
+El owner pidió cerrar el waiver **sin escribir código de producto** desde este carril, y dejó el
+god-class del panel en el otro. Lo que era de agente eran dos cosas: recorrer el guion de navegador
+(`VERIFICACION-E2E-CAJON.md` §5.nonies) y revisar el subsistema completo como exige `CONVENCIONES §5`
+(quien no lo escribió). Las dos están hechas; el detalle vive en la spec **§9.10** y **§10**. Aquí,
+el porqué de lo decidido y lo que la sesión enseñó.
+
+### Cómo se hizo, y por qué así
+
+- **El guion, con navegador headless dentro del contenedor** (receta §5.bis: Playwright + Chromium en
+  `/root/e2e`, fuera del repo; el Chromium del host no arranca —cinco librerías ausentes—). El
+  script conduce **la UI real**: el cajón, Mailpit por API, los PDF **leídos** con `pdf-parse`, y el
+  panel de verdad —editar el texto, **la acción «Publicar versión firmable» con su modal**, Ajustes
+  → Avanzado → Puerta → «Gestión del waiver», y la pantalla de puerta—. Un headless **mide, no
+  valida** (`CONVENCIONES §3.bis`): el ojo del owner sigue pendiente, pero ya no va a descubrir nada.
+- **La revisión, con 6 lentes independientes + escépticos** (55 agentes, solo lectura: nada de
+  mutaciones mientras una prueba usaba el árbol y la BD). 69 hallazgos brutos → 37 confirmados, 3
+  refutados, 29 bajas sin verificar por tope. Los de más peso los re-verifiqué a mano antes de
+  escribir una línea (fichero:línea en la spec).
+- **El reparto se reescribió y se empujó ANTES de empezar** (`4e1b723`), y chocó a la primera: el
+  portátil había empujado `#167` con una fila que decía como «siguiente» *«…y/o la revisión del
+  waiver»* — exactamente el trabajo que este carril arrancaba. Se fusionó a mano conservando sus
+  hechos y dejando inequívoco de quién es cada cosa. `CONVENCIONES §10·7`, otra vez.
+
+### El guion: 94 de 99, y los dos ✗ que importan son UN defecto
+
+Todo lo que el guion pide del waiver **pasa** (§9.10): la casilla opt-in con el texto plegado, el
+alta que manda `accept_waiver` **solo** con el id servido, el correo y su enlace que abre sesión, el
+aviso del índice, los cuatro estados de la tarjeta, «Firmando…» → «Firma registrada ✓» y el aviso
+apagado sin recargar, v2 y v3 publicadas desde el panel, la re-firma con **el PDF de la v1 intacto**,
+el `409 waiver_document_stale` con relectura y segunda firma, los tres idiomas con el PDF en el
+idioma **en que se firmó**, la puerta («versión anterior… puede pasar») y el modo externo por Ajustes.
+En BD: 7 firmas `web`, cadena por titular OK, `waiver:verify-chain --workers=8` lineal sobre MySQL.
+**Los dos ✗ reales**: tras el 409 **la casilla sigue marcada y el botón habilitado** — es `CAJ-3` de
+la revisión (`PrivacyZone.vue:73-80`), visto antes leyendo y después en pantalla. Los otros tres ✗
+eran del script o aserciones que el guion no pide (spec §9.10 los nombra uno a uno).
+
+### ❗❗ Lo más grave del día no era del waiver: con Turnstile activo, NADIE puede crear cuenta desde `/registro`
+
+La primera pasada murió en el alta con «no eres un robot», dos de dos. No era el andamio: en
+`/registro` el cajón nace abierto y `RegisterForm` se monta a los **756 ms**; `GET /config` —que
+trae la `turnstile_site_key`— responde a los **794 ms**. El widget se monta **solo en `onMounted`**
+(`RegisterForm.vue:97-104`), con la clave vacía → apaño inerte. Cuando la clave llega, el `v-if` pinta
+el contenedor (en el DOM, **vacío**) y nadie monta nada: sin script de Cloudflare, sin iframe, sin
+token. El paso 5 del embudo no lo sufre (monta el formulario mucho después). ⚠️ **Por qué nadie lo
+vio**: en local las claves se pusieron el 26/08 a las 14:48; el guion V17 del 23/08 corrió sin ellas;
+y el diff de árbol no monta el widget. **Staging tiene claves.** Es `DEUDA.md` Alta, del carril A, y
+el arreglo es acotado (montar cuando la clave existe, con su test de `node --test`). Para la prueba
+se apagó el anti-bot y **se restauró** al terminar.
+
+▶ **Regla que deja**: **un guion de navegador se recorre con la instalación configurada como
+producción** (anti-bot incluido). Un entorno «cómodo» esconde exactamente los fallos de secuencia.
+
+### La revisión: el diseño aguanta, la FRONTERA no
+
+**68 afirmaciones aguantaron** (§10.0) — inmutabilidad, cadena por titular, snapshot, retención,
+permisos, contrato, i18n, presupuestos. Lo que no aguantó:
+
+1. **ALTA (§10.1)** — el alta manual del panel registra una firma «declarada por el operador» **que
+   el operador no declara**: el formulario tiene una sola casilla (privacidad) y `CustomerRegistrar`
+   firma igual. El PDF le atribuye un acto que no hizo. **Decisión de producto** (spec §7·4).
+2. **Lo que el cliente decide sobre su propia prueba (§10.2)** — el `channel` sale de si hay cabecera
+   `Bearer` (con cookie válida, Sanctum ni la mira); la IP es el primer `X-Forwarded-For` mientras
+   `trustProxies('*')`; se firma **con el correo sin verificar** (§4.7 decía lo contrario: corregido
+   en el cuerpo); y `POST /me/waiver` **no es idempotente** (dos envíos → dos firmas, dos consents).
+3. **El cajón (§10.3)** — el id que se firma sale de `status` y el texto pintado de un `legal`
+   cacheado (pueden divergir en la ruta del embudo); el 422 `waiver_stale` del alta no relee; y el
+   409 deja la casilla marcada. Más un 401 mudo y, **fuera del waiver**, el contador de reservas del
+   índice que **no se pinta nunca** (`upcoming` sin declarar).
+4. **La guarda de borrador caza `[pendiente` y nada más (§10.4)**: los marcadores `en`/`fr` del seeder
+   pasan. `#160` la vendía como guarda de BORRADOR y es de MARCADOR.
+5. **Dominio y panel (§10.5)** — el badge del pedido lee el sello y la puerta el registro;
+   `declared_by_user_id` entra en el hash con FK `nullOnDelete`; el PDF lee `business.name` y el
+   operador en vivo; la poda con firmas de menor intercaladas rompe la cadena (**condiciona la spec
+   C**); el lock solo es «primera sentencia» cuando `sign()` abre la transacción; y **ningún gate
+   vigila ese lock** (SQLite no emite `FOR UPDATE`, `WaiverSigner` no está en el `CRITICAL_RE`).
+6. **Los `throttle:N,1` sin nombre comparten cubo por usuario — y el reintento del pago está dentro.**
+7. **El PDF afirma de más (§10.6)**: «Verificada» con un `sha256` sin secreto ni anclaje.
+
+**Tres refutados**, y el porqué importa: «la maquinaria rechaza el borrador — resuelto» (los hechos
+son ciertos, la v1 local es una preparación del guion, no un incidente) y «conservación sin plazo =
+hueco» (×2: es **el `[PENDIENTE: owner]` declarado**, no un defecto; lo que sí queda para el owner es
+que el plazo cuenta **desde la firma** y afecta a cuentas vivas).
+
+### Lo que se corrigió en la doc, hoy
+
+La cabecera y la intro de §9 de la spec decían «3b pendiente» y «ninguna versión publicada» un día
+después de `#166` (DOC-3); §4.7 apoyaba la identidad en un correo verificado que no lo está; el bloque
+del guion se llamaba «5.sexies» como el del bloque de cuenta (DOC-4 → **§5.nonies**, citas vivas
+corregidas); §6 no tenía estado por ítem (§10.10 lo tiene). Y `docs-check` **no ve marcadores de
+conflicto**: se midió con un `ESTADO.md` en `UU` y salió verde (DOC-5, ficha).
+
+### Las reglas de método que esta sesión deja
+
+- **Lo que ninguna lente puede ver es lo que hay que ejecutar**: seis lentes y 55 agentes leyendo no
+  vieron el alta rota; un navegador la vio en el primer minuto. Leer y ejecutar son dos instrumentos.
+- **Un headless que falla no es «el andamio»** hasta que se demuestra: la primera pasada parecía un
+  fallo de Turnstile en headless y era el producto. Se sondeó el DOM (contenedor vacío, sin script)
+  antes de tocar el script.
+- **Los refutados también enseñan**: dos agentes vieron un hueco donde había una decisión pendiente
+  declarada. La severidad la da el DISEÑO que falta, no el dato que se conserva.
+
+### Lo que queda, y de quién es
+
+**Del owner** (spec §7, seis): el texto definitivo · el plazo (desde la firma, mín. 1 · máx. 600 meses)
+· el aviso en el paso de pagar (0,28 KiB de margen) · la casilla del alta manual · firmar con correo
+sin verificar, sí o no · su ojo en navegador (con el anti-bot apagado o arreglado). **Del carril A**,
+código acotado (spec §10.11, fichas en `DEUDA.md`): **el widget del alta suelta primero**. Después,
+«menores a cargo», que hereda NUC-3.
+
+### Las cuatro que el owner decidió al cierre (2026-08-26, con el número y el coste delante)
+
+1. **El anti-bot del alta suelta lo arregla el carril A, lo primero de su próxima sesión** (frente a
+   cruzar carriles ahora o aparcar con staging sin altas sueltas).
+2. **Casilla del waiver en el alta MANUAL del panel**, con el texto a la vista; sin marcarla, no hay
+   firma (frente a «el mostrador no firma» o dejarlo como está).
+3. **Se exige correo VERIFICADO para firmar**: el alta con casilla firma al verificar, no al crear, y
+   `POST /me/waiver` exige cuenta verificada (frente a guardar el estado en la fila, o dejarlo).
+   ⚠️ Cambia §9.8 y el test del alta con casilla.
+4. **El aviso de re-firma en el paso de pagar NO se construye**: basta el del índice (cerrado; el
+   chunk se queda en 225,72 de 226).
+
+Quedan del owner las dos jurídicas —**el texto definitivo y el plazo**— y **su ojo en navegador**.
+
+Verificación: docs-check ✓ · **solo doc** (`app/`, `resources/`, `tests/` intactos) · suite sin
+cambios (2935) · el andamio y su evidencia (capturas, textos de PDF, `resultado.json`) en el
+scratchpad de la sesión y en `/root/e2e/out` del contenedor · BD local: v1→v3, 7 firmas, anti-bot
+restaurado.

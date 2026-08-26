@@ -1869,9 +1869,19 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] **B · Waiver con valor probatorio** — `docs/specs/waiver-probatorio.md`.
       ▶ 🟦 **CÓDIGO COMPLETO (agente A, 2026-08-25 → 26: `#160` · `#161` · `#163` · `#166`)** — el
       detalle vive en la spec **§9**. Las cuatro tandas empujadas: **1 · el NÚCLEO** ✅ · **2 · el
-      PANEL** ✅ · **3a · el cliente por API** ✅ · **3b · el CAJÓN** ✅. Sigue 🟦 y no ✅ por lo que
-      NO es de agente: el **✅ del owner en navegador** (guion §5.sexies), **el texto definitivo**
-      (§8.1: ninguna versión publicada) y **el periodo de retención** (`waiver.retention_months`).
+      PANEL** ✅ · **3a · el cliente por API** ✅ · **3b · el CAJÓN** ✅ · **el guion §5.nonies en
+      headless** ✅ (§9.10) · **la revisión adversarial del subsistema** ✅ (§10, `#169`). Sigue 🟦 y
+      no ✅ por lo que NO es de agente: el **OJO del owner en navegador** (guion §5.nonies), **el
+      texto definitivo** (§8.1: ninguna versión publicada), **el periodo de retención**
+      (`waiver.retention_months`) y **las decisiones de §10.11** — y por el código acotado que la
+      revisión exige antes de que una instalación entre en `interno` (fichas en `DEUDA.md`).
+  - [x] **B · el guion en headless + la revisión adversarial del SUBSISTEMA** (2026-08-26, `#169`,
+        carril A, **sin escribir código**): 99 comprobaciones del guion, 94 ✓ —los dos ✗ reales son
+        `CAJ-3`—; 5 PDF leídos; `waiver:verify-chain` lineal sobre MySQL. Revisión: 6 lentes + escépticos
+        (55 agentes) → 37 hallazgos confirmados (**1 alta**: el alta manual registra una firma «declarada»
+        que el operador no declara · 21 medias · 15 bajas), 3 refutados, 68 afirmaciones que aguantaron.
+        ❗❗ **Y un defecto que no es del waiver**: con Turnstile activo el alta suelta de `/registro`
+        **no termina** (el widget nunca se monta) — `DEUDA.md` Alta, spec §9.10.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado
@@ -1906,8 +1916,9 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         la regla escrita solo cedía por correcciones—; los textos **podados antes de subir** (−508 B:
         tres claves que no leía nadie y cuatro literales del 422 que el servidor ya publica) y el
         anónimo **BAJA** su techo. ⚠️ **El diff de árbol NO ve la casilla** (`v-if` sobre un documento
-        que en SSR no existe): la red de lo visible es el navegador → guion **§5.sexies** de
-        `VERIFICACION-E2E-CAJON.md`, **pendiente del ✅ del owner**. ❗ El aviso **en el paso de pagar**
+        que en SSR no existe): la red de lo visible es el navegador → guion **§5.nonies** de
+        `VERIFICACION-E2E-CAJON.md`, **recorrido en headless el 26/08 (`#169`); pendiente del OJO
+        del owner**. ❗ El aviso **en el paso de pagar**
         NO se construyó (§9.9·1: la puerta deja pasar, y el chunk no tiene margen) — decisión de producto
         abierta. Spec **§9.9**.
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
