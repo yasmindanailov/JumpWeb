@@ -2,76 +2,50 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-25**.
+> aquí solo se enlaza.** Última actualización: **2026-08-26**.
 >
-> ❗❗ **ATENCIÓN: hay DOS AGENTES trabajando sobre `main` a la vez.** Antes de planificar nada,
-> `git fetch` y mira qué hay de nuevo. Reparto vigente el 2026-08-25:
-> · **Agente A (panel/dinero)** — **`#146` CERRADO ENTERO**: D5 en `#149` y D4+D3+D2 (más el
->   sexto sitio y el pack CON señal medido) en `#150`, todo verificado en vivo sobre MySQL.
->   Toca `Order.php`, `ViewOrder.php` y `lang/es/admin.php`. **NO entrar ahí.**
-> · **Agente B (landing/aforo/i18n)** — Última sesión: `#143`, `#144`, `#147`, `#148`, **`#156`** (la
->   revisión adversarial de las cuatro specs de Fase 6) y **`#157`** (lo que le faltaba a la guarda
->   del EN/FR).
+> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main`, y uno está trabajando AHORA.** Antes de planificar
+> nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
+> 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
+> abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
+> retiró: dos repartos son un reparto que no se puede creer.
 >
-> ❗❗ **REPARTO VIGENTE desde el 2026-08-25 por la tarde — LÉELO ANTES DE ELEGIR TAREA.**
-> · **Agente A** → **Fase 6, subsistemas B y C**: primero el **waiver** (`specs/waiver-probatorio.md`)
->   y después **menores a cargo** (`specs/menores-a-cargo.md`). `[DECIDIDO owner]`.
-> · **Agente B** → ✅ `RGPD-01` y el mapa que lleva a las guardas (`#159`) ·
->   ✅ **la suite AUDITADA contra la FECHA** (`#162`): `TEST_CLOCK` + `scripts/audit-clock.sh`, diez
->   fronteras en verde. ❗❗ **Encontró una BOMBA CON FECHA para el 2026-09-01** —un fixture con una
->   ventana escrita a mano que iba a tumbar el gate de los DOS agentes en seis días— y que **la
->   aritmética de meses de PHP desborda** (`2026-08-31 +3 meses = 2026-12-01`). Los dos arreglados.
->   ▶ **Al cerrar una tanda que toque fixtures con calendario: `bash scripts/audit-clock.sh`**
->   (está en `/cierre-sesion`; NO en el `pre-push`, son diez pases).
->   ✅ **Y la caza de `#97` está cerrada** (`#164`): el reloj **queda EXONERADO** —10 fronteras
->   congeladas + **4 cruces de medianoche a mitad de pase** (modo nuevo `TEST_CLOCK_START`) + la suite
->   entera en **2 órdenes aleatorios**: todo verde—. ❗ **La causa sigue SIN NOMBRE**, pero el
->   `pre-push` ya **dice la ruta de su log al caer**: antes sobrevivía y nadie lo anunciaba, que es
->   por lo que `#97` se quedó sin diagnóstico. De «no se supo» a «se sabrá».
->   ✅ **ESCRITA: la SPEC para desmontar `ViewOrder`** (`docs/specs/desmontar-view-order.md`) (`[DECIDIDO owner, 2026-08-26]`), la mayor
->   deuda estructural con «sin plan». ⚠️ **Solo DISEÑO, ni una línea de código**: el proceso exige
->   spec revisada antes de tocar el fichero más peligroso del producto (`CONVENCIONES §5`).
->   ⚠️ **Cifra caducada corregida al medir**: son **5.280** líneas, no las 5.029 que declaraba
->   `DEUDA.md` desde el 2026-08-14 — creció 251 sin que nadie mirara.
->   **Ficheros**: `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md` · `docs/README.md` ·
->   `CLAUDE.md` (fila de enrutado). **No toca `app/`.**
->   **Ficheros**: `tests/TestCase.php` (hook opt-in por variable de entorno, **sin cambiar la
->   conducta por defecto**) · los ficheros de test que resulten fallar —**excluyendo
->   `tests/Feature/Api/V1/` y `tests/Feature/Waiver/`, que son del carril del waiver**— ·
->   `docs/TESTING.md` · `docs/DEUDA.md` · una guarda nueva en `tests/Feature/Architecture/`.
->   ⚠️ **`tests/TestCase.php` es infraestructura COMPARTIDA**: lo extienden también tus tests. El
->   cambio es aditivo y sin efecto si no se pasa la variable, pero queda declarado aquí.
+> ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.**
+> · **Agente A (Fable, en el OTRO ordenador) → Fase 6 · waiver. TRABAJANDO AHORA MISMO.**
+>   Tandas 1 (núcleo, `#160`), 2 (panel, `#161`) y 3a (API, `#163`) **empujadas**; la **3b (el CAJÓN,
+>   Vue) EN CURSO**. Sus ficheros, y **no se entra ahí**: `resources/js/sidebar/` · `resources/css/` ·
+>   `storage/ssr/` · `lang/*/account.php` · `docs/specs/waiver-probatorio.md` ·
+>   `docs/specs/sidebar-spa.md` (§8) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/`.
+>   Después le toca **menores a cargo** (subsistema C).
+>   ⚠️ Corrección medida de una nota anterior: **ni `routes/api.php` ni `MeController` están en el
+>   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
+>   exigido `VERIFY_CONC` en ningún push.
 >
-> ⚠️⚠️ **Y hay una DEPENDENCIA entre las dos, en este orden**: la revisión
-> (`waiver-probatorio.md` §8.3) midió que **`RGPD-01` NO contiene hoy la frase que el waiver dice
-> modificar**. La invariante enumera CINCO operaciones de `anonymize()` y el código hace **OCHO** —
-> calla el borrado del PROPIO titular (nombre, email, teléfono, los tres sellos legales),
-> `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
-> ✅ **HECHO y EMPUJADO** (`#159`): `RGPD-01` ya describe las OCHO operaciones que el código hace.
-> `User::anonymize()` **no se tocó** en esa tanda —md5 comprobado—: esa conducta la modifica el waiver.
-> ✅ **Agente A · waiver — tandas 1 (núcleo, `#160`), 2 (panel, `#161`) y 3a (API, `#163`)
->   EMPUJADAS** (spec **§9**), con los pasos (2) de `RGPD-01` y la ampliación de `RGPD-04` escritos en
->   sus filas. **Tanda 3b (el CAJÓN, Vue) en curso**; sus ficheros: `resources/js/sidebar/` (el alta
->   del paso 5, la zona de privacidad, el aviso de re-firma, sus stores y sus `.test.js`) ·
->   `resources/css/` (solo si hace falta una regla nueva: `SidebarStyleWiringTest`) · `storage/ssr/`
->   (`build:ssr`) · `lang/*/account.php` (rótulos del cajón) · `docs/specs/waiver-probatorio.md` ·
->   `docs/specs/sidebar-spa.md` (§8, el mapa) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/`.
->   ⚠️ Corrección de una nota anterior de esta fila: **ni `routes/api.php` ni `MeController` están en
->   el `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—; medido contra la regex
->   del hook. El waiver no ha exigido `VERIFY_CONC` en ningún push.
+> · **Agente B → SESIÓN CERRADA el 2026-08-26.** ✅ **No deja nada a medias ni ningún fichero
+>   reclamado**: todo lo suyo está empujado y verde. Lo que hizo, con el porqué en su entrada:
+>   `RGPD-01` decía CINCO operaciones y el código hacía OCHO (`#159`) · la suite **auditada contra la
+>   FECHA** (`#162`) · la **caza de `#97`** (`#164`) · la **spec para desmontar `ViewOrder`** (`#165`,
+>   solo diseño, `app/` intacto).
+>   ▶ **Lo que hay que seguir haciendo, y no depende de él**: al cerrar una tanda que toque fixtures
+>   con calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`).
+>   La primera pasada encontró un fixture que iba a tumbar el gate de los DOS agentes **seis días
+>   después**, sin que nadie tocara nada.
+>   ❗ **Y `docs/specs/desmontar-view-order.md` espera DOS cosas**: la revisión adversarial del otro
+>   agente (`CONVENCIONES §5`) y el ✅ del owner. **Nadie toca `ViewOrder` hasta entonces.**
 > ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
-> Ha colisionado **OCHO** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
-> fusionar) · y los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
-> porque el agente A empujó **seis veces** mientras se escribían — y la octava fue `#158`, tomado
-> mientras se escribía esta misma tanda.
+> Ha colisionado **NUEVE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
+> fusionar) · los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
+> porque el agente A empujó **seis veces** mientras se escribían · `#158`, tomado mientras se escribía
+> esa tanda · y el 2026-08-26 otra vez: `#163` se lo llevó la tanda 3a del waiver y el agente B tuvo
+> que renumerar a `#164` **con el número ya escrito dentro de dos ficheros**.
 > ❗ **La regla, corregida por el precio pagado**: el número **no se fija al escribir, se fija al
 > EMPUJAR** — se vuelve a mirar el remoto justo antes del push. **Corolario: empujar PRONTO.**
 > ❗❗ **Y el 2026-08-25 el precio dejó de ser solo el número**: los DOS agentes arreglaron **el mismo
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#163`**.
+> El último usado es **`#165`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -209,7 +183,7 @@ que sirva staging de verdad.
   `OversellVerifierCoversEveryQuotaTest` (`#147`), la guarda de que el verificador de sobreventa
   **no encoja**. ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y vive en comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
-  **671 tests JS** (`node --test`) · Pint limpio (886 ficheros) · `docs-check` verde ·
+  **671 tests JS** (`node --test`) · Pint limpio (895 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
   runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.
@@ -321,9 +295,28 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-▶ **La línea de panel/dinero (agente A) está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en
-`7776370`): no hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el
-modal nuevo de «Reembolsar» en navegador con sus 9 pedidos-sonda (decidió conservarlos para eso).
+# ❗ SI ERES EL AGENTE QUE ENTRA DESPUÉS DEL AGENTE B (2026-08-26)
+
+**Lo que está EN MARCHA no es tuyo**: Fable sigue con la tanda 3b del waiver en el otro ordenador
+(ficheros en el reparto de arriba). `git fetch` antes de nada.
+
+**Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
+cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
+midió y da **cero** (`#164`: las 35 citas de la columna «Dónde vive» resuelven), y la landing sigue
+bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que NO depende de nosotros»**:
+casi todo lo que queda lo desbloquea el owner.
+
+▶ **Las dos cosas que sí serán trabajo de agente en cuanto se desbloqueen:**
+1. **Revisar el waiver entero** de forma adversarial cuando Fable cierre el subsistema
+   (`CONVENCIONES §5`). Es lo natural para quien no lo escribió. ⚠️ Sondeado por encima el 26/08 y
+   **cumple** lo que la revisión de la spec exigía: el texto borrador **no se ha publicado**,
+   `RGPD-01` recoge la conservación restringida y el PDF dice que el dato no está verificado.
+2. **`docs/specs/desmontar-view-order.md`** (`#165`) — el plan está escrito y medido; le falta la
+   revisión adversarial y el ✅ del owner. **Nadie toca `ViewOrder` hasta las dos cosas.**
+
+▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
+hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
+«Reembolsar» en navegador con sus 9 pedidos-sonda (decidió conservarlos para eso).
 
 # ❗ LO SIGUIENTE: **`testimonials`** — lo único de la landing que NO está bloqueado
 
