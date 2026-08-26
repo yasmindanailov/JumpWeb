@@ -1909,7 +1909,11 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         en `WaiverSigner` (fila bloqueada, salvo firma declarada), la aceptación PENDIENTE del alta en
         `users` y su firma al verificar (`SignPendingWaiverOnVerification`) o su descarte si el texto
         cambió; `409 waiver_email_unverified`; `anonymize()` + censo. `VERIFY_CONC` con
-        `waiver:verify-chain` 8/16. ▶ Queda (5) el texto del PDF. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
+        `waiver:verify-chain` 8/16. ▶ Queda (5) el texto del PDF.
+  - [x] **Tanda 4 · (5) el texto del PDF** (2026-08-26 noche, `#180`, carril A): el PDF dice exactamente
+        lo que el diseño garantiza (§10.6) — comprobación INTERNA con su nota de alcance, pie sin
+        «inmutable», datos/IP/UA del puesto en mostrador— y `WaiverChain` cruza cada firma con su
+        versión. **La tanda 4 queda CERRADA**: las cinco unidades empujadas. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
         `VERIFY_CONC`) y (5) el texto del PDF.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un

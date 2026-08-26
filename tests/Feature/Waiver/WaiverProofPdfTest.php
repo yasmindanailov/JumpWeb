@@ -181,6 +181,10 @@ class WaiverProofPdfTest extends TestCase
         $this->assertStringContainsString(__('waiver.proof.first_link', [], 'es'), $html);
         $this->assertStringContainsString(__('waiver.proof.verified_yes', [], 'es'), $html);
         $this->assertStringContainsString(__('waiver.proof.presented_note', [], 'es'), $html);
+        // §10.6 (WAI-02, `#180`): la comprobación es INTERNA y el PDF lo dice; y los datos los declaró la persona.
+        $this->assertStringContainsString(__('waiver.proof.verification_note', [], 'es'), $html);
+        $this->assertStringContainsString(__('waiver.proof.holder_note', [], 'es'), $html);
+        $this->assertStringNotContainsString(__('waiver.proof.ip_declared', [], 'es'), $html);
         $this->assertStringNotContainsString(__('waiver.proof.declared_title', [], 'es'), $html);
         $this->assertStringContainsString('v1·es', $html);
     }
@@ -197,6 +201,12 @@ class WaiverProofPdfTest extends TestCase
         $this->assertStringContainsString(__('waiver.proof.declared_title', [], 'es'), $html);
         $this->assertStringContainsString('Lucía Operadora', $html);
         $this->assertStringNotContainsString(__('waiver.proof.presented_note', [], 'es'), $html);
+
+        // §10.6 (WAI-07, `#180`): los datos los tecleó el operador, y la IP y el navegador son del PUESTO.
+        $this->assertStringContainsString(__('waiver.proof.holder_note_declared', [], 'es'), $html);
+        $this->assertStringNotContainsString(__('waiver.proof.holder_note', [], 'es'), $html, 'el PDF de mostrador no puede decir que los datos los declaró la persona');
+        $this->assertStringContainsString(__('waiver.proof.ip_declared', [], 'es'), $html);
+        $this->assertStringContainsString(__('waiver.proof.user_agent_declared', [], 'es'), $html);
     }
 
     /** §4.2 — el idioma es parte de la prueba: el documento sale en el idioma del texto firmado. */
@@ -277,12 +287,18 @@ class WaiverProofPdfTest extends TestCase
     public function test_the_document_texts_exist_in_the_three_customer_languages_and_differ(): void
     {
         $titles = [];
+        $notes = [];
         foreach (['es', 'en', 'fr'] as $locale) {
             $this->assertTrue(Lang::has('waiver.proof.title', $locale, false), "falta waiver.proof.title en {$locale}");
             $this->assertTrue(Lang::has('waiver.proof.declared_text', $locale, false), "falta waiver.proof.declared_text en {$locale}");
             $this->assertTrue(Lang::has('waiver.proof.channels.panel', $locale, false), "falta waiver.proof.channels.panel en {$locale}");
+            foreach (['verification_note', 'holder_note_declared', 'ip_declared', 'user_agent_declared', 'footer_note'] as $key) {
+                $this->assertTrue(Lang::has('waiver.proof.'.$key, $locale, false), "falta waiver.proof.{$key} en {$locale}");
+            }
             $titles[] = __('waiver.proof.title', [], $locale);
+            $notes[] = __('waiver.proof.verification_note', [], $locale);
         }
         $this->assertCount(3, array_unique($titles), 'los tres idiomas tienen que decir cosas DISTINTAS');
+        $this->assertCount(3, array_unique($notes), 'la nota de la comprobación también');
     }
 }

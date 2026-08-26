@@ -24,6 +24,7 @@ final class WaiverChain
     {
         $rows = WaiverSignature::query()
             ->where('user_id', $user->getKey())
+            ->with('version')
             ->orderBy('id')
             ->get();
 
@@ -35,6 +36,11 @@ final class WaiverChain
             }
             if (! $row->verifyHash()) {
                 $problems[] = "#{$row->getKey()}: el hash no coincide con el contenido";
+            }
+            // §10.6 (NUC-8): la cadena también cruza cada firma con su VERSIÓN — el texto que se firmó.
+            // Hasta `#180` una versión alterada por debajo daba «cadena OK» y solo el PDF lo veía.
+            if ($row->version === null || ! $row->version->verifyHash() || ! hash_equals((string) $row->version->body_hash, (string) $row->document_hash)) {
+                $problems[] = "#{$row->getKey()}: el texto firmado no coincide con su versión";
             }
             $previous = $row->hash;
         }

@@ -816,7 +816,12 @@ Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y s
   y el UA del clic— o la descarta si el texto ya no es el vigente; `409 waiver_email_unverified` en la
   API. ⚠️ `accepted_at` pasa a ser el momento de la verificación, no el del alta: es cuando la persona
   demostró ser dueña del buzón que la firma copia. `waiver:verify-chain` siembra el titular verificado.
-- ⏳ **Unidad 5 · el texto del PDF** (§10.6).
+- ✅ **Unidad 5 · el texto del PDF** (§10.6, `#180`): la comprobación se llama «Coincide … (comprobación
+  interna)» y una nota nueva dice lo que es —cadena SHA-256 sin secreto en la propia BD, sin sello de
+  tiempo ni anclaje en un tercero; detecta alteraciones accidentales o de la aplicación, no las de quien
+  escriba en la BD— (WAI-02); el pie ya no dice «fila inmutable»; en una firma de mostrador el PDF dice
+  que los datos los TECLEÓ el operador y que la IP y el navegador son del PUESTO (WAI-07); y
+  `WaiverChain::verify()` cruza cada firma con su versión (NUC-8). En los tres idiomas, con paridad.
 
 ---
 
@@ -1062,8 +1067,9 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
    ✅ `WaiverSigner` en el `CRITICAL_RE` (NUC-6, `#174`) · ⏳ y las tres decisiones del owner que son
    código: **correo verificado para firmar** (§7·5), **la casilla del alta manual** (§7·4) y **la
    casilla del alta OBLIGATORIA en interno** (§7·7).
-4. **Texto del PDF**: quitar «Verificada»/«inmutable» donde el diseño no lo garantiza (§10.6) y decir
-   de quién son la IP y el UA en una firma de mostrador (WAI-07).
+4. ✅ **Texto del PDF** (`#180`): «Coincide (comprobación interna)» + nota de lo que garantiza y lo que no;
+   el pie sin «fila inmutable»; en mostrador, datos tecleados por el operador e IP/UA del puesto (WAI-07);
+   `WaiverChain` cruza la versión (NUC-8).
 5. Las decisiones humanas de siempre: **texto definitivo**, **plazo** (con la precisión de §10.8), y el
    aviso en el paso de pagar.
 

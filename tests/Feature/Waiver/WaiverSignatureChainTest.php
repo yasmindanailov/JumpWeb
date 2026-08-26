@@ -337,4 +337,21 @@ class WaiverSignatureChainTest extends TestCase
 
         $this->assertSame($operator->id, $declared->declared_by_user_id, 'el mostrador declara: la identidad la asegura el operador');
     }
+
+    /** §10.6 (NUC-8, `#180`): la cadena también cruza cada firma con su VERSIÓN — una versión alterada por debajo rompe la cadena. */
+    public function test_a_version_tampered_under_the_model_breaks_the_chain(): void
+    {
+        $holder = User::factory()->create();
+        $version = $this->version();
+        $this->sign($holder, $version);
+        $this->assertTrue(WaiverChain::verify($holder)['ok']);
+
+        DB::table('legal_document_versions')->where('id', $version->id)->update([
+            'body' => json_encode([['h' => 'Riesgo', 'p' => 'Texto alterado por debajo.']]),
+        ]);
+
+        $verdict = WaiverChain::verify($holder);
+        $this->assertFalse($verdict['ok']);
+        $this->assertStringContainsString('no coincide con su versión', implode(' ', $verdict['problems']));
+    }
 }

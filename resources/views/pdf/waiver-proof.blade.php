@@ -88,7 +88,8 @@
             <tr><td class="k">{{ $t('holder_email') }}</td><td class="v">{{ $proof->holderEmail() }}</td></tr>
             <tr><td class="k">{{ $t('subject') }}</td><td class="v">{{ $proof->isForHolder() ? $t('subject_holder') : $t('subject_dependent', ['id' => $proof->subjectId()]) }}</td></tr>
         </table>
-        <p class="note">{{ $t('holder_note') }}</p>
+        {{-- §10.6 (WAI-07): en una firma de mostrador los datos los tecleó el operador — se dice. --}}
+        <p class="note">{{ $t($proof->isDeclared() ? 'holder_note_declared' : 'holder_note') }}</p>
         @if ($proof->holderIsAnonymised())
             <p class="note">{{ $t('holder_anonymised') }}</p>
         @endif
@@ -100,8 +101,9 @@
         <table class="kv">
             <tr><td class="k">{{ $t('accepted_at') }}</td><td class="v">{{ $proof->acceptedAtLabel() }} ({{ $proof->acceptedTz() }}) · UTC {{ $proof->acceptedAtUtc() }}</td></tr>
             <tr><td class="k">{{ $t('channel') }}</td><td class="v">{{ $t('channels.'.$proof->channel()) }}</td></tr>
-            <tr><td class="k">{{ $t('ip') }}</td><td class="v">{{ $proof->ip() }}</td></tr>
-            <tr><td class="k">{{ $t('user_agent') }}</td><td class="v mono">{{ $proof->userAgent() }}</td></tr>
+            {{-- §10.6 (WAI-07): en mostrador la IP y el navegador son del PUESTO, no de la persona. --}}
+            <tr><td class="k">{{ $t($proof->isDeclared() ? 'ip_declared' : 'ip') }}</td><td class="v">{{ $proof->ip() }}</td></tr>
+            <tr><td class="k">{{ $t($proof->isDeclared() ? 'user_agent_declared' : 'user_agent') }}</td><td class="v mono">{{ $proof->userAgent() }}</td></tr>
         </table>
         @if ($proof->isDeclared())
             {{-- §8.4: sustancialmente más débil que una firma del titular, y se dice con todas las letras. --}}
@@ -124,6 +126,8 @@
             <tr><td class="k">{{ $t('canonical') }}</td><td class="v">v{{ $proof->canonicalVersion() }}</td></tr>
             <tr><td class="k">{{ $t('verification') }}</td><td class="v {{ $proof->integrityOk() ? 'ok' : 'ko' }}">{{ $proof->integrityOk() ? $t('verified_yes') : $t('verified_no') }}</td></tr>
         </table>
+        {{-- §10.6 (WAI-02): el PDF no puede decir más de lo que el diseño garantiza (§4.7: sin sello externo). --}}
+        <p class="note">{{ $t('verification_note') }}</p>
     </div>
 
     <div class="sec">

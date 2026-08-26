@@ -9622,3 +9622,43 @@ prueba que `anonymize()` las toca de verdad.
 
 Verificación: suite (contador en `ESTADO.md`) · `VERIFY_CONC=1` con `waiver:verify-chain` ·
 headless (alta con casilla → sin firma hasta verificar → firma tras el enlace) · Pint ✓ · docs-check ✓.
+
+## #180 · 2026-08-26 · Tanda 4 · el PDF del waiver dice exactamente lo que el diseño garantiza — y la cadena cruza cada firma con su versión. La tanda 4 queda CERRADA
+
+**Qué se hizo** (carril A; la revisión `#169` **§10.6**: lo que el PDF afirmaba DE MÁS; §9.11):
+
+1. **«Verificada» → «Coincide (comprobación interna)»**, y una nota nueva bajo la tabla de integridad
+   dice qué es esa comprobación y qué NO: una cadena SHA-256 por titular, sin secreto, guardada en la
+   propia base de datos, sin sello de tiempo cualificado ni anclaje en un tercero — detecta
+   alteraciones accidentales o hechas por la aplicación; **no protege frente a quien escriba en la BD**.
+   Es lo que §4.7 asume al aplazar el sello RFC 3161, y el documento lo tiene que decir (WAI-02, con
+   dos escépticos detrás). El pie deja de decir «fila inmutable»: dice «solo se añade, con hash
+   encadenado» y que el registro no está anclado en un tercero.
+2. **En una firma de mostrador, el PDF ya no atribuye a la persona lo que hizo el operador** (WAI-07):
+   los datos de identidad «los tecleó el operador en el mostrador», y las filas de IP y navegador se
+   rotulan «del puesto de mostrador». Hasta hoy imprimía «los declaró la persona al crear su cuenta»
+   y una IP que era la del puesto, sin decirlo.
+3. **`WaiverChain::verify()` cruza cada firma con su VERSIÓN** (NUC-8): hash de la versión y
+   `document_hash` = `body_hash`. Una versión alterada por debajo daba «cadena OK» en la herramienta
+   que se usa para auditar la cadena entera y solo el PDF lo veía, fila a fila.
+4. Todo en **es/en/fr con paridad** (la guarda de los tres idiomas cubre las claves nuevas y exige
+   que la nota diga cosas distintas en cada uno).
+
+**Lo medido**: WaiverProofPdfTest ampliado (firma del titular: nota de comprobación + nota de
+identidad de siempre, sin «del puesto»; firma declarada: datos tecleados por el operador, IP/UA del
+puesto, y NUNCA «los declaró la persona»; paridad de cinco claves nuevas) · WaiverSignatureChainTest
++1 (una versión alterada por debajo rompe la cadena) · mutaciones que muerden (nota de identidad sin
+condición · rótulo de IP sin condición · `WaiverChain` sin cruzar la versión) · Pint · docs-check.
+
+**Regla de método que dejó la 4a, pagada con un push rechazado**: `bash scripts/docs-check.sh | tail -1
+&& git commit …` **no encadena el gate: encadena `tail`**. La migración nueva subió el recuento a 78,
+la doc decía 77, `docs-check` salió rojo… y el `&&` siguió porque el exit era el de `tail`. El
+`pre-push` lo paró (es exactamente para lo que existe). Desde hoy el exit del gate documental se lee
+del propio script (`$?` sin tubería) antes de commitear.
+
+**Lo que queda del waiver, y de quién es**: del owner, **el texto definitivo** (§8.1), **el plazo**
+(§4.6) y **su ojo en navegador** (§9.10; ya con el anti-bot encendido); de agente, las bajas de §10.7 y
+§10.9 que no bloquean (la IP por `trustProxies` es infra), y **«menores a cargo»** (C), que hereda
+NUC-3. **La tanda 4 —cinco unidades, `#171` → `#180`— queda cerrada.**
+
+Verificación: suite (contador en `ESTADO.md`) · Pint ✓ · docs-check ✓ · mutaciones ✓.
