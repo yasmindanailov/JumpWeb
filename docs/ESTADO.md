@@ -19,10 +19,12 @@
 >   leídos, `waiver:verify-chain` lineal sobre MySQL; los dos ✗ reales son **un defecto del cajón**
 >   (tras el 409 la casilla sigue marcada) · (2) ✅ la **revisión adversarial del subsistema entero**
 >   (spec **§10**: 1 alta · 21 medias · 15 bajas · 3 refutados · 68 afirmaciones que aguantaron) ·
->   (3) ✅ las decisiones del owner **planteadas con su medida** (spec §7, ahora SEIS) — y **CUATRO
+>   (3) ✅ las decisiones del owner **planteadas con su medida** (spec §7, ahora SIETE) — y **SEIS
 >   ya DECIDIDAS al cierre** (`#169`): el anti-bot lo arregla este carril lo primero · casilla del
 >   waiver en el alta manual · **correo verificado para firmar** (el alta firma al verificar) · sin
->   aviso en el paso de pagar. Quedan el texto, el plazo y su ojo en navegador.
+>   aviso en el paso de pagar · **la casilla del alta OBLIGATORIA en modo interno** (era opt-in) ·
+>   **su pasada del guion va DESPUÉS del arreglo del anti-bot**, en local (staging no sirve: sirve
+>   `7776370`, 21 commits por detrás y sin el waiver). Quedan el texto y el plazo.
 >   ❗❗ **Y lo más grave del día NO es del waiver: con el anti-bot activo, el alta suelta de
 >   `/registro` NO TERMINA** —el widget de Turnstile nunca se monta porque `RegisterForm` se monta
 >   antes de que `GET /config` traiga la clave— y **staging tiene claves** (`DEUDA.md` Alta, spec

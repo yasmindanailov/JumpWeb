@@ -9213,7 +9213,7 @@ sin verificar, sí o no · su ojo en navegador (con el anti-bot apagado o arregl
 código acotado (spec §10.11, fichas en `DEUDA.md`): **el widget del alta suelta primero**. Después,
 «menores a cargo», que hereda NUC-3.
 
-### Las cuatro que el owner decidió al cierre (2026-08-26, con el número y el coste delante)
+### Las seis que el owner decidió al cierre (2026-08-26, con el número y el coste delante)
 
 1. **El anti-bot del alta suelta lo arregla el carril A, lo primero de su próxima sesión** (frente a
    cruzar carriles ahora o aparcar con staging sin altas sueltas).
@@ -9224,8 +9224,16 @@ código acotado (spec §10.11, fichas en `DEUDA.md`): **el widget del alta suelt
    ⚠️ Cambia §9.8 y el test del alta con casilla.
 4. **El aviso de re-firma en el paso de pagar NO se construye**: basta el del índice (cerrado; el
    chunk se queda en 225,72 de 226).
+5. **La casilla del waiver del alta pasa a ser OBLIGATORIA en modo interno** (era opt-in por §4.4:
+   cuenta ≠ firma, la firma se exige en la puerta). El owner preguntó por qué no era obligatoria; se
+   le puso el porqué y el coste —quien crea cuenta para comprar sin saltar también acepta— y eligió
+   obligatoria. Sigue desmarcada por defecto; la firma se registra al verificar el correo (3).
+6. **Su pasada del guion va DESPUÉS del arreglo del anti-bot, en local y con Turnstile encendido.**
+   Preguntó si subirlo a staging: **no sirve**, medido — staging sirve `7776370`, 21 commits por
+   detrás y **sin ninguna tanda del waiver**; tiene claves de Turnstile (el alta moriría igual); y
+   publicar allí una versión es irreversible sobre un texto borrador.
 
-Quedan del owner las dos jurídicas —**el texto definitivo y el plazo**— y **su ojo en navegador**.
+Quedan del owner las dos jurídicas —**el texto definitivo y el plazo**—.
 
 Verificación: docs-check ✓ · **solo doc** (`app/`, `resources/`, `tests/` intactos) · suite sin
 cambios (2935) · el andamio y su evidencia (capturas, textos de PDF, `resultado.json`) en el

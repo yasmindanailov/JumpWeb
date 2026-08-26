@@ -149,6 +149,9 @@ Amplía lo que hoy es `consents`, o nace al lado — lo decide la revisión. Lo 
 - Casilla **separada** de privacidad y condiciones, **desmarcada** por defecto. Hoy ya son `type`
   distintos en `consents` y eso está bien: el waiver es aceptación contractual de asunción de riesgo,
   **no es «consentimiento» en el sentido del RGPD**, y mezclarlos en una casilla es el error clásico.
+  ⚠️ `[DECIDIDO owner, 2026-08-26]` (§7·7): en modo **interno** la casilla es **OBLIGATORIA** para
+  crear la cuenta —hasta entonces era opt-in (`#163`, `#166`)—; sigue desmarcada por defecto. La
+  firma se registra al verificar el correo (§7·5), no al crear la cuenta.
 - ⚠️ **El servidor solo emite la aceptación si la petición trae el identificador de la versión que él
   sirvió.** Sin esto, la firma no queda atada a ningún texto y todo lo demás es decorado.
 - ⚠️ **RETIRADO**: obligar a abrir un modal para poder registrarse. Un booleano que envía el navegador
@@ -285,7 +288,18 @@ hallazgos y veredicto en **§10**; el guion de navegador, en headless, en **§9.
 6. 🆕 **El ✅ en navegador** (§9.10): el guion está recorrido en headless; falta su ojo — ⚠️ con el
    anti-bot apagado o el defecto de §9.10 arreglado, porque con Turnstile activo el alta suelta no
    termina. `[DECIDIDO owner, 2026-08-26]`: **ese defecto lo arregla el carril A, lo primero de su
-   próxima sesión.**
+   próxima sesión, y la pasada del owner va DESPUÉS, en local y con el anti-bot ENCENDIDO** — es la
+   única que valida la configuración real. ⚠️ **Staging no sirve para esta prueba**, medido: sirve
+   `7776370`, **21 commits por detrás y sin ninguna tanda del waiver**; tiene claves de Turnstile
+   (el alta moriría igual); y publicar allí una versión es irreversible sobre un texto borrador.
+7. ✅ 🆕 **La casilla del waiver del alta es OBLIGATORIA en modo interno** — `[DECIDIDO owner,
+   2026-08-26]`, planteado con su coste (§4.4 la dejaba opt-in a propósito: cuenta ≠ firma, la firma
+   se exige en la puerta). Sin marcarla, **no hay cuenta** (422 sobre el campo, como privacidad y
+   condiciones); sigue **desmarcada** por defecto (§4.4 no cambia en eso). Coste asumido: quien crea
+   cuenta para comprar sin saltar también acepta. ⚠️ Encaja con §7·5: la aceptación se captura en el
+   alta y **la firma se registra al VERIFICAR el correo**. Cambia §9.8 (fila «El alta»), `register.js`
+   (`accept_waiver` deja de poder ir `false` en interno), `AuthRegistrationTest` y el rótulo del 422
+   (`api.register.*`). Código del carril A, detrás del anti-bot.
 
 ---
 
@@ -981,7 +995,9 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
    desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3) · tres marcadores en la guarda (§10.4) ·
    el infolist por `WaiverStatus` (PAN-5) · throttles con nombre (API-2) · **el widget del anti-bot en
    el alta suelta** (§9.10, el más urgente: sin él no hay alta suelta en ninguna instalación con
-   Turnstile) · `WaiverSigner` en el `CRITICAL_RE` (NUC-6).
+   Turnstile) · `WaiverSigner` en el `CRITICAL_RE` (NUC-6) · y las tres decisiones del owner que son
+   código: **correo verificado para firmar** (§7·5), **la casilla del alta manual** (§7·4) y **la
+   casilla del alta OBLIGATORIA en interno** (§7·7).
 4. **Texto del PDF**: quitar «Verificada»/«inmutable» donde el diseño no lo garantiza (§10.6) y decir
    de quién son la IP y el UA en una firma de mostrador (WAI-07).
 5. Las decisiones humanas de siempre: **texto definitivo**, **plazo** (con la precisión de §10.8), y el
