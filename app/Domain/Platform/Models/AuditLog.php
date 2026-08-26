@@ -188,6 +188,8 @@ class AuditLog extends Model
         // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────
         'legal.version_published',          // target = LegalDocumentVersion (la fila del 1.er idioma)
         'waiver.declared',                  // firma DECLARADA por un operador (alta presencial)
+        'waiver.proof_downloaded',          // PDF del registro probatorio servido; target = WaiverSignature
+        'waiver.proof_viewed',              // registro probatorio abierto en la ficha; target = User
         'waiver.signed',                    // firma del titular (web/API); target = User
     ];
 

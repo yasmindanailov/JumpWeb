@@ -276,6 +276,14 @@ docker compose exec -u sail laravel.test php artisan redsys:verify-sandbox      
 docker compose exec -u sail laravel.test php artisan waiver:verify-chain      --workers=16   # cadena de firmas del waiver (Fase 6)
 ```
 
+- ⚠️ **Trampa del arnés (Livewire 4 + Filament 5), medida en `#161`**: la vista de modales de
+  Filament es un `wire:partial`, y el HTML del componente tras `mountAction('x')` **NO incluye el
+  contenido del modal** — `assertSee` sobre lo que el modal pinta sale ROJO aunque el modal exista y
+  se abra (comprobado: `mountedActions` lo lista, `mountedActionShouldOpenModal()` es `true` y el
+  `mountUsing` corre). Se prueba cada pieza donde sí es observable: `assertActionVisible/Hidden`,
+  los efectos de `mountUsing` (p. ej. la auditoría), `getMountedAction()->getModalContent()` para
+  atar la acción a su vista, y esa vista renderizada directamente con `view(...)->render()`.
+  Patrón en `tests/Feature/Waiver/WaiverProofActionTest.php`.
 - **`waiver:verify-chain`** (Fase 6, `specs/waiver-probatorio.md` §8.5/§9.3): N firmas del MISMO
   titular en paralelo → verifica que el `lockForUpdate` de su fila en `WaiverSigner` serializa la
   cadena de hashes: N filas, cada `prev_hash` enlaza con la anterior y ninguno se repite. **Visto

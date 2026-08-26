@@ -100,6 +100,21 @@ class CustomerRegistrar
                 'version' => Consent::CURRENT_VERSION,
             ]);
 
+            // Fase 6 · waiver (`specs/waiver-probatorio.md` §8.4, `[DECIDIDO owner]`): en modo INTERNO
+            // el alta presencial produce una firma DECLARADA por el operador —no hay navegador del
+            // cliente—, igual que el consentimiento de privacidad de arriba. Exige una versión
+            // publicada y un operador con sesión: sin cualquiera de las dos no hay firma, y el
+            // cliente saldrá «sin waiver» en la puerta hasta que firme por su cuenta.
+            $operator = auth()->user();
+            $version = WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
+            if ($version !== null && $operator instanceof User) {
+                app(WaiverSigner::class)->sign(
+                    $user,
+                    $version,
+                    WaiverSignatureRequest::declaredAtCounter($operator, $ip, request()?->userAgent()),
+                );
+            }
+
             return $user;
         });
 

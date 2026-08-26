@@ -47,19 +47,41 @@ class WaiverSignature extends Model
 
     public const CHANNELS = [self::CHANNEL_WEB, self::CHANNEL_API, self::CHANNEL_PANEL];
 
-    /** Versión del esquema canónico del hash. Subirla obliga a seguir verificando con la anterior. */
-    public const CANONICAL_VERSION = 1;
+    /**
+     * Versión VIGENTE del esquema canónico del hash: la que escribe `WaiverSigner`. Cada fila guarda
+     * la suya en `canonical_version` y se verifica con ella, así que subirla NO invalida lo firmado
+     * (spec §4.7): solo añade una entrada a `HASHED_FIELDS_BY_VERSION`. Nunca se edita una entrada
+     * existente.
+     */
+    public const CANONICAL_VERSION = 2;
 
     /**
-     * Campos que entran en el hash, EN ESTE ORDEN. Fijados desde el primer commit (spec §4.7):
-     * cambiarlos invalida la verificación de todo lo ya firmado.
+     * Campos que entran en el hash, EN ESTE ORDEN, por versión del esquema.
+     *  - v1 (2026-08-25): la fila probatoria original.
+     *  - v2 (2026-08-26, `DECISIONES #161`): + la IDENTIDAD del firmante tal y como estaba al firmar
+     *    (`holder_name`, `holder_email`), para que la prueba siga identificando a la persona después
+     *    de `User::anonymize()`.
+     *
+     * @var array<int, list<string>>
+     */
+    public const HASHED_FIELDS_BY_VERSION = [
+        1 => [
+            'user_id', 'subject_type', 'subject_id', 'legal_document_version_id', 'document_hash',
+            'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
+        ],
+        2 => [
+            'user_id', 'subject_type', 'subject_id', 'legal_document_version_id', 'document_hash',
+            'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
+            'holder_name', 'holder_email',
+        ],
+    ];
+
+    /**
+     * Los campos de la versión vigente.
      *
      * @var list<string>
      */
-    public const HASHED_FIELDS = [
-        'user_id', 'subject_type', 'subject_id', 'legal_document_version_id', 'document_hash',
-        'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
-    ];
+    public const HASHED_FIELDS = self::HASHED_FIELDS_BY_VERSION[self::CANONICAL_VERSION];
 
     protected $guarded = [];
 
@@ -67,6 +89,7 @@ class WaiverSignature extends Model
         'accepted_at' => 'datetime',
         'subject_id' => 'integer',
         'declared_by_user_id' => 'integer',
+        'canonical_version' => 'integer',
     ];
 
     /** Solo la poda por plazo puede borrar; lo enciende `pruning()` justo antes de `delete()`. */
@@ -120,6 +143,17 @@ class WaiverSignature extends Model
         return $this->subject_type === self::SUBJECT_HOLDER;
     }
 
+    /** El nombre del firmante TAL Y COMO ESTABA al firmar (v2); las filas v1 caen a la cuenta. */
+    public function holderName(): ?string
+    {
+        return $this->holder_name ?? $this->user?->name;
+    }
+
+    public function holderEmail(): ?string
+    {
+        return $this->holder_email ?? $this->user?->email;
+    }
+
     // ─── Hash canónico ────────────────────────────────────────────────────────
 
     public function verifyHash(): bool
@@ -136,16 +170,23 @@ class WaiverSignature extends Model
     }
 
     /**
-     * Serialización canónica: `v` + los `HASHED_FIELDS` en orden, con `accepted_at` en UTC ISO-8601
-     * (segundos) y los ids como enteros — una fila leída de BD trae strings y una recién construida
-     * trae ints, y las dos tienen que dar el mismo hash.
+     * Serialización canónica: `v` + los campos de ESA versión en orden, con `accepted_at` en UTC
+     * ISO-8601 (segundos) y los ids como enteros — una fila leída de BD trae strings y una recién
+     * construida trae ints, y las dos tienen que dar el mismo hash. La versión sale de la propia
+     * fila (`canonical_version`); sin ella, la vigente.
      *
      * @param  array<string,mixed>  $attributes
      */
     public static function canonical(array $attributes): string
     {
-        $payload = ['v' => self::CANONICAL_VERSION];
-        foreach (self::HASHED_FIELDS as $field) {
+        $version = (int) ($attributes['canonical_version'] ?? self::CANONICAL_VERSION);
+        $fields = self::HASHED_FIELDS_BY_VERSION[$version] ?? null;
+        if ($fields === null) {
+            throw new \InvalidArgumentException("Versión canónica desconocida: {$version}.");
+        }
+
+        $payload = ['v' => $version];
+        foreach ($fields as $field) {
             $value = $attributes[$field] ?? null;
             $payload[$field] = match (true) {
                 $value === null => null,

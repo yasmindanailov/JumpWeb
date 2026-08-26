@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CalendarEventsController;
 use App\Http\Controllers\Admin\DailySummaryController;
 use App\Http\Controllers\Admin\PanelLocaleController;
 use App\Http\Controllers\Admin\ReservationSlipController;
+use App\Http\Controllers\Admin\WaiverProofController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -175,6 +176,14 @@ Route::get('/admin/puerta/validar', ValidarRegistro::class)
 Route::get('/admin/pedidos/{order}/items/{item}/imprimir', ReservationSlipController::class)
     ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.orders.items.slip'); // L1: la hoja imprime nombres+alergias de menores (art. 9).
+
+// Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
+// §4.5). Permiso PROPIO `waiver.view` (comprobado en el controlador) + IDOR (la firma debe ser del
+// usuario de la URL) + auditoría de cada consulta. `no-store` (`RGPD-04`): lleva nombre, email, ip y
+// user-agent del firmante. Se sirve en el idioma del texto firmado.
+Route::get('/admin/usuarios/{user}/waiver/{signature}/pdf', WaiverProofController::class)
+    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->name('admin.users.waiver.proof');
 
 // Panel admin — Fase 7.4 (decisión #14): feed JSON del calendario unificado.
 // Eventos = productos individuales de pedidos pagados, acotados al rango que

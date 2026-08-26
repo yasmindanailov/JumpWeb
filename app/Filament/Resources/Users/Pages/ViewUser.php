@@ -63,9 +63,37 @@ class ViewUser extends ViewRecord
     {
         return [
             $this->manageRolesAction(),
+            $this->waiverProofAction(),
             $this->sendPasswordResetAction(),
             $this->anonymizeUserAction(),
         ];
+    }
+
+    /**
+     * Fase 6 · waiver (`specs/waiver-probatorio.md` §4.6) — el REGISTRO probatorio del titular, en
+     * régimen restringido: NO es una sección de la ficha, es una acción con permiso PROPIO
+     * (`waiver.view`) cuya apertura ES la consulta y queda AUDITADA (`waiver.proof_viewed`). Visible
+     * también sobre cuentas anonimizadas: es exactamente entonces cuando la prueba hace falta.
+     */
+    private function waiverProofAction(): Action
+    {
+        return Action::make('waiverProof')
+            ->label(__('admin.waiver.proof.action'))
+            ->icon(Heroicon::OutlinedDocumentText)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission('waiver.view') ?? false)
+            ->modalHeading(fn (User $record): string => __('admin.waiver.proof.heading', ['name' => $record->name]))
+            ->modalDescription(__('admin.waiver.proof.description'))
+            ->modalContent(fn (User $record) => view('filament.users.partials.waiver-proof', ['record' => $record]))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.waiver.proof.close'))
+            ->mountUsing(function (User $record): void {
+                // «Cada consulta auditada» (§4.6): abrir el registro es la consulta. Sin PII.
+                AuditLogger::log('waiver.proof_viewed', $record, [
+                    'user_id' => $record->getKey(),
+                    'signatures' => $record->waiverSignatures()->count(),
+                ]);
+            });
     }
 
     /**

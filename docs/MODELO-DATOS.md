@@ -277,11 +277,14 @@ porque es «lo que el titular aceptó» e Identity no puede mirar a Content. Un 
 
 ### `waiver_signatures` (WaiverSignature, **append-only + Prunable**) — Fase 6 · waiver
 `user_id` FK **RESTRICT** (la prueba sobrevive al titular) · `subject_type` (`holder|dependent`) +
-`subject_id` nullable · `legal_document_version_id` FK restrict · `document_hash` (copia del de la
-versión) · `accepted_at` + `accepted_tz` · `ip` · `user_agent`(512) · `channel` (`web|api|panel`) ·
-`declared_by_user_id` FK users nullOnDelete (alta presencial: firma DECLARADA por el operador) ·
-`prev_hash` · `hash` unique · `created_at`. `hash` = sha256 del JSON canónico de
-`WaiverSignature::HASHED_FIELDS` en ese orden; `prev_hash` encadena POR TITULAR, serializado con el
+`subject_id` nullable · **`holder_name` · `holder_email`** (la identidad del firmante TAL Y COMO
+ESTABA al firmar, `[DECIDIDO owner, 2026-08-26]`; es lo que sigue identificándole tras `anonymize()`)
+· `legal_document_version_id` FK restrict · `document_hash` (copia del de la versión) · `accepted_at`
++ `accepted_tz` · `ip` · `user_agent`(512) · `channel` (`web|api|panel`) · `declared_by_user_id` FK
+users nullOnDelete (alta presencial: firma DECLARADA por el operador) · `prev_hash` · `hash` unique ·
+**`canonical_version`** (con qué esquema se calculó el hash: v1 sin identidad, v2 con ella; cada fila
+se verifica con el suyo) · `created_at`. `hash` = sha256 del JSON canónico de
+`WaiverSignature::HASHED_FIELDS_BY_VERSION[v]` en ese orden; `prev_hash` encadena POR TITULAR, serializado con el
 `lockForUpdate()` de su fila de `users` en `WaiverSigner` (único escritor); `waiver:verify-chain` lo
 mide sobre MySQL. **Sobrevive a `anonymize()`.** Poda por `waiver.retention_months` (sin valor → no
 se poda nada; solo `subject_type = holder`) vía el mismo `model:prune` diario. Fuera de la poda solo

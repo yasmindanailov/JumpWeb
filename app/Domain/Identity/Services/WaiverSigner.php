@@ -66,6 +66,12 @@ final class WaiverSigner
                 'channel' => $request->channel,
                 'declared_by_user_id' => $request->declaredBy?->getKey(),
                 'prev_hash' => $previous?->hash,
+                // La IDENTIDAD del firmante, tal y como está AHORA (`DECISIONES #161`, owner): tras
+                // `anonymize()` la fila de `users` ya no identifica a nadie, y una prueba que apunte a
+                // «Cliente eliminado» no prueba quién firmó. Entra en el hash (esquema v2).
+                'holder_name' => $locked->name !== null ? mb_substr((string) $locked->name, 0, 255) : null,
+                'holder_email' => $locked->email !== null ? mb_substr((string) $locked->email, 0, 255) : null,
+                'canonical_version' => WaiverSignature::CANONICAL_VERSION,
             ];
             $attributes['hash'] = WaiverSignature::computeHash($attributes);
 

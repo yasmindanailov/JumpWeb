@@ -1880,6 +1880,14 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         poda por `waiver.retention_months` (sin valor: nada) y la acción «Publicar versión firmable» en la
         página del waiver. **`waiver:verify-chain` sobre MySQL con 8 y 16 procesos: cadena lineal — y
         visto FALLAR sin el lock, 3 de 3 (1, 9 y 15 `prev_hash` repetidos).**
+  - [x] **B · tanda 2 — el PANEL** (2026-08-26, `#161`): **la identidad del firmante viaja EN la
+        firma** (`[DECIDIDO owner]`: `holder_name`/`holder_email` dentro del hash, esquema canónico v2
+        con la versión guardada por fila —lo firmado con v1 sigue verificando—), permiso PROPIO
+        `waiver.view` (no va al staff por defecto), la acción «Registro del waiver» en la ficha del
+        usuario —no una sección: abrirla ES la consulta y se audita—, el **PDF del snapshot** en el
+        idioma del texto firmado (determinista, `no-store`, IDOR, auditado; `RGPD-04` amplía) con las
+        etiquetas en `lang/{es,en,fr}/waiver.php`, y el alta presencial en modo interno como firma
+        **declarada por el operador** (§8.4). Detalle y lo medido: spec **§9.6**.
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
       modos** (externo / interno / desactivado). ⚠️ **Y modifica `INVARIANTES` §3 (RGPD-01)**: el
       registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.

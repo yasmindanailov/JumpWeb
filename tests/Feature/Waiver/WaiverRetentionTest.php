@@ -71,6 +71,10 @@ class WaiverRetentionTest extends TestCase
         $this->assertSame($holder->id, $kept->user_id);
         $this->assertTrue($kept->verifyHash());
         $this->assertTrue(WaiverChain::verify($holder->fresh())['ok']);
+        // `#161` (owner): la prueba sigue identificando a la persona por la copia que lleva dentro.
+        $this->assertSame('Ana', $kept->holder_name);
+        $this->assertSame('ana@example.com', $kept->holder_email);
+        $this->assertSame('Ana', $kept->holderName(), 'no puede caer a «Cliente eliminado»');
 
         // (2) Y todo lo demás sigue purgándose exactamente como antes.
         $anonymised = $holder->fresh();

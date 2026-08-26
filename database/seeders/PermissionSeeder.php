@@ -67,6 +67,8 @@ class PermissionSeeder extends Seeder
         'users.manage' => 'Crear/editar/borrar usuarios',
         'users.anonymize' => 'Anonimizar usuario (RGPD)',
         'consents.view' => 'Ver consentimientos de usuario',
+        // Fase 6 · waiver (§4.6): el registro probatorio, con permiso PROPIO y consulta auditada.
+        'waiver.view' => 'Ver el registro probatorio del waiver (firmas y PDF)',
         'access.manage' => 'Gestionar roles y permisos',
         'reports.view' => 'Ver informes y exportaciones',
         'audit.view' => 'Ver registro de auditoría',

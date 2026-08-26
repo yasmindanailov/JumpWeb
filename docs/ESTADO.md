@@ -25,14 +25,14 @@
 > `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
 > ✅ **HECHO y EMPUJADO** (`#159`): `RGPD-01` ya describe las OCHO operaciones que el código hace.
 > `User::anonymize()` **no se tocó** en esa tanda —md5 comprobado—: esa conducta la modifica el waiver.
-> ✅ **Agente A · waiver — tanda 1 (el núcleo) EMPUJADA** (`#160`, spec **§9**) **sobre la `RGPD-01`
->   corregida, y con el paso (2) ya escrito en su fila**: `anonymize()` NO toca `waiver_signatures`
->   (cita viva: `WaiverRetentionTest`). **Tanda 2 (el panel) en curso**; sus ficheros:
->   `app/Domain/Identity/{Models,Services}` · `app/Console/Commands/PurgeCustomerData.php` ·
->   `app/Http/Controllers/Admin/` (PDF nuevo) · `resources/views/pdf/` · `app/Filament/Resources/Users/` ·
->   `app/Domain/Identity/Services/CustomerRegistrar.php` · `database/seeders/PermissionSeeder.php` ·
->   `routes/web.php` · `lang/*/admin.php` (bloque `waiver`) · `docs/specs/waiver-probatorio.md` ·
->   `docs/INVARIANTES.md` (solo `RGPD-04`, que se amplía con el PDF) · `tests/Feature/Waiver/`.
+> ✅ **Agente A · waiver — tandas 1 (núcleo, `#160`) y 2 (panel, `#161`) EMPUJADAS** (spec **§9**),
+>   con los pasos (2) de `RGPD-01` y la ampliación de `RGPD-04` escritos en sus filas. **Tanda 3 (el
+>   cliente) en curso**; sus ficheros: `app/Domain/Identity/Services/{SelfSignup,WaiverSigner}.php` ·
+>   `app/Http/Controllers/Api/V1/` (waiver nuevo + registro) · `app/Http/Api/` · `openapi/v1.yaml` ·
+>   `routes/api.php` · `resources/js/sidebar/` (alta + zona de privacidad) · `lang/*/account.php` ·
+>   `docs/specs/waiver-probatorio.md` · `docs/specs/api-v1.md` (§10) · `tests/Feature/Waiver/` ·
+>   `tests/Feature/Api/V1/`. ⚠️ `routes/api.php` y `MeController` están en el `CRITICAL_RE`
+>   (`VERIFY_CONC=1` tras los verificadores) — el waiver no toca dinero ni aforo, pero el gate lo exige igual.
 > ▶ **Para el agente B — tu «interlock» del censo NO dispara, y es correcto** (2026-08-25 noche):
 >   `waiver_accepted_at` sigue **`SCRUBBED`** a propósito, porque es presentación, no prueba. La prueba
 >   vive en `waiver_signatures` —tabla aparte, `user_id` RESTRICT—, no en una columna de `users`, así que
@@ -50,7 +50,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#160`**.
+> El último usado es **`#161`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -135,9 +135,15 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2884 en verde** (16.679 aserciones, `--parallel` **~71 s** medidos el 2026-08-25 por la
-  noche **sobre el estado FUSIONADO** —`#159` del agente B + `#160` del agente A—) ·
-  ▶ **+47 en el último corte** (`#160`): los seis ficheros de `tests/Feature/Waiver/` — inmutabilidad
+- Suite **2909 en verde** (16.806 aserciones, `--parallel` **~75 s** medidos el 2026-08-26 en la
+  máquina del agente A) ·
+  ▶ **+25 en el último corte** (`#161`): `WaiverProofPdfTest` (14: permiso propio, IDOR, auditoría,
+  `no-store`, idioma del texto firmado, **el PDF no cambia al editar la página ni al publicar otra
+  versión**, determinismo, la identidad copiada sobrevive a `anonymize()`, tres idiomas distintos),
+  `WaiverProofActionTest` (6) y `PresentialWaiverDeclarationTest` (5). **5 mutaciones, las 5
+  muerden** (spec §9.6). ⚠️ Y una trampa del arnés medida: el modal de Filament es un `wire:partial`
+  y `assertSee` no lo ve tras `mountAction` (`TESTING.md`).
+  ▶ Antes, **+47** (`#160`): los seis ficheros de `tests/Feature/Waiver/` — inmutabilidad
   de versiones, cadena de firmas (con la serialización canónica FIJADA como literal), retención tras
   `anonymize()` y poda con el reloj congelado, los tres modos, la puerta en interno y la acción de
   publicar. **5 mutaciones, las 5 muerden**; el verificador de cadena sobre MySQL, visto fallar sin el
@@ -457,9 +463,12 @@ de la señal, cero reembolsos necesarios, identidades cerrando — lo que `#146`
 `specs/waiver-probatorio.md` **§9**): versiones inmutables, firmas encadenadas por titular (verificadas
 bajo concurrencia sobre MySQL, y el verificador visto fallar sin el lock), los tres modos, la prueba que
 sobrevive a `anonymize()` y la acción de publicar — **sin publicar ninguna versión** (§8.1 es ahora un
-mecanismo: un `[PENDIENTE]` no se publica). Quedan las tandas 2 (panel: PDF, ficha, alta presencial) y
-3 (cliente: API, alta, cajón, re-firma). **No toca la landing**. Detalle en el tracker; las cuatro
-specs, en `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
+mecanismo: un `[PENDIENTE]` no se publica). ✅ **Y la tanda 2 —el panel— también** (`#161`, 2026-08-26):
+la identidad del firmante viaja EN la firma (`[DECIDIDO owner]`), permiso propio `waiver.view`, el
+registro en la ficha como acción auditada, el PDF del snapshot en el idioma firmado y el alta
+presencial declarada. Queda la tanda 3 (cliente: API, casilla del alta, cajón, re-firma). **No toca la
+landing**. Detalle en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de
+`CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
 **§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables

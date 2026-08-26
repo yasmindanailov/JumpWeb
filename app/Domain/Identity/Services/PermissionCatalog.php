@@ -58,6 +58,9 @@ final class PermissionCatalog
             'users.manage',
             'users.anonymize',
             'consents.view',
+            // Fase 6 · waiver (§4.6): el registro probatorio tiene permiso PROPIO y cada consulta se
+            // audita. No va al staff por defecto: está fuera de toda superficie normal.
+            'waiver.view',
             'reports.view',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).

@@ -63,6 +63,10 @@ class WaiverSignatureChainTest extends TestCase
         $this->assertSame('Europe/Madrid', $signature->accepted_tz);
         $this->assertNull($signature->prev_hash, 'la primera firma del titular no tiene anterior');
         $this->assertNull($signature->declared_by_user_id);
+        // `#161` (owner): la identidad del firmante viaja EN la firma, tal y como está al firmar.
+        $this->assertSame($holder->name, $signature->holder_name);
+        $this->assertSame($holder->email, $signature->holder_email);
+        $this->assertSame(2, $signature->fresh()->canonical_version);
         $this->assertTrue($signature->fresh()->verifyHash());
 
         // Lo que el titular VE (art. 7.1) y el sello heredado: presentación, no prueba.
@@ -204,13 +208,14 @@ class WaiverSignatureChainTest extends TestCase
     }
 
     /**
-     * La serialización canónica, FIJADA como literal (spec §4.7: «definir qué campos entran en el
-     * hash y en qué orden, desde el primer commit»). Una fila leída de BD (strings) y una recién
-     * construida (ints, Carbon) tienen que dar el mismo texto.
+     * La serialización canónica, FIJADA como literal POR VERSIÓN (spec §4.7: «definir qué campos
+     * entran en el hash y en qué orden, desde el primer commit»). Una fila leída de BD (strings) y
+     * una recién construida (ints, Carbon) tienen que dar el mismo texto. Y una fila v1 sigue
+     * verificando con SU esquema aunque el vigente sea v2: subir la versión no invalida lo firmado.
      */
-    public function test_the_canonical_serialisation_is_fixed(): void
+    public function test_the_canonical_serialisation_is_fixed_per_version(): void
     {
-        $attributes = [
+        $v1 = [
             'user_id' => '7',
             'subject_type' => 'holder',
             'subject_id' => null,
@@ -223,20 +228,39 @@ class WaiverSignatureChainTest extends TestCase
             'channel' => 'web',
             'declared_by_user_id' => null,
             'prev_hash' => null,
+            'canonical_version' => '1',
             'hash' => 'no entra en el hash',
             'id' => 99,
         ];
-        $expected = '{"v":1,"user_id":7,"subject_type":"holder","subject_id":null,"legal_document_version_id":3,'
+        $common = '"user_id":7,"subject_type":"holder","subject_id":null,"legal_document_version_id":3,'
             .'"document_hash":"'.str_repeat('a', 64).'","accepted_at":"2026-08-25T18:30:00Z","accepted_tz":"Europe/Madrid",'
-            .'"ip":"10.0.0.1","user_agent":"UA/1","channel":"web","declared_by_user_id":null,"prev_hash":null}';
+            .'"ip":"10.0.0.1","user_agent":"UA/1","channel":"web","declared_by_user_id":null,"prev_hash":null';
 
-        $this->assertSame($expected, WaiverSignature::canonical($attributes));
-        $this->assertSame(hash('sha256', $expected), WaiverSignature::computeHash($attributes));
+        $expectedV1 = '{"v":1,'.$common.'}';
+        $this->assertSame($expectedV1, WaiverSignature::canonical($v1));
+        $this->assertSame(hash('sha256', $expectedV1), WaiverSignature::computeHash($v1));
 
-        $asBuilt = $attributes;
+        $v2 = $v1;
+        $v2['canonical_version'] = 2;
+        $v2['holder_name'] = 'Ana Pérez';
+        $v2['holder_email'] = 'ana@example.com';
+        $expectedV2 = '{"v":2,'.$common.',"holder_name":"Ana Pérez","holder_email":"ana@example.com"}';
+        $this->assertSame($expectedV2, WaiverSignature::canonical($v2));
+        $this->assertSame(hash('sha256', $expectedV2), WaiverSignature::computeHash($v2));
+
+        // Sin `canonical_version` se usa la vigente (v2); v1 y v2 no pueden dar el mismo texto.
+        unset($v2['canonical_version']);
+        $this->assertSame($expectedV2, WaiverSignature::canonical($v2));
+        $this->assertSame(2, WaiverSignature::CANONICAL_VERSION);
+
+        $asBuilt = $v1;
         $asBuilt['user_id'] = 7;
         $asBuilt['legal_document_version_id'] = 3;
+        $asBuilt['canonical_version'] = 1;
         $asBuilt['accepted_at'] = now()->setDateTime(2026, 8, 25, 18, 30, 0);
-        $this->assertSame($expected, WaiverSignature::canonical($asBuilt));
+        $this->assertSame($expectedV1, WaiverSignature::canonical($asBuilt));
+
+        $this->expectException(InvalidArgumentException::class);
+        WaiverSignature::canonical(['canonical_version' => 99]);
     }
 }

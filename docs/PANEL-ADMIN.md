@@ -73,6 +73,13 @@ buscando por **email o teléfono**:
   pide en la siguiente compra o inicio de sesión, nunca en el mostrador. El texto se publica como
   versión firmable desde «Páginas → waiver → Publicar versión firmable»: es **irreversible** (una
   versión publicada no se edita ni se borra) y un borrador con `[PENDIENTE]` se rechaza.
+  ▶ **El registro probatorio** vive en la ficha del usuario como la acción «Registro del waiver»,
+  con permiso PROPIO `waiver.view` (no lo tiene el staff por defecto): abrirla queda en la auditoría,
+  lista las firmas (versión, canal, quién la declaró si fue en mostrador, integridad) y cada una
+  tiene su **PDF** —compuesto del texto exacto que la persona aceptó, en su idioma, no del texto
+  actual de la página— que también se audita. Funciona sobre cuentas ya anonimizadas: la firma lleva
+  copia del nombre y el email de entonces. El **alta presencial** (pedido manual → cliente nuevo) en
+  modo interno deja una firma **declarada por el operador**, y el PDF lo dice con todas las letras.
 - Si la entrada se compró online, además se valida su **QR** (§2.4).
 - Si la persona **no está registrada**, se registra en el momento: **desde su móvil**
   (QR/enlace en la entrada) **o en una tablet** del local (ambas opciones, decidido).

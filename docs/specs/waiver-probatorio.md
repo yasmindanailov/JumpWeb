@@ -133,6 +133,10 @@ Amplía lo que hoy es `consents`, o nace al lado — lo decide la revisión. Lo 
   duplicar mecanismo (`menores-a-cargo.md` §4.3).
 - **`hash` y `prev_hash` se calculan y guardan desde el PRIMER commit**, aunque hoy no se ancle nada.
   El porqué está en §4.7.
+- ✅ `[DECIDIDO owner, 2026-08-26]` **La identidad del firmante viaja EN la firma** (`holder_name`,
+  `holder_email`, dentro del hash): tras `User::anonymize()` la cuenta ya no identifica a nadie, y una
+  prueba que apunte a «Cliente eliminado» no prueba quién firmó. Es PII conservada a propósito bajo el
+  régimen restringido de §4.6 y solo la purga el plazo (§9.6, `DECISIONES #161`).
 
 ### 4.4 Cómo se firma (y qué se retiró)
 
@@ -384,13 +388,14 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 ---
 
-## 9. Ejecución — tanda 1, el NÚCLEO (2026-08-25, `DECISIONES #160`)
+## 9. Ejecución — tandas 1 (el NÚCLEO, `#160`) y 2 (el PANEL, `#161`) HECHAS; 3 pendiente
 
-> Lo que hay en el árbol, dicho sin optimismo. Tres tandas: **1 · el núcleo** (esta) · **2 · el panel**
-> (PDF del snapshot, ficha del usuario con permiso propio y consulta auditada, alta presencial
-> declarada desde `CustomerRegistrar`) · **3 · el cliente** (API `legal/waiver` + `me/waiver`, casilla
-> en el alta, zona de privacidad del cajón, re-firma en el siguiente momento natural). **No hay
-> ninguna versión publicada** en ninguna instalación: §8.1 sigue vigente y ahora es mecanismo (§9.2).
+> Lo que hay en el árbol, dicho sin optimismo. Tres tandas: ✅ **1 · el núcleo** (§9.1–§9.4,
+> 2026-08-25) · ✅ **2 · el panel** (§9.6–§9.7, 2026-08-26: PDF del snapshot, registro en la ficha con
+> permiso propio y consulta auditada, alta presencial declarada, y **la identidad del firmante EN la
+> firma**) · ⬜ **3 · el cliente** (API `legal/waiver` + `me/waiver`, casilla en el alta, zona de
+> privacidad del cajón, re-firma en el siguiente momento natural). **No hay ninguna versión
+> publicada** en ninguna instalación: §8.1 sigue vigente y ahora es mecanismo (§9.2).
 
 ### 9.1 Qué existe (todo en Identity; la capa de entrega solo lo consume)
 
@@ -414,7 +419,7 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 Además: dos alias morph (`legal_document_version`, `waiver_signature`), tres acciones de auditoría
 (`legal.version_published`, `waiver.signed`, `waiver.declared`) y el bloque `admin.waiver.*` de
-`lang/es/admin.php`. Recuentos del gate: **32 modelos · 76 migraciones**.
+`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 77 migraciones**.
 
 ### 9.2 Las TRES cosas en que la ejecución se apartó del cuerpo, y por qué
 
@@ -482,13 +487,66 @@ fiscales— rechaza la publicación entera, sin dejar ningún idioma a medias.
 - **Un `[x]` bajo Fase 6 obliga a poner 🟦 en su cabecera** (`docs-check`, coherencia de marcadores):
   el tracker ya lo lleva.
 
-### 9.5 Lo que queda ABIERTO tras la tanda 1
+### 9.5 Lo que queda ABIERTO tras las tandas 1 y 2
 
 - ❗ `[PENDIENTE: owner]` **el plazo** (§4.6): hoy `waiver.retention_months` vacío = no se poda nada.
 - ❗ `[PENDIENTE: owner]` **el texto definitivo** (§8.1): la maquinaria rechaza publicar el borrador.
-- **`RGPD-01`, paso (2)** —la restricción del waiver— se escribe **sobre la corrección (1) del agente
-  B** (`ESTADO`, reparto del 2026-08-25), citando `WaiverRetentionTest`. **`RGPD-04`** se amplía en la
-  tanda 2 con el PDF.
-- Tanda 2 y tanda 3, en el orden de arriba. La casilla del alta (§4.4) y la re-firma «en el siguiente
-  momento natural» (§4.8) no existen todavía: hoy solo se puede firmar por servicio y por el
-  verificador.
+- ✅ `RGPD-01` lleva el paso (2) —escrito sobre la corrección (1) de `#159`— y `RGPD-04` está ampliada
+  con el PDF; las dos citan su guarda (`WaiverRetentionTest`, `WaiverProofPdfTest`).
+- **Tanda 3 (el cliente)**: la casilla del alta (§4.4), `GET /api/v1/legal/waiver` (la vigente en el
+  idioma del cliente, con su id), `POST /api/v1/me/waiver` (aceptar con el id que el servidor sirvió
+  — §4.4: sin él, no hay firma), `GET /api/v1/me/waiver` (estado + PDF propio), la zona de
+  privacidad del cajón y la re-firma «en el siguiente momento natural» (§4.8). Hoy solo se firma por
+  servicio, desde el mostrador (§9.6) y por el verificador.
+
+### 9.6 Ejecución — tanda 2, el PANEL (2026-08-26, `DECISIONES #161`)
+
+**La decisión que la abrió** (`[DECIDIDO owner, 2026-08-26]`): al diseñar el PDF apareció un hueco
+del cuerpo — tras `User::anonymize()` la fila de `users` dice «Cliente eliminado», así que una prueba
+que solo apuntara al `user_id` **dejaba de identificar a la persona**, y `#142` la quiere «conservada
+vinculada, no anonimizada». El owner eligió **nombre + email** (no el teléfono). Entran en la firma
+(`holder_name`, `holder_email`) **y en el hash**, como esquema canónico **v2**; cada fila guarda
+`canonical_version` y se verifica con la suya, así que lo firmado con v1 seguiría verificando (no
+había ninguna firma real). Las dos serializaciones están fijadas como literal en
+`WaiverSignatureChainTest`.
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| Migración | `database/migrations/2026_08_26_090000_add_holder_identity_to_waiver_signatures.php` | `holder_name` · `holder_email` · `canonical_version` (default 1 para lo anterior) + el permiso `waiver.view` insertado idempotente |
+| `WaiverProof` | `app/Domain/Identity/Services/WaiverProof.php` | Presentador del PDF: texto íntegro del snapshot, identidad copiada (cae a la cuenta solo en filas v1), fecha en su zona y en UTC, ip, UA, canal, operador declarante, hashes, `integrityOk()` (fila + versión + enlace) y la línea de conservación. **Determinista**: sin «generado el» |
+| `WaiverProofController` + ruta | `app/Http/Controllers/Admin/WaiverProofController.php` · `routes/web.php` | `GET /admin/usuarios/{user}/waiver/{signature}/pdf`: `web+auth+staff_or_admin` + `throttle:30,1` + `no-store` · permiso **`waiver.view`** · IDOR (la firma es del usuario de la URL) · audita `waiver.proof_downloaded` · **idioma = el del texto firmado** |
+| La vista | `resources/views/pdf/waiver-proof.blade.php` · `lang/{es,en,fr}/waiver.php` | dompdf; las etiquetas en los TRES idiomas del cliente (`#154`), y dicen cosas distintas (guarda). La firma declarada lleva su recuadro: «sustancialmente más débil» (§8.4) |
+| La ficha del usuario | `app/Filament/Resources/Users/Pages/ViewUser.php` · `resources/views/filament/users/partials/waiver-proof.blade.php` | **Acción** «Registro del waiver», no sección: visible solo con `waiver.view` (también sobre cuentas anonimizadas), `mountUsing` audita `waiver.proof_viewed`, el modal lista estado, firmas, integridad y el PDF de cada una |
+| Permiso | `database/seeders/PermissionSeeder.php` · `app/Domain/Identity/Services/PermissionCatalog.php` · `lang/{es,zh_CN}/admin.php` | `waiver.view` en «gestión», **no** entre los del staff por defecto; etiqueta en es y zh_CN (`AccessI18nParityTest`) |
+| Alta presencial | `app/Domain/Identity/Services/CustomerRegistrar.php` | En modo **interno**, con versión publicada y operador con sesión → `WaiverSigner` con `declaredAtCounter()`; sin cualquiera de las tres, no hay firma (y la puerta dirá «sin waiver») |
+| Auditoría | `app/Domain/Platform/Models/AuditLog.php` | `waiver.proof_viewed` · `waiver.proof_downloaded` |
+
+**Lo medido**: suite **+25** (`WaiverProofPdfTest` 14 · `WaiverProofActionTest` 6 ·
+`PresentialWaiverDeclarationTest` 5), todos los existentes afectados en verde (alta manual, permisos
+y su paridad es↔zh, catálogo de auditoría, morph map, fronteras, ficha de usuario) · migración
+aplicada sobre MySQL dev · **§6·2 demostrada por mutación**: editar la página y publicar otra versión
+DESPUÉS de firmar no cambia ni un byte del documento (`test_editing_the_page_and_publishing_again…`) ·
+el documento es idéntico en dos renders · **cinco mutaciones, las cinco muerden** (control verde,
+ficheros restaurados por `cmp`): sin IDOR → `test_404_when_the_signature_belongs_to_another_user` cae ·
+sin permiso propio → `test_staff_without_the_waiver_permission…` cae · PDF sin auditar →
+`test_admin_gets_the_pdf_and_the_consultation_is_audited…` cae · firmador sin copiar el nombre →
+`test_an_anonymised_holder_is_still_identified…` cae · alta presencial sin mirar el modo →
+`test_in_external_mode_nothing_is_signed` cae.
+
+### 9.7 Lo que la tanda 2 enseñó (trampas)
+
+- ⚠️ **Livewire 4: el contenido de un modal de Filament NO está en el `html()` del test** tras
+  `mountAction()` — la vista de modales es un `wire:partial`. Medido: `mountedActions` lo lista,
+  `mountedActionShouldOpenModal()` da `true` y el `mountUsing` corre (la auditoría quedó escrita), y
+  aun así `assertSee` sobre el modal sale rojo. Se prueba cada pieza donde sí es observable
+  (`TESTING.md`); el patrón está en `WaiverProofActionTest`.
+- **Blade escapa los apóstrofos** (`d&#039;acceptation`): al comparar el HTML del PDF con un texto
+  francés hay que decodificar entidades antes.
+- **El PDF nunca vuelve a interpolar**: los tokens fiscales se resolvieron al PUBLICAR (§9.2·2). Si
+  el parque cambia su razón social, las versiones ya publicadas —y sus PDF— siguen diciendo la de
+  entonces, que es lo correcto.
+- **Un permiso nuevo exige su etiqueta en zh_CN** aunque el chino no se mantenga (`DEUDA.md`):
+  `AccessI18nParityTest` la pide para toda entrada de `PermissionCatalog`.
+- **La limpieza de go-live borra las firmas ANTES que los usuarios** (`PurgeCustomerData`, `RESTRICT`)
+  y por `DB::table`, porque el modelo rechaza `delete()`. Cualquier otra limpieza nueva hereda las dos
+  condiciones.

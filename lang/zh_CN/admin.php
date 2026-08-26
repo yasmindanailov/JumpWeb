@@ -1086,6 +1086,7 @@ return [
             'users_manage' => '管理用户(资料、匿名化、密码)',
             'users_anonymize' => '匿名化用户(GDPR)',
             'consents_view' => '查看用户同意记录',
+            'waiver_view' => '查看免责声明签署记录(签名与PDF)',
             'reports_view' => '查看报表与导出',
             'audit_view' => '查看审计日志',
             'access_manage' => '管理角色与权限',

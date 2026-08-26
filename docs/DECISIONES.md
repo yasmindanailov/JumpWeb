@@ -8581,5 +8581,45 @@ El censo se queda como está y en verde.
 los dos).
 
 Verificación: suite verde sobre el estado FUSIONADO (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓
-(32 modelos · 76 migraciones, con los checks nuevos de `#159`) · BD MySQL de desarrollo migrada ·
-verificador de cadena y mutaciones con su salida en §9.3.
+(entonces 32 modelos y ~76 migraciones; con los checks nuevos de `#159`) · BD MySQL de desarrollo
+migrada · verificador de cadena y mutaciones con su salida en §9.3.
+
+## #161 · 2026-08-26 · [DECIDIDO, owner] La identidad del firmante viaja EN la firma — y la tanda 2 del waiver: el registro probatorio en el panel, el PDF del snapshot y el alta presencial declarada
+
+**Lo que decidió el owner** (2026-08-26, a pregunta del agente): **sí, la firma guarda el nombre y el
+email del titular tal y como estaban al firmar** (no el teléfono). Nació de un hueco de la spec que
+apareció al diseñar el PDF: tras `User::anonymize()` la fila de `users` dice «Cliente eliminado», así
+que una prueba que solo apuntara al `user_id` **dejaba de identificar a la persona** — y `#142` la
+quiere «conservada vinculada, no anonimizada». Es PII conservada **a propósito** bajo el régimen
+restringido de §4.6: solo la purga el plazo, nunca la baja de la cuenta. `RGPD-01` lo dice.
+
+**Cómo entra sin invalidar nada**: `holder_name`/`holder_email` entran en el hash con un **esquema
+canónico v2**, y cada fila guarda `canonical_version`; `WaiverSignature::canonical()` verifica cada
+fila con su versión, así que lo firmado con v1 sigue verificando (no había ninguna firma real; el
+verificador limpia las suyas). La serialización de las DOS versiones queda fijada como literal en
+`WaiverSignatureChainTest`.
+
+**Y con ella, la tanda 2 (el panel), spec §9.6:**
+- Permiso PROPIO **`waiver.view`** (§4.6), fuera de los del staff por defecto, con su etiqueta en
+  es y zh_CN (`AccessI18nParityTest`) e insertado idempotente por migración para lo ya desplegado.
+- En la ficha del usuario, **una ACCIÓN, no una sección**: «Registro del waiver». Abrirla ES la
+  consulta y queda auditada (`waiver.proof_viewed`); lista las firmas con versión, canal, quién la
+  declaró, integridad y su PDF. Visible también sobre cuentas anonimizadas.
+- **El PDF del snapshot** (`WaiverProof` + `WaiverProofController` + `pdf/waiver-proof`): texto
+  íntegro, identidad copiada, fecha con zona, ip, user-agent, canal, hashes y comprobación de
+  integridad; **en el idioma del texto firmado** (`lang/{es,en,fr}/waiver.php`, tres idiomas que
+  dicen cosas distintas); determinista (sin «generado el»); `no-store` + throttle + IDOR + auditoría.
+  **`RGPD-04` amplía.** §6·2 queda demostrada por mutación: editar la página y publicar otra versión
+  después de firmar no cambia ni un byte del documento.
+- **El alta presencial** (`CustomerRegistrar`) en modo interno deja una firma **declarada por el
+  operador** (§8.4) — solo con versión publicada y operador con sesión; el PDF lo dice con todas las
+  letras y es «sustancialmente más débil».
+
+**Lo que enseñó, y va a `TESTING.md`**: en Livewire 4 el modal de Filament es un `wire:partial` y
+`assertSee` no ve su contenido tras `mountAction()` — se mide dónde sí es observable (§9.7).
+
+**Lo que NO se decidió aquí**: el plazo de conservación y el texto definitivo (`[PENDIENTE: owner]`).
+Tanda 3 (API, casilla del alta, cajón, re-firma) sin empezar.
+
+Verificación: suite verde (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓ (32 modelos · 77
+migraciones) · BD MySQL de desarrollo migrada · cinco mutaciones de la tanda 2 con su salida en §9.6.
