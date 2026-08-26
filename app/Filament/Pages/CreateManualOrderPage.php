@@ -276,6 +276,11 @@ class CreateManualOrderPage extends Page
             ]);
     }
 
+    /** Memo por petición de la versión firmable que enseña el mostrador (F-06). */
+    private ?LegalDocumentVersion $counterWaiverVersionMemo = null;
+
+    private bool $counterWaiverVersionResolved = false;
+
     /** Memo por petición del mapa de horas ofrecibles (`SlotOffer`); clave "producto|fecha". */
     private ?array $timeMapCache = null;
 
@@ -758,6 +763,10 @@ class CreateManualOrderPage extends Page
         }
 
         $this->selectCustomer($id);
+        // F-01 (`#181`): la declaración marcada en el modal vale también para el cliente EXISTENTE elegido.
+        if ((bool) ($this->pendingNoEmailCustomer['waiver_declared'] ?? false)) {
+            app(CustomerRegistrar::class)->declareAtCounter(User::findOrFail($id));
+        }
         Notification::make()->success()
             ->title(__('admin.orders.create_manual.phone_match_used'))->send();
     }
@@ -1166,7 +1175,13 @@ class CreateManualOrderPage extends Page
     /** La versión firmable que se enseña en mostrador, o `null` fuera del modo interno / sin versión. */
     public function counterWaiverVersion(): ?LegalDocumentVersion
     {
-        return WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
+        // F-06 (`#181`): cuatro closures del modal lo piden por render; se resuelve una vez por petición.
+        if (! $this->counterWaiverVersionResolved) {
+            $this->counterWaiverVersionMemo = WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
+            $this->counterWaiverVersionResolved = true;
+        }
+
+        return $this->counterWaiverVersionMemo;
     }
 
     /**

@@ -43,7 +43,7 @@ return [
         'canonical' => 'Esquema canónico',
         'verification' => 'Comprobación',
         'verified_yes' => 'Coincide: el texto y el registro cuadran con sus hashes (comprobación interna)',
-        'verified_no' => 'NO VERIFICADA: el contenido no coincide con su hash',
+        'verified_no' => 'NO COINCIDE: el contenido no cuadra con su hash (comprobación interna)',
         'verification_note' => 'La comprobación es interna: el registro es una cadena de hashes por titular (SHA-256, sin secreto) guardada en la propia base de datos, sin sello de tiempo cualificado ni anclaje en un tercero. Detecta alteraciones accidentales o hechas por la aplicación; no protege frente a quien pueda escribir directamente en la base de datos.',
         'retention' => 'Conservación',
         'retention_until' => 'Este registro se conservará hasta el :date, salvo obligación legal en contrario.',

@@ -103,6 +103,26 @@ final class LegalDocumentPublisher
     }
 
     /**
+     * Los idiomas que `publish()` publicaría de verdad: los que tienen cuerpo (F-07, `#181`: el modal de
+     * confirmar listaba también los vacíos, y anunciaba tres idiomas donde se publicaba uno).
+     *
+     * @param  array<string, array{title?:mixed, body?:mixed}>  $texts
+     * @return list<string>
+     */
+    public static function publishableLocales(array $texts): array
+    {
+        $locales = [];
+        foreach ($texts as $locale => $text) {
+            $body = is_array($text) && is_array($text['body'] ?? null) ? $text['body'] : [];
+            if (LegalDocumentVersion::normaliseBody($body) !== []) {
+                $locales[] = (string) $locale;
+            }
+        }
+
+        return $locales;
+    }
+
+    /**
      * Idiomas cuyo texto menciona «borrador»/«draft»/«brouillon» — para AVISAR antes de publicar, no
      * para bloquear. Recibe la misma forma que `publish()` (idioma → {title, body:[{h,p}]}).
      *
@@ -132,6 +152,12 @@ final class LegalDocumentPublisher
     private static function looksLikeDraft(array $text): bool
     {
         $haystack = mb_strtolower(self::haystack($text));
+        // S-6 (`#181`): texto, no bytes — un marcador pegado en NFD (macOS) o con espacio tras el corchete
+        // publicaba el borrador. NFC + colapsar el blanco tras `[`.
+        if (class_exists(\Normalizer::class)) {
+            $haystack = \Normalizer::normalize($haystack, \Normalizer::FORM_C) ?: $haystack;
+        }
+        $haystack = (string) preg_replace('/\[\s+/u', '[', $haystack);
 
         foreach (self::DRAFT_MARKERS as $marker) {
             if (str_contains($haystack, $marker)) {

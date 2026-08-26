@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountProfile;
 use App\Http\Controllers\Controller;
 use App\Notifications\EmailChangeCompleted;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -70,6 +71,9 @@ class EmailChangeController extends Controller
             'pending_email' => null,
             'pending_email_sent_at' => null,
         ])->save();
+        // S-5 (`#181`): confirmar el correo NUEVO es verificarlo — y lo que espera a la verificación (la
+        // aceptación pendiente del waiver) tiene que enterarse, como por el enlace del alta o por el cobro.
+        event(new Verified($user));
 
         // Aviso al EMAIL VIEJO de que el cambio se consumó (cierre del loop anti-takeover, C-07).
         // Si la víctima ve este correo en su buzón original y no fue ella, sabe que la cuenta

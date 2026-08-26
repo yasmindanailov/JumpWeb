@@ -41,7 +41,7 @@ return [
         'canonical' => 'Schéma canonique',
         'verification' => 'Vérification',
         'verified_yes' => 'Cohérent : le texte et le registre correspondent à leurs empreintes (vérification interne)',
-        'verified_no' => 'NON VÉRIFIÉE : le contenu ne correspond pas à son empreinte',
+        'verified_no' => 'INCOHÉRENT : le contenu ne correspond pas à son empreinte (vérification interne)',
         'verification_note' => 'La vérification est interne : le registre est une chaîne d\'empreintes par titulaire (SHA-256, sans secret) conservée dans la base de données de l\'application, sans horodatage qualifié ni ancrage auprès d\'un tiers. Elle détecte les altérations accidentelles ou faites par l\'application ; elle ne protège pas contre qui peut écrire directement dans la base de données.',
         'retention' => 'Conservation',
         'retention_until' => 'Ce registre sera conservé jusqu\'au :date, sauf obligation légale contraire.',

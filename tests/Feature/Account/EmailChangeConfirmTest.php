@@ -3,6 +3,9 @@
 namespace Tests\Feature\Account;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Platform\Models\Setting;
 use App\Notifications\EmailChangeCompleted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -149,5 +152,26 @@ class EmailChangeConfirmTest extends TestCase
         Notification::assertSentTo($user, EmailChangeCompleted::class, function ($notif, $channels, $notifiable) {
             return $notif->routeNotificationForMail($notifiable) === 'ana@example.com';
         });
+    }
+
+    /** S-5 (`#181`): confirmar el correo NUEVO es verificarlo — la aceptación pendiente del waiver se firma. */
+    public function test_confirming_the_new_email_signs_a_pending_waiver_acceptance(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        $document = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Acepto el riesgo.']]],
+        ])->first();
+        $user = User::factory()->create([
+            'email' => 'ana@example.com',
+            'pending_email' => 'nueva@example.com',
+            'pending_email_sent_at' => now(),
+            'email_verified_at' => null,
+        ]);
+        $user->forceFill(['waiver_pending_document_id' => $document->id, 'waiver_pending_channel' => 'web'])->save();
+
+        $this->get($this->confirmUrl($user))->assertRedirect(route('account'));
+
+        $this->assertSame(1, WaiverSignature::where('user_id', $user->id)->count());
+        $this->assertNull($user->fresh()->waiver_pending_document_id);
     }
 }

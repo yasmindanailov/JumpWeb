@@ -142,4 +142,25 @@ class PresentialWaiverDeclarationTest extends TestCase
         $this->assertDatabaseMissing('audit_logs', ['action' => 'waiver.declared']);
         $this->assertDatabaseMissing('consents', ['user_id' => $result['user']->id, 'type' => 'waiver']);
     }
+
+    /** F-01 (`#181`): la declaración del operador vale también para una cuenta que YA existía. */
+    public function test_an_existing_account_gets_the_declared_signature_when_the_operator_declares(): void
+    {
+        $this->mode('interno');
+        $this->publish();
+        $existing = User::factory()->create(['email' => 'ana@example.com']);
+
+        $result = $this->actingAs($this->operator())->app->make(CustomerRegistrar::class)
+            ->register('Ana Pérez', 'ana@example.com', null, waiverDeclared: true);
+
+        $this->assertSame($existing->id, $result['user']->id);
+        $this->assertFalse($result['created']);
+        $this->assertSame(1, WaiverSignature::where('user_id', $existing->id)->count());
+        $this->assertSame(WaiverSignature::CHANNEL_PANEL, WaiverSignature::where('user_id', $existing->id)->value('channel'));
+
+        // Y otra vez: idempotente por versión.
+        $this->actingAs($this->operator())->app->make(CustomerRegistrar::class)
+            ->register('Ana Pérez', 'ana@example.com', null, waiverDeclared: true);
+        $this->assertSame(1, WaiverSignature::where('user_id', $existing->id)->count());
+    }
 }

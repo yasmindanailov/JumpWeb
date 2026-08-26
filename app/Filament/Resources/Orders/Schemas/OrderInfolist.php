@@ -161,7 +161,8 @@ class OrderInfolist
                             ->visible(fn (): bool => WaiverSettings::mode() !== WaiverSettings::MODE_OFF)
                             ->getStateUsing(fn (Order $record): string => self::waiverBadge($record))
                             ->badge()
-                            ->color(fn (Order $record): string => self::waiverStatus($record)?->signed ? 'success' : 'warning'),
+                            // F-03 (`#181`): tres estados, tres colores — la versión anterior no es verde.
+                            ->color(fn (Order $record): string => (($status = self::waiverStatus($record)) !== null && $status->signed && ! $status->isOutdated()) ? 'success' : 'warning'),
                     ]),
 
                 // CTA al final de la card "Detalles" (sub-fase 7.2d, decisión

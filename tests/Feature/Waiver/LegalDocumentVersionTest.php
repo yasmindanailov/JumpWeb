@@ -219,4 +219,31 @@ class LegalDocumentVersionTest extends TestCase
         $rows = app(LegalDocumentPublisher::class)->publish('waiver', $texts);
         $this->assertCount(count(self::TEXTS), $rows, 'avisar no es bloquear');
     }
+
+    /** S-6 (`#181`): la guarda compara TEXTO — un marcador en NFD o con espacio tras el corchete también bloquea. */
+    public function test_draft_markers_are_caught_in_nfd_and_with_spaces_after_the_bracket(): void
+    {
+        $nfd = \Normalizer::normalize('[À COMPLÉTER : rédaction définitive]', \Normalizer::FORM_D);
+        foreach ([$nfd, '[ À COMPLÉTER ]', '[  pending: wording]'] as $marker) {
+            $texts = self::TEXTS;
+            $texts['fr']['body'][] = ['h' => 'Acceptation', 'p' => "Brouillon. {$marker}"];
+            try {
+                app(LegalDocumentPublisher::class)->publish('waiver', $texts);
+                $this->fail("«{$marker}» tendría que bloquear la publicación");
+            } catch (DraftCannotBePublishedException) {
+                $this->assertSame(0, LegalDocumentVersion::count());
+            }
+        }
+    }
+
+    /** F-07 (`#181`): los idiomas que se anuncian al confirmar son los que se publican — los vacíos no cuentan. */
+    public function test_only_locales_with_a_body_are_publishable(): void
+    {
+        $texts = self::TEXTS;
+        $texts['en'] = ['title' => 'Waiver', 'body' => []];
+        $texts['fr'] = ['title' => 'Décharge', 'body' => [['h' => '', 'p' => '']]];
+
+        $this->assertSame(['es'], LegalDocumentPublisher::publishableLocales($texts));
+        $this->assertSame(1, app(LegalDocumentPublisher::class)->publish('waiver', $texts)->count());
+    }
 }

@@ -18,6 +18,7 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
@@ -300,5 +301,19 @@ class WaiverProofPdfTest extends TestCase
         }
         $this->assertCount(3, array_unique($titles), 'los tres idiomas tienen que decir cosas DISTINTAS');
         $this->assertCount(3, array_unique($notes), 'la nota de la comprobación también');
+    }
+
+    /** F-04 (`#181`): la rama NEGATIVA se renderiza y habla el mismo idioma que la positiva. */
+    public function test_a_tampered_record_renders_the_negative_verdict(): void
+    {
+        $holder = User::factory()->create();
+        $signature = $this->sign($holder);
+        DB::table('waiver_signatures')->where('id', $signature->id)->update(['ip' => '0.0.0.0']);
+
+        $html = $this->html($signature->fresh());
+
+        $this->assertStringContainsString(__('waiver.proof.verified_no', [], 'es'), $html);
+        $this->assertStringNotContainsString(__('waiver.proof.verified_yes', [], 'es'), $html);
+        $this->assertStringContainsString('(comprobación interna)', __('waiver.proof.verified_no', [], 'es'));
     }
 }

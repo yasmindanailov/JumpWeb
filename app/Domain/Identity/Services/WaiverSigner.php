@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
@@ -54,6 +55,13 @@ final class WaiverSigner
             // operador, y el cliente de agenda puede no tener correo. Sobre la fila BLOQUEADA.
             if ($request->declaredBy === null && $locked->email_verified_at === null) {
                 throw new WaiverEmailUnverifiedException;
+            }
+
+            // S-3 (`#181`): la vigencia se comprueba FUERA (`WaiverAcceptance::currentDocument()`) y una
+            // publicación cruzada entre esa lectura y este `create` firmaría una versión superada sin 409.
+            // Se re-comprueba aquí, bajo el lock, contra el máximo publicado.
+            if ((int) $version->version !== (int) LegalDocuments::latestVersionNumber($version->slug)) {
+                throw new WaiverDocumentStaleException;
             }
 
             $previous = WaiverSignature::query()

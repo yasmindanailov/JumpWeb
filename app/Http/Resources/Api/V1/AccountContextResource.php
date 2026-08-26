@@ -72,6 +72,7 @@ class AccountContextResource extends JsonResource
             'waiver' => [
                 'mode' => (string) $context['waiver']['mode'],
                 'required' => (bool) $context['waiver']['required'],
+                'pending' => (bool) ($context['waiver']['pending'] ?? false),
                 'outdated' => (bool) $context['waiver']['outdated'],
                 'document_id' => $context['waiver']['documentId'] === null ? null : (int) $context['waiver']['documentId'],
             ],

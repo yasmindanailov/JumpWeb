@@ -43,17 +43,23 @@
 >   `store.upcoming`; JS 700, 5 mutaciones muerden; chunk 226,21 → techo 226,5 por corrección;
 >   verificado en headless con anti-bot) →
 >   (4) las tres decisiones del owner que son código: ✅ **casilla del alta manual** y ✅ **casilla
->   obligatoria en interno** (`#176`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ✅ **correo
+>   obligatoria en interno** (`#178`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ✅ **correo
 >   verificado para firmar** (`#179`: guarda en `WaiverSigner`, aceptación pendiente del alta firmada
 >   al verificar, `409 waiver_email_unverified`; 5 mutaciones muerden; `waiver:verify-chain` 8/16) →
 >   (5) ✅ **el texto del PDF** (`#180`: comprobación «interna» con su alcance, pie sin «inmutable»,
->   IP/UA del puesto en mostrador, `WaiverChain` cruza la versión). **TANDA 4 CERRADA.** Cada unidad se empuja
->   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
+>   IP/UA del puesto en mostrador, `WaiverChain` cruza la versión). **TANDA 4 CERRADA.** →
+>   (6) ✅ **la revisión adversarial de la propia tanda, APLICADA** (`#183`, spec §9.12: 24 confirmados,
+>   0 refutados; S-1 —`Verified` también lo emite el COBRO, dentro de su transacción— resuelto con IP/UA
+>   de la aceptación + `afterCommit`; vigencia dentro del lock; `pending` en el contrato; el 422 de
+>   `accept_waiver` relee; declaración en mostrador para la cuenta existente; 10 mutaciones muerden;
+>   **guion §5.nonies reescrito y re-recorrido en headless: **111/111 ✓, 0 desviaciones****). Cada unidad se empuja
+>   verde y sola. ⚠️ **Para el carril B**: `#183` trae UNA migración más del waiver
+>   (`waiver_pending_ip`/`_user_agent`): `php artisan migrate` al retomar, como en tu A0. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
 >   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
 >   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
 >   del waiver · `routes/api.php`) más `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md`
 >   · `docs/VERIFICACION-E2E-CAJON.md`.
->   ⚠️ **La BD local de esta máquina tras la prueba**: `waiver.mode = interno`, **v1→v3** publicadas
+>   ⚠️ **La BD local de esta máquina tras la prueba**: `waiver.mode = interno`, **v1→v9** publicadas (dos pasadas completas del guion y los sondeos de la unidad 6)
 >   en es/en/fr (v2/v3 llevan marcadores `[E2E-vN]` en el texto), **7 firmas `web`** de 6 cuentas
 >   `e2e-waiver-*@jumpweb.test`, y el anti-bot **restaurado** (claves de prueba de Cloudflare). ⚠️
 >   Para el ojo del owner en `/registro` hay que **vaciar `security.turnstile_secret`** o arreglar el
@@ -123,7 +129,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#182`**.
+> El último usado es **`#183`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -208,9 +214,14 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2960 en verde** (17.087 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2969 en verde** (17.124 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+1 test PHP en el último corte** (`#180`, el texto del PDF): la comprobación del PDF se llama
+  ▶ **+9 tests PHP y +1 JS en el último corte** (`#183`, la revisión de la tanda 4 aplicada): la firma
+  pendiente lleva la UA de la aceptación y espera al commit; `pending` en el contrato; vigencia dentro
+  del lock; NFD y blanco tras `[`; idiomas publicables; cuenta existente declarada; rama negativa del
+  PDF; el cambio de correo firma la pendiente; el 422 de `accept_waiver` relee. **10 mutaciones, las 10
+  muerden** · **guion completo en headless: **111/111 ✓, 0 desviaciones**** ·
+  ▶ **+1 test PHP en el corte anterior** (`#180`, el texto del PDF): la comprobación del PDF se llama
   «interna» y dice su alcance, el PDF de mostrador dice de quién son los datos y la IP, y
   `WaiverChain` cruza cada firma con su versión (una versión alterada por debajo rompe la cadena).
   **3 mutaciones, las 3 muerden** ·
@@ -623,11 +634,12 @@ casilla del alta (opt-in, y **solo si hay documento servido**), la tarjeta de Pr
 re-firmar y los PDF, y el aviso del índice; el store RE-LEE ante `409 waiver_document_stale`. Los
 textos del montaje se **podaron antes de subir** (−508 B) y el chunk subió su techo **por decisión del
 owner**. **El código del waiver está COMPLETO**, ✅ **el guion §5.nonies está recorrido en headless
-y el subsistema REVISADO de forma adversarial** (`#169`, 2026-08-26: spec §9.10 y §10); sigue 🟦 por
-lo humano —el ojo del owner en navegador, el texto, la retención y las decisiones nuevas de §7— y por
-el código acotado de §10.11 (`DEUDA.md`). ❗ La revisión dejó **una alta de producto** (el alta manual
-del panel registra una firma «declarada» sin que el operador declare nada) y el guion, **un defecto
-fuera del waiver** (el alta suelta no termina con el anti-bot activo). **No toca la landing**. Detalle
+y el subsistema REVISADO de forma adversarial** (`#169`, 2026-08-26: spec §9.10 y §10); **el código
+acotado que exigió esa revisión está HECHO** (tanda 4, `#171`→`#180`) **y la revisión de la propia
+tanda, aplicada** (`#183`, spec §9.12; guion re-recorrido con la conducta definitiva, **111/111 ✓, 0 desviaciones**).
+Sigue 🟦 solo por lo humano —el ojo del owner en navegador, el texto definitivo y la retención—: las
+decisiones de §7 están tomadas y ejecutadas. Las dos altas que dejó la revisión —el alta manual que
+«declaraba» sin declarar y el alta suelta sin anti-bot— están arregladas (`#178`, `#171`). **No toca la landing**. Detalle
 en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su

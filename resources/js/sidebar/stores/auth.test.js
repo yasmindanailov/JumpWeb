@@ -557,6 +557,26 @@ describe('el alta cuyo texto del waiver caducó', () => {
         assert.equal(a.registerError.fields.waiver_document_id, 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.');
     });
 
+    /** CAJ-422 (`#181`): el 422 de `accept_waiver` también relee — y con `document: null` cacheado, es la única salida. */
+    test('un 422 sobre accept_waiver relee el texto aunque el cacheado fuera document: null', async () => {
+        const a = store();
+        const waiver = useWaiverStore();
+        const legal = [{ mode: 'interno', document: null }, { mode: 'interno', document: { id: 7, version: 1, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v1' }], published_at: null } }];
+        const api = fakeApi({
+            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { accept_waiver: ['Para crear la cuenta hay que leer y aceptar la exención de responsabilidad (waiver).'] } } },
+        });
+        api.get = async (url) => { api.llamadas.push({ url }); return url === '/legal/waiver' ? { ok: true, status: 200, data: legal.shift() ?? legal[0] } : { ok: false, status: 500, data: null }; };
+
+        await waiver.ensureLegal({ api });
+        assert.equal(waiver.document, null, 'montado antes de publicarse la versión');
+        const r = await a.register({ api, messages: MENSAJES, auth: {} });
+
+        assert.equal(r.ok, false);
+        assert.equal(waiver.document?.version, 1, 'ahora el texto (y la casilla) existen');
+        assert.equal(waiver.reread, true);
+        assert.equal(a.form.accept_waiver, false);
+    });
+
     test('un 422 por OTRO campo no toca el texto ni la casilla', async () => {
         const a = store();
         const waiver = useWaiverStore();

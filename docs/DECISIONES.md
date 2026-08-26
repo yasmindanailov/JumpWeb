@@ -9716,3 +9716,60 @@ escrito sub-paso a sub-paso en la spec **§9.6** (el handoff original de §9.5 s
 verde** (49 s; 1 notice de PHPUnit por identificar en A0), `docs-check` ✓, web 200, y **3
 migraciones del waiver PENDIENTES** en esta BD (se aplican en A0; sin ellas el panel de un pedido
 falla por el badge de `#174`).
+
+## #183 · 2026-08-26 · Tanda 4 · la revisión adversarial de la PROPIA tanda, aplicada — y el guion re-recorrido con la conducta definitiva
+
+**Qué se hizo** (carril A; spec **§9.12**): la tanda 4 (`#171`→`#180`) se revisó como se revisó el
+subsistema (§10.0): 28 agentes, **24 hallazgos confirmados, 0 refutados, 52 afirmaciones que
+aguantaron**. Todo lo confirmado se arregló o se fichó en la misma pasada:
+
+1. **S-1 (alta) — `Verified` no lo emite solo el enlace del correo.** También lo emite
+   **`RedsysReturnHandler::autoVerifyBuyer()`** al cobrar en pay-first, **dentro de la transacción del
+   cobro**, y si gana la notificación S2S la petición es la de Redsys: la firma pendiente del alta
+   (`#179`) habría llevado la IP y el navegador **del servidor de Redsys**, y se habría escrito —con su
+   lock y su transacción— dentro de la transacción del dinero. Desde hoy la aceptación pendiente guarda
+   **la IP y el navegador del momento de marcar la casilla** (`waiver_pending_ip`/`_user_agent`; PII
+   del alta: `anonymize()` las nulifica y el censo las declara) y el listener firma con ellos en
+   **`DB::afterCommit`**: nunca dentro de la transacción de otro; si el cobro se deshace, no hay firma.
+   `accepted_at` sigue siendo el momento de la verificación, y el PDF lo dice.
+2. **D1 (alta) — el guion §5.nonies describía la conducta ANTERIOR** (V31·2 «se crea igual: es opt-in»,
+   V31·3 «Firmada» nada más crear la cuenta). Reescrito con `#178` (casilla obligatoria en interno) y
+   `#179` (la firma nace al verificar), **y re-recorrido en headless de V31 a V35 y V31·4: 111/111 ✓,
+   0 desviaciones**, sin presuponer la versión de partida. Lo nuevo que midió: el 422 sin casilla con
+   su error visible y el `GET /legal/waiver` de relectura; la aceptación **pendiente y sin firma en BD**
+   antes de verificar; la firma nacida al verificar; y la aceptación **descartada** cuando el texto
+   cambia antes del enlace.
+3. **Medias**: `pending` en `WaiverStatus` y en `account-context.waiver` (S-2; `api-v1.md` pt. 94) ·
+   el 422 de `accept_waiver` también relee el texto (CAJ-422: con `document: null` cacheado la casilla
+   ni existía) · la declaración en mostrador vale para una cuenta que YA existía por correo o elegida
+   por teléfono (F-01, `CustomerRegistrar::declareAtCounter()`, idempotente por versión) · y los
+   desfases de doc (tracker, `CLAUDE.md`, README, `ESTADO` `#176`→`#178`, spec §7·2/§9.8/§10.4/§10.11).
+4. **Bajas que cambiaban conducta**: la vigencia se re-comprueba DENTRO del lock (S-3, TOCTOU
+   publicar-vs-firmar) · `EmailChangeController` emite `Verified` (S-5: confirmar el correo nuevo es
+   verificarlo, y la aceptación pendiente no se queda colgada) · la guarda de borrador compara texto y
+   no bytes: NFC y blanco tras `[` (S-6) · re-marcar apaga la relectura pegajosa (CAJ-REREAD) · el aviso
+   del modal de publicar se ve (`HtmlString`, F-02) · los idiomas anunciados son los que se publican
+   (F-07) · «versión anterior» en ámbar (F-03) · la rama negativa del PDF con el mismo vocabulario y
+   renderizada en test (F-04) · ayuda `zh_CN` completa (F-05) · la versión del mostrador memoizada por
+   petición (F-06). **Bajas que no cambian conducta**, fichadas en `DEUDA.md`: S-4 (el canal `web` del
+   alta lo decide el `Origin`: es el diseño), TURN-CLAVE-VACÍA y TURN-ESPERA (inalcanzables hoy), y
+   `pending` que el cajón no pinta (una cuenta sin verificar no entra en Mi cuenta por web).
+
+**Lo medido**: +9 tests PHP, +1 JS · **10 mutaciones, las 10 muerden** (UA del clic en vez del alta ·
+sin `afterCommit` · sin vigencia en el lock · cuenta existente sin declarar · sin NFC · sin colapsar el
+blanco · idiomas vacíos contados · sin `Verified` en el cambio de correo · `pending` siempre `false` ·
+sin releer ante `accept_waiver`) · `waiver:verify-chain` 8/16 lineal sobre InnoDB (`WaiverSigner` tocado:
+`VERIFY_CONC`) · Pint · docs-check con el exit leído del script · el guion completo en headless.
+
+**Dos trampas del arnés, pagadas con tres pasadas** (guion §5.nonies): tras el 422 el cajón relee el
+texto y re-renderiza la casilla —hay que esperar ese `GET` antes de marcarla, o la re-render la
+desmarca—; y con «Leer el texto completo» desplegado el botón queda bajo el pliegue de un contenedor
+con scroll suave: un clic sin `scrollIntoViewIfNeeded()` no envía nada. Ninguna es un defecto de la
+app: se midieron con un sondeo aparte antes de tocar el script.
+
+**Lo que queda del waiver, y de quién es**: del owner, **el texto definitivo** (§8.1), **el plazo**
+(§4.6) y **su ojo en navegador** (guion §5.nonies, ya con el anti-bot encendido y la conducta
+definitiva); de agente, «menores a cargo» (C), que hereda NUC-3. **Las decisiones de §7 y §10.11 están
+todas tomadas y ejecutadas.**
+
+Verificación: suite (contador en `ESTADO.md`) · Pint ✓ · docs-check ✓ · mutaciones ✓ · headless 111/111 ✓.

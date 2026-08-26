@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { usePrivacyStore } from '../../stores/privacy.js';
 import { useWaiverStore } from '../../stores/waiver.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
@@ -71,6 +71,8 @@ waiver.reset();
 waiver.ensureStatus();
 waiver.ensureLegal();
 const acceptWaiver = ref(false);
+// CAJ-REREAD (`#181`): volver a marcar tras releer apaga la relectura — un fallo posterior que no sea de texto no desmarca.
+watch(acceptWaiver, (v) => { if (v) waiver.reread = false; });
 const waiverText = computed(() => translateWith(props.account, waiverStatusKey(waiver.status), { version: waiver.status?.version ?? '' }));
 
 // Tras un fallo, la casilla solo se desmarca si el texto se RELEYÓ (409 `waiver_document_stale`): lo

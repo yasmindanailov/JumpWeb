@@ -284,7 +284,9 @@ export const useAuthStore = defineStore('auth', {
                 // solo se puede cumplir si se RELEE — el texto plegado era de una sola lectura y cada
                 // reenvío mandaba el mismo id (revisión `#169` §10.3, CAJ-2). Y la casilla se desmarca:
                 // lo que se leyó ya no es lo que se firma.
-                if (result.errors?.fields?.waiver_document_id) {
+                // CAJ-422 (`#181`): el 422 de `accept_waiver` (obligatoria en interno) también relee — si el
+                // formulario cacheó `document: null` (montado antes de publicarse la versión), la casilla ni existe.
+                if (result.errors?.fields?.waiver_document_id || result.errors?.fields?.accept_waiver) {
                     this.form.accept_waiver = false;
                     await useWaiverStore().reloadLegal({ api });
                 }

@@ -41,7 +41,7 @@ return [
         'canonical' => 'Canonical schema',
         'verification' => 'Check',
         'verified_yes' => 'Consistent: the text and the record match their hashes (internal check)',
-        'verified_no' => 'NOT VERIFIED: the content does not match its hash',
+        'verified_no' => 'INCONSISTENT: the content does not match its hash (internal check)',
         'verification_note' => 'The check is internal: the record is a per-holder hash chain (SHA-256, no secret) stored in the application\'s own database, with no qualified timestamp and no third-party anchoring. It detects accidental changes or changes made through the application; it does not protect against someone able to write directly to the database.',
         'retention' => 'Retention',
         'retention_until' => 'This record will be kept until :date, unless a legal obligation requires otherwise.',

@@ -1913,8 +1913,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
   - [x] **Tanda 4 · (5) el texto del PDF** (2026-08-26 noche, `#180`, carril A): el PDF dice exactamente
         lo que el diseño garantiza (§10.6) — comprobación INTERNA con su nota de alcance, pie sin
         «inmutable», datos/IP/UA del puesto en mostrador— y `WaiverChain` cruza cada firma con su
-        versión. **La tanda 4 queda CERRADA**: las cinco unidades empujadas. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
-        `VERIFY_CONC`) y (5) el texto del PDF.
+        versión. **La tanda 4 queda CERRADA**: las cinco unidades empujadas.
+  - [x] **Tanda 4 · (6) la revisión de la propia tanda, aplicada** (2026-08-26 noche, `#183`, carril A;
+        spec §9.12): 24 hallazgos confirmados, 0 refutados. La firma pendiente del alta lleva la IP/UA
+        de la ACEPTACIÓN y se registra tras el commit (`Verified` también lo emite el cobro), vigencia
+        re-comprobada dentro del lock, `pending` en el contrato, el 422 de `accept_waiver` relee, la
+        declaración en mostrador vale para la cuenta existente, y ocho bajas. 10 mutaciones muerden;
+        **el guion §5.nonies reescrito y re-recorrido en headless con la conducta nueva: **111/111 ✓, 0 desviaciones****.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado

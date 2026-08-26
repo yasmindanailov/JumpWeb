@@ -1110,3 +1110,13 @@ la respuesta es la cabecera `%PDF-`, el `content-type` y el `no-store` del grupo
 reserva.
 
 **93. El waiver se firma con el correo VERIFICADO — y el alta ya no firma: deja la aceptación pendiente.** `[DECIDIDO owner, 2026-08-26]` (spec §7·5, `#179`). `POST /auth/register` con `accept_waiver` guarda `users.waiver_pending_document_id` + `waiver_pending_channel` y responde 201 sin firmar; al abrir el enlace de verificación (`Verified`) un listener firma con el canal del alta —si el texto sigue vigente— o descarta la pendiente. `POST /me/waiver` con `email_verified_at = null` → `409 waiver_email_unverified`. La guarda vive en `WaiverSigner` (dominio), salvo firma declarada en mostrador. ⚠️ `accepted_at` es el momento de la verificación, no el del alta.
+
+**94. El contrato dice «aceptado, pendiente de verificar»: `pending`** (`#183`, S-2). `WaiverStatus.pending` y
+`account-context.waiver.pending` son `true` mientras la aceptación del alta espera al correo verificado:
+`signed` es `false`, `required` sigue `true` y aceptar de nuevo responde `409 waiver_email_unverified`. El
+cajón no lo pinta (una cuenta sin verificar no entra en Mi cuenta por web); es para el cliente nativo
+(`DEUDA.md`). Precisión al punto 91 (S-4): «con sesión» lo decide que la petición se sirviera con la cookie
+de la web, y eso lo decide el `Origin` (`ApiOrigin`) — es el diseño del canal `web`, no un hueco. Y desde
+`#183` la firma que nace de la aceptación pendiente lleva **la IP y el navegador del momento de marcar la
+casilla** (`waiver_pending_ip`/`_user_agent`), no los de la petición que verifica —que en pay-first es el
+cobro, y puede ser la notificación S2S de Redsys— y se registra **tras el commit** de quien emitió `Verified`.

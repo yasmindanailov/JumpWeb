@@ -14,7 +14,9 @@ use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
@@ -619,5 +621,42 @@ class AuthRegistrationTest extends ApiTestCase
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
         $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
+    }
+
+    /** S-1 (`#181`): la firma lleva la IP/UA de la ACEPTACIÓN (el alta), no de la petición que verifica. */
+    public function test_the_signature_carries_the_user_agent_of_the_acceptance_not_of_the_verification_click(): void
+    {
+        $document = $this->internalWaiver();
+
+        $this->withHeader('User-Agent', 'Alta/1.0 (navegador de la persona)')
+            ->register(['accept_waiver' => true, 'waiver_document_id' => $document->id])
+            ->assertCreated();
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame('Alta/1.0 (navegador de la persona)', $user->waiver_pending_user_agent);
+        $this->assertNotNull($user->waiver_pending_ip);
+
+        $url = URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $user->id, 'hash' => sha1((string) $user->email)]);
+        $this->withHeader('User-Agent', 'Verificador/2.0 (otra máquina)')->get($url)->assertRedirect();
+        auth()->logout();
+
+        $signature = WaiverSignature::where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('Alta/1.0 (navegador de la persona)', $signature->user_agent);
+        $this->assertNull($user->fresh()->waiver_pending_user_agent);
+    }
+
+    /** S-1 (`#181`): si `Verified` se emite DENTRO de una transacción (el cobro), la firma espera al commit. */
+    public function test_the_pending_signature_waits_for_the_commit_of_the_transaction_that_verifies(): void
+    {
+        $document = $this->internalWaiver();
+        $this->register(['accept_waiver' => true, 'waiver_document_id' => $document->id])->assertCreated();
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+
+        DB::beginTransaction();
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count(), 'dentro de la transacción no se firma');
+        DB::commit();
+
+        $this->assertSame(1, WaiverSignature::where('user_id', $user->id)->count(), 'tras el commit, sí');
     }
 }

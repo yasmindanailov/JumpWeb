@@ -56,6 +56,8 @@ class WaiverStatusResource extends JsonResource
 
         return [
             'mode' => $status->mode,
+            // S-2 (`#181`): la aceptación marcada en el alta que espera al correo verificado.
+            'pending' => $user->waiver_pending_document_id !== null,
             'signed' => $status->signed,
             'outdated' => $status->isOutdated(),
             'accepted_at' => $status->acceptedAt?->toIso8601String(),

@@ -104,7 +104,7 @@ class MeAccountContextTest extends ApiTestCase
                 'next_reservation' => null,
                 'pending_forms' => [],
                 'pending_forms_count' => 0,
-                'waiver' => ['mode' => 'externo', 'required' => false, 'outdated' => false, 'document_id' => null],
+                'waiver' => ['mode' => 'externo', 'required' => false, 'pending' => false, 'outdated' => false, 'document_id' => null],
             ]);
     }
 
@@ -122,7 +122,7 @@ class MeAccountContextTest extends ApiTestCase
         $user = $this->verifiedUser('Grace Hopper');
 
         $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200)
-            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => true, 'outdated' => false, 'document_id' => $document->id]);
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => true, 'pending' => false, 'outdated' => false, 'document_id' => $document->id]);
 
         app(WaiverSigner::class)->sign($user, $document, WaiverSignatureRequest::web('10.0.0.1', 'test'));
         // El servicio es un singleton memoizado POR PETICIÓN; en el test las tres peticiones
@@ -137,7 +137,7 @@ class MeAccountContextTest extends ApiTestCase
         ])->first();
         app()->forgetInstance(CustomerAccountContext::class);
         $this->actingAs($user)->getJson(self::PATH)->assertOk()
-            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => false, 'outdated' => true, 'document_id' => $v2->id]);
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => false, 'pending' => false, 'outdated' => true, 'document_id' => $v2->id]);
     }
 
     /** Un pack sin rellenar publica su formulario pendiente, con producto y destino. */

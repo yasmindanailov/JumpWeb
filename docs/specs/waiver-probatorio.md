@@ -1,13 +1,15 @@
 # [SPEC] El waiver con valor probatorio
 
 > Estado: 🟦 **CÓDIGO COMPLETO** — revisada (**§8**), las **cuatro tandas HECHAS** (§9: `#160` ·
-> `#161` · `#163` · `#166`), **el guion recorrido en headless el 2026-08-26 (§9.10)** y **el
-> subsistema entero revisado de forma adversarial (§10, `DECISIONES #169`)**; el ✅ final espera al
-> owner: su ojo en navegador, el texto definitivo, el plazo y las decisiones de §10.11 ·
+> `#161` · `#163` · `#166`), **el subsistema revisado de forma adversarial (§10, `DECISIONES #169`)**,
+> **la TANDA 4 que esa revisión exigía HECHA y cerrada (§9.11, `#171`→`#180`)**, **la revisión de la
+> propia tanda 4 aplicada (§9.12, `#183`)** y **el guion recorrido en headless DOS veces** (§9.10 con la
+> conducta de entonces; §9.12 con la definitiva: **111/111 ✓, 0 desviaciones**); el ✅ final espera al owner —su ojo en
+> navegador, el texto definitivo y el plazo—; **las decisiones de §7 y §10.11 están tomadas y ejecutadas** ·
 > Última actualización: 2026-08-26 ·
 > Verificado contra código: 2026-08-24 (consents, SelfSignup, Page, User::anonymize, SecurityHeaders),
 > **re-verificado el 2026-08-25 por la revisión** (§8.0) y **el 2026-08-26 por la del subsistema** (§10.0) ·
-> Decisión asociada: `DECISIONES #142`, revisiones en `DECISIONES #156` (spec) y **`#169`** (subsistema) ·
+> Decisión asociada: `DECISIONES #142`, revisiones en `DECISIONES #156` (spec), **`#169`** (subsistema) y **`#183`** (tanda 4) ·
 > Se invalida si: cambia el modo de gestión del waiver, o el owner fija el plazo de conservación.
 >
 > ❗❗ **Si vas a tocar código, LEE §10.11 y §9.10 PRIMERO**: lo que la revisión del subsistema exige
@@ -273,7 +275,8 @@ hallazgos y veredicto en **§10**; el guion de navegador, en headless, en **§9.
    a «sin firmar». Sin valor, nada se poda.
 2. **La redacción legal definitiva del waiver** (§8.1). El texto que hay hoy dice de sí mismo que
    es un borrador, y publicar una versión es irreversible por diseño. **La maquinaria se puede
-   construir sin esto; el acto de publicar la v1, no.** ⚠️ Y la guarda solo caza `[pendiente` (§10.4).
+   construir sin esto; el acto de publicar la v1, no.** La guarda de borrador caza los TRES marcadores
+   —en NFC y con blanco tras el corchete— y avisa de «borrador/draft/brouillon» (§10.4, `#174` + `#183`).
 3. ✅ **El aviso de re-firma en el paso de pagar** (§9.9·1) — `[DECIDIDO owner, 2026-08-26]`: **NO se
    construye; basta el aviso del índice** (coherente con §4.8: no es condición de compra). El chunk
    se queda en 225,72 de 226 KiB. Cerrado.
@@ -438,7 +441,7 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 ---
 
-## 9. Ejecución — las CUATRO tandas HECHAS: 1 (NÚCLEO, `#160`), 2 (PANEL, `#161`), 3a (API, `#163`) y 3b (CAJÓN, `#166`) — y el guion recorrido en headless (§9.10)
+## 9. Ejecución — las CUATRO tandas HECHAS: 1 (NÚCLEO, `#160`), 2 (PANEL, `#161`), 3a (API, `#163`) y 3b (CAJÓN, `#166`) — el guion recorrido en headless (§9.10) — y la TANDA 4 con su revisión (§9.11, §9.12)
 
 > Lo que hay en el árbol, dicho sin optimismo. ✅ **1 · el núcleo** (§9.1–§9.4, 2026-08-25) · ✅ **2 ·
 > el panel** (§9.6–§9.7, 2026-08-26: PDF del snapshot, registro en la ficha con permiso propio y
@@ -450,7 +453,9 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 > (staging ni producción): §8.1 sigue vigente y es mecanismo (§9.2) — ⚠️ con el alcance que §10.4 le
 > mide. En la BD local del carril A sí hay versiones (v1→v3), publicadas para el guion.
 > ⚠️ §9.1 y §9.3 cuentan la **tanda 1** (47 casos en 6 ficheros, 3 acciones de auditoría); tras las
-> cuatro son **72 casos en 9 ficheros y 5 acciones** (§10.7, NUC-12).
+> cuatro son **72 casos en 9 ficheros y 5 acciones** (§10.7, NUC-12). · ✅ **4 · el código acotado que exigió la revisión** (§9.11, `#171`→`#180`) · ✅ **la revisión
+> adversarial de esa tanda, aplicada** (§9.12, `#183`: dos altas, cinco medias, diecisiete bajas —24 confirmadas,
+> 0 refutadas— y el guion re-recorrido con la conducta definitiva, **111/111 ✓, 0 desviaciones**).
 
 ### 9.1 Qué existe (todo en Identity; la capa de entrega solo lo consume)
 
@@ -474,7 +479,7 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 Además: dos alias morph (`legal_document_version`, `waiver_signature`), tres acciones de auditoría
 (`legal.version_published`, `waiver.signed`, `waiver.declared`) y el bloque `admin.waiver.*` de
-`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 78 migraciones**.
+`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 79 migraciones**.
 
 ### 9.2 Las TRES cosas en que la ejecución se apartó del cuerpo, y por qué
 
@@ -618,7 +623,7 @@ el texto, aceptarlo y ver la prueba, **sin tocar todavía una línea de Vue**. C
 | `GET /me/waiver` | `app/Http/Controllers/Api/V1/MeWaiverController.php` · `app/Http/Resources/Api/V1/WaiverStatusResource.php` | Estado según el modo (`signed`, `outdated`, `current_document_id`) y mis firmas con su PDF; sin ip, UA ni hashes |
 | `POST /me/waiver` | ídem + `app/Domain/Identity/Services/WaiverAcceptance.php` | Aceptar con el `document_id` servido → 201 con el estado nuevo; `409 waiver_document_stale` si el texto cambió, `409 waiver_not_internal` fuera del modo interno. Sirve para la re-firma (§4.8) |
 | `GET /me/waiver/{signature}/pdf` | ídem | El PDF PROPIO (§4.5), scoping por el guard (404 si no es mía), auditado, `no-store` por el grupo |
-| El alta | `app/Http/Controllers/Api/V1/AuthRegistrationController.php` · `app/Domain/Identity/Services/SelfSignup.php` | `accept_waiver` (opt-in, desmarcada) + `waiver_document_id` (`required_if_accepted`); la vigencia se comprueba **antes** de crear la cuenta (422 sobre el campo); ⚠️ desde `#179` `createAccount()` **NO firma**: deja la aceptación pendiente (`waiver_pending_document_id` + canal) y la firma la registra `SignPendingWaiverOnVerification` al verificar el correo, si el texto sigue vigente |
+| El alta | `app/Http/Controllers/Api/V1/AuthRegistrationController.php` · `app/Domain/Identity/Services/SelfSignup.php` | `accept_waiver` (nace desmarcada; **OBLIGATORIA en interno con versión publicada desde `#178`**: sin ella `422` sobre el campo y la cuenta no se crea) + `waiver_document_id` (`required_if_accepted`); la vigencia se comprueba **antes** de crear la cuenta (422 sobre el campo); ⚠️ desde `#179` `createAccount()` **NO firma**: deja la aceptación pendiente (`waiver_pending_document_id` + canal) y la firma la registra `SignPendingWaiverOnVerification` al verificar el correo, si el texto sigue vigente |
 | El contexto de cuenta | `app/Domain/Identity/Services/CustomerAccountContext.php` · `app/Http/Resources/Api/V1/AccountContextResource.php` | `waiver: {mode, required, outdated, document_id}` — el sitio de la re-firma «en el siguiente momento natural»; viaja también en la semilla del montaje (`AccountContextSeed`) |
 | Códigos de error | `app/Http/Api/ApiErrorCode.php` · `lang/{es,en,fr}/api.php` | `waiver_not_internal` · `waiver_document_stale` (409), en el `enum` del contrato |
 
@@ -733,6 +738,10 @@ guion, recorrido en headless) y en §10 (la revisión adversarial del subsistema
 
 ### 9.10 El guion §5.nonies, recorrido en HEADLESS (2026-08-26, `DECISIONES #169`)
 
+> ⚠️ **Esta pasada es ANTERIOR a `#178` y `#179`**: describe la casilla como opt-in y la firma en el
+> alta. La conducta definitiva se recorrió otra vez en §9.12 (**111/111 ✓, 0 desviaciones**); las filas V31·2, V31·3 y
+> V32 de la tabla del guion se leen con eso delante.
+
 El carril A lo recorrió entero con Playwright dentro del contenedor (receta y resultado detallado en
 `VERIFICACION-E2E-CAJON.md` §5.nonies): **99 comprobaciones, 94 ✓**; de los 5 ✗, dos eran del
 script, uno una aserción que el guion no pide, y **dos son un defecto real del cajón** (CAJ-3, §10.3:
@@ -822,8 +831,41 @@ Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y s
   escriba en la BD— (WAI-02); el pie ya no dice «fila inmutable»; en una firma de mostrador el PDF dice
   que los datos los TECLEÓ el operador y que la IP y el navegador son del PUESTO (WAI-07); y
   `WaiverChain::verify()` cruza cada firma con su versión (NUC-8). En los tres idiomas, con paridad.
+- ✅ **Unidad 6 · lo que la revisión de la propia tanda vio** (§9.12, `#183`): la firma pendiente del
+  alta lleva la IP/UA de la ACEPTACIÓN y se registra TRAS el commit (S-1: `Verified` también lo emite
+  el cobro, dentro de su transacción); la vigencia se re-comprueba DENTRO del lock (S-3); el cambio de
+  correo también verifica (S-5); la guarda de borrador compara texto, no bytes (S-6); la declaración en
+  mostrador vale para una cuenta que ya existía (F-01); el contrato dice `pending` (S-2); el 422 de
+  `accept_waiver` relee el texto (CAJ-422); re-marcar apaga la relectura (CAJ-REREAD); el aviso del
+  modal se ve, los idiomas anunciados son los publicados, el badge de versión anterior es ámbar, la
+  rama negativa del PDF habla como la positiva y se renderiza en test, la ayuda `zh_CN` completa y la
+  versión del mostrador memoizada (F-02…F-07). 10 mutaciones, las 10 muerden. Y el guion, otra vez.
 
 ---
+
+### 9.12 La revisión adversarial de la TANDA 4, aplicada (2026-08-26 noche, `#183`)
+
+La tanda se revisó como el subsistema (§10.0): 24 hallazgos verificados con escépticos, **0 refutados**,
+52 afirmaciones que aguantaron. Dos altas, cinco medias, diecisiete bajas. Lo que cambió el código:
+
+| Id | Hallazgo (verificado) | Qué se hizo |
+|---|---|---|
+| **S-1** (alta) | `Verified` no lo emite solo el enlace del correo: también **`RedsysReturnHandler::autoVerifyBuyer()`** al cobrar en pay-first, **dentro de la transacción del cobro** — y si gana la notificación S2S, la firma pendiente llevaba la IP/UA **de Redsys** | La aceptación pendiente guarda **la IP y el navegador del momento de marcar la casilla** (`waiver_pending_ip`/`_user_agent`, PII del alta: `anonymize()` + censo) y el listener firma con ellos **`DB::afterCommit`**: nunca dentro de la transacción de otro, y si el cobro se deshace, no hay firma |
+| **D1** (alta) | El guion §5.nonies V31·2/V31·3/V32 describía la conducta anterior (opt-in, firma en el alta) | Reescrito; **re-recorrido en headless con la conducta nueva: **111/111 ✓, 0 desviaciones**** |
+| S-2 | La API no podía decir «aceptado, pendiente de verificar» | `pending` en `WaiverStatus` y en `account-context.waiver` (contrato + `#183` en `api-v1.md` pt. 94). El cajón no lo pinta: una cuenta sin verificar no llega a Mi cuenta por web; es para un cliente nativo (`DEUDA.md`) |
+| CAJ-422 | `auth.js` solo releía ante `waiver_document_id`; el 422 de `accept_waiver` con `document: null` cacheado era un callejón sin casilla | Releer también ante `accept_waiver` (medido en el guion: `422` → `GET /legal/waiver`) |
+| F-01 | El alta manual descartaba en silencio la declaración si el correo ya existía | `CustomerRegistrar::declareAtCounter()`: vale para la cuenta nueva, para la existente por correo y para la elegida por teléfono; idempotente por versión |
+| S-3 | TOCTOU publicar-vs-firmar: la vigencia se comprobaba FUERA del lock | Re-comprobada DENTRO (contra el máximo publicado): una versión superada no se firma aunque pasara la puerta |
+| S-5 | `EmailChangeController` verificaba sin emitir `Verified` → aceptación colgada | Emite `Verified` |
+| S-6 | La guarda comparaba bytes: un marcador en NFD o `[ pendiente` publicaba el borrador | NFC + blanco tras `[` colapsado |
+| CAJ-REREAD | `reread` se quedaba pegajoso: un fallo de red posterior desmarcaba la casilla | Re-marcar apaga la relectura |
+| F-02…F-07 | El aviso del modal (`\n\n` en un `<p>`), idiomas vacíos anunciados, badge «versión anterior» en verde, `verified_no` con otro vocabulario y sin test, ayuda `zh_CN` truncada, cuatro lecturas de la versión por render | Arreglados; la rama negativa del PDF ahora se renderiza en test |
+| D2…D12 | Desfases de doc (tracker con un «▶ Sigue» ya hecho, la fila de `CLAUDE.md` y el README que presentaban como abiertos defectos cerrados, `ESTADO` citando `#176` por `#178`, §7·2/§10.4 diciendo que la guarda caza un marcador, §9.8 «opt-in», §10.11 con ⏳ ya ✅) | Corregidos en esta misma pasada |
+| S-4 · TURN-CLAVE-VACÍA · TURN-ESPERA | Precisiones que no cambian conducta (el canal `web` del alta lo decide que la petición se sirviera con sesión —`Origin` de la web—; la clave vacía y la espera definitiva del widget son inalcanzables hoy) | Fichadas en `DEUDA.md` como bajas |
+
+**Lo medido**: +9 tests PHP, +1 JS (contador en `ESTADO.md`) · **10 mutaciones, las 10 muerden**
+(S-1 ×2, S-3, F-01, S-6 ×2, F-07, S-5, S-2, CAJ-422) · `waiver:verify-chain` 8/16 lineal sobre InnoDB ·
+el guion completo en headless, **111/111 ✓, 0 desviaciones**.
 
 ## 10. Revisión adversarial del SUBSISTEMA — 2026-08-26 (`DECISIONES #169`)
 
@@ -932,6 +974,8 @@ y `:103-104`, `CustomerRegistrar.php:71` y `:114`).
   próximas **no se pinta nunca**. Compilado: `t.upcoming>0` frente a `P(r).upcoming` dos líneas después.
 
 ### 10.4 La guarda de borrador caza UN marcador de tres (WAI-03 + DOC-2)
+
+> ✅ **Cerrado**: tres marcadores + aviso de palabras (`#174`); NFC y blanco tras `[` (`#183`, S-6).
 
 `LegalDocumentPublisher::DRAFT_MARKER = '[pendiente'` (`:28`). El seeder siembra **tres** marcadores
 —`[PENDIENTE: redacción definitiva]` (es), `[PENDING: final wording]` (en, `LandingContentSeeder.php:790`),
@@ -1055,8 +1099,8 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
 (§10.1), tres carreras entre lo enseñado y lo firmado (§10.3) y lo que el PDF afirma de más (§10.6).
 
 ❗ **Antes de que una instalación entre en modo `interno` con una versión publicada** (ninguna lo está):
-1. **Decisión de producto** (§10.1): la casilla del waiver en el alta manual, o no firmar en mostrador.
-2. **Decisión** (§10.2·3): exigir correo verificado para firmar, o registrar el estado en la fila.
+1. ✅ **Decisión de producto** (§10.1): la casilla del waiver en el alta manual — decidida y hecha (§7·4, `#178`).
+2. ✅ **Decisión** (§10.2·3): correo verificado para firmar — decidida y hecha (§7·5, `#179`).
 3. **Código, pequeño y acotado** — la TANDA 4, en marcha desde la noche del 26/08 (§9.11): ✅ canal
    por guard (API-1, `#174`) · ✅ idempotencia por versión (API-3, `#174`) · ✅ `legal` releído en
    el 422 del alta y en el 409, casilla desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3,
@@ -1064,14 +1108,15 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
    ✅ tres marcadores en la guarda + aviso de palabras (§10.4, `#174`) · ✅ el infolist por
    `WaiverStatus` (PAN-5, `#174`) · ✅ throttles con prefijo en las dos rutas del waiver (API-2,
    `#174`; el del pago queda en `DEUDA`) · ✅ **el widget del anti-bot en el alta suelta** (`#171`) ·
-   ✅ `WaiverSigner` en el `CRITICAL_RE` (NUC-6, `#174`) · ⏳ y las tres decisiones del owner que son
-   código: **correo verificado para firmar** (§7·5), **la casilla del alta manual** (§7·4) y **la
-   casilla del alta OBLIGATORIA en interno** (§7·7).
+   ✅ `WaiverSigner` en el `CRITICAL_RE` (NUC-6, `#174`) · ✅ las tres decisiones del owner que son
+   código: **la casilla del alta manual** (§7·4, `#178`), **la casilla del alta OBLIGATORIA en
+   interno** (§7·7, `#178`) y **correo verificado para firmar** (§7·5, `#179`) · ✅ **y la revisión de la
+   propia tanda, aplicada** (§9.12, `#183`).
 4. ✅ **Texto del PDF** (`#180`): «Coincide (comprobación interna)» + nota de lo que garantiza y lo que no;
    el pie sin «fila inmutable»; en mostrador, datos tecleados por el operador e IP/UA del puesto (WAI-07);
    `WaiverChain` cruza la versión (NUC-8).
-5. Las decisiones humanas de siempre: **texto definitivo**, **plazo** (con la precisión de §10.8), y el
-   aviso en el paso de pagar.
+5. Las decisiones humanas de siempre: **texto definitivo** y **plazo** (con la precisión de §10.8). El
+   aviso en el paso de pagar ya está decidido: no (§7·3).
 
 Las fichas están en `DEUDA.md` (una por grupo, con su severidad), y la entrada `DECISIONES #169`
 recoge el porqué de cada veredicto.

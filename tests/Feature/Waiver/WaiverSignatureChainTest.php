@@ -3,6 +3,7 @@
 namespace Tests\Feature\Waiver;
 
 use App\Domain\Identity\Exceptions\ImmutableRecordException;
+use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
@@ -86,9 +87,10 @@ class WaiverSignatureChainTest extends TestCase
         $ana = User::factory()->create();
         $bea = User::factory()->create();
         $v1 = $this->version();
-        $v2 = $this->version(); // la cadena crece con VERSIONES nuevas: re-firmar la misma es idempotente (`#169`)
-
         $first = $this->sign($ana, $v1);
+        // La cadena crece con VERSIONES nuevas: re-firmar la misma es idempotente (`#169`) — y la v1 se firma
+        // ANTES de publicarse la v2, porque una versión superada ya no se firma (S-3, `#181`).
+        $v2 = $this->version();
         $second = $this->sign($ana, $v2);
         $other = $this->sign($bea, $v2);
 
@@ -353,5 +355,16 @@ class WaiverSignatureChainTest extends TestCase
         $verdict = WaiverChain::verify($holder);
         $this->assertFalse($verdict['ok']);
         $this->assertStringContainsString('no coincide con su versión', implode(' ', $verdict['problems']));
+    }
+
+    /** S-3 (`#181`): la vigencia se re-comprueba DENTRO del lock — una versión superada no se firma aunque pasara la puerta. */
+    public function test_signing_a_version_that_is_no_longer_current_is_refused_inside_the_lock(): void
+    {
+        $holder = User::factory()->create();
+        $v1 = $this->version();
+        $this->version(); // v2: la v1 deja de ser la vigente
+
+        $this->expectException(WaiverDocumentStaleException::class);
+        $this->sign($holder, $v1);
     }
 }

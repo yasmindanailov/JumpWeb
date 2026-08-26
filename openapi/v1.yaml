@@ -2651,7 +2651,7 @@ components:
             `required`: modo interno y sin ninguna firma · `outdated`: firmado en una versión anterior
             del texto (en la puerta se deja pasar) · `document_id`: el texto vigente en este idioma,
             para `POST /me/waiver` — el mismo id que publica `GET /legal/waiver`.
-          required: [mode, required, outdated, document_id]
+          required: [mode, required, pending, outdated, document_id]
           additionalProperties: false
           properties:
             mode:
@@ -2659,6 +2659,9 @@ components:
               enum: [externo, interno, desactivado]
             required:
               type: boolean
+            pending:
+              type: boolean
+              description: La aceptación del alta espera al correo verificado (`#181`).
             outdated:
               type: boolean
             document_id:
@@ -4690,7 +4693,7 @@ components:
     WaiverStatus:
       type: object
       description: Mi waiver — el estado según el modo de la instalación, y mis firmas.
-      required: [mode, signed, outdated, accepted_at, accepted_label, version, current_document_id, signatures]
+      required: [mode, signed, pending, outdated, accepted_at, accepted_label, version, current_document_id, signatures]
       additionalProperties: false
       properties:
         mode:
@@ -4699,6 +4702,12 @@ components:
         signed:
           type: boolean
           description: En `externo`, el sello del sistema del parque; en `interno`, si hay registro firmado aquí.
+        pending:
+          type: boolean
+          description: |
+            La aceptación marcada en el ALTA que espera a que el correo se verifique (`#181`): el titular ya
+            aceptó, pero la firma no existe todavía — `signed` es `false` y aceptar de nuevo responde
+            `409 waiver_email_unverified`. Se convierte en firma al verificar, si el texto sigue vigente.
         outdated:
           type: boolean
           description: Firmado, pero en una versión anterior del texto. Se deja pasar; se pide la re-firma.

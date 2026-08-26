@@ -250,6 +250,10 @@ class SelfSignup
                 $user->forceFill([
                     'waiver_pending_document_id' => (int) $waiver['document']->getKey(),
                     'waiver_pending_channel' => (string) ($waiver['channel'] ?? WaiverSignature::CHANNEL_WEB),
+                    // S-1 (`#181`): la firma llevará la IP y el navegador de ESTE momento —cuando la persona marcó
+                    // la casilla—, no los de la petición que verifique (que en pay-first puede ser Redsys).
+                    'waiver_pending_ip' => $ip !== '' ? mb_substr($ip, 0, 45) : null,
+                    'waiver_pending_user_agent' => isset($waiver['user_agent']) ? mb_substr((string) $waiver['user_agent'], 0, 512) : null,
                 ])->save();
             }
 

@@ -17,6 +17,7 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\HtmlString;
 use InvalidArgumentException;
 
 class EditPage extends EditRecord
@@ -58,17 +59,19 @@ class EditPage extends EditRecord
                 ->modalHeading(fn (): string => __('admin.waiver.publish.heading', ['next' => $this->nextVersionNumber()]))
                 // El aviso de «borrador» (revisión `#169` §10.4): los marcadores bloquean, las palabras
                 // avisan — un texto definitivo puede mencionarlas, pero quien publica tiene que verlo.
-                ->modalDescription(function (): string {
+                ->modalDescription(function (): HtmlString {
                     $texts = $this->publishableTexts();
                     $description = __('admin.waiver.publish.description', [
                         'next' => $this->nextVersionNumber(),
-                        'locales' => implode(', ', array_keys($texts)) ?: '—',
+                        // F-07 (`#181`): los idiomas que se ANUNCIAN son los que `publish()` publicará (con cuerpo).
+                        'locales' => implode(', ', LegalDocumentPublisher::publishableLocales($texts)) ?: '—',
                     ]);
                     $drafty = LegalDocumentPublisher::mentionsDraftWords($texts);
 
-                    return $drafty === []
-                        ? $description
-                        : $description."\n\n".__('admin.waiver.publish.draft_words', ['locales' => implode(', ', $drafty)]);
+                    // F-02 (`#181`): Filament pinta la descripción escapada en un `<p>`; un `\n\n` no separa nada.
+                    return new HtmlString($drafty === []
+                        ? e($description)
+                        : e($description).'<br><br><strong>'.e(__('admin.waiver.publish.draft_words', ['locales' => implode(', ', $drafty)])).'</strong>');
                 })
                 ->modalSubmitActionLabel(fn (): string => __('admin.waiver.publish.confirm', ['next' => $this->nextVersionNumber()]))
                 ->visible(fn (): bool => $record->slug === WaiverSettings::SLUG

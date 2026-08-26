@@ -177,6 +177,8 @@ class RegisterCustomerActionTest extends TestCase
 
         Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'externo', 'group' => 'waiver']);
 
+        // F-06 (`#181`): la versión se memoiza POR PETICIÓN — el modo no cambia a mitad de una; página nueva.
+        $page = app(CreateManualOrderPage::class);
         $this->assertNull($page->counterWaiverVersion());
         $this->assertSame('', $page->counterWaiverText()->toHtml());
     }

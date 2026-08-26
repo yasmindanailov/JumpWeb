@@ -992,14 +992,27 @@ Ya que hay una sesión abierta y el motor es otro:
 > hay que acotarlo con `:visible`); la 4ª: **86/90 ✓** hasta V35, y V31·4 suelto **8/9 ✓**.
 > **Total: 99 comprobaciones, 94 ✓; de los 5 ✗, 2 del script (los textos coincidían letra por letra
 > con los FR esperados), 1 una aserción que el guion no pide, y 2 REALES** (abajo, V34).
+>
+> ⚠️ **Re-recorrido la noche del 26/08 con la conducta NUEVA** (`#178` casilla obligatoria · `#179`
+> firma al verificar · `#183`): **111/111 ✓, 0 desviaciones** en una sola pasada de V31 a V35 y V31·4, sin
+> presuponer la versión de partida (la BD ya iba por la v5). Lo nuevo que midió: el **422 sin
+> casilla** con su error visible y el `GET /legal/waiver` de relectura detrás; la aceptación
+> **pendiente y SIN firma en BD** antes de verificar (canal `web`, 0 firmas) y la firma nacida al
+> verificar; la aceptación **descartada** cuando el texto cambia antes del enlace (0 firmas, aviso en
+> el índice, texto nuevo en la tarjeta); y el resto —409 bajo los pies, re-firma, idiomas, puerta,
+> externo/interno— igual que en la 4ª pasada. **Las filas V31·2, V31·3 y V32 de abajo describen la
+> pasada ANTERIOR (opt-in, firma en el alta): léelas con el guion nuevo delante.** Dos trampas del
+> arnés que costaron tres pasadas: tras el 422 el cajón relee el texto y re-renderiza la casilla —hay
+> que esperar ese `GET` antes de marcarla— y con el texto desplegado el botón queda bajo el pliegue de
+> un contenedor con scroll suave: `scrollIntoViewIfNeeded()` antes del clic, o el clic no envía nada.
 
 | V | Resultado | Lo medido |
 |---|---|---|
 | **V31·1** | ✅ | Casilla «He leído y acepto la exención…» desmarcada bajo la contraseña; «Leer el texto completo» plegado; al desplegar, **5 secciones = las 5 de `GET /legal/waiver`** (es, v1 id 7) |
-| **V31·2** | ✅ | Alta sin marcar → `POST /auth/register` 201 con `accept_waiver=false · waiver_document_id=null`; cara «Confirma tu email»; correo «Verifica tu dirección de email» en Mailpit; su enlace abre sesión y aterriza en `/mi-cuenta/pedidos`; índice con «Tienes pendiente… · Firmarla»; Privacidad «Todavía no la has firmado.» con «Firmar» |
-| **V31·3** | ✅ | Alta marcándola → en red `accept_waiver=true · waiver_document_id=7` (el servido); Privacidad «Firmada, versión vigente (v1).», 1 firma `v1·es` con «PDF»; `GET /me/waiver/{id}/pdf` → 200 `application/pdf`, `no-store`, 1,1 MB, **leído**: nombre, correo y «Conocimiento del riesgo» (ES), sin «Awareness of risk» |
+| **V31·2** | ✅ ⚠️ conducta anterior a `#178`/`#179` | Alta sin marcar → `POST /auth/register` 201 con `accept_waiver=false · waiver_document_id=null`; cara «Confirma tu email»; correo «Verifica tu dirección de email» en Mailpit; su enlace abre sesión y aterriza en `/mi-cuenta/pedidos`; índice con «Tienes pendiente… · Firmarla»; Privacidad «Todavía no la has firmado.» con «Firmar» |
+| **V31·3** | ✅ ⚠️ conducta anterior a `#179` | Alta marcándola → en red `accept_waiver=true · waiver_document_id=7` (el servido); Privacidad «Firmada, versión vigente (v1).», 1 firma `v1·es` con «PDF»; `GET /me/waiver/{id}/pdf` → 200 `application/pdf`, `no-store`, 1,1 MB, **leído**: nombre, correo y «Conocimiento del riesgo» (ES), sin «Awareness of risk» |
 | **V31·4** | ✅ 8/9 | `waiver.mode` → externo **por Ajustes** (`button[role=combobox]`, «Configuración guardada») → `GET /legal/waiver` `mode=externo, document=null`; `/registro` en incógnito **sin casilla** (3 casillas); índice sin aviso; Privacidad «La gestiona el parque fuera de esta web.» sin formulario; vuelta a interno → v3. ⚠️ **Observación** (no la pide el guion): en externo la tarjeta **sigue listando las firmas ya registradas** con su PDF. Decidir si es lo deseado |
-| **V32·1–2** | ✅ | Botón «Firmar» **deshabilitado** sin casilla, habilitado al marcar; textos del botón `["Firmar","Firmando…"]` → «Firma registrada ✓»; red `POST /me/waiver 201 · GET /me/account-context 200`; estado «(v1)»; 1 firma; **de vuelta al índice sin recargar, el aviso ha desaparecido** |
+| **V32·1–2** | ✅ (re-recorrido con la conducta nueva) | Botón «Firmar» **deshabilitado** sin casilla, habilitado al marcar; textos del botón `["Firmar","Firmando…"]` → «Firma registrada ✓»; red `POST /me/waiver 201 · GET /me/account-context 200`; estado «(v1)»; 1 firma; **de vuelta al índice sin recargar, el aviso ha desaparecido** |
 | **V33·1–3** | ✅ | v2 publicada **desde el panel** (texto ES editado con un marcador, «Guardado», acción → modal → «Publicar versión 2» → «Versión 2 publicada») → API v2; el aviso **vuelve**; Privacidad «La firmaste en una versión anterior…» con el texto **nuevo** (marcador) plegado; firma → «(v2)», **dos** firmas `v2·es`/`v1·es`; **el PDF de la v1 sigue enseñando el v1** (sin marcador) y el de la v2 lleva el marcador |
 | **V34·1–3** | ✅ / ✗✗ | A3 en **FR**: Privacidad con v2 en memoria; v3 publicada (ES+FR) desde el panel; marcar y «Signer» → **`POST /me/waiver → 409 waiver_document_stale` · `GET /me/waiver` · `GET /legal/waiver`**, sin «Signature enregistrée ✓», **texto recargado: v3** ✓. ❌ **Pero la casilla sigue MARCADA y el botón habilitado** tras la recarga (2 ✗: es `CAJ-3` de la revisión, spec §10.3, `PrivacyZone.vue:73-80`) — ✅ **arreglado la misma noche (`#175`)** y re-verificado en headless: tras el 409 la casilla está desmarcada y el botón deshabilitado. Segunda firma → «Signée, version en vigueur (v3).» y **PDF en FR** («Conscience du risque», marcador v3, nombre) |
 | **V35·1** | ✅ | `/registro` con la web en EN: «Read the full text», API `locale=en`, 5 secciones EN; A2 (firmó v1 en ES) en EN: aviso «Your liability waiver is pending. Sign it», tarjeta «You signed an earlier version…», texto EN plegado, y **su PDF v1 sigue en ES**; en FR, «Vous avez signé une version antérieure…» |
@@ -1033,26 +1046,43 @@ V35·1) · los marcadores de versión (`[E2E-v2]`, `[E2E-v3]`) quedan en el text
 
 ### V31 · La casilla del ALTA (ventana de incógnito)
 
+> ⚠️ Reescrito el 26/08 (noche) tras `#178` (**la casilla es OBLIGATORIA en interno con versión
+> publicada**) y `#179` (**el alta NO firma: la firma nace al verificar el correo**). La versión
+> anterior de estos pasos decía «es opt-in» y «Firmada» nada más crear la cuenta: ya no es así.
+
 1. Abre `/registro`. ▶ Debajo de la contraseña, la casilla **«He leído y acepto la exención de
    responsabilidad (waiver).»** —desmarcada— y, bajo ella, **«Leer el texto completo»** plegado.
    Despliégalo: son las secciones del texto publicado, en el idioma de la página.
-2. Crea una cuenta **SIN marcarla**. ▶ Se crea igual: es opt-in. Entra en **Mi cuenta → Privacidad**:
-   la tarjeta «Exención de responsabilidad (waiver)» dice **«Todavía no la has firmado.»** y ofrece
-   firmar. Y en el índice de Mi cuenta sale el aviso **«Tienes pendiente la exención de
-   responsabilidad (waiver).» · «Firmarla»**.
-3. Otra cuenta, esta vez **marcándola**. ▶ En Privacidad: **«Firmada, versión vigente (v1).»**, una
-   firma en la lista con su fecha y su enlace **«PDF»**. Púlsalo: baja un PDF con el texto **en el
-   idioma en que lo firmaste**, tu nombre y tu correo. ⚠️ En la pestaña de red, el alta tiene que haber
-   mandado `accept_waiver: true` **y** `waiver_document_id: <id>`; si va `true` con `null`, el
-   servidor lo rechaza en el campo y el banner del formulario tiene que decirlo.
-4. Cambia `waiver.mode` a **externo** y vuelve a `/registro`. ▶ **No hay casilla** y Privacidad dice
+2. Rellena todo y pulsa «Crear cuenta» **SIN marcarla**. ▶ **No se crea la cuenta**: `422` sobre
+   `accept_waiver`, y el formulario lo dice bajo la casilla y en el banner («Para crear la cuenta hay
+   que leer y aceptar la exención de responsabilidad (waiver).»). En red: `POST /auth/register` con
+   `accept_waiver: false · waiver_document_id: null` → `422`, y **a continuación un `GET /legal/waiver`**
+   (el cajón relee el texto; si el formulario se montó antes de publicarse la versión, es lo que hace
+   aparecer la casilla). No llega ningún correo.
+3. Marca la casilla y vuelve a pulsar (con el texto desplegado el botón queda bajo el pliegue: haz
+   scroll). ▶ `201` → cara «Confirma tu email» y llega el correo. ⚠️ **Todavía no hay firma**: el alta
+   deja la aceptación **pendiente** (`users.waiver_pending_document_id`, con el canal, la IP y el
+   navegador de ESTE momento) y la firma nace **al verificar**. En red, el alta tiene que haber mandado
+   `accept_waiver: true` **y** `waiver_document_id: <id>`; si va `true` con `null`, el servidor lo
+   rechaza en el campo y el banner tiene que decirlo. Abre el enlace del correo. ▶ Aterrizas en Mi
+   cuenta con sesión; **sin aviso** en el índice; en **Privacidad**: **«Firmada, versión vigente
+   (vN).»**, una firma en la lista con su fecha y su enlace **«PDF»**. Púlsalo: baja un PDF con el
+   texto **en el idioma en que lo aceptaste**, tu nombre y tu correo.
+4. **La aceptación caduca si el texto cambia antes de verificar.** Otra cuenta, marcando la casilla; y
+   ANTES de abrir su enlace, publica una versión nueva en el panel. Abre el enlace. ▶ Entras, pero
+   **sin firma**: la aceptación se descarta porque el texto ya no es el que leíste (log
+   `waiver.pending_dropped`). En el índice, el aviso **«Tienes pendiente la exención de
+   responsabilidad (waiver).» · «Firmarla»**; en Privacidad, **«Todavía no la has firmado.»** con el
+   texto **nuevo** plegado y el botón «Firmar». (Es, además, la única manera de tener en modo interno
+   una cuenta verificada sin firma: la necesitan V32 y V34.)
+5. Cambia `waiver.mode` a **externo** y vuelve a `/registro`. ▶ **No hay casilla** y Privacidad dice
    **«La gestiona el parque fuera de esta web.»**. Devuélvelo a interno.
 
 ### V32 · La TARJETA de Privacidad: firmar
 
-1. Con la cuenta del punto 2 de V31, en Privacidad: despliega el texto, marca la casilla y pulsa
+1. Con la cuenta del punto 4 de V31, en Privacidad: despliega el texto, marca la casilla y pulsa
    **«Firmar»**. ▶ «Firmando…» → **«Firma registrada ✓»**, el estado pasa a «Firmada, versión vigente
-   (v1).» y la firma aparece en la lista con su «PDF». **Sin recargar**, vuelve al índice: el aviso
+   (vN).» y la firma aparece en la lista con su «PDF». **Sin recargar**, vuelve al índice: el aviso
    «Tienes pendiente…» **ha desaparecido** — es el refresco del contexto de cuenta al firmar.
 2. El botón **sin** marcar la casilla. ▶ No hace nada (deshabilitado): firmar es marcar y pulsar, no
    pulsar.
@@ -1068,8 +1098,8 @@ V35·1) · los marcadores de versión (`[E2E-v2]`, `[E2E-v3]`) quedan en el text
 
 ### V34 · El texto que cambia BAJO LOS PIES (`409 waiver_document_stale`)
 
-1. Pestaña A: Privacidad con el texto v2 cargado (sin firmar todavía, usa otra cuenta). Pestaña B, el
-   panel: publica **v3**.
+1. Pestaña A: Privacidad con el texto vigente cargado (sin firmar todavía: otra cuenta, creada como en
+   V31·4). Pestaña B, el panel: publica una versión **nueva**.
 2. Vuelve a A **sin recargar**, marca y pulsa «Firmar». ▶ **NO** sale «Firma registrada ✓»: la tarjeta
    **recarga el texto** —ahora v3— y vuelve a pedir la casilla. En red: `POST /me/waiver` → **409**
    con `waiver_document_stale`, y a continuación `GET /legal/waiver` y `GET /me/waiver`.

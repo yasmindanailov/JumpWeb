@@ -334,4 +334,22 @@ class MeWaiverTest extends ApiTestCase
 
         $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
     }
+
+    /** S-2 (`#181`): el contrato dice «aceptado, pendiente de verificar». */
+    public function test_the_status_says_when_an_acceptance_is_pending_verification(): void
+    {
+        $this->mode('interno');
+        $document = $this->publish();
+        $user = User::factory()->create(['email_verified_at' => null]);
+        $user->forceFill(['waiver_pending_document_id' => $document->id, 'waiver_pending_channel' => 'web'])->save();
+
+        $response = $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200);
+
+        $this->assertFalse($response->json('signed'));
+        $this->assertTrue($response->json('pending'));
+
+        $this->actingAs($user)->getJson(self::ROOT.'/me/account-context')->assertOk()
+            ->assertJsonPath('waiver.pending', true)
+            ->assertJsonPath('waiver.required', true);
+    }
 }

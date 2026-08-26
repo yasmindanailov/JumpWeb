@@ -63,6 +63,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'waiver_accepted_at',
         'waiver_pending_document_id',
         'waiver_pending_channel',
+        'waiver_pending_ip',
+        'waiver_pending_user_agent',
         'email_verified_at',
         'password',
         'remember_token',
@@ -196,6 +198,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         $user->forceFill([
             'waiver_pending_document_id' => $version->getKey(),
             'waiver_pending_channel' => 'web',
+            'waiver_pending_ip' => '10.0.0.9',
+            'waiver_pending_user_agent' => 'Alta/1.0 (test)',
             'pending_email' => 'ana.nueva@example.com',
             'pending_email_sent_at' => now()->subHour(),
             'panel_locale' => 'en',

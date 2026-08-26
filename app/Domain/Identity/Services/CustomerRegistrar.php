@@ -64,6 +64,12 @@ class CustomerRegistrar
         if ($email !== null) {
             $existing = User::where('email', $email)->first();
             if ($existing !== null) {
+                // F-01 (`#181`): el cliente vio el texto y lo aceptó delante del operador; que la cuenta ya
+                // existiera no borra esa declaración (idempotente por versión).
+                if ($waiverDeclared) {
+                    $this->declareAtCounter($existing);
+                }
+
                 return ['user' => $existing, 'created' => false, 'email_sent' => true];
             }
         }
@@ -111,14 +117,8 @@ class CustomerRegistrar
             // cliente—, igual que el consentimiento de privacidad de arriba. Exige una versión
             // publicada y un operador con sesión: sin cualquiera de las dos no hay firma, y el
             // cliente saldrá «sin waiver» en la puerta hasta que firme por su cuenta.
-            $operator = auth()->user();
-            $version = WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
-            if ($waiverDeclared && $version !== null && $operator instanceof User) {
-                app(WaiverSigner::class)->sign(
-                    $user,
-                    $version,
-                    WaiverSignatureRequest::declaredAtCounter($operator, $ip, request()?->userAgent()),
-                );
+            if ($waiverDeclared) {
+                $this->declareAtCounter($user);
             }
 
             return $user;
@@ -198,5 +198,27 @@ class CustomerRegistrar
     public static function normalizePhone(?string $phone): ?string
     {
         return PhoneNormalizer::digits($phone);
+    }
+
+    /**
+     * La firma DECLARADA por el operador (§8.4, `[DECIDIDO owner]` §7·4): solo en modo interno, con
+     * versión publicada y con un operador con sesión. Idempotente por versión (`WaiverSigner`). Vale para
+     * la cuenta recién creada y para una que ya existía (F-01, `#181`).
+     */
+    public function declareAtCounter(User $user): bool
+    {
+        $operator = auth()->user();
+        $version = WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
+        if ($version === null || ! $operator instanceof User) {
+            return false;
+        }
+
+        app(WaiverSigner::class)->sign(
+            $user,
+            $version,
+            WaiverSignatureRequest::declaredAtCounter($operator, request()?->ip(), request()?->userAgent()),
+        );
+
+        return true;
     }
 }

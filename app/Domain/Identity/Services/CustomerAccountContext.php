@@ -50,7 +50,7 @@ class CustomerAccountContext
      * `waiver.required` (modo interno y sin firma), `waiver.outdated` (firmado en una versión
      * anterior) y `waiver.documentId` (el vigente en el idioma de la petición, para `POST /me/waiver`).
      *
-     * @return array{firstName: string, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, outdated: bool, documentId: ?int}}
+     * @return array{firstName: string, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}}
      */
     public function for(User $user): array
     {
@@ -67,7 +67,7 @@ class CustomerAccountContext
             'pendingForms' => [],
             'pendingFormsCount' => 0,
             'hasPendingForm' => false,
-            'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'outdated' => false, 'documentId' => null],
+            'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'pending' => false, 'outdated' => false, 'documentId' => null],
         ];
 
         try {
@@ -75,6 +75,7 @@ class CustomerAccountContext
             $context['waiver'] = [
                 'mode' => $status->mode,
                 'required' => $status->mode === WaiverSettings::MODE_INTERNAL && ! $status->signed,
+                'pending' => $user->waiver_pending_document_id !== null,
                 'outdated' => $status->isOutdated(),
                 'documentId' => $status->mode === WaiverSettings::MODE_INTERNAL
                     ? LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale())?->getKey()

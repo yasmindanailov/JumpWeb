@@ -183,7 +183,7 @@ return [
             'register_privacy' => '我已向客户说明隐私政策，并经其同意创建账户。',
             'register_waiver' => '我已向客户出示现行免责声明，客户声明接受。',
             'register_waiver_text' => '现行免责声明文本（v:version）— 请出示给客户',
-            'register_waiver_help' => '仅在内部模式且已发布版本时可用。未勾选则不登记任何签署。',
+            'register_waiver_help' => '仅在内部模式且已发布版本时可用。未勾选则不登记任何签署：客户将在其账户中签署，在此之前门口会请其使用平板签署。',
             'register_privacy_required' => '你必须确认已向客户说明隐私政策。',
             'register_submit' => '创建账户',
             'register_done' => '已为 :email 创建账户并选中。我们已通过邮件发送其密码。',
