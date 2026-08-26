@@ -29,11 +29,16 @@
 >   `/registro` NO TERMINA** —el widget de Turnstile nunca se monta porque `RegisterForm` se monta
 >   antes de que `GET /config` traiga la clave— y **staging tiene claves** (`DEUDA.md` Alta, spec
 >   §9.10). El arreglo es del carril A (`resources/js/sidebar/`) y esta sesión no escribía código.
->   ▶ **Lo siguiente de este carril, en orden**: el código acotado que exige la spec **§10.11** (el
->   widget del alta suelta primero; canal por guard, idempotencia, las tres grietas del cajón, la
->   guarda de borrador, el badge del pedido, throttles con nombre, `WaiverSigner` en el `CRITICAL_RE`)
->   → las respuestas del owner → «menores a cargo» (C), que además hereda NUC-3 (la poda con firmas de
->   menor intercaladas rompe la cadena). Ficheros del carril: los de siempre del waiver y el cajón
+>   ▶ 🟦 **TANDA 4 · el código acotado de §10.11 — EN CURSO desde el 2026-08-26 por la noche**
+>   (`[DECIDIDO owner]`: «procede con lo que sigue»; esta sesión SÍ escribe código): (1) **el widget
+>   del anti-bot en el alta suelta** (decisión en `turnstile.js`, que es módulo plano con tests; el
+>   componente solo pinta; verificación: el guion V31 en headless **con Turnstile encendido**) →
+>   (2) servidor: canal por guard, idempotencia por versión, guarda de borrador con los tres
+>   marcadores, badge del pedido por `WaiverStatus`, throttles con nombre, `WaiverSigner` en el
+>   `CRITICAL_RE` → (3) cajón: las tres grietas (id enseñado, 422 del alta, casilla tras el 409) →
+>   (4) las tres decisiones del owner que son código: correo verificado para firmar, casilla del alta
+>   manual, casilla obligatoria en interno → (5) el texto del PDF (§10.6). Cada unidad se empuja
+>   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
 >   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
 >   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
 >   del waiver · `routes/api.php`) más `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md`
