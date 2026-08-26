@@ -168,7 +168,7 @@ trait PresentsOrderActions
         $newQty = max(1, (int) ($get('quantity') ?: $item->quantity));
         $dateStr = $this->calendarSelectedDate ?: $item->slot?->date?->toDateString();
 
-        $pricing = $this->computeEditPricing($item, $newTypeId, $newQty, $dateStr);
+        $pricing = $this->itemEditPricing()->computeEditPricing($item, $newTypeId, $newQty, $dateStr);
         $oldTotal = $pricing['old'];
 
         $rows = '<div class="text-sm" style="display:flex;gap:1.5rem;flex-wrap:wrap;">'
@@ -221,7 +221,7 @@ trait PresentsOrderActions
             return new HtmlString('');
         }
         $dateStr = $this->calendarSelectedDate ?: $item->slot?->date?->toDateString();
-        $pricing = $this->computeAddonPricing($item, $type, $normalized['edits'], $normalized['adds'], $dateStr);
+        $pricing = $this->itemEditPricing()->computeAddonPricing($item, $type, $normalized['edits'], $normalized['adds'], $dateStr);
 
         $upcharge = (int) ($pricing['upcharge'] ?? 0);
         $hasRemoval = ! empty($pricing['changes']['addon_change']['removed']);

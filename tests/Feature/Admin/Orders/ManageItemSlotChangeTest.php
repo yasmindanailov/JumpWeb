@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ItemRescheduleOffer;
+use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -1064,20 +1065,17 @@ class ManageItemSlotChangeTest extends TestCase
     }
 
     /**
-     * Invoca el helper privado `validateNewSlot` de `ViewOrder` con
-     * reflection. Permite testear los escenarios de defense in depth capa 4
+     * Invoca el validador `validateNewSlot`, que desde la extracción 4b es un
+     * método PÚBLICO de `OrderItemEditor` (antes, privado de `ViewOrder` por
+     * reflexión). Permite testear los escenarios de defense in depth capa 4
      * (cross-zone, slot pasado, slot cerrado, park cerrado, product window)
      * que Filament rechaza ANTES vía validación in:options del Select —
-     * escenarios hipotéticos para atacante autenticado.
+     * escenarios hipotéticos para atacante autenticado. El `$order` ya no hace
+     * falta: se conserva en la firma para no tocar los llamantes.
      */
     private function invokeValidateNewSlot(Order $order, OrderItem $item, ?Slot $candidate): ?string
     {
-        $page = new ViewOrder;
-        $page->record = $order;
-        $ref = new \ReflectionMethod(ViewOrder::class, 'validateNewSlot');
-        $ref->setAccessible(true);
-
-        return $ref->invoke($page, $item, $candidate);
+        return app(OrderItemEditor::class)->validateNewSlot($item, $candidate);
     }
 
     /**

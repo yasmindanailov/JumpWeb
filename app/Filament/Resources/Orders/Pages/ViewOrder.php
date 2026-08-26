@@ -4,15 +4,12 @@ namespace App\Filament\Resources\Orders\Pages;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
-use App\Domain\Booking\Services\ItemRescheduleOffer;
-use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
-use App\Domain\Booking\Services\ProductAvailability;
-use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
@@ -55,7 +52,6 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -941,108 +937,20 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Cómputo PURO del importe de un edit (sub-fase 7.2e.3, #167) — sin
-     * efectos: compartido por `priceDiffPreview` (display reactivo) y
-     * `executeItemEdit` (guardado), garantizando que lo que ve el operador y
-     * lo que se cobra/reembolsa coinciden.
-     *
-     * Criterio de tarifa:
-     *  - Producto SIN cambio → conserva el `unit_price` HISTÓRICO del item
-     *    (extiende la reserva a la tarifa que pagó el cliente, sin sorpresas).
-     *  - Producto CAMBIADO → tarifa de catálogo (`RateResolver`) en la fecha
-     *    efectiva. Si no hay precio ese día, `new`/`diff` = null (bloqueante).
-     *
-     * @return array{old:int, unit:int, new:?int, diff:?int}
+     * Los servicios del dominio de la extracción 4b (spec §9.6): la edición de
+     * un ítem y su tarificación viven en `app/Domain/`. La página es un
+     * componente Livewire —sin inyección por constructor—, así que se
+     * resuelven del contenedor al usarlos, como el trait del calendario hace
+     * con `ItemRescheduleOffer`.
      */
-    /**
-     * Precio unitario de CATÁLOGO del producto del item para una fecha, o `null` si ese día no tiene
-     * precio para su tarifa. Es la misma fuente que usa la compra (`RateResolver`), así que el panel
-     * y la web no pueden divergir sobre lo que cuesta un día.
-     */
-    private function catalogUnitPriceFor(OrderItem $item, ?string $dateStr): ?int
+    private function itemEditor(): OrderItemEditor
     {
-        if ($dateStr === null || $dateStr === '' || $item->ticketType === null) {
-            return null;
-        }
-
-        return app(RateResolver::class)->priceCents($item->ticketType, Carbon::parse($dateStr));
+        return app(OrderItemEditor::class);
     }
 
-    private function computeEditPricing(OrderItem $item, int $newTypeId, int $newQty, ?string $dateStr): array
+    private function itemEditPricing(): ItemEditPricing
     {
-        $newQty = max(1, $newQty);
-        $oldTotal = $item->chargedSubtotalCents();
-        $productChanged = $newTypeId !== (int) $item->ticket_type_id;
-
-        if (! $productChanged) {
-            // ⚠️⚠️ **Si la FECHA lleva a un día de otro precio, manda el catálogo de ESE día**
-            // (`DECISIONES #127(d)`): «pagas el precio del día que elijas». Antes se conservaba
-            // siempre la tarifa pagada, y eso convertía el cambio de fecha en un arbitraje —comprar
-            // el día barato y pedir el cambio al caro salía gratis—.
-            // El LÍMITE está en el llamante: `dateStr` solo trae un día DISTINTO cuando la fecha
-            // cambia de verdad, así que una subida de cantidad sin mover el día sigue conservando la
-            // tarifa histórica del ítem, como siempre.
-            $catalogo = $this->catalogUnitPriceFor($item, $dateStr);
-            $movedDay = $dateStr !== null && $dateStr !== ''
-                && $item->slot?->date?->toDateString() !== $dateStr;
-
-            $unit = ($movedDay && $catalogo !== null) ? $catalogo : (int) $item->unit_price;
-        } else {
-            $newType = TicketType::find($newTypeId);
-            $date = $dateStr !== null && $dateStr !== '' ? Carbon::parse($dateStr) : Carbon::today();
-            $resolved = $newType !== null ? app(RateResolver::class)->priceCents($newType, $date) : null;
-            if ($resolved === null) {
-                return ['old' => $oldTotal, 'unit' => 0, 'new' => null, 'diff' => null];
-            }
-            $unit = (int) $resolved;
-        }
-
-        $newTotal = $unit * $newQty;
-
-        return ['old' => $oldTotal, 'unit' => $unit, 'new' => $newTotal, 'diff' => $newTotal - $oldTotal];
-    }
-
-    /**
-     * Validación PURA del destino de un edit (sub-fase 7.2e.3, #167):
-     * producto (mismo tipo + misma zona + vendible, sin addons huérfanos) +
-     * cantidad (rango del pack). Devuelve la razón estructurada de bloqueo o
-     * `null` si pasa. Sin efectos secundarios → testeable por reflexión, igual
-     * que `validateNewSlot`. La capa 3 de Filament (Select `in:options` +
-     * `min/max` del TextInput) rechaza la mayoría ANTES; esto es la defensa en
-     * profundidad para un cliente que manipule el form.
-     */
-    private function validateItemEditTarget(OrderItem $item, TicketType $newType, int $newQty): ?string
-    {
-        $oldType = $item->ticketType;
-        $productChanged = (int) $newType->id !== (int) $item->ticket_type_id;
-
-        if ($productChanged) {
-            if (! $newType->is_sellable) {
-                return 'invalid_product';
-            }
-            if ($oldType === null || $newType->type !== $oldType->type) {
-                return 'cross_type_change_forbidden';
-            }
-            if ($newType->zone_id === null || (int) $newType->zone_id !== (int) $oldType->zone_id) {
-                return 'cross_zone_change_forbidden_product';
-            }
-            if ($this->orphanAddonsForNewProduct($item, $newType) !== []) {
-                return 'orphan_addons';
-            }
-        }
-
-        if ($newQty < 1) {
-            return 'invalid_quantity';
-        }
-        if ($newType->isPack()) {
-            $min = (int) ($newType->min_qty ?? 1);
-            $max = $newType->max_qty !== null ? (int) $newType->max_qty : null;
-            if ($newQty < $min || ($max !== null && $newQty > $max)) {
-                return 'pack_quantity_range';
-            }
-        }
-
-        return null;
+        return app(ItemEditPricing::class);
     }
 
     // ─── Complementos (Tab 2 del modal Gestionar, sub-fase 7.2e.4, #170) ───
@@ -1087,58 +995,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * ¿El guardado incluye algún cambio REAL de complementos? (sub-fase 7.2e.4).
-     * Un edit que deja la cantidad igual NO cuenta. Usado por el router para
-     * decidir si entrar al handler unificado `executeItemEdit`.
-     *
-     * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}  $normalized
-     */
-    private function addonEditsPresent(OrderItem $item, array $normalized): bool
-    {
-        if (($normalized['adds'] ?? []) !== []) {
-            return true;
-        }
-        $childById = $item->children->keyBy('id');
-        foreach ($normalized['edits'] ?? [] as $edit) {
-            $child = $childById->get($edit['child_id']);
-            if ($child === null) {
-                // Referencia desconocida (p. ej. IDOR cross-item o concurrente):
-                // enrutar para que `validateAddonEdits` la bloquee con razón.
-                return true;
-            }
-            if ($child->isCancelled()) {
-                // Ya cancelado → un edit sobre él es no-op (no enrutar por esto).
-                continue;
-            }
-            if ((int) $edit['quantity'] !== (int) $child->quantity) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * child_ids de complementos que se QUITAN (cantidad 0) en este guardado.
-     * Usado por la orphan-resolution: un complemento huérfano deja de bloquear
-     * si se está quitando en el mismo guardado (sub-fase 7.2e.4, #170).
-     *
-     * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, mixed>}  $addonEdits
-     * @return array<int, int>
-     */
-    private function addonChildIdsBeingRemoved(array $addonEdits): array
-    {
-        $ids = [];
-        foreach ($addonEdits['edits'] ?? [] as $edit) {
-            if ((int) ($edit['quantity'] ?? -1) === 0) {
-                $ids[] = (int) $edit['child_id'];
-            }
-        }
-
-        return $ids;
-    }
-
-    /**
      * Complementos que el item PUEDE añadir: los del pivote `addons()` del
      * producto `$forType` (o el actual) que aún no están presentes como child
      * activo. Para el selector "Añadir complemento" (sub-fase 7.2e.4, #170).
@@ -1165,83 +1021,6 @@ class ViewOrder extends ViewRecord
             ->reject(fn (TicketType $t): bool => $t->pivot->choiceGroup() !== null)
             ->mapWithKeys(fn (TicketType $t): array => [$t->id => $t->tr('name')])
             ->all();
-    }
-
-    /**
-     * Pivotes de los complementos del producto del item, indexados por ticket_type_id, para leer
-     * su config (incluido/obligatorio/por-invitado/grupo) al editar (modal "Gestionar"). Misma
-     * autoridad que la compra pública.
-     *
-     * @return array<int, ProductAddon>
-     */
-    private function addonPivotsFor(OrderItem $item): array
-    {
-        $type = $item->ticketType;
-        if ($type === null) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($type->addons()->get() as $addon) {
-            $out[(int) $addon->id] = $addon->pivot;
-        }
-
-        return $out;
-    }
-
-    /**
-     * Metadatos de cada complemento ACTUAL del item para aplicar las MISMAS condiciones que la web:
-     * cantidad mínima (los incluidos/obligatorios no se quitan ni bajan de lo incluido), bloqueo de
-     * cantidad (per-invitado/grupo: se cambian con "elige menú", no editando la cantidad) y badge.
-     *
-     * @return array<int, array{min:int, locked:bool, badge:?string, group:?string, free:int}>
-     */
-    private function childAddonMeta(OrderItem $item): array
-    {
-        $pivots = $this->addonPivotsFor($item);
-        $isPack = $item->ticketType?->isPack() ?? false;
-
-        $meta = [];
-        foreach ($item->children as $child) {
-            $pivot = $pivots[(int) $child->ticket_type_id] ?? null;
-            $perGuest = $pivot?->isPerGuest() ?? false;
-            $group = $pivot?->choiceGroup();
-            $locked = $perGuest || $group !== null;
-            $min = $locked
-                ? (int) $child->quantity
-                : (($pivot?->is_mandatory ?? false) ? max(1, (int) $pivot->included_quantity) : 0);
-            $badge = ($pivot?->is_included ?? false) ? ($isPack ? 'included' : 'free') : null;
-            // Tope superior (#225 · auditoría Fase 1 P4): un complemento INCLUIDO SIN extras
-            // (`is_included && !allow_extra`) no admite unidades de pago por encima de lo incluido —
-            // la compra pública lo capa en `AddonResolver::effectiveQuantity`; el edit del panel
-            // debe heredar la MISMA autoridad (antes cobraba `extra_due` de unidades no vendibles).
-            // null = sin tope (admite extras de pago).
-            // Un PER-INVITADO no tiene «extras» que topar: su cantidad es fija (= invitados) y
-            // bloqueada. Los topes (incluido-sin-extra / max_qty) SOLO aplican a cantidad FIJA. Sin
-            // este guard, un Menú incluido per-invitado daba max=included_quantity(1) y la validación
-            // rechazaba CUALQUIER cambio de complementos del pack con `addon_no_extra`.
-            $caps = [];
-            if (! $perGuest) {
-                if (($pivot?->is_included ?? false) && ! ($pivot?->allow_extra ?? false)) {
-                    $caps[] = max(1, (int) $pivot->included_quantity);
-                }
-                if (($pivot?->max_qty ?? null) !== null) { // P9: tope por complemento
-                    $caps[] = (int) $pivot->max_qty;
-                }
-            }
-            $max = $caps === [] ? null : min($caps);
-
-            $meta[(int) $child->id] = [
-                'min' => $min,
-                'max' => $max,
-                'locked' => $locked,
-                'badge' => $badge,
-                'group' => $group,
-                'free' => (int) $child->free_quantity,
-            ];
-        }
-
-        return $meta;
     }
 
     /**
@@ -1404,253 +1183,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Validación PURA de los edits de complementos (sub-fase 7.2e.4, #170).
-     * Reflexión-testeable como `validateItemEditTarget`. Devuelve la razón
-     * estructurada de bloqueo o `null`. Reglas:
-     *  - cada EDIT referencia un child ACTIVO del item (`addon_not_in_parent`);
-     *  - cantidad de un edit ≥ 0 (`addon_quantity_invalid`); la reducción
-     *    parcial a un valor intermedio (0 < q < actual) NO está soportada sin
-     *    refund (`addon_partial_reduce_unsupported`) — quitar (0) sí;
-     *  - cada ADD está en el pivote `addons()` del producto NUEVO
-     *    (`addon_incompatible_with_product`), con cantidad ≥ 1
-     *    (`addon_quantity_invalid`), sin duplicar un complemento ya presente
-     *    ni repetirlo en la misma tanda (`addon_already_added`).
-     *
-     * @param  array<int, array{child_id:int, quantity:int}>  $edits
-     * @param  array<int, array{ticket_type_id:int, quantity:int}>  $adds
-     */
-    private function validateAddonEdits(OrderItem $item, TicketType $newType, array $edits, array $adds): ?string
-    {
-        $childById = $item->children->keyBy('id');
-        $meta = $this->childAddonMeta($item);
-
-        foreach ($edits as $edit) {
-            $child = $childById->get($edit['child_id']);
-            if ($child === null || (int) $child->parent_item_id !== (int) $item->id || $child->isCancelled()) {
-                return 'addon_not_in_parent';
-            }
-            $q = (int) $edit['quantity'];
-            if ($q < 0) {
-                return 'addon_quantity_invalid';
-            }
-            // MISMAS condiciones que la web: los incluidos/obligatorios no se quitan ni bajan de lo
-            // incluido; los per-invitado/grupo están bloqueados (se cambian con "elige menú").
-            $cmeta = $meta[(int) $child->id] ?? ['min' => 0, 'locked' => false];
-            if (($cmeta['locked'] ?? false) && $q !== (int) $child->quantity) {
-                return 'addon_locked';
-            }
-            if ($q < ($cmeta['min'] ?? 0)) {
-                return 'addon_locked';
-            }
-            // Tope de un INCLUIDO sin extras (#225 · auditoría Fase 1 P4): no se cobran unidades de
-            // pago por encima de lo incluido (misma autoridad que la compra pública, AddonResolver).
-            if (($cmeta['max'] ?? null) !== null && $q > $cmeta['max']) {
-                return 'addon_no_extra';
-            }
-            if ($q > 0 && $q < (int) $child->quantity) {
-                return 'addon_partial_reduce_unsupported';
-            }
-        }
-
-        $allowedAddonIds = array_map('intval', $newType->addons()->pluck('ticket_types.id')->all());
-        $activeAddonTypeIds = $item->children
-            ->reject(fn (OrderItem $c): bool => $c->isCancelled())
-            ->map(fn (OrderItem $c): int => (int) $c->ticket_type_id)
-            ->all();
-
-        // Pivotes del producto nuevo para detectar conflictos de grupo entre los adds.
-        $newPivots = [];
-        foreach ($newType->addons()->get() as $a) {
-            $newPivots[(int) $a->id] = $a->pivot;
-        }
-
-        $seen = [];
-        $seenGroups = [];
-        foreach ($adds as $add) {
-            $typeId = (int) $add['ticket_type_id'];
-            if ((int) $add['quantity'] < 1) {
-                return 'addon_quantity_invalid';
-            }
-            if (! in_array($typeId, $allowedAddonIds, true)) {
-                return 'addon_incompatible_with_product';
-            }
-            if (in_array($typeId, $activeAddonTypeIds, true) || in_array($typeId, $seen, true)) {
-                return 'addon_already_added';
-            }
-            // No se pueden elegir DOS del mismo grupo a la vez (la web es radio). Añadir UN miembro
-            // de un grupo que ya tiene otro presente es un CAMBIO de menú (se permite; el guardado
-            // sustituye el anterior).
-            $group = $newPivots[$typeId]?->choiceGroup();
-            if ($group !== null) {
-                if (in_array($group, $seenGroups, true)) {
-                    return 'addon_group_conflict';
-                }
-                $seenGroups[] = $group;
-            }
-            $seen[] = $typeId;
-        }
-
-        // Dependencias «requiere» (data-driven): tras aplicar edits+adds, ningún complemento ACTIVO
-        // puede quedar con su requisito ausente. Conjunto de tipos que QUEDARÁN activos = children no
-        // quitados (edit qty != 0) ∪ los añadidos; cada dependiente exige su requisito dentro (misma
-        // autoridad que la compra pública, AddonResolver). Cubre tanto «añadir el dependiente sin su
-        // requisito» como «quitar el requisito dejando al dependiente huérfano».
-        $removedChildIds = [];
-        foreach ($edits as $edit) {
-            if ((int) $edit['quantity'] === 0) {
-                $removedChildIds[(int) $edit['child_id']] = true;
-            }
-        }
-        $finalActiveTypeIds = [];
-        foreach ($item->children as $child) {
-            if ($child->isCancelled() || isset($removedChildIds[(int) $child->id])) {
-                continue;
-            }
-            $finalActiveTypeIds[(int) $child->ticket_type_id] = true;
-        }
-        foreach ($adds as $add) {
-            $finalActiveTypeIds[(int) $add['ticket_type_id']] = true;
-        }
-        // El GUARDADO sustituye al miembro de grupo presente cuando un add es del MISMO grupo
-        // (group-replacement, ②b). Simúlalo aquí: ese miembro NO seguirá activo, así que un
-        // dependiente que lo «requiere» debe disparar `addon_requires_missing` (igual que la web),
-        // en vez de quedar huérfano. Sin esto, el panel divergiría de la autoridad pública.
-        $addedGroups = [];
-        foreach ($adds as $add) {
-            $group = $newPivots[(int) $add['ticket_type_id']]?->choiceGroup();
-            if ($group !== null) {
-                $addedGroups[$group] = true;
-            }
-        }
-        if ($addedGroups !== []) {
-            foreach ($item->children as $child) {
-                if ($child->isCancelled()) {
-                    continue;
-                }
-                $childGroup = $newPivots[(int) $child->ticket_type_id]?->choiceGroup();
-                if ($childGroup !== null && isset($addedGroups[$childGroup])) {
-                    unset($finalActiveTypeIds[(int) $child->ticket_type_id]);
-                }
-            }
-        }
-        foreach (array_keys($finalActiveTypeIds) as $typeId) {
-            $required = $newPivots[$typeId]?->requiresAddonId();
-            if ($required !== null && ! isset($finalActiveTypeIds[$required])) {
-                return 'addon_requires_missing';
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Cómputo PURO del importe de los cambios de complementos (sub-fase 7.2e.4,
-     * #170). Modelo financiero (decisión #170): SUBIDAS (añadir / subir
-     * cantidad) → cobro en puerta; BAJADAS (quitar, cantidad 0) → SIN
-     * movimiento (refund manual aparte). Compartido por el guardado y la
-     * preview reactiva (lo que ve el operador == lo que se cobra).
-     *
-     * @param  array<int, array{child_id:int, quantity:int}>  $edits
-     * @param  array<int, array{ticket_type_id:int, quantity:int}>  $adds
-     * @return array{upcharge:int, changes:array<string,mixed>, add_unit_prices:array<int,int>, add_quantities:array<int,int>, add_free_quantities:array<int,int>, error:?string}
-     */
-    private function computeAddonPricing(OrderItem $item, TicketType $newType, array $edits, array $adds, ?string $dateStr): array
-    {
-        $childById = $item->children->keyBy('id');
-        $upcharge = 0;
-        $added = [];
-        $removed = [];
-        $updated = [];
-        $addUnitPrices = [];
-        $addQuantities = [];
-        $addFreeQuantities = [];
-        // Cargos por complemento, cada uno ATADO a su child (no al principal): así, al
-        // cancelar un complemento, su extra_due se anula solo (OrderFinancialSummary).
-        $charges = [];
-
-        foreach ($edits as $edit) {
-            $child = $childById->get($edit['child_id']);
-            if ($child === null) {
-                continue;
-            }
-            $q = (int) $edit['quantity'];
-            $oldQ = (int) $child->quantity;
-            $name = $child->ticketType?->tr('name') ?? ('#'.$child->id);
-            if ($q === 0) {
-                $removed[] = $name;
-            } elseif ($q > $oldQ) {
-                // Subir cantidad añade unidades de PAGO: las gratis (free_quantity) se conservan
-                // intactas, así que el delta es (q − oldQ) × unit_price.
-                $delta = ($q - $oldQ) * (int) $child->unit_price;
-                $upcharge += $delta;
-                $updated[] = ['name' => $name, 'old' => $oldQ, 'new' => $q];
-                if ($delta > 0) {
-                    $charges[] = [
-                        'child_id' => (int) $child->id,
-                        'type_id' => null,
-                        'amount' => $delta,
-                        'context' => ['addon_change' => ['added' => [], 'removed' => [], 'updated' => [['name' => $name, 'old' => $oldQ, 'new' => $q]]]],
-                    ];
-                }
-            }
-        }
-
-        $date = $dateStr !== null && $dateStr !== '' ? Carbon::parse($dateStr) : Carbon::today();
-        foreach ($adds as $add) {
-            $typeId = (int) $add['ticket_type_id'];
-            $addonType = TicketType::find($typeId);
-            if ($addonType === null) {
-                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'charges' => [], 'error' => 'invalid_product'];
-            }
-
-            // Config del pivote (incluido / por-invitado / extras): MISMA autoridad que la compra
-            // pública vía AddonResolver, para no cobrar lo que viene incluido (#170 + complementos
-            // avanzados). Un incluido SIN precio se trata como gratis (unit 0), igual que el resolver.
-            $pivot = $newType->addons()->where('ticket_types.id', $typeId)->first()?->pivot;
-            $resolved = app(RateResolver::class)->priceCents($addonType, $date);
-            if ($resolved === null && ! ($pivot?->is_included)) {
-                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'charges' => [], 'error' => 'addon_unavailable_on_date'];
-            }
-            $unit = (int) ($resolved ?? 0);
-
-            $reqQty = (int) $add['quantity'];
-            $effQty = $pivot ? AddonResolver::effectiveQuantity($pivot, $reqQty, (int) $item->quantity) : max(1, $reqQty);
-            $free = $pivot ? AddonResolver::freeUnits($pivot, $effQty) : 0;
-
-            $thisUpcharge = max(0, $effQty - $free) * $unit;
-            $upcharge += $thisUpcharge;
-            $addUnitPrices[$typeId] = $unit;
-            $addQuantities[$typeId] = $effQty;
-            $addFreeQuantities[$typeId] = $free;
-            $addonName = $addonType->tr('name');
-            $added[] = ['name' => $addonName, 'qty' => $effQty];
-            if ($thisUpcharge > 0) {
-                $charges[] = [
-                    'child_id' => null,            // se resuelve al crear el child en la txn
-                    'type_id' => $typeId,
-                    'amount' => $thisUpcharge,
-                    'context' => ['addon_change' => ['added' => [['name' => $addonName, 'qty' => $effQty]], 'removed' => [], 'updated' => []]],
-                ];
-            }
-        }
-
-        $changes = [];
-        if ($added !== [] || $removed !== [] || $updated !== []) {
-            $changes['addon_change'] = ['added' => $added, 'removed' => $removed, 'updated' => $updated];
-        }
-
-        return [
-            'upcharge' => $upcharge,
-            'changes' => $changes,
-            'add_unit_prices' => $addUnitPrices,
-            'add_quantities' => $addQuantities,
-            'add_free_quantities' => $addFreeQuantities,
-            'charges' => $charges,
-            'error' => null,
-        ];
-    }
-
-    /**
      * Tab 2 "Editar producto" (#173) — el producto en sí + sus complementos,
      * en dos secciones diferenciadas:
      *  - **Producto**: selector de producto (mismo tipo+zona) + cantidad/
@@ -1727,7 +1259,7 @@ class ViewOrder extends ViewRecord
         }
 
         // Condiciones por complemento (MISMAS que la web): mín, bloqueo y badge según el pivote.
-        $meta = $this->childAddonMeta($item);
+        $meta = $this->itemEditor()->childAddonMeta($item);
 
         // ②b: los miembros de grupo NO se listan como línea editable (los gobierna el Radio de arriba).
         $groupMemberIds = $this->groupMemberAddonTypeIds($item);
@@ -1935,25 +1467,6 @@ class ViewOrder extends ViewRecord
         return $canEditSlot || $hasEventDataForm;
     }
 
-    /**
-     * Resuelve un Slot concreto (zone del item + fecha + hora). Devuelve
-     * null si no existe (defense in depth — el handler lo trata como
-     * "selección inválida").
-     */
-    private function resolveSlotForItem(OrderItem $item, string $date, string $time): ?Slot
-    {
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return null;
-        }
-
-        return Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->where('date', $date)
-            ->where('start_time', $time)
-            ->first();
-    }
-
     // ─── Calendario visual del modal Gestionar (7.2e.2bis6, #160) ─────────
 
     /**
@@ -2105,7 +1618,7 @@ class ViewOrder extends ViewRecord
         // ②b: la elección del Radio de cada grupo se materializa como un `add` (group-replacement).
         $data = $this->applyGroupChoices($item, $data);
         $addonEdits = $this->normalizeAddonEdits($data);
-        $addonsChanged = $this->addonEditsPresent($item, $addonEdits);
+        $addonsChanged = $this->itemEditor()->addonEditsPresent($item, $addonEdits);
 
         // ⚠️⚠️ **Mover la FECHA re-tarifica** (`DECISIONES #127(d)`). Un cambio de día cuya tarifa
         // difiere TOCA DINERO, así que tiene que entrar por el handler unificado —el que ya sabe
@@ -2118,8 +1631,8 @@ class ViewOrder extends ViewRecord
         // ⚠️ El LÍMITE: solo re-tarifica el cambio de FECHA. Una edición que no mueve el día conserva
         // la tarifa histórica del ítem, como siempre.
         $tariffChanged = $slotChanged && ! $productChanged
-            && $this->catalogUnitPriceFor($item, $newDate) !== null
-            && $this->catalogUnitPriceFor($item, $newDate) !== (int) $item->unit_price;
+            && $this->itemEditPricing()->catalogUnitPriceFor($item, $newDate) !== null
+            && $this->itemEditPricing()->catalogUnitPriceFor($item, $newDate) !== (int) $item->unit_price;
 
         if ($productChanged || $quantityChanged || $addonsChanged || $tariffChanged) {
             $this->executeItemEdit(
@@ -2263,14 +1776,14 @@ class ViewOrder extends ViewRecord
         // Capa 4b: validar producto + cantidad (defense in depth pura —
         // testeable por reflexión, sin notificaciones). El orphan se trata
         // aparte para listar los complementos afectados en el banner.
-        $targetReason = $this->validateItemEditTarget($item, $newType, $newQty);
+        $targetReason = $this->itemEditor()->validateItemEditTarget($item, $newType, $newQty);
         if ($targetReason !== null) {
             if ($targetReason === 'orphan_addons') {
                 // Sub-fase 7.2e.4 (#170): un huérfano deja de bloquear si se
                 // QUITA (cantidad 0) en este mismo guardado (resolución en la
                 // Tab Complementos). Solo bloquea si quedan huérfanos sin quitar.
-                $orphans = $this->orphanAddonsForNewProduct($item, $newType);
-                $removingIds = $this->addonChildIdsBeingRemoved($addonEdits);
+                $orphans = $this->itemEditor()->orphanAddonsForNewProduct($item, $newType);
+                $removingIds = $this->itemEditor()->addonChildIdsBeingRemoved($addonEdits);
                 $unresolved = array_diff_key($orphans, array_flip($removingIds));
                 if ($unresolved !== []) {
                     $this->logManageItemBlocked($order, $item, 'edit', 'orphan_addons', [
@@ -2290,8 +1803,8 @@ class ViewOrder extends ViewRecord
 
         // Capa 4c: resolver slot efectivo (cambiado o el actual).
         if ($slotChanged) {
-            $effectiveSlot = $this->resolveSlotForItem($item, $newDate, $newTime);
-            $validationReason = $this->validateNewSlot($item, $effectiveSlot, $newType);
+            $effectiveSlot = $this->itemEditor()->resolveSlotForItem($item, $newDate, $newTime);
+            $validationReason = $this->itemEditor()->validateNewSlot($item, $effectiveSlot, $newType);
             if ($validationReason !== null) {
                 $this->blockEdit($order, $item, $validationReason);
 
@@ -2309,7 +1822,7 @@ class ViewOrder extends ViewRecord
         // Capa 4d: precio unitario nuevo + diff (helper puro compartido con la
         // preview en vivo). `new === null` ⇒ producto cambiado sin tarifa de
         // catálogo ese día → no editamos a un importe indefinido.
-        $pricing = $this->computeEditPricing($item, (int) $newType->id, $newQty, $effectiveSlot->date->toDateString());
+        $pricing = $this->itemEditPricing()->computeEditPricing($item, (int) $newType->id, $newQty, $effectiveSlot->date->toDateString());
         if ($pricing['new'] === null) {
             $this->blockEdit($order, $item, 'product_unavailable_on_date');
 
@@ -2325,13 +1838,13 @@ class ViewOrder extends ViewRecord
 
         // Capa 4e (7.2e.4, #170): validar + tarificar los cambios de
         // complementos contra el producto NUEVO (defense in depth pura).
-        $addonReason = $this->validateAddonEdits($item, $newType, $addonEdits['edits'] ?? [], $addonEdits['adds'] ?? []);
+        $addonReason = $this->itemEditor()->validateAddonEdits($item, $newType, $addonEdits['edits'] ?? [], $addonEdits['adds'] ?? []);
         if ($addonReason !== null) {
             $this->blockEdit($order, $item, $addonReason);
 
             return;
         }
-        $addonPricing = $this->computeAddonPricing(
+        $addonPricing = $this->itemEditPricing()->computeAddonPricing(
             $item, $newType, $addonEdits['edits'] ?? [], $addonEdits['adds'] ?? [], $effectiveSlot->date->toDateString(),
         );
         if ($addonPricing['error'] !== null) {
@@ -2689,31 +2202,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Complementos del item que el producto NUEVO no admite (no están en su
-     * pivote `product_addons`). Solo cuentan los children ACTIVOS (no
-     * cancelados). Devuelve [order_item_id => nombre] para listarlos en el
-     * banner (sub-fase 7.2e.3, #167).
-     *
-     * @return array<int, string>
-     */
-    private function orphanAddonsForNewProduct(OrderItem $item, TicketType $newType): array
-    {
-        $allowedAddonIds = $newType->addons()->pluck('ticket_types.id')->all();
-
-        $orphans = [];
-        foreach ($item->children as $child) {
-            if ($child->isCancelled()) {
-                continue;
-            }
-            if (! in_array((int) $child->ticket_type_id, array_map('intval', $allowedAddonIds), true)) {
-                $orphans[(int) $child->id] = $child->ticketType?->tr('name') ?? ('#'.$child->id);
-            }
-        }
-
-        return $orphans;
-    }
-
-    /**
      * Ejecuta el cambio de slot del item con defense in depth 5 capas
      * (sub-fase 7.2e.2, decisión #159).
      *
@@ -2777,8 +2265,8 @@ class ViewOrder extends ViewRecord
         }
 
         // Capa 4: validar el slot elegido.
-        $newSlot = $this->resolveSlotForItem($item, $newDate, $newTime);
-        $validationReason = $this->validateNewSlot($item, $newSlot);
+        $newSlot = $this->itemEditor()->resolveSlotForItem($item, $newDate, $newTime);
+        $validationReason = $this->itemEditor()->validateNewSlot($item, $newSlot);
         if ($validationReason !== null) {
             $this->logManageItemBlocked($order, $item, 'edit', $validationReason);
             $this->manageItemBlockedNotification($validationReason);
@@ -2890,55 +2378,6 @@ class ViewOrder extends ViewRecord
             ->title(__('admin.orders.manage_item.success_slot_changed'))
             ->success()
             ->send();
-    }
-
-    /**
-     * Valida el slot elegido en capa 4 del cambio. Devuelve la razón
-     * estructurada para audit log o null si pasa.
-     */
-    private function validateNewSlot(OrderItem $item, ?Slot $newSlot, ?TicketType $forType = null): ?string
-    {
-        if ($newSlot === null) {
-            return 'invalid_slot_selection';
-        }
-        // Sub-fase 7.2e.3 (#167): cuando se valida un cambio de producto, el
-        // slot debe encajar con el producto NUEVO (zona + ventana). Por
-        // defecto valida contra el producto actual del item (path 7.2e.2).
-        $ticketType = $forType ?? $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id !== $newSlot->zone_id) {
-            return 'cross_zone_change_forbidden';
-        }
-        if ($newSlot->online_sales_open === false || $newSlot->status === Slot::STATUS_CLOSED) {
-            // Excepción: el slot ACTUAL del item podría estar cerrado por admin;
-            // mantener el mismo slot no es un "cambio" (lo cubre el no-op del
-            // handler). Si llegamos aquí con cerrado, es porque el operador
-            // eligió el cerrado como destino — bloqueamos.
-            return 'slot_closed';
-        }
-        $newDateCarbon = $newSlot->date;
-        // El ancla de «hoy» es la del PARQUE, la misma que usa la oferta
-        // (`ItemRescheduleOffer::today`, [DECIDIDO owner, 2026-08-26]): si la
-        // validación anclara en UTC, entre las 00:00 y las ~02:00 del parque
-        // rechazaría como pasada una fecha que el calendario acaba de ofrecer.
-        $rescheduleOffer = app(ItemRescheduleOffer::class);
-        if ($newDateCarbon->lt($rescheduleOffer->today())) {
-            return 'slot_in_past';
-        }
-        // Capa defense in depth — horizonte de compra (sub-fase 7.2e.2bis6, #160):
-        // si el slot está más allá del límite global (default 6 meses), rechazo.
-        // El calendario UI ya filtra esto (`ItemRescheduleOffer::selectableDates`);
-        // este check protege contra atacante autenticado que manipule el form.
-        if ($newDateCarbon->gt($rescheduleOffer->horizon())) {
-            return 'beyond_horizon';
-        }
-        if (! app(OperatingSchedule::class)->isOpenOn($newDateCarbon)) {
-            return 'park_closed';
-        }
-        if (! app(ProductAvailability::class)->allowsStart($ticketType, $newDateCarbon, $newSlot->start_time)) {
-            return 'product_window';
-        }
-
-        return null;
     }
 
     /**

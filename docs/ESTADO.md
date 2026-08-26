@@ -75,6 +75,11 @@
 >   EJECUCIÓN** (`[DECIDIDO owner]`: «procede según tu valoración profesional»). El plan refinado
 >   con el código delante está en la spec **§9.6** (`#182`): cuatro servicios por forma
 >   transaccional + `ZoneDaySlotLock` compartido con `OrderCreator` + outcome, orden A0→H.
+>   ✅ **A0 y A HECHOS** (`#184`, 2026-08-27 00:30): migraciones aplicadas, 6/6 escenarios + Redsys en
+>   verde, y lo PURO en el dominio — `ItemEditPricing` + la mitad pura de `OrderItemEditor`;
+>   `ViewOrder` en **3.350** líneas (de 3.907); **11 mutaciones, 11 muerden** (una tras ganar su
+>   test: la regla de bloqueo per-invitado/grupo no tenía ninguno). ▶ **Siguiente: B** (`event_data`
+>   → `OrderItemEventDataWriter`), luego C0 (el lock compartido, `VERIFY_CONC`). Detalle: spec §9.6.1.
 >   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
 >   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
 >   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
@@ -129,7 +134,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#183`**.
+> El último usado es **`#184`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -214,9 +219,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2969 en verde** (17.124 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2970 en verde** (17.127 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+9 tests PHP y +1 JS en el último corte** (`#183`, la revisión de la tanda 4 aplicada): la firma
+  ▶ **+1 test PHP en el último corte** (`#184`, sub-paso A de la 4b): la regla de bloqueo
+  per-invitado/grupo de los complementos (`addon_locked` por BLOQUEO, no por mínimo) no tenía test
+  y la mutación salía verde; ahora lo tiene, con control negativo. Antes:
+  ▶ **+9 tests PHP y +1 JS** (`#183`, la revisión de la tanda 4 aplicada): la firma
   pendiente lleva la UA de la aceptación y espera al commit; `pending` en el contrato; vigencia dentro
   del lock; NFD y blanco tras `[`; idiomas publicables; cuenta existente declarada; rama negativa del
   PDF; el cambio de correo firma la pendiente; el 422 de `accept_waiver` relee. **10 mutaciones, las 10

@@ -796,7 +796,8 @@ commitea en local ANTES de sus mutaciones — la regla de §9.1):
 `executeItemSlotChange` (154: txn de aforo, sin dinero) · `saveItemEventData*` (192: txn mínima,
 `RGPD-02`) · `executeItemCancellation` (99: txn con el audit de éxito DENTRO a propósito) ·
 `executeItemRefundBatch` (157: **sin txn propia**, delega en `Order::executePartialRefundBatch`).
-Siete entradas por reflexión (6 en tests + el instrumento `panel-edit`); dos costuras desde
+Seis entradas por reflexión (5 en tests + el instrumento `panel-edit` — ⚠️ la primera versión de
+esta línea decía «siete (6 en tests)»: contó dos veces la del instrumento); dos costuras desde
 `PresentsOrderActions` (los `*Preview` llaman a `computeEditPricing`/`computeAddonPricing`).
 
 **Cinco correcciones a la letra de §9.5 (el diseño de §4.3 se sostiene; cambia el reparto):**
@@ -866,3 +867,47 @@ Siete entradas por reflexión (6 en tests + el instrumento `panel-edit`); dos co
 - **H** · `CRITICAL_RE` + `CriticalPathGateTest` (2 críticos, 2 controles negativos) · «Dónde vive»
   de `AFORO-05`/`AFORO-06`/`RGPD-02` re-apuntadas · los 6 escenarios + Redsys · `wc -l` final aquí
   y en `DEUDA.md` · la pasada de NAVEGADOR del owner (§6·5, humano).
+  ⚠️ Corrección al orden: `OrderItemEditor` y `ZoneDaySlotLock` entran en el `CRITICAL_RE` **en C0,
+  cuando nace el lock**, no en H — si no, los pushes de C→F (los que mudan el lock) no exigirían
+  `VERIFY_CONC`. H solo lo confirma.
+
+#### 9.6.1 Ejecución — sub-paso a sub-paso, con su evidencia
+
+**A0 · HECHO (2026-08-26, 23:40).** Las 3 migraciones del waiver aplicadas en el portátil ·
+`purchase:verify-oversell` **6/6 escenarios PASAN** con 8 workers (`entry` · `pack` · `pack-guests` ·
+`pack-prep` · `mixed` · `panel-edit`) · `redsys:verify-concurrency` PASA · suite 2960 / 17.087.
+⚠️ La ayuda del comando (`--scenario`) sigue listando cinco escenarios: `panel-edit` no está en el
+texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el instrumento.
+
+**A · HECHO (2026-08-27, 00:30 — `#184`).** Lo puro vive en el dominio:
+- **`ItemEditPricing`** (199 líneas): `catalogUnitPriceFor` · `computeEditPricing` ·
+  `computeAddonPricing`, con `RateResolver` inyectado. Los dos `*Preview` del trait de presentación
+  y el guardado leen de la MISMA instancia de la aritmética.
+- **`OrderItemEditor`** (444 líneas, la mitad pura): `validateItemEditTarget` ·
+  `orphanAddonsForNewProduct` · `validateAddonEdits` · `childAddonMeta` (público: lo lee también el
+  formulario) · `addonEditsPresent` · `addonChildIdsBeingRemoved` · `resolveSlotForItem` ·
+  `validateNewSlot`, con `ItemRescheduleOffer`/`OperatingSchedule`/`ProductAvailability` inyectados.
+- **`ViewOrder` en 3.350 líneas** (de 3.907; −557): dos accesores al contenedor (`itemEditor()`,
+  `itemEditPricing()`), 14 call-sites re-apuntados, 6 imports retirados (4 de ellos solo vivían en
+  comentarios: Pint los conserva y se quitaron a mano).
+- **Fidelidad por diferencia de conjuntos**: de las 389 líneas borradas, el residuo que no está en los
+  servicios son EXACTAMENTE los 14 call-sites, 8 `app()`→inyección, 11 firmas `private`→`public`, 11
+  líneas de docblock reescritas (dos `@return` completados: `max` en `childAddonMeta`, `charges` en
+  `computeAddonPricing`) y los 4 imports. Cero líneas de lógica.
+- **Las 5 reflexiones de tests re-apuntadas** al método público; cero asserts tocados. Las firmas de
+  los helpers privados de test conservan el `$order` que ya no usan, para no tocar 21 llamantes.
+- **Mutación: 11 de 11 muerden** (una por método movido; ancla única, restauración por md5): sin
+  re-tarifa al mover de día → 5 rojos · cobrar las unidades gratis → rojo · catálogo siempre `null` → 5
+  rojos · sin rango del pack → 2 · duplicar complemento → rojo · aceptar franja pasada → rojo ·
+  `resolveSlotForItem` nunca resuelve → 3 · `addonEditsPresent` ignora los adds → 9 · nunca hay
+  huérfanos → 2 · quitar no cuenta → rojo (en `ManageItemAddonsTest`; en `QuantityProduct` sale
+  verde: la resolución de huérfanos por quitar solo la prueba el fichero de complementos) ·
+  ❗ **`childAddonMeta` con nada bloqueado salió VERDE en los 591 tests de la carpeta**: `addon_locked`
+  se aseveraba UNA vez y por la rama del MÍNIMO — la regla del BLOQUEO (per-invitado/grupo no se
+  edita) no tenía test. Ganó el suyo
+  (`test_per_guest_and_group_addons_reject_quantity_edits_as_locked`, con control negativo) y la
+  mutación muerde.
+- Lo que se queda a propósito en la entrega (§9.6·2): `applyGroupChoices`, `normalizeAddonEdits`,
+  `itemChoiceGroups`, `groupFieldName`, `groupMemberAddonTypeIds`, `addableAddonsFor`,
+  `addableAddonMeta`, `addonQuantityHint` — traducen el formulario o lo componen.
+- Suite **2961 / 17.090 en verde** (+1 test, +3 aserciones) · Pint global ✓ · `php -l` ✓.

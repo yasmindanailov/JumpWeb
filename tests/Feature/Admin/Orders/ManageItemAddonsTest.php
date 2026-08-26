@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -198,6 +199,47 @@ class ManageItemAddonsTest extends TestCase
         // Poner a 0 (quitar) un incluido obligatorio se bloquea (mismas condiciones que la web).
         $reason = $this->invokeValidateAddon($item, $this->entryA, [['child_id' => $cakeChild->id, 'quantity' => 0]], []);
         $this->assertSame('addon_locked', $reason);
+    }
+
+    /**
+     * La regla del BLOQUEO, no la del mínimo: un complemento PER-INVITADO o miembro de un GRUPO de
+     * elección no admite que el operador le cambie la cantidad — la fija el nº de invitados o la
+     * elección de menú, y se cambia con «elige menú». Ganó su test en la extracción 4b: la mutación
+     * «nada bloqueado» (`childAddonMeta` con `locked = false`) salía VERDE en los 591 tests de la
+     * carpeta, porque `addon_locked` solo se aseveraba por la rama del mínimo (el test de arriba).
+     */
+    public function test_per_guest_and_group_addons_reject_quantity_edits_as_locked(): void
+    {
+        $water = $this->makeAddon('Agua', 200);
+        $this->entryA->configurableAddons()->attach($water->id, ['quantity_mode' => 'per_guest', 'position' => 12]);
+        $menu = $this->makeAddon('Menú', 800);
+        $this->entryA->configurableAddons()->attach($menu->id, ['quantity_mode' => 'per_guest', 'choice_group' => 'menu', 'position' => 13]);
+
+        [$order, $item] = $this->paidEntryOrderWithSocks();
+        $guests = (int) $item->quantity;
+        $waterChild = $item->children()->create([
+            'order_id' => $order->id, 'parent_item_id' => $item->id, 'ticket_type_id' => $water->id,
+            'slot_id' => null, 'quantity' => $guests, 'free_quantity' => 0, 'unit_price' => 200, 'seats' => 0,
+        ]);
+        $menuChild = $item->children()->create([
+            'order_id' => $order->id, 'parent_item_id' => $item->id, 'ticket_type_id' => $menu->id,
+            'slot_id' => null, 'quantity' => $guests, 'free_quantity' => 0, 'unit_price' => 800, 'seats' => 0,
+        ]);
+        $item->load('children.ticketType');
+
+        // SUBIR la cantidad (no bajarla: así no cae en el mínimo ni en la reducción parcial) se
+        // bloquea por el BLOQUEO, tanto en el per-invitado suelto como en el miembro de grupo.
+        $this->assertSame('addon_locked', $this->invokeValidateAddon(
+            $item, $this->entryA, [['child_id' => $waterChild->id, 'quantity' => $guests + 1]], [],
+        ));
+        $this->assertSame('addon_locked', $this->invokeValidateAddon(
+            $item, $this->entryA, [['child_id' => $menuChild->id, 'quantity' => $guests + 1]], [],
+        ));
+
+        // Control negativo: dejar la cantidad como está no es un cambio y pasa.
+        $this->assertNull($this->invokeValidateAddon(
+            $item, $this->entryA, [['child_id' => $waterChild->id, 'quantity' => $guests]], [],
+        ));
     }
 
     public function test_two_group_members_in_one_batch_are_rejected(): void
@@ -1033,16 +1075,15 @@ class ManageItemAddonsTest extends TestCase
     }
 
     /**
+     * Invoca el validador puro `validateAddonEdits`, que desde la extracción 4b es un método
+     * PÚBLICO de `OrderItemEditor` (antes, privado de `ViewOrder` por reflexión).
+     *
      * @param  array<int, array{child_id:int, quantity:int}>  $edits
      * @param  array<int, array{ticket_type_id:int, quantity:int}>  $adds
      */
     private function invokeValidateAddon(OrderItem $item, TicketType $newType, array $edits, array $adds): ?string
     {
-        $page = new ViewOrder;
-        $ref = new \ReflectionMethod(ViewOrder::class, 'validateAddonEdits');
-        $ref->setAccessible(true);
-
-        return $ref->invoke($page, $item, $newType, $edits, $adds);
+        return app(OrderItemEditor::class)->validateAddonEdits($item, $newType, $edits, $adds);
     }
 
     /**

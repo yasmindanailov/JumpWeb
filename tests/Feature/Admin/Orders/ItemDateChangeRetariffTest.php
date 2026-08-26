@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -271,13 +272,11 @@ class ItemDateChangeRetariffTest extends TestCase
     {
         [$order, $item] = $this->paidOrderOn($this->monday, qty: 2);
 
-        $page = new ViewOrder;
-        $page->record = $this->fresh($order);
-        $page->calendarSelectedDate = $this->saturday;
-
-        $ref = new \ReflectionMethod(ViewOrder::class, 'computeEditPricing');
-        $ref->setAccessible(true);
-        $pricing = $ref->invoke($page, $item->fresh('slot', 'ticketType'), (int) $item->ticket_type_id, 2, $this->saturday);
+        // La vista previa del operador consume `ItemEditPricing::computeEditPricing` tal cual (desde
+        // la extracción 4b la tarificación vive en el dominio): se prueba directamente, con la fecha
+        // que el calendario le pasaría.
+        $pricing = app(ItemEditPricing::class)
+            ->computeEditPricing($item->fresh('slot', 'ticketType'), (int) $item->ticket_type_id, 2, $this->saturday);
 
         $this->assertSame(2400, $pricing['old']);
         $this->assertSame(4000, $pricing['new'], 'el previo tiene que tarificar al día destino');

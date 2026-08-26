@@ -9773,3 +9773,29 @@ definitiva); de agente, «menores a cargo» (C), que hereda NUC-3. **Las decisio
 todas tomadas y ejecutadas.**
 
 Verificación: suite (contador en `ESTADO.md`) · Pint ✓ · docs-check ✓ · mutaciones ✓ · headless 111/111 ✓.
+
+## #184 · 2026-08-27 · Extracción 4b · sub-paso A: lo PURO al dominio — y la regla de bloqueo per-invitado/grupo no tenía test
+
+Primer sub-paso del plan de `#182` (spec §9.6.1). Nacen **`ItemEditPricing`** (la tarificación de
+una edición: catálogo del día, diff del producto/cantidad, complementos — la misma aritmética para
+la vista previa y el guardado) y **`OrderItemEditor`** con su mitad pura (los validadores de
+destino, producto, complementos y franja, ahora PÚBLICOS: los 5 tests que entraban por reflexión
+llaman al método). `ViewOrder` pasa de 3.907 a **3.350 líneas**.
+
+**Lo que enseñó:**
+1. **Una regla de defensa sin red.** La mutación «nada bloqueado» en `childAddonMeta` salió VERDE
+   en los 591 tests de `Admin/Orders`: `addon_locked` se aseveraba una sola vez y por la rama del
+   MÍNIMO (incluido obligatorio que no se quita), no por la del BLOQUEO (un complemento
+   per-invitado o de grupo no admite que le cambien la cantidad; la fija el aforo o «elige menú»).
+   Ganó su test con control negativo antes de cerrar; ahora **11 de 11 mutaciones muerden**.
+2. **Pint conserva un `use` si el nombre aparece en un comentario**: cuatro imports de `ViewOrder`
+   (`RateResolver`, `OperatingSchedule`, `ProductAvailability`, `ItemRescheduleOffer`) solo vivían
+   en docblocks y hubo que retirarlos a mano. Medir con `grep -v '^use '`, no fiarse del fixer.
+3. **La fidelidad se mide por diferencia de conjuntos** (`comm -23` de las líneas borradas contra
+   los ficheros nuevos): el residuo son exactamente los call-sites, las inyecciones, las
+   visibilidades y los docblocks reescritos — cero lógica.
+4. Corrección a `#182`: son **6** entradas por reflexión (5 en tests + el instrumento), no siete.
+
+Verificación: suite **2961 / 17.090 en verde** (+1 test) · Pint global ✓ · `php -l` ✓ · 11/11
+mutaciones con ancla única y restauración por md5 · A0 previo: 6/6 escenarios + Redsys PASAN sobre
+MySQL, migraciones aplicadas.

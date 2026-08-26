@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Identity\Models\Permission;
@@ -1096,30 +1098,26 @@ class ManageItemQuantityProductTest extends TestCase
         return $this->staffWith(['orders.view']);
     }
 
-    /** Invoca el validador puro `validateItemEditTarget` por reflexión. */
+    /**
+     * Invoca el validador puro `validateItemEditTarget`, que desde la extracción 4b es un método
+     * PÚBLICO de `OrderItemEditor` (antes, privado de `ViewOrder` por reflexión). El `$order` ya no
+     * hace falta: se conserva en la firma para no tocar los llamantes.
+     */
     private function invokeValidateTarget(Order $order, OrderItem $item, TicketType $newType, int $newQty): ?string
     {
-        $page = new ViewOrder;
-        $page->record = $order;
-        $ref = new \ReflectionMethod(ViewOrder::class, 'validateItemEditTarget');
-        $ref->setAccessible(true);
-
-        return $ref->invoke($page, $item, $newType, $newQty);
+        return app(OrderItemEditor::class)->validateItemEditTarget($item, $newType, $newQty);
     }
 
     /**
-     * Invoca el cómputo puro `computeEditPricing` por reflexión.
+     * Invoca el cómputo puro `computeEditPricing`, que desde la extracción 4b vive en
+     * `ItemEditPricing` (antes, privado de `ViewOrder` por reflexión). El `$order` ya no hace
+     * falta: se conserva en la firma para no tocar los llamantes.
      *
      * @return array{old:int, unit:int, new:?int, diff:?int}
      */
     private function invokeComputePricing(Order $order, OrderItem $item, int $newTypeId, int $newQty, ?string $dateStr): array
     {
-        $page = new ViewOrder;
-        $page->record = $order;
-        $ref = new \ReflectionMethod(ViewOrder::class, 'computeEditPricing');
-        $ref->setAccessible(true);
-
-        return $ref->invoke($page, $item, $newTypeId, $newQty, $dateStr);
+        return app(ItemEditPricing::class)->computeEditPricing($item, $newTypeId, $newQty, $dateStr);
     }
 
     /** Configura el cupo de invitados por franja de packs (setting). */
