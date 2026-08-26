@@ -161,8 +161,8 @@
 
 ## ▶ Dónde estamos
 
-**Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅ · 6 🟦 (el waiver, en ejecución desde el
-2026-08-25)** — el detalle paso a paso de cada una está en `00-REFACTOR.md`, que es el tracker. Aquí
+**Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅ · 6 🟦 (el waiver: CÓDIGO COMPLETO, revisado
+dos veces y con su guion recorrido en headless con la conducta definitiva —`#183`—; espera SOLO al owner)** — el detalle paso a paso de cada una está en `00-REFACTOR.md`, que es el tracker. Aquí
 solo la foto.
 
 🟩 **CERRADO y sin nada pendiente:** el cajón SPA como motor único con `Purchase.php` retirado
@@ -448,14 +448,22 @@ bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que N
 casi todo lo que queda lo desbloquea el owner.
 
 ▶ **Las dos cosas que eran trabajo de agente YA TIENEN CARRIL** (reparto de la cabecera):
-1. ✅ **Revisar el waiver entero** de forma adversarial + recorrer su guion en headless → **carril A,
-   HECHO el 2026-08-26 (`#169`)**: spec §9.10 (el guion: 94/99 ✓) y §10 (la revisión: 37 hallazgos
-   confirmados, 1 alta). Lo que queda es del owner (spec §7, seis decisiones) y **código acotado**
-   (spec §10.11, fichas en `DEUDA.md`) — el primero, **el alta suelta rota por el anti-bot**, que no
-   es del waiver y afecta a staging.
-   ⚠️ La nota anterior de este punto («sondeado por encima el 26/08: el texto borrador no se ha
-   publicado») era de la máquina del portátil: en la del carril A **sí hay versiones locales**
-   (v1→v3) publicadas para el guion.
+1. ✅ **El waiver, de agente, está TERMINADO** → **carril A, 2026-08-26** (`#169` → `#183`): revisión
+   adversarial del subsistema (spec §10), **la tanda 4 que exigía** (§9.11: `#171` anti-bot · `#174`
+   servidor · `#175` cajón · `#178` casilla del alta manual + casilla OBLIGATORIA en interno · `#179`
+   correo verificado para firmar · `#180` texto del PDF) **y la revisión adversarial de la propia
+   tanda, aplicada** (§9.12, `#183`: 24 confirmados, 0 refutados; lo peor, `Verified` emitido por el
+   COBRO dentro de su transacción). El guion `VERIFICACION-E2E-CAJON.md` §5.nonies está **reescrito con
+   la conducta definitiva y recorrido en headless: 111/111 ✓**. **Lo que queda es del owner y solo
+   del owner**: su ✅ en navegador (guion §5.nonies, en local, con las claves de PRUEBA de Turnstile
+   en Ajustes —receta en §5.bis—), el **texto definitivo** (spec §8.1: publicar la v1 real es
+   irreversible) y el **plazo de retención** (§4.6). ▶ **Siguiente trabajo de agente en este
+   carril**: «menores a cargo» (`specs/menores-a-cargo.md`, C; hereda NUC-3 de `DEUDA.md`) — spec
+   revisada: leer antes `docs/INVARIANTES.md` §2 (AFORO) y, en la spec, sus secciones 8.1 y 8.2 —la lista
+   blanca de `cart.js::save()` y el `STORAGE_VERSION`—; o lo que el owner diga.
+   ⚠️ En la máquina del carril A hay **v1→v9 publicadas** localmente por las dos pasadas del guion y
+   los sondeos (y cuentas `e2e-waiver-*@jumpweb.test` / `probe-*@jumpweb.test`); en la del portátil,
+   no. Tras un pull en el portátil: **`migrate`** (`#183` añade una migración).
 2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ revisión
    (`#167`) + correcciones (`#168`) + **✅ del owner y EJECUCIÓN casi completa el mismo día**
    (`#170` · `#172` · `#173` · `#176` · `#177`): `ViewOrder` en 3.907 líneas y ya no compone
