@@ -269,7 +269,11 @@ la segunda implementación a mano de la receta anti-sobreventa, con el porqué d
 - **El nombre del contrato y su forma exacta**: sale del paso 4, cuando las tres extracciones
   anteriores hayan enseñado dónde están las costuras reales. Fijarlo ahora sería especulación — la
   misma razón por la que `#37` aplazó el segundo driver de pasarela.
-- **Si `ViewOrder` debe seguir siendo una sola clase** al final. Se decide con la cifra en la mano.
+- ~~**Si `ViewOrder` debe seguir siendo una sola clase** al final. Se decide con la cifra en la
+  mano.~~ ✅ **`[DECIDIDO owner, 2026-08-26]`: tras la 4b el fichero SE QUEDA COMO QUEDE** (una
+  clase con su composición Filament, ~2.200 líneas de entrega legítima). La partición opcional en
+  clases por acción **se descarta**: no quita riesgo ni líneas del producto, solo las reparte. El
+  desmontaje TERMINA con la 4b y la cifra final medida.
 
 ---
 
@@ -748,8 +752,35 @@ fila compartida).
 - `OversellVerifierCoversEveryQuotaTest` conoce el escenario nuevo (inventario al día).
 - Suite **2950 / 17.013 en verde** · Pint ✓ · cero restos en la BD tras cada ejecución (comprobado).
 
-**4b · El MOVIMIENTO — PENDIENTE (tanda propia, la última)**: las cuatro fases de §4.3 a un
-servicio de dominio (dueño de la txn de aforo + orquestador de la secuencia financiera), el
-waterfall de créditos como pieza única, las guardas por sus DOS traits, la decisión del
-`CRITICAL_RE` para el servicio nuevo, y al cerrar: los verificadores (incluido `panel-edit`) + el
-navegador del owner (§6·5).
+**4b · El MOVIMIENTO — PENDIENTE (tanda propia, la última; con la 4b el desmontaje TERMINA, §4.4).**
+Las cuatro fases de §4.3 a un servicio de dominio (dueño de la txn de aforo + orquestador de la
+secuencia financiera), el waterfall de créditos como pieza única, las guardas por sus DOS traits,
+la decisión del `CRITICAL_RE` para el servicio nuevo, y al cerrar: los verificadores (incluido
+`panel-edit`) + el navegador del owner (§6·5).
+
+▶ **El orden de sub-pasos, diseñado por riesgo creciente y dejado aquí como handoff** (cada uno se
+commitea en local ANTES de sus mutaciones — la regla de §9.1):
+- **A · Lo PURO primero** (sin transacción): `computeEditPricing` · `computeAddonPricing` ·
+  `validateItemEditTarget` · `validateAddonEdits` · `validateNewSlot` · `resolveSlotForItem` ·
+  `applyGroupChoices` · `normalizeAddonEdits`. ⚠️ Los dos `*Preview` del trait de presentación los
+  llaman por `$this->`: sus dos call-sites se re-apuntan al servicio en el mismo sub-paso.
+- **B · `saveItemEventData` / `saveItemEventDataReturningDiffPresence`** (su transacción pequeña;
+  `computeEventDataDiff`/`eventDataDiffKeys` conservan la propiedad de `RGPD-02`: solo CLAVES).
+- **C · El núcleo de `executeItemSlotChange`** (la txn de aforo con `lockZoneDaySlots`, que se muda
+  al servicio) — es el camino que el instrumento `panel-edit` ejecuta: **correr el escenario tras
+  el sub-paso**, y verlo fallar de nuevo con la mutación del lock ya en su casa nueva.
+- **D · El núcleo de `executeItemCancellation`** (libera aforo, no lo consume).
+- **E · El núcleo de `executeItemRefundBatch`** (llama a `Order::executePartialRefundBatch` — REST
+  fuera de la txn de aforo, como hoy).
+- **F · `executeItemEdit`, el monstruo, EL ÚLTIMO**: txn de aforo + secuencia financiera
+  post-commit, con el waterfall de créditos extraído como UNA pieza (§8.9: hoy está DOS veces, con
+  una asimetría en la condición del marcador que hay que verificar al extraer).
+- **G · El reparto de fronteras que NO cambia**: `executeManageItemSave` (el despachador) SE QUEDA
+  en la página — lee `calendarSelected*` y pasa fecha/hora por parámetros al servicio (el corte
+  dominio↔calendario que §4.1 fijó) · las guardas de PRESENTACIÓN (`blockEdit`,
+  `*BlockedNotification`, `logManageItemBlocked`/`logItemActionBlocked`, `humanSlotLabel`,
+  `eurosFromCents`, `refundItemOptionLabel`) SE QUEDAN en la entrega · los audits conservan su
+  topología (§8.4: incidencia fuera, éxito de cancelación DENTRO de su txn).
+- **H · El cierre**: el servicio nuevo ENTRA en el `CRITICAL_RE` (y `CriticalPathGateTest` con él)
+  · los verificadores todos (los 6 escenarios + Redsys) · `wc -l` final declarado aquí y en
+  `DEUDA.md` · la pasada de NAVEGADOR del owner por las 10 acciones (§6·5).

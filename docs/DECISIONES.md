@@ -9662,3 +9662,27 @@ del propio script (`$?` sin tubería) antes de commitear.
 NUC-3. **La tanda 4 —cinco unidades, `#171` → `#180`— queda cerrada.**
 
 Verificación: suite (contador en `ESTADO.md`) · Pint ✓ · docs-check ✓ · mutaciones ✓.
+
+## #181 · 2026-08-26 · [DECIDIDO owner] Tras la 4b, `ViewOrder` se queda como quede — y el cierre del carril B con el desmontaje a un paso del final
+
+Dos cosas, al cerrar la sesión del carril B (el portátil):
+
+1. **`[DECIDIDO owner]`: el desmontaje TERMINA con la 4b.** La pregunta que §4.4 de la spec dejaba
+   abierta a propósito («¿debe `ViewOrder` seguir siendo una sola clase?») queda respondida: las
+   ~2.200 líneas que quedarán tras mover el dinero son **composición Filament y entrega legítima**
+   (los 10 botones con sus formularios, ayudantes de pantalla), y **no se parten** en clases por
+   acción — no quitaría riesgo ni líneas del producto, solo las repartiría. La cifra final se
+   declara MEDIDA al cerrar la 4b, como exige §2·3.
+
+2. **El estado del desmontaje al cierre** (todo empujado y verde): paso 0 (`#170`) · extracción 1
+   (`#172`) · extracción 2 (`#173`) · extracción 3 (`#176`, con `VERIFY_CONC` ganado) · el
+   instrumento de la 4 (`#177`, visto fallar). `ViewOrder` en **3.907 líneas** (de 5.280, −26 %).
+   **Queda SOLO la 4b** — mover la orquestación del dinero — y su handoff está escrito sub-paso a
+   sub-paso en la spec **§9.5** (orden A→H por riesgo creciente, con el instrumento `panel-edit`
+   como red y la pasada de navegador del owner al cerrar). La retoma el MISMO carril (el portátil)
+   en la siguiente sesión; el carril A sigue con el waiver en el otro ordenador.
+
+Verificación del cierre: suite **2956 / 17.033 en verde** tras `git pull --rebase` del `#178` del
+carril A (⚠️ los 30 rojos iniciales eran el bundle SSR RANCIO de `#69` — `npm run build:ssr` y
+verde; ni un assert tocado) · `audit-clock` corrido por los fixtures de calendario nuevos ·
+`composer audit` y `npm audit` en 0 · Pint ✓ · docs-check ✓.

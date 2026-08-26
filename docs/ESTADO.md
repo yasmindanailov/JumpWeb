@@ -65,23 +65,20 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (el portátil) → `desmontar-view-order`: EN EJECUCIÓN.** ✅ **El owner APROBÓ la spec
->   y autorizó ejecutar** (2026-08-26, tras `#167`+`#168`). **Paso 0 HECHO** (`#170`, spec §9.1:
->   −268 líneas de código muerto, tests re-apuntados, 4/4 mutaciones muerden) **y EXTRACCIÓN 1
->   HECHA** (`#172`: el calendario a `ManagesItemCalendar`, trait), **EXTRACCIÓN 2 HECHA** (`#173`:
->   la presentación a `PresentsOrderActions`; la palabra «Presenter» cedió ante la medida) **y
->   EXTRACCIÓN 3 HECHA** (`#176`, spec §9.4: la oferta de re-programación al DOMINIO —
->   `Booking\Services\ItemRescheduleOffer`, con las TRES reglas decididas por el owner: ancla del
->   PARQUE con test que cruza UTC↔Madrid · exención del mostrador DECLARADA · horas sin aforo
->   ocultas, que NO tenía red y la ganó — y **`VERIFY_CONC` corrido y en verde**: 5/5 escenarios de
->   oversell + Redsys sobre MySQL). `ViewOrder` en **3.907 líneas** (de 5.280, −26 %) y **ya no
->   compone ninguna oferta** (`AFORO-02`/`AFORO-09` al día).
->   ▶ **Y el INSTRUMENTO de la extracción 4 ya existe y se vio FALLAR** (`#177`, spec §9.5):
->   `purchase:verify-oversell --scenario=panel-edit` ejecuta el camino REAL de la edición de panel
->   bajo carrera — con el lock real PASA (1/1) y con el lock mutado caza **2 donde cabía 1**. De
->   paso arregló una FUGA preexistente del comando (guarda fallida saltaba el `finally`).
->   ▶ **Siguiente y ÚLTIMA: extracción 4b — mover la orquestación del dinero** (§4.3: el mapa
->   transaccional real; el instrumento ya en mano; navegador del owner al cerrar, §6·5).
+> · **Agente B (el portátil) → SESIÓN CERRADA el 2026-08-26 por la noche. ✅ Nada a medias: todo
+>   empujado y verde.** El desmontaje de `ViewOrder` quedó **a UN paso del final**: paso 0 (`#170`)
+>   · extracción 1 (`#172`, calendario→trait) · 2 (`#173`, presentación→trait) · 3 (`#176`, la
+>   oferta de re-programación al DOMINIO con las tres reglas del owner y `VERIFY_CONC` en verde) ·
+>   el instrumento de la 4 (`#177`, `--scenario=panel-edit`, **visto fallar**: 2 donde cabía 1).
+>   `ViewOrder` en **3.907 líneas** (de 5.280, −26 %) y ya no compone ninguna oferta.
+>   ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril (el portátil): la extracción 4b** —
+>   mover la orquestación del dinero. **El handoff está sub-paso a sub-paso en la spec §9.5**
+>   (orden A→H por riesgo creciente: puros → event_data → cambio de franja con el instrumento
+>   corriendo → cancelación → refund batch → `executeItemEdit` el último → fronteras que no cambian
+>   → `CRITICAL_RE` + verificadores + navegador del owner). Empezar por §4.3 (el mapa transaccional
+>   REAL) y §9.5; commitear en local ANTES de cada mutación (§9.1).
+>   ✅ **`[DECIDIDO owner]` (`#181`): con la 4b el desmontaje TERMINA** — las ~2.200 líneas de
+>   composición Filament que queden NO se parten (§4.4 cerrada).
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
 >   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
 >   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
@@ -111,7 +108,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#180`**.
+> El último usado es **`#181`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -425,10 +422,12 @@ casi todo lo que queda lo desbloquea el owner.
    ⚠️ La nota anterior de este punto («sondeado por encima el 26/08: el texto borrador no se ha
    publicado») era de la máquina del portátil: en la del carril A **sí hay versiones locales**
    (v1→v3) publicadas para el guion.
-2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ **revisión
-   adversarial HECHA (`#167`) y correcciones INCORPORADAS (`#168`)**, 2026-08-26: el cuerpo ya
-   describe el código real y §8 conserva el registro. ❗ **Pendiente SOLO el ✅ del owner**; después,
-   la ejecución del paso 0 y las cuatro extracciones. Hasta el ✅ nadie toca `ViewOrder`.
+2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ revisión
+   (`#167`) + correcciones (`#168`) + **✅ del owner y EJECUCIÓN casi completa el mismo día**
+   (`#170` · `#172` · `#173` · `#176` · `#177`): `ViewOrder` en 3.907 líneas y ya no compone
+   ninguna oferta. ❗ **Queda SOLO la extracción 4b** (el dinero) — handoff en la spec **§9.5**,
+   la retoma el carril B en su siguiente sesión. `[DECIDIDO owner]` (`#181`): con la 4b, el
+   desmontaje TERMINA.
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
