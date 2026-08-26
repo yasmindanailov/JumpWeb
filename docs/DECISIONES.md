@@ -8998,3 +8998,75 @@ menores a cargo** (`specs/menores-a-cargo.md`, subsistema C).
 
 Verificación: docs-check ✓ · Pint ✓ · `npm run test:js` 690 ✓ · guardas del cajón ✓ · suite ✓ (el
 contador vive en `ESTADO.md`) · **pendiente el ✅ del owner en navegador**.
+
+## #167 · 2026-08-26 · La revisión adversarial de la spec de `ViewOrder`: el diagnóstico sobrevive, y tres piezas del plan describían un código que no existe
+
+`CONVENCIONES §5` exigía que un agente distinto del autor revisara
+`docs/specs/desmontar-view-order.md` (`#165`) antes de escribir código. Hecha: 7 medidores
+independientes por lote, cada afirmación con dos instrumentos, y una pasada de escépticos que
+intentó refutar cada hallazgo antes de publicarlo — **8 hallazgos sobrevivieron, 0 cayeron**. El
+detalle entero vive en la spec **§8**; aquí el porqué de lo decidido.
+
+### El veredicto: NI rehacerla NI aprobarla tal cual
+
+**El diagnóstico (§1) y la opción C con las cuatro extracciones por riesgo creciente SOBREVIVEN** —
+las cifras estructurales son exactas y la tesis «grande, no enmarañado» aguantó dos instrumentos
+(censo de asignaciones `$this->` incluido). Pero **tres hallazgos son bloqueantes** y la spec no va
+al owner sin las correcciones de su §8.12:
+
+1. **El paso 3 no es una «sustitución por el contrato»** (§8.3): `AvailabilityOffer` responde «¿qué
+   se puede COMPRAR?» y el panel «¿a dónde se puede MOVER este ítem ya comprado?». La divergencia
+   está garantizada estáticamente (producto retirado, slot actual, `seats`, sin antelación ni suelo
+   intradía, `excludeItemId` que el contrato no expone, ancla UTC vs parque) y varias diferencias
+   son decisiones documentadas de la clienta del ORIGEN en los docblocks: «medir cuál es correcta»
+   no aplica — ambas son correctas para su pregunta. Se re-diseña como EXTENSIÓN, riesgo Alto, y
+   dispara `VERIFY_CONC` ya en ese paso (toca `SlotOffer`/`SlotAvailability`/`PackAvailability`,
+   que SÍ están en el `CRITICAL_RE`).
+2. **§4.3 invierte el mapa transaccional real** (§8.4): describe DENTRO de la transacción
+   exactamente las piezas que corren FUERA (guardas pre-txn; secuencia financiera post-commit con
+   transacciones propias en `Order`). Quien «preserve» esa envolvente al extraer **la crearía**:
+   savepoints financieros, lock sostenido durante audit/email/REST y rastro en alcance de rollback —
+   `PAY-05` y `AFORO-01` a la vez, con la suite en verde.
+3. **El plan de verificación del paso 4 no ejecuta el código mudado** (§8.5): los dos verificadores
+   de concurrencia conducen `OrderCreator` y `RedsysReturnHandler`, no `ViewOrder`. El lock mudado
+   pertenece a `AFORO-05` —cuyo alcance no tiene assert, y la spec ni la nombra—.
+
+### Lo que además quedó medido (y corregido donde ya estaba escrito)
+
+- **Las «25 llamadas a dinero/aforo» eran 8 invocaciones reales**: el grep contaba comentarios y
+  definiciones, `executePartialRefund` a secas tiene CERO llamadas (el método real es
+  `executePartialRefundBatch`) y el lock se llama ×2, no ×3. Corregido con marcador en la spec y en
+  `DEUDA.md`; `#165` no repetía la cifra. Es la lección de `#143` otra vez, en un fichero PHP:
+  **el instrumento que no distingue comentario de código da un inventario que parece medido y no lo es.**
+- **Las extracciones 1 y 3 están acopladas** y la 1 no es autocontenida (`executeManageItemSave`
+  lee las props del calendario; la disponibilidad VIVA está dentro del calendario) — y de los 3
+  métodos de la categoría «disponibilidad», **DOS son código muerto** (cero llamadores de
+  producción; solo los mantienen vivos tests por reflexión). Se retiran por `§3.quater`, no se mudan.
+- **Solo la rama Concern cumple «cero cambios de conducta»**: 75 interacciones de test + el runtime
+  dependen de que el calendario siga en el mismo componente Livewire. Y **36 tests usan
+  `ReflectionMethod` contra la clase**: cualquier extracción los rompe por construcción, así que el
+  criterio «un test reescrito = alarma» necesita la cláusula de reflexión.
+- **Hay una SEGUNDA duplicación de dominio** que §1.4 negaba: `lockZoneDaySlots` re-implementa a
+  mano la receta anti-sobreventa de `AFORO-01` («MISMO alcance que `OrderCreator::lockSlots`», dice
+  su docblock), con el porqué documentado solo en el dominio.
+- **La tabla de invariantes estaba incompleta**: cuatro con cita literal a `ViewOrder` fuera
+  (`AFORO-05`, `AFORO-06`, `RGPD-02`, `SEC-04`) y cuatro de roce (`AFORO-02`, `AFORO-09`, `PAY-13`,
+  `PAY-16`).
+
+### Las reglas de método que esta revisión deja
+
+- **Contar apariciones no es contar llamadas**: toda cifra de acoplamiento se mide con un grep de
+  INVOCACIÓN (`->nombre(`) y leyendo el contexto de cada hit, no con la subcadena.
+- **Un plan de verificación se audita mirando QUÉ ejecuta el instrumento**, no si el instrumento
+  existe: dos verificadores en verde no median nada del código que se iba a mudar.
+- **Los números de decisión de los docblocks heredados son del ORIGEN**: `#173`/`#164`/`#167` del
+  código no son entradas de nuestro registro. Citarlos exige decir de qué numeración son.
+
+### Lo que queda
+
+La spec queda 🟦 con la revisión HECHA: le falta **incorporar las correcciones de §8.12** (trabajo
+de agente, una tanda de doc) y **después** el ✅ del owner — que ahora decide con un plan que
+describe el código que existe. `ViewOrder` sigue sin tocarse.
+
+Verificación: docs-check ✓ · solo doc (`app/` intacto, `git status` limpio de código) · revisión
+por 7 medidores + refutación cruzada, cifras clave re-verificadas a mano en sesión.

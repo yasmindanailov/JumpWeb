@@ -28,12 +28,15 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (esta máquina) → sesión NUEVA del 2026-08-26: REVISIÓN ADVERSARIAL de
->   `docs/specs/desmontar-view-order.md`** (`#165`, la exige `CONVENCIONES §5`) — **RECLAMADA, en
->   curso.** Ficheros: `docs/specs/desmontar-view-order.md` (§ de hallazgos) · `docs/ESTADO.md` ·
->   `docs/DECISIONES.md` (número al empujar). **Sin tocar `app/`**: la revisión mide, no arregla.
->   ❗ Tras la revisión seguirá faltando el **✅ del owner**: **nadie toca `ViewOrder` hasta las dos
->   cosas.**
+> · **Agente B (esta máquina) → la REVISIÓN ADVERSARIAL de `desmontar-view-order.md` está HECHA y
+>   EMPUJADA** (`#167`, 2026-08-26; el detalle en la spec **§8**). **El diagnóstico y la opción C
+>   sobreviven; TRES bloqueantes**: el paso 3 compara comprar-vs-mover y se re-diseña como EXTENSIÓN
+>   (con `VERIFY_CONC` ya en ese paso) · §4.3 describía DENTRO de la transacción lo que corre FUERA ·
+>   los verificadores de §6.4 no ejecutan el código mudado (`AFORO-05` sin instrumento).
+>   ▶ **Siguiente de este carril**: incorporar las correcciones de la spec §8.12 (doc, sin `app/`)
+>   y/o la revisión adversarial del WAIVER entero, ya desbloqueada por `#166`.
+>   ❗ Tras las correcciones seguirá faltando el **✅ del owner**: **nadie toca `ViewOrder` hasta
+>   entonces.**
 >   ▶ La sesión anterior del carril CERRÓ el 2026-08-26 sin dejar nada a medias (`#159` · `#162` ·
 >   `#164` · `#165`, todo empujado y verde). Su recordatorio que sigue vigente: al cerrar una tanda
 >   que toque fixtures con calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO
@@ -52,7 +55,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#166`**.
+> El último usado es **`#167`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -320,14 +323,15 @@ bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que N
 casi todo lo que queda lo desbloquea el owner.
 
 ▶ **Las dos cosas que sí serán trabajo de agente en cuanto se desbloqueen:**
-1. **Revisar el waiver entero** de forma adversarial cuando Fable cierre el subsistema
-   (`CONVENCIONES §5`). Es lo natural para quien no lo escribió. ⚠️ Sondeado por encima el 26/08 y
+1. **Revisar el waiver entero** de forma adversarial — ✅ **DESBLOQUEADA desde `#166`** (2026-08-26:
+   las cuatro tandas empujadas, código completo; queda el ✅ del owner en navegador). Es lo natural
+   para quien no lo escribió (`CONVENCIONES §5`). ⚠️ Sondeado por encima el 26/08 y
    **cumple** lo que la revisión de la spec exigía: el texto borrador **no se ha publicado**,
    `RGPD-01` recoge la conservación restringida y el PDF dice que el dato no está verificado.
-2. **`docs/specs/desmontar-view-order.md`** (`#165`) — el plan está escrito y medido; le falta la
-   revisión adversarial y el ✅ del owner. **Nadie toca `ViewOrder` hasta las dos cosas.**
-   ▶ 🟦 **La revisión adversarial está RECLAMADA y en curso** (2026-08-26, carril B — ver el
-   reparto de la cabecera).
+2. **`docs/specs/desmontar-view-order.md`** (`#165`) — ✅ **la revisión adversarial está HECHA**
+   (`#167`, 2026-08-26, spec **§8**): el diagnóstico sobrevive, con TRES bloqueantes y el checklist
+   §8.12 a incorporar en la spec ANTES del ✅ del owner. **Nadie toca `ViewOrder` hasta las dos
+   cosas** (correcciones incorporadas + ✅ del owner).
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
