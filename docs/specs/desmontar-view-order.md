@@ -679,6 +679,49 @@ procede, se decide en el paso 4 con las firmas reales delante.
   `OrderAdminActionsTest` en rojo**. Restauración verificada.
 - Suite **2936 / 16.961 en verde** (sin cambios: pura mudanza) · Pint ✓ · `php -l` ✓.
 
-### 9.4 Extracción 3 · La consulta de re-programación — PENDIENTE (`VERIFY_CONC`)
+### 9.4 Extracción 3 · La oferta de re-programación al DOMINIO — HECHA (2026-08-26, `VERIFY_CONC` ✓)
+
+**3.907 líneas** quedan en `ViewOrder` (desde 4.014) y el trait del calendario baja de 544 a **431**:
+la composición de la oferta vive en **`Booking\Services\ItemRescheduleOffer`** (252 líneas), un
+servicio NUEVO del dominio — no una extensión del contrato de compra, porque responde a OTRA
+pregunta (mover vs comprar, §8.3). El trait ya solo DECORA (display, is_selected) y guarda estado
+Livewire. `AFORO-02` queda aplicada al panel: **`ViewOrder` no compone ninguna oferta**.
+
+**Las TRES reglas del contrato las decidió el owner ANTES de escribirlo** (`[DECIDIDO owner,
+2026-08-26]`, preguntadas con recomendación y las tres aceptadas):
+1. **Ancla temporal = zona del PARQUE** (`DisplayTime`), como la oferta pública — cambia conducta
+   SOLO en la ventana 00:00–02:00 del parque, donde el ancla UTC ofrecía/bloqueaba el día
+   equivocado. Con test que CRUZA la frontera (a las 00:30 de Madrid un día que en UTC aún es «hoy»
+   no se ofrece) — el caso que `AFORO-09` declaraba no tener.
+2. **Exención del panel DECLARADA**: sin antelación mínima ni corte intra-día (mostrador). Deja de
+   ser herencia por accidente: está en el docblock del contrato.
+3. **Horas sin aforo se OCULTAN** (salvo la actual). ⚠️ **Su mutación salió VERDE en toda la red**
+   — la regla existía desde el origen y no la probaba nadie: ganó su test antes de cerrar.
+
+**Cómo se verificó** (por orden):
+- **Sonda A/B ANTES de conmutar** (§6·3): la composición vieja (por reflexión) contra el servicio
+  nuevo, sobre los **27 ítems con slot de la BD real** — fechas (rango de 3 meses) y horas del día
+  del slot: **0 divergencias** (ejecutada lejos de la ventana nocturna: las dos anclas coincidían,
+  UTC = parque = 2026-08-26). La receta, en el scratchpad de la sesión; instrumento, no guarda.
+- **4 mutaciones sobre el servicio, 4 muerden** (una tras ganar su test): `selectableDates` muerto
+  → 5 rojos · rama siempre-incluido → rojo · ancla a UTC → el test nocturno rojo · regla de ocultar
+  → rojo con su test nuevo.
+- **`validateNewSlot` re-ancló con la MISMA fuente** (`ItemRescheduleOffer::today/horizon`): si la
+  validación siguiera en UTC, entre las 00:00 y las ~02:00 rechazaría como pasada una fecha que el
+  calendario acaba de ofrecer.
+- ⚠️ **La flecha de módulos la cazó el arch-test** (`ModuleBoundariesTest`): el servicio nuevo no
+  puede abrir otra flecha Booking→Payments (la baseline de `PaymentSettings` SOLO ENCOGE). La
+  familia de la oferta comparte fuente: `SlotOffer::horizonMonths()` (accessor nuevo de una línea)
+  y el servicio lee por ahí. **Tocar `SlotOffer` disparó `VERIFY_CONC`**: los DOS verificadores
+  corridos sobre MySQL real — `purchase:verify-oversell` en sus **5 escenarios** con 8 workers
+  (5/5 PASA) y `redsys:verify-concurrency` (PASA).
+- Los dos fallbacks de fecha de TARIFICACIÓN (`computeEditPricing`/`computeAddonPricing`) **siguen
+  en UTC a propósito**: son dinero (`PAY-18`) y el ancla de tarifa se examina en la extracción 4,
+  no aquí.
+- De regalo: las DOS copias casi idénticas de la lista de horas (`calendarTimesForItem` /
+  `WithSelection`) quedan consolidadas en una decoración sobre la misma oferta, y el `$isPack` que
+  ambas computaban sin usar murió en el trasplante.
+- Suite **2938 / 16.966 en verde** (+2 tests: el nocturno del ancla y el de ocultar) · Pint ✓ ·
+  `php -l` ✓ · `AFORO-02`/`AFORO-09` actualizadas en `INVARIANTES.md`.
 
 ### 9.5 Extracción 4 · La orquestación de dinero — PENDIENTE (la última)

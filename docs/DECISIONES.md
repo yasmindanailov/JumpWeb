@@ -9465,3 +9465,36 @@ conducta rompe un test, antes de arreglar el test hay que preguntarse cuál de l
 
 Verificación: `node --test` 700/700 ✓ · guardas del cajón ✓ · headless 14/14 ✓ · docs-check ✓ · Pint ✓
 (el contador PHP vive en `ESTADO.md`, sin cambios en PHP salvo el ledger del techo).
+
+## #176 · 2026-08-26 · Extracción 3: la oferta de re-programación al dominio — tres reglas DECIDIDAS antes de escribirla, y una que nadie probaba
+
+Cuarta tanda de la ejecución (`#170`, `#172`, `#173`). Nace
+**`Booking\Services\ItemRescheduleOffer`** (252 líneas): la respuesta del dominio a «¿a dónde se
+puede MOVER este ítem ya comprado?» — otra pregunta que la de compra, como fijó la revisión
+(`#167`, spec §8.3), y por eso servicio propio y no extensión de `AvailabilityOffer`. `ViewOrder`
+baja a **3.907 líneas** y **ya no compone NINGUNA oferta** (`AFORO-02` aplicada al panel; su fila
+y la de `AFORO-09` actualizadas). Detalle completo en la spec **§9.4**.
+
+**Lo que hay que retener:**
+
+1. **Las tres reglas del contrato se preguntaron al owner ANTES de escribir el servicio** y quedaron
+   decididas: ancla en la zona del PARQUE (cambia conducta solo en la ventana 00:00–02:00, con el
+   test que CRUZA la frontera UTC↔Madrid que `AFORO-09` declaraba no tener) · la exención de
+   antelación/corte del panel DECLARADA en el contrato (mostrador) · horas sin aforo OCULTAS.
+2. **Una regla ratificada resultó no tener red**: la mutación de «ocultar horas sin aforo» salió
+   VERDE en 82 tests. Existía desde el origen y no la probaba nadie — ganó su test y la mutación se
+   vio morder. Un contrato recién decidido se verifica regla a regla, no en bloque.
+3. **La sonda A/B antes de conmutar**: composición vieja vs servicio nuevo sobre los 27 ítems reales
+   de la BD — 0 divergencias. Es el «diff antes de mover» de §4.2/§6·3, ejecutado.
+4. **El arch-test hizo su trabajo**: el servicio nuevo no pudo abrir otra flecha Booking→Payments
+   (la baseline SOLO ENCOGE) — la familia de la oferta comparte fuente por
+   `SlotOffer::horizonMonths()`, y tocar `SlotOffer` disparó `VERIFY_CONC`: **los 5 escenarios de
+   `purchase:verify-oversell` (8 workers) y `redsys:verify-concurrency`, PASA sobre MySQL real**.
+5. **La validación re-ancló con la MISMA fuente que la oferta** (`validateNewSlot` →
+   `ItemRescheduleOffer::today/horizon`): oferta y backstop no pueden divergir de reloj. Los
+   fallbacks de fecha de TARIFICACIÓN siguen en UTC a propósito — son dinero (`PAY-18`) y se
+   examinan en la extracción 4.
+
+Verificación: suite **2950 / 17.012 en verde** (+2 tests sobre el corte del carril A) · sonda A/B
+27/27 sin divergencias · mutación 4/4 · `VERIFY_CONC` ganado con los dos verificadores en verde ·
+Pint ✓ · docs-check ✓ · `INVARIANTES.md` al día.

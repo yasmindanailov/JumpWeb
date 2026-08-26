@@ -8,13 +8,13 @@ use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
+use App\Domain\Booking\Services\ItemRescheduleOffer;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\ProductAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Payments\Models\PaymentRefund;
-use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\OrderResource;
@@ -1651,33 +1651,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Plazas LIBRES de una franja para MOSTRAR al operador en el slider del modal
-     * Gestionar (sub-fase 7.2e.3 pulido #168):
-     *  - Entradas: `SlotAvailability::availableFor`.
-     *  - Packs: `PackAvailability::freeGuestSlots` (cupo de invitados restante;
-     *    si no hay tope, cae a `availableGuestsFor`).
-     *
-     * #173 (decisión clienta): el slider es **FIDEDIGNO con la lógica REAL de
-     * reservas** — muestra las plazas que un booking vería de verdad, CONTANDO la
-     * huella propia del item. Un cumpleaños ocupa su ventana (montaje + fiesta +
-     * limpieza) y las fiestas que solapan comparten cupo; es la MISMA lógica que
-     * la compra pública. Por eso NO se excluye aquí la huella propia: la asimetría
-     * con la validación (que sí la excluye para permitir crecer/recolocar el item)
-     * se abordará en la fase de gestión/edición de reservas. (Se revirtió un intento
-     * previo de excluirla en el display, que mostraba 60 ocultando la ocupación real.)
-     */
-    private function displayAvailableFor(Slot $slot, TicketType $ticketType): int
-    {
-        if ($ticketType->isPack()) {
-            $pack = app(PackAvailability::class);
-
-            return $pack->freeGuestSlots($slot, $ticketType) ?? $pack->availableGuestsFor($slot, $ticketType);
-        }
-
-        return app(SlotAvailability::class)->availableFor($slot, $ticketType->duration_min);
-    }
-
-    /**
      * Tab 2 "Editar producto" (#173) — el producto en sí + sus complementos,
      * en dos secciones diferenciadas:
      *  - **Producto**: selector de producto (mismo tipo+zona) + cantidad/
@@ -1963,34 +1936,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * ¿El slot $slot cumple los requisitos del $item para ser ofrecible como
-     * opción del modal Gestionar? (zone match implícito en la query; este
-     * helper aplica producto+aforo).
-     */
-    private function slotMeetsItemRequirements(Slot $slot, OrderItem $item, ProductAvailability $productWindow): bool
-    {
-        $ticketType = $item->ticketType;
-        if ($ticketType === null) {
-            return false;
-        }
-        if (! $productWindow->allowsStart($ticketType, $slot->date, $slot->start_time)) {
-            return false;
-        }
-        $seatsNeeded = (int) $item->seats;
-        $available = $ticketType->isPack()
-            ? app(PackAvailability::class)->availableGuestsFor($slot, $ticketType)
-            : app(SlotAvailability::class)->availableFor($slot, $ticketType->duration_min);
-        // Sub-fase 7.2e.2bis10 (#164): el slot ACTUAL del item siempre cumple
-        // los requisitos (mantenerlo es no-op, no consume aforo nuevo). El
-        // resto se valida con las plazas REALES (sin sumar las del item).
-        if ($item->slot && $item->slot->id === $slot->id) {
-            return true;
-        }
-
-        return $available >= $seatsNeeded;
-    }
-
-    /**
      * Resuelve un Slot concreto (zone del item + fecha + hora). Devuelve
      * null si no existe (defense in depth — el handler lo trata como
      * "selección inválida").
@@ -2010,58 +1955,6 @@ class ViewOrder extends ViewRecord
     }
 
     // ─── Calendario visual del modal Gestionar (7.2e.2bis6, #160) ─────────
-
-    /**
-     * Lista de fechas (Y-m-d) dentro de [$from, $to] que tienen al menos un
-     * slot operable para el item (zone match + park open + product window
-     * + aforo ≥ seats). Acotada a un rango específico (el del mes visible
-     * del calendario) para evitar cargar 6 meses de slots cada render.
-     *
-     * @return array<int, string>
-     */
-    private function selectableDatesInRange(OrderItem $item, Carbon $from, Carbon $to): array
-    {
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return [];
-        }
-
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
-        $effectiveFrom = $from->copy()->max($today);
-        $effectiveTo = $to->copy()->min($horizon);
-
-        if ($effectiveFrom->gt($effectiveTo)) {
-            return [];
-        }
-
-        $schedule = app(OperatingSchedule::class);
-        $productWindow = app(ProductAvailability::class);
-
-        $slots = Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->whereBetween('date', [$effectiveFrom->toDateString(), $effectiveTo->toDateString()])
-            ->sellableOnline()
-            ->orderBy('date')
-            ->orderBy('start_time')
-            ->get();
-
-        $valid = [];
-        foreach ($slots->groupBy(fn (Slot $s) => $s->date->toDateString()) as $dateStr => $daySlots) {
-            $dateCarbon = Carbon::parse($dateStr);
-            if (! $schedule->isOpenOn($dateCarbon)) {
-                continue;
-            }
-            $anyOperable = $daySlots->contains(
-                fn (Slot $s) => $this->slotMeetsItemRequirements($s, $item, $productWindow)
-            );
-            if ($anyOperable) {
-                $valid[] = $dateStr;
-            }
-        }
-
-        return $valid;
-    }
 
     /**
      * Query base reusable para el computed `orderAuditPaginator`. Captura en
@@ -3023,15 +2916,19 @@ class ViewOrder extends ViewRecord
             return 'slot_closed';
         }
         $newDateCarbon = $newSlot->date;
-        if ($newDateCarbon->isPast() && ! $newDateCarbon->isToday()) {
+        // El ancla de «hoy» es la del PARQUE, la misma que usa la oferta
+        // (`ItemRescheduleOffer::today`, [DECIDIDO owner, 2026-08-26]): si la
+        // validación anclara en UTC, entre las 00:00 y las ~02:00 del parque
+        // rechazaría como pasada una fecha que el calendario acaba de ofrecer.
+        $rescheduleOffer = app(ItemRescheduleOffer::class);
+        if ($newDateCarbon->lt($rescheduleOffer->today())) {
             return 'slot_in_past';
         }
         // Capa defense in depth — horizonte de compra (sub-fase 7.2e.2bis6, #160):
         // si el slot está más allá del límite global (default 6 meses), rechazo.
-        // El calendario UI ya filtra esto en `selectableDatesInRange`; este check
-        // protege contra atacante autenticado que manipule el form.
-        $horizon = Carbon::today()->addMonths(PaymentSettings::purchaseHorizonMonths());
-        if ($newDateCarbon->gt($horizon)) {
+        // El calendario UI ya filtra esto (`ItemRescheduleOffer::selectableDates`);
+        // este check protege contra atacante autenticado que manipule el form.
+        if ($newDateCarbon->gt($rescheduleOffer->horizon())) {
             return 'beyond_horizon';
         }
         if (! app(OperatingSchedule::class)->isOpenOn($newDateCarbon)) {

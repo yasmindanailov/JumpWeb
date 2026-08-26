@@ -64,14 +64,16 @@
 > · **Agente B (el portátil) → `desmontar-view-order`: EN EJECUCIÓN.** ✅ **El owner APROBÓ la spec
 >   y autorizó ejecutar** (2026-08-26, tras `#167`+`#168`). **Paso 0 HECHO** (`#170`, spec §9.1:
 >   −268 líneas de código muerto, tests re-apuntados, 4/4 mutaciones muerden) **y EXTRACCIÓN 1
->   HECHA** (`#172`, spec §9.2: el calendario a `Pages/Concerns/ManagesItemCalendar`, trait, 544
->   líneas) **y EXTRACCIÓN 2 HECHA** (`#173`, spec §9.3: la presentación —14 métodos— a
->   `PresentsOrderActions`, 535 líneas; ⚠️ la palabra «Presenter» cedió ante la medida: los
->   previews componen sobre cómputos del DOMINIO que la extracción 4 moverá — trait, y la clase se
->   decide en el paso 4 con las firmas reales). `ViewOrder` en **4.014 líneas** (de 5.280).
->   Método rodado: fidelidad por diferencia de conjuntos = 0 ausencias · retirar el `use` tumba la
->   red (14 y 19 tests) · **commitear la extracción en local ANTES de mutar** (regla pagada).
->   ▶ **Siguiente**: extracción 3 (consulta de re-programación, `VERIFY_CONC`) → 4 (el dinero).
+>   HECHA** (`#172`: el calendario a `ManagesItemCalendar`, trait), **EXTRACCIÓN 2 HECHA** (`#173`:
+>   la presentación a `PresentsOrderActions`; la palabra «Presenter» cedió ante la medida) **y
+>   EXTRACCIÓN 3 HECHA** (`#176`, spec §9.4: la oferta de re-programación al DOMINIO —
+>   `Booking\Services\ItemRescheduleOffer`, con las TRES reglas decididas por el owner: ancla del
+>   PARQUE con test que cruza UTC↔Madrid · exención del mostrador DECLARADA · horas sin aforo
+>   ocultas, que NO tenía red y la ganó — y **`VERIFY_CONC` corrido y en verde**: 5/5 escenarios de
+>   oversell + Redsys sobre MySQL). `ViewOrder` en **3.907 líneas** (de 5.280, −26 %) y **ya no
+>   compone ninguna oferta** (`AFORO-02`/`AFORO-09` al día).
+>   ▶ **Siguiente y ÚLTIMA: extracción 4 — la orquestación del dinero** (§4.3: el mapa
+>   transaccional real; el instrumento nuevo de §6·4).
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
 >   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
 >   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
@@ -101,7 +103,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#175`**.
+> El último usado es **`#176`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -186,9 +188,13 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2948 en verde** (17.007 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2950 en verde** (17.012 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+12 tests y +46 aserciones en el último corte** (`#174`, unidad 2 de la tanda 4 del waiver):
+  ▶ **+2 tests PHP en el último corte** (`#176`, extracción 3 del desmontaje): el del ancla del parque
+  que CRUZA la frontera UTC↔Madrid (el caso que `AFORO-09` no tenía) y el de «horas sin aforo se
+  ocultan», cuya regla existía desde el origen y su mutación salía VERDE — 4 mutaciones del
+  servicio, las 4 muerden ·
+  ▶ **+12 tests y +46 aserciones en el corte anterior** (`#174`, unidad 2 de la tanda 4 del waiver):
   el canal por guard (sesión + `Bearer basura` sigue siendo `web`; token real → `api`; alta sin
   sesión → `api`), la aceptación idempotente por versión (una firma, un consentimiento, ninguna
   auditoría de más), los tres marcadores de borrador + el aviso de palabras, el badge del pedido por

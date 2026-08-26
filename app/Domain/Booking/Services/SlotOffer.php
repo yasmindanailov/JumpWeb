@@ -39,6 +39,19 @@ class SlotOffer
     ) {}
 
     /**
+     * Meses del horizonte de compra/edición. Es la lectura Booking de
+     * `PaymentSettings::purchaseHorizonMonths` — una flecha Booking→Payments
+     * baselined en `ModuleBoundariesTest` que SOLO ENCOGE, así que los
+     * consumidores nuevos de la familia de la oferta (extracción 3 del
+     * desmontaje de `ViewOrder`: `ItemRescheduleOffer`) la leen POR AQUÍ en
+     * vez de abrir otra flecha al módulo de pagos.
+     */
+    public static function horizonMonths(): int
+    {
+        return PaymentSettings::purchaseHorizonMonths();
+    }
+
+    /**
      * Franjas ofrecibles del producto: `sellableOnline` + zona + horizonte + ventana del día.
      * Si `$type` es null (mes inicial del calendario público antes de elegir producto) no filtra por
      * zona ni ventana: devuelve todas las franjas vendibles del horizonte (igual que hacía la web).

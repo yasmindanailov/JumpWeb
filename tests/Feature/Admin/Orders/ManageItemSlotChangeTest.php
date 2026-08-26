@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ItemRescheduleOffer;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -458,10 +459,11 @@ class ManageItemSlotChangeTest extends TestCase
 
     public function test_selectable_dates_in_range_excludes_beyond_horizon_and_keeps_valid_dates(): void
     {
-        // Re-apuntado en el paso 0 del desmontaje (spec desmontar-view-order §9)
-        // desde el helper retirado `availableDatesForItem` a la fuente VIVA del
-        // calendario. El slot lejano se crea plenamente vendible: la ÚNICA razón
-        // para excluirlo debe ser el horizonte — el test viejo lo creaba sin
+        // Re-apuntado en el paso 0 del desmontaje al calendario vivo, y en la
+        // extracción 3 (spec desmontar-view-order §9.4) a la consulta de
+        // re-programación del DOMINIO — ya pública: muere la reflexión. El slot
+        // lejano se crea plenamente vendible: la ÚNICA razón para excluirlo
+        // debe ser el horizonte — el test original lo creaba sin
         // `online_sales_open` y salía verde por `sellableOnline()`, no por el
         // horizonte.
         $beyondHorizon = Carbon::today()->addMonths(7)->toDateString();
@@ -475,16 +477,74 @@ class ManageItemSlotChangeTest extends TestCase
             'online_sales_open' => true,
             'status' => Slot::STATUS_OPEN,
         ]);
-        [$order, $item] = $this->makePaidEntryOrder('10:00:00');
+        [, $item] = $this->makePaidEntryOrder('10:00:00');
 
-        $ref = new \ReflectionMethod(ViewOrder::class, 'selectableDatesInRange');
-        $ref->setAccessible(true);
-        $page = new ViewOrder;
-        $page->record = $order;
-        $dates = $ref->invoke($page, $item, Carbon::today(), Carbon::today()->addMonths(8));
+        $dates = app(ItemRescheduleOffer::class)
+            ->selectableDates($item, Carbon::today(), Carbon::today()->addMonths(8));
 
         $this->assertContains($this->todayPlus7, $dates);
         $this->assertNotContains($beyondHorizon, $dates);
+    }
+
+    public function test_reschedule_offer_anchors_today_in_park_timezone_not_utc(): void
+    {
+        // [DECIDIDO owner, 2026-08-26] (extracción 3, spec §9.4): el ancla
+        // temporal del panel es la zona del PARQUE, como la oferta pública
+        // (AFORO-09), no UTC. A las 00:30 de Madrid (22:30 UTC del día
+        // anterior), un día con franjas plenamente vendibles que en UTC aún es
+        // «hoy» pero en el parque ya es AYER no se ofrece — con ancla UTC este
+        // test cae, porque ese día sí entraría en la lista.
+        $utcToday = '2026-06-14';
+        Slot::create([
+            'zone_id' => $this->zone->id,
+            'date' => $utcToday,
+            'start_time' => '10:00:00',
+            'end_time' => '11:00:00',
+            'capacity' => 10,
+            'online_capacity' => 10,
+            'online_sales_open' => true,
+            'status' => Slot::STATUS_OPEN,
+        ]);
+        [, $item] = $this->makePaidEntryOrder('10:00:00');
+
+        $this->travelTo(Carbon::parse('2026-06-14 22:30:00', 'UTC')); // 00:30 en Madrid: ya es 15 de junio
+
+        $offer = app(ItemRescheduleOffer::class);
+        $this->assertSame('2026-06-15', $offer->today()->toDateString());
+
+        $dates = $offer->selectableDates(
+            $item,
+            Carbon::parse('2026-06-10'),
+            Carbon::parse('2026-06-30'),
+        );
+        $this->assertNotContains($utcToday, $dates, 'El 14 de junio es AYER en el parque: no se ofrece aunque en UTC siga siendo hoy.');
+        $this->assertContains($this->todayPlus7, $dates);
+    }
+
+    public function test_times_hide_slots_without_capacity_for_the_item_seats(): void
+    {
+        // [DECIDIDO owner, 2026-08-26] (extracción 3, spec §9.4): las horas sin
+        // aforo para `item.seats` se OCULTAN, no se enseñan deshabilitadas. La
+        // regla existía desde el origen pero su mutación salía VERDE en toda la
+        // red — este test es su red: una franja de capacidad 1 ya ocupada por
+        // OTRO pedido no puede ofrecerse como destino; la libre de al lado, sí.
+        Slot::create([
+            'zone_id' => $this->zone->id,
+            'date' => $this->todayPlus7,
+            'start_time' => '13:00:00',
+            'end_time' => '14:00:00',
+            'capacity' => 1,
+            'online_capacity' => 1,
+            'online_sales_open' => true,
+            'status' => Slot::STATUS_OPEN,
+        ]);
+        $this->makePaidEntryOrder('13:00:00'); // la llena: 0 libres
+        [, $item] = $this->makePaidEntryOrder('10:00:00');
+
+        $times = collect(app(ItemRescheduleOffer::class)->times($item->fresh('ticketType', 'slot'), $this->todayPlus7));
+
+        $this->assertNotNull($times->firstWhere('time', '11:00:00'), 'La franja libre se ofrece.');
+        $this->assertNull($times->firstWhere('time', '13:00:00'), 'Una franja sin aforo para el ítem debe OCULTARSE, no ofrecerse.');
     }
 
     public function test_purchase_horizon_helper_falls_back_to_default_on_invalid_value(): void

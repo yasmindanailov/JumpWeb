@@ -4,10 +4,7 @@ namespace App\Filament\Resources\Orders\Pages\Concerns;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Models\Slot;
-use App\Domain\Booking\Services\OperatingSchedule;
-use App\Domain\Booking\Services\ProductAvailability;
-use App\Domain\Payments\Services\PaymentSettings;
+use App\Domain\Booking\Services\ItemRescheduleOffer;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -26,10 +23,11 @@ use Illuminate\Support\Str;
  * §8.8). Es estado de UI: capa de entrega, no dominio.
  *
  * ⚠️ Dependencias hacia la clase que lo compone (se resuelven al aplanar el
- * trait): `$this->record`, `$this->mountedActions`, `$this->resolveItem()`,
- * `$this->selectableDatesInRange()` y `$this->displayAvailableFor()` — las
- * dos últimas son LECTURAS DE DISPONIBILIDAD y se van con la extracción 3
- * (la consulta de re-programación del dominio, spec §4.1·3).
+ * trait): `$this->record`, `$this->mountedActions` y `$this->resolveItem()`.
+ * La DISPONIBILIDAD (qué fechas/horas se ofrecen, con qué aforo y con qué
+ * ancla temporal) ya NO se compone aquí: la responde el dominio por
+ * `ItemRescheduleOffer` (extracción 3, spec §9.4) y este trait solo DECORA
+ * para el blade (display 'HH:MM', is_selected) y guarda el estado Livewire.
  */
 trait ManagesItemCalendar
 {
@@ -82,14 +80,15 @@ trait ManagesItemCalendar
         }
 
         $slot = $item->slot;
-        $today = Carbon::today();
+        $offer = app(ItemRescheduleOffer::class);
+        $today = $offer->today();
         $slotDate = $slot?->date ? Carbon::parse($slot->date->toDateString()) : null;
 
         $this->calendarItemId = $item->id;
         // El mes inicial es el del slot actual si está en el rango ofrecible
         // (today..today+horizon); si está en el pasado o fuera de rango,
         // arrancamos en el mes actual para no abrir en un mes vacío.
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
+        $horizon = $offer->horizon();
         $initialMonth = $slotDate !== null && $slotDate->gte($today) && $slotDate->lte($horizon)
             ? $slotDate
             : $today;
@@ -124,8 +123,9 @@ trait ManagesItemCalendar
         // interacción del usuario). El render inicial muestra el mes y
         // hora correctos del item; tras un click, los wire methods toman
         // el relevo y persisten state en el snapshot.
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
+        $offer = app(ItemRescheduleOffer::class);
+        $today = $offer->today();
+        $horizon = $offer->horizon();
         $itemSlotDate = $item->slot?->date ? Carbon::parse($item->slot->date->toDateString()) : null;
         $defaultMonth = $itemSlotDate !== null && $itemSlotDate->gte($today) && $itemSlotDate->lte($horizon)
             ? $itemSlotDate->copy()->startOfMonth()
@@ -184,12 +184,13 @@ trait ManagesItemCalendar
      */
     private function calendarMatrixForItemWithSelection(OrderItem $item, Carbon $month, ?string $selectedDate): array
     {
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
+        $offer = app(ItemRescheduleOffer::class);
+        $today = $offer->today();
+        $horizon = $offer->horizon();
 
         $start = $month->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $end = $month->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-        $selectableDates = $this->selectableDatesInRange($item, $start, $end);
+        $selectableDates = $offer->selectableDates($item, $start, $end);
 
         // #173: el heatmap de saturación (#164) se retiró — la clienta no lo
         // necesita; ya no se computa el mapa ni se pasa al blade.
@@ -220,83 +221,32 @@ trait ManagesItemCalendar
     }
 
     /**
-     * Variante de `calendarTimesForItem` con `$selectedTime` explícito —
-     * paralelo a `calendarMatrixForItemWithSelection`.
+     * Decoración de UI de la oferta de horas del dominio
+     * (`ItemRescheduleOffer::times`): añade `display` ('HH:MM') e
+     * `is_selected` con el `$selectedTime` explícito — paralelo a
+     * `calendarMatrixForItemWithSelection`. Qué horas se ofrecen, con qué
+     * aforo y por qué es cosa del dominio, no de aquí.
      *
      * @return array<int, array<string, mixed>>
      */
     private function calendarTimesForItemWithSelection(OrderItem $item, string $date, ?string $selectedTime): array
     {
-        if ($date === '') {
-            return [];
-        }
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return [];
-        }
-
-        $dateCarbon = Carbon::parse($date);
-        $isParkOpen = app(OperatingSchedule::class)->isOpenOn($dateCarbon);
-        $productWindow = app(ProductAvailability::class);
-        $currentSlot = $item->slot;
-
-        $slots = Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->where('date', $date)
-            ->sellableOnline()
-            ->orderBy('start_time')
-            ->get();
-
-        $isPack = $ticketType->isPack();
-        $seatsNeeded = (int) $item->seats;
-        $entries = [];
-
-        if ($isParkOpen) {
-            foreach ($slots as $slot) {
-                if (! $productWindow->allowsStart($ticketType, $dateCarbon, $slot->start_time)) {
-                    continue;
-                }
-                // #164 + #173 (decisión clienta): el cómputo muestra las plazas
-                // REALES libres CONTANDO la huella propia del item — FIDEDIGNO con
-                // la lógica de reservas: un cumpleaños ocupa su ventana montaje+
-                // fiesta+limpieza y las fiestas que solapan comparten cupo (misma
-                // lógica que la compra pública). El slot actual SIEMPRE se incluye
-                // en las opciones (mantenerlo es no-op). El excluir la huella propia
-                // para crecer/recolocar se hará en la gestión de reservas futura.
-                $available = $this->displayAvailableFor($slot, $ticketType);
-                $isCurrentSlot = $currentSlot !== null && $currentSlot->id === $slot->id;
-                if ($available < $seatsNeeded && ! $isCurrentSlot) {
-                    continue;
-                }
-                $entries[] = [
-                    'time' => $slot->start_time,
-                    'display' => Str::substr($slot->start_time, 0, 5),
-                    'available' => $available,
-                    'is_current' => $isCurrentSlot,
-                    'is_selected' => $slot->start_time === $selectedTime,
-                ];
-            }
-        }
-
-        if ($currentSlot !== null
-            && $currentSlot->date->toDateString() === $date
-            && ! collect($entries)->contains(fn (array $e) => $e['time'] === $currentSlot->start_time)
-        ) {
-            array_unshift($entries, [
-                'time' => $currentSlot->start_time,
-                'display' => Str::substr($currentSlot->start_time, 0, 5),
-                'available' => $seatsNeeded,
-                'is_current' => true,
-                'is_selected' => $currentSlot->start_time === $selectedTime,
-            ]);
-        }
-
-        return $entries;
+        return array_map(
+            fn (array $entry): array => [
+                'time' => $entry['time'],
+                'display' => Str::substr($entry['time'], 0, 5),
+                'available' => $entry['available'],
+                'is_current' => $entry['is_current'],
+                'is_selected' => $entry['time'] === $selectedTime,
+            ],
+            app(ItemRescheduleOffer::class)->times($item, $date),
+        );
     }
 
     /**
      * Lista de horas del día seleccionado en el calendario para el item
-     * dado. Cada entrada incluye metadata para el blade (chips):
+     * dado, con `is_selected` leído del estado Livewire. Cada entrada
+     * incluye metadata para el blade (chips):
      *
      *  - `time`         : 'HH:MM:SS'.
      *  - `display`      : 'HH:MM' (lo que ve el operador).
@@ -304,78 +254,15 @@ trait ManagesItemCalendar
      *  - `is_current`   : bool — es la hora del slot ACTUAL del item.
      *  - `is_selected`  : bool — es la hora actualmente elegida.
      *
+     * Hasta la extracción 3 este método y su variante `WithSelection` eran
+     * DOS copias casi idénticas de la composición entera; hoy ambos decoran
+     * la misma oferta del dominio.
+     *
      * @return array<int, array<string, mixed>>
      */
     private function calendarTimesForItem(OrderItem $item, string $date): array
     {
-        if ($date === '') {
-            return [];
-        }
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return [];
-        }
-
-        $dateCarbon = Carbon::parse($date);
-        $isParkOpen = app(OperatingSchedule::class)->isOpenOn($dateCarbon);
-        $productWindow = app(ProductAvailability::class);
-        $currentSlot = $item->slot;
-        $selectedTime = $this->calendarSelectedTime;
-
-        $slots = Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->where('date', $date)
-            ->sellableOnline()
-            ->orderBy('start_time')
-            ->get();
-
-        $isPack = $ticketType->isPack();
-        $seatsNeeded = (int) $item->seats;
-        $entries = [];
-
-        if ($isParkOpen) {
-            foreach ($slots as $slot) {
-                if (! $productWindow->allowsStart($ticketType, $dateCarbon, $slot->start_time)) {
-                    continue;
-                }
-                // #164 + #173 (decisión clienta): el cómputo muestra las plazas
-                // REALES libres CONTANDO la huella propia del item — FIDEDIGNO con
-                // la lógica de reservas: un cumpleaños ocupa su ventana montaje+
-                // fiesta+limpieza y las fiestas que solapan comparten cupo (misma
-                // lógica que la compra pública). El slot actual SIEMPRE se incluye
-                // en las opciones (mantenerlo es no-op). El excluir la huella propia
-                // para crecer/recolocar se hará en la gestión de reservas futura.
-                $available = $this->displayAvailableFor($slot, $ticketType);
-                $isCurrentSlot = $currentSlot !== null && $currentSlot->id === $slot->id;
-                if ($available < $seatsNeeded && ! $isCurrentSlot) {
-                    continue;
-                }
-                $entries[] = [
-                    'time' => $slot->start_time,
-                    'display' => Str::substr($slot->start_time, 0, 5),
-                    'available' => $available,
-                    'is_current' => $isCurrentSlot,
-                    'is_selected' => $slot->start_time === $selectedTime,
-                ];
-            }
-        }
-
-        // Slot actual siempre incluido si la fecha coincide y no estaba en
-        // la lista (zone cerrado, etc.).
-        if ($currentSlot !== null
-            && $currentSlot->date->toDateString() === $date
-            && ! collect($entries)->contains(fn (array $e) => $e['time'] === $currentSlot->start_time)
-        ) {
-            array_unshift($entries, [
-                'time' => $currentSlot->start_time,
-                'display' => Str::substr($currentSlot->start_time, 0, 5),
-                'available' => $seatsNeeded,
-                'is_current' => true,
-                'is_selected' => $currentSlot->start_time === $selectedTime,
-            ]);
-        }
-
-        return $entries;
+        return $this->calendarTimesForItemWithSelection($item, $date, $this->calendarSelectedTime);
     }
 
     /**
@@ -432,9 +319,10 @@ trait ManagesItemCalendar
         if ($item === null) {
             return;
         }
-        $slotDate = $item->slot?->date ? Carbon::parse($item->slot->date->toDateString()) : Carbon::today();
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
+        $offer = app(ItemRescheduleOffer::class);
+        $today = $offer->today();
+        $slotDate = $item->slot?->date ? Carbon::parse($item->slot->date->toDateString()) : $today->copy();
+        $horizon = $offer->horizon();
         $target = $slotDate->gte($today) && $slotDate->lte($horizon) ? $slotDate : $today;
         $this->calendarMonth = $target->format('Y-m');
     }
@@ -449,7 +337,7 @@ trait ManagesItemCalendar
             return;
         }
         $month = Carbon::parse($this->calendarMonth.'-01');
-        $today = Carbon::today()->startOfMonth();
+        $today = app(ItemRescheduleOffer::class)->today()->startOfMonth();
         $prev = $month->copy()->subMonth()->startOfMonth();
         if ($prev->lt($today)) {
             return;
@@ -467,9 +355,7 @@ trait ManagesItemCalendar
             return;
         }
         $month = Carbon::parse($this->calendarMonth.'-01');
-        $horizonMonth = Carbon::today()
-            ->addMonths(PaymentSettings::purchaseHorizonMonths())
-            ->startOfMonth();
+        $horizonMonth = app(ItemRescheduleOffer::class)->horizon()->startOfMonth();
         $next = $month->copy()->addMonth()->startOfMonth();
         if ($next->gt($horizonMonth)) {
             return;
@@ -492,8 +378,9 @@ trait ManagesItemCalendar
         if ($item === null) {
             return;
         }
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
+        $offer = app(ItemRescheduleOffer::class);
+        $today = $offer->today();
+        $horizon = $offer->horizon();
 
         try {
             $candidate = Carbon::parse($date);
@@ -507,7 +394,7 @@ trait ManagesItemCalendar
         // El día debe estar en la lista de selectables del mes actual.
         $monthStart = Carbon::parse($this->calendarMonth.'-01')->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $monthEnd = Carbon::parse($this->calendarMonth.'-01')->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-        $valid = $this->selectableDatesInRange($item, $monthStart, $monthEnd);
+        $valid = $offer->selectableDates($item, $monthStart, $monthEnd);
         if (! in_array($date, $valid, true)) {
             return;
         }
