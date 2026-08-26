@@ -28,17 +28,17 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B → SESIÓN CERRADA el 2026-08-26.** ✅ **No deja nada a medias ni ningún fichero
->   reclamado**: todo lo suyo está empujado y verde. Lo que hizo, con el porqué en su entrada:
->   `RGPD-01` decía CINCO operaciones y el código hacía OCHO (`#159`) · la suite **auditada contra la
->   FECHA** (`#162`) · la **caza de `#97`** (`#164`) · la **spec para desmontar `ViewOrder`** (`#165`,
->   solo diseño, `app/` intacto).
->   ▶ **Lo que hay que seguir haciendo, y no depende de él**: al cerrar una tanda que toque fixtures
->   con calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`).
->   La primera pasada encontró un fixture que iba a tumbar el gate de los DOS agentes **seis días
->   después**, sin que nadie tocara nada.
->   ❗ **Y `docs/specs/desmontar-view-order.md` espera DOS cosas**: la revisión adversarial del otro
->   agente (`CONVENCIONES §5`) y el ✅ del owner. **Nadie toca `ViewOrder` hasta entonces.**
+> · **Agente B (esta máquina) → sesión NUEVA del 2026-08-26: REVISIÓN ADVERSARIAL de
+>   `docs/specs/desmontar-view-order.md`** (`#165`, la exige `CONVENCIONES §5`) — **RECLAMADA, en
+>   curso.** Ficheros: `docs/specs/desmontar-view-order.md` (§ de hallazgos) · `docs/ESTADO.md` ·
+>   `docs/DECISIONES.md` (número al empujar). **Sin tocar `app/`**: la revisión mide, no arregla.
+>   ❗ Tras la revisión seguirá faltando el **✅ del owner**: **nadie toca `ViewOrder` hasta las dos
+>   cosas.**
+>   ▶ La sesión anterior del carril CERRÓ el 2026-08-26 sin dejar nada a medias (`#159` · `#162` ·
+>   `#164` · `#165`, todo empujado y verde). Su recordatorio que sigue vigente: al cerrar una tanda
+>   que toque fixtures con calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO
+>   en el `pre-push`) — la primera pasada cazó un fixture que iba a tumbar el gate de los DOS
+>   agentes seis días después, sin que nadie tocara nada.
 > ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **NUEVE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
@@ -323,6 +323,8 @@ casi todo lo que queda lo desbloquea el owner.
    `RGPD-01` recoge la conservación restringida y el PDF dice que el dato no está verificado.
 2. **`docs/specs/desmontar-view-order.md`** (`#165`) — el plan está escrito y medido; le falta la
    revisión adversarial y el ✅ del owner. **Nadie toca `ViewOrder` hasta las dos cosas.**
+   ▶ 🟦 **La revisión adversarial está RECLAMADA y en curso** (2026-08-26, carril B — ver el
+   reparto de la cabecera).
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
