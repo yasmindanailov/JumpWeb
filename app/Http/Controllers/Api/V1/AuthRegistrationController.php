@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\SignupResult;
+use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
+use App\Domain\Identity\Services\WaiverAcceptance;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\Concerns\RequiresStatefulSession;
@@ -74,6 +77,11 @@ class AuthRegistrationController extends Controller
             // dos casos que esquivan el fallo.
             'website' => ['sometimes', 'nullable', 'string'],
             'turnstile_token' => ['sometimes', 'nullable', 'string'],
+            // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): casilla SEPARADA y desmarcada por
+            // defecto — aceptarla es opcional en el alta, pero aceptar sin decir QUÉ texto se leyó no
+            // vale nada: el servidor solo emite la aceptación con el identificador que él sirvió.
+            'accept_waiver' => ['sometimes', 'nullable', 'boolean'],
+            'waiver_document_id' => ['required_if_accepted:accept_waiver', 'nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -92,6 +100,9 @@ class AuthRegistrationController extends Controller
         return [
             'accept_privacy.accepted' => __('account.register.must_accept'),
             'accept_terms.accepted' => __('account.register.must_accept'),
+            // En `api.register`, no en `account.register`: ese grupo viaja en el montaje de cada
+            // página y estos avisos solo los emite el servidor (`SidebarMountTest` mide el peaje).
+            'waiver_document_id.required_if_accepted' => __('api.register.waiver_document_required'),
         ];
     }
 
@@ -129,6 +140,29 @@ class AuthRegistrationController extends Controller
             return $denial;
         }
 
+        // Fase 6 · waiver: si acepta, el identificador tiene que ser el del texto VIGENTE, y se
+        // comprueba ANTES de crear nada — un 422 después de crear la cuenta dejaría al cliente sin
+        // saber si la tiene. Fuera del modo interno no hay texto que aceptar aquí.
+        $waiver = null;
+        if ((bool) ($data['accept_waiver'] ?? false)) {
+            if (! WaiverSettings::isInternal()) {
+                return ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: [
+                    'waiver_document_id' => [__('api.register.waiver_not_internal')],
+                ]);
+            }
+            $document = WaiverAcceptance::currentDocument((int) $data['waiver_document_id']);
+            if ($document === null) {
+                return ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: [
+                    'waiver_document_id' => [__('api.register.waiver_stale')],
+                ]);
+            }
+            $waiver = [
+                'document' => $document,
+                'channel' => $request->bearerToken() !== null ? WaiverSignature::CHANNEL_API : WaiverSignature::CHANNEL_WEB,
+                'user_agent' => $request->userAgent(),
+            ];
+        }
+
         $result = $signup->register(
             [
                 'name' => $data['name'],
@@ -136,6 +170,7 @@ class AuthRegistrationController extends Controller
                 'phone' => $data['phone'],
                 'password' => $data['password'],
                 'marketing' => (bool) ($data['marketing'] ?? false),
+                'waiver' => $waiver,
             ],
             (string) $request->ip(),
             notifyByEmail: ! $inPurchase,

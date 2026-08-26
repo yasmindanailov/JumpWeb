@@ -298,6 +298,38 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /legal/waiver:
+    get:
+      tags: [Instalación]
+      operationId: getWaiverDocument
+      summary: El texto firmable del waiver, vigente
+      description: |
+        El SNAPSHOT vigente del waiver en el idioma negociado, con el identificador que el cliente
+        devuelve al aceptar (`POST /auth/register` con `accept_waiver`, o `POST /me/waiver`).
+        Fase 6 (`specs/waiver-probatorio.md` §4.2, §4.4).
+
+        **Público a propósito**: quien se está dando de alta todavía no tiene sesión y es justo cuando
+        lo necesita. Lo que publica es lo que se firma —una versión inmutable, ya interpolada—, nunca
+        la página editable del CMS.
+
+        `document` es `null` cuando no hay nada que firmar aquí: `mode` distinto de `interno`, o ninguna
+        versión publicada todavía. **No es un error**: es un estado legítimo de la instalación.
+
+        Si el idioma pedido no se publicó en la versión vigente, cae al de respaldo (el mismo respaldo
+        que aplica la web al pintar el texto) y `document.locale` dice cuál se sirvió: el idioma es
+        parte de la prueba.
+      responses:
+        '200':
+          description: El modo de la instalación y, si lo hay, el texto vigente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaiverDocument'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /booking/status:
     get:
       tags: [Compra]
@@ -1472,6 +1504,129 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/waiver:
+    get:
+      tags: [Cuenta]
+      operationId: getMyWaiver
+      summary: Mi waiver
+      description: |
+        El estado del waiver del titular según el modo de la instalación, y sus propias firmas con
+        el PDF de cada una (Fase 6, `specs/waiver-probatorio.md` §4.5, §4.8).
+
+        - `externo`: `signed` sale del sello que deja el sistema del parque; no hay versiones.
+        - `interno`: manda el registro firmado aquí. `outdated` dice que se firmó una versión anterior
+          del texto — **se deja pasar en la puerta**, y la re-firma se pide en el siguiente momento
+          natural (al entrar o al comprar), nunca en el mostrador. `current_document_id` es el texto
+          que hay que aceptar entonces: el mismo id que publica `GET /legal/waiver` en este idioma.
+        - `desactivado`: no hay pregunta.
+
+        ⚠️ **No publica ip, user-agent ni hashes** de las firmas, por el mismo criterio que
+        `GET /me/consents`: la prueba completa es el PDF, que es un acto explícito del titular.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: El estado y las firmas del titular.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaiverStatus'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+    post:
+      tags: [Cuenta]
+      operationId: acceptMyWaiver
+      summary: Aceptar el waiver vigente
+      description: |
+        Registra la aceptación del titular del texto que el servidor sirvió
+        (`specs/waiver-probatorio.md` §4.4): **el servidor solo emite la aceptación si la petición trae
+        el identificador de la versión vigente**. Si el texto se publicó de nuevo entre servirlo y
+        aceptarlo, responde `409 waiver_document_stale` y el cliente vuelve a pedir `GET /legal/waiver`
+        y a presentarlo. Fuera del modo interno, `409 waiver_not_internal`.
+
+        Es la firma del titular desde su propio dispositivo: se guarda con su ip, su user-agent y el
+        canal (`web` con cookie de sesión, `api` con Bearer), encadenada a su firma anterior. Sirve
+        también para la re-firma cuando `outdated` es `true`.
+
+        Responde **201 con el estado nuevo**, el mismo cuerpo que `GET /me/waiver`.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaiverAcceptRequest'
+      responses:
+        '201':
+          description: Aceptación registrada; el estado ya la refleja.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaiverStatus'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: |
+            `waiver_not_internal` — el waiver no se firma en esta instalación ·
+            `waiver_document_stale` — el identificador no es el del texto vigente: hay que volver a leerlo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/waiver/{signature}/pdf:
+    get:
+      tags: [Cuenta]
+      operationId: getMyWaiverProof
+      summary: El PDF de una firma mía
+      description: |
+        El registro probatorio de una firma PROPIA, legible (`specs/waiver-probatorio.md` §4.5): el
+        texto íntegro que se aceptó, la identidad tal y como estaba al firmar, fecha con zona, ip,
+        user-agent, canal y hashes, **en el idioma del texto firmado**. Compuesto del snapshot, nunca
+        del CMS; el mismo documento que ve el operador desde el panel.
+
+        Scoping por el guard: una firma que no sea del titular **no existe** (404). Cada descarga queda
+        en la auditoría. `no-store`, como toda respuesta autenticada.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: signature
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: El PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/account-context:
     get:
       tags: [Cuenta]
@@ -1811,6 +1966,9 @@ components:
                 - order_not_retryable
                 - guest_form_closed
                 - payment_unavailable
+                # Fase 6 · waiver — aceptar el texto (409): no se firma aquí, o el texto cambió.
+                - waiver_not_internal
+                - waiver_document_stale
             message:
               type: string
               description: Mensaje legible en el idioma negociado.
@@ -2411,7 +2569,7 @@ components:
       description: |
         El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
         de invitados están pendientes.
-      required: [first_name, upcoming_count, next_reservation, pending_forms, pending_forms_count]
+      required: [first_name, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver]
       additionalProperties: false
       properties:
         first_name:
@@ -2477,6 +2635,29 @@ components:
             Cuántos hay. Va aparte y **no es `pending_forms.length`** para el cliente que reciba la
             lista podada: es el número que decide si el aviso lleva a un formulario concreto o al
             listado.
+        waiver:
+          type: object
+          description: |
+            Fase 6 · waiver (`specs/waiver-probatorio.md` §4.8): **si hay que firmar, y qué texto**.
+            Este contexto es lo que el cajón repinta al conseguir sesión, y «el siguiente momento
+            natural» de la re-firma es entrar o comprar — nunca el mostrador.
+
+            `required`: modo interno y sin ninguna firma · `outdated`: firmado en una versión anterior
+            del texto (en la puerta se deja pasar) · `document_id`: el texto vigente en este idioma,
+            para `POST /me/waiver` — el mismo id que publica `GET /legal/waiver`.
+          required: [mode, required, outdated, document_id]
+          additionalProperties: false
+          properties:
+            mode:
+              type: string
+              enum: [externo, interno, desactivado]
+            required:
+              type: boolean
+            outdated:
+              type: boolean
+            document_id:
+              type: integer
+              nullable: true
 
     PendingGuestForm:
       type: object
@@ -4424,6 +4605,146 @@ components:
         turnstile_token:
           type: string
           description: Token del anti-bot, si la instalación lo tiene configurado.
+        accept_waiver:
+          type: boolean
+          description: |
+            Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): la casilla SEPARADA de la exención
+            de responsabilidad, **desmarcada por defecto y opcional** — sin ella el alta es la de
+            siempre y el titular firmará más tarde. Solo tiene sentido en modo `interno`
+            (`GET /legal/waiver`); fuera de él se rechaza con un 422 sobre `waiver_document_id`.
+        waiver_document_id:
+          type: integer
+          nullable: true
+          description: |
+            El `document.id` que `GET /legal/waiver` sirvió. **Obligatorio si `accept_waiver` es
+            `true`**: aceptar sin decir qué texto se leyó no prueba nada. Si el texto se publicó de
+            nuevo entre medias, 422 sobre este campo y el cliente vuelve a presentarlo — **antes** de
+            crear la cuenta, nunca después.
+
+    WaiverDocument:
+      type: object
+      description: El modo de la instalación y, si lo hay, el texto firmable vigente (Fase 6 · waiver).
+      required: [mode, document]
+      additionalProperties: false
+      properties:
+        mode:
+          type: string
+          enum: [externo, interno, desactivado]
+          description: Cómo gestiona el waiver esta instalación (`waiver.mode`).
+        document:
+          type: object
+          nullable: true
+          description: '`null` fuera del modo interno o sin versión publicada. No es un error.'
+          required: [id, version, locale, title, sections, published_at]
+          additionalProperties: false
+          properties:
+            id:
+              type: integer
+              description: El identificador que se devuelve al aceptar. Cambia con cada versión publicada.
+            version:
+              type: integer
+              description: Número de versión del texto (1, 2, …), común a todos sus idiomas.
+            locale:
+              type: string
+              description: El idioma en que se sirvió — puede ser el de respaldo. Es parte de la prueba.
+            title:
+              type: string
+            sections:
+              type: array
+              description: El texto íntegro, ya interpolado, como lista de secciones encabezado + párrafo.
+              items:
+                type: object
+                required: [h, p]
+                additionalProperties: false
+                properties:
+                  h:
+                    type: string
+                    description: Encabezado de la sección; puede ser cadena vacía.
+                  p:
+                    type: string
+            published_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    WaiverAcceptRequest:
+      type: object
+      description: Aceptar el texto vigente del waiver.
+      required: [document_id]
+      additionalProperties: false
+      properties:
+        document_id:
+          type: integer
+          minimum: 1
+          description: El `document.id` que `GET /legal/waiver` sirvió (o `current_document_id` de `GET /me/waiver`).
+
+    WaiverStatus:
+      type: object
+      description: Mi waiver — el estado según el modo de la instalación, y mis firmas.
+      required: [mode, signed, outdated, accepted_at, accepted_label, version, current_document_id, signatures]
+      additionalProperties: false
+      properties:
+        mode:
+          type: string
+          enum: [externo, interno, desactivado]
+        signed:
+          type: boolean
+          description: En `externo`, el sello del sistema del parque; en `interno`, si hay registro firmado aquí.
+        outdated:
+          type: boolean
+          description: Firmado, pero en una versión anterior del texto. Se deja pasar; se pide la re-firma.
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        accepted_label:
+          type: string
+          nullable: true
+          description: La fecha ya compuesta, en la zona horaria de la instalación.
+        version:
+          type: integer
+          nullable: true
+          description: Número de la versión firmada (solo en modo interno).
+        current_document_id:
+          type: integer
+          nullable: true
+          description: El texto vigente en este idioma, para aceptar o re-firmar. `null` fuera del modo interno.
+        signatures:
+          type: array
+          description: Mis firmas, de la más reciente a la más antigua. Sin ip, user-agent ni hashes.
+          items:
+            $ref: '#/components/schemas/WaiverSignatureSummary'
+
+    WaiverSignatureSummary:
+      type: object
+      description: Una firma del titular, tal como él la ve; la prueba completa es su PDF.
+      required: [id, version_label, accepted_at, accepted_label, channel, declared, subject, pdf_url]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        version_label:
+          type: string
+          description: '«v2·es»: versión e idioma del texto firmado.'
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        accepted_label:
+          type: string
+        channel:
+          type: string
+          enum: [web, api, panel]
+        declared:
+          type: boolean
+          description: '`true` si la declaró un operador en el mostrador (alta presencial): sustancialmente más débil.'
+        subject:
+          type: string
+          enum: [holder, dependent]
+        pdf_url:
+          type: string
+          format: uri
+          description: '`GET /me/waiver/{signature}/pdf`.'
 
     EmailRequest:
       type: object

@@ -44,7 +44,13 @@ class CustomerAccountContext
      * ▶ Quien pinta la etiqueta llama a `Platform\Services\DisplayTime::dayLabel()`, que es su fuente
      * única y lo vigila `DayLabelSingleSourceTest`.
      *
-     * @return array{firstName: string, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool}
+     * ▶ Fase 6 · waiver (`specs/waiver-probatorio.md` §4.8): «la re-firma se pide en el siguiente
+     * momento natural —compra o login—, nunca en el mostrador». Este contexto es lo que el cajón
+     * repinta al conseguir sesión, así que es donde viaja **si hay que firmar y qué texto**:
+     * `waiver.required` (modo interno y sin firma), `waiver.outdated` (firmado en una versión
+     * anterior) y `waiver.documentId` (el vigente en el idioma de la petición, para `POST /me/waiver`).
+     *
+     * @return array{firstName: string, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, outdated: bool, documentId: ?int}}
      */
     public function for(User $user): array
     {
@@ -61,9 +67,20 @@ class CustomerAccountContext
             'pendingForms' => [],
             'pendingFormsCount' => 0,
             'hasPendingForm' => false,
+            'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'outdated' => false, 'documentId' => null],
         ];
 
         try {
+            $status = WaiverStatus::for($user);
+            $context['waiver'] = [
+                'mode' => $status->mode,
+                'required' => $status->mode === WaiverSettings::MODE_INTERNAL && ! $status->signed,
+                'outdated' => $status->isOutdated(),
+                'documentId' => $status->mode === WaiverSettings::MODE_INTERNAL
+                    ? LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale())?->getKey()
+                    : null,
+            ];
+
             $upcoming = $this->reservations->upcomingFor((int) $user->id);
             $context['upcomingCount'] = count($upcoming);
             $context['nextReservation'] = $upcoming[0] ?? null;

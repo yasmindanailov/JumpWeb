@@ -67,6 +67,14 @@ class AccountContextResource extends JsonResource
                 $context['pendingForms'],
             ),
             'pending_forms_count' => (int) $context['pendingFormsCount'],
+            // Fase 6 · waiver (§4.8): si hay que firmar y qué texto. `document_id` es el mismo id que
+            // publica `GET /legal/waiver` en este idioma — dos caminos, un dato.
+            'waiver' => [
+                'mode' => (string) $context['waiver']['mode'],
+                'required' => (bool) $context['waiver']['required'],
+                'outdated' => (bool) $context['waiver']['outdated'],
+                'document_id' => $context['waiver']['documentId'] === null ? null : (int) $context['waiver']['documentId'],
+            ],
         ];
     }
 }

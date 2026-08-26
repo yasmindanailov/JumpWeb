@@ -144,6 +144,21 @@ enum ApiErrorCode: string
      */
     case PaymentUnavailable = 'payment_unavailable';
 
+    // ── Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4) ───────────────────────────────────
+
+    /**
+     * 409 — el waiver no se firma en esta instalación (`waiver.mode` ≠ `interno`). Es un dato de la
+     * instalación que `GET /legal/waiver` ya publica; no se arregla reintentando.
+     */
+    case WaiverNotInternal = 'waiver_not_internal';
+
+    /**
+     * 409 — el identificador de texto que trae la aceptación no es el de la versión VIGENTE: el
+     * texto se publicó de nuevo entre servirlo y aceptarlo (o el id no es del waiver). El cliente
+     * vuelve a pedir `GET /legal/waiver` y lo presenta otra vez.
+     */
+    case WaiverDocumentStale = 'waiver_document_stale';
+
     /** Clave i18n del mensaje legible. Indirección deliberada: el código público no la conoce. */
     public function messageKey(): string
     {

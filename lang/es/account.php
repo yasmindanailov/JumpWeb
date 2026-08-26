@@ -129,6 +129,7 @@ return [
         'password' => 'Contraseña',
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',
+        'accept_waiver' => 'He leído y acepto la exención de responsabilidad (waiver).',
         'accept_privacy' => 'He leído y acepto la <a href=":url" target="_blank" rel="noopener">política de privacidad</a>.',
         'accept_terms' => 'Acepto los <a href=":url" target="_blank" rel="noopener">términos y condiciones</a>.',
         'marketing' => 'Quiero recibir novedades y ofertas (opcional).',

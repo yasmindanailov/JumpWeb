@@ -41,5 +41,13 @@ return [
         'order_not_retryable' => 'Cette réservation ne peut plus être payée.',
         'payment_unavailable' => "Nous n'avons pas pu ouvrir la passerelle de paiement. Réessayez.",
         'guest_form_closed' => 'Cette réservation a déjà eu lieu : ses informations sont consultables mais ne sont plus modifiables.',
+        'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
+        'waiver_document_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
+    ],
+
+    'register' => [
+        'waiver_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
+        'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
+        'waiver_document_required' => 'Pour accepter la décharge, il faut indiquer quel texte a été lu.',
     ],
 ];

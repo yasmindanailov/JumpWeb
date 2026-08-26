@@ -129,6 +129,7 @@ return [
         'password' => 'Password',
         'password_hint' => 'At least 8 characters. Avoid common or breached passwords.',
         'must_accept' => 'You must accept this to continue.',
+        'accept_waiver' => 'I have read and accept the liability waiver.',
         'accept_privacy' => 'I have read and accept the <a href=":url" target="_blank" rel="noopener">privacy policy</a>.',
         'accept_terms' => 'I accept the <a href=":url" target="_blank" rel="noopener">terms and conditions</a>.',
         'marketing' => 'I want to receive news and offers (optional).',

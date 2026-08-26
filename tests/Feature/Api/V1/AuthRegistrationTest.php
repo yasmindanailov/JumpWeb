@@ -3,8 +3,11 @@
 namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
@@ -430,6 +433,87 @@ class AuthRegistrationTest extends ApiTestCase
         Notification::fake();
         $this->postJson(self::ROOT.'/auth/email/resend', ['email' => $user->email])->assertAccepted();
         Notification::assertNothingSent();
+    }
+
+    // ─── Fase 6 · waiver: la casilla SEPARADA del alta (`specs/waiver-probatorio.md` §4.4) ───
+
+    private function internalWaiver(): LegalDocumentVersion
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+
+        return app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+    }
+
+    public function test_accepting_the_waiver_at_signup_signs_it_with_the_served_document(): void
+    {
+        $document = $this->internalWaiver();
+
+        $this->register(['accept_waiver' => true, 'waiver_document_id' => $document->id])
+            ->assertCreated()
+            ->assertValidRequest();
+
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $signature = WaiverSignature::where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($document->id, $signature->legal_document_version_id);
+        $this->assertSame('web', $signature->channel, 'con cookie de sesión el canal es la web');
+        $this->assertSame('Ana Pérez', $signature->holder_name);
+        $this->assertTrue($signature->verifyHash());
+        $this->assertSame(['privacy', 'terms', 'waiver'], $user->consents->pluck('type')->sort()->values()->all());
+        $this->assertNotNull($user->waiver_accepted_at);
+    }
+
+    /** Desmarcada por defecto: sin la casilla el alta es la de siempre, sin waiver. */
+    public function test_without_the_checkbox_the_signup_leaves_no_waiver(): void
+    {
+        $this->internalWaiver();
+
+        $this->register()->assertCreated();
+
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
+        $this->assertNull($user->waiver_accepted_at);
+    }
+
+    /** §4.4 — el texto cambió entre servirlo y aceptarlo: NO se crea la cuenta con un texto viejo. */
+    public function test_a_stale_document_rejects_the_signup_before_creating_anything(): void
+    {
+        $old = $this->internalWaiver();
+        app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Texto nuevo.']]],
+        ]);
+
+        $this->register(['accept_waiver' => true, 'waiver_document_id' => $old->id])
+            ->assertStatus(422)
+            ->assertValidResponse(422)
+            ->assertJsonPath('error.fields.waiver_document_id.0', __('api.register.waiver_stale'));
+
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->first());
+    }
+
+    public function test_accepting_without_saying_which_text_is_rejected(): void
+    {
+        $this->internalWaiver();
+
+        $this->register(['accept_waiver' => true])
+            ->assertStatus(422)
+            ->assertJsonPath('error.fields.waiver_document_id.0', __('api.register.waiver_document_required'));
+
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->first());
+    }
+
+    public function test_outside_internal_mode_the_checkbox_is_refused(): void
+    {
+        $document = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first(); // sin `waiver.mode`: externo
+
+        $this->register(['accept_waiver' => true, 'waiver_document_id' => $document->id])
+            ->assertStatus(422)
+            ->assertJsonPath('error.fields.waiver_document_id.0', __('api.register.waiver_not_internal'));
+
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->first());
     }
 
     /** El rol `customer` tiene que existir para que el alta lo asigne; si no, el test miente. */

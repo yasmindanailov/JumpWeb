@@ -43,5 +43,17 @@ return [
         'order_not_retryable' => 'Esa reserva ya no se puede pagar.',
         'payment_unavailable' => 'No hemos podido abrir la pasarela de pago. Inténtalo de nuevo.',
         'guest_form_closed' => 'Esa reserva ya se ha celebrado: sus datos se pueden consultar, pero ya no se editan.',
+        'waiver_not_internal' => 'El waiver no se firma en esta web.',
+        'waiver_document_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
+    ],
+
+    // Avisos POR CAMPO del alta (`POST /auth/register`) que solo emite el servidor en el 422.
+    // Viven aquí y no en `account.register` a propósito: ese grupo viaja en el montaje de CADA
+    // página (`SidebarMountTest` mide su presupuesto), y un texto que el cliente nunca pinta por su
+    // cuenta no tiene por qué pagar ese peaje.
+    'register' => [
+        'waiver_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
+        'waiver_not_internal' => 'El waiver no se firma en esta web.',
+        'waiver_document_required' => 'Para aceptar el waiver hay que indicar qué texto se ha leído.',
     ],
 ];

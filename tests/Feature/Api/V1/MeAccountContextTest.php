@@ -8,6 +8,11 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerAccountContext;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Identity\Services\WaiverSigner;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -99,7 +104,40 @@ class MeAccountContextTest extends ApiTestCase
                 'next_reservation' => null,
                 'pending_forms' => [],
                 'pending_forms_count' => 0,
+                'waiver' => ['mode' => 'externo', 'required' => false, 'outdated' => false, 'document_id' => null],
             ]);
+    }
+
+    /**
+     * Fase 6 · waiver (`specs/waiver-probatorio.md` §4.8): «la re-firma se pide en el siguiente
+     * momento natural —compra o login—». El contexto es lo que el cajón repinta al conseguir sesión,
+     * así que es donde viaja si hay que firmar y qué texto.
+     */
+    public function test_it_says_whether_the_waiver_needs_signing_and_which_text(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        $document = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+        $user = $this->verifiedUser('Grace Hopper');
+
+        $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => true, 'outdated' => false, 'document_id' => $document->id]);
+
+        app(WaiverSigner::class)->sign($user, $document, WaiverSignatureRequest::web('10.0.0.1', 'test'));
+        // El servicio es un singleton memoizado POR PETICIÓN; en el test las tres peticiones
+        // comparten contenedor, así que se olvida la instancia entre una y otra.
+        app()->forgetInstance(CustomerAccountContext::class);
+        $this->actingAs($user)->getJson(self::PATH)->assertOk()
+            ->assertJsonPath('waiver.required', false)
+            ->assertJsonPath('waiver.outdated', false);
+
+        $v2 = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Texto nuevo.']]],
+        ])->first();
+        app()->forgetInstance(CustomerAccountContext::class);
+        $this->actingAs($user)->getJson(self::PATH)->assertOk()
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => false, 'outdated' => true, 'document_id' => $v2->id]);
     }
 
     /** Un pack sin rellenar publica su formulario pendiente, con producto y destino. */

@@ -63,7 +63,9 @@ class ApiContractTest extends TestCase
         // valor por defecto, y los dos anti-bot solo los envía quien los tiene: el señuelo
         // `website` lo rellenan los bots y `turnstile_token` solo existe si la instalación
         // configuró claves. Obligarlos convertiría en 422 a un cliente correcto.
-        'RegisterRequest' => ['marketing', 'context', 'website', 'turnstile_token'],
+        // Y desde Fase 6 la casilla del waiver, que es opcional por definición (desmarcada por
+        // defecto): quien la marca debe decir qué texto leyó, y eso lo exige el servidor.
+        'RegisterRequest' => ['marketing', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN otra vez, y por el mismo motivo. Una línea de cesta sin complementos y
         // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
         // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`

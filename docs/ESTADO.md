@@ -37,14 +37,16 @@
 > `consents()->delete()`, `roles()->detach()` y la guarda de idempotencia—.
 > ✅ **HECHO y EMPUJADO** (`#159`): `RGPD-01` ya describe las OCHO operaciones que el código hace.
 > `User::anonymize()` **no se tocó** en esa tanda —md5 comprobado—: esa conducta la modifica el waiver.
-> ✅ **Agente A · waiver — tandas 1 (núcleo, `#160`) y 2 (panel, `#161`) EMPUJADAS** (spec **§9**),
->   con los pasos (2) de `RGPD-01` y la ampliación de `RGPD-04` escritos en sus filas. **Tanda 3 (el
->   cliente) en curso**; sus ficheros: `app/Domain/Identity/Services/{SelfSignup,WaiverSigner}.php` ·
->   `app/Http/Controllers/Api/V1/` (waiver nuevo + registro) · `app/Http/Api/` · `openapi/v1.yaml` ·
->   `routes/api.php` · `resources/js/sidebar/` (alta + zona de privacidad) · `lang/*/account.php` ·
->   `docs/specs/waiver-probatorio.md` · `docs/specs/api-v1.md` (§10) · `tests/Feature/Waiver/` ·
->   `tests/Feature/Api/V1/`. ⚠️ `routes/api.php` y `MeController` están en el `CRITICAL_RE`
->   (`VERIFY_CONC=1` tras los verificadores) — el waiver no toca dinero ni aforo, pero el gate lo exige igual.
+> ✅ **Agente A · waiver — tandas 1 (núcleo, `#160`), 2 (panel, `#161`) y 3a (API, `#163`)
+>   EMPUJADAS** (spec **§9**), con los pasos (2) de `RGPD-01` y la ampliación de `RGPD-04` escritos en
+>   sus filas. **Tanda 3b (el CAJÓN, Vue) en curso**; sus ficheros: `resources/js/sidebar/` (el alta
+>   del paso 5, la zona de privacidad, el aviso de re-firma, sus stores y sus `.test.js`) ·
+>   `resources/css/` (solo si hace falta una regla nueva: `SidebarStyleWiringTest`) · `storage/ssr/`
+>   (`build:ssr`) · `lang/*/account.php` (rótulos del cajón) · `docs/specs/waiver-probatorio.md` ·
+>   `docs/specs/sidebar-spa.md` (§8, el mapa) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/`.
+>   ⚠️ Corrección de una nota anterior de esta fila: **ni `routes/api.php` ni `MeController` están en
+>   el `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—; medido contra la regex
+>   del hook. El waiver no ha exigido `VERIFY_CONC` en ningún push.
 > ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **OCHO** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
@@ -57,7 +59,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#161`**.
+> El último usado es **`#163`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -142,9 +144,15 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2909 en verde** (16.806 aserciones, `--parallel` **~75 s** medidos el 2026-08-26 en la
+- Suite **2934 en verde** (16.953 aserciones, `--parallel` **~63 s** medidos el 2026-08-26 en la
   máquina del agente A) ·
-  ▶ **+25 en el último corte** (`#161`): `WaiverProofPdfTest` (14: permiso propio, IDOR, auditoría,
+  ▶ **+25 en el último corte** (`#163`): `LegalWaiverTest` (5), `MeWaiverTest` (14: estado por modo,
+  aceptar solo lo servido, `409` caducado / no interno, canal por autenticación, el PDF propio con
+  IDOR y auditoría, y que el export NO lleva el registro probatorio), `AuthRegistrationTest` (+5: la
+  casilla opt-in, el rechazo ANTES de crear la cuenta) y `MeAccountContextTest` (+1). **5 mutaciones,
+  las 5 muerden** (spec §9.8). ⚠️ Y los avisos del alta se movieron a `api.register.*` porque en
+  `account.register.*` sacaban de su techo a los DOS presupuestos del montaje del cajón.
+  ▶ Antes, **+25** (`#161`): `WaiverProofPdfTest` (14: permiso propio, IDOR, auditoría,
   `no-store`, idioma del texto firmado, **el PDF no cambia al editar la página ni al publicar otra
   versión**, determinismo, la identidad copiada sobrevive a `anonymize()`, tres idiomas distintos),
   `WaiverProofActionTest` (6) y `PresentialWaiverDeclarationTest` (5). **5 mutaciones, las 5
@@ -473,8 +481,10 @@ sobrevive a `anonymize()` y la acción de publicar — **sin publicar ninguna ve
 mecanismo: un `[PENDIENTE]` no se publica). ✅ **Y la tanda 2 —el panel— también** (`#161`, 2026-08-26):
 la identidad del firmante viaja EN la firma (`[DECIDIDO owner]`), permiso propio `waiver.view`, el
 registro en la ficha como acción auditada, el PDF del snapshot en el idioma firmado y el alta
-presencial declarada. Queda la tanda 3 (cliente: API, casilla del alta, cajón, re-firma). **No toca la
-landing**. Detalle en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de
+presencial declarada. ✅ **Y la 3a —el cliente por API— también** (`#163`): `GET /legal/waiver`,
+`GET|POST /me/waiver` (aceptar SOLO el texto que el servidor sirvió), el PDF propio, la casilla del
+alta y `waiver` en el contexto de cuenta. Queda la **3b: el cajón** (casilla en el paso 5, zona de
+privacidad, aviso de re-firma al entrar o al comprar). **No toca la landing**. Detalle en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de
 `CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su

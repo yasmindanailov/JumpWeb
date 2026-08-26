@@ -41,5 +41,13 @@ return [
         'order_not_retryable' => 'That booking can no longer be paid.',
         'payment_unavailable' => 'We could not open the payment gateway. Please try again.',
         'guest_form_closed' => 'That booking has already taken place: its details can be viewed but no longer edited.',
+        'waiver_not_internal' => 'The waiver is not signed on this website.',
+        'waiver_document_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
+    ],
+
+    'register' => [
+        'waiver_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
+        'waiver_not_internal' => 'The waiver is not signed on this website.',
+        'waiver_document_required' => 'To accept the waiver you must indicate which text you have read.',
     ],
 ];

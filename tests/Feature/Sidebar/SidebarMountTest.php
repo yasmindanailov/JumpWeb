@@ -688,8 +688,10 @@ class SidebarMountTest extends TestCase
         $seed = $this->bootPayload($this->actingAs($user)->get('/')->getContent())['accountContext'];
 
         // (1) Lo ESTRUCTURAL, que es lo que discrimina de verdad.
+        // `waiver` entró a propósito el 2026-08-26 (`DECISIONES #163`, spec del waiver §4.8): cuatro
+        // campos cortos, y el endpoint lo publica igual (`MeAccountContextTest`, contrato).
         $this->assertSame(
-            ['first_name', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count'],
+            ['first_name', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver'],
             array_keys($seed),
             'La semilla ha cambiado de forma. Cada campo nuevo viaja en el HTML de TODA página con '.
             'sesión: si hace falta, que entre a propósito — y comprueba antes que el endpoint lo '.

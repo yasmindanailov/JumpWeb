@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GuestFormController;
+use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\V1\MePrivacyController;
 use App\Http\Controllers\Api\V1\MeProfileController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
+use App\Http\Controllers\Api\V1\MeWaiverController;
 use App\Http\Controllers\Api\V1\OrderEventDataController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
@@ -96,6 +98,12 @@ Route::name('api.v1.')->group(function (): void {
     // Va SEPARADO de `/config` porque es ESTADO y se relee: la dueña acciona el interruptor con
     // clientes navegando, y un snapshot de arranque mentiría desde ese segundo.
     Route::get('/booking/status', BookingStatusController::class)->name('booking.status');
+
+    // ── El texto firmable del waiver (Fase 6, `specs/waiver-probatorio.md` §4.4) — PÚBLICO ────
+    // Quien se da de alta aún no tiene sesión y es justo cuando lo necesita. Publica el SNAPSHOT
+    // vigente con su identificador: lo que se enseña es exactamente lo que se acepta. `document`
+    // es `null` fuera del modo interno o sin versión publicada — no es un error.
+    Route::get('/legal/waiver', [LegalWaiverController::class, 'show'])->name('legal.waiver.show');
 
     // ── Catálogo (paso 1b) — PÚBLICO ──────────────────────────────────────────────────────────
     // El escaparate se mira sin cuenta: la web ya deja llegar hasta el pago como invitado, y pedir
@@ -221,6 +229,19 @@ Route::name('api.v1.')->group(function (): void {
         // y esa página se retira: sin esto, el borrado le quitaría al cliente la prueba visible del
         // art. 7.1. NO publica la IP — eso viaja en el export, que es un acto explícito.
         Route::get('/me/consents', [MePrivacyController::class, 'consents'])->name('me.consents.index');
+
+        // ── Mi waiver (Fase 6, `specs/waiver-probatorio.md` §4.4, §4.5, §4.8) ──────────────────
+        // Estado según el modo · ACEPTAR el texto vigente con el `document_id` que se sirvió (si
+        // cambió entre medias, 409 y se vuelve a leer) · el PDF de una firma PROPIA, auditado. El
+        // `throttle` de las dos últimas acota filas append-only y generación de PDF; `no-store` lo
+        // pone el grupo (`RGPD-04`).
+        Route::get('/me/waiver', [MeWaiverController::class, 'show'])->name('me.waiver.show');
+        Route::post('/me/waiver', [MeWaiverController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('me.waiver.store');
+        Route::get('/me/waiver/{signature}/pdf', [MeWaiverController::class, 'pdf'])
+            ->middleware('throttle:10,1')
+            ->name('me.waiver.pdf');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
 

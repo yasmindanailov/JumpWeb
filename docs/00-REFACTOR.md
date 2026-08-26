@@ -1888,6 +1888,16 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         idioma del texto firmado (determinista, `no-store`, IDOR, auditado; `RGPD-04` amplía) con las
         etiquetas en `lang/{es,en,fr}/waiver.php`, y el alta presencial en modo interno como firma
         **declarada por el operador** (§8.4). Detalle y lo medido: spec **§9.6**.
+  - [x] **B · tanda 3a — el CLIENTE por API** (2026-08-26, `#163`): `GET /legal/waiver` (público, el
+        snapshot vigente con su id), `GET|POST /me/waiver` (estado · aceptar SOLO lo que el servidor
+        sirvió: `409 waiver_document_stale` si el texto cambió), el PDF propio auditado, la casilla del
+        alta (`accept_waiver` + `waiver_document_id`, comprobada ANTES de crear la cuenta) y `waiver`
+        en `me/account-context` (donde vive la re-firma «en el siguiente momento natural»). Contrato
+        en `openapi/v1.yaml`; los avisos del alta fuera del montaje del cajón (presupuesto medido).
+        Spec **§9.8**, `api-v1.md` §10.septdecies.
+  - [ ] **B · tanda 3b — el CAJÓN** (Vue): casilla en el alta del paso 5, zona de privacidad con
+        «firmar / re-firmar» y los PDF, y el aviso al entrar o al ir a pagar. Con los presupuestos del
+        cajón delante (`SidebarBundleBudgetTest`, 40 líneas por componente, diff de árbol, `build:ssr`).
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
       modos** (externo / interno / desactivado). ⚠️ **Y modifica `INVARIANTES` §3 (RGPD-01)**: el
       registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.

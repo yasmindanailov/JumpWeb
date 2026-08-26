@@ -129,6 +129,7 @@ return [
         'password' => 'Mot de passe',
         'password_hint' => 'Au moins 8 caractères. Évitez les mots de passe courants ou compromis.',
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
+        'accept_waiver' => "J'ai lu et j'accepte la décharge de responsabilité.",
         'accept_privacy' => "J'ai lu et j'accepte la <a href=\":url\" target=\"_blank\" rel=\"noopener\">politique de confidentialité</a>.",
         'accept_terms' => "J'accepte les <a href=\":url\" target=\"_blank\" rel=\"noopener\">conditions générales</a>.",
         'marketing' => 'Je souhaite recevoir les nouveautés et offres (facultatif).',

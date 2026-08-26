@@ -8750,3 +8750,36 @@ lo que costó no saber la causa de `#97`.** Corregido —conoce los dos formatos
 dice y manda al log en vez de callar— y re-verificado: ahora nombra la clase.
 ⚠️ **Y el fichero mutado se restauró comprobando md5 — la primera restauración NO cuadró**: se había
 comido un paréntesis. Por eso la regla es comprobar el md5 y no decir «restaurado».
+
+## #163 · 2026-08-26 · El waiver por API (tanda 3a): el texto vigente con su id, aceptar solo lo que se sirvió, el PDF propio y «hay que firmar» en el contexto de cuenta
+
+**Qué se hizo** (agente A, spec `specs/waiver-probatorio.md` **§9.8**, contrato en `openapi/v1.yaml`,
+lo que enseñó en `specs/api-v1.md` §10.septdecies): la mitad servidor de la tanda 3 — `GET /legal/waiver`
+(público: el snapshot vigente en el idioma negociado, con su `id`), `GET /me/waiver` (estado según el
+modo y mis firmas con su PDF), `POST /me/waiver` (aceptar con el id servido; `409 waiver_document_stale`
+si el texto cambió, `409 waiver_not_internal` fuera del modo interno), `GET /me/waiver/{signature}/pdf`
+(el PDF PROPIO, auditado), la casilla del alta (`accept_waiver` + `waiver_document_id`, opt-in) y
+`waiver: {mode, required, outdated, document_id}` en `me/account-context` — el sitio de la re-firma
+«en el siguiente momento natural» (§4.8).
+
+**La regla que vale todo**: «el identificador de la versión que el servidor sirvió» es, por definición,
+el VIGENTE (`WaiverAcceptance::currentDocument()`), y las dos puertas la comparten sin copiarla. En el
+alta se rechaza **antes de crear la cuenta** —un 422 después dejaría al cliente sin saber si la tiene—
+y como aviso bajo el campo; en `/me/waiver`, como un 409 con código.
+
+**Lo que enseñó y hubo que corregir en el mismo commit**: los avisos por campo del alta, puestos en
+`account.register.*`, **sacaron de su techo a los dos presupuestos del montaje del cajón** (anónimo:
+3.381 B sobre 3.200 · con sesión: 6.794 sobre 6.600) — ese grupo viaja en cada página y esos textos
+solo los emite el servidor. Se movieron a `api.register.*` y solo el rótulo de la casilla se queda.
+Y `waiver` entró en la semilla del montaje **a propósito**, con su clave declarada en
+`SidebarMountTest` y el endpoint publicándolo igual.
+
+**Lo medido**: +25 casos · contrato en verde (rutas ↔ `paths`, códigos ↔ `enum`, esquemas
+estrictos; los dos campos nuevos del alta en `OPTIONAL_BY_DESIGN`) · cinco mutaciones, las cinco
+muerden (§9.8).
+
+**Lo que NO se decidió aquí**: el plazo y el texto definitivo (`[PENDIENTE: owner]`). 3b (el cajón)
+sin empezar.
+
+Verificación: suite verde sobre el estado FUSIONADO con `#162` (contador en `ESTADO`) · Pint ✓ ·
+`docs-check` ✓ · mutaciones con su salida en §9.8.

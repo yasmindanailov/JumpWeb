@@ -139,7 +139,7 @@ que dejarían de coincidir si cada una llevara su copia.
 | Superficie | Endpoints (futuro) | Autorización | Se apoya en |
 |---|---|---|---|
 | Auth | `POST auth/login` · `register` · `logout` · `password/forgot` · `password/reset` · `email/resend` · ~~`auth/tokens`~~ (emisión aplazada a Fase 6, `DECISIONES #29`) | pública, con limitadores de `SEC-06` | **`Livewire\Auth\Register`** (no `CustomerRegistrar`, ver §8) |
-| Cuenta | ✅ **TODA abierta** (tanda 2 del área de cliente, `#120(n)`–`(s)`): `GET/PATCH me` · `PUT me/password` · `POST me/sessions/revoke-others` · `DELETE me` (art. 17: **anonimiza**, no borra) · `GET me/export` (art. 20) · `DELETE me/pending-email` · `POST me/pending-email/resend`. ⚠️ Los nombres de esta fila eran los PREVISTOS en Fase 3 y dos cambiaron al construirlos —era `PATCH me/password` y `POST me/logout-others`—: manda `openapi/v1.yaml` | dueño; reconfirmación de contraseña **con limitador** por (titular, IP) | `Identity\Services\AccountCredentials`/`AccountProfile`/`AccountPrivacy` · `User::anonymize()` · `Booking\Contracts\CustomerOrderHistory` |
+| Cuenta | ✅ **TODA abierta** (tanda 2 del área de cliente, `#120(n)`–`(s)`): `GET/PATCH me` · `PUT me/password` · `POST me/sessions/revoke-others` · `DELETE me` (art. 17: **anonimiza**, no borra) · `GET me/export` (art. 20) · `DELETE me/pending-email` · `POST me/pending-email/resend`. ⚠️ Los nombres de esta fila eran los PREVISTOS en Fase 3 y dos cambiaron al construirlos —era `PATCH me/password` y `POST me/logout-others`—: manda `openapi/v1.yaml`. ▶ **Fase 6 · waiver** (`DECISIONES #163`, `specs/waiver-probatorio.md` §9.8): `GET legal/waiver` (público: el texto firmable vigente con su id) · `GET/POST me/waiver` (estado propio · aceptar con el id servido; `409 waiver_document_stale` si el texto cambió, `409 waiver_not_internal` fuera del modo interno) · `GET me/waiver/{signature}/pdf` (el PDF propio, auditado); el alta acepta `accept_waiver` + `waiver_document_id`, y `me/account-context` publica `waiver` (§10.septdecies) | dueño; reconfirmación de contraseña **con limitador** por (titular, IP) | `Identity\Services\AccountCredentials`/`AccountProfile`/`AccountPrivacy` · `User::anonymize()` · `Booking\Contracts\CustomerOrderHistory` |
 | **Mis pedidos** | `GET me/orders` (paginado, TODOS los estados) | dueño | `AccountController::index` (hoy pagina 3 con items/payments/adjustments) |
 | Mis reservas | `GET me/reservations` | dueño | `Booking\Contracts\CustomerReservations` |
 | Catálogo | `GET catalog/zones` · `catalog/products` · `catalog/products/{id}` | pública | **read-model NUEVO en Booking**, extraído de `Purchase::render()` — incluye esquema `event_fields` y config de complementos |
@@ -1066,3 +1066,39 @@ saber a qué pantalla ir sin preguntar `GET /me`. No es un defecto del contrato:
 honeypot sirva, y el contrato ya lo dejaba escrito («quien se registra dentro de la compra ya queda
 identificado y puede pedir su perfil»). ⚠️ Y el fallo de esa segunda pregunta **no** puede leerse como
 «hay sesión»: llevaría al pago a quien no ha entrado.
+
+### 10.septdecies Lo que el código enseñó — Fase 6 · el waiver por API (2026-08-26, `DECISIONES #163`)
+
+**88. «El identificador de la versión que el servidor sirvió» es, por definición, el VIGENTE — y las
+dos puertas lo dicen de forma distinta a propósito.** `WaiverAcceptance::currentDocument()` es la única
+regla: el id tiene que ser del waiver y de la última versión publicada; si el texto se publicó de nuevo
+entre servirlo y aceptarlo, se rechaza. En `POST /me/waiver` eso es un **`409 waiver_document_stale`**
+—un estado, que el cliente resuelve volviendo a pedir `GET /legal/waiver`—; en `POST /auth/register` es
+un **422 sobre `waiver_document_id`**, porque ahí el cliente pinta el aviso bajo la casilla, como con
+cualquier otro campo. Y en el alta se comprueba **antes de crear la cuenta**: un rechazo después
+dejaría al cliente sin saber si tiene cuenta (la misma lección que el punto 85 dio con la sesión).
+
+**89. Una casilla opcional con dato obligatorio se expresa con `required_if_accepted`, no con
+`required`.** `accept_waiver` es opt-in (desmarcada por defecto, §4.4: nada obliga a firmar en el alta),
+pero marcada sin `waiver_document_id` no prueba nada y se rechaza con su propio mensaje. OpenAPI no
+sabe decir «obligatorio si otro campo es `true`», así que los dos campos van a `OPTIONAL_BY_DESIGN` y
+quien lo exige es el servidor — el mismo patrón que `ProfileUpdateRequest.current_password` (punto 61).
+
+**90. La re-firma «en el siguiente momento natural» necesitaba un SITIO, y el sitio es
+`me/account-context`.** Es lo que el cajón repinta al conseguir sesión sin recargar, así que es donde
+viaja «hay que firmar» (`required`), «firmaste un texto anterior» (`outdated`) y qué texto
+(`document_id`, el mismo id que `GET /legal/waiver`). Y por la regla de la semilla (`AccountContextSeed`:
+se poda por cardinalidad, nunca por campo) viaja también en el HTML de cada página con sesión: cuatro
+campos cortos, dentro del techo de 512 B que fija `SidebarMountTest`.
+
+**91. El canal de una firma sale de CÓMO se autenticó la petición, no de un campo.** `bearerToken()`
+presente → `api` (app nativa); cookie de sesión → `web` (el cajón). Un campo `channel` en el cuerpo sería
+un dato que el cliente declara sobre sí mismo, y el registro probatorio no debe llevar nada que el
+cliente pueda inventar. `Sanctum::actingAs()` en los tests no pone la cabecera: hay que enviarla a mano
+para probar el canal `api`.
+
+**92. El PDF propio va por la API con `application/pdf` en el contrato y SIN `assertValidResponse`.**
+El documento se sirve igual que al operador (mismo `WaiverProof`, misma vista), pero la ruta es de
+`/api/v1` para que la app nativa lo descargue con su Bearer. Spectator no valida binarios; la prueba de
+la respuesta es la cabecera `%PDF-`, el `content-type` y el `no-store` del grupo, como en la hoja de
+reserva.

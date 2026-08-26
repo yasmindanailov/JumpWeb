@@ -388,14 +388,15 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 ---
 
-## 9. Ejecución — tandas 1 (el NÚCLEO, `#160`) y 2 (el PANEL, `#161`) HECHAS; 3 pendiente
+## 9. Ejecución — tandas 1 (NÚCLEO, `#160`), 2 (PANEL, `#161`) y 3a (API, `#163`) HECHAS; 3b pendiente
 
-> Lo que hay en el árbol, dicho sin optimismo. Tres tandas: ✅ **1 · el núcleo** (§9.1–§9.4,
-> 2026-08-25) · ✅ **2 · el panel** (§9.6–§9.7, 2026-08-26: PDF del snapshot, registro en la ficha con
-> permiso propio y consulta auditada, alta presencial declarada, y **la identidad del firmante EN la
-> firma**) · ⬜ **3 · el cliente** (API `legal/waiver` + `me/waiver`, casilla en el alta, zona de
-> privacidad del cajón, re-firma en el siguiente momento natural). **No hay ninguna versión
-> publicada** en ninguna instalación: §8.1 sigue vigente y ahora es mecanismo (§9.2).
+> Lo que hay en el árbol, dicho sin optimismo. ✅ **1 · el núcleo** (§9.1–§9.4, 2026-08-25) · ✅ **2 ·
+> el panel** (§9.6–§9.7, 2026-08-26: PDF del snapshot, registro en la ficha con permiso propio y
+> consulta auditada, alta presencial declarada, y **la identidad del firmante EN la firma**) · ✅ **3a ·
+> el cliente por API** (§9.8, 2026-08-26: `GET /legal/waiver`, `GET|POST /me/waiver`, el PDF propio,
+> la casilla del alta y `waiver` en el contexto de cuenta) · ⬜ **3b · el cajón** (Vue: casilla en el
+> paso 5, zona de privacidad, aviso al entrar o al comprar). **No hay ninguna versión publicada** en
+> ninguna instalación: §8.1 sigue vigente y ahora es mecanismo (§9.2).
 
 ### 9.1 Qué existe (todo en Identity; la capa de entrega solo lo consume)
 
@@ -550,3 +551,50 @@ sin permiso propio → `test_staff_without_the_waiver_permission…` cae · PDF 
 - **La limpieza de go-live borra las firmas ANTES que los usuarios** (`PurgeCustomerData`, `RESTRICT`)
   y por `DB::table`, porque el modelo rechaza `delete()`. Cualquier otra limpieza nueva hereda las dos
   condiciones.
+
+### 9.8 Ejecución — tanda 3a, el CLIENTE por API (2026-08-26, `DECISIONES #163`)
+
+La mitad servidor de la tanda 3: todo lo que el cajón (3b) y una app nativa necesitan para presentar
+el texto, aceptarlo y ver la prueba, **sin tocar todavía una línea de Vue**. Contrato en
+`openapi/v1.yaml` (manda), lo que enseñó en `specs/api-v1.md` §10.septdecies.
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `GET /legal/waiver` (público) | `app/Http/Controllers/Api/V1/LegalWaiverController.php` · `app/Http/Resources/Api/V1/WaiverDocumentResource.php` | El SNAPSHOT vigente en el idioma negociado, con su `id`; `document: null` fuera del modo interno o sin versión (no es un error) |
+| `GET /me/waiver` | `app/Http/Controllers/Api/V1/MeWaiverController.php` · `app/Http/Resources/Api/V1/WaiverStatusResource.php` | Estado según el modo (`signed`, `outdated`, `current_document_id`) y mis firmas con su PDF; sin ip, UA ni hashes |
+| `POST /me/waiver` | ídem + `app/Domain/Identity/Services/WaiverAcceptance.php` | Aceptar con el `document_id` servido → 201 con el estado nuevo; `409 waiver_document_stale` si el texto cambió, `409 waiver_not_internal` fuera del modo interno. Sirve para la re-firma (§4.8) |
+| `GET /me/waiver/{signature}/pdf` | ídem | El PDF PROPIO (§4.5), scoping por el guard (404 si no es mía), auditado, `no-store` por el grupo |
+| El alta | `app/Http/Controllers/Api/V1/AuthRegistrationController.php` · `app/Domain/Identity/Services/SelfSignup.php` | `accept_waiver` (opt-in, desmarcada) + `waiver_document_id` (`required_if_accepted`); la vigencia se comprueba **antes** de crear la cuenta (422 sobre el campo); `createAccount()` firma con el `WaiverSigner` de siempre |
+| El contexto de cuenta | `app/Domain/Identity/Services/CustomerAccountContext.php` · `app/Http/Resources/Api/V1/AccountContextResource.php` | `waiver: {mode, required, outdated, document_id}` — el sitio de la re-firma «en el siguiente momento natural»; viaja también en la semilla del montaje (`AccountContextSeed`) |
+| Códigos de error | `app/Http/Api/ApiErrorCode.php` · `lang/{es,en,fr}/api.php` | `waiver_not_internal` · `waiver_document_stale` (409), en el `enum` del contrato |
+
+**Decisiones de ingeniería** (el porqué, en §10.septdecies de la spec de la API): (1) «la versión que
+el servidor sirvió» = la VIGENTE, y `WaiverAcceptance::currentDocument()` es la única regla para las
+dos puertas; en el alta se rechaza **antes** de crear la cuenta y como 422 sobre el campo, en
+`/me/waiver` como 409 con código. (2) El canal (`web`/`api`) sale de cómo se autenticó la petición,
+nunca de un campo del cuerpo. (3) Los avisos por campo del alta viven en `api.register.*`, no en
+`account.register.*`: ese grupo viaja en el montaje de cada página y `SidebarMountTest` mide su
+presupuesto — al ponerlos ahí, el montaje anónimo pasó de su techo (3.381 B sobre 3.200) y con
+sesión también (6.794 sobre 6.600); movidos, cabe. Solo el rótulo de la casilla (`accept_waiver`)
+se queda, porque el cajón sí lo pinta. (4) El export del art. 20 lleva el consentimiento visible y
+**no** el registro probatorio (§4.6) — aseverado. (5) El PDF propio va por la API para que la app
+nativa lo baje con su Bearer; mismo `WaiverProof` y misma vista que el panel.
+
+**Lo medido**: suite **+25** (`LegalWaiverTest` 5 · `MeWaiverTest` 14 · `AuthRegistrationTest` +5 ·
+`MeAccountContextTest` +1), el contrato en verde (`ApiContractTest`: rutas ↔ `paths`, códigos ↔
+`enum`, esquemas estrictos) y los presupuestos del montaje del cajón dentro de su techo tras la poda.
+**Cinco mutaciones, las cinco muerden** (control verde, ficheros restaurados por `cmp`): un texto
+caducado aceptado → `test_a_stale_document_id_is_rejected…` cae · el alta sin comprobar la vigencia →
+`test_a_stale_document_rejects_the_signup…` cae · el PDF sin IDOR → `test_someone_elses_signature…`
+cae · un alta que no firma → `test_accepting_the_waiver_at_signup…` cae · un contexto que no avisa →
+`test_it_says_whether_the_waiver_needs_signing…` cae.
+
+**Trampas** (para la 3b): `CustomerAccountContext` es un singleton memoizado por petición — en un
+test que encadena peticiones hay que `app()->forgetInstance()` entre ellas · `Sanctum::actingAs()` no
+pone la cabecera `Authorization`: para probar el canal `api` hay que enviarla · Spectator no valida
+binarios: el PDF se prueba por `%PDF-`, `content-type` y `no-store`.
+
+**Lo que queda (3b, el cajón)**: la casilla en el alta del paso 5 (`register.js` + su `.vue`),
+la zona de privacidad con «firmar / re-firmar» y los PDF, y el aviso al entrar o al ir a pagar
+cuando `accountContext.waiver.required|outdated` — con los presupuestos del cajón delante
+(`SidebarBundleBudgetTest`, el techo de 40 líneas por componente, el diff de árbol y `build:ssr`).

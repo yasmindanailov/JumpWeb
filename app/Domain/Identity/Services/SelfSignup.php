@@ -4,8 +4,10 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\SignupResult;
 use App\Domain\Identity\Models\Consent;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
 use Illuminate\Support\Facades\DB;
@@ -231,6 +233,20 @@ class SelfSignup
                     'ip' => $ip,
                     'version' => Consent::CURRENT_VERSION,
                 ]);
+            }
+
+            // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): la casilla SEPARADA y desmarcada del
+            // alta. Solo si el llamante ya comprobó que el identificador es el de la versión vigente
+            // (`WaiverAcceptance::currentDocument`) y lo pasa aquí resuelto: esta transacción no
+            // puede fallar por un texto caducado después de haber creado la cuenta. Mismo `WaiverSigner`
+            // que las demás puertas — una firma es una firma, entre por donde entre.
+            $waiver = $data['waiver'] ?? null;
+            if (is_array($waiver) && ($waiver['document'] ?? null) instanceof LegalDocumentVersion) {
+                app(WaiverSigner::class)->sign($user, $waiver['document'], new WaiverSignatureRequest(
+                    channel: (string) ($waiver['channel'] ?? WaiverSignature::CHANNEL_WEB),
+                    ip: $ip,
+                    userAgent: isset($waiver['user_agent']) ? (string) $waiver['user_agent'] : null,
+                ));
             }
 
             return $user;
