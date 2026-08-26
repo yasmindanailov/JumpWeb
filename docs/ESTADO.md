@@ -137,9 +137,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2934 en verde** (16.954 aserciones, `--parallel` **~63 s** medidos el 2026-08-26 en la
+- Suite **2935 en verde** (16.956 aserciones, `--parallel` **~63 s** medidos el 2026-08-26 en la
   máquina del agente A) ·
-  ▶ **+0 tests y +1 aserción en el último corte** (`#166`, la 3b del waiver): lo nuevo es JS —
+  ▶ **+1 test en el último corte** (2026-08-26, tras `#166`, sin número: un fix con su guarda):
+  `SeededSettingsAreSaveableTest` — lo que siembra `db:seed` tiene que poder guardarse desde Ajustes;
+  el owner lo pilló en navegador (`DEUDA.md` · Baja: «Guardar» mudo por un `#` sembrado) ·
+  ▶ **+0 tests y +1 aserción en el corte anterior** (`#166`, la 3b del waiver): lo nuevo es JS —
   `npm run test:js` **671 → 690** (+19: módulo 6 · store 9 · `register.js` 4)— y la aserción es la
   lista exacta de `register` en `SidebarMountTest` ·
   ▶ **+25 en el corte anterior** (`#163`): `LegalWaiverTest` (5), `MeWaiverTest` (14: estado por modo,

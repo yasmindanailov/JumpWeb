@@ -55,7 +55,7 @@ class LandingContentSeeder extends Seeder
             ['key' => 'contact.tiktok', 'value' => 'https://tiktok.com/@saltopark', 'group' => 'social'],
             ['key' => 'address.line1', 'value' => 'Avenida de los Saltos, 22', 'group' => 'contact'],
             ['key' => 'address.line2', 'value' => '30009 Murcia', 'group' => 'contact'],
-            ['key' => 'address.maps_url', 'value' => '#', 'group' => 'contact'],
+            ['key' => 'address.maps_url', 'value' => '', 'group' => 'contact'],
             ['key' => 'seo.og_image', 'value' => '', 'group' => 'seo'], // [PENDIENTE] imagen para compartir en redes
             ['key' => 'payment.tax_rate', 'value' => '21', 'group' => 'payment'], // IVA % por defecto [PENDIENTE: confirmar con el gestor]
             ['key' => 'sales.hold_minutes', 'value' => '15', 'group' => 'payment'], // retención de plaza durante el pago
