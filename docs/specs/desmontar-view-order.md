@@ -752,7 +752,7 @@ fila compartida).
 - `OversellVerifierCoversEveryQuotaTest` conoce el escenario nuevo (inventario al día).
 - Suite **2950 / 17.013 en verde** · Pint ✓ · cero restos en la BD tras cada ejecución (comprobado).
 
-**4b · El MOVIMIENTO — PENDIENTE (tanda propia, la última; con la 4b el desmontaje TERMINA, §4.4).**
+**4b · El MOVIMIENTO — EN EJECUCIÓN desde el 2026-08-26 por la noche (tanda propia, la última; con la 4b el desmontaje TERMINA, §4.4).** ▶ El plan refinado con el código delante, sub-paso a sub-paso, está en **§9.6**; lo de abajo es el handoff original, que §9.6 corrige en cinco puntos.
 Las cuatro fases de §4.3 a un servicio de dominio (dueño de la txn de aforo + orquestador de la
 secuencia financiera), el waterfall de créditos como pieza única, las guardas por sus DOS traits,
 la decisión del `CRITICAL_RE` para el servicio nuevo, y al cerrar: los verificadores (incluido
@@ -784,3 +784,85 @@ commitea en local ANTES de sus mutaciones — la regla de §9.1):
 - **H · El cierre**: el servicio nuevo ENTRA en el `CRITICAL_RE` (y `CriticalPathGateTest` con él)
   · los verificadores todos (los 6 escenarios + Redsys) · `wc -l` final declarado aquí y en
   `DEUDA.md` · la pasada de NAVEGADOR del owner por las 10 acciones (§6·5).
+
+### 9.6 Extracción 4b · El plan refinado con el código delante (2026-08-26, noche) — `[DECIDIDO agente B]`
+
+> Escrito ANTES de tocar una línea, tras leer entero lo que se muda. El owner entregó el objetivo
+> («procede según tu valoración profesional»); la forma del contrato la dejaba §4.4 a este paso.
+> Registro: `DECISIONES #182`.
+
+**Lo medido, que ordena el diseño.** Lo que se muda no tiene UNA forma transaccional sino CUATRO:
+`executeItemEdit` (471 líneas: txn de aforo + secuencia financiera POST-commit + email) ·
+`executeItemSlotChange` (154: txn de aforo, sin dinero) · `saveItemEventData*` (192: txn mínima,
+`RGPD-02`) · `executeItemCancellation` (99: txn con el audit de éxito DENTRO a propósito) ·
+`executeItemRefundBatch` (157: **sin txn propia**, delega en `Order::executePartialRefundBatch`).
+Siete entradas por reflexión (6 en tests + el instrumento `panel-edit`); dos costuras desde
+`PresentsOrderActions` (los `*Preview` llaman a `computeEditPricing`/`computeAddonPricing`).
+
+**Cinco correcciones a la letra de §9.5 (el diseño de §4.3 se sostiene; cambia el reparto):**
+
+1. **E no puede importar `PaymentRefund`.** Un servicio nuevo en `Booking` que use
+   `PaymentRefund::MODE_*`/`intents()` abre una flecha Booking→Payments, y la baseline de
+   `ModuleBoundariesTest` **solo encoge** (lo pagó ya la extracción 3 con `PaymentSettings`). La
+   página resuelve `mode` (forzado a manual por `isRedsysRefundable()`) e `intent` **exactamente
+   como ya lo hace el reembolso a nivel PEDIDO** (`refundAction`), y el servicio recibe escalares.
+   Esa normalización no tiene efectos: cero cambio de conducta.
+2. **`applyGroupChoices` y `normalizeAddonEdits` NO son dominio: traducen el FORMULARIO a
+   intención** (`group_choice_<md5>`, filas `addon_edits`/`addon_adds`). Moverlos metería nombres
+   de campo de Filament en `app/Domain/`. Se quedan en la entrega, con el despachador (G); el
+   contrato del dominio recibe la intención ya normalizada (`{edits, adds}`). Misma naturaleza que
+   la desviación de §9.3.
+3. **La asimetría del waterfall (§8.9) es sintáctica, no semántica.** El marcador del ítem
+   principal exige `quantity_change` o `unit_price_change` en el contexto; el de la re-escala
+   per-invitado no lo exige — pero su contexto lleva SIEMPRE `quantity_change`. Una sola función
+   con la condición evaluada sobre el contexto da resultados idénticos en los dos sitios. Se
+   confirma por mutación al extraer.
+4. **UN solo punto de lock.** `lockZoneDaySlots` se llama desde dos métodos y `panel-edit` solo
+   ejecuta uno: tras la 4b un lock retirado en `edit()` sería invisible. `edit()` y `changeSlot()`
+   mutan a través de un único `withZoneDayLock()` → la mutación del instrumento cubre ambos. Y
+   **la consolidación de §8.9 se hace**: `ZoneDaySlotLock` compartido con `OrderCreator::lockSlots`
+   (misma consulta: ids literales, `orderBy('id')`, `FOR UPDATE` primero; el porqué documentado UNA
+   vez), verificado viendo fallar `entry` Y `panel-edit` con el helper mutado.
+5. **La autorización es la PRIMERA guarda del servicio**, con `User $by` explícito en vez de
+   `auth()`: `SEC-04` en el punto de ejecución sea quien sea el llamante, y el instrumento sigue
+   recorriendo el camino entero. El servicio devuelve un **outcome** (`ok / reason / extra`) que la
+   página traduce a lo suyo —audit del rechazo + `Notification`—, como G fija. Los audits de ÉXITO
+   y el email viajan con el dominio (topología de §4.3 intacta).
+
+**El contrato — un servicio por forma transaccional, no uno de ~1.300 líneas con cuatro dentro**
+(eso es cómo `ViewOrder` llegó a ser lo que es):
+
+| Pieza | Contiene | `CRITICAL_RE` |
+|---|---|---|
+| `Booking\Services\OrderItemEditor` | `edit()` (F) · `changeSlot()` (C) · los validadores como métodos PÚBLICOS (las reflexiones pasan a llamarlos) · `withZoneDayLock()` · el waterfall como UNA pieza | **SÍ** (posee el lock de aforo) |
+| `Booking\Services\ZoneDaySlotLock` | la receta anti-sobreventa de `AFORO-01`, compartida con `OrderCreator` | **SÍ** |
+| `Booking\Services\ItemEditPricing` | `computeEditPricing` · `computeAddonPricing` · `catalogUnitPriceFor` (solo lectura; la usan los `*Preview` y el editor) | no — control negativo declarado |
+| `Booking\Services\OrderItemEventDataWriter` | B, con la propiedad de `RGPD-02` (solo claves) | no |
+| `Booking\Services\OrderItemCanceller` | D (lock orden+ítem; libera aforo, no lo consume) | no — control negativo |
+| `Booking\Services\OrderItemRefunder` | E sin `PaymentRefund` (guardas, expansión a hijos, anti-IDOR, importe a medida → `Order::executePartialRefundBatch`) | no (los locks viven en `Order`) |
+| `Booking\Contracts\ItemActionOutcome` | el resultado que la página traduce | — |
+
+**Orden de ejecución** (cada sub-paso: commit local ANTES de mutar —§9.1—, verde, empujado solo):
+
+- **A0** · `migrate` en la BD del portátil (3 migraciones del waiver pendientes; el panel de un
+  pedido falla sin ellas por el badge de `#174`) · baseline: suite + los 6 escenarios de los
+  verificadores en verde, `panel-edit` incluido → el instrumento funciona AQUÍ antes de fiarse.
+- **A** · `ItemEditPricing` + validadores públicos en el editor (sin txn aún) · 6 reflexiones
+  re-apuntadas · los dos `*Preview` y el `catalogUnitPriceFor` del despachador → una mutación por
+  método movido, todas deben morder.
+- **B** · `OrderItemEventDataWriter` → mutación: registrar VALORES en vez de claves →
+  `OrderItemUpdateEventDataTest` en rojo.
+- **C0** · `ZoneDaySlotLock` en `OrderCreator` Y en la página → 6 escenarios en verde; helper
+  mutado → `entry` Y `panel-edit` en rojo; restauración por md5. Dispara `VERIFY_CONC`.
+- **C** · `changeSlot()` al editor; el instrumento invoca el servicio → `panel-edit` verde y visto
+  fallar de nuevo con el lock mutado en su casa nueva.
+- **D** · `OrderItemCanceller` (audit de éxito dentro de su txn, como hoy) · **E** · `OrderItemRefunder`.
+- **F** · `edit()` el último → mutaciones: orden del waterfall · condición del marcador · lock
+  retirado (lo caza `panel-edit` por el punto único) · re-escala per-invitado.
+- **G** · Se queda en la página: `executeManageItemSave` (lee `calendarSelected*`, normaliza el
+  form, despacha), `blockEdit`, `log*Blocked`, `humanSlotLabel`, `eurosFromCents`,
+  `refundItemOptionLabel`, `assertItemActionAllowed`, y las dos acciones a nivel PEDIDO
+  (`cancelAction`/`refundAction`: §1.2 las clasificó como composición Filament y ya delegan en `Order`).
+- **H** · `CRITICAL_RE` + `CriticalPathGateTest` (2 críticos, 2 controles negativos) · «Dónde vive»
+  de `AFORO-05`/`AFORO-06`/`RGPD-02` re-apuntadas · los 6 escenarios + Redsys · `wc -l` final aquí
+  y en `DEUDA.md` · la pasada de NAVEGADOR del owner (§6·5, humano).

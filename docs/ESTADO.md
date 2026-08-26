@@ -65,8 +65,23 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (el portátil) → SESIÓN CERRADA el 2026-08-26 por la noche. ✅ Nada a medias: todo
->   empujado y verde.** El desmontaje de `ViewOrder` quedó **a UN paso del final**: paso 0 (`#170`)
+> · **Agente B (el portátil) → 🟦 SESIÓN RETOMADA el 2026-08-26 a las 23:00: la extracción 4b EN
+>   EJECUCIÓN** (`[DECIDIDO owner]`: «procede según tu valoración profesional»). El plan refinado
+>   con el código delante está en la spec **§9.6** (`#182`): cuatro servicios por forma
+>   transaccional + `ZoneDaySlotLock` compartido con `OrderCreator` + outcome, orden A0→H.
+>   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
+>   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
+>   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
+>   `app/Domain/Booking/Services/OrderCreator.php` (SOLO `lockSlots`, sub-paso C0) ·
+>   `app/Console/Commands/VerifyPurchaseConcurrency.php` (el instrumento re-apuntado) ·
+>   **`.githooks/pre-push` (`CRITICAL_RE`) · `tests/Feature/Architecture/CriticalPathGateTest.php` ·
+>   `docs/INVARIANTES.md`** (los tres que el A tocó esta semana por el waiver: si vuelve a ellos
+>   antes de mi push, rebase mío).
+>   ▶ **Para el agente del A**: `#174` entró en `app/Filament/Resources/Orders/Schemas/OrderInfolist.php`
+>   (directorio del B). No choca con la 4b —no toco `Schemas/`—; sigue limitándote a ese fichero ahí.
+>   Las 3 migraciones del waiver estaban PENDIENTES en el portátil (aplicadas en A0): no es un choque,
+>   es esta máquina, que no había pasado por ellas.
+>   Estado al retomar: el desmontaje de `ViewOrder` estaba **a UN paso del final**: paso 0 (`#170`)
 >   · extracción 1 (`#172`, calendario→trait) · 2 (`#173`, presentación→trait) · 3 (`#176`, la
 >   oferta de re-programación al DOMINIO con las tres reglas del owner y `VERIFY_CONC` en verde) ·
 >   el instrumento de la 4 (`#177`, `--scenario=panel-edit`, **visto fallar**: 2 donde cabía 1).
@@ -108,7 +123,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#181`**.
+> El último usado es **`#182`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido

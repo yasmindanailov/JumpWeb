@@ -9686,3 +9686,33 @@ Verificación del cierre: suite **2956 / 17.033 en verde** tras `git pull --reba
 carril A (⚠️ los 30 rojos iniciales eran el bundle SSR RANCIO de `#69` — `npm run build:ssr` y
 verde; ni un assert tocado) · `audit-clock` corrido por los fixtures de calendario nuevos ·
 `composer audit` y `npm audit` en 0 · Pint ✓ · docs-check ✓.
+
+## #182 · 2026-08-26 · [DECIDIDO agente B] La forma del contrato de la 4b: un servicio por forma TRANSACCIONAL, el lock consolidado, y cinco correcciones a la letra del handoff
+
+Retoma del carril B (el portátil) a las 23:00, con el encargo del owner de proceder «según tu
+valoración profesional». §4.4 de `specs/desmontar-view-order.md` dejaba a este paso el nombre y la
+forma del contrato; se decidió **con el código entero leído antes de tocar una línea** y está
+escrito sub-paso a sub-paso en la spec **§9.6** (el handoff original de §9.5 se conserva, corregido).
+
+**Lo que decide, y por qué:**
+1. **Cuatro servicios, no uno.** Lo que se muda tiene CUATRO formas transaccionales distintas
+   (txn de aforo + secuencia financiera post-commit · txn de aforo sola · txn mínima · sin txn
+   propia). Meterlas en un servicio de ~1.300 líneas es reproducir `ViewOrder` en `app/Domain/`.
+   `OrderItemEditor` (edit + changeSlot, dueño del lock) · `OrderItemEventDataWriter` ·
+   `OrderItemCanceller` · `OrderItemRefunder` · `ItemEditPricing` (solo lectura, control negativo)
+   · `ZoneDaySlotLock` · `Booking\Contracts\ItemActionOutcome`.
+2. **La consolidación de §8.9 se hace**: `ZoneDaySlotLock` compartido con `OrderCreator::lockSlots`,
+   y en el editor UN solo punto de lock (`withZoneDayLock()`) para que `panel-edit` cubra los dos
+   caminos. Verificación: helper mutado → `entry` Y `panel-edit` en rojo.
+3. **Cinco correcciones a la letra de §9.5**, todas medidas: (i) el refund no puede importar
+   `PaymentRefund` desde Booking (baseline de módulos «solo encoge») → `mode`/`intent` los resuelve
+   la página como ya hace el reembolso de PEDIDO · (ii) `applyGroupChoices`/`normalizeAddonEdits`
+   son traducción form→intención y se quedan en la entrega · (iii) la asimetría del waterfall es
+   sintáctica (el contexto per-invitado lleva siempre `quantity_change`) · (iv) el lock, punto
+   único · (v) la autorización es la primera guarda del servicio con `User $by` explícito y el
+   servicio devuelve un outcome que la página traduce.
+
+**Base medida al retomar** (portátil): árbol = `origin/main` (`#181`), suite **2960 / 17.087 en
+verde** (49 s; 1 notice de PHPUnit por identificar en A0), `docs-check` ✓, web 200, y **3
+migraciones del waiver PENDIENTES** en esta BD (se aplican en A0; sin ellas el panel de un pedido
+falla por el badge de `#174`).
