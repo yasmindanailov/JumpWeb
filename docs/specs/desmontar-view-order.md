@@ -1,7 +1,8 @@
 # [SPEC] Desmontar `ViewOrder` — el god-class del panel
 
-> Estado: diseño 🟦 · **revisión adversarial HECHA e INCORPORADA al cuerpo (2026-08-26, §8 +
-> checklist §8.12 ejecutado): pendiente SOLO el ✅ del owner** ·
+> Estado: 🟦 **EN EJECUCIÓN** · revisión adversarial HECHA e INCORPORADA (2026-08-26, §8) ·
+> ✅ **`[DECIDIDO owner, 2026-08-26]`: spec APROBADA y ejecución AUTORIZADA («ahora», no «espera»)**
+> · el paso a paso vive en **§9** ·
 > Última actualización: 2026-08-26 ·
 > Verificado contra código: 2026-08-26 (el fichero entero, sus 98 métodos, su red de tests, y qué
 > contratos del dominio usa — ninguno; re-verificado por la revisión §8 con 7 medidores) ·
@@ -335,10 +336,11 @@ Sin esto no puede llegar a ✅ (`CONVENCIONES §3.bis`).
   incorporación es la siguiente a `#167`. La tradición sigue ganando: `#122` encontró dos
   bloqueantes, `#123` declaró un diseño insuficiente, `#156` un hecho no observable — y aquí, un
   mapa transaccional invertido que habría hecho crear la transacción que decía preservar.
-- ❗ **PENDIENTE del owner**: el ✅, y la pregunta de si esto se hace **ahora** o espera. No es urgente
-  —el fichero funciona— pero **crece**, y cada tanda de dinero que entra lo engorda. Con el ✅, las
-  decisiones de producto del diff del paso 3 (§4.2) se preguntan cuando el diff las destape.
-- **Entrada final**: `DECISIONES #165` (la spec) · `#167` (la revisión).
+- ✅ **`[DECIDIDO owner, 2026-08-26]`: el ✅ está DADO y la ejecución arranca ya** — con el encargo
+  explícito de rigor y meticulosidad. Las decisiones de producto del diff del paso 3 (§4.2) se
+  preguntan cuando el diff las destape.
+- **Entrada final**: `DECISIONES #165` (la spec) · `#167` (la revisión) · la ejecución, en **§9** y
+  sus entradas.
 
 ---
 
@@ -584,3 +586,55 @@ justificación y a éste lo omite).
 6. **Retirar el código muerto ANTES de mudar** (§8.7): `availableDatesForItem`,
    `availableTimesForItem`, `calendarMatrixForItem`, auditando sus tests por `§3.quater`.
 7. **Completar §5** con las cuatro invariantes de cita literal y las cuatro de roce (§8.10).
+
+---
+
+## 9. Ejecución — el paso a paso, con su evidencia
+
+> ✅ **`[DECIDIDO owner, 2026-08-26]`: spec aprobada y ejecución autorizada**, con el encargo
+> explícito de rigor, meticulosidad y verificación empírica.
+
+### 9.1 Paso 0 · El código muerto, RETIRADO (2026-08-26)
+
+**5.280 → 5.012 líneas (−268)** medidas con `wc -l`. Cayeron **CINCO métodos, no tres**: los tres
+censados (`availableDatesForItem`, `availableTimesForItem`, `calendarMatrixForItem`) más los DOS que
+la retirada dejaba huérfanos — `buildCurrentSlotOnlyTimeOption` y `formatTimeOption` solo los
+llamaban los muertos (medido por grep de invocación antes de tocar). La clave de traducción
+`current_marker` **se queda**: la usa el blade vivo del calendario. La documentación de la rejilla
+(el docblock rico del muerto) se movió a `calendarMatrixForItemWithSelection` antes de borrar, y las
+dos referencias de código colgantes se re-apuntaron (`PaymentSettings` y el comentario de
+`validateNewSlot`).
+
+▶ **Los 3 tests por reflexión se RE-APUNTARON a la fuente viva** (`§3.quater`, categoría 3 — usar el
+muerto como intermediario de una regla que sobrevive), y los tres MEJORAN la red:
+
+| Test viejo (sobre el muerto) | Test nuevo (sobre lo vivo) | Lo que gana |
+|---|---|---|
+| `test_available_dates_excludes_dates_beyond_horizon` | `test_selectable_dates_in_range_excludes_beyond_horizon_and_keeps_valid_dates` | `selectableDatesInRange` gana su **primer test directo** (lo pedía §6·2). ⚠️ El viejo estaba **verde por el motivo equivocado**: creaba el slot lejano sin `online_sales_open`, así que lo excluía `sellableOnline()`, no el horizonte. El nuevo lo crea plenamente vendible |
+| `test_available_dates_marks_current_slot_date_with_actual_marker` | `test_calendar_matrix_marks_current_slot_day_as_current_and_selectable` | Primer assert de `is_current`/`selectable` sobre la MATRIZ (antes solo lo tenía la lista de horas), con el día vecino como control negativo |
+| `test_available_times_includes_current_slot_when_date_matches` | `test_calendar_times_include_current_slot_even_when_park_closed` | La rama defensiva «el slot ACTUAL siempre se ofrece» **no tenía test**: ahora se prueba con el parque CERRADO y se asevera que responde SOLO ella (exactamente 1 entrada) |
+
+▶ **Verificado por mutación, 4 de 4 muerden** — cada una con su ancla comprobada ÚNICA, el `grep`
+de dónde cayó, el test objetivo en ROJO y la restauración verificada por **md5 byte-exacto**:
+quitar el recorte de horizonte de `selectableDatesInRange` · `is_current => false` en la matriz ·
+`selectable => false` en la matriz · anular la rama siempre-incluido de `calendarTimesForItem`.
+▶ Suite completa **2935 en verde (16.959 aserciones)** · Pint limpio · `php -l` limpio.
+
+⚠️ **Trampa pagada y regla que deja** (la 5ª de `§3.quater`): durante la primera mutación, el
+`git checkout` de la restauración devolvió el fichero al **HEAD commiteado** — y el paso 0 entero
+eran cambios sin commitear: se restauró el estado EQUIVOCADO y hubo que re-aplicar el borrado (se
+verificó byte-idéntico por md5 contra la línea base). **La extracción se commitea en local ANTES de
+empezar a mutar**: mutar sobre árbol sucio convierte cada restauración en una pérdida silenciosa.
+
+▶ Fósil que confirma el diagnóstico de §8.3, anotado al leer antes de borrar: el muerto
+`availableTimesForItem` **inflaba** las plazas del slot actual (`available += seats`) — la conducta
+que la decisión de la clienta del origen (fidedigno, plazas reales) sustituyó. El código muerto no
+era solo ruido: era la política VIEJA esperando a que alguien la leyera como vigente.
+
+### 9.2 Extracción 1 · El calendario → Concern — PENDIENTE
+
+### 9.3 Extracción 2 · Presentación → Presenter — PENDIENTE
+
+### 9.4 Extracción 3 · La consulta de re-programación — PENDIENTE (`VERIFY_CONC`)
+
+### 9.5 Extracción 4 · La orquestación de dinero — PENDIENTE (la última)

@@ -9239,3 +9239,35 @@ Verificación: docs-check ✓ · **solo doc** (`app/`, `resources/`, `tests/` in
 cambios (2935) · el andamio y su evidencia (capturas, textos de PDF, `resultado.json`) en el
 scratchpad de la sesión y en `/root/e2e/out` del contenedor · BD local: v1→v3, 7 firmas, anti-bot
 restaurado.
+
+## #170 · 2026-08-26 · El ✅ del owner al desmontaje, y el paso 0 EJECUTADO: −268 líneas de política muerta — que resultó ser la política VIEJA
+
+✅ **El owner aprobó la spec y autorizó la ejecución** («procede con ello. Sé riguroso y empírico…
+es una tarea crítica»). Con eso arranca el desmontaje de `ViewOrder`; el paso a paso vive en la spec
+**§9** y aquí solo el porqué de lo decidido en el paso 0.
+
+**Lo ejecutado**: los tres métodos muertos censados por la revisión (`#167`) **más los dos helpers
+que quedaban huérfanos** al retirarlos (`buildCurrentSlotOnlyTimeOption`, `formatTimeOption` — solo
+los llamaban los muertos, medido por grep de invocación). `ViewOrder` pasa de **5.280 a 5.012
+líneas**. Los 3 tests que mantenían vivo aquello por reflexión se **re-apuntaron a la fuente viva**
+(`§3.quater`, categoría 3) y los tres mejoran la red — el detalle y la tabla, en la spec §9.1.
+
+**Las tres cosas que este paso enseñó:**
+
+1. **Un test verde puede estarlo por el motivo equivocado**: el del horizonte creaba su slot lejano
+   sin `online_sales_open`, así que lo excluía `sellableOnline()` y el horizonte nunca se probó.
+   El re-apuntado crea el slot plenamente vendible — y su mutación (quitar el recorte de horizonte)
+   se vio MORDER, cosa que con el fixture viejo no habría pasado.
+2. **La 5ª trampa de la mutación, pagada aquí**: restaurar con `git checkout` durante una mutación
+   devuelve el fichero al HEAD **commiteado** — y el borrado entero era árbol sucio: se perdió y
+   hubo que re-aplicarlo (verificado byte-idéntico por md5). **Regla: commitear la extracción en
+   local ANTES de mutar.** Va también en la spec §9.1.
+3. **El código muerto no era ruido, era la política VIEJA**: el `availableTimesForItem` retirado
+   **inflaba** las plazas del slot actual (`available += seats`), la conducta que la decisión
+   «fidedigno, plazas reales» de la clienta del origen sustituyó. Dos implementaciones de la misma
+   pregunta = una siempre está desactualizada, que es el argumento entero del paso 3.
+
+Verificación: suite **2935 / 16.959 en verde** (3 tests sustituidos 1:1, +3 aserciones) · mutación
+**4/4 muerden** (anclas únicas verificadas, rojo comprobado, restauración por md5) · Pint ✓ ·
+`php -l` ✓ · docs-check ✓ · referencias colgantes re-apuntadas (`PaymentSettings`,
+`validateNewSlot`) · la clave `current_marker` conservada (la usa el blade vivo).

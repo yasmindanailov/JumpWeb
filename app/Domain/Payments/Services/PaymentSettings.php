@@ -37,8 +37,8 @@ class PaymentSettings
      * Horizonte de compra en meses (sub-fase 7.2e.2bis6, decisión #160).
      * Default 6 meses — restricción operativa del negocio: ninguna entrada o
      * reserva (cliente o panel) puede agendarse más allá de `today + N meses`.
-     * Aplicado en `availableDatesForItem` (UI selector fecha) + `validateNewSlot`
-     * (defense in depth backend).
+     * Aplicado en `selectableDatesInRange` (el calendario del panel) +
+     * `validateNewSlot` (defense in depth backend).
      */
     public const PURCHASE_HORIZON_MONTHS_DEFAULT = 6;
 

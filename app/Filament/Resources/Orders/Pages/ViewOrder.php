@@ -1934,13 +1934,29 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Variante de `calendarMatrixForItem` que acepta el `$selectedDate`
-     * explícitamente (en lugar de leerlo de `$this->calendarSelectedDate`).
-     * Necesario para el render inicial cuando las properties Livewire
-     * pueden estar null pero queremos marcar como "selected" el slot
-     * actual del item.
+     * Construye la rejilla del calendario para el mes visible: lunes a
+     * domingo, 5 o 6 semanas que cubren el mes completo + días vecinos del
+     * mes anterior/siguiente. Acepta el `$selectedDate` explícitamente (en
+     * lugar de leerlo de `$this->calendarSelectedDate`): necesario para el
+     * render inicial cuando las properties Livewire pueden estar null pero
+     * queremos marcar como "selected" el slot actual del item.
      *
-     * @return array<int, array<int, array<string, mixed>>>
+     * Cada celda incluye metadata para que el blade pueda pintar estado
+     * visual sin lógica adicional:
+     *
+     *  - `date`         : 'YYYY-MM-DD'.
+     *  - `day`          : número del día (1-31).
+     *  - `in_month`     : bool — true si el día pertenece al mes visible
+     *                     (el resto son días del mes anterior/siguiente que
+     *                     completan las semanas; se renderizan atenuados).
+     *  - `selectable`   : bool — el día tiene al menos un slot operable.
+     *  - `is_current`   : bool — es el día del slot ACTUAL del item.
+     *  - `is_selected`  : bool — es el día actualmente seleccionado en el
+     *                     calendario (puede coincidir con `is_current` o no).
+     *  - `is_past`      : bool — el día ya pasó (se renderiza disabled).
+     *  - `is_beyond_horizon` : bool — más allá de today+horizon (disabled).
+     *
+     * @return array<int, array<int, array<string, mixed>>> semanas × días
      */
     private function calendarMatrixForItemWithSelection(OrderItem $item, Carbon $month, ?string $selectedDate): array
     {
@@ -2408,231 +2424,6 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Opciones del selector de FECHA del modal Gestionar Tab 1.
-     *
-     * Reglas (decisión #159 + 4ª pregunta validada por la clienta — modo
-     * estricto: aforo + Pack + OperatingSchedule + ProductAvailability):
-     *  - Solo mismo zone del item (cross-zone bloqueado, eso es cambio de
-     *    producto → 7.2e.3).
-     *  - Solo fechas FUTURAS (today + horas restantes del día → mañana
-     *    siempre incluida; today con slots aún por venir → incluida).
-     *  - `online_sales_open = true` + `status != closed` (defensa antes
-     *    de pasar al cómputo de aforo).
-     *  - `OperatingSchedule::isOpenOn` true ese día.
-     *  - Al menos UN slot del día cumple `ProductAvailability::allowsStart`
-     *    + tiene aforo suficiente para `item.seats` (entradas →
-     *    `SlotAvailability::availableFor`; packs → `PackAvailability::
-     *    availableGuestsFor`). Sin esto, mostrar la fecha sería engañoso
-     *    (el operador la elige y luego no hay horas válidas).
-     *
-     * Slot ACTUAL del item siempre incluido marcado "(actual)" aunque NO
-     * cumpla los filtros — caso operativo: el admin cerró el zone tras
-     * la compra, el operador debe poder dejar el item donde está sin que
-     * el modal le obligue a moverlo. Validación al submit revalida.
-     *
-     * Sub-fase 7.2e.2 escoge formato humano `isoFormat('ddd D MMM YYYY')`
-     * en el locale activo del panel (pregunta de UX validada por la clienta).
-     *
-     * @return array<string, string> Y-m-d => "Vie 12 Jun 2026"
-     */
-    private function availableDatesForItem(OrderItem $item): array
-    {
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return [];
-        }
-
-        $schedule = app(OperatingSchedule::class);
-        $productWindow = app(ProductAvailability::class);
-        $today = Carbon::today();
-        // Horizonte de compra/edición (sub-fase 7.2e.2bis6, decisión #160):
-        // restricción operativa del negocio aplicada a TODOS los flujos de
-        // selección de fecha. Default 6 meses; configurable via Setting.
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
-        $currentSlot = $item->slot;
-
-        // Pool inicial: slots del mismo zone, no cerrados, fecha en
-        // [hoy, hoy+horizonte].
-        $slots = Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->where('date', '>=', $today->toDateString())
-            ->where('date', '<=', $horizon->toDateString())
-            ->sellableOnline()
-            ->orderBy('date')
-            ->orderBy('start_time')
-            ->get();
-
-        // Agrupar por fecha y filtrar las que tienen AL MENOS un slot operable.
-        $validDates = collect();
-        foreach ($slots->groupBy(fn (Slot $s) => $s->date->toDateString()) as $dateStr => $daySlots) {
-            $dateCarbon = Carbon::parse($dateStr);
-            if (! $schedule->isOpenOn($dateCarbon)) {
-                continue;
-            }
-            $anyOperable = $daySlots->contains(
-                fn (Slot $s) => $this->slotMeetsItemRequirements($s, $item, $productWindow)
-            );
-            if ($anyOperable) {
-                $validDates->push($dateStr);
-            }
-        }
-
-        // Slot actual: incluir su fecha aunque no cumpla los filtros (operativa).
-        if ($currentSlot !== null) {
-            $currentDateStr = $currentSlot->date->toDateString();
-            if (! $validDates->contains($currentDateStr)) {
-                $validDates->prepend($currentDateStr);
-            }
-        }
-
-        $currentDateStr = $currentSlot?->date?->toDateString();
-        $marker = ' '.__('admin.orders.manage_item.current_marker');
-
-        return $validDates
-            ->unique()
-            ->sort()
-            ->mapWithKeys(function (string $dateStr) use ($currentDateStr, $marker): array {
-                $label = Str::ucfirst(
-                    Carbon::parse($dateStr)->locale(app()->getLocale())->isoFormat('ddd D MMM YYYY')
-                );
-                if ($dateStr === $currentDateStr) {
-                    $label .= $marker;
-                }
-
-                return [$dateStr => $label];
-            })
-            ->all();
-    }
-
-    /**
-     * Opciones del selector de HORA del modal Gestionar Tab 1 para la fecha
-     * elegida.
-     *
-     * Filtros: zone match + product window + park open + aforo suficiente
-     * para `item.seats`. Slot ACTUAL del item siempre incluido si la fecha
-     * elegida es la suya (mismo razonamiento que `availableDatesForItem`).
-     *
-     * @return array<string, string> H:i:s => "HH:MM (X libres)"
-     */
-    private function availableTimesForItem(OrderItem $item, string $date): array
-    {
-        if ($date === '') {
-            return [];
-        }
-
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || $ticketType->zone_id === null) {
-            return [];
-        }
-
-        $dateCarbon = Carbon::parse($date);
-        if (! app(OperatingSchedule::class)->isOpenOn($dateCarbon)) {
-            // Sin park abierto → solo el slot actual si la fecha coincide.
-            return $this->buildCurrentSlotOnlyTimeOption($item, $date);
-        }
-
-        $productWindow = app(ProductAvailability::class);
-        $currentSlot = $item->slot;
-
-        $slots = Slot::query()
-            ->where('zone_id', $ticketType->zone_id)
-            ->where('date', $date)
-            ->sellableOnline()
-            ->orderBy('start_time')
-            ->get();
-
-        $isPack = $ticketType->isPack();
-        $seatsNeeded = (int) $item->seats;
-        $marker = ' '.__('admin.orders.manage_item.current_marker');
-
-        $options = [];
-
-        foreach ($slots as $slot) {
-            if (! $productWindow->allowsStart($ticketType, $dateCarbon, $slot->start_time)) {
-                continue;
-            }
-            $available = $this->displayAvailableFor($slot, $ticketType);
-
-            // El cómputo cuenta el ITEM ACTUAL si vive en este slot. Para no
-            // engañar al operador con "0 libres" en su propio slot, le sumamos
-            // de vuelta sus plazas.
-            $isCurrentSlot = $currentSlot !== null && $currentSlot->id === $slot->id;
-            if ($isCurrentSlot) {
-                $available += $seatsNeeded;
-            }
-            if ($available < $seatsNeeded && ! $isCurrentSlot) {
-                continue;
-            }
-
-            $options[$slot->start_time] = $this->formatTimeOption(
-                $slot->start_time,
-                $available,
-                $isCurrentSlot,
-                $marker,
-            );
-        }
-
-        // Slot actual fuera de los filtros (zone cerrado, etc.): incluirlo SIEMPRE
-        // si la fecha coincide.
-        if ($currentSlot !== null
-            && $currentSlot->date->toDateString() === $date
-            && ! array_key_exists($currentSlot->start_time, $options)
-        ) {
-            $options = array_merge(
-                [
-                    $currentSlot->start_time => $this->formatTimeOption(
-                        $currentSlot->start_time,
-                        $seatsNeeded,
-                        true,
-                        $marker,
-                    ),
-                ],
-                $options,
-            );
-        }
-
-        return $options;
-    }
-
-    /**
-     * Helper para mostrar SOLO el slot actual cuando la fecha elegida es la
-     * suya y el resto de validaciones bloquean cualquier opción. Evita un
-     * select vacío que confundiría al operador en items con slot bloqueado.
-     *
-     * @return array<string, string>
-     */
-    private function buildCurrentSlotOnlyTimeOption(OrderItem $item, string $date): array
-    {
-        $current = $item->slot;
-        if ($current === null || $current->date->toDateString() !== $date) {
-            return [];
-        }
-        $marker = ' '.__('admin.orders.manage_item.current_marker');
-
-        return [
-            $current->start_time => $this->formatTimeOption(
-                $current->start_time,
-                (int) $item->seats,
-                true,
-                $marker,
-            ),
-        ];
-    }
-
-    private function formatTimeOption(string $startTime, int $available, bool $isCurrent, string $marker): string
-    {
-        // Sub-fase 7.2e.2bis6 (decisión #160): bug fix de pluralización.
-        // Antes usábamos `__()` que NO procesa la regla `{0}|{1}|[2,*]` —
-        // dejaba al operador el texto literal `{0}sin plazas|{1}1 plaza|...`.
-        // `trans_choice` procesa el plural según el `count` recibido.
-        $base = Str::substr($startTime, 0, 5)
-            .' — '
-            .trans_choice('admin.orders.manage_item.seats_available', $available, ['count' => $available]);
-
-        return $isCurrent ? $base.$marker : $base;
-    }
-
-    /**
      * ¿El slot $slot cumple los requisitos del $item para ser ofrecible como
      * opción del modal Gestionar? (zone match implícito en la query; este
      * helper aplica producto+aforo).
@@ -2682,69 +2473,10 @@ class ViewOrder extends ViewRecord
     // ─── Calendario visual del modal Gestionar (7.2e.2bis6, #160) ─────────
 
     /**
-     * Construye la rejilla del calendario para el mes visible: lunes a
-     * domingo, 5 o 6 semanas que cubren el mes completo + days vecinos del
-     * mes anterior/siguiente. Cada celda incluye metadata para que el blade
-     * pueda pintar estado visual sin lógica adicional:
-     *
-     *  - `date`         : 'YYYY-MM-DD'.
-     *  - `day`          : número del día (1-31).
-     *  - `in_month`     : bool — true si el día pertenece al mes visible
-     *                     (el resto son días del mes anterior/siguiente que
-     *                     completan las semanas; se renderizan atenuados).
-     *  - `selectable`   : bool — el día tiene al menos un slot operable.
-     *  - `is_current`   : bool — es el día del slot ACTUAL del item.
-     *  - `is_selected`  : bool — es el día actualmente seleccionado en el
-     *                     calendario (puede coincidir con `is_current` o no).
-     *  - `is_past`      : bool — el día ya pasó (se renderiza disabled).
-     *  - `is_beyond_horizon` : bool — más allá de today+horizon (disabled).
-     *
-     * @return array<int, array<int, array<string, mixed>>> semanas × días
-     */
-    private function calendarMatrixForItem(OrderItem $item, Carbon $month): array
-    {
-        $today = Carbon::today();
-        $horizon = $today->copy()->addMonths(PaymentSettings::purchaseHorizonMonths());
-
-        // Pre-cargar todas las fechas selectables del mes (incluyendo días
-        // anteriores/siguientes que aparecen en el grid).
-        $start = $month->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
-        $end = $month->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-        $selectableDates = $this->selectableDatesInRange($item, $start, $end);
-
-        $currentSlotDate = $item->slot?->date?->toDateString();
-        $selectedDate = $this->calendarSelectedDate;
-
-        $weeks = [];
-        $week = [];
-        foreach (CarbonPeriod::create($start, $end) as $day) {
-            /** @var Carbon $day */
-            $ymd = $day->toDateString();
-            $week[] = [
-                'date' => $ymd,
-                'day' => $day->day,
-                'in_month' => $day->month === $month->month,
-                'selectable' => in_array($ymd, $selectableDates, true),
-                'is_current' => $ymd === $currentSlotDate,
-                'is_selected' => $ymd === $selectedDate,
-                'is_past' => $day->lt($today),
-                'is_beyond_horizon' => $day->gt($horizon),
-            ];
-            if (count($week) === 7) {
-                $weeks[] = $week;
-                $week = [];
-            }
-        }
-
-        return $weeks;
-    }
-
-    /**
      * Lista de fechas (Y-m-d) dentro de [$from, $to] que tienen al menos un
      * slot operable para el item (zone match + park open + product window
-     * + aforo ≥ seats). Reusa la lógica de `availableDatesForItem` pero
-     * acotada a un rango específico (el del mes visible del calendario)
-     * para evitar cargar 6 meses de slots cada render.
+     * + aforo ≥ seats). Acotada a un rango específico (el del mes visible
+     * del calendario) para evitar cargar 6 meses de slots cada render.
      *
      * @return array<int, string>
      */
@@ -4082,7 +3814,7 @@ class ViewOrder extends ViewRecord
         }
         // Capa defense in depth — horizonte de compra (sub-fase 7.2e.2bis6, #160):
         // si el slot está más allá del límite global (default 6 meses), rechazo.
-        // El selector UI ya filtra esto en `availableDatesForItem`; este check
+        // El calendario UI ya filtra esto en `selectableDatesInRange`; este check
         // protege contra atacante autenticado que manipule el form.
         $horizon = Carbon::today()->addMonths(PaymentSettings::purchaseHorizonMonths());
         if ($newDateCarbon->gt($horizon)) {

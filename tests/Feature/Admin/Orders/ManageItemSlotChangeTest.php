@@ -456,8 +456,14 @@ class ManageItemSlotChangeTest extends TestCase
         $this->assertSame('beyond_horizon', $reason);
     }
 
-    public function test_available_dates_excludes_dates_beyond_horizon(): void
+    public function test_selectable_dates_in_range_excludes_beyond_horizon_and_keeps_valid_dates(): void
     {
+        // Re-apuntado en el paso 0 del desmontaje (spec desmontar-view-order §9)
+        // desde el helper retirado `availableDatesForItem` a la fuente VIVA del
+        // calendario. El slot lejano se crea plenamente vendible: la ÚNICA razón
+        // para excluirlo debe ser el horizonte — el test viejo lo creaba sin
+        // `online_sales_open` y salía verde por `sellableOnline()`, no por el
+        // horizonte.
         $beyondHorizon = Carbon::today()->addMonths(7)->toDateString();
         Slot::create([
             'zone_id' => $this->zone->id,
@@ -466,16 +472,19 @@ class ManageItemSlotChangeTest extends TestCase
             'end_time' => '11:00:00',
             'capacity' => 10,
             'online_capacity' => 10,
+            'online_sales_open' => true,
+            'status' => Slot::STATUS_OPEN,
         ]);
         [$order, $item] = $this->makePaidEntryOrder('10:00:00');
 
-        $ref = new \ReflectionMethod(ViewOrder::class, 'availableDatesForItem');
+        $ref = new \ReflectionMethod(ViewOrder::class, 'selectableDatesInRange');
         $ref->setAccessible(true);
         $page = new ViewOrder;
         $page->record = $order;
-        $dates = $ref->invoke($page, $item);
+        $dates = $ref->invoke($page, $item, Carbon::today(), Carbon::today()->addMonths(8));
 
-        $this->assertArrayNotHasKey($beyondHorizon, $dates);
+        $this->assertContains($this->todayPlus7, $dates);
+        $this->assertNotContains($beyondHorizon, $dates);
     }
 
     public function test_purchase_horizon_helper_falls_back_to_default_on_invalid_value(): void
@@ -741,27 +750,28 @@ class ManageItemSlotChangeTest extends TestCase
             ->assertSet('calendarMonth', $horizonMonth);
     }
 
-    // ─── Selector opciones (helper privado availableDatesForItem) ─────────
+    // ─── Fuente viva del calendario (paso 0 del desmontaje: re-apuntados) ──
 
-    public function test_available_dates_marks_current_slot_date_with_actual_marker(): void
+    public function test_calendar_matrix_marks_current_slot_day_as_current_and_selectable(): void
     {
-        // Si el slot actual del item no estuviera en las opciones por algún
-        // motivo (zone cerrado, etc.), debe igualmente aparecer marcado
-        // "(actual)" para permitir al operador hacer no-op desde el modal.
+        // La regla del selector retirado («la fecha del slot actual siempre
+        // aparece, marcada») vive ahora en la matriz del calendario: la celda
+        // del día del slot actual lleva `is_current` y es seleccionable
+        // (mantener el slot es un no-op válido). El día vecino es el control:
+        // seleccionable pero NO current.
         [$order, $item] = $this->makePaidEntryOrder('10:00:00');
 
-        $ref = new \ReflectionMethod(ViewOrder::class, 'availableDatesForItem');
+        $ref = new \ReflectionMethod(ViewOrder::class, 'calendarMatrixForItemWithSelection');
         $ref->setAccessible(true);
         $page = new ViewOrder;
         $page->record = $order;
-        $dates = $ref->invoke($page, $item);
+        $weeks = $ref->invoke($page, $item, Carbon::parse($this->todayPlus7), null);
 
-        $this->assertArrayHasKey($this->todayPlus7, $dates);
-        // La label incluye el marker `(actual)`.
-        $this->assertStringContainsString(
-            __('admin.orders.manage_item.current_marker'),
-            $dates[$this->todayPlus7],
-        );
+        $cells = collect($weeks)->flatten(1)->keyBy('date');
+        $this->assertTrue($cells[$this->todayPlus7]['is_current']);
+        $this->assertTrue($cells[$this->todayPlus7]['selectable']);
+        $this->assertFalse($cells[$this->todayPlus8]['is_current']);
+        $this->assertTrue($cells[$this->todayPlus8]['selectable']);
     }
 
     public function test_available_times_shows_real_seats_not_inflated_for_current_slot_entry(): void
@@ -801,24 +811,28 @@ class ManageItemSlotChangeTest extends TestCase
         $this->assertTrue($entry['is_current']);
     }
 
-    public function test_available_times_includes_current_slot_when_date_matches(): void
+    public function test_calendar_times_include_current_slot_even_when_park_closed(): void
     {
+        // La rama defensiva «el slot ACTUAL siempre se ofrece» de
+        // `calendarTimesForItem` no tenía test propio. Con el parque CERRADO
+        // ese día la lista debe traer EXACTAMENTE el slot actual (marcado
+        // `is_current`) y ningún vecino — si trajera el vecino, habría
+        // respondido el camino normal y no la rama defensiva.
         [$order, $item] = $this->makePaidEntryOrder('10:00:00');
+        SpecialDate::create([
+            'date' => $this->todayPlus7,
+            'is_closed' => true,
+        ]);
 
-        $ref = new \ReflectionMethod(ViewOrder::class, 'availableTimesForItem');
+        $ref = new \ReflectionMethod(ViewOrder::class, 'calendarTimesForItem');
         $ref->setAccessible(true);
         $page = new ViewOrder;
         $page->record = $order;
-        $times = $ref->invoke($page, $item, $this->todayPlus7);
+        $times = $ref->invoke($page, $item->fresh('ticketType', 'slot'), $this->todayPlus7);
 
-        // Slot actual (10:00) + slot vecino válido (11:00) ambos presentes.
-        $this->assertArrayHasKey('10:00:00', $times);
-        $this->assertArrayHasKey('11:00:00', $times);
-        // El slot actual lleva el marker `(actual)`.
-        $this->assertStringContainsString(
-            __('admin.orders.manage_item.current_marker'),
-            $times['10:00:00'],
-        );
+        $this->assertCount(1, $times);
+        $this->assertSame('10:00:00', $times[0]['time']);
+        $this->assertTrue($times[0]['is_current']);
     }
 
     // ─── Notification content ────────────────────────────────────────────
