@@ -9341,3 +9341,27 @@ lo nota**: cero asserts tocados, la suite pasó a la primera.
 Verificación: suite **2936 / 16.961 en verde** (+1 test, +2 aserciones) · fidelidad por diferencia
 de conjuntos = 0 ausencias · mutación de pieza y de extracción vistas morder · Pint ✓ · `php -l` ✓ ·
 docs-check ✓.
+
+## #173 · 2026-08-26 · Extracción 2: la presentación de `ViewOrder` a su Concern — y la palabra de la spec cedió ante la medida
+
+Tercera tanda de la ejecución (`#170`, `#172`). `ViewOrder` baja de 4.505 a **4.014 líneas** (−491):
+los 14 métodos de presentación (6 `*Notification` · 3 `render*` · 2 `*Preview` · 3 `*Options`)
+viven en `Pages/Concerns/PresentsOrderActions` (535 líneas). Detalle en la spec **§9.3**.
+
+**La decisión que esta tanda deja escrita**: la spec decía «un `*Presenter`» y §4.1 afirmaba «no
+toca dominio; solo compone textos». **La medición de dependencias dijo otra cosa**: los dos
+`*Preview` componen SOBRE los cómputos del dominio que la extracción 4 va a mover
+(`computeEditPricing`, `computeAddonPricing`, `applyGroupChoices`), y `buildRefundItemsOptions`
+cuelga de `record`/`resolveItem`. Una clase Presenter habría fijado HOY firmas que la 4 rompería —
+la especulación del enchufe que `#37` enseñó a no cometer. **Trait de entrega** (mismo patrón que
+la extracción 1), con las costuras declaradas en su docblock; el Presenter-clase, si procede, se
+decide en el paso 4 con las firmas reales delante. La desviación queda declarada en la spec §9.3,
+no escondida.
+
+▶ De regalo, la mecánica ya rodada en `#172` salió igual de limpia: fidelidad por diferencia de
+conjuntos = 0 ausencias · la reflexión de `sameScopeProductOptions` ni se enteró (los traits se
+aplanan) · retirar el `use` deja 19 de 61 tests de `OrderAdminActionsTest` en rojo · un import
+huérfano cazado (`OrderItemRefunded`).
+
+Verificación: suite **2936 / 16.961 en verde** (pura mudanza, cero asserts tocados) · Pint ✓ ·
+`php -l` ✓ · docs-check ✓.

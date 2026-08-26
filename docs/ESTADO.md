@@ -59,12 +59,14 @@
 > · **Agente B (el portátil) → `desmontar-view-order`: EN EJECUCIÓN.** ✅ **El owner APROBÓ la spec
 >   y autorizó ejecutar** (2026-08-26, tras `#167`+`#168`). **Paso 0 HECHO** (`#170`, spec §9.1:
 >   −268 líneas de código muerto, tests re-apuntados, 4/4 mutaciones muerden) **y EXTRACCIÓN 1
->   HECHA** (`#172`, spec §9.2: el calendario a `Pages/Concerns/ManagesItemCalendar` como TRAIT —
->   544 líneas—, `ViewOrder` en **4.505**; fidelidad por diferencia de conjuntos = 0 ausencias;
->   retirar el `use` tumba 14 tests). ⚠️ Regla pagada en el paso 0: **commitear la extracción en
->   local ANTES de mutar** (un `git restore` durante la mutación devolvió el árbol sucio al HEAD).
->   ▶ **Siguiente**: extracción 2 (Presenter) → 3 (consulta de re-programación, `VERIFY_CONC`) →
->   4 (el dinero, la última).
+>   HECHA** (`#172`, spec §9.2: el calendario a `Pages/Concerns/ManagesItemCalendar`, trait, 544
+>   líneas) **y EXTRACCIÓN 2 HECHA** (`#173`, spec §9.3: la presentación —14 métodos— a
+>   `PresentsOrderActions`, 535 líneas; ⚠️ la palabra «Presenter» cedió ante la medida: los
+>   previews componen sobre cómputos del DOMINIO que la extracción 4 moverá — trait, y la clase se
+>   decide en el paso 4 con las firmas reales). `ViewOrder` en **4.014 líneas** (de 5.280).
+>   Método rodado: fidelidad por diferencia de conjuntos = 0 ausencias · retirar el `use` tumba la
+>   red (14 y 19 tests) · **commitear la extracción en local ANTES de mutar** (regla pagada).
+>   ▶ **Siguiente**: extracción 3 (consulta de re-programación, `VERIFY_CONC`) → 4 (el dinero).
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
 >   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
 >   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
@@ -94,7 +96,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#172`**.
+> El último usado es **`#173`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido

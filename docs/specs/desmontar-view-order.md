@@ -654,7 +654,30 @@ interacciones de test ni el partial blade ni `executeManageItemSave` notan el ca
   costura.
 - Suite **2936 / 16.961 en verde** (+1 test, +2 aserciones) · Pint ✓ · `php -l` ✓.
 
-### 9.3 Extracción 2 · Presentación → Presenter — PENDIENTE
+### 9.3 Extracción 2 · Presentación → Concern de entrega — HECHA (2026-08-26)
+
+**4.014 líneas** quedan en `ViewOrder` (desde 4.505; −491). Los 14 métodos de presentación —6
+`*Notification`, 3 `render*`, 2 `*Preview`, 3 `*Options`— viven en
+`Pages/Concerns/PresentsOrderActions` (535 líneas). Cero asserts tocados; la suite pasó a la
+primera.
+
+⚠️ **Desviación DECLARADA respecto a la palabra de §4.1 («un `*Presenter`»), y su medida**: antes de
+mover se midieron las dependencias `$this->` de los 14 (Reflection + grep por método), y los dos
+`*Preview` no «solo componen textos»: **componen SOBRE cómputos del dominio** (`computeEditPricing`,
+`computeAddonPricing`, `applyGroupChoices`, `normalizeAddonEdits`) que la extracción 4 va a mover, y
+`buildRefundItemsOptions` necesita `record` + `resolveItem` + `refundItemOptionLabel`. Una clase
+Presenter habría fijado HOY firmas que la extracción 4 rompería mañana — especulación del enchufe,
+el error que `#37` enseñó a no cometer. **Se extrajo como trait de entrega** (mismo patrón que la
+1): separa la responsabilidad, deja las costuras visibles en su docblock, y el Presenter-clase, si
+procede, se decide en el paso 4 con las firmas reales delante.
+
+- **Fidelidad por diferencia de conjuntos**: 0 líneas ausentes; `ViewOrder` gana solo el import y
+  el `use`. Import huérfano retirado (`OrderItemRefunded`).
+- **La reflexión de `sameScopeProductOptions` no se tocó**: `ReflectionMethod` sobre la clase
+  resuelve métodos de trait — cero re-apuntes.
+- **Mutación de la extracción**: retirar el `use PresentsOrderActions;` deja **19 de 61 tests de
+  `OrderAdminActionsTest` en rojo**. Restauración verificada.
+- Suite **2936 / 16.961 en verde** (sin cambios: pura mudanza) · Pint ✓ · `php -l` ✓.
 
 ### 9.4 Extracción 3 · La consulta de re-programación — PENDIENTE (`VERIFY_CONC`)
 
