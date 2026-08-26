@@ -10,17 +10,26 @@
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
 >
-> ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.**
-> · **Agente A → Fase 6 · waiver: CÓDIGO COMPLETO, las CUATRO tandas empujadas** (`#160` · `#161` ·
->   `#163` · **`#166`**, la 3b: el cajón, 2026-08-26). ❗ Lo que deja **pendiente del OWNER**: el ✅ en
->   navegador (guion `VERIFICACION-E2E-CAJON.md` **§5.sexies**, solo en local), el texto definitivo
->   (§8.1) y la retención — y **una decisión de producto**: el aviso de re-firma **en el paso de pagar**
->   no se construyó (spec §9.9·1: la puerta deja pasar, y el chunk quedó con 0,28 KiB).
->   **Lo siguiente del agente A: menores a cargo** (subsistema C, `specs/menores-a-cargo.md`). Sus
->   ficheros, y **no se entra ahí**: `resources/js/sidebar/` · `resources/css/` · `storage/ssr/` ·
->   `lang/*/account.php` · `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md` ·
->   `docs/specs/sidebar-spa.md` (§8) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` — más lo
->   de Identity que la spec C nombre cuando arranque.
+> ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
+> indicación del owner: los dos carriles cambian de trabajo, no de máquina)
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → Fase 6 · waiver: CERRARLO SIN
+>   ESCRIBIR CÓDIGO DE PRODUCTO** (`[DECIDIDO owner, 2026-08-26]`). Las cuatro tandas están
+>   empujadas (`#160` · `#161` · `#163` · `#166`); lo que queda es (1) el guion
+>   `VERIFICACION-E2E-CAJON.md` **§5.sexies** recorrido en **navegador headless** (Playwright dentro
+>   del contenedor, receta §5.bis, **fuera del repo**) con evidencia —red, BD, `waiver:verify-chain`—
+>   y **después** el ✅ del owner en su navegador; (2) la **revisión adversarial del waiver entero**
+>   (`CONVENCIONES §5`: refutar la spec §9 contra el código, resultado en un §10 de la spec); (3) las
+>   tres decisiones del owner planteadas con su medida: el texto definitivo (§8.1), la retención y
+>   el aviso de re-firma en el paso de pagar (§9.9·1). Ficheros: `docs/specs/waiver-probatorio.md` ·
+>   `docs/VERIFICACION-E2E-CAJON.md` · `docs/ESTADO.md` · `docs/00-REFACTOR.md` · `docs/DECISIONES.md`
+>   (número al empujar) · `docs/DEUDA.md` (fichas del waiver, si salen) · `docs/TESTING.md` (si la
+>   prueba enseña una trampa). ❗ **`app/`, `resources/`, `lang/`, `tests/` NO se tocan desde este
+>   carril**: un defecto que destape la prueba o la revisión se anota con su reproducción y se decide
+>   quién lo arregla. «Menores a cargo» (subsistema C) queda DETRÁS de esto.
+>   ⚠️ **La BD local de esta máquina ya está preparada para el guion** (medido al arrancar):
+>   `waiver.mode = interno`, v1 publicada en es/en/fr el 26/08 a las 14:42 por `admin@jumpweb.test`
+>   —con el marcador `[PENDIENTE…]` retirado a mano pero la frase «Este texto es un borrador…»
+>   dentro—, **0 firmas**, 0 consentimientos.
 >   ⚠️ **El techo del chunk del cajón cedió por una FEATURE el 2026-08-26 (221,5 → 226)**: la regla
 >   escrita decía «solo por correcciones» y por eso **lo decidió el owner**, con el número delante.
 >   Quedan 0,28 KiB. Lo siguiente que entre lo mide (`SidebarBundleBudgetTest`).
@@ -28,20 +37,28 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (esta máquina) → la REVISIÓN ADVERSARIAL de `desmontar-view-order.md` está HECHA y
+> · **Agente B (el portátil) → `desmontar-view-order`: la REVISIÓN ADVERSARIAL está HECHA y
 >   EMPUJADA** (`#167`, 2026-08-26; el detalle en la spec **§8**). **El diagnóstico y la opción C
 >   sobreviven; TRES bloqueantes**: el paso 3 compara comprar-vs-mover y se re-diseña como EXTENSIÓN
 >   (con `VERIFY_CONC` ya en ese paso) · §4.3 describía DENTRO de la transacción lo que corre FUERA ·
 >   los verificadores de §6.4 no ejecutan el código mudado (`AFORO-05` sin instrumento).
->   ▶ **Siguiente de este carril**: incorporar las correcciones de la spec §8.12 (doc, sin `app/`)
->   y/o la revisión adversarial del WAIVER entero, ya desbloqueada por `#166`.
->   ❗ Tras las correcciones seguirá faltando el **✅ del owner**: **nadie toca `ViewOrder` hasta
->   entonces.**
->   ▶ La sesión anterior del carril CERRÓ el 2026-08-26 sin dejar nada a medias (`#159` · `#162` ·
->   `#164` · `#165`, todo empujado y verde). Su recordatorio que sigue vigente: al cerrar una tanda
->   que toque fixtures con calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO
->   en el `pre-push`) — la primera pasada cazó un fixture que iba a tumbar el gate de los DOS
->   agentes seis días después, sin que nadie tocara nada.
+>   ▶ **Lo que sigue en este carril** (`[DECIDIDO owner, 2026-08-26]`): incorporar las correcciones
+>   de la spec §8.12 (doc, sin `app/`) → ✅ del owner → **EJECUCIÓN de las cuatro extracciones**.
+>   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
+>   en curso desde esta tarde junto con el guion headless — no se empieza dos veces
+>   (`CONVENCIONES §10·7`). Ficheros del carril B: `app/Filament/Resources/Orders/**`
+>   (`ViewOrder.php` y lo que se extraiga de él) · los ficheros de test que conducen `ViewOrder`
+>   (spec §1.5) · `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md` (su ficha) ·
+>   `docs/DECISIONES.md` (número al empujar). ⚠️ El paso 3 entra en el `CRITICAL_RE`
+>   (`SlotOffer`/`SlotAvailability`/`PackAvailability`): `VERIFY_CONC=1`. ❗ Hasta el ✅ del owner
+>   **nadie toca `ViewOrder`**.
+>   ▶ **Para el agente del portátil (2026-08-26, del carril A)**: esta fila la fusionó el carril A
+>   con la tuya de `#167` por indicación del owner; **ajústala tú al empujar** y retira este aviso.
+>   El carril A empuja **pequeño y a menudo** y solo toca `docs/`: `git pull --rebase` antes de cada
+>   push tuyo, y el número de `DECISIONES` se mira en el remoto justo antes (`#167` ya es tuyo).
+>   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
+>   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
+>   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
 > ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **NUEVE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
@@ -311,10 +328,10 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ERES EL AGENTE QUE ENTRA DESPUÉS DEL AGENTE B (2026-08-26)
+# ❗ SI ENTRAS NUEVO (2026-08-26, tarde): LOS DOS CARRILES ESTÁN OCUPADOS
 
-**Lo que está EN MARCHA no es tuyo**: Fable sigue con la tanda 3b del waiver en el otro ordenador
-(ficheros en el reparto de arriba). `git fetch` antes de nada.
+**Lo que está EN MARCHA no es tuyo**: el reparto de la cabecera es el único vigente y sus dos filas
+tienen dueño. `git fetch` antes de nada.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
@@ -322,16 +339,17 @@ midió y da **cero** (`#164`: las 35 citas de la columna «Dónde vive» resuelv
 bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que NO depende de nosotros»**:
 casi todo lo que queda lo desbloquea el owner.
 
-▶ **Las dos cosas que sí serán trabajo de agente en cuanto se desbloqueen:**
-1. **Revisar el waiver entero** de forma adversarial — ✅ **DESBLOQUEADA desde `#166`** (2026-08-26:
-   las cuatro tandas empujadas, código completo; queda el ✅ del owner en navegador). Es lo natural
-   para quien no lo escribió (`CONVENCIONES §5`). ⚠️ Sondeado por encima el 26/08 y
-   **cumple** lo que la revisión de la spec exigía: el texto borrador **no se ha publicado**,
-   `RGPD-01` recoge la conservación restringida y el PDF dice que el dato no está verificado.
-2. **`docs/specs/desmontar-view-order.md`** (`#165`) — ✅ **la revisión adversarial está HECHA**
-   (`#167`, 2026-08-26, spec **§8**): el diagnóstico sobrevive, con TRES bloqueantes y el checklist
-   §8.12 a incorporar en la spec ANTES del ✅ del owner. **Nadie toca `ViewOrder` hasta las dos
-   cosas** (correcciones incorporadas + ✅ del owner).
+▶ **Las dos cosas que eran trabajo de agente YA TIENEN CARRIL** (reparto de la cabecera):
+1. **Revisar el waiver entero** de forma adversarial + recorrer su guion en headless → **carril A**,
+   en curso desde el 2026-08-26 por la tarde (desbloqueada por `#166`: las cuatro tandas empujadas).
+   ⚠️ La nota anterior de este punto («sondeado por encima el 26/08: el texto borrador no se ha
+   publicado») era de la máquina del portátil: en la del carril A **sí hay una v1 local publicada**
+   para el guion, sin marcador y con la frase de borrador dentro.
+2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ **la revisión
+   adversarial está HECHA** (`#167`, 2026-08-26, spec **§8**): el diagnóstico sobrevive, con TRES
+   bloqueantes y el checklist §8.12 a incorporar en la spec ANTES del ✅ del owner; después, la
+   ejecución de las cuatro extracciones. **Nadie toca `ViewOrder` hasta las dos cosas**
+   (correcciones incorporadas + ✅ del owner).
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de
