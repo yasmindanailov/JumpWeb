@@ -37,25 +37,20 @@
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
 >
-> · **Agente B (el portátil) → `desmontar-view-order`: la REVISIÓN ADVERSARIAL está HECHA y
->   EMPUJADA** (`#167`, 2026-08-26; el detalle en la spec **§8**). **El diagnóstico y la opción C
->   sobreviven; TRES bloqueantes**: el paso 3 compara comprar-vs-mover y se re-diseña como EXTENSIÓN
->   (con `VERIFY_CONC` ya en ese paso) · §4.3 describía DENTRO de la transacción lo que corre FUERA ·
->   los verificadores de §6.4 no ejecutan el código mudado (`AFORO-05` sin instrumento).
->   ▶ **Lo que sigue en este carril** (`[DECIDIDO owner, 2026-08-26]`): incorporar las correcciones
->   de la spec §8.12 (doc, sin `app/`) → ✅ del owner → **EJECUCIÓN de las cuatro extracciones**.
+> · **Agente B (el portátil) → `desmontar-view-order`: REVISIÓN HECHA (`#167`) y CORRECCIONES
+>   INCORPORADAS (`#168`)**, todo el 2026-08-26: **el cuerpo de la spec ya describe el código real**
+>   y §8 conserva el registro de la revisión. Lo que cambió el plan: paso 0 (código muerto), el paso
+>   3 como EXTENSIÓN de re-programación, el mapa transaccional real de §4.3 y el instrumento del
+>   paso 4 (`AFORO-05`).
+>   ▶ **Lo que sigue en este carril** (`[DECIDIDO owner, 2026-08-26]`): ✅ del owner → **EJECUCIÓN
+>   del paso 0 y las cuatro extracciones**. ❗ Hasta el ✅ **nadie toca `ViewOrder`**.
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
->   en curso desde esta tarde junto con el guion headless — no se empieza dos veces
->   (`CONVENCIONES §10·7`). Ficheros del carril B: `app/Filament/Resources/Orders/**`
->   (`ViewOrder.php` y lo que se extraiga de él) · los ficheros de test que conducen `ViewOrder`
->   (spec §1.5) · `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md` (su ficha) ·
->   `docs/DECISIONES.md` (número al empujar). ⚠️ El paso 3 entra en el `CRITICAL_RE`
->   (`SlotOffer`/`SlotAvailability`/`PackAvailability`): `VERIFY_CONC=1`. ❗ Hasta el ✅ del owner
->   **nadie toca `ViewOrder`**.
->   ▶ **Para el agente del portátil (2026-08-26, del carril A)**: esta fila la fusionó el carril A
->   con la tuya de `#167` por indicación del owner; **ajústala tú al empujar** y retira este aviso.
->   El carril A empuja **pequeño y a menudo** y solo toca `docs/`: `git pull --rebase` antes de cada
->   push tuyo, y el número de `DECISIONES` se mira en el remoto justo antes (`#167` ya es tuyo).
+>   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
+>   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
+>   de él) · los ficheros de test que conducen `ViewOrder` (spec §1.5) ·
+>   `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md` (su ficha) · `docs/DECISIONES.md`
+>   (número al empujar). ⚠️ El paso 3 entra en el `CRITICAL_RE`
+>   (`SlotOffer`/`SlotAvailability`/`PackAvailability`): `VERIFY_CONC=1`.
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
@@ -72,7 +67,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#167`**.
+> El último usado es **`#168`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -345,11 +340,10 @@ casi todo lo que queda lo desbloquea el owner.
    ⚠️ La nota anterior de este punto («sondeado por encima el 26/08: el texto borrador no se ha
    publicado») era de la máquina del portátil: en la del carril A **sí hay una v1 local publicada**
    para el guion, sin marcador y con la frase de borrador dentro.
-2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ **la revisión
-   adversarial está HECHA** (`#167`, 2026-08-26, spec **§8**): el diagnóstico sobrevive, con TRES
-   bloqueantes y el checklist §8.12 a incorporar en la spec ANTES del ✅ del owner; después, la
-   ejecución de las cuatro extracciones. **Nadie toca `ViewOrder` hasta las dos cosas**
-   (correcciones incorporadas + ✅ del owner).
+2. **`docs/specs/desmontar-view-order.md`** (`#165`) → **carril B** (el portátil): ✅ **revisión
+   adversarial HECHA (`#167`) y correcciones INCORPORADAS (`#168`)**, 2026-08-26: el cuerpo ya
+   describe el código real y §8 conserva el registro. ❗ **Pendiente SOLO el ✅ del owner**; después,
+   la ejecución del paso 0 y las cuatro extracciones. Hasta el ✅ nadie toca `ViewOrder`.
 
 ▶ **La línea de panel/dinero está CERRADA y DESPLEGADA** (`#149`→`#155`, staging en `7776370`): no
 hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueba el modal nuevo de

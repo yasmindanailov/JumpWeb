@@ -9067,6 +9067,37 @@ al owner sin las correcciones de su §8.12:
 La spec queda 🟦 con la revisión HECHA: le falta **incorporar las correcciones de §8.12** (trabajo
 de agente, una tanda de doc) y **después** el ✅ del owner — que ahora decide con un plan que
 describe el código que existe. `ViewOrder` sigue sin tocarse.
+▶ **Hecho el mismo día: la incorporación es `#168`.**
 
 Verificación: docs-check ✓ · solo doc (`app/` intacto, `git status` limpio de código) · revisión
 por 7 medidores + refutación cruzada, cifras clave re-verificadas a mano en sesión.
+
+## #168 · 2026-08-26 · Las correcciones de la revisión, incorporadas: la spec de `ViewOrder` ya describe el código que existe
+
+Ejecuta el checklist §8.12 de `docs/specs/desmontar-view-order.md` (`#167`), el mismo día y solo
+doc. El cuerpo de la spec queda corregido y **§8 se conserva entero como registro** — la evidencia
+de por qué cada cosa estaba mal es lo que impide re-cometerla.
+
+Lo que cambió DE VERDAD el plan (el resto son cifras y matices):
+
+1. **Nace un paso 0**: retirar el código muerto (`availableDatesForItem`, `availableTimesForItem`,
+   `calendarMatrixForItem`) por `CONVENCIONES §3.quater` ANTES de mudar nada.
+2. **El paso 3 deja de ser «sustitución por el contrato»** y pasa a ser una consulta de
+   RE-PROGRAMACIÓN nueva en el dominio (extensión de la familia `SlotOffer`/primitivas con
+   `excludeItemId`), riesgo Alto, con `VERIFY_CONC=1` ya en ese paso, y el diff previo POR EJE
+   separando decisión documentada del origen de deriva accidental — las derivas (ancla temporal
+   `AFORO-09`, exención `PAY-13` del panel) las zanja el owner cuando el diff las destape.
+3. **§4.3 describe el mapa transaccional REAL** (guardas pre-txn · txn SOLO de aforo · secuencia
+   financiera post-commit con transacciones propias en `Order` · email) y declara el patrón híbrido
+   del servicio extraído: dueño de la txn de aforo Y orquestador de la secuencia financiera.
+4. **El paso 4 gana instrumento**: extender `purchase:verify-oversell` (o hermano) con el escenario
+   de edición de panel concurrente (`AFORO-05`), visto fallar antes de creerle el verde.
+5. **La rama Concern queda FIJADA** para el calendario («componente» descartado) y el criterio de
+   éxito lleva la cláusula de reflexión: lo intocable es lo ASEVERADO, no el cableado del arnés.
+6. **La tabla de invariantes de §5 queda completa** (once filas, con `AFORO-05`/`AFORO-06`/
+   `RGPD-02`/`SEC-04` y las cuatro de roce).
+
+❗ **Pendiente SOLO el ✅ del owner** (y su «¿ahora o espera?»). `ViewOrder` sigue sin tocarse:
+`app/` intacto también en esta tanda.
+
+Verificación: docs-check ✓ · solo doc.

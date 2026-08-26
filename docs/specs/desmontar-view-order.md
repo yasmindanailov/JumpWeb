@@ -1,17 +1,18 @@
 # [SPEC] Desmontar `ViewOrder` — el god-class del panel
 
-> Estado: diseño 🟦 · **revisión adversarial HECHA (2026-08-26, §8): el diagnóstico y la opción C
-> sobreviven; TRES bloqueantes y el checklist §8.12 van ANTES del ✅ del owner** ·
+> Estado: diseño 🟦 · **revisión adversarial HECHA e INCORPORADA al cuerpo (2026-08-26, §8 +
+> checklist §8.12 ejecutado): pendiente SOLO el ✅ del owner** ·
 > Última actualización: 2026-08-26 ·
 > Verificado contra código: 2026-08-26 (el fichero entero, sus 98 métodos, su red de tests, y qué
 > contratos del dominio usa — ninguno; re-verificado por la revisión §8 con 7 medidores) ·
-> Decisión asociada: `DECISIONES #165` (la spec) + la entrada de la revisión ·
+> Decisión asociada: `DECISIONES #165` (la spec) · `#167` (la revisión) ·
 > Se invalida si: alguien mueve código dentro del fichero sin re-medir la descomposición de §1.2.
 >
-> ⚠️⚠️ **LEE §8 ANTES QUE EL CUERPO**: tres afirmaciones del cuerpo resultaron FALSAS al medirlas
-> (las «25 llamadas» son 8 invocaciones · §4.3 describe DENTRO de la transacción lo que corre FUERA ·
-> los verificadores de §6.4 no ejecutan el código mudado) y el paso 3 compara dos preguntas
-> distintas. Cada sección afectada lleva su marcador.
+> ▶ **El cuerpo ya describe el código real**: las correcciones de la revisión (§8) están
+> incorporadas — §8 conserva el registro de lo que estaba mal, con su evidencia, y NO se lee como
+> estado vigente sino como historia de la revisión. Lo que cambió de verdad el plan: el paso 0
+> (código muerto), el paso 3 como EXTENSIÓN con `VERIFY_CONC`, el mapa transaccional de §4.3 y el
+> instrumento del paso 4.
 >
 > ⚠️ **Esto es DISEÑO. No se ha tocado una línea de `app/`**, y no debe tocarse hasta que esta spec
 > esté revisada por el otro agente y aprobada por el owner: es el fichero que más cerca está del
@@ -34,35 +35,51 @@ abrirla, no creerla*. Corregida en su ficha.
 
 ### 1.2 La descomposición, que es lo que decide el diseño
 
-98 métodos en 5.280 líneas. Repartidos por lo que hacen:
+98 métodos en 5.280 líneas (más ~36 closures y ~60 arrow-fns dentro de ellos — el pegamento de los
+`*Action`, que captura `$this` y `$record`). Repartidos por lo que hacen.
+⚠️ **Instrumento declarado** (lo exige la cláusula de invalidación de la cabecera): líneas por
+**BLOQUE** — cada método absorbe su docblock y el hueco que lo precede. Quien re-mida por cuerpos
+Reflection obtendrá cifras menores en todas las filas (p. ej. orquestación 1.542) sin que la tabla
+esté caducada.
 
 | | Líneas | Métodos | Qué es | ¿Es de la capa de entrega? |
 |---|---|---|---|---|
 | **Orquestación de dominio** (`execute*`, `compute*`, `validate*`, `save*`, `apply*`) | **1.699 (32 %)** | 14 | Editar un ítem, reembolsar, cancelar, cambiar franja, tarificar complementos | ❌ **No** |
-| Presentación y notificaciones (`*Notification`, `render*`, `*Preview`, `*Options`) | ~460 (9 %) | ~10 | Los textos y avisos que ve el operador | ✅ Sí |
-| Lecturas de disponibilidad (`availableDatesForItem`, `availableTimesForItem`, `selectableDatesInRange`) | ~219 (4 %) | 3 | Qué días y horas se pueden elegir | ❌ **No** (§1.4) |
-| Acciones y composición Filament (`*Action`, `*Form`, `*Field`) | 1.223 (23 %) | 20 | Los 10 botones y sus formularios | ✅ Sí |
-| Calendario (`calendar*`) | 524 (9 %) | 13 | El selector de fecha/hora del panel | ✅ Sí (estado de UI) |
-| Ayudantes varios | ~1.150 (22 %) | ~38 | Mezcla de las dos naturalezas | ⚠️ Hay que clasificar uno a uno |
+| Presentación y notificaciones (`*Notification`, `render*`, `*Preview`, `*Options`) | ~495 (9 %) | 14 | Los textos y avisos que ve el operador | ✅ Sí |
+| Lecturas de disponibilidad (`availableDatesForItem`, `availableTimesForItem`, `selectableDatesInRange`) | ~240 (4 %) | 3 · ⚠️ **2 MUERTOS** (§8.7) | Qué días y horas se pueden elegir — la VIVA es `selectableDatesInRange`; el resto de la disponibilidad viva está dentro del calendario | ❌ **No** (§1.4) |
+| Acciones y composición Filament (`*Action`, `*Fields`, `*Tab*`, formularios de modal) | ~1.203 (23 %) | 18 | Los 10 botones y sus formularios | ✅ Sí |
+| Calendario (contiene `Calendar` — ⚠️ NO es prefijo: por prefijo son solo 10) | ~529 (9 %) | 13 | El selector de fecha/hora del panel | ✅ Sí (estado de UI) — ⚠️ pero CONTIENE disponibilidad viva (§8.7) |
+| Ayudantes varios | ~1.016 + 98 de cabecera (21 %) | 40 | Mezcla de las dos naturalezas | ⚠️ Hay que clasificar uno a uno |
 
-▶ El método más grande es **`executeItemEdit`, con 475 líneas**. Los 12 mayores suman **2.068
-líneas, el 39 % del fichero**.
-▶ Toca dinero y aforo en **25 llamadas**: `executePartialRefund` ×7, `executeItemEdit` ×7,
-`applyExtraDue` ×7, `lockZoneDaySlots` ×3, `executeFullRefund` ×1.
-⚠️ **REVISADO (§8.6): esa cifra cuenta comentarios y definiciones — las invocaciones reales son 8**,
-`executePartialRefund` a secas tiene CERO llamadas (el método real es `executePartialRefundBatch`) y
-el lock se llama ×2, no ×3.
+▶ El método más grande es **`executeItemEdit`, con ~472 líneas**. Los 12 mayores suman
+**1.924–2.128 líneas según instrumento — unas dos quintas partes del fichero**.
+▶ Toca dinero y aforo en **8 invocaciones reales**: `applyExtraDue` ×3 · `lockZoneDaySlots` ×2 ·
+`executeFullRefund` ×1 · `executePartialRefundBatch` ×1 · `executeItemEdit` ×1 (interna).
+Reproducible: grep de INVOCACIÓN (`\$this->` / `\$order->` + nombre + paréntesis), leyendo el
+contexto de cada hit.
+⚠️ La primera versión de esta línea decía «25 llamadas»: contaba apariciones de subcadena —
+comentarios y definiciones incluidos— y el ×7 de `executePartialRefund` era `executePartialRefundBatch`
+como substring más 6 comentarios. El registro del error y su desglose, en **§8.6**.
 
 ### 1.3 ❗ El dato que cambia el diseño: es GRANDE, no está ENMARAÑADO
 
-**Solo tiene CINCO propiedades públicas de Livewire**, y **cuatro son del calendario**
-(`calendarItemId`, `calendarMonth`, `calendarSelectedDate`, `calendarSelectedTime`); la quinta es el
-paginador de la auditoría. La composición de la ficha ya vive fuera (`Schemas/OrderInfolist.php`).
+**Solo declara CINCO propiedades públicas de Livewire**, y **cuatro son del calendario**
+(`calendarItemId`, `calendarMonth`, `calendarSelectedDate`, `calendarSelectedTime`); la quinta es
+`auditPerPage` (el tamaño de página de la auditoría — el paginador real es una computed más el
+estado heredado de `WithPagination`). La clase hereda además estado de la infraestructura
+Filament/Livewire (`$record`, `$data`, `$mountedActions`, `$paginators`), que no entrelaza las
+piezas entre sí (§8.11). La composición de la ficha ya vive fuera (`Schemas/OrderInfolist.php`);
+lo que sí compone inline son los formularios de los MODALES de acción.
 
-▶ **Traducido**: el estado mutable compartido es mínimo, así que las piezas **no están entrelazadas
-por estado** — están simplemente amontonadas. Eso convierte el desmontaje en una serie de
+▶ **Traducido**: el estado mutable compartido es mínimo — el censo de asignaciones `$this->` del
+fichero solo muta las 4 del calendario (§8.2) — así que las piezas **no están entrelazadas
+por estado**: están simplemente amontonadas. Eso convierte el desmontaje en una serie de
 extracciones acotadas en vez de una reescritura. **Un god-class con veinte propiedades compartidas
 sería otro proyecto.**
+⚠️ **El matiz que ordena el paso 1**: las 4 props del calendario SÍ las leen tres métodos de fuera
+de su familia — uno de dominio (`executeManageItemSave`) y dos de presentación (`priceDiffPreview`,
+`addonDiffPreview`) — así que la frontera calendario↔dominio cruza estado (§8.7). No tumba la tesis;
+fija el mecanismo del paso 1 (Concern) y del paso 4 (fecha/hora por parámetros).
 
 ### 1.4 Y un hallazgo que no se buscaba: el panel tiene su PROPIA disponibilidad
 
@@ -85,18 +102,26 @@ oferta, la misma situación que el pricing.
 
 ### 1.5 La red que ya existe, y es la que hace esto pensable
 
-**16 ficheros de test conducen `ViewOrder`, con ~285 casos.** Los cinco mayores:
+**16 ficheros de test citan `ViewOrder` (289 métodos); con criterio de CONDUCCIÓN real la red son
+~23 ficheros y ~317 casos** — 7 ficheros más conducen la página por ruta HTTP sin nombrar la clase
+(`OrderInfolistEnrichedTest` con 48, `ItemsListSubCardTest`…, §8.11) y 49 de los 289 conducen otra
+cosa. Los cinco mayores por métodos:
 
     OrderAdminActionsTest              61
     ManageItemQuantityProductTest      47
     ManageItemSlotChangeTest           33
     ManageItemAddonsTest               28
-    ManualOrderWithoutEmailTest        17
+    ManualOrderWithoutEmailTest        17   ⚠️ solo 2 conducen la página (es una suite de CreateManualOrderPage)
 
 ▶ Sin esa red, desmontar este fichero sería temerario. Con ella, la conducta está fijada y cada
 extracción se puede verificar **por mutación**.
+⚠️ **36 de esos tests entran por `ReflectionMethod` contra la clase** (10 métodos privados):
+cualquier extracción los rompe POR CONSTRUCCIÓN — la cláusula que eso impone al criterio de éxito
+está en §2·1. Y dos piezas del calendario no tienen red ninguna (`calendarGoToItemMonth`;
+`calendarMatrixForItem` está directamente muerto), §8.11.
 ⚠️ **Y NO está en el `CRITICAL_RE`** del `pre-push` (comprobado), así que hoy tocarlo no exige
-`VERIFY_CONC=1`. §5 discute si eso debe seguir siendo verdad después.
+`VERIFY_CONC=1`. §5 discute si eso debe seguir siendo verdad después — y desde la revisión se sabe
+que **el paso 3 SÍ lo dispara** por los ficheros del dominio que extiende (§8.3).
 
 ---
 
@@ -106,13 +131,19 @@ extracción se puede verificar **por mutación**.
 
 Criterios de éxito, todos medibles:
 
-1. **Cero cambios de conducta.** La red de ~285 casos pasa sin tocar un solo assert. Un test que haya
-   que reescribir es la señal de que la extracción cambió algo — y entonces se para y se mira.
+1. **Cero cambios de conducta.** La red de ~317 casos pasa **sin tocar un solo ASSERT**. Un assert
+   que haya que reescribir es la señal de que la extracción cambió algo — y entonces se para y se
+   mira. ⚠️ **Cláusula de reflexión (§8.8)**: 36 tests entran por `ReflectionMethod` y 75
+   interacciones fijan las props del calendario sobre la clase — re-apuntar una reflexión o un
+   `set()` al nuevo dueño del método es mudanza esperada y va en el mismo paso; lo intocable es lo
+   ASEVERADO, no el cableado del arnés.
 2. La orquestación de dinero/aforo vive en **`app/Domain/`**, detrás de un contrato, como el resto del
    dominio desde Fase 2.
 3. `ViewOrder` baja de 5.280 líneas a **lo que sea composición de Filament y estado de UI**, y esa
    cifra se declara MEDIDA al cerrar, no estimada.
-4. El panel deja de tener **su propia disponibilidad**: la pide por `AvailabilityOffer`.
+4. El panel deja de COMPONER **su propia oferta de disponibilidad**: la pide al dominio por una
+   consulta de **re-programación** (extensión de la familia de `SlotOffer`/primitivas, §4.2 y §8.3)
+   — que es cumplir `AFORO-02` sin perder las decisiones de producto que el panel encarna.
 5. Cada extracción se verifica **por mutación**, no por «la suite sigue verde».
 
 ### Fuera de alcance, explícitamente
@@ -153,47 +184,84 @@ god-model, que es peor porque el modelo lo usa todo el mundo.
 siguiente.** El orden no es por tamaño ni por comodidad: es **por riesgo creciente**, para que el
 método esté rodado cuando llegue el dinero.
 
-### 4.1 Las cuatro extracciones, en orden
+### 4.1 Las extracciones, en orden — con un paso 0 que la revisión añadió
+
+**Paso 0 · Retirar el código MUERTO antes de mudar nada** (`CONVENCIONES §3.quater`, §8.7):
+`availableDatesForItem` y `availableTimesForItem` (cero llamadores de producción desde el commit
+fundacional; solo los mantienen vivos tests por reflexión) y `calendarMatrixForItem` (cero
+referencias en todo el repo). Sus tests se auditan y se re-apuntan o retiran ANTES — mudar código
+muerto es pagar el riesgo de la mudanza sin comprar nada.
 
 | | Qué sale | Tamaño | Riesgo | Por qué va aquí |
 |---|---|---|---|---|
-| **1** | **El calendario** → su propio `Concern`/componente | ~524 líneas · 13 métodos · **las 4 propiedades** | **Mínimo** | Autocontenido y sin dinero. Es el ensayo del método: si esto sale limpio, el resto es lo mismo con más cuidado. ⚠️ **REVISADO (§8.7/§8.8): NO es autocontenido** (el dominio lee sus props y el calendario CONTIENE disponibilidad viva) **y solo la rama Concern cumple §2.1** — «componente» se descarta |
-| **2** | **Presentación y notificaciones** → un `*Presenter` de la capa de entrega | ~460 líneas | Bajo | No toca dominio; solo compone textos. Reduce ruido antes de entrar en lo serio |
-| **3** | **Las lecturas de disponibilidad** → **`Booking\Contracts\AvailabilityOffer`, que YA EXISTE** | ~219 líneas | ⚠️ Medio → ❗ **Alto (§8.3)** | ~~No es mudanza: es **sustitución por el contrato**~~ ⚠️ **REVISADO (§8.3): NO es sustituible — son dos preguntas distintas (comprar vs mover), se re-diseña como EXTENSIÓN, y dispara `VERIFY_CONC` ya en este paso** |
-| **4** | **La orquestación de dinero/aforo** → servicio de dominio con contrato propio | ~1.699 líneas · 14 métodos | ❗ **Alto** | `executeItemEdit` (475 líneas) y familia. La última, con el método ya probado tres veces |
+| **1** | **El calendario** → un `Concern` (trait sobre la MISMA clase — «componente» DESCARTADO: rompería 75 interacciones de test y el camino de runtime, §8.8) | ~529 líneas · 13 métodos («contiene Calendar», no prefijo) · **las 4 propiedades** | **Bajo** | Sin dinero, y como trait las props siguen en el componente: el corte de la frontera dominio→calendario (`executeManageItemSave` lee `calendarSelected*`, §8.7) se hace en el paso 4 pasando fecha/hora por parámetros. Es el ensayo del método |
+| **2** | **Presentación y notificaciones** → un `*Presenter` de la capa de entrega | ~495 líneas · 14 métodos | Bajo | No toca dominio; solo compone textos (dos leen el estado del calendario: reciben la fecha por parámetro). Reduce ruido antes de entrar en lo serio |
+| **3** | **La COMPOSICIÓN de la oferta del panel** → una consulta de **RE-PROGRAMACIÓN** nueva en el dominio, sobre `SlotOffer`/`SlotAvailability`/`PackAvailability` con `excludeItemId` — **extensión, no sustitución** (§8.3: el contrato existente responde a COMPRAR, el panel a MOVER) | `selectableDatesInRange` + `calendarTimesForItem*` + `displayAvailableFor` + `slotMeetsItemRequirements` (la disponibilidad VIVA, más que las ~240 de §1.2) | ❗ **Alto** — toca ficheros del `CRITICAL_RE` ⟹ **`VERIFY_CONC=1` ya en este paso** | El diff previo POR EJE (§4.2) separa decisión documentada de deriva; lo que destape de producto lo zanja el owner |
+| **4** | **La orquestación de dinero/aforo** → servicio de dominio con contrato propio | ~1.699 líneas · 14 métodos | ❗ **Alto** | `executeItemEdit` (~472 líneas) y familia. La última, con el método ya probado tres veces |
 
-### 4.2 ⚠️ El paso 3 puede destapar una diferencia de CONDUCTA, y eso no es un fallo de la extracción
+### 4.2 ⚠️ El paso 3 destapará diferencias de CONDUCTA con seguridad — y se clasifican POR EJE
 
-El panel y el contrato pueden **no ofrecer las mismas fechas**: llevan meses evolucionando por
-separado. Si al sustituir aparece una diferencia, **es un hallazgo, no un error de la mudanza**, y
-tiene tres salidas y solo una es válida:
+La primera versión de esta sección preguntaba «¿difieren?». La revisión (§8.3) midió que **la
+divergencia está garantizada estáticamente** y que **no hay UNA respuesta correcta**: el contrato
+responde a una compra nueva y el panel a mover un ítem ya comprado, y varias diferencias son
+decisiones de producto documentadas en los docblocks del propio fichero (numeración del ORIGEN).
+Así que el diff previo — que sigue siendo obligatorio ANTES de mover — se hace **POR EJE**, y cada
+eje tiene una de dos salidas:
 
-1. ❌ Ajustar el contrato para que se parezca al panel **sin decidir cuál es correcto**.
-2. ❌ Dejar la implementación del panel «por si acaso».
-3. ✅ **Medir cuál de las dos es correcta, decidirlo, y anotarlo.** Si el panel ofrecía días que el
-   contrato no, o al revés, eso es una diferencia de producto que alguien tiene que zanjar.
+- **Decisión documentada → la consulta de re-programación la CONSERVA** (no se «unifica» contra el
+  contrato, que la desharía): el slot actual siempre ofrecido · la huella propia contada al mostrar
+  y excluida al validar (`excludeItemId`, `AFORO-06`) · producto retirado sigue movible · aforo
+  contra los `seats` del ítem.
+- **Deriva accidental o hueco → lo zanja el OWNER con la medida delante**: el ancla temporal
+  (`Carbon::today()` en UTC vs la zona del parque, `AFORO-09`) · si el panel debe seguir EXENTO de
+  antelación mínima y suelo intradía (`PAY-13` hoy solo rige la web — probablemente sí, es venta en
+  mostrador, pero es decisión y no accidente) · entrada llena oculta vs ofrecida-no-vendible.
 
-⚠️ **Y hay que medirla ANTES de mover nada**: comparar la salida de las dos implementaciones sobre los
-mismos datos. Si coinciden, el paso 3 es mecánico. Si no, el paso 3 **se para** y se abre la decisión.
+⚠️ Dos trampas del diff, medidas (§8.11): las firmas no aceptan los mismos datos (hay que definir la
+PROYECCIÓN ítem→producto primero), y ejecutarlo entre las 00:00 y las ~02:00 del parque arroja
+diferencias que son del RELOJ, no de las lógicas — los datasets incluyen a propósito «hoy con horas
+pasadas» y esa ventana.
 
-### 4.3 El paso 4: qué contrato, y qué NO se toca
+### 4.3 El paso 4: el mapa transaccional REAL, qué contrato, y qué NO se toca
 
-⚠️⚠️ **REVISADO (§8.4): el párrafo siguiente describe AL REVÉS el mapa transaccional real** — las
-guardas van ANTES de toda transacción, la transacción contiene SOLO aforo/mutación, y toda la
-secuencia financiera corre DESPUÉS del commit con transacciones propias en `Order`. Se reescribe con
-el mapa de §8.4 antes del ✅ (checklist §8.12·1). Se conserva tachado como testimonio del error:
+> La primera versión de esta sección describía la secuencia como si viviera entera «dentro de una
+> transacción» — **era al revés**, y quien la hubiera «preservado» al extraer la habría CREADO. El
+> registro del error y su evidencia: **§8.4**. Éste es el mapa medido:
 
-~~`executeItemEdit` y familia orquestan **dentro de una transacción**: guardas (`blockEdit` ×9),
-`applyExtraDue`, `recordReductionMarker`, `applyGateCredit`, `applyDepositRemainderCredit`, y los
-cálculos de `itemExtraDueCents`/`itemDepositRemainderCents`.~~
+`executeItemEdit` (y en espejo `executeItemSlotChange`) ejecuta **cuatro fases**, y la frontera
+transaccional es el diseño, no un accidente:
 
-▶ Lo que se mueve es **la secuencia**, no las piezas: los métodos de `Order` se quedan donde están.
-Es la misma doctrina que `CheckoutOrchestrator` (`#37`): **el sitio único donde vive el ORDEN**.
-⚠️ **No se envuelve la secuencia en una transacción nueva ni se cambia la que hay.** `PAY-05` y
-`AFORO-01` fijan qué puede y qué no puede vivir dentro de una transacción con locks; una extracción no
-es el sitio para revisarlo.
-⚠️ **Y las guardas ya tienen casa**: `HasItemActionGuards` está en el dominio. El contrato nuevo se
-apoya en ella en vez de reimplementarla.
+1. **Guardas** — las 9 llamadas a `blockEdit`, **ANTES de abrir transacción alguna**. ⚠️ `blockEdit`
+   es capa de ENTREGA (audita el rechazo + `Notification` de Filament): el predicado de dominio que
+   consulta vive en `HasItemActionGuards` y se consume vía `Order`; la mitad de REEMBOLSO de esa
+   familia vive en `Payments\Concerns\GuardsItemRefunds`, que el paso 4 también necesita.
+2. **UNA transacción SOLO de aforo/mutación**: `lockZoneDaySlots` como PRIMERA sentencia
+   (`AFORO-01`/`AFORO-05`), lock del ítem, revalidación de cupo con `excludeItemId` (`AFORO-06`),
+   `forceFill`, complementos y re-escala.
+3. **Tras el commit, la secuencia financiera**: cada `applyExtraDue` / `applyGateCredit` /
+   `applyDepositRemainderCredit` / `recordReductionMarker` abre su PROPIA transacción corta en
+   `Order` — los métodos de `Order` **se quedan donde están** — y los buckets
+   `itemExtraDueCents`/`itemDepositRemainderCents` leen estado **committed** entre ellas. El propio
+   docblock del método lo declara: la REST de un refund no puede ir dentro de la txn de aforo.
+   ⚠️ El **waterfall de créditos** está escrito DOS veces dentro del método (edición y re-escala
+   per-invitado, con una asimetría en la condición del marcador a verificar): se extrae como UNA
+   pieza, no por copia (§8.9).
+4. **Notificación/email al final.**
+
+▶ **El servicio extraído es un HÍBRIDO y hay que decirlo así** (§8.4): para la fase 3 aplica la
+doctrina `CheckoutOrchestrator` (`#37`) — orquestar pasos que abren sus transacciones, cero
+transacción propia —, pero la fase 2 **posee su transacción con lógica inline** (patrón
+`OrderCreator`, no orquestador). El servicio nuevo abre y posee la txn de aforo Y orquesta la
+secuencia financiera post-commit.
+⚠️ **No se envuelve NADA en una transacción envolvente que hoy no existe**: haría savepoints de las
+transacciones financieras, sostendría el lock de zona/día durante auditoría, email y REST, y metería
+el rastro en alcance de rollback — `PAY-05` y `AFORO-01` violadas a la vez con la suite en verde.
+⚠️ **Los audits no se «normalizan»**: el de INCIDENCIA va fuera de toda transacción; los dos de
+ÉXITO de las cancelaciones viven a propósito DENTRO de la suya (si la acción no commitea, no hubo
+acción que auditar) — §8.4.
+⚠️ **Y el paso 4 decide si consolida los DOS locks en un helper único**: `lockZoneDaySlots` es hoy
+la segunda implementación a mano de la receta anti-sobreventa, con el porqué documentado solo en
+`OrderCreator::lockSlots` (§8.9).
 
 ### 4.4 Lo que NO se decide en esta spec, a propósito
 
@@ -206,38 +274,48 @@ apoya en ella en vez de reimplementarla.
 
 ## 5. Impacto en invariantes
 
-⚠️ **REVISADO (§8.10): esta tabla está INCOMPLETA** — faltan cuatro invariantes que citan a
-`ViewOrder` literalmente (`AFORO-05`, `AFORO-06`, `RGPD-02`, `SEC-04`) y cuatro que el plan roza
-(`AFORO-02`, `AFORO-09`, `PAY-13`, `PAY-16`). Y «se llama 3 veces» son 2 llamadas + la definición
-(§8.6). Se completa antes del ✅ (checklist §8.12·7).
+> Tabla COMPLETADA por la revisión (§8.10): la primera versión omitía cuatro invariantes con cita
+> literal a `ViewOrder` y cuatro de roce.
 
 | ID | Impacto |
 |---|---|
-| **AFORO-01** | ⚠️⚠️ **El más expuesto.** `lockZoneDaySlots` se llama 3 veces desde aquí. El lock con `zone_id` literal debe seguir siendo la PRIMERA sentencia de su transacción: una extracción que meta un `SELECT` antes lo rompe **sin que ningún test lo vea** (SQLite no reproduce la carrera) |
-| **PAY-05** | Se CITA: el rastro de incidencia no puede quedar dentro de un rollback. La extracción no cambia dónde empieza y acaba la transacción |
-| **PAY-09 · PAY-10 · PAY-17 · PAY-18** | Sus reglas viven en los métodos que se mudan. **Ninguna se relaja**: el criterio de éxito es cero cambios de conducta |
+| **AFORO-01 · AFORO-05** | ⚠️⚠️ **Las más expuestas.** `lockZoneDaySlots` se llama 2 veces desde aquí (los dos caminos de edición) y HOY es la primera sentencia de su transacción en ambos — así debe seguir: una extracción que meta un `SELECT` antes lo rompe **sin que ningún test lo vea**, porque `AFORO-05` documenta que el ALCANCE zona/día del lock no tiene assert (SQLite no reproduce la carrera). El instrumento del paso 4 sale de aquí (§6·4) |
+| **AFORO-06** | `excludeItemId` en la revalidación del re-agendado — la consulta de re-programación del paso 3 lo hereda como requisito de contrato, no como detalle |
+| **AFORO-02** | El paso 3 ES su ejecución sobre el panel: hoy `ViewOrder` la incumple en su letra (compone oferta sin `SlotOffer`). Extender la familia de la oferta toca ficheros del `CRITICAL_RE` ⟹ `VERIFY_CONC` en el paso 3 |
+| **AFORO-09** | El panel ancla «hoy» con `Carbon::today()` (UTC) ×14; la oferta del dominio, en la zona del parque. El diff del paso 3 lo destapa por construcción; unificar el ancla es decisión del owner (§4.2) |
+| **PAY-05** | El rastro de incidencia no puede quedar dentro de un rollback — HOY se cumple con la topología de §4.3 (guardas pre-txn, incidencia fuera, éxito de cancelación DENTRO a propósito). La extracción conserva la topología, no la «normaliza» |
+| **PAY-13** | El panel está EXENTO de suelo intradía y antelación mínima **a propósito** (venta en mostrador). La consulta de re-programación debe mantener la exención de forma DECLARADA, no heredada por accidente — y el owner la confirma (§4.2) |
+| **PAY-09 · PAY-10 · PAY-16 · PAY-17 · PAY-18** | Sus reglas viven en los métodos que se mudan (los escritores de los canales de `PAY-16` — `applyExtraDue`, los dos créditos, el marcador — son exactamente la fase 3 de §4.3). **Ninguna se relaja**: el criterio de éxito es cero cambios de conducta |
+| **RGPD-02** | `eventDataDiffKeys` vive aquí: los diffs de `event_data` registran solo CLAVES, jamás valores. La extracción 2/4 que lo toque conserva la propiedad |
+| **SEC-04** | El re-check de `orders.cancel` en el handler del reembolso vive aquí: re-autorizar EN el momento de ejecutar no puede perderse al extraer la acción |
 | **SUITE-04** | ⚠️ La suite es ciega a las carreras InnoDB. Por eso el paso 4 **no puede** apoyarse solo en la red de tests |
-| **CRITICAL_RE del `pre-push`** | ❗ **Decisión pendiente**: hoy `ViewOrder` NO está en la lista, así que tocarlo no exige `VERIFY_CONC`. Si su orquestación de dinero pasa a un servicio de dominio, **ese servicio probablemente sí deba entrar** — y `CriticalPathGateTest` vigila que la lista cubra lo que debe. Se decide en el paso 4, no antes |
+| **CRITICAL_RE del `pre-push`** | El paso 3 ya dispara `VERIFY_CONC` por los ficheros del dominio que extiende (arriba). ❗ Para el paso 4 queda la decisión: el servicio de dinero extraído **probablemente deba entrar** en la lista — `CriticalPathGateTest` vigila que cubra lo que debe. Se decide en el paso 4 |
 
 ---
 
 ## 6. Plan de verificación empírica
 
 Sin esto no puede llegar a ✅ (`CONVENCIONES §3.bis`).
-⚠️ **REVISADO**: el punto 1 necesita la cláusula de reflexión (§8.8 — 36 tests rompen POR
-CONSTRUCCIÓN en cualquier extracción) y el punto 4 usa verificadores que NO ejecutan el código
-mudado (§8.5 — el hueco real es `AFORO-05`).
 
-1. **La red de ~285 casos pasa sin tocar un solo assert**, en cada extracción. ⚠️ Un test que haya que
-   reescribir **para** una extracción es la señal de alarma, no un trámite.
+1. **La red pasa sin tocar un solo ASSERT**, en cada extracción — con la cláusula de reflexión de
+   §2·1: re-apuntar `ReflectionMethod`/`set()` al nuevo dueño es mudanza esperada; un ASSERT que
+   haya que reescribir **para** una extracción es la señal de alarma, no un trámite.
 2. **Mutación por extracción**: retirar la pieza extraída deja en rojo los casos que la cubren. Una
    extracción cuya mutación no muerde es una extracción que nadie estaba probando — y eso se arregla
-   antes de moverla, no después.
-3. **Paso 3, ANTES de mover**: comparar la salida de la disponibilidad del panel con la del contrato
-   sobre los mismos datos. Si difieren, el paso se para (§4.2).
-4. **Paso 4, con los DOS verificadores de concurrencia** (`purchase:verify-oversell`,
-   `redsys:verify-concurrency`) sobre MySQL real, y **viendo fallar el instrumento** antes de creerle
-   el verde — la regla de `#147`.
+   antes de moverla, no después. ⚠️ Dos piezas parten SIN red (§8.11): `calendarGoToItemMonth` gana
+   su test en el paso 1, y `selectableDatesInRange` el suyo directo en el paso 3.
+3. **Paso 3, ANTES de mover**: el diff POR EJE de §4.2 — definir la proyección ítem→producto,
+   correrlo con los datasets que fuerzan los ejes conocidos (hoy con horas pasadas, la ventana
+   00:00–02:00 del parque, packs, slot actual cerrado, producto retirado) y clasificar cada eje en
+   decisión-documentada o deriva. Lo que sea deriva/producto lo zanja el owner antes de escribir la
+   consulta.
+4. **Paso 4, con un instrumento que EJECUTE lo mudado** (§8.5): los dos verificadores actuales
+   conducen `OrderCreator` y `RedsysReturnHandler`, no esto — su verde sería trivial. Se extiende
+   `purchase:verify-oversell` (o comando hermano) con el escenario de **edición de panel
+   concurrente** — dos ediciones con tramos solapados en franjas distintas, el bug que motivó
+   `lockZoneDaySlots` según su propio docblock (`AFORO-05`) — sobre MySQL real, y **viendo fallar el
+   instrumento** (lock retirado) antes de creerle el verde: la regla de `#147`. Además, revisión por
+   query-log de que el lock sigue siendo la primera sentencia.
 5. **Navegador**: las 10 acciones del panel recorridas a mano tras el paso 4. La suite no ve un
    formulario de Filament que deja de montarse.
 6. **La cifra final se MIDE**: `wc -l` de `ViewOrder` al cerrar, y se declara en `DEUDA.md`. No se
@@ -248,19 +326,27 @@ mudado (§8.5 — el hueco real es `AFORO-05`).
 ## 7. Revisión y decisión
 
 - **Medido por el agente B** el 2026-08-26 contra el código: los 98 métodos, su reparto por
-  responsabilidad, las 5 propiedades públicas, las 25 llamadas a dinero/aforo, la red de 16 ficheros y
-  ~285 casos, los contratos que usa (**ninguno**) y el tamaño de `Order.php` como destino descartado.
-- ❗ **PENDIENTE de revisión adversarial por el otro agente** (`CONVENCIONES §5`), antes de escribir
-  código. En este proyecto esa revisión ha parado bloqueantes reales: `#122` encontró dos, `#123`
-  declaró un diseño INSUFICIENTE y `#156` encontró que una spec descansaba sobre un hecho que el
-  sistema no podía observar.
+  responsabilidad, las 5 propiedades públicas, la red de tests, los contratos que usa (**ninguno**)
+  y el tamaño de `Order.php` como destino descartado. (Su cifra de «25 llamadas a dinero/aforo»
+  resultó ser un conteo de subcadenas: son 8 invocaciones — §8.6.)
+- ✅ **Revisión adversarial HECHA** (2026-08-26, otra sesión, `CONVENCIONES §5`): **§8**, entrada
+  `DECISIONES #167`. Confirmó el diagnóstico, refutó tres piezas del plan y **sus correcciones están
+  INCORPORADAS a este cuerpo** (§1.2, §1.3, §1.5, §2, §4.1–§4.3, §5, §6) — la entrada de la
+  incorporación es la siguiente a `#167`. La tradición sigue ganando: `#122` encontró dos
+  bloqueantes, `#123` declaró un diseño insuficiente, `#156` un hecho no observable — y aquí, un
+  mapa transaccional invertido que habría hecho crear la transacción que decía preservar.
 - ❗ **PENDIENTE del owner**: el ✅, y la pregunta de si esto se hace **ahora** o espera. No es urgente
-  —el fichero funciona— pero **crece**, y cada tanda de dinero que entra lo engorda.
-- **Entrada final**: `DECISIONES #165`. La revisión adversarial: **§8** y su entrada de `DECISIONES`.
+  —el fichero funciona— pero **crece**, y cada tanda de dinero que entra lo engorda. Con el ✅, las
+  decisiones de producto del diff del paso 3 (§4.2) se preguntan cuando el diff las destape.
+- **Entrada final**: `DECISIONES #165` (la spec) · `#167` (la revisión).
 
 ---
 
-## 8. Revisión adversarial (2026-08-26) — el diagnóstico SOBREVIVE; el plan necesita corrección
+## 8. Revisión adversarial (2026-08-26) — el diagnóstico SOBREVIVE; el plan necesitaba corrección
+
+> ✅ **Este § es el REGISTRO de la revisión, y su checklist §8.12 está EJECUTADO** (mismo día): las
+> correcciones viven ya en el cuerpo. Se conserva entero porque la evidencia de POR QUÉ cada cosa
+> estaba mal es lo que impide re-cometerla.
 
 > Revisión hecha por el agente del carril B (sesión distinta de la que escribió la spec),
 > `CONVENCIONES §5`. Método: 7 medidores independientes por lote (métricas · estado/propiedades ·
@@ -482,7 +568,7 @@ justificación y a éste lo omite).
   diferencias que son del RELOJ (UTC vs parque), no de las lógicas — los datasets del diff deben
   incluir a propósito «hoy con horas pasadas» y esa ventana.
 
-### 8.12 Lo que esta revisión exige ANTES del ✅ del owner
+### 8.12 Lo que esta revisión exigía antes del ✅ del owner — ✅ EJECUTADO el 2026-08-26
 
 1. **Reescribir §4.3** con el mapa transaccional real (§8.4), incluida la distinción
    orquestador-financiero vs dueño-de-la-txn-de-aforo y la cláusula de los dos audits de éxito.
