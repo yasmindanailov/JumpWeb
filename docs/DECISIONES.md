@@ -9883,3 +9883,33 @@ email—; la página traduce el outcome. `ViewOrder` pasa de 3.173 a **3.008 lí
 Verificación: suite **2976 / 17.168 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · `panel-edit`
 FALLA mutado / PASA real (MySQL, 8 workers) · 7 mutaciones más sobre la red SQLite, todas muerden ·
 fidelidad por diferencia de conjuntos: cero lógica · empujado con `VERIFY_CONC=1`.
+
+## #188 · 2026-08-27 · Extracción 4b · sub-pasos D y E: cancelar y reembolsar un ítem al dominio — y cinco guardas que la red de página no distinguía del dominio
+
+Quinto y sexto sub-pasos del plan de `#182` (spec §9.6.1). `OrderItemCanceller::cancel()` (la
+transacción con lock de pedido y de ítem, la cascada a los complementos y el audit de éxito DENTRO
+—§4.3/§8.4—, el email después) y `OrderItemRefunder::refund()` con el contrato `ItemRefundRequest`
+(las guardas y la selección; el dinero sigue en `Order::executePartialRefundBatch`). `ViewOrder`
+pasa de 3.008 a **2.848 líneas**. Los dos son controles negativos del `CRITICAL_RE`: uno libera
+aforo, el otro no toma locks (viven en `Order`).
+
+**Lo que decide y lo que enseñó:**
+1. **E no importa `PaymentRefund`** (la corrección 1 de `#182`, ejecutada): el modo —forzado a
+   manual sin pasarela— y la intención los resuelve la PÁGINA, como ya hacía el reembolso de
+   PEDIDO, y llegan al dominio como cadenas válidas. La baseline de módulos no crece.
+2. **La página resuelve el ítem y el servicio recibe el modelo**: `not_found` es de la entrega
+   (nunca tuvo audit) y así ni se consulta dos veces ni el outcome tiene que devolver un modelo.
+3. **Cinco guardas sin red propia.** Los dos permisos (inalcanzables desde la página: `visible()`
+   filtra y Filament no monta una acción oculta) y **tres de E cuyos tests de página existían y
+   salían verdes con la guarda retirada**: «selección vacía» e «ítem de otro pedido» solo aseveraban
+   «sin REST, sin reembolso» —y eso lo garantiza también el dominio por su cuenta—, y la guarda del
+   principal la cubre el `mountUsing`, no el handler. Un test directo fija la RAZÓN de cada una
+   (`no_items_selected` · `invalid_item_selection` con el id enviado · `item_is_addon`), que es lo
+   que la página audita. **16 de 16 mutaciones muerden.**
+4. **Una rareza conservada y declarada**: si el ítem resultó cancelado entre la guarda y el lock,
+   la cancelación sale sin escribir y el email se envía igual. Era la conducta de la página; esta
+   mudanza no la cambia (la arreglaría una ficha, no un refactor).
+
+Verificación: suite **2979 / 17.185 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · 16/16
+mutaciones con ancla única y restauración por md5 · fidelidad por diferencia de conjuntos: cero
+lógica · Admin/Orders 601 · Architecture 197.

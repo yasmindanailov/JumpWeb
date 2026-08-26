@@ -996,3 +996,34 @@ texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el inst
   La sustitución va por `$ENV{A}`, como en la función `mutate`.
 - Suite **2976 / 17.168 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · Admin/Orders 598 ·
   Architecture 197 · `panel-edit` PASA con el lock real.
+
+**D + E · HECHOS (2026-08-27, 05:00 — `#188`).** Cancelar y reembolsar un ítem viven en el dominio:
+- **`OrderItemCanceller::cancel(Order, OrderItem, token, ?User)`** (122 líneas): permiso re-exigido ·
+  `cancelItemBlockedReason` · token · la transacción con lock de pedido Y de ítem, la cascada a los
+  complementos vivos y **el audit de ÉXITO DENTRO** (§4.3/§8.4: si no commitea, no hubo cancelación
+  que auditar) · el email después. Conserva una rareza de la página, declarada en su docblock: si el
+  ítem resultó ya cancelado entre la guarda y el lock, la transacción sale sin escribir y el email se
+  envía igual. Libera aforo: control negativo del `CRITICAL_RE`.
+- **`OrderItemRefunder::refund(Order, OrderItem, ItemRefundRequest, ?User)`** (153 líneas) + el
+  contrato **`ItemRefundRequest`** (39): permiso · `refundItemBlockedReason` · token · centinela de
+  capacidad · selección (vacía · el principal arrastra a sus hijos con remanente · anti-IDOR) · el
+  importe a medida (una línea, positivo, ≤ remanente) → `Order::executePartialRefundBatch`. **Sin
+  `PaymentRefund`** (§9.6·1): `mode` (forzado a manual sin pasarela) e `intent` los resuelve la página,
+  como el reembolso de PEDIDO, y llegan como cadenas. Sin transacción propia: los locks viven en `Order`.
+- **La página resuelve el ítem** (`not_found` es suyo, sin audit, como siempre) y pasa el modelo;
+  audita el rechazo con su `extra` salvo `no_items_selected`, que nunca dejó rastro; renderiza el
+  batch. `ViewOrder` en **2.848 líneas** (de 3.008; −160).
+- **Mutación: 16 de 16 muerden — cinco solo tras ganar su test DIRECTO**: los dos permisos
+  (inalcanzables desde la página: `visible()` filtra y Filament no monta una acción oculta) y **tres
+  guardas de E que la red de página no distingue del dominio** — `test_empty_selection_blocked` y
+  `test_selection_with_item_from_another_pack_blocked` solo aseveran «sin REST, sin reembolso», y eso
+  lo garantiza también `executePartialRefundBatch` por su cuenta; la guarda del principal
+  (`refundItemBlockedReason`) la cubre el `mountUsing`, no el handler. El test nuevo fija la RAZÓN
+  estructurada de cada una (`no_items_selected` · `invalid_item_selection` con el id enviado ·
+  `item_is_addon`), que es lo que la página audita. Las once restantes mordieron a la primera
+  (cascada → rojo · audit → 5 errores · email → 3 · `alsoCancelItems: true` → 5 · centinela · token ×2
+  · auto-marcado · importe a medida ×2 · `cancelItemBlockedReason`).
+- Suite **2979 / 17.185 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · Admin/Orders 601 ·
+  Architecture 197 (los dos servicios, controles negativos en `CriticalPathGateTest`).
+- ▶ **Queda F** (`edit()`, el monstruo: 471 líneas con la secuencia financiera post-commit y el
+  waterfall duplicado), luego G (lo que se queda) y H (el cierre).

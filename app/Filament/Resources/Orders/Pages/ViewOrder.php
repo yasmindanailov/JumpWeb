@@ -2,14 +2,17 @@
 
 namespace App\Filament\Resources\Orders\Pages;
 
+use App\Domain\Booking\Contracts\ItemRefundRequest;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
+use App\Domain\Booking\Services\OrderItemRefunder;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Booking\Services\ZoneDaySlotLock;
@@ -957,6 +960,16 @@ class ViewOrder extends ViewRecord
     private function eventDataWriter(): OrderItemEventDataWriter
     {
         return app(OrderItemEventDataWriter::class);
+    }
+
+    private function itemCanceller(): OrderItemCanceller
+    {
+        return app(OrderItemCanceller::class);
+    }
+
+    private function itemRefunder(): OrderItemRefunder
+    {
+        return app(OrderItemRefunder::class);
     }
 
     // ─── Complementos (Tab 2 del modal Gestionar, sub-fase 7.2e.4, #170) ───
@@ -2692,7 +2705,6 @@ class ViewOrder extends ViewRecord
         /** @var Order $order */
         $order = $this->record->fresh();
         $itemId = (int) ($data['item_id'] ?? 0);
-        $user = auth()->user();
 
         $item = OrderItem::with('ticketType')->find($itemId);
         if ($item === null) {
@@ -2701,108 +2713,42 @@ class ViewOrder extends ViewRecord
             return;
         }
 
-        // Capa 4: revalidar bloqueos con fila fresca.
-        $reason = $order->cancelItemBlockedReason($item);
-        if ($reason !== null) {
-            $this->logItemActionBlocked($order, $item, 'cancel', $reason);
-            $this->itemActionBlockedNotification('cancel', $reason);
+        // La operación entera —guardas, la transacción con la cascada a los complementos y el
+        // audit dentro, el email— vive en `OrderItemCanceller` (extracción 4b). Aquí, el desenlace.
+        $outcome = $this->itemCanceller()->cancel(
+            $order,
+            $item,
+            (string) ($data['optimistic_token'] ?? ''),
+            auth()->user(),
+        );
+
+        if ($outcome->isBlocked()) {
+            $this->logItemActionBlocked($order, $item, 'cancel', $outcome->reason, $outcome->extra);
+            $this->itemActionBlockedNotification('cancel', $outcome->reason);
 
             return;
         }
-
-        // Capa 3: optimistic lock.
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($item->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->logItemActionBlocked($order, $item, 'cancel', 'stale_item_version');
-            $this->itemActionBlockedNotification('cancel', 'stale_item_version');
-
-            return;
-        }
-
-        // Capa 5: cancelación atómica + audit. NO Redsys.
-        // Sub-fase 7.2e.1bis4 (decisión #157): cancela también los CHILDREN
-        // en cascada. Cancelar el producto principal implica que sus
-        // complementos van con él (operativamente: no tiene sentido
-        // "cancelar la entrada de cumple pero mantener la tarta"). La
-        // gestión per-complemento individual vendrá en 7.2e.4 (Tab
-        // Complementos del modal Gestionar).
-        $previousStatus = $item->displayStatusForCustomer();
-        $cascadedChildIds = [];
-        DB::transaction(function () use ($item, $user, $order, $previousStatus, &$cascadedChildIds): void {
-            // lockForUpdate sobre Order Y item — serializa contra ediciones
-            // concurrentes (otro operador cancelando el mismo item).
-            Order::query()->lockForUpdate()->find($order->id);
-            /** @var OrderItem $itemLocked */
-            $itemLocked = OrderItem::query()->with('children')->lockForUpdate()->findOrFail($item->id);
-
-            // Re-check dentro del lock: el bloqueo de capa 4 pasó con fresh,
-            // pero entre el fresh y el lock alguien podría haber cancelado
-            // el item. `markCancelled` es idempotente (preserva timestamp
-            // original) — no rompe, pero evitamos audit duplicado.
-            if ($itemLocked->isCancelled()) {
-                return;
-            }
-            $itemLocked->markCancelled($user);
-
-            // Cascada a children: cada complemento vivo se marca cancelled
-            // por el mismo user. Los ya cancelled (caso teórico — alguien
-            // los canceló antes individualmente) NO se tocan (idempotente).
-            foreach ($itemLocked->children as $child) {
-                if (! $child->isCancelled()) {
-                    /** @var OrderItem $childLocked */
-                    $childLocked = OrderItem::query()->lockForUpdate()->findOrFail($child->id);
-                    if (! $childLocked->isCancelled()) {
-                        $childLocked->markCancelled($user);
-                        $cascadedChildIds[] = $childLocked->id;
-                    }
-                }
-            }
-
-            AuditLogger::log(
-                action: 'orders.item_cancelled',
-                target: $order,
-                payload: [
-                    'order_code' => $order->code,
-                    'order_item_id' => $itemLocked->id,
-                    'ticket_type_id' => $itemLocked->ticket_type_id,
-                    'previous_status' => $previousStatus,
-                    'cascaded_child_ids' => $cascadedChildIds,
-                ],
-            );
-        });
-
-        // Post-commit: notify al cliente. Pasamos contador de complementos
-        // cascaded para que el email los mencione explícitamente si los hay.
-        $order->notifyCustomer(new OrderItemCancelled(
-            order: $order->fresh(),
-            item: $item->fresh(),
-            cascadedChildrenCount: count($cascadedChildIds),
-        ));
 
         Notification::make()
             ->title(__('admin.orders.cancel_item.success'))
             ->success()
             ->send();
-
     }
 
     /**
      * Handler de `refundItemAction` (sub-fase 7.2e.1bis): refund por
-     * checkboxes. Itera la selección y aplica `executePartialRefund` a cada
-     * uno con `alsoCancelItem=true`.
-     *
-     * Atomicidad parcial: cada item es una transacción independiente. Si
-     * uno falla por REST/banco, los siguientes NO se intentan (evita el
-     * caso "ya devolví 3 de 5, ahora el banco está caído y los próximos
-     * fallan" → operador se queda con resultado mixto sin reintentos
-     * automáticos sobre lo que ya tuvo éxito).
+     * checkboxes. La petición se normaliza AQUÍ en lo que es de la entrega
+     * —el modo (forzado a manual sin pasarela, `#225` D7, como el reembolso
+     * de PEDIDO) y el motivo (`intent`, contra `PaymentRefund::intents()`)—
+     * y `OrderItemRefunder` aplica las guardas y delega el dinero en
+     * `Order::executePartialRefundBatch` (atomicidad PARCIAL: un fallo REST
+     * aborta las pendientes, no deshace las hechas). Esta capa audita el
+     * rechazo con su `extra` y renderiza el resultado.
      */
     private function executeItemRefundBatch(array $data): void
     {
         /** @var Order $order */
         $order = $this->record->fresh();
-        $user = auth()->user();
         $mode = (string) ($data['mode'] ?? PaymentRefund::MODE_REST);
         // #225 (D7): defensa server-side — en pagos sin gateway (caja) el REST no es ejecutable;
         // forzamos «manual» (record-only) aunque llegara otro valor.
@@ -2818,142 +2764,36 @@ class ViewOrder extends ViewRecord
             return;
         }
 
-        // Capa 4: revalidar bloqueos del item PRINCIPAL con fila fresca.
-        $reason = $order->refundItemBlockedReason($primaryItem);
-        if ($reason !== null) {
-            $this->logItemActionBlocked($order, $primaryItem, 'refund', $reason);
-            $this->itemActionBlockedNotification('refund', $reason);
-
-            return;
-        }
-
-        // Capa 3: optimistic lock vs item.updated_at.
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($primaryItem->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->logItemActionBlocked($order, $primaryItem, 'refund', 'stale_item_version');
-            $this->itemActionBlockedNotification('refund', 'stale_item_version');
-
-            return;
-        }
-
-        // Capa 3 bis: capacity sentinel.
-        $expectedCapacity = (int) ($data['expected_capacity_cents'] ?? -1);
-        $currentCapacity = $order->refundableCapacityCents();
-        if ($expectedCapacity < 0 || $currentCapacity < $expectedCapacity) {
-            $this->logItemActionBlocked($order, $primaryItem, 'refund', 'capacity_changed', [
-                'expected_capacity_cents' => $expectedCapacity,
-                'current_capacity_cents' => $currentCapacity,
-            ]);
-            $this->itemActionBlockedNotification('refund', 'capacity_changed');
-
-            return;
-        }
-
-        // Selección del operador: lista de item_ids marcados en el CheckboxList.
-        $selectedIds = array_values(array_unique(array_map(
-            'intval',
-            (array) ($data['items_to_refund'] ?? []),
-        )));
-
-        if ($selectedIds === []) {
-            $this->itemActionBlockedNotification('refund', 'no_items_selected');
-
-            return;
-        }
-
-        // "Marcar el pack auto-marca complementos": si el principal está
-        // seleccionado, añadir TODOS sus children (idempotente vía array_unique).
-        if (in_array($primaryItem->id, $selectedIds, true)) {
-            foreach ($primaryItem->children as $child) {
-                if (! in_array($child->id, $selectedIds, true)
-                    && $order->itemRefundableRemainderCents($child) > 0) {
-                    $selectedIds[] = $child->id;
-                }
-            }
-        }
-
-        // Validación de pertenencia: cada selected_id debe ser el principal
-        // o uno de sus children. Defensa anti-IDOR ante manipulación del form.
-        $allowedIds = array_merge([$primaryItem->id], $primaryItem->children->pluck('id')->all());
-        foreach ($selectedIds as $sid) {
-            if (! in_array($sid, $allowedIds, true)) {
-                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'invalid_item_selection', [
-                    'submitted_item_id' => $sid,
-                ]);
-                $this->itemActionBlockedNotification('refund', 'invalid_item_selection');
-
-                return;
-            }
-        }
-
-        // Ejecutar refund batch: orquestador devuelve array de resultados
-        // por item. Fallos parciales abortan los pendientes (atomicidad
-        // parcial — ver docstring de executePartialRefundBatch).
-        //
-        // Sub-fase 7.2e.1bis4 (decisión #157): `alsoCancelItems=false`
-        // explícito. Refund y cancellation son dimensiones independientes
-        // (feedback empírico 2026-05-30). El operador refunda dinero sin
-        // que se cancele el servicio; si quiere cancelar, usa el botón 🗑️
-        // del sub-card por separado (que ahora cancela el producto entero
-        // con cascada a sus complementos).
-        // ⚠️ Este camino **NO cancela la línea** (`alsoCancelItems: false`), a propósito: reembolsar y
-        // cancelar son independientes (`DECISIONES #127(c)`, owner). Por eso el motivo es OBLIGATORIO
-        // aquí — la reserva sigue viva y el dinero vuelve, así que sin él el desglose no puede decirle
-        // al cliente si sigue debiendo ese importe.
+        // ⚠️ Este camino **NO cancela la línea**, a propósito: reembolsar y cancelar son
+        // independientes (`DECISIONES #127(c)`, owner). Por eso el motivo es OBLIGATORIO aquí — la
+        // reserva sigue viva y el dinero vuelve, así que sin él el desglose no puede decirle al
+        // cliente si sigue debiendo ese importe.
         $intent = $data['intent'] ?? null;
         if (! in_array($intent, PaymentRefund::intents(), true)) {
             $intent = null;
         }
 
-        // D5 (`#146`): importe elegido por el operador. Server-side entero — el form es UI, no
-        // defensa. Exige UNA línea (la atribución por línea es lo que el eje de caja explota para
-        // explicar), un valor positivo y no exceder el remanente de esa línea; el dominio re-valida
-        // los topes bajo lock igualmente (`PAY-09`). Cada bloqueo deja su audit, como el resto de
-        // capas de esta acción.
-        $amountOverrideCents = null;
-        if (($data['amount_mode'] ?? 'remainder') === 'custom') {
-            if (count($selectedIds) !== 1) {
-                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'custom_amount_requires_single_item', [
-                    'selected_count' => count($selectedIds),
-                ]);
-                $this->itemActionBlockedNotification('refund', 'custom_amount_requires_single_item');
+        $outcome = $this->itemRefunder()->refund($order, $primaryItem, new ItemRefundRequest(
+            selectedIds: array_map('intval', (array) ($data['items_to_refund'] ?? [])),
+            optimisticToken: (string) ($data['optimistic_token'] ?? ''),
+            expectedCapacityCents: (int) ($data['expected_capacity_cents'] ?? -1),
+            mode: $mode,
+            intent: $intent,
+            amountMode: (string) ($data['amount_mode'] ?? 'remainder'),
+            customAmount: $data['custom_amount'] ?? null,
+        ), auth()->user());
 
-                return;
+        if ($outcome->isBlocked()) {
+            // Una selección vacía nunca dejó rastro; el resto de rechazos, sí, con su `extra`.
+            if ($outcome->reason !== 'no_items_selected') {
+                $this->logItemActionBlocked($order, $primaryItem, 'refund', $outcome->reason, $outcome->extra);
             }
-            $amountOverrideCents = (int) round(((float) ($data['custom_amount'] ?? 0)) * 100);
-            if ($amountOverrideCents <= 0) {
-                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'invalid_custom_amount', [
-                    'submitted_amount' => (string) ($data['custom_amount'] ?? ''),
-                ]);
-                $this->itemActionBlockedNotification('refund', 'invalid_custom_amount');
+            $this->itemActionBlockedNotification('refund', $outcome->reason);
 
-                return;
-            }
-            $selectedItem = OrderItem::find($selectedIds[0]);
-            $selectedRemainder = $selectedItem !== null ? $order->itemRefundableRemainderCents($selectedItem) : 0;
-            if ($amountOverrideCents > $selectedRemainder) {
-                $this->logItemActionBlocked($order, $primaryItem, 'refund', 'exceeds_item_refundable', [
-                    'amount_cents' => $amountOverrideCents,
-                    'item_remainder_cents' => $selectedRemainder,
-                ]);
-                $this->itemActionBlockedNotification('refund', 'exceeds_item_refundable');
-
-                return;
-            }
+            return;
         }
 
-        $batchResult = $order->executePartialRefundBatch(
-            itemIds: $selectedIds,
-            by: $user,
-            mode: $mode,
-            alsoCancelItems: false,
-            intent: $intent,
-            amountCentsOverride: $amountOverrideCents,
-        );
-
-        $this->renderBatchResult($batchResult, $order, $mode);
-
+        $this->renderBatchResult($outcome->extra['batch'], $order, (string) $outcome->extra['mode']);
     }
 
     /**

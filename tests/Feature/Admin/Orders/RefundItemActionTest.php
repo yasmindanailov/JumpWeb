@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Contracts\ItemRefundRequest;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderItemRefunder;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -428,6 +430,72 @@ class RefundItemActionTest extends TestCase
         Http::assertNothingSent();
         $log = AuditLog::where('action', 'orders.item_refund_blocked')->latest()->first();
         $this->assertSame('stale_item_version', $log->payload['reason']);
+    }
+
+    /**
+     * `SEC-04`: el permiso `orders.refund_item` se re-exige en el punto de ejecución, en el
+     * servicio. Desde la página es inalcanzable (la acción filtra por `visible()` en cada petición):
+     * solo se mide llamando a `OrderItemRefunder` — con un staff sin ese permiso y con nadie
+     * autenticado. Ni una llamada REST, ni un `PaymentRefund`. Ganó su test en la extracción 4b.
+     */
+    public function test_refunder_requires_the_permission_at_execution_time(): void
+    {
+        Http::fake();
+        $order = $this->makePaidOrder(2400);
+        $this->attachPaidPayment($order);
+        $item = $this->attachActiveItem($order, unitPrice: 1200);
+        $request = new ItemRefundRequest(
+            selectedIds: [$item->id],
+            optimisticToken: (string) $item->updated_at->getTimestamp(),
+            expectedCapacityCents: $order->refundableCapacityCents(),
+            mode: PaymentRefund::MODE_REST,
+            intent: PaymentRefund::INTENT_COMPENSATION,
+        );
+
+        $asViewer = app(OrderItemRefunder::class)->refund($order, $item, $request, $this->staffWith(['orders.view']));
+        $anonymous = app(OrderItemRefunder::class)->refund($order, $item, $request, null);
+
+        $this->assertSame('permission_denied', $asViewer->reason);
+        $this->assertSame('permission_denied', $anonymous->reason);
+        Http::assertNothingSent();
+        $this->assertSame(0, PaymentRefund::count());
+    }
+
+    /**
+     * Las tres guardas del servicio que la red de página no distingue del dominio: los tests de
+     * arriba («selección vacía», «ítem de otro pedido») solo aseveran «sin REST, sin reembolso», y
+     * eso lo garantiza también `Order::executePartialRefundBatch` por su cuenta — las mutaciones
+     * que las retiraban salían VERDES. Aquí se fija la RAZÓN estructurada con la que cada una
+     * rechaza, que es lo que la página audita (`orders.item_refund_blocked`).
+     */
+    public function test_refunder_names_the_reason_of_each_pre_domain_guard(): void
+    {
+        Http::fake();
+        $admin = $this->admin();
+        $order = $this->makePaidOrder(2400);
+        $this->attachPaidPayment($order);
+        $pack = $this->attachActiveItem($order, unitPrice: 1200);
+        $addon = $this->attachAddon($order, $pack);
+        $otherItem = $this->attachActiveItem($this->makePaidOrder(code: 'JJ-EVIL'));
+        $request = fn (OrderItem $primary, array $selected): ItemRefundRequest => new ItemRefundRequest(
+            selectedIds: $selected,
+            optimisticToken: (string) $primary->updated_at->getTimestamp(),
+            expectedCapacityCents: $order->refundableCapacityCents(),
+            mode: PaymentRefund::MODE_REST,
+            intent: PaymentRefund::INTENT_COMPENSATION,
+        );
+        $refunder = app(OrderItemRefunder::class);
+
+        $empty = $refunder->refund($order, $pack, $request($pack, []), $admin);
+        $foreign = $refunder->refund($order, $pack, $request($pack, [$otherItem->id]), $admin);
+        $addonAsPrimary = $refunder->refund($order, $addon, $request($addon, [$addon->id]), $admin);
+
+        $this->assertSame('no_items_selected', $empty->reason);
+        $this->assertSame('invalid_item_selection', $foreign->reason);
+        $this->assertSame($otherItem->id, $foreign->extra['submitted_item_id']);
+        $this->assertSame('item_is_addon', $addonAsPrimary->reason);
+        Http::assertNothingSent();
+        $this->assertSame(0, PaymentRefund::count());
     }
 
     public function test_refund_complementos_when_principal_already_fully_refunded(): void

@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -272,6 +273,30 @@ class CancelItemActionTest extends TestCase
         $log = AuditLog::where('action', 'orders.item_cancel_blocked')->latest()->first();
         $this->assertSame('stale_item_version', $log->payload['reason']);
 
+        Notification::assertNothingSent();
+    }
+
+    /**
+     * `SEC-04`: el permiso `orders.cancel_item` se re-exige en el punto de ejecución, en el
+     * servicio. Desde la página es inalcanzable (la acción filtra por `visible()` en cada petición y
+     * Filament no monta una acción oculta): solo se mide llamando a `OrderItemCanceller` — con un
+     * staff sin ese permiso y con nadie autenticado. Ganó su test en la extracción 4b.
+     */
+    public function test_canceller_requires_the_permission_at_execution_time(): void
+    {
+        Notification::fake();
+        $order = $this->makePaidOrder();
+        $this->attachPaidPayment($order);
+        $item = $this->attachActiveItem($order);
+        $token = (string) $item->updated_at->getTimestamp();
+
+        $asViewer = app(OrderItemCanceller::class)->cancel($order, $item, $token, $this->staffWith(['orders.view']));
+        $anonymous = app(OrderItemCanceller::class)->cancel($order, $item, $token, null);
+
+        $this->assertSame('permission_denied', $asViewer->reason);
+        $this->assertSame('permission_denied', $anonymous->reason);
+        $this->assertNull($item->fresh()->cancelled_at);
+        $this->assertNull(AuditLog::where('action', 'orders.item_cancelled')->first());
         Notification::assertNothingSent();
     }
 

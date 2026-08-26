@@ -112,6 +112,11 @@ class CriticalPathGateTest extends TestCase
         // y obliga a decidirlo a conciencia.
         'app/Domain/Booking/Services/ItemEditPricing.php',
         'app/Domain/Booking/Services/OrderItemEventDataWriter.php',
+        // Y los dos últimos de la 4b: cancelar LIBERA aforo (no lo consume; los contadores excluyen
+        // `cancelled_at`) y reembolsar delega el dinero en `Order::executePartialRefundBatch`, que es
+        // donde viven sus locks. Ninguno toma el lock de zona/día.
+        'app/Domain/Booking/Services/OrderItemCanceller.php',
+        'app/Domain/Booking/Services/OrderItemRefunder.php',
     ];
 
     /**
