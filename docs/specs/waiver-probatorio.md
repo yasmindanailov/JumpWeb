@@ -749,9 +749,12 @@ anti-bot activo, el alta suelta NO TERMINA.** En `/registro` `RegisterForm` se m
 iframe, ni token. El servidor responde **422 «no eres un robot»** siempre. El paso 5 del embudo no lo
 sufre (monta el formulario mucho después de `/config`). En local las claves se pusieron el 26/08 a las
 14:48 y el guion V17 del 23/08 corrió sin ellas: por eso nunca se vio. ⚠️ **Staging tiene claves.**
-Ficha en `DEUDA.md` (Alta); es del carril A y esta sesión no escribía código. Para la prueba se
-apagó el anti-bot (secreto vacío) y se restauró al terminar. ▶ **El ojo del owner sigue pendiente**
-(`CONVENCIONES §3.bis`), y necesita lo mismo: anti-bot apagado o el defecto arreglado.
+Para la prueba se apagó el anti-bot (secreto vacío) y se restauró al terminar.
+✅ **ARREGLADO la misma noche (`DECISIONES #171`)**: la decisión va al módulo — `mountTurnstile`
+acepta funciones para el nodo y la clave, espera a que existan y **no carga el script de Cloudflare
+hasta entonces**; el componente cambia dos líneas. 5 casos nuevos, 4 mutaciones que muerden, y
+**verificado en headless con Turnstile encendido**: script inyectado tras `/config`, token a 3,1 s,
+`201`. ▶ **El ojo del owner sigue pendiente** (`CONVENCIONES §3.bis`), ya sin apagar nada.
 
 Trampas del andamio, para la siguiente vez, en §5.nonies del guion (puente dual-stack, `pdf-parse`,
 `:visible`, los rótulos con `*` de Filament, `p.auth__sent`).

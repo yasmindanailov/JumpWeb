@@ -239,3 +239,109 @@ describe('las salidas sin efecto', () => {
         }
     });
 });
+
+/**
+ * `DECISIONES #169` · `DEUDA.md` (Alta): en `/registro` el cajón nace abierto y `RegisterForm` se monta
+ * ANTES de que `GET /config` traiga la clave. Con valores, `mountTurnstile` devolvía el apaño inerte y
+ * nadie volvía a llamar: el contenedor se pintaba vacío y el servidor respondía «no eres un robot» a
+ * todo el mundo. Con FUNCIONES, se espera a que existan clave y nodo — y hasta entonces no se carga el
+ * script de Cloudflare, porque con el anti-bot apagado la clave no llega nunca.
+ */
+describe('la clave y el nodo que llegan DESPUÉS: el alta suelta de /registro', () => {
+    test('espera SIN inyectar el script, y monta cuando clave y nodo existen', () => {
+        const win = fakeWin();
+        const doc = fakeDoc();
+        const api = fakeTurnstile();
+        const seen = [];
+        let key = '';
+        let el = null;
+
+        mountTurnstile(() => el, { sitekey: () => key, onToken: (t) => seen.push(t), win, doc });
+        win.tick(3);
+
+        assert.equal(doc.appended.length, 0, 'sin clave no se carga el script de Cloudflare');
+        assert.equal(win.liveTimers, 1, 'sigue esperando');
+
+        key = 'k';
+        el = EL; // llega /config y Vue pinta el contenedor
+        win.tick(1);
+
+        assert.equal(doc.appended.length, 1, 'ahora sí: el script, una vez');
+
+        win.turnstile = api; // la API carga
+        win.tick(1);
+
+        assert.equal(api.calls.render.length, 1);
+        assert.equal(api.calls.render[0].el, EL, 'pinta en el nodo que EXISTE ahora, no en el null de antes');
+        assert.equal(api.calls.render[0].opts.sitekey, 'k');
+        assert.equal(win.liveTimers, 0);
+        assert.deepEqual(seen, [], 'no se emite ningún token vacío por esperar');
+    });
+
+    test('si la clave no llega nunca (anti-bot apagado) se rinde en SILENCIO: sin script, sin aviso, sin token', () => {
+        const win = fakeWin();
+        const doc = fakeDoc();
+        const avisos = [];
+        const seen = [];
+
+        mountTurnstile(() => EL, {
+            sitekey: () => '', onToken: (t) => seen.push(t), win, doc,
+            warn: (m) => avisos.push(m), waitMaxTries: 3,
+        });
+        win.tick(5);
+
+        assert.equal(doc.appended.length, 0);
+        assert.equal(avisos.length, 0, 'no hay nada que avisar: el anti-bot puede estar apagado');
+        assert.deepEqual(seen, []);
+        assert.equal(win.liveTimers, 0, 'la espera también se agota');
+    });
+
+    test('la espera NO consume los intentos de carga: el sondeo agotado sigue avisando después', () => {
+        const win = fakeWin();
+        const avisos = [];
+        const seen = [];
+        let key = '';
+
+        mountTurnstile(() => EL, {
+            sitekey: () => key, onToken: (t) => seen.push(t), win, doc: fakeDoc(),
+            warn: (m) => avisos.push(m), maxTries: 2, waitMaxTries: 10,
+        });
+        win.tick(5); // esperando la clave
+
+        assert.equal(avisos.length, 0, 'esperar no es fallar');
+        assert.equal(win.liveTimers, 1);
+
+        key = 'k';
+        win.tick(4); // inyecta y agota los 2 intentos
+
+        assert.equal(avisos.length, 1);
+        assert.deepEqual(seen, ['']);
+        assert.equal(win.liveTimers, 0);
+    });
+
+    test('destroy durante la espera para el sondeo y no monta aunque la clave llegue después', () => {
+        const win = fakeWin();
+        const api = fakeTurnstile();
+        let key = '';
+
+        const handle = mountTurnstile(() => EL, { sitekey: () => key, onToken: () => {}, win, doc: fakeDoc() });
+        handle.destroy();
+        key = 'k';
+        win.turnstile = api;
+        win.tick(3);
+
+        assert.equal(win.liveTimers, 0);
+        assert.equal(api.calls.render.length, 0);
+    });
+
+    test('con funciones que ya resuelven se comporta como con valores: pinta sin sondear si la API está', () => {
+        const win = fakeWin({ turnstile: fakeTurnstile() });
+        const doc = fakeDoc();
+
+        mountTurnstile(() => EL, { sitekey: () => 'k', onToken: () => {}, win, doc });
+
+        assert.equal(win.turnstile.calls.render.length, 1);
+        assert.equal(doc.appended.length, 0);
+        assert.equal(win.liveTimers, 0);
+    });
+});

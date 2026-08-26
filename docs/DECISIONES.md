@@ -9271,3 +9271,42 @@ Verificación: suite **2935 / 16.959 en verde** (3 tests sustituidos 1:1, +3 ase
 **4/4 muerden** (anclas únicas verificadas, rojo comprobado, restauración por md5) · Pint ✓ ·
 `php -l` ✓ · docs-check ✓ · referencias colgantes re-apuntadas (`PaymentSettings`,
 `validateNewSlot`) · la clave `current_marker` conservada (la usa el blade vivo).
+
+## #171 · 2026-08-26 · El alta suelta vuelve a funcionar con el anti-bot encendido: `mountTurnstile` espera a que EXISTAN la clave y el nodo — y no carga Cloudflare antes
+
+**Qué se hizo** (carril A, tanda 4 del waiver, unidad 1 — la ficha Alta que dejó `#169`): en
+`/registro` el cajón nace abierto y `RegisterForm` se montaba a los ~756 ms, **antes** de que
+`GET /config` (~794 ms) trajera la `turnstile_site_key`. `mountTurnstile(el, {sitekey})` recibía
+`null` y `''`, devolvía su apaño inerte y nadie volvía a llamar; al llegar la clave, el `v-if` pintaba
+el contenedor —vacío para siempre— y el servidor respondía «no eres un robot» a **todo** alta suelta
+en cualquier instalación con claves (staging las tiene). El paso 5 del embudo no lo sufría porque monta
+el formulario mucho después.
+
+**La decisión de diseño, y su porqué**: la decisión vive en el MÓDULO, no en el componente. Los tests
+JS son `node --test` sobre módulos planos —ningún `.vue` se testea— y `RegisterForm.vue` está en **37
+de 40** líneas de código. Así que `mountTurnstile` acepta ahora **funciones** para el nodo y la clave
+(los valores siguen valiendo, con la conducta de siempre), las re-lee en cada sondeo y añade una
+**fase de espera** (150 ms × 400 ≈ 60 s) antes de la de carga: **el script de Cloudflare no se inyecta
+hasta tener clave y nodo delante** —con el anti-bot apagado la clave no llega nunca, y no se carga un
+tercero por si acaso—; si no llegan, se rinde **en silencio** (no hay nada que avisar); y la espera
+**no consume** los intentos de carga, que siguen avisando al agotarse. El componente cambia dos
+líneas: pasa `() => captchaEl.value` y `() => props.turnstileSiteKey`. Sigue siendo un pintor.
+
+**Lo medido**: `turnstile.test.js` **13 → 18** (espera sin script y monta al llegar ambos · clave que
+no llega nunca → silencio · la espera no consume intentos · destroy durante la espera · funciones que
+ya resuelven = valores) · `npm run test:js` **690 → 695** · **4 mutaciones, las 4 muerden** (sin fase
+de espera → 2 rojos · inyectar durante la espera → 2 · la espera consume intentos → 2 · `render` con
+el nodo de la llamada en vez del actual → 1), fichero restaurado por `cmp` · chunk del cajón
+**225,72 → 225,85 KiB** (+0,13, corrección: el techo de 226 no se toca, quedan 0,15) · las cuatro
+guardas del cajón 61/61 tras `build` + `build:ssr` · y **la verificación que vale: el alta suelta en
+headless con Turnstile ENCENDIDO** — formulario a 1.083 ms, `/config` a 1.178, **script inyectado a
+1.323 (después de la clave)**, token a 3.089, `POST /auth/register → 201`, «revisa tu correo», 1
+correo en Mailpit. Ayer, en las mismas condiciones, 422 dos de dos.
+
+**Regla de método que deja, pagada con un push rojo**: **no se edita NADA mientras corre el gate del
+`pre-push`**. El commit de reclamación (solo doc) se empujó mientras se editaba `RegisterForm.vue`, y
+`SidebarDomContractTest` cayó por bundle rancio (`#69`): el gate hace `build:ssr` y luego la suite, y
+un fichero tocado entre las dos es un artefacto viejo. Se reconstruyó y se re-verificó todo.
+
+Verificación: Pint ✓ · `node --test` 695/695 ✓ · guardas del cajón ✓ · headless con anti-bot ✓ ·
+docs-check ✓ · suite (el contador vive en `ESTADO.md`, sin cambios en PHP).

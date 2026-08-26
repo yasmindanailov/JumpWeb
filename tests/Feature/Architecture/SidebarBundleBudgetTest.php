@@ -331,6 +331,10 @@ class SidebarBundleBudgetTest extends TestCase
      * tarjeta y el aviso; y el TEXTO del waiver no viaja ni en el chunk ni en el arranque — lo
      * publica `GET /legal/waiver` cuando hace falta. **226 deja 0,28 KiB**: lo siguiente que entre
      * lo mide, y no hay margen para un arrastre.
+     * ▶ **2026-08-26 (noche, `#171`): 225,72 → 225,85, +0,13 por una CORRECCIÓN** —`mountTurnstile`
+     * acepta funciones para el nodo y la clave y espera a que existan, que es lo que faltaba para
+     * que el alta suelta de `/registro` funcionara con el anti-bot encendido—. El techo no se toca:
+     * **quedan 0,15 KiB.**
      */
     private const SIDEBAR_CHUNK_MAX_KB = 226;
 

@@ -49,6 +49,19 @@ const POLL_INTERVAL_MS = 150;
 const POLL_MAX_TRIES = 80;
 
 /**
+ * 150 ms × 400 ≈ 60 s esperando a que EXISTAN la clave y el nodo (no a que cargue Cloudflare).
+ *
+ * ⚠️ Es la fase que faltaba, y costó el alta suelta entera (`DECISIONES #169`, `DEUDA.md`): en
+ * `/registro` el cajón nace abierto y `RegisterForm` se monta ANTES de que `GET /config` traiga la
+ * `turnstile_site_key`. Con la clave vacía, esto devolvía el apaño inerte y nadie volvía a llamar; al
+ * llegar la clave, el `v-if` pintaba el contenedor —vacío para siempre— y el servidor respondía
+ * «no eres un robot» a todo el mundo. Por eso `el` y `sitekey` pueden ser FUNCIONES: se re-leen en
+ * cada sondeo, y el script de Cloudflare **no se inyecta hasta tener clave y nodo delante** — con el
+ * anti-bot apagado la clave no llega nunca, y no se carga un tercero para nada.
+ */
+const WAIT_MAX_TRIES = 400;
+
+/**
  * Monta el widget sobre `el` y avisa por `onToken` cada vez que el token cambia.
  *
  * @param {object} el Nodo contenedor. Llega por `ref` del componente, NUNCA por `querySelector`:
@@ -73,10 +86,19 @@ export function mountTurnstile(el, {
     warn = null,
     intervalMs = POLL_INTERVAL_MS,
     maxTries = POLL_MAX_TRIES,
+    waitMaxTries = WAIT_MAX_TRIES,
 } = {}) {
     const noop = { reset: () => {}, destroy: () => {} };
 
-    if (! el || ! sitekey || ! win || ! doc) {
+    // `el` y `sitekey` admiten un valor o una FUNCIÓN que lo devuelve. Con valores, la conducta de
+    // siempre: si falta algo, apaño inerte. Con funciones, lo que falta puede llegar después y se
+    // espera (ver `WAIT_MAX_TRIES`).
+    const elOf = () => (typeof el === 'function' ? el() : el);
+    const keyOf = () => (typeof sitekey === 'function' ? sitekey() : sitekey);
+    const canWait = typeof el === 'function' || typeof sitekey === 'function';
+    const present = () => !! (elOf() && keyOf());
+
+    if (! win || ! doc || (! canWait && ! present())) {
         return noop;
     }
 
@@ -103,43 +125,68 @@ export function mountTurnstile(el, {
         }
 
         // El retorno es el `widgetId`, y es justo lo que el original tira. Ver trampa 2.
-        widgetId = win.turnstile.render(el, {
-            sitekey,
+        widgetId = win.turnstile.render(elOf(), {
+            sitekey: keyOf(),
             callback: (token) => emit(token ?? ''),
             'error-callback': () => emit(''),
             'expired-callback': () => emit(''),
         });
     };
 
-    if (ready()) {
-        render();
-
-        return {
-            reset: () => { if (widgetId !== null) win.turnstile.reset(widgetId); emit(''); },
-            destroy: () => { stopPolling(); if (widgetId !== null) win.turnstile.remove(widgetId); },
-        };
-    }
+    const handle = {
+        reset: () => { if (widgetId !== null) win.turnstile.reset(widgetId); emit(''); },
+        destroy: () => { stopPolling(); if (widgetId !== null) win.turnstile.remove(widgetId); },
+    };
 
     // Cargar `api.js` UNA sola vez para toda la página, compartiendo el guard del motor Livewire.
     // `createElement` sí ejecuta; un `<script>` inyectado por morph no (esa es la regresión que el
-    // comentario de `register.blade.php` narra).
-    if (! win.__cfTurnstileLoading) {
+    // comentario de `register.blade.php` narra). ⚠️ Solo con clave y nodo delante: antes de eso no se
+    // sabe si el anti-bot está encendido, y no se carga un tercero por si acaso.
+    const injectScript = () => {
+        if (win.__cfTurnstileLoading) {
+            return;
+        }
+
         win.__cfTurnstileLoading = true;
         const script = doc.createElement('script');
         script.src = TURNSTILE_SCRIPT;
         script.async = true;
         script.defer = true;
         doc.head.appendChild(script);
+    };
+
+    if (present()) {
+        if (ready()) {
+            render();
+
+            return handle;
+        }
+
+        injectScript();
     }
 
     let tries = 0;
+    let waited = 0;
     poll = win.setInterval(() => {
+        // Fase 1: esperar a que EXISTAN clave y nodo. No consume los intentos de carga (fase 2), y si
+        // no llegan nunca —anti-bot apagado— se rinde en silencio: no hay nada que avisar.
+        if (! present()) {
+            if (++waited > waitMaxTries) {
+                stopPolling();
+            }
+
+            return;
+        }
+
+        // Fase 2: con clave y nodo, cargar la API y pintar en cuanto responda.
         if (ready()) {
             stopPolling();
             render();
 
             return;
         }
+
+        injectScript();
 
         if (++tries > maxTries) {
             stopPolling();
@@ -149,8 +196,5 @@ export function mountTurnstile(el, {
         }
     }, intervalMs);
 
-    return {
-        reset: () => { if (widgetId !== null) win.turnstile.reset(widgetId); emit(''); },
-        destroy: () => { stopPolling(); if (widgetId !== null) win.turnstile.remove(widgetId); },
-    };
+    return handle;
 }

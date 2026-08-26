@@ -1882,6 +1882,11 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         que el operador no declara · 21 medias · 15 bajas), 3 refutados, 68 afirmaciones que aguantaron.
         ❗❗ **Y un defecto que no es del waiver**: con Turnstile activo el alta suelta de `/registro`
         **no termina** (el widget nunca se monta) — `DEUDA.md` Alta, spec §9.10.
+  - [x] **Tanda 4 · (1) el anti-bot del alta suelta** (2026-08-26 noche, `#171`, carril A):
+        `mountTurnstile` acepta funciones para el nodo y la clave, espera a que existan y no carga el
+        script de Cloudflare antes; `RegisterForm` cambia dos líneas (37/40). +5 casos JS (695), 4
+        mutaciones muerden, chunk +0,13 KiB (225,85/226). **Verificado en headless con Turnstile
+        encendido**: script tras `/config`, token a 3,1 s, `201`. ▶ Siguen (2)…(5) de la tanda.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado

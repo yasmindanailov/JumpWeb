@@ -966,11 +966,11 @@ Ya que hay una sesión abierta y el motor es otro:
 > (`specs/waiver-probatorio.md` §9.9). ✅ **Recorrido en navegador headless** (abajo, «Resultado») ·
 > ⬜ **Pendiente del OJO del owner** (`CONVENCIONES §3.bis`: un headless mide, no valida).
 >
-> ⚠️⚠️ **Antes de recorrerlo en TU navegador: el anti-bot.** Con claves de Turnstile en `settings`,
-> el alta suelta de `/registro` **no termina** —el widget nunca se monta y el servidor responde «no
-> eres un robot»— y no es culpa del guion: es un defecto real (`DEUDA.md` · Alta, spec §9.10). Hasta
-> que se arregle, vacía `security.turnstile_secret` en local (el anti-bot se autodesactiva y
-> `/config` deja de publicar la clave) y restáuralo al terminar.
+> ✅ **El anti-bot ya no estorba** (`DECISIONES #171`, 2026-08-26 noche): la primera pasada en headless
+> destapó que con claves de Turnstile el alta suelta de `/registro` **no terminaba** (el widget nunca
+> se montaba: el formulario nace antes de que `/config` traiga la clave). Arreglado en `turnstile.js`
+> y verificado en headless **con el anti-bot encendido** (script inyectado tras `/config`, token a
+> 3,1 s, `201`). **Recorre el guion con la instalación como en producción**: claves puestas.
 >
 > ⚠️⚠️ **Preparación, y SOLO EN LOCAL (`localhost:8081`), nunca en staging ni en producción**:
 > publicar una versión es **irreversible** y el texto del waiver **sigue siendo un borrador** (§8.1).
@@ -1025,7 +1025,9 @@ V35·1) · los marcadores de versión (`[E2E-v2]`, `[E2E-v3]`) quedan en el text
   `form h2.fi-section-header-heading`; las pestañas del texto son `getByRole('tab', {name: 'Español'})`
   y el último `textarea:visible` es la última sección; el modal de publicar se confirma con
   `getByRole('button', {name: 'Publicar versión N'})`.
-- Turnstile con claves de prueba **no ayuda**: el widget no se monta en el alta suelta (defecto, arriba).
+- Turnstile con claves de prueba: el token aparece en `input[name="cf-turnstile-response"]` dentro del
+  contenedor (~2 s tras inyectar el script); esperar por él, no por reloj. (El 26/08 por la tarde el
+  widget **no se montaba** en el alta suelta — defecto arreglado esa noche, `#171`.)
 - El enlace de verificación del correo **abre sesión** y aterriza en `/mi-cuenta/pedidos`: no hace
   falta pasar por el login para entrar en Mi cuenta.
 

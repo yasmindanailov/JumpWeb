@@ -30,9 +30,10 @@
 >   antes de que `GET /config` traiga la clave— y **staging tiene claves** (`DEUDA.md` Alta, spec
 >   §9.10). El arreglo es del carril A (`resources/js/sidebar/`) y esta sesión no escribía código.
 >   ▶ 🟦 **TANDA 4 · el código acotado de §10.11 — EN CURSO desde el 2026-08-26 por la noche**
->   (`[DECIDIDO owner]`: «procede con lo que sigue»; esta sesión SÍ escribe código): (1) **el widget
->   del anti-bot en el alta suelta** (decisión en `turnstile.js`, que es módulo plano con tests; el
->   componente solo pinta; verificación: el guion V31 en headless **con Turnstile encendido**) →
+>   (`[DECIDIDO owner]`: «procede con lo que sigue»; esta sesión SÍ escribe código): (1) ✅ **el widget
+>   del anti-bot en el alta suelta — HECHO y EMPUJADO** (`#171`: `mountTurnstile` acepta funciones y
+>   espera a que existan clave y nodo sin cargar Cloudflare antes; 5 casos, 4 mutaciones muerden;
+>   verificado en headless **con Turnstile encendido**: token a 3,1 s y `201`) →
 >   (2) servidor: canal por guard, idempotencia por versión, guarda de borrador con los tres
 >   marcadores, badge del pedido por `WaiverStatus`, throttles con nombre, `WaiverSigner` en el
 >   `CRITICAL_RE` → (3) cajón: las tres grietas (id enseñado, 422 del alta, casilla tras el 409) →
@@ -92,7 +93,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#170`**.
+> El último usado es **`#171`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -185,6 +186,8 @@ que sirva staging de verdad.
   ▶ **+1 test en el corte anterior** (2026-08-26, tras `#166`, sin número: un fix con su guarda):
   `SeededSettingsAreSaveableTest` — lo que siembra `db:seed` tiene que poder guardarse desde Ajustes;
   el owner lo pilló en navegador (`DEUDA.md` · Baja: «Guardar» mudo por un `#` sembrado) ·
+  ▶ **+0 tests PHP y +5 JS en el corte del 26/08 por la noche** (`#171`, el anti-bot del alta suelta):
+  `npm run test:js` **690 → 695**; chunk del cajón 225,72 → 225,85 KiB (corrección, techo intacto) ·
   ▶ **+0 tests y +1 aserción en el corte anterior** (`#166`, la 3b del waiver): lo nuevo es JS —
   `npm run test:js` **671 → 690** (+19: módulo 6 · store 9 · `register.js` 4)— y la aserción es la
   lista exacta de `register` en `SidebarMountTest` ·

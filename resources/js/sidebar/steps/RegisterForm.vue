@@ -93,11 +93,13 @@ const turnstileToken = defineModel('turnstileToken', { type: String, default: ''
 const captchaEl = ref(null);
 let widget = null;
 
-// Sin guarda de clave a propósito: `mountTurnstile` ya devuelve un apaño inerte si falta la clave o
-// el nodo, y el componente es un PINTOR — la decisión vive en el módulo, no aquí.
+// Nodo y clave van como FUNCIONES, no como valores: en `/registro` este componente se monta ANTES de
+// que `GET /config` traiga la clave, y el contenedor (`v-if`) ni existe todavía. `mountTurnstile` los
+// re-lee en cada sondeo y monta cuando ambos llegan (`DECISIONES #169`). El componente sigue siendo un
+// PINTOR: la decisión —esperar, cuándo cargar el script, cuándo rendirse— vive en el módulo.
 onMounted(() => {
-    widget = mountTurnstile(captchaEl.value, {
-        sitekey: props.turnstileSiteKey,
+    widget = mountTurnstile(() => captchaEl.value, {
+        sitekey: () => props.turnstileSiteKey,
         onToken: (token) => { turnstileToken.value = token; },
     });
     waiverStore.ensureLegal();
