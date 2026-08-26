@@ -7,15 +7,11 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
-use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
 use App\Domain\Booking\Services\OrderItemRefunder;
-use App\Domain\Booking\Services\PackAvailability;
-use App\Domain\Booking\Services\SlotAvailability;
-use App\Domain\Booking\Services\ZoneDaySlotLock;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
@@ -26,7 +22,6 @@ use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderItemCancelled;
-use App\Notifications\OrderItemModified;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderRefunded;
 use Filament\Actions\Action;
@@ -1683,58 +1678,17 @@ class ViewOrder extends ViewRecord
     }
 
     /**
-     * Handler UNIFICADO de edición de un item (sub-fase 7.2e.3, decisión
-     * #167): cantidad + producto (+ slot + event_data si vienen en el mismo
-     * guardado). Activa la dimensión financiera real — invoca `applyExtraDue`
-     * (subida → cobro en puerta, sin Redsys) o `executePartialRefund`
-     * (bajada → refund REST automático, #150) según el SIGNO del diff de
-     * precio. Un solo guardado → un email (`OrderItemModified`) → un audit
-     * (`orders.item_edited`) → un refund O un adjustment.
-     *
-     * Defense in depth (paralela a 7.2e.2):
-     *  1. Permiso `orders.edit_item`.
-     *  2. `editItemBlockedReason` con fila fresca + audit de bloqueos.
-     *  3. Optimistic lock vs `item.updated_at`.
-     *  4. Validar producto nuevo (mismo tipo + misma zona + vendible, sin
-     *     addons huérfanos), cantidad (rango del pack), slot (si cambió) y
-     *     precio del día (`RateResolver`).
-     *  5. `DB::transaction` lockForUpdate sobre slot + item, revalida aforo
-     *     EXCLUYENDO la huella propia del item (`excludeItemId`) y aplica los
-     *     campos atómicamente.
-     *
-     * Atomicidad financiera: la REST de refund no puede ir dentro de la txn
-     * de aforo. La mutación de campos se confirma PRIMERO; luego el refund.
-     * Si el refund REST falla, el item queda correctamente modificado y el
-     * operador reintenta la devolución con la action `refundItem` ya existente
-     * (recuperable; nunca se devuelve dinero por un cambio no aplicado). Las
-     * subidas usan `applyExtraDue` (sin red), por lo que no tienen esa ventana.
-     *
-     * Sub-fase 7.2e.4 (#170): absorbe también los cambios de COMPLEMENTOS
-     * (Tab 2). Modelo financiero #170: añadir/subir complemento → `applyExtraDue`
-     * (cobro en puerta, MOVIMIENTO SEPARADO del diff de Tab 1 — no se netea);
-     * quitar (cantidad 0) → solo `markCancelled` (SIN auto-refund; el operador
-     * reembolsa aparte con `refundItem`). Complementos neutros al aforo
-     * (`seats=0`/`slot_id=null`) → sin re-validación de capacidad. Los huérfanos
-     * de un cambio de producto dejan de bloquear si se quitan en este guardado.
+     * Edición unificada de un item (sub-fase 7.2e.3, decisión #167): cantidad
+     * + producto (+ slot + event_data + complementos si vienen en el mismo
+     * guardado). La operación entera —las guardas, la transacción de aforo
+     * bajo el lock de zona/día, la secuencia financiera post-commit y el
+     * email— vive en `OrderItemEditor::edit()` desde la extracción 4b. Esta
+     * capa traduce el desenlace: el permiso sin audit (como siempre), los
+     * huérfanos con su lista para el banner, el resto por `blockEdit`, y el
+     * éxito a su toast con los importes.
      *
      * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}  $addonEdits
      */
-
-    /**
-     * Bloquea TODAS las franjas de la zona/día de `$slot` (auditoría Fase 1, L3), con el MISMO alcance
-     * que la compra — desde la extracción 4b (spec §8.9) por el MISMO helper, `ZoneDaySlotLock`, que
-     * es donde vive la receta y su porqué. Antes las ediciones de panel bloqueaban SOLO la franja de
-     * destino: dos ediciones con tramos SOLAPADOS (franjas distintas) no compartían fila bloqueada y
-     * podían sobrellenar una franja intermedia común (el aforo se cuenta por tramo, #60). Bloquear la
-     * zona/día entera serializa también panel↔panel (web↔panel ya serializaba porque OrderCreator
-     * bloquea este mismo conjunto). Debe seguir siendo la PRIMERA sentencia de su transacción.
-     * `$slot` se cargó ANTES de abrir la transacción: su zona y su fecha son literales.
-     */
-    private function lockZoneDaySlots(Slot $slot): void
-    {
-        app(ZoneDaySlotLock::class)->acquire([(int) $slot->zone_id], [$slot->date->toDateString()]);
-    }
-
     private function executeItemEdit(
         Order $order,
         OrderItem $item,
@@ -1747,464 +1701,47 @@ class ViewOrder extends ViewRecord
         ?array $eventDataCandidate,
         array $addonEdits = ['edits' => [], 'adds' => []],
     ): void {
-        $user = auth()->user();
-
-        // Capa 1: permiso.
-        if (! ($user?->hasPermission('orders.edit_item') ?? false)) {
-            Notification::make()
-                ->title(__('admin.orders.manage_item.permission_denied'))
-                ->danger()
-                ->send();
-
-            return;
-        }
-
-        // Capa 2: bloqueo del item con fila fresca.
-        $reason = $order->editItemBlockedReason($item);
-        if ($reason !== null) {
-            $this->blockEdit($order, $item, $reason);
-
-            return;
-        }
-
-        // Capa 3: optimistic.
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($item->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->blockEdit($order, $item, 'stale_item_version');
-
-            return;
-        }
-
-        $oldType = $item->ticketType;
-
-        // Capa 4a: resolver el producto nuevo.
-        $newType = $newProductId === (int) $item->ticket_type_id
-            ? $oldType
-            : TicketType::find($newProductId);
-        if ($newType === null) {
-            $this->blockEdit($order, $item, 'invalid_product');
-
-            return;
-        }
-        $productChanged = (int) $newType->id !== (int) $item->ticket_type_id;
-
-        // Capa 4b: validar producto + cantidad (defense in depth pura —
-        // testeable por reflexión, sin notificaciones). El orphan se trata
-        // aparte para listar los complementos afectados en el banner.
-        $targetReason = $this->itemEditor()->validateItemEditTarget($item, $newType, $newQty);
-        if ($targetReason !== null) {
-            if ($targetReason === 'orphan_addons') {
-                // Sub-fase 7.2e.4 (#170): un huérfano deja de bloquear si se
-                // QUITA (cantidad 0) en este mismo guardado (resolución en la
-                // Tab Complementos). Solo bloquea si quedan huérfanos sin quitar.
-                $orphans = $this->itemEditor()->orphanAddonsForNewProduct($item, $newType);
-                $removingIds = $this->itemEditor()->addonChildIdsBeingRemoved($addonEdits);
-                $unresolved = array_diff_key($orphans, array_flip($removingIds));
-                if ($unresolved !== []) {
-                    $this->logManageItemBlocked($order, $item, 'edit', 'orphan_addons', [
-                        'orphan_addon_item_ids' => array_keys($unresolved),
-                    ]);
-                    $this->orphanAddonsBlockedNotification($unresolved);
-
-                    return;
-                }
-                // Todos los huérfanos se están quitando → continuar.
-            } else {
-                $this->blockEdit($order, $item, $targetReason);
-
-                return;
-            }
-        }
-
-        // Capa 4c: resolver slot efectivo (cambiado o el actual).
-        if ($slotChanged) {
-            $effectiveSlot = $this->itemEditor()->resolveSlotForItem($item, $newDate, $newTime);
-            $validationReason = $this->itemEditor()->validateNewSlot($item, $effectiveSlot, $newType);
-            if ($validationReason !== null) {
-                $this->blockEdit($order, $item, $validationReason);
-
-                return;
-            }
-        } else {
-            $effectiveSlot = $item->slot;
-        }
-        if ($effectiveSlot === null) {
-            $this->blockEdit($order, $item, 'invalid_slot_selection');
-
-            return;
-        }
-
-        // Capa 4d: precio unitario nuevo + diff (helper puro compartido con la
-        // preview en vivo). `new === null` ⇒ producto cambiado sin tarifa de
-        // catálogo ese día → no editamos a un importe indefinido.
-        $pricing = $this->itemEditPricing()->computeEditPricing($item, (int) $newType->id, $newQty, $effectiveSlot->date->toDateString());
-        if ($pricing['new'] === null) {
-            $this->blockEdit($order, $item, 'product_unavailable_on_date');
-
-            return;
-        }
-        $newUnit = (int) $pricing['unit'];
-        $newSeats = $newQty * (int) ($newType->seats_per_unit ?? 1);
-
-        $oldSlot = $item->slot;
-        $oldQty = (int) $item->quantity;
-        $oldUnit = (int) $item->unit_price;
-        $diff = (int) $pricing['diff'];
-
-        // Capa 4e (7.2e.4, #170): validar + tarificar los cambios de
-        // complementos contra el producto NUEVO (defense in depth pura).
-        $addonReason = $this->itemEditor()->validateAddonEdits($item, $newType, $addonEdits['edits'] ?? [], $addonEdits['adds'] ?? []);
-        if ($addonReason !== null) {
-            $this->blockEdit($order, $item, $addonReason);
-
-            return;
-        }
-        $addonPricing = $this->itemEditPricing()->computeAddonPricing(
-            $item, $newType, $addonEdits['edits'] ?? [], $addonEdits['adds'] ?? [], $effectiveSlot->date->toDateString(),
+        $outcome = $this->itemEditor()->edit(
+            $order,
+            $item,
+            $newDate,
+            $newTime,
+            $slotChanged,
+            $newProductId,
+            $newQty,
+            $eventDataCandidate,
+            $addonEdits,
+            (string) ($data['optimistic_token'] ?? ''),
+            auth()->user(),
         );
-        if ($addonPricing['error'] !== null) {
-            $this->blockEdit($order, $item, $addonPricing['error']);
 
-            return;
-        }
-        $addonUpcharge = (int) $addonPricing['upcharge'];
-        $addonAddUnitPrices = $addonPricing['add_unit_prices'];
-        $addonAddQuantities = $addonPricing['add_quantities'] ?? [];
-        $addonAddFreeQuantities = $addonPricing['add_free_quantities'] ?? [];
-        $addonCharges = $addonPricing['charges'] ?? [];
-        // typeId → id del child creado en la txn (para atar el extra_due del add a SU child).
-        $addonAddChildIds = [];
+        if ($outcome->isBlocked()) {
+            if ($outcome->reason === 'permission_denied') {
+                Notification::make()
+                    ->title(__('admin.orders.manage_item.permission_denied'))
+                    ->danger()
+                    ->send();
 
-        // Grupo de elección de cada complemento del producto (para el CAMBIO de menú: añadir un
-        // miembro de un grupo sustituye al miembro presente de ese mismo grupo).
-        $addonGroupByTypeId = [];
-        foreach ($newType->addons()->get() as $addonOption) {
-            $addonGroup = $addonOption->pivot->choiceGroup();
-            if ($addonGroup !== null) {
-                $addonGroupByTypeId[(int) $addonOption->id] = $addonGroup;
-            }
-        }
-
-        // Cambios estructurados para el email + audit.
-        $changes = [];
-        if ($slotChanged) {
-            $changes['slot_change'] = [
-                'old' => OrderItemEditor::humanSlotLabel($oldSlot),
-                'new' => OrderItemEditor::humanSlotLabel($effectiveSlot),
-            ];
-        }
-        if ($productChanged) {
-            $changes['product_change'] = [
-                'old' => $oldType?->tr('name') ?? '—',
-                'new' => $newType->tr('name'),
-            ];
-        }
-        if ($newQty !== $oldQty) {
-            $changes['quantity_change'] = ['old' => $oldQty, 'new' => $newQty];
-        }
-        // ⚠️⚠️ **El cambio de PRECIO UNITARIO viaja como cambio estructurado desde `#150`** (D4/D3 de
-        // `#146`). La re-tarificación (`PAY-18`) puede bajar el valor SIN tocar la cantidad, y
-        // `itemOriginalOnlineCents` solo sabía reconstruir por cantidad: tras una bajada por fecha,
-        // el tope de reembolso caía al precio YA re-tarificado (medido con los números del owner en
-        // `#149`: pagó 40,00, se le debían 40,00 y el tope decía 30,00 — y con el pedido cancelado,
-        // 10,00 quedaban ATRAPADOS sin vía de panel). Con el `old` en el contexto del ajuste, la
-        // reconstrucción vuelve a saber lo que se cobró de verdad.
-        if ($newUnit !== $oldUnit) {
-            $changes['unit_price_change'] = ['old' => $oldUnit, 'new' => $newUnit];
-        }
-        if (($addonPricing['changes']['addon_change'] ?? null) !== null) {
-            $changes['addon_change'] = $addonPricing['changes']['addon_change'];
-        }
-
-        // Capa 5: mutación atómica bajo lock con revalidación de aforo
-        // EXCLUYENDO la huella propia del item (si no, un crecimiento en su
-        // propia franja se contaría a sí mismo y se bloquearía).
-        $committed = false;
-        $perGuestRescales = []; // child_id => ['delta'=>cents, 'old_qty'=>n, 'new_qty'=>n, 'name'=>str] (M4)
-        DB::transaction(function () use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $user, &$committed, &$addonAddChildIds, &$perGuestRescales): void {
-            $this->lockZoneDaySlots($effectiveSlot); // L3: toda la zona/día (no solo la franja destino)
-            /** @var OrderItem $locked */
-            $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
-            if ($locked->isCancelled()) {
                 return;
             }
-
-            $available = $newType->isPack()
-                ? app(PackAvailability::class)->availableGuestsFor($effectiveSlot, $newType, [], $locked->id)
-                : app(SlotAvailability::class)->availableFor($effectiveSlot, $newType->duration_min, [], $locked->id);
-            if ($available < $newSeats) {
-                return;
-            }
-
-            $locked->forceFill([
-                'ticket_type_id' => $newType->id,
-                'quantity' => $newQty,
-                'unit_price' => $newUnit,
-                'seats' => $newSeats,
-                'slot_id' => $effectiveSlot->id,
-            ])->save();
-
-            // Sub-fase 7.2e.4 (#170): complementos (NEUTROS al aforo) en la
-            // misma txn. Subir cantidad → forceFill; quitar (0) → markCancelled
-            // (sin refund, #170); añadir → nuevo child enlazado al parent.
-            foreach ($addonEdits['edits'] ?? [] as $edit) {
-                /** @var OrderItem|null $child */
-                $child = OrderItem::query()->lockForUpdate()->find((int) $edit['child_id']);
-                if ($child === null || (int) $child->parent_item_id !== (int) $locked->id || $child->isCancelled()) {
-                    continue;
-                }
-                $q = (int) $edit['quantity'];
-                if ($q === 0) {
-                    $child->markCancelled($user);
-                } elseif ($q > (int) $child->quantity) {
-                    $child->forceFill(['quantity' => $q])->save();
-                }
-            }
-            foreach ($addonEdits['adds'] ?? [] as $add) {
-                $typeId = (int) $add['ticket_type_id'];
-
-                // CAMBIO de menú (grupo de elección): añadir un miembro de un grupo SUSTITUYE al que
-                // estuviera presente de ese mismo grupo (soft-cancel; si era de pago queda pendiente
-                // de reembolso por #170, si era el incluido gratis no hay nada que devolver).
-                $group = $addonGroupByTypeId[$typeId] ?? null;
-                if ($group !== null) {
-                    foreach ($locked->children()->whereNull('cancelled_at')->get() as $present) {
-                        if (($addonGroupByTypeId[(int) $present->ticket_type_id] ?? null) === $group) {
-                            $present->markCancelled($user);
-                        }
-                    }
-                }
-
-                $created = $locked->children()->create([
-                    'order_id' => $locked->order_id,
-                    'ticket_type_id' => $typeId,
-                    'slot_id' => null,
-                    // Cantidad efectiva + unidades gratis las computó computeAddonPricing con la
-                    // config del pivote (incluido/por-invitado), no el qty crudo del operador.
-                    'quantity' => (int) ($addonAddQuantities[$typeId] ?? $add['quantity']),
-                    'free_quantity' => (int) ($addonAddFreeQuantities[$typeId] ?? 0),
-                    'unit_price' => (int) ($addonAddUnitPrices[$typeId] ?? 0),
-                    'seats' => 0,
-                    'event_data' => null,
+            if ($outcome->reason === 'orphan_addons') {
+                $this->logManageItemBlocked($order, $item, 'edit', 'orphan_addons', [
+                    'orphan_addon_item_ids' => $outcome->extra['orphan_addon_item_ids'],
                 ]);
-                $addonAddChildIds[$typeId] = (int) $created->id;
+                $this->orphanAddonsBlockedNotification($outcome->extra['unresolved']);
+
+                return;
             }
-
-            // M4 (auditoría Fase 1): re-escalar los complementos PER-INVITADO al nuevo nº de invitados.
-            // Su cantidad efectiva SIGUE al principal (AddonResolver::effectiveQuantity → invitados); si
-            // no se re-escalan, un addon per-invitado DE PAGO INFRA-cobra al subir y SOBRE-cobra (de
-            // forma invisible) al bajar. Recogemos el delta por child para canalizarlo financieramente
-            // FUERA de la txn con el MISMO criterio que el principal (subida → extra_due puerta; bajada
-            // → crédito de buckets + marcador para que el sobre-cobro online aflore). Los children
-            // per-invitado están bloqueados en la UI → nunca llegan por `addonEdits`, sin doble manejo.
-            if ($newQty !== $oldQty) {
-                $pivotByAddonId = $newType->addons()->get()->keyBy('id');
-                foreach ($locked->children()->whereNull('cancelled_at')->get() as $child) {
-                    $pivot = $pivotByAddonId->get($child->ticket_type_id)?->pivot;
-                    if ($pivot === null || ! $pivot->isPerGuest()) {
-                        continue;
-                    }
-                    $oldChildQty = (int) $child->quantity;
-                    $oldChildFree = (int) $child->free_quantity;
-                    $newChildQty = AddonResolver::effectiveQuantity($pivot, 0, $newQty);
-                    $newChildFree = AddonResolver::freeUnits($pivot, $newChildQty);
-                    if ($newChildQty === $oldChildQty && $newChildFree === $oldChildFree) {
-                        continue;
-                    }
-                    $oldCharged = max(0, $oldChildQty - $oldChildFree) * (int) $child->unit_price;
-                    $newCharged = max(0, $newChildQty - $newChildFree) * (int) $child->unit_price;
-                    $child->forceFill(['quantity' => $newChildQty, 'free_quantity' => $newChildFree])->save();
-                    $perGuestRescales[(int) $child->id] = [
-                        'delta' => $newCharged - $oldCharged,
-                        'old_qty' => $oldChildQty,
-                        'new_qty' => $newChildQty,
-                        'name' => $child->ticketType?->tr('name') ?? ('#'.$child->id),
-                    ];
-                }
-            }
-
-            $committed = true;
-        });
-
-        if (! $committed) {
-            $this->logManageItemBlocked($order, $item, 'edit', 'insufficient_capacity_at_save');
-            $this->manageItemBlockedNotification('insufficient_capacity_at_save');
+            $this->blockEdit($order, $item, $outcome->reason);
 
             return;
         }
 
-        // Audit del edit con el desglose de `changes`.
-        AuditLogger::log(
-            action: 'orders.item_edited',
-            target: $order,
-            payload: [
-                'order_code' => $order->code,
-                'order_item_id' => $item->id,
-                'from_ticket_type_id' => $oldType?->id,
-                'to_ticket_type_id' => $newType->id,
-                'from_quantity' => $oldQty,
-                'to_quantity' => $newQty,
-                'from_unit_price' => $oldUnit,
-                'to_unit_price' => $newUnit,
-                'from_slot_id' => $oldSlot?->id,
-                'to_slot_id' => $effectiveSlot->id,
-                'price_diff_cents' => $diff,
-                'addon_upcharge_cents' => $addonUpcharge,
-                'changes' => array_keys($changes),
-                'addon_changes' => $addonPricing['changes']['addon_change'] ?? null,
-            ],
+        $this->editSuccessNotification(
+            $outcome->extra['extra_due_cents'],
+            $outcome->extra['reduced_cents'],
+            $outcome->extra['item_edit_context'],
         );
-
-        // Lado financiero por SIGNO del diff de Tab 1.
-        //  - SUBIDA (#150): el incremento se cobra en puerta (`applyExtraDue`); la señal se congela.
-        //  - BAJADA (#225, D8): «bajar cantidad = SOLO cancelar». Acreditamos los DOS buckets de
-        //    puerta del item (primero el `extra_due` de ediciones, luego el resto de la señal
-        //    `deposit_remainder`) para que «a cobrar en el parque» refleje la reserva menor. NO se
-        //    auto-reembolsa (cancelar ≠ reembolsar): si la bajada cae POR DEBAJO de lo cobrado
-        //    online, el sobre-cobro aflora como «pendiente de devolución» (#198) y el operador lo
-        //    reembolsa APARTE con «Reembolsar». (Evita además el fallo en pedidos manuales: sin
-        //    gateway_order el refund REST fallaba siempre.)
-        // Context ESTRUCTURADO (no solo claves) para el desglose "A cobrar en el parque" (#171).
-        $extraDueCents = null;
-        $reducedCents = null;
-        // `#155`: el REPARTO de una bajada, para que el email lo cuente — lo absorbido en puerta
-        // (créditos) y lo que aflora como «pendiente de devolución».
-        $gateCreditedCents = null;
-        $pendingRefundCents = null;
-        // ⚠️⚠️ **`slot_change` ENTRA aquí desde `DECISIONES #145`, y su ausencia era un defecto con
-        // fecha.** Este filtro es del commit fundacional (2026-08-12), cuando mover la fecha NO
-        // re-tarificaba: un cambio de franja no podía generar diferencia de precio, así que no había
-        // nada que anotar. **`PAY-18` (2026-08-24) creó esa causa nueva y nadie extendió el filtro**,
-        // de modo que el ajuste se guardaba con `context = {"changes": []}` mientras su hermano del
-        // registro guardaba `"changes": ["slot_change"]` con los precios de origen y destino. El mismo
-        // hecho, dos registros, y el pobre era el que colgaba del dinero.
-        // ▶ Medido en `R-S9XDYB` (staging): tres líneas de ajuste con la MISMA etiqueta muda.
-        // ▶ Es también la causa que `#131` no llegó a ver: allí se midió que «los ocho `extra_due`»
-        //   caían al texto de respaldo y se mejoró ESE texto; esto quita la necesidad de recurrir a él.
-        $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change', 'slot_change', 'unit_price_change']));
-        if ($diff > 0) {
-            $order->applyExtraDue($item->fresh(), $diff, $user, 'item_edit', ['changes' => $itemEditContext]);
-            $extraDueCents = $diff;
-        } elseif ($diff < 0) {
-            $reduction = -$diff;
-            // Crédito firmado contra los dos buckets de puerta del item (el neto nunca baja de 0):
-            // primero las ediciones (extra_due), luego el resto de la señal (deposit_remainder).
-            $extraCredit = max(0, min($reduction, $order->itemExtraDueCents($item->fresh())));
-            if ($extraCredit > 0) {
-                $order->applyGateCredit($item->fresh(), $extraCredit, $user, 'item_edit_reduction', ['changes' => $itemEditContext]);
-            }
-            $depositCredit = max(0, min($reduction - $extraCredit, $order->itemDepositRemainderCents($item->fresh())));
-            if ($depositCredit > 0) {
-                $order->applyDepositRemainderCredit($item->fresh(), $depositCredit, $user, 'item_edit_reduction', ['changes' => $itemEditContext]);
-            }
-            // SIN reembolso automático (D8): el remanente por debajo de lo cobrado online queda
-            // como «pendiente de devolución», a reembolsar aparte. Si NO se creó ningún crédito de
-            // puerta (bajada de un producto pagado íntegro online), dejamos un marcador 0 € que
-            // porta el cambio para que itemOriginalOnlineCents reconstruya lo cobrado ORIGINAL y el
-            // sobre-cobro aflore como «pendiente de devolución» (si no, sería invisible).
-            // ⚠️⚠️ **La condición era `isset(quantity_change)` y era D3 de `#146`**: una bajada por
-            // RE-TARIFICACIÓN (fecha o producto, `PAY-18`) no lleva cambio de cantidad y el marcador
-            // no se disparaba — «(ninguna fila de ajuste)», y el tope de D4 sin dato del que tirar.
-            // Se dispara con CUALQUIER cambio reconstruible: cantidad o precio unitario.
-            if ($extraCredit === 0 && $depositCredit === 0
-                && (isset($itemEditContext['quantity_change']) || isset($itemEditContext['unit_price_change']))) {
-                $order->recordReductionMarker($item->fresh(), $user, ['changes' => $itemEditContext]);
-            }
-            $reducedCents = $reduction;
-            $gateCreditedCents = $extraCredit + $depositCredit;
-            $pendingRefundCents = max(0, $reduction - $gateCreditedCents);
-        }
-
-        // Sub-fase 7.2e.4 (#170): el upcharge de COMPLEMENTOS es un MOVIMIENTO
-        // SEPARADO (decisión #170, "no netear"): cobro en puerta independiente
-        // del diff de Tab 1. Las bajadas de complementos NO mueven dinero aquí
-        // (refund manual aparte vía `refundItem`). Sin red → no puede fallar.
-        //
-        // Cada cargo se ata a SU child (el complemento), no al principal: así, si ese
-        // complemento se cancela luego (p. ej. un cambio de menú lo sustituye), su
-        // extra_due se ANULA solo (OrderFinancialSummary lo excluye al estar el child
-        // cancelado) → no quedan cargos fantasma ni reembolsos pendientes espurios.
-        foreach ($addonCharges as $charge) {
-            $amount = (int) ($charge['amount'] ?? 0);
-            if ($amount <= 0) {
-                continue;
-            }
-            $childId = $charge['child_id'] ?? ($addonAddChildIds[$charge['type_id']] ?? null);
-            $childItem = $childId !== null ? OrderItem::find((int) $childId) : null;
-            // Defensa: si por lo que sea no se resuelve el child, se ata al principal
-            // (comportamiento previo) en vez de perder el cobro.
-            $target = $childItem ?? $item->fresh();
-            $order->applyExtraDue($target, $amount, $user, 'addon_edit', $charge['context'] ?? [
-                'addon_change' => $addonPricing['changes']['addon_change'] ?? null,
-            ]);
-            $extraDueCents = ($extraDueCents ?? 0) + $amount;
-        }
-
-        // M4 (auditoría Fase 1): canalizar el delta de los complementos PER-INVITADO re-escalados, atado
-        // a CADA child (#170) y con el MISMO criterio de signo que el principal. El `quantity_change` en
-        // el contexto permite a `itemOriginalOnlineCents` reconstruir el sobre-cobro de una BAJADA como
-        // «pendiente de devolución» (igual que el principal). Para un pack con SEÑAL, el crédito recae en
-        // el `deposit_remainder` del child (puerta); para uno pagado online, en el marcador (online).
-        foreach ($perGuestRescales as $childId => $r) {
-            $delta = (int) $r['delta'];
-            if ($delta === 0) {
-                continue;
-            }
-            $child = OrderItem::find($childId);
-            if ($child === null) {
-                continue;
-            }
-            $ctx = ['changes' => [
-                'quantity_change' => ['old' => (int) $r['old_qty'], 'new' => (int) $r['new_qty']],
-                'addon_change' => ['added' => [], 'removed' => [], 'updated' => [
-                    ['name' => $r['name'], 'old' => (int) $r['old_qty'], 'new' => (int) $r['new_qty']],
-                ]],
-            ]];
-
-            if ($delta > 0) {
-                $order->applyExtraDue($child, $delta, $user, 'addon_per_guest_rescale', $ctx);
-                $extraDueCents = ($extraDueCents ?? 0) + $delta;
-            } else {
-                $reduction = -$delta;
-                $extraCredit = max(0, min($reduction, $order->itemExtraDueCents($child)));
-                if ($extraCredit > 0) {
-                    $order->applyGateCredit($child, $extraCredit, $user, 'addon_per_guest_rescale_reduction', $ctx);
-                }
-                $depositCredit = max(0, min($reduction - $extraCredit, $order->itemDepositRemainderCents($child)));
-                if ($depositCredit > 0) {
-                    $order->applyDepositRemainderCredit($child, $depositCredit, $user, 'addon_per_guest_rescale_reduction', $ctx);
-                }
-                if ($extraCredit === 0 && $depositCredit === 0) {
-                    $order->recordReductionMarker($child, $user, $ctx);
-                }
-            }
-        }
-
-        // event_data en el mismo guardado (tras mutar el item; reusa 7.2c).
-        // El token se refresca: la mutación bumpeó `updated_at`.
-        if ($eventDataCandidate !== null) {
-            $fresh = $item->fresh();
-            $data['optimistic_token'] = (string) ($fresh?->updated_at?->getTimestamp() ?? '');
-            if ($this->saveItemEventDataReturningDiffPresence($order, $item->fresh(), $data)) {
-                $changes['event_data_change'] = true;
-            }
-        }
-
-        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa → `refundedCents` null —
-        // pero desde `#155` SÍ se cuenta: cuánto queda pendiente de devolverle y cuánto pagará de
-        // menos en el parque. Antes el email de una bajada no llevaba un solo importe.
-        $order->notifyCustomer(new OrderItemModified(
-            order: $order->fresh(),
-            item: $item->fresh(),
-            changes: $changes,
-            extraDueCents: $extraDueCents,
-            refundedCents: null,
-            pendingRefundCents: $pendingRefundCents,
-            gateCreditedCents: $gateCreditedCents,
-        ));
-
-        $this->editSuccessNotification($extraDueCents, $reducedCents, $itemEditContext);
     }
 
     /**
@@ -2284,36 +1821,6 @@ class ViewOrder extends ViewRecord
                 'reason' => $reason,
             ], $extra),
         );
-    }
-
-    /**
-     * Variante de `saveItemEventData` que devuelve si hubo diff (para
-     * decidir si el email consolidado debe citar `event_data_change`).
-     * La defense in depth la aplica `OrderItemEventDataWriter`; esta
-     * variante NO envía Notification ni el email de 7.2c (esos los maneja el
-     * caller con su mensaje consolidado) y solo audita los rechazos que
-     * siempre auditó — la versión rancia y los obligatorios ausentes; el
-     * permiso, el no-pack y el sin-campos salen en silencio, como siempre.
-     */
-    private function saveItemEventDataReturningDiffPresence(Order $order, OrderItem $item, array $data): bool
-    {
-        $outcome = $this->eventDataWriter()->save(
-            $order,
-            $item,
-            (array) ($data['event_data'] ?? []),
-            (string) ($data['optimistic_token'] ?? ''),
-            auth()->user(),
-        );
-
-        if ($outcome->isBlocked()) {
-            if (in_array($outcome->reason, ['stale_version', 'required_missing'], true)) {
-                $this->eventDataWriter()->auditBlocked($order, $item, $outcome->reason, $outcome->extra);
-            }
-
-            return false;
-        }
-
-        return $outcome->changed;
     }
 
     /**

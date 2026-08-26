@@ -95,9 +95,14 @@
 >   ✅ **D + E HECHOS** (`#188`, 05:00): `OrderItemCanceller` y `OrderItemRefunder` (+ el contrato
 >   `ItemRefundRequest`; E sin `PaymentRefund`: modo e intención los resuelve la página); `ViewOrder` en
 >   **2.848**; **16/16 mutaciones muerden** — cinco tras ganar su test directo (los dos permisos y tres
->   guardas de E que la red de página no distinguía del dominio). ▶ **Siguiente: F** (`edit()`, el
->   monstruo — txn de aforo + secuencia financiera post-commit + waterfall único), luego G y H.
->   Detalle: spec §9.6.1.
+>   guardas de E que la red de página no distinguía del dominio).
+>   ✅ **F + G + H(agente) HECHOS** (`#189`, 07:00, `VERIFY_CONC`): `OrderItemEditor::edit()` con las
+>   cuatro fases de §4.3 intactas, el waterfall como UNA pieza (`creditReduction`) y `withZoneDayLock()`
+>   como punto único —guardado por `OrderItemEditorSingleLockPointTest`—; **16/16 mutaciones
+>   muerden** (tres tras ganar su test). **`ViewOrder` en 2.355 líneas y 50 métodos: cifra FINAL.**
+>   **EL DESMONTAJE, DE AGENTE, TERMINÓ.** ❗ Sigue 🟦 por lo único humano: **la pasada de NAVEGADOR
+>   del owner por las 10 acciones del panel (spec §6·5)** — la suite no ve un formulario de Filament
+>   que deje de montarse. Detalle: spec §9.6.1.
 >   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
 >   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
 >   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
@@ -152,7 +157,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#188`**.
+> El último usado es **`#189`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -246,9 +251,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **2979 en verde** (17.185 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+- Suite **2984 en verde** (17.208 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+3 tests PHP en el último corte** (`#188`, D+E de la 4b): los permisos re-exigidos en
+  ▶ **+5 tests PHP en el último corte** (`#189`, F+G de la 4b): la huella propia excluida para el PACK
+  en `edit()`, «con crédito NO hay marcador», los `event_data` en el mismo guardado que una edición
+  con dinero, y la guarda de arquitectura del punto único de lock (2 casos). Antes:
+  ▶ **+3 tests PHP** (`#188`, D+E de la 4b): los permisos re-exigidos en
   `OrderItemCanceller`/`OrderItemRefunder` (inalcanzables desde la página) y las tres guardas de E
   con su razón estructurada (selección vacía, ítem ajeno, principal bloqueado) — cinco mutaciones
   que salían verdes. Antes:

@@ -325,6 +325,46 @@ class ManageItemSlotChangeTest extends TestCase
         });
     }
 
+    /**
+     * Los datos del evento en el MISMO guardado que una edición con dinero: `OrderItemEditor::edit()`
+     * los guarda tras mutar el ítem (con el token refrescado, porque la mutación movió el
+     * `updated_at`) y el email consolidado los cita junto al cambio de cantidad. Ganó su test en la
+     * extracción 4b: la mutación «event_data no se guarda tras la mutación» salía VERDE.
+     */
+    public function test_edit_saves_event_data_in_the_same_save_after_mutating_the_item(): void
+    {
+        Notification::fake();
+        $this->zone->update(['max_per_slot' => 5, 'max_guests_per_slot' => 100]);
+        $this->packType->update(['event_fields' => [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
+        ]]);
+        [$order, $item] = $this->makePaidPackOrder('10:00:00', guests: 8);
+        $item->update(['event_data' => ['celebrant' => 'Mateo']]);
+        $item = $item->fresh(['ticketType', 'slot']);
+
+        $outcome = app(OrderItemEditor::class)->edit(
+            $order,
+            $item,
+            '',
+            '',
+            false,
+            (int) $item->ticket_type_id,
+            9,
+            ['celebrant' => 'Lucía'],
+            ['edits' => [], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $this->staffWith(['orders.view', 'orders.edit_item', 'orders.edit_event_data']),
+        );
+
+        $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
+        $this->assertSame(9, (int) $item->fresh()->quantity);
+        $this->assertSame(['celebrant' => 'Lucía'], $item->fresh()->event_data);
+        Notification::assertSentTo($order->user, OrderItemModified::class, function (OrderItemModified $n): bool {
+            return ($n->changes['event_data_change'] ?? false) === true
+                && isset($n->changes['quantity_change']);
+        });
+    }
+
     public function test_save_with_same_slot_is_noop_no_email_no_audit(): void
     {
         Notification::fake();

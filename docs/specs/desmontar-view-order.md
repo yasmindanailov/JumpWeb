@@ -1027,3 +1027,60 @@ texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el inst
   Architecture 197 (los dos servicios, controles negativos en `CriticalPathGateTest`).
 - ▶ **Queda F** (`edit()`, el monstruo: 471 líneas con la secuencia financiera post-commit y el
   waterfall duplicado), luego G (lo que se queda) y H (el cierre).
+
+**F + G + H(agente) · HECHOS (2026-08-27, 07:00 — `#189`, `VERIFY_CONC`). EL DESMONTAJE, de agente,
+TERMINA.** La edición con dinero vive en el dominio:
+- **`OrderItemEditor::edit(...)`**: las cuatro fases de §4.3 con su frontera intacta — guardas ANTES
+  de abrir transacción · la txn SOLO de aforo/mutación bajo **`withZoneDayLock()`** (el mismo punto
+  que `changeSlot()`: ítem bloqueado, cupo revalidado excluyendo la huella propia, `forceFill`,
+  complementos, re-escala per-invitado) · POST-commit el audit `orders.item_edited`, la secuencia
+  financiera (cada paso con su transacción corta en `Order`) y los datos del evento · el email. Nada
+  se «normalizó»: ni una transacción envolvente, ni un audit movido.
+- **El waterfall es UNA pieza, `creditReduction()`** (§8.9): `extra_due` → resto de la señal →
+  marcador 0 € solo si no hubo crédito y el contexto lleva un cambio reconstruible. La «asimetría»
+  entre las dos copias era sintáctica (el contexto per-invitado lleva siempre `quantity_change`): la
+  condición única da lo mismo en los dos sitios, y lo demuestran los tests del dinero en verde y las
+  mutaciones MF5/MF6.
+- **Un solo `fresh()`** donde la página hacía cinco: medido que ningún escritor de `Order`
+  (`applyExtraDue`, los dos créditos, el marcador) muta el `OrderItem` que recibe.
+- **`ViewOrder` en 2.355 líneas y 50 métodos** (de 5.280 y 98 al abrir la spec; 3.907 al empezar la
+  4b; −55 % en total). Se retiraron con F el docblock FÓSIL de «Handler UNIFICADO» (que vivía
+  encima de `lockZoneDaySlots`, no de su método), `lockZoneDaySlots` y
+  `saveItemEventDataReturningDiffPresence`, ya sin llamadores. **G, medido**: cero métodos privados
+  sin llamador en la página; lo que queda es composición Filament y traducción de outcomes (§4.4,
+  `[DECIDIDO owner]` `#181`: no se parte).
+- **Guarda nueva de arquitectura, `OrderItemEditorSingleLockPointTest`**: el editor abre UNA
+  transacción y toma el lock UNA vez (en `withZoneDayLock`), las DOS operaciones pasan por ahí, y la
+  página solo abre la transacción de cancelar el PEDIDO y no toma ningún lock. Es lo único que puede
+  ver una segunda transacción antes de que una carrera la mida (SQLite no emite `FOR UPDATE`).
+- **Mutación: 16 de 16 muerden — tres solo tras ganar su test**: la huella propia excluida para el
+  PACK en `edit()` (la entrada ya la tenía) → `test_pack_can_grow_within_its_own_slot_up_to_the_guest_cap`
+  · «con crédito NO hay marcador» (D3/D8 de `#146`; un marcador de más duplicaría el contexto que
+  reconstruye lo cobrado) → `test_reduction_absorbed_by_the_deposit_leaves_a_credit_and_no_marker` ·
+  los datos del evento en el MISMO guardado que una edición con dinero →
+  `test_edit_saves_event_data_in_the_same_save_after_mutating_the_item` (directo al servicio; ⚠️ vive
+  en `ManageItemSlotChangeTest`, no en el fichero de `event_data`: su rejilla de 59 min sin
+  `online_sales_open` no da cupo a un pack de 90 min, y forzar el fixture era peor que mover el
+  test). Las trece restantes a la primera: la estructural del punto de lock (MF1: `edit()` con su
+  propia `DB::transaction` → la guarda nueva en rojo) · huella propia (entrada) · revalidación de
+  aforo · waterfall sin `extra_due` → 2 · marcador nunca → 8 · subida sin cobro → 11 · cargo del
+  complemento al principal → 5 · re-escala sin cobro · email sin pendiente · audit → 42 errores ·
+  token (2.ª ocurrencia) → 2 · huérfano quitado no resuelto · cambio de menú sin sustituir → 4.
+- `INVARIANTES`: `PAY-18` citaba `ViewOrder::computeEditPricing()` (caducó en A sin verse) →
+  `ItemEditPricing` + el despacho hacia `edit()`; `AFORO-05` → solo `withZoneDayLock()`.
+- **H, de agente**: el `CRITICAL_RE` ya tenía a `ZoneDaySlotLock` y `OrderItemEditor` desde C0; los
+  cuatro servicios restantes son controles negativos; los verificadores corridos (abajo); la cifra
+  final declarada aquí y en `DEUDA.md`. ❗ **Queda H, de owner: la pasada de NAVEGADOR por las 10
+  acciones (§6·5)** — la suite no ve un formulario de Filament que deja de montarse. Hasta ese ✅ el
+  desmontaje sigue 🟦 (`CONVENCIONES §3.bis`, cuarta condición).
+- **Verificación**: suite **2984 / 17.208 en verde** (+5 tests: los 3 de F y los 2 de la guarda del
+  lock) · Pint global ✓ · `php -l` ✓ · **`purchase:verify-oversell` 6/6 PASAN** (8 workers, MySQL) ·
+  **`redsys:verify-concurrency` PASA** · cero restos en la BD (26 pedidos, los de siempre) · Admin/Orders
+  604 · Architecture 199 · Sales 413 · Support 95 · empujado con `VERIFY_CONC=1`.
+
+**Balance de la 4b entera (A→F, 2026-08-26 23:00 → 2026-08-27 07:00)**: 6 servicios + 2 contratos +
+1 guarda de arquitectura en el dominio (2.020 líneas, docblocks incluidos) · `ViewOrder` −1.552 líneas
+(3.907 → 2.355) · **74 mutaciones, 74 muerden** (y una inobservable, documentada) · **15 tests
+nuevos que ganaron reglas SIN red** — el hallazgo transversal de la extracción: reglas de defensa que
+la página no podía alcanzar (Filament valida antes, el despachador filtra el permiso, el dominio
+garantiza lo mismo por otro camino) y que solo un servicio invocable sin Filament permite probar.

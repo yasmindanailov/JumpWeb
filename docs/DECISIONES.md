@@ -9913,3 +9913,44 @@ aforo, el otro no toma locks (viven en `Order`).
 Verificación: suite **2979 / 17.185 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · 16/16
 mutaciones con ancla única y restauración por md5 · fidelidad por diferencia de conjuntos: cero
 lógica · Admin/Orders 601 · Architecture 197.
+
+## #189 · 2026-08-27 · Extracción 4b · sub-pasos F y G: la edición con dinero al dominio con UN punto de lock y el waterfall como UNA pieza — el desmontaje de `ViewOrder`, de agente, TERMINA
+
+Séptimo y último sub-paso de código del plan de `#182` (spec §9.6.1). `OrderItemEditor::edit()`
+lleva las cuatro fases de §4.3 con su frontera intacta: guardas ANTES de abrir transacción · la txn
+SOLO de aforo/mutación bajo `withZoneDayLock()` (el mismo punto que `changeSlot()`) · POST-commit el
+audit, la secuencia financiera —cada paso con su transacción corta en `Order`— y los datos del
+evento · el email. `ViewOrder` pasa de 2.848 a **2.355 líneas y 50 métodos: cifra FINAL, medida**
+(de 5.280 y 98 al abrir la spec; 3.907 al empezar la 4b). G, medido: cero métodos privados sin
+llamador en la página; lo que queda es composición Filament y traducción de outcomes, y `#181`
+decidió que no se parte.
+
+**Lo que decide y lo que enseñó:**
+1. **El waterfall es UNA pieza** (`creditReduction`, §8.9): `extra_due` → resto de la señal →
+   marcador 0 € solo sin crédito y con cambio reconstruible. La «asimetría» era sintáctica — el
+   contexto per-invitado lleva siempre `quantity_change` — y las mutaciones MF5/MF6 lo confirman.
+2. **Una guarda de arquitectura para el punto único de lock** (`OrderItemEditorSingleLockPointTest`):
+   el editor abre UNA transacción y toma el lock UNA vez, las dos operaciones pasan por ahí, y la
+   página solo abre la de cancelar el PEDIDO. Es lo único que puede ver una segunda transacción antes
+   de que una carrera la mida.
+3. **Tres reglas sin red, la última tanda**: la huella propia excluida para el PACK en `edit()` (la
+   entrada sí la tenía), «con crédito NO hay marcador» (un marcador de más duplicaría el contexto que
+   reconstruye lo cobrado) y los datos del evento en el MISMO guardado que una edición con dinero.
+   Tres tests; **16 de 16 mutaciones muerden** — 74 de 74 en toda la 4b, más una inobservable.
+4. **Dos fósiles retirados**: el docblock de «Handler UNIFICADO» vivía encima de `lockZoneDaySlots`,
+   no de su método; y `PAY-18` en `INVARIANTES` citaba `ViewOrder::computeEditPricing()`, caducado
+   desde A sin que lo viera nadie — re-apuntado.
+5. **Un solo `fresh()` donde había cinco**: medido que ningún escritor de `Order` muta el `OrderItem`
+   que recibe; misma conducta, menos consultas.
+6. **Lo que enseñó la 4b entera**: 15 tests nuevos son reglas de defensa que la página NO podía
+   alcanzar —Filament valida antes, el despachador filtra el permiso, el dominio garantiza lo mismo
+   por otro camino— y que solo un servicio invocable sin Filament permite probar. El valor de la
+   extracción no es la cifra de líneas: es que esas reglas tienen red por primera vez.
+
+❗ **Queda H, de owner**: la pasada de NAVEGADOR por las 10 acciones del panel (spec §6·5). Hasta ese
+✅ el desmontaje sigue 🟦 (`CONVENCIONES §3.bis`, cuarta condición del DoD).
+
+Verificación: suite **2984 / 17.208 en verde** (+5 tests) · Pint global ✓ · `php -l` ✓ · docs-check ✓
+· `purchase:verify-oversell` **6/6 PASAN** (8 workers, MySQL) · `redsys:verify-concurrency` PASA ·
+cero restos en la BD · 16/16 mutaciones con ancla única y restauración por md5 · fidelidad por
+diferencia de conjuntos: cero lógica · empujado con `VERIFY_CONC=1`.

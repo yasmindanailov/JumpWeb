@@ -550,6 +550,61 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertSame(6000, (int) $adj->amount_cents); // 4 invitados × 15.00
     }
 
+    /**
+     * `AFORO-06` en la rama de PACK de `edit()` (la de entrada ya tenía test): un pack de 8 en una
+     * franja con cupo de 10 invitados crece a 10. Sin `excludeItemId` la revalidación bajo el lock
+     * se contaría a sí mismo (10 − 8 = 2 < 10) y bloquearía siempre. Ganó su test en la extracción
+     * 4b: la mutación «sin excluir la huella» en la rama de pack salía VERDE.
+     */
+    public function test_pack_can_grow_within_its_own_slot_up_to_the_guest_cap(): void
+    {
+        $this->setPackGuestCap(10);
+        [$order, $item] = $this->makePaidPackOrder(guests: 8);
+
+        Livewire::actingAs($this->staffWithEdit())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('manageItem', data: $this->editData($item, ['quantity' => 10]), arguments: ['item' => $item->id])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(10, (int) $item->fresh()->quantity);
+        $this->assertNull(AuditLog::where('action', 'orders.item_edit_blocked')->first());
+    }
+
+    /**
+     * D8/D3 (`#146`): en una BAJADA, el marcador 0 € que porta el cambio SOLO se deja cuando ningún
+     * crédito de puerta lo porta ya. Si la señal absorbe la bajada, hay crédito y NO marcador — un
+     * marcador de más duplicaría el contexto con el que se reconstruye lo cobrado. Ganó su test en
+     * la extracción 4b: la mutación «marcador aunque haya crédito» salía VERDE.
+     */
+    public function test_reduction_absorbed_by_the_deposit_leaves_a_credit_and_no_marker(): void
+    {
+        [$order, $item] = $this->makePaidPackOrder(guests: 10);
+        // El pack tiene señal: el resto (10 × 15,00 € = 150,00 €) está pendiente de cobro en puerta.
+        $order->adjustments()->create([
+            'order_item_id' => $item->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'amount_cents' => 15000, 'currency' => 'EUR', 'reason' => 'deposit_remainder',
+            'applied_by' => $this->staffWithEdit()->id,
+        ]);
+
+        // 10 → 8 invitados (el mínimo del pack del fixture es 8: una bajada mayor la rechaza el form).
+        Livewire::actingAs($this->staffWithEdit())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('manageItem', data: $this->editData($item->fresh(), ['quantity' => 8]), arguments: ['item' => $item->id])
+            ->assertHasNoActionErrors();
+
+        $adjustments = OrderAdjustment::where('order_item_id', $item->id)->get();
+        $this->assertSame(
+            1,
+            $adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER)->where('amount_cents', '<', 0)->count(),
+            'la bajada (2 × 15,00 €) se acredita contra el resto de la señal',
+        );
+        $this->assertSame(
+            0,
+            $adjustments->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->where('amount_cents', 0)->count(),
+            'con crédito de puerta, SIN marcador 0 €',
+        );
+    }
+
     public function test_pack_quantity_increase_rescales_per_guest_paid_addon_and_charges_delta(): void
     {
         // Auditoría Fase 1 (M4): subir invitados del pack re-escala un complemento PER-INVITADO de PAGO
