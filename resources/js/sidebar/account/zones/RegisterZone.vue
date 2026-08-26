@@ -108,6 +108,7 @@ async function submit() {
         v-model:password="store.form.password"
         v-model:accept-privacy="store.form.accept_privacy"
         v-model:accept-terms="store.form.accept_terms"
+        v-model:accept-waiver="store.form.accept_waiver"
         v-model:marketing="store.form.marketing"
         v-model:website="store.form.website"
         v-model:turnstile-token="store.form.turnstile_token"

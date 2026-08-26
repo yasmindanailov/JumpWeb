@@ -1,6 +1,8 @@
 <script setup>
 import { useReservationsStore } from '../../stores/reservations.js';
-import { HOME_ENTRIES, titleKeyOf } from '../navigation.js';
+import { useAccountContextStore } from '../../stores/accountContext.js';
+import { HOME_ENTRIES, ZONES, titleKeyOf } from '../navigation.js';
+import { waiverPendingFrom } from '../waiver.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import ZoneIcon from '../ZoneIcon.vue';
@@ -28,6 +30,10 @@ const emit = defineEmits(['go']);
 const store = useReservationsStore();
 
 store.ensure();
+
+// Fase 6 · waiver (§4.8): «la re-firma se pide al entrar». Lo dice el contexto de cuenta —el que se
+// repinta al conseguir sesión—, y la decisión de avisar vive en `account/waiver.js`, no aquí.
+const context = useAccountContextStore();
 </script>
 
 <template>
@@ -39,6 +45,12 @@ store.ensure();
 
     <p v-else-if="store.next" class="acct__sub">
         {{ store.next.date_label }}<template v-if="store.next.time_window"> · {{ store.next.time_window }}</template> · {{ store.next.product_name }}
+    </p>
+
+    <!-- El aviso del waiver (Fase 6): pendiente o de una versión anterior. Lleva a firmarlo. -->
+    <p v-if="waiverPendingFrom(context.context)" class="auth__switch">
+        {{ translate(account, 'account.privacy.waiver.pending_notice') }}
+        <button type="button" @click="emit('go', ZONES.PRIVACY)">{{ translate(account, 'account.privacy.waiver.pending_cta') }}</button>
     </p>
 
     <div class="catalog">

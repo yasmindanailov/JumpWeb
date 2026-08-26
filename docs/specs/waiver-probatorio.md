@@ -594,7 +594,81 @@ test que encadena peticiones hay que `app()->forgetInstance()` entre ellas · `S
 pone la cabecera `Authorization`: para probar el canal `api` hay que enviarla · Spectator no valida
 binarios: el PDF se prueba por `%PDF-`, `content-type` y `no-store`.
 
-**Lo que queda (3b, el cajón)**: la casilla en el alta del paso 5 (`register.js` + su `.vue`),
+**Lo que quedaba (3b, el cajón)**: la casilla en el alta del paso 5 (`register.js` + su `.vue`),
 la zona de privacidad con «firmar / re-firmar» y los PDF, y el aviso al entrar o al ir a pagar
 cuando `accountContext.waiver.required|outdated` — con los presupuestos del cajón delante
 (`SidebarBundleBudgetTest`, el techo de 40 líneas por componente, el diff de árbol y `build:ssr`).
+▶ Hecho en §9.9, con UNA salvedad dicha ahí: el aviso vive en el índice de la cuenta, **no en el paso
+de pagar**.
+
+### 9.9 Ejecución — tanda 3b, el CAJÓN (2026-08-26, `DECISIONES #166`)
+
+La mitad cliente de la tanda 3: lo que el visitante VE. Tres capas, como todo el cajón
+(`specs/sidebar-spa.md` §8): un módulo plano que decide, un store que pide, y componentes que pintan.
+
+| Pieza | Dónde | Qué hace | Su red |
+|---|---|---|---|
+| El módulo plano | `resources/js/sidebar/account/waiver.js` | `waiverStatusKey(status)` —qué frase se pinta: `external` · `unsigned` · `current` · `outdated`—, `waiverNeedsSignature(status)` y `waiverPendingFrom(context)` —el aviso del índice, leído de `accountContext.waiver`—. **La lectura del estado es UNA** y la comparten la tarjeta y el aviso | `account/waiver.test.js` (6) |
+| El store | `resources/js/sidebar/stores/waiver.js` | `useWaiverStore`: `ensureLegal()` (`GET /legal/waiver`, una vez), `ensureStatus()` (`GET /me/waiver`), `accept()` (`POST /me/waiver` con el `document_id` **servido**). ⚠️ Ante `409 waiver_document_stale` **RE-LEE** texto y estado y NO da la firma por hecha: el cliente nunca decide por su cuenta qué versión es la vigente | `stores/waiver.test.js` (9) |
+| La casilla del alta | `register.js` · `stores/auth.js` · `steps/RegisterForm.vue` (+ `IdentifyStep.vue` y `RegisterZone.vue`, que la enchufan) | `accept_waiver` viaja `true` **solo si hay documento servido** y entonces va con su `waiver_document_id`; en cualquier otro caso `false` y `null`. La casilla **no existe** si `GET /legal/waiver` no trae documento (modo externo/desactivado o sin versión publicada): el alta de hoy no cambia. El texto completo va **plegado** en un `<details>` y `FIELD_ORDER` conoce `waiver_document_id` para que el aviso del servidor salga en su sitio del banner | `register.test.js` (+4) |
+| La tarjeta de Privacidad | `account/zones/PrivacyZone.vue` | Estado según el modo (la frase sale de `waiverStatusKey`), **firmar o re-firmar** (texto plegado + casilla + botón), «firma registrada ✓», y la lista de firmas con su PDF (`pdf_url` de la API; la declarada en puerta se marca como tal). Al firmar **refresca el contexto de cuenta**, para que el aviso del índice se apague en el acto | navegador: `VERIFICACION-E2E-CAJON.md` §5.sexies |
+| El aviso del índice | `account/zones/AccountHomeZone.vue` | «Tu waiver está pendiente → fírmalo» cuando `accountContext.waiver.required` o `.outdated`; lleva a Privacidad. Es la re-firma «en el siguiente momento natural» (§4.8) | ídem |
+| Los textos | `resources/views/components/layout.blade.php` · `lang/{es,en,fr}/account.php` | `privacy.waiver` entero (12 rótulos, todos pintados) y `register.accept_waiver` + `waiver_read`. **`register` pasa de viajar entero a `Arr::only`** (ver «lo medido») | `SidebarMountTest` (listas exactas + dos presupuestos) |
+
+**Decisiones de ingeniería** (el porqué largo, en `DECISIONES #166`):
+
+1. **El aviso de re-firma vive en el índice de la cuenta, NO en el paso de pagar.** La spec decía
+   «al entrar o al ir a pagar»; se construyó lo primero. Dos motivos, y el segundo es el que manda:
+   la puerta **deja pasar** con una versión anterior (§4.8: no es una condición de compra, así que
+   no debe parecer una en el checkout), y el chunk quedó con **0,28 KiB** de margen bajo el techo
+   que el owner acaba de subir — un segundo aviso en `PurchaseSection` (432 líneas, que solo puede
+   adelgazar) costaría más que eso. **Queda abierto como decisión de producto**, con su precio.
+2. **El texto del waiver no viaja ni en el chunk ni en el arranque.** Lo pide el store cuando hace
+   falta (`ensureLegal()`), en el idioma negociado, y en el alta se pide al montar el formulario.
+   Meterlo en `data-boot` habría sido pagar un texto legal entero en cada página pública.
+3. **El diff de árbol NO ve la casilla del waiver**, y hay que decirlo: `RegisterForm` la pinta bajo
+   `v-if="waiverStore.document"` y en SSR el store está vacío —`onMounted` no corre—, así que el
+   manifiesto congelado del formulario de alta **no cambia** y sigue en verde con la casilla rota o
+   sin ella. La red de esta tanda para lo visible es el **navegador** (§5.sexies del guion E2E), como
+   ya lo era para todas las zonas de la cuenta.
+4. **Los presupuestos se PODARON antes de subir, y uno BAJÓ.** Detalle abajo.
+
+**Lo medido** (todo sobre el `data-boot` real y el `manifest.json` real, no sobre una idea de ellos):
+
+- **Chunk del cajón: 220,78 → 225,72 KiB, +4,94** — supera a «Mis pedidos» (`#129`, +4,10). Y es
+  una FEATURE, cuando `ESTADO.md` decía que ese techo solo cede por correcciones: **la subida a 226 la
+  decidió el owner el 2026-08-26 con el número delante**, entre subir, partir el waiver en un chunk
+  aparte (el alta seguiría costando ~1,5 KiB en éste) o aparcar la tanda. **Quedan 0,28 KiB.**
+- **Textos con sesión: 7.176 B con lo nuevo y sin poda → 6.668 tras la poda** (techo 6.600 → 6.760,
+  92 B de holgura). La poda son **508 B** en dos capas: (a) fuera de `lang/` tres claves que **no leía
+  nadie** —`login.no_account`, `register.has_account`, `profile.email_resend_throttle`—; (b) fuera
+  del ARRANQUE, pero no de `lang/`, `register.must_accept`, `already_exists`, `exists_unverified` y
+  `bot_check_failed`: los publica el **servidor dentro del 422** y `register.js::registerErrors()` los
+  pinta tal cual, así que el cajón nunca los leía de aquí y viajaban en todas las páginas públicas.
+  Lo nuevo son +701 B brutos; el neto es **+193**.
+- **Textos anónimos: 2.742 B** medidos por la guarda tras la poda (que aquí también se paga, porque
+  `login` y `register` viajan para todo el mundo), y su techo **BAJA** de 3.200 a 2.850: con 458 B
+  sobrantes «un techo con margen sobrante deja de apretar» (`SidebarBundleBudgetTest`). ⚠️ Un
+  `tinker` sobre la BD de desarrollo dio 2.505 con los mismos grupos —todos un ~10 % más cortos—; la
+  cifra que vale es la de la guarda, que mide el mismo `data-boot` que asevera.
+- `npm run test:js`: **671 → 690** (+19: 6 del módulo, 9 del store, 4 de `register.js`).
+- Suite PHP: lo que cambia es `SidebarMountTest` (la lista de `register` y los dos techos) y
+  `SidebarBundleBudgetTest`; el resto de guardas del cajón —árbol, estilo, iconos, texto, componentes
+  ≤ 40 líneas, `build:ssr`— en verde sin tocarlos.
+
+**Trampas** (para quien vuelva aquí):
+
+- **`git pull --rebase --autostash` reescribe los ficheros guardados y les pone mtime nuevo**: el
+  bundle SSR pasó a estar «rancio» sin que cambiara una línea, y `SidebarDomContractTest` cayó
+  **19/19** con un mensaje que dice exactamente eso. `npm run build:ssr` y en paz — pero si se ve
+  caer en bloque, es esto antes que un componente.
+- Un grupo de `lang/` que viaja **entero** (`__('account.register')`) es una invitación: cada clave
+  que alguien añada para el SERVIDOR viaja al cliente sin que nada avise. `register` ya no viaja así.
+- El store de Pinia no puede leer `this.<algo>` que no haya declarado en `state` —un `lastStale`
+  imaginario devolvió `undefined` en silencio—: la bandera del 409 se captura de la respuesta cruda
+  en la propia acción.
+
+**Lo que queda del subsistema** (no de esta tanda): **el ✅ del owner en navegador** (§5.sexies del
+guion) · el aviso en el paso de pagar, si el owner lo quiere, con su coste en el chunk · las dos
+decisiones humanas de siempre: **el texto definitivo** (§8.1: ninguna versión publicada) y el
+**periodo de retención** (`waiver.retention_months`, hoy sin valor).

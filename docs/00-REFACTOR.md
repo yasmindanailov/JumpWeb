@@ -1867,10 +1867,11 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 > ❗ **Ninguna spec está aprobada todavía**: las cuatro siguen 🟦 esperando el **✅ del owner**.
 
 - [ ] **B · Waiver con valor probatorio** — `docs/specs/waiver-probatorio.md`.
-      ▶ 🟦 **EN EJECUCIÓN (agente A, desde el 2026-08-25, `#160`)** — el detalle vive en la spec **§9**.
-      Tres tandas: **1 · el NÚCLEO** ✅ · 2 · el panel (PDF del snapshot, ficha del usuario con
-      permiso propio y consulta auditada, alta presencial declarada) · 3 · el cliente (API, casilla en
-      el alta, zona de privacidad del cajón, re-firma en el siguiente momento natural).
+      ▶ 🟦 **CÓDIGO COMPLETO (agente A, 2026-08-25 → 26: `#160` · `#161` · `#163` · `#166`)** — el
+      detalle vive en la spec **§9**. Las cuatro tandas empujadas: **1 · el NÚCLEO** ✅ · **2 · el
+      PANEL** ✅ · **3a · el cliente por API** ✅ · **3b · el CAJÓN** ✅. Sigue 🟦 y no ✅ por lo que
+      NO es de agente: el **✅ del owner en navegador** (guion §5.sexies), **el texto definitivo**
+      (§8.1: ninguna versión publicada) y **el periodo de retención** (`waiver.retention_months`).
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado
@@ -1895,9 +1896,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         en `me/account-context` (donde vive la re-firma «en el siguiente momento natural»). Contrato
         en `openapi/v1.yaml`; los avisos del alta fuera del montaje del cajón (presupuesto medido).
         Spec **§9.8**, `api-v1.md` §10.septdecies.
-  - [ ] **B · tanda 3b — el CAJÓN** (Vue): casilla en el alta del paso 5, zona de privacidad con
-        «firmar / re-firmar» y los PDF, y el aviso al entrar o al ir a pagar. Con los presupuestos del
-        cajón delante (`SidebarBundleBudgetTest`, 40 líneas por componente, diff de árbol, `build:ssr`).
+  - [x] **B · tanda 3b — el CAJÓN** (2026-08-26, `#166`): la casilla en el alta del paso 5 (opt-in,
+        **solo existe si el servidor sirve un documento**; el texto completo plegado; `accept_waiver`
+        viaja `true` solo con su `waiver_document_id`), la tarjeta de Privacidad con estado por modo,
+        «firmar / re-firmar» y las firmas con su PDF, y el aviso «tu waiver está pendiente» en el
+        índice de la cuenta. Un módulo plano (`account/waiver.js`) decide, un store (`stores/waiver.js`)
+        pide y RE-LEE ante `409 waiver_document_stale`, los componentes pintan. **Presupuestos**: el
+        chunk **+4,94 KiB** —techo 221,5 → 226 **decidido por el owner** con el número delante, porque
+        la regla escrita solo cedía por correcciones—; los textos **podados antes de subir** (−508 B:
+        tres claves que no leía nadie y cuatro literales del 422 que el servidor ya publica) y el
+        anónimo **BAJA** su techo. ⚠️ **El diff de árbol NO ve la casilla** (`v-if` sobre un documento
+        que en SSR no existe): la red de lo visible es el navegador → guion **§5.sexies** de
+        `VERIFICACION-E2E-CAJON.md`, **pendiente del ✅ del owner**. ❗ El aviso **en el paso de pagar**
+        NO se construyó (§9.9·1: la puerta deja pasar, y el chunk no tiene margen) — decisión de producto
+        abierta. Spec **§9.9**.
       ⚠️ **Revierte una decisión vigente**: el waiver deja de ser solo externo y pasa a tener **tres
       modos** (externo / interno / desactivado). ⚠️ **Y modifica `INVARIANTES` §3 (RGPD-01)**: el
       registro firmado **se conserva** al borrar la cuenta, bajo tratamiento restringido y con plazo.

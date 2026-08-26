@@ -108,6 +108,12 @@ contrato visual entero. Que el `pre-push` construya antes de la suite no basta: 
 peligroso es LOCAL y silencioso, justo mientras se itera sobre esos módulos.
 La guarda es `assertBundleIsNotStale()`: compara la fecha del artefacto con la de cada fuente que entra
 en él. Si añades un test que compare contra algo compilado, generado o congelado, ponle la suya.
+⚠️ **Y el artefacto puede quedar rancio SIN que cambie una línea** (medido el 2026-08-26,
+`DECISIONES #166`): `git pull --rebase --autostash` guarda y vuelve a escribir los ficheros
+modificados, y les pone **mtime nuevo**. `SidebarDomContractTest` cayó **19/19** justo después de un
+rebase, con el bundle compilado minutos antes. Si cae en bloque tras un rebase, es esto antes que un
+componente: `npm run build:ssr` y vuelve a mirar. La guarda hace lo que debe —un mtime más nuevo ES
+una fuente que puede haber cambiado— y el precio de un rojo así es un minuto.
 
 ### 2.ter. En una página con el cajón, `assertSee` de un texto del `data-boot` NO PRUEBA NADA
 ⚠️⚠️ **Medido el 2026-08-21** (`DECISIONES #112(e)`). El punto de montaje del cajón SPA va en

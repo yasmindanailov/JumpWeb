@@ -310,3 +310,58 @@ describe('el envío', () => {
         assert.equal(result.identified, false);
     });
 });
+
+/**
+ * Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): la casilla SEPARADA del alta. Lo que se fija es
+ * que **el id que viaja es el que el servidor sirvió**, y que sin texto en memoria la casilla no
+ * manda nada — marcarla sin decir qué se leyó no prueba nada.
+ */
+describe('la casilla del waiver', () => {
+    /** Un cliente de mentira que recuerda el cuerpo del alta y responde 201 + `GET /me` con sesión. */
+    function spy() {
+        const calls = [];
+
+        return {
+            calls,
+            post: async (path, body) => { calls.push({ path, body }); return ok(null, 201); },
+            get: async () => ok({ id: 7 }),
+        };
+    }
+
+    test('marcada y con el texto en memoria, viaja el id servido', async () => {
+        const api = spy();
+
+        await runRegister({ form: { ...FORM, accept_waiver: true }, api, waiver: { id: 7 } });
+
+        assert.equal(api.calls[0].body.accept_waiver, true);
+        assert.equal(api.calls[0].body.waiver_document_id, 7);
+    });
+
+    test('sin marcar se manda desmarcada y sin id, aunque haya texto', async () => {
+        const api = spy();
+
+        await runRegister({ form: { ...FORM, accept_waiver: false }, api, waiver: { id: 7 } });
+
+        assert.equal(api.calls[0].body.accept_waiver, false);
+        assert.equal(api.calls[0].body.waiver_document_id, null);
+    });
+
+    test('marcada pero sin texto en memoria NO se manda: no hay nada que aceptar', async () => {
+        const api = spy();
+
+        await runRegister({ form: { ...FORM, accept_waiver: true }, api, waiver: null });
+
+        assert.equal(api.calls[0].body.accept_waiver, false);
+        assert.equal(api.calls[0].body.waiver_document_id, null);
+    });
+
+    test('el aviso del texto caducado se pinta bajo su campo y en el banner, en su sitio', () => {
+        const errors = registerErrors(fail(422, {
+            code: 'validation_failed', message: 'x',
+            fields: { marketing: ['m'], waiver_document_id: ['El texto ha cambiado.'], name: ['n'] },
+        }), { messages: MESSAGES, auth: AUTH });
+
+        assert.equal(errors.fields.waiver_document_id, 'El texto ha cambiado.');
+        assert.deepEqual(errors.summary, ['n', 'El texto ha cambiado.', 'm']);
+    });
+});

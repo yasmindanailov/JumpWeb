@@ -8935,3 +8935,66 @@ servicio de dominio, **ese servicio probablemente sí deba entrar**. Se decide e
 
 Verificación: docs-check ✓ · solo doc (`app/` intacto) · spec registrada en `docs/README.md` y en la
 tabla de enrutado de `CLAUDE.md`, como exige `CONVENCIONES §5`.
+
+## #166 · 2026-08-26 · El waiver en el cajón (tanda 3b): la casilla del alta, la tarjeta de Privacidad y el aviso del índice — y un techo que cedió por una FEATURE, decidido por el owner con el número delante
+
+**Qué se hizo** (agente A, spec `specs/waiver-probatorio.md` **§9.9**, mapa en `specs/sidebar-spa.md` §8,
+guion de navegador en `VERIFICACION-E2E-CAJON.md` **§5.sexies**): la mitad visible de la tanda 3, en las
+tres capas de siempre del cajón. Un módulo plano, `account/waiver.js`, decide **qué frase se pinta**
+(`external` · `unsigned` · `current` · `outdated`) y **si hay algo pendiente** —una sola lectura del
+estado, compartida—. Un store, `stores/waiver.js`, pide el texto vigente (`GET /legal/waiver`), el
+estado propio (`GET /me/waiver`) y acepta (`POST /me/waiver`) con el `document_id` **que el servidor
+sirvió**; ante `409 waiver_document_stale` **RE-LEE** texto y estado y no da la firma por hecha. Y tres
+sitios pintan: la **casilla del alta** en `RegisterForm` —opt-in, con el texto completo plegado, y que
+**solo existe si hay documento servido**: en modo externo o desactivado, o sin versión publicada, el
+alta de hoy no cambia—; la **tarjeta de Privacidad** (estado por modo, firmar o re-firmar, las firmas
+con su PDF, y refresco del contexto de cuenta al firmar); y el **aviso del índice** cuando
+`accountContext.waiver.required|outdated`, que lleva a Privacidad. `register.js` manda
+`accept_waiver: true` **solo** con su `waiver_document_id`.
+
+**Las decisiones, y su porqué:**
+
+1. **El techo del chunk sube de 221,5 a 226 KiB por una FEATURE, y lo decidió el owner.** Medido:
+   **220,78 → 225,72 KiB, +4,94**, más que «Mis pedidos» (`#129`, +4,10). `ESTADO.md` decía que ese
+   techo solo cede por correcciones, así que el agente no lo subió: le puso al owner el número delante
+   con las tres salidas —subir; partir el waiver en un chunk aparte, con el alta costando aún ~1,5 KiB
+   en éste; o aparcar la tanda— y el owner eligió subir. El párrafo del test lo deja escrito con lo
+   que cuesta y de dónde NO sale (una sola lectura del estado; el texto del waiver no viaja en el chunk
+   ni en el arranque, lo pide el store). **Quedan 0,28 KiB**: lo siguiente que entre lo mide, sin
+   margen para un arrastre.
+2. **Los textos del montaje se PODARON antes de subir, y el anónimo BAJÓ su techo.** Con lo nuevo y
+   sin poda, el montaje con sesión medía 7.176 B (techo 6.600). La poda son **508 B en dos capas**:
+   fuera de `lang/` tres claves que **no leía nadie** —`login.no_account`, `register.has_account`,
+   `profile.email_resend_throttle`—, y fuera del ARRANQUE, pero no de `lang/`, `register.must_accept`,
+   `already_exists`, `exists_unverified` y `bot_check_failed`: los publica el **servidor dentro del
+   422** y `register.js::registerErrors()` los pinta tal cual, así que el cajón nunca los leía de aquí
+   y viajaban en **todas** las páginas públicas. `register` pasa de viajar entero a `Arr::only`, con
+   su lista exacta en `SidebarMountTest`. Con sesión: **6.668 B**, techo 6.600 → 6.760 (neto +193 por
+   +701 brutos). Sin sesión: medido **2.742 B** por la guarda, y el techo **baja** de 3.200 a 2.850,
+   porque *un techo con margen sobrante deja de apretar*.
+3. **El aviso de re-firma vive en el índice de la cuenta, NO en el paso de pagar.** La spec decía «al
+   entrar o al ir a pagar»; se construyó lo primero. La puerta **deja pasar** con una versión
+   anterior (§4.8): no es una condición de compra y no debe parecer una en el checkout; y un segundo
+   aviso en `PurchaseSection` (432 líneas, que solo puede adelgazar) costaría más que los 0,28 KiB
+   que quedan. **Queda abierto como decisión de producto**, con su precio dicho.
+4. **El diff de árbol NO ve la casilla del waiver, y hay que decirlo en voz alta.** Cuelga de
+   `v-if="waiverStore.document"`, y en SSR el store está vacío (`onMounted` no corre): el manifiesto
+   congelado del formulario de alta **no cambia** y seguiría verde con la casilla rota o sin ella.
+   La red de lo visible es el **navegador** —como para todas las zonas de la cuenta—, y por eso el
+   guion §5.sexies existe y el subsistema sigue 🟦 hasta que el owner lo recorra.
+
+**Lo medido**: `npm run test:js` **671 → 690** (+19: 6 del módulo, 9 del store, 4 de `register.js`);
+suite PHP sin tests nuevos —cambian `SidebarMountTest` (la lista de `register`, los dos techos) y
+`SidebarBundleBudgetTest`— y el resto de guardas del cajón (árbol tras `build:ssr`, estilo, iconos,
+texto, componentes ≤ 40 líneas) en verde sin tocarlas. ⚠️ **Una trampa nueva, medida**: `git pull
+--rebase --autostash` reescribe los ficheros guardados con mtime nuevo, y el bundle SSR pasa a estar
+«rancio» sin que cambie una línea —`SidebarDomContractTest` cayó **19/19**—. `npm run build:ssr` y en
+paz; está en `TESTING.md` §2.bis.
+
+**Lo que queda del subsistema, y NO es de agente**: el ✅ del owner en navegador (§5.sexies) · el
+texto definitivo (§8.1: ninguna versión publicada en ninguna instalación) · el periodo de retención
+(`waiver.retention_months`, hoy sin valor) · y la decisión 3 de arriba. **Lo siguiente del agente A:
+menores a cargo** (`specs/menores-a-cargo.md`, subsistema C).
+
+Verificación: docs-check ✓ · Pint ✓ · `npm run test:js` 690 ✓ · guardas del cajón ✓ · suite ✓ (el
+contador vive en `ESTADO.md`) · **pendiente el ✅ del owner en navegador**.

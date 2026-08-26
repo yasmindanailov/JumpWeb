@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
 import PasswordInput from './PasswordInput.vue';
 import { mountTurnstile } from '../turnstile.js';
+import { useWaiverStore } from '../stores/waiver.js';
 
 /**
  * El formulario de ALTA del paso 5 (Fase 4 · paso 4.4b·1).
@@ -67,6 +68,16 @@ const acceptPrivacy = defineModel('acceptPrivacy', { type: Boolean, default: fal
 const acceptTerms = defineModel('acceptTerms', { type: Boolean, default: false });
 const marketing = defineModel('marketing', { type: Boolean, default: false });
 
+/**
+ * ⚠️ **7. La casilla del waiver solo existe si hay TEXTO que firmar** (Fase 6,
+ * `specs/waiver-probatorio.md` §4.4): `GET /legal/waiver` se pide al MONTAR —nunca en el SSR del
+ * contrato de árbol, que no ejecuta `onMounted`—, y con `document: null` (modo externo, o sin versión
+ * publicada) no se emite ningún nodo, así que el manifiesto congelado del alta sigue valiendo. Separada
+ * de privacidad y condiciones y desmarcada por defecto: es aceptación contractual, no consentimiento RGPD.
+ */
+const acceptWaiver = defineModel('acceptWaiver', { type: Boolean, default: false });
+const waiverStore = useWaiverStore();
+
 /** El señuelo. Un cliente legítimo lo deja vacío; que exista es lo que hace que sirva. */
 const website = defineModel('website', { type: String, default: '' });
 
@@ -89,6 +100,7 @@ onMounted(() => {
         sitekey: props.turnstileSiteKey,
         onToken: (token) => { turnstileToken.value = token; },
     });
+    waiverStore.ensureLegal();
 });
 
 // El padre vacía el token al fallar un envío → hay que pedirle uno nuevo a Cloudflare.
@@ -169,6 +181,21 @@ const summary = computed(() => props.errors?.summary ?? []);
                     <span v-html="a('register.accept_terms')"></span>
                 </label>
                 <span v-if="fieldErrors.accept_terms" class="form__error">{{ fieldErrors.accept_terms }}</span>
+
+                <!-- Detalle 7: solo con texto firmable en memoria. Sin él, ni casilla ni nodo. -->
+                <template v-if="waiverStore.document">
+                    <label class="check">
+                        <input v-model="acceptWaiver" type="checkbox">
+                        <span>{{ a('register.accept_waiver') }}</span>
+                    </label>
+                    <span v-if="fieldErrors.waiver_document_id" class="form__error">{{ fieldErrors.waiver_document_id }}</span>
+                    <details class="form__hint">
+                        <summary>{{ a('register.waiver_read') }}</summary>
+                        <p v-for="(section, i) in waiverStore.document.sections" :key="i">
+                            <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
+                        </p>
+                    </details>
+                </template>
 
                 <label class="check check--opt">
                     <input v-model="marketing" type="checkbox">

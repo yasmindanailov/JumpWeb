@@ -1,10 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { usePrivacyStore } from '../../stores/privacy.js';
+import { useWaiverStore } from '../../stores/waiver.js';
+import { useAccountContextStore } from '../../stores/accountContext.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import { consentRows } from '../privacy.js';
+import { waiverNeedsSignature, waiverStatusKey } from '../waiver.js';
 import { fieldError } from '../form-outcome.js';
-import { t as translate } from '../../i18n.js';
+import { t as translate, tp as translateWith } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
 
 /**
@@ -56,6 +59,25 @@ async function remove() {
 
     if (await store.deleteAccount({ currentPassword: current.value }, ctx())) window.location.assign('/');
 }
+
+/**
+ * **El waiver** (Fase 6, `specs/waiver-probatorio.md` §4.5, §4.8): el estado según el modo, la firma
+ * —o la re-firma cuando el texto cambió— y mis PDF. Qué frase y si se ofrece firmar lo decide
+ * `account/waiver.js` sobre lo que el servidor publica; aquí solo se pinta. Tras firmar se refresca el
+ * contexto de cuenta, que es donde el índice lee «tienes pendiente el waiver».
+ */
+const waiver = useWaiverStore();
+waiver.reset();
+waiver.ensureStatus();
+waiver.ensureLegal();
+const acceptWaiver = ref(false);
+const waiverText = computed(() => translateWith(props.account, waiverStatusKey(waiver.status), { version: waiver.status?.version ?? '' }));
+
+async function sign() {
+    if (! await waiver.accept(ctx())) return;
+    acceptWaiver.value = false;
+    useAccountContextStore().refresh();
+}
 </script>
 
 <template>
@@ -102,6 +124,42 @@ async function remove() {
             </button>
 
             <p v-if="store.savedAs" class="account__card-sub" role="status">{{ store.savedAs }} ✓</p>
+        </section>
+
+        <!-- El WAIVER (Fase 6): solo si la instalación lo comprueba. En modo interno, la firma o la
+             re-firma se hacen AQUÍ —nunca en el mostrador—, y cada firma tiene su PDF. -->
+        <section v-if="waiver.status && waiver.status.mode !== 'desactivado'" class="account__card">
+            <h3 class="account__card-title">{{ a('account.privacy.waiver.title') }}</h3>
+            <p class="account__card-sub">{{ waiverText }}</p>
+
+            <div v-if="waiver.notice" class="auth__errors" role="alert"><p>{{ waiver.notice }}</p></div>
+
+            <form v-if="waiverNeedsSignature(waiver.status) && waiver.document" class="form auth__form" novalidate @submit.prevent="sign">
+                <details class="form__hint">
+                    <summary>{{ a('register.waiver_read') }}</summary>
+                    <p v-for="(section, i) in waiver.document.sections" :key="i">
+                        <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
+                    </p>
+                </details>
+                <div class="form__checks">
+                    <label class="check">
+                        <input v-model="acceptWaiver" type="checkbox">
+                        <span>{{ a('register.accept_waiver') }}</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn--zone auth__submit" :disabled="waiver.busy || ! acceptWaiver">
+                    {{ waiver.busy ? a('account.privacy.waiver.signing') : a('account.privacy.waiver.sign_btn') }}
+                </button>
+            </form>
+
+            <p v-if="waiver.done" class="account__card-sub" role="status">{{ a('account.privacy.waiver.signed_ok') }}</p>
+
+            <ul v-if="waiver.signatures.length" class="account__consents">
+                <li v-for="signature in waiver.signatures" :key="signature.id">
+                    <span class="account__consent-type">{{ signature.version_label }}<template v-if="signature.declared"> · {{ a('account.privacy.waiver.declared') }}</template></span>
+                    <span class="account__consent-meta">{{ signature.accepted_label }} · <a :href="signature.pdf_url" target="_blank" rel="noopener">{{ a('account.privacy.waiver.pdf') }}</a></span>
+                </li>
+            </ul>
         </section>
 
         <!-- El derecho de SUPRESIÓN (art. 17). En su propia tarjeta y con el borde de peligro que la

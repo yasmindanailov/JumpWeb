@@ -313,8 +313,26 @@ class SidebarBundleBudgetTest extends TestCase
      *    ofrecería iconos que la cesta serviría como un ticket genérico.
      * ▶ **Se podó ANTES de subir el techo**, como en `#129`: la subida neta es de cuatro iconos, no
      * de seis. **221,5 deja 0,72 KiB.**
+     *
+     * ⚠️⚠️ **221,5 → 226 el 2026-08-26: el WAIVER en el cajón** (Fase 6 · tanda 3b, `DECISIONES
+     * #166`). Medido: **220,78 → 225,72 KiB, +4,94**, más que «Mis pedidos» (`#129`, +4,10). Y es una
+     * FEATURE, no una corrección: `ESTADO.md` decía que este techo solo cede por correcciones, así
+     * que **la subida la decidió el owner el 2026-08-26 con el número en la mano** —se le dieron las
+     * tres salidas: subir, partir el waiver en un chunk aparte (el alta seguiría costando ~1,5 KiB en
+     * éste) o aparcar la tanda— y eligió subir. Lo que cuesta, en tres piezas:
+     *  · la casilla «acepto el waiver» con el texto completo PLEGADO en el formulario de ALTA
+     *    (`RegisterForm`), y `register.js` mandando `accept_waiver` + `waiver_document_id`;
+     *  · la tarjeta de Privacidad —estado, firmar o re-firmar, y la lista de firmas con su PDF—
+     *    (`PrivacyZone`) más el aviso del índice (`AccountHomeZone`);
+     *  · el store (`stores/waiver.js`: documento vigente, estado, y aceptar RE-LEYENDO los dos si el
+     *    texto cambió bajo los pies —el 409 `waiver_document_stale`—) y el módulo puro
+     *    (`account/waiver.js`) que decide qué frase se pinta y si hay algo pendiente.
+     * ▶ **De dónde NO sale**: la lectura del estado es UNA (`waiverStatusKey`) y la comparten la
+     * tarjeta y el aviso; y el TEXTO del waiver no viaja ni en el chunk ni en el arranque — lo
+     * publica `GET /legal/waiver` cuando hace falta. **226 deja 0,28 KiB**: lo siguiente que entre
+     * lo mide, y no hay margen para un arrastre.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 221.5;
+    private const SIDEBAR_CHUNK_MAX_KB = 226;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

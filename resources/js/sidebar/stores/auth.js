@@ -6,6 +6,7 @@ import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '..
 import { ZONES } from '../account/navigation.js';
 import { useAccountStore } from './account.js';
 import { useSectionStore } from './section.js';
+import { useWaiverStore } from './waiver.js';
 
 /**
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
@@ -35,6 +36,9 @@ import { useSectionStore } from './section.js';
 const emptyForm = () => ({
     email: '', password: '', remember: false,
     name: '', phone: '', accept_privacy: false, accept_terms: false, marketing: false,
+    // Fase 6 · waiver: la casilla SEPARADA y desmarcada por defecto. El id del texto NO vive aquí:
+    // lo pone `register.js` a partir del documento que el store del waiver tiene en memoria.
+    accept_waiver: false,
     // El señuelo: un cliente legítimo lo deja vacío y el servidor finge un alta si llega relleno.
     // Y el token del anti-bot, que escribe Cloudflare por callback (`turnstile.js`), no el usuario.
     website: '', turnstile_token: '',
@@ -267,7 +271,9 @@ export const useAuthStore = defineStore('auth', {
             this.busy = true;
 
             try {
-                const result = await runRegister({ form: this.form, api, messages, auth, context });
+                // El texto del waiver que el formulario tiene en memoria (o `null`): con él viaja el
+                // id que el servidor sirvió, y sin él la casilla no manda nada (`register.js`).
+                const result = await runRegister({ form: this.form, api, messages, auth, context, waiver: useWaiverStore().document });
                 this.registerError = result.errors;
 
                 if (! result.ok) {

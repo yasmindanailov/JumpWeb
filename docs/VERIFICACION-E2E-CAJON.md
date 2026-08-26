@@ -952,3 +952,78 @@ Ya que hay una sesión abierta y el motor es otro:
 2. **Un pedido a medio pagar**: su reserva tiene que estar en «Mis reservas» —no en el historial— y su
    botón de reintentar **fuera** del desplegable. Es el único camino que le queda al cliente para no
    perder la plaza, y esconderlo tras un clic sería enterrarlo.
+
+## 5.sexies · EL WAIVER EN EL CAJÓN (2026-08-26) — guion de `DECISIONES #166`
+
+> **Por qué existe este bloque.** El diff de árbol **no ve** la casilla del waiver: cuelga de un
+> documento que en SSR no existe, así que el manifiesto congelado del alta sigue en verde con la
+> casilla rota o sin ella. Y las zonas de la cuenta **no las monta** `scripts/render-sidebar.mjs`.
+> Lo que aquí se recorre es exactamente lo que ningún test del repo puede ver
+> (`specs/waiver-probatorio.md` §9.9). ⬜ **Pendiente del owner.**
+>
+> ⚠️⚠️ **Preparación, y SOLO EN LOCAL (`localhost:8081`), nunca en staging ni en producción**:
+> publicar una versión es **irreversible** y el texto del waiver **sigue siendo un borrador** (§8.1).
+> En local: (1) panel → Ajustes → `waiver.mode` = **interno**; (2) página del waiver en el CMS → quita
+> el marcador `[PENDIENTE…]` del texto (solo en tu BD local) → **«Publicar versión firmable»** → v1.
+> Sin (1) no hay casilla ni tarjeta que firmar; sin (2), `GET /legal/waiver` devuelve `document: null`
+> y el alta de siempre no cambia — **compruébalo antes**: en ventana de incógnito, `/registro` **no**
+> tiene que enseñar la casilla mientras no haya versión publicada.
+
+### V31 · La casilla del ALTA (ventana de incógnito)
+
+1. Abre `/registro`. ▶ Debajo de la contraseña, la casilla **«He leído y acepto la exención de
+   responsabilidad (waiver).»** —desmarcada— y, bajo ella, **«Leer el texto completo»** plegado.
+   Despliégalo: son las secciones del texto publicado, en el idioma de la página.
+2. Crea una cuenta **SIN marcarla**. ▶ Se crea igual: es opt-in. Entra en **Mi cuenta → Privacidad**:
+   la tarjeta «Exención de responsabilidad (waiver)» dice **«Todavía no la has firmado.»** y ofrece
+   firmar. Y en el índice de Mi cuenta sale el aviso **«Tienes pendiente la exención de
+   responsabilidad (waiver).» · «Firmarla»**.
+3. Otra cuenta, esta vez **marcándola**. ▶ En Privacidad: **«Firmada, versión vigente (v1).»**, una
+   firma en la lista con su fecha y su enlace **«PDF»**. Púlsalo: baja un PDF con el texto **en el
+   idioma en que lo firmaste**, tu nombre y tu correo. ⚠️ En la pestaña de red, el alta tiene que haber
+   mandado `accept_waiver: true` **y** `waiver_document_id: <id>`; si va `true` con `null`, el
+   servidor lo rechaza en el campo y el banner del formulario tiene que decirlo.
+4. Cambia `waiver.mode` a **externo** y vuelve a `/registro`. ▶ **No hay casilla** y Privacidad dice
+   **«La gestiona el parque fuera de esta web.»**. Devuélvelo a interno.
+
+### V32 · La TARJETA de Privacidad: firmar
+
+1. Con la cuenta del punto 2 de V31, en Privacidad: despliega el texto, marca la casilla y pulsa
+   **«Firmar»**. ▶ «Firmando…» → **«Firma registrada ✓»**, el estado pasa a «Firmada, versión vigente
+   (v1).» y la firma aparece en la lista con su «PDF». **Sin recargar**, vuelve al índice: el aviso
+   «Tienes pendiente…» **ha desaparecido** — es el refresco del contexto de cuenta al firmar.
+2. El botón **sin** marcar la casilla. ▶ No hace nada (deshabilitado): firmar es marcar y pulsar, no
+   pulsar.
+
+### V33 · La RE-FIRMA: el texto cambia
+
+1. En el panel (local), edita el texto del waiver y publica **v2**.
+2. Con la cuenta de V32, abre Mi cuenta. ▶ El aviso del índice **vuelve**; en Privacidad: **«La
+   firmaste en una versión anterior del texto: puedes entrar igual, pero te pedimos que aceptes la
+   nueva.»**, con el texto **nuevo** plegado debajo, la casilla y «Firmar».
+3. Firma. ▶ «Firmada, versión vigente (v2).» y **dos** firmas en la lista, cada una con su PDF: el de
+   la v1 sigue enseñando el texto v1. Ninguna firma se borra: es un registro, no un estado.
+
+### V34 · El texto que cambia BAJO LOS PIES (`409 waiver_document_stale`)
+
+1. Pestaña A: Privacidad con el texto v2 cargado (sin firmar todavía, usa otra cuenta). Pestaña B, el
+   panel: publica **v3**.
+2. Vuelve a A **sin recargar**, marca y pulsa «Firmar». ▶ **NO** sale «Firma registrada ✓»: la tarjeta
+   **recarga el texto** —ahora v3— y vuelve a pedir la casilla. En red: `POST /me/waiver` → **409**
+   con `waiver_document_stale`, y a continuación `GET /legal/waiver` y `GET /me/waiver`.
+3. Marca y firma otra vez. ▶ Ahora sí: «Firmada, versión vigente (v3).». Lo firmado es lo que se
+   enseñó, nunca lo que había en memoria.
+
+### V35 · Los tres idiomas, y la puerta
+
+1. Cambia el idioma de la web a EN y a FR. ▶ El texto plegado del alta y de Privacidad llega **en ese
+   idioma** (la API negocia el `Accept-Language`); el PDF de cada firma sale **en el idioma en que se
+   firmó**, no en el de la página.
+2. En el panel → puerta, valida el registro de una de estas cuentas. ▶ Con la firma vigente, pasa; con
+   una firma **anterior**, pasa igual y señala «versión anterior» (§4.8 no crea cola).
+
+### Qué comparar en BD al terminar
+
+`waiver_signatures`: una fila por firma, `channel` = `web`, `holder_name`/`holder_email` como estaban
+al firmar, y `prev_hash` encadenando las de un mismo titular. Y `php artisan waiver:verify-chain`
+tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del cajón.

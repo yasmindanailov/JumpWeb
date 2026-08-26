@@ -254,7 +254,17 @@
                             // enlace» obligaría al cliente a recomponer una frase traducida —que en
                             // francés y en inglés no ordena igual—. El cajón los pinta con `v-html`;
                             // el contenido sale de `lang/` y de `route()`, nunca de un usuario.
-                            'register' => array_replace(__('account.register'), [
+                            // ⚠️ `register` va PODADO clave a clave desde el 2026-08-26 (Fase 6, `DECISIONES
+                            // #166`); antes viajaba entero. Se quedan fuera `must_accept`, `already_exists`,
+                            // `exists_unverified` y `bot_check_failed`: son literales que publica el SERVIDOR
+                            // dentro del 422 —`register.js::registerErrors()` los pinta tal cual— y el cajón
+                            // nunca los leía del arranque. Viajaban en TODAS las páginas públicas. La casilla
+                            // del waiver y su «leer el texto» entran aquí porque los pinta el formulario de alta.
+                            'register' => array_replace(\Illuminate\Support\Arr::only(__('account.register'), [
+                                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+                                'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
+                                'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+                            ]), [
                                 'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
                                 'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
                             ]),
@@ -343,10 +353,13 @@
                                 // zona. Los CUATRO `consent_types` siguen fuera **a propósito**: el
                                 // rótulo del documento lo publica la API (`type_label`), para que el
                                 // cliente no lleve una segunda tabla que envejece sola.
+                                // ⚠️ `waiver` entra ENTERO el 2026-08-26 (Fase 6, `DECISIONES #166`): son
+                                // 12 rótulos y la tarjeta y el aviso del índice los pintan todos. La
+                                // casilla y su «leer el texto» van en `register`, que ya viaja.
                                 'privacy' => \Illuminate\Support\Arr::only(__('account.account.privacy'), [
                                     'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                                     'delete_title', 'delete_intro', 'delete_password',
-                                    'delete_confirm', 'delete_btn', 'deleting',
+                                    'delete_confirm', 'delete_btn', 'deleting', 'waiver',
                                 ]),
                             ], 'orders' => \Illuminate\Support\Arr::only(__('account.orders'), [
                                 // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda

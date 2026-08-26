@@ -279,6 +279,23 @@ class SidebarMountTest extends TestCase
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
 
+        // ⚠️ **`register` va PODADO clave a clave desde el 2026-08-26** (Fase 6, `DECISIONES #166`), y
+        // antes viajaba entero. Fuera `must_accept`, `already_exists`, `exists_unverified` y
+        // `bot_check_failed`: los publica el SERVIDOR dentro del 422 y `register.js` los pinta tal
+        // cual, así que el cajón nunca los leía del arranque. Siguen en `lang/`, que es de donde los
+        // lee `Api\V1\AuthRegistrationController`. Sin esta lista, el día que alguien añada una clave
+        // al grupo viajaría en todas las páginas públicas sin que nada avise.
+        $this->assertSame(
+            // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
+            [
+                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+                'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
+                'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+            ],
+            array_keys($boot['account']['register'] ?? []),
+            'el subgrupo `register` ha dejado de estar podado a lo que el formulario de alta pinta'
+        );
+
         // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los TRES botones del
         // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en
         // blanco**: `i18n.js` devuelve cadena vacía cuando falta una clave y nada avisa. Con sesión
@@ -364,8 +381,20 @@ class SidebarMountTest extends TestCase
         // 170.753 B → 169.341 B, o sea −1.412 B netos por visita**, en la ruta que `PERF-02` protege.
         // (El neto no es la resta directa: entran también el hueco servido, `urls.home` y la clave
         // `accountContext`.)
+        //
+        // ⚠️ **3.200 → 2.850 el 2026-08-26, y BAJA: el WAIVER en el cajón podó más de lo que puso**
+        // (Fase 6 · tanda 3b, `DECISIONES #166`). El alta gana dos rótulos —`register.accept_waiver`
+        // y `waiver_read`, ~115 B—. La poda que pide el presupuesto con sesión (abajo) se paga aquí
+        // también, porque `login` y `register` viajan para todo el mundo: fuera `login.no_account` y
+        // `register.has_account` (nadie los leía) y fuera del ARRANQUE los cuatro literales del 422
+        // que publica el servidor —seis claves, **≈443 B** sumando sus longitudes en español—.
+        // Medido por esta guarda: **2.742 B** —`login` 240, `register` 899, `forgot` 439, `nav` 77,
+        // `sidecart` 340, `account` 21, `verify` 464 y `auth` 187—. Con 3.200 sobraban 458 B, y *un
+        // techo con margen sobrante deja de apretar* (`SidebarBundleBudgetTest`): **2.850 deja 108**.
+        // ⚠️ Un `tinker` contra la BD de desarrollo dio 2.505 con todos los grupos un ~10 % más
+        // cortos; la cifra que vale es la de aquí, que mide el mismo `data-boot` que asevera.
         $this->assertLessThan(
-            3200, $anonBytes,
+            2850, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -403,7 +432,11 @@ class SidebarMountTest extends TestCase
             [
                 'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                 'delete_title', 'delete_intro', 'delete_password',
-                'delete_confirm', 'delete_btn', 'deleting',
+                'delete_confirm', 'delete_btn',
+                // Fase 6 · waiver (`DECISIONES #166`): el subgrupo entero, 12 rótulos que la tarjeta
+                // y el aviso del índice pintan todos. Va antes de `deleting` porque `Arr::only`
+                // conserva el orden de `lang/`, y ahí `waiver` se declaró junto a `delete_btn`.
+                'waiver', 'deleting',
             ],
             array_keys($boot['account']['account']['privacy'] ?? []),
             'el subgrupo `privacy` ha dejado de estar podado a lo que la zona pinta'
@@ -486,8 +519,21 @@ class SidebarMountTest extends TestCase
         // página con sesión—. Eso devolvió **205 B**. El grupo nuevo son **298 B** de rótulos que la
         // pantalla sí pinta, así que el neto es **+93**: de 6.382 a **6.475 B**, con **125 B** de
         // holgura. Sin la poda habrían sido 6.680.
+        //
+        // ⚠️ **6.600 → 6.760 el 2026-08-26: el WAIVER en el cajón** (Fase 6 · tanda 3b, `DECISIONES
+        // #166`). Y otra vez primero se PODÓ, en dos capas:
+        // · fuera de `lang/` **tres claves que no leía NADIE**, ni el cajón ni la web ni el servidor
+        //   —`login.no_account`, `register.has_account` y `profile.email_resend_throttle`—;
+        // · y fuera del ARRANQUE, pero no de `lang/`, `register.must_accept`, `already_exists`,
+        //   `exists_unverified` y `bot_check_failed`: los publica el SERVIDOR dentro del 422 y
+        //   `register.js::registerErrors()` los pinta tal cual, así que el cliente nunca los leía de
+        //   aquí y viajaban en TODAS las páginas públicas. `register` pasa de entero a `Arr::only`.
+        // Lo nuevo son **+701 B** brutos —`register.accept_waiver` y `waiver_read`, y
+        // `privacy.waiver` entero, 12 rótulos que la tarjeta y el aviso del índice pintan todos—; la
+        // poda devuelve **508**; el neto es **+193**: de 6.475 a **6.668 B**, con **92 B** de
+        // holgura. Sin la poda habrían sido 7.176 y el techo tendría que haber ido a 7.200.
         $this->assertLessThan(
-            6600, $bytes,
+            6760, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

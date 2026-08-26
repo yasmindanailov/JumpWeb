@@ -11,12 +11,19 @@
 > retiró: dos repartos son un reparto que no se puede creer.
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.**
-> · **Agente A (Fable, en el OTRO ordenador) → Fase 6 · waiver. TRABAJANDO AHORA MISMO.**
->   Tandas 1 (núcleo, `#160`), 2 (panel, `#161`) y 3a (API, `#163`) **empujadas**; la **3b (el CAJÓN,
->   Vue) EN CURSO**. Sus ficheros, y **no se entra ahí**: `resources/js/sidebar/` · `resources/css/` ·
->   `storage/ssr/` · `lang/*/account.php` · `docs/specs/waiver-probatorio.md` ·
->   `docs/specs/sidebar-spa.md` (§8) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/`.
->   Después le toca **menores a cargo** (subsistema C).
+> · **Agente A → Fase 6 · waiver: CÓDIGO COMPLETO, las CUATRO tandas empujadas** (`#160` · `#161` ·
+>   `#163` · **`#166`**, la 3b: el cajón, 2026-08-26). ❗ Lo que deja **pendiente del OWNER**: el ✅ en
+>   navegador (guion `VERIFICACION-E2E-CAJON.md` **§5.sexies**, solo en local), el texto definitivo
+>   (§8.1) y la retención — y **una decisión de producto**: el aviso de re-firma **en el paso de pagar**
+>   no se construyó (spec §9.9·1: la puerta deja pasar, y el chunk quedó con 0,28 KiB).
+>   **Lo siguiente del agente A: menores a cargo** (subsistema C, `specs/menores-a-cargo.md`). Sus
+>   ficheros, y **no se entra ahí**: `resources/js/sidebar/` · `resources/css/` · `storage/ssr/` ·
+>   `lang/*/account.php` · `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md` ·
+>   `docs/specs/sidebar-spa.md` (§8) · `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` — más lo
+>   de Identity que la spec C nombre cuando arranque.
+>   ⚠️ **El techo del chunk del cajón cedió por una FEATURE el 2026-08-26 (221,5 → 226)**: la regla
+>   escrita decía «solo por correcciones» y por eso **lo decidió el owner**, con el número delante.
+>   Quedan 0,28 KiB. Lo siguiente que entre lo mide (`SidebarBundleBudgetTest`).
 >   ⚠️ Corrección medida de una nota anterior: **ni `routes/api.php` ni `MeController` están en el
 >   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
 >   exigido `VERIFY_CONC` en ningún push.
@@ -45,7 +52,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#165`**.
+> El último usado es **`#166`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -130,9 +137,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2934 en verde** (16.953 aserciones, `--parallel` **~63 s** medidos el 2026-08-26 en la
+- Suite **2934 en verde** (16.954 aserciones, `--parallel` **~63 s** medidos el 2026-08-26 en la
   máquina del agente A) ·
-  ▶ **+25 en el último corte** (`#163`): `LegalWaiverTest` (5), `MeWaiverTest` (14: estado por modo,
+  ▶ **+0 tests y +1 aserción en el último corte** (`#166`, la 3b del waiver): lo nuevo es JS —
+  `npm run test:js` **671 → 690** (+19: módulo 6 · store 9 · `register.js` 4)— y la aserción es la
+  lista exacta de `register` en `SidebarMountTest` ·
+  ▶ **+25 en el corte anterior** (`#163`): `LegalWaiverTest` (5), `MeWaiverTest` (14: estado por modo,
   aceptar solo lo servido, `409` caducado / no interno, canal por autenticación, el PDF propio con
   IDOR y auditoría, y que el export NO lleva el registro probatorio), `AuthRegistrationTest` (+5: la
   casilla opt-in, el rechazo ANTES de crear la cuenta) y `MeAccountContextTest` (+1). **5 mutaciones,
@@ -488,9 +498,13 @@ la identidad del firmante viaja EN la firma (`[DECIDIDO owner]`), permiso propio
 registro en la ficha como acción auditada, el PDF del snapshot en el idioma firmado y el alta
 presencial declarada. ✅ **Y la 3a —el cliente por API— también** (`#163`): `GET /legal/waiver`,
 `GET|POST /me/waiver` (aceptar SOLO el texto que el servidor sirvió), el PDF propio, la casilla del
-alta y `waiver` en el contexto de cuenta. Queda la **3b: el cajón** (casilla en el paso 5, zona de
-privacidad, aviso de re-firma al entrar o al comprar). **No toca la landing**. Detalle en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de
-`CLAUDE.md`.
+alta y `waiver` en el contexto de cuenta. ✅ **Y la 3b —el cajón— también** (`#166`, 2026-08-26): la
+casilla del alta (opt-in, y **solo si hay documento servido**), la tarjeta de Privacidad con firmar /
+re-firmar y los PDF, y el aviso del índice; el store RE-LEE ante `409 waiver_document_stale`. Los
+textos del montaje se **podaron antes de subir** (−508 B) y el chunk subió su techo **por decisión del
+owner**. **El código del waiver está COMPLETO**; sigue 🟦 por lo humano: el ✅ en navegador (§5.sexies),
+el texto y la retención. **No toca la landing**. Detalle en el tracker; las cuatro specs, en
+`docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
 **§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables
@@ -627,8 +641,11 @@ specs del cajón están ✅ EJECUTADAS.
 ⚠️ **Antes de añadir NADA al cajón, mira su presupuesto.** Es la holgura más estrecha de todo el
 ledger, y **la cifra viva NO se copia aquí**: vive en `SidebarBundleBudgetTest::SIDEBAR_CHUNK_MAX_KB`
 con su ledger al lado —ya envejeció una vez en esta tabla—. El techo subió dos veces el 2026-08-23
-(`#125` y `#126`), las dos con su medición y su párrafo, y las dos por **corrección**, no por features:
-ése es el único caso en que debe ceder.
+(`#125` y `#126`), las dos con su medición y su párrafo, y las dos por **corrección**, no por features.
+⚠️ **El 2026-08-26 cedió por una FEATURE** (`#166`, el waiver en el cajón: **+4,94 KiB**, 221,5 → 226)
+**y lo decidió el owner**, no el agente: se le pusieron delante el número y las tres salidas —subir,
+partir en un chunk aparte, aparcar— y eligió subir. **La regla sigue siendo ésa**: el agente no sube
+este techo por una feature; **pregunta**, con la medida y el coste de cada alternativa. Quedan 0,28 KiB.
 
 🟩 **«MIS RESERVAS» SE LISTA POR RESERVA** (`DECISIONES #126`, `specs/mis-reservas-por-reserva.md` ✅):
 una tarjeta por reserva con la referencia de su pedido, las vivas de la más próxima a la más lejana, el

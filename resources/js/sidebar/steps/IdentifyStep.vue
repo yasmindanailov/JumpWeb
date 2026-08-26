@@ -102,6 +102,7 @@ const a = (key) => translate(props.account, key);
         v-model:password="form.password"
         v-model:accept-privacy="form.accept_privacy"
         v-model:accept-terms="form.accept_terms"
+        v-model:accept-waiver="form.accept_waiver"
         v-model:marketing="form.marketing"
         v-model:website="form.website"
         v-model:turnstile-token="form.turnstile_token"

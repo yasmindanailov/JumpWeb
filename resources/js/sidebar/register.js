@@ -71,7 +71,7 @@ export const TOO_MANY_REQUESTS = 'too_many_requests';
  */
 
 /** El orden en que la web lista los avisos del banner: el de las reglas de validación. */
-const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'marketing'];
+const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'waiver_document_id', 'marketing'];
 
 function clean() {
     return { summary: [], fields: {} };
@@ -157,16 +157,24 @@ function firstOf(value) {
  * pasarlo en el embudo verá al cliente parado en «revisa tu correo» —visible, y se arregla—, mientras
  * que el default contrario habría saltado la verificación de correo **en silencio**.
  *
+ * ⚠️ **La casilla del waiver viaja con el `id` del texto que el servidor SIRVIÓ, o no viaja**
+ * (Fase 6, `specs/waiver-probatorio.md` §4.4). `waiver` es el documento de `GET /legal/waiver` que el
+ * formulario tiene en memoria; sin él, la casilla no se pinta y aquí se manda desmarcada. Aceptar sin
+ * decir qué texto se leyó no prueba nada, y el servidor lo rechaza.
+ *
  * @param {{
  *   form: object,
  *   api: {post: Function, get: Function},
  *   messages: object,
  *   auth: object,
  *   context: string,
+ *   waiver: {id: number}|null,
  * }} deps
  * @returns {Promise<{ok: boolean, identified: boolean, me: object|null, errors: RegisterErrors}>}
  */
-export async function runRegister({ form, api, messages = {}, auth = {}, context = CONTEXT_STANDALONE }) {
+export async function runRegister({ form, api, messages = {}, auth = {}, context = CONTEXT_STANDALONE, waiver = null }) {
+    const acceptWaiver = form?.accept_waiver === true && Number.isInteger(waiver?.id);
+
     const response = await api.post('/auth/register', {
         name: form?.name ?? '',
         email: form?.email ?? '',
@@ -175,6 +183,8 @@ export async function runRegister({ form, api, messages = {}, auth = {}, context
         marketing: form?.marketing === true,
         accept_privacy: form?.accept_privacy === true,
         accept_terms: form?.accept_terms === true,
+        accept_waiver: acceptWaiver,
+        waiver_document_id: acceptWaiver ? waiver.id : null,
         context,
         // El señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
         website: form?.website ?? '',

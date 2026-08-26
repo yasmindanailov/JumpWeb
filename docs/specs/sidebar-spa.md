@@ -635,8 +635,13 @@ módulo aquí —cada uno lleva su `*.test.js` al lado, que es donde se lee su p
 puerta a una zona**, y hay guarda de que ninguna quede inalcanzable) · `orders.js` · `profile.js` ·
 `privacy.js` (el fichero que el titular se descarga, con el DOM **por parámetro** para poder probarlo)
 · `form-outcome.js` (traduce la respuesta de CUALQUIER formulario) · `form-run.js` (el guardián común:
-limpia **antes** de llamar) · y los stores `section`, `account`, `orders`, `reservations`,
-`credentials`, `profile` y `privacy`, uno por dominio. Las zonas viven en `account/zones/`.
+limpia **antes** de llamar) · **`waiver.js`** (Fase 6, `#166`: qué frase del waiver se pinta y si hay
+algo pendiente — **UNA lectura del estado**, compartida por la tarjeta de Privacidad y el aviso del
+índice) · y los stores `section`, `account`, `orders`, `reservations`, `credentials`, `profile`,
+`privacy` y **`waiver`** (el texto vigente, el estado propio y aceptar **RE-LEYENDO** los dos ante un
+`409 waiver_document_stale`: el cliente nunca decide qué versión es la vigente), uno por dominio. Las
+zonas viven en `account/zones/`. ⚠️ **La casilla del waiver del alta (`RegisterForm`) está fuera del
+contrato de árbol**: cuelga de un documento que en SSR no existe (`specs/waiver-probatorio.md` §9.9).
 
 Fuera de `sidebar/`: **`resources/js/ui/scroll-lock.js`**, el dueño ÚNICO de `body.no-scroll` con llaves
 por superpuesto. Lo vigila `ScrollLockOwnerTest`; nadie más puede tocar esa clase (`#58`).
