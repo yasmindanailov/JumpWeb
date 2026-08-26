@@ -1887,6 +1887,12 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         script de Cloudflare antes; `RegisterForm` cambia dos líneas (37/40). +5 casos JS (695), 4
         mutaciones muerden, chunk +0,13 KiB (225,85/226). **Verificado en headless con Turnstile
         encendido**: script tras `/config`, token a 3,1 s, `201`. ▶ Siguen (2)…(5) de la tanda.
+  - [x] **Tanda 4 · (2) el servidor** (2026-08-26 noche, `#174`, carril A): canal por guard (token
+        real / sesión), idempotencia por versión y sujeto DENTRO del lock, guarda de borrador con los
+        tres marcadores + aviso de palabras, badge del pedido por `WaiverStatus`, throttles con prefijo
+        y `WaiverSigner` en el `CRITICAL_RE`. +12 tests, **7 mutaciones, las 7 muerden**;
+        `waiver:verify-chain` (un menor por proceso) lineal con 8 y 16 y visto fallar sin el lock.
+        Spec **§9.11**. ▶ Siguen (3) el cajón, (4) las decisiones del owner, (5) el texto del PDF.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado

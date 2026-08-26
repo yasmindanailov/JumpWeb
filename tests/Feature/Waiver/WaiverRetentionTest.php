@@ -108,7 +108,7 @@ class WaiverRetentionTest extends TestCase
         $old = $this->sign($holder, $version);
 
         $this->travelTo(Carbon::parse('2028-03-01 10:00:00'));
-        $new = $this->sign($holder, $version);
+        $new = $this->sign($holder, $this->version()); // v2: re-firmar la MISMA versión es idempotente (`#169`)
         $this->assertSame($old->hash, $new->prev_hash);
 
         $this->artisan('model:prune', ['--model' => [WaiverSignature::class]])->assertSuccessful();

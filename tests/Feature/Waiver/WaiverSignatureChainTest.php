@@ -84,11 +84,12 @@ class WaiverSignatureChainTest extends TestCase
     {
         $ana = User::factory()->create();
         $bea = User::factory()->create();
-        $version = $this->version();
+        $v1 = $this->version();
+        $v2 = $this->version(); // la cadena crece con VERSIONES nuevas: re-firmar la misma es idempotente (`#169`)
 
-        $first = $this->sign($ana, $version);
-        $second = $this->sign($ana, $version);
-        $other = $this->sign($bea, $version);
+        $first = $this->sign($ana, $v1);
+        $second = $this->sign($ana, $v2);
+        $other = $this->sign($bea, $v2);
 
         $this->assertSame($first->hash, $second->prev_hash);
         $this->assertNull($other->prev_hash, 'la cadena es POR TITULAR: la de Bea empieza de cero');
@@ -136,9 +137,8 @@ class WaiverSignatureChainTest extends TestCase
     public function test_a_forged_link_breaks_the_chain(): void
     {
         $holder = User::factory()->create();
-        $version = $this->version();
-        $this->sign($holder, $version);
-        $second = $this->sign($holder, $version);
+        $this->sign($holder, $this->version());
+        $second = $this->sign($holder, $this->version()); // v2: el segundo eslabón
 
         DB::table('waiver_signatures')->where('id', $second->id)->update(['prev_hash' => str_repeat('0', 64)]);
 
@@ -262,5 +262,59 @@ class WaiverSignatureChainTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         WaiverSignature::canonical(['canonical_version' => 99]);
+    }
+
+    /**
+     * `#169` §10.2·4 — idempotencia por VERSIÓN: firmar otra vez la versión vigente (en cualquier
+     * idioma: el texto publicado es el mismo) devuelve la fila que hay y no escribe nada; una versión
+     * NUEVA sí crea el siguiente eslabón.
+     */
+    public function test_signing_the_same_version_again_returns_the_existing_row_and_writes_nothing(): void
+    {
+        $holder = User::factory()->create();
+        $rows = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+            'en' => ['title' => 'Waiver', 'body' => [['h' => 'Risk', 'p' => 'Jumping is risky.']]],
+        ]);
+        $es = $rows->firstWhere('locale', 'es');
+        $en = $rows->firstWhere('locale', 'en');
+
+        $first = $this->sign($holder, $es);
+        $again = $this->sign($holder, $es);
+        $otherLocale = $this->sign($holder, $en);
+
+        $this->assertSame($first->getKey(), $again->getKey());
+        $this->assertSame($first->getKey(), $otherLocale->getKey(), 'otro idioma de la MISMA versión es el mismo texto');
+        $this->assertSame(1, WaiverSignature::where('user_id', $holder->id)->count());
+        $this->assertSame(1, $holder->consents()->where('type', 'waiver')->count());
+        $this->assertSame(1, AuditLog::where('action', 'waiver.signed')->count());
+
+        $v2 = $this->version();
+        $next = $this->sign($holder, $v2);
+
+        $this->assertNotSame($first->getKey(), $next->getKey());
+        $this->assertSame($first->hash, $next->prev_hash, 'la versión nueva sí encadena');
+        $this->assertSame(2, WaiverSignature::where('user_id', $holder->id)->count());
+    }
+
+    /** La idempotencia es POR SUJETO: la firma del titular y la de un menor a su cargo no se confunden. */
+    public function test_idempotency_is_per_subject(): void
+    {
+        $holder = User::factory()->create();
+        $version = $this->version();
+
+        $own = $this->sign($holder, $version);
+        $forDependent = $this->sign($holder, $version, new WaiverSignatureRequest(
+            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
+            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: 17,
+        ));
+        $forDependentAgain = $this->sign($holder, $version, new WaiverSignatureRequest(
+            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
+            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: 17,
+        ));
+
+        $this->assertNotSame($own->getKey(), $forDependent->getKey());
+        $this->assertSame($forDependent->getKey(), $forDependentAgain->getKey());
+        $this->assertSame(2, WaiverSignature::where('user_id', $holder->id)->count());
     }
 }

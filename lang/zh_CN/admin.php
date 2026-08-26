@@ -356,6 +356,7 @@ return [
         ],
         'customer_waiver' => '免责声明',
         'customer_waiver_missing' => '未签署',
+        'customer_waiver_outdated' => '旧版本',
 
         // 订单总额 (#131): 显示在「概要」卡片内，不再独立成卡片。
         'amount_total' => '总额',

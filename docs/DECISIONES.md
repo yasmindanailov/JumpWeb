@@ -9365,3 +9365,58 @@ huérfano cazado (`OrderItemRefunded`).
 
 Verificación: suite **2936 / 16.961 en verde** (pura mudanza, cero asserts tocados) · Pint ✓ ·
 `php -l` ✓ · docs-check ✓.
+
+## #174 · 2026-08-26 · Tanda 4 · unidad 2 del waiver: lo que el cliente ya NO decide sobre su prueba, la aceptación idempotente dentro del lock, y `WaiverSigner` bajo el gate
+
+**Qué se hizo** (carril A; las seis piezas de servidor que la revisión `#169` §10.11 exigía antes del
+✅, cada una con su test y su mutación — **7 de 7 muerden**; spec **§9.11**):
+
+1. **El canal sale del token REAL, no de una cabecera.** `MeWaiverController` decidía `api` con
+   `bearerToken() !== null`, y con cookie de sesión el guard de Sanctum ni mira esa cabecera: `Bearer
+   basura` bastaba para que la firma constara como «app nativa». Hoy: `currentAccessToken()
+   instanceof PersonalAccessToken` → `api`; la sesión deja un `TransientToken` → `web`. En el alta
+   (anónima) decide `hasSession()`: el cajón llega por el grupo stateful con sesión; la app nativa,
+   sin ella. ⚠️ **`Sanctum::actingAs()` también deja un `TransientToken`**: el test del canal `api`
+   emite ahora un token de verdad (`createToken()->plainTextToken` + `withToken()`), y hay un caso
+   para el ataque exacto (sesión + `Bearer basura` → `web`).
+2. **Aceptar dos veces la misma versión ya no duplica la prueba.** `WaiverSigner::sign()` es
+   **idempotente por versión y sujeto**: si el mismo sujeto ya firmó esa versión —en cualquier idioma,
+   el texto publicado es el mismo— devuelve la fila que hay, sin fila, consentimiento ni auditoría
+   nuevos. **Va DENTRO del lock a propósito**: dos envíos simultáneos del mismo `document_id` pasan
+   los dos la comprobación de vigencia, y solo el lock del titular los pone en fila.
+   ▶ **Lo que costó, y era de esperar**: tres tests y `waiver:verify-chain` construían la cadena
+   **re-firmando la misma versión**, y cayeron (el verificador esperaba 9 filas y encontró 1 — la
+   correcta). La cadena crece con VERSIONES nuevas (tests corregidos así), y el verificador firma
+   ahora **un menor a cargo por proceso** (`subject_id` = i): misma propiedad —el lock serializa la
+   cabeza— y **visto FALLAR sin el lock** otra vez: 16 procesos, 17 filas, **15 `prev_hash`
+   repetidos**, cadena ROTA. Con el lock: lineal con 8 y con 16.
+3. **La guarda de borrador caza los TRES marcadores** del seeder (`[PENDIENTE…]`, `[PENDING…]`,
+   `[À COMPLÉTER…]`) más el `[pendiente]` neutro; y las PALABRAS («borrador», «draft», «brouillon»)
+   **avisan sin bloquear**: `mentionsDraftWords()` alimenta el modal de «Publicar versión firmable».
+   Un texto definitivo puede mencionarlas; quien publica tiene que verlo.
+4. **El badge del pedido va por `WaiverStatus`**, como la puerta: en interno un sello sin registro es
+   «No firmado», una firma de versión anterior lo dice, y en `desactivado` no se enseña. §8.7 exigía
+   migrar «las dos» superficies y una se había quedado.
+5. **Throttles con PREFIJO** en las dos rutas del waiver (`throttle:10,1,waiver-sign` / `waiver-pdf`):
+   el tercer parámetro del middleware es el prefijo del cubo, y sin él siete descargas del PDF
+   dejaban 60 s sin poder reintentar un pago. Los demás sin prefijo (pago, guest-form, reenvío)
+   quedan en `DEUDA.md` con nombre: el del pago está en `PAY-04` y se toca con su test.
+6. **`WaiverSigner` entra en el `CRITICAL_RE`** y en `CriticalPathGateTest::CRITICAL_FILES` (con
+   `WaiverAcceptance` de control negativo), y el aviso del hook nombra `waiver:verify-chain`. Retirar
+   el lock pasaba 72/72 y pasaba el push; ahora exige `VERIFY_CONC=1` tras correr el verificador —
+   **este push es el primero que lo hace**.
+
+**Lo medido**: +12 tests (MeWaiverTest +3, AuthRegistrationTest +2, WaiverSignatureChainTest +2,
+LegalDocumentVersionTest +2, OrderInfolistEnrichedTest +3) · 7 mutaciones, las 7 muerden (canal por
+cabecera ×2, sin idempotencia, un solo marcador, badge por el sello, throttle sin prefijo,
+`WaiverSigner` fuera del patrón), ficheros restaurados por `cmp` · `waiver:verify-chain` 8 y 16 OK
+sobre MySQL, y ROTA sin el lock · contrato OpenAPI en verde (`ApiContractTest`) con la descripción
+de la idempotencia · Pint ✓ · docs-check ✓.
+
+**Lo que enseñó**: **un cambio de conducta correcto rompe los tests que se apoyaban en la conducta
+vieja sin saberlo** — tres tests y un verificador usaban «firmar dos veces» como atajo para tener
+dos eslabones. Ninguno estaba mal; los tres describían el mundo anterior. Se corrigen los tests, no
+la conducta.
+
+Verificación: suite (el contador vive en `ESTADO.md`) · `VERIFY_CONC=1` con `waiver:verify-chain`
+(8/16, y visto fallar) · Pint ✓ · docs-check ✓ · `php -l` ✓.

@@ -380,6 +380,7 @@ return [
         ],
         'customer_waiver' => 'Waiver',
         'customer_waiver_missing' => 'No firmado',
+        'customer_waiver_outdated' => 'versión anterior',
 
         // Total del pedido (sub-fase 7.2a refinada #131): mostrado dentro de la card
         // de Resumen, ya no en una card "Importes" propia. Subtotal/IVA siguen en BD
@@ -2409,6 +2410,7 @@ return [
             'done' => 'Versión :version publicada (:locales).',
             'refused_draft' => 'No se ha publicado: el texto sigue siendo un borrador',
             'nothing' => 'No hay texto que publicar: el cuerpo está vacío en todos los idiomas.',
+            'draft_words' => '⚠️ El texto menciona «borrador» (:locales). Publicar es irreversible: si de verdad es un borrador, no lo publiques.',
         ],
         // El registro probatorio en la ficha del usuario (tanda 2): acción con permiso propio y auditada.
         'proof' => [

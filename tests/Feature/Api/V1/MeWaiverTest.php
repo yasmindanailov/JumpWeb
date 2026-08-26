@@ -121,18 +121,68 @@ class MeWaiverTest extends ApiTestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'waiver.signed']);
     }
 
+    /**
+     * El canal sale de CÓMO se autenticó la petición: un token personal REAL (la app nativa). Antes
+     * bastaba una cabecera `Authorization` cualquiera —`#169` §10.2·1—, y por eso este caso emite un
+     * token de verdad en vez de `Sanctum::actingAs()`, que deja un `TransientToken` como la sesión.
+     */
     public function test_a_bearer_client_signs_through_the_api_channel(): void
     {
         $this->mode('interno');
         $document = $this->publish();
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $token = $user->createToken('app')->plainTextToken;
 
-        $this->withHeader('Authorization', 'Bearer token-de-prueba')
+        $this->withToken($token)
             ->postJson(self::PATH, ['document_id' => $document->id])
             ->assertCreated();
 
         $this->assertSame('api', WaiverSignature::where('user_id', $user->id)->value('channel'));
+    }
+
+    /** `#169` §10.2·1 — la cookie manda: `Bearer basura` junto a la sesión NO convierte la firma en «api». */
+    public function test_a_session_with_a_junk_bearer_header_is_still_the_web_channel(): void
+    {
+        $this->mode('interno');
+        $document = $this->publish();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withHeader('Origin', (string) config('app.url'))
+            ->withHeader('Authorization', 'Bearer basura-que-nadie-valida')
+            ->postJson(self::PATH, ['document_id' => $document->id])
+            ->assertCreated();
+
+        $this->assertSame('web', WaiverSignature::where('user_id', $user->id)->value('channel'));
+    }
+
+    /** `#169` §10.2·4 — aceptar dos veces la misma versión no duplica la prueba: una firma, un consentimiento. */
+    public function test_accepting_the_same_version_twice_keeps_one_signature_and_one_consent(): void
+    {
+        $this->mode('interno');
+        $document = $this->publish();
+        $user = User::factory()->create();
+
+        foreach ([1, 2] as $attempt) {
+            $this->actingAs($user)
+                ->withHeader('Origin', (string) config('app.url'))
+                ->postJson(self::PATH, ['document_id' => $document->id])
+                ->assertCreated()
+                ->assertJsonPath('signed', true);
+        }
+
+        $this->assertSame(1, WaiverSignature::where('user_id', $user->id)->count());
+        $this->assertSame(1, $user->consents()->where('type', 'waiver')->count());
+        $this->assertSame(1, AuditLog::where('action', 'waiver.signed')->count(), 'la segunda vez no pasó nada que auditar');
+    }
+
+    /** `#169` §10.5 — los throttles del waiver tienen su propio cubo: sin prefijo compartían el del reintento del pago. */
+    public function test_the_waiver_routes_throttle_in_their_own_bucket(): void
+    {
+        $routes = app('router')->getRoutes();
+
+        $this->assertContains('throttle:10,1,waiver-sign', $routes->getByName('api.v1.me.waiver.store')->gatherMiddleware());
+        $this->assertContains('throttle:10,1,waiver-pdf', $routes->getByName('api.v1.me.waiver.pdf')->gatherMiddleware());
     }
 
     /** §4.4 — el texto cambió entre servirlo y aceptarlo: NO se acepta el antiguo. */

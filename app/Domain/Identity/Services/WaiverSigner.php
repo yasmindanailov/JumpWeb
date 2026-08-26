@@ -52,6 +52,23 @@ final class WaiverSigner
                 ->orderByDesc('id')
                 ->first();
 
+            // Idempotencia por VERSIÓN (revisión `#169` §10.2·4): si este mismo sujeto ya firmó esta
+            // versión —en cualquier idioma: el texto publicado es el mismo—, no se escribe una segunda
+            // fila ni un segundo consentimiento: se devuelve la que hay. Va DENTRO del lock a propósito:
+            // dos envíos simultáneos del mismo `document_id` pasan los dos la comprobación de vigencia,
+            // y solo el lock de la fila del titular los pone en fila.
+            $sameSubject = WaiverSignature::query()
+                ->where('user_id', $locked->getKey())
+                ->where('subject_type', $request->subjectType)
+                ->where('subject_id', $request->subjectId)
+                ->with('version')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($sameSubject !== null && (int) $sameSubject->version->version === (int) $version->version) {
+                return $sameSubject;
+            }
+
             $now = now();
             $attributes = [
                 'user_id' => (int) $locked->getKey(),

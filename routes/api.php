@@ -234,13 +234,15 @@ Route::name('api.v1.')->group(function (): void {
         // Estado según el modo · ACEPTAR el texto vigente con el `document_id` que se sirvió (si
         // cambió entre medias, 409 y se vuelve a leer) · el PDF de una firma PROPIA, auditado. El
         // `throttle` de las dos últimas acota filas append-only y generación de PDF; `no-store` lo
-        // pone el grupo (`RGPD-04`).
+        // pone el grupo (`RGPD-04`). ⚠️ Con PREFIJO (tercer parámetro): un `throttle:N,1` sin prefijo
+        // comparte UN cubo por usuario con todos los demás sin prefijo —incluido el reintento del
+        // pago—, y siete descargas del PDF dejaban 60 s sin poder pagar (revisión `#169` §10.5).
         Route::get('/me/waiver', [MeWaiverController::class, 'show'])->name('me.waiver.show');
         Route::post('/me/waiver', [MeWaiverController::class, 'store'])
-            ->middleware('throttle:10,1')
+            ->middleware('throttle:10,1,waiver-sign')
             ->name('me.waiver.store');
         Route::get('/me/waiver/{signature}/pdf', [MeWaiverController::class, 'pdf'])
-            ->middleware('throttle:10,1')
+            ->middleware('throttle:10,1,waiver-pdf')
             ->name('me.waiver.pdf');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');

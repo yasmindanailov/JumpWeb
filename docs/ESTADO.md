@@ -34,9 +34,11 @@
 >   del anti-bot en el alta suelta — HECHO y EMPUJADO** (`#171`: `mountTurnstile` acepta funciones y
 >   espera a que existan clave y nodo sin cargar Cloudflare antes; 5 casos, 4 mutaciones muerden;
 >   verificado en headless **con Turnstile encendido**: token a 3,1 s y `201`) →
->   (2) servidor: canal por guard, idempotencia por versión, guarda de borrador con los tres
->   marcadores, badge del pedido por `WaiverStatus`, throttles con nombre, `WaiverSigner` en el
->   `CRITICAL_RE` → (3) cajón: las tres grietas (id enseñado, 422 del alta, casilla tras el 409) →
+>   (2) ✅ **servidor — HECHO y EMPUJADO** (`#174`: canal por guard —token real / sesión—,
+>   idempotencia por versión y sujeto DENTRO del lock, guarda de borrador con los tres marcadores +
+>   aviso de palabras, badge del pedido por `WaiverStatus`, throttles con prefijo, `WaiverSigner` en
+>   el `CRITICAL_RE`; +12 tests, 7 mutaciones muerden; `waiver:verify-chain` lineal con 8/16 y visto
+>   fallar sin el lock) → (3) cajón: las tres grietas (id enseñado, 422 del alta, casilla tras el 409) →
 >   (4) las tres decisiones del owner que son código: correo verificado para firmar, casilla del alta
 >   manual, casilla obligatoria en interno → (5) el texto del PDF (§10.6). Cada unidad se empuja
 >   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
@@ -96,7 +98,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#173`**.
+> El último usado es **`#174`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -181,9 +183,16 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2936 en verde** (16.961 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
-  máquina del agente B) ·
-  ▶ **+1 test en el último corte** (`#172`, extracción 1 del desmontaje): `calendarGoToItemMonth`
+- Suite **2948 en verde** (17.007 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+  máquina del agente B; **~70 s** en la del A) ·
+  ▶ **+12 tests y +46 aserciones en el último corte** (`#174`, unidad 2 de la tanda 4 del waiver):
+  el canal por guard (sesión + `Bearer basura` sigue siendo `web`; token real → `api`; alta sin
+  sesión → `api`), la aceptación idempotente por versión (una firma, un consentimiento, ninguna
+  auditoría de más), los tres marcadores de borrador + el aviso de palabras, el badge del pedido por
+  `WaiverStatus` (sello sin registro, versión anterior, modo desactivado) y los throttles con prefijo.
+  **7 mutaciones, las 7 muerden.** ⚠️ Tres tests y `waiver:verify-chain` construían la cadena
+  re-firmando la misma versión: se corrigieron (versiones nuevas / un menor por proceso) ·
+  ▶ **+1 test en el corte anterior** (`#172`, extracción 1 del desmontaje): `calendarGoToItemMonth`
   gana el test que no tenía ANTES de mudarse al Concern (mutación vista morder), y retirar el
   `use ManagesItemCalendar;` tumba 14 tests — la red cubre la extracción entera ·
   ▶ **+0 tests y +3 aserciones en el corte anterior** (`#170`, paso 0 del desmontaje de `ViewOrder`):

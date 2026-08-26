@@ -56,10 +56,20 @@ class EditPage extends EditRecord
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalHeading(fn (): string => __('admin.waiver.publish.heading', ['next' => $this->nextVersionNumber()]))
-                ->modalDescription(fn (): string => __('admin.waiver.publish.description', [
-                    'next' => $this->nextVersionNumber(),
-                    'locales' => implode(', ', array_keys($this->publishableTexts())) ?: '—',
-                ]))
+                // El aviso de «borrador» (revisión `#169` §10.4): los marcadores bloquean, las palabras
+                // avisan — un texto definitivo puede mencionarlas, pero quien publica tiene que verlo.
+                ->modalDescription(function (): string {
+                    $texts = $this->publishableTexts();
+                    $description = __('admin.waiver.publish.description', [
+                        'next' => $this->nextVersionNumber(),
+                        'locales' => implode(', ', array_keys($texts)) ?: '—',
+                    ]);
+                    $drafty = LegalDocumentPublisher::mentionsDraftWords($texts);
+
+                    return $drafty === []
+                        ? $description
+                        : $description."\n\n".__('admin.waiver.publish.draft_words', ['locales' => implode(', ', $drafty)]);
+                })
                 ->modalSubmitActionLabel(fn (): string => __('admin.waiver.publish.confirm', ['next' => $this->nextVersionNumber()]))
                 ->visible(fn (): bool => $record->slug === WaiverSettings::SLUG
                     && (auth()->user()?->hasPermission('content.manage') ?? false))

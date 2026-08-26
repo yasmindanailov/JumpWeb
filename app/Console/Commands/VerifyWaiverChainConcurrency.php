@@ -25,6 +25,11 @@ use Illuminate\Support\Str;
  * repite—. Si el lock de `WaiverSigner` no serializa, dos firmas leen la misma cabeza y la cadena
  * se BIFURCA en silencio: no falla, no avisa, y una cadena bifurcada no prueba nada.
  *
+ * ⚠️ Cada proceso firma como un SUJETO distinto (un menor a cargo por proceso, `subject_id` = i):
+ * desde `#169` re-firmar la MISMA versión por el mismo sujeto es idempotente (devuelve la fila que
+ * hay), así que N firmas iguales darían UNA fila y no probarían nada de la cadena. La propiedad que
+ * se mide —que el lock del titular serialice la lectura de la cabeza— es la misma.
+ *
  * ⚠️ Un verde solo vale si el instrumento se ha visto FALLAR (`#147`): con el `lockForUpdate()`
  * retirado del firmador, este comando tiene que cazar la bifurcación. Solo dev/local.
  */
@@ -149,7 +154,13 @@ class VerifyWaiverChainConcurrency extends Command
                 try {
                     $holder = User::findOrFail($seed['user']->getKey());
                     $version = LegalDocumentVersion::findOrFail($seed['version']->getKey());
-                    $signature = app(WaiverSigner::class)->sign($holder, $version, WaiverSignatureRequest::api('127.0.0.1', "waiver:verify-chain/{$i}"));
+                    $signature = app(WaiverSigner::class)->sign($holder, $version, new WaiverSignatureRequest(
+                        channel: WaiverSignature::CHANNEL_API,
+                        ip: '127.0.0.1',
+                        userAgent: "waiver:verify-chain/{$i}",
+                        subjectType: WaiverSignature::SUBJECT_DEPENDENT,
+                        subjectId: $i + 1,
+                    ));
                     $outcome = 'signed:'.$signature->getKey();
                 } catch (\Throwable $e) {
                     $outcome = 'EXCEPTION: '.$e->getMessage();

@@ -72,7 +72,11 @@ buscando por **email o teléfono**:
   firma es de una **versión anterior** del texto lo SEÑALA en ámbar pero deja pasar — la re-firma se
   pide en la siguiente compra o inicio de sesión, nunca en el mostrador. El texto se publica como
   versión firmable desde «Páginas → waiver → Publicar versión firmable»: es **irreversible** (una
-  versión publicada no se edita ni se borra) y un borrador con `[PENDIENTE]` se rechaza.
+  versión publicada no se edita ni se borra) y un borrador con marcador —`[PENDIENTE…]`,
+  `[PENDING…]` o `[À COMPLÉTER…]`, en cualquier idioma— se rechaza; si el texto menciona «borrador»,
+  «draft» o «brouillon», el modal de confirmación lo AVISA antes de publicar (`#174`).
+  ▶ En la ficha del PEDIDO, el badge «Waiver» sigue la misma regla que la puerta: por el registro
+  firmado (no el sello), «versión anterior» señalada, y oculto si el modo es «desactivado».
   ▶ **El registro probatorio** vive en la ficha del usuario como la acción «Registro del waiver»,
   con permiso PROPIO `waiver.view` (no lo tiene el staff por defecto): abrirla queda en la auditoría,
   lista las firmas (versión, canal, quién la declaró si fue en mostrador, integridad) y cada una

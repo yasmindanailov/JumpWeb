@@ -451,13 +451,13 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 |---|---|---|
 | `legal_document_versions` · `LegalDocumentVersion` | `app/Domain/Identity/Models/LegalDocumentVersion.php` | Una fila por (slug, idioma, versión), **inmutable** (`updating`/`deleting` lanzan), con `body_hash`. Sin `updated_at`: no hay ni columna con la que cambiar |
 | `waiver_signatures` · `WaiverSignature` | `app/Domain/Identity/Models/WaiverSignature.php` | El registro probatorio, **append-only** + `Prunable`. `hash` canónico (`HASHED_FIELDS`, `CANONICAL_VERSION`), `prev_hash` por titular, `document_hash`, `accepted_tz`, `channel`, `declared_by_user_id` |
-| `LegalDocumentPublisher` | `app/Domain/Identity/Services/LegalDocumentPublisher.php` | Publicar = crear la versión N+1 en cada idioma con cuerpo; **rechaza `[PENDIENTE…]`** en cualquier caja; audita `legal.version_published` sin el texto |
+| `LegalDocumentPublisher` | `app/Domain/Identity/Services/LegalDocumentPublisher.php` | Publicar = crear la versión N+1 en cada idioma con cuerpo; **rechaza los TRES marcadores** (`[PENDIENTE…]`, `[PENDING…]`, `[À COMPLÉTER…]`, y el `[pendiente]` neutro — desde `#174`, §10.4) en cualquier caja; `mentionsDraftWords()` señala «borrador/draft/brouillon» para el AVISO del modal de publicar; audita `legal.version_published` sin el texto |
 | `LegalDocuments` | `app/Domain/Identity/Services/LegalDocuments.php` | `current(slug, locale)`: la vigente en el idioma pedido, con respaldo → `es` (el mismo que aplica la web al pintar) |
-| `WaiverSigner` · `WaiverSignatureRequest` | `app/Domain/Identity/Services/WaiverSigner.php` · `…/WaiverSignatureRequest.php` | El ÚNICO escritor: lock de la fila del titular como PRIMERA sentencia, `prev_hash` de su última firma, la fila visible de `consents` (`v1·es`) y el sello — los dos últimos solo si el sujeto es el titular |
+| `WaiverSigner` · `WaiverSignatureRequest` | `app/Domain/Identity/Services/WaiverSigner.php` · `…/WaiverSignatureRequest.php` | El ÚNICO escritor: lock de la fila del titular como PRIMERA sentencia, `prev_hash` de su última firma, la fila visible de `consents` (`v1·es`) y el sello — los dos últimos solo si el sujeto es el titular. **Idempotente por versión y sujeto, DENTRO del lock** (`#174`, §10.2·4): la misma versión —en cualquier idioma— devuelve la fila que hay sin escribir nada. ⚠️ Está en el `CRITICAL_RE`: tocarlo exige `VERIFY_CONC=1` tras `waiver:verify-chain` |
 | `WaiverStatus` | `app/Domain/Identity/Services/WaiverStatus.php` | «¿Tiene waiver, y de qué versión?» según el MODO: `externo` → sello · `interno` → registro (+ `isOutdated()`) · `desactivado` → no hay pregunta |
 | `WaiverSettings` | `app/Domain/Identity/Services/WaiverSettings.php` | `waiver.mode` (hereda `puerta.waiver_check_enabled`: '0' → desactivado, si no → externo) · `waiver.retention_months` (vacío/inválido → `null` → NO se poda) |
 | `WaiverChain` | `app/Domain/Identity/Services/WaiverChain.php` | Verifica la cadena de un titular: cada fila da su hash y enlaza con la anterior |
-| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | N firmas simultáneas del MISMO titular (`pcntl_fork`, MySQL) → una cadena lineal. Se limpia solo (`DB::table`) |
+| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | N firmas simultáneas del MISMO titular (`pcntl_fork`, MySQL) → una cadena lineal. Se limpia solo (`DB::table`). ⚠️ Desde `#174` cada proceso firma como un MENOR distinto (`subject_id` = i): re-firmar la misma versión por el mismo sujeto es idempotente y N firmas iguales darían una fila |
 | La puerta | `app/Livewire/Admin/Puerta/ValidarRegistro.php` + su vista | Lee `WaiverStatus`; en interno señala «versión anterior» en ámbar y **deja pasar** (§4.8) |
 | Ajustes | `app/Filament/Pages/Settings.php` | `Select` de modo (hidratado con el EFECTIVO para que Guardar no cambie conducta) + plazo; el toggle de #216 ya no se edita: `save()` lo escribe como espejo |
 | Publicar | `app/Filament/Resources/Pages/Pages/EditPage.php` | Acción «Publicar versión firmable», solo en `waiver` y con `content.manage`; congela lo GUARDADO con los tokens fiscales resueltos |
@@ -619,7 +619,9 @@ el texto, aceptarlo y ver la prueba, **sin tocar todavía una línea de Vue**. C
 el servidor sirvió» = la VIGENTE, y `WaiverAcceptance::currentDocument()` es la única regla para las
 dos puertas; en el alta se rechaza **antes** de crear la cuenta y como 422 sobre el campo, en
 `/me/waiver` como 409 con código. (2) El canal (`web`/`api`) sale de cómo se autenticó la petición,
-nunca de un campo del cuerpo. (3) Los avisos por campo del alta viven en `api.register.*`, no en
+nunca de un campo del cuerpo — ⚠️ y desde `#174` **tampoco de una cabecera**: en `/me/waiver` decide
+el token real (`currentAccessToken() instanceof PersonalAccessToken`; con sesión, `Bearer basura`
+sigue siendo `web`) y en el alta, si la petición se sirvió con sesión (§10.2·1). (3) Los avisos por campo del alta viven en `api.register.*`, no en
 `account.register.*`: ese grupo viaja en el montaje de cada página y `SidebarMountTest` mide su
 presupuesto — al ponerlos ahí, el montaje anónimo pasó de su techo (3.381 B sobre 3.200) y con
 sesión también (6.794 sobre 6.600); movidos, cabe. Solo el rótulo de la casilla (`accept_waiver`)
@@ -758,6 +760,36 @@ hasta entonces**; el componente cambia dos líneas. 5 casos nuevos, 4 mutaciones
 
 Trampas del andamio, para la siguiente vez, en §5.nonies del guion (puente dual-stack, `pdf-parse`,
 `:visible`, los rótulos con `*` de Filament, `p.auth__sent`).
+
+
+### 9.11 Tanda 4 — el código acotado de §10.11 (2026-08-26 noche, carril A)
+
+Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y solas:
+
+- ✅ **Unidad 1 · el anti-bot del alta suelta** (`#171`, §9.10): `mountTurnstile` acepta funciones y
+  espera a que existan clave y nodo sin cargar Cloudflare antes; verificado en headless con Turnstile
+  encendido.
+- ✅ **Unidad 2 · el servidor** (`#174`), seis piezas con su test y su mutación (7 de 7 muerden):
+  · **canal por guard** — en `/me/waiver`, `currentAccessToken() instanceof PersonalAccessToken`
+    (`Sanctum::actingAs()` y la sesión dejan un `TransientToken`, así que `Bearer basura` con cookie
+    es `web`); en el alta, `hasSession()` (cajón = sesión; app nativa = sin ella);
+  · **idempotencia por versión y sujeto, dentro del lock** de `WaiverSigner` — la segunda aceptación
+    de la misma versión (en cualquier idioma) devuelve la fila que hay: ni fila, ni consentimiento, ni
+    auditoría nuevos. ⚠️ Consecuencia medida: **tres tests y el verificador construían la cadena
+    re-firmando la misma versión** y cayeron; la cadena crece con VERSIONES nuevas, y
+    `waiver:verify-chain` firma ahora **un menor a cargo por proceso** (`subject_id` = i) — misma
+    propiedad, y visto FALLAR sin el lock (16 procesos: 15 `prev_hash` repetidos);
+  · **guarda de borrador con los tres marcadores** del seeder + `[pendiente]` neutro, y
+    `mentionsDraftWords()` como AVISO (no bloqueo) en el modal de «Publicar versión firmable»;
+  · **el badge del pedido por `WaiverStatus`** — «No firmado» con sello sin registro en interno,
+    «versión anterior» señalada, oculto en `desactivado`;
+  · **throttles con prefijo** (`throttle:10,1,waiver-sign` / `waiver-pdf`): el tercer parámetro del
+    middleware es el prefijo del cubo; los demás sin prefijo (pago, guest-form, reenvío) quedan en
+    `DEUDA.md`;
+  · **`WaiverSigner` en el `CRITICAL_RE`** y en `CriticalPathGateTest` (con `WaiverAcceptance` de
+    control negativo); el aviso del hook nombra `waiver:verify-chain`.
+- ⏳ **Unidad 3 · el cajón** (CAJ-1/2/3) · ⏳ **Unidad 4 · las tres decisiones del owner** (§7·4, §7·5,
+  §7·7) · ⏳ **Unidad 5 · el texto del PDF** (§10.6).
 
 ---
 
@@ -993,12 +1025,13 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
 ❗ **Antes de que una instalación entre en modo `interno` con una versión publicada** (ninguna lo está):
 1. **Decisión de producto** (§10.1): la casilla del waiver en el alta manual, o no firmar en mostrador.
 2. **Decisión** (§10.2·3): exigir correo verificado para firmar, o registrar el estado en la fila.
-3. **Código, pequeño y acotado** — no se escribe en este carril (`ESTADO.md`, reparto): canal por guard
-   (API-1) · idempotencia por versión (API-3) · `legal` invalidado en el 422 del alta y en el 409, casilla
-   desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3) · tres marcadores en la guarda (§10.4) ·
-   el infolist por `WaiverStatus` (PAN-5) · throttles con nombre (API-2) · **el widget del anti-bot en
-   el alta suelta** (§9.10, el más urgente: sin él no hay alta suelta en ninguna instalación con
-   Turnstile) · `WaiverSigner` en el `CRITICAL_RE` (NUC-6) · y las tres decisiones del owner que son
+3. **Código, pequeño y acotado** — la TANDA 4, en marcha desde la noche del 26/08 (§9.11): ✅ canal
+   por guard (API-1, `#174`) · ✅ idempotencia por versión (API-3, `#174`) · ⏳ `legal` invalidado en
+   el 422 del alta y en el 409, casilla desmarcada tras el 409, id enviado = id ENSEÑADO (CAJ-1/2/3) ·
+   ✅ tres marcadores en la guarda + aviso de palabras (§10.4, `#174`) · ✅ el infolist por
+   `WaiverStatus` (PAN-5, `#174`) · ✅ throttles con prefijo en las dos rutas del waiver (API-2,
+   `#174`; el del pago queda en `DEUDA`) · ✅ **el widget del anti-bot en el alta suelta** (`#171`) ·
+   ✅ `WaiverSigner` en el `CRITICAL_RE` (NUC-6, `#174`) · ⏳ y las tres decisiones del owner que son
    código: **correo verificado para firmar** (§7·5), **la casilla del alta manual** (§7·4) y **la
    casilla del alta OBLIGATORIA en interno** (§7·7).
 4. **Texto del PDF**: quitar «Verificada»/«inmutable» donde el diseño no lo garantiza (§10.6) y decir

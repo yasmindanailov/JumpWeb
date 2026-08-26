@@ -18,6 +18,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -95,7 +96,12 @@ class MeWaiverController extends Controller
         $ip = $request->ip();
         $userAgent = $request->userAgent();
 
-        return $request->bearerToken() !== null
+        // El canal sale de CÓMO se autenticó la petición, no de una cabecera que el cliente pueda
+        // añadir. Con cookie de sesión, el guard de Sanctum resuelve al usuario SIN mirar el
+        // `Authorization` y le deja un `TransientToken`; solo un token personal real —la app nativa—
+        // es `PersonalAccessToken`. Revisión `#169` §10.2·1: con `bearerToken() !== null` bastaba
+        // `Bearer basura` junto a la cookie para que la firma constara como `api`.
+        return $request->user()?->currentAccessToken() instanceof PersonalAccessToken
             ? WaiverSignatureRequest::api($ip, $userAgent)
             : WaiverSignatureRequest::web($ip, $userAgent);
     }

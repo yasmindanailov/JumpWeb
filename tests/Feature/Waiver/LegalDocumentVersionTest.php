@@ -188,4 +188,35 @@ class LegalDocumentVersionTest extends TestCase
         $this->assertArrayHasKey('es', $log->payload['hashes']);
         $this->assertStringNotContainsString('Saltar implica', json_encode($log->payload));
     }
+
+    /** `#169` §10.4 — los marcadores de los TRES idiomas del seeder bloquean, no solo el castellano. */
+    public function test_the_english_and_french_draft_markers_are_refused_too(): void
+    {
+        foreach (['[PENDING: final wording]', '[À COMPLÉTER : rédaction définitive]', '[pending]', '[a completer]'] as $marker) {
+            $texts = self::TEXTS;
+            $texts['en']['body'][] = ['h' => 'Acceptance', 'p' => "This text is a draft. {$marker}"];
+
+            try {
+                app(LegalDocumentPublisher::class)->publish('waiver', $texts);
+                $this->fail("«{$marker}» tendría que bloquear la publicación");
+            } catch (DraftCannotBePublishedException) {
+                $this->assertSame(0, LegalDocumentVersion::count());
+            }
+        }
+    }
+
+    /** Las PALABRAS («borrador», «draft», «brouillon») no bloquean: se enseñan como aviso, por idioma. */
+    public function test_draft_words_are_reported_per_locale_but_do_not_block(): void
+    {
+        $texts = self::TEXTS;
+        $texts['es']['body'][] = ['h' => 'Aceptación', 'p' => 'Este texto es un borrador y será revisado por un asesor legal.'];
+        $texts['en']['body'][] = ['h' => 'Acceptance', 'p' => 'This text is a draft.'];
+
+        $this->assertSame(['es', 'en'], LegalDocumentPublisher::mentionsDraftWords($texts));
+        $this->assertSame([], LegalDocumentPublisher::mentionsDraftWords(self::TEXTS));
+        $this->assertSame([], LegalDocumentPublisher::mentionsDraftWords(['es' => ['title' => 'Borradores S.L.', 'body' => [['h' => 'x', 'p' => 'brouillonnage']]]]), 'solo la palabra entera');
+
+        $rows = app(LegalDocumentPublisher::class)->publish('waiver', $texts);
+        $this->assertCount(count(self::TEXTS), $rows, 'avisar no es bloquear');
+    }
 }

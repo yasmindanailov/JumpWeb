@@ -8,8 +8,12 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\Redsys;
@@ -1307,5 +1311,61 @@ class OrderInfolistEnrichedTest extends TestCase
             ->assertSee('Lucía')                    // valor
             ->assertSee('Edad')
             ->assertSee('7');
+    }
+
+    // ─── El badge del waiver, por `WaiverStatus` y no por el sello (`#169` §10.5, PAN-5) ────────
+
+    private function waiverVersion(): LegalDocumentVersion
+    {
+        return app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+    }
+
+    public function test_in_internal_mode_a_stamp_without_a_signed_record_shows_missing(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        $this->waiverVersion();
+        $customer = User::factory()->create(['waiver_accepted_at' => now()]);
+        $this->makeOrderForCustomer($customer);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/JJ-DETAIL1')
+            ->assertOk()
+            ->assertSee(__('admin.orders.customer_waiver_missing'));
+    }
+
+    public function test_in_internal_mode_a_signature_of_an_older_version_is_flagged(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        $v1 = $this->waiverVersion();
+        $customer = User::factory()->create();
+        app(WaiverSigner::class)->sign($customer, $v1, WaiverSignatureRequest::web('10.0.0.1', 'test'));
+        $this->makeOrderForCustomer($customer);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/JJ-DETAIL1')
+            ->assertOk()
+            ->assertDontSee(__('admin.orders.customer_waiver_outdated'))
+            ->assertDontSee(__('admin.orders.customer_waiver_missing'));
+
+        $this->waiverVersion(); // v2: la firma de v1 pasa a ser «versión anterior», y el pedido lo dice
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/JJ-DETAIL1')
+            ->assertOk()
+            ->assertSee(__('admin.orders.customer_waiver_outdated'));
+    }
+
+    public function test_in_disabled_mode_the_waiver_badge_is_not_shown(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'desactivado', 'group' => 'waiver']);
+        $customer = User::factory()->create(['waiver_accepted_at' => null]);
+        $this->makeOrderForCustomer($customer);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/JJ-DETAIL1')
+            ->assertOk()
+            ->assertDontSee(__('admin.orders.customer_waiver_missing'));
     }
 }

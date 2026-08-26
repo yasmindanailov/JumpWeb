@@ -72,6 +72,10 @@ class CriticalPathGateTest extends TestCase
         // el patrón encoja en silencio.
         'app/Domain/Booking/Services/SlotAvailability.php',
         'app/Domain/Booking/Services/PackAvailability.php',
+        // No es dinero ni aforo, pero se protege igual (spec del waiver §8.5 y §10.5, `#169`): la
+        // cadena de firmas por titular solo es lineal por el `lockForUpdate()` de este fichero, la
+        // suite corre en SQLite —que NO emite `FOR UPDATE`— y el verificador es `waiver:verify-chain`.
+        'app/Domain/Identity/Services/WaiverSigner.php',
     ];
 
     /**
@@ -92,6 +96,8 @@ class CriticalPathGateTest extends TestCase
         'app/Http/Controllers/HomeController.php',
         'app/Domain/Identity/Models/User.php',
         'routes/api.php',
+        // Control negativo del waiver: decide modo y vigencia, pero no escribe la cadena.
+        'app/Domain/Identity/Services/WaiverAcceptance.php',
     ];
 
     /**

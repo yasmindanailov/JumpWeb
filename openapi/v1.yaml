@@ -1550,7 +1550,11 @@ paths:
         y a presentarlo. Fuera del modo interno, `409 waiver_not_internal`.
 
         Es la firma del titular desde su propio dispositivo: se guarda con su ip, su user-agent y el
-        canal (`web` con cookie de sesión, `api` con Bearer), encadenada a su firma anterior. Sirve
+        canal (`web` con cookie de sesión, `api` con un token personal REAL: una cabecera
+        `Authorization` suelta junto a la cookie no cuenta), encadenada a su firma anterior.
+        **Idempotente por versión**: repetir la aceptación de la versión vigente —en cualquier
+        idioma— no crea una segunda firma ni un segundo consentimiento; responde `201` con el mismo
+        estado. Sirve
         también para la re-firma cuando `outdated` es `true`.
 
         Responde **201 con el estado nuevo**, el mismo cuerpo que `GET /me/waiver`.

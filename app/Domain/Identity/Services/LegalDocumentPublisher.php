@@ -24,8 +24,20 @@ use InvalidArgumentException;
  */
 final class LegalDocumentPublisher
 {
-    /** Marcador de borrador, comparado en minúsculas: caza `[PENDIENTE: …]` y el `[pendiente]` neutro. */
-    public const DRAFT_MARKER = '[pendiente';
+    /**
+     * Marcadores de borrador, comparados en minúsculas. ⚠️ Son TRES, uno por idioma del seeder
+     * —`[PENDIENTE: …]`, `[PENDING: …]`, `[À COMPLÉTER : …]`— más el `[pendiente]` neutro que deja
+     * `LegalIdentity::interpolate` sin datos fiscales. Hasta `#169` §10.4 solo se cazaba el castellano
+     * y los otros dos idiomas se publicaban con su marcador dentro.
+     */
+    public const DRAFT_MARKERS = ['[pendiente', '[pending', '[à compléter', '[a completer'];
+
+    /**
+     * Palabras que delatan un borrador SIN marcador («Este texto es un borrador y será revisado…»).
+     * No bloquean —un texto definitivo puede mencionarlas—: la acción de publicar las enseña como
+     * AVISO en su confirmación (`mentionsDraftWords()`).
+     */
+    public const DRAFT_WORDS = ['borrador', 'draft', 'brouillon'];
 
     /**
      * @param  array<string, array{title?:mixed, body?:mixed}>  $texts  idioma → {title, body:[{h,p}]}, ya interpolado
@@ -91,15 +103,53 @@ final class LegalDocumentPublisher
     }
 
     /**
+     * Idiomas cuyo texto menciona «borrador»/«draft»/«brouillon» — para AVISAR antes de publicar, no
+     * para bloquear. Recibe la misma forma que `publish()` (idioma → {title, body:[{h,p}]}).
+     *
+     * @param  array<string, array{title?:mixed, body?:mixed}>  $texts
+     * @return list<string>
+     */
+    public static function mentionsDraftWords(array $texts): array
+    {
+        $locales = [];
+        foreach ($texts as $locale => $text) {
+            $body = is_array($text) && is_array($text['body'] ?? null) ? $text['body'] : [];
+            $haystack = self::haystack([
+                'title' => (string) (is_array($text) ? ($text['title'] ?? '') : ''),
+                'sections' => LegalDocumentVersion::normaliseBody($body),
+            ]);
+            if (preg_match('/\b('.implode('|', self::DRAFT_WORDS).')\b/iu', $haystack) === 1) {
+                $locales[] = (string) $locale;
+            }
+        }
+
+        return $locales;
+    }
+
+    /**
      * @param  array{title:string, sections:list<array{h:string,p:string}>}  $text
      */
     private static function looksLikeDraft(array $text): bool
     {
-        $haystack = $text['title'].' '.implode(' ', array_map(
+        $haystack = mb_strtolower(self::haystack($text));
+
+        foreach (self::DRAFT_MARKERS as $marker) {
+            if (str_contains($haystack, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array{title:string, sections:list<array{h:string,p:string}>}  $text
+     */
+    private static function haystack(array $text): string
+    {
+        return $text['title'].' '.implode(' ', array_map(
             fn (array $section): string => $section['h'].' '.$section['p'],
             $text['sections'],
         ));
-
-        return str_contains(mb_strtolower($haystack), self::DRAFT_MARKER);
     }
 }

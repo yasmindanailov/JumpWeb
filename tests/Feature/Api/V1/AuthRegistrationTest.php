@@ -521,4 +521,30 @@ class AuthRegistrationTest extends ApiTestCase
     {
         $this->assertNotNull(Role::where('name', 'customer')->first());
     }
+
+    /** `#169` §10.2·1 — el canal del alta sale de si la petición se sirvió CON sesión (cajón) o sin ella (app nativa). */
+    public function test_a_stateless_signup_signs_through_the_api_channel(): void
+    {
+        $document = $this->internalWaiver();
+
+        // Sin `Origin`: el grupo stateful de Sanctum no monta la sesión — así llega una app nativa.
+        $this->postJson(self::ROOT.'/auth/register', $this->payload(['accept_waiver' => true, 'waiver_document_id' => $document->id]))
+            ->assertCreated();
+
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame('api', WaiverSignature::where('user_id', $user->id)->value('channel'));
+    }
+
+    /** Y una cabecera `Authorization` suelta ya no decide nada: con sesión sigue siendo «web». */
+    public function test_a_junk_bearer_header_does_not_turn_a_web_signup_into_api(): void
+    {
+        $document = $this->internalWaiver();
+
+        $this->withHeader('Authorization', 'Bearer basura')
+            ->register(['accept_waiver' => true, 'waiver_document_id' => $document->id])
+            ->assertCreated();
+
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame('web', WaiverSignature::where('user_id', $user->id)->value('channel'));
+    }
 }

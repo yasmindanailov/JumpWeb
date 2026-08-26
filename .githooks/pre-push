@@ -53,7 +53,7 @@ touched_critical=''
 # ⚠️ No entra `ProductAvailability`, la tercera dependencia de aforo de `OrderCreator`: no cuenta
 # plazas, solo mira si la hora cae en la ventana del día. La suite (SQLite) lo cubre entero, y
 # `CriticalPathGateTest` lo fija como control negativo para que el gate no se vuelva un comodín.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue
@@ -91,6 +91,7 @@ if [[ -n "$touched_critical" && "${VERIFY_CONC:-0}" != "1" ]]; then
     echo '  La suite (SQLite) NO reproduce sus carreras (INVARIANTES §6). Corre lo que aplique:' >&2
     echo '    docker compose exec -u sail laravel.test php artisan redsys:verify-concurrency --workers=16' >&2
     echo '    docker compose exec -u sail laravel.test php artisan purchase:verify-oversell --workers=16' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan waiver:verify-chain --workers=16   # si tocas WaiverSigner' >&2
     echo '  y confirma con:  VERIFY_CONC=1 git push' >&2
     exit 1
 fi

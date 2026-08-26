@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Infolists\Components\TextEntry;
@@ -150,13 +152,16 @@ class OrderInfolist
                                 ? __('admin.orders.customer_locale_value.'.$record->user->locale)
                                 : '—'),
 
+                        // Por `WaiverStatus`, no por el sello (revisión `#169` §10.5, PAN-5): en modo
+                        // interno manda el REGISTRO firmado —un sello heredado sin firma es «No firmado»,
+                        // igual que dice la puerta—, una firma de versión anterior se señala, y en
+                        // `desactivado` no hay nada que enseñar.
                         TextEntry::make('user.waiver_accepted_at')
                             ->label(__('admin.orders.customer_waiver'))
-                            ->getStateUsing(fn (Order $record) => $record->user?->waiver_accepted_at
-                                ? DisplayTime::format($record->user->waiver_accepted_at)
-                                : __('admin.orders.customer_waiver_missing'))
+                            ->visible(fn (): bool => WaiverSettings::mode() !== WaiverSettings::MODE_OFF)
+                            ->getStateUsing(fn (Order $record): string => self::waiverBadge($record))
                             ->badge()
-                            ->color(fn (Order $record) => $record->user?->waiver_accepted_at ? 'success' : 'warning'),
+                            ->color(fn (Order $record): string => self::waiverStatus($record)?->signed ? 'success' : 'warning'),
                     ]),
 
                 // CTA al final de la card "Detalles" (sub-fase 7.2d, decisión
@@ -188,5 +193,23 @@ class OrderInfolist
             ->schema([
                 View::make('filament.orders.items-list'),
             ]);
+    }
+
+    /** El estado del waiver del titular del pedido, por el REGISTRO y el modo — o `null` sin titular. */
+    private static function waiverStatus(Order $record): ?WaiverStatus
+    {
+        return $record->user !== null ? WaiverStatus::for($record->user) : null;
+    }
+
+    private static function waiverBadge(Order $record): string
+    {
+        $status = self::waiverStatus($record);
+        if ($status === null || ! $status->signed || $status->acceptedAt === null) {
+            return __('admin.orders.customer_waiver_missing');
+        }
+
+        $date = DisplayTime::format($status->acceptedAt);
+
+        return $status->isOutdated() ? $date.' · '.__('admin.orders.customer_waiver_outdated') : $date;
     }
 }

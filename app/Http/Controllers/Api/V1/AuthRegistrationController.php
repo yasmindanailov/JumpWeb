@@ -156,9 +156,13 @@ class AuthRegistrationController extends Controller
                     'waiver_document_id' => [__('api.register.waiver_stale')],
                 ]);
             }
+            // El canal sale de CÓMO se sirvió la petición, no de una cabecera que el cliente elija:
+            // el alta es anónima, así que aquí «web» es «vino por el grupo stateful de Sanctum y tiene
+            // sesión» (el cajón, con `Origin`) y «api» es «sin sesión» (la app nativa). Revisión `#169`
+            // §10.2·1: `bearerToken() !== null` lo decidía una cabecera que cualquiera puede añadir.
             $waiver = [
                 'document' => $document,
-                'channel' => $request->bearerToken() !== null ? WaiverSignature::CHANNEL_API : WaiverSignature::CHANNEL_WEB,
+                'channel' => $request->hasSession() ? WaiverSignature::CHANNEL_WEB : WaiverSignature::CHANNEL_API,
                 'user_agent' => $request->userAgent(),
             ];
         }

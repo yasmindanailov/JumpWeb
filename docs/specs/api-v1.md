@@ -1091,11 +1091,17 @@ viaja «hay que firmar» (`required`), «firmaste un texto anterior» (`outdated
 se poda por cardinalidad, nunca por campo) viaja también en el HTML de cada página con sesión: cuatro
 campos cortos, dentro del techo de 512 B que fija `SidebarMountTest`.
 
-**91. El canal de una firma sale de CÓMO se autenticó la petición, no de un campo.** `bearerToken()`
-presente → `api` (app nativa); cookie de sesión → `web` (el cajón). Un campo `channel` en el cuerpo sería
-un dato que el cliente declara sobre sí mismo, y el registro probatorio no debe llevar nada que el
-cliente pueda inventar. `Sanctum::actingAs()` en los tests no pone la cabecera: hay que enviarla a mano
-para probar el canal `api`.
+**91. El canal de una firma sale de CÓMO se autenticó la petición, no de un campo — ni de una
+cabecera.** ⚠️ Corregido en `#174` (revisión `#169` §10.2·1): la primera versión miraba
+`bearerToken()`, y una cabecera `Authorization: Bearer basura` junto a la cookie de sesión bastaba
+para que la firma constara como `api` — el guard de Sanctum resuelve PRIMERO la sesión y ni valida el
+token. Hoy: en `/me/waiver`, `currentAccessToken() instanceof PersonalAccessToken` → `api` (un token
+personal REAL, la app nativa); la sesión deja un `TransientToken` → `web`. En el alta (anónima),
+`hasSession()` → `web` (el cajón, por el grupo stateful) y sin sesión → `api`. Un campo `channel` en el
+cuerpo sería un dato que el cliente declara sobre sí mismo, y el registro probatorio no debe llevar
+nada que el cliente pueda inventar. ⚠️ **`Sanctum::actingAs()` en los tests deja un `TransientToken`**
+—como la sesión—: para probar el canal `api` hay que emitir un token de verdad
+(`$user->createToken('app')->plainTextToken` + `withToken()`), no una cabecera a mano.
 
 **92. El PDF propio va por la API con `application/pdf` en el contrato y SIN `assertValidResponse`.**
 El documento se sirve igual que al operador (mismo `WaiverProof`, misma vista), pero la ruta es de
