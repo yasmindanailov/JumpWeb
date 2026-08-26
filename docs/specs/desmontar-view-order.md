@@ -631,7 +631,28 @@ empezar a mutar**: mutar sobre árbol sucio convierte cada restauración en una 
 que la decisión de la clienta del origen (fidedigno, plazas reales) sustituyó. El código muerto no
 era solo ruido: era la política VIEJA esperando a que alguien la leyera como vigente.
 
-### 9.2 Extracción 1 · El calendario → Concern — PENDIENTE
+### 9.2 Extracción 1 · El calendario → Concern — HECHA (2026-08-26)
+
+**4.505 líneas** quedan en `ViewOrder` (desde 5.012; −507). El calendario entero —las 4 propiedades
+Livewire y los 12 métodos que quedaban de la familia tras el paso 0— vive en
+`Pages/Concerns/ManagesItemCalendar` (544 líneas), **trait sobre la MISMA clase** como §4.1 fijó:
+las properties y los wire methods siguen perteneciendo a `ViewOrder`, así que ni las 75
+interacciones de test ni el partial blade ni `executeManageItemSave` notan el cambio.
+
+- **Antes de mover, la pieza sin red ganó su test**: `calendarGoToItemMonth` (cero tests, §8.11)
+  tiene ahora el suyo — monta la acción, navega un mes (assert intermedio: se navegó de verdad) y
+  el atajo vuelve al mes del ítem. Su mutación (no escribir el mes) vista MORDER antes del
+  movimiento.
+- **Fidelidad del movimiento verificada por diferencia de conjuntos**: cero líneas borradas de
+  `ViewOrder` ausentes del trait (`comm -23` sobre el diff), y `ViewOrder` solo ganó 2 líneas (el
+  import y el `use`). El único import que quedó huérfano (`CarbonPeriod`) se retiró.
+- **Mutación de la extracción**: retirar el `use ManagesItemCalendar;` deja **14 tests del
+  calendario en rojo** de golpe. Restauración verificada por md5.
+- **Lo que el trait declara como deuda de las extracciones siguientes** (en su docblock):
+  `selectableDatesInRange` y `displayAvailableFor` se quedan en `ViewOrder` y son la disponibilidad
+  que la extracción 3 se lleva al dominio — el trait los llama por `$this->` y ese es el punto de
+  costura.
+- Suite **2936 / 16.961 en verde** (+1 test, +2 aserciones) · Pint ✓ · `php -l` ✓.
 
 ### 9.3 Extracción 2 · Presentación → Presenter — PENDIENTE
 

@@ -625,6 +625,27 @@ class ManageItemSlotChangeTest extends TestCase
             );
     }
 
+    public function test_calendar_go_to_item_month_returns_to_the_item_slot_month(): void
+    {
+        // `calendarGoToItemMonth` no tenía NINGÚN test (lo pidió el paso 1 del
+        // desmontaje, spec desmontar-view-order §6·2): es el atajo «volver al
+        // mes del item» tras navegar lejos. El método lee el item de
+        // `mountedActions`, así que se monta la acción primero; el assert
+        // intermedio prueba que de verdad se navegó ANTES de volver.
+        [$order, $item] = $this->makePaidEntryOrder('10:00:00');
+
+        Livewire::actingAs($this->staffWithEdit())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->mountAction('manageItem', ['item' => $item->id])
+            ->call('calendarNextMonth')
+            ->assertSet(
+                'calendarMonth',
+                Carbon::parse($this->todayPlus7)->startOfMonth()->addMonth()->format('Y-m'),
+            )
+            ->call('calendarGoToItemMonth')
+            ->assertSet('calendarMonth', Carbon::parse($this->todayPlus7)->format('Y-m'));
+    }
+
     public function test_calendar_partial_html_updates_after_prev_month_call(): void
     {
         // Regresión empírica del bug #162: los botones del calendario

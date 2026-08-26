@@ -9310,3 +9310,34 @@ un fichero tocado entre las dos es un artefacto viejo. Se reconstruyó y se re-v
 
 Verificación: Pint ✓ · `node --test` 695/695 ✓ · guardas del cajón ✓ · headless con anti-bot ✓ ·
 docs-check ✓ · suite (el contador vive en `ESTADO.md`, sin cambios en PHP).
+
+## #172 · 2026-08-26 · Extracción 1: el calendario de `ViewOrder` a su Concern — y la fidelidad de una mudanza se puede MEDIR
+
+Segunda tanda de la ejecución (`#170`). `ViewOrder` baja de 5.012 a **4.505 líneas** (−507): las 4
+propiedades Livewire del calendario y sus 12 métodos viven ahora en
+`Pages/Concerns/ManagesItemCalendar` (544 líneas). El detalle, en la spec **§9.2**.
+
+**Por qué trait y no componente** (fijado por la revisión, spec §8.8): un componente Livewire hijo
+cambiaría el dueño de las properties y de los wire methods — 75 interacciones de test y el camino
+de runtime de `executeManageItemSave` rotos. Con el trait, la clase aplanada es idéntica y **nada
+lo nota**: cero asserts tocados, la suite pasó a la primera.
+
+**Las tres verificaciones que valen la pena copiar:**
+
+1. **La pieza sin red ganó su test ANTES del movimiento** (`calendarGoToItemMonth`, cero tests):
+   mover código sin red es mover a ciegas; el test se escribió, se vio morder su mutación, y
+   DESPUÉS se movió.
+2. **La fidelidad de la mudanza se midió, no se supuso**: diferencia de conjuntos entre las líneas
+   borradas del origen y el contenido del trait — cero ausencias, y el destino solo añade su
+   cabecera. Un `comm -23` de dos minutos caza el renglón que un copia-pega de 500 líneas pierde
+   en silencio.
+3. **La mutación de la extracción es retirar el `use`**: 14 tests del calendario caen de golpe —
+   la red cubre la pieza entera, no un método suelto.
+
+▶ El trait declara en su docblock su deuda con la extracción 3: `selectableDatesInRange` y
+`displayAvailableFor` (la disponibilidad) se quedan en `ViewOrder` y el trait los llama por
+`$this->` — ese es el punto de costura que la consulta de re-programación del dominio sustituirá.
+
+Verificación: suite **2936 / 16.961 en verde** (+1 test, +2 aserciones) · fidelidad por diferencia
+de conjuntos = 0 ausencias · mutación de pieza y de extracción vistas morder · Pint ✓ · `php -l` ✓ ·
+docs-check ✓.

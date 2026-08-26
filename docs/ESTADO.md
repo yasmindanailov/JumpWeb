@@ -57,13 +57,14 @@
 >   exigido `VERIFY_CONC` en ningún push.
 >
 > · **Agente B (el portátil) → `desmontar-view-order`: EN EJECUCIÓN.** ✅ **El owner APROBÓ la spec
->   y autorizó ejecutar** (2026-08-26, tras `#167`+`#168`). **Paso 0 HECHO y verificado** (`#170`,
->   spec §9.1): −268 líneas de código muerto (5.280 → 5.012), 5 métodos fuera (3 censados + 2
->   huérfanos en cascada), los 3 tests por reflexión re-apuntados a la fuente viva y **4/4
->   mutaciones muerden**. ⚠️ Regla nueva pagada: **commitear la extracción en local ANTES de mutar**
->   (un `git restore` durante la mutación devolvió el árbol sucio al HEAD y se perdió el borrado).
->   ▶ **Siguiente**: extracción 1 (calendario → Concern, §4.1) → 2 (Presenter) → 3 (consulta de
->   re-programación, `VERIFY_CONC`) → 4 (el dinero, la última).
+>   y autorizó ejecutar** (2026-08-26, tras `#167`+`#168`). **Paso 0 HECHO** (`#170`, spec §9.1:
+>   −268 líneas de código muerto, tests re-apuntados, 4/4 mutaciones muerden) **y EXTRACCIÓN 1
+>   HECHA** (`#172`, spec §9.2: el calendario a `Pages/Concerns/ManagesItemCalendar` como TRAIT —
+>   544 líneas—, `ViewOrder` en **4.505**; fidelidad por diferencia de conjuntos = 0 ausencias;
+>   retirar el `use` tumba 14 tests). ⚠️ Regla pagada en el paso 0: **commitear la extracción en
+>   local ANTES de mutar** (un `git restore` durante la mutación devolvió el árbol sucio al HEAD).
+>   ▶ **Siguiente**: extracción 2 (Presenter) → 3 (consulta de re-programación, `VERIFY_CONC`) →
+>   4 (el dinero, la última).
 >   ❗ **La revisión adversarial del WAIVER NO es de este carril**: la lleva el A (fila de arriba),
 >   junto con el guion headless — no se empieza dos veces (`CONVENCIONES §10·7`).
 >   Ficheros del carril B: `app/Filament/Resources/Orders/**` (`ViewOrder.php` y lo que se extraiga
@@ -93,7 +94,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#171`**.
+> El último usado es **`#172`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -178,9 +179,12 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2935 en verde** (16.959 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2936 en verde** (16.961 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B) ·
-  ▶ **+0 tests y +3 aserciones en el último corte** (`#170`, paso 0 del desmontaje de `ViewOrder`):
+  ▶ **+1 test en el último corte** (`#172`, extracción 1 del desmontaje): `calendarGoToItemMonth`
+  gana el test que no tenía ANTES de mudarse al Concern (mutación vista morder), y retirar el
+  `use ManagesItemCalendar;` tumba 14 tests — la red cubre la extracción entera ·
+  ▶ **+0 tests y +3 aserciones en el corte anterior** (`#170`, paso 0 del desmontaje de `ViewOrder`):
   los 3 tests por reflexión sobre métodos MUERTOS se sustituyeron 1:1 por 3 sobre la fuente viva
   del calendario, que aseveran más (**4 mutaciones, las 4 muerden**; spec §9.1) ·
   ▶ **+1 test en el corte anterior** (2026-08-26, tras `#166`, sin número: un fix con su guarda):
