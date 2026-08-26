@@ -71,7 +71,7 @@ export const TOO_MANY_REQUESTS = 'too_many_requests';
  */
 
 /** El orden en que la web lista los avisos del banner: el de las reglas de validación. */
-const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'waiver_document_id', 'marketing'];
+const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'accept_waiver', 'waiver_document_id', 'marketing'];
 
 function clean() {
     return { summary: [], fields: {} };

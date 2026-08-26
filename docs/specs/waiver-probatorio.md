@@ -279,8 +279,10 @@ hallazgos y veredicto en **§10**; el guion de navegador, en headless, en **§9.
    se queda en 225,72 de 226 KiB. Cerrado.
 4. ✅ **La casilla del waiver en el alta MANUAL del panel** (§10.1) — `[DECIDIDO owner, 2026-08-26]`:
    **se construye**, con el texto vigente a la vista; **sin marcarla, no hay firma** (condición nueva
-   en `CustomerRegistrar`, con su test). Hasta entonces el mostrador sigue produciendo la firma
-   «declarada» de hoy.
+   en `CustomerRegistrar`, con su test). ✅ **HECHO** (`#178`, §9.11): `Placeholder` con las secciones
+   vigentes + `Checkbox waiver_declared`, solo en interno con versión; el flag viaja también por el
+   camino del cliente sin email. ⚠️ El modal es un `wire:partial`: su presencia no se asevera con
+   `assertSee`, se prueba por sus efectos.
 5. ✅ **¿Se firma con correo sin verificar?** (§10.2·3) — `[DECIDIDO owner, 2026-08-26]`: **se exige
    correo verificado para firmar**. El alta con casilla **deja de firmar al crear la cuenta y firma al
    VERIFICAR** (la aceptación se conserva hasta entonces); `POST /me/waiver` exige cuenta verificada.
@@ -299,7 +301,7 @@ hallazgos y veredicto en **§10**; el guion de navegador, en headless, en **§9.
    cuenta para comprar sin saltar también acepta. ⚠️ Encaja con §7·5: la aceptación se captura en el
    alta y **la firma se registra al VERIFICAR el correo**. Cambia §9.8 (fila «El alta»), `register.js`
    (`accept_waiver` deja de poder ir `false` en interno), `AuthRegistrationTest` y el rótulo del 422
-   (`api.register.*`). Código del carril A, detrás del anti-bot.
+   (`api.register.*`). ✅ **HECHO** (`#178`, §9.11): regla `accepted` sobre `accept_waiver` cuando `WaiverSettings::isInternal()` y hay versión en el idioma de la petición —exactamente cuando `GET /legal/waiver` sirve un documento—; mensaje `api.register.waiver_required` (es/en/fr) bajo `accept_waiver`, que el cajón pinta en el mismo hueco que el del texto (`FIELD_ORDER` lo conoce).
 
 ---
 
@@ -796,8 +798,15 @@ Lo que la revisión exigía antes del ✅, en unidades que se empujan verdes y s
   texto para el id que se acepta»: era la grieta, escrita como test; se reescribió. **Chunk 226,21
   KiB: el techo sube a 226,5 por CORRECCIÓN** (ledger en `SidebarBundleBudgetTest`). Verificado en
   headless con el anti-bot encendido.
-- ⏳ **Unidad 4 · las tres decisiones del owner** (§7·4, §7·5, §7·7) · ⏳ **Unidad 5 · el texto del
-  PDF** (§10.6).
+- 🟦 **Unidad 4 · las tres decisiones del owner** — ✅ **4c · la casilla del alta OBLIGATORIA en
+  interno** (§7·7, `#178`): `accepted` sobre `accept_waiver` cuando hay documento que servir; 422
+  con `api.register.waiver_required`; externo e interno-sin-versión siguen opcionales · ✅ **4b · la
+  casilla del alta MANUAL** (§7·4, `#178`): el operador ve el texto vigente y declara; sin la casilla
+  `CustomerRegistrar` no firma, también por el camino del cliente sin email. ⚠️ **El navegador cazó
+  un 500 al abrir el modal** (`$version->sections` como propiedad) con la suite en verde —el modal es
+  un `wire:partial`—: `counterWaiverText()` es público y se prueba directo · ⏳ **4a · correo
+  verificado para firmar** (§7·5): toca `WaiverSigner` → push aparte con `VERIFY_CONC`.
+- ⏳ **Unidad 5 · el texto del PDF** (§10.6).
 
 ---
 

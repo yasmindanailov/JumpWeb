@@ -1898,6 +1898,14 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         casilla se desmarca tras el 409, y `store.upcoming`. JS 695 → 700, **5 mutaciones, las 5
         muerden**; chunk 226,21 → techo 226,5 por corrección. Verificado en headless con anti-bot.
         ▶ Siguen (4) las decisiones del owner y (5) el texto del PDF.
+  - [x] **Tanda 4 · (4b + 4c) dos de las tres decisiones del owner** (2026-08-26 noche, `#178`,
+        carril A): la casilla del alta **OBLIGATORIA en interno** con versión publicada (422
+        `api.register.waiver_required` sobre `accept_waiver`; opcional en externo e interno sin versión)
+        y **la casilla del alta MANUAL** (texto vigente a la vista + `waiver_declared`; sin ella
+        `CustomerRegistrar` no firma, también por el camino sin email). +6 tests PHP, +1 JS, **4
+        mutaciones, las 4 muerden**; headless 4c 5/5 y 4b 3/3 — y el navegador cazó un 500 del modal
+        que la suite no veía (`wire:partial`), ahora con red directa. ▶ Sigue (4a) correo verificado para firmar (toca `WaiverSigner`,
+        `VERIFY_CONC`) y (5) el texto del PDF.
   - [x] **B · tanda 1 — el NÚCLEO** (2026-08-25, `#160`): `legal_document_versions` +
         `waiver_signatures` (inmutables, en Identity), `LegalDocumentPublisher` (publicar es un ACTO; un
         texto con `[PENDIENTE]` se rechaza —§8.1 hecho mecanismo—), `WaiverSigner` (hash canónico fijado

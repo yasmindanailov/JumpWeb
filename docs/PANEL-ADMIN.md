@@ -77,6 +77,11 @@ buscando por **email o teléfono**:
   «draft» o «brouillon», el modal de confirmación lo AVISA antes de publicar (`#174`).
   ▶ En la ficha del PEDIDO, el badge «Waiver» sigue la misma regla que la puerta: por el registro
   firmado (no el sello), «versión anterior» señalada, y oculto si el modo es «desactivado».
+  ▶ **El alta MANUAL** («Crear pedido manual → Registrar al cliente», `#178`): en modo interno con
+  versión publicada, el modal enseña el **texto vigente** y una casilla —«Le he enseñado al cliente
+  la exención vigente y declara que la acepta»—. **Sin marcarla no se registra ninguna firma**: el
+  cliente firmará desde su cuenta y la puerta le pedirá la tablet mientras tanto. Con ella, la firma
+  queda como **declarada por el operador** (y el PDF lo dice).
   ▶ **El registro probatorio** vive en la ficha del usuario como la acción «Registro del waiver»,
   con permiso PROPIO `waiver.view` (no lo tiene el staff por defecto): abrirla queda en la auditoría,
   lista las firmas (versión, canal, quién la declaró si fue en mostrador, integridad) y cada una

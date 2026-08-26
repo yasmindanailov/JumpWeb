@@ -9532,3 +9532,50 @@ cerrar. `ViewOrder` está hoy en **3.907 líneas** (de 5.280).
 Verificación: escenario nuevo PASA en limpio y FALLA con la mutación (md5 de la restauración) ·
 suite **2950 / 17.013 en verde** (+1 aserción: el inventario de la guarda) · Pint ✓ · docs-check ✓
 · `OversellVerifierCoversEveryQuotaTest` al día · cero restos `pe-probe` en la BD.
+
+## #178 · 2026-08-26 · Tanda 4 · dos de las tres decisiones del owner: la casilla del waiver es OBLIGATORIA en interno, y el mostrador solo firma si el operador enseña el texto y lo declara
+
+**Qué se hizo** (carril A; spec **§7·4** y **§7·7**, `[DECIDIDO owner, 2026-08-26]`; §9.11):
+
+1. **La casilla del alta es obligatoria en modo interno con versión publicada** (§7·7). El owner
+   preguntó por qué no lo era; §4.4 la había dejado opt-in a propósito (cuenta ≠ firma: la firma se
+   exige en la puerta) y se le puso el coste delante —quien compra sin saltar también acepta—; eligió
+   obligatoria. Regla `accepted` sobre `accept_waiver` **exactamente cuando `GET /legal/waiver` sirve
+   un documento** (`WaiverSettings::isInternal()` y versión en el idioma de la petición); mensaje
+   `api.register.waiver_required` en es/en/fr bajo `accept_waiver`, que el cajón pinta en el hueco de
+   la casilla (`FIELD_ORDER` lo conoce). En externo, y en interno SIN versión, sigue opcional — no
+   se puede exigir una casilla que no existe. Sigue desmarcada por defecto.
+2. **El mostrador solo firma si el operador enseña el texto y lo declara** (§7·4; la ALTA de la
+   revisión `#169` §10.1). El modal «Registrar al cliente» del pedido manual enseña, solo en interno
+   con versión, el **texto vigente** (`Placeholder`, escapado) y la casilla «Le he enseñado al cliente
+   la exención vigente y declara que la acepta». `CustomerRegistrar::register(…, waiverDeclared:)`
+   firma **solo con ella**; sin marcarla no hay firma, ni consentimiento, ni auditoría —el cliente
+   firmará desde su cuenta y la puerta le pedirá la tablet—. ⚠️ El flag viaja también por el camino
+   del cliente **sin email** (`pendingNoEmailCustomer` → `performRegistration`): la primera versión lo
+   leía de un `$data` que no existía en ese método y `?? false` lo tapaba — lo cazó el test antes
+   que nadie.
+   ⚠️ **El modal es un `wire:partial`** (trampa de `#161`): su presencia no se asevera con
+   `assertSee`; se prueba por sus efectos (firma / no firma) y la visibilidad es la misma condición
+   que decide la firma.
+
+**Lo medido**: +6 tests PHP (`AuthRegistrationTest` +2 · `PresentialWaiverDeclarationTest` +1 ·
+`RegisterCustomerActionTest` +3) y +1 JS (el aviso de `accept_waiver` en el orden del banner) ·
+**4 mutaciones, las 4 muerden** (la casilla nunca obligatoria · el registrador ignora la
+declaración · la página no pasa la declaración · la propiedad en vez del método), restaurado por
+`cmp` · **headless con anti-bot**: 4c 5/5 (422 bajo la casilla y en el banner; 201 al marcarla) y
+4b 3/3 (el modal enseña el texto vigente y la casilla; con las dos marcadas, firma `panel`
+declarada por el operador en BD) ·
+❗ **Y el navegador cazó un 500 que la suite NO podía ver**: el modal del alta manual reventaba al
+abrirse (`$version->sections` como propiedad: Laravel lo toma por una relación) y los tests pasaban
+en verde, porque el modal es un `wire:partial` y el arnés no lo renderiza. Arreglado, y con red
+nueva: `counterWaiverText()` es público y `RegisterCustomerActionTest` lo ejecuta directo (mutación
+vista morder). **Regla**: lo que vive en un modal de Filament se prueba llamando al código que lo
+pinta, no al componente · las guardas del cajón tras
+`build` + `build:ssr` (el hueco del aviso no cambia el árbol SSR) · contrato OpenAPI actualizado
+(`accept_waiver`: obligatoria cuando hay documento) en verde · Pint · docs-check.
+
+**Queda de la unidad 4**: **4a · correo verificado para firmar** (§7·5): toca `WaiverSigner` (en el
+`CRITICAL_RE` desde `#174`) y va en su propio push con `VERIFY_CONC=1`.
+
+Verificación: suite (contador en `ESTADO.md`) · `node --test` · headless 4b/4c (spec §9.11) ·
+Pint ✓ · docs-check ✓.

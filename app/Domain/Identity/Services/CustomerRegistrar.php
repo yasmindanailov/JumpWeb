@@ -49,7 +49,13 @@ class CustomerRegistrar
      *
      * @return array{user: User, created: bool, email_sent: bool}
      */
-    public function register(string $name, ?string $email, ?string $phone): array
+    /**
+     * @param  bool  $waiverDeclared  `[DECIDIDO owner]` (spec §7·4, `#178`): el operador ENSEÑÓ el texto
+     *                                vigente y declara que el cliente lo acepta. Sin esto, en mostrador
+     *                                NO se registra ninguna firma — hasta `#178` se registraba una
+     *                                «declarada» que nadie había declarado (revisión `#169` §10.1).
+     */
+    public function register(string $name, ?string $email, ?string $phone, bool $waiverDeclared = false): array
     {
         $name = trim($name);
         $email = self::normalizeEmail($email);
@@ -70,7 +76,7 @@ class CustomerRegistrar
         $now = now();
         $ip = request()?->ip();
 
-        $user = DB::transaction(function () use ($name, $email, $phone, $plainPassword, $now, $ip): User {
+        $user = DB::transaction(function () use ($name, $email, $phone, $plainPassword, $now, $ip, $waiverDeclared): User {
             $user = User::create([
                 'name' => $name,
                 'email' => $email,                 // NULL para el cliente de agenda sin correo
@@ -107,7 +113,7 @@ class CustomerRegistrar
             // cliente saldrá «sin waiver» en la puerta hasta que firme por su cuenta.
             $operator = auth()->user();
             $version = WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
-            if ($version !== null && $operator instanceof User) {
+            if ($waiverDeclared && $version !== null && $operator instanceof User) {
                 app(WaiverSigner::class)->sign(
                     $user,
                     $version,

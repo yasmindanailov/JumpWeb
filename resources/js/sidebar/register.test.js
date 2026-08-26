@@ -365,3 +365,15 @@ describe('la casilla del waiver', () => {
         assert.deepEqual(errors.summary, ['n', 'El texto ha cambiado.', 'm']);
     });
 });
+
+/** `#178` (spec §7·7): la casilla del waiver puede ser obligatoria en interno, y su aviso tiene sitio en el orden del banner. */
+describe('el aviso de la casilla obligatoria del waiver', () => {
+    test('accept_waiver va en el banner en su sitio: tras las condiciones y antes del texto del waiver', () => {
+        const response = { ok: false, error: { code: 'validation_failed', fields: { waiver_document_id: ['qué texto'], accept_waiver: ['hay que aceptarlo'], name: ['falta el nombre'] } } };
+
+        const errors = registerErrors(response, { messages: {}, auth: {} });
+
+        assert.deepEqual(errors.summary, ['falta el nombre', 'hay que aceptarlo', 'qué texto']);
+        assert.equal(errors.fields.accept_waiver, 'hay que aceptarlo');
+    });
+});

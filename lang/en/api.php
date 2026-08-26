@@ -49,5 +49,6 @@ return [
         'waiver_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
         'waiver_not_internal' => 'The waiver is not signed on this website.',
         'waiver_document_required' => 'To accept the waiver you must indicate which text you have read.',
+        'waiver_required' => 'To create the account you must read and accept the liability waiver.',
     ],
 ];

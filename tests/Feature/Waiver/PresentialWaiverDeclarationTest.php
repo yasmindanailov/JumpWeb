@@ -61,11 +61,11 @@ class PresentialWaiverDeclarationTest extends TestCase
         $operator = $this->operator();
 
         $result = $this->actingAs($operator)->app->make(CustomerRegistrar::class)
-            ->register('Ana Pérez', 'ana@example.com', '600 11 22 33');
+            ->register('Ana Pérez', 'ana@example.com', '600 11 22 33', waiverDeclared: true);
 
         $user = $result['user'];
         $signature = WaiverSignature::where('user_id', $user->id)->first();
-        $this->assertNotNull($signature, 'el alta presencial en modo interno tiene que dejar la firma declarada');
+        $this->assertNotNull($signature, 'el alta presencial en modo interno, CON la declaración del operador, deja la firma declarada');
         $this->assertSame($operator->id, $signature->declared_by_user_id);
         $this->assertSame(WaiverSignature::CHANNEL_PANEL, $signature->channel);
         $this->assertSame($version->id, $signature->legal_document_version_id);
@@ -125,5 +125,21 @@ class PresentialWaiverDeclarationTest extends TestCase
 
         $this->assertFalse($result['created']);
         $this->assertSame(0, WaiverSignature::count());
+    }
+
+    /** `[DECIDIDO owner]` (spec §7·4, `#178`): sin la declaración del operador NO hay firma — aunque el modo sea interno y haya versión. */
+    public function test_without_the_operators_declaration_nothing_is_signed(): void
+    {
+        $this->mode('interno');
+        $this->publish();
+        $operator = $this->operator();
+
+        $result = $this->actingAs($operator)->app->make(CustomerRegistrar::class)
+            ->register('Ana Pérez', 'ana@example.com', '600 11 22 33');
+
+        $this->assertSame(0, WaiverSignature::where('user_id', $result['user']->id)->count());
+        $this->assertNull($result['user']->fresh()->waiver_accepted_at);
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'waiver.declared']);
+        $this->assertDatabaseMissing('consents', ['user_id' => $result['user']->id, 'type' => 'waiver']);
     }
 }

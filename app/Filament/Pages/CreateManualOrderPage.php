@@ -10,8 +10,11 @@ use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Booking\Services\SlotOffer;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerRegistrar;
+use App\Domain\Identity\Services\LegalDocuments;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
@@ -20,6 +23,7 @@ use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -38,6 +42,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\HtmlString;
 
 /**
  * Fase 7.3 — Pedido manual desde back-office (decisión #120, iteración 1: efectivo/datáfono).
@@ -253,6 +258,17 @@ class CreateManualOrderPage extends Page
                                         ->label(__('admin.orders.create_manual.register_privacy'))
                                         ->accepted()
                                         ->required(),
+                                    // Fase 6 · waiver, `[DECIDIDO owner]` (spec §7·4, `#178`): la firma
+                                    // DECLARADA en mostrador exige enseñar el texto vigente y decirlo.
+                                    // Sin la casilla no hay firma; solo existe en interno con versión.
+                                    Placeholder::make('waiver_text')
+                                        ->label(fn (): string => __('admin.orders.create_manual.register_waiver_text', ['version' => $this->counterWaiverVersion()?->version ?? '']))
+                                        ->content(fn (): HtmlString => $this->counterWaiverText())
+                                        ->visible(fn (): bool => $this->counterWaiverVersion() !== null),
+                                    Checkbox::make('waiver_declared')
+                                        ->label(__('admin.orders.create_manual.register_waiver'))
+                                        ->helperText(__('admin.orders.create_manual.register_waiver_help'))
+                                        ->visible(fn (): bool => $this->counterWaiverVersion() !== null),
                                 ])
                                 ->action(fn (array $data) => $this->registerCustomerFromData($data)),
                         ]),
@@ -634,6 +650,8 @@ class CreateManualOrderPage extends Page
         $name = trim((string) ($data['name'] ?? ''));
         $email = CustomerRegistrar::normalizeEmail($data['email'] ?? null);
         $phone = trim((string) ($data['phone'] ?? ''));
+        // La declaración del waiver viaja hasta `performRegistration`, también por el camino del cliente sin email (`#178`).
+        $waiverDeclared = (bool) ($data['waiver_declared'] ?? false);
 
         // El teléfono es obligatorio (identidad del cliente cuando no hay email + clave de
         // deduplicación/rate-limit). El modal ya lo exige; defensa en profundidad en servidor.
@@ -649,7 +667,7 @@ class CreateManualOrderPage extends Page
         if ($email === null) {
             $matches = app(CustomerRegistrar::class)->customersMatchingPhone($phone);
             if ($matches->isNotEmpty()) {
-                $this->pendingNoEmailCustomer = ['name' => $name, 'phone' => $phone];
+                $this->pendingNoEmailCustomer = ['name' => $name, 'phone' => $phone, 'waiver_declared' => $waiverDeclared];
                 $this->phoneMatchOptions = $matches
                     ->mapWithKeys(fn (User $u): array => [$u->id => $this->customerDisplay($u)])
                     ->all();
@@ -664,7 +682,7 @@ class CreateManualOrderPage extends Page
             }
         }
 
-        $this->performRegistration($name, $email, $phone);
+        $this->performRegistration($name, $email, $phone, $waiverDeclared);
     }
 
     /**
@@ -673,7 +691,7 @@ class CreateManualOrderPage extends Page
      * se aplica AQUÍ (en el alta real), con clave por email o, sin email, por teléfono normalizado
      * (nunca `md5('')`, que metería todas las altas sin email en el mismo cubo).
      */
-    private function performRegistration(string $name, ?string $email, string $phone): void
+    private function performRegistration(string $name, ?string $email, string $phone, bool $waiverDeclared = false): void
     {
         $rateLimitId = $email ?? 'phone:'.(CustomerRegistrar::normalizePhone($phone) ?? $phone);
         $key = 'manual-register:'.md5($rateLimitId);
@@ -686,7 +704,7 @@ class CreateManualOrderPage extends Page
         RateLimiter::hit($key, 3600);
 
         try {
-            $result = app(CustomerRegistrar::class)->register($name, $email, $phone);
+            $result = app(CustomerRegistrar::class)->register($name, $email, $phone, waiverDeclared: $waiverDeclared);
         } catch (\Throwable $e) {
             Log::warning('manual_order.register_failed', ['error' => $e->getMessage()]);
             Notification::make()->danger()
@@ -757,7 +775,7 @@ class CreateManualOrderPage extends Page
         // NO limpiamos el aviso aquí (#264-audit): si `performRegistration` aborta (p. ej. rate-limit),
         // el panel de elección debe seguir visible para no perder el alta tecleada. En el camino feliz
         // lo limpia `selectCustomer()` → `clearPhoneMatch()` al crear/seleccionar.
-        $this->performRegistration((string) $pending['name'], null, (string) $pending['phone']);
+        $this->performRegistration((string) $pending['name'], null, (string) $pending['phone'], (bool) ($pending['waiver_declared'] ?? false));
     }
 
     /** Descarta el aviso de duplicado sin actuar. */
@@ -1143,5 +1161,35 @@ class CreateManualOrderPage extends Page
             self::STEP_PRODUCTS => __('admin.orders.create_manual.step_products'),
             self::STEP_PAYMENT => __('admin.orders.create_manual.step_payment'),
         ];
+    }
+
+    /** La versión firmable que se enseña en mostrador, o `null` fuera del modo interno / sin versión. */
+    public function counterWaiverVersion(): ?LegalDocumentVersion
+    {
+        return WaiverSettings::isInternal() ? LegalDocuments::current(WaiverSettings::SLUG, 'es') : null;
+    }
+
+    /**
+     * El texto vigente, escapado, para que el operador lo enseñe antes de declarar la aceptación.
+     *
+     * ⚠️ Público a propósito: el modal es un `wire:partial` y el arnés de Livewire NO lo renderiza, así
+     * que un fallo aquí (`$version->sections` en vez de `sections()`: 500 al abrir el modal, cazado
+     * en headless, `#178`) no lo ve ningún `assertSee`. `RegisterCustomerActionTest` lo llama directo.
+     */
+    public function counterWaiverText(): HtmlString
+    {
+        $version = $this->counterWaiverVersion();
+        if ($version === null) {
+            return new HtmlString('');
+        }
+
+        $html = '';
+        foreach ($version->sections() as $section) {
+            $h = trim((string) ($section['h'] ?? ''));
+            $p = trim((string) ($section['p'] ?? ''));
+            $html .= '<p class="text-sm">'.($h !== '' ? '<strong>'.e($h).'</strong> ' : '').e($p).'</p>';
+        }
+
+        return new HtmlString($html);
     }
 }

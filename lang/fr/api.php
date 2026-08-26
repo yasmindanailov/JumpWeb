@@ -49,5 +49,6 @@ return [
         'waiver_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
         'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
         'waiver_document_required' => 'Pour accepter la décharge, il faut indiquer quel texte a été lu.',
+        'waiver_required' => 'Pour créer le compte, il faut lire et accepter la décharge de responsabilité.',
     ],
 ];

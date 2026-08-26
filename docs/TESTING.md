@@ -365,6 +365,12 @@ docker compose exec -u sail laravel.test php artisan waiver:verify-chain      --
   los efectos de `mountUsing` (p. ej. la auditoría), `getMountedAction()->getModalContent()` para
   atar la acción a su vista, y esa vista renderizada directamente con `view(...)->render()`.
   Patrón en `tests/Feature/Waiver/WaiverProofActionTest.php`.
+  ⚠️⚠️ **Y el reverso, pagado en `#178`: un 500 al ABRIR el modal tampoco lo ve la suite.** El
+  arnés no renderiza el partial, así que un `Placeholder` cuyo `content()` reventaba
+  (`$version->sections` como propiedad) dejó 45 tests en verde y el modal del alta manual roto en
+  el navegador. **Lo que pinta un modal de Filament se prueba llamando al código que lo pinta**
+  —un método público del componente con su test directo—, no al componente. La red de un modal
+  es el navegador o esa llamada; nunca `mountAction()` a secas.
 - **`waiver:verify-chain`** (Fase 6, `specs/waiver-probatorio.md` §8.5/§9.3): N firmas del MISMO
   titular en paralelo → verifica que el `lockForUpdate` de su fila en `WaiverSigner` serializa la
   cadena de hashes: N filas, cada `prev_hash` enlaza con la anterior y ninguno se repite. **Visto

@@ -190,7 +190,7 @@ const summary = computed(() => props.errors?.summary ?? []);
                         <input v-model="acceptWaiver" type="checkbox">
                         <span>{{ a('register.accept_waiver') }}</span>
                     </label>
-                    <span v-if="fieldErrors.waiver_document_id" class="form__error">{{ fieldErrors.waiver_document_id }}</span>
+                    <span v-if="fieldErrors.accept_waiver || fieldErrors.waiver_document_id" class="form__error">{{ fieldErrors.accept_waiver || fieldErrors.waiver_document_id }}</span>
                     <details class="form__hint">
                         <summary>{{ a('register.waiver_read') }}</summary>
                         <p v-for="(section, i) in waiverStore.document.sections" :key="i">

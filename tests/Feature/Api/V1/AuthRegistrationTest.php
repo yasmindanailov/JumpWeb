@@ -464,10 +464,10 @@ class AuthRegistrationTest extends ApiTestCase
         $this->assertNotNull($user->waiver_accepted_at);
     }
 
-    /** Desmarcada por defecto: sin la casilla el alta es la de siempre, sin waiver. */
+    /** Desmarcada por defecto, y fuera del modo interno OPCIONAL: sin la casilla el alta es la de siempre, sin waiver. */
     public function test_without_the_checkbox_the_signup_leaves_no_waiver(): void
     {
-        $this->internalWaiver();
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'externo', 'group' => 'waiver']);
 
         $this->register()->assertCreated();
 
@@ -546,5 +546,32 @@ class AuthRegistrationTest extends ApiTestCase
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
         $this->assertSame('web', WaiverSignature::where('user_id', $user->id)->value('channel'));
+    }
+
+    /** `[DECIDIDO owner]` (spec §7·7, `#178`): en modo interno con versión publicada, la casilla es OBLIGATORIA. */
+    public function test_in_internal_mode_with_a_published_version_the_checkbox_is_required(): void
+    {
+        $this->internalWaiver();
+
+        $this->register()
+            ->assertStatus(422)
+            ->assertValidResponse(422)
+            ->assertJsonPath('error.fields.accept_waiver.0', __('api.register.waiver_required'));
+        $this->register(['accept_waiver' => false])
+            ->assertStatus(422)
+            ->assertJsonPath('error.fields.accept_waiver.0', __('api.register.waiver_required'));
+
+        $this->assertDatabaseMissing('users', ['email' => 'nuevo@jumpweb.test']);
+    }
+
+    /** Sin texto que aceptar (interno sin versión publicada) la casilla no puede ser obligatoria: no existe. */
+    public function test_in_internal_mode_without_a_published_version_the_checkbox_is_not_required(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+
+        $this->register()->assertCreated();
+
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+        $this->assertSame(0, WaiverSignature::where('user_id', $user->id)->count());
     }
 }

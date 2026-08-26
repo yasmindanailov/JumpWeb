@@ -42,8 +42,10 @@
 >   el estado dice otro, el 422 del alta relee y desmarca, casilla desmarcada tras el 409,
 >   `store.upcoming`; JS 700, 5 mutaciones muerden; chunk 226,21 → techo 226,5 por corrección;
 >   verificado en headless con anti-bot) →
->   (4) las tres decisiones del owner que son código: correo verificado para firmar, casilla del alta
->   manual, casilla obligatoria en interno → (5) el texto del PDF (§10.6). Cada unidad se empuja
+>   (4) las tres decisiones del owner que son código: ✅ **casilla del alta manual** y ✅ **casilla
+>   obligatoria en interno** (`#176`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ⏳ **correo
+>   verificado para firmar** (4a: toca `WaiverSigner`, push aparte con `VERIFY_CONC`) → (5) el
+>   texto del PDF (§10.6). Cada unidad se empuja
 >   verde y sola. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
 >   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
 >   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
@@ -107,7 +109,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#177`**.
+> El último usado es **`#178`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -192,9 +194,14 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2950 en verde** (17.013 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
+- Suite **2956 en verde** (17.033 aserciones, `--parallel` **~36 s** medidos el 2026-08-26 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+0 tests y +1 aserción en el último corte** (`#177`, el instrumento de la extracción 4): el
+  ▶ **+6 tests PHP y +1 JS en el último corte** (`#178`, decisiones 4b/4c del waiver): la casilla del
+  alta obligatoria en interno (422 sobre `accept_waiver`; opcional en externo e interno sin versión)
+  y la casilla del alta manual (con ella firma declarada; sin ella nada, también sin email); JS
+  **700 → 701**. **4 mutaciones, las 4 muerden**. ⚠️ El navegador cazó un **500 al abrir el modal**
+  del alta manual con la suite en verde (`wire:partial`): ahora el texto del modal se prueba directo ·
+  ▶ **+0 tests y +1 aserción en el corte anterior** (`#177`, el instrumento de la extracción 4): el
   inventario de `OversellVerifierCoversEveryQuotaTest` conoce el escenario `panel-edit` ·
   ▶ **+2 tests PHP en el corte anterior** (`#176`, extracción 3 del desmontaje): el del ancla del parque
   que CRUZA la frontera UTC↔Madrid (el caso que `AFORO-09` no tenía) y el de «horas sin aforo se

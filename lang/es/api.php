@@ -55,5 +55,6 @@ return [
         'waiver_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
         'waiver_not_internal' => 'El waiver no se firma en esta web.',
         'waiver_document_required' => 'Para aceptar el waiver hay que indicar qué texto se ha leído.',
+        'waiver_required' => 'Para crear la cuenta hay que leer y aceptar la exención de responsabilidad (waiver).',
     ],
 ];

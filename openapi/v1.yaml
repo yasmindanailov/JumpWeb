@@ -4613,9 +4613,11 @@ components:
           type: boolean
           description: |
             Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): la casilla SEPARADA de la exención
-            de responsabilidad, **desmarcada por defecto y opcional** — sin ella el alta es la de
-            siempre y el titular firmará más tarde. Solo tiene sentido en modo `interno`
-            (`GET /legal/waiver`); fuera de él se rechaza con un 422 sobre `waiver_document_id`.
+            de responsabilidad, **desmarcada por defecto**. ⚠️ Desde `#178` (`[DECIDIDO owner]`, spec
+            §7·7) es **OBLIGATORIA cuando el modo es `interno` y hay una versión publicada** —es
+            decir, siempre que `GET /legal/waiver` devuelva un `document`—: sin marcarla, 422 sobre
+            `accept_waiver` y no se crea la cuenta. Fuera de ese caso es opcional, y en modo externo
+            marcarla se rechaza con un 422 sobre `waiver_document_id`.
         waiver_document_id:
           type: integer
           nullable: true

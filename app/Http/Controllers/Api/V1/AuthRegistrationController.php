@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\SignupResult;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Identity\Services\WaiverAcceptance;
@@ -80,7 +81,9 @@ class AuthRegistrationController extends Controller
             // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): casilla SEPARADA y desmarcada por
             // defecto — aceptarla es opcional en el alta, pero aceptar sin decir QUÉ texto se leyó no
             // vale nada: el servidor solo emite la aceptación con el identificador que él sirvió.
-            'accept_waiver' => ['sometimes', 'nullable', 'boolean'],
+            // `[DECIDIDO owner]` (spec §7·7, `#178`): OBLIGATORIA en modo interno con versión publicada —
+            // siempre que `GET /legal/waiver` sirva un documento—. Fuera de ese caso, opcional.
+            'accept_waiver' => $this->waiverRequired() ? ['accepted'] : ['sometimes', 'nullable', 'boolean'],
             'waiver_document_id' => ['required_if_accepted:accept_waiver', 'nullable', 'integer', 'min:1'],
         ];
     }
@@ -103,7 +106,14 @@ class AuthRegistrationController extends Controller
             // En `api.register`, no en `account.register`: ese grupo viaja en el montaje de cada
             // página y estos avisos solo los emite el servidor (`SidebarMountTest` mide el peaje).
             'waiver_document_id.required_if_accepted' => __('api.register.waiver_document_required'),
+            'accept_waiver.accepted' => __('api.register.waiver_required'),
         ];
+    }
+
+    /** ¿Hay un texto que aceptar en esta instalación? Entonces aceptarlo es condición de alta (§7·7). */
+    private function waiverRequired(): bool
+    {
+        return WaiverSettings::isInternal() && LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale()) !== null;
     }
 
     /**
