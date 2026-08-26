@@ -16,8 +16,13 @@
 > ❗❗ **REPARTO VIGENTE desde el 2026-08-25 por la tarde — LÉELO ANTES DE ELEGIR TAREA.**
 > · **Agente A** → **Fase 6, subsistemas B y C**: primero el **waiver** (`specs/waiver-probatorio.md`)
 >   y después **menores a cargo** (`specs/menores-a-cargo.md`). `[DECIDIDO owner]`.
-> · **Agente B** → ✅ `RGPD-01` y el mapa que lleva a las guardas (`#159`, HECHO) ·
->   🟦 **EN CURSO: la suite auditada contra la FECHA** (ficha «Media» de `DEUDA.md`, `#64`/`#97`).
+> · **Agente B** → ✅ `RGPD-01` y el mapa que lleva a las guardas (`#159`) ·
+>   ✅ **la suite AUDITADA contra la FECHA** (`#162`): `TEST_CLOCK` + `scripts/audit-clock.sh`, diez
+>   fronteras en verde. ❗❗ **Encontró una BOMBA CON FECHA para el 2026-09-01** —un fixture con una
+>   ventana escrita a mano que iba a tumbar el gate de los DOS agentes en seis días— y que **la
+>   aritmética de meses de PHP desborda** (`2026-08-31 +3 meses = 2026-12-01`). Los dos arreglados.
+>   ▶ **Al cerrar una tanda que toque fixtures con calendario: `bash scripts/audit-clock.sh`**
+>   (está en `/cierre-sesion`; NO en el `pre-push`, son diez pases).
 >   **Ficheros**: `tests/TestCase.php` (hook opt-in por variable de entorno, **sin cambiar la
 >   conducta por defecto**) · los ficheros de test que resulten fallar —**excluyendo
 >   `tests/Feature/Api/V1/` y `tests/Feature/Waiver/`, que son del carril del waiver**— ·
@@ -184,7 +189,7 @@ que sirva staging de verdad.
   `OversellVerifierCoversEveryQuotaTest` (`#147`), la guarda de que el verificador de sobreventa
   **no encoja**. ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y vive en comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
-  **671 tests JS** (`node --test`) · Pint limpio (854 ficheros) · `docs-check` verde ·
+  **671 tests JS** (`node --test`) · Pint limpio (886 ficheros) · `docs-check` verde ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
   runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.

@@ -63,9 +63,28 @@ class ManageItemSlotChangeTest extends TestCase
 
     private int $paymentCounter = 0;
 
+    /**
+     * ⚠️⚠️ **El reloj se congela para TODO el fichero, y sale de una medición** (`DECISIONES #162`,
+     * `scripts/audit-clock.sh`). Dos casos del calendario fallaban **el día 31 de ciertos meses y el
+     * 31 de diciembre**, y la causa no es el código de producción —`calendarPrevMonth()` es
+     * correcto— sino la **aritmética de meses de PHP, que DESBORDA**:
+     *
+     *     hoy 2026-08-31 → +2 meses = 2026-10-31 · +3 meses = **2026-12-01**  (se salta noviembre)
+     *     hoy 2026-12-31 → +2 meses = 2027-03-03 · +3 meses = **2027-03-31**  (los dos en marzo)
+     *
+     * El fichero construye su fixture con `today()->addMonths(2)` y `addMonths(3)` dando por hecho
+     * que distan **un** mes. Varios días al año no es verdad: distan dos, o cero.
+     *
+     * ▶ **La fecha elegida es un día 15**, así que `+2`, `+3` y `+7` meses caen todos en día 15 y
+     * ningún salto puede desbordar. Es lunes, aunque aquí da igual: la única tarifa del fixture es
+     * `weekdays => null`.
+     */
+    private const FROZEN_NOW = '2026-06-15 09:00:00';
+
     protected function setUp(): void
     {
         parent::setUp();
+        $this->travelTo(Carbon::parse(self::FROZEN_NOW, 'UTC'));
         $this->seed(RoleSeeder::class);
         $this->seed(PermissionSeeder::class);
 

@@ -195,6 +195,52 @@ significa que el caso sea malo**; puede significar que el motor de la suite no e
 Hay que preguntárselo antes de dar la guarda por buena — la suite corre en SQLite y producción en
 MySQL, y esa diferencia ya tenía ficha en `SUITE-04` para los locks.
 
+### 2.septies. La suite se AUDITA contra el reloj — `scripts/audit-clock.sh`
+
+§2 dice la regla («congela el reloj si el fixture tiene calendario») y las dos causas que la
+enseñaron. Lo que faltaba era **la forma de saber quién la incumple**, porque un test que solo falla
+ciertos días **está rojo y aún no lo sabes**.
+
+**El instrumento.** `Tests\TestCase` lee `TEST_CLOCK` del entorno y, si viene, congela el reloj de la
+suite entera en ese instante **UTC**:
+
+    docker compose exec -u sail -T -e TEST_CLOCK='2026-09-01 12:00:00' laravel.test php artisan test
+
+⚠️ **Sin la variable no hace nada** —la conducta por defecto es idéntica— y **con basura EXPLOTA**:
+un instrumento que se autodesactiva al no entender su entrada da un verde que no significa nada.
+⚠️ **Alcance**: solo llega a los tests que extienden `Tests\TestCase`. Los de `tests/Unit/` extienden
+`PHPUnit\Framework\TestCase` por convención (`CONVENCIONES §3.ter`) y el reloj **no les llega**.
+Medido el 2026-08-26: son 4 y ninguno depende de la fecha.
+
+**El barrido.** `bash scripts/audit-clock.sh` corre la suite entera en diez fronteras y lista los
+culpables. ⚠️ **No entra en el `pre-push`** (son diez pases completos): se corre a mano, y **conviene
+al cerrar cualquier tanda que añada fixtures con calendario**.
+⚠️⚠️ **Sus fechas se calculan RELATIVAS a hoy, y eso es el diseño**: una lista fija caduca igual que
+los fixtures que persigue.
+
+**Lo que encontró la primera pasada** (`DECISIONES #162`), que es lo que hay que saber para escribir
+tests nuevos:
+
+- ❗ **Un fixture con una ventana de fechas escrita a mano es una BOMBA con fecha.**
+  `ModuleContractsTest` declaraba una temporada «Verano» del `2026-07-01` al `2026-08-31`, y
+  `ScheduleDisplay::seasons()` descarta las temporadas ya terminadas. Medido: **verde el 31 de agosto,
+  rojo el 1 de septiembre** — iba a tumbar el gate de los dos agentes seis días después, sin que nadie
+  tocara nada y sin ninguna pista de por qué.
+- ❗❗ **La aritmética de meses de PHP DESBORDA, y en tests eso no es teórico:**
+
+      hoy 2026-08-31 → +2 meses = 2026-10-31 · +3 meses = **2026-12-01**  (se salta noviembre)
+      hoy 2026-12-31 → +2 meses = 2027-03-03 · +3 meses = **2027-03-31**  (los dos en marzo)
+
+  `ManageItemSlotChangeTest` construía su fixture con `today()->addMonths(2)` y `addMonths(3)` dando
+  por hecho que distan **un** mes. Varios días al año distan dos, o cero. ⚠️ **El código de producción
+  estaba bien** (`calendarPrevMonth()` es correcto): el que dependía del calendario era el test.
+  ▶ Si necesitas aritmética de meses en un fixture, **congela en un día ≤ 28** o usa
+  `addMonthsNoOverflow()`.
+
+⚠️ **Y el residuo, dicho sin adornos**: esto vale mientras alguien lo ejecute. No hay CI que lo dispare
+—`DEUDA.md` lo recoge—, así que el barrido depende de que se corra al cerrar. La alternativa medida
+(meterlo en el `pre-push`) multiplicaría por diez el tiempo de cada push.
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

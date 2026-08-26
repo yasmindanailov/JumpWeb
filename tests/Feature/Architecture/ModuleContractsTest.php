@@ -56,6 +56,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -79,6 +80,13 @@ use Tests\TestCase;
 class ModuleContractsTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Instante en que se congela el caso del calendario de operación. Cae DENTRO de la ventana
+     * «Verano» que declara su doble (`2026-07-01`…`2026-08-31`) y ANTES del día especial que
+     * asevera (`2026-12-25`). Ver el docblock de ese caso: sin congelar, moría el 2026-09-01.
+     */
+    private const CALENDAR_FIXTURE_NOW = '2026-07-15 12:00:00';
 
     public function test_every_contract_resolves_to_its_legacy_implementation(): void
     {
@@ -466,9 +474,21 @@ class ModuleContractsTest extends TestCase
      * CONTENT → BOOKING: el calendario de operación (paso 7). El doble no toca la base de datos:
      * si `ScheduleDisplay` siguiera consultando `OpeningHour`/`Season`/`SpecialDate` por su
      * cuenta, con la BD vacía no pintaría nada.
+     *
+     * ⚠️⚠️ **El reloj se congela, y no es una precaución genérica: sin esto este test se ponía en
+     * ROJO el 2026-09-01** (`DECISIONES #162`). Su doble declara una temporada «Verano» del
+     * `2026-07-01` al `2026-08-31`, y `ScheduleDisplay::seasons()` **descarta las temporadas ya
+     * terminadas** (`endsOn >= hoy`) — que es correcto: filtrar lo que ya pasó es presentación, y
+     * `is_current` lo sigue decidiendo Booking. Pasado agosto, `$seasons` salía vacío y el caso
+     * moría con «Undefined array key 0». Medido con `scripts/audit-clock.sh`: verde el 31 de agosto,
+     * rojo el 1 de septiembre.
+     * ▶ La fecha elegida cae dentro de la ventana del fixture **y antes del 25-dic**, que es el día
+     * especial que asevera el final del caso. Cambiar una obliga a mirar la otra.
      */
     public function test_content_gets_the_operating_calendar_through_the_contract(): void
     {
+        $this->travelTo(Carbon::parse(self::CALENDAR_FIXTURE_NOW, 'UTC'));
+
         $this->app->instance(OperatingCalendar::class, new class implements OperatingCalendar
         {
             public function windowFor(CarbonInterface $date): OperatingWindow

@@ -8623,3 +8623,130 @@ Tanda 3 (API, casilla del alta, cajón, re-firma) sin empezar.
 
 Verificación: suite verde (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓ (32 modelos · 77
 migraciones) · BD MySQL de desarrollo migrada · cinco mutaciones de la tanda 2 con su salida en §9.6.
+
+## #162 · 2026-08-26 · La suite auditada contra el RELOJ — y lo que encontró no era «los sábados», era una bomba con fecha para el 1 de septiembre
+
+La ficha llevaba abierta desde `#64` con la etiqueta «sin plan»: *la suite no está auditada contra la
+fecha, y ya mordió DOS veces*. Ésta la audita.
+
+### Por qué importaba, en una frase
+
+Un test que solo falla ciertos días **está rojo y aún no lo sabes**. Y el daño no es la tarde perdida:
+es que **se aprende a desconfiar del portero**. El día que la suite se ponga roja de verdad, alguien
+pensará «será otra vez lo de la fecha». Con **dos agentes** empujando a `main`, además, un rojo que no
+es tuyo ya no es solo confuso: no sabes si es tu cambio, el del otro o el reloj.
+
+### El instrumento, y por qué se construyó ANTES de barrer
+
+El proxy estático decía **54 ficheros sospechosos** de 301 (fixture de tarifa por día de la semana +
+fecha relativa a hoy + reloj libre). ⚠️ **Barrer 54 ficheros a ciegas habría sido la chapuza**:
+congelar en una fecha mal elegida convierte un test que pasa en uno que **pasa por el motivo
+equivocado**. Así que primero el instrumento y después la medida.
+
+`Tests\TestCase` lee **`TEST_CLOCK`** del entorno y congela el reloj de la suite entera en ese
+instante UTC. Dos propiedades, y las dos son el diseño:
+- **Sin la variable no hace nada.** Es la condición para que pueda vivir en infraestructura
+  compartida con el carril del waiver.
+- **Con basura EXPLOTA.** Un instrumento que se autodesactiva al no entender su entrada da un verde
+  que no significa nada — y eso es peor que no tenerlo. ▶ Verificado: con `TEST_CLOCK='esto-no-es-una-fecha'`
+  la suite muere nombrando la variable.
+
+⚠️ **Hueco declarado**: el reloj **no llega a `tests/Unit/`**, que por `CONVENCIONES §3.ter` extienden
+`PHPUnit\Framework\TestCase`. Medido: son 4 y ninguno depende de la fecha. Hoy no es un agujero; el día
+que un test Unit gane calendario, esta auditoría no lo verá.
+
+### Lo que encontró: DOS defectos, y ninguno era el que se buscaba
+
+**1 · ❗❗ Un fixture con una ventana escrita a mano es una BOMBA CON FECHA.**
+`ModuleContractsTest` declaraba una temporada «Verano» del `2026-07-01` al `2026-08-31`, y
+`ScheduleDisplay::seasons()` descarta las temporadas ya terminadas (`endsOn >= hoy`). Medido al día:
+**verde el 31 de agosto, ROJO el 1 de septiembre**. Iba a tumbar el gate de los **dos** agentes seis
+días después de medirlo, sin que nadie tocara nada y sin ninguna pista de por qué.
+▶ **Y no hay defecto de diseño detrás**: filtrar lo que ya pasó es presentación, y `is_current` lo
+sigue decidiendo Booking. El que dependía del calendario era el fixture.
+
+**2 · ❗❗ La aritmética de meses de PHP DESBORDA, y en un fixture eso no es teórico.**
+
+    hoy 2026-08-31 → +2 meses = 2026-10-31 · +3 meses = **2026-12-01**   (se salta noviembre)
+    hoy 2026-12-31 → +2 meses = 2027-03-03 · +3 meses = **2027-03-31**   (los dos en marzo)
+
+`ManageItemSlotChangeTest` construye su fixture con `today()->addMonths(2)` y `addMonths(3)` dando por
+hecho que distan **un** mes. Varios días al año distan **dos, o cero**, y sus dos casos del calendario
+caían en fin de mes y en fin de año.
+▶ **El código de producción está BIEN**: `ViewOrder::calendarPrevMonth()` solo se niega a ir antes del
+mes actual, que es correcto. Lo comprobé antes de tocar nada, porque la diferencia entre «el test está
+mal» y «el panel no deja retroceder los días 31» es la diferencia entre un fixture y un defecto de
+producto.
+
+▶ **Arreglados los dos con la regla que `TESTING.md` §2 ya tenía escrita** —congelar con una constante
+documentada—, no inventando otra. Y la constante del calendario es **un día 15**: así `+2`, `+3` y
+`+7` meses caen todos en día 15 y ningún salto puede desbordar.
+
+### El barrido, hecho repetible
+
+`scripts/audit-clock.sh` corre la suite entera en **diez fronteras**: tres días de la semana, tres
+horizontes futuros (1 mes, 6 meses, 1 año), fin de mes, fin de año y **las DOS medianoches**.
+⚠️⚠️ **Sus fechas se calculan RELATIVAS a hoy, y eso es el hallazgo de método de esta tanda**: una
+lista de fechas fijas **caduca igual que los fixtures que persigue**. El defecto 1 se encontró porque
+una de las fronteras cayó en septiembre; con fechas fijas escritas hoy, dentro de un año no
+encontraría nada.
+
+❗ **Y las DOS medianoches, que es lo que la ficha no decía.** La app guarda en UTC y **muestra en
+`Europe/Madrid`** (`DisplayTime::DEFAULT_TIMEZONE`), así que en verano hay dos fronteras: la de UTC
+cae a las **02:00** de Madrid y la de Madrid a las **22:00** UTC (verificado dentro del contenedor).
+`#64` fue la de UTC. **`#97` cayó a las 00:02 de Madrid —22:02 UTC—, que NO es un cruce de medianoche
+UTC**, así que la explicación que se le dio entonces no cuadra con la hora. Su causa sigue sin nombre:
+esta auditoría no la reprodujo.
+
+### Dos errores de método propios, anotados porque valen más que el resultado
+
+1. ⚠️ **Mutar el árbol mientras la medición corría.** Apliqué el primer arreglo con los ocho pases aún
+   en marcha, así que los cuatro primeros miden el estado ANTES y los siguientes el de DESPUÉS. Se
+   lee igual sabiéndolo, pero **la matriz autoritativa hubo que rehacerla limpia**. Una medición no se
+   toca mientras mide.
+2. ⚠️ **Dos veces el instrumento me dio cifras falsas** (`ugrep` tomando `->next(` como opción, y una
+   cuenta que mezclaba menciones con citas). Las dos se descartaron al no poder explicar la
+   diferencia. Es la misma regla de siempre: *la medida que sobra no es la que da más, es la que no
+   puede explicar por qué da más*.
+
+### Lo que NO se hizo, y por qué
+
+⛔ **No hay guarda estática nueva.** El proxy que señalaba 54 ficheros resultó **27 veces más ruidoso
+que la realidad** (2 defectos reales). Construir un gate sobre un proxy así es fabricar el mismo
+«portero que llora lobo» que `#159` acababa de arreglar en `docs-check`. El instrumento correcto es el
+barrido, y el barrido ya existe.
+⛔ **No entra en el `pre-push`**: son diez pases completos: multiplicaría por diez el tiempo de cada
+push. Se dispara desde `/cierre-sesion` cuando la tanda tocó fixtures con calendario, y eso queda
+escrito allí.
+⚠️ **Residuo honesto, en `DEUDA.md`**: la ficha **sigue abierta**, ahora por otro motivo — el barrido
+existe pero **nadie garantiza que se ejecute**.
+
+### La matriz final, medida con el árbol quieto
+
+`bash scripts/audit-clock.sh`, suite completa en las diez fronteras, **después** de los dos arreglos:
+
+    próximo sábado           2026-08-29 12:00:00   ✓ 2909 tests
+    próximo domingo          2026-08-30 12:00:00   ✓ 2909 tests
+    próximo lunes            2026-08-31 12:00:00   ✓ 2909 tests
+    dentro de 1 mes          2026-09-26 12:00:00   ✓ 2909 tests      ← aquí moría el defecto 1
+    dentro de 6 meses        2027-02-26 12:00:00   ✓ 2909 tests
+    dentro de 1 año          2027-08-26 12:00:00   ✓ 2909 tests
+    fin de mes               2026-08-31 23:59:30   ✓ 2909 tests      ← aquí morían los dos del defecto 2
+    fin de año               2026-12-31 23:59:30   ✓ 2909 tests      ← y aquí también
+    medianoche UTC           2026-08-27 23:59:30   ✓ 2909 tests
+    medianoche de MADRID     2026-08-27 21:59:30   ✓ 2909 tests
+
+⚠️ **El contador NO sube, y es lo correcto**: esta tanda no añade casos, **arregla dos que ya
+existían**. Una tanda de robustez que engorda el contador suele estar añadiendo tests en vez de
+arreglar los que mienten.
+
+### El instrumento se vio FALLAR, y su fallo destapó otro defecto suyo
+
+Retirando el congelado de `ModuleContractsTest`, `audit-clock.sh` se pone en rojo en las cuatro
+fronteras futuras. ❗ **Pero la primera vez que se ejercitó esa rama, la lista de «culpables» salió
+VACÍA**: la extracción solo conocía el formato `N) Clase::caso` del bloque final de PHPUnit, y con
+`--filter` la salida es `FAILED  Clase > caso`. **Un gate que falla sin decir qué falló es exactamente
+lo que costó no saber la causa de `#97`.** Corregido —conoce los dos formatos y, si ninguno casa, lo
+dice y manda al log en vez de callar— y re-verificado: ahora nombra la clase.
+⚠️ **Y el fichero mutado se restauró comprobando md5 — la primera restauración NO cuadró**: se había
+comido un paréntesis. Por eso la regla es comprobar el md5 y no decir «restaurado».

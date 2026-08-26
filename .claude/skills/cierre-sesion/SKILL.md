@@ -16,7 +16,13 @@ docker compose exec -u sail -T laravel.test ./vendor/bin/pint --dirty
 docker compose exec -u sail -T laravel.test npm run build
 # si tocaste OrderCreator/RedsysReturnHandler/SlotGenerator (INVARIANTES §6):
 #   php artisan redsys:verify-concurrency / purchase:verify-oversell (el pre-push lo exigirá)
+# si la tanda AÑADIÓ o TOCÓ fixtures con calendario (fechas, meses, tarifas por día):
+bash scripts/audit-clock.sh   # ~10 pases de la suite; NO está en el pre-push (TESTING.md §2.septies)
 ```
+⚠️ **Lo del reloj no es ceremonia**: un test que solo falla ciertos días **está rojo y aún no lo
+sabes**, y con dos agentes sobre `main` un rojo que no es tuyo cuesta una sesión. La primera pasada
+(`DECISIONES #162`) encontró un fixture que iba a tumbar el gate **seis días después**, sin que nadie
+tocara nada.
 - Suite NO verde → o lo arreglas ahora, o mueves el trabajo a rama `wip/…` y lo anotas en
   `ESTADO.md` como ❗ con el detalle del fallo. `main` nunca queda rojo (el gate de pre-push
   solo aplica a `main`; `wip/…` puede empujarse en rojo como backup).
