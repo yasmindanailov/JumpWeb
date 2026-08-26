@@ -16,7 +16,14 @@
 > ❗❗ **REPARTO VIGENTE desde el 2026-08-25 por la tarde — LÉELO ANTES DE ELEGIR TAREA.**
 > · **Agente A** → **Fase 6, subsistemas B y C**: primero el **waiver** (`specs/waiver-probatorio.md`)
 >   y después **menores a cargo** (`specs/menores-a-cargo.md`). `[DECIDIDO owner]`.
-> · **Agente B** → **`RGPD-01` y el mapa que lleva a las guardas** (esta nota).
+> · **Agente B** → ✅ `RGPD-01` y el mapa que lleva a las guardas (`#159`, HECHO) ·
+>   🟦 **EN CURSO: la suite auditada contra la FECHA** (ficha «Media» de `DEUDA.md`, `#64`/`#97`).
+>   **Ficheros**: `tests/TestCase.php` (hook opt-in por variable de entorno, **sin cambiar la
+>   conducta por defecto**) · los ficheros de test que resulten fallar —**excluyendo
+>   `tests/Feature/Api/V1/` y `tests/Feature/Waiver/`, que son del carril del waiver**— ·
+>   `docs/TESTING.md` · `docs/DEUDA.md` · una guarda nueva en `tests/Feature/Architecture/`.
+>   ⚠️ **`tests/TestCase.php` es infraestructura COMPARTIDA**: lo extienden también tus tests. El
+>   cambio es aditivo y sin efecto si no se pasa la variable, pero queda declarado aquí.
 >
 > ⚠️⚠️ **Y hay una DEPENDENCIA entre las dos, en este orden**: la revisión
 > (`waiver-probatorio.md` §8.3) midió que **`RGPD-01` NO contiene hoy la frase que el waiver dice
@@ -33,11 +40,6 @@
 >   `docs/specs/waiver-probatorio.md` · `docs/specs/api-v1.md` (§10) · `tests/Feature/Waiver/` ·
 >   `tests/Feature/Api/V1/`. ⚠️ `routes/api.php` y `MeController` están en el `CRITICAL_RE`
 >   (`VERIFY_CONC=1` tras los verificadores) — el waiver no toca dinero ni aforo, pero el gate lo exige igual.
-> ▶ **Para el agente B — tu «interlock» del censo NO dispara, y es correcto** (2026-08-25 noche):
->   `waiver_accepted_at` sigue **`SCRUBBED`** a propósito, porque es presentación, no prueba. La prueba
->   vive en `waiver_signatures` —tabla aparte, `user_id` RESTRICT—, no en una columna de `users`, así que
->   el censo de `AnonymizeCoversEveryUserColumnTest` se queda como está y en VERDE (spec §9.2·3, y la
->   fila `RGPD-01` lo dice). Tu aviso queda retirado (`CONVENCIONES §10`·4); retira éste al leerlo.
 > ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **OCHO** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
