@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\OrderItemEditor;
+use App\Domain\Booking\Services\OrderItemEventDataWriter;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -951,6 +952,11 @@ class ViewOrder extends ViewRecord
     private function itemEditPricing(): ItemEditPricing
     {
         return app(ItemEditPricing::class);
+    }
+
+    private function eventDataWriter(): OrderItemEventDataWriter
+    {
+        return app(OrderItemEventDataWriter::class);
     }
 
     // ─── Complementos (Tab 2 del modal Gestionar, sub-fase 7.2e.4, #170) ───
@@ -2418,96 +2424,46 @@ class ViewOrder extends ViewRecord
     /**
      * Variante de `saveItemEventData` que devuelve si hubo diff (para
      * decidir si el email consolidado debe citar `event_data_change`).
-     * Reusa la misma defense in depth pero NO envía Notification ni el
-     * email de 7.2c (esos los maneja el caller con su mensaje
-     * consolidado).
+     * La defense in depth la aplica `OrderItemEventDataWriter`; esta
+     * variante NO envía Notification ni el email de 7.2c (esos los maneja el
+     * caller con su mensaje consolidado) y solo audita los rechazos que
+     * siempre auditó — la versión rancia y los obligatorios ausentes; el
+     * permiso, el no-pack y el sin-campos salen en silencio, como siempre.
      */
     private function saveItemEventDataReturningDiffPresence(Order $order, OrderItem $item, array $data): bool
     {
-        $user = auth()->user();
-        if (! ($user?->hasPermission('orders.edit_event_data') ?? false)) {
-            return false;
-        }
-
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || ! $ticketType->isPack()) {
-            return false;
-        }
-        $eventFields = $ticketType->eventFields();
-        if ($eventFields === []) {
-            return false;
-        }
-
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($item->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->logItemEventDataBlocked($order, $item, reason: 'stale_version');
-
-            return false;
-        }
-
-        $raw = (array) ($data['event_data'] ?? []);
-        $sanitized = $ticketType->sanitizeEventData($raw);
-        $missing = $ticketType->missingRequiredEventFields($raw);
-        if ($missing !== []) {
-            $this->logItemEventDataBlocked(
-                $order,
-                $item,
-                reason: 'required_missing',
-                extra: ['missing_keys' => $missing],
-            );
-
-            return false;
-        }
-        $beforeData = is_array($item->event_data) ? $item->event_data : [];
-        $schemaKeys = array_column($eventFields, 'key');
-        $legacyPreserved = collect($beforeData)
-            ->reject(fn ($v, string $k): bool => in_array($k, $schemaKeys, true))
-            ->all();
-        $sanitized = array_merge($legacyPreserved, $sanitized);
-
-        $diff = null;
-        DB::transaction(function () use ($item, $sanitized, &$diff): void {
-            $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
-            $current = is_array($locked->event_data) ? $locked->event_data : [];
-            $diff = self::computeEventDataDiff($current, $sanitized);
-            if (! self::eventDataDiffIsEmpty($diff)) {
-                $locked->forceFill(['event_data' => $sanitized])->save();
-            }
-        });
-
-        if (self::eventDataDiffIsEmpty($diff)) {
-            return false;
-        }
-
-        AuditLogger::log(
-            action: 'order_items.event_data_updated',
-            target: $item->fresh(),
-            payload: [
-                'order_code' => $order->code,
-                'ticket_type_id' => $item->ticket_type_id,
-                // Auditoría Fase 1 · P2 (RGPD art.9): SOLO las CLAVES cambiadas, NUNCA los valores —
-                // `event_data` lleva el nombre del homenajeado (PII de menor) y `AuditLogger::log`
-                // es para acciones SIN dato personal (su contrato). El detalle vive en el pedido.
-                'diff' => self::eventDataDiffKeys($diff),
-            ],
+        $outcome = $this->eventDataWriter()->save(
+            $order,
+            $item,
+            (array) ($data['event_data'] ?? []),
+            (string) ($data['optimistic_token'] ?? ''),
+            auth()->user(),
         );
 
-        return true;
+        if ($outcome->isBlocked()) {
+            if (in_array($outcome->reason, ['stale_version', 'required_missing'], true)) {
+                $this->logItemEventDataBlocked($order, $item, reason: $outcome->reason, extra: $outcome->extra);
+            }
+
+            return false;
+        }
+
+        return $outcome->changed;
     }
 
     /**
      * Handler del save de `event_data` desde la action. Misma defense in
-     * depth que el controller HTTP previo (#147), pero con Filament
-     * Notification en lugar de flash session y con `mountAction` en lugar
-     * de HTTP POST.
+     * depth que el controller HTTP previo (#147) —hoy en
+     * `OrderItemEventDataWriter`—, pero con Filament Notification en lugar
+     * de flash session y con `mountAction` en lugar de HTTP POST.
      *
      * Capas:
-     *  1. Permiso `orders.edit_event_data` (403).
+     *  1. Permiso `orders.edit_event_data` (403) — aquí ANTES de resolver el
+     *     ítem, como siempre; el servicio lo re-exige en el punto de ejecución.
      *  2. Ownership: el item pertenece al $this->record (404).
-     *  3. Semántica: el item es pack con eventFields no vacío (422).
-     *  4. Optimistic lock vs `updated_at` (rechazo con notificación + audit).
-     *  Final: lockForUpdate + sanitize + missing required + diff + audit log.
+     *  3–final (en el servicio): pack con eventFields · optimistic lock ·
+     *     sanitize + obligatorios · legacy · lockForUpdate + diff + audit.
+     *  Esta capa traduce el rechazo: audit `event_data_blocked` + aviso.
      */
     private function saveItemEventData(array $arguments, array $data): void
     {
@@ -2526,82 +2482,35 @@ class ViewOrder extends ViewRecord
             return;
         }
 
-        $ticketType = $item->ticketType;
-        if ($ticketType === null || ! $ticketType->isPack()) {
-            $this->logItemEventDataBlocked($order, $item, reason: 'not_pack');
-            $this->itemEventDataBlockedNotification('not_pack');
+        $outcome = $this->eventDataWriter()->save(
+            $order,
+            $item,
+            (array) ($data['event_data'] ?? []),
+            (string) ($data['optimistic_token'] ?? ''),
+            $user,
+        );
 
-            return;
-        }
-
-        $eventFields = $ticketType->eventFields();
-        if ($eventFields === []) {
-            $this->logItemEventDataBlocked($order, $item, reason: 'no_event_fields');
-            $this->itemEventDataBlockedNotification('no_event_fields');
-
-            return;
-        }
-
-        // Optimistic lock: el `updated_at` que enviamos al fillForm debe
-        // coincidir con el actual; si otro operador editó entre el render del
-        // modal y el submit, rechazamos sin modificar.
-        $sentToken = (string) ($data['optimistic_token'] ?? '');
-        $currentToken = (string) ($item->updated_at?->getTimestamp() ?? '');
-        if ($sentToken === '' || $sentToken !== $currentToken) {
-            $this->logItemEventDataBlocked($order, $item, reason: 'stale_version');
-            $this->itemEventDataBlockedNotification('stale_version');
-
-            return;
-        }
-
-        $raw = (array) ($data['event_data'] ?? []);
-        $sanitized = $ticketType->sanitizeEventData($raw);
-        $missing = $ticketType->missingRequiredEventFields($raw);
-
-        // Preservar claves legacy (mismo razonamiento que en #147): si el pack
-        // se editó tras la compra y el item tiene claves que ya no están en
-        // `eventFields()` actual, el form NO las envía pero las queremos
-        // conservar en lugar de borrarlas silenciosamente.
-        $beforeData = is_array($item->event_data) ? $item->event_data : [];
-        $schemaKeys = array_column($eventFields, 'key');
-        $legacyPreserved = collect($beforeData)
-            ->reject(fn ($v, string $k): bool => in_array($k, $schemaKeys, true))
-            ->all();
-        $sanitized = array_merge($legacyPreserved, $sanitized);
-
-        if ($missing !== []) {
-            $this->logItemEventDataBlocked(
-                $order,
-                $item,
-                reason: 'required_missing',
-                extra: ['missing_keys' => $missing],
-            );
-            Notification::make()
-                ->title(__('admin.orders.item_detail.flash_required_missing', [
-                    'missing' => implode(', ', $missing),
-                ]))
-                ->danger()
-                ->send();
-
-            return;
-        }
-
-        $diff = null;
-        DB::transaction(function () use ($item, $sanitized, &$diff) {
-            $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
-            $current = is_array($locked->event_data) ? $locked->event_data : [];
-
-            // Re-comparar contra el estado bloqueado, NO contra el snapshot
-            // anterior — entre el optimistic_token y este lock pudo haber
-            // pasado algo (improbable pero correcto a nivel teórico).
-            $diff = self::computeEventDataDiff($current, $sanitized);
-
-            if (! self::eventDataDiffIsEmpty($diff)) {
-                $locked->forceFill(['event_data' => $sanitized])->save();
+        if ($outcome->isBlocked()) {
+            if ($outcome->reason === 'permission_denied') {
+                abort(403); // Inalcanzable tras la puerta de arriba; se conserva el contrato (SEC-04).
             }
-        });
+            $this->logItemEventDataBlocked($order, $item, reason: $outcome->reason, extra: $outcome->extra);
+            if ($outcome->reason === 'required_missing') {
+                Notification::make()
+                    ->title(__('admin.orders.item_detail.flash_required_missing', [
+                        'missing' => implode(', ', $outcome->extra['missing_keys'] ?? []),
+                    ]))
+                    ->danger()
+                    ->send();
 
-        if (self::eventDataDiffIsEmpty($diff)) {
+                return;
+            }
+            $this->itemEventDataBlockedNotification($outcome->reason);
+
+            return;
+        }
+
+        if (! $outcome->changed) {
             Notification::make()
                 ->title(__('admin.orders.item_detail.flash_no_changes'))
                 ->info()
@@ -2610,92 +2519,10 @@ class ViewOrder extends ViewRecord
             return;
         }
 
-        AuditLogger::log(
-            action: 'order_items.event_data_updated',
-            target: $item->fresh(),
-            payload: [
-                'order_code' => $order->code,
-                'ticket_type_id' => $item->ticket_type_id,
-                // Auditoría Fase 1 · P2 (RGPD art.9): SOLO las CLAVES cambiadas, NUNCA los valores —
-                // `event_data` lleva el nombre del homenajeado (PII de menor) y `AuditLogger::log`
-                // es para acciones SIN dato personal (su contrato). El detalle vive en el pedido.
-                'diff' => self::eventDataDiffKeys($diff),
-            ],
-        );
-
         Notification::make()
             ->title(__('admin.orders.item_detail.flash_saved'))
             ->success()
             ->send();
-    }
-
-    /**
-     * @param  array<string,scalar>  $before
-     * @param  array<string,scalar>  $after
-     * @return array{changed:array<string,array{0:string,1:string}>,added:array<string,string>,removed:array<string,string>}
-     */
-    private static function computeEventDataDiff(array $before, array $after): array
-    {
-        $changed = [];
-        $added = [];
-        $removed = [];
-
-        foreach ($after as $key => $newValue) {
-            $newStr = (string) $newValue;
-            if (! array_key_exists($key, $before)) {
-                $added[$key] = $newStr;
-
-                continue;
-            }
-            $oldStr = (string) $before[$key];
-            if ($oldStr !== $newStr) {
-                $changed[$key] = [$oldStr, $newStr];
-            }
-        }
-
-        foreach ($before as $key => $oldValue) {
-            if (! array_key_exists($key, $after)) {
-                $removed[$key] = (string) $oldValue;
-            }
-        }
-
-        return [
-            'changed' => $changed,
-            'added' => $added,
-            'removed' => $removed,
-        ];
-    }
-
-    /**
-     * Proyección del diff a SOLO las CLAVES cambiadas (auditoría Fase 1 · P2): el audit log de
-     * `event_data_updated` registra QUÉ campos cambió el operador, NUNCA sus valores — `event_data`
-     * porta el nombre del homenajeado (PII de menor, art. 9) y `AuditLogger::log` es para acciones
-     * sin dato personal; además `User::anonymize()` no podría purgar PII enterrada en el payload.
-     *
-     * @param  array{changed:array<string,mixed>,added:array<string,mixed>,removed:array<string,mixed>}  $diff
-     * @return array{changed:list<string>,added:list<string>,removed:list<string>}
-     */
-    private static function eventDataDiffKeys(array $diff): array
-    {
-        return [
-            'changed' => array_keys($diff['changed'] ?? []),
-            'added' => array_keys($diff['added'] ?? []),
-            'removed' => array_keys($diff['removed'] ?? []),
-        ];
-    }
-
-    /**
-     * @param  array{changed:array<string,mixed>,added:array<string,mixed>,removed:array<string,mixed>}|null  $diff
-     */
-    private static function eventDataDiffIsEmpty(?array $diff): bool
-    {
-        if ($diff === null) {
-            return true;
-        }
-
-        return $diff['changed'] === []
-            && $diff['added'] === []
-            && $diff['removed'] === [];
     }
 
     /**

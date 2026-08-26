@@ -911,3 +911,32 @@ texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el inst
   `itemChoiceGroups`, `groupFieldName`, `groupMemberAddonTypeIds`, `addableAddonsFor`,
   `addableAddonMeta`, `addonQuantityHint` — traducen el formulario o lo componen.
 - Suite **2961 / 17.090 en verde** (+1 test, +3 aserciones) · Pint global ✓ · `php -l` ✓.
+
+**B · HECHO (2026-08-27, 01:30 — `#185`).** Los datos del evento viven en el dominio:
+- **`Booking\Contracts\ItemActionOutcome`** (57 líneas, `final readonly` como los demás
+  contratos): `ok / changed / reason / extra`. Es el resultado de TODAS las acciones de ítem de la
+  4b — el dominio dice QUÉ pasó; la página traduce el rechazo (audit + aviso) y el «sin cambios».
+- **`OrderItemEventDataWriter::save(Order, OrderItem, array $raw, string $token, ?User $by)`** (190
+  líneas): permiso re-exigido (`SEC-04`) · pack con campos · optimistic lock · sanitize + obligatorios
+  · claves legacy · txn mínima con diff contra el estado BLOQUEADO · audit de éxito con SOLO CLAVES
+  (`RGPD-02`, «Dónde vive» re-apuntada en `INVARIANTES`). Los tres helpers estáticos del diff viajan
+  con él, privados.
+- **`ViewOrder` en 3.173 líneas** (de 3.350; −177): las DOS copias de guardas/sanitize/txn/audit
+  (la variante consolidada y la acción suelta) se funden en una llamada; cada variante conserva
+  EXACTAMENTE lo que hacía con el rechazo — la consolidada audita solo `stale_version` y
+  `required_missing` y calla el resto; la suelta mantiene su `abort_unless(403)` ANTES de resolver
+  el ítem (si se moviera detrás, un usuario sin permiso con un ítem inexistente vería `not_found`
+  en vez de 403) y audita + avisa todo lo demás.
+- **Fidelidad**: el residuo del `comm -23` son las líneas de ENTREGA que se quedan (avisos, audit del
+  rechazo, `abort_unless`), comentarios re-envueltos y tres renombres a parámetro (`$raw`,
+  `$optimisticToken`, `$by`). Cero lógica.
+- **Mutación: 6 de 6 muerden — tres de ellas solo tras ganar su test DIRECTO del servicio**, y las
+  tres enseñan lo mismo: **la página no alcanza la regla**. `required_missing`: la validación
+  `required()` de Filament rechaza el formulario antes de que el handler vea nada, y el test de
+  página (`…_logs_blocked`) lo traga con un `try/catch` sin aseverar el audit — la guarda del dominio
+  nunca se ejecutaba desde un test. `permission_denied` en el servicio: inalcanzable desde el
+  despachador, que ya filtra por permiso. «Sin cambios»: el test miraba solo el audit, no que no se
+  guarde ni que el `updated_at` no se mueva. Tres tests nuevos (`test_writer_*`) con cliente, con nadie
+  autenticado y con `travel(1)->minutes()` para ver el `updated_at`. Las otras tres (audit con
+  VALORES → 2 rojos · sin optimistic lock → 2 · sin claves legacy → 1) mordieron a la primera.
+- Suite **2973 / 17.139 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓.

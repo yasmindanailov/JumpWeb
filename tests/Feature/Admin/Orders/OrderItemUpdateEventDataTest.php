@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderItemEventDataWriter;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -454,6 +455,78 @@ class OrderItemUpdateEventDataTest extends TestCase
         }
 
         $this->assertSame(['celebrant' => 'Mateo', 'age' => '8'], $item->fresh()->event_data);
+    }
+
+    // ─── El servicio, DIRECTO (extracción 4b): las reglas que la página no alcanza ──────
+
+    /**
+     * La validación `required()` de Filament rechaza el formulario ANTES de que el handler vea los
+     * obligatorios vacíos (el test de arriba lo mide con `try/catch`), así que la guarda del
+     * dominio —la defensa para un cliente que manipule el envío— solo se ejercita llamando al
+     * servicio. La mutación «sin obligatorios» salía VERDE en toda la carpeta por eso.
+     */
+    public function test_writer_blocks_required_missing_without_touching_the_item(): void
+    {
+        [$order, $item] = $this->makePackOrder();
+        AuditLog::query()->delete();
+
+        $outcome = app(OrderItemEventDataWriter::class)->save(
+            $order,
+            $item,
+            ['celebrant' => '', 'age' => '', 'notes' => 'solo notas'],
+            (string) $item->updated_at->getTimestamp(),
+            $this->staff(),
+        );
+
+        $this->assertTrue($outcome->isBlocked());
+        $this->assertSame('required_missing', $outcome->reason);
+        $this->assertSame(['celebrant', 'age'], $outcome->extra['missing_keys']);
+        $this->assertSame(['celebrant' => 'Mateo', 'age' => '8'], $item->fresh()->event_data);
+        $this->assertSame(0, AuditLog::where('action', 'order_items.event_data_updated')->count());
+    }
+
+    /**
+     * `SEC-04`: el permiso se re-exige en el punto de ejecución, sea quien sea el llamante. Desde
+     * la página es inalcanzable (el despachador ya filtra por permiso antes de llamar): solo se
+     * mide aquí, con un cliente y con nadie autenticado.
+     */
+    public function test_writer_requires_the_permission_at_execution_time(): void
+    {
+        [$order, $item] = $this->makePackOrder();
+        $token = (string) $item->updated_at->getTimestamp();
+        $writer = app(OrderItemEventDataWriter::class);
+
+        $asCustomer = $writer->save($order, $item, ['celebrant' => 'Lucía', 'age' => '9'], $token, $this->customer());
+        $anonymous = $writer->save($order, $item, ['celebrant' => 'Lucía', 'age' => '9'], $token, null);
+
+        $this->assertSame('permission_denied', $asCustomer->reason);
+        $this->assertSame('permission_denied', $anonymous->reason);
+        $this->assertSame(['celebrant' => 'Mateo', 'age' => '8'], $item->fresh()->event_data);
+    }
+
+    /**
+     * «Sin cambios» es un resultado con nombre: ni `save` (el `updated_at` no se mueve, y con él
+     * el optimistic token del siguiente envío), ni audit; la página lo traduce a su aviso.
+     */
+    public function test_writer_reports_unchanged_when_nothing_differs(): void
+    {
+        [$order, $item] = $this->makePackOrder();
+        AuditLog::query()->delete();
+        $before = $item->fresh()->updated_at;
+        $this->travel(1)->minutes();
+
+        $outcome = app(OrderItemEventDataWriter::class)->save(
+            $order,
+            $item,
+            ['celebrant' => 'Mateo', 'age' => '8'],
+            (string) $item->updated_at->getTimestamp(),
+            $this->staff(),
+        );
+
+        $this->assertFalse($outcome->isBlocked());
+        $this->assertFalse($outcome->changed);
+        $this->assertTrue($before->equalTo($item->fresh()->updated_at));
+        $this->assertSame(0, AuditLog::where('action', 'order_items.event_data_updated')->count());
     }
 
     // ─── Semántica: item no-pack o pack sin event_fields ─────────────────

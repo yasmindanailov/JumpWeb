@@ -78,8 +78,12 @@
 >   ✅ **A0 y A HECHOS** (`#184`, 2026-08-27 00:30): migraciones aplicadas, 6/6 escenarios + Redsys en
 >   verde, y lo PURO en el dominio — `ItemEditPricing` + la mitad pura de `OrderItemEditor`;
 >   `ViewOrder` en **3.350** líneas (de 3.907); **11 mutaciones, 11 muerden** (una tras ganar su
->   test: la regla de bloqueo per-invitado/grupo no tenía ninguno). ▶ **Siguiente: B** (`event_data`
->   → `OrderItemEventDataWriter`), luego C0 (el lock compartido, `VERIFY_CONC`). Detalle: spec §9.6.1.
+>   test: la regla de bloqueo per-invitado/grupo no tenía ninguno).
+>   ✅ **B HECHO** (`#185`, 01:30): `OrderItemEventDataWriter` + el contrato `ItemActionOutcome`;
+>   `ViewOrder` en **3.173**; **6 mutaciones, 6 muerden** — tres solo tras ganar su test DIRECTO,
+>   porque la página no alcanza la regla (Filament valida antes; el despachador filtra el permiso).
+>   ▶ **Siguiente: C0** (`ZoneDaySlotLock` compartido con `OrderCreator`, `VERIFY_CONC`), luego C.
+>   Detalle: spec §9.6.1.
 >   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
 >   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
 >   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
@@ -134,7 +138,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#184`**.
+> El último usado es **`#185`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -219,9 +223,13 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2970 en verde** (17.127 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+- Suite **2973 en verde** (17.139 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+1 test PHP en el último corte** (`#184`, sub-paso A de la 4b): la regla de bloqueo
+  ▶ **+3 tests PHP en el último corte** (`#185`, sub-paso B de la 4b): tres reglas de
+  `OrderItemEventDataWriter` que la página NO alcanza (obligatorios ausentes —Filament valida
+  antes—, permiso re-exigido en el servicio, «sin cambios» sin `save`) probadas DIRECTAMENTE; sus
+  mutaciones salían verdes y ahora muerden. Antes:
+  ▶ **+1 test PHP** (`#184`, sub-paso A de la 4b): la regla de bloqueo
   per-invitado/grupo de los complementos (`addon_locked` por BLOQUEO, no por mínimo) no tenía test
   y la mutación salía verde; ahora lo tiene, con control negativo. Antes:
   ▶ **+9 tests PHP y +1 JS** (`#183`, la revisión de la tanda 4 aplicada): la firma

@@ -9799,3 +9799,29 @@ llaman al método). `ViewOrder` pasa de 3.907 a **3.350 líneas**.
 Verificación: suite **2961 / 17.090 en verde** (+1 test) · Pint global ✓ · `php -l` ✓ · 11/11
 mutaciones con ancla única y restauración por md5 · A0 previo: 6/6 escenarios + Redsys PASAN sobre
 MySQL, migraciones aplicadas.
+
+## #185 · 2026-08-27 · Extracción 4b · sub-paso B: los datos del evento al dominio — y tres reglas que la página no alcanza ganan su test directo
+
+Segundo sub-paso del plan de `#182` (spec §9.6.1). Nacen el contrato **`Booking\Contracts\ItemActionOutcome`**
+(`ok / changed / reason / extra` — el resultado de todas las acciones de ítem de la 4b: el dominio dice
+QUÉ pasó y la entrega traduce el rechazo y el «sin cambios») y **`OrderItemEventDataWriter`**, la
+única de las cuatro formas transaccionales que no toca dinero ni aforo. `ViewOrder` pasa de 3.350 a
+**3.173 líneas**: las dos copias de guardas/sanitize/txn/audit se funden en una llamada, y cada
+variante conserva exactamente lo que hacía con el rechazo.
+
+**Lo que enseñó:**
+1. **Tres reglas de defensa que la red de PÁGINA no puede ejercitar.** La mutación «sin obligatorios»
+   salió verde con un test llamado `…required_missing…_logs_blocked` delante: la validación `required()`
+   de Filament rechaza el formulario antes de que el handler vea nada, y el test lo traga con un
+   `try/catch` sin aseverar el audit. El permiso re-exigido en el servicio (`SEC-04`) es inalcanzable
+   desde el despachador, que ya filtra por permiso. Y «sin cambios» solo se medía por el audit.
+   **Un servicio de dominio se puede llamar sin Filament**: tres tests directos (`test_writer_*`) y
+   las tres mutaciones muerden. Es el argumento empírico de la extracción entera.
+2. **La topología de cada variante es conducta**: la consolidada calla ante permiso/no-pack/sin-campos
+   y audita solo `stale_version` y `required_missing`; la suelta exige el permiso con `abort_unless`
+   ANTES de resolver el ítem (moverlo detrás cambiaría un 403 por un `not_found`). La mudanza las
+   respeta una a una en vez de «normalizarlas».
+3. **`RGPD-02` cambia de casa**: `eventDataDiffKeys` vive en el servicio; «Dónde vive» re-apuntado.
+
+Verificación: suite **2973 / 17.139 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · 6/6
+mutaciones con ancla única y restauración por md5 · fidelidad por diferencia de conjuntos: cero lógica.
