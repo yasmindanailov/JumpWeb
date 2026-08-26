@@ -227,6 +227,15 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
+- **El único «PHPUnit notice» de la suite está IDENTIFICADO y RETIRADO** (cierre del carril A, 2026-08-27):
+  `RequiresStaffOrAdminTest::test_can_access_panel_mirrors_middleware` hacía `createMock(Panel::class)`
+  sin expectativas y PHPUnit 12 lo avisa; es `createStub`. Se encontró bisecando por carpetas con
+  `artisan test --parallel <ruta>` (⚠️ con una ruta el resumen es el de PHPUnit, «OK (N tests…)», no
+  «Tests: N») y se confirmó con `vendor/bin/phpunit --display-all-issues` (`--display-notices` NO enseña
+  los notices de PHPUnit: son `--display-phpunit-notices`). El carril B ya no tiene que hacerlo en A0.
+  ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
+  issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
+  meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
 - Suite **2973 en verde** (17.145 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
   ▶ **+0 tests, +6 aserciones en el último corte** (`#186`, C0 de la 4b: `CriticalPathGateTest` vigila

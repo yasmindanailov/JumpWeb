@@ -173,6 +173,14 @@ docker compose exec -u sail -T laravel.test php artisan test --parallel 2>&1 | t
 # `DECISIONES #116`. Fail-closed: si no se puede leer alguno de los cuatro números, se corta.
 ran_tests=$(grep -a 'Tests:' "$suite_log" | grep -oE 'Tests:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
 ran_asserts=$(grep -a 'Assertions:' "$suite_log" | grep -oE 'Assertions:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
+# ⚠️ PHPUnit escribe DOS resúmenes: «Tests: N, Assertions: M, …» solo cuando hubo issues (notices,
+# deprecations…) y «OK (N tests, M assertions)» cuando no hubo ninguna. Hasta el 2026-08-27 el gate
+# solo entendía la primera — y funcionaba porque la suite llevaba UN notice de PHPUnit; al retirarlo
+# (`RequiresStaffOrAdminTest`, cierre del carril A) el gate se quedó ciego. Fail-closed sigue igual.
+if [[ -z "$ran_tests" ]]; then
+    ran_tests=$(grep -aoE 'OK \([0-9]+ tests?, [0-9]+ assertions?\)' "$suite_log" | grep -oE '[0-9]+' | sed -n '1p' || true)
+    ran_asserts=$(grep -aoE 'OK \([0-9]+ tests?, [0-9]+ assertions?\)' "$suite_log" | grep -oE '[0-9]+' | sed -n '2p' || true)
+fi
 doc_tests=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\*' docs/ESTADO.md | grep -oE '[0-9]+' | head -1 || true)
 doc_asserts=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\* \([0-9.]+ aserciones' docs/ESTADO.md | grep -oE '\([0-9.]+' | tr -d '(.' | head -1 || true)
 # Solo se borra si el gate va bien: si algo falla, el `trap` de arriba lo anuncia y el fichero

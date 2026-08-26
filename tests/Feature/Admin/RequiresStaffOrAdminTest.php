@@ -83,7 +83,9 @@ class RequiresStaffOrAdminTest extends TestCase
     {
         // El gate de Filament debe permitir/negar exactamente lo mismo que el
         // middleware — sin ese mirroring, defense in depth no se cumple.
-        $panel = $this->createMock(Panel::class);
+        // Stub, no mock: no se configura ninguna expectativa sobre el panel (PHPUnit 12 lo avisaba
+        // como el único «PHPUnit notice» de la suite; `DECISIONES #182` lo dejó por identificar).
+        $panel = $this->createStub(Panel::class);
 
         $admin = User::factory()->create();
         $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
