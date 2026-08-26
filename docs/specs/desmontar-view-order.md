@@ -940,3 +940,26 @@ texto de la opción, solo en el docblock. Se corrige en C, al re-apuntar el inst
   autenticado y con `travel(1)->minutes()` para ver el `updated_at`. Las otras tres (audit con
   VALORES → 2 rojos · sin optimistic lock → 2 · sin claves legacy → 1) mordieron a la primera.
 - Suite **2973 / 17.139 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓.
+
+**C0 · HECHO (2026-08-27, 02:15 — `#186`, `VERIFY_CONC`).** La receta anti-sobreventa vive UNA vez:
+- **`ZoneDaySlotLock::acquire(array $zoneIds, array $dates): Collection`** (68 líneas, casi todas
+  docblock: las tres piezas de la receta y su porqué, que antes estaban solo en `OrderCreator`).
+  `OrderCreator::lockSlots` (inyectado por constructor; nadie lo construye a mano) y
+  `ViewOrder::lockZoneDaySlots` lo llaman; el segundo pasa `[$slot->zone_id]` y
+  `[$slot->date->toDateString()]` — literales resueltos ANTES de abrir la transacción.
+- ⚠️ **Un fósil retirado**: `lockSlots` llevaba DOS docblocks apilados y el primero describía «la
+  SUBCONSULTA dentro de la propia sentencia de bloqueo» — exactamente el fix INSUFICIENTE que
+  `AFORO-01` prohíbe (`#246`). Un lector que se fiara del primero habría reintroducido la sobreventa.
+- ⚠️ **Una diferencia de binding, medida y a mejor**: la página ataba `where('date', $slot->date)`
+  con un Carbon → `'Y-m-d 00:00:00'`; MySQL lo compara bien contra la columna DATE (por eso el
+  instrumento pasaba), SQLite NO (la suite nunca vio ese lock, pero tampoco lo necesita). El helper
+  recibe `Y-m-d` y es exacto en los dos motores. Cero cambio en el conjunto bloqueado en MySQL.
+- **Entran en el `CRITICAL_RE` AQUÍ** (no en H, corrección de arriba): `ZoneDaySlotLock` y
+  `OrderItemEditor`, en el hook y en `CriticalPathGateTest::CRITICAL_FILES`; `ItemEditPricing` y
+  `OrderItemEventDataWriter` como controles negativos. `INVARIANTES` `AFORO-01`/`AFORO-05` re-apuntadas.
+- **Verificación** (todo sobre MySQL, 8 workers): los **6 escenarios PASAN** con el helper real ·
+  **mutación — el helper lee sin `FOR UPDATE` → `entry` FALLA y `panel-edit` FALLA** (las dos
+  puertas que comparten la receta, rojas con UNA mutación; restauración por md5) · Redsys PASA ·
+  cero restos en la BD.
+- Suite **2973 / 17.145 en verde** (mismos tests; +6 aserciones de `CriticalPathGateTest` por las
+  cuatro entradas nuevas) · Pint global ✓ · `php -l` ✓ · `bash -n` del hook ✓.

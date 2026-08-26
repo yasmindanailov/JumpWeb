@@ -82,8 +82,12 @@
 >   ✅ **B HECHO** (`#185`, 01:30): `OrderItemEventDataWriter` + el contrato `ItemActionOutcome`;
 >   `ViewOrder` en **3.173**; **6 mutaciones, 6 muerden** — tres solo tras ganar su test DIRECTO,
 >   porque la página no alcanza la regla (Filament valida antes; el despachador filtra el permiso).
->   ▶ **Siguiente: C0** (`ZoneDaySlotLock` compartido con `OrderCreator`, `VERIFY_CONC`), luego C.
->   Detalle: spec §9.6.1.
+>   ✅ **C0 HECHO** (`#186`, 02:15, `VERIFY_CONC`): `ZoneDaySlotLock` — la receta anti-sobreventa
+>   UNA vez, compartida por `OrderCreator` y el panel; 6/6 escenarios PASAN y **con el helper sin
+>   `FOR UPDATE` FALLAN `entry` Y `panel-edit`** (una mutación, dos puertas rojas). `ZoneDaySlotLock`
+>   y `OrderItemEditor` en el `CRITICAL_RE` desde hoy. Fósil retirado: un docblock de `lockSlots`
+>   describía la subconsulta que `AFORO-01` prohíbe. ▶ **Siguiente: C** (`changeSlot()` al editor y
+>   el instrumento `panel-edit` re-apuntado al servicio). Detalle: spec §9.6.1.
 >   **Ficheros que ESTE carril va a tocar además de los suyos** (aviso al A, `CONVENCIONES §10·3`):
 >   `app/Domain/Booking/Services/{OrderItemEditor,ZoneDaySlotLock,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder}.php`
 >   (futuro) · `app/Domain/Booking/Contracts/ItemActionOutcome.php` (futuro) ·
@@ -138,7 +142,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#185`**.
+> El último usado es **`#186`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -223,8 +227,10 @@ diferencia de código» con 68 ficheros de diferencia. Antes de creerte lo de ar
 `git diff --stat e551851..HEAD -- . ':(exclude)docs' ':(exclude)*.md'`, sustituyendo `e551851` por lo
 que sirva staging de verdad.
 
-- Suite **2973 en verde** (17.139 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+- Suite **2973 en verde** (17.145 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~70 s** en la del A) ·
+  ▶ **+0 tests, +6 aserciones en el último corte** (`#186`, C0 de la 4b: `CriticalPathGateTest` vigila
+  cuatro ficheros más — dos críticos, dos controles negativos). Antes:
   ▶ **+3 tests PHP en el último corte** (`#185`, sub-paso B de la 4b): tres reglas de
   `OrderItemEventDataWriter` que la página NO alcanza (obligatorios ausentes —Filament valida
   antes—, permiso re-exigido en el servicio, «sin cambios» sin `save`) probadas DIRECTAMENTE; sus

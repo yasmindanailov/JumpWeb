@@ -9825,3 +9825,31 @@ variante conserva exactamente lo que hacía con el rechazo.
 
 Verificación: suite **2973 / 17.139 en verde** (+3 tests) · Pint global ✓ · `php -l` ✓ · 6/6
 mutaciones con ancla única y restauración por md5 · fidelidad por diferencia de conjuntos: cero lógica.
+
+## #186 · 2026-08-27 · Extracción 4b · sub-paso C0: la receta anti-sobreventa vive UNA vez (`ZoneDaySlotLock`) — y el fósil que describía el fix insuficiente
+
+Tercer sub-paso del plan de `#182` (spec §9.6.1), el que decide lo que §8.9 dejaba abierto:
+**se consolida**. `ZoneDaySlotLock::acquire(zoneIds, dates)` es la receta de `AFORO-01`/`AFORO-05`
+—literales resueltos fuera de la transacción, `orderBy('id')`, `FOR UPDATE` como primera sentencia—
+con su porqué escrito UNA vez; `OrderCreator::lockSlots` (compra) y `ViewOrder::lockZoneDaySlots`
+(panel) la llaman. Hasta hoy vivía dos veces y el porqué solo en el dominio: si alguien corregía
+una, la otra derivaba en silencio.
+
+**Lo que enseñó:**
+1. **El fósil.** `lockSlots` llevaba DOS docblocks apilados; el primero explicaba que «resuelve las
+   zonas con una SUBCONSULTA dentro de la propia sentencia de bloqueo» — el fix INSUFICIENTE que
+   `#246` reprodujo como sobreventa y que `AFORO-01` prohíbe. Un lector fiel al primer docblock
+   habría reintroducido el bug creyendo cumplir la invariante. Retirado.
+2. **Una mutación, dos puertas rojas.** Con el helper leyendo sin `FOR UPDATE`, `entry` FALLA
+   (compra) y `panel-edit` FALLA (panel): la prueba de que las dos puertas comparten de verdad la
+   receta. Con el helper real, 6/6 escenarios y Redsys PASAN sobre MySQL, cero restos.
+3. **El binding de la fecha.** La página ataba un Carbon (`'Y-m-d 00:00:00'`): MySQL lo compara bien
+   con la columna DATE, SQLite no — la suite nunca había visto ese lock (ni lo necesita). El helper
+   recibe `Y-m-d`, exacto en ambos motores; el conjunto bloqueado en MySQL no cambia.
+4. **El `CRITICAL_RE` crece aquí, no al cerrar**: `ZoneDaySlotLock` y `OrderItemEditor` entran en el
+   hook y en `CriticalPathGateTest::CRITICAL_FILES` cuando NACE el lock, para que los pushes de C→F
+   exijan `VERIFY_CONC`; `ItemEditPricing` y `OrderItemEventDataWriter` quedan como controles negativos.
+
+Verificación: suite **2973 / 17.145 en verde** (mismos tests; +6 aserciones del gate) · Pint global ✓
+· `php -l` ✓ · `bash -n` del hook ✓ · `purchase:verify-oversell` 6/6 · mutación vista FALLAR en `entry` y `panel-edit`
+(restauración por md5) · `redsys:verify-concurrency` PASA · empujado con `VERIFY_CONC=1`.

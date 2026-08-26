@@ -12,6 +12,7 @@ use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
+use App\Domain\Booking\Services\ZoneDaySlotLock;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
@@ -1709,20 +1710,17 @@ class ViewOrder extends ViewRecord
 
     /**
      * Bloquea TODAS las franjas de la zona/día de `$slot` (auditoría Fase 1, L3), con el MISMO alcance
-     * que `OrderCreator::lockSlots`. Antes las ediciones de panel bloqueaban SOLO la franja de destino:
-     * dos ediciones con tramos de entrada SOLAPADOS (franjas distintas) no compartían fila bloqueada y
+     * que la compra — desde la extracción 4b (spec §8.9) por el MISMO helper, `ZoneDaySlotLock`, que
+     * es donde vive la receta y su porqué. Antes las ediciones de panel bloqueaban SOLO la franja de
+     * destino: dos ediciones con tramos SOLAPADOS (franjas distintas) no compartían fila bloqueada y
      * podían sobrellenar una franja intermedia común (el aforo se cuenta por tramo, #60). Bloquear la
      * zona/día entera serializa también panel↔panel (web↔panel ya serializaba porque OrderCreator
-     * bloquea este mismo conjunto). `orderBy('id')` → orden estable anti-interbloqueo.
+     * bloquea este mismo conjunto). Debe seguir siendo la PRIMERA sentencia de su transacción.
+     * `$slot` se cargó ANTES de abrir la transacción: su zona y su fecha son literales.
      */
     private function lockZoneDaySlots(Slot $slot): void
     {
-        Slot::query()
-            ->where('zone_id', $slot->zone_id)
-            ->where('date', $slot->date)
-            ->orderBy('id')
-            ->lockForUpdate()
-            ->get();
+        app(ZoneDaySlotLock::class)->acquire([(int) $slot->zone_id], [$slot->date->toDateString()]);
     }
 
     private function executeItemEdit(

@@ -76,6 +76,13 @@ class CriticalPathGateTest extends TestCase
         // cadena de firmas por titular solo es lineal por el `lockForUpdate()` de este fichero, la
         // suite corre en SQLite —que NO emite `FOR UPDATE`— y el verificador es `waiver:verify-chain`.
         'app/Domain/Identity/Services/WaiverSigner.php',
+        // Extracción 4b del desmontaje de `ViewOrder` (2026-08-27, spec §9.6·4, `#186`). El primero ES la
+        // receta anti-sobreventa de `AFORO-01`/`AFORO-05`, que hasta hoy vivía DOS veces (compra y
+        // panel) y ahora vive una: literales fuera de la txn, `orderBy('id')`, `FOR UPDATE` primero. El
+        // segundo será el dueño de la transacción de aforo de las ediciones del panel; su instrumento es
+        // el escenario `panel-edit` de `purchase:verify-oversell`, que se vio FALLAR con el lock mutado.
+        'app/Domain/Booking/Services/ZoneDaySlotLock.php',
+        'app/Domain/Booking/Services/OrderItemEditor.php',
     ];
 
     /**
@@ -98,6 +105,13 @@ class CriticalPathGateTest extends TestCase
         'routes/api.php',
         // Control negativo del waiver: decide modo y vigencia, pero no escribe la cadena.
         'app/Domain/Identity/Services/WaiverAcceptance.php',
+        // Controles negativos de la extracción 4b, los vecinos de `ZoneDaySlotLock` y `OrderItemEditor`
+        // en la misma carpeta: la tarificación es aritmética de SOLO LECTURA (no toma locks) y el
+        // escritor de `event_data` no toca ni dinero ni aforo (su txn mínima bloquea solo el ítem).
+        // Si algún día uno de los dos empieza a contar plazas o a mover dinero, este test se pone rojo
+        // y obliga a decidirlo a conciencia.
+        'app/Domain/Booking/Services/ItemEditPricing.php',
+        'app/Domain/Booking/Services/OrderItemEventDataWriter.php',
     ];
 
     /**

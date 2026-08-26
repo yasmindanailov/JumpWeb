@@ -53,7 +53,17 @@ touched_critical=''
 # ⚠️ No entra `ProductAvailability`, la tercera dependencia de aforo de `OrderCreator`: no cuenta
 # plazas, solo mira si la hora cae en la ventana del día. La suite (SQLite) lo cubre entero, y
 # `CriticalPathGateTest` lo fija como control negativo para que el gate no se vuelva un comodín.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+#
+# `ZoneDaySlotLock` y `OrderItemEditor` entran el 2026-08-27 (extracción 4b del desmontaje de
+# `ViewOrder`, spec §9.6·4 y `#186`). El primero ES la receta anti-sobreventa de `AFORO-01`/`AFORO-05`
+# —hasta hoy vivía DOS veces, en `OrderCreator` y en el panel— y el segundo será el dueño de la
+# transacción de aforo de las ediciones del panel (el escenario `panel-edit` de
+# `purchase:verify-oversell` es su instrumento). La suite (SQLite) no emite `FOR UPDATE`: solo los
+# verificadores sobre MySQL ven lo que estos dos ficheros pueden romper.
+# ⚠️ No entran `ItemEditPricing` ni `OrderItemEventDataWriter` (sus vecinos de la misma extracción):
+# el primero es aritmética de solo lectura y el segundo no toca ni dinero ni aforo. Son los controles
+# negativos de `CriticalPathGateTest`.
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

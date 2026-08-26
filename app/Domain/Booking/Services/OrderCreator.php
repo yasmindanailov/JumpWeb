@@ -53,6 +53,7 @@ class OrderCreator
         private ProductAvailability $productWindow,
         private PackAvailability $packAvailability,
         private AddonResolver $addons,
+        private ZoneDaySlotLock $zoneDayLock,
     ) {}
 
     /** Momento hasta el que se retiene una reserva provisional pendiente de verificación. */
@@ -329,27 +330,13 @@ class OrderCreator
     }
 
     /**
-     * Bloquea (lockForUpdate) y devuelve las franjas de las zonas/fechas de la cesta, indexadas
-     * por "zona|fecha|hora". DEBE ser la primera lectura de la transacción (auditoría Fase 1, H2):
-     * por eso resuelve las zonas implicadas con una SUBCONSULTA dentro de la propia sentencia de
-     * bloqueo, en vez de recibir los `TicketType` ya cargados (lo que habría fijado el snapshot
-     * de lecturas consistentes antes del lock → sobreventa).
-     *
-     * Bloquea por zona×fecha (superset de los pares exactos zona|fecha de la cesta: si la cesta
-     * mezcla varias zonas y fechas, se bloquea alguna franja de más, nunca de menos — irrelevante
-     * para la corrección y de contención mínima). Los complementos (zone_id NULL) no aportan zona.
+     * Bloquea (FOR UPDATE) las franjas de las zonas/fechas de la cesta y las devuelve indexadas por
+     * "zona|fecha|hora". La receta —literales resueltos fuera de la txn, `orderBy('id')`, primera
+     * sentencia— y su porqué viven en `ZoneDaySlotLock`, compartido con las ediciones del panel
+     * (extracción 4b, spec §8.9): `$zoneIds` llega ya RESUELTO (arriba, fuera de la transacción),
+     * NO como subconsulta (#246). Los complementos (zone_id NULL) no aportan zona.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  array<int, int>  $typeIds  ids de TODOS los productos de la cesta (líneas + complementos)
-     * @return Collection<string, Slot>
-     */
-    /**
-     * Bloquea (FOR UPDATE) las franjas de las zonas/fechas implicadas. `$zoneIds` llega ya RESUELTO
-     * (literales), NO como subconsulta: una subconsulta dentro del `SELECT ... FOR UPDATE` es una
-     * lectura CONSISTENTE que fija el snapshot de REPEATABLE READ ANTES de que el lock serialice →
-     * SOBREVENTA real (#246, reproducido con `purchase:verify-oversell`). Con literales, el
-     * `FOR UPDATE` es la primera sentencia y no fija el snapshot.
-     *
      * @param  array<int,int>  $zoneIds
      * @return Collection<string,Slot>
      */
@@ -364,12 +351,8 @@ class OrderCreator
             $dates[$line['date']] = $line['date'];
         }
 
-        return Slot::query()
-            ->whereIn('zone_id', $zoneIds)   // LITERAL (no subconsulta) → el FOR UPDATE no fija el snapshot
-            ->whereIn('date', array_values($dates))
-            ->orderBy('id')          // orden estable → evita interbloqueos
-            ->lockForUpdate()
-            ->get()
+        return $this->zoneDayLock
+            ->acquire($zoneIds, array_values($dates))
             ->keyBy(fn (Slot $s) => $this->slotKey($s->zone_id, $s->date->toDateString(), $s->start_time));
     }
 
