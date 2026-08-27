@@ -26,8 +26,8 @@
 >   contraste lo dan las TARJETAS (su hallazgo `S-00`, severidad Alta, ya aplicado). Verificado en el
 >   canvas: **cero** fondos a sangre en los 218 KB del mockup. Buena noticia: el mecanismo de la
 >   tanda 1 no se pierde, **se usa más** — pasa de la sección a la tarjeta.
-> · **§7** — el plan de tandas se rehízo: la 2 se parte en **2a** (hecha), **2b** (el hero), **2c**
->   (el menú, a spec propia) y **2d** (el movimiento).
+> · **§7** — el plan de tandas se rehízo: la 2 se parte en **2a** (hecha), **2b** (hecha), **2c**
+>   (el menú → **`armazon-y-menu.md`, spec propia YA ESCRITA**) y **2d** (el movimiento).
 >
 > ⚠️ **Y antes de leer nada del canvas, comprueba que tu copia no está vieja.** La de
 > `mockup_playjumppark/` estaba **caducada** al empezar la 2a —386 líneas de diff, y tocaban el
@@ -435,7 +435,7 @@ Sin esto no puede llegar a ✅ (`/dod`, `docs/CONVENCIONES.md` §3.bis).
 | **1** ✅ | **Cimientos** — los dos fondos + `--sheet` + los dos grises + la escala de radios + las fuentes por instalación + el set de iconos | Solo tokens y CSS | Es lo que el armazón consume: hacerlo después obliga a rehacerlo. ▶ **Y su promesa es que NO mueve un píxel**, lo que la hace verificable de una sola forma y barata de revisar. |
 | **2a** ✅ | **La FORMA + el pie** — la escala de canto, la ley del motivo cuadrado, el anillo de foco y la tira de marca | Tokens, CSS y 9 líneas de Blade | `[DECIDIDO owner, 2026-08-27]`. Mueve **20 px en 11 declaraciones**, todas enumeradas. Es lo que el hero consumirá: hacerlo después obliga a repasarlo. §10. |
 | **2b** ⬜ | **El hero** — tarjeta con margen en vez de a sangre, coreografía de scroll, y **la escala de sombra** | Marcado + CSS + JS de scroll | ⚠️ Aquí el producto **sí cambia de aspecto de verdad**: es la que necesita ojo en navegador. La sombra entra aquí porque no hay escala extraíble sin coste (§10.3). |
-| **2c** ⬜ | **El menú** → **spec propia** | — | `[DECIDIDO owner, 2026-08-27]`. Sustituir la barra horizontal por logo + hamburguesa + menú a pantalla completa toca **12 vistas**, los dos desplegables con sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil. No es «adoptar una estructura»: es cambiar la navegación del sitio. |
+| **2c** ⬜ | **El menú** → **spec propia: `armazon-y-menu.md`** ✍️ **ESCRITA el 2026-08-27** | — | `[DECIDIDO owner, 2026-08-27]`. Sustituir la barra horizontal por logo + hamburguesa + menú a pantalla completa toca **12 vistas**, los dos desplegables con sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil. No es «adoptar una estructura»: es cambiar la navegación del sitio. ▶ **Medido al escribir la spec**: son **232 reglas · 819 declaraciones** de CSS, **31 aserciones** en 4 ficheros y **41 reglas MUERTAS**; el owner cerró **cuatro** decisiones y dejó **seis** pendientes, la primera de ellas el **artboard de móvil**. ⚠️ **Y una que vuelve aquí**: el hallazgo `M-05` del cliente —difusa fuera de modal en el CTA fijo y el botón de registro— **pone en cuestión dos consumidores de `--shadow-float`** (§13.3). |
 | **2d** ⬜ | **El MOVIMIENTO** — 4 curvas y 7 duraciones como tokens | CSS | Sale de la 2a con su medida: **237 declaraciones, 48 duraciones distintas y 20 curvas** (el sistema declara 7 y 4). `200ms` sola tiene 110 usos. No mueve píxeles, mueve TIEMPO — y eso no se revisa con una captura, se revisa interactuando. |
 | **3** ⬜ | **Las secciones**, pieza a pieza | Sección por sección | ⚠️ El owner subió el 2026-08-27 dos artboards nuevos, `Descubre-el-Parque` y `Recorrido-Parque`: son **dos variantes de la misma sección** («02 · El parque»), y **cuál se queda está sin decidir**. `Elementos Fachada` sigue **sin migrar**: de ahí se saca la FORMA, nunca el color. |
 
@@ -1050,3 +1050,10 @@ sentido.
   el aspecto de media web. Lo verificado es que cada sombra sale de un rol, no que el resultado
   guste.
 - El **menú** (tanda 2c) sigue siendo lo siguiente, con la guía del owner sobre el móvil.
+  ▶ ✍️ **Su spec ya está escrita**: `armazon-y-menu.md` (2026-08-27), con las cuatro decisiones
+  del owner tomadas y **seis pendientes**. ⚠️ **Y le devuelve una pregunta a esta sección**: el
+  hallazgo `M-05` de la auditoría del cliente dice que el **CTA fijo** y el **botón de registro
+  de la esquina** no pueden llevar sombra difusa —«la difusa solo existe en modales»— y
+  recomienda keyline. Los dos son hoy consumidores de **`--shadow-float`**. Si el owner acepta
+  la recomendación, el rol pierde dos de sus ocho usos y hay que volver a mirarlo. **No se
+  toca hasta que lo diga**: la lista de excepciones y de roles **solo encoge**.

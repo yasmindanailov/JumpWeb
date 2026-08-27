@@ -206,10 +206,19 @@
 >   ⚠️ **Y una que despista**: `mockup_playjumppark/` (el canvas del 2.º cliente) está **gitignorada y
 >   excluida del `rsync`** (`DECISIONES #1`), así que **en tu máquina no existe** aunque la doc la
 >   cite. La receta para regenerarla con el MCP `DesignSync` está en la **§1 de la spec del tema**.
->   ▶ **Siguiente de este carril**: la **tanda 2, el armazón** (hero, menú, hero footer y pie). ⚠️ A
->   diferencia de la 1, **esa SÍ mueve píxeles** —el producto adopta la ESTRUCTURA del mockup, neutra
->   en valores (`[DECIDIDO owner]`)— y con ella entran la escala de sombra y los 56 radios huérfanos.
->   Necesita el OJO del owner, no solo el gate.
+>   ▶ **Siguiente de este carril**: la **tanda 2c, el ARMAZÓN** — y su spec **YA ESTÁ ESCRITA**:
+>   **`specs/armazon-y-menu.md`** (2026-08-27 por la tarde), con **cuatro decisiones del owner
+>   tomadas** y **seis pendientes**. `[DECIDIDO owner]`: la barra fija se retira en las **12** vistas
+>   y la sustituyen **dos racimos flotantes + un menú a pantalla completa**; la lista del menú es
+>   **PLANA** y la sigue mandando la BD; con sesión, icono de cuenta con **punto naranja/verde**;
+>   **el MÓVIL lo guía el owner con un artboard** y hasta que exista no se empieza la 2c·4.
+>   ▶ Medido: **232 reglas · 819 declaraciones** de CSS en 8 familias, **31 aserciones** en 4
+>   ficheros, y **41 reglas (el 18 %) MUERTAS**. ❗ **El cajón móvil no lo toca NINGÚN test** —ni PHP
+>   ni JS—, así que la tanda **2c·0 no cambia nada: construye la red**. ⚠️ **Y el menú del mockup
+>   trae tres defectos que se importan solos** (spec §1.7): deja sus enlaces en el orden de
+>   tabulación estando cerrado, y el hallazgo `M-05` del propio cliente **choca con `--shadow-float`,
+>   que `#196` creó ese mismo día**. ⚠️ **La auditoría del cliente EXCLUYE el menú y el logotipo**:
+>   es la misma trampa que con el hero. Necesita el OJO del owner, no solo el gate.
 > ▶ Protocolo de los carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **NUEVE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
@@ -612,15 +621,34 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 |---|---|
 | **A · menores** | Las cinco decisiones de §9.5 **TOMADAS** (`#197`), las tandas 2 y 3 **EMPUJADAS** (`#198` la firma del menor, `#199` la zona del cajón con su guion 20/20). De agente sigue la **tanda 4, la asignación en el embudo** (toca el checkout); del owner, su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗❗ **SOLO la pasada de NAVEGADOR — de agente no queda nada pendiente de la capa de tema.** Se ha acumulado cambio visual sin mirar: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). ▶ Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ▶ **Lo siguiente que ÉL anunció**: el MENÚ («cambia totalmente») y cómo se comporta en MÓVIL, que guiará él. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»** |
+| **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
-tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
-`landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
+tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que
+sigue parado es el CONTENIDO (la tanda B de `landing-white-label.md`: `testimonials` y el copy al
+CMS), no el tema.
 
-▶ **Por dónde retoma el carril C**: la **tanda 2c, el MENÚ** — spec propia; el owner avisó de que
-«cambia totalmente» y de que **guiará cómo se comporta en MÓVIL**. Medido: toca **12 vistas**, los
-dos desplegables con sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil.
+▶ **Por dónde retoma el carril C**: la **tanda 2c, el ARMAZÓN**, y **su spec ya está escrita** —
+**`specs/armazon-y-menu.md`**, 2026-08-27 por la tarde—. **No se escribe código todavía**: falta el
+✅ del owner y recortar la 2c·0 con él delante, como se hizo con el waiver y con la capa de tema.
+▶ **Lo que el owner ya decidió** (con la medida delante): armazón flotante en las **12** vistas ·
+lista de menú **PLANA** con los destinos que ya hay, y la BD sigue al mando · con sesión, **icono de
+cuenta con punto naranja/verde** · **el móvil lo guía él con un artboard**.
+▶ **Lo medido** (instrumento con guarda de la guarda, spec §1): **232 reglas · 819 declaraciones** de
+CSS en 8 familias · **31 aserciones** en 4 ficheros · **41 reglas (18 %) MUERTAS** · **12** vistas ·
+el salto al contenido existe en **1 de 12**.
+❗ **Y el hallazgo de método de esta tanda**: el instrumento dijo **9** clases muertas en vez de 11
+porque dos «vivían» **dentro de un comentario de Blade** que explicaba que ya no se usan. La regla
+escrita —«un `grep` que no encuentra no demuestra que no exista»— **tiene simétrica**: un `grep` que
+SÍ encuentra tampoco demuestra que exista. El corpus ahora limpia comentarios y lleva el control
+positivo que muerde ese caso.
+❗❗ **Tres cosas del mockup NO se copian** (spec §1.7): su menú cerrado **deja los enlaces en el
+orden de tabulación** (medido: cero `inert`, cero `aria-hidden`, cero `visibility`) — nuestro cajón
+ya resolvió eso y el porqué está escrito; el hallazgo **`M-05`** del propio cliente —difusa fuera de
+modal en el CTA fijo y el botón de registro— **choca con `--shadow-float`, creado el mismo día en
+`#196`**; y el eslogan a rotulador sale dos veces (`T-02`).
+⚠️ **La auditoría del cliente EXCLUYE el menú y el logotipo** por indicación suya: sus colores están
+revisados, su forma y su coreografía **no**. Es la misma trampa que con el hero.
 
 ✅ **La capa de tema tiene ya sus CUATRO mecanismos** (`#192` → `#196`): color y superficie · forma
 (cantos, motivo, foco, tira) · el hero · y ahora la **ELEVACIÓN**.
