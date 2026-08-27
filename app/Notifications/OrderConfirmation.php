@@ -5,8 +5,10 @@ namespace App\Notifications;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Services\EmailProductCard;
 use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Domain\Platform\Services\QrCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -92,6 +94,19 @@ class OrderConfirmation extends Notification implements ShouldQueue
         $paidConfirmation = $this->order->needsGuestForm()
             ? 'emails.order_confirmation.paid_confirmation_guest_form'
             : 'emails.order_confirmation.paid_confirmation';
+
+        // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.10, §9.2 A·8): el CARNÉ QR viaja en
+        // este correo como PNG ADJUNTO —no como imagen remota (los clientes las bloquean) ni como SVG
+        // inline (no lo renderizan)—. El carné nace aquí si el titular aún no tiene. Si la clave de
+        // cifrado rotó y no se puede repintar (§8.1), el correo sale sin adjunto en vez de fallar.
+        $token = $this->order->user !== null
+            ? app(CustomerCards::class)->ensureFor($this->order->user)->plainToken()
+            : null;
+        if ($token !== null) {
+            $message
+                ->line(__('emails.order_confirmation.card_attached'))
+                ->attachData(QrCode::png($token), 'carne-qr.png', ['mime' => 'image/png']);
+        }
 
         return $message
             ->action(__('emails.order_confirmation.action'), route('account.orders'))

@@ -99,6 +99,17 @@ buscando por **email o teléfono**:
   actual de la página— que también se audita. Funciona sobre cuentas ya anonimizadas: la firma lleva
   copia del nombre y el email de entonces. El **alta presencial** (pedido manual → cliente nuevo) en
   modo interno deja una firma **declarada por el operador**, y el PDF lo dice con todas las letras.
+- **Fase 6 · subsistema A — el CARNÉ QR y la FICHA de puerta** (`specs/identidad-qr-puerta.md`, `#208`):
+  cada cliente tiene un **carné QR** (viaja adjunto en el correo de confirmación y por `GET /me/card`;
+  escanearlo NO autentica: identifica). El lector de mostrador teclea el código en el **mismo input**
+  de esta pantalla. Quien tiene el permiso **`puerta.profile`** (el staff por defecto) ve, además del
+  semáforo, la **ficha**: nombre del titular, exención, carné, **reservas de hoy** con lo pendiente de
+  cobrar en puerta (el dinero sale del ledger), la ventana ±N días, los **menores a cargo como edad y
+  estado de la exención — jamás el nombre —** y el botón **«Registrar visita»** (explícito, una vez por
+  día: es lo que acredita la visita para JumpPoints). La búsqueda tecleada también abre la ficha, con su
+  propio límite por hora (Ajustes → Puerta) y auditada aparte; la ficha **caduca sola en el servidor**
+  (Ajustes → Puerta, 5 min) y se vela a los 60 s sin tocarla. Un carné rotado o revocado dice «Carné
+  caducado — busca por email».
 - Si la entrada se compró online, además se valida su **QR** (§2.4).
 - Si la persona **no está registrada**, se registra en el momento: **desde su móvil**
   (QR/enlace en la entrada) **o en una tablet** del local (ambas opciones, decidido).

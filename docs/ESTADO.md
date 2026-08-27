@@ -22,8 +22,14 @@
 >   después el SUBSISTEMA A (carné QR + puerta).** `[DECIDIDO owner]` **`#208`**: primero el panel,
 >   carné de 20 caracteres, spec de la puerta APROBADA. ✅ **EL PANEL ESTÁ EN EL ÁRBOL** (tanda 5,
 >   `specs/menores-a-cargo.md` **§9.10.4**, `8ab0f5c`: +45 tests, 4/4 mutaciones, sonda de concurrencia
->   con y sin lock, headless 13/13 con capturas); queda el OJO del owner. ▶ **Sigue la PUERTA**
->   (`specs/identidad-qr-puerta.md`, diseño de ejecución en su §9). **Ficheros de este carril**:
+>   con y sin lock, headless 13/13 con capturas); queda el OJO del owner. ✅ **Y LA PUERTA TAMBIÉN
+>   (subsistema A, `specs/identidad-qr-puerta.md` §9.4, 2026-08-28 madrugada)**: el carné en
+>   `customer_cards` dentro de `revokeAllAccess()`, la visita en `customer_visits`, la ficha compuesta
+>   por `GateProfile` (23 consultas constantes, sin campo para el nombre de un menor), la pantalla con el
+>   carné por el MISMO input + dos limitadores + caducidad EN SERVIDOR + «Registrar visita», el PNG en el
+>   correo y `GET|POST /me/card`. **5/5 mutaciones · headless 15/15 con capturas.** Queda el OJO del
+>   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check`: **36 modelos · 85
+>   migraciones**. **Ficheros de este carril**:
 >   `app/Domain/Identity/**` (`DependentAssigner`, `WaiverStatus`), `app/Filament/Resources/Orders/**`,
 >   `app/Filament/Pages/CreateManualOrderPage.php`, `resources/views/filament/orders/items-list.blade.php`,
 >   `resources/views/filament/pages/partials/manual-order-cart.blade.php`, `lang/es/admin.php`
@@ -484,8 +490,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3197 en verde** (20.803 aserciones, `--parallel` **~75 s**), medida el 2026-08-27 por la noche
-  por el carril A tras **A2** del subsistema A (`specs/identidad-qr-puerta.md` §9.3): **+7 tests** — la
+- Suite **3213 en verde** (20.935 aserciones, `--parallel` **~80 s**), medida el 2026-08-28 de madrugada
+  por el carril A tras **A3+A4** del subsistema A (`specs/identidad-qr-puerta.md` §9.4): **+16 tests** —
+  la pantalla (`ValidarRegistroProfileTest`: el carné por el input, quién ve la ficha, los dos
+  limitadores, caducidad en servidor, visita idempotente, zh_CN, nunca el nombre de un menor; 3/3
+  mutaciones), `GET|POST /me/card` contra el contrato (`MeCardTest`) y el PNG en el correo
+  (`OrderConfirmationCardTest`, con la clave rotada el correo sale sin adjunto). Antes:
+- Suite **3197 en verde** (20.803 aserciones), tras **A2** del subsistema A (`specs/identidad-qr-puerta.md` §9.3): **+7 tests** — la
   ficha compuesta (`GateProfileTest`: hoy frente a la ventana configurable, el dinero por
   `OrderLedger::forReservation()`, los menores como edad + exención SIN nombre, los estados de
   waiver/carné/visita, presupuesto CONSTANTE de 23 consultas medido con dos fixtures de la misma forma) y
@@ -949,7 +960,7 @@ retención.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores + puerta** | **SESIÓN EN CURSO (2026-08-27 desde las 22:20)**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) está EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ▶ **En curso: el subsistema A** (carné QR de 20 caracteres + pantalla de puerta; spec APROBADA, diseño de ejecución en su §9). Del owner siguen: su ✅ en navegador del panel (§9.10.4 «lo que queda»), de la zona (guion §5.decies) y del embudo (§5.undecies), y los DOS valores de retención en meses |
+| **A · menores + puerta** | **SESIÓN del 2026-08-27 noche → 28 madrugada**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ✅ **El SUBSISTEMA A (`specs/identidad-qr-puerta.md` §9.4) EN EL ÁRBOL**: carné QR de 20 caracteres, visita acreditada, ficha compuesta, pantalla con caducidad en servidor, correo con PNG, `GET|POST /me/card`; 5/5 mutaciones, headless 15/15. **Ambos 🟦 por el OJO del owner** (§9.10.4 y §9.4 «lo que queda»: el panel, la puerta, el correo en Gmail/Outlook y **el lector real del recinto**), más los guiones §5.decies/§5.undecies y los DOS valores de retención en meses. ▶ Lo siguiente de agente, cuando el owner lo pida: la zona «Mi carné» del cajón y la rotación desde el panel (`DEUDA.md`), y **D · JumpPoints**, que ya tiene su hecho observable (`customer_visits`) |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son SEIS tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas), `#205` (el CTA doble de móvil) y **`#209` (el botón de comprar YA SALE EN NARANJA en esta máquina)**. ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y dos cosas concretas: el **SVG del logotipo** en `public/img/client-logo.svg` y **cuál de las TRES variantes de «El parque»** para la tanda 3 (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`; preguntado el 28: «todavía no lo decido»). ▶ ✅ **El artboard del menú en MÓVIL YA LLEGÓ** (dentro de `Landing PJP Modos`, 2026-08-28): la 2c·4b se desbloquea, pero **su barra inferior son 3 iconos + 1 CTA y la nuestra es un CTA doble (`#205`)** — eso hay que contrastarlo con él antes de rehacerla. ▶ `[PENDIENTE: owner]` **avisar cuando el color de acción no alcance AA** (spec §15.8). ▶ Ya validó `#193` y `#194` |
 

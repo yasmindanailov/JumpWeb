@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
+use App\Http\Controllers\Api\V1\MeCardController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
 use App\Http\Controllers\Api\V1\MeDependentsController;
@@ -252,6 +253,12 @@ Route::name('api.v1.')->group(function (): void {
         // (`dependents.max_per_account`, `PAY-12`) y la pertenencia se re-valida en el dominio: un id
         // ajeno «no existe» (404). El `throttle` acota una superficie que crea PII de terceros; con
         // PREFIJO, como los del waiver (revisión `#169` §10.5).
+        // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §9.2 A·8): el CARNÉ QR. `GET` lo emite si
+        // no existe; `rotate` mata el viejo en el acto. Con `throttle` por prefijo: rotar escribe.
+        Route::get('/me/card', [MeCardController::class, 'show'])->name('me.card.show');
+        Route::post('/me/card/rotate', [MeCardController::class, 'rotate'])
+            ->middleware('throttle:10,1,card-rotate')
+            ->name('me.card.rotate');
         Route::get('/me/dependents', [MeDependentsController::class, 'index'])->name('me.dependents.index');
         Route::post('/me/dependents', [MeDependentsController::class, 'store'])
             ->middleware('throttle:30,1,dependents-write')

@@ -50,6 +50,7 @@ return [
         'deposit_paid' => 'Deposit paid online: :amount €',
         'pending_at_park' => 'To pay at the park on the day of your booking: :amount € (you can pay in cash or by card).',
         'paid_at' => 'Charged on: :when',
+        'card_attached' => 'Your QR pass is attached (carne-qr.png): show it at the entrance and we will help you right away. It is personal and does not expire; if you lose it, you can renew it from your account.',
         'action' => 'See my bookings',
         'paid_confirmation' => 'We’ll see you on the date and time you chose. You can view all the details from "My bookings", in your account.',
         'paid_confirmation_guest_form' => 'We’ll see you on the date and time you chose. We’ll soon email you to collect the guests’ details; you can also fill them in any time from "My bookings".',

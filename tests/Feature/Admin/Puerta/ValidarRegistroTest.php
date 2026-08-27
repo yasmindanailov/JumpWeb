@@ -212,6 +212,12 @@ class ValidarRegistroTest extends TestCase
 
     // ─── Privacy by design (RGPD) ────────────────────────────────────────
 
+    /**
+     * El SEMÁFORO no revela PII. ⚠️ Desde Fase 6 · subsistema A (`identidad-qr-puerta.md` §4.6,
+     * `[DECIDIDO owner]`) quien tiene `puerta.profile` SÍ ve la ficha con el nombre del titular —eso lo
+     * fija `ValidarRegistroProfileTest`—; esta guarda vale para quien NO lo tiene, que sigue viendo solo
+     * el estado. El staff por defecto trae ese permiso, así que aquí se le retira a propósito.
+     */
     public function test_response_never_exposes_user_name_or_other_pii(): void
     {
         User::factory()->create([
@@ -220,8 +226,10 @@ class ValidarRegistroTest extends TestCase
             'phone' => '+34600999888',
             'waiver_accepted_at' => now(),
         ]);
+        $staff = $this->staff();
+        $staff->roles->first()->permissions()->detach(Permission::where('name', 'puerta.profile')->value('id'));
 
-        Livewire::actingAs($this->staff())
+        Livewire::actingAs($staff)
             ->test(ValidarRegistro::class)
             ->set('input', 'juan@example.com')
             ->call('search')

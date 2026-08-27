@@ -2051,11 +2051,17 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         concurrentes sobre MySQL (con lock 4/4 PASA; sin él 3/4 abortan por deadlock) · headless 13/13
         con capturas.** Sigue 🟦 por el OJO del owner (§9.10.4 «lo que queda»).
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).
-- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ **EN COLA en la
-      sesión del carril A del 2026-08-27 noche** (`[DECIDIDO owner]` `#207` + **`#208`**: va DESPUÉS del
-      panel de menores D14). ✅ **Spec APROBADA por el owner** (`#208`) con §8 incorporado; **§8.2
-      decidido: carné de 20 caracteres** (`2⁸⁵`, misma versión de QR que 13 — medido); §8.1 se
-      construye (lectura del token que captura y devuelve `null`).
+- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ 🟦 **CÓDIGO
+      COMPLETO (carril A, 2026-08-27 noche → 28 madrugada, `#208`; spec §9.4)**: **A1** el carné
+      (`customer_cards`, `CardToken` de 20 caracteres con control mod 31, `CustomerCards`, dentro de
+      `revokeAllAccess()` — `RGPD-06` ampliada) y la visita (`customer_visits`, idempotente por día) ·
+      **A2** la ficha (`Booking\Contracts\GateReservations` con el dinero del ledger + `GateProfile` →
+      `GateProfileData` sin campo para el nombre de un menor; 23 consultas constantes) · **A3** la
+      pantalla (el carné por el MISMO input, semáforo + ficha con `puerta.profile`, dos limitadores,
+      `ensureFresh()` en servidor, «Registrar visita») · **A4** el PNG en el correo y `GET|POST /me/card`
+      contra el contrato. **+~36 tests · 5/5 mutaciones · headless 15/15 con capturas.** ✅ Spec
+      APROBADA por el owner (`#208`); §8.2 decidido (20 caracteres); §8.1 construido. Sigue 🟦 por el
+      OJO del owner: la pantalla, el correo en clientes reales y **el lector real del recinto** (§6).
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
       commit — es literalmente el modo de fallo que esa invariante existe para impedir.

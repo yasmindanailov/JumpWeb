@@ -1632,6 +1632,65 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/card:
+    get:
+      tags: [Cuenta]
+      operationId: getMyCard
+      summary: Mi carné QR
+      description: |
+        El carné QR del titular (Fase 6 · subsistema A, `specs/identidad-qr-puerta.md` §4.1, §4.5):
+        un identificador **estable, opaco y rotable** que se enseña en la puerta. Si el titular aún
+        no tiene, se emite en ese momento.
+
+        `token` es el dato del QR **tal cual** —20 caracteres en mayúsculas, sin URL—: píntalo en
+        modo alfanumérico con corrección **H** (cabe en versión 2, 25×25). **Escanearlo no autentica**:
+        identifica al titular ante un empleado con sesión, y nada más; por eso puede imprimirse y
+        viajar por correo. `token` es `null` solo si la clave de cifrado del servidor rotó: rota el
+        carné y listo.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: El carné activo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerCard'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/card/rotate:
+    post:
+      tags: [Cuenta]
+      operationId: rotateMyCard
+      summary: Rotar mi carné QR
+      description: |
+        Emite un carné nuevo y **mata el viejo en el acto** (`specs/identidad-qr-puerta.md` §4.5): un
+        correo antiguo o una impresión dejan de valer al instante, sin ventana de gracia — una
+        credencial revocada que sigue valiendo no es amable, es un hueco. Responde **201 con el
+        carné nuevo**, la misma forma que `GET /me/card`.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '201':
+          description: El carné nuevo; el anterior ya no vale.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerCard'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/dependents:
     get:
       tags: [Cuenta]
@@ -5051,6 +5110,24 @@ components:
             $ref: '#/components/schemas/Dependent'
         meta:
           $ref: '#/components/schemas/ListMeta'
+
+    CustomerCard:
+      type: object
+      description: |
+        El carné QR del titular (`specs/identidad-qr-puerta.md` §4.1, §4.5). `token` es el payload
+        del QR tal cual: `JW` + 17 caracteres aleatorios + 1 de control, en Crockford Base32
+        (`0-9 A-Z` sin `I L O U`).
+      required: [token, issued_at]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          nullable: true
+          pattern: '^JW[0-9A-HJKMNP-TV-Z]{18}$'
+          description: '`null` solo si la clave de cifrado del servidor rotó: rota el carné.'
+        issued_at:
+          type: string
+          format: date-time
 
     Dependent:
       type: object

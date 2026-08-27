@@ -138,6 +138,10 @@ class Settings extends Page
         'sales.purchase_horizon_months' => 'payment',
         'sales.order_prefix' => 'payment',
         'puerta.validate_rate_limit_per_minute' => 'puerta',
+        // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §9.2 A·9): la ficha de puerta.
+        'puerta.lookup_rate_limit_per_hour' => 'puerta',
+        'puerta.profile_ttl_minutes' => 'puerta',
+        'puerta.window_days' => 'puerta',
         // Fase 6 · waiver (`DECISIONES #142`): el MODO sustituye al interruptor de #216 —externo (el
         // sistema del parque; aquí solo el sello) · interno (se firma aquí) · desactivado— y el
         // plazo de conservación del registro firmado (vacío = no se poda; `[PENDIENTE: owner]`).
@@ -766,6 +770,26 @@ class Settings extends Page
                     ->minValue(PuertaSettings::VALIDATE_RATE_LIMIT_MIN)
                     ->maxValue(PuertaSettings::VALIDATE_RATE_LIMIT_MAX)
                     ->required(),
+                // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.6, §4.8, §9.2 A·9): los tres
+                // ajustes de la FICHA de puerta. Vacío = por defecto (`PuertaSettings`).
+                TextInput::make('puerta.lookup_rate_limit_per_hour')
+                    ->label(__('admin.settings.puerta_lookup_rate_limit'))
+                    ->helperText(__('admin.settings.puerta_lookup_rate_limit_hint'))
+                    ->integer()
+                    ->minValue(PuertaSettings::LOOKUP_RATE_LIMIT_MIN)
+                    ->maxValue(PuertaSettings::LOOKUP_RATE_LIMIT_MAX),
+                TextInput::make('puerta.profile_ttl_minutes')
+                    ->label(__('admin.settings.puerta_profile_ttl'))
+                    ->helperText(__('admin.settings.puerta_profile_ttl_hint'))
+                    ->integer()
+                    ->minValue(PuertaSettings::PROFILE_TTL_MIN)
+                    ->maxValue(PuertaSettings::PROFILE_TTL_MAX),
+                TextInput::make('puerta.window_days')
+                    ->label(__('admin.settings.puerta_window_days'))
+                    ->helperText(__('admin.settings.puerta_window_days_hint'))
+                    ->integer()
+                    ->minValue(PuertaSettings::WINDOW_DAYS_MIN)
+                    ->maxValue(PuertaSettings::WINDOW_DAYS_MAX),
                 // Fase 6 · waiver: los TRES modos (`DECISIONES #142`) en lugar del toggle de #216.
                 Select::make(WaiverSettings::KEY_MODE)
                     ->label(__('admin.waiver.settings_mode'))

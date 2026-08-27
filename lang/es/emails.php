@@ -50,6 +50,8 @@ return [
         'deposit_paid' => 'Señal pagada online: :amount €',
         'pending_at_park' => 'Pendiente de pago en el parque el día de tu reserva: :amount € (puedes pagarlo en efectivo o con tarjeta).',
         'paid_at' => 'Fecha del cobro: :when',
+        // Fase 6 · subsistema A: el carné QR va adjunto (PNG).
+        'card_attached' => 'Adjuntamos tu carné QR (carne-qr.png): enséñalo en la entrada y te atenderemos al momento. Es personal y no caduca; si lo pierdes, puedes renovarlo desde tu cuenta.',
         'action' => 'Ver mis reservas',
         'paid_confirmation' => 'Te esperamos en la fecha y hora que elegiste. Puedes ver todos los detalles desde «Mis reservas», en tu cuenta.',
         'paid_confirmation_guest_form' => 'Te esperamos en la fecha y hora que elegiste. En breve te pediremos por email los datos de los invitados; también puedes completarlos cuando quieras desde «Mis reservas», en tu cuenta.',
