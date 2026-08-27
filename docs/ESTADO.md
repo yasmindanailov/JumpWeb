@@ -482,10 +482,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3160 en verde** (18.538 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
-  por el carril A **sobre el árbol CONJUNTO** (el `#209` del carril C rebasado con P1+P2 de la tanda 5 de
-  menores, `#208`): el número se mide sobre el árbol conjunto, no se suma. Los dos cortes que fusiona:
-  ▶ **+16 tests y +89 aserciones** (carril A, menores a cargo · tanda 5 · P1+P2, spec §9.10): el
+- Suite **3172 en verde** (18.647 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
+  por el carril A tras **P3** de la tanda 5 de menores (`#208`, spec §9.10): **+12 tests y +109
+  aserciones** — la acción «Asignar menores» de la línea (`AssignDependentsActionTest`: quién ve el icono,
+  qué enseña el modal —leído por el SCHEMA montado, porque el HTML del modal no forma parte del render
+  del componente en el test—, pone y quita con auditoría del operador, mismo conjunto = sin cambios,
+  `too_many`, y las cuatro capas de defensa: permiso, IDOR por `not_in_order`, cancelado, pack). Antes:
+- Suite **3160 en verde** (18.538 aserciones), medida por el carril A **sobre el árbol CONJUNTO** (el
+  `#209` del carril C rebasado con P1+P2 de la tanda 5 de menores): el número se mide sobre el árbol
+  conjunto, no se suma. ▶ **+16 tests y +89 aserciones** (carril A, tanda 5 · P1+P2): el
   `sync()`/`candidates()` del mostrador (8 casos, 4/4 mutaciones muerden), `WaiverStatus::forDependents()`
   con paridad (3) y el «Para:» de la ficha del pedido (5).
 - Suite **3144 en verde** (18.449 aserciones, `--parallel` **~87 s**), medida el 2026-08-28 por el

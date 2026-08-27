@@ -463,6 +463,19 @@
                     />
                 @endif
 
+                {{-- Menores a cargo (tanda 5, D14·4/D14·6): «Asignar menores» — solo en ENTRADAS de un
+                     titular con menores, para quien puede editar la línea y mientras la línea admite
+                     cambios. El handler lo revalida TODO (defensa en profundidad, como Gestionar). --}}
+                @if (! $isPack && $holderHasDependents && ($authUser?->hasPermission('orders.edit_item') ?? false) && $record->canEditItem($item))
+                    <x-filament::icon-button
+                        wire:click="mountAction('assignDependents', { item: {{ $item->id }} })"
+                        icon="heroicon-o-users"
+                        color="gray"
+                        size="lg"
+                        :label="__('admin.orders.dependents.btn_aria', ['name' => $ticketType?->tr('name') ?? '—'])"
+                    />
+                @endif
+
                 {{-- P12: «Gestionar» pasa a ser un ICONO de lápiz (coherente con el resto de iconos de
                      la fila). Mismo `mountAction('manageItem')`; el aria-label conserva la semántica.
                      Visible siempre (incluso cancelados); decisión #159 (`viewItemDetail`→`manageItem`). --}}

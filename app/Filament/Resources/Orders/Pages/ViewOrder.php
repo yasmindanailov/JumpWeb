@@ -16,6 +16,7 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Orders\Pages\Concerns\AssignsDependents;
 use App\Filament\Resources\Orders\Pages\Concerns\ManagesItemCalendar;
 use App\Filament\Resources\Orders\Pages\Concerns\PresentsOrderActions;
 use App\Notifications\GuestFormRequest;
@@ -59,6 +60,7 @@ use Livewire\WithPagination;
 
 class ViewOrder extends ViewRecord
 {
+    use AssignsDependents;
     use ManagesItemCalendar;
     use PresentsOrderActions;
     use WithPagination;
