@@ -10383,3 +10383,33 @@ El del segundo cliente pondría `none` en las dos primeras y su dura en la terce
 suite **3047** verde · Pint 932.
 ❗ **Falta la pasada de NAVEGADOR, y aquí pesa mucho**: **19 elementos pierden su sombra** y eso
 cambia el aspecto de media web. Lo verificado es que cada sombra sale de un rol, no que guste.
+
+## #197 · 2026-08-27 · [DECIDIDO, owner] Menores a cargo: cadena por (titular, sujeto), el chunk sube por feature, la firma del menor se conserva desde los 18, declarar no exige correo verificado
+
+**Las cinco decisiones que la tanda 1 dejó planteadas con número y coste** (`specs/menores-a-cargo.md`
+§9.5), respondidas por el owner el 2026-08-27 por la tarde, a pregunta del agente A:
+
+1. **NUC-3 → cadena por (titular, sujeto).** `prev_hash` enlaza con la última firma del MISMO sujeto
+   —el titular, o cada menor a su cargo—, así que la poda de un titular nunca deja agujeros en la
+   cadena de un menor ni al revés, y «la poda solo mueve el inicio» vuelve a ser verdad para todas
+   las cadenas. Compatible con lo ya firmado (sin firmas de menor, cadena por sujeto ≡ cadena por
+   titular). **Lo que cambia de sitio**: el verificador `waiver:verify-chain` deja de medir «N menores
+   en una cadena» (con cadenas por sujeto serían N cadenas de una fila) y pasa a medir la
+   **idempotencia bajo el lock** —N firmas simultáneas del MISMO sujeto = UNA fila—, que es la
+   propiedad que el lock protege ahora. Se descartó la poda por prefijo (acumula hasta 18 años más el
+   plazo) y, por supuesto, dejar la cadena rota (no distingue poda de manipulación).
+2. **El techo del chunk del cajón**: la zona «Menores a cargo» se construye, se MIDE con y sin ella y
+   el techo sube exactamente lo medido con su párrafo en el ledger, como en `#175`. Ni podar antes ni
+   un chunk diferido.
+3. **La firma de un MENOR se conserva N meses DESPUÉS de su 18.º cumpleaños**, con ajuste propio
+   `waiver.dependent_retention_months` (Ajustes → «Puerta»). Es lo que el waiver §4.6 anticipaba. El
+   valor de N sigue siendo criterio jurídico: sin valor, ninguna firma de menor se poda.
+4. **Declarar un menor NO exige el correo verificado** (firmar su waiver sí, `#179`): el alta pay-first
+   crea cuentas sin verificar y en la tanda 4 asignar una entrada ocurre en el camino del pago. Lo que
+   acota la superficie es el tope por cuenta y el throttle con prefijo.
+5. **A un adulto no se le declara «a cargo»** (`422 dependent_not_minor`): a los 18 el waiver del adulto
+   deja de cubrirlo, y una firma «como responsable de» un adulto no cubriría a nadie.
+
+▶ Con la 1 y la 3 decididas arranca la **tanda 2 — la firma del menor** (misma sesión); la 2 desbloquea
+la tanda 3 (el cajón). El «qué pasó» de cada tanda va en su entrada y en la spec §9.
+

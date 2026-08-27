@@ -421,6 +421,13 @@ Recuentos del gate tras la tanda: **33 modelos · 80 migraciones**.
 
 ### 9.5 ❗ Lo que la SIGUIENTE tanda necesita del owner — con número y coste
 
+> ✅ **`[DECIDIDO owner, 2026-08-27]` — las cinco, respondidas** (`DECISIONES #197`): **(1) cadena por
+> (titular, sujeto)** · **(2) construir la zona, MEDIR y subir el techo por FEATURE con su párrafo** ·
+> **(3) la firma de un menor se conserva N meses DESPUÉS de su 18.º cumpleaños, con ajuste propio
+> `waiver.dependent_retention_months`** (el valor de N sigue siendo criterio jurídico: sin valor, no se
+> poda) · **(4) declarar NO exige el correo verificado** (firmar sí, `#179`) · **(5) declarar a un
+> adulto se rechaza**. Lo que sigue son las opciones tal y como se plantearon, para la historia.
+
 1. **NUC-3 — la cadena de hashes con firmas de menor** (`DEUDA.md` Alta; se decide ANTES de la primera
    firma de menor, y la tanda 2 ES esa primera firma). Hoy `prev_hash` enlaza con la última fila del
    titular sea cual sea el sujeto, y la poda por plazo no toca `dependent`: con un menor intercalado la

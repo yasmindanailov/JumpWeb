@@ -22,14 +22,18 @@
 >   menores; tope de servidor bajo el lock de la fila del titular) + `GET|POST|DELETE /me/dependents`
 >   contra el contrato + `anonymize()`/export/purga de go-live/poda + el tope en Ajustes → «Puerta».
 >   34 casos, 7/7 mutaciones muerden, 14 comprobaciones HTTP sobre MySQL con Bearer, BD local migrada.
->   ▶ ❗ **POR DÓNDE SIGUE este carril: la tanda 2 NO se escribe sin el owner.** Las cinco decisiones,
->   con número y coste, están en la spec **§9.5**: (1) **NUC-3** —la cadena de hashes con firmas de
->   menor; recomendada la cadena por (titular, sujeto), y el verificador pasa a medir la idempotencia
->   bajo el lock— **bloquea la tanda 2** · (2) **el techo del chunk** (0,16 KiB) **bloquea la tanda 3**
->   (el cajón) · (3) el plazo de retención de una firma de menor · (4) ¿correo verificado para declarar?
->   (hoy no) · (5) la regla de los 18 al declarar (hoy sí). Con la (1) decidida, la tanda 2 es ~media
->   sesión; §9.4 tiene el mapa por tandas y §9.6 las trampas (⚠️ la FK `subject_id → dependents` rompe
->   `WaiverRetentionTest` y `waiver:verify-chain` si no siembran filas reales).
+>   ▶ ✅ **`[DECIDIDO owner, 2026-08-27]` (`#197`) — las cinco decisiones de la spec §9.5, tomadas:**
+>   (1) **cadena por (titular, sujeto)** · (2) la zona del cajón se construye, se MIDE y el techo sube
+>   por FEATURE · (3) la firma de un menor se conserva N meses tras su 18.º cumpleaños, ajuste propio
+>   `waiver.dependent_retention_months` · (4) declarar NO exige correo verificado · (5) a un adulto no
+>   se le declara. ▶ ❗ **EN CURSO (misma sesión, tarde-noche): la TANDA 2 — la firma del menor**:
+>   cadena por sujeto en `WaiverSigner` (`CRITICAL_RE` → `waiver:verify-chain` rehecho + `VERIFY_CONC=1`),
+>   la FK `waiver_signatures.subject_id → dependents` RESTRICT, la identidad del menor copiada EN la
+>   firma (esquema canónico v3), `POST /me/dependents/{id}/waiver`, el estado del waiver por
+>   dependiente en `GET /me/dependents`, el PDF con el sujeto y la retención del menor. Ficheros: los
+>   del carril + `tests/Feature/Waiver/**` + `app/Console/Commands/VerifyWaiverChainConcurrency.php` +
+>   `resources/views/pdf/waiver-proof.blade.php` + `resources/views/filament/users/partials/waiver-proof.blade.php`
+>   + `lang/*/waiver.php` (y, compartidos, un campo más en `Settings.php` y sus claves en `admin.php`).
 >   **Ficheros de este trabajo** (además de los del carril, abajo): `database/migrations/*dependents*` ·
 >   `app/Domain/Identity/{Models/Dependent,Services/DependentRegistry,Services/DependentSettings,Exceptions/Dependent*,Contracts/DependentRemoval}.php`
 >   · `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php`
@@ -212,7 +216,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#192`**.
+> El último usado es **`#197`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
