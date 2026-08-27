@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
 import { formState, resetForm, runForm } from '../account/form-run.js';
 import { replaceDependent } from '../account/dependents.js';
+import { assignableIds, assignableOptions, dependentsById } from '../assignment.js';
 
 /**
  * **El estado de los menores a cargo en el cajón** (Fase 6 · C, `docs/specs/menores-a-cargo.md`
@@ -33,6 +34,8 @@ export const useDependentsStore = defineStore('dependents', {
         /** `data` de `GET /me/dependents`, cruda. `null` mientras no se haya pedido. */
         list: null,
         listLoading: false,
+        /** La petición EN VUELO, para que quien llame mientras tanto espere a la misma y no vuelva con la lista vacía. */
+        inflight: null,
 
         /** El menor cuya firma o retirada está en vuelo, para que SU tarjeta lo diga y no las demás. */
         signingId: null,
@@ -45,6 +48,13 @@ export const useDependentsStore = defineStore('dependents', {
     getters: {
         loaded: (state) => state.list !== null,
         items: (state) => state.list ?? [],
+
+        // Lo que el EMBUDO necesita de la lista (Fase 6 · tanda 4, `assignment.js`): a quién ofrecer
+        // —con su porqué cuando no se puede marcar—, qué ids valen hoy y cómo se llama cada uno.
+        /** @returns {(account: object) => Array<object>} */
+        optionsFor: (state) => (messages) => assignableOptions(state.list ?? [], messages),
+        assignable: (state) => assignableIds(state.list ?? []),
+        byId: (state) => dependentsById(state.list ?? []),
     },
 
     actions: {
@@ -56,20 +66,31 @@ export const useDependentsStore = defineStore('dependents', {
             this.signedId = null;
         },
 
-        /** Pide la lista **solo si no la tiene**. Bandera propia, no `busy` (misma razón que `stores/privacy.js`). */
+        /**
+         * Pide la lista **solo si no la tiene**. Bandera propia, no `busy` (misma razón que `stores/privacy.js`).
+         *
+         * ⚠️ **Dos llamadas seguidas esperan a la MISMA petición.** El embudo la pide al nacer con sesión
+         * y otra vez al restaurar la cesta, y la segunda tiene que volver con la lista en la mano: si
+         * volviera antes, `dropUnassignable()` vería «cero asignables» y vaciaría ids válidos.
+         */
         async ensure({ api = httpClient } = {}) {
-            if (this.loaded || this.listLoading) return;
+            if (this.loaded) return;
+            if (this.inflight) return this.inflight;
 
             this.listLoading = true;
+            this.inflight = (async () => {
+                try {
+                    const response = await api.get('/me/dependents');
 
-            try {
-                const response = await api.get('/me/dependents');
+                    if (response.ok) this.list = response.data?.data ?? [];
+                    else if (response.status === 401) this.expired = true;
+                } finally {
+                    this.listLoading = false;
+                    this.inflight = null;
+                }
+            })();
 
-                if (response.ok) this.list = response.data?.data ?? [];
-                else if (response.status === 401) this.expired = true;
-            } finally {
-                this.listLoading = false;
-            }
+            return this.inflight;
         },
 
         /** Olvida la lista: el siguiente `ensure()` vuelve a preguntar (al cambiar de titular). */

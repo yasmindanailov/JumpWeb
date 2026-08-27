@@ -246,4 +246,20 @@ return [
         'whatsapp' => 'Écris-nous sur WhatsApp',
         'contact' => 'Aller au contact',
     ],
+
+    // Los menores a cargo EN EL EMBUDO (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9): el selector de
+    // los pasos 3 y 4, el aviso de la puerta 2 y el «Para:» del resumen. ⚠️ Viven AQUÍ y no en
+    // `account.dependents` porque `account` viaja SOLO con sesión y quien entra anónimo y se identifica
+    // en el paso 5 los necesita sin recargar — lo cazó el guion headless (§5.undecies).
+    'dependents' => [
+        'title' => 'Pour qui sont ces billets ?',
+        'hint' => 'Cochez les mineurs qui viennent avec ces billets ; les autres sont des adultes.',
+        'full' => 'Plus de place : un billet par mineur.',
+        'adult' => 'a déjà 18 ans',
+        'unsigned' => 'décharge non signée : signez-la dans « Mineurs à ma charge »',
+        'outdated' => 'vous avez signé une version antérieure : acceptez la nouvelle dans « Mineurs à ma charge »',
+        'notice' => 'Vous avez des mineurs à charge : indiquez pour qui est chaque billet avant de payer (ou laissez-les en adultes).',
+        'for' => 'Pour :',
+        'age' => ':age ans',
+    ],
 ];

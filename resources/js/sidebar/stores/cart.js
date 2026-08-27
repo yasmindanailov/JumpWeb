@@ -3,7 +3,9 @@ import {
     cartRows, clear as forgetStored, decideOwnership, load as readStored, reconcile,
     removeLine as removeCartLine, save as writeStored, toApiItems,
 } from '../cart.js';
+import { applyRejections, reconcileAssignments, toggleDependent } from '../assignment.js';
 import { useCatalogStore } from './catalog.js';
+import { useDependentsStore } from './dependents.js';
 
 /**
  * El estado de la CESTA (reorganización del SPA, 2026-08-22).
@@ -51,6 +53,12 @@ export const useCartStore = defineStore('cart', {
 
         /** Errores por campo del evento, con la misma forma que el error bag de la web. */
         fieldErrors: {},
+
+        /**
+         * El AVISO del carrito que no es un error (Fase 6 · tanda 4, la puerta 2): `'assign'` cuando
+         * quien acaba de identificarse tiene menores y entradas sin asignar. Se apaga al salir.
+         */
+        notice: '',
     }),
 
     getters: {
@@ -69,7 +77,9 @@ export const useCartStore = defineStore('cart', {
          * duplicar el dato.
          */
         rows() {
-            return cartRows(this.quote?.lines ?? [], this.lines, useCatalogStore().fieldsByProduct);
+            // Y los NOMBRES de los menores asignados (tanda 4) salen del store de menores: en la
+            // línea viajan solo ids, y el nombre se pone al pintar.
+            return cartRows(this.quote?.lines ?? [], this.lines, useCatalogStore().fieldsByProduct, useDependentsStore().byId);
         },
     },
 
@@ -96,9 +106,62 @@ export const useCartStore = defineStore('cart', {
                 this.forget();
             }
 
+            // Otro titular = otros menores (tanda 4): la lista del anterior no puede seguir sirviendo
+            // opciones. `invalidate()` no tenía llamadores hasta aquí (spec §9.9.1·10).
+            if (String(this.owner ?? '') !== String(newOwner ?? '')) {
+                useDependentsStore().invalidate();
+            }
+
             this.setOwner(newOwner);
 
             return decision;
+        },
+
+        // ── Los menores asignados a cada línea (Fase 6 · tanda 4, `assignment.js`) ──────────────
+
+        /** Marca o desmarca un menor en una línea de la cesta, y persiste (son ids: sí se guardan). */
+        assign(index, dependentId) {
+            const line = this.lines[index];
+
+            if (! line) return;
+
+            this.lines = this.lines.map((each, i) => (
+                i === index ? { ...each, dependent_ids: toggleDependent(each.dependent_ids ?? [], dependentId, each.quantity) } : each
+            ));
+            this.notice = '';
+            this.persist();
+        },
+
+        /**
+         * Quita de la cesta los ids que HOY no se pueden asignar (§4.8·2): el menor se retiró, cumplió
+         * 18 o su firma caducó. Se llama con la lista viva en la mano, al restaurar y al conseguir sesión.
+         */
+        dropUnassignable(assignable = useDependentsStore().assignable) {
+            const { lines, changed } = reconcileAssignments(this.lines, assignable);
+
+            if (changed) {
+                this.lines = lines;
+                this.persist();
+            }
+
+            return changed;
+        },
+
+        /** El 422 del checkout sobre la asignación: las líneas rechazadas se quedan sin asignar. */
+        applyAssignmentRejections(fields) {
+            const { lines, changed, message } = applyRejections(this.lines, fields);
+
+            if (changed) {
+                this.lines = lines;
+                this.persist();
+                this.error = message;
+            }
+
+            return changed;
+        },
+
+        setNotice(notice) {
+            this.notice = notice ?? '';
         },
 
         /**
@@ -142,6 +205,12 @@ export const useCartStore = defineStore('cart', {
 
         setFieldErrors(errors) {
             this.fieldErrors = errors ?? {};
+        },
+
+        /** Lo que `line-problems.js` decidió, aplicado: los errores por campo se SUMAN, el aviso sustituye. */
+        applyLineProblems({ fieldErrors = {}, error = '' } = {}) {
+            this.fieldErrors = { ...this.fieldErrors, ...fieldErrors };
+            this.error = error;
         },
 
         /**

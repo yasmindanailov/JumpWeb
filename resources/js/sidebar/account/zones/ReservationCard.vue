@@ -29,6 +29,12 @@ defineProps({
     answers: { type: Array, default: () => [] },
     /** ¿Están desplegadas sus respuestas? */
     openEvent: { type: Boolean, default: false },
+    /** Los menores a cargo para los que es ESTA entrada (`event-data`, Fase 6 · tanda 4), o lista vacía. */
+    dependents: { type: Array, default: () => [] },
+    /** ¿Se ofrece «ver para quién»? Solo en ENTRADAS y solo si el titular tiene menores declarados. */
+    offerDependents: { type: Boolean, default: false },
+    /** ¿Está desplegado «para quién»? */
+    openDependents: { type: Boolean, default: false },
     /** ¿Va atenuada? Lo decide la pantalla. */
     dimmed: { type: Boolean, default: false },
     /** ¿Hay una petición en vuelo? Bloquea el reintento. */
@@ -37,7 +43,7 @@ defineProps({
     messages: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['open-order', 'toggle-event', 'retry']);
+defineEmits(['open-order', 'toggle-event', 'toggle-dependents', 'retry']);
 </script>
 
 <template>
@@ -85,6 +91,22 @@ defineEmits(['open-order', 'toggle-event', 'retry']);
             <li v-for="answer in answers" :key="answer.key">
                 <span class="orders__event-label">{{ answer.label }}:</span> {{ answer.value }}
             </li>
+        </ul>
+
+        <!--
+          Para quién es la ENTRADA (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9.3 D7): bajo demanda y
+          por `event-data`, como las respuestas del pack y por lo mismo — es el nombre de un menor y no
+          viaja en la lista. Se ofrece solo si el titular tiene menores declarados.
+        -->
+        <button v-if="offerDependents && ! row.isPack" type="button" class="orders__gate-toggle"
+                :aria-expanded="openDependents ? 'true' : 'false'" @click="$emit('toggle-dependents')">
+            {{ openDependents ? account?.account?.dependents?.assigned_hide : account?.account?.dependents?.assigned_show }}
+        </button>
+        <ul v-if="openDependents" class="orders__event">
+            <li v-if="dependents.length">
+                <span class="orders__event-label">{{ account?.account?.dependents?.for_label }}</span> {{ dependents.map((d) => d.name).join(', ') }}
+            </li>
+            <li v-else>{{ account?.account?.dependents?.assigned_none }}</li>
         </ul>
 
         <!--

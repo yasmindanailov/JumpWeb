@@ -205,10 +205,22 @@ export async function runCheckout({ cartCount, incompleteLines = false, api, mes
  * }} deps
  * @returns {Promise<CheckoutVerdict & {purged: boolean}>}
  */
-export async function continueAfterIdentification({ cartCount, me, api, messages = {}, refreshStatus }) {
+export async function continueAfterIdentification({ cartCount, me, api, messages = {}, refreshStatus, needsAssignment = false }) {
     const eligibility = await api.get('/me/reservation-eligibility');
 
-    return settle({ cartCount, me, eligibility, messages }, refreshStatus);
+    const verdict = await settle({ cartCount, me, eligibility, messages }, refreshStatus);
+
+    // ⚠️ **La puerta 2 de los menores a cargo** (`[DECIDIDO owner]` `DECISIONES #202`·1,
+    // `menores-a-cargo.md` §9.9.2): quien acaba de identificarse y tiene menores asignables con
+    // entradas sin asignar VUELVE AL CARRITO —a marcar para quién es cada entrada— en vez de ir a
+    // pagar. Solo si el veredicto era «a pagar»: un rechazo de admisión sigue mandando, y quien no
+    // tiene menores o ya lo asignó todo sigue el camino de siempre. Sin mensaje de error: el carrito
+    // enseña el aviso por su cuenta (`notice`), porque esto no es un «no», es un «antes, esto».
+    if (verdict.step === STEPS.PAY && needsAssignment === true) {
+        return { ...verdict, step: STEPS.CART, error: '', notice: 'assign' };
+    }
+
+    return verdict;
 }
 
 /**

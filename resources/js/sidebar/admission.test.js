@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideCheckout, runCheckout } from './admission.js';
+import { continueAfterIdentification, decideCheckout, runCheckout } from './admission.js';
 import { STEPS } from './machine.js';
 
 /**
@@ -249,6 +249,43 @@ describe('la cesta que todavía no se puede comprar', () => {
     test('solo un `true` explícito bloquea', () => {
         assert.equal(decide({ incompleteLines: 'sí' }).step, STEPS.PAY);
         assert.equal(decide({ incompleteLines: [] }).step, STEPS.PAY);
+    });
+});
+
+/**
+ * **La puerta 2 de los menores a cargo** (`[DECIDIDO owner]` #202·1): tras identificarse en el paso 5,
+ * quien tiene menores asignables y entradas sin asignar vuelve al CARRITO con un aviso, en vez de ir a
+ * pagar. Solo si el veredicto era «a pagar»; un rechazo de admisión sigue mandando.
+ */
+describe('la puerta 2: volver al carrito tras identificarse', () => {
+    const api = (allowed = true) => ({ get: async () => ok({ allowed }) });
+    const me = ok({ id: 7 });
+    const statusOk = async () => true;
+
+    test('con menores y entradas sin asignar, a pagar se convierte en el carrito con su aviso', async () => {
+        const verdict = await continueAfterIdentification({ cartCount: 1, me, api: api(), messages: MESSAGES, refreshStatus: statusOk, needsAssignment: true });
+
+        assert.equal(verdict.step, STEPS.CART);
+        assert.equal(verdict.error, '', 'no es un error: el carrito enseña el aviso');
+        assert.equal(verdict.notice, 'assign');
+        assert.equal(verdict.purged, false);
+    });
+
+    test('sin nada que asignar, el camino es el de siempre', async () => {
+        const verdict = await continueAfterIdentification({ cartCount: 1, me, api: api(), messages: MESSAGES, refreshStatus: statusOk, needsAssignment: false });
+
+        assert.equal(verdict.step, STEPS.PAY);
+        assert.equal(verdict.notice, undefined);
+    });
+
+    test('un rechazo de admisión manda sobre la puerta 2', async () => {
+        const denied = { get: async () => ok({ allowed: false, reason: 'too_many_pending_orders', max_pending_orders: 5 }) };
+
+        const verdict = await continueAfterIdentification({ cartCount: 1, me, api: denied, messages: MESSAGES, refreshStatus: statusOk, needsAssignment: true });
+
+        assert.equal(verdict.step, STEPS.CART);
+        assert.notEqual(verdict.error, '', 'el aviso es el del tope, no el de la asignación');
+        assert.equal(verdict.notice, undefined);
     });
 });
 

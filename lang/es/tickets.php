@@ -279,4 +279,20 @@ return [
         'whatsapp' => 'Escríbenos por WhatsApp',
         'contact' => 'Ir a contacto',
     ],
+
+    // Los menores a cargo EN EL EMBUDO (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9): el selector de
+    // los pasos 3 y 4, el aviso de la puerta 2 y el «Para:» del resumen. ⚠️ Viven AQUÍ y no en
+    // `account.dependents` porque `account` viaja SOLO con sesión y quien entra anónimo y se identifica
+    // en el paso 5 los necesita sin recargar — lo cazó el guion headless (§5.undecies).
+    'dependents' => [
+        'title' => '¿Para quién son estas entradas?',
+        'hint' => 'Marca a los menores que vienen con estas entradas; el resto son adultos.',
+        'full' => 'No caben más: una entrada por menor.',
+        'adult' => 'ya tiene 18 años',
+        'unsigned' => 'exención sin firmar: fírmala en «Menores a cargo»',
+        'outdated' => 'firmaste una versión anterior: acepta la nueva en «Menores a cargo»',
+        'notice' => 'Tienes menores a cargo: indica para quién es cada entrada antes de pagar (o déjalas como adultos).',
+        'for' => 'Para:',
+        'age' => ':age años',
+    ],
 ];

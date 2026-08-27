@@ -112,6 +112,12 @@ return [
             'waiver_unsigned' => 'Waiver not signed on their behalf.',
             'waiver_current' => 'Waiver signed on their behalf, current version (v:version).',
             'waiver_outdated' => 'You signed an earlier version of the text on their behalf: please accept the new one.',
+            // Assigning TICKETS to minors in the funnel (batch 4): the picker in steps 3 and 4, the
+            // notice after signing in, the summary row and the reservation card.
+            'for_label' => 'For:',
+            'assigned_none' => 'Not assigned to any minor.',
+            'assigned_show' => 'See who it is for',
+            'assigned_hide' => 'Hide who it is for',
         ],
     ],
 

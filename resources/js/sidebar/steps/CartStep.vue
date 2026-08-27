@@ -2,6 +2,7 @@
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import ProductIcon from '../ProductIcon.vue';
+import DependentPicker from './DependentPicker.vue';
 import { shortDate } from '../progress.js';
 
 /**
@@ -34,9 +35,16 @@ const props = defineProps({
     error: { type: String, default: '' },
     messages: { type: Object, default: () => ({}) },
     locale: { type: String, default: 'es' },
+    /**
+     * Los menores a cargo que se ofrecen (Fase 6 · tanda 4, `assignment.js::assignableOptions()`).
+     * Vacío sin sesión o sin menores, y entonces ninguna línea pinta el selector.
+     */
+    dependentOptions: { type: Array, default: () => [] },
+    /** El aviso que no es un error: `'assign'` tras identificarse con menores y entradas sin asignar. */
+    notice: { type: String, default: '' },
 });
 
-defineEmits(['remove', 'add-another', 'update-field']);
+defineEmits(['remove', 'add-another', 'update-field', 'toggle-dependent']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -122,6 +130,12 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
                     </label>
                 </div>
 
+                <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4): solo ENTRADAS, solo con menores
+                     que ofrecer. Aquí se edita una línea ya en la cesta —y persistida: son ids—. -->
+                <DependentPicker v-if="! line.is_pack && dependentOptions.length"
+                                 :options="dependentOptions" :selected="line.dependent_ids ?? []" :quantity="line.quantity" :messages="messages"
+                                 @toggle="$emit('toggle-dependent', line.index, $event)" />
+
                 <ul v-if="line.addons.length" class="cart__addons">
                     <li v-for="addon in line.addons" :key="addon.product_id">
                         <span>+ {{ addon.quantity }}&times; {{ addon.product_name }}<em v-if="addon.free_quantity" class="cart__addon-incl">{{ includedLabel(addon) }}</em></span>
@@ -137,6 +151,10 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
         <div class="purchase__foot purchase__foot--info">
             <p v-if="error" class="form__error">{{ error }}</p>
             <div v-if="confirmed" class="purchase__confirm">{{ t('confirm_next') }}</div>
+            <!-- La puerta 2 (`DECISIONES #202`·1): quien acaba de identificarse con menores a cargo vuelve
+                 aquí a decir para quién es cada entrada. Es un aviso, no un error: mismo bloque que
+                 «carrito listo». -->
+            <div v-if="notice === 'assign'" class="purchase__confirm" role="status">{{ t('dependents.notice') }}</div>
             <button type="button" class="purchase__add-more" @click="$emit('add-another')">+ {{ t('add_another') }}</button>
         </div>
     </template>

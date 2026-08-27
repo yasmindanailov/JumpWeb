@@ -352,8 +352,19 @@ class SidebarBundleBudgetTest extends TestCase
      * y porque el store tiene cuatro escrituras y no una. **235 deja 0,59 KiB**: la holgura estrecha
      * de siempre, a propósito, para que lo siguiente que entre —la asignación en el embudo, tanda 4—
      * tenga que medirse y decidirse igual.
+     *
+     * ⚠️ **235 → 243 el 2026-08-27 por la noche, y lo paga la TANDA 4 de «MENORES A CARGO» —la
+     * asignación de entradas en el embudo (`DECISIONES #202`)— subida por FEATURE (`#197`·2).** Dos
+     * subidas dentro: U1 puso la paridad mínima de `cart.js` (`dependent_ids` en el saneador y en el
+     * almacén: 234,41 → 234,70, +0,29) y U2 el resto, medido construyendo con y sin: `assignment.js`
+     * (las reglas del selector, la reconciliación y la puerta 2), `DependentPicker.vue` pintado en los
+     * pasos 3 y 4, `toCheckoutItems()`, el «Para:» del resumen y del paso 6, el despliegue de la
+     * tarjeta de «Mis reservas», y `line-problems.js` —que salió del orquestador para que éste siguiera
+     * encogiendo—: **234,70 → 242,19 KiB, +7,49**. Es del tamaño de la zona de menores (+8,07) por lo
+     * mismo: cada casilla del selector es un bloque con su motivo, y se pinta en dos pasos. **243 deja
+     * 0,81 KiB**: la holgura estrecha de siempre, a propósito — lo siguiente se mide.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 235;
+    private const SIDEBAR_CHUNK_MAX_KB = 243;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

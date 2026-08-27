@@ -10708,6 +10708,24 @@ nombre en la 201, `orders/{code}`, `me/orders` y `me/reservations`**, y los cuat
 estaba en el `CRITICAL_RE`; `DependentAssigner` queda declarado control negativo. ▶ Sigue **U2, el
 cajón**.
 
+▶ ✅ **U2 EJECUTADA y empujada la noche del 27** (spec **§9.9.8**): el cajón entero —`assignment.js`
+(las reglas del selector, la reconciliación, la puerta 2 y el 422 por campo, todo con `node --test`),
+`DependentPicker.vue` en los pasos 3 y 4 con clases que ya existen, `cart.js` con `dependent_ids` en
+sus cuatro listas y `toCheckoutItems()` como único camino con ids hacia `POST /orders`, «Para:» en el
+resumen, el paso 6 y la tarjeta de «Mis reservas» (el nombre solo por `event-data`)—. **Dos decisiones
+de diseño que el guion headless FORZÓ y la suite no habría pedido**: (a) **los rótulos del embudo viven
+en `tickets.dependents`, no en `account.dependents`**, porque `account` viaja solo con sesión y quien
+entra anónimo y se identifica en el paso 5 volvía al carrito con el selector y el aviso EN BLANCO; (b)
+**los menores se piden en cuanto se sabe quién es el titular** (`watch` con `immediate`), no solo al
+restaurar una cesta: el cajón que nace abierto con sesión salía sin selector — y el primer arreglo nació
+con un TDZ que Vue traga en silencio (la carga saltó una vez, también sin sesión, y nunca más); el
+`ensure()` del store devuelve ahora la petición en vuelo. **Lo medido**: +2 tests PHP y +39 JS
+(3123 / 17.982 en el árbol del A; el fusionado con el C, 3132 / 18.048 · JS 773), 136 guardas del cajón con los techos re-medidos (chunk 234,70 → 242,19 KiB, techo
+243; payload con sesión 7.602 → 7.747 B, techo 7.800 —bajó de un 8.300 provisional al mudar los
+rótulos—; `PurchaseSection.vue` 432 → 428), guion **§5.undecies 19/19** por las dos puertas, y la sonda
+de **16 `assign()` simultáneos → una fila** que §9.9.5 exigía y U1 no había medido. `layout.blade.php`
+no se tocó. ▶ Sigue **U4, el ojo del owner**.
+
 ## #203 · 2026-08-27 · El ARMAZÓN, tanda 2c·2 — la barra se DISUELVE en dos racimos flotantes, y el salto al contenido pasa de 1 de 12 a 12 de 12
 
 `.nav` deja de tener fondo, desenfoque y línea inferior y pasa a ser el **contenedor** de dos

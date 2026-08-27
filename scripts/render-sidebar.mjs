@@ -53,6 +53,7 @@ import {
 } from '../resources/js/sidebar/calendar.js';
 import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
 import { cartRows } from '../resources/js/sidebar/cart.js';
+import { assignableOptions, dependentsById } from '../resources/js/sidebar/assignment.js';
 import { buildProgress } from '../resources/js/sidebar/progress.js';
 import { buildFooter } from '../resources/js/sidebar/foot.js';
 import { gatewayForm } from '../resources/js/sidebar/pay.js';
@@ -148,6 +149,10 @@ const PROPS_FROM_API = {
             // es lo que `CE-4` prohíbe.
             addons: { groups: api.addons?.groups ?? [], singles: api.addons?.singles ?? [] },
             messages,
+            // Los menores a cargo (Fase 6 · tanda 4): lo que ofrece `assignableOptions()` sobre la
+            // respuesta REAL de `GET /me/dependents`, y los ya marcados. Sin ellos el bloque no existe.
+            dependentOptions: assignableOptions(api.dependents?.data ?? [], messages),
+            dependentIds: state.dependentIds ?? [],
         };
     },
 
@@ -179,7 +184,7 @@ const PROPS_FROM_API = {
     }),
 
     [STEPS.PAY]: (api, messages, state) => ({
-        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}),
+        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}, dependentsById(api.dependents?.data ?? [])),
         error: state.error ?? '',
         messages,
         locale: state.locale ?? 'es',
@@ -229,11 +234,15 @@ const PROPS_FROM_API = {
     }),
 
     [STEPS.CART]: (api, messages, state) => ({
-        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}),
+        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}, dependentsById(api.dependents?.data ?? [])),
         confirmed: state.confirmed ?? false,
         error: state.error ?? '',
         messages,
         locale: state.locale ?? 'es',
+        // Los menores a cargo (Fase 6 · tanda 4), como en el paso 3. ⚠️ `state.notice` es el aviso de
+        // PAUSA del armazón; el del carrito viaja como `cartNotice` para no pisarlo.
+        dependentOptions: assignableOptions(api.dependents?.data ?? [], messages),
+        notice: state.cartNotice ?? '',
     }),
 };
 

@@ -116,6 +116,13 @@ return [
             'waiver_unsigned' => 'Exención sin firmar en su nombre.',
             'waiver_current' => 'Exención firmada en su nombre, versión vigente (v:version).',
             'waiver_outdated' => 'Firmaste en su nombre una versión anterior del texto: acepta la nueva.',
+            // La asignación de ENTRADAS a menores en el embudo (tanda 4, `specs/menores-a-cargo.md`
+            // §9.9.3 D9/D10): el selector de los pasos 3 y 4, el aviso de la puerta 2, la fila del
+            // resumen y la tarjeta de «Mis reservas». Solo con sesión, como el resto del subgrupo.
+            'for_label' => 'Para:',
+            'assigned_none' => 'Sin asignar a ningún menor.',
+            'assigned_show' => 'Ver para quién es',
+            'assigned_hide' => 'Ocultar para quién es',
         ],
     ],
 

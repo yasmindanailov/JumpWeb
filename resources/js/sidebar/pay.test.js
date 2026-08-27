@@ -35,6 +35,31 @@ const ok = (data) => ({ ok: true, status: 201, data, error: null, offline: false
 const fail = (status, error) => ({ ok: false, status, data: { error }, error, offline: false });
 const offline = () => ({ ok: false, status: 0, data: null, error: null, offline: true });
 
+/**
+ * El 422 de la ASIGNACIÓN de menores (Fase 6 · tanda 4, D3): el servidor lo comprueba ANTES del dinero
+ * y responde por campo con el mensaje ya traducido. Se enseña ese mensaje —no el genérico— y se devuelven
+ * los campos para que el store deje esas líneas sin asignar.
+ */
+describe('el 422 de la asignación de menores', () => {
+    test('el mensaje del servidor se enseña tal cual y los campos viajan con el veredicto', async () => {
+        const fields = { 'items.0.dependent_ids.0': ['Ese menor no está en tu cuenta.'] };
+        const api = { post: async () => fail(422, { code: 'validation_failed', message: 'Revisa los datos.', fields }) };
+
+        const result = await runConfirm({ items: [], api, messages: MESSAGES });
+
+        assert.equal(result.ok, false);
+        assert.equal(result.error, 'Ese menor no está en tu cuenta.');
+        assert.deepEqual(result.fields, fields);
+    });
+
+    test('un 422 que no es de la asignación sigue cayendo al aviso genérico', () => {
+        const verdict = confirmError(fail(422, { code: 'validation_failed', fields: { 'items.0.quantity': ['x'] } }), MESSAGES);
+
+        assert.equal(verdict.error, MESSAGES.errors.try_later);
+        assert.equal(verdict.fields, undefined);
+    });
+});
+
 describe('el formulario de la pasarela', () => {
     /**
      * ⚠️ **Los campos se emiten TAL CUAL y en su orden.** La firma cubre esos valores exactos, así que

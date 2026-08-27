@@ -4,13 +4,15 @@
 > la 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`) con la cadena por
 > (titular, sujeto) que decidió el owner (`#197`); la 3, la ZONA DEL CAJÓN (`#199`), medida y con su
 > guion en headless 20/20. La TANDA 4 —la asignación en el embudo— tiene su DISEÑO DE EJECUCIÓN
-> escrito y medido (§9.9, `#202`): U0 (la purga de la cesta) y U1 (el SERVIDOR: tabla, asignador,
-> contrato de Booking, `CartLine.dependent_ids`, checkout, `event-data`, RGPD) están EN EL ÁRBOL
-> (§9.9.6, §9.9.7); sigue U2, el cajón.** ▶ **EMPIEZA POR §9.9** —§9.9.2 las decisiones del owner
+> escrito y medido (§9.9, `#202`) y **sus tres unidades de código EN EL ÁRBOL**: U0 (la purga de la
+> cesta, §9.9.6), U1 (el SERVIDOR, §9.9.7) y **U2 (el CAJÓN, §9.9.8: el selector en los pasos 3 y 4, la
+> puerta 2, el «Para:», los rótulos en `tickets.dependents`, guion headless 19/19 por las dos puertas)**;
+> sigue U4, el OJO del owner. ⚠️ §9.9.8·4 y ·5: dos defectos que la suite no veía y el guion cazó.**
+> ▶ **EMPIEZA POR §9.9** —§9.9.2 las decisiones del owner
 > (⚠️ la exención firmada es CONDICIÓN para asignar; el panel NO entra, rectificado),
 > §9.9.1 lo que el código corrige al cuerpo (§4.7 «esa pantalla ya existe» era FALSA; la cesta del
 > propio titular se PURGA al nacer abierto el cajón), §9.9.3 el diseño y §9.9.4 las unidades— ·
-> Última actualización: 2026-08-27 noche (§9.9) · anteriores: §9.8, 2026-08-25 ·
+> Última actualización: 2026-08-27 noche (§9.9.8) · anteriores: §9.9, 2026-08-27 · §9.8, 2026-08-25 ·
 > ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
 > persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
 > la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
@@ -983,3 +985,79 @@ con sesión, A5·4 nuevo).
 `assignment.js`, las casillas en `TimeStep`/`CartStep`, la puerta 2 en `admission.js`, el paso 6 y la
 tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos con y sin.
 
+
+#### 9.9.8 U2 EJECUTADA — el CAJÓN (2026-08-27 noche, carril A, dentro de `#202`)
+
+> Lo que hay, en qué se apartó de §9.9.3, lo medido y lo que queda. ⚠️ **Lo más valioso de esta
+> unidad lo cazó el guion headless (§5.undecies), no la suite: DOS defectos que las 136 guardas del
+> cajón daban por buenos** — están en «En qué se apartó», puntos 4 y 5, porque cambian el diseño.
+
+**Qué existe**
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| Las reglas del selector | `resources/js/sidebar/assignment.js` · `assignment.test.js` | D9 en un módulo con `node --test`: `assignableOptions()` (qué se ofrece y por qué NO se puede marcar: adulto · sin firma · versión anterior; fuera del modo interno no hay firma que mirar), `toggleDependent()`/`trimToQuantity()` (nunca más menores que unidades), `reconcileAssignments()` (§4.8·2: fuera de la cesta el id que hoy no es asignable), `needsAssignment()` (la puerta 2), `assignmentRejections()`/`applyRejections()` (el 422 por campo, aplicado a SU línea, que vuelve sin asignar) |
+| El selector | `resources/js/sidebar/steps/DependentPicker.vue` | «¿Para quién son estas entradas?»: una casilla por menor declarado, las no asignables deshabilitadas **con su motivo**, y con la línea llena las libres se deshabilitan. Lo pintan los pasos 3 (`TimeStep`) y 4 (`CartStep`) con clases que ya existen (`eventfields`, `form__checks`, `check`): **cero CSS nuevo** |
+| Los rótulos | `lang/{es,en,fr}/tickets.php` → `tickets.dependents.*` (9) · `account.dependents.{for_label,assigned_none,assigned_show,assigned_hide}` (4) | ⚠️ **Los del EMBUDO van en el grupo del embudo, que viaja siempre** (punto 5 de abajo). En `account` quedan solo los de la tarjeta de «Mis reservas» |
+| La cesta | `resources/js/sidebar/cart.js` · `stores/cart.js` · `stores/selection.js` | D8: `dependent_ids` en las cuatro listas (saneador · `save()` · `addLine` que funde y recorta · `cartRows()` que resuelve `dependents[{id, name}]` con `dependentsById`); `toCheckoutItems()` es lo ÚNICO que viaja a `POST /orders` con ids; `assign()`, `dropUnassignable()`, `applyAssignmentRejections()`, `applyLineProblems()` y el `notice` en el store; `selection.js` lleva los ids de la línea en construcción y los recorta al bajar la cantidad |
+| El store de menores | `resources/js/sidebar/stores/dependents.js` | `optionsFor(messages)` · `assignable` · `byId`; **`ensure()` devuelve la petición EN VUELO** a quien llame mientras tanto (punto 4) |
+| La puerta 2 | `resources/js/sidebar/admission.js::continueAfterIdentification()` · `admission.test.js` | `[DECIDIDO owner]` `#202`·1: si el veredicto era PAGAR y hay menores asignables con entradas sin asignar, devuelve CART con `notice: 'assign'`. Solo entonces: sin menores o con todo asignado va a pagar como siempre |
+| El orquestador | `resources/js/sidebar/sections/PurchaseSection.vue` | `loadDependents()` (pide y poda) disparado por un **`watch` sobre el titular con `immediate`** —al nacer con sesión, al identificarse, al cambiar de dueño— y, a propósito, otra vez desde `restoreCart()` y `enterWith()` para podar con las líneas en la mano; `confirmReservation()` manda `toCheckoutItems()` y aplica el 422; el 422 devuelve al carrito. **432 → 428 líneas**: `today()` y `showLineProblems` salieron (`line-problems.js`, con test) |
+| El resumen y la tarjeta | `steps/SummaryLine.vue` (pasos PAGAR y 6, «Para: Lucas») · `account/zones/ReservationCard.vue` + `OrdersZone.vue` («Ver para quién es» → nombres, desde `event-data`) · `outcome.js` | D7: el nombre solo llega por `GET /orders/{code}/event-data`, como las respuestas del pack; la lista de pedidos no lo lleva |
+| El renderizador SSR | `scripts/render-sidebar.mjs` | Los pasos 3 y 4 reciben `api.dependents` (la respuesta REAL de `GET /me/dependents`), `state.dependentIds` y `state.cartNotice` (⚠️ `state.notice` es el aviso de PAUSA del armazón) |
+| El contrato de árbol | `tests/Feature/Sidebar/SidebarDomContractTest.php` (+2) · `tests/Fixtures/sidebar-dom-manifest.json` (+2 claves, 0 cambios) | El paso 3 con una ENTRADA y dos menores (uno marcado, otro deshabilitado con motivo) y el carrito con la línea asignada y el aviso de la puerta 2. Fixture real: `DependentRegistry` + `WaiverSigner` en modo interno |
+
+**En qué se apartó de §9.9.3 (o lo precisa)**
+
+1. **La reconciliación vive en `assignment.js`, no en `cart.js`**: `cart.js` sanea la FORMA (enteros ≥ 1
+   sin repetidos, o la línea cae) y `assignment.js` decide el FONDO (qué id sigue siendo asignable).
+   `dropUnassignable()` en el store las une «con la lista viva en la mano».
+2. **El 422 DESASIGNA la línea rechazada** (`applyRejections()`): el cliente vuelve al carrito con el
+   motivo del servidor en el pie y la casilla sin marcar, en vez de con una casilla marcada que no puede
+   pagar. Verificado en navegador (P1·422-desmarca-al-menor).
+3. **`showLineProblems` ya no es del orquestador**: era una regla de presentación sin caso; hoy es
+   `line-problems.js` con `node --test` y el store la aplica (`applyLineProblems`).
+4. ⚠️⚠️ **El cajón que NACE ABIERTO con sesión no pedía los menores.** `loadDependents()` colgaba de
+   `restoreCart()` (solo con cesta guardada) y del login del paso 5; quien entra, va a `/entradas` y
+   elige una entrada veía el paso 3 **sin selector**. Lo cazó el guion, no la suite: el contrato de árbol
+   recibe `api.dependents` ya hecho y ningún test arranca el motor con sesión. **El arreglo también nació
+   roto**: el `watch` sobre `cartStore.owner` quedó por encima de `const cartStore`, y Vue **traga** el
+   `ReferenceError` del getter y llama al callback con `undefined` —que `!== null`—, así que la carga
+   saltaba UNA vez, **también sin sesión** (tres 401 en consola), y nunca más. La puerta 1 pasó por
+   accidente; lo delató el `pageerror` del diagnóstico. Hoy: el `watch` debajo de la declaración, y
+   `ensure()` devuelve la petición en vuelo para que las tres llamadas esperen a la MISMA lista.
+5. ⚠️⚠️ **Los rótulos del embudo se pusieron en `account.dependents` y `account` viaja SOLO con sesión**
+   (`layout.blade.php`, `auth()->check()`, medido y a propósito desde `area-cliente.md`). Quien entra
+   anónimo y se identifica en el paso 5 volvía al carrito con el selector y el aviso **en blanco** —
+   `role=status` vacío, «Lucas ·» sin edad—. Ninguna guarda lo veía: la paridad de textos compara claves,
+   no presencia por sesión. Hoy viven en **`tickets.dependents`** (9 rótulos, **498 B** en ES que van en
+   cada página) y `account.dependents` conserva los cuatro de la tarjeta. Los techos se re-midieron:
+   el de sesión **BAJÓ** (8.300 provisional → **7.800**, sobre 7.747 medidos).
+6. **`layout.blade.php` NO se tocó** (§9.9.4 lo daba por tocado): el subgrupo `dependents` viaja entero
+   con sesión y el del embudo va con `tickets`. Aviso al carril C retirado en `ESTADO`.
+
+**Lo medido**
+
+- **Suite: 3121 → 3123 (+2), 17.936 → 17.982 en el árbol del A** (el FUSIONADO con el carril C, medido al empujar: **3132 / 18.048**); `npm run test:js` **734 → 773 (+39)**: `assignment.test.js`,
+  `line-problems.test.js`, los stores de cesta/selección/menores (incluido «dos `ensure()` a la vez esperan
+  a la MISMA petición»), `admission.test.js` (la puerta 2 en sus dos sentidos), `pay.test.js` (el 422 con
+  campos), `outcome.test.js`. Las 136 guardas del cajón en verde, **con los techos re-medidos**: chunk
+  **234,70 → 242,19 KiB** (techo 235 → **243**, +7,49 por FEATURE, `#197`·2 — del tamaño de la zona de
+  menores, +8,07, y por lo mismo), payload con sesión **7.602 → 7.747 B** (techo 7.700 → **7.800**),
+  `PurchaseSection.vue` **432 → 428** («solo encoge»: subió a 440 y se bajó antes de commitear, dos veces).
+- **Guion headless §5.undecies: 19/19 por las DOS puertas** (P1 con sesión desde el paso 3: selector,
+  Vera deshabilitada con motivo, `localStorage` con ids y sin nombre, «Para: Lucas», el 422 al retirar
+  la firma bajo los pies —pedido NO creado, vuelta al carrito con el mensaje del servidor y la línea sin
+  asignar—, el 201 con `items[0].dependent_ids`, fila y auditoría sin nombre, `event-data` con el
+  nombre y `me/orders` sin él · P2 anónimo hasta el paso 5: vuelve al CARRITO con el aviso y el selector
+  con rótulos, y paga con el id). Cada pasada crea dos pedidos `pending` que `cleanup` caduca por el
+  dominio y borra.
+- **Sonda de concurrencia que §9.9.5 exigía y U1 no midió**: pedido real por HTTP con Bearer y **16
+  procesos** (`pcntl_fork`) llamando a `DependentAssigner::assign()` con el MISMO par (Lucas, pedido 119)
+  a la vez → **16 completan, UNA fila, UNA auditoría** (con `user_id` nulo: en CLI no hay `auth()`; por
+  HTTP lleva al titular).
+- Pint ✓ · `docs-check` ✓ · `MANIFEST_REFRESH=1` añadió 2 claves y no cambió ninguna.
+
+**Lo que queda** — **U4, el ojo del owner**: el guion §5.undecies en su navegador, EN/FR de los nueve
+rótulos, la tarjeta de «Mis reservas» con un pedido pagado (el guion se queda en `pending`), y el aspecto
+del selector con el tema. Del cuerpo de la spec siguen pendientes del owner los DOS valores de retención.

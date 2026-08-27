@@ -112,6 +112,12 @@ return [
             'waiver_unsigned' => 'Décharge non signée en son nom.',
             'waiver_current' => 'Décharge signée en son nom, version en vigueur (v:version).',
             'waiver_outdated' => 'Vous avez signé en son nom une version antérieure du texte : merci d\'accepter la nouvelle.',
+            // L'attribution de BILLETS aux mineurs dans le parcours (lot 4) : le sélecteur des étapes 3
+            // et 4, l'avis après connexion, la ligne du récapitulatif et la carte de réservation.
+            'for_label' => 'Pour :',
+            'assigned_none' => 'Attribué à aucun mineur.',
+            'assigned_show' => 'Voir pour qui',
+            'assigned_hide' => 'Masquer pour qui',
         ],
     ],
 

@@ -38,16 +38,23 @@
 >   idempotente, sin lanzar) · `CartLine.dependent_ids` en el contrato y en `CartPayload` (Booking no lo
 >   ve) · `OrdersController::store()` · `event-data` con `dependents[]` · `anonymize()` y el export ·
 >   `api.dependents.*` ×3 · la paridad mínima de `cart.js`. **9 mutaciones, las 9 muerden · 6 escenarios
->   + Redsys sobre MySQL ✓ · sonda HTTP de 10 pasos ✓.** ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ →
->   **U2 (el cajón: `toCheckoutItems()`, `assignment.js`, casillas en los pasos 3 y 4, la puerta 2 en
->   `admission.js`, paso 6 y tarjeta, rótulos ×3, manifiesto con caso de ENTRADA, techos medidos)** →
->   U4 (el ojo del owner). Cada unidad se empuja verde. ⚠️ **U2 entra en `layout.blade.php`** (la lista
->   de claves con sesión): aviso al carril C ya dado abajo.
->   ▶ **Para el agente del C (el tema/armazón)**: esta tanda tocará **`resources/views/components/layout.blade.php`**
->   (solo la lista de claves `account.dependents.*` que viajan con sesión, en U2) y **NO toca**
->   `public/css/*`, `nav.blade.php`, `menu.blade.php` ni `app.js` salvo, en U0, la siembra del dueño de
->   la cesta si acaba viviendo en `app.js` (te lo avisaré aquí antes). El selector del embudo se
->   compone con clases que ya existen (`eventfields`, `cart__pending`, `form`): **cero CSS nuevo**,
+>   + Redsys sobre MySQL ✓ · sonda HTTP de 10 pasos ✓.** ✅ **U2 HECHA y empujada (noche del 27)**: el
+>   CAJÓN entero (spec **§9.9.8**): `assignment.js` (reglas del selector, reconciliación, puerta 2 y el
+>   422 por campo, con `node --test`) · `DependentPicker.vue` en los pasos 3 y 4 con clases que ya existen
+>   · `cart.js` con `dependent_ids` en sus cuatro listas y `toCheckoutItems()` · «Para:» en el resumen,
+>   el paso 6 y la tarjeta de «Mis reservas» (nombre solo por `event-data`) · rótulos ×3 **en
+>   `tickets.dependents`** · manifiesto +2 · techos re-medidos. **Guion §5.undecies 19/19 por las DOS
+>   puertas · sonda de 16 `assign()` simultáneos → 1 fila.** ⚠️⚠️ **El guion cazó DOS defectos que las
+>   136 guardas del cajón daban por buenos** (§9.9.8·4 y ·5): el cajón nacido abierto con sesión no
+>   pedía los menores (y el primer arreglo nació con un TDZ que Vue traga en silencio), y los rótulos del
+>   embudo estaban en `account`, que viaja SOLO con sesión: quien se identificaba en el paso 5 volvía al
+>   carrito con el selector EN BLANCO. ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ → ~~U2~~ → **U4 (el ojo
+>   del owner: guion §5.undecies en su navegador)**. ⚠️ **U2 NO tocó `layout.blade.php`** (se daba por
+>   tocado): el aviso de abajo al carril C queda RETIRADO.
+>   ▶ **Para el agente del C (el tema/armazón)**: la tanda 4 **no ha tocado ni tocará**
+>   `resources/views/components/layout.blade.php`, `public/css/*`, `nav.blade.php`, `menu.blade.php`
+>   ni `app.js` (la siembra del dueño de la cesta vive en `resources/js/sidebar/index.js`). El selector
+>   del embudo se compone con clases que ya existen (`eventfields`, `form__checks`, `check`): **cero CSS nuevo**,
 >   como la zona de menores. Si tu 2c·2 toca `layout.blade.php`, `git pull --rebase` antes de empujar.
 >   (El aviso al carril B que hubo aquí se retira: el owner rectificó y esta tanda NO toca `app/Filament/**`.)
 >   Lo anterior de esta fila sigue siendo cierto y se conserva como historia: cierre de la sesión del
@@ -415,9 +422,23 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3130 en verde** (18.002 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
-  madrugada sobre el árbol FUSIONADO de los dos carriles, en la máquina del carril C) ·
-  ▶ **+3 tests PHP en el último corte** (carril C, el paquete del 2.º cliente · las dos decisiones
+- Suite **3132 en verde** (18.048 aserciones, `--parallel` **~70 s** medidos el 2026-08-27 por la noche
+  sobre el árbol FUSIONADO de los dos carriles (tras `#206`), en la máquina del carril A) ·
+  ▶ **+2 tests PHP y +39 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U2**, el
+  cajón — spec §9.9.8): dos casos del contrato de árbol (el paso 3 con una ENTRADA y dos menores, uno
+  deshabilitado con motivo; el carrito con la línea asignada y el aviso de la puerta 2; manifiesto +2
+  claves, 0 cambios) y `npm run test:js` **734 → 773** (`assignment.test.js`, `line-problems.test.js`,
+  stores de cesta/selección/menores, `admission`, `pay`, `outcome`). Las 136 guardas del cajón con los
+  techos RE-MEDIDOS: chunk 234,70 → **242,19 KiB** (techo 235 → 243, por FEATURE), payload con sesión
+  7.602 → **7.747 B** (techo 7.700 → 7.800; ⚠️ estuvo en 8.300 provisional mientras los rótulos del
+  embudo viajaban en `account`), `PurchaseSection.vue` 432 → **428**. **Guion §5.undecies 19/19** por
+  las dos puertas · **sonda de 16 `assign()` simultáneos → 1 fila, 1 auditoría** (§9.9.5, que U1 no
+  midió). ⚠️ **Dos trampas pagadas**: un `watch` con `immediate` por ENCIMA de la `const` que lee —Vue
+  traga el `ReferenceError` del getter y llama al callback con `undefined`, que `!== null`: la carga
+  saltó una vez, también sin sesión, y nunca más; lo delató el `pageerror` del diagnóstico—; y un
+  `ensure()` que devolvía en seco a la segunda llamada mientras la primera estaba en vuelo (hoy devuelve
+  la misma promesa). Antes:
+  ▶ **+3 tests PHP en el corte anterior** (carril C, el paquete del 2.º cliente · las dos decisiones
   del owner): el hueco del **LOGOTIPO de la instalación** con sus tres piezas —no se versiona, se
   carga si existe, `deploy.sh` lo excluye del `--delete`— y su `alt`, que es el nombre accesible del
   único enlace que toda página tiene. **5 mutaciones, las 5 muerden.** ⚠️ Y el **anillo de foco por
@@ -781,7 +802,7 @@ la usa.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0 hecha** (la purga de la cesta, §9.9.6) y **U1 hecha** (el servidor entero, §9.9.7); sigue **U2, el cajón**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0, U1 y U2 hechas** (la purga de la cesta §9.9.6 · el servidor §9.9.7 · el cajón §9.9.8, guion §5.undecies 19/19); sigue **U4, el ojo del owner** (el guion en su navegador). Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
 

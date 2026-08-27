@@ -30,6 +30,28 @@ function fakeApi(responses) {
     return { calls, get: respond('GET'), post: respond('POST'), delete: respond('DELETE') };
 }
 
+describe('lo que el EMBUDO lee de la lista (Fase 6 · tanda 4)', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    test('las opciones, los ids asignables y el mapa por id salen de la lista viva', async () => {
+        const store = useDependentsStore();
+        const signed = lucas({ signed: true });
+        const unsigned = { ...lucas(), id: 2, name: 'Vera' };
+        const api = fakeApi({ 'GET /me/dependents': ok({ data: [signed, unsigned], meta: { total: 2 } }) });
+
+        await store.ensure({ api });
+
+        const options = store.optionsFor({ dependents: { age: ':age años' } });
+        assert.deepEqual(options.map((o) => [o.id, o.assignable]), [[1, true], [2, false]]);
+        assert.equal(options[0].label, 'Lucas · 9 años');
+        assert.deepEqual(store.assignable, [1]);
+        assert.deepEqual(store.byId, { 1: { id: 1, name: 'Lucas' }, 2: { id: 2, name: 'Vera' } });
+
+        store.invalidate();
+        assert.deepEqual(store.assignable, [], 'sin lista no hay nadie asignable');
+    });
+});
+
 describe('la lista', () => {
     beforeEach(() => setActivePinia(createPinia()));
 
@@ -51,6 +73,23 @@ describe('la lista', () => {
 
         assert.equal(store.expired, true);
         assert.equal(store.loaded, false);
+    });
+
+    test('dos ensure() a la vez esperan a la MISMA petición: una llamada, y la segunda vuelve con la lista', async () => {
+        const store = useDependentsStore();
+        let release;
+        const api = { calls: [], get(path) { this.calls.push(path); return new Promise((resolve) => { release = () => resolve(ok({ data: [{ id: 7, name: 'Lucas', age: 9, waiver: { signed: true, outdated: false } }] })); }); } };
+
+        const first = store.ensure({ api });
+        const second = store.ensure({ api });
+        assert.equal(store.listLoading, true);
+        release();
+        await Promise.all([first, second]);
+
+        assert.equal(api.calls.length, 1, 'la segunda llamada NO pide otra vez');
+        assert.equal(store.loaded, true);
+        assert.equal(store.listLoading, false);
+        assert.equal(store.inflight, null);
     });
 
     test('invalidate() hace que el siguiente ensure() vuelva a preguntar', async () => {

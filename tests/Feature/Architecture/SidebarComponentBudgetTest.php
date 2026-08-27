@@ -94,7 +94,17 @@ class SidebarComponentBudgetTest extends TestCase
         // imports y dos instanciaciones que no son suyos—, y el módulo los resuelve él por defecto
         // (mismo patrón que `api = httpClient`). El gate hizo justo lo que existe para hacer:
         // **provocar la pregunta**.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 432, 'api' => 2],
+        // ⚠️ **432 → 429 el 2026-08-27 por la noche, la tanda 4 de menores a cargo (`DECISIONES #202`):
+        // y otra vez SUBIÓ primero y se BAJÓ antes de commitear.** Cablear la asignación —el store de
+        // menores, `loadDependents()`, la puerta 2 en `enterWith()`, el 422 aplicado a la cesta, los
+        // ids de la línea en construcción— lo puso en **440**. La regla dice que solo encoge, así que
+        // salieron DOS cosas que nunca debieron vivir aquí: `today()` (a `cart.js::todayIso()`) y
+        // `showLineProblems` entero (a `line-problems.js`, con `node --test` — era una regla de
+        // presentación sin ningún caso). El gate volvió a hacer su trabajo: provocar la pregunta.
+        // Y a 428 el mismo día: el guion headless cazó que el cajón nacido abierto con sesión no pedía
+        // los menores (una línea de `watch` sobre el titular), y la pagó `showLineProblems`, que pasó
+        // a UNA llamada porque «aplicar lo decidido a la cesta» es del store (`applyLineProblems`).
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 428, 'api' => 2],
     ];
 
     /**

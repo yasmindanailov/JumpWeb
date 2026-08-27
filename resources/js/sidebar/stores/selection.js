@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { toggleDependent, trimToQuantity } from '../assignment.js';
 
 /**
  * Lo que se está configurando ANTES de entrar en la cesta — cantidad, complementos y respuestas del
@@ -26,6 +27,12 @@ export const useSelectionStore = defineStore('selection', {
         /** Las respuestas de los campos del evento. ⚠️ Solo en memoria, nunca persistidas. */
         eventData: {},
 
+        /**
+         * Los menores a cargo para los que son estas entradas (Fase 6 · tanda 4, `menores-a-cargo.md`
+         * §9.9.3 D9): solo IDS, un conjunto acotado por la cantidad. Viajan a la cesta al añadir.
+         */
+        dependentIds: [],
+
         /** La línea ya resuelta que devuelve el servidor al validar, o `null`. */
         line: null,
 
@@ -36,6 +43,13 @@ export const useSelectionStore = defineStore('selection', {
     actions: {
         setQuantity(quantity) {
             this.quantity = quantity;
+            // Nunca más menores que unidades: al bajar la cantidad se quitan los últimos marcados.
+            this.dependentIds = trimToQuantity(this.dependentIds, quantity);
+        },
+
+        /** Marca o desmarca un menor para estas entradas. El tope es la cantidad (`assignment.js`). */
+        toggleDependent(id) {
+            this.dependentIds = toggleDependent(this.dependentIds, id, this.quantity);
         },
 
         setAddons(addons) {
@@ -108,6 +122,7 @@ export const useSelectionStore = defineStore('selection', {
             this.choices = [];
             this.quantities = [];
             this.eventData = {};
+            this.dependentIds = [];
             this.line = null;
             this.resolved = [];
         },

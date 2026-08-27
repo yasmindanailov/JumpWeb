@@ -465,6 +465,13 @@ class SidebarMountTest extends TestCase
                 'title', 'intro', 'empty', 'add_title', 'name', 'name_hint', 'born_on', 'add', 'adding',
                 'age', 'adult', 'remove', 'removing', 'remove_confirm',
                 'waiver_unsigned', 'waiver_current', 'waiver_outdated',
+                // Fase 6 · tanda 4 (`DECISIONES #202`): lo que la tarjeta de «Mis reservas» pinta de
+                // la asignación —el «Para:» y el despliegue—. ⚠️ Los rótulos del EMBUDO (el selector
+                // de los pasos 3 y 4, el aviso de la puerta 2, el «Para:» del resumen) NO van aquí:
+                // viven en `tickets.dependents`, porque este subgrupo viaja SOLO con sesión y quien
+                // entra anónimo y se identifica en el paso 5 los necesita sin recargar. Se pusieron
+                // aquí primero y el guion headless (§5.undecies) los encontró en blanco.
+                'for_label', 'assigned_none', 'assigned_show', 'assigned_hide',
             ],
             array_keys($boot['account']['account']['dependents'] ?? []),
             'el subgrupo `dependents` ha crecido: si la zona no pinta lo nuevo, hay que podarlo'
@@ -584,8 +591,17 @@ class SidebarMountTest extends TestCase
         // **+934 B** brutos: de 6.668 a **7.602 B**. El más largo es `intro` (~190 B) y se queda a
         // propósito: es la frase de la spec (§4.2) que le dice al titular que puede poner el nombre
         // que use en casa y que en la puerta nunca se ve. **7.700 deja 98 B**, la holgura de siempre.
+        //
+        // ⚠️ **7.700 → 7.800 el 2026-08-27 por la noche: la ASIGNACIÓN de entradas a menores en el
+        // embudo** (Fase 6 · C, tanda 4 · U2, `DECISIONES #202`; subida por FEATURE, `#197`·2). Aquí
+        // entran solo los CUATRO rótulos de la tarjeta de «Mis reservas» (el «Para:» y el despliegue),
+        // **+145 B**: de 7.602 a **7.747 B**. ⚠️ Primero entraron ONCE (8.260 B, y este techo se puso
+        // en 8.300): el selector, el aviso y el «Para:» del resumen viajaban también aquí, y el guion
+        // headless (§5.undecies) los encontró EN BLANCO en quien entra anónimo y se identifica en el
+        // paso 5 — este subgrupo viaja solo con sesión. Se mudaron a `tickets.dependents`, que va
+        // siempre, y este techo BAJÓ a lo medido. **7.800 deja 53 B**: la holgura de siempre.
         $this->assertLessThan(
-            7700, $bytes,
+            7800, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

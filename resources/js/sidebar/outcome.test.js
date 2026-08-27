@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    answersByReservation, buildConfirmation, confirmationLine, declinedReasonText,
+    answersByReservation, buildConfirmation, confirmationLine, declinedReasonText, dependentsByReservation,
     loadConfirmation, loadPaymentStatus, pollVerdict, runRetry,
 } from './outcome.js';
 
@@ -116,7 +116,25 @@ test('traduce la línea del pedido a la forma del presupuesto', () => {
         gate_remainder_cents: 27000,
         addons: [{ product_name: 'Tarta', quantity: 2, free_quantity: 1, subtotal_cents: 1000 }],
         event: [{ key: 'celebrant', label: 'Homenajeado', value: 'Mara' }],
+        dependents: [],
     });
+});
+
+/** Los menores asignados (Fase 6 · tanda 4) llegan por `event-data` con la misma llave que las respuestas. */
+test('empareja los menores asignados por reservation_id, igual que las respuestas', () => {
+    const eventData = {
+        reservations: [
+            { reservation_id: 22, answers: [], dependents: [{ id: 5, name: 'Vera' }] },
+            { reservation_id: 11, answers: [], dependents: [{ id: 3, name: 'Lucas' }, { id: 5, name: 'Vera' }] },
+        ],
+    };
+
+    const built = buildConfirmation(order({ items: [item({ id: 11 }), item({ id: 22 })] }), eventData);
+
+    assert.deepEqual(built.lines[0].dependents.map((d) => d.name), ['Lucas', 'Vera']);
+    assert.deepEqual(built.lines[1].dependents.map((d) => d.name), ['Vera']);
+    assert.deepEqual(dependentsByReservation({ reservations: [{ reservation_id: 1 }] }), { 1: [] });
+    assert.deepEqual(dependentsByReservation(null), {});
 });
 
 test('⚠️ el icono se TRANSPORTA, no se deduce de is_pack', () => {

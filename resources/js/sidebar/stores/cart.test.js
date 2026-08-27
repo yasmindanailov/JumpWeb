@@ -98,6 +98,61 @@ describe('el store de la cesta', () => {
     });
 
     /**
+     * Los menores asignados a una línea (Fase 6 · tanda 4): marcar y desmarcar persiste —son ids—, el
+     * conjunto se acota por la cantidad, la lista viva quita lo que ya no vale, y el 422 del checkout
+     * deja la línea rechazada sin asignar con su aviso.
+     */
+    test('asignar menores a una línea persiste los ids y respeta la cantidad', () => {
+        const c = store();
+        c.setLines([LINEA({ quantity: 2 }), LINEA({ product_id: 4, quantity: 1 })]);
+
+        c.assign(0, 12);
+        c.assign(0, 15);
+        c.assign(0, 18);
+        c.assign(1, 12);
+        c.assign(9, 12);
+
+        assert.deepEqual(c.lines.map((l) => l.dependent_ids), [[12, 15], [12]], 'acotado por la cantidad; un índice que no existe no hace nada');
+        assert.deepEqual(store().restore('2026-09-01').lines.map((l) => l.dependent_ids), [[12, 15], [12]], 'los ids sí se guardan');
+
+        c.assign(0, 12);
+        assert.deepEqual(c.lines[0].dependent_ids, [15], 'desmarcar quita');
+    });
+
+    test('la lista viva quita de la cesta lo que ya no se puede asignar, y persiste', () => {
+        const c = store();
+        c.setLines([LINEA({ dependent_ids: [12, 15] })]);
+        c.persist();
+
+        assert.equal(c.dropUnassignable([15]), true);
+        assert.deepEqual(c.lines[0].dependent_ids, [15]);
+        assert.deepEqual(store().restore('2026-09-01').lines[0].dependent_ids, [15]);
+        assert.equal(c.dropUnassignable([15]), false, 'sin nada que quitar no cambia nada');
+    });
+
+    test('el 422 de la asignación deja la línea sin asignar y enseña el aviso del servidor', () => {
+        const c = store();
+        c.setLines([LINEA({ dependent_ids: [12] }), LINEA({ product_id: 4, dependent_ids: [15] })]);
+
+        const changed = c.applyAssignmentRejections({ 'items.1.dependent_ids.0': ['Falta su exención firmada.'] });
+
+        assert.equal(changed, true);
+        assert.deepEqual(c.lines.map((l) => l.dependent_ids), [[12], []]);
+        assert.equal(c.error, 'Falta su exención firmada.');
+        assert.equal(c.applyAssignmentRejections(undefined), false);
+    });
+
+    test('el aviso de la puerta 2 se enciende con el veredicto y se apaga al asignar', () => {
+        const c = store();
+        c.setLines([LINEA()]);
+        c.setNotice('assign');
+
+        assert.equal(c.notice, 'assign');
+        c.assign(0, 12);
+        assert.equal(c.notice, '');
+    });
+
+    /**
      * ⚠️⚠️ EL CASO QUE NO PUEDE FALTAR. Las respuestas del evento son datos del art. 9 y **no salen
      * de memoria**. Se busca un centinela en el volcado ENTERO del almacén, no en el campo esperado:
      * si algún día se persistieran por otra vía, el caso muerde igual.
@@ -239,5 +294,18 @@ describe('el store de la cesta', () => {
         assert.equal(c.maxLines, 50, 'lo que no es número se ignora: el tope lo publica el servidor');
         c.setMaxLines(8);
         assert.equal(c.maxLines, 8);
+    });
+
+    test('aplicar los problemas de una línea SUMA los errores por campo y sustituye el aviso', () => {
+        const c = useCartStore();
+        c.setFieldErrors({ celebrant: 'Obligatorio' });
+        c.setError('antes');
+
+        c.applyLineProblems({ fieldErrors: { date: 'Sin fecha' }, error: 'Revisa la línea' });
+        assert.deepEqual(c.fieldErrors, { celebrant: 'Obligatorio', date: 'Sin fecha' }, 'los de otros campos se conservan');
+        assert.equal(c.error, 'Revisa la línea');
+
+        c.applyLineProblems({});
+        assert.equal(c.error, '', 'sin problemas, sin aviso');
     });
 });

@@ -2028,9 +2028,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
           + `OrdersController::store()` + `event-data` con `dependents[]` + `anonymize()`/export +
           `api.dependents.*` ×3 + la paridad mínima de `cart.js`. **+30 tests · 9/9 mutaciones · 6
           escenarios + Redsys ✓ · sonda HTTP 10 pasos ✓.**
-    - [ ] **U2 · el cajón**: las cuatro listas de `cart.js`, `assignment.js`, el bloque «¿Para quién?»
-          en los pasos 3 y 4, la puerta 2 en `admission.js`, el paso 6 y la tarjeta, rótulos ×3,
-          manifiesto y techos medidos.
+    - [x] **U2 · el cajón** (2026-08-27 noche, spec §9.9.8): `assignment.js` + `DependentPicker.vue`
+          en los pasos 3 y 4 (cero CSS nuevo), las cuatro listas de `cart.js` + `toCheckoutItems()`, la
+          puerta 2 en `admission.js`, «Para:» en el resumen/paso 6 y la tarjeta, rótulos ×3 **en
+          `tickets.dependents`** (los del embudo viajan siempre), manifiesto +2, techos re-medidos
+          (chunk 243 · payload con sesión 7.800 · orquestador 428), guion §5.undecies **19/19** por
+          las dos puertas y sonda de 16 `assign()` simultáneos → 1 fila. ⚠️ Dos defectos cazados por
+          el guion, no por la suite (§9.9.8·4 y ·5).
     - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
           sesión; D14 se conserva como diseño).
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).

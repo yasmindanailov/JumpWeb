@@ -1174,3 +1174,55 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
 - Un menor que cumple 18 entre la declaración y hoy (la tarjeta lo marca y no ofrece firmar): exige
   cambiar el reloj, así que lo cubre `MeDependentWaiverTest`, no el navegador.
 
+
+## §5.undecies · LA ASIGNACIÓN DE ENTRADAS A MENORES, EN EL EMBUDO — ✅ recorrido en headless el 2026-08-27 por la noche (19/19), pendiente del OJO del owner (`DECISIONES #202`)
+
+> Fase 6 · C, tanda 4 · U2 (`specs/menores-a-cargo.md` §9.9). Mismo andamio que §5.decies. Guion:
+> `/root/e2e/dep-assign-probe.js`; helper de BD: `dep-assign-db.php` bajo `storage/app/e2e/`
+> (`seed` · `state` · `sign` · `unsign` · `cleanup`). `seed` deja al titular con DOS menores —Lucas con
+> la exención vigente, Vera sin firmar— en modo interno; `cleanup` CADUCA los pedidos del guion por el
+> dominio (`orders:expire`, que es lo que libera el aforo) y luego los borra. Cuenta:
+> `e2e-dependents@jumpweb.test`. ⚠️ Las dos puertas crean un pedido `pending` cada una y se van a la
+> pasarela: el guion aborta esa navegación; en el navegador **no pagues** salvo en staging.
+>
+> ⚠️⚠️ **Este guion cazó DOS defectos que ningún test veía**, y por eso existe ANTES del ojo:
+> (1) el cajón que **nace abierto con sesión** (`/entradas` tras entrar) no pedía los menores —solo
+> se pedían al restaurar una cesta o tras el login del paso 5— y el paso 3 salía **sin selector**; el
+> arreglo (un `watch` sobre el titular) nació con un TDZ que Vue tragaba en silencio y que hacía saltar
+> la carga **una vez, también sin sesión** (401 en consola) y nunca más; (2) quien entra anónimo y se
+> identifica en el paso 5 volvía a la cesta con el selector y el aviso **en blanco**: los rótulos
+> viajaban en `account.dependents`, que solo va con sesión. Hoy viven en `tickets.dependents`.
+
+### P1 · Con sesión desde el principio (la puerta 1)
+1. Entra por `/mi-cuenta` y ve a `/entradas`. Elige una ENTRADA (no un pack), un día y una hora.
+2. Bajo la cantidad aparece **«¿Para quién son estas entradas?»** con una casilla por menor: «Lucas ·
+   9 años» se puede marcar; «Vera · 6 años — exención sin firmar: fírmala en «Menores a cargo»» sale
+   **deshabilitada** con ese motivo. Sube la cantidad a 2 y marca a Lucas.
+3. «Añadir al carrito» → la línea del carrito lleva el mismo selector con Lucas marcado y **ningún**
+   aviso. En el almacén del navegador (`jw.cart.v1`) la línea guarda `dependent_ids: [id]` y **nunca
+   el nombre**.
+4. «Ir a pagar» → el resumen dice **«Para: Lucas»** bajo la línea.
+5. (Solo con el helper) `unsign` y pulsa pagar: **422**, ningún pedido creado, el cajón vuelve al
+   carrito con «Falta su exención firmada: fírmala en «Menores a cargo» antes de asignarle una
+   entrada.» en el pie y **Lucas desmarcado** (D3: la línea rechazada vuelve sin asignar).
+6. `sign`, marca a Lucas otra vez y paga: **201** con `items[0].dependent_ids = [id]`; en BD una fila
+   en `dependent_assignments` y una entrada de auditoría `dependents.assigned` **sin el nombre**.
+   `GET /orders/{code}/event-data` lista `dependents: [{id, name: "Lucas"}]`; `GET /me/orders` **no
+   contiene «Lucas»** (el nombre solo por el canal lateral, como las respuestas del pack).
+
+### P2 · Sin sesión hasta el paso 5 (la puerta 2)
+7. Ventana limpia. Misma entrada, cantidad 1, sin selector (no hay sesión). «Añadir al carrito» → «Ir a
+   pagar» → paso 5, pestaña «Entrar».
+8. Entra con la cuenta. **No va a pagar**: vuelve al **carrito** con el aviso «Tienes menores a cargo:
+   indica para quién es cada entrada antes de pagar (o déjalas como adultos).» y el selector ya
+   pintado, **con sus rótulos**. Marca a Lucas → «Ir a pagar» → «Para: Lucas» → pagar → 201.
+9. Si al identificarse **no** hubiera menores asignables (o todas las líneas fueran packs), iría a
+   pagar directamente: no hay aviso que dar.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- El aspecto del selector con el tema (cero CSS nuevo: `eventfields`, `form__checks`, `check`).
+- EN/FR: los nueve rótulos de `tickets.dependents` existen en los tres idiomas; el guion corre en `es`.
+- «Mis reservas»: la tarjeta de una reserva con menor asignado ofrece «Ver para quién es» → «Para:
+  Lucas» (lo fija el test de la tarjeta; el guion no llega porque el pedido queda `pending`).
+- El menor que cumple 18 antes del día de la visita (la casilla dice «ya tiene 18 años» y el servidor
+  responde `not_minor_on_date`): exige jugar con fechas; lo cubre `DependentAssignerTest`.

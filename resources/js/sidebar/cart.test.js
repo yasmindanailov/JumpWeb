@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addLine, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems } from './cart.js';
+import { addLine, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems, toCheckoutItems, todayIso } from './cart.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red de la cesta (criterio CE-6).
@@ -49,6 +49,54 @@ describe('añadir', () => {
         addLine(before, line({ product_id: 7 }), { quantity: 1, merges_with_index: null });
 
         assert.equal(before.length, 1);
+    });
+
+    /**
+     * Los menores asignados (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9.3 D8): al fundir se UNEN, al
+     * recortar la cantidad se RECORTAN con ella. Nunca más menores que unidades, tampoco cuando es el
+     * servidor quien decide cuántas entran.
+     */
+    test('los menores marcados entran con la línea, recortados a la cantidad EFECTIVA', () => {
+        const cart = addLine([], line({ quantity: 3, dependent_ids: [12, 15, 18] }), { quantity: 2, merges_with_index: null });
+
+        assert.deepEqual(cart[0].dependent_ids, [12, 15], 'el servidor recortó a 2: el tercero se queda fuera');
+        assert.deepEqual(addLine([], line({ quantity: 2 }), { quantity: 2, merges_with_index: null })[0].dependent_ids, [], 'sin marcar, vacío y no ausente');
+    });
+
+    test('al fundir, los menores de las dos líneas se unen sin repetir, los existentes primero', () => {
+        const existing = [line({ quantity: 2, dependent_ids: [12] })];
+        const cart = addLine(existing, line({ quantity: 2, dependent_ids: [15, 12] }), { quantity: 2, merges_with_index: 0 });
+
+        assert.equal(cart[0].quantity, 4);
+        assert.deepEqual(cart[0].dependent_ids, [12, 15]);
+    });
+});
+
+describe('lo que viaja al checkout', () => {
+    /** `toApiItems()` alimenta tres endpoints PÚBLICOS: los ids de menores viajan SOLO a `POST /orders`. */
+    test('toApiItems no lleva los menores; toCheckoutItems sí, y solo cuando hay', () => {
+        const cart = [line({ dependent_ids: [12] }), line({ product_id: 7, dependent_ids: [] })];
+
+        assert.equal('dependent_ids' in toApiItems(cart)[0], false);
+        assert.deepEqual(toCheckoutItems(cart)[0].dependent_ids, [12]);
+        assert.equal('dependent_ids' in toCheckoutItems(cart)[1], false, 'una línea sin menores no manda la clave');
+        assert.deepEqual(toCheckoutItems(cart)[0].product_id, 1);
+    });
+
+    test('las filas del carrito llevan los ids y los NOMBRES que resuelve el mapa en memoria', () => {
+        const rows = cartRows(
+            [{ index: 0, product_id: 1, quantity: 2 }],
+            [line({ dependent_ids: [12, 99] })],
+            {},
+            { 12: { id: 12, name: 'Lucas' } },
+        );
+
+        assert.deepEqual(rows[0].dependent_ids, [12, 99]);
+        assert.deepEqual(rows[0].dependents, [{ id: 12, name: 'Lucas' }], 'un id sin nombre en el mapa no se pinta');
+    });
+
+    test('todayIso da el día del reloj que se le pasa, acolchado', () => {
+        assert.equal(todayIso(new Date(2026, 8, 5)), '2026-09-05');
     });
 });
 

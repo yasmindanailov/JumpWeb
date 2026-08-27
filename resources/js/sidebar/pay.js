@@ -19,6 +19,7 @@
  */
 
 import { t, tp } from './i18n.js';
+import { applyRejections } from './assignment.js';
 
 /**
  * Los códigos de error del contrato → la clave del diccionario que pinta el cajón.
@@ -81,6 +82,17 @@ export function confirmError(response, messages = {}) {
     // el paso al pago (4.4a·1). Es además lo que el contrato pide releer tras un 409.
     if (code === RESERVATIONS_PAUSED) {
         return { error: '', rereadStatus: true };
+    }
+
+    // Fase 6 · tanda 4: la asignación de menores se comprueba ANTES del dinero y responde 422 por
+    // campo con el mensaje ya traducido (`api.dependents.*`). El pedido no se creó; se enseña el
+    // primer aviso y el store deja esas líneas sin asignar (`applyRejections`).
+    if (code === 'validation_failed') {
+        const { message } = applyRejections([], response?.error?.fields);
+
+        if (message !== '') {
+            return { error: message, rereadStatus: false, fields: response.error.fields };
+        }
     }
 
     const key = ERROR_KEYS[code] ?? null;

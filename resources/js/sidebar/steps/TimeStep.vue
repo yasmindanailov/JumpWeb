@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
+import DependentPicker from './DependentPicker.vue';
 
 /**
  * Paso 3 — HORA, cantidad, datos del pack y COMPLEMENTOS (Fase 4 · paso 4.2).
@@ -47,9 +48,16 @@ const props = defineProps({
     /** Errores por campo del evento, con la misma forma que el error bag de la web. */
     errors: { type: Object, default: () => ({}) },
     messages: { type: Object, default: () => ({}) },
+    /**
+     * Los menores a cargo que se ofrecen para estas entradas (Fase 6 · tanda 4): `assignment.js::
+     * assignableOptions()`. Vacío sin sesión o sin menores declarados, y entonces el bloque no existe.
+     */
+    dependentOptions: { type: Array, default: () => [] },
+    /** Los ids ya marcados para esta línea en construcción. */
+    dependentIds: { type: Array, default: () => [] },
 });
 
-defineEmits(['select-time', 'inc', 'dec', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon']);
+defineEmits(['select-time', 'inc', 'dec', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon', 'toggle-dependent']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -90,6 +98,12 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
                 <span v-if="dayPriceCents !== null" class="qtybox__price"> · {{ money(dayPriceCents) }}<template v-if="isPack"> {{ periodLabel || t('per_child') }}</template></span>
             </p>
         </div>
+
+        <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4, `menores-a-cargo.md` §4.7): solo en
+             ENTRADAS, solo con sesión y menores declarados. Un pack ya pide a sus invitados abajo. -->
+        <DependentPicker v-if="! isPack && dependentOptions.length"
+                         :options="dependentOptions" :selected="dependentIds" :quantity="quantity" :messages="messages"
+                         @toggle="$emit('toggle-dependent', $event)" />
 
         <!-- Campos del evento del pack: data-driven por instalación, así que el esquema llega del
              servidor y aquí solo se pinta el control que cada tipo pide. -->

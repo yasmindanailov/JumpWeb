@@ -51,6 +51,24 @@ export function answersByReservation(eventData) {
 }
 
 /**
+ * Los menores a cargo para los que es cada reserva, indexados igual que las respuestas (Fase 6 ·
+ * tanda 4, `menores-a-cargo.md` §9.9.3 D7): `event-data` los sirve por la misma llave y por la misma
+ * razón — es el nombre de un menor, y no viaja en el pedido.
+ *
+ * @param {{reservations?: Array<{reservation_id?: number, dependents?: Array<{id: number, name: string}>}>}} eventData
+ * @returns {Record<string, Array<{id: number, name: string}>>}
+ */
+export function dependentsByReservation(eventData) {
+    const reservations = Array.isArray(eventData?.reservations) ? eventData.reservations : [];
+
+    return reservations.reduce((map, reservation) => {
+        map[String(reservation?.reservation_id)] = Array.isArray(reservation?.dependents) ? reservation.dependents : [];
+
+        return map;
+    }, {});
+}
+
+/**
  * Una línea del pedido traducida a la FILA que pinta el resumen.
  *
  * ⚠️ **La forma de destino es la del presupuesto, no una nueva**, y es la decisión que permite que la
@@ -65,8 +83,9 @@ export function answersByReservation(eventData) {
  *
  * @param {object} item  una línea de `GET orders/{code}`
  * @param {Array<{key: string, label: string, value: string}>} answers
+ * @param {Array<{id: number, name: string}>} dependents  los menores para los que es (`event-data`)
  */
-export function confirmationLine(item, answers = []) {
+export function confirmationLine(item, answers = [], dependents = []) {
     return {
         product_name: String(item?.product_name ?? ''),
         is_pack: item?.is_pack === true,
@@ -91,6 +110,7 @@ export function confirmationLine(item, answers = []) {
             subtotal_cents: Number(addon?.charged_subtotal_cents ?? 0),
         })),
         event: answers,
+        dependents: Array.isArray(dependents) ? dependents : [],
     };
 }
 
@@ -106,6 +126,7 @@ export function confirmationLine(item, answers = []) {
  */
 export function buildConfirmation(order, eventData = {}) {
     const answers = answersByReservation(eventData);
+    const dependents = dependentsByReservation(eventData);
     const items = Array.isArray(order?.items) ? order.items : [];
 
     return {
@@ -121,7 +142,7 @@ export function buildConfirmation(order, eventData = {}) {
         // y `total − online` no es lo mismo (hay ajustes que no viven en ninguno de los dos).
         park_cents: Number(order?.ledger?.value?.pending_at_gate_cents ?? 0),
         has_guest_form: order?.guest_form_pending === true,
-        lines: items.map((item) => confirmationLine(item, answers[String(item?.id)] ?? [])),
+        lines: items.map((item) => confirmationLine(item, answers[String(item?.id)] ?? [], dependents[String(item?.id)] ?? [])),
     };
 }
 

@@ -9,6 +9,8 @@ import { useOutcomeStore } from '../stores/outcome.js';
 import { useCatalogStore } from '../stores/catalog.js';
 import { useBookingStore } from '../stores/booking.js';
 import { useSelectionStore } from '../stores/selection.js';
+import { useDependentsStore } from '../stores/dependents.js';
+import { needsAssignment } from '../assignment.js';
 import { STEPS, isOutcome } from '../machine.js';
 import { api } from '../api.js';
 import { searchIsEnabled, sectionsFrom } from '../catalog.js';
@@ -19,9 +21,10 @@ import { buildFooter } from '../foot.js';
 import { buildNotice } from '../paused.js';
 import { continueAfterIdentification, runCheckout } from '../admission.js';
 import { runConfirm } from '../pay.js';
+import { lineProblems } from '../line-problems.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from '../outcome.js';
 import { signupRequiresCaptcha, CONTEXT_PURCHASE } from '../register.js';
-import { addLine, hasPendingEventFields, toApiItems } from '../cart.js';
+import { addLine, hasPendingEventFields, toCheckoutItems, todayIso } from '../cart.js';
 import { sessionGained } from '../account/session-gained.js';
 import Shell from '../Shell.vue';
 import CatalogStep from '../steps/CatalogStep.vue';
@@ -248,7 +251,7 @@ onMounted(async () => {
  * ⚠️ Y como la web: con cesta, el cajón abre EN el carrito.
  */
 async function restoreCart() {
-    const { lines } = cartStore.restore(today());
+    const { lines } = cartStore.restore(todayIso());
 
     if (lines.length === 0) {
         return;
@@ -257,6 +260,10 @@ async function restoreCart() {
     cartStore.setLines(lines);
 
     await tracked(catalogStore.loadFieldsFor({ api, ids: lines.map((line) => line.product_id) }));
+
+    // Con sesión, los menores a cargo (tanda 4): la lista viva, y fuera de la cesta los ids que ya no
+    // se pueden asignar (§4.8·2). Sin sesión no hay lista que pedir ni ids que valgan.
+    if (cartStore.owner !== null) await loadDependents();
 
     await tracked(cartStore.refreshQuote({ api }));
 
@@ -297,6 +304,26 @@ async function selectProduct(id) {
 /** Lo que el paso 3 necesita. Todo llega de la API; aquí no se decide nada (`CE-4`). */
 const timeStore = useTimeStore();
 
+/**
+ * Los menores a cargo del titular (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9.3 D9): el mismo store
+ * que la zona de la cuenta. Aquí solo se PIDE —con sesión— y se reconcilia la cesta con la lista viva;
+ * a quién se ofrece y qué cabe lo decide `assignment.js`.
+ */
+const dependentsStore = useDependentsStore();
+
+async function loadDependents() {
+    await tracked(dependentsStore.ensure({ api }));
+    cartStore.dropUnassignable();
+}
+
+// ⚠️ **Con sesión, la lista se pide en cuanto se SABE quién es el titular** —al nacer (el boot ya lo
+// sembró, U0), al identificarse en el paso 5 y al cambiar de titular—, no solo al restaurar una cesta.
+// Lo cazó el guion headless (§5.undecies), no ningún test: el cajón que nace abierto en `/entradas`
+// con sesión y sin cesta no pasa por `refreshIdentity()`, y el paso 3 salía SIN el selector.
+// `restoreCart()` y el login la vuelven a pedir a propósito: esperan a la MISMA petición y podan
+// después de tener las líneas en la mano.
+watch(() => cartStore.owner, (owner) => { if (owner !== null) loadDependents(); }, { immediate: true });
+
 // ── La CESTA ──────────────────────────────────────────────────────────────────────────────────
 //
 // En memoria en 4.3·2. La persistencia en `localStorage` —con su dueño, su purga al cambiar de
@@ -312,13 +339,7 @@ const timeStore = useTimeStore();
  */
 const cartStore = useCartStore();
 
-/** El día de HOY en el huso del navegador, para caducar las líneas de días pasados. */
-function today() {
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
+/** El día de HOY en el huso del navegador es `cart.js::todayIso()` (se mudó en la tanda 4 de menores). */
 
 /** Persiste la cesta. Nunca con `event_data`: eso lo garantiza el módulo (`DECISIONES #38(d)`). */
 
@@ -685,6 +706,9 @@ async function enterWith(identity) {
     await notifyLoggedIn();
     actOnIdentity(cartStore.applyIdentityResponse(identity));
     authStore.reset();
+    // 4. (tanda 4) los menores del titular que acaba de entrar, y la puerta 2: con menores asignables
+    //    y entradas sin asignar se vuelve al carrito (`DECISIONES #202`·1). La regla es de `admission.js`.
+    await loadDependents();
 
     const verdict = await tracked(continueAfterIdentification({
         cartCount: cartStore.lines.length,
@@ -692,9 +716,11 @@ async function enterWith(identity) {
         api,
         messages: props.messages,
         refreshStatus: refreshBookingStatus,
+        needsAssignment: needsAssignment(cartStore.rows, dependentsStore.assignable.length),
     }));
 
     cartStore.error = verdict.error;
+    cartStore.setNotice(verdict.notice);
     goToVerdict(verdict.step);
 }
 
@@ -750,7 +776,8 @@ async function confirmReservation() {
 
     try {
         const result = await tracked(runConfirm({
-            items: toApiItems(cartStore.lines),
+            // Con los menores asignados por línea (tanda 4): SOLO aquí, no en los endpoints públicos.
+            items: toCheckoutItems(cartStore.lines),
             api,
             messages: props.messages,
         }));
@@ -760,6 +787,8 @@ async function confirmReservation() {
         }
 
         if (! result.ok) {
+            // Un 422 sobre la asignación deja esas líneas sin asignar: el pedido no se creó (D3).
+            cartStore.applyAssignmentRejections(result.fields);
             cartStore.error = result.error;
             // Espejo del componente Livewire: cualquier «no» al confirmar devuelve al CARRITO, que es
             // donde el cliente puede arreglarlo —quitar una línea, cambiar una franja—.
@@ -974,6 +1003,8 @@ async function addToCart() {
         // Lo que se guarda es la selección que el dominio RESOLVIÓ (obligatorios inyectados,
         // dependientes huérfanos podados), no la que se pidió.
         addons: selectionStore.resolved,
+        // Los menores marcados en el paso 3 (tanda 4): solo ids; `addLine` los funde y recorta.
+        dependent_ids: selectionStore.dependentIds,
     };
 
     const response = await tracked(cartStore.validateLine({ api, line: candidate }));
@@ -1003,36 +1034,11 @@ async function addToCart() {
 /**
  * Traduce el «no» del servidor a lo que esta pantalla enseña.
  *
- * Los tres motivos de SELECCIÓN —producto no elegible, franja no ofrecida, sin sitio— comparten aviso
- * a propósito: es el que el cajón ha enseñado siempre, y son el mismo callejón para quien mira el
- * paso 3. Los campos que faltan se resaltan uno a uno **y** se nombran en un resumen: sin las dos
- * cosas, un pack con cuatro campos deja al cliente adivinando cuál falla.
- *
- * ⚠️ Los `problems` vienen SIN contexto a propósito: el mínimo, el tope y las etiquetas ya los
- * publican `catalog/products/{id}` y `config`, y republicarlos sería un segundo sitio del que leer el
- * mismo valor.
+ * La regla —qué campo se resalta, qué aviso se compone— es `line-problems.js` desde la tanda 4 de
+ * menores (`CE-6`, y el presupuesto de este fichero solo encoge); aquí solo se aplica lo que devuelve.
  */
 function showLineProblems(problems) {
-    const missing = [];
-
-    for (const problem of problems) {
-        if (problem.reason === 'event_field_required' && problem.field) {
-            cartStore.fieldErrors = { ...cartStore.fieldErrors, [problem.field]: t('errors.field_required') };
-
-            const label = (catalogStore.product?.event_fields ?? []).find((f) => f.key === problem.field)?.label;
-            if (label) missing.push(label);
-
-            continue;
-        }
-
-        cartStore.error = problem.reason === 'cart_full'
-            ? t('errors.cart_too_large')
-            : t('errors.choose_one');
-    }
-
-    if (missing.length > 0) {
-        cartStore.error = tp('errors.fields_missing', { fields: missing.join(', ') });
-    }
+    cartStore.applyLineProblems(lineProblems(problems, catalogStore.product?.event_fields ?? [], props.messages));
 }
 
 /** Quita una línea. Con la cesta vacía se vuelve al catálogo, como hace la web. */
@@ -1131,10 +1137,13 @@ function goBack() {
             :addons="selectionStore.addons"
             :errors="cartStore.fieldErrors"
             :messages="messages"
+            :dependent-options="dependentsStore.optionsFor(messages)"
+            :dependent-ids="selectionStore.dependentIds"
             @select-time="selectTime"
             @inc="changeQuantity(1)"
             @dec="changeQuantity(-1)"
             @update-field="selectionStore.answer"
+            @toggle-dependent="selectionStore.toggleDependent"
             @choose-addon="chooseAddon"
             @toggle-addon="(id) => setAddonQuantity(id, selectionStore.addons.singles.find((a) => a.product_id === id)?.selected ? 0 : 1)"
             @inc-addon="(id) => setAddonQuantity(id, (selectionStore.addons.singles.find((a) => a.product_id === id)?.quantity ?? 0) + 1)"
@@ -1146,9 +1155,12 @@ function goBack() {
             :error="cartStore.error"
             :messages="messages"
             :locale="locale"
+            :dependent-options="dependentsStore.optionsFor(messages)"
+            :notice="cartStore.notice"
             @remove="removeLine"
             @add-another="addAnother"
-            @update-field="updateCartField" />
+            @update-field="updateCartField"
+            @toggle-dependent="cartStore.assign" />
 
         <IdentifyStep
             v-else-if="store.step === STEPS.IDENTIFY"

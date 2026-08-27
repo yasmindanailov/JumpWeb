@@ -1,10 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useOrdersStore } from '../../stores/orders.js';
+import { useDependentsStore } from '../../stores/dependents.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import ReservationCard from './ReservationCard.vue';
 import { cardRows, pageInfo } from '../orders.js';
-import { answersByReservation } from '../../outcome.js';
+import { answersByReservation, dependentsByReservation } from '../../outcome.js';
 import { ZONES } from '../navigation.js';
 
 /**
@@ -39,8 +40,11 @@ const props = defineProps({
 const emit = defineEmits(['sign-in', 'go']);
 
 const store = useOrdersStore();
+// Los menores declarados (tanda 4): solo para saber si se ofrece «ver para quién» en las entradas.
+const dependents = useDependentsStore();
 
 store.ensure(props.scope);
+dependents.ensure();
 
 const rows = computed(() => cardRows(store.pages[props.scope], { messages: props.messages, account: props.account }));
 const page = computed(() => pageInfo(store.pages[props.scope], props.account));
@@ -51,11 +55,21 @@ const emptyText = computed(() => (past.value ? props.account?.orders?.history?.e
 const openEvent = ref(0);
 
 const answersOf = (row) => (answersByReservation(store.eventData[row.orderCode])[String(row.id)] ?? []);
+const dependentsOf = (row) => (dependentsByReservation(store.eventData[row.orderCode])[String(row.id)] ?? []);
 
 function toggleEvent(row) {
     openEvent.value = openEvent.value === row.id ? 0 : row.id;
 
     if (openEvent.value) store.ensureEventData(row.orderCode);
+}
+
+/** Qué entrada tiene desplegado «para quién». Mismo endpoint y misma regla que las respuestas. */
+const openDependents = ref(0);
+
+function toggleDependents(row) {
+    openDependents.value = openDependents.value === row.id ? 0 : row.id;
+
+    if (openDependents.value) store.ensureEventData(row.orderCode);
 }
 
 </script>
@@ -81,12 +95,16 @@ function toggleEvent(row) {
                 :row="row"
                 :answers="answersOf(row)"
                 :open-event="openEvent === row.id"
+                :dependents="dependentsOf(row)"
+                :offer-dependents="dependents.items.length > 0"
+                :open-dependents="openDependents === row.id"
                 :dimmed="past"
                 :busy="store.loading"
                 :account="account"
                 :messages="messages"
                 @open-order="store.openPurchase(row.orderCode)"
                 @toggle-event="toggleEvent(row)"
+                @toggle-dependents="toggleDependents(row)"
                 @retry="store.retry(row.orderCode, { messages })" />
         </ul>
 

@@ -8,6 +8,11 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\DependentRegistry;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
@@ -251,7 +256,84 @@ class SidebarDomContractTest extends TestCase
         }
     }
 
+    /**
+     * ⚠️ **Y con una ENTRADA y menores a cargo (Fase 6 · tanda 4, `DECISIONES #202`).** Los dos casos
+     * anteriores usan un PACK, donde el selector «¿Para quién son estas entradas?» no existe —un pack
+     * ya pide a sus invitados—, y el caso de la entrada que ya había ancla en `bk-progress`: el bloque
+     * de casillas del paso 3 quedaba sin contrato de árbol. Dos menores a propósito: uno con la exención
+     * VIGENTE, marcado; otro sin firmar, que se pinta DESHABILITADO con su motivo — son dos ramas.
+     */
+    public function test_the_time_step_with_dependents_emits_the_same_tree(): void
+    {
+        $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($entry, 3);
+        $dependents = $this->holderWithDependents();
+
+        $date = now()->addDay()->toDateString();
+
+        $vue = $this->vueTree(3, [], 'wiz__title', withSiblings: true,
+            api: [...$this->timeApiPayload($entry->id, $date, '10:00:00', 2), 'dependents' => $dependents],
+            state: [...$this->clientState($date, '10:00:00', 2), 'dependentIds' => [$dependents['data'][0]['id']]]);
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El paso de hora con menores a cargo DIFIERE del árbol congelado.\n\n"
+        );
+    }
+
+    /**
+     * Un titular con DOS menores: Lucas con la exención vigente (asignable) y Vera sin firmar.
+     * Modo interno, porque fuera de él no hay firma que comprobar y la rama deshabilitada no existiría.
+     *
+     * @return array<string, mixed> la respuesta REAL de `GET /me/dependents`
+     */
+    private function holderWithDependents(): array
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        Setting::flushMemo();
+
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $registry = app(DependentRegistry::class);
+        $lucas = $registry->add($user, 'Lucas', '2017-03-12');
+        $registry->add($user, 'Vera', '2019-11-02');
+
+        $version = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+        app(WaiverSigner::class)->sign($user, $version, new WaiverSignatureRequest(
+            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
+            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: (int) $lucas->getKey(),
+        ));
+
+        return $this->actingAs($user)->getJson('/api/v1/me/dependents')->assertOk()->json();
+    }
+
     // ── El paso 4: la cesta ───────────────────────────────────────────────────────────────────
+
+    /**
+     * El carrito con una ENTRADA asignada a un menor y el aviso de la puerta 2 (Fase 6 · tanda 4):
+     * el selector por línea —ya en la cesta y persistida— y el bloque de aviso que comparte clase con
+     * «carrito listo». Ninguno de los tres casos del paso 4 los pintaba.
+     */
+    public function test_the_cart_step_with_dependents_emits_the_same_tree(): void
+    {
+        $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($entry, 3);
+        $dependents = $this->holderWithDependents();
+
+        $api = $this->cartApiPayload([[
+            'ticket_type_id' => $entry->id, 'date' => now()->addDay()->toDateString(), 'time' => '10:00:00',
+            'qty' => 2, 'event_data' => [], 'addons' => [],
+        ]]);
+        $api['cart'][0]['dependent_ids'] = [$dependents['data'][0]['id']];
+        $api['dependents'] = $dependents;
+
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true, api: $api,
+            state: [...$this->clientState(), 'cartNotice' => 'assign']);
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El carrito con menores a cargo DIFIERE del árbol congelado.\n\n"
+        );
+    }
 
     /**
      * La cesta con TODO lo que una línea puede llevar, porque cada rama solo aparece con sus datos:

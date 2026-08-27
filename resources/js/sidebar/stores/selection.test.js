@@ -19,6 +19,27 @@ describe('el store de la línea en construcción', () => {
         assert.equal(s.line, null);
     });
 
+    /** Los menores marcados (Fase 6 · tanda 4): un conjunto acotado por la cantidad, que se vacía con el resto. */
+    test('marcar menores respeta la cantidad y bajar la cantidad los recorta', () => {
+        const s = store();
+        s.setQuantity(2);
+        s.toggleDependent(12);
+        s.toggleDependent(15);
+        s.toggleDependent(18);
+
+        assert.deepEqual(s.dependentIds, [12, 15], 'con dos entradas no cabe un tercero');
+
+        s.setQuantity(1);
+        assert.deepEqual(s.dependentIds, [12], 'bajar la cantidad quita al último');
+
+        s.toggleDependent(12);
+        assert.deepEqual(s.dependentIds, [], 'volver a marcar quita');
+
+        s.toggleDependent(12);
+        s.clear();
+        assert.deepEqual(s.dependentIds, [], 'vaciar la línea vacía también a los menores');
+    });
+
     test('contestar un campo conserva los anteriores', () => {
         const s = store();
         s.answer('nombre', 'Ana');

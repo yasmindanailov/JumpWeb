@@ -83,6 +83,14 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
             </li>
         </ul>
 
+        <!-- Los menores a cargo para los que es la entrada (Fase 6 · tanda 4): en el paso 8 salen del
+             mapa en memoria, en el 6 de `event-data`. Mismo marcado que las respuestas del pack. -->
+        <ul v-if="line.dependents?.length" class="cart__event">
+            <li>
+                <span class="cart__event-label">{{ t('dependents.for') }}</span> {{ line.dependents.map((d) => d.name).join(', ') }}
+            </li>
+        </ul>
+
         <ul v-if="line.addons.length" class="cart__addons">
             <!-- La clave es la POSICIÓN a propósito: la fila la comparten dos fuentes —el presupuesto
                  trae `product_id` y el pedido no— y la lista es estática dentro de un render. -->

@@ -48,13 +48,24 @@ export function addLine(cart, line, verdict) {
     const quantity = verdict.quantity;
     const target = verdict.merges_with_index;
 
+    // Los menores asignados (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9.3 D8): al FUNDIR se unen los
+    // de las dos líneas —los de la existente primero— y al RECORTAR la cantidad se recortan con ella:
+    // nunca más menores que unidades, también cuando es el servidor quien decide cuántas entran.
+    const requested = Array.isArray(line.dependent_ids) ? line.dependent_ids.map(Number) : [];
+
     if (target !== null && target !== undefined && cart[target] !== undefined) {
         return cart.map((existing, index) => (
-            index === target ? { ...existing, quantity: existing.quantity + quantity } : existing
+            index === target
+                ? {
+                    ...existing,
+                    quantity: existing.quantity + quantity,
+                    dependent_ids: [...new Set([...(existing.dependent_ids ?? []).map(Number), ...requested.slice(0, quantity)])],
+                }
+                : existing
         ));
     }
 
-    return [...cart, { ...line, quantity }];
+    return [...cart, { ...line, quantity, dependent_ids: requested.slice(0, quantity) }];
 }
 
 /**
@@ -93,6 +104,32 @@ export function toApiItems(cart) {
 }
 
 /**
+ * La cesta en la forma que viaja a `POST /orders`, y SOLO ahí: la de siempre más los menores a cargo
+ * de cada línea (Fase 6 · tanda 4, `menores-a-cargo.md` §9.9.3 D1/D8).
+ *
+ * ⚠️ `toApiItems()` no los lleva a propósito: alimenta la disponibilidad, la validación de línea y el
+ * presupuesto, tres endpoints públicos que no tienen titular contra el que comprobar nada. Los ids son
+ * punteros opacos, pero mandarlos donde nadie los lee es ruido en la ruta de más tráfico.
+ *
+ * @param {CartLine[]} cart
+ * @returns {Array<object>}
+ */
+export function toCheckoutItems(cart) {
+    return toApiItems(cart).map((item, index) => {
+        const ids = Array.isArray(cart[index]?.dependent_ids) ? cart[index].dependent_ids.map(Number) : [];
+
+        return ids.length > 0 ? { ...item, dependent_ids: ids } : item;
+    });
+}
+
+/** El día de HOY en el huso del navegador (`Y-m-d`), para caducar las líneas de días pasados. */
+export function todayIso(now = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0');
+
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
  * Las filas que el carrito PINTA, emparejando cada línea tarificada con las respuestas del pack que
  * el cliente tiene en memoria.
  *
@@ -106,18 +143,28 @@ export function toApiItems(cart) {
  * `GET catalog/products/{id}`. El emparejado es el mismo que hace `TicketType::eventAnswers()`: orden
  * del ESQUEMA y fuera las vacías.
  *
+ * Y los menores asignados a la línea (Fase 6 · tanda 4): en la cesta viajan como IDS, y el nombre lo
+ * pone aquí el mapa de `GET /me/dependents` que el titular tiene en memoria — el almacén nunca lo ve.
+ *
  * @param {Array<object>} quoteLines  `lines` de `POST /orders/quote`
  * @param {CartLine[]} cart
  * @param {Record<number, Array<{key: string, label: string}>>} fieldsByProduct
+ * @param {Record<number, {id: number, name: string}>} dependentsById  ver `assignment.js::dependentsById`
  * @returns {Array<object>}
  */
-export function cartRows(quoteLines, cart, fieldsByProduct = {}) {
-    return quoteLines.map((line) => ({
-        ...line,
-        event: eventAnswers(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
-        // Lo que hay que volver a pedir para que esta línea se pueda comprar (Fase 4 · paso 4.5·1).
-        pending: pendingEventFields(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
-    }));
+export function cartRows(quoteLines, cart, fieldsByProduct = {}, dependentsById = {}) {
+    return quoteLines.map((line) => {
+        const ids = Array.isArray(cart[line.index]?.dependent_ids) ? cart[line.index].dependent_ids.map(Number) : [];
+
+        return {
+            ...line,
+            event: eventAnswers(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
+            // Lo que hay que volver a pedir para que esta línea se pueda comprar (Fase 4 · paso 4.5·1).
+            pending: pendingEventFields(fieldsByProduct[line.product_id] ?? [], cart[line.index]?.event_data ?? {}),
+            dependent_ids: ids,
+            dependents: ids.map((id) => dependentsById[id]).filter(Boolean),
+        };
+    });
 }
 
 /**
