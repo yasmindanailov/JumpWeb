@@ -13,9 +13,8 @@
 @endphp
 
 <div x-data="landing">
-    {{-- Lote 11 (a11y): skip-link al contenido (1.er focusable, antes del nav) + landmark <main>.
-         La home era la única página pública sin <main> (las demás ya lo tienen). --}}
-    <a href="#main" class="skip-link">{{ __('landing.nav.skip') }}</a>
+    {{-- El salto al contenido ya NO se pinta aquí: lo sirve `<x-site.nav>` para las DOCE vistas
+         (armazón · tanda 2c·2). Aquí solo quedaba porque la home fue la primera en tenerlo. --}}
     <x-site.nav />
     <main id="main">
 

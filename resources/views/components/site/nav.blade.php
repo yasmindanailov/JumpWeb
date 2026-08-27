@@ -46,10 +46,19 @@
     $menuItems = array_values($menuItems);
 @endphp
 
-{{-- Con el menú abierto la barra sube POR ENCIMA de él (la hamburguesa es la forma de cerrarlo)
+{{-- **El salto al contenido, y va aquí a propósito** (`specs/armazon-y-menu.md` §1.8): existía
+     en 1 de las 12 vistas —la home— y las otras once repiten el mismo bloque de navegación sin
+     ofrecer forma de saltarlo. Al vivir en el componente, entra en las doce y **no se puede
+     olvidar en la siguiente página pública que se cree**. Tiene que ser el PRIMER focusable, así
+     que va antes que el racimo. --}}
+<a href="#main" class="skip-link">{{ __('landing.nav.skip') }}</a>
+
+{{-- Con el menú abierto el armazón sube POR ENCIMA de él (la hamburguesa es la forma de cerrarlo)
      y declara superficie de TINTA, que es lo que hace legible su contenido sobre el menú sin
      escribir un solo color a mano: los siete tokens de superficie se re-escopan solos. --}}
-<nav class="nav" :class="menuOpen && 'nav--over'" x-bind:data-surface="menuOpen ? 'ink' : false">
+<nav class="nav"
+     :class="[menuOpen && 'nav--over', navHidden && 'nav--hidden']"
+     x-bind:data-surface="menuOpen ? 'ink' : false">
     <div class="nav__left">
         <a href="{{ url('/') }}" class="nav__brand">
             <span class="nav__brand-row">

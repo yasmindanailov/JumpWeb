@@ -1,5 +1,6 @@
 import { installScrollLock } from './ui/scroll-lock.js';
 import { reveal } from './ui/account-host.js';
+import { shouldHideNav } from './ui/nav-choreography.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -820,6 +821,7 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.data('landing', () => ({
         zone: 'jump', // zona activa (jump | kids)
         menuOpen: false, // el menú del armazón: a pantalla completa en escritorio, cajón en móvil
+        navHidden: false, // el armazón se retira al bajar y vuelve al subir (tanda 2c·2)
         langOpen: false, // selector de idioma
         faqOpen: 0, // índice de FAQ abierta
         progressLeft: 0, // barra de progreso del slider
@@ -851,6 +853,51 @@ document.addEventListener('alpine:init', () => {
             // Reencuadrar mueve la hamburguesa; con el menú abierto, su origen deja de valer.
             this._onMenuResize = () => { if (this.menuOpen) this.publishMenuOrigin(); };
             window.addEventListener('resize', this._onMenuResize, { passive: true });
+
+            this.watchScrollDirection();
+        },
+
+        /**
+         * **La coreografía del armazón: se retira al bajar y vuelve al subir.**
+         *
+         * ⚠️ **La spec (§4.4) decía «en una página con hero nace oculto y aparece al terminar
+         * el hero», y aquí NO se implementa así — con motivo medido.** Esa regla es la del
+         * mockup, y el mockup tiene un hero a pantalla completa. El nuestro dejó de serlo en
+         * `#195`: es una TARJETA con `max-height: calc(100vh - 160px)` dentro de un `padding`
+         * de 96 px. Aplicarla tal cual dejaría la portada **sin logotipo y sin ☰** flotando
+         * sobre una tarjeta que no llena la pantalla, o sea el sitio sin ninguna navegación
+         * visible en su primera pantalla. Se implementa lo que sí se sostiene: **visible desde
+         * el primer píxel en las doce**, y la retirada al bajar.
+         *
+         * ⚠️ **Nunca se retira con un overlay abierto.** El ☰ es la forma de cerrar el menú: si
+         * se fuera con el scroll del propio menú, el visitante se quedaría dentro sin salida
+         * visible. Escape seguiría funcionando, pero eso no es una salida que nadie vea.
+         *
+         * ⚠️ **Y no reacciona a cualquier píxel**: por debajo del umbral, el temblor de un
+         * trackpad o el rebote elástico de iOS harían parpadear el armazón sin que nadie haya
+         * pedido nada. Un gesto es una intención, no un evento.
+         */
+        watchScrollDirection() {
+            let anterior = window.scrollY || 0;
+
+            this._onNavScroll = () => {
+                const y = window.scrollY || 0;
+                const decision = shouldHideNav({
+                    y,
+                    previous: anterior,
+                    locked: this.menuOpen || !! this.$store.purchase?.isOpen,
+                });
+
+                // `null` es «no me consta»: sin intención, ni se mueve el armazón ni se mueve la
+                // referencia — si la referencia avanzara, un arrastre lento nunca acumularía
+                // suficiente delta y la coreografía no se dispararía jamás.
+                if (decision === null) return;
+
+                anterior = y;
+                this.navHidden = decision;
+            };
+
+            window.addEventListener('scroll', this._onNavScroll, { passive: true });
         },
 
         /**
@@ -881,6 +928,11 @@ document.addEventListener('alpine:init', () => {
         visibleMenuPanel() {
             return [this.$refs.menuPanel, this.$refs.mobPanel]
                 .find((panel) => panel && panel.offsetParent !== null) ?? null;
+        },
+
+        destroy() {
+            if (this._onNavScroll) window.removeEventListener('scroll', this._onNavScroll);
+            if (this._onMenuResize) window.removeEventListener('resize', this._onMenuResize);
         },
 
         // Trap de foco del overlay (Lote 10): Tab cíclico dentro del panel mientras está abierto

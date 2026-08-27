@@ -10,7 +10,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="e404 wrap">
+    <main id="main" class="e404 wrap">
         <div class="e404__badge" aria-hidden="true">404</div>
 
         <div class="e404__head">

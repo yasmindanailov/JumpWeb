@@ -5,7 +5,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="page wrap">
+    <main id="main" class="page wrap">
         <div class="page__head">
             <div class="eyebrow">{{ __('account.verify.eyebrow') }}</div>
             <h1 class="page__title">{{ __('account.verify.title') }}</h1>

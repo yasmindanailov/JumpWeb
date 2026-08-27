@@ -3,7 +3,7 @@
     <x-site.nav />
 
     @if ($packages->isEmpty())
-        <main class="page wrap">
+        <main id="main" class="page wrap">
             <div class="page__head">
                 <div class="eyebrow">{{ __('landing.events.eyebrow') }}</div>
                 <h1 class="page__title">{{ __('landing.events.title') }}</h1>
@@ -16,7 +16,7 @@
     @else
         {{-- El componente trae sus propias secciones `.wrap`; `.bd-standalone` solo añade el
              despeje superior bajo el nav fijo (#231). Aquí SÍ va la tarjeta de invitación. --}}
-        <main class="bd-standalone">
+        <main id="main" class="bd-standalone">
             <x-site.events-section :packages="$packages" :show-invite="true" :level="1" />
         </main>
     @endif

@@ -2,7 +2,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="page wrap">
+    <main id="main" class="page wrap">
         <div class="page__head">
             <div class="eyebrow">{{ __('site.contact_eyebrow') }}</div>
             <h1 class="page__title">{{ __('site.contact_title') }}</h1>

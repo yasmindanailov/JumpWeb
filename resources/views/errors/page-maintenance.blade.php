@@ -9,7 +9,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="page wrap" style="min-height:52vh">
+    <main id="main" class="page wrap" style="min-height:52vh">
         <div class="page__head">
             <div class="eyebrow">{{ __('site.page_maintenance.eyebrow') }}</div>
             <h1 class="page__title">{{ __('site.page_maintenance.title') }}</h1>

@@ -408,6 +408,125 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **El salto al contenido existe en las DOCE vistas, es el primer focusable y aterriza.**
+     *
+     * Existía en **1 de 12** —la home— y las otras once repiten el mismo bloque de navegación sin
+     * ofrecer forma de saltarlo. Es el defecto de accesibilidad más viejo del armazón y la 2c·2
+     * es el sitio natural de cerrarlo, porque es cuando el armazón pasa a ser una pieza
+     * compartida de verdad.
+     *
+     * ▶ Se comprueban las TRES cosas, porque cualquiera de ellas sola es un salto roto: que
+     * exista, que sea **lo primero que recibe el foco** —si va después del armazón no ahorra
+     * nada— y que su destino **exista en la página**.
+     */
+    public function test_the_skip_link_is_the_first_focusable_and_lands_somewhere(): void
+    {
+        foreach (array_merge(self::RENDERABLE, ['/no-existe-esta-pagina']) as $path) {
+            $html = $this->get($path)->getContent();
+
+            $skip = $this->nodes($html, 'skip-link');
+            $this->assertCount(1, $skip, "`{$path}` no ofrece salto al contenido");
+
+            $target = $skip[0]->getAttribute('href');
+            $this->assertSame('#main', $target, "`{$path}`: el salto no apunta a `#main`");
+
+            $xpath = $this->xpath($html);
+            $this->assertSame(
+                1, $xpath->query('//*[@id="main"]')->length,
+                "`{$path}`: el salto apunta a `#main` y ahí no hay nada",
+            );
+
+            $body = $xpath->query('//body')->item(0);
+            $primero = $xpath->query('.//a[@href] | .//button | .//input | .//select | .//textarea', $body)->item(0);
+
+            $this->assertSame(
+                'skip-link', $primero?->getAttribute('class'),
+                "`{$path}`: el salto al contenido no es el primer focusable, así que no ahorra nada",
+            );
+        }
+    }
+
+    /**
+     * **TODOS los `<main>` de las vistas con armazón llevan el ancla, no solo el primero.**
+     *
+     * ❗ Esto existe por un defecto REAL que cazó el test de arriba: `pages/events` tiene **dos**
+     * `<main>` en ramas excluyentes, se parcheó el primero y **la página servía el segundo**. El
+     * salto al contenido quedaba apuntando a un ancla que no existía en la página que se ve —y
+     * eso no falla, no avisa y solo lo nota quien navega con teclado—.
+     * ▶ Un `grep` que mira «el primer `<main>`» da un inventario que parece completo.
+     */
+    public function test_every_main_landmark_carries_the_skip_target(): void
+    {
+        $sinAncla = [];
+
+        foreach (self::VIEWS_WITH_ARMAZON as $view) {
+            $source = (string) file_get_contents(resource_path('views/'.$view.'.blade.php'));
+
+            preg_match_all('/<main\b[^>]*>/', $source, $matches);
+
+            foreach ($matches[0] as $tag) {
+                if (! str_contains($tag, 'id="main"')) {
+                    $sinAncla[] = $view.' → '.$tag;
+                }
+            }
+        }
+
+        $this->assertSame(
+            [], $sinAncla,
+            'estos `<main>` no llevan `id="main"`, así que en la rama que los sirva el salto al '.
+            "contenido apunta a la nada:\n  ".implode("\n  ", $sinAncla),
+        );
+    }
+
+    /**
+     * **La barra se ha DISUELTO: queda un contenedor transparente con dos racimos.**
+     *
+     * Lo que desaparece es la barra, no la navegación. Se comprueba en la HOJA porque es donde
+     * vive la decisión, y de las cuatro cosas la última es la que no se ve y más duele:
+     * **`pointer-events`**. Sin ella, la franja vacía entre los dos racimos se traga los clics de
+     * todo el ancho de la pantalla en sus primeros píxeles — y eso ni falla ni avisa.
+     */
+    public function test_the_bar_has_dissolved_into_two_clusters(): void
+    {
+        $nav = $this->ruleBody('.nav');
+
+        foreach (['background', 'backdrop-filter', 'border-bottom'] as $prop) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/(?<![-\w])'.preg_quote($prop, '/').'\s*:/', $nav,
+                "`.nav` sigue declarando `{$prop}`: la barra no se ha disuelto",
+            );
+        }
+
+        $this->assertMatchesRegularExpression(
+            '/pointer-events:\s*none/', $nav,
+            '`.nav` no renuncia a los clics: su franja vacía se traga todo lo que haya debajo',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/\.nav__left,\s*\.nav__cta\s*\{[^}]*pointer-events:\s*auto/s', $this->stylesheets(),
+            'los dos racimos no recuperan los clics, así que el armazón entero sería inerte',
+        );
+    }
+
+    /**
+     * **El armazón consume la coreografía, y su estado lo decide un módulo que SÍ se prueba.**
+     *
+     * Aquí solo se comprueba el cableado —que la clase se ate al estado—; las reglas (el umbral,
+     * la primera pantalla, el overlay abierto) las cubre `nav-choreography.test.js`, que es donde
+     * se pueden ejercitar de verdad. Un test de HTML no puede hacer scroll.
+     */
+    public function test_the_armazon_is_wired_to_the_choreography(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $nav = $this->nodes($html, 'nav')[0];
+
+        $this->assertStringContainsString(
+            'navHidden', $nav->getAttribute('data-bind-class'),
+            'el armazón no se ata al estado de la coreografía: no se retiraría nunca',
+        );
+    }
+
+    /**
      * **El menú a pantalla completa es un overlay accesible — y cerrado NO aporta focos.**
      *
      * ❗❗ **Ésta es la aserción que existe por el defecto del mockup.** Su menú se oculta con un
@@ -563,6 +682,24 @@ class ArmazonContractTest extends TestCase
         }
 
         return $out;
+    }
+
+    /**
+     * El cuerpo de TODAS las reglas cuyo selector es exactamente el dado, concatenado.
+     *
+     * Exactamente: `.nav` no puede casar con `.nav__left` ni con `.nav--over`, o la aserción
+     * diría cualquier cosa.
+     */
+    private function ruleBody(string $selector): string
+    {
+        preg_match_all(
+            '/(?:^|\})\s*'.preg_quote($selector, '/').'\s*\{([^}]*)\}/m',
+            $this->stylesheets(), $matches,
+        );
+
+        $this->assertNotEmpty($matches[1], "no hay ninguna regla `{$selector}` en las hojas");
+
+        return implode(' ', $matches[1]);
     }
 
     /** Las dos hojas del producto, con los comentarios blanqueados. */

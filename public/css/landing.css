@@ -377,19 +377,49 @@ img { display: block; max-width: 100%; }
 .section + .section { border-top: 1px solid var(--line); }
 
 /* ---------- nav ---------- */
+/* **LA BARRA SE DISUELVE EN DOS RACIMOS** (armazón · tanda 2c·2).
+   Ya no hay fondo translúcido, ni desenfoque, ni línea inferior: `.nav` deja de
+   ser una barra y pasa a ser el CONTENEDOR de dos racimos pinneados a las
+   esquinas. Sigue llamándose `nav` porque es la navegación del sitio — lo que
+   desaparece es la barra, no la navegación.
+   ⚠️ **`pointer-events: none` en el contenedor y `auto` en los racimos**: sin
+   eso, la franja vacía entre los dos se traga los clics de todo el ancho de la
+   pantalla en los primeros ~76 px, y eso no falla ni avisa. */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: flex-start; justify-content: space-between;
   padding: 16px clamp(24px, 4vw, 48px);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  border-bottom: 1px solid var(--line);
   gap: 24px;
+  pointer-events: none;
+}
+.nav__left,
+.nav__cta { pointer-events: auto; }
+/* La coreografía: se retira al bajar y vuelve al subir. Nunca con un overlay
+   abierto — la hamburguesa es la forma de cerrarlo (lo garantiza el JS). */
+.nav__left,
+.nav__cta {
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+}
+.nav--hidden .nav__left,
+.nav--hidden .nav__cta {
+  transform: translateY(calc(-100% - 20px));
+  opacity: 0;
+  pointer-events: none;
 }
 .nav__left {
   display: flex; align-items: center; gap: clamp(28px, 4vw, 56px);
   min-width: 0;
+}
+/* Sin barra detrás, la marca se queda sola sobre el contenido que pase por
+   debajo. El mockup lo resuelve con un `drop-shadow` sobre su logotipo de seis
+   capas; aquí la nuestra es TEXTO y esa vía está cerrada por `M-05` (la difusa
+   solo existe en modales), así que se sostiene con la misma receta que el resto
+   del racimo: superficie de tarjeta y keyline. */
+.nav__brand {
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
 }
 .nav__brand {
   display: inline-flex; flex-direction: column;

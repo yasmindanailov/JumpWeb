@@ -2,7 +2,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="page wrap account">
+    <main id="main" class="page wrap account">
         <div class="page__head">
             <div class="eyebrow">{{ __('account.orders.eyebrow') }}</div>
             <h1 class="page__title">{{ __('tickets.pay_redirecting_title') }}</h1>

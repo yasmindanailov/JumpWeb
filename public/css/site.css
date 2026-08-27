@@ -2076,10 +2076,16 @@ body.no-scroll { overflow: hidden; }
    relación radio/altura llevaría al ojo a leerlo como "pill" — subimos el
    padding vertical a 11px para que la altura quede ~38-40px (radio = ~⅓ de la
    altura → rounded rect claro, coherente con `.btn`/`.btn--ghost` del mockup). */
+/* ⚠️ **El fantasma deja de ser TRANSPARENTE y pasa a ser «no el relleno principal»**
+   (armazón · tanda 2c·2). Con la barra disuelta, transparente dejaba de ser un estilo
+   y pasaba a ser un accidente: el botón quedaba ilegible en cuanto el scroll traía
+   una tarjeta por debajo. La jerarquía se conserva por PESO DE RELLENO —tinta para el
+   principal, tarjeta para el secundario—, que es como la declara el sistema del
+   cliente, y no por ausencia de fondo. */
 .cta-ghost {
     display: inline-flex; align-items: center; gap: var(--sp-8);
     padding: var(--sp-11) var(--sp-14) var(--sp-11) var(--sp-12);
-    background: transparent; color: var(--fg);
+    background: var(--bg-card); color: var(--fg);
     border: 1px solid var(--line-strong);
     border-radius: var(--r-btn);
     font-family: var(--font-body); font-weight: 500;
@@ -3447,13 +3453,10 @@ html:not(.js) .gf-fiche__foot { display: none; }
 /* Con el menú abierto la barra sube POR ENCIMA y se queda desnuda: la hamburguesa
    es la forma de cerrarlo, así que no puede quedar debajo. Declara superficie de
    tinta desde el marcado, de modo que su contenido sigue leyéndose. */
-.nav--over {
-    z-index: 110;
-    background: transparent;
-    border-bottom-color: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
+/* Con el menú abierto el armazón sube POR ENCIMA: la hamburguesa es la forma de
+   cerrarlo y no puede quedar debajo. Desde la 2c·2 ya no hay fondo que apagar —
+   la barra se disolvió— así que aquí solo queda la capa. */
+.nav--over { z-index: 110; }
 
 /* En móvil manda el cajón (tanda 2c·4, `[PENDIENTE: owner]`), así que el menú a
    pantalla completa NO existe ahí — y `display:none` lo saca también del foco,

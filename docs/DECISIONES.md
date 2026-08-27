@@ -10682,3 +10682,74 @@ nada), «reconcile deja la línea sin asignar» (futuro, no código), «cinco es
 **Orden de trabajo**: U0 la purga → U1 el servidor → U2 el cajón → U3 el panel → U4 el ojo del owner;
 cada unidad se empuja verde (`CONVENCIONES §10`·5). Este commit es solo doc: reclama la tanda en el
 reparto y deja el aviso al carril C (`layout.blade.php` en U2) y al B (`Orders/**` en U3).
+
+## #203 · 2026-08-27 · El ARMAZÓN, tanda 2c·2 — la barra se DISUELVE en dos racimos flotantes, y el salto al contenido pasa de 1 de 12 a 12 de 12
+
+`.nav` deja de tener fondo, desenfoque y línea inferior y pasa a ser el **contenedor** de dos
+racimos pinneados a las esquinas: la marca a un lado, la acción al otro. **Sigue llamándose `nav`
+porque es la navegación del sitio: lo que desaparece es la barra, no la navegación.**
+
+⚠️ **Lo que no se ve es lo que más duele**: el contenedor renuncia a los clics
+(`pointer-events: none`) y los racimos los recuperan (`auto`). Sin eso, la franja vacía entre los
+dos **se traga los clics de todo el ancho de la pantalla** en sus primeros píxeles — no falla, no
+avisa, y solo lo nota quien intenta pulsar algo que está justo debajo. Guarda propia, mutación que
+muerde.
+
+**El salto al contenido pasa de 1 de 12 a 12 de 12.** Vive en el componente, así que no se puede
+olvidar en la próxima página pública, y las once vistas que no lo tenían ganan su ancla.
+❗ **Y ahí apareció un defecto real que cazó el propio test**: `pages/events` tiene **dos**
+`<main>` en ramas excluyentes; el parche puso el ancla en el primero y **la página sirve el
+segundo**, así que el salto apuntaba a un ancla inexistente en la página que se ve. Hay guarda que
+mira **todos** los `<main>`, no el primero. ▶ **Un `grep` que mira «el primer X» da un inventario
+que parece completo.**
+
+**La coreografía**: el armazón se retira al bajar y vuelve al subir, nunca por encima de la
+primera pantalla y **nunca con un overlay abierto** —la hamburguesa es la forma de cerrar el menú;
+si se fuera con el scroll del propio menú, el visitante se quedaría dentro sin salida visible—.
+▶ **La lógica salió de `app.js`**, que no lo cubre ningún test, a
+`resources/js/ui/nav-choreography.js` con **8 casos propios**. Devuelve `null` —«no me consta»—
+cuando no hay intención: si la referencia avanzara con cada píxel, un arrastre lento nunca
+acumularía delta suficiente y **la coreografía no se dispararía jamás**.
+
+❗❗ **DOS VECES ESTA TANDA CORRIGIÓ A SU PROPIA SPEC, y las dos correcciones valen más que el
+código:**
+
+**1 · `M-05` ya estaba cumplido.** §4.8 daba por hecho que el mobiliario llevaba sombra difusa y
+había que quitársela. Medido: **ninguna de nuestras piezas declara `box-shadow`** — se la llevó
+`#196` al retirarla de 19 elementos. La decisión del owner no costaba nada: **ya era el estado**.
+Lo que sí hacía falta era lo contrario de lo que parecía: **dar a las piezas con qué sostenerse**
+al desaparecer el fondo que las sujetaba. De ahí las dos únicas cosas que cambian de aspecto por sí
+mismas:
+· **el CTA fantasma deja de ser transparente** y pasa a superficie de tarjeta. Con la barra
+  disuelta, transparente dejaba de ser un estilo y era un accidente: ilegible en cuanto el scroll
+  trae una tarjeta por debajo. **La jerarquía se conserva por PESO DE RELLENO** —tinta el
+  principal, tarjeta el secundario—, que es como la declara el sistema del cliente.
+· **la marca gana su propia caja**: el mockup lo resuelve con `drop-shadow` sobre su logotipo de
+  seis capas, y la nuestra es TEXTO — esa vía la cierra el propio `M-05`.
+
+**2 · La coreografía NO se implementa como la spec la escribió.** §4.4 decía «en una página con
+hero nace oculto y aparece al terminar el hero». Es la regla del mockup, **que tiene un hero a
+pantalla completa**; el nuestro dejó de tenerlo en `#195` —es una tarjeta con
+`max-height: calc(100vh - 160px)`— y aplicarla dejaría la portada **sin logotipo y sin ☰** sobre
+una tarjeta que no llena la pantalla: el sitio sin ninguna navegación visible en su primera
+pantalla. Se implementa **visible desde el primer píxel en las doce**. `[PENDIENTE: owner]`: si al
+mirarlo prefiere la del mockup es una línea, pero entonces hay que decidir qué ve quien entra.
+
+⚠️ **Y el arnés de mutación volvió a mentir, de la forma más tonta**: dos ediciones automáticas
+sobre él **fallaron en silencio** y corrió la lista de la tanda anterior — 16 de 16 en verde,
+válidas, pero **no eran las mutaciones de esta tanda**. Se reescribió entero y ahora **verifica que
+cada ancla casa exactamente una vez antes de empezar**. ▶ **Una edición fallida convierte un arnés
+en un teatro que siempre da 100 %.** Es la tercera vez en dos tandas que el instrumento es el
+problema.
+
+▶ **Medido, no supuesto**: el borde inferior del racimo queda en **60 px** y el espacio superior
+es de **108 px** en las páginas `.page` y **96 px** en el hero — despeja en las dos.
+
+`specs/armazon-y-menu.md` §8.4 (y §4.4 y §4.8 **corregidas delante del texto que corrigen**) ·
+`nav.blade.php` · `resources/js/ui/nav-choreography.js` + su test (nuevos) · `app.js` ·
+`public/css/{site,landing}.css` · las 12 vistas con `id="main"` ·
+`ArmazonContractTest` (+4, **20 casos**).
+**12 mutaciones, las 12 muerden**, con verificación de anclas y control positivo en los tres
+carriles · suite **3086** verde (17.763 aserciones) · `test:js` **732** · Pint 937 · docs-check verde.
+❗ **Falta la pasada de NAVEGADOR del owner**, y ahora son TRES tandas apiladas sobre el mismo
+terreno (`#195`, `#196`, `#201`, `#203`). Lo eligió él sabiendo el coste (`#200`).

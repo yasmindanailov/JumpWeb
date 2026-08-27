@@ -22,7 +22,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="svc-main">
+    <main id="main" class="svc-main">
         {{-- Hero: eyebrow + título XL + intro + índice de anclas a cada servicio --}}
         <header class="svc-hero wrap">
             <span class="eyebrow">{{ __('services.eyebrow') }}</span>

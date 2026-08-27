@@ -2,7 +2,7 @@
 <div x-data="landing">
     <x-site.nav />
 
-    <main class="page wrap">
+    <main id="main" class="page wrap">
         <div class="rides__head">
             <div>
                 <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.pricing.eyebrow') }}</div>

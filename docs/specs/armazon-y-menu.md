@@ -376,9 +376,15 @@ nombre.
 El racimo se comporta igual en las 12 vistas, con **una** regla y un caso particular que ya
 existe:
 
+⚠️⚠️ **LA PRIMERA FILA DE ESTA TABLA NO SE IMPLEMENTÓ ASÍ, y el motivo es una medida** (§8.4):
+la regla «nace oculto bajo el hero» es la del mockup, **que tiene un hero a pantalla completa**.
+El nuestro dejó de tenerlo en `#195` —es una tarjeta con `max-height: calc(100vh - 160px)`— y
+aplicarla dejaría la portada sin logotipo y sin ☰ sobre una tarjeta que no llena la pantalla.
+**En el árbol, el armazón está visible desde el primer píxel en las doce.** `[PENDIENTE: owner]`.
+
 | Situación | Conducta |
 |---|---|
-| Página **con** hero | nace oculto; aparece al terminar el hero; se retira ante el bloque de cierre |
+| Página **con** hero | ~~nace oculto; aparece al terminar el hero~~ → **visible desde el primer píxel** (ver el aviso de arriba) |
 | Página **sin** hero | **visible desde el primer píxel** |
 | Bajando | se retira |
 | Subiendo | vuelve |
@@ -452,6 +458,14 @@ glifos, o un solo significado.
 
 `[DECIDIDO owner, 2026-08-27]`, aceptando la recomendación de su propia auditoría (`M-05`):
 **el mobiliario de cabecera no lleva sombra difusa. Se sostiene por su borde.**
+
+⚠️⚠️ **MEDIDO AL EJECUTAR, y corrige la tabla de abajo: nuestro mobiliario NO tenía sombra.**
+Ninguna de las piezas —el CTA de comprar, el fantasma, el chip de cuenta, la hamburguesa—
+declaraba `box-shadow`: se la llevó `#196` al retirarla de 19 elementos. La tabla siguiente
+describe **el mobiliario del mockup**, no el nuestro, y se conserva porque es la razón del
+hallazgo. ▶ **La decisión del owner no costaba nada: ya era el estado.** Lo que sí hacía falta
+era lo contrario de lo que parecía —dar a las piezas con qué sostenerse al desaparecer el fondo
+que las sujetaba—, y eso es §8.4.
 
 | Pieza | Antes (mockup) | Con esta decisión |
 |---|---|---|
@@ -607,7 +621,7 @@ Cada una deja el sitio navegable y se puede mirar en navegador por separado.
 |---|---|---|---|
 | **2c·0** ✅ | **La red y la limpieza** — HECHA el 2026-08-27: `ArmazonContractTest` (10 casos) fija la conducta del armazón y **estrena red para el cajón móvil**, `ArmazonCssHasNoOrphansTest` deja fuera las 33 reglas muertas y las mantiene fuera. **15 mutaciones, las 15 muerden**, con control positivo | **No**, y está medido: cero apariciones de las once clases en el HTML servido de 16 páginas |
 | **2c·1** ✅ | **El menú a pantalla completa** — HECHA el 2026-08-27: sustituye a los dos desplegables, la barra pierde sus enlaces y la hamburguesa aparece en todos los anchos. El cajón de móvil **sigue intacto** por debajo de 1080 px, esperando el artboard | **Sí, y mucho.** Es la primera pantalla de las 12 vistas |
-| **2c·2** | **Los dos racimos** — la barra se disuelve; logotipo y acción flotan; entra la coreografía generalizada a las 12 vistas; el mobiliario va **a keyline, sin sombra** (§4.8) | Sí, en toda la web |
+| **2c·2** ✅ | **Los dos racimos** — HECHA el 2026-08-27: la barra se disuelve (sin fondo, sin desenfoque, sin línea), los dos racimos flotan en las esquinas, entra la coreografía en las 12 vistas y **el salto al contenido pasa de 1 de 12 a 12 de 12** | **Sí, en toda la web** |
 | **2c·3** | **La cuenta** — icono con **punto de aviso en amarillo, y nada cuando no hay aviso**; los glifos al set de iconos; el nombre accesible en texto | Sí, en la esquina |
 | **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard. Ya llega con dos cosas decididas: **manda la barra de abajo** y **arriba solo logotipo y hamburguesa** (§4.9) | — |
 
@@ -649,6 +663,76 @@ guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86
 (4.025 → 3.939, medido volviendo a poner el CSS y corriendo otra vez) y los tests nuevos aportan
 **87**. `17 694 − 86 + 87 = 17 695`. **Un contador que se mueve menos de lo esperado no es un
 contador roto hasta que no puedes explicar la diferencia.**
+
+### 8.4 Lo que la 2c·2 dejó hecho, y las dos veces que la spec se corrigió a sí misma
+
+**La barra se disuelve.** `.nav` deja de tener fondo, desenfoque y línea inferior y pasa a ser el
+**contenedor** de dos racimos pinneados a las esquinas. Sigue llamándose `nav` porque es la
+navegación del sitio: **lo que desaparece es la barra, no la navegación**.
+
+⚠️ **Y lo que no se ve es lo que más duele**: el contenedor renuncia a los clics
+(`pointer-events: none`) y los racimos los recuperan (`auto`). Sin eso, la franja vacía entre los
+dos **se traga los clics de todo el ancho de la pantalla** en sus primeros píxeles. No falla, no
+avisa, y solo lo nota quien intenta pulsar algo que está justo debajo. Hay guarda y su mutación
+muerde.
+
+**El salto al contenido pasa de 1 de 12 a 12 de 12.** Vive en el componente, así que no se puede
+olvidar en la próxima página pública que se cree, y las once vistas que no lo tenían ganan su
+ancla.
+
+**La coreografía**: el armazón se retira al bajar y vuelve al subir, nunca con un overlay abierto,
+y nunca en la primera pantalla.
+
+#### ❗ Dos veces que esta spec se corrigió a sí misma al ejecutarla
+
+**1 · `M-05` ya estaba cumplido, y la spec decía lo contrario.** §4.8 daba por hecho que el
+mobiliario llevaba sombra difusa y había que quitársela. Medido: **nuestras piezas no tienen
+`box-shadow` ninguna** — se la llevó `#196` al retirarla de 19 elementos. Así que la decisión del
+owner no costaba nada: ya era el estado. Lo que sí hacía falta era lo contrario de lo que parecía:
+**dar a las piezas con qué sostenerse** al desaparecer el fondo que las sujetaba.
+▶ De ahí las dos únicas cosas que cambian de aspecto por sí mismas:
+· **el CTA fantasma deja de ser transparente** y pasa a superficie de tarjeta. Con la barra
+  disuelta, transparente dejaba de ser un estilo y pasaba a ser un accidente: el botón quedaba
+  ilegible en cuanto el scroll traía una tarjeta por debajo. **La jerarquía se conserva por PESO
+  DE RELLENO** —tinta el principal, tarjeta el secundario—, que es como la declara el sistema del
+  cliente, y no por ausencia de fondo.
+· **la marca gana su propia caja.** El mockup resuelve esto con un `drop-shadow` sobre su
+  logotipo de seis capas; la nuestra es TEXTO y esa vía está cerrada por el propio `M-05`.
+
+**2 · La coreografía de §4.4 NO se implementa como estaba escrita, y el motivo es una medida.**
+Decía «en una página con hero nace oculto y aparece al terminar el hero». Esa es la regla del
+mockup, **y el mockup tiene un hero a pantalla completa**. El nuestro dejó de tenerlo en `#195`:
+es una TARJETA con `max-height: calc(100vh - 160px)` dentro de un `padding` de 96 px. Aplicarla
+tal cual dejaría la portada **sin logotipo y sin ☰** sobre una tarjeta que no llena la pantalla —
+o sea, el sitio sin ninguna navegación visible en su primera pantalla.
+▶ Se implementa lo que sí se sostiene: **visible desde el primer píxel en las doce**, más la
+retirada al bajar. **`[PENDIENTE: owner]`**: si al mirarlo prefiere la del mockup, es una línea —
+pero entonces hay que decidir qué ve alguien que entra a la portada.
+
+⚠️ **Y una tercera regla que sí se conserva íntegra**: con un overlay abierto el armazón **no se
+retira nunca**. La hamburguesa es la forma de cerrar el menú; si se fuera con el scroll del propio
+menú, el visitante se quedaría dentro sin salida visible. Escape seguiría funcionando, pero eso no
+es una salida que nadie vea.
+
+#### Lo que costó
+
+❗ **Un `<main>` de más, y el test lo cazó.** `pages/events` tiene **dos** `<main>` en ramas
+excluyentes; el parche automático puso el ancla en el primero y **la página sirve el segundo**. El
+salto al contenido apuntaba a un ancla inexistente en la página que se ve — no falla, no avisa, y
+solo lo nota quien navega con teclado. ▶ Hay guarda propia que ahora mira **todos** los `<main>`,
+no el primero: **un `grep` que mira «el primer X» da un inventario que parece completo.**
+
+⚠️ **El arnés de mutación volvió a mentir, y de la forma más tonta.** Dos ediciones automáticas
+sobre él **fallaron en silencio** y corrió la lista de la tanda anterior: 16 de 16 en verde,
+válidas, pero **no eran las mutaciones de esta tanda**. Se reescribió entero y **verifica ahora
+que cada ancla casa exactamente una vez antes de empezar** — una edición fallida convierte un
+arnés en un teatro que siempre da 100 %.
+
+⚠️ **La lógica del scroll salió de `app.js`.** El fichero que registra los componentes de Alpine
+**no lo cubre ningún test**, y una regla con tres casos de borde metida ahí es una regla que nadie
+puede ejercitar. Vive en `resources/js/ui/nav-choreography.js` con **8 casos propios**, y devuelve
+`null` —«no me consta»— cuando no hay intención: si la referencia avanzara con cada píxel, un
+arrastre lento nunca acumularía delta suficiente y la coreografía **no se dispararía jamás**.
 
 ### 8.3 Lo que la 2c·1 dejó hecho, y lo que costó
 
