@@ -64,7 +64,10 @@ class ShapeScaleTest extends TestCase
         '.offw-burst .spark' => [9, 2.0],
         '.svc-marquee__item::after' => [13, 3.5],
         '.svc-ed2__kicker::before' => [12, 3.0],
-        '.hero__stat .sep' => [14, 3.5],
+        // ⚠️ `.hero__stat .sep` vivía aquí y SE RETIRÓ el 2026-08-27 (tanda 2b, paso 1): la familia
+        // `.hero__stat` entera estaba MUERTA —cero usos en `resources/`— y se fue con otras cinco.
+        // Lo cazó esta misma guarda, que es para lo que está: una excepción sin sujeto tapa el
+        // siguiente caso que se llame igual.
         '.bd-proc__cube' => [44, 11.0],
         '.catalog-acc__icon' => [30, 9.0],
         '.pwd-input__toggle' => [32, 6.0],

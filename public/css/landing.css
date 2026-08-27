@@ -770,20 +770,7 @@ img { display: block; max-width: 100%; }
 }
 .hero__stage-content > *,
 .hero__stage-content a,
-.hero__stage-content button { pointer-events: auto; }
-
-.hero__stage-top {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 40px;
-}
-.hero__tag--onvideo {
-  color: color-mix(in srgb, var(--bg) 82%, transparent);
-  text-align: right;
-  max-width: 320px;
-  margin: 0;
-}
-
-/* on-video title — cream text; blink keeps its zone color */
+.hero__stage-content button { pointer-events: auto; }/* on-video title — cream text; blink keeps its zone color */
 .hero__title.hero__title--onvideo {
   color: var(--bg);
   font-size: clamp(56px, 10.5vw, 168px);
@@ -805,13 +792,7 @@ img { display: block; max-width: 100%; }
   pointer-events: none;
   z-index: 6;
 }
-.hero__stage[data-has-video="true"] .hero__stage-label { display: none; }
-
-.hero__cta-row--onvideo {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 18px 24px; flex-wrap: wrap; margin: 0;
-}
-.hero__title {
+.hero__stage[data-has-video="true"] .hero__stage-label { display: none; }.hero__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(96px, 18vw, 320px);
   line-height: 0.82; letter-spacing: -0.045em; margin: 0;
@@ -821,41 +802,7 @@ img { display: block; max-width: 100%; }
   display: inline-block; background: var(--zone-1); color: var(--on-brand);
   padding: 0 0.12em 0.04em; border-radius: 18px;
   transform: rotate(-2deg);
-}
-/* hero stats — centered horizontal ticker, below the stage */
-.hero__foot {
-  display: flex; align-items: baseline; justify-content: center;
-  flex-wrap: wrap; gap: 18px 36px;
-  border-top: 1px solid var(--line);
-  padding-top: 28px; margin-top: 40px;
-  text-align: center;
-}
-
-/* (Lote 12) `.hero__cta-main` (CTA antiguo del hero) ELIMINADO: 0 uso en blades — el hero usa
-   `.cta-prime` (Lote 3). Se poda también su override de móvil. */
-.hero__stat { display: inline-flex; align-items: baseline; gap: 10px; }
-.hero__stat .num {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 44px; line-height: 1; letter-spacing: -0.03em;
-}
-.hero__stat .label {
-  font-family: var(--font-body); font-size: 11px; color: var(--fg-mute);
-  text-transform: uppercase; letter-spacing: 0.14em;
-}
-.hero__stat .sep {
-  display: inline-block;
-  width: 14px; height: 14px;
-  background: var(--zone-1);
-  border-radius: 3.5px;
-  transform: rotate(22deg);
-  align-self: center;
-}
-
-.hero__bubble {
-  position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-}
-
-/* ---------- marquee ---------- */
+}/* ---------- marquee ---------- */
 .marquee {
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
   background: var(--bg); overflow: hidden; padding: 22px 0;
@@ -1924,23 +1871,9 @@ input[type="radio"]:focus-visible,
      encuadre hacia el centro-superior para que el chaval saltando quede dentro del recorte.
      Ajustable: si el sujeto está más abajo/lado, cambiar este object-position. */
   .hero__video { object-position: 78% 32%; }
-  .hero__stage-content { padding: 22px 20px 24px; }
-  .hero__stage-top { flex-direction: column; align-items: flex-start; gap: 14px; }
-  .hero__tag--onvideo { text-align: left; max-width: none; font-size: 13px; }
-  .hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
+  .hero__stage-content { padding: 22px 20px 24px; }.hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
   .hero__stage-label { display: none; }
-  .hero__stage-bottom { flex-direction: column; align-items: stretch; gap: 14px; }
-  .hero__cta-row--onvideo {
-    flex-direction: column; align-items: stretch;
-    justify-content: flex-start; gap: 12px;
-  }
-  /* stats */
-  .hero__foot { gap: 14px 24px; padding-top: 22px; margin-top: 28px; }
-  .hero__stat { gap: 8px; }
-  .hero__stat .num { font-size: 26px; }
-  .hero__stat .sep { display: none; }
-  .hero__stat .label { font-size: 10px; }
-  /* marquee */
+  .hero__stage-bottom { flex-direction: column; align-items: stretch; gap: 14px; }/* marquee */
   .marquee { padding: 14px 0; }
   .marquee__item { font-size: 36px; gap: 32px; }
   .marquee__item .star { font-size: 22px; }
