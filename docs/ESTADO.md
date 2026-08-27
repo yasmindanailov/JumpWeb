@@ -146,7 +146,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#191`**.
+> El último usado es **`#192`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -241,9 +241,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3018 en verde** (17.410 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+- Suite **3032 en verde** (17.489 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
   máquina del agente B; **~68 s** en la del A, la tarde del 27) ·
-  ▶ **+34 tests PHP en el último corte** (`#191`, menores a cargo · tanda 1): `DependentRegistryTest`
+  ▶ **+14 tests PHP en el último corte** (`#192`, capa de tema · tanda 1): `SurfaceScopeTest` (8) y
+  `ThemeFontsTest` (6). **13 mutaciones, las 13 muerden.** ⚠️ Y una de ellas destapó que **la guarda de
+  la guarda había nacido ciega**: aseveraba un umbral de recuento sobre `:root` y no detectaba que el
+  parser se quedara sin la mitad del corpus, porque `site.css` declara el suyo. Se asevera por NOMBRE.
+  ⚠️ El trinquete `SidebarTokenBudgetTest::MAX_RAW_COLOURS` bajó **5 → 4 → 3**, avisando él las dos
+  veces. Antes:
+  ▶ **+34 tests PHP** (`#191`, menores a cargo · tanda 1): `DependentRegistryTest`
   (15: edad derivada y jamás persistida, el 18.º cumpleaños cruzando UTC↔Madrid, solo menores, tope de
   servidor desde el ajuste, quitar = desvincular/borrar, anti-IDOR), `DependentPrivacyTest` (5:
   `anonymize()`, export, poda, purga de go-live), `MeDependentsTest` (11, contra el contrato) y

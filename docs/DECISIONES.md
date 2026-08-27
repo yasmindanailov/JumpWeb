@@ -10021,3 +10021,72 @@ con restauración comprobada byte a byte · **14 comprobaciones HTTP sobre MySQL
 Verificación: suite **3018 / 17.410** (= lo que declara `ESTADO.md`) · Pint ✓ · `docs-check` ✓ (33
 modelos · 80 migraciones) · sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
 
+
+## #192 · 2026-08-27 · La capa de TEMA, tanda 1 — las dos superficies como ÁMBITO, y la tipografía que era un token sin fuente detrás
+
+**Qué se hizo** (carril del tema, la tarde del 27; `specs/tema-por-instalacion.md`, registro de
+ejecución en su **§9**): los mecanismos que `landing-white-label.md` §4.5 **dio por supuestos y no
+existían**. Aquella spec decidió que el tema son tres mecanismos y ejecutó la tanda A; ésta cubre lo
+que la tanda A necesitaba y no estaba: que el producto sepa pintar una sección sobre fondo oscuro,
+que tenga dos grises, y que una instalación pueda traerse su tipografía.
+
+**La medida que dimensionó todo, y por qué salió barato**: el CSS del producto **ya estaba
+tokenizado**, así que re-escopar siete tokens en `[data-surface]` invierte **866 de los 1.915 usos de
+`var()`** de las dos hojas sin tocar una sola regla. Lo que no invertía eran **52 literales en 44
+declaraciones**, y no eran 52 casos sueltos: **tres familias con rol distinto** —la tarjeta sobre la
+superficie, lo que va sobre el ACENTO (y por tanto se queda) y los tintes—.
+
+**Las seis unidades**: el ámbito `[data-surface="ink"|"paper"]` con la paleta de tinta **derivada** de
+`--fg`/`--bg` · **`--sheet`**, la hoja que no es `--bg` ni `--on-brand` (familia A: 15 → 5) · los dos
+grises · los tintes (familia C: 11 → 5) · 21 radios idénticos · y las fuentes por instalación.
+
+⚠️⚠️ **Tres cosas que esto deja escritas y que no son evidentes leyendo el CSS:**
+
+1. **La paleta de tinta se declara en `:root`, no dentro del ámbito, y eso NO es estilo.** La
+   sustitución de `var()` ocurre donde la custom property se DECLARA, así que ahí resuelve contra los
+   valores de papel y baja ya computada. Declararla dentro de `[data-surface="ink"]` —donde `--fg` se
+   está redefiniendo— sería un **CICLO**, y un ciclo en CSS **no falla**: deja la propiedad inválida y
+   el color se cae al inicial, en silencio. Verificado en navegador con un control negativo que sí cicla.
+2. **Los dos grises no son una preferencia, son aritmética.** El gris único daba **3,28 sobre tinta**
+   (incumple AA) con 163 usos, y **ningún gris puede pasar en las dos superficies**: el que cumple en
+   una falla en la otra. Hoy la tinta da **7,29 (AAA)** y el papel **4,92 (AA)**, calculados por la
+   guarda y no copiados de una tabla.
+3. **La tipografía eran DOS mitades que no se hablaban.** `client.css` ya podía redefinir
+   `--font-display`, pero **el fichero no se descargaba nunca**: la lista estaba escrita a mano en tres
+   layouts, así que el token cambiaba y el navegador caía a `system-ui`. El tema tipográfico era un
+   token sin fuente detrás.
+
+❗ **Y el HOST de fuentes NO es configurable, a propósito**: la CSP permite un único origen y apuntar a
+otro **no da error** — lo bloquea en silencio y la instalación se queda sin tipografía. Lo variable es
+solo lo que se puede variar sin romper nada, y encima por allowlist, porque acaba dentro de una URL en
+el `<head>` (`SEC-07`). Medido: Bunny sirve el catálogo de Google, así que ningún cliente necesita
+abrir un origen nuevo.
+
+**La promesa de la tanda era NO mover un solo píxel, y se verificó regla a regla**: el color computado
+de las 11 reglas convertidas y de los 6 tintes es el de antes, con control negativo. Guardas nuevas y
+**vistas morder**: `SurfaceScopeTest` (8 casos, **8/8 mutaciones**) y `ThemeFontsTest` (6 casos,
+**5/5**). El trinquete del cajón bajó **5 → 4 → 3**, avisando él las dos veces.
+
+⚠️ **Lo que costó, y es lo más reutilizable** (spec §9.3): **el instrumento falló DOS veces antes que
+el código**. La sonda de color asumía canales 0-255 y `color-mix` los devuelve en 0-1 → cinco fallos
+que no existían. Y el diff de capturas **no puede probar identidad de píxel en `/cumpleanos`**: el
+original contra sí mismo da **28,6 dB**, *peor* que contra el cambio (30,9) — la página no es
+determinista. Un diff de captura sin **control por página** no mide nada. Además, la guarda de la
+guarda nació ciega: aseveraba un umbral de recuento sobre `:root` y no detectaba que el parser se
+hubiera quedado sin la mitad del corpus, porque `site.css` declara el suyo.
+
+⚠️ **Y el mecanismo todavía no lo usa nadie**: ninguna sección declara superficie. Es correcto —es el
+cimiento y la tanda 2 lo consume— pero significa que su red hoy son la guarda y las sondas, **no el
+ojo del owner**. La primera pasada de navegador de verdad llega con el armazón.
+
+▶ **`[DECIDIDO owner, 2026-08-27]`, cuatro decisiones que enmarcan lo que sigue**: mecanismos al
+producto y PJP como paquete · el cajón solo se retiñe (su rediseño de flujo es spec propia) · **la
+escala de sombra sale de la tanda 1** y se decide con el armazón · y en la tanda 2 el producto adopta
+la **ESTRUCTURA** del mockup, **neutra en valores**. Con eso la frontera entre las dos primeras tandas
+queda limpia: **la 1 no mueve píxeles, la 2 sí**, y los 56 radios huérfanos van con la sombra.
+
+▶ **El canvas del 2.º cliente no entra en el repo** (`DECISIONES #1`): se baja a
+`mockup_playjumppark/`, **gitignorada y excluida del `rsync`** —que son dos piezas, porque el rsync
+sincroniza el árbol de trabajo y no lo que git sigue—, con la receta para regenerarla en la §1 de la
+spec. Medido: **10 de sus 18 artboards están sin migrar**, y entre ellos los de logotipo, menú y hero.
+

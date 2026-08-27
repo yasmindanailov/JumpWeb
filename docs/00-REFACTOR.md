@@ -2320,6 +2320,33 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
+### La CAPA DE TEMA 🟦 — **tanda 1 CERRADA (6 de 6) · tanda 2 (el armazón) sin empezar**
+
+> Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7**) · Decisión `#192`.
+> Hermana de `landing-white-label.md` §4.5: aquélla decidió que el tema son TRES mecanismos y
+> ejecutó su tanda A; ésta construye **lo que aquélla dio por supuesto y no existía**.
+
+- ✅ **1 · Cimientos** (2026-08-27, `#192`). Las dos superficies como **ámbito**, `--sheet`, los dos
+      grises, los tintes, 21 radios y las fuentes por instalación.
+      ▶ **Salió barato por una medida**: el CSS ya estaba tokenizado, así que re-escopar siete tokens
+      invierte **866 de los 1.915 usos de `var()`** sin tocar una regla; lo que no invertía eran
+      **52 literales en 44 declaraciones**, en tres familias con rol distinto.
+      ▶ **La promesa era no mover un píxel y se verificó regla a regla** en navegador, con control
+      negativo. Guardas nuevas vistas morder: **13 mutaciones, las 13 muerden**.
+      ⚠️ **Tres cosas que no se ven leyendo el CSS**: la paleta de tinta se declara en `:root` o es un
+      **CICLO** (y un ciclo no falla, deja el color en el inicial); los dos grises son **aritmética**
+      —el gris único daba 3,28 sobre tinta y ninguno pasa en las dos superficies—; y la tipografía
+      eran **dos mitades que no se hablaban** (el token se redefinía y el fichero no se descargaba).
+      ⚠️ **El mecanismo aún no lo usa nadie**: ninguna sección declara superficie. Es el cimiento; su
+      red hoy son la guarda y las sondas, **no el ojo del owner**.
+- [ ] **2 · El armazón** — hero, menú, hero footer y pie. `[DECIDIDO owner]`: el producto adopta la
+      **ESTRUCTURA** del mockup, **neutra en valores**; las secciones NO se tocan. **Aquí el producto
+      SÍ cambia de aspecto**, y aquí entran las dos decisiones de escala que se aparcaron a propósito:
+      la de **sombra** y los **56 radios huérfanos**. La frontera entre la 1 y la 2 es «¿mueve
+      píxeles?», y no es cosmética: es lo que permite revisar cada una de una forma distinta.
+- [ ] **3 · Las secciones**, pieza a pieza desde `Elementos Fachada`. ⚠️ Ese artboard está **sin
+      migrar**: de ahí se saca la FORMA, nunca el color.
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,
