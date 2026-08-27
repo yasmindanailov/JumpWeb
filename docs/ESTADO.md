@@ -374,7 +374,10 @@ que sirva staging de verdad.
   `OversellVerifierCoversEveryQuotaTest` (`#147`), la guarda de que el verificador de sobreventa
   **no encoja**. ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y vive en comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
-  **671 tests JS** (`node --test`) · Pint limpio (895 ficheros) · `docs-check` verde ·
+  **702 tests JS** (`node --test`) · Pint limpio (931 ficheros) · `docs-check` verde ·
+  ⚠️ **Los dos números de esta línea llevaban retraso y se re-MIDIERON el 2026-08-27**, no se
+  dedujeron sumando: JS decía 671 (son **702**) y Pint 895 (son **931**). El contador de JS no
+  tiene guarda —el de PHP sí— y por eso deriva: mídelo con `npm run test:js`, no lo estimes. ·
   `composer audit` y `npm audit` en **0** · `npm run build` y `build:ssr` OK.
   ⚠️ Sale con **1 `PHPUnit Notice`** que **NO es de ningún trabajo reciente**: viene de antes y es del
   runner (ver `TESTING.md`). No lo persigas creyéndolo nuevo.
