@@ -484,8 +484,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3190 en verde** (20.750 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
-  por el carril A tras **A1** del subsistema A (`#208`, `specs/identidad-qr-puerta.md` §9.3): **+13 tests**
+- Suite **3197 en verde** (20.803 aserciones, `--parallel` **~75 s**), medida el 2026-08-27 por la noche
+  por el carril A tras **A2** del subsistema A (`specs/identidad-qr-puerta.md` §9.3): **+7 tests** — la
+  ficha compuesta (`GateProfileTest`: hoy frente a la ventana configurable, el dinero por
+  `OrderLedger::forReservation()`, los menores como edad + exención SIN nombre, los estados de
+  waiver/carné/visita, presupuesto CONSTANTE de 23 consultas medido con dos fixtures de la misma forma) y
+  el doble del contrato `GateReservations` en `ModuleContractsTest`. Y el control del carné pasa a
+  **módulo 31** con un test EXHAUSTIVO (17×31 sustituciones): el «mod 32» caía 1 de ~8 veces. Antes:
+- Suite **3190 en verde** (20.750 aserciones), tras **A1** del subsistema A (`#208`, `specs/identidad-qr-puerta.md` §9.3): **+13 tests**
   — el carné (`CustomerCardTest`: forma y control con 500 emisiones, emisión única, rotación que mata
   el viejo, `revokeAllAccess()`/`anonymize()` revocan —2/2 mutaciones muerden—, `plainToken()` con
   `APP_KEY` rotada) y la visita (`GateVisitsTest`: idempotente por día, auditada solo al escribir).

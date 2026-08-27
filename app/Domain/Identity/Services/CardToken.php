@@ -15,7 +15,12 @@ namespace App\Domain\Identity\Services;
  *    ({@see normalize()}), que es lo que Crockford permite;
  *  - **entropía `32¹⁷ ≈ 2⁸⁵`** (§8.2: `2⁵⁰` era enumerable ante un volcado con GPU; esto no);
  *  - el carácter de CONTROL hace que un escaneo defectuoso falle en el navegador, no contra la base
- *    de datos: suma ponderada por posición (caza transposiciones) módulo 32, en el mismo alfabeto.
+ *    de datos: suma ponderada por posición **módulo 31** (primo), en el mismo alfabeto. ⚠️ Con
+ *    módulo 32 los pesos pares compartían factor con el módulo y una sustitución en una posición par
+ *    podía pasar (medido: un test aleatorio cayó 1 de ~8 veces). Con 31 y pesos 1..19 se caza TODA
+ *    sustitución simple y TODA transposición adyacente, salvo el par `0↔Z` (valores 0 y 31, que son
+ *    congruentes): es la única pareja que este control no distingue, y está escrito aquí para que
+ *    nadie lo descubra midiendo.
  *
  * El carné se guarda como sha256 del token (sin sal: tiene que servir para BUSCAR, §4.5) y cifrado
  * para repintarlo. Este objeto no toca la base de datos.
@@ -76,7 +81,9 @@ final class CardToken
         return hash('sha256', $normalized);
     }
 
-    /** Suma ponderada por posición (1..19) de los valores del alfabeto, módulo 32, como carácter del alfabeto. */
+    public const CHECK_MODULUS = 31;
+
+    /** Suma ponderada por posición (1..19) de los valores del alfabeto, módulo 31, como carácter del alfabeto. */
     public static function checksum(string $body): string
     {
         $sum = 0;
@@ -88,6 +95,6 @@ final class CardToken
             $sum += ($i + 1) * $value;
         }
 
-        return self::ALPHABET[$sum % 32];
+        return self::ALPHABET[$sum % self::CHECK_MODULUS];
     }
 }

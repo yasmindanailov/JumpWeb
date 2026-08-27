@@ -9,6 +9,7 @@ use App\Domain\Booking\Contracts\CartPricing;
 use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
@@ -24,6 +25,7 @@ use App\Domain\Booking\Services\CheckoutLinesReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
+use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
@@ -51,6 +53,8 @@ class BookingServiceProvider extends ServiceProvider
         // a cargo, tanda 4). Lo consume `Identity\Services\DependentAssigner` para atar cada asignación
         // a SU ítem sin importar `OrderItem`: la promesa del orden es de Booking, y aquí se cumple.
         $this->app->bind(CheckoutLines::class, CheckoutLinesReader::class);
+        // Fase 6 · subsistema A: la ficha de puerta (Identity) pide las reservas y su dinero por aquí.
+        $this->app->bind(GateReservations::class, GateReservationsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
         // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);

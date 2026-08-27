@@ -38,6 +38,8 @@ class LedgerSingleSourceTest extends TestCase
         'app/Http/Resources/Api/V1/OrderResource.php',
         'app/Http/Resources/Api/V1/OrderItemResource.php',
         'app/Notifications/OrderConfirmation.php',
+        // Fase 6 · subsistema A: la PUERTA pasa a ser una superficie del ledger (`identidad-qr-puerta.md` §4.7).
+        'app/Domain/Booking/Services/GateReservationsReader.php',
     ];
 
     /**

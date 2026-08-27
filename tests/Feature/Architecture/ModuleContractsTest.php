@@ -15,6 +15,8 @@ use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\CheckoutOutcome;
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\GateReservation;
+use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
@@ -43,6 +45,7 @@ use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Booking\Services\CheckoutLinesReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerReservationsReader;
+use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ZonePaletteReader;
@@ -55,6 +58,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\DependentRegistry;
+use App\Domain\Identity\Services\GateProfile;
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
@@ -62,6 +66,7 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -100,6 +105,7 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(Redsys::class, app(RefundGateway::class));
         $this->assertInstanceOf(CustomerReservationsReader::class, app(CustomerReservations::class));
         $this->assertInstanceOf(CheckoutLinesReader::class, app(CheckoutLines::class));
+        $this->assertInstanceOf(GateReservationsReader::class, app(GateReservations::class));
         $this->assertInstanceOf(PublishableCatalogReader::class, app(PublishableCatalog::class));
         $this->assertInstanceOf(CatalogReader::class, app(ProductCatalog::class));
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
@@ -786,6 +792,46 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(1, $outcome->assigned);
         $this->assertDatabaseHas('dependent_assignments', ['order_item_id' => $second->id, 'dependent_id' => $lucas->id]);
         $this->assertDatabaseMissing('dependent_assignments', ['order_item_id' => $first->id]);
+    }
+
+    /**
+     * IDENTITY → BOOKING: la FICHA DE PUERTA pide las reservas y su dinero por el contrato (Fase 6 ·
+     * subsistema A, `identidad-qr-puerta.md` §9.2 A·3). El doble devuelve un pedido que NO existe en
+     * base de datos: si `GateProfile` volviera a consultar `OrderItem` por su cuenta, el doble se
+     * quedaría sin usar y la ficha saldría vacía.
+     */
+    public function test_identity_asks_booking_for_the_gate_reservations_through_the_contract(): void
+    {
+        $holder = User::factory()->create();
+        $reservations = new class implements GateReservations
+        {
+            public int $calls = 0;
+
+            public array $args = [];
+
+            public function forHolder(int $userId, string $fromDate, string $toDate): array
+            {
+                $this->calls++;
+                $this->args = [$userId, $fromDate, $toDate];
+
+                return [new GateReservation(
+                    orderId: 1, orderCode: 'R-DOBLE', orderItemId: 99, date: '2026-07-15', timeWindow: '10:00–11:00',
+                    productName: 'Doble', isEntry: true, quantity: 2, addons: ['1 × Calcetines'], paidOnlineCents: 1234,
+                    pendingGateCents: 56, chargeMethod: 'redsys', paidAt: null, createdAt: '2026-07-01T10:00:00+00:00',
+                )];
+            }
+        };
+        $this->app->instance(GateReservations::class, $reservations);
+
+        $profile = app(GateProfile::class)->for($holder, CarbonImmutable::parse('2026-07-15'), 2);
+
+        $this->assertSame(1, $reservations->calls, 'la ficha tiene que pedirle las reservas a Booking por el contrato');
+        $this->assertSame([$holder->id, '2026-07-13', '2026-07-17'], $reservations->args, 'la ventana ±N la calcula Identity y viaja por el contrato');
+        $this->assertSame('R-DOBLE', $profile->today_reservations[0]['order_code']);
+        $this->assertSame(1234, $profile->today_reservations[0]['paid_online_cents']);
+        $this->assertSame(56, $profile->today_reservations[0]['pending_gate_cents']);
+        $this->assertSame([], $profile->today_reservations[0]['minors'], 'un ítem que no existe no tiene menores asignados');
+        $this->assertSame([], $profile->window);
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

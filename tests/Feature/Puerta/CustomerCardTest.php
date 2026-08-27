@@ -44,27 +44,49 @@ class CustomerCardTest extends TestCase
         $this->assertCount(500, $seen, 'quinientos carnés, quinientos distintos');
     }
 
-    public function test_the_check_char_catches_a_typo_and_a_transposition(): void
+    /**
+     * EXHAUSTIVO, no aleatorio: sobre un carné fijo se prueban las 19 × 31 sustituciones simples y las 17
+     * transposiciones adyacentes. Lo único que el control no distingue —y está escrito en `CardToken`—
+     * es el par `0↔Z` (valores 0 y 31, congruentes módulo 31).
+     */
+    public function test_the_check_char_catches_every_single_typo_and_adjacent_transposition_except_0_and_z(): void
     {
-        $token = CardToken::generate();
-        $body = substr($token, 0, 19);
+        $token = 'JW7K3M9P2XA4ZQ0HT5G'; // 19 caracteres, con un 0 y una Z a propósito
+        $token .= CardToken::checksum($token);
+        $this->assertTrue(CardToken::isWellFormed($token));
+        $alphabet = str_split(CardToken::ALPHABET);
+        $isZeroZ = fn (string $a, string $b): bool => in_array($a, ['0', 'Z'], true) && in_array($b, ['0', 'Z'], true);
 
-        // Un carácter cambiado.
-        $pos = 7;
-        $other = $token[$pos] === 'A' ? 'B' : 'A';
-        $typo = substr_replace($token, $other, $pos, 1);
-        $this->assertFalse(CardToken::isWellFormed($typo));
-
-        // Dos caracteres adyacentes distintos, intercambiados.
-        for ($i = 2; $i < 18; $i++) {
-            if ($body[$i] !== $body[$i + 1]) {
-                $swapped = $body;
-                $swapped[$i] = $body[$i + 1];
-                $swapped[$i + 1] = $body[$i];
-                $this->assertFalse(CardToken::isWellFormed($swapped.$token[19]), "transposición en {$i} no detectada");
-                break;
+        $missed = [];
+        $tried = 0;
+        for ($pos = 2; $pos < 19; $pos++) {
+            foreach ($alphabet as $char) {
+                if ($char === $token[$pos]) {
+                    continue;
+                }
+                $tried++;
+                $typo = substr_replace($token, $char, $pos, 1);
+                if (CardToken::isWellFormed($typo) && ! $isZeroZ($token[$pos], $char)) {
+                    $missed[] = [$pos, $token[$pos], $char];
+                }
             }
         }
+        $this->assertSame(17 * 31, $tried);
+        $this->assertSame([], $missed, 'toda sustitución simple fuera del par 0↔Z se caza');
+
+        $missedSwaps = [];
+        for ($i = 2; $i < 18; $i++) {
+            if ($token[$i] === $token[$i + 1]) {
+                continue;
+            }
+            $swapped = $token;
+            $swapped[$i] = $token[$i + 1];
+            $swapped[$i + 1] = $token[$i];
+            if (CardToken::isWellFormed($swapped) && ! $isZeroZ($token[$i], $token[$i + 1])) {
+                $missedSwaps[] = $i;
+            }
+        }
+        $this->assertSame([], $missedSwaps, 'toda transposición adyacente fuera del par 0↔Z se caza');
 
         $this->assertFalse(CardToken::isWellFormed('JW'.str_repeat('A', 18)), 'sin control válido');
         $this->assertFalse(CardToken::isWellFormed('XX'.substr($token, 2)), 'sin el prefijo');

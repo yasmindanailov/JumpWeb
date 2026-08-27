@@ -474,8 +474,11 @@ commit.
   `token_hash` sha256 ÚNICO · `issued_at` · `revoked_at` · `revoked_reason` ∈ `rotated | revoked |
   anonymized`), **uno ACTIVO por titular** —lo garantiza `Identity\Services\CustomerCards` bajo el lock
   de la fila del titular, no un índice parcial (no es portable)—; alias morph `customer_card`. **Formato
-  `#208`**: `JW` + 17 de Crockford Base32 (sin `I L O U`) + 1 de control (suma ponderada mod 32, en el
-  mismo alfabeto) = **20 caracteres** (`2⁸⁵`, versión 2 del QR con ECC H, medido). `CardToken` es un
+  `#208`**: `JW` + 17 de Crockford Base32 (sin `I L O U`) + 1 de control (suma ponderada por posición
+  **módulo 31**, primo, en el mismo alfabeto — ⚠️ se escribió primero «mod 32» y un test aleatorio cayó
+  1 de ~8 veces: con módulo 32 las posiciones pares comparten factor y una sustitución ahí puede pasar;
+  con 31 se caza toda sustitución simple y toda transposición adyacente salvo el par `0↔Z`, probado
+  de forma EXHAUSTIVA, no por azar) = **20 caracteres** (`2⁸⁵`, versión 2 del QR con ECC H, medido). `CardToken` es un
   objeto de valor: `generate()`, `normalize()` (mayúsculas; `I/L → 1`, `O → 0`: lo que Crockford permite
   dictar), `isWellFormed()` (longitud, alfabeto y control — un escaneo defectuoso falla en el navegador,
   §4.3). **`CustomerCard::plainToken()` captura `DecryptException` y devuelve `null`** (§8.1): ninguna
