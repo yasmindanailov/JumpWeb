@@ -189,8 +189,17 @@
 > ZONA** (cumpleaños en la suya; el futuro «excursiones de colegio» tendrá la suya). Detalle en
 > el punto **1.bis** de «Lo que está ABIERTO».
 >
-> ▶ **Landing**: tanda A CERRADA (`#138`→`#143`), tanda B **PARADA a la espera del diseño** — el
-> owner está rehaciendo el sistema visual. **Lo medido del mockup viejo sobre COLOR está caducado.**
+> ▶ **Landing y TEMA — son dos cosas distintas y esta línea las mezclaba.**
+> · **El TEMA ya no está parado**: `specs/tema-por-instalacion.md`, **tanda 1 en `main`** (`#192`).
+>   El sistema visual del 2.º cliente está **cerrado y auditado** por el owner; lo que él sigue
+>   terminando (27/08 por la noche) es el diseño **de las secciones** y el mockup del layout de una
+>   página nueva — o sea, lo que necesita la tanda **3**, no la 2.
+> · **El CONTENIDO sí sigue parado**: tanda B de `landing-white-label.md` (`testimonials`, el copy al
+>   CMS). Su tanda A está cerrada (`#138`→`#143`).
+> ⚠️ **«Lo medido del mockup viejo sobre COLOR está caducado» sigue siendo cierto, pero se quedó
+> corto**: medido el 27/08, son **10 de los 18 artboards** los que están sin migrar —entre ellos los
+> de logotipo, menú y hero—, y **los mismos elementos están rehechos con el sistema vigente dentro de
+> `Landing PJP Modos`**. De los sin migrar se saca la FORMA, nunca el color (spec del tema §1).
 > Redis ya no bloquea nada (`#137`) y el desglose de dinero está CERRADO (`#127`→`#134`) — **cerrado
 > el DESGLOSE, no el cambio de precio: eso es `#146`**.
 >
@@ -519,20 +528,41 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-27, tarde): el B está CERRADO; el A dejó la TANDA 1 de «menores a cargo» EMPUJADA y la siguiente espera al OWNER
+# ❗ SI ENTRAS NUEVO (2026-08-27, noche): los TRES carriles cerrados y empujados — y los tres esperan al OWNER, cada uno por una cosa distinta
 
-**El carril B cerró el 2026-08-27 a las 07:30** con todo empujado y verde, y **el A cerró por la tarde
-con la tanda 1 de «menores a cargo» en `origin/main`** (`#191`, `specs/menores-a-cargo.md` §9). El
-reparto de la cabecera sigue siendo el único vigente. `git fetch` antes de nada, y **lee las dos filas
-antes de elegir tarea**: lo que queda es del OWNER —su ojo en navegador, el texto del waiver, el plazo,
-**y las cinco decisiones de la spec de menores §9.5**, la primera de las cuales (NUC-3) bloquea la
-tanda 2—. De agente, sin decisión nueva, no hay nada de valor alto que empezar.
+**Los tres cerraron el 2026-08-27 con todo en `origin/main` y verde.** El B a las 07:30; el A por la
+tarde con la tanda 1 de «menores a cargo» (`#191`); y el **C, el TEMA**, por la noche con la tanda 1
+de la capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas de la cabecera antes de
+elegir tarea**. De agente, **sin decisión nueva del owner, no hay nada de valor alto que empezar** —
+lo que queda de cada carril está abajo, y es distinto en cada uno.
+
+| Carril | Qué espera, exactamente |
+|---|---|
+| **A · menores** | Las **cinco decisiones** de `specs/menores-a-cargo.md` §9.5. La primera (**NUC-3**) bloquea su tanda 2 |
+| **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
+| **C · tema** | **El DISEÑO de las secciones y el mockup del layout de página nueva**, que el owner está terminando (dicho por él el 27 por la noche) |
+
+⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
+tiene su tanda 1 en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
+`landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
+
+▶ **Por dónde retoma el carril C, con nombre y orden** (`specs/tema-por-instalacion.md` §7):
+la **tanda 2, el armazón** — hero, menú, hero footer y pie, sacados de `Landing PJP Modos`, que ya
+está terminado y auditado. **Las secciones NO se tocan** hasta que el owner cierre su diseño.
+❗❗ **Y no se empieza como la 1.** La tanda 1 tenía una promesa verificable por instrumento —*no
+mueve un píxel*— y por eso se pudo cerrar sola. **La 2 SÍ mueve píxeles**: el producto adopta la
+ESTRUCTURA del mockup, neutra en valores (`[DECIDIDO owner]`), y con ella entran la escala de sombra
+y los 56 radios huérfanos. **Su red no es el gate: es el ojo del owner en navegador.** Empezarla
+mientras él no puede mirarla es construir lo que nadie puede validar.
+⚠️ **Y el mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección declara superficie. Es
+correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de verdad** es
+cuando el armazón pinte la primera sección en tinta. Hasta entonces su red son la guarda y las sondas.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
-cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
-midió y da **cero** (`#164`: las 35 citas de la columna «Dónde vive» resuelven), y la landing sigue
-bloqueada. Así que **antes de inventarte una tarea, mira la lista de «Lo que NO depende de nosotros»**:
-casi todo lo que queda lo desbloquea el owner.
+cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`) y la siguiente rebanada del gate documental se
+midió y da **cero** (`#164`: las 35 citas de la columna «Dónde vive» resuelven). Así que **antes de
+inventarte una tarea, mira la lista de «Lo que NO depende de nosotros»**: casi todo lo que queda lo
+desbloquea el owner.
 
 ▶ **Las dos cosas que eran trabajo de agente YA TIENEN CARRIL** (reparto de la cabecera):
 1. ✅ **El waiver, de agente, está TERMINADO** → **carril A, 2026-08-26** (`#169` → `#183`): revisión
