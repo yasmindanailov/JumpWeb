@@ -86,6 +86,19 @@ Color/acento por zona: columnas `color` y `color_secondary` de `zones`, en el pa
 ▶ Es lo único que cruza al **panel y a los correos**, donde el CSS del cliente no llega. Por eso el
 tema en BD se queda en COLOR: tipografía y radios van en (b) (`[DECIDIDO owner]`, §4.5.5 de la spec).
 
+**a.bis) El LOGOTIPO → `public/img/client-logo.svg`** (`DECISIONES #206`).
+Fichero **OPCIONAL** con las **mismas tres piezas** que la hoja de tema, y con dos parece que
+funciona: **no se versiona**, se carga **si existe**, y `deploy.sh` lo **excluye del
+`rsync --delete`** — sin esa exclusión el primer despliegue lo borra y la marca vuelve a ser texto,
+en silencio.
+▶ **El suelo es el nombre del sitio en la fuente de rótulo**, que es lo que el producto sabe pintar
+sin saber nada del cliente.
+⚠️ **El `alt` lleva el nombre del sitio, y no es opcional**: es el único enlace que TODA página
+tiene, y un logotipo sin `alt` lo deja sin nombre accesible.
+⚠️ **Un lockup hecho con CSS hay que exportarlo a SVG**: el hueco acepta un fichero, no una
+composición de capas. Se pierde poder retocarlo desde la herramienta de diseño; es el precio de que
+entre por el mismo sitio que el resto del paquete.
+
 **b) Estructura y detalle → `public/css/client.css`** (`DECISIONES #143`).
 Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cuatro** —después de
 `landing.css`, del tema inyectado y de `site.css`—, así que redefinir un token ahí gana en cascada:
@@ -117,6 +130,20 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
        claro, así que el anillo se invierte sin declarar nada. */
     --focus-w: 3px;
     --focus-color: #F5C400;
+
+    /* ⚠️⚠️ **AVISO PAGADO (2026-08-28, `DECISIONES #206`): fijar `--focus-color` a un literal
+       ROMPE la inversión automática.** El producto lo deja en `var(--fg)` justo para que siga a la
+       superficie; en cuanto un paquete pone un color fijo, ese color tiene que valer en las DOS.
+       Al montar el primer paquete real, el amarillo del cliente daba **1,49 sobre papel** —WCAG
+       1.4.11 exige 3,0— y su propia auditoría de 20 pares no incluía ese par: el anillo quedaba
+       invisible en casi toda la web.
+       ▶ **Si tu marca tiene un color de foco propio, decláralo POR SUPERFICIE** y comprueba los dos
+       contrastes. Ninguna guarda del producto lo hace por ti: calculan sobre la raíz del PRODUCTO,
+       no sobre la de tu paquete.
+
+           [data-surface="ink"]   { --focus-color: <el tuyo sobre oscuro>; }
+           [data-surface="paper"] { --focus-color: <el tuyo sobre claro>;  }
+    */
 
     /* LA TIRA del pie · cinco franjas. Por defecto CICLAN sobre los dos colores de marca;
        una instalación con cinco colores propios los pone aquí, uno a uno. */

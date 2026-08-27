@@ -1149,6 +1149,40 @@ vez, eso es bloquear al otro agente por tener un tema instalado.
 ▶ **Verificado midiendo las dos veces**: con paquete y sin él, **3.127 tests y 17.990 aserciones,
 idénticos**. Es la comprobación que faltaba, y no la habría dado nadie sin montar el paquete.
 
+### 14.6 Las dos decisiones del owner sobre el paquete, y cómo salieron
+
+**1 · El anillo de foco: UN COLOR POR SUPERFICIE** (`[DECIDIDO owner, 2026-08-28]`, de las tres
+salidas de §14.2). Amarillo Aviso sobre tinta, **Azul Muro `#0A5C93` sobre papel**.
+
+▶ **Y salió más barato de lo que parecía: NO hace falta tocar el producto.** Su `--focus-color`
+vale `var(--fg)` precisamente para seguir a la superficie solo — **era el paquete el que lo estaba
+rompiendo** al fijarlo a un literal. Se arregla declarándolo en los dos ámbitos, que es el
+mecanismo de la tanda 1 haciendo su trabajo.
+
+| El anillo, con la decisión aplicada | Ratio | Exige |
+|---|---|---|
+| sobre papel `#F4F4F1` | **6,43** | 3,0 ✓ |
+| sobre tarjeta blanca | **7,08** | 3,0 ✓ |
+| sobre nube `#E8E9E5` | **5,81** | 3,0 ✓ |
+| sobre tinta `#101418` | **11,26** | 3,0 ✓ |
+| sobre tarjeta de tinta `#1A1F25` | **10,09** | 3,0 ✓ |
+
+⚠️ **Y de aquí sale un aviso que va en la receta de instalación**: fijar `--focus-color` a un
+literal rompe la inversión automática, y **ninguna guarda del producto lo caza** —calculan sobre la
+raíz del producto, no sobre la del paquete—. Si una marca trae color de foco propio, **tiene que
+declararlo por superficie y comprobar los dos contrastes**.
+
+**2 · El logotipo: un SVG por instalación** (`[DECIDIDO owner, 2026-08-28]`). Entra por
+`public/img/client-logo.svg`, con **las mismas tres piezas** que la hoja de tema —no se versiona,
+se carga si existe, `deploy.sh` lo excluye del `--delete`— y el **suelo** es el nombre en la fuente
+de rótulo, que es lo que el producto sabe pintar sin saber nada del cliente.
+⚠️ **El `alt` lleva el nombre del sitio y no es opcional**: es el único enlace que TODA página
+tiene, y sin `alt` se queda sin nombre accesible. Hay guarda y su mutación muerde.
+⚠️ **Coste aceptado por el owner**: su logotipo es un lockup de seis capas en CSS, así que hay que
+**exportarlo a SVG** y se pierde poder retocarlo desde el canvas.
+▶ De paso, **la marca se pintaba en DOS sitios** —el racimo y la cabecera del cajón— y ahora sale
+de un solo componente.
+
 ### 14.5 Lo que el paquete NO puede cambiar, medido con él puesto
 
 - ❗ **El relleno de ACCIÓN.** El sistema del cliente pinta el CTA primario en **Naranja Salto**;

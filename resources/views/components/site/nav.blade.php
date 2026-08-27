@@ -61,9 +61,7 @@
      x-bind:data-surface="menuOpen ? 'ink' : false">
     <div class="nav__left">
         <a href="{{ url('/') }}" class="nav__brand">
-            <span class="nav__brand-row">
-                {{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span>
-            </span>
+            <x-site.brand :name="$site['name'] ?? config('app.name')" />
         </a>
     </div>
 
@@ -181,7 +179,7 @@
     <aside class="mob-menu__panel" role="dialog" aria-modal="true" x-ref="mobPanel">
         <div class="mob-menu__head">
             <span class="nav__brand">
-                <span class="nav__brand-row">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
+                <x-site.brand :name="$site['name'] ?? config('app.name')" />
             </span>
             <button class="mob-menu__close" @click="menuOpen = false" aria-label="{{ __('landing.nav.menu_close') }}">
                 <x-icons.close />

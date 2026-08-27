@@ -25,6 +25,10 @@
 # ⚠️ `deploy.sh` la excluye del `rsync --delete` por el mismo motivo que `public/uploads/`:
 # no está en local, y sin la exclusión el primer despliegue la borraría del servidor.
 /public/css/client.css
+# Y su hermano: el LOGOTIPO de la instalación. Mismo criterio y mismas tres piezas —no se
+# versiona, se carga si existe, y `deploy.sh` lo excluye del `--delete`—. Sin él, el armazón
+# pinta el nombre en la fuente de rótulo, que es el suelo del producto.
+/public/img/client-logo.svg
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

@@ -88,6 +88,68 @@ class ClientThemePackageTest extends TestCase
     }
 
     /**
+     * **El LOGOTIPO de la instalación entra por el mismo hueco, con las mismas tres piezas.**
+     *
+     * Y la tercera es la que no se ve: si `deploy.sh` no lo excluye del `--delete`, el primer
+     * despliegue lo borra y la marca vuelve a ser texto **en silencio** — exactamente lo que pasó
+     * con la hoja de tema antes de `#143`.
+     */
+    public function test_the_installation_logo_replaces_the_wordmark_and_keeps_its_name(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        // Sin fichero: el suelo del producto es el nombre en la fuente de rótulo.
+        $this->get('/')->assertOk()
+            ->assertSee('nav__brand-row', false)
+            ->assertDontSee('nav__brand-logo', false);
+
+        $path = public_path('img/client-logo.svg');
+        @mkdir(dirname($path), 0o777, true);
+
+        try {
+            file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"></svg>');
+
+            $html = $this->get('/')->assertOk()->getContent();
+
+            $this->assertStringContainsString('nav__brand-logo', $html, 'el logotipo de la instalación no se pinta');
+            $this->assertStringNotContainsString('nav__brand-row', $html, 'se pintan el logotipo Y el texto: son alternativas');
+            $this->assertMatchesRegularExpression(
+                '/client-logo\.svg\?v=\d+/', $html,
+                'el logotipo se sirve sin cache-busting: un cliente que lo cambia no ve el cambio',
+            );
+            // ❗ El nombre accesible NO se pierde: es el único enlace que TODA página tiene.
+            $this->assertMatchesRegularExpression(
+                '/<img[^>]+nav__brand-logo[^>]+alt="[^"]+"/', $html,
+                'el logotipo va sin `alt`: el enlace a la portada se queda sin nombre accesible',
+            );
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /** **El logotipo tampoco se versiona**: es marca de un cliente y este repo es el producto. */
+    public function test_the_installation_logo_is_not_versioned(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '#^/public/img/client-logo\.svg\s*$#m',
+            (string) file_get_contents(base_path('.gitignore')),
+            '`.gitignore` no ignora el logotipo de la instalación: la marca de un cliente acabaría '.
+            'versionada en el repo del PRODUCTO.',
+        );
+    }
+
+    /** **Y `deploy.sh` lo excluye del `--delete`**, que es la pieza que no se ve hasta que se pierde. */
+    public function test_deploy_excludes_the_installation_logo(): void
+    {
+        $this->assertMatchesRegularExpression(
+            "#^\s*--exclude='/public/img/client-logo\.svg'#m",
+            (string) file_get_contents(base_path('scripts/deploy.sh')),
+            '`deploy.sh` no excluye el logotipo del `rsync --delete`: el primer despliegue lo borra '.
+            'y la marca vuelve a ser texto, en silencio.',
+        );
+    }
+
+    /**
      * **Sin hoja del cliente, el `<head>` no cambia** — que es el estado de este repo y el de
      * cualquier instalación que aún no tenga tema propio.
      *

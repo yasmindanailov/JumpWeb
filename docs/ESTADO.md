@@ -415,9 +415,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3127 en verde** (17.990 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
+- Suite **3130 en verde** (18.002 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
   madrugada sobre el árbol FUSIONADO de los dos carriles, en la máquina del carril C) ·
-  ▶ **−1 aserción en el último corte, y es un ARREGLO de fondo** (carril C, el paquete del 2.º
+  ▶ **+3 tests PHP en el último corte** (carril C, el paquete del 2.º cliente · las dos decisiones
+  del owner): el hueco del **LOGOTIPO de la instalación** con sus tres piezas —no se versiona, se
+  carga si existe, `deploy.sh` lo excluye del `--delete`— y su `alt`, que es el nombre accesible del
+  único enlace que toda página tiene. **5 mutaciones, las 5 muerden.** ⚠️ Y el **anillo de foco por
+  superficie** no costó código de producto: su `--focus-color` ya valía `var(--fg)` para seguir a la
+  superficie, y **era el paquete el que lo rompía** al fijarlo a un literal. Antes:
+  ▶ **−1 aserción, y es un ARREGLO de fondo** (carril C, el paquete del 2.º
   cliente): las cinco guardas de CSS **dejan de juzgar `public/css/client.css`**, que es la hoja de
   una INSTALACIÓN y no del producto. Una de ellas aseveraba **por hoja**, así que el recuento
   cambiaba según si la máquina tenía o no un paquete instalado — y el `pre-push` compara el número

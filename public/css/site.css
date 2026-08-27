@@ -183,6 +183,16 @@
     color: var(--fg-mute); text-transform: none;
 }
 
+/* El logotipo de una instalación, cuando lo hay. Alto fijo para que la esquina no baile entre
+   una marca y otra, y ancho libre: un lockup puede ser mucho más ancho que alto. `max-width` lo
+   sujeta en móvil, donde el racimo comparte fila con la hamburguesa. */
+.nav__brand-logo {
+    display: block;
+    height: 26px;
+    width: auto;
+    max-width: min(220px, 46vw);
+}
+
 /* ⚠️ Aquí vivía `.lang-dd--up`, la variante que abría el panel hacia arriba para el pie, y **se
    retiró el 2026-08-27** con el selector de idioma del pie (`[DECIDIDO owner]`, armazón · tanda
    2c·4): el selector vive ahora en las cápsulas del menú, donde se abre hacia abajo como el

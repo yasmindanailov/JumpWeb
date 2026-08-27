@@ -327,6 +327,9 @@ RSYNC_EXCLUDES=(
     --exclude='/public/css/client.css'  # paquete de tema DEL CLIENTE (#143): gitignorado, vive solo
                                         # en el servidor. Sin esta línea el --delete se lo lleva en el
                                         # primer despliegue y la web vuelve al tema del producto
+    --exclude='/public/img/client-logo.svg'  # el LOGOTIPO de la instalación: mismo motivo exacto
+                                             # que la hoja de arriba. Sin la exclusión, el primer
+                                             # despliegue lo borra y la marca vuelve a ser texto
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'
