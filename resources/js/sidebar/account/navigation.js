@@ -47,6 +47,14 @@ export const ZONES = {
     /** Los dos derechos RGPD: descargar los datos y borrar la cuenta (tanda 2 · paso 8). */
     PRIVACY: 'privacy',
 
+    /**
+     * **Menores a cargo** (Fase 6 · C, `specs/menores-a-cargo.md` §9.8): declarar de quién se hace
+     * responsable el titular, quitarlo y firmar la exención en su nombre. Entra cuando su API existe
+     * entera (`GET|POST|DELETE /me/dependents`, `POST /me/dependents/{id}/waiver`), como pide la
+     * regla de arriba.
+     */
+    DEPENDENTS: 'dependents',
+
     // ── Las zonas de INVITADO (`specs/auth-en-cajon.md` §4.1) ─────────────────────────────────
     //
     // ⚠️⚠️ **Con ellas la sección de cuenta deja de ser «solo con sesión»**, que era un supuesto
@@ -111,6 +119,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.SESSIONS]: 'account.sessions.title',
     [ZONES.PROFILE]: 'account.profile.title',
     [ZONES.PRIVACY]: 'account.privacy.title',
+    [ZONES.DEPENDENTS]: 'account.dependents.title',
     [ZONES.LOGIN]: 'login.title',
     [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
@@ -195,7 +204,7 @@ export function parentZoneFor(zone) {
  * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
  * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
  */
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.PROFILE, ZONES.DEPENDENTS, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
 
 /**
  * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.

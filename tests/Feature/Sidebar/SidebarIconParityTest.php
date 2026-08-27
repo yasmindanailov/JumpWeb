@@ -140,6 +140,9 @@ class SidebarIconParityTest extends TestCase
         foreach ([
             'ic-e5', 'ic-b1', 'ic-b7', 'ticket-tear-off', 'arrow-left', 'arrow-right',
             'calendar', 'user', 'lock', 'devices', 'shield', 'login', 'logout',
+            // `receipt` («Mis pedidos», 2026-08-24) y `users` («Menores a cargo», Fase 6 · C, 2026-08-27):
+            // los dos nacieron con su zona, y el cajón lleva su copia.
+            'receipt', 'users',
         ] as $icono) {
             $this->assertFileExists(
                 resource_path("views/components/icons/{$icono}.blade.php"),

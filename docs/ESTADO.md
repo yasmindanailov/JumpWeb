@@ -33,11 +33,19 @@
 >   menor copiada en la firma (v3), `POST /me/dependents/{id}/waiver`, `Dependent.waiver`, el PDF y el
 >   panel nombrando al menor, la retención del menor desde los 18 en Ajustes. +15 casos, 5/5 mutaciones,
 >   sonda HTTP sobre MySQL. NUC-3 CERRADA.
->   ▶ ❗ **POR DÓNDE SIGUE este carril: la TANDA 3 — el cajón** (spec §9.4/§9.7.4): la zona «Menores a
->   cargo» en la cuenta (declarar · quitar · firmar el waiver de cada uno · «ya no está cubierto»),
->   **medida con y sin ella**, y el techo del chunk sube por FEATURE con su párrafo (`#197`·2). Toda la
->   API que necesita existe. Después, la tanda 4 (el embudo, §4.7–§4.10). **Del owner**: los DOS valores
->   de retención en meses (titular y menor), criterio jurídico.
+>   ▶ ✅ **TANDA 3 EMPUJADA (misma sesión, noche): la ZONA DEL CAJÓN** (`#199`, spec **§9.8**):
+>   `DependentsZone` + `DependentCard` + su store y su módulo plano, la entrada del índice con el icono
+>   `users` (nuevo, copiado byte a byte), 17 rótulos ES/EN/FR solo con sesión. **Cero CSS nuevo** y
+>   ≤ 40 líneas por componente. **Medido y subido por FEATURE** (`#197`·2): chunk 226,34 → 234,41 KiB
+>   (techo 235, quedan 0,59) · payload con sesión 6.668 → 7.602 B (techo 7.700). JS 702 → 724.
+>   **Guion en headless 20/20** (`VERIFICACION-E2E-CAJON.md` §5.decies; ⚠️ publica versiones `[E2E-DEP]`
+>   en la BD local: v10 y v11 ya existen).
+>   ▶ ❗ **POR DÓNDE SIGUE este carril: la TANDA 4 — la asignación en el embudo** (spec §4.7–§4.10 y
+>   §9.4): la tabla de Identity con el ítem por id entero, las dos puertas sin paso nuevo, el hueco en
+>   la lista blanca de `cart.js::save()` sobre `v: 1` (§8.1/§8.2), la re-validación en servidor y la
+>   escritura post-commit fuera del lock. **Toca el checkout**: `OrderCreator`/`CheckoutOrchestrator`
+>   están en el `CRITICAL_RE`. **Del owner**: su ✅ en navegador de la zona (guion §5.decies) y los DOS
+>   valores de retención en meses (titular y menor), criterio jurídico.
 >   **Ficheros de este trabajo** (además de los del carril, abajo): `database/migrations/*dependents*` ·
 >   `app/Domain/Identity/{Models/Dependent,Services/DependentRegistry,Services/DependentSettings,Exceptions/Dependent*,Contracts/DependentRemoval}.php`
 >   · `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php`
@@ -81,8 +89,9 @@
 >   `settings` (`security.turnstile_site_key`/`_secret` = `1x000…AA`): es justo lo que necesita el ojo
 >   del owner en `/registro`. La migración de `#183` está aplicada aquí; en el portátil, `migrate`
 >   tras el pull.
->   ⚠️ **El techo del chunk del cajón** cedió por una FEATURE el 26/08 (221,5 → 226,5 KiB) por decisión
->   del owner; medido hoy **226,34 KiB: quedan 0,16 KiB**. Lo siguiente que entre en el cajón —y
+>   ⚠️ **El techo del chunk del cajón** cedió por una FEATURE el 26/08 (221,5 → 226,5 KiB) y otra vez el
+>   27 por la noche (226,5 → **235**, la zona de menores, `#199`; medido **234,41 KiB: quedan 0,59**), las
+>   dos por decisión del owner. Lo siguiente que entre en el cajón —y
 >   «menores a cargo» entra— lo mide `SidebarBundleBudgetTest` y casi seguro obliga a podar o a
 >   decidir con el owner ANTES de escribir el componente.
 >   ⚠️ Medido: ni `routes/api.php` ni `MeController` están en el `CRITICAL_RE` (son controles
@@ -220,7 +229,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#198`**.
+> El último usado es **`#199`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -324,9 +333,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3062 en verde** (17.691 aserciones, `--parallel` **~68 s** medidos el 2026-08-27 por la noche
+- Suite **3062 en verde** (17.694 aserciones, `--parallel` **~68 s** medidos el 2026-08-27 por la noche
   en la máquina del carril A; ~91 s en la del C, ~42 s en la del B) ·
-  ▶ **+15 tests PHP en el último corte** (`#198`, menores a cargo · tanda 2, la firma del menor):
+  ▶ **+0 tests PHP y +3 aserciones en el último corte, y +22 JS** (`#199`, menores a cargo · tanda 3,
+  el cajón): `npm run test:js` **702 → 724** (el módulo plano `account/dependents.js` 9, el store 13);
+  las tres aserciones son la poda del subgrupo `dependents` en `SidebarMountTest`. Chunk del cajón
+  **234,41 KiB (techo 235)**, payload con sesión **7.602 B (techo 7.700)**, los dos subidos por FEATURE
+  con su párrafo. Antes:
+  ▶ **+15 tests PHP** (`#198`, menores a cargo · tanda 2, la firma del menor):
   `MeDependentWaiverTest` (9, contra el contrato), la cadena por sujeto y ajeno/retirado/adulto en
   `WaiverSignatureChainTest` (+2), la retención del menor desde los 18 y **NUC-3 como guarda** en
   `WaiverRetentionTest` (+2), el PDF y el registro del panel con el nombre (+2). **5 mutaciones, las 5
@@ -470,7 +484,7 @@ que sirva staging de verdad.
   `OversellVerifierCoversEveryQuotaTest` (`#147`), la guarda de que el verificador de sobreventa
   **no encoja**. ⚠️ **Ninguno cubre la carrera**: eso exige MySQL y `pcntl_fork`, y vive en comando.
   ▶ Antes, **+14** con las guardas del registro legible de un pedido (`#145`).
-  **702 tests JS** (`node --test`) · Pint limpio (931 ficheros) · `docs-check` verde ·
+  **724 tests JS** (`node --test`) · Pint limpio (935 ficheros) · `docs-check` verde ·
   ⚠️ **Los dos números de esta línea llevaban retraso y se re-MIDIERON el 2026-08-27**, no se
   dedujeron sumando: JS decía 671 (son **702**) y Pint 895 (son **931**). El contador de JS no
   tiene guarda —el de PHP sí— y por eso deriva: mídelo con `npm run test:js`, no lo estimes. ·
@@ -589,13 +603,14 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 **Los tres cerraron el 2026-08-27 con todo en `origin/main` y verde.** El B a las 07:30; el A por la
 tarde con la tanda 1 de «menores a cargo» (`#191`) **y por la noche con la 2, la firma del menor
-(`#198`)**; y el **C, el TEMA**, por la noche con la tanda 1 de la capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas de la cabecera antes de
+(`#198`), y la 3, la zona del cajón (`#199`)**; y el **C, el TEMA**, por la noche con la tanda 1 de la
+capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas de la cabecera antes de
 elegir tarea**. De agente, **sin decisión nueva del owner, no hay nada de valor alto que empezar** —
 lo que queda de cada carril está abajo, y es distinto en cada uno.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | Las cinco decisiones de §9.5 están **TOMADAS** (`#197`) y la tanda 2 **EMPUJADA** (`#198`). De agente sigue la **tanda 3, el cajón** (medir y subir el techo por feature); del owner, los DOS valores de retención en meses (spec §9.7.4) |
+| **A · menores** | Las cinco decisiones de §9.5 **TOMADAS** (`#197`), las tandas 2 y 3 **EMPUJADAS** (`#198` la firma del menor, `#199` la zona del cajón con su guion 20/20). De agente sigue la **tanda 4, la asignación en el embudo** (toca el checkout); del owner, su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | ❗❗ **SOLO la pasada de NAVEGADOR — de agente no queda nada pendiente de la capa de tema.** Se ha acumulado cambio visual sin mirar: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). ▶ Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ▶ **Lo siguiente que ÉL anunció**: el MENÚ («cambia totalmente») y cómo se comporta en MÓVIL, que guiará él. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»** |
 

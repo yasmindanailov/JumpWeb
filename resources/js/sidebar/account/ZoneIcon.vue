@@ -64,6 +64,17 @@ defineProps({
             <path d="M12 3.1 19.2 6v5.5c0 4.3-3 7.6-7.2 9.4-4.2-1.8-7.2-5.1-7.2-9.4V6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
         </svg>
 
+        <!-- `users` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). Nace con
+             «Menores a cargo» (Fase 6 · C): reutilizar `user` habría dejado dos entradas del índice
+             con el MISMO dibujo, justo donde el cliente elige entre «Tus datos» y sus menores. -->
+        <svg v-else-if="zone === ZONES.DEPENDENTS" width="18" height="18" viewBox="0 0 24 24" fill="none"
+             class="catalog__ico" aria-hidden="true" focusable="false">
+            <circle cx="9" cy="8.2" r="3.2" stroke="currentColor" stroke-width="1.7" />
+            <path d="M2.8 19.5c0-3.2 2.8-5.3 6.2-5.3s6.2 2.1 6.2 5.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <circle cx="16.4" cy="9.4" r="2.5" stroke="currentColor" stroke-width="1.7" />
+            <path d="M15.4 14.3c3.2.1 5.9 2.2 5.9 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+        </svg>
+
         <!-- `receipt` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
              ⚠️ Nace con la zona, como `shield` nació con privacidad: no había ningún icono pequeño
              que dijera «pedido», y reusar el `calendar` de «Mis reservas» habría dejado dos entradas

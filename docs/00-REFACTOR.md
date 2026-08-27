@@ -1977,8 +1977,8 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       de servidor, quitar = desvincular si hay firma detrás; la asignación la posee Identity por id
       entero (§4.6) y entra en el embudo por dos puertas sin paso nuevo (§4.7).
       ▶ 🟦 **EN EJECUCIÓN (carril A, `[DECIDIDO owner]` `#190`): la TANDA 1 está en el árbol** (`#191`,
-      spec **§9**) **y la TANDA 2 también** (`#198`, §9.7). Sigue 🟦 y no ✅ porque faltan las tandas
-      3–4 (las cinco decisiones de §9.5 están TOMADAS, `#197`) y el ✅ del owner en navegador.
+      spec **§9**) **la TANDA 2 también** (`#198`, §9.7) **y la 3, el cajón** (`#199`, §9.8). Sigue 🟦
+      y no ✅ porque falta la tanda 4 (el embudo) y el ✅ del owner en navegador (guion §5.decies).
   - [x] **C · tanda 1 — el NÚCLEO en Identity + la API** (2026-08-27, `#191`, carril A): `dependents`
         (`user_id` RESTRICT · `name` · `born_on` · `removed_at`, y nada más: la edad se DERIVA fecha
         contra fecha en el «hoy» del parque), `DependentRegistry` (solo menores; tope
@@ -1999,9 +1999,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         y diciendo que los datos los declaró el titular, y la retención del menor desde los 18
         (`waiver.dependent_retention_months`, en Ajustes). **+15 casos · 5/5 mutaciones muerden · sonda
         HTTP sobre MySQL.** NUC-3 de `DEUDA.md` CERRADA como guarda.
-  - [ ] **C · tanda 3 — el cajón**: la zona «Menores a cargo» en la sección de cuenta (una línea en
-        `ZONES` + rótulo + store), con el «ya no está cubierto» de §4.1, MEDIDA antes de decidir el
-        techo del chunk. **Bloqueada por §9.5·2.**
+  - [x] **C · tanda 3 — la ZONA DEL CAJÓN** (2026-08-27 noche, `#199`, carril A; spec §9.8):
+        `DependentsZone` + `DependentCard` + `stores/dependents.js` + `account/dependents.js`, la
+        entrada del índice con el icono `users` (nuevo en el sistema de diseño, copiado byte a byte),
+        17 rótulos ES/EN/FR solo con sesión (y seis reutilizados). **Cero CSS nuevo** (`site.css` es
+        del carril C) y ≤ 40 líneas por componente. **Medido y subido por FEATURE** (`#197`·2): chunk
+        226,34 → 234,41 KiB (techo 235), payload con sesión 6.668 → 7.602 B (techo 7.700). JS 702 → 724.
+        **Guion en headless 20/20** (`VERIFICACION-E2E-CAJON.md` §5.decies). Queda el OJO del owner.
   - [ ] **C · tanda 4 — la asignación en el embudo** (§4.7–§4.10): la tabla de Identity con el ítem
         por id entero, las dos puertas, el hueco en la lista blanca de `cart.js::save()` sobre `v: 1`
         (§8.1, §8.2), la re-validación en servidor (§4.9) y la escritura post-commit fuera del lock

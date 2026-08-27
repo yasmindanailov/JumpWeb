@@ -93,6 +93,26 @@ return [
             ],
             'deleting' => 'Suppression…',
         ],
+        // Phase 6 · mineurs à charge (`specs/menores-a-cargo.md` §9.8) : la zone et ses cartes, avec session.
+        'dependents' => [
+            'title' => 'Mineurs à ma charge',
+            'intro' => 'Déclarez les mineurs dont vous êtes responsable et signez la décharge au nom de chacun. À l\'entrée, seuls leur âge et l\'état de leur décharge sont visibles, jamais leur nom.',
+            'empty' => 'Vous n\'avez encore déclaré aucun mineur.',
+            'add_title' => 'Ajouter un mineur',
+            'name' => 'Prénom',
+            'name_hint' => 'Le prénom que vous utilisez à la maison suffit : vous seul le verrez.',
+            'born_on' => 'Date de naissance',
+            'add' => 'Ajouter',
+            'adding' => 'Ajout…',
+            'age' => ':age ans',
+            'adult' => 'Il a désormais 18 ans : votre décharge ne le couvre plus.',
+            'remove' => 'Retirer',
+            'removing' => 'Retrait…',
+            'remove_confirm' => 'Retirer :name de votre compte ? Si vous avez signé la décharge en son nom, ce registre est conservé.',
+            'waiver_unsigned' => 'Décharge non signée en son nom.',
+            'waiver_current' => 'Décharge signée en son nom, version en vigueur (v:version).',
+            'waiver_outdated' => 'Vous avez signé en son nom une version antérieure du texte : merci d\'accepter la nouvelle.',
+        ],
     ],
 
     'login' => [

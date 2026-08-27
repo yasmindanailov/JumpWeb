@@ -363,6 +363,13 @@
                                     'delete_title', 'delete_intro', 'delete_password',
                                     'delete_confirm', 'delete_btn', 'deleting', 'waiver',
                                 ]),
+                                // ⚠️ **Menores a cargo** entra ENTERO (Fase 6 · C, `specs/menores-a-cargo.md`
+                                // §9.8): 17 rótulos que la zona y sus tarjetas pintan todos. Y primero se
+                                // REUTILIZÓ, que es lo que el presupuesto pide antes de subirlo: la casilla
+                                // y «leer el texto» son los de `register.*`, y «Firmar», «Firmando…»,
+                                // «Firma registrada» y «PDF» los de `privacy.waiver.*` — seis rótulos que
+                                // ya viajaban y no se redactan por segunda vez.
+                                'dependents' => __('account.account.dependents'),
                             ], 'orders' => \Illuminate\Support\Arr::only(__('account.orders'), [
                                 // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda
                                 // el texto de `lang/` (`account.orders.title`), y el nombre técnico se

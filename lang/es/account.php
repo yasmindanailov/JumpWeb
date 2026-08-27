@@ -95,6 +95,28 @@ return [
             ],
             'deleting' => 'Eliminando…',
         ],
+        // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §9.8): la zona y sus tarjetas. Viajan
+        // solo con sesión, ENTEROS (la zona los pinta todos). La casilla, «leer el texto», «Firmar»,
+        // «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*`.
+        'dependents' => [
+            'title' => 'Menores a cargo',
+            'intro' => 'Declara a los menores de los que te haces responsable y firma la exención en nombre de cada uno. En la puerta solo se ve su edad y si tiene la exención al día, nunca su nombre.',
+            'empty' => 'Todavía no has declarado ningún menor.',
+            'add_title' => 'Añadir un menor',
+            'name' => 'Nombre',
+            'name_hint' => 'Vale el nombre que uséis en casa: solo lo verás tú.',
+            'born_on' => 'Fecha de nacimiento',
+            'add' => 'Añadir',
+            'adding' => 'Añadiendo…',
+            'age' => ':age años',
+            'adult' => 'Ya tiene 18 años: tu exención ya no le cubre.',
+            'remove' => 'Quitar',
+            'removing' => 'Quitando…',
+            'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste la exención en su nombre, ese registro se conserva.',
+            'waiver_unsigned' => 'Exención sin firmar en su nombre.',
+            'waiver_current' => 'Exención firmada en su nombre, versión vigente (v:version).',
+            'waiver_outdated' => 'Firmaste en su nombre una versión anterior del texto: acepta la nueva.',
+        ],
     ],
 
     'login' => [

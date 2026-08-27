@@ -1,11 +1,11 @@
 # [SPEC] Menores a cargo
 
-> Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — TANDAS 1 y 2 EN EL ÁRBOL (2026-08-27, carril A):
-> la tanda 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`), con la cadena
-> de hashes por (titular, sujeto) que decidió el owner (`#197`).** ▶ **EMPIEZA POR §9** —§9.1/§9.7 qué
-> existe, §9.2/§9.8 en qué se apartó del cuerpo, §9.5 las cinco decisiones (TOMADAS) y §9.4 lo que
-> queda: la tanda 3 (el cajón) y la 4 (el embudo)— · pendiente del ✅ del owner ·
-> Última actualización: 2026-08-27 noche (§9.7) · anterior: 2026-08-25 ·
+> Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — TANDAS 1, 2 y 3 EN EL ÁRBOL (2026-08-27, carril A):
+> la 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`) con la cadena por
+> (titular, sujeto) que decidió el owner (`#197`); la 3, la ZONA DEL CAJÓN (`#199`), medida y con su
+> guion en headless 20/20.** ▶ **EMPIEZA POR §9** —§9.1/§9.7/§9.8 qué existe, §9.5 las cinco decisiones
+> (TOMADAS) y §9.8.4 lo que queda: la tanda 4 (el embudo) y el ✅ del owner en navegador— ·
+> Última actualización: 2026-08-27 noche (§9.8) · anterior: 2026-08-25 ·
 > ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
 > persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
 > la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
@@ -557,4 +557,73 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
 - Spectator no valida el PDF (`application/pdf`): el caso comprueba cabecera y `%PDF`, y el CONTENIDO se
   prueba sobre el HTML de la vista, como en `WaiverProofPdfTest`.
 - El verificador limpia por `DB::table` en orden firmas → menor → titular: con la FK, al revés falla.
+
+### 9.8 Ejecución — tanda 3 (2026-08-27 noche, carril A, `DECISIONES #199`): la ZONA DEL CAJÓN
+
+> Con la decisión 2 de §9.5 en la mano (`#197`: construir, MEDIR y subir el techo por feature). Lo que
+> hay, las reglas que se impuso, lo medido y lo que queda.
+
+#### 9.8.1 Qué existe
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La zona | `resources/js/sidebar/account/zones/DependentsZone.vue` | «Menores a cargo» en la sección de cuenta: intro, aviso, lista de tarjetas y el formulario de alta (nombre + fecha de nacimiento, **nada más**). Pinta y recoge; el tope, la regla de los 18 y qué hace «quitar» los dice el servidor y se enseñan tal cual |
+| La tarjeta | `resources/js/sidebar/account/zones/DependentCard.vue` | Un menor: nombre, «N años · dd/mm/aaaa», el aviso «ya tiene 18» (§4.1, se MARCA), la frase de SU exención, el formulario de firma en su nombre (texto plegado + casilla + botón; solo en interno, solo a un menor, solo sin firma o con una anterior), su PDF y «Quitar» |
+| El módulo plano | `resources/js/sidebar/account/dependents.js` | Las frases y los booleanos (`dependentWaiverKey`, `dependentNeedsSignature`, `coverageKey`), la fecha sin `Date` (`bornOnLabel`) y `replaceDependent`. `node --test` |
+| El store | `resources/js/sidebar/stores/dependents.js` | Las cuatro llamadas (`GET`/`POST`/`DELETE /me/dependents`, `POST /me/dependents/{id}/waiver`) por `runForm`; `signWaiver` devuelve `{ok, stale}` y el `document_id` es el del texto ENSEÑADO (`stores/waiver.js`, CAJ-1). La lista no se persiste. `node --test` |
+| La navegación | `resources/js/sidebar/account/navigation.js` | `ZONES.DEPENDENTS`, su rótulo y su entrada en `HOME_ENTRIES` (tras «Tus datos»): una línea y su rótulo, como §4.2 de `area-cliente.md` prometía |
+| El icono | `resources/views/components/icons/users.blade.php` · `account/ZoneIcon.vue` | `users` nace en el sistema de diseño y el cajón lo copia byte a byte (`SidebarIconParityTest`); reutilizar `user` habría dejado dos entradas del índice con el mismo dibujo |
+| Los textos | `lang/{es,en,fr}/account.php` · `resources/views/components/layout.blade.php` | `account.account.dependents`, 17 rótulos, ENTEROS y solo con sesión. La casilla, «leer el texto», «Firmar», «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*` |
+
+#### 9.8.2 Las reglas que la tanda se impuso (y por qué)
+
+1. **Cero clases CSS nuevas**: `site.css` es hoy del carril C (el tema), y una zona más no puede
+   abrir un frente ahí. La pantalla se compone con el vocabulario de las tarjetas de la cuenta
+   (`account__card`, `form`, `btn`, `account__consents`), que `SidebarStyleWiringTest` ya vigila.
+2. **Cero llamadas a la API desde componentes y ≤ 40 líneas de código por componente** (`CE-6`,
+   `SidebarComponentBudgetTest`): por eso hay una zona Y una tarjeta, y el store tiene las cuatro
+   llamadas.
+3. **El cliente no decide NADA sobre un menor** (`CE-4`): edad, minoría y estado de la exención
+   vienen derivados del servidor con el «hoy» del parque; el módulo plano solo los traduce a claves.
+4. **Reutilizar antes de añadir rótulos**: seis textos ya viajaban y no se redactan por segunda vez.
+
+#### 9.8.3 Lo medido
+
+- **JS**: `npm run test:js` **702 → 724** (+22: el módulo plano 9, el store 13). Suite PHP verde
+  (contador en `ESTADO.md`; +3 aserciones, las de la poda del subgrupo nuevo).
+- **El chunk del cajón, construyendo con y sin la zona: 226,34 → 234,41 KiB, +8,07.** Techo 226,5 →
+  **235** por FEATURE con su párrafo en `SidebarBundleBudgetTest` (`#197`·2). Es del tamaño del bloque
+  de cuenta (+8,25): la tarjeta repite por cada menor el formulario de firma de Privacidad y el store
+  tiene cuatro escrituras. Quedan 0,59 KiB.
+- **El payload con sesión: 6.668 → 7.602 B, +934** (los 17 rótulos; el más largo, `intro`, se queda
+  por ser la frase de §4.2). Techo 6.760 → **7.700** con su párrafo en `SidebarMountTest`; el anónimo
+  no cambia (la zona viaja solo con sesión).
+- **Las guardas del cajón, todas verdes sin excepción nueva**: iconos (la copia de `users` es byte a
+  byte), ≤ 40 líneas por componente, clases con regla, DOM contract (SSR reconstruido), textos,
+  cableado de imports/emits.
+- **El guion en headless: 20/20 ✓** (`VERIFICACION-E2E-CAJON.md` §5.decies): entrada en el índice con
+  icono · zona vacía · adulto rechazado con el texto del servidor · menor declarado con «9 años ·
+  12/03/2017» y su exención sin firmar · formulario vaciado · botón bloqueado sin la casilla · firma
+  201 → «Firma registrada ✓», v9, PDF (200 `application/pdf`), sin sello del titular, cadena OK · tras
+  publicar v10, «versión anterior» y re-firma (2 firmas, 1 cadena, OK) · tope a 1 desde `settings` →
+  «máximo (1)» · sin tope, entra · quitar con firma detrás → desvinculada y las firmas siguen · volver
+  al índice. ⚠️ **Publica versiones de prueba** (`[E2E-DEP]`) en la BD local: v10 y v11 tras dos pasadas.
+
+#### 9.8.4 Lo que queda
+
+- **Tanda 4 — la asignación en el embudo** (§4.7–§4.10), sin cambios respecto a §9.4: la tabla de
+  Identity con el ítem por id entero, las dos puertas, el hueco en la lista blanca de `cart.js::save()`
+  sobre `v: 1`, la re-validación en servidor y la escritura post-commit. Toca el checkout.
+- **Del owner**: su ✅ en navegador de la zona (guion §5.decies, en local, con `waiver.mode = interno`
+  y una versión publicada) y los dos plazos de retención en meses.
+- **Pantalla de puerta**: subsistema A (edad + estado de la exención, jamás el nombre).
+
+#### 9.8.5 Trampas
+
+- **`ctx.request.get(pdf)` en Playwright da 401**: sin `Referer`, Sanctum no trata la petición como
+  *stateful* y no mira la cookie. Un clic real lo manda; el guion lo emula con `Referer` del mismo
+  origen. No es un defecto del PDF.
+- La entrada del índice se reconoce por su TEXTO (`hasText`): no hay `data-*` por zona a propósito
+  (el contrato visual es el árbol, `sidebar-spa.md` §4.2).
+- `<input type="date">` entrega `Y-m-d` tal cual: la fecha viaja sin tocar y el servidor la valida.
 

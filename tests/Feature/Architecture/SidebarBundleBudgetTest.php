@@ -340,8 +340,20 @@ class SidebarBundleBudgetTest extends TestCase
      * el id del texto ENSEÑADO y relee cuando el estado dice otro (CAJ-1), el 422 del alta relee y
      * desmarca (CAJ-2), la casilla se desmarca tras el 409 (CAJ-3) y el contador de reservas del
      * índice vuelve a pintarse (CAJ-5). **Quedan 0,29 KiB.** Lo siguiente que entre lo mide.
+     *
+     * ⚠️⚠️ **226,5 → 235 el 2026-08-27 por la noche, y lo paga «MENORES A CARGO» (Fase 6 · C, tanda 3,
+     * `DECISIONES #199`) — subida por FEATURE, `[DECIDIDO owner]` (`#197`·2: «construir, medir y subir
+     * por feature con su párrafo», ni podar antes ni chunk diferido).** Medido construyendo con y sin
+     * la zona: **226,34 → 234,41 KiB, +8,07**. Entran `DependentsZone` (lista + alta), `DependentCard`
+     * (edad, cobertura, la exención del menor con su casilla y su PDF, quitar), `stores/dependents.js`
+     * (las cuatro llamadas) y `account/dependents.js` (las frases), más una entrada del índice con su
+     * icono. Es del tamaño del bloque de cuenta (+8,25) y mayor que Privacidad (+2,6) porque la
+     * tarjeta repite el formulario de firma de aquélla —casilla, texto plegado, botón— por cada menor,
+     * y porque el store tiene cuatro escrituras y no una. **235 deja 0,59 KiB**: la holgura estrecha
+     * de siempre, a propósito, para que lo siguiente que entre —la asignación en el embudo, tanda 4—
+     * tenga que medirse y decidirse igual.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 226.5;
+    private const SIDEBAR_CHUNK_MAX_KB = 235;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

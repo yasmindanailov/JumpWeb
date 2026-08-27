@@ -10448,3 +10448,33 @@ la poda ignorando el plazo del menor) · sonda HTTP sobre MySQL con Bearer (firm
 **Pendiente del owner**: los DOS valores de retención en meses. **De agente**: la tanda 3 (el cajón,
 midiendo el chunk) y la 4 (el embudo).
 
+## #199 · 2026-08-27 · Menores a cargo, tanda 3 — la ZONA DEL CAJÓN: medida, subida por feature y recorrida en headless (20/20)
+
+**Qué se hizo** (carril A, la noche del 27; `specs/menores-a-cargo.md` **§9.8**, ejecutando la
+decisión 2 de `#197`): la zona «Menores a cargo» en la sección de cuenta del cajón — declarar (nombre y
+fecha de nacimiento, nada más), quitar, y firmar la exención en nombre de cada menor con el texto que
+se ENSEÑA; una tarjeta por menor con su edad, su cobertura («ya tiene 18» se marca, no se borra), la
+frase de su exención, su PDF y «Quitar». Entrada en el índice con el icono `users`, nuevo en el sistema
+de diseño y copiado byte a byte. Toda la API que necesitaba existía desde `#191`/`#198`.
+
+**Las cuatro reglas que se impuso, y por qué** (§9.8.2): **cero CSS nuevo** —`site.css` es hoy del
+carril C y la zona se compone con el vocabulario de las tarjetas de la cuenta—; **cero llamadas a la
+API desde componentes y ≤ 40 líneas por componente** (de ahí una zona Y una tarjeta); **el cliente no
+decide nada sobre un menor** (edad, minoría y exención vienen derivadas del servidor); **reutilizar
+antes de añadir rótulos** (seis ya viajaban).
+
+**Lo medido, que es lo que la decisión pedía**: el chunk del cajón, construyendo con y sin la zona,
+**226,34 → 234,41 KiB (+8,07)** → techo **235** por FEATURE con su párrafo en `SidebarBundleBudgetTest`
+(del tamaño del bloque de cuenta: la tarjeta repite el formulario de firma por cada menor y el store
+tiene cuatro escrituras) · el payload con sesión **6.668 → 7.602 B (+934)** → techo **7.700** con su
+párrafo en `SidebarMountTest`; el anónimo no cambia · JS **702 → 724** · todas las guardas del cajón en
+verde sin excepción nueva · **guion en headless 20/20** (`VERIFICACION-E2E-CAJON.md` §5.decies): índice,
+zona vacía, adulto rechazado, menor declarado, firma 201 con PDF y sin sello del titular, re-firma tras
+publicar, tope a 1 desde `settings`, quitar con firma detrás → desvinculada, volver.
+
+**Una trampa de andamio, no de producto**: `ctx.request.get(pdf)` en Playwright da 401 porque sin
+`Referer` Sanctum no trata la petición como *stateful*; un clic real lo manda. El guion lo emula.
+
+**Lo que queda**: la tanda 4 (la asignación en el embudo, §4.7–§4.10) y, del owner, su ✅ en navegador
+de la zona y los dos plazos de retención. Sigue 🟦.
+

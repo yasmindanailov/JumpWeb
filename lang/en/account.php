@@ -93,6 +93,26 @@ return [
             ],
             'deleting' => 'Deleting…',
         ],
+        // Phase 6 · dependents (`specs/menores-a-cargo.md` §9.8): the zone and its cards, signed-in only.
+        'dependents' => [
+            'title' => 'Minors in my care',
+            'intro' => 'Declare the minors you are responsible for and sign the waiver on behalf of each one. At the door only their age and whether their waiver is current are shown, never their name.',
+            'empty' => 'You have not declared any minor yet.',
+            'add_title' => 'Add a minor',
+            'name' => 'Name',
+            'name_hint' => 'The name you use at home is fine: only you will see it.',
+            'born_on' => 'Date of birth',
+            'add' => 'Add',
+            'adding' => 'Adding…',
+            'age' => ':age years old',
+            'adult' => 'Now 18: your waiver no longer covers them.',
+            'remove' => 'Remove',
+            'removing' => 'Removing…',
+            'remove_confirm' => 'Remove :name from your account? If you signed the waiver on their behalf, that record is kept.',
+            'waiver_unsigned' => 'Waiver not signed on their behalf.',
+            'waiver_current' => 'Waiver signed on their behalf, current version (v:version).',
+            'waiver_outdated' => 'You signed an earlier version of the text on their behalf: please accept the new one.',
+        ],
     ],
 
     'login' => [

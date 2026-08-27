@@ -1119,3 +1119,49 @@ V35·1) · los marcadores de versión (`[E2E-v2]`, `[E2E-v3]`) quedan en el text
 `waiver_signatures`: una fila por firma, `channel` = `web`, `holder_name`/`holder_email` como estaban
 al firmar, y `prev_hash` encadenando las de un mismo titular. Y `php artisan waiver:verify-chain`
 tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del cajón.
+
+## §5.decies · «MENORES A CARGO» EN EL CAJÓN — ✅ recorrido en headless el 2026-08-27 (20/20), pendiente del OJO del owner (`DECISIONES #199`)
+
+> Fase 6 · C, tanda 3 (`specs/menores-a-cargo.md` §9.8). Mismo andamio que §5.bis (Playwright dentro
+> del contenedor, puente 8081→80). Guion: `/root/e2e/dep-probe.js`; helper de BD:
+> `dep-db.php` bajo `storage/app/e2e/` (ignorado por git; `setup` · `state` · `publish` · `cap N` · `cleanup`).
+> Requiere `waiver.mode = interno` y una versión publicada. ⚠️ **`publish` deja una versión de prueba
+> `[E2E-DEP]` en la BD local en cada pasada.** Cuenta: `e2e-dependents@jumpweb.test`.
+
+### D1 · La entrada y la zona vacía
+1. Entra por `/mi-cuenta` (zona de login dentro del cajón) con la cuenta de prueba.
+2. En el índice hay una entrada **«Menores a cargo»** con su icono (dos personas), entre «Tus datos» y
+   «Cambiar contraseña». Ábrela: el título es «Menores a cargo», el texto dice que todavía no hay
+   ninguno, y debajo está «Añadir un menor» con **dos campos** (nombre y fecha de nacimiento).
+
+### D2 · Declarar
+3. Nombre «Mayor», fecha `2000-01-01`, «Añadir» → aviso rojo con el texto del servidor («…tiene que
+   ser menor de edad») y **ninguna tarjeta**.
+4. Nombre «Lucas», fecha `2017-03-12`, «Añadir» → tarjeta «Lucas · 9 años · 12/03/2017 · Exención sin
+   firmar en su nombre», con «Leer el texto completo», la casilla y «Firmar» **deshabilitado**. El
+   formulario de alta queda vacío.
+
+### D3 · Firmar en su nombre
+5. Marca la casilla → «Firmar» se habilita. Púlsalo → «Firma registrada ✓», la frase pasa a «versión
+   vigente (vN)», aparece «vN · fecha · PDF» y la casilla desaparece. El PDF abre (`application/pdf`)
+   y dice «En nombre de: Un menor a su cargo: Lucas (fecha de nacimiento 12/03/2017)» y la nota de
+   que los datos los declaró el titular. ⚠️ **El titular NO queda firmado** por esto: en Privacidad su
+   propia exención sigue como estaba.
+6. Publica una versión nueva del waiver desde el panel (Páginas → waiver → «Publicar versión
+   firmable»). Recarga y vuelve a la zona: la tarjeta dice «versión anterior… acepta la nueva» y
+   vuelve a ofrecer la casilla. Firma → «versión vigente (vN+1)».
+
+### D4 · El tope, quitar, volver
+7. Ajustes → «Puerta» → «Menores a cargo por cuenta (máx.)» = 1. Intenta añadir «Vera» → aviso «Ya
+   has llegado al máximo de menores a cargo de tu cuenta (1)». Vacía el ajuste → «Vera» entra.
+8. «Quitar» en Lucas → diálogo de confirmación → la tarjeta desaparece; Vera sigue. En el panel, el
+   registro del waiver de la cuenta sigue listando las dos firmas «en nombre del menor a su cargo
+   Lucas» (la fila queda desvinculada, no borrada).
+9. «Volver» → el índice, con la entrada.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- El aspecto de la tarjeta con el tema (no hay CSS nuevo: es el de las tarjetas de la cuenta).
+- Los tres idiomas de la zona (EN/FR tienen sus 17 rótulos; el guion corre en `es`).
+- Un menor que cumple 18 entre la declaración y hoy (la tarjeta lo marca y no ofrece firmar): exige
+  cambiar el reloj, así que lo cubre `MeDependentWaiverTest`, no el navegador.
+

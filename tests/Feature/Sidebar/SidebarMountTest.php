@@ -425,7 +425,21 @@ class SidebarMountTest extends TestCase
             array_keys($boot['account']['purchases'] ?? []),
             'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
         );
-        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy', 'dependents'], array_keys($boot['account']['account'] ?? []));
+
+        // ⚠️ **Menores a cargo** (Fase 6 · C, `DECISIONES #199`) va ENTERO: 17 rótulos que la zona y
+        // sus tarjetas pintan todos. La lista exacta es lo que impide que crezca en silencio — y lo
+        // que NO está aquí es tan deliberado como lo que está: la casilla, «leer el texto», «Firmar»,
+        // «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*`.
+        $this->assertSame(
+            [
+                'title', 'intro', 'empty', 'add_title', 'name', 'name_hint', 'born_on', 'add', 'adding',
+                'age', 'adult', 'remove', 'removing', 'remove_confirm',
+                'waiver_unsigned', 'waiver_current', 'waiver_outdated',
+            ],
+            array_keys($boot['account']['account']['dependents'] ?? []),
+            'el subgrupo `dependents` ha crecido: si la zona no pinta lo nuevo, hay que podarlo'
+        );
 
         // ⚠️ **`privacy` va podado clave a clave, al revés que los tres subgrupos de al lado.**
         $this->assertSame(
@@ -532,8 +546,17 @@ class SidebarMountTest extends TestCase
         // `privacy.waiver` entero, 12 rótulos que la tarjeta y el aviso del índice pintan todos—; la
         // poda devuelve **508**; el neto es **+193**: de 6.475 a **6.668 B**, con **92 B** de
         // holgura. Sin la poda habrían sido 7.176 y el techo tendría que haber ido a 7.200.
+        //
+        // ⚠️ **6.760 → 7.700 el 2026-08-27 por la noche: «MENORES A CARGO» en el cajón** (Fase 6 · C,
+        // tanda 3, `DECISIONES #199`). Y primero se REUTILIZÓ, que es la poda que cabía: la casilla y
+        // «leer el texto» son los de `register.*`, y «Firmar», «Firmando…», «Firma registrada» y «PDF»
+        // los de `privacy.waiver.*` — seis rótulos que ya viajaban y no se redactan por segunda vez.
+        // Lo nuevo son los **17** de `account.dependents`, todos pintados por la zona o sus tarjetas,
+        // **+934 B** brutos: de 6.668 a **7.602 B**. El más largo es `intro` (~190 B) y se queda a
+        // propósito: es la frase de la spec (§4.2) que le dice al titular que puede poner el nombre
+        // que use en casa y que en la puerta nunca se ve. **7.700 deja 98 B**, la holgura de siempre.
         $this->assertLessThan(
-            6760, $bytes,
+            7700, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

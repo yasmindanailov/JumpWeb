@@ -12,6 +12,7 @@ import ProfileZone from '../account/zones/ProfileZone.vue';
 import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 import PrivacyZone from '../account/zones/PrivacyZone.vue';
+import DependentsZone from '../account/zones/DependentsZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
 import RegisterZone from '../account/zones/RegisterZone.vue';
 import ForgotZone from '../account/zones/ForgotZone.vue';
@@ -132,6 +133,14 @@ const signIn = () => store.go(ZONES.LOGIN);
 
         <PrivacyZone
             v-else-if="store.zone === ZONES.PRIVACY"
+            :messages="messages"
+            :auth="auth"
+            :account="account"
+            :ui="ui" />
+
+        <!-- Menores a cargo (Fase 6 · C): declarar, quitar y firmar la exención en su nombre. -->
+        <DependentsZone
+            v-else-if="store.zone === ZONES.DEPENDENTS"
             :messages="messages"
             :auth="auth"
             :account="account"
