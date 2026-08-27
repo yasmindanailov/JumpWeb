@@ -1,8 +1,9 @@
 # [SPEC] El ARMAZÓN — la barra se retira y el menú pasa a pantalla completa (tanda 2c)
 
-> Estado: ⬜ **BORRADOR** · Última actualización: 2026-08-27 · Decisión asociada:
-> `DECISIONES #N` al aprobarse (**el número se fija al EMPUJAR**, mirando el remoto —
-> `CONVENCIONES §10`). Hermana de `tema-por-instalacion.md`, de la que sale como **tanda 2c**
+> Estado: 🟦 **APROBADA LA DIRECCIÓN, EN EJECUCIÓN** — el owner dio el ✅ el 2026-08-27
+> (*«la landing como el mockup, como sea, hay que hacerlo»*) con **siete decisiones** tomadas
+> (§5) y **cuatro pendientes**, ninguna de las cuales bloquea la primera tanda ·
+> Última actualización: 2026-08-27 · Decisión asociada: **`DECISIONES #200`**. Hermana de `tema-por-instalacion.md`, de la que sale como **tanda 2c**
 > (§7 de aquélla: *«no es adoptar una estructura: es cambiar la navegación del sitio»*).
 >
 > ▶ **EMPIEZA POR §1.6 y §1.7.** §1.6 es lo que el mockup **no contesta** y sin lo cual no se
@@ -32,18 +33,28 @@ de la guarda: seis controles que tiene que pasar antes de emitir una sola cifra.
 un inventario hecho con un `grep` ingenuo ya ha salido mal **cinco** veces
 (`DECISIONES #143`, `#193`, `#196`).
 
-### 1.1 El tamaño real: 12 vistas, 232 reglas, 819 declaraciones
+### 1.1 El tamaño real: 12 vistas, 194 reglas, 733 declaraciones
 
 | | Medido (2026-08-27) |
 |---|---|
 | Vistas que incluyen el componente de nav | **12** |
 | Vistas públicas que NO lo incluyen | **1** (el post-formulario de invitados, que usa el layout enfocado) |
-| Reglas CSS de las 8 familias del armazón | **232** |
-| Declaraciones dentro de ellas | **819** |
-| …de las cuales, dentro de un `@media` | **35** |
+| Reglas CSS **distintas** de las 7 familias del armazón | **194** |
+| Declaraciones dentro de ellas | **733** |
+| …de las cuales, dentro de un `@media` | **32** |
+| Reglas de `.cta-prime`, **compartida con el hero y la barra de móvil** | **27** · 65 decl. |
 | Aserciones de la suite que fijan nombres de clase del armazón | **31**, en **4** ficheros |
 
-Las ocho familias, y dónde vive cada una:
+⚠️⚠️ **Esta tabla decía «232 reglas · 819 declaraciones» y era FALSO — se corrige aquí porque la
+corrección enseña más que el número.** Aquella cifra sumaba **coincidencias, no reglas**: una
+regla cuyo selector cita dos familias —`.nav-cta-med` es de `nav` y de `cta-med`— se contaba dos
+veces, y `.cta-prime` se contaba como si fuera del armazón cuando la comparte con el hero. Al
+contar reglas DISTINTAS son **194 · 733**, y **10** de ellas tocan más de una familia.
+▶ **Es el mismo sesgo que §1.2 documenta al revés**: allí el instrumento contaba de menos por no
+limpiar comentarios; aquí contaba de más por sumar por familia. **Un inventario que suma por
+etiqueta no cuenta sujetos: cuenta etiquetas.**
+
+Las siete familias propias, y dónde vive cada una:
 
 | Familia | Reglas | Decl. | Qué es |
 |---|---|---|---|
@@ -56,14 +67,23 @@ Las ocho familias, y dónde vive cada una:
 | `.lang-dd*` | 15 | 69 | el selector de idioma — **vive en el PIE**, no en el nav |
 | `.book-bar*` | 13 | 29 | la barra flotante inferior de móvil |
 
-▶ **Dos de las ocho no son del armazón y hay que decirlo antes de contar**: `.cta-prime` lo
-comparte el hero (`#195`) y `.lang-dd` vive en el pie. Tocarlas desde aquí es entrar en
-terreno de otra pieza.
+▶ **Dos filas de esa tabla no son del armazón, y hay que decirlo antes de contar**:
+`.cta-prime` lo comparte el hero (`#195`) —por eso queda FUERA de las 194— y `.lang-dd` vive en
+el pie. Tocarlas desde aquí es entrar en terreno de otra pieza. Y los recuentos por familia
+**no se suman entre sí**: 10 reglas caen en dos familias a la vez.
 
-### 1.2 El 18 % de esa CSS está MUERTA — y el primer instrumento no lo vio
+### 1.2 El 17 % de esa CSS está MUERTA — y el primer instrumento no lo vio
 
 **11 clases** del armazón no aparecen en Blade, ni en el JS fuente, ni en el SSR, ni en el
-bundle compilado: **41 reglas · 131 declaraciones**, el **17,7 %** de las reglas del armazón.
+bundle compilado: **33 reglas enteras · 121 declaraciones**, el **17 %** de las reglas del
+armazón, más **1 selector muerto** dentro de una regla viva —`.plan-select__trigger:active`
+convive con seis selectores que sí pintan, así que ahí se retira el selector, no la regla—.
+
+⚠️ **La primera redacción decía «41 reglas · 131 declaraciones» y contaba de más**, por el mismo
+sesgo que corrige §1.1: sumaba por clase, y tres reglas citan dos clases muertas cada una
+(`.nav__scan` con `.nav__scan-ticket`, `.nav__user` con `.nav__user--mob`). El recuento por clase
+de la tabla de abajo sigue siendo útil —dice de dónde viene cada trozo— pero **su suma no es el
+número de reglas**.
 
 | Clase | Reglas | Decl. |
 |---|---|---|
@@ -91,7 +111,8 @@ está escrita —«un `grep` que no encuentra no demuestra que no exista»— ti
 ⚠️ **Aquí un `grep` sí es concluyente, y en el cajón no lo sería**: el armazón es Blade SSR y
 sus clases se escriben enteras. El cajón construye las suyas por concatenación en Vue, y por eso
 `DEUDA.md` tiene abierta una ficha de ~50 reglas que **parecen** muertas y no se pueden
-confirmar así. Las 41 de aquí **sí** se pueden.
+confirmar así. Las 33 de aquí **sí** se pueden — y se comprobó además contra el HTML servido
+de **16 páginas públicas**: cero apariciones de las once, y las clases vivas en las dieciséis.
 
 ### 1.3 ❗ La pieza que más importa es la ÚNICA sin red
 
@@ -180,16 +201,18 @@ enlaces invisibles**.
 mecanismo no.** Es exactamente la regla de `tema-por-instalacion.md` §1: de lo que no está
 migrado se saca la forma, nunca el resto.
 
-**2 · `M-05` de la auditoría cae justo aquí, y choca con un token que acabamos de crear.**
-Dice, textualmente, que el **CTA fijo** y el **botón de registro de la esquina** llevan sombras
-difusas fuera de un modal, que el sistema **solo** admite la difusa en modales, y recomienda
-pasarlas a *keyline*. Está en **Pendiente** porque «son mobiliario de cabecera y quedan
-excluidos de esta pasada» — o sea: **entra con esta tanda, no con aquélla**.
-⚠️ Y toca `--shadow-float`, el rol que `#196` creó hace unas horas precisamente para «paneles,
-avisos y la barra de móvil». Si el mobiliario de cabecera pasa a keyline, `--shadow-float`
-pierde dos de sus consumidores y hay que decidir si el rol sigue teniendo sentido o si el
-paquete del cliente lo pone a `none` (que es justo lo que el ejemplo de §13.6 de aquella spec
-ya proponía).
+**2 · `M-05` de la auditoría cae justo aquí — ✅ RESUELTO por el owner el 2026-08-27.**
+Decía que el **CTA fijo** y el **botón de registro de la esquina** llevan sombras difusas fuera
+de un modal, que el sistema **solo** admite la difusa en modales, y recomendaba *keyline*.
+Estaba en **Pendiente** porque «son mobiliario de cabecera y quedan excluidos de esta pasada» —
+o sea: entraba con esta tanda, no con aquélla.
+▶ **`[DECIDIDO owner]`: keyline.** El mobiliario de cabecera **pierde la sombra** y se sostiene
+por su borde. Detalle en §4.9.
+⚠️ **Y eso toca `--shadow-float`**, el rol que `#196` creó el mismo día para «paneles, avisos y
+la barra de móvil»: pierde **dos** de sus ocho usos y se queda con los seis que sí flotan sobre
+contenido. **El rol no se retira** —sigue teniendo consumidores y sigue siendo redefinible por
+el paquete— pero su recuento cambia, y `tema-por-instalacion.md` §13.3 hay que actualizarlo al
+ejecutar, no antes.
 
 **3 · `T-02`: el rotulador aparece dos veces.** El eslogan a mano está en el hero y en el pie
 del menú; la norma del cliente es **una vez por página**. Su propio informe dice «sobra el del
@@ -232,7 +255,7 @@ Criterios, todos medibles:
    foco. Verificable sin navegador.
 4. **Cero consultas nuevas por petición**: la lista sigue leyéndose del payload memoizado del
    composer global (`PERF-02`).
-5. **Las 41 reglas muertas salen**, y el trinquete que las deja fuera solo puede encoger.
+5. **Las 33 reglas muertas salen**, y el trinquete que las deja fuera solo puede encoger.
 6. **Cada tanda deja el sitio navegable**: en ningún commit intermedio hay una vista sin menú.
 
 ### Fuera de alcance, explícitamente
@@ -317,37 +340,36 @@ En el mockup **se ocultan por debajo de cierto ancho**. Con la lista plana, en p
 medianas quedan **solo los títulos**: los subtítulos dejan de ser información garantizada y
 pasan a ser un refuerzo.
 
-### 4.3 El botón de cuenta y su punto de estado
+### 4.3 El botón de cuenta y su punto de aviso
 
-`[DECIDIDO owner, 2026-08-27]`: **con sesión iniciada, el racimo enseña el icono de cuenta con
-un punto: naranja si hay notificación, verde si no hay nada.** Sin sesión, el icono de
-registro. Los dos glifos existen en el set del cliente y son **pareja declarada** por él mismo:
-uno etiqueta «acceder» y el otro «crear cuenta», misma cabeza y mismos hombros con el signo de
-más separado abajo a la derecha.
+`[DECIDIDO owner, 2026-08-27]`: **con sesión iniciada, el racimo enseña el icono de cuenta;
+sin sesión, el icono de registro.** Los dos glifos existen en el set del cliente y son **pareja
+declarada** por él mismo: uno etiqueta «acceder» y el otro «crear cuenta», misma cabeza y
+mismos hombros con el signo de más separado abajo a la derecha.
 
-▶ **Esto es MÁS de lo que hay hoy, no menos**: hoy el punto solo se pinta cuando hay formulario
-pendiente. Con la regla nueva el punto **está siempre** y su color dice el estado.
+`[DECIDIDO owner, 2026-08-27]` — **corrige la primera redacción de esta sección**: el punto es
+**Amarillo Aviso cuando hay algo pendiente, y NO HAY PUNTO cuando no lo hay.**
 
-⚠️⚠️ **Tres objeciones medidas, y las tres se resuelven con una línea cada una.** Se construye
-lo decidido; esto se anota para que la decisión sea informada, no para revisarla:
+▶ **Por qué esta versión es mejor que la primera** (naranja si hay aviso, verde si no), y queda
+escrito porque la diferencia no es de gusto:
 
-1. **El color no puede ser el único portador.** Naranja y verde se distinguen solo por tono: a
-   quien no discrimina ese par le queda «un punto» en los dos casos. El nombre accesible del
-   botón **ya** lo dice hoy en texto, y debe seguir diciéndolo en los dos estados — eso es
-   obligatorio y no es negociable. Si además hay que distinguirlos **a la vista**, hace falta
-   algo más que el tono (forma, glifo o tamaño).
-2. **El naranja es el color de la acción en el sistema del cliente**, y su propia auditoría
-   levantó dos hallazgos de severidad **Alta** y **Media** por usarlo como relleno en cinco
-   sitios y por pintar un estado con él: *«un único relleno naranja por pantalla»*. El punto de
-   la cabecera sería un relleno naranja más, compitiendo con el botón que compra.
-3. **Su sistema ya tiene color para este mensaje exacto.** El aviso «tienes un formulario
-   pendiente» del panel de reservas **ya se corrigió** a Amarillo Aviso con el glifo de aviso
-   —hallazgo `C-05`, Aplicado—. Un punto amarillo en la cabecera diría lo mismo que el aviso de
-   dentro; el verde declarado es «éxito: reserva confirmada, pago correcto», no «reposo».
+1. **Cabecera y panel dicen lo mismo con el mismo color.** El aviso «tienes un formulario
+   pendiente» de dentro del panel **ya está en Amarillo Aviso** desde el hallazgo `C-05` del
+   propio cliente. Dos avisos del mismo hecho en dos colores distintos es un sistema que se
+   contradice a sí mismo a un clic de distancia.
+2. **No gasta un color de estado en el reposo.** El verde declarado es *«éxito: reserva
+   confirmada, pago correcto»*; usarlo para «no pasa nada» lo vacía. La **ausencia** de punto ya
+   significa reposo, y no necesita tinta.
+3. **Libera el naranja.** Es el color de la acción, y su norma es *«un único relleno naranja por
+   pantalla»* — que en esta esquina lo lleva el botón que compra.
+4. **Sale gratis en accesibilidad.** Con dos puntos que solo cambian de tono, quien no
+   discrimina ese par ve «un punto» en los dos casos y el color no informa. Con punto / sin
+   punto, la señal es de presencia, no de tono.
 
-▶ **`[PENDIENTE: owner]`** — una sola pregunta, y se responde en un token: *¿el punto de aviso
-se queda naranja, o pasa al amarillo que su propio sistema ya asigna a este mensaje?* Mientras
-no la conteste, se implementa **naranja/verde** tal como lo pidió.
+⚠️ **Lo que sigue siendo obligatorio pase lo que pase**: el **nombre accesible** del botón dice
+en TEXTO si hay algo pendiente. Hoy lo dice, hay test que lo fija, y al pasar de chip con
+saludo a icono no puede perderse — el texto visible que desaparece tiene que sobrevivir en el
+nombre.
 
 ### 4.4 La coreografía: una regla, no dos
 
@@ -397,9 +419,10 @@ un hallazgo **Alto** por ignorarlo en cuatro animaciones.
 |---|---|
 | La barra fija translúcida | la sustituyen los dos racimos |
 | Los dos paneles desplegables | sus destinos pasan a la lista plana |
-| El cajón lateral de móvil | **`[PENDIENTE: owner]`** — no se retira hasta que haya artboard |
-| Las 11 clases muertas (41 reglas · 131 decl.) | nada: ya no las pinta nadie |
-| El chip «Hola, nombre» con texto | lo sustituye el icono de cuenta con su punto (§4.3) |
+| El cajón lateral de móvil | **`[PENDIENTE: owner]`** — no se retira hasta que haya artboard (§4.9) |
+| Las 11 clases muertas (33 reglas · 121 decl. + 1 selector) | nada: ya no las pinta nadie. ✅ **HECHO en la 2c·0** |
+| El chip «Hola, nombre» con texto | lo sustituye el icono de cuenta con su punto de aviso (§4.3) |
+| La sombra difusa del mobiliario de cabecera | la sustituye el borde marcado (§4.8, `M-05`) |
 
 ⚠️ **El saludo visible desaparece**, y hoy es el **nombre accesible** del botón. Al pasar a
 icono, ese nombre tiene que seguir existiendo en texto — hay un test que lo fija y una regla de
@@ -425,7 +448,57 @@ según haya o no URL externa configurada. Con el glifo de persona-y-más, el cas
 externo queda etiquetado como si fuera un alta de cuenta. **`[PENDIENTE: owner]`**: o dos
 glifos, o un solo significado.
 
-### 4.8 Lo que NO se toca
+### 4.8 La elevación del mobiliario: **keyline, no sombra**
+
+`[DECIDIDO owner, 2026-08-27]`, aceptando la recomendación de su propia auditoría (`M-05`):
+**el mobiliario de cabecera no lleva sombra difusa. Se sostiene por su borde.**
+
+| Pieza | Antes (mockup) | Con esta decisión |
+|---|---|---|
+| El CTA de comprar | difusa de 28 px | **borde marcado**, sin sombra |
+| El botón de cuenta / registro | difusa de 26 px | **borde marcado**, sin sombra |
+| El botón del menú | difusa de 28 px | **borde marcado**, sin sombra |
+| El panel del menú a pantalla completa | — | **es una superficie completa, no una pieza elevada**: tampoco lleva |
+
+▶ **Encaja con lo que `#196` ya decidió, no lo contradice**: aquella tanda quitó la sombra a
+**19** elementos con el mismo argumento —*«una tarjeta quieta no está elevada, está apoyada»*—.
+El mobiliario fijo de una esquina tampoco flota sobre nada: **está anclado**.
+
+⚠️ **Consecuencia contable que hay que arrastrar al ejecutar**: `--shadow-float` pasa de **8** a
+**6** usos. **No se retira** —le quedan los paneles, los avisos y la barra de móvil— y sigue
+siendo redefinible por el paquete del cliente. Lo que hay que actualizar, y solo cuando el
+código esté puesto, es el recuento de `tema-por-instalacion.md` §13.3.
+
+⚠️ **Y hay que resistir la tentación de la sombra dura**: el remate de pegatina —borde de 2 px
+más sombra dura de 5 px— es el más característico del mural, pero su propia norma dice **«un
+solo elemento por pantalla lo lleva; en una rejilla, jamás»**, y aquí hay tres piezas en fila.
+El hallazgo `F-02` de su auditoría retiró exactamente eso de una rejilla de tarjetas.
+
+### 4.9 El móvil: lo que YA está decidido, y lo que espera al artboard
+
+`[DECIDIDO owner, 2026-08-27]`: **en móvil manda la barra de compra de abajo.** El racimo
+superior se queda con **el logotipo y la hamburguesa**, y nada más.
+
+▶ **Tres razones, y ninguna es preferencia:**
+1. **Un solo relleno de acción por pantalla**, que es la norma del propio cliente y el hallazgo
+   `C-01` de su auditoría, de severidad **Alta**.
+2. **El pulgar.** En móvil se compra desde abajo; la esquina superior derecha es el punto más
+   lejano de la mano.
+3. **Ya está construido y probado**: la barra inferior existe, sabe aparecer tras el hero, sabe
+   aparecer antes en las páginas sin hero y sabe **esconderse al llegar al pie**, con el cajón
+   abierto y con el banner de cookies. No se inventa nada.
+
+⚠️ **Y con eso aparece un hueco que hay que resolver, no ignorar**: si en móvil el racimo pierde
+el botón de registro —como hace el propio mockup por debajo de 620 px—, **desde un móvil no hay
+forma de darse de alta sin abrir el menú**. La cápsula de «acceder» del menú pasa a ser el
+único camino, y por tanto **deja de ser secundaria**: en móvil es la puerta de la cuenta.
+
+⬜ **Lo que sigue esperando al artboard del owner** (`[PENDIENTE: owner]`, tanda 2c·4): cómo se
+ve el menú a pantalla completa en un móvil sin ficha lateral y sin subtítulos —o sea, con **diez
+títulos grandes y nada más**—, dónde caen las cápsulas secundarias y qué tamaño toma el
+logotipo. **Sin él no se implementa la 2c·4**; las otras cuatro tandas no dependen de esto.
+
+### 4.10 Lo que NO se toca
 
 - **El cajón de compra y su bloque de cuenta.** El armazón solo lo **abre**, como hoy.
 - **El pie**, incluido el selector de idioma y su tira de marca (`#193`).
@@ -437,24 +510,31 @@ glifos, o un solo significado.
 
 ## 5. Lo decidido y lo que sigue pendiente
 
-**Decidido por el owner el 2026-08-27**, con la medida delante:
+**Decidido por el owner el 2026-08-27**, en dos vueltas y con la medida delante:
 
-1. **Armazón flotante en las 12 vistas** (opción C de §3).
-2. **Lista plana con los destinos que ya tenemos**, con la BD siguiendo al mando.
-3. **Con sesión, icono de cuenta con punto**: naranja si hay notificación, verde si no.
-   Sin sesión, icono de registro. Los dos glifos del set del cliente.
-4. **El móvil lo guía el owner con un artboard.**
+| # | Decisión | Dónde vive |
+|---|---|---|
+| 1 | **Armazón flotante en las 12 vistas** | §3, opción C |
+| 2 | **Lista de menú PLANA** con los destinos que ya tenemos, y la BD sigue al mando | §4.2 |
+| 3 | **Icono de cuenta con sesión, icono de registro sin ella** | §4.3 |
+| 4 | **El punto es Amarillo Aviso cuando hay algo pendiente, y no hay punto cuando no lo hay** — corrige la primera redacción, que era naranja/verde | §4.3 |
+| 5 | **`M-05` aceptado: el mobiliario de cabecera pasa a keyline** y pierde la sombra difusa | §4.8 |
+| 6 | **En móvil manda la barra de compra de abajo**; arriba solo logotipo y hamburguesa | §4.9 |
+| 7 | **El artboard de MÓVIL lo sube el owner**, y hasta entonces la 2c·4 espera | §4.9 |
 
-**Pendiente del owner** — cada uno bloquea lo que dice su fila:
+▶ **Dos de las siete corrigen a este documento**, y se dejan escritas como corrección y no como
+texto nuevo: la 4 sustituye al punto naranja/verde y la 5 cierra un `[PENDIENTE]` que esta misma
+spec había abierto.
+
+**Sigue pendiente del owner** — cada uno bloquea lo que dice su fila, y ninguno bloquea la
+primera tanda:
 
 | # | Qué falta | Qué bloquea |
 |---|---|---|
-| 1 | **El artboard de MÓVIL** | la tanda **2c·4** entera |
-| 2 | **`M-05`**: ¿el mobiliario de cabecera pasa a keyline, o conserva la sombra difusa? | el acabado de 2c·2, y de rebote el sentido del rol `--shadow-float` de `#196` |
-| 3 | **`T-02`**: ¿sobra el eslogan a rotulador del pie del menú? | un detalle de 2c·1; su propio informe dice que sobra |
-| 4 | **El color del punto de aviso**: naranja, o el amarillo que su sistema ya asigna a este mensaje (§4.3) | nada — se implementa naranja mientras no diga |
-| 5 | **El idioma**: ¿se queda en el pie o sube a las cápsulas del menú? | una cápsula de 2c·1 |
-| 6 | **El glifo del botón de registro** cuando el parque tiene trámite externo (§4.7) | un icono de 2c·3 |
+| 1 | **El artboard de MÓVIL** | la tanda **2c·4** entera. Nada más |
+| 2 | **`T-02`**: ¿sobra el eslogan a rotulador del pie del menú? | un detalle de 2c·1. ▶ **Por defecto NO se pinta**: su norma es una vez por página, el hero ya lo gasta desde `#195`, y su propio informe dice que el del menú sobra. Ponerlo después cuesta una línea; quitarlo, una revisión |
+| 3 | **El idioma**: ¿se queda solo en el pie, o entra también en las cápsulas del menú? | una cápsula de 2c·1 |
+| 4 | **El glifo del botón de registro** cuando el parque tiene trámite externo (§4.7) | un icono de 2c·3 |
 
 ⚠️ **Y lo que NO es de este carril y sigue esperando**: la **pasada de navegador** de `#195` y
 `#196` — el hero entero y 19 elementos que perdieron su sombra. Esta tanda **cambia el mismo
@@ -525,18 +605,65 @@ Cada una deja el sitio navegable y se puede mirar en navegador por separado.
 
 | | Tanda | Qué entra | Mueve píxeles |
 |---|---|---|---|
-| **2c·0** | **La red y la limpieza** — los tests que fijan la conducta actual del armazón y del cajón móvil + salida de las 41 reglas muertas + el trinquete que las deja fuera | **No.** Es la única verificable con un diff de captura, y por eso va primera |
+| **2c·0** ✅ | **La red y la limpieza** — HECHA el 2026-08-27: `ArmazonContractTest` (10 casos) fija la conducta del armazón y **estrena red para el cajón móvil**, `ArmazonCssHasNoOrphansTest` deja fuera las 33 reglas muertas y las mantiene fuera. **15 mutaciones, las 15 muerden**, con control positivo | **No**, y está medido: cero apariciones de las once clases en el HTML servido de 16 páginas |
 | **2c·1** | **El menú a pantalla completa** — sustituye a los dos desplegables y al cajón móvil en escritorio; la barra se queda pero pierde sus enlaces y gana la hamburguesa en todos los anchos | Sí, y mucho |
-| **2c·2** | **Los dos racimos** — la barra se disuelve; logotipo y acción flotan; entra la coreografía generalizada a las 12 vistas | Sí, en toda la web |
-| **2c·3** | **La cuenta** — icono con punto de estado, los glifos al set de iconos, el nombre accesible en texto | Sí, en la esquina |
-| **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard | — |
+| **2c·2** | **Los dos racimos** — la barra se disuelve; logotipo y acción flotan; entra la coreografía generalizada a las 12 vistas; el mobiliario va **a keyline, sin sombra** (§4.8) | Sí, en toda la web |
+| **2c·3** | **La cuenta** — icono con **punto de aviso en amarillo, y nada cuando no hay aviso**; los glifos al set de iconos; el nombre accesible en texto | Sí, en la esquina |
+| **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard. Ya llega con dos cosas decididas: **manda la barra de abajo** y **arriba solo logotipo y hamburguesa** (§4.9) | — |
 
 ⚠️ **El orden importa y no es negociable**: si el racimo (2c·2) entrara antes que el menú
 (2c·1), habría un commit con la barra retirada y sin nada que la sustituya. Y si la limpieza
-(2c·0) entrara después, se estarían migrando 41 reglas que no pinta nadie.
+(2c·0) entrara después, se estarían migrando 33 reglas que no pinta nadie.
 
 ⚠️ **Commitear en local ANTES de cada mutación.** Es regla pagada del carril del panel, y aquí
 se muta CSS compartido con el cajón.
+
+### 8.1 ❗ Lo que costó la 2c·0, y es lo más útil de este registro
+
+La tanda salió como se planeó —cero píxeles, red nueva, 33 reglas fuera— pero **cuatro de los
+cinco instrumentos que se usaron nacieron rotos, y las cuatro veces parecía lo contrario**. Se
+escriben aquí porque el próximo que toque esto va a escribir instrumentos parecidos.
+
+| # | El instrumento decía | Lo que pasaba de verdad |
+|---|---|---|
+| 1 | **9** clases muertas | Eran **11**: dos «vivían» dentro de un **comentario de Blade** que explicaba que ya no se usan (§1.2) |
+| 2 | **1.032 reglas** en una hoja de 194 | El localizador **no avanzaba por delante de los comentarios**, así que cada bloque `/* … */` contaba como un selector |
+| 3 | **232 reglas · 819 declaraciones** de armazón | Sumaba **coincidencias, no reglas**: una regla que cita dos familias contaba dos veces (§1.1). Son **194 · 733** |
+| 4 | **15 de 15 mutaciones muerden** | Cierto, pero **no lo había demostrado**: el arnés restauraba el fuente con `copy2`, que conserva el **mtime original** — más viejo que la vista que Blade compiló durante la mutación—, así que **el fuente volvía a estar sano y la aplicación seguía sirviendo la versión mutada**. Una mutación podía apuntarse el tanto que había ganado el residuo de la anterior |
+
+▶ **El patrón es siempre el mismo, y ya tiene nombre en este repo**: cuando dos medidas del mismo
+corpus no coinciden, la que sobra **no es la que da más: es la que no puede explicar la
+diferencia**. Aquí las cuatro se cerraron explicando la diferencia con un número.
+
+▶ **Y la regla que este trabajo añade**, porque es la simétrica de una que ya estaba escrita:
+«un `grep` que no encuentra no demuestra que no exista» → **un `grep` que SÍ encuentra tampoco
+demuestra que exista.** Un comentario que dice «esto ya no se usa» mantiene viva, para un
+inventario ingenuo, exactamente la deuda que está enterrando.
+
+▶ **Lo cuarto tiene consecuencia operativa para cualquier arnés de este repo**: hay que hacer
+`view:clear` **antes de cada medición**, no al final. Sin eso, un arnés de mutación de Blade
+mide el residuo de la mutación anterior.
+
+⚠️ **Y una cifra que asustó y era correcta**: la suite sube **15 tests y solo 1 aserción**. Los
+guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86** aserciones
+(4.025 → 3.939, medido volviendo a poner el CSS y corriendo otra vez) y los tests nuevos aportan
+**87**. `17 694 − 86 + 87 = 17 695`. **Un contador que se mueve menos de lo esperado no es un
+contador roto hasta que no puedes explicar la diferencia.**
+
+### 8.2 Lo que la 2c·0 dejó hecho
+
+- **`ArmazonContractTest`** (10 casos): fija **capacidades, no píxeles** — las 12 vistas que
+  sirven el armazón, que ningún destino se ofrezca solo en la barra o solo en el cajón, que un
+  servicio del CMS llegue a los dos y desaparezca de los dos, que el cajón sea un overlay
+  accesible, que **todo enlace del cajón lo cierre** y que el racimo cambie con la sesión.
+  ▶ **El cajón móvil estrena red**: no lo tocaba ningún test, ni PHP ni JS.
+- **`ArmazonCssHasNoOrphansTest`** (5 casos): el trinquete. Su lista de excepciones nace **vacía**
+  y solo puede encoger.
+- **33 reglas y 121 declaraciones fuera**, más 1 selector muerto de una regla viva, más los
+  comentarios y el `@keyframes` que se quedaron sin sujeto y los tres `@media` que quedaron
+  vacíos.
+- **Cero píxeles, medido**: ninguna de las once clases aparece en el HTML servido de **16
+  páginas** públicas, y las clases vivas aparecen en las dieciséis.
 
 ---
 
@@ -546,9 +673,13 @@ se muta CSS compartido con el cajón.
   del armazón y el canvas re-bajado ese mismo día a las 17:53. El instrumento de inventario
   lleva guarda de la guarda y **se corrigió a media medición** (§1.2): sus cifras son las de la
   versión corregida.
-- **Cuatro decisiones del owner** el 2026-08-27, con número y coste delante (§5).
-- **Seis cosas siguen pendientes de él**, y la primera —el artboard de móvil— la anunció él
-  mismo.
-- ⬜ **Falta su ✅ a esta spec** y recortar la tanda 2c·0 con él delante, como se hizo con el
-  waiver y con la capa de tema.
-- **Entrada final**: `DECISIONES #N` al aprobarse.
+- **Siete decisiones del owner** el 2026-08-27, en dos vueltas y con número y coste delante
+  (§5). **Dos de ellas corrigen a este documento**, y ése es el resultado que se buscaba al
+  escribir las objeciones en vez de callarlas: el punto de aviso pasa de naranja/verde a
+  amarillo-o-nada, y `M-05` se cierra en keyline.
+- ✅ **El owner aprueba la dirección**: *«la landing como el mockup, como sea, hay que
+  hacerlo»*. Se empieza por la tanda **2c·0**, que no cambia un píxel.
+- **Cuatro cosas siguen pendientes de él** y ninguna bloquea la primera tanda; la primera —el
+  artboard de móvil— la anunció él mismo.
+- **Entrada final**: **`DECISIONES #200`** — la spec, las siete decisiones y la ejecución de la
+  tanda 2c·0.

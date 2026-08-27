@@ -212,9 +212,11 @@
 >   y la sustituyen **dos racimos flotantes + un menú a pantalla completa**; la lista del menú es
 >   **PLANA** y la sigue mandando la BD; con sesión, icono de cuenta con **punto naranja/verde**;
 >   **el MÓVIL lo guía el owner con un artboard** y hasta que exista no se empieza la 2c·4.
->   ▶ Medido: **232 reglas · 819 declaraciones** de CSS en 8 familias, **31 aserciones** en 4
->   ficheros, y **41 reglas (el 18 %) MUERTAS**. ❗ **El cajón móvil no lo toca NINGÚN test** —ni PHP
->   ni JS—, así que la tanda **2c·0 no cambia nada: construye la red**. ⚠️ **Y el menú del mockup
+>   ▶ Medido: **194 reglas distintas · 733 declaraciones** de CSS en 7 familias, **31 aserciones**
+>   en 4 ficheros, y **33 reglas (el 17 %) MUERTAS**. ⚠️ **La primera cifra publicada —«232 · 819»,
+>   «41 muertas»— era FALSA y se corrigió al ejecutar**: sumaba COINCIDENCIAS, no reglas (una regla
+>   que cita dos familias contaba dos veces). ✅ **La tanda 2c·0 está HECHA**: no cambia un píxel —
+>   construye la red que el cajón móvil no tenía y retira las 33 reglas muertas. ⚠️ **Y el menú del mockup
 >   trae tres defectos que se importan solos** (spec §1.7): deja sus enlaces en el orden de
 >   tabulación estando cerrado, y el hallazgo `M-05` del propio cliente **choca con `--shadow-float`,
 >   que `#196` creó ese mismo día**. ⚠️ **La auditoría del cliente EXCLUYE el menú y el logotipo**:
@@ -238,7 +240,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#199`**.
+> El último usado es **`#200`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -342,9 +344,24 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3062 en verde** (17.694 aserciones, `--parallel` **~68 s** medidos el 2026-08-27 por la noche
-  en la máquina del carril A; ~91 s en la del C, ~42 s en la del B) ·
-  ▶ **+0 tests PHP y +3 aserciones en el último corte, y +22 JS** (`#199`, menores a cargo · tanda 3,
+- Suite **3077 en verde** (17.695 aserciones, `--parallel` **~54 s** medidos el 2026-08-27 por la noche
+  en la máquina del carril C; ~68 s en la del A, ~42 s en la del B) ·
+  ▶ **+15 tests PHP en el último corte** (carril C, armazón · tanda **2c·0**): `ArmazonContractTest`
+  (10, la red de conducta del armazón — **y el cajón móvil ESTRENA test: no lo tocaba ninguno**) y
+  `ArmazonCssHasNoOrphansTest` (5, el trinquete de CSS sin consumidor). **15 mutaciones, las 15
+  muerden**, con control positivo.
+  ⚠️⚠️ **Y las aserciones suben SOLO 1 con 15 tests nuevos: 17.694 → 17.695. No es un error, y
+  cuadra a la aserción.** Los tres guardas de CSS aseveran **por regla**, así que al retirar las 33
+  reglas muertas pierden **86** aserciones (4.025 → 3.939, medido stasheando el cambio y volviendo a
+  correr); los tests nuevos aportan **87**. `17 694 − 86 + 87 = 17 695`. ▶ **Un contador que se mueve
+  menos de lo que esperabas no es un contador roto hasta que no puedes explicar la diferencia.**
+  ⚠️ **Lo que enseñó el arnés de mutación de esta tanda, y afecta a cualquiera que escriba uno**:
+  `shutil.copy2` restaura el fuente **con su mtime original**, que queda más viejo que la vista que
+  Blade compiló durante la mutación → **el fuente vuelve a estar sano y la aplicación sigue sirviendo
+  la versión mutada**. Dos tests salieron rojos por mutaciones ya revertidas, y —peor— una mutación
+  puede apuntarse un tanto que ha ganado el residuo de la anterior. **El arnés hace `view:clear` antes
+  de cada medición**; sin eso su 15/15 no valía. Antes:
+  ▶ **+0 tests PHP y +3 aserciones, y +22 JS** (`#199`, menores a cargo · tanda 3,
   el cajón): `npm run test:js` **702 → 724** (el módulo plano `account/dependents.js` 9, el store 13);
   las tres aserciones son la poda del subgrupo `dependents` en `SidebarMountTest`. Chunk del cajón
   **234,41 KiB (techo 235)**, payload con sesión **7.602 B (techo 7.700)**, los dos subidos por FEATURE
@@ -634,9 +651,13 @@ CMS), no el tema.
 ▶ **Lo que el owner ya decidió** (con la medida delante): armazón flotante en las **12** vistas ·
 lista de menú **PLANA** con los destinos que ya hay, y la BD sigue al mando · con sesión, **icono de
 cuenta con punto naranja/verde** · **el móvil lo guía él con un artboard**.
-▶ **Lo medido** (instrumento con guarda de la guarda, spec §1): **232 reglas · 819 declaraciones** de
-CSS en 8 familias · **31 aserciones** en 4 ficheros · **41 reglas (18 %) MUERTAS** · **12** vistas ·
-el salto al contenido existe en **1 de 12**.
+▶ **Lo medido** (instrumento con guarda de la guarda, spec §1): **194 reglas distintas · 733
+declaraciones** de CSS en 7 familias · **31 aserciones** en 4 ficheros · **33 reglas (17 %) MUERTAS**
+· **12** vistas · el salto al contenido existe en **1 de 12**.
+⚠️ **La primera cifra publicada era FALSA y se corrigió al ejecutar**: «232 · 819» y «41 muertas»
+sumaban COINCIDENCIAS, no reglas —una regla que cita dos familias contaba dos veces, y `.cta-prime`
+se contaba como del armazón cuando la comparte con el hero—. **Un inventario que suma por etiqueta
+cuenta etiquetas, no sujetos.**
 ❗ **Y el hallazgo de método de esta tanda**: el instrumento dijo **9** clases muertas en vez de 11
 porque dos «vivían» **dentro de un comentario de Blade** que explicaba que ya no se usan. La regla
 escrita —«un `grep` que no encuentra no demuestra que no exista»— **tiene simétrica**: un `grep` que

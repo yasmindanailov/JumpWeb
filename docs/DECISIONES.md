@@ -10478,3 +10478,78 @@ publicar, tope a 1 desde `settings`, quitar con firma detrás → desvinculada, 
 **Lo que queda**: la tanda 4 (la asignación en el embudo, §4.7–§4.10) y, del owner, su ✅ en navegador
 de la zona y los dos plazos de retención. Sigue 🟦.
 
+## #200 · 2026-08-27 · El ARMAZÓN pasa a spec propia, el owner cierra SIETE decisiones, y la tanda 2c·0 deja la red puesta y 33 reglas muertas fuera
+
+La **2c** del tema (`specs/tema-por-instalacion.md` §7) deja de ser una fila del plan y pasa a
+spec propia: **`specs/armazon-y-menu.md`**. No es «adoptar una estructura»: es **cambiar por dónde
+se navega el sitio**, y por eso se midió antes de tocar.
+
+**Lo medido** (instrumento que parte el CSS en reglas, con guarda de la guarda):
+· **12 vistas** sirven el armazón · 1 pública no (el layout enfocado).
+· **194 reglas distintas · 733 declaraciones** en 7 familias, 32 dentro de un `@media`.
+  `.cta-prime` (27 · 65) queda **fuera**: la comparte el hero y la barra de móvil.
+· **31 aserciones** en 4 ficheros fijan nombres de clase del armazón.
+· **33 reglas enteras · 121 declaraciones (el 17 %) MUERTAS**, en once clases, más **1 selector
+  muerto** dentro de una regla viva.
+· ❗ **El cajón móvil no lo tocaba NINGÚN test**, ni PHP ni JS: 26 reglas, ~50 líneas de marcado,
+  el trap de foco, el bloqueo de scroll y las cuatro vías de cierre, sin red.
+· El salto al contenido existe en **1 de las 12** vistas.
+
+**SIETE decisiones del owner**, en dos vueltas y con número y coste delante (spec §5): armazón
+flotante **en las 12** vistas · lista de menú **PLANA** con los destinos que ya hay, y la BD sigue
+al mando · icono de cuenta con sesión / de registro sin ella · **el punto de aviso es Amarillo
+Aviso, y no hay punto cuando no hay aviso** · **`M-05` aceptado: el mobiliario de cabecera pasa a
+keyline** y pierde la sombra difusa · **en móvil manda la barra de compra de abajo** y arriba solo
+quedan logotipo y hamburguesa · **el artboard de móvil lo sube él** y hasta entonces la 2c·4 espera.
+▶ **Dos de las siete corrigen a la spec**, y ése era el objetivo de escribir las objeciones en vez
+de callarlas: el punto naranja/verde que él pidió chocaba con sus propios roles de color —naranja
+es «acción», verde es «pago correcto», y el aviso de formulario pendiente **ya estaba corregido a
+amarillo** en su hallazgo `C-05`—, y `M-05` estaba abierto en su auditoría esperando a esta tanda.
+
+⚠️ **Tres cosas del mockup NO se copian** (spec §1.7): su menú cerrado **deja los enlaces en el
+orden de tabulación** —medido: cero `inert`, cero `aria-hidden`, cero `visibility`—, cuando nuestro
+cajón ya resolvió eso y dejó escrito el porqué; `M-05`; y el eslogan a rotulador duplicado (`T-02`).
+⚠️ **Y la auditoría del cliente EXCLUYE el menú y el logotipo** por indicación suya: sus colores
+están revisados, su forma y su coreografía **no**. Misma trampa que con el hero en `#195`.
+
+**La tanda 2c·0, ejecutada: no cambia un píxel.**
+· **`ArmazonContractTest`** (10 casos) fija **capacidades, no píxeles**, y **el cajón móvil estrena
+  red**: las 12 vistas, que ningún destino se ofrezca solo en la barra o solo en el cajón, que un
+  servicio del CMS llegue a los dos y se retire de los dos, el overlay accesible, que **todo enlace
+  del cajón lo cierre** y el cambio de racimo con la sesión.
+· **`ArmazonCssHasNoOrphansTest`** (5 casos) retira las 33 reglas y las mantiene fuera. Su lista de
+  excepciones nace **vacía** y solo puede encoger.
+· **15 mutaciones, las 15 muerden**, con control positivo.
+· **Cero píxeles, MEDIDO**: ninguna de las once clases aparece en el HTML servido de **16 páginas**
+  públicas, y las clases vivas aparecen en las dieciséis.
+
+❗❗ **Lo más útil de esta entrada son los CUATRO instrumentos que nacieron rotos** (spec §8.1), y
+las cuatro veces parecía lo contrario:
+1. «**9** clases muertas» → eran **11**: dos «vivían» dentro de un **comentario de Blade** que
+   explicaba que ya no se usan. ▶ La regla escrita «un `grep` que no encuentra no demuestra que no
+   exista» **tiene simétrica**: un `grep` que SÍ encuentra tampoco demuestra que exista.
+2. «**1.032 reglas**» en una hoja de 194 → el localizador **no avanzaba por delante de los
+   comentarios** y cada `/* … */` contaba como selector.
+3. «**232 reglas · 819 declaraciones**» → sumaba **coincidencias, no reglas**: una regla que cita
+   dos familias contaba dos veces. **Un inventario que suma por etiqueta cuenta etiquetas, no
+   sujetos.**
+4. «**15 de 15 muerden**» era cierto pero **no estaba demostrado**: el arnés restauraba con
+   `copy2`, que conserva el **mtime original** —más viejo que la vista que Blade compiló durante la
+   mutación—, así que el fuente volvía a estar sano y **la aplicación seguía sirviendo la versión
+   mutada**. Una mutación podía apuntarse el tanto que había ganado el residuo de la anterior.
+   ▶ **Un arnés que muta Blade necesita `view:clear` ANTES de cada medición**, no al final.
+
+⚠️ **Y un contador que asustó y era correcto**: la suite gana **15 tests y solo 1 aserción**. Los
+guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86** (4.025 → 3.939,
+medido volviendo a poner el CSS) y los tests nuevos aportan **87**. `17 694 − 86 + 87 = 17 695`.
+▶ **Un contador que se mueve menos de lo esperado no es un contador roto hasta que no puedes
+explicar la diferencia.**
+
+`specs/armazon-y-menu.md` (nueva) · `specs/tema-por-instalacion.md` §7 y §13.7 ·
+`public/css/{site,landing}.css` · `tests/Feature/Site/ArmazonContractTest.php` ·
+`tests/Feature/Architecture/ArmazonCssHasNoOrphansTest.php` · suite **3077** verde (17.695
+aserciones) · Pint 937.
+❗ **Lo que falta es del owner**: el artboard de MÓVIL (bloquea la 2c·4) · `T-02` · dónde vive el
+idioma · el glifo del registro externo. Y, antes de apilar la 2c·1 encima, **su pasada de navegador
+por `#195` y `#196`**: la 2c toca el mismo terreno, y si se apila sin mirar, cuando algo se vea raro
+no habrá forma de saber cuál de las tres tandas lo hizo.

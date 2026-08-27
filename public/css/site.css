@@ -114,51 +114,6 @@
     padding-inline: var(--wrap-gutter);
 }
 
-/* ---------- atajo "Scan light" del nav (abre el sidebar de compra) ----------
-   Icono basado en `admit-one.css` #03 del mockup ("Scan light"): ticket con
-   barrido vertical en color de marca que sugiere "validar/comprar entrada".
-   Diferencia respecto al mockup original: aquí el barrido NO es infinito (un
-   header con animación constante distrae); se dispara solo en :hover, :focus
-   y :active. Coherente, sutil y respetuoso con `prefers-reduced-motion`. */
-.nav__scan {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px;
-    background: transparent; border: 0; padding: 0;
-    color: var(--fg); cursor: pointer; border-radius: var(--r-md);
-    transition: background 0.18s ease, transform 0.18s ease;
-}
-.nav__scan:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); transform: translateY(-1px); }
-.nav__scan:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.nav__scan-ticket { display: block; line-height: 0; }
-.nav__scan-ticket svg {
-    width: 30px; height: 22px; display: block; overflow: visible;
-}
-.nav__scan-ticket svg path {
-    fill: none; stroke: currentColor; stroke-width: 1.6;
-    stroke-linecap: round; stroke-linejoin: round;
-}
-.nav__scan-ticket svg .dashed { stroke-dasharray: 1.4 1.8; }
-.nav__scan-ticket svg .thin { stroke-width: 0.9; }
-.nav__scan-ticket svg .scan {
-    stroke: var(--zone-1); stroke-width: 1.6;
-    opacity: 0;       /* idle: invisible — el ticket está limpio */
-}
-.nav__scan:hover .nav__scan-ticket svg .scan,
-.nav__scan:focus-visible .nav__scan-ticket svg .scan,
-.nav__scan:active .nav__scan-ticket svg .scan {
-    animation: nav-scan-sweep 1.6s cubic-bezier(0.65, 0, 0.35, 1) 1;
-}
-@keyframes nav-scan-sweep {
-    0%   { opacity: 0; transform: translateX(-8px); }
-    20%  { opacity: 1; }
-    80%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(28px); }
-}
-@media (prefers-reduced-motion: reduce) {
-    .nav__scan, .nav__scan-ticket svg .scan { transition: none; animation: none; }
-    .nav__scan:hover { transform: none; }
-}
-
 /* ====================================================================
    `prefers-reduced-motion` — Lote 5 (Fase 3 UI/UX). Las animaciones DECORATIVAS
    EN BUCLE de la landing viven en landing.css (el CSS estático del mockup) y no
@@ -916,16 +871,6 @@
   .rules-vslider { max-height: none; overflow: visible; }
 }
 
-/* ---------- enlace "Entrar" (invitado) ---------- */
-.nav__login {
-    font-family: var(--font-body); font-size: 12px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.12em;
-    background: none; border: none; color: var(--fg); cursor: pointer;
-    padding: 9px 6px; transition: color 0.2s ease;
-}
-.nav__login:hover { color: var(--zone-1); }
-@media (max-width: 768px) { .nav__cta .nav__login { display: none; } }
-
 /* fila "recordar sesión" + "¿olvidaste tu contraseña?" */
 .auth__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
 .auth__row .check--opt { margin: 0; }
@@ -947,25 +892,6 @@
     background: none; border: none; cursor: pointer; padding: 0;
     font: inherit; color: var(--zone-1); font-weight: 600; text-decoration: underline;
 }
-
-/* ---------- nav con sesión iniciada ---------- */
-.nav__user {
-    font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--fg);
-    white-space: nowrap;
-}
-.nav__logout {
-    font-family: var(--font-body); font-size: 12px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.12em;
-    padding: 9px 14px; border-radius: var(--r-btn);
-    border: 1px solid var(--line-strong); background: var(--bg-card); color: var(--fg);
-    cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease;
-}
-.nav__logout:hover { border-color: var(--fg); }
-@media (max-width: 768px) {
-    .nav__user:not(.nav__user--mob) { display: none; }
-    .nav__cta .nav__logout { display: none; }
-}
-.nav__user--mob { display: block; margin-top: 12px; }
 
 /* ---------- banner de avisos (flash) ---------- */
 .flash {

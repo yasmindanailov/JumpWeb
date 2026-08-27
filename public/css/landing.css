@@ -400,13 +400,6 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-display); font-weight: 800; font-size: 22px;
   letter-spacing: -0.04em; display: inline-flex; align-items: baseline;
 }
-.nav__brand-slogan {
-  font-family: var(--font-display); font-stretch: 75%; font-weight: 700;
-  font-size: 11px; letter-spacing: -0.005em;
-  color: var(--fg-mute);
-  line-height: 1; margin-top: 2px;
-  white-space: nowrap;
-}
 .nav__period {
   color: var(--zone-1);
   display: inline-block;
@@ -444,7 +437,6 @@ img { display: block; max-width: 100%; }
   86%      { transform: translateY(0)    scale(1.14, 0.78); }   /* landing squash */
   94%, 100%{ transform: translateY(0)    scale(1,    1   ); }   /* rest */
 }
-.nav__dot { display: none; }
 
 /* polished nav links */
 .nav__links {
@@ -581,29 +573,6 @@ img { display: block; max-width: 100%; }
 }
 /* ---------- plan select (sliding dropdown) ---------- */
 .plan-select { position: relative; }
-.plan-select__trigger {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  font-family: var(--font-body); font-size: 12px; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  border: 1px solid var(--line); border-radius: var(--r-btn);
-  color: var(--fg);
-  background: var(--bg-card);
-  transition:
-    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
-    box-shadow 0.25s ease;
-}
-.plan-select__trigger:hover {
-  transform: translateY(-3px) scale(1.02);
-  border-color: var(--fg); color: var(--fg);
-  box-shadow: var(--shadow-lift);
-}
-.plan-select__trigger .chevron { transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); }
-.plan-select--open .plan-select__trigger {
-  background: var(--fg); color: var(--bg); border-color: var(--fg);
-}
-.plan-select--open .plan-select__trigger .chevron { transform: rotate(180deg); }
 
 .plan-select__panel {
   position: absolute; top: calc(100% + 14px); right: 0;
@@ -652,18 +621,6 @@ img { display: block; max-width: 100%; }
   transition: background 0.2s ease, color 0.2s ease;
 }
 .plan-select__panel a:hover { background: var(--zone-1); }
-.plan-select__item-num {
-  font-family: var(--font-body); font-size: 10px; font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--fg-mute);
-  border: 1px dashed color-mix(in srgb, var(--fg) 32%, transparent);
-  padding: 4px 6px; border-radius: var(--r-xs);
-  flex-shrink: 0;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-.plan-select__panel a:hover .plan-select__item-num {
-  color: var(--fg); border-color: var(--fg);
-}
 .plan-select__item-text { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .plan-select__item-t {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -1864,7 +1821,6 @@ input[type="radio"]:focus-visible,
 /* active (pressed) — subtle "press" feedback on all buttons */
 .btn:active,
 .zone-intro__cta:active,
-.plan-select__trigger:active,
 .nav__burger:active,
 .mob-menu__close:active,
 .slider-arrow:active:not(:disabled),
@@ -1925,7 +1881,6 @@ input[type="radio"]:focus-visible,
   .section { padding: 64px 0; }
   .nav { padding: 12px 20px; }
   .nav__brand { font-size: 18px; }
-  .nav__reserve { padding: 10px 14px; font-size: 13px; }
   /* hero */
   .hero { padding: 92px 0 40px; min-height: auto; }
   .hero__stage { aspect-ratio: 3 / 4; border-radius: var(--r); }
@@ -2018,13 +1973,11 @@ input[type="radio"]:focus-visible,
 
 @media (max-width: 560px) {
   .nav { gap: 8px; padding: 12px 16px !important; }
-  .nav__reserve { padding: 9px 12px; font-size: 12px; }
   /* #231 p9: logo MÁS GRANDE en móvil (hay espacio al ocultar «Hola, nombre», p7) + espaciado
      sano entre icono de cuenta · CTA «Reservas aquí» · menú (logo a la izquierda, resto a la
      derecha vía el justify-between del nav). */
   .nav__brand-row { font-size: 20px; }
   .nav__cta { gap: 12px; }
-  .nav__brand-slogan { display: none; }
   .nav__burger { width: var(--tap-min); height: var(--tap-min); }   /* Lote 9: no encoger en móvil (44px táctil) */
 }
 
