@@ -72,6 +72,12 @@ const props = defineProps({
      * ⚠️ Llega con el HTML a propósito: el LOGOUT es una navegación completa, y es justo el caso que
      * la sesión resolvía sola con `invalidate()` y que `localStorage` no tiene. Esperar a un `fetch`
      * dejaría una ventana en la que la cesta de quien acaba de salir sigue en pantalla.
+     *
+     * ⚠️⚠️ **Aquí NO se lee: la siembra vive en `index.js`, antes de montar.** Desde el 2026-08-22
+     * hasta el 2026-08-27 este docblock prometía una siembra que no existía en ninguna parte —la
+     * prop estaba declarada y muerta— y el cajón que nace abierto purgaba la cesta del propio titular
+     * (`specs/menores-a-cargo.md` §9.9.6). La prop se conserva declarada porque la raíz hace
+     * `v-bind="props"`: sin declararla, Vue la volcaría como atributo sobre el DOM.
      */
     userId: { type: [Number, String], default: null },
 

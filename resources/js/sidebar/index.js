@@ -8,6 +8,7 @@ import { useSectionStore } from './stores/section.js';
 import { useAccountStore } from './stores/account.js';
 import { createNavigation } from './account/navigation.js';
 import { useAccountContextStore } from './stores/accountContext.js';
+import { useCartStore } from './stores/cart.js';
 import { takeOver } from '../ui/account-host.js';
 
 /**
@@ -114,6 +115,21 @@ export function mount(el, boot = {}) {
     // (`Http\Sidebar\AccountContextSeed`), así que el bloque se pinta sin pedirle nada a nadie; solo
     // se refresca cuando el cajón consigue sesión SIN recargar (`specs/account-context-vue.md` §4.3).
     useAccountContextStore(pinia).seed(boot.accountContext ?? null);
+
+    // ⚠️⚠️ **El DUEÑO de la cesta se siembra desde el HTML, aquí y ANTES de montar** — y esta línea
+    // faltó desde que la identidad se mudó al store (2026-08-22) hasta el 2026-08-27, cuando una sonda
+    // en headless la echó de menos (`specs/menores-a-cargo.md` §9.9.6): `userId` viajaba en el boot,
+    // la raíz lo declaraba y **nadie lo leía**. El cajón que NACE ABIERTO (`/entradas`, `/mi-cuenta`,
+    // `/login`, `/registro`, `/recuperar-contrasena`) arranca por `bootSpaEngine()` sin pasar por
+    // `open()` —el único sitio que pregunta `GET /me`—, así que `restoreCart()` corría con el dueño a
+    // `null` y `decideOwnership(N, null)` PURGABA la cesta del propio titular (medido: 2/2; desde la
+    // home, 4/4 conservada porque ahí `open()` sí pregunta).
+    //
+    // Es el dato del SERVIDOR al pintar la página (`auth()->id()`), no un id que venga del cliente:
+    // por eso vale como siembra, y por eso `GET /me` sigue re-resolviéndolo en cada apertura. Va
+    // ANTES de `app.mount(el)` porque la sección restaura en su `onMounted`. Lo fija
+    // `SidebarMountTest::test_the_engine_seeds_the_cart_owner_from_the_boot_before_mounting`.
+    useCartStore(pinia).setOwner(boot.userId ?? null);
 
     // ⚠️⚠️ **El hueco del bloque se vacía ANTES de montar, y el orden no es negociable**: `<Teleport>`
     // **anexa y no vacía** —al revés que `app.mount()`, que sí limpia su contenedor—, así que sin esto

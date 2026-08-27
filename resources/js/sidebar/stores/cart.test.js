@@ -71,6 +71,33 @@ describe('el store de la cesta', () => {
     });
 
     /**
+     * ⚠️⚠️ **La cesta del PROPIO titular se PURGABA cuando el cajón nacía abierto** (medido en headless
+     * el 2026-08-27, `specs/menores-a-cargo.md` §9.9.6): se restauraba con el dueño a `null` porque
+     * nadie lo sembraba desde el HTML, y `decideOwnership(N, null)` es la casilla del logout. La
+     * secuencia correcta es sembrar ANTES de restaurar; este caso fija las tres casillas que dependen
+     * de ese orden, y la última es literalmente lo que hacía el arranque nacido abierto.
+     */
+    test('sembrar el dueño ANTES de restaurar conserva la cesta del propio titular y purga la ajena', () => {
+        const mia = store();
+        mia.setOwner(457);
+        mia.setLines([LINEA()]);
+        mia.persist();
+
+        const misma = store();
+        misma.setOwner(457);
+        assert.equal(misma.restore('2026-09-01').lines.length, 1, 'el mismo titular, sembrado antes de restaurar: se conserva');
+
+        const otra = store();
+        otra.setOwner(99);
+        assert.equal(otra.restore('2026-09-01').lines.length, 0, 'otro titular: se purga (la tablet compartida)');
+
+        mia.persist();
+        const sinSembrar = store();
+        assert.equal(sinSembrar.restore('2026-09-01').lines.length, 0, 'sin sembrar el dueño —el logout, o el defecto— se purga');
+        assert.equal(sinSembrar.restore('2026-09-01').lines.length, 0, 'y olvidada: no vuelve en la siguiente carga');
+    });
+
+    /**
      * ⚠️⚠️ EL CASO QUE NO PUEDE FALTAR. Las respuestas del evento son datos del art. 9 y **no salen
      * de memoria**. Se busca un centinela en el volcado ENTERO del almacén, no en el campo esperado:
      * si algún día se persistieran por otra vía, el caso muerde igual.

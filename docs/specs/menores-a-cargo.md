@@ -717,9 +717,11 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
    la regla no aplica y se puede asignar — la exención vive fuera o no hay. Si el owner prefiere que
    sin modo interno no se asigne, es un `if` menos.
 3. **La purga de la cesta (§9.9.1·11) se arregla AHORA, como unidad 0** de esta tanda.
-4. **El PANEL entra**: ver la asignación en el pedido **y asignar en mostrador** (alta manual y
-   pedido existente). Toca `app/Filament/Resources/Orders/**` (carril B, aviso en el reparto) y
-   `app/Filament/Pages/CreateManualOrderPage.php`.
+4. ~~**El PANEL entra**: ver la asignación en el pedido **y asignar en mostrador**.~~ ▶ ❗ **RECTIFICADO
+   por el owner la misma noche**: «el panel no entra en alcance; el panel tendrá su propia sesión.
+   Ahora solamente la gestión de menores». **La tanda 4 es SOLO el embudo** (U0 → U1 → U2 → el ojo del
+   owner); la ficha del pedido, «Asignar menores» y el alta manual (D14) quedan como diseño para esa
+   sesión y **no se toca ningún fichero del carril B**.
 
 #### 9.9.3 Decisiones de diseño `[DECIDIDO agente]` — todas reversibles, cada una con su porqué
 
@@ -824,7 +826,8 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
   `by` del operador. Un fallo de escritura va a log, no a auditoría (no hay acción que auditar).
 - **D13 · Minoría en la FECHA DE LA VISITA** (D3), no hoy: es la fecha en la que la cobertura del
   adulto importa (§4.1). Reversible.
-- **D14 · El panel (unidad 3)**: la ficha del pedido enseña, por línea de entrada, «Para: Lucas
+- **D14 · El panel** — ⏸️ **FUERA de esta tanda por la rectificación de §9.9.2·4 (sesión propia); se
+  conserva como diseño**: la ficha del pedido enseña, por línea de entrada, «Para: Lucas
   (9 años · exención ✓)» leyendo por `DependentAssigner::forOrder()`; la acción «Asignar menores» de
   la línea (misma familia que «Gestionar») fija el CONJUNTO (`sync`: quitar y poner) con las mismas
   reglas de D3 y el mismo lock; y el alta manual, tras elegir el cliente, ofrece por línea de entrada
@@ -839,12 +842,13 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
 | **U0** | La purga de la cesta (§9.9.1·11): sembrar el dueño desde el HTML antes de restaurar, caso JS, re-correr la sonda §9.9.6 (10 medidas) | `resources/js/sidebar/sections/PurchaseSection.vue` (presupuesto 432 exacto: se compensa o sube con párrafo) · `stores/cart.js` · sus tests | `test:js`, suite, sonda headless |
 | **U1** | El SERVIDOR: migración + `DependentAssignment` + `Dependent` (D5) + `DependentAssigner` (check/assign/forOrder) + `Booking\Contracts\CheckoutLines` y su reader + `CartPayload` (D1) + `OrdersController::store()` (D3) + contrato (`CartLine.dependent_ids`, `OrderEventDataReservation.dependents`, `ExportedOrderItem.dependents`) + `OrderEventDataResource` + `anonymize()`/export (D6) + auditoría + morph + `NON_CRITICAL_FILES` + `lang/*/api.php` | `database/migrations/*dependent_assignments*` · `app/Domain/Identity/{Models/DependentAssignment,Services/DependentAssigner,Contracts/*}` · `app/Domain/Booking/{Contracts/CheckoutLines,Services/CheckoutLinesReader,BookingServiceProvider}` · `app/Http/Api/CartPayload.php` · `app/Http/Controllers/Api/V1/OrdersController.php` · `app/Http/Resources/Api/V1/OrderEventDataResource.php` · `openapi/v1.yaml` · `tests/Feature/{Dependents,Api/V1,Architecture}/**` | `VERIFY_CONC=1` (6 escenarios + Redsys), `ApiContractTest`, `ModuleBoundariesTest` con diff de baselines VACÍO, `ModuleContractsTest` con el doble nuevo, sonda HTTP sobre MySQL |
 | **U2** | El CAJÓN: `cart.js` (D8) + `assignment.js` + `stores/dependents.js` (ensure/invalidate) + `TimeStep`/`CartStep` (D9) + `admission.js` (puerta 2) + `PurchaseSection` (cableado, presupuesto) + `SummaryLine`/paso 6 + tarjeta de «Mis reservas» (D7) + rótulos ×3 (D10) + manifiesto regenerado **con un caso nuevo de ENTRADA en la `qtybox`** + techos del chunk y del payload medidos con y sin | `resources/js/sidebar/**` · `lang/{es,en,fr}/account.php` · `resources/views/components/layout.blade.php` (la lista de claves con sesión) · `tests/Fixtures/sidebar-dom-manifest.json` · `tests/Feature/Sidebar/**` | `test:js`, todas las guardas del cajón, `SidebarBundleBudgetTest`/`SidebarMountTest` con su párrafo, guion headless §5.undecies por las DOS puertas |
-| **U3** | El PANEL (D14): la ficha del pedido, la acción «Asignar menores» y el alta manual | ⚠️ `app/Filament/Resources/Orders/**` (**carril B**: aviso en el reparto ANTES de tocarlo) · `app/Filament/Pages/CreateManualOrderPage.php` · `lang/es/admin.php` · `tests/Feature/Admin/**` | suite; la vista del modal se prueba llamando a lo que la pinta (`TESTING.md` §concurrencia, trampa del `wire:partial`) |
+| ~~**U3**~~ | ~~El PANEL (D14)~~ — **FUERA por la rectificación del owner (§9.9.2·4): el panel tendrá su propia sesión.** No se toca `app/Filament/**` | — | — |
 | **U4** | El OJO del owner: guion §5.undecies en navegador, con `waiver.mode = interno` y un menor firmado y otro sin firmar | `docs/VERIFICACION-E2E-CAJON.md` | — |
 
-Lo que NO entra: la pantalla de puerta (subsistema A) · asignar menores a PACKS (§4.7, dos fuentes de
-verdad) · editar una asignación desde «Mis reservas» (el cliente quita/pone en el embudo; después, el
-mostrador) · el modo `externo`/`desactivado` como bloqueo (§9.9.2·2, reversible).
+Lo que NO entra: **el panel** (ver y asignar en mostrador: sesión propia, D14 como diseño) · la
+pantalla de puerta (subsistema A) · asignar menores a PACKS (§4.7, dos fuentes de verdad) · editar una
+asignación desde «Mis reservas» (el cliente quita/pone en el embudo; después, el mostrador en su
+sesión) · el modo `externo`/`desactivado` como bloqueo (§9.9.2·2, reversible).
 
 #### 9.9.5 Verificación empírica que se exige a cada unidad
 
@@ -887,4 +891,17 @@ con `slots:generate-rolling`, `AFORO-03`), sembrada en `localStorage` tal como l
 el dueño a `null`. El arreglo es la línea que el docblock de `PurchaseSection` promete y nunca existió:
 sembrar el dueño desde el HTML antes de `restoreCart()`. ⚠️ El guion A5·2 del E2E espera una purga que
 la tabla no produce (cesta SIN dueño + otra cuenta → conservar): es doc caducada, se corrige en U0.
+
+✅ **U0 EJECUTADA (misma noche).** La siembra vive en `index.js`, junto a la del contexto de cuenta y
+ANTES de `app.mount(el)` —no en `PurchaseSection.vue`, que sigue en 432/2—: `useCartStore(pinia)
+.setOwner(boot.userId ?? null)`. El docblock de la prop `userId` dice ahora la verdad (se conserva
+declarada porque la raíz hace `v-bind="props"`). Red: un caso en `stores/cart.test.js` (sembrar antes
+de restaurar conserva la propia, purga la ajena y la anónima; JS 724 → 725) y una guarda ESTRUCTURAL en
+`SidebarMountTest` —la suite no arranca el motor, `TESTING.md` §2.sexies— que exige la siembra y que
+vaya antes de montar; **dos mutaciones, las dos muerden** (sin siembra · siembra después de montar).
+⚠️ Y la primera versión de esa guarda salió ROJA con el fuente correcto: `strpos` casó `app.mount(el)`
+con la MENCIÓN en un comentario que va antes que la llamada — limpia comentarios antes de buscar.
+**La sonda re-corrida sobre el build: 10/10, M1/M1bis CONSERVADAS** (dueño 457, «Tu carrito»), M5
+sigue purgando en el logout. Chunk 234,41 → 234,43 KiB (+20 B). A5 del guion corregido (§5, A5·1
+con sesión, A5·4 nuevo).
 

@@ -2016,16 +2016,19 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         línea hoy se descarta en silencio con 201; la cesta del propio titular se PURGA al nacer
         abierto el cajón — medido en headless). **Cuatro decisiones del owner**: la puerta 2 vuelve al
         carrito con aviso · ❗ **la exención firmada es CONDICIÓN para asignar** · la purga se arregla
-        como unidad 0 · ❗ **el panel ENTRA** (ver y asignar en mostrador). Unidades: U0 la purga ·
-        U1 el servidor · U2 el cajón · U3 el panel · U4 el ojo del owner.
-    - [ ] **U0 · la purga de la cesta** (defecto medido, `DEUDA.md` Alta).
+        como unidad 0 · el panel NO entra (rectificado la misma noche: sesión propia). Unidades: U0 la
+        purga · U1 el servidor · U2 el cajón · U4 el ojo del owner.
+    - [x] **U0 · la purga de la cesta** (2026-08-27 noche): el dueño se siembra en `index.js` desde
+          `boot.userId` antes de montar; caso JS + guarda estructural con 2 mutaciones que muerden;
+          sonda headless 10/10 (M1/M1bis conservadas). Ficha de `DEUDA.md` RETIRADA.
     - [ ] **U1 · el servidor**: `dependent_assignments` + `DependentAssigner` (check ANTES del dinero,
           assign DESPUÉS del `allow`) + `Booking\Contracts\CheckoutLines` + `CartLine.dependent_ids` +
           `OrdersController::store()` + `event-data` con `dependents` + RGPD + gates.
     - [ ] **U2 · el cajón**: las cuatro listas de `cart.js`, `assignment.js`, el bloque «¿Para quién?»
           en los pasos 3 y 4, la puerta 2 en `admission.js`, el paso 6 y la tarjeta, rótulos ×3,
           manifiesto y techos medidos.
-    - [ ] **U3 · el panel**: la ficha del pedido, «Asignar menores» y el alta manual (aviso al carril B).
+    - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
+          sesión; D14 se conserva como diseño).
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).
 - [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía

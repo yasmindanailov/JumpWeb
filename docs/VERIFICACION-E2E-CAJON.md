@@ -149,12 +149,21 @@ App\Domain\Booking\Models\Order::where('code','R-XXXX')->update(['expires_at' =>
 
 ### A5 · La cesta cruzada entre pestañas
 
-1. Pestaña 1: añade algo al carrito **sin** iniciar sesión.
-2. Pestaña 2: inicia sesión con OTRA cuenta y recarga la pestaña 1.
+1. Pestaña 1: **con sesión** (Alice), añade algo al carrito — la cesta guarda su dueño.
+2. Pestaña 2: cierra sesión, entra con OTRA cuenta (Bob) y recarga la pestaña 1.
    · **Mirar**: la cesta de la pestaña 1 se **purga**. Es la defensa que `localStorage` introdujo
      (`DECISIONES #38(d)`); si sobrevive, el titular cambió y la cesta no se enteró.
+   ⚠️ **Corregido el 2026-08-27**: este paso decía «añade SIN iniciar sesión», y esa purga **no existe
+   ni debe existir** — una cesta sin dueño se conserva sea quien sea el titular (es la fila «sin dueño
+   | X | conservar» de `decideOwnership()`, el flujo principal del paso 3). La expectativa era
+   inalcanzable tal como estaba escrita; se descubrió al leer la tabla contra el guion.
 3. Y al revés: cesta de invitado + login del MISMO navegador → **la cesta SOBREVIVE**. Es el flujo
    principal, no un descuido.
+4. ❗ **Con sesión, añade al carrito y navega a `/entradas` o a «Mi cuenta» por el pie** (el cajón nace
+   abierto): la cesta **SOBREVIVE**. Hasta el 2026-08-27 se purgaba —2/2 medido en headless, mientras
+   desde la home se conservaba 4/4—, porque el dueño solo lo fijaba `GET /me` y el arranque nacido
+   abierto no lo pregunta; ahora se siembra desde el HTML antes de restaurar
+   (`specs/menores-a-cargo.md` §9.9.6, unidad 0 de la tanda 4 de menores).
 
 ### A6 · Accesibilidad y superpuestos (lo que ningún árbol ve)
 

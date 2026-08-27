@@ -134,6 +134,35 @@ class SidebarMountTest extends TestCase
     }
 
     /**
+     * ⚠️⚠️ **Y el motor tiene que LEER ese dato antes de restaurar la cesta.** Medido en headless el
+     * 2026-08-27 (`specs/menores-a-cargo.md` §9.9.6): `userId` viajaba, la raíz lo declaraba y nadie lo
+     * sembraba en el store; el cajón que nace abierto (`/entradas`, `/mi-cuenta`…) restauraba con el
+     * dueño a `null` y PURGABA la cesta del propio titular (2/2), mientras el que abre desde la home la
+     * conservaba (4/4) porque `open()` pregunta `GET /me`. El caso de arriba pasaba igual: que el dato
+     * viaje no prueba que alguien lo lea.
+     *
+     * Es una guarda ESTRUCTURAL sobre el entry, porque la suite no arranca el motor y el diff de árbol
+     * monta los pasos por su cuenta (`TESTING.md` §2.sexies): la siembra existe y va ANTES de montar,
+     * que es cuando la sección restaura en su `onMounted`.
+     */
+    public function test_the_engine_seeds_the_cart_owner_from_the_boot_before_mounting(): void
+    {
+        $entry = (string) file_get_contents(resource_path('js/sidebar/index.js'));
+
+        // ⚠️ Sin los comentarios: la primera versión de esta guarda casó `app.mount(el)` con una
+        // MENCIÓN en un comentario que va antes que la llamada, y salió roja con el fuente correcto.
+        // Un `grep` que SÍ encuentra tampoco demuestra que exista (`specs/armazon-y-menu.md` §1.2).
+        $code = (string) preg_replace(['~/\*.*?\*/~s', '~^\s*//.*$~m'], '', $entry);
+
+        $seed = strpos($code, 'useCartStore(pinia).setOwner(boot.userId');
+        $mount = strpos($code, 'app.mount(el)');
+
+        $this->assertNotFalse($seed, 'el entry siembra el dueño de la cesta desde `boot.userId`');
+        $this->assertNotFalse($mount, 'el entry monta la app con `app.mount(el)`');
+        $this->assertLessThan($mount, $seed, 'la siembra va ANTES de montar: `restoreCart()` corre en el `onMounted` de la sección');
+    }
+
+    /**
      * ⚠️ **El que consume el desenlace es el LAYOUT.** El paso 4.0a dejó anotado el contraste: con el
      * componente `lazy` se usaba `peek()` aquí porque su `mount()` corría en una petición POSTERIOR;
      * con la SPA **el motor es este mismo documento**, así que el que consume es este.

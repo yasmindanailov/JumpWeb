@@ -10653,9 +10653,11 @@ coste de cada salida delante — `specs/menores-a-cargo.md` **§9.9.2**):
 3. **La purga de la cesta del propio titular** —defecto medido en headless (`DEUDA.md`, Alta: 2/2 purga
    al nacer abierto el cajón, 4/4 se conserva desde la home)— **se arregla AHORA, como unidad 0** de la
    tanda: sembrar el dueño desde el HTML antes de restaurar, un caso JS y la sonda re-corrida.
-4. ❗ **El PANEL entra en la tanda: ver la asignación en el pedido y ASIGNAR EN MOSTRADOR** (alta
-   manual y pedido existente). Toca `app/Filament/Resources/Orders/**` (carril B, con aviso previo en el
-   reparto) y `CreateManualOrderPage`.
+4. ~~❗ **El PANEL entra en la tanda: ver la asignación en el pedido y ASIGNAR EN MOSTRADOR**.~~
+   ▶ ❗ **RECTIFICADO por el owner la misma noche, antes de escribir una línea del panel**: «el panel
+   no entra en alcance; el panel tendrá su propia sesión. Ahora solamente la gestión de menores». La
+   tanda 4 es SOLO el embudo; el diseño del panel se conserva en la spec (D14) para esa sesión y
+   **no se toca ningún fichero del carril B**.
 
 **Y el diseño de ejecución `[DECIDIDO agente]`, escrito en §9.9.3 con su porqué y todo reversible**:
 `dependent_ids` DENTRO de `CartLine` (los tres endpoints públicos lo validan e ignoran; solo
@@ -10680,8 +10682,17 @@ huecos**), y la única medida que faltaba, en headless (§9.9.6). Lo que corrige
 nada), «reconcile deja la línea sin asignar» (futuro, no código), «cinco escenarios» (son seis).
 
 **Orden de trabajo**: U0 la purga → U1 el servidor → U2 el cajón → U3 el panel → U4 el ojo del owner;
-cada unidad se empuja verde (`CONVENCIONES §10`·5). Este commit es solo doc: reclama la tanda en el
-reparto y deja el aviso al carril C (`layout.blade.php` en U2) y al B (`Orders/**` en U3).
+cada unidad se empuja verde (`CONVENCIONES §10`·5). El primer commit fue solo doc: reclama la tanda en
+el reparto y deja el aviso al carril C (`layout.blade.php` en U2) y al B (`Orders/**` en U3).
+
+▶ ✅ **U0 EJECUTADA y empujada la misma noche** (spec §9.9.6): la siembra del dueño en `index.js`
+(`useCartStore(pinia).setOwner(boot.userId ?? null)`, ANTES de `app.mount(el)`; `PurchaseSection.vue`
+no se toca y sigue en 432/2), un caso en `stores/cart.test.js` (JS 724 → 725) y una guarda
+ESTRUCTURAL en `SidebarMountTest` con dos mutaciones vistas morder. **La sonda, re-corrida sobre el
+build: 10/10 — la cesta del propio titular sobrevive al nacer abierto el cajón.** Lo que enseñó: la
+primera versión de la guarda salió roja con el fuente correcto porque `strpos` casó una MENCIÓN en un
+comentario; limpia comentarios antes de buscar (la lección de `#200`, otra vez). El guion A5 decía una
+purga que la tabla de `decideOwnership()` nunca produjo (cesta sin dueño + otra cuenta): corregido.
 
 ## #203 · 2026-08-27 · El ARMAZÓN, tanda 2c·2 — la barra se DISUELVE en dos racimos flotantes, y el salto al contenido pasa de 1 de 12 a 12 de 12
 

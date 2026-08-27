@@ -24,23 +24,23 @@
 >   imprecisas) y el owner decidió las cuatro ambigüedades a pregunta simple: **(1)** quien se
 >   identifica en el paso 5 vuelve al CARRITO con aviso si tiene menores y entradas sin asignar ·
 >   **(2)** ❗ **la exención firmada es CONDICIÓN para asignar** (el servidor lo exige) · **(3)** la
->   purga de la cesta se arregla AHORA como unidad 0 · **(4)** ❗ **el PANEL entra** (ver en el pedido
->   y asignar en mostrador). ❗❗ **Defecto MEDIDO en headless, fuera de la tanda pero en este carril**
->   (`DEUDA.md`, Alta; lo cierra la unidad 0): **la cesta del PROPIO titular se PURGA cuando el cajón
->   nace abierto** (`/entradas`, `/mi-cuenta`, `/login`, `/registro`, `/recuperar-contrasena`) — 2/2
->   purga, 4/4 se conserva abriendo desde la home. Causa: `props.userId` llega del HTML y no la lee
->   nadie. ▶ **Orden de trabajo**: U0 (la purga) → U1 (el servidor: tabla, `DependentAssigner`,
->   `Booking\Contracts\CheckoutLines`, `CartLine.dependent_ids`, `OrdersController`) → U2 (el cajón) →
->   U3 (el panel) → U4 (el ojo del owner). Cada unidad se empuja verde.
+>   purga de la cesta se arregla AHORA como unidad 0 · **(4)** el panel **NO entra** (el owner lo
+>   RECTIFICÓ la misma noche: «tendrá su propia sesión; ahora solamente la gestión de menores»).
+>   ✅ **U0 HECHA y empujada**: el defecto medido en headless —**la cesta del PROPIO titular se PURGABA
+>   cuando el cajón nace abierto** (`/entradas`, `/mi-cuenta`, `/login`, `/registro`,
+>   `/recuperar-contrasena`; 2/2 purga, 4/4 se conservaba desde la home; causa: `props.userId` llegaba
+>   del HTML y no la leía nadie)— está cerrado: el dueño se siembra en `index.js` antes de montar, guarda
+>   estructural con 2 mutaciones que muerden, sonda re-corrida 10/10 (spec §9.9.6; ficha de `DEUDA.md`
+>   retirada). ▶ **Orden de trabajo**: ~~U0~~ → **U1 (el servidor: tabla, `DependentAssigner`,
+>   `Booking\Contracts\CheckoutLines`, `CartLine.dependent_ids`, `OrdersController`)** → U2 (el cajón)
+>   → U4 (el ojo del owner). Cada unidad se empuja verde.
 >   ▶ **Para el agente del C (el tema/armazón)**: esta tanda tocará **`resources/views/components/layout.blade.php`**
 >   (solo la lista de claves `account.dependents.*` que viajan con sesión, en U2) y **NO toca**
 >   `public/css/*`, `nav.blade.php`, `menu.blade.php` ni `app.js` salvo, en U0, la siembra del dueño de
 >   la cesta si acaba viviendo en `app.js` (te lo avisaré aquí antes). El selector del embudo se
 >   compone con clases que ya existen (`eventfields`, `cart__pending`, `form`): **cero CSS nuevo**,
 >   como la zona de menores. Si tu 2c·2 toca `layout.blade.php`, `git pull --rebase` antes de empujar.
->   ▶ **Para el agente del B (si vuelve)**: U3 entrará en `app/Filament/Resources/Orders/**` (la ficha
->   del pedido y una acción de línea) por decisión del owner (`#202`·4): se avisará aquí con fecha
->   ANTES de tocarlo, y solo ese fichero.
+>   (El aviso al carril B que hubo aquí se retira: el owner rectificó y esta tanda NO toca `app/Filament/**`.)
 >   Lo anterior de esta fila sigue siendo cierto y se conserva como historia: cierre de la sesión del
 >   27 a las 18:40 con las TANDAS 1, 2 y 3 EMPUJADAS (`#191` · `#198` · `#199`;
 >   `specs/menores-a-cargo.md` §9.1/§9.7/§9.8) **y la revisión de las cinco decisiones del owner hecha
@@ -404,9 +404,20 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3090 en verde** (17.766 aserciones, `--parallel` **~58 s** medidos el 2026-08-27 por la noche
-  en la máquina del carril C; ~68 s en la del A, ~42 s en la del B) ·
-  ▶ **+4 tests PHP en el último corte** (carril C, armazón · tanda **2c·3**, la cuenta): que el
+- Suite **3091 en verde** (17.769 aserciones, `--parallel` **~68 s** medidos el 2026-08-27 por la noche
+  en la máquina del carril A sobre el árbol fusionado con `#204`; ~58 s en la del C, ~42 s en la del B) ·
+  ▶ **+1 test PHP y +1 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U0**, la purga
+  de la cesta): `SidebarMountTest::test_the_engine_seeds_the_cart_owner_from_the_boot_before_mounting`
+  —guarda ESTRUCTURAL sobre `index.js`, porque la suite no arranca el motor— con **2 mutaciones, las 2
+  muerden** (sin siembra · siembra después de montar), y el caso «sembrar el dueño ANTES de restaurar»
+  en `stores/cart.test.js`: `npm run test:js` **732 → 733**. Chunk 234,41 → **234,43 KiB** (techo 235).
+  ⚠️ **La primera versión de la guarda salió ROJA con el fuente correcto**: `strpos` casó `app.mount(el)`
+  con una mención en un comentario anterior a la llamada — limpia comentarios antes de buscar (la
+  lección de `#200`). ⚠️ **Y 30 casos del contrato de árbol salieron rojos por correr `npm run build`
+  sin `build:ssr`**: el renderizador SSR quedó desfasado; el hook los encadena a propósito. ⚠️ **Y el
+  push chocó DOS veces con el carril C** (`#203`, `#204`) mientras el gate corría (~4 min cada vez): el
+  precio de «empujar pronto» con dos carriles a la vez, pagado esta noche. Antes:
+  ▶ **+4 tests PHP en el corte anterior** (carril C, armazón · tanda **2c·3**, la cuenta): que el
   botón conserve su nombre accesible **en texto** —era el saludo visible, y al quedarse en icono
   solo vive en el `aria-label`—, que el texto visible no vuelva sin ser prefijo del nombre, que el
   punto use el token de aviso, que el glifo del alta siga al DESTINO (trámite externo vs crear
@@ -419,6 +430,7 @@ que sirva staging de verdad.
   lógica del scroll salió de `app.js`, que no lo cubre ningún test. `npm run test:js` **724 → 732**.
   **12 mutaciones, las 12 muerden.** Antes:
   ▶ **+5 tests PHP** (carril C, armazón · tanda **2c·1**, el menú a pantalla completa): **+7** en `ArmazonContractTest` —el overlay accesible del menú, que declare superficie
+
   de tinta, que todo enlace lo cierre, que los números sean decoración, el orden del parque, el
   orden de los servicios y que la barra ya NO lleve destinos— y **−2 en `HomePageTest`**, que **no
   se retiraron: se MUDARON**. Su sujeto —los dos desplegables— murió, pero lo que comprobaban de
@@ -718,7 +730,7 @@ la usa.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), cuatro decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · ❗ el panel ENTRA), y arranca por la unidad 0 (la purga de la cesta, defecto medido). Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0 hecha** (la purga de la cesta) y sigue **U1, el servidor**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
 
