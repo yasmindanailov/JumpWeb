@@ -10978,3 +10978,25 @@ exista, la landing **no puede ser 1:1**.
 ❗ **Lo que falta para el 1:1 sigue estando escrito y medido**: el quinto mecanismo (la acción), la
 tanda **2d**, el menú de móvil (artboard), y la tanda **3** con sus secciones — de las que
 **opiniones** y **el minijuego** no existen, y **`D9`/`B4` las bloquea el ARTE, no el código**.
+
+## #207 · 2026-08-27 · [DECIDIDO, owner] La siguiente sesión del carril A es el SUBSISTEMA A (carné QR + pantalla de puerta) y el PANEL de menores a cargo (D14); el orden se decide a pregunta simple al arrancar
+
+**Contexto.** La tanda 4 de «menores a cargo» (`#202`) terminó en código la noche del 27 (U0 · U1 · U2 y
+el arreglo visual del selector, §9.9.8·7); solo queda el ojo del owner (U4). El owner cerró la sesión
+con la instrucción: «seguimos en la siguiente sesión el subsistema A de los menores a cargo, panel y
+puerta».
+
+**Decidido.** La siguiente sesión de este carril trabaja **dos cosas y solo esas**: (a) **el PANEL de
+menores** —el diseño D14 de `menores-a-cargo.md` §9.9.3, que el propio owner sacó de la tanda 4 para
+«su propia sesión» (`#202`·4, rectificado)—; (b) **el subsistema A** de la Fase 6, `identidad-qr-puerta.md`
+(carné QR + pantalla de puerta), donde los menores entran como **edad y estado de la exención, jamás el
+nombre**.
+
+**No decidido (a preguntar al arrancar, con el número delante).** El ORDEN. Propuesta del agente:
+primero el panel (diseño hecho, cero decisiones pendientes, ~1 tanda, desbloquea el mostrador) y después
+la puerta, que es spec-first y exige antes el ✅ del owner (§7), las dos decisiones de §8 (entropía del
+carné · `APP_KEY` que lanza) y la guarda «nunca el nombre» con mutación desde el primer commit. ⚠️ La
+puerta trae además la responsabilidad de §8.3 —acreditar la visita, de donde salen los JumpPoints—:
+idempotencia y auditoría desde el primer commit, y `A → D` es dependencia dura (`lealtad-jumppoints.md` §8).
+
+**Mapa de arranque** en `ESTADO.md`, bloque del carril A.

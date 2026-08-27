@@ -17,9 +17,14 @@
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN ABIERTA desde el 2026-08-27
->   por la noche: la TANDA 4 de «menores a cargo» (la asignación en el embudo) ES DE ESTE CARRIL y su
->   DISEÑO DE EJECUCIÓN está en el árbol** (`specs/menores-a-cargo.md` **§9.9**, `#202`). Se escribió
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
+>   22:11 (hora de Madrid; ⚠️ el contenedor va en UTC, 2 h menos). ✅ Nada a medias: la TANDA 4 de «menores
+>   a cargo» TERMINÓ EN CÓDIGO (U0 · U1 · U2 + el arreglo visual del selector), todo empujado y con el
+>   gate en verde (`167bbc2`, `748030a`). ▶ LA SIGUIENTE SESIÓN DE ESTE CARRIL, `[DECIDIDO owner,
+>   2026-08-27 noche]` (`#207`): el SUBSISTEMA A de la Fase 6 —el carné QR y la PANTALLA DE PUERTA
+>   (`specs/identidad-qr-puerta.md`)— y el PANEL de menores a cargo (D14 de `menores-a-cargo.md`
+>   §9.9.3). El MAPA DE ARRANQUE está más abajo, tras el orden de trabajo.** La tanda 4 es de este
+>   carril y su DISEÑO DE EJECUCIÓN está en el árbol (`specs/menores-a-cargo.md` **§9.9**, `#202`). Se escribió
 >   MIDIENDO antes (seis lectores + crítico: 296 hechos, 14 afirmaciones de la spec falsas o
 >   imprecisas) y el owner decidió las cuatro ambigüedades a pregunta simple: **(1)** quien se
 >   identifica en el paso 5 vuelve al CARRITO con aviso si tiene menores y entradas sin asignar ·
@@ -55,6 +60,29 @@
 >   (spec §9.9.8·7). ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ → ~~U2~~ → **U4 (el ojo
 >   del owner: guion §5.undecies en su navegador)**. ⚠️ **U2 NO tocó `layout.blade.php`** (se daba por
 >   tocado): el aviso de abajo al carril C queda RETIRADO.
+>   ▶▶ **MAPA DE ARRANQUE de la siguiente sesión (subsistema A + panel D14), en este orden:**
+>   **(1)** `/arranque-sesion` y este bloque. **(2)** Lee `specs/identidad-qr-puerta.md` ENTERA
+>   —empieza por §8 (la revisión adversarial) y luego §4—: está **REVISADA y es sólida**, pero sigue
+>   🟦 **pendiente del ✅ del owner** (§7) y deja DOS cosas por decidir: **§8.2 la entropía del carné**
+>   (`2⁵⁰` en sha256 sin sal: decidirla o justificarla) y **§8.1 rotar `APP_KEY` LANZA, no degrada**.
+>   ❗ **§8.3 amplía el alcance**: la pantalla es donde se ACREDITA LA VISITA y de ahí salen los
+>   JumpPoints (`[DECIDIDO owner]`): idempotencia y auditoría desde el primer commit, y **no puede colgar
+>   de «se abrió la ficha»**. **(3)** Lee `menores-a-cargo.md` §9.9.3 **D14** (el panel: la ficha del
+>   pedido enseña «Para: Lucas (9 años · exención ✓)» por `DependentAssigner::forOrderItems()`; la acción
+>   «Asignar menores» fija el CONJUNTO con las reglas de D3 y el mismo lock; el alta manual escribe
+>   DESPUÉS de `ManualOrderFulfiller::fulfill()`, fuera de su transacción) y lo que la spec de menores
+>   exige de la PUERTA: **edad y estado de la exención, JAMÁS el nombre** (§4·48, §6·231, guarda con
+>   mutación obligatoria; `identidad-qr-puerta.md` §4.6 fila 3 y §6·2). **(4)** Lo que YA existe y se
+>   reutiliza sin tocar: `Dependent` (`isMinorOn()`, `referenced()`), `WaiverStatus::forDependent()`,
+>   `DependentAssigner::{check,assign,forOrderItems}` (D3, bajo el lock del titular), la cadena de
+>   hashes por (titular, sujeto), `DependentSettings`. ⚠️ El panel es Filament (`app/Filament/**`):
+>   `ViewOrder` está DESMONTADO (`desmontar-view-order.md`) — las acciones de línea viven en la
+>   familia de «Gestionar»; no vuelvas a meter orquestación en la página. **(5) La PRIMERA pregunta
+>   simple al owner**, con el número delante: **¿en qué orden?** Propuesta del agente: **primero el
+>   PANEL (D14)** —diseño hecho, cero decisiones pendientes, desbloquea el mostrador, ~1 tanda— y
+>   **después la PUERTA**, que es spec-first: exige su ✅ de §7, las dos decisiones de §8 y la
+>   guarda «nunca el nombre» antes de la primera línea. **(6)** Sigue pendiente del owner, y no
+>   bloquea el arranque: su OJO sobre §5.decies y §5.undecies, y los DOS valores de retención en meses.
 >   ▶ **Para el agente del C (el tema/armazón)**: la tanda 4 **no ha tocado ni tocará**
 >   `resources/views/components/layout.blade.php`, `public/css/*`, `nav.blade.php`, `menu.blade.php`
 >   ni `app.js` (la siembra del dueño de la cesta vive en `resources/js/sidebar/index.js`). El selector
@@ -322,7 +350,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#206`**.
+> El último usado es **`#207`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -834,7 +862,7 @@ retención.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0, U1 y U2 hechas** (la purga de la cesta §9.9.6 · el servidor §9.9.7 · el cajón §9.9.8, guion §5.undecies 19/19); sigue **U4, el ojo del owner** (el guion en su navegador). Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0, U1 y U2 hechas** (la purga de la cesta §9.9.6 · el servidor §9.9.7 · el cajón §9.9.8, guion §5.undecies 19/19; el selector se veía roto y está arreglado y re-medido, §9.9.8·7). **SESIÓN CERRADA**; sigue **U4, el ojo del owner** (el guion en su navegador) y, `[DECIDIDO owner]` `#207`, **la SIGUIENTE SESIÓN de este carril es el subsistema A (carné QR + pantalla de puerta) y el PANEL de menores (D14)** — mapa de arranque en el bloque del reparto. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son CINCO tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas) y `#205` (el CTA doble de móvil). ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y tres cosas concretas: el **artboard del menú en MÓVIL** (bloquea la 2c·4b), el **SVG del logotipo** en `public/img/client-logo.svg`, y **cuál de las dos variantes de «El parque»** para la tanda 3. ▶ Ya validó `#193` y `#194` |
 

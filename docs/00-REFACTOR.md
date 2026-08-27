@@ -2036,9 +2036,12 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
           las dos puertas y sonda de 16 `assign()` simultáneos → 1 fila. ⚠️ Dos defectos cazados por
           el guion, no por la suite (§9.9.8·4 y ·5).
     - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
-          sesión; D14 se conserva como diseño).
+          sesión; D14 se conserva como diseño). ▶ **Esa sesión es la SIGUIENTE del carril A** (`#207`),
+          junto al subsistema A.
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).
-- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
+- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ **SIGUIENTE
+      sesión del carril A** (`[DECIDIDO owner]` `#207`, con el panel de menores D14); mapa de arranque en
+      `ESTADO.md`. Sigue pendiente del owner el ✅ de §7 y las dos decisiones de §8.
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
       commit — es literalmente el modo de fallo que esa invariante existe para impedir.
