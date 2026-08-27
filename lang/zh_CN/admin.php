@@ -1039,6 +1039,7 @@ return [
             'users_anonymize_blocked' => '匿名化被阻止（GDPR）',
             'access_user_roles_update_blocked' => '角色变更被阻止',
             'registrations_validate_rate_limited' => '验证频率限制（入口）',
+            'puerta_lookup_rate_limited' => '手动查询频率限制（入口档案）',
         ],
     ],
 
@@ -1072,6 +1073,7 @@ return [
 
         'permissions' => [
             'registrations_validate' => '在门口验证注册/免责声明',
+            'puerta_profile' => '查看顾客的入口档案并登记到访',
             'orders_view' => '查看订单',
             'orders_create_manual' => '创建手动订单(后台)',
             'orders_cancel' => '取消订单',

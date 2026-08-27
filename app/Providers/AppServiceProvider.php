@@ -28,6 +28,8 @@ use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\CustomerCard;
+use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\LegalDocumentVersion;
@@ -104,6 +106,8 @@ class AppServiceProvider extends ServiceProvider
             'audit_log' => AuditLog::class,
             'consent' => Consent::class,
             'cookie_consent_log' => CookieConsentLog::class,
+            'customer_card' => CustomerCard::class,
+            'customer_visit' => CustomerVisit::class,
             'dependent' => Dependent::class,
             'dependent_assignment' => DependentAssignment::class,
             'faq' => Faq::class,

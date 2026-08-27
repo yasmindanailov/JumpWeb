@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
      */
     public const STAFF_DEFAULT_PERMISSIONS = [
         'registrations.validate',
+        'puerta.profile',
         'orders.view',
         'orders.create_manual',
         'orders.cancel',
@@ -47,6 +48,9 @@ class PermissionSeeder extends Seeder
     public const ALL_PERMISSIONS = [
         // Operativa diaria — staff por defecto.
         'registrations.validate' => 'Validar registro/waiver en puerta',
+        // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.6): la FICHA completa es otra cosa
+        // que «¿está registrado?». Staff por defecto: es la operativa del mostrador.
+        'puerta.profile' => 'Ver la ficha de puerta del cliente y registrar su visita',
         'orders.view' => 'Ver pedidos',
         'orders.create_manual' => 'Crear pedido manual (back-office)',
         'orders.cancel' => 'Cancelar pedido',

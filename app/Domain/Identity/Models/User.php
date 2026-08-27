@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Models;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Platform\Services\AuditLogger;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -101,10 +102,33 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
      * restablecimiento de contraseña (quien resetea no está autenticado; si el atacante lo estaba,
      * tiene que caer). Para «todas menos la mía», {@see revokeOtherAccess()}.
      */
-    public function revokeAllAccess(): void
+    public function revokeAllAccess(string $cardReason = CustomerCard::REASON_REVOKED): void
     {
         $this->purgeSessions(exceptCurrent: false);
         $this->tokens()->delete();
+        $this->revokeCards($cardReason);
+    }
+
+    /**
+     * Fase 6 · subsistema A — el CARNÉ QR es la siguiente credencial que llega después de Sanctum, y
+     * entra aquí desde su primer commit (`specs/identidad-qr-puerta.md` §4.4, §9.2 A·2): es
+     * literalmente el modo de fallo que `RGPD-06` existe para impedir (cuatro copias de la purga y
+     * ninguna revocaba tokens). Revocar es escribir `revoked_at`, nunca borrar (historial); se audita
+     * SOLO si había alguno activo, con el motivo y sin el token.
+     *
+     * ⚠️ `revokeOtherAccess()` NO lo llama a propósito: un cambio de contraseña no debe matar el carné
+     * impreso en casa —escanear no autentica (§4.2)—; rotarlo es un acto explícito del titular.
+     */
+    private function revokeCards(string $reason): void
+    {
+        $count = $this->cards()->whereNull('revoked_at')->update([
+            'revoked_at' => now(),
+            'revoked_reason' => $reason,
+        ]);
+
+        if ($count > 0) {
+            AuditLogger::log('cards.revoked', $this, ['count' => $count, 'reason' => $reason]);
+        }
     }
 
     /**
@@ -288,8 +312,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // de password NO basta (el guard web no monta AuthenticateSession), así que una
             // baja/baneo dejaría la sesión viva. Centralizado aquí → lo garantizan AMBAS vías
             // (panel `ViewUser` + self-service `DeleteAccount`). Los tokens entran en Fase 3 · paso
-            // 3a: sin ellos, un Bearer sobreviviría a la supresión del art. 17.
-            $this->revokeAllAccess();
+            // 3a: sin ellos, un Bearer sobreviviría a la supresión del art. 17. Y el carné QR en
+            // Fase 6 · A (`RGPD-06` ampliada): aquí solo se le pone el motivo.
+            $this->revokeAllAccess(CustomerCard::REASON_ANONYMIZED);
         });
 
         return true;
@@ -338,6 +363,27 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function dependents(): HasMany
     {
         return $this->hasMany(Dependent::class);
+    }
+
+    /**
+     * Fase 6 · subsistema A — los CARNÉS QR del titular, activos y revocados (`specs/identidad-qr-puerta.md`
+     * §4.4: historial de rotación). El activo lo da `CustomerCards::activeFor()`.
+     *
+     * @return HasMany<CustomerCard, $this>
+     */
+    public function cards(): HasMany
+    {
+        return $this->hasMany(CustomerCard::class);
+    }
+
+    /**
+     * Fase 6 · subsistema A — las VISITAS acreditadas en la puerta (§8.3), una por día.
+     *
+     * @return HasMany<CustomerVisit, $this>
+     */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(CustomerVisit::class);
     }
 
     /**

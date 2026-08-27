@@ -985,7 +985,7 @@ con sesión, A5·4 nuevo).
   `(13, 111)` y `dependents.assigned {order_id, dependent_id, order_item_id}`. Sonda limpiada (pedido
   borrado en cascada, 0 asignaciones, 0 menores, 0 tokens).
 - Chunk del cajón **234,43 → 234,70 KiB** (`cart.js`; techo 235, quedan 0,30). Pint ✓ · `docs-check` 34
-  modelos · 82 migraciones. BD local migrada.
+  modelos · ~82 migraciones. BD local migrada.
 
 **Lo que queda** — U2, el cajón (§9.9.4), y sigue siendo lo más caro: `toCheckoutItems()` en `pay.js`,
 `assignment.js`, las casillas en `TimeStep`/`CartStep`, la puerta 2 en `admission.js`, el paso 6 y la

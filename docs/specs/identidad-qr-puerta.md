@@ -410,3 +410,133 @@ convierte en un oráculo (§4.6), y trae los contrapesos. Los dos hallazgos téc
 acotados y no tocan la arquitectura. El cambio de fondo es §8.3: la pantalla deja de ser solo consulta
 y pasa a **escribir** algo que vale puntos, y eso exige idempotencia y auditoría desde el primer
 commit.
+
+---
+
+## 9. Ejecución (2026-08-27 noche, carril A, `DECISIONES #208`) — el diseño de ejecución, MEDIDO antes de escribir
+
+> La spec está aprobada (§7, `#208`) y las dos decisiones de §8 tomadas (20 caracteres; la rotación de
+> `APP_KEY` se construye). Esto es cómo baja al código, leído en el árbol `8ab0f5c` (tras la tanda 5 de
+> menores) el 2026-08-27 por la noche.
+
+### 9.1 Lo que el código enseñó — y lo que corrige o precisa al cuerpo
+
+1. **`ValidarRegistro` (225 líneas) tiene las tres defensas tal cual** (permiso re-autorizado en cada
+   petición, límite por `user_id` del staff, auditoría con sha256) y **23 tests** en
+   `ValidarRegistroTest`. `detectInputType()` devuelve `email | phone | null`; la ruta es una sola URL
+   sin parámetro; el input ya lleva `autocomplete="off"`. ▶ La pantalla **crece**, no se reescribe: los
+   estados de hoy siguen valiendo para quien no tenga el permiso nuevo (A·5).
+2. **`Ticket.qr_token` sigue muerta** (0 lectores). No se toca (§3·D).
+3. **`Platform\Services\QrCode::svg()` es un perfil de adorno** (`eccLevel M`, `quietzoneSize 0`,
+   SVG para CSS). El carné necesita **PNG, ECC H y zona de silencio 4** (§4.3): `QrCode::png()` con
+   perfil propio; GD e Imagick están en el contenedor (§8.0).
+4. **`User::revokeAllAccess()` borra sesiones y tokens** y **`AccessRevocationTest` escanea `app/` por
+   LITERALES de tabla** (`sessions`, `personal_access_tokens`) con dos ficheros permitidos: `User.php`
+   y `PurgeCustomerData`. La tabla del carné entra en esa lista: Eloquent no necesita el literal
+   (convención de nombre), así que **solo `User.php` podrá nombrarla** — y la purga de go-live no la
+   necesita porque la FK es CASCADE (`personal_access_tokens` se borra a mano porque NO tiene FK).
+5. **`anonymize()` SÍ termina en `revokeAllAccess()`** (A2 de la auditoría de Fase 1: «centralizado
+   aquí → lo garantizan AMBAS vías»), además de borrar `password_reset_tokens` por su cuenta. ⚠️ Este
+   punto se escribió primero al revés («NO llama») leyendo solo la mitad del método: **medido, llama.**
+   Así que el carné entra UNA vez, en `revokeAllAccess()`, y `anonymize()` solo le pasa el motivo
+   (`anonymized`) — `RGPD-06` ampliada (§5) sin un segundo sitio.
+6. **Booking ↔ Identity, otra vez**: la ficha compone reservas y dinero (Booking) con waiver, menores y
+   carné (Identity). `Booking\Contracts\CustomerReservations::upcomingFor()` devuelve
+   `UpcomingReservation{date, timeWindow, productName}` — **sin cantidad, sin dinero, sin pedido ni ítem**:
+   no sirve para la puerta. ▶ Contrato NUEVO `Booking\Contracts\GateReservations` (A·3), con el dinero
+   por **`OrderLedger::forReservation()`** (existe) y el reader **entra en
+   `LedgerSingleSourceTest::SURFACES`** («si nace una nueva, entra aquí», §4.7).
+7. **El permiso propio de §4.6 cuesta lo que costó medir en `menores-a-cargo.md` §9.10.1·3**: seeder +
+   `PermissionCatalog::GROUPS` + migración idempotente para instalaciones desplegadas (plantilla
+   `2026_05_28_000006_…`) + etiqueta es **y zh_CN** + el test de paridad. Aquí SÍ se paga: la spec lo
+   exige y «ver la ficha completa» no es «¿está registrado?».
+8. **`AuditLogger::assertKnownAction()` lanza fuera de producción** con una acción que no esté en
+   `AuditLog::ACTIONS`; `CRITICAL_ACTIONS` ya lleva `registrations.validate_rate_limited` («abuso») y
+   las críticas van al visor de incidencias y al correo del operador (§4.6·4): el limitador nuevo se
+   audita con su acción propia y **entra en `CRITICAL_ACTIONS`** para heredar el aviso.
+9. **Los ajustes de puerta viven en `Settings::KEYS` (grupo `puerta`) y en la sección «Puerta»**, con
+   `PuertaSettings` como lector defensivo (valor inválido → por defecto). Los tres nuevos siguen ese
+   patrón exacto.
+10. **`GET /me/*` valida contra `openapi/v1.yaml` con Spectator** (`ApiTestCase::assertValidResponse`):
+    los dos endpoints del carné llevan sus rutas y su esquema en el contrato ANTES que el código.
+11. **`OrderConfirmation::toMail()` es un `MailMessage` de líneas** (sin plantilla propia): el QR viaja
+    como **adjunto PNG** (`attachData`) con una línea que lo dice; incrustarlo *inline* (CID) exige un
+    Mailable con plantilla y queda para el ojo del owner sobre clientes reales (§4.10, no medido).
+12. **`CheckoutLinesReader` ordena por `id` los ítems principales** y `DependentAssigner::forOrderItems()`
+    + `WaiverStatus::forDependents()` ya dan, por ítem, los menores con su firma en dos consultas (tanda
+    5): la puerta los reutiliza **sin el nombre** (A·6).
+13. **`docs-check` cuenta modelos y migraciones**: dos modelos (carné, visita) y tres migraciones (dos
+    tablas, un permiso) → **34 → 36 · 82 → 85** en las docs que los citan.
+
+### 9.2 Decisiones `[DECIDIDO agente]` — reversibles, cada una con su porqué
+
+- **A·1 · El carné**: tabla `customer_cards` (`user_id` FK CASCADE · `token` con cast `encrypted` ·
+  `token_hash` sha256 ÚNICO · `issued_at` · `revoked_at` · `revoked_reason` ∈ `rotated | revoked |
+  anonymized`), **uno ACTIVO por titular** —lo garantiza `Identity\Services\CustomerCards` bajo el lock
+  de la fila del titular, no un índice parcial (no es portable)—; alias morph `customer_card`. **Formato
+  `#208`**: `JW` + 17 de Crockford Base32 (sin `I L O U`) + 1 de control (suma ponderada mod 32, en el
+  mismo alfabeto) = **20 caracteres** (`2⁸⁵`, versión 2 del QR con ECC H, medido). `CardToken` es un
+  objeto de valor: `generate()`, `normalize()` (mayúsculas; `I/L → 1`, `O → 0`: lo que Crockford permite
+  dictar), `isWellFormed()` (longitud, alfabeto y control — un escaneo defectuoso falla en el navegador,
+  §4.3). **`CustomerCard::plainToken()` captura `DecryptException` y devuelve `null`** (§8.1): ninguna
+  superficie lee el atributo directo, y hay test con la clave rotada.
+- **A·2 · Revocación (`RGPD-06`)**: `revokeAllAccess()` revoca los carnés activos (motivo `revoked`);
+  `anonymize()` también (`anonymized`). **`revokeOtherAccess()` NO**: un cambio de contraseña no debe
+  matar el carné impreso en casa —escanear no autentica (§4.2)—; rotarlo es un acto explícito del
+  titular. `customer_cards` entra en `AccessRevocationTest::CREDENTIAL_TABLES`.
+- **A·3 · La ficha es un servicio con presupuesto**: `Identity\Services\GateProfile::for(User, hoy)` →
+  `GateProfileData` (DTO de solo lectura) con: titular (nombre), waiver (`WaiverStatus::for`), carné
+  (activo / revocado / sin carné), **HOY** (reservas del día por `GateReservations`, con tipo, franja,
+  cantidad, complementos, `paidOnlineCents`, `pendingGateCents`, cuándo se hizo y cuándo se pagó, y los
+  menores asignados a esa línea como **edad + estado de la exención**), **VENTANA ±N** (mismo DTO, sin
+  hoy), **menores a cargo** (activos: edad + exención, NUNCA el nombre), y `visitRegisteredToday`.
+  Presupuesto constante, con test. `Booking\Contracts\GateReservations::forHolder(userId, from, to)`
+  devuelve `GateReservation{orderId, orderCode, orderItemId, date, timeWindow, productName, isEntry,
+  quantity, addons, paidOnlineCents, pendingGateCents, paidAt, createdAt}`; lo implementa
+  `Booking\Services\GateReservationsReader` con `OrderLedger::forReservation()`, y entra en
+  `LedgerSingleSourceTest::SURFACES`. Identity → `Booking\Contracts` está en `ALLOWED`: cero flechas.
+- **A·4 · La visita es un HECHO con tabla**: `customer_visits` (`user_id` FK CASCADE · `visited_on` DATE
+  · `registered_by` FK `users` nullOnDelete · `created_at`; ÚNICO `(user_id, visited_on)`). Es el hecho
+  observable que `lealtad-jumppoints.md` §8.1 no tenía. `Identity\Services\GateVisits::register(User
+  $customer, User $by, hoy)` es **idempotente por (cliente, día)** —`insertOrIgnore` sobre el único— y
+  audita `puerta.visit_registered` (target el cliente, `by` el operador) **solo cuando escribe**. Un
+  botón explícito, jamás un efecto de abrir la ficha (§8.3).
+- **A·5 · Quién ve qué**: permiso nuevo **`puerta.profile`** («Ver la ficha de puerta del cliente y
+  registrar su visita»; staff por defecto: es la operativa diaria). Sin él la pantalla es la de hoy (los
+  estados). Con él, **tanto el escaneo como la búsqueda tecleada abren la ficha** (`[DECIDIDO owner]`,
+  §4.6) con los cuatro contrapesos: (1) **dos limitadores por empleado** —escaneo: el de hoy,
+  `puerta.validate_rate_limit_per_minute`; tecleado: **`puerta.lookup_rate_limit_per_hour`**, por
+  defecto 30—; (2) la coincidencia exacta se conserva (mismo código); (3) se audita la **DIVULGACIÓN**
+  (`puerta.profile_viewed`, target el cliente) además de la búsqueda (`registrations.validated` con hash,
+  como hoy; y `puerta.card_scanned` con el hash del token); (4) el rechazo del limitador tecleado se
+  audita como `puerta.lookup_rate_limited`, **crítica** (aviso al operador heredado). El escaneo entra por
+  el MISMO input (el lector es *keyboard wedge*): `detectInputType()` gana `card` cuando
+  `CardToken::isWellFormed(normalize(raw))`.
+- **A·6 · La ficha caduca en el SERVIDOR** (`SEC-04` al tiempo): el resultado lleva `expires_at`
+  (`now + puerta.profile_ttl_minutes`, por defecto 5) y **cada método público y `render()` pasan por
+  `ensureFresh()`**, que descarta la ficha vencida antes de hacer nada. Los dos relojes del navegador
+  (velo a 60 s, cierre al TTL) son Alpine y llaman a `clear()`; cualquier interacción los reinicia. Lo
+  verificable por mutación: **recargar tras el plazo no la resucita**, con o sin temporizador.
+- **A·7 · «Nunca el nombre de un menor» es ESTRUCTURAL, no una omisión**: el DTO de la ficha no tiene
+  campo para él, el compositor nunca lo lee, y una guarda renderiza la pantalla con un nombre único y
+  afirma que no está ni en el HTML ni en el estado público de Livewire — **con mutación**.
+- **A·8 · El carné nace cuando hace falta** (`CustomerCards::ensureFor()`): al componer el correo de
+  confirmación y en `GET /me/card`. **`POST /me/card/rotate`** lo rota (201 con el nuevo; el viejo muere
+  en el acto, §4.5). El correo lleva el PNG adjunto (`carne-qr.png`) y una línea que lo nombra. La
+  rotación desde el PANEL y una zona «Mi carné» en el cajón no entran: quedan escritas en «Lo que queda».
+- **A·9 · Ajustes** (`Settings` → «Puerta», `PuertaSettings` defensivo): `puerta.lookup_rate_limit_per_hour`
+  (30) · `puerta.profile_ttl_minutes` (5) · `puerta.window_days` (1, la ventana ±N de §4.6·5).
+- **A·10 · Auditoría** (`AuditLog::ACTIONS`): `cards.issued` · `cards.rotated` · `cards.revoked` (target
+  el titular; `reason`; nunca el token) · `puerta.card_scanned` (sensible: hash del token, target el
+  titular si existe) · `puerta.profile_viewed` · `puerta.visit_registered` · `puerta.lookup_rate_limited`
+  (crítica). Con etiqueta en el visor (es/zh_CN).
+
+### 9.3 Las unidades, en orden — cada una verde y EMPUJADA antes de la siguiente
+
+| U | Qué | Ficheros | Red |
+|---|---|---|---|
+| **A1** | El CARNÉ y la VISITA en el dominio: migraciones (`customer_cards`, `customer_visits`, el permiso), modelos, `CardToken`, `CustomerCards`, `GateVisits`, `PuertaSettings` +3, `revokeAllAccess()`/`anonymize()`, `AuditLog::ACTIONS` +7, `QrCode::png()`, permiso + catálogo + i18n | `database/migrations/**` · `app/Domain/Identity/**` · `app/Domain/Platform/**` · `database/seeders/PermissionSeeder.php` · `lang/{es,zh_CN}/admin.php` | `CustomerCardTest` (formato/control/normalización · uno activo bajo el lock, 16 procesos → 1 · rotar mata el viejo · `revokeAllAccess()` y `anonymize()` revocan, con mutación · `plainToken()` con `APP_KEY` rotada → `null`, sin excepción · `findByToken()` distingue revocado) · `GateVisitsTest` (idempotente por día, auditoría solo al escribir) · `AccessRevocationTest` con la tabla · paridad de permisos |
+| **A2** | La FICHA: `Booking\Contracts\GateReservations` + `GateReservation` + reader (ledger) · `GateProfile` + `GateProfileData` · superficie en `LedgerSingleSourceTest` | `app/Domain/Booking/Contracts/**` · `app/Domain/Booking/Services/GateReservationsReader.php` (futuro) · `app/Domain/Identity/Services/GateProfile*.php` | `GateProfileTest` (hoy vs. ventana vs. nada · dinero del ledger · menores por edad y exención, sin nombre · presupuesto constante · `ModuleContractsTest` doble) |
+| **A3** | La PANTALLA: `ValidarRegistro` (+`card`, dos limitadores, ficha, `ensureFresh()`, `registerVisit()`), la vista, los rótulos, Ajustes | `app/Livewire/Admin/Puerta/**` · `resources/views/livewire/admin/puerta/**` · `lang/es/admin.php` · `app/Filament/Pages/Settings.php` | `ValidarRegistroProfileTest` (permiso · escaneo abre la ficha · tecleado abre la ficha con su limitador y su auditoría crítica · carné revocado · caducidad en servidor con mutación · visita idempotente · **nunca el nombre**, con mutación) + los 23 de hoy en verde |
+| **A4** | El CORREO y la API: `OrderConfirmation` con el PNG · `GET /me/card` · `POST /me/card/rotate` · contrato | `app/Notifications/OrderConfirmation.php` · `app/Http/Controllers/Api/V1/MeCardController.php` (futuro) · `openapi/v1.yaml` · `routes/api.php` | `MeCardTest` (contrato · rota y mata el viejo · `no-store`) · `OrderConfirmationCardTest` (adjunto PNG, el carné se emite si no existe) |
+| **A5** | Verificación: suite · Pint · docs-check (36 · 85) · mutaciones · pasada headless de la puerta con capturas · docs | — | esta sección, §9.4 |

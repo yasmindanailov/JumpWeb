@@ -25,7 +25,7 @@
   Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
-  `AppServiceProvider` con alias snake_case para los 34 modelos — las columnas polimórficas
+  `AppServiceProvider` con alias snake_case para los 36 modelos — las columnas polimórficas
   (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan
   ALIAS (`order`, `ticket_type`…), nunca FQCN; los datos legacy los convirtió la migración
   `convert_morph_types_to_aliases`. Renombrar/mover modelos ya NO rompe datos. Regla:
@@ -326,6 +326,28 @@ posición**: es un CONJUNTO acotado por la cantidad de la línea, exigido al esc
 `check()` antes del dinero → 422 por campo; `assign()` tras el `allow`, bajo el `lockForUpdate()` de la
 fila del titular, idempotente por el único). `anonymize()` la borra (como vacía `guest_data`). Sale por
 `GET /orders/{code}/event-data` (`dependents[]`) y por el export (`ExportedOrderItem.dependents`).
+
+### `customer_cards` (CustomerCard) — Fase 6 · subsistema A (carné QR)
+El CARNÉ QR del titular (`specs/identidad-qr-puerta.md` §4.1, §4.4, §4.5, §9.2 A·1; `DECISIONES
+#208`): `user_id` FK **CASCADE** · `token_hash` (sha256, **único**: por él se BUSCA; sobrevive a una
+rotación de `APP_KEY`) · `token` (text, cast `encrypted`: para REPINTAR el QR; con la clave rotada
+`CustomerCard::plainToken()` devuelve `null` en vez de lanzar, §8.1; `token` y `token_hash` están
+**ocultos** a la serialización) · `issued_at` · `revoked_at` nullable · `revoked_reason` (`rotated` ·
+`revoked` · `anonymized`) · timestamps · índice `(user_id, revoked_at)`. **Uno ACTIVO por titular**, lo
+garantiza `Identity\Services\CustomerCards` bajo el `lockForUpdate()` de su fila (emitir y rotar; el
+viejo muere en el acto). Formato: `JW` + 17 de Crockford Base32 + 1 de control = 20 caracteres
+(`2⁸⁵`), `CardToken`. **Es una credencial y entra en `User::revokeAllAccess()`** (`RGPD-06`
+ampliada; `anonymize()` la revoca con motivo `anonymized`; `revokeOtherAccess()` NO la toca a
+propósito). Escanearla NO autentica: es una búsqueda desde la sesión del empleado. La tabla está en
+`AccessRevocationTest::CREDENTIAL_TABLES` (solo `User.php` puede nombrarla).
+
+### `customer_visits` (CustomerVisit) — Fase 6 · subsistema A (la visita acreditada)
+El HECHO OBSERVABLE que JumpPoints no tenía (`identidad-qr-puerta.md` §8.3; `lealtad-jumppoints.md`
+§8.1): `user_id` FK **CASCADE** · `visited_on` (date) · `registered_by` FK users nullOnDelete ·
+`created_at` (sin `updated_at`) · **único `(user_id, visited_on)`**. Lo escribe la pantalla de puerta con
+un acto EXPLÍCITO del empleado («registrar visita»), nunca al abrir la ficha; el único hace la
+idempotencia por construcción y `Identity\Services\GateVisits::register()` audita
+`puerta.visit_registered` SOLO cuando escribe.
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·

@@ -37,6 +37,7 @@ final class PermissionCatalog
         // Operativa diaria (los que el staff trae por defecto).
         'operativa' => [
             'registrations.validate',
+            'puerta.profile',
             'orders.view',
             'orders.create_manual',
             'orders.cancel',

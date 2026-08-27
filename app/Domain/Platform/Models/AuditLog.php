@@ -43,6 +43,7 @@ class AuditLog extends Model
         'users.anonymize_blocked',          // RGPD: anonimización bloqueada
         'access.user_roles_update_blocked', // seguridad: cambio de roles bloqueado
         'registrations.validate_rate_limited', // abuso: rate-limit en la puerta
+        'puerta.lookup_rate_limited',       // abuso: rate-limit de la búsqueda TECLEADA que abre la ficha (subsistema A, §4.6·4)
     ];
 
     /**
@@ -190,6 +191,15 @@ class AuditLog extends Model
         'dependents.removed',               // payload: dependent_id + mode (deleted | unlinked)
         'dependents.assigned',              // payload: dependent_id + order_item_id + order_id (tanda 4; nunca el nombre)
         'dependents.unassigned',            // payload: dependent_id + order_item_id + order_id (tanda 5, el mostrador desmarca; user_id = el operador)
+
+        // ── Carné QR y puerta (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.2 A·10) — target = User; nunca el token ──
+        'cards.issued',                     // payload: card_id
+        'cards.rotated',                    // payload: card_id (el revocado) + reason (`rotated`)
+        'cards.revoked',                    // payload: count + reason (`revoked` | `anonymized`); lo escribe `User::revokeAllAccess()`/`anonymize()`
+        'puerta.card_scanned',              // SENSIBLE: payload_hash = sha256 del token; target = el titular si el carné existe
+        'puerta.profile_viewed',            // la DIVULGACIÓN de la ficha (§4.6·3), distinta de la búsqueda; payload: via (`card` | `lookup`)
+        'puerta.visit_registered',          // la visita acreditada (§8.3); payload: visited_on; user_id = el operador
+        'puerta.lookup_rate_limited',       // crítica: el limitador de la búsqueda tecleada; payload: limit
 
         // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────
         'legal.version_published',          // target = LegalDocumentVersion (la fila del 1.er idioma)

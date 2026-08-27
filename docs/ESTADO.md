@@ -484,8 +484,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3177 en verde** (18.680 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
-  por el carril A tras **P4** de la tanda 5 de menores (`#208`, spec §9.10): **+5 tests y +33 aserciones**
+- Suite **3190 en verde** (20.750 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
+  por el carril A tras **A1** del subsistema A (`#208`, `specs/identidad-qr-puerta.md` §9.3): **+13 tests**
+  — el carné (`CustomerCardTest`: forma y control con 500 emisiones, emisión única, rotación que mata
+  el viejo, `revokeAllAccess()`/`anonymize()` revocan —2/2 mutaciones muerden—, `plainToken()` con
+  `APP_KEY` rotada) y la visita (`GateVisitsTest`: idempotente por día, auditada solo al escribir).
+  `docs-check` pasa a **36 modelos · 85 migraciones**. Antes:
+- Suite **3177 en verde** (18.680 aserciones), tras **P4** de la tanda 5 de menores: **+5 tests y +33 aserciones**
   — el alta manual (`CreateManualOrderDependentsTest`: el selector por línea de entrada con motivos, la
   línea guarda solo ids asignables y rechaza más menores que unidades, `check()` ANTES de cobrar —un
   rechazo no crea ni cobra nada— y `assign()` DESPUÉS de `fulfill()`, con el fallo que deja el pedido en
@@ -576,7 +581,7 @@ que sirva staging de verdad.
   idempotencia · correlación · `anonymize()` · referencia · el `check()` del controlador · `event-data`).
   Los SEIS escenarios de `purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos ✓ (no
   ejercitan la asignación: control de no-regresión por el `CRITICAL_RE`). Sonda HTTP de 10 pasos ✓.
-  Chunk 234,43 → **234,70 KiB** (techo 235). `docs-check` **34 modelos · 82 migraciones**.
+  Chunk 234,43 → **234,70 KiB** (techo 235). `docs-check` **~34 modelos · ~82 migraciones** (entonces).
   ⚠️ **Dos trampas de test pagadas**: el tercer argumento de `assertDatabaseHas` es la CONEXIÓN, no un
   mensaje («Database connection [mensaje] not configured»); y `assertJsonPath` no resuelve claves con
   puntos (`items.0.dependent_ids.1`) — se lee `json('error.fields')` y se compara la clave literal. Antes:

@@ -30,7 +30,7 @@ class AccessRevocationTest extends TestCase
      *
      * @var list<string>
      */
-    private const CREDENTIAL_TABLES = ['sessions', 'session.table', 'personal_access_tokens'];
+    private const CREDENTIAL_TABLES = ['sessions', 'session.table', 'personal_access_tokens', 'customer_cards'];
 
     /**
      * Quién PUEDE nombrarlas, y por qué. La lista solo encoge.

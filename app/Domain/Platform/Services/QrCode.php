@@ -42,4 +42,28 @@ class QrCode
 
         return (new ChillerlanQRCode($options))->render($data);
     }
+
+    /**
+     * Fase 6 · subsistema A — el perfil del CARNÉ (`specs/identidad-qr-puerta.md` §4.3, §4.10): PNG
+     * binario para adjuntarlo a un correo (los clientes de correo no renderizan SVG inline), corrección
+     * MÁXIMA (H: un carné rayado, una pantalla sucia, poca luz) y **zona de silencio de 4 módulos** —
+     * `svg()` la pone a 0 porque el marco de la tarjeta hace de margen, y eso vale para un adorno que se
+     * escanea con el móvil, no para un lector de mostrador—. El dato es el token pelado (§3·C), que
+     * entra en modo alfanumérico: 20 caracteres caben en versión 2 (25×25), medido.
+     *
+     * Necesita GD (presente en el contenedor; staging sin inventariar, §4.10).
+     */
+    public static function png(string $data, int $scale = 8): string
+    {
+        $options = new QROptions([
+            'outputType' => QROutputInterface::GDIMAGE_PNG,
+            'outputBase64' => false,
+            'eccLevel' => EccLevel::H,
+            'quietzoneSize' => 4,
+            'scale' => $scale,
+            'imageTransparent' => false,
+        ]);
+
+        return (new ChillerlanQRCode($options))->render($data);
+    }
 }

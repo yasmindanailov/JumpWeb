@@ -1320,6 +1320,7 @@ return [
             'users_anonymize_blocked' => 'Anonimización bloqueada (RGPD)',
             'access_user_roles_update_blocked' => 'Cambio de roles bloqueado',
             'registrations_validate_rate_limited' => 'Límite de validaciones (puerta)',
+            'puerta_lookup_rate_limited' => 'Límite de búsquedas tecleadas (ficha de puerta)',
         ],
     ],
 
@@ -1353,6 +1354,7 @@ return [
 
         'permissions' => [
             'registrations_validate' => 'Validar registro/waiver en puerta',
+            'puerta_profile' => 'Ver la ficha de puerta del cliente y registrar su visita',
             'orders_view' => 'Ver pedidos',
             'orders_create_manual' => 'Crear pedido manual (back-office)',
             'orders_cancel' => 'Cancelar pedido',
