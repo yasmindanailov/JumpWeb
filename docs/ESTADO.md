@@ -29,8 +29,8 @@
 >   carné por el MISMO input + dos limitadores + caducidad EN SERVIDOR + «Registrar visita», el PNG en el
 >   correo y `GET|POST /me/card`. **5/5 mutaciones · headless 15/15 con capturas.** Queda el OJO del
 >   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check`: **36 modelos · 85
->   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 01:05 (hora de Madrid)** con todo empujado
->   (`77d2278`) y el gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
+>   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 00:40 (hora de Madrid; el contenedor va en UTC,
+>   2 h menos)** con todo empujado (`225c402`) y el gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
 >   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las
 >   mismas fechas relativas que sus vecinos; ninguno afirma una edad o un día concreto sin fijar el
 >   reloj). ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(1)** nada de agente
