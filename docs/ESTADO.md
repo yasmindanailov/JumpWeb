@@ -4,10 +4,12 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-27**.
 >
-> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main` (dos máquinas, un repo). El B cerró el 2026-08-27 a las
-> 07:30 con todo empujado y verde; el A hizo por la tarde la TANDA 1 de «menores a cargo» (`#191`) y
-> **la siguiente tanda espera CINCO decisiones del owner** (`specs/menores-a-cargo.md` §9.5; su fila,
-> abajo).** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
+> ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
+> las 07:30 con todo empujado y verde; el A hizo por la tarde la TANDA 1 de «menores a cargo» (`#191`)
+> y **su siguiente tanda espera CINCO decisiones del owner** (`specs/menores-a-cargo.md` §9.5); y
+> **nace el carril C, el TEMA**, que cerró y empujó su tanda 1 esa misma tarde (`#192`,
+> `specs/tema-por-instalacion.md`). Los tres tienen su fila abajo. Antes de planificar nada,
+> `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
@@ -127,7 +129,35 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> ▶ Protocolo de los dos carriles: **`CONVENCIONES §10`**.
+> · 🆕 **Agente C (el TEMA) → SESIÓN del 2026-08-27 por la tarde/noche: tanda 1 CERRADA y EMPUJADA
+>   (`#192`).** Hay un **TERCER carril** desde hoy, por encargo del owner: la capa de tema
+>   (`specs/tema-por-instalacion.md`). La tanda 1 —las dos superficies como ámbito, `--sheet`, los dos
+>   grises, los tintes, 21 radios y las fuentes por instalación— está hecha, verificada y en `main`.
+>   ▶ **Ficheros de este carril**: `public/css/*.css` · `resources/views/components/layout.blade.php`
+>   y `focused-layout.blade.php` · `resources/views/errors/maintenance.blade.php` ·
+>   `config/theme.php` · `app/Domain/Content/Services/ThemeFonts.php` ·
+>   `tests/Feature/Architecture/SurfaceScopeTest.php` · `tests/Feature/Theme/**` ·
+>   `docs/specs/tema-por-instalacion.md` · `docs/INSTALACION-CLIENTE.md`.
+>
+>   ❗❗ **TRES cosas que los otros carriles necesitan saber, porque tocan terreno compartido:**
+>   1. ⚠️ **`SidebarTokenBudgetTest::MAX_RAW_COLOURS` bajó de 5 a 3.** El cajón comparte `site.css`,
+>      así que si tu tanda mete un color crudo ahí, el trinquete muerde antes que antes. Los alfa
+>      salen con `color-mix(in srgb, var(--fg) X%, transparent)`, y el blanco de una tarjeta ya tiene
+>      token: **`--sheet`**.
+>   2. ⚠️ **`--line`/`--line-strong` ya NO son `rgba(20,19,15,α)`**: derivan de `--fg`. Si copias una
+>      línea de otro sitio, cópiala con `var()`, no con el literal — `RawColourIsNotATokenTest` lo caza.
+>   3. ⚠️ **Existe `[data-surface="ink"|"paper"]`** y re-escopa siete tokens. **Todavía no lo usa
+>      ninguna sección** (eso es la tanda 2), pero si tu componente pinta un color de superficie a
+>      mano en vez de por token, dejará de seguir a su sección el día que la haya.
+>
+>   ⚠️ **Y una que despista**: `mockup_playjumppark/` (el canvas del 2.º cliente) está **gitignorada y
+>   excluida del `rsync`** (`DECISIONES #1`), así que **en tu máquina no existe** aunque la doc la
+>   cite. La receta para regenerarla con el MCP `DesignSync` está en la **§1 de la spec del tema**.
+>   ▶ **Siguiente de este carril**: la **tanda 2, el armazón** (hero, menú, hero footer y pie). ⚠️ A
+>   diferencia de la 1, **esa SÍ mueve píxeles** —el producto adopta la ESTRUCTURA del mockup, neutra
+>   en valores (`[DECIDIDO owner]`)— y con ella entran la escala de sombra y los 56 radios huérfanos.
+>   Necesita el OJO del owner, no solo el gate.
+> ▶ Protocolo de los carriles: **`CONVENCIONES §10`**.
 > ⚠️⚠️ **El número de `DECISIONES.md` se elige mirando el REMOTO, y NO BASTA con mirarlo al empezar.**
 > Ha colisionado **NUEVE** veces en dos días: `#142` duplicado · `#148` (el agente A renumeró al
 > fusionar) · los del agente B, que fueron `#149`/`#150` → `#152`/`#153` → `#154` → **`#156`/`#157`**
