@@ -1354,8 +1354,9 @@ Enumeradas en `ActionFillTest::EXCEPTIONS`, y **la lista solo puede encoger**:
 - **Sonda de navegador (Playwright), 12/12** — es la única prueba de que las dos conductas existen:
   con color de acción el botón da `rgb(242,113,28)` **dentro y fuera** del menú de tinta y su hover
   `rgb(213,99,25)`; borrando `--action-brand` en vivo, **claro dentro** (`rgb(244,244,241)`) y
-  **tinta fuera** (`rgb(16,20,24)`). Guion en el scratchpad de la sesión; se copia a
-  `/home/sail/e2e/` dentro del contenedor.
+  **tinta fuera** (`rgb(16,20,24)`).
+  ▶ **El guion está escrito paso a paso en `VERIFICACION-E2E-CAJON.md` §5.duodecies**, con los
+  valores esperados y lo que NO cubre. Es el que tiene que recorrer el owner.
   ⚠️ **Dos trampas del armazón que la sonda pagó**: el CTA del nav **nace oculto** (`navCtaReveal`)
   y la barra **se retira al bajar** (`nav--hidden`) — hay que bajar para destaparlo y volver a
   subir un poco para que esté en pantalla, o Playwright espera a un elemento invisible.

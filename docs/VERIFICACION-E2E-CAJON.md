@@ -1229,3 +1229,60 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
   Lucas» (lo fija el test de la tarjeta; el guion no llega porque el pedido queda `pending`).
 - El menor que cumple 18 antes del día de la visita (la casilla dice «ya tiene 18 años» y el servidor
   responde `not_minor_on_date`): exige jugar con fechas; lo cubre `DependentAssignerTest`.
+
+---
+
+## §5.duodecies · EL RELLENO DE ACCIÓN (el quinto mecanismo del tema) — ✅ recorrido en headless el 2026-08-28 (12/12), pendiente del OJO del owner (`DECISIONES #209`)
+
+> Carril C (`specs/tema-por-instalacion.md` §15). Mismo andamio que §5.bis: Playwright **dentro del
+> contenedor** (`/home/sail/e2e/`), la web en `http://localhost` desde dentro. Guion:
+> `accion.mjs`, ~60 líneas, sin helper de BD ni cuenta de prueba — **no toca datos**, solo lee
+> colores computados y manipula el `<style id="jj-theme">` en memoria.
+>
+> ❗ **Este guion es la ÚNICA prueba de que el rol tiene sus DOS conductas.** Ninguna guarda estática
+> puede verlo: lo que se comprueba es el color que **resuelve el navegador** en cada ámbito.
+>
+> ⚠️ **Requisito**: la instalación tiene que tener `theme.action` puesto (en esta máquina,
+> `#F2711C`). Sin él el bloque A no aplica y solo se puede recorrer el B.
+>
+> ⚠️⚠️ **Dos trampas del ARMAZÓN que este guion pagó, y que costarán lo mismo al siguiente**: el CTA
+> del nav **nace oculto** (`navCtaReveal` lo destapa al bajar del hero) y la barra **se retira al
+> bajar** (`nav--hidden`). Hay que **bajar ~1,6 pantallas y volver a subir ~240 px**; si no,
+> Playwright espera a un elemento invisible o «fuera del viewport» y agota el tiempo. No es un fallo
+> del mecanismo: es la coreografía de `#194`/`#203`.
+
+### A1 · El conmutador llega al navegador
+1. Abre `/`. En `getComputedStyle(document.documentElement)`, `--action-brand` vale **`#F2711C`** y
+   `--on-action-brand` vale **`#14130F`** (tinta) — el color del rótulo lo elige el CONTRASTE, no el
+   gusto: sobre naranja gana tinta.
+
+### A2 · Con color de acción, el botón NO cambia con el fondo
+2. Baja 1,6 pantallas y sube 240 px (ver la trampa de arriba). El CTA de compra del armazón
+   (`.cta-med`) está visible y su `background-color` es **`rgb(242, 113, 28)`** con el rótulo en
+   `rgb(20, 19, 15)`.
+3. Pasa el cursor por encima: el fondo pasa a **`rgb(213, 99, 25)`** — el `#D56319` que declara el
+   sistema del cliente, **derivado ×0,88, no tecleado**.
+4. Abre el menú (☰). La barra gana `data-surface="ink"`.
+5. **El CTA sigue siendo `rgb(242, 113, 28)`**: idéntico sobre papel y sobre tinta, que es la regla
+   del cliente. ⚠️ Y mira al lado: el botón **fantasma** «Registrarse» SÍ se ha adaptado al fondo
+   oscuro — es la otra mitad de la regla («el secundario cambia según el fondo»).
+
+### B · Sin color de acción, el botón SÍ sigue a la superficie
+6. Con el menú abierto, borra el conmutador en vivo:
+   `s = document.getElementById('jj-theme'); s.textContent = s.textContent.replace(/--(on-)?action-brand[^;]*;/g, '')`.
+   Es exactamente lo que ve una instalación que no ha declarado color de acción.
+7. **Dentro del menú el botón se vuelve CLARO** (`rgb(244, 244, 241)`): el fallback resuelve contra
+   el `--fg` de la superficie de tinta.
+8. Cierra el menú (Esc). **Fuera vuelve a ser tinta oscura** (`rgb(16, 20, 24)`) — la conducta
+   histórica del producto, intacta.
+9. Cero errores de JavaScript en toda la pasada.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **Las otras 12 reglas de acción**: el guion solo conduce `.cta-med`. Los demás (`.btn`,
+  `.cta-prime` de la barra de móvil, `.price__cta`, `.bd-pack__cta`, `.zone-intro__cta`,
+  `.acct__btn--primary`, `.cartbar`, `.svc-cta--book`) leen los mismos tokens y lo fija
+  `ActionFillTest`, pero **verlos en su sitio es del ojo**.
+- **Que ningún relleno que NO es acción se haya vuelto naranja**: pegatinas, pestañas activas,
+  hovers de fantasma. Es lo que más se notaría y ninguna captura lo demuestra sola.
+- **La barra de compra de MÓVIL** (`.book-bar__cta`), cuyo estado pulsado usa `--action-hover`: en
+  táctil no hay hover y ese estado solo se ve con el dedo.
