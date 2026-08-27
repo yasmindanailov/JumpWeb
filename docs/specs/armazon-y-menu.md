@@ -507,10 +507,42 @@ el botón de registro —como hace el propio mockup por debajo de 620 px—, **d
 forma de darse de alta sin abrir el menú**. La cápsula de «acceder» del menú pasa a ser el
 único camino, y por tanto **deja de ser secundaria**: en móvil es la puerta de la cuenta.
 
-⬜ **Lo que sigue esperando al artboard del owner** (`[PENDIENTE: owner]`, tanda 2c·4): cómo se
-ve el menú a pantalla completa en un móvil sin ficha lateral y sin subtítulos —o sea, con **diez
-títulos grandes y nada más**—, dónde caen las cápsulas secundarias y qué tamaño toma el
-logotipo. **Sin él no se implementa la 2c·4**; las otras cuatro tandas no dependen de esto.
+✅ **`[DECIDIDO owner, 2026-08-27]` — y esto es la mitad de la 2c·4: la barra de abajo pasa a ser
+el CTA DOBLE del mockup, no el sencillo de hoy.**
+
+Sus palabras: *«el cta que ves en el mockup es un cta doble, al darle clic al icono de al lado se
+transforma en otro cta, se despliega el otro cta, ese es el cta que tendremos en el móvil debajo,
+no el actual»*.
+
+Medido en `Landing PJP Modos`, que es de donde sale la mecánica:
+
+| | Cómo se comporta |
+|---|---|
+| Estado | Uno de los dos está **expandido** (icono + título + subtítulo) y el otro **colapsado a solo icono**, 56 px |
+| Anchos del expandido | **224 px** en escritorio · 182 px por debajo de 1100 · **138 px** en teléfono |
+| Pulsar el **colapsado** | lo expande **y colapsa al otro**. No actúa |
+| Pulsar el **expandido** | **actúa** — abre el cajón en su zona |
+| Al cargar | *Reservar* expandido → **comprar sigue siendo UN solo gesto**; registrarse cuesta dos |
+| Guiño | mientras nadie lo ha tocado, el colapsado hace un vaivén y un aro que se expande, ambos con parada |
+| Transición | el ancho, con curva; los textos entran con opacidad y un desplazamiento corto |
+
+⚠️ **Y esto reabre una decisión que la 2c·2 dio por cerrada**: `[DECIDIDO owner]` fue «en móvil
+manda la barra de abajo; arriba solo logotipo y hamburguesa». El CTA doble **lleva dentro el
+registro**, así que en móvil la puerta de la cuenta **vuelve a estar abajo** y ya no depende solo
+de la cápsula «Acceder» del menú. Es mejor de lo que había, y hay que escribirlo porque §4.9 decía
+lo contrario.
+
+⚠️ **Lo que el CTA doble cuesta, y hay que decirlo antes de construirlo**: un botón que **cambia
+de significado al pulsarlo** es la clase de control que se pulsa por error. El mockup lo compensa
+con el guiño y con que el estado inicial sea el de comprar. En el producto habrá además que
+resolverlo en accesibilidad: el nombre accesible de cada mitad tiene que decir **qué hace ahora**
+—«Reservar entradas» frente a «Mostrar registro»—, o un lector de pantalla anunciará dos botones
+que dicen lo mismo y hacen cosas distintas.
+
+⬜ **Lo que SIGUE esperando al artboard** (`[PENDIENTE: owner]`): cómo se ve el **menú a pantalla
+completa** en un móvil sin ficha lateral y sin subtítulos —o sea, con **diez títulos grandes y
+nada más**—, dónde caen las cápsulas secundarias y qué tamaño toma el logotipo. **El CTA doble ya
+no está bloqueado; el menú de móvil, sí.**
 
 ### 4.10 Lo que NO se toca
 
