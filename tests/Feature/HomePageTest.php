@@ -255,30 +255,113 @@ class HomePageTest extends TestCase
         $response->assertDontSee('cta-med__s', false); // sin subtítulo
     }
 
-    public function test_hero_uses_cta_prime_structure_with_subtitle(): void
+    /**
+     * **El HERO no lleva CTA — y el acceso a comprar no se pierde.**
+     *
+     * `[DECIDIDO owner, 2026-08-27]` (`specs/tema-por-instalacion.md` §12): la primera pantalla
+     * es solo eslogan, titular, estado y vídeo. El botón de comprar aparece DESPUÉS, al bajar.
+     *
+     * ⚠️ Aquí vivía `test_hero_uses_cta_prime_structure_with_subtitle`, que aseveraba lo
+     * contrario. **No se borró: se re-apuntó** (`CONVENCIONES §3.quater`). Su SUJETO —el CTA del
+     * hero— se va, pero la regla que protegía —«el visitante ve un botón de comprar con el precio
+     * anclado»— sigue viva, y ahora la cumplen el CTA del nav y la barra flotante de móvil. Esa
+     * mitad es el test de abajo.
+     */
+    public function test_the_hero_carries_no_cta_and_buying_is_still_reachable(): void
     {
-        // Hero CTA "prime" (peso 5/5): variante `--onvideo` para destacar sobre
-        // el vídeo de fondo. Estructura icono + body (t + s) + arrow. Subtítulo con
-        // el precio "desde X" cuando hay catálogo vendible (copy `hero.cta_buy_from`;
-        // se retiró "sin colas" — claridad clienta 2026-06-13).
-        $expected = AppServiceProvider::formatPriceLabel($this->cheapestEntryCents());
-
         $response = $this->get('/')->assertOk();
+        $html = $response->getContent();
 
-        $response->assertSee('cta-prime', false);
-        $response->assertSee('cta-prime--onvideo', false);
-        $response->assertSee('cta-prime__t', false);
-        $response->assertSee('cta-prime__s', false);
-        $response->assertSee('cta-prime__arrow', false);
-        $response->assertSeeText("desde {$expected}");
+        // El hero, acotado: del `id="top"` al cierre de su `</header>`.
+        $start = strpos($html, 'id="top"');
+        $this->assertNotFalse($start, 'no se encuentra el hero en la home');
+        $hero = substr($html, $start, strpos($html, '</header>', $start) - $start);
+
+        // Guarda de la guarda: si el recorte fuera vacío o mínimo, las tres aserciones de abajo
+        // pasarían sin mirar nada.
+        $this->assertStringContainsString('hero__stage', $hero, 'el recorte del hero no trae el escenario');
+        $this->assertStringContainsString('hero__title', $hero, 'el recorte del hero no trae el titular');
+
+        $this->assertStringNotContainsString(
+            'cta-prime', $hero,
+            'el hero ha vuelto a llevar un CTA. La primera pantalla es eslogan, titular, estado y '.
+            'vídeo; comprar se ofrece DESPUÉS (spec §12).',
+        );
+
+        // …y lo que SÍ tiene que traer, que es lo que ocupó el sitio del CTA.
+        $this->assertStringContainsString('hero__kicker', $hero, 'falta el eslogan sobre el titular');
+
+        // ⚠️ El chip de estado NO se asevera aquí: es data-driven y **no se pinta sin horario**
+        // configurado (`HeroStatus`), que es justo el caso del entorno de test. Aseverarlo haría
+        // que este caso fallara por un motivo que no tiene nada que ver con el CTA. Su presencia
+        // la cubren los casos de `HeroStatus`, que sí siembran horario.
+        $this->assertStringContainsString('hero__sentinel', $hero, 'falta el sentinel de los CTAs de compra');
+
+        // El acceso a comprar sigue en la página, FUERA del hero: el CTA del nav y la barra móvil.
+        $this->assertStringContainsString('cta-med', $html, 'el CTA de compra del nav ha desaparecido');
+        $this->assertStringContainsString('book-bar__cta', $html, 'la barra de compra de móvil ha desaparecido');
     }
 
-    public function test_hero_cta_falls_back_to_no_price_subtitle_when_catalog_empty(): void
+    /**
+     * **El botón de comprar lleva el precio anclado — donde quiera que viva.**
+     *
+     * Es la mitad SUPERVIVIENTE del test del CTA del hero. El sujeto cambió (ahora es la barra
+     * flotante de móvil, que conserva la misma estructura `cta-prime`); la regla es la misma:
+     * icono + cuerpo (título + subtítulo) + flecha, con «desde X €» cuando hay catálogo vendible.
+     */
+    public function test_the_buy_cta_carries_the_price_anchor(): void
     {
-        // Sin entradas vendibles (estado real hoy): el hero SIGUE mostrando subtítulo
-        // (la clase `cta-prime__s` permanece) con el fallback "Cumpleaños online" (copy
-        // `hero.cta_buy_no_price`) — honesto: lo único reservable online hoy. El botón nunca
-        // queda mudo y el CTA "Reservas aquí" se mantiene general (claridad clienta 2026-06-13).
+        $expected = AppServiceProvider::formatPriceLabel($this->cheapestEntryCents());
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // ⚠️ **Acotado a la barra, y no es un refinamiento: sin acotar el test NO fijaba nada.**
+        // Medido por mutación: `assertSee('cta-prime')` casa con `cta-prime__ico`, así que
+        // retirar la clase del botón lo dejaba verde; y `assertSeeText('desde X')` lo satisfacía
+        // el CTA del NAV, que dice el mismo texto con otra clave de idioma. Las dos mutaciones
+        // pasaban. Es literalmente el aviso de `CONVENCIONES §3.quater`: «si un dato viaja al
+        // cliente y su único test conduce la superficie vieja, el contrato NO lo está fijando».
+        $bar = $this->slice($html, 'book-bar__cta');
+
+        $this->assertStringContainsString('cta-prime ', $bar, 'el botón perdió la estructura `cta-prime`');
+        $this->assertStringContainsString('cta-prime__t', $bar, 'falta el título del botón');
+        $this->assertStringContainsString('cta-prime__s', $bar, 'falta el subtítulo del botón');
+        $this->assertStringContainsString('cta-prime__arrow', $bar, 'falta la flecha del botón');
+        $this->assertStringContainsString(
+            "desde {$expected}", $bar,
+            "el botón de compra ya no ancla el precio («desde {$expected}»). Ojo: el CTA del nav ".
+            'dice el mismo texto, así que sin acotar a la barra esto pasaría igual.',
+        );
+    }
+
+    /**
+     * Recorta el elemento `<a>`/`<button>` que contiene `$needle`, de su `<` de apertura al `</$tag>`
+     * que lo cierra. Sirve para aseverar DENTRO de un componente y no en toda la página.
+     *
+     * ⚠️ El corte va al cierre REAL, no a un número de caracteres. La primera versión usaba una
+     * ventana fija de 900 y el botón mide 1.032 —el SVG del icono se lleva la mayor parte—, así que
+     * la flecha del final quedaba fuera y el caso fallaba por el recorte, no por el marcado.
+     */
+    private function slice(string $html, string $needle, string $tag = 'a'): string
+    {
+        $at = strpos($html, $needle);
+        $this->assertNotFalse($at, "no se encuentra `{$needle}` en la página");
+
+        $open = strrpos(substr($html, 0, $at), '<');
+        $open = $open === false ? $at : $open;
+        $close = strpos($html, "</{$tag}>", $at);
+        $this->assertNotFalse($close, "no se encuentra el cierre `</{$tag}>` de `{$needle}`");
+
+        return substr($html, $open, $close - $open);
+    }
+
+    public function test_buy_cta_falls_back_to_no_price_subtitle_when_catalog_empty(): void
+    {
+        // Sin entradas vendibles: el botón SIGUE mostrando subtítulo (la clase `cta-prime__s`
+        // permanece) con el fallback "Cumpleaños online" (copy `hero.cta_buy_no_price`) —
+        // honesto: lo único reservable online hoy. El botón nunca queda mudo.
+        // ⚠️ Se re-apuntó del hero a la barra de móvil (`#195`): el sujeto cambió de sitio, la
+        // regla no. La clave de idioma sigue llamándose `hero.*` por compatibilidad.
         TicketType::query()->update(['is_sellable' => false]);
         Cache::flush();
 

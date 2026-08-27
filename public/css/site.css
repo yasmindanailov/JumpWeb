@@ -1690,20 +1690,91 @@ body.no-scroll { overflow: hidden; }
 .ride-card__img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; }
 
 /* Header/hero a TODO EL ANCHO (full-bleed). Padding superior para que NO quede bajo el nav fijo. */
-.hero.hero--full { width: 100%; max-width: none; margin: 0; padding: clamp(76px, 9vh, 104px) 0 0; }
-.hero--full .hero__stage { border-radius: 0; aspect-ratio: 21 / 9; max-height: calc(100vh - 96px); }
-/* Texto del hero centrado verticalmente (título + CTA como grupo centrado). */
-.hero--full .hero__stage-content { justify-content: center; }
+/* ════════════════════════════════════════════════════════════════════════════════════
+   EL HERO Y SU COREOGRAFÍA (2026-08-27, `#195` · spec §12)
+   ------------------------------------------------------------------------------------
+   El hero tiene DOS estados y el scroll interpola entre ellos:
+
+     `--hero-p: 0` → pantalla completa, con el margen mínimo. Es el estado de partida y
+                     es COMPLETO por sí solo: sin JS o con movimiento reducido se queda
+                     aquí y la página funciona.
+     `--hero-p: 1` → tarjeta centrada, con el nav ya despejado encima.
+
+   ⚠️ **El JS solo publica `--hero-p`; TODO el diseño lo decide este CSS.** Es lo que
+   permite que un paquete de instalación cambie los dos estados —el margen, el alto, el
+   ancho, cuánto dura el recorrido— sin tocar una línea de JavaScript. Si esto viviera en
+   el JS, sería la única parte del tema que un cliente no podría cambiar.
+
+   ⚠️ Y el recorrido (`--hero-runway`) es ALTURA REAL del `<header>`: son píxeles de
+   scroll que existen. Con movimiento reducido se pone a 0 y el hueco desaparece — si no,
+   quedaría una pantalla vacía que nadie sabría por qué está ahí.
+   ════════════════════════════════════════════════════════════════════════════════════ */
+.hero.hero--full {
+    --hero-runway: 420px;                    /* cuánto scroll dura la transición */
+    --hero-gap: 10px;                        /* margen del hero al empezar */
+    --hero-gap-end: clamp(16px, 2.2vw, 32px);/* margen al terminar */
+    --hero-top-end: clamp(76px, 9vh, 104px); /* hueco para el nav al terminar = el de antes */
+    /* ⚠️ `svh` DESPUÉS de `vh`, no en lugar de: en móvil `100vh` incluye la barra del navegador
+       y el hero se sale por abajo hasta que el usuario hace scroll. `svh` es la altura estable.
+       Quien no entienda la unidad se queda con la primera línea, que sigue siendo válida. */
+    --hero-h-ini: calc(100vh - var(--hero-gap) * 2);
+    --hero-h-ini: calc(100svh - var(--hero-gap) * 2);
+    --hero-h-end: min(78vh, 660px);
+    --hero-w-end: 1240px;
+    --hero-p: 0;
+
+    width: 100%; max-width: none; margin: 0; padding: 0;
+    position: relative;
+    height: calc(100vh + var(--hero-runway));
+    height: calc(100svh + var(--hero-runway));
+}
+
+/* El escenario se queda pegado arriba mientras dura el recorrido. El margen y el hueco del
+   nav los pone ESTE envoltorio; la caja de dentro solo cambia de alto y de ancho. */
+.hero--full .hero__sticky {
+    position: sticky; top: 0;
+    display: flex; justify-content: center;
+    padding-top: calc(var(--hero-gap) + (var(--hero-top-end) - var(--hero-gap)) * var(--hero-p));
+    padding-inline: calc(var(--hero-gap) + (var(--hero-gap-end) - var(--hero-gap)) * var(--hero-p));
+    padding-bottom: var(--hero-gap);
+}
+
+/* ⚠️ El `border-radius: 0` que había aquí se RETIRA: el hero deja de ir a sangre y pasa a ser
+   una tarjeta, así que hereda `var(--r-lg)` de `.hero__stage`. Es el único canto del producto
+   que estaba anulado a mano, y por eso salía en la lista de excepciones de `ShapeScaleTest`. */
+.hero--full .hero__stage {
+    aspect-ratio: auto;
+    width: 100%;
+    height: calc(var(--hero-h-ini) + (var(--hero-h-end) - var(--hero-h-ini)) * var(--hero-p));
+    max-width: calc(100vw + (var(--hero-w-end) - 100vw) * var(--hero-p));
+    max-height: none;
+}
+
+/* Movimiento reducido: el recorrido desaparece —si no, quedaría una pantalla de scroll vacío—
+   y el hero se queda en su estado de partida. `heroChoreo` tampoco se monta (app.js), así que
+   `--hero-p` nunca se escribe. Las dos mitades dicen lo mismo a propósito: si una falla, la
+   otra sostiene el estado válido. */
+@media (prefers-reduced-motion: reduce) {
+    .hero.hero--full { --hero-runway: 0px; --hero-p: 0; }
+}
+/* ⚠️ El contenido del hero va ABAJO, no centrado. Estaba centrado para agrupar «título + CTA»
+   como una unidad; al retirarse el CTA (`#195`) ese motivo desaparece, y la estructura del
+   mockup apoya el bloque —eslogan, titular y estado— en el canto inferior. */
+.hero--full .hero__stage-content { justify-content: flex-end; }
 /* Mantén el placeholder como FALLBACK detrás del vídeo: si el vídeo no carga, se ve el fondo. */
 .hero--full .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: block; }
 /* Vídeo de fondo del hero (placeholder): cubre el escenario, bajo el velo y el texto. */
 .hero__video { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; }
+/* ⚠️ En móvil solo cambian los VALORES, no las reglas — y eso es la prueba de que el diseño
+   está en el sitio correcto. Antes aquí había un `height: 80vh` y un `padding-top: 69px` que
+   sobreescribían la estructura; ahora los dos estados se ajustan moviendo cuatro tokens. */
 @media (max-width: 768px) {
-    .hero--full .hero__stage { aspect-ratio: auto; height: 80vh; }
-    /* En móvil pegamos el hero al nav fijo: reducimos la holgura superior del clamp de arriba para que
-       el vídeo arranque justo bajo el header (sin gap). Scoped a `.hero.hero--full` → misma especificidad
-       que la regla de :1400 pero declarada DESPUÉS, así gana por orden de fuente (sin `!important`). */
-    .hero.hero--full { padding-top: 69px; }
+    .hero.hero--full {
+        --hero-runway: 300px;
+        --hero-gap-end: 12px;
+        --hero-top-end: 69px;                /* el hueco del nav en móvil, el de siempre */
+        --hero-h-end: min(72vh, 520px);
+    }
 }
 
 /* ====================================================================
@@ -2416,30 +2487,21 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     .book-bar { display: block; }
 }
 
-
 /* ====================================================================
-   Jerarquía de CTAs — Ronda 4: hero CTA anclado a la esquina (2026-05-27).
+   El TITULAR del hero (2026-08-27, `#195`).
    --------------------------------------------------------------------
-   Problema raíz que las rondas 2/3 no resolvían: el `.hero__stage-bottom`
-   estaba en el flex column del `.hero__stage-content`, así que su posición
-   vertical dependía de `justify-content: space-between` + `padding-bottom`
-   + altura del título. Resultado: el CTA "flotaba" arriba con títulos
-   pequeños o se desplazaba con cambios de viewport — no quedaba "pegado"
-   al borde del hero de forma robusta.
+   ⚠️ Aquí vivía la explicación de cómo anclar el CTA del hero a la esquina
+   («Jerarquía de CTAs — Ronda 4», 2026-05-27). Se retira con su sujeto:
+   **el hero ya no lleva CTA** (`[DECIDIDO owner]`, spec §12) y el elemento
+   que describía, `.hero__stage-bottom`, ya no existe. Un comentario que
+   explica una pieza retirada es peor que ninguno: manda a buscar algo que
+   no está.
 
-   Fix: lo sacamos del flex con `position: absolute`. Ahora:
-   • Su posición ya no depende del título ni del flex.
-   • `bottom: 0; right: 0` lo ancla al borde del PADDING BOX del contenedor.
-   • El padding del contenedor define el "respiro" entre el CTA y el borde
-     real del hero (responsive con clamp).
-   • Desktop: esquina inferior derecha. Móvil: centrado horizontal abajo
-     (`left: 50%; transform: translateX(-50%)`).
-   • El título queda como único hijo flex — se posiciona arriba con su
-     padding-top (`justify-content: space-between` con un solo hijo se
-     resuelve como `flex-start`, comportamiento deseado).
-
-   La especificidad de doble clase (`.hero__title.hero__title--onvideo`)
-   iguala landing.css; site.css carga después → override gana sin !important.
+   Lo que SÍ sigue vigente de aquel bloque, y por eso se conserva:
+   la especificidad de doble clase (`.hero__title.hero__title--onvideo`)
+   iguala la de landing.css; site.css carga después → el override gana sin
+   `!important`. Si alguien simplifica el selector, el titular vuelve al
+   tamaño de landing.css sin que falle nada.
    ==================================================================== */
 .hero__title.hero__title--onvideo {
     font-size: clamp(44px, 8.5vw, 128px);
@@ -2468,47 +2530,14 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     padding-block: clamp(20px, 2.5vw, 36px);
     padding-inline: var(--wrap-gutter);
     justify-content: flex-start;
-}
-.hero__stage-bottom {
-    position: absolute;
-    /* `right: var(--wrap-gutter)` ancla el CTA al MISMO borde lateral que el
-       ghost "Registrarse" del nav (que está a `wrap-gutter` del borde derecho
-       gracias al `padding-inline: var(--wrap-gutter)` del `.nav` y al
-       `margin-left: -14px` que cancela el `gap: 14px` del `.nav__cta` cuando
-       el filled está colapsado). Tres piezas, una sola variable. */
-    bottom: clamp(20px, 4.5vw, 48px);
-    right: var(--wrap-gutter);
-    margin: 0;
-}
-@media (max-width: 720px) {
+}@media (max-width: 720px) {
     .hero__title.hero__title--onvideo {
         font-size: clamp(63px, 13vw, 96px);
         text-align: center;
     }
     .hero__stage-content {
         padding-block: clamp(16px, 4vw, 28px);
-    }
-    /* CTA móvil: ocupa el ancho del wrap (mismos límites laterales que el resto
-       de la web) con `left/right: var(--wrap-gutter)` simétricos. El `.cta-prime`
-       interior se estira con `width: 100%` y el body con `flex: 1` empuja el
-       arrow a la derecha (mismo patrón del `.cta-hero-mob` del sticky). */
-    .hero__stage-bottom {
-        bottom: clamp(18px, 4vw, 28px);
-        /* Mismo inset lateral que el CTA flotante (`--float-cta-inset`) → hero CTA y float
-           sticky tienen EXACTAMENTE el mismo ancho (el float entra sobre el hueco del hero
-           sin salto de anchura). Antes usaba `--wrap-gutter` (40px en móvil), más estrecho. */
-        left: var(--float-cta-inset);
-        right: var(--float-cta-inset);
-        transform: none;
-    }
-    .hero__stage-bottom .cta-prime {
-        width: 100%;
-    }
-    .hero__stage-bottom .cta-prime__body {
-        flex: 1;
-    }
-}
-
+    }}
 
 /* ====================================================================
    Complementos por producto en la landing (#194)

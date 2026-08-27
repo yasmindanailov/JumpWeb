@@ -35,6 +35,9 @@ return [
     ],
     'hero' => [
         'today' => "Murcia · Ouvert aujourd'hui",
+        // Eslogan sobre el titular del hero. CORTO a propósito: el sistema del 2.º cliente
+        // limita el rotulador a seis palabras («el eslogan, nada más»), y girado no se lee más.
+        'kicker' => 'active ton mode amusement',
         'l1' => 'DU FUN', 'l2' => 'EN SAUTANT',
         'tag' => 'Parc de sauts, trampolines, tyrolienne et bien plus en plein Murcia. Fait pour rire.',
         'cta' => 'Réserver ici', 'cta2' => 'Voir les attractions', 'reel' => 'Vidéo du parc',

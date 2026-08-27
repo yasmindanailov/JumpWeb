@@ -20,7 +20,13 @@
     <main id="main">
 
     {{-- ===================== HERO ===================== --}}
-    <header id="top" class="hero hero--full">
+    {{-- ⚠️ `heroChoreo` (`resources/js/app.js`) publica UNA custom property, `--hero-p`, con el
+         progreso del scroll de 0 a 1. **No decide nada de diseño**: los dos estados del hero —el
+         de pantalla completa y el de tarjeta— los define el CSS con `calc()`, así que un paquete
+         de instalación puede cambiarlos sin tocar una línea de JavaScript.
+         ▶ Sin JS, o con `prefers-reduced-motion`, `--hero-p` se queda en 0 y el hero se ve en su
+         estado inicial. Es un estado válido y completo, no una degradación rota. --}}
+    <header id="top" class="hero hero--full" x-data="heroChoreo">
         {{-- ⚠️⚠️ `data-surface="ink"` NO es decorativo: es el ÚNICO sitio del producto donde se
              declara una superficie, y es lo que la tanda 1 de `specs/tema-por-instalacion.md`
              construyó para que existiera. Dentro de este envoltorio los siete tokens de
@@ -29,6 +35,10 @@
              Por eso `--onvideo` ha dejado de pintar colores: los pinta el ámbito.
              ▶ Lo que sigue en `--onvideo` NO es superficie: es el TAMAÑO del titular y las
              sombras sobre oscuro. `[data-surface]` nunca iba a cubrir eso. --}}
+        {{-- El escenario PEGAJOSO: se queda arriba mientras dura el recorrido, y dentro la
+             caja del hero encoge. El margen y el hueco para el nav los pone este envoltorio;
+             la caja solo cambia de alto y de ancho. --}}
+        <div class="hero__sticky">
         <div class="hero__stage" data-surface="ink" data-has-video="true">
             <div class="hero__stage-placeholder" aria-hidden="true"></div>
             {{-- Vídeo de fondo del hero (oficial). Servido como MP4 H.264 (universal: Chrome/Firefox/
@@ -40,7 +50,21 @@
             </video>
             <div class="hero__stage-scrim" aria-hidden="true"></div>
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
+            {{-- ⚠️⚠️ **EL HERO NO LLEVA CTA, y es una decisión de PRODUCTO, no un olvido**
+                 (`[DECIDIDO owner, 2026-08-27]`, `specs/tema-por-instalacion.md` §12). En el
+                 mockup la primera pantalla es solo eslogan, titular, estado y vídeo: el botón de
+                 comprar aparece DESPUÉS, al empezar a bajar, y vive en el mobiliario fijo de la
+                 cabecera. Aquí había un `.cta-prime` que se retiró con esa decisión.
+                 ▶ El acceso a comprar NO se pierde: lo dan el CTA del nav —que aparece al pasar
+                 el hero (`navCtaReveal`)— y la barra flotante en móvil (`mobileBookBar`). Los dos
+                 siguen leyendo `$ctaMinPriceLabel`, así que el anclaje «desde X €» no se va. --}}
             <div class="hero__stage-content">
+                {{-- Eslogan sobre el titular. En el sistema del segundo cliente va en la fuente
+                     de rotulador y ligeramente girado; aquí sale de `--font-accent`, que por
+                     defecto vale lo mismo que `--font-display` y que un paquete de instalación
+                     redefine junto a las demás familias (`INSTALACION-CLIENTE.md` §4·b.bis). --}}
+                <span class="hero__kicker">{{ __('landing.hero.kicker') }}</span>
+
                 <h1 class="hero__title hero__title--onvideo">
                     <span class="word">{{ __('landing.hero.l1') }}</span>
                     <span class="word"><span class="blink">{{ __('landing.hero.l2') }}</span></span>
@@ -54,36 +78,28 @@
                        class="hero__chip hero__chip--onvideo"
                        title="{{ __('landing.hero.status_link_hint') }}"
                        aria-label="{{ $heroStatus['day'] }} · {{ $heroStatus['status'] }}. {{ __('landing.hero.status_link_hint') }}">
+                        <span class="hero__chip-dot" aria-hidden="true"></span>
                         <span class="hero__chip-text">{{ $heroStatus['day'] }} · {{ $heroStatus['status'] }}</span>
                         <x-icons.pin class="hero__chip-pin" />
                     </a>
                 @endif
-
-                <div class="hero__stage-bottom">
-                    {{-- CTA "prime" del hero (mockup `design_mockup/jerarquia-ctas.html`,
-                         peso 5/5). Variante `--onvideo` invierte el fondo a cream sobre el
-                         vídeo oscuro para máxima legibilidad. El anclaje "desde X € · sin
-                         colas" es data-driven: si el catálogo aún no tiene precios, cae al
-                         fallback `cta_buy_no_price` (solo "sin colas"). El handler
-                         `$store.purchase.open()` se conserva exacto (#66). --}}
-                    <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()"
-                       class="cta-prime cta-prime--onvideo">
-                        <span class="cta-prime__ico"><x-icons.ic-e2 :width="54" :height="35" /></span>
-                        <span class="cta-prime__body">
-                            <span class="cta-prime__t">{{ __('landing.hero.cta_buy') }}</span>
-                            <span class="cta-prime__s">
-                                @if (! empty($ctaMinPriceLabel))
-                                    {{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}
-                                @else
-                                    {{ __('landing.hero.cta_buy_no_price') }}
-                                @endif
-                            </span>
-                        </span>
-                        <span class="cta-prime__arrow" aria-hidden="true">→</span>
-                    </a>
-                </div>
             </div>
         </div>
+        </div>
+
+        {{-- ⚠️⚠️ **EL SENTINEL, y no es decorativo.** Dos comportamientos de COMPRA lo observan
+             con `IntersectionObserver` (`resources/js/app.js`): el CTA «Comprar entradas» del nav
+             en escritorio (`navCtaReveal`) y la barra flotante de reserva en móvil
+             (`mobileBookBar`). Los dos están escritos para que el hero y el botón de comprar
+             nunca sean co-visibles.
+             ▶ Hasta hoy la señal era `.hero__stage-bottom`, o sea **el propio CTA del hero**.
+             Funcionaba por casualidad: el sitio donde acababa el botón coincidía con el sitio
+             donde queríamos que aparecieran los otros. Al retirar ese CTA la señal desaparecía,
+             y con la coreografía el stage va `sticky` —dentro de un sticky nada abandona el
+             viewport—, así que el momento de ofrecer la compra habría dejado de ser el que
+             alguien diseñó. Aquí es un elemento PROPIO, vacío, fuera del `sticky` y al final del
+             hero: hace UN trabajo y se puede mover sin tocar ningún botón. `DEUDA.md` (`#194`). --}}
+        <div class="hero__sentinel" aria-hidden="true"></div>
     </header>
 
     <x-site.marquee />

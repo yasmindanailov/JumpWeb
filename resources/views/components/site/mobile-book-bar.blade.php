@@ -2,7 +2,7 @@
      En móvil el CTA primario SALE del header (ver `.nav-cta-med { display:none }` en site.css, Capa D) y
      reaparece como botón FLOTANTE inferior que entra deslizando desde abajo:
        • Landing (única con hero): aparece cuando el CTA «prime» del hero abandona el viewport (mismo
-         sentinel `.hero__stage-bottom` que usa el reveal del header en desktop) → hero y barra NUNCA
+         sentinel `.hero__sentinel` que usa el reveal del header en desktop) → hero y barra NUNCA
          co-visibles.
        • Resto de páginas (sin hero): aparece al hacer scroll, antes que en la landing (~1/3 de pantalla).
        • En ambos casos se oculta al llegar al pie real (`.foot`), con el sidecart abierto o con el

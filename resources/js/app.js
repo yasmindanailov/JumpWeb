@@ -647,23 +647,80 @@ document.addEventListener('alpine:init', () => {
 
     // "Reveal on scroll" del CTA filled del nav en DESKTOP (espejo del sticky móvil).
     // En páginas con hero (`body[data-has-hero]`), el `.nav-cta-med` empieza oculto
-    // por CSS y aparece cuando el `.hero__stage-bottom` (que contiene el CTA "prime")
+    // por CSS y aparece cuando el `.hero__sentinel` (el final del hero)
     // sale del viewport. En páginas sin marker no se observa nada y el CSS deja el
     // botón visible por defecto.
     //
     // Robustez:
     //  • Sin marker → cortocircuita en `init()` (otras páginas conservan el CTA visible).
-    //  • Sin `.hero__stage-bottom` aún en DOM → cortocircuita (el CSS lo deja oculto;
+    //  • Sin `.hero__sentinel` aún en DOM → cortocircuita (el CSS lo deja oculto;
     //    estado seguro: aunque pase, el CTA "prime" del hero sigue al cargar).
     //  • Sin `IntersectionObserver` (navegadores muy antiguos) → cortocircuita, el CTA
     //    queda oculto pero el CTA del hero está visible al cargar — no se pierde el
     //    acceso primario.
     //  • `destroy()` desconecta el observer (relevante si la página usa wire:navigate).
+    // ════════════════════════════════════════════════════════════════════════════════
+    // COREOGRAFÍA DEL HERO (`#195` · `specs/tema-por-instalacion.md` §12)
+    // --------------------------------------------------------------------------------
+    // El hero empieza a pantalla completa y encoge a una tarjeta centrada mientras se baja.
+    //
+    // ⚠️ Este componente **NO decide nada de diseño**: publica UNA custom property,
+    //    `--hero-p`, con el progreso de 0 a 1. Los dos estados —margen, alto, ancho, hueco
+    //    del nav— los define el CSS con `calc()`. Es lo que permite que un paquete de
+    //    instalación cambie el efecto sin tocar JavaScript; si los números vivieran aquí,
+    //    serían la única parte del tema que un cliente no podría cambiar.
+    //
+    // Robustez:
+    //  • `prefers-reduced-motion` → NO se monta. `--hero-p` se queda en 0 y el CSS deja el
+    //    hero en su estado de partida, que es completo por sí solo (y pone el recorrido a 0
+    //    para que no quede una pantalla de scroll vacío).
+    //  • Sin JS → lo mismo, sin ninguna rama que mantener.
+    //  • El scroll va con `{ passive: true }` y coalesce en un `requestAnimationFrame`: como
+    //    mucho una escritura por frame, aunque el navegador dispare veinte eventos.
+    //  • No escribe si el valor redondeado no cambia — evita invalidar el estilo en cada
+    //    frame cuando ya se ha llegado al final del recorrido, que es donde más tiempo se
+    //    pasa el visitante.
+    //  • `destroy()` suelta el listener y cancela el frame pendiente.
+    window.Alpine.data('heroChoreo', () => ({
+        _raf: null,
+        _last: null,
+        _onScroll: null,
+        init() {
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+            this._onScroll = () => {
+                if (this._raf !== null) return;
+                this._raf = requestAnimationFrame(() => { this._raf = null; this.apply(); });
+            };
+            window.addEventListener('scroll', this._onScroll, { passive: true });
+            window.addEventListener('resize', this._onScroll, { passive: true });
+            this.apply();
+        },
+        apply() {
+            // El recorrido lo declara el CSS (`--hero-runway`), no este fichero: así el
+            // cliente puede alargarlo o acortarlo desde su paquete.
+            const runway = parseFloat(getComputedStyle(this.$el).getPropertyValue('--hero-runway')) || 0;
+            if (runway <= 0) return;                       // movimiento reducido, o sin recorrido
+            const raw = Math.min(1, Math.max(0, window.scrollY / runway));
+            // Curva de salida cúbica: rápida al principio, se posa al final. Es la del mockup.
+            const p = Math.round((1 - Math.pow(1 - raw, 3)) * 1000) / 1000;
+            if (p === this._last) return;
+            this._last = p;
+            this.$el.style.setProperty('--hero-p', String(p));
+        },
+        destroy() {
+            if (this._onScroll) {
+                window.removeEventListener('scroll', this._onScroll);
+                window.removeEventListener('resize', this._onScroll);
+            }
+            if (this._raf !== null) cancelAnimationFrame(this._raf);
+        },
+    }));
+
     window.Alpine.data('navCtaReveal', () => ({
         _io: null,
         init() {
             if (!document.body.dataset.hasHero) return;
-            const trigger = document.querySelector('.hero__stage-bottom');
+            const trigger = document.querySelector('.hero__sentinel');
             if (!trigger || !('IntersectionObserver' in window)) return;
             this._io = new IntersectionObserver(
                 ([entry]) => {
@@ -689,7 +746,7 @@ document.addEventListener('alpine:init', () => {
     // Barra flotante de reserva en MÓVIL (mockup `design_mockup/jerarquia-ctas.html` §03). En móvil
     // el CTA «Reservas aquí» sale del header y reaparece como barra fija inferior:
     //  • LANDING (`body[data-has-hero]`, la única página con hero): aparece cuando el sentinel del hero
-    //    (`.hero__stage-bottom`) abandona el viewport → hero y barra nunca co-visibles (misma señal que
+    //    (`.hero__sentinel`) abandona el viewport → hero y barra nunca co-visibles (misma señal que
     //    el reveal del header). Sigue oculta en la primera pantalla.
     //  • RESTO DE PÁGINAS (sin hero): aparece al hacer scroll, con un umbral MENOR que la landing
     //    (~1/3 de pantalla, no el hero completo) → emerge antes.
@@ -718,7 +775,7 @@ document.addEventListener('alpine:init', () => {
                 // LANDING (única página con hero): comportamiento original — la barra entra cuando el
                 // CTA «prime» del hero abandona el viewport (mismo sentinel que el reveal del header) →
                 // hero y barra nunca co-visibles; sigue oculta en la primera pantalla.
-                const trigger = document.querySelector('.hero__stage-bottom');
+                const trigger = document.querySelector('.hero__sentinel');
                 if (trigger && 'IntersectionObserver' in window) {
                     this._io = new IntersectionObserver(
                         ([entry]) => { this.revealed = !entry.isIntersecting; },

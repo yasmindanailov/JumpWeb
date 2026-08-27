@@ -158,6 +158,15 @@
   --font-body: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
+  /* ⚠️ El CUARTO rol tipográfico: el ESLOGAN. El sistema del segundo cliente lo escribe con una
+     familia de rotulador y lo limita a seis palabras («el eslogan, nada más»), y esa distinción
+     —eslogan ≠ titular— es ESTRUCTURA, no marca: la tiene cualquier landing que quiera una voz
+     encima del titular.
+     ▶ Por defecto vale lo mismo que `--font-display`, así que el producto **no cambia de aspecto**
+     por declararlo: quien quiera una familia aparte la pone en su `client.css` y la añade a
+     `THEME_FONTS` (las dos mitades, `config/theme.php`). */
+  --font-accent: var(--font-display);
+
   /* La escala de canto, CERRADA. Un paquete de cliente redefine estos siete y todos los cantos
      del producto le obedecen — que es el criterio §2·3 de `specs/tema-por-instalacion.md`.
      ⚠️ `--r-xs` y `--r-md` entran en la tanda 2a: son los dos escalones que faltaban, y sus
@@ -768,7 +777,7 @@ img { display: block; max-width: 100%; }
   position: absolute; inset: 0;
   z-index: 5;
   padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 44px);
-  display: flex; flex-direction: column; justify-content: space-between;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
   /* ⚠️ Aquí había `color: var(--bg)` para forzar texto crema sobre el vídeo. Se RETIRA: el
      ámbito `[data-surface="ink"]` del stage ya pone `color: var(--fg)`, que en tinta vale
      crema. Dejarlo habría pintado texto OSCURO sobre el hero oscuro — `--bg` en tinta es la
@@ -777,19 +786,44 @@ img { display: block; max-width: 100%; }
 }
 .hero__stage-content > *,
 .hero__stage-content a,
-.hero__stage-content button { pointer-events: auto; }/* on-video title — cream text; blink keeps its zone color */
+.hero__stage-content button { pointer-events: auto; }/* ── EL SENTINEL del hero ────────────────────────────────────────────────────────────
+   Elemento vacío, de altura cero, al FINAL del `<header>` y FUERA de cualquier `sticky`.
+   No pinta nada: existe para que dos comportamientos de COMPRA sepan cuándo el hero ha
+   quedado atrás —el CTA del nav en escritorio y la barra flotante en móvil— sin depender
+   de la posición de ningún botón. Antes ese trabajo lo hacía el propio CTA del hero, y
+   funcionaba por casualidad. `resources/js/app.js` · `DEUDA.md` (`#194`). */
+.hero__sentinel { height: 0; }
+
+/* ── EL ESLOGAN del hero ─────────────────────────────────────────────────────────────
+   Va ENCIMA del titular y en su propia familia (`--font-accent`, que por defecto es la de
+   display). El giro es parte del patrón: un eslogan escrito a mano no va recto.
+   ⚠️ Es un texto CORTO por contrato —el sistema del segundo cliente limita el rotulador a seis
+   palabras—, así que no lleva `max-width`: si alguien mete un párrafo aquí, lo que hay que
+   arreglar es el texto, no el CSS. */
+.hero__kicker {
+  font-family: var(--font-accent);
+  font-size: clamp(16px, 1.6vw, 22px);
+  line-height: 1;
+  transform: rotate(-2.2deg);
+  transform-origin: left bottom;
+  margin: 0 0 clamp(12px, 1.4vw, 20px) 4px;
+  color: var(--zone-1);
+}
+
+/* El punto de «Abierto ahora». Verde de ÉXITO (`--ok`), no el color de acción: es un ESTADO,
+   no un botón — es el hallazgo `C-04` de la auditoría del cliente aplicado aquí. */
+.hero__chip-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+}
+
+/* on-video title — cream text; blink keeps its zone color */
 .hero__title.hero__title--onvideo {
   font-size: clamp(56px, 10.5vw, 168px);
   margin: 0;
   text-shadow: 0 4px 40px rgba(0,0,0,0.18);
-}
-
-/* on-video bottom row */
-.hero__stage-bottom {
-  display: flex; align-items: end; justify-content: flex-end;
-  gap: 24px; flex-wrap: wrap;
-}
-.hero__stage-label {
+}.hero__stage-label {
   position: absolute;
   left: clamp(20px, 3vw, 40px); bottom: clamp(16px, 2vw, 28px);
   font-family: var(--font-body); font-size: 11px;
@@ -1878,8 +1912,7 @@ input[type="radio"]:focus-visible,
      Ajustable: si el sujeto está más abajo/lado, cambiar este object-position. */
   .hero__video { object-position: 78% 32%; }
   .hero__stage-content { padding: 22px 20px 24px; }.hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
-  .hero__stage-label { display: none; }
-  .hero__stage-bottom { flex-direction: column; align-items: stretch; gap: 14px; }/* marquee */
+  .hero__stage-label { display: none; }/* marquee */
   .marquee { padding: 14px 0; }
   .marquee__item { font-size: 36px; gap: 32px; }
   .marquee__item .star { font-size: 22px; }

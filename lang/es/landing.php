@@ -46,6 +46,9 @@ return [
     ],
     'hero' => [
         'today' => 'Murcia · Abierto hoy',
+        // Eslogan sobre el titular del hero. CORTO a propósito: el sistema del 2.º cliente
+        // limita el rotulador a seis palabras («el eslogan, nada más»), y girado no se lee más.
+        'kicker' => 'activa tu modo diversión',
         'l1' => 'DIVERSIÓN', 'l2' => 'INFINITA',
         'tag' => 'Parque de saltos, trampolines, tirolinas y mucho más en plena Murcia. Hecho para reír.',
         'cta' => 'Reservas aquí', 'cta2' => 'Ver atracciones', 'reel' => 'Vídeo del parque',

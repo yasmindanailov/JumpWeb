@@ -35,6 +35,9 @@ return [
     ],
     'hero' => [
         'today' => 'Murcia · Open today',
+        // Eslogan sobre el titular del hero. CORTO a propósito: el sistema del 2.º cliente
+        // limita el rotulador a seis palabras («el eslogan, nada más»), y girado no se lee más.
+        'kicker' => 'switch on your fun mode',
         'l1' => 'FUN', 'l2' => 'JUMPING',
         'tag' => 'Indoor jump park — trampolines, ziplines and a lot more, in the heart of Murcia. Built for laughter.',
         'cta' => 'Book here', 'cta2' => 'See the rides', 'reel' => 'Park reel',
