@@ -13,6 +13,14 @@
         ->values();
     $authUser = auth()->user();
 
+    // Menores a cargo (Fase 6 · C, tanda 5, spec §9.10 D14·1): para quién es cada ENTRADA, compuesto
+    // UNA vez para todo el pedido (presupuesto constante). Solo hay entrada en el mapa si hay algo asignado.
+    $assignedByItem = \App\Filament\Resources\Orders\Support\AssignedDependents::forOrder($record);
+    // ¿Tiene sentido ofrecer «Asignar menores» en este pedido? Si el titular no tiene menores activos y
+    // ninguna línea lleva ya uno, el icono sería ruido en el 95 % de los pedidos. UNA consulta por pedido.
+    $holderHasDependents = $assignedByItem !== [] || ($record->user !== null
+        && \App\Domain\Identity\Models\Dependent::query()->where('user_id', $record->user_id)->active()->exists());
+
     // #173: cancelar y reembolsar por-item se gestionan desde el pie del modal
     // Gestionar (#171/#172); ya no hay iconos de esas acciones en la sub-card.
     // La visibilidad real la imponen los handlers de las Filament Actions
@@ -172,6 +180,18 @@
                         <span>{{ $durationLabel }}</span>
                     @endif
                 </div>
+
+                {{-- Menores a cargo (tanda 5, D14·1): para quién es cada entrada — nombre, edad EN LA FECHA
+                     DE LA VISITA y el estado de su exención (solo en modo interno). Solo líneas de ENTRADA;
+                     el resto de unidades son adultos. --}}
+                @if (! empty($assignedByItem[$item->id] ?? []))
+                    <div class="mt-1 text-sm text-gray-700 dark:text-gray-300" data-dependents-for="{{ $item->id }}">
+                        <span class="font-medium">{{ __('admin.orders.dependents.for') }}</span>
+                        @foreach ($assignedByItem[$item->id] as $dep)
+                            <span class="whitespace-nowrap">{{ $dep['label'] }}{{ $loop->last ? '' : ',' }}</span>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             {{-- Sub-fase 7.2e.1bis5 (decisión #158): subtítulo con nombre del

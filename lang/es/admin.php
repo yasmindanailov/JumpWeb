@@ -363,6 +363,47 @@ return [
         'guest_badge_pending' => 'Pendiente',
         'guests_empty' => 'El cliente aún no ha rellenado el formulario de reserva.',
 
+        // Menores a cargo en la ficha del pedido y en el alta manual (Fase 6 · C, tanda 5,
+        // `specs/menores-a-cargo.md` §9.10 D14). El operador ve el NOMBRE porque ya lo ve en el
+        // registro del waiver; la puerta (subsistema A) solo verá edad y estado de la exención.
+        'dependents' => [
+            'for' => 'Para:',
+            'age' => ':age años',
+            'waiver_current' => 'exención ✓',
+            'waiver_outdated' => 'exención de una versión anterior',
+            'waiver_missing' => 'sin exención firmada',
+            'removed' => 'retirado de la cuenta',
+            // La acción «Asignar menores» de la línea (P3).
+            'btn_aria' => 'Asignar menores a :name',
+            'modal_heading' => 'Asignar menores',
+            'modal_description' => 'Marca a los menores del cliente que vienen con estas entradas; el resto de unidades son adultos.',
+            'field_label' => '¿Para quién son estas entradas?',
+            'limit_hint' => 'Como máximo :max (una entrada por menor).',
+            'conserved_hint' => ':names ya no están en la cuenta del cliente pero conservan su entrada: cuentan para el tope.',
+            'option_reason' => ':name · :age años (:reason)',
+            'option' => ':name · :age años',
+            'none' => 'El cliente no tiene menores a cargo declarados. Los declara desde su cuenta, en «Menores a cargo».',
+            'save' => 'Guardar',
+            'saved' => 'Menores asignados: :names.',
+            'saved_none' => 'Sin menores asignados: todas las entradas son de adultos.',
+            'unchanged' => 'Sin cambios.',
+            'rejected' => 'No se ha guardado nada: :reasons.',
+            'blocked' => 'No se pueden asignar menores: :reason.',
+            'failed' => 'No se pudo guardar la asignación. Inténtalo de nuevo.',
+            'reasons' => [
+                'not_yours' => 'un menor no es de este cliente',
+                'not_minor_on_date' => 'ya tiene 18 años el día de la visita',
+                'waiver_unsigned' => 'sin exención firmada y vigente',
+                'too_many' => 'más menores que entradas',
+                'entries_only' => 'los menores solo se asignan a entradas',
+            ],
+            // El alta manual (P4).
+            'manual_hint' => 'Solo se pueden marcar los menores con exención firmada; el resto de unidades son adultos.',
+            'manual_too_many' => 'Has marcado más menores que entradas: quita alguno o sube la cantidad.',
+            'manual_check_failed' => 'No se ha creado ni cobrado nada: :reasons.',
+            'manual_assign_failed' => 'El pedido se ha creado y cobrado, pero :count menor(es) no se pudieron asignar. Asígnalos desde la ficha del pedido.',
+        ],
+
         // Cards "Detalles" (sub-fase 7.2a refinada #134): info de consulta espontánea,
         // collapsed por defecto. Sub-secciones con Fieldset.
         'section_details' => 'Detalles',

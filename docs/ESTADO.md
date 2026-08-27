@@ -482,9 +482,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3160 en verde** (18.538 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
+  por el carril A **sobre el árbol CONJUNTO** (el `#209` del carril C rebasado con P1+P2 de la tanda 5 de
+  menores, `#208`): el número se mide sobre el árbol conjunto, no se suma. Los dos cortes que fusiona:
+  ▶ **+16 tests y +89 aserciones** (carril A, menores a cargo · tanda 5 · P1+P2, spec §9.10): el
+  `sync()`/`candidates()` del mostrador (8 casos, 4/4 mutaciones muerden), `WaiverStatus::forDependents()`
+  con paridad (3) y el «Para:» de la ficha del pedido (5).
 - Suite **3144 en verde** (18.449 aserciones, `--parallel` **~87 s**), medida el 2026-08-28 por el
   carril C **sobre el árbol ya rebasado encima de `origin/main`** (con `#207`/`#208` del carril A
-  dentro), tras `npm run build` + `build:ssr`.
+  dentro, pero SIN P1+P2), tras `npm run build` + `build:ssr`.
   ▶ **+12 tests y +401 aserciones en este corte** (carril C, el **QUINTO mecanismo del tema** — el
   relleno de ACCIÓN, `#209`, spec §15): `ActionFillTest` (11 casos: el conjunto de reglas de acción
   es exactamente el declarado · ninguna conversión a medias · las piezas internas del CTA siguen al
