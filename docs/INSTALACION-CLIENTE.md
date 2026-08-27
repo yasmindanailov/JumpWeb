@@ -93,11 +93,35 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
 ```css
 /* public/css/client.css — el paquete de tema de esta instalación */
 :root {
+    /* SUPERFICIE — la de tinta se deriva sola de estas dos (ver el aviso de abajo) */
     --bg: #F4F4F1;  --bg-soft: #E8E9E5;  --bg-card: #FFFFFF;
     --fg: #101418;  --fg-mute: #626A72;
     --sheet: #FFFFFF;              /* LA HOJA: la tarjeta que va ENCIMA de la superficie */
+
+    /* TIPOGRAFÍA — el nombre visible; qué se DESCARGA va en THEME_FONTS (b.bis) */
     --font-display: "Su Fuente", system-ui, sans-serif;
-    --r: 16px;  --r-lg: 24px;      /* radios: aquí, no en el panel */
+
+    /* FORMA · la escala de canto ENTERA (siete escalones, `DECISIONES #193`).
+       Redefinir uno mueve TODOS los cantos de ese rol; no hay literales sueltos que se queden
+       quietos, porque `ShapeScaleTest` no los deja entrar. */
+    --r-xs: 6px;   /* badges y tags dentro de una tarjeta */
+    --r-sm: 6px;   /* items interiores (filas de desplegable) */
+    --r-md: 10px;  /* controles, celdas y contenedores medianos */
+    --r-btn: 10px; /* TODOS los botones */
+    --r: 16px;     /* tarjetas y marcos */
+    --r-lg: 24px;  /* tarjetas grandes y bloques destacados */
+    --r-pill: 999px;
+
+    /* FOCO · el anillo con el que se navega con teclado. El OFFSET no se toca: es encaje de
+       cada componente. Y sigue al tema solo: dentro de una superficie oscura `--fg` ya vale
+       claro, así que el anillo se invierte sin declarar nada. */
+    --focus-w: 3px;
+    --focus-color: #F5C400;
+
+    /* LA TIRA del pie · cinco franjas. Por defecto CICLAN sobre los dos colores de marca;
+       una instalación con cinco colores propios los pone aquí, uno a uno. */
+    --strip-1: #1AA9DE;  --strip-2: #A3C21C;  --strip-3: #F5C400;
+    --strip-4: #F2711C;  --strip-5: #D93E14;
 }
 ```
 
@@ -105,6 +129,21 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
 `--fg` y `--bg`, así que redefiniendo esos dos ya tienes las dos superficies coherentes; si quieres
 afinarla, redefine los `--ink-*`. **No la teclees entera**: `SurfaceScopeTest` exige que se derive,
 justo para que cambiar la marca no deje media web con el color de otro cliente.
+
+⚠️ **Lo que el paquete TODAVÍA no puede cambiar, dicho para que nadie lo busque:**
+- **La FORMA de las sombras.** El color sí le obedece (60 de 68 declaraciones ya leen por `var()`),
+  pero **no hay escala de elevación**: 55 sombras difusas con 58 formas distintas y solo 8 repetidas.
+  Crearla mueve píxeles (la mejor escala de 6 escalones mueve 35 de 55), así que se decide con el
+  hero. `specs/tema-por-instalacion.md` §10.3.
+- **El TEMPO.** 237 declaraciones de transición con **48 duraciones y 20 curvas** distintas. Hay 4
+  tokens (`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`) que cubren una parte
+  mínima. §10.4.
+
+⚠️ **Y un aviso sobre la tira**: si tu marca solo tiene dos colores, **no la redefinas** — el
+default cicla sobre `--zone-1` y `--zone-2` y siempre da colores enteros. Repartir cinco pasos
+interpolados entre dos colores parece mejor idea y **no lo es**: con un par casi complementario la
+franja del medio sale gris sucio, y cambiar de espacio de color no lo arregla (medido: `oklab` da
+croma 0,024 frente a 0,025 de `srgb`).
 
 **b.bis) La TIPOGRAFÍA son DOS mitades, y con una sola no se ve nada.**
 - **Qué se DESCARGA** → `THEME_FONTS` en el `.env` (lo lee `config/theme.php`), en el formato de la

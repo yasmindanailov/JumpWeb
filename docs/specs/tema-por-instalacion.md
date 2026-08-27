@@ -1,18 +1,30 @@
 # [SPEC] El tema por instalación — los MECANISMOS que al paquete de un cliente le faltan
 
-> Estado: 🟦 **TANDA 1 COMPLETA — las 6 unidades hechas y verificadas** · Última
-> actualización: 2026-08-27 · Decisión asociada: `DECISIONES #N` al aprobarse (**el número se fija
-> al EMPUJAR**, mirando el remoto — ver `docs/CONVENCIONES.md` §10).
+> Estado: 🟦 **TANDAS 1 y 2a EN `main`** (`#192` · `#193`) · Última actualización: 2026-08-27 ·
+> Decisiones asociadas: `DECISIONES #192` (tanda 1) y `#193` (tanda 2a). **El número se fija al
+> EMPUJAR**, mirando el remoto — ver `docs/CONVENCIONES.md` §10.
 >
-> ⚠️ **Lo que está hecho vive en el árbol y NO está commiteado.** El registro unidad por unidad,
-> con lo que se midió y lo que se corrigió sobre la marcha, está en **§9**.
-> ❗ **Al commitear hay que subir el contador de la suite en `ESTADO.md`**: 2984 → **2998** (8 de
-> `SurfaceScopeTest` + 6 de `ThemeFontsTest`). El `pre-push` compara ese número con lo que da la suite y corta si
-> no cuadran.
+> ❗ **Sigue 🟦 por una sola cosa, y es del owner: su pasada de NAVEGADOR** sobre las **11
+> declaraciones que la 2a mueve a propósito** (§10.2, enumeradas) y sobre la **tira del pie**. La
+> suite comprueba que cada token vale lo que tiene que valer; no comprueba que el resultado guste.
 >
-> ⚠️⚠️ **Empieza por §1.7.** Es la medida que cambia el tamaño de todo lo demás: el CSS del producto
-> ya está tokenizado, así que **el 45 % de los usos de `var()` se invierten solos**. El trabajo no
-> son 1.900 reglas, son **52 literales en 44 declaraciones** y siete definiciones de token.
+> ⚠️⚠️ **DOS SECCIONES DE ESTE DOCUMENTO ESTÁN CADUCADAS Y LA CORRECCIÓN VA ANTES QUE EL TEXTO:**
+> · **§1.2** — la premisa «el sistema alterna dos superficies, nunca dos papeles seguidos»
+>   **YA NO ES CIERTA**. La norma vigente del cliente es **papel continuo de arriba abajo**, y el
+>   contraste lo dan las TARJETAS (su hallazgo `S-00`, severidad Alta, ya aplicado). Verificado en el
+>   canvas: **cero** fondos a sangre en los 218 KB del mockup. Buena noticia: el mecanismo de la
+>   tanda 1 no se pierde, **se usa más** — pasa de la sección a la tarjeta.
+> · **§7** — el plan de tandas se rehízo: la 2 se parte en **2a** (hecha), **2b** (el hero), **2c**
+>   (el menú, a spec propia) y **2d** (el movimiento).
+>
+> ⚠️ **Y antes de leer nada del canvas, comprueba que tu copia no está vieja.** La de
+> `mockup_playjumppark/` estaba **caducada** al empezar la 2a —386 líneas de diff, y tocaban el
+> hero—, y `Colores de Marca PJP` también. Una copia vieja se lee igual de bien que una fresca y no
+> avisa. Receta de re-bajada en §1.
+>
+> ⚠️⚠️ **Empieza por §1.7 si vas a la 2b, y por §10 si quieres saber cómo quedó la forma.** §1.7 es
+> la medida que cambia el tamaño de todo lo demás: el CSS del producto ya está tokenizado, así que
+> **el 45 % de los usos de `var()` se invierten solos**.
 >
 > ⚠️ Esta spec es hermana de `landing-white-label.md` §4.5, **no la sustituye**: aquélla decidió que
 > el tema son TRES mecanismos (valores→panel · ficheros→assets · dibujos→iconos) y ejecutó la tanda
@@ -45,14 +57,27 @@ MCP **`DesignSync`** (no vale `WebFetch`: da 403):
 2. **`truncated` importa**: el MCP corta los binarios a 256 KiB. Medido: `assets/logo.png` llega
    **inservible** (36 % de sus líneas, sin `IEND`) y las dos fotos de fachada, usables por ser JPEG
    progresivos. **No bloquea nada**: el logotipo del cliente **no es una imagen** (§1.6).
-3. ❗❗ **10 de sus 18 artboards están SIN MIGRAR** —llevan la paleta anterior (`#2FB6DE`, `#0E8FCB`,
+3. ❗❗ **10 de sus artboards están SIN MIGRAR** —llevan la paleta anterior (`#2FB6DE`, `#0E8FCB`,
    `#8DC63F`) y las fuentes anteriores (Anton, Space Grotesk)—, y entre ellos están precisamente los
    de logotipo, menú y hero. **Los mismos elementos están rehechos con el sistema vigente dentro de
    `Landing PJP Modos`**. De los sin migrar se saca la FORMA; el color, jamás.
+4. ❗❗ **Y la copia local CADUCA sin avisar.** Medido el 2026-08-27 por la mañana: la copia de las
+   07:30 ya no valía —`Landing PJP Modos` con **386 líneas de diff** (el hero gana una tira de
+   colores; la sección de entradas pierde su fondo cian y sus goterones) y `Colores de Marca PJP`
+   también movido—. **`list_files` + diff ANTES de implementar nada**, siempre.
 
 | Normativos (sistema vigente) | Sin migrar (exploración) |
 |---|---|
-| `Colores de Marca PJP` · `Landing PJP Modos` · `Auditoría Landing PJP` · `Iconos PJP` · `Microanimaciones PJP` · `Precios PJP variantes` · `Zonas PJP variantes` · `Cabecera Seccion variantes` | `Logotipo variantes` · `Menu PJP` · `Hero PJP variantes` · `Info PJP variantes` · `Boton Reservar variantes` · `App PJP` · `Elementos Fachada` · `Marquesina Castillo` · `Salta la Ciudad` · `Tag Lorca` |
+| `Colores de Marca PJP` · `Landing PJP Modos` · `Auditoría Landing PJP` · `Iconos PJP` · `Microanimaciones PJP` · `Precios PJP variantes` · `Zonas PJP variantes` · `Cabecera Seccion variantes` · 🆕 `Descubre-el-Parque` · 🆕 `Recorrido-Parque` | `Logotipo variantes` · `Menu PJP` · `Hero PJP variantes` · `Info PJP variantes` · `Boton Reservar variantes` · `App PJP` · `Elementos Fachada` · `Marquesina Castillo` · `Salta la Ciudad` · `Tag Lorca` |
+
+🆕 **Los dos artboards nuevos (2026-08-27) son DOS VARIANTES DE LA MISMA SECCIÓN**, la «02 · El
+parque» de la landing, las dos con el sistema vigente: `Descubre-el-Parque` es un mapa de 3 parcelas
+con 20 chinchetas y ficha lateral; `Recorrido-Parque` es un carril de 4 paradas con scroll-snap.
+❗ **Cuál se queda está SIN DECIDIR** (`[PENDIENTE: owner]`, preguntado el 2026-08-27) — no se
+implementa ninguna hasta que lo diga, y en todo caso es tanda 3.
+⚠️ **Y estrenan `#E6007E` (Magenta Chispa) como acento de «la plaza»**: está en `Colores de Marca`
+pero **no aparecía ni una vez** en `Landing PJP Modos`. Es uno de los cuatro colores del sistema que
+no tienen token en el producto (§ la nota de `ESTADO.md` sobre Lima Bote, Azul Muro y Magenta).
 
 ### 1.1 Lo que la tanda A dejó hecho, y por qué no basta
 
@@ -67,14 +92,39 @@ pedir una sección oscura, ni un segundo gris, ni su tipografía.
 
 ### 1.2 Los dos fondos de sección son un **MODO**, y no existe
 
+> ### ❗❗ LEE ESTO ANTES QUE EL PÁRRAFO DE ABAJO — la premisa de esta sección CADUCÓ
+>
+> **`[DECIDIDO owner, 2026-08-27]`, y lo dice su propia auditoría, no nosotros.** El hallazgo
+> **`S-00`** de `Auditoría Landing PJP` —severidad **Alta**, estado **Aplicado**— dice, literal:
+>
+> > «Regla nueva: el fondo de una sección nunca lleva color. […] Decisión de cliente en revisión,
+> > y **pasa a ser norma del sistema por encima del orden 01–08**. Papel continuo de arriba abajo.
+> > El contraste lo dan las tarjetas —tinta para tarifas y packs, blanca para normas y opiniones,
+> > de color para la zona activa—. **Ni negro ni cian a sangre en ninguna sección.**»
+>
+> Los dos intentos de alternancia por fondo están marcados **Revertido**: `S-01` (entradas en cian
+> pleno) y `S-02` (cumpleaños en tinta, «el muro negro dejaba una franja de 130 px encima del
+> titular que no se sostenía»).
+>
+> ▶ **Verificado en el mockup, no creído**: en los 218 KB de `Landing PJP Modos` hay **cero**
+> `calc(50% - 50vw)` y **cero** `width:100vw`. Antes había tres. Ninguna sección va a sangre.
+>
+> ▶ **Y esto NO deja inútil el mecanismo de la tanda 1 — lo hace más útil.** `[data-surface]` es un
+> selector de atributo, no está atado a `.section`, así que vale igual para una **tarjeta** de tinta
+> dentro de una sección de papel. Pasa de usarse dos veces (hero y cierre) a usarse en cada tarjeta
+> oscura, que es justo lo que la norma nueva pide. Lo que cambia no es el mecanismo: es **dónde se
+> cuelga el atributo**.
+>
+> ⚠️ **La regla «nunca dos papeles seguidos» ya NO existe.** Si la lees abajo, está muerta.
+
 El sistema del cliente alterna dos superficies —**tinta** `#101418` y **papel** `#F4F4F1`— con la
 regla «nunca dos papeles seguidos», más una excepción de color pleno una vez por página.
 
 ⚠️ **Medido: en `public/css/*.css` no hay ni un mecanismo de superficie.** Un barrido de
 `--dark`, `--invert`, `.dark` y `section--` devuelve **0**. La única superficie oscura del producto
-es el hero, y se resuelve con un sufijo ad-hoc `--onvideo` —**7 reglas** en `landing.css` y **29
-apariciones** entre CSS y Blade—: una clase por elemento, escrita a mano, que no es un mecanismo
-sino la excepción de un caso.
+es el hero, y se resuelve con un sufijo ad-hoc `--onvideo` —**7 reglas** en `landing.css` y **30
+apariciones** entre CSS y Blade (`ESTADO.md` decía 29: re-medido el 2026-08-27)—: una clase por
+elemento, escrita a mano, que no es un mecanismo sino la excepción de un caso.
 
 ### 1.3 Un solo `--fg-mute`, y hacen falta dos — **demostrado con números**
 
@@ -370,9 +420,12 @@ Sin esto no puede llegar a ✅ (`/dod`, `docs/CONVENCIONES.md` §3.bis).
 
 | | Tanda | Qué entra | Por qué va aquí |
 |---|---|---|---|
-| **1** | **Cimientos** — los dos fondos + `--sheet` + los dos grises + la escala de radios + las fuentes por instalación + el set de iconos | Solo tokens y CSS | Es lo que el armazón consume: hacerlo después obliga a rehacerlo. ▶ **Y su promesa es que NO mueve un píxel**, lo que la hace verificable de una sola forma y barata de revisar. |
-| **2** | **El armazón** — hero, menú, hero footer y pie · **+ la escala de sombra** | Marcado + CSS del armazón | `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA**, neutra en valores. **Las secciones NO se tocan.** ⚠️ Aquí el producto **sí cambia de aspecto**: es la tanda que necesita ojo en navegador. |
-| **3** | **Las secciones**, pieza a pieza desde `Elementos Fachada` | Sección por sección | ⚠️ Ese artboard está **sin migrar**: de ahí se saca la FORMA, nunca el color. |
+| **1** ✅ | **Cimientos** — los dos fondos + `--sheet` + los dos grises + la escala de radios + las fuentes por instalación + el set de iconos | Solo tokens y CSS | Es lo que el armazón consume: hacerlo después obliga a rehacerlo. ▶ **Y su promesa es que NO mueve un píxel**, lo que la hace verificable de una sola forma y barata de revisar. |
+| **2a** ✅ | **La FORMA + el pie** — la escala de canto, la ley del motivo cuadrado, el anillo de foco y la tira de marca | Tokens, CSS y 9 líneas de Blade | `[DECIDIDO owner, 2026-08-27]`. Mueve **20 px en 11 declaraciones**, todas enumeradas. Es lo que el hero consumirá: hacerlo después obliga a repasarlo. §10. |
+| **2b** ⬜ | **El hero** — tarjeta con margen en vez de a sangre, coreografía de scroll, y **la escala de sombra** | Marcado + CSS + JS de scroll | ⚠️ Aquí el producto **sí cambia de aspecto de verdad**: es la que necesita ojo en navegador. La sombra entra aquí porque no hay escala extraíble sin coste (§10.3). |
+| **2c** ⬜ | **El menú** → **spec propia** | — | `[DECIDIDO owner, 2026-08-27]`. Sustituir la barra horizontal por logo + hamburguesa + menú a pantalla completa toca **12 vistas**, los dos desplegables con sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil. No es «adoptar una estructura»: es cambiar la navegación del sitio. |
+| **2d** ⬜ | **El MOVIMIENTO** — 4 curvas y 7 duraciones como tokens | CSS | Sale de la 2a con su medida: **237 declaraciones, 48 duraciones distintas y 20 curvas** (el sistema declara 7 y 4). `200ms` sola tiene 110 usos. No mueve píxeles, mueve TIEMPO — y eso no se revisa con una captura, se revisa interactuando. |
+| **3** ⬜ | **Las secciones**, pieza a pieza | Sección por sección | ⚠️ El owner subió el 2026-08-27 dos artboards nuevos, `Descubre-el-Parque` y `Recorrido-Parque`: son **dos variantes de la misma sección** («02 · El parque»), y **cuál se queda está sin decidir**. `Elementos Fachada` sigue **sin migrar**: de ahí se saca la FORMA, nunca el color. |
 
 ⚠️ **La frontera entre la 1 y la 2 es exactamente «¿mueve píxeles?»**, y no es cosmética: es lo que
 permite revisar la 1 con un diff de captura y la 2 con criterio. Meter la escala de sombra en la 1
@@ -477,3 +530,161 @@ porque acaba dentro de una URL en el `<head>` (`SEC-07`).
   —es el cimiento, y la tanda 2 es quien lo consume—, pero significa que **su red es la guarda y las
   sondas, no el ojo**. Cuando el armazón pinte la primera sección en tinta, esa es la pasada de
   navegador que falta.
+
+---
+
+## 10. Ejecución de la tanda 2a — la FORMA, el foco y el pie
+
+> Registro escrito **mientras se ejecutaba**. Igual que §9, la parte útil no es lo que salió bien:
+> es lo que costó y lo que la medida corrigió del plan.
+>
+> ⚠️⚠️ **Y lo primero de todo: esta tanda empezó descubriendo que la doc mentía sobre el canvas.**
+> El `Landing PJP Modos` que había en `mockup_playjumppark/` estaba **caducado** —386 líneas de
+> diff contra el remoto, y tocaban el hero— y `Colores de Marca PJP` también. La copia local se
+> bajó el 2026-08-27 a las 07:30 y el owner siguió trabajando después. **Antes de implementar nada
+> desde el canvas, `DesignSync · list_files` y diffear**: la carpeta local no avisa de que está
+> vieja, y una copia caducada se lee igual de bien que una fresca.
+
+### 10.1 Cómo se recortó, y con qué números
+
+El owner recortó con los datos delante (regla de §7, la misma del waiver). Las cuatro unidades que
+se midieron, y qué pasó con cada una:
+
+| | Unidad | Medido | Decisión |
+|---|---|---|---|
+| **A** | El pie | 20 reglas CSS · 120 líneas Blade | ✅ **ENTRA** |
+| **B** | Los patrones de forma | 219 radios (95 literales) · 68 sombras · 237 transiciones | ✅ **ENTRA la forma estática**; sombra y movimiento salen (§10.3, §10.4) |
+| **C** | El hero | 64 reglas · 30 apariciones de `--onvideo` · JS de scroll con rAF | ⬜ **Tanda 2b** |
+| **D** | El menú | 77 reglas · 261 líneas Blade · **12 vistas** | ⬜ **Spec propia** |
+
+▶ **Y una decisión de producto que la medida forzó, sobre el PIE**: el mockup tiene una fila de
+enlaces; el nuestro tiene **cuatro columnas** (marca, El parque, Información, Contacto) porque el
+mockup es de UNA página y el producto sirve a seis. Adoptar su estructura habría **perdido**
+teléfono, correo, redes, «Mi cuenta» y «Registro». Se adopta la **tira** y el ritmo de la fila
+inferior; las cuatro columnas se conservan. Es la línea del owner —«los datos son los que tenemos
+ahora»— aplicada a la estructura cuando la nuestra es más rica que la del mockup.
+
+### 10.2 Lo que se hizo
+
+| | Unidad | Qué entró | Píxeles |
+|---|---|---|---|
+| **1** | **La escala de canto, CERRADA** — `--r-xs: 5px` y `--r-md: 10px` nuevos; queda `5·8·10·14·16·28·999` | 25 declaraciones convertidas; los literales bajan de **95 a 70** y los huérfanos de **56 a 31** | **11 se mueven, 20 px** |
+| **2** | **La ley del motivo cuadrado**, declarada y aseverada | 13 declaraciones salen de «deuda» y pasan a familia con ley | **0** |
+| **3** | **El anillo de foco** — `--focus-w` / `--focus-color` / `--focus-outline` | 8 reglas dejan de escribirlo a mano; 3 excepciones declaradas | **0** |
+| **4** | **La tira de marca del pie** — `--strip-1..5`, sin un solo hex | 20 reglas + 9 líneas de Blade | la tira es nueva; el filete de 1 px que sustituye, menos |
+| — | **`ShapeScaleTest`** | 9 casos, **13 de 13 mutaciones muerden** | — |
+
+▶ **Los dos escalones nuevos NO son de gusto.** Se eligieron minimizando el movimiento sobre los 23
+cantos que estaban en literal, probando la rejilla entera de candidatos:
+
+| Escala | Declaraciones movidas | Píxeles |
+|---|---|---|
+| la de antes, `8·14·16·28` | **23 de 23** | 53 |
+| `+ --r-xs:5` | 19 de 23 | 36 |
+| `+ --r-md:10` | 15 de 23 | 37 |
+| **`+ los dos` ← elegida** | **11 de 23** | **20** |
+| `+ un tercero en 12` | 6 de 23 | 10 |
+
+El tercer escalón se descartó **a propósito**: con 8·10·12·14·16 los saltos son de 2 px y eso deja
+de ser una escala para ser un continuo — una escala que no disciplina nada es una escala que el
+siguiente rodea metiendo un literal. Coincide que `--r-md: 10px` es también el escalón del cliente,
+pero **se eligió por la medida, no por copiarle**: si hubiera salido otro número, iría otro número.
+
+▶ **Las 11 que se mueven, enumeradas** (ninguna otra):
+`.bk-foot__pop` · `.guestform__child` · `.guestform__flash` · `.guestform__readonly` ·
+`.orders__product` (12→10) · `.zone-intro__tag` · `.zone-photo-card__tag` (6→5) ·
+`.plan-select__item-num` (4→5) · `.bd-pol__sticker` (7→8) · `.bd-card` (18→16) ·
+**`.offw-card` (24→28, el único salto de más de 2 px)**.
+
+### 10.3 ❗ La SOMBRA no entra, y el porqué es un número
+
+`ESTADO.md` pedía «decidir la escala de elevación». Medida sobre las 68 declaraciones, **la escala
+no se puede extraer sin coste**:
+
+| Escalones | Declaraciones movidas | Píxeles de blur |
+|---|---|---|
+| 3 · `22·44·60` | 42 de 55 | 299 |
+| 4 · `18·28·44·60` | 38 de 55 | 221 |
+| 5 · `18·28·44·60·80` | 35 de 55 | 161 |
+| 6 · `18·28·38·48·60·80` | 35 de 55 | 125 |
+
+Ni con seis escalones baja de 35 movidas. Crear la escala **es decidirla**, y decidirla mueve mucho:
+va con el hero (tanda 2b), que es cuando el armazón pide sombras concretas y se ve el efecto en vez
+de imaginarlo. Es lo que §4.5 ya decía; ahora tiene el número.
+
+⚠️⚠️ **Y un instrumento mío salió sesgado aquí, con la firma exacta del defecto que este repo ya ha
+pagado cinco veces.** El primer barrido clasificaba las sombras con `(-?\d+)px` — que **no ve un `0`
+sin unidad**. Y una sombra dura acaba justo en `… 0 <color>`: el clasificador la habría mandado a
+«difusa» sin enterarse. Daba «0 duras». Corregido, y con guarda que caza sus propios ejemplos, da
+**6**… que al mirarlas una a una son **anillos de foco `0 0 0 Npx`**, no elevación.
+
+▶ La clasificación honesta de las 68 es: **55 de elevación · 9 anillos · 4 `none` · 0 duras**.
+▶ Y la respuesta a lo que importaba —*¿existe en el producto la sombra dura proyectada de PJP,
+`5px 5px 0`?*— **sigue siendo cero**, igual que decía el instrumento roto. **Dos medidas coinciden
+y solo una puede explicar la diferencia: vale la que sabría encontrarla.** La primera acertó por
+casualidad, y una medida que acierta por casualidad no es una medida.
+
+### 10.4 ❗ El MOVIMIENTO tampoco entra, y también es un número
+
+| | Producto | Sistema del cliente |
+|---|---|---|
+| Declaraciones `transition`/`animation` | **237** | — |
+| Duraciones distintas | **48** | 7 (`120·180·240·320·420·620·900`) |
+| Curvas distintas | **20** | 4 (Bote · Lona · Salida · Lineal) |
+| Tokens que ya existen | 4 (`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`) | — |
+
+`200ms` sola tiene **110 usos** y `ease` **216**: adoptar la escala del cliente tal cual cambiaría
+el tempo de toda la web. Es una tanda propia (**2d**), y su red no es una captura: es interactuar.
+
+### 10.5 ⚠️ Lo que la ejecución CORRIGIÓ del plan
+
+1. **La tira CICLA, no interpola — y se escribió al revés primero.** El plan repartía cinco pasos de
+   `color-mix` entre los dos colores de marca. Con la marca por defecto (naranja→amarillo, vecinos)
+   quedaba bien. Con la del segundo cliente (cian→naranja, casi complementarios) la franja del medio
+   salía **`#868D7D`, barro**. ▶ **Y no era cosa del espacio de color**: medido, `oklab` da croma
+   mínimo **0,024** frente a **0,025** de `srgb`. Interpolar entre dos colores *arbitrarios* no es
+   robusto, y **el producto no elige la marca de su cliente**. Ciclando, cada franja es un color de
+   marca entero sea cual sea el par.
+2. **Los 56 «radios huérfanos» eran DOS leyes mezcladas, no una lista.** 16 de ellos siguen
+   `radio ≈ lado / 4` con **mediana exacta 4,00** (12 de 16 dentro de ±12 %): es la forma del bloque
+   de espuma a cada tamaño. Forzarlos a un escalón habría roto una familia proporcional para
+   «arreglar» algo que no estaba roto.
+3. **`.cal__dot` no es un motivo, y lo dijo el test.** Con lado 12 y radio 4 su ratio es **3,00** y
+   la aserción de la ley lo escupió. Al mirarlo es la **muestra de color de la leyenda del
+   calendario**: un swatch. Va a la lista de dibujo, no a la de motivos.
+4. **La tira se cazó a sí misma.** Se escribió con `border-radius: 2px` y `ShapeScaleTest` la marcó
+   como canto en literal en su primera pasada. Va con `var(--r-pill)`: en una caja de 4 px de alto
+   el navegador escala los radios y `999px` rinde **exactamente** los 2 px de antes.
+5. **El `outline-offset` NO se tokeniza.** Hay 2, 3, 4 y −2 px, y cada uno responde a la forma de su
+   caja. Un token único movería píxeles en cinco reglas a cambio de nada.
+
+### 10.6 ❗ Lo que costó, y es lo más útil de este registro
+
+⚠️⚠️ **El arnés de mutación dio «0 de 12 muerden» con el test funcionando perfectamente.**
+
+Decidía si el test había caído con `grep -q "FAILED\|failed"` sobre la salida. En esta máquina
+`grep` es **ugrep**, que interpreta ERE: ahí `\|` es un **pipe literal**, así que buscaba la cadena
+`FAILED|failed` y no casaba jamás. Con el arnés arreglado —decidiendo por **código de salida**, que
+no admite interpretación, y con un **control positivo** que exige que el test esté verde antes de
+mutar— salen **13 de 13**.
+
+▶ **La lección, que es la misma de §9.3 con otra cara**: cuando un instrumento dice que *nada*
+funciona, la primera hipótesis es el instrumento. Un arnés de mutación que nunca detecta el fallo es
+peor que no tenerlo, porque **certifica**: habría firmado que 12 aserciones eran decorativas y
+habría mandado a alguien a reescribir un test que estaba bien.
+
+⚠️ **Y el script de conversión abortó en 9 de sus 25 anclas a la primera**, por un defecto propio:
+localizaba reglas con `(?m)^([^{}/@\n][^{}]*?)\{` **sin blanquear los comentarios**, así que un
+`/* … */` que terminara justo encima del selector se comía la cabecera y daba **cero** reglas donde
+había una. Se blanquean **conservando la longitud**, para que los offsets sigan valiendo. El aborto
+hizo su trabajo: no escribió nada hasta que las 25 cuadraron.
+
+### 10.7 Lo que falta
+
+- **Nada de la 2a.** Lo siguiente es la **2b, el hero**, y con ella la escala de sombra.
+- ❗ **La pasada de NAVEGADOR del owner sobre las 11 declaraciones que se mueven** y sobre la tira
+  del pie. La suite comprueba que el token vale lo que tiene que valer; **no comprueba que el
+  resultado guste**, y estas once cambian de aspecto a propósito.
+- ⚠️ **`[data-surface]` sigue sin usarlo nadie.** La 2a tampoco lo consume: la primera vez que se
+  verá funcionar es en la 2b, cuando el hero declare `ink` y las tres excepciones del anillo de foco
+  (`.skip-link`, `.hero__chip`, `.gf-fiche__head`) puedan retirarse.

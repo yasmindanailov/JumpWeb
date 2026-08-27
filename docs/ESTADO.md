@@ -129,15 +129,37 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> · 🆕 **Agente C (el TEMA) → SESIÓN del 2026-08-27 por la tarde/noche: tanda 1 CERRADA y EMPUJADA
->   (`#192`).** Hay un **TERCER carril** desde hoy, por encargo del owner: la capa de tema
+> · 🆕 **Agente C (el TEMA) → tandas 1 y 2a CERRADAS y EMPUJADAS el 2026-08-27 (`#192`, `#193`).**
+>   Hay un **TERCER carril**, por encargo del owner: la capa de tema
 >   (`specs/tema-por-instalacion.md`). La tanda 1 —las dos superficies como ámbito, `--sheet`, los dos
 >   grises, los tintes, 21 radios y las fuentes por instalación— está hecha, verificada y en `main`.
+>   La **2a** —la escala de canto, la ley del motivo cuadrado, el anillo de foco y la tira del pie—
+>   también (§10 de la spec).
 >   ▶ **Ficheros de este carril**: `public/css/*.css` · `resources/views/components/layout.blade.php`
->   y `focused-layout.blade.php` · `resources/views/errors/maintenance.blade.php` ·
+>   y `focused-layout.blade.php` · `resources/views/components/site/footer.blade.php` ·
+>   `resources/views/errors/maintenance.blade.php` ·
 >   `config/theme.php` · `app/Domain/Content/Services/ThemeFonts.php` ·
->   `tests/Feature/Architecture/SurfaceScopeTest.php` · `tests/Feature/Theme/**` ·
+>   `tests/Feature/Architecture/{SurfaceScopeTest,ShapeScaleTest}.php` · `tests/Feature/Theme/**` ·
 >   `docs/specs/tema-por-instalacion.md` · `docs/INSTALACION-CLIENTE.md`.
+>
+>   ❗❗ **LO MÁS IMPORTANTE QUE ESTE CARRIL APRENDIÓ EL 27, y afecta a cualquiera que toque el canvas:**
+>   **la copia local de `mockup_playjumppark/` CADUCA sin avisar.** La del 27 a las 07:30 ya no valía
+>   a las 11:00: `Landing PJP Modos` con **386 líneas de diff** (el hero gana una tira de colores; la
+>   sección de entradas pierde su fondo cian y sus goterones) y `Colores de Marca PJP` también movido.
+>   ▶ **`DesignSync · list_files` + diff ANTES de implementar nada desde ahí.** Una copia vieja se lee
+>   igual de bien que una fresca.
+>
+>   ❗❗ **Y la premisa de la spec del tema §1.2 CADUCÓ**: la regla «el sistema alterna dos superficies,
+>   nunca dos papeles seguidos» **ya no existe**. El hallazgo `S-00` del owner —severidad Alta,
+>   Aplicado— la sustituye por **papel continuo de arriba abajo, y el contraste lo dan las TARJETAS**.
+>   Verificado en el canvas: **cero** fondos a sangre en los 218 KB del mockup (antes había tres).
+>   ▶ **Esto NO tira la tanda 1: la hace más útil.** `[data-surface]` es un selector de atributo, no
+>   está atado a `.section`, así que sirve igual para una tarjeta oscura dentro de una sección clara.
+>
+>   ⚠️ **Y una que los otros dos carriles tienen que saber**: la escala de radios GANÓ dos escalones
+>   (`--r-xs: 5px`, `--r-md: 10px`) y `ShapeScaleTest` **prohíbe escribir un canto en literal**. Si tu
+>   tanda mete un `border-radius: 12px` a mano, el gate muerde. Usa un token, o justifica en qué
+>   familia cae (motivo cuadrado / dibujo) — **las dos listas solo encogen**.
 >
 >   ❗❗ **TRES cosas que los otros carriles necesitan saber, porque tocan terreno compartido:**
 >   1. ⚠️ **`SidebarTokenBudgetTest::MAX_RAW_COLOURS` bajó de 5 a 3.** El cajón comparte `site.css`,
@@ -280,9 +302,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3032 en verde** (17.489 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
-  máquina del agente B; **~68 s** en la del A, la tarde del 27) ·
-  ▶ **+14 tests PHP en el último corte** (`#192`, capa de tema · tanda 1): `SurfaceScopeTest` (8) y
+- Suite **3041 en verde** (17.572 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
+  máquina del carril C; ~42 s en la del B) ·
+  ▶ **+9 tests PHP en el último corte** (`#193`, capa de tema · tanda **2a**): `ShapeScaleTest`.
+  **13 mutaciones, las 13 muerden** — pero solo después de arreglar el arnés. ⚠️⚠️ **El arnés de
+  mutación dio «0 de 12 muerden» con el test funcionando perfectamente**: decidía con
+  `grep -q "FAILED\|failed"` y aquí `grep` es **ugrep en ERE**, donde `\|` es un pipe LITERAL — buscaba
+  la cadena `FAILED|failed` y no casaba jamás. Se decide por **código de salida** y lleva **control
+  positivo** (el test tiene que estar verde antes de mutar). ▶ **Cuando un instrumento dice que NADA
+  funciona, la primera hipótesis es el instrumento**: un arnés que nunca detecta el fallo no es
+  inofensivo, **certifica** — habría firmado que 12 aserciones eran decorativas.
+  ▶ Antes, **+14** (`#192`, tanda 1): `SurfaceScopeTest` (8) y
   `ThemeFontsTest` (6). **13 mutaciones, las 13 muerden.** ⚠️ Y una de ellas destapó que **la guarda de
   la guarda había nacido ciega**: aseveraba un umbral de recuento sobre `:root` y no detectaba que el
   parser se quedara sin la mitad del corpus, porque `site.css` declara el suyo. Se asevera por NOMBRE.
@@ -540,23 +570,26 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 |---|---|
 | **A · menores** | Las **cinco decisiones** de `specs/menores-a-cargo.md` §9.5. La primera (**NUC-3**) bloquea su tanda 2 |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | **El DISEÑO de las secciones y el mockup del layout de página nueva**, que el owner está terminando (dicho por él el 27 por la noche) |
+| **C · tema** | La pasada de **NAVEGADOR** del owner sobre las **11 declaraciones que la 2a mueve a propósito** (spec §10.2, enumeradas) y sobre la **tira del pie**. Y, para la tanda 3, **decidir cuál de las dos variantes de «El parque»** se queda |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
-tiene su tanda 1 en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
+tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
 `landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
 
-▶ **Por dónde retoma el carril C, con nombre y orden** (`specs/tema-por-instalacion.md` §7):
-la **tanda 2, el armazón** — hero, menú, hero footer y pie, sacados de `Landing PJP Modos`, que ya
-está terminado y auditado. **Las secciones NO se tocan** hasta que el owner cierre su diseño.
-❗❗ **Y no se empieza como la 1.** La tanda 1 tenía una promesa verificable por instrumento —*no
-mueve un píxel*— y por eso se pudo cerrar sola. **La 2 SÍ mueve píxeles**: el producto adopta la
-ESTRUCTURA del mockup, neutra en valores (`[DECIDIDO owner]`), y con ella entran la escala de sombra
-y los 56 radios huérfanos. **Su red no es el gate: es el ojo del owner en navegador.** Empezarla
-mientras él no puede mirarla es construir lo que nadie puede validar.
-⚠️ **Y el mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección declara superficie. Es
-correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de verdad** es
-cuando el armazón pinte la primera sección en tinta. Hasta entonces su red son la guarda y las sondas.
+▶ **Por dónde retoma el carril C, con nombre y orden** (`specs/tema-por-instalacion.md` §7 y §10.7):
+la **tanda 2b, el HERO** — la tarjeta con margen en vez del sangrado de hoy, la coreografía de
+scroll y, con ella, **la escala de sombra**. **Las secciones NO se tocan** hasta que el owner decida
+cuál de las dos variantes de «El parque» se queda.
+❗❗ **Y no se empieza como la 1 ni como la 2a.** Las dos primeras tenían promesas verificables por
+instrumento —*no mueve un píxel* la 1; *mueve estas 11 y solo estas* la 2a—. **La 2b cambia el
+aspecto de la primera pantalla**: su red no es el gate, es el ojo del owner en navegador.
+▶ **Y con la 2b entra la sombra, que sale con su número**: no hay escala extraíble sin coste —la
+mejor de 6 escalones mueve **35 de 55 y 125 px de blur**—, así que **crearla es decidirla**.
+⚠️ **El mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección ni tarjeta declara
+superficie. Es correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de
+verdad** es en la 2b, cuando el hero declare `ink`. Y ese mismo día se retiran las **tres excepciones
+del anillo de foco** (`.skip-link`, `.hero__chip`, `.gf-fiche__head`), que existen justo porque su
+fondo oscuro aún no declara superficie.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`) y la siguiente rebanada del gate documental se

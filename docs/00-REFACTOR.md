@@ -2320,11 +2320,22 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **tanda 1 CERRADA (6 de 6) · tanda 2 (el armazón) sin empezar**
+### La CAPA DE TEMA 🟦 — **tandas 1 y 2a CERRADAS · 2b (el hero) sin empezar**
 
-> Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7**) · Decisión `#192`.
+> Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7** si vas a la 2b, por **§10** si quieres
+> saber cómo quedó la forma) · Decisiones `#192` y `#193`.
 > Hermana de `landing-white-label.md` §4.5: aquélla decidió que el tema son TRES mecanismos y
 > ejecutó su tanda A; ésta construye **lo que aquélla dio por supuesto y no existía**.
+>
+> ❗❗ **DOS cosas de esta sección envejecieron el mismo día y la corrección va primero:**
+> 1. **La premisa de §1.2 CADUCÓ.** «El sistema alterna dos superficies, nunca dos papeles seguidos»
+>    **ya no es cierto**: el hallazgo `S-00` del owner —Alta, Aplicado— lo sustituye por **papel
+>    continuo de arriba abajo, y el contraste lo dan las TARJETAS**. Verificado: **cero** fondos a
+>    sangre en los 218 KB del mockup. ▶ El mecanismo de la tanda 1 no se pierde: **se usa más**,
+>    porque `[data-surface]` vale igual en una tarjeta que en una sección.
+> 2. **La tanda 2 se partió en cuatro** con el owner delante: **2a** (forma + pie, hecha), **2b** (el
+>    hero, con la escala de sombra), **2c** (el menú → **spec propia**, toca 12 vistas) y **2d** (el
+>    movimiento: 237 declaraciones, 48 duraciones y 20 curvas).
 
 - ✅ **1 · Cimientos** (2026-08-27, `#192`). Las dos superficies como **ámbito**, `--sheet`, los dos
       grises, los tintes, 21 radios y las fuentes por instalación.
@@ -2339,13 +2350,47 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       eran **dos mitades que no se hablaban** (el token se redefinía y el fichero no se descargaba).
       ⚠️ **El mecanismo aún no lo usa nadie**: ninguna sección declara superficie. Es el cimiento; su
       red hoy son la guarda y las sondas, **no el ojo del owner**.
-- [ ] **2 · El armazón** — hero, menú, hero footer y pie. `[DECIDIDO owner]`: el producto adopta la
-      **ESTRUCTURA** del mockup, **neutra en valores**; las secciones NO se tocan. **Aquí el producto
-      SÍ cambia de aspecto**, y aquí entran las dos decisiones de escala que se aparcaron a propósito:
-      la de **sombra** y los **56 radios huérfanos**. La frontera entre la 1 y la 2 es «¿mueve
-      píxeles?», y no es cosmética: es lo que permite revisar cada una de una forma distinta.
-- [ ] **3 · Las secciones**, pieza a pieza desde `Elementos Fachada`. ⚠️ Ese artboard está **sin
-      migrar**: de ahí se saca la FORMA, nunca el color.
+- ✅ **2a · La FORMA y el pie** (2026-08-27, `#193`). La **escala de canto cerrada** (`--r-xs: 5px` y
+      `--r-md: 10px` nuevos → `5·8·10·14·16·28·999`), la **ley del motivo cuadrado**, el **anillo de
+      foco tokenizado** y la **tira de marca del pie**.
+      ▶ **Los dos escalones no son de gusto**: salen de minimizar el movimiento sobre los 23 cantos en
+      literal. Con la escala anterior se movían **23 de 23 y 53 px**; con éstos, **11 y 20 px**. Un
+      tercer escalón bajaba a 6 y 10 y **se descartó a propósito** — con saltos de 2 px deja de ser una
+      escala y pasa a ser un continuo, y una escala que no disciplina es una que el siguiente rodea.
+      ▶ **Los 56 «huérfanos» eran DOS leyes mezcladas.** 16 siguen `radio ≈ lado / 4` (mediana EXACTA
+      4,00): es la forma del bloque de espuma a cada tamaño, no deuda. Meterlos en la escala habría
+      roto una familia proporcional. Literales: **95 → 70**; huérfanos: **56 → 31**.
+      ▶ **El anillo de foco** cierra en nuestro código el `M-01` de la auditoría del cliente (Alta).
+      El `outline-offset` NO se tokeniza: es encaje de cada componente.
+      ⚠️ **Dos instrumentos propios salieron rotos, y las dos veces parecía lo contrario.** El
+      clasificador de sombras usaba `(-?\d+)px`, que **no ve un `0` sin unidad** —justo donde acaba
+      una sombra dura—; y el arnés de mutación dio **«0 de 12 muerden»** con el test perfecto, porque
+      decidía con `grep -q "A\|B"` y aquí `grep` es **ugrep en ERE** (`\|` = pipe literal). Con ambos
+      arreglados: **13 de 13 muerden**. ▶ **Cuando un instrumento dice que nada funciona, la primera
+      hipótesis es el instrumento.**
+      ⚠️ **La tira CICLA, no interpola**, y eso se decidió midiendo: con dos colores casi
+      complementarios la franja del medio salía barro (`#868D7D`), y **`oklab` no lo arreglaba**
+      (croma 0,024 vs 0,025 de `srgb`). El producto no elige la marca de su cliente.
+      ❗ **Falta la pasada de NAVEGADOR del owner** sobre las 11 declaraciones que se mueven.
+- [ ] **2b · El HERO** — tarjeta con margen en vez de a sangre, coreografía de scroll, **y la escala
+      de sombra**. `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
+      valores**. **Aquí el producto SÍ cambia de aspecto de verdad**: su red es el ojo en navegador.
+      ▶ La sombra entra aquí porque **no hay escala extraíble sin coste**: probadas de 3 a 6
+      escalones, la mejor mueve **35 de 55 y 125 px de blur**. Crearla es decidirla.
+      ▶ Y aquí el hero declara `[data-surface="ink"]`, que es **la primera vez que el mecanismo de la
+      tanda 1 se usa de verdad** — y el día que las tres excepciones del anillo de foco se retiran.
+- [ ] **2c · El MENÚ → spec propia.** `[DECIDIDO owner, 2026-08-27]`: sustituir la barra horizontal
+      por logo + hamburguesa + menú a pantalla completa toca **12 vistas**, los dos desplegables con
+      sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil. No es «adoptar una
+      estructura»: es cambiar la navegación del sitio.
+- [ ] **2d · El MOVIMIENTO** — 4 curvas y 7 duraciones como tokens. Medido: **237 declaraciones, 48
+      duraciones distintas y 20 curvas** (el sistema del cliente declara 7 y 4); `200ms` sola tiene
+      110 usos. No mueve píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa
+      interactuando**.
+- [ ] **3 · Las secciones**, pieza a pieza. ⚠️ El owner subió el 2026-08-27 **dos artboards nuevos**,
+      `Descubre-el-Parque` y `Recorrido-Parque`: son **dos variantes de la misma sección** («02 · El
+      parque») y **cuál se queda está SIN DECIDIR**. `Elementos Fachada` sigue **sin migrar**: de ahí
+      se saca la FORMA, nunca el color.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

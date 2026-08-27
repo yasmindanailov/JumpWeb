@@ -10090,3 +10090,99 @@ queda limpia: **la 1 no mueve píxeles, la 2 sí**, y los 56 radios huérfanos v
 sincroniza el árbol de trabajo y no lo que git sigue—, con la receta para regenerarla en la §1 de la
 spec. Medido: **10 de sus 18 artboards están sin migrar**, y entre ellos los de logotipo, menú y hero.
 
+
+## #193 · 2026-08-27 · La capa de TEMA, tanda 2a — la FORMA también sigue al cliente, y dos leyes que estaban mezcladas
+La tanda 1 (`#192`) hizo que el COLOR siguiera al paquete de la instalación. Ésta hace lo mismo con
+la **forma**, y el problema no era el mismo: en color había **866 usos que ya leían por token** y
+bastaba re-escoparlos; en forma había **95 literales de `border-radius`** y **23 reglas de foco con
+cinco tratamientos distintos y CERO tokens**. Un cliente podía cambiar toda su marca y sus cantos
+—y el anillo con el que su visitante navega con teclado— seguían siendo los del primero. Sin fallar,
+sin avisar.
+
+▶ **`[DECIDIDO owner, 2026-08-27]`, con el recorte hecho con él delante y con números** (regla de la
+spec §7, la misma del waiver): la tanda 2 se parte en **2a** (la forma + el pie, ésta), **2b** (el
+hero, con la escala de sombra), **2c** (el menú → **spec propia**) y **2d** (el movimiento).
+
+**Lo que entró:**
+- **La escala de canto, CERRADA**: `--r-xs: 5px` y `--r-md: 10px` nuevos → `5·8·10·14·16·28·999`.
+  25 declaraciones convertidas; los literales bajan de **95 a 70** y los huérfanos de **56 a 31**.
+  ▶ **Los dos valores no son de gusto**: salen de minimizar el movimiento sobre los 23 cantos que
+  estaban en literal, probando la rejilla entera. Con la escala anterior se movían **23 de 23 y
+  53 px**; con estos dos escalones, **11 y 20 px**. Un tercer escalón en 12 bajaba a 6 y 10, y **se
+  descartó a propósito**: con `8·10·12·14·16` los saltos son de 2 px y eso deja de ser una escala
+  para ser un continuo — y una escala que no disciplina es una que el siguiente rodea.
+- **El anillo de foco tokenizado**: `--focus-w` / `--focus-color` / `--focus-outline`; 8 reglas dejan
+  de escribirlo a mano y quedan 3 excepciones declaradas. Cierra en nuestro código el hallazgo
+  **`M-01`** de la auditoría del propio cliente (severidad Alta). ⚠️ **El `outline-offset` NO se
+  tokeniza**: hay 2, 3, 4 y −2 px y cada uno responde a la forma de su caja; unificarlo movería
+  píxeles a cambio de nada.
+- **La tira de marca del pie** (`C2 · tiras`): `--strip-1..5`, sin un solo hex, y sustituye al filete
+  de 1 px que había.
+
+❗❗ **Y lo primero que hizo esta tanda fue descubrir que la premisa de su propia spec había CADUCADO.**
+El hallazgo **`S-00`** de `Auditoría Landing PJP` —severidad Alta, **Aplicado**— dice: «el fondo de
+una sección nunca lleva color… papel continuo de arriba abajo… **ni negro ni cian a sangre en ninguna
+sección**», y **pasa a ser norma por encima del orden de página**. Los dos intentos de alternancia
+están **Revertidos**. Verificado en el canvas y no creído: **cero** `calc(50% - 50vw)` y **cero**
+`width:100vw` en los 218 KB del mockup (antes había tres).
+▶ **Eso NO deja inútil el mecanismo de la tanda 1: lo hace más útil.** `[data-surface]` es un selector
+de atributo, no está atado a `.section`, así que vale igual para una **tarjeta** de tinta dentro de una
+sección de papel — que es exactamente lo que la norma nueva pide («tinta para tarifas y packs»). Pasa
+de usarse dos veces a usarse en cada tarjeta oscura.
+
+❗ **Los 56 «radios huérfanos» eran DOS leyes mezcladas, no una lista de deuda.** 16 de ellos siguen
+`radio ≈ lado / 4` —la familia `.jj-block` y sus primos— con **mediana EXACTA 4,00** y 12 de 16 dentro
+de ±12 %. Es la forma del bloque de espuma a cada tamaño. Meterlos en la escala de canto habría roto
+una familia proporcional para «arreglar» algo que no estaba roto. `ShapeScaleTest` asevera la ley, así
+que la lista de excepciones **no puede convertirse en un cajón**: para entrar hay que cumplirla.
+
+**Lo que SALIÓ, y sale con su número:**
+- **La sombra.** No hay escala extraíble sin coste: probadas todas de 3 a 6 escalones, la mejor
+  (`18·28·38·48·60·80`) **mueve 35 de 55 y 125 px de blur**. Crear la escala **es decidirla**, y va
+  con el hero, que es cuando el armazón pide sombras concretas.
+- **El movimiento.** **237 declaraciones, 48 duraciones distintas y 20 curvas**; el sistema del
+  cliente declara 7 y 4. `200ms` sola tiene 110 usos. Es tanda propia, y su red no es una captura:
+  es interactuar.
+
+⚠️⚠️ **DOS instrumentos MÍOS salieron rotos, y las dos veces parecía lo contrario. Es la parte más
+útil de esta entrada.**
+1. **El clasificador de sombras usaba `(-?\d+)px`, que NO ve un `0` sin unidad** — y una sombra dura
+   acaba justo en `… 0 <color>`. Daba «0 duras». Corregido (con guarda que caza sus propios ejemplos)
+   da **6**, que al mirarlas una a una son **anillos de foco `0 0 0 Npx`**. La respuesta a lo que
+   importaba —*¿existe la sombra dura proyectada de PJP en el producto?*— **sigue siendo cero**, igual
+   que decía el instrumento roto. ▶ **Dos medidas coinciden y solo una puede explicar la diferencia:
+   vale la que sabría encontrarla. Una medida que acierta por casualidad no es una medida.**
+2. **El arnés de mutación dio «0 de 12 muerden» con el test funcionando perfectamente.** Decidía con
+   `grep -q "FAILED\|failed"` y aquí `grep` es **ugrep en ERE**, donde `\|` es un **pipe literal**:
+   buscaba la cadena `FAILED|failed` y no casaba jamás. Con el arnés decidiendo por **código de
+   salida** y con **control positivo** (el test tiene que estar verde antes de mutar), salen **13 de
+   13**. ▶ **Cuando un instrumento dice que NADA funciona, la primera hipótesis es el instrumento.**
+   Un arnés que nunca detecta el fallo es peor que no tenerlo, porque **certifica**: habría firmado
+   que 12 aserciones eran decorativas y mandado a alguien a reescribir un test que estaba bien.
+
+⚠️ **Y la tira se escribió al revés primero.** El plan repartía cinco pasos de `color-mix` entre los
+dos colores de marca; con la del segundo cliente (cian→naranja, casi complementarios) la franja del
+medio salía **`#868D7D`, barro**. Y **no era cosa del espacio de color**: medido, `oklab` da croma
+mínimo **0,024** frente a **0,025** de `srgb`. Interpolar entre dos colores *arbitrarios* no es
+robusto y **el producto no elige la marca de su cliente**: las franjas **CICLAN**.
+
+⚠️ **Dos decisiones de producto que la medida forzó:**
+- **El pie conserva sus CUATRO columnas.** El mockup tiene una fila de enlaces porque es de UNA
+  página; el producto sirve a seis. Adoptar su estructura habría perdido teléfono, correo, redes,
+  «Mi cuenta» y «Registro». Se adopta la **tira** y el ritmo de la fila inferior. Es la línea del
+  owner —«los datos son los que tenemos ahora»— aplicada también a la estructura.
+- **El menú sale a spec propia**: sustituir la barra horizontal por logo + hamburguesa + menú a
+  pantalla completa toca **12 vistas**, los dos desplegables con sus datos del CMS (`show_in_nav`),
+  el botón de registro y la barra de móvil. No es «adoptar una estructura»: es cambiar la navegación.
+
+⚠️ **Y la copia local del canvas estaba CADUCADA al empezar**: `Landing PJP Modos` con **386 líneas de
+diff** contra el remoto (el hero gana una tira de colores; entradas pierde su fondo cian) y `Colores
+de Marca PJP` también movido. **`DesignSync · list_files` + diff antes de implementar nada**: una
+copia vieja se lee igual de bien que una fresca y no avisa. El canvas tiene además **dos artboards
+nuevos** —`Descubre-el-Parque` y `Recorrido-Parque`—, que son **dos variantes de la misma sección** y
+**cuál se queda está sin decidir**.
+
+`specs/tema-por-instalacion.md` §10 · `ShapeScaleTest` (9 casos, **13/13 mutaciones muerden**) ·
+suite **3041** verde · Pint 932 · seis fichas nuevas en `DEUDA.md`.
+❗ **Sigue 🟦: falta la pasada de NAVEGADOR del owner** sobre las 11 declaraciones que se mueven a
+propósito (enumeradas en la spec §10.2) y sobre la tira del pie.
