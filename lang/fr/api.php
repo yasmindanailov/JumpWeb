@@ -44,6 +44,8 @@ return [
         'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
         'waiver_document_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
         'waiver_email_unverified' => 'Vérifiez votre adresse e-mail avant de signer la décharge.',
+        'dependent_not_minor' => 'La personne à charge doit être mineure.',
+        'dependents_limit_reached' => 'Votre compte a atteint le nombre maximal de personnes à charge (:max).',
     ],
 
     'register' => [

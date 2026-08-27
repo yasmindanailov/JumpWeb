@@ -44,6 +44,8 @@ return [
         'waiver_not_internal' => 'The waiver is not signed on this website.',
         'waiver_document_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
         'waiver_email_unverified' => 'Verify your email address before signing the waiver.',
+        'dependent_not_minor' => 'A dependent must be under 18.',
+        'dependents_limit_reached' => 'Your account has reached its maximum number of dependents (:max).',
     ],
 
     'register' => [

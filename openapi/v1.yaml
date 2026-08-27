@@ -1632,6 +1632,127 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/dependents:
+    get:
+      tags: [Cuenta]
+      operationId: getMyDependents
+      summary: Mis menores a cargo
+      description: |
+        Las personas a cargo que el titular ha declarado y no ha retirado, en el orden en que las
+        declaró (Fase 6, `specs/menores-a-cargo.md` §4.1, §4.2). Una retirada **no vuelve a salir**
+        nunca: si tenía un waiver firmado detrás, sigue existiendo desvinculada bajo el régimen
+        restringido del registro; si no, se borró.
+
+        `age` e `is_minor` se **derivan** de `born_on` con el «hoy» del parque en cada petición: no
+        hay edad guardada que pueda quedarse vieja. `adult_from` es el día en que cumple 18 y deja
+        de estar cubierto por el waiver del adulto — la lista lo marca, nadie lo borra.
+
+        Lista corta por naturaleza (tope de servidor, `dependents.max_per_account`): no se pagina,
+        pero lleva `meta.total` como cualquier otra.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Las personas a cargo activas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependentList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+    post:
+      tags: [Cuenta]
+      operationId: addMyDependent
+      summary: Declarar un menor a cargo
+      description: |
+        Declara una persona a cargo: **nombre y fecha de nacimiento, nada más** (`DECISIONES #142`).
+        El nombre es la etiqueta con la que el titular la distingue —puede ser el que use en casa—;
+        la puerta no lo enseña nunca.
+
+        Dos reglas de dominio, con su código:
+        - `422 dependent_not_minor` — hoy, en el reloj del parque, ya tiene 18 o más. Un adulto
+          firma su propio waiver.
+        - `422 dependents_limit_reached` — la cuenta está en el tope de la instalación
+          (`params.max`). Es un tope de **servidor**, no de pantalla (`PAY-12`).
+
+        Una fecha futura o mal formada es `422 validation_failed` sobre `born_on`. **No hay
+        edición**: una fecha de nacimiento corregida es otra persona a cargo (quitar y volver a
+        declarar), porque con una firma detrás sería reescribir lo firmado.
+
+        Responde **201 con la persona a cargo**, la misma forma que cada elemento de la lista.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependentCreateRequest'
+      responses:
+        '201':
+          description: Declarada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dependent'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          description: |
+            `validation_failed` (con `fields`) · `dependent_not_minor` — ya tiene 18 o más ·
+            `dependents_limit_reached` — la cuenta está en su tope (`params.max`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/dependents/{dependent}:
+    delete:
+      tags: [Cuenta]
+      operationId: removeMyDependent
+      summary: Quitar un menor a cargo
+      description: |
+        Quita una persona a cargo de la cuenta (`specs/menores-a-cargo.md` §4.4). **Quitar es
+        desvincular, no borrar, si hay algo detrás**: con un waiver firmado en su nombre la fila
+        se conserva desvinculada —el registro probatorio sigue apuntando ahí— y desaparece de esta
+        lista y de la pantalla de puerta; sin firma ni reservas se borra de verdad. El cliente no
+        distingue los dos casos y no le hace falta. Volver a declararla después es **otra** persona
+        a cargo, con su propia firma.
+
+        Un id ajeno, inexistente o ya retirado responde `404`: la API no distingue los tres casos
+        (anti-IDOR, §4.9).
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: dependent
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Retirada (desvinculada o borrada).
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/account-context:
     get:
       tags: [Cuenta]
@@ -1975,6 +2096,9 @@ components:
                 - waiver_not_internal
                 - waiver_document_stale
                 - waiver_email_unverified
+                # Fase 6 · menores a cargo (422 los dos).
+                - dependent_not_minor
+                - dependents_limit_reached
             message:
               type: string
               description: Mensaje legible en el idioma negociado.
@@ -2287,7 +2411,7 @@ components:
 
         Su forma la componen dos módulos: Identity pone perfil, consentimientos y roles, y Booking
         pone `orders` por contrato (`Booking\Contracts\CustomerOrderHistory`) — porque son sus datos.
-      required: [exported_at, profile, consents, roles, orders]
+      required: [exported_at, profile, consents, roles, dependents, orders]
       additionalProperties: false
       properties:
         exported_at:
@@ -2308,6 +2432,13 @@ components:
             esperable, y va igualmente porque es un dato que existe sobre él.
           items:
             type: string
+        dependents:
+          type: array
+          description: |
+            Las personas a cargo que declaró y no ha retirado (Fase 6). Datos que él mismo aportó,
+            así que le pertenecen (art. 20).
+          items:
+            $ref: '#/components/schemas/ExportedDependent'
         orders:
           type: array
           description: Los pedidos del titular, del más antiguo al más reciente.
@@ -2391,6 +2522,25 @@ components:
         version:
           type: string
           description: Versión del documento que se aceptó, para saber a QUÉ se dijo que sí.
+
+    ExportedDependent:
+      type: object
+      description: |
+        Una persona a cargo declarada por el titular y no retirada (Fase 6,
+        `specs/menores-a-cargo.md` §5). Las retiradas con un waiver firmado detrás viven bajo el
+        régimen restringido del registro probatorio y, como la propia firma, **no salen aquí**.
+      required: [name, born_on, added_at]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        born_on:
+          type: string
+          format: date
+        added_at:
+          type: string
+          format: date-time
+          nullable: true
 
     ExportedOrder:
       type: object
@@ -4763,6 +4913,62 @@ components:
           type: string
           format: uri
           description: '`GET /me/waiver/{signature}/pdf`.'
+
+    DependentList:
+      type: object
+      required: [data, meta]
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dependent'
+        meta:
+          $ref: '#/components/schemas/ListMeta'
+
+    Dependent:
+      type: object
+      description: |
+        Una persona a cargo, vista por su titular (`specs/menores-a-cargo.md` §4.1, §4.2). La edad
+        no se guarda: se deriva de `born_on` con el «hoy» del parque en cada petición.
+      required: [id, name, born_on, age, is_minor, adult_from]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          description: La etiqueta del titular («el nombre que use en casa»). La puerta no la enseña.
+        born_on:
+          type: string
+          format: date
+          description: '`Y-m-d`.'
+        age:
+          type: integer
+          minimum: 0
+          description: Años cumplidos hoy, en el reloj del parque. Derivada, nunca guardada.
+        is_minor:
+          type: boolean
+          description: '`false` desde el día en que cumple 18: «ya no está cubierto». La fila no se borra.'
+        adult_from:
+          type: string
+          format: date
+          description: El día en que cumple 18 (`Y-m-d`).
+
+    DependentCreateRequest:
+      type: object
+      description: Nombre y fecha de nacimiento, nada más. Cada campo de más sería dato personal de un menor.
+      required: [name, born_on]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        born_on:
+          type: string
+          format: date
+          description: '`Y-m-d`, no futura y de un menor (hoy, menos de 18 años).'
 
     EmailRequest:
       type: object

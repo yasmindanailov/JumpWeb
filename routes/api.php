@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeCredentialsController;
+use App\Http\Controllers\Api\V1\MeDependentsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MePrivacyController;
 use App\Http\Controllers\Api\V1\MeProfileController;
@@ -244,6 +245,21 @@ Route::name('api.v1.')->group(function (): void {
         Route::get('/me/waiver/{signature}/pdf', [MeWaiverController::class, 'pdf'])
             ->middleware('throttle:10,1,waiver-pdf')
             ->name('me.waiver.pdf');
+
+        // ── Menores a cargo (Fase 6 · C, `specs/menores-a-cargo.md` §4.2, §4.4, §4.5, §4.9) ───────
+        // Solo LEER, AÑADIR y QUITAR: no hay edición —una fecha de nacimiento corregida es otra
+        // persona a cargo, y con una firma detrás sería reescribir lo firmado—. El tope es de SERVIDOR
+        // (`dependents.max_per_account`, `PAY-12`) y la pertenencia se re-valida en el dominio: un id
+        // ajeno «no existe» (404). El `throttle` acota una superficie que crea PII de terceros; con
+        // PREFIJO, como los del waiver (revisión `#169` §10.5).
+        Route::get('/me/dependents', [MeDependentsController::class, 'index'])->name('me.dependents.index');
+        Route::post('/me/dependents', [MeDependentsController::class, 'store'])
+            ->middleware('throttle:30,1,dependents-write')
+            ->name('me.dependents.store');
+        Route::delete('/me/dependents/{dependent}', [MeDependentsController::class, 'destroy'])
+            ->middleware('throttle:30,1,dependents-write')
+            ->whereNumber('dependent')
+            ->name('me.dependents.destroy');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
 

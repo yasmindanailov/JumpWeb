@@ -165,6 +165,20 @@ enum ApiErrorCode: string
      */
     case WaiverEmailUnverified = 'waiver_email_unverified';
 
+    // ── Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §4.1, §4.5) ──────────────────────
+
+    /**
+     * 422 — la fecha de nacimiento no es la de un MENOR: hoy, en el reloj del parque, ya tiene 18 o
+     * más. Un adulto firma su propio waiver; no se declara «a cargo» de otro.
+     */
+    case DependentNotMinor = 'dependent_not_minor';
+
+    /**
+     * 422 — la cuenta ya tiene el máximo de personas a cargo de la instalación
+     * (`dependents.max_per_account`; tope de SERVIDOR, `PAY-12`). Lleva `params.max`.
+     */
+    case DependentsLimitReached = 'dependents_limit_reached';
+
     /** Clave i18n del mensaje legible. Indirección deliberada: el código público no la conoce. */
     public function messageKey(): string
     {

@@ -7,4 +7,8 @@ return [
     'password' => [
         'uncompromised' => 'That password is too common (it appears in known data breaches). Please choose a stronger one, for example a long, memorable phrase.',
     ],
+
+    'attributes' => [
+        'born_on' => 'date of birth',
+    ],
 ];

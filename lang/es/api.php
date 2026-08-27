@@ -46,6 +46,8 @@ return [
         'waiver_not_internal' => 'El waiver no se firma en esta web.',
         'waiver_document_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
         'waiver_email_unverified' => 'Para firmar el waiver primero hay que verificar el correo.',
+        'dependent_not_minor' => 'La persona a cargo tiene que ser menor de edad.',
+        'dependents_limit_reached' => 'Ya has llegado al máximo de menores a cargo de tu cuenta (:max).',
     ],
 
     // Avisos POR CAMPO del alta (`POST /auth/register`) que solo emite el servidor en el 422.

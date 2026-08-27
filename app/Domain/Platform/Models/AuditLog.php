@@ -185,6 +185,10 @@ class AuditLog extends Model
         'users.password_reset_sent',
         'users.send_reset_blocked',
 
+        // ── Menores a cargo (Fase 6 · C, `specs/menores-a-cargo.md`) — target = User; sin PII ──
+        'dependents.added',                 // payload: dependent_id (nunca el nombre ni la fecha)
+        'dependents.removed',               // payload: dependent_id + mode (deleted | unlinked)
+
         // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────
         'legal.version_published',          // target = LegalDocumentVersion (la fila del 1.er idioma)
         'waiver.declared',                  // firma DECLARADA por un operador (alta presencial)

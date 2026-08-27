@@ -204,6 +204,15 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             $this->consents()->delete();
             $this->roles()->detach();
 
+            // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §5, `RGPD-01` ampliada): cada
+            // persona a cargo sigue el régimen de su waiver. Con una firma detrás se CONSERVA vinculada
+            // bajo el mismo tratamiento restringido que la firma (desvinculada: sale de toda superficie;
+            // la poda la retira cuando su última firma vence). Sin firma ni referencias es el nombre y la
+            // fecha de nacimiento de un menor sin nada que los justifique: se borra de verdad.
+            $this->dependents()->get()->each(
+                static fn (Dependent $dependent) => $dependent->hasReferences() ? $dependent->unlink() : $dependent->delete()
+            );
+
             // RGPD art. 17 — PII de TERCEROS (auditoría Fase 1, A1): los datos de invitados de los
             // pedidos del titular (nombres y ALERGIAS de menores = datos de salud, art. 9) viven en
             // `order_items.guest_data`/`event_data`. El deber fiscal AEAT cubre la FACTURA (importes,
@@ -310,6 +319,18 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function waiverSignatures(): HasMany
     {
         return $this->hasMany(WaiverSignature::class);
+    }
+
+    /**
+     * Fase 6 · menores a cargo — las PERSONAS A CARGO que este titular declaró
+     * (`specs/menores-a-cargo.md` §4.1–§4.4): incluye las DESVINCULADAS (`removed_at`), que siguen
+     * apuntando aquí porque hay un waiver firmado detrás. Lo que el titular VE es `->active()`.
+     *
+     * @return HasMany<Dependent, $this>
+     */
+    public function dependents(): HasMany
+    {
+        return $this->hasMany(Dependent::class);
     }
 
     /**

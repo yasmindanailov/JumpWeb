@@ -1838,7 +1838,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
-### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25
+### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25 · menores a cargo (C) desde el 2026-08-27
 - [ ] **Segundo driver de pasarela** (Stripe u otros) sobre el puerto `Booking\Contracts\
       PaymentInitiation` que dejó el cierre de Fase 3: selección de driver por configuración, e
       imprescindible para instalar un cliente fuera de España. Se aplazó aquí a propósito
@@ -1849,7 +1849,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
 
-#### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados; **B (waiver) en ejecución**
+#### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados; **B (waiver) y C (menores a cargo) en ejecución**
 
 > Decisión que los enmarca: **`DECISIONES #142`** (2026-08-25, sesión de arquitectura con el owner).
 > La app móvil existe para **fidelizar**, y de ese propósito salen cuatro subsistemas.
@@ -1974,13 +1974,32 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       ⚠️ `RGPD-01` **no contiene hoy la frase que hay que modificar**: primero se le añade lo que el
       código ya hace y ella calla, y **después** se restringe.
 - [ ] **C · Menores a cargo** — `docs/specs/menores-a-cargo.md`. Nombre y fecha de nacimiento, tope 20
-      configurable, la edad **derivada y nunca persistida**. La asignación de una entrada a un menor va
-      en el embudo, **por dos puertas** (con sesión en el paso 3; sin ella, tras identificarse en el 5).
-      ⚠️ Los **grupos escolares quedaron FUERA** por decisión del owner.
-      ✅ **REVISADA (`#156`, §8): sin bloqueantes, se implementa tal cual.** Es la que menos hallazgos
-      tuvo, y el principal es **buena noticia**: el mecanismo que protege los datos del menor
-      (`cart.js::save()` es una **lista blanca**, no un filtro) es más fuerte de lo que ella creía —
-      pero está en `cart.js`, no en `selection.js`, que es donde la spec mandaba a mirar.
+      de servidor, quitar = desvincular si hay firma detrás; la asignación la posee Identity por id
+      entero (§4.6) y entra en el embudo por dos puertas sin paso nuevo (§4.7).
+      ▶ 🟦 **EN EJECUCIÓN (carril A, `[DECIDIDO owner]` `#190`): la TANDA 1 está en el árbol** (`#191`,
+      spec **§9**). Sigue 🟦 y no ✅ porque faltan las tandas 2–4 **y las cinco decisiones de §9.5 son
+      del owner** (la 1.ª, NUC-3, bloquea la tanda 2; la 2.ª, el techo del chunk, bloquea la 3).
+  - [x] **C · tanda 1 — el NÚCLEO en Identity + la API** (2026-08-27, `#191`, carril A): `dependents`
+        (`user_id` RESTRICT · `name` · `born_on` · `removed_at`, y nada más: la edad se DERIVA fecha
+        contra fecha en el «hoy» del parque), `DependentRegistry` (solo menores; tope
+        `dependents.max_per_account` bajo el lock de la fila del titular; quitar = `unlink()` con firma
+        detrás / `delete()` sin ella; ajeno = inexistente), `GET|POST|DELETE /me/dependents` contra el
+        contrato (`dependent_not_minor` · `dependents_limit_reached` con `params.max`), `anonymize()`
+        que desvincula o borra (`RGPD-01`), `dependents[]` en el export (`RGPD-04`), la purga de go-live
+        antes que `users`, la poda de las desvinculadas sin firma y el tope en Ajustes → «Puerta».
+        **34 casos · 7 mutaciones, las 7 muerden · 14 comprobaciones HTTP sobre MySQL con Bearer.**
+        ⚠️ **Sin ninguna firma de menor todavía, a propósito**: NUC-3 se decide ANTES de la primera.
+  - [ ] **C · tanda 2 — la firma del menor**: `POST /me/dependents/{id}/waiver` y su estado en la
+        lista, la PERTENENCIA del `subject_id` en `WaiverSigner` (`CRITICAL_RE`: `verify-chain` +
+        `VERIFY_CONC=1`), la FK `waiver_signatures.subject_id → dependents` RESTRICT, el verificador con
+        filas reales, el PDF diciendo de quién es la firma. **Bloqueada por §9.5·1 (NUC-3).**
+  - [ ] **C · tanda 3 — el cajón**: la zona «Menores a cargo» en la sección de cuenta (una línea en
+        `ZONES` + rótulo + store), con el «ya no está cubierto» de §4.1, MEDIDA antes de decidir el
+        techo del chunk. **Bloqueada por §9.5·2.**
+  - [ ] **C · tanda 4 — la asignación en el embudo** (§4.7–§4.10): la tabla de Identity con el ítem
+        por id entero, las dos puertas, el hueco en la lista blanca de `cart.js::save()` sobre `v: 1`
+        (§8.1, §8.2), la re-validación en servidor (§4.9) y la escritura post-commit fuera del lock
+        (§4.10). Es la tanda que toca el checkout.
 - [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer

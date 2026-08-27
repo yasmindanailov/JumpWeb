@@ -479,7 +479,7 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 
 Además: dos alias morph (`legal_document_version`, `waiver_signature`), tres acciones de auditoría
 (`legal.version_published`, `waiver.signed`, `waiver.declared`) y el bloque `admin.waiver.*` de
-`lang/es/admin.php`. Recuentos del gate tras las dos tandas: **32 modelos · 79 migraciones**.
+`lang/es/admin.php`. Recuentos del gate tras las dos tandas (entonces): **32 modelos y 79 migraciones**.
 
 ### 9.2 Las TRES cosas en que la ejecución se apartó del cuerpo, y por qué
 

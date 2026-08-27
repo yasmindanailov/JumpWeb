@@ -103,6 +103,7 @@ return [
         'name' => 'nom',
         'email' => 'e-mail',
         'phone' => 'téléphone',
+        'born_on' => 'date de naissance',
         'password' => 'mot de passe',
         'accept_privacy' => 'la politique de confidentialité',
         'accept_terms' => 'les conditions générales',

@@ -2438,4 +2438,10 @@ return [
             'pdf' => 'PDF',
         ],
     ],
+
+    // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §4.5): el ajuste del tope, en «Puerta».
+    'dependents' => [
+        'settings_max' => 'Menores a cargo por cuenta (máx.)',
+        'settings_max_hint' => 'Cuántas personas a cargo puede declarar cada cuenta de cliente. Es un tope de servidor —no solo de pantalla— y no afecta a las que ya estén declaradas. Vacío = 20.',
+    ],
 ];

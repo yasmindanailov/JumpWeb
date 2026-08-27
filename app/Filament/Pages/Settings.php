@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Payments\Services\PaymentSettings;
@@ -143,6 +144,9 @@ class Settings extends Page
         // `puerta.waiver_check_enabled` ya no se edita: `save()` lo escribe como espejo del modo.
         'waiver.mode' => 'waiver',
         'waiver.retention_months' => 'waiver',
+        // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §4.5): el tope de personas a cargo por
+        // cuenta. Es un invariante de SERVIDOR (lo aplica `DependentRegistry`); vacío = 20.
+        'dependents.max_per_account' => 'dependents',
         'payment.tax_rate' => 'payment',
         'packs.max_per_slot' => 'packs',
         'packs.max_guests_per_slot' => 'packs',
@@ -729,7 +733,7 @@ class Settings extends Page
             ]);
     }
 
-    /** Puerta (técnico): freno anti-abuso de validaciones + modo y conservación del waiver. Colapsada. */
+    /** Puerta (técnico): freno anti-abuso de validaciones, modo y conservación del waiver, tope de menores a cargo. Colapsada. */
     private function doorSection(): Section
     {
         return Section::make(__('admin.settings.section_door'))
@@ -762,6 +766,13 @@ class Settings extends Page
                     ->integer()
                     ->minValue(WaiverSettings::RETENTION_MIN)
                     ->maxValue(WaiverSettings::RETENTION_MAX),
+                // Fase 6 · menores a cargo (`DECISIONES #142`): tope por cuenta, de servidor. Vacío = 20.
+                TextInput::make(DependentSettings::KEY_MAX_PER_ACCOUNT)
+                    ->label(__('admin.dependents.settings_max'))
+                    ->helperText(__('admin.dependents.settings_max_hint'))
+                    ->integer()
+                    ->minValue(DependentSettings::MAX_PER_ACCOUNT_MIN)
+                    ->maxValue(DependentSettings::MAX_PER_ACCOUNT_MAX),
             ]);
     }
 

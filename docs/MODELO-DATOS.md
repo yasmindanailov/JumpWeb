@@ -25,7 +25,7 @@
   Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
-  `AppServiceProvider` con alias snake_case para los 32 modelos — las columnas polimórficas
+  `AppServiceProvider` con alias snake_case para los 33 modelos — las columnas polimórficas
   (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan
   ALIAS (`order`, `ticket_type`…), nunca FQCN; los datos legacy los convirtió la migración
   `convert_morph_types_to_aliases`. Renombrar/mover modelos ya NO rompe datos. Regla:
@@ -290,6 +290,19 @@ se verifica con el suyo) · `created_at`. `hash` = sha256 del JSON canónico de
 mide sobre MySQL. **Sobrevive a `anonymize()`.** Poda por `waiver.retention_months` (sin valor → no
 se poda nada; solo `subject_type = holder`) vía el mismo `model:prune` diario. Fuera de la poda solo
 borran `PurgeCustomerData` (go-live) y el verificador, por `DB::table`.
+
+### `dependents` (Dependent, **Prunable**) — Fase 6 · menores a cargo
+Las PERSONAS A CARGO que un titular declara (`specs/menores-a-cargo.md` §4.1–§4.5, `DECISIONES #191`):
+`user_id` FK **RESTRICT** (la fila sobrevive a la cuenta mientras haya una firma detrás; la limpieza de
+go-live la borra explícitamente antes que `users`) · `name` (120; la etiqueta del titular, la puerta no
+la enseña) · `born_on` (date) · `removed_at` nullable · timestamps. **Y nada más**: la EDAD no existe
+como columna, se deriva (`ageOn()`/`isMinor()`/`adultFrom()`, fecha contra fecha en el «hoy» del
+parque) y la fila sobrevive a la mayoría de edad. Único escritor `Identity\Services\DependentRegistry`
+(solo menores; tope `dependents.max_per_account` —vacío = 20— bajo el `lockForUpdate()` de la fila del
+titular). **Quitar es desvincular si hay un waiver firmado detrás** (`removed_at`; `deleting` LANZA) y
+borrar de verdad si no. `anonymize()`: con firma → desvincula; sin ella → borra. Poda (`model:prune`,
+detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. ⚠️ Sin FK desde
+`waiver_signatures.subject_id` todavía: llega con la tanda 2 (spec §9.2·3).
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·

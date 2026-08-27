@@ -79,6 +79,7 @@ class PurgeCustomerData extends Command
             ['Pagos a borrar', $paymentIds->count()],
             ['Reembolsos a borrar', PaymentRefund::whereIn('payment_id', $paymentIds)->count()],
             ['Usuarios a borrar', $deleteUserIds->count()],
+            ['Personas a cargo a borrar', DB::table('dependents')->whereIn('user_id', $deleteUserIds)->count()],
             ['Usuarios conservados', count($keptIds)],
         ]);
         $this->info('Cuentas conservadas: '.$keptUsers->pluck('email')->implode(', '));
@@ -125,6 +126,11 @@ class PurgeCustomerData extends Command
             //    borra firmas, y lo hace por `DB::table` porque el modelo es append-only y rechaza
             //    `delete()`. `legal_document_versions.published_by` es nullOnDelete: las versiones quedan.
             DB::table('waiver_signatures')->whereIn('user_id', $purgedIds)->delete();
+            // 4.ter Fase 6 · menores a cargo: `dependents.user_id` es RESTRICT por la misma razón
+            //    (`specs/menores-a-cargo.md` §4.4: la fila sobrevive a la cuenta mientras haya una firma
+            //    detrás), así que va ANTES que los usuarios y DESPUÉS que las firmas. Por `DB::table`:
+            //    el modelo rechaza borrar una fila con referencias, y aquí se borra todo.
+            DB::table('dependents')->whereIn('user_id', $purgedIds)->delete();
             // 5. Usuarios → cascada consents/role_user; nullOnDelete audit_logs/cookie_consent_logs/tickets/order_items.
             User::whereNotIn('id', $keptIds)->delete();
         });

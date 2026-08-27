@@ -5,30 +5,41 @@
 > aquí solo se enlaza.** Última actualización: **2026-08-27**.
 >
 > ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main` (dos máquinas, un repo). El B cerró el 2026-08-27 a las
-> 07:30 con todo empujado y verde; el A REABRIÓ a las 12:00 con «menores a cargo», tanda 1 (su fila,
-> abajo) — decidido por el owner en `#190`.** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
+> 07:30 con todo empujado y verde; el A hizo por la tarde la TANDA 1 de «menores a cargo» (`#191`) y
+> **la siguiente tanda espera CINCO decisiones del owner** (`specs/menores-a-cargo.md` §9.5; su fila,
+> abajo).** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN ABIERTA el 2026-08-27 (la
->   segunda del día, desde las 12:00): «MENORES A CARGO», TANDA 1 — el NÚCLEO en Identity + su API —
->   EN CURSO** (`specs/menores-a-cargo.md`, `[DECIDIDO owner]` `#190`). Sin firmas de menor todavía:
->   la tanda 1 es la entidad `Dependent` (tabla `dependents`), el registro con tope de servidor,
->   `anonymize()`/export/purga de go-live, `GET|POST|DELETE /me/dependents` y el ajuste del tope.
->   **Ficheros de ESTA tanda** (además de los del carril, abajo): `database/migrations/*dependents*` ·
->   `app/Domain/Identity/{Models/Dependent,Services/DependentRegistry,Services/DependentSettings,Exceptions/Dependent*}.php`
->   · `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php` (futuro)
->   · `tests/Feature/Dependents/**` · `tests/Feature/Api/V1/MeDependentsTest.php` · `openapi/v1.yaml` (futuro).
->   ⚠️ **Y toca SEIS ficheros COMPARTIDOS, solo en el punto que se dice**: `app/Providers/AppServiceProvider.php`
->   (una línea del morphMap) · `app/Domain/Platform/Models/AuditLog.php` (dos acciones en el catálogo) ·
->   `app/Filament/Pages/Settings.php` (un campo en la sección «Puerta» + su clave en `MANAGED`) ·
->   `app/Console/Commands/PurgeCustomerData.php` (una línea, antes de `users`) · `routes/console.php`
->   (`Dependent` en el `model:prune`) · `lang/{es,en,fr}/api.php` + `lang/es/admin.php` (claves nuevas).
->   ▶ **Para el agente del B**: si necesitas alguno de esos seis, avísalo aquí y haz `git pull --rebase`
->   antes; empujo por unidades verdes, no al cierre.
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN del 2026-08-27 por la tarde:
+>   «MENORES A CARGO», TANDA 1 EMPUJADA** (`#191`, `specs/menores-a-cargo.md` **§9**): el núcleo en
+>   Identity + la API, **sin firmas de menor todavía** — `dependents` + `DependentRegistry` (solo
+>   menores; tope de servidor bajo el lock de la fila del titular) + `GET|POST|DELETE /me/dependents`
+>   contra el contrato + `anonymize()`/export/purga de go-live/poda + el tope en Ajustes → «Puerta».
+>   34 casos, 7/7 mutaciones muerden, 14 comprobaciones HTTP sobre MySQL con Bearer, BD local migrada.
+>   ▶ ❗ **POR DÓNDE SIGUE este carril: la tanda 2 NO se escribe sin el owner.** Las cinco decisiones,
+>   con número y coste, están en la spec **§9.5**: (1) **NUC-3** —la cadena de hashes con firmas de
+>   menor; recomendada la cadena por (titular, sujeto), y el verificador pasa a medir la idempotencia
+>   bajo el lock— **bloquea la tanda 2** · (2) **el techo del chunk** (0,16 KiB) **bloquea la tanda 3**
+>   (el cajón) · (3) el plazo de retención de una firma de menor · (4) ¿correo verificado para declarar?
+>   (hoy no) · (5) la regla de los 18 al declarar (hoy sí). Con la (1) decidida, la tanda 2 es ~media
+>   sesión; §9.4 tiene el mapa por tandas y §9.6 las trampas (⚠️ la FK `subject_id → dependents` rompe
+>   `WaiverRetentionTest` y `waiver:verify-chain` si no siembran filas reales).
+>   **Ficheros de este trabajo** (además de los del carril, abajo): `database/migrations/*dependents*` ·
+>   `app/Domain/Identity/{Models/Dependent,Services/DependentRegistry,Services/DependentSettings,Exceptions/Dependent*,Contracts/DependentRemoval}.php`
+>   · `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php`
+>   · `tests/Feature/Dependents/**` · `tests/Feature/Api/V1/MeDependentsTest.php` ·
+>   `tests/Feature/Admin/Settings/DependentsCapSettingTest.php` · `openapi/v1.yaml`.
+>   ⚠️ **Y tocó SEIS ficheros COMPARTIDOS, en un punto cada uno** (ya en `origin/main`):
+>   `app/Providers/AppServiceProvider.php` (una línea del morphMap) · `app/Domain/Platform/Models/AuditLog.php`
+>   (dos acciones) · `app/Filament/Pages/Settings.php` (un campo en «Puerta» + su clave en `MANAGED`) ·
+>   `app/Console/Commands/PurgeCustomerData.php` (una línea antes de `users`) · `routes/console.php`
+>   (`Dependent` en el `model:prune`) · `lang/{es,en,fr}/api.php` + `lang/es/admin.php` + `validation.php`.
+>   ▶ **Para el agente del B**: nada pendiente de ti; si tocas alguno de esos seis, `git pull --rebase`
+>   antes.
 >   ✅ Lo anterior de este carril: el waiver, de agente, TERMINADO** (`#169` revisión adversarial del subsistema
 >   + guion en headless · la **tanda 4** que esa revisión exigía: `#171` anti-bot · `#174` servidor ·
 >   `#175` cajón · `#178` casilla del alta manual + casilla OBLIGATORIA en interno · `#179` correo
@@ -135,7 +146,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#190`**.
+> El último usado es **`#191`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -163,7 +174,8 @@
 ## ▶ Dónde estamos
 
 **Fase 0 ✅ · 1 ✅ · 2 ✅ · 3 (API v1) ✅ · 4 (sidebar SPA) ✅ · 6 🟦 (el waiver: CÓDIGO COMPLETO, revisado
-dos veces y con su guion recorrido en headless con la conducta definitiva —`#183`—; espera SOLO al owner)** — el detalle paso a paso de cada una está en `00-REFACTOR.md`, que es el tracker. Aquí
+dos veces y con su guion recorrido en headless con la conducta definitiva —`#183`—; espera SOLO al owner ·
+**menores a cargo: tanda 1 en el árbol, `#191`**; la 2 espera cinco decisiones del owner, spec §9.5)** — el detalle paso a paso de cada una está en `00-REFACTOR.md`, que es el tracker. Aquí
 solo la foto.
 
 🟩 **CERRADO y sin nada pendiente:** el cajón SPA como motor único con `Purchase.php` retirado
@@ -229,9 +241,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **2984 en verde** (17.208 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
-  máquina del agente B; **~70 s** en la del A) ·
-  ▶ **+5 tests PHP en el último corte** (`#189`, F+G de la 4b): la huella propia excluida para el PACK
+- Suite **3018 en verde** (17.410 aserciones, `--parallel` **~42 s** medidos el 2026-08-27 en la
+  máquina del agente B; **~68 s** en la del A, la tarde del 27) ·
+  ▶ **+34 tests PHP en el último corte** (`#191`, menores a cargo · tanda 1): `DependentRegistryTest`
+  (15: edad derivada y jamás persistida, el 18.º cumpleaños cruzando UTC↔Madrid, solo menores, tope de
+  servidor desde el ajuste, quitar = desvincular/borrar, anti-IDOR), `DependentPrivacyTest` (5:
+  `anonymize()`, export, poda, purga de go-live), `MeDependentsTest` (11, contra el contrato) y
+  `DependentsCapSettingTest` (3, el tope en Ajustes). **7 mutaciones, las 7 muerden.** Antes:
+  ▶ **+5 tests PHP** (`#189`, F+G de la 4b): la huella propia excluida para el PACK
   en `edit()`, «con crédito NO hay marcador», los `event_data` en el mismo guardado que una edición
   con dinero, y la guarda de arquitectura del punto único de lock (2 casos). Antes:
   ▶ **+3 tests PHP** (`#188`, D+E de la 4b): los permisos re-exigidos en
@@ -463,13 +480,14 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-27, mañana): LOS DOS CARRILES ESTÁN CERRADOS, y ninguno dejó nada a medias
+# ❗ SI ENTRAS NUEVO (2026-08-27, tarde): el B está CERRADO; el A dejó la TANDA 1 de «menores a cargo» EMPUJADA y la siguiente espera al OWNER
 
-**Los dos carriles cerraron sesión el 2026-08-27** (el A a primera hora, el B a las 07:30) con todo
-empujado y verde; el reparto de la cabecera sigue siendo el único vigente y dice qué toca cada uno si
-vuelve. `git fetch` antes de nada, y **lee las dos filas antes de elegir tarea**: lo que queda en las
-dos es del OWNER (su ojo en navegador, el texto del waiver, el plazo), no de agente — **salvo lo ya
-decidido para la siguiente sesión: «menores a cargo», carril A** (`[DECIDIDO owner, 2026-08-27]`).
+**El carril B cerró el 2026-08-27 a las 07:30** con todo empujado y verde, y **el A cerró por la tarde
+con la tanda 1 de «menores a cargo» en `origin/main`** (`#191`, `specs/menores-a-cargo.md` §9). El
+reparto de la cabecera sigue siendo el único vigente. `git fetch` antes de nada, y **lee las dos filas
+antes de elegir tarea**: lo que queda es del OWNER —su ojo en navegador, el texto del waiver, el plazo,
+**y las cinco decisiones de la spec de menores §9.5**, la primera de las cuales (NUC-3) bloquea la
+tanda 2—. De agente, sin decisión nueva, no hay nada de valor alto que empezar.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
@@ -491,7 +509,9 @@ casi todo lo que queda lo desbloquea el owner.
    SIGUIENTE SESIÓN de este carril hace «menores a cargo»** (`specs/menores-a-cargo.md`, C; hereda
    NUC-3 de `DEUDA.md`) — spec revisada, sin código: leer antes `docs/INVARIANTES.md` §2 (AFORO) y, en
    la spec, sus secciones 8.1 y 8.2 —la lista blanca de `cart.js::save()` y el `STORAGE_VERSION`—. El
-   detalle del arranque está en la fila A de la cabecera.
+   detalle del arranque está en la fila A de la cabecera. ▶ ✅ **HECHO por la tarde: la tanda 1 está
+   EMPUJADA** (`#191`, spec §9: la entidad, el registro con tope, la API, RGPD y el ajuste; sin firmas
+   de menor). **Lo siguiente son las cinco decisiones de §9.5**, no código.
    ⚠️ En la máquina del carril A hay **v1→v9 publicadas** localmente por las dos pasadas del guion y
    los sondeos (y cuentas `e2e-waiver-*@jumpweb.test` / `probe-*@jumpweb.test`); en la del portátil,
    no. Tras un pull en el portátil: **`migrate`** (`#183` añade una migración).
@@ -691,6 +711,9 @@ Sigue 🟦 solo por lo humano —el ojo del owner en navegador, el texto definit
 decisiones de §7 están tomadas y ejecutadas. Las dos altas que dejó la revisión —el alta manual que
 «declaraba» sin declarar y el alta suelta sin anti-bot— están arregladas (`#178`, `#171`). **No toca la landing**. Detalle
 en el tracker; las cuatro specs, en `docs/specs/` y en la tabla de enrutado de `CLAUDE.md`.
+▶ **C (menores a cargo) arrancó el 2026-08-27 por la tarde: tanda 1 EMPUJADA** (`#191`, spec §9) —
+la entidad, el registro con tope de servidor, la API contra el contrato y el RGPD, sin firmas de menor
+todavía—; **la tanda 2 espera NUC-3** y las otras cuatro decisiones de §9.5.
 
 ✅ **La revisión adversarial que `CONVENCIONES` §5 exigía está HECHA** (`#156`): cada spec tiene su
 **§8** con los hallazgos, y **ninguna hay que rehacerla**. De todas sus afirmaciones verificables

@@ -8621,7 +8621,7 @@ verificador limpia las suyas). La serialización de las DOS versiones queda fija
 **Lo que NO se decidió aquí**: el plazo de conservación y el texto definitivo (`[PENDIENTE: owner]`).
 Tanda 3 (API, casilla del alta, cajón, re-firma) sin empezar.
 
-Verificación: suite verde (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓ (32 modelos · 77
+Verificación: suite verde (contador en `ESTADO`) · Pint ✓ · `docs-check` ✓ (entonces 32 modelos y 77
 migraciones) · BD MySQL de desarrollo migrada · cinco mutaciones de la tanda 2 con su salida en §9.6.
 
 ## #162 · 2026-08-26 · La suite auditada contra el RELOJ — y lo que encontró no era «los sábados», era una bomba con fecha para el 1 de septiembre
@@ -9978,4 +9978,46 @@ hizo lo mismo con `audit-clock` en su cierre.
 
 **Regla de método, pagada dos veces más hoy**: `git rebase … | tail -1 && git push` encadena `tail`,
 no el rebase — con un conflicto a medias el push salió igual. El exit se lee del propio comando.
+
+## #191 · 2026-08-27 · Menores a cargo, tanda 1 — el NÚCLEO en Identity y su API, sin producir ninguna firma de menor: NUC-3 se decide antes
+
+**Qué se hizo** (carril A, la tarde del 27; `specs/menores-a-cargo.md` **§9**, `[DECIDIDO owner]`
+`#190`): la maquinaria del subsistema C sin la pieza que exige una decisión del owner — igual que el
+waiver construyó todo sin publicar la v1 (`#160`). Tabla `dependents` en Identity (`user_id` RESTRICT
+· `name` · `born_on` · `removed_at`, **y nada más**), `DependentRegistry` como único escritor,
+`GET|POST|DELETE /me/dependents` en el contrato, `anonymize()` y el export ampliados, la purga de
+go-live y la poda, y el tope en Ajustes.
+
+**Cinco decisiones de ingeniería, dentro del margen de la spec** (detalle y porqué en §9.2):
+1. **La edad se compara FECHA con FECHA y «hoy» es el del parque.** Medido: las 00:30 de Madrid del
+   18.º cumpleaños son las 22:30 UTC de la víspera; con UTC —o restando instantes— el menor lo sería
+   dos horas más. La mutación M4 lo caza.
+2. **Solo menores al declarar** (`422 dependent_not_minor`) y **sin edición**: una fecha corregida es
+   otra persona a cargo (§4.4, «dos filas»). Las dos reversibles en una línea (§9.5·4, §9.5·5).
+3. **El tope es un invariante bajo el `lockForUpdate()` de la fila del titular**, la receta de
+   `WaiverSigner`; sin él dos altas simultáneas leen «19» las dos. Sin verificador de fork y fuera del
+   `CRITICAL_RE`, con nombre: el precio de fallar es una fila de más, no una plaza vendida dos veces.
+4. **`removed_at` solo existe con una firma detrás** (§4.4 literal) **y la fila se poda sola cuando
+   su última firma vence**: PII de un menor no se queda por inercia. El export lleva solo las activas.
+5. **Sin FK `waiver_signatures.subject_id → dependents` todavía**: llega con la tanda 2 junto con
+   NUC-3 — `waiver:verify-chain` y `WaiverRetentionTest` firman hoy con `subject_id` sin fila. Medido
+   que la FK cabe en SQLite: Laravel 13 recrea la tabla en el `ALTER`.
+
+**Lo que NO se decidió aquí, a propósito, y está para el owner con número y coste en §9.5**: NUC-3
+(la cadena de hashes con firmas de menor — bloquea la tanda 2; recomendada la cadena por (titular,
+sujeto), que convierte «la poda solo mueve el inicio» en verdad para todas las cadenas y cambia lo que
+mide el verificador), el techo del chunk del cajón (bloquea la tanda 3), el plazo de retención de una
+firma de menor, el correo verificado para declarar y la regla de los 18.
+
+**Lo medido, que es lo que vale**: 34 casos nuevos (spec §9.3) · **siete mutaciones, las siete
+muerden** (tope, pertenencia, guarda de `deleting`, «hoy» UTC, `anonymize()`, `prunable()`, la lista)
+con restauración comprobada byte a byte · **14 comprobaciones HTTP sobre MySQL real con un Bearer**
+(los tres verbos, los tres 422, 404 propio/ajeno/repetido, 401, `no-store`, inglés, el tope desde
+`settings` con `params.max`) y la auditoría sin PII · BD de desarrollo migrada.
+
+**Dos trampas de método pagadas**: `assertDatabaseHas` con un `date` en SQLite compara contra
+`Y-m-d 00:00:00` (léelo por el modelo), y el `message` del sobre de error no interpola `params` solo.
+
+Verificación: suite **3018 / 17.410** (= lo que declara `ESTADO.md`) · Pint ✓ · `docs-check` ✓ (33
+modelos · 80 migraciones) · sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
 

@@ -1,7 +1,11 @@
 # [SPEC] Menores a cargo
 
-> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
-> Última actualización: 2026-08-25 ·
+> Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — la TANDA 1 está EN EL ÁRBOL (2026-08-27, carril A,
+> `DECISIONES #191`): el núcleo en Identity + la API, sin firmas de menor todavía.** ▶ **EMPIEZA POR
+> §9** —qué existe, en qué se apartó del cuerpo y, sobre todo, **§9.5: lo que la tanda 2 necesita del
+> owner, con número y coste** (la primera es NUC-3: la cadena de hashes con firmas de menor)— ·
+> pendiente del ✅ del owner ·
+> Última actualización: 2026-08-27 (§9) · anterior: 2026-08-25 ·
 > ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
 > persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
 > la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
@@ -239,6 +243,9 @@ Diseñado en sesión de arquitectura con el owner el 2026-08-24 (`DECISIONES #14
 es correcto y se implementa tal cual, aplicando §8.1 y §8.2. **Ningún bloqueante.**
 ⚠️ Su única dependencia externa es la decisión de `waiver-probatorio.md` §8.6 (tabla propia), sin la
 cual §4.3 no encaja. Ver §8.3.
+▶ **`[DECIDIDO owner, 2026-08-27]` (`#190`): se ejecuta en el carril A**, spec-first y por tandas, como
+el waiver. **La tanda 1 está en el árbol** (`#191`, §9); las siguientes se recortan con el owner
+delante sobre §9.5.
 
 ---
 
@@ -309,3 +316,158 @@ es `cascadeOnDelete` y un `sujeto` que apunta a un dependiente no tendría dónd
 **El diseño es correcto y se puede implementar tal cual**, con §8.1 y §8.2 aplicadas. Es la spec de
 las cuatro con menos hallazgos, y la única cuyo hallazgo principal resultó ser una **buena noticia**:
 el mecanismo que protege los datos del menor es más fuerte de lo que ella misma creía.
+
+---
+
+## 9. Ejecución — tanda 1 (2026-08-27, carril A, `DECISIONES #191`): el NÚCLEO en Identity + la API, sin firmas de menor todavía
+
+> Lo que hay, en qué se apartó del cuerpo, lo medido, lo que NO hay por tanda y —lo que importa para
+> seguir— **§9.5: las decisiones que la tanda 2 necesita del owner, con número y coste**. Ninguna
+> firma de menor se produce todavía: `WaiverSignature::SUBJECT_DEPENDENT` sigue siendo código sin
+> escritor HTTP, a propósito, porque NUC-3 (`DEUDA.md`) exige decidirse ANTES de la primera.
+
+### 9.1 Qué existe (todo en Identity; la capa de entrega solo lo consume)
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `dependents` · `Dependent` | `database/migrations/2026_08_27_120000_create_dependents_table.php` · `app/Domain/Identity/Models/Dependent.php` | `user_id` (RESTRICT) · `name` (120) · `born_on` (date) · `removed_at` · timestamps. **Y nada más** (§4.2). La edad se DERIVA (`ageOn()`, `isMinor()`, `adultFrom()`) comparando FECHA con FECHA en el «hoy» del parque. `deleting` LANZA si hay una firma detrás (§4.4 hecho guarda). `Prunable`: las desvinculadas sin firma se podan |
+| `DependentRegistry` | `app/Domain/Identity/Services/DependentRegistry.php` | El ÚNICO escritor: `add()` (solo menores; tope bajo el `lockForUpdate()` de la fila del titular, como `WaiverSigner`; audita `dependents.added` sin PII) · `remove()` (ajeno/inexistente/retirado → `DependentNotFoundException`; con firma → `unlink()`, sin ella → `delete()`; devuelve `DependentRemoval`) · `activeFor()` |
+| `DependentSettings` | `app/Domain/Identity/Services/DependentSettings.php` | `dependents.max_per_account` (1–100; ausente o inválido → **20**). Se edita en Ajustes → «Puerta» |
+| `DependentRemoval` + cuatro excepciones | `app/Domain/Identity/Contracts/DependentRemoval.php` · `app/Domain/Identity/Exceptions/` | `Deleted`/`Unlinked` · `DependentNotMinorException` · `DependentsLimitReachedException` (lleva `max`) · `DependentNotFoundException` · `DependentHasReferencesException` (la guarda de `deleting`) |
+| La API | `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php` · `openapi/v1.yaml` | `GET /me/dependents` (activas, en orden de alta; `age`, `is_minor`, `adult_from` derivados) · `POST` (201; `422 validation_failed` sobre `born_on` si es futura o mal formada; `422 dependent_not_minor`; `422 dependents_limit_reached` con `params.max` y el mensaje ya interpolado) · `DELETE /{dependent}` (204; ajeno/inexistente/retirado → 404). Throttle CON PREFIJO `dependents-write` (30/min) en los dos de escritura |
+| `anonymize()` | `app/Domain/Identity/Models/User.php` | `RGPD-01` ampliada (§5): con firma detrás → `unlink()` (se conserva vinculada, fuera de toda superficie); sin ella → `delete()` |
+| El export | `app/Domain/Identity/Services/AccountPrivacy.php` | `RGPD-04` (§5): `dependents[]` con las ACTIVAS (`name`, `born_on`, `added_at`); esquema `ExportedDependent` en el contrato |
+| Go-live | `app/Console/Commands/PurgeCustomerData.php` | Borra `dependents` por `DB::table` DESPUÉS de las firmas y ANTES de los usuarios (RESTRICT) |
+| La poda | `routes/console.php` | `Dependent` en el mismo `model:prune` diario, **detrás** de `WaiverSignature`: la firma que vence deja huérfana a su fila en la misma pasada |
+| Auditoría · morph | `app/Domain/Platform/Models/AuditLog.php` · `app/Providers/AppServiceProvider.php` | `dependents.added` · `dependents.removed` (payload: `dependent_id` + `mode`; **nunca** el nombre ni la fecha, `RGPD-02`) · alias `dependent` |
+
+Recuentos del gate tras la tanda: **33 modelos · 80 migraciones**.
+
+### 9.2 Lo que se apartó del cuerpo (o lo precisa), y por qué
+
+1. **Solo MENORES al declarar** (`422 dependent_not_minor`): el cuerpo no lo decía y §4.1 lo implica —a
+   los 18 «el waiver del adulto deja de cubrirlo», así que declarar a un adulto produciría una firma
+   que no cubre a nadie—. `[DECIDIDO agente]`, reversible en una línea (§9.5·5).
+2. **Sin edición** (`PATCH`): una fecha de nacimiento corregida es OTRA persona a cargo, y con una firma
+   detrás sería reescribir lo firmado. Es §4.4 al pie de la letra («dos filas»).
+3. **Sin FK `waiver_signatures.subject_id → dependents.id` todavía.** Llega con la tanda 2, junto con
+   NUC-3 y con `waiver:verify-chain`, que hoy firma con `subject_id` = i **sin fila en `dependents`**
+   (la FK lo rompería, y también a `WaiverRetentionTest::test_dependent_signatures_are_not_pruned…`).
+   ▶ Medido que cabe: la gramática SQLite de Laravel 13 recrea la tabla para `foreign` en un `ALTER`
+   (`SQLiteGrammar::$alterCommands`), así que el `RESTRICT` real se puede añadir a una tabla existente
+   sin la excepción de «FKs ausentes a propósito» de `DEUDA.md`.
+4. **`removed_at` no se escribe si no hay referencias**: se borra de verdad (§4.4 literal). La fila
+   desvinculada solo existe con una firma detrás — y **se poda sola** cuando esa firma vence
+   (`Dependent::prunable()`): PII de un menor sin nada que la justifique no se queda por inercia.
+5. **El export lleva solo las ACTIVAS**: la retirada con firma vive bajo el régimen restringido del
+   waiver (waiver §4.6), fuera del art. 20 como la propia firma.
+6. **El correo verificado NO se exige para declarar** (sí para firmar, `#179`): el alta pay-first crea
+   cuentas sin verificar y en la tanda 4 asignar una entrada ocurre en el camino del dinero; exigirlo
+   aquí pondría un 409 delante del pago. Lo que acota la superficie es el tope + el throttle con
+   prefijo. `[DECIDIDO agente]`, reversible (§9.5·4).
+7. **El tope se serializa con el lock de la fila del titular**, misma receta que `WaiverSigner`: sin
+   él, dos altas simultáneas leen «19» las dos y entra la 21. ⚠️ SQLite no reproduce el lock, la
+   propiedad **no tiene verificador de fork** y `DependentRegistry` **no entra en el `CRITICAL_RE`**
+   (no es dinero ni aforo). Hueco con nombre, no un descuido: el precio de que falle es una fila de
+   más, no una plaza vendida dos veces.
+8. **La edad compara FECHA con FECHA y «hoy» es el del parque** (`DisplayTime::today()`, `AFORO-09`).
+   Medido en su test: las 00:30 de Madrid del 18.º cumpleaños son las 22:30 UTC de la víspera; con la
+   fecha UTC el menor seguiría siéndolo dos horas más, y con una resta de instantes también. Es lo que
+   la mutación M4 (§9.3) caza.
+
+### 9.3 Lo medido
+
+- **Suite**: 34 casos nuevos en cuatro ficheros —`DependentRegistryTest` (15), `DependentPrivacyTest`
+  (5), `MeDependentsTest` (11, contra el contrato) y `DependentsCapSettingTest` (3)— y la suite
+  completa verde (contador en `ESTADO.md`). Los que ya vigilaban lo que se tocó, verdes sin cambios:
+  `ApiContractTest` (rutas ↔ `paths`, enum de errores ↔ `ApiErrorCode`), `MePrivacyTest` (el export
+  sigue validando contra su esquema estricto), `PrivacyTest`, `MorphMapTest`, `AuditActionCatalogTest`,
+  `ModuleBoundariesTest`, `AnonymizeCoversEveryUserColumnTest` (ninguna columna nueva en `users`),
+  `ApiBoundariesTest`, `PurgeCustomerDataTest`, `WaiverRetentionTest`, `SeededSettingsAreSaveableTest`.
+- **Siete mutaciones, las siete muerden** (cada una contra su test; restauración comprobada byte a
+  byte): sin el tope de servidor → `test_the_cap_is_enforced…` y `test_the_server_cap_answers_422…`
+  caen (§6·4) · sin la pertenencia en `remove()` → los dos tests anti-IDOR caen (§6·1) · sin la guarda
+  de `deleting` → `test_a_referenced_dependent_cannot_be_deleted…` cae (§6·5) · «hoy» en UTC →
+  `test_the_registry_uses_the_parks_today…` cae · `anonymize()` sin dependientes → `test_anonymize_…`
+  cae (§6·5) · `prunable()` sin excluir las referenciadas → `test_orphan_unlinked…` cae · la lista sin
+  filtrar las retiradas → `test_it_lists_only…` cae.
+- **HTTP contra MySQL real, con un Bearer de una cuenta sonda** (14 comprobaciones): `GET` vacía 200 ·
+  `POST` menor 201 con `age: 9`, `is_minor: true`, `adult_from` · adulto `422 dependent_not_minor` ·
+  futura `422 validation_failed` sobre `born_on` («fecha de nacimiento…», atributo traducido) · cuerpo
+  vacío 422 con los dos campos · `GET` con una · `GET /me/export` con `dependents[]` · `DELETE` de un
+  id inexistente 404 · propio 204 · repetido 404 · sin token 401 · `Cache-Control: no-store` · en
+  inglés («A dependent must be under 18.») · con el tope a 1 desde `settings`: el segundo
+  `422 dependents_limit_reached` con `params.max = 1` y el mensaje interpolado. Auditoría:
+  `dependents.added {dependent_id}` · `dependents.removed {mode, dependent_id}`, sin nombre ni fecha.
+  Sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
+- **BD de desarrollo migrada** (`2026_08_27_120000`); `docs-check` con 33 modelos · 80 migraciones.
+- **El chunk del cajón no se ha tocado**: esta tanda no entra en `resources/js/sidebar/`.
+
+### 9.4 Lo que NO hay todavía, por tanda
+
+- **Tanda 2 — la firma del menor** (§4.3): `POST /me/dependents/{id}/waiver` (y su estado por
+  dependiente en `GET /me/dependents`), la guarda de PERTENENCIA en `WaiverSigner` (el `subject_id`
+  llega del cliente: §4.9 aplica también aquí), la FK `RESTRICT` (§9.2·3), `verify-chain` sembrando
+  filas reales, el PDF diciendo **de quién** es la firma (hoy `subject_dependent` en el panel enseña
+  «menor n.º :id»), y la retención de las firmas de menor (§9.5·3). ⚠️ `WaiverSigner` está en el
+  `CRITICAL_RE`: `waiver:verify-chain` + `VERIFY_CONC=1`. **Bloqueada por §9.5·1.**
+- **Tanda 3 — el cajón**: una zona «Menores a cargo» en la sección de cuenta (una línea en `ZONES` +
+  su rótulo + el store), con el aviso «ya no está cubierto» del §4.1. **Bloqueada por §9.5·2.**
+- **Tanda 4 — la asignación en el embudo** (§4.7–§4.10): la tabla que posee Identity con el
+  `order_item_id` ENTERO (§4.6), las dos puertas sin paso nuevo (§4.7), el hueco en la lista blanca de
+  `cart.js::save()` **sobre `v: 1`** (§8.1, §8.2), la re-validación en servidor (§4.9) y la escritura
+  post-commit fuera del lock (§4.10). Es la tanda que toca el checkout.
+- **La pantalla de puerta** (edad + estado del waiver, jamás el nombre): subsistema A.
+
+### 9.5 ❗ Lo que la SIGUIENTE tanda necesita del owner — con número y coste
+
+1. **NUC-3 — la cadena de hashes con firmas de menor** (`DEUDA.md` Alta; se decide ANTES de la primera
+   firma de menor, y la tanda 2 ES esa primera firma). Hoy `prev_hash` enlaza con la última fila del
+   titular sea cual sea el sujeto, y la poda por plazo no toca `dependent`: con un menor intercalado la
+   poda deja **agujeros en medio** y `WaiverChain::verify()` declara ROTA una cadena legítima.
+   - **(a) Cadena por (titular, sujeto)** — *recomendada*. `prev_hash` enlaza con la última firma del
+     MISMO sujeto; la poda de un titular nunca deja agujeros en la cadena de un menor ni al revés, y
+     `verify()` verifica por sujeto. Dentro de un sujeto, «más antiguo que el plazo» es siempre un
+     PREFIJO (el lock serializa, `accepted_at` crece con `id`), así que «la poda solo mueve el
+     inicio» vuelve a ser verdad para TODAS las cadenas. Compatible con lo ya firmado: sin firmas de
+     menor, cadena por sujeto ≡ cadena por titular. **Coste**: `WaiverSigner` (`CRITICAL_RE`:
+     `verify-chain` + `VERIFY_CONC=1`), `WaiverChain::verify()` agrupando por sujeto, la
+     serialización literal de `WaiverSignatureChainTest`, y **rehacer el verificador**: hoy mide N
+     menores en UNA cadena; con cadenas por sujeto mediría N cadenas de una fila y no cazaría nada
+     → pasa a medir «N firmas simultáneas del MISMO sujeto = UNA fila» (la idempotencia bajo el
+     lock, que es lo que el lock protege ahí) y la linealidad en serie. ~media sesión.
+   - **(b) Poda solo por PREFIJO** (una cadena por titular, como hoy): `prunable()` borra filas del
+     titular solo si ninguna fila NO podable (un menor) va detrás. **Coste**: `prunable()` + su test;
+     `WaiverSigner` intacto. **Precio**: las firmas viejas del titular se conservan mientras un menor
+     intercalado siga sin plazo — hasta 18 años más el suyo—, que es la acumulación que el waiver
+     (§4.6) no quiere.
+   - **(c) Nada** (asumir la cadena rota tras la poda): **descartada** — una cadena rota no
+     distingue una poda legítima de una manipulación, que es lo único para lo que existe.
+2. **El techo del chunk del cajón** (`SidebarBundleBudgetTest`; 0,16 KiB de holgura medidos al cerrar
+   el waiver): la zona de menores se construye, **se mide** construyendo con y sin ella, y con la cifra
+   delante el owner decide subir el techo con su párrafo (como `#175`) o podar. No se escribe el
+   componente antes de tener esa decisión encuadrada.
+3. **El plazo de retención de una firma de MENOR** (waiver §4.6: puede empezar a contar a los 18) —
+   sigue `[PENDIENTE: owner]`. Hasta entonces `WaiverSignature::prunable()` no poda `dependent` y la
+   fila desvinculada se queda (§9.2·4). Sin coste técnico: es un ajuste más, como
+   `waiver.retention_months`.
+4. **¿Correo verificado para declarar?** (§9.2·6) — hoy NO. Sí = un `409` más en el contrato y
+   fricción en el embudo para el alta pay-first. Una línea y un test.
+5. **La regla de los 18 al declarar** (§9.2·1) — hoy se rechaza. Admitir adultos «a cargo» obliga a
+   decir quién firma su waiver. Una línea y un test.
+
+### 9.6 Trampas para las tandas siguientes (lo que la ejecución enseñó)
+
+- `WaiverRetentionTest::test_dependent_signatures_are_not_pruned…` y `waiver:verify-chain` firman con
+  un `subject_id` que **no existe** en `dependents`. Con la FK de la tanda 2 los dos rompen: hay que
+  sembrar filas reales (un `Dependent` por proceso en el verificador, y limpiarlas después de las
+  firmas, no antes).
+- `assertDatabaseHas` con una columna `date` en SQLite compara contra `Y-m-d 00:00:00` (el cast
+  escribe con hora): léela por el modelo (`->born_on->toDateString()`).
+- El `message` del sobre de error **no interpola `params` solo**: `ApiErrorCode::message()` traduce
+  sin argumentos. Quien tenga los datos los pasa (`MeDependentsController` con `:max`).
+- `ApiBoundariesTest` prohíbe `->delete()` en `app/Http/**`: el controlador llama a
+  `DependentRegistry::remove()`, y el nombre del método importa (`#120(q)`).
+- Un tope que el panel guarda y el dominio ignora es un ajuste que miente: `DependentsCapSettingTest`
+  ata los dos extremos (rango del campo = rango de `DependentSettings`).
+

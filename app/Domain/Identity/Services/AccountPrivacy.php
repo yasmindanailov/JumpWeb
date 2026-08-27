@@ -4,6 +4,7 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\Log;
 
@@ -122,6 +123,15 @@ class AccountPrivacy
                 'version' => $consent->version,
             ])->values()->all(),
             'roles' => $user->roles->pluck('name')->values()->all(),
+            // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §5, `RGPD-04`): las personas a cargo
+            // ACTIVAS —las que declaró y no ha retirado—. Una retirada con firma detrás vive bajo el
+            // régimen restringido del waiver, fuera del export del art. 20 como la propia firma.
+            'dependents' => $user->dependents()->active()->orderBy('id')->get()
+                ->map(static fn (Dependent $dependent): array => [
+                    'name' => (string) $dependent->name,
+                    'born_on' => $dependent->born_on->toDateString(),
+                    'added_at' => $dependent->created_at?->toIso8601String(),
+                ])->values()->all(),
             'orders' => $this->orders->exportFor((int) $user->id),
         ];
     }

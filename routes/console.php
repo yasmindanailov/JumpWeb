@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Models\CookieConsentLog;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\WaiverSignature;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -43,9 +44,15 @@ Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
  * firmas al vencer su plazo. `WaiverSignature` es Prunable: sin `waiver.retention_months` fijado NO
  * poda nada (la conservación sin plazo se decide, no se improvisa); con plazo, borra las firmas del
  * TITULAR más antiguas que él. Es la única vía de borrado que su guarda de inmutabilidad autoriza.
- * Una sola entrada para las dos podas: la salud del despliegue cuenta tareas registradas.
+ * Una sola entrada para las podas: la salud del despliegue cuenta tareas registradas.
+ *
+ * Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §4.4, §5) — y en la misma tarea, DESPUÉS de las
+ * firmas, las personas a cargo DESVINCULADAS que ya no tienen ninguna firma detrás: cuando la poda por
+ * plazo se lleva la última firma de un menor, su nombre y su fecha de nacimiento se quedan sin nada
+ * que los justifique. Las activas no se podan nunca (son del titular); las desvinculadas con firma,
+ * tampoco (`Dependent::prunable()` las excluye antes de que la guarda de `deleting` lance).
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, Dependent::class]])
     ->daily()
     ->withoutOverlapping();
 
