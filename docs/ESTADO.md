@@ -424,6 +424,11 @@ que sirva staging de verdad.
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
 - Suite **3132 en verde** (18.048 aserciones, `--parallel` **~70 s** medidos el 2026-08-27 por la noche
   sobre el árbol FUSIONADO de los dos carriles (tras `#206`), en la máquina del carril A) ·
+  ⚠️ **Este número lo verificó el `pre-push` sobre el árbol FUSIONADO** (2026-08-28): el carril C
+  cerró midiendo **3.130 · 18.002** en su árbol y el A empujó su U2 mientras tanto, así que la
+  evidencia del commit de cierre del C es **anterior a la fusión** y no coincide con ésta. **La
+  cifra buena es ésta**, que es la que corrió con los dos trabajos dentro. Es la segunda vez en dos
+  días que dos carriles cortan a la vez: el número **se mide sobre el árbol conjunto, no se suma**.
   ▶ **+2 tests PHP y +39 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U2**, el
   cajón — spec §9.9.8): dos casos del contrato de árbol (el paso 3 con una ENTRADA y dos menores, uno
   deshabilitado con motivo; el carrito con la línea asignada y el aviso de la puerta 2; manifiesto +2
