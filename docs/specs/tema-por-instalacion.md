@@ -688,3 +688,144 @@ hizo su trabajo: no escribió nada hasta que las 25 cuadraron.
 - ⚠️ **`[data-surface]` sigue sin usarlo nadie.** La 2a tampoco lo consume: la primera vez que se
   verá funcionar es en la 2b, cuando el hero declare `ink` y las tres excepciones del anillo de foco
   (`.skip-link`, `.hero__chip`, `.gf-fiche__head`) puedan retirarse.
+
+---
+
+## 11. Ejecución de la tanda 2b — el hero, en tres pasos (dos hechos)
+
+> `[DECIDIDO owner, 2026-08-27]`: la 2b va **entera, coreografía incluida**, con el aviso delante
+> de que su propia auditoría excluye el hero (§11.1). Se ejecutó por pasos, commiteando en local
+> antes de cada mutación. **Los pasos 1 y 2 están hechos y verificados; el 3 se paró, y el porqué
+> es §11.5 — no es cansancio, es una dependencia que nadie había visto.**
+
+### 11.1 ❗ Lo primero: la auditoría del cliente EXCLUYE el hero
+
+`Auditoría Landing PJP`, en su portada, dice literalmente:
+
+> «Quedan fuera **por indicación expresa**: organización y efectos del **hero de cabecera**, del
+> **bloque de cierre**, del **menú** y del **logotipo**. Sus colores, iconos y estilos sí se han
+> revisado.»
+
+Y su inventario del kit lo repite: `E4 · Hero → **Excluido** — organización y efectos excluidos por
+indicación`; `M-03` deja las duraciones del hero «intactas por indicación»; `M-05` sigue
+**Pendiente** justo por las sombras de su CTA fijo.
+
+▶ **Consecuencia**: la FORMA y la COREOGRAFÍA del hero del mockup **no están validadas contra el
+sistema del propio cliente**. Sus COLORES sí. Por eso el paso 2 —la superficie— es terreno firme, y
+el 3 —forma y coreografía— es el único de toda la capa de tema que copia algo no normativo. Se hace
+igualmente porque el owner lo decidió con el aviso delante; queda escrito para que nadie lo tome
+por «lo que dice el sistema».
+
+### 11.2 `--onvideo` no era una cosa mal hecha: eran TRES con el mismo nombre
+
+La doc prometía «retirar las 30 apariciones». Medido con un resolutor de color con guarda, las 21
+reglas se reparten así:
+
+| | Qué es | Qué pasa al declarar `data-surface="ink"` |
+|---|---|---|
+| **11 decl.** | **clases MUERTAS** — 6 de las 20 clases `.hero*` no aparecen ni una vez en `resources/` | se van gratis (paso 1) |
+| **14 decl.** | **superficie** (color) | el ámbito las cubre; **10 rinden idéntico solas**, 3 necesitan regla de ámbito, 1 estaba muerta |
+| **~8 decl.** | **tamaño y sombra** — `font-size` del titular, `box-shadow`, `text-shadow` | el ámbito **nunca** iba a cubrirlas: no son superficie. **Se quedan** |
+
+▶ Medido al terminar: de las **10 reglas `--onvideo` que quedan, ninguna declara un color**. Eso es
+lo que asevera `SurfaceScopeTest::test_onvideo_never_paints_a_colour_again`.
+
+### 11.3 Lo que se hizo, y cómo se verificó sin navegador
+
+| | Paso | Qué entró | Verificación |
+|---|---|---|---|
+| **1** ✅ | **Limpieza** | 17 reglas de 6 clases muertas, 56 líneas de `landing.css` | control de entrada (0 usos en `resources/`) y de salida (0 referencias); abortaba si no localizaba 17 tramos |
+| **2** ✅ | **La SUPERFICIE** | el stage declara `data-surface="ink"`; los `--onvideo` de color se van | **aritmética**: 14 declaraciones resueltas en los dos ámbitos contra el valor medido ANTES. **14/14 idénticas**, dentro y fuera del hero |
+| **3** ⬜ | **Forma + coreografía** | — | **parado**: §11.5 |
+
+▶ **Es la PRIMERA VEZ que el producto consume el mecanismo de la tanda 1.** Hasta ahora
+`[data-surface]` existía y no lo usaba nadie.
+
+▶ **Y hay una pieza conceptual que merece nombre**: tres declaraciones no las cubría el ámbito
+porque van **sobre el BOTÓN**, y el botón **invierte respecto a la superficie** (dentro de tinta el
+CTA es claro). Pasan a reglas de ámbito que leen los alias **`--paper-*`** — que la tanda 1 creó
+justo «para poder VOLVER a papel desde dentro de tinta». Es el primer uso real de esos alias.
+
+### 11.4 ❗❗ Lo que costó: la conversión estaba a MEDIAS en tres sitios, y la guarda nació ciega
+
+Es la parte útil de este registro.
+
+**El commit del paso 2 prometía «14 de 14 rinden exactamente lo mismo», y era cierto — para las 14
+que el barrido miraba.** Fuera de esa lista había tres conversiones a medio hacer:
+
+1. **El scrim tiene CUATRO paradas de degradado y se convirtieron DOS.** Las de abajo —las que dan
+   legibilidad al titular y al CTA sobre el vídeo— se quedaron leyendo `--fg`, que dentro de tinta
+   vale **claro**: pasaban de tinta al 65 % a **crema al 65 %**. La mitad inferior del hero se
+   blanqueaba.
+2. **`.hero__stage-content { color: var(--bg) }` seguía ahí.** El plan lo daba por retirado y no lo
+   estaba: texto oscuro sobre hero oscuro.
+3. **El telón del placeholder** —lo único que se ve si el vídeo no carga— quedaba en crema.
+
+Las tres con la misma firma: **CSS válido, suite verde, página cargando, hero roto en silencio.**
+
+⚠️⚠️ **Y la guarda que se escribió para cazarlo nació ciega, por partida doble:**
+
+- **Su diccionario de tinta no pre-resolvía `:root`.** Ahí `--fg` → `var(--ink-fg)` → `var(--bg)` →
+  `var(--ink-bg)` → `var(--fg)` es un **CICLO**: el resolutor devuelve `null`, la comprobación hace
+  `continue` y la guarda pasa **sin mirar nada**. Dio verde ante las dos mutaciones que reproducían
+  el fallo que la motivó. ▶ Y es **el mismo error corregido veinte minutos antes en el instrumento
+  de Python**, repetido en PHP.
+- **Su criterio era el equivocado.** Preguntaba «¿invierte entre ámbitos?», y eso no distingue nada:
+  **todo lo que lee un token de superficie invierte** — ése es el mecanismo. El criterio que sirve
+  es el **resultado**: dentro del hero el suelo es OSCURO y el texto CLARO, resuelto en el ámbito
+  donde de verdad vive, y **filtrando la marca**, que no se re-escopa (una mancha de `--zone-1`
+  sobre el hero es clara a propósito).
+
+▶ **La guarda final asevera las CUATRO paradas del degradado POR NOMBRE**, no por umbral — que es
+la lección que ese mismo fichero ya llevaba escrita desde `#192` y que aun así se volvió a saltar.
+▶ **4 mutaciones, 4 muerden, y tres REPRODUCEN los fallos reales.** Una guarda que no se prueba
+contra el fallo que la motivó no se sabe si sirve.
+
+⚠️ El instrumento de medida se equivocó **cuatro** veces antes que el código, y las cuatro están
+aquí porque son reutilizables: `\b` tras «hero» no casa en `hero__stage` —el siguiente carácter es
+`_`, que es de palabra— y el primer barrido **no vio NI UNA regla del stage** · el lado «hoy» se
+componía sobre el botón oscuro cuando `--onvideo` pinta sobre el claro · los alias `--paper-*` se
+resolvían dentro de tinta cuando el navegador los resuelve en `:root` · y el emparejador comparaba
+selectores enteros, así que no veía las bases declaradas en selectores agrupados.
+
+### 11.5 ❗❗ Por qué el paso 3 se PARÓ: la coreografía toca el camino de COMPRA
+
+No es un problema de pintura. Medido:
+
+**`.hero__stage-bottom` no es solo el sitio donde vive el CTA: es el SENTINEL de otros dos.**
+- `navCtaReveal` — el botón «Comprar entradas» del nav aparece en escritorio cuando ese elemento
+  sale del viewport.
+- `mobileBookBar` — la barra flotante de reserva en móvil, igual.
+
+Los dos lo observan con `IntersectionObserver` (`resources/js/app.js`), y los dos están escritos
+para que hero y CTA **nunca sean co-visibles**.
+
+▶ **La coreografía pone el stage en `position: sticky`**, y el sentinel vive dentro. Un elemento
+dentro de un sticky **no abandona el viewport mientras el sticky sigue pegado** — y además sube
+mientras la caja encoge. O sea: **el momento en que aparecen los dos CTAs de compra deja de ser el
+que alguien diseñó y pasa a depender de la coreografía.**
+
+Eso no es adoptar una estructura: es cambiar cuándo se le ofrece comprar al visitante. **Necesita
+una decisión, no una suposición.** Las opciones, con su coste:
+
+| | Opción | Coste |
+|---|---|---|
+| **A** | El sentinel pasa a ser el propio `<header class="hero">`, que sí sale del viewport al acabar el recorrido | dos componentes Alpine y sus comentarios; el CTA aparece **más tarde** que hoy (~420 px) |
+| **B** | Un sentinel propio, invisible, al final del `<header>`, fuera del sticky | igual de barato y desacopla el sentinel del CTA: hoy son el mismo elemento por casualidad |
+| **C** | La coreografía sin `sticky` (solo encoge en su sitio) | pierde el efecto del mockup; el sentinel no se toca |
+
+▶ **Recomendada la B**: es la única que deja el sentinel siendo *un sentinel* y no *el botón*, y la
+que no cambia el momento de aparición.
+
+### 11.6 Lo que falta
+
+- **El paso 3** (forma + coreografía), con la decisión de §11.5 tomada.
+- **La escala de sombra**, que entra con él (§10.3: no hay ninguna extraíble sin mover 35 de 55).
+- ❗ **La pasada de NAVEGADOR del owner.** Los pasos 1 y 2 prometen «cero píxeles» y eso se ha
+  verificado por aritmética, que es fuerte — pero **esta máquina no tiene navegador headless**, así
+  que nadie ha MIRADO el hero todavía. Y §11.4 es la prueba de que un barrido incompleto puede
+  jurar que todo está bien.
+- ⚠️ **Las tres excepciones del anillo de foco siguen ahí.** `.skip-link` y `.hero__chip` pintan el
+  anillo claro a mano porque su fondo oscuro no declara superficie. El del chip **ya podría
+  retirarse** —el hero ya declara `ink`—; se dejó fuera de este paso a propósito, para no mezclar
+  un cambio de foco con la conversión de superficie. Entra con el paso 3.

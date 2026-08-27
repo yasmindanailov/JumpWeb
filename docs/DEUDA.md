@@ -245,6 +245,24 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ ❗ ALTA · el SENTINEL de los dos CTAs de compra es el mismo elemento que el CTA del hero (2026-08-27, `#194`)
+
+| Qué (medido) | Dónde muerde | La retira |
+|---|---|---|
+| **`.hero__stage-bottom` hace DOS trabajos a la vez y nadie lo declaró así**: es donde vive el CTA «prime» del hero **y** el sentinel que observan `navCtaReveal` (el botón «Comprar entradas» del nav en escritorio) y `mobileBookBar` (la barra flotante de reserva en móvil), los dos con `IntersectionObserver` en `resources/js/app.js`. Funciona hoy **por casualidad**: el sitio donde acaba el CTA del hero coincide con el sitio donde queremos que aparezcan los otros dos | **El camino de compra.** En cuanto el hero cambie de estructura —y el paso 3 de la tanda 2b lo pone en `position: sticky`— el sentinel deja de abandonar el viewport cuando alguien lo pensó: **cambia el momento en que se le ofrece comprar al visitante**, y no lo caza ningún test | **Decisión del owner, con tres opciones y su coste en `specs/tema-por-instalacion.md` §11.5.** Recomendada la **B**: un sentinel propio, invisible, al final del `<header>` y fuera del sticky. Es igual de barata que las otras y la única que deja el sentinel siendo *un sentinel* y no *el botón*. ⏳ **Bloquea el paso 3 de la 2b** |
+
+---
+
+## ▶ Baja · lo que la tanda 2b dejó anotado (2026-08-27, `#194`)
+
+| Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
+|---|---|---|---|---|
+| **Baja** | **Tres excepciones del anillo de foco, y dos ya podrían caer** | `.skip-link:focus-visible` y `.hero__chip:focus-visible` pintan el anillo claro **a mano** (`var(--bg)`) porque su fondo oscuro no declaraba superficie. **El del chip ya no aplica: el hero declara `ink` desde `#194`**, así que `var(--focus-color)` ya rendiría claro solo | Un cliente que cambie `--focus-color` mueve 8 anillos y estos dos no | Se dejó fuera del paso 2 **a propósito**, para no mezclar un cambio de foco con la conversión de superficie. Entra con el paso 3. `FOCUS_EXCEPTIONS` **solo encoge** |
+| **Baja** | **`.cta-prime__ico` tiene un literal blanco que ningún test caza** | `background: rgba(255, 255, 255, 0.10)`. `RawColourIsNotATokenTest` no lo marca porque **no repite el valor de ningún token existente** — es blanco puro, y el producto no tiene un token blanco puro salvo `--sheet`, que significa otra cosa (la hoja de una tarjeta) | Un cliente cambia su marca y la caja del icono del CTA sigue aclarándose con blanco puro. Dentro del hero **sí** obedece, porque ahí lo pinta una regla de ámbito con `--paper-fg` | Decidir qué token le toca. No es `--sheet` (rol distinto) ni `--bg` (crema). Puede que haga falta declarar que «aclarar sobre el propio botón» es un rol y darle nombre |
+| **Baja** | **El titular del hero sigue con `--onvideo`, y el nombre miente** | De las 10 reglas `--onvideo` que quedan, ninguna pinta color: son `font-size` (×5), `box-shadow` (×2), `text-shadow`, `opacity` y `transform`. Es decir, el modificador ya solo significa **«tamaño del hero» y «sombra sobre oscuro»**, no «sobre vídeo» | En nada hoy. Cuesta lectura: quien lo vea creerá que aún invierte colores | Renombrar toca la especificidad de `.hero__title.hero__title--onvideo`, que existe para ganarle a `landing.css`. Va con el paso 3, que toca el titular de todos modos |
+
+---
+
 ## ▶ Baja/Media · lo que la tanda 2a del TEMA midió y NO arregló (2026-08-27, `DECISIONES #193`)
 
 > Todo lo de aquí salió de instrumentos con guarda, no de leer. `specs/tema-por-instalacion.md` §10.

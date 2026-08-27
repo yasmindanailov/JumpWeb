@@ -129,7 +129,7 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> · 🆕 **Agente C (el TEMA) → tandas 1 y 2a CERRADAS y EMPUJADAS el 2026-08-27 (`#192`, `#193`).**
+> · 🆕 **Agente C (el TEMA) → tandas 1, 2a y los DOS PRIMEROS PASOS de la 2b, empujados el 2026-08-27 (`#192`, `#193`, `#194`).**
 >   Hay un **TERCER carril**, por encargo del owner: la capa de tema
 >   (`specs/tema-por-instalacion.md`). La tanda 1 —las dos superficies como ámbito, `--sheet`, los dos
 >   grises, los tintes, 21 radios y las fuentes por instalación— está hecha, verificada y en `main`.
@@ -316,7 +316,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3041 en verde** (17.572 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
+- Suite **3044 en verde** (17.543 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
   máquina del carril C; ~42 s en la del B) ·
   ▶ **+9 tests PHP en el último corte** (`#193`, capa de tema · tanda **2a**): `ShapeScaleTest`.
   **13 mutaciones, las 13 muerden** — pero solo después de arreglar el arnés. ⚠️⚠️ **El arnés de
@@ -584,21 +584,40 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 |---|---|
 | **A · menores** | Las **cinco decisiones** de `specs/menores-a-cargo.md` §9.5. La primera (**NUC-3**) bloquea su tanda 2 |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | La pasada de **NAVEGADOR** del owner sobre las **11 declaraciones que la 2a mueve a propósito** (spec §10.2, enumeradas) y sobre la **tira del pie**. Y, para la tanda 3, **decidir cuál de las dos variantes de «El parque»** se queda |
+| **C · tema** | ❗ **UNA DECISIÓN DE PRODUCTO que bloquea el paso 3 de la 2b**: la coreografía del hero pone el stage en `sticky`, y ahí vive el **sentinel de los DOS CTAs de compra** (el del nav en escritorio y la barra flotante de móvil). Tres opciones con su coste en `specs/tema-por-instalacion.md` **§11.5**; recomendada la **B**. ▶ Y la pasada de **NAVEGADOR** sobre lo ya hecho: las 11 declaraciones que la 2a mueve (§10.2), la **tira del pie** y **el hero**, que nadie ha visto todavía. ▶ Para la tanda 3, **cuál de las dos variantes de «El parque»** se queda |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
 `landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
 
-▶ **Por dónde retoma el carril C, con nombre y orden** (`specs/tema-por-instalacion.md` §7 y §10.7):
-la **tanda 2b, el HERO** — la tarjeta con margen en vez del sangrado de hoy, la coreografía de
-scroll y, con ella, **la escala de sombra**. **Las secciones NO se tocan** hasta que el owner decida
-cuál de las dos variantes de «El parque» se queda.
-❗❗ **Y no se empieza como la 1 ni como la 2a.** Las dos primeras tenían promesas verificables por
-instrumento —*no mueve un píxel* la 1; *mueve estas 11 y solo estas* la 2a—. **La 2b cambia el
-aspecto de la primera pantalla**: su red no es el gate, es el ojo del owner en navegador.
+▶ **Por dónde retoma el carril C** (`specs/tema-por-instalacion.md` §11.5 y §11.6): el **paso 3
+de la 2b** —la FORMA del hero (tarjeta con margen en vez de a sangre) y su COREOGRAFÍA de scroll—
+y, con él, la **escala de sombra**.
+❗❗ **Pero NO se empieza sin una decisión del owner, y no es de pintura.** Medido: la coreografía
+pone el `.hero__stage` en `position: sticky`, y ahí dentro vive `.hero__stage-bottom`, que **no es
+solo donde está el CTA del hero: es el SENTINEL de otros dos** —el botón «Comprar entradas» del nav
+en escritorio y la barra flotante de reserva en móvil, los dos con `IntersectionObserver` y escritos
+para que hero y CTA nunca sean co-visibles—. Un elemento dentro de un sticky **no abandona el
+viewport mientras el sticky sigue pegado**, así que **el momento en que se le ofrece comprar al
+visitante dejaría de ser el que alguien diseñó**. Tres opciones con su coste en la spec **§11.5**;
+recomendada la **B** (sentinel propio, invisible, fuera del sticky).
 ▶ **Y con la 2b entra la sombra, que sale con su número**: no hay escala extraíble sin coste —la
 mejor de 6 escalones mueve **35 de 55 y 125 px de blur**—, así que **crearla es decidirla**.
+
+✅ **Lo que la 2b YA dejó hecho** (`#194`): el hero **declara `data-surface="ink"`** —la primera vez
+que el producto consume el mecanismo de la tanda 1, que hasta hoy no usaba nadie— y `--onvideo`
+**deja de pintar color**: de sus 10 reglas restantes, ninguna declara uno. Verificado por
+aritmética: **14/14 declaraciones rinden idéntico**, dentro y fuera del hero. Más 17 reglas muertas
+retiradas.
+⚠️⚠️ **Y lo que enseñó, que vale más que lo que entró**: la conversión estaba **a medias en tres
+sitios** —el scrim tiene CUATRO paradas y se convirtieron dos, dejando la mitad inferior en crema—
+y **la guarda escrita para cazarlo nació ciega**: su diccionario de tinta ciclaba, devolvía `null`
+y pasaba sin mirar nada. Dio verde ante las mutaciones que reproducían el fallo que la motivó.
+▶ **La regla que sale de ahí: una guarda no se sabe si sirve hasta que se muta con el fallo REAL
+que la motivó.** Las 4 mutaciones de `SurfaceScopeTest` incluyen tres reproducciones exactas.
+⚠️ **Dos de las tres excepciones del anillo de foco ya podrían caer** —el hero ya declara `ink`—;
+se dejaron a propósito para no mezclar un cambio de foco con la conversión de superficie.
+
 ⚠️ **El mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección ni tarjeta declara
 superficie. Es correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de
 verdad** es en la 2b, cuando el hero declare `ink`. Y ese mismo día se retiran las **tres excepciones

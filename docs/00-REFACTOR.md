@@ -2320,7 +2320,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **tandas 1 y 2a CERRADAS · 2b (el hero) sin empezar**
+### La CAPA DE TEMA 🟦 — **tandas 1 y 2a CERRADAS · 2b con sus pasos 1 y 2 hechos**
 
 > Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7** si vas a la 2b, por **§10** si quieres
 > saber cómo quedó la forma) · Decisiones `#192` y `#193`.
@@ -2372,8 +2372,33 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       complementarios la franja del medio salía barro (`#868D7D`), y **`oklab` no lo arreglaba**
       (croma 0,024 vs 0,025 de `srgb`). El producto no elige la marca de su cliente.
       ❗ **Falta la pasada de NAVEGADOR del owner** sobre las 11 declaraciones que se mueven.
-- [ ] **2b · El HERO** — tarjeta con margen en vez de a sangre, coreografía de scroll, **y la escala
-      de sombra**. `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
+- 🟦 **2b · El HERO — pasos 1 y 2 HECHOS** (2026-08-27, `#194`), paso 3 PARADO por decisión.
+      ✅ **Paso 1**: 17 reglas de **6 clases MUERTAS** fuera (cero usos en `resources/`), 56 líneas.
+      ✅ **Paso 2**: el `.hero__stage` **declara `data-surface="ink"`** — la PRIMERA vez que el
+      producto consume el mecanismo de la tanda 1, que hasta hoy no usaba nadie— y `--onvideo` deja
+      de pintar color: de sus 10 reglas restantes, **ninguna declara uno**.
+      ▶ **`--onvideo` eran TRES cosas con un nombre**: superficie (se la lleva el ámbito), tamaño
+      (el titular del hero es mayor que un `h1`; se queda) y sombra sobre oscuro (se queda).
+      ▶ Verificado por **aritmética**, no por vista: **14/14 declaraciones rinden idéntico**, dentro
+      y fuera del hero. Y tres van **sobre el BOTÓN**, que invierte respecto a la superficie: leen
+      los alias `--paper-*`, primer uso real de lo que la tanda 1 creó «para volver a papel».
+      ⚠️⚠️ **La conversión estaba a MEDIAS en tres sitios y la guarda nació CIEGA.** El scrim tiene
+      CUATRO paradas y se convirtieron dos —la mitad inferior quedaba en crema—; `.hero__stage-content`
+      seguía forzando texto oscuro; el telón del placeholder, crema. Y la guarda escrita para cazarlo
+      **ciclaba** al resolver los tokens, devolvía `null` y **pasaba sin mirar nada**: dio verde ante
+      las mutaciones que reproducían el fallo que la motivó. ▶ **Regla que sale de ahí: una guarda no
+      se sabe si sirve hasta que se muta con el fallo REAL.** 4 mutaciones, 3 son reproducciones.
+      ❗❗ **Paso 3 PARADO, y no es de pintura**: la coreografía pone el stage en `sticky`, y ahí vive
+      `.hero__stage-bottom`, que es el **SENTINEL de los dos CTAs de compra** (nav en escritorio y
+      barra flotante en móvil). Dentro de un sticky no abandona el viewport, así que **cambiaría el
+      momento en que se le ofrece comprar al visitante**. Tres opciones con su coste en la spec
+      **§11.5**; recomendada la **B**. Con el paso 3 entran la FORMA y **la escala de sombra**.
+      ⚠️ **Y la auditoría del cliente EXCLUYE el hero por indicación suya** («organización y efectos
+      del hero de cabecera… quedan fuera»): sus COLORES sí están revisados, su forma y su
+      coreografía **no**. El paso 2 es terreno firme; el 3 es el único de toda la capa que copia
+      algo no normativo.
+      ❗ **Nadie ha MIRADO el hero**: esta máquina no tiene navegador headless.
+- [ ] **2b · paso 3** — la FORMA del hero y su coreografía, **y la escala de sombra**. `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
       valores**. **Aquí el producto SÍ cambia de aspecto de verdad**: su red es el ojo en navegador.
       ▶ La sombra entra aquí porque **no hay escala extraíble sin coste**: probadas de 3 a 6
       escalones, la mejor mueve **35 de 55 y 125 px de blur**. Crearla es decidirla.

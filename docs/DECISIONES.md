@@ -10186,3 +10186,93 @@ nuevos** —`Descubre-el-Parque` y `Recorrido-Parque`—, que son **dos variante
 suite **3041** verde · Pint 932 · seis fichas nuevas en `DEUDA.md`.
 ❗ **Sigue 🟦: falta la pasada de NAVEGADOR del owner** sobre las 11 declaraciones que se mueven a
 propósito (enumeradas en la spec §10.2) y sobre la tira del pie.
+
+## #194 · 2026-08-27 · La capa de TEMA, tanda 2b (pasos 1 y 2) — el hero DECLARA superficie, y la conversión estaba a medias en tres sitios
+Hasta hoy `[data-surface]` existía y **no lo usaba nadie**: la tanda 1 (`#192`) construyó el
+mecanismo y la 2a (`#193`) la forma, pero ninguna sección ni tarjeta lo consumía. Esta entrada es
+la primera vez que el producto lo usa de verdad — el `.hero__stage` declara `data-surface="ink"` y
+sus colores dejan de invertirse a mano.
+
+▶ **`[DECIDIDO owner, 2026-08-27]`**: la 2b va **entera, coreografía incluida**, con el aviso
+delante de que **su propia auditoría EXCLUYE el hero** (ver abajo). Se ejecutó por pasos: **1 y 2
+hechos y verificados; el 3 parado**, y no por cansancio — §11.5 de la spec.
+
+❗❗ **LO PRIMERO, porque enmarca todo: `Auditoría Landing PJP` excluye el hero por indicación del
+propio owner.** Literal: «Quedan fuera **por indicación expresa**: organización y efectos del hero
+de cabecera, del bloque de cierre, del menú y del logotipo. **Sus colores, iconos y estilos sí se
+han revisado**». Y el kit lo repite: `E4 · Hero → Excluido`. ▶ Es decir: la **forma** y la
+**coreografía** del hero del mockup no están validadas contra el sistema del cliente; sus
+**colores** sí. Por eso el paso 2 es terreno firme y el 3 es el único de toda la capa de tema que
+copia algo no normativo. Queda escrito para que nadie lo tome por «lo que dice el sistema».
+
+**Lo que entró:**
+- **Paso 1 · limpieza**: **17 reglas de 6 clases MUERTAS** (`.hero__stat` y sus tres hijas,
+  `.hero__foot`, `.hero__bubble`, `.hero__stage-top`, `.hero__tag--onvideo`,
+  `.hero__cta-row--onvideo`) — cero usos en `resources/`, 56 líneas menos. Cero píxeles.
+  ▶ Lo cazó la guarda de `ShapeScaleTest`: `.hero__stat .sep` se quedó sin sujeto en la lista de
+  excepciones del motivo cuadrado. La lista **solo encoge**, y funcionó.
+- **Paso 2 · la superficie**: el stage declara el ámbito y los `--onvideo` **dejan de pintar color**.
+
+❗ **`--onvideo` no era una cosa mal hecha: eran TRES con el mismo nombre.** Medido: **superficie**
+(14 declaraciones de color, se las lleva el ámbito) · **tamaño** (el titular del hero es mayor que
+un `h1`; se queda, es legítimo) · **sombra sobre oscuro** (se queda, entra con la escala de
+elevación). De las **10 reglas `--onvideo` que quedan, ninguna declara un color**.
+
+▶ **Verificado por ARITMÉTICA, no por vista**: un resolutor con guarda (7 casos + 2 controles
+negativos) resuelve **14 declaraciones** del hero y del CTA en los dos ámbitos, contra el valor
+medido ANTES. **14/14 idénticas, dentro y fuera del hero.**
+
+▶ **Y una pieza conceptual que merece nombre**: tres declaraciones no las cubría el ámbito porque
+van **sobre el BOTÓN**, y el botón **invierte respecto a la superficie** (dentro de tinta el CTA es
+claro). Pasan a reglas de ámbito que leen los alias **`--paper-*`** — que la tanda 1 creó justo
+«para poder VOLVER a papel desde dentro de tinta». Primer uso real de esos alias.
+
+⚠️⚠️ **LO QUE COSTÓ, y es lo más útil de esta entrada: la conversión estaba a MEDIAS en tres
+sitios, y la guarda escrita para cazarlo NACIÓ CIEGA.**
+
+El commit del paso 2 prometía «14 de 14 rinden exactamente lo mismo». Era cierto **para las 14 que
+el barrido miraba**. Fuera de esa lista:
+1. **El scrim tiene CUATRO paradas y se convirtieron DOS**: las de abajo —las que dan legibilidad
+   al titular sobre el vídeo— pasaban de tinta al 65 % a **crema al 65 %**.
+2. **`.hero__stage-content { color: var(--bg) }`** seguía ahí: texto oscuro sobre hero oscuro.
+3. **El telón del placeholder** —lo único visible si el vídeo no carga— quedaba en crema.
+
+Las tres: CSS válido, suite verde, página cargando, hero roto en silencio.
+
+Y la guarda falló por dos motivos independientes:
+- **Su diccionario de tinta no pre-resolvía `:root`**, así que `--fg` → `--ink-fg` → `--bg` →
+  `--ink-bg` → `--fg` era un **CICLO**: el resolutor devolvía `null`, la comprobación hacía
+  `continue` y la guarda pasaba **sin mirar nada**. Dio verde ante las dos mutaciones que
+  reproducían el fallo que la motivó. ▶ **Es el mismo error corregido veinte minutos antes en el
+  instrumento de Python, repetido en PHP.**
+- **Su criterio era el equivocado**: preguntaba «¿invierte entre ámbitos?», y eso no distingue nada
+  —**todo lo que lee un token de superficie invierte**, ése es el mecanismo—. El criterio que sirve
+  es el **resultado**: dentro del hero el suelo es oscuro y el texto claro, resuelto donde de verdad
+  vive y **filtrando la marca**, que no se re-escopa.
+
+▶ La guarda final asevera las cuatro paradas **por NOMBRE**, no por umbral — la lección que ese
+mismo fichero llevaba escrita desde `#192` y que aun así se volvió a saltar. **4 mutaciones, 4
+muerden, y tres REPRODUCEN los fallos reales**: una guarda que no se prueba contra el fallo que la
+motivó no se sabe si sirve.
+
+⚠️ El instrumento se equivocó **cuatro** veces antes que el código: `\b` tras «hero» no casa en
+`hero__stage` (el siguiente carácter es `_`) y el primer barrido **no vio NI UNA regla del stage** ·
+el lado «hoy» se componía sobre el botón oscuro cuando `--onvideo` pinta sobre el claro · los alias
+`--paper-*` se resolvían dentro de tinta · y el emparejador no veía las bases declaradas en
+selectores agrupados.
+
+❗❗ **POR QUÉ EL PASO 3 SE PARÓ, y es una decisión de PRODUCTO, no de pintura.**
+`.hero__stage-bottom` no es solo donde vive el CTA del hero: es el **SENTINEL** de otros dos —el
+botón «Comprar entradas» del nav en escritorio (`navCtaReveal`) y la barra flotante de reserva en
+móvil (`mobileBookBar`)—, los dos con `IntersectionObserver` y escritos para que hero y CTA nunca
+sean co-visibles. ▶ **La coreografía pone el stage en `position: sticky`, y un elemento dentro de
+un sticky no abandona el viewport mientras el sticky sigue pegado** — y además sube mientras la caja
+encoge. O sea: **el momento en que se le ofrece comprar al visitante dejaría de ser el que alguien
+diseñó**. Tres opciones con su coste en la spec §11.5; recomendada la **B** (sentinel propio,
+invisible, fuera del sticky), que es la única que deja el sentinel siendo un sentinel y no el botón.
+
+`specs/tema-por-instalacion.md` §11 · `SurfaceScopeTest` (11 casos: +3 guardas nuevas, todas con
+mutación que muerde) · suite **3044** verde · Pint 932.
+❗ **Y falta MIRARLO**: esta máquina no tiene navegador headless, así que la promesa de «cero
+píxeles» está verificada por aritmética pero **nadie ha visto el hero**. §11.4 es la prueba de que
+un barrido incompleto puede jurar que todo está bien.
