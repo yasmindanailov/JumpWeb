@@ -788,23 +788,41 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-27, 18:40): los TRES carriles cerrados y empujados — y el A ya tiene su siguiente tarea DECIDIDA: la tanda 4 de «menores a cargo»
+# ❗ SI ENTRAS NUEVO (2026-08-28, madrugada): el carril C cerró con **el paquete del 2.º cliente MONTADO** y el armazón completo salvo el móvil
 
-**Los tres cerraron el 2026-08-27 con todo en `origin/main` y verde.** El B a las 07:30; el **A a las
-18:40 con las tandas 1, 2 y 3 de «menores a cargo»** (`#191` · `#198` · `#199`, `specs/menores-a-cargo.md`
-§9) **y la tanda 4 decidida como siguiente** (`[DECIDIDO owner]`; el mapa de arranque, con los ocho
-puntos que hay que saber antes de escribir, está en su fila de la cabecera); y el **C, el TEMA**, por
-la noche con la tanda 1 de la capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas
-de la cabecera antes de elegir tarea**. Del owner: su ojo en navegador (el waiver, la zona de menores,
-el hero), el texto del waiver y los dos plazos de retención. ⚠️ En el carril A, **antes de la tanda 4
-conviene ese ojo sobre la zona de menores** (guion `VERIFICACION-E2E-CAJON.md` §5.decies): la tanda 4
-la usa.
+**`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
+
+El **carril C (el TEMA)** cerró el 2026-08-28 de madrugada con **seis tandas empujadas y verdes**:
+la spec del armazón y su red (`#200`), el **menú a pantalla completa** (`#201`), la **barra disuelta
+en dos racimos** (`#203`), la **cuenta en icono** (`#204`), el **CTA doble de móvil** (`#205`) y
+**el primer PAQUETE DE TEMA REAL de un cliente** (`#206`).
+
+❗❗ **Lo más importante que dejó, y afecta a cualquiera que toque CSS o guardas:**
+**montar un paquete de cliente destapó TRES defectos del producto que solo aparecen con una
+instalación encima** (`specs/tema-por-instalacion.md` §14.4). El peor no fue el original sino **el
+primer arreglo**: hacer que un test se saltara movía el **contador de aserciones**, y el `pre-push`
+compara el número EXACTO contra `ESTADO.md` — así que **bloqueaba a una de las dos máquinas
+siempre**. Con dos carriles a la vez, eso es bloquear al otro agente por tener un tema instalado.
+▶ **Un gate que depende de si el disco tiene el tema de un cliente no es un gate.**
+▶ Arreglado de fondo: los casos del paquete corren sobre un `public/` propio y **las cinco guardas
+de CSS excluyen `client.css`** — un paquete de tema **está hecho de literales** y juzgarlo con las
+reglas del producto sería prohibirle existir. Verificado midiendo con paquete y sin él: **idéntico**.
+
+⚠️ **Y esta máquina es ahora una INSTALACIÓN**: tiene `public/css/client.css` (gitignorado), los
+ajustes `theme.brand`/`theme.brand_secondary` en la BD local y `THEME_FONTS` en el `.env`. **En otra
+máquina nada de eso existe** y la web se ve con el tema del producto: es lo correcto. Para
+regenerarlo, la receta es `INSTALACION-CLIENTE.md` §4 y la fuente el artboard `Colores de Marca PJP`
+del canvas.
+
+Del owner sigue esperando: **su ojo en navegador** (ahora son CINCO tandas visuales sin mirar), el
+**artboard del menú en móvil**, el **SVG del logotipo**, el texto del waiver y los plazos de
+retención.
 
 | Carril | Qué espera, exactamente |
 |---|---|
 | **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0, U1 y U2 hechas** (la purga de la cesta §9.9.6 · el servidor §9.9.7 · el cajón §9.9.8, guion §5.undecies 19/19); sigue **U4, el ojo del owner** (el guion en su navegador). Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
+| **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son CINCO tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas) y `#205` (el CTA doble de móvil). ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y tres cosas concretas: el **artboard del menú en MÓVIL** (bloquea la 2c·4b), el **SVG del logotipo** en `public/img/client-logo.svg`, y **cuál de las dos variantes de «El parque»** para la tanda 3. ▶ Ya validó `#193` y `#194` |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que
@@ -825,12 +843,25 @@ mecanismo del tema (`specs/tema-por-instalacion.md` §14.5).
 **1,49 sobre papel** cuando WCAG exige 3,0. Su auditoría de 20 pares **no incluye ese par**. Está
 `[PENDIENTE: owner]` con tres salidas en §14.2.
 
-▶ **Por dónde retoma el carril C**: **el armazón está COMPLETO salvo el MENÚ EN MÓVIL** —2c·0
-(`#200`), 2c·1 (`#201`), 2c·2 (`#203`), 2c·3 (`#204`) y 2c·4a, el CTA doble (`#205`), todas en el
-árbol y verdes—. Lo único que queda es la **2c·4b, el menú a pantalla completa en móvil**, y la
-bloquea el **artboard del owner**: hasta que exista, el cajón lateral sigue intacto por debajo de
-1080 px. ▶ Lo siguiente de agente sin depender de él es la tanda **2d, el MOVIMIENTO** (medido: 237
-declaraciones, 48 duraciones y 20 curvas; el sistema del cliente declara 7 y 4).
+▶ ❗ **POR DÓNDE RETOMA EL CARRIL C, y está decidido: el QUINTO MECANISMO DEL TEMA — el relleno de
+ACCIÓN.** Es lo único que impide que la landing sea 1:1 con el mockup, y lo destapó montar el
+paquete (`#206`, `specs/tema-por-instalacion.md` §14.5):
+
+· El CTA primario del cliente es **Naranja Salto**; el del producto está atado a
+  `background: var(--fg)` —tinta— en `.cta-prime`, `.cta-med` y `.btn`. **No hay token de acción**,
+  así que **ningún paquete puede poner el botón de comprar en naranja** sin tocar el producto.
+· **Medido: 50 reglas** rellenan con `var(--fg)` y **NO todas son acción** —unas son superficie
+  invertida (`.flash`, `.skip-link`, `.acct__avatar`, los `:hover` que invierten)—. Es el mismo
+  problema que la elevación de `#196`: hay que preguntar **«¿para qué sirve cada relleno de
+  tinta?»** y sacar un ROL, no una lista. La receta que funcionó dos veces: clasificar, tokenizar
+  el rol, guarda con mutación, y la lista de excepciones **solo encoge**.
+· ▶ El comando para reproducir la medida está en la spec §14.5.
+
+▶ **Después**, y sin depender del owner: la tanda **2d, el MOVIMIENTO** (medido: 237 declaraciones,
+48 duraciones y 20 curvas; el sistema del cliente declara 7 y 4 — no mueve píxeles, mueve TIEMPO).
+▶ **Lo que SÍ depende de él**: la **2c·4b** (menú en móvil, espera artboard), el **SVG del
+logotipo**, **cuál variante de «El parque»**, y la **tanda 3** — donde **opiniones** y **el
+minijuego del castillo** no existen y **`D9`/`B4` las bloquea el ARTE, no el código**.
 ▶ **Y de la LANDING (tanda 3), lo medido el 2026-08-27 contra el artboard normativo**: la única
 sección del mockup que **no existe** es **OPINIONES** (3 tarjetas `texto`/`nombre`/`meta` + cápsula
 de valoración = el `testimonials` parado en `#158`); **el minijuego del castillo** tampoco existe y

@@ -2358,10 +2358,17 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **los CUATRO mecanismos hechos · falta el ojo del owner y el MENÚ (2c)**
+### La CAPA DE TEMA 🟦 — **cinco mecanismos, el ARMAZÓN entero y el PRIMER PAQUETE REAL montado**
 
-> Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7** si vas a la 2b, por **§10** si quieres
-> saber cómo quedó la forma) · Decisiones `#192` y `#193`.
+> Spec: `specs/tema-por-instalacion.md` (empieza por **§14**, que es el paquete real y lo que
+> destapó; luego §1.7 y §10) · Decisiones `#192`, `#193`, `#194`, `#195`, `#196` y **`#206`**.
+> El armazón tiene spec propia: `specs/armazon-y-menu.md` (`#200`, `#201`, `#203`, `#204`, `#205`).
+>
+> ❗❗ **Lo que falta para que la landing sea 1:1 con el mockup, medido**: el **QUINTO mecanismo, el
+> relleno de ACCIÓN** —el CTA del cliente es naranja y el del producto está atado a
+> `background: var(--fg)`; 50 reglas rellenan con tinta y **no todas son acción**—; la tanda **2d**;
+> el **menú en móvil** (espera artboard); y la tanda **3**, donde **opiniones** y **el minijuego del
+> castillo** no existen y **`D9`/`B4` las bloquea el ARTE, no el código**.
 > Hermana de `landing-white-label.md` §4.5: aquélla decidió que el tema son TRES mecanismos y
 > ejecutó su tanda A; ésta construye **lo que aquélla dio por supuesto y no existía**.
 >
@@ -2478,10 +2485,36 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       escalones, la mejor mueve **35 de 55 y 125 px de blur**. Crearla es decidirla.
       ▶ Y aquí el hero declara `[data-surface="ink"]`, que es **la primera vez que el mecanismo de la
       tanda 1 se usa de verdad** — y el día que las tres excepciones del anillo de foco se retiran.
-- [ ] **2c · El MENÚ → spec propia.** `[DECIDIDO owner, 2026-08-27]`: sustituir la barra horizontal
-      por logo + hamburguesa + menú a pantalla completa toca **12 vistas**, los dos desplegables con
-      sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil. No es «adoptar una
-      estructura»: es cambiar la navegación del sitio.
+- 🟦 **2c · El ARMAZÓN → spec propia `specs/armazon-y-menu.md`** (2026-08-27, `#200` → `#205`).
+      **Completo salvo el menú en MÓVIL**, que espera el artboard del owner. Siete decisiones suyas,
+      dos de ellas corrigiendo a la propia spec.
+      · **2c·0** (`#200`) la RED —el cajón móvil **estrenó test**: no lo tocaba ninguno— y 33 reglas
+        muertas fuera. **Cero píxeles, medido** en el HTML de 16 páginas.
+      · **2c·1** (`#201`) el **menú a pantalla completa** sustituye a los dos desplegables; 33 reglas
+        más fuera. ⚠️ Lo único del mockup que NO se copia es cómo oculta su menú: `clip-path` sin
+        `visibility` deja los enlaces en el orden de tabulación.
+      · **2c·2** (`#203`) la barra se **DISUELVE** en dos racimos y el salto al contenido pasa de
+        **1 a 12** vistas. ⚠️ `pointer-events:none` en el contenedor y `auto` en los racimos: sin eso
+        la franja vacía se traga los clics de todo el ancho.
+      · **2c·3** (`#204`) la cuenta en icono con punto de aviso en amarillo, y tres glifos al set.
+      · **2c·4a** (`#205`) el **CTA DOBLE** de móvil; el idioma sale del pie con `<noscript>` de suelo.
+      ❗ **Falta la pasada de NAVEGADOR de las CINCO tandas**, y el owner eligió mirarlas juntas
+      sabiendo el coste de la atribución.
+- 🟦 **El PRIMER PAQUETE DE CLIENTE REAL** (2026-08-28, `#206`). ✅ **Demuestra que los cuatro
+      mecanismos COMPONEN**: la web sale con la marca del 2.º cliente y la suite entera pasa, con
+      cero migraciones y cero dominio. **El paquete NO está en el repo y no puede estarlo**: vive en
+      `public/css/client.css` (gitignorado, excluido del `rsync`), dos ajustes en el panel y
+      `THEME_FONTS` en el `.env`.
+      ❗❗ **Y destapó lo que ninguna guarda podía dar: el anillo de foco del cliente es INVISIBLE en
+      papel** —1,49 frente al 3,0 que exige WCAG—, y **su auditoría de 20 pares no incluía ese par**.
+      `[DECIDIDO owner]`: un color por superficie, y **no costó código de producto** — su
+      `--focus-color` ya valía `var(--fg)` y era el paquete el que lo rompía.
+      ❗❗ **Tres defectos del producto que solo aparecen con una instalación encima**: una guarda
+      exigía que la hoja del cliente NO existiera; **el primer arreglo lo empeoró** —saltar movía el
+      contador de aserciones y el `pre-push` bloqueaba a una de las dos máquinas SIEMPRE—; y las
+      cinco guardas de CSS juzgaban `client.css`, que **está hecho de literales**. Arreglado de
+      fondo y verificado midiendo con paquete y sin él: **idéntico**.
+      ▶ Y entra el hueco del **LOGOTIPO de instalación**, con las mismas tres piezas.
 - [ ] **2d · El MOVIMIENTO** — 4 curvas y 7 duraciones como tokens. Medido: **237 declaraciones, 48
       duraciones distintas y 20 curvas** (el sistema del cliente declara 7 y 4); `200ms` sola tiene
       110 usos. No mueve píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa
