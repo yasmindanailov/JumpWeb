@@ -260,6 +260,13 @@ Route::name('api.v1.')->group(function (): void {
             ->middleware('throttle:30,1,dependents-write')
             ->whereNumber('dependent')
             ->name('me.dependents.destroy');
+        // La firma EN NOMBRE de un menor (tanda 2, `#197`): mismo cubo que la firma del titular — es
+        // la misma clase de escritura append-only, y así siete firmas de menores no dejan sin poder
+        // pagar (revisión `#169` §10.5).
+        Route::post('/me/dependents/{dependent}/waiver', [MeDependentsController::class, 'acceptWaiver'])
+            ->middleware('throttle:10,1,waiver-sign')
+            ->whereNumber('dependent')
+            ->name('me.dependents.waiver.store');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
 

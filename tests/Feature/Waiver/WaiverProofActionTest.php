@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Waiver;
 
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -152,6 +153,19 @@ class WaiverProofActionTest extends TestCase
         $this->assertStringContainsString('Ana Pérez', $html);
         $this->assertStringContainsString('ana@example.com', $html);
         $this->assertStringNotContainsString('Cliente eliminado', $html);
+    }
+
+    /** `#197` — la firma en nombre de un menor lista su nombre, y no cambia el estado del TITULAR. */
+    public function test_a_dependent_signature_names_the_minor_in_the_record_view(): void
+    {
+        $customer = $this->userWithRole('customer');
+        $dependent = Dependent::create(['user_id' => $customer->id, 'name' => 'Lucas', 'born_on' => '2017-03-12']);
+        app(WaiverSigner::class)->sign($customer, $this->publish(), WaiverSignatureRequest::web('10.0.0.1', 'test')->forDependent($dependent->id));
+
+        $html = $this->modalHtml($customer);
+
+        $this->assertStringContainsString(__('admin.waiver.proof.subject_dependent', ['name' => 'Lucas']), $html);
+        $this->assertStringContainsString(__('admin.waiver.proof.status_unsigned'), $html, 'la firma del menor no firma al titular');
     }
 
     public function test_the_empty_state_and_the_outdated_status(): void

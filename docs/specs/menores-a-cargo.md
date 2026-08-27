@@ -1,11 +1,11 @@
 # [SPEC] Menores a cargo
 
-> Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — la TANDA 1 está EN EL ÁRBOL (2026-08-27, carril A,
-> `DECISIONES #191`): el núcleo en Identity + la API, sin firmas de menor todavía.** ▶ **EMPIEZA POR
-> §9** —qué existe, en qué se apartó del cuerpo y, sobre todo, **§9.5: lo que la tanda 2 necesita del
-> owner, con número y coste** (la primera es NUC-3: la cadena de hashes con firmas de menor)— ·
-> pendiente del ✅ del owner ·
-> Última actualización: 2026-08-27 (§9) · anterior: 2026-08-25 ·
+> Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — TANDAS 1 y 2 EN EL ÁRBOL (2026-08-27, carril A):
+> la tanda 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`), con la cadena
+> de hashes por (titular, sujeto) que decidió el owner (`#197`).** ▶ **EMPIEZA POR §9** —§9.1/§9.7 qué
+> existe, §9.2/§9.8 en qué se apartó del cuerpo, §9.5 las cinco decisiones (TOMADAS) y §9.4 lo que
+> queda: la tanda 3 (el cajón) y la 4 (el embudo)— · pendiente del ✅ del owner ·
+> Última actualización: 2026-08-27 noche (§9.7) · anterior: 2026-08-25 ·
 > ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
 > persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
 > la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
@@ -341,7 +341,7 @@ el mecanismo que protege los datos del menor es más fuerte de lo que ella misma
 | La poda | `routes/console.php` | `Dependent` en el mismo `model:prune` diario, **detrás** de `WaiverSignature`: la firma que vence deja huérfana a su fila en la misma pasada |
 | Auditoría · morph | `app/Domain/Platform/Models/AuditLog.php` · `app/Providers/AppServiceProvider.php` | `dependents.added` · `dependents.removed` (payload: `dependent_id` + `mode`; **nunca** el nombre ni la fecha, `RGPD-02`) · alias `dependent` |
 
-Recuentos del gate tras la tanda: **33 modelos · 80 migraciones**.
+Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; tras la 2, 81 migraciones.
 
 ### 9.2 Lo que se apartó del cuerpo (o lo precisa), y por qué
 
@@ -400,7 +400,7 @@ Recuentos del gate tras la tanda: **33 modelos · 80 migraciones**.
   `422 dependents_limit_reached` con `params.max = 1` y el mensaje interpolado. Auditoría:
   `dependents.added {dependent_id}` · `dependents.removed {mode, dependent_id}`, sin nombre ni fecha.
   Sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
-- **BD de desarrollo migrada** (`2026_08_27_120000`); `docs-check` con 33 modelos · 80 migraciones.
+- **BD de desarrollo migrada** (`2026_08_27_120000`); `docs-check` entonces con 33 modelos y 80 migraciones.
 - **El chunk del cajón no se ha tocado**: esta tanda no entra en `resources/js/sidebar/`.
 
 ### 9.4 Lo que NO hay todavía, por tanda
@@ -477,4 +477,84 @@ Recuentos del gate tras la tanda: **33 modelos · 80 migraciones**.
   `DependentRegistry::remove()`, y el nombre del método importa (`#120(q)`).
 - Un tope que el panel guarda y el dominio ignora es un ajuste que miente: `DependentsCapSettingTest`
   ata los dos extremos (rango del campo = rango de `DependentSettings`).
+
+### 9.7 Ejecución — tanda 2 (2026-08-27 noche, carril A, `DECISIONES #198`): la FIRMA DEL MENOR
+
+> Con las decisiones de §9.5 tomadas (`#197`). Lo que hay, en qué se apartó del cuerpo, lo medido y lo
+> que queda. ⚠️ Tocó `WaiverSigner` (`CRITICAL_RE`): `waiver:verify-chain` corrió con 8 y 16 procesos y
+> **se vio FALLAR** sin el lock antes de empujar con `VERIFY_CONC=1`.
+
+#### 9.7.1 Qué existe
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La migración | `database/migrations/2026_08_27_200000_dependent_waiver_signatures.php` | **FK `waiver_signatures.subject_id → dependents.id` RESTRICT** (§4.4 deja de ser solo una guarda de modelo: medido en vivo, un `DELETE` crudo lo rechaza MySQL) + `subject_name` y `subject_born_on`. Aborta si hubiera firmas de menor previas sin fila |
+| `WaiverSignature` v3 | `app/Domain/Identity/Models/WaiverSignature.php` | `CANONICAL_VERSION = 3`: la identidad del MENOR entra en el hash (`null` en las del titular); lo firmado con v1/v2 verifica con el suyo. `dependent()`, `subjectName()`. `prunable()` con DOS plazos por clase de sujeto |
+| `WaiverSigner` | `app/Domain/Identity/Services/WaiverSigner.php` | **Cadena por (titular, sujeto)**: `prev_hash` es la última firma del MISMO sujeto (y esa misma fila decide la idempotencia por versión). Para un menor, bajo el lock: **suyo, activo y menor** (`DependentNotFoundException` / `DependentNotMinorException`) y su identidad copiada. El lock de la fila del titular sigue siendo el punto de serialización de todas sus cadenas |
+| `WaiverChain` | `app/Domain/Identity/Services/WaiverChain.php` | Verifica UNA cadena por sujeto; devuelve `chains` además de `ok`/`count`/`problems` |
+| `WaiverStatus::forDependent()` | `app/Domain/Identity/Services/WaiverStatus.php` | El estado del menor por su propia cadena (solo en interno); `signatureId` para el PDF |
+| `WaiverSettings` + Ajustes | `app/Domain/Identity/Services/WaiverSettings.php` · `app/Filament/Pages/Settings.php` | `waiver.dependent_retention_months` (Puerta): N meses tras el 18.º cumpleaños; vacío = no se poda |
+| `WaiverAcceptance::acceptForDependent()` · `WaiverSignatureRequest::forDependent()` | `app/Domain/Identity/Services/` | Las dos reglas del texto (interno, vigente) y el sujeto cambiado; quién es el menor lo decide el firmador |
+| La API | `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Api/Concerns/BuildsWaiverSignatureRequest.php` · `openapi/v1.yaml` | `POST /me/dependents/{id}/waiver` (`document_id`; 201 con el `Dependent`; 404 ajeno/retirado; 409 ×3 como el titular; `422 dependent_not_minor`; throttle `waiver-sign`). `Dependent.waiver` (`DependentWaiverStatus`) y `dependent_id`/`dependent_name` en `WaiverSignatureSummary`. El canal (web/api) sale del trait compartido con `POST /me/waiver` |
+| El PDF y el panel | `resources/views/pdf/waiver-proof.blade.php` · `resources/views/filament/users/partials/waiver-proof.blade.php` · `lang/*/waiver.php` | «En nombre de: Lucas (fecha de nacimiento 12/03/2017)» + la nota de que los datos los declaró el titular (§4.2); la conservación del menor desde los 18; «cadena por sujeto» en la nota de verificación. El registro del panel lista el nombre |
+| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | REHECHO (`#197`): N procesos firman como el MISMO sujeto desde cero → **UNA fila** (idempotencia bajo el lock) y dos cadenas verificadas (la sonda en serie firma en nombre de un menor real) |
+
+#### 9.7.2 En qué se apartó del cuerpo (o lo precisa)
+
+1. **La identidad del menor viaja EN la firma** (v3). §4.2 solo pedía que el PDF dijera que el dato lo
+   declaró el titular; con la doctrina de `#161` (la identidad del firmante en la fila), una prueba que
+   apuntara a una fila de `dependents` editable por debajo dejaría de decir de quién se aceptó. Ahora el
+   hash la cubre. Más PII de un menor en una tabla restringida, a propósito y con su plazo.
+2. **La FK Y la guarda de modelo, las dos**: la FK es la base de datos diciendo §4.4; `deleting` es lo
+   que da una excepción con nombre en vez de un error de MySQL. Medidas las dos en vivo.
+3. **La regla de los 18 también al FIRMAR**: un menor declarado a los 17 puede cumplir 18 antes de que
+   el titular firme en su nombre; el firmador lo rechaza bajo el lock (`422 dependent_not_minor`).
+4. **El plazo del menor se calcula sobre la fecha de nacimiento COPIADA** en la firma (`subject_born_on
+   <= hoy − 18 años − N meses`), sin join: la fila se poda sola aunque `dependents` no exista ya.
+5. **El PDF de la firma del menor se sirve por la ruta del titular** (`GET /me/waiver/{signature}/pdf`):
+   el scoping por `user_id` ya cubre las dos clases de firma, y una ruta más habría sido una segunda
+   puerta al mismo documento.
+6. **`waiver:verify-chain` cambia lo que mide**: con cadenas por sujeto, «N menores en una cadena» sería
+   N cadenas de una fila. Mide la idempotencia bajo el lock, que es lo que el lock protege ahora.
+
+#### 9.7.3 Lo medido
+
+- **Suite**: +15 casos —`MeDependentWaiverTest` (9), `WaiverSignatureChainTest` (+2: una cadena por
+  sujeto; ajeno/retirado/adulto rechazados), `WaiverRetentionTest` (+2: la poda del menor desde los 18;
+  **NUC-3 como guarda**: podar un sujeto nunca rompe la cadena del otro, en las dos direcciones),
+  `WaiverProofPdfTest` (+1), `WaiverProofActionTest` (+1)— y la suite completa verde (contador en
+  `ESTADO.md`). La serialización canónica v3 queda FIJADA como literal, con la fecha sin hora venga como
+  venga (SQLite escribe «Y-m-d 00:00:00»).
+- **`waiver:verify-chain` sobre MySQL real**: `--workers=8` y `--workers=16` → 1 fila del titular, 1 del
+  menor, 2 cadenas, 0 repetidos, OK; restos 0. ❗ **Visto FALLAR sin el `lockForUpdate()`**: 16 procesos
+  → 2 filas del titular, 1 `prev_hash` repetido, cadena ROTA. Fichero restaurado byte a byte.
+- **Cinco mutaciones, las cinco muerden**: la cadena por titular otra vez → los dos tests de cadena por
+  sujeto y NUC-3 caen · sin la pertenencia en el firmador → el test de ajeno/retirado cae · sin la guarda
+  de menor → dos tests caen · sin copiar la identidad → el test de la firma y el del PDF caen · la poda
+  ignorando el plazo del menor → su test cae.
+- **HTTP sobre MySQL con Bearer**: firma del menor 201 con `waiver.signed`, `signature_id` y `pdf_url` ·
+  repetida 201 (una fila) · `document_id` viejo `409 waiver_document_stale` · id inexistente 404 ·
+  `GET /me/dependents` con el estado · `GET /me/waiver` con `dependent_id`/`dependent_name` y el titular
+  sin firmar · el PDF (`application/pdf`, v3, cadena OK) nombra al menor, su fecha y la nota de «declarado
+  por el titular» · `DELETE` del menor con firma → 204 y la fila queda desvinculada · **`delete()`
+  lanza `DependentHasReferencesException` y `DB::table(...)->delete()` lo bloquea la FK**. Sonda limpiada.
+- BD de desarrollo migrada; `docs-check` 33 modelos · 81 migraciones.
+
+#### 9.7.4 Lo que queda
+
+- **Tanda 3 — el cajón**: la zona «Menores a cargo» (declarar, quitar, firmar el waiver de cada uno, «ya
+  no está cubierto»), **medida** con y sin ella y el techo del chunk subido por FEATURE con su párrafo
+  (`#197`·2). Toda la API que necesita existe.
+- **Tanda 4 — la asignación en el embudo** (§4.7–§4.10), sin cambios respecto a §9.4.
+- **Del owner**: los DOS valores de retención en meses (`waiver.retention_months`,
+  `waiver.dependent_retention_months`) — criterio jurídico; sin valor, nada se poda.
+
+#### 9.7.5 Trampas (lo que la ejecución enseñó)
+
+- Un esquema estricto del contrato exige TODOS los campos: añadir `dependent_id`/`dependent_name` al
+  resumen y `waiver` al `Dependent` obliga a emitirlos siempre (también `null`), o `assertValidResponse`
+  cae en tests que no tocan menores.
+- Spectator no valida el PDF (`application/pdf`): el caso comprueba cabecera y `%PDF`, y el CONTENIDO se
+  prueba sobre el HTML de la vista, como en `WaiverProofPdfTest`.
+- El verificador limpia por `DB::table` en orden firmas → menor → titular: con la FK, al revés falla.
 

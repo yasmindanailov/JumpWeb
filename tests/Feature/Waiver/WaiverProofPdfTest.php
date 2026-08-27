@@ -3,6 +3,7 @@
 namespace Tests\Feature\Waiver;
 
 use App\Domain\Content\Models\Page;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -271,6 +272,25 @@ class WaiverProofPdfTest extends TestCase
         $this->assertStringContainsString(__('waiver.proof.verified_yes', [], 'es'), $html);
 
         $this->actingAs($this->userWithRole('admin'))->get($this->url($holder->fresh(), $signature))->assertOk();
+    }
+
+    /** `menores-a-cargo.md` §4.2/§4.3 (`#197`) — la firma EN NOMBRE de un menor dice de quién es y que sus datos los declaró el titular. */
+    public function test_a_dependent_signature_names_the_minor_and_says_the_data_is_declared(): void
+    {
+        $holder = User::factory()->create(['name' => 'Ana Pérez']);
+        $dependent = Dependent::create(['user_id' => $holder->id, 'name' => 'Lucas', 'born_on' => '2017-03-12']);
+        $signature = $this->sign($holder, null, WaiverSignatureRequest::web('10.0.0.7', 'Mozilla/5.0 (test)')->forDependent($dependent->id));
+
+        $html = $this->html($signature);
+
+        $this->assertStringContainsString(__('waiver.proof.subject_dependent', ['name' => 'Lucas', 'born_on' => '12/03/2017'], 'es'), $html);
+        $this->assertStringContainsString(__('waiver.proof.subject_dependent_note', [], 'es'), $html);
+        $this->assertStringContainsString('Ana Pérez', $html, 'quien firma sigue siendo el adulto');
+        $this->assertStringContainsString(__('waiver.proof.retention_none', [], 'es'), $html);
+
+        // Y su conservación cuenta desde los 18 (`#197`): 12/03/2017 + 18 años + 12 meses.
+        Setting::updateOrCreate(['key' => 'waiver.dependent_retention_months'], ['value' => '12', 'group' => 'waiver']);
+        $this->assertStringContainsString(__('waiver.proof.retention_until', ['date' => '12/03/2036'], 'es'), $this->html($signature->fresh()));
     }
 
     public function test_the_retention_line_follows_the_setting(): void

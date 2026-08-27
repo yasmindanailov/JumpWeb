@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\Setting;
@@ -28,7 +29,7 @@ final class WaiverProof
 
     public static function make(WaiverSignature $signature): self
     {
-        $signature->loadMissing(['version', 'user', 'declaredBy']);
+        $signature->loadMissing(['version', 'user', 'declaredBy', 'dependent']);
 
         return new self($signature, $signature->version);
     }
@@ -89,6 +90,20 @@ final class WaiverProof
     public function subjectId(): ?int
     {
         return $this->signature->subject_id;
+    }
+
+    /**
+     * El menor en cuyo nombre se firmó, TAL Y COMO ESTABA al firmar (`menores-a-cargo.md` §4.2: la
+     * copia va en la fila, esquema v3). Datos declarados por el titular, no verificados — el PDF lo dice.
+     */
+    public function subjectName(): ?string
+    {
+        return $this->signature->subjectName();
+    }
+
+    public function subjectBornOnLabel(): ?string
+    {
+        return $this->signature->subject_born_on?->format('d/m/Y');
     }
 
     // ─── La aceptación ───────────────────────────────────────────────────────
@@ -171,12 +186,20 @@ final class WaiverProof
 
     public function retainUntilLabel(): ?string
     {
-        $months = WaiverSettings::retentionMonths();
-        if ($months === null || ! $this->isForHolder()) {
+        if ($this->isForHolder()) {
+            $months = WaiverSettings::retentionMonths();
+
+            return $months === null ? null : $this->inZone($this->signature->accepted_at)->addMonths($months)->format('d/m/Y');
+        }
+
+        // La firma de un MENOR se conserva N meses después de su 18.º cumpleaños (`DECISIONES #197`).
+        $months = WaiverSettings::dependentRetentionMonths();
+        $born = $this->signature->subject_born_on;
+        if ($months === null || $born === null) {
             return null;
         }
 
-        return $this->inZone($this->signature->accepted_at)->addMonths($months)->format('d/m/Y');
+        return $born->addYears(Dependent::ADULT_AGE)->addMonths($months)->format('d/m/Y');
     }
 
     public function businessName(): string

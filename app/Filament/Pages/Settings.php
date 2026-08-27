@@ -144,6 +144,7 @@ class Settings extends Page
         // `puerta.waiver_check_enabled` ya no se edita: `save()` lo escribe como espejo del modo.
         'waiver.mode' => 'waiver',
         'waiver.retention_months' => 'waiver',
+        'waiver.dependent_retention_months' => 'waiver',
         // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §4.5): el tope de personas a cargo por
         // cuenta. Es un invariante de SERVIDOR (lo aplica `DependentRegistry`); vacío = 20.
         'dependents.max_per_account' => 'dependents',
@@ -763,6 +764,13 @@ class Settings extends Page
                 TextInput::make(WaiverSettings::KEY_RETENTION_MONTHS)
                     ->label(__('admin.waiver.settings_retention'))
                     ->helperText(__('admin.waiver.settings_retention_hint'))
+                    ->integer()
+                    ->minValue(WaiverSettings::RETENTION_MIN)
+                    ->maxValue(WaiverSettings::RETENTION_MAX),
+                // `DECISIONES #197`: la firma de un MENOR se conserva N meses tras su 18.º cumpleaños.
+                TextInput::make(WaiverSettings::KEY_DEPENDENT_RETENTION_MONTHS)
+                    ->label(__('admin.waiver.settings_dependent_retention'))
+                    ->helperText(__('admin.waiver.settings_dependent_retention_hint'))
                     ->integer()
                     ->minValue(WaiverSettings::RETENTION_MIN)
                     ->maxValue(WaiverSettings::RETENTION_MAX),

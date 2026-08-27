@@ -49,6 +49,9 @@ class WaiverStatusResource extends JsonResource
                 'channel' => (string) $signature->channel,
                 'declared' => $signature->isDeclaredByOperator(),
                 'subject' => (string) $signature->subject_type,
+                // Fase 6 · menores a cargo (`#197`): de quién es la firma cuando no es del titular.
+                'dependent_id' => $signature->isForHolder() ? null : (int) $signature->subject_id,
+                'dependent_name' => $signature->subjectName(),
                 'pdf_url' => route('api.v1.me.waiver.pdf', ['signature' => $signature->getKey()]),
             ])
             ->values()

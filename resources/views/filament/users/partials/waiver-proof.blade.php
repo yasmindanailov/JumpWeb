@@ -42,7 +42,7 @@
                             · {{ $signature->version?->label() ?? '—' }}
                             · {{ __('admin.waiver.proof.channels.'.$signature->channel) }}
                             @if (! $signature->isForHolder())
-                                · {{ __('admin.waiver.proof.subject_dependent', ['id' => $signature->subject_id]) }}
+                                · {{ __('admin.waiver.proof.subject_dependent', ['name' => $signature->subjectName() ?? ('#'.$signature->subject_id)]) }}
                             @endif
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">

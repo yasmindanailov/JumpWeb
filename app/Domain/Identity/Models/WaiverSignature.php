@@ -4,6 +4,7 @@ namespace App\Domain\Identity\Models;
 
 use App\Domain\Identity\Exceptions\ImmutableRecordException;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -19,10 +20,15 @@ use Illuminate\Support\Carbon;
  * Tres propiedades que son el subsistema entero:
  *  - **Append-only**: `updating`/`deleting` lanzan. Las únicas salidas son la poda por plazo, que
  *    `pruning()` autoriza fila a fila (`Prunable`), y la limpieza de go-live por `DB::table`.
- *  - **Hash canónico + cadena POR TITULAR** (§4.7, §8.5): `hash` cubre todos los campos de la
- *    prueba en un orden fijo; `prev_hash` enlaza con la firma anterior del MISMO titular. La
- *    serialización la pone `WaiverSigner` (lock de la fila del titular). Que la cadena no se
- *    bifurque bajo concurrencia lo mide `waiver:verify-chain` sobre MySQL real.
+ *  - **Hash canónico + cadena POR (TITULAR, SUJETO)** (§4.7, §8.5; `DECISIONES #197`): `hash` cubre
+ *    todos los campos de la prueba en un orden fijo; `prev_hash` enlaza con la firma anterior del
+ *    MISMO sujeto —el titular, o cada menor a su cargo—, así que la poda de un sujeto nunca deja
+ *    agujeros en la cadena de otro. La serialización la pone `WaiverSigner` (lock de la fila del
+ *    titular). Que dos firmas simultáneas del mismo sujeto den UNA fila lo mide `waiver:verify-chain`
+ *    sobre MySQL real.
+ *  - **La identidad del SUJETO viaja en la firma**: `holder_name`/`holder_email` (v2, `#161`) y, para
+ *    un menor a cargo, `subject_name`/`subject_born_on` (v3, `#197`), copiados al firmar y dentro del
+ *    hash. `subject_id` es FK RESTRICT a `dependents` (`menores-a-cargo.md` §4.4).
  *  - **Sobrevive a `User::anonymize()`** (§4.6, `RGPD-01`): conservación con tratamiento
  *    restringido — fuera de toda superficie normal, con permiso propio y consulta auditada.
  *
@@ -53,7 +59,7 @@ class WaiverSignature extends Model
      * (spec §4.7): solo añade una entrada a `HASHED_FIELDS_BY_VERSION`. Nunca se edita una entrada
      * existente.
      */
-    public const CANONICAL_VERSION = 2;
+    public const CANONICAL_VERSION = 3;
 
     /**
      * Campos que entran en el hash, EN ESTE ORDEN, por versión del esquema.
@@ -61,6 +67,8 @@ class WaiverSignature extends Model
      *  - v2 (2026-08-26, `DECISIONES #161`): + la IDENTIDAD del firmante tal y como estaba al firmar
      *    (`holder_name`, `holder_email`), para que la prueba siga identificando a la persona después
      *    de `User::anonymize()`.
+     *  - v3 (2026-08-27, `DECISIONES #197`): + la IDENTIDAD del SUJETO cuando es un menor a cargo
+     *    (`subject_name`, `subject_born_on`; `null` en las firmas del titular), por la misma razón.
      *
      * @var array<int, list<string>>
      */
@@ -73,6 +81,11 @@ class WaiverSignature extends Model
             'user_id', 'subject_type', 'subject_id', 'legal_document_version_id', 'document_hash',
             'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
             'holder_name', 'holder_email',
+        ],
+        3 => [
+            'user_id', 'subject_type', 'subject_id', 'legal_document_version_id', 'document_hash',
+            'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
+            'holder_name', 'holder_email', 'subject_name', 'subject_born_on',
         ],
     ];
 
@@ -87,6 +100,7 @@ class WaiverSignature extends Model
 
     protected $casts = [
         'accepted_at' => 'datetime',
+        'subject_born_on' => 'immutable_date',
         'subject_id' => 'integer',
         'declared_by_user_id' => 'integer',
         'canonical_version' => 'integer',
@@ -133,6 +147,17 @@ class WaiverSignature extends Model
         return $this->belongsTo(User::class, 'declared_by_user_id');
     }
 
+    /**
+     * El menor a cargo en cuyo nombre se firmó (`null` en las firmas del titular). La fila existe
+     * mientras exista la firma (FK RESTRICT); su identidad de entonces está copiada en la propia fila.
+     *
+     * @return BelongsTo<Dependent, $this>
+     */
+    public function dependent(): BelongsTo
+    {
+        return $this->belongsTo(Dependent::class, 'subject_id');
+    }
+
     public function isDeclaredByOperator(): bool
     {
         return $this->declared_by_user_id !== null;
@@ -152,6 +177,16 @@ class WaiverSignature extends Model
     public function holderEmail(): ?string
     {
         return $this->holder_email ?? $this->user?->email;
+    }
+
+    /** El nombre del menor TAL Y COMO ESTABA al firmar (v3); `null` en las firmas del titular. */
+    public function subjectName(): ?string
+    {
+        if ($this->isForHolder()) {
+            return null;
+        }
+
+        return $this->subject_name ?? $this->dependent?->name;
     }
 
     // ─── Hash canónico ────────────────────────────────────────────────────────
@@ -191,6 +226,9 @@ class WaiverSignature extends Model
             $payload[$field] = match (true) {
                 $value === null => null,
                 $field === 'accepted_at' => Carbon::parse($value)->utc()->format('Y-m-d\TH:i:s\Z'),
+                // Una fecha SIN hora: la fila leída de SQLite trae «Y-m-d 00:00:00», la de MySQL «Y-m-d» y
+                // la recién construida un Carbon o la cadena; las tres tienen que dar «Y-m-d».
+                $field === 'subject_born_on' => $value instanceof \DateTimeInterface ? $value->format('Y-m-d') : mb_substr((string) $value, 0, 10),
                 in_array($field, ['user_id', 'subject_id', 'legal_document_version_id', 'declared_by_user_id'], true) => (int) $value,
                 default => (string) $value,
             };
@@ -203,22 +241,38 @@ class WaiverSignature extends Model
 
     /**
      * Sin plazo fijado NO se poda nada: la conservación sin plazo se decide, no se improvisa
-     * (`waiver.retention_months`, `[PENDIENTE: owner]`). Con plazo: las firmas del TITULAR más
-     * antiguas que él. Las de menores a cargo esperan a que su plazo —que puede empezar a contar a
-     * los 18— exista en `menores-a-cargo.md`.
+     * (`[PENDIENTE: owner]` los dos valores). Dos plazos, uno por clase de sujeto (`DECISIONES #197`):
+     *  - **titular** (`waiver.retention_months`): las firmas más antiguas que N meses desde su fecha;
+     *  - **menor a cargo** (`waiver.dependent_retention_months`): N meses DESPUÉS de su 18.º cumpleaños
+     *    —un niño de 3 puede implicar conservar 15 años—, calculado sobre la fecha de nacimiento copiada
+     *    en la propia firma: `subject_born_on <= hoy − 18 años − N meses`.
+     * Como la cadena es por (titular, sujeto), podar una clase nunca rompe la cadena de la otra.
      *
      * @return Builder<WaiverSignature>
      */
     public function prunable(): Builder
     {
-        $months = WaiverSettings::retentionMonths();
-        if ($months === null) {
+        $holderMonths = WaiverSettings::retentionMonths();
+        $dependentMonths = WaiverSettings::dependentRetentionMonths();
+
+        if ($holderMonths === null && $dependentMonths === null) {
             return static::query()->whereRaw('1 = 0');
         }
 
-        return static::query()
-            ->where('subject_type', self::SUBJECT_HOLDER)
-            ->where('accepted_at', '<', now()->subMonths($months));
+        return static::query()->where(function (Builder $query) use ($holderMonths, $dependentMonths): void {
+            if ($holderMonths !== null) {
+                $query->orWhere(fn (Builder $holder) => $holder
+                    ->where('subject_type', self::SUBJECT_HOLDER)
+                    ->where('accepted_at', '<', now()->subMonths($holderMonths)));
+            }
+            if ($dependentMonths !== null) {
+                $cutoffBornOn = DisplayTime::today()->subYears(Dependent::ADULT_AGE)->subMonths($dependentMonths)->toDateString();
+                $query->orWhere(fn (Builder $dependent) => $dependent
+                    ->where('subject_type', self::SUBJECT_DEPENDENT)
+                    ->whereNotNull('subject_born_on')
+                    ->where('subject_born_on', '<=', $cutoffBornOn));
+            }
+        });
     }
 
     protected function pruning(): void

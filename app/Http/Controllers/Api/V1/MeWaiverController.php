@@ -9,17 +9,16 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverProof;
-use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
+use App\Http\Api\Concerns\BuildsWaiverSignatureRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\WaiverStatusResource;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -39,6 +38,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class MeWaiverController extends Controller
 {
+    use BuildsWaiverSignatureRequest;
+
     public function show(Request $request): WaiverStatusResource
     {
         /** @var User $user */
@@ -92,20 +93,5 @@ class MeWaiverController extends Controller
         $pdf = Pdf::loadView('pdf.waiver-proof', ['proof' => $proof])->setPaper('a4');
 
         return $pdf->stream("waiver-{$signature->getKey()}.pdf");
-    }
-
-    private function signatureRequest(Request $request): WaiverSignatureRequest
-    {
-        $ip = $request->ip();
-        $userAgent = $request->userAgent();
-
-        // El canal sale de CÓMO se autenticó la petición, no de una cabecera que el cliente pueda
-        // añadir. Con cookie de sesión, el guard de Sanctum resuelve al usuario SIN mirar el
-        // `Authorization` y le deja un `TransientToken`; solo un token personal real —la app nativa—
-        // es `PersonalAccessToken`. Revisión `#169` §10.2·1: con `bearerToken() !== null` bastaba
-        // `Bearer basura` junto a la cookie para que la firma constara como `api`.
-        return $request->user()?->currentAccessToken() instanceof PersonalAccessToken
-            ? WaiverSignatureRequest::api($ip, $userAgent)
-            : WaiverSignatureRequest::web($ip, $userAgent);
     }
 }

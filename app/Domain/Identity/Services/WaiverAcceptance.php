@@ -4,6 +4,7 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Exceptions\WaiverNotInternalException;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -53,5 +54,24 @@ final class WaiverAcceptance
         $document = self::currentDocument($documentId) ?? throw new WaiverDocumentStaleException;
 
         return $this->signer->sign($holder, $document, $request);
+    }
+
+    /**
+     * La aceptación EN NOMBRE de un menor a cargo (`menores-a-cargo.md` §4.3): las mismas dos reglas
+     * —modo interno, texto vigente— y el sujeto es el dependiente. Quién es ese dependiente lo decide
+     * `WaiverSigner` bajo el lock (suyo, activo y menor); aquí solo se cambia el sujeto de la petición.
+     *
+     * @throws WaiverNotInternalException si la instalación no gestiona el waiver aquí
+     * @throws WaiverDocumentStaleException si el identificador no es el de la versión vigente
+     */
+    public function acceptForDependent(User $holder, Dependent $dependent, int $documentId, WaiverSignatureRequest $request): WaiverSignature
+    {
+        if (! WaiverSettings::isInternal()) {
+            throw new WaiverNotInternalException;
+        }
+
+        $document = self::currentDocument($documentId) ?? throw new WaiverDocumentStaleException;
+
+        return $this->signer->sign($holder, $document, $request->forDependent((int) $dependent->getKey()));
     }
 }

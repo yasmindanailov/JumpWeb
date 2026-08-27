@@ -17,6 +17,10 @@ use App\Domain\Platform\Models\Setting;
  *
  * `waiver.retention_months` — el plazo de conservación del registro firmado, también tras borrar la
  * cuenta. ❗ `[PENDIENTE: owner]` (criterio jurídico): sin valor NO se poda nada.
+ *
+ * `waiver.dependent_retention_months` — el plazo de la firma de un MENOR a cargo, contado desde su
+ * 18.º cumpleaños (`DECISIONES #197`, `menores-a-cargo.md` §9.5·3). ❗ `[PENDIENTE: owner]` igual:
+ * sin valor, ninguna firma de menor se poda.
  */
 final class WaiverSettings
 {
@@ -33,6 +37,8 @@ final class WaiverSettings
     public const KEY_MODE = 'waiver.mode';
 
     public const KEY_RETENTION_MONTHS = 'waiver.retention_months';
+
+    public const KEY_DEPENDENT_RETENTION_MONTHS = 'waiver.dependent_retention_months';
 
     /** El interruptor de #216, hoy solo respaldo de `mode()` y espejo que escribe el panel. */
     public const LEGACY_KEY_CHECK_ENABLED = 'puerta.waiver_check_enabled';
@@ -66,7 +72,18 @@ final class WaiverSettings
 
     public static function retentionMonths(): ?int
     {
-        $n = filter_var(Setting::value(self::KEY_RETENTION_MONTHS), FILTER_VALIDATE_INT, [
+        return self::months(self::KEY_RETENTION_MONTHS);
+    }
+
+    /** Meses de conservación de la firma de un menor a cargo DESPUÉS de cumplir 18; `null` = no se poda. */
+    public static function dependentRetentionMonths(): ?int
+    {
+        return self::months(self::KEY_DEPENDENT_RETENTION_MONTHS);
+    }
+
+    private static function months(string $key): ?int
+    {
+        $n = filter_var(Setting::value($key), FILTER_VALIDATE_INT, [
             'options' => ['min_range' => self::RETENTION_MIN, 'max_range' => self::RETENTION_MAX],
         ]);
 

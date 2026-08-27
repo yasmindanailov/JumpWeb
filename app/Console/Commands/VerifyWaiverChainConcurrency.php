@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -20,15 +21,19 @@ use Illuminate\Support\Str;
  * Fase 6 · waiver — verificador de CONCURRENCIA de la cadena de hashes
  * (`docs/specs/waiver-probatorio.md` §8.5), hermano de `purchase:verify-oversell`.
  *
- * N procesos reales (`pcntl_fork`) firman a la vez para el MISMO titular contra MySQL. El invariante:
- * N filas, UNA cadena lineal —cada `prev_hash` enlaza con la anterior y ningún `prev_hash` se
- * repite—. Si el lock de `WaiverSigner` no serializa, dos firmas leen la misma cabeza y la cadena
- * se BIFURCA en silencio: no falla, no avisa, y una cadena bifurcada no prueba nada.
+ * N procesos reales (`pcntl_fork`) firman a la vez para el MISMO titular y el MISMO sujeto contra
+ * MySQL, partiendo de CERO firmas de ese sujeto. El invariante desde `DECISIONES #197` (cadena por
+ * (titular, sujeto)): **UNA sola fila** — la primera firma entra y las N-1 restantes la encuentran bajo
+ * el lock y la devuelven (idempotencia por versión). Si el lock de `WaiverSigner` no serializa, todas
+ * leen «no hay firma», todas insertan, y la cadena del sujeto nace BIFURCADA: N filas con el mismo
+ * `prev_hash` nulo. No falla, no avisa, y una cadena bifurcada no prueba nada.
  *
- * ⚠️ Cada proceso firma como un SUJETO distinto (un menor a cargo por proceso, `subject_id` = i):
- * desde `#169` re-firmar la MISMA versión por el mismo sujeto es idempotente (devuelve la fila que
- * hay), así que N firmas iguales darían UNA fila y no probarían nada de la cadena. La propiedad que
- * se mide —que el lock del titular serialice la lectura de la cabeza— es la misma.
+ * ⚠️ Hasta `#197` la cadena era por titular y cada proceso firmaba como un menor distinto para medir
+ * la linealidad de una cadena de N filas; con cadenas por sujeto eso serían N cadenas de una fila y
+ * el instrumento no cazaría nada. La propiedad que el lock protege ahora es la idempotencia del mismo
+ * sujeto, y es la que se mide. La sonda EN SERIE firma antes en nombre de un menor real (fila en
+ * `dependents`, FK RESTRICT) para comprobar que el escenario firma y que la cadena del menor queda
+ * aparte de la del titular.
  *
  * ⚠️ Un verde solo vale si el instrumento se ha visto FALLAR (`#147`): con el `lockForUpdate()`
  * retirado del firmador, este comando tiene que cazar la bifurcación. Solo dev/local.
@@ -36,10 +41,10 @@ use Illuminate\Support\Str;
 class VerifyWaiverChainConcurrency extends Command
 {
     protected $signature = 'waiver:verify-chain
-        {--workers=8 : Nº de firmas concurrentes (procesos) del MISMO titular}
+        {--workers=8 : Nº de firmas concurrentes (procesos) del MISMO titular y sujeto}
         {--keep : No borrar los datos de prueba al terminar}';
 
-    protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N firmas simultáneas del mismo titular producen UNA cadena lineal de hashes, sin bifurcar. Solo dev/local.';
+    protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N firmas simultáneas del mismo titular y sujeto producen UNA sola fila (idempotencia bajo el lock) y cadenas lineales por sujeto. Solo dev/local.';
 
     public function handle(): int
     {
@@ -64,12 +69,18 @@ class VerifyWaiverChainConcurrency extends Command
         File::cleanDirectory($resultsDir);
 
         $seed = $this->seed();
-        $this->line("Titular #{$seed['user']->getKey()} · versión firmable v{$seed['version']->version}·{$seed['version']->locale} (#{$seed['version']->getKey()}).");
+        $this->line("Titular #{$seed['user']->getKey()} · menor a cargo #{$seed['dependent']->getKey()} · versión firmable v{$seed['version']->version}·{$seed['version']->locale} (#{$seed['version']->getKey()}).");
 
         // La guarda del instrumento: una firma EN SERIE tiene que funcionar. Si no, lo que fallara
-        // abajo no sería la carrera, y el verificador estaría midiendo otra cosa.
+        // abajo no sería la carrera, y el verificador estaría midiendo otra cosa. Se firma en nombre
+        // del MENOR: así la cadena del titular parte de cero para la carrera, y la del menor queda
+        // aparte para comprobar que las dos verifican por separado.
         try {
-            app(WaiverSigner::class)->sign($seed['user'], $seed['version'], WaiverSignatureRequest::api('127.0.0.1', 'waiver:verify-chain/probe'));
+            app(WaiverSigner::class)->sign(
+                $seed['user'],
+                $seed['version'],
+                WaiverSignatureRequest::api('127.0.0.1', 'waiver:verify-chain/probe')->forDependent((int) $seed['dependent']->getKey()),
+            );
         } catch (\Throwable $e) {
             $this->error('El escenario NO permite firmar ni una vez: '.$e->getMessage());
             $this->cleanup($seed, $resultsDir);
@@ -77,7 +88,7 @@ class VerifyWaiverChainConcurrency extends Command
             return self::FAILURE;
         }
 
-        $this->line("Disparando <fg=yellow>{$workers}</> firmas <options=bold>CONCURRENTES</> del mismo titular sobre {$driver}…");
+        $this->line("Disparando <fg=yellow>{$workers}</> firmas <options=bold>CONCURRENTES</> del mismo titular y sujeto sobre {$driver}…");
 
         try {
             $this->forkWorkers($seed, $workers, microtime(true) + 0.5, $resultsDir);
@@ -97,10 +108,10 @@ class VerifyWaiverChainConcurrency extends Command
     }
 
     /**
-     * Un titular desechable y la versión vigente del waiver; si no hay ninguna publicada, se
-     * publica una de prueba (y se retira al limpiar).
+     * Un titular desechable con un menor a cargo, y la versión vigente del waiver; si no hay ninguna
+     * publicada, se publica una de prueba (y se retira al limpiar).
      *
-     * @return array{user:User, version:LegalDocumentVersion, created_version:bool}
+     * @return array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool}
      */
     private function seed(): array
     {
@@ -115,6 +126,12 @@ class VerifyWaiverChainConcurrency extends Command
             // Desde `#179` el titular firma solo con el correo verificado.
             $user->forceFill(['email_verified_at' => now()])->save();
 
+            $dependent = Dependent::create([
+                'user_id' => (int) $user->getKey(),
+                'name' => 'Menor del verificador',
+                'born_on' => now()->subYears(9)->toDateString(),
+            ]);
+
             $version = LegalDocuments::current(WaiverSettings::SLUG, 'es');
             $created = false;
             if ($version === null) {
@@ -127,7 +144,7 @@ class VerifyWaiverChainConcurrency extends Command
                 $created = true;
             }
 
-            return ['user' => $user, 'version' => $version, 'created_version' => $created];
+            return ['user' => $user, 'dependent' => $dependent, 'version' => $version, 'created_version' => $created];
         });
     }
 
@@ -156,13 +173,8 @@ class VerifyWaiverChainConcurrency extends Command
                 try {
                     $holder = User::findOrFail($seed['user']->getKey());
                     $version = LegalDocumentVersion::findOrFail($seed['version']->getKey());
-                    $signature = app(WaiverSigner::class)->sign($holder, $version, new WaiverSignatureRequest(
-                        channel: WaiverSignature::CHANNEL_API,
-                        ip: '127.0.0.1',
-                        userAgent: "waiver:verify-chain/{$i}",
-                        subjectType: WaiverSignature::SUBJECT_DEPENDENT,
-                        subjectId: $i + 1,
-                    ));
+                    // Todos como el TITULAR, misma versión: la propiedad es que solo UNO escriba.
+                    $signature = app(WaiverSigner::class)->sign($holder, $version, WaiverSignatureRequest::api('127.0.0.1', "waiver:verify-chain/{$i}"));
                     $outcome = 'signed:'.$signature->getKey();
                 } catch (\Throwable $e) {
                     $outcome = 'EXCEPTION: '.$e->getMessage();
@@ -179,7 +191,7 @@ class VerifyWaiverChainConcurrency extends Command
     }
 
     /**
-     * @param  array{user:User, version:LegalDocumentVersion}  $seed
+     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion}  $seed
      */
     private function evaluate(array $seed, int $workers, string $resultsDir): bool
     {
@@ -187,47 +199,57 @@ class VerifyWaiverChainConcurrency extends Command
             ->map(fn ($file): string => trim(File::get($file->getPathname())));
         $signed = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'signed:'));
         $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'signed:'));
+        $distinctIds = $signed->map(fn (string $o): string => mb_substr($o, 7))->unique();
 
         $rows = WaiverSignature::query()->where('user_id', $seed['user']->getKey())->orderBy('id')->get();
+        $holderRows = $rows->where('subject_type', WaiverSignature::SUBJECT_HOLDER);
+        $dependentRows = $rows->where('subject_type', WaiverSignature::SUBJECT_DEPENDENT);
         $chain = WaiverChain::verify(User::findOrFail($seed['user']->getKey()));
-        $prevHashes = $rows->pluck('prev_hash');
-        $forks = $prevHashes->count() - $prevHashes->unique()->count(); // dos filas con el mismo prev_hash = bifurcación
-        $expected = $workers + 1; // + la firma de la sonda
+        // Dos filas del MISMO sujeto con el mismo prev_hash = bifurcación.
+        $forks = $rows->groupBy(fn (WaiverSignature $r): string => $r->subject_type.':'.$r->subject_id)
+            ->sum(fn ($group): int => $group->count() - $group->pluck('prev_hash')->unique()->count());
 
         $this->newLine();
         $this->line('<options=bold>Resultados de las firmas concurrentes:</>');
-        $this->line('  '.$signed->count().'× firmada');
+        $this->line('  '.$signed->count().'× devuelven una firma · ids distintos: '.$distinctIds->count());
         if ($errors->isNotEmpty()) {
             $this->line('  <fg=red>'.$errors->count().'× error inesperado</>');
             $errors->each(fn (string $e) => $this->line('     '.$e));
         }
-        $this->line("  filas en la cadena: {$rows->count()} (esperadas {$expected}) · prev_hash repetidos: {$forks} · verificación: ".($chain['ok'] ? 'OK' : 'ROTA'));
+        $this->line("  filas del titular: {$holderRows->count()} (esperada 1) · del menor: {$dependentRows->count()} (esperada 1) · cadenas: {$chain['chains']} (esperadas 2) · prev_hash repetidos por sujeto: {$forks} · verificación: ".($chain['ok'] ? 'OK' : 'ROTA'));
         foreach ($chain['problems'] as $problem) {
             $this->line('     <fg=red>'.$problem.'</>');
         }
 
-        $ok = $signed->count() === $workers && $rows->count() === $expected && $forks === 0 && $chain['ok'];
+        $ok = $signed->count() === $workers
+            && $distinctIds->count() === 1
+            && $holderRows->count() === 1
+            && $dependentRows->count() === 1
+            && $chain['chains'] === 2
+            && $forks === 0
+            && $chain['ok'];
         $this->newLine();
         if ($ok) {
-            $this->info("✅ PASA: bajo {$workers} firmas concurrentes del mismo titular la cadena es LINEAL — sin bifurcación, todos los hashes verifican. Verificado sobre InnoDB real.");
+            $this->info("✅ PASA: bajo {$workers} firmas concurrentes del mismo titular y sujeto hay UNA sola fila —idempotencia bajo el lock— y las dos cadenas (titular y menor) verifican. Verificado sobre InnoDB real.");
         } else {
-            $this->error('❌ FALLA: cadena bifurcada o rota. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de WaiverSigner.');
+            $this->error('❌ FALLA: firmas duplicadas o cadena rota. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de WaiverSigner.');
         }
 
         return $ok;
     }
 
     /**
-     * Borrado por `DB::table`: las dos tablas son append-only y sus modelos rechazan `delete()`.
-     * Esta limpieza y la de go-live (`PurgeCustomerData`) son las únicas que lo hacen, y solo
-     * sobre datos que este propio comando creó.
+     * Borrado por `DB::table`: las tablas son append-only (o rechazan borrar con referencias) y sus
+     * modelos rechazan `delete()`. Esta limpieza y la de go-live (`PurgeCustomerData`) son las únicas
+     * que lo hacen, y solo sobre datos que este propio comando creó. Orden: firmas → menor → titular.
      *
-     * @param  array{user:User, version:LegalDocumentVersion, created_version:bool}  $seed
+     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool}  $seed
      */
     private function cleanup(array $seed, string $resultsDir): void
     {
         $userId = $seed['user']->getKey();
         DB::table('waiver_signatures')->where('user_id', $userId)->delete();
+        DB::table('dependents')->where('user_id', $userId)->delete();
         DB::table('consents')->where('user_id', $userId)->delete();
         DB::table('audit_logs')->where('target_type', (new User)->getMorphClass())->where('target_id', $userId)->delete();
         if ($seed['created_version']) {

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Waiver;
 
+use App\Domain\Identity\Exceptions\DependentNotFoundException;
+use App\Domain\Identity\Exceptions\DependentNotMinorException;
 use App\Domain\Identity\Exceptions\ImmutableRecordException;
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -21,7 +24,8 @@ use Tests\TestCase;
 
 /**
  * Fase 6 · waiver — el registro de firma (`docs/specs/waiver-probatorio.md` §4.3, §4.7, §8.4, §8.5):
- * append-only, con hash canónico y `prev_hash` encadenado POR TITULAR. Verificado por MUTACIÓN:
+ * append-only, con hash canónico y `prev_hash` encadenado POR (TITULAR, SUJETO) desde `DECISIONES
+ * #197`: el titular tiene su cadena y cada menor a su cargo la suya. Verificado por MUTACIÓN:
  * alterar o borrar lanza; alterar por debajo del modelo rompe la verificación.
  *
  * ⚠️ La serialización canónica está FIJADA aquí como texto literal (`test_the_canonical_…`): si
@@ -37,6 +41,16 @@ class WaiverSignatureChainTest extends TestCase
         return app(LegalDocumentPublisher::class)->publish($slug, [
             'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
         ])->first();
+    }
+
+    private function dependentFor(User $holder, string $name = 'Lucas', string $bornOn = '2017-03-12'): Dependent
+    {
+        return Dependent::create(['user_id' => $holder->id, 'name' => $name, 'born_on' => $bornOn]);
+    }
+
+    private function forDependent(Dependent $dependent): WaiverSignatureRequest
+    {
+        return WaiverSignatureRequest::web('10.0.0.7', 'Mozilla/5.0 (test)')->forDependent($dependent->id);
     }
 
     private function sign(User $holder, ?LegalDocumentVersion $version = null, ?WaiverSignatureRequest $request = null): WaiverSignature
@@ -68,7 +82,9 @@ class WaiverSignatureChainTest extends TestCase
         // `#161` (owner): la identidad del firmante viaja EN la firma, tal y como está al firmar.
         $this->assertSame($holder->name, $signature->holder_name);
         $this->assertSame($holder->email, $signature->holder_email);
-        $this->assertSame(2, $signature->fresh()->canonical_version);
+        $this->assertSame(3, $signature->fresh()->canonical_version);
+        $this->assertNull($signature->subject_name, 'en la firma del titular la identidad del sujeto va a null (v3)');
+        $this->assertNull($signature->subject_born_on);
         $this->assertTrue($signature->fresh()->verifyHash());
 
         // Lo que el titular VE (art. 7.1) y el sello heredado: presentación, no prueba.
@@ -181,24 +197,83 @@ class WaiverSignatureChainTest extends TestCase
         $this->assertDatabaseMissing('audit_logs', ['action' => 'waiver.signed']);
     }
 
-    /** §4.3 — el sujeto puede ser un menor a cargo: cuelga del titular, pero no le pone el sello a él. */
+    /**
+     * §4.3 — el sujeto puede ser un menor a cargo: cuelga del titular, pero no le pone el sello a él, y
+     * su identidad de ese momento viaja EN la firma (`menores-a-cargo.md` §4.2; esquema v3, `#197`).
+     */
     public function test_a_dependent_signature_hangs_from_the_holder_without_stamping_him(): void
     {
         $holder = User::factory()->create(['waiver_accepted_at' => null]);
+        $dependent = $this->dependentFor($holder);
 
-        $signature = $this->sign($holder, null, new WaiverSignatureRequest(
-            channel: WaiverSignature::CHANNEL_API,
-            ip: '10.0.0.1',
-            subjectType: WaiverSignature::SUBJECT_DEPENDENT,
-            subjectId: 42,
-        ));
+        $signature = $this->sign($holder, null, $this->forDependent($dependent));
 
         $this->assertSame('dependent', $signature->subject_type);
-        $this->assertSame(42, $signature->subject_id);
+        $this->assertSame($dependent->id, $signature->subject_id);
         $this->assertFalse($signature->isForHolder());
+        $this->assertSame('Lucas', $signature->subject_name);
+        $this->assertSame('2017-03-12', $signature->fresh()->subject_born_on->toDateString());
+        $this->assertSame('Lucas', $signature->subjectName());
+        $this->assertSame(3, $signature->fresh()->canonical_version);
+        $this->assertTrue($signature->fresh()->verifyHash());
         $this->assertNull($holder->fresh()->waiver_accepted_at);
         $this->assertSame(0, $holder->consents()->count());
         $this->assertTrue(WaiverChain::verify($holder)['ok']);
+    }
+
+    /** `#197` — UNA cadena por sujeto: la del menor empieza de cero aunque el titular ya haya firmado. */
+    public function test_each_subject_has_its_own_chain(): void
+    {
+        $holder = User::factory()->create();
+        $dependent = $this->dependentFor($holder);
+        $v1 = $this->version();
+        $h1 = $this->sign($holder, $v1);
+        $d1 = $this->sign($holder, $v1, $this->forDependent($dependent));
+        $v2 = $this->version();
+        $h2 = $this->sign($holder, $v2);
+        $d2 = $this->sign($holder, $v2, $this->forDependent($dependent));
+
+        $this->assertNull($d1->prev_hash, 'la cadena del menor no cuelga de la del titular');
+        $this->assertSame($h1->hash, $h2->prev_hash);
+        $this->assertSame($d1->hash, $d2->prev_hash);
+        $this->assertNotSame($h2->hash, $d2->prev_hash);
+
+        $verdict = WaiverChain::verify($holder);
+        $this->assertTrue($verdict['ok']);
+        $this->assertSame(4, $verdict['count']);
+        $this->assertSame(2, $verdict['chains']);
+    }
+
+    /** `menores-a-cargo.md` §4.9 aplicado a la firma: el `subject_id` llega del cliente y se decide bajo el lock. */
+    public function test_signing_for_a_foreign_removed_or_adult_dependent_is_refused(): void
+    {
+        $ana = User::factory()->create();
+        $bea = User::factory()->create();
+        $version = $this->version();
+
+        $ofBea = $this->dependentFor($bea);
+        try {
+            $this->sign($ana, $version, $this->forDependent($ofBea));
+            $this->fail('un menor de otra cuenta no existe para Ana');
+        } catch (DependentNotFoundException) {
+        }
+
+        $removed = $this->dependentFor($ana);
+        $removed->unlink();
+        try {
+            $this->sign($ana, $version, $this->forDependent($removed));
+            $this->fail('un menor retirado no existe');
+        } catch (DependentNotFoundException) {
+        }
+
+        $adult = $this->dependentFor($ana, 'Mayor', '2000-01-01');
+        try {
+            $this->sign($ana, $version, $this->forDependent($adult));
+            $this->fail('a los 18 el waiver del adulto ya no le cubre');
+        } catch (DependentNotMinorException) {
+        }
+
+        $this->assertSame(0, WaiverSignature::count());
     }
 
     public function test_a_dependent_signature_needs_the_dependent_id(): void
@@ -251,10 +326,30 @@ class WaiverSignatureChainTest extends TestCase
         $this->assertSame($expectedV2, WaiverSignature::canonical($v2));
         $this->assertSame(hash('sha256', $expectedV2), WaiverSignature::computeHash($v2));
 
-        // Sin `canonical_version` se usa la vigente (v2); v1 y v2 no pueden dar el mismo texto.
-        unset($v2['canonical_version']);
-        $this->assertSame($expectedV2, WaiverSignature::canonical($v2));
-        $this->assertSame(2, WaiverSignature::CANONICAL_VERSION);
+        // v3 (`#197`): + la identidad del SUJETO; en una firma del titular los dos campos van a null.
+        $v3 = $v2;
+        $v3['canonical_version'] = 3;
+        $v3['subject_name'] = null;
+        $v3['subject_born_on'] = null;
+        $expectedV3 = '{"v":3,'.$common.',"holder_name":"Ana Pérez","holder_email":"ana@example.com","subject_name":null,"subject_born_on":null}';
+        $this->assertSame($expectedV3, WaiverSignature::canonical($v3));
+
+        // Y en nombre de un menor: la fecha SIN hora, venga como venga («Y-m-d 00:00:00» de SQLite).
+        $forMinor = $v3;
+        $forMinor['subject_type'] = 'dependent';
+        $forMinor['subject_id'] = '17';
+        $forMinor['subject_name'] = 'Lucas';
+        $forMinor['subject_born_on'] = '2017-03-12 00:00:00';
+        $commonMinor = str_replace('"subject_type":"holder","subject_id":null', '"subject_type":"dependent","subject_id":17', $common);
+        $expectedMinor = '{"v":3,'.$commonMinor.',"holder_name":"Ana Pérez","holder_email":"ana@example.com","subject_name":"Lucas","subject_born_on":"2017-03-12"}';
+        $this->assertSame($expectedMinor, WaiverSignature::canonical($forMinor));
+        $forMinor['subject_born_on'] = now()->setDate(2017, 3, 12);
+        $this->assertSame($expectedMinor, WaiverSignature::canonical($forMinor));
+
+        // Sin `canonical_version` se usa la vigente (v3); v1, v2 y v3 no pueden dar el mismo texto.
+        unset($v3['canonical_version']);
+        $this->assertSame($expectedV3, WaiverSignature::canonical($v3));
+        $this->assertSame(3, WaiverSignature::CANONICAL_VERSION);
 
         $asBuilt = $v1;
         $asBuilt['user_id'] = 7;
@@ -305,16 +400,11 @@ class WaiverSignatureChainTest extends TestCase
     {
         $holder = User::factory()->create();
         $version = $this->version();
+        $dependent = $this->dependentFor($holder);
 
         $own = $this->sign($holder, $version);
-        $forDependent = $this->sign($holder, $version, new WaiverSignatureRequest(
-            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
-            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: 17,
-        ));
-        $forDependentAgain = $this->sign($holder, $version, new WaiverSignatureRequest(
-            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
-            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: 17,
-        ));
+        $forDependent = $this->sign($holder, $version, $this->forDependent($dependent));
+        $forDependentAgain = $this->sign($holder, $version, $this->forDependent($dependent));
 
         $this->assertNotSame($own->getKey(), $forDependent->getKey());
         $this->assertSame($forDependent->getKey(), $forDependentAgain->getKey());

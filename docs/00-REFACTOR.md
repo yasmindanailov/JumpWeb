@@ -1977,8 +1977,8 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       de servidor, quitar = desvincular si hay firma detrás; la asignación la posee Identity por id
       entero (§4.6) y entra en el embudo por dos puertas sin paso nuevo (§4.7).
       ▶ 🟦 **EN EJECUCIÓN (carril A, `[DECIDIDO owner]` `#190`): la TANDA 1 está en el árbol** (`#191`,
-      spec **§9**). Sigue 🟦 y no ✅ porque faltan las tandas 2–4 **y las cinco decisiones de §9.5 son
-      del owner** (la 1.ª, NUC-3, bloquea la tanda 2; la 2.ª, el techo del chunk, bloquea la 3).
+      spec **§9**) **y la TANDA 2 también** (`#198`, §9.7). Sigue 🟦 y no ✅ porque faltan las tandas
+      3–4 (las cinco decisiones de §9.5 están TOMADAS, `#197`) y el ✅ del owner en navegador.
   - [x] **C · tanda 1 — el NÚCLEO en Identity + la API** (2026-08-27, `#191`, carril A): `dependents`
         (`user_id` RESTRICT · `name` · `born_on` · `removed_at`, y nada más: la edad se DERIVA fecha
         contra fecha en el «hoy» del parque), `DependentRegistry` (solo menores; tope
@@ -1989,10 +1989,16 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         antes que `users`, la poda de las desvinculadas sin firma y el tope en Ajustes → «Puerta».
         **34 casos · 7 mutaciones, las 7 muerden · 14 comprobaciones HTTP sobre MySQL con Bearer.**
         ⚠️ **Sin ninguna firma de menor todavía, a propósito**: NUC-3 se decide ANTES de la primera.
-  - [ ] **C · tanda 2 — la firma del menor**: `POST /me/dependents/{id}/waiver` y su estado en la
-        lista, la PERTENENCIA del `subject_id` en `WaiverSigner` (`CRITICAL_RE`: `verify-chain` +
-        `VERIFY_CONC=1`), la FK `waiver_signatures.subject_id → dependents` RESTRICT, el verificador con
-        filas reales, el PDF diciendo de quién es la firma. **Bloqueada por §9.5·1 (NUC-3).**
+  - [x] **C · tanda 2 — la FIRMA DEL MENOR** (2026-08-27 noche, `#198`, carril A; spec §9.7): la
+        cadena de hashes por (titular, sujeto) en `WaiverSigner` (`#197`; `CRITICAL_RE` → `verify-chain`
+        rehecho para medir la idempotencia bajo el lock, 8/16 PASA y **visto FALLAR sin el lock**), la
+        FK `waiver_signatures.subject_id → dependents` RESTRICT (medida bloqueando un `DELETE` crudo),
+        la identidad del menor copiada en la firma (esquema canónico v3), pertenencia y minoría bajo el
+        lock, `POST /me/dependents/{id}/waiver` + `Dependent.waiver` + `dependent_id`/`dependent_name`
+        en el resumen, `WaiverStatus::forDependent()`, el PDF y el registro del panel nombrando al menor
+        y diciendo que los datos los declaró el titular, y la retención del menor desde los 18
+        (`waiver.dependent_retention_months`, en Ajustes). **+15 casos · 5/5 mutaciones muerden · sonda
+        HTTP sobre MySQL.** NUC-3 de `DEUDA.md` CERRADA como guarda.
   - [ ] **C · tanda 3 — el cajón**: la zona «Menores a cargo» en la sección de cuenta (una línea en
         `ZONES` + rótulo + store), con el «ya no está cubierto» de §4.1, MEDIDA antes de decidir el
         techo del chunk. **Bloqueada por §9.5·2.**

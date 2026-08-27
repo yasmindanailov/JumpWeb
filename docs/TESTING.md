@@ -371,10 +371,12 @@ docker compose exec -u sail laravel.test php artisan waiver:verify-chain      --
   el navegador. **Lo que pinta un modal de Filament se prueba llamando al código que lo pinta**
   —un método público del componente con su test directo—, no al componente. La red de un modal
   es el navegador o esa llamada; nunca `mountAction()` a secas.
-- **`waiver:verify-chain`** (Fase 6, `specs/waiver-probatorio.md` §8.5/§9.3): N firmas del MISMO
-  titular en paralelo → verifica que el `lockForUpdate` de su fila en `WaiverSigner` serializa la
-  cadena de hashes: N filas, cada `prev_hash` enlaza con la anterior y ninguno se repite. **Visto
-  fallar** sin el lock (3 de 3: 1, 9 y 15 `prev_hash` repetidos). Correr tras tocar `WaiverSigner`.
+- **`waiver:verify-chain`** (Fase 6, `specs/waiver-probatorio.md` §8.5/§9.13): N firmas del MISMO
+  titular y el MISMO sujeto en paralelo, desde cero → verifica que el `lockForUpdate` de su fila en
+  `WaiverSigner` serializa: **UNA fila** (idempotencia por versión bajo el lock) y las cadenas —una por
+  sujeto desde `#197`— verifican. ⚠️ Hasta `#198` medía la linealidad de una cadena de N menores; con
+  cadenas por sujeto eso no cazaría nada. **Visto fallar** sin el lock (2 filas del titular, 1 `prev_hash`
+  repetido, cadena ROTA). Correr tras tocar `WaiverSigner`.
 
 - **`redsys:verify-concurrency`**: N notificaciones Redsys en **paralelo real (`pcntl_fork`)**
   sobre el mismo pago → verifica que el `lockForUpdate` del handler serializa: 1 cobro,

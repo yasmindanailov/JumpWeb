@@ -278,17 +278,22 @@ porque es «lo que el titular aceptó» e Identity no puede mirar a Content. Un 
 
 ### `waiver_signatures` (WaiverSignature, **append-only + Prunable**) — Fase 6 · waiver
 `user_id` FK **RESTRICT** (la prueba sobrevive al titular) · `subject_type` (`holder|dependent`) +
-`subject_id` nullable · **`holder_name` · `holder_email`** (la identidad del firmante TAL Y COMO
+`subject_id` nullable, **FK RESTRICT a `dependents`** (`#198`: una fila de menor con firma detrás no se
+borra ni por SQL) · **`holder_name` · `holder_email`** (la identidad del firmante TAL Y COMO
 ESTABA al firmar, `[DECIDIDO owner, 2026-08-26]`; es lo que sigue identificándole tras `anonymize()`)
-· `legal_document_version_id` FK restrict · `document_hash` (copia del de la versión) · `accepted_at`
+· **`subject_name` · `subject_born_on`** (la del MENOR en cuyo nombre se firmó, `#198`; `null` en las
+del titular) · `legal_document_version_id` FK restrict · `document_hash` (copia del de la versión) · `accepted_at`
 + `accepted_tz` · `ip` · `user_agent`(512) · `channel` (`web|api|panel`) · `declared_by_user_id` FK
 users nullOnDelete (alta presencial: firma DECLARADA por el operador) · `prev_hash` · `hash` unique ·
-**`canonical_version`** (con qué esquema se calculó el hash: v1 sin identidad, v2 con ella; cada fila
-se verifica con el suyo) · `created_at`. `hash` = sha256 del JSON canónico de
-`WaiverSignature::HASHED_FIELDS_BY_VERSION[v]` en ese orden; `prev_hash` encadena POR TITULAR, serializado con el
-`lockForUpdate()` de su fila de `users` en `WaiverSigner` (único escritor); `waiver:verify-chain` lo
-mide sobre MySQL. **Sobrevive a `anonymize()`.** Poda por `waiver.retention_months` (sin valor → no
-se poda nada; solo `subject_type = holder`) vía el mismo `model:prune` diario. Fuera de la poda solo
+**`canonical_version`** (con qué esquema se calculó el hash: v1 sin identidad, v2 con la del titular, v3
+con la del menor; cada fila se verifica con el suyo) · `created_at`. `hash` = sha256 del JSON canónico de
+`WaiverSignature::HASHED_FIELDS_BY_VERSION[v]` en ese orden; `prev_hash` encadena POR (TITULAR, SUJETO)
+(`#197`/`#198`: el titular tiene su cadena y cada menor a su cargo la suya), serializado con el
+`lockForUpdate()` de su fila de `users` en `WaiverSigner` (único escritor); `waiver:verify-chain` mide
+sobre MySQL que N firmas simultáneas del mismo sujeto dan UNA fila. **Sobrevive a `anonymize()`.** Poda
+con DOS plazos por clase de sujeto: `waiver.retention_months` (titular, desde la firma) y
+`waiver.dependent_retention_months` (menor, desde su 18.º cumpleaños, sobre `subject_born_on`); sin
+valor → no se poda esa clase; podar una nunca rompe la cadena de la otra. Vía el mismo `model:prune` diario. Fuera de la poda solo
 borran `PurgeCustomerData` (go-live) y el verificador, por `DB::table`.
 
 ### `dependents` (Dependent, **Prunable**) — Fase 6 · menores a cargo
@@ -301,8 +306,9 @@ parque) y la fila sobrevive a la mayoría de edad. Único escritor `Identity\Ser
 (solo menores; tope `dependents.max_per_account` —vacío = 20— bajo el `lockForUpdate()` de la fila del
 titular). **Quitar es desvincular si hay un waiver firmado detrás** (`removed_at`; `deleting` LANZA) y
 borrar de verdad si no. `anonymize()`: con firma → desvincula; sin ella → borra. Poda (`model:prune`,
-detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. ⚠️ Sin FK desde
-`waiver_signatures.subject_id` todavía: llega con la tanda 2 (spec §9.2·3).
+detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. Desde la tanda 2
+(`#198`) `waiver_signatures.subject_id` es FK **RESTRICT** a esta tabla, y la firma en nombre de un menor
+lleva copiados su `name` y `born_on` (esquema canónico v3).
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·

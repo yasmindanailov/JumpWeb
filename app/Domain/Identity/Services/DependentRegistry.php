@@ -124,6 +124,21 @@ final class DependentRegistry
     }
 
     /**
+     * Una persona a cargo ACTIVA de este titular, o «no existe» (§4.9: ajena, inexistente y retirada
+     * responden igual). Es lo que la capa de entrega resuelve antes de firmar en su nombre.
+     *
+     * @throws DependentNotFoundException
+     */
+    public function findActive(User $holder, int $dependentId): Dependent
+    {
+        return Dependent::query()
+            ->whereKey($dependentId)
+            ->where('user_id', $holder->getKey())
+            ->active()
+            ->first() ?? throw new DependentNotFoundException;
+    }
+
+    /**
      * Las personas a cargo que el titular VE: activas, en el orden en que las declaró.
      *
      * @return Collection<int, Dependent>

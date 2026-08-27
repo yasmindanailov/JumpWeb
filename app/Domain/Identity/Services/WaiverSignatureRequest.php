@@ -35,6 +35,15 @@ final class WaiverSignatureRequest
      * Alta presencial (`CustomerRegistrar`): no hay navegador del cliente, así que la firma la
      * declara el operador y el registro lo dice — el PDF tiene que decirlo con todas las letras.
      */
+    /**
+     * La misma petición, pero EN NOMBRE de un menor a cargo (`menores-a-cargo.md` §4.3): el canal, la
+     * ip y el user-agent son los del titular que firma; cambia el sujeto.
+     */
+    public function forDependent(int $dependentId): self
+    {
+        return new self($this->channel, $this->ip, $this->userAgent, WaiverSignature::SUBJECT_DEPENDENT, $dependentId, $this->declaredBy);
+    }
+
     public static function declaredAtCounter(User $operator, ?string $ip, ?string $userAgent = null): self
     {
         return new self(WaiverSignature::CHANNEL_PANEL, $ip, $userAgent, declaredBy: $operator);

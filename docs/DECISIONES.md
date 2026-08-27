@@ -10018,8 +10018,8 @@ con restauración comprobada byte a byte · **14 comprobaciones HTTP sobre MySQL
 **Dos trampas de método pagadas**: `assertDatabaseHas` con un `date` en SQLite compara contra
 `Y-m-d 00:00:00` (léelo por el modelo), y el `message` del sobre de error no interpola `params` solo.
 
-Verificación: suite **3018 / 17.410** (= lo que declara `ESTADO.md`) · Pint ✓ · `docs-check` ✓ (33
-modelos · 80 migraciones) · sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
+Verificación: suite **3018 / 17.410** (= lo que declaraba `ESTADO.md` entonces) · Pint ✓ · `docs-check` ✓ (entonces 33
+modelos y 80 migraciones) · sonda limpiada (0 dependientes, 0 tokens, ajuste retirado).
 
 
 ## #192 · 2026-08-27 · La capa de TEMA, tanda 1 — las dos superficies como ÁMBITO, y la tipografía que era un token sin fuente detrás
@@ -10412,4 +10412,39 @@ cambia el aspecto de media web. Lo verificado es que cada sombra sale de un rol,
 
 ▶ Con la 1 y la 3 decididas arranca la **tanda 2 — la firma del menor** (misma sesión); la 2 desbloquea
 la tanda 3 (el cajón). El «qué pasó» de cada tanda va en su entrada y en la spec §9.
+
+## #198 · 2026-08-27 · Menores a cargo, tanda 2 — la firma del MENOR: la cadena por (titular, sujeto) en el árbol, la identidad del menor en la firma (v3), la FK RESTRICT y el verificador rehecho — visto fallar sin el lock
+
+**Qué se hizo** (carril A, la noche del 27; `specs/menores-a-cargo.md` **§9.7**, ejecutando las
+decisiones de `#197`): la firma EN NOMBRE de un menor a cargo, de punta a punta — `WaiverSigner` con
+la cadena por (titular, sujeto), la pertenencia y la minoría del sujeto decididas bajo el lock, la
+identidad del menor copiada en la fila (esquema canónico **v3**), la FK `waiver_signatures.subject_id →
+dependents` RESTRICT, `WaiverChain` por sujeto, `WaiverStatus::forDependent()`,
+`POST /me/dependents/{id}/waiver` en el contrato (+ `Dependent.waiver` y `dependent_id`/`dependent_name`
+en el resumen de `GET /me/waiver`), el PDF y el registro del panel diciendo de quién es la firma y que
+sus datos los declaró el titular, y la retención del menor desde los 18 (`waiver.dependent_retention_months`).
+
+**Lo que cambia de sitio, y es lo que hay que saber**: con cadenas por sujeto, el verificador de
+concurrencia ya no puede medir «N menores en una cadena» (serían N cadenas de una fila). Lo que el
+lock protege ahora es la **idempotencia**: N firmas simultáneas del MISMO sujeto = UNA fila. El
+comando `waiver:verify-chain` se rehizo para medir exactamente eso —y la sonda en serie firma en nombre
+de un menor REAL, porque con la FK un `subject_id` inventado ya no entra—. **Corrido con 8 y 16 sobre
+InnoDB: una fila, dos cadenas, 0 repetidos. Y visto FALLAR sin el `lockForUpdate()`: 2 filas del
+titular, 1 `prev_hash` repetido, cadena ROTA.** Es lo que `INVARIANTES §6` exige para empujar con
+`VERIFY_CONC=1`.
+
+**Seis decisiones de ingeniería dentro del margen** (§9.7.2): la identidad del menor viaja en la firma
+(doctrina `#161`, cubierta por el hash) · la FK y la guarda de modelo, las dos · la regla de los 18
+también al firmar · el plazo del menor se calcula sobre la fecha copiada, sin join · el PDF del menor se
+sirve por la ruta del titular · el verificador mide otra propiedad.
+
+**Lo medido**: +15 casos (suite **3062 / 17.691**, contador en `ESTADO.md`) · cinco mutaciones, las cinco
+muerden (cadena por titular otra vez, sin pertenencia, sin la guarda de menor, sin copiar la identidad,
+la poda ignorando el plazo del menor) · sonda HTTP sobre MySQL con Bearer (firma 201, idempotencia,
+`409 stale`, 404, lista, resumen, PDF v3 con cadena OK que nombra al menor, desvinculación al quitar) ·
+**`delete()` lanza y `DB::table(...)->delete()` lo bloquea la FK**, en vivo · BD de desarrollo migrada.
+
+**Cerrado**: NUC-3 de `DEUDA.md`, como guarda (`WaiverRetentionTest`, en las dos direcciones).
+**Pendiente del owner**: los DOS valores de retención en meses. **De agente**: la tanda 3 (el cajón,
+midiendo el chunk) y la 4 (el embudo).
 

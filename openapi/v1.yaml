@@ -1753,6 +1753,76 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/dependents/{dependent}/waiver:
+    post:
+      tags: [Cuenta]
+      operationId: acceptMyDependentWaiver
+      summary: Aceptar el waiver vigente en nombre de un menor a cargo
+      description: |
+        Registra la aceptación del texto vigente **en nombre de** una persona a cargo (Fase 6,
+        `specs/menores-a-cargo.md` §4.3): la firma la hace el ADULTO, y lo que queda registrado es
+        «X, como responsable de Y, aceptó la versión V el día D». Cuelga del par (titular, menor) y
+        forma **su propia cadena** de hashes, separada de la del titular (`DECISIONES #197`).
+
+        Las mismas reglas que `POST /me/waiver`: la petición trae el `document_id` que el servidor
+        sirvió (`GET /legal/waiver` o `current_document_id` de `GET /me/waiver`) — si el texto cambió
+        entre medias, `409 waiver_document_stale`; fuera del modo interno, `409 waiver_not_internal`;
+        sin el correo del titular verificado, `409 waiver_email_unverified`. **Idempotente por
+        versión**: repetir la aceptación no crea una segunda firma. Y las del sujeto: ajeno,
+        inexistente o retirado es `404`; si hoy ya tiene 18 o más, `422 dependent_not_minor` — el
+        waiver del adulto ya no le cubre.
+
+        La identidad del menor —nombre y fecha de nacimiento tal y como estaban al firmar— se copia
+        en el registro y entra en su hash, como la del titular. La firma aparece en `GET /me/waiver`
+        (con `dependent_id`/`dependent_name`) y su PDF se sirve por `GET /me/waiver/{signature}/pdf`.
+
+        Responde **201 con la persona a cargo**, cuyo `waiver` ya refleja la firma.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: dependent
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaiverAcceptRequest'
+      responses:
+        '201':
+          description: Aceptación registrada en nombre del menor; su estado ya la refleja.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dependent'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |
+            `waiver_not_internal` · `waiver_document_stale` — hay que volver a leer el texto ·
+            `waiver_email_unverified` — el titular tiene que verificar su correo antes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`validation_failed` (con `fields`) · `dependent_not_minor` — ya tiene 18 o más.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/account-context:
     get:
       tags: [Cuenta]
@@ -4886,7 +4956,7 @@ components:
     WaiverSignatureSummary:
       type: object
       description: Una firma del titular, tal como él la ve; la prueba completa es su PDF.
-      required: [id, version_label, accepted_at, accepted_label, channel, declared, subject, pdf_url]
+      required: [id, version_label, accepted_at, accepted_label, channel, declared, subject, dependent_id, dependent_name, pdf_url]
       additionalProperties: false
       properties:
         id:
@@ -4909,6 +4979,14 @@ components:
         subject:
           type: string
           enum: [holder, dependent]
+        dependent_id:
+          type: integer
+          nullable: true
+          description: 'Con `subject` = `dependent`, el menor a cargo en cuyo nombre se firmó.'
+        dependent_name:
+          type: string
+          nullable: true
+          description: Su nombre tal y como estaba al firmar (copiado en el registro).
         pdf_url:
           type: string
           format: uri
@@ -4931,7 +5009,7 @@ components:
       description: |
         Una persona a cargo, vista por su titular (`specs/menores-a-cargo.md` §4.1, §4.2). La edad
         no se guarda: se deriva de `born_on` con el «hoy» del parque en cada petición.
-      required: [id, name, born_on, age, is_minor, adult_from]
+      required: [id, name, born_on, age, is_minor, adult_from, waiver]
       additionalProperties: false
       properties:
         id:
@@ -4954,6 +5032,45 @@ components:
           type: string
           format: date
           description: El día en que cumple 18 (`Y-m-d`).
+        waiver:
+          $ref: '#/components/schemas/DependentWaiverStatus'
+
+    DependentWaiverStatus:
+      type: object
+      description: |
+        El waiver del MENOR, según el modo de la instalación: su propia cadena de firmas, nunca el
+        sello del titular (`specs/menores-a-cargo.md` §4.3). Fuera del modo interno no hay pregunta
+        (`signed: false`). Sin `current_document_id`: el texto que hay que aceptar es el mismo que
+        publican `GET /legal/waiver` y `GET /me/waiver`.
+      required: [mode, signed, outdated, accepted_at, accepted_label, version, signature_id, pdf_url]
+      additionalProperties: false
+      properties:
+        mode:
+          type: string
+          enum: [externo, interno, desactivado]
+        signed:
+          type: boolean
+        outdated:
+          type: boolean
+          description: Firmado en una versión anterior del texto; se deja pasar y se pide la re-firma.
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        accepted_label:
+          type: string
+          nullable: true
+        version:
+          type: integer
+          nullable: true
+        signature_id:
+          type: integer
+          nullable: true
+          description: La firma que responde; su PDF es `pdf_url`.
+        pdf_url:
+          type: string
+          format: uri
+          nullable: true
 
     DependentCreateRequest:
       type: object

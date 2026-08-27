@@ -144,6 +144,11 @@ Amplía lo que hoy es `consents`, o nace al lado — lo decide la revisión. Lo 
   `holder_email`, dentro del hash): tras `User::anonymize()` la cuenta ya no identifica a nadie, y una
   prueba que apunte a «Cliente eliminado» no prueba quién firmó. Es PII conservada a propósito bajo el
   régimen restringido de §4.6 y solo la purga el plazo (§9.6, `DECISIONES #161`).
+- ✅ `[DECIDIDO owner, 2026-08-27]` **La cadena es por (TITULAR, SUJETO)**, no por titular (`#197`,
+  ejecutado en `#198` · `menores-a-cargo.md` §9.7): `prev_hash` enlaza con la última firma del MISMO
+  sujeto —el titular, o cada menor a su cargo—, así que la poda de un sujeto nunca deja agujeros en la
+  cadena de otro (NUC-3 de §10.5, cerrada). Y **la identidad del MENOR viaja en su firma**
+  (`subject_name`, `subject_born_on`; esquema canónico v3), por la misma razón que la del titular.
 
 ### 4.4 Cómo se firma (y qué se retiró)
 
@@ -409,6 +414,10 @@ transacción) y ya sabe lo que pasa cuando falta (`#147`: 8 fiestas donde cabía
 contención cae a cero, y además es la unidad que se audita de verdad («enséñame la cadena de esta
 persona»). Una cadena global obliga a un lock en el camino del alta, que es superficie de registro
 masivo. **Elegirlo ahora es barato; migrar una cadena después es rehacerla.**
+▶ **Y una vuelta más, ya con firmas de menor delante (`#197`, 2026-08-27)**: por titular a secas, la
+poda por plazo dejaba agujeros en medio cuando un menor firmaba entre dos firmas del titular (§10.5,
+NUC-3). La cadena es **por (titular, sujeto)**; el punto de serialización sigue siendo el lock de la
+fila del titular, y lo que el verificador mide es la idempotencia bajo ese lock (§9.13).
 
 ### 8.6 Dónde vive el registro: la spec lo dejó a esta revisión
 
@@ -462,14 +471,14 @@ el resto son correcciones de inventario que ahorran descubrirlas tarde.
 | Pieza | Dónde | Qué hace |
 |---|---|---|
 | `legal_document_versions` · `LegalDocumentVersion` | `app/Domain/Identity/Models/LegalDocumentVersion.php` | Una fila por (slug, idioma, versión), **inmutable** (`updating`/`deleting` lanzan), con `body_hash`. Sin `updated_at`: no hay ni columna con la que cambiar |
-| `waiver_signatures` · `WaiverSignature` | `app/Domain/Identity/Models/WaiverSignature.php` | El registro probatorio, **append-only** + `Prunable`. `hash` canónico (`HASHED_FIELDS`, `CANONICAL_VERSION`), `prev_hash` por titular, `document_hash`, `accepted_tz`, `channel`, `declared_by_user_id` |
+| `waiver_signatures` · `WaiverSignature` | `app/Domain/Identity/Models/WaiverSignature.php` | El registro probatorio, **append-only** + `Prunable`. `hash` canónico (`HASHED_FIELDS_BY_VERSION`, `CANONICAL_VERSION` = **3** desde `#198`), `prev_hash` por **(titular, sujeto)**, `document_hash`, `accepted_tz`, `channel`, `declared_by_user_id`, la identidad del titular (v2) y la del menor (v3). `subject_id` es FK RESTRICT a `dependents`. Dos plazos de poda, uno por clase de sujeto |
 | `LegalDocumentPublisher` | `app/Domain/Identity/Services/LegalDocumentPublisher.php` | Publicar = crear la versión N+1 en cada idioma con cuerpo; **rechaza los TRES marcadores** (`[PENDIENTE…]`, `[PENDING…]`, `[À COMPLÉTER…]`, y el `[pendiente]` neutro — desde `#174`, §10.4) en cualquier caja; `mentionsDraftWords()` señala «borrador/draft/brouillon» para el AVISO del modal de publicar; audita `legal.version_published` sin el texto |
 | `LegalDocuments` | `app/Domain/Identity/Services/LegalDocuments.php` | `current(slug, locale)`: la vigente en el idioma pedido, con respaldo → `es` (el mismo que aplica la web al pintar) |
-| `WaiverSigner` · `WaiverSignatureRequest` | `app/Domain/Identity/Services/WaiverSigner.php` · `…/WaiverSignatureRequest.php` | El ÚNICO escritor: lock de la fila del titular como PRIMERA sentencia, `prev_hash` de su última firma, la fila visible de `consents` (`v1·es`) y el sello — los dos últimos solo si el sujeto es el titular. **Idempotente por versión y sujeto, DENTRO del lock** (`#174`, §10.2·4): la misma versión —en cualquier idioma— devuelve la fila que hay sin escribir nada. ⚠️ Está en el `CRITICAL_RE`: tocarlo exige `VERIFY_CONC=1` tras `waiver:verify-chain` |
-| `WaiverStatus` | `app/Domain/Identity/Services/WaiverStatus.php` | «¿Tiene waiver, y de qué versión?» según el MODO: `externo` → sello · `interno` → registro (+ `isOutdated()`) · `desactivado` → no hay pregunta |
-| `WaiverSettings` | `app/Domain/Identity/Services/WaiverSettings.php` | `waiver.mode` (hereda `puerta.waiver_check_enabled`: '0' → desactivado, si no → externo) · `waiver.retention_months` (vacío/inválido → `null` → NO se poda) |
-| `WaiverChain` | `app/Domain/Identity/Services/WaiverChain.php` | Verifica la cadena de un titular: cada fila da su hash y enlaza con la anterior |
-| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | N firmas simultáneas del MISMO titular (`pcntl_fork`, MySQL) → una cadena lineal. Se limpia solo (`DB::table`). ⚠️ Desde `#174` cada proceso firma como un MENOR distinto (`subject_id` = i): re-firmar la misma versión por el mismo sujeto es idempotente y N firmas iguales darían una fila |
+| `WaiverSigner` · `WaiverSignatureRequest` | `app/Domain/Identity/Services/WaiverSigner.php` · `…/WaiverSignatureRequest.php` | El ÚNICO escritor: lock de la fila del titular como PRIMERA sentencia, `prev_hash` de la última firma del MISMO sujeto (`#198`), la fila visible de `consents` (`v1·es`) y el sello — los dos últimos solo si el sujeto es el titular. **Idempotente por versión y sujeto, DENTRO del lock** (`#174`). Para un menor: suyo, activo y menor, con su identidad copiada (`menores-a-cargo.md` §9.7). `forDependent()` cambia el sujeto de la petición. ⚠️ Está en el `CRITICAL_RE`: tocarlo exige `VERIFY_CONC=1` tras `waiver:verify-chain` |
+| `WaiverStatus` | `app/Domain/Identity/Services/WaiverStatus.php` | «¿Tiene waiver, y de qué versión?» según el MODO: `externo` → sello · `interno` → registro (+ `isOutdated()`) · `desactivado` → no hay pregunta. `forDependent()` (`#198`): lo mismo para un menor, por su propia cadena |
+| `WaiverSettings` | `app/Domain/Identity/Services/WaiverSettings.php` | `waiver.mode` (hereda `puerta.waiver_check_enabled`: '0' → desactivado, si no → externo) · `waiver.retention_months` (vacío/inválido → `null` → NO se poda) · `waiver.dependent_retention_months` (`#197`: meses tras el 18.º cumpleaños del menor; vacío → NO se poda) |
+| `WaiverChain` | `app/Domain/Identity/Services/WaiverChain.php` | Verifica las cadenas de un titular, UNA por sujeto (`#198`): cada fila da su hash, enlaza con la anterior de su sujeto y apunta a su versión. Devuelve `chains` |
+| `waiver:verify-chain` | `app/Console/Commands/VerifyWaiverChainConcurrency.php` | REHECHO en `#198`: N firmas simultáneas del MISMO titular y sujeto (`pcntl_fork`, MySQL), desde cero → **UNA fila** (idempotencia bajo el lock) y dos cadenas verificadas (la sonda en serie firma en nombre de un menor REAL, FK RESTRICT). Se limpia solo (`DB::table`, firmas → menor → titular). Visto FALLAR sin el lock: 2 filas del titular, 1 `prev_hash` repetido |
 | La puerta | `app/Livewire/Admin/Puerta/ValidarRegistro.php` + su vista | Lee `WaiverStatus`; en interno señala «versión anterior» en ámbar y **deja pasar** (§4.8) |
 | Ajustes | `app/Filament/Pages/Settings.php` | `Select` de modo (hidratado con el EFECTIVO para que Guardar no cambie conducta) + plazo; el toggle de #216 ya no se edita: `save()` lo escribe como espejo |
 | Publicar | `app/Filament/Resources/Pages/Pages/EditPage.php` | Acción «Publicar versión firmable», solo en `waiver` y con `content.manage`; congela lo GUARDADO con los tokens fiscales resueltos |
@@ -866,6 +875,23 @@ La tanda se revisó como el subsistema (§10.0): 24 hallazgos verificados con es
 **Lo medido**: +9 tests PHP, +1 JS (contador en `ESTADO.md`) · **10 mutaciones, las 10 muerden**
 (S-1 ×2, S-3, F-01, S-6 ×2, F-07, S-5, S-2, CAJ-422) · `waiver:verify-chain` 8/16 lineal sobre InnoDB ·
 el guion completo en headless, **111/111 ✓, 0 desviaciones**.
+
+### 9.13 La cadena pasa a ser por (titular, sujeto) — tanda 2 de «menores a cargo» (2026-08-27 noche, `#198`)
+
+NUC-3 (§10.5) exigía decidirlo antes de la primera firma de menor, y el owner decidió (`#197`): **una
+cadena por sujeto**. Lo que cambió en el subsistema, resumido —el detalle, las mutaciones y la sonda
+HTTP viven en `menores-a-cargo.md` **§9.7**—:
+- `WaiverSigner`: `prev_hash` es la última firma del MISMO sujeto (la misma fila que decide la
+  idempotencia); para un menor, pertenencia y minoría bajo el lock, e identidad copiada (esquema
+  canónico **v3**). `WaiverChain` verifica una cadena por sujeto. Sin firmas de menor, todo lo ya
+  firmado es idéntico bajo las dos reglas: lo firmado con v1/v2 sigue verificando con su esquema.
+- **El verificador cambia lo que mide**: la idempotencia bajo el lock (N firmas del mismo sujeto = una
+  fila). Corrido con 8 y 16 y **visto FALLAR** sin el lock (2 filas, 1 `prev_hash` repetido).
+- La poda tiene DOS plazos, uno por clase de sujeto (`waiver.dependent_retention_months`, desde los
+  18), y podar una clase nunca rompe la cadena de la otra — `WaiverRetentionTest` lo asevera en las
+  dos direcciones. Los dos valores siguen siendo `[PENDIENTE: owner]`.
+- El PDF y el registro del panel dicen DE QUIÉN es una firma de menor (nombre y fecha de nacimiento
+  copiados) y que esos datos los declaró el titular.
 
 ## 10. Revisión adversarial del SUBSISTEMA — 2026-08-26 (`DECISIONES #169`)
 

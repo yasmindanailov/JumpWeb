@@ -86,10 +86,14 @@
         <table class="kv">
             <tr><td class="k">{{ $t('holder_name') }}</td><td class="v">{{ $proof->holderName() }}</td></tr>
             <tr><td class="k">{{ $t('holder_email') }}</td><td class="v">{{ $proof->holderEmail() }}</td></tr>
-            <tr><td class="k">{{ $t('subject') }}</td><td class="v">{{ $proof->isForHolder() ? $t('subject_holder') : $t('subject_dependent', ['id' => $proof->subjectId()]) }}</td></tr>
+            <tr><td class="k">{{ $t('subject') }}</td><td class="v">{{ $proof->isForHolder() ? $t('subject_holder') : $t('subject_dependent', ['name' => $proof->subjectName() ?? '—', 'born_on' => $proof->subjectBornOnLabel() ?? '—']) }}</td></tr>
         </table>
         {{-- §10.6 (WAI-07): en una firma de mostrador los datos los tecleó el operador — se dice. --}}
         <p class="note">{{ $t($proof->isDeclared() ? 'holder_note_declared' : 'holder_note') }}</p>
+        {{-- `menores-a-cargo.md` §4.2: los datos del menor los declaró el titular y no están verificados — se dice. --}}
+        @if (! $proof->isForHolder())
+            <p class="note">{{ $t('subject_dependent_note') }}</p>
+        @endif
         @if ($proof->holderIsAnonymised())
             <p class="note">{{ $t('holder_anonymised') }}</p>
         @endif

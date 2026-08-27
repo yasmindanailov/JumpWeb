@@ -61,6 +61,11 @@ class MeDependentsTest extends ApiTestCase
             'age' => 9,
             'is_minor' => true,
             'adult_from' => '2035-03-12',
+            // Su waiver (tanda 2): fuera del modo interno no hay pregunta; nunca el sello del titular.
+            'waiver' => [
+                'mode' => 'externo', 'signed' => false, 'outdated' => false, 'accepted_at' => null,
+                'accepted_label' => null, 'version' => null, 'signature_id' => null, 'pdf_url' => null,
+            ],
         ], $response->json('data.0'));
     }
 
