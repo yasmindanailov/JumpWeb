@@ -253,6 +253,14 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ Media · ~50 reglas de CSS que PARECEN muertas y un `grep` no puede confirmarlo (2026-08-27, `#196`)
+
+| Qué (medido) | Dónde muerde | La retira |
+|---|---|---|
+| Al clasificar las sombras salieron **14 reglas cuyo selector raíz no aparece en `resources/`** —`.invite-card`, `.modal__panel`, `.plan-select__trigger`, `.events__photo`, `.events__ticket`…—. ⚠️ **Pero eso NO prueba que estén muertas**: el cajón construye sus clases por concatenación en Vue, así que `cal__day--normal` **tampoco aparece** ni en `resources/` ni en el bundle minificado **y está viva** (sale en `tests/Fixtures/sidebar-dom-manifest.json`) | Peso muerto en las dos hojas que sirve todo visitante, y ruido para el siguiente que audite. Pero **borrar por `grep` sería exactamente el error que este repo persigue** | Auditoría propia con el rigor de `CONVENCIONES §3.quater`: clasificar por SUJETO y **mutar, no leer**. El instrumento tiene que ver las clases que se construyen dinámicamente — el manifiesto DOM del cajón es una fuente, y las páginas servidas por HTTP otra. ⚠️ En `#196` se retiraron **solo** las dos de `.cta-prime--onvideo`, porque su único uso lo había retirado yo mismo media hora antes: eso sí es certeza, no inferencia |
+
+---
+
 ## ▶ Baja · lo que la tanda 2b dejó anotado (2026-08-27, `#194`)
 
 | Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
@@ -270,7 +278,7 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 | Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
 |---|---|---|---|---|
-| **Media** | **No hay escala de ELEVACIÓN, y crearla mueve mucho** | 68 `box-shadow` → **55 de elevación · 9 anillos · 4 `none` · 0 duras**. Solo 8 formas se repiten ≥2 veces. Probadas todas las escalas de 3 a 6 escalones, la mejor (`18·28·38·48·60·80`) **mueve 35 de 55 y 125 px de blur** | Un cliente que redefina su tema **no mueve ninguna de las 55 sombras**. El color sí le obedece (60 de 68 ya van por `var()`); la forma, no | **Tanda 2b** del tema (el hero): la escala se decide cuando el armazón pida sombras concretas, no antes. `[DECIDIDO owner]` |
+| ~~**Media** · **No hay escala de ELEVACIÓN**~~ **RETIRADA 2026-08-27** (`#196`: no era una escala, eran **TRES ROLES** — `lift`/`float`/`modal`; 19 sombras se retiran porque una tarjeta quieta no está elevada, y de 53 formas propias quedan 6, todas justificadas) | 68 `box-shadow` → **55 de elevación · 9 anillos · 4 `none` · 0 duras**. Solo 8 formas se repiten ≥2 veces. Probadas todas las escalas de 3 a 6 escalones, la mejor (`18·28·38·48·60·80`) **mueve 35 de 55 y 125 px de blur** | Un cliente que redefina su tema **no mueve ninguna de las 55 sombras**. El color sí le obedece (60 de 68 ya van por `var()`); la forma, no | **Tanda 2b** del tema (el hero): la escala se decide cuando el armazón pida sombras concretas, no antes. `[DECIDIDO owner]` |
 | **Media** | **El MOVIMIENTO no tiene escala** | **237** declaraciones `transition`/`animation` con **48 duraciones distintas** y **20 curvas**; el sistema del cliente declara **7 y 4**. `200ms` sola tiene 110 usos y `ease` 216. Existen ya 4 tokens (`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`) que cubren una parte mínima | Un cliente no puede dar a su web su propio tempo. Y 48 duraciones no son una decisión: son 48 decisiones sueltas | **Tanda 2d** del tema. ⚠️ No mueve píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa interactuando** |
 | **Baja** | **16 no-ops `var(--X, var(--X))`** | Un fallback de `var()` a **sí misma** no puede dispararse nunca: si `--X` no está definida, el fallback tampoco. Medido en `site.css`: 5 × `--bg`, 4 × `--fg`, 3 × `--bg-soft`, 2 × `--bg-card`, 1 × `--line`, 1 × `--fg-mute`. Restos del barrido de `#143` | En nada hoy: es ruido que hace parecer que una regla tiene un fallback pensado. Cuesta lectura, no píxeles | Un `replace` de dos líneas, cero riesgo y cero píxeles. **No se hizo en la 2a a propósito**: ampliar el alcance en silencio es lo que esta casa prohíbe |
 | **Baja** | **`.cal__dot` está entre dos familias** | La muestra de color de la leyenda del calendario: lado 12 px, radio 4 px → ratio **3,00**, fuera de la ley del motivo cuadrado (`lado/4`, tolerancia 3,2–5,4). Está en la lista de dibujo de `ShapeScaleTest` con su porqué | En nada. Es una excepción **justificada**, no un olvido | Tokenizarlo a `--r-xs` lo movería **+1 px**. Es decisión de producto, no refactor: entra si el owner lo quiere en la pasada de navegador |

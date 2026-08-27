@@ -129,7 +129,7 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> · 🆕 **Agente C (el TEMA) → tandas 1, 2a y la 2b COMPLETA, empujadas el 2026-08-27 (`#192`, `#193`, `#194`, `#195`).**
+> · 🆕 **Agente C (el TEMA) → tandas 1, 2a, 2b y la ELEVACIÓN, empujadas el 2026-08-27 (`#192`, `#193`, `#194`, `#195`).**
 >   Hay un **TERCER carril**, por encargo del owner: la capa de tema
 >   (`specs/tema-por-instalacion.md`). La tanda 1 —las dos superficies como ámbito, `--sheet`, los dos
 >   grises, los tintes, 21 radios y las fuentes por instalación— está hecha, verificada y en `main`.
@@ -316,7 +316,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3045 en verde** (17.551 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
+- Suite **3047 en verde** (17.558 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
   máquina del carril C; ~42 s en la del B) ·
   ▶ **+9 tests PHP en el último corte** (`#193`, capa de tema · tanda **2a**): `ShapeScaleTest`.
   **13 mutaciones, las 13 muerden** — pero solo después de arreglar el arnés. ⚠️⚠️ **El arnés de
@@ -590,38 +590,35 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
 `landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
 
-▶ **Por dónde retoma el carril C** (`specs/tema-por-instalacion.md` §12.5): la **tanda 2c, el
-MENÚ** —spec propia; el owner ya avisó de que «cambia totalmente» y de que guiará cómo se comporta
-en MÓVIL— y **la escala de sombra**, que por fin se puede decidir porque el hero ya pide sombras
-concretas (§10.3: ninguna extraíble sin mover 35 de 55 y 125 px de blur).
+▶ **Por dónde retoma el carril C**: la **tanda 2c, el MENÚ** — spec propia; el owner avisó de que
+«cambia totalmente» y de que **guiará cómo se comporta en MÓVIL**. Medido: toca **12 vistas**, los
+dos desplegables con sus datos del CMS (`show_in_nav`), el botón de registro y la barra de móvil.
 
-✅ **La 2b está COMPLETA** (`#194` pasos 1-2, `#195` paso 3). El hero:
-· **no lleva CTA** — `[DECIDIDO owner]`, «en el mockup el CTA sale después del hero»— y queda
-  **eslogan → titular → estado**; comprar se ofrece en el nav y en la barra de móvil, con su
-  anclaje «desde X €» intacto;
-· **declara `data-surface="ink"`** — la primera vez que el producto consume el mecanismo de la
-  tanda 1—; · es una **tarjeta** con margen y radio, no un sangrado; · y **encoge al bajar**.
-❗ **La duda del sentinel se resolvió sola con la decisión**: al no haber CTA en el hero,
-`.hero__stage-bottom` —que era el elemento que dos comportamientos de COMPRA observaban— desaparece,
-así que había que dar un sentinel propio de todas formas. Ahora es `.hero__sentinel`, vacío y fuera
-del `sticky`. ▶ **Que aquello funcionara era una COINCIDENCIA**, y una coincidencia sostiene hasta
-que algo se mueve, sin avisar.
-▶ **Y una decisión de arquitectura que conviene no deshacer**: el JS publica UNA custom property
-(`--hero-p`) y **no decide nada de diseño** — los dos estados los define el CSS con `calc()`. El
-mockup lo hace al revés (estilos inline desde JS), y copiarlo habría dejado los números del efecto
-en el único sitio que un paquete de cliente no puede tocar. En móvil **solo cambian cuatro tokens**.
+✅ **La capa de tema tiene ya sus CUATRO mecanismos** (`#192` → `#196`): color y superficie · forma
+(cantos, motivo, foco, tira) · el hero · y ahora la **ELEVACIÓN**.
+❗❗ **La elevación son TRES ROLES, no una escala, y eso CORRIGE la medición de `#193`.** Aquella
+miró solo el difuminado; con las cuatro dimensiones, el producto tenía **53 sombras y 42 formas
+distintas** y la mejor escala de cinco escalones movía **47 de 53**. No era una escala con ruido:
+**no había ninguna**. ▶ Y al ir a copiar el número de escalones del cliente apareció que **él
+tampoco tiene**: declara DOS formas. Con 42 de un lado y 2 del otro, la pregunta era **«¿para qué
+sirve cada sombra?»** — y salen tres respuestas: `lift`, `float`, `modal`. **19 pierden la sombra**:
+una tarjeta quieta no está elevada, está apoyada. De **53 formas propias a 6**, todas justificadas.
+⚠️ **Los tres leen `--paper-fg`, no `--fg`**: dentro del hero `--fg` vale CLARO y la sombra se
+volvería clara. Es el mismo defecto que `#194` cazó tres veces.
 
-⚠️⚠️ **Lo que enseñó, y vale para cualquier test de esta casa**: al retirar el CTA cayó su test, se
-re-apuntó a la barra de móvil siguiendo `CONVENCIONES §3.quater`… **y el test re-apuntado NO fijaba
-nada**. `assertSee('cta-prime')` casaba con `cta-prime__ico`, y `assertSeeText('desde 7,90 €')` lo
-satisfacía **el CTA del NAV**, que dice el mismo texto con otra clave de idioma. Dos mutaciones
-pasaban en verde. Acotado al botón real, 4 de 4 muerden.
-▶ **Y una mutación mal diseñada**: renombrar una clase a `algo-NO` no mata un
-`assertStringContainsString('algo')` — sigue siendo subcadena. Para probar una AUSENCIA hay que
-retirar el elemento, no renombrarlo.
-⚠️ Sigue abierto: **`--onvideo` sobrevive en 10 reglas y su nombre ya miente** (solo declara tamaño
-y sombra), y **la excepción del anillo de foco del chip ya se puede retirar** — el hero declara
-`ink`. Los dos en `DEUDA.md`.
+❗❗ **LO QUE ESPERA AL OWNER, y ahora es lo único que bloquea**: la **pasada de NAVEGADOR**. Se ha
+acumulado mucho cambio visual sin que nadie lo mire: el hero entero (`#195`: pierde su CTA, gana un
+eslogan, es una tarjeta y encoge al bajar) y **19 elementos que pierden su sombra** (`#196`), que
+cambia el aspecto de media web. Lo verificado es aritmética y estructura — **no vista**.
+▶ Y de `#193` sigue pendiente su ✅ a las 11 declaraciones de canto que se movieron.
+
+⚠️ Sigue abierto en `DEUDA.md`: **`--onvideo` sobrevive en 10 reglas y su nombre ya miente** (solo
+declara tamaño y sombra) · **la excepción del anillo de foco del chip ya se puede retirar** (el hero
+declara `ink`) · y **~50 reglas de CSS que PARECEN muertas y no se pueden confirmar con un `grep`**:
+el cajón construye sus clases por concatenación en Vue, así que `cal__day--normal` no aparece ni en
+`resources/` ni en el bundle minificado **y sin embargo está viva** (sale en el manifiesto DOM).
+Auditarlas necesita su propia pasada, con el rigor de `CONVENCIONES §3.quater`.
+
 
 
 ⚠️ **El mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección ni tarjeta declara

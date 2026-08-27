@@ -2320,7 +2320,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **tandas 1, 2a y 2b CERRADAS · falta el ojo del owner y el MENÚ (2c)**
+### La CAPA DE TEMA 🟦 — **los CUATRO mecanismos hechos · falta el ojo del owner y el MENÚ (2c)**
 
 > Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7** si vas a la 2b, por **§10** si quieres
 > saber cómo quedó la forma) · Decisiones `#192` y `#193`.
@@ -2420,8 +2420,20 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       que dice el mismo texto con otra clave. Dos mutaciones pasaban. Acotado al botón real,
       **4 de 4 muerden**.
       ❗ **Falta la pasada de NAVEGADOR**, y aquí pesa: este paso SÍ cambia la primera pantalla.
-- [ ] **2b.bis · La escala de SOMBRA** — ahora se puede decidir, porque el hero ya pide sombras
-      concretas (§10.3: ninguna extraíble sin mover 35 de 55 y 125 px de blur). `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
+- ✅ **2b.bis · La ELEVACIÓN: TRES ROLES, no una escala** (2026-08-27, `#196`).
+      ⚠️⚠️ **Corrige la medición de §10.3**, que miró solo el difuminado. Con las cuatro dimensiones
+      de una sombra, el producto tenía **53 vivas y 42 formas distintas**, y la mejor escala de
+      cinco escalones movía **47 de 53** con grupos deformes (22·14·10·6·**1**). No era una escala
+      con ruido: **no había ninguna**.
+      ❗ Y al ir a copiar el número de escalones del cliente apareció que **él tampoco tiene**:
+      declara DOS formas. Con 42 de un lado y 2 del otro, la pregunta era **«¿para qué sirve cada
+      sombra?»**, y salen tres: `--shadow-lift` (17) · `--shadow-float` (8) · `--shadow-modal` (3).
+      Y **19 pierden la sombra**: una tarjeta quieta no está elevada, está apoyada.
+      ▶ **De 53 formas propias a 6**, todas justificadas: tres DIRECCIONALES, la tarjeta de
+      invitación (artefacto imprimible), el pulgar de un interruptor y el badge del widget.
+      ⚠️ Leen **`--paper-fg`**, no `--fg`: dentro del hero `--fg` vale CLARO y la sombra se volvería
+      clara — el mismo defecto que `#194` cazó tres veces. Guarda propia, mutación que muerde.
+      ❗ **Falta el navegador**: 19 elementos pierden su sombra y eso cambia media web. `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
       valores**. **Aquí el producto SÍ cambia de aspecto de verdad**: su red es el ojo en navegador.
       ▶ La sombra entra aquí porque **no hay escala extraíble sin coste**: probadas de 3 a 6
       escalones, la mejor mueve **35 de 55 y 125 px de blur**. Crearla es decidirla.

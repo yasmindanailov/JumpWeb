@@ -937,3 +937,101 @@ subcadena. Para probar una ausencia hay que **retirar el elemento**, no renombra
 - ⚠️ **`--onvideo` sobrevive en 10 reglas y su nombre ya miente**: solo declara tamaño y sombra.
   Renombrarlo toca la especificidad de `.hero__title.hero__title--onvideo`, que existe para ganarle
   a `landing.css`. Ficha en `DEUDA.md`.
+
+---
+
+## 13. La ELEVACIÓN — tres roles, no una escala
+
+> `[DECIDIDO owner, 2026-08-27]` tras ver la medida. Cierra lo que §10.3 dejó abierto: «la escala
+> de sombra se decide cuando el hero pida sombras concretas». Ya las pide.
+
+### 13.1 ⚠️⚠️ Esto CORRIGE la medición de §10.3
+
+§10.3 concluyó «no hay escala extraíble» **mirando solo el difuminado**. Una sombra tiene cuatro
+grados de libertad —desplazamiento, difuminado, expansión y opacidad—, y agrupar por uno solo es
+como clasificar tipografías por el ancho de la «m».
+
+Rehecha con los cuatro, agrupando por **cuánto se percibe** cada sombra (`y + blur/2 + spread`,
+ponderado por opacidad) y con *k*-means exacto por programación dinámica, la conclusión **no
+cambia: empeora**.
+
+| | Medido |
+|---|---|
+| Sombras de elevación vivas | **53** |
+| Formas distintas | **42** — casi cada una única |
+| Mejor escala de 5 escalones | mueve **47 de 53**; 7 px de media, **25 px** en el peor |
+| Reparto de esa escala | 22 · 14 · 10 · 6 · **1** — el último escalón lo usaba UNA regla |
+
+▶ **Eso no es una escala con ruido: es que no hay ninguna.** Son 53 ajustes hechos uno a uno.
+
+### 13.2 ❗ El dato que cambió la pregunta
+
+Al ir a copiar el número de escalones del sistema del cliente apareció que **no tiene ninguno**.
+`Colores de Marca PJP` declara **DOS** formas —«dura `5px 5px 0` **o ninguna**», más la difusa
+reservada a modales— con la regla de uso: *«un solo elemento por pantalla la lleva; en una rejilla
+de tarjetas, jamás»*.
+
+▶ **Con 42 formas de un lado y 2 del otro, la pregunta no era «¿de cuántos escalones?». Era «¿para
+qué sirve cada sombra?».**
+
+### 13.3 Los tres roles
+
+| Token | Qué es | Cuántas |
+|---|---|---|
+| **`--shadow-lift`** | se despega al pasar el ratón o al activarse | **17** |
+| **`--shadow-float`** | flota sobre el contenido, sin velo: paneles, avisos, la barra de móvil | **8** |
+| **`--shadow-modal`** | tapa la página, con velo detrás | **3** |
+| — | **no lleva sombra** | **19** |
+
+▶ **Una tarjeta quieta no está elevada: está apoyada.** Esas 19 son justo las que el sistema del
+cliente dice que no deberían llevar sombra, y entre ellas está el `.hero__stage` — verificado: **el
+hero del mockup no tiene `box-shadow`**.
+
+▶ **Los valores salen de lo que el producto ya hacía**: cada token es la **mediana** de su grupo, o
+sea una sombra que ya existía, no un promedio inventado que no usaba nadie.
+
+### 13.4 ⚠️ Leen `--paper-fg`, no `--fg`, y no es un detalle
+
+Dentro de `[data-surface="ink"]` el token `--fg` vale **CLARO**. Una sombra escrita con él **se
+vuelve clara dentro del hero** — y una sombra clara no es una sombra. Es el mismo defecto que se
+cazó tres veces en §11.4 con el scrim, el texto y el placeholder.
+
+▶ Una sombra es **ausencia de luz**: es oscura en las dos superficies. `--paper-fg` es el alias que
+no se mueve al entrar en tinta, y hay guarda propia (`test_the_shadow_roles_use_the_stable_ink_alias`)
+cuya mutación muerde.
+
+### 13.5 Las seis excepciones, y por qué no son deuda
+
+De **53 formas propias a 6**. La lista **solo encoge**.
+
+| Selector | Por qué |
+|---|---|
+| `.sidecart__panel` · `.mob-menu__panel` | **DIRECCIONALES**: `-20px 0 …`, entran desde el lado. Un token vertical las rompe |
+| `.lang-dd--up .lang-dd__panel` | **DIRECCIONAL hacia arriba** (`0 -18px …`): el desplegable se abre hacia arriba |
+| `.invite-card` | **ARTEFACTO IMPRIMIBLE**: se captura con `html2canvas` y su sombra es parte de la tarjeta que el visitante se descarga |
+| `.ck-tgl::after` | el **pulgar de un interruptor**: 1 px de sombra lo hace parecer una pieza física, no elevación |
+| `.offw-badge` | lee `--offw-accent`, color de marca del widget, no una sombra de elevación |
+
+### 13.6 Lo que esto le da al cliente
+
+Un paquete redefine **tres tokens** y **las 28 sombras del producto le obedecen**. El del segundo
+cliente pondría:
+
+```css
+:root {
+    --shadow-lift:  none;                       /* «dura o ninguna»: en hover se aplasta, no se eleva */
+    --shadow-float: 5px 5px 0 var(--paper-fg);  /* la pegatina del mural */
+    --shadow-modal: 0 24px 60px rgba(0,0,0,.45);/* la única difusa que su sistema admite */
+}
+```
+
+⚠️ **Lo que sigue sin poder cambiar**: las seis excepciones. Es una limitación conocida y
+enumerada, no un olvido — y cinco de las seis no son elevación, así que redefinirlas no tendría
+sentido.
+
+### 13.7 Lo que falta
+
+- ❗ **La pasada de NAVEGADOR**, y aquí pesa mucho: **19 elementos pierden su sombra** y eso cambia
+  el aspecto de media web. Lo verificado es que cada sombra sale de un rol, no que el resultado
+  guste.
+- El **menú** (tanda 2c) sigue siendo lo siguiente, con la guía del owner sobre el móvil.

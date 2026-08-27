@@ -10335,3 +10335,51 @@ los tres encoge y el estado final deja hueco al nav.
 `specs/tema-por-instalacion.md` §12 · suite **3045** verde · Pint 932 · bundle +0,85 KiB.
 ❗ **Falta la pasada de NAVEGADOR del owner, y aquí pesa más que nunca**: este paso SÍ cambia el
 aspecto de la primera pantalla.
+
+## #196 · 2026-08-27 · La ELEVACIÓN son TRES ROLES, no una escala — de 42 formas de sombra a 3 tokens
+Cierra lo que `#193` §10.3 dejó abierto («la escala de sombra se decide cuando el hero pida sombras
+concretas»). Ya las pide, y al medirlo bien la respuesta resultó ser otra pregunta.
+
+⚠️⚠️ **Esto CORRIGE mi propia medición de `#193`.** Aquella concluyó «no hay escala extraíble»
+**mirando solo el difuminado**. Una sombra tiene cuatro grados de libertad —desplazamiento,
+difuminado, expansión y opacidad— y agrupar por uno solo es como clasificar tipografías por el
+ancho de la «m». Rehecha con los cuatro, agrupando por cuánto se PERCIBE cada sombra y con
+*k*-means exacto, la conclusión no cambia: **empeora**.
+· **53 sombras vivas con 42 formas distintas** — casi cada una única.
+· La mejor escala de cinco escalones movía **47 de 53** (7 px de media, 25 en el peor) y sus grupos
+  salían deformes: 22 · 14 · 10 · 6 · **1**. El último escalón lo usaba UNA regla.
+▶ **No es una escala con ruido: es que no había ninguna.** Son 53 ajustes hechos uno a uno.
+
+❗ **Y el dato que cambió la pregunta**: al ir a copiar el número de escalones del sistema del
+cliente apareció que **no tiene ninguno**. Declara **DOS** formas —«dura `5px 5px 0` o ninguna» más
+la difusa de modales— con la regla «un solo elemento por pantalla la lleva; en una rejilla de
+tarjetas, jamás». ▶ **Con 42 formas de un lado y 2 del otro, la pregunta no era «¿de cuántos
+escalones?» sino «¿para qué sirve cada sombra?».** `[DECIDIDO owner]` con la medida delante.
+
+**Los tres roles**: `--shadow-lift` (17, se despega al pasar el ratón) · `--shadow-float` (8, flota
+sobre el contenido: paneles, avisos, la barra de móvil) · `--shadow-modal` (3, tapa la página). Y
+**19 pierden la sombra**: una tarjeta quieta no está elevada, está apoyada — son justo las que el
+sistema del cliente dice que no deberían llevarla, y entre ellas el `.hero__stage` (verificado: el
+hero del mockup no tiene `box-shadow`).
+▶ Los valores son la **mediana de cada grupo**: una sombra que ya existía en el producto, no un
+promedio inventado que no usaba nadie.
+
+⚠️ **Los tres leen `--paper-fg`, no `--fg`, y no es un detalle**: dentro de `[data-surface="ink"]`
+el token `--fg` vale CLARO, así que una sombra escrita con él **se vuelve clara dentro del hero**.
+Es el mismo defecto que `#194` §11.4 cazó tres veces con el scrim, el texto y el placeholder. Una
+sombra es ausencia de luz: es oscura en las dos superficies. Guarda propia, con mutación que muerde.
+
+▶ **De 53 formas propias a 6**, y las seis son excepciones declaradas con su porqué: tres
+**DIRECCIONALES** (dos paneles que entran de lado y un desplegable que se abre hacia arriba — un
+token vertical las rompe), la tarjeta de invitación (**artefacto imprimible**: se captura con
+`html2canvas` y su sombra es parte de lo que el visitante se descarga), el pulgar de un interruptor
+(1 px que lo hace parecer una pieza física, no elevación) y el badge del widget, que lee color de
+marca. **La lista solo encoge.**
+
+▶ **Lo que le da al cliente**: redefine tres tokens y **las 28 sombras del producto le obedecen**.
+El del segundo cliente pondría `none` en las dos primeras y su dura en la tercera.
+
+`specs/tema-por-instalacion.md` §13 · `ShapeScaleTest` (+2 guardas, **3/3 mutaciones muerden**) ·
+suite **3047** verde · Pint 932.
+❗ **Falta la pasada de NAVEGADOR, y aquí pesa mucho**: **19 elementos pierden su sombra** y eso
+cambia el aspecto de media web. Lo verificado es que cada sombra sale de un rol, no que guste.
