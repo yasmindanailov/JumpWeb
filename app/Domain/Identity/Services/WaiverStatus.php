@@ -79,13 +79,62 @@ final class WaiverStatus
         return self::fromLastSignature($mode, $last);
     }
 
+    /**
+     * La misma pregunta que {@see forDependent()} para VARIOS menores, en UNA consulta de firmas (más la
+     * versión vigente, una vez): lo que necesita una ficha que enseña varios a la vez (el pedido en el
+     * panel, el modal de asignar). Paridad con `forDependent()` probada menor a menor.
+     *
+     * @param  iterable<Dependent>  $dependents
+     * @return array<int, self> por id de menor
+     */
+    public static function forDependents(iterable $dependents): array
+    {
+        $list = collect($dependents)->values();
+        if ($list->isEmpty()) {
+            return [];
+        }
+
+        $mode = WaiverSettings::mode();
+        $out = [];
+
+        if ($mode !== WaiverSettings::MODE_INTERNAL) {
+            foreach ($list as $dependent) {
+                $out[(int) $dependent->getKey()] = new self($mode, false, null, null, null, false);
+            }
+
+            return $out;
+        }
+
+        $signatures = WaiverSignature::query()
+            ->whereIn('user_id', $list->map(fn (Dependent $d): int => (int) $d->user_id)->unique()->all())
+            ->where('subject_type', WaiverSignature::SUBJECT_DEPENDENT)
+            ->whereIn('subject_id', $list->map(fn (Dependent $d): int => (int) $d->getKey())->all())
+            ->with('version')
+            ->orderByDesc('id')
+            ->get();
+        $latest = LegalDocuments::latestVersionNumber(WaiverSettings::SLUG);
+
+        foreach ($list as $dependent) {
+            // La ÚLTIMA firma de ESE par (titular, sujeto): la lista viene por id descendente.
+            $last = $signatures->first(fn (WaiverSignature $s): bool => (int) $s->subject_id === (int) $dependent->getKey()
+                && (int) $s->user_id === (int) $dependent->user_id);
+            $out[(int) $dependent->getKey()] = self::build($mode, $last, $latest);
+        }
+
+        return $out;
+    }
+
     private static function fromLastSignature(string $mode, ?WaiverSignature $last): self
+    {
+        return self::build($mode, $last, $last === null ? null : LegalDocuments::latestVersionNumber(WaiverSettings::SLUG));
+    }
+
+    /** Un estado a partir de la última firma y de la versión vigente ya resuelta (o `null` si no hay versiones). */
+    private static function build(string $mode, ?WaiverSignature $last, ?int $latest): self
     {
         if ($last === null) {
             return new self($mode, false, null, null, null, false);
         }
-
-        $latest = LegalDocuments::latestVersionNumber(WaiverSettings::SLUG);
 
         return new self(
             $mode,

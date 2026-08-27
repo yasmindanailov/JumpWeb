@@ -121,10 +121,11 @@ class DependentAssignerTest extends TestCase
             'status' => Order::STATUS_PENDING, 'subtotal' => 1000, 'tax' => 0, 'total' => 1000,
             'currency' => 'EUR', 'expires_at' => now()->addHour(),
         ]);
-        $slot = Slot::create([
-            'zone_id' => $this->zone->id, 'date' => self::VISIT, 'start_time' => '10:00:00',
-            'end_time' => '11:00:00', 'capacity' => 20, 'online_capacity' => 20,
-        ]);
+        // La MISMA franja para todos los pedidos del test (la clave es única por zona, día y hora).
+        $slot = Slot::firstOrCreate(
+            ['zone_id' => $this->zone->id, 'date' => self::VISIT, 'start_time' => '10:00:00'],
+            ['end_time' => '11:00:00', 'capacity' => 20, 'online_capacity' => 20],
+        );
         foreach ($lines as [$type, $quantity]) {
             $order->items()->create([
                 'ticket_type_id' => $type->id, 'slot_id' => $slot->id, 'quantity' => $quantity,
@@ -470,5 +471,210 @@ class DependentAssignerTest extends TestCase
 
         $this->assertSame(0, DependentAssignment::count());
         $this->assertDatabaseHas('dependents', ['id' => $lucas->id]);
+    }
+
+    // ─── El MOSTRADOR (tanda 5, spec §9.10.2 D14·3) ──────────────────────────
+
+    /** D14: la lista que ve el operador — los ACTIVOS del titular, con el motivo de cada uno que no se puede marcar ese día. */
+    public function test_candidates_lists_the_active_minors_with_their_reason_on_that_date(): void
+    {
+        $this->mode('interno');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);                             // firmado → asignable
+        $vera = $this->add($holder, 'Vera', '2019-11-02');        // sin firma
+        $noa = $this->add($holder, 'Noa', '2008-09-01');          // 17 hoy, 18 el día de la visita
+        $max = $this->add($holder, 'Max', '2016-01-01');          // se retira: no sale
+        $this->signFor($holder, $lucas);
+        $this->signFor($holder, $max);
+        app(DependentRegistry::class)->remove($holder, $max->id);
+        $this->add(User::factory()->create(), 'Ajeno', '2017-01-01');
+
+        $candidates = $this->assigner()->candidates($holder, self::VISIT);
+
+        $this->assertSame([$lucas->id, $vera->id, $noa->id], array_map(fn (array $c): int => $c['dependent']->id, $candidates));
+        $this->assertSame(
+            [null, DependentAssigner::REASON_WAIVER_UNSIGNED, DependentAssigner::REASON_NOT_MINOR_ON_DATE],
+            array_column($candidates, 'reason'),
+        );
+        $this->assertSame([], $this->assigner()->candidates(User::factory()->create(), self::VISIT), 'sin menores no hay lista');
+
+        // Fuera del modo interno no hay firma que mirar: Vera pasa a ser asignable.
+        $this->mode('externo');
+        $this->assertNull($this->assigner()->candidates($holder, self::VISIT)[1]['reason']);
+    }
+
+    /** D14·3: el sync pone y quita para dejar EXACTAMENTE el conjunto pedido, y audita cada fila con el OPERADOR. */
+    public function test_sync_adds_and_removes_to_match_the_requested_set_and_audits_with_the_operator(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $order = $this->order($holder, [[$this->entry, 2]]);
+        $item = $order->items()->firstOrFail();
+        $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id]]]));
+        $operator = User::factory()->create();
+        $this->actingAs($operator);
+
+        $outcome = $this->assigner()->sync($holder, $order->id, $item->id, [$vera->id]);
+
+        $this->assertTrue($outcome->ok());
+        $this->assertSame([1, 1, 0], [$outcome->added, $outcome->removed, $outcome->kept]);
+        $this->assertSame([$vera->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
+
+        $unassigned = AuditLog::where('action', 'dependents.unassigned')->sole();
+        $this->assertSame($operator->id, (int) $unassigned->user_id, 'D12: en el mostrador el `by` es el operador');
+        $this->assertSame(['dependent_id' => $lucas->id, 'order_item_id' => $item->id, 'order_id' => $order->id], $unassigned->payload);
+        $assigned = AuditLog::where('action', 'dependents.assigned')->orderByDesc('id')->firstOrFail();
+        $this->assertSame($operator->id, (int) $assigned->user_id);
+        $this->assertSame($vera->id, $assigned->payload['dependent_id']);
+        $this->assertStringNotContainsString('Vera', json_encode(AuditLog::all()), 'RGPD-02');
+    }
+
+    public function test_sync_is_idempotent_and_writes_nothing_for_the_same_set(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $order = $this->order($holder, [[$this->entry, 2]]);
+        $item = $order->items()->firstOrFail();
+        $this->assertTrue($this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id])->changed());
+
+        $again = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $lucas->id]);
+
+        $this->assertTrue($again->ok());
+        $this->assertFalse($again->changed());
+        $this->assertSame(1, $again->kept);
+        $this->assertSame(1, DependentAssignment::count());
+        $this->assertSame(1, AuditLog::whereIn('action', ['dependents.assigned', 'dependents.unassigned'])->count());
+
+        $emptied = $this->assigner()->sync($holder, $order->id, $item->id, []);
+        $this->assertSame(1, $emptied->removed);
+        $this->assertSame(0, DependentAssignment::count());
+    }
+
+    /** FAIL-CLOSED: un rechazo en lo que se AÑADE deja la línea como estaba, y dice en qué POSICIÓN. */
+    public function test_sync_writes_nothing_when_anything_added_is_rejected_and_reports_the_position(): void
+    {
+        $this->mode('interno');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $this->signFor($holder, $lucas);
+        $order = $this->order($holder, [[$this->entry, 3]]);
+        $item = $order->items()->firstOrFail();
+        $foreign = $this->add(User::factory()->create(), 'Ajeno', '2017-01-01');
+
+        $outcome = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $vera->id, $foreign->id]);
+
+        $this->assertFalse($outcome->ok());
+        $this->assertSame(['1' => DependentAssigner::REASON_WAIVER_UNSIGNED, '2' => DependentAssigner::REASON_NOT_YOURS], $outcome->rejections);
+        $this->assertSame(0, DependentAssignment::count(), 'con un rechazo no se escribe NADA, tampoco Lucas');
+        $this->assertSame(0, AuditLog::where('action', 'dependents.assigned')->count());
+
+        $tooMany = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $lucas->id, $vera->id, $foreign->id, 999]);
+        $this->assertSame(['' => DependentAssigner::REASON_TOO_MANY], $tooMany->rejections, 'el tope se mira sobre ids DISTINTOS y antes que las reglas');
+    }
+
+    /** D14·3: lo asignado a un menor ya RETIRADO se conserva —el operador no lo ve— y cuenta para el tope. */
+    public function test_sync_conserves_assignments_to_unlinked_dependents_and_counts_them(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $max = $this->add($holder, 'Max', '2016-01-01');
+        $order = $this->order($holder, [[$this->entry, 2]]);
+        $item = $order->items()->firstOrFail();
+        $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id, $vera->id]]]));
+        // Vera se retira de la cuenta: con una entrada asignada detrás, se DESVINCULA (§4.4).
+        app(DependentRegistry::class)->remove($holder, $vera->id);
+        $this->assertNotNull($vera->fresh()->removed_at);
+
+        // Mantener a Lucas: Vera sigue ahí sin que el operador la haya tocado.
+        $same = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id]);
+        $this->assertTrue($same->ok());
+        $this->assertFalse($same->changed());
+        $this->assertEqualsCanonicalizing([$lucas->id, $vera->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
+
+        // Y ocupa una unidad: Lucas + Max serían tres en una línea de dos.
+        $full = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $max->id]);
+        $this->assertSame(['' => DependentAssigner::REASON_TOO_MANY], $full->rejections);
+
+        // Cambiar a Lucas por Max sí cabe: Vera se conserva, Lucas sale, Max entra.
+        $swap = $this->assigner()->sync($holder, $order->id, $item->id, [$max->id]);
+        $this->assertSame([1, 1, 0], [$swap->added, $swap->removed, $swap->kept]);
+        $this->assertEqualsCanonicalizing([$vera->id, $max->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
+    }
+
+    /** Lo que se MANTIENE no se re-valida (como `assign()` con `insertOrIgnore`); lo que se AÑADE, sí. */
+    public function test_sync_does_not_revalidate_what_is_kept_but_validates_what_is_added(): void
+    {
+        $this->mode('interno');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $this->signFor($holder, $lucas);
+        $order = $this->order($holder, [[$this->entry, 2]]);
+        $item = $order->items()->firstOrFail();
+        $this->assertTrue($this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id])->ok());
+
+        // Se publica un texto nuevo: la firma de Lucas queda «anterior» y ya no sería asignable de nuevo…
+        $this->publish();
+        $this->assertSame(DependentAssigner::REASON_WAIVER_UNSIGNED, $this->assigner()->candidates($holder, self::VISIT)[0]['reason']);
+
+        // …pero mantenerlo en la línea no se bloquea.
+        $kept = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id]);
+        $this->assertTrue($kept->ok());
+        $this->assertSame(1, $kept->kept);
+
+        // Añadir a Vera (sin firma) sí se rechaza, y no se escribe nada.
+        $added = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $vera->id]);
+        $this->assertSame(['1' => DependentAssigner::REASON_WAIVER_UNSIGNED], $added->rejections);
+        $this->assertSame([$lucas->id], DependentAssignment::pluck('dependent_id')->all());
+    }
+
+    /** Un ítem que no es del pedido del titular NO EXISTE (`no_line`); un pack se rechaza como línea. */
+    public function test_sync_aborts_on_a_foreign_item_and_rejects_pack_lines(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $mine = $this->order($holder, [[$this->entry, 1], [$this->pack, 4]]);
+        [$entryItem, $packItem] = $mine->items()->orderBy('id')->get();
+        $other = $this->order(User::factory()->create(), [[$this->entry, 1]]);
+        $foreignItem = $other->items()->firstOrFail();
+
+        $this->assertSame('no_line', $this->assigner()->sync($holder, $other->id, $foreignItem->id, [$lucas->id])->abortedBecause);
+        $this->assertSame('no_line', $this->assigner()->sync($holder, $mine->id, $foreignItem->id, [$lucas->id])->abortedBecause, 'el ítem tiene que ser de ESE pedido');
+        $this->assertSame('no_line', $this->assigner()->sync($holder, $mine->id, 999999, [])->abortedBecause);
+        $this->assertSame(['' => DependentAssigner::REASON_ENTRIES_ONLY], $this->assigner()->sync($holder, $mine->id, $packItem->id, [$lucas->id])->rejections);
+        $this->assertSame(0, DependentAssignment::count());
+        $this->assertTrue($this->assigner()->sync($holder, $mine->id, $entryItem->id, [$lucas->id])->ok());
+    }
+
+    /** Nunca lanza: si el contrato de Booking cae, el operador recibe un resultado, no una excepción. */
+    public function test_sync_never_throws(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder);
+        $order = $this->order($holder, [[$this->entry, 1]]);
+        $item = $order->items()->firstOrFail();
+        Log::spy();
+        $this->app->instance(CheckoutLines::class, new class implements CheckoutLines
+        {
+            public function forOrder(int $orderId, int $userId): array
+            {
+                throw new \RuntimeException('booking caído');
+            }
+        });
+
+        $outcome = app(DependentAssigner::class)->sync($holder, $order->id, $item->id, [$lucas->id]);
+
+        $this->assertSame('failed', $outcome->abortedBecause);
+        $this->assertFalse($outcome->ok());
+        $this->assertSame(0, DependentAssignment::count());
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $msg): bool => $msg === 'dependents.sync_failed')->once();
     }
 }

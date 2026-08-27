@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\CheckoutLine;
 use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Identity\Contracts\AssignmentOutcome;
+use App\Domain\Identity\Contracts\SyncOutcome;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\User;
@@ -42,6 +43,11 @@ use Throwable;
  * **La correlación cesta ↔ ítem la promete Booking** ({@see CheckoutLines}, D2): esta clase no adivina
  * nada por posición; si el pedido no tiene exactamente las líneas que la cesta tenía, no escribe NADA y
  * lo dice en el log — mejor sin asignar que asignado a otra línea.
+ *
+ * **Y el MOSTRADOR** (tanda 5, spec §9.10.2 D14·3): {@see sync()} fija el CONJUNTO de menores de UNA línea
+ * —quitar y poner— bajo el mismo lock y con las mismas reglas sobre lo que se AÑADE; {@see candidates()}
+ * es la lista que el operador ve, con el motivo de cada menor que no se puede marcar. Las reglas siguen
+ * escritas UNA vez ({@see rejections()}): lo que rechaza el embudo lo rechaza el mostrador.
  *
  * `RGPD-02`: la auditoría lleva ids, nunca el nombre. Y esta clase NO es dinero ni aforo: está
  * declarada control negativo en `CriticalPathGateTest`.
@@ -197,6 +203,165 @@ final class DependentAssigner
 
             return AssignmentOutcome::aborted('failed', $requestedIds);
         }
+    }
+
+    // ─── El MOSTRADOR (tanda 5, D14) ──────────────────────────────────────────
+
+    /**
+     * Los menores ACTIVOS del titular con el motivo por el que NO se pueden asignar ese día (`null` =
+     * asignable): lo que el operador ve en el modal del pedido y en el alta manual. Mismas reglas que
+     * el embudo, escritas una vez; el estado de las firmas se lee en UNA consulta.
+     *
+     * @return list<array{dependent: Dependent, reason: ?string}>
+     */
+    public function candidates(User $holder, string $date): array
+    {
+        $dependents = Dependent::query()
+            ->where('user_id', $holder->getKey())
+            ->active()
+            ->orderBy('id')
+            ->get();
+
+        if ($dependents->isEmpty()) {
+            return [];
+        }
+
+        $statuses = self::currentWaiverByDependent($dependents);
+        $ids = $dependents->map(fn (Dependent $d): int => (int) $d->getKey())->all();
+        $rejections = $this->rejections($ids, count($ids), $date, $dependents->keyBy(fn (Dependent $d): int => (int) $d->getKey()), $statuses);
+
+        $out = [];
+        foreach (array_values($ids) as $j => $id) {
+            $out[] = ['dependent' => $dependents->firstWhere('id', $id), 'reason' => $rejections[(string) $j] ?? null];
+        }
+
+        return $out;
+    }
+
+    /**
+     * MOSTRADOR — fija el CONJUNTO de menores de UNA línea (D14·3). Bajo el mismo lock que `assign()`.
+     *
+     *  - El conjunto que se sustituye es el de los menores ACTIVOS del titular. Una asignación a un menor
+     *    ya DESVINCULADO se CONSERVA y cuenta para el tope: «ajeno = retirado» (§4.9) no se relaja aquí,
+     *    y un modal no puede borrar en silencio lo que no enseña.
+     *  - Las reglas se aplican a lo que se AÑADE; lo que se mantiene no se re-valida (como `assign()`
+     *    con `insertOrIgnore`: una firma que quedó «anterior» no bloquea guardar la línea).
+     *  - FAIL-CLOSED: cualquier rechazo → no se escribe NADA y vuelven los rechazos por posición.
+     *  - Idempotente, auditado por fila (`dependents.assigned` / `dependents.unassigned`, con el operador
+     *    en `user_id`), y nunca lanza.
+     *
+     * @param  list<int>  $dependentIds  el conjunto que el operador quiere en la línea
+     */
+    public function sync(User $holder, int $orderId, int $orderItemId, array $dependentIds): SyncOutcome
+    {
+        $requested = array_values(array_unique(array_map('intval', $dependentIds)));
+
+        try {
+            return DB::transaction(function () use ($holder, $orderId, $orderItemId, $requested): SyncOutcome {
+                // ⚠️ PRIMERA sentencia: el lock de la fila del titular (`DependentRegistry`, `WaiverSigner`, `assign()`).
+                $locked = User::query()->whereKey($holder->getKey())->lockForUpdate()->firstOrFail();
+
+                $line = null;
+                foreach ($this->lines->forOrder($orderId, (int) $locked->getKey()) as $candidate) {
+                    if ($candidate->orderItemId === $orderItemId) {
+                        $line = $candidate;
+                        break;
+                    }
+                }
+                if ($line === null) {
+                    return SyncOutcome::aborted('no_line');
+                }
+                if (! $line->isEntry) {
+                    return SyncOutcome::rejected(['' => self::REASON_ENTRIES_ONLY]);
+                }
+
+                $current = DependentAssignment::query()->where('order_item_id', $orderItemId)->orderBy('id')->get();
+                $currentIds = $current->map(fn (DependentAssignment $a): int => (int) $a->dependent_id)->all();
+                $active = $this->dependentsOf($locked, array_values(array_unique(array_merge($currentIds, $requested))));
+
+                // Lo que el operador NO ve y por tanto no puede tocar: asignaciones a menores retirados.
+                $conserved = array_values(array_filter($currentIds, fn (int $id): bool => ! $active->has($id)));
+                $controllable = array_values(array_filter($currentIds, fn (int $id): bool => $active->has($id)));
+
+                if (count($conserved) + count($requested) > $line->quantity) {
+                    return SyncOutcome::rejected(['' => self::REASON_TOO_MANY]);
+                }
+
+                $toAdd = array_values(array_diff($requested, $controllable));
+                $toRemove = array_values(array_diff($controllable, $requested));
+
+                // Las reglas, SOLO sobre lo que se añade — y en la posición que ocupa en lo pedido.
+                $date = $line->date ?? DisplayTime::today()->toDateString();
+                $statuses = [];
+                $rejections = [];
+                $positionOf = array_flip($requested);
+                foreach ($this->rejections($toAdd, count($toAdd), $date, $active, $statuses) as $j => $reason) {
+                    $rejections[(string) $positionOf[$toAdd[(int) $j]]] = $reason;
+                }
+                if ($rejections !== []) {
+                    return SyncOutcome::rejected($rejections);
+                }
+
+                $added = 0;
+                $removed = 0;
+                foreach ($toRemove as $dependentId) {
+                    $deleted = DependentAssignment::query()
+                        ->where('order_item_id', $orderItemId)
+                        ->where('dependent_id', $dependentId)
+                        ->delete();
+                    if ($deleted > 0) {
+                        $removed++;
+                        AuditLogger::log('dependents.unassigned', $locked, [
+                            'dependent_id' => $dependentId,
+                            'order_item_id' => $orderItemId,
+                            'order_id' => $orderId,
+                        ]);
+                    }
+                }
+                foreach ($toAdd as $dependentId) {
+                    $written = DependentAssignment::query()->insertOrIgnore([
+                        'dependent_id' => $dependentId,
+                        'order_item_id' => $orderItemId,
+                        'created_at' => now(),
+                    ]);
+                    if ($written > 0) {
+                        $added++;
+                        AuditLogger::log('dependents.assigned', $locked, [
+                            'dependent_id' => $dependentId,
+                            'order_item_id' => $orderItemId,
+                            'order_id' => $orderId,
+                        ]);
+                    }
+                }
+
+                return new SyncOutcome($added, $removed, count($controllable) - count($toRemove));
+            });
+        } catch (Throwable $e) {
+            Log::warning('dependents.sync_failed', ['order_id' => $orderId, 'order_item_id' => $orderItemId, 'exception' => $e]);
+
+            return SyncOutcome::aborted('failed');
+        }
+    }
+
+    /**
+     * «Firma vigente» por menor, en UNA consulta (`WaiverStatus::forDependents()`): la caché que
+     * {@see rejections()} consulta con `??=`. Fuera del modo interno no hay firma que mirar: todo `true`.
+     *
+     * @param  Collection<int, Dependent>  $dependents
+     * @return array<int, bool>
+     */
+    private static function currentWaiverByDependent(Collection $dependents): array
+    {
+        if (! WaiverSettings::isInternal()) {
+            return $dependents->mapWithKeys(fn (Dependent $d): array => [(int) $d->getKey() => true])->all();
+        }
+
+        $out = [];
+        foreach (WaiverStatus::forDependents($dependents) as $id => $status) {
+            $out[$id] = $status->signed && ! $status->isOutdated();
+        }
+
+        return $out;
     }
 
     /**
