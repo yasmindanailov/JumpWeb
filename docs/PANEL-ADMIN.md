@@ -54,6 +54,16 @@ entradas. Incluye **empleados con permisos limitados**.
 - Respeta el **aforo** igual que la web.
 - Cobro de altas manuales (decidido): el admin las **marca como pagadas** (efectivo/datáfono)
   o las deja **pendientes**. **No se generan enlaces de pago.**
+- **Menores a cargo** (Fase 6 · C, tanda 5, `specs/menores-a-cargo.md` §9.10): al añadir una
+  **entrada** para un cliente con menores declarados, bajo la cantidad aparece «¿Para quién son estas
+  entradas?» con una casilla por menor —los que no tienen la exención firmada y vigente (en modo
+  interno) o ya son adultos ese día van deshabilitados con su motivo—; el resto de unidades son
+  adultos. Se comprueba ANTES de cobrar (un menor que dejó de ser asignable no crea ni cobra nada) y se
+  escribe DESPUÉS del cobro. ▶ En la **ficha del pedido**, cada entrada dice «Para: Lucas (9 años ·
+  exención ✓)» y el icono de personas de su fila abre **«Asignar menores»** (mismo permiso que editar
+  la línea, `orders.edit_item`; solo en entradas de pedidos que admiten cambios): marcar y desmarcar
+  deja rastro en la auditoría con el operador y sin el nombre. Un menor retirado de la cuenta del
+  cliente conserva su entrada y se enseña marcado como tal.
 
 ### 2.4 Verificación en puerta y canje por pulsera
 - Buscar el pedido (código, email o QR) → ver **qué entrada es** y el **color de pulsera**

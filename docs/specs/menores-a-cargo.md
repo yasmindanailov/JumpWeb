@@ -8,9 +8,12 @@
 > cesta, §9.9.6), U1 (el SERVIDOR, §9.9.7) y **U2 (el CAJÓN, §9.9.8: el selector en los pasos 3 y 4, la
 > puerta 2, el «Para:», los rótulos en `tickets.dependents`, guion headless 19/19 por las dos puertas)**;
 > sigue U4, el OJO del owner. ⚠️ §9.9.8·4 y ·5: dos defectos que la suite no veía y el guion cazó.**
-> ▶ **TANDA 5 — el PANEL (D14) — EN EJECUCIÓN desde el 2026-08-27 a las 22:20** (carril A,
-> `DECISIONES #208`): diseño de ejecución MEDIDO en **§9.10** (el permiso, el gate, la semántica del
-> `sync`, el alta manual). Si vienes a eso, **empieza por §9.10**.
+> ▶ **TANDA 5 — el PANEL (D14) — EN EL ÁRBOL (2026-08-27 noche, carril A, `DECISIONES #208`)**:
+> las cinco unidades de **§9.10.4** (`8ab0f5c`): la ficha del pedido dice «Para: Lucas (9 años ·
+> exención ✓)», la acción «Asignar menores» de la línea fija el conjunto bajo el lock, y el alta manual
+> ofrece los menores y escribe después de cobrar. **+45 tests, 4/4 mutaciones, sonda de 16 `sync()`
+> concurrentes (con lock 4/4 PASA; sin él, deadlocks), headless 13/13.** Queda el OJO del owner.
+> Si vienes a eso, **empieza por §9.10.4 y sus trampas**; el diseño está en §9.10.2.
 > ▶ **EMPIEZA POR §9.9** —§9.9.2 las decisiones del owner
 > (⚠️ la exención firmada es CONDICIÓN para asignar; el panel NO entra, rectificado),
 > §9.9.1 lo que el código corrige al cuerpo (§4.7 «esa pantalla ya existe» era FALSA; la cesta del
@@ -1193,3 +1196,100 @@ pendientes del owner los DOS valores de retención.
 
 Lo que NO entra: la puerta (subsistema A, después) · un permiso propio (D14·2) · tocar
 `resources/js/sidebar/**` (el cliente ya lee `event-data`; nada que invalidar).
+
+#### 9.10.4 EJECUTADA — las cinco unidades (2026-08-27 noche, carril A; `1e98ec1` → `8ab0f5c`)
+
+> Qué existe, en qué se apartó de §9.10.2, lo medido y lo que queda. Cada unidad se empujó verde
+> antes de la siguiente (P1 `3219eb7` · P2 `172e3f2` · P3 `e257f46` · P4 `8ab0f5c`), dos de ellas
+> rebasadas sobre cortes del carril C que llegaron mientras corría el gate.
+
+**Qué existe**
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| El dominio del mostrador | `Identity\Services\DependentAssigner::{sync,candidates}` · `Identity\Contracts\SyncOutcome` | D14·3 tal cual: el conjunto de una línea bajo el lock del titular, reglas solo sobre lo que se AÑADE, lo asignado a un menor retirado se CONSERVA y cuenta para el tope, fail-closed por posición, idempotente, auditado por fila con el operador, nunca lanza. `candidates()` es la lista con motivos que ven el modal y el alta manual (una consulta de firmas) |
+| Las firmas por lotes | `WaiverStatus::forDependents()` | Tres consultas sean 1 o 20 los menores; paridad con `forDependent()` probada menor a menor (`WaiverStatusBatchTest`) |
+| La acción de auditoría | `AuditLog::ACTIONS` → `dependents.unassigned` | Sin etiqueta en el visor del pedido: `orderActions()` solo mira `orders.`/`order_items.` (§9.10.1·5) |
+| La lectura | `Filament\Resources\Orders\Support\AssignedDependents` · `items-list.blade.php` (cabecera de la sub-card) | «Para: Lucas (9 años · exención ✓), Vera (6 años · sin exención firmada · retirado de la cuenta)» — la edad en la fecha de la visita, la marca solo en interno, solo entradas; el rótulo se compone en PHP (trampa 1) |
+| La acción | `Pages/Concerns/AssignsDependents` (trait) + un `use` en `ViewOrder` + el icono `heroicon-o-users` en la fila de la sub-card | `mountAction('assignDependents', { item })` desde el icono, que solo se pinta en ENTRADAS de un titular con menores para quien tiene `orders.edit_item` y mientras `canEditItem()`. El handler revalida las cuatro capas y audita cada bloqueo como `orders.item_edit_blocked` con `dependents: true` |
+| El alta manual | `CreateManualOrderPage` (`sel_dependent_ids`, `dependentRequests()`, `manualDependentOptions()`) · `manual-order-cart.blade.php` | El selector bajo la cantidad (solo cliente + fecha + entrada + algún menor), la línea guarda `dependent_ids` + `dependent_display`, `check()` antes de `fulfill()` y `assign()` después; `cartToOrderCart()` no cambió: Booking sigue sin ver un id |
+| Rótulos | `lang/es/admin.php` → `orders.dependents.*` (30) | ES solo, como el resto del panel |
+
+**En qué se apartó de §9.10.2 (o lo precisa)**
+
+1. **`no_line` y `entries_only` son dos cosas**: un ítem que no es del pedido del titular NO EXISTE
+   (`abortedBecause = no_line`, el handler lo trata como `not_found`); un pack es un RECHAZO de línea
+   (`rejections['']` = `entries_only`) con su mensaje. D14·3 los juntaba bajo `no_line`.
+2. **La primera capa contra un menor no asignable la pone el FORMULARIO, no el dominio**: Filament
+   valida cada valor de la `CheckboxList` contra las opciones habilitadas al enviar, así que una casilla
+   deshabilitada (sin firma, adulta ese día) no llega a `sync()` ni forzándola —el test lo mide con una
+   publicación de versión nueva entre abrir el modal y guardar: `assertHasActionErrors()` y NADA
+   escrito—. El dominio sigue siendo la última capa (`DependentAssignerTest`, para lo que no pasa por el
+   formulario: la API de mañana, una app nativa).
+3. **El modal SIEMPRE tiene schema**: con `schema()` vacío Livewire no puede montar el formulario de la
+   acción (`$mountedActionSchema0` no existe) y la acción revienta antes del handler. Un pack, un ítem
+   ajeno o un pedido sin titular reciben un `Placeholder` con el motivo, y el handler lo vuelve a
+   comprobar y lo audita.
+4. **El «Como máximo N» es presentación**: Filament v4 no expone un getter del `helperText`
+   (`belowContent` sin lectura), así que el tope no se afirma por el texto sino por el camino completo
+   (la acción rechaza `too_many` contando al conservado).
+5. Los mensajes del `check()` del alta manual son los del cliente (`api.dependents.*`): `check()`
+   devuelve mensajes traducidos, no códigos, y un operador los entiende igual («Falta su exención
+   firmada…»). El modal del pedido sí usa los suyos (`orders.dependents.reasons.*`).
+
+**Lo medido**
+
+- **Suite: 3132 → 3177 (+45), 18.048 → 18.680**, en cuatro cortes: P1 +11 (los 8 del `sync` y los 3 de
+  la paridad) · P2 +5 · P3 +12 · P4 +5 — y los 12 del `#209` del carril C, que llegó en medio. Cada
+  push con el gate completo (docs-check · Pint · build · JS · suite).
+- **Mutaciones del dominio, 4/4 muerden**: el tope ignora a los conservados (M1) · se re-valida lo que se
+  mantiene (M2) · nunca quita (M3) · `forDependents()` ignora la versión vigente (M4).
+- **Sonda de concurrencia sobre MySQL** (`sync-probe.php`, 16 `pcntl_fork` sobre la MISMA línea de 2
+  unidades con conjuntos alternos `{Lucas} · {Vera} · {Lucas, Max} · {}`): **con el lock, 16/16
+  terminan**, se serializan (34 → 418 ms escalonados), el conjunto final es exactamente el del último en
+  terminar y las escrituras netas coinciden con las auditorías (32 = 32) — **4 pasadas, 4 PASA**.
+  **Sin `lockForUpdate()` en `sync()`** (mutación): **3 de 4 pasadas abortan** 2–4 procesos con
+  `Deadlock found when trying to get lock` (MySQL, entre borrados e inserciones cruzados) — el operador
+  vería «No se pudo guardar la asignación» bajo contención— y TODAS pierden actualizaciones (8–10
+  escrituras netas frente a 30–32). ⚠️ **La lección de instrumento, otra vez**: el primer veredicto
+  exigía «32 escrituras = orden serial» y era FALSO —bajo el lock el orden de llegada es arbitrario y
+  cada orden serial cambia entre 5 y 32 filas—: con el lock salió «FALLA» con 30. Lo invariante bajo
+  serialización es «cero abortos» y «el conjunto final = el del último en confirmar»; la pérdida de
+  actualizaciones se ve en el número, pero no se puede afirmar con un umbral. Y **sin el lock la sonda
+  puede pasar por azar** (1 de 4): lo que la distingue es el aborto, no el conjunto final.
+- **Pasada headless del panel (Playwright en el contenedor, fuera del repo): 13/13** — la ficha sin
+  «Para:» y con UN icono (solo la entrada) · el modal con dos casillas, Vera deshabilitada con su motivo
+  · guardar con Lucas → «Menores asignados: Lucas.», «Para: Lucas (9 años · exención ✓)» en la sub-card,
+  fila y auditoría con `user_id` = el operador y sin el nombre · reabrir con Lucas pre-marcado, desmarcar →
+  «Sin menores asignados», auditoría de baja · **el alta manual**: el selector aparece con cliente +
+  fecha + entrada (Lucas habilitado, Vera deshabilitada con motivo), la línea dice «Para: Lucas»,
+  «Cobrar y crear pedido» → pedido `paid` con la asignación y la ficha resultante con el «Para:» ·
+  cero `pageerror`. Seis capturas revisadas. Fixture y andamio en `/tmp` y `/root/e2e` del contenedor;
+  se limpia sola.
+- Pint ✓ · docs-check ✓ · `docs-check` sigue en 34 modelos (no hay modelo nuevo).
+
+**Lo que queda** — el OJO del owner en su navegador (§9.10.4 es headless: mide, no valida): la ficha de
+un pedido con menores, el modal, y el alta manual con un cliente con menores. Y del cuerpo de la spec,
+los DOS valores de retención.
+
+**Trampas (lo que la ejecución enseñó)**
+
+1. **Livewire intercala `<!--[if BLOCK]><![endif]-->` en cada `@if` del render**: un rótulo compuesto en
+   Blade con tres `@if` («Lucas (9 años · exención ✓)») sale partido en el HTML y no se puede afirmar
+   —ni leer— de una pieza. Se compone en PHP (`AssignedDependents::label()`) y la vista emite UN `{{ }}`.
+2. **El HTML de un modal de acción no forma parte del render del componente en el test de Livewire**:
+   `assertSee()` tras `mountAction()` no ve el modal. Lo que se afirma es el SCHEMA montado
+   (`getSchema(getMountedActionSchemaName())` → `getComponent(fn ($c) => $c instanceof CheckboxList)` →
+   `getOptions()`, `isOptionDisabled()`, `getDescription()`).
+3. **En interno, `assign()` SALTA a un menor sin firma** (`#202`·2): un test que «asigna a Vera sin
+   firma» para enseñar «sin exención firmada» no asigna nada. El único camino a esa marca es asignar en
+   externo y pasar la instalación a interno después — y así se prueba.
+4. **`email_verified_at` no es asignable en masa en `User`** (`forceCreate`), y en interno `WaiverSigner`
+   no firma sin él: un fixture de sonda muere dos veces antes de arrancar.
+5. **Filament: `OrderResource::getUrl()` devuelve la URL ABSOLUTA**; la espera del login del panel tiene que
+   ser «la URL ya no es `/admin/login`» (`/admin(\/|$)/` casa con la propia página de login); y el
+   `set()` de Livewire v3 vive en `component.$wire`, con los componentes nombrados por su CLASE
+   (`App\Filament\Pages\CreateManualOrderPage`).
+6. **El contador de `ESTADO.md` se mide sobre el árbol CONJUNTO**: dos pushes cayeron por no ser
+   fast-forward mientras corría el gate (el carril C empujaba a la vez), y el rebase dejó un conflicto en
+   el contador que se resolvió MIDIENDO (3160 sobre el árbol fusionado), no sumando.

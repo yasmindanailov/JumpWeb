@@ -20,8 +20,10 @@
 > · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN EN CURSO desde el 2026-08-27
 >   a las 22:20 (hora de Madrid; ⚠️ el contenedor va en UTC, 2 h menos): el PANEL de menores (D14) y
 >   después el SUBSISTEMA A (carné QR + puerta).** `[DECIDIDO owner]` **`#208`**: primero el panel,
->   carné de 20 caracteres, spec de la puerta APROBADA. Diseño de ejecución del panel en
->   `specs/menores-a-cargo.md` **§9.10** (medido antes de escribir). **Ficheros de este carril**:
+>   carné de 20 caracteres, spec de la puerta APROBADA. ✅ **EL PANEL ESTÁ EN EL ÁRBOL** (tanda 5,
+>   `specs/menores-a-cargo.md` **§9.10.4**, `8ab0f5c`: +45 tests, 4/4 mutaciones, sonda de concurrencia
+>   con y sin lock, headless 13/13 con capturas); queda el OJO del owner. ▶ **Sigue la PUERTA**
+>   (`specs/identidad-qr-puerta.md`, diseño de ejecución en su §9). **Ficheros de este carril**:
 >   `app/Domain/Identity/**` (`DependentAssigner`, `WaiverStatus`), `app/Filament/Resources/Orders/**`,
 >   `app/Filament/Pages/CreateManualOrderPage.php`, `resources/views/filament/orders/items-list.blade.php`,
 >   `resources/views/filament/pages/partials/manual-order-cart.blade.php`, `lang/es/admin.php`
@@ -936,7 +938,7 @@ retención.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores + puerta** | **SESIÓN EN CURSO (2026-08-27 desde las 22:20)**: `[DECIDIDO owner]` `#208` — **primero el PANEL de menores (D14, `specs/menores-a-cargo.md` §9.10, en ejecución)**, después el **subsistema A** (carné QR de 20 caracteres + pantalla de puerta; spec APROBADA). La tanda 4 (el embudo) TERMINÓ en código la sesión anterior (`#202`: U0 · U1 · U2, guion §5.undecies 19/19); sigue **U4, el ojo del owner**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y del embudo (§5.undecies), y los DOS valores de retención en meses |
+| **A · menores + puerta** | **SESIÓN EN CURSO (2026-08-27 desde las 22:20)**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) está EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ▶ **En curso: el subsistema A** (carné QR de 20 caracteres + pantalla de puerta; spec APROBADA, diseño de ejecución en su §9). Del owner siguen: su ✅ en navegador del panel (§9.10.4 «lo que queda»), de la zona (guion §5.decies) y del embudo (§5.undecies), y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son SEIS tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas), `#205` (el CTA doble de móvil) y **`#209` (el botón de comprar YA SALE EN NARANJA en esta máquina)**. ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y dos cosas concretas: el **SVG del logotipo** en `public/img/client-logo.svg` y **cuál de las TRES variantes de «El parque»** para la tanda 3 (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`; preguntado el 28: «todavía no lo decido»). ▶ ✅ **El artboard del menú en MÓVIL YA LLEGÓ** (dentro de `Landing PJP Modos`, 2026-08-28): la 2c·4b se desbloquea, pero **su barra inferior son 3 iconos + 1 CTA y la nuestra es un CTA doble (`#205`)** — eso hay que contrastarlo con él antes de rehacerla. ▶ `[PENDIENTE: owner]` **avisar cuando el color de acción no alcance AA** (spec §15.8). ▶ Ya validó `#193` y `#194` |
 

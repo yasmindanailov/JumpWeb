@@ -2038,12 +2038,18 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
     - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
           sesión; D14 se conserva como diseño). ▶ **Esa sesión es la del carril A del 2026-08-27 noche**
           (`#207`, `#208`): **EN EJECUCIÓN como tanda 5, spec §9.10** (abajo).
-  - [ ] **C · tanda 5 — el PANEL (D14)** (2026-08-27 noche, carril A, `#208`; spec **§9.10**, diseño de
-        ejecución medido): la ficha del pedido enseña «Para: Lucas (9 años · exención ✓)» por línea de
-        entrada (una consulta de asignaciones + una de firmas), la acción «Asignar menores» de la línea
-        fija el CONJUNTO (`DependentAssigner::sync()`, mismas reglas de D3 sobre lo que se AÑADE, mismo
-        lock, fail-closed, auditado con el operador), y el alta manual ofrece los menores por línea de
-        entrada y escribe DESPUÉS de `ManualOrderFulfiller::fulfill()`, con `check()` ANTES de cobrar.
+  - [x] **C · tanda 5 — el PANEL (D14)** (2026-08-27 noche, carril A, `#208`; spec **§9.10**, diseño de
+        ejecución medido y **§9.10.4 ejecutada**, `3219eb7` → `8ab0f5c`): la ficha del pedido enseña
+        «Para: Lucas (9 años · exención ✓)» por línea de entrada (`AssignedDependents`, presupuesto
+        constante: asignaciones + `WaiverStatus::forDependents()`), la acción «Asignar menores» de la
+        línea (trait `AssignsDependents`, misma familia que Gestionar) fija el CONJUNTO con
+        `DependentAssigner::sync()` —reglas de D3 sobre lo que se AÑADE, lo asignado a un menor retirado
+        se conserva y cuenta, mismo lock, fail-closed por posición, auditado con el operador— tras las
+        cuatro capas de defensa (`orders.edit_item` · `editItemBlockedReason()` con IDOR · solo entradas
+        · el dominio), y el alta manual ofrece los menores por línea de entrada, `check()` ANTES de
+        cobrar y `assign()` DESPUÉS de `fulfill()`. **+45 tests · 4/4 mutaciones · sonda de 16 `sync()`
+        concurrentes sobre MySQL (con lock 4/4 PASA; sin él 3/4 abortan por deadlock) · headless 13/13
+        con capturas.** Sigue 🟦 por el OJO del owner (§9.10.4 «lo que queda»).
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).
 - [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ **EN COLA en la
       sesión del carril A del 2026-08-27 noche** (`[DECIDIDO owner]` `#207` + **`#208`**: va DESPUÉS del
