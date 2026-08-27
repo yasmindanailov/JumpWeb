@@ -13,15 +13,18 @@ use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerRegistrar;
+use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
 use BackedEnum;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
@@ -120,6 +123,14 @@ class CreateManualOrderPage extends Page
     private ?Collection $addonsMemo = null;
 
     private ?int $addonsMemoFor = null;
+
+    /**
+     * Memo por petición de los menores a cargo del cliente en la fecha en curso (tanda 5, D14·5): el
+     * selector lo pide desde `options`, `descriptions`, `disableOptionWhen` y `visible` en el mismo render.
+     *
+     * @var array{key: string, options: array<int, string>, descriptions: array<int, string>, disabled: list<int>, names: array<int, string>}|null
+     */
+    private ?array $dependentOptionsMemo = null;
 
     public static function canAccess(): bool
     {
@@ -309,6 +320,7 @@ class CreateManualOrderPage extends Page
                                 $set('sel_time', null);
                                 $set('sel_qty', $this->defaultQtyFor((int) $get('sel_product_id')));
                                 $set('event_data', []);
+                                $set('sel_dependent_ids', []);
                                 // Pre-carga los complementos incluidos/obligatorios y el default de
                                 // cada grupo del producto elegido (igual que la web).
                                 $this->initManualAddonDefaults();
@@ -329,7 +341,11 @@ class CreateManualOrderPage extends Page
                                 ?? DisplayTime::today()->addMonths(PaymentSettings::purchaseHorizonMonths()))
                             ->disabledDates(fn (): array => $this->disabledOfferDates())
                             ->live()
-                            ->afterStateUpdated(fn (callable $set) => $set('sel_time', null)),
+                            ->afterStateUpdated(function (callable $set): void {
+                                $set('sel_time', null);
+                                // La asignabilidad de un menor depende de la FECHA (D13): se re-elige.
+                                $set('sel_dependent_ids', []);
+                            }),
 
                         Select::make('sel_time')
                             ->label(__('admin.orders.create_manual.time'))
@@ -352,6 +368,20 @@ class CreateManualOrderPage extends Page
                             // Reactivo: al cambiar el nº de invitados, el widget de complementos
                             // recalcula los `per_guest` (uno por invitado) y su importe.
                             ->live(onBlur: true),
+
+                        // Menores a cargo (Fase 6 · C, tanda 5, `specs/menores-a-cargo.md` §9.10 D14·5): para
+                        // quién son estas ENTRADAS. Solo con cliente, fecha y entrada, y solo si el cliente
+                        // tiene alguno; los no asignables van deshabilitados con su motivo (las mismas reglas
+                        // que el embudo, `DependentAssigner::candidates()`). Se guarda en la línea y se escribe
+                        // DESPUÉS de cobrar (`create()`), nunca dentro de la transacción del cobro.
+                        CheckboxList::make('sel_dependent_ids')
+                            ->label(__('admin.orders.dependents.field_label'))
+                            ->helperText(__('admin.orders.dependents.manual_hint'))
+                            ->options(fn (): array => $this->manualDependentOptions()['options'])
+                            ->descriptions(fn (): array => $this->manualDependentOptions()['descriptions'])
+                            ->disableOptionWhen(fn (string $value): bool => in_array((int) $value, $this->manualDependentOptions()['disabled'], true))
+                            ->columns(1)
+                            ->visible(fn (): bool => $this->manualDependentOptions()['options'] !== []),
 
                         // Datos del evento del pack (reactivo: solo hay UNA selección en curso).
                         Group::make()
@@ -433,6 +463,26 @@ class CreateManualOrderPage extends Page
 
         $eventData = is_array($this->data['event_data'] ?? null) ? $this->data['event_data'] : [];
 
+        // Menores a cargo (D14·5): solo los ASIGNABLES del cliente en esa fecha (un id forzado que no lo
+        // sea se descarta aquí y lo volvería a rechazar `check()`), y nunca más menores que unidades —
+        // con aviso, no recortando en silencio.
+        $dependentIds = [];
+        $dependentDisplay = [];
+        if (! $type->isPack()) {
+            $dependentOptions = $this->manualDependentOptions();
+            $assignable = array_values(array_diff(array_keys($dependentOptions['options']), $dependentOptions['disabled']));
+            $dependentIds = array_values(array_intersect(
+                array_values(array_unique(array_map('intval', (array) ($this->data['sel_dependent_ids'] ?? [])))),
+                $assignable,
+            ));
+            if (count($dependentIds) > $qty) {
+                Notification::make()->warning()->title(__('admin.orders.dependents.manual_too_many'))->send();
+
+                return;
+            }
+            $dependentDisplay = array_map(fn (int $id): string => $dependentOptions['names'][$id], $dependentIds);
+        }
+
         // #225 (DISPLAY): señal de la línea, para AVISAR en el carrito de que un producto con señal
         // cobra ahora solo la señal del principal y el resto (+ complementos) se cobra en el parque.
         // Mismo cálculo data-driven que la landing (`depositCents` sobre el subtotal del principal).
@@ -455,6 +505,10 @@ class CreateManualOrderPage extends Page
             'line_total_cents' => $this->estimateLineCents($type, $date, $qty, $addons),
             // null = sin señal (se cobra el total). Si hay señal, son los céntimos que se cobran AHORA.
             'deposit_cents' => $hasLineDeposit ? $lineDepositCents : null,
+            // Menores a cargo (D14·5): ids para Identity (NUNCA llegan a Booking: `cartToOrderCart()` no
+            // los copia) y nombres solo para el resumen del operador.
+            'dependent_ids' => $dependentIds,
+            'dependent_display' => $dependentDisplay,
         ];
 
         // Resetea la selección para la siguiente línea (preserva cliente, método y paso).
@@ -463,6 +517,7 @@ class CreateManualOrderPage extends Page
         $this->data['sel_time'] = null;
         $this->data['sel_qty'] = null;
         $this->data['event_data'] = [];
+        $this->data['sel_dependent_ids'] = [];
         $this->selAddonQty = [];
         $this->selAddonGroup = [];
         $this->addonsMemo = null;
@@ -854,6 +909,22 @@ class CreateManualOrderPage extends Page
 
         $method = (string) ($this->data['payment_method'] ?? '');
 
+        // Menores a cargo (D14·5, D3): FASE 1 ANTES del dinero. Un rechazo —el menor dejó de ser del
+        // cliente, no tiene la exención vigente, es adulto ese día— no crea ni cobra NADA: el operador
+        // lo arregla con el cliente delante. Sin menores en el carrito no comprueba nada.
+        $dependentRequests = $this->dependentRequests();
+        $rejections = app(DependentAssigner::class)->check($customer, $dependentRequests);
+        if ($rejections !== []) {
+            $reasons = array_values(array_unique(array_merge(...array_values($rejections))));
+            Notification::make()
+                ->danger()
+                ->persistent()
+                ->title(__('admin.orders.dependents.manual_check_failed', ['reasons' => implode(' · ', $reasons)]))
+                ->send();
+
+            return;
+        }
+
         try {
             $order = app(ManualOrderFulfiller::class)->fulfill($customer, $this->cartToOrderCart(), $method);
         } catch (ReservationException $e) {
@@ -870,12 +941,93 @@ class CreateManualOrderPage extends Page
             return;
         }
 
+        // Menores a cargo (D14·5, §9.9.1): FASE 2 DESPUÉS de que `fulfill()` devuelva, FUERA de su
+        // transacción. El cobro ya está tomado y el pedido en pie; si esto falla, el operador lo ve y lo
+        // asigna desde la ficha del pedido («Asignar menores»). Nunca lanza.
+        $outcome = app(DependentAssigner::class)->assign($customer, (int) $order->id, $dependentRequests);
+        if ($outcome->skipped > 0 || $outcome->abortedBecause !== null) {
+            Notification::make()
+                ->warning()
+                ->persistent()
+                ->title(__('admin.orders.dependents.manual_assign_failed', ['count' => max(1, $outcome->skipped)]))
+                ->send();
+        }
+
         Notification::make()
             ->success()
             ->title(__('admin.orders.create_manual.created', ['code' => $order->code]))
             ->send();
 
         $this->redirect(OrderResource::getUrl('view', ['record' => $order]));
+    }
+
+    /**
+     * Las líneas del carrito en la forma que `DependentAssigner` espera (índice = posición en la cesta,
+     * que es el orden en que `OrderCreator` crea los ítems, D2). Las líneas sin menores viajan igual:
+     * el asignador las ignora, pero el RECUENTO de líneas es la guarda de correlación.
+     *
+     * @return list<array{index:int, product_id:int, date:string, quantity:int, dependent_ids:list<int>}>
+     */
+    private function dependentRequests(): array
+    {
+        $lines = [];
+        foreach (array_values($this->cart) as $index => $line) {
+            $lines[] = [
+                'index' => $index,
+                'product_id' => (int) $line['ticket_type_id'],
+                'date' => (string) $line['date'],
+                'quantity' => (int) $line['qty'],
+                'dependent_ids' => array_values(array_map('intval', (array) ($line['dependent_ids'] ?? []))),
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Los menores a cargo del cliente en la fecha en curso, como opciones del selector (D14·5): vacío sin
+     * cliente, sin fecha, sin producto o con un pack. Memo por (cliente, fecha).
+     *
+     * @return array{key: string, options: array<int, string>, descriptions: array<int, string>, disabled: list<int>, names: array<int, string>}
+     */
+    private function manualDependentOptions(): array
+    {
+        $empty = ['key' => '', 'options' => [], 'descriptions' => [], 'disabled' => [], 'names' => []];
+        $customerId = (int) ($this->data['customer_id'] ?? 0);
+        $rawDate = (string) ($this->data['sel_date'] ?? '');
+        $type = $this->selectedProduct();
+        if ($customerId <= 0 || $rawDate === '' || $type === null || $type->isPack()) {
+            return $empty;
+        }
+
+        $date = Carbon::parse($rawDate)->toDateString();
+        $key = "{$customerId}|{$date}";
+        if (($this->dependentOptionsMemo['key'] ?? null) === $key) {
+            return $this->dependentOptionsMemo;
+        }
+
+        $customer = User::find($customerId);
+        if ($customer === null) {
+            return $empty;
+        }
+
+        $day = CarbonImmutable::createFromFormat('!Y-m-d', $date, 'UTC');
+        $options = [];
+        $descriptions = [];
+        $disabled = [];
+        $names = [];
+        foreach (app(DependentAssigner::class)->candidates($customer, $date) as $candidate) {
+            $dependent = $candidate['dependent'];
+            $id = (int) $dependent->getKey();
+            $names[$id] = (string) $dependent->name;
+            $options[$id] = __('admin.orders.dependents.option', ['name' => $dependent->name, 'age' => $dependent->ageOn($day)]);
+            if ($candidate['reason'] !== null) {
+                $descriptions[$id] = __('admin.orders.dependents.reasons.'.$candidate['reason']);
+                $disabled[] = $id;
+            }
+        }
+
+        return $this->dependentOptionsMemo = compact('key', 'options', 'descriptions', 'disabled', 'names');
     }
 
     // ─── Helpers de datos ─────────────────────────────────────────────────

@@ -482,8 +482,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3172 en verde** (18.647 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
-  por el carril A tras **P3** de la tanda 5 de menores (`#208`, spec §9.10): **+12 tests y +109
+- Suite **3177 en verde** (18.680 aserciones, `--parallel` **~70 s**), medida el 2026-08-27 por la noche
+  por el carril A tras **P4** de la tanda 5 de menores (`#208`, spec §9.10): **+5 tests y +33 aserciones**
+  — el alta manual (`CreateManualOrderDependentsTest`: el selector por línea de entrada con motivos, la
+  línea guarda solo ids asignables y rechaza más menores que unidades, `check()` ANTES de cobrar —un
+  rechazo no crea ni cobra nada— y `assign()` DESPUÉS de `fulfill()`, con el fallo que deja el pedido en
+  pie y avisa). Antes:
+- Suite **3172 en verde** (18.647 aserciones), tras **P3** de la tanda 5 de menores: **+12 tests y +109
   aserciones** — la acción «Asignar menores» de la línea (`AssignDependentsActionTest`: quién ve el icono,
   qué enseña el modal —leído por el SCHEMA montado, porque el HTML del modal no forma parte del render
   del componente en el test—, pone y quita con auditoría del operador, mismo conjunto = sin cambios,

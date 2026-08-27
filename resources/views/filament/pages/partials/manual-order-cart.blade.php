@@ -24,6 +24,12 @@
                                 @endforeach
                             </ul>
                         @endif
+                        {{-- Menores a cargo (tanda 5, D14·5): para quién son estas entradas. --}}
+                        @if (! empty($line['dependent_display'] ?? []))
+                            <p class="mt-0.5 text-xs text-gray-600 dark:text-gray-300" data-cart-dependents>
+                                {{ __('admin.orders.dependents.for') }} {{ implode(', ', $line['dependent_display']) }}
+                            </p>
+                        @endif
                         {{-- #225 (display): producto con señal → se cobra ahora solo la señal. --}}
                         @if (! is_null($line['deposit_cents'] ?? null))
                             <p class="mt-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
