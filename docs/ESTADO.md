@@ -31,9 +31,18 @@
 >   `/recuperar-contrasena`; 2/2 purga, 4/4 se conservaba desde la home; causa: `props.userId` llegaba
 >   del HTML y no la leía nadie)— está cerrado: el dueño se siembra en `index.js` antes de montar, guarda
 >   estructural con 2 mutaciones que muerden, sonda re-corrida 10/10 (spec §9.9.6; ficha de `DEUDA.md`
->   retirada). ▶ **Orden de trabajo**: ~~U0~~ → **U1 (el servidor: tabla, `DependentAssigner`,
->   `Booking\Contracts\CheckoutLines`, `CartLine.dependent_ids`, `OrdersController`)** → U2 (el cajón)
->   → U4 (el ojo del owner). Cada unidad se empuja verde.
+>   retirada). ✅ **U1 HECHA y empujada (madrugada del 28)**: el SERVIDOR entero (spec **§9.9.7**):
+>   `dependent_assignments` + `DependentAssignment` · `Dependent::referenced()` (UN predicado para
+>   `remove()`/`anonymize()`/poda) · `Booking\Contracts\CheckoutLines` + reader + doble · `DependentAssigner`
+>   (`check()` ANTES del dinero → 422 por campo; `assign()` tras el `allow` bajo el lock del titular,
+>   idempotente, sin lanzar) · `CartLine.dependent_ids` en el contrato y en `CartPayload` (Booking no lo
+>   ve) · `OrdersController::store()` · `event-data` con `dependents[]` · `anonymize()` y el export ·
+>   `api.dependents.*` ×3 · la paridad mínima de `cart.js`. **9 mutaciones, las 9 muerden · 6 escenarios
+>   + Redsys sobre MySQL ✓ · sonda HTTP de 10 pasos ✓.** ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ →
+>   **U2 (el cajón: `toCheckoutItems()`, `assignment.js`, casillas en los pasos 3 y 4, la puerta 2 en
+>   `admission.js`, paso 6 y tarjeta, rótulos ×3, manifiesto con caso de ENTRADA, techos medidos)** →
+>   U4 (el ojo del owner). Cada unidad se empuja verde. ⚠️ **U2 entra en `layout.blade.php`** (la lista
+>   de claves con sesión): aviso al carril C ya dado abajo.
 >   ▶ **Para el agente del C (el tema/armazón)**: esta tanda tocará **`resources/views/components/layout.blade.php`**
 >   (solo la lista de claves `account.dependents.*` que viajan con sesión, en U2) y **NO toca**
 >   `public/css/*`, `nav.blade.php`, `menu.blade.php` ni `app.js` salvo, en U0, la siembra del dueño de
@@ -404,9 +413,21 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3091 en verde** (17.769 aserciones, `--parallel` **~68 s** medidos el 2026-08-27 por la noche
-  en la máquina del carril A sobre el árbol fusionado con `#204`; ~58 s en la del C, ~42 s en la del B) ·
-  ▶ **+1 test PHP y +1 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U0**, la purga
+- Suite **3121 en verde** (17.936 aserciones, `--parallel` **~68 s** medidos el 2026-08-28 de madrugada
+  en la máquina del carril A; ~58 s en la del C, ~42 s en la del B) ·
+  ▶ **+30 tests PHP y +1 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U1**, el
+  servidor — spec §9.9.7): `DependentAssignerTest` (17), `OrdersDependentAssignmentTest` (8),
+  +1 `DependentRegistryTest`, +3 `DependentPrivacyTest`, +1 `ModuleContractsTest` (el doble de
+  `CheckoutLines` con el orden invertido); `npm run test:js` **733 → 734** (`sanitizeLine` con
+  `dependent_ids`). **9 mutaciones, las 9 muerden** (anti-IDOR · firma · minoría en la visita ·
+  idempotencia · correlación · `anonymize()` · referencia · el `check()` del controlador · `event-data`).
+  Los SEIS escenarios de `purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos ✓ (no
+  ejercitan la asignación: control de no-regresión por el `CRITICAL_RE`). Sonda HTTP de 10 pasos ✓.
+  Chunk 234,43 → **234,70 KiB** (techo 235). `docs-check` **34 modelos · 82 migraciones**.
+  ⚠️ **Dos trampas de test pagadas**: el tercer argumento de `assertDatabaseHas` es la CONEXIÓN, no un
+  mensaje («Database connection [mensaje] not configured»); y `assertJsonPath` no resuelve claves con
+  puntos (`items.0.dependent_ids.1`) — se lee `json('error.fields')` y se compara la clave literal. Antes:
+  ▶ **+1 test PHP y +1 JS en el corte anterior** (carril A, menores a cargo · tanda 4 · **U0**, la purga
   de la cesta): `SidebarMountTest::test_the_engine_seeds_the_cart_owner_from_the_boot_before_mounting`
   —guarda ESTRUCTURAL sobre `index.js`, porque la suite no arranca el motor— con **2 mutaciones, las 2
   muerden** (sin siembra · siembra después de montar), y el caso «sembrar el dueño ANTES de restaurar»
@@ -730,7 +751,7 @@ la usa.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0 hecha** (la purga de la cesta) y sigue **U1, el servidor**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0 hecha** (la purga de la cesta, §9.9.6) y **U1 hecha** (el servidor entero, §9.9.7); sigue **U2, el cajón**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
 

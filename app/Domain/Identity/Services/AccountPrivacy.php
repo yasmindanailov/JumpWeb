@@ -43,6 +43,7 @@ class AccountPrivacy
     public function __construct(
         private readonly AccountCredentials $credentials,
         private readonly CustomerOrderHistory $orders,
+        private readonly DependentAssigner $assigner,
     ) {}
 
     /**
@@ -132,7 +133,41 @@ class AccountPrivacy
                     'born_on' => $dependent->born_on->toDateString(),
                     'added_at' => $dependent->created_at?->toIso8601String(),
                 ])->values()->all(),
-            'orders' => $this->orders->exportFor((int) $user->id),
+            'orders' => $this->withAssignedDependents($this->orders->exportFor((int) $user->id)),
         ];
+    }
+
+    /**
+     * Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D6, `RGPD-04`): a cada
+     * línea exportada se le añaden los NOMBRES de los menores para los que era, y se le retira el `id`
+     * que Booking le puso solo para poder cruzar. El cruce es de Identity porque la asignación es suya.
+     *
+     * @param  list<array<string, mixed>>  $orders
+     * @return list<array<string, mixed>>
+     */
+    private function withAssignedDependents(array $orders): array
+    {
+        $itemIds = [];
+        foreach ($orders as $order) {
+            foreach ($order['items'] ?? [] as $item) {
+                $itemIds[] = (int) $item['id'];
+            }
+        }
+
+        $byItem = $this->assigner->forOrderItems($itemIds);
+
+        foreach ($orders as &$order) {
+            foreach ($order['items'] as &$item) {
+                $item['dependents'] = array_map(
+                    static fn (Dependent $dependent): string => (string) $dependent->name,
+                    $byItem[(int) $item['id']] ?? [],
+                );
+                unset($item['id']);
+            }
+            unset($item);
+        }
+        unset($order);
+
+        return $orders;
     }
 }

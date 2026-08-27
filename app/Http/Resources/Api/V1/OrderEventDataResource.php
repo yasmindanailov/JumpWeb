@@ -5,6 +5,8 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Services\DependentAssigner;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -37,16 +39,31 @@ class OrderEventDataResource extends JsonResource
     public function toArray(Request $request): array
     {
         $order = $this->resource;
+        $items = $order->items->whereNull('parent_item_id')->values();
+
+        // Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D7): los menores para
+        // los que es cada entrada salen por AQUÍ y no por `OrderItem`, por la misma razón que las
+        // respuestas del pack —nombres de menores en una lista paginada—. Una consulta por pedido, no
+        // por línea; y la coherencia con la cantidad actual la deriva el asignador (D4). Es la capa de
+        // entrega componiendo Booking e Identity, que es lo único que puede hacerlo.
+        $dependents = app(DependentAssigner::class)->forOrderItems(
+            $items->map(static fn (OrderItem $item): int => (int) $item->id)->all(),
+            $items->mapWithKeys(static fn (OrderItem $item): array => [(int) $item->id => (int) $item->quantity])->all(),
+        );
 
         return [
             'order_code' => (string) $order->code,
-            'reservations' => $order->items
-                ->whereNull('parent_item_id')
+            'reservations' => $items
                 ->map(static fn (OrderItem $item): array => [
                     'reservation_id' => (int) $item->id,
                     // Solo la fase de RESERVA: lo del post-form vive en su endpoint, que se abre
                     // con firma. El porqué, en el docblock del controlador.
                     'answers' => $item->eventAnswers(TicketType::EVENT_STAGE_BOOKING),
+                    // Solo `id` y `name`: la edad y la exención se leen en `GET /me/dependents`.
+                    'dependents' => array_map(
+                        static fn (Dependent $dependent): array => ['id' => (int) $dependent->getKey(), 'name' => (string) $dependent->name],
+                        $dependents[(int) $item->id] ?? [],
+                    ),
                 ])
                 ->values()
                 ->all(),

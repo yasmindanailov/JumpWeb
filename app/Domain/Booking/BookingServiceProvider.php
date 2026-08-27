@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AddonOffer;
 use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
+use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
@@ -19,6 +20,7 @@ use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartLineValidator;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
+use App\Domain\Booking\Services\CheckoutLinesReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
@@ -45,6 +47,10 @@ class BookingServiceProvider extends ServiceProvider
         // Lo consume `Identity\Services\AccountPrivacy`, que compone el documento entero: sin este
         // contrato, Identity tendría que recorrer `Order`/`OrderItem`/`Slot`/`TicketType` a mano.
         $this->app->bind(CustomerOrderHistory::class, CustomerOrderHistoryReader::class);
+        // Las líneas principales de un pedido recién creado, en el orden de la cesta (Fase 6 · menores
+        // a cargo, tanda 4). Lo consume `Identity\Services\DependentAssigner` para atar cada asignación
+        // a SU ítem sin importar `OrderItem`: la promesa del orden es de Booking, y aquí se cumple.
+        $this->app->bind(CheckoutLines::class, CheckoutLinesReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
         // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);

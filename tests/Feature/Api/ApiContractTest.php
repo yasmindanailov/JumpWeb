@@ -70,7 +70,10 @@ class ApiContractTest extends TestCase
         // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
         // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`
         // sigue impidiendo colar un campo que el servidor ignoraría en silencio.
-        'CartLine' => ['event_data', 'addons'],
+        // Y desde Fase 6 · menores a cargo (tanda 4) los menores para los que son las entradas: la
+        // línea sin menores es la normal, y exigir el campo obligaría a mandar `dependent_ids: []` en
+        // cada línea de cada presupuesto. Solo `POST /orders` lo lee; los demás lo validan e ignoran.
+        'CartLine' => ['event_data', 'addons', 'dependent_ids'],
         // Y otro cuerpo de PETICIÓN: en la disponibilidad la cesta es opcional de verdad —la
         // primera compra empieza sin nada elegido— y ausente equivale a vacía. Exigirla obligaría a
         // todo cliente a mandar `items: []` para preguntar por unas horas.

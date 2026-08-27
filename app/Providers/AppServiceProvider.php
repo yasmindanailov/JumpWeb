@@ -29,6 +29,7 @@ use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -104,6 +105,7 @@ class AppServiceProvider extends ServiceProvider
             'consent' => Consent::class,
             'cookie_consent_log' => CookieConsentLog::class,
             'dependent' => Dependent::class,
+            'dependent_assignment' => DependentAssignment::class,
             'faq' => Faq::class,
             'landing_service' => LandingService::class,
             'legal_document_version' => LegalDocumentVersion::class,

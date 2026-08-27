@@ -25,7 +25,7 @@
   Rareza a vigilar al
   escribir código nuevo.
 - **morphMap FORZADO** (Fase 2, 2026-08-12): `Relation::enforceMorphMap()` en
-  `AppServiceProvider` con alias snake_case para los 33 modelos — las columnas polimórficas
+  `AppServiceProvider` con alias snake_case para los 34 modelos — las columnas polimórficas
   (`prices.priceable_type`, `payments.payable_type`, `audit_logs.target_type`) guardan
   ALIAS (`order`, `ticket_type`…), nunca FQCN; los datos legacy los convirtió la migración
   `convert_morph_types_to_aliases`. Renombrar/mover modelos ya NO rompe datos. Regla:
@@ -308,7 +308,24 @@ titular). **Quitar es desvincular si hay un waiver firmado detrás** (`removed_a
 borrar de verdad si no. `anonymize()`: con firma → desvincula; sin ella → borra. Poda (`model:prune`,
 detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. Desde la tanda 2
 (`#198`) `waiver_signatures.subject_id` es FK **RESTRICT** a esta tabla, y la firma en nombre de un menor
-lleva copiados su `name` y `born_on` (esquema canónico v3).
+lleva copiados su `name` y `born_on` (esquema canónico v3). Desde la tanda 4 (`#202`) «referencia» =
+firma O entrada asignada, y el predicado se escribe UNA vez (`Dependent::referenced()`/`unreferenced()`),
+compartido por `hasReferences()` y `prunable()`.
+
+### `dependent_assignments` (DependentAssignment) — Fase 6 · menores a cargo, tanda 4
+Qué ENTRADAS de un pedido son para qué menores (`specs/menores-a-cargo.md` §4.6–§4.10, §9.9.3 D4;
+`DECISIONES #202`). La posee IDENTITY y referencia el ítem por su id ENTERO: `dependent_id` FK
+**RESTRICT** a `dependents` (un menor con entradas asignadas se DESVINCULA, no se borra) ·
+`order_item_id` `unsignedBigInteger` FK **CASCADE** desde `order_items` (una asignación sin su línea no
+significa nada; así la purga de go-live y los verificadores no la conocen) · `created_at` (sin
+`updated_at`: quitar y poner son filas distintas) · único `(order_item_id, dependent_id)`. **Sin
+posición**: es un CONJUNTO acotado por la cantidad de la línea, exigido al escribir y derivado al leer
+(si la cantidad baja desde el panel se enseñan las primeras `quantity`). Sin relación Eloquent hacia
+`OrderItem` a propósito (`ModuleBoundariesTest`): Identity lee las líneas por
+`Booking\Contracts\CheckoutLines`. Único escritor `Identity\Services\DependentAssigner` (dos fases:
+`check()` antes del dinero → 422 por campo; `assign()` tras el `allow`, bajo el `lockForUpdate()` de la
+fila del titular, idempotente por el único). `anonymize()` la borra (como vacía `guest_data`). Sale por
+`GET /orders/{code}/event-data` (`dependents[]`) y por el export (`ExportedOrderItem.dependents`).
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·

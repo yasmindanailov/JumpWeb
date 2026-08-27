@@ -4,8 +4,10 @@
 > la 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`) con la cadena por
 > (titular, sujeto) que decidió el owner (`#197`); la 3, la ZONA DEL CAJÓN (`#199`), medida y con su
 > guion en headless 20/20. La TANDA 4 —la asignación en el embudo— tiene su DISEÑO DE EJECUCIÓN
-> escrito y medido (§9.9, `#202`) y arranca por la unidad 0.** ▶ **EMPIEZA POR §9.9** —§9.9.2 las
-> cuatro decisiones del owner (⚠️ la exención firmada es CONDICIÓN para asignar, y el panel ENTRA),
+> escrito y medido (§9.9, `#202`): U0 (la purga de la cesta) y U1 (el SERVIDOR: tabla, asignador,
+> contrato de Booking, `CartLine.dependent_ids`, checkout, `event-data`, RGPD) están EN EL ÁRBOL
+> (§9.9.6, §9.9.7); sigue U2, el cajón.** ▶ **EMPIEZA POR §9.9** —§9.9.2 las decisiones del owner
+> (⚠️ la exención firmada es CONDICIÓN para asignar; el panel NO entra, rectificado),
 > §9.9.1 lo que el código corrige al cuerpo (§4.7 «esa pantalla ya existe» era FALSA; la cesta del
 > propio titular se PURGA al nacer abierto el cajón), §9.9.3 el diseño y §9.9.4 las unidades— ·
 > Última actualización: 2026-08-27 noche (§9.9) · anteriores: §9.8, 2026-08-25 ·
@@ -541,7 +543,7 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
   sin firmar · el PDF (`application/pdf`, v3, cadena OK) nombra al menor, su fecha y la nota de «declarado
   por el titular» · `DELETE` del menor con firma → 204 y la fila queda desvinculada · **`delete()`
   lanza `DependentHasReferencesException` y `DB::table(...)->delete()` lo bloquea la FK**. Sonda limpiada.
-- BD de desarrollo migrada; `docs-check` 33 modelos · 81 migraciones.
+- BD de desarrollo migrada; `docs-check` entonces con 33 modelos y 81 migraciones (la tanda 4 sube a 34 y 82).
 
 #### 9.7.4 Lo que queda
 
@@ -904,4 +906,80 @@ con la MENCIÓN en un comentario que va antes que la llamada — limpia comentar
 **La sonda re-corrida sobre el build: 10/10, M1/M1bis CONSERVADAS** (dueño 457, «Tu carrito»), M5
 sigue purgando en el logout. Chunk 234,41 → 234,43 KiB (+20 B). A5 del guion corregido (§5, A5·1
 con sesión, A5·4 nuevo).
+
+#### 9.9.7 U1 EJECUTADA — el SERVIDOR (2026-08-28 madrugada, carril A, dentro de `#202`)
+
+> Lo que hay, en qué se apartó de §9.9.3, lo medido y lo que queda. `OrdersController` está en el
+> `CRITICAL_RE`: los SEIS escenarios de `purchase:verify-oversell` y `redsys:verify-concurrency`
+> corrieron con 16 procesos sobre MySQL antes de empujar — **y se dice lo que miden: el aforo y el
+> cobro, no la asignación**, que va después del `allow` y no toca ninguno de los dos.
+
+**Qué existe**
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La tabla y el modelo | `database/migrations/2026_08_27_233000_create_dependent_assignments_table.php` · `app/Domain/Identity/Models/DependentAssignment.php` | D4 tal cual: `dependent_id` FK RESTRICT · `order_item_id` entero con FK CASCADE · único `(order_item_id, dependent_id)` · sin posición ni `updated_at`. Alias `dependent_assignment` en el morphMap |
+| `Dependent` | `app/Domain/Identity/Models/Dependent.php` | D5: `assignments()`, y los scopes `referenced()`/`unreferenced()` —firma O asignación— de los que salen `hasReferences()` y `prunable()`: **un predicado, tres consumidores** (`remove()`, `anonymize()`, `model:prune`) |
+| El contrato de Booking | `app/Domain/Booking/Contracts/{CheckoutLines,CheckoutLine}.php` · `app/Domain/Booking/Services/CheckoutLinesReader.php` · `BookingServiceProvider` | D2: los principales del pedido del titular, `orderBy('id')` = orden de la cesta, con `index`, `orderItemId`, `quantity`, `isEntry`, `date`. Un pedido ajeno devuelve la lista VACÍA. Doble en `ModuleContractsTest` (devuelve el orden INVERTIDO a los ids y el asignador le obedece) |
+| El asignador | `app/Domain/Identity/Services/DependentAssigner.php` · `app/Domain/Identity/Contracts/AssignmentOutcome.php` | D3: `check()` antes del dinero (rechazos POR CAMPO, traducidos) · `assign()` tras el `allow` bajo el `lockForUpdate()` del titular, re-validando, `insertOrIgnore` sobre el único, auditando `dependents.assigned` sin nombre, y **sin lanzar nunca** (`AssignmentOutcome::aborted`) · `forOrderItems()` con el recorte a la cantidad actual (D4). Las reglas se escriben UNA vez (`rejections()`) y las usan las dos fases. Declarado control negativo en `CriticalPathGateTest` (D11) |
+| La entrada HTTP | `app/Http/Api/CartPayload.php` · `app/Http/Controllers/Api/V1/OrdersController.php` | D1: `dependent_ids` (`sometimes|array`, `*.integer|min:1|distinct`) en `lineRules()`; `toCart()` NO se lo pasa a Booking; `assignments()` extrae TODAS las líneas con su `index`. El controlador: `check()` → `ValidationException::withMessages()` (422 `validation_failed`, `fields['items.{i}.dependent_ids.{j}']`) → `start()` → si `allow`, `assign()` → `fresh()` → 201. `CheckoutOrchestrator` y `OrderCreator` **intactos** |
+| La lectura | `app/Http/Resources/Api/V1/OrderEventDataResource.php` | D7: `dependents[{id, name}]` por reserva, una consulta por pedido, recortada a la cantidad actual |
+| RGPD | `app/Domain/Identity/Models/User.php` (`anonymize()`) · `app/Domain/Identity/Services/AccountPrivacy.php` · `app/Domain/Booking/Services/CustomerOrderHistoryReader.php` | D6: `anonymize()` borra las asignaciones ANTES de tratar a los menores; el export lleva `dependents: [nombres]` por línea (Booking añade un `id` interno por línea y `AccountPrivacy` lo retira tras cruzar) |
+| El contrato | `openapi/v1.yaml` · `ApiContractTest::OPTIONAL_BY_DESIGN` | `CartLine.dependent_ids` (opcional; los tres endpoints públicos lo validan e ignoran) · `OrderEventDataReservation.dependents` + `AssignedDependent` · `ExportedOrderItem.dependents` |
+| Los avisos | `lang/{es,en,fr}/api.php` → `api.dependents.*` | `not_yours` · `not_minor_on_date` · `waiver_unsigned` · `too_many` · `entries_only`, distintos en los tres idiomas (guarda) |
+| El cliente, lo mínimo | `resources/js/sidebar/cart.js` · `cart.test.js` · `SidebarCartParityTest` | D8, solo la paridad que la guarda exige al añadir una regla de línea: `dependent_ids` en `SANITISED_FIELDS`, `sanitizeLine()` con el veredicto del servidor (enteros ≥ 1 sin repetidos, o la línea se descarta) y `save()` lo persiste. Siete casos nuevos en el corpus del oráculo diferencial. **La interfaz, `toCheckoutItems()` y la reconciliación son U2** |
+
+**En qué se apartó de §9.9.3 (o lo precisa)**
+
+1. **`assignments()` pasa TODAS las líneas, no solo las que piden algo**: el recuento es la guarda de
+   correlación de D2 (`count(líneas del pedido) === count(líneas de la cesta)`), y sin las vacías no
+   habría nada que comparar. El asignador ignora las que no piden.
+2. **Un producto que el catálogo no ofrece no es cosa de `check()`**: `ProductCatalog::product()` da
+   `null` para lo no vendible y `OrderCreator` lo rechaza después con su código; `check()` solo
+   pregunta «¿es pack?» cuando hay producto.
+3. **`assign()` captura `Throwable` y devuelve `aborted('failed')`** en vez de dejar que el controlador
+   capture: §4.10 en el propio servicio, con `Log::warning('dependents.assign_failed')` y la excepción
+   en el contexto. Idempotencia por `insertOrIgnore` fila a fila para auditar solo lo que se escribió.
+4. **La segunda pasada se PROCESA, no se captura**: `test_assign_is_idempotent` asevera también
+   `abortedBecause === null` — sin eso, un `insert` a secas que reventara por el único pasaba el test
+   (el fallo se capturaba y el recuento cuadraba igual). Es la mutación M4.
+5. **`check()` sin lock y con caché de firmas por menor** (una consulta por menor, no por línea).
+
+**Lo medido**
+
+- **Suite: 3091 → 3121 (+30), 17.769 → 17.936**. `DependentAssignerTest` (17: las cinco reglas en
+  `check()` por posición y mensaje; los tres idiomas distintos; `assign()` escribe en SU línea, audita
+  sin nombre, es idempotente, re-valida y salta lo que ya no cabe, salta packs, no escribe nada si las
+  líneas no cuadran o el pedido es ajeno, no lanza si Booking falla; la lectura recortada a la cantidad
+  y con los retirados; el reader real por orden de creación; la cascada) · `OrdersDependentAssignmentTest`
+  (8: la 201 con `assertValidRequest()` —el contrato acepta el campo—, `event-data` por reserva, **el
+  nombre no viaja por la 201, `/orders/{code}`, `/me/orders` ni `/me/reservations`**, los 422 por campo
+  ANTES de crear el pedido y sin consumir la ficha de admisión, la forma, el fallo de escritura que deja
+  el pedido en pie, y la cesta sin menores igual que antes) · +1 en `DependentRegistryTest` (quitar con
+  entrada asignada DESVINCULA y `delete()` lanza) · +3 en `DependentPrivacyTest` (anonymize borra las
+  asignaciones y luego cada menor sigue su firma; el export con nombres y sin `id`; la desvinculada con
+  asignación no se poda hasta que la cascada se la lleva) + la purga de go-live con asignación · +1 en
+  `ModuleContractsTest` (el doble con el orden invertido). JS **733 → 734**.
+- **NUEVE mutaciones, las nueve muerden** (cada una contra su test, restauración comprobada por md5):
+  sin pertenencia · sin exigir la firma · minoría HOY en vez de en la visita · `insert` sin idempotencia
+  · sin la guarda de correlación · `anonymize()` sin borrar asignaciones · la asignación no cuenta como
+  referencia · el controlador sin `check()` · `event-data` sin `dependents`.
+- **Concurrencia sobre MySQL, 16 procesos**: `entry` · `pack` · `pack-guests` · `pack-prep` · `mixed` ·
+  `panel-edit` ✓ (1 compra / 15 `sold_out`; asientos == aforo) y `redsys:verify-concurrency` ✓ (1
+  `authorized` / 15 `idempotent_paid`). **No ejercitan la asignación**: son el control de no-regresión
+  que exige tocar un fichero del `CRITICAL_RE`.
+- **Sonda HTTP con Bearer sobre la BD local** (10 pasos): declarar dos menores · firmar a uno en interno
+  (`document_id` 34, 201) · `POST /orders` con el firmado → **201**, 0 apariciones del nombre en la
+  respuesta · `event-data` → `[{id, name}]` en su reserva · `orders/{code}`, `me/orders` y
+  `me/reservations/upcoming` → 0 apariciones · el sin firma → `422 waiver_unsigned` en
+  `items.0.dependent_ids.0` · un id ajeno → `422 not_yours` · repetido → 422 de forma en las dos
+  posiciones · tres menores en dos entradas → `422 too_many` en `items.0.dependent_ids` · BD: una fila
+  `(13, 111)` y `dependents.assigned {order_id, dependent_id, order_item_id}`. Sonda limpiada (pedido
+  borrado en cascada, 0 asignaciones, 0 menores, 0 tokens).
+- Chunk del cajón **234,43 → 234,70 KiB** (`cart.js`; techo 235, quedan 0,30). Pint ✓ · `docs-check` 34
+  modelos · 82 migraciones. BD local migrada.
+
+**Lo que queda** — U2, el cajón (§9.9.4), y sigue siendo lo más caro: `toCheckoutItems()` en `pay.js`,
+`assignment.js`, las casillas en `TimeStep`/`CartStep`, la puerta 2 en `admission.js`, el paso 6 y la
+tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos con y sin.
 

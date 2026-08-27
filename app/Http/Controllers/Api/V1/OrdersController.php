@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Contracts\PaymentTicket;
 use App\Http\Api\AdmissionCodeMap;
@@ -17,6 +18,7 @@ use App\Http\Resources\Api\V1\OrderPaymentResource;
 use App\Http\Resources\Api\V1\OrderResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Fase 3 · paso 4c — CREAR la reserva y abrir su cobro (`docs/specs/api-v1.md` §4.4 y §4.5).
@@ -47,12 +49,23 @@ class OrdersController extends Controller
      * **201**, porque crea un recurso: el pedido existe y retiene aforo desde este momento, se
      * complete el pago o no.
      */
-    public function store(Request $request, ReservationCheckout $checkout): OrderPaymentResource|JsonResponse
+    public function store(Request $request, ReservationCheckout $checkout, DependentAssigner $assigner): OrderPaymentResource|JsonResponse
     {
         $validated = $request->validate(CartPayload::rules());
 
         /** @var User $user */
         $user = $request->user();
+
+        // Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D3): la asignación de
+        // entradas a menores se COMPRUEBA ANTES del dinero. Un id ajeno, un menor que ese día ya es
+        // adulto o uno sin la exención firmada responde 422 POR CAMPO, sin crear el pedido ni consumir
+        // la ficha de admisión: el cliente se entera comprando, y nada queda a medias. Es la capa de
+        // entrega componiendo dos módulos —Booking no puede mirar a Identity—, y por eso vive aquí.
+        $assignments = CartPayload::assignments($validated['items']);
+        $rejections = $assigner->check($user, $assignments);
+        if ($rejections !== []) {
+            throw ValidationException::withMessages($rejections);
+        }
 
         try {
             $outcome = $checkout->start(
@@ -77,6 +90,15 @@ class OrdersController extends Controller
         $order = $outcome->order;
         /** @var PaymentTicket $ticket Garantizado por `allow`. */
         $ticket = $outcome->ticket;
+
+        // Y se ESCRIBE después del `allow` (§4.10): el pedido ya existe, retiene aforo y su cobro está
+        // abierto — fuera de la transacción de los locks y sin poder deshacer nada de eso. Identity la
+        // escribe bajo el lock del titular y re-valida las mismas reglas; si algo cambió entre las dos
+        // fases la línea se queda sin asignar y el pedido sigue en pie. Va ANTES de `fresh()` para que
+        // la 201 ya la refleje.
+        if (CartPayload::hasAssignments($assignments)) {
+            $assigner->assign($user, (int) $order->getKey(), $assignments);
+        }
 
         return (new OrderPaymentResource($order->fresh(['items.ticketType', 'items.slot', 'items.children.ticketType', 'adjustments', 'payments.refunds'])))
             ->withPaymentTicket($ticket)

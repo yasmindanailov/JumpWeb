@@ -92,6 +92,13 @@ final class CartPayload
             $prefix.'.addons' => ['sometimes', 'array'],
             $prefix.'.addons.*.product_id' => ['required', 'integer', 'min:1'],
             $prefix.'.addons.*.quantity' => ['required', 'integer', 'min:1'],
+            // Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D1): los ids de los
+            // menores para los que son estas entradas. Es FORMA: enteros, sin repetidos. Si son suyos, si
+            // son menores ese día y si han firmado lo decide `Identity\Services\DependentAssigner`, y
+            // SOLO `POST /orders` lo lee — los otros tres endpoints que comparten esta línea lo validan
+            // e ignoran, y `toCart()` no se lo pasa a Booking (§4.6: Booking no conoce a los menores).
+            $prefix.'.dependent_ids' => ['sometimes', 'array', 'max:'.self::MAX_LINES],
+            $prefix.'.dependent_ids.*' => ['integer', 'min:1', 'distinct'],
         ];
     }
 
@@ -104,6 +111,48 @@ final class CartPayload
     public static function toCart(array $items): array
     {
         return array_values(array_map(self::toLine(...), $items));
+    }
+
+    /**
+     * Cuerpo validado → lo que la ASIGNACIÓN de menores necesita de cada línea, en el orden de la
+     * cesta (Fase 6 · tanda 4, `specs/menores-a-cargo.md` §9.9.3 D1/D2).
+     *
+     * Van TODAS las líneas, también las que no piden nada, y con su `index`: `DependentAssigner` usa el
+     * recuento para comprobar que el pedido tiene exactamente las líneas que la cesta tenía antes de
+     * escribir una sola fila —la correlación cesta ↔ ítem la promete `Booking\Contracts\CheckoutLines`
+     * por posición, y una cuenta que no cuadre significa que nadie sabe qué ítem es qué línea—.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return list<array{index:int, product_id:int, date:string, quantity:int, dependent_ids:list<int>}>
+     */
+    public static function assignments(array $items): array
+    {
+        $lines = [];
+        foreach (array_values($items) as $index => $item) {
+            $lines[] = [
+                'index' => $index,
+                'product_id' => (int) $item['product_id'],
+                'date' => (string) $item['date'],
+                'quantity' => (int) $item['quantity'],
+                'dependent_ids' => array_values(array_map('intval', is_array($item['dependent_ids'] ?? null) ? $item['dependent_ids'] : [])),
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param  list<array{dependent_ids:list<int>}>  $lines
+     */
+    public static function hasAssignments(array $lines): bool
+    {
+        foreach ($lines as $line) {
+            if ($line['dependent_ids'] !== []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

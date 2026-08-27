@@ -10,6 +10,8 @@ use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
+use App\Domain\Booking\Contracts\CheckoutLine;
+use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\CheckoutOutcome;
 use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
@@ -38,6 +40,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartPricer;
 use App\Domain\Booking\Services\CatalogReader;
+use App\Domain\Booking\Services\CheckoutLinesReader;
 use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
@@ -50,6 +53,8 @@ use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerAccountContext;
+use App\Domain\Identity\Services\DependentAssigner;
+use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
@@ -94,6 +99,7 @@ class ModuleContractsTest extends TestCase
         // implementaciones muden (pasos 5 y 6), aquí solo cambia el nombre esperado.
         $this->assertInstanceOf(Redsys::class, app(RefundGateway::class));
         $this->assertInstanceOf(CustomerReservationsReader::class, app(CustomerReservations::class));
+        $this->assertInstanceOf(CheckoutLinesReader::class, app(CheckoutLines::class));
         $this->assertInstanceOf(PublishableCatalogReader::class, app(PublishableCatalog::class));
         $this->assertInstanceOf(CatalogReader::class, app(ProductCatalog::class));
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
@@ -725,6 +731,61 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(0, Order::query()->count(), 'ninguna superficie puede crear pedidos por su cuenta');
         $this->assertSame(1, $checkout->starts, 'la superficie que compra tiene que pedir la secuencia');
         $this->assertSame(1, $checkout->retries, 'las que reintentan tienen que pedir la secuencia');
+    }
+
+    /**
+     * IDENTITY → BOOKING: la asignación de entradas a menores (Fase 6 · tanda 4) ata cada asignación a
+     * SU ítem por lo que `CheckoutLines` promete —las líneas principales en el orden de la cesta—, no
+     * consultando `OrderItem` por su cuenta. El doble devuelve un orden INVERTIDO al de los ids: si el
+     * asignador se guiara por la base de datos y no por el contrato, la asignación caería en la otra
+     * línea y este caso lo vería.
+     */
+    public function test_identity_asks_booking_for_the_checkout_lines_through_the_contract(): void
+    {
+        $this->travelTo(Carbon::parse('2026-08-27 12:00:00', 'Europe/Madrid'));
+
+        $holder = User::factory()->create();
+        $lucas = app(DependentRegistry::class)->add($holder, 'Lucas', '2017-03-12');
+        $order = Order::create([
+            'user_id' => $holder->id, 'code' => 'R-CONTRATO', 'status' => Order::STATUS_PENDING,
+            'subtotal' => 1000, 'tax' => 0, 'total' => 1000, 'currency' => 'EUR', 'expires_at' => now()->addHour(),
+        ]);
+        $zone = Zone::create(['slug' => 'jump', 'name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $entry = TicketType::create([
+            'name' => ['es' => 'Entrada'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        $first = $order->items()->create(['ticket_type_id' => $entry->id, 'quantity' => 2, 'unit_price' => 500, 'seats' => 2]);
+        $second = $order->items()->create(['ticket_type_id' => $entry->id, 'quantity' => 2, 'unit_price' => 500, 'seats' => 2]);
+
+        $lines = new class($first->id, $second->id) implements CheckoutLines
+        {
+            public int $calls = 0;
+
+            public function __construct(private int $firstId, private int $secondId) {}
+
+            public function forOrder(int $orderId, int $userId): array
+            {
+                $this->calls++;
+
+                // Al revés que los ids: el índice 0 de la cesta es el SEGUNDO ítem creado.
+                return [
+                    new CheckoutLine(index: 0, orderItemId: $this->secondId, quantity: 2, isEntry: true, date: '2026-09-05'),
+                    new CheckoutLine(index: 1, orderItemId: $this->firstId, quantity: 2, isEntry: true, date: '2026-09-05'),
+                ];
+            }
+        };
+        $this->app->instance(CheckoutLines::class, $lines);
+
+        $outcome = app(DependentAssigner::class)->assign($holder, $order->id, [
+            ['index' => 0, 'product_id' => $entry->id, 'date' => '2026-09-05', 'quantity' => 2, 'dependent_ids' => [$lucas->id]],
+            ['index' => 1, 'product_id' => $entry->id, 'date' => '2026-09-05', 'quantity' => 2, 'dependent_ids' => []],
+        ]);
+
+        $this->assertSame(1, $lines->calls, 'el asignador tiene que pedirle las líneas a Booking por el contrato');
+        $this->assertSame(1, $outcome->assigned);
+        $this->assertDatabaseHas('dependent_assignments', ['order_item_id' => $second->id, 'dependent_id' => $lucas->id]);
+        $this->assertDatabaseMissing('dependent_assignments', ['order_item_id' => $first->id]);
     }
 
     /** CONTENT → BOOKING: el color de zona (paso 7). */

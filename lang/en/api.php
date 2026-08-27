@@ -48,6 +48,15 @@ return [
         'dependents_limit_reached' => 'Your account has reached its maximum number of dependents (:max).',
     ],
 
+    // Per-field notices for assigning tickets to dependents (`POST /orders`, Phase 6 · batch 4).
+    'dependents' => [
+        'not_yours' => 'That dependent is not on your account.',
+        'not_minor_on_date' => 'They will already be 18 on that day: buy their ticket as an adult.',
+        'waiver_unsigned' => 'Their waiver is not signed yet: sign it under “Dependents” before assigning them a ticket.',
+        'too_many' => 'You have picked more dependents than tickets.',
+        'entries_only' => 'Dependents can only be assigned to tickets: a party pack already asks for its guests.',
+    ],
+
     'register' => [
         'waiver_stale' => 'The waiver text has changed. Please read it again and accept it once more.',
         'waiver_not_internal' => 'The waiver is not signed on this website.',

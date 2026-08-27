@@ -211,7 +211,7 @@ const STORAGE_VERSION = 1;
  *
  * @type {ReadonlyArray<string>}
  */
-export const SANITISED_FIELDS = ['product_id', 'date', 'time', 'quantity', 'event_data', 'addons'];
+export const SANITISED_FIELDS = ['product_id', 'date', 'time', 'quantity', 'event_data', 'addons', 'dependent_ids'];
 
 /**
  * Entero al estilo de la regla `integer` de Laravel, que **no es estricta**: acepta la cadena `'3'`.
@@ -319,9 +319,43 @@ export function sanitizeLine(raw) {
         })
         .filter(Boolean);
 
+    // Los menores a cargo para los que son estas entradas (Fase 6 · tanda 4, `menores-a-cargo.md`
+    // §9.9.3 D8): SOLO ids —punteros opacos que resuelve la sesión de su dueño, nunca un nombre—, y con
+    // el MISMO veredicto que el servidor (`integer|min:1|distinct`): un id que no sea entero o un
+    // repetido descarta la línea, como una cantidad imposible. ⚠️ Que no haya MÁS ids que unidades no
+    // es regla de forma en el servidor, así que aquí tampoco: lo recorta quien asigna.
+    const dependentIds = sanitizeDependentIds(raw.dependent_ids);
+    if (dependentIds === null) {
+        return null;
+    }
+
     // ⚠️ `event_data` NO se restaura NUNCA: no se persiste (`DECISIONES #38(d)`, art. 9 del RGPD).
     // Se deja el objeto vacío para que la forma en memoria sea siempre la misma.
-    return { product_id: productId, date, time, quantity, event_data: {}, addons };
+    return { product_id: productId, date, time, quantity, event_data: {}, addons, dependent_ids: dependentIds };
+}
+
+/**
+ * `dependent_ids` con las reglas del servidor: ausente = ninguno; lista de enteros ≥ 1 sin repetidos;
+ * cualquier otra cosa invalida la línea (`null`).
+ *
+ * @returns {number[]|null}
+ */
+function sanitizeDependentIds(raw) {
+    if (raw === undefined || raw === null) {
+        return [];
+    }
+
+    if (! Array.isArray(raw)) {
+        return null;
+    }
+
+    const ids = raw.map(toInt);
+
+    if (ids.some((id) => id === null || id < 1) || new Set(ids).size !== ids.length) {
+        return null;
+    }
+
+    return ids;
 }
 
 /**
@@ -497,6 +531,9 @@ export function save(storage, { owner = null, lines = [] } = {}) {
             time: line.time,
             quantity: line.quantity,
             addons: (line.addons ?? []).map((addon) => ({ product_id: addon.product_id, quantity: addon.quantity })),
+            // Solo los IDS de los menores (`menores-a-cargo.md` §4.8, §9.9.3 D8): un puntero opaco que
+            // solo la sesión de su dueño resuelve. El nombre no puede llegar aquí por construcción.
+            dependent_ids: (line.dependent_ids ?? []).map((id) => Number(id)),
         })),
     };
 

@@ -367,6 +367,16 @@ class SidebarCartParityTest extends TestCase
             'complemento correcto' => [...$base, 'addons' => [['product_id' => 4, 'quantity' => 1]]],
             'complementos vacíos' => [...$base, 'addons' => []],
             'respuestas vacías' => [...$base, 'event_data' => []],
+            // Fase 6 · menores a cargo, tanda 4: los ids de los menores, con las reglas de FORMA del
+            // servidor (`integer|min:1|distinct`). Que no haya más que unidades NO es forma: lo decide
+            // `DependentAssigner`, así que el saneador tampoco lo mira.
+            'menores asignados' => [...$base, 'dependent_ids' => [12, 7]],
+            'menores como cadena numérica' => [...$base, 'dependent_ids' => ['12']],
+            'menores vacíos' => [...$base, 'dependent_ids' => []],
+            'menor con texto' => [...$base, 'dependent_ids' => ['x']],
+            'menor cero' => [...$base, 'dependent_ids' => [0]],
+            'menor repetido' => [...$base, 'dependent_ids' => [7, 7]],
+            'menores que no son lista' => [...$base, 'dependent_ids' => 7],
         ];
     }
 

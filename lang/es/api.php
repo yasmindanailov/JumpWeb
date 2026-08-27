@@ -50,6 +50,17 @@ return [
         'dependents_limit_reached' => 'Ya has llegado al máximo de menores a cargo de tu cuenta (:max).',
     ],
 
+    // Avisos POR CAMPO de la ASIGNACIÓN de entradas a menores a cargo (`POST /orders`, Fase 6 · tanda 4):
+    // llegan en el 422 bajo `items.{i}.dependent_ids[.{j}]` y el cajón los enseña en su línea. Viven
+    // aquí y no en `account.dependents` por lo mismo que los del alta: el servidor es quien los dice.
+    'dependents' => [
+        'not_yours' => 'Ese menor no está en tu cuenta.',
+        'not_minor_on_date' => 'Ese día ya tendrá 18 años: compra su entrada como adulto.',
+        'waiver_unsigned' => 'Falta su exención firmada: fírmala en «Menores a cargo» antes de asignarle una entrada.',
+        'too_many' => 'Has elegido más menores que entradas.',
+        'entries_only' => 'Los menores solo se asignan a entradas: un pack ya pide a sus invitados.',
+    ],
+
     // Avisos POR CAMPO del alta (`POST /auth/register`) que solo emite el servidor en el 422.
     // Viven aquí y no en `account.register` a propósito: ese grupo viaja en el montaje de CADA
     // página (`SidebarMountTest` mide su presupuesto), y un texto que el cliente nunca pinta por su

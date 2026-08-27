@@ -10479,7 +10479,7 @@ publicar, tope a 1 desde `settings`, quitar con firma detrás → desvinculada, 
 de la zona y los dos plazos de retención. Sigue 🟦.
 
 **Cierre del carril A (2026-08-27, 18:40) sobre el árbol final** —con el TEMA del carril C ya fusionado—:
-docs-check ✓ (33 modelos · 81 migraciones) · Pint ✓ · suite **3062 / 17.694** en el árbol del carril A y
+docs-check ✓ (entonces 33 modelos y 81 migraciones) · Pint ✓ · suite **3062 / 17.694** en el árbol del carril A y
 **3077 / 17.695** tras fusionar `#200` del carril C (= lo que declara `ESTADO.md`) · JS **724** · `npm run build` ✓ (chunk 234,41 KiB) · `scripts/audit-clock.sh` ✓ **12/12 fronteras verdes** (10 con el reloj congelado y los 2 cruces de medianoche a mitad de pase; la tanda añadió fixtures con fechas de nacimiento y `travelTo`, y ninguno depende del día real).
 **`[DECIDIDO owner]`: la siguiente sesión de este carril hace la TANDA 4** (la asignación en el embudo);
 el mapa de arranque, con los ocho puntos que hay que saber antes de escribir, está en la fila A de
@@ -10693,6 +10693,20 @@ build: 10/10 — la cesta del propio titular sobrevive al nacer abierto el cajó
 primera versión de la guarda salió roja con el fuente correcto porque `strpos` casó una MENCIÓN en un
 comentario; limpia comentarios antes de buscar (la lección de `#200`, otra vez). El guion A5 decía una
 purga que la tabla de `decideOwnership()` nunca produjo (cesta sin dueño + otra cuenta): corregido.
+
+▶ ✅ **U1 EJECUTADA y empujada la madrugada del 28** (spec **§9.9.7**): el servidor entero, tal como
+§9.9.3 lo diseñó y con cinco precisiones escritas —`assignments()` pasa TODAS las líneas porque el
+recuento es la guarda de correlación; un producto que el catálogo no ofrece no es cosa de `check()`;
+`assign()` captura `Throwable` y devuelve `aborted('failed')` en vez de dejar que el controlador decida;
+la segunda pasada se PROCESA y el test lo asevera (sin eso, un `insert` a secas pasaba); `check()` cachea
+la firma por menor—. **Lo medido**: +30 tests y +167 aserciones (3121 / 17.936), JS 734, **nueve
+mutaciones que muerden**, los seis escenarios de `purchase:verify-oversell` y `redsys:verify-concurrency`
+con 16 procesos sobre MySQL —que NO ejercitan la asignación, y se dice—, y una sonda HTTP con Bearer de
+diez pasos: 201 con la fila y la auditoría sin nombre, `event-data` por reserva, **cero apariciones del
+nombre en la 201, `orders/{code}`, `me/orders` y `me/reservations`**, y los cuatro 422 por campo.
+`CheckoutOrchestrator` y `OrderCreator` no se tocaron: la composición vive en `OrdersController`, que ya
+estaba en el `CRITICAL_RE`; `DependentAssigner` queda declarado control negativo. ▶ Sigue **U2, el
+cajón**.
 
 ## #203 · 2026-08-27 · El ARMAZÓN, tanda 2c·2 — la barra se DISUELVE en dos racimos flotantes, y el salto al contenido pasa de 1 de 12 a 12 de 12
 

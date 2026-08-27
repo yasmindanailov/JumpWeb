@@ -48,6 +48,15 @@ return [
         'dependents_limit_reached' => 'Votre compte a atteint le nombre maximal de personnes à charge (:max).',
     ],
 
+    // Avis PAR CHAMP de l'attribution de billets aux personnes à charge (`POST /orders`, Phase 6 · lot 4).
+    'dependents' => [
+        'not_yours' => 'Cette personne à charge n\'est pas sur votre compte.',
+        'not_minor_on_date' => 'Elle aura déjà 18 ans ce jour-là : achetez son billet en tant qu\'adulte.',
+        'waiver_unsigned' => 'Sa décharge n\'est pas signée : signez-la dans « Personnes à charge » avant de lui attribuer un billet.',
+        'too_many' => 'Vous avez choisi plus de personnes à charge que de billets.',
+        'entries_only' => 'Les personnes à charge ne s\'attribuent qu\'aux billets : un pack anniversaire demande déjà ses invités.',
+    ],
+
     'register' => [
         'waiver_stale' => 'Le texte de la décharge a changé. Relisez-le et acceptez-le à nouveau.',
         'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',

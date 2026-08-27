@@ -33,8 +33,9 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  *    plazo se lleva su última firma, `prunable()` retira la fila huérfana: PII de un menor sin nada
  *    que la justifique.
  *
- * ⚠️ **No pertenece a Booking** (§4.6): la asignación de una entrada la poseerá Identity y
- * referenciará el ítem por su id ENTERO (`ModuleBoundariesTest`: Booking no ve a Identity).
+ * ⚠️ **No pertenece a Booking** (§4.6): la asignación de una entrada la POSEE Identity
+ * (`DependentAssignment`, tanda 4) y referencia el ítem por su id ENTERO (`ModuleBoundariesTest`:
+ * Booking no ve a Identity; Identity lee las líneas por `Booking\Contracts\CheckoutLines`).
  */
 #[Fillable(['user_id', 'name', 'born_on'])]
 class Dependent extends Model
@@ -79,7 +80,7 @@ class Dependent extends Model
 
     /**
      * Las firmas del waiver hechas EN SU NOMBRE por el titular (`waiver-probatorio.md` §4.3: el
-     * «sujeto» de la firma). Hoy no las produce ningún escritor: llegan en la tanda 2.
+     * «sujeto» de la firma). Las escribe `WaiverSigner` desde la tanda 2 (`#198`).
      *
      * @return HasMany<WaiverSignature, $this>
      */
@@ -87,6 +88,62 @@ class Dependent extends Model
     {
         return $this->hasMany(WaiverSignature::class, 'subject_id')
             ->where('subject_type', WaiverSignature::SUBJECT_DEPENDENT);
+    }
+
+    /**
+     * Las ENTRADAS que le han asignado (tanda 4, §4.7–§4.10): la otra referencia que conserva la fila.
+     * Las escribe `DependentAssigner`.
+     *
+     * @return HasMany<DependentAssignment, $this>
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(DependentAssignment::class);
+    }
+
+    /**
+     * Las filas con ALGO detrás que obliga a conservarlas: una firma del waiver o una entrada asignada.
+     *
+     * ⚠️ **Es el ÚNICO predicado de «qué cuenta como referencia», y por eso es un scope**: hasta la
+     * tanda 4 `hasReferences()` y `prunable()` lo escribían cada uno por su lado, y bastaba con añadir
+     * la asignación en uno y no en el otro para que la poda diaria abortara a mitad (`delete()` lanza)
+     * o para que `remove()` BORRARA un menor con entradas asignadas (spec §9.9.1·5). Con un solo scope,
+     * `remove()`, `anonymize()` y `model:prune` coinciden por construcción.
+     *
+     * @param  Builder<Dependent>  $query
+     */
+    public function scopeReferenced(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q
+            ->whereExists(self::signaturesSubquery(...))
+            ->orWhereExists(self::assignmentsSubquery(...)));
+    }
+
+    /**
+     * El complemento exacto de {@see scopeReferenced()}: ni firma ni entrada asignada.
+     *
+     * @param  Builder<Dependent>  $query
+     */
+    public function scopeUnreferenced(Builder $query): void
+    {
+        $query
+            ->whereNotExists(self::signaturesSubquery(...))
+            ->whereNotExists(self::assignmentsSubquery(...));
+    }
+
+    private static function signaturesSubquery(QueryBuilder $q): void
+    {
+        $q->selectRaw('1')
+            ->from('waiver_signatures')
+            ->whereColumn('waiver_signatures.subject_id', 'dependents.id')
+            ->where('waiver_signatures.subject_type', WaiverSignature::SUBJECT_DEPENDENT);
+    }
+
+    private static function assignmentsSubquery(QueryBuilder $q): void
+    {
+        $q->selectRaw('1')
+            ->from('dependent_assignments')
+            ->whereColumn('dependent_assignments.dependent_id', 'dependents.id');
     }
 
     /**
@@ -155,13 +212,13 @@ class Dependent extends Model
     // ─── Referencias y retirada (§4.4) ────────────────────────────────────────
 
     /**
-     * ¿Hay algo detrás que obligue a conservar la fila? Hoy, sus firmas del waiver.
-     * ▶ Tanda 4: aquí entra también la asignación de entradas (la tabla que poseerá Identity,
-     * §4.6/§4.10). Es el ÚNICO sitio que decide «borrar o desvincular».
+     * ¿Hay algo detrás que obligue a conservar la fila? Sus firmas del waiver, o —desde la tanda 4— una
+     * entrada asignada. Es lo que decide «borrar o desvincular», y lo decide con el MISMO predicado que
+     * la poda ({@see scopeReferenced()}).
      */
     public function hasReferences(): bool
     {
-        return $this->waiverSignatures()->exists();
+        return static::query()->whereKey($this->getKey())->referenced()->exists();
     }
 
     /**
@@ -179,10 +236,11 @@ class Dependent extends Model
 
     /**
      * Las filas DESVINCULADAS que ya no tienen ninguna referencia: la poda por plazo se llevó su
-     * última firma y lo que queda es el nombre y la fecha de nacimiento de un menor sin nada que lo
-     * justifique. Una fila activa nunca se poda (es del titular) y una desvinculada CON firma
-     * tampoco: la guarda de `deleting` lanzaría, y la consulta la excluye ANTES para que
-     * `model:prune` no aborte a mitad.
+     * última firma —o la cascada del pedido purgado, su última entrada— y lo que queda es el nombre y
+     * la fecha de nacimiento de un menor sin nada que lo justifique. Una fila activa nunca se poda (es
+     * del titular) y una desvinculada CON referencia tampoco: la guarda de `deleting` lanzaría, y la
+     * consulta la excluye ANTES para que `model:prune` no aborte a mitad — con el mismo predicado que
+     * `hasReferences()`, a propósito ({@see scopeUnreferenced()}).
      *
      * @return Builder<Dependent>
      */
@@ -190,10 +248,6 @@ class Dependent extends Model
     {
         return static::query()
             ->whereNotNull('removed_at')
-            ->whereNotExists(fn (QueryBuilder $q) => $q
-                ->selectRaw('1')
-                ->from('waiver_signatures')
-                ->whereColumn('waiver_signatures.subject_id', 'dependents.id')
-                ->where('waiver_signatures.subject_type', WaiverSignature::SUBJECT_DEPENDENT));
+            ->unreferenced();
     }
 }

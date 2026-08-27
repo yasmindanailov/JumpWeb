@@ -2,8 +2,13 @@
 
 namespace Tests\Feature\Dependents;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Contracts\DependentRemoval;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -56,6 +61,81 @@ class DependentPrivacyTest extends TestCase
             subjectType: WaiverSignature::SUBJECT_DEPENDENT,
             subjectId: (int) $dependent->getKey(),
         ));
+    }
+
+    /** Una ENTRADA del titular asignada al menor, tal como la escribe `DependentAssigner` (tanda 4). */
+    private function assignTicket(User $holder, Dependent $dependent): OrderItem
+    {
+        $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $entry = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
+            'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        $order = Order::create([
+            'user_id' => $holder->id, 'code' => 'R-'.strtoupper(substr(md5((string) mt_rand()), 0, 6)),
+            'status' => Order::STATUS_PAID, 'subtotal' => 500, 'tax' => 0, 'total' => 500, 'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        $item = $order->items()->create(['ticket_type_id' => $entry->id, 'quantity' => 1, 'unit_price' => 500, 'seats' => 1]);
+        DependentAssignment::create(['dependent_id' => $dependent->id, 'order_item_id' => $item->id]);
+
+        return $item;
+    }
+
+    /**
+     * §5 + tanda 4 (D6) — `anonymize()` BORRA las asignaciones como vacía `guest_data`: PII de un menor
+     * atada a una visita. Después cada menor sigue la regla de siempre con solo su firma como referencia:
+     * el que tenía entradas y ninguna firma se BORRA; el que además firmó, se desvincula.
+     */
+    public function test_anonymize_deletes_the_assignments_and_then_treats_each_dependent_by_its_signature(): void
+    {
+        $holder = User::factory()->create();
+        $onlyAssigned = $this->add($holder, 'Solo entradas', '2017-03-12');
+        $assignedAndSigned = $this->add($holder, 'Entradas y firma', '2016-05-05');
+        $item = $this->assignTicket($holder, $onlyAssigned);
+        $this->assignTicket($holder, $assignedAndSigned);
+        $this->signFor($holder, $assignedAndSigned);
+        $this->assertSame(2, DependentAssignment::count());
+
+        $this->assertTrue($holder->fresh()->anonymize());
+
+        $this->assertSame(0, DependentAssignment::count(), 'las asignaciones se van con el art. 17, como las respuestas del pack');
+        // El pedido se conserva (AEAT): solo cae la etiqueta.
+        $this->assertDatabaseHas('order_items', ['id' => $item->id]);
+        $this->assertDatabaseMissing('dependents', ['id' => $onlyAssigned->id]);
+        $this->assertTrue(Dependent::find($assignedAndSigned->id)->isRemoved());
+    }
+
+    /** `RGPD-04` + tanda 4 (D6) — el export lleva, en cada línea, los NOMBRES de los menores para los que era. */
+    public function test_the_export_carries_the_assigned_dependents_names_per_line_and_no_internal_id(): void
+    {
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder, 'Lucas', '2017-03-12');
+        $this->assignTicket($holder, $lucas);
+
+        $export = app(AccountPrivacy::class)->exportFor($holder->fresh());
+
+        $line = $export['orders'][0]['items'][0];
+        $this->assertSame(['Lucas'], $line['dependents']);
+        $this->assertArrayNotHasKey('id', $line, 'el id del ítem es solo para cruzar: no se exporta');
+        $this->assertSame(['product', 'date', 'time', 'quantity', 'unit_price_cents', 'seats', 'event_data', 'addons', 'dependents'], array_keys($line));
+    }
+
+    /** §4.4 + tanda 4 (D5) — una desvinculada CON entradas asignadas no se poda; cuando la cascada se las lleva, sí. */
+    public function test_an_unlinked_dependent_with_assignments_is_kept_until_the_line_is_gone(): void
+    {
+        $holder = User::factory()->create();
+        $registry = app(DependentRegistry::class);
+        $lucas = $this->add($holder, 'Lucas', '2017-03-12');
+        $item = $this->assignTicket($holder, $lucas);
+        $this->assertSame(DependentRemoval::Unlinked, $registry->remove($holder, $lucas->id));
+
+        $this->artisan('model:prune', ['--model' => [Dependent::class]])->assertSuccessful();
+        $this->assertDatabaseHas('dependents', ['id' => $lucas->id]);
+
+        // La línea se borra físicamente (purga de go-live, verificador): la cascada se lleva la
+        // asignación y la fila queda sin nada que la justifique.
+        OrderItem::query()->whereKey($item->id)->delete();
+        $this->artisan('model:prune', ['--model' => [Dependent::class]])->assertSuccessful();
+        $this->assertDatabaseMissing('dependents', ['id' => $lucas->id]);
     }
 
     /** §5 (`RGPD-01` ampliada) — el dependiente sigue el régimen de su waiver. */
@@ -161,12 +241,17 @@ class DependentPrivacyTest extends TestCase
         $customer = User::factory()->create(['email' => 'cliente@x.test']);
         $dependent = $this->add($customer, 'Lucas', '2017-03-12');
         $this->signFor($customer, $dependent);
+        // Y con una entrada asignada (tanda 4): la cascada desde `order_items` la borra ANTES que a
+        // los menores, así que la limpieza no tiene que conocerla.
+        $this->assignTicket($customer, $dependent);
+        $this->assertSame(1, DependentAssignment::count());
 
         $this->artisan('app:purge-customers', ['--keep' => ['admin-keep@x.test'], '--force' => true])->assertSuccessful();
 
         $this->assertDatabaseMissing('users', ['email' => 'cliente@x.test']);
         $this->assertDatabaseMissing('dependents', ['id' => $dependent->id]);
         $this->assertDatabaseMissing('waiver_signatures', ['subject_id' => $dependent->id]);
+        $this->assertSame(0, DependentAssignment::count(), 'la asignación cae con la línea del pedido purgado');
         $this->assertDatabaseHas('users', ['email' => 'admin-keep@x.test']);
     }
 }

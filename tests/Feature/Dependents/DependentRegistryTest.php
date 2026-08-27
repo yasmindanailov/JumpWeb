@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Dependents;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Contracts\DependentRemoval;
 use App\Domain\Identity\Exceptions\DependentHasReferencesException;
 use App\Domain\Identity\Exceptions\DependentNotFoundException;
 use App\Domain\Identity\Exceptions\DependentNotMinorException;
 use App\Domain\Identity\Exceptions\DependentsLimitReachedException;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\DependentRegistry;
@@ -294,6 +298,43 @@ class DependentRegistryTest extends TestCase
         // Fuera de la lista del titular.
         $this->assertSame([], $this->registry()->activeFor($holder)->pluck('id')->all());
         $this->assertSame('unlinked', AuditLog::where('action', 'dependents.removed')->latest('id')->value('payload')['mode']);
+    }
+
+    /** Una ENTRADA asignada al menor, escrita como la escribe `DependentAssigner` (tanda 4). */
+    private function assignTicket(User $holder, Dependent $dependent): DependentAssignment
+    {
+        $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $entry = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
+            'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        $order = Order::create([
+            'user_id' => $holder->id, 'code' => 'R-'.strtoupper(substr(md5((string) mt_rand()), 0, 6)),
+            'status' => Order::STATUS_PAID, 'subtotal' => 500, 'tax' => 0, 'total' => 500, 'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        $item = $order->items()->create(['ticket_type_id' => $entry->id, 'quantity' => 1, 'unit_price' => 500, 'seats' => 1]);
+
+        return DependentAssignment::create(['dependent_id' => $dependent->id, 'order_item_id' => $item->id]);
+    }
+
+    /** §4.4 (tanda 4) — con una ENTRADA asignada detrás, quitar también DESVINCULA: es la otra referencia. */
+    public function test_removing_with_an_assigned_ticket_unlinks_and_keeps_the_row(): void
+    {
+        $holder = User::factory()->create();
+        $dependent = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $assignment = $this->assignTicket($holder, $dependent);
+
+        $mode = $this->registry()->remove($holder, $dependent->id);
+
+        $this->assertSame(DependentRemoval::Unlinked, $mode);
+        $this->assertTrue(Dependent::find($dependent->id)->isRemoved(), 'la fila con una entrada asignada no se borra');
+        $this->assertDatabaseHas('dependent_assignments', ['id' => $assignment->id]);
+
+        // Y desde ningún sitio: es la FK RESTRICT y la guarda de `deleting`, las dos.
+        try {
+            Dependent::find($dependent->id)->delete();
+            $this->fail('un delete() sobre una fila con entradas asignadas tiene que lanzar');
+        } catch (DependentHasReferencesException) {
+        }
     }
 
     /** §4.4 — y desde NINGÚN sitio se puede borrar una fila con firma: es una guarda, no una convención. */

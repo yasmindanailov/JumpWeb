@@ -2021,9 +2021,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
     - [x] **U0 · la purga de la cesta** (2026-08-27 noche): el dueño se siembra en `index.js` desde
           `boot.userId` antes de montar; caso JS + guarda estructural con 2 mutaciones que muerden;
           sonda headless 10/10 (M1/M1bis conservadas). Ficha de `DEUDA.md` RETIRADA.
-    - [ ] **U1 · el servidor**: `dependent_assignments` + `DependentAssigner` (check ANTES del dinero,
-          assign DESPUÉS del `allow`) + `Booking\Contracts\CheckoutLines` + `CartLine.dependent_ids` +
-          `OrdersController::store()` + `event-data` con `dependents` + RGPD + gates.
+    - [x] **U1 · el servidor** (2026-08-28 madrugada, spec §9.9.7): `dependent_assignments` +
+          `DependentAssignment` + `Dependent::referenced()` (un predicado) + `Booking\Contracts\CheckoutLines`
+          + reader + doble + `DependentAssigner` (`check()` ANTES del dinero → 422 por campo; `assign()`
+          tras el `allow`, bajo el lock del titular, idempotente, sin lanzar) + `CartLine.dependent_ids`
+          + `OrdersController::store()` + `event-data` con `dependents[]` + `anonymize()`/export +
+          `api.dependents.*` ×3 + la paridad mínima de `cart.js`. **+30 tests · 9/9 mutaciones · 6
+          escenarios + Redsys ✓ · sonda HTTP 10 pasos ✓.**
     - [ ] **U2 · el cajón**: las cuatro listas de `cart.js`, `assignment.js`, el bloque «¿Para quién?»
           en los pasos 3 y 4, la puerta 2 en `admission.js`, el paso 6 y la tarjeta, rótulos ×3,
           manifiesto y techos medidos.

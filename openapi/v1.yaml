@@ -2672,7 +2672,7 @@ components:
 
     ExportedOrderItem:
       type: object
-      required: [product, date, time, quantity, unit_price_cents, seats, event_data, addons]
+      required: [product, date, time, quantity, unit_price_cents, seats, event_data, addons, dependents]
       additionalProperties: false
       properties:
         product:
@@ -2713,6 +2713,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ExportedOrderAddon'
+        dependents:
+          type: array
+          description: |
+            Los nombres de los menores a cargo para los que era esta entrada (Fase 6 · menores a
+            cargo, tanda 4, `RGPD-04`): dato personal de terceros que el titular declaró y por eso
+            forma parte de su copia del art. 20. Vacío si ninguna unidad era para un menor.
+          items:
+            type: string
 
     ExportedOrderAddon:
       type: object
@@ -3561,7 +3569,7 @@ components:
 
     OrderEventDataReservation:
       type: object
-      required: [reservation_id, answers]
+      required: [reservation_id, answers, dependents]
       additionalProperties: false
       properties:
         reservation_id:
@@ -3577,6 +3585,31 @@ components:
             pide datos al reservar, o si no se contestó nada.
           items:
             $ref: '#/components/schemas/EventAnswer'
+        dependents:
+          type: array
+          description: |
+            Los menores a cargo para los que es esta entrada (Fase 6 · menores a cargo, tanda 4), en
+            el orden en que se asignaron; vacío si ninguna unidad es para un menor o si la reserva es
+            un pack. Sale por AQUÍ y no por `OrderItem` por la misma razón que las respuestas del
+            pack: es el nombre de un menor y no debe viajar en cada página del historial. Nunca más
+            entradas que unidades tenga hoy la línea. La edad y el estado de su exención se leen en
+            `GET /me/dependents`.
+          items:
+            $ref: '#/components/schemas/AssignedDependent'
+
+    AssignedDependent:
+      type: object
+      description: Un menor a cargo al que se asignó una entrada — solo lo que identifica al titular su etiqueta.
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: El `id` de `GET /me/dependents`. Puede ser el de un menor ya retirado de la cuenta.
+        name:
+          type: string
+          description: La etiqueta que el titular le puso («el nombre que use en casa»).
 
     EventAnswer:
       type: object
@@ -4190,6 +4223,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CartLineAddon'
+        dependent_ids:
+          type: array
+          description: |
+            Los menores a cargo del titular para los que son estas entradas (Fase 6 · menores a cargo,
+            tanda 4). Enteros de `GET /me/dependents`, sin repetidos y nunca más que `quantity`; el
+            resto de unidades son adultos. **Solo `POST /orders` lo lee**: la disponibilidad, la
+            validación de línea y el presupuesto aceptan el mismo cuerpo y lo ignoran. El servidor
+            comprueba ANTES de crear el pedido que cada menor es suyo, que es menor el día de la
+            visita y que tiene la exención firmada y vigente (modo interno); si no, `422
+            validation_failed` con el campo `items.{i}.dependent_ids.{j}`. Solo entradas: en un pack
+            responde 422 sobre `items.{i}.dependent_ids`.
+          items:
+            type: integer
+            format: int64
+            minimum: 1
 
     CartLineAddon:
       type: object

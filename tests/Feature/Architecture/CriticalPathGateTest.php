@@ -117,6 +117,13 @@ class CriticalPathGateTest extends TestCase
         // donde viven sus locks. Ninguno toma el lock de zona/día.
         'app/Domain/Booking/Services/OrderItemCanceller.php',
         'app/Domain/Booking/Services/OrderItemRefunder.php',
+        // Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D11): el asignador de
+        // entradas a menores escribe DESPUÉS de que el pedido exista y su cobro se haya abierto, fuera
+        // de la transacción de los locks, y no cuenta plazas ni mueve dinero — una etiqueta de puerta.
+        // Se declara aquí a propósito: si algún día decidiera aforo o dinero, este test se pone rojo y
+        // obliga a meterlo en el gate a conciencia, no por inercia. Su lock (la fila del titular) lo
+        // comparte con `WaiverSigner`, que SÍ está en el gate por la cadena de hashes.
+        'app/Domain/Identity/Services/DependentAssigner.php',
     ];
 
     /**

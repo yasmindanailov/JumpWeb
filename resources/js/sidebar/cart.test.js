@@ -187,8 +187,24 @@ describe('el saneador de líneas restauradas', () => {
     test('una línea buena sobrevive y sale con la hora canónica', () => {
         assert.deepEqual(
             sanitizeLine({ product_id: 1, date: '2026-09-05', time: '10:00', quantity: 2 }),
-            { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2, event_data: {}, addons: [] }
+            { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2, event_data: {}, addons: [], dependent_ids: [] }
         );
+    });
+
+    /**
+     * Los menores asignados (Fase 6 · tanda 4) se restauran como IDS y con el veredicto del servidor:
+     * enteros ≥ 1 sin repetidos, o la línea se descarta entera — como una cantidad imposible, y por lo
+     * mismo: en un almacén que el usuario puede editar, corregir en silencio es inventarse una compra.
+     */
+    test('los menores asignados se restauran como ids, y una lista corrupta descarta la línea', () => {
+        const base = { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2 };
+
+        assert.deepEqual(sanitizeLine({ ...base, dependent_ids: [12, '7'] }).dependent_ids, [12, 7]);
+        assert.deepEqual(sanitizeLine({ ...base, dependent_ids: [] }).dependent_ids, []);
+
+        for (const bad of [['x'], [0], [-1], [2.5], [7, 7], 'siete', 7]) {
+            assert.equal(sanitizeLine({ ...base, dependent_ids: bad }), null, `dependent_ids ${JSON.stringify(bad)}`);
+        }
     });
 
     /**
@@ -474,20 +490,24 @@ describe('guardar', () => {
                     age: '__CANARIO_EDAD__',
                     notes: '__CANARIO_ALERGIA__',
                 },
+                // Y desde la tanda 4 de menores: si alguien colgara el NOMBRE del menor de la línea
+                // (`dependents: [{id, name}]`, como lo sirve `event-data`), tampoco puede salir de aquí.
+                dependents: [{ id: 12, name: '__CANARIO_MENOR__' }],
+                dependent_name: '__CANARIO_MENOR_2__',
             })],
         });
 
         assert.equal(
             storage.dump().includes('__CANARIO_'),
             false,
-            'una respuesta del pack ha llegado al navegador: es dato del art. 9 y no puede persistirse'
+            'una respuesta del pack —o el nombre de un menor— ha llegado al navegador: es dato personal de un menor y no puede persistirse'
         );
     });
 
-    test('lo guardado conserva producto, día, hora, cantidad y complementos', () => {
+    test('lo guardado conserva producto, día, hora, cantidad, complementos y los IDS de los menores', () => {
         const storage = fakeStorage();
 
-        save(storage, { owner: 7, lines: [line({ addons: [{ product_id: 4, quantity: 2 }] })] });
+        save(storage, { owner: 7, lines: [line({ addons: [{ product_id: 4, quantity: 2 }], dependent_ids: [12, 15] })] });
 
         const payload = JSON.parse(storage.raw('jw.cart.v1'));
 
@@ -495,6 +515,7 @@ describe('guardar', () => {
         assert.deepEqual(payload.lines[0], {
             product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2,
             addons: [{ product_id: 4, quantity: 2 }],
+            dependent_ids: [12, 15],
         });
     });
 

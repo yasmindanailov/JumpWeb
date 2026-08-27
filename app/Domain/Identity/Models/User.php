@@ -209,6 +209,13 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // bajo el mismo tratamiento restringido que la firma (desvinculada: sale de toda superficie;
             // la poda la retira cuando su última firma vence). Sin firma ni referencias es el nombre y la
             // fecha de nacimiento de un menor sin nada que los justifique: se borra de verdad.
+            // Tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D6): las ENTRADAS ASIGNADAS a sus menores se
+            // borran ANTES —son la misma clase de dato que `guest_data`, PII de un menor atada a una
+            // visita— y así cada menor sigue después la regla de arriba con solo su firma como referencia.
+            DependentAssignment::query()
+                ->whereIn('dependent_id', $this->dependents()->select('id'))
+                ->delete();
+
             $this->dependents()->get()->each(
                 static fn (Dependent $dependent) => $dependent->hasReferences() ? $dependent->unlink() : $dependent->delete()
             );

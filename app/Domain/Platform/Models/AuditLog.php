@@ -188,6 +188,7 @@ class AuditLog extends Model
         // ── Menores a cargo (Fase 6 · C, `specs/menores-a-cargo.md`) — target = User; sin PII ──
         'dependents.added',                 // payload: dependent_id (nunca el nombre ni la fecha)
         'dependents.removed',               // payload: dependent_id + mode (deleted | unlinked)
+        'dependents.assigned',              // payload: dependent_id + order_item_id + order_id (tanda 4; nunca el nombre)
 
         // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────
         'legal.version_published',          // target = LegalDocumentVersion (la fila del 1.er idioma)
