@@ -86,7 +86,7 @@
 >   ▶ **Para el agente del C (el tema/armazón)**: la tanda 4 **no ha tocado ni tocará**
 >   `resources/views/components/layout.blade.php`, `public/css/*`, `nav.blade.php`, `menu.blade.php`
 >   ni `app.js` (la siembra del dueño de la cesta vive en `resources/js/sidebar/index.js`). El selector
->   del embudo se compone con clases que ya existen (`eventfields`, `form__checks`, `check`): **cero CSS nuevo**,
+>   del embudo se compone con clases que ya existen (`addons`/`addons__intro`, `form__hint`, `form__checks`, `check` — ⚠️ NO `eventfields`: su `input { width:100% }` rompía el checkbox, §9.9.8·7): **cero CSS nuevo**,
 >   como la zona de menores. Si tu 2c·2 toca `layout.blade.php`, `git pull --rebase` antes de empujar.
 >   (El aviso al carril B que hubo aquí se retira: el owner rectificó y esta tanda NO toca `app/Filament/**`.)
 >   Lo anterior de esta fila sigue siendo cierto y se conserva como historia: cierre de la sesión del
