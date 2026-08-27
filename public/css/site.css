@@ -609,32 +609,6 @@
 }
 .pwd-input__icon { display: block; }
 
-/* ---------- "Visítanos": enlace del menú con desplegable ---------- */
-/* mismo aspecto que .nav__links a (sin recuadro de botón) */
-.nav__dd { position: relative; display: inline-flex; align-items: center; }
-.nav__dd-trigger {
-    position: relative;
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--font-body); font-size: 12px; font-weight: 500;
-    text-transform: uppercase; letter-spacing: 0.16em;
-    color: var(--fg); padding: 6px 0;
-    transition: color 0.25s ease;
-}
-.nav__dd-trigger::after {
-    content: ""; position: absolute; left: 0; right: 15px; bottom: -2px;
-    height: 2px; background: var(--zone-1);
-    transform: scaleX(0); transform-origin: left center;
-    transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
-}
-.nav__dd-trigger:hover { color: var(--zone-1); }
-.nav__dd-trigger:hover::after,
-.plan-select--open .nav__dd-trigger::after { transform: scaleX(1); }
-.plan-select--open .nav__dd-trigger { color: var(--zone-1); }
-.nav__dd-chev { transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); }
-.plan-select--open .nav__dd-chev { transform: rotate(180deg); }
-/* el panel cuelga hacia la derecha desde el enlace */
-.nav__dd .plan-select__panel { left: 0; right: auto; transform-origin: top left; }
-
 /* ====================================================================
    Autenticación (Fase 4): botón de cuenta, modal, formulario y avisos.
    ==================================================================== */
@@ -3343,4 +3317,162 @@ html:not(.js) .gf-fiche__foot { display: none; }
 @media (max-width: 560px) {
     .offw-modal { width: calc(100vw - 24px); }
     .offw-title { font-size: 22px; }
+}
+
+/* ====================================================================
+   EL MENÚ A PANTALLA COMPLETA — armazón, tanda 2c·1
+   --------------------------------------------------------------------
+   `docs/specs/armazon-y-menu.md` §4.5. Adopta la ESTRUCTURA del mockup del
+   segundo cliente y **ni un valor suyo**: todo sale de los tokens de las
+   tandas 1 (color y superficie), 2a (canto y foco) y la elevación.
+
+   ⚠️⚠️ **Cerrado se oculta con `visibility`, NO solo con el recorte.** El menú
+   del mockup se esconde con `clip-path` y `pointer-events:none` y por eso deja
+   sus enlaces en el orden de tabulación (medido: cero `inert`, cero
+   `aria-hidden`). Aquí el recorte es la ANIMACIÓN y `visibility` es el ESTADO
+   — el mismo mecanismo que el cajón de móvil, cuyo porqué ya estaba escrito.
+
+   ⚠️ **La duración es 620 ms, no los 720 del mockup**, y no es capricho: el
+   contrato de movimiento del propio cliente declara siete duraciones
+   (120/180/240/320/420/620/900) y 720 no es una de ellas. Meterla ahora sería
+   sumar a la deuda que la tanda 2d existe para saldar.
+
+   ⚠️ **De dónde nace el recorte lo publica el JS** (`--menu-x`/`--menu-y`, la
+   posición real de la hamburguesa) y **nada más**: el radio, la curva y la
+   duración viven aquí, porque si vivieran en el `.js` serían la única parte del
+   tema que un cliente no puede tocar desde su hoja. Es la regla de `#195`.
+   ==================================================================== */
+.menu {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    visibility: hidden;
+    clip-path: circle(0 at var(--menu-x, 100%) var(--menu-y, 0px));
+    transition: clip-path 0.62s cubic-bezier(0.7, 0, 0.2, 1), visibility 0s linear 0.62s;
+}
+.menu--open {
+    visibility: visible;
+    clip-path: circle(150vmax at var(--menu-x, 100%) var(--menu-y, 0px));
+    transition-delay: 0s;
+}
+
+/* Trama de puntos: la única textura que el sistema admite sobre tinta. */
+.menu__grain {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--fg) 11%, transparent) 1.4px, transparent 1.6px);
+    background-size: 20px 20px;
+}
+
+.menu__inner {
+    position: relative; height: 100%;
+    max-width: 1240px; margin-inline: auto;
+    padding: clamp(104px, 13vh, 132px) var(--wrap-gutter) clamp(64px, 9vh, 104px);
+    display: flex; flex-direction: column; gap: 24px;
+}
+
+.menu__list {
+    list-style: none; margin: 0; padding: 0;
+    flex: 1; min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column; justify-content: center;
+    scrollbar-width: none;
+}
+.menu__list::-webkit-scrollbar { width: 0; }
+
+.menu__item { border-bottom: 1px solid var(--line); }
+.menu__item a {
+    display: flex; align-items: baseline; gap: 18px;
+    padding: clamp(9px, 1.8vh, 18px) 6px;
+    color: var(--fg);
+    /* Entrada escalonada: la posición la pone el marcado (`--i`), el tiempo el tema. */
+    opacity: 0; transform: translateY(26px);
+    transition:
+        opacity 0.42s ease calc(90ms + var(--i, 0) * 55ms),
+        transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) calc(90ms + var(--i, 0) * 55ms),
+        padding-left 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+        color 0.18s ease;
+}
+.menu--open .menu__item a { opacity: 1; transform: translateY(0); }
+.menu__item a:hover,
+.menu__item a:focus-visible { padding-left: 18px; color: var(--zone-1); }
+.menu__item a:focus-visible { outline: var(--focus-outline); outline-offset: 4px; }
+
+.menu__n {
+    flex: 0 0 auto; width: 26px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+    color: var(--fg-mute);
+}
+.menu__t {
+    font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
+    font-size: clamp(30px, min(5.2vw, 9vh), 68px);
+    line-height: 1; letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+.menu__s {
+    flex: 0 0 auto;
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--fg-mute); white-space: nowrap;
+}
+.menu__arrow {
+    margin-left: auto; display: inline-flex; align-items: center;
+    color: var(--fg-mute); opacity: 0.35;
+    transition: opacity 0.24s ease, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.menu__item a:hover .menu__arrow,
+.menu__item a:focus-visible .menu__arrow { opacity: 1; transform: translateX(6px); }
+
+.menu__foot {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+}
+.menu__chips {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.menu__chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--fg);
+    font-family: var(--font-body); font-size: 13.5px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.menu__chip:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); border-color: var(--fg); }
+.menu__chip:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+
+/* Con el menú abierto la barra sube POR ENCIMA y se queda desnuda: la hamburguesa
+   es la forma de cerrarlo, así que no puede quedar debajo. Declara superficie de
+   tinta desde el marcado, de modo que su contenido sigue leyéndose. */
+.nav--over {
+    z-index: 110;
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* En móvil manda el cajón (tanda 2c·4, `[PENDIENTE: owner]`), así que el menú a
+   pantalla completa NO existe ahí — y `display:none` lo saca también del foco,
+   que es lo que `visibility` sola no haría. Por encima del corte, al revés. */
+@media (max-width: 1080px) {
+    .menu { display: none; }
+}
+@media (min-width: 1081px) {
+    .mob-menu { display: none; }
+}
+
+/* El contrato de movimiento del cliente: desaparecen desplazamientos y escalas,
+   se mantienen las opacidades cortas. Sin esto el recorte circular es un barrido
+   de pantalla completa para quien pidió no tener uno. */
+@media (prefers-reduced-motion: reduce) {
+    .menu {
+        clip-path: none; opacity: 0;
+        transition: opacity 0.12s linear, visibility 0s linear 0.12s;
+    }
+    .menu--open { opacity: 1; transition-delay: 0s; }
+    .menu__item a { transition: color 0.12s linear; transform: none; }
 }

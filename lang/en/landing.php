@@ -14,6 +14,7 @@ return [
         'park' => 'The park',
         'services' => 'Services',
         'tickets' => 'Tickets',
+        'menu_label' => 'Main menu',
         'menu_open' => 'Open menu',
         'menu_close' => 'Close menu',
         'skip' => 'Skip to content',

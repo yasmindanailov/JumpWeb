@@ -98,7 +98,10 @@ class ShapeScaleTest extends TestCase
         '.bd-card__conf' => 'confeti del diseñador de invitaciones: dibujo',
         '.hero__chip:focus-visible' => 'anillo de foco sobre el vídeo del hero (ver el bloque de foco)',
         '.hero--full .hero__stage' => 'RESET: anula un radio heredado',
-        '.plan-select__panel a' => 'RESET: ídem',
+        // ⚠️ `.plan-select__panel a` vivía aquí y SE RETIRÓ el 2026-08-27 (armazón, tanda 2c·1):
+        // los dos desplegables de la barra desaparecieron con ella y la familia entera se quedó
+        // sin consumidor. Lo cazó esta misma guarda, que es para lo que está: una excepción sin
+        // sujeto tapa al siguiente que se llame igual.
         '.bd-proc__cube@media' => 'el cubo del proceso a otro tamaño dentro de un @media: sigue la ley',
     ];
 

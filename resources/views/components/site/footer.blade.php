@@ -16,8 +16,12 @@
                 unset($legalUrls[$waiverIdx], $legalLabels[$waiverIdx]);
             }
         }
-        $locales = ['es', 'en', 'fr'];
-        $langNames = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];
+        // ⚠️ Estas dos listas estaban QUEMADAS aquí y son una SEGUNDA copia de `SiteLocales`,
+        // cuyo propio docblock avisa: «dos listas de idiomas es cómo se acaba ofreciendo uno que
+        // la otra no reconoce». Al necesitar el menú del armazón los mismos datos (tanda 2c·1) se
+        // devuelven a su fuente única en vez de hacer una tercera.
+        $locales = \App\Domain\Platform\Services\SiteLocales::SUPPORTED;
+        $langNames = \App\Domain\Platform\Services\SiteLocales::NAMES;
     @endphp
     {{-- Tira de marca («C2 · tiras» del sistema del 2.º cliente): cinco franjas que rematan el
          pie y sustituyen al filete de 1px que había. Los cinco colores salen de `--strip-1..5`,

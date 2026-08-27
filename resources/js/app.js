@@ -819,9 +819,7 @@ document.addEventListener('alpine:init', () => {
     // Interacciones de la landing (zona activa, menú móvil, dropdown, slider, FAQ).
     window.Alpine.data('landing', () => ({
         zone: 'jump', // zona activa (jump | kids)
-        mobileOpen: false, // menú móvil
-        parkOpen: false, // desplegable "El parque" del nav (2026-05-27)
-        servicesOpen: false, // desplegable "Servicios" del nav (2026-05-27)
+        menuOpen: false, // el menú del armazón: a pantalla completa en escritorio, cajón en móvil
         langOpen: false, // selector de idioma
         faqOpen: 0, // índice de FAQ abierta
         progressLeft: 0, // barra de progreso del slider
@@ -838,22 +836,59 @@ document.addEventListener('alpine:init', () => {
             // un enlace —incluido un ancla same-page que NO recarga): al abrir bloquea el scroll del
             // fondo y pasa el foco al panel; al cerrar lo restaura y devuelve el foco al botón ☰.
             // (Dispara solo en CAMBIOS → no pelea con el `no-scroll` que el sidecart pone al cargar.)
-            this.$watch('mobileOpen', (open) => {
+            this.$watch('menuOpen', (open) => {
                 this.$store.scrollLock.set('nav', open);
                 if (open) {
-                    this.$nextTick(() => this.$refs.mobPanel?.querySelector('a[href],button:not([disabled])')?.focus());
+                    // La geometría ANTES de que se vea: si el recorte naciera en el sitio de la
+                    // apertura anterior, el menú se abriría desde una esquina que ya no es la suya.
+                    this.publishMenuOrigin();
+                    this.$nextTick(() => this.visibleMenuPanel()?.querySelector('a[href],button:not([disabled])')?.focus());
                 } else {
-                    this.$refs.burger?.focus();   // no-op si el ☰ está oculto (desktop)
+                    this.$refs.burger?.focus();
                 }
             });
+
+            // Reencuadrar mueve la hamburguesa; con el menú abierto, su origen deja de valer.
+            this._onMenuResize = () => { if (this.menuOpen) this.publishMenuOrigin(); };
+            window.addEventListener('resize', this._onMenuResize, { passive: true });
         },
 
-        // Trap de foco del drawer móvil (Lote 10): Tab cíclico dentro del panel mientras está
-        // abierto (mismo gesto que `a11yPanel` del modal/sidecart; aquí vive en el componente
-        // porque el estado `mobileOpen` es propio del nav, no un store).
-        trapMobile(e) {
-            if (e.key !== 'Tab' || !this.mobileOpen) return;
-            const panel = this.$refs.mobPanel;
+        /**
+         * **De dónde nace el recorte circular del menú.**
+         *
+         * ⚠️ **Publica GEOMETRÍA, no diseño** (misma regla que el hero, `#195`): aquí solo se
+         * mide dónde está la hamburguesa. El radio, la curva y la duración viven en el CSS,
+         * porque si los números vivieran aquí serían la única parte del tema que un cliente no
+         * puede tocar desde su hoja.
+         */
+        publishMenuOrigin() {
+            const burger = this.$refs.burger;
+            if (! burger) return;
+            const box = burger.getBoundingClientRect();
+            const root = document.documentElement;
+            root.style.setProperty('--menu-x', `${Math.round(box.left + box.width / 2)}px`);
+            root.style.setProperty('--menu-y', `${Math.round(box.top + box.height / 2)}px`);
+        },
+
+        /**
+         * **El panel que se está viendo AHORA.**
+         *
+         * El armazón sirve DOS overlays con un solo estado —el menú a pantalla completa en
+         * escritorio y el cajón en móvil— y el CSS decide cuál se ve. El foco tiene que ir al
+         * que existe, no al primero que se encuentre: `offsetParent` es `null` para lo que está
+         * en `display:none`, que es exactamente como se oculta el que no toca.
+         */
+        visibleMenuPanel() {
+            return [this.$refs.menuPanel, this.$refs.mobPanel]
+                .find((panel) => panel && panel.offsetParent !== null) ?? null;
+        },
+
+        // Trap de foco del overlay (Lote 10): Tab cíclico dentro del panel mientras está abierto
+        // (mismo gesto que `a11yPanel` del modal/sidecart; aquí vive en el componente porque el
+        // estado `menuOpen` es propio del armazón, no un store).
+        trapMenu(e) {
+            if (e.key !== 'Tab' || !this.menuOpen) return;
+            const panel = this.visibleMenuPanel();
             if (!panel) return;
             const items = [...panel.querySelectorAll(
                 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),[tabindex]:not([tabindex="-1"])'

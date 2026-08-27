@@ -196,23 +196,59 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **Ningún destino se ofrece solo en la barra o solo en el cajón.**
+     * **Ningún destino se pierde a ningún ancho.**
      *
-     * Es la regla que la 2c tiene que conservar cuando funda los dos en una lista plana: si un
-     * destino vive en un sitio y no en el otro, media plantilla de usuarios no lo encuentra y
-     * eso no falla ni avisa.
+     * ⚠️ **Esta regla se REDACTÓ de otra forma en la 2c·0 y la 2c·1 la movió de sujeto**, no de
+     * contenido: entonces los portadores eran la barra y el cajón; ahora son el **menú a
+     * pantalla completa** (por encima de 1080 px) y el **cajón** (por debajo). Lo que se
+     * comprueba es lo mismo de siempre: si un destino vive en un portador y no en el otro,
+     * media plantilla de visitantes no lo encuentra, y eso ni falla ni avisa.
+     *
+     * ▶ Se comparan como CONJUNTOS, no destino a destino: así también se caza el caso
+     * contrario —un destino que llega a un portador y no al otro— sin tener que enumerarlo.
      */
-    public function test_every_destination_is_offered_in_both_the_bar_and_the_drawer(): void
+    public function test_no_destination_is_lost_at_any_width(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
-        $bar = $this->linksIn($html, 'nav');
+        $menu = $this->linksIn($html, 'menu__list');
         $drawer = $this->linksIn($html, 'mob-menu');
 
         foreach (self::FIXED_DESTINATIONS as $destination) {
-            $this->assertContains($destination, $bar, "la barra no ofrece `{$destination}`");
+            $this->assertContains($destination, $menu, "el menú no ofrece `{$destination}`");
             $this->assertContains($destination, $drawer, "el cajón móvil no ofrece `{$destination}`");
         }
+
+        sort($menu);
+        $drawer = array_values(array_diff($drawer, ['/registro']));   // el alta vive en el pie del cajón, no es un destino
+        sort($drawer);
+
+        $this->assertSame(
+            $menu, $drawer,
+            'el menú a pantalla completa y el cajón de móvil ofrecen destinos DISTINTOS: a uno de '.
+            'los dos anchos se le está escondiendo algo.',
+        );
+    }
+
+    /**
+     * **La barra ya no lleva destinos, y eso hay que fijarlo.**
+     *
+     * La 2c·1 le quitó los dos desplegables y los dos atajos. Sin esta aserción, media migración
+     * —los enlaces de vuelta a la barra «mientras tanto»— pasaría inadvertida y el sitio tendría
+     * otra vez dos navegaciones que mantener.
+     */
+    public function test_the_bar_no_longer_carries_destinations(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $bar = $this->linksIn($html, 'nav');
+
+        $filtrados = array_values(array_intersect($bar, self::FIXED_DESTINATIONS));
+
+        $this->assertSame(
+            [], $filtrados,
+            'la barra ha vuelto a llevar destinos de navegación: '.implode(', ', $filtrados).
+            '. Desde la 2c·1 los lleva el menú.',
+        );
     }
 
     /**
@@ -222,7 +258,7 @@ class ArmazonContractTest extends TestCase
      * lee la misma lista y **nadie comprobaba que llegara**: si el día de mañana se sirve solo a
      * la barra, en móvil el servicio deja de existir.
      */
-    public function test_a_service_marked_for_the_nav_reaches_both_the_bar_and_the_drawer(): void
+    public function test_a_service_marked_for_the_nav_reaches_both_the_menu_and_the_drawer(): void
     {
         LandingService::create([
             'slug' => 'sonda-armazon',
@@ -234,7 +270,7 @@ class ArmazonContractTest extends TestCase
 
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertContains('/servicios#sonda-armazon', $this->linksIn($html, 'nav'));
+        $this->assertContains('/servicios#sonda-armazon', $this->linksIn($html, 'menu__list'));
         $this->assertContains('/servicios#sonda-armazon', $this->linksIn($html, 'mob-menu'));
 
         LandingService::where('slug', 'sonda-armazon')->update(['show_in_nav' => false]);
@@ -242,7 +278,7 @@ class ArmazonContractTest extends TestCase
 
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertNotContains('/servicios#sonda-armazon', $this->linksIn($html, 'nav'));
+        $this->assertNotContains('/servicios#sonda-armazon', $this->linksIn($html, 'menu__list'));
         $this->assertNotContains('/servicios#sonda-armazon', $this->linksIn($html, 'mob-menu'));
     }
 
@@ -300,7 +336,7 @@ class ArmazonContractTest extends TestCase
 
         /** @var \DOMElement $link */
         foreach ($xpath->query('.//a', $drawer) as $link) {
-            if (! str_contains($link->getAttribute('data-alpine-click'), 'mobileOpen = false')) {
+            if (! str_contains($link->getAttribute('data-alpine-click'), 'menuOpen = false')) {
                 $sinCierre[] = $link->getAttribute('href');
             }
         }
@@ -310,6 +346,164 @@ class ArmazonContractTest extends TestCase
             'estos enlaces del cajón móvil no lo cierran al pulsarlos, así que en un ancla de la '.
             "misma página el cajón se queda tapando el destino:\n  ".implode("\n  ", $sinCierre),
         );
+    }
+
+    /**
+     * **El menú conserva los cuatro destinos del parque, en su orden y con sus anclas.**
+     *
+     * ⚠️ **Se MUDÓ desde `HomePageTest::nav_renders_park_dropdown_with_anchor_items`** al retirar
+     * la 2c·1 el desplegable de la barra. El sujeto viejo —el desplegable— murió; lo que
+     * comprobaba de verdad —las etiquetas, **el orden** y las anclas— sigue vivo y nadie más lo
+     * fijaba. Retirar el test en vez de mudarlo habría perdido la cobertura del orden.
+     *
+     * ▶ Y aquí se lee **acotado al elemento**: la versión anterior aseveraba sobre la página
+     * entera, donde «Zona Kids» lo pinta también la sección de zonas.
+     */
+    public function test_the_menu_keeps_the_park_items_in_order(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $titles = $this->menuTitles($html);
+        $parque = ['Zona Kids', 'Zona Jump', 'Atracciones', 'Ubicación y horario'];
+
+        $this->assertSame(
+            $parque,
+            array_values(array_intersect($titles, $parque)),
+            'los destinos del parque han cambiado de orden o han desaparecido del menú',
+        );
+
+        $urls = $this->linksIn($html, 'menu__list');
+        foreach (['/#zones', '/#rides', '/#info'] as $anchor) {
+            $this->assertContains($anchor, $urls, "el menú ya no ancla a `{$anchor}`");
+        }
+    }
+
+    /**
+     * **El menú conserva los servicios, en el orden que manda la BD.**
+     *
+     * ⚠️ **Se MUDÓ desde `HomePageTest::nav_renders_services_dropdown_with_section_links`**, por
+     * el mismo motivo. El orden lo fija `position` en el panel: si el menú dejara de respetarlo,
+     * el parque perdería el control de cómo se presentan sus propios servicios.
+     */
+    public function test_the_menu_keeps_the_services_in_order(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $titles = $this->menuTitles($html);
+        $servicios = ['Cumpleaños', 'Excursiones de colegio', 'Empresas', 'Excursión para mayores', 'Otros eventos'];
+
+        $this->assertSame(
+            $servicios,
+            array_values(array_intersect($titles, $servicios)),
+            'los servicios han cambiado de orden o han desaparecido del menú',
+        );
+
+        $urls = $this->linksIn($html, 'menu__list');
+        foreach (['excursionescolegio', 'teambuilding', 'sesionadultos', 'eventos'] as $slug) {
+            $this->assertContains(
+                '/servicios#'.$slug, $urls,
+                "el menú ya no lleva a la sección `{$slug}` de servicios",
+            );
+        }
+    }
+
+    /**
+     * **El menú a pantalla completa es un overlay accesible — y cerrado NO aporta focos.**
+     *
+     * ❗❗ **Ésta es la aserción que existe por el defecto del mockup.** Su menú se oculta con un
+     * recorte circular y `pointer-events:none`, sin `visibility`, sin `inert` y sin
+     * `aria-hidden`: cerrado deja sus enlaces en el orden de tabulación. Aquí el recorte es la
+     * animación y **`visibility` es el estado**, que es el mecanismo que el cajón ya tenía.
+     * Se comprueba en la HOJA, no en el marcado, porque es donde vive la decisión.
+     */
+    public function test_the_menu_is_an_accessible_overlay_that_leaves_no_focus_when_closed(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $panel = $this->nodes($html, 'menu__inner')[0];
+
+        $this->assertSame('dialog', $panel->getAttribute('role'), 'el menú no es un diálogo');
+        $this->assertSame('true', $panel->getAttribute('aria-modal'), 'el menú no se anuncia como modal');
+        $this->assertNotSame('', $panel->getAttribute('aria-label'), 'el menú no tiene nombre accesible');
+        $this->assertSame('menuPanel', $panel->getAttribute('x-ref'), 'sin referencia al panel no hay trap de foco ni foco inicial');
+
+        $menu = $this->nodes($html, 'menu')[0];
+        $this->assertNotSame('', $menu->getAttribute('data-alpine-keydown'), 'el menú no atrapa el foco');
+        $this->assertNotSame('', $menu->getAttribute('data-alpine-keydown.escape.window'), 'Escape no cierra el menú');
+
+        $css = $this->stylesheets();
+
+        $this->assertMatchesRegularExpression(
+            '/\.menu\s*\{[^}]*visibility:\s*hidden/s', $css,
+            'el menú CERRADO no se oculta con `visibility`: sus enlaces se quedarían en el orden '.
+            'de tabulación, que es exactamente el defecto del mockup.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.menu--open\s*\{[^}]*visibility:\s*visible/s', $css,
+            'el menú ABIERTO no se declara visible: no sería alcanzable con el teclado',
+        );
+    }
+
+    /**
+     * **El menú declara superficie de TINTA.**
+     *
+     * Es el segundo consumidor del mecanismo de la tanda 1, después del hero. Si dejara de
+     * declararla, los siete tokens de superficie volverían a los del papel y **todo lo de dentro
+     * se pintaría claro sobre claro** sin que fallara nada: es el defecto que `#194` cazó tres
+     * veces con el scrim, el texto y el placeholder del hero.
+     */
+    public function test_the_menu_declares_the_ink_surface(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertSame(
+            'ink', $this->nodes($html, 'menu')[0]->getAttribute('data-surface'),
+            'el menú ha dejado de declarar superficie de tinta',
+        );
+    }
+
+    /**
+     * **Todo enlace del menú lo cierra al pulsarlo.**
+     *
+     * Mismo motivo que en el cajón: la mitad de los destinos son anclas de la MISMA página, y sin
+     * esto el visitante pulsa «Zona Kids», la página salta a la sección y **el menú se queda a
+     * pantalla completa encima**, tapando justo lo que acaba de pedir.
+     */
+    public function test_every_menu_link_closes_the_menu(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $xpath = $this->xpath($html);
+
+        $sinCierre = [];
+
+        /** @var \DOMElement $link */
+        foreach ($xpath->query('.//a', $this->nodes($html, 'menu__list')[0]) as $link) {
+            if (! str_contains($link->getAttribute('data-alpine-click'), 'menuOpen = false')) {
+                $sinCierre[] = $link->getAttribute('href');
+            }
+        }
+
+        $this->assertSame([], $sinCierre, 'estos enlaces del menú no lo cierran: '.implode(', ', $sinCierre));
+    }
+
+    /**
+     * **El número de cada destino es DECORACIÓN, no parte de su nombre.**
+     *
+     * Sin `aria-hidden`, un lector de pantalla anuncia «cero uno Cumpleaños» en los diez.
+     */
+    public function test_the_menu_numbers_are_decoration(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $numeros = $this->nodes($html, 'menu__n');
+
+        $this->assertNotEmpty($numeros, 'el menú no numera sus destinos');
+
+        foreach ($numeros as $n) {
+            $this->assertSame(
+                'true', $n->getAttribute('aria-hidden'),
+                'un número del menú entra en el nombre accesible del enlace',
+            );
+        }
     }
 
     /**
@@ -355,6 +549,34 @@ class ArmazonContractTest extends TestCase
      * confianza del mundo, que el cableado no existe. Se renombran a `data-alpine-*` /
      * `data-bind-*` y hay control positivo que lo comprueba.
      */
+    /**
+     * Los títulos de los destinos del menú, **en el orden en que se pintan**.
+     *
+     * @return list<string>
+     */
+    private function menuTitles(string $html): array
+    {
+        $out = [];
+
+        foreach ($this->nodes($html, 'menu__t') as $node) {
+            $out[] = trim($node->textContent);
+        }
+
+        return $out;
+    }
+
+    /** Las dos hojas del producto, con los comentarios blanqueados. */
+    private function stylesheets(): string
+    {
+        $out = '';
+
+        foreach (glob(public_path('css/*.css')) ?: [] as $path) {
+            $out .= (string) preg_replace('#/\*.*?\*/#s', ' ', (string) file_get_contents($path))."\n";
+        }
+
+        return $out;
+    }
+
     private function xpath(string $html): \DOMXPath
     {
         $key = md5($html);

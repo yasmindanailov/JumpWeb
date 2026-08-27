@@ -10560,3 +10560,78 @@ aserciones) · Pint 937.
 idioma · el glifo del registro externo. Y, antes de apilar la 2c·1 encima, **su pasada de navegador
 por `#195` y `#196`**: la 2c toca el mismo terreno, y si se apila sin mirar, cuando algo se vea raro
 no habrá forma de saber cuál de las tres tandas lo hizo.
+
+## #201 · 2026-08-27 · El ARMAZÓN, tanda 2c·1 — la barra pierde sus enlaces y la navegación pasa a un MENÚ A PANTALLA COMPLETA
+
+La primera tanda de la 2c que **sí mueve píxeles**, y mueve la primera pantalla de las 12 vistas.
+Sustituye los dos desplegables de la barra por un overlay a pantalla completa con la lista PLANA
+que el owner decidió en `#200`.
+
+**Lo que entra**
+· El menú declara **`data-surface="ink"`** y es el **segundo consumidor del mecanismo de la tanda
+  1**, después del hero: los siete tokens de superficie se re-escopan solos y **no hay ni un color
+  escrito a mano**. Canto, foco y tipografía, por token. **25 reglas · 112 declaraciones.**
+· **Lista plana de 10 destinos**, numerada, con entrada escalonada y el recorte circular desde la
+  hamburguesa. La sigue mandando la BD: un servicio con «sale en el menú» entra solo.
+· **Cápsulas** (`[DECIDIDO owner]`): acceder + idioma + redes. El idioma sube al menú **además** de
+  quedarse en el pie —con la barra sin enlaces, quien está a mitad de página no debería bajar hasta
+  el final para cambiarlo— y las redes solo se pintan si la instalación las tiene configuradas,
+  con las URLs ya saneadas por el composer (`SEC-07`).
+· La barra **pierde sus enlaces** y la hamburguesa pasa a **todos los anchos**: es la única puerta
+  a la navegación. Con el menú abierto la barra **sube por encima** y declara tinta, porque la
+  hamburguesa es la forma de cerrarlo y no puede quedar debajo.
+· **El móvil no se toca**: por debajo de 1080 px sigue mandando el cajón de siempre, esperando el
+  artboard del owner (`#200`, pendiente 1).
+
+⚠️⚠️ **Lo único del mockup que NO se copia es cómo se oculta el menú**, y es su defecto real: el
+suyo se esconde con `clip-path` y `pointer-events:none` —cero `inert`, cero `aria-hidden`, cero
+`visibility`, medido— así que **cerrado deja sus enlaces en el orden de tabulación**. Aquí el
+recorte es la ANIMACIÓN y `visibility` es el ESTADO, que es el mecanismo que el cajón ya tenía y
+cuyo porqué estaba escrito. **La mutación que le quita ese `visibility` muerde.**
+⚠️ Y los dos overlays se conmutan con **`display:none`, no con `visibility`**: el panel que no toca
+no puede aportar ni un tabulador, y `visibility` no siempre lo saca del foco.
+⚠️ **La duración es 620 ms, no los 720 del mockup**: el contrato de movimiento del propio cliente
+declara siete duraciones y 720 no es una de ellas. Meterla habría sumado a la deuda que la tanda 2d
+existe para saldar.
+⚠️ **El JS publica GEOMETRÍA y no decide diseño** (regla de `#195`): mide dónde está la hamburguesa
+y publica `--menu-x`/`--menu-y`. El radio, la curva y la duración viven en el CSS, porque si
+vivieran en el `.js` serían la única parte del tema que un cliente no puede tocar desde su hoja.
+
+**Lo que sale**: **33 reglas · 143 declaraciones** de `plan-select*`, `nav__dd*` y `nav__links*`,
+que murieron con los desplegables — más los comentarios que las citaban. El armazón pasa de **161 a
+154 reglas** y de 612 a 586 declaraciones. Sumando las dos tandas, de **194 a 154**: 33 se
+retiraron **por muertas** (`#200`) y 33 **con la feature que las usaba** (ésta). Son dos cosas
+distintas y no se suman como si fueran lo mismo.
+
+❗ **Dos tests de `HomePageTest` se cayeron y NO se retiraron: se MUDARON.** Su sujeto —los dos
+desplegables— murió, pero lo que comprobaban de verdad seguía vivo y **nadie más lo fijaba**: las
+etiquetas de los destinos, sus anclas y **su ORDEN**. Viven ahora en `ArmazonContractTest`
+apuntando al menú y **acotados al elemento** — los originales aseveraban sobre la página entera,
+donde «Zona Kids» lo pinta también la sección de zonas. Es `CONVENCIONES §3.quater`: clasificar por
+sujeto, no borrar lo que estorba.
+❗ **Y dos guardas avisaron de que se habían quedado sin sujeto**, que es exactamente para lo que
+están: `ShapeScaleTest` perdió una excepción (`.plan-select__panel a`) y la sonda de at-rules del
+trinquete perdió la suya (`.nav__links` era la única clase del armazón que solo vivía dentro de un
+`@media`; ahora es `.book-bar-visible`). ▶ **Una sonda por NOMBRE avisa cuando se queda sin sujeto;
+una por umbral se habría quedado verde sin comprobar nada.**
+
+⚠️ **Y una reconciliación que no cuadró a la primera**: el antes y el después daban `161 − 33 + 25 =
+153` frente a 154 medidas. La causa era mía y ya conocida —había cambiado la lista de familias
+entre las dos medidas—. Con una sola definición y un diff **de selectores**, las tres reglas que
+faltaban aparecen con nombre y `161 − 34 + 27 = 154`. **Un cuadre que falla por uno es un cuadre que
+falla.**
+
+▶ **De paso, el pie deja de tener su propia lista de idiomas**: eran una segunda copia de
+`SiteLocales`, cuyo propio docblock avisa de que «dos listas de idiomas es cómo se acaba ofreciendo
+uno que la otra no reconoce». El menú necesitaba los mismos datos y se devuelven a la fuente única
+en vez de hacer una tercera.
+
+`specs/armazon-y-menu.md` §8.3 · `resources/views/components/site/menu.blade.php` (nuevo) ·
+`nav.blade.php` · `footer.blade.php` · `resources/js/app.js` · `public/css/{site,landing}.css` ·
+`lang/{es,en,fr}/landing.php` · `ArmazonContractTest` (+7) · `HomePageTest` (−2, mudados) ·
+`ShapeScaleTest` · `ArmazonCssHasNoOrphansTest`.
+**16 mutaciones, las 16 muerden**, con control positivo · suite **3082** verde (17.711 aserciones)
+· `test:js` 724/724 · Pint 937 · docs-check verde.
+❗ **Falta la pasada de NAVEGADOR del owner, y aquí pesa como nunca**: esto cambia la primera
+pantalla de las doce vistas, encima de `#195` y `#196`, que siguen sin mirarse. El owner eligió
+revisarlo todo junto sabiendo el coste (`#200`).

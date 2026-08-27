@@ -28,77 +28,34 @@
         ['t' => __('landing.nav.events'), 'url' => route('cumpleanos')],   // Cumpleaños (destacado además del item dentro de Servicios)
         ['t' => __('landing.nav.tickets'), 'url' => route('precios')],     // Entradas
     ];
+
+    // **La lista PLANA del menú a pantalla completa** (`specs/armazon-y-menu.md` §4.2,
+    // `[DECIDIDO owner]`). Se compone de las MISMAS fuentes que tenía la barra —atajos, «El
+    // parque» y «Servicios», con los del CMS por `show_in_nav`— y en el mismo orden que ya
+    // usaba el cajón de móvil: primero lo más buscado, luego el parque, luego los servicios.
+    //
+    // ⚠️ **Se deduplica por el PAR (título, url), no por url**, y la diferencia importa:
+    // «Cumpleaños» está a la vez como atajo y como primer servicio —mismo título y misma
+    // URL— y en una lista plana sería el mismo destino dos veces; pero «Zona Kids» y «Zona
+    // Jump» **comparten ancla** (`/#zones`) y son dos destinos distintos. Deduplicar por URL
+    // se habría comido uno de los dos sin avisar.
+    $menuItems = [];
+    foreach (array_merge($simpleLinks, $parkItems, $servicesItems) as $item) {
+        $menuItems[$item['t'].'|'.$item['url']] ??= $item;
+    }
+    $menuItems = array_values($menuItems);
 @endphp
 
-<nav class="nav">
+{{-- Con el menú abierto la barra sube POR ENCIMA de él (la hamburguesa es la forma de cerrarlo)
+     y declara superficie de TINTA, que es lo que hace legible su contenido sobre el menú sin
+     escribir un solo color a mano: los siete tokens de superficie se re-escopan solos. --}}
+<nav class="nav" :class="menuOpen && 'nav--over'" x-bind:data-surface="menuOpen ? 'ink' : false">
     <div class="nav__left">
         <a href="{{ url('/') }}" class="nav__brand">
             <span class="nav__brand-row">
                 {{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span>
             </span>
         </a>
-        <div class="nav__links">
-            {{-- Desplegable "El parque" — secciones de la home (zonas, atracciones, ubicación). --}}
-            <div class="nav__dd plan-select" :class="parkOpen && 'plan-select--open'" @click.outside="parkOpen = false">
-                <button type="button" class="nav__dd-trigger" @click="parkOpen = !parkOpen; if (parkOpen) servicesOpen = false" :aria-expanded="parkOpen">
-                    {{ __('landing.nav.park') }}
-                    <x-icons.chevron-down class="nav__dd-chev" :width="9" :height="9" />
-                </button>
-                <div class="plan-select__panel" role="menu">
-                    <div class="plan-select__panel-head">
-                        <span class="jj-block jj-block--xs"></span>{{ __('landing.nav.park') }}
-                    </div>
-                    <ul>
-                        @foreach ($parkItems as $i => $item)
-                            <li style="--i: {{ $i }}">
-                                <a href="{{ $item['url'] }}" role="menuitem">
-                                    <div class="plan-select__item-text">
-                                        <span class="plan-select__item-t">{{ $item['t'] }}</span>
-                                        <span class="plan-select__item-s">{{ $item['s'] }}</span>
-                                    </div>
-                                    <span class="arrow">
-                                        <x-icons.arrow-right :width="14" :height="14" />
-                                    </span>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-
-            {{-- Desplegable "Servicios" — cumpleaños + secciones de /servicios. --}}
-            <div class="nav__dd plan-select" :class="servicesOpen && 'plan-select--open'" @click.outside="servicesOpen = false">
-                <button type="button" class="nav__dd-trigger" @click="servicesOpen = !servicesOpen; if (servicesOpen) parkOpen = false" :aria-expanded="servicesOpen">
-                    {{ __('landing.nav.services') }}
-                    <x-icons.chevron-down class="nav__dd-chev" :width="9" :height="9" />
-                </button>
-                <div class="plan-select__panel" role="menu">
-                    <div class="plan-select__panel-head">
-                        <span class="jj-block jj-block--xs"></span>{{ __('landing.nav.services') }}
-                    </div>
-                    <ul>
-                        @foreach ($servicesItems as $i => $item)
-                            <li style="--i: {{ $i }}">
-                                <a href="{{ $item['url'] }}" role="menuitem">
-                                    <div class="plan-select__item-text">
-                                        <span class="plan-select__item-t">{{ $item['t'] }}</span>
-                                        <span class="plan-select__item-s">{{ $item['s'] }}</span>
-                                    </div>
-                                    <span class="arrow">
-                                        <x-icons.arrow-right :width="14" :height="14" />
-                                    </span>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-
-            {{-- Atajos directos: Cumpleaños (destacado) + Entradas. --}}
-            @foreach ($simpleLinks as $link)
-                <a href="{{ $link['url'] }}">{{ $link['t'] }}</a>
-            @endforeach
-        </div>
     </div>
 
     <div class="nav__cta">
@@ -184,7 +141,7 @@
             <span class="cta-med__arrow" aria-hidden="true">→</span>
         </button>
 
-        <button class="nav__burger" x-ref="burger" @click="mobileOpen = true" aria-label="{{ __('landing.nav.menu_open') }}">
+        <button class="nav__burger" x-ref="burger" @click="menuOpen = true" aria-label="{{ __('landing.nav.menu_open') }}">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
                 <path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
             </svg>
@@ -192,19 +149,21 @@
     </div>
 </nav>
 
-{{-- Menú móvil (drawer) = overlay accesible (Lote 10): Escape cierra, `trapMobile` atrapa el
+<x-site.menu :items="$menuItems" />
+
+{{-- Menú móvil (drawer) = overlay accesible (Lote 10): Escape cierra, `trapMenu` atrapa el
      foco (Tab cíclico) dentro del panel, y el componente `landing` bloquea el scroll del fondo +
      pasa/devuelve el foco al abrir/cerrar. Fuera de tab-order y AT cuando cerrado vía CSS
      (`visibility:hidden`), no por `aria-hidden` (que dejaba foco-fantasma). --}}
-<div class="mob-menu" :class="mobileOpen && 'mob-menu--open'" :aria-hidden="!mobileOpen"
-     @keydown.escape.window="mobileOpen = false" @keydown="trapMobile($event)">
-    <div class="mob-menu__backdrop" @click="mobileOpen = false"></div>
+<div class="mob-menu" :class="menuOpen && 'mob-menu--open'" :aria-hidden="!menuOpen"
+     @keydown.escape.window="menuOpen = false" @keydown="trapMenu($event)">
+    <div class="mob-menu__backdrop" @click="menuOpen = false"></div>
     <aside class="mob-menu__panel" role="dialog" aria-modal="true" x-ref="mobPanel">
         <div class="mob-menu__head">
             <span class="nav__brand">
                 <span class="nav__brand-row">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
             </span>
-            <button class="mob-menu__close" @click="mobileOpen = false" aria-label="{{ __('landing.nav.menu_close') }}">
+            <button class="mob-menu__close" @click="menuOpen = false" aria-label="{{ __('landing.nav.menu_close') }}">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
             </button>
         </div>
@@ -213,7 +172,7 @@
         <ul class="mob-menu__primary">
             @foreach ($simpleLinks as $i => $link)
                 <li style="--i: {{ $i }}">
-                    <a href="{{ $link['url'] }}" @click="mobileOpen = false">{{ $link['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
+                    <a href="{{ $link['url'] }}" @click="menuOpen = false">{{ $link['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
                 </li>
             @endforeach
         </ul>
@@ -224,7 +183,7 @@
             <ul class="mob-menu__secondary">
                 @foreach ($parkItems as $i => $item)
                     <li style="--i: {{ $i + 2 }}">
-                        <a href="{{ $item['url'] }}" @click="mobileOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
+                        <a href="{{ $item['url'] }}" @click="menuOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
                     </li>
                 @endforeach
             </ul>
@@ -235,7 +194,7 @@
             <ul class="mob-menu__secondary">
                 @foreach ($servicesItems as $i => $item)
                     <li style="--i: {{ $i + 6 }}">
-                        <a href="{{ $item['url'] }}" @click="mobileOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
+                        <a href="{{ $item['url'] }}" @click="menuOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
                     </li>
                 @endforeach
             </ul>
@@ -247,13 +206,13 @@
         @guest
             <div class="mob-menu__foot">
                 @if (! empty($site['registration_url']))
-                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="btn btn--zone" @click="mobileOpen = false">{{ $site['registration_label'] }}<x-icons.arrow-right :width="15" :height="15" /></a>
+                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="btn btn--zone" @click="menuOpen = false">{{ $site['registration_label'] }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @else
                     {{-- Mismo cambio que el CTA de escritorio, y aquí el `href` importa aún más: en
                          móvil el «abrir en pestaña nueva» es un gesto habitual. Se cierra el cajón de
                          navegación ANTES de abrir el de la cuenta, o quedarían dos superpuestos. --}}
                     <a href="{{ route('registro') }}" class="btn btn--zone"
-                       x-on:click="mobileOpen = false; $store.purchase.openAccount($event, 'register')">{{ __('landing.nav.reserve') }}<x-icons.arrow-right :width="15" :height="15" /></a>
+                       x-on:click="menuOpen = false; $store.purchase.openAccount($event, 'register')">{{ __('landing.nav.reserve') }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @endif
             </div>
         @endguest

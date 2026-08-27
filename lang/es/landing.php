@@ -24,6 +24,7 @@ return [
         'park' => 'El parque',
         'services' => 'Servicios',
         'tickets' => 'Entradas',
+        'menu_label' => 'Menú principal',
         'menu_open' => 'Abrir menú',
         'menu_close' => 'Cerrar menú',
         'skip' => 'Saltar al contenido',

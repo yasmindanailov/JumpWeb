@@ -43,6 +43,7 @@ class ArmazonCssHasNoOrphansTest extends TestCase
      * de aquí es porque ya no existe, no porque estorbe.
      */
     private const FAMILIES = [
+        'menu',         // el menú a pantalla completa (tanda 2c·1)
         'nav',          // la barra, la marca, los disparadores, el chip de cuenta, la hamburguesa
         'mob-menu',     // el cajón lateral de móvil
         'plan-select',  // el panel de los dos desplegables temáticos
@@ -89,22 +90,27 @@ class ArmazonCssHasNoOrphansTest extends TestCase
 
         $this->assertGreaterThan(
             40, count($classes),
-            'el escaneo encuentra menos de 40 clases del armazón y hay 59: el parser se ha '.
+            'el escaneo encuentra menos de 40 clases del armazón y hay 62: el parser se ha '.
             'quedado ciego a parte del corpus.',
         );
 
         // Por NOMBRE, no por umbral: un contador no distingue «leo poco» de «leo otra cosa».
-        foreach (['nav__brand', 'mob-menu__panel', 'cta-med__body', 'lang-dd__panel'] as $needle) {
+        foreach (['nav__brand', 'mob-menu__panel', 'menu__list', 'cta-med__body', 'lang-dd__panel'] as $needle) {
             $this->assertContains(
                 $needle, $classes,
                 "el escaneo de las hojas no ve `.{$needle}`, que está declarada",
             );
         }
 
+        // ⚠️ La sonda de las at-rules era `.nav__links` y la tanda 2c·1 **la retiró**: el test se
+        // cayó al quedarse sin sujeto, que es exactamente lo que tiene que pasar y por lo que la
+        // sonda va por NOMBRE. La nueva es la única clase del armazón que hoy solo existe dentro
+        // de un `@media`; si un día también desaparece, este test volverá a avisar en vez de
+        // quedarse verde sin comprobar nada.
         $this->assertContains(
-            'nav__links', $classes,
-            'el escaneo no ve `.nav__links`, que SOLO se declara dentro de un `@media`: el parser '.
-            'no desciende en las at-rules.',
+            'book-bar-visible', $classes,
+            'el escaneo no ve `.book-bar-visible`, que SOLO se declara dentro de un `@media`: el '.
+            'parser no desciende en las at-rules.',
         );
     }
 

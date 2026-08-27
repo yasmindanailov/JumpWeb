@@ -390,40 +390,14 @@ class HomePageTest extends TestCase
        dos atajos directos. Blindamos copy + URLs + estado Alpine.
        ==================================================================== */
 
-    public function test_nav_renders_park_dropdown_with_anchor_items(): void
-    {
-        // Dropdown 1: "El parque" → 4 items que apuntan a anclas de la home.
-        // Estado Alpine `parkOpen` controla la visibilidad del panel.
-        $response = $this->get('/')->assertOk();
-
-        $response->assertSee('El parque');
-        $response->assertSee('parkOpen', false);
-        $response->assertSee('Zona Kids');
-        $response->assertSee('Zona Jump');
-        $response->assertSeeInOrder(['Zona Kids', 'Zona Jump', 'Atracciones', 'Ubicación y horario']);
-        // Las 3 primeras zonas apuntan al ancla #zones / #rides de la home;
-        // "Ubicación y horario" apunta a #info.
-        $response->assertSee('href="'.url('/#zones').'"', false);
-        $response->assertSee('href="'.url('/#rides').'"', false);
-        $response->assertSee('href="'.url('/#info').'"', false);
-    }
-
-    public function test_nav_renders_services_dropdown_with_section_links(): void
-    {
-        // Dropdown 2: "Servicios" → cumpleaños + 4 secciones de /servicios.
-        // Estado Alpine `servicesOpen`.
-        $response = $this->get('/')->assertOk();
-
-        $response->assertSee('Servicios');
-        $response->assertSee('servicesOpen', false);
-        $response->assertSeeInOrder([
-            'Cumpleaños', 'Excursiones de colegio', 'Empresas', 'Excursión para mayores', 'Otros eventos',
-        ]);
-        $response->assertSee(route('servicios').'#excursionescolegio', false);
-        $response->assertSee(route('servicios').'#teambuilding', false);
-        $response->assertSee(route('servicios').'#sesionadultos', false);
-        $response->assertSee(route('servicios').'#eventos', false);
-    }
+    // ⚠️ **`test_nav_renders_park_dropdown_with_anchor_items` y
+    // `test_nav_renders_services_dropdown_with_section_links` se MUDARON**, no se retiraron
+    // (2026-08-27, armazón · tanda 2c·1, `DECISIONES #200`). Su sujeto —los dos desplegables de
+    // la barra— dejó de existir, pero lo que comprobaban de verdad sigue vivo: las etiquetas de
+    // los destinos, **su orden** y sus anclas. Eso se comprueba ahora contra el portador nuevo y
+    // **acotado al elemento**, en `Tests\Feature\Site\ArmazonContractTest`:
+    // `the_menu_keeps_the_park_items_in_order` y `the_menu_keeps_the_services_in_order`.
+    // ▶ Retirarlas sin mudarlas habría perdido la cobertura del ORDEN, que ninguna otra fijaba.
 
     public function test_nav_renders_direct_links_for_birthdays_and_tickets(): void
     {

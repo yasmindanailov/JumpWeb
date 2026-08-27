@@ -606,7 +606,7 @@ Cada una deja el sitio navegable y se puede mirar en navegador por separado.
 | | Tanda | Qué entra | Mueve píxeles |
 |---|---|---|---|
 | **2c·0** ✅ | **La red y la limpieza** — HECHA el 2026-08-27: `ArmazonContractTest` (10 casos) fija la conducta del armazón y **estrena red para el cajón móvil**, `ArmazonCssHasNoOrphansTest` deja fuera las 33 reglas muertas y las mantiene fuera. **15 mutaciones, las 15 muerden**, con control positivo | **No**, y está medido: cero apariciones de las once clases en el HTML servido de 16 páginas |
-| **2c·1** | **El menú a pantalla completa** — sustituye a los dos desplegables y al cajón móvil en escritorio; la barra se queda pero pierde sus enlaces y gana la hamburguesa en todos los anchos | Sí, y mucho |
+| **2c·1** ✅ | **El menú a pantalla completa** — HECHA el 2026-08-27: sustituye a los dos desplegables, la barra pierde sus enlaces y la hamburguesa aparece en todos los anchos. El cajón de móvil **sigue intacto** por debajo de 1080 px, esperando el artboard | **Sí, y mucho.** Es la primera pantalla de las 12 vistas |
 | **2c·2** | **Los dos racimos** — la barra se disuelve; logotipo y acción flotan; entra la coreografía generalizada a las 12 vistas; el mobiliario va **a keyline, sin sombra** (§4.8) | Sí, en toda la web |
 | **2c·3** | **La cuenta** — icono con **punto de aviso en amarillo, y nada cuando no hay aviso**; los glifos al set de iconos; el nombre accesible en texto | Sí, en la esquina |
 | **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard. Ya llega con dos cosas decididas: **manda la barra de abajo** y **arriba solo logotipo y hamburguesa** (§4.9) | — |
@@ -649,6 +649,59 @@ guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86
 (4.025 → 3.939, medido volviendo a poner el CSS y corriendo otra vez) y los tests nuevos aportan
 **87**. `17 694 − 86 + 87 = 17 695`. **Un contador que se mueve menos de lo esperado no es un
 contador roto hasta que no puedes explicar la diferencia.**
+
+### 8.3 Lo que la 2c·1 dejó hecho, y lo que costó
+
+**El menú.** Un overlay a pantalla completa que declara `data-surface="ink"` —**segundo
+consumidor del mecanismo de la tanda 1**, después del hero— con la lista PLANA numerada, la
+entrada escalonada, el recorte circular desde la hamburguesa y la fila de cápsulas. **25 reglas
+· 112 declaraciones**, y ni un color, canto o sombra escrito a mano.
+
+**La barra pierde sus enlaces** y la hamburguesa pasa a estar en todos los anchos: es la única
+puerta a la navegación. Con el menú abierto la barra **sube por encima** y declara tinta, porque
+la hamburguesa es la forma de cerrarlo y no puede quedar debajo.
+
+**Los dos anchos, mientras tanto.** Por encima de 1080 px manda el menú; por debajo, el cajón de
+siempre —intacto hasta que el owner suba el artboard—. Se conmutan con `display:none`, **no con
+`visibility`**, y la diferencia importa: `display:none` saca del foco, `visibility` no siempre; el
+panel que no toca no puede aportar ni un tabulador.
+
+| | Medido |
+|---|---|
+| Armazón antes de la 2c·1 (tras la 2c·0) | **161 reglas · 612 declaraciones** |
+| Armazón ahora | **154 reglas · 586 declaraciones** |
+| Reglas que salen | **34** — las 33 de `plan-select*`, `nav__dd*` y `nav__links*`, que murieron con los desplegables, más la de la hamburguesa que ya no necesita `@media` |
+| Reglas que entran | **27** — 25 del menú, la barra por encima y el corte del cajón |
+| Cuadre | `161 − 34 + 27 = 154` ✓ |
+| Destinos en el menú | **10**, con «Cumpleaños» deduplicado y Kids/Jump conservados pese a compartir ancla |
+
+▶ **Sumando las dos tandas**: el armazón pasa de **194 a 154 reglas**. 33 se retiraron **por
+muertas** (2c·0) y 33 más **con la feature que las usaba** (2c·1) — son dos cosas distintas y no
+se suman como si fueran lo mismo.
+
+**Lo que costó:**
+
+⚠️ **Dos tests de `HomePageTest` se cayeron, y NO se retiraron: se mudaron.** Su sujeto —los dos
+desplegables— murió, pero lo que comprobaban de verdad seguía vivo y **nadie más lo fijaba**: las
+etiquetas de los destinos, sus anclas y **su ORDEN**. Están ahora en `ArmazonContractTest`,
+apuntando al menú y **acotados al elemento** (los originales aseveraban sobre la página entera,
+donde «Zona Kids» lo pinta también la sección de zonas). Es `CONVENCIONES §3.quater` aplicado:
+clasificar por sujeto, no borrar lo que estorba.
+
+⚠️ **`ShapeScaleTest` perdió una excepción sin sujeto** (`.plan-select__panel a`) y lo cazó su
+propia guarda, que es para lo que está. La lista solo encoge.
+
+⚠️ **La sonda de at-rules del trinquete se quedó sin sujeto**: era `.nav__links`, la única clase
+del armazón que solo existía dentro de un `@media`, y esta tanda la retiró. Se re-apuntó a
+`.book-bar-visible`, que hoy es la única. ▶ **Una sonda por NOMBRE avisa cuando se queda sin
+sujeto; una por umbral se habría quedado verde sin comprobar nada.**
+
+⚠️ **Y una reconciliación que no cuadraba a la primera**: al medir el antes y el después salieron
+`161 − 33 + 25 = 153` frente a **154** medidas. La causa era **mía y ya conocida**: había cambiado
+la lista de familias entre las dos medidas. Con una sola definición y un diff **de selectores**,
+las tres reglas que faltaban aparecen con nombre —la barra por encima, el corte del cajón y la
+hamburguesa que sale del `@media`— y `161 − 34 + 27 = 154`. **Un cuadre que falla por uno es un
+cuadre que falla.**
 
 ### 8.2 Lo que la 2c·0 dejó hecho
 

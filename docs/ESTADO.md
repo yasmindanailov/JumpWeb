@@ -229,7 +229,11 @@
 >   ⚠️ **Y una que despista**: `mockup_playjumppark/` (el canvas del 2.º cliente) está **gitignorada y
 >   excluida del `rsync`** (`DECISIONES #1`), así que **en tu máquina no existe** aunque la doc la
 >   cite. La receta para regenerarla con el MCP `DesignSync` está en la **§1 de la spec del tema**.
->   ▶ **Siguiente de este carril**: la **tanda 2c, el ARMAZÓN** — y su spec **YA ESTÁ ESCRITA**:
+>   ▶ **Siguiente de este carril**: la **tanda 2c·2, los dos racimos flotantes** (`M-05` a keyline).
+>   Las 2c·0 y 2c·1 están EN EL ÁRBOL (`#200`, `#201`): la red del armazón, 66 reglas de CSS fuera y
+>   **el menú a pantalla completa sustituyendo a los dos desplegables** — la barra ya no lleva
+>   enlaces y la hamburguesa está en todos los anchos. El móvil sigue con su cajón intacto.
+>   ▶ Contexto de aquella spec, que **YA ESTABA ESCRITA**:
 >   **`specs/armazon-y-menu.md`** (2026-08-27 por la tarde), con **cuatro decisiones del owner
 >   tomadas** y **seis pendientes**. `[DECIDIDO owner]`: la barra fija se retira en las **12** vistas
 >   y la sustituyen **dos racimos flotantes + un menú a pantalla completa**; la lista del menú es
@@ -263,7 +267,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#200`**.
+> El último usado es **`#201`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -367,9 +371,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3077 en verde** (17.695 aserciones, `--parallel` **~54 s** medidos el 2026-08-27 por la noche
+- Suite **3082 en verde** (17.711 aserciones, `--parallel` **~58 s** medidos el 2026-08-27 por la noche
   en la máquina del carril C; ~68 s en la del A, ~42 s en la del B) ·
-  ▶ **+15 tests PHP en el último corte** (carril C, armazón · tanda **2c·0**): `ArmazonContractTest`
+  ▶ **+5 tests PHP en el último corte** (carril C, armazón · tanda **2c·1**, el menú a pantalla
+  completa): **+7** en `ArmazonContractTest` —el overlay accesible del menú, que declare superficie
+  de tinta, que todo enlace lo cierre, que los números sean decoración, el orden del parque, el
+  orden de los servicios y que la barra ya NO lleve destinos— y **−2 en `HomePageTest`**, que **no
+  se retiraron: se MUDARON**. Su sujeto —los dos desplegables— murió, pero lo que comprobaban de
+  verdad seguía vivo y nadie más lo fijaba: las etiquetas, las anclas y **el ORDEN**.
+  **16 mutaciones, las 16 muerden**, y la que más importa es la del defecto del mockup: quitarle al
+  menú el `visibility:hidden` de cerrado. `npm run test:js` 724/724. Antes:
+  ▶ **+15 tests PHP** (carril C, armazón · tanda **2c·0**): `ArmazonContractTest`
   (10, la red de conducta del armazón — **y el cajón móvil ESTRENA test: no lo tocaba ninguno**) y
   `ArmazonCssHasNoOrphansTest` (5, el trinquete de CSS sin consumidor). **15 mutaciones, las 15
   muerden**, con control positivo.
@@ -671,9 +683,10 @@ tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la 
 sigue parado es el CONTENIDO (la tanda B de `landing-white-label.md`: `testimonials` y el copy al
 CMS), no el tema.
 
-▶ **Por dónde retoma el carril C**: la **tanda 2c, el ARMAZÓN**, y **su spec ya está escrita** —
-**`specs/armazon-y-menu.md`**, 2026-08-27 por la tarde—. **No se escribe código todavía**: falta el
-✅ del owner y recortar la 2c·0 con él delante, como se hizo con el waiver y con la capa de tema.
+▶ **Por dónde retoma el carril C**: la **tanda 2c·2, los dos racimos flotantes** —la barra se
+disuelve y el logotipo y la acción pasan a flotar en las esquinas, en las 12 vistas, con el
+mobiliario **a keyline** (`M-05`, `[DECIDIDO owner]`)—. Las tandas **2c·0** (la red y la limpieza,
+`#200`) y **2c·1** (el menú a pantalla completa, `#201`) están **en el árbol y verdes**.
 ▶ **Lo que el owner ya decidió** (con la medida delante): armazón flotante en las **12** vistas ·
 lista de menú **PLANA** con los destinos que ya hay, y la BD sigue al mando · con sesión, **icono de
 cuenta con punto naranja/verde** · **el móvil lo guía él con un artboard**.
