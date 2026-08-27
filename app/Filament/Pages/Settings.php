@@ -166,6 +166,10 @@ class Settings extends Page
         // en `zones.color` (#210) y se editan en cada zona, no aquí.
         'theme.brand' => 'theme',
         'theme.brand_secondary' => 'theme',
+        // Color de ACCIÓN (`#209`): el relleno del botón que hace avanzar la compra. Vacío ⇒ el
+        // botón sigue a la superficie (conducta histórica del producto); con valor ⇒ es el mismo
+        // en los dos fondos. Ver `ThemeSettings::action()`.
+        'theme.action' => 'theme',
         // Cookies (#219): mostrar el banner de consentimiento. Apagarlo NO desactiva el bloqueo
         // previo de los iframes de tercero (siguen gateados) — solo oculta el banner.
         'cookies.banner_enabled' => 'cookies',
@@ -672,6 +676,18 @@ class Settings extends Page
                 ColorPicker::make('theme.brand_secondary')
                     ->label(__('admin.settings.theme_brand_secondary'))
                     ->helperText(__('admin.settings.theme_brand_secondary_hint'))
+                    ->regex('/^$|^#[0-9a-fA-F]{6}$/'),
+                // Color de ACCIÓN (`#209`, el quinto mecanismo del tema): el relleno del botón que
+                // hace avanzar la compra —reservar, comprar, enviar—. NO es el color de marca: la
+                // marca tiñe acentos y decoración y puede repetirse por zona; éste es un rol y hay
+                // uno por pantalla.
+                // ⚠️ **Vacío es una respuesta, no una falta.** Sin color de acción el botón sigue a
+                // la superficie —oscuro sobre claro, claro sobre oscuro—, que es lo que el producto
+                // hace desde siempre; ponerlo lo fija igual en los dos fondos. Por eso no hay
+                // default ni `required`.
+                ColorPicker::make('theme.action')
+                    ->label(__('admin.settings.theme_action'))
+                    ->helperText(__('admin.settings.theme_action_hint'))
                     ->regex('/^$|^#[0-9a-fA-F]{6}$/'),
                 TextInput::make('seo.og_image')
                     ->label(__('admin.settings.seo_og_image'))

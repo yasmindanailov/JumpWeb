@@ -37,6 +37,27 @@ class SurfaceScopeTest extends TestCase
         '--bg', '--bg-soft', '--bg-card', '--sheet', '--fg', '--fg-mute', '--line', '--line-strong',
     ];
 
+    /**
+     * **El rol de ACCIÓN también se re-declara en las dos superficies, y NO es un token de
+     * superficie** (`docs/specs/tema-por-instalacion.md` §15).
+     *
+     * La distinción importa y por eso son dos constantes y no una lista revuelta. Los ocho de
+     * arriba se re-declaran porque **cambian de valor** con el fondo. Estos cuatro se re-declaran
+     * por un motivo distinto: para que su **fallback vuelva a evaluarse** en el ámbito. Su valor
+     * es `var(--action-brand, var(--fg))`, y ese `var(--fg)` tiene que resolver contra el `--fg`
+     * de ESTA superficie — si solo estuvieran en `:root`, bajarían computados contra papel y el
+     * botón primario dejaría de invertirse dentro del menú abierto: relleno oscuro sobre fondo
+     * oscuro, sin fallar y sin avisar.
+     *
+     * ▶ Y con `--action-brand` puesto por el paquete de un cliente, ese mismo fallback deja de
+     * usarse en los tres ámbitos a la vez: el color de acción pasa a ser **idéntico en los dos
+     * fondos**, que es lo que exige el sistema del 2.º cliente («CTA primario: idéntico en ambos
+     * fondos, siempre con texto tinta»). Las dos conductas salen de la MISMA declaración.
+     */
+    private const ROLE_TOKENS = [
+        '--action', '--on-action', '--action-hover', '--on-action-hover',
+    ];
+
     /** @var ?array<string, array<string, string>> */
     private ?array $blocks = null;
 
@@ -144,10 +165,60 @@ class SurfaceScopeTest extends TestCase
         );
 
         $this->assertSame(
-            $this->sorted(self::SURFACE_TOKENS), $ink,
-            'la superficie no cubre los ocho tokens que declara `SURFACE_TOKENS`: si uno se retira '.
-            'de verdad, quítalo también de la constante y di por qué.',
+            $this->sorted(array_merge(self::SURFACE_TOKENS, self::ROLE_TOKENS)), $ink,
+            'la superficie no cubre exactamente lo que declaran `SURFACE_TOKENS` (los ocho que '.
+            'CAMBIAN con el fondo) y `ROLE_TOKENS` (los cuatro del rol de acción, que se re-declaran '.
+            'para que su fallback se re-evalúe). Si uno se retira de verdad, quítalo también de su '.
+            'constante y di por qué — y no lo muevas de constante: significan cosas distintas.',
         );
+    }
+
+    /**
+     * **El rol de ACCIÓN conserva su indirección: nadie lo ata a un color.**
+     *
+     * Este caso es el que sostiene el quinto mecanismo. `--action` tiene que valer
+     * `var(--action-brand, …)` en los TRES ámbitos, porque de ahí salen sus dos conductas: sin
+     * color de acción declarado sigue a la superficie; con él, es el mismo en los dos fondos.
+     *
+     * ⚠️ Y `--action-brand*` **no puede declararse en las hojas del producto**. Lo emite
+     * `ThemeSettings` en `<style id="jj-theme">` SOLO cuando la instalación tiene color de acción;
+     * declararlo aquí —aunque fuera vacío o «inherit»— mataría el fallback sin que nada fallara:
+     * el botón primario se quedaría sin relleno y la página cargaría igual.
+     */
+    public function test_the_action_role_keeps_its_indirection(): void
+    {
+        $scopes = [':root', '[data-surface="ink"]', '[data-surface="paper"]'];
+        $esperado = [
+            '--action' => 'var(--action-brand, var(--fg))',
+            '--on-action' => 'var(--on-action-brand, var(--bg))',
+            '--action-hover' => 'var(--action-brand-hover, var(--zone-1))',
+            '--on-action-hover' => 'var(--on-action-brand-hover, var(--on-brand))',
+        ];
+
+        foreach ($scopes as $scope) {
+            foreach ($esperado as $token => $valor) {
+                $this->assertSame(
+                    $valor, $this->blocks()[$scope][$token] ?? null,
+                    "En `{$scope}`, `{$token}` ya no vale «{$valor}».\n".
+                    "▶ Sin el fallback, el rol pierde una de sus dos conductas: o deja de seguir a la\n".
+                    "  superficie (botón oscuro sobre menú oscuro) o deja de obedecer al paquete del\n".
+                    '  cliente (ningún color de acción posible). Las dos salen de esa misma línea.',
+                );
+            }
+        }
+
+        // Y el otro lado: el producto NO declara el conmutador.
+        foreach ($this->blocks() as $scope => $tokens) {
+            foreach (array_keys($tokens) as $token) {
+                $this->assertStringStartsNotWith(
+                    '--action-brand', $token,
+                    "`{$token}` está declarado en `{$scope}` dentro de una hoja del PRODUCTO. Ese ".
+                    'conmutador lo emite `ThemeSettings` desde `theme.action`, y solo cuando existe: '.
+                    'declararlo aquí anula el fallback y deja el botón primario sin relleno.',
+                );
+                $this->assertStringStartsNotWith('--on-action-brand', $token, "idem para `{$token}`");
+            }
+        }
     }
 
     /**

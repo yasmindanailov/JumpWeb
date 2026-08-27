@@ -86,6 +86,22 @@ Color/acento por zona: columnas `color` y `color_secondary` de `zones`, en el pa
 ▶ Es lo único que cruza al **panel y a los correos**, donde el CSS del cliente no llega. Por eso el
 tema en BD se queda en COLOR: tipografía y radios van en (b) (`[DECIDIDO owner]`, §4.5.5 de la spec).
 
+**a.ter) El COLOR DE ACCIÓN → setting `theme.action`** (`DECISIONES #209`,
+`specs/tema-por-instalacion.md` §15). El relleno del botón que hace avanzar la compra —reservar,
+comprar, enviar—. **No es el color de marca**: la marca tiñe acentos y decoración y puede repetirse
+por zona; éste es un ROL y hay **uno por pantalla**.
+⚠️⚠️ **Dejarlo VACÍO es una respuesta, no una falta.** Vacío ⇒ el botón **sigue a la superficie**
+(oscuro sobre claro, claro sobre oscuro), que es como se ha visto el producto siempre. Con un color
+⇒ es **el mismo en los dos fondos**, que es lo que pide un sistema de marca con CTA propio.
+▶ **Un solo dato**: el tono al pasar el cursor se deriva (×0,88; sobre un color casi negro, aclara)
+y el color del rótulo lo elige el contraste, no el gusto.
+⚠️ **No lo metas en `client.css`.** Ahí funcionaría en la web y **no llegaría al panel ni a los
+correos**, que es exactamente el «funciona a medias» que este apartado avisa. Además el hover y el
+color del texto los calcula el servidor: escribiéndolos a mano se pierden los dos.
+⚠️ **Con algunos colores NO hay texto que alcance AA**: un relleno de luminancia ≈ 0,19 deja tinta y
+blanco empatados en 4,31. El producto elige el mejor de los dos y **hoy no avisa** — está
+`[PENDIENTE: owner]` (spec §15.8).
+
 **a.bis) El LOGOTIPO → `public/img/client-logo.svg`** (`DECISIONES #206`).
 Fichero **OPCIONAL** con las **mismas tres piezas** que la hoja de tema, y con dos parece que
 funciona: **no se versiona**, se carga **si existe**, y `deploy.sh` lo **excluye del

@@ -2526,13 +2526,41 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       cinco guardas de CSS juzgaban `client.css`, que **está hecho de literales**. Arreglado de
       fondo y verificado midiendo con paquete y sin él: **idéntico**.
       ▶ Y entra el hueco del **LOGOTIPO de instalación**, con las mismas tres piezas.
+- 🟦 **El QUINTO MECANISMO — el relleno de ACCIÓN** (2026-08-28, `#209`, spec **§15**). ✅ **Lo
+      único que impedía que la landing fuese 1:1 con el mockup en color, cerrado.** El botón que
+      hace avanzar la compra deja de estar atado a `var(--fg)` y pasa a ser un **ROL** con cuatro
+      tokens (`--action`, `--on-action`, `--action-hover`, `--on-action-hover`), configurable desde
+      el panel con **un solo dato** (`theme.action`).
+      ▶ **La pregunta fue «¿para qué sirve cada relleno de tinta?»**, no «¿qué botones son oscuros?»
+      —la receta que ya funcionó en `#193` y `#196`—. Medido con **dos instrumentos independientes
+      que coincidieron**: **52 reglas** rellenan con `var(--fg)` sólido y solo **13 son acción**;
+      las otras 39 (superficie invertida, hover que invierte, estado seleccionado, decoración) se
+      quedan en tinta **a propósito**, porque el propio sistema del cliente dice «en claro el
+      secundario es TINTA».
+      ❗ **La decisión que merece defenderse**: los tokens llevan `var(--action-brand, …)` y se
+      declaran en `:root` **y en las dos superficies**. Con eso el rol tiene DOS conductas desde una
+      sola línea — sin color de acción **sigue a la superficie** (el CTA del nav se invierte al abrir
+      el menú, que si no sería oscuro sobre oscuro) y con él es **idéntico en los dos fondos**, que es
+      lo que exige el sistema del cliente.
+      ❗ **El hover se DERIVA ×0,88, y el número se midió antes**: es el factor exacto que lleva el
+      `#F2711C` del cliente a su `#D56319` en los tres canales, **y el mismo que el `--err-hover` que
+      el producto ya tenía**.
+      ⚠️⚠️ **Lo que costó, y lo dijo la guarda con el color del propio cliente**: reutilizar
+      `onBrand()` daba **3,73** sobre `#D56319` —falla AA— porque su umbral es **3,0**, el de texto
+      GRANDE, y un rótulo de botón no lo es. `onAction()` elige el de más contraste: 4,99. Y quedó
+      medido que **con luminancia ≈ 0,19 no existe texto que pase AA** (empate en 4,31).
+      **11 mutaciones, las 11 muerden · sonda de navegador 12/12.** ❗ Sigue 🟦 por el ojo del owner.
 - [ ] **2d · El MOVIMIENTO** — 4 curvas y 7 duraciones como tokens. Medido: **237 declaraciones, 48
       duraciones distintas y 20 curvas** (el sistema del cliente declara 7 y 4); `200ms` sola tiene
       110 usos. No mueve píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa
       interactuando**.
-- [ ] **3 · Las secciones**, pieza a pieza. ⚠️ El owner subió el 2026-08-27 **dos artboards nuevos**,
-      `Descubre-el-Parque` y `Recorrido-Parque`: son **dos variantes de la misma sección** («02 · El
-      parque») y **cuál se queda está SIN DECIDIR**. `Elementos Fachada` sigue **sin migrar**: de ahí
+- [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
+      (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
+      elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).
+      ⚠️ El owner subió **tres artboards** de la misma sección, no dos: `Descubre-el-Parque`,
+      `Recorrido-Parque` y —el 28— `Elige tu Zona`, una maqueta isométrica en SVG de todo el parque.
+      Las **tres** son «02 · El parque» y **cuál se queda sigue SIN DECIDIR** (preguntado el 28:
+      «todavía no lo decido»). `Elementos Fachada` sigue **sin migrar**: de ahí
       se saca la FORMA, nunca el color.
 
 ## Relación con el proyecto origen

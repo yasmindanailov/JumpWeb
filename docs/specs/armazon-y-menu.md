@@ -556,6 +556,23 @@ no está bloqueado; el menú de móvil, sí.**
 
 ## 5. Lo decidido y lo que sigue pendiente
 
+> ✅ **ACTUALIZACIÓN 2026-08-28 — la decisión 7 está CUMPLIDA: el artboard de móvil YA EXISTE.**
+> No llegó como artboard suelto sino **dentro de `Landing PJP Modos`**, en una pasada de móvil
+> completa (428 líneas de diff contra la copia del 27 a las 17:53). Lo que trae:
+> `--pjp-margen` / `--pjp-radio` / `--pjp-tope` / `--pjp-barra` como escala responsiva · `100svh`
+> en lugar de `100vh` · `env(safe-area-inset-*)` arriba y abajo · los grids de tarjetas convertidos
+> en **carruseles con `scroll-snap`** · el panel de reserva convertido en **hoja inferior con asa**
+> por debajo de tamaño teléfono · y una **barra de acciones fija** con **3 enlaces de icono**
+> (Zonas · Cumples · Llegar) **+ un CTA «Reservar» naranja**, con el CTA de escritorio oculto
+> mientras esa barra existe.
+> ▶ **La 2c·4b deja de estar bloqueada.**
+> ⚠️⚠️ **Pero hay un choque que hay que resolver con el owner ANTES de escribir código**: nuestra
+> barra inferior de móvil es el **CTA DOBLE** de `#205` (dos mitades con destinos distintos, una de
+> ellas colapsada) y la del mockup es **3 iconos + 1 CTA**. No son la misma pieza y la nuestra la
+> validó él hace un día. **Preguntar, no elegir.**
+> ⚠️ Y el mockup **vuelve a poner CTA dentro del hero**: `[DECIDIDO owner, 2026-08-28]` **no se
+> copia** — la decisión de `#195` sigue en pie.
+
 **Decidido por el owner el 2026-08-27**, en dos vueltas y con la medida delante:
 
 | # | Decisión | Dónde vive |

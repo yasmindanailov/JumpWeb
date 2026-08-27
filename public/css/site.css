@@ -504,7 +504,7 @@
 }
 .svc-ed2__price .per { font-size: 13px; color: var(--fg-mute); }
 /* Acción primaria = relleno oscuro (contraste seguro, sin depender de --on-brand global). */
-.svc-cta--book { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.svc-cta--book { background: var(--action); color: var(--on-action); border-color: var(--action); }
 .svc-cta--book:hover {
   transform: translateY(-3px) scale(1.02);
   box-shadow: var(--shadow-lift);
@@ -1250,9 +1250,9 @@ body.no-scroll { overflow: hidden; }
 /* (3.bis) Barra-carrito del catálogo (estilo mockup `.cart`): un único botón con badge de cantidad
    + (artículos / total) + «Ir al carrito». Clase propia (`.cartbar`) para no colisionar con `.cart`
    (lista de líneas del carrito). */
-.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--fg); color: var(--bg); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform 0.25s var(--ease-bounce), background 0.2s ease, color 0.2s ease; }
-.cartbar:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); }
-.cartbar:hover .cartbar__count { background: var(--fg); color: var(--zone-1); }
+.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--action); color: var(--on-action); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform 0.25s var(--ease-bounce), background 0.2s ease, color 0.2s ease; }
+.cartbar:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); }
+.cartbar:hover .cartbar__count { background: var(--fg); color: var(--action-hover); }
 .cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background 0.2s ease, color 0.2s ease; }
 .cartbar__txt { display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 0; text-align: left; }
 .cartbar__label { font-size: var(--fs-11); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
@@ -1936,15 +1936,15 @@ body.no-scroll { overflow: hidden; }
     100% { transform: rotate(0deg); }
 }
 /* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
-.cta-prime__ico .ic-e2, .cta-med__ico .ic-e2 { color: var(--bg); }
-.cta-prime:hover .cta-prime__ico .ic-e2, .cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-brand); }
+.cta-prime__ico .ic-e2, .cta-med__ico .ic-e2 { color: var(--on-action); }
+.cta-prime:hover .cta-prime__ico .ic-e2, .cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-action-hover); }
 /* El «occluder» de E2 (la entrada de delante) debe fundirse con el FONDO del botón, no con
    --bg (que asume fondo claro). Sin esto, sobre el botón oscuro la entrada delantera se ve
    como un bloque crema. Reposo = --fg (botón oscuro) · hover = --zone-1 · on-video = --bg. */
 .cta-prime__ico .ic-e2 svg .occ,
-.cta-med__ico .ic-e2 svg .occ { fill: var(--fg); }
+.cta-med__ico .ic-e2 svg .occ { fill: var(--action); }
 .cta-prime:hover .cta-prime__ico .ic-e2 svg .occ,
-.cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--zone-1); }
+.cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--action-hover); }
 
 /* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
    de la cabecera del acordeón (no en bucle); reduced-motion la deja en reposo. */
@@ -2118,14 +2118,14 @@ body.no-scroll { overflow: hidden; }
 .cta-med {
     display: inline-flex; align-items: center; gap: 12px;
     padding: 11px 16px 11px 12px;
-    background: var(--fg); color: var(--bg);
+    background: var(--action); color: var(--on-action);
     border: 0; border-radius: var(--r-btn);
     font-family: var(--font-body); font-weight: 600;
     cursor: pointer; white-space: nowrap;
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.5, 1), background 0.2s ease, color 0.2s ease;
 }
 .cta-med:hover {
-    background: var(--zone-1); color: var(--on-brand);
+    background: var(--action-hover); color: var(--on-action-hover);
     transform: translateY(-2px) scale(1.02);
 }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
@@ -2137,7 +2137,7 @@ body.no-scroll { overflow: hidden; }
     flex-shrink: 0;
     transition: background 0.2s ease;
 }
-.cta-med__ico .tk { width: 28px; height: 18px; color: var(--bg); }
+.cta-med__ico .tk { width: 28px; height: 18px; color: var(--on-action); }
 .cta-med__ico .tk svg { width: 28px; height: 18px; }
 .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .cta-med:hover .cta-med__ico .tk { color: var(--fg); }
@@ -2146,7 +2146,7 @@ body.no-scroll { overflow: hidden; }
 .cta-med__s {
     font-family: var(--font-mono); font-size: 9px;
     text-transform: uppercase; letter-spacing: 0.10em;
-    color: color-mix(in srgb, var(--bg) 70%, transparent);
+    color: color-mix(in srgb, var(--on-action) 70%, transparent);
 }
 .cta-med:hover .cta-med__s { color: rgba(255, 255, 255, 0.72); }
 .cta-med__arrow { margin-left: 4px; transition: transform 0.3s ease; }
@@ -2219,7 +2219,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
        mayor que left por la flecha (estándar UI — el desbalance compensa el peso
        óptico de la flecha contra el icono más grande de la izquierda). */
     padding: 14px 22px 14px 16px;
-    background: var(--fg); color: var(--bg);
+    background: var(--action); color: var(--on-action);
     border: 0; border-radius: var(--r-btn);
     font-family: var(--font-body); font-weight: 600;
     cursor: pointer; text-decoration: none;
@@ -2227,7 +2227,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     box-shadow: none;
 }
 .cta-prime:hover {
-    background: var(--zone-1); color: var(--on-brand);
+    background: var(--action-hover); color: var(--on-action-hover);
     transform: translateY(-3px) scale(1.02);
     box-shadow: var(--shadow-lift);
 }
@@ -2242,13 +2242,13 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 }
 .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .cta-prime:hover .cta-prime__ico .tk { color: var(--fg); }
-.cta-prime__ico .tk { color: var(--bg); }
+.cta-prime__ico .tk { color: var(--on-action); }
 .cta-prime__body { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.05; text-align: left; }
 .cta-prime__t { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .cta-prime__s {
     font-family: var(--font-mono); font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.10em;
-    color: color-mix(in srgb, var(--bg) 70%, transparent);
+    color: color-mix(in srgb, var(--on-action) 70%, transparent);
 }
 .cta-prime:hover .cta-prime__s { color: rgba(255, 255, 255, 0.72); }
 .cta-prime__arrow { margin-left: 6px; font-size: 22px; line-height: 1; transition: transform 0.3s ease; }
@@ -2407,7 +2407,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
    marca con un leve hundido de feedback. */
 .book-bar__cta:hover { transform: none; }
 .book-bar__cta:active {
-    background: var(--zone-1); color: var(--on-brand);
+    background: var(--action-hover); color: var(--on-action-hover);
     transform: scale(0.99);
 }
 .book-bar__cta:active .cta-prime__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
@@ -2664,14 +2664,14 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     transition: transform 0.22s var(--ease-bounce), background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.22s ease;
 }
 .acct__btn svg { width: 15px; height: 15px; }
-.acct__btn--primary { background: var(--fg); color: var(--bg-card); }
-.acct__btn--primary:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
+.acct__btn--primary { background: var(--action); color: var(--on-action); }
+.acct__btn--primary:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
 .acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 .acct__btn--ghost:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
 /* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
    cursor not-allowed y SIN efecto hover (el `disabled` lo fija Alpine vía $store.purchase.identifying). */
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg-card); box-shadow: none; }
+.acct__btn--primary:disabled:hover { transform: none; background: var(--action); color: var(--on-action); box-shadow: none; }
 .acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--line-strong); }
 /* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
    salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`

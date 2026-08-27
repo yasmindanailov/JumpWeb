@@ -254,6 +254,17 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ Baja/Media · lo que el QUINTO mecanismo midió y NO arregló (2026-08-28, `DECISIONES #209`)
+
+| Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
+|---|---|---|---|---|
+| **Media** | **`.btn:hover` pinta su texto con `--fg` donde las otras diez usan `--on-brand`** | Medido al clasificar los 52 rellenos: `.btn:hover { background: var(--zone-1); color: var(--fg) }` mientras `.btn--zone`, `.cta-prime:hover`, `.cta-med:hover`, `.cartbar:hover`, `.bd-pack__cta:hover`… usan `--on-brand` **sobre el mismo fondo**. Es decir, el mismo color de fondo recibe **dos colores de texto distintos en la misma hoja** | Con una marca OSCURA, `--fg` (tinta) sobre ella no contrasta. Hoy no se ve porque la marca por defecto y la del 2.º cliente son claras. Y es la única de las 13 reglas de acción cuyo hover **no** sigue al rol | Es un cambio de COLOR, no de mecanismo: convertirla vuelve el texto blanco al pasar el cursor y eso lo decide el owner en su pasada de navegador. Está enumerada en `ActionFillTest::EXCEPTIONS`, que **solo encoge** |
+| **Baja** | **`[data-surface="ink"] .cta-prime__ico` y `.cta-prime__s` pueden estar MUERTAS** | Las creó la tanda 2b para cuando el CTA grande vivía DENTRO del hero. **El hero perdió su CTA en `#195`** y `.cta-prime` hoy solo aparece en la barra de compra de móvil, que no declara superficie | En nada visible. Pero si un día vuelve un `.cta-prime` a una superficie de tinta **con** color de acción, esas dos reglas pintarían gris oscuro sobre el naranja (≈ 2,0 de contraste) | No se retiran por `grep`: `CONVENCIONES §3.quater` (clasificar por sujeto y **mutar, no leer**). Va con la auditoría de las ~50 reglas de la ficha de abajo |
+| **Baja** | **Un color de acción puede no alcanzar AA y el panel no avisa** | Aritmética, no defecto: con un relleno de luminancia ≈ 0,19, tinta y blanco **empatan en 4,31**. `onAction()` devuelve el mejor de los dos y calla | El operador elige un color en el panel, ve el botón bonito y **nunca sabe** que su rótulo no cumple. Afecta al control con más peso de la web | `[PENDIENTE: owner]`, spec §15.8: no hacer nada · decirlo en la ayuda del campo · un aviso vivo bajo el campo con el número medido |
+| **Baja** | **El PRESS del rol de acción no existe** | El sistema del 2.º cliente declara `press #B85615` (×0,76 de su relleno) y el producto **no tiene estado de pulsado en color**: sus `:active` solo escalan | En nada hoy. El cliente no puede reproducir su tercer estado | Añadirlo cambia la conducta del producto en un estado que hoy no existe: es **diseño**, no mecanismo. Del owner |
+
+---
+
 ## ▶ Media · ~50 reglas de CSS que PARECEN muertas y un `grep` no puede confirmarlo (2026-08-27, `#196`)
 
 | Qué (medido) | Dónde muerde | La retira |

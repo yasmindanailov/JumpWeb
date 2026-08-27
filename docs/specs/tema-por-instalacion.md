@@ -1185,6 +1185,13 @@ de un solo componente.
 
 ### 14.5 Lo que el paquete NO puede cambiar, medido con él puesto
 
+> ⚠️⚠️ **CORRECCIÓN, y va delante del texto que corrige (2026-08-28, `#209`).** El primer punto de
+> esta lista —el relleno de acción— **ya está resuelto**: es la §15. Dos de sus cifras eran además
+> imprecisas y se corrigen ahí con dos instrumentos independientes que coincidieron: no son «50
+> reglas» sino **52**, y de ellas son acción **13**, no «unas». El segundo punto, el logotipo,
+> **también dejó de ser cierto** con `#206`: existe el hueco de `public/img/client-logo.svg`.
+> ▶ Lo único vigente de esta sección son **las cinco excepciones de sombra**.
+
 - ❗ **El relleno de ACCIÓN.** El sistema del cliente pinta el CTA primario en **Naranja Salto**;
   el producto lo tiene atado a `background: var(--fg)` —tinta— en `.cta-prime`, `.cta-med` y
   `.btn`. **No hay token de acción**, así que el botón de comprar **no puede ser naranja** sin
@@ -1195,3 +1202,173 @@ de un solo componente.
 - **El logotipo.** El del cliente es un lockup de seis capas con dos degradados; el nuestro es
   texto. No hay mecanismo de logotipo y no se ha inventado uno aquí.
 - **Las cinco excepciones de sombra** de §13.5, ya enumeradas.
+
+---
+
+## 15. EL RELLENO DE ACCIÓN — el QUINTO mecanismo (`#209`, 2026-08-28)
+
+> ⚠️ **Ojo con el número `#207` si lo ves en el código**: es el de la base heredada («Fase 7.7 ·
+> Temporadas»), NO el de esta tanda. Aquí el número se fija al EMPUJAR (`CONVENCIONES §10`) y el
+> carril A se llevó el `#207` y el `#208` mientras esto se escribía.
+
+> **Estado: CÓDIGO COMPLETO y verificado en navegador.** Falta el ojo del owner, que ya tenía
+> cinco tandas visuales pendientes y ahora son seis.
+> ▶ **Si vienes a tocar un botón, lee §15.3 y §15.6 y nada más.**
+
+Montar el paquete del 2.º cliente (`#206`) destapó lo único que su marca no podía pedirle al
+producto: **su botón de comprar es naranja y el nuestro estaba atado a `background: var(--fg)`**.
+No había token de acción, así que **ninguna instalación podía pintar el CTA de otro color** sin
+tocar el producto. Era el último obstáculo para que la landing fuese 1:1 con el mockup.
+
+### 15.1 La pregunta no era «¿qué botones son oscuros?»
+
+Esa pregunta da una **lista**, y una lista envejece con el primer botón nuevo. La que sirve —la
+misma que sacó los tres roles de sombra en `#196`— es **«¿para qué sirve cada relleno de tinta?»**.
+
+Medido con **dos instrumentos independientes que coincidieron** (un parser de pila y un barrido por
+cuerpo de regla; se cruzaron a propósito porque en este repo un inventario de CSS ya ha salido mal
+cinco veces):
+
+| | reglas | qué son |
+|---|---|---|
+| **ACCIÓN** | **13** | el control PRIMARIO que hace avanzar: comprar, reservar, enviar, confirmar |
+| superficie invertida | 12 | un parche de tinta que hace de fondo: `.flash`, `.skip-link`, pegatinas, el avatar |
+| hover que invierte | 15 | un botón fantasma o secundario que se rellena al pasar el cursor |
+| estado seleccionado | 6 | pestaña activa, idioma abierto, paso hecho |
+| decoración | 6 | manchas, viñetas, puntos de línea de tiempo |
+| **total sólidos** | **52** | (+ 19 velos con `color-mix`, que son otra cosa) |
+
+❗ **Las 39 que no son acción se quedan en `var(--fg)` A PROPÓSITO**, y no por prudencia: el propio
+sistema del cliente lo dice —«**en claro el secundario es tinta, no cian**: cian sobre papel da 2,45
+y el borde se come el texto»—. Pintar de acción un hover fantasma rompería además su prohibición
+explícita: «**✕ TRES PRIMARIOS — un solo botón de relleno de acción por pantalla**».
+
+### 15.2 Lo que el sistema del cliente declara, textualmente
+
+Del artboard normativo `Colores de Marca PJP` (§05 ROLES y §06 BOTONES), leído del canvas fresco:
+
+- **Naranja Salto `#F2711C`**, masa 36 % — rol: «**Acción. Reservar, comprar, enviar. Un único
+  relleno naranja por pantalla.**» · `hover #D56319` · `press #B85615` · texto `#101418`.
+- **CTA primario**: «**Idéntico en ambos fondos, siempre con texto tinta.**»
+- **CTA secundario**: «Cambia de color según el fondo; el relleno nunca compite.»
+- Anatomía: radio 10 px, alto mín. 48 px, peso 800, foco 3 px.
+
+▶ La segunda línea es la que manda la arquitectura: **el color de acción NO sigue a la superficie**,
+al revés que los ocho tokens de la tanda 1.
+
+### 15.3 ❗ El conflicto real, y cómo caben las dos conductas en una sola línea
+
+El producto **necesita** que su CTA siga a la superficie, y no es un capricho: `.cta-med` vive
+dentro de `.nav`, que **pasa a `data-surface="ink"` al abrir el menú**. Hoy el botón se invierte
+ahí; si dejara de hacerlo sería **un relleno oscuro sobre un menú oscuro**.
+
+Y el cliente **necesita lo contrario**: el mismo naranja en los dos fondos.
+
+Las dos caben porque **el fallback de `var()` se evalúa donde la propiedad se DECLARA** (el mismo
+hecho de CSS que ya obligó a declarar los `--ink-*` en `:root`, §4.1):
+
+```css
+--action:          var(--action-brand, var(--fg));
+--on-action:       var(--on-action-brand, var(--bg));
+--action-hover:    var(--action-brand-hover, var(--zone-1));
+--on-action-hover: var(--on-action-brand-hover, var(--on-brand));
+```
+
+Estas cuatro líneas se declaran **TRES veces**: en `:root`, en `[data-surface="ink"]` y en
+`[data-surface="paper"]`. Con eso:
+
+- **sin `--action-brand`** → en cada ámbito el fallback resuelve contra el `--fg` de ESA superficie
+  → el botón **sigue a la superficie**, exactamente como el producto hacía antes de esta tanda;
+- **con `--action-brand`** → gana en los tres a la vez → **idéntico en los dos fondos**.
+
+▶ **Y `--action-brand` no se declara en ninguna hoja del producto.** Lo emite `ThemeSettings` en
+`<style id="jj-theme">` y **solo si la instalación tiene color de acción**. Declararlo vacío no es
+neutral: anularía el fallback y dejaría el botón primario **sin relleno**, con la página cargando
+igual. Hay guarda con mutación para eso.
+
+### 15.4 El dato vive en el PANEL, no en `client.css`
+
+Campo nuevo `theme.action` (Ajustes → Aspecto de la web), hex o **vacío**. ⚠️ **Vacío es una
+respuesta, no una falta**: significa «el botón se adapta al fondo», que es la conducta histórica.
+Por eso `ThemeSettings::action()` es el único getter de la clase que devuelve `null` — todos los
+demás tienen color por defecto, y ponerle uno aquí ataría **toda** instalación a un relleno fijo.
+
+De un solo dato salen cuatro valores. El hover **se deriva**, y el número no es de gusto:
+
+| par | factor medido |
+|---|---|
+| cliente `#F2711C` → `#D56319` (su hover) | **×0,88 en los tres canales** |
+| cliente `#F2711C` → `#B85615` (su press) | ×0,76 |
+| producto `--err` `#c0392b` → `#a93226` | **×0,88** |
+
+❗ **El 0,88 acierta el hover del cliente al byte y también el que el producto ya tenía escrito.**
+Derivarlo, en vez de pedir un segundo campo, deja **un solo dato que mantener** y da el valor
+correcto. Sobre un color casi negro (luminancia < 0,08) se **aclara** en la misma proporción, para
+que el estado siga existiendo.
+
+### 15.5 ⚠️⚠️ Lo que costó: `onBrand()` NO vale para un botón, y lo dijo la guarda
+
+La primera versión reutilizaba `ThemeSettings::onBrand()` para el texto sobre el relleno. **El test
+salió rojo con el color del propio cliente**: sobre su hover `#D56319` elegía **blanco** y daba
+**3,73**.
+
+La causa es una preferencia estética escrita hace tiempo y perfectamente razonable en su sitio:
+`onBrand()` **prefiere blanco** sobre el acento y solo cae a tinta por debajo de **3,0** — que es el
+umbral de **texto GRANDE**. Un acento decorativo puede permitírselo; **el rótulo de un botón de
+15–18 px, no**.
+
+▶ `onAction()` no tiene preferencia: **elige el de más contraste de los dos**, que es literalmente
+lo que hace la auditoría del propio cliente. Sobre `#D56319` elige tinta y da **4,99**.
+
+⚠️ **Y hay un suelo aritmético que conviene saber**: con un relleno de luminancia ≈ 0,19, tinta y
+blanco **empatan en 4,31** — no existe texto que pase AA sobre ese color. El helper devuelve el
+mejor de los dos y la guarda fija ese suelo. **Avisar al operador de que su color no llega a AA
+está `[PENDIENTE: owner]`** (§15.8).
+
+### 15.6 Las TRES excepciones, y por qué no son deuda escondida
+
+Enumeradas en `ActionFillTest::EXCEPTIONS`, y **la lista solo puede encoger**:
+
+| regla | qué no se convirtió | por qué |
+|---|---|---|
+| `.btn:hover` | el `color` | pinta con `var(--fg)` donde las otras diez usan `--on-brand`. Es una **incoherencia previa del producto**: el mismo fondo recibe dos colores de texto en la misma hoja. Convertirla volvería el texto blanco al pasar el cursor — eso es diseño, no mecanismo. Ficha en `DEUDA.md` |
+| `.price--feat .price__cta:hover` | los dos | ese CTA **invierte** al pasar el cursor en vez de oscurecerse: es otro patrón de hover, no el del rol |
+| `.cta-prime:hover .cta-prime__ico` | el `background` | es un **velo del 10 %** sobre el relleno, no el relleno; funciona sobre cualquier color |
+
+### 15.7 Cómo se verificó
+
+- **Dos instrumentos** para el inventario, cruzados: coinciden en 52.
+- **`ActionFillTest`** (11 casos): el conjunto de reglas de acción es *exactamente* el declarado ·
+  ninguna conversión a medias · las piezas internas del CTA siguen al relleno · el conmutador no se
+  emite sin dato ni con basura · el hover acierta `#D56319` · el texto pasa AA y **siempre es el
+  mejor de los dos** (barrido por toda la escala de grises).
+- **`SurfaceScopeTest`** gana el rol como constante propia (`ROLE_TOKENS`, separada de
+  `SURFACE_TOKENS` porque **significan cosas distintas**) y un caso que exige la indirección en los
+  tres ámbitos.
+- **11 mutaciones, las 11 muerden**: un CTA que vuelve a tinta · una pegatina pintada de acción ·
+  la conversión a medias · una pieza interna que se queda atrás · el fallback perdido · el
+  conmutador declarado en el producto · emitido siempre · la preferencia estética de vuelta · el
+  factor del hover movido · el aclarado de casi-negro retirado · un hex inválido emitido.
+  ⚠️ La detección es por **código de salida**, nunca por `grep`: en esta shell `grep` es una función
+  interpuesta y en `#195` un arnés dio «0 de 12» con el test perfecto por eso.
+- **Sonda de navegador (Playwright), 12/12** — es la única prueba de que las dos conductas existen:
+  con color de acción el botón da `rgb(242,113,28)` **dentro y fuera** del menú de tinta y su hover
+  `rgb(213,99,25)`; borrando `--action-brand` en vivo, **claro dentro** (`rgb(244,244,241)`) y
+  **tinta fuera** (`rgb(16,20,24)`). Guion en el scratchpad de la sesión; se copia a
+  `/home/sail/e2e/` dentro del contenedor.
+  ⚠️ **Dos trampas del armazón que la sonda pagó**: el CTA del nav **nace oculto** (`navCtaReveal`)
+  y la barra **se retira al bajar** (`nav--hidden`) — hay que bajar para destaparlo y volver a
+  subir un poco para que esté en pantalla, o Playwright espera a un elemento invisible.
+
+### 15.8 Lo que queda
+
+- ❗ **El ojo del owner** en navegador. Con esta van **seis** tandas visuales sin mirar.
+- `[PENDIENTE: owner]` **Avisar en el panel cuando el color elegido no alcance AA** (§15.5). Hoy el
+  helper elige el mejor texto posible y calla. Opciones: no hacer nada · una ayuda que lo diga ·
+  un aviso vivo bajo el campo con el número.
+- **El PRESS no entra**, y no es un olvido: el producto **no tiene** estado de pulsado en color
+  (sus `:active` solo escalan). El sistema del cliente sí lo declara (`#B85615`, ×0,76). Añadirlo
+  cambiaría la conducta del producto en un estado que hoy no existe — es diseño, no mecanismo.
+- ⚠️ **`[data-surface="ink"] .cta-prime__ico` y `.cta-prime__s` pueden estar muertas**: existían para
+  cuando el CTA grande vivía dentro del hero, y el hero perdió su CTA en `#195`. No se retiran aquí
+  —retirar código viejo tiene su propio protocolo (`CONVENCIONES §3.quater`)—; ficha en `DEUDA.md`.

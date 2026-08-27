@@ -11028,3 +11028,66 @@ hipótesis es el instrumento* (`tema-por-instalacion.md` §10.6).
 **El diseño de ejecución del panel** está en `menores-a-cargo.md` **§9.10**, medido antes de escribir
 (el permiso, el gate, la semántica del `sync`, dónde se escribe en el alta manual). El de la puerta se
 escribe en su spec (§9) cuando el panel esté en el árbol.
+
+---
+
+## #209 · 2026-08-28 · El QUINTO mecanismo del tema — el relleno de ACCIÓN es un ROL, y de un solo dato salen sus cuatro valores
+
+**Contexto.** Montar el primer paquete de tema real (`#206`) dejó una sola cosa fuera: **el botón de
+comprar del 2.º cliente es naranja y el del producto estaba atado a `background: var(--fg)`**. No
+había token de acción, así que **ninguna instalación** podía cambiarlo sin tocar el producto. Era lo
+único que impedía que la landing fuese 1:1 con el mockup.
+
+**La decisión de método, que es la que se repite.** No se hizo una lista de botones oscuros —una
+lista envejece con el primer botón nuevo— sino la pregunta que ya funcionó dos veces (`#193` la
+forma, `#196` la elevación): **«¿para qué sirve cada relleno de tinta?»**. Medido con **dos
+instrumentos independientes que coincidieron**: **52 reglas** rellenan con `var(--fg)` sólido y solo
+**13 son ACCIÓN**. Las otras 39 son superficie invertida (12), hover que invierte (15), estado
+seleccionado (6) y decoración (6), y **se quedan en tinta a propósito** — el propio sistema del
+cliente dice «en claro el secundario es TINTA» y prohíbe «tres primarios».
+
+**La decisión de arquitectura, y merece defenderse.** El producto **necesita** que su CTA siga a la
+superficie (`.cta-med` vive en `.nav`, que pasa a `data-surface="ink"` al abrir el menú: si no se
+invirtiera sería un relleno oscuro sobre un menú oscuro). El cliente **necesita lo contrario**
+(«CTA primario: idéntico en ambos fondos»). Las dos conductas caben en **una sola línea** porque el
+fallback de `var()` se evalúa donde la propiedad se declara:
+
+    --action: var(--action-brand, var(--fg));   /* declarada en :root Y en las dos superficies */
+
+Sin `--action-brand` el fallback resuelve contra el `--fg` de cada ámbito → **sigue a la
+superficie**. Con él, gana en los tres → **idéntico en los dos fondos**. Y `--action-brand` **no se
+declara en ninguna hoja del producto**: lo emite `ThemeSettings` y solo si la instalación tiene
+color de acción — declararlo vacío anularía el fallback y dejaría el botón **sin relleno** con la
+página cargando igual.
+
+**El dato vive en el PANEL** (`theme.action`), no en `client.css`: es lo único que cruza al panel y
+a los correos. **Vacío es una respuesta, no una falta.** De un solo dato salen cuatro valores: el
+hover se **deriva** ×0,88 y el rótulo lo elige el contraste.
+
+❗ **El 0,88 no es de gusto y se midió antes de escribirlo**: el hover que declara el cliente
+(`#F2711C` → `#D56319`) es **×0,88 en los tres canales**, y el `--err-hover` que el producto ya
+tenía (`#c0392b` → `#a93226`) usa **el mismo factor**. Derivarlo acierta el valor del cliente al
+byte y deja un solo dato que mantener.
+
+⚠️⚠️ **Lo que costó, y lo dijo la guarda con el color del propio cliente.** La primera versión
+reutilizaba `onBrand()` para el texto sobre el relleno. Salió ROJO: sobre `#D56319` elegía **blanco**
+y daba **3,73**. La causa es una preferencia estética legítima en su sitio —`onBrand()` prefiere
+blanco y solo cae a tinta por debajo de **3,0**, el umbral de texto GRANDE— que **no vale para el
+rótulo de un botón de 15–18 px**. `onAction()` no tiene preferencia: elige el de más contraste, como
+hace la auditoría del propio cliente. Sobre `#D56319` da 4,99.
+▶ Y quedó medido que **no siempre existe un texto que pase AA**: con luminancia ≈ 0,19 tinta y
+blanco empatan en **4,31**. Avisar de eso en el panel queda `[PENDIENTE: owner]`.
+
+**Verificación.** `ActionFillTest` (11 casos) + un caso nuevo en `SurfaceScopeTest` · **11
+mutaciones, las 11 muerden** (detección por código de salida, nunca por `grep`: en `#195` un arnés
+dio «0 de 12» con el test perfecto por eso) · **sonda de navegador 12/12**, que es la única prueba de
+que las dos conductas existen: con color de acción `rgb(242,113,28)` **dentro y fuera** del menú de
+tinta, hover `rgb(213,99,25)`; borrando el conmutador en vivo, claro dentro y tinta fuera.
+
+**Alcance decidido por el owner en esta sesión** (`[DECIDIDO owner, 2026-08-28]`): del canvas de
+diseño **solo se toma el SISTEMA DE DISEÑO** —colores, elementos, iconos, formas, menú, hero de
+cabecera y pie—; las secciones (las tres variantes de «El parque», los artboards de cumpleaños)
+**no se tocan** hasta que él lo diga. Y **el hero NO recupera su CTA** aunque el mockup se lo haya
+devuelto: la decisión de `#195` sigue en pie.
+
+▶ Detalle completo, tabla de roles y trampas: `specs/tema-por-instalacion.md` **§15**.

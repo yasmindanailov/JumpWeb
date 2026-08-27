@@ -154,6 +154,33 @@
      transparent)` en la propiedad (bordes). */
   --on-brand: #FFFFFF;
 
+  /* ── EL RELLENO DE ACCIÓN — el QUINTO mecanismo del tema (`specs/tema-por-instalacion.md` §15)
+     ───────────────────────────────────────────────────────────────────────────────────────────
+     La pregunta que lo define no es «¿qué botones son oscuros?» sino **«¿para qué sirve cada
+     relleno de tinta?»** — la misma que sacó los tres roles de sombra en `#196`. Medido: **52
+     reglas** del producto rellenan con `var(--fg)` sólido, y solo **11** son ACCIÓN (el control
+     primario: comprar, reservar, enviar, confirmar). Las otras 41 son superficie invertida,
+     hover que invierte, estado seleccionado o decoración, y **se quedan en `var(--fg)` a
+     propósito**: el propio sistema del 2.º cliente dice «en claro el secundario es TINTA».
+
+     ⚠️⚠️ **Por qué hay un nivel de indirección y no un literal.** El rol tiene que poder ser las
+     DOS cosas:
+       · sin color de acción declarado → **sigue a la superficie**, que es lo que el producto lleva
+         haciendo siempre (el CTA del nav se invierte al abrir el menú, porque `.nav` pasa a
+         `data-surface="ink"`; sin eso sería un botón oscuro sobre un menú oscuro);
+       · con color de acción declarado → **idéntico en los dos fondos**, que es lo que exige el
+         sistema del cliente («CTA primario: idéntico en ambos fondos, siempre con texto tinta»).
+     Las dos caben porque el fallback de `var()` se evalúa DONDE se declara: por eso estas cuatro
+     líneas se repiten en `[data-surface="ink"]` y `[data-surface="paper"]` — ahí `var(--fg)` ya
+     vale lo de esa superficie. Si el servidor emite `--action-brand`, gana en los tres sitios.
+
+     ⚠️ `--action-brand*` NO se declara aquí: o lo emite `ThemeSettings` desde `theme.action`, o no
+     existe y manda el fallback. Declararlo vacío rompería el fallback sin avisar. */
+  --action: var(--action-brand, var(--fg));
+  --on-action: var(--on-action-brand, var(--bg));
+  --action-hover: var(--action-brand-hover, var(--zone-1));
+  --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
+
   --font-display: "Bricolage Grotesque", system-ui, sans-serif;
   --font-body: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -329,6 +356,15 @@
   --fg-mute: var(--ink-fg-mute);
   --line: var(--ink-line);
   --line-strong: var(--ink-line-strong);
+
+  /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
+     superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
+     abierto —un relleno oscuro sobre fondo oscuro—, que es exactamente el píxel que este
+     mecanismo no puede mover. Con `--action-brand` puesto, el color del cliente gana igual. */
+  --action: var(--action-brand, var(--fg));
+  --on-action: var(--on-action-brand, var(--bg));
+  --action-hover: var(--action-brand-hover, var(--zone-1));
+  --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
 }
 
 [data-surface="paper"] {
@@ -340,6 +376,15 @@
   --fg-mute: var(--paper-fg-mute);
   --line: var(--paper-line);
   --line-strong: var(--paper-line-strong);
+
+  /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
+     superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
+     abierto —un relleno oscuro sobre fondo oscuro—, que es exactamente el píxel que este
+     mecanismo no puede mover. Con `--action-brand` puesto, el color del cliente gana igual. */
+  --action: var(--action-brand, var(--fg));
+  --on-action: var(--on-action-brand, var(--bg));
+  --action-hover: var(--action-brand-hover, var(--zone-1));
+  --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
 }
 
 /* La superficie se PINTA sola: quien la declara no tiene que acordarse de poner el fondo ni
@@ -597,7 +642,7 @@ img { display: block; max-width: 100%; }
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-10);
   padding: var(--sp-12) var(--sp-20);
-  background: var(--fg); color: var(--bg);
+  background: var(--action); color: var(--on-action);
   border-radius: var(--r-btn);
   font-weight: 600; font-size: var(--fs-14);
   transition:
@@ -608,7 +653,7 @@ img { display: block; max-width: 100%; }
 }
 .btn:hover {
   transform: translateY(-3px) scale(1.02);
-  background: var(--zone-1);
+  background: var(--action-hover);
   color: var(--fg);
   box-shadow: var(--shadow-lift);
 }
@@ -626,7 +671,7 @@ img { display: block; max-width: 100%; }
 .btn:disabled,
 .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
 .btn:disabled:hover,
-.btn[aria-disabled="true"]:hover { transform: none; box-shadow: none; background: var(--fg); color: var(--bg); }
+.btn[aria-disabled="true"]:hover { transform: none; box-shadow: none; background: var(--action); color: var(--on-action); }
 .btn--zone:disabled:hover,
 .btn--zone[aria-disabled="true"]:hover { background: var(--zone-1); color: var(--on-brand); }
 .btn--ghost:disabled:hover,
@@ -897,7 +942,7 @@ img { display: block; max-width: 100%; }
   display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--font-body); font-size: 12px;
   text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600;
-  background: var(--fg); color: var(--bg);
+  background: var(--action); color: var(--on-action);
   padding: 12px 18px; border-radius: var(--r-btn);
   margin-top: 28px; align-self: flex-start;
 }
@@ -975,7 +1020,7 @@ img { display: block; max-width: 100%; }
   display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--font-body); font-size: 12px;
   text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600;
-  background: var(--fg); color: var(--bg);
+  background: var(--action); color: var(--on-action);
   padding: 12px 18px; border-radius: var(--r-btn);
   margin-top: 24px; align-self: flex-start;
 }
@@ -1198,7 +1243,7 @@ img { display: block; max-width: 100%; }
    que todas las cards alineen su botón. En las destacadas (fondo de zona) el botón invierte para
    no fundirse con el color de la card al pasar el ratón. */
 .price__cta { width: 100%; justify-content: center; margin-top: auto; }
-.price--feat .price__cta { background: var(--fg); color: var(--bg-card); }
+.price--feat .price__cta { background: var(--action); color: var(--on-action); }
 .price--feat .price__cta:hover { background: var(--bg-card); color: var(--fg); }
 .price__name { font-family: var(--font-body); font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; }
 .price__num {
@@ -2082,12 +2127,12 @@ input[type="radio"]:focus-visible,
 .bd-pack__note strong { color: var(--fg); font-weight: 600; }
 .bd-pack__cta {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; background: var(--fg); color: var(--bg);
+  width: 100%; background: var(--action); color: var(--on-action);
   border-radius: var(--r-btn); padding: 16px 22px;
   font-size: 15px; font-weight: 600; margin-top: 20px; cursor: pointer;
   transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.25s ease;
 }
-.bd-pack__cta:hover { transform: translateY(-3px) scale(1.01); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
+.bd-pack__cta:hover { transform: translateY(-3px) scale(1.01); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
 .bd-pack__cta:active { transform: translateY(0) scale(0.98); transition: transform 0.08s ease; }
 .bd-pack__cta svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .bd-pack__cta:hover svg { transform: translateX(5px); }
@@ -2146,8 +2191,8 @@ input[type="radio"]:focus-visible,
 .bd-btn { display: inline-flex; align-items: center; gap: 9px; border-radius: var(--r-btn); padding: 13px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.25s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
 .bd-btn:hover { transform: translateY(-2px); }
 .bd-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
-.bd-btn--solid { background: var(--fg); color: var(--bg); }
-.bd-btn--solid:hover { background: var(--zone-1); color: var(--on-brand); }
+.bd-btn--solid { background: var(--action); color: var(--on-action); }
+.bd-btn--solid:hover { background: var(--action-hover); color: var(--on-action-hover); }
 .bd-btn--ghost { border: 1px solid var(--line-strong); color: var(--fg); background: transparent; }
 .bd-btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .bd-btn:active:not(:disabled) { transform: translateY(0) scale(0.97); transition: transform 0.08s ease; }

@@ -1807,6 +1807,8 @@ return [
         'theme_brand_hint' => 'Color principal de la marca (formato #RRGGBB). No afecta a los colores de zona, que se configuran por zona.',
         'theme_brand_secondary' => 'Color de marca secundario',
         'theme_brand_secondary_hint' => 'Acento que acompaña al principal en detalles y decoraciones (formato #RRGGBB). Si lo dejas vacío se usa el del diseño por defecto.',
+        'theme_action' => 'Color del botón de reservar',
+        'theme_action_hint' => 'Relleno de los botones que hacen avanzar la compra: reservar, comprar y enviar (formato #RRGGBB). No es el color de marca: la marca tiñe acentos y decoración, y éste solo los botones. Si lo dejas VACÍO el botón se adapta al fondo de cada sección, que es como se ve hoy; si pones un color, será el mismo sobre fondo claro y sobre fondo oscuro. El tono al pasar el cursor se calcula solo.',
 
         'cookies_banner_enabled' => 'Mostrar el banner de cookies',
         'cookies_banner_enabled_hint' => 'Si lo desactivas, NO se oculta el bloqueo previo: el mapa y el feed social siguen sin cargarse hasta que el visitante consienta; solo se oculta el aviso. Déjalo activado salvo que gestiones el consentimiento por otra vía.',
