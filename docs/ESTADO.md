@@ -2,74 +2,56 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-26**.
+> aquí solo se enlaza.** Última actualización: **2026-08-27**.
 >
-> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main`, y uno está trabajando AHORA.** Antes de planificar
-> nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
+> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main` (dos máquinas, un repo). Los dos cerraron sesión el
+> 2026-08-27 con todo empujado y verde, y la siguiente sesión ya está decidida por el owner: «menores
+> a cargo», en el carril A (su fila, abajo).** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → Fase 6 · waiver: CERRARLO SIN
->   ESCRIBIR CÓDIGO DE PRODUCTO** (`[DECIDIDO owner, 2026-08-26]`) — **HECHO lo que era de agente**
->   (`#169`, tarde del 26/08): (1) ✅ el guion `VERIFICACION-E2E-CAJON.md` **§5.nonies** (antes
->   «5.sexies», ancla duplicada) recorrido en **navegador headless**: 99 comprobaciones, 94 ✓, 5 PDF
->   leídos, `waiver:verify-chain` lineal sobre MySQL; los dos ✗ reales son **un defecto del cajón**
->   (tras el 409 la casilla sigue marcada) · (2) ✅ la **revisión adversarial del subsistema entero**
->   (spec **§10**: 1 alta · 21 medias · 15 bajas · 3 refutados · 68 afirmaciones que aguantaron) ·
->   (3) ✅ las decisiones del owner **planteadas con su medida** (spec §7, ahora SIETE) — y **SEIS
->   ya DECIDIDAS al cierre** (`#169`): el anti-bot lo arregla este carril lo primero · casilla del
->   waiver en el alta manual · **correo verificado para firmar** (el alta firma al verificar) · sin
->   aviso en el paso de pagar · **la casilla del alta OBLIGATORIA en modo interno** (era opt-in) ·
->   **su pasada del guion va DESPUÉS del arreglo del anti-bot**, en local (staging no sirve: sirve
->   `7776370`, 21 commits por detrás y sin el waiver). Quedan el texto y el plazo.
->   ❗❗ **Y lo más grave del día NO es del waiver: con el anti-bot activo, el alta suelta de
->   `/registro` NO TERMINA** —el widget de Turnstile nunca se monta porque `RegisterForm` se monta
->   antes de que `GET /config` traiga la clave— y **staging tiene claves** (`DEUDA.md` Alta, spec
->   §9.10). El arreglo es del carril A (`resources/js/sidebar/`) y esta sesión no escribía código.
->   ▶ 🟦 **TANDA 4 · el código acotado de §10.11 — EN CURSO desde el 2026-08-26 por la noche**
->   (`[DECIDIDO owner]`: «procede con lo que sigue»; esta sesión SÍ escribe código): (1) ✅ **el widget
->   del anti-bot en el alta suelta — HECHO y EMPUJADO** (`#171`: `mountTurnstile` acepta funciones y
->   espera a que existan clave y nodo sin cargar Cloudflare antes; 5 casos, 4 mutaciones muerden;
->   verificado en headless **con Turnstile encendido**: token a 3,1 s y `201`) →
->   (2) ✅ **servidor — HECHO y EMPUJADO** (`#174`: canal por guard —token real / sesión—,
->   idempotencia por versión y sujeto DENTRO del lock, guarda de borrador con los tres marcadores +
->   aviso de palabras, badge del pedido por `WaiverStatus`, throttles con prefijo, `WaiverSigner` en
->   el `CRITICAL_RE`; +12 tests, 7 mutaciones muerden; `waiver:verify-chain` lineal con 8/16 y visto
->   fallar sin el lock) → (3) ✅ **cajón — HECHO** (`#175`: id enseñado = id firmado con relectura si
->   el estado dice otro, el 422 del alta relee y desmarca, casilla desmarcada tras el 409,
->   `store.upcoming`; JS 700, 5 mutaciones muerden; chunk 226,21 → techo 226,5 por corrección;
->   verificado en headless con anti-bot) →
->   (4) las tres decisiones del owner que son código: ✅ **casilla del alta manual** y ✅ **casilla
->   obligatoria en interno** (`#178`: +6 tests PHP, +1 JS, 4 mutaciones muerden; headless 4c y 4b) · ✅ **correo
->   verificado para firmar** (`#179`: guarda en `WaiverSigner`, aceptación pendiente del alta firmada
->   al verificar, `409 waiver_email_unverified`; 5 mutaciones muerden; `waiver:verify-chain` 8/16) →
->   (5) ✅ **el texto del PDF** (`#180`: comprobación «interna» con su alcance, pie sin «inmutable»,
->   IP/UA del puesto en mostrador, `WaiverChain` cruza la versión). **TANDA 4 CERRADA.** →
->   (6) ✅ **la revisión adversarial de la propia tanda, APLICADA** (`#183`, spec §9.12: 24 confirmados,
->   0 refutados; S-1 —`Verified` también lo emite el COBRO, dentro de su transacción— resuelto con IP/UA
->   de la aceptación + `afterCommit`; vigencia dentro del lock; `pending` en el contrato; el 422 de
->   `accept_waiver` relee; declaración en mostrador para la cuenta existente; 10 mutaciones muerden;
->   **guion §5.nonies reescrito y re-recorrido en headless: **111/111 ✓, 0 desviaciones****). Cada unidad se empuja
->   verde y sola. ⚠️ **Para el carril B**: `#183` trae UNA migración más del waiver
->   (`waiver_pending_ip`/`_user_agent`): `php artisan migrate` al retomar, como en tu A0. Después: «menores a cargo» (C), que hereda NUC-3. Ficheros del carril: los de siempre del waiver y el cajón
->   (`resources/js/sidebar/` · `resources/css/` · `storage/ssr/` · `lang/*/account.php` ·
->   `tests/Feature/Sidebar/` · `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**`
->   del waiver · `routes/api.php`) más `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md`
->   · `docs/VERIFICACION-E2E-CAJON.md`.
->   ⚠️ **La BD local de esta máquina tras la prueba**: `waiver.mode = interno`, **v1→v9** publicadas (dos pasadas completas del guion y los sondeos de la unidad 6)
->   en es/en/fr (v2/v3 llevan marcadores `[E2E-vN]` en el texto), **7 firmas `web`** de 6 cuentas
->   `e2e-waiver-*@jumpweb.test`, y el anti-bot **restaurado** (claves de prueba de Cloudflare). ⚠️
->   Para el ojo del owner en `/registro` hay que **vaciar `security.turnstile_secret`** o arreglar el
->   defecto: si no, el alta muere con «no eres un robot».
->   ⚠️ **El techo del chunk del cajón cedió por una FEATURE el 2026-08-26 (221,5 → 226)**: la regla
->   escrita decía «solo por correcciones» y por eso **lo decidió el owner**, con el número delante.
->   Quedan 0,28 KiB. Lo siguiente que entre lo mide (`SidebarBundleBudgetTest`).
->   ⚠️ Corrección medida de una nota anterior: **ni `routes/api.php` ni `MeController` están en el
->   `CRITICAL_RE`** —son sus controles NEGATIVOS en `CriticalPathGateTest`—, así que el waiver no ha
->   exigido `VERIFY_CONC` en ningún push.
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
+>   06:23. ✅ Nada a medias: el waiver, de agente, TERMINADO** (`#169` revisión adversarial del subsistema
+>   + guion en headless · la **tanda 4** que esa revisión exigía: `#171` anti-bot · `#174` servidor ·
+>   `#175` cajón · `#178` casilla del alta manual + casilla OBLIGATORIA en interno · `#179` correo
+>   verificado para firmar · `#180` texto del PDF · **`#183` la revisión de la propia tanda, aplicada**
+>   —24 confirmados, 0 refutados— con el guion §5.nonies **reescrito con la conducta definitiva y
+>   re-recorrido en headless: 111/111 ✓**). El «qué pasó» vive en `00-REFACTOR.md` (Fase 6), en cada
+>   decisión y en la spec §9.11/§9.12. Al cerrar, además: el único «PHPUnit notice» de la suite,
+>   identificado y retirado, y el `pre-push` corregido para leer también «OK (N tests, M assertions)»
+>   (commit `e5df6dd`: sin eso el gate se quedaba ciego con la suite verde).
+>   ❗ **Lo que queda del waiver es del OWNER**: su ✅ en navegador (guion §5.nonies, **en local y con las
+>   claves de PRUEBA de Turnstile en Ajustes**, receta en §5.bis — el defecto del anti-bot está
+>   arreglado desde `#171`), el **texto definitivo** (spec §8.1: publicar la v1 real es irreversible) y
+>   el **plazo de retención** (§4.6). Hasta eso, Fase 6 sigue 🟦.
+>   ▶ ✅ **`[DECIDIDO owner, 2026-08-27]`: LA SIGUIENTE SESIÓN DE ESTE CARRIL HACE «MENORES A CARGO»**
+>   (`specs/menores-a-cargo.md`, C). Por dónde: `/arranque-sesion` → `docs/INVARIANTES.md` §2 (AFORO)
+>   → la spec entera **empezando por §8.1 y §8.2** (el mecanismo es la lista blanca de
+>   `cart.js::save()`, y subir `STORAGE_VERSION` purga TODAS las cestas vivas) → §4.6 (Booking NO
+>   mira a Identity; la asignación la posee Identity) → §4.7 (al elegir cantidad no hay sesión) →
+>   hereda **NUC-3** de `DEUDA.md` (la poda con firmas de menor). Es spec-first: la spec está revisada
+>   y sin código; la primera tanda se recorta con el owner delante, con número y coste, como el waiver.
+>   Ficheros del carril: los de siempre del waiver y el cajón (`resources/js/sidebar/` ·
+>   `resources/css/` · `storage/ssr/` · `lang/*/account.php` · `tests/Feature/Sidebar/` ·
+>   `tests/Feature/Waiver/` · `app/Domain/Identity/**` · `app/Http/**/Api/V1/**` · `routes/api.php`)
+>   más `docs/specs/waiver-probatorio.md` · `docs/specs/menores-a-cargo.md` ·
+>   `docs/VERIFICACION-E2E-CAJON.md`.
+>   ⚠️ **La BD local de esta máquina**: `waiver.mode = interno`, **v1→v9** publicadas en es/en/fr (las
+>   de prueba llevan marcadores `[E2E-…]` en el texto), firmas de cuentas `e2e-waiver-*@jumpweb.test` y
+>   `probe-*@jumpweb.test`, y **el anti-bot ENCENDIDO con las claves de prueba de Cloudflare** en
+>   `settings` (`security.turnstile_site_key`/`_secret` = `1x000…AA`): es justo lo que necesita el ojo
+>   del owner en `/registro`. La migración de `#183` está aplicada aquí; en el portátil, `migrate`
+>   tras el pull.
+>   ⚠️ **El techo del chunk del cajón** cedió por una FEATURE el 26/08 (221,5 → 226,5 KiB) por decisión
+>   del owner; medido hoy **226,34 KiB: quedan 0,16 KiB**. Lo siguiente que entre en el cajón —y
+>   «menores a cargo» entra— lo mide `SidebarBundleBudgetTest` y casi seguro obliga a podar o a
+>   decidir con el owner ANTES de escribir el componente.
+>   ⚠️ Medido: ni `routes/api.php` ni `MeController` están en el `CRITICAL_RE` (son controles
+>   NEGATIVOS en `CriticalPathGateTest`); **`WaiverSigner` SÍ** (`#174`): tocarlo exige
+>   `waiver:verify-chain` y `VERIFY_CONC=1`.
 >
 > · **Agente B (el portátil) → SESIÓN CERRADA el 2026-08-27 a las 07:30. ✅ Nada a medias: la
 >   extracción 4b ENTERA empujada y verde en seis tandas** (`#182` plan · `#184` A · `#185` B ·
@@ -138,7 +120,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#189`**.
+> El último usado es **`#190`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -471,7 +453,8 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 **Los dos carriles cerraron sesión el 2026-08-27** (el A a primera hora, el B a las 07:30) con todo
 empujado y verde; el reparto de la cabecera sigue siendo el único vigente y dice qué toca cada uno si
 vuelve. `git fetch` antes de nada, y **lee las dos filas antes de elegir tarea**: lo que queda en las
-dos es del OWNER (su ojo en navegador, el texto del waiver, el plazo), no de agente.
+dos es del OWNER (su ojo en navegador, el texto del waiver, el plazo), no de agente — **salvo lo ya
+decidido para la siguiente sesión: «menores a cargo», carril A** (`[DECIDIDO owner, 2026-08-27]`).
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`), la siguiente rebanada del gate documental se
@@ -489,10 +472,11 @@ casi todo lo que queda lo desbloquea el owner.
    la conducta definitiva y recorrido en headless: 111/111 ✓**. **Lo que queda es del owner y solo
    del owner**: su ✅ en navegador (guion §5.nonies, en local, con las claves de PRUEBA de Turnstile
    en Ajustes —receta en §5.bis—), el **texto definitivo** (spec §8.1: publicar la v1 real es
-   irreversible) y el **plazo de retención** (§4.6). ▶ **Siguiente trabajo de agente en este
-   carril**: «menores a cargo» (`specs/menores-a-cargo.md`, C; hereda NUC-3 de `DEUDA.md`) — spec
-   revisada: leer antes `docs/INVARIANTES.md` §2 (AFORO) y, en la spec, sus secciones 8.1 y 8.2 —la lista
-   blanca de `cart.js::save()` y el `STORAGE_VERSION`—; o lo que el owner diga.
+   irreversible) y el **plazo de retención** (§4.6). ▶ ✅ **`[DECIDIDO owner, 2026-08-27]`: la
+   SIGUIENTE SESIÓN de este carril hace «menores a cargo»** (`specs/menores-a-cargo.md`, C; hereda
+   NUC-3 de `DEUDA.md`) — spec revisada, sin código: leer antes `docs/INVARIANTES.md` §2 (AFORO) y, en
+   la spec, sus secciones 8.1 y 8.2 —la lista blanca de `cart.js::save()` y el `STORAGE_VERSION`—. El
+   detalle del arranque está en la fila A de la cabecera.
    ⚠️ En la máquina del carril A hay **v1→v9 publicadas** localmente por las dos pasadas del guion y
    los sondeos (y cuentas `e2e-waiver-*@jumpweb.test` / `probe-*@jumpweb.test`); en la del portátil,
    no. Tras un pull en el portátil: **`migrate`** (`#183` añade una migración).
@@ -514,8 +498,8 @@ hay siguiente paso de agente ahí. Lo único pendiente es HUMANO: el owner prueb
 
 ⏸️ **[DECIDIDO owner, 2026-08-25 tarde] APLAZADO hasta que la landing esté terminada** (`#158`): el
 owner no puede visualizarlo ahora, y una sección que no se puede ver no se puede validar (cuarta
-condición del DoD, `CONVENCIONES §3.bis`). Lo que SÍ está en marcha es **Fase 6 · waiver** (agente A)
-y **`RGPD-01`** (agente B): el reparto de arriba. Lo que sigue de este apartado describe el trabajo
+condición del DoD, `CONVENCIONES §3.bis`). Ya no hay nada en marcha —los dos carriles cerraron el
+27/08— y lo siguiente decidido es «menores a cargo» (reparto de arriba). Lo que sigue de este apartado describe el trabajo
 tal y como quedó MEDIDO, para cuando toque.
 
 ⏸️ **Por qué no es «seguir con la tanda B»**: el owner está **rehaciendo el sistema visual** en Claude

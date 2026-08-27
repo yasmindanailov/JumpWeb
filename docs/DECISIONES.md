@@ -9954,3 +9954,28 @@ Verificación: suite **2984 / 17.208 en verde** (+5 tests) · Pint global ✓ ·
 · `purchase:verify-oversell` **6/6 PASAN** (8 workers, MySQL) · `redsys:verify-concurrency` PASA ·
 cero restos en la BD · 16/16 mutaciones con ancla única y restauración por md5 · fidelidad por
 diferencia de conjuntos: cero lógica · empujado con `VERIFY_CONC=1`.
+
+## #190 · 2026-08-27 · [DECIDIDO owner] La siguiente sesión del carril A es «menores a cargo» — y el cierre del carril A
+
+**Decisión del owner** (al cerrar la sesión del carril A, 2026-08-27): el waiver queda en manos del
+owner (su ✅ en navegador, el texto definitivo, el plazo) y **la siguiente sesión de este carril hace
+«menores a cargo»** (`specs/menores-a-cargo.md`, subsistema C de Fase 6). Es spec-first —la spec
+está revisada y sin bloqueantes (`#156`)— y el arranque está escrito en la fila A de `ESTADO.md`:
+`INVARIANTES` §2 (AFORO), luego las secciones 8.1 y 8.2 de la spec (la lista blanca de `cart.js::save()`; subir
+`STORAGE_VERSION` purga todas las cestas vivas), §4.6 (Booking no mira a Identity), §4.7 (sin sesión
+al elegir cantidad) y NUC-3 de `DEUDA.md`. ⚠️ Entra en el cajón con **0,16 KiB** de margen en el
+chunk (`SidebarBundleBudgetTest`): se mide y se decide con el owner antes de escribir el componente.
+
+**Cierre del carril A, con la base verificada sobre el árbol FINAL de los dos carriles**
+(`84d9cae`, con el desmontaje de `ViewOrder` terminado por el B): docs-check ✓ · Pint ✓ · suite
+**2984 / 17.208** (= lo que declara `ESTADO.md`) · JS 702 · sin migraciones por aplicar · sin assets
+tocados desde el último build. Lo que dejó este cierre además del `#183`: el único «PHPUnit notice» de
+la suite identificado y retirado (`RequiresStaffOrAdminTest`, `createMock` → `createStub`) y **el
+`pre-push` corregido**: solo entendía «Tests: N, Assertions: M», que PHPUnit escribe cuando hay
+issues; sin el notice la suite resume «OK (N tests, M assertions)» y el gate se quedó ciego con la
+suite verde (push rechazado). Lee las dos formas, probado con ambas cadenas (`e5df6dd`); el carril B
+hizo lo mismo con `audit-clock` en su cierre.
+
+**Regla de método, pagada dos veces más hoy**: `git rebase … | tail -1 && git push` encadena `tail`,
+no el rebase — con un conflicto a medias el push salió igual. El exit se lee del propio comando.
+
