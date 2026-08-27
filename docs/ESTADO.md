@@ -584,7 +584,7 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 |---|---|
 | **A · menores** | Las **cinco decisiones** de `specs/menores-a-cargo.md` §9.5. La primera (**NUC-3**) bloquea su tanda 2 |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ahora pesa más que nunca**: el paso 3 de la 2b (`#195`) **SÍ cambia el aspecto de la primera pantalla** —el hero pierde su CTA, gana un eslogan, pasa a ser una tarjeta con margen y ENCOGE al bajar—, y esta máquina no tiene navegador headless: lo verificado es aritmética y estructura, **no vista**. ▶ El owner ya validó lo de la 2a (hero igual, tira correcta, esquinas). ▶ **Lo siguiente que él anunció**: el MENÚ («cambia totalmente») y cómo se comporta en MÓVIL, que guiará él. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»** se queda |
+| **C · tema** | ❗❗ **SOLO la pasada de NAVEGADOR — de agente no queda nada pendiente de la capa de tema.** Se ha acumulado cambio visual sin mirar: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). ▶ Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ▶ **Lo siguiente que ÉL anunció**: el MENÚ («cambia totalmente») y cómo se comporta en MÓVIL, que guiará él. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»** |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
@@ -621,11 +621,13 @@ Auditarlas necesita su propia pasada, con el rigor de `CONVENCIONES §3.quater`.
 
 
 
-⚠️ **El mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección ni tarjeta declara
-superficie. Es correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de
-verdad** es en la 2b, cuando el hero declare `ink`. Y ese mismo día se retiran las **tres excepciones
-del anillo de foco** (`.skip-link`, `.hero__chip`, `.gf-fiche__head`), que existen justo porque su
-fondo oscuro aún no declara superficie.
+✅ **El mecanismo de la tanda 1 YA lo usa alguien**, desde `#194`: el `.hero__stage` declara
+`data-surface="ink"` y es el primer —y por ahora único— consumidor. Este párrafo decía lo contrario
+y se corrige aquí.
+⚠️ **Pero las tres excepciones del anillo de foco NO se retiraron.** Este documento daba por hecho
+que caerían «ese mismo día» y no fue así: se dejaron **a propósito**, para no mezclar un cambio de
+foco con la conversión de superficie. ▶ **La del chip del hero ya se puede retirar** —su fondo sí
+declara superficie—; las de `.skip-link` y `.gf-fiche__head`, no. Ficha en `DEUDA.md`.
 
 **Y en el carril de calidad no queda trabajo de valor alto — está medido, no supuesto.** El reloj está
 cerrado (`#162`, `#164`), `RGPD-01` corregida (`#159`) y la siguiente rebanada del gate documental se

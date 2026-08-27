@@ -1,12 +1,24 @@
 # [SPEC] El tema por instalación — los MECANISMOS que al paquete de un cliente le faltan
 
-> Estado: 🟦 **TANDAS 1 y 2a EN `main`** (`#192` · `#193`) · Última actualización: 2026-08-27 ·
-> Decisiones asociadas: `DECISIONES #192` (tanda 1) y `#193` (tanda 2a). **El número se fija al
-> EMPUJAR**, mirando el remoto — ver `docs/CONVENCIONES.md` §10.
+> Estado: 🟦 **LOS CUATRO MECANISMOS EN `main`** (`#192` → `#196`) · Última actualización:
+> 2026-08-27 · Decisiones: `#192` (tanda 1, color y superficie) · `#193` (2a, la forma) ·
+> `#194` (2b pasos 1-2, el hero declara superficie) · `#195` (2b paso 3, la estructura del hero) ·
+> `#196` (la elevación). **El número se fija al EMPUJAR**, mirando el remoto — `CONVENCIONES §10`.
 >
-> ❗ **Sigue 🟦 por una sola cosa, y es del owner: su pasada de NAVEGADOR** sobre las **11
-> declaraciones que la 2a mueve a propósito** (§10.2, enumeradas) y sobre la **tira del pie**. La
-> suite comprueba que cada token vale lo que tiene que valer; no comprueba que el resultado guste.
+> ❗❗ **Sigue 🟦 por UNA sola cosa, y es del owner: su pasada de NAVEGADOR.** Se ha acumulado
+> cambio visual sin que nadie lo mire, y la suite comprueba que cada token vale lo que debe — **no
+> que el resultado guste**:
+>
+> | | Qué falta mirar | Estado |
+> |---|---|---|
+> | `#192` | la tanda 1 no movía un píxel, y se verificó regla a regla | ✅ verificado |
+> | `#193` | las **11 declaraciones de canto** que se mueven (§10.2) y la **tira del pie** | ✅ **el owner lo validó**: «la tira está ahí y está correcta, las esquinas redondeadas» |
+> | `#194` | que el hero se viera **igual** tras declarar superficie | ✅ **el owner lo validó**: «el hero está como estaba antes» |
+> | `#195` | **el hero entero**: pierde su CTA, gana un eslogan, es una tarjeta y **encoge al bajar** | ⬜ **nadie lo ha visto** |
+> | `#196` | **19 elementos pierden su sombra** — cambia el aspecto de media web | ⬜ **nadie lo ha visto** |
+>
+> ⚠️ Y una razón concreta para no dar por buena la aritmética: **§11.4 es la prueba de que un
+> barrido incompleto puede jurar que todo está bien.** Tres conversiones a medias pasaron la suite.
 >
 > ⚠️⚠️ **DOS SECCIONES DE ESTE DOCUMENTO ESTÁN CADUCADAS Y LA CORRECCIÓN VA ANTES QUE EL TEXTO:**
 > · **§1.2** — la premisa «el sistema alterna dos superficies, nunca dos papeles seguidos»
@@ -526,6 +538,9 @@ porque acaba dentro de una URL en el `<head>` (`SEC-07`).
 
 - **Nada de la tanda 1.** Lo siguiente es la **tanda 2** (el armazón), y con ella las dos decisiones
   de escala que se aparcaron a propósito: la de **sombra** y los **56 radios huérfanos**.
+- ⚠️ **[CADUCADO — lee §11 antes que esta línea]** Desde `#194` el `.hero__stage` declara
+  `data-surface="ink"`: el mecanismo **sí** tiene consumidor, y fue ahí donde se vio funcionar por
+  primera vez. Lo que sigue describe el estado del día de la tanda 1.
 - ⚠️ **El mecanismo aún no lo usa nadie**: ninguna sección declara superficie todavía. Es correcto
   —es el cimiento, y la tanda 2 es quien lo consume—, pero significa que **su red es la guarda y las
   sondas, no el ojo**. Cuando el armazón pinte la primera sección en tinta, esa es la pasada de

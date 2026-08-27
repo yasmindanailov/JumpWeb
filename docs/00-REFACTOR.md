@@ -2348,8 +2348,9 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       **CICLO** (y un ciclo no falla, deja el color en el inicial); los dos grises son **aritmética**
       —el gris único daba 3,28 sobre tinta y ninguno pasa en las dos superficies—; y la tipografía
       eran **dos mitades que no se hablaban** (el token se redefinía y el fichero no se descargaba).
-      ⚠️ **El mecanismo aún no lo usa nadie**: ninguna sección declara superficie. Es el cimiento; su
-      red hoy son la guarda y las sondas, **no el ojo del owner**.
+      ⚠️ **[CADUCADO — desde `#194` SÍ lo usa alguien]** Esta línea decía «el mecanismo aún no lo usa
+      nadie». El `.hero__stage` declara `data-surface="ink"` y es su primer consumidor real; ahí se
+      vio funcionar por primera vez, y ahí se cazaron tres conversiones a medias (spec §11.4).
 - ✅ **2a · La FORMA y el pie** (2026-08-27, `#193`). La **escala de canto cerrada** (`--r-xs: 5px` y
       `--r-md: 10px` nuevos → `5·8·10·14·16·28·999`), la **ley del motivo cuadrado**, el **anillo de
       foco tokenizado** y la **tira de marca del pie**.
@@ -2372,7 +2373,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       complementarios la franja del medio salía barro (`#868D7D`), y **`oklab` no lo arreglaba**
       (croma 0,024 vs 0,025 de `srgb`). El producto no elige la marca de su cliente.
       ❗ **Falta la pasada de NAVEGADOR del owner** sobre las 11 declaraciones que se mueven.
-- 🟦 **2b · El HERO — pasos 1 y 2 HECHOS** (2026-08-27, `#194`), paso 3 PARADO por decisión.
+- ✅ **2b · El HERO, pasos 1 y 2** (2026-08-27, `#194`). ▶ **El owner lo verificó en navegador**: «el hero está como estaba antes» — que era exactamente la promesa de estos dos pasos.
       ✅ **Paso 1**: 17 reglas de **6 clases MUERTAS** fuera (cero usos en `resources/`), 56 líneas.
       ✅ **Paso 2**: el `.hero__stage` **declara `data-surface="ink"`** — la PRIMERA vez que el
       producto consume el mecanismo de la tanda 1, que hasta hoy no usaba nadie— y `--onvideo` deja
@@ -2398,7 +2399,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       coreografía **no**. El paso 2 es terreno firme; el 3 es el único de toda la capa que copia
       algo no normativo.
       ❗ **Nadie ha MIRADO el hero**: esta máquina no tiene navegador headless.
-- ✅ **2b · paso 3 — el hero adopta la ESTRUCTURA del mockup** (2026-08-27, `#195`).
+- 🟦 **2b · paso 3 — el hero adopta la ESTRUCTURA del mockup** (2026-08-27, `#195`). ❗ **Sigue 🟦 y no ✅ a propósito**: cambia el aspecto de la primera pantalla y **nadie lo ha MIRADO** — falta la cuarta condición del DoD, la verificación empírica.
       `[DECIDIDO owner]`: «en el mockup el CTA sale DESPUÉS del hero; en el hero no hay CTA, solo
       texto y el vídeo». El hero queda **eslogan → titular → estado**, es una **tarjeta** con
       margen y radio (no un sangrado) y **encoge al bajar**. Comprar se ofrece en el nav y en la
@@ -2420,7 +2421,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       que dice el mismo texto con otra clave. Dos mutaciones pasaban. Acotado al botón real,
       **4 de 4 muerden**.
       ❗ **Falta la pasada de NAVEGADOR**, y aquí pesa: este paso SÍ cambia la primera pantalla.
-- ✅ **2b.bis · La ELEVACIÓN: TRES ROLES, no una escala** (2026-08-27, `#196`).
+- 🟦 **2b.bis · La ELEVACIÓN: TRES ROLES, no una escala** (2026-08-27, `#196`). ❗ **Sigue 🟦 y no ✅**: **19 elementos pierden su sombra** y eso cambia media web sin que nadie lo haya visto.
       ⚠️⚠️ **Corrige la medición de §10.3**, que miró solo el difuminado. Con las cuatro dimensiones
       de una sombra, el producto tenía **53 vivas y 42 formas distintas**, y la mejor escala de
       cinco escalones movía **47 de 53** con grupos deformes (22·14·10·6·**1**). No era una escala
