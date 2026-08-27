@@ -10478,6 +10478,13 @@ publicar, tope a 1 desde `settings`, quitar con firma detrás → desvinculada, 
 **Lo que queda**: la tanda 4 (la asignación en el embudo, §4.7–§4.10) y, del owner, su ✅ en navegador
 de la zona y los dos plazos de retención. Sigue 🟦.
 
+**Cierre del carril A (2026-08-27, 18:40) sobre el árbol final** —con el TEMA del carril C ya fusionado—:
+docs-check ✓ (33 modelos · 81 migraciones) · Pint ✓ · suite **3062 / 17.694** (= lo que declara
+`ESTADO.md`) · JS **724** · `npm run build` ✓ (chunk 234,41 KiB) · `scripts/audit-clock.sh` ✓ **12/12 fronteras verdes** (10 con el reloj congelado y los 2 cruces de medianoche a mitad de pase; la tanda añadió fixtures con fechas de nacimiento y `travelTo`, y ninguno depende del día real).
+**`[DECIDIDO owner]`: la siguiente sesión de este carril hace la TANDA 4** (la asignación en el embudo);
+el mapa de arranque, con los ocho puntos que hay que saber antes de escribir, está en la fila A de
+`ESTADO.md`.
+
 ## #200 · 2026-08-27 · El ARMAZÓN pasa a spec propia, el owner cierra SIETE decisiones, y la tanda 2c·0 deja la red puesta y 33 reglas muertas fuera
 
 La **2c** del tema (`specs/tema-por-instalacion.md` §7) deja de ser una fila del plan y pasa a

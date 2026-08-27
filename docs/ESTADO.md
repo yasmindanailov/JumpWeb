@@ -5,9 +5,10 @@
 > aquí solo se enlaza.** Última actualización: **2026-08-27**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
-> las 07:30 con todo empujado y verde; el A hizo por la tarde la TANDA 1 de «menores a cargo» (`#191`)
-> y **su siguiente tanda espera CINCO decisiones del owner** (`specs/menores-a-cargo.md` §9.5); y
-> **nace el carril C, el TEMA**, que cerró y empujó su tanda 1 esa misma tarde (`#192`,
+> las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
+> cargo» empujadas (`#191` · `#198` · `#199`) y **su siguiente sesión hace la TANDA 4, la asignación en
+> el embudo** (`[DECIDIDO owner]`; el mapa de arranque está en su fila); y **nace el carril C, el
+> TEMA**, que cerró y empujó su tanda 1 esa misma tarde (`#192`,
 > `specs/tema-por-instalacion.md`). Los tres tienen su fila abajo. Antes de planificar nada,
 > `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
@@ -16,8 +17,30 @@
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN del 2026-08-27 por la tarde:
->   «MENORES A CARGO», TANDA 1 EMPUJADA** (`#191`, `specs/menores-a-cargo.md` **§9**): el núcleo en
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
+>   18:40. ✅ Nada a medias: «MENORES A CARGO», TANDAS 1, 2 y 3 EMPUJADAS** (`#191` · `#198` · `#199`;
+>   `specs/menores-a-cargo.md` §9.1/§9.7/§9.8) **y la revisión de las cinco decisiones del owner hecha
+>   (`#197`)**. Cierre sobre el árbol final: suite 3062 / 17.694 · JS 724 · Pint ✓ · docs-check ✓ ·
+>   build ✓ · `audit-clock` ✓ 12/12 fronteras.
+>   ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril: la TANDA 4 — la asignación de entradas a
+>   un menor EN EL EMBUDO** (`[DECIDIDO owner, 2026-08-27]`: «seguimos la tanda 4 en el siguiente chat»).
+>   Por dónde: `/arranque-sesion` → `docs/INVARIANTES.md` §1 (PAY-04, PAY-12) y §2 (AFORO-01, AFORO-10)
+>   → la spec **§4.6, §4.7, §4.8 con §8.1/§8.2, §4.9, §4.10** y **§9.4** → `specs/checkout-orquestado.md`.
+>   Lo que hay que saber ANTES de escribir: **(1)** la asignación la posee Identity con el ítem por id
+>   ENTERO (Booking no puede mirar a Identity; `ModuleBoundariesTest`) · **(2)** dos puertas, CERO pasos
+>   nuevos en `machine.js` (con sesión en el paso 3 al elegir cantidad; sin ella en el paso 5) ·
+>   **(3)** el hueco viaja en la LISTA BLANCA de `cart.js::save()` **manteniendo `v: 1`** (subir
+>   `STORAGE_VERSION` purga todas las cestas vivas) y `reconcile` deja la línea sin asignar si el menor
+>   se retiró · **(4)** el servidor re-valida la pertenencia de cada id (anti-IDOR, la guarda más
+>   importante de la spec, con su mutación) · **(5)** se escribe DESPUÉS de que `OrderCreator` devuelva
+>   y FUERA de la transacción de los locks (post-commit, idempotente); si falla, el pedido sigue en pie ·
+>   **(6)** toca `OrderCreator`/`CheckoutOrchestrator` → `CRITICAL_RE`: los CINCO escenarios de
+>   `purchase:verify-oversell` y `VERIFY_CONC=1` · **(7)** solo entradas, no packs · **(8)** el chunk
+>   del cajón tiene 0,59 KiB: se mide y se sube por feature (`#197`·2). Primera unidad recomendada: la
+>   tabla + el contrato de escritura post-commit + la re-validación, SIN tocar el cajón; el cajón
+>   después, medido. ⚠️ **Antes de la tanda 4 conviene el OJO del owner sobre la zona del cajón**
+>   (guion §5.decies), porque la tanda 4 la usa.
+>   **Lo que fue esta sesión — TANDA 1** (`#191`, spec **§9**): el núcleo en
 >   Identity + la API, **sin firmas de menor todavía** — `dependents` + `DependentRegistry` (solo
 >   menores; tope de servidor bajo el lock de la fila del titular) + `GET|POST|DELETE /me/dependents`
 >   contra el contrato + `anonymize()`/export/purga de go-live/poda + el tope en Ajustes → «Puerta».
@@ -625,14 +648,17 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-27, noche): los TRES carriles cerrados y empujados — y los tres esperan al OWNER, cada uno por una cosa distinta
+# ❗ SI ENTRAS NUEVO (2026-08-27, 18:40): los TRES carriles cerrados y empujados — y el A ya tiene su siguiente tarea DECIDIDA: la tanda 4 de «menores a cargo»
 
-**Los tres cerraron el 2026-08-27 con todo en `origin/main` y verde.** El B a las 07:30; el A por la
-tarde con la tanda 1 de «menores a cargo» (`#191`) **y por la noche con la 2, la firma del menor
-(`#198`), y la 3, la zona del cajón (`#199`)**; y el **C, el TEMA**, por la noche con la tanda 1 de la
-capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas de la cabecera antes de
-elegir tarea**. De agente, **sin decisión nueva del owner, no hay nada de valor alto que empezar** —
-lo que queda de cada carril está abajo, y es distinto en cada uno.
+**Los tres cerraron el 2026-08-27 con todo en `origin/main` y verde.** El B a las 07:30; el **A a las
+18:40 con las tandas 1, 2 y 3 de «menores a cargo»** (`#191` · `#198` · `#199`, `specs/menores-a-cargo.md`
+§9) **y la tanda 4 decidida como siguiente** (`[DECIDIDO owner]`; el mapa de arranque, con los ocho
+puntos que hay que saber antes de escribir, está en su fila de la cabecera); y el **C, el TEMA**, por
+la noche con la tanda 1 de la capa de tema (`#192`). `git fetch` antes de nada y **lee las tres filas
+de la cabecera antes de elegir tarea**. Del owner: su ojo en navegador (el waiver, la zona de menores,
+el hero), el texto del waiver y los dos plazos de retención. ⚠️ En el carril A, **antes de la tanda 4
+conviene ese ojo sobre la zona de menores** (guion `VERIFICACION-E2E-CAJON.md` §5.decies): la tanda 4
+la usa.
 
 | Carril | Qué espera, exactamente |
 |---|---|
