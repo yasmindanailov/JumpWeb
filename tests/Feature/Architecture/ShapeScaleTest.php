@@ -102,6 +102,23 @@ class ShapeScaleTest extends TestCase
         '.bd-proc__cube@media' => 'el cubo del proceso a otro tamaño dentro de un @media: sigue la ley',
     ];
 
+    /**
+     * **Las sombras que NO salen de un rol, y por qué.**
+     *
+     * El producto tenía **53 sombras con 42 formas distintas**. Ahora hay TRES tokens por
+     * función —`lift`, `float`, `modal`— y lo que no entra en ninguna **no lleva sombra**.
+     * Estas seis se quedan con forma propia, cada una por un motivo que no es «no me dio
+     * tiempo». La lista **solo encoge**.
+     */
+    private const SHADOW_EXCEPTIONS = [
+        '.sidecart__panel' => 'DIRECCIONAL (`-20px 0 …`): el panel entra desde el lado, y un token vertical lo rompe',
+        '.mob-menu__panel' => 'DIRECCIONAL: ídem, el menú lateral de móvil',
+        '.lang-dd--up .lang-dd__panel' => 'DIRECCIONAL hacia ARRIBA (`0 -18px …`): el desplegable se abre hacia arriba',
+        '.invite-card' => 'ARTEFACTO IMPRIMIBLE: se captura con `html2canvas` y su sombra es parte de la tarjeta que el visitante se descarga',
+        '.ck-tgl::after' => 'el PULGAR de un interruptor: 1 px de sombra lo hace parecer una pieza física, no elevación',
+        '.offw-badge' => 'lee `--offw-accent`, color de marca del widget, no una sombra de elevación',
+    ];
+
     /** Las tres reglas de foco que NO pueden usar `--focus-color`, y por qué. */
     private const FOCUS_EXCEPTIONS = [
         '.skip-link:focus-visible' => 'pinta sobre su propio fondo oscuro, que aún no declara superficie',
@@ -323,6 +340,106 @@ class ShapeScaleTest extends TestCase
             'la mediana de `lado / radio` de la familia se ha ido de 4: la ley que justifica esta '.
             'lista de excepciones ha dejado de ser cierta, y con ella la excepción.',
         );
+    }
+
+    /**
+     * **Toda sombra sale de un ROL, o es una excepción declarada.**
+     *
+     * ⚠️⚠️ El producto tenía **53 sombras de elevación con 42 formas distintas** — casi cada una
+     * única. Y la mejor escala de cinco escalones movía **47 de 53**: no era una escala con
+     * ruido, es que **no había ninguna**. El sistema del cliente al que esta capa sirve declara
+     * **DOS** formas. Con 42 de un lado y 2 del otro, la pregunta no era de cuántos escalones
+     * sino **para qué sirve cada sombra**.
+     *
+     * Salen tres roles —`lift` (se despega al pasar el ratón), `float` (flota sobre el contenido)
+     * y `modal` (tapa la página)— y lo que no entra en ninguno **no lleva sombra**: una tarjeta
+     * quieta no está elevada, está apoyada.
+     *
+     * ▶ Si esto se relaja, un cliente que redefina su tema deja de mover las sombras que se le
+     * escapen — y no falla nada, simplemente se queda con las del primero.
+     */
+    public function test_every_shadow_comes_from_a_role_or_is_a_declared_exception(): void
+    {
+        $roles = ['var(--shadow-lift)', 'var(--shadow-float)', 'var(--shadow-modal)'];
+        $offenders = [];
+        $seen = 0;
+
+        foreach ($this->rules() as $rule) {
+            if (! preg_match('/(?<![-\w])box-shadow\s*:\s*([^;}]+)/', $rule['body'], $m)) {
+                continue;
+            }
+
+            $seen++;
+            $value = trim($m[1]);
+            $selector = $rule['selector'];
+
+            if ($value === 'none' || str_contains($value, 'inset')) {
+                continue;                      // reset, o anillo interior: no es elevación
+            }
+
+            // Un anillo (`0 0 0 Npx`) tampoco lo es: es foco o selección.
+            if (preg_match('/^0\s+0\s+0\s/', $value)) {
+                continue;
+            }
+
+            foreach ($roles as $role) {
+                if (str_contains($value, $role)) {
+                    continue 2;
+                }
+            }
+
+            foreach (array_keys(self::SHADOW_EXCEPTIONS) as $known) {
+                if (in_array($known, $this->splitSelectors($selector), true)) {
+                    continue 2;
+                }
+            }
+
+            $offenders[] = "{$selector}  →  ".substr($value, 0, 70);
+        }
+
+        // Guarda de la guarda, POR NOMBRE: si el escaneo dejara de ver sombras, esto pasaría
+        // sin comprobar nada. Se exige ver los tres roles EN USO, no un recuento.
+        foreach ($roles as $role) {
+            $this->assertNotEmpty(
+                array_filter($this->rules(), fn (array $r) => str_contains($r['body'], $role)),
+                "el escaneo no encuentra ni un uso de `{$role}`: o el rol ha dejado de usarse, o el ".
+                'localizador se ha roto y esta guarda estaría verde sin mirar nada.',
+            );
+        }
+        $this->assertGreaterThan(30, $seen, 'el escaneo ve menos de 30 `box-shadow` y hay ~68');
+
+        $this->assertSame(
+            [], $offenders,
+            "estas sombras no salen de un rol ni son excepción declarada:\n  ".implode("\n  ", $offenders)."\n\n".
+            "Decide QUÉ es antes de añadirla a la lista:\n".
+            "  · se despega al pasar el ratón     → `var(--shadow-lift)`\n".
+            "  · flota sobre el contenido         → `var(--shadow-float)`\n".
+            "  · tapa la página, con velo detrás  → `var(--shadow-modal)`\n".
+            "  · está quieta y apoyada            → `none`. Una tarjeta en reposo no está elevada.\n".
+            'La lista de excepciones SOLO ENCOGE: si estás ampliándola, casi seguro es un rol.',
+        );
+    }
+
+    /**
+     * **Las sombras leen `--paper-fg`, no `--fg`.**
+     *
+     * Dentro de `[data-surface="ink"]` el token `--fg` vale CLARO, así que una sombra escrita con
+     * él **se vuelve clara dentro del hero**. Una sombra es ausencia de luz: es oscura en las dos
+     * superficies. `--paper-fg` es el alias que no se mueve al entrar en tinta.
+     */
+    public function test_the_shadow_roles_use_the_stable_ink_alias(): void
+    {
+        $root = $this->rootTokens();
+
+        foreach (['--shadow-lift', '--shadow-float', '--shadow-modal'] as $token) {
+            $this->assertArrayHasKey($token, $root, "falta el rol de sombra `{$token}`");
+
+            $this->assertStringContainsString(
+                'var(--paper-fg)', $root[$token],
+                "`{$token}` no lee `--paper-fg`. Con `--fg` la sombra se vuelve CLARA dentro del ".
+                'hero, que declara superficie de tinta — y una sombra clara no es una sombra.',
+            );
+        }
     }
 
     /**

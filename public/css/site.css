@@ -204,7 +204,7 @@
     background: var(--bg-card);
     border: 1px solid var(--line); border-radius: var(--r);
     padding: 6px;
-    box-shadow: 0 18px 44px -12px color-mix(in srgb, var(--fg) 18%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 6%, transparent);
+    box-shadow: var(--shadow-float);
     opacity: 0; visibility: hidden;
     transform: translateY(-8px) scale(0.97); transform-origin: top right;
     transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.2,0.8,0.2,1), visibility 0s linear 0.28s;
@@ -443,7 +443,7 @@
   text-transform: uppercase; letter-spacing: 0.14em;
   padding: 6px 12px; border-radius: var(--r-xs);
   background: var(--fg); color: var(--bg); transform: rotate(5deg);
-  box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--fg) 28%, transparent); pointer-events: none;
+  box-shadow: none; pointer-events: none;
 }
 
 /* mini-ficha de specs (las condiciones rápidas, en formato tabla) */
@@ -468,7 +468,7 @@
   max-width: 540px; margin: 0 0 30px;
   background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: clamp(20px, 2.5vw, 28px);
-  box-shadow: 0 12px 32px -20px color-mix(in srgb, var(--fg) 18%, transparent);
+  box-shadow: none;
 }
 .svc-rates__title {
   display: block; font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -553,7 +553,7 @@
 .svc-cta--book { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .svc-cta--book:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 26px -12px color-mix(in srgb, var(--fg) 30%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 
 /* media: foto que RESPETA el wrapper (sin sangrado al viewport) + palabra de acento outline
@@ -884,7 +884,7 @@
   font-family: var(--font-body); font-weight: 700; font-size: 11px;
   text-transform: uppercase; letter-spacing: 0.04em;
   transform: rotate(-5deg);
-  box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--fg) 28%, transparent);
+  box-shadow: none;
 }
 
 /* ── Normas: 2 columnas (imagen + slider vertical de cards) (#10 · 2026-05-31) ── */
@@ -895,7 +895,7 @@
 .rules-layout__media {
   background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: 16px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 16px 40px -22px color-mix(in srgb, var(--fg) 20%, transparent);
+  box-shadow: none;
 }
 .rules-layout__media img {
   width: 100%; height: auto; max-height: 620px; object-fit: contain;
@@ -974,7 +974,7 @@
     display: flex; align-items: center; gap: 14px;
     background: var(--fg); color: var(--bg);
     padding: 12px 16px; border-radius: var(--r);
-    box-shadow: 0 18px 44px -12px color-mix(in srgb, var(--fg) 28%, transparent);
+    box-shadow: var(--shadow-float);
     font-family: var(--font-body); font-size: 14px; line-height: 1.4;
 }
 .flash__close {
@@ -989,7 +989,7 @@
 .modal__panel {
     position: relative; z-index: 1; width: 100%; max-width: 520px;
     background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
-    box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--fg) 40%, transparent);
+    box-shadow: var(--shadow-modal);
     padding: clamp(22px, 4vw, 36px);
 }
 .modal__close {
@@ -1328,7 +1328,7 @@ body.no-scroll { overflow: hidden; }
 /* Anclado al FOOTER (no al icono): abarca su ancho interior (left/right = padding) y se abre justo
    encima. Así queda SIEMPRE dentro del panel — no lo recorta el `overflow:hidden` de `.sidecart__body`
    ni se sale por el borde izquierdo (el fallo anterior con `translateX`). */
-.bk-foot__pop { position: absolute; left: 20px; right: 20px; bottom: calc(100% + 6px); z-index: 20; display: flex; flex-direction: column; gap: var(--sp-7); padding: var(--sp-12) var(--sp-14); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-card); box-shadow: 0 16px 34px -14px color-mix(in srgb, var(--fg) 50%, transparent); }
+.bk-foot__pop { position: absolute; left: 20px; right: 20px; bottom: calc(100% + 6px); z-index: 20; display: flex; flex-direction: column; gap: var(--sp-7); padding: var(--sp-12) var(--sp-14); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-card); box-shadow: var(--shadow-float); }
 .bk-foot__pop-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
 .bk-foot__pop-row span:last-child { font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap; }
 
@@ -1343,7 +1343,7 @@ body.no-scroll { overflow: hidden; }
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: 14px; }
 .bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform 0.25s var(--ease-bounce), background 0.2s ease, color 0.2s ease, box-shadow 0.25s ease; }
-.bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--fg) 40%, transparent); }
+.bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: var(--shadow-lift); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform 0.3s var(--ease-bounce); }
 .bk-cta:hover svg { transform: translateX(4px); }
 .bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none; }
@@ -2319,12 +2319,12 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     font-family: var(--font-body); font-weight: 600;
     cursor: pointer; text-decoration: none;
     transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.5, 1), background 0.2s ease, color 0.2s ease, box-shadow 0.25s ease;
-    box-shadow: 0 12px 28px -10px color-mix(in srgb, var(--fg) 28%, transparent);
+    box-shadow: none;
 }
 .cta-prime:hover {
     background: var(--zone-1); color: var(--on-brand);
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 18px 36px -10px color-mix(in srgb, var(--fg) 32%, transparent);
+    box-shadow: var(--shadow-lift);
 }
 .cta-prime:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 .cta-prime__ico {
@@ -2349,28 +2349,13 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .cta-prime__arrow { margin-left: 6px; font-size: 22px; line-height: 1; transition: transform 0.3s ease; }
 .cta-prime:hover .cta-prime__arrow { transform: translateX(5px); }
 .cta-prime:hover .tk .stub,
-.cta-prime:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }
-
-/* Variante on-video: jerarquía "cool" — fondo cream (`--bg`) + texto negro
-   sobre el vídeo, sin saturar el primer viewport. El contenido del hero
-   lidera; el CTA acompaña sin gritar. El color de marca aparece SOLO en
-   hover (accent puntual) para mantener el "feel" calmado de Apple/Mercedes
-   y similares. Sombra oscura reforzada garantiza contraste sobre cualquier
-   frame del vídeo dinámico. */
-.cta-prime--onvideo {
-    box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.18);
-}
-/* ⚠️ Estas dos van SOBRE EL BOTÓN, y el botón INVIERTE respecto a la superficie: dentro de
+.cta-prime:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }/* ⚠️ Estas dos van SOBRE EL BOTÓN, y el botón INVIERTE respecto a la superficie: dentro de
    tinta el `.cta-prime` es claro. Por eso leen los alias `--paper-*`, que existen justo
    «para poder VOLVER a papel desde dentro de tinta». Verificado por aritmética: rinden el
    mismo color que rendían con `--onvideo` (#E2DDD2 y #6B675D). Todo lo demás que hacía
    `--onvideo` aquí lo hace ya la regla BASE dentro del ámbito, sin declarar nada. */
 [data-surface="ink"] .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 8%, transparent); }
-[data-surface="ink"] .cta-prime__s { color: var(--paper-fg-mute); }
-.cta-prime--onvideo:hover {
-    box-shadow: 0 22px 48px -12px rgba(0, 0, 0, 0.6), 0 6px 14px rgba(0, 0, 0, 0.22);
-}
-[data-surface="ink"] .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 12%, transparent); }
+[data-surface="ink"] .cta-prime__s { color: var(--paper-fg-mute); }[data-surface="ink"] .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 12%, transparent); }
 
 /* ====================================================================
    Jerarquía de CTAs — Capa D: adaptación móvil del header.
@@ -2467,7 +2452,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .book-bar__cta {
     pointer-events: auto;
     width: 100%;
-    box-shadow: 0 16px 32px -10px color-mix(in srgb, var(--fg) 52%, transparent), 0 4px 10px -4px color-mix(in srgb, var(--fg) 35%, transparent);
+    box-shadow: var(--shadow-float);
 }
 /* En full-width el cuerpo crece y empuja la flecha al borde derecho (como el botón anterior). */
 .book-bar__cta .cta-prime__body { flex: 1; }
@@ -2744,7 +2729,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 }
 .acct__btn svg { width: 15px; height: 15px; }
 .acct__btn--primary { background: var(--fg); color: var(--bg-card); }
-.acct__btn--primary:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--fg) 40%, transparent); }
+.acct__btn--primary:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
 .acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 .acct__btn--ghost:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
 /* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
@@ -2982,7 +2967,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     position: fixed; left: 24px; bottom: 24px; z-index: 1000;
     width: 416px; max-width: calc(100vw - 32px);
     background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
-    box-shadow: 0 30px 64px -20px color-mix(in srgb, var(--fg) 50%, transparent), 0 2px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+    box-shadow: var(--shadow-modal);
     overflow: hidden;
 }
 .cookie__pad { position: relative; padding: 22px 22px; }
@@ -3119,7 +3104,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 
 .gf-sheet {
     width: 100%; max-width: 700px; background: var(--bg-card); border-radius: var(--r-lg);
-    box-shadow: 0 40px 80px -28px color-mix(in srgb, var(--fg) 30%, transparent), 0 8px 20px -10px color-mix(in srgb, var(--fg) 12%, transparent);
+    box-shadow: var(--shadow-modal);
     overflow: hidden; position: relative;
 }
 
@@ -3174,7 +3159,7 @@ html:not(.js) .gf-bulk { display: none; }
 /* fichas (acordeón) */
 .gf-fiches { display: flex; flex-direction: column; gap: 10px; }
 .gf-fiche { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); overflow: hidden; transition: border-color 0.22s ease, box-shadow 0.25s ease; }
-.gf-fiche.is-open { border-color: var(--line-strong); box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--fg) 18%, transparent); }
+.gf-fiche.is-open { border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
 .gf-fiche.is-complete { border-color: color-mix(in oklab, var(--zone-1) 55%, var(--line)); }
 .gf-fiche__head { display: flex; align-items: center; gap: 14px; width: 100%; padding: 15px 16px; text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background 0.18s ease; }
 .gf-fiche__head:hover { background: var(--bg-card); }
@@ -3214,7 +3199,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .gf-savebar__help { font-size: 12.5px; line-height: 1.5; color: var(--fg-mute); text-align: center; margin: 0; }
 
 /* toast del flash de guardado */
-.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 16px 36px -10px color-mix(in srgb, var(--fg) 50%, transparent); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; z-index: 200; }
+.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; z-index: 200; }
 .gf-toast .tcheck { width: 20px; height: 20px; border-radius: 50%; background: var(--zone-1); color: var(--on-brand); display: grid; place-items: center; flex-shrink: 0; }
 .gf-toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -3389,7 +3374,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     position: relative; overflow: hidden; text-align: center;
     background: var(--bg-card, var(--bg-card)); border: 1px solid var(--line, var(--line));
     border-radius: var(--r-lg); padding: 30px 26px 26px;
-    box-shadow: 0 40px 80px -28px color-mix(in srgb, var(--fg) 55%, transparent), 0 12px 26px -14px color-mix(in srgb, var(--fg) 40%, transparent);
+    box-shadow: var(--shadow-float);
 }
 .offw-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--box), color-mix(in srgb, var(--box) 55%, #F0B33F)); }
 .offw-close {
@@ -3404,7 +3389,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
     width: 40px; height: 40px; border: 1px solid var(--line, color-mix(in srgb, var(--fg) 12%, transparent)); border-radius: 50%;
     display: grid; place-items: center; cursor: pointer; color: var(--fg, var(--fg)); background: var(--bg-card, var(--bg-card));
-    box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--fg) 40%, transparent); transition: background 0.2s ease, color 0.2s ease;
+    box-shadow: var(--shadow-float); transition: background 0.2s ease, color 0.2s ease;
 }
 .offw-arrow--prev { left: 8px; }
 .offw-arrow--next { right: 8px; }

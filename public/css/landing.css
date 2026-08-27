@@ -179,6 +179,28 @@
   --r-lg: 28px;
   --r-pill: 999px;
 
+  /* ── LA ELEVACIÓN: TRES ROLES, no una escala ───────────────────────────────────────────
+     ⚠️⚠️ **Aquí NO hay una escala de tamaños, y eso se decidió MIDIENDO.** El producto tenía
+     **53 sombras con 42 formas distintas** —casi cada una única— y la mejor escala de cinco
+     escalones movía **47 de 53**. Eso no es una escala con ruido: es que no había ninguna.
+     Y el sistema del segundo cliente, al que esta capa sirve, **declara DOS formas**: «dura
+     `5px 5px 0` o ninguna», más la difusa reservada a modales, con la regla «un solo elemento
+     por pantalla la lleva; en una rejilla de tarjetas, jamás».
+
+     ▶ Con 42 formas de un lado y 2 del otro, la pregunta no era «¿de cuántos escalones?» sino
+     **«¿para qué sirve cada sombra?»**. Salen TRES respuestas, y son las de abajo. Lo que no
+     entra en ninguna **no lleva sombra**: una tarjeta quieta no está elevada, está apoyada.
+
+     ⚠️ **Leen `--paper-fg`, no `--fg`, y no es un detalle**: dentro de `[data-surface="ink"]`
+     `--fg` vale CLARO, así que una sombra escrita con él se volvería clara en el hero. Una
+     sombra es ausencia de luz: es oscura en las dos superficies. `--paper-fg` es el alias que
+     no se mueve al entrar en tinta.
+     ▶ Un paquete de cliente redefine estos tres y **las 28 sombras del producto le obedecen**.
+     El del segundo cliente pondría `none` en las dos primeras y su dura en la tercera. */
+  --shadow-lift:  0 12px 28px -8px color-mix(in srgb, var(--paper-fg) 35%, transparent);
+  --shadow-float: 0 16px 36px -10px color-mix(in srgb, var(--paper-fg) 50%, transparent);
+  --shadow-modal: 0 30px 64px -20px color-mix(in srgb, var(--paper-fg) 50%, transparent);
+
   /* ── EL ANILLO DE FOCO ─────────────────────────────────────────────────────────────────
      Medido antes de esta tanda: **23 reglas de foco, CINCO tratamientos distintos y CERO
      tokens**. O sea que un cliente podía cambiar toda su marca y el anillo con el que su
@@ -575,7 +597,7 @@ img { display: block; max-width: 100%; }
 .plan-select__trigger:hover {
   transform: translateY(-3px) scale(1.02);
   border-color: var(--fg); color: var(--fg);
-  box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--fg) 18%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .plan-select__trigger .chevron { transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); }
 .plan-select--open .plan-select__trigger {
@@ -594,7 +616,7 @@ img { display: block; max-width: 100%; }
   transform: translateY(-12px) scale(0.97);
   transform-origin: top right;
   transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.2,0.8,0.2,1), visibility 0s linear 0.3s;
-  box-shadow: 0 22px 60px -10px color-mix(in srgb, var(--fg) 18%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 6%, transparent);
+  box-shadow: var(--shadow-float);
   z-index: 60;
 }
 .plan-select--open .plan-select__panel {
@@ -690,7 +712,7 @@ img { display: block; max-width: 100%; }
   transform: translateY(-3px) scale(1.02);
   background: var(--zone-1);
   color: var(--fg);
-  box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--fg) 22%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .btn svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .btn:hover svg { transform: translateX(5px); }
@@ -732,7 +754,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   overflow: hidden;
   background: var(--bg);
-  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--bg) 20%, transparent);
+  box-shadow: none;
 }
 .hero__video {
   position: absolute; inset: 0;
@@ -939,7 +961,7 @@ img { display: block; max-width: 100%; }
 }
 .zone-intro__card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 22px 48px -16px color-mix(in srgb, var(--fg) 20%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 /* El color de la zona llega INLINE desde el servidor (`--zone-1`/`--on-brand`, `DECISIONES #138`).
    Antes había una regla por acento y solo existían para `jump` y `kids`: una zona con cualquier otro
@@ -953,7 +975,7 @@ img { display: block; max-width: 100%; }
   padding: 8px 14px; background: var(--bg); border-radius: var(--r-xs);
   color: var(--fg);
   transform: rotate(-2deg);
-  box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--fg) 22%, transparent), 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent);
+  box-shadow: none;
 }
 .zone-intro__name {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -1015,7 +1037,7 @@ img { display: block; max-width: 100%; }
 }
 .zone-photo-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 22px 48px -16px color-mix(in srgb, var(--fg) 20%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .zone-photo-card__photo {
   width: 100%; height: 240px; display: block; object-fit: cover;
@@ -1031,7 +1053,7 @@ img { display: block; max-width: 100%; }
   text-transform: uppercase; letter-spacing: 0.12em;
   padding: 7px 13px; background: var(--bg); border-radius: var(--r-xs); color: var(--fg);
   transform: rotate(-2deg);
-  box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--fg) 22%, transparent);
+  box-shadow: none;
   margin-bottom: 16px;
 }
 .zone-photo-card__name {
@@ -1145,7 +1167,7 @@ img { display: block; max-width: 100%; }
 .ride-card:hover {
   transform: translateY(-6px);
   border-color: var(--zone-1);
-  box-shadow: 0 20px 44px -16px color-mix(in srgb, var(--fg) 20%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .ride-card__viz {
   height: 220px; border-radius: var(--r);
@@ -1251,7 +1273,7 @@ img { display: block; max-width: 100%; }
 .price:hover {
   border-color: var(--zone-1);
   transform: translateY(-6px);
-  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--fg) 18%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .price--feat { background: var(--zone-1); color: var(--on-brand); border-color: transparent; }
 /* Contraste en card DESTACADA (fondo = color de zona, #232): los textos atenuados (--fg-mute)
@@ -1320,7 +1342,7 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-body); font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.14em;
   transform: rotate(6deg);
-  box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--fg) 20%, transparent);
+  box-shadow: none;
 }
 /* «Cards Destacadas» — Badge hop: en la card de producto DESTACADA (`.price--feat`) la pegatina da el
    salto del logo (squash+stretch) MANTENIENDO su rotación. La card conserva su color diferenciador
@@ -1389,7 +1411,7 @@ img { display: block; max-width: 100%; }
   background: var(--sheet);
   padding: 18px 18px 56px;
   transform: rotate(-2.5deg);
-  box-shadow: 0 26px 50px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 4px 12px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
   transition:
     transform 0.5s cubic-bezier(0.2,0.8,0.2,1),
     box-shadow 0.4s ease;
@@ -1397,7 +1419,7 @@ img { display: block; max-width: 100%; }
 }
 .events__photo:hover {
   transform: rotate(0deg) translateY(-8px);
-  box-shadow: 0 34px 62px -10px color-mix(in srgb, var(--fg) 28%, transparent), 0 6px 16px color-mix(in srgb, var(--fg) 12%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .events__photo-frame {
   width: 100%; aspect-ratio: 4 / 5;
@@ -1432,7 +1454,7 @@ img { display: block; max-width: 100%; }
   transform: rotate(8deg);
   border-radius: var(--r-pill);
   font-weight: 700;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--fg) 18%, transparent);
+  box-shadow: none;
   z-index: 3;
 }
 
@@ -1444,7 +1466,7 @@ img { display: block; max-width: 100%; }
   padding: 18px 28px 16px;
   border-radius: var(--r-md);
   transform: rotate(5deg);
-  box-shadow: 0 18px 38px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
   display: flex; flex-direction: column; align-items: center;
   z-index: 4;
   text-align: center;
@@ -1488,7 +1510,7 @@ img { display: block; max-width: 100%; }
   background: var(--bg-card);
   border-radius: var(--r-lg);
   padding: 26px 28px 24px;
-  box-shadow: 0 12px 30px -10px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
 }
 .events__pack-head {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -1633,7 +1655,7 @@ img { display: block; max-width: 100%; }
 .rule:hover {
   border-color: var(--zone-1);
   transform: translateY(-3px);
-  box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--fg) 14%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .rule__icon {
   width: 36px; height: 36px; border-radius: 50%;
@@ -1667,7 +1689,7 @@ img { display: block; max-width: 100%; }
   flex: 0 0 240px;
   background: var(--sheet);
   padding: 14px 14px 36px;
-  box-shadow: 0 6px 24px color-mix(in srgb, var(--fg) 10%, transparent), 0 1px 3px color-mix(in srgb, var(--fg) 8%, transparent);
+  box-shadow: none;
   transition:
     transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 0.4s ease;
@@ -1675,7 +1697,7 @@ img { display: block; max-width: 100%; }
 }
 .polaroid:hover {
   transform: translateY(-8px) rotate(0deg) !important;
-  box-shadow: 0 22px 50px -10px color-mix(in srgb, var(--fg) 20%, transparent), 0 4px 12px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .polaroid:nth-child(odd)  { transform: rotate(-2.2deg); }
 .polaroid:nth-child(even) { transform: rotate(1.6deg); }
@@ -2078,13 +2100,13 @@ input[type="radio"]:focus-visible,
   position: relative; background: var(--sheet);
   padding: 18px 18px 56px;
   transform: rotate(-2.5deg);
-  box-shadow: 0 26px 50px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 4px 12px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
   transition: transform 0.5s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.4s ease;
   margin-top: 10px;
 }
 .bd-pol:hover {
   transform: rotate(0deg) translateY(-8px);
-  box-shadow: 0 34px 62px -10px color-mix(in srgb, var(--fg) 28%, transparent), 0 6px 16px color-mix(in srgb, var(--fg) 12%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .bd-pol__frame {
   width: 100%; aspect-ratio: 4 / 5;
@@ -2110,14 +2132,14 @@ input[type="radio"]:focus-visible,
   text-transform: uppercase; letter-spacing: 0.14em;
   padding: 6px 14px; transform: rotate(8deg);
   border-radius: var(--r-sm);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--fg) 18%, transparent); z-index: 3;
+  box-shadow: none; z-index: 3;
 }
 .bd-pol__ticket {
   position: absolute; bottom: -26px; right: -28px;
   background: var(--bg-card); color: var(--fg);
   padding: 16px 26px 14px; border-radius: var(--r-md);
   transform: rotate(5deg);
-  box-shadow: 0 18px 38px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
   display: flex; flex-direction: column; align-items: center;
   z-index: 4; text-align: center; min-width: 132px;
 }
@@ -2140,7 +2162,7 @@ input[type="radio"]:focus-visible,
 .bd-pack {
   background: var(--bg-card); color: var(--fg); border-radius: var(--r-lg);
   padding: 26px 28px 28px;
-  box-shadow: 0 24px 54px -18px color-mix(in srgb, var(--fg) 28%, transparent);
+  box-shadow: none;
 }
 .bd-pack__head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
 /* Chip de tarifa especial (#267) en la card de pack: la card NO es flex-gap como `.price`, así que
@@ -2174,7 +2196,7 @@ input[type="radio"]:focus-visible,
   font-size: 15px; font-weight: 600; margin-top: 20px; cursor: pointer;
   transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.25s ease;
 }
-.bd-pack__cta:hover { transform: translateY(-3px) scale(1.01); background: var(--zone-1); color: var(--on-brand); box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--fg) 35%, transparent); }
+.bd-pack__cta:hover { transform: translateY(-3px) scale(1.01); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
 .bd-pack__cta:active { transform: translateY(0) scale(0.98); transition: transform 0.08s ease; }
 .bd-pack__cta svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .bd-pack__cta:hover svg { transform: translateX(5px); }
@@ -2246,7 +2268,7 @@ input[type="radio"]:focus-visible,
      porque el segundo color no tenía dónde vivir hasta `#138`. */
   --inv: var(--zone-1); --inv2: var(--zone-2);
   width: min(560px, 100%); background: var(--sheet); border-radius: var(--r);
-  box-shadow: 0 30px 60px -16px color-mix(in srgb, var(--fg) 30%, transparent), 0 6px 16px color-mix(in srgb, var(--fg) 10%, transparent);
+  box-shadow: none;
   transform: rotate(-2deg); position: relative; overflow: hidden;
   transition: transform 0.5s cubic-bezier(0.2,0.8,0.2,1);
 }
@@ -2357,7 +2379,7 @@ input[type="radio"]:focus-visible,
 }
 .bd-proc__stop:nth-child(4n + 3) .bd-proc__cube { transform: rotate(-7deg); }
 .bd-proc__stop:hover .bd-proc__cube { transform: rotate(0deg) translateY(-4px); }
-.bd-proc__stop.is-active .bd-proc__cube { background: var(--bda); color: var(--on-brand); border-color: transparent; transform: rotate(0deg) scale(1.12); box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--fg) 30%, transparent); }
+.bd-proc__stop.is-active .bd-proc__cube { background: var(--bda); color: var(--on-brand); border-color: transparent; transform: rotate(0deg) scale(1.12); box-shadow: var(--shadow-lift); }
 .bd-proc__stop.is-done .bd-proc__cube { background: var(--fg); border-color: transparent; color: var(--bg); }
 .bd-proc__lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); transition: color 0.2s ease; }
 .bd-proc__stop.is-active .bd-proc__lbl { color: var(--fg); }
