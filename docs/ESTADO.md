@@ -4,17 +4,32 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-27**.
 >
-> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main` (dos máquinas, un repo). Los dos cerraron sesión el
-> 2026-08-27 con todo empujado y verde, y la siguiente sesión ya está decidida por el owner: «menores
-> a cargo», en el carril A (su fila, abajo).** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
+> ❗❗ **ATENCIÓN: hay DOS AGENTES sobre `main` (dos máquinas, un repo). El B cerró el 2026-08-27 a las
+> 07:30 con todo empujado y verde; el A REABRIÓ a las 12:00 con «menores a cargo», tanda 1 (su fila,
+> abajo) — decidido por el owner en `#190`.** Antes de planificar nada, `git fetch`. El reparto vigente es el bloque de aquí abajo — **es el único**: hasta el
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
->   06:23. ✅ Nada a medias: el waiver, de agente, TERMINADO** (`#169` revisión adversarial del subsistema
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN ABIERTA el 2026-08-27 (la
+>   segunda del día, desde las 12:00): «MENORES A CARGO», TANDA 1 — el NÚCLEO en Identity + su API —
+>   EN CURSO** (`specs/menores-a-cargo.md`, `[DECIDIDO owner]` `#190`). Sin firmas de menor todavía:
+>   la tanda 1 es la entidad `Dependent` (tabla `dependents`), el registro con tope de servidor,
+>   `anonymize()`/export/purga de go-live, `GET|POST|DELETE /me/dependents` y el ajuste del tope.
+>   **Ficheros de ESTA tanda** (además de los del carril, abajo): `database/migrations/*dependents*` ·
+>   `app/Domain/Identity/{Models/Dependent,Services/DependentRegistry,Services/DependentSettings,Exceptions/Dependent*}.php`
+>   · `app/Http/Controllers/Api/V1/MeDependentsController.php` · `app/Http/Resources/Api/V1/DependentResource.php` (futuro)
+>   · `tests/Feature/Dependents/**` · `tests/Feature/Api/V1/MeDependentsTest.php` · `openapi/v1.yaml` (futuro).
+>   ⚠️ **Y toca SEIS ficheros COMPARTIDOS, solo en el punto que se dice**: `app/Providers/AppServiceProvider.php`
+>   (una línea del morphMap) · `app/Domain/Platform/Models/AuditLog.php` (dos acciones en el catálogo) ·
+>   `app/Filament/Pages/Settings.php` (un campo en la sección «Puerta» + su clave en `MANAGED`) ·
+>   `app/Console/Commands/PurgeCustomerData.php` (una línea, antes de `users`) · `routes/console.php`
+>   (`Dependent` en el `model:prune`) · `lang/{es,en,fr}/api.php` + `lang/es/admin.php` (claves nuevas).
+>   ▶ **Para el agente del B**: si necesitas alguno de esos seis, avísalo aquí y haz `git pull --rebase`
+>   antes; empujo por unidades verdes, no al cierre.
+>   ✅ Lo anterior de este carril: el waiver, de agente, TERMINADO** (`#169` revisión adversarial del subsistema
 >   + guion en headless · la **tanda 4** que esa revisión exigía: `#171` anti-bot · `#174` servidor ·
 >   `#175` cajón · `#178` casilla del alta manual + casilla OBLIGATORIA en interno · `#179` correo
 >   verificado para firmar · `#180` texto del PDF · **`#183` la revisión de la propia tanda, aplicada**
