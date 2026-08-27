@@ -1035,6 +1035,22 @@ tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos c
    el de sesión **BAJÓ** (8.300 provisional → **7.800**, sobre 7.747 medidos).
 6. **`layout.blade.php` NO se tocó** (§9.9.4 lo daba por tocado): el subgrupo `dependents` viaja entero
    con sesión y el del embudo va con `tickets`. Aviso al carril C retirado en `ESTADO`.
+7. ⚠️⚠️ **El selector se veía ROTO y lo vio el OWNER, no ninguna guarda ni el guion** (2026-08-27 noche,
+   corte posterior al push de U2). Nació envuelto en `.eventfields`, elegida por «existe y da espaciado»
+   — y esa clase es el bloque de campos de TEXTO del pack: trae `.eventfields input { width: 100%;
+   font-size: 15px; background; border; padding }` (`site.css` ~1526), que por descendencia y con la misma
+   especificidad que `.check input` pero más abajo en la hoja le gana. **Medido en headless**: el checkbox
+   medía **400 px de ancho** (350 en móvil) con fondo de tarjeta, y el `span` del nombre quedaba a 37 px
+   **fuera del borde del cajón** (x=1277 con el cajón acabando en ~1260) — por eso «el texto también».
+   El guion de §5.undecies pasó 19/19 porque comprueba nodos, textos y estados, no la cascada; el contrato
+   de árbol compara etiquetas y clases. **Arreglo sin CSS nuevo**: el bloque «grupo con título» que ya
+   existe en el paso 3, `.addons` + `.addons__intro` (sin reglas de descendencia sobre `input`, comprobado
+   regla a regla), con `form__hint` · `form__checks` · `check`. Re-medido: **16×16 px en los dos pasos y
+   en los dos anchos, idéntico al alta**; capturas revisadas. Manifiesto: 2 claves regeneradas, 0 más.
+   ▶ **La lección, en el docblock del componente**: *una clase que existe no es una clase que sirva —
+   mira sus reglas de descendencia antes de reutilizarla*. Y la de método: el «cero CSS nuevo» se verificó
+   con un `grep` de que las clases tenían regla (`SidebarStyleWiringTest`), que es justo la mitad que no
+   importa; lo que rompe es la regla que **sobra**.
 
 **Lo medido**
 
@@ -1060,4 +1076,5 @@ tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos c
 
 **Lo que queda** — **U4, el ojo del owner**: el guion §5.undecies en su navegador, EN/FR de los nueve
 rótulos, la tarjeta de «Mis reservas» con un pedido pagado (el guion se queda en `pending`), y el aspecto
-del selector con el tema. Del cuerpo de la spec siguen pendientes del owner los DOS valores de retención.
+del selector con el tema (⚠️ ya vio uno: el punto 7, arreglado y re-medido). Del cuerpo de la spec siguen
+pendientes del owner los DOS valores de retención.

@@ -1220,7 +1220,10 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
    pagar directamente: no hay aviso que dar.
 
 ### Lo que el guion no cubre y hay que mirar con el ojo
-- El aspecto del selector con el tema (cero CSS nuevo: `eventfields`, `form__checks`, `check`).
+- El aspecto del selector con el tema (cero CSS nuevo: `addons`/`addons__intro`, `form__hint`, `form__checks`,
+  `check`). ⚠️ El owner ya cazó uno que este guion NO ve —el checkbox a 400 px y el nombre fuera del cajón por
+  `.eventfields input`—: el guion comprueba nodos y textos, no la cascada. Está arreglado y re-medido
+  (`specs/menores-a-cargo.md` §9.9.8·7); si vuelve a verse raro, mide `getComputedStyle(input).width`.
 - EN/FR: los nueve rótulos de `tickets.dependents` existen en los tres idiomas; el guion corre en `es`.
 - «Mis reservas»: la tarjeta de una reserva con menor asignado ofrece «Ver para quién es» → «Para:
   Lucas» (lo fija el test de la tarjeta; el guion no llega porque el pedido queda `pending`).

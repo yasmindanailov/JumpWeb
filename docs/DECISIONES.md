@@ -10724,7 +10724,10 @@ con un TDZ que Vue traga en silencio (la carga saltó una vez, también sin sesi
 243; payload con sesión 7.602 → 7.747 B, techo 7.800 —bajó de un 8.300 provisional al mudar los
 rótulos—; `PurchaseSection.vue` 432 → 428), guion **§5.undecies 19/19** por las dos puertas, y la sonda
 de **16 `assign()` simultáneos → una fila** que §9.9.5 exigía y U1 no había medido. `layout.blade.php`
-no se tocó. ▶ Sigue **U4, el ojo del owner**.
+no se tocó. ⚠️ **Tras el push el owner vio el selector ROTO** (checkbox a 400 px, nombre fuera del cajón):
+`.eventfields` es el bloque de campos de TEXTO del pack y su `input { width:100% }` pisaba a `.check input`;
+arreglado sin CSS nuevo con `.addons`/`.addons__intro` y re-medido (spec §9.9.8·7) — *una clase que existe
+no es una clase que sirva*. ▶ Sigue **U4, el ojo del owner**.
 
 ## #203 · 2026-08-27 · El ARMAZÓN, tanda 2c·2 — la barra se DISUELVE en dos racimos flotantes, y el salto al contenido pasa de 1 de 12 a 12 de 12
 

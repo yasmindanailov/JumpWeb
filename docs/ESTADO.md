@@ -48,7 +48,11 @@
 >   136 guardas del cajón daban por buenos** (§9.9.8·4 y ·5): el cajón nacido abierto con sesión no
 >   pedía los menores (y el primer arreglo nació con un TDZ que Vue traga en silencio), y los rótulos del
 >   embudo estaban en `account`, que viaja SOLO con sesión: quien se identificaba en el paso 5 volvía al
->   carrito con el selector EN BLANCO. ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ → ~~U2~~ → **U4 (el ojo
+>   carrito con el selector EN BLANCO. ⚠️ **Y un TERCERO lo vio el OWNER tras el push**: el checkbox del
+>   selector a 400 px y el nombre fuera del cajón — `.eventfields input { width:100% }` pisaba a `.check
+>   input` (la clase «que existía» era la de los campos de texto del pack). Arreglado sin CSS nuevo
+>   (`.addons`/`.addons__intro`), re-medido 16×16 en los dos pasos y anchos, capturas revisadas
+>   (spec §9.9.8·7). ▶ **Orden de trabajo**: ~~U0~~ → ~~U1~~ → ~~U2~~ → **U4 (el ojo
 >   del owner: guion §5.undecies en su navegador)**. ⚠️ **U2 NO tocó `layout.blade.php`** (se daba por
 >   tocado): el aviso de abajo al carril C queda RETIRADO.
 >   ▶ **Para el agente del C (el tema/armazón)**: la tanda 4 **no ha tocado ni tocará**
@@ -429,7 +433,12 @@ que sirva staging de verdad.
   evidencia del commit de cierre del C es **anterior a la fusión** y no coincide con ésta. **La
   cifra buena es ésta**, que es la que corrió con los dos trabajos dentro. Es la segunda vez en dos
   días que dos carriles cortan a la vez: el número **se mide sobre el árbol conjunto, no se suma**.
-  ▶ **+2 tests PHP y +39 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U2**, el
+  ▶ **Corte de arreglo visual, sin tests nuevos** (carril A, menores a cargo · tanda 4, spec §9.9.8·7): el
+  checkbox del selector se veía descuadrado y el nombre fuera del cajón —lo vio el owner, no ninguna guarda—;
+  causa `.eventfields input { width:100% }` por descendencia; arreglo sin CSS nuevo; manifiesto 2 claves
+  regeneradas. ⚠️ **Lección**: `SidebarStyleWiringTest` comprueba que cada clase TENGA regla, no que las
+  reglas de sus ancestros no SOBREN — «cero CSS nuevo» no es «cero CSS que alcanza». Antes:
+  ▶ **+2 tests PHP y +39 JS en el corte anterior** (carril A, menores a cargo · tanda 4 · **U2**, el
   cajón — spec §9.9.8): dos casos del contrato de árbol (el paso 3 con una ENTRADA y dos menores, uno
   deshabilitado con motivo; el carrito con la línea asignada y el aviso de la puerta 2; manifiesto +2
   claves, 0 cambios) y `npm run test:js` **734 → 773** (`assignment.test.js`, `line-problems.test.js`,
