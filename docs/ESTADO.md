@@ -29,7 +29,20 @@
 >   carné por el MISMO input + dos limitadores + caducidad EN SERVIDOR + «Registrar visita», el PNG en el
 >   correo y `GET|POST /me/card`. **5/5 mutaciones · headless 15/15 con capturas.** Queda el OJO del
 >   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check`: **36 modelos · 85
->   migraciones**. **Ficheros de este carril**:
+>   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 01:05 (hora de Madrid)** con todo empujado
+>   (`77d2278`) y el gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
+>   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las
+>   mismas fechas relativas que sus vecinos; ninguno afirma una edad o un día concreto sin fijar el
+>   reloj). ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(1)** nada de agente
+>   está a medias — lo primero es el OJO del owner sobre el panel (`menores-a-cargo.md` §9.10.4 «lo
+>   que queda») y la puerta (`identidad-qr-puerta.md` §9.4 «lo que queda»: `/admin/puerta/validar`
+>   con un cliente con carné y menores; el correo de confirmación en Gmail/Outlook/móvil; y el
+>   **lector real del recinto**, que ninguna suite mide) · **(2)** las dos fichas de `DEUDA.md` del
+>   carné (zona «Mi carné» del cajón —⚠️ `resources/js/sidebar/**` es del carril C hoy— y «Rotar
+>   carné» en `ViewUser`), cuando el owner las pida · **(3)** el subsistema **D · JumpPoints**
+>   (`specs/lealtad-jumppoints.md`, §8 va ANTES que el cuerpo): ya tiene su hecho observable,
+>   `customer_visits`, y el canje entra en el `CRITICAL_RE` — spec-first, exige el ✅ del owner.
+>   **Ficheros de este carril**:
 >   `app/Domain/Identity/**` (`DependentAssigner`, `WaiverStatus`), `app/Filament/Resources/Orders/**`,
 >   `app/Filament/Pages/CreateManualOrderPage.php`, `resources/views/filament/orders/items-list.blade.php`,
 >   `resources/views/filament/pages/partials/manual-order-cart.blade.php`, `lang/es/admin.php`
