@@ -10834,3 +10834,67 @@ verde (17.766 aserciones) · `test:js` 732 · Pint 937 · docs-check verde.
 ❗ **Con esto el armazón de escritorio está COMPLETO.** Lo que queda de la 2c es la **2c·4, el
 MÓVIL**, y sigue bloqueada por el artboard del owner. Y siguen sin mirarse en navegador `#195`,
 `#196`, `#201`, `#203` y ésta.
+
+## #205 · 2026-08-27 · El ARMAZÓN, tanda 2c·4a — el CTA DOBLE de móvil, el idioma sale del pie y el menú gana su eslogan
+
+`[DECIDIDO owner, 2026-08-27]`, sus palabras: *«el cta que ves en el mockup es un cta doble, al
+darle clic al icono de al lado se transforma en otro cta… ese es el cta que tendremos en el móvil
+debajo, no el actual»*.
+
+**El CTA doble.** La barra de abajo deja de ser un botón: dos mitades, una expandida con su
+subtítulo y otra colapsada a icono. Pulsar la colapsada la expande y colapsa a la otra; pulsar la
+expandida **actúa**. Arranca con comprar expandido — **comprar cuesta un gesto y registrarse dos**,
+y eso es la jerarquía, no un descuido. La segunda mitad es la del racimo de la cabecera: trámite
+externo del parque · crear cuenta · o «mi cuenta» con sesión.
+
+⚠️⚠️ **Un botón que cambia de significado al pulsarlo es un botón que se pulsa por error.** Por eso
+su nombre accesible **dice qué hace AHORA**: colapsada se llama «cambiar a…», no «registrarse». Sin
+eso, un lector de pantalla anunciaría dos botones que dicen lo mismo y hacen cosas distintas, y el
+segundo no llevaría a donde dice. Guarda propia y mutación que muerde.
+
+⚠️ **Sin JavaScript el doble paso no existe, a propósito**: las dos mitades son `<a href>` de verdad
+y navegan de **una sola pulsación**. Por eso el nombre accesible **servido** es el de ACTUAR —que es
+lo que hacen sin JS— y Alpine lo sustituye por el de «cambiar» solo en la que quede colapsada. Al
+revés, quien navega sin JS leería «Cambiar a registrarse» en un enlace que se registra. **Hay guarda
+de las dos direcciones.**
+
+⚠️ **La mitad colapsada encoge por su CONTENIDO, no por una anchura animada**: transicionar
+`flex-basis` o `width` entre `auto` y un número no es fiable; el texto sí se pliega y el botón sigue
+al plegado. El texto **se queda en el árbol** —no `display:none`— y el nombre lo fija el
+`aria-label`.
+▶ Y el reparto lo decide el **CSS a partir de una clase**: el JS publica el modo y nada más. Misma
+regla que `#195` y `#201`. Por defecto —también sin JS— la ancha es la de comprar.
+
+**El selector de idioma sale del pie** (`[DECIDIDO owner]`): vive en las cápsulas del menú desde
+`#201`, y dos selectores del mismo idioma son dos sitios que mantener y uno que se queda atrás.
+❗ **Con él se iba el ÚNICO cambio de idioma que funcionaba SIN JavaScript**, porque el menú lo abre
+Alpine. El resto de la navegación sobrevive —las columnas del pie son anclas de verdad—, pero el
+idioma se quedaba sin ninguna. De ahí el **`<noscript>`** del pie: no lo ve nadie con JS y sin JS es
+la única puerta. Mismo recurso que ya usaban el reintento de pago y el marco de consentimiento.
+▶ **Y al irse `.lang-dd--up` con él cayó una de las SEIS excepciones de sombra direccional de
+`#196`. Quedan cinco: la lista encogió sola**, que es lo que aquella tanda prometió.
+
+**El menú gana el eslogan a rotulador** (`[DECIDIDO owner]`: «la idea es 1:1 al mockup») y sale de
+la **misma clave** que el del hero — dos claves para el mismo copy son dos copys que se separan
+solos.
+⚠️ **`T-02` lo marcaba como repetido** («máx. una vez por página») y **no lo incumple**: el menú es
+`inset: 0` y tapa el hero entero, así que los dos **nunca están en pantalla a la vez**.
+
+❗ **Lo que costó:**
+· **Un apóstrofo tumbó la suite entera**: `Passer à l'inscription` se generó dentro de comillas
+  simples de PHP y el fichero de idioma dejó de parsear — 7 fallos y un error, ninguno relacionado
+  con lo que se construía. `php -l` en los tres ficheros es el control que faltaba.
+· **Dos guardas ajenas se dispararon y las dos tenían razón.** `AccountDoorWiringTest` **cuenta** los
+  CTA de alta precisamente para que quitarle el cableado a uno no pase en verde: apareció un tercero
+  y el número sube a 3 con su porqué. **Aflojarla a un «contiene» habría sido tirar la guarda.** Y la
+  aserción del glifo contaba la PÁGINA cuando el glifo ya sale dos veces: se acotó **a cada
+  portador**, porque un recuento global da verde con uno solo bien puesto.
+
+✅ **Cierra los pendientes 2 y 3 de la spec** (`T-02` y el idioma). Queda **la 2c·4b, el menú en
+móvil**, que sigue esperando el artboard del owner.
+
+`specs/armazon-y-menu.md` §8.6 · `mobile-book-bar.blade.php` · `menu.blade.php` ·
+`footer.blade.php` · `resources/js/app.js` · `public/css/site.css` · `lang/{es,en,fr}/landing.php` ·
+`ArmazonContractTest` (**31 casos**) · `AccountDoorWiringTest` · `ShapeScaleTest`.
+**9 mutaciones, las 9 muerden**, con verificación de anclas y control positivo · suite **3096**
+verde (17.821 aserciones) · `test:js` 732 · Pint 937 · docs-check verde.

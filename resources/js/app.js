@@ -755,6 +755,17 @@ document.addEventListener('alpine:init', () => {
     //    el resto de capas que la ocultan (sidecart abierto, banner de cookies) las cubre el `:class` del blade.
     // El deslizamiento (translateY) y la visibilidad responsive (solo <=720px) viven en CSS (`.book-bar`).
     window.Alpine.data('mobileBookBar', () => ({
+        /**
+         * **Cuál de las dos mitades está expandida** (armazón · tanda 2c·4, el CTA doble).
+         *
+         * ⚠️ Publica ESTADO y nada más: qué mitad es ancha, cuánto mide y cómo se anima lo decide
+         * el CSS a partir de una sola clase en el contenedor. Si los anchos vivieran aquí serían
+         * la única parte del tema que un cliente no puede tocar desde su hoja — misma regla que el
+         * hero (`#195`) y que el recorte del menú (`#201`).
+         *
+         * ⚠️ Arranca en `buy`, y eso ES la jerarquía: **comprar cuesta un gesto y registrarse dos**.
+         */
+        mode: 'buy',
         revealed: false,
         nearFoot: false,
         _io: null,

@@ -183,30 +183,11 @@
     color: var(--fg-mute); text-transform: none;
 }
 
-/* Variante de `.lang-dd` que abre el panel HACIA ARRIBA y a la IZQUIERDA del trigger (uso:
-   footer izquierda). Reutiliza el trigger y el panel base del componente — solo invierte
-   posición vertical (top→bottom), horizontal (right:0→left:0), transform-origin y dirección
-   de la sombra. Hereda la transición opacity/transform del componente base.
-
-   Además: muestra el AUTONYM del idioma (Español/English/Français) en vez del código corto
-   ("ES"), por lo que desactivamos uppercase y el letter-spacing fuerte del trigger base
-   (mismo precedente que `.nav__acct` con el "Hola, Yasmin"). */
-.lang-dd--up .lang-dd__trigger {
-    text-transform: none;
-    letter-spacing: 0.02em;
-}
-.lang-dd--up .lang-dd__panel {
-    top: auto;
-    bottom: calc(100% + 10px);
-    left: 0;
-    right: auto;
-    transform: translateY(8px) scale(0.97);
-    transform-origin: bottom left;
-    box-shadow: 0 -18px 44px -12px color-mix(in srgb, var(--fg) 18%, transparent), 0 -2px 6px color-mix(in srgb, var(--fg) 6%, transparent);
-}
-.lang-dd--up.lang-dd--open .lang-dd__panel {
-    transform: translateY(0) scale(1);
-}
+/* ⚠️ Aquí vivía `.lang-dd--up`, la variante que abría el panel hacia arriba para el pie, y **se
+   retiró el 2026-08-27** con el selector de idioma del pie (`[DECIDIDO owner]`, armazón · tanda
+   2c·4): el selector vive ahora en las cápsulas del menú, donde se abre hacia abajo como el
+   componente base. ▶ Con ella cae **una de las seis excepciones de sombra direccional** que
+   declaró la elevación (`#196`): esa lista solo encoge, y ésta encogió sola. */
 
 /* Bloque izquierdo del bottom row: lang-dd arriba + copyright debajo, alineados al inicio. */
 .foot__bottom-left {
@@ -2363,9 +2344,50 @@ body[data-has-hero] .nav-cta-med.is-revealed {
    FULL-WIDTH (ocupa el ancho del viewport con el padding del contenedor, como el botón anterior),
    fondo NEGRO (`.cta-prime` base, no `--onvideo`), interactivo (el contenedor es `pointer-events:
    none`) y con sombra reforzada a dos capas para flotar sobre el contenido. */
+/* **EL PAR** (armazón · tanda 2c·4). El contenedor no captura toques —lo dejaba pasar ya antes—
+   y cada mitad sí. Cuál es la ancha lo dice UNA clase en la barra; aquí no hay más lógica que
+   ésa, y por defecto —o sea, también **sin JavaScript**— la ancha es la de comprar. */
+.book-bar__pair {
+    display: flex; align-items: stretch; gap: 8px;
+    pointer-events: none;
+}
+.book-bar__cta--buy { flex: 1 1 auto; }
+.book-bar__cta--alt { flex: 0 0 auto; }
+.book-bar--signup .book-bar__cta--buy { flex: 0 0 auto; }
+.book-bar--signup .book-bar__cta--alt { flex: 1 1 auto; }
+
+/* ⚠️ **La mitad colapsada encoge por su CONTENIDO, no por una anchura animada.** Transicionar
+   `flex-basis` o `width` entre `auto` y un número no es fiable; el texto sí se puede plegar, y el
+   botón sigue al plegado sin que nadie anime una caja. El texto se queda en el árbol —no
+   `display:none`— y el nombre accesible lo fija el `aria-label`, que además dice qué hace AHORA. */
+.book-bar__cta .cta-prime__body,
+.book-bar__cta .cta-prime__arrow {
+    overflow: hidden;
+    transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+    max-width: 22ch; opacity: 1;
+}
+.book-bar__cta--alt .cta-prime__body,
+.book-bar__cta--alt .cta-prime__arrow,
+.book-bar--signup .book-bar__cta--buy .cta-prime__body,
+.book-bar--signup .book-bar__cta--buy .cta-prime__arrow {
+    max-width: 0; opacity: 0;
+}
+.book-bar--signup .book-bar__cta--alt .cta-prime__body,
+.book-bar--signup .book-bar__cta--alt .cta-prime__arrow {
+    max-width: 22ch; opacity: 1;
+}
+
+/* La mitad colapsada sigue siendo un objetivo táctil entero. */
+.book-bar__cta--alt,
+.book-bar--signup .book-bar__cta--buy { min-width: var(--tap-min); justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+    .book-bar__cta .cta-prime__body,
+    .book-bar__cta .cta-prime__arrow { transition: opacity 0.12s linear; }
+}
+
 .book-bar__cta {
     pointer-events: auto;
-    width: 100%;
     box-shadow: var(--shadow-float);
 }
 /* En full-width el cuerpo crece y empuja la flecha al borde derecho (como el botón anterior). */
@@ -3429,10 +3451,22 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .menu__foot {
     border-top: 1px solid var(--line);
     padding-top: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap;
 }
 .menu__chips {
     list-style: none; margin: 0; padding: 0;
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+/* El eslogan a rotulador. `--font-accent` vale por defecto lo mismo que la de display y un
+   paquete de instalación la redefine junto a las demás familias: aquí no se nombra ninguna
+   fuente concreta. El giro es el mismo gesto que el del hero. */
+.menu__slogan {
+    margin: 0;
+    font-family: var(--font-accent);
+    font-size: 18px; line-height: 1;
+    color: var(--zone-2);
+    transform: rotate(-2deg);
 }
 .menu__chip {
     display: inline-flex; align-items: center; gap: 8px;

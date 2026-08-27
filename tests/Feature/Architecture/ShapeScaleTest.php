@@ -116,7 +116,10 @@ class ShapeScaleTest extends TestCase
     private const SHADOW_EXCEPTIONS = [
         '.sidecart__panel' => 'DIRECCIONAL (`-20px 0 …`): el panel entra desde el lado, y un token vertical lo rompe',
         '.mob-menu__panel' => 'DIRECCIONAL: ídem, el menú lateral de móvil',
-        '.lang-dd--up .lang-dd__panel' => 'DIRECCIONAL hacia ARRIBA (`0 -18px …`): el desplegable se abre hacia arriba',
+        // ⚠️ `.lang-dd--up .lang-dd__panel` vivía aquí —sombra DIRECCIONAL hacia arriba— y SE
+        // RETIRÓ el 2026-08-27 (armazón · tanda 2c·4): el selector de idioma salió del pie y con
+        // él su variante. **De seis excepciones de elevación quedan cinco**, y la lista encogió
+        // sola, que es exactamente lo que `#196` prometió que pasaría.
         '.invite-card' => 'ARTEFACTO IMPRIMIBLE: se captura con `html2canvas` y su sombra es parte de la tarjeta que el visitante se descarga',
         '.ck-tgl::after' => 'el PULGAR de un interruptor: 1 px de sombra lo hace parecer una pieza física, no elevación',
         '.offw-badge' => 'lee `--offw-accent`, color de marca del widget, no una sombra de elevación',

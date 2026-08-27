@@ -24,6 +24,15 @@ return [
         'park' => 'El parque',
         'services' => 'Servicios',
         'tickets' => 'Entradas',
+        // **Nombres accesibles del CTA DOBLE de móvil** (armazón · tanda 2c·4). Cuando una mitad
+        // está COLAPSADA su pulsación no lleva a ninguna parte: la expande. El nombre tiene que
+        // decir eso, o un lector de pantalla anuncia dos botones que dicen lo mismo y hacen cosas
+        // distintas. Los `*_sub` son el subtítulo VISIBLE de la mitad expandida.
+        'cta_switch_buy' => 'Cambiar a reservar entradas',
+        'cta_switch_signup' => 'Cambiar a registrarse',
+        'cta_switch_signup_sub' => 'guarda tus reservas',
+        'cta_switch_account' => 'Cambiar a mi cuenta',
+        'cta_account_sub' => 'tus reservas y tus datos',
         'menu_label' => 'Menú principal',
         'menu_open' => 'Abrir menú',
         'menu_close' => 'Cerrar menú',

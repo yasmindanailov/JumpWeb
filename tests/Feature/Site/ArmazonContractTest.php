@@ -680,6 +680,156 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **El selector de idioma vive en UN solo sitio — y sin JavaScript sigue habiendo uno.**
+     *
+     * `[DECIDIDO owner, 2026-08-27]`: sale del pie porque desde la 2c·1 vive en las cápsulas del
+     * menú, y dos selectores del mismo idioma son dos sitios que mantener y uno que se queda
+     * atrás.
+     *
+     * ❗ **Y con él se iba el único cambio de idioma que funcionaba sin JS**: el menú lo abre
+     * Alpine, así que sin JS no se abre y sus cápsulas no se alcanzan. El resto de la navegación
+     * sobrevive —las columnas del pie son anclas de verdad— pero el idioma se quedaba sin
+     * ninguna. De ahí el `<noscript>`: no lo ve nadie con JS, y sin JS es la única puerta.
+     */
+    public function test_the_language_switcher_has_one_home_and_a_no_js_floor(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertNotEmpty(
+            $this->within($html, 'menu__chips', 'lang-dd'),
+            'el selector de idioma no está en las cápsulas del menú',
+        );
+
+        $this->assertEmpty(
+            $this->within($html, 'foot', 'lang-dd'),
+            'el selector de idioma ha vuelto al pie: dos sitios que mantener y uno que se queda atrás',
+        );
+
+        $xpath = $this->xpath($html);
+        $noscript = $xpath->query('//noscript[.//a[contains(@href, "/lang/")]]');
+
+        $this->assertGreaterThan(
+            0, $noscript->length,
+            'no queda ningún cambio de idioma sin JavaScript: el menú necesita Alpine para abrirse',
+        );
+    }
+
+    /**
+     * **El menú lleva el eslogan, y sale de la MISMA clave que el del hero.**
+     *
+     * `[DECIDIDO owner, 2026-08-27]`: «la idea es 1:1 al mockup». Su auditoría lo marcaba como
+     * repetido (`T-02`, «máx. una vez por página»), y no lo incumple: el menú es `inset: 0` y tapa
+     * el hero entero, así que **los dos nunca están en pantalla a la vez**.
+     * ▶ Y sale de la misma clave a propósito: dos claves para el mismo copy son dos copys que se
+     * separan solos.
+     */
+    public function test_the_menu_slogan_reuses_the_hero_key(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $slogan = $this->nodes($html, 'menu__slogan');
+        $this->assertCount(1, $slogan, 'el menú no lleva eslogan');
+
+        $this->assertSame(
+            trim((string) __('landing.hero.kicker')), trim($slogan[0]->textContent),
+            'el eslogan del menú ya no sale de la misma clave que el del hero',
+        );
+    }
+
+    /**
+     * **La barra de móvil es un CTA DOBLE, y sus dos mitades llevan a sitios distintos.**
+     *
+     * `[DECIDIDO owner, 2026-08-27]`. Arranca con **comprar expandido**, y eso es la jerarquía:
+     * comprar cuesta un gesto y registrarse dos.
+     */
+    public function test_the_mobile_bar_is_a_double_cta(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertCount(2, $this->nodes($html, 'book-bar__cta'), 'la barra de móvil no tiene dos mitades');
+        $this->assertCount(1, $this->nodes($html, 'book-bar__cta--buy'), 'falta la mitad de comprar');
+        $this->assertCount(1, $this->nodes($html, 'book-bar__cta--alt'), 'falta la mitad de la cuenta');
+
+        $destinos = $this->linksIn($html, 'book-bar__pair');
+        sort($destinos);
+
+        $this->assertSame(
+            ['/entradas', '/registro'], $destinos,
+            'las dos mitades no llevan a destinos distintos y reales',
+        );
+    }
+
+    /**
+     * **La mitad COLAPSADA dice qué hace AHORA, no a dónde lleva.**
+     *
+     * ❗❗ Es la aserción que existe por el riesgo del propio patrón: **un botón que cambia de
+     * significado al pulsarlo se pulsa por error**. Colapsada, la pulsación no lleva a ninguna
+     * parte: expande. Si su nombre siguiera diciendo «Registrarse», un lector de pantalla
+     * anunciaría dos botones que dicen lo mismo y hacen cosas distintas, y el segundo no llevaría
+     * a donde dice.
+     */
+    public function test_the_collapsed_half_says_what_it_does_now(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        foreach (['book-bar__cta--buy', 'book-bar__cta--alt'] as $mitad) {
+            $binding = $this->nodes($html, $mitad)[0]->getAttribute('data-bind-aria-label');
+
+            $this->assertNotSame('', $binding, "`{$mitad}` no cambia de nombre accesible al colapsarse");
+            $this->assertStringContainsString(
+                __('landing.nav.cta_switch_buy') === $binding ? '' : 'Cambiar', $binding,
+                "`{$mitad}`: su nombre colapsado no dice que la pulsación CAMBIA de CTA",
+            );
+        }
+    }
+
+    /**
+     * **Sin JavaScript las dos mitades siguen funcionando, y con UNA pulsación.**
+     *
+     * El doble paso es de Alpine; sin él, cada mitad es un `<a href>` que navega. Por eso el
+     * nombre accesible **servido** es el de ACTUAR —que es lo que hacen sin JS— y Alpine lo
+     * sustituye por el de «cambiar» solo en la que quede colapsada. Al revés, quien navega sin JS
+     * leería «Cambiar a registrarse» en un enlace que se registra.
+     */
+    public function test_both_halves_work_without_javascript(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        foreach (['book-bar__cta--buy', 'book-bar__cta--alt'] as $mitad) {
+            $node = $this->nodes($html, $mitad)[0];
+
+            $this->assertSame('a', $node->nodeName, "`{$mitad}` no es un enlace: sin JS no haría nada");
+            $this->assertNotSame('', $node->getAttribute('href'), "`{$mitad}` no tiene destino");
+            $this->assertNotSame('#', $node->getAttribute('href'), "`{$mitad}` apunta a la nada");
+            $this->assertStringNotContainsString(
+                'Cambiar', $node->getAttribute('aria-label'),
+                "`{$mitad}`: el nombre SERVIDO dice «cambiar», y sin JS ese enlace NAVEGA",
+            );
+        }
+    }
+
+    /**
+     * **Por defecto —y por tanto también sin JavaScript— la mitad ancha es la de comprar.**
+     *
+     * El reparto lo decide el CSS a partir de una clase en el contenedor; el JS solo publica el
+     * estado. Si el reparto viviera en el `.js`, sería la única parte del tema que un cliente no
+     * puede tocar desde su hoja.
+     */
+    public function test_the_pair_defaults_to_buy_expanded(): void
+    {
+        $css = $this->stylesheets();
+
+        $this->assertMatchesRegularExpression(
+            '/\.book-bar__cta--buy\s*\{[^}]*flex:\s*1 1 auto/s', $css,
+            'la mitad de comprar no arranca expandida',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.book-bar--signup \.book-bar__cta--alt\s*\{[^}]*flex:\s*1 1 auto/s', $css,
+            'la mitad de la cuenta no se expande nunca: el par no se puede invertir',
+        );
+    }
+
+    /**
      * **El glifo del botón de alta sigue al DESTINO, no a la posición del botón.**
      *
      * El mismo botón de la esquina sirve a dos destinos según la instalación: si el parque tiene
@@ -690,8 +840,19 @@ class ArmazonContractTest extends TestCase
      */
     public function test_the_signup_glyph_follows_the_destination(): void
     {
+        // ⚠️ Se comprueba **en los DOS portadores**, no en la página: el mismo botón vive en el
+        // racimo de la cabecera y en la barra de móvil, y la regla tiene que valer en los dos. Un
+        // recuento global daría verde con uno solo bien puesto.
+        $portadores = ['nav__cta', 'book-bar__pair'];
+
         $interno = $this->get('/')->assertOk()->getContent();
-        $this->assertCount(1, $this->nodes($interno, 'user-plus-ico'), 'el alta de CUENTA no lleva su glifo');
+
+        foreach ($portadores as $portador) {
+            $this->assertNotEmpty(
+                $this->within($interno, $portador, 'user-plus-ico'),
+                "`{$portador}`: el alta de CUENTA no lleva su glifo",
+            );
+        }
 
         Setting::updateOrCreate(
             ['key' => 'registration.url'],
@@ -701,7 +862,14 @@ class ArmazonContractTest extends TestCase
         Cache::flush();
 
         $externo = $this->get('/')->assertOk()->getContent();
-        $this->assertCount(0, $this->nodes($externo, 'user-plus-ico'), 'el TRÁMITE externo lleva el glifo de crear cuenta');
+
+        foreach ($portadores as $portador) {
+            $this->assertEmpty(
+                $this->within($externo, $portador, 'user-plus-ico'),
+                "`{$portador}`: el TRÁMITE externo lleva el glifo de crear cuenta",
+            );
+        }
+
         $this->assertNotEmpty($this->nodes($externo, 'cta-ghost__ico'), 'el trámite externo se ha quedado sin glifo');
     }
 
@@ -781,6 +949,27 @@ class ArmazonContractTest extends TestCase
      * confianza del mundo, que el cableado no existe. Se renombran a `data-alpine-*` /
      * `data-bind-*` y hay control positivo que lo comprueba.
      */
+    /**
+     * Los elementos con la clase dada que cuelgan del subárbol de otra.
+     *
+     * @return list<\DOMElement>
+     */
+    private function within(string $html, string $rootClass, string $class): array
+    {
+        $xpath = $this->xpath($html);
+        $out = [];
+
+        foreach ($this->nodes($html, $rootClass) as $root) {
+            $q = ".//*[contains(concat(' ', normalize-space(@class), ' '), ".$this->quote(' '.$class.' ').')]';
+
+            foreach ($xpath->query($q, $root) as $node) {
+                $out[] = $node;
+            }
+        }
+
+        return $out;
+    }
+
     /**
      * Los títulos de los destinos del menú, **en el orden en que se pintan**.
      *

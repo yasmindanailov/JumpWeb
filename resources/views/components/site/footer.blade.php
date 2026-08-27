@@ -78,45 +78,26 @@
     </div>
 
     <div class="foot__bottom">
-        {{-- Bloque izquierdo: selector de idioma arriba (más visible) + copyright debajo.
-             Convención web (Stripe/Linear/Vercel/GitHub): el selector de idioma vive en el
-             lateral izquierdo del bottom row, alineado con el copyright. --}}
+        {{-- ⚠️ **El selector de idioma se RETIRÓ de aquí el 2026-08-27** (`[DECIDIDO owner]`, armazón
+             · tanda 2c·4): desde la 2c·1 vive en las cápsulas del menú a pantalla completa, y dos
+             selectores del mismo idioma en la misma página son dos sitios que mantener y uno que
+             se queda atrás. Queda el copyright, que es lo que el bloque tenía además.
+
+             ❗ **Y con él se va el ÚNICO cambio de idioma que funcionaba SIN JavaScript**: el menú
+             se abre con Alpine, así que sin JS no se abre y sus cápsulas no se alcanzan. El resto
+             de la navegación sobrevive —las tres columnas de enlaces de aquí arriba son anclas de
+             verdad—, pero el idioma se quedaba sin ninguna. Por eso el `<noscript>` de abajo: no
+             lo ve nadie con JS, y sin JS es la única puerta. Es el mismo recurso que ya usan el
+             reintento de pago y el marco de consentimiento. --}}
         <div class="foot__bottom-left">
-            {{-- Reutiliza el patrón `.lang-dd` del proyecto (mismo que el menú de cuenta del
-                 nav). Variante `--up` invierte el panel para que se abra HACIA ARRIBA y
-                 hacia la DERECHA del trigger (apropiado en footer-izquierda). --}}
-            <div class="lang-dd lang-dd--up"
-                 x-data="{ open: false }"
-                 :class="open && 'lang-dd--open'"
-                 @click.outside="open = false"
-                 @keydown.escape.window="open = false">
-                <button type="button"
-                        class="lang-dd__trigger"
-                        @click="open = !open"
-                        :aria-expanded="open.toString()"
-                        aria-haspopup="menu"
-                        aria-label="{{ __('landing.footer.language') }}">
-                    {{-- Autonym del idioma actual (cada idioma se nombra a sí mismo: "Español",
-                         "English", "Français") — estándar moderno, reconocible para el visitante
-                         aunque la página esté en otro idioma. --}}
-                    {{ $langNames[app()->getLocale()] }}
-                    <svg class="chev" width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                        <path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
-                <div class="lang-dd__panel" role="menu">
+            <noscript>
+                <ul class="foot__lang-fallback">
                     @foreach ($locales as $l)
-                        @php($isActive = app()->getLocale() === $l)
-                        <a href="{{ route('lang.switch', $l) }}"
-                           class="{{ $isActive ? 'active' : '' }}"
-                           role="menuitem"
-                           hreflang="{{ $l }}"
-                           @if ($isActive) aria-current="true" @endif>
-                            <span>{{ strtoupper($l) }}</span><span class="name">{{ $langNames[$l] }}</span>
-                        </a>
+                        <li><a href="{{ route('lang.switch', $l) }}" hreflang="{{ $l }}"
+                               @if (app()->getLocale() === $l) aria-current="true" @endif>{{ $langNames[$l] }}</a></li>
                     @endforeach
-                </div>
-            </div>
+                </ul>
+            </noscript>
 
             <span class="foot__copy">© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
         </div>

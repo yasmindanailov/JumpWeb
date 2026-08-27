@@ -127,6 +127,16 @@
                     @endif
                 @endforeach
             </ul>
+
+            {{-- **El eslogan a rotulador** (`[DECIDIDO owner, 2026-08-27]`: «la idea es 1:1 al
+                 mockup»). Es el mismo texto y la misma fuente que el del hero, y sale de la MISMA
+                 clave: repetirlo en otra clave sería dos copys que se separan solos.
+
+                 ⚠️ **Su auditoría lo marcaba como repetido** (`T-02`: «Permanent Marker aparece dos
+                 veces — hero y pie del menú; máx. una por página»). No lo incumple, y el motivo es
+                 geométrico: **el menú es `inset: 0` y tapa el hero entero al abrirse**, así que los
+                 dos nunca están en pantalla a la vez. La norma habla de por PANTALLA. --}}
+            <p class="menu__slogan">{{ __('landing.hero.kicker') }}</p>
         </div>
     </div>
 </div>

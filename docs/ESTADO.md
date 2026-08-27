@@ -262,7 +262,9 @@
 >   ⚠️ **Y una que despista**: `mockup_playjumppark/` (el canvas del 2.º cliente) está **gitignorada y
 >   excluida del `rsync`** (`DECISIONES #1`), así que **en tu máquina no existe** aunque la doc la
 >   cite. La receta para regenerarla con el MCP `DesignSync` está en la **§1 de la spec del tema**.
->   ❗❗ **El armazón de ESCRITORIO está COMPLETO**: 2c·0 (`#200`), 2c·1 (`#201`), 2c·2 (`#203`) y
+>   ❗❗ **El armazón está COMPLETO salvo el MENÚ EN MÓVIL**, que espera el artboard del owner. El
+>   **CTA doble** de la barra inferior ya está (`#205`), y con él el idioma salió del pie —con
+>   `<noscript>` de suelo— y el menú ganó su eslogan. Detalle de escritorio: 2c·0 (`#200`), 2c·1 (`#201`), 2c·2 (`#203`) y
 >   2c·3 (`#204`) en el árbol y verdes — la red, 66 reglas de CSS fuera, **el menú a pantalla
 >   completa**, **la barra DISUELTA en dos racimos**, el salto al contenido en las 12 y la cuenta en
 >   icono con su punto de aviso. ▶ **Lo que queda de la 2c es la 2c·4, el MÓVIL, y la bloquea el
@@ -309,7 +311,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#204`**.
+> El último usado es **`#205`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -413,9 +415,24 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3121 en verde** (17.936 aserciones, `--parallel` **~68 s** medidos el 2026-08-28 de madrugada
-  en la máquina del carril A; ~58 s en la del C, ~42 s en la del B) ·
-  ▶ **+30 tests PHP y +1 JS en el último corte** (carril A, menores a cargo · tanda 4 · **U1**, el
+- Suite **3127 en verde** (17.991 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
+  madrugada sobre el árbol FUSIONADO de los dos carriles, en la máquina del carril C) ·
+  ▶ **+6 tests PHP en el último corte** (carril C, armazón · tanda **2c·4a**, el CTA doble de
+  móvil): que la barra sea un par con destinos distintos, que la mitad colapsada **diga qué hace
+  AHORA** y no a dónde lleva, que **las dos funcionen sin JavaScript** con una sola pulsación y con
+  el nombre servido correcto, que el reparto por defecto sea comprar, que el idioma tenga **un solo
+  sitio y suelo sin JS**, y que el eslogan del menú salga de la clave del hero. **9 mutaciones, las
+  9 muerden.**
+  ⚠️ **Este contador se fusionó a mano el 2026-08-28**: los dos carriles cortaron a la vez y ninguna
+  de las dos cifras previas —3.121 del A, 3.096 del C— valía para el árbol conjunto. **Se volvió a
+  MEDIR, no a sumar** — y menos mal: sumar habría dado 3.127 tests (acierta) y **17.991 aserciones
+  solo por casualidad**, porque la fusión también movió aserciones dentro de guardas que cuentan por
+  regla.
+  ⚠️ **Y la trampa del carril A mordió al carril C en cuanto fusionó**: `npm run build` sin
+  `build:ssr` desfasa el renderizador SSR y tumba **30 casos** del contrato de árbol. Estaba escrita
+  dos párrafos más abajo, se leyó **después** de pagarla. El hook los encadena a propósito. Antes:
+  ▶ Y el corte del carril A, con su medida propia (3.121 · 17.936 en su árbol):
+  ▶ **+30 tests PHP y +1 JS** (carril A, menores a cargo · tanda 4 · **U1**, el
   servidor — spec §9.9.7): `DependentAssignerTest` (17), `OrdersDependentAssignmentTest` (8),
   +1 `DependentRegistryTest`, +3 `DependentPrivacyTest`, +1 `ModuleContractsTest` (el doble de
   `CheckoutLines` con el orden invertido); `npm run test:js` **733 → 734** (`sanitizeLine` con
@@ -760,12 +777,20 @@ tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la 
 sigue parado es el CONTENIDO (la tanda B de `landing-white-label.md`: `testimonials` y el copy al
 CMS), no el tema.
 
-▶ **Por dónde retoma el carril C**: **el armazón de ESCRITORIO está COMPLETO** —2c·0 (`#200`),
-2c·1 (`#201`), 2c·2 (`#203`) y 2c·3 (`#204`), las cuatro en el árbol y verdes—. Lo que queda de la
-2c es la **2c·4, el MÓVIL**, y la bloquea el **artboard del owner**: hasta que exista, el cajón
-lateral sigue intacto por debajo de 1080 px. ▶ Si el artboard no llega, lo siguiente de agente es
-la tanda **2d, el MOVIMIENTO** (medido: 237 declaraciones, 48 duraciones y 20 curvas; el sistema
-del cliente declara 7 y 4).
+▶ **Por dónde retoma el carril C**: **el armazón está COMPLETO salvo el MENÚ EN MÓVIL** —2c·0
+(`#200`), 2c·1 (`#201`), 2c·2 (`#203`), 2c·3 (`#204`) y 2c·4a, el CTA doble (`#205`), todas en el
+árbol y verdes—. Lo único que queda es la **2c·4b, el menú a pantalla completa en móvil**, y la
+bloquea el **artboard del owner**: hasta que exista, el cajón lateral sigue intacto por debajo de
+1080 px. ▶ Lo siguiente de agente sin depender de él es la tanda **2d, el MOVIMIENTO** (medido: 237
+declaraciones, 48 duraciones y 20 curvas; el sistema del cliente declara 7 y 4).
+▶ **Y de la LANDING (tanda 3), lo medido el 2026-08-27 contra el artboard normativo**: la única
+sección del mockup que **no existe** es **OPINIONES** (3 tarjetas `texto`/`nombre`/`meta` + cápsula
+de valoración = el `testimonials` parado en `#158`); **el minijuego del castillo** tampoco existe y
+en el mockup vive dentro del CTA final; tenemos **galería y FAQ**, que el mockup **no tiene**; y sus
+juegos van **dentro de Zonas**, no en una sección «Atracciones» aparte. Del **kit de fachada** solo
+hay **2 de 24 piezas** (la trama de puntos y la tira del pie) — y dos de las que faltan (`D9` las
+poses, `B4` foto dentro de mancha) **las bloquea el ARTE, no el código**. Del set de iconos, **25 de
+48** componentes.
 ⚠️⚠️ **La 2c·2 corrigió DOS VECES a su propia spec y las correcciones van delante del texto que
 corrigen**: `M-05` **ya estaba cumplido** —nuestro mobiliario perdió la sombra en `#196`, así que lo
 que hacía falta era lo contrario: darle a las piezas con qué sostenerse— y la coreografía «nace

@@ -580,6 +580,8 @@ primera tanda:
 | 1 | **El artboard de MÓVIL** | la tanda **2c·4** entera. Nada más |
 | 2 | **`T-02`**: ¿sobra el eslogan a rotulador del pie del menú? | un detalle de 2c·1. ▶ **Por defecto NO se pinta**: su norma es una vez por página, el hero ya lo gasta desde `#195`, y su propio informe dice que el del menú sobra. Ponerlo después cuesta una línea; quitarlo, una revisión |
 | 3 | **El idioma**: ¿se queda solo en el pie, o entra también en las cápsulas del menú? | una cápsula de 2c·1 |
+| ~~2~~ | ~~**`T-02`**: ¿sobra el eslogan a rotulador del pie del menú?~~ ✅ **CERRADO** (`[DECIDIDO owner]`: «1:1 al mockup»). Se pinta, y no incumple la norma: el menú tapa el hero, nunca son co-visibles (§8.6) | — |
+| ~~3~~ | ~~**El idioma**: ¿pie o menú?~~ ✅ **CERRADO** (`[DECIDIDO owner]`): solo en el menú, con `<noscript>` en el pie como suelo sin JS (§8.6) | — |
 | ~~4~~ | ~~**El glifo del botón de registro** cuando el parque tiene trámite externo~~ ✅ **CERRADO por construcción en la 2c·3** (§8.5): el icono sigue al DESTINO — portapapeles para el trámite externo del parque, `user-plus` para crear cuenta. Si el owner prefiere otra cosa, es un componente | — |
 
 ⚠️ **Y lo que NO es de este carril y sigue esperando**: la **pasada de navegador** de `#195` y
@@ -655,7 +657,8 @@ Cada una deja el sitio navegable y se puede mirar en navegador por separado.
 | **2c·1** ✅ | **El menú a pantalla completa** — HECHA el 2026-08-27: sustituye a los dos desplegables, la barra pierde sus enlaces y la hamburguesa aparece en todos los anchos. El cajón de móvil **sigue intacto** por debajo de 1080 px, esperando el artboard | **Sí, y mucho.** Es la primera pantalla de las 12 vistas |
 | **2c·2** ✅ | **Los dos racimos** — HECHA el 2026-08-27: la barra se disuelve (sin fondo, sin desenfoque, sin línea), los dos racimos flotan en las esquinas, entra la coreografía en las 12 vistas y **el salto al contenido pasa de 1 de 12 a 12 de 12** | **Sí, en toda la web** |
 | **2c·3** ✅ | **La cuenta** — HECHA el 2026-08-27: icono redondo en todos los anchos, **punto en Amarillo Aviso y nada cuando no hay aviso**, tres glifos al set y el nombre accesible **en texto** | Sí, en la esquina |
-| **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard. Ya llega con dos cosas decididas: **manda la barra de abajo** y **arriba solo logotipo y hamburguesa** (§4.9) | — |
+| **2c·4a** ✅ | **El CTA DOBLE de móvil** — HECHA el 2026-08-27, y con ella el idioma sale del pie y el menú gana su eslogan | Sí, en la barra de abajo |
+| **2c·4b** ⬜ | **El MENÚ en móvil** — `[PENDIENTE: owner]`, sigue esperando el artboard | — |
 
 ⚠️ **El orden importa y no es negociable**: si el racimo (2c·2) entrara antes que el menú
 (2c·1), habría un commit con la barra retirada y sin nada que la sustituya. Y si la limpieza
@@ -695,6 +698,65 @@ guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86
 (4.025 → 3.939, medido volviendo a poner el CSS y corriendo otra vez) y los tests nuevos aportan
 **87**. `17 694 − 86 + 87 = 17 695`. **Un contador que se mueve menos de lo esperado no es un
 contador roto hasta que no puedes explicar la diferencia.**
+
+### 8.6 Lo que la 2c·4a dejó hecho
+
+**El CTA doble.** La barra de abajo deja de ser un botón: dos mitades, una expandida con su
+subtítulo y otra colapsada a icono. Pulsar la colapsada la expande y colapsa a la otra; pulsar la
+expandida **actúa**. Arranca con comprar expandido — **comprar cuesta un gesto y registrarse dos**,
+y eso es la jerarquía, no un descuido.
+
+⚠️⚠️ **Un botón que cambia de significado al pulsarlo es un botón que se pulsa por error**, y por
+eso su nombre accesible **dice qué hace AHORA**: colapsada se llama «cambiar a…», no «registrarse».
+Sin eso, un lector de pantalla anunciaría dos botones que dicen lo mismo y hacen cosas distintas, y
+el segundo no llevaría a donde dice.
+
+⚠️ **Sin JavaScript el doble paso no existe, a propósito.** Las dos mitades son `<a href>` de
+verdad, así que sin JS cada una navega de **una sola pulsación** — y por eso el nombre accesible
+**servido** es el de ACTUAR, que es lo que hacen sin JS; Alpine lo sustituye por el de «cambiar»
+solo en la que quede colapsada. Al revés, quien navega sin JS leería «Cambiar a registrarse» en un
+enlace que se registra. Hay guarda de las dos direcciones.
+
+⚠️ **La mitad colapsada encoge por su CONTENIDO, no por una anchura animada**: transicionar
+`flex-basis` o `width` entre `auto` y un número no es fiable; el texto sí se pliega, y el botón
+sigue al plegado sin que nadie anime una caja. El texto **se queda en el árbol** —no `display:none`—
+y el nombre lo fija el `aria-label`.
+
+▶ **Y el reparto lo decide el CSS a partir de UNA clase.** El JS publica el modo y nada más: misma
+regla que el hero (`#195`) y que el recorte del menú (`#201`). Por defecto —o sea, también sin
+JS— la ancha es la de comprar.
+
+**El selector de idioma sale del pie** (`[DECIDIDO owner]`): desde la 2c·1 vive en las cápsulas del
+menú, y dos selectores del mismo idioma son dos sitios que mantener y uno que se queda atrás.
+❗ **Y con él se iba el ÚNICO cambio de idioma que funcionaba sin JavaScript**, porque el menú lo
+abre Alpine. El resto de la navegación sobrevive —las columnas del pie son anclas de verdad— pero
+el idioma se quedaba sin ninguna. De ahí el `<noscript>` del pie: no lo ve nadie con JS y sin JS es
+la única puerta. Es el mismo recurso que ya usaban el reintento de pago y el marco de
+consentimiento.
+▶ **Y al irse `.lang-dd--up` con él, cayó una de las SEIS excepciones de sombra direccional** que
+declaró la elevación (`#196`). Quedan cinco. **La lista encogió sola**, que es justo lo que aquella
+tanda prometió que pasaría.
+
+**El menú gana el eslogan a rotulador** (`[DECIDIDO owner]`: «la idea es 1:1 al mockup»), y sale de
+la **misma clave** que el del hero: dos claves para el mismo copy son dos copys que se separan
+solos.
+⚠️ **`T-02` de su auditoría lo marcaba como repetido** —«máx. una vez por página»— y no lo
+incumple: **el menú es `inset: 0` y tapa el hero entero**, así que los dos nunca están en pantalla a
+la vez. La norma habla de por pantalla.
+
+#### Lo que costó
+
+⚠️ **Un apóstrofo tumbó la suite entera.** La clave francesa `Passer à l'inscription` se generó
+dentro de comillas simples de PHP y el fichero dejó de parsear — 7 fallos y un error, ninguno
+relacionado con lo que se estaba construyendo. `php -l` en los tres ficheros de idioma es el
+control que faltaba, y ahora está en el guion.
+
+⚠️ **Dos guardas ajenas se dispararon, y las dos tenían razón**:
+· `AccountDoorWiringTest` **cuenta** los CTA de alta —dos, escritorio y cajón— precisamente para que
+  quitarle el cableado a uno no pase en verde. Apareció un **tercero** y el número sube a 3, con su
+  porqué escrito. Aflojar la aserción a un «contiene» habría sido tirar la guarda.
+· La aserción del glifo de alta contaba **la página** y ahora el glifo sale **dos veces** —cabecera
+  y barra—. Se acotó **a cada portador**: un recuento global daba verde con uno solo bien puesto.
 
 ### 8.5 Lo que la 2c·3 dejó hecho
 
