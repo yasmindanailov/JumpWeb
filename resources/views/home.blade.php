@@ -21,7 +21,15 @@
 
     {{-- ===================== HERO ===================== --}}
     <header id="top" class="hero hero--full">
-        <div class="hero__stage" data-has-video="true">
+        {{-- ⚠️⚠️ `data-surface="ink"` NO es decorativo: es el ÚNICO sitio del producto donde se
+             declara una superficie, y es lo que la tanda 1 de `specs/tema-por-instalacion.md`
+             construyó para que existiera. Dentro de este envoltorio los siete tokens de
+             superficie se redefinen —`--fg` vale claro, `--bg` oscuro, `--fg-mute` el gris de
+             tinta— así que TODA regla que cuelgue de aquí se invierte sola, sin modificador.
+             Por eso `--onvideo` ha dejado de pintar colores: los pinta el ámbito.
+             ▶ Lo que sigue en `--onvideo` NO es superficie: es el TAMAÑO del titular y las
+             sombras sobre oscuro. `[data-surface]` nunca iba a cubrir eso. --}}
+        <div class="hero__stage" data-surface="ink" data-has-video="true">
             <div class="hero__stage-placeholder" aria-hidden="true"></div>
             {{-- Vídeo de fondo del hero (oficial). Servido como MP4 H.264 (universal: Chrome/Firefox/
                  Safari/Android) — el original era HEVC/.mov que Chrome/Firefox NO reproducen. `poster`

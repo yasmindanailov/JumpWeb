@@ -285,6 +285,93 @@ class SurfaceScopeTest extends TestCase
         }
     }
 
+    /**
+     * **El hero DECLARA su superficie, y sin eso todo lo demás pinta al revés.**
+     *
+     * Desde la tanda 2b el hero ya no invierte sus colores a mano: los invierte el ámbito. Eso
+     * significa que `.hero__stage { background: var(--bg) }` —que dentro de tinta rinde oscuro—
+     * pasaría a rendir **crema** si alguien quita el atributo del marcado. Y no fallaría nada:
+     * el CSS es válido, la página carga, y el hero se ve blanco con el texto invisible.
+     *
+     * ⚠️ Es la primera vez que el producto CONSUME el mecanismo de la tanda 1, y este test es
+     * lo único que ata las dos mitades. Un test de CSS no puede verlo: el atributo vive en Blade.
+     */
+    public function test_the_hero_declares_its_surface(): void
+    {
+        $blade = (string) file_get_contents(base_path('resources/views/home.blade.php'));
+
+        $this->assertMatchesRegularExpression(
+            '/class="hero__stage"[^>]*data-surface="ink"/',
+            $blade,
+            'el `.hero__stage` de la home ha dejado de declarar `data-surface="ink"`. Sin el '.
+            'atributo, los siete tokens de superficie NO se redefinen y el hero pinta con los de '.
+            'papel: fondo crema, texto crema encima. No falla nada — solo deja de verse.',
+        );
+    }
+
+    /**
+     * **`--onvideo` no puede volver a pintar un COLOR.**
+     *
+     * El modificador era TRES cosas con un solo nombre: superficie (invertir los colores sobre el
+     * vídeo), tamaño (el titular del hero es mayor que un `h1` normal) y sombra sobre oscuro. La
+     * primera se la lleva el ámbito; las otras dos se quedan y son legítimas.
+     *
+     * ⚠️ Si aparece un `color` o un `background` en una regla `--onvideo`, alguien ha vuelto a
+     * pintar la superficie a mano — y esa declaración **no seguirá al paquete del cliente**,
+     * porque `--onvideo` es una clase escrita en el marcado, no un ámbito.
+     */
+    public function test_onvideo_never_paints_a_colour_again(): void
+    {
+        $offenders = [];
+        $seen = 0;
+
+        foreach ($this->sheetContents() as $path => $css) {
+            // Comentarios BLANQUEADOS conservando longitud: un `/* … */` pegado al selector se
+            // comía la cabecera y el localizador daba cero reglas donde había una.
+            $blind = (string) preg_replace_callback(
+                '#/\*.*?\*/#s',
+                fn (array $m) => str_repeat(' ', strlen($m[0])),
+                $css,
+            );
+
+            preg_match_all('/([^{}\n][^{}]*--onvideo[^{}]*)\{([^{}]*)\}/', $blind, $rules, PREG_SET_ORDER);
+
+            foreach ($rules as $rule) {
+                $seen++;
+                $selector = trim((string) preg_replace('/\s+/', ' ', $rule[1]));
+
+                foreach (explode(';', $rule[2]) as $chunk) {
+                    if (! str_contains($chunk, ':')) {
+                        continue;
+                    }
+
+                    $property = trim(explode(':', $chunk, 2)[0]);
+
+                    if (in_array($property, ['color', 'background', 'background-color', 'fill', 'stroke', 'border-color'], true)) {
+                        $offenders[] = "{$path}: {$selector} → {$property}";
+                    }
+                }
+            }
+        }
+
+        // Guarda de la guarda: si el escaneo deja de ver reglas `--onvideo`, esta comprobación
+        // quedaría verde sin mirar nada. Hoy quedan diez, todas de tamaño o de sombra.
+        $this->assertGreaterThanOrEqual(
+            5, $seen,
+            'el escaneo no encuentra reglas `--onvideo` y debería ver unas diez: el localizador '.
+            'se ha roto y esta guarda estaría pasando sin mirar.',
+        );
+
+        $this->assertSame(
+            [], $offenders,
+            "estas reglas `--onvideo` vuelven a pintar un COLOR:\n  ".implode("\n  ", $offenders)."\n".
+            'La superficie la pinta `[data-surface="ink"]`, que sigue al paquete del cliente. Una '.
+            'clase en el marcado no. Si de verdad hace falta un color distinto DENTRO del hero, la '.
+            'regla va como `[data-surface="ink"] .lo-que-sea` y lee los alias `--paper-*` cuando '.
+            'pinte sobre el botón, que invierte respecto a la superficie.',
+        );
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Herramientas
     // ─────────────────────────────────────────────────────────────────────────────────

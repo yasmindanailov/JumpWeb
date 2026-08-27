@@ -722,8 +722,8 @@ img { display: block; max-width: 100%; }
   max-height: calc(100vh - 160px);
   border-radius: var(--r-lg);
   overflow: hidden;
-  background: var(--fg);
-  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--fg) 20%, transparent);
+  background: var(--bg);
+  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--bg) 20%, transparent);
 }
 .hero__video {
   position: absolute; inset: 0;
@@ -755,7 +755,7 @@ img { display: block; max-width: 100%; }
 .hero__stage-scrim {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--fg) 45%, transparent) 0%, color-mix(in srgb, var(--fg) 8%, transparent) 30%, color-mix(in srgb, var(--fg) 10%, transparent) 55%, color-mix(in srgb, var(--fg) 65%, transparent) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 45%, transparent) 0%, color-mix(in srgb, var(--bg) 8%, transparent) 30%, color-mix(in srgb, var(--fg) 10%, transparent) 55%, color-mix(in srgb, var(--fg) 65%, transparent) 100%);
 }
 .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: none; }
 
@@ -772,7 +772,6 @@ img { display: block; max-width: 100%; }
 .hero__stage-content a,
 .hero__stage-content button { pointer-events: auto; }/* on-video title — cream text; blink keeps its zone color */
 .hero__title.hero__title--onvideo {
-  color: var(--bg);
   font-size: clamp(56px, 10.5vw, 168px);
   margin: 0;
   text-shadow: 0 4px 40px rgba(0,0,0,0.18);
@@ -788,7 +787,7 @@ img { display: block; max-width: 100%; }
   left: clamp(20px, 3vw, 40px); bottom: clamp(16px, 2vw, 28px);
   font-family: var(--font-body); font-size: 11px;
   text-transform: uppercase; letter-spacing: 0.16em;
-  color: color-mix(in srgb, var(--bg) 50%, transparent);
+  color: color-mix(in srgb, var(--fg) 50%, transparent);
   pointer-events: none;
   z-index: 6;
 }

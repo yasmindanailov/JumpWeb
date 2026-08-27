@@ -1968,13 +1968,11 @@ body.no-scroll { overflow: hidden; }
 /* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
 .cta-prime__ico .ic-e2, .cta-med__ico .ic-e2 { color: var(--bg); }
 .cta-prime:hover .cta-prime__ico .ic-e2, .cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-brand); }
-.cta-prime--onvideo .cta-prime__ico .ic-e2 { color: var(--fg); }
 /* El «occluder» de E2 (la entrada de delante) debe fundirse con el FONDO del botón, no con
    --bg (que asume fondo claro). Sin esto, sobre el botón oscuro la entrada delantera se ve
    como un bloque crema. Reposo = --fg (botón oscuro) · hover = --zone-1 · on-video = --bg. */
 .cta-prime__ico .ic-e2 svg .occ,
 .cta-med__ico .ic-e2 svg .occ { fill: var(--fg); }
-.cta-prime--onvideo .cta-prime__ico .ic-e2 svg .occ { fill: var(--bg); }
 .cta-prime:hover .cta-prime__ico .ic-e2 svg .occ,
 .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--zone-1); }
 
@@ -2289,18 +2287,19 @@ body[data-has-hero] .nav-cta-med.is-revealed {
    y similares. Sombra oscura reforzada garantiza contraste sobre cualquier
    frame del vídeo dinámico. */
 .cta-prime--onvideo {
-    background: var(--bg); color: var(--fg);
     box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.18);
 }
-.cta-prime--onvideo .cta-prime__ico { background: color-mix(in srgb, var(--fg) 8%, transparent); }
-.cta-prime--onvideo .cta-prime__ico .tk { color: var(--fg); }
-.cta-prime--onvideo .cta-prime__s { color: var(--fg-mute); }
+/* ⚠️ Estas dos van SOBRE EL BOTÓN, y el botón INVIERTE respecto a la superficie: dentro de
+   tinta el `.cta-prime` es claro. Por eso leen los alias `--paper-*`, que existen justo
+   «para poder VOLVER a papel desde dentro de tinta». Verificado por aritmética: rinden el
+   mismo color que rendían con `--onvideo` (#E2DDD2 y #6B675D). Todo lo demás que hacía
+   `--onvideo` aquí lo hace ya la regla BASE dentro del ámbito, sin declarar nada. */
+[data-surface="ink"] .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 8%, transparent); }
+[data-surface="ink"] .cta-prime__s { color: var(--paper-fg-mute); }
 .cta-prime--onvideo:hover {
-    background: var(--zone-1); color: var(--on-brand);
     box-shadow: 0 22px 48px -12px rgba(0, 0, 0, 0.6), 0 6px 14px rgba(0, 0, 0, 0.22);
 }
-.cta-prime--onvideo:hover .cta-prime__ico { background: color-mix(in srgb, var(--fg) 12%, transparent); }
-.cta-prime--onvideo:hover .cta-prime__s { color: rgba(255, 255, 255, 0.72); }
+[data-surface="ink"] .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 12%, transparent); }
 
 /* ====================================================================
    Jerarquía de CTAs — Capa D: adaptación móvil del header.
@@ -3045,7 +3044,6 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     transition: opacity 0.2s ease;
 }
 .hero__chip--onvideo {
-    color: var(--bg, var(--bg));
     text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5);  /* legibilidad sin fondo, sobre el vídeo */
 }
 .hero__chip--onvideo:hover { opacity: 0.82; }
