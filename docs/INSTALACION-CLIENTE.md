@@ -130,11 +130,26 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
 afinarla, redefine los `--ink-*`. **No la teclees entera**: `SurfaceScopeTest` exige que se derive,
 justo para que cambiar la marca no deje media web con el color de otro cliente.
 
+⚠️⚠️ **CORRECCIÓN (2026-08-27): la lista de abajo decía que el paquete no puede cambiar las
+SOMBRAS, y desde `DECISIONES #196` SÍ PUEDE.** Aquella medición miró solo el difuminado; rehecha
+con las cuatro dimensiones salió que **no había ninguna escala que extraer** —53 sombras, 42 formas
+distintas— y que el propio sistema del cliente **tampoco tiene**: declara dos formas. La pregunta
+pasó a ser «¿para qué sirve cada sombra?» y salieron **tres roles**:
+
+```css
+    /* ELEVACIÓN · tres roles, no una escala (`DECISIONES #196`). Redefinirlos mueve las 28
+       sombras del producto. Leen `--paper-fg`, el alias que NO se invierte en superficie
+       oscura: una sombra es ausencia de luz, y es oscura en las dos superficies. */
+    --shadow-lift:  none;                        /* se despega al pasar el ratón */
+    --shadow-float: 5px 5px 0 var(--paper-fg);   /* flota sobre el contenido */
+    --shadow-modal: 0 24px 60px rgba(0,0,0,.45); /* tapa la página, con velo */
+```
+
+▶ Quedan **cinco** excepciones que el paquete no alcanza —tres direccionales, un artefacto
+imprimible y el pulgar de un interruptor—, enumeradas en `specs/tema-por-instalacion.md` §13.5, y
+**la lista solo encoge**: era de seis hasta que el selector de idioma salió del pie (`#205`).
+
 ⚠️ **Lo que el paquete TODAVÍA no puede cambiar, dicho para que nadie lo busque:**
-- **La FORMA de las sombras.** El color sí le obedece (60 de 68 declaraciones ya leen por `var()`),
-  pero **no hay escala de elevación**: 55 sombras difusas con 58 formas distintas y solo 8 repetidas.
-  Crearla mueve píxeles (la mejor escala de 6 escalones mueve 35 de 55), así que se decide con el
-  hero. `specs/tema-por-instalacion.md` §10.3.
 - **El TEMPO.** 237 declaraciones de transición con **48 duraciones y 20 curvas** distintas. Hay 4
   tokens (`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`) que cubren una parte
   mínima. §10.4.
