@@ -548,7 +548,7 @@ primera tanda:
 | 1 | **El artboard de MÓVIL** | la tanda **2c·4** entera. Nada más |
 | 2 | **`T-02`**: ¿sobra el eslogan a rotulador del pie del menú? | un detalle de 2c·1. ▶ **Por defecto NO se pinta**: su norma es una vez por página, el hero ya lo gasta desde `#195`, y su propio informe dice que el del menú sobra. Ponerlo después cuesta una línea; quitarlo, una revisión |
 | 3 | **El idioma**: ¿se queda solo en el pie, o entra también en las cápsulas del menú? | una cápsula de 2c·1 |
-| 4 | **El glifo del botón de registro** cuando el parque tiene trámite externo (§4.7) | un icono de 2c·3 |
+| ~~4~~ | ~~**El glifo del botón de registro** cuando el parque tiene trámite externo~~ ✅ **CERRADO por construcción en la 2c·3** (§8.5): el icono sigue al DESTINO — portapapeles para el trámite externo del parque, `user-plus` para crear cuenta. Si el owner prefiere otra cosa, es un componente | — |
 
 ⚠️ **Y lo que NO es de este carril y sigue esperando**: la **pasada de navegador** de `#195` y
 `#196` — el hero entero y 19 elementos que perdieron su sombra. Esta tanda **cambia el mismo
@@ -622,7 +622,7 @@ Cada una deja el sitio navegable y se puede mirar en navegador por separado.
 | **2c·0** ✅ | **La red y la limpieza** — HECHA el 2026-08-27: `ArmazonContractTest` (10 casos) fija la conducta del armazón y **estrena red para el cajón móvil**, `ArmazonCssHasNoOrphansTest` deja fuera las 33 reglas muertas y las mantiene fuera. **15 mutaciones, las 15 muerden**, con control positivo | **No**, y está medido: cero apariciones de las once clases en el HTML servido de 16 páginas |
 | **2c·1** ✅ | **El menú a pantalla completa** — HECHA el 2026-08-27: sustituye a los dos desplegables, la barra pierde sus enlaces y la hamburguesa aparece en todos los anchos. El cajón de móvil **sigue intacto** por debajo de 1080 px, esperando el artboard | **Sí, y mucho.** Es la primera pantalla de las 12 vistas |
 | **2c·2** ✅ | **Los dos racimos** — HECHA el 2026-08-27: la barra se disuelve (sin fondo, sin desenfoque, sin línea), los dos racimos flotan en las esquinas, entra la coreografía en las 12 vistas y **el salto al contenido pasa de 1 de 12 a 12 de 12** | **Sí, en toda la web** |
-| **2c·3** | **La cuenta** — icono con **punto de aviso en amarillo, y nada cuando no hay aviso**; los glifos al set de iconos; el nombre accesible en texto | Sí, en la esquina |
+| **2c·3** ✅ | **La cuenta** — HECHA el 2026-08-27: icono redondo en todos los anchos, **punto en Amarillo Aviso y nada cuando no hay aviso**, tres glifos al set y el nombre accesible **en texto** | Sí, en la esquina |
 | **2c·4** | **MÓVIL** — `[PENDIENTE: owner]`, no se empieza sin artboard. Ya llega con dos cosas decididas: **manda la barra de abajo** y **arriba solo logotipo y hamburguesa** (§4.9) | — |
 
 ⚠️ **El orden importa y no es negociable**: si el racimo (2c·2) entrara antes que el menú
@@ -663,6 +663,49 @@ guardas de CSS aseveran **por regla**, así que retirar 33 reglas les quita **86
 (4.025 → 3.939, medido volviendo a poner el CSS y corriendo otra vez) y los tests nuevos aportan
 **87**. `17 694 − 86 + 87 = 17 695`. **Un contador que se mueve menos de lo esperado no es un
 contador roto hasta que no puedes explicar la diferencia.**
+
+### 8.5 Lo que la 2c·3 dejó hecho
+
+**El saludo visible se retira.** Sin barra detrás, el racimo son piezas del mismo tamaño y un
+botón que cambia de ancho con el nombre de cada visitante —«Hola, Marta» frente a «Hola,
+Wilhelmina»— desalinea la esquina entera. El icono pasa a redondo en **todos** los anchos (su
+versión circular vivía en un `@media` de móvil y se promueve a regla base).
+
+❗ **Lo único que no podía perderse es que el nombre accesible siguiera EN TEXTO.** El saludo
+visible **era** el nombre accesible del botón; al quedarse en icono, ese nombre solo existe en el
+`aria-label`. Hay guarda propia y su mutación muerde, y una segunda que impide que el texto
+visible vuelva sin ser prefijo del nombre —«label in name», WCAG 2.5.3—.
+
+**El punto pasa a Amarillo Aviso**, que es el mismo token con el que el panel pinta «tienes un
+formulario pendiente»: cabecera y panel dicen lo mismo con el mismo color.
+⚠️ **Y aquí sí es el significado del token, no decoración.** El CSS del producto tiene escrita
+una prohibición justo al lado —no usar `--ok`/`--err`/`--attn` para pintar la tira de marca,
+porque «un color semántico usado como decoración deja de significar lo que significa», con el
+hallazgo `C-04` del propio cliente detrás—. Este uso es el contrario: un aviso pintado con el
+color de aviso.
+▶ **Y «sin punto cuando no hay aviso» ya era el estado**: el punto siempre se renderizó bajo
+condición. Lo que cambia es el color, y que ahora hay guarda de las dos cosas.
+
+**Tres glifos al set de iconos** —«dibujos → el set» es uno de los tres mecanismos del tema, y un
+`<svg>` suelto en el marcado **no lo puede sustituir un cliente**—:
+· `menu` y `close`, **traslado exacto** desde el marcado del armazón: mismas coordenadas, mismo
+  grosor, mismo remate. Cero píxeles.
+· `user-plus`, nuevo, y **es la pareja declarada de `user`** por el propio sistema del cliente:
+  «misma cabeza y mismos hombros con el más separado abajo a la derecha».
+
+⚠️ **Y con él se cierra el pendiente 4 de §5, por construcción**: el botón de la esquina sirve a
+DOS destinos según la instalación. Si el parque tiene su propio **trámite de registro de acceso**
+(una URL externa), eso es un formulario y conserva el portapapeles; si no lo tiene, el botón
+**crea una cuenta** y lleva `user-plus`. **El icono sigue al destino, no a la posición del
+botón.** Guarda propia que monta las dos configuraciones.
+
+⚠️ **Los dos galones del selector de idioma se quedan dibujados en línea, a propósito.** El set ya
+tiene un galón, pero con otro trazo y otra caja: unificarlos **cambiaría el aspecto del PIE**, que
+no es de esta tanda. Están declarados como excepción en la guarda, y **la lista solo encoge**.
+
+▶ Un test de `CustomerAccountContextTest` perdió su sujeto (`nav__acct-greet`) y **no se retiró**:
+se sustituyó por la capacidad que sí importa —que el nombre accesible siga en texto—, y se dejó
+escrito dónde vive ahora la versión acotada al elemento.
 
 ### 8.4 Lo que la 2c·2 dejó hecho, y las dos veces que la spec se corrigió a sí misma
 

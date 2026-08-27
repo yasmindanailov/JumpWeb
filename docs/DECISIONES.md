@@ -10753,3 +10753,59 @@ es de **108 px** en las páginas `.page` y **96 px** en el hero — despeja en l
 carriles · suite **3086** verde (17.763 aserciones) · `test:js` **732** · Pint 937 · docs-check verde.
 ❗ **Falta la pasada de NAVEGADOR del owner**, y ahora son TRES tandas apiladas sobre el mismo
 terreno (`#195`, `#196`, `#201`, `#203`). Lo eligió él sabiendo el coste (`#200`).
+
+## #204 · 2026-08-27 · El ARMAZÓN, tanda 2c·3 — la cuenta se queda en ICONO, el punto pasa a Amarillo Aviso y tres glifos entran en el set
+
+**El saludo visible se retira** (`[DECIDIDO owner]`, `#200`). Sin barra detrás, el racimo son
+piezas del mismo tamaño y un botón que cambia de ancho con el nombre de cada visitante —«Hola,
+Marta» frente a «Hola, Wilhelmina»— desalinea la esquina entera. El icono pasa a redondo en
+**todos** los anchos: su versión circular vivía en un `@media` de móvil y se promueve a regla base.
+
+❗ **Lo único que no podía perderse es que el nombre accesible siguiera EN TEXTO.** El saludo
+visible **era** el nombre accesible del botón; al quedarse en icono, ese nombre solo existe en el
+`aria-label`. Hay guarda propia —y una segunda que impide que el texto visible vuelva sin ser
+prefijo del nombre, «label in name», WCAG 2.5.3—. Las dos mutaciones muerden.
+
+**El punto pasa a Amarillo Aviso** (`[DECIDIDO owner]`, `#200`, que corrigió el naranja/verde de la
+primera redacción): es el mismo token con el que el panel pinta «tienes un formulario pendiente»,
+así que **cabecera y panel dicen lo mismo con el mismo color**.
+⚠️ **Y aquí sí es el significado del token, no decoración.** El CSS tiene escrita una prohibición
+justo al lado —no usar `--ok`/`--err`/`--attn` para la tira de marca, porque «un color semántico
+usado como decoración deja de significar lo que significa», con el hallazgo `C-04` del propio
+cliente detrás—. Este uso es el contrario: un aviso pintado con el color de aviso.
+▶ **«Sin punto cuando no hay aviso» ya era el estado**: el punto siempre se renderizó bajo
+condición. Lo que cambia es el color — y que ahora hay guarda de las dos cosas.
+
+**Tres glifos al set de iconos.** «Dibujos → el set» es uno de los tres mecanismos del tema
+(`landing-white-label.md` §4.5) y **un `<svg>` suelto en el marcado no lo puede sustituir un
+cliente**, por bien dibujado que esté:
+· `menu` y `close`: **traslado exacto** desde el armazón —mismas coordenadas, mismo grosor, mismo
+  remate—. Cero píxeles.
+· `user-plus`: nuevo, y **es la pareja declarada de `user`** por el sistema del cliente, que lo
+  describe con estas palabras: «misma cabeza y mismos hombros con el más separado abajo a la
+  derecha».
+
+✅ **Con él se cierra el pendiente 4 de la spec, por construcción.** El botón de la esquina sirve a
+DOS destinos según la instalación: si el parque tiene su **trámite de registro de acceso** (una URL
+externa), eso es un formulario y conserva el portapapeles; si no lo tiene, el botón **crea una
+cuenta** y lleva `user-plus`. **El icono sigue al DESTINO, no a la posición del botón** — con un
+solo glifo, el trámite del parque quedaría etiquetado como si fuera un alta de cuenta. Guarda que
+monta las dos configuraciones.
+
+⚠️ **Los dos galones del selector de idioma se quedan en línea, a propósito**: el set ya tiene un
+galón, pero con otro trazo y otra caja, y unificarlos **cambiaría el aspecto del PIE**, que no es
+de esta tanda. Declarados como excepción en la guarda de dibujos sueltos, y **la lista solo
+encoge**.
+
+▶ Un test de `CustomerAccountContextTest` perdió su sujeto (`nav__acct-greet`) y **no se retiró**:
+se sustituyó por la capacidad que sí importa —el nombre accesible en texto— con el puntero a dónde
+vive ahora la versión acotada al elemento. `CONVENCIONES §3.quater`.
+
+`specs/armazon-y-menu.md` §8.5 · `nav.blade.php` · `public/css/site.css` ·
+`resources/views/components/icons/{menu,close,user-plus}.blade.php` (nuevos) ·
+`ArmazonContractTest` (**25 casos**) · `CustomerAccountContextTest`.
+**8 mutaciones, las 8 muerden**, con verificación de anclas y control positivo · suite **3090**
+verde (17.766 aserciones) · `test:js` 732 · Pint 937 · docs-check verde.
+❗ **Con esto el armazón de escritorio está COMPLETO.** Lo que queda de la 2c es la **2c·4, el
+MÓVIL**, y sigue bloqueada por el artboard del owner. Y siguen sin mirarse en navegador `#195`,
+`#196`, `#201`, `#203` y ésta.

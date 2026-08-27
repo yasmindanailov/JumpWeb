@@ -232,27 +232,35 @@
    sidebar de compra. Este «chip» (saludo + icono) solo abre ese panel; el puntito avisa de un
    formulario pendiente. No es un `.lang-dd`, así que se muestra también en móvil (allí el saludo
    se mantiene, compactado). */
+/* ⚠️ **Icono redondo en TODOS los anchos desde la tanda 2c·3.** Era un chip con el saludo
+   visible y la versión circular vivía en un `@media` de móvil; al retirarse el saludo
+   (`[DECIDIDO owner]`) el chip se quedaba sin contenido variable, y en un racimo de piezas
+   flotantes un botón que cambia de ancho con el nombre de cada visitante desalinea la esquina
+   entera. El nombre accesible sigue en TEXTO, en el `aria-label`. */
 .nav__acct {
-    display: inline-flex; align-items: center; gap: 8px;
-    min-height: var(--tap-min);   /* Lote 9: objetivo táctil (el contenido se centra) */
-    padding: 7px 12px 7px 14px;
-    border: 1px solid var(--line); border-radius: var(--r-btn);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: var(--tap-min); height: var(--tap-min);   /* Lote 9: objetivo táctil, y círculo, no óvalo */
+    padding: 0;
+    border: 1px solid var(--line); border-radius: 50%;
     background: var(--bg-card); color: var(--fg); cursor: pointer;
     transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 .nav__acct:hover { background: var(--bg-soft); border-color: var(--fg); color: var(--zone-1); }
 .nav__acct:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.nav__acct-greet {
-    font-family: var(--font-body); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.02em; white-space: nowrap;
-}
 .nav__acct-icon {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
 }
+/* ⚠️ **Amarillo Aviso, y aquí SÍ es su significado.** El punto dice «tienes algo pendiente», que
+   es exactamente lo que ese token nombra, y es el mismo color con el que el panel pinta ese mismo
+   aviso: cabecera y panel dicen lo mismo con el mismo color. No es el caso que la tira de marca
+   prohíbe unas líneas más abajo —allí sería un color semántico usado como DECORACIÓN—.
+   ▶ Y no hay punto «de reposo»: la ausencia ya significa que no hay nada, y no gasta un color de
+   estado. Con dos puntos que solo cambian de tono, quien no discrimina ese par ve «un punto» en
+   los dos casos y el color deja de informar. */
 .nav__acct-dot {
     position: absolute; top: -4px; right: -4px; width: 9px; height: 9px;
-    border-radius: 50%; background: var(--zone-1); border: 2px solid var(--bg-card);
+    border-radius: 50%; background: var(--attn); border: 2px solid var(--bg-card);
 }
 
 /* ---------- páginas de texto (legales, normas) ---------- */
@@ -2573,20 +2581,10 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 
 /* ===================== #216 — detalles transversales ===================== */
 
-/* (4) Acceso a la cuenta en MÓVIL: el chip `.nav__acct` (#221) no es un `.lang-dd`, así que se
-   muestra por defecto en la barra superior también en móvil — con el saludo «Hola, nombre»
-   incluido. Lo compactamos (fuente menor + elipsis de seguridad para nombres largos) para que
-   no compita con el CTA «Reservar» ni el botón de menú. */
-/* #231 p7 / #232: en móvil el chip de cuenta queda SOLO con el icono (+ punto naranja si hay
-   algo pendiente). El saludo «Hola, nombre» se oculta para ganar espacio; el nombre accesible
-   lo aporta el `aria-label` del botón (ver nav.blade). Breakpoint 720px = el MISMO al que el CTA
-   filled pasa a su modo móvil (sin zona muerta 720-768; revisión #232). */
-@media (max-width: 720px) {
-    /* Icon-only en móvil → CÍRCULO de 44px (no óvalo): el `min-height` táctil del Lote 9 sobre
-       un chip estrecho lo estiraba en vertical; fijamos ancho = alto y radio 50%, icono centrado. */
-    .nav__acct { width: var(--tap-min); height: var(--tap-min); padding: 0; gap: 0; justify-content: center; border-radius: 50%; }
-    .nav__acct-greet { display: none; }
-}
+/* ⚠️ Aquí vivía la compactación del chip de cuenta en móvil —icono solo, saludo oculto— y **se
+   retiró en la tanda 2c·3**: el saludo visible ya no existe en ningún ancho y el icono redondo
+   pasó a ser la regla base, así que este bloque se quedó sin nada que decir. El nombre accesible
+   lo sigue aportando el `aria-label` del botón. */
 
 /* (6a) Ghost CTA «Registro» con subtítulo bajo la etiqueta (sistema externo). */
 .cta-ghost--stack { align-items: center; }

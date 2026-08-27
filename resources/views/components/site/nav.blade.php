@@ -97,9 +97,14 @@
                      el `<button>` de antes esos tres casos no hacían nada.
                      ⚠️ La clase no cambia y el CSS ya la soporta sobre un ancla: la rama de al lado
                      —el registro externo del parque— lleva usándola así desde `#216`. --}}
+                {{-- ⚠️ **El glifo sigue al DESTINO, no a la posición del botón** (tanda 2c·3): esta
+                     rama CREA UNA CUENTA, así que lleva la pareja de `user`. La rama de arriba —el
+                     trámite de registro de acceso del parque, una URL externa— es un formulario y
+                     conserva el portapapeles. Con un solo glifo para las dos, el trámite quedaría
+                     etiquetado como si fuera un alta de cuenta. --}}
                 <a href="{{ route('registro') }}" class="cta-ghost nav-cta-ghost"
                    x-on:click="$store.purchase.openAccount($event, 'register')">
-                    <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
+                    <span class="cta-ghost__ico"><x-icons.user-plus /></span>
                     <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
                     <span class="cta-ghost__arrow" aria-hidden="true">→</span>
                 </a>
@@ -115,8 +120,16 @@
                  nombre accesible lo da el `aria-label` (incluye el aviso de formulario pendiente);
                  el saludo visible es un PREFIJO del aria-label → cumple WCAG 2.5.3 (label in name). --}}
             @php($acctLabel = __('account.nav.hello', ['name' => $acct['firstName']]).($acct['hasPendingForm'] ? ' · '.__('account.nav.pending_form') : ''))
+            {{-- ⚠️⚠️ **El saludo visible SE RETIRA** (tanda 2c·3, `[DECIDIDO owner]`): sin barra
+                 detrás, el racimo son piezas del mismo tamaño y un chip con texto variable —«Hola,
+                 Marta» frente a «Hola, Wilhelmina»— cambia de ancho con cada visitante. El nombre
+                 accesible **sigue estando en TEXTO** en el `aria-label`, que es lo que no se puede
+                 perder: era el nombre accesible del botón y lo sigue siendo.
+                 ⚠️ Y el punto de aviso pasa a **Amarillo Aviso**: es el mismo color con el que el
+                 panel pinta «tienes un formulario pendiente», así que cabecera y panel dicen lo
+                 mismo con el mismo color. Sin aviso NO HAY PUNTO — la ausencia ya significa
+                 reposo y no gasta un color de estado (`armazon-y-menu.md` §4.3). --}}
             <button type="button" class="nav__acct" @click="$store.purchase.open()" aria-label="{{ $acctLabel }}">
-                <span class="nav__acct-greet">{{ __('account.nav.hello', ['name' => $acct['firstName']]) }}</span>
                 <span class="nav__acct-icon" aria-hidden="true">
                     <x-icons.user />
                     @if ($acct['hasPendingForm'])
@@ -151,9 +164,7 @@
         </button>
 
         <button class="nav__burger" x-ref="burger" @click="menuOpen = true" aria-label="{{ __('landing.nav.menu_open') }}">
-            <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
-                <path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
+            <x-icons.menu />
         </button>
     </div>
 </nav>
@@ -173,7 +184,7 @@
                 <span class="nav__brand-row">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
             </span>
             <button class="mob-menu__close" @click="menuOpen = false" aria-label="{{ __('landing.nav.menu_close') }}">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+                <x-icons.close />
             </button>
         </div>
 

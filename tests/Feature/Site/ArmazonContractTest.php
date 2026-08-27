@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -647,6 +648,118 @@ class ArmazonContractTest extends TestCase
 
         $chip = $this->nodes($member, 'nav__acct')[0];
         $this->assertNotSame('', $chip->getAttribute('aria-label'), 'el chip de cuenta se queda sin nombre accesible');
+    }
+
+    /**
+     * **El botón de cuenta conserva su nombre accesible EN TEXTO, y el aviso también.**
+     *
+     * ❗ Es lo único que no podía perderse al retirar el saludo visible (tanda 2c·3): el texto
+     * «Hola, nombre» **era** el nombre accesible del botón. Al quedarse en icono, ese nombre solo
+     * existe en el `aria-label` — si alguien lo borra «porque el icono ya se entiende», el botón
+     * se queda mudo para quien no ve el icono, y no falla nada.
+     * ▶ Y el aviso de formulario pendiente tiene que estar **en el nombre, no solo en el color**:
+     * un punto amarillo no lo lee nadie.
+     */
+    public function test_the_account_button_keeps_its_accessible_name_in_text(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now(), 'name' => 'Marta']);
+        $html = $this->actingAs($user)->get('/')->assertOk()->getContent();
+
+        $chip = $this->nodes($html, 'nav__acct')[0];
+
+        $this->assertStringContainsString(
+            'Marta', $chip->getAttribute('aria-label'),
+            'el nombre accesible del botón de cuenta ya no dice de quién es la cuenta',
+        );
+
+        $this->assertSame(
+            '', trim($chip->textContent),
+            'el botón de cuenta ha recuperado texto visible: si vuelve, tiene que ser PREFIJO del '.
+            'nombre accesible o incumple «label in name» (WCAG 2.5.3)',
+        );
+    }
+
+    /**
+     * **El glifo del botón de alta sigue al DESTINO, no a la posición del botón.**
+     *
+     * El mismo botón de la esquina sirve a dos destinos según la instalación: si el parque tiene
+     * su propio **trámite de registro de acceso** (una URL externa configurada en el panel), eso
+     * es un formulario y lleva portapapeles; si no lo tiene, el botón **crea una cuenta** y lleva
+     * la pareja de `user`. Con un solo glifo para las dos, el trámite del parque quedaría
+     * etiquetado como si fuera un alta de cuenta — y son cosas distintas para el visitante.
+     */
+    public function test_the_signup_glyph_follows_the_destination(): void
+    {
+        $interno = $this->get('/')->assertOk()->getContent();
+        $this->assertCount(1, $this->nodes($interno, 'user-plus-ico'), 'el alta de CUENTA no lleva su glifo');
+
+        Setting::updateOrCreate(
+            ['key' => 'registration.url'],
+            ['value' => 'https://registro.ejemplo.test/alta', 'group' => 'registration'],
+        );
+        Setting::flushMemo();
+        Cache::flush();
+
+        $externo = $this->get('/')->assertOk()->getContent();
+        $this->assertCount(0, $this->nodes($externo, 'user-plus-ico'), 'el TRÁMITE externo lleva el glifo de crear cuenta');
+        $this->assertNotEmpty($this->nodes($externo, 'cta-ghost__ico'), 'el trámite externo se ha quedado sin glifo');
+    }
+
+    /**
+     * **El armazón no dibuja glifos EN LÍNEA, salvo los que la lista declara.**
+     *
+     * «Dibujos → el set de iconos» es uno de los tres mecanismos del tema
+     * (`landing-white-label.md` §4.5): un `<svg>` suelto en el marcado **no lo puede sustituir un
+     * cliente**, por muy bien dibujado que esté. La tanda 2c·3 se llevó al set la hamburguesa y
+     * el aspa de cerrar.
+     *
+     * ⚠️ **Los dos galones del selector de idioma se quedan a propósito, y por eso están en la
+     * lista**: el set ya tiene un galón, pero con otro trazo y otra caja, así que unificarlos
+     * **cambiaría el aspecto del PIE**, que no es de esta tanda. **La lista solo encoge.**
+     */
+    public function test_the_armazon_draws_no_inline_glyphs(): void
+    {
+        /** @var array<string, string> */
+        $permitidos = [
+            'menu.blade.php' => 'el galón del selector de idioma: el del set tiene otro trazo y otra caja, y unificarlo movería el pie',
+            'footer.blade.php' => 'ídem, su gemelo en el pie',
+        ];
+
+        $sueltos = [];
+
+        foreach (['nav', 'menu', 'footer'] as $componente) {
+            $fichero = $componente.'.blade.php';
+            $source = (string) file_get_contents(resource_path('views/components/site/'.$fichero));
+            $cuantos = preg_match_all('/<svg\b/', $source);
+            $tolerados = isset($permitidos[$fichero]) ? 1 : 0;
+
+            if ($cuantos > $tolerados) {
+                $sueltos[] = $fichero.': '.$cuantos.' (tolerados '.$tolerados.')';
+            }
+        }
+
+        $this->assertSame(
+            [], $sueltos,
+            "el armazón vuelve a dibujar glifos en línea:\n  ".implode("\n  ", $sueltos)."\n".
+            'Al set de iconos: un dibujo suelto en el marcado no lo puede sustituir un cliente.',
+        );
+    }
+
+    /**
+     * **El punto de aviso es Amarillo Aviso, y solo aparece cuando hay algo que avisar.**
+     *
+     * ⚠️ Se comprueba en la HOJA porque el color es donde vive la decisión: el mismo token con el
+     * que el panel pinta «tienes un formulario pendiente», de modo que cabecera y panel dicen lo
+     * mismo con el mismo color. Que el punto solo se pinte con aviso lo cubre
+     * `CustomerAccountContextTest`, que tiene los dos fixtures.
+     */
+    public function test_the_pending_dot_uses_the_warning_token(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/background:\s*var\(--attn\)/', $this->ruleBody('.nav__acct-dot'),
+            'el punto de aviso no usa el token de aviso: cabecera y panel dirían lo mismo con '.
+            'colores distintos',
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

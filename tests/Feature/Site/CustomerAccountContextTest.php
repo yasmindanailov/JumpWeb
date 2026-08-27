@@ -463,8 +463,14 @@ class CustomerAccountContextTest extends TestCase
 
         $this->actingAs($user)->get(route('account'))
             ->assertOk()
-            ->assertSee('Hola, Mara')                       // saludo (chip del nav + bloque del sidecart)
-            ->assertSee('nav__acct-greet', false)           // «Hola, nombre» junto al icono del nav
+            ->assertSee('Hola, Mara')                       // saludo (bloque del sidecart)
+            // ⚠️ **`nav__acct-greet` se RETIRÓ el 2026-08-27** (armazón · tanda 2c·3, `DECISIONES
+            // #203+`): el saludo VISIBLE del chip del nav desaparece por decisión del owner —sin
+            // barra detrás, un botón que cambia de ancho con el nombre de cada visitante desalinea
+            // el racimo—. Lo que NO podía perderse es que el nombre accesible siguiera **en
+            // texto**, y eso se asevera aquí abajo y, acotado al elemento, en
+            // `ArmazonContractTest::the_account_button_keeps_its_accessible_name_in_text`.
+            ->assertSee('aria-label="Hola, Mara', false)    // el nombre accesible, en TEXTO
             ->assertSee('nav__acct-icon', false)            // icono de cuenta en el nav
             ->assertSee('nav__acct-dot', false)             // puntito (hay form pendiente)
             // ⚠️ El SUELO del hueco: la única salida de sesión servida de la aplicación (§4.8).

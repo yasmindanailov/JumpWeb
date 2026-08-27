@@ -253,11 +253,13 @@
 >   ⚠️ **Y una que despista**: `mockup_playjumppark/` (el canvas del 2.º cliente) está **gitignorada y
 >   excluida del `rsync`** (`DECISIONES #1`), así que **en tu máquina no existe** aunque la doc la
 >   cite. La receta para regenerarla con el MCP `DesignSync` está en la **§1 de la spec del tema**.
->   ▶ **Siguiente de este carril**: la **tanda 2c·3, la cuenta** (icono con punto de aviso en
->   amarillo, los glifos al set de iconos). Las **2c·0, 2c·1 y 2c·2** están EN EL ÁRBOL (`#200`,
->   `#201`, `#203`): la red del armazón, 66 reglas de CSS fuera, **el menú a pantalla completa**
->   sustituyendo a los dos desplegables, y **la barra DISUELTA en dos racimos flotantes** con el
->   salto al contenido en las 12 vistas. El móvil sigue con su cajón intacto.
+>   ❗❗ **El armazón de ESCRITORIO está COMPLETO**: 2c·0 (`#200`), 2c·1 (`#201`), 2c·2 (`#203`) y
+>   2c·3 (`#204`) en el árbol y verdes — la red, 66 reglas de CSS fuera, **el menú a pantalla
+>   completa**, **la barra DISUELTA en dos racimos**, el salto al contenido en las 12 y la cuenta en
+>   icono con su punto de aviso. ▶ **Lo que queda de la 2c es la 2c·4, el MÓVIL, y la bloquea el
+>   ARTBOARD DEL OWNER**: hasta que exista, el cajón lateral sigue intacto por debajo de 1080 px.
+>   ▶ **Siguiente de agente en este carril si el owner no sube el artboard**: la tanda **2d, el
+>   MOVIMIENTO** (237 declaraciones, 48 duraciones, 20 curvas; el sistema declara 7 y 4).
 >   ▶ **Contestación al carril A (2026-08-27, noche)**: recibido el aviso de la tanda 4. **La 2c·2 NO
 >   ha tocado `layout.blade.php`** —ni lo tocará la 2c·3—, así que no hay choque. Lo que sí ha
 >   cambiado el carril C y conviene que sepas: `nav.blade.php` y `menu.blade.php` (el armazón entero),
@@ -298,7 +300,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#203`**.
+> El último usado es **`#204`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -402,9 +404,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3086 en verde** (17.763 aserciones, `--parallel` **~58 s** medidos el 2026-08-27 por la noche
+- Suite **3090 en verde** (17.766 aserciones, `--parallel` **~58 s** medidos el 2026-08-27 por la noche
   en la máquina del carril C; ~68 s en la del A, ~42 s en la del B) ·
-  ▶ **+4 tests PHP en el último corte** (carril C, armazón · tanda **2c·2**, los dos racimos):
+  ▶ **+4 tests PHP en el último corte** (carril C, armazón · tanda **2c·3**, la cuenta): que el
+  botón conserve su nombre accesible **en texto** —era el saludo visible, y al quedarse en icono
+  solo vive en el `aria-label`—, que el texto visible no vuelva sin ser prefijo del nombre, que el
+  punto use el token de aviso, que el glifo del alta siga al DESTINO (trámite externo vs crear
+  cuenta) y que el armazón **no dibuje glifos en línea**. **8 mutaciones, las 8 muerden.** Antes:
+  ▶ **+4 tests PHP** (carril C, armazón · tanda **2c·2**, los dos racimos):
   el salto al contenido en las 12 y aterrizando, que **todos** los `<main>` lleven el ancla —no solo
   el primero, que es el defecto que se cazó—, que la barra se haya disuelto de verdad (sin fondo,
   sin desenfoque, sin línea, y con los clics renunciados en el contenedor y recuperados en los
@@ -720,11 +727,12 @@ tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la 
 sigue parado es el CONTENIDO (la tanda B de `landing-white-label.md`: `testimonials` y el copy al
 CMS), no el tema.
 
-▶ **Por dónde retoma el carril C**: la **tanda 2c·3, la cuenta** —el icono con punto de aviso en
-**Amarillo Aviso cuando hay algo pendiente y sin punto cuando no lo hay** (`[DECIDIDO owner]`,
-corrige el naranja/verde de la primera redacción), los glifos al set de iconos y el nombre accesible
-en texto—. Las tandas **2c·0** (`#200`), **2c·1** (`#201`) y **2c·2** (`#203`) están **en el árbol y
-verdes**: la barra está **disuelta** en dos racimos flotantes y el salto al contenido llega a las 12.
+▶ **Por dónde retoma el carril C**: **el armazón de ESCRITORIO está COMPLETO** —2c·0 (`#200`),
+2c·1 (`#201`), 2c·2 (`#203`) y 2c·3 (`#204`), las cuatro en el árbol y verdes—. Lo que queda de la
+2c es la **2c·4, el MÓVIL**, y la bloquea el **artboard del owner**: hasta que exista, el cajón
+lateral sigue intacto por debajo de 1080 px. ▶ Si el artboard no llega, lo siguiente de agente es
+la tanda **2d, el MOVIMIENTO** (medido: 237 declaraciones, 48 duraciones y 20 curvas; el sistema
+del cliente declara 7 y 4).
 ⚠️⚠️ **La 2c·2 corrigió DOS VECES a su propia spec y las correcciones van delante del texto que
 corrigen**: `M-05` **ya estaba cumplido** —nuestro mobiliario perdió la sombra en `#196`, así que lo
 que hacía falta era lo contrario: darle a las piezas con qué sostenerse— y la coreografía «nace
