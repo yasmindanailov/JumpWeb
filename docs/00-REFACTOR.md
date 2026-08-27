@@ -2320,7 +2320,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **tandas 1 y 2a CERRADAS · 2b con sus pasos 1 y 2 hechos**
+### La CAPA DE TEMA 🟦 — **tandas 1, 2a y 2b CERRADAS · falta el ojo del owner y el MENÚ (2c)**
 
 > Spec: `specs/tema-por-instalacion.md` (empieza por **§1.7** si vas a la 2b, por **§10** si quieres
 > saber cómo quedó la forma) · Decisiones `#192` y `#193`.
@@ -2398,7 +2398,30 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       coreografía **no**. El paso 2 es terreno firme; el 3 es el único de toda la capa que copia
       algo no normativo.
       ❗ **Nadie ha MIRADO el hero**: esta máquina no tiene navegador headless.
-- [ ] **2b · paso 3** — la FORMA del hero y su coreografía, **y la escala de sombra**. `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
+- ✅ **2b · paso 3 — el hero adopta la ESTRUCTURA del mockup** (2026-08-27, `#195`).
+      `[DECIDIDO owner]`: «en el mockup el CTA sale DESPUÉS del hero; en el hero no hay CTA, solo
+      texto y el vídeo». El hero queda **eslogan → titular → estado**, es una **tarjeta** con
+      margen y radio (no un sangrado) y **encoge al bajar**. Comprar se ofrece en el nav y en la
+      barra de móvil, con su anclaje «desde X €» intacto.
+      ❗ **La duda del sentinel que paraba este paso se resolvió con la propia decisión**: sin CTA
+      en el hero, `.hero__stage-bottom` —el elemento que dos comportamientos de COMPRA observaban—
+      desaparece. Ahora hay un `.hero__sentinel` propio, vacío y fuera del `sticky`. ▶ Que aquello
+      funcionara era una **coincidencia**, y una coincidencia sostiene hasta que algo se mueve.
+      ▶ **El JS publica UNA custom property (`--hero-p`) y no decide nada de diseño**: los dos
+      estados los define el CSS con `calc()`. El mockup lo hace al revés (estilos inline desde JS)
+      y copiarlo habría dejado los números del efecto en el único sitio que un cliente no puede
+      tocar. En móvil **solo cambian cuatro tokens**, ni una regla.
+      ▶ Robustez: `prefers-reduced-motion` no monta el componente **y** el CSS pone el recorrido a
+      0 (si no, quedaría una pantalla de scroll vacío); scroll `passive` en un `rAF`; no escribe si
+      el valor no cambia; `100svh` tras `100vh`.
+      ⚠️⚠️ **Lo que costó: el test re-apuntado NO fijaba nada.** Se auditó por sujeto
+      (`CONVENCIONES §3.quater`) y se re-apuntó a la barra de móvil… pero `assertSee('cta-prime')`
+      casaba con `cta-prime__ico` y `assertSeeText('desde X')` lo satisfacía **el CTA del NAV**,
+      que dice el mismo texto con otra clave. Dos mutaciones pasaban. Acotado al botón real,
+      **4 de 4 muerden**.
+      ❗ **Falta la pasada de NAVEGADOR**, y aquí pesa: este paso SÍ cambia la primera pantalla.
+- [ ] **2b.bis · La escala de SOMBRA** — ahora se puede decidir, porque el hero ya pide sombras
+      concretas (§10.3: ninguna extraíble sin mover 35 de 55 y 125 px de blur). `[DECIDIDO owner]`: el producto adopta la **ESTRUCTURA** del mockup, **neutra en
       valores**. **Aquí el producto SÍ cambia de aspecto de verdad**: su red es el ojo en navegador.
       ▶ La sombra entra aquí porque **no hay escala extraíble sin coste**: probadas de 3 a 6
       escalones, la mejor mueve **35 de 55 y 125 px de blur**. Crearla es decidirla.

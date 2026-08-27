@@ -10276,3 +10276,62 @@ mutación que muerde) · suite **3044** verde · Pint 932.
 ❗ **Y falta MIRARLO**: esta máquina no tiene navegador headless, así que la promesa de «cero
 píxeles» está verificada por aritmética pero **nadie ha visto el hero**. §11.4 es la prueba de que
 un barrido incompleto puede jurar que todo está bien.
+
+## #195 · 2026-08-27 · La capa de TEMA, tanda 2b paso 3 — el hero adopta la estructura del mockup y PIERDE su CTA
+`[DECIDIDO owner, 2026-08-27]`, con sus palabras: «en el mockup el CTA sale **después** del hero;
+en el hero no hay CTA, solo texto y el vídeo. Hazlo igual que el mockup, de manera profesional. Si
+valoras cambiar algo por profesionalidad y robustez lo haremos, **pero el mockup es el que manda**;
+después iteraremos».
+
+❗ **La decisión resolvió sola la duda que bloqueaba este paso.** `#194` lo dejó parado porque
+`.hero__stage-bottom` no era solo donde vivía el CTA del hero: era el **sentinel** que dos
+comportamientos de COMPRA observan para saber cuándo mostrar sus botones, y meterlo en `sticky`
+habría cambiado ese momento. ▶ Al decidir que el hero no lleva CTA, ese elemento **desaparece**: el
+sentinel había que darlo igual. Ahora es `.hero__sentinel`, vacío y **fuera del `sticky`**.
+⚠️ **La lección es de arquitectura**: que aquello funcionara era una **coincidencia** —el sitio
+donde acababa el botón coincidía con el sitio donde queríamos que aparecieran los otros dos—, y una
+coincidencia sostiene hasta que algo se mueve, sin avisar.
+
+**Lo que entró:** el hero pierde su CTA y queda **eslogan → titular → estado** · entra el eslogan
+(`landing.hero.kicker` en es/en/fr) con **`--font-accent`**, el CUARTO rol tipográfico —por defecto
+igual a `--font-display`, así que el producto no cambia de familia por declararlo— · el punto de
+«Abierto ahora» pasa a `--ok` (es el hallazgo `C-04` del cliente: un estado no se pinta con el
+color de un botón) · el hero deja de ir a sangre y es una **tarjeta** con margen y `var(--r-lg)`,
+desapareciendo el `border-radius: 0` que lo anulaba a mano · y la **coreografía**: el escenario se
+queda `sticky` y la caja encoge en 420 px de scroll.
+
+▶ **El acceso a comprar NO se pierde**: lo dan el CTA del nav —que aparece al pasar el hero— y la
+barra flotante de móvil, las dos con el anclaje «desde X €» intacto.
+
+⚠️ **DECISIÓN DE ARQUITECTURA que merece defenderse: el JS no decide diseño.** `heroChoreo` publica
+**una** custom property, `--hero-p` (0→1); los dos estados los define el CSS con `calc()`. El
+mockup lo hace al revés —escribe estilos inline desde JS en cada frame—, y copiarlo habría dejado
+los números del efecto **en el único sitio que un paquete de cliente no puede tocar**. Toda esta
+capa existe para que el tema sea configurable; una excepción escondida en un `.js` la contradice.
+▶ Se nota en el móvil: ahí **solo cambian cuatro tokens**, ni una regla. Antes había un
+`height: 80vh` y un `padding-top: 69px` que sobreescribían la estructura.
+▶ Robustez: `prefers-reduced-motion` no monta el componente **y** el CSS pone el recorrido a 0 —si
+no, quedaría una pantalla de scroll vacío—; scroll `passive` coalescido en un `rAF`; no escribe si
+el valor redondeado no cambia; y `100svh` declarado tras `100vh`, porque en móvil `vh` cuenta la
+barra del navegador y el hero se salía por abajo.
+
+⚠️⚠️ **LO QUE COSTÓ: el test re-apuntado NO fijaba nada, y solo se supo mutando.** Al retirar el CTA
+cayó `test_hero_uses_cta_prime_structure_with_subtitle`. Se auditó por **sujeto**
+(`CONVENCIONES §3.quater`): el sujeto se va, la regla —«el visitante ve un botón de comprar con el
+precio anclado»— **sobrevive** en la barra de móvil, y se re-apuntó. **Pero el test re-apuntado
+pasaba dos mutaciones que debían matarlo**: `assertSee('cta-prime')` casa con `cta-prime__ico`, y
+`assertSeeText('desde 7,90 €')` lo satisfacía **el CTA del NAV**, que dice el mismo texto con otra
+clave de idioma. Acotado al botón real —recortando por su **cierre de etiqueta**, no por una ventana
+de caracteres— **4 de 4 muerden**. ▶ Es literalmente el aviso de §3.quater: «si un dato viaja al
+cliente y su único test conduce la superficie vieja, el contrato NO lo está fijando».
+⚠️ Y una mutación mal diseñada que vale la pena anotar: renombrar la clase a `hero__kicker-NO`
+**no mata** un `assertStringContainsString('hero__kicker')` — sigue siendo subcadena. Para probar
+una ausencia hay que **retirar el elemento**, no renombrarlo.
+
+Verificado además por aritmética en tres viewports (no hay navegador headless aquí): 1440×900 pasa
+de 1420×880 a 1240×660 · 1280×800 de 1260×780 a 1224×624 · móvil 390×844 de 370×824 a 366×520. En
+los tres encoge y el estado final deja hueco al nav.
+
+`specs/tema-por-instalacion.md` §12 · suite **3045** verde · Pint 932 · bundle +0,85 KiB.
+❗ **Falta la pasada de NAVEGADOR del owner, y aquí pesa más que nunca**: este paso SÍ cambia el
+aspecto de la primera pantalla.

@@ -129,7 +129,7 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> · 🆕 **Agente C (el TEMA) → tandas 1, 2a y los DOS PRIMEROS PASOS de la 2b, empujados el 2026-08-27 (`#192`, `#193`, `#194`).**
+> · 🆕 **Agente C (el TEMA) → tandas 1, 2a y la 2b COMPLETA, empujadas el 2026-08-27 (`#192`, `#193`, `#194`, `#195`).**
 >   Hay un **TERCER carril**, por encargo del owner: la capa de tema
 >   (`specs/tema-por-instalacion.md`). La tanda 1 —las dos superficies como ámbito, `--sheet`, los dos
 >   grises, los tintes, 21 radios y las fuentes por instalación— está hecha, verificada y en `main`.
@@ -316,7 +316,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3044 en verde** (17.543 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
+- Suite **3045 en verde** (17.551 aserciones, `--parallel` **~91 s** medidos el 2026-08-27 en la
   máquina del carril C; ~42 s en la del B) ·
   ▶ **+9 tests PHP en el último corte** (`#193`, capa de tema · tanda **2a**): `ShapeScaleTest`.
   **13 mutaciones, las 13 muerden** — pero solo después de arreglar el arnés. ⚠️⚠️ **El arnés de
@@ -584,39 +584,45 @@ lo que queda de cada carril está abajo, y es distinto en cada uno.
 |---|---|
 | **A · menores** | Las **cinco decisiones** de `specs/menores-a-cargo.md` §9.5. La primera (**NUC-3**) bloquea su tanda 2 |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗ **UNA DECISIÓN DE PRODUCTO que bloquea el paso 3 de la 2b**: la coreografía del hero pone el stage en `sticky`, y ahí vive el **sentinel de los DOS CTAs de compra** (el del nav en escritorio y la barra flotante de móvil). Tres opciones con su coste en `specs/tema-por-instalacion.md` **§11.5**; recomendada la **B**. ▶ Y la pasada de **NAVEGADOR** sobre lo ya hecho: las 11 declaraciones que la 2a mueve (§10.2), la **tira del pie** y **el hero**, que nadie ha visto todavía. ▶ Para la tanda 3, **cuál de las dos variantes de «El parque»** se queda |
+| **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ahora pesa más que nunca**: el paso 3 de la 2b (`#195`) **SÍ cambia el aspecto de la primera pantalla** —el hero pierde su CTA, gana un eslogan, pasa a ser una tarjeta con margen y ENCOGE al bajar—, y esta máquina no tiene navegador headless: lo verificado es aritmética y estructura, **no vista**. ▶ El owner ya validó lo de la 2a (hero igual, tira correcta, esquinas). ▶ **Lo siguiente que él anunció**: el MENÚ («cambia totalmente») y cómo se comporta en MÓVIL, que guiará él. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»** se queda |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1 y 2a** en `main`. Lo que sigue parado es el CONTENIDO (la tanda B de
 `landing-white-label.md`: `testimonials` y el copy al CMS), no el tema.
 
-▶ **Por dónde retoma el carril C** (`specs/tema-por-instalacion.md` §11.5 y §11.6): el **paso 3
-de la 2b** —la FORMA del hero (tarjeta con margen en vez de a sangre) y su COREOGRAFÍA de scroll—
-y, con él, la **escala de sombra**.
-❗❗ **Pero NO se empieza sin una decisión del owner, y no es de pintura.** Medido: la coreografía
-pone el `.hero__stage` en `position: sticky`, y ahí dentro vive `.hero__stage-bottom`, que **no es
-solo donde está el CTA del hero: es el SENTINEL de otros dos** —el botón «Comprar entradas» del nav
-en escritorio y la barra flotante de reserva en móvil, los dos con `IntersectionObserver` y escritos
-para que hero y CTA nunca sean co-visibles—. Un elemento dentro de un sticky **no abandona el
-viewport mientras el sticky sigue pegado**, así que **el momento en que se le ofrece comprar al
-visitante dejaría de ser el que alguien diseñó**. Tres opciones con su coste en la spec **§11.5**;
-recomendada la **B** (sentinel propio, invisible, fuera del sticky).
-▶ **Y con la 2b entra la sombra, que sale con su número**: no hay escala extraíble sin coste —la
-mejor de 6 escalones mueve **35 de 55 y 125 px de blur**—, así que **crearla es decidirla**.
+▶ **Por dónde retoma el carril C** (`specs/tema-por-instalacion.md` §12.5): la **tanda 2c, el
+MENÚ** —spec propia; el owner ya avisó de que «cambia totalmente» y de que guiará cómo se comporta
+en MÓVIL— y **la escala de sombra**, que por fin se puede decidir porque el hero ya pide sombras
+concretas (§10.3: ninguna extraíble sin mover 35 de 55 y 125 px de blur).
 
-✅ **Lo que la 2b YA dejó hecho** (`#194`): el hero **declara `data-surface="ink"`** —la primera vez
-que el producto consume el mecanismo de la tanda 1, que hasta hoy no usaba nadie— y `--onvideo`
-**deja de pintar color**: de sus 10 reglas restantes, ninguna declara uno. Verificado por
-aritmética: **14/14 declaraciones rinden idéntico**, dentro y fuera del hero. Más 17 reglas muertas
-retiradas.
-⚠️⚠️ **Y lo que enseñó, que vale más que lo que entró**: la conversión estaba **a medias en tres
-sitios** —el scrim tiene CUATRO paradas y se convirtieron dos, dejando la mitad inferior en crema—
-y **la guarda escrita para cazarlo nació ciega**: su diccionario de tinta ciclaba, devolvía `null`
-y pasaba sin mirar nada. Dio verde ante las mutaciones que reproducían el fallo que la motivó.
-▶ **La regla que sale de ahí: una guarda no se sabe si sirve hasta que se muta con el fallo REAL
-que la motivó.** Las 4 mutaciones de `SurfaceScopeTest` incluyen tres reproducciones exactas.
-⚠️ **Dos de las tres excepciones del anillo de foco ya podrían caer** —el hero ya declara `ink`—;
-se dejaron a propósito para no mezclar un cambio de foco con la conversión de superficie.
+✅ **La 2b está COMPLETA** (`#194` pasos 1-2, `#195` paso 3). El hero:
+· **no lleva CTA** — `[DECIDIDO owner]`, «en el mockup el CTA sale después del hero»— y queda
+  **eslogan → titular → estado**; comprar se ofrece en el nav y en la barra de móvil, con su
+  anclaje «desde X €» intacto;
+· **declara `data-surface="ink"`** — la primera vez que el producto consume el mecanismo de la
+  tanda 1—; · es una **tarjeta** con margen y radio, no un sangrado; · y **encoge al bajar**.
+❗ **La duda del sentinel se resolvió sola con la decisión**: al no haber CTA en el hero,
+`.hero__stage-bottom` —que era el elemento que dos comportamientos de COMPRA observaban— desaparece,
+así que había que dar un sentinel propio de todas formas. Ahora es `.hero__sentinel`, vacío y fuera
+del `sticky`. ▶ **Que aquello funcionara era una COINCIDENCIA**, y una coincidencia sostiene hasta
+que algo se mueve, sin avisar.
+▶ **Y una decisión de arquitectura que conviene no deshacer**: el JS publica UNA custom property
+(`--hero-p`) y **no decide nada de diseño** — los dos estados los define el CSS con `calc()`. El
+mockup lo hace al revés (estilos inline desde JS), y copiarlo habría dejado los números del efecto
+en el único sitio que un paquete de cliente no puede tocar. En móvil **solo cambian cuatro tokens**.
+
+⚠️⚠️ **Lo que enseñó, y vale para cualquier test de esta casa**: al retirar el CTA cayó su test, se
+re-apuntó a la barra de móvil siguiendo `CONVENCIONES §3.quater`… **y el test re-apuntado NO fijaba
+nada**. `assertSee('cta-prime')` casaba con `cta-prime__ico`, y `assertSeeText('desde 7,90 €')` lo
+satisfacía **el CTA del NAV**, que dice el mismo texto con otra clave de idioma. Dos mutaciones
+pasaban en verde. Acotado al botón real, 4 de 4 muerden.
+▶ **Y una mutación mal diseñada**: renombrar una clase a `algo-NO` no mata un
+`assertStringContainsString('algo')` — sigue siendo subcadena. Para probar una AUSENCIA hay que
+retirar el elemento, no renombrarlo.
+⚠️ Sigue abierto: **`--onvideo` sobrevive en 10 reglas y su nombre ya miente** (solo declara tamaño
+y sombra), y **la excepción del anillo de foco del chip ya se puede retirar** — el hero declara
+`ink`. Los dos en `DEUDA.md`.
+
 
 ⚠️ **El mecanismo de la tanda 1 todavía no lo usa NADIE**: ninguna sección ni tarjeta declara
 superficie. Es correcto —es el cimiento— pero significa que la **primera vez que se verá funcionar de
