@@ -311,7 +311,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#205`**.
+> El último usado es **`#206`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -415,8 +415,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3127 en verde** (17.991 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
+- Suite **3127 en verde** (17.990 aserciones, `--parallel` **~45 s** medidos el 2026-08-28 de
   madrugada sobre el árbol FUSIONADO de los dos carriles, en la máquina del carril C) ·
+  ▶ **−1 aserción en el último corte, y es un ARREGLO de fondo** (carril C, el paquete del 2.º
+  cliente): las cinco guardas de CSS **dejan de juzgar `public/css/client.css`**, que es la hoja de
+  una INSTALACIÓN y no del producto. Una de ellas aseveraba **por hoja**, así que el recuento
+  cambiaba según si la máquina tenía o no un paquete instalado — y el `pre-push` compara el número
+  exacto: **bloqueaba a una de las dos máquinas siempre**. ⚠️ **Un gate que depende de si el disco
+  tiene el tema de un cliente no es un gate.** ▶ Verificado midiendo las dos veces: **3.127 y
+  17.990 con paquete y sin él, idénticos**. Antes:
   ▶ **+6 tests PHP en el último corte** (carril C, armazón · tanda **2c·4a**, el CTA doble de
   móvil): que la barra sea un par con destinos distintos, que la mitad colapsada **diga qué hace
   AHORA** y no a dónde lleva, que **las dos funcionen sin JavaScript** con una sola pulsación y con
@@ -776,6 +783,20 @@ la usa.
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que
 sigue parado es el CONTENIDO (la tanda B de `landing-white-label.md`: `testimonials` y el copy al
 CMS), no el tema.
+
+❗❗ **EL PAQUETE DEL 2.º CLIENTE ESTÁ MONTADO EN ESTA MÁQUINA** (`#206`, 2026-08-28) y **no está en
+el repo ni puede estarlo**: `public/css/client.css` (gitignorado), los ajustes `theme.brand` /
+`theme.brand_secondary` en la BD local, y `THEME_FONTS` en el `.env`. En otra máquina **no existe**:
+para regenerarlo, la receta es `INSTALACION-CLIENTE.md` §4 y la fuente el artboard
+`Colores de Marca PJP` del canvas.
+▶ ✅ **Y con él quedó demostrado que los cuatro mecanismos del tema COMPONEN**: la web se sirve con
+la marca del cliente y la suite entera pasa, con cero migraciones y cero líneas de dominio.
+❗ **Pero destapó que la landing NO puede ser 1:1 todavía**: el CTA primario del cliente es naranja
+y el del producto está atado a `background: var(--fg)`. **No hay token de acción** — es el QUINTO
+mecanismo del tema (`specs/tema-por-instalacion.md` §14.5).
+❗❗ **Y un hallazgo de accesibilidad que es del CLIENTE**: su anillo de foco (Amarillo Aviso) da
+**1,49 sobre papel** cuando WCAG exige 3,0. Su auditoría de 20 pares **no incluye ese par**. Está
+`[PENDIENTE: owner]` con tres salidas en §14.2.
 
 ▶ **Por dónde retoma el carril C**: **el armazón está COMPLETO salvo el MENÚ EN MÓVIL** —2c·0
 (`#200`), 2c·1 (`#201`), 2c·2 (`#203`), 2c·3 (`#204`) y 2c·4a, el CTA doble (`#205`), todas en el

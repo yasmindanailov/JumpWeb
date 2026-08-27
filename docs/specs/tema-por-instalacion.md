@@ -1057,3 +1057,107 @@ sentido.
   recomienda keyline. Los dos son hoy consumidores de **`--shadow-float`**. Si el owner acepta
   la recomendación, el rol pierde dos de sus ocho usos y hay que volver a mirarlo. **No se
   toca hasta que lo diga**: la lista de excepciones y de roles **solo encoge**.
+
+
+---
+
+## 14. El PRIMER PAQUETE REAL — la verificación que faltaba, y lo que destapó
+
+> `[DECIDIDO owner, 2026-08-28]`: «vamos a montar ya el tema del cliente 1:1 al mockup, sin tocar
+> sidebar». Montado el mismo día. **El paquete NO está en el repo y no puede estarlo**
+> (`DECISIONES #1`): vive en `public/css/client.css`, gitignorado y excluido del `rsync`, más dos
+> ajustes en el panel y una línea en el `.env`. Aquí se registra **lo que el montaje enseñó**, que
+> es lo único de esto que es del producto.
+
+### 14.1 ✅ Los cuatro mecanismos COMPONEN, y hasta ahora era una promesa
+
+Se construyeron por separado —color y superficie (`#192`), forma (`#193`), el hero (`#194`,
+`#195`), la elevación (`#196`)— y **nunca se había comprobado que funcionaran juntos con un
+paquete real**. Ahora sí: con el paquete puesto, **la suite entera pasa** (3.127, 3 saltados) y la
+web se sirve con la marca del cliente sin tocar una línea del producto.
+
+▶ **Cero migraciones, cero líneas de dominio, cero cambios en el marcado.** Es la medida de éxito
+que arrastraban las cinco tandas, y se cumple.
+
+### 14.2 ❗❗ El hallazgo que ninguna guarda podía dar: **el anillo de foco es INVISIBLE en papel**
+
+El sistema del cliente declara Amarillo Aviso `#F5C400` como **único** color de foco, «3px, offset
+2px, **en ambos fondos**». Su auditoría de contraste cubre **20 pares** y es buena — pero **no
+incluye «Amarillo sobre Papel»**. Auditó el foco sobre TINTA (11,26 ✓) y nunca contra el fondo
+claro, que es donde ese anillo va a vivir **casi siempre** en nuestro producto: desde el hallazgo
+`S-00` la web es **papel continuo de arriba abajo**.
+
+| Par | Ratio | WCAG exige | |
+|---|---|---|---|
+| Amarillo Aviso sobre **Tinta** | **11,26** | 3,0 (1.4.11) | ✓ auditado por el cliente |
+| Amarillo Aviso sobre **Papel** | **1,49** | 3,0 (1.4.11) | ✗ **no está en su auditoría** |
+
+▶ **No es marginal: es invisible.** Quien navegue con teclado no verá dónde está en la mayor parte
+del sitio.
+
+⚠️ **Y no lo puede cazar ninguna guarda nuestra**, y eso también es un hallazgo: `SurfaceScopeTest`
+calcula contrastes **de la raíz del PRODUCTO**, no de la del paquete. Los guardas leen
+`public/css/*.css` y el orden alfabético hace que `client.css` quede **antes** que `landing.css` y
+`site.css`, así que el producto gana y el paquete **no se mide**. Funciona a favor —las guardas
+vigilan el producto, que es su trabajo— pero significa que **un paquete puede incumplir AA sin que
+nada avise**.
+
+▶ **`[PENDIENTE: owner]`**, con tres salidas y su coste:
+1. **Anillo de dos tonos** —amarillo con un filo de tinta— como hace GOV.UK. Pasa en las dos
+   superficies y **conserva el amarillo en todas partes**. Es un cambio en el mecanismo de foco del
+   producto, no en el paquete.
+2. **Un color de foco por superficie**: amarillo sobre tinta, Azul Muro `#0A5C93` (6,43) sobre
+   papel. Barato, y rompe su regla de «único color que no cambia».
+3. **Dejarlo**: 1:1 con el mockup, con el anillo invisible en papel. Es una decisión, no un
+   descuido, y quedaría escrita como tal.
+
+### 14.3 ⚠️ Lo segundo, que su sistema SÍ sabe: el rojo sobre tinta da 4,10
+
+Su propia tabla lo marca «GRANDE · solo ≥19px bold» y ofrece `#FF8A6B` (8,02) para texto pequeño en
+oscuro. Nuestro `--err` es **un solo token** y no distingue tamaño, así que dentro de una superficie
+de tinta un error en cuerpo pequeño se queda en 4,10. **No lo arregla el paquete**: haría falta un
+`--err-on-ink`, o que la superficie de tinta re-escope `--err` como re-escopa los otros siete.
+
+### 14.4 ❗❗ La suite del producto NO dejaba convivir con una instalación — y el primer arreglo fue peor
+
+Tres cosas se rompieron al aparecer `client.css` en el disco, y las tres son del producto:
+
+**1 · Una guarda exigía que la hoja NO existiera.**
+`ClientThemePackageTest::test_without_a_client_sheet_no_link_is_emitted` aseveraba
+`assertFileDoesNotExist` a secas, así que **la suite se ponía roja en cuanto alguien montaba un
+paquete de cliente en su máquina** — justo lo que el mecanismo existe para permitir.
+
+**2 · El primer arreglo lo empeoró, y lo cazó el gate.** Se le puso el `markTestSkipped` que sus
+hermanos ya tenían… y **saltar mueve el contador de aserciones**: 17.977 en la máquina con paquete
+frente a 17.991 en la que no lo tiene. El `pre-push` compara el número EXACTO contra `ESTADO.md`,
+así que **una de las dos máquinas quedaba bloqueada siempre** — y con dos carriles trabajando a la
+vez, eso es bloquear al otro agente por tener un tema instalado.
+▶ **Un gate que depende de si el disco tiene el tema de un cliente no es un gate.**
+
+**3 · Lo que sí lo arregla, y es de fondo.** Dos cambios:
+· Los tres casos corren sobre un **`public/` propio** (`usePublicPath()` a un directorio temporal,
+  con `build/` enlazado porque el layout resuelve ahí el manifiesto de Vite). «Sin hoja» pasa a ser
+  un hecho **que decide el test**, no el disco de quien lo ejecuta — y **la hoja del cliente no se
+  toca jamás**.
+· **Las cinco guardas de CSS dejan de juzgar `client.css`.** Barrían `public/css/*.css` y ahí no
+  vive solo el producto. Un paquete de tema **está hecho de literales**: juzgarlo con
+  `RawColourIsNotATokenTest` sería prohibirle existir. Y una guarda que asevera **por hoja** movía
+  el recuento según la máquina.
+  ▶ Mismo criterio que `SidebarStyleWiringTest`, que **enumera** las hojas del producto en vez de
+  barrer la carpeta. Lo que se pierde no es cobertura: es jurisdicción sobre algo que no es nuestro.
+
+▶ **Verificado midiendo las dos veces**: con paquete y sin él, **3.127 tests y 17.990 aserciones,
+idénticos**. Es la comprobación que faltaba, y no la habría dado nadie sin montar el paquete.
+
+### 14.5 Lo que el paquete NO puede cambiar, medido con él puesto
+
+- ❗ **El relleno de ACCIÓN.** El sistema del cliente pinta el CTA primario en **Naranja Salto**;
+  el producto lo tiene atado a `background: var(--fg)` —tinta— en `.cta-prime`, `.cta-med` y
+  `.btn`. **No hay token de acción**, así que el botón de comprar **no puede ser naranja** sin
+  tocar el producto. Medido: **50 reglas** rellenan con `var(--fg)`, y no todas son acción —unas
+  son superficie invertida—. Es el mismo problema que la elevación: hay que preguntar **«¿para qué
+  sirve cada relleno de tinta?»** y sacar un rol, no una lista.
+  ▶ **Es el QUINTO mecanismo del tema**, y hasta que exista el paquete no puede ser 1:1.
+- **El logotipo.** El del cliente es un lockup de seis capas con dos degradados; el nuestro es
+  texto. No hay mecanismo de logotipo y no se ha inventado uno aquí.
+- **Las cinco excepciones de sombra** de §13.5, ya enumeradas.

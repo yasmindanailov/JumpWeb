@@ -31,20 +31,53 @@ class ClientThemePackageTest extends TestCase
 
     private const CLIENT_SHEET = 'css/client.css';
 
+    private string $publicDir = '';
+
     /**
-     * ⚠️ **Nunca se toca la hoja de una instalación real.** Si el fichero ya existe, este proceso no
-     * es un entorno de pruebas limpio: se avisa en vez de borrarle el tema a nadie.
+     * **Estos casos corren sobre un `public/` PROPIO, no sobre el de la máquina.**
+     *
+     * ⚠️⚠️ **Y eso los arregló DOS veces.** Antes miraban el disco de verdad: escribían y borraban
+     * `public/css/client.css`, y se **saltaban** si ya existía —para no borrarle el tema a una
+     * instalación—. Al montar el paquete del segundo cliente (2026-08-28) las dos mitades de esa
+     * decisión salieron mal:
+     *
+     *   · **la suite del producto se ponía roja o incompleta en cuanto una máquina era una
+     *     INSTALACIÓN**, que es justo lo que este mecanismo existe para permitir; y
+     *   · los saltos **movían el contador de aserciones**, así que el `pre-push` de esa máquina
+     *     bloqueaba… y el de la máquina sin paquete bloqueaba al revés. Un gate que depende de si
+     *     el disco tiene o no el tema de un cliente **no es un gate**.
+     *
+     * ▶ Con `usePublicPath()` el caso deja de depender del disco: existe o no existe porque **lo
+     * decide el test**. Y la hoja del cliente **no se toca jamás**.
+     * ⚠️ `build/` se enlaza al real porque el layout resuelve el manifiesto de Vite por
+     * `public_path()`: sin él, cualquier página lanzaría «Vite manifest not found».
      */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->publicDir = sys_get_temp_dir().'/jw-public-'.getmypid().'-'.uniqid();
+        mkdir($this->publicDir.'/css', 0o777, true);
+        @symlink(base_path('public/build'), $this->publicDir.'/build');
+        $this->app->usePublicPath($this->publicDir);
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->publicDir !== '' && is_dir($this->publicDir)) {
+            @unlink($this->publicDir.'/build');
+            @unlink($this->publicDir.'/'.self::CLIENT_SHEET);
+            @rmdir($this->publicDir.'/css');
+            @rmdir($this->publicDir);
+        }
+
+        parent::tearDown();
+    }
+
+    /** Escribe una hoja de cliente **en el `public/` del test** y la retira al terminar. */
     private function withClientSheet(callable $body): void
     {
         $path = public_path(self::CLIENT_SHEET);
-
-        if (file_exists($path)) {
-            $this->markTestSkipped(
-                'Ya existe `public/'.self::CLIENT_SHEET.'`: esto parece una instalación real y el '.
-                'test no va a tocar la hoja de un cliente.',
-            );
-        }
 
         try {
             file_put_contents($path, ":root{--bg:#001122}\n");
@@ -57,15 +90,14 @@ class ClientThemePackageTest extends TestCase
     /**
      * **Sin hoja del cliente, el `<head>` no cambia** — que es el estado de este repo y el de
      * cualquier instalación que aún no tenga tema propio.
+     *
+     * ⚠️ El `public/` es el del test (ver `setUp`), así que «sin hoja» es un hecho que decide este
+     * caso — **no el disco de quien lo corre**. Antes dependía de la máquina, y eso lo hacía saltar
+     * o fallar según quién lo ejecutara.
      */
     public function test_without_a_client_sheet_no_link_is_emitted(): void
     {
         $this->seed(LandingContentSeeder::class);
-
-        $this->assertFileDoesNotExist(
-            public_path(self::CLIENT_SHEET),
-            'el corpus de esta comprobación exige que la hoja NO exista',
-        );
 
         $this->get('/')
             ->assertOk()

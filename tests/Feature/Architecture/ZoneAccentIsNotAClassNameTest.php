@@ -94,6 +94,19 @@ class ZoneAccentIsNotAClassNameTest extends TestCase
         $conReferencias = [];
 
         foreach (glob(base_path('public/css/*.css')) ?: [] as $ruta) {
+            // ⚠️ **La hoja de una INSTALACIÓN queda fuera, y no es un descuido.** `client.css`
+            // no es del producto: existe precisamente para que un cliente declare sus valores
+            // —literales incluidos, que es de lo que está hecho un paquete de tema— y juzgarla
+            // con las reglas del producto sería prohibirle hacer aquello para lo que existe.
+            // ▶ Y además la hacía MENTIR al gate: una guarda que asevera por hoja cambiaba el
+            // recuento de aserciones según si la máquina tenía o no un paquete instalado, así
+            // que el `pre-push` bloqueaba en una máquina o en la otra. Medido el 2026-08-28 al
+            // montar el paquete del segundo cliente. Mismo criterio que `SidebarStyleWiringTest`,
+            // que enumera las hojas del producto en vez de barrer la carpeta.
+            if (basename($ruta) === 'client.css') {
+                continue;
+            }
+
             // ⚠️ Se miran las REGLAS, no los comentarios. Sin esto la guarda saltaba con la nota que
             // explica por qué esos tokens se retiraron: una guarda que se dispara con su propia
             // documentación obliga a borrar el porqué, y acaba silenciada.

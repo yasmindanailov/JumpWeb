@@ -10898,3 +10898,62 @@ móvil**, que sigue esperando el artboard del owner.
 `ArmazonContractTest` (**31 casos**) · `AccountDoorWiringTest` · `ShapeScaleTest`.
 **9 mutaciones, las 9 muerden**, con verificación de anclas y control positivo · suite **3096**
 verde (17.821 aserciones) · `test:js` 732 · Pint 937 · docs-check verde.
+
+## #206 · 2026-08-28 · El PRIMER PAQUETE DE TEMA REAL — los cuatro mecanismos COMPONEN, y montarlo destapó tres defectos del producto
+
+`[DECIDIDO owner, 2026-08-28]`: «vamos a montar ya el tema del cliente 1:1 al mockup, sin tocar
+sidebar». **El paquete no está en el repo y no puede estarlo** (`DECISIONES #1`): vive en
+`public/css/client.css` —gitignorado y excluido del `rsync`—, más dos ajustes en el panel y una
+línea de `THEME_FONTS` en el `.env`. Aquí se registra **lo que el montaje enseñó**, que es lo único
+de esto que pertenece al producto.
+
+✅ **LOS CUATRO MECANISMOS COMPONEN, y hasta hoy era una promesa.** Se construyeron por separado
+—color y superficie (`#192`), forma (`#193`), el hero (`#194`/`#195`), la elevación (`#196`)— y
+**nunca se había comprobado que funcionaran juntos con un paquete real**. Con el paquete puesto la
+web se sirve con la marca del cliente y **la suite entera pasa**: cero migraciones, cero líneas de
+dominio, cero cambios de marcado. Es la medida de éxito que arrastraban cinco tandas.
+
+❗❗ **EL HALLAZGO QUE NINGUNA GUARDA PODÍA DAR: el anillo de foco es INVISIBLE en papel.**
+El sistema del cliente declara Amarillo Aviso `#F5C400` como **único** color de foco «en ambos
+fondos». Su auditoría de contraste cubre **20 pares** y es buena, pero **no incluye «Amarillo sobre
+Papel»**: auditó el foco sobre TINTA (**11,26** ✓) y nunca contra el fondo claro — que es donde ese
+anillo vive **casi siempre**, porque desde su hallazgo `S-00` la web es papel continuo.
+**Amarillo sobre Papel = 1,49**, y WCAG 1.4.11 exige **3,0**. No es marginal: es invisible.
+⚠️ **Y no lo caza ninguna guarda nuestra**, que también es un hallazgo: `SurfaceScopeTest` calcula
+contrastes **de la raíz del PRODUCTO**, no de la del paquete. **Un paquete puede incumplir AA sin
+que nada avise.** `[PENDIENTE: owner]` con tres salidas en `specs/tema-por-instalacion.md` §14.2.
+
+❗❗ **Y TRES DEFECTOS DEL PRODUCTO que solo aparecen con una instalación encima** (§14.4):
+1. Una guarda exigía que la hoja del cliente **NO existiera** (`assertFileDoesNotExist` a secas):
+   la suite del producto se ponía roja en cuanto alguien montaba un paquete.
+2. **El primer arreglo lo empeoró**, y lo cazó el gate: ponerle `markTestSkipped` movió el
+   **contador de aserciones** —17.977 con paquete frente a 17.991 sin él— y el `pre-push` compara
+   el número EXACTO, así que **una de las dos máquinas quedaba bloqueada siempre**. Con dos
+   carriles a la vez, eso es bloquear al otro agente por tener un tema instalado.
+   ▶ **Un gate que depende de si el disco tiene el tema de un cliente no es un gate.**
+3. **Las cinco guardas de CSS juzgaban `client.css`.** Barrían `public/css/*.css`, donde no vive
+   solo el producto. Un paquete de tema **está hecho de literales**: juzgarlo con
+   `RawColourIsNotATokenTest` sería prohibirle existir; y una guarda que asevera **por hoja**
+   cambiaba el recuento según la máquina.
+▶ **Arreglado de fondo**: los tres casos corren sobre un `public/` propio (`usePublicPath()`, con
+`build/` enlazado por el manifiesto de Vite) —así «sin hoja» lo decide el test y **la hoja del
+cliente no se toca jamás**— y las guardas **excluyen `client.css`**, mismo criterio que
+`SidebarStyleWiringTest`. **Verificado midiendo las dos veces: 3.127 · 17.990 con paquete y sin él,
+idénticos.**
+
+⚠️ **Lo que el paquete NO puede cambiar, medido con él puesto** (§14.5): **el relleno de ACCIÓN**.
+El cliente pinta el CTA primario en Naranja Salto; el producto lo tiene atado a
+`background: var(--fg)` —tinta— en `.cta-prime`, `.cta-med` y `.btn`, y **no hay token de acción**.
+Medido: **50 reglas** rellenan con `var(--fg)` y **no todas son acción** —unas son superficie
+invertida—, así que es el mismo problema que la elevación: hay que preguntar «¿para qué sirve cada
+relleno de tinta?» y sacar un ROL, no una lista. ▶ **Es el QUINTO mecanismo del tema**, y hasta que
+exista, la landing **no puede ser 1:1**.
+⚠️ Y el rojo del cliente sobre tinta da **4,10**: su propia tabla lo sabe («solo ≥19px bold», con
+`#FF8A6B` para texto pequeño), pero nuestro `--err` es un solo token y no distingue tamaño.
+
+`specs/tema-por-instalacion.md` §14 · `ClientThemePackageTest` (sin saltos, `public/` propio) ·
+`RawColourIsNotATokenTest` · `ShapeScaleTest` · `SurfaceScopeTest` · `ZoneAccentIsNotAClassNameTest`
+· `ArmazonCssHasNoOrphansTest` · suite **3127** verde (17.990) · Pint 946 · docs-check verde.
+❗ **Lo que falta para el 1:1 sigue estando escrito y medido**: el quinto mecanismo (la acción), la
+tanda **2d**, el menú de móvil (artboard), y la tanda **3** con sus secciones — de las que
+**opiniones** y **el minijuego** no existen, y **`D9`/`B4` las bloquea el ARTE, no el código**.
