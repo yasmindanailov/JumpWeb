@@ -749,13 +749,17 @@ img { display: block; max-width: 100%; }
   background:
     radial-gradient(ellipse at 22% 38%, color-mix(in srgb, var(--zone-1) 22%, transparent) 0%, transparent 55%),
     radial-gradient(ellipse at 78% 78%, color-mix(in srgb, var(--zone-2) 16%, transparent) 0%, transparent 55%),
-    repeating-linear-gradient(135deg, color-mix(in srgb, var(--fg) 97.5%, white) 0 22px, var(--fg) 22px 23px);
+    /* ⚠️ Estas dos leen `--bg` y no `--fg` desde la tanda 2b: el placeholder vive DENTRO del
+       ámbito de tinta del stage, donde `--fg` vale CLARO. Con `--fg` el telón de fondo del
+       hero —el que se ve mientras el vídeo carga, y el único que se ve si no hay vídeo— salía
+       crema. Con `--bg` rinde el `#14130F` de siempre. */
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 97.5%, white) 0 22px, var(--bg) 22px 23px);
 }
 /* scrim for content legibility — between video and overlay content */
 .hero__stage-scrim {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg) 45%, transparent) 0%, color-mix(in srgb, var(--bg) 8%, transparent) 30%, color-mix(in srgb, var(--fg) 10%, transparent) 55%, color-mix(in srgb, var(--fg) 65%, transparent) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 45%, transparent) 0%, color-mix(in srgb, var(--bg) 8%, transparent) 30%, color-mix(in srgb, var(--bg) 10%, transparent) 55%, color-mix(in srgb, var(--bg) 65%, transparent) 100%);
 }
 .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: none; }
 
@@ -765,7 +769,10 @@ img { display: block; max-width: 100%; }
   z-index: 5;
   padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 44px);
   display: flex; flex-direction: column; justify-content: space-between;
-  color: var(--bg);
+  /* ⚠️ Aquí había `color: var(--bg)` para forzar texto crema sobre el vídeo. Se RETIRA: el
+     ámbito `[data-surface="ink"]` del stage ya pone `color: var(--fg)`, que en tinta vale
+     crema. Dejarlo habría pintado texto OSCURO sobre el hero oscuro — `--bg` en tinta es la
+     tinta, no el papel. Verificado: hereda #F4EFE3, el mismo de siempre. */
   pointer-events: none;
 }
 .hero__stage-content > *,

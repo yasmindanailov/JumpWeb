@@ -372,9 +372,264 @@ class SurfaceScopeTest extends TestCase
         );
     }
 
+    /**
+     * **Dentro del hero, el fondo es OSCURO y el texto CLARO — y se comprueba resolviéndolo.**
+     *
+     * ⚠️⚠️ Esta guarda existe porque el fallo ocurrió TRES veces en la misma tanda, y ninguna otra
+     * comprobación lo habría visto.
+     *
+     * El hero pinta ahora dentro del ámbito de tinta, así que **cada `var(--fg)` que quede en una
+     * de sus reglas significa lo contrario de lo que significaba**. Al convertirlo:
+     *   · el scrim tiene **cuatro** paradas de degradado y se convirtieron **dos** → la mitad
+     *     inferior, la que da legibilidad al titular, pasaba de tinta 65 % a **crema 65 %**;
+     *   · `.hero__stage-content { color: var(--bg) }` se dio por retirado y seguía ahí → texto
+     *     oscuro sobre hero oscuro;
+     *   · el telón del placeholder —lo único que se ve si el vídeo no carga— quedaba **crema**.
+     * En los tres casos el CSS era válido, la suite verde y la página cargaba.
+     *
+     * ▶ **El criterio NO es «¿invierte entre ámbitos?»**: todo lo que lee un token de superficie
+     * invierte, por definición — ése es el mecanismo. El criterio es el RESULTADO: se resuelve
+     * cada declaración **en el ámbito donde de verdad vive** y se exige el rol que le toca.
+     */
+    public function test_inside_the_hero_the_ground_is_dark_and_the_text_is_light(): void
+    {
+        $ink = $this->inkScope();
+
+        // (selector, propiedad, rol esperado) — «dark» = luminancia < 0,2 · «light» = > 0,5
+        $expected = [
+            ['.hero__stage', 'background', 'dark'],
+            ['.hero__stage-scrim', 'background', 'dark'],
+            ['.hero__stage-placeholder', 'background', 'dark'],
+            ['.hero__stage-label', 'color', 'light'],
+        ];
+
+        $declarations = $this->heroColourDeclarations();
+        $offenders = [];
+        $checked = [];
+
+        foreach ($expected as [$selector, $property, $role]) {
+            $values = array_values(array_filter(
+                $declarations,
+                fn (array $d) => $d[0] === $selector && $d[1] === $property,
+            ));
+
+            $this->assertNotEmpty(
+                $values,
+                "el escaneo no encuentra `{$selector} → {$property}`: el localizador se ha roto y ".
+                'esta guarda estaría verde sin mirar nada.',
+            );
+
+            foreach ($values as [, , $value]) {
+                // ⚠️ Solo se juzga lo que lee un token de SUPERFICIE. La marca —`--zone-*`,
+                // `--brand*`, `--on-brand`— **no se re-escopa** (spec §4.2: «la marca no cambia
+                // con el fondo»), así que una mancha de acento sobre el hero es clara a propósito
+                // y no tiene por qué obedecer al rol de la superficie que hay debajo.
+                if (! preg_match('/var\(\s*--(bg|fg|sheet|line)[\w-]*\s*\)/', $value)) {
+                    continue;
+                }
+
+                $colour = $this->resolve($value, $ink);
+
+                if ($colour === null) {
+                    continue;
+                }
+
+                $checked[$selector][] = $value;
+                $light = $this->relativeLuminance($colour);
+                $ok = $role === 'dark' ? $light < 0.2 : $light > 0.5;
+
+                if (! $ok) {
+                    $offenders[] = sprintf(
+                        '%s → %s: `%s` rinde luminancia %.3f dentro de tinta y se esperaba %s',
+                        $selector, $property, $value, $light, $role,
+                    );
+                }
+            }
+        }
+
+        // ⚠️ Por NOMBRE y no por umbral — la lección que este mismo fichero ya documenta. Del
+        // scrim se exigen las CUATRO paradas: fue exactamente el hueco por el que se convirtieron
+        // dos y se dejaron dos.
+        $this->assertCount(
+            4, $checked['.hero__stage-scrim'] ?? [],
+            'el escaneo ve '.count($checked['.hero__stage-scrim'] ?? []).' paradas del degradado del '.
+            'scrim y son CUATRO. Si vuelve a ver menos, media conversión pasaría desapercibida.',
+        );
+
+        $this->assertSame(
+            [], $offenders,
+            "dentro del hero hay colores que ya no cumplen su rol:\n  ".implode("\n  ", $offenders)."\n\n".
+            "El hero vive dentro de `[data-surface=\"ink\"]`, donde `--fg` vale CLARO y `--bg` vale\n".
+            "OSCURO — lo contrario que fuera. Una regla que decía «oscuro» diciendo `var(--fg)` ahora\n".
+            "dice «claro», y no falla: solo deja de verse.\n".
+            '▶ Si el color tiene que ser oscuro, escríbelo con `--bg`; si claro, con `--fg`.',
+        );
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Herramientas
     // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Declaraciones de COLOR de las reglas que pintan dentro del hero.
+     *
+     * ⚠️ El filtro no puede usar `\b` tras «hero»: en `.hero__stage` el carácter siguiente es `_`,
+     * que es de palabra, así que `\bhero\b` no casa y el barrido no ve NI UNA regla del stage.
+     * Lo pagó el instrumento que midió esta tanda.
+     *
+     * @return list<array{0: string, 1: string, 2: string}>
+     */
+    private function heroColourDeclarations(): array
+    {
+        $properties = ['color', 'background', 'background-color', 'background-image', 'fill', 'stroke', 'border-color'];
+        $out = [];
+
+        foreach ($this->sheetContents() as $css) {
+            $blind = (string) preg_replace_callback(
+                '#/\*.*?\*/#s',
+                fn (array $m) => str_repeat(' ', strlen($m[0])),
+                $css,
+            );
+
+            preg_match_all('/([^{}\n][^{}]*)\{([^{}]*)\}/', $blind, $rules, PREG_SET_ORDER);
+
+            foreach ($rules as $rule) {
+                $selector = trim((string) preg_replace('/\s+/', ' ', $rule[1]));
+
+                // Solo lo que cuelga del STAGE: es lo único que vive dentro del ámbito.
+                if (! preg_match('/\.hero__(stage|title|chip)[\w-]*/', $selector)) {
+                    continue;
+                }
+
+                foreach ($this->splitDeclarations($rule[2]) as [$property, $value]) {
+                    if (in_array($property, $properties, true)) {
+                        // Un degradado trae varias paradas: se comprueban TODAS. Es lo que faltó.
+                        preg_match_all('/color-mix\([^()]*(?:\([^()]*\)[^()]*)*\)|var\(--[\w-]+\)/', $value, $stops);
+
+                        foreach (($stops[0] ?: [$value]) as $stop) {
+                            $out[] = [$selector, $property, $stop];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Parte un cuerpo en declaraciones respetando paréntesis anidados.
+     *
+     * @return list<array{0: string, 1: string}>
+     */
+    private function splitDeclarations(string $body): array
+    {
+        $out = [];
+        $buffer = '';
+        $depth = 0;
+
+        for ($i = 0, $n = strlen($body); $i < $n; $i++) {
+            $char = $body[$i];
+
+            if ($char === '(') {
+                $depth++;
+            } elseif ($char === ')') {
+                $depth--;
+            }
+
+            if ($char === ';' && $depth === 0) {
+                if (str_contains($buffer, ':')) {
+                    [$p, $v] = explode(':', $buffer, 2);
+                    $out[] = [trim($p), trim($v)];
+                }
+                $buffer = '';
+
+                continue;
+            }
+
+            $buffer .= $char;
+        }
+
+        if (str_contains($buffer, ':')) {
+            [$p, $v] = explode(':', $buffer, 2);
+            $out[] = [trim($p), trim($v)];
+        }
+
+        return $out;
+    }
+
+    /**
+     * El diccionario de tokens tal y como los ve un elemento DENTRO de `[data-surface="ink"]`.
+     *
+     * ⚠️⚠️ **`:root` se pre-resuelve contra sí mismo ANTES de superponer el ámbito**, y eso no es
+     * un refinamiento: sin ello, `--fg` → `var(--ink-fg)` → `var(--bg)` → `var(--ink-bg)` →
+     * `var(--fg)` es un **CICLO**. El resolutor se rinde, devuelve `null`, las comprobaciones
+     * hacen `continue` y la guarda pasa **sin mirar nada**. Ocurrió: esta misma guarda dio verde
+     * ante dos mutaciones que reproducían el fallo que la motivó.
+     * ▶ Es lo que hace el navegador: la sustitución de `var()` ocurre donde la propiedad se
+     *   DECLARA, así que `--ink-*` y `--paper-*` bajan al ámbito ya computados contra papel.
+     *
+     * @return array<string, string>
+     */
+    private function inkScope(): array
+    {
+        $declared = $this->blocks()[':root'] ?? [];
+        $root = [];
+
+        foreach ($declared as $token => $value) {
+            $resolved = $this->resolve($value, $declared);
+            $root[$token] = $resolved === null ? $value : $this->asRgba($resolved);
+        }
+
+        $ink = $root;
+
+        foreach (($this->blocks()['[data-surface="ink"]'] ?? []) as $token => $value) {
+            $ink[$token] = $value;
+        }
+
+        // Segunda vuelta: el ámbito declara `--fg: var(--ink-fg)`, y `--ink-fg` ya está resuelto.
+        foreach (self::SURFACE_TOKENS as $token) {
+            $resolved = $this->resolve($ink[$token] ?? '', $root);
+
+            if ($resolved !== null) {
+                $ink[$token] = $this->asRgba($resolved);
+            }
+        }
+
+        // Control: si los dos ámbitos rindieran lo mismo, no habría nada que comprobar.
+        $paper = $this->resolve('var(--fg)', $root);
+        $inked = $this->resolve('var(--fg)', $ink);
+        $this->assertNotNull($paper, 'no se resuelve `--fg` en papel: el diccionario está roto');
+        $this->assertNotNull($inked, 'no se resuelve `--fg` en tinta: el diccionario CICLA');
+        $this->assertGreaterThan(
+            100, abs($paper[0] - $inked[0]),
+            '`--fg` rinde casi lo mismo en las dos superficies: el diccionario de tinta no se ha '.
+            'construido bien y toda la comprobación sería contra sí misma.',
+        );
+
+        return $ink;
+    }
+
+    /** @param array{0: float, 1: float, 2: float, 3: float} $rgba */
+    private function asRgba(array $rgba): string
+    {
+        return sprintf(
+            'rgba(%d, %d, %d, %.4f)',
+            (int) round($rgba[0]), (int) round($rgba[1]), (int) round($rgba[2]), $rgba[3],
+        );
+    }
+
+    /** Luminancia relativa WCAG de un `[r, g, b, a]`. */
+    private function relativeLuminance(array $rgba): float
+    {
+        $channel = static function (float $c): float {
+            $c /= 255;
+
+            return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        };
+
+        return 0.2126 * $channel($rgba[0]) + 0.7152 * $channel($rgba[1]) + 0.0722 * $channel($rgba[2]);
+    }
 
     /** @return array<string, string> */
     private function sheetContents(): array
