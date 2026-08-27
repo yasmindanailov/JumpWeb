@@ -17,8 +17,32 @@
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
->   18:40. ✅ Nada a medias: «MENORES A CARGO», TANDAS 1, 2 y 3 EMPUJADAS** (`#191` · `#198` · `#199`;
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN ABIERTA desde el 2026-08-27
+>   por la noche: la TANDA 4 de «menores a cargo» (la asignación en el embudo) ES DE ESTE CARRIL y su
+>   DISEÑO DE EJECUCIÓN está en el árbol** (`specs/menores-a-cargo.md` **§9.9**, `#202`). Se escribió
+>   MIDIENDO antes (seis lectores + crítico: 296 hechos, 14 afirmaciones de la spec falsas o
+>   imprecisas) y el owner decidió las cuatro ambigüedades a pregunta simple: **(1)** quien se
+>   identifica en el paso 5 vuelve al CARRITO con aviso si tiene menores y entradas sin asignar ·
+>   **(2)** ❗ **la exención firmada es CONDICIÓN para asignar** (el servidor lo exige) · **(3)** la
+>   purga de la cesta se arregla AHORA como unidad 0 · **(4)** ❗ **el PANEL entra** (ver en el pedido
+>   y asignar en mostrador). ❗❗ **Defecto MEDIDO en headless, fuera de la tanda pero en este carril**
+>   (`DEUDA.md`, Alta; lo cierra la unidad 0): **la cesta del PROPIO titular se PURGA cuando el cajón
+>   nace abierto** (`/entradas`, `/mi-cuenta`, `/login`, `/registro`, `/recuperar-contrasena`) — 2/2
+>   purga, 4/4 se conserva abriendo desde la home. Causa: `props.userId` llega del HTML y no la lee
+>   nadie. ▶ **Orden de trabajo**: U0 (la purga) → U1 (el servidor: tabla, `DependentAssigner`,
+>   `Booking\Contracts\CheckoutLines`, `CartLine.dependent_ids`, `OrdersController`) → U2 (el cajón) →
+>   U3 (el panel) → U4 (el ojo del owner). Cada unidad se empuja verde.
+>   ▶ **Para el agente del C (el tema/armazón)**: esta tanda tocará **`resources/views/components/layout.blade.php`**
+>   (solo la lista de claves `account.dependents.*` que viajan con sesión, en U2) y **NO toca**
+>   `public/css/*`, `nav.blade.php`, `menu.blade.php` ni `app.js` salvo, en U0, la siembra del dueño de
+>   la cesta si acaba viviendo en `app.js` (te lo avisaré aquí antes). El selector del embudo se
+>   compone con clases que ya existen (`eventfields`, `cart__pending`, `form`): **cero CSS nuevo**,
+>   como la zona de menores. Si tu 2c·2 toca `layout.blade.php`, `git pull --rebase` antes de empujar.
+>   ▶ **Para el agente del B (si vuelve)**: U3 entrará en `app/Filament/Resources/Orders/**` (la ficha
+>   del pedido y una acción de línea) por decisión del owner (`#202`·4): se avisará aquí con fecha
+>   ANTES de tocarlo, y solo ese fichero.
+>   Lo anterior de esta fila sigue siendo cierto y se conserva como historia: cierre de la sesión del
+>   27 a las 18:40 con las TANDAS 1, 2 y 3 EMPUJADAS (`#191` · `#198` · `#199`;
 >   `specs/menores-a-cargo.md` §9.1/§9.7/§9.8) **y la revisión de las cinco decisiones del owner hecha
 >   (`#197`)**. Cierre sobre el árbol final: suite 3062 / 17.694 · JS 724 · Pint ✓ · docs-check ✓ ·
 >   build ✓ · `audit-clock` ✓ 12/12 fronteras.
@@ -267,7 +291,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#201`**.
+> El último usado es **`#202`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -674,7 +698,7 @@ la usa.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | Las cinco decisiones de §9.5 **TOMADAS** (`#197`), las tandas 2 y 3 **EMPUJADAS** (`#198` la firma del menor, `#199` la zona del cajón con su guion 20/20). De agente sigue la **tanda 4, la asignación en el embudo** (toca el checkout); del owner, su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), cuatro decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · ❗ el panel ENTRA), y arranca por la unidad 0 (la purga de la cesta, defecto medido). Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | **Dos cosas, y las dos son suyas.** ① **La pasada de NAVEGADOR**, que sigue sin hacerse: **`#195`, el hero entero** (pierde su CTA, gana un eslogan, es una tarjeta y ENCOGE al bajar) y **`#196`, 19 elementos que pierden su sombra** (cambia media web; mira `/cumpleanos` y `/precios`, las más afectadas, y pasa el ratón por las tarjetas). Ya validó `#193` («la tira está y es correcta, las esquinas») y `#194` («el hero está como estaba antes»). ② **El ✅ a `specs/armazon-y-menu.md`** (escrita el 27 por la tarde) y sus **seis pendientes** §5 — la 1.ª es el **artboard de MÓVIL**, que él mismo anunció que guiaría, y bloquea una tanda entera. ▶ Y para la tanda 3, **cuál de las dos variantes de «El parque»**. ⚠️ **Las dos cosas se pisan**: la 2c cambia el mismo terreno que `#195`/`#196`, así que **si se apila sin haber mirado lo anterior, cuando algo se vea raro no habrá forma de saber cuál de las tres tandas lo hizo** |
 

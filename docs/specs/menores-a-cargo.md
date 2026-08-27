@@ -3,9 +3,12 @@
 > Estado: 🟦 **REVISADO (§8) y EN EJECUCIÓN — TANDAS 1, 2 y 3 EN EL ÁRBOL (2026-08-27, carril A):
 > la 1 es el núcleo en Identity + la API (`#191`); la 2, la FIRMA DEL MENOR (`#198`) con la cadena por
 > (titular, sujeto) que decidió el owner (`#197`); la 3, la ZONA DEL CAJÓN (`#199`), medida y con su
-> guion en headless 20/20.** ▶ **EMPIEZA POR §9** —§9.1/§9.7/§9.8 qué existe, §9.5 las cinco decisiones
-> (TOMADAS) y §9.8.4 lo que queda: la tanda 4 (el embudo) y el ✅ del owner en navegador— ·
-> Última actualización: 2026-08-27 noche (§9.8) · anterior: 2026-08-25 ·
+> guion en headless 20/20. La TANDA 4 —la asignación en el embudo— tiene su DISEÑO DE EJECUCIÓN
+> escrito y medido (§9.9, `#202`) y arranca por la unidad 0.** ▶ **EMPIEZA POR §9.9** —§9.9.2 las
+> cuatro decisiones del owner (⚠️ la exención firmada es CONDICIÓN para asignar, y el panel ENTRA),
+> §9.9.1 lo que el código corrige al cuerpo (§4.7 «esa pantalla ya existe» era FALSA; la cesta del
+> propio titular se PURGA al nacer abierto el cajón), §9.9.3 el diseño y §9.9.4 las unidades— ·
+> Última actualización: 2026-08-27 noche (§9.9) · anteriores: §9.8, 2026-08-25 ·
 > ⚠️ **§8.1 CORRIGE a §4.8**: las respuestas del evento también viven en `cart.js`, que **sí** se
 > persiste — y el mecanismo que hay que extender es su **lista blanca**, no `selection.js`. §8.2 añade
 > la trampa del sobre versionado, que la spec no nombra. Léelas antes que §4.8.
@@ -626,4 +629,262 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
 - La entrada del índice se reconoce por su TEXTO (`hasText`): no hay `data-*` por zona a propósito
   (el contrato visual es el árbol, `sidebar-spa.md` §4.2).
 - `<input type="date">` entrega `Y-m-d` tal cual: la fecha viaja sin tocar y el servidor la valida.
+
+### 9.9 Ejecución — tanda 4 (2026-08-27 noche, carril A, `DECISIONES #202`): la ASIGNACIÓN EN EL EMBUDO — el diseño de ejecución, MEDIDO antes de escribir
+
+> Spec-first, como las tres anteriores: antes de una línea de código se leyó el código contra el que
+> se diseña (seis lectores por subsistema + un crítico de completitud: **296 hechos, 75 afirmaciones
+> de la spec verificadas —14 FALSAS o IMPRECISAS—, 96 trampas, 15 huecos que el diseño tenía que
+> decidir**) y se midió en headless lo único que nadie había medido (§9.9.6). ▶ **Lee §9.9.2 (lo que
+> decidió el owner) y después §9.9.1 (lo que corrige al cuerpo), y solo entonces §9.9.3.** El cuerpo
+> §4.7–§4.10 sigue siendo el QUÉ; esto es el CÓMO, y donde chocan manda esto.
+
+#### 9.9.1 Lo que el código enseñó — y corrige al cuerpo
+
+1. ❗ **No existe ninguna pantalla «después de identificarse» en el paso 5.** `PurchaseSection::enterWith()`
+   encadena `sessionGained → applyIdentity → reset → continueAfterIdentification` y navega a PAY (o a
+   CART con error). §4.7 decía «esa pantalla ya existe»: **era FALSA**. El paso 5 es el formulario
+   entero, sin pie ni CTA (`buildFooter()` devuelve `null`). Decidido por el owner en §9.9.2·1.
+2. ❗ **Un campo nuevo por línea hoy daría 201 «asignando nada».** `Validator::validated()` descarta
+   las claves sin regla (`excludeUnvalidatedArrayKeys`), y después `CartPayload::toLine()` y
+   `Cart::sanitize()` reconstruyen la línea con SEIS claves fijas. El CONTRATO sí es estricto
+   (`CartLine` con `additionalProperties: false`), pero solo lo hace cumplir Spectator donde un test
+   llama a `assertValidRequest()`: **uno** de los tests de `POST /orders`, con un fixture de cuatro
+   campos. Un test que no mande el campo no lo comprueba.
+3. **El orquestador NO puede llamar a Identity** (`ModuleBoundariesTest::ALLOWED['Booking']` = Platform +
+   `Payments\Contracts`; solo `User` es kernel), y Booking no emite eventos de dominio (cero `event(`,
+   cero listeners salvo `Verified`). El punto de composición es **`OrdersController::store()` tras
+   `start()`**: la capa de entrega compone los dos módulos (precedente: `MeOrdersController` importa
+   `Order` y `User`), y `ApiBoundariesTest` prohíbe las escrituras de Eloquent y `DB::` en el
+   controlador, **no** llamar a un servicio de dominio con nombre propio (`AccountPrivacy::anonymize()`,
+   `DependentRegistry::remove()` ya se llaman así).
+4. **No hay índice de línea persistido.** `createPendingOrder()` devuelve `Order` sin `items` cargados;
+   los principales nacen en el orden de `$cart` con ids crecientes y `Order::items()` no lleva
+   `orderBy`; la 201 publica el `id` de cada línea pero no su `index`; el cliente descarta los items
+   tras el 201. La correlación cesta ↔ ítem la tiene que PROMETER Booking (D2).
+5. **`Dependent::hasReferences()` y `prunable()` son DOS copias** del predicado «qué cuenta como
+   referencia»: si la asignación entra en una y no en la otra, o la poda diaria aborta a mitad
+   (`delete()` lanza), o `remove()` borra un menor con entradas asignadas. Se unifican (D5).
+6. **`GET /orders/{code}/event-data` es el precedente exacto** de «dato de un menor por reserva,
+   servido APARTE, `no-store`, emparejado por `reservation_id`»: el paso 6 ya lo pide en paralelo con
+   el pedido y la tarjeta de «Mis reservas» lo pide bajo demanda. Es por donde sale la asignación (D7).
+7. **En «Mis reservas» no hay dónde poner «asignada a»**: `OrderItem` es cerrado (19 campos, en cinco
+   respuestas) y `UpcomingReservation` no lleva `id`. §4.10 («recuperable desde Mis reservas») era
+   diseño, no código — y con la decisión §9.9.2·4 la recuperación la hace el mostrador.
+8. `purchase:verify-oversell` tiene **SEIS** escenarios (`panel-edit` entró con la 4b), no cinco como
+   decía la fila A de `ESTADO.md`.
+9. **La lista blanca del cliente son CUATRO sitios y dos guardas**, no uno: `toApiItems()` (lo que
+   viaja a CUATRO endpoints), `SANITISED_FIELDS` (atada a `CartPayload::lineRules()` por
+   `SidebarCartParityTest`), `sanitizeLine()` (lo que se restaura) y `save()` (lo que se persiste), más
+   el `deepEqual` y el canario de `cart.test.js`. §8.1 nombraba solo `save()`: un campo que entre ahí y
+   no en `sanitizeLine()` se pierde al recargar sin que nada falle.
+10. **`reconcile()` solo reconcilia contra el PRESUPUESTO** (índices que no vuelven, precio nulo,
+    complementos perdidos): «la línea se queda sin asignar si el menor se retiró» (§4.8·2) hay que
+    construirlo, no extenderlo (D8).
+11. ❗❗ **La cesta del PROPIO titular se PURGA cuando el cajón nace abierto** (`/entradas`,
+    `/mi-cuenta`, `/login`, `/registro`, `/recuperar-contrasena`). Medido en headless (§9.9.6):
+    `props.userId` llega del HTML, está declarada en `PurchaseSection.vue` y **no la lee nadie** (se
+    perdió al mover la identidad al store); el dueño solo lo fija `GET /me`, que dispara `open()` — y el
+    arranque «nace abierto» llama a `bootSpaEngine()` sin pasar por `open()`. Una cesta guardada con
+    `owner = N` se restaura con `owner = null` y `decideOwnership(N, null)` = `purge`. §4.8 daba esa
+    defensa «ya resuelta»: lo está en el camino normal (4/4 medidos) y rota en el que nace abierto
+    (2/2). Es la **unidad 0** (§9.9.2·3).
+12. **Quien se da de alta en el paso 5 tiene CERO menores** en ese instante y no puede firmar ninguna
+    exención hasta verificar el correo (`#179`): la puerta 2 sirve a **cuentas que ya existen**. No es
+    un defecto: es lo que la decisión §9.9.2·2 implica.
+13. **La cantidad de una línea BAJA y SUBE desde el panel** (`OrderItemEditor::edit()`) sin borrar ni
+    crear filas, y la fecha se mueve (`changeSlot()`); Booking no avisa a nadie. La coherencia de la
+    asignación se DERIVA al leer, como `guest_data` contra `quantity` (D4).
+14. `ModuleContractsTest` sustituye `ReservationCheckout` por un doble que DENIEGA y exige
+    `Order::count() === 0` y `starts === 1`: la escritura solo puede colgar de un `start()` que
+    permitió (D3).
+15. Presupuestos, medidos hoy: `PurchaseSection.vue` clavado en **432 líneas / 2 llamadas** (exacto,
+    «solo encoge»); chunk **234,41 KiB de 235** (607 B); payload con sesión **7.602 B de 7.700** (98 B);
+    y el manifiesto congelado **no tiene ningún caso de ENTRADA en la `qtybox` del paso 3** (los dos
+    casos anclados ahí usan un PACK).
+
+#### 9.9.2 Las cuatro decisiones del owner (2026-08-27 noche, `#202`), a pregunta simple con la medida delante
+
+1. **Puerta 2 → el cajón VUELVE AL CARRITO con aviso**, solo si la cuenta tiene menores asignables y la
+   cesta tiene entradas sin asignar; el resto sigue a pagar como hoy. Cero pasos nuevos en `machine.js`
+   (la transición `IDENTIFY → CART` ya existe).
+2. ❗❗ **La exención firmada es CONDICIÓN para asignar**: «un menor no se puede asignar si no firma la
+   exención; sin eso, asignar menores no sirve de nada». **Cambia el alcance de §4.7**: la asignación
+   no es una etiqueta con aviso, es la lista de los menores que YA pueden entrar. El selector solo
+   ofrece menores con firma VIGENTE, y el servidor lo exige (422) aunque el cliente no lo haga.
+   ▶ `[DECIDIDO agente, reversible en una línea]`: en modo `externo` o `desactivado` no existe firma
+   que comprobar (`WaiverStatus::forDependent()` devuelve `signed: false` sin pregunta), así que ahí
+   la regla no aplica y se puede asignar — la exención vive fuera o no hay. Si el owner prefiere que
+   sin modo interno no se asigne, es un `if` menos.
+3. **La purga de la cesta (§9.9.1·11) se arregla AHORA, como unidad 0** de esta tanda.
+4. **El PANEL entra**: ver la asignación en el pedido **y asignar en mostrador** (alta manual y
+   pedido existente). Toca `app/Filament/Resources/Orders/**` (carril B, aviso en el reparto) y
+   `app/Filament/Pages/CreateManualOrderPage.php`.
+
+#### 9.9.3 Decisiones de diseño `[DECIDIDO agente]` — todas reversibles, cada una con su porqué
+
+- **D1 · Transporte: `dependent_ids` DENTRO de `CartLine`**, opcional (`OPTIONAL_BY_DESIGN`), lista de
+  enteros distintos, ≤ `quantity`. Es el esquema compartido por cuatro endpoints, y se decide que los
+  tres públicos lo **validan e ignoran** (descripción en el contrato); solo `POST /orders` lo lee.
+  `CartPayload::lineRules()` lo valida (`sometimes|array`, `*.integer|min:1|distinct`) y
+  **`CartPayload::toCart()` NO lo pasa a Booking**: una función hermana, `CartPayload::assignments()`,
+  extrae `[índice => ids]` para Identity. `Cart::sanitize()` no se toca — Booking sigue sin ver un id
+  de menor (§4.6). Descartadas: (a) una petición aparte tras el 201 —añade una llamada en el momento
+  más delicado (entre el 201 y el envío a la pasarela) y convierte el fallo en un reintento del
+  cliente—; (b) un esquema `CheckoutLine` aparte —OpenAPI 3.0 + Spectator no soportan `allOf` con
+  `additionalProperties: false`, y duplicar seis propiedades es la deuda que `ApiContractTest` vigila—.
+- **D2 · Correlación cesta ↔ ítem: la promete Booking por CONTRATO.** `Booking\Contracts\CheckoutLines`
+  con `forOrder(int $orderId, int $userId): list<CheckoutLine>` — los ítems PRINCIPALES del pedido en
+  orden de creación (`orderBy('id')`, que es el orden de la cesta porque `OrderCreator` los crea así),
+  cada uno con `index`, `orderItemId`, `quantity`, `isEntry` y `date`. Implementación
+  `Booking\Services\CheckoutLinesReader`, bind en `BookingServiceProvider`, doble en
+  `ModuleContractsTest`. Identity → `Booking\Contracts` está en `ALLOWED`: **cero flechas**. Guarda de
+  método: si `count(líneas) !== count(peticiones)` no se escribe NADA y se registra (fail-safe: mejor
+  sin asignar que asignado a otra línea). Descartado devolver el mapa desde `OrderCreator`: toca el
+  `CRITICAL_RE` y la firma que consumen el verificador y el fulfiller sin ganar nada.
+- **D3 · DOS FASES, y la primera va ANTES del dinero.** `Identity\Services\DependentAssigner`:
+  · `check(User $holder, array $lines): AssignmentRejections` — sin lock, ANTES de `start()`: para cada
+    id, suyo + activo (ajeno = inexistente = retirado, §4.9), **menor en la FECHA DE LA VISITA**
+    (`isMinorOn(line.date)`, no hoy: un menor de 17 años y 364 días visita como adulto), **firma
+    VIGENTE** en modo interno (§9.9.2·2), sin repetidos y ≤ `quantity`. Cualquier rechazo → **`422
+    validation_failed`** con `fields['items.{i}.dependent_ids.{j}']` y el mensaje de su motivo (tres
+    claves `api.*`, tres idiomas). Es fail-closed **antes** de crear el pedido y de consumir la ficha
+    de admisión: el cliente se entera y nada queda a medias.
+  · `assign(User $holder, int $orderId, array $lines): AssignmentOutcome` — DESPUÉS de que `start()`
+    devuelva `allow` (o sea, tras `open()`: si la pasarela no abre no hay nada que limpiar), bajo el
+    `lockForUpdate()` de la fila del titular —**el mismo lock que `DependentRegistry::remove()` y
+    `WaiverSigner`**, así una retirada concurrente no se cruza con una asignación—, RE-valida las mismas
+    reglas (el estado pudo cambiar entre las dos fases), lee las líneas por D2, escribe idempotente
+    (`insertOrIgnore` sobre el único `(order_item_id, dependent_id)`; solo entradas; ≤ `quantity`), y
+    audita. Si falla, `Log::warning('dependents.assign_failed', …)` y **el pedido sigue en pie** (§4.10);
+    el 201 se compone DESPUÉS, así que ya la refleja. Descartado `DB::afterCommit`: fuera de una
+    transacción se ejecuta en el acto (el orquestador no abre ninguna, por regla).
+  · Con el doble que deniega (§9.9.1·14) no se invoca: cuelga de `$outcome->denied() === false`.
+- **D4 · La tabla, en Identity: `dependent_assignments`** — `id · dependent_id (FK `dependents`
+  RESTRICT) · order_item_id (`unsignedBigInteger`, FK `order_items` CASCADE) · created_at`, único
+  `(order_item_id, dependent_id)`, índice `dependent_id`. **Sin columna de posición**: la asignación es
+  el CONJUNTO de menores de una línea (un menor no usa dos entradas a la vez), con `count ≤ quantity`
+  exigido al escribir y **derivado al leer** (si la cantidad bajó desde el panel se enseñan las
+  primeras `quantity` por `id`; si subió, hay huecos de adulto). Modelo `Identity\Models\DependentAssignment`
+  con alias `dependent_assignment` en el morphMap. CASCADE desde `order_items` porque una asignación
+  sin su línea no significa nada y así `PurgeCustomerData` (que borra pedidos ANTES que menores) y los
+  `Verify*` (que borran `OrderItem` a mano) siguen funcionando sin tocarlos; RESTRICT hacia
+  `dependents` porque es la BD diciendo §4.4, como la FK de las firmas (`#198`).
+- **D5 · La asignación es REFERENCIA (§4.4), y el predicado se escribe UNA vez.** `Dependent` gana
+  `assignments()` y un scope `referenced()` —firma O asignación— del que salen `hasReferences()`
+  (`whereKey + referenced()->exists()`) y `prunable()` (`whereNotNull(removed_at) + unreferenced()`):
+  las dos copias de §9.9.1·5 se funden, y `remove()`, `anonymize()` y `model:prune` coinciden por
+  construcción. Consecuencia: un menor con entradas asignadas se DESVINCULA al quitarlo, y la fila se
+  poda sola cuando el pedido se purga (la cascada borra la asignación).
+- **D6 · RGPD.** `RGPD-01`: `User::anonymize()` **borra las asignaciones** del titular antes de tratar a
+  sus menores — es la misma clase de dato que `guest_data`/`event_data`, que ya se vacían: PII de un
+  menor atada a una visita; después cada menor sigue la regla vigente (con firma → desvinculado, sin
+  nada → borrado). `RGPD-04`: el export lleva `dependents: [nombres]` en cada `ExportedOrderItem`
+  (art. 20); `CustomerOrderHistory::exportFor()` añade un `id` interno por línea para que Identity
+  cruce, y `AccountPrivacy` lo retira antes de emitir. La purga de go-live no cambia (cascada).
+- **D7 · Lectura: `dependents[]` en `OrderEventDataReservation`** (`{id, name}`, obligatorio, vacío si
+  no hay), compuesto por `OrderEventDataResource` desde Identity (`DependentAssigner::forOrder()`,
+  una consulta por pedido, sin N+1). El paso 6 lo enseña sin una petición más («Para: Lucas, Vera»
+  bajo la línea, en `SummaryLine` — que también pinta el paso 8, donde la propiedad va vacía). En «Mis
+  reservas», la tarjeta de una ENTRADA ofrece «Ver para quién» solo si el titular tiene menores (el
+  store ya lo sabe) y lo pide bajo demanda, como las respuestas del pack. Descartado un campo en
+  `OrderItem`: cinco respuestas, listas paginadas con nombres de menores y un N+1 que
+  `ApiOverheadTest` cazaría.
+- **D8 · Cliente: `dependent_ids` en las CUATRO listas** (`SANITISED_FIELDS` —la paridad con
+  `lineRules` se mantiene sola—, `sanitizeLine()` que restaura solo enteros ≥ 1, distintos y ≤
+  `quantity`, `save()` y una `toCheckoutItems()` que usa SOLO `pay.js`; `toApiItems()` no cambia para
+  los tres endpoints públicos). Política de fusión en `addLine()`: unión de ids (los existentes
+  primero) recortada a la cantidad efectiva; `quantity_capped` recorta. Reconciliación (§4.8·2): al
+  restaurar con sesión y en `sessionGained`, los ids que no estén en la lista viva de menores
+  ASIGNABLES (`GET /me/dependents`: activo, `is_minor`, `waiver.signed && !outdated`) se quitan de la
+  línea en silencio; y si el servidor rechaza (D3) el 422 llega por línea y la línea se desasigna con
+  su aviso. `useDependentsStore().invalidate()` gana los llamadores que hoy no tiene (`applyIdentity`
+  y `sessionGained`). `STORAGE_VERSION` sigue en **1** (§8.2). El canario de `cart.test.js` se siembra
+  también con un nombre en la línea: el almacén solo puede llevar ids.
+- **D9 · La interfaz, en dos sitios y con la misma pieza.** Un bloque «¿Para quién son estas
+  entradas?» con una CASILLA por menor asignable («Lucas · 9 años»; los no asignables aparecen
+  deshabilitados con su motivo —«exención sin firmar: fírmala en Menores a cargo»— y el enlace abre
+  esa zona del mismo cajón, sin perder la cesta), tope = `quantity`, «el resto son adultos». Vive en
+  **`TimeStep`** (paso 3, con sesión, solo entradas) y en **`CartStep`** (paso 4, con sesión, por
+  línea — el único paso que ya edita líneas persistidas). La lógica —opciones, tope, motivos,
+  recorte, «¿hace falta volver al carrito?»— en un módulo plano `assignment.js` con `node --test`;
+  los `.vue` pintan (≤ 40 líneas). La puerta 2 (§9.9.2·1) es un input más de
+  `continueAfterIdentification()`: si `needsAssignment` el veredicto es CART con aviso en vez de PAY.
+- **D10 · Rótulos en `account.dependents.*`**, no en `tickets.*`: solo se pintan con sesión, y
+  `tickets` viaja entero en toda página pública. El techo del payload con sesión (7.700, 98 B de
+  holgura) sube por FEATURE con su párrafo, misma regla que `#197`·2.
+- **D11 · Gates.** `OrdersController` ya está en el `CRITICAL_RE` (prefijo `Order`): la tanda se empuja
+  con `VERIFY_CONC=1` tras correr los SEIS escenarios de `purchase:verify-oversell` y
+  `redsys:verify-concurrency`. `DependentAssigner` **no** es dinero ni aforo: se declara en
+  `CriticalPathGateTest::NON_CRITICAL_FILES` como control negativo, con su porqué, para que la decisión
+  quede fijada y no por inercia. `CheckoutOrchestrator` y `OrderCreator` **no se tocan**. El modelo
+  nuevo sube «33 modelos» a 34 en las dos docs que `docs-check` cuenta.
+- **D12 · Auditoría**: `dependents.assigned` (target el titular; payload `dependent_id`,
+  `order_item_id`, `order_id`, nunca el nombre, `RGPD-02`) y en el mostrador la misma acción con
+  `by` del operador. Un fallo de escritura va a log, no a auditoría (no hay acción que auditar).
+- **D13 · Minoría en la FECHA DE LA VISITA** (D3), no hoy: es la fecha en la que la cobertura del
+  adulto importa (§4.1). Reversible.
+- **D14 · El panel (unidad 3)**: la ficha del pedido enseña, por línea de entrada, «Para: Lucas
+  (9 años · exención ✓)» leyendo por `DependentAssigner::forOrder()`; la acción «Asignar menores» de
+  la línea (misma familia que «Gestionar») fija el CONJUNTO (`sync`: quitar y poner) con las mismas
+  reglas de D3 y el mismo lock; y el alta manual, tras elegir el cliente, ofrece por línea de entrada
+  sus menores asignables y escribe **después** de que `ManualOrderFulfiller::fulfill()` devuelva (fuera
+  de SU transacción, §9.9.1). El operador ve el nombre porque ya lo ve en el registro del waiver
+  (`#198`); la puerta seguirá sin verlo (subsistema A).
+
+#### 9.9.4 Las unidades, en orden — cada una verde y EMPUJADA antes de la siguiente (`CONVENCIONES §10`·5)
+
+| U | Qué | Ficheros | Gate |
+|---|---|---|---|
+| **U0** | La purga de la cesta (§9.9.1·11): sembrar el dueño desde el HTML antes de restaurar, caso JS, re-correr la sonda §9.9.6 (10 medidas) | `resources/js/sidebar/sections/PurchaseSection.vue` (presupuesto 432 exacto: se compensa o sube con párrafo) · `stores/cart.js` · sus tests | `test:js`, suite, sonda headless |
+| **U1** | El SERVIDOR: migración + `DependentAssignment` + `Dependent` (D5) + `DependentAssigner` (check/assign/forOrder) + `Booking\Contracts\CheckoutLines` y su reader + `CartPayload` (D1) + `OrdersController::store()` (D3) + contrato (`CartLine.dependent_ids`, `OrderEventDataReservation.dependents`, `ExportedOrderItem.dependents`) + `OrderEventDataResource` + `anonymize()`/export (D6) + auditoría + morph + `NON_CRITICAL_FILES` + `lang/*/api.php` | `database/migrations/*dependent_assignments*` · `app/Domain/Identity/{Models/DependentAssignment,Services/DependentAssigner,Contracts/*}` · `app/Domain/Booking/{Contracts/CheckoutLines,Services/CheckoutLinesReader,BookingServiceProvider}` · `app/Http/Api/CartPayload.php` · `app/Http/Controllers/Api/V1/OrdersController.php` · `app/Http/Resources/Api/V1/OrderEventDataResource.php` · `openapi/v1.yaml` · `tests/Feature/{Dependents,Api/V1,Architecture}/**` | `VERIFY_CONC=1` (6 escenarios + Redsys), `ApiContractTest`, `ModuleBoundariesTest` con diff de baselines VACÍO, `ModuleContractsTest` con el doble nuevo, sonda HTTP sobre MySQL |
+| **U2** | El CAJÓN: `cart.js` (D8) + `assignment.js` + `stores/dependents.js` (ensure/invalidate) + `TimeStep`/`CartStep` (D9) + `admission.js` (puerta 2) + `PurchaseSection` (cableado, presupuesto) + `SummaryLine`/paso 6 + tarjeta de «Mis reservas» (D7) + rótulos ×3 (D10) + manifiesto regenerado **con un caso nuevo de ENTRADA en la `qtybox`** + techos del chunk y del payload medidos con y sin | `resources/js/sidebar/**` · `lang/{es,en,fr}/account.php` · `resources/views/components/layout.blade.php` (la lista de claves con sesión) · `tests/Fixtures/sidebar-dom-manifest.json` · `tests/Feature/Sidebar/**` | `test:js`, todas las guardas del cajón, `SidebarBundleBudgetTest`/`SidebarMountTest` con su párrafo, guion headless §5.undecies por las DOS puertas |
+| **U3** | El PANEL (D14): la ficha del pedido, la acción «Asignar menores» y el alta manual | ⚠️ `app/Filament/Resources/Orders/**` (**carril B**: aviso en el reparto ANTES de tocarlo) · `app/Filament/Pages/CreateManualOrderPage.php` · `lang/es/admin.php` · `tests/Feature/Admin/**` | suite; la vista del modal se prueba llamando a lo que la pinta (`TESTING.md` §concurrencia, trampa del `wire:partial`) |
+| **U4** | El OJO del owner: guion §5.undecies en navegador, con `waiver.mode = interno` y un menor firmado y otro sin firmar | `docs/VERIFICACION-E2E-CAJON.md` | — |
+
+Lo que NO entra: la pantalla de puerta (subsistema A) · asignar menores a PACKS (§4.7, dos fuentes de
+verdad) · editar una asignación desde «Mis reservas» (el cliente quita/pone en el embudo; después, el
+mostrador) · el modo `externo`/`desactivado` como bloqueo (§9.9.2·2, reversible).
+
+#### 9.9.5 Verificación empírica que se exige a cada unidad
+
+- **Guardas nuevas con mutación vista morder**: (1) un id ajeno/retirado → 422 y el pedido NO se crea
+  (§6·1, la más importante: mutación = quitar `where('user_id')` del check); (2) un menor sin firma
+  vigente → 422 en interno, entra en externo; (3) adulto en la fecha de la visita → 422, aunque sea
+  menor hoy; (4) `count > quantity` → 422; (5) packs → 422 (§6·7); (6) idempotencia: dos `assign()`
+  iguales → una fila; (7) el pedido sigue en pie si `assign()` lanza (§4.10) y el 201 sale; (8) el
+  doble que deniega no escribe nada; (9) `remove()` DESVINCULA con asignación detrás y `anonymize()`
+  borra la asignación antes (§6·5/§6·6); (10) la poda no toca un desvinculado con asignación y sí
+  cuando la cascada se la lleva; (11) `event-data` lleva `dependents` y `/me/orders` NO lleva ningún
+  nombre; (12) el export lleva los nombres; (13) la línea de cesta restaurada pierde el id de un menor
+  que ya no es asignable (`cart.test.js`); (14) el canario: un nombre sembrado en la línea no llega al
+  almacén; (15) `continueAfterIdentification` devuelve CART con aviso cuando hay menores y entradas
+  sin asignar, y PAY si no (`admission.test.js`); (16) la correlación: con dos líneas del mismo producto
+  y distinta franja, cada asignación cae en SU ítem.
+- **Concurrencia real sobre MySQL**: los seis escenarios de `purchase:verify-oversell` y
+  `redsys:verify-concurrency` (por el `CRITICAL_RE`, aunque no ejercitan la asignación — se dice); y una
+  sonda propia de N `assign()` simultáneos del mismo titular → una fila por par (el lock).
+- **HTTP sobre MySQL con Bearer**: el ciclo entero (`POST /orders` con `dependent_ids` → 201 →
+  `GET /orders/{code}/event-data` con `dependents`), los cuatro 422 y el export.
+- **Navegador**: el guion §5.undecies por las DOS puertas (con sesión desde el paso 3; sin sesión
+  identificándose en el 5 y volviendo al carrito con el aviso), con un menor firmado y otro sin firmar,
+  primero en headless (`feedback` del owner: él después).
+
+#### 9.9.6 La sonda del dueño de la cesta (2026-08-27 noche, headless, 10 medidas) — la evidencia de §9.9.1·11
+
+`/root/e2e/cart-owner-probe.js` (fuera del repo, receta §5.bis). Cuenta `e2e-dependents@jumpweb.test`
+(id 457), una línea real («Jump · 1 hora», 27/08 20:00; el horizonte de franjas hubo que regenerarlo
+con `slots:generate-rolling`, `AFORO-03`), sembrada en `localStorage` tal como la escribe `save()`.
+
+| Medida | Estado guardado | Camino | Resultado |
+|---|---|---|---|
+| M1, M1bis | `owner = 457`, sesión | `/entradas` (nace abierto) | ❌ **PURGADA** ×2: almacén borrado, 0 líneas, el cajón abre en el catálogo |
+| M2 | `owner = null`, sesión | `/entradas` | ✅ conservada: 1 línea, abre en «Tu carrito» |
+| M3, M4.0–2 | `owner = 457`, sesión | home + CTA (`open()`) | ✅ conservada ×4, dueño 457 intacto |
+| M5 | `owner = 457`, **sin** sesión (logout) | `/entradas` | ✅ purgada — la casilla del logout, correcta |
+
+▶ La tabla de `decideOwnership()` es correcta; lo roto es que el arranque «nace abierto» restaura con
+el dueño a `null`. El arreglo es la línea que el docblock de `PurchaseSection` promete y nunca existió:
+sembrar el dueño desde el HTML antes de `restoreCart()`. ⚠️ El guion A5·2 del E2E espera una purga que
+la tabla no produce (cesta SIN dueño + otra cuenta → conservar): es doc caducada, se corrige en U0.
 

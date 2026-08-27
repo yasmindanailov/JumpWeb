@@ -10635,3 +10635,50 @@ en vez de hacer una tercera.
 ❗ **Falta la pasada de NAVEGADOR del owner, y aquí pesa como nunca**: esto cambia la primera
 pantalla de las doce vistas, encima de `#195` y `#196`, que siguen sin mirarse. El owner eligió
 revisarlo todo junto sabiendo el coste (`#200`).
+
+## #202 · 2026-08-27 · [DECIDIDO, owner] Menores a cargo, tanda 4 — la asignación en el embudo: la exención firmada es CONDICIÓN para asignar, la puerta 2 vuelve al carrito, la purga de la cesta se arregla primero y el panel ENTRA; y el diseño de ejecución, medido antes de escribir
+
+**Qué se decidió** (owner, 2026-08-27 por la noche, a pregunta simple del agente A con la medida y el
+coste de cada salida delante — `specs/menores-a-cargo.md` **§9.9.2**):
+
+1. **La puerta «sin sesión» del embudo**: medido que tras identificarse en el paso 5 el cajón va
+   DIRECTO a pagar (no existe la pantalla que §4.7 daba por existente), el owner elige que **vuelva al
+   CARRITO con un aviso** —solo si la cuenta tiene menores asignables y la cesta tiene entradas sin
+   asignar—; el resto sigue a pagar como hoy. Cero pasos nuevos en `machine.js`.
+2. ❗❗ **«Un menor no se puede asignar si no firma la exención; sin eso, asignar menores no sirve de
+   nada.»** La asignación deja de ser una etiqueta con aviso (§4.7) y pasa a ser **la lista de los
+   menores que YA pueden entrar**: el selector solo ofrece menores con firma VIGENTE y **el servidor lo
+   exige con un 422** aunque el cliente no lo haga. `[DECIDIDO agente, reversible en una línea]`: en
+   modo `externo`/`desactivado` no hay firma que comprobar y se puede asignar.
+3. **La purga de la cesta del propio titular** —defecto medido en headless (`DEUDA.md`, Alta: 2/2 purga
+   al nacer abierto el cajón, 4/4 se conserva desde la home)— **se arregla AHORA, como unidad 0** de la
+   tanda: sembrar el dueño desde el HTML antes de restaurar, un caso JS y la sonda re-corrida.
+4. ❗ **El PANEL entra en la tanda: ver la asignación en el pedido y ASIGNAR EN MOSTRADOR** (alta
+   manual y pedido existente). Toca `app/Filament/Resources/Orders/**` (carril B, con aviso previo en el
+   reparto) y `CreateManualOrderPage`.
+
+**Y el diseño de ejecución `[DECIDIDO agente]`, escrito en §9.9.3 con su porqué y todo reversible**:
+`dependent_ids` DENTRO de `CartLine` (los tres endpoints públicos lo validan e ignoran; solo
+`POST /orders` lo lee, y `CartPayload::toCart()` NO se lo pasa a Booking) · la correlación cesta ↔ ítem
+la promete Booking por contrato (`Booking\Contracts\CheckoutLines`, principales en orden de creación;
+cero flechas nuevas) · DOS fases: `DependentAssigner::check()` ANTES del dinero (422 fail-closed: ajeno
+= inexistente = retirado, adulto EN LA FECHA DE LA VISITA, sin firma vigente, repetidos, > cantidad,
+packs) y `assign()` DESPUÉS del `allow` bajo el mismo lock que `remove()`/`WaiverSigner`, idempotente,
+y si falla el pedido sigue en pie · tabla `dependent_assignments` en Identity (FK RESTRICT a menores,
+CASCADE desde `order_items`, sin posición: es un CONJUNTO acotado por `quantity` y derivado al leer) ·
+la asignación es REFERENCIA y `hasReferences()`/`prunable()` pasan a UN predicado · `anonymize()` borra
+las asignaciones como vacía `guest_data`; el export las lleva · la lectura sale por
+`GET /orders/{code}/event-data` (`dependents[]` por reserva), el precedente exacto de dato de menor
+servido aparte · la interfaz es UNA pieza (casillas por menor asignable, tope = cantidad) en los pasos
+3 y 4 · rótulos en `account.dependents.*` (solo con sesión) · `OrdersController` ya está en el
+`CRITICAL_RE`; `DependentAssigner` se declara control negativo.
+
+**Cómo se llegó**: seis lectores por subsistema + un crítico de completitud sobre el código real
+(**296 hechos, 75 afirmaciones de la spec verificadas —14 FALSAS o IMPRECISAS—, 96 trampas, 15
+huecos**), y la única medida que faltaba, en headless (§9.9.6). Lo que corrige al cuerpo está en
+§9.9.1; lo peor: «esa pantalla ya existe» (falsa), «un campo desconocido da 422» (falsa: 201 asignando
+nada), «reconcile deja la línea sin asignar» (futuro, no código), «cinco escenarios» (son seis).
+
+**Orden de trabajo**: U0 la purga → U1 el servidor → U2 el cajón → U3 el panel → U4 el ojo del owner;
+cada unidad se empuja verde (`CONVENCIONES §10`·5). Este commit es solo doc: reclama la tanda en el
+reparto y deja el aviso al carril C (`layout.blade.php` en U2) y al B (`Orders/**` en U3).

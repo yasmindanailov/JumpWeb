@@ -2010,6 +2010,23 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
         por id entero, las dos puertas, el hueco en la lista blanca de `cart.js::save()` sobre `v: 1`
         (§8.1, §8.2), la re-validación en servidor (§4.9) y la escritura post-commit fuera del lock
         (§4.10). Es la tanda que toca el checkout.
+        ▶ 🟦 **EN EJECUCIÓN desde el 2026-08-27 por la noche (carril A, `#202`): el DISEÑO DE EJECUCIÓN
+        está en la spec §9.9**, medido contra el código antes de escribir (14 afirmaciones de la spec
+        resultaron falsas o imprecisas: no hay pantalla post-login en el paso 5; un campo nuevo por
+        línea hoy se descarta en silencio con 201; la cesta del propio titular se PURGA al nacer
+        abierto el cajón — medido en headless). **Cuatro decisiones del owner**: la puerta 2 vuelve al
+        carrito con aviso · ❗ **la exención firmada es CONDICIÓN para asignar** · la purga se arregla
+        como unidad 0 · ❗ **el panel ENTRA** (ver y asignar en mostrador). Unidades: U0 la purga ·
+        U1 el servidor · U2 el cajón · U3 el panel · U4 el ojo del owner.
+    - [ ] **U0 · la purga de la cesta** (defecto medido, `DEUDA.md` Alta).
+    - [ ] **U1 · el servidor**: `dependent_assignments` + `DependentAssigner` (check ANTES del dinero,
+          assign DESPUÉS del `allow`) + `Booking\Contracts\CheckoutLines` + `CartLine.dependent_ids` +
+          `OrdersController::store()` + `event-data` con `dependents` + RGPD + gates.
+    - [ ] **U2 · el cajón**: las cuatro listas de `cart.js`, `assignment.js`, el bloque «¿Para quién?»
+          en los pasos 3 y 4, la puerta 2 en `admission.js`, el paso 6 y la tarjeta, rótulos ×3,
+          manifiesto y techos medidos.
+    - [ ] **U3 · el panel**: la ficha del pedido, «Asignar menores» y el alta manual (aviso al carril B).
+    - [ ] **U4 · el ojo del owner** (guion §5.undecies).
 - [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`.
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
