@@ -2036,12 +2036,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
           las dos puertas y sonda de 16 `assign()` simultáneos → 1 fila. ⚠️ Dos defectos cazados por
           el guion, no por la suite (§9.9.8·4 y ·5).
     - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
-          sesión; D14 se conserva como diseño). ▶ **Esa sesión es la SIGUIENTE del carril A** (`#207`),
-          junto al subsistema A.
+          sesión; D14 se conserva como diseño). ▶ **Esa sesión es la del carril A del 2026-08-27 noche**
+          (`#207`, `#208`): **EN EJECUCIÓN como tanda 5, spec §9.10** (abajo).
+  - [ ] **C · tanda 5 — el PANEL (D14)** (2026-08-27 noche, carril A, `#208`; spec **§9.10**, diseño de
+        ejecución medido): la ficha del pedido enseña «Para: Lucas (9 años · exención ✓)» por línea de
+        entrada (una consulta de asignaciones + una de firmas), la acción «Asignar menores» de la línea
+        fija el CONJUNTO (`DependentAssigner::sync()`, mismas reglas de D3 sobre lo que se AÑADE, mismo
+        lock, fail-closed, auditado con el operador), y el alta manual ofrece los menores por línea de
+        entrada y escribe DESPUÉS de `ManualOrderFulfiller::fulfill()`, con `check()` ANTES de cobrar.
     - [ ] **U4 · el ojo del owner** (guion §5.undecies).
-- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ **SIGUIENTE
-      sesión del carril A** (`[DECIDIDO owner]` `#207`, con el panel de menores D14); mapa de arranque en
-      `ESTADO.md`. Sigue pendiente del owner el ✅ de §7 y las dos decisiones de §8.
+- [ ] **A · Carné QR + pantalla de puerta** — `docs/specs/identidad-qr-puerta.md`. ▶ **EN COLA en la
+      sesión del carril A del 2026-08-27 noche** (`[DECIDIDO owner]` `#207` + **`#208`**: va DESPUÉS del
+      panel de menores D14). ✅ **Spec APROBADA por el owner** (`#208`) con §8 incorporado; **§8.2
+      decidido: carné de 20 caracteres** (`2⁸⁵`, misma versión de QR que 13 — medido); §8.1 se
+      construye (lectura del token que captura y devuelve `null`).
       ⚠️ **Segunda reversión**: la puerta deja de ser «privacy-by-design mínima». ⚠️ **Y amplía
       `RGPD-06`**: el carné es una credencial y entra en `User::revokeAllAccess()` desde el primer
       commit — es literalmente el modo de fallo que esa invariante existe para impedir.

@@ -8,6 +8,9 @@
 > cesta, §9.9.6), U1 (el SERVIDOR, §9.9.7) y **U2 (el CAJÓN, §9.9.8: el selector en los pasos 3 y 4, la
 > puerta 2, el «Para:», los rótulos en `tickets.dependents`, guion headless 19/19 por las dos puertas)**;
 > sigue U4, el OJO del owner. ⚠️ §9.9.8·4 y ·5: dos defectos que la suite no veía y el guion cazó.**
+> ▶ **TANDA 5 — el PANEL (D14) — EN EJECUCIÓN desde el 2026-08-27 a las 22:20** (carril A,
+> `DECISIONES #208`): diseño de ejecución MEDIDO en **§9.10** (el permiso, el gate, la semántica del
+> `sync`, el alta manual). Si vienes a eso, **empieza por §9.10**.
 > ▶ **EMPIEZA POR §9.9** —§9.9.2 las decisiones del owner
 > (⚠️ la exención firmada es CONDICIÓN para asignar; el panel NO entra, rectificado),
 > §9.9.1 lo que el código corrige al cuerpo (§4.7 «esa pantalla ya existe» era FALSA; la cesta del
@@ -1078,3 +1081,115 @@ tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos c
 rótulos, la tarjeta de «Mis reservas» con un pedido pagado (el guion se queda en `pending`), y el aspecto
 del selector con el tema (⚠️ ya vio uno: el punto 7, arreglado y re-medido). Del cuerpo de la spec siguen
 pendientes del owner los DOS valores de retención.
+
+### 9.10 Ejecución — tanda 5 (2026-08-27 noche, carril A, `DECISIONES #208`): el PANEL (D14) — el diseño de ejecución, MEDIDO antes de escribir
+
+> D14 (§9.9.3) dejó el panel «como diseño» cuando el owner lo sacó de la tanda 4. Esta sección lo baja
+> al código: qué hay ya, qué se decide y por qué, en qué unidades se empuja. Todo lo de «medido» se
+> leyó en el árbol el 2026-08-27 por la noche (`748030a`).
+
+#### 9.10.1 Lo que el código enseñó (medido) — y lo que corrige o precisa a D14
+
+1. **La ficha del pedido pinta las líneas en `resources/views/filament/orders/items-list.blade.php`**
+   (un `@forelse` sobre los ítems PRINCIPALES, con un bloque `@php` por ítem que ya calcula `isPack`,
+   `ticketType`, `quantityLabel`), y la fila de iconos de la sub-card monta las acciones con
+   `wire:click="mountAction('manageItem', { item: id })"`. El sitio del «Para:» es la sub-card, bajo la
+   cabecera; el sitio de «Asignar menores» es esa fila de iconos.
+2. **`ViewOrder` tiene 2.355 líneas y sus acciones de línea viven en la página con traits en
+   `Pages/Concerns/`** (`ManagesItemCalendar`, `PresentsOrderActions`). `resolveItem()` **no acota al
+   pedido a propósito** (nota IDOR en su docblock): la guarda de mutación es
+   `Order::editItemBlockedReason()` → `not_in_order`, con `item_cancelled` · `item_finished` ·
+   `item_is_addon` · `order_not_operational`. ▶ La acción nueva usa **el mismo gate** (D14·4) y vive en
+   un trait propio (D14·6): cero orquestación nueva en la página (`desmontar-view-order.md`).
+3. **No existe un permiso de «asignar»** (`PermissionSeeder::ALL_PERMISSIONS`: 8 de `orders.*`).
+   Crear uno cuesta: seeder + `PermissionCatalog::GROUPS` + migración idempotente para instalaciones
+   desplegadas (`2026_05_28_000006_…`) + etiqueta i18n en **es y zh_CN** (paridad obligatoria) + el test
+   de paridad. `orders.edit_item` se describe como «editar item del pedido (fecha, cantidad, producto,
+   **datos**, complementos)»: para quién es la entrada es un dato de la línea. ▶ **D14·2: se reutiliza
+   `orders.edit_item`**, y el coste medido de un permiso propio queda escrito por si se revierte.
+4. **`CreateManualOrderPage::create()` llama a `ManualOrderFulfiller::fulfill()` FUERA de toda
+   transacción** y `cartToOrderCart()` **mapea solo claves conocidas** (`ticket_type_id · date · time ·
+   qty · event_data · addons`): un `dependent_ids` en la línea del carrito **jamás llega a Booking** sin
+   tocar nada. §9.9.1 acertaba: se escribe después de `fulfill()`, fuera de SU transacción.
+5. **`AuditLog::orderActions()` solo cubre los prefijos `orders.`/`order_items.`**, así que la acción
+   nueva `dependents.unassigned` no necesita etiqueta en el visor del pedido — pero **sí** tiene que
+   estar en `AuditLog::ACTIONS`: `assertKnownAction()` lanza fuera de producción.
+6. **`AuditLogger::write()` toma `user_id = Auth::id()`**: en el panel, el `by` del operador que D12
+   pedía **sale gratis**. En CLI (la sonda) va nulo, como ya midió §9.9.8.
+7. **`WaiverStatus::forDependent()` es una consulta POR MENOR**. La ficha del pedido enseña varios;
+   se añade `forDependents()` (una consulta, mismo `fromLastSignature`, **paridad probada con
+   `forDependent()`**) para que la lectura sean dos consultas y no `2 + N`.
+8. **Los mensajes `api.dependents.*` hablan al CLIENTE** («fírmala en “Menores a cargo”», tres idiomas).
+   El operador necesita los suyos, cortos y en ES (`lang/es/admin.php` es mono-idioma): D14·7.
+9. **`CheckoutLine` no lleva estado** (`index · orderItemId · quantity · isEntry · date`). «La línea
+   está viva» lo decide la capa de entrega con `editItemBlockedReason()`; Identity decide pertenencia,
+   entrada y reglas. Son dos gates, uno por capa, a propósito.
+10. **`DependentAssigner::forOrderItems()` devuelve también a las personas DESVINCULADAS** («la reserva
+    fue para ellas»). Eso obliga a decidir qué hace el `sync` con una asignación a un menor que el titular
+    ya retiró: D14·3.
+
+#### 9.10.2 Decisiones `[DECIDIDO agente]` — todas reversibles, cada una con su porqué
+
+- **D14·1 · La LECTURA es un read-model de la capa de entrega**:
+  `App\Filament\Resources\Orders\Support\AssignedDependents::forOrder(Order)` compone
+  `DependentAssigner::forOrderItems()` (recortado a la cantidad actual, D4) + `WaiverStatus::forDependents()`
+  + la edad **en la fecha de la visita** (`Dependent::ageOn(slot.date)`, D13; sin franja, hoy). Devuelve por
+  ítem `{id, name, age, waiver: ✓ | anterior | sin firma | null (fuera de interno), removed}`. La vista lo
+  llama UNA vez; presupuesto: **2 consultas + `latestVersionNumber`** por pedido, con test. El rótulo:
+  «Para: Lucas (9 años · exención ✓), Vera (7 años · sin exención)». Solo en líneas de ENTRADA; un pack
+  nunca lo enseña. El nombre lo ve el operador porque ya lo ve en el registro del waiver (`#198`).
+- **D14·2 · Permiso: `orders.edit_item`** (§9.10.1·3). Reversible por un permiso propio con el coste
+  ya medido.
+- **D14·3 · La semántica del `sync` — fija el CONJUNTO, pero solo el que el operador puede ver.**
+  `DependentAssigner::sync(User $holder, int $orderId, int $orderItemId, list<int> $ids): SyncOutcome`,
+  bajo el **mismo lock** de la fila del titular:
+  · el conjunto que se sustituye es el de los menores **ACTIVOS** del titular; una asignación a un menor
+    **desvinculado** (`removed_at`) se **CONSERVA** —el operador la ve como «(retirado de la cuenta,
+    se conserva)» y cuenta para el tope— porque la regla «ajeno = inexistente = retirado» (§4.9) no se
+    relaja para el mostrador y un modal no puede borrar en silencio lo que no enseña;
+  · las reglas de D3 (suyo y activo · menor en la fecha de la visita · firma vigente en interno) se aplican
+    a lo que se **AÑADE**; lo que ya estaba asignado y se mantiene **no se re-valida** —es lo mismo que
+    hace `assign()` con `insertOrIgnore`: una firma que quedó «anterior» no bloquea guardar la línea; el
+    operador la ve señalada y puede desmarcarla—; `count(conservados + pedidos) ≤ quantity` siempre;
+  · **fail-closed**: cualquier rechazo → **no se escribe NADA** y vuelven los rechazos por posición
+    (`''` = la línea), como `check()`; no hay «asigno lo que pueda» en el mostrador;
+  · idempotente: el mismo conjunto no escribe ni audita; cada alta audita `dependents.assigned` y cada
+    baja `dependents.unassigned` (target el titular; `dependent_id · order_item_id · order_id · by` =
+    `Auth::id()`, nunca el nombre, `RGPD-02`);
+  · nunca lanza: `SyncOutcome{added, removed, kept, rejections, abortedBecause}` (`no_line` si el ítem no
+    es del pedido del titular o no es entrada; `failed` si la transacción cae).
+  Y `candidates(User $holder, string $date)`: los menores ACTIVOS del titular con su motivo de no
+  asignabilidad ese día (`null` = asignable), **con las mismas reglas escritas una vez** (`rejections()`).
+  Lo usan el modal del pedido y el alta manual.
+- **D14·4 · Gate de la acción = el de «Gestionar»**: `orders.edit_item` + `editItemBlockedReason()`
+  (bloquea `not_in_order` · cancelado · finalizado · complemento · pedido no operativo, con la
+  notificación y las etiquetas `admin.orders.actions.reasons.*` que ya existen) + **solo entradas**. Sin
+  pedido operativo no se etiqueta a nadie; es la misma regla que impide editar la línea.
+- **D14·5 · El alta manual**: bajo la cantidad del paso «Productos», una lista de casillas «¿Para quién
+  son estas entradas?» con los `candidates()` del cliente en la fecha elegida (visible solo con cliente,
+  fecha y ENTRADA, y si hay alguno; los no asignables deshabilitados con su motivo). `addLineToCart()`
+  guarda `dependent_ids` en la línea (solo asignables, ≤ cantidad: si sobran, aviso y no se añade) y
+  `dependent_display` (nombres) para el resumen. En `create()`: **`check()` ANTES de `fulfill()`**
+  (rechazo → notificación y **no se cobra ni se crea nada**, D3) y **`assign()` DESPUÉS de que
+  `fulfill()` devuelva** (§9.9.1: fuera de su transacción; un fallo deja el pedido en pie y avisa al
+  operador). `cartToOrderCart()` no cambia: Booking sigue sin ver un id de menor.
+- **D14·6 · La acción vive en `Pages/Concerns/AssignsDependents`** (trait, como los otros dos): el modal
+  es una `CheckboxList` con los `candidates()` en la fecha de la línea, pre-marcada con lo asignado,
+  tope en el texto de ayuda, y los conservados como texto. La orquestación —lock, reglas, escritura,
+  auditoría— está en Identity, no en la página.
+- **D14·7 · Rótulos** en `lang/es/admin.php` → `orders.dependents.*` (para · edad · exención ✓/anterior/
+  sin firma · retirado · el modal · los cinco motivos en palabras de operador · sin menores). ES solo:
+  el panel es mono-idioma (es/zh_CN solo para permisos).
+
+#### 9.10.3 Las unidades, en orden — cada una verde y EMPUJADA antes de la siguiente
+
+| U | Qué | Ficheros | Red |
+|---|---|---|---|
+| **P1** | El DOMINIO: `DependentAssigner::sync()` + `candidates()` + `Identity\Contracts\SyncOutcome` · `WaiverStatus::forDependents()` · `AuditLog::ACTIONS` +1 | `app/Domain/Identity/**` · `app/Domain/Platform/Models/AuditLog.php` | `DependentAssignerTest` (+sync: pone y quita · conserva al retirado y lo cuenta · fail-closed por posición · no re-valida lo que se mantiene · idempotente sin auditar · `no_line` en pedido ajeno/pack · audita sin nombre) · `WaiverStatusTest` (paridad `forDependents` ↔ `forDependent`) · mutaciones |
+| **P2** | La LECTURA: `AssignedDependents` + el «Para:» en `items-list` + rótulos | `app/Filament/Resources/Orders/Support/` · `items-list.blade.php` · `lang/es/admin.php` | `ItemsListDependentsTest` (nombre + edad en la fecha + marca de exención en interno; sin marca en externo; nunca en packs; presupuesto de consultas) |
+| **P3** | La ESCRITURA: el trait `AssignsDependents` + el icono en la sub-card | `Pages/Concerns/AssignsDependents.php` · `ViewOrder.php` (un `use`) · `items-list.blade.php` | `AssignDependentsActionTest` (permiso · IDOR por `not_in_order` · pone y quita · tope · rechazo fail-closed · pack sin icono · auditoría con el operador) |
+| **P4** | El ALTA MANUAL: el selector, la línea, `check()` antes y `assign()` después | `CreateManualOrderPage.php` · `manual-order-cart.blade.php` | `CreateManualOrderDependentsTest` (la línea guarda ids · sobran → no se añade · `check()` bloquea SIN crear ni cobrar · se asigna tras cobrar · Booking no recibe el campo) |
+| **P5** | Verificación: suite completa · Pint · docs-check · sonda de 16 `sync()` concurrentes sobre la MISMA línea con conjuntos alternos → conjunto final coherente, cero duplicados · pasada headless del panel con capturas | — | evidencia en esta sección |
+
+Lo que NO entra: la puerta (subsistema A, después) · un permiso propio (D14·2) · tocar
+`resources/js/sidebar/**` (el cliente ya lee `event-data`; nada que invalidar).

@@ -11000,3 +11000,31 @@ puerta trae además la responsabilidad de §8.3 —acreditar la visita, de donde
 idempotencia y auditoría desde el primer commit, y `A → D` es dependencia dura (`lealtad-jumppoints.md` §8).
 
 **Mapa de arranque** en `ESTADO.md`, bloque del carril A.
+
+## #208 · 2026-08-27 · [DECIDIDO, owner] Orden de la sesión del carril A: PRIMERO el panel de menores (D14), DESPUÉS la puerta; el carné QR es de 20 caracteres; la spec `identidad-qr-puerta.md` queda APROBADA con §8 incorporado
+
+**Contexto.** `#207` dejó tres cosas al owner para el arranque: el orden de las dos piezas, la entropía
+del carné (`identidad-qr-puerta.md` §8.2) y el ✅ formal de la spec (§7). Se preguntaron a la vez, a
+pregunta simple y **con la medida delante**: la versión del QR se midió con la librería vendorizada
+(`chillerlan/php-qrcode` 5.0.5, segmento alfanumérico, ECC H): **13, 16 y 20 caracteres caben todos en
+versión 2 (25×25)**; a partir de 21 sube a versión 3 (29×29). ⚠️ La primera medida salió falsa —«versión
+1 para todo, hasta 26 caracteres»— porque `getQRMatrix($data)` en la 5.x **no acepta datos** (van por
+`addAlphaNumSegment()`) y midió un QR vacío: *cuando un instrumento dice algo imposible, la primera
+hipótesis es el instrumento* (`tema-por-instalacion.md` §10.6).
+
+**Decidido (2026-08-27, 22:25, hora de Madrid).**
+1. **Orden: primero el PANEL (D14 de `menores-a-cargo.md` §9.9.3), después la PUERTA.** El panel tiene
+   el diseño hecho y cero decisiones pendientes; desbloquea el mostrador; la puerta arranca con sus
+   decisiones ya tomadas.
+2. **Carné de 20 caracteres** (2 de prefijo + 17 aleatorios + 1 de control, Crockford Base32):
+   `32¹⁷ ≈ 2⁸⁵`, fuera del alcance de un volcado + GPU que §8.2 señalaba para `2⁵⁰`, **al mismo
+   tamaño de QR** que los 13 de la spec. Coste asumido: dictarlo por teléfono es más largo (plan B raro).
+3. **La spec de la puerta queda APROBADA** con las correcciones de §8: tabla propia dentro de
+   `revokeAllAccess()`, ficha compuesta por un servicio con presupuesto de consultas, dos limitadores,
+   caducidad en servidor, «registrar visita» idempotente por cliente y día, menores solo por edad y
+   estado de la exención. §8.1 (`APP_KEY` rotada **lanza**) no es decisión sino construcción: el token
+   se lee siempre por un método que captura y devuelve `null`.
+
+**El diseño de ejecución del panel** está en `menores-a-cargo.md` **§9.10**, medido antes de escribir
+(el permiso, el gate, la semántica del `sync`, dónde se escribe en el alta manual). El de la puerta se
+escribe en su spec (§9) cuando el panel esté en el árbol.

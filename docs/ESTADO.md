@@ -17,13 +17,23 @@
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
-> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN CERRADA el 2026-08-27 a las
->   22:11 (hora de Madrid; ⚠️ el contenedor va en UTC, 2 h menos). ✅ Nada a medias: la TANDA 4 de «menores
->   a cargo» TERMINÓ EN CÓDIGO (U0 · U1 · U2 + el arreglo visual del selector), todo empujado y con el
->   gate en verde (`167bbc2`, `748030a`). ▶ LA SIGUIENTE SESIÓN DE ESTE CARRIL, `[DECIDIDO owner,
->   2026-08-27 noche]` (`#207`): el SUBSISTEMA A de la Fase 6 —el carné QR y la PANTALLA DE PUERTA
->   (`specs/identidad-qr-puerta.md`)— y el PANEL de menores a cargo (D14 de `menores-a-cargo.md`
->   §9.9.3). El MAPA DE ARRANQUE está más abajo, tras el orden de trabajo.** La tanda 4 es de este
+> · **Agente A (la máquina de los 24 + 9 pedidos, la del waiver) → SESIÓN EN CURSO desde el 2026-08-27
+>   a las 22:20 (hora de Madrid; ⚠️ el contenedor va en UTC, 2 h menos): el PANEL de menores (D14) y
+>   después el SUBSISTEMA A (carné QR + puerta).** `[DECIDIDO owner]` **`#208`**: primero el panel,
+>   carné de 20 caracteres, spec de la puerta APROBADA. Diseño de ejecución del panel en
+>   `specs/menores-a-cargo.md` **§9.10** (medido antes de escribir). **Ficheros de este carril**:
+>   `app/Domain/Identity/**` (`DependentAssigner`, `WaiverStatus`), `app/Filament/Resources/Orders/**`,
+>   `app/Filament/Pages/CreateManualOrderPage.php`, `resources/views/filament/orders/items-list.blade.php`,
+>   `resources/views/filament/pages/partials/manual-order-cart.blade.php`, `lang/es/admin.php`
+>   (`orders.dependents.*`), `app/Domain/Platform/Models/AuditLog.php` (una acción), y después
+>   `app/Livewire/Admin/Puerta/**`, `resources/views/livewire/admin/puerta/**`, `layouts/puerta.blade.php`.
+>   ⚠️ **NO toca** `layout.blade.php`, `public/css/*`, `nav`/`menu`, `app.js` ni `resources/js/sidebar/**`.
+>   La sesión anterior de este carril CERRÓ el 2026-08-27 a las 22:11 con la TANDA 4 de «menores a
+>   cargo» TERMINADA EN CÓDIGO (U0 · U1 · U2 + el arreglo visual del selector), todo empujado y con el
+>   gate en verde (`167bbc2`, `748030a`). ▶ `[DECIDIDO owner, 2026-08-27 noche]` (`#207`): esta sesión
+>   es el SUBSISTEMA A de la Fase 6 —el carné QR y la PANTALLA DE PUERTA (`specs/identidad-qr-puerta.md`)—
+>   y el PANEL de menores a cargo (D14 de `menores-a-cargo.md` §9.9.3). El MAPA DE ARRANQUE está más
+>   abajo, tras el orden de trabajo (sus preguntas (5) ya están contestadas en `#208`). La tanda 4 es de este
 >   carril y su DISEÑO DE EJECUCIÓN está en el árbol (`specs/menores-a-cargo.md` **§9.9**, `#202`). Se escribió
 >   MIDIENDO antes (seis lectores + crítico: 296 hechos, 14 afirmaciones de la spec falsas o
 >   imprecisas) y el owner decidió las cuatro ambigüedades a pregunta simple: **(1)** quien se
@@ -350,7 +360,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#207`**.
+> El último usado es **`#208`**.
 >
 > ❗ **LO PRIMERO que es de DINERO: los CUATRO defectos del cambio de precio (`#146`) están
 > CERRADOS** (`#149`, `#150`) y el pack CON señal quedó MEDIDO. La peor ficha derivada —el pedido
@@ -862,7 +872,7 @@ retención.
 
 | Carril | Qué espera, exactamente |
 |---|---|
-| **A · menores** | **La tanda 4 (la asignación en el embudo) EN EJECUCIÓN desde el 27 por la noche**: diseño medido en `specs/menores-a-cargo.md` §9.9 (`#202`), decisiones del owner tomadas (❗ la exención firmada es CONDICIÓN para asignar · el panel NO entra, rectificado: sesión propia), **U0, U1 y U2 hechas** (la purga de la cesta §9.9.6 · el servidor §9.9.7 · el cajón §9.9.8, guion §5.undecies 19/19; el selector se veía roto y está arreglado y re-medido, §9.9.8·7). **SESIÓN CERRADA**; sigue **U4, el ojo del owner** (el guion en su navegador) y, `[DECIDIDO owner]` `#207`, **la SIGUIENTE SESIÓN de este carril es el subsistema A (carné QR + pantalla de puerta) y el PANEL de menores (D14)** — mapa de arranque en el bloque del reparto. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y los DOS valores de retención en meses |
+| **A · menores + puerta** | **SESIÓN EN CURSO (2026-08-27 desde las 22:20)**: `[DECIDIDO owner]` `#208` — **primero el PANEL de menores (D14, `specs/menores-a-cargo.md` §9.10, en ejecución)**, después el **subsistema A** (carné QR de 20 caracteres + pantalla de puerta; spec APROBADA). La tanda 4 (el embudo) TERMINÓ en código la sesión anterior (`#202`: U0 · U1 · U2, guion §5.undecies 19/19); sigue **U4, el ojo del owner**. Del owner siguen: su ✅ en navegador de la zona (guion §5.decies) y del embudo (§5.undecies), y los DOS valores de retención en meses |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
 | **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son CINCO tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas) y `#205` (el CTA doble de móvil). ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y tres cosas concretas: el **artboard del menú en MÓVIL** (bloquea la 2c·4b), el **SVG del logotipo** en `public/img/client-logo.svg`, y **cuál de las dos variantes de «El parque»** para la tanda 3. ▶ Ya validó `#193` y `#194` |
 

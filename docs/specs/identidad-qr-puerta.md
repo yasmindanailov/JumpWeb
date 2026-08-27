@@ -1,11 +1,16 @@
 # [SPEC] El carné QR del cliente y la pantalla de puerta
 
-> Estado: diseño 🟦 **REVISADO** (revisión adversarial hecha — **§8**) · pendiente del ✅ del owner ·
+> Estado: ✅ **APROBADA por el owner el 2026-08-27** (`DECISIONES #208`) **con §8 incorporado**, y
+> **en cola de ejecución** (carril A: va DESPUÉS del panel de menores D14, `menores-a-cargo.md` §9.10) ·
+> **§8.2 DECIDIDO**: el carné es de **20 caracteres** (2 de prefijo + 17 aleatorios + 1 de control →
+> `2⁸⁵`), medido: cabe en la misma versión 2 (25×25, ECC H) que los 13 de §4.3 — **§4.3 queda
+> corregida por esta línea** · **§8.1 no es decisión sino construcción**: el token se lee siempre por
+> un método que captura `DecryptException` y devuelve `null` ·
 > ❗ **§8.3 AMPLÍA el alcance**: esta pantalla pasa a ser el sitio donde se **acredita la visita** de
 > un cliente, y de ahí salen sus JumpPoints (`[DECIDIDO owner]`). No es un detalle: si el punto cae al
 > **abrir** la ficha, el saldo depende de cuántas veces mire el empleado. Léelo antes de §4.6.
 >
-> Estado anterior: diseño 🟦 en revisión ·
+> Estado anterior: diseño 🟦 **REVISADO** (§8), pendiente del ✅ del owner · antes: 🟦 en revisión ·
 > Última actualización: 2026-08-24 ·
 > Verificado contra código: 2026-08-24 (ValidarRegistro, QrCode, TicketIssuer, User::revokeAllAccess, SecurityHeaders) ·
 > Decisión asociada: `DECISIONES #142` ·
