@@ -333,8 +333,13 @@ RSYNC_EXCLUDES=(
     --exclude='/phpunit.xml'
     --exclude='/package-lock.json'
     --exclude='/design_mockup/'
+    --exclude='/mockup_playjumppark/'  # canvas de diseño del 2º cliente (3 MB): material de un
+                                       # cliente, y el servidor no lo necesita para nada.
+                                       # ⚠️ Está gitignorado, pero eso NO basta: el rsync sincroniza
+                                       # el árbol de TRABAJO, no lo que git sigue. Sin esta línea
+                                       # viaja igual — el mismo motivo por el que está `design_mockup`
 )
-dim "excluidos: .env · .git · vendor · node_modules · tests · docs · openapi · storage · public/hot · public/uploads · public/css/client.css · bootstrap/cache"
+dim "excluidos: .env · .git · vendor · node_modules · tests · docs · openapi · storage · public/hot · public/uploads · public/css/client.css · bootstrap/cache · mockup_playjumppark"
 dim "SÍ viajan: app · bootstrap · config · database · lang · public (con build) · resources · routes · artisan · composer.*"
 
 rsync_run() {  # $1 = extra flags

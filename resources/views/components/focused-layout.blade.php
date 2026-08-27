@@ -28,7 +28,9 @@
 
     {{-- Mismas fuentes que el resto del sitio. --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,600,700,800|space-grotesk:400,500,600,700|jetbrains-mono:400,500">
+    {{-- Las familias son de la INSTALACIÓN (`config/theme.php` → `THEME_FONTS`); el host NO,
+         porque la CSP solo permite uno. Ver `Content\Services\ThemeFonts`. --}}
+    <link rel="stylesheet" href="{{ \App\Domain\Content\Services\ThemeFonts::stylesheetUrl() }}">
 
     {{-- MISMO sistema de estilos que la web (tokens + componentes: .btn, .eventfields, .eyebrow…) →
          esta página NO inventa estilos propios; reutiliza los del sitio. landing.css define los

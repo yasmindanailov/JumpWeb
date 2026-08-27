@@ -85,20 +85,27 @@ class SidebarTokenBudgetTest extends TestCase
      * No se eligió: entró con las otras 143 porque coincidía EXACTAMENTE con un token existente, y el
      * trinquete de abajo es quien avisó de que había que bajar el número. Los cinco que quedan:
      *
-     *   · `.cal__day--special .cal__day-price`   `background: rgba(255, 255, 255, 0.55)`
      *   · `.addons__badge--included`             `color: #fff`
      *   · `.addons-mini__badge`                  `background: rgba(34, 197, 94, 0.15)`
      *   · `.addons-mini__badge--included`        `color: #fff`
-     *   · `.purchase__note--guestform`           `background: color-mix(…, #fff)`
      *
-     * ⚠️ **Los cinco CAMBIAN PÍXEL si se tocan, y por eso siguen aquí.** Cuatro son blanco puro, que
-     * no es `--bg` (crema) ni `--on-brand` (sigue al acento, y sobre un acento claro es tinta oscura):
-     * darles cualquiera de los dos tokens los repinta. El quinto es un verde de otra familia que el
-     * texto de al lado ya no comparte —`color: var(--ok)` con `background` de otro verde—, así que es
-     * además un defecto de coherencia. Cambiar un color exige verificación visual (DoD §4).
-     * Ficha en `DEUDA.md`.
+     * ⚠️ **Los tres CAMBIAN PÍXEL si se tocan, y por eso siguen aquí.** Dos son blanco puro sobre el
+     * ACENTO, que no es `--bg` (crema) ni `--sheet` (la hoja, que sigue a la superficie): el que les
+     * toca es `--on-brand`, y sobre un acento claro `--on-brand` es tinta oscura, así que
+     * convertirlos los repinta. El tercero es un verde de otra familia que el texto de al lado ya no
+     * comparte —`color: var(--ok)` con `background` de otro verde—, así que es además un defecto de
+     * coherencia. Cambiar un color exige verificación visual (DoD §4). Ficha en `DEUDA.md`.
+     *
+     * ▶ **Bajó de 5 a 3 en la tanda 1 de `specs/tema-por-instalacion.md`**, y en dos pasos, cada uno
+     * avisado por el propio trinquete:
+     *   · **5 → 4** al nacer `--sheet`: `.cal__day--special .cal__day-price` era
+     *     `rgba(255, 255, 255, 0.55)`, o sea LA HOJA escrita a mano.
+     *   · **4 → 3** al convertir los tintes: `.purchase__note--guestform` mezclaba contra `#fff`
+     *     literal, así que su tinte no seguía a la superficie.
+     * Ninguno de los dos cambia píxel —`--sheet` vale hoy `#FFFFFF`, verificado en navegador regla a
+     * regla—, y los dos pasan de ser color del primer cliente a seguir el tema de la instalación.
      */
-    private const MAX_RAW_COLOURS = 5;
+    private const MAX_RAW_COLOURS = 3;
 
     /** @var ?list<array{property: string, value: string}> */
     private ?array $declarations = null;

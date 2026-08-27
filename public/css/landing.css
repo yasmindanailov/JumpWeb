@@ -42,7 +42,9 @@
      ≤420   tiny    (extra-tight wrap padding)
    ==================================================================== */
 
-/* ----- JumpWeb landing — light theme only ----- */
+/* ----- JumpWeb landing — DOS superficies: papel (por defecto) y tinta -----
+   ⚠️ Esta línea decía «light theme only» y dejó de ser cierta: ver el bloque
+   `[data-surface]` justo debajo del `:root`. */
 
 :root {
   /* base: warm cream + ink black */
@@ -51,8 +53,63 @@
   --bg-card: #FBF7EC;
   --fg: #14130F;
   --fg-mute: #6B675D;
-  --line: rgba(20, 19, 15, 0.10);
-  --line-strong: rgba(20, 19, 15, 0.22);
+
+  /* La HOJA sobre la superficie: el blanco de las polaroids, la tarjeta de invitación, el
+     resumen del post-form… **NO es `--bg`** (que es crema) ni `--on-brand` (que sigue al
+     acento). Vale hoy exactamente lo que valían los 15 literales que sustituye, así que no
+     mueve un píxel; lo que gana es que ahora sigue a la superficie. `DEUDA.md` lo pedía.
+
+     ⚠️ Se llama `--sheet` y no `--paper` a propósito: «papel» es el nombre de la SUPERFICIE
+     clara (ver `[data-surface]`), y usarlo también para la tarjeta que va encima haría que
+     el mismo nombre significara dos cosas a un palmo de distancia. */
+  --sheet: #FFFFFF;
+
+  /* ⚠️ Antes eran `rgba(20, 19, 15, α)`, o sea `--fg` escrito a mano: un cliente cambiaba
+     `--fg` y las 147 líneas y bordes seguían siendo del primer cliente. `color-mix` con
+     `transparent` premultiplica y rinde EXACTAMENTE el mismo color (`DECISIONES #143`). */
+  --line: color-mix(in srgb, var(--fg) 10%, transparent);
+  --line-strong: color-mix(in srgb, var(--fg) 22%, transparent);
+
+  /* ── LA SUPERFICIE DE TINTA ─────────────────────────────────────────────────────────
+     Se DERIVA de las dos de arriba en vez de teclearse: así un cliente que cambie `--fg`
+     y `--bg` desde su paquete obtiene una superficie oscura coherente sin declarar nada, y
+     no hay dos paletas que puedan separarse en silencio — que es el defecto que esta capa
+     entera existe para cerrar.
+
+     ⚠️⚠️ **Se declaran AQUÍ, en `:root`, y eso NO es un detalle de estilo.** La sustitución
+     de `var()` ocurre en el elemento donde la custom property se DECLARA, así que estas
+     resuelven contra los valores de PAPEL y bajan ya computadas. Declararlas dentro del
+     propio `[data-surface="ink"]` —donde `--fg` y `--bg` se están redefiniendo— sería un
+     CICLO, y un ciclo en CSS no falla: deja la propiedad inválida y el color se cae al
+     valor inicial, sin aviso. Verificado en navegador con un control negativo que sí cicla.
+
+     Las mezclas están elegidas por ARITMÉTICA de contraste, no a ojo (spec §6·2). */
+  --ink-bg: var(--fg);
+  --ink-fg: var(--bg);
+  --ink-bg-soft: color-mix(in srgb, var(--bg) 3%, var(--fg));
+  --ink-bg-card: color-mix(in srgb, var(--bg) 6%, var(--fg));
+  --ink-sheet: color-mix(in srgb, var(--bg) 9%, var(--fg));
+  /* 65% da 7,30 sobre tinta (AAA) con los valores del producto. No es un número redondo
+     elegido por gusto: es el mínimo que deja el gris secundario por encima de AAA, y cae
+     junto al 7,08 del sistema de referencia. Con el gris ÚNICO de antes eran 3,28: FALLA AA.
+     Ningún gris puede pasar en las dos superficies — por eso hay dos. */
+  --ink-fg-mute: color-mix(in srgb, var(--bg) 65%, var(--fg));
+  --ink-line: color-mix(in srgb, var(--bg) 12%, transparent);
+  --ink-line-strong: color-mix(in srgb, var(--bg) 24%, transparent);
+
+  /* ── Y LA DE PAPEL, para poder VOLVER a ella desde dentro de tinta ──────────────────
+     ⚠️ Son alias, no copias. La primera versión de este bloque re-tecleaba los literales
+     en `[data-surface="paper"]` y eso era **exactamente el defecto que esta capa existe
+     para cerrar**: un cliente cambia `--bg` en su paquete y la sección de papel anidada se
+     queda con el color del primer cliente, sin fallar y sin avisar. */
+  --paper-bg: var(--bg);
+  --paper-bg-soft: var(--bg-soft);
+  --paper-bg-card: var(--bg-card);
+  --paper-sheet: var(--sheet);
+  --paper-fg: var(--fg);
+  --paper-fg-mute: var(--fg-mute);
+  --paper-line: var(--line);
+  --paper-line-strong: var(--line-strong);
 
   /* ⚠️ AQUÍ VIVÍAN `--jump-1/2` y `--kids-1/2`: la paleta de las dos zonas del PRIMER CLIENTE,
      escrita en el CSS del producto y heredada por toda instalación. Se retiraron el 2026-08-25
@@ -143,6 +200,50 @@
   --sp-20: calc(var(--sp-unit) * 20);
   --sp-28: calc(var(--sp-unit) * 28);
 }
+
+/* ══ LA SUPERFICIE DE UNA SECCIÓN ES UN ÁMBITO, NO UNA CLASE POR ELEMENTO ═══════════════
+   `docs/specs/tema-por-instalacion.md` §4.1.
+
+   Redefinir aquí los SIETE tokens de superficie invierte **866 de los 1.915 usos de `var()`**
+   de las dos hojas sin tocar ni una regla. Lo que NO invierte es la lista corta y enumerable
+   de §1.7, y por eso esa lista tiene guarda propia.
+
+   ⚠️ **Por qué NO se llama `dark`.** Esto no es `prefers-color-scheme`: no es una preferencia
+   del visitante, es una decisión de composición de la página —el sistema alterna superficies
+   para dar ritmo—. Llamarlo `dark` invita a cablearlo al ajuste del sistema operativo, que
+   sería justo lo contrario de lo que hace.
+
+   ⚠️ **Y `paper` no sobra aunque sea el valor por defecto**: sin él, una sección de papel
+   ANIDADA dentro de una de tinta heredaría la tinta. Es el caso que hace falta para volver.
+
+   ⚠️ **No lo pongas en `<html>`.** Ahí es donde viven las declaraciones `--ink-*`, y el
+   ámbito coincidiría con la declaración: eso sí es un ciclo. Va en la sección, o en `<body>`. */
+[data-surface="ink"] {
+  --bg: var(--ink-bg);
+  --bg-soft: var(--ink-bg-soft);
+  --bg-card: var(--ink-bg-card);
+  --sheet: var(--ink-sheet);
+  --fg: var(--ink-fg);
+  --fg-mute: var(--ink-fg-mute);
+  --line: var(--ink-line);
+  --line-strong: var(--ink-line-strong);
+}
+
+[data-surface="paper"] {
+  --bg: var(--paper-bg);
+  --bg-soft: var(--paper-bg-soft);
+  --bg-card: var(--paper-bg-card);
+  --sheet: var(--paper-sheet);
+  --fg: var(--paper-fg);
+  --fg-mute: var(--paper-fg-mute);
+  --line: var(--paper-line);
+  --line-strong: var(--paper-line-strong);
+}
+
+/* La superficie se PINTA sola: quien la declara no tiene que acordarse de poner el fondo ni
+   el color de texto, que es exactamente el descuido por el que hoy hay 29 apariciones de
+   `--onvideo` escritas a mano. */
+[data-surface] { background: var(--bg); color: var(--fg); }
 
 * { box-sizing: border-box; }
 
@@ -708,7 +809,7 @@ img { display: block; max-width: 100%; }
 .jj-block--xs { width: 9px;  height: 9px;  border-radius: 2px;   transform: rotate(22deg); }
 .jj-block--sm { width: 14px; height: 14px; border-radius: 3.5px; transform: rotate(22deg); }
 .jj-block--md { width: 22px; height: 22px; border-radius: 5px;   transform: rotate(15deg); }
-.jj-block--lg { width: 36px; height: 36px; border-radius: 8px;   transform: rotate(14deg); }
+.jj-block--lg { width: 36px; height: 36px; border-radius: var(--r-sm);   transform: rotate(14deg); }
 .jj-block--xl { width: 42px; height: 42px; border-radius: 9px;  transform: rotate(12deg); }
 .jj-block--inv { background: var(--fg); }
 .jj-block--zone2 { background: var(--zone-2); }
@@ -1052,7 +1153,7 @@ img { display: block; max-width: 100%; }
    position:relative + overflow:hidden). Translúcido blanco → coherente con cualquier marca (#213). */
 .ride-card--special .ride-card__viz::after {
   content: ""; position: absolute; top: -30%; bottom: -30%; left: 0; width: 30%;
-  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.55) 50%, transparent);
+  background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--sheet) 55%, transparent) 50%, transparent);
   transform: skewX(-16deg) translateX(-160%);
   animation: jj-shine-sweep 3.2s cubic-bezier(0.6, 0, 0.3, 1) infinite;
   pointer-events: none; z-index: 1;
@@ -1145,7 +1246,7 @@ img { display: block; max-width: 100%; }
 .price__special { display: flex; flex-wrap: wrap; gap: 8px; }
 .price__special-chip {
   display: inline-flex; align-items: baseline; gap: 7px;
-  background: var(--bg-soft); border-radius: 999px;
+  background: var(--bg-soft); border-radius: var(--r-pill);
   padding: 7px 14px; font-size: 12.5px; line-height: 1.25; color: var(--fg-mute);
 }
 .price__special-chip b { font-family: var(--font-mono); font-weight: 600; font-size: 12.5px; color: var(--fg); white-space: nowrap; }
@@ -1200,7 +1301,7 @@ img { display: block; max-width: 100%; }
 .events__list { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
 .events__list li {
   display: flex; gap: 14px; align-items: center; font-size: 16px; font-weight: 500;
-  padding: 14px 18px; background: rgba(255,255,255,0.4); border-radius: var(--r);
+  padding: 14px 18px; background: color-mix(in srgb, var(--sheet) 40%, transparent); border-radius: var(--r);
   border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
 }
 .events__list li::before {
@@ -1227,7 +1328,7 @@ img { display: block; max-width: 100%; }
 /* polaroid photo (image-slot inside) */
 .events__photo {
   position: relative;
-  background: #FFFFFF;
+  background: var(--sheet);
   padding: 18px 18px 56px;
   transform: rotate(-2.5deg);
   box-shadow: 0 26px 50px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 4px 12px color-mix(in srgb, var(--fg) 10%, transparent);
@@ -1260,7 +1361,7 @@ img { display: block; max-width: 100%; }
   position: absolute; top: -14px; left: 50%;
   width: 130px; height: 28px;
   transform: translateX(-50%) rotate(-3deg);
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--sheet) 55%, transparent);
   border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
   z-index: 2;
 }
@@ -1506,7 +1607,7 @@ img { display: block; max-width: 100%; }
 
 .polaroid {
   flex: 0 0 240px;
-  background: #FFFFFF;
+  background: var(--sheet);
   padding: 14px 14px 36px;
   box-shadow: 0 6px 24px color-mix(in srgb, var(--fg) 10%, transparent), 0 1px 3px color-mix(in srgb, var(--fg) 8%, transparent);
   transition:
@@ -1543,7 +1644,7 @@ img { display: block; max-width: 100%; }
 .polaroid__tag {
   position: absolute; top: 10px; left: 10px; z-index: 2;
   font-family: var(--font-body); font-size: 10px;
-  padding: 3px 8px; background: #FFFFFF; border-radius: var(--r-pill);
+  padding: 3px 8px; background: var(--sheet); border-radius: var(--r-pill);
   text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg);
 }
 .polaroid__caption {
@@ -1910,7 +2011,7 @@ input[type="radio"]:focus-visible,
 
 /* polaroid con la foto de la zona */
 .bd-pol {
-  position: relative; background: #FFFFFF;
+  position: relative; background: var(--sheet);
   padding: 18px 18px 56px;
   transform: rotate(-2.5deg);
   box-shadow: 0 26px 50px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 4px 12px color-mix(in srgb, var(--fg) 10%, transparent);
@@ -1935,7 +2036,7 @@ input[type="radio"]:focus-visible,
   position: absolute; top: -14px; left: 50%;
   width: 130px; height: 28px;
   transform: translateX(-50%) rotate(-3deg);
-  background: rgba(255,255,255,0.55);
+  background: color-mix(in srgb, var(--sheet) 55%, transparent);
   border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent); z-index: 2;
 }
 .bd-pol__sticker {
@@ -2080,7 +2181,7 @@ input[type="radio"]:focus-visible,
   /* La tarjeta usa la paleta COMPLETA de la zona elegida: `--inv2` valía lo mismo que `--inv`
      porque el segundo color no tenía dónde vivir hasta `#138`. */
   --inv: var(--zone-1); --inv2: var(--zone-2);
-  width: min(560px, 100%); background: #FFFFFF; border-radius: 18px;
+  width: min(560px, 100%); background: var(--sheet); border-radius: 18px;
   box-shadow: 0 30px 60px -16px color-mix(in srgb, var(--fg) 30%, transparent), 0 6px 16px color-mix(in srgb, var(--fg) 10%, transparent);
   transform: rotate(-2deg); position: relative; overflow: hidden;
   transition: transform 0.5s cubic-bezier(0.2,0.8,0.2,1);

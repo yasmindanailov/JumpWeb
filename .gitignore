@@ -54,3 +54,12 @@ Thumbs.db
 # Las versiones optimizadas para web SI se versionan en /public/images/attractions.
 /design_mockup/imagenesatracciones/
 storage/ssr
+
+# Copia local del canvas de diseño del SEGUNDO cliente (Play Jump Park), bajada con el MCP
+# `DesignSync`. Mismo criterio que `client.css`: es material de un cliente y este repo es el
+# PRODUCTO. Su fuente de verdad es el canvas, no esta copia — la receta para regenerarla entera
+# está en `mockup_playjumppark/README.md`.
+# ⚠️ Y como `public/uploads/`, NO basta con ignorarla: el `rsync` de `deploy.sh` sincroniza el
+# árbol de TRABAJO, no lo que git sigue, así que una carpeta ignorada pero presente SÍ se sube.
+# Por eso lleva además su `--exclude` en `RSYNC_EXCLUDES`.
+/mockup_playjumppark/

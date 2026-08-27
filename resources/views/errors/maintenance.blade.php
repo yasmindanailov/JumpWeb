@@ -24,7 +24,9 @@
     <meta name="robots" content="noindex, nofollow">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,600,700,800|space-grotesk:400,500,600,700|jetbrains-mono:400,500">
+    {{-- Las familias son de la INSTALACIÓN (`config/theme.php` → `THEME_FONTS`); el host NO,
+         porque la CSP solo permite uno. Ver `Content\Services\ThemeFonts`. --}}
+    <link rel="stylesheet" href="{{ \App\Domain\Content\Services\ThemeFonts::stylesheetUrl() }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ @filemtime(public_path('css/landing.css')) }}">
     {{-- Color de marca white-label (#213): `ThemeSettings` es defensivo y no lanza ni sin BD. --}}
     <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>

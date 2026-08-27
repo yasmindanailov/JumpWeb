@@ -329,7 +329,7 @@
 }
 .pagination__btn {
     font-size: 14px; font-weight: 600; color: var(--fg);
-    border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px;
+    border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px 18px;
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 .pagination__btn:hover { border-color: var(--fg); }
@@ -371,7 +371,7 @@
 }
 .svc-hero__title .blink {
   display: inline-block; background: var(--zone-1); color: var(--on-brand);
-  padding: 0 0.12em 0.04em; border-radius: 14px; transform: rotate(-2deg);
+  padding: 0 0.12em 0.04em; border-radius: var(--r-btn); transform: rotate(-2deg);
 }
 .svc-hero__intro {
   max-width: 56ch; font-size: 18px; line-height: 1.55;
@@ -728,7 +728,7 @@
 }
 .invite-card__age {
   display: inline-block; margin: 14px 0 0; padding: 5px 14px;
-  background: var(--zone-1); color: var(--on-brand); border-radius: 999px;
+  background: var(--zone-1); color: var(--on-brand); border-radius: var(--r-pill);
   font-family: var(--font-body); font-weight: 700; font-size: 13px;
 }
 .invite-card__meta { margin: 20px 0 0; display: grid; gap: 11px; }
@@ -806,7 +806,7 @@
 .qr-tile {
   position: relative; width: var(--qr-size); height: var(--qr-size);
   background: #fdfbf4; border: 1px solid var(--line);
-  border-radius: 16px; padding: 14px;
+  border-radius: var(--r); padding: 14px;
 }
 .qr-slot { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 5px; }
 .qr-slot svg { display: block; width: 100%; height: 100%; }
@@ -893,7 +893,7 @@
   align-items: start; margin-top: 40px;
 }
 .rules-layout__media {
-  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: 16px; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 16px 40px -22px color-mix(in srgb, var(--fg) 20%, transparent);
 }
@@ -909,7 +909,7 @@
 .rules-vslider:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; border-radius: var(--r); }
 .rules-vslider .rule { scroll-snap-align: start; }
 .rules-vslider::-webkit-scrollbar { width: 6px; }
-.rules-vslider::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+.rules-vslider::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); }
 .rules-vslider::-webkit-scrollbar-track { background: transparent; }
 @media (max-width: 768px) {
   .rules-layout { grid-template-columns: 1fr; }
@@ -1447,7 +1447,7 @@ body.no-scroll { overflow: hidden; }
 /* En día especial (festivo/finde) el fondo de la celda ya es de marca; el chip pasa a
    blanco semi-transparente para no competir con el color de zona y mantenerse legible. */
 .cal__day--special .cal__day-price {
-    background: rgba(255, 255, 255, 0.55);
+    background: color-mix(in srgb, var(--sheet) 55%, transparent);
     color: var(--fg);
 }
 /* Celdas muy estrechas (móvil < 380px): el chip ocuparía demasiado. Mostramos el precio
@@ -1673,7 +1673,7 @@ body.no-scroll { overflow: hidden; }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
 .cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-11); color: var(--ok); }
-.orders__line-included { display: inline-block; padding: 0 6px; border-radius: 999px; background: var(--ok-bg); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
+.orders__line-included { display: inline-block; padding: 0 6px; border-radius: var(--r-pill); background: var(--ok-bg); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
 .orders__line-unit { color: var(--fg-mute); font-size: 12px; font-weight: 400; }
 
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
@@ -1768,7 +1768,7 @@ body.no-scroll { overflow: hidden; }
 .orders__history-cta { display: flex; justify-content: center; margin: 4px 0 0; }
 .orders__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .orders__code { font-family: var(--font-body); font-size: 14px; color: var(--fg); }
-.orders__status { font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 999px; background: var(--bg-soft); color: var(--fg-mute); }
+.orders__status { font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
 .orders__status--paid { background: var(--ok-bg); color: var(--ok); }
 .orders__status--pending { background: var(--attn); color: var(--fg); }
 .orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--err-strong); }
@@ -1839,7 +1839,7 @@ body.no-scroll { overflow: hidden; }
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
    es ni positivo ni negativo, simplemente "ya pasó". */
-.orders__line-badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.6; }
+.orders__line-badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; line-height: 1.6; }
 .orders__line-badge--finished { background: var(--line); color: var(--fg-mute); }
 .orders__line--finished .orders__line-name,
 .orders__line--finished .orders__line-when,
@@ -2261,7 +2261,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .cta-prime__ico {
     width: 64px; height: 42px;
     background: rgba(255, 255, 255, 0.10);
-    border-radius: 8px;
+    border-radius: var(--r-sm);
     display: grid; place-items: center;
     flex-shrink: 0;
     transition: background 0.2s ease;
@@ -2582,7 +2582,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     padding: 2px 6px;
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     line-height: 1;
     background: rgba(34, 197, 94, 0.15);
     color: var(--ok);
@@ -2693,7 +2693,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .acct__inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 13px; }
 .acct__row { display: flex; align-items: center; gap: 13px; }
 .acct__avatar {
-    width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+    width: 44px; height: 44px; border-radius: var(--r-btn); flex-shrink: 0;
     background: var(--fg); color: var(--zone-1);
     display: grid; place-items: center; transform: rotate(-3deg);
     font-family: var(--font-display); font-weight: 800; font-size: 19px;
@@ -2748,7 +2748,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 }
 .acct__count {
     display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
-    border-radius: 999px; background: var(--zone-1); color: var(--on-brand); font-size: 10px; font-weight: 700;
+    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: 10px; font-weight: 700;
 }
 /* Aviso de formulario de reserva pendiente (#217), accionable. */
 .acct__alert {
@@ -2801,8 +2801,8 @@ body[data-has-hero] .nav-cta-med.is-revealed {
    `.eventfields` (etiqueta + input) para cada campo; aquí van el contenedor y las tarjetas. */
 .guestform { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: 8px; }
 .guestform__flash {
-    background: color-mix(in srgb, var(--zone-1) 12%, #fff);
-    border: 1px solid color-mix(in srgb, var(--zone-1) 40%, #fff);
+    background: color-mix(in srgb, var(--zone-1) 12%, var(--sheet));
+    border: 1px solid color-mix(in srgb, var(--zone-1) 40%, var(--sheet));
     color: var(--fg); border-radius: 12px; padding: 14px 18px; font-weight: 600;
 }
 /* Aviso de SOLO LECTURA (#217): la reserva ya se celebró → el formulario se muestra pero no se edita. */
@@ -2813,7 +2813,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 /* Post-form individualizado POR RESERVA (#217): resumen de la reserva (cuándo · invitados ·
    referencia) + indicador de progreso + nota de privacidad de datos de menores. */
 .guestform__summary {
-    border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; background: var(--sheet);
     display: flex; flex-direction: column; gap: 14px; margin-top: 8px;
 }
 .guestform__facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
@@ -2822,9 +2822,9 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .guestform__fact-value { font-weight: 600; font-size: 15px; }
 .guestform__progress {
     align-self: flex-start; font-size: 13px; font-weight: 600; color: var(--zone-1);
-    background: color-mix(in srgb, var(--zone-1) 10%, #fff); border-radius: 999px; padding: 5px 14px;
+    background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet)); border-radius: var(--r-pill); padding: 5px 14px;
 }
-.guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, #fff); }
+.guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
 .guestform__privacy { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 .guestform__section { display: flex; flex-direction: column; gap: 14px; }
 .guestform__section-title { font-family: var(--font-display); font-size: 18px; margin: 0; }
@@ -2838,7 +2838,7 @@ body[data-has-hero] .nav-cta-med.is-revealed {
 .guestform__actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .guestform__hint { color: var(--muted); font-size: 13px; margin: 0; }
 .purchase__note--guestform {
-    background: color-mix(in srgb, var(--zone-1) 10%, #fff);
+    background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet));
     border-radius: 10px; padding: var(--sp-10) var(--sp-12);
 }
 /* Subcard sutil POR PRODUCTO (#217 UX): separa cada reserva del pedido y agrupa producto +
@@ -2890,7 +2890,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .maint-banner {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
     gap: 6px 16px; padding: 10px 18px; text-align: center;
-    background: color-mix(in srgb, var(--zone-1) 16%, #fff);
+    background: color-mix(in srgb, var(--zone-1) 16%, var(--sheet));
     border-bottom: 2px solid var(--zone-1);
     color: var(--fg); font-size: 14px; font-weight: 600;
     position: sticky; top: 0; z-index: 60;
@@ -2926,7 +2926,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
 }
 .e404__links a {
-    display: inline-block; padding: 9px 16px; border-radius: 999px;
+    display: inline-block; padding: 9px 16px; border-radius: var(--r-pill);
     border: 1px solid var(--line); color: var(--fg); text-decoration: none;
     font-weight: 600; font-size: 14px; transition: border-color .15s ease, color .15s ease;
 }
@@ -2968,7 +2968,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .cookie__x:hover { color: var(--fg); }
 .cookie__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .cookie__chip {
-    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; transform: rotate(-4deg);
+    width: 30px; height: 30px; border-radius: var(--r-sm); flex-shrink: 0; transform: rotate(-4deg);
     background: var(--fg); color: var(--zone-1); display: grid; place-items: center;
 }
 .cookie__eyebrow { font-family: var(--font-mono, var(--font-body)); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--fg-mute); }
@@ -3000,7 +3000,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .pref__lock { font-family: var(--font-mono, var(--font-body)); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-top: 6px; display: inline-block; }
 /* Toggle de finalidad. */
 .ck-tgl {
-    position: relative; width: 42px; height: 24px; border-radius: 999px; flex-shrink: 0;
+    position: relative; width: 42px; height: 24px; border-radius: var(--r-pill); flex-shrink: 0;
     margin-top: 1px; border: 0; padding: 0; background: var(--line-strong); cursor: pointer;
     transition: background 0.25s ease;
 }
@@ -3263,7 +3263,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 /* Badge del nº de ofertas */
 .offw-badge {
     position: absolute; top: 2px; right: -2px; min-width: 19px; height: 19px; padding: 0 5px;
-    background: var(--offw-accent); color: #fff; border-radius: 999px; border: 2px solid var(--bg, var(--bg));
+    background: var(--offw-accent); color: #fff; border-radius: var(--r-pill); border: 2px solid var(--bg, var(--bg));
     font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; font-weight: 700;
     display: grid; place-items: center; z-index: 2; line-height: 1;
     box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--offw-accent) 70%, transparent);
@@ -3390,7 +3390,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     font-weight: 800; font-stretch: 75%; font-size: clamp(24px, 5vw, 32px);
     line-height: 1.05; letter-spacing: -0.02em; margin: 4px 24px 16px; color: var(--fg, var(--fg));
 }
-.offw-img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; border-radius: 14px; }
+.offw-img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; border-radius: var(--r-btn); }
 .offw-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
 .offw-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--line-strong, color-mix(in srgb, var(--fg) 22%, transparent)); transition: background 0.2s ease, transform 0.2s var(--offw-spring); }
 .offw-dot.is-on { background: var(--offw-accent); transform: scale(1.25); }

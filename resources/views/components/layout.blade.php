@@ -47,7 +47,9 @@
     <x-site.json-ld :site="$site" />
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=bricolage-grotesque:400,600,700,800|space-grotesk:400,500,600,700|jetbrains-mono:400,500">
+    {{-- Las familias son de la INSTALACIÓN (`config/theme.php` → `THEME_FONTS`); el host NO,
+         porque la CSP solo permite uno. Ver `Content\Services\ThemeFonts`. --}}
+    <link rel="stylesheet" href="{{ \App\Domain\Content\Services\ThemeFonts::stylesheetUrl() }}">
 
     {{-- CSS base del producto (sin minificar).
          ⚠️ El encabezado de `site.css` dice «el CSS del mockup se mantiene intacto» y **eso ya no

@@ -93,12 +93,35 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
 ```css
 /* public/css/client.css — el paquete de tema de esta instalación */
 :root {
-    --bg: #0E0E10;  --bg-soft: #17171B;  --bg-card: #1D1D22;
-    --fg: #F2F2F0;  --fg-mute: #9A9A94;
+    --bg: #F4F4F1;  --bg-soft: #E8E9E5;  --bg-card: #FFFFFF;
+    --fg: #101418;  --fg-mute: #626A72;
+    --sheet: #FFFFFF;              /* LA HOJA: la tarjeta que va ENCIMA de la superficie */
     --font-display: "Su Fuente", system-ui, sans-serif;
-    --r: 4px;  --r-lg: 8px;   /* radios: aquí, no en el panel */
+    --r: 16px;  --r-lg: 24px;      /* radios: aquí, no en el panel */
 }
 ```
+
+⚠️ **La superficie OSCURA se deriva sola.** El producto calcula la paleta de tinta a partir de
+`--fg` y `--bg`, así que redefiniendo esos dos ya tienes las dos superficies coherentes; si quieres
+afinarla, redefine los `--ink-*`. **No la teclees entera**: `SurfaceScopeTest` exige que se derive,
+justo para que cambiar la marca no deje media web con el color de otro cliente.
+
+**b.bis) La TIPOGRAFÍA son DOS mitades, y con una sola no se ve nada.**
+- **Qué se DESCARGA** → `THEME_FONTS` en el `.env` (lo lee `config/theme.php`), en el formato de la
+  URL de Bunny: `slug-en-minusculas:pesos|otro-slug:pesos`.
+- **Qué se USA** → los tokens `--font-display` / `--font-body` / `--font-mono` en `client.css`, con
+  el **nombre visible** de la familia.
+
+```dotenv
+THEME_FONTS="bungee:400|hanken-grotesk:400,500,600,700,800|jetbrains-mono:400,500,700"
+```
+
+⚠️ **El HOST no se configura** y es a propósito: la CSP permite un único origen de fuentes
+(`fonts.bunny.net`), y apuntar a otro **no da error** — la CSP lo bloquea en silencio y la web se
+queda con `system-ui`. Bunny sirve el mismo catálogo que Google Fonts, así que casi cualquier
+familia libre está disponible sin abrir un origen nuevo.
+⚠️ **Un valor inválido no rompe la web: se sirve la del producto**, y también en silencio. Si tu
+fuente no aparece, el slug está mal escrito (minúsculas y guiones, pesos en centenas).
 
 ⚠️ **Con eso se retiñe la web entera**, incluidas las 145 sombras, bordes y velos que hasta el
 2026-08-25 estaban escritos a mano en el color del primer cliente (`#143`). Lo vigila
