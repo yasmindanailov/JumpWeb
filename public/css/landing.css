@@ -14,20 +14,38 @@
      --font-body      Space Grotesk (all body + chrome labels)
      --font-mono      JetBrains Mono (ONLY: hours table, .mono utility)
 
-   RADII
+   RADII — escala CERRADA de 6 escalones + la píldora. Un canto de contenedor sale de aquí
+   o es una de las tres excepciones declaradas abajo; `ShapeScaleTest` no admite un cuarto caso.
+     --r-xs   5px   badges, tags y numeritos dentro de una tarjeta
      --r-sm   8px   inner items (dropdown rows)
+     --r-md  10px   controles, celdas y contenedores medianos
+     --r-btn 14px   ALL interactive buttons (CTAs, triggers, tabs)
      --r     16px   default cards & frames
      --r-lg  28px   big cards & feature blocks
-     --r-btn 14px   ALL interactive buttons (CTAs, triggers, tabs)
      --r-pill 999px ONLY decorative passive labels (badges/stickers)
+
+   ⚠️ `--r-xs` y `--r-md` NO se eligieron por gusto ni copiando la escala de un cliente: son los
+   dos valores que MENOS píxeles mueven sobre los 23 cantos que había en literal. Con la escala
+   de antes (8·14·16·28) se movían las 23 y 53 px; con estos dos escalones se mueven 11 y 20 px,
+   y solo uno más de 2 px (`.offw-card`, 24→28). El cálculo está en `specs/tema-por-instalacion.md`.
 
    SHAPE RULES
      button / action       → --r-btn (14px rounded rect)
      icon-only button      → 50% (circle)
      card / frame          → --r or --r-lg
-     prominent badge       → rotated rounded rect, small radius (5-8px)
+     prominent badge       → --r-xs (rotated rounded rect)
      micro tag inside card → --r-pill (small, inline)
      foam-block accent     → .jj-block (xs / sm / md / lg / xl)
+
+   LAS TRES EXCEPCIONES, y por qué no son deuda
+     1. `50%` — geometría de círculo. No es un escalón de ninguna escala (39 usos).
+     2. MOTIVO CUADRADO — la familia `.jj-block` y sus primos siguen una LEY de facto medida en
+        el propio producto: **radio ≈ lado / 4** (mediana exacta 4,00 sobre 16 declaraciones; 12
+        de 16 dentro de ±12 %). No son huérfanos: son la forma del bloque de espuma a cada
+        tamaño. Meterlos en la escala de canto los rompería. `ShapeScaleTest` vigila la ley.
+     3. DIBUJO — el radio define un motivo gráfico, no el canto de un contenedor: las cuatro
+        esquinas del marcador QR, el subrayado tipográfico en `em`, la barra de 2 px de alto.
+        Y los `0` que son un reset de un radio heredado.
 
    SECTION HEAD PATTERN (.zones__head / .rides__head)
      stack vertical, left-aligned:  eyebrow → h2 → intro
@@ -140,11 +158,64 @@
   --font-body: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
+  /* La escala de canto, CERRADA. Un paquete de cliente redefine estos siete y todos los cantos
+     del producto le obedecen — que es el criterio §2·3 de `specs/tema-por-instalacion.md`.
+     ⚠️ `--r-xs` y `--r-md` entran en la tanda 2a: son los dos escalones que faltaban, y sus
+     valores salen de minimizar el movimiento sobre los 23 literales que había (ver cabecera). */
+  --r-xs: 5px;
   --r-sm: 8px;
+  --r-md: 10px;
+  --r-btn: 14px;
   --r: 16px;
   --r-lg: 28px;
   --r-pill: 999px;
-  --r-btn: 14px;
+
+  /* ── EL ANILLO DE FOCO ─────────────────────────────────────────────────────────────────
+     Medido antes de esta tanda: **23 reglas de foco, CINCO tratamientos distintos y CERO
+     tokens**. O sea que un cliente podía cambiar toda su marca y el anillo con el que su
+     visitante navega con teclado seguía siendo el del primer cliente — y no fallaba nadie.
+
+     Se tokeniza el GROSOR y el COLOR, que es lo que un paquete necesita cambiar. El
+     `outline-offset` NO: es encaje de cada componente (hay 2, 3, 4 y −2 px, y cada uno
+     responde a la forma de su caja, no a la marca). Meterlo en un token único movería
+     píxeles en cinco reglas a cambio de nada.
+
+     ⚠️ Y sigue al TEMA por herencia: dentro de `[data-surface="ink"]`, `--fg` ya vale claro,
+     así que el anillo se invierte solo sin declarar nada. Los dos sitios que hoy pintan a
+     mano el anillo claro —el `.skip-link` y el chip del hero— es porque su fondo oscuro
+     todavía NO declara superficie; el día que el armazón la declare (tanda del hero), pasan
+     a `var(--focus-color)` y esas dos excepciones desaparecen. */
+  --focus-w: 2px;
+  --focus-color: var(--fg);
+  --focus-outline: var(--focus-w) solid var(--focus-color);
+
+  /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
+     Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
+     segundo cliente, y por eso son cinco: su marca tiene cinco colores.
+
+     ⚠️ **Ni un hex entra aquí.** Los cinco salen de los dos tokens de marca, así que una
+     instalación cualquiera obtiene su tira sin declarar nada, y una con cinco colores propios
+     los redefine uno a uno desde su `client.css`.
+
+     ⚠️⚠️ **CICLAN, no interpolan — y eso se decidió MIDIENDO, después de escribirlo al revés.**
+     La primera versión repartía cinco pasos de `color-mix` entre los dos colores. Con la marca
+     por defecto (naranja→amarillo, vecinos) quedaba bien; con la del segundo cliente
+     (cian→naranja, casi complementarios) la franja del medio salía **`#868D7D`, barro**. Y no
+     era cosa del espacio de color: en `oklab` el croma mínimo era **0,024** frente a 0,025 en
+     `srgb` — o sea, lo mismo. Interpolar entre dos colores arbitrarios NO es robusto, y el
+     producto no puede elegir la marca de su cliente. Alternar sí lo es: sea cual sea el par,
+     cada franja es un color de marca entero y ninguna es una mezcla que nadie eligió.
+
+     ⚠️⚠️ **Y NO se pintan con `--ok` / `--err` / `--attn`, que era la vía obvia.** Dos razones
+     medidas: `--attn` vale HOY exactamente lo mismo que `--zone-2` (`#FFE14A`), así que dos
+     franjas saldrían idénticas; y un color semántico usado como decoración deja de significar
+     lo que significa —es el hallazgo `C-04` de la auditoría del propio cliente, «el estado
+     "Abierto ahora" pintado en el color de acción»—. */
+  --strip-1: var(--zone-1);
+  --strip-2: var(--zone-2);
+  --strip-3: var(--zone-1);
+  --strip-4: var(--zone-2);
+  --strip-5: var(--zone-1);
 
   /* ── Escalas de TIPOGRAFÍA y ESPACIADO del sidebar (Fase 4 · paso 4.0c, 2ª mitad) ────────────
      `docs/specs/sidebar-spa.md` §4.3.bis · `DECISIONES #42`.
@@ -555,7 +626,7 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.14em;
   color: var(--fg-mute);
   border: 1px dashed color-mix(in srgb, var(--fg) 32%, transparent);
-  padding: 4px 6px; border-radius: 4px;
+  padding: 4px 6px; border-radius: var(--r-xs);
   flex-shrink: 0;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
@@ -892,7 +963,7 @@ img { display: block; max-width: 100%; }
 .zone-intro__tag {
   font-family: var(--font-body); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 8px 14px; background: var(--bg); border-radius: 6px;
+  padding: 8px 14px; background: var(--bg); border-radius: var(--r-xs);
   color: var(--fg);
   transform: rotate(-2deg);
   box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--fg) 22%, transparent), 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent);
@@ -971,7 +1042,7 @@ img { display: block; max-width: 100%; }
   align-self: flex-start;
   font-family: var(--font-body); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 7px 13px; background: var(--bg); border-radius: 6px; color: var(--fg);
+  padding: 7px 13px; background: var(--bg); border-radius: var(--r-xs); color: var(--fg);
   transform: rotate(-2deg);
   box-shadow: 0 8px 18px -6px color-mix(in srgb, var(--fg) 22%, transparent);
   margin-bottom: 16px;
@@ -1033,7 +1104,7 @@ img { display: block; max-width: 100%; }
 }
 .zone-tab {
   padding: var(--sp-10) 22px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   font-size: var(--fs-13); font-weight: 600;
   color: var(--fg-mute);
   transition: all 0.25s ease;
@@ -1258,7 +1329,7 @@ img { display: block; max-width: 100%; }
 .price__badge {
   position: absolute; top: 14px; right: 14px;
   background: var(--fg); color: var(--bg);
-  padding: 6px 12px; border-radius: 5px;
+  padding: 6px 12px; border-radius: var(--r-xs);
   font-family: var(--font-body); font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.14em;
   transform: rotate(6deg);
@@ -1384,7 +1455,7 @@ img { display: block; max-width: 100%; }
   bottom: -26px; right: -32px;
   background: var(--bg-card);
   padding: 18px 28px 16px;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   transform: rotate(5deg);
   box-shadow: 0 18px 38px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 10%, transparent);
   display: flex; flex-direction: column; align-items: center;
@@ -1701,7 +1772,28 @@ img { display: block; max-width: 100%; }
 .reserve__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* ---------- footer ---------- */
-.foot { border-top: 1px solid var(--line); padding: 60px 0 40px; }
+/* ⚠️ El `border-top: 1px solid var(--line)` que había aquí lo SUSTITUYE la tira: dos remates
+   horizontales pegados leen como un error de maquetación, no como dos piezas. Es el único
+   píxel que el pie mueve por sí mismo en esta tanda. */
+.foot { padding: 60px 0 40px; }
+
+/* La tira de marca, «C2 · tiras» del sistema del segundo cliente. Cinco franjas de igual
+   ancho, 4 px de alto, cantos apenas matados. Decorativa de arriba abajo: va con
+   `aria-hidden` en el marcado y no lleva texto, así que no entra en el orden de lectura. */
+/* ⚠️ El canto va por token y no como `2px` literal, y no es lo mismo por casualidad: en una caja
+   de 4 px de alto el navegador ESCALA los radios para que no se solapen, así que `999px` rinde
+   exactamente los 2 px de una píldora aplastada. Sale de la escala sin mover un píxel. */
+.foot__strip {
+  display: flex; height: 4px; margin-bottom: clamp(30px, 3vw, 44px);
+  border-radius: var(--r-pill); overflow: hidden;
+}
+.foot__strip > span { flex: 1; }
+.foot__strip > span:nth-child(1) { background: var(--strip-1); }
+.foot__strip > span:nth-child(2) { background: var(--strip-2); }
+.foot__strip > span:nth-child(3) { background: var(--strip-3); }
+.foot__strip > span:nth-child(4) { background: var(--strip-4); }
+.foot__strip > span:nth-child(5) { background: var(--strip-5); }
+
 .foot__grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
 .foot__brand {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -1756,7 +1848,7 @@ input[type="radio"]:focus-visible,
      caer a ~1:1 con la zona Kids activa) y NO redefine el border-radius del elemento
      (antes 6px deformaba el radio 14px de los botones al tabular). El outline ya sigue
      el radio propio de cada elemento. */
-  outline: 2px solid var(--fg);
+  outline: var(--focus-outline);
   outline-offset: 3px;
 }
 
@@ -2045,13 +2137,13 @@ input[type="radio"]:focus-visible,
   font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.14em;
   padding: 6px 14px; transform: rotate(8deg);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   box-shadow: 0 6px 18px color-mix(in srgb, var(--fg) 18%, transparent); z-index: 3;
 }
 .bd-pol__ticket {
   position: absolute; bottom: -26px; right: -28px;
   background: var(--bg-card); color: var(--fg);
-  padding: 16px 26px 14px; border-radius: 10px;
+  padding: 16px 26px 14px; border-radius: var(--r-md);
   transform: rotate(5deg);
   box-shadow: 0 18px 38px -10px color-mix(in srgb, var(--fg) 22%, transparent), 0 2px 6px color-mix(in srgb, var(--fg) 10%, transparent);
   display: flex; flex-direction: column; align-items: center;
@@ -2147,7 +2239,7 @@ input[type="radio"]:focus-visible,
 .bd-field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
 .bd-field input {
   font: inherit; font-size: 14px; color: var(--fg);
-  background: var(--bg); border: 1px solid var(--line-strong); border-radius: 10px;
+  background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--r-md);
   padding: 11px 13px; outline: none; width: 100%;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -2181,7 +2273,7 @@ input[type="radio"]:focus-visible,
   /* La tarjeta usa la paleta COMPLETA de la zona elegida: `--inv2` valía lo mismo que `--inv`
      porque el segundo color no tenía dónde vivir hasta `#138`. */
   --inv: var(--zone-1); --inv2: var(--zone-2);
-  width: min(560px, 100%); background: var(--sheet); border-radius: 18px;
+  width: min(560px, 100%); background: var(--sheet); border-radius: var(--r);
   box-shadow: 0 30px 60px -16px color-mix(in srgb, var(--fg) 30%, transparent), 0 6px 16px color-mix(in srgb, var(--fg) 10%, transparent);
   transform: rotate(-2deg); position: relative; overflow: hidden;
   transition: transform 0.5s cubic-bezier(0.2,0.8,0.2,1);

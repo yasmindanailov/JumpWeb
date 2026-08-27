@@ -19,6 +19,15 @@
         $locales = ['es', 'en', 'fr'];
         $langNames = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];
     @endphp
+    {{-- Tira de marca («C2 · tiras» del sistema del 2.º cliente): cinco franjas que rematan el
+         pie y sustituyen al filete de 1px que había. Los cinco colores salen de `--strip-1..5`,
+         que DERIVAN de los dos tokens de marca — el producto no lleva ni un hex y una
+         instalación los redefine desde su `client.css`. Es puramente decorativa: `aria-hidden`
+         y sin texto, así que no entra en el orden de lectura de un lector de pantalla. --}}
+    <div class="foot__strip" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
     <div class="foot__grid">
         <div>
             <div class="foot__brand">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></div>
