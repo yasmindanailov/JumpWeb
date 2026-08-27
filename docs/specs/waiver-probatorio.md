@@ -915,26 +915,26 @@ en el idioma del SITIO; la casilla no existe sin documento y si un día se pinta
 
 §8.4 `[DECIDIDO owner]` dice que el mostrador produce una firma **declarada por el operador** («el
 operador declara que el cliente aceptó»), y el PDF lo imprime así. Medido: el formulario del alta
-manual tiene **una sola casilla**, la de privacidad (`app/Filament/Pages/CreateManualOrderPage.php:252`,
+manual tiene **una sola casilla**, la de privacidad (`CreateManualOrderPage::customerStep()`,
 `privacy_informed`; `grep -i waiver` en ese fichero → 0), y `CustomerRegistrar` firma en modo interno
-sin más condición que las tres de §9.6 (`app/Domain/Identity/Services/CustomerRegistrar.php:109-114`).
+sin más condición que las tres de §9.6 (`CustomerRegistrar::register()`).
 **El operador no ve el texto, no marca nada y no sabe que está «declarando»**: el documento probatorio
 le atribuye un acto que no hizo. Es §4.5 («fingir lo contrario es peor que decirlo») trasladado al
 operador, y **es de producto antes que de código**: hace falta la casilla del waiver en el alta manual
 (con el texto vigente a la vista) que condicione la firma — o no firmar en mostrador. Confirmado 2/2.
 ⚠️ Relacionado (bajas): el PDF de mostrador imprime «los datos los declaró la persona al crear su
-cuenta» y una IP/UA **que son del puesto del operador** sin decirlo (WAI-07, `waiver-proof.blade.php:91`
-y `:103-104`, `CustomerRegistrar.php:71` y `:114`).
+cuenta» y una IP/UA **que son del puesto del operador** sin decirlo (WAI-07: las filas del sujeto y de
+la IP en `pdf/waiver-proof.blade.php`, y `CustomerRegistrar::register()`).
 
 ### 10.2 Lo que el CLIENTE puede decidir sobre su PROPIA prueba (cuatro medias)
 
 1. **El canal lo elige el cliente** (API-1). `channel` —que entra en el hash y el PDF enseña— sale de
-   `$request->bearerToken() !== null` (`MeWaiverController.php:98`, `AuthRegistrationController.php:161`).
+   `$request->bearerToken() !== null` (`MeWaiverController::signatureRequest()`, `AuthRegistrationController::register()`).
    El guard de Sanctum resuelve **primero la sesión**, así que con cookie válida y una cabecera
    `Authorization: Bearer basura` la firma consta como `api` sin que el token se valide. §9.8·2
    («sale de cómo se autenticó, nunca de un campo») es **falsa**: es un dato que el cliente declara.
    ▶ Salida: derivar el canal del guard que autenticó de verdad (sesión ⇒ `web`, token ⇒ `api`).
-2. **La IP la elige el cliente** (WAI-04). `bootstrap/app.php:39` `trustProxies(at: '*')` ⇒ `ip()` es
+2. **La IP la elige el cliente** (WAI-04). `bootstrap/app.php` declara `trustProxies(at: '*')` ⇒ `ip()` es
    **siempre** el primer valor de `X-Forwarded-For`, que escribe el cliente — medido pasando una
    `Request` por `TrustProxies` (`REMOTE_ADDR=203.0.113.9` + XFF `8.8.8.8` → `8.8.8.8`). Ni siquiera un
    proxy que AÑADA la IP real al final lo arregla. Es infra (acotar los proxies de Enhance/Cloudflare,
@@ -942,13 +942,13 @@ y `:103-104`, `CustomerRegistrar.php:71` y `:114`).
 3. **Se firma con un correo que nadie ha verificado** (WAI-01 + API-5). §4.7 apoya la identidad en
    «cuenta con correo verificado»: **falso**. `SelfSignup::createAccount()` firma dentro de la misma
    transacción que crea la cuenta, con `email_verified_at = null`, y el correo de verificación sale
-   **después** (`SelfSignup.php:127-131`, `:244-249`); `POST /me/waiver` va bajo `auth:sanctum` sin
+   **después** (`SelfSignup::register()`, `SelfSignup::createAccount()`); `POST /me/waiver` va bajo `auth:sanctum` sin
    exigir verificación; y el esquema canónico v2 **no guarda** el estado de verificación al firmar.
    Cualquiera puede darse de alta con el correo de un tercero y «aceptar en su nombre». Confirmado 2/2.
    ▶ Es una decisión: exigir correo verificado para firmar (el alta con casilla dejaría de firmar en
    el acto) **o** guardar `email_verified_at` en la fila y que el PDF lo diga.
 4. **`POST /me/waiver` no es idempotente** (API-3). `WaiverAcceptance::accept()` solo comprueba modo y
-   vigencia (`WaiverAcceptance.php:47-56`): dos envíos del mismo id → **dos firmas, dos `consents`,
+   vigencia (`WaiverAcceptance::accept()`): dos envíos del mismo id → **dos firmas, dos `consents`,
    dos PDF** (sonda: `[201, 201, 2, 4, 4]`). El cajón lo evita con `busy`; una app nativa, un doble
    tap o un reintento de red, no. ▶ Salida: si ya hay firma de ESA versión, no crear otra.
 
@@ -977,9 +977,9 @@ y `:103-104`, `CustomerRegistrar.php:71` y `:114`).
 
 > ✅ **Cerrado**: tres marcadores + aviso de palabras (`#174`); NFC y blanco tras `[` (`#183`, S-6).
 
-`LegalDocumentPublisher::DRAFT_MARKER = '[pendiente'` (`:28`). El seeder siembra **tres** marcadores
-—`[PENDIENTE: redacción definitiva]` (es), `[PENDING: final wording]` (en, `LandingContentSeeder.php:790`),
-`[À COMPLÉTER : rédaction définitive]` (fr, `:797`)— y **solo el castellano se detecta**; los otros dos
+`LegalDocumentPublisher::DRAFT_MARKER = '[pendiente'`. El seeder siembra **tres** marcadores
+—`[PENDIENTE: redacción definitiva]` (es), `[PENDING: final wording]` (en, `LandingContentSeeder::legalDocs()`),
+`[À COMPLÉTER : rédaction définitive]` (fr, en el mismo `legalDocs()`)— y **solo el castellano se detecta**; los otros dos
 pasan (medido con `looksLikeDraft` → `false`). Y en esta BD hay una v1 publicada cuya sección
 «Aceptación» dice literalmente «Este texto es un borrador y será revisado por un asesor legal», sin
 corchetes: **§9.2 vende una guarda de BORRADOR y es una guarda de MARCADOR**. ▶ Salida barata: los
@@ -987,57 +987,57 @@ tres marcadores + la palabra «borrador/draft/brouillon» como aviso (no bloqueo
 
 ### 10.5 Panel y dominio (medias)
 
-- **PAN-5** — el badge del waiver en la ficha del PEDIDO lee el **sello** (`OrderInfolist.php:153-159`)
+- **PAN-5** — el badge del waiver en la ficha del PEDIDO lee el **sello** (`OrderInfolist::detailsSection()`)
   sin `WaiverStatus`: en interno, un sello heredado sin registro sale **verde** en el pedido y «falta
   firmar» en la puerta; una firma de versión antigua sale verde sin aviso; en `desactivado` sigue
   avisando. §8.7 exigía migrar «las dos» superficies y §9.5 no lo dejó abierto.
 - **PAN-1 / NUC-2** — `declared_by_user_id` **entra en el hash** y su FK es `nullOnDelete`
-  (migración `2026_08_25_130000:55`): un borrado físico del operador (hoy solo `app:purge-customer-data`
+  (la FK `declared_by_user_id` de `2026_08_25_130000_create_waiver_probatory_tables.php`): un borrado físico del operador (hoy solo `app:purge-customer-data`
   o SQL; el panel no borra usuarios) deja `verifyHash() === false` **para siempre** en todas las
   firmas que declaró — la FK muta un campo hasheado de una fila «inmutable». `RESTRICT`, o copiar el
   nombre del operador como se copió el del titular.
 - **PAN-4** — «determinista» lo es respecto al REGISTRO, no al documento: la cabecera lee
-  `business.name` en vivo (`WaiverProof.php:184`) y el recuadro de declaración lee `declaredBy?->name`
-  en vivo (`:133`). Renombrar el parque o al operador cambia todos los PDF ya emitidos.
+  `business.name` en vivo (`WaiverProof::businessName()`) y el recuadro de declaración lee `declaredBy?->name`
+  en vivo (`WaiverProof::declaredByName()`). Renombrar el parque o al operador cambia todos los PDF ya emitidos.
 - **NUC-3** — §9.4 («la poda solo mueve el inicio») solo vale para cadenas de puro titular:
-  `prunable()` no poda `dependent` (`WaiverSignature.php:241`) pero la cadena enlaza sobre la **última
-  fila del titular sea cual sea el sujeto** (`WaiverSigner.php:50-53`, sin filtro): con un menor
+  `prunable()` no poda `dependent` (`WaiverSignature::pruning()`) pero la cadena enlaza sobre la **última
+  fila del titular sea cual sea el sujeto** (`WaiverSigner::sign()`, sin filtro): con un menor
   intercalado, la poda deja **agujeros en medio** y `WaiverChain::verify()` declara ROTA una cadena
   legítima. ⚠️ Condiciona `menores-a-cargo.md` (§8.3): decidirlo ANTES de la primera firma de menor.
 - **NUC-5** — «el lock es la primera sentencia de la transacción» solo es cierto cuando `sign()` ABRE
   la transacción (`POST /me/waiver`); en `SelfSignup` y `CustomerRegistrar` va **anidado** (savepoint,
-  `SelfSignup.php:210-245`). Hoy inocuo (el titular acaba de crearse); el día que un tercer llamante
+  `SelfSignup::createAccount()`). Hoy inocuo (el titular acaba de crearse); el día que un tercer llamante
   firme por un titular EXISTENTE dentro de su propia transacción, §8.5 vuelve. Regla para dejar escrita.
 - **NUC-6** — **ningún gate vigila el lock**: la suite corre en SQLite, donde `compileLock()` devuelve
   `''`; ningún test de `tests/Feature/Waiver/` menciona `lockForUpdate`; `WaiverSigner.php` **no está**
   en el `CRITICAL_RE` ni en `CriticalPathGateTest::CRITICAL_FILES`. Retirar el lock pasa 72/72 y pasa
   el push. La única propiedad por la que existe la cadena depende de acordarse de `waiver:verify-chain`.
 - **API-2** — los `throttle:N,1` **sin nombre** comparten UN cubo por usuario
-  (`ThrottleRequests.php:98`, `:224-227`): `POST /me/waiver` (10), el PDF propio (10), el guest-form (30),
+  (`ThrottleRequests::handle()`, `ThrottleRequests::resolveRequestSignature()`): `POST /me/waiver` (10), el PDF propio (10), el guest-form (30),
   **el reintento del pago** (6) y `verification.send` (6). Siete descargas del PDF en un minuto dejan
   al cliente sin poder reintentar un pago durante 60 s. Throttles con nombre.
 
 ### 10.6 Lo que el PDF afirma DE MÁS (para el texto del documento)
 
 - **WAI-02 (media, 2/2)** — «Verificada» / «fila inmutable» / «el valor probatorio reside en el
-  registro»: el hash es `sha256` **sin secreto ni anclaje** (`WaiverSignature.php:167-170`); quien
+  registro»: el hash es `sha256` **sin secreto ni anclaje** (`WaiverSignature::computeHash()`); quien
   escriba en MySQL fabrica o reescribe la cadena entera de un titular y el PDF imprime «Verificada»
   (demostrado con una fila inventada: `verifyHash=true`, `prev_ok=true`). §4.7 lo asume al aplazar el
   sello RFC 3161; **el PDF no puede decir más de lo que el diseño garantiza**.
 - PAN-3 (baja) — «`integrityOk()` (fila + versión + enlace)»: el «enlace» es firma→VERSIÓN
-  (`document_hash == body_hash`, `WaiverProof.php:163-168`), **no** `prev_hash` con la anterior.
+  (`document_hash == body_hash`, `WaiverProof::integrityOk()`), **no** `prev_hash` con la anterior.
 - NUC-7 (baja) — `body_hash` cubre `title` + secciones: `published_at`, `version`, `locale` y `slug`
-  quedan fuera (`LegalDocumentVersion.php:80-88`), y el PDF imprime esa fecha como si estuviera cubierta.
+  quedan fuera (`LegalDocumentVersion::verifyHash()`), y el PDF imprime esa fecha como si estuviera cubierta.
 - NUC-8 (baja) — `WaiverChain::verify()` no cruza `document_hash` con la versión ni llama a
-  `version->verifyHash()` (`WaiverChain.php:25-42`): una versión alterada por debajo da «cadena OK».
+  `version->verifyHash()` (`WaiverChain::verify()`): una versión alterada por debajo da «cadena OK».
 - NUC-4 (baja) — la poda no deja rastro propio del hash podado; queda el `audit_logs` de la firma.
 
 ### 10.7 Bajas restantes, una línea cada una
 
 NUC-9 la guarda «anonimizado no firma» se evalúa sobre la instancia recibida, fuera del lock
-(`WaiverSigner.php:39` vs `:48`) · NUC-10 el respaldo de idioma es pedido → `app.fallback_locale`
-(**`en`**) → `es` → primera, no «→ es» como dice §9.1 (`LegalDocuments.php:36-39`) · NUC-11 en interno
-una cuenta anonimizada sigue «firmada, versión vigente» (`WaiverStatus.php:46-66`) y en externo «sin
+(`WaiverSigner::sign()` vs `sign()`) · NUC-10 el respaldo de idioma es pedido → `app.fallback_locale`
+(**`en`**) → `es` → primera, no «→ es» como dice §9.1 (`LegalDocuments::current()`) · NUC-11 en interno
+una cuenta anonimizada sigue «firmada, versión vigente» (`WaiverStatus::for()`) y en externo «sin
 waiver»: §9.2·3 solo es cierto en interno · NUC-12 §9.1/§9.3 cuentan la tanda 1 (47 casos, 3 acciones)
 cuando hoy son **72 casos en 9 ficheros y 5 acciones** · WAI-09 la única prueba respecto de un menor es
 la cláusula genérica; `subject_type = dependent` es hoy **código inalcanzable** · API-4 en interno **sin

@@ -161,6 +161,20 @@
 >   tanda mete un `border-radius: 12px` a mano, el gate muerde. Usa un token, o justifica en qué
 >   familia cae (motivo cuadrado / dibujo) — **las dos listas solo encogen**.
 >
+> ❗❗❗ **PARA LOS TRES CARRILES, Y ES LO MÁS IMPORTANTE DE ESTA SESIÓN: `docs-check.sh` PUEDE DARTE
+> UN FALSO VERDE.** Medido el 2026-08-27: el gate daba **✓** en la shell del agente y **✗** con el
+> `grep` real, y así se coló en `origin/main` una doc rota desde el **26/08** —37 citas
+> `fichero.php:línea` que `CONVENCIONES §4` prohíbe—. La causa: **en la shell de trabajo `grep` es
+> una FUNCIÓN de bash** interpuesta por el harness, no `/usr/bin/grep` (`declare -F grep` lo
+> confirma). El `pre-push` **sí** usa el binario, así que el gate acaba mordiendo — pero te muerde
+> cuando ya has hecho el trabajo, y por deuda que puede no ser tuya.
+> ▶ **La regla, hasta que se arregle**: `docs-check` **solo cuenta con el binario real** —
+> `env -i PATH=/usr/bin:/bin bash scripts/docs-check.sh` —, o déjaselo al `pre-push`.
+> ▶ **Las 37 citas ya están convertidas a símbolo** (`#193`, con permiso del owner: son ficheros del
+> carril A). ⏳ **Lo que sigue abierto es que el gate pueda mentir**, y tiene ficha **Alta** en
+> `DEUDA.md`. ▶ Es el **quinto** instrumento ciego de este repo y **el primero que era el propio
+> GATE**: los otros cuatro daban un inventario incompleto; éste daba **permiso**.
+>
 >   ❗❗ **TRES cosas que los otros carriles necesitan saber, porque tocan terreno compartido:**
 >   1. ⚠️ **`SidebarTokenBudgetTest::MAX_RAW_COLOURS` bajó de 5 a 3.** El cajón comparte `site.css`,
 >      así que si tu tanda mete un color crudo ahí, el trinquete muerde antes que antes. Los alfa
