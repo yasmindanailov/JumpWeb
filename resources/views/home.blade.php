@@ -49,68 +49,53 @@
             </video>
             <div class="hero__stage-scrim" aria-hidden="true"></div>
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
-            {{-- ⚠️⚠️ **CORRECCIÓN, y va DELANTE del texto que corrige** (2c·8, `#216`):
-                 `[DECIDIDO owner, 2026-08-28]` **el hero RECUPERA sus dos botones**. Lo de abajo
-                 —«el hero no lleva CTA»— fue `#195` y era fiel al mockup de entonces; el mockup se
-                 los ha devuelto y ahora se copian.
-                 ▶ **Y no es un cambio de gusto: es lo que hace posible la otra mitad de la tanda.**
-                 El armazón pasa a nacer OCULTO bajo el hero, como el mockup, y el mockup puede
-                 permitírselo justamente porque su hero ofrece la compra. Sin estos dos botones, la
-                 primera pantalla de la portada se quedaría sin ningún sitio donde comprar y sin
-                 navegación — el mismo agujero que `#211` cerró por otra puerta.
-                 ▶ Medido en `Landing PJP Modos`: van entre el titular y el estado, son dos, el
-                 primero es el relleno de ACCIÓN y el segundo un contorno sobre el vídeo. --}}
-            {{-- Texto tachado que se conserva porque explica de dónde viene esto:
-                 «EL HERO NO LLEVA CTA, y es una decisión de PRODUCTO, no un olvido»
-                 (`[DECIDIDO owner, 2026-08-27]`, `specs/tema-por-instalacion.md` §12). --}}
+            {{-- ⚠️⚠️ **EL HERO SE VACÍA — sin eslogan, sin titular visible, sin botones y sin
+                 chip de estado** (`#224`, `[DECIDIDO owner, 2026-08-28]`: «el hero lo quiero
+                 **por ahora** sin texto y sin botones, después valoraremos cómo lo hacemos»).
+                 La primera pantalla pasa a ser el vídeo y la tira de marca, y nada más.
+
+                 ▶ **Es PROVISIONAL y así se decidió.** Lo que había —eslogan, titular con su
+                 coreografía de tamaño (`#220`), los dos botones de `#216` y el chip de estado—
+                 está entero en el historial; su CSS se queda **aparcado a propósito**, sin
+                 retirar, porque retirarlo convertiría una decisión provisional en un
+                 desmantelamiento. Ficha en `docs/DEUDA.md`.
+
+                 ⚠️⚠️ **Y esto REABRE, a sabiendas, el agujero que `#216` cerró**: con el armazón
+                 naciendo oculto bajo el hero, la primera pantalla **no ofrece comprar ni
+                 navegar**. `#216` le devolvió los botones al hero justamente por eso. El owner
+                 lo ha elegido con el efecto delante (opción «hero limpio y armazón oculto, como
+                 el mockup»), así que es una decisión, no un descuido — pero **no puede subir a
+                 producción sin resolverse**. Es lo primero que hay que mirar al «valorar cómo lo
+                 hacemos».
+
+                 ⚠️ **El `<h1>` NO se va: se queda para lectores de pantalla.** Era el ÚNICO de la
+                 portada, y una página sin encabezado principal es una regresión de SEO y de
+                 accesibilidad que no tiene nada que ver con lo que se pidió. «Sin texto» es una
+                 decisión VISUAL; el documento sigue necesitando su título. --}}
             <div class="hero__stage-content">
-                {{-- Eslogan sobre el titular. En el sistema del segundo cliente va en la fuente
-                     de rotulador y ligeramente girado; aquí sale de `--font-accent`, que por
-                     defecto vale lo mismo que `--font-display` y que un paquete de instalación
-                     redefine junto a las demás familias (`INSTALACION-CLIENTE.md` §4·b.bis). --}}
-                <span class="hero__kicker">{{ __('landing.hero.kicker') }}</span>
-
-                <h1 class="hero__title hero__title--onvideo">
-                    <span class="word">{{ __('landing.hero.l1') }}</span>
-                    <span class="word"><span class="blink">{{ __('landing.hero.l2') }}</span></span>
-                </h1>
-
-                {{-- Estado de apertura (data-driven, `App\Domain\Content\Services\HeroStatus`) DEBAJO del título: «{Día} ·
-                     Abierto ahora» / «… · Abrimos en Xh», con un icono de ubicación al final. Sin fondo
-                     (texto sobre el vídeo). Enlaza a #info (horario + cómo llegar). No se pinta sin horario. --}}
-                {{-- ── LOS DOS BOTONES DEL HERO ──────────────────────────────────────────────
-                     ⚠️ **El primero es el ROL DE ACCIÓN** (`#209`), no «el color de marca»: es el
-                     botón que hace avanzar la compra, y con `theme.action` puesto sale idéntico
-                     dentro y fuera del vídeo. Sin él sigue a la superficie, que es la conducta
-                     histórica del producto.
-                     ⚠️ **El segundo NO declara colores**: está dentro de `data-surface="ink"`, así
-                     que `--fg` ya vale claro y su velo sale de `--paper-fg`, el alias que NO se
-                     invierte. Un `rgba(255,255,255,…)` aquí sería un blanco crudo que ninguna
-                     instalación podría tocar.
-                     ⚠️ **`<a href>` los dos**, y el primero abre el cajón encima: sin JavaScript
-                     `/entradas` y `/precios` llevan a su pantalla de una sola pulsación. --}}
-                <div class="hero__acts">
-                    <a href="{{ route('entradas') }}" class="hero__act hero__act--buy"
-                       @click.prevent="$store.purchase.open()">
-                        <span class="hero__act-t">{{ __('landing.hero.cta_buy') }}</span>
-                        @if (! empty($ctaMinPriceLabel))
-                            <span class="hero__act-s">{{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('precios') }}" class="hero__act hero__act--alt">{{ __('landing.hero.cta_prices') }}</a>
-                </div>
-
-                @if (! empty($heroStatus))
-                    <a href="#info"
-                       class="hero__chip hero__chip--onvideo"
-                       title="{{ __('landing.hero.status_link_hint') }}"
-                       aria-label="{{ $heroStatus['day'] }} · {{ $heroStatus['status'] }}. {{ __('landing.hero.status_link_hint') }}">
-                        <span class="hero__chip-dot" aria-hidden="true"></span>
-                        <span class="hero__chip-text">{{ $heroStatus['day'] }} · {{ $heroStatus['status'] }}</span>
-                        <x-icons.pin class="hero__chip-pin" />
-                    </a>
-                @endif
+                <h1 class="sr-only">{{ __('landing.hero.l1') }} {{ __('landing.hero.l2') }}</h1>
             </div>
+        </div>
+
+        {{-- ⚠️ **LA TIRA DE MARCA DEL HERO, y VIAJA** (`#224`, del mockup `Landing PJP Modos`).
+             Arranca como un pelo de 4 px pegado al filo superior de la página —por encima del
+             hero, que a esa altura va a sangre— y al encoger el hero **baja hasta quedar 28 px
+             por debajo de la tarjeta**. Empieza siendo el borde de la página y acaba siendo el
+             subrayado del hero.
+
+             ▶ Va DENTRO del envoltorio pegajoso y no en el `<header>`: tiene que viajar con el
+             escenario, no con el documento. Y va DESPUÉS del escenario en el marcado con
+             `z-index: -1`, que es lo que hace el mockup: si el hero crece hasta taparla, la tira
+             pasa por detrás en vez de flotar sobre el vídeo.
+
+             ⚠️ **Es decorativa y no toca**: `aria-hidden` (lo pone el componente) y
+             `pointer-events: none` en el envase, porque cruza por delante del área del hero.
+
+             ⚠️ Cuánto viaja lo decide el CSS con `--hero-p`, no el JS. Es la misma regla que el
+             resto de la coreografía (`#195`): el JavaScript publica UNA custom property y no
+             decide diseño, para que una instalación pueda cambiar el recorrido desde su hoja. --}}
+        <div class="hero__strip" aria-hidden="true">
+            <x-site.brand-strip class="hero__strip-box" />
         </div>
         </div>
 

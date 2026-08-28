@@ -419,6 +419,24 @@
 
 * { box-sizing: border-box; }
 
+/* ⚠️⚠️ **`overflow-x` es `clip`, y NO es lo mismo que `hidden`** (`#224`, 2026-08-28).
+   `hidden` convierte al elemento en **contenedor de scroll**. En `<body>` eso rompe, en silencio,
+   TODOS los `position: sticky` de la página: se anclan al scrollport del body en vez de al del
+   viewport, y como el body no es quien scrollea, no llegan a pegarse nunca.
+
+   ▶ **Medido en navegador el 2026-08-28, y el daño llevaba ahí desde `#195`:** el hero de la
+   portada —que es un `sticky` que encoge mientras la página baja— **nunca se pegó**. Se iba con
+   el scroll y dejaba un **hueco vacío de 569 px** entre el hero y el contenido, porque el
+   recorrido (`--hero-runway`, 420 px) es altura real del `<header>`. La coreografía se veía bien
+   en los tests —son aserciones sobre el CSS— y mal en el navegador, que es donde se mira.
+   ▶ Verificado punto por punto: con `hidden`, el pegajoso queda en `-700` a scroll 700 (o sea,
+   no pega); con `clip`, en `-131`, que es lo correcto —ya ha tocado el fondo de su contenedor—.
+
+   ⚠️ **El recorte SIGUE haciendo falta y por eso no se retira**: la marquesina de la portada se
+   sale hasta x = 2533 en un viewport de 1280. Con `clip` se recorta exactamente igual que antes
+   —medido: 0 px de desbordamiento horizontal— pero sin crear contenedor de scroll.
+   ⚠️ No es un patrón nuevo en esta hoja: `.svc-main` ya usa `overflow-x: clip` desde la v2 de
+   /servicios, y por este mismo motivo. */
 html, body {
   margin: 0; padding: 0;
   background: var(--bg);
@@ -426,7 +444,7 @@ html, body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 ::selection { background: var(--zone-1); color: var(--on-brand); }
 a { color: inherit; text-decoration: none; }
@@ -1847,20 +1865,28 @@ img { display: block; max-width: 100%; }
 
 /* La tira de marca, «C2 · tiras» del sistema del segundo cliente. Cinco franjas de igual
    ancho, 4 px de alto, cantos apenas matados. Decorativa de arriba abajo: va con
-   `aria-hidden` en el marcado y no lleva texto, así que no entra en el orden de lectura. */
-/* ⚠️ El canto va por token y no como `2px` literal, y no es lo mismo por casualidad: en una caja
+   `aria-hidden` en el marcado y no lleva texto, así que no entra en el orden de lectura.
+   ⚠️ El canto va por token y no como `2px` literal, y no es lo mismo por casualidad: en una caja
    de 4 px de alto el navegador ESCALA los radios para que no se solapen, así que `999px` rinde
-   exactamente los 2 px de una píldora aplastada. Sale de la escala sin mover un píxel. */
-.foot__strip {
-  display: flex; height: 4px; margin-bottom: clamp(30px, 3vw, 44px);
+   exactamente los 2 px de una píldora aplastada. Sale de la escala sin mover un píxel.
+
+   ⚠️ **`.brand-strip` es el COMPONENTE y `.foot__strip` la COLOCACIÓN** (`#224`). Estaban fundidos
+   porque la tira existía en un solo sitio; el mockup la usa **dos veces** —remata el pie y
+   encabeza el hero, donde además VIAJA con el scroll—, y con las dos reglas fundidas la segunda
+   habría sido una copia. Misma separación que `#223` acaba de hacer con el par de CTA. */
+.brand-strip {
+  display: flex; height: 4px;
   border-radius: var(--r-pill); overflow: hidden;
 }
-.foot__strip > span { flex: 1; }
-.foot__strip > span:nth-child(1) { background: var(--strip-1); }
-.foot__strip > span:nth-child(2) { background: var(--strip-2); }
-.foot__strip > span:nth-child(3) { background: var(--strip-3); }
-.foot__strip > span:nth-child(4) { background: var(--strip-4); }
-.foot__strip > span:nth-child(5) { background: var(--strip-5); }
+.brand-strip > span { flex: 1; }
+.brand-strip > span:nth-child(1) { background: var(--strip-1); }
+.brand-strip > span:nth-child(2) { background: var(--strip-2); }
+.brand-strip > span:nth-child(3) { background: var(--strip-3); }
+.brand-strip > span:nth-child(4) { background: var(--strip-4); }
+.brand-strip > span:nth-child(5) { background: var(--strip-5); }
+
+/* COLOCACIÓN · el pie: lo único suyo es el aire que deja debajo. */
+.foot__strip { margin-bottom: clamp(30px, 3vw, 44px); }
 
 .foot__grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
 .foot__brand {

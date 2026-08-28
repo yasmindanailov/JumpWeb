@@ -11892,3 +11892,89 @@ el par del armazón**, con guarda de la guarda.
 fantasma, invitación activa al cargar, el clic **intercambia sin navegar** (`location.pathname`
 sigue en `/`) y la invitación se apaga al tocarla. Escritorio a 1280: **224 × 54** y **56 × 54**.
 Suite acotada (armazón + acción + huérfanos + home): **101 verdes**. Pint limpio.
+
+---
+
+## #224 · 2026-08-28 · La tira de marca sube al hero y VIAJA — y por el camino se descubre que la coreografía del hero nunca se vio en un navegador
+
+**Contexto.** `[DECIDIDO owner]`: «el hero header tiene una barra colorida como la que tenemos en
+la landing ahora en el footer; al hacer full vw el hero, la barra está encima del hero. El hero lo
+quiero **por ahora** sin texto y sin botones, después valoraremos cómo lo hacemos».
+
+**Frescura verificada, no supuesta.** El README del mockup avisa de que `Landing PJP Modos`
+**caducó dos veces en una misma jornada**. Se bajó el artboard del canvas y se diffeó contra la
+copia local: **0 líneas, 241.273 bytes exactos**. Estaba fresco.
+
+### La tira
+
+Existía una sola vez, incrustada en el pie. El mockup la usa **dos**, así que pasa a ser
+COMPONENTE (`<x-site.brand-strip>`) con dos colocaciones: `.foot__strip` (el aire de debajo) y
+`.hero__strip` (posición y viaje). Misma separación que `#223` acababa de hacer con el par de CTA,
+y por el mismo motivo: dos copias de lo que debe ser idéntico no se mantienen idénticas solas.
+
+**Y viaja.** El mockup escribe `top = lerp(3, pt_ahora + alto_ahora + 28)`: arranca como un pelo de
+4 px pegado al filo superior —el hero está a sangre y su canto empieza a 10 px, así que asoma por
+encima— y al encoger el hero baja hasta quedar **28 px por debajo** de la tarjeta. Empieza siendo
+el borde de la página y acaba siendo el subrayado del hero.
+▶ **El destino es un blanco MÓVIL y por eso el `calc` está anidado**: se interpola hacia una
+posición que ella misma se está moviendo. Hacia el destino FINAL, la tira adelantaría al hero a
+mitad de recorrido y se le metería por encima del vídeo.
+▶ Verificado: `top` 3 → 769 px, separación final **28 px exactos**, ancho igual al del hero
+encogido, en 1280 / 768 / 390.
+
+### ⚠️⚠️ El hallazgo: `overflow-x: hidden` rompía TODOS los `sticky` de la web
+
+Midiendo la tira salió el hero en `top: -379` cuando debía estar clavado arriba. **No era del
+cambio** —se retiró la tira y seguía igual—: la causa es `html, body { overflow-x: hidden }`.
+`hidden`, a diferencia de `clip`, **convierte al elemento en contenedor de scroll**; un `sticky`
+que cuelga del `<body>` se ancla entonces a *su* scrollport en vez de al del viewport y, como el
+body no es quien scrollea, **no se pega nunca**.
+
+**Lo que costó, medido:** el hero de la portada es un sticky que encoge mientras la página baja
+(`#195`, `#216`, `#220`). Se iba con el scroll y dejaba **569 px de banda vacía** entre el hero y
+el contenido, porque el recorrido (`--hero-runway`, 420 px) es altura real del `<header>`.
+**Tres decisiones construyeron esa coreografía y ninguna se veía.**
+
+▶ **Y por qué no lo cazó nadie**: las guardas del hero aseveran el CSS —que los `calc` estén, que
+los tokens existan, que el JS publique `--hero-p`— y **todo eso era cierto**. El CSS estaba bien
+escrito. Lo que fallaba era una regla a 1.200 líneas de distancia, en otro fichero, que ni
+menciona el hero. **Una hoja de estilos correcta no garantiza una página correcta.**
+
+**El arreglo es una palabra**: `overflow-x: clip`. Recorta igual —la marquesina se sale hasta
+x = 2533 en un viewport de 1280 y sigue recortada: **0 px de desbordamiento** medido en los tres
+anchos— pero no crea contenedor de scroll. No es un patrón nuevo aquí: `.svc-main` ya lo usaba.
+▶ Verificado punto por punto: con `hidden`, el pegajoso queda en `-700` a scroll 700; con `clip`,
+en `-131`, que es lo correcto —ya ha tocado el fondo de su contenedor—.
+
+**Guarda nueva** (`StickySurvivesTheRootOverflowTest`): `body` no puede declarar `overflow` con
+`hidden`/`auto`/`scroll` (`.no-scroll` sí: ahí el objetivo *es* impedir el scroll y no hay ningún
+sticky que importe), y el hero sigue siendo `sticky` — para que la guarda no acabe defendiendo
+algo que ya no está. **Probada con las dos mutaciones**: devolver `hidden` muere, quitar el
+`sticky` muere.
+
+### El hero vaciado, y el agujero que abre
+
+Se retiran eslogan, titular visible, los dos botones de `#216` y el chip de estado. Su CSS se
+queda **aparcado a propósito**: la decisión es provisional y desmantelarlo la convertiría en
+definitiva.
+
+⚠️ **El `<h1>` NO se va: se queda `sr-only`.** Era el **único** de la portada, y «sin texto» es una
+decisión VISUAL — no puede llevarse por delante el encabezado del documento. Eso sería una
+regresión de SEO y de accesibilidad que nadie pidió.
+
+⚠️⚠️ **Esto REABRE, a sabiendas, el agujero que `#216` cerró.** Con el armazón naciendo oculto bajo
+el hero, la primera pantalla **no ofrece comprar ni navegar**: ni logotipo, ni menú, ni botón.
+`#216` le devolvió los botones al hero exactamente por eso. El owner lo eligió con el efecto
+delante (opción «hero limpio y armazón oculto, como el mockup»), así que es una decisión y no un
+descuido — pero **no puede subir a producción sin resolverse**. Ficha **Alta** en `DEUDA.md`.
+▶ Y el caso que lo guardaba **no se borra: cambia de signo**. Ahora asevera el ESTADO DECIDIDO, así
+que se pone rojo en cuanto alguien devuelva el botón al hero o haga visible el armazón, y le
+obliga a cerrar la ficha en vez de dejarla abierta para siempre. Borrarlo habría dejado el agujero
+sin ningún sitio en la suite que lo nombre, y un agujero que no aparece en ninguna parte deja de
+ser una decisión pendiente para convertirse en cómo son las cosas.
+
+**Verificación.** Navegador headless en 1280 / 768 / 390, cuatro posiciones de scroll cada uno: el
+pegajoso se queda en `0` mientras dura el recorrido, el hero encoge en su sitio (880 → 660 px en
+escritorio), el hueco se cierra a 0 y el desbordamiento horizontal es **0 px** en los tres anchos.
+Suite acotada (home + armazón + acción + formas + superficies + sticky + páginas públicas): **136
+verdes**. Pint limpio.

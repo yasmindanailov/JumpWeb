@@ -1711,6 +1711,17 @@ body.no-scroll { overflow: hidden; }
     --hero-t-end: clamp(44px, 6vw, 94px);
     --hero-p: 0;
 
+    /* ⚠️ **Lo que mide AHORA cada cosa, declarado UNA vez** (`#224`). El envoltorio, la caja y la
+       tira de marca necesitan los mismos dos valores interpolados, y hasta ahora cada regla
+       repetía el `calc`. La tira los necesita **sumados** —su destino es «justo debajo de la
+       tarjeta»—, así que con la fórmula repetida en tres sitios el día que cambie el recorrido
+       se movería el hero y la tira se quedaría donde estaba. */
+    --hero-pt-now: calc(var(--hero-gap) + (var(--hero-top-end) - var(--hero-gap)) * var(--hero-p));
+    --hero-h-now: calc(var(--hero-h-ini) + (var(--hero-h-end) - var(--hero-h-ini)) * var(--hero-p));
+    /* El aire entre el canto inferior del hero y la tira cuando ya ha bajado. Es el `+ 28` del
+       mockup (`aplicaHero`), y va como token para que una instalación lo pueda respirar. */
+    --hero-strip-gap: 28px;
+
     width: 100%; max-width: none; margin: 0; padding: 0;
     position: relative;
     height: calc(100vh + var(--hero-runway));
@@ -1722,7 +1733,7 @@ body.no-scroll { overflow: hidden; }
 .hero--full .hero__sticky {
     position: sticky; top: 0;
     display: flex; justify-content: center;
-    padding-top: calc(var(--hero-gap) + (var(--hero-top-end) - var(--hero-gap)) * var(--hero-p));
+    padding-top: var(--hero-pt-now);
     padding-inline: calc(var(--hero-gap) + (var(--hero-gap-end) - var(--hero-gap)) * var(--hero-p));
     padding-bottom: var(--hero-gap);
 }
@@ -1733,10 +1744,43 @@ body.no-scroll { overflow: hidden; }
 .hero--full .hero__stage {
     aspect-ratio: auto;
     width: 100%;
-    height: calc(var(--hero-h-ini) + (var(--hero-h-end) - var(--hero-h-ini)) * var(--hero-p));
+    height: var(--hero-h-now);
     max-width: calc(100vw + (var(--hero-w-end) - 100vw) * var(--hero-p));
     max-height: none;
 }
+
+/* ══ LA TIRA DE MARCA DEL HERO, Y VIAJA (`#224`, del mockup) ═════════════════════════════════
+   Arranca a 3 px del filo superior de la página: el hero está a sangre y su canto empieza a
+   10 px, así que la tira asoma **por encima** en ese hueco. Al encoger el hero, viaja hasta
+   quedar 28 px **por debajo** de la tarjeta. Empieza siendo el borde de la página y acaba siendo
+   el subrayado del hero, que es el gesto del mockup.
+
+   ⚠️ **El destino es un blanco MÓVIL, y por eso el `calc` está anidado.** El mockup escribe
+   `top = lerp(3, pt_ahora + alto_ahora + 28)`, o sea que interpola hacia una posición que ella
+   misma se está moviendo. Si se interpolara hacia el destino FINAL, la tira adelantaría al hero
+   a mitad de recorrido y se le metería por encima del vídeo.
+
+   ⚠️ **`z-index: -1` no es un detalle: es lo que la mete DEBAJO del hero.** Mientras el hero va a
+   sangre la tira le cruza por delante en su viaje, y sin esto se vería una raya de colores sobre
+   el vídeo. Va detrás y sólo se ve en el aire de arriba y en el de abajo.
+   ▶ `position: sticky` crea contexto de apilamiento, así que el `-1` se queda DENTRO del hero y
+   no se cuela detrás del fondo de la página.
+
+   ⚠️ El ancho es CONSTANTE (`--hero-w-end`, el ancho final del hero) y el sangrado también
+   (`--hero-gap-end`). No se interpolan: en el mockup tampoco. Lo que hace el gesto es el viaje
+   vertical, no un estiramiento. */
+.hero--full .hero__strip {
+    position: absolute; left: 0; right: 0;
+    z-index: -1;
+    display: flex; justify-content: center;
+    padding-inline: var(--hero-gap-end);
+    pointer-events: none;
+    top: calc(3px + (var(--hero-pt-now) + var(--hero-h-now) + var(--hero-strip-gap) - 3px) * var(--hero-p));
+}
+.hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
+
+/* Fuera de la portada no hay coreografía y la tira no tiene sitio: sólo existe con `--full`. */
+.hero:not(.hero--full) .hero__strip { display: none; }
 
 /* Movimiento reducido: el recorrido desaparece —si no, quedaría una pantalla de scroll vacío—
    y el hero se queda en su estado de partida. `heroChoreo` tampoco se monta (app.js), así que

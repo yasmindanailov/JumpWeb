@@ -302,7 +302,7 @@ class HomePageTest extends TestCase
         // Guarda de la guarda: si el recorte fuera vacío o mínimo, las tres aserciones de abajo
         // pasarían sin mirar nada.
         $this->assertStringContainsString('hero__stage', $hero, 'el recorte del hero no trae el escenario');
-        $this->assertStringContainsString('hero__title', $hero, 'el recorte del hero no trae el titular');
+        $this->assertStringContainsString('hero__video', $hero, 'el recorte del hero no trae el vídeo');
 
         // ⚠️⚠️ **Esta aserción decía `cta-prime` y desde `#223` NO FIJABA NADA**: esa clase ya no
         // existe en ninguna parte del producto, así que la ausencia se cumplía sola. Y el motivo
@@ -319,12 +319,32 @@ class HomePageTest extends TestCase
                 'propios botones (`hero__act--*`) y una coreografía distinta.',
             );
         }
-        // Guarda de la guarda: el hero SÍ tiene botones, y si dejara de tenerlos las cuatro
-        // ausencias de arriba pasarían por el motivo equivocado.
-        $this->assertStringContainsString('hero__act', $hero, 'el hero se ha quedado sin sus botones');
+        // ⚠️⚠️ **EL HERO SE VACÍA EN `#224`** (`[DECIDIDO owner, 2026-08-28]`: «por ahora sin
+        // texto y sin botones»). Aquí se aseveraba que el hero SÍ tenía sus botones y su eslogan;
+        // las dos aserciones se van con su sujeto.
+        // ▶ Lo que ocupa su sitio no es nada: es lo que se pidió. Y por eso se asevera el hecho
+        // que sustituye —queda el vídeo y la tira de marca— para que este caso no se quede
+        // comprobando ausencias, que se cumplen solas.
+        foreach (['hero__kicker', 'hero__acts', 'hero__chip'] as $retirado) {
+            $this->assertStringNotContainsString(
+                $retirado, $hero,
+                "el hero ha recuperado `{$retirado}`. Si es a propósito, hay que revisar la ficha ".
+                'de `DEUDA.md` sobre la primera pantalla sin compra: parte del motivo por el que '.
+                'está abierta es justamente que el hero se vació.',
+            );
+        }
+        $this->assertStringContainsString('hero__strip', $hero, 'el hero se ha quedado sin la tira de marca');
 
-        // …y lo que SÍ tiene que traer, que es lo que ocupó el sitio del CTA.
-        $this->assertStringContainsString('hero__kicker', $hero, 'falta el eslogan sobre el titular');
+        // ⚠️ **El `<h1>` NO se va, y esto lo fija.** Era el ÚNICO de la portada; «sin texto» es una
+        // decisión visual y no puede llevarse por delante el encabezado del documento. Se queda
+        // como `sr-only`: invisible, pero presente para lectores de pantalla y buscadores.
+        $this->assertMatchesRegularExpression(
+            '/<h1[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>\s*\S/', $hero,
+            "el hero no sirve un `<h1>` accesible.\n".
+            '▶ Es el único encabezado principal de la portada. Vaciar el hero VISUALMENTE no puede '.
+            'dejar el documento sin título: eso es una regresión de SEO y de accesibilidad que '.
+            'nadie pidió.',
+        );
 
         // ⚠️ El chip de estado NO se asevera aquí: es data-driven y **no se pinta sin horario**
         // configurado (`HeroStatus`), que es justo el caso del entorno de test. Aseverarlo haría
@@ -472,6 +492,13 @@ class HomePageTest extends TestCase
     /**
      * **El armazón nace bajo el hero, y la portada sigue ofreciendo la compra.**
      *
+     * ⚠️⚠️ **CORRECCIÓN, y va DELANTE del texto que corrige** (`#224`, 2026-08-28): el hero **se
+     * ha vaciado** por decisión del owner —«por ahora sin texto y sin botones»— eligiendo
+     * explícitamente «hero limpio y armazón oculto, como el mockup». O sea que la regla que este
+     * caso defendía **está suspendida a propósito**, y el caso pasa a aseverar el estado decidido
+     * para que nadie lo cambie sin enterarse. El razonamiento de abajo sigue siendo válido y por
+     * eso se conserva: es el motivo por el que la ficha de `DEUDA.md` está abierta.
+     *
      * ⚠️ **RE-APUNTADO, no retirado** (2c·8, `#216`): este caso aseveraba `x-data="navCtaReveal"`,
      * el componente que ocultaba SOLO el botón de comprar del armazón. Ese componente se retira —su
      * trabajo lo hace ahora la coreografía entera, con una sola señal— pero **el hecho que el caso
@@ -482,17 +509,41 @@ class HomePageTest extends TestCase
      */
     public function test_the_hero_offers_the_purchase_because_the_frame_is_hidden_under_it(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression(
-            '/<a[^>]+class="hero__act hero__act--buy"/', (string) $html,
-            "El hero no lleva su botón de comprar.\n".
-            "▶ Y el armazón nace OCULTO bajo él (`--nav-p`), así que sin este botón la primera\n".
-            '  pantalla de la portada se queda sin ningún sitio donde comprar.',
+        // ⚠️⚠️ **ESTE CASO CAMBIA DE SIGNO EN `#224`, y el motivo va entero en el docblock.**
+        // `[DECIDIDO owner, 2026-08-28]`: el hero se vacía «por ahora», con el efecto delante y
+        // eligiendo explícitamente «hero limpio y armazón oculto, como el mockup».
+        //
+        // ▶ La regla de producto que este caso defendía —«la primera pantalla ofrece comprar»—
+        // **está suspendida a propósito**, no rota por descuido. Y como está suspendida, lo que
+        // se asevera ahora es el ESTADO DECIDIDO: que las dos mitades del acoplamiento siguen
+        // donde el owner las dejó. El día que alguien devuelva el botón al hero, o haga visible
+        // el armazón desde el primer píxel, este caso se pone rojo y le obliga a leer esto y a
+        // cerrar la ficha de `DEUDA.md` en vez de dejarla abierta para siempre.
+        //
+        // ⚠️ **No se borra, y no es ceremonia**: borrarlo dejaría el agujero sin ningún sitio en
+        // la suite que lo nombre, y un agujero que no aparece en ninguna parte deja de ser una
+        // decisión pendiente para convertirse en cómo son las cosas.
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a[^>]+class="hero__act/', $html,
+            "El hero ha recuperado un botón de acción.\n".
+            "▶ Si es a propósito, ESTO ES UNA BUENA NOTICIA: cierra el agujero de la primera\n".
+            "  pantalla. Pero hay que hacerlo entero — retirar esta aserción, restaurar la que\n".
+            "  exigía el botón de comprar, y cerrar la ficha de `DEUDA.md`.\n".
+            '▶ Si NO es a propósito, alguien ha revertido `#224` sin enterarse.',
+        );
+
+        // La otra mitad del acoplamiento: el armazón sigue naciendo oculto bajo el hero.
+        $this->assertStringContainsString(
+            'heroChoreo', $html,
+            'ha desaparecido la coreografía que oculta el armazón bajo el hero. Si el armazón ya '.
+            'es visible desde el primer píxel, el agujero de la primera pantalla está cerrado por '.
+            'la otra puerta: revisa este caso y la ficha de `DEUDA.md`.',
         );
 
         $this->assertStringNotContainsString(
-            'navCtaReveal', (string) $html,
+            'navCtaReveal', $html,
             'sigue montándose `navCtaReveal`: son dos mecanismos ocultando el mismo botón.',
         );
     }
