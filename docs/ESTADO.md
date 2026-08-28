@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 17:40 (carril A · la FORMA del panel, `#223` + `#224`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28 (carril C · el mockup 1:1: `#225`→`#230`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -15,6 +15,31 @@
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
 >
+> ❗❗ **EL CARRIL C VUELVE A ABRIR (2026-08-28, tarde): el mockup 1:1** (`#225` → `#230`, seis
+> cortes). `[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo
+> mismo en el footer y el hero del footer». **Ninguno toca el panel, el cajón, el dominio ni sus
+> tests**: armazón, hero, menú, cierre y el composer compartido.
+>
+> ⚠️⚠️ **DOS HALLAZGOS QUE AFECTAN A TODO EL MUNDO, no solo al tema:**
+> 1. **`html, body { overflow-x: hidden }` rompía TODOS los `position: sticky` de la web** (`#226`).
+>    `hidden` convierte al elemento en contenedor de scroll. Medido: el hero de la portada **nunca se
+>    pegó** y dejaba **569 px de banda vacía** antes del contenido, desde `#195`. Arreglado con
+>    `overflow-x: clip` y guardado por `StickySurvivesTheRootOverflowTest`.
+> 2. **Un selector más ancho que su intención** (`#227`): once reglas decían
+>    `[data-surface="ink"] .cta-med` cuando su propio comentario decía «dentro del MENÚ». No se
+>    notaba porque el único `.cta-med` en tinta era el del nav; al llegar un segundo caso, el botón
+>    de comprar salió **amarillo aviso** sin que nadie lo decidiera.
+>
+> ⚠️ **Y una colisión de numeración entre agentes**: se eligieron `#223`–`#227` mirando el remoto
+> (que estaba en `#222`), y el carril A publicó `#223`/`#224` mientras tanto. Renumerados a
+> `#225`–`#229` **antes** de fusionar — después del merge, una sustitución global habría corrompido
+> las entradas del otro carril. **Mirar el remoto al elegir número no basta: hay que volver a
+> mirarlo al publicar.**
+>
+> ❗ **Lo que queda del encargo del owner**: el **minijuego** del hero del pie (≈400 líneas de JS:
+> bucle, física, generación, muñeco de píxeles, récord persistido), los **iconos** del canvas, el
+> contenido real del cliente y la subida a staging.
+
 > ❗❗ **AVISO AL CARRIL A (2026-08-28, 15:30) — el carril C cerró y tocó CSS a lo ancho.**
 > Ocho cortes empujados (`46e5f93` → `a300aba`). **Ninguno toca el panel, el cajón
 > (`resources/js/sidebar/**`), el dominio ni tus tests**: son el armazón, el hero, la marca y el
@@ -732,7 +757,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3338 en verde** (21.814 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 17:45
+- Suite **3341 en verde** (21.940 aserciones, 1 skipped a propósito), medida el 2026-08-28 en el gate de `#230`
   (hora de Madrid) por el carril A tras **`#223`** (menú plano + «Ajustes») y **`#224`** (el buscador),
   que suman **23 casos** —`AdminNavigationTest` y `AdminGlobalSearchTest`, ninguno de los dos existía—
   sobre los 3315 del pulido `#217`. JS **813** (estas dos tandas no tocan JS) · chunk 251,02 (techo 252).
