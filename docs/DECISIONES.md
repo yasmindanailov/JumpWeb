@@ -11924,3 +11924,78 @@ con su párrafo: lo paga la revisión, no una feature).
 correcto y **guardas que se creían verdes**. Lo que las destapó no fue leerlas: fue mutarlas. Y el coste
 —2,8 M de tokens— es la otra mitad del dato: **la revisión encontró dos fallos que ningún gate habría
 visto, y aun así el owner tiene razón en que ese precio no se paga en cada tanda.**
+
+---
+
+## #223 · 2026-08-28 · [DECIDIDO owner] El menú del panel pasa a ser PLANO y de cinco sitios: las otras 19 pantallas salen del camino a «Ajustes» — y el owner corrigió al agente para bien
+
+**Encargo del owner**: «simplificar el panel, mejor UI/UX, que el empleado o el negocio se mueva
+de manera coherente, empezando por el menú y la organización de cada acción. Hay mucho jaleo,
+pedidos, usuarios, reservas todo separado, ajustes que no son necesarios en el día a día».
+
+**Medido antes de proponer nada** (sobre `main`, 2026-08-28): el admin veía **24 entradas en 6
+grupos, todos desplegados**, y de esas 24 solo **4** son del día a día según `PANEL-ADMIN.md` §2
+— el **83 % del menú era puesta en marcha**. Cinco entradas para «cuándo abrimos», seis de
+contenido web, cero búsqueda global, «Pedidos» ordenando por fecha de COMPRA y no de visita,
+«Usuarios» mezclando 23 clientes con 5 del equipo, «Calendario» y «Crear pedido» duplicados
+(menú + barra superior), y **un solo fichero de test en todo el repo miraba la navegación**.
+
+⚠️ **La primera medición fue FALSA y casi arranca el diseño torcido**: volcar la navegación para
+dos roles en el MISMO proceso dijo que el empleado veía las 24 del admin —que sería un agujero de
+seguridad—. **Filament memoiza la navegación.** En procesos separados el empleado veía 5 y el
+gateo por permisos era correcto. *Cuando un instrumento dice que algo está roto de par en par, la
+primera hipótesis es el instrumento* — tercera vez en el proyecto.
+
+**El agente propuso 10 entradas con 4 grupos plegables (clusters de Filament). El owner lo
+corrigió**: «no quiero toggles, el menú plano; ajustes, catálogos, programación, contenido web y
+sistema que salgan solo desde el icono del usuario, escondido». **Y tiene razón**: un grupo
+plegable sigue ocupando sitio y sigue obligando a decidir dónde mirar. Con su corrección el menú
+queda en **5**, no en 10.
+
+**Lo que entró** (`specs/panel-navegacion.md`): menú plano **Hoy · Calendario · Pedidos ·
+Clientes · Puerta**, sin grupos; las 19 restantes a `/admin/ajustes` en tarjetas por área **con
+una línea de qué hace cada una** —el problema real no era que «Temporadas» se llame mal, sino que
+nadie sabía para qué era—; la entrada dentro del menú del avatar; «Calendario» retirado de la
+barra superior (era el único enlace duplicado; «Crear pedido» se queda porque es una ACCIÓN, no un
+sitio); y «Usuarios» partido en dos pestañas de la MISMA pantalla, «Clientes» (menú) y «Equipo»
+(Ajustes), cortadas por `User::PANEL_ROLES`, la misma lista que decide `canAccessPanel()`.
+
+**Resultado medido**: admin **24 → 5** en el menú; empleado **5 → 4** (no ve «Clientes» porque
+`users.manage` no está en su rol — es una decisión de permisos, no una omisión) y **no ve
+«Ajustes» en absoluto**.
+
+**Cuatro cosas que enseñó la ejecución:**
+
+1. ⚠️ **Ocultar NO es autorizar**, y el riesgo real de esconder no es la seguridad —las 19 tienen
+   su `canViewAny()`/`canAccess()`, verificados uno por uno— sino **dejar una pantalla huérfana**:
+   fuera del menú y fuera de Ajustes, inalcanzable salvo tecleando la URL, sin que nada avise. Por
+   eso `AdminSettingsHub::areas()` es fuente única y hay caso que exige que **toda** pantalla
+   registrada esté en el menú, en `areas()` o en la lista explícita de excepciones.
+2. ⚠️⚠️ **Un test se volvió VACÍO sin ponerse rojo.** Tres aseveraban `assertTrue(shouldRegisterNavigation())`
+   y cayeron, como debían. Pero `RateTypeResourceTest` aseveraba el `assertFalse` **para el staff**:
+   pasaba porque le faltaba el permiso y ahora pasa para cualquiera. *Un cambio de conducta no solo
+   rompe tests: también los desactiva en silencio, y esos hay que ir a buscarlos.*
+3. ⚠️⚠️ **Las utilidades de color de Tailwind habrían dejado el foco de teclado INVISIBLE.** Medido
+   sobre el bundle compilado: las clases `hover:border-primary-500` y `focus-visible:ring-primary-600`
+   **sí** entran, pero `--color-primary-500/600` **no están declaradas** (solo la 400). Clase puesta,
+   test verde, aro de foco en nada. Es el mismo fallo que dejó la pantalla de puerta en blanco y negro
+   (`#217`). El estilo pasó a `theme.css` con `var(--primary-*)`, que además hace que el color de
+   marca por instalación mande, y hay guarda de que la respuesta trae esos tokens.
+4. ⚠️ **Un `sed` de renumeración se comió 21 ficheros ajenos** (cookies, landing, `app.js`) por
+   lanzarse sobre `app/ tests/ resources/` en vez de sobre los ficheros del cambio. Se detectó
+   comparando fichero a fichero si TODAS sus líneas cambiadas eran de la renumeración, y se revirtió.
+   *Un reemplazo global se acota a la lista de ficheros tocados, nunca al árbol.*
+
+**Vocabulario, corto a propósito** (`[DECIDIDO owner]`: lo propone el agente y lo revisa él):
+`GLOSARIO.md` fija «franja» e «incidencia» como términos del dominio, en código y en doc, así que
+renombrarlos en la UI habría partido el lenguaje común. Solo cambiaron los que no dicen nada:
+*Escritorio → **Hoy***, *Usuarios → **Clientes***, *Validar registro → **Puerta*** en el menú.
+
+**Verificación**: 12 casos nuevos (`AdminNavigationTest`, que **no existía**), **3 mutaciones y las
+3 muerden**, suite del panel **1162 / 5125** verde, sondeo headless con capturas a 1440 y 390 px.
+
+▶ **Lo que NO arregla esta tanda y sigue abierto**: la pantalla **«Hoy»** que conteste quién viene
+hoy —pagado, firmado, un clic al pedido— y la **búsqueda global (⌘K)**. Son las dos mitades del
+«todo está separado» que el menú, por sí solo, no puede cerrar (`specs/panel-navegacion.md` §6).
+⚠️ La búsqueda **toca RGPD/SEC**: se gatea por permiso y se decide qué campos se indexan leyendo
+`INVARIANTES` §3 y §4 ANTES de escribir nada.

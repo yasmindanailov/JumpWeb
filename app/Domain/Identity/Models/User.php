@@ -13,6 +13,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +46,18 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
 
     /** Dominio reservado para emails de cuentas anonimizadas (M3.3). No es enrutable. */
     public const ANONYMIZED_EMAIL_DOMAIN = 'deleted.local';
+
+    /**
+     * Los roles que hacen de alguien EQUIPO en vez de cliente (#223).
+     *
+     * Es la misma definición que usa `canAccessPanel()`: quien entra al panel es equipo, y
+     * quien no, es cliente. Vive aquí como constante para que las pestañas «Clientes» y
+     * «Equipo» del panel no puedan desviarse del gate de acceso: la lista estaba escrita a
+     * mano en un solo sitio y una segunda copia habría envejecido en silencio.
+     *
+     * @var array<int, string>
+     */
+    public const PANEL_ROLES = ['admin', 'staff'];
 
     /**
      * Get the attributes that should be cast.
@@ -448,6 +461,24 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasRole('admin') || $this->hasRole('staff');
+        foreach (self::PANEL_ROLES as $role) {
+            if ($this->hasRole($role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Cuentas de EQUIPO: las que pueden entrar al panel. */
+    public function scopeTeamMembers(Builder $query): Builder
+    {
+        return $query->whereHas('roles', fn (Builder $roles) => $roles->whereIn('name', self::PANEL_ROLES));
+    }
+
+    /** Cuentas de CLIENTE: todas las demás (incluidas las que aún no tienen rol). */
+    public function scopeCustomers(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('roles', fn (Builder $roles) => $roles->whereIn('name', self::PANEL_ROLES));
     }
 }

@@ -2102,6 +2102,28 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       sesión sin recargar. Suite 3315 / 21.713 · sondeos 38 ✓ y 15/15 · desplegado en staging.
       **Sigue 🟦: falta el OJO del owner** (guion `VERIFICACION-E2E-CAJON.md` §5.octodecies, y en
       particular el LECTOR real del recinto con el PNG descargado).
+- [x] ✅ **LA FORMA DEL PANEL — tanda 1: el MENÚ PLANO** (2026-08-28 tarde, `#223`,
+      `docs/specs/panel-navegacion.md`). Fuera de roadmap, por encargo directo del owner: «simplificar
+      el panel, mejor UI/UX, empezando por el menú». **Medido antes**: 24 entradas en 6 grupos, todos
+      desplegados, y solo **4** del día a día (`PANEL-ADMIN.md` §2) → el **83 % del menú era puesta en
+      marcha**; cero búsqueda global; «Usuarios» mezclando clientes y equipo; «Calendario» y «Crear
+      pedido» duplicados; **1 solo fichero de test miraba la navegación**. ⚠️⚠️ **La primera medición
+      fue FALSA**: Filament **memoiza** la navegación y dijo que el empleado veía las 24 del admin —no
+      era cierto, el gateo estaba bien—; para medir dos roles, **un proceso por rol**. ❗ **El owner
+      corrigió la propuesta del agente** (10 entradas con grupos plegables → **menú PLANO de 5**) y
+      mejoró el resultado. **Entró**: menú **Hoy · Calendario · Pedidos · Clientes · Puerta** · las
+      **19** de puesta en marcha a **`/admin/ajustes`**, en tarjetas con su descripción, entrando por el
+      **menú del avatar** · «Calendario» fuera de la barra superior · «Usuarios» partido en pestañas
+      **Clientes**/**Equipo** por `User::PANEL_ROLES`. **Resultado**: admin **24 → 5**, empleado
+      **5 → 4** y sin «Ajustes». ⚠️ **Ocultar no es autorizar** (los 19 `canViewAny()`/`canAccess()`,
+      intactos y verificados uno a uno) ⚠️⚠️ **y el riesgo real es la pantalla HUÉRFANA**: por eso
+      `AdminNavigationTest` exige que toda pantalla registrada esté en el menú, en
+      `AdminSettingsHub::areas()` o en `OUTSIDE_HUB`. ⚠️⚠️ **Las utilidades de color de Tailwind
+      habrían dejado el aro de foco INVISIBLE** (`--color-primary-500/600` no declaradas aunque sus
+      clases compilan): el fallo de `#217`, cazado antes de subirlo. **12 casos nuevos · 3 mutaciones,
+      las 3 muerden · suite del panel 1162 / 5125 · headless con capturas.**
+      **Sigue 🟦: falta el OJO del owner**, y con él el repaso de los rótulos. ▶ **Lo que el menú NO
+      arregla y sigue abierto**: la pantalla **«Hoy»** y la **búsqueda global (⌘K)** (spec §6).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\RateTypeResource;
@@ -83,7 +84,13 @@ class RateTypeResourceTest extends TestCase
         $this->actingAs($admin);
         $this->assertTrue(RateTypeResource::canViewAny());
         $this->assertTrue(RateTypeResource::canCreate());
-        $this->assertTrue(RateTypeResource::shouldRegisterNavigation());
+        // #223: fuera de la barra lateral a propósito — esta pantalla es de puesta en
+        // marcha y se entra por «Ajustes». Ocultar no autoriza: el acceso lo sigue
+        // decidiendo `canViewAny()`, que se asevera justo arriba. La FORMA del menú la
+        // guarda `AdminNavigationTest`.
+        $this->assertFalse(RateTypeResource::shouldRegisterNavigation());
+        // Y al admin «Ajustes» sí le abre: es por donde llega ahora a esta pantalla.
+        $this->assertTrue(AdminSettingsHub::canAccess());
     }
 
     public function test_staff_lacks_prices_manage_and_is_denied(): void
@@ -93,7 +100,10 @@ class RateTypeResourceTest extends TestCase
 
         $this->actingAs($staff);
         $this->assertFalse(RateTypeResource::canViewAny());
-        $this->assertFalse(RateTypeResource::shouldRegisterNavigation());
+        // #223: `shouldRegisterNavigation()` ya devuelve false para TODOS, así que aseverarlo
+        // aquí dejó de distinguir al staff del admin — pasaba sin medir nada. Lo que sí lo
+        // distingue es que tampoco le abre «Ajustes», la única puerta que queda a esta pantalla.
+        $this->assertFalse(AdminSettingsHub::canAccess());
 
         $this->actingAs($staff)->get('/admin/rate-types')->assertForbidden();
     }

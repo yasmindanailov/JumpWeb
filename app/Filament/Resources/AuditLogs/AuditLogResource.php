@@ -35,11 +35,6 @@ class AuditLogResource extends Resource
     // Dentro del grupo «Sistema», tras Ajustes (10), antes/junto a Roles (40).
     protected static ?int $navigationSort = 30;
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.sistema');
-    }
-
     public static function getNavigationLabel(): string
     {
         return __('admin.audit.nav_label');
@@ -109,9 +104,14 @@ class AuditLogResource extends Resource
         return self::canViewAudit();
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return self::canViewAudit();
+        return false;
     }
 
     public static function canCreate(): bool

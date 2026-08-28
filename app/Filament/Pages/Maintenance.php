@@ -94,14 +94,14 @@ class Maintenance extends Page
         return auth()->user()?->hasPermission('settings.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('settings.manage') ?? false;
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.sistema');
+        return false;
     }
 
     public static function getNavigationLabel(): string

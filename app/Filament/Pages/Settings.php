@@ -73,7 +73,7 @@ class Settings extends Page
      * Toggles cuyo DEFAULT de runtime es ON (sus helpers defensivos devuelven true sin fila). Si la
      * fila falta, `mount()` debe hidratar el toggle en ON para no mostrar OFF y, con un Save, apagar
      * el comportamiento por accidente (mismatch UI↔runtime). Coincide con `CookieConsent::bannerEnabled`
-     * (#219). El interruptor del waiver dejó de ser un toggle en Fase 6: es el MODO `waiver.mode`,
+     * (#223). El interruptor del waiver dejó de ser un toggle en Fase 6: es el MODO `waiver.mode`,
      * que `mount()` hidrata con el valor EFECTIVO por la misma razón.
      */
     private const BOOL_DEFAULT_ON = ['cookies.banner_enabled'];
@@ -174,7 +174,7 @@ class Settings extends Page
         // botón sigue a la superficie (conducta histórica del producto); con valor ⇒ es el mismo
         // en los dos fondos. Ver `ThemeSettings::action()`.
         'theme.action' => 'theme',
-        // Cookies (#219): mostrar el banner de consentimiento. Apagarlo NO desactiva el bloqueo
+        // Cookies (#223): mostrar el banner de consentimiento. Apagarlo NO desactiva el bloqueo
         // previo de los iframes de tercero (siguen gateados) — solo oculta el banner.
         'cookies.banner_enabled' => 'cookies',
         // Catálogo del sidebar de compra (#226): nº de productos a partir del cual aparece el
@@ -187,14 +187,14 @@ class Settings extends Page
         return auth()->user()?->hasPermission('settings.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('settings.manage') ?? false;
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.sistema');
+        return false;
     }
 
     public static function getNavigationLabel(): string
@@ -659,7 +659,7 @@ class Settings extends Page
      * - `seo.og_image`: imagen Open Graph al compartir el sitio.
      * - `catalog.search_min_items` (#226): umbral del buscador del catálogo (vacío → default 12 de
      *   `CatalogSettings`; la validación replica su rango).
-     * - `cookies.banner_enabled` (#219): banner de consentimiento. Default ON; apagarlo solo oculta
+     * - `cookies.banner_enabled` (#223): banner de consentimiento. Default ON; apagarlo solo oculta
      *   el banner — el bloqueo previo de iframes de tercero sigue activo.
      */
     private function webAppearanceSection(): Section

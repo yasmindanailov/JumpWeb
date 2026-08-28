@@ -8,19 +8,47 @@ return [
         'configuracion' => 'Configuración',
     ],
 
-    // Grupos del sidebar (Plan B · L1): reorganizan el panel para el empleado no técnico.
-    // «Operativa» = el día a día; «Sistema» aísla lo delicado (usuarios/roles/mantenimiento).
-    'nav_groups' => [
-        'operativa' => 'Operativa',
-        'programacion' => 'Programación',
-        'catalogo' => 'Catálogo y precios',
-        'contenido' => 'Contenido web',
-        'sistema' => 'Sistema',
+    // #219 — «Ajustes»: la puerta ÚNICA a las pantallas de puesta en marcha, que salieron
+    // del menú lateral. Cada tarjeta lleva una línea de qué hace: a estas pantallas se entra
+    // dos veces al año y su nombre, solo, no basta para saber cuál es la que buscas.
+    'hub' => [
+        'nav_label' => 'Ajustes',
+        'title' => 'Ajustes',
+        'subheading' => 'Lo que se configura una vez y no hace falta en el día a día.',
+        'areas' => [
+            'sales' => 'Precios y productos',
+            'schedule' => 'Horarios y aforo',
+            'web' => 'Contenido web',
+            'system' => 'Sistema',
+        ],
+        'items' => [
+            'catalog' => ['label' => 'Catálogo', 'description' => 'Entradas, packs y complementos que se venden.'],
+            'rate_types' => ['label' => 'Tarifas', 'description' => 'Tipos de precio y a qué días se aplica cada uno.'],
+            'zones' => ['label' => 'Zonas', 'description' => 'Áreas del recinto, su aforo y su color.'],
+            'weekly_schedule' => ['label' => 'Horario semanal', 'description' => 'A qué hora se abre y se cierra cada día de la semana.'],
+            'seasons' => ['label' => 'Temporadas', 'description' => 'Periodos con un horario distinto del habitual.'],
+            'special_dates' => ['label' => 'Fechas especiales', 'description' => 'Días sueltos: festivos, cierres y horarios excepcionales.'],
+            'slots' => ['label' => 'Franjas', 'description' => 'Las sesiones concretas que se ponen a la venta.'],
+            'slot_templates' => ['label' => 'Plantillas de franja', 'description' => 'La receta con la que se generan las franjas de cada semana.'],
+            'attractions' => ['label' => 'Atracciones', 'description' => 'Lo que se enseña de cada zona en la web.'],
+            'landing_services' => ['label' => 'Servicios (web)', 'description' => 'Las secciones de la página de servicios.'],
+            'faqs' => ['label' => 'Preguntas frecuentes', 'description' => 'Las preguntas y respuestas que se publican.'],
+            'offers' => ['label' => 'Ofertas', 'description' => 'Promociones informativas del aviso flotante.'],
+            'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
+            'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
+            'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
+            'team' => ['label' => 'Equipo', 'description' => 'Las cuentas de quien trabaja aquí y entra al panel.'],
+            'roles' => ['label' => 'Roles y permisos', 'description' => 'Qué puede hacer cada rol dentro del panel.'],
+            'audit' => ['label' => 'Incidencias', 'description' => 'Registro de acciones críticas y avisos del sistema.'],
+            'maintenance' => ['label' => 'Mantenimiento', 'description' => 'Apagar la web, las reservas o una página concreta.'],
+        ],
     ],
 
     'puerta' => [
+        // #219: el rotulo del MENU es «Puerta» (el sitio); «title» sigue siendo
+        // el titulo de la pantalla, que describe la accion.
+        'nav_label' => 'Puerta',
         'validar' => [
-            'nav_group' => 'Puerta',
             'title' => 'Validar registro',
             'intro' => 'Introduce el email o el teléfono del cliente para comprobar si está registrado y si ha firmado el waiver.',
             'back_to_panel' => 'Volver al panel',
@@ -110,7 +138,6 @@ return [
     // Calendario unificado (Fase 7.4, decisión #14).
     'calendar' => [
         'nav_label' => 'Calendario',
-        'nav_group' => 'Operativa',
         'title' => 'Calendario',
         'filter' => [
             'all' => 'Todo',
@@ -187,6 +214,10 @@ return [
     // Dashboard del panel (Fase 7.4 iter2, decisión #14): widgets operativos +
     // filtro de periodo compartido (hoy / esta semana / este mes).
     'dashboard' => [
+        // #219: «Escritorio» no decia que hay dentro; esta pantalla contesta la
+        // pregunta con la que se abre el panel cada manana.
+        'nav_label' => 'Hoy',
+        'title' => 'Hoy',
         'period' => [
             'label' => 'Periodo',
             'today' => 'Hoy',
@@ -222,7 +253,6 @@ return [
     // Pedidos (Fase 7.1b, decisión #127).
     'orders' => [
         'nav_label' => 'Pedidos',
-        'nav_group' => 'Operativa',
         'model_label_singular' => 'pedido',
         'model_label_plural' => 'Pedidos',
 
@@ -1274,7 +1304,15 @@ return [
 
     // Fase 7.5 — Gestión de usuarios (RGPD del día a día), decisión #180.
     'users' => [
-        'nav_label' => 'Usuarios',
+        // #219: el menu dice «Clientes» porque es lo que se busca a diario; el EQUIPO
+        // es la otra pestana de esta misma pantalla y se entra por Ajustes.
+        'nav_label' => 'Clientes',
+        'tabs' => [
+            'clients' => 'Clientes',
+            'team' => 'Equipo',
+        ],
+        'title_clients' => 'Clientes',
+        'title_team' => 'Equipo',
         'model_label_singular' => 'usuario',
         'model_label_plural' => 'Usuarios',
         'heading' => 'Usuario',

@@ -35,12 +35,7 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?int $navigationSort = 30;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.sistema');
-    }
+    protected static ?int $navigationSort = 40;   // #223 · menú plano: 4.ª de cinco
 
     public static function getNavigationLabel(): string
     {

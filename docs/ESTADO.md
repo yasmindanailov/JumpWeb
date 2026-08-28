@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 15:30 (cierre del carril C)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 16:40 (carril A · la FORMA del panel, `#223`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -138,6 +138,50 @@
 >   diaria» (`docs/PANEL-ADMIN.md`) — y si toca la ficha del cliente o los pedidos,
 >   `specs/desmontar-view-order.md` (⚠️ `ViewOrder` está DESMONTADO: la orquestación NO vuelve a la
 >   página) y `specs/menores-a-cargo.md` §9.10/§9.11.
+>   ▶ ✅ **SESIÓN DEL 2026-08-28 POR LA TARDE (carril A) — LA FORMA DEL PANEL, TANDA 1 (`DECISIONES #223`,
+>   `specs/panel-navegacion.md`).** El owner pidió «simplificar el panel, mejor UI/UX, empezando por el
+>   MENÚ y la organización de cada acción: hay mucho jaleo, y ajustes que no hacen falta en el día a día».
+>   **Medido antes de proponer nada**: el admin veía **24 entradas en 6 grupos, todos desplegados**, y
+>   solo **4** eran del día a día según `PANEL-ADMIN.md` §2 — el **83 % del menú era puesta en marcha**;
+>   cero búsqueda global; «Pedidos» ordenando por fecha de COMPRA y no de visita; «Usuarios» mezclando 23
+>   clientes con 5 del equipo; «Calendario» y «Crear pedido» **duplicados** (menú + barra superior); y
+>   **un solo fichero de test en todo el repo miraba la navegación**. ⚠️⚠️ **La PRIMERA medición fue FALSA
+>   y casi arranca el diseño torcido**: volcar la navegación de dos roles en el MISMO proceso dijo que el
+>   empleado veía las 24 del admin —que sería un agujero de seguridad—. **Filament MEMOIZA la navegación**;
+>   en procesos separados el empleado veía 5 y el gateo estaba bien. *Cuando un instrumento dice que algo
+>   está roto de par en par, la primera hipótesis es el instrumento.* ❗ **El owner CORRIGIÓ al agente y para
+>   bien**: se le propuso un menú de 10 entradas con 4 grupos plegables (clusters) y contestó «**no quiero
+>   toggles, el menú PLANO**; ajustes, catálogos, programación, contenido web y sistema que salgan solo
+>   desde el icono del usuario, escondido». Con su corrección el menú queda en **5**, no en 10. **Lo que
+>   entró**: menú plano **Hoy · Calendario · Pedidos · Clientes · Puerta** sin grupos · las **19** restantes
+>   a **`/admin/ajustes`** en tarjetas por área **con una línea de qué hace cada una** (el problema real no
+>   era que «Temporadas» se llame mal, sino que nadie sabía para qué era) · la entrada **dentro del menú del
+>   avatar** · «Calendario» retirado de la barra superior (único duplicado; «Crear pedido» se queda porque
+>   es una ACCIÓN, no un sitio) · «Usuarios» partido en **dos pestañas de la MISMA pantalla**, «Clientes»
+>   (menú) y «Equipo» (Ajustes), cortadas por `User::PANEL_ROLES`, la misma lista que decide
+>   `canAccessPanel()`. **Medido después**: admin **24 → 5**; empleado **5 → 4** (no ve «Clientes»: exige
+>   `users.manage`, que su rol no tiene — es decisión de permisos, no omisión) y **no ve «Ajustes» en
+>   absoluto**. ⚠️ **Ocultar NO es autorizar**: las 19 conservan intacto su `canViewAny()`/`canAccess()`,
+>   verificados uno por uno. ⚠️⚠️ **El riesgo real de esconder es dejar una pantalla HUÉRFANA** —fuera del
+>   menú y fuera de Ajustes, inalcanzable salvo tecleando la URL, sin que nada avise—: por eso
+>   `AdminSettingsHub::areas()` es fuente única y **`AdminNavigationTest` exige que toda pantalla registrada
+>   esté en el menú, en `areas()` o en `OUTSIDE_HUB`**. ⚠️⚠️ **Las utilidades de color de Tailwind habrían
+>   dejado el ARO DE FOCO invisible**: `hover:border-primary-500` y `focus-visible:ring-primary-600` compilan,
+>   pero `--color-primary-500/600` **no están declaradas** (solo la 400) — el mismo fallo que dejó la puerta
+>   en blanco y negro en `#217`. El estilo pasó a `theme.css` con `var(--primary-*)`, que además hace que el
+>   color de marca por instalación mande. ⚠️ **Un test se volvió VACÍO sin ponerse rojo** (`RateTypeResourceTest`:
+>   su `assertFalse(shouldRegisterNavigation())` pasaba por falta de permiso y ahora pasa para cualquiera) y
+>   ⚠️ **un `sed` de renumeración se comió 21 ficheros ajenos** (cookies, landing, `app.js`), detectado
+>   comparando fichero a fichero y revertido con `git checkout --`. **Verificación**: 12 casos nuevos ·
+>   **3 mutaciones, las 3 muerden** · suite del panel **1162 / 5125** · headless con capturas a 1440 y 390 px.
+>   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
+>   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
+>   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
+>   **«Hoy»** y **(4)** la **búsqueda global (⌘K)**, que son las dos mitades del «todo está separado» que el
+>   menú por sí solo **no puede cerrar** (`specs/panel-navegacion.md` §6). ⚠️ La búsqueda **toca RGPD/SEC**.
+>   ⚠️ **Para el carril C**: esta tanda tocó `resources/css/filament/admin/theme.css` (+120 líneas al final),
+>   `lang/{es,zh_CN}/admin.php`, `app/Filament/**` y `app/Domain/Identity/Models/User.php`. **NO toca**
+>   `public/css/*`, `resources/js/**`, `home.blade.php` ni el cajón.
 >   ▶ **Lo que queda pendiente y NO bloquea**: **(1)** el OJO del owner sobre §5.octodecies en staging
 >   —y en particular el **lector real** con el PNG descargado, que ninguna suite mide—; **(2)** los
 >   **14 hallazgos menores** de la revisión, en `DEUDA.md` con su reproducción (ninguno rompe hoy;
@@ -656,9 +700,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3315 en verde** (21.713 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 15:35
-  (hora de Madrid) **sobre el árbol CONJUNTO** —el pulido `#217` con los nueve arreglos de su revisión,
-  rebasado sobre los ocho commits del carril C (hasta `#222`)—. JS **813** · chunk 251,02 (techo 252).
+- Suite **3327 en verde** (21.794 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 16:55
+  (hora de Madrid) por el carril A tras **`#223`** (la FORMA del panel: menú plano + «Ajustes»), que
+  suma **12 casos** —`AdminNavigationTest`, que no existía— sobre los 3315 del pulido `#217`. JS **813**
+  (esta tanda no toca JS) · chunk 251,02 (techo 252).
+  ⚠️ **La medición anterior, 3315 / 21.713 a las 15:35, fue la del árbol CONJUNTO** —el pulido `#217`
+  con los nueve arreglos de su revisión, rebasado sobre los ocho commits del carril C (hasta `#222`)—,
+  y su lección sigue valiendo:
   ⚠️ **La fusión no fue limpia y lo cazó la suite, no el rebase**: el carril C había estrenado
   `MotionScaleTest` (la escala de MOVIMIENTO de su tanda 2d) y mis clases nuevas del cajón llevaban las
   duraciones y las curvas escritas a mano (`0.15s ease`, `0.22s`, `0.18s`). Adaptadas a los roles de su

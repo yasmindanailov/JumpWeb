@@ -25,16 +25,11 @@ class OrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 30;   // #223 · menú plano: 3.ª de cinco
 
     public static function getNavigationLabel(): string
     {
         return __('admin.orders.nav_label');
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.orders.nav_group');
     }
 
     public static function getModelLabel(): string

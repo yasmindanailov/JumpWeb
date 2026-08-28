@@ -34,11 +34,6 @@ class AttractionResource extends Resource
     // Detrás de Zonas (90), antes de FAQ (92): la atracción cuelga de una zona.
     protected static ?int $navigationSort = 10;
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.contenido');
-    }
-
     public static function getNavigationLabel(): string
     {
         return __('admin.attractions.nav_label');
@@ -106,8 +101,13 @@ class AttractionResource extends Resource
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
     }
 }

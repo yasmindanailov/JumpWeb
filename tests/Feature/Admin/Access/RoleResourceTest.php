@@ -46,7 +46,11 @@ class RoleResourceTest extends TestCase
         $this->actingAs($this->admin());
 
         $this->assertTrue(RoleResource::canViewAny());
-        $this->assertTrue(RoleResource::shouldRegisterNavigation());
+        // #223: fuera de la barra lateral a propósito — esta pantalla es de puesta en
+        // marcha y se entra por «Ajustes». Ocultar no autoriza: el acceso lo sigue
+        // decidiendo `canViewAny()`, que se asevera justo arriba. La FORMA del menú la
+        // guarda `AdminNavigationTest`.
+        $this->assertFalse(RoleResource::shouldRegisterNavigation());
         $this->get('/admin/roles')->assertSuccessful();
     }
 

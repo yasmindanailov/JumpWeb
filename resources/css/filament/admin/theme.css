@@ -1138,3 +1138,123 @@
 .gate-res__minors-label:where(.dark, .dark *) {
     color: var(--gray-400);
 }
+
+/* ─── «Ajustes»: la puerta única a la puesta en marcha (#223) ──────────────────
+ *
+ * `AdminSettingsHub`. El menú lateral pasó de 24 entradas a 5 y las 19 restantes viven aquí,
+ * en tarjetas agrupadas por área. Las secciones y los iconos son componentes de Filament;
+ * esto es solo la rejilla y la tarjeta, que Filament no trae.
+ *
+ * ⚠️ **Todos los colores salen de los tokens del panel** (`--gray-*`, `--primary-*`), como en
+ * la pantalla de puerta y por la MISMA razón medida: al compilar, las utilidades Tailwind
+ * `hover:border-primary-500`, `group-hover:text-primary-600` y `focus-visible:ring-primary-600`
+ * entraban en el bundle **pero sus variables `--color-primary-500/600` no estaban declaradas**
+ * —solo la 400—, así que el borde del hover y el ARO DE FOCO de teclado habrían resuelto a
+ * nada. Con `var(--primary-600)` resuelven siempre, y además siguen el color de marca de la
+ * instalación (`theme.brand`), que es lo que un panel white-label tiene que hacer.
+ *
+ * Modo oscuro con el selector de Filament (`:where(.dark, .dark *)`). */
+
+.jj-hub {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+}
+
+.jj-hub__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: calc(var(--spacing) * 3);
+}
+
+@media (min-width: 640px) {
+    .jj-hub__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .jj-hub__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.jj-hub__card {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 4);
+    border: 1px solid color-mix(in oklab, var(--gray-950) 10%, transparent);
+    border-radius: 0.75rem;
+    background-color: var(--color-white);
+    /* La misma curva que el resto del panel; sin `all` para no animar el color del texto. */
+    transition: border-color 150ms, background-color 150ms;
+}
+
+.jj-hub__card:hover {
+    border-color: var(--primary-600);
+    background-color: var(--gray-50);
+}
+
+/* Foco de TECLADO visible: es la única forma de recorrer 19 tarjetas sin ratón. */
+.jj-hub__card:focus-visible {
+    outline: 2px solid var(--primary-600);
+    outline-offset: 2px;
+}
+
+.jj-hub__ico {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--gray-400);
+    transition: color 150ms;
+}
+
+.jj-hub__card:hover .jj-hub__ico {
+    color: var(--primary-600);
+}
+
+.jj-hub__text {
+    min-width: 0;
+}
+
+.jj-hub__label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-950);
+}
+
+.jj-hub__desc {
+    display: block;
+    margin-top: calc(var(--spacing) * 0.5);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--gray-500);
+}
+
+.jj-hub__card:where(.dark, .dark *) {
+    border-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+}
+
+.jj-hub__card:hover:where(.dark, .dark *) {
+    border-color: var(--primary-500);
+    background-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.jj-hub__card:hover:where(.dark, .dark *) .jj-hub__ico {
+    color: var(--primary-400);
+}
+
+.jj-hub__ico:where(.dark, .dark *) {
+    color: var(--gray-500);
+}
+
+.jj-hub__label:where(.dark, .dark *) {
+    color: var(--color-white);
+}
+
+.jj-hub__desc:where(.dark, .dark *) {
+    color: var(--gray-400);
+}

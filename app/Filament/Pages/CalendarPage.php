@@ -36,7 +36,7 @@ class CalendarPage extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    protected static ?int $navigationSort = 10;   // Plan B · L1: primero en «Operativa»
+    protected static ?int $navigationSort = 20;   // #223 · menú plano: 2.ª de cinco
 
     protected static ?string $slug = 'calendario';
 
@@ -55,11 +55,6 @@ class CalendarPage extends Page
     public static function getNavigationLabel(): string
     {
         return __('admin.calendar.nav_label');
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.calendar.nav_group');
     }
 
     public function getTitle(): string
