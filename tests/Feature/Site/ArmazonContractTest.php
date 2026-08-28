@@ -1072,29 +1072,60 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **El selector de idioma vive en UN solo sitio — y sin JavaScript sigue habiendo uno.**
+     * **El selector de idioma es UN COMPONENTE — y sin JavaScript sigue habiendo una puerta.**
      *
-     * `[DECIDIDO owner, 2026-08-27]`: sale del pie porque desde la 2c·1 vive en las cápsulas del
-     * menú, y dos selectores del mismo idioma son dos sitios que mantener y uno que se queda
-     * atrás.
+     * ⚠️⚠️ **CORRECCIÓN, y va delante del texto que corrige** (`#233`, 2026-08-28). Este caso
+     * exigía que el selector viviera en UN SOLO SITIO y que **no** estuviera en el pie, por la
+     * decisión de `#205`: «dos selectores del mismo idioma son dos sitios que mantener y uno que
+     * se queda atrás». Era verdad **mientras fueran dos copias**.
      *
-     * ❗ **Y con él se iba el único cambio de idioma que funcionaba sin JS**: el menú lo abre
-     * Alpine, así que sin JS no se abre y sus cápsulas no se alcanzan. El resto de la navegación
-     * sobrevive —las columnas del pie son anclas de verdad— pero el idioma se quedaba sin
-     * ninguna. De ahí el `<noscript>`: no lo ve nadie con JS, y sin JS es la única puerta.
+     * `[DECIDIDO owner, 2026-08-28]`: «el footer tiene menos elementos». El mockup lo tiene en los
+     * DOS —las cápsulas del menú y el bloque inferior del pie—, y la respuesta correcta a «esto
+     * está en dos sitios» no es retirarlo de uno: es que haya **una sola definición**. Con
+     * `<x-site.lang-switch>` el coste que `#205` temía no existe.
+     *
+     * ▶ Por eso lo que se asevera ahora es la CAUSA —una definición— y no el número de sitios: si
+     * mañana hace falta un tercero, este caso no estorba; si alguien copia y pega el marcado, salta.
+     *
+     * ❗ **El `<noscript>` NO se retira con la vuelta del selector**: el desplegable lo abre Alpine,
+     * así que sin JavaScript sigue sin abrirse — en el pie igual que en el menú. Los dos hacen
+     * falta y por motivos distintos.
      */
-    public function test_the_language_switcher_has_one_home_and_a_no_js_floor(): void
+    public function test_the_language_switcher_has_one_definition_and_a_no_js_floor(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
+        // Está en los dos sitios del mockup…
         $this->assertNotEmpty(
             $this->within($html, 'menu__chips', 'lang-dd'),
             'el selector de idioma no está en las cápsulas del menú',
         );
-
-        $this->assertEmpty(
+        $this->assertNotEmpty(
             $this->within($html, 'foot', 'lang-dd'),
-            'el selector de idioma ha vuelto al pie: dos sitios que mantener y uno que se queda atrás',
+            'el selector de idioma no está en el pie. El mockup lo tiene ahí, y sin él el bloque '.
+            'inferior se queda con menos elementos que el suyo (`#233`).',
+        );
+
+        // …y los dos salen de la MISMA definición. Esto es lo que de verdad protege.
+        $this->assertFileExists(
+            resource_path('views/components/site/lang-switch.blade.php'),
+            'ha desaparecido el componente del selector de idioma.',
+        );
+        // ⚠️ **Los COMENTARIOS no cuentan, y este contador ya salió mal por eso**: dio «3 de 2»
+        // porque el propio comentario que explica el cambio nombra `<x-site.lang-switch>`. Es la
+        // misma trampa que `#226` pagó contando clases del menú: *un `grep` que SÍ encuentra
+        // tampoco demuestra que la cosa exista donde crees*.
+        $usos = 0;
+        foreach (['menu', 'footer'] as $vista) {
+            $blade = (string) file_get_contents(resource_path("views/components/site/{$vista}.blade.php"));
+            $blade = (string) preg_replace('/\{\{--.*?--\}\}/s', '', $blade);
+            $usos += substr_count($blade, '<x-site.lang-switch');
+        }
+        $this->assertSame(
+            2, $usos,
+            "El selector de idioma no se sirve del componente en sus dos sitios ({$usos} de 2).\n".
+            '▶ La regla no es «que esté en un sitio»: es que haya UNA definición. Dos copias del '.
+            'marcado son dos listas de idiomas, y así se acaba ofreciendo uno que la otra no tiene.',
         );
 
         $xpath = $this->xpath($html);
@@ -1102,7 +1133,8 @@ class ArmazonContractTest extends TestCase
 
         $this->assertGreaterThan(
             0, $noscript->length,
-            'no queda ningún cambio de idioma sin JavaScript: el menú necesita Alpine para abrirse',
+            'no queda ningún cambio de idioma sin JavaScript: el desplegable necesita Alpine para '.
+            'abrirse, en el pie igual que en el menú.',
         );
     }
 

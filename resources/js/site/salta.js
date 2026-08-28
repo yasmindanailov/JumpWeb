@@ -559,11 +559,17 @@ export function montaSalta(cv, opciones) {
         const nk = alto / 300;
         if (j && k && Math.abs(nk / k - 1) > 0.004) {
             // Reescalar en caliente: todo el estado está en píxeles, así que se multiplica.
+            // ⚠️ **`pie` NO se multiplica: se recoloca.** Es una coordenada desde ARRIBA, y el
+            // lienzo cambia de alto justo al empezar a jugar (150 → 358). Multiplicándola, el
+            // muñeco aparecía a media pantalla en vez de sobre la almena. Lo que se conserva es su
+            // altura SOBRE EL SUELO, que es lo que significa.
             const f = nk / k;
-            j.cam *= f; j.pie *= f; j.vy *= f; j.xFin *= f; j.ultAlt *= f;
+            const sobreSuelo = h - j.pie;
+            j.cam *= f; j.vy *= f; j.xFin *= f; j.ultAlt *= f;
             j.plats.forEach((p) => { p.x0 *= f; p.x1 *= f; p.alt *= f; });
             j.items.forEach((i2) => { i2.x *= f; i2.alt *= f; });
-            j.part.length = 0;
+            j.pie = alto - sobreSuelo * f;
+            j.part.length = 0; j.notas.length = 0;
         }
         w = anchoCv; h = alto; k = nk;
         x0 = Math.round(w * FISICA.xJug);

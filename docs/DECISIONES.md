@@ -12579,3 +12579,83 @@ entre «la landing hace algo más» y «la landing carga un juego que casi nadie
 qué existe porque nadie lo echaría de menos: **un trozo diferido que engorda engorda MÁS callado**.
 No lo paga quien entra en la portada —así que no mueve ningún otro número— pero sí lo paga quien
 llega al final, que es justo el visitante que ya ha demostrado interés.
+
+---
+
+## #233 · 2026-08-28 · Tres correcciones del cierre que solo vio el OJO del owner — y la del medio dice que `#229` eligió mal
+
+**Contexto.** El owner miró el hero del pie y dijo tres cosas: «está roto», «el juego está mucho más
+lejos el zoom que en el mockup», «la transición de sección a full vw no es la correcta» y «el footer
+tiene menos elementos». Las tres eran ciertas y **ninguna la habría cazado un test**.
+
+### 1 · El zoom del juego: 2,3 veces más lejos
+
+El motor escala todo con `k = alto / 300`, así que **la altura del lienzo ES el nivel de zoom**. Yo
+le puse una altura FIJA (`clamp(122px, 14vw, 156px)`) porque nunca leí `altoJuego()` del mockup, que
+hace algo distinto y evidente en cuanto se ve:
+
+```js
+altoJuego() {                                  // el mockup
+  if (fase !== 'jugando' && fase !== 'fin') return 150;   // tira decorativa
+  return max(248, min(358, round(vh * 0.44)));            // jugando
+}
+```
+
+▶ Medido a 900 px de ventana: el mockup juega a **k = 1,19** y el mío a **0,52**. Corregido y
+re-medido: reposo 150 (k = 0,5) · jugando 358 (**k = 1,19**), los números exactos.
+⚠️ **Y al cambiar de altura hay que RECOLOCAR al muñeco, no multiplicarlo.** `pie` es una coordenada
+desde arriba; multiplicándola por el factor, el muñeco aparecía a media pantalla en vez de sobre la
+almena. Lo que se conserva es su altura SOBRE EL SUELO, que es lo que significa.
+
+### 2 · ⚠️⚠️ La transición: `#229` eligió el mecanismo equivocado, y el razonamiento era bueno
+
+`#229` rechazó el `position: fixed` del mockup y lo hizo con un envoltorio PEGAJOSO, razonando que
+así el JS publica un número y el CSS decide. El razonamiento sigue siendo bueno. **El resultado no.**
+
+Un `sticky` solo puede pegarse **dentro de su propio padre**, así que la tarjeta crecía **antes** del
+pie y luego te lo pasabas. En el mockup el recorrido va **DESPUÉS del `</footer>`** y la tarjeta se
+ancla arriba y **crece mientras el pie pasa por detrás**, llenando la pantalla justo al llegar al
+final del documento. Son dos gestos distintos, y el gesto era lo único que no se podía cambiar.
+
+▶ **La lección**: la limpieza arquitectónica es un criterio para elegir ENTRE implementaciones que
+dan el mismo resultado. Cuando cambia el resultado, deja de ser un criterio.
+▶ Lo que sí se conserva del intento: el JS no escribe estilos de diseño. Publica la caja natural de
+la tarjeta —`--c-x0/w0/h0`, que solo él puede medir— y el progreso; el estado final y la curva
+siguen en la hoja, así que una instalación los cambia sin tocar JavaScript.
+
+⚠️ **Y el recorrido se declaraba fuera de alcance.** `--cierre-runway` estaba en `.reserve` y
+`.reserve__runway` es **hermano** de la sección: una custom property solo baja por el árbol, así que
+el carril **nunca tuvo altura**. Sin altura no hay scroll que consumir y `--cierre-p` se quedaba en 0
+en las cuatro posiciones medidas. *Un token fuera de alcance no falla: rinde vacío.*
+
+### 3 · El pie tenía menos elementos, y el motivo estaba escrito
+
+`#205` retiró el selector de idioma del pie razonando que «dos selectores del mismo idioma en la
+misma página son dos sitios que mantener y uno que se queda atrás». **Era verdad mientras fueran dos
+copias.** El mockup lo tiene en los dos sitios, y la respuesta correcta a «esto está en dos sitios»
+no es retirarlo de uno: es que haya **una sola definición**.
+
+▶ `<x-site.lang-switch>`, con `--up` para el pie —donde el panel tiene que abrirse hacia arriba o se
+sale de la página—. **Tercera vez en esta sesión** que la respuesta es un componente y no una copia.
+▶ La guarda se re-apunta de «vive en UN sitio» a «tiene UNA definición»: si mañana hace falta un
+tercero no estorba, y si alguien copia el marcado, salta.
+⚠️ **El `<noscript>` no se retira con la vuelta del selector**: el desplegable lo abre Alpine, así
+que sin JavaScript sigue sin abrirse — en el pie igual que en el menú.
+⚠️ Y el contador de la guarda **dio «3 de 2» porque contaba una mención dentro de un comentario**.
+Es la misma trampa que `#228` pagó contando clases del menú.
+
+### El techo de peso, otra vez — y esta vez el problema era el margen
+
+Con 22 KiB el margen real era de **0,07** (medido 21,93). *Un techo con siete centésimas de margen no
+es una guarda: es un cable trampa que salta con el siguiente cambio trivial y enseña a subirlo sin
+mirar.* Sube a 23.
+⚠️ Y ojo con la unidad: **Vite cuenta en kB decimales y el test en KiB**. «22,46 kB» son 21,93 KiB, y
+esa diferencia ya despistó una vez en esta misma tanda.
+
+### Verificación
+
+Headless a 1280 y 390, cuatro posiciones de recorrido: la tarjeta va de **1160×622 a 1260×880**
+(escritorio) y de **310×512 a 370×824** (móvil) —viewport menos 20—, anclada en `top: 10`, con el pie
+pasando por detrás (`pie_top` 1002 → −171). Zoom del juego re-medido: 0,5 en reposo y **1,19**
+jugando. Pie: selector de idioma presente con su variante `--up`, 3 columnas, 22 enlaces, tira.
+**Cero desbordamiento horizontal** en los dos anchos.

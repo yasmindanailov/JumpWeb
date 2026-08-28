@@ -488,7 +488,6 @@
          existen. Con movimiento reducido se pone a 0 y desaparece, o quedaría una pantalla de
          scroll vacío que nadie sabría por qué está ahí. --}}
     <section id="reserve" class="reserve" x-data="cierreChoreo">
-        <div class="reserve__sticky">
             <div class="reserve__box" data-surface="ink">
                 {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
                      admite sobre tinta, y aquí sale del mismo mecanismo. --}}
@@ -565,10 +564,21 @@
                     </div>
                 </div>
             </div>
-        </div>
     </section>
     </main>
 
     <x-site.footer />
+
+    {{-- ⚠️⚠️ **EL RECORRIDO DEL HERO DEL CIERRE VA AQUÍ, DESPUÉS DEL PIE — y ése era el fallo.**
+         (`#233`, corrigiendo a `#229`.) La primera versión lo puso DENTRO de la sección y usó un
+         envoltorio pegajoso: la tarjeta crecía **antes** del pie y luego te lo pasabas. El mockup
+         hace lo contrario, y es otro gesto: la tarjeta se ancla arriba y **crece mientras el pie
+         pasa por detrás**, llenando la pantalla justo al llegar al final del documento.
+         ▶ `position: sticky` NO puede hacer eso —solo pega dentro de su propio padre—, así que
+         aquí la tarjeta sí se fija a la ventana, como en el mockup. Rechazarlo en `#229` por
+         limpieza arquitectónica cambió la coreografía, que era lo único que no se podía cambiar.
+         ▶ Es altura REAL: los píxeles de scroll que dura el crecimiento. Con movimiento reducido
+         se queda a 0 y no hay hueco. --}}
+    <div class="reserve__runway" aria-hidden="true"></div>
 </div>
 </x-layout>

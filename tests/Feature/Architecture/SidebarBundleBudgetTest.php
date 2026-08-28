@@ -37,8 +37,18 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ **Y lo que NO entra son los otros 12 kB del juego**, que van en su propio trozo. Sin el
      * `import()` dinámico este número habría tenido que subir a **32**: es la diferencia entre
      * «la landing hace algo más» y «la landing carga un juego que casi nadie va a abrir».
+     *
+     * ⚠️ **De 22 a 23 en `#233`**, y el motivo es tan importante como el número: con 22 el margen
+     * real era de **0,07 KiB** —medido 21,93—, y un techo con siete centésimas de margen no es una
+     * guarda: es un cable trampa que salta con el siguiente cambio trivial y enseña a subirlo sin
+     * mirar. Lo que entra es la coreografía del cierre rehecha (`#233`): dejó de ser un pegajoso y
+     * pasó a fijarse a la ventana, que es lo que hace el mockup, y eso son dos condiciones de
+     * anclaje y tres medidas publicadas.
+     *
+     * ⚠️ Y ojo con la unidad al leer la salida de Vite: **Vite cuenta en kB decimales y esto en
+     * KiB**. «22,46 kB» son 21,93 KiB, y esa diferencia ya despistó una vez en esta misma tanda.
      */
-    private const LANDING_ENTRY_MAX_KB = 22;
+    private const LANDING_ENTRY_MAX_KB = 23;
 
     /**
      * Techo del trozo del minijuego (`#231`). Medido al construirlo: **12,08 kB**.

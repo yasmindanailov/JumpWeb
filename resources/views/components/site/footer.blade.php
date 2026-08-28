@@ -75,10 +75,15 @@
     </div>
 
     <div class="foot__bottom">
-        {{-- ⚠️ **El selector de idioma se RETIRÓ de aquí el 2026-08-27** (`[DECIDIDO owner]`, armazón
-             · tanda 2c·4): desde la 2c·1 vive en las cápsulas del menú a pantalla completa, y dos
-             selectores del mismo idioma en la misma página son dos sitios que mantener y uno que
-             se queda atrás. Queda el copyright, que es lo que el bloque tenía además.
+        {{-- ⚠️⚠️ **VUELVE el selector de idioma** (`#233`, `[DECIDIDO owner]`: «el footer tiene
+             menos elementos»). `#205` lo retiró de aquí razonando que «dos selectores del mismo
+             idioma en la misma página son dos sitios que mantener y uno que se queda atrás» —y era
+             verdad **mientras fueran dos copias**. Ahora es UN componente
+             (`<x-site.lang-switch>`) usado en dos sitios, así que ese coste no existe; y el mockup
+             lo tiene en los dos, en las cápsulas del menú y aquí abajo.
+             ▶ Con él, el `<noscript>` de abajo deja de ser la única puerta sin JavaScript… pero
+             **no se retira**: el desplegable se abre con Alpine, así que sin JS sigue sin abrirse.
+             Los dos siguen haciendo falta y por motivos distintos.
 
              ❗ **Y con él se va el ÚNICO cambio de idioma que funcionaba SIN JavaScript**: el menú
              se abre con Alpine, así que sin JS no se abre y sus cápsulas no se alcanzan. El resto
@@ -87,6 +92,7 @@
              lo ve nadie con JS, y sin JS es la única puerta. Es el mismo recurso que ya usan el
              reintento de pago y el marco de consentimiento. --}}
         <div class="foot__bottom-left">
+            <x-site.lang-switch :up="true" />
             <noscript>
                 <ul class="foot__lang-fallback">
                     @foreach ($locales as $l)

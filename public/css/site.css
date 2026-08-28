@@ -1783,72 +1783,76 @@ body.no-scroll { overflow: hidden; }
 }
 .hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
 
-/* ══ EL HERO DEL CIERRE (`#229`, 2026-08-28) ═════════════════════════════════════════════════
+/* ══ EL HERO DEL CIERRE (`#229`, corregido en `#233`) ════════════════════════════════════════
    La imagen ESPECULAR del hero de cabecera: aquél empieza a pantalla completa y encoge hasta ser
-   una tarjeta; éste empieza siendo una tarjeta y CRECE hasta llenar la pantalla al llegar al
-   final. Hasta las tallas del titular son las mismas al revés — arranca en la talla FINAL del de
-   cabecera y acaba en su talla INICIAL.
+   una tarjeta; éste empieza siendo una tarjeta y CRECE hasta llenar la pantalla.
 
-   ⚠️ **Mismo recurso que el hero: envoltorio pegajoso + recorrido de scroll real**, no
-   `position: fixed` con anchos escritos por JavaScript. El JS publica `--cierre-p` y nada más.
+   ⚠️⚠️ **`#229` lo hizo con un envoltorio PEGAJOSO y era el gesto equivocado.** El razonamiento
+   era bueno —el JS publica un número y el CSS decide— pero el resultado no: con `sticky` la
+   tarjeta solo puede pegarse DENTRO de su propio padre, así que crecía **antes** del pie y luego
+   te lo pasabas. En el mockup la tarjeta se ancla arriba y **crece mientras el pie pasa por
+   detrás**, llenando la pantalla justo al llegar al final del documento. Por eso su recorrido va
+   DESPUÉS del `</footer>` y por eso usa `position: fixed`.
+   ▶ **Lo que sí se conserva del intento anterior**: el JS no escribe estilos de diseño. Publica la
+   caja natural de la tarjeta —`--c-x0/w0/h0`, que solo él puede medir— y el progreso; el estado
+   final y la curva siguen aquí, así que una instalación puede cambiarlos sin tocar JavaScript.
 
-   ⚠️ **El recorrido es altura REAL del `<section>`**: son píxeles de scroll que existen. Con
-   movimiento reducido se pone a 0 y el hueco desaparece — si no, quedaría una pantalla de scroll
-   vacío que nadie sabría por qué está ahí. Es la misma regla, y el mismo remedio, que el hero. */
+   ⚠️ **El recorrido es altura REAL** y va al final del documento. Con movimiento reducido se pone
+   a 0: si no, quedaría una pantalla de scroll vacío que nadie sabría por qué está ahí. */
+/* ⚠️⚠️ **El recorrido se declara en el `<body>`, y esto costó una medición.** Estaba en `.reserve`
+   y `.reserve__runway` es HERMANO de la sección, no descendiente: una custom property solo baja
+   por el árbol, así que el carril **nunca tuvo altura**. Sin altura no hay scroll que consumir, y
+   `--cierre-p` se quedaba en 0 en las cuatro posiciones medidas — la tarjeta se anclaba arriba y
+   no crecía. *Un token fuera de alcance no falla: rinde vacío.* */
+body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
+
 .reserve {
-    --cierre-runway: max(420px, 75vh);   /* cuánto scroll dura el crecimiento */
     --cierre-gap: 10px;                  /* el margen de la tarjeta cuando ya llena la pantalla */
-    --cierre-h-ini: clamp(420px, 52vh, 560px);
-    --cierre-h-end: calc(100svh - var(--cierre-gap) * 2);
-    --cierre-w-ini: min(1240px, 100vw - var(--wrap-gutter) * 2);
-    --cierre-w-end: calc(100vw - var(--cierre-gap) * 2);
     /* Las dos tallas del titular son las del hero de cabecera, en orden inverso. */
     --cierre-t-ini: clamp(40px, 6vw, 90px);
     --cierre-t-end: clamp(54px, 8.4vw, 124px);
     --cierre-p: 0;
 
     position: relative;
-    margin-top: clamp(112px, 10.5vw, 180px);
-    padding: 0;
-    /* ⚠️⚠️ **La altura es la FINAL más el recorrido, no la de reposo — y esto se midió.**
-       Un `sticky` deja de pegarse cuando su contenedor se acaba, y aquí el contenido CRECE: al
-       final la tarjeta mide `--cierre-h-end`, casi el doble que en reposo. Con la sección
-       dimensionada a la talla de reposo, el pegajoso se quedaba sin sitio a mitad de camino y la
-       tarjeta se iba por arriba mientras seguía creciendo.
-       ▶ Medido antes de corregirlo: a `p = 0,70` la tarjeta estaba en `top: -42` y a `p = 0,98`
-       en **`top: -361`**. Crecía y se escapaba a la vez.
-       ▶ Con la talla final, el recorrido que el pegajoso puede sostener es exactamente
-       `--cierre-runway`, que es lo que el JS mide. */
-    min-height: calc(var(--cierre-h-end) + var(--cierre-runway));
-}
-.reserve__sticky {
-    position: sticky; top: var(--cierre-gap);
-    display: flex; justify-content: center;
-    padding-inline: calc(var(--wrap-gutter) + (var(--cierre-gap) - var(--wrap-gutter)) * var(--cierre-p));
+    max-width: 1240px;
+    margin: clamp(112px, 10.5vw, 180px) auto 0;
+    padding: 0 var(--wrap-gutter);
 }
 .reserve__box {
     position: relative; overflow: hidden;
-    width: 100%;
-    max-width: calc(var(--cierre-w-ini) + (var(--cierre-w-end) - var(--cierre-w-ini)) * var(--cierre-p));
-    height: calc(var(--cierre-h-ini) + (var(--cierre-h-end) - var(--cierre-h-ini)) * var(--cierre-p));
     border-radius: var(--r-lg);
     display: flex; flex-direction: column; justify-content: center;
     box-shadow: var(--shadow-lift);
 }
+/* ── ANCLADA: sale del flujo y crece hacia la ventana ──────────────────────────────────────────
+   ⚠️ `min-height` en la sección es el HUECO que deja la tarjeta al salir del flujo. Sin él, todo
+   lo que va debajo —el pie entero— pegaría un salto hacia arriba en el fotograma del anclaje. */
+.reserve--fija { min-height: var(--c-h0, 0px); }
+.reserve--fija .reserve__box {
+    position: fixed; z-index: 210; box-sizing: border-box;
+    top: var(--cierre-gap);
+    left:   calc(var(--c-x0) + (var(--cierre-gap) - var(--c-x0)) * var(--cierre-p));
+    width:  calc(var(--c-w0) + (100vw - var(--cierre-gap) * 2 - var(--c-w0)) * var(--cierre-p));
+    height: calc(var(--c-h0) + (100svh - var(--cierre-gap) * 2 - var(--c-h0)) * var(--cierre-p));
+}
+
 /* El contenido va centrado y por encima de la trama. */
 .reserve__body { position: relative; z-index: 1; text-align: center; padding: clamp(24px, 5vw, 80px); }
 
-/* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#220`). Sin esto, la
-   tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña: el
-   cierre acabaría siendo una pantalla casi vacía con una línea en medio. */
+/* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#222`). Sin esto, la
+   tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña. */
 .reserve h2 {
     font-size: calc(var(--cierre-t-ini) + (var(--cierre-t-end) - var(--cierre-t-ini)) * var(--cierre-p));
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .reserve { --cierre-runway: 0px; --cierre-p: 0; }
-}
+/* El recorrido, al FINAL del documento. Es lo que da scroll para que la tarjeta acabe de crecer
+   con el pie ya pasado por detrás. */
+.reserve__runway { height: var(--cierre-runway); }
 
+@media (prefers-reduced-motion: reduce) {
+    .reserve { --cierre-p: 0; }
+    body[data-has-hero] { --cierre-runway: 0px; }
+}
 
 /* ══ «SALTA LA CIUDAD» — el minijuego del cierre (`#231`, del mockup) ════════════════════════
    El lienzo va pegado al canto inferior de la tarjeta de cierre y hace de ESCENARIO: mientras
@@ -1906,8 +1910,11 @@ body.no-scroll { overflow: hidden; }
 }
 
 /* El marcador. `aria-live` lo lee un lector de pantalla, así que va en texto de verdad. */
+/* ⚠️ El marcador y el resultado se colocan sobre la altura de AHORA, no sobre la de reposo: el
+   lienzo pasa de 150 px a ~358 al empezar a jugar, y con la altura fija el marcador quedaba DENTRO
+   del juego, encima del muñeco. `--salta-h-now` la publica el componente en cada cambio de fase. */
 .salta__hud {
-    position: absolute; left: 50%; bottom: calc(var(--salta-h) + 10px);
+    position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) + 10px);
     transform: translateX(-50%);
     z-index: 8; pointer-events: none;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
@@ -1933,7 +1940,7 @@ body.no-scroll { overflow: hidden; }
 /* El resultado. Va MÁS ARRIBA que la invitación: si saliera en el mismo sitio, el pulgar que
    acaba de tocar para saltar pulsaría «otra vez» sin querer. */
 .salta__fin {
-    position: absolute; left: 50%; bottom: calc(var(--salta-h) * 0.4 + 40px);
+    position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) * 0.4 + 40px);
     transform: translateX(-50%);
     z-index: 9; pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -3184,7 +3191,7 @@ body[data-has-hero] .nav--over .nav__cta {
    (antes era un chip con fondo). La «ver más» y el grupo de elección se apilan debajo. */
 .addons-mini__item {
     /* sin fondo/borde/padding: es una fila de lista, no una tarjeta. `list-style:none` también
-       en el <li> (no solo en el <ul>) → sin el bullet «·» antes del «+» (revisión #232). */
+       en el <li> (no solo en el <ul>) → sin el bullet «·» antes del «+» (revisión #233). */
     list-style: none;
 }
 .addons-mini__row {
@@ -3202,7 +3209,7 @@ body[data-has-hero] .nav--over .nav__cta {
     flex-shrink: 0;
 }
 .addons-mini__name {
-    /* Tono atenuado (lista quieta del mockup #232). El badge + el precio se empujan a la derecha
+    /* Tono atenuado (lista quieta del mockup #233). El badge + el precio se empujan a la derecha
        desde `.addons-mini__meta` (margin-left:auto), NO desde el nombre — así el «Más info» inline
        queda pegado al título (#194). */
     font-size: 13px;
@@ -3228,7 +3235,7 @@ body[data-has-hero] .nav--over .nav__cta {
     color: var(--ok);
 }
 /* Variantes Incluido/Gratis (espejo de `.addons__badge--*` del sidebar, #194) — el blade genera
-   `addons-mini__badge--{incluido|gratis}`; sin estas reglas ambos se veían idénticos (revisión #232). */
+   `addons-mini__badge--{incluido|gratis}`; sin estas reglas ambos se veían idénticos (revisión #233). */
 .addons-mini__badge--included { background: var(--ok); color: #fff; }
 .addons-mini__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
 /* Landing (decisión clienta): el botón «Más info +» (mismo patrón que el sidebar, `.addons__moreinfo`

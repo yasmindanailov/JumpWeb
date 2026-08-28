@@ -712,6 +712,17 @@ document.addEventListener('alpine:init', () => {
         _motor: null, _cargando: false, _abierto: false,
         get reduce() { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches; },
 
+        /** La altura del lienzo, que es también el zoom del juego (`k = alto / 300`). */
+        altoLienzo() {
+            if (this.fase !== 'jugando' && this.fase !== 'fin') return 150;
+            return Math.max(248, Math.min(358, Math.round((window.innerHeight || 760) * 0.44)));
+        },
+
+        /** Publica la altura de AHORA para que el marcador y el resultado se coloquen sobre ella. */
+        _publicaAlto() {
+            this.$el?.style.setProperty('--salta-h-now', this.altoLienzo() + 'px');
+        },
+
         init() {
             this._onAbierto = (e) => { this.abierto(!!e.detail); };
             window.addEventListener('cierre:abierto', this._onAbierto);
@@ -743,9 +754,17 @@ document.addEventListener('alpine:init', () => {
                 const cv = this.$refs.lienzo;
                 if (!cv) return null;
                 this._motor = montaSalta(cv, {
-                    alto: () => cv.clientHeight || Math.round((this.$el.clientHeight || 300)),
+                    // ⚠️⚠️ **La altura del lienzo depende de la FASE, y de ahí sale el ZOOM.**
+                    // El motor escala todo con `k = alto / 300`, así que la altura del lienzo ES
+                    // el nivel de zoom. En reposo el lienzo es una tira decorativa de 150 px
+                    // (k = 0,5); jugando ocupa el **44 % de la ventana** —entre 248 y 358— y k
+                    // sube a ~1,19. Son los números del mockup (`altoJuego`).
+                    // ▶ La primera versión usaba una altura FIJA de 156 px, así que jugando se
+                    // veía a **k = 0,52 en vez de 1,19: el doble de lejos**. Lo cazó el ojo del
+                    // owner, no una medición: un juego «más pequeño» no falla, se ve mal.
+                    alto: () => this.altoLienzo(),
                     marcador: (m, p, r) => { this.metros = m; this.pulseras = p; this.record = r; },
-                    fin: (m, p, nuevo) => { this.metros = m; this.pulseras = p; this.nuevoRecord = nuevo; this.fase = 'fin'; },
+                    fin: (m, p, nuevo) => { this.metros = m; this.pulseras = p; this.nuevoRecord = nuevo; this.fase = 'fin'; this._publicaAlto(); },
                     reduce: this.reduce,
                 });
                 this.record = this._motor.record;
@@ -759,6 +778,7 @@ document.addEventListener('alpine:init', () => {
         async abierto(si) {
             if (si) {
                 if (this.fase === 'off') this.fase = 'listo';
+                this._publicaAlto();
                 // Con movimiento reducido no se precarga: el fondo no se va a mover de todas formas.
                 if (!this.reduce) await this.carga();
             } else if (this.fase !== 'off') {
@@ -772,6 +792,7 @@ document.addEventListener('alpine:init', () => {
             if (!m) return;
             this.metros = 0; this.pulseras = 0; this.nuevoRecord = false;
             this.fase = 'jugando';
+            this._publicaAlto();
             m.arranca();
         },
 
@@ -779,7 +800,7 @@ document.addEventListener('alpine:init', () => {
             if (this.fase === 'jugando') { e.preventDefault(); this._motor?.pulsa(); }
         },
 
-        sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; },
+        sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; this._publicaAlto(); },
 
         destroy() {
             window.removeEventListener('cierre:abierto', this._onAbierto);
@@ -792,9 +813,7 @@ document.addEventListener('alpine:init', () => {
     }));
 
     window.Alpine.data('cierreChoreo', () => ({
-        _raf: null,
-        _last: null,
-        _onScroll: null,
+        _raf: null, _last: null, _fija: false, _r0: null, _abierto: false,
         init() {
             if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
             this._onScroll = () => {
@@ -802,71 +821,83 @@ document.addEventListener('alpine:init', () => {
                 this._raf = requestAnimationFrame(() => { this._raf = null; this.apply(); });
             };
             window.addEventListener('scroll', this._onScroll, { passive: true });
-            this._onResize = () => { this._total = null; this._last = null; this._onScroll(); };
+            this._onResize = () => { this._r0 = null; this._last = null; this.suelta(); this._onScroll(); };
             window.addEventListener('resize', this._onResize, { passive: true });
             this.apply();
         },
-        // ⚠️⚠️ **El recorrido se MIDE, no se lee del token — y esto costó una medición.**
-        //  La primera versión hacía `parseFloat(getComputedStyle(el).getPropertyValue('--cierre-
-        //  runway'))`, igual que `heroChoreo` con el suyo. Con `heroChoreo` funciona porque ahí el
-        //  token vale `420px`, un número. Aquí vale `max(420px, 75vh)` y **`getComputedStyle` NO
-        //  resuelve una custom property que no esté registrada con `@property`**: devuelve el
-        //  texto tal cual. `parseFloat('max(420px…')` da `NaN`, la guarda `runway <= 0` era falsa,
-        //  y `--cierre-p` **no se publicaba nunca**. La tarjeta no crecía y nada fallaba.
-        //  ▶ Se midió en navegador: `p` se quedaba en `0` en las cuatro posiciones de scroll.
-        //  ▶ La geometría real no tiene ese problema: el recorrido ES el alto de la sección menos
-        //  el alto de la tarjeta en reposo, y los dos son píxeles de verdad. Además sigue siendo
-        //  themeable —quien cambie `--cierre-runway` en su paquete cambia el alto de la sección y
-        //  esto lo ve—, que era el motivo de leer el token.
-        //  ⚠️⚠️ **Y el recorrido se mide contra la talla FINAL, no contra la de reposo.** Éste fue
-        //  el segundo intento y también salió mal a la primera: un `sticky` solo puede viajar lo
-        //  que le sobra a su contenedor con el tamaño que el contenido tiene EN CADA MOMENTO, y
-        //  aquí el contenido crece. Dividiendo por `alto de sección − reposo` (1087 px medidos),
-        //  `p` no podía pasar de **0,62**: a partir de ahí el pegajoso ya se había quedado sin
-        //  sitio, y la tarjeta se iba por arriba antes de terminar de crecer.
-        //  ▶ Se miden las DOS tallas forzando la propiedad a 0 y a 1. Es una medida por montaje y
-        //  por `resize`, no por fotograma.
-        medir() {
-            const caja = this.$el.querySelector('.reserve__box');
-            if (!caja) { this._total = 0; return; }
-            const previo = this.$el.style.getPropertyValue('--cierre-p');
-            this.$el.style.setProperty('--cierre-p', '1');
-            const final = caja.offsetHeight;
-            this._total = Math.max(0, this.$el.offsetHeight - final);
-            if (previo === '') this.$el.style.removeProperty('--cierre-p');
-            else this.$el.style.setProperty('--cierre-p', previo);
+
+        /** Devuelve la tarjeta al flujo y limpia lo que solo vale anclada. */
+        suelta() {
+            if (!this._fija) return;
+            this.$el.classList.remove('reserve--fija');
+            this._fija = false;
         },
-        apply() {
-            if (this._total == null) this.medir();
-            const tope = parseFloat(getComputedStyle(this.$el).top) || 10;
-            if (!this._total) return;
-            // Cuánto ha subido la sección por encima de su punto de anclaje, sobre el recorrido.
-            const arriba = tope - this.$el.getBoundingClientRect().top;
-            const bruto = Math.min(1, Math.max(0, arriba / this._total));
-            // La misma curva del mockup: un arranque lineal y un final que se posa
-            // (`0.22·q + 0.78·smoothstep(q)`), no la cúbica del hero — aquí lo que crece tiene que
-            // notarse desde el primer píxel o parece que no pasa nada.
-            const p = Math.round((0.22 * bruto + 0.78 * (bruto * bruto * (3 - 2 * bruto))) * 1000) / 1000;
+
+        publica(p) {
             if (p === this._last) return;
             this._last = p;
             this.$el.style.setProperty('--cierre-p', String(p));
-            // ⚠️ **Y también en el `<body>`**, por el mismo motivo que `--nav-p`: quien lo lee —el
-            // armazón, que se retira ante el cierre— es HERMANO de esta sección, no descendiente
-            // suyo, y una custom property solo baja por el árbol.
+            // ⚠️ **También en el `<body>`**: quien lo lee —el armazón, que se retira ante el
+            // cierre— es HERMANO de esta sección, y una custom property solo baja por el árbol.
             document.body.style.setProperty('--cierre-p', String(p));
-            // Un hecho binario, igual que `nav--live`: «el armazón ya está tan fuera que pulsarlo
-            // sería un accidente». Qué significa «tan fuera» lo decide el CSS.
             document.body.classList.toggle('cierre--live', p >= 0.3);
-            // ⚠️ **Un AVISO, no un segundo observador.** El minijuego necesita saber cuándo la
-            // tarjeta está del todo abierta, y esa señal ya se calcula aquí. Con un observador
-            // propio serían dos fuentes para el mismo hecho, que es como se acaba teniendo un
-            // juego que arranca antes de que se le vea (`#227` aprendió lo mismo con el relevo).
             const abierto = p >= 0.985;
             if (abierto !== this._abierto) {
                 this._abierto = abierto;
                 window.dispatchEvent(new CustomEvent('cierre:abierto', { detail: abierto }));
             }
         },
+
+        apply() {
+            const el = this.$el;
+            const caja = el.querySelector('.reserve__box');
+            const pie = document.querySelector('.foot');
+            const carril = document.querySelector('.reserve__runway');
+            if (!caja || !pie || !carril) return;
+
+            const vh = window.innerHeight;
+            const y = window.scrollY || 0;
+            const maxY = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - vh;
+            const tope = parseFloat(getComputedStyle(el).paddingTop) >= 0
+                ? (parseFloat(getComputedStyle(caja).top) || 10) : 10;
+
+            // ⚠️ **«En la cola» y «anclada» son DOS condiciones, y hacen falta las dos.** Con solo
+            // «la sección ha llegado arriba», la tarjeta se fijaría también al pasar por delante
+            // en un scroll rápido hacia arriba. Con solo «estamos al final», se fijaría antes de
+            // llegar. Son los dos filtros del mockup (`aplicaCierre`).
+            const enCola = maxY > vh && (maxY - y) <= pie.offsetHeight + carril.offsetHeight + 80;
+            const anclada = enCola && el.getBoundingClientRect().top <= tope;
+
+            if (!anclada) {
+                this.suelta();
+                // Su caja NATURAL se mide mientras está en el flujo: una vez fija ya no se puede.
+                this._r0 = caja.getBoundingClientRect();
+                this.publica(0);
+                return;
+            }
+
+            if (!this._fija) {
+                const r0 = this._r0 || caja.getBoundingClientRect();
+                // El JS publica lo único que el CSS no puede saber: dónde y cuánto mide la tarjeta
+                // en el flujo. El estado final y la curva siguen en la hoja.
+                el.style.setProperty('--c-x0', Math.round(r0.left) + 'px');
+                el.style.setProperty('--c-w0', Math.round(r0.width) + 'px');
+                el.style.setProperty('--c-h0', Math.round(r0.height) + 'px');
+                el.classList.add('reserve--fija');
+                this._fija = true;
+            }
+
+            // ⚠️ El progreso va de «el pie cabe entero en la ventana» hasta «el final del
+            // documento», que es el recorrido que abre `.reserve__runway` detrás del pie.
+            const pieR = pie.getBoundingClientRect();
+            const yExp = y + pieR.bottom - vh;
+            const bruto = Math.min(1, Math.max(0, (y - yExp) / Math.max(1, maxY - yExp)));
+            // La curva del mockup: arranque lineal y final que se posa. No la cúbica del hero —
+            // aquí lo que crece tiene que notarse desde el primer píxel o parece que no pasa nada.
+            const p = Math.round((0.22 * bruto + 0.78 * (bruto * bruto * (3 - 2 * bruto))) * 1000) / 1000;
+            this.publica(p);
+        },
+
         destroy() {
             if (this._onScroll) window.removeEventListener('scroll', this._onScroll);
             if (this._onResize) window.removeEventListener('resize', this._onResize);
