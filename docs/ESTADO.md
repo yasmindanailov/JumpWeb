@@ -1525,6 +1525,34 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 
 **`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
 
+## ▶ STAGING desplegado el 2026-08-28 — commit `3bda1a9`
+
+`https://jumpweb.sites.aelium.app` · **9/9 verificaciones en verde**: `/up` 200 · `/` 200 ·
+`robots.txt` con `Disallow: /` · 5 tareas del scheduler · **0 migraciones pendientes** (aplicó la
+`add_surname_and_relationship_to_dependents` del carril A) · 0 `failed_jobs` · 0 jobs varados.
+▶ Comprobado además con navegador contra el servidor REAL: la coreografía del cierre llega a
+`--cierre-p: 1` con la tarjeta en 1260×880 anclada, y **cero errores de JavaScript**.
+
+⚠️⚠️ **STAGING NO TIENE EL PAQUETE DE TEMA DEL CLIENTE, y eso es correcto.** Medido: `client.css`,
+`client-logo.svg`, `client-logo-ink.svg`, `client-favicon.svg` y `client-tag.svg` dan **404**. Están
+gitignorados y excluidos del `rsync --delete` a propósito (`DECISIONES #1`: este repo es el PRODUCTO
+y no lleva la marca de nadie).
+
+▶ **Consecuencia práctica, y hay que decirla antes de que alguien la lea como un fallo: staging
+enseña el PRODUCTO en crudo, no Play Jump Park.** Sin fuentes de rótulo, con el naranja del producto
+en vez del cian del cliente, sin tag de la ciudad y sin las manchas del menú.
+
+▶ **Y eso es una VALIDACIÓN, no un problema**: los seis mecanismos white-label **degradan bien**.
+Nada se rompe ni deja una caja vacía — el tag no pinta (`background-image: none`), las manchas del
+menú no pintan (máscara transparente por defecto, que es justo por lo que se eligió ese default en
+`#228`) y el minijuego se dibuja con la paleta del producto porque **lee tokens, no hex**.
+
+❗ **Para que el owner vea el DISEÑO en staging hay que instalar el paquete allí**: son cinco
+ficheros y el procedimiento está en `INSTALACION-CLIENTE.md` §4. **No se hizo en esta sesión**: subir
+la marca de un cliente a un servidor es una decisión suya, no de maquetación.
+
+---
+
 ## ▶ La sesión del carril C del 2026-08-28 (tarde): **el mockup 1:1** — `#225` → `#235`
 
 `[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo mismo en
