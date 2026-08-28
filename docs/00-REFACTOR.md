@@ -2529,6 +2529,22 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ▶ **La lección que más se repitió: leer el bloque ENTERO del artboard sale más barato que
 > reconstruirlo de memoria dos veces.**
 >
+> ✅ **Y un corte más, `#238` — LA COLUMNA** (2026-08-28 noche). El owner volvió al hero del cierre:
+> «en estado normal no tiene el width correcto, tiene demasiada altura y oculta el footer». Dos
+> defectos que se sumaban, ninguno visible a 1280 px:
+> - ❗❗ **`--wrap-gutter` dentro de una caja ACOTADA mide al PADRE** (su `100%` es un porcentaje).
+>   La tarjeta del cierre medía **700 px a 1920** y **160 a 2560** — y **`.menu__inner` tenía el
+>   MISMO fallo desde `#201`**, con **60 px de columna a 2560**, sin que lo viera nadie. Entra
+>   `--col-gutter` (longitud fija) y `CappedContainerGutterTest`, con sus 4 mutaciones.
+> - **El hueco del minijuego estaba reservado DOS veces** (`.reserve__box` y `.reserve__body`):
+>   **220 px de aire muerto** a 1280, y eso era lo que tapaba el pie.
+> - Y dos divergencias más: el lienzo mide **150 px** fijos (no un `clamp`, y el alto ES el zoom) y
+>   el titular tiene **otra escala en teléfono**, que es `#220` otra vez.
+> ▶ **La lección de método, cuarta de este carril: no basta con medir, hay que medir DONDE el fallo
+> puede aparecer.** Todas las sondas corrían a 1280 y 390 — los dos anchos donde no se ve.
+> ❗ `[DECIDIDO owner]` la tarjeta va en la columna del **mockup** (1176). Queda su decisión sobre el
+> pie, que sigue en `.wrap` (1380): igualarlos son las doce vistas (`tema-por-instalacion.md` §17.4).
+>
 > ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
 > del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
 > AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas

@@ -3,8 +3,22 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-28 — carril A (la FORMA del panel y los
-> menores: `#223`, `#224`, `#232`, `#234`, `#236`) y carril C (el mockup 1:1: `#225`→`#235`,
-> sesión CERRADA)**.
+> menores: `#223`, `#224`, `#232`, `#234`, `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235`
+> y **`#238`, la COLUMNA**)**.
+>
+> ❗❗ **`#238` — LA TARJETA DEL CIERRE MEDÍA 160 px A 2560, Y EL MENÚ 60. Afecta a cualquiera que
+> escriba CSS**, así que va delante de todo lo demás. `--wrap-gutter` vale
+> `max(40px, calc((100% - 1380px) / 2))` y ese `100%` es un **porcentaje: mide el CONTENEDOR, no el
+> elemento**. En algo a sangre completa (el `.nav`, el escenario del hero) significa lo que parece;
+> **en un elemento que ya tiene su propio `max-width` el sangrado crece con la ventana mientras la
+> caja no puede** y la columna se estrangula. Dos víctimas: la tarjeta del hero del cierre —el fallo
+> que vio el owner— y **`.menu__inner`, que llevaba así desde `#201` sin que lo viera nadie**.
+> ▶ **Un contenedor acotado se sangra con `--col-gutter`** (longitud fija: 32 · 24 bajo 1100 · 16
+> bajo 720). `--wrap-gutter` sigue siendo correcto donde está. Lo vigila
+> `CappedContainerGutterTest`, con sus 4 mutaciones.
+> ⚠️⚠️ **Y la lección de método, que es la CUARTA vez que se paga en este carril: no basta con
+> medir; hay que medir DONDE el fallo puede aparecer.** Todas las sondas de armazón y de tema
+> corrieron a **1280 y 390**, que son justo los dos anchos donde este defecto no existe.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -920,6 +934,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3361 en verde** (22.130 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
+  noche (hora de Madrid) **sobre el árbol CONJUNTO**, tras rebasar `#238` (la COLUMNA, carril C)
+  encima del `#237` del carril A. ▶ **+4 casos y +37 aserciones en este corte**:
+  `CappedContainerGutterTest`, la guarda de que un contenedor con `max-width` propio no se sangra
+  con `--wrap-gutter` — **4 mutaciones y las 4 muerden**, una por cada mitad de los dos defectos
+  que motivaron la guarda.
 - Suite **3357 en verde** (22.093 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
   20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
   panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet, `#234` su
@@ -1491,6 +1511,52 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
+
+# ❗ SI ENTRAS NUEVO (2026-08-28, tarde-noche · carril C): la COLUMNA — `#238`
+
+**`git fetch` antes de nada.** ⚠️ El carril A publicó `#237` mientras esta sesión trabajaba; el
+número se eligió **mirando el remoto al PUBLICAR**, no solo al empezar, y por eso ésta es `#238`.
+
+## ▶ El encargo y lo que salió
+
+`[DECIDIDO owner]`: seguir con el hero del cierre, «el estado normal y a full vw está roto; en estado
+normal no tiene el width correcto, tiene demasiada altura y oculta el footer. **1:1 al mockup**».
+Las tres cosas eran ciertas y salían de **dos defectos que se sumaban** — ninguno visible a 1280 px.
+
+| | |
+|---|---|
+| `#238` · la columna | ❗❗ **`--wrap-gutter` dentro de una caja ACOTADA mide al PADRE.** La tarjeta del cierre medía **700 px a 1920** y **160 a 2560**; **`.menu__inner` tenía el mismo fallo desde `#201`** y a 2560 su columna eran **60 px**. Entra `--col-gutter` (longitud fija) y `CappedContainerGutterTest` con 4 mutaciones |
+| `#238` · el alto | El hueco del minijuego estaba **reservado dos veces** (`.reserve__box` y `.reserve__body`): **220 px de aire muerto** a 1280 — 762 de alto contra los 542 del mockup — y por eso la tarjeta anclada dejaba **128 px** de pie visible en vez de 348 |
+| `#238` · el lienzo | Medía `clamp(122px, 14vw, 156px)` en vez de los **150** fijos del mockup: en un teléfono salía a 122 y **saltaba a 150 al abrirse**, y como el alto ES el zoom, se jugaba a **k = 0,41** en vez de 0,5 |
+| `#238` · el titular | En teléfono el mockup usa **otra escala** bajo 620 px; con un solo `clamp` mandaba el suelo y a 320 px salía **un 43 % grande**. Es `#220` otra vez, en el bloque de al lado |
+
+## ❗❗ Lo que MÁS importa que sepas
+
+1. ❗❗ **Si escribes CSS: `--wrap-gutter` es SOLO para elementos a sangre completa.** Su `100%` es un
+   porcentaje y mide el contenedor. Un contenedor con `max-width` propio se sangra con
+   **`--col-gutter`**. La guarda te lo dirá, pero mejor saberlo antes.
+2. ⚠️⚠️ **Medir no basta: hay que medir DONDE el fallo puede aparecer.** Las sondas de armazón y de
+   tema corrieron siempre a **1280 y 390** — los dos anchos donde este defecto no existe. El menú
+   pasó por cinco tandas, por el ojo del owner y por 31 aserciones con la columna rota.
+   ▶ **Cuarta vez que este carril paga una lección de método sobre sus propios instrumentos.**
+3. ⚠️ **Dos reservas del mismo hueco no se ven por separado: se ven sumadas**, y no parecen un fallo
+   — parecen «este bloque es alto». Cuatro pasadas de captura no lo cazaron.
+4. `[DECIDIDO owner]` **la tarjeta va en la columna del MOCKUP** (1240 → **1176**), no en la del pie.
+   Conserva el gesto de `#229`: el cierre **nace más estrecho que la tarjeta del hero** y crece hasta
+   comérselo todo.
+
+## ▶ POR DÓNDE SIGUE
+
+0. ❗ **El OJO del owner**, y ahora hay algo NUEVO que mirar además del cierre: **el menú a pantalla
+   completa en una pantalla ancha** — su columna acaba de pasar de 700 px a 1176 a 1920.
+1. ❗ **Una decisión suya, con los números en `specs/tema-por-instalacion.md` §17.4**: en el mockup la
+   tarjeta del cierre y el pie **comparten columna**; aquí el pie sigue en `.wrap` (1380) y a 1920 el
+   escalón es de **102 px por lado**. Igualarlos = bajar **toda la columna del sitio** a 1240/1176,
+   doce vistas. No se toma desde una tanda de cierre.
+2. ⬜ Lo de antes sigue igual: los **iconos** del canvas, el **contenido real** del cliente y el ojo
+   del owner sobre las nueve tandas visuales anteriores.
+
+---
 
 # ❗ SI ENTRAS NUEVO (2026-08-28, CIERRE del carril C): el TEMA tiene sus SEIS mecanismos, el ARMAZÓN está completo en los doce anchos, y NO QUEDA NADA DE AGENTE EN ESTE CARRIL
 

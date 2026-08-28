@@ -12981,3 +12981,85 @@ la disponibilidad se enseña **solo cuando quedan pocas**, con el umbral configu
 
 **Verificación**: `LayerOrderTest` (2 casos, **2 mutaciones y las 2 muerden**: devolver el aviso a
 1000 y hundirlo bajo el nav) · suite **3.357 / 22.093** · verificado en navegador.
+
+---
+
+## #238 · 2026-08-28 · Un sangrado en PORCENTAJE mide al padre — el hero del cierre a 160 px de ancho en una pantalla ancha, y el menú a 60
+
+**Contexto.** El owner miró el hero del cierre y dijo: «el estado normal y a full vw está roto; en
+estado normal no tiene el width correcto, tiene demasiada altura y oculta el footer». Las tres cosas
+eran ciertas, ninguna la veía ningún test, y salían de **dos defectos distintos que se sumaban**.
+
+### 1 · ⚠️⚠️ `--wrap-gutter` dentro de una caja ACOTADA no significa lo que parece
+
+```css
+--wrap-gutter: max(40px, calc((100% - 1380px) / 2));
+```
+
+Ese `100%` es un porcentaje: se resuelve contra el **contenedor**, nunca contra el elemento. En algo
+a sangre completa —el `.nav`, el escenario del hero— dice lo que parece decir y está bien usado. En
+un elemento que ya tiene su propio `max-width`, el sangrado **crece con la ventana mientras la caja
+no puede**, y la columna se estrangula.
+
+| ventana | sangrado | tarjeta del cierre | columna del menú |
+|---|---|---|---|
+| 1280 | 40 px | 1160 | 1160 |
+| **1920** | **270 px** | **700** | **700** |
+| **2560** | **590 px** | **160** | **60** |
+
+▶ **Y con el ancho se disparaba el alto**: a 700 px el titular y el párrafo envuelven, así que la
+tarjeta pasaba de 542 a 806. Eso es lo que el owner leyó como «demasiada altura».
+
+⚠️⚠️ **El menú a pantalla completa tenía el MISMO defecto y no lo había visto nadie.**
+`.menu__inner` también está acotado a 1240 y también se sangraba así, desde `#201`: cinco tandas de
+armazón, el ojo del owner encima y 31 aserciones, y a 2560 px su columna medía **60 px**.
+▶ **La causa de que no se viera es de método, y es la cuarta vez que este carril la paga:** todas las
+sondas corrieron a **1280 y 390**, que son exactamente los dos anchos donde este fallo no existe.
+*Una sonda con dos anchos fijos demuestra lo que pasa en esos dos anchos y nada más; los defectos de
+columna viven en los extremos.*
+
+**El arreglo** es un token con otro contrato: `--col-gutter`, **longitud fija** (32 · 24 bajo 1100 ·
+16 bajo 720, los escalones del mockup). `--wrap-gutter` no se toca —es correcto donde está—; lo que
+se prohíbe es mezclarlo con un tope propio, y de eso se encarga `CappedContainerGutterTest`.
+
+### 2 · El hueco del minijuego estaba reservado DOS veces
+
+El lienzo es `absolute` contra el canto inferior, así que su sitio lo aparta el `padding-bottom` de
+`.reserve__box`, como en el mockup. Pero `.reserve__body` volvía a apartar la tira entera más un
+respiro: **220 px de aire muerto a 1280** (762 de alto contra los 542 del mockup).
+
+▶ **Y eso es lo que tapaba el pie**: anclada, la tarjeta ocupaba 772 px de una ventana de 900 y
+del pie quedaba una franja de 128. Con una sola reserva quedan **348**.
+⚠️ *Dos reservas del mismo hueco no se ven por separado: se ven **sumadas**, y no parecen un fallo —
+parecen «este bloque es alto».* Por eso cuatro pasadas de captura no la cazaron.
+
+### 3 · `[DECIDIDO owner]` La tarjeta va en la columna del MOCKUP
+
+Preguntado con los números delante —columna propia de 1240 (como el hero de cabecera) o la del pie
+(1380)—, la respuesta fue **«igual que el mockup»**: 1240 con sangrado propio → **1176**, constante
+en cualquier pantalla. Eso conserva el gesto de `#229`: el cierre **nace más estrecho que la tarjeta
+del hero** (1176 < 1240) y crece hasta comérselo todo.
+
+❗ **Lo que queda abierto y es suyo**: el pie sigue en `.wrap` (1380), así que a 1920 hay un escalón
+de 102 px por lado entre la tarjeta y el pie —en el mockup comparten columna—. Igualarlos significa
+bajar **toda la columna del sitio**, doce vistas, y eso no se decide desde una tanda de cierre.
+
+### 4 · Dos divergencias más del mismo bloque, del mismo repaso
+
+- **El lienzo mide 150 px, no una talla adaptable.** Era `clamp(122px, 14vw, 156px)` —la misma
+  expresión que el hueco, que es otra cosa—. En un teléfono salía a 122 y **saltaba a 150 al abrirse
+  la tarjeta**, porque el motor le escribe su altura. Y el alto del lienzo **ES el zoom**
+  (`k = alto / 300`, `#233`): a 122 se jugaba a 0,41 en vez de a 0,5.
+- **En teléfono el titular tiene otra escala** — `#220` otra vez, y en el bloque de al lado. El
+  mockup cambia de fórmula bajo 620 px; con un solo `clamp` mandaba el suelo y el titular salía **un
+  43 % grande en el estado final** a 320 px.
+
+### Verificación
+
+Sonda en **siete anchos** (390 · 768 · 1280 · 1440 · 1600 · 1920 · 2560), reposo y final: tarjeta
+**1176 × 542** constante de 1280 para arriba, **358 × 521** a 390; anclada, `100vw − 20` × `100svh −
+20` en `top: 10` en los siete, **cero desbordamiento horizontal**. Menú: **1176 en los cuatro anchos
+anchos**. Minijuego intacto y re-medido: **150 (k = 0,5)** en reposo, **358 (k = 1,193)** jugando,
+CTA a `opacity: 0` con `pointer-events: none`, **cero errores de JavaScript**.
+**`CappedContainerGutterTest` nuevo (4 casos) · 4 mutaciones, las 4 muerden.**
+Suite **3.359 / 22.125** · Pint ✓.

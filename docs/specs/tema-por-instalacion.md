@@ -1472,3 +1472,116 @@ dejó la tanda 3 fuera de alcance. Aquí solo se declaran.
   (`--nav-p: 0.561` a scrollY = 120) y `prefers-reduced-motion` sigue apagando lo que apagaba.
 - ❗ **Y lo que ninguna sonda puede medir: cómo se siente.** Esta tanda no se revisa con una
   captura, se revisa **interactuando**. Si algo va lento o brusco, el número está en un token.
+
+---
+
+## 17. LA COLUMNA — un sangrado en porcentaje mide al PADRE (`#238`, 2026-08-28)
+
+`[DECIDIDO owner, 2026-08-28]`: **la tarjeta del hero del cierre va en la columna del mockup**
+(1240 con sangrado propio → **1176 de contenido**), no en la del resto del producto.
+
+**El síntoma que lo destapó fue el del owner, y era el estado en reposo del hero del cierre**: «no
+tiene el width correcto, tiene demasiada altura y oculta el footer». Las tres cosas eran ciertas y
+salían de **dos defectos distintos** que se sumaban.
+
+### 17.1 ⚠️⚠️ El primero: `--wrap-gutter` dentro de una caja ACOTADA
+
+```css
+--wrap-gutter: max(40px, calc((100% - 1380px) / 2));
+```
+
+Ese `100%` es un **porcentaje**, así que se resuelve contra el **contenedor** del elemento, nunca
+contra el elemento. En algo que ocupa todo el ancho —el `.nav`, el escenario del hero— significa
+exactamente lo que dice: «40 px, o lo que haga falta para centrar una columna de 1380». Para eso
+existe y ahí está bien usado.
+
+▶ **En un elemento que YA está acotado por su propio `max-width` significa otra cosa**: el sangrado
+sigue creciendo con la ventana mientras la caja no puede. La columna se estrangula.
+
+| ancho de ventana | sangrado | tarjeta del cierre | columna del menú |
+|---|---|---|---|
+| 1280 | 40 px | 1160 | 1160 |
+| 1440 | 40 px | 1160 | 1160 |
+| **1920** | **270 px** | **700** | **700** |
+| **2560** | **590 px** | **160** | **60** |
+
+⚠️⚠️ **Y el menú a pantalla completa tenía el MISMO defecto, sin que lo viera nadie.** `.menu__inner`
+también está acotado a 1240 y también se sangraba con `--wrap-gutter`. Llevaba así desde que se
+escribió (`#201`), pasó por cinco tandas de armazón, por el ojo del owner y por 31 aserciones —y
+**ninguna sonda de este carril corrió por encima de 1280 px**, que es justo donde el defecto empieza.
+
+▶ **La lección de método, y es la cuarta vez que este carril la paga**: *no basta con medir; hay que
+medir donde el fallo puede aparecer.* Un banco de sondas con dos anchos fijos —1280 y 390— demuestra
+lo que pasa en 1280 y en 390, y nada más. Los defectos de columna viven en los extremos.
+
+**El arreglo** es un token nuevo con un contrato distinto:
+
+```css
+--col-gutter: 32px;                                    /* 24 bajo 1100 · 16 bajo 720 */
+```
+
+Es una **longitud fija** a propósito: dentro de una caja acotada, un porcentaje mide el padre y
+miente. Los tres escalones son los del mockup (`--pjp-margen`) y los dos cortes —1100 y 720— ya los
+usaba este producto para el logotipo y el par de CTA, así que no se estrena ningún punto de ruptura.
+
+⚠️ **`--wrap-gutter` no se retira ni se toca**: es correcto donde está (`.nav`, `.hero__stage-content`)
+y esos dos casos son justo para lo que se escribió. Lo que se prohíbe es **mezclarlo con un tope
+propio**, y de eso se encarga `CappedContainerGutterTest`.
+
+### 17.2 El segundo: el hueco del minijuego estaba reservado DOS veces
+
+El lienzo de «Salta la ciudad» es `absolute` y va pegado al canto inferior de la tarjeta, así que su
+sitio lo aparta el `padding-bottom` de `.reserve__box` —`clamp(122px, 14vw, 156px)`, que es lo que
+hace el mockup—. Pero `.reserve__body` volvía a apartar **la tira entera más un respiro**:
+
+```css
+.reserve__body { padding-bottom: calc(clamp(24px, 5vw, 80px) + var(--salta-h)); }   /* retirado */
+```
+
+Resultado: **220 px de aire muerto a 1280** (tarjeta de **762** de alto contra los **542** del
+mockup) y 146 en un teléfono. ▶ **Y eso es lo que tapaba el pie**: anclada, la tarjeta ocupaba 772 px
+de una ventana de 900 y del pie quedaba una franja de 128. Con una sola reserva quedan 348.
+
+⚠️ *Dos reservas del mismo hueco no se ven por separado: se ven **sumadas**, y no parecen un fallo —
+parecen «este bloque es alto».* Por eso ninguna captura lo cazó en cuatro pasadas.
+
+### 17.3 Y de paso, dos divergencias más del mismo bloque
+
+- **El alto del lienzo es 150 px, no una talla adaptable.** Era `clamp(122px, 14vw, 156px)` —la misma
+  expresión que el hueco, que es **otra cosa**: aquélla es el sitio reservado, ésta el dibujo—. En el
+  mockup `altoJuego()` devuelve `150` mientras nadie juega. Consecuencia doble: en un teléfono la
+  tira salía a 122, y **al abrirse la tarjeta el motor le escribe `height: 150px` y saltaba 28 px de
+  golpe**. Además el alto del lienzo **ES el zoom** (`k = alto / 300`, `#233`): a 122 se jugaba a
+  0,41 en vez de a 0,5.
+- **En teléfono el titular tiene OTRA escala** (`#220` otra vez). El mockup cambia de fórmula por
+  debajo de 620 px; con un solo `clamp` mandaba el suelo y el titular salía **un 17 % grande en
+  reposo y un 43 % en el estado final** a 320 px (54 px contra 37,8). Ahora
+  `clamp(28px, 9.8vw, 52px)` → `clamp(34px, 11.8vw, 72px)`, que son los números del mockup.
+
+### 17.4 ❗ Lo que queda ABIERTO, y es del owner
+
+**La tarjeta del cierre y el pie ya NO comparten columna**, y en el mockup sí:
+
+| | mockup | nosotros |
+|---|---|---|
+| tarjeta del cierre | 1176 | **1176** ✅ |
+| pie y secciones | 1176 | **1380** (`.wrap`, decisión anterior del producto) |
+
+A 1280 el escalón es de 12 px por lado y no se ve; **a 1920 son 102**. Igualarlos significa bajar
+**toda la columna del sitio** de 1380 a 1240/1176 —doce vistas, no solo el pie—, que es una decisión
+de producto y no se toma desde aquí. ▶ La alternativa (bajar solo el pie) deja el escalón en las
+otras once vistas, donde no hay tarjeta de cierre: sería mover el problema, no resolverlo.
+
+### 17.5 Verificación
+
+- Sonda de navegador en **siete anchos** (390 · 768 · 1280 · 1440 · 1600 · 1920 · 2560), reposo y
+  estado final: tarjeta **1176 × 542** constante de 1280 para arriba, **720 × 419** a 768, **358 ×
+  521** a 390; anclada, `100vw − 20` × `100svh − 20` con `top: 10` en los siete. **Cero desbordamiento
+  horizontal.** Columna del menú: **1176 en los cuatro anchos anchos** (era 700 y 60).
+- El minijuego, intacto y re-medido: lienzo **150 (k = 0,5)** en reposo y **358 (k = 1,193)** jugando
+  —los números de `#233`—, los CTA a `opacity: 0` con `pointer-events: none` al empezar, **cero
+  errores de JavaScript** en los tres anchos.
+- **`CappedContainerGutterTest` nuevo (4 casos)** · **4 mutaciones, las 4 muerden**: devolver
+  `--wrap-gutter` a `.reserve`, devolvérselo a `.menu__inner`, devolver la segunda reserva del hueco
+  y quitar la reserva que sí tiene que existir.
+- Suite **3359 / 22.125** · Pint ✓.

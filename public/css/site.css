@@ -30,7 +30,20 @@
        Un color con significado no puede vivir en la paleta de una zona. */
     --attn: #FFE14A;
 
+    /* ⚠️⚠️ **`--wrap-gutter` es el sangrado de un elemento A SANGRE COMPLETA, y solo sirve ahí.**
+       Su `100%` es un porcentaje: se resuelve contra el CONTENEDOR del elemento, no contra el
+       elemento. En algo que ocupa todo el ancho eso significa lo que dice —«40 px, o lo que haga
+       falta para centrar una columna de 1380»— y por eso el `.nav` y el hero lo usan bien.
+       ▶ **En un elemento que YA está acotado por su propio `max-width` significa otra cosa**: el
+       sangrado sigue creciendo con la ventana mientras la caja no, así que la columna se
+       estrangula. No falla, no avisa y no se ve a 1280 px. Medido a 2560: la tarjeta del cierre
+       quedaba en **160 px de ancho** y la columna del menú a pantalla completa en **60**.
+       Los contenedores acotados usan `--col-gutter`. */
     --wrap-gutter: max(40px, calc((100% - 1380px) / 2));
+    /* El sangrado lateral de un contenedor YA ACOTADO (`max-width` propio). Es una LONGITUD FIJA
+       a propósito: dentro de una caja acotada, un porcentaje mide el padre y miente. Los tres
+       escalones son los del mockup (`--pjp-margen`: 32 · 24 · 16). */
+    --col-gutter: 32px;
     /* Inset lateral (móvil) COMPARTIDO por el CTA flotante de reserva (`.book-bar`) y el CTA del
        hero, para que ambos tengan EXACTAMENTE el mismo ancho y el float deslice sobre el hueco que
        deja el hero sin saltos de anchura. Cambiar aquí afecta a los dos a la vez. */
@@ -99,6 +112,11 @@
        uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;   /* el latido que invita a descubrir el CTA doble (2c·7) */
 }
+
+/* Los dos escalones del sangrado de columna. Son los cortes del mockup —1100 y 720—, que este
+   producto ya usaba para el logotipo y el par de CTA: no se estrena ningún punto de ruptura. */
+@media (max-width: 1099px) { :root { --col-gutter: 24px; } }
+@media (max-width: 719px)  { :root { --col-gutter: 16px; } }
 
 /* ====================================================================
    Lote 9 — Objetivos táctiles (WCAG 2.5.5). Ampliamos el ÁREA de toque a
@@ -1815,8 +1833,25 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 
     position: relative;
     max-width: 1240px;
+    /* ⚠️ **El sangrado es `--col-gutter`, no `--wrap-gutter`, y la diferencia no es de estilo.**
+       Esta sección está acotada a 1240, así que el porcentaje de `--wrap-gutter` mide el padre a
+       sangre completa y crece con la ventana mientras la caja no: medido, la tarjeta pasaba de
+       1160 px a 1280 a **700 a 1920** y a **160 a 2560** — y con ella se disparaba su alto, que es
+       lo que acababa tapando el pie. Con la longitud fija sale 1240 − 2 × 32 = **1176**, el número
+       del mockup, en cualquier pantalla. */
     margin: clamp(112px, 10.5vw, 180px) auto 0;
-    padding: 0 var(--wrap-gutter);
+    padding: 0 var(--col-gutter);
+}
+/* ⚠️⚠️ **En teléfono el titular tiene OTRA escala, no la misma con el suelo mandando** — y es la
+   tercera vez que este producto paga la misma lección (`armazon-y-menu.md` §11, `#220`). El
+   mockup cambia de fórmula por debajo de 620 px; con la nuestra el suelo del `clamp` ganaba
+   siempre y el titular salía **un 17 % grande en reposo y un 43 % en el estado final** a 320 px
+   (54 contra 37,8), que es alto que se le suma a una tarjeta ya alta. */
+@media (max-width: 619px) {
+    .reserve {
+        --cierre-t-ini: clamp(28px, 9.8vw, 52px);
+        --cierre-t-end: clamp(34px, 11.8vw, 72px);
+    }
 }
 .reserve__box {
     position: relative; overflow: hidden;
@@ -1931,14 +1966,26 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    ⚠️ **La tarjeta reserva su sitio con `padding-bottom`, no con un hueco a ojo.** El lienzo es
    `absolute`, así que si el texto no le dejara aire acabaría pisándolo — y sólo en las pantallas
    donde el texto ocupe más, que es la peor forma de que un fallo aparezca.
+   ⚠️⚠️ **Y lo reserva UNA sola vez: el `padding-bottom` de `.reserve__box`.** Aquí había una
+   segunda reserva sobre `.reserve__body` que volvía a apartar la tira entera más un respiro, así
+   que la tarjeta cargaba **220 px de aire muerto a 1280** (762 de alto medidos contra los 542 del
+   mockup) y anclada tapaba el pie casi entero: 772 px de una ventana de 900. Dos reservas del
+   mismo hueco no se ven por separado; se ven sumadas y parecen «el bloque es alto».
 
    ⚠️ **Los rótulos del juego NO usan la escala tipográfica de la web.** Son mono, pequeños y en
    mayúsculas: es el registro de un marcador, no el de una landing. Es lo que hace el mockup.
 
    ⚠️ **Ningún color se teclea**: el lienzo lee la paleta del tema con `getComputedStyle` sobre sí
    mismo, y estas piezas de alrededor leen los tokens de la superficie de tinta en la que viven. */
-.reserve { --salta-h: clamp(122px, 14vw, 156px); }
-.reserve__body { padding-bottom: calc(clamp(24px, 5vw, 80px) + var(--salta-h)); }
+/* ⚠️ **El alto del lienzo es 150 y no una talla adaptable, y eso es del mockup** (`altoJuego()`
+   devuelve `150` mientras nadie juega). Aquí era `clamp(122px, 14vw, 156px)` —la misma expresión
+   que el `padding-bottom` de la tarjeta, que es OTRA cosa: aquélla es el hueco reservado, ésta el
+   dibujo— y la consecuencia era doble: en un teléfono la tira salía a 122 px, y **al abrirse la
+   tarjeta el motor le escribe `height: 150px` y saltaba 28 px de golpe**. El alto del lienzo
+   además ES el zoom del juego (`k = alto / 300`, `#233`): a 122 se jugaba a 0,41 en vez de a 0,5.
+   ▶ Que el hueco (122–156) y el dibujo (150) no coincidan es del mockup: por debajo de 872 px la
+   tira asoma sobre el texto, y ahí es donde vive el castillo. */
+.reserve { --salta-h: 150px; }
 
 .salta { position: absolute; inset: 0; pointer-events: none; }
 .salta__lienzo {
@@ -4195,10 +4242,15 @@ html:not(.js) .gf-fiche__foot { display: none; }
     background-size: 20px 20px;
 }
 
+/* ⚠️⚠️ **Aquí vivía el MISMO defecto que en la tarjeta del cierre, y nadie lo vio porque las
+   sondas del armazón corrieron a 1280 y a 390.** Esta columna está acotada a 1240, así que el
+   porcentaje de `--wrap-gutter` medía el overlay a pantalla completa: medido, el menú tenía
+   **700 px de columna a 1920** y **60 a 2560**, con los destinos partidos en una tira. Con la
+   longitud fija son 1240 − 2 × 32 = 1176 en cualquier pantalla, que es lo que dibuja el mockup. */
 .menu__inner {
     position: relative; height: 100%;
     max-width: 1240px; margin-inline: auto;
-    padding: clamp(104px, 13vh, 132px) var(--wrap-gutter) clamp(64px, 9vh, 104px);
+    padding: clamp(104px, 13vh, 132px) var(--col-gutter) clamp(64px, 9vh, 104px);
     display: flex; flex-direction: column; gap: 24px;
 }
 
@@ -4259,7 +4311,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
    en `y = -26`. Alineada arriba, lo que no cabe se alcanza con el scroll que la lista ya tiene. */
 @media (max-width: 1080px) {
     .menu__inner {
-        padding: clamp(88px, 12vh, 120px) var(--wrap-gutter) clamp(48px, 7vh, 88px);
+        padding: clamp(88px, 12vh, 120px) var(--col-gutter) clamp(48px, 7vh, 88px);
         gap: 18px;
     }
     .menu__list { justify-content: flex-start; }
