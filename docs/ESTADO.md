@@ -37,6 +37,12 @@
 > las entradas del otro carril. **Mirar el remoto al elegir número no basta: hay que volver a
 > mirarlo al publicar.**
 >
+> ⚠️⚠️ **El OJO del owner corrigió el cierre DOS veces** (`#233` y `#235`), y las dos por la misma
+> causa: se reconstruyó el bloque **de memoria** en vez de sacarlo entero del artboard. En `#235` se
+> copió el `<section id="reservar">` completo —6.981 bytes— y aparecieron el tag de la ciudad, el
+> rol de acción en el CTA, el desvanecido de los CTA al jugar y que el ESPACIO arranca la partida.
+> ▶ **Si el encargo es «1:1», leer el bloque entero es más barato que reconstruirlo dos veces.**
+>
 > ⚠️⚠️ **El OJO del owner corrigió TRES cosas del cierre que ningún test veía** (`#233`): el zoom
 > del juego iba **2,3× más lejos** (la altura del lienzo ES el zoom, y el mockup la cambia con la
 > fase), la transición usaba un **pegajoso** cuando el mockup fija la tarjeta y la hace crecer
@@ -824,7 +830,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3355 en verde** (22.040 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
+- Suite **3355 en verde** (22.088 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
   20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
   panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet y `#234` su
   pulido, que suman **30 casos** —`AdminNavigationTest`, `AdminGlobalSearchTest` y `GateKioskTest`,
