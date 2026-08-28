@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 15:30 (cierre del carril C)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -14,6 +14,19 @@
 > 2026-08-26 había también un resumen en esta cabecera que se quedó atrás y **contradecía al de
 > abajo** (decía que el agente A estaba en panel/dinero cuando lleva dos días en el waiver). Se
 > retiró: dos repartos son un reparto que no se puede creer.
+>
+> ❗❗ **AVISO AL CARRIL A (2026-08-28, 15:30) — el carril C cerró y tocó CSS a lo ancho.**
+> Ocho cortes empujados (`46e5f93` → `a300aba`). **Ninguno toca el panel, el cajón
+> (`resources/js/sidebar/**`), el dominio ni tus tests**: son el armazón, el hero, la marca y el
+> tema. ⚠️ **Pero la tanda 2d hizo 570 sustituciones en `public/css/site.css` y `landing.css`**, así
+> que una rama vieja sobre esas dos hojas dará conflictos grandes: `git pull --rebase` **antes** de
+> tocarlas. Ficheros del carril C en esta sesión: `public/css/{landing,site,spinner}.css` ·
+> `resources/js/app.js` · `resources/js/ui/nav-choreography.js` ·
+> `resources/views/components/site/{nav,brand,favicon}.blade.php` · `resources/views/home.blade.php`
+> · `lang/*/landing.php` · `.gitignore` · `scripts/deploy.sh` · y sus guardas en
+> `tests/Feature/{Site,Architecture,Theme}/**`, `HomePageTest`, `PublicPagesTest`, `SeoTest`.
+> ▶ **`ShapeScaleTest` cambió** (entra un cuarto rol de sombra) y **`MotionScaleTest` es nuevo**:
+> si añades CSS, las dos te pedirán tokens en vez de literales.
 >
 > ❗❗ **REPARTO VIGENTE — LÉELO ANTES DE ELEGIR TAREA.** (reescrito el 2026-08-26 por la tarde, por
 > indicación del owner: los dos carriles cambian de trabajo, no de máquina)
@@ -1132,7 +1145,57 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-28 mediodía, carril C): el ARMAZÓN NACE BAJO EL HERO y el paquete de MARCA del 2.º cliente ESTÁ INSTALADO
+# ❗ SI ENTRAS NUEVO (2026-08-28, CIERRE del carril C): el TEMA tiene sus SEIS mecanismos, el ARMAZÓN está completo en los doce anchos, y NO QUEDA NADA DE AGENTE EN ESTE CARRIL
+
+**`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
+
+## ▶ La sesión del 2026-08-28 (09:00 → 15:30), en una línea cada cosa
+
+| | |
+|---|---|
+| `#216` | El **armazón NACE BAJO EL HERO** como el mockup — y por eso **el hero recupera sus dos botones**, reabriendo `#195`. El **CTA doble** se alinea en sus OCHO medidas. Y entra el **paquete de MARCA** del 2.º cliente: los huecos pasan de 2 a 9 |
+| `#217` | Las **TRES piezas que el ojo del owner vio y la sonda no**: las sombras del racimo (entra un CUARTO rol), la forma del botón de menú (rect + etiqueta + dos rayas que ROTAN) y el logotipo, que **flota** sin pastilla |
+| `#218` | El logotipo **no medía lo que el mockup**: su `height:54px` es la CAJA que lo envuelve, no el dibujo. Son **70** |
+| `#219` | El **arnés de mutación envenenó la caché de vistas** de Blade y la web sirvió el fallo con el fichero correcto en disco. Suite verde, `pre-push` verde |
+| `#220` | El **titular del hero no cabía en un teléfono**, y la culpa era del **suelo de un `clamp`** |
+| `#221` | La **2c·4b**: el menú a pantalla completa manda también en móvil. **El armazón queda completo en los doce anchos** |
+| `#222` | La **2d, el MOVIMIENTO**: el SEXTO mecanismo. 4 curvas y 7 duraciones; **cero literales fuera de la escala** |
+
+## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
+
+1. ❗❗ **ESTE CARRIL NO TIENE NADA PENDIENTE DE AGENTE.** El tema está completo (seis mecanismos),
+   el armazón está completo (doce anchos) y la marca del 2.º cliente está instalada. **Todo lo que
+   queda es del owner** — está en la fila «C · tema» de la cabecera.
+2. ⚠️⚠️ **`#195` ESTÁ REABIERTO** (`[DECIDIDO owner]`): el hero vuelve a llevar sus dos botones.
+   No es un cambio de gusto: **es lo que hace posible que el armazón se oculte**, porque el mockup
+   puede permitirse esconder su cabecera solo porque su hero ofrece la acción. Las dos mitades no
+   se pueden separar.
+3. ⚠️ **Si tocas `public/css/site.css` o `landing.css`, ábrelas antes de escribir**: la 2d hizo
+   **570 sustituciones** en las dos. Cualquier rama vieja sobre esas hojas dará conflictos grandes.
+4. ⚠️⚠️ **TRES lecciones de método que esta sesión pagó, y las tres se repiten:**
+   · **Medir no es mirar.** Tres defectos los cazó el OJO del owner con la suite verde y las
+   mutaciones mordiendo: el CTA doble desalineado, los botones del hero apilados y el logotipo
+   pequeño. La sonda medía existencia, color y tamaño — nunca **dónde**.
+   · **Una caché rancia da verde con el código roto.** Pasó dos veces: el bundle SSR (`#216`) y la
+   vista compilada de Blade (`#219`). Tras correr un arnés, **mira la página**.
+   · **La conversión a medias vuelve.** `#196` la documentó, y `#222` la repitió con otra
+   herramienta: un filtro que mira el CONTEXTO acierta hasta que el contexto cambia.
+5. ⚠️ **El cajón lateral de móvil (`.mob-menu`) está APAGADO, no retirado**: ~200 líneas de CSS y un
+   bloque de blade que **ningún test cubre**. Ficha en `DEUDA.md`; retirarlo pide su propia pasada
+   con `CONVENCIONES §3.quater`.
+
+## ▶ POR DÓNDE SIGUE ESTE CARRIL
+
+**Por el owner.** Sin su ojo, lo único honesto que queda de agente es deuda declarada, y ninguna
+urge:
+- retirar el cajón lateral apagado (`DEUDA`), con su auditoría de tests;
+- servir un `manifest.webmanifest` para que el icono *maskable* del cliente sirva de algo (`DEUDA`);
+- las cuatro contradicciones de las fuentes del cliente, todas anotadas y **todas decididas** a
+  favor de lo que él validó.
+
+---
+
+# ❗ SI ENTRABAS NUEVO A MEDIODÍA (2026-08-28, carril C): el ARMAZÓN NACE BAJO EL HERO y el paquete de MARCA del 2.º cliente ESTÁ INSTALADO
 
 **`git fetch` antes de nada.** ⚠️ El carril A empujó `#215` mientras esta sesión trabajaba; el
 número se eligió **mirando el remoto** y esta tanda es **`#216`**.
@@ -1279,7 +1342,7 @@ retención.
 |---|---|
 | **A · menores + puerta** | **SESIÓN del 2026-08-27 noche → 28 madrugada**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ✅ **El SUBSISTEMA A (`specs/identidad-qr-puerta.md` §9.4) EN EL ÁRBOL**: carné QR de 20 caracteres, visita acreditada, ficha compuesta, pantalla con caducidad en servidor, correo con PNG, `GET|POST /me/card`; 5/5 mutaciones, headless 15/15. **Ambos 🟦 por el OJO del owner** (§9.10.4 y §9.4 «lo que queda»: el panel, la puerta, el correo en Gmail/Outlook y **el lector real del recinto**), más los guiones §5.decies/§5.undecies y los DOS valores de retención en meses. ▶ Lo siguiente de agente, cuando el owner lo pida: la zona «Mi carné» del cajón y la rotación desde el panel (`DEUDA.md`), y **D · JumpPoints**, que ya tiene su hecho observable (`customer_visits`) |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ✅ **(1) EL LOGOTIPO Y EL ICONO YA ESTÁN** (`#216`): los subiste a `marca/` en el canvas y están instalados —logotipo con silueta, su variante **sobre TINTA** (el hueco se abrió en esta tanda) y el set de icono **completo**, así que iOS y Android dejan de enseñar la «J» del producto—. ❗ **LO QUE ESPERA DE TI AHORA:** **(1)** La **pasada de NAVEGADOR: son NUEVE tandas visuales sin mirar** — `#195` (el hero pierde su CTA), `#196` (19 elementos pierden su sombra), `#201` (menú a pantalla completa), `#203` (la barra disuelta), `#205` (CTA doble de móvil), `#209` (el botón de comprar en naranja), `#211` (el menú ya se cierra y siempre ofrece comprar) y `#213`+`#214` (el CTA es un PAR y se vuelve AVISO dentro del menú). Los guiones para recorrerlas: `VERIFICACION-E2E-CAJON.md` **§5.duodecies · §5.quindecies · §5.sexdecies**. **(2)** **La barra inferior de móvil**: el mockup pide **3 iconos + 1 CTA** y la nuestra es el **CTA doble** que validaste el 27 — hay que elegir antes de hacer la 2c·4b. **(3)** ⚠️ **El logotipo se pinta a 26 px de alto y tu mockup lo pinta a 54** — medido, NO cambiado: no estaba en el encargo. Es una línea cuando lo digas. **(4)** ⚠️ **La sombra de tu mobiliario: tercera contradicción de tus fuentes** —tu mockup la pinta difusa y tu `M-05` dice que las difusas son solo para modal—; se sigue el sistema y sale dura. Ficha en `DEUDA.md`. **(5)** **Cuál de las TRES variantes de «El parque»** (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`). ▶ `[PENDIENTE: owner]` menor: avisar en el panel cuando el color de acción no alcance AA (`tema-por-instalacion.md` §15.8). ▶ Ya validó `#193` y `#194` |
+| **C · tema** | ❗❗ **CARRIL CERRADO EL 2026-08-28 A LAS 15:30. NO QUEDA NADA DE AGENTE**: el tema tiene sus **SEIS mecanismos** (`#222` cierra con el MOVIMIENTO), el armazón está **completo en los doce anchos** (`#221`) y la marca del 2.º cliente está instalada (`#216`). ⚠️ **Si tocas `public/css/site.css` o `landing.css`, ábrelas antes de escribir**: la 2d hizo **570 sustituciones** en las dos. ✅ **(1) EL LOGOTIPO Y EL ICONO YA ESTÁN** (`#216`): los subiste a `marca/` en el canvas y están instalados —logotipo con silueta, su variante **sobre TINTA** (el hueco se abrió en esta tanda) y el set de icono **completo**, así que iOS y Android dejan de enseñar la «J» del producto—. ❗ **LO QUE ESPERA DE TI AHORA:** **(1)** La **pasada de NAVEGADOR: son NUEVE tandas visuales sin mirar** — `#195` (el hero pierde su CTA), `#196` (19 elementos pierden su sombra), `#201` (menú a pantalla completa), `#203` (la barra disuelta), `#205` (CTA doble de móvil), `#209` (el botón de comprar en naranja), `#211` (el menú ya se cierra y siempre ofrece comprar) y `#213`+`#214` (el CTA es un PAR y se vuelve AVISO dentro del menú). Los guiones para recorrerlas: `VERIFICACION-E2E-CAJON.md` **§5.duodecies · §5.quindecies · §5.sexdecies**. **(2)** **La barra inferior de móvil**: el mockup pide **3 iconos + 1 CTA** y la nuestra es el **CTA doble** que validaste el 27 — hay que elegir antes de hacer la 2c·4b. **(3)** ⚠️ **El logotipo se pinta a 26 px de alto y tu mockup lo pinta a 54** — medido, NO cambiado: no estaba en el encargo. Es una línea cuando lo digas. **(4)** ⚠️ **La sombra de tu mobiliario: tercera contradicción de tus fuentes** —tu mockup la pinta difusa y tu `M-05` dice que las difusas son solo para modal—; se sigue el sistema y sale dura. Ficha en `DEUDA.md`. **(5)** **Cuál de las TRES variantes de «El parque»** (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`). ▶ `[PENDIENTE: owner]` menor: avisar en el panel cuando el color de acción no alcance AA (`tema-por-instalacion.md` §15.8). ▶ Ya validó `#193` y `#194` |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que

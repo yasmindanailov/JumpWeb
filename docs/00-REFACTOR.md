@@ -2399,7 +2399,7 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **cinco mecanismos, el ARMAZÓN entero, el paquete real y la MARCA del 2.º cliente instalada**
+### La CAPA DE TEMA 🟦 — **los SEIS mecanismos, el ARMAZÓN entero en los doce anchos, el paquete real y la MARCA del 2.º cliente instalada**
 
 > Spec: `specs/tema-por-instalacion.md` (empieza por **§14**, que es el paquete real y lo que
 > destapó; luego §1.7 y §10) · Decisiones `#192`, `#193`, `#194`, `#195`, `#196` y **`#206`**.
@@ -2411,8 +2411,17 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > verificada (0,5617 calculado / 0,561 medido)—, **el hero recupera sus dos botones** (lo que
 > REABRE `#195`, porque las dos mitades no se pueden separar), el **CTA doble se alinea en sus ocho
 > medidas** y entra **el paquete de MARCA del 2.º cliente**: los huecos del producto pasan de 2 a 9.
-> ▶ Del armazón solo queda la **2c·4b**, el menú en móvil, que espera una decisión del owner sobre
-> su barra inferior (3 iconos + 1 CTA en el mockup frente al CTA doble que ya validó).
+> ✅ **La 2c·4b TAMBIÉN está hecha** (`#221`): el menú a pantalla completa manda en los doce anchos
+> y la barra inferior se queda como el owner la validó (`[DECIDIDO owner]`). El cajón lateral queda
+> **apagado, no retirado** — ficha en `DEUDA.md`.
+> ✅ **Y la 2d, el MOVIMIENTO** (`#222`, §16): el SEXTO y último mecanismo. Medido antes —239
+> declaraciones, 53 duraciones, 20 curvas, y **200 de los 220 usos de curva eran `ease`**— y
+> después: **608 usos de token, cero literales fuera de la escala**.
+>
+> ❗❗ **CON ESTO EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE.** Lo que queda es del owner: su ojo
+> en navegador (quince tandas), cuál de las tres variantes de «El parque», y el aviso de contraste
+> AA del color de acción. ▶ La tanda **3 (las secciones)** sigue **fuera de alcance por decisión
+> suya**: «del canvas solo se toma el sistema de diseño; el resto son pruebas».
 >
 > ❗❗ **Lo que falta para que la landing sea 1:1 con el mockup, medido**: el **QUINTO mecanismo, el
 > relleno de ACCIÓN** —el CTA del cliente es naranja y el del producto está atado a
