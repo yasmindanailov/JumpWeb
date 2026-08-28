@@ -678,7 +678,11 @@ class SidebarMountTest extends TestCase
         );
 
         $this->assertSame(
-            1, preg_match_all('/this\.mode\s*=/', $alpine),
+            // ⚠️ **ACOTADA en la 2c·7**: el store `ctaPair` del CTA doble también tiene un `mode`,
+            // y `this.mode =` casaba con el suyo. Contar «cualquier asignación de mode» convertía
+            // una guarda del CAJÓN en una que se rompe cada vez que otro store elige ese nombre.
+            // Se acota al bloque del store `purchase`, que es de quien habla.
+            1, preg_match_all('/this\.mode\s*=/', $this->purchaseStoreSource($alpine)),
             "Alguien ha vuelto a escribir el modo del panel fuera de `setMode()`.\n".
             "⚠️ El modo lo publica el MOTOR (`Sidebar.vue`), y un segundo escritor lo desincroniza sin \n".
             "que nada falle: al reabrir el cajón, el panel dice «catálogo» y el bloque de cuenta \n".
@@ -904,5 +908,25 @@ class SidebarMountTest extends TestCase
         }
 
         return json_decode(html_entity_decode($matches[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * El fuente del store `purchase` y solo él.
+     *
+     * ⚠️ Existe porque la guarda de arriba contaba `this.mode =` en TODO `app.js`, y el store
+     * `ctaPair` del CTA doble (2c·7) también tiene un `mode`. Una guarda que cuenta por nombre de
+     * propiedad se rompe cuando otro store elige el mismo nombre — y su mensaje culpa al cajón.
+     */
+    private function purchaseStoreSource(string $alpine): string
+    {
+        $inicio = strpos($alpine, "Alpine.store('purchase'");
+
+        if ($inicio === false) {
+            return '';   // que la guarda falle: si no encuentra el store, no puede aseverar nada
+        }
+
+        $fin = strpos($alpine, "Alpine.store('", $inicio + 30);
+
+        return substr($alpine, $inicio, $fin === false ? null : $fin - $inicio);
     }
 }

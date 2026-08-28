@@ -72,21 +72,50 @@
              Sustituye al icono `nav__scan` y al botón `nav__reserve` previos: los handlers
              (`$store.purchase.open()` y —desde el 2026-08-23— `$store.purchase.openAccount()`);
              solo cambia el tratamiento visual y el copy. --}}
+        {{-- ── EL PAR: una mitad expandida y la otra colapsada a solo icono (2c·7) ────────────────
+             `[DECIDIDO owner, 2026-08-28]`: **como el mockup**. Su CTA fijo no son dos botones
+             sueltos sino un PAR: uno ancho y el otro reducido a su icono. El primer clic en el
+             colapsado **lo expande y colapsa al otro**; el segundo **actúa**. Y mientras nadie lo
+             ha tocado, el colapsado **invita** —asoma y late un aro— para que se descubra.
+
+             ▶ **Comprar arranca expandido, y eso ES la jerarquía**: comprar cuesta un gesto y la
+             cuenta dos. Es la misma regla que la barra de móvil de `#205`, y ahora **comparten
+             estado de verdad** (`$store.ctaPair`): son la misma decisión y no puede haber dos.
+
+             ⚠️⚠️ **UN BOTÓN QUE CAMBIA DE SIGNIFICADO AL PULSARLO SE PULSA POR ERROR**, así que el
+             nombre accesible **dice qué hace AHORA**: colapsado se llama «cambiar a…», no «mi
+             cuenta». Sin esto, un lector de pantalla anuncia dos botones que dicen lo mismo y hacen
+             cosas distintas — y el segundo no lleva a ninguna parte.
+             ⚠️ **Y sin JavaScript el doble paso no existe, a propósito**: las tres ramas son
+             `<a href>` de verdad —`/registro`, la URL del parque y `/mi-cuenta` son PUERTAS— así
+             que sin JS cada una navega a su destino de una sola pulsación, y el nombre accesible
+             servido es el de ACTUAR, que es lo que hacen. Alpine lo sustituye por el de «cambiar»
+             solo en la que quede colapsada.
+             ⚠️ El aspecto —qué mitad es ancha— lo decide el CSS con DOS clases. El JS no reparte
+             anchos: publica estado. Misma regla que el hero (`#195`) y el recorte del menú (`#201`). --}}
+        <div class="nav__pair"
+             :class="[$store.ctaPair.mode === 'account' && 'nav__pair--account',
+                      ! $store.ctaPair.touched && 'nav__pair--invita']">
         @guest
             {{-- #216: «Registro» del parque. Si hay URL externa configurada (Ajustes → Registro), el
                  botón lleva a ese sistema en una pestaña nueva, con etiqueta + subtítulo por idioma.
                  Si NO hay URL, cae al comportamiento actual: abre el modal de registro interno. --}}
             @if (! empty($site['registration_url']))
-                <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="cta-ghost cta-ghost--stack nav-cta-ghost">
-                    <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
-                    <span class="cta-ghost__body">
-                        <span class="cta-ghost__t">{{ $site['registration_label'] }}</span>
-                        @if (! empty($site['registration_subtitle']))
-                            <span class="cta-ghost__s">{{ $site['registration_subtitle'] }}</span>
-                        @endif
-                    </span>
-                    <span class="cta-ghost__arrow" aria-hidden="true">→</span>
-                </a>
+                <span class="nav__alt">
+                    <span class="nav__alt-ring" aria-hidden="true"></span>
+                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="cta-ghost cta-ghost--stack nav-cta-ghost"
+                       aria-label="{{ $site['registration_label'] }}"
+                       :aria-label="$store.ctaPair.mode === 'account' ? @js($site['registration_label']) : @js(__('landing.nav.cta_switch_signup'))"
+                       @click="if ($store.ctaPair.mode !== 'account') { $event.preventDefault(); $store.ctaPair.show('account'); }">
+                        <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
+                        <span class="cta-ghost__body">
+                            <span class="cta-ghost__t">{{ $site['registration_label'] }}</span>
+                            @if (! empty($site['registration_subtitle']))
+                                <span class="cta-ghost__s">{{ $site['registration_subtitle'] }}</span>
+                            @endif
+                        </span>
+                    </a>
+                </span>
             @else
                 {{-- ⚠️⚠️ **Pasa de `<button>` a `<a href>` el 2026-08-23** (`specs/auth-en-cajon.md`
                      §4.5), y el `href` no es decorativo: `/registro` es una PUERTA que sirve la home
@@ -100,12 +129,18 @@
                      trámite de registro de acceso del parque, una URL externa— es un formulario y
                      conserva el portapapeles. Con un solo glifo para las dos, el trámite quedaría
                      etiquetado como si fuera un alta de cuenta. --}}
-                <a href="{{ route('registro') }}" class="cta-ghost nav-cta-ghost"
-                   x-on:click="$store.purchase.openAccount($event, 'register')">
-                    <span class="cta-ghost__ico"><x-icons.user-plus /></span>
-                    <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
-                    <span class="cta-ghost__arrow" aria-hidden="true">→</span>
-                </a>
+                <span class="nav__alt">
+                    <span class="nav__alt-ring" aria-hidden="true"></span>
+                    <a href="{{ route('registro') }}" class="cta-ghost nav-cta-ghost"
+                       aria-label="{{ __('landing.nav.reserve') }}"
+                       :aria-label="$store.ctaPair.mode === 'account' ? @js(__('landing.nav.reserve')) : @js(__('landing.nav.cta_switch_signup'))"
+                       x-on:click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'register') : $store.ctaPair.show('account')">
+                        <span class="cta-ghost__ico"><x-icons.user-plus /></span>
+                        <span class="cta-ghost__body">
+                            <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
+                        </span>
+                    </a>
+                </span>
             @endif
         @else
             {{-- Cliente con sesión (#221): la cuenta vive en el bloque del sidebar de compra. El nav
@@ -127,14 +162,33 @@
                  panel pinta «tienes un formulario pendiente», así que cabecera y panel dicen lo
                  mismo con el mismo color. Sin aviso NO HAY PUNTO — la ausencia ya significa
                  reposo y no gasta un color de estado (`armazon-y-menu.md` §4.3). --}}
-            <button type="button" class="nav__acct" @click="$store.purchase.open()" aria-label="{{ $acctLabel }}">
-                <span class="nav__acct-icon" aria-hidden="true">
-                    <x-icons.user />
-                    @if ($acct['hasPendingForm'])
-                        <span class="nav__acct-dot"></span>
-                    @endif
-                </span>
-            </button>
+            {{-- ⚠️⚠️ **Pasa de `<button>` a `<a href>` en la 2c·7, y no es cosmético**: era la única
+                 de las tres ramas del par sin suelo sin JavaScript —no hacía NADA—. `/mi-cuenta` es
+                 una PUERTA que sirve la home y abre el cajón en la cuenta, así que el clic central,
+                 «abrir en pestaña nueva» y un navegador sin JS acaban en la misma pantalla por el
+                 camino largo. Mismo trato que las otras dos ramas desde `#122`/`#216`.
+                 ⚠️ **El rótulo visible es «Mi cuenta», FIJO, y el saludo se queda en el nombre
+                 accesible.** `#204` retiró el saludo visible porque «Hola, Marta» y «Hola,
+                 Wilhelmina» cambian el ancho con cada visitante; con un rótulo fijo eso no pasa, y
+                 el nombre accesible sigue diciendo de quién es la cuenta. El visible es PREFIJO del
+                 accesible, que es lo que exige «label in name» (WCAG 2.5.3). --}}
+            <span class="nav__alt">
+                <span class="nav__alt-ring" aria-hidden="true"></span>
+                <a href="{{ route('account') }}" class="cta-ghost nav-cta-ghost nav__acct"
+                   aria-label="{{ __('landing.footer.account_link') }} · {{ $acctLabel }}"
+                   :aria-label="$store.ctaPair.mode === 'account' ? @js(__('landing.footer.account_link').' · '.$acctLabel) : @js(__('landing.nav.cta_switch_account'))"
+                   x-on:click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : $store.ctaPair.show('account')">
+                    <span class="cta-ghost__ico nav__acct-icon">
+                        <x-icons.user />
+                        @if ($acct['hasPendingForm'])
+                            <span class="nav__acct-dot"></span>
+                        @endif
+                    </span>
+                    <span class="cta-ghost__body">
+                        <span class="cta-ghost__t">{{ __('landing.footer.account_link') }}</span>
+                    </span>
+                </a>
+            </span>
         @endguest
 
         {{-- `x-data="navCtaReveal"` (ver app.js): si la página marca `data-has-hero`
@@ -144,9 +198,14 @@
              Estructura idéntica al `.cta-med` del mockup `design_mockup/jerarquia-ctas.html`:
              icono tear-off + body (título + descripción con anclaje "desde X €") + flecha.
              El subtítulo solo se renderiza cuando hay catálogo (data-driven). --}}
-        <button type="button" class="cta-med nav-cta-med" x-data="navCtaReveal"
-                @click="$store.purchase.open()"
-                aria-label="{{ __('landing.nav.reserve_tickets_aria') }}">
+        {{-- ⚠️ Mitad A del par. Pasa de `<button>` a `<a href>` por el mismo motivo que la otra
+             mitad: `/entradas` es una PUERTA, así que sin JavaScript esto lleva a comprar de una
+             sola pulsación en vez de no hacer nada. Y su nombre accesible también dice qué hace
+             AHORA: colapsada se llama «cambiar a reservar entradas». --}}
+        <a href="{{ route('entradas') }}" class="cta-med nav-cta-med" x-data="navCtaReveal"
+           aria-label="{{ __('landing.nav.reserve_tickets_aria') }}"
+           :aria-label="$store.ctaPair.mode === 'buy' ? @js(__('landing.nav.reserve_tickets_aria')) : @js(__('landing.nav.cta_switch_buy'))"
+           @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')">
             <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
             <span class="cta-med__body">
                 {{-- Dos labels: el desktop muestra el copy completo + subtítulo de precio,
@@ -161,7 +220,8 @@
             {{-- ⚠️ Aquí había una flecha `→`. **El CTA fijo del mockup no la lleva** y se retira con
                  la alineación de `#213`: el botón ya dice a dónde va con su rótulo y su icono, y una
                  flecha de más en el elemento más repetido de la web es ruido en las 12 vistas. --}}
-        </button>
+        </a>
+        </div>{{-- /.nav__pair --}}
 
         {{-- **La hamburguesa ABRE Y CIERRA, y enseña una X cuando está abierta.**
 

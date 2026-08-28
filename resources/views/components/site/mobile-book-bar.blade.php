@@ -25,7 +25,7 @@
      La visibilidad de la barra —aparece tras el hero, se esconde en el pie, con el cajón abierto,
      con el banner de cookies— no cambia: sigue en `Alpine.data('mobileBookBar')`. --}}
 <div class="book-bar" x-data="mobileBookBar"
-     :class="[visible && 'book-bar--on', mode === 'signup' && 'book-bar--signup']"
+     :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']"
      x-effect="document.body.classList.toggle('book-bar-visible', visible)">
     <div class="book-bar__pair">
 
@@ -33,8 +33,8 @@
         <a href="{{ route('entradas') }}"
            class="cta-prime book-bar__cta book-bar__cta--buy"
            aria-label="{{ __('landing.hero.cta_buy') }}"
-           :aria-label="mode === 'buy' ? '{{ __('landing.hero.cta_buy') }}' : '{{ __('landing.nav.cta_switch_buy') }}'"
-           @click.prevent="mode === 'buy' ? $store.purchase.open() : (mode = 'buy')">
+           :aria-label="$store.ctaPair.mode === 'buy' ? '{{ __('landing.hero.cta_buy') }}' : '{{ __('landing.nav.cta_switch_buy') }}'"
+           @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : ($store.ctaPair.show('buy'))">
             <span class="cta-prime__ico"><x-icons.ic-e2 :width="54" :height="35" /></span>
             <span class="cta-prime__body">
                 <span class="cta-prime__t">{{ __('landing.hero.cta_buy') }}</span>
@@ -60,8 +60,8 @@
                 <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener"
                    class="cta-prime book-bar__cta book-bar__cta--alt"
                    aria-label="{{ $site['registration_label'] }}"
-                   :aria-label="mode === 'signup' ? '{{ $site['registration_label'] }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                   @click="if (mode !== 'signup') { $event.preventDefault(); mode = 'signup'; }">
+                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ $site['registration_label'] }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
+                   @click="if ($store.ctaPair.mode !== 'account') { $event.preventDefault(); $store.ctaPair.show('account'); }">
                     <span class="cta-prime__ico"><x-icons.clipboard-check :width="26" :height="26" /></span>
                     <span class="cta-prime__body">
                         <span class="cta-prime__t">{{ $site['registration_label'] }}</span>
@@ -75,8 +75,8 @@
                 <a href="{{ route('registro') }}"
                    class="cta-prime book-bar__cta book-bar__cta--alt"
                    aria-label="{{ __('landing.nav.reserve') }}"
-                   :aria-label="mode === 'signup' ? '{{ __('landing.nav.reserve') }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                   @click.prevent="mode === 'signup' ? $store.purchase.openAccount($event, 'register') : (mode = 'signup')">
+                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.nav.reserve') }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
+                   @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'register') : ($store.ctaPair.show('account'))">
                     <span class="cta-prime__ico"><x-icons.user-plus :width="26" :height="26" /></span>
                     <span class="cta-prime__body">
                         <span class="cta-prime__t">{{ __('landing.nav.reserve') }}</span>
@@ -89,8 +89,8 @@
             <a href="{{ route('account') }}"
                class="cta-prime book-bar__cta book-bar__cta--alt"
                aria-label="{{ __('landing.footer.account_link') }}"
-               :aria-label="mode === 'signup' ? '{{ __('landing.footer.account_link') }}' : '{{ __('landing.nav.cta_switch_account') }}'"
-               @click.prevent="mode === 'signup' ? $store.purchase.open() : (mode = 'signup')">
+               :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.footer.account_link') }}' : '{{ __('landing.nav.cta_switch_account') }}'"
+               @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : ($store.ctaPair.show('account'))">
                 <span class="cta-prime__ico"><x-icons.user :width="26" :height="26" /></span>
                 <span class="cta-prime__body">
                     <span class="cta-prime__t">{{ __('landing.footer.account_link') }}</span>

@@ -216,7 +216,11 @@ class HomePageTest extends TestCase
 
         $response = $this->actingAs($user)->get('/')->assertOk();
 
-        $response->assertDontSee('nav-cta-ghost', false);
+        // ⚠️ **RE-APUNTADO en la 2c·7 y el sujeto NO cambia.** `nav-cta-ghost` ya no distingue
+        // nada: desde que la cuenta es una mitad del PAR lleva esa misma clase —su caja es la del
+        // botón fantasma—. Lo que había que comprobar sigue siendo que **con sesión no se ofrece
+        // el ALTA**, y eso se comprueba por el DESTINO.
+        $response->assertDontSee(route('registro'), false);
         $response->assertSee('nav__acct', false);
         $response->assertSee('nav-cta-med', false); // filled SÍ visible auth
     }

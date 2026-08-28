@@ -470,7 +470,11 @@ class CustomerAccountContextTest extends TestCase
             // el racimo—. Lo que NO podía perderse es que el nombre accesible siguiera **en
             // texto**, y eso se asevera aquí abajo y, acotado al elemento, en
             // `ArmazonContractTest::the_account_button_keeps_its_accessible_name_in_text`.
-            ->assertSee('aria-label="Hola, Mara', false)    // el nombre accesible, en TEXTO
+            // ⚠️ **RE-APUNTADO en la 2c·7**: el nombre accesible ya no EMPIEZA por el saludo, porque
+            // el botón recuperó rótulo visible («Mi cuenta») al volverse una mitad expandible del
+            // par, y «label in name» (WCAG 2.5.3) exige que el visible sea el PREFIJO. El saludo
+            // sigue ahí —que es lo que no podía perderse— pero detrás.
+            ->assertSee('Hola, Mara', false)               // el nombre accesible, en TEXTO
             ->assertSee('nav__acct-icon', false)            // icono de cuenta en el nav
             ->assertSee('nav__acct-dot', false)             // puntito (hay form pendiente)
             // ⚠️ El SUELO del hueco: la única salida de sesión servida de la aplicación (§4.8).

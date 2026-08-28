@@ -755,17 +755,9 @@ document.addEventListener('alpine:init', () => {
     //    el resto de capas que la ocultan (sidecart abierto, banner de cookies) las cubre el `:class` del blade.
     // El deslizamiento (translateY) y la visibilidad responsive (solo <=720px) viven en CSS (`.book-bar`).
     window.Alpine.data('mobileBookBar', () => ({
-        /**
-         * **Cuál de las dos mitades está expandida** (armazón · tanda 2c·4, el CTA doble).
-         *
-         * ⚠️ Publica ESTADO y nada más: qué mitad es ancha, cuánto mide y cómo se anima lo decide
-         * el CSS a partir de una sola clase en el contenedor. Si los anchos vivieran aquí serían
-         * la única parte del tema que un cliente no puede tocar desde su hoja — misma regla que el
-         * hero (`#195`) y que el recorte del menú (`#201`).
-         *
-         * ⚠️ Arranca en `buy`, y eso ES la jerarquía: **comprar cuesta un gesto y registrarse dos**.
-         */
-        mode: 'buy',
+        // ⚠️ **`mode` ya NO vive aquí**: subió al store `ctaPair` en la 2c·7, porque el racimo de
+        // la cabecera y esta barra son la MISMA decisión y no puede haber dos. El arranque en
+        // `buy` —comprar cuesta un gesto y registrarse dos— se conserva, ahora en el store.
         revealed: false,
         nearFoot: false,
         _io: null,
@@ -1082,6 +1074,35 @@ document.addEventListener('alpine:init', () => {
     // `offers` expone SOLO el flag `open` (lo lee la book-bar para cederle sitio); toda la lógica
     // (carrusel, destello, posicionado, focus-trap) vive en el componente para no dispersar estado.
     window.Alpine.store('offers', { open: false });
+
+    /**
+     * **EL CTA DOBLE — cuál de las dos mitades está expandida** (armazón · tanda 2c·7).
+     *
+     * El racimo de la cabecera y la barra flotante de móvil **son la misma decisión**, y por eso
+     * el estado vive en UN store y no dos veces: nunca coexisten en pantalla, pero si alguien
+     * expande «mi cuenta» en escritorio y estrecha la ventana, la barra tiene que salir igual.
+     * Antes `mode` era local de `mobileBookBar` y la cabecera no tenía nada.
+     *
+     * ⚠️ **Publica ESTADO y nada más.** Qué mitad es ancha, cuánto mide, cómo se anima y cuándo
+     * deja de invitar lo decide el CSS a partir de dos clases. Si los anchos vivieran aquí serían
+     * la única parte del tema que un cliente no puede tocar desde su hoja — misma regla que el
+     * hero (`#195`), el recorte del menú (`#201`) y la propia barra (`#205`).
+     *
+     * ⚠️ **`touched` no es cosmético**: apaga la invitación **para siempre en esa visita**. Una
+     * animación que sigue llamando la atención después de que el visitante ya ha respondido deja
+     * de ser una invitación y pasa a ser ruido.
+     */
+    window.Alpine.store('ctaPair', {
+        /** `'buy'` (comprar expandido, el arranque) | `'account'` (la cuenta expandida). */
+        mode: 'buy',
+        /** ¿Ha interactuado ya alguien con el par? Mientras sea `false`, la otra mitad invita. */
+        touched: false,
+        /** Expande una mitad. Cualquier uso del par apaga la invitación, se expanda lo que se expanda. */
+        show(mode) {
+            this.mode = mode;
+            this.touched = true;
+        },
+    });
 
     // Componente del widget. Envuelve lanzador + scrim + estallido + modal-carrusel en UN x-data
     // (el modal NO tiene x-data propio → comparte `i`/`go`/`close`/`loaded` sin problemas de scope).

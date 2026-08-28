@@ -782,6 +782,153 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **EL RACIMO DE LA CABECERA ES UN PAR: uno ancho y el otro reducido a su icono** (2c·7).
+     *
+     * `[DECIDIDO owner, 2026-08-28]`, como el mockup. Primer clic en la colapsada → la expande;
+     * segundo → actúa. Se asevera lo que puede romperse por separado:
+     *
+     *  1. **Que exista el envoltorio con sus dos clases**, que es lo único que reparte los anchos.
+     *  2. **Que el estado esté COMPARTIDO** con la barra de móvil. Son la misma decisión, y con dos
+     *     copias el visitante que estrecha la ventana vería otra mitad expandida sin haber tocado
+     *     nada.
+     *  3. **Que el nombre accesible de CADA mitad alterne.** Un botón que cambia de significado al
+     *     pulsarlo se pulsa por error; colapsado tiene que llamarse «cambiar a…», no «mi cuenta».
+     */
+    public function test_the_header_cluster_is_a_double_cta(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $par = $this->nodes($html, 'nav__pair');
+
+        $this->assertCount(1, $par, 'el racimo de la cabecera ha dejado de ser un PAR');
+
+        $clases = $par[0]->getAttribute('data-bind-class');
+
+        foreach (['nav__pair--account', 'nav__pair--invita'] as $marca) {
+            $this->assertStringContainsString(
+                $marca, $clases,
+                "el par no publica `{$marca}`: sin esa clase el CSS no sabe qué mitad es ancha ".
+                '(o la invitación no se apaga nunca).',
+            );
+        }
+
+        // ⚠️ Se asevera la EXPRESIÓN COMPLETA, no que la cadena `$store.ctaPair` aparezca en algún
+        // sitio del atributo: la primera versión pasaba con el reparto de anchos leyendo una
+        // variable local, porque la invitación —en el mismo atributo— sí usaba el store. Lo
+        // demostró la mutación.
+        $this->assertStringContainsString(
+            "\$store.ctaPair.mode === 'account'", $clases,
+            'el reparto de anchos lee un estado LOCAL en vez del store compartido con la barra de '.
+            'móvil: son la misma decisión y con dos copias se separan solas.',
+        );
+
+        // Las DOS mitades alternan su nombre accesible.
+        foreach (['nav-cta-med', 'nav-cta-ghost'] as $mitad) {
+            $nodo = $this->nodes($html, $mitad)[0];
+
+            // ⚠️ Se lee el ATRIBUTO del nodo, no el fuente del Blade: la primera versión de esta
+            // comprobación devolvía lo mismo para las dos mitades —buscaba `cta_switch` en el
+            // fichero entero— y habría pasado con una sola de las dos cableada. Una aserción que
+            // no distingue sus casos no asevera nada.
+            $this->assertStringContainsString(
+                __('landing.nav.'.($mitad === 'nav-cta-med' ? 'cta_switch_buy' : 'cta_switch_signup')),
+                $nodo->getAttribute('data-bind-aria-label'),
+                "la mitad `{$mitad}` no ofrece el rótulo de «cambiar a…» cuando está colapsada",
+            );
+            $this->assertNotSame(
+                '', $nodo->getAttribute('data-bind-aria-label'),
+                "la mitad `{$mitad}` no alterna su nombre accesible: colapsada diría a dónde lleva ".
+                'en vez de decir qué hace, y se pulsaría por error.',
+            );
+            $this->assertNotSame(
+                '', $nodo->getAttribute('aria-label'),
+                "la mitad `{$mitad}` se queda sin nombre accesible cuando no hay JavaScript.",
+            );
+        }
+    }
+
+    /**
+     * **Las tres ramas del par son enlaces de verdad: sin JavaScript, un solo clic actúa.**
+     *
+     * ⚠️ Con `<button>` el doble paso no degrada: **no hace nada**. Las tres puertas existen
+     * (`/entradas`, `/registro` o la URL del parque, `/mi-cuenta`), así que el clic central, «abrir
+     * en pestaña nueva» y un navegador sin JS acaban en la misma pantalla por el camino largo.
+     * La rama con sesión era la ÚNICA que seguía siendo un `<button>` y se arregla en la 2c·7.
+     */
+    public function test_every_half_of_the_pair_works_without_javascript(): void
+    {
+        $sinSesion = $this->get('/')->assertOk()->getContent();
+
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $conSesion = $this->actingAs($user)->get('/')->assertOk()->getContent();
+
+        foreach ([['invitado', $sinSesion], ['con sesión', $conSesion]] as [$caso, $html]) {
+            foreach (['nav-cta-med', 'nav-cta-ghost'] as $mitad) {
+                $nodo = $this->nodes($html, $mitad)[0];
+
+                $this->assertSame(
+                    'a', strtolower($nodo->nodeName),
+                    "({$caso}) la mitad `{$mitad}` no es un enlace: sin JavaScript no haría NADA.",
+                );
+                $this->assertNotSame(
+                    '', $nodo->getAttribute('href'),
+                    "({$caso}) la mitad `{$mitad}` es un enlace sin destino.",
+                );
+            }
+        }
+    }
+
+    /**
+     * **La invitación existe, se apaga al tocar el par y no corre con `prefers-reduced-motion`.**
+     *
+     * ⚠️ Las tres mitades importan por separado. Sin la primera nadie descubre que el botón
+     * colapsado se puede expandir; sin la segunda la página late para siempre y pasa de invitar a
+     * molestar; sin la tercera se ignora una preferencia del sistema que existe **porque a alguna
+     * gente el movimiento en bucle le produce náuseas**.
+     */
+    public function test_the_invitation_stops_when_touched_and_respects_reduced_motion(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(public_path('css/site.css')));
+
+        foreach (['@keyframes cta-asoma', '@keyframes cta-aro'] as $paso) {
+            $this->assertStringContainsString($paso, $css, "falta la animación `{$paso}` de la invitación");
+        }
+
+        // ⚠️ Las DOS piezas por separado. El regex genérico de la primera versión lo cumplía el
+        // ARO, así que retirar el asomo dejaba la guarda verde: media invitación es la que no se
+        // ve, porque el aro late alrededor de un botón que ya no se mueve.
+        foreach (['nav__alt > .cta-ghost' => 'cta-asoma', 'nav__alt-ring' => 'cta-aro'] as $quien => $paso) {
+            $this->assertMatchesRegularExpression(
+                '/\.nav__pair--invita \.'.preg_quote($quien, '/').'[^{]*\{[^}]*animation:\s*'.$paso.'/', $css,
+                "la invitación ha perdido su mitad `{$paso}`: sin ella el par de dos pasos no se ".
+                'descubre solo.',
+            );
+        }
+
+        $reduce = preg_split('/@media \(prefers-reduced-motion: reduce\)/', $css);
+        $apagada = false;
+
+        foreach (array_slice($reduce, 1) as $bloque) {
+            if (str_contains(substr($bloque, 0, 400), 'nav__pair--invita') && str_contains(substr($bloque, 0, 400), 'animation: none')) {
+                $apagada = true;
+            }
+        }
+
+        $this->assertTrue(
+            $apagada,
+            "La invitación NO se apaga con `prefers-reduced-motion`.\n".
+            '▶ Es decoración en bucle: aquí «reducir» es «no hacerlo», no «hacerlo más despacio».',
+        );
+
+        // Y que el apagado dependa de haberlo TOCADO, no de un temporizador.
+        $this->assertStringContainsString(
+            '! $store.ctaPair.touched',
+            $this->nodes($this->get('/')->assertOk()->getContent(), 'nav__pair')[0]->getAttribute('data-bind-class'),
+            'la invitación no mira si alguien ya ha usado el par: seguiría llamando después de que '.
+            'le hayan hecho caso.',
+        );
+    }
+
+    /**
      * **Todo enlace del menú lo cierra al pulsarlo.**
      *
      * Mismo motivo que en el cajón: la mitad de los destinos son anclas de la MISMA página, y sin
@@ -841,7 +988,20 @@ class ArmazonContractTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $member = $this->actingAs($user)->get('/')->assertOk()->getContent();
 
-        $this->assertCount(0, $this->nodes($member, 'nav-cta-ghost'), 'con sesión sigue ofreciéndose el alta');
+        // ⚠️ **RE-APUNTADO en la 2c·7, y el sujeto NO cambia.** Antes se comprobaba por la CLASE
+        // `nav-cta-ghost`, que con sesión no existía. Desde que la cuenta es **una mitad del PAR**
+        // lleva esa misma clase —su caja es la del botón fantasma— así que contarla ya no dice
+        // nada. Lo que había que comprobar sigue siendo lo mismo y ahora se comprueba de verdad:
+        // **con sesión no se ofrece el alta**, es decir, ninguna mitad apunta a `/registro`.
+        $this->assertCount(1, $this->nodes($member, 'nav-cta-ghost'), 'con sesión desaparece la mitad de cuenta del par');
+
+        foreach ($this->nodes($member, 'nav-cta-ghost') as $mitad) {
+            $this->assertStringNotContainsString(
+                '/registro', $mitad->getAttribute('href'),
+                'con sesión el par sigue ofreciendo el ALTA: esa mitad tiene que llevar a la cuenta.',
+            );
+        }
+
         $this->assertCount(1, $this->nodes($member, 'nav__acct'), 'con sesión no aparece el chip de cuenta');
         $this->assertCount(1, $this->nodes($member, 'nav-cta-med'), 'con sesión desaparece el CTA de compra');
 
@@ -871,10 +1031,21 @@ class ArmazonContractTest extends TestCase
             'el nombre accesible del botón de cuenta ya no dice de quién es la cuenta',
         );
 
-        $this->assertSame(
-            '', trim($chip->textContent),
-            'el botón de cuenta ha recuperado texto visible: si vuelve, tiene que ser PREFIJO del '.
-            'nombre accesible o incumple «label in name» (WCAG 2.5.3)',
+        // ⚠️ **RE-APUNTADO en la 2c·7, y era lo que el propio mensaje anterior pedía.** El botón
+        // recuperó texto visible —«Mi cuenta», FIJO— al convertirse en una mitad expandible del
+        // par. `#204` lo había retirado porque el saludo variable («Hola, Marta» / «Hola,
+        // Wilhelmina») desalineaba el racimo; un rótulo fijo no tiene ese problema.
+        // ▶ Lo que NO se puede perder es «label in name» (WCAG 2.5.3): si hay texto visible, el
+        // nombre accesible tiene que EMPEZAR por él, o quien dicta por voz «pulsa Mi cuenta» no
+        // activa nada.
+        $visible = trim((string) preg_replace('/\s+/', ' ', $chip->textContent));
+
+        $this->assertNotSame('', $visible, 'la mitad de cuenta se ha quedado sin rótulo que expandir');
+        $this->assertStringStartsWith(
+            $visible, $chip->getAttribute('aria-label'),
+            "El texto visible «{$visible}» NO es prefijo del nombre accesible.\n".
+            '▶ «Label in name» (WCAG 2.5.3): quien dicta por voz lee lo que VE, y si el nombre '.
+            'accesible empieza por otra cosa, el comando no activa el botón.',
         );
     }
 

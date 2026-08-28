@@ -1435,3 +1435,47 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
 - **El estado degradado** (clave del servidor rotada): «Este carné ya no se puede mostrar» + renovar.
   Lo fijan `MeCardTest` y `card.test.js`; no se ha provocado en navegador.
 - **La acción del panel**, con el ojo (K4): el modal con la fecha, el aviso, la fila de Incidencias.
+
+---
+
+## §5.sexdecies · EL CTA DOBLE DE LA CABECERA — ✅ recorrido en headless el 2026-08-28 (12/12), pendiente del OJO del owner (`DECISIONES #214`)
+
+> Carril C (`specs/armazon-y-menu.md` §8). Playwright dentro del contenedor. Guion: `par.mjs`.
+> **No toca datos.** ⚠️ Ventana **≥ 1080 px**: por debajo manda la barra flotante, que es la otra
+> mitad de la misma pieza.
+> ⚠️ Recuerda las dos trampas del armazón: el CTA **nace oculto** y la barra **se retira al bajar**
+> — hay que bajar ~1,6 pantallas y volver a subir ~240 px.
+
+### P1 · Reposo: uno ancho, el otro reducido a su icono
+1. **Comprar está expandido** (~167 px) y la mitad de la cuenta **colapsada a su icono** (~54 px).
+   El cuerpo de la cuenta está a opacidad 0; el de comprar, a 1.
+2. ❗ **La mitad colapsada INVITA**: se mueve sola cada 4,6 s (`cta-asoma`) y un **aro** late a su
+   alrededor (`cta-aro`). Míralo unos segundos: es lo que hace que un botón de dos pasos se
+   descubra sin instrucciones.
+
+### P2 · El primer clic EXPANDE, no actúa
+3. Pulsa la mitad colapsada. **Los anchos se intercambian** con transición: ahora la cuenta es la
+   ancha y comprar queda en su icono. ⚠️ **El cajón NO se abre**: el primer clic solo expande.
+4. **La invitación se apaga** — y ya no vuelve en esa visita, aunque expandas la otra mitad.
+5. Los nombres accesibles **dicen qué hacen AHORA**: la colapsada se llama «Cambiar a reservar
+   entradas», no «Reservar». Compruébalo con el inspector o con un lector de pantalla.
+6. Pulsa **otra vez** la mitad ancha: ahora sí actúa (abre el cajón en su zona).
+
+### P3 · Las tres situaciones de la mitad de la cuenta
+7. **Invitado sin trámite externo** → «Registrarse», glifo de persona con +, y abre el alta.
+8. **Invitado con trámite externo configurado** (Ajustes → Registro) → el rótulo y subtítulo del
+   parque, glifo de portapapeles, y abre su sistema en pestaña nueva.
+9. **Con sesión** → «Mi cuenta», glifo de persona, y abre el área de cliente. Si hay formulario
+   pendiente, el **punto de aviso** sigue sobre el icono.
+
+### P4 · El suelo
+10. Con JavaScript desactivado, **las tres mitades navegan de una sola pulsación** (`/entradas`,
+    `/registro` o la URL del parque, `/mi-cuenta`). El doble paso no existe ahí, a propósito.
+11. Con **«reducir movimiento»** activado en el sistema, la invitación **no se anima** — ni el
+    asomo ni el aro. El par sigue funcionando igual.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **La transición en sí**: el guion mira estados antes y después, no el camino entre ellos.
+- **Que la invitación no moleste**: 4,6 s es el valor del mockup, pero si en pantalla resulta
+  insistente, el token `--dur-invite` está para eso.
+- **El par por debajo de 1080 px**: ahí es la barra flotante (`#205`), que ya tenías validada.

@@ -454,7 +454,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#213`**.
+> El último usado es **`#214`**.
 > ⚠️ **Y el `#207` volvió a demostrar la regla el 2026-08-28**: el carril C escribió su tanda con
 > `#207` en cinco sitios y, al ir a empujar, el carril A ya se había llevado **`#207` Y `#208`**.
 > Renumerar costó cinco ediciones. ▶ **Y además `#207` está OCUPADO por la base heredada** («Fase
@@ -562,6 +562,19 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3235 en verde** (21.140 aserciones), medida el 2026-08-28 por el carril C tras `#214`
+  (**el CTA es un PAR**: uno ancho, el otro reducido a su icono, y una invitación que se apaga
+  cuando le hacen caso). ▶ **+3 casos en `ArmazonContractTest`** y **CUATRO tests re-apuntados, ninguno
+  retirado**: los dos que contaban `nav-cta-ghost` para saber si se ofrecía el alta (ahora por
+  DESTINO, porque esa clase ya no distingue nada), el del nombre accesible (ahora exige que el
+  visible sea PREFIJO) y **la guarda del `mode` del cajón, que contaba `this.mode =` en TODO
+  `app.js`** y casaba con el `mode` del store nuevo. **9 mutaciones, las 9 muerden · sonda de
+  navegador 12/12.**
+  ⚠️⚠️ **DOS de esas guardas nacieron LAXAS y solo lo demostró la mutación**: una miraba si
+  `$store.ctaPair` aparecía «en algún sitio» del atributo —y pasaba con los anchos leyendo una
+  variable local, porque la invitación, en el MISMO atributo, sí usaba el store—; la otra aceptaba
+  cualquier `animation:` bajo `--invita`, y el ARO la cumplía. **Media invitación es la que no se
+  ve.** Antes:
 - Suite **3232 en verde** (21.070 aserciones), medida el 2026-08-28 por el carril C **sobre el árbol
   CONJUNTO** (su `#213` rebasado encima del `#212` del carril A, el carné QR). ⚠️ **Se MIDIÓ, no se
   sumó**: en su propio árbol el carril C daba 3.224 · 21.000, evidencia ANTERIOR a la fusión. Tras `#213` (el

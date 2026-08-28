@@ -11341,3 +11341,61 @@ muerden** · **sonda de navegador 14/14** (§5.quindecies).
 ⚠️ Trampa nueva del instrumento: Chromium devuelve un `color-mix()` resuelto como
 `color(srgb r g b / a)` con los canales en **0–1**, no como `rgba()`. La primera comprobación del
 velo buscaba `rgba(` y dio ROJO con el CSS correcto.
+
+---
+
+## #214 · 2026-08-28 · El CTA del armazón es un PAR que se descubre solo: uno ancho, el otro reducido a su icono, y una invitación que se apaga cuando le hacen caso
+
+**El encargo, con sus palabras.** «El icono de al lado del CTA —registrarse, o iniciar sesión, o mi
+cuenta según la situación— al darle clic **se desplaza con una transición y se convierte en más
+ancho**, y el botón de reservar **se vuelve solo un icono**. Ese CTA es "doble". Y tiene una
+animación invitando a darle clic para hacer esa transición.»
+
+**Medido en el mockup**: `ctaModo` ∈ `reserva`|`registro` (arranca en reserva) + `ctaTocado`;
+expandido 224 px (182 / 138 según ancho), colapsado **56 px**; el 1.er clic en la colapsada **la
+expande**, el 2.º **actúa**; y mientras nadie ha tocado el par, la otra mitad **asoma** y un **aro
+late**, en ciclo de 4,6 s.
+
+▶ **La mecánica ya existía en móvil** (`#205`) y **no en la cabecera**, que eran dos botones sueltos
+siempre expandidos. Esta tanda la lleva al racimo y **une los dos estados**.
+
+❗ **El estado sube a un STORE (`ctaPair`), y ése es el cambio de fondo.** `mode` vivía dentro de
+`mobileBookBar`; ahora `mode` + `touched` viven en un store que leen los dos. No coexisten en
+pantalla, pero **quien expande «mi cuenta» en escritorio y estrecha la ventana tiene que encontrarse
+la barra igual**: con dos copias se separan solas. ⚠️ El store publica ESTADO y nada más: los
+anchos, la transición y el apagado los decide el CSS con dos clases — misma regla que `#195`,
+`#201` y `#205`.
+⚠️ **Y se colapsa el CUERPO, no el botón**: con un `width` fijo el icono se descentraría durante la
+transición y el objetivo táctil dejaría de ser el mismo elemento.
+
+**Tres cosas que arregla de paso:**
+1. La rama **con sesión era la ÚNICA del par sin suelo sin JavaScript** —un `<button>` que no hacía
+   nada—. Pasa a `<a href="/mi-cuenta">`, que es una PUERTA.
+2. **El rótulo de la cuenta vuelve, pero FIJO** («Mi cuenta»). `#204` retiró el saludo visible
+   porque cambiaba de ancho con cada visitante; un rótulo fijo no. El saludo sigue en el nombre
+   accesible, y el visible es su **prefijo** — «label in name» (WCAG 2.5.3).
+3. **La flecha del botón fantasma se va** con sus tres reglas de CSS, cazada como huérfana.
+
+⚠️⚠️ **La invitación se apaga por DOS motivos, no uno**: al tocar el par (una animación que sigue
+llamando después de que le han hecho caso deja de invitar y empieza a molestar) y con
+`prefers-reduced-motion`, **sin sustituto** — es decoración en bucle, y ahí «reducir» es «no
+hacerlo». La duración entra como token propio (`--dur-invite`) porque es de otra familia que
+`--dur-collapse`/`--dur-fade`: éstas responden a un gesto, ésta es un latido ambiental.
+
+**Cuatro tests RE-APUNTADOS, ninguno retirado**, porque su sujeto seguía vivo: los dos que contaban
+`nav-cta-ghost` para saber si se ofrecía el alta —ahora se comprueba **por el destino**, porque esa
+clase ya no distingue nada—, el del nombre accesible —ahora exige que el visible sea **prefijo**— y
+**la guarda del `mode` del cajón, que contaba `this.mode =` en TODO `app.js`** y casaba con el
+`mode` del store nuevo: acotada al store `purchase`, que es de quien habla. Una guarda que cuenta
+por nombre de propiedad se rompe cuando otro store elige ese nombre, **y su mensaje culpa al cajón**.
+
+**Verificación**: suite **3235 / 21.140** · `ArmazonContractTest` +3 · **9 mutaciones, las 9
+muerden** · **sonda de navegador 12/12** (`VERIFICACION-E2E-CAJON.md` §5.sexdecies).
+
+⚠️⚠️ **Y la lección del arnés, que es la más útil de esta tanda: DOS de mis guardas nacieron LAXAS
+y solo lo demostró la mutación.** Una miraba si la cadena `$store.ctaPair` aparecía «en algún sitio»
+del atributo, y pasaba con el reparto de anchos leyendo una variable local —porque la invitación, en
+el MISMO atributo, sí usaba el store—. La otra aceptaba cualquier `animation:` bajo `--invita`, y el
+**aro** la cumplía: retirar el asomo la dejaba verde. **Media invitación es la que no se ve.**
+▶ Y el propio guion de navegador cayó en lo mismo: aseveró el intercambio con «60 px más» y la
+mitad de la cuenta expandida mide MENOS que la de comprar. **Se asevera el hecho, no un número.**

@@ -67,6 +67,11 @@
     --dur-fade: 0.22s;
     --ease-panel: cubic-bezier(0.2, 0.8, 0.2, 1);   /* paneles y colapsos: entra rápido, frena */
     --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* CTA y chevrons: sobrepasa y vuelve */
+    /* Duración del ciclo de INVITACIÓN del CTA doble (2c·7). Es de otra familia que las dos de
+       arriba —éstas son respuestas a un gesto; ésta es un latido ambiental— y por eso tiene su
+       propio token: una instalación que quiera invitar más o menos a menudo no debería tener que
+       reescribir dos `@keyframes`. El valor sale del mockup del 2.º cliente. */
+    --dur-invite: 4.6s;
 }
 
 /* ====================================================================
@@ -228,16 +233,12 @@
    (`[DECIDIDO owner]`) el chip se quedaba sin contenido variable, y en un racimo de piezas
    flotantes un botón que cambia de ancho con el nombre de cada visitante desalinea la esquina
    entera. El nombre accesible sigue en TEXTO, en el `aria-label`. */
-.nav__acct {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: var(--tap-min); height: var(--tap-min);   /* Lote 9: objetivo táctil, y círculo, no óvalo */
-    padding: 0;
-    border: 1px solid var(--line); border-radius: 50%;
-    background: var(--bg-card); color: var(--fg); cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
-}
-.nav__acct:hover { background: var(--bg-soft); border-color: var(--fg); color: var(--zone-1); }
-.nav__acct:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+/* ⚠️⚠️ **Aquí vivía la caja del chip de cuenta —círculo de 44 px, borde, fondo y foco— y se
+   retira en la 2c·7.** Desde que la cuenta es **una mitad del PAR**, su caja es la del botón
+   fantasma (`.cta-ghost`) como las otras dos ramas: si además tuviera la suya, un `border-radius:
+   50%` y un `width` fijo impedirían que se ensanchara al expandirse — el mecanismo entero.
+   ▶ La clase `.nav__acct` SIGUE en el marcado: es la identidad de «esta mitad es la cuenta», y de
+   ella cuelgan el icono y el punto de aviso, que sí son suyos. */
 .nav__acct-icon {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
@@ -2100,16 +2101,13 @@ body.no-scroll { overflow: hidden; }
 .cta-ghost:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .cta-ghost:hover .ic-reg { color: var(--bg); }
 .cta-ghost:hover .ic-reg .accent { stroke: var(--zone-2); }
+/* ⚠️ Aquí vivían las tres reglas de `.cta-ghost__arrow`, y se van con la flecha: el par del
+   armazón no la lleva —el mockup tampoco— y su único marcado se retiró en la 2c·7. Una regla sin
+   consumidor es peso muerto en las 12 vistas, y `ArmazonCssHasNoOrphansTest` la caza. */
 .cta-ghost__ico { display: inline-grid; place-items: center; flex-shrink: 0; line-height: 0; }
 .cta-ghost__ico .ic-reg { width: 22px; height: 14px; }
 .cta-ghost__ico .ic-reg svg { width: 22px; height: 14px; }
 .cta-ghost__t { font-size: 13px; font-weight: 500; line-height: 1; }
-.cta-ghost__arrow {
-    margin-left: 2px; font-size: 12px;
-    color: var(--fg-mute);
-    transition: transform 0.3s ease, color 0.2s ease;
-}
-.cta-ghost:hover .cta-ghost__arrow { color: var(--bg); transform: translateX(3px); }
 
 /* MED — "Comprar entradas" (filled del header).
    Jerarquía "cool" (revertida 2026-05-27): fondo `--fg` negro + texto cream,
@@ -2164,6 +2162,71 @@ body.no-scroll { overflow: hidden; }
    reglas de `.cta-med__arrow`. Las tres se retiran con la alineación al mockup (`#213`): el
    subtítulo ya hereda el color y baja la opacidad, y **el CTA fijo del cliente no lleva flecha**.
    No se «ocultan» con `display:none`: se van, y con ellas su marcado. */
+/* ══ EL CTA DOBLE DEL ARMAZÓN (2c·7) ══════════════════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: el par del mockup. Una mitad ancha y la otra reducida a su
+   icono; el primer clic en la colapsada la expande y colapsa a la otra, el segundo actúa. Y
+   mientras nadie lo ha tocado, la colapsada INVITA.
+
+   ⚠️ **El reparto lo hace el CSS con DOS clases** que publica el store, no el JS con anchos: es
+   lo único que deja a una instalación retemplar la pieza desde su hoja.
+   ⚠️ **Se colapsa el CUERPO, no el botón.** Poniendo un `width` fijo al botón, el icono se
+   descentraría durante la transición y el objetivo táctil dejaría de ser el mismo elemento; con
+   `max-width` sobre el texto, el botón encoge hasta su icono **por su propio padding** y nunca
+   baja del mínimo táctil.
+   ⚠️ `visibility` NO se toca aquí: un `max-width: 0` con `overflow: hidden` ya saca el texto del
+   flujo visual, y `visibility: hidden` cortaría la transición en seco. Lo que SÍ hace falta es que
+   el texto colapsado no sea alcanzable — de eso se encarga el `aria-label`, que cambia a «cambiar
+   a…»: el nombre accesible dice qué hace AHORA, no a dónde lleva. */
+.nav__pair { display: flex; align-items: center; gap: inherit; }
+.nav__alt { position: relative; display: inline-flex; }
+
+/* Reposo: la CUENTA colapsada, COMPRAR expandido. Es la jerarquía, no un default cualquiera. */
+.nav__pair .cta-ghost__body,
+.nav__pair .cta-med__body {
+    overflow: hidden;
+    max-width: 22ch;
+    opacity: 1;
+    transition: max-width 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+}
+.nav__pair .cta-ghost__body { max-width: 0; opacity: 0; }
+.nav__pair--account .cta-ghost__body { max-width: 22ch; opacity: 1; }
+.nav__pair--account .cta-med__body { max-width: 0; opacity: 0; }
+
+/* ── LA INVITACIÓN ────────────────────────────────────────────────────────────────────────────
+   Mientras nadie ha tocado el par, la mitad colapsada **asoma** y un aro **late** a su alrededor.
+   Es lo que hace que un botón de dos pasos se descubra sin instrucciones.
+   ⚠️ `touched` se pone a `true` con CUALQUIER uso del par, se expanda lo que se expanda: una
+   invitación que sigue llamando después de que le han hecho caso deja de ser invitación.
+   ⚠️ **Y se apaga entera con `prefers-reduced-motion`**, sin sustituto: el aro y el asomo son
+   decoración pura, así que aquí «reducir» es «no hacerlo», no «hacerlo más despacio». */
+@keyframes cta-asoma {
+    0%, 64%, 100% { transform: translateX(0); }
+    72% { transform: translateX(-7px); }
+    80% { transform: translateX(0); }
+    86% { transform: translateX(-3px); }
+    92% { transform: translateX(0); }
+}
+@keyframes cta-aro {
+    0%, 62% { opacity: 0; transform: scale(0.7); }
+    74% { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.45); }
+}
+.nav__alt-ring {
+    position: absolute; inset: -4px;
+    border: 2px solid var(--zone-1);
+    border-radius: var(--r-btn);
+    opacity: 0; pointer-events: none;
+}
+.nav__pair--invita .nav__alt > .cta-ghost { animation: cta-asoma var(--dur-invite) ease-in-out infinite; }
+.nav__pair--invita .nav__alt-ring { animation: cta-aro var(--dur-invite) ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    .nav__pair--invita .nav__alt > .cta-ghost,
+    .nav__pair--invita .nav__alt-ring { animation: none; }
+    .nav__pair .cta-ghost__body,
+    .nav__pair .cta-med__body { transition: none; }
+}
+
 .cta-med:hover .tk .stub,
 .cta-med:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }
 
@@ -2369,8 +2432,7 @@ body[data-has-hero] .nav--over .nav-cta-med {
         padding: 9px 12px 9px 10px; gap: 6px;
     }
     .cta-ghost.nav-cta-ghost .cta-ghost__t { font-size: 12px; }
-    .cta-ghost.nav-cta-ghost .cta-ghost__arrow { display: none; }
-}
+    }
 
 /* ====================================================================
    Jerarquía de CTAs — Capa E: barra flotante de reserva en MÓVIL.
