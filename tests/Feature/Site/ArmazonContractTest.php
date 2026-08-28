@@ -1668,6 +1668,33 @@ class ArmazonContractTest extends TestCase
         }
     }
 
+    /**
+     * **Los dos botones del hero van EN FILA, no apilados.**
+     *
+     * ⚠️ **`width: 100%` NO es redundante con el `max-width`, y sin él no se ve nada raro: se ve
+     * MAL.** El contenido del hero es un flex de columna con `align-items: flex-start`, así que
+     * esta fila se encoge a su contenido mínimo —el ancho del botón más ancho— y el segundo botón
+     * envuelve debajo. Medido antes de arreglarlo: 327 px de ancho y los dos a `x = 50`; después,
+     * 640 px y `x = 50` / `x = 396`.
+     * ▶ Es exactamente el tipo de declaración que alguien retira por «redundante» leyendo el CSS
+     * sin abrir la página. Por eso hay guarda.
+     */
+    public function test_the_hero_buttons_sit_in_a_row(): void
+    {
+        $cuerpo = (string) ($this->cssRules(public_path('css/site.css'))['.hero__acts'] ?? '');
+
+        $this->assertStringContainsString(
+            'width: 100%', $cuerpo,
+            "`.hero__acts` no declara ancho.\n".
+            "▶ Su padre es un flex de columna con `align-items: flex-start`: sin ancho declarado la\n".
+            '  fila se encoge a su contenido y el segundo botón cae debajo del primero.',
+        );
+        $this->assertStringContainsString(
+            'max-width: 640px', $cuerpo,
+            'sin el tope, la fila cruza el hero entero y los dos botones se estiran.',
+        );
+    }
+
     /** Literal XPath seguro aunque el texto lleve comillas. */
     private function quote(string $value): string
     {

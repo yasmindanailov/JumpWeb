@@ -11506,9 +11506,17 @@ de foco): su mockup pinta el racimo con **sombra difusa** y su propio hallazgo `
 difusas son solo para modal — que es lo que `#196` implementó y lo que su `client.css` declara
 (`5px 5px 0`). Se sigue **el sistema**, porque es lo que deja al paquete decidir. Ficha en `DEUDA.md`.
 
-**Verificación**: `ArmazonContractTest` **+6 casos** · **4 tests RE-APUNTADOS, ninguno retirado** —
+⚠️ **Y una CUARTA trampa, que la sonda NO vio y sí la captura**: los dos botones del hero salían
+**apilados**. La sonda medía existencia, color y tamaño de cada uno —y los dos estaban bien—; lo que
+estaba mal era **dónde**. La causa: el contenido del hero es un flex de columna con
+`align-items: flex-start`, así que la fila se encogía a su contenido mínimo. Se arregla con
+`width: 100%`, una declaración que **leyendo el CSS parece redundante** junto al `max-width` — o
+sea, justo lo que alguien retira en una limpieza. Tiene guarda. ▶ **Medir no es mirar.**
+
+**Verificación**: `ArmazonContractTest` **+7 casos** · **6 tests RE-APUNTADOS, ninguno retirado** —
 el del menú abierto pasa a mirar el racimo entero (ahora se juega también la X de cerrar), el de
 `navCtaReveal` pasa a aseverar **el hecho de producto** (el hero ofrece la compra) en vez del nombre
 de un componente de JavaScript, el del rótulo alterno exige que NO vuelva, y `ActionFillTest`
 declara `.hero__act--buy` — · sonda de navegador con la coreografía contrastada contra la
-aritmética del mockup · arnés de **12 mutaciones**, cada una con el fallo REAL de su guarda.
+aritmética del mockup · arnés de **15 mutaciones, las 15 muerden**, cada una con el fallo REAL de
+su guarda.

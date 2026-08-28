@@ -1322,13 +1322,27 @@ conserva el `alt` de siempre.
    instrumento** — y esa misma medida mala me hizo escribir antes que «los 8 rasters locales están
    rotos» cuando son **3**.
 
+### 9.7.bis ⚠️ Y una CUARTA, que la sonda no vio y sí la captura
+
+Los dos botones del hero salían **APILADOS**, no en fila. La causa no es el `flex-wrap`: el
+contenido del hero es un flex de **columna con `align-items: flex-start`**, así que la fila se
+encogía a su contenido mínimo —327 px, el ancho del botón más ancho— y el segundo envolvía debajo.
+Se arregla con `width: 100%` junto al `max-width: 640px`, y **esa declaración parece redundante
+leyendo el CSS**: es justo lo que alguien retira en una limpieza. Por eso tiene guarda.
+
+▶ **La lección de método**: la sonda medía existencia, color y tamaño de cada botón —y los dos
+estaban bien—. Lo que estaba mal era **dónde**, y eso solo se ve mirando. Medido: antes 327 px de
+ancho con los dos a `x = 50`; después 640 px, con `x = 50` y `x = 396`.
+
 ### 9.8 Verificación
 
-- **`ArmazonContractTest` +6 casos** · **4 tests RE-APUNTADOS, no retirados** (su sujeto sigue
+- **`ArmazonContractTest` +7 casos** · **6 tests RE-APUNTADOS, no retirados** (su sujeto sigue
   vivo): el del menú abierto pasa a mirar el racimo entero —ahora se juega también la X de cerrar—,
   el de `navCtaReveal` pasa a aseverar **el hecho de producto** (el hero ofrece la compra) en vez
   del nombre de un componente, el del rótulo alterno pasa a exigir que NO vuelva, y `ActionFillTest`
   declara `.hero__act--buy` como acción nueva.
 - **Sonda de navegador**: la coreografía verificada contra la aritmética del mockup, los anchos
   224/56 exactos, el intercambio, el aviso dentro del menú y **el fantasma blanco**.
-- **Arnés de mutación**: doce mutaciones con el fallo REAL de cada guarda.
+- **Arnés de mutación**: **quince** mutaciones, cada una con el fallo REAL de su guarda — las 15
+  muerden. Incluye las dos guardas que hubo que **acotar** (no aflojar) porque aseveraban por
+  subcadena, y la del `width` del hero.

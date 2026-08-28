@@ -589,9 +589,9 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3241 en verde** (21.227 aserciones), medida el 2026-08-28 a mediodía por el carril C
+- Suite **3242 en verde** (21.229 aserciones), medida el 2026-08-28 a mediodía por el carril C
   **sobre el árbol CONJUNTO** —tras rebasar encima del `#215` del carril A— con `--parallel` en
-  **1 min 43 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
+  **47 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
   CTA doble se alinea en sus ocho medidas y entra el paquete de MARCA del 2.º cliente**).
   ▶ **+6 casos en `ArmazonContractTest`** y **SEIS tests re-apuntados, ninguno retirado**: el del
   menú abierto (ahora mira el racimo ENTERO, porque con el armazón oculto también se juega la X de
@@ -603,8 +603,12 @@ que sirva staging de verdad.
   documento en vez de en el atributo del `<body>`, así que un `<style>` que nombra el selector lo
   ponía en rojo. **Las dos quedan ACOTADAS a su sujeto, no aflojadas.** Cuarta vez que esta casa
   paga la misma lección.
-  ▶ **14 mutaciones, las 14 muerden** · sonda de navegador con la coreografía **contrastada contra
+  ▶ **15 mutaciones, las 15 muerden** · sonda de navegador con la coreografía **contrastada contra
   la aritmética del mockup** (0,5617 calculado / **0,561 medido**) y los anchos 224/56 exactos.
+  ⚠️ **Y una CUARTA trampa, que la sonda NO vio y sí la captura**: los dos botones del hero salían
+  **apilados**. La sonda medía existencia, color y tamaño —los dos bien—; lo que fallaba era
+  **dónde**. `width: 100%` junto al `max-width`, una declaración que leyendo el CSS parece
+  redundante. **Medir no es mirar.**
   ⚠️ **Y 32 fallos que NO eran de la tanda**: `SidebarDomContractTest` con el bundle SSR **rancio**
   tras traer el `machine.js` del carril A. Lo dice el propio test; se arregla con `npm run build:ssr`
   (el `pre-push` lo hace solo). **Un test que compara un bundle viejo da verde con el código roto.**

@@ -2662,6 +2662,12 @@ body[data-has-hero] .nav--over .nav__cta {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
+    /* ⚠️ **`width: 100%` NO es redundante con el `max-width`**, y sin él los dos botones salen
+       APILADOS: el contenido del hero es un flex de columna con `align-items: flex-start`, así que
+       esta fila se encogía a su contenido mínimo —el ancho del botón más ancho, 327 px— y el
+       segundo no cabía al lado. Medido antes de tocarlo. Con el ancho declarado, la fila llega a
+       sus 640 y los dos reparten (`1 1 240` y `1 1 200`), que es lo que hace el mockup. */
+    width: 100%;
     max-width: 640px;
     margin-top: clamp(20px, 2.6vw, 30px);
 }
