@@ -23,6 +23,7 @@ use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
@@ -243,6 +244,13 @@ class AppServiceProvider extends ServiceProvider
 
         return $data + [
             'cookieBannerEnabled' => CookieConsent::bannerEnabled(),
+            // ⚠️ **Sube del `HomeController` al payload compartido en `#230`.** Lo pinta el MENÚ, y
+            // el menú vive en las doce vistas: mientras solo lo pasara la home, el bloque de datos
+            // del menú salía vacío en once de ellas — y desde que el hero se vació (`#226`) también
+            // en la propia home, porque su único consumidor era el chip del hero.
+            // ▶ Se calcula UNA vez por petición aquí, y el controlador deja de calcularlo: dos
+            // llamadas al mismo servicio en la misma petición serían dos veces sus consultas.
+            'heroStatus' => app(HeroStatus::class)->current(),
             'site' => [
                 'name' => $get('business.name', config('app.name')),
                 'city' => $get('business.city', ''),

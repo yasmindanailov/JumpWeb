@@ -111,6 +111,25 @@ class HeroStatusTest extends TestCase
         $this->assertSame((string) __('landing.hero.status_opens_tomorrow', ['time' => '11:00']), $s['status']);
     }
 
+    /**
+     * **El estado de apertura se ANUNCIA en la web, y enlaza a horario + cómo llegar.**
+     *
+     * ⚠️⚠️ **CORRECCIÓN: el sujeto se mudó dos veces el 2026-08-28, la regla no.** Vivía en el
+     * CHIP del hero; `#226` vació el hero por decisión del owner y el chip se fue con él, y `#228`
+     * lo colocó donde el mockup lo pone: el **bloque de datos del menú**, junto al teléfono y la
+     * ubicación. Que el visitante pueda saber si está abierto —y llegar al horario desde ahí— no
+     * ha cambiado nunca.
+     *
+     * ⚠️ **Y el `href` deja de ser el ancla desnuda `#info`, a propósito.** El chip vivía solo en
+     * la portada, así que un ancla bastaba. El menú se pinta en las DOCE vistas, y desde
+     * `/precios` un `#info` a secas no lleva a ninguna parte: tiene que ser la URL completa.
+     * Aseverar el ancla desnuda ataba el caso a que el estado viviera solo en la home.
+     *
+     * ⚠️ **Este caso destapó un fallo de verdad y por eso se conserva** (`#230`): al mudar el
+     * estado al menú, el dato seguía viniendo del `HomeController` — o sea que el menú lo pintaba
+     * vacío en once vistas, **y también en la home**, porque el componente no lo recibía. El
+     * estado había desaparecido de la web entera sin que nada fallara, salvo esto.
+     */
     public function test_chip_renders_on_home_when_open(): void
     {
         Carbon::setTestNow('2026-06-15 18:00:00');
@@ -119,6 +138,23 @@ class HeroStatusTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee((string) __('landing.hero.status_open'))
-            ->assertSee('href="#info"', false); // el chip enlaza a horario + cómo llegar
+            ->assertSee('href="'.url('/#info').'"', false);
+    }
+
+    /**
+     * **Y se anuncia en TODAS las vistas, no solo en la portada.**
+     *
+     * Es la mitad que el caso de arriba no puede cubrir: el menú vive en las doce, y el dato
+     * llegaba de un controlador que solo sirve una. Sin esto, alguien podría devolver
+     * `heroStatus` al `HomeController` y el caso de arriba seguiría verde.
+     */
+    public function test_the_status_travels_to_every_view_because_the_menu_does(): void
+    {
+        Carbon::setTestNow('2026-06-15 18:00:00');
+        $this->openToday();
+
+        $this->get(route('precios'))
+            ->assertOk()
+            ->assertSee((string) __('landing.hero.status_open'));
     }
 }

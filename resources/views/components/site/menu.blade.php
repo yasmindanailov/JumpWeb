@@ -101,7 +101,10 @@
                     {{-- La foto sale del CMS y **solo la tienen los servicios**; el resto cae al
                          fondo rayado, que es lo que el mockup usa donde aún no hay foto. --}}
                     <template x-if="vistas[mira] && vistas[mira].img">
-                        <img class="menu__preview-img" :src="vistas[mira].img" alt="">
+                        {{-- ⚠️ `aria-hidden` ADEMÁS del `alt=""`: la tarjeta entera ya está oculta al lector, pero
+                             `SeoTest` exige que cada imagen diga por sí misma si es contenido o decoración.
+                             Tiene razón — un `alt=""` a secas no distingue «decorativa» de «se me olvidó». --}}
+                        <img class="menu__preview-img" :src="vistas[mira].img" alt="" aria-hidden="true">
                     </template>
                     <div class="menu__preview-body">
                         {{-- ⚠️ El sombrerete es el NÚMERO del destino, no una etiqueta inventada:

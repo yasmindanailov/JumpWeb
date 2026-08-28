@@ -7,7 +7,6 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\VenueRule;
-use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\LandingComplementResolver;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
@@ -41,9 +40,10 @@ class HomeController extends Controller
         return view('home', [
             'zones' => $zones,
             'complements' => $complements,
-            // Chip del hero: estado de apertura en vivo (data-driven, zona horaria del parque).
-            // `null` si no hay horario configurado → la vista no pinta el chip.
-            'heroStatus' => app(HeroStatus::class)->current(),
+            // ⚠️ **`heroStatus` se fue al payload compartido en `#230`** y por eso ya no está aquí:
+            // su consumidor dejó de ser el chip del hero —que `#226` retiró— y pasó a ser el bloque
+            // de datos del MENÚ, que vive en las doce vistas. Calcularlo también aquí sería
+            // ejecutar el mismo servicio dos veces en la misma petición.
             // `inOperationalZone()`: NO pintar entradas de una zona desactivada con CTA «Reservar»
             // que el flujo de compra no puede vender (espejo de packs/sidebar; Sistema 6 · W4).
             'tickets' => TicketType::with(['prices.rateType', 'addons.prices.rateType'])

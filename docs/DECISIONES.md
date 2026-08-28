@@ -12450,3 +12450,49 @@ escribirla: la siguiente persona la lee y la da por hecha.*
 tarjeta de **1200×468 a 1260×880** (escritorio) y de **310×439 a 370×824** (móvil) —viewport menos
 20 en los dos—, `top` clavado en 10 durante todo el recorrido, titular de 77 a 108 y de 40 a 54, y
 **cero desbordamiento horizontal**. Suite acotada: **141 verdes**. Pint limpio.
+
+---
+
+## #230 · 2026-08-28 · El estado de apertura había desaparecido de la web entera, y solo lo vio la suite completa
+
+**Contexto.** Al empujar `#225`–`#229` el gate `pre-push` corrió la suite entera —**3.340 casos**—
+y salieron **tres fallos** que las tandas acotadas no podían ver. Los tres eran consecuencia
+legítima del trabajo, y uno era un defecto de verdad.
+
+### El defecto: el estado se mudó y el dato se quedó atrás
+
+`#226` vació el hero y con él se fue el **chip de estado** («Viernes · Abierto ahora»). `#228` lo
+recolocó donde lo pone el mockup: el bloque de datos del MENÚ, junto al teléfono y la ubicación.
+▶ Pero `heroStatus` lo servía el **`HomeController`**, y el menú es un componente global que se
+pinta desde el layout: **no lo recibía**. Resultado: el estado no salía en once vistas *y tampoco
+en la home*. Había desaparecido de la web entera y **nada fallaba** salvo un caso de `HeroStatusTest`.
+
+▶ Sube al payload compartido del composer, que ya hace una sola lectura de `settings` por petición,
+y **se retira del controlador**: dos llamadas al mismo servicio en la misma petición son dos veces
+sus consultas.
+
+⚠️ **Y el caso se re-apunta con su sujeto, dos veces en un día.** Aseveraba `href="#info"`, el ancla
+desnuda del chip. El chip vivía solo en la portada, así que un ancla bastaba; el menú se pinta en
+las DOCE vistas y desde `/precios` un `#info` a secas no lleva a ninguna parte. Aserción a la URL
+completa, **más una guarda nueva** que comprueba el estado en una vista que no es la home: sin ella,
+alguien podría devolver `heroStatus` al controlador y el caso original seguiría verde.
+
+### Los otros dos, y son recuentos que suben
+
+**`AccountDoorWiringTest`: de TRES a CUATRO puertas al alta.** `#227` dio a la primera pantalla el
+CTA del armazón, y su mitad de la cuenta es una cuarta puerta. El sujeto no cambia —que TODOS los
+caminos al alta lleguen cableados y con `href`— y por eso el número sube en vez de aflojarse la
+aserción a un «contiene». Es la misma decisión que se tomó al pasar de dos a tres en `#205`.
+
+**`SeoTest`: la imagen de vista previa del menú se declara decorativa.** Llevaba `alt=""` dentro de
+una tarjeta con `aria-hidden`, pero la guarda exige que **cada imagen lo diga por sí misma**. Tiene
+razón: *un `alt=""` a secas no distingue «decorativa» de «se me olvidó»*.
+
+### La lección de método
+
+**Las tres las cazó la suite COMPLETA, ninguna las tandas acotadas** —y las acotadas iban verdes en
+141 casos—. Los tres sujetos viven lejos de lo que se tocó: un test de arquitectura de puertas de
+cuenta, uno de SEO y uno de horarios. ▶ *Cuando el cambio es de ARMAZÓN —algo que se pinta en las
+doce vistas—, el radio de las guardas afectadas no se puede adivinar por el nombre del fichero.*
+▶ Y por eso se empujó a mitad de sesión en vez de al final: con tres commits más encima, el defecto
+del estado habría sido mucho más caro de encontrar.

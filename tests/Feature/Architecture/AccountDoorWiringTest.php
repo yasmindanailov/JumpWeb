@@ -278,20 +278,24 @@ class AccountDoorWiringTest extends TestCase
         // un botón y pasó a ser el **CTA doble**, cuya segunda mitad es el alta. El sujeto de este
         // recuento no cambia —que TODOS los caminos al alta lleguen cableados— y por eso el número
         // se sube en vez de aflojar la aserción a un «contiene».
+        // ⚠️ **De TRES a CUATRO el 2026-08-28** (`#227`): la primera pantalla recupera el CTA del
+        // armazón —abajo a la derecha, con relevo al de la cabecera al bajar—, y su mitad de la
+        // cuenta es una cuarta puerta al alta. El sujeto sigue sin cambiar —que TODOS los caminos
+        // al alta lleguen cableados— y por eso el número sube en vez de aflojarse la aserción.
         $this->assertSame(
-            3, substr_count($html, "openAccount(\$event, 'register')"),
-            'Los CTA de alta son TRES —escritorio, cajón móvil y la mitad de la barra de móvil— y no '.
-            'llegan los tres cableados. ⚠️ Si el fixture configurara un registro EXTERNO, los de '.
-            'escritorio y barra serían otro enlace: este recuento también lo delata.'
+            4, substr_count($html, "openAccount(\$event, 'register')"),
+            'Los CTA de alta son CUATRO —escritorio, primera pantalla, cajón móvil y la mitad de la '.
+            'barra de móvil— y no llegan los cuatro cableados. ⚠️ Si el fixture configurara un '.
+            'registro EXTERNO, los tres del armazón serían otro enlace: este recuento lo delata.'
         );
 
-        // ⚠️ Y el `href` de los dos sobrevive: es lo que responde sin JS, con el clic central y al
-        // abrir en pestaña nueva. La ruta existe como PUERTA justo para eso.
+        // ⚠️ Y el `href` de los CUATRO sobrevive: es lo que responde sin JS, con el clic central y
+        // al abrir en pestaña nueva. La ruta existe como PUERTA justo para eso.
         $this->assertSame(
-            3, substr_count($html, 'href="'.route('registro').'"'),
-            'Alguno de los TRES CTA de alta perdió su `href`: sin él, ese clic no hace NADA cuando el '.
-            'motor todavía no ha cargado, «abrir en pestaña nueva» deja de funcionar, y en la barra '.
-            'de móvil un visitante sin JS se queda sin forma de darse de alta.'
+            4, substr_count($html, 'href="'.route('registro').'"'),
+            'Alguno de los CUATRO CTA de alta perdió su `href`: sin él, ese clic no hace NADA cuando '.
+            'el motor todavía no ha cargado, «abrir en pestaña nueva» deja de funcionar, y en la '.
+            'barra de móvil un visitante sin JS se queda sin forma de darse de alta.'
         );
 
         // ⚠️⚠️ **Control negativo: ya no queda NADIE que abra el modal.** Sin esto, el caso pasaría
