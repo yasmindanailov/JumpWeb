@@ -257,6 +257,15 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ Media/Baja · las TRES fuentes del cliente que no coinciden en su propio CTA (2026-08-28, `DECISIONES #213`)
+
+| Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
+|---|---|---|---|---|
+| **Media** | **Su sistema de color se contradice con su propia implementación** | El CTA fijo de `Landing PJP Modos` se pinta de **Amarillo Aviso** con el menú abierto. Pero `Colores de Marca` §02 dice de ese amarillo: «Resalte tipo marcador y anillo de foco. **Nunca fondo de sección ni botón**». Y §14 (orden de página) dice que la cabecera fija domina con **`cta.fill`** (Naranja Salto). Tres fuentes suyas, tres respuestas | En que cualquiera que implemente desde su canvas elegirá una de las tres **sin saber que hay tres**. Aquí se eligió la implementación por decisión suya (`#213`), pero la próxima pieza volverá a chocar | Es del owner: decidir cuál de las tres manda y corregir las otras dos en su canvas. Mientras, queda escrito en `specs/armazon-y-menu.md` §7.2 |
+| **Baja** | **El rol de ACCIÓN se queda sin demostración VISUAL de su independencia de superficie** | `.cta-med` era el único botón de acción que entraba en un ámbito de tinta, y en `#213` salió del rol. El mecanismo sigue entero —`SurfaceScopeTest` lo fija y el bloque B del guion aún lo enseña— pero **la mitad A ya no se puede ver en el producto** | En nada funcional. Cuesta que el owner no pueda comprobar con el ojo la mitad del quinto mecanismo | Volverá sola el día que un botón de acción viva sobre una sección oscura — que es justo lo que traerá la tanda 3 (el cierre del mockup es un bloque de tinta con un botón dentro) |
+
+---
+
 ## ▶ Media/Baja · lo que destapó el OJO del owner sobre la marca (2026-08-28, `DECISIONES #211`)
 
 | Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |

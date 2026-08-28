@@ -11287,3 +11287,57 @@ verde al cierre (cifra en `ESTADO.md`).
 
 **Pendiente del owner**: su OJO sobre la zona (móvil y escritorio) y la acción del panel, el LECTOR
 real con un PNG descargado desde la web, y el ✅ o los cambios a JumpPoints (§9 de su spec).
+---
+
+## #213 · 2026-08-28 · El CTA del armazón, alineado al mockup: cambia de ROL dentro del menú, y por eso SALE del rol de acción
+
+**El encargo.** El owner: «todavía nos falta el CTA del menú **idéntico al mockup**».
+
+⚠️ **Y lo primero fue reconocer una medida propia mal hecha.** En `#211` este proyecto afirmó que
+«el menú del mockup no lleva CTA propio», y el instrumento que lo dijo **no imprimió ni un solo
+botón de esa región**: un barrido que no encuentra nada no demuestra que no haya nada. Repetido con
+control positivo —el extractor tiene que ver el bucle `enlacesMenu` del propio menú—, la conclusión
+se confirma: **0 botones**. Era correcta por casualidad, no por la medida.
+
+❗❗ **El hallazgo real, y no era el esperado: su CTA fijo NO es el color de acción.**
+
+    background: menuAbierto ? '#F5C400' : '#101418'     ← AVISO abierto, TINTA cerrado
+    color:      menuAbierto ? '#101418' : '#F4F4F1'
+
+El naranja lo usa en el hero, en las zonas y en la barra de móvil; en su CTA fijo, **no**. Y tres
+fuentes suyas **se contradicen**: su implementación dice aviso, su norma de color dice «el amarillo
+**nunca** es fondo de botón» y su tabla de orden de página dice que la cabecera domina con
+`cta.fill`. `[DECIDIDO owner]`: **gana la implementación**; las otras dos, a `DEUDA.md`.
+
+▶ **Consecuencia de arquitectura**: `.cta-med` **sale del rol de ACCIÓN** que `#209` le dio. Su
+color no lo manda un rol sino una **coreografía**. `.cta-prime` —la barra de compra de móvil— sigue
+en el rol, y ahí el mockup también lo pinta de acción: es una diferencia REAL entre las dos piezas.
+El rol pasa de 13 reglas a 12, y **hubo que partir las reglas COMPARTIDAS** por los dos botones (el
+glifo, el «occluder», el subtítulo) — la mitad del trabajo que una conversión apresurada se deja.
+
+⚠️⚠️ **Y el anillo de foco NO podía quedarse.** `--focus-color` sigue a la superficie y en el
+paquete de este cliente vale **su mismo Amarillo Aviso**: un botón de aviso con anillo de aviso deja
+el **foco de teclado invisible**, y eso no falla, no avisa y solo lo nota quien no usa ratón. Dentro
+del menú el anillo pasa a tinta: 11,26 sobre el amarillo. Se vio venir antes de escribirlo y se le
+puso guarda con mutación.
+
+**Las cinco diferencias de forma**, todas alineadas (`[DECIDIDO owner]`): rótulo «Reservar» en la
+fuente de RÓTULO y en MAYÚSCULAS a 17 px · **sin flecha** (fuera del marcado y sus dos reglas) ·
+subtítulo plano a 11 px que **hereda el color** · chip del icono 30×26 con velo por token · y ese
+chip **invierte** dentro del menú.
+▶ Lo del subtítulo no es estilo: el botón pinta de **tres** colores —tinta, marca al pasar el cursor
+y aviso dentro del menú—, así que *cualquier* token elegido falla en dos de los tres. De paso se va
+un `rgba(255,255,255,.72)` en crudo. Y la fuente va por **token**, no por nombre: una instalación la
+cambia con `THEME_FONTS` y el rótulo la sigue (verificado: rinde Bungee).
+
+❗ **Lo que este cambio ROMPIÓ y hubo que arreglar**: el guion de navegador de `#209`
+(§5.duodecies) conducía precisamente `.cta-med` para demostrar el rol de acción. Está corregido con
+la caducidad delante. ▶ **Y deja al producto sin ningún sitio donde se pueda VER la independencia de
+superficie del rol**: era el único botón de acción que entraba en un ámbito de tinta. El mecanismo
+sigue entero y con guarda; la demostración visual, no.
+
+**Verificación**: `ArmazonContractTest` +2 · `ActionFillTest` re-apuntado · **8 mutaciones, las 8
+muerden** · **sonda de navegador 14/14** (§5.quindecies).
+⚠️ Trampa nueva del instrumento: Chromium devuelve un `color-mix()` resuelto como
+`color(srgb r g b / a)` con los canales en **0–1**, no como `rgba()`. La primera comprobación del
+velo buscaba `rgba(` y dio ROJO con el CSS correcto.

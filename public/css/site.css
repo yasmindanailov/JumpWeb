@@ -1936,15 +1936,17 @@ body.no-scroll { overflow: hidden; }
     100% { transform: rotate(0deg); }
 }
 /* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
-.cta-prime__ico .ic-e2, .cta-med__ico .ic-e2 { color: var(--on-action); }
-.cta-prime:hover .cta-prime__ico .ic-e2, .cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-action-hover); }
+.cta-prime__ico .ic-e2 { color: var(--on-action); }
+.cta-med__ico .ic-e2 { color: var(--bg); }
+.cta-prime:hover .cta-prime__ico .ic-e2 { color: var(--on-action-hover); }
+.cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-brand); }
 /* El «occluder» de E2 (la entrada de delante) debe fundirse con el FONDO del botón, no con
    --bg (que asume fondo claro). Sin esto, sobre el botón oscuro la entrada delantera se ve
    como un bloque crema. Reposo = --fg (botón oscuro) · hover = --zone-1 · on-video = --bg. */
-.cta-prime__ico .ic-e2 svg .occ,
-.cta-med__ico .ic-e2 svg .occ { fill: var(--action); }
-.cta-prime:hover .cta-prime__ico .ic-e2 svg .occ,
-.cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--action-hover); }
+.cta-prime__ico .ic-e2 svg .occ { fill: var(--action); }
+.cta-med__ico .ic-e2 svg .occ { fill: var(--fg); }
+.cta-prime:hover .cta-prime__ico .ic-e2 svg .occ { fill: var(--action-hover); }
+.cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--zone-1); }
 
 /* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
    de la cabecera del acordeón (no en bucle); reduced-motion la deja en reposo. */
@@ -2118,39 +2120,50 @@ body.no-scroll { overflow: hidden; }
 .cta-med {
     display: inline-flex; align-items: center; gap: 12px;
     padding: 11px 16px 11px 12px;
-    background: var(--action); color: var(--on-action);
+    background: var(--fg); color: var(--bg);
     border: 0; border-radius: var(--r-btn);
     font-family: var(--font-body); font-weight: 600;
     cursor: pointer; white-space: nowrap;
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.5, 1), background 0.2s ease, color 0.2s ease;
 }
 .cta-med:hover {
-    background: var(--action-hover); color: var(--on-action-hover);
+    background: var(--zone-1); color: var(--on-brand);
     transform: translateY(-2px) scale(1.02);
 }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 .cta-med__ico {
-    width: 30px; height: 22px;
-    background: rgba(255, 255, 255, 0.10);
+    width: 30px; height: 26px;
+    /* El velo del chip sale del TEMA: sobre el botón de tinta rinde claro, y dentro del menú lo
+       re-escopa la regla de superficie de abajo. Antes era `rgba(255,255,255,.10)`, un blanco
+       crudo que ninguna instalación podía tocar (ficha de `DEUDA.md`, `#194`). */
+    background: color-mix(in srgb, var(--bg) 14%, transparent);
     border-radius: var(--r-xs);
     display: grid; place-items: center;
     flex-shrink: 0;
     transition: background 0.2s ease;
 }
-.cta-med__ico .tk { width: 28px; height: 18px; color: var(--on-action); }
+.cta-med__ico .tk { width: 28px; height: 18px; color: var(--bg); }
 .cta-med__ico .tk svg { width: 28px; height: 18px; }
 .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .cta-med:hover .cta-med__ico .tk { color: var(--fg); }
 .cta-med__body { display: inline-flex; flex-direction: column; line-height: 1.05; gap: 2px; text-align: left; }
-.cta-med__t { font-size: 13px; font-weight: 600; line-height: 1; }
-.cta-med__s {
-    font-family: var(--font-mono); font-size: 9px;
-    text-transform: uppercase; letter-spacing: 0.10em;
-    color: color-mix(in srgb, var(--on-action) 70%, transparent);
+/* El rótulo va en la fuente de ROTULO y en mayúsculas, como el CTA fijo del mockup del 2.º
+   cliente. La fuente sale del TOKEN —no del nombre—, así que una instalación la cambia con
+   `THEME_FONTS` y esto la sigue. */
+.cta-med__t {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 17px; line-height: 1;
+    text-transform: uppercase; letter-spacing: 0.01em;
 }
-.cta-med:hover .cta-med__s { color: rgba(255, 255, 255, 0.72); }
-.cta-med__arrow { margin-left: 4px; transition: transform 0.3s ease; }
-.cta-med:hover .cta-med__arrow { transform: translateX(4px); }
+/* ⚠️ HEREDA el color del botón y solo baja la opacidad, en vez de calcularlo con un token: el
+   botón pinta de TRES colores distintos —tinta, marca al pasar el cursor y aviso dentro del
+   menú— y cualquier token elegido aquí fallaría en dos de los tres. Es también lo que hace el
+   mockup (`opacity:.62`). */
+.cta-med__s { font-size: 11px; color: inherit; opacity: 0.62; }
+/* ⚠️ Aquí vivían `.cta-med:hover .cta-med__s` —un `rgba(255,255,255,.72)` en crudo— y las dos
+   reglas de `.cta-med__arrow`. Las tres se retiran con la alineación al mockup (`#213`): el
+   subtítulo ya hereda el color y baja la opacidad, y **el CTA fijo del cliente no lleva flecha**.
+   No se «ocultan» con `display:none`: se van, y con ellas su marcado. */
 .cta-med:hover .tk .stub,
 .cta-med:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }
 
@@ -2270,6 +2283,46 @@ body[data-has-hero] .nav--over .nav-cta-med {
    `--onvideo` aquí lo hace ya la regla BASE dentro del ámbito, sin declarar nada. */
 [data-surface="ink"] .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 8%, transparent); }
 [data-surface="ink"] .cta-prime__s { color: var(--paper-fg-mute); }[data-surface="ink"] .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 12%, transparent); }
+
+/* ── EL CTA DEL ARMAZÓN DENTRO DEL MENÚ ────────────────────────────────────────────────────────
+   `[DECIDIDO owner, 2026-08-28]`: **como el mockup**. Su CTA fijo va en tinta con el menú cerrado
+   y **pasa a AVISO cuando el menú lo tapa** — no sigue a la superficie ni se queda en el color de
+   acción: cambia de rol. Deja de ser «el botón de comprar» y pasa a ser «lo único que hay que
+   mirar en esta pantalla».
+
+   ⚠️ **Por eso `.cta-med` NO está en el rol de ACCIÓN** (`tema-por-instalacion.md` §15) aunque sea
+   el botón de comprar más visible: su color lo manda esta coreografía, no el rol. Su hermano
+   `.cta-prime` —la barra de compra de móvil— sí lo está, y ahí el mockup también lo pinta de
+   acción. Es una diferencia REAL entre las dos piezas, no una incoherencia nuestra.
+   ▶ Y hay tres fuentes del cliente que no coinciden en esto: su implementación dice aviso, su
+   norma de color dice «el amarillo NUNCA es fondo de botón» y su tabla de orden de página dice
+   que la cabecera domina con el color de acción. Se sigue la implementación por decisión suya,
+   con las otras dos anotadas en `DEUDA.md`.
+
+   ⚠️⚠️ **Y el anillo de foco NO puede quedarse como está.** `--focus-color` sigue a la superficie
+   y en el paquete del cliente vale su Amarillo Aviso: un botón de aviso con un anillo de aviso
+   deja el foco de teclado **invisible**, y eso no falla ni avisa. Aquí el anillo pasa a tinta,
+   que sobre el amarillo da 11,26. Es la misma clase de defecto que `#206` encontró en su paleta. */
+[data-surface="ink"] .cta-med {
+    background: var(--attn);
+    color: var(--paper-fg);
+}
+[data-surface="ink"] .cta-med:hover {
+    background: var(--attn);
+    color: var(--paper-fg);
+}
+[data-surface="ink"] .cta-med:focus-visible {
+    outline-color: var(--paper-fg);
+}
+/* El chip del icono invierte con él: sobre el botón de aviso, un velo OSCURO. */
+[data-surface="ink"] .cta-med__ico,
+[data-surface="ink"] .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--paper-fg) 16%, transparent); }
+[data-surface="ink"] .cta-med__ico .tk,
+[data-surface="ink"] .cta-med:hover .cta-med__ico .tk,
+[data-surface="ink"] .cta-med__ico .ic-e2,
+[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 { color: var(--paper-fg); }
+[data-surface="ink"] .cta-med__ico .ic-e2 svg .occ,
+[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--attn); }
 
 /* ====================================================================
    Jerarquía de CTAs — Capa D: adaptación móvil del header.

@@ -61,7 +61,12 @@ class ActionFillTest extends TestCase
         '.bd-btn--solid' => 'el primario del par del editor de invitaciones',
         // site.css
         '.cta-prime' => 'el CTA grande de compra',
-        '.cta-med' => 'el CTA de compra del armazón',
+        // ⚠️⚠️ **`.cta-med` NO está aquí, y no es un olvido** (`DECISIONES #213`). Es el botón de
+        // comprar más visible de la web, pero su color no lo manda el rol: lo manda una
+        // COREOGRAFÍA — tinta con el menú cerrado, AVISO mientras el menú lo tapa—, que es lo que
+        // hace el mockup del 2.º cliente y lo que el owner decidió con las tres fuentes delante.
+        // Su hermano `.cta-prime` (la barra de compra de móvil) sí es acción, y ahí el mockup
+        // también lo pinta de acción: es una diferencia real entre las dos piezas.
         '.cartbar' => 'la barra del carrito: lleva a pagar',
         '.svc-cta--book' => '«Reservar» de servicios',
         '.acct__btn--primary' => 'el primario del cajón de cuenta',
@@ -215,13 +220,14 @@ class ActionFillTest extends TestCase
      */
     public function test_the_inner_parts_of_the_cta_follow_the_fill(): void
     {
+        // ⚠️ Solo las de `.cta-prime`: las de `.cta-med` se separaron en `#213` cuando ese botón
+        // dejó de ser acción. Estaban en reglas COMPARTIDAS por los dos, y partirlas era la mitad
+        // del trabajo que una conversión apresurada se deja.
         $esperado = [
-            '.cta-prime__ico .ic-e2, .cta-med__ico .ic-e2' => 'var(--on-action)',
-            '.cta-prime__ico .ic-e2 svg .occ, .cta-med__ico .ic-e2 svg .occ' => 'var(--action)',
+            '.cta-prime__ico .ic-e2' => 'var(--on-action)',
+            '.cta-prime__ico .ic-e2 svg .occ' => 'var(--action)',
             '.cta-prime__ico .tk' => 'var(--on-action)',
-            '.cta-med__ico .tk' => 'var(--on-action)',
             '.cta-prime__s' => 'color-mix(in srgb, var(--on-action) 70%, transparent)',
-            '.cta-med__s' => 'color-mix(in srgb, var(--on-action) 70%, transparent)',
         ];
 
         $rules = $this->rules();

@@ -17,9 +17,9 @@ return [
         // En MÓVIL el espacio del nav no permite el copy largo: usamos `cta_book`
         // como versión de 1 palabra (controlado por dos `<span>` con clases
         // `__t--desktop` / `__t--mobile` y media query en site.css).
-        'cta_buy' => 'Reservas aquí',
+        'cta_buy' => 'Reservar',
         'cta_buy_from' => 'desde :amount',
-        'cta_book' => 'Reservas aquí',
+        'cta_book' => 'Reservar',
         // Reorganización 2026-05-27: dos desplegables temáticos + dos atajos directos.
         'park' => 'El parque',
         'services' => 'Servicios',

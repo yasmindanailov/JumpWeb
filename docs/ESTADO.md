@@ -449,7 +449,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#211`**.
+> El último usado es **`#213`**.
 > ⚠️ **Y el `#207` volvió a demostrar la regla el 2026-08-28**: el carril C escribió su tanda con
 > `#207` en cinco sitios y, al ir a empujar, el carril A ya se había llevado **`#207` Y `#208`**.
 > Renumerar costó cinco ediciones. ▶ **Y además `#207` está OCUPADO por la base heredada** («Fase
@@ -557,6 +557,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3232 en verde** (21.070 aserciones), medida el 2026-08-28 por el carril C **sobre el árbol
+  CONJUNTO** (su `#213` rebasado encima del `#212` del carril A, el carné QR). ⚠️ **Se MIDIÓ, no se
+  sumó**: en su propio árbol el carril C daba 3.224 · 21.000, evidencia ANTERIOR a la fusión. Tras `#213` (el
+  CTA del armazón alineado al mockup). ▶ **+2 casos y +21 aserciones** en `ArmazonContractTest`: que
+  el CTA **cambie de rol dentro del menú** (tinta → aviso) y que su **anillo de foco deje de ser el
+  amarillo del propio botón** —si no, foco invisible—; y que su forma sea la del mockup (fuente de
+  rótulo en mayúsculas, sin flecha, subtítulo que HEREDA el color). `ActionFillTest` re-apuntado:
+  `.cta-med` sale del rol de acción, que pasa de 13 reglas a 12. **8 mutaciones, las 8 muerden ·
+  sonda de navegador 14/14.** ⚠️ Trampa nueva: Chromium devuelve `color-mix()` como
+  `color(srgb r g b / a)` con canales 0–1, no como `rgba()` — la primera comprobación del velo dio
+  ROJO con el CSS correcto. Antes:
 - Suite **3230 en verde** (21.049 aserciones, `--parallel` **~70 s**), medida el 2026-08-28 a las 07:46 (hora de
   Madrid) por el carril A **sobre el árbol CONJUNTO** —`#210` + el `#211` del carril C + `#212`—, tras rebasar
   el `#212` encima del `#211`. ⚠️ **Se MIDIÓ, no se sumó** (coincide con 3222 + 8 y 20.979 + 70, y eso es

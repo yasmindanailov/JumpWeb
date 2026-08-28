@@ -1207,6 +1207,16 @@ de un solo componente.
 
 ## 15. EL RELLENO DE ACCIÓN — el QUINTO mecanismo (`#209`, 2026-08-28)
 
+> ⚠️⚠️ **CORRECCIÓN (2026-08-28, `#213`), y va delante del texto que corrige: el rol tiene 12
+> reglas, no 13.** `.cta-med` —el CTA del armazón— **salió del rol de ACCIÓN** por decisión del
+> owner: su color no lo manda un rol sino una COREOGRAFÍA (tinta con el menú cerrado, **aviso**
+> mientras el menú lo tapa), que es lo que hace el mockup del 2.º cliente. Su hermano `.cta-prime`
+> —la barra de compra de móvil— sigue en el rol, y ahí el mockup también lo pinta de acción.
+> ▶ **No es una incoherencia nuestra: es una diferencia real entre las dos piezas**, y el detalle
+> —con las tres fuentes del cliente que se contradicen— está en `specs/armazon-y-menu.md` §7.
+> ▶ Y las reglas COMPARTIDAS por `.cta-prime` y `.cta-med` (el glifo, el «occluder», el subtítulo)
+> **hubo que partirlas**: era la mitad del trabajo que una conversión apresurada se deja.
+
 > ⚠️ **Ojo con el número `#207` si lo ves en el código**: es el de la base heredada («Fase 7.7 ·
 > Temporadas»), NO el de esta tanda. Aquí el número se fija al EMPUJAR (`CONVENCIONES §10`) y el
 > carril A se llevó el `#207` y el `#208` mientras esto se escribía.

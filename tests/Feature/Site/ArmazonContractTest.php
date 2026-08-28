@@ -707,6 +707,81 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **El CTA del armazón CAMBIA DE ROL dentro del menú: de tinta a AVISO** (`#213`).
+     *
+     * `[DECIDIDO owner, 2026-08-28]` con las tres fuentes del cliente delante, que **no coinciden**:
+     * su implementación pinta ese botón de aviso mientras el menú lo tapa, su norma de color dice
+     * que el amarillo «nunca» es fondo de botón, y su tabla de orden de página dice que la cabecera
+     * domina con el color de acción. Gana la implementación, por decisión suya.
+     *
+     * ⚠️⚠️ **Y el anillo de foco se asevera aquí porque es la parte que se rompe sola.**
+     * `--focus-color` sigue a la superficie y en el paquete de este cliente vale su **mismo**
+     * Amarillo Aviso: sin la línea que lo cambia, el foco de teclado sobre este botón es
+     * **invisible** — y eso no falla, no avisa y solo lo nota quien no usa ratón.
+     */
+    public function test_the_frame_cta_turns_into_a_warning_inside_the_menu(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        $this->assertArrayHasKey(
+            '[data-surface="ink"] .cta-med', $reglas,
+            'el CTA del armazón ya no cambia de color dentro del menú: se quedaría en tinta sobre '.
+            'la tinta del menú, que es un botón invisible.',
+        );
+
+        $this->assertStringContainsString('var(--attn)', $reglas['[data-surface="ink"] .cta-med']);
+        $this->assertStringContainsString('var(--paper-fg)', $reglas['[data-surface="ink"] .cta-med']);
+
+        $this->assertArrayHasKey(
+            '[data-surface="ink"] .cta-med:focus-visible', $reglas,
+            "El botón pasa a AVISO dentro del menú y NADIE cambia su anillo de foco.\n".
+            "▶ `--focus-color` sigue a la superficie, y en el paquete de este cliente vale su MISMO\n".
+            "  Amarillo Aviso: amarillo sobre amarillo. El foco de teclado desaparece sin que nada\n".
+            '  falle. Es la misma clase de defecto que `#206` encontró en su paleta.',
+        );
+    }
+
+    /**
+     * **Y su FORMA es la del CTA fijo del mockup** (`#213`): rótulo en la fuente de rótulo y en
+     * mayúsculas, sin flecha, y subtítulo que HEREDA el color en vez de calcularlo.
+     *
+     * ⚠️ Lo del subtítulo no es estilo: el botón pinta de **tres** colores distintos —tinta, marca
+     * al pasar el cursor y aviso dentro del menú— así que cualquier token elegido para su texto
+     * fallaría en dos de los tres. Heredar y bajar la opacidad es lo único que vale en los tres.
+     */
+    public function test_the_frame_cta_has_the_shape_of_the_mockup(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        $this->assertStringContainsString(
+            'var(--font-display)', $reglas['.cta-med__t'] ?? '',
+            'el rótulo del CTA ha dejado de ir en la fuente de rótulo. ⚠️ Y va por TOKEN, no por '.
+            'nombre: así una instalación la cambia con `THEME_FONTS` y esto la sigue.',
+        );
+        $this->assertStringContainsString('uppercase', $reglas['.cta-med__t'] ?? '');
+
+        $this->assertStringContainsString(
+            'color: inherit', $reglas['.cta-med__s'] ?? '',
+            'el subtítulo vuelve a calcular su color con un token: fallaría en dos de los tres '.
+            'colores que este botón puede tener.',
+        );
+
+        foreach (['.cta-med__arrow', '.cta-med:hover .cta-med__arrow'] as $muerta) {
+            $this->assertArrayNotHasKey(
+                $muerta, $reglas,
+                "`{$muerta}` ha vuelto: el CTA fijo del mockup NO lleva flecha, y una regla sin ".
+                'marcado que la use es peso muerto en las 12 vistas.',
+            );
+        }
+
+        $this->assertStringNotContainsString(
+            'cta-med__arrow',
+            (string) file_get_contents(resource_path('views/components/site/nav.blade.php')),
+            'la flecha ha vuelto al marcado del CTA.',
+        );
+    }
+
+    /**
      * **Todo enlace del menú lo cierra al pulsarlo.**
      *
      * Mismo motivo que en el cajón: la mitad de los destinos son anclas de la MISMA página, y sin
@@ -1214,6 +1289,42 @@ class ArmazonContractTest extends TestCase
         }
 
         return array_values(array_unique($out));
+    }
+
+    /**
+     * Las reglas de una hoja, por selector NORMALIZADO → su cuerpo.
+     *
+     * ⚠️ Se indexa por selector exacto y no se busca por subcadena: `.cta-med-NO` contiene
+     * `.cta-med`, y una aserción por subcadena pasa con el CSS roto. Este repo lo ha pagado tres
+     * veces en dos días (`#211`).
+     * ⚠️ Y los comentarios se BLANQUEAN conservando longitud: uno pegado al selector se come la
+     * cabecera y el localizador da cero reglas donde hay una.
+     *
+     * @return array<string, string>
+     */
+    private function cssRules(string $path): array
+    {
+        $css = (string) preg_replace_callback(
+            '#/\*.*?\*/#s',
+            fn (array $m): string => str_repeat(' ', strlen($m[0])),
+            (string) file_get_contents($path),
+        );
+
+        $out = [];
+
+        preg_match_all('/([^{}]*)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
+
+        foreach ($rules as $rule) {
+            foreach (explode(',', $rule[1]) as $selector) {
+                $selector = trim((string) preg_replace('/\s+/', ' ', $selector));
+
+                if ($selector !== '' && ! str_starts_with($selector, '@')) {
+                    $out[$selector] = ($out[$selector] ?? '').' '.$rule[2];
+                }
+            }
+        }
+
+        return $out;
     }
 
     /** Literal XPath seguro aunque el texto lleve comillas. */

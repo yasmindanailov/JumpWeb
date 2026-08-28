@@ -1028,3 +1028,78 @@ partir la hoja en reglas, y además que declare `opacity: 1` y `pointer-events: 
   nace oculto · la hamburguesa dice `aria-expanded=false` y enseña rayas · al abrir dice `true`,
   enseña la X, su nombre pasa a «Cerrar menú» y **aparece el CTA en `rgb(242,113,28)`** · al
   volver a pulsarla el menú se cierra · `Escape` sigue cerrando.
+
+---
+
+## 7. La 2c·6 — el CTA del armazón, alineado al mockup (`#213`, 2026-08-28)
+
+> `[DECIDIDO owner, 2026-08-28]`: **como el mockup**, y las cinco diferencias de forma.
+
+### 7.1 ⚠️⚠️ Primero, una medida propia que salió MAL y hay que decirlo
+
+En `#211` este documento afirmó que «el menú del mockup no lleva CTA propio», y el instrumento que
+lo dijo **no imprimió ni un solo botón de esa región**: un barrido que no encuentra nada no
+demuestra que no haya nada. Repetido con control positivo —el extractor tiene que ver el bucle
+`enlacesMenu` del propio menú—, la conclusión **se confirma**: el contenedor del menú tiene **0
+botones** y ningún «Reservar». Pero la conclusión era correcta por casualidad, no por la medida.
+
+### 7.2 ❗❗ El CTA fijo del mockup NO es el color de acción
+
+Medido en `estiloCtaFijo`:
+
+```
+background: menuAbierto ? '#F5C400' : '#101418'      ← AVISO abierto, TINTA cerrado
+color:      menuAbierto ? '#101418' : '#F4F4F1'
+```
+
+El naranja de acción lo usa en el hero, en las zonas y en la barra de móvil. **Su CTA fijo, no.**
+Y ahí hay **tres fuentes del cliente que se contradicen**:
+
+| Fuente | Qué dice del botón «Reservar» de la cabecera |
+|---|---|
+| `Landing PJP Modos` (implementación) | tinta cerrado → **Amarillo Aviso** abierto |
+| `Colores de Marca` §02 (rol del amarillo) | «Resalte tipo marcador y anillo de foco. **Nunca fondo de sección ni botón**» |
+| `Colores de Marca` §14 (orden de página) | cabecera fija → dominante = **`cta.fill`** (Naranja Salto) |
+
+`[DECIDIDO owner]`: **gana la implementación**. Las otras dos quedan anotadas en `DEUDA.md`.
+
+▶ **Consecuencia de arquitectura, y no es menor**: `.cta-med` **sale del rol de ACCIÓN** que `#209`
+le había dado. Su color no lo manda un rol sino una **coreografía**. Su hermano `.cta-prime` —la
+barra de compra de móvil— sí sigue en el rol, y ahí el mockup también lo pinta de acción: es una
+diferencia REAL entre las dos piezas, no una incoherencia nuestra. El rol pasa de 13 reglas a 12.
+
+### 7.3 ⚠️⚠️ Y el anillo de foco NO podía quedarse como estaba
+
+`--focus-color` sigue a la superficie, y en el paquete de este cliente vale **su mismo Amarillo
+Aviso**. Un botón de aviso con un anillo de aviso deja el **foco de teclado invisible** — no falla,
+no avisa, y solo lo nota quien no usa ratón. Dentro del menú el anillo pasa a tinta: **11,26** sobre
+el amarillo. Es la misma clase de defecto que `#206` encontró en su paleta, y esta vez se vio venir.
+
+### 7.4 Las cinco diferencias de forma
+
+| | Antes | Ahora (mockup) |
+|---|---|---|
+| Rótulo | «Reservas aquí», fuente de TEXTO, peso 600, 13 px | **«Reservar», fuente de RÓTULO, MAYÚSCULAS, 17 px** |
+| Flecha | `→` | **no lleva** (retirada del marcado y sus dos reglas) |
+| Subtítulo | mono, mayúsculas, tracking `.10em`, color por token | **plano 11 px, `color: inherit`, opacidad .62** |
+| Chip del icono | 30×22, `rgba(255,255,255,.10)` en crudo | **30×26**, velo por token (`--bg` al 14 %) |
+| Chip dentro del menú | no cambiaba | **invierte**: velo oscuro al 16 % |
+
+⚠️ **Lo del subtítulo no es estilo, es corrección**: el botón pinta de **tres** colores distintos
+—tinta, marca al pasar el cursor y aviso dentro del menú—, así que *cualquier* token elegido para
+su texto falla en dos de los tres. Heredar y bajar la opacidad es lo único que vale en los tres, y
+es también lo que hace el mockup. De paso se va un `rgba(255,255,255,.72)` en crudo.
+
+▶ **La fuente va por TOKEN** (`--font-display`), no por nombre: así una instalación la cambia con
+`THEME_FONTS` y el rótulo la sigue. Verificado en navegador: rinde **Bungee**.
+
+### 7.5 Verificación
+
+- **`ArmazonContractTest` +2 casos** · `ActionFillTest` re-apuntado (`.cta-med` fuera del rol y sus
+  piezas internas separadas de las de `.cta-prime`, que estaban en reglas COMPARTIDAS).
+- **8 mutaciones, las 8 muerden** — incluidas «el foco se queda amarillo sobre amarillo» y «el CTA
+  vuelve al rol de acción».
+- **Sonda de navegador 14/14** (`VERIFICACION-E2E-CAJON.md` §5.quindecies).
+  ⚠️ **Y una trampa nueva del instrumento**: Chromium devuelve un `color-mix()` resuelto como
+  `color(srgb r g b / a)` con los canales en **0–1**, no como `rgba()`. La primera comprobación del
+  velo buscaba `rgba(` y dio ROJO con el CSS correcto.

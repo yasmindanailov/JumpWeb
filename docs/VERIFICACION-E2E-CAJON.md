@@ -1256,26 +1256,33 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
    `--on-action-brand` vale **`#14130F`** (tinta) — el color del rótulo lo elige el CONTRASTE, no el
    gusto: sobre naranja gana tinta.
 
-### A2 · Con color de acción, el botón NO cambia con el fondo
-2. Baja 1,6 pantallas y sube 240 px (ver la trampa de arriba). El CTA de compra del armazón
-   (`.cta-med`) está visible y su `background-color` es **`rgb(242, 113, 28)`** con el rótulo en
-   `rgb(20, 19, 15)`.
-3. Pasa el cursor por encima: el fondo pasa a **`rgb(213, 99, 25)`** — el `#D56319` que declara el
-   sistema del cliente, **derivado ×0,88, no tecleado**.
-4. Abre el menú (☰). La barra gana `data-surface="ink"`.
-5. **El CTA sigue siendo `rgb(242, 113, 28)`**: idéntico sobre papel y sobre tinta, que es la regla
-   del cliente. ⚠️ Y mira al lado: el botón **fantasma** «Registrarse» SÍ se ha adaptado al fondo
-   oscuro — es la otra mitad de la regla («el secundario cambia según el fondo»).
+> ⚠️⚠️ **CADUCADO EN PARTE por `#213`, y la corrección va delante.** Los pasos 2–5 conducían
+> `.cta-med` —el CTA del armazón— y **ese botón ya NO es de acción**: por decisión del owner cambia
+> de rol dentro del menú (tinta cerrado → aviso abierto, como su mockup). Los pasos reescritos
+> están abajo.
+> ❗ **Y con eso el producto se queda SIN UN SITIO donde se pueda VER la independencia de
+> superficie**: era el único botón de acción que entraba en un ámbito de tinta. El mecanismo sigue
+> entero —lo fija `SurfaceScopeTest::test_the_action_role_keeps_its_indirection`, y el bloque B de
+> abajo aún lo demuestra en vivo—, pero **de la mitad A ya no queda demostración visual**. Volverá
+> a haberla el día que un botón de acción viva sobre una sección oscura.
 
-### B · Sin color de acción, el botón SÍ sigue a la superficie
+### A2 · Con color de acción, el relleno es el del cliente
+2. Baja hasta la sección de tarifas. El CTA de la tarifa destacada (`.price__cta`) tiene
+   `background-color` **`rgb(242, 113, 28)`** con el rótulo en `rgb(20, 19, 15)`.
+3. Pasa el cursor por encima de un `.btn` sólido: el fondo pasa a **`rgb(213, 99, 25)`** — el
+   `#D56319` que declara el sistema del cliente, **derivado ×0,88, no tecleado**.
+4. Abre el menú (☰). La barra gana `data-surface="ink"`. ⚠️ **El CTA del armazón se vuelve
+   AMARILLO**, no naranja: eso es `#213` y es correcto, no un fallo de este mecanismo.
+5. Mira al lado: el botón **fantasma** «Registrarse» SÍ se ha adaptado al fondo oscuro — es la otra
+   mitad de la regla del cliente («el secundario cambia según el fondo»).
+
+### B · Sin color de acción, el relleno SÍ sigue a la superficie
 6. Con el menú abierto, borra el conmutador en vivo:
    `s = document.getElementById('jj-theme'); s.textContent = s.textContent.replace(/--(on-)?action-brand[^;]*;/g, '')`.
    Es exactamente lo que ve una instalación que no ha declarado color de acción.
-7. **Dentro del menú el botón se vuelve CLARO** (`rgb(244, 244, 241)`): el fallback resuelve contra
-   el `--fg` de la superficie de tinta.
-8. Cierra el menú (Esc). **Fuera vuelve a ser tinta oscura** (`rgb(16, 20, 24)`) — la conducta
-   histórica del producto, intacta.
-9. Cero errores de JavaScript en toda la pasada.
+7. Cierra el menú y mira `.price__cta`: **se vuelve TINTA** (`rgb(20, 19, 15)`), la conducta
+   histórica del producto. El fallback resuelve contra el `--fg` de su superficie.
+8. Cero errores de JavaScript en toda la pasada.
 
 ### Lo que el guion no cubre y hay que mirar con el ojo
 - **Las otras 12 reglas de acción**: el guion solo conduce `.cta-med`. Los demás (`.btn`,

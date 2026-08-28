@@ -158,7 +158,9 @@
                     <span class="cta-med__s">{{ __('landing.nav.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
                 @endif
             </span>
-            <span class="cta-med__arrow" aria-hidden="true">→</span>
+            {{-- ⚠️ Aquí había una flecha `→`. **El CTA fijo del mockup no la lleva** y se retira con
+                 la alineación de `#213`: el botón ya dice a dónde va con su rótulo y su icono, y una
+                 flecha de más en el elemento más repetido de la web es ruido en las 12 vistas. --}}
         </button>
 
         {{-- **La hamburguesa ABRE Y CIERRA, y enseña una X cuando está abierta.**
