@@ -2,8 +2,9 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 19:40 — carril A (la FORMA del panel,
-> `#223`, `#224`, `#232` y `#234`) sobre el carril C (el mockup 1:1, `#225`→`#233`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28 — carril A (la FORMA del panel y los
+> menores: `#223`, `#224`, `#232`, `#234`, `#236`) y carril C (el mockup 1:1: `#225`→`#235`,
+> sesión CERRADA)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -853,7 +854,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3355 en verde** (22.088 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
+- Suite **3355 en verde** (22.096 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
   20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
   panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet, `#234` su
   pulido y **`#236` los menores**, que suman **30 casos nuevos** —`AdminNavigationTest`,
@@ -1523,6 +1524,65 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 # ❗ SI ENTRAS NUEVO (2026-08-28, cierre anterior del carril C): el TEMA tiene sus CINCO mecanismos y el ARMAZÓN pasó por el OJO del owner
 
 **`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
+
+## ▶ La sesión del carril C del 2026-08-28 (tarde): **el mockup 1:1** — `#225` → `#235`
+
+`[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo mismo en
+el footer y el hero del footer». **Todo empujado y verde.**
+
+| | |
+|---|---|
+| `#225` | La **barra de móvil ES el mismo botón** que el racimo de la cabecera. Medido antes: **100 px de alto contra 54**, chip 64×42 contra 30×26 y **las dos mitades naranjas**. `.cta-prime` retirado entero ⇒ **el rol de ACCIÓN se queda sin ningún CTA de armazón** |
+| `#226` | La **tira de marca** sube al hero y **VIAJA** (filo superior → subrayado, 28 px bajo la tarjeta). El hero se **vacía** (`[DECIDIDO owner]`) ⚠️⚠️ y aparece que **`html, body { overflow-x: hidden }` rompía TODOS los `sticky`**: el hero **nunca se pegó** desde `#195` y dejaba **569 px de banda vacía** |
+| `#227` | El **CTA de la primera pantalla**, con relevo al armazón (se apaga cuando el otro se enciende, atado al mismo token) ⚠️ destapa **once reglas** que pintaban el CTA de amarillo dentro del hero |
+| `#228` | El **menú a dos columnas** con vista previa del destino señalado, y las manchas de marca. El subtítulo **se muda** a la tarjeta |
+| `#229` · `#233` | El **hero del CIERRE**. `#229` lo hizo con un pegajoso y **era el gesto equivocado**; `#233` lo rehace con `position: fixed` y el recorrido **después del `</footer>`**: la tarjeta crece **mientras el pie pasa por detrás** |
+| `#230` | El **estado de apertura había desaparecido de la web entera** — lo vio la suite completa, no las tandas acotadas |
+| `#231` | El **minijuego** «Salta la ciudad», en **trozo aparte de 12 kB** (`import()` dinámico) |
+| `#235` | El cierre **1:1 de verdad**: tag de la ciudad, rol de acción en el CTA, los CTA **se apartan al jugar**, el **espacio arranca** la partida, y el **pie a una fila** |
+
+### ❗❗ Lo que MÁS importa que sepas de esta tanda
+
+1. **DOS hallazgos que afectan a TODOS los carriles, no solo al tema:**
+   - `overflow-x: hidden` en `html, body` convierte al elemento en **contenedor de scroll** y rompe
+     cualquier `position: sticky`. Arreglado con `clip` y guardado por
+     `StickySurvivesTheRootOverflowTest`. **Si añades un sticky en cualquier vista, ya funciona.**
+   - **Un selector más ancho que su intención no falla el día que se escribe: falla el día que
+     alguien añade el segundo caso que casa.** Once reglas decían `[data-surface="ink"] .cta-med`
+     cuando su propio comentario decía «dentro del menú».
+2. ⚠️⚠️ **Cuando el cambio es de ARMAZÓN —algo que se pinta en las doce vistas— el radio de las
+   guardas afectadas NO se adivina por el nombre del fichero.** Pasó dos veces: el estado de
+   apertura lo cazó `HeroStatusTest` y el eslogan del pie lo cazó un test de **Ajustes**. Las tandas
+   acotadas iban verdes las dos veces. ▶ **Empuja a mitad de sesión**, no solo al final.
+3. ⚠️ **Si el encargo es «1:1», saca el bloque ENTERO del artboard.** `#229` y `#231` lo
+   reconstruyeron de memoria y el owner tuvo que corregir el cierre **dos veces** (`#233`, `#235`).
+   Leerlo entero son 7 KB y cuesta una lectura.
+4. ⚠️ **Culpar al instrumento es la SEGUNDA hipótesis, no la primera.** En `#235` diagnostiqué dos
+   veces el parser de una guarda y la causa era **un `</div>` de más** en mi propio marcado.
+5. ⚠️⚠️ **La numeración de `DECISIONES.md` colisionó DOS veces** con el otro carril en una sola
+   sesión. **Mirar el remoto al ELEGIR número no basta: hay que volver a mirarlo al PUBLICAR**, y
+   renumerar **antes** de fusionar (después, una sustitución global corrompe las entradas del otro).
+
+### ▶ POR DÓNDE SIGUE ESTE CARRIL
+
+0. ❗ **El OJO del owner**, que es lo único que falta de todo lo anterior. Un navegador headless
+   mide, no valida (`CONVENCIONES §3.bis`). Lo más importante de mirar: **el tacto del salto** del
+   minijuego y **el relevo del CTA** al bajar por la portada.
+1. ⬜ **Los ICONOS del canvas** — el encargo pendiente más grande. `Iconos PJP.dc.html` declara
+   **47 iconos UI + 3 cargadores + 14 zonas (7 familias) + 4 estados**, en LOTES de exploración con
+   variantes marcadas «ACTUAL» / «Mi apuesta». ⚠️ **Antes de empezar hay una decisión del owner sin
+   tomar: ¿el set entra en el PRODUCTO o en el paquete de tema del cliente?** El repo no lleva marca
+   de nadie (`#1`), y eso cambia dónde aterrizan los 47. ⚠️ Y hay que respetar
+   `SidebarIconParityTest`, que obliga a que la geometría del cajón sea la del sistema de diseño.
+2. ⬜ **El contenido real del cliente** (productos, precios, textos). Necesita datos del owner.
+3. ⚠️ **Dos cosas abiertas del cierre, dichas al owner y sin respuesta suya:**
+   - El **pie queda tapado** por la tarjeta de cierre en cuanto se ancla — es lo que hace el mockup
+     (`z-index: 210`), pero deja una franja estrecha para leer sus 14 enlaces. Si molesta, se
+     retrasa el anclaje.
+   - El titular del cierre usa **nuestro copy** (`VAMOS / A SALTAR`) con la **estructura** del
+     mockup. Si lo quiere literal (`¿NOS VEMOS / EN EL AIRE HOY?`) son tres claves de idioma.
+
+---
 
 ## ▶ Lo que hizo esta sesión del carril C, en una línea cada cosa
 

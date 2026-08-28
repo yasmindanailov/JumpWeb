@@ -2491,9 +2491,28 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > declaraciones, 53 duraciones, 20 curvas, y **200 de los 220 usos de curva eran `ease`**— y
 > después: **608 usos de token, cero literales fuera de la escala**.
 >
-> ❗❗ **CON ESTO EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE.** Lo que queda es del owner: su ojo
-> en navegador (quince tandas), cuál de las tres variantes de «El parque», y el aviso de contraste
-> AA del color de acción. ▶ La tanda **3 (las secciones)** sigue **fuera de alcance por decisión
+> ✅ **EL CARRIL C REABRE Y HACE EL MOCKUP 1:1** (2026-08-28 tarde, `#225` → `#235`,
+> `[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo mismo
+> en el footer y el hero del footer»). Once cortes:
+> - `#225` la barra de móvil **es el mismo botón** que el racimo (medido: 100 px de alto contra 54,
+>   chip 64×42 contra 30×26 y las dos mitades naranjas). `.cta-prime` retirado.
+> - `#226` la **tira de marca** sube al hero y **viaja** · ⚠️⚠️ y aparece que
+>   `html, body { overflow-x: hidden }` **rompía TODOS los `sticky`**: el hero de la portada
+>   **nunca se pegó** desde `#195` y dejaba **569 px de banda vacía**.
+> - `#227` el CTA de la **primera pantalla**, con relevo al armazón · ⚠️ destapa que once reglas
+>   pintaban el CTA de amarillo dentro del hero (selector más ancho que su intención).
+> - `#228` el **menú a dos columnas** con vista previa · `#229`+`#233` el **hero del cierre** ·
+>   `#230` el estado de apertura, que **había desaparecido de la web entera**.
+> - `#231` el **minijuego** «Salta la ciudad», en trozo aparte (12 kB) · `#235` el cierre **1:1 de
+>   verdad**: tag de la ciudad, rol de acción, CTA que se apartan al jugar y el espacio que arranca.
+> ▶ **La lección que más se repitió: leer el bloque ENTERO del artboard sale más barato que
+> reconstruirlo de memoria dos veces.**
+>
+> ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
+> del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
+> AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas
+> (47 UI + 3 cargadores + 14 zonas — con la decisión previa de si entran en el PRODUCTO o en el
+> paquete de tema) y el **contenido real del cliente**. ▶ La tanda **3 (las secciones)** sigue **fuera de alcance por decisión
 > suya**: «del canvas solo se toma el sistema de diseño; el resto son pruebas».
 >
 > ❗❗ **Lo que falta para que la landing sea 1:1 con el mockup, medido**: el **QUINTO mecanismo, el
