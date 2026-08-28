@@ -2081,6 +2081,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       ❗ **y una responsabilidad NUEVA**: esta pantalla es donde se **acredita la visita** de un cliente
       y de ahí salen sus JumpPoints (`[DECIDIDO owner]`). ⚠️ **No puede colgar de «se abrió la ficha»**:
       la ficha se abre varias veces por cliente y también tecleando un correo.
+      ✅ **Y LAS DOS SUPERFICIES DEL CARNÉ, EN EL ÁRBOL (2026-08-28 por la mañana, `#212`, spec §9.6)**:
+      `GET /me/card/png` (los MISMOS bytes que el adjunto del correo; el QR lo dibuja el servidor porque
+      el chunk estaba a 0,36 KiB del techo) + `png_url` en el contrato · la zona **«Mi carné»** del cajón
+      (tercera del índice, icono `qr`; imagen con `?v=issued_at`, token en grupos de 4 para dictarlo,
+      descargar, renovar con confirmación) · **«Rotar carné QR»** en `ViewUser` (el `cards.rotated` lleva al
+      OPERADOR de actor). `[DECIDIDO owner]`: **el panel NO declara menores**. +8 tests PHP · JS 773 → 790 ·
+      headless **14/14** · techos por feature (chunk 247, payload 8.550). Sigue 🟦 solo por el OJO del owner.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

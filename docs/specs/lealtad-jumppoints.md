@@ -357,3 +357,57 @@ correctos y no se tocan.** Lo que la revisión cambia es §4.2: deja de ser una 
 ser **una regla por fuente**, con la fuente «visita» apoyada en la pantalla de puerta y la fuente
 «compra» conservando el retardo que impide el agujero de ingresos. **§8.2 es lo que no se puede
 perder**: es la línea entre un programa de fidelización y un grifo.
+
+---
+
+## 9. Resumen de UNA página para el ✅ del owner (2026-08-28, carril A; `DECISIONES #212`·3)
+
+> El owner pidió repasar la spec antes de aprobarla («quiero repasarla antes»). Esto es lo que dice,
+> sin añadir nada: cada línea remite a su sección. **No se diseña la ejecución hasta su ✅.**
+
+**Qué es (§2, §4.1, §4.4).** Un programa de puntos («JumpPoints») con **ledger append-only** —una
+fila por evento, nunca se actualiza ni se borra; el saldo es la suma— y **vales en especie**
+(catálogo configurable: coste en puntos + descripción) que se canjean **en la puerta**, enseñando el
+carné: el empleado los marca usados (idempotente, como las entradas). Sin dinero de por medio: el
+subsistema queda **fuera del núcleo de pagos** (§5), pero **se protege como si fuera dinero** (§4.5).
+
+**Cómo se ganan (§8, `[DECIDIDO owner]` 2026-08-25).** No hay una regla global: hay **una por
+FUENTE**, y lo configurable es **cuántos** puntos da cada fuente, **no cuándo se abren**:
+- **Visita** acreditada en la pantalla de puerta («Registrar visita», el hecho que ya existe:
+  `customer_visits`, `identidad-qr-puerta.md` §9.4) → puntos **disponibles al instante**.
+- **Compra** pagada → puntos que se abren **después de la visita** (§4.2), sobre lo pagado online +
+  en puerta según el ledger de dinero (§4.3), **truncando** los decimales. ❗ **§8.2: si se abrieran al
+  pagar, se reabre el agujero** «compra → canjea → reembolsa» que §4.2 cierra por construcción.
+- Un reembolso anterior a la visita anula puntos que **nunca fueron gastables**; posterior, un apunte
+  negativo y, si el saldo quedara en rojo, ajuste con motivo y aviso al operador — nunca un bloqueo.
+- Si una reserva **cambia de fecha**, sus puntos se abren mirando la reserva (§4.2·2), no la fecha vieja.
+
+**Cómo caducan (§4.6).** Por **inactividad**, configurable en meses, con **aviso previo** por correo.
+Es la ÚNICA pieza que depende del **cron**, que sigue sin demonio en staging (`#115`): se construye y
+se prueba en local **la última**, y no se verifica de punta a punta hasta que el cron se desbloquee.
+
+**Dónde se ve (§4.8).** Cajón: saldo, historial, catálogo, canjear, mis vales — ⚠️ **la adición más
+cara al cajón** de la Fase 6 (varias pantallas; el techo del chunk se sube por feature, como hoy).
+Puerta: vales activos + saldo, marcar usado. Panel: interruptor, tasas por fuente, catálogo, ajuste
+manual con motivo, **vales emitidos sin usar** (es stock que alguien repone). API primero
+(`openapi/v1.yaml` manda).
+
+**Lo que cuesta de verdad (§4.5, §5).** El canje es una carrera idéntica al aforo: dos canjes a la vez
+= dos vales por el precio de uno. Se resuelve con una operación atómica condicionada, **su fichero
+entra en el `CRITICAL_RE` del `pre-push`** y necesita **su propio verificador con `pcntl_fork` sobre
+MySQL real** (la suite en SQLite no puede verlo, `SUITE-04`). Y `anonymize()` tiene que decidir qué
+hace con el ledger y los vales de un titular suprimido (`RGPD-01`).
+
+**Lo que te toca decidir para el ✅** (con la propuesta del agente delante):
+1. **El modelo de §8 tal cual** — dos fuentes, la compra abre tras la visita, cuántos puntos por
+   fuente es un ajuste del panel. *Propuesta: ✅.*
+2. **Las tasas iniciales** (ajustes, no código): puntos por **visita** y puntos por **euro** de
+   compra. *Propuesta: 10 por visita, 1 por euro; se cambian desde el panel.*
+3. **La caducidad**: meses de inactividad y con cuánta antelación se avisa. *Propuesta: 12 meses,
+   aviso 30 días antes.*
+4. **El catálogo inicial** de recompensas (nombre + coste): tres o cuatro entradas bastan para
+   arrancar; se editan desde el panel.
+5. **Al anonimizar** un titular: *propuesta: el ledger se conserva SIN titular (sumas históricas del
+   parque) y sus vales sin usar se cancelan* — o se borra todo con la cuenta.
+6. **El orden de corte** (§4.6 lo impone en parte): ledger + fuentes → cajón → puerta → panel →
+   caducidad al final. *Propuesta: ese.*

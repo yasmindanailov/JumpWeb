@@ -143,6 +143,8 @@ class SidebarIconParityTest extends TestCase
             // `receipt` («Mis pedidos», 2026-08-24) y `users` («Menores a cargo», Fase 6 · C, 2026-08-27):
             // los dos nacieron con su zona, y el cajón lleva su copia.
             'receipt', 'users',
+            // `qr` («Mi carné», Fase 6 · A, 2026-08-28, `specs/identidad-qr-puerta.md` §9.6 B·3).
+            'qr',
         ] as $icono) {
             $this->assertFileExists(
                 resource_path("views/components/icons/{$icono}.blade.php"),

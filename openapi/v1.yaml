@@ -1691,6 +1691,41 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/card/png:
+    get:
+      tags: [Cuenta]
+      operationId: getMyCardImage
+      summary: Mi carné QR como imagen
+      description: |
+        El carné activo dibujado como PNG (`specs/identidad-qr-puerta.md` §9.6 B·1): **los mismos
+        bytes que el adjunto `carne-qr.png` del correo de confirmación** (corrección H, zona de
+        silencio de 4 módulos). Es lo que la zona «Mi carné» pinta y ofrece descargar; su URL viaja en
+        `CustomerCard.png_url`. Si el titular aún no tiene carné, se emite en ese momento, como en
+        `GET /me/card`.
+
+        **404** cuando el carné no se puede dibujar (`token` nulo: la clave de cifrado del servidor
+        rotó) — rota el carné y vuelve a pedirla. `no-store`, como toda respuesta autenticada: es una
+        credencial de puerta.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: La imagen.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/dependents:
     get:
       tags: [Cuenta]
@@ -5117,7 +5152,7 @@ components:
         El carné QR del titular (`specs/identidad-qr-puerta.md` §4.1, §4.5). `token` es el payload
         del QR tal cual: `JW` + 17 caracteres aleatorios + 1 de control, en Crockford Base32
         (`0-9 A-Z` sin `I L O U`).
-      required: [token, issued_at]
+      required: [token, issued_at, png_url]
       additionalProperties: false
       properties:
         token:
@@ -5128,6 +5163,13 @@ components:
         issued_at:
           type: string
           format: date-time
+        png_url:
+          type: string
+          format: uri
+          nullable: true
+          description: |
+            La URL de `GET /me/card/png` —el carné como imagen, los mismos bytes que el adjunto del
+            correo—, compuesta por el servidor. `null` cuando `token` es `null`: no hay nada que dibujar.
 
     Dependent:
       type: object

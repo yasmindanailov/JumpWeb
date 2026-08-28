@@ -1330,6 +1330,16 @@ return [
                 'throttled' => 'Ya se envió un enlace hace poco. Espera un minuto antes de volver a enviarlo.',
                 'blocked' => 'No se puede enviar el enlace a esta cuenta.',
             ],
+            // El carné QR (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·5): rotar desde la ficha.
+            'rotate_card' => [
+                'label' => 'Rotar carné QR',
+                'modal_heading' => 'Rotar el carné QR del cliente',
+                'modal_description_active' => 'El carné actual (emitido el :date) dejará de valer EN EL ACTO: el del correo y cualquier copia impresa. Se emite uno nuevo, que el cliente verá en «Mi carné» y en su próxima confirmación de pedido.',
+                'modal_description_none' => 'Este cliente todavía no tiene carné. Se emitirá uno nuevo, que verá en «Mi carné» y en su próxima confirmación de pedido.',
+                'submit' => 'Rotar carné',
+                'success' => 'Carné rotado: el anterior ya no vale y el cliente tiene uno nuevo.',
+                'blocked' => 'No se puede rotar el carné de esta cuenta.',
+            ],
             'anonymize' => [
                 'label' => 'Anonimizar',
                 'modal_heading' => 'Anonimizar usuario (RGPD)',

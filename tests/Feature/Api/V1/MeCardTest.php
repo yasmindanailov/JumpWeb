@@ -7,6 +7,9 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CardToken;
 use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Services\QrCode;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Encryption\Encrypter;
 use Tests\Feature\Api\ApiTestCase;
 
 /**
@@ -54,6 +57,7 @@ class MeCardTest extends ApiTestCase
     {
         $this->getJson(self::PATH)->assertUnauthorized()->assertValidResponse(401);
         $this->postJson(self::PATH.'/rotate')->assertUnauthorized()->assertValidResponse(401);
+        $this->getJson(route('api.v1.me.card.png'))->assertUnauthorized()->assertValidResponse(401);
     }
 
     public function test_the_token_never_leaks_through_the_model_serialization(): void
@@ -62,6 +66,53 @@ class MeCardTest extends ApiTestCase
         $card = app(CustomerCards::class)->ensureFor($user);
 
         $this->assertArrayNotHasKey('token', $card->toArray());
-        $this->assertSame(['token', 'issued_at'], array_keys($this->actingAs($user)->getJson(self::PATH)->json()), 'el recurso publica exactamente dos campos');
+        $this->assertSame(['token', 'issued_at', 'png_url'], array_keys($this->actingAs($user)->getJson(self::PATH)->json()), 'el recurso publica exactamente tres campos');
+    }
+
+    // ─── La IMAGEN (§9.6 B·1) ─────────────────────────────────────────────────────────────────
+
+    /**
+     * El PNG son **los MISMOS bytes que el adjunto del correo**: lo que el cliente descarga de «Mi
+     * carné» es, byte a byte, lo que le llegó en la confirmación. Y pedir la imagen NO emite un
+     * segundo carné ni deja rastro en caché (`no-store`, `RGPD-04`).
+     */
+    public function test_the_png_is_the_same_image_the_email_attaches_and_is_not_stored(): void
+    {
+        $user = User::factory()->create();
+        $card = $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(route('api.v1.me.card.png'), $card->json('png_url'), 'la URL de la imagen la compone el servidor');
+
+        $response = $this->actingAs($user)->get(route('api.v1.me.card.png'))->assertOk();
+
+        $this->assertStringContainsString('image/png', (string) $response->headers->get('content-type'));
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('carne-qr.png', (string) $response->headers->get('content-disposition'));
+        $this->assertStringStartsWith("\x89PNG", (string) $response->getContent());
+        $this->assertSame(QrCode::png((string) $card->json('token')), $response->getContent(), 'los MISMOS bytes que el adjunto del correo');
+        $this->assertSame(1, CustomerCard::count(), 'la imagen no emite un segundo carné');
+    }
+
+    /**
+     * Con la clave de cifrado rotada (§8.1) no hay nada que dibujar: el JSON lo dice (`token` y
+     * `png_url` nulos) y la imagen responde 404 en vez de un 500 — el titular rota el carné y listo.
+     */
+    public function test_with_the_encryption_key_rotated_the_image_is_404_and_png_url_is_null(): void
+    {
+        $user = User::factory()->create();
+        app(CustomerCards::class)->ensureFor($user);
+
+        Model::encryptUsing(new Encrypter(Encrypter::generateKey('AES-256-CBC'), 'AES-256-CBC'));
+
+        try {
+            $json = $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200);
+
+            $this->assertNull($json->json('token'));
+            $this->assertNull($json->json('png_url'));
+            $this->actingAs($user)->getJson(route('api.v1.me.card.png'))->assertNotFound()->assertValidResponse(404);
+            $this->assertSame(1, CustomerCard::count(), 'no se emite otro carné a escondidas: rotar es un acto del titular');
+        } finally {
+            Model::encryptUsing(null);
+        }
     }
 }

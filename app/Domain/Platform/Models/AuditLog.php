@@ -185,6 +185,7 @@ class AuditLog extends Model
         'users.anonymized',
         'users.password_reset_sent',
         'users.send_reset_blocked',
+        'users.rotate_card_blocked',        // «Rotar carné» del panel rechazada entre render y submit (`specs/identidad-qr-puerta.md` §9.6 B·5)
 
         // ── Menores a cargo (Fase 6 · C, `specs/menores-a-cargo.md`) — target = User; sin PII ──
         'dependents.added',                 // payload: dependent_id (nunca el nombre ni la fecha)

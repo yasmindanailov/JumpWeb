@@ -11246,3 +11246,44 @@ pasa en falso. `.nav-cta-med-NO` contiene `.nav-cta-med`, y `client-favicon.svg`
 **Verificación**: +6 casos (3 en `ArmazonContractTest`, 3 en `ClientThemePackageTest`) ·
 **10 mutaciones, las 10 muerden** · **sonda de navegador 15/15**
 (`VERIFICACION-E2E-CAJON.md` §5.quaterdecies).
+
+
+## #212 · 2026-08-28 · [DECIDIDO owner] El siguiente paso son las DOS superficies del carné QR — «Mi carné» en el cajón y «Rotar carné» en el panel —, el panel NO declara menores, y JumpPoints espera su repaso; y la tanda, EJECUTADA
+
+**Las tres respuestas del owner** (pregunta simple con opciones, tras `#210`):
+1. **Siguiente = las dos fichas del carné** de `DEUDA.md` (antes que su OJO sobre menores/puerta y
+   que JumpPoints). Coste anunciado: ~1 tanda; toca `resources/js/sidebar/**` y el sistema de
+   diseño (un icono), territorio que el carril C también pisa.
+2. **El PANEL NO declara menores de un cliente** — solo el titular desde su cuenta (spec de menores
+   §4.2); el mostrador ASIGNA. Cierra el `[PENDIENTE: owner]` de `identidad-qr-puerta.md` §9.5 sin
+   trabajo y con el RGPD más limpio: el parque no teclea datos de menores.
+3. **JumpPoints: «quiero repasarla antes»** del ✅ al modelo de §8 (puntos por FUENTE: visita
+   acreditada en puerta + compra pagada con retardo). El resumen de una página está en
+   `specs/lealtad-jumppoints.md` **§9**; no se diseña la ejecución hasta su ✅.
+
+**La tanda** (`identidad-qr-puerta.md` **§9.6**, decisiones B·1–B·6):
+- **B·1 · el QR lo dibuja el SERVIDOR** (`GET /me/card/png`: los MISMOS bytes que el adjunto del
+  correo, probado byte a byte; `png_url` en el recurso, como `pdf_url` en el waiver). Por tres razones
+  medidas: el chunk estaba a 0,36 KiB del techo y un codificador de QR pesa ≥ 8 KiB; un solo dibujo
+  para correo, web y app; la CSP y la cookie de sesión ya lo permiten en un `<img>` del mismo origen.
+- **B·2 · la zona `card`** (tercera del índice): imagen 264×264 con `?v=issued_at` —sin la versión, un
+  `<img>` con el mismo `src` no se vuelve a pedir y renovar dejaba el QR viejo dibujado—, el token en
+  grupos de 4 para DICTARLO si la cámara falla, «Descargar (PNG)», «Renovar carné» con confirmación
+  explícita («deja de valer en el acto», §4.5), y los dos estados degradados (clave rotada → renuévalo;
+  401 → vuelve a entrar). Cero CSS nuevo.
+- **B·5 · «Rotar carné QR» en `ViewUser`**, con el patrón de defensa de la ficha: `users.manage` +
+  solo clientes/nunca uno mismo/nunca anonimizada, confirmación que dice si hay carné y desde cuándo,
+  `fresh()` + re-check, `CustomerCards::rotate()` — el `cards.rotated` lleva al **operador** de actor y
+  al titular de target, que es lo que distingue una rotación del mostrador de una del cliente. NO cierra
+  sesiones (para eso está anonimizar/bloquear).
+
+**Verificación.** `MeCardTest` 7 · `RotateCardActionTest` 6 (visible/oculta ×4, rota y audita al
+operador, emite sin carné previo, y **el re-check entre render y submit no rota nada**; ⚠️ «staff sin
+permiso» resultó ser «la ficha entera le está vedada», 403 medido) · `node --test` 773 → **790** ·
+contrato ✓ · paridad de iconos ✓ · **headless 14/14** (`card-zone-probe.js`; el único rojo de la
+primera pasada era el selector del guion, que casaba con el catálogo oculto). Techos por feature:
+chunk **243 → 247** (medido 246,29) y payload con sesión **7.800 → 8.550** (medido 8.472). Suite en
+verde al cierre (cifra en `ESTADO.md`).
+
+**Pendiente del owner**: su OJO sobre la zona (móvil y escritorio) y la acción del panel, el LECTOR
+real con un PNG descargado desde la web, y el ✅ o los cambios a JumpPoints (§9 de su spec).

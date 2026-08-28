@@ -13,6 +13,7 @@ import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 import PrivacyZone from '../account/zones/PrivacyZone.vue';
 import DependentsZone from '../account/zones/DependentsZone.vue';
+import CardZone from '../account/zones/CardZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
 import RegisterZone from '../account/zones/RegisterZone.vue';
 import ForgotZone from '../account/zones/ForgotZone.vue';
@@ -154,6 +155,14 @@ const signIn = () => store.go(ZONES.LOGIN);
         <!-- Menores a cargo (Fase 6 · C): declarar, quitar y firmar la exención en su nombre. -->
         <DependentsZone
             v-else-if="store.zone === ZONES.DEPENDENTS"
+            :messages="messages"
+            :auth="auth"
+            :account="account"
+            :ui="ui" />
+
+        <!-- Mi carné QR (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6): verlo, dictarlo, descargarlo, renovarlo. -->
+        <CardZone
+            v-else-if="store.zone === ZONES.CARD"
             :messages="messages"
             :auth="auth"
             :account="account"

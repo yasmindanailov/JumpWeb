@@ -661,3 +661,109 @@ empieza sin su ✅.
 4. **`Livewire::test` no pasa por `SetAdminLocale`**: el zh_CN se fija con `app()->setLocale()` en el test.
 5. **`JsonResource` decide el 201 por `wasRecentlyCreated`**: un GET que crea bajo demanda tiene que
    fijar su código a mano.
+
+### 9.6 Las DOS superficies del carné — diseño de ejecución y ejecución (2026-08-28 por la mañana, carril A, `DECISIONES #212`)
+
+> `[DECIDIDO owner, 2026-08-28]`: tras `#210`, el owner eligió como siguiente paso **las dos fichas de
+> `DEUDA.md`** que §9.4·6 dejó fuera: la zona **«Mi carné»** del cajón y la acción **«Rotar carné»** de
+> la ficha de usuario del panel. Y contestó la pregunta de §9.5: **el PANEL NO declara menores** —solo
+> el cliente desde su cuenta (spec de menores §4.2); el mostrador ASIGNA—. Queda cerrada.
+> ⚠️ Toca `resources/js/sidebar/**` y añade un icono al sistema de diseño
+> (`resources/views/components/icons/qr.blade.php`): territorio que el carril C también pisa —
+> `git pull --rebase` antes de empujar, como con `#210`.
+
+**Decisiones `[DECIDIDO agente]`, cada una con su porqué**
+
+- **B·1 · El QR lo pinta el SERVIDOR: `GET /me/card/png`** (`image/png`, `no-store` del grupo,
+  `throttle:30,1,card-png`), que devuelve **`QrCode::png($token)`: los MISMOS píxeles que el adjunto
+  del correo**. Tres razones, las tres medidas: (1) el chunk del cajón está en **242,64 de 243 KiB** y
+  un codificador de QR en el navegador pesa ≥ 8 KiB minificados —una subida por feature para una
+  imagen que el servidor ya sabe dibujar—; (2) **un solo dibujo** para correo, web y app: lo que el
+  cliente imprime desde la web es byte a byte lo que le llegó por correo; (3) la CSP del sitio admite
+  `img-src 'self'`, y la cookie de sesión viaja con un `<img>` del mismo origen (Sanctum lo trata como
+  *stateful* por el `Referer`, que la `Referrer-Policy` del sitio manda completo en mismo origen —
+  medido en `#210` con el `Referer` del `curl`). Con `plainToken()` a `null` (clave rotada, §8.1) el
+  PNG responde **404** (no hay nada que dibujar; el JSON ya dice `token: null` y ninguna pantalla pide
+  la imagen en ese estado). **La URL la compone el servidor**: `CustomerCard.png_url` entra en el
+  recurso y en el contrato (`nullable`, como `token`), igual que `pdf_url` en el waiver — el cajón no
+  compone rutas de la API a mano (`urls`, `DECISIONES #38`).
+- **B·2 · La zona `card`** (`ZONES.CARD`, tercera entrada del índice, tras «Mis pedidos»: es lo que se
+  enseña en la puerta, no un ajuste): intro (qué es, dónde se enseña, **no sirve para entrar**), la
+  imagen (`<img>` con `width`/`height`, sin CSS nuevo), **el token en texto en grupos de 4**
+  («si la cámara falla, dicta este código» — es exactamente lo que teclea la puerta, §4.6), «Descargar
+  PNG» (`<a download>` sobre el mismo endpoint) y **«Renovar carné»** con confirmación explícita («el
+  actual —correo e impreso— deja de valer en el acto», §4.5) → `POST /me/card/rotate` → la imagen se
+  repinta porque su `src` lleva `?v=issued_at`. Con `token: null`: «este carné ya no se puede mostrar:
+  renuévalo» y el mismo botón. Sesión perdida (401) → el aviso de sesión de las demás zonas.
+  `stores/card.js` (una lectura, una escritura, por `runForm`) y `account/card.js` (los grupos del
+  token y la URL con versión), los dos con `node --test`; `zones/CardZone.vue` solo pinta.
+- **B·3 · El icono `qr`** nace en el sistema de diseño (`icons/qr.blade.php`, el idioma pequeño de
+  `user`: 18×18 sobre 24, trazo 1.7, `currentColor`) y `ZoneIcon.vue` lleva su copia byte a byte,
+  como `users` y `receipt`: `SidebarIconParityTest` lo exige.
+- **B·4 · Los rótulos**: `account.card.*` en es/en/fr, solo con sesión (viajan por la poda de
+  `layout.blade.php`, como `dependents`). El techo del payload con sesión (7.800, con 53 B libres)
+  **sube por feature con su párrafo** (`#197`·2), lo mismo que el del chunk.
+- **B·5 · «Rotar carné» en `ViewUser`**: acción de cabecera con el patrón de defensa de la ficha
+  (`#128`): `users.manage` + `isSensitiveActionAllowed()` (solo clientes, nunca uno mismo, nunca
+  anonimizada) → `requiresConfirmation` con la descripción que dice si HAY carné activo y desde cuándo
+  → `fresh()` + re-check → `CustomerCards::rotate()` (la MISMA transacción bajo el lock que usa el
+  titular; el `cards.rotated` que escribe lleva al **operador como actor** y al titular como target,
+  y eso es lo que distingue una rotación del mostrador de una del cliente) → notificación. El camino
+  bloqueado audita `users.rotate_card_blocked`, como sus hermanas. **No** manda el carné por correo:
+  el cliente lo ve en «Mi carné» o en su próxima confirmación (si el owner lo pide, es una acción
+  aparte sobre `OrderConfirmation`).
+- **B·6 · Lo que NO entra**: el QR *inline* (CID) en el correo (§9.4·5, sigue en `DEUDA`), un carné
+  físico impreso por el parque, y que el panel DECLARE menores (`[DECIDIDO owner]`, arriba).
+
+**Unidades, en orden** — cada una verde antes de la siguiente; empujadas en dos cortes (servidor ·
+cajón) por el coste del gate.
+
+| U | Qué | Red |
+|---|---|---|
+| **B1** | `png_url` + `GET /me/card/png` + contrato | `MeCardTest`: el PNG son los MISMOS bytes que `QrCode::png()` · `no-store` · 401 · 404 con la clave rotada · `png_url` nulo con `token` nulo · las TRES claves exactas del recurso · `ApiContractTest` |
+| **B2** | «Rotar carné» en `ViewUser` + auditoría + rótulos | `RotateCardActionTest`: visible/oculta (cliente · staff · anonimizada · uno mismo) · rota (el viejo `rotated`, el nuevo activo, `cards.rotated` con el ADMIN de actor) · emite si no había · bloqueada entre render y submit |
+| **B3** | La zona: `navigation.js` · `qr` · `stores/card.js` · `account/card.js` · `CardZone.vue` · `AccountSection.vue` · rótulos ×3 · poda · techos | `node --test` (store: una lectura, 401 → caducada, rotar sustituye; módulo: grupos y URL con versión) · `navigation.test.js` (rótulo y alcanzabilidad, ya recorre `ZONES`) · `SidebarIconParityTest` · `SidebarMountTest` · `SidebarBundleBudgetTest` · `SidebarSetupBindingsTest` |
+| **B4** | Headless de la zona (con sesión: la imagen carga 200 `image/png`, el token en pantalla, renovar cambia token e imagen, el viejo deja de valer) · docs | `VERIFICACION-E2E-CAJON.md` §5.quindecies · esta sección · `DEUDA` · `PANEL-ADMIN` · `ESTADO` |
+
+**EJECUTADA (2026-08-28 por la mañana, las cuatro unidades)** — qué existe, en qué se apartó y lo medido.
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La imagen | `MeCardController::png()` · `GET /me/card/png` (`throttle:30,1,card-png`) · `CustomerCardResource.png_url` · contrato (`/me/card/png`, `CustomerCard.png_url`) | B·1 tal cual: `QrCode::png($token)`, **los mismos bytes que el adjunto del correo** (test: igualdad byte a byte), `image/png` + `Content-Disposition: inline; filename="carne-qr.png"`, `no-store` del grupo; 404 con `token` nulo, sin emitir otro carné |
+| La zona | `account/navigation.js` (`ZONES.CARD`, tercera del índice) · `icons/qr.blade.php` + `ZoneIcon.vue` · `account/card.js` · `stores/card.js` · `zones/CardZone.vue` · `AccountSection.vue` · `account.card.*` ×3 · poda del `layout` | B·2/B·3/B·4: imagen 264×264 del servidor con `?v=issued_at`, token en grupos de 4, «Descargar (PNG)» (`<a download>`), «Renovar carné» con `window.confirm` → `POST /me/card/rotate` → sustituye; `token` nulo → «renuévalo»; 401 → sesión caducada. Cero CSS nuevo |
+| El panel | `ViewUser::rotateCardAction()` · `admin.users.actions.rotate_card.*` · `AuditLog::ACTIONS` +1 (`users.rotate_card_blocked`) | B·5 tal cual: `users.manage` + `isSensitiveActionAllowed()`, confirmación con «carné activo desde :date» o «todavía no tiene», `fresh()` + re-check, `CustomerCards::rotate()` (el `cards.rotated` lleva al OPERADOR de actor), aviso |
+
+**En qué se apartó de lo diseñado (o lo precisa)**
+
+1. **El caso «staff sin permiso» no es que la acción se oculte: es que la FICHA le está vedada** (403
+   antes de que exista ninguna acción; medido: `Livewire::test` ni siquiera monta la página). El test
+   afirma el 403 real en vez de un «oculta» que no se podía observar.
+2. **El `<img>` lleva la versión en el `src`** (`?v=issued_at`): un `<img>` cuyo `src` no cambia no se
+   vuelve a pedir aunque el servidor diga `no-store`, y `png_url` es la misma para todos los carnés
+   del titular. Sin eso, renovar cambiaba el token en pantalla y dejaba el QR VIEJO dibujado.
+3. **El sondeo de la zona cayó una vez por su propio selector**, no por la app: `.catalog__name` casaba
+   también con el catálogo de compra —sección oculta con `v-show`, pero en el DOM— y «Mi carné» salía
+   en la posición 18. `:visible` lo arregló; 14/14 en la segunda pasada.
+
+**Lo medido**
+
+- `MeCardTest` +2 (7) · `RotateCardActionTest` 6 · `node --test` 773 → **790** (`account/card.test.js` 9,
+  `stores/card.test.js` 9; `navigation.test.js` recorre `ZONES` y no hubo que tocarlo) · contrato
+  (`ApiContractTest`) ✓ · paridad de iconos ✓ (`qr` copiado byte a byte) · `SidebarSetupBindingsTest` ✓.
+- **Chunk 242,64 → 246,29 KiB** (techo 243 → **247**, por feature): la zona, el store, el módulo y el icono.
+  Lo que NO pesa es lo que decide B·1: el QR lo dibuja el servidor.
+- **Payload con sesión 7.747 → 8.472 B** (techo 7.800 → **8.550**, por feature): los 12 rótulos de
+  `account.card`, todos pintados; los dos más largos —la intro y la confirmación de renovar— se
+  quedan porque son las dos frases que evitan un malentendido en la puerta.
+- **Headless 14/14** (`card-zone-probe.js`, con un cliente de prueba `probe-card@jumpweb.test`): el índice
+  ofrece «Mi carné» tercero y con su icono · `GET /me/card` con token y `png_url` · la imagen carga
+  **264×264 desde el servidor** (`image/png`, `no-store`, firma PNG) · el token en grupos de 4 · descargar
+  apunta al mismo PNG · «Renovar» pide confirmación con «dejará de valer en el acto» · `POST` 201 con
+  token nuevo · la pantalla enseña el nuevo y REPINTA la imagen (otro `?v=`) · «Carné renovado» ·
+  `GET /me/card` devuelve el nuevo · cero errores de consola. En BD: el carné anterior `rotated` en el
+  mismo segundo, el nuevo activo, auditoría `issued → rotated → issued`.
+
+**Lo que queda** — del owner: su OJO sobre la zona (móvil y escritorio), la acción del panel y el
+LECTOR REAL con un PNG descargado desde la web. De agente, nada de esta tanda; en `DEUDA` sigue solo el
+QR *inline* (CID) del correo. Una puerta por URL (`/mi-cuenta/carne`) no se abrió: ningún correo apunta
+ahí todavía; si el owner la quiere, es una línea en `AccountDoor::ZONE_BY_ROUTE`.

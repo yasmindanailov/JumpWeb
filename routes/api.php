@@ -259,6 +259,11 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/me/card/rotate', [MeCardController::class, 'rotate'])
             ->middleware('throttle:10,1,card-rotate')
             ->name('me.card.rotate');
+        // §9.6 B·1: el carné como IMAGEN (los mismos bytes que el adjunto del correo). Genera un PNG
+        // por petición, así que lleva su cubo propio, como el PDF del waiver.
+        Route::get('/me/card/png', [MeCardController::class, 'png'])
+            ->middleware('throttle:30,1,card-png')
+            ->name('me.card.png');
         Route::get('/me/dependents', [MeDependentsController::class, 'index'])->name('me.dependents.index');
         Route::post('/me/dependents', [MeDependentsController::class, 'store'])
             ->middleware('throttle:30,1,dependents-write')

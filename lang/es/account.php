@@ -124,6 +124,22 @@ return [
             'assigned_show' => 'Ver para quién es',
             'assigned_hide' => 'Ocultar para quién es',
         ],
+        // El carné QR (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): verlo, dictarlo, descargarlo y
+        // renovarlo. Solo con sesión: es una credencial de puerta.
+        'card' => [
+            'title' => 'Mi carné',
+            'intro' => 'Tu carné QR te identifica en la puerta: enséñalo desde el móvil o impreso. No sirve para entrar en tu cuenta.',
+            'alt' => 'Tu carné QR',
+            'token_label' => 'Si la cámara falla, dicta este código:',
+            'download' => 'Descargar (PNG)',
+            'hint' => 'Es el mismo carné que recibes en cada confirmación de reserva.',
+            'unavailable' => 'Este carné ya no se puede mostrar. Renuévalo y tendrás uno nuevo al instante.',
+            'rotate' => 'Renovar carné',
+            'rotating' => 'Renovando…',
+            'rotate_confirm' => 'El carné actual dejará de valer en el acto: el del correo y cualquier copia impresa. ¿Renovar?',
+            'rotated' => 'Carné renovado. El anterior ya no vale.',
+            'expired' => 'Tu sesión ha caducado: vuelve a entrar para ver tu carné.',
+        ],
     ],
 
     'login' => [

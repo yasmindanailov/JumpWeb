@@ -368,6 +368,9 @@
                                 // «Firma registrada» y «PDF» los de `privacy.waiver.*` — seis rótulos que
                                 // ya viajaban y no se redactan por segunda vez.
                                 'dependents' => __('account.account.dependents'),
+                                // ⚠️ **Mi carné** entra ENTERO (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6
+                                // B·2): 12 rótulos que la zona pinta todos. Solo con sesión: es una credencial.
+                                'card' => __('account.account.card'),
                             ], 'orders' => \Illuminate\Support\Arr::only(__('account.orders'), [
                                 // ⚠️ «Mis reservas» de cara al cliente, `orders` en el código: manda
                                 // el texto de `lang/` (`account.orders.title`), y el nombre técnico se

@@ -119,6 +119,21 @@ return [
             'assigned_show' => 'See who it is for',
             'assigned_hide' => 'Hide who it is for',
         ],
+        // The QR card (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): see it, read it out, download it, renew it.
+        'card' => [
+            'title' => 'My card',
+            'intro' => 'Your QR card identifies you at the door: show it on your phone or printed. It does not sign you in to your account.',
+            'alt' => 'Your QR card',
+            'token_label' => 'If the camera fails, read out this code:',
+            'download' => 'Download (PNG)',
+            'hint' => 'It is the same card you receive with every booking confirmation.',
+            'unavailable' => 'This card can no longer be shown. Renew it and you will have a new one right away.',
+            'rotate' => 'Renew card',
+            'rotating' => 'Renewing…',
+            'rotate_confirm' => 'The current card will stop working immediately: the one in your email and any printed copy. Renew?',
+            'rotated' => 'Card renewed. The previous one no longer works.',
+            'expired' => 'Your session has expired: sign in again to see your card.',
+        ],
     ],
 
     'login' => [

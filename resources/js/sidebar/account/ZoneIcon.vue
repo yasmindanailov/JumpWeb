@@ -84,4 +84,18 @@ defineProps({
             <path d="M5.4 3.6h13.2v16.8l-2.64-1.5-2.64 1.5-2.64-1.5-2.64 1.5-2.64-1.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
             <path d="M8.8 8.4h6.4M8.8 12.2h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
         </svg>
+
+        <!-- `qr` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). Nace con
+             «Mi carné» (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·3): no había ningún
+             icono pequeño que dijera «código», y es la entrada que el cliente busca en la puerta. -->
+        <svg v-else-if="zone === ZONES.CARD" width="18" height="18" viewBox="0 0 24 24" fill="none"
+             class="catalog__ico" aria-hidden="true" focusable="false">
+            <rect x="3.6" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+            <rect x="13.8" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+            <rect x="3.6" y="13.8" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+            <rect x="13.8" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+            <rect x="17.6" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+            <rect x="13.8" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+            <rect x="17.6" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+        </svg>
 </template>

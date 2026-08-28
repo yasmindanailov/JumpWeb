@@ -24,9 +24,14 @@ class CustomerCardResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
+        $token = $this->resource->plainToken();
+
         return [
-            'token' => $this->resource->plainToken(),
+            'token' => $token,
             'issued_at' => $this->resource->issued_at->toIso8601String(),
+            // §9.6 B·1: la URL de la IMAGEN la compone el SERVIDOR —como `pdf_url` en el waiver—: el cajón
+            // no compone rutas de la API a mano. Nula cuando no hay token que dibujar (clave rotada, §8.1).
+            'png_url' => $token === null ? null : route('api.v1.me.card.png'),
         ];
     }
 }

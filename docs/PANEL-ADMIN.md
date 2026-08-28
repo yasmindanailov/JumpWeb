@@ -146,6 +146,13 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
 - **Usuarios:** ver, buscar, **crear, editar y borrar**.
   - Crear: se envía email para que el usuario establezca su contraseña `[propuesta]`.
   - Borrar: se **anonimiza** para cumplir RGPD (se conservan facturas obligatorias) `[propuesta]`.
+  - **Ficha del usuario** (`ViewUser`), acciones de cabecera, todas con el mismo patrón de defensa
+    (permiso + solo clientes, nunca uno mismo, nunca anonimizada; re-check al confirmar; auditoría):
+    roles (`access.manage`) · registro probatorio del waiver (`waiver.view`, cada apertura auditada) ·
+    enviar enlace de contraseña (`users.manage`) · **rotar carné QR** (`users.manage`; el carné actual
+    —el del correo y el impreso— deja de valer EN EL ACTO y el cliente ve el nuevo en «Mi carné» o en
+    su próxima confirmación; NO cierra sesiones: para eso está anonimizar/bloquear,
+    `specs/identidad-qr-puerta.md` §9.6 B·5) · anonimizar (`users.anonymize`).
 - **Pedidos y reembolsos:** ver compras, reembolsar, reenviar entradas.
 
 ---

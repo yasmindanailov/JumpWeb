@@ -119,6 +119,21 @@ return [
             'assigned_show' => 'Voir pour qui',
             'assigned_hide' => 'Masquer pour qui',
         ],
+        // La carte QR (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2) : la voir, la dicter, la télécharger, la renouveler.
+        'card' => [
+            'title' => 'Ma carte',
+            'intro' => 'Ta carte QR t’identifie à l’entrée : montre-la sur ton téléphone ou imprimée. Elle ne permet pas de te connecter à ton compte.',
+            'alt' => 'Ta carte QR',
+            'token_label' => 'Si la caméra ne lit pas, dicte ce code :',
+            'download' => 'Télécharger (PNG)',
+            'hint' => 'C’est la même carte que tu reçois avec chaque confirmation de réservation.',
+            'unavailable' => 'Cette carte ne peut plus être affichée. Renouvelle-la et tu en auras une nouvelle immédiatement.',
+            'rotate' => 'Renouveler la carte',
+            'rotating' => 'Renouvellement…',
+            'rotate_confirm' => 'La carte actuelle cessera de fonctionner immédiatement : celle de l’e-mail et toute copie imprimée. Renouveler ?',
+            'rotated' => 'Carte renouvelée. L’ancienne ne fonctionne plus.',
+            'expired' => 'Ta session a expiré : reconnecte-toi pour voir ta carte.',
+        ],
     ],
 
     'login' => [

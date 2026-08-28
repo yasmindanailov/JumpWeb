@@ -55,6 +55,13 @@ export const ZONES = {
      */
     DEPENDENTS: 'dependents',
 
+    /**
+     * **Mi carné QR** (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): verlo, dictarlo,
+     * descargarlo y renovarlo. Entra con su API entera (`GET /me/card`, `GET /me/card/png`,
+     * `POST /me/card/rotate`), como pide la regla de arriba. Es una CREDENCIAL: solo con sesión.
+     */
+    CARD: 'card',
+
     // ── Las zonas de INVITADO (`specs/auth-en-cajon.md` §4.1) ─────────────────────────────────
     //
     // ⚠️⚠️ **Con ellas la sección de cuenta deja de ser «solo con sesión»**, que era un supuesto
@@ -120,6 +127,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.PROFILE]: 'account.profile.title',
     [ZONES.PRIVACY]: 'account.privacy.title',
     [ZONES.DEPENDENTS]: 'account.dependents.title',
+    [ZONES.CARD]: 'account.card.title',
     [ZONES.LOGIN]: 'login.title',
     [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
@@ -204,7 +212,9 @@ export function parentZoneFor(zone) {
  * una línea aquí y su rótulo arriba, no copiar dieciséis líneas de `<button>` con su `<svg>` dentro.
  * El índice las recorre. `HOME` no está porque el índice no se enlaza a sí mismo.
  */
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.PROFILE, ZONES.DEPENDENTS, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
+// ⚠️ «Mi carné» va TERCERO, tras las dos entradas de reservas y pedidos y antes de los ajustes: es lo
+// que el cliente enseña en la puerta, no algo que configura (§9.6 B·2).
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PROFILE, ZONES.DEPENDENTS, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
 
 /**
  * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.

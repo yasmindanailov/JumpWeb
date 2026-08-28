@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Actions\Action;
@@ -65,8 +66,69 @@ class ViewUser extends ViewRecord
             $this->manageRolesAction(),
             $this->waiverProofAction(),
             $this->sendPasswordResetAction(),
+            $this->rotateCardAction(),
             $this->anonymizeUserAction(),
         ];
+    }
+
+    /**
+     * Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.5, §9.6 B·5) — **rotar el carné QR** del
+     * cliente desde el mostrador: un carné perdido, fotografiado o que circula por donde no debe deja
+     * de valer EN EL ACTO y el cliente recibe otro. Es la MISMA transacción bajo el lock del titular
+     * que usa `POST /me/card/rotate`; lo que cambia es el ACTOR: el `cards.rotated` que escribe
+     * `CustomerCards::rotate()` lleva al operador como `user_id` y al titular como target, y eso es lo
+     * que distingue en la auditoría una rotación del mostrador de una del propio cliente.
+     *
+     * Mismo patrón de defensa que sus hermanas: `visible()` (permiso + solo clientes, nunca uno
+     * mismo, nunca anonimizada) → `fresh()` + re-check → auditoría del bloqueo o del éxito → aviso.
+     * ⚠️ NO revoca el acceso (`revokeAllAccess()` cierra además sesiones y tokens): rotar el carné es
+     * lo que un operador puede hacer sin echar al cliente de su cuenta — el hueco que `DEUDA` anotaba.
+     */
+    private function rotateCardAction(): Action
+    {
+        return Action::make('rotateCard')
+            ->label(__('admin.users.actions.rotate_card.label'))
+            ->icon(Heroicon::OutlinedQrCode)
+            ->color('gray')
+            ->visible(fn (User $record): bool => (auth()->user()?->hasPermission('users.manage') ?? false)
+                && $this->isSensitiveActionAllowed($record))
+            ->requiresConfirmation()
+            ->modalHeading(__('admin.users.actions.rotate_card.modal_heading'))
+            ->modalDescription(function (User $record): string {
+                // Le dice al operador si HAY carné activo y desde cuándo: rotar «nada» también emite uno.
+                $active = app(CustomerCards::class)->activeFor($record);
+
+                return $active === null
+                    ? __('admin.users.actions.rotate_card.modal_description_none')
+                    : __('admin.users.actions.rotate_card.modal_description_active', [
+                        'date' => $active->issued_at->setTimezone(config('app.timezone'))->format('d/m/Y'),
+                    ]);
+            })
+            ->modalSubmitActionLabel(__('admin.users.actions.rotate_card.submit'))
+            ->action(function (User $record): void {
+                $record = $record->fresh();
+
+                if ($record === null || ! $this->isSensitiveActionAllowed($record)) {
+                    if ($record !== null) {
+                        AuditLogger::log('users.rotate_card_blocked', $record, ['reason' => 'not_allowed']);
+                    }
+                    Notification::make()
+                        ->title(__('admin.users.actions.rotate_card.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                // `rotate()` audita `cards.rotated` por cada carné que mata (con este operador de actor) y
+                // `cards.issued` por el nuevo. Nunca el token (`RGPD-02`).
+                app(CustomerCards::class)->rotate($record);
+
+                Notification::make()
+                    ->title(__('admin.users.actions.rotate_card.success'))
+                    ->success()
+                    ->send();
+            });
     }
 
     /**

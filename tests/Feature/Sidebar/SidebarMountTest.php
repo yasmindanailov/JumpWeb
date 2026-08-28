@@ -454,7 +454,7 @@ class SidebarMountTest extends TestCase
             array_keys($boot['account']['purchases'] ?? []),
             'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
         );
-        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy', 'dependents'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy', 'dependents', 'card'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **Menores a cargo** (Fase 6 · C, `DECISIONES #199`) va ENTERO: 17 rótulos que la zona y
         // sus tarjetas pintan todos. La lista exacta es lo que impide que crezca en silencio — y lo
@@ -600,8 +600,20 @@ class SidebarMountTest extends TestCase
         // headless (§5.undecies) los encontró EN BLANCO en quien entra anónimo y se identifica en el
         // paso 5 — este subgrupo viaja solo con sesión. Se mudaron a `tickets.dependents`, que va
         // siempre, y este techo BAJÓ a lo medido. **7.800 deja 53 B**: la holgura de siempre.
+        //
+        // ⚠️ **7.800 → 8.550 el 2026-08-28 por la mañana: «MI CARNÉ» en el cajón** (Fase 6 · A,
+        // `specs/identidad-qr-puerta.md` §9.6 B·2/B·4, `DECISIONES #212`; subida por FEATURE, `#197`·2).
+        // Son los **12** rótulos de `account.card`, todos pintados por la zona —el título del índice, la
+        // intro, el `alt` de la imagen, «dicta este código», descargar, la nota, el carné que no se puede
+        // dibujar, renovar y su «renovando…», la confirmación explícita, «renovado» y la sesión
+        // caducada—, **+725 B**: de 7.747 a **8.472 B**. No hay nada que reutilizar de otros grupos: el
+        // único texto parecido, el de sesión caducada, no viajaba con sesión. Los dos más largos son la
+        // intro (~120 B: qué es, dónde se enseña y que **no sirve para entrar**, §4.2) y la confirmación
+        // de renovar (~110 B: «el del correo y cualquier copia impresa», §4.5), y los dos se quedan:
+        // son las dos frases que evitan un malentendido caro en la puerta. **8.550 deja 78 B**: la
+        // holgura estrecha de siempre, a propósito.
         $this->assertLessThan(
-            7800, $bytes,
+            8550, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

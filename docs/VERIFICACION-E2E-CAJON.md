@@ -1377,3 +1377,54 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
 - **La animación** del recorte circular al abrir y el aspa al alternar: el guion mira estados, no
   el camino entre ellos.
 - **El logotipo**: sigue siendo el nombre en la fuente de rótulo, no la marca del cliente.
+
+
+## §5.quindecies · «MI CARNÉ» EN EL CAJÓN y «ROTAR CARNÉ» EN EL PANEL — ✅ recorrido en headless el 2026-08-28 (14/14), pendiente del OJO del owner (`DECISIONES #212`)
+
+> Carril A (`specs/identidad-qr-puerta.md` §9.6). Mismo andamio que §5.bis. Guion `card-zone-probe.js`
+> con un cliente de prueba propio (`probe-card@jumpweb.test`, correo verificado; se crea con `tinker`,
+> no vive en el repo). ⚠️ **Trampa del guion**: la sección de compra está en el DOM aunque no se vea
+> (`v-show`), así que un selector sin `:visible` sobre `.catalog__item` cuenta también el catálogo —
+> la primera pasada dijo que «Mi carné» era la entrada 18.
+
+### K1 · La entrada del índice
+1. Entra por `/mi-cuenta`. En el índice, **tercera entrada** tras «Mis reservas» y «Mis pedidos»:
+   «Mi carné», con un icono de QR (tres cuadrados y una rejilla).
+
+### K2 · La zona
+2. Púlsala. Aparece el **QR** (264×264, dibujado por el servidor: es el MISMO PNG del correo), debajo
+   «Si la cámara falla, dicta este código:» y el token en **grupos de 4** (`JW.. .... ....`), el enlace
+   «Descargar (PNG)» y el botón «Renovar carné».
+3. Descarga el PNG y ábrelo: es un QR nítido con margen blanco. ▶ **Es el que hay que probar con el
+   LECTOR real** (§6 de la spec): la cámara del móvil ya lo lee (§9.5·5).
+
+### K3 · Renovar
+4. Pulsa «Renovar carné». Sale una confirmación: «El carné actual dejará de valer en el acto: el del
+   correo y cualquier copia impresa. ¿Renovar?». Acepta.
+5. El token de la pantalla **cambia** y el QR **se repinta** (otra imagen); arriba, «Carné renovado. El
+   anterior ya no vale.».
+6. Con el token ANTERIOR en la puerta (`/admin/puerta/validar`): «Carné caducado». Con el nuevo:
+   verde + ficha.
+
+### K4 · El panel
+7. Panel → Usuarios → la ficha de ese cliente → **«Rotar carné QR»** en la cabecera (solo si tienes
+   `users.manage`; no aparece sobre staff, sobre ti ni sobre una cuenta anonimizada). El modal dice
+   «El carné actual (emitido el DD/MM/AAAA) dejará de valer EN EL ACTO…» — o «todavía no tiene carné».
+8. Confirma: aviso verde. En Incidencias, `cards.rotated` con **tu usuario** de actor y el cliente de
+   target (así se distingue del que rota el propio cliente). El cliente, al reabrir «Mi carné», ve otro.
+
+### Resultado headless (2026-08-28, 07:40, hora de Madrid)
+- **14/14**: Z0 índice con icono y tercero · Z1 `GET /me/card` con token y `png_url`, imagen
+  264×264 cargada desde `/api/v1/me/card/png?v=…`, `image/png` + `no-store` + firma PNG, token en
+  grupos de 4, descargar al mismo PNG · Z2 «Renovar» presente, confirmación con «dejará de valer en el
+  acto», `POST` 201 con token nuevo, pantalla con el nuevo e imagen repintada, aviso «Carné renovado» ·
+  Z3 `GET /me/card` devuelve el nuevo · Z4 cero errores de consola. BD: carné anterior `rotated` en el
+  mismo segundo, nuevo activo; auditoría `issued → rotated → issued`.
+- El panel (K4) lo cubre `RotateCardActionTest` (6 casos, incluido el re-check entre render y submit);
+  no se condujo en navegador.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **El QR en el MÓVIL** (tamaño, nitidez, el `download` en iOS/Android) y con el **lector real**.
+- **El estado degradado** (clave del servidor rotada): «Este carné ya no se puede mostrar» + renovar.
+  Lo fijan `MeCardTest` y `card.test.js`; no se ha provocado en navegador.
+- **La acción del panel**, con el ojo (K4): el modal con la fecha, el aviso, la fila de Incidencias.

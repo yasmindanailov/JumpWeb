@@ -34,7 +34,7 @@
 >   gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
 >   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las
 >   mismas fechas relativas que sus vecinos; ninguno afirma una edad o un día concreto sin fijar el
->   reloj). ▶ ✅ **SESIÓN CORTA del 2026-08-28 por la mañana (06:23 → 07:15, hora de Madrid; carril A;
+>   reloj). ▶ ✅ **SESIÓN del 2026-08-28 por la mañana (06:23 → 07:50, hora de Madrid; carril A;
 >   `DECISIONES #210`) — el OJO del owner en localhost, ANTES de retomar la lista de abajo.** Reportó
 >   «pulso iniciar sesión y no sale nada» y «el carrito no tiene CTA para volver». Medido y arreglado:
 >   **(1)** el «no» del login (401 y 429) era **INVISIBLE en el ÁREA DE CLIENTE desde el 2026-08-23**:
@@ -57,8 +57,30 @@
 >   gate en verde: suite **3216 / 20.942** · JS 773 · Pint ✓ · docs-check ✓ · build ✓.
 >   `[PENDIENTE: owner]`: si el área de cliente gana casos de contrato de árbol (hoy cero) o ESLint
 >   entra en el gate (`DEUDA.md`). ⚠️ Para el carril C: el `.form__error` del cajón se computa en
->   TINTA, no en `--err` (legible; lo decide el tema). **Esta sesión NO tocó la lista de retoma de
->   abajo: sigue vigente tal cual.** ⚠️ **Tras el cierre, el owner abrió el panel y NO VIO NADA de menores** (ni en un pedido,
+>   TINTA, no en `--err` (legible; lo decide el tema). ▶ ✅ **Y EN LA MISMA SESIÓN (07:20 → 07:50), LA
+>   TANDA DE LAS DOS SUPERFICIES DEL CARNÉ (`DECISIONES #212`, spec `identidad-qr-puerta.md` §9.6)**,
+>   elegida por el owner a pregunta simple: **(1)** `GET /me/card/png` —los MISMOS bytes que el adjunto
+>   del correo; el QR lo dibuja el SERVIDOR porque el chunk estaba a 0,36 KiB del techo— y `png_url` en
+>   el contrato · **(2)** la zona **«Mi carné»** del cajón (tercera del índice, icono `qr` nuevo en el
+>   sistema de diseño; imagen con `?v=issued_at`, token en grupos de 4 para dictarlo, «Descargar (PNG)»,
+>   «Renovar carné» con confirmación) · **(3)** **«Rotar carné QR»** en `ViewUser` con el patrón de
+>   defensa de la ficha (el `cards.rotated` lleva al OPERADOR de actor). Y dos respuestas más del owner:
+>   **el panel NO declara menores** (`[DECIDIDO]`, cierra el `[PENDIENTE]` de §9.5) y **JumpPoints
+>   espera su repaso**: el resumen de una página está en `specs/lealtad-jumppoints.md` **§9** y NO se
+>   diseña la ejecución hasta su ✅. Medido: +8 tests PHP (`MeCardTest` 7, `RotateCardActionTest` 6) ·
+>   JS 773 → 790 · headless **14/14** (`VERIFICACION-E2E-CAJON.md` §5.quindecies) · chunk 246,29
+>   (techo 243 → 247, por feature) · payload con sesión 8.472 (techo 7.800 → 8.550, por feature) ·
+>   suite **3224 / 21.012** sobre el árbol del carril A y **3230 / 21.049 sobre el árbol CONJUNTO** tras
+>   rebasar sobre el `#211` del carril C (empujado a las 07:18 mientras corría el gate; tres conflictos de
+>   «ambos añaden al final», resueltos con los dos bloques). ⚠️ **Para el carril C**: esta tanda tocó `resources/js/sidebar/**`
+>   (`AccountSection.vue`, `ZoneIcon.vue`, `navigation.js`, zona y store nuevos) y añadió
+>   `resources/views/components/icons/qr.blade.php`: `git pull --rebase` antes de empujar. ▶ ❗ **POR
+>   DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(0)** el owner: su OJO sobre «Mi carné» (móvil y
+>   escritorio, y el LECTOR real con un PNG descargado), la acción del panel, y el ✅ o los cambios a
+>   JumpPoints (§9 de su spec) · **(1)** con el ✅: el DISEÑO DE EJECUCIÓN de JumpPoints (§8 antes que el
+>   cuerpo; el canje entra en el `CRITICAL_RE`; la caducidad al final por el cron `#115`) · **(2)** sin
+>   él: la lista de retoma de abajo sigue vigente (el ojo sobre menores/puerta, guion §9.5).
+>   ⚠️ **Tras el cierre, el owner abrió el panel y NO VIO NADA de menores** (ni en un pedido,
 >   ni al crear uno) y no pudo probar el QR: **es la condición de diseño, no un fallo** —solo aparece
 >   con un cliente que tenga menores declarados DESDE SU CUENTA en la web, y el carné nace con el
 >   correo de confirmación—. **El guion de prueba paso a paso está en `identidad-qr-puerta.md`
@@ -535,6 +557,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3230 en verde** (21.049 aserciones, `--parallel` **~70 s**), medida el 2026-08-28 a las 07:46 (hora de
+  Madrid) por el carril A **sobre el árbol CONJUNTO** —`#210` + el `#211` del carril C + `#212`—, tras rebasar
+  el `#212` encima del `#211`. ⚠️ **Se MIDIÓ, no se sumó** (coincide con 3222 + 8 y 20.979 + 70, y eso es
+  una comprobación, no la fuente). Conflictos de la fusión: los tres ficheros a los que ambos carriles
+  añaden al final (`DECISIONES`, este ledger, `VERIFICACION-E2E-CAJON`) — resueltos conservando los dos
+  bloques; y el guion del carné pasó de `§5.quaterdecies` (que el carril C ya había usado) a `§5.quindecies`.
 - Suite **3222 en verde** (20.979 aserciones), medida el 2026-08-28 por el carril C **sobre el árbol
   CONJUNTO** (su `#211` rebasado encima del `#210` del carril A). ⚠️ **Se MIDIÓ, no se sumó**: en su
   propio árbol el carril C daba 3.150 · 18.486, y esa evidencia es ANTERIOR a la fusión.
@@ -546,6 +574,11 @@ que sirva staging de verdad.
   `.nav-cta-med-NO` contiene `.nav-cta-med`, así que pasaba con el CSS roto. Es la **tercera** vez
   en dos días (las otras: `favicon.svg` dentro de `client-favicon.svg`, y `cta-prime` dentro de
   `cta-prime__ico` en `#195`). **Antes de creerte un test verde, acota al elemento.** Antes:
+
+- Suite **3224 en verde** (21.012 aserciones, `--parallel` **~70 s**), medida el 2026-08-28 a las 07:40 (hora de
+  Madrid) por el carril A **sobre su propio árbol, ANTES de fusionar con el `#211` del carril C**, tras
+  **`#212`** (las dos superficies del carné): **+8 tests y +70 aserciones** — `MeCardTest` +2 (la imagen:
+  mismos bytes que el correo; 404 con la clave rotada) y `RotateCardActionTest` (6). JS 773 → 790.
 - Suite **3216 en verde** (20.942 aserciones, `--parallel` **~71 s**), medida el 2026-08-28 a las 07:10 (hora de
   Madrid), tras **`#210`** (el OJO del owner en localhost): **+3 tests y +7 aserciones** — `SidebarSetupBindingsTest`
   (3 casos: props sombreadas, `watch` antes de su `const`, la guarda de la guarda). ⚠️ El hook `pre-push` contrasta

@@ -371,8 +371,17 @@ class SidebarBundleBudgetTest extends TestCase
      * anterior: el arreglo visual del selector (`748030a`, la misma noche) dejó el chunk en 247.990 B
      * = 242,18 y no re-anotó el ledger; la revisión adversarial de `#210` lo midió reconstruyendo
      * HEAD. **243 deja 0,36 KiB**: lo siguiente que entre en el cajón se mide y decide, como siempre.
+     *
+     * ⚠️ **243 → 247 el 2026-08-28 por la mañana, y lo paga «MI CARNÉ» (Fase 6 · A,
+     * `specs/identidad-qr-puerta.md` §9.6, `DECISIONES #212`) — subida por FEATURE (`#197`·2).**
+     * Medido construyendo: **242,64 → 246,29 KiB, +3,65**. Entran `zones/CardZone.vue`, `stores/card.js`
+     * (una lectura, una escritura por `runForm`), `account/card.js` (los grupos del token y la URL con
+     * versión) y la copia del icono `qr` en `ZoneIcon.vue`. ▶ **Y lo que NO entra es lo que hace que
+     * sean 3,65 y no 12**: el QR lo dibuja el SERVIDOR (`GET /me/card/png`, los mismos bytes que el
+     * adjunto del correo) — un codificador de QR en el navegador habría costado ≥ 8 KiB minificados para
+     * repetir un dibujo que ya existe. **247 deja 0,71 KiB**: la holgura estrecha de siempre.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 243;
+    private const SIDEBAR_CHUNK_MAX_KB = 247;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
