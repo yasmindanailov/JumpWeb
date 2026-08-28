@@ -51,7 +51,7 @@ queda) y lo que usa la vieja como **intermediario de una fuente que sobrevive** 
 siempre mejora el test). El tercero hay que buscarlo activamente.
 
 **Y se hace MUTANDO, no leyendo.** Una nota escrita leyendo el código es una hipótesis, no un plan
-(`#83`). Cuatro trampas, todas nacidas de errores reales:
+(`#83`). Seis trampas, todas nacidas de errores reales:
 
 1. **Comprueba DÓNDE cayó la mutación** (`#77`): un nombre puede aparecer dos veces en el fichero.
 2. **Comprueba el CONTENIDO, no el código de salida** (`#90`): `git checkout` no revierte un fichero
@@ -60,6 +60,18 @@ siempre mejora el test). El tercero hay que buscarlo activamente.
    dar un resultado **coherente con la hipótesis equivocada**.
 4. **No mutes UNA rama de una propiedad de indistinguibilidad** (`#95`): si dos respuestas son iguales
    a propósito —anti-enumeración—, el mutante es equivalente por diseño y su verde no dice nada.
+5. ❗ **Restaurar el fichero NO basta: hay que TOCAR SU FECHA** (`#219`). `shutil.move` y `cp -p`
+   **conservan el mtime**, y toda caché que se guíe por fecha —Blade la primera— compara «¿es el
+   fuente más nuevo que lo que compilé?». Durante la mutación el fichero queda con fecha de AHORA y
+   contenido MUTADO: si algo pide la página en ese instante, el compilado guarda **el fallo**. Al
+   restaurar, la fecha vuelve a ser la vieja y **el compilado con la mutación gana para siempre** —
+   la web sirve el defecto con el fichero correcto en disco, y el test que lo caza vuelve a estar
+   verde en la siguiente pasada porque el arnés ya restauró. ▶ Medido: así se perdió la etiqueta
+   «MENÚ» del armazón y **solo lo vio el ojo del owner en una captura**. `os.utime(path, None)` al
+   restaurar, y `php artisan view:clear` si ya pasó.
+6. **Un ancla que ya no existe no es una mutación que no muerde**: si el arnés dice «NO APLICA»,
+   el código cambió debajo. Es una señal, no un aprobado — y hay que distinguirla del rojo, o una
+   guarda sin ejercitar pasa por probada.
 
 **Dos criterios que se ganaron midiendo:**
 - **Si un dato viaja al cliente y su único test conduce la superficie vieja, el contrato NO lo está

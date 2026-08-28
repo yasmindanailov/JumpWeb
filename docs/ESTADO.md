@@ -1115,6 +1115,7 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 | `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
 | `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
 | `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+| `#219` · el arnés | ❗❗ **El arnés de mutación ENVENENÓ la caché de vistas de Blade**: restaurar con `shutil.move` conserva el mtime, así que el compilado con la mutación se cree más nuevo que el fuente y **gana para siempre**. La web servía el fallo con el fichero correcto en disco, la suite verde y el `pre-push` verde — **solo lo vio el ojo del owner en una captura**. Arreglado con `os.utime` en los cinco arneses; la trampa entra en `CONVENCIONES §3.quater`, que pasa de 4 a 6 |
 | `#218` · el logo | ❗ **El logotipo no medía lo que el mockup**: su `height:54px` está en el `<a>` que ENVUELVE el lockup y el dibujo desborda por sus contornos (54 declarados, **68 reales**). A 70 px la tinta coincide al 1,5 % |
 | `#217` · el ojo | ❗ **Las TRES piezas que el owner vio distintas y la sonda no**: las **sombras** del racimo (entra un CUARTO rol, el mobiliario flotante), la **forma del botón de menú** (era un círculo; ahora el rectángulo del mockup con etiqueta y dos rayas que ROTAN) y el **logotipo** (fuera la pastilla, 26 → 54 px y `drop-shadow` que sigue la SILUETA) |
 
@@ -1133,7 +1134,11 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 4. ✅ **El logotipo ya está a 54 px** (`#217`): lo pidió el owner al verlo. Y con él se fueron la
    pastilla de detrás —acotada al suelo de TEXTO, que sí la necesita— y la sombra de caja, que
    pasa a `drop-shadow` porque una marca recortada necesita que su sombra siga la **silueta**.
-5. ⚠️⚠️ **La sonda no ve la FORMA.** Las tres cosas de `#217` las cazó el ojo del owner con la
+5. ❗❗ **Y hay una trampa que ni la sonda ni la suite ven: la CACHÉ RANCIA.** `#219`: el arnés de
+   mutación dejó una vista compilada con el fallo dentro y Blade la dio por buena porque el fuente
+   restaurado tenía fecha ANTERIOR. **Verde en todo, roto en la web.** Misma familia que el bundle
+   SSR rancio de `#216`. ▶ Tras correr un arnés, **mira la página**, no solo el rojo/verde.
+6. ⚠️⚠️ **La sonda no ve la FORMA.** Las tres cosas de `#217` las cazó el ojo del owner con la
    suite en verde y 15 mutaciones mordiendo: la sonda medía existencia, color, tamaño y estado —y
    todo estaba bien—. Es la tercera vez en dos días. **Medir no es mirar.**
 

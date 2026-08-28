@@ -11626,3 +11626,40 @@ los dos, y el color computado es `rgba(16,20,24,.45)`, exactamente el del mockup
 **Verificación**: suite **3245 / 21.314** · Pint ✓ · docs-check ✓ · la guarda del logotipo pasa a
 exigir **70** con la medida escrita en su mensaje, para que el siguiente no vuelva a copiar el
 número declarado del mockup · comparativa visual de los dos, superpuestos.
+
+---
+
+## #219 · 2026-08-28 · El arnés de mutación ENVENENÓ la caché de vistas: restaurar un fichero conserva su fecha, y Blade sirvió el fallo con el fichero correcto en disco
+
+**Cómo se vio.** Tras `#218`, una captura de comprobación enseñaba el botón de menú **sin su
+etiqueta «MENÚ»** — con el blade correcto en disco, la suite en verde y el `pre-push` en verde.
+
+**La causa, medida.** El arnés de mutación hace `shutil.copy` a `.bak`, escribe el fichero mutado y
+restaura con `shutil.move`. **`shutil.move` conserva el mtime**, así que:
+
+1. Durante la mutación el `.blade.php` tiene fecha de **ahora** y contenido **mutado**.
+2. Algo pide la página en ese instante → Blade compila y **guarda la mutación**.
+3. Al restaurar, el fichero vuelve a su fecha **vieja** — anterior a la del compilado.
+4. Blade recompila solo si el fuente es **más nuevo** que el compilado. No lo es.
+   ▶ **El compilado con la mutación gana para siempre.**
+
+Medido: `nav.blade.php` con fecha `10:47:34 UTC` y el compilado `10:47:36 UTC`, sin la línea.
+
+❗❗ **Lo peligroso no es el fallo: es que se AUTO-OCULTA.** El fichero en disco está bien, así que
+leyéndolo no se ve nada; y el test que lo caza **vuelve a estar verde** en la pasada siguiente,
+porque el arnés ya restauró y los tests no comparten esa caché. Solo lo vio **el ojo del owner en
+una captura**. ▶ Es la misma familia que el bundle SSR rancio de `#216`: **un artefacto derivado
+que se cree más nuevo que su fuente**, y en los dos casos el síntoma es «verde con el código roto».
+
+**Arreglado en los cinco arneses**: `os.utime(path, None)` al restaurar. Verificado: antes del
+arreglo la web servía 0 etiquetas tras correr el arnés; después, 1. Y `php artisan view:clear` para
+la caché ya envenenada.
+
+**Y la trampa entra en la doc**, que es lo que evita que le pase al siguiente:
+`CONVENCIONES.md` §3.quater pasa de **cuatro** trampas de la mutación a **seis** — la del mtime, y
+una que también salió aquí: **«NO APLICA» no es «no muerde»**. Si el ancla de una mutación ya no
+existe, el código cambió debajo; es una señal de que hay que re-apuntarla, no un aprobado. Sin
+distinguirla del rojo, una guarda sin ejercitar pasa por probada.
+
+**Verificación**: suite **3245 / 21.314** · Pint ✓ · docs-check ✓ · arnés re-corrido: **11/11
+muerden** y **la web sigue sirviendo la etiqueta después**, que es lo que antes no pasaba.
