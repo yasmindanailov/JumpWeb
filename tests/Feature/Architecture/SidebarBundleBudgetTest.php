@@ -29,8 +29,26 @@ class SidebarBundleBudgetTest extends TestCase
      *
      * El margen es corto a propósito: este número solo debe subir cuando alguien decida que la
      * landing haga algo más, no por arrastre de una dependencia que se coló.
+     *
+     * ⚠️ **De 20 a 22 el 2026-08-28** (`#231`), y es del primer caso: la landing hace más. Entran
+     * la coreografía del hero del cierre (`#229`) y el estado del minijuego (`#231`), y son
+     * **2,3 kB** medidos. Este techo hizo exactamente su trabajo: saltó en el `pre-push`, con el
+     * mensaje correcto, antes de que nadie lo notara en producción.
+     * ▶ **Y lo que NO entra son los otros 12 kB del juego**, que van en su propio trozo. Sin el
+     * `import()` dinámico este número habría tenido que subir a **32**: es la diferencia entre
+     * «la landing hace algo más» y «la landing carga un juego que casi nadie va a abrir».
      */
-    private const LANDING_ENTRY_MAX_KB = 20;
+    private const LANDING_ENTRY_MAX_KB = 22;
+
+    /**
+     * Techo del trozo del minijuego (`#231`). Medido al construirlo: **12,08 kB**.
+     *
+     * ⚠️ **Un trozo diferido también engorda, y engorda MÁS callado**: no lo paga quien entra en la
+     * portada, así que ningún número lo delata — pero sí lo paga quien llega al final, y es
+     * justamente el visitante que ya ha demostrado interés. El margen es corto por el mismo motivo
+     * que el de arriba.
+     */
+    private const SALTA_CHUNK_MAX_KB = 14;
 
     /**
      * Techo del chunk del cajón, que se descarga en la PRIMERA apertura. Los once pasos llegan a
@@ -491,6 +509,43 @@ class SidebarBundleBudgetTest extends TestCase
                 'la landing, sube el techo a propósito — es un presupuesto, no un objetivo.',
                 $kb, self::LANDING_ENTRY_MAX_KB
             )
+        );
+    }
+
+    /**
+     * **El minijuego pesa lo que dijo pesar** (`#231`).
+     *
+     * Es una guarda de peso como las de arriba, pero de un trozo DIFERIDO, y por eso hace falta
+     * decir por qué existe: nadie la echaría de menos. Un trozo diferido que engorda no lo paga
+     * quien entra en la portada —así que no mueve ningún otro número— pero sí lo paga quien llega
+     * al final, que es el visitante que ya ha demostrado interés. Sin techo, el juego podría
+     * triplicarse sin que ninguna medida se enterara.
+     */
+    public function test_the_game_chunk_stays_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+
+        $entrada = collect($manifest)->first(
+            fn (array $v, string $k): bool => str_contains($k, 'site/salta.js'),
+        );
+
+        $this->assertNotNull(
+            $entrada,
+            "el trozo del minijuego no está en el manifiesto.\n".
+            '▶ O se ha retirado el juego, o su `import()` dejó de ser dinámico y Rollup lo ha '.
+            'fundido con el entry de la landing — que es lo que el techo de arriba mide.',
+        );
+
+        $kb = $this->sizeKb($entrada['file']);
+
+        $this->assertLessThanOrEqual(
+            self::SALTA_CHUNK_MAX_KB, $kb,
+            sprintf(
+                "El trozo del minijuego pesa %.1f kB (techo: %d kB).\n".
+                'Lo descarga quien llega al final de la portada. Si el juego ha crecido a '.
+                'propósito, sube el techo — es un presupuesto, no un objetivo.',
+                $kb, self::SALTA_CHUNK_MAX_KB,
+            ),
         );
     }
 

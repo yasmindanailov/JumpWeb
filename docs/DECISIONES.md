@@ -12561,3 +12561,21 @@ devuelve `null`**. Sin los dos `try`, el juego reventaría al arrancar en una ve
 llevaría por delante el bucle entero, no solo el récord.
 ▶ Dos mutaciones muertas: quitar el `import()` dinámico y dejar correr la demo con movimiento
 reducido.
+
+### ⚠️ Y el techo de peso saltó — que es la mejor noticia de la tanda
+
+`SidebarBundleBudgetTest::test_the_landing_entry_stays_under_its_budget` paró el `pre-push`: **21,2
+de un techo de 20**. Existía y yo había mirado en el fichero equivocado al planificar, dando por
+hecho que no lo había. **Hizo exactamente su trabajo**: saltó con el mensaje correcto —«si es
+trabajo nuevo de la landing, sube el techo a propósito; es un presupuesto, no un objetivo»— antes de
+que nadie lo notara en producción.
+
+▶ Sube a **22**, que es el caso que su propio docblock contempla: la landing hace más (la
+coreografía del cierre y el estado del juego, 2,3 kB medidos). ▶ Y **lo que NO entra son los otros
+12 kB**: sin el `import()` dinámico el techo habría tenido que subir a **32**. Es la diferencia
+entre «la landing hace algo más» y «la landing carga un juego que casi nadie va a abrir».
+
+⚠️ **Se le pone techo también al trozo diferido** (14 kB sobre 12,08 medidos), y hay que decir por
+qué existe porque nadie lo echaría de menos: **un trozo diferido que engorda engorda MÁS callado**.
+No lo paga quien entra en la portada —así que no mueve ningún otro número— pero sí lo paga quien
+llega al final, que es justo el visitante que ya ha demostrado interés.
