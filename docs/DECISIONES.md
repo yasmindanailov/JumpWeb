@@ -13151,3 +13151,73 @@ rellenado con nada: tapar un hueco con contenido inventado es una decisión de p
 **Verificación**: JS 813 → **835** · PHP +20 casos · **10 mutaciones, las 10 muerden** · headless
 **22/22** a 390×844 y 2/2 más con el umbral alto (`VERIFICACION-E2E-CAJON.md` §5.novodecies) · chunk
 252,27 → **255,13 KiB** (techo 253 → 256, medido construyendo con y sin).
+
+---
+
+## #250 · 2026-08-28 · [DECIDIDO owner] La columna del sitio es la del MOCKUP — y no era más ancha, era más estrecha
+
+**Contexto.** El owner, tras el arreglo del hero del cierre (`#238`): «para hacer la landing al
+mockup ¿debemos cambiar toda la estructura? más ancha la landing ¿no?». Las dos mitades tenían
+respuesta medida, y las dos **al revés de lo que parecía**.
+
+### 1 · No es más ancha: es más ESTRECHA
+
+| | columna de contenido |
+|---|---|
+| el producto hasta hoy (`.wrap`) | **1380** |
+| el mockup (`max-width:1240` + `--pjp-margen:32`, en TODAS sus secciones) | **1176** |
+
+▶ **Y había una prueba interna de que la columna buena era la suya**: nuestro hero de cabecera ya
+acababa en **1240** —`--hero-w-end`, el número del mockup— mientras las secciones iban a 1380. El
+producto llevaba **dos columnas contradictorias** sin que nadie lo hubiera decidido: se coló pieza a
+pieza, que es como se cuela siempre.
+
+### 2 · No es «cambiar la estructura»: el sitio ya pasaba por UNA columna
+
+Medido ANTES de tocar nada, en las **12 vistas públicas** a dos anchos: `.wrap`, el pie y el `.nav`
+devuelven **exactamente el mismo número en todas** (1380/270 a 1920 · 1200/40 a 1280). Lo demás que
+declara `max-width` —480, 640, 820, 920…— son **medidas tipográficas**, no columnas, y no se tocan.
+
+El cambio son **tres declaraciones y dos borrados**, y se simuló y midió antes de proponerlo.
+
+### 3 · Un solo número, y por qué hay que forzarlo
+
+El sitio expresa la MISMA columna de tres formas: `width` (`.wrap`), **sangrado** (`--wrap-gutter`,
+para lo que va a sangre completa y tiene que alinearse) y **caja exterior** (`--hero-w-end`,
+`.reserve`, `.menu__inner`, que se sangran por dentro). *Tres expresiones del mismo número escritas
+a mano son tres columnas esperando a separarse* — literalmente lo que había pasado. Ahora el ancho
+vive en **`--col-max`** y las tres se derivan.
+▶ Se van también los **dos overrides de `.wrap` por `@media`**: eran una **tercera** escala de
+sangrado (cortes en 768 y 420) compitiendo con la de `--col-gutter` (1100 y 720).
+
+### 4 · El REPOSO del hero del cierre, 27 de 28 contra el artboard
+
+`[DECIDIDO owner]`: «el estado normal del hero del footer, no full viewport, con las dimensiones
+correctas al mockup». Se comparó **cada dimensión declarada** del `<section id="reservar">` con la
+computada en el navegador, a 1280 y a 390. **Coinciden 27 de 28** en los dos anchos.
+
+⚠️⚠️ **Dos de las cuatro divergencias del primer comparador NO eran del código, y comprobarlo
+ahorró dos cambios equivocados:**
+- **el tag daba 108 contra 102,4** → va girado −7° y `getBoundingClientRect()` devuelve la
+  envolvente del giro (`102,4·cos7 + 53,5·sin7 = 108,2`). El ancho real era exacto.
+- **canto y sombra de la tarjeta** → salían 24 y «ninguna» porque **`client.css` ya lo dice**
+  (`--r-lg: 24px`, `--shadow-lift: none`). El paquete del cliente estaba haciendo su trabajo.
+▶ *Cuando un comparador dice que algo no cuadra, la primera hipótesis sigue siendo el comparador.*
+
+❗ **La única divergencia real es el canto de los CTA, 10 contra 14, y es una contradicción interna
+del cliente**: su escala de forma declara seis escalones —0 · 6 · 10 · 16 · 24 · 999— y **14 no está
+en ella**; medido en su propio artboard, **12 de sus 19 botones usan 10 y solo 3 usan 14**, los del
+cierre. Manda su escala declarada. Es la **quinta** contradicción de sus fuentes (`DEUDA.md`), y
+cambiarla sería **una línea de su `client.css`**, no código del producto.
+
+### Verificación
+
+12 vistas × 2 anchos, las 24 a **1176** con `.wrap`, pie y `.nav` alineados al píxel · **13 anchos ×
+6 vistas = 78 combinaciones** (360 → 2560) con **cero desborde de página y cero errores de
+JavaScript**. ⚠️ El detector marcó 31 elementos «fuera de ventana» y **el control con la columna
+anterior marcó los mismos 31** —marquesinas, tira de zonas, polaroid girada—: *sin el control se
+habrían reportado 31 roturas inventadas.* El hero **no se movió** (1224 · 1240 · 1240 · 1240 · 366
+antes y después). Menú, tarjeta del cierre y minijuego re-medidos sin cambio.
+**`ColumnIsDeclaredOnceTest` nuevo (3 casos) · 6 mutaciones, las 6 muerden.** El lector de hojas se
+extrae a `Tests\Support\ReadsSiteStylesheets`, que tres guardas se estaban copiando.
+Suite **3.364 / 22.147** · Pint ✓ · docs-check ✓.

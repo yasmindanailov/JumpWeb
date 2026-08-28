@@ -460,7 +460,12 @@ img { display: block; max-width: 100%; }
 }
 
 /* ---------- layout ---------- */
-.wrap { width: min(1380px, 100% - 80px); margin-inline: auto; }
+/* ⚠️ **El ancho NO se escribe aquí**: sale de `--col-max` (site.css), que es el único sitio
+   donde vive el número de la columna. Y el sangrado sale de `--col-gutter`, que ya trae sus
+   escalones (32 · 24 bajo 1100 · 16 bajo 720) — por eso este `.wrap` **ya no tiene overrides
+   por `@media`**: tenía dos, con cortes distintos (768 y 420), y eran una tercera escala de
+   sangrado compitiendo con las otras dos. */
+.wrap { width: min(var(--col-max), 100% - var(--col-gutter) * 2); margin-inline: auto; }
 .section { padding: 96px 0; position: relative; }
 .section + .section { border-top: 1px solid var(--line); }
 
@@ -2005,7 +2010,6 @@ input[type="radio"]:focus-visible,
 }
 
 @media (max-width: 768px) {
-  .wrap { width: calc(100% - 40px); }
   .section { padding: 64px 0; }
   .nav { padding: 12px 20px; }
   .nav__brand { font-size: 18px; }
@@ -2113,7 +2117,6 @@ input[type="radio"]:focus-visible,
 }
 
 @media (max-width: 420px) {
-  .wrap { width: calc(100% - 32px); }
   .nav__brand { font-size: 16px; }
   .nav__brand-row { font-size: 18px; } /* #231 p9: logo grande pero ajustado al ancho mínimo */
   .hero__stage { aspect-ratio: 4 / 5; }

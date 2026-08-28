@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
 /**
@@ -30,16 +31,7 @@ use Tests\TestCase;
  */
 class CappedContainerGutterTest extends TestCase
 {
-    /**
-     * Hojas del PRODUCTO. `client.css` queda fuera a propósito, con el mismo criterio que
-     * `ShapeScaleTest`: es el paquete de una instalación y juzgarlo con las reglas del producto
-     * sería prohibirle aquello para lo que existe — además de hacer que el recuento de aserciones
-     * del gate cambiara según si la máquina tiene o no un paquete montado.
-     */
-    private const SHEETS = 'public/css/*.css';
-
-    /** @var list<array{selector: string, body: string, sheet: string}>|null */
-    private ?array $rules = null;
+    use ReadsSiteStylesheets;
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  El instrumento, antes que lo que mide
@@ -52,7 +44,7 @@ class CappedContainerGutterTest extends TestCase
      */
     public function test_the_scan_sees_the_corpus_including_inside_at_rules(): void
     {
-        $rules = $this->rules();
+        $rules = $this->siteRules();
 
         $this->assertGreaterThan(500, count($rules), 'el barrido de reglas se ha quedado corto: es el instrumento, no la hoja');
 
@@ -75,7 +67,7 @@ class CappedContainerGutterTest extends TestCase
         // El token que la guarda protege existe y es una LONGITUD, no un porcentaje.
         $this->assertMatchesRegularExpression(
             '/--col-gutter:\s*\d+(\.\d+)?px\s*;/',
-            implode("\n", $this->sheetContents()),
+            implode("\n", $this->siteSheets()),
             '`--col-gutter` tiene que ser una longitud fija: si se declara en porcentaje vuelve a '.
             'medir al padre y esta guarda deja de significar nada',
         );
@@ -110,7 +102,7 @@ class CappedContainerGutterTest extends TestCase
     {
         $offenders = [];
 
-        foreach ($this->rules() as $rule) {
+        foreach ($this->siteRules() as $rule) {
             if (! str_contains($rule['body'], 'var(--wrap-gutter)')) {
                 continue;
             }
@@ -145,7 +137,7 @@ class CappedContainerGutterTest extends TestCase
      */
     public function test_the_closing_card_reserves_the_game_strip_exactly_once(): void
     {
-        foreach ($this->rules() as $rule) {
+        foreach ($this->siteRules() as $rule) {
             if ($rule['selector'] !== '.reserve__body') {
                 continue;
             }
@@ -161,7 +153,7 @@ class CappedContainerGutterTest extends TestCase
 
         // Y la reserva que sí tiene que existir sigue ahí, o la guarda de arriba se cumpliría
         // sola con la tira pisando el texto.
-        $box = array_values(array_filter($this->rules(), fn (array $r) => $r['selector'] === '.reserve__box'
+        $box = array_values(array_filter($this->siteRules(), fn (array $r) => $r['selector'] === '.reserve__box'
             && preg_match('/(?<![-\w])padding\s*:/', $r['body']) === 1));
 
         $this->assertNotEmpty($box, '`.reserve__box` ha perdido el relleno que aparta el sitio del lienzo del minijuego');
@@ -174,7 +166,7 @@ class CappedContainerGutterTest extends TestCase
     /** ¿El bloque acota su propio ancho a una columna? */
     private function isCapped(string $body): bool
     {
-        if (preg_match('/(?<![-\w])(max-)?width\s*:\s*([^;}]+)/i', $body, $m) !== 1) {
+        if (preg_match('/(?<![-\\w])(max-)?width\\s*:\\s*([^;}]+)/i', $body, $m) !== 1) {
             return false;
         }
 
@@ -186,106 +178,9 @@ class CappedContainerGutterTest extends TestCase
             return false;
         }
 
-        return preg_match('/\d+(\.\d+)?(px|rem|em|ch)/', $value) === 1;
-    }
-
-    /** @return list<array{selector: string, body: string, sheet: string}> */
-    private function rules(): array
-    {
-        if ($this->rules !== null) {
-            return $this->rules;
-        }
-
-        $out = [];
-
-        foreach ($this->sheetContents() as $sheet => $css) {
-            $this->walk($css, (string) $sheet, $out);
-        }
-
-        return $this->rules = $out;
-    }
-
-    /**
-     * Recorre la hoja quedándose con los bloques de REGLA — los que no abren otro bloque dentro—,
-     * así que desciende solo a `@media` y compañía sin tratarlos como reglas.
-     *
-     * @param  list<array{selector: string, body: string, sheet: string}>  $out
-     */
-    private function walk(string $css, string $sheet, array &$out): void
-    {
-        $length = strlen($css);
-        $start = 0;
-
-        for ($i = 0; $i < $length; $i++) {
-            if ($css[$i] === '}') {
-                $start = $i + 1;
-
-                continue;
-            }
-
-            if ($css[$i] !== '{') {
-                continue;
-            }
-
-            $selector = trim((string) preg_replace('/\s+/', ' ', substr($css, $start, $i - $start)));
-            $close = $this->matching($css, $i);
-            $body = substr($css, $i + 1, $close - $i - 1);
-
-            // Un at-rule que contiene reglas —`@media`, `@supports`, `@keyframes`— se recorre
-            // dentro; uno que no las contiene —`@font-face`— es una declaración y no una regla.
-            if (str_starts_with($selector, '@')) {
-                if (str_contains($body, '{')) {
-                    $this->walk($body, $sheet, $out);
-                }
-            } elseif ($selector !== '') {
-                $out[] = ['selector' => $selector, 'body' => $body, 'sheet' => $sheet];
-            }
-
-            $i = $close;
-            $start = $i + 1;
-        }
-    }
-
-    /** Índice del `}` que cierra el `{` que hay en `$open`. */
-    private function matching(string $css, int $open): int
-    {
-        $depth = 0;
-        $length = strlen($css);
-
-        for ($i = $open; $i < $length; $i++) {
-            if ($css[$i] === '{') {
-                $depth++;
-            } elseif ($css[$i] === '}') {
-                $depth--;
-
-                if ($depth === 0) {
-                    return $i;
-                }
-            }
-        }
-
-        return $length - 1;
-    }
-
-    /** @return array<string, string> */
-    private function sheetContents(): array
-    {
-        $out = [];
-
-        foreach (glob(base_path(self::SHEETS)) ?: [] as $path) {
-            if (basename($path) === 'client.css') {
-                continue;
-            }
-
-            // Los comentarios se BLANQUEAN conservando la longitud: al borrarlos, un `/* … */`
-            // pegado al selector de la línea de arriba deja el recorrido sin selector.
-            $out[basename($path)] = (string) preg_replace_callback(
-                '#/\*.*?\*/#s',
-                fn (array $m) => str_repeat(' ', strlen($m[0])),
-                (string) file_get_contents($path),
-            );
-        }
-
-        return $out;
+        // Una caja que se acota LEYENDO la columna del sitio también está acotada: es justo el
+        // caso de la tarjeta del cierre y de la columna del menú.
+        return preg_match('/\\d+(\\.\\d+)?(px|rem|em|ch)/', $value) === 1
+            || str_contains($value, 'var(--col-max)');
     }
 }

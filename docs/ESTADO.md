@@ -12,6 +12,23 @@
 > hace siempre sobre la lista de ficheros del propio diff (`git status`), nunca con un `grep` del
 > árbol: un `sed` global llegó a corromper cinco referencias del otro carril.
 >
+> ❗❗ **`#250` — LA COLUMNA DEL SITIO ES AHORA LA DEL MOCKUP: 1176 px, no 1380.** `[DECIDIDO
+> owner]`. Afecta a las **doce vistas** y a cualquiera que escriba CSS, así que va delante.
+> ▶ **El ancho se escribe UNA vez, en `--col-max`**, y de ahí salen las tres formas en las que el
+> sitio expresa la misma columna: `width` (`.wrap`) · SANGRADO (`--wrap-gutter`, para lo que va a
+> sangre completa) · caja EXTERIOR (`--hero-w-end`, `.reserve`, `.menu__inner`). Lo vigila
+> `ColumnIsDeclaredOnceTest`, con sus 6 mutaciones. **No escribas un ancho de columna a mano.**
+> ⚠️ **La landing no se ensancha: se ESTRECHA.** Y había una prueba interna de que la columna buena
+> era la del mockup: el hero de cabecera ya acababa en 1240 (su número) mientras las secciones iban
+> a 1380 — **dos columnas contradictorias que nadie había decidido**.
+> ⚠️ **Y el reposo del hero del cierre está medido contra el artboard: 27 de 28 dimensiones
+> idénticas.** La única real es el canto de sus CTA (10 contra 14) y es una **contradicción del
+> cliente consigo mismo** —14 no está en su escala— : ficha en `DEUDA.md`, se arregla en su
+> `client.css` si él quiere.
+> ⚠️⚠️ **Dos de las cuatro divergencias que dio el comparador NO eran del código**: el tag va girado
+> −7° y `getBoundingClientRect()` mide la envolvente del giro, y el canto y la sombra ya los ponía
+> `client.css`. *Comprobarlo ahorró dos cambios equivocados.*
+>
 > ❗❗ **`#238` — LA TARJETA DEL CIERRE MEDÍA 160 px A 2560, Y EL MENÚ 60. Afecta a cualquiera que
 > escriba CSS**, así que va delante de todo lo demás. `--wrap-gutter` vale
 > `max(40px, calc((100% - 1380px) / 2))` y ese `100%` es un **porcentaje: mide el CONTENEDOR, no el
@@ -1006,6 +1023,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3377 en verde** (22.276 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
+  noche **sobre el árbol CONJUNTO**, tras rebasar `#250` (la COLUMNA, carril C) encima del `#239` del
+  carril A. ▶ **+3 casos en este corte**: `ColumnIsDeclaredOnceTest` —el ancho de la columna se
+  escribe una vez y las tres formas de expresarla lo leen—, **6 mutaciones y las 6 muerden**.
+  ⚠️ **Y una trampa del rebase que costó 34 rojos y no era del cambio**: el bundle SSR quedó RANCIO
+  con las fuentes del otro carril, y lo dijo su propia guarda. `npm run build && npm run build:ssr`
+  antes de la suite, o el `pre-push`, que ya lo hace.
 - Suite **3374 en verde** (22.251 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
   noche (hora de Madrid) tras las unidades 2–4 del **cajón en móvil** (`#239`). ▶ **+13 casos y +121
   aserciones**: `AvailabilitySettingsTest` (9, el lector defensivo y el predicado del aviso —con dos
@@ -1589,6 +1613,52 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
+
+# ❗ SI ENTRAS NUEVO (2026-08-28, noche · carril C): la COLUMNA DEL SITIO ES LA DEL MOCKUP — `#250`
+
+**`git fetch` antes de nada.** ⚠️ **Hay rangos de numeración repartidos** (los pactó el carril A en
+la cabecera): A toma `#239`–`#249` y C sigue por `#250`. Esta tanda es la primera del rango nuevo, y
+se renumeró **dos veces** antes de fusionar — de `#239` a `#240` y de ahí a `#250`.
+
+## ▶ El encargo
+
+El owner, después de `#238`: «para hacer la landing al mockup ¿debemos cambiar toda la estructura?
+más ancha la landing ¿no?» → se midió, se simuló y se le enseñó con capturas; respondió **«procede
+así, idéntico al mockup. Y el estado normal del hero del footer, no full viewport, con las
+dimensiones correctas al mockup»**.
+
+| | |
+|---|---|
+| `#250` · la columna | ❗❗ **La columna del sitio pasa de 1380 a 1176**, la del mockup. ⚠️ **No se ensancha: se ESTRECHA.** Y había prueba interna de que la suya era la buena: **el hero ya acababa en 1240** (su número) mientras las secciones iban a 1380 — dos columnas contradictorias que nadie decidió |
+| `#250` · el token | El ancho se escribe **UNA vez** (`--col-max`) y de ahí salen sus **tres formas**: `width` (`.wrap`) · SANGRADO (`--wrap-gutter`) · caja EXTERIOR (`--hero-w-end`, `.reserve`, `.menu__inner`). Guarda: `ColumnIsDeclaredOnceTest`, 6 mutaciones |
+| `#250` · el reposo | El hero del cierre, comparado dimensión a dimensión con el artboard: **27 de 28 idénticas** a 1280 y a 390 |
+
+## ❗❗ Lo que MÁS importa que sepas
+
+1. ❗❗ **No escribas un ancho de columna a mano.** Derívalo de `--col-max`. Por encima de 1000 px un
+   ancho ya no es una medida tipográfica: es la columna, y la guarda te lo dirá.
+2. ⚠️⚠️ **Dos de las cuatro divergencias que dio el comparador NO eran del código**, y comprobarlo
+   ahorró dos cambios equivocados: el tag va **girado −7°** y `getBoundingClientRect()` devuelve la
+   envolvente del giro; y el canto y la sombra de la tarjeta ya los ponía **`client.css`**.
+   ▶ *Cuando un comparador dice que algo no cuadra, la primera hipótesis sigue siendo el comparador.*
+3. ⚠️⚠️ **Un barrido de roturas sin CONTROL inventa roturas.** El detector marcó 31 elementos «fuera
+   de ventana» con la columna nueva… y **los mismos 31 con la vieja**: marquesinas, tira de zonas y
+   una polaroid girada, todas a propósito. Sin la pasada de control habría reportado 31 fallos.
+4. ⚠️ **El rebase dejó el bundle SSR RANCIO y salieron 34 rojos que no eran del cambio.** Lo dijo la
+   guarda que el otro carril construyó para eso. `npm run build && npm run build:ssr`.
+5. ❗ **Queda UNA divergencia real con el artboard y es del cliente consigo mismo**: el canto de los
+   CTA del cierre, 10 contra 14. **14 no está en su escala declarada** y 12 de sus 19 botones usan
+   10. Quinta contradicción de sus fuentes; ficha en `DEUDA.md`, se arregla en su `client.css`.
+
+## ▶ POR DÓNDE SIGUE
+
+0. ❗ **El OJO del owner sobre la columna nueva**: es un cambio de aire en las **doce vistas**, y una
+   captura no lo valida. Lo que más conviene mirar es `/precios`, `/servicios` y `/cumpleanos`, que
+   son las de rejillas más densas.
+1. ⬜ Lo de antes sigue igual: los **iconos** del canvas, el **contenido real** del cliente, y el ojo
+   del owner sobre las tandas visuales anteriores.
+
+---
 
 # ❗ SI ENTRAS NUEVO (2026-08-28, tarde-noche · carril C): la COLUMNA — `#238`
 

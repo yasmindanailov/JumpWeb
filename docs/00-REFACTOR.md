@@ -2575,6 +2575,19 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ❗ `[DECIDIDO owner]` la tarjeta va en la columna del **mockup** (1176). Queda su decisión sobre el
 > pie, que sigue en `.wrap` (1380): igualarlos son las doce vistas (`tema-por-instalacion.md` §17.4).
 >
+> ✅ **Y `#250` — LA COLUMNA DEL SITIO** (2026-08-28 noche, `[DECIDIDO owner]`: «procede así,
+> idéntico al mockup»). La columna pasa de **1380 a 1176**, la del mockup, en las doce vistas.
+> - ⚠️ **No se ensancha: se ESTRECHA** — y había prueba interna de que la suya era la buena: el hero
+>   ya acababa en 1240 (su número) mientras las secciones iban a 1380.
+> - **No fue «cambiar la estructura»**: medido antes, `.wrap`, el pie y el `.nav` ya daban el mismo
+>   número en las 12 vistas. Son **tres declaraciones y dos borrados**.
+> - El ancho se escribe **una vez** (`--col-max`) y de ahí salen sus tres formas —`width`, sangrado y
+>   caja exterior—. Guarda: `ColumnIsDeclaredOnceTest`, 6 mutaciones.
+> - **El reposo del hero del cierre: 27 de 28 dimensiones idénticas al artboard.** La única real es
+>   el canto de sus CTA (10 vs 14) y es contradicción del cliente consigo mismo (`DEUDA`).
+> ▶ **Dos lecciones de instrumento**: un comparador que mide la envolvente de un GIRO miente, y un
+> barrido de roturas **sin pasada de control** inventa roturas (31, las mismas antes y después).
+>
 > ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
 > del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
 > AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas

@@ -1585,3 +1585,104 @@ otras once vistas, donde no hay tarjeta de cierre: sería mover el problema, no 
   `--wrap-gutter` a `.reserve`, devolvérselo a `.menu__inner`, devolver la segunda reserva del hueco
   y quitar la reserva que sí tiene que existir.
 - Suite **3359 / 22.125** · Pint ✓.
+
+---
+
+## 18. LA COLUMNA DEL SITIO — un solo número, tres expresiones (`#250`, 2026-08-28)
+
+`[DECIDIDO owner, 2026-08-28]`: **la columna del sitio es la del mockup** — **1176 px de contenido**
+con un sangrado de 32 · 24 · 16, o sea la caja de **1240** que dibujan **todas** sus secciones.
+La pregunta que lo abrió fue suya: *«para hacer la landing al mockup ¿debemos cambiar toda la
+estructura? más ancha la landing ¿no?»*. Las dos mitades tenían respuesta medida, y las dos al revés
+de lo que parecía.
+
+### 18.1 No es más ancha: es más ESTRECHA
+
+| | columna de contenido |
+|---|---|
+| el producto hasta hoy (`.wrap`) | **1380** |
+| el mockup (`max-width:1240` + `--pjp-margen:32`) | **1176** |
+
+▶ **Y había una prueba interna de que la columna buena era la suya**: nuestro hero de cabecera ya
+acababa en **1240** (`--hero-w-end`, el número del mockup) mientras las secciones iban a 1380. El
+producto tenía **dos columnas contradictorias** y nadie lo había decidido: se coló pieza a pieza.
+
+### 18.2 No es «cambiar la estructura»: el sitio ya pasaba por UNA columna
+
+Medido antes de tocar nada, en las **12 vistas públicas** a dos anchos: `.wrap`, el pie y el `.nav`
+devuelven **exactamente el mismo número en todas** (1380/270 a 1920 · 1200/40 a 1280). Todo lo demás
+que declara `max-width` en las hojas —480, 640, 820, 920…— son **medidas tipográficas**, no columnas.
+
+El cambio son **tres declaraciones y dos borrados**:
+
+```css
+--col-max: 1176px;                                             /* el único sitio con el número */
+--wrap-gutter: max(var(--col-gutter), calc((100% - var(--col-max)) / 2));
+.wrap { width: min(var(--col-max), 100% - var(--col-gutter) * 2); }
+/* y se van los dos overrides de `.wrap` por @media: eran una TERCERA escala de sangrado
+   (cortes en 768 y 420) compitiendo con `--col-gutter` (1100 y 720) */
+```
+
+### 18.3 ⚠️ Tres formas del mismo número, y por eso el token
+
+El sitio necesita expresar la columna de tres maneras, y las tres tienen que moverse juntas:
+
+| forma | quién | para qué |
+|---|---|---|
+| `width` | `.wrap` | secciones, pie y páginas de contenido |
+| SANGRADO | `--wrap-gutter` | lo que va a sangre completa y debe alinearse: el `.nav`, el hero |
+| caja EXTERIOR (`--col-max + 2×g`) | `--hero-w-end` · `.reserve` · `.menu__inner` | los que se sangran por dentro |
+
+▶ *Tres expresiones del mismo número escritas a mano son tres columnas esperando a separarse*, y
+este producto ya lo vivió. Lo vigila **`ColumnIsDeclaredOnceTest`**, con su suelo declarado: por
+encima de **1000 px** un ancho ya no es una medida, es la columna (la medida más ancha del producto
+son 920).
+
+⚠️ **La trampa de esa guarda**: `@media (max-width: 1080px)` **es** un `max-width` con un literal de
+cuatro cifras, y hay once en estas hojas. Un barrido que no separe el prelude de un at-rule del
+cuerpo de una regla sale rojo con el producto sano — o lo ablandan hasta dejarlo ciego. El caso del
+instrumento lo comprueba explícitamente.
+
+### 18.4 El REPOSO del hero del cierre, medido contra el artboard: 27 de 28
+
+`[DECIDIDO owner]`: «el estado normal del hero del footer, no full viewport, con las dimensiones
+correctas al mockup». Se comparó **cada dimensión declarada** del `<section id="reservar">` contra la
+computada en el navegador, a 1280 y a 390:
+
+**Coinciden las 28 menos una**: sangrado y margen de la sección · los tres rellenos de la tarjeta ·
+canto · sombra · alto del lienzo · sitio de la invitación · talla e interlínea del titular · grosor
+del contorno · ancho, margen, talla e interlínea del párrafo · margen, hueco, alto, relleno, talla,
+base flex y ancho máximo de los CTA · las tres medidas del tag.
+
+⚠️ **Dos de las cuatro «divergencias» que dio el primer comparador eran del INSTRUMENTO o del
+paquete del cliente, no del código** — y comprobarlo antes de tocar ahorró dos cambios equivocados:
+- **el tag salía 108 contra 102,4**: va girado −7°, y `getBoundingClientRect()` devuelve la
+  envolvente del giro. `102,4·cos7 + 53,5·sin7 = 108,2`. El ancho real es exacto.
+- **canto de la tarjeta y sombra**: el comparador esperaba 24 y «ninguna», y salían 24 y ninguna —
+  porque **`client.css` ya lo dice** (`--r-lg: 24px`, `--shadow-lift: none`). El paquete del cliente
+  estaba haciendo su trabajo; el producto no tenía nada que arreglar.
+
+❗ **La única divergencia real es el canto de los CTA: 10 contra 14**, y es una **contradicción
+interna del cliente**. Su escala de forma declara seis escalones —0 · 6 · 10 · 16 · 24 · 999— y **14
+no está en ella**; medido en su propio artboard, **12 de sus 19 botones usan 10 y solo 3 usan 14**,
+los del cierre. Manda su escala declarada. Ficha en `DEUDA.md`: es la **quinta** contradicción de sus
+fuentes, y cambiarla sería **una línea de su `client.css`**, no código del producto.
+
+### 18.5 Verificación
+
+- **12 vistas × 2 anchos**: las 24 a **1176**, con `.wrap`, el pie y el `.nav` alineados al píxel.
+- **13 anchos × 6 vistas = 78 combinaciones** (360 → 2560): **cero desborde de página** y **cero
+  errores de JavaScript**. ⚠️ El detector marcó 31 elementos «fuera de ventana» — y **el control con
+  la columna anterior marcó los mismos 31**: son desbordes de diseño preexistentes (las marquesinas,
+  la tira de zonas, la polaroid girada). *Sin el control se habrían reportado 31 roturas inventadas.*
+- **El hero no se movió**: 1224 · 1240 · 1240 · 1240 · 366 antes y después, porque su ancho final ya
+  era la caja exterior de esta columna.
+- El menú, la tarjeta del cierre y el minijuego, re-medidos y sin cambio (150 / k = 0,5 en reposo;
+  358 / k = 1,193 jugando).
+- **`ColumnIsDeclaredOnceTest` nuevo (3 casos)** · **6 mutaciones, las 6 muerden**: devolver 1380 a
+  `.wrap`, escribir 1240 a mano en la tarjeta o en el menú, clavar el número en el sangrado o en el
+  hero, y cambiar la columna sin decidirlo.
+- El lector de hojas se extrae a **`Tests\Support\ReadsSiteStylesheets`**: tres guardas lo
+  necesitaban y cada una se lo escribía. Es la respuesta de `#233` otra vez — *cuando algo está en
+  dos sitios, la salida no es retirarlo de uno, es que haya una definición*.
+- Suite **3364 / 22.147** · Pint ✓ · docs-check ✓.

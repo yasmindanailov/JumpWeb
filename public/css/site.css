@@ -3,13 +3,20 @@
    El CSS del mockup (landing.css) se mantiene intacto.
    ==================================================================== */
 
-/* Padding lateral canónico del sitio — replica la fórmula del `.wrap` (landing.css L105)
-   `width: min(1380px, 100% - 80px); margin-inline: auto` traducida a un gutter usable
-   con `padding-inline` y con offsets de `position: absolute`. Resultado:
-   • Viewport ≤ 1460 px → 40 px a cada lado (mismo que el wrap interno).
-   • Viewport >  1460 px → `(100vw - 1380 px) / 2` a cada lado (centrado del contenido).
-   Permite que elementos full-bleed (como el hero del header o el nav fijo) alineen su
-   contenido con el resto de secciones de la web (`<section class="section wrap">`). */
+/* ══ LA COLUMNA DEL SITIO — un solo número, tres expresiones ═══════════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]` (`#250`): **la columna es la del mockup** — 1176 px de contenido
+   con un sangrado de 32 · 24 · 16, o sea la caja de 1240 que dibujan TODAS sus secciones. Antes
+   eran 1380 con 40 de sangrado, y eso dejaba al producto con dos columnas contradictorias: el
+   hero de cabecera ya acababa en 1240 (el número del mockup) y las secciones iban a 1380.
+
+   ▶ **El ancho se escribe UNA vez, en `--col-max`.** De ahí salen las tres formas en las que el
+   sitio necesita expresar la misma columna, y por eso no pueden separarse:
+   • `.wrap`            — el contenedor de las secciones (`width`), landing.css.
+   • `--wrap-gutter`    — el mismo número visto como SANGRADO, para los elementos a sangre
+                          completa que tienen que alinearse con él: el `.nav` y el hero.
+   • `--col-max + 2×g`  — la caja EXTERIOR, para los contenedores que se sangran por dentro:
+                          la tarjeta del cierre, la columna del menú y el ancho final del hero.
+   `ColumnIsDeclaredOnceTest` vigila que nadie vuelva a escribir el número a mano. */
 :root {
     /* ── Escala de PESO TIPOGRÁFICO (Fase 4 · paso 4.0c, `docs/specs/sidebar-spa.md` §4.3.bis) ──
        Medido antes de inventarla: el sidebar usa 51 `font-weight` con solo CINCO valores
@@ -32,14 +39,19 @@
 
     /* ⚠️⚠️ **`--wrap-gutter` es el sangrado de un elemento A SANGRE COMPLETA, y solo sirve ahí.**
        Su `100%` es un porcentaje: se resuelve contra el CONTENEDOR del elemento, no contra el
-       elemento. En algo que ocupa todo el ancho eso significa lo que dice —«40 px, o lo que haga
-       falta para centrar una columna de 1380»— y por eso el `.nav` y el hero lo usan bien.
+       elemento. En algo que ocupa todo el ancho eso significa lo que dice —«el sangrado, o lo que
+       haga falta para centrar `--col-max`»— y por eso el `.nav` y el hero lo usan bien.
        ▶ **En un elemento que YA está acotado por su propio `max-width` significa otra cosa**: el
        sangrado sigue creciendo con la ventana mientras la caja no, así que la columna se
        estrangula. No falla, no avisa y no se ve a 1280 px. Medido a 2560: la tarjeta del cierre
        quedaba en **160 px de ancho** y la columna del menú a pantalla completa en **60**.
        Los contenedores acotados usan `--col-gutter`. */
-    --wrap-gutter: max(40px, calc((100% - 1380px) / 2));
+    --wrap-gutter: max(var(--col-gutter), calc((100% - var(--col-max)) / 2));
+    /* ⚠️ **EL ANCHO DE LA COLUMNA, Y EL ÚNICO SITIO DONDE SE ESCRIBE.** Es el del mockup: sus
+       secciones son cajas de 1240 con 32 de sangrado, o sea 1176 de contenido. Cambiar este
+       número mueve el sitio entero —las doce vistas— a la vez, que es justo lo que tiene que
+       pasar: una columna que hay que cambiar en tres sitios acaba siendo tres columnas. */
+    --col-max: 1176px;
     /* El sangrado lateral de un contenedor YA ACOTADO (`max-width` propio). Es una LONGITUD FIJA
        a propósito: dentro de una caja acotada, un porcentaje mide el padre y miente. Los tres
        escalones son los del mockup (`--pjp-margen`: 32 · 24 · 16). */
@@ -154,11 +166,11 @@
 .skip-link:focus-visible { transform: translateY(0); outline: 2px solid var(--bg); outline-offset: 2px; }
 
 /* Nav fijo: el padding lateral original (landing.css L113 `clamp(24px, 4vw, 48px)`)
-   no coincide con el `.wrap`: a 1280 px era 8 px más estrecho, y por encima de
-   1460 px quedaba MUCHO más al borde (la regla `.wrap` empieza a centrar el
-   contenido en 1380 px pero el nav seguía contra los bordes). Override a
-   `--wrap-gutter` → logo y CTAs quedan alineados verticalmente con el contenido
-   de cada sección sin importar el viewport. El padding-block (16 px) se conserva. */
+   no coincide con el `.wrap`: a 1280 px era 8 px más estrecho, y por encima del ancho
+   de la columna quedaba MUCHO más al borde (el `.wrap` empieza a centrar su contenido
+   y el nav seguía contra los bordes). Override a `--wrap-gutter` → logo y CTAs quedan
+   alineados verticalmente con el contenido de cada sección sin importar el viewport.
+   El padding-block (16 px) se conserva. */
 .nav {
     padding-inline: var(--wrap-gutter);
 }
@@ -1889,7 +1901,10 @@ body.no-scroll { overflow: hidden; }
     --hero-h-ini: calc(100vh - var(--hero-gap) * 2);
     --hero-h-ini: calc(100svh - var(--hero-gap) * 2);
     --hero-h-end: min(78vh, 660px);
-    --hero-w-end: 1240px;
+    /* ⚠️ El ancho final del hero es la caja EXTERIOR de la columna (`--col-max + 2 × sangrado`),
+       no un número suyo: en el mockup su tarjeta acaba justo en el borde exterior de la columna
+       de las secciones, así que sus cantos sobresalen un sangrado por cada lado del texto. */
+    --hero-w-end: calc(var(--col-max) + var(--col-gutter) * 2);
     /* ⚠️ **El TITULAR también encoge, y hasta ahora no lo hacía** (`#220`). El mockup lo interpola
        con el mismo progreso que la caja (`lerp(f0, f1)` en `aplicaHero`), así que al minimizarse
        el hero el titular baja de 124 a 94 px de tope. Sin esto, el hero encogía y el texto se
@@ -1999,7 +2014,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     --cierre-p: 0;
 
     position: relative;
-    max-width: 1240px;
+    max-width: calc(var(--col-max) + var(--col-gutter) * 2);
     /* ⚠️ **El sangrado es `--col-gutter`, no `--wrap-gutter`, y la diferencia no es de estilo.**
        Esta sección está acotada a 1240, así que el porcentaje de `--wrap-gutter` mide el padre a
        sangre completa y crece con la ventana mientras la caja no: medido, la tarjeta pasaba de
@@ -4416,7 +4431,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
    longitud fija son 1240 − 2 × 32 = 1176 en cualquier pantalla, que es lo que dibuja el mockup. */
 .menu__inner {
     position: relative; height: 100%;
-    max-width: 1240px; margin-inline: auto;
+    max-width: calc(var(--col-max) + var(--col-gutter) * 2); margin-inline: auto;
     padding: clamp(104px, 13vh, 132px) var(--col-gutter) clamp(64px, 9vh, 104px);
     display: flex; flex-direction: column; gap: 24px;
 }
