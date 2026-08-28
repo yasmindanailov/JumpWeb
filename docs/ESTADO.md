@@ -345,6 +345,52 @@
 >   **solo cuando quedan pocas**, con umbral configurable. `LayerOrderTest` (2 casos, 2 mutaciones y
 >   las 2 muerden). ⚠️ **El carril C CERRÓ**, así que `resources/js/**` y `public/css/site.css` ya no
 >   se disputan.
+>   ▶▶ ❗❗ **CIERRE DE ESTA SESIÓN (2026-08-28, 21:30 hora de Madrid) — POR DÓNDE RETOMA LA SIGUIENTE.**
+>   Todo empujado y con el gate en verde: suite **3357 / 22.093** · JS **813** · Pint ✓ · docs-check ✓ ·
+>   build ✓. `audit-clock` **NO corrido a propósito**: la sesión no añadió ninguna fecha nueva ni
+>   ninguna afirmación de edad sin reloj congelado —los fixtures tocados conservan sus fechas fijas y
+>   su `travelTo`— (comprobado sobre el diff de los seis commits).
+>
+>   ▶ **LO SIGUIENTE ES EL CAJÓN EN MÓVIL, y ya está medido** (`#237`, y la medición vale: no hay que
+>   repetirla). El orden acordado con el owner:
+>     **1.** ~~El aviso de cookies deja de tapar el cajón~~ **HECHO** (`#237`).
+>     **2.** **La FECHA pasa a una tira de días RESERVABLES** + objetivos de 44 px. Medido: 11 de 12
+>        controles por debajo de 44 (celdas 43×43, flechas 32×32, «Volver» 61×17) y el calendario
+>        pinta **un mes de 42 celdas donde solo 2 eran reservables** — el cliente BUSCA en vez de
+>        elegir, y eso pesa más que el tamaño. El mes completo puede quedar tras un «ver más fechas».
+>     **3.** **La HORA pasa a tira deslizable con AJUSTE** (`scroll-snap`), `[DECIDIDO owner]`. ⚠️ **NO
+>        un deslizador continuo**: con once horas hay que pasar por todas y el dedo tapa el valor que
+>        se elige. Medido: chips de **68×39** y **~400 px de pantalla vacía** debajo.
+>     **4.** **Cada hora dice cómo está de llena, pero SOLO cuando quedan pocas** (`[DECIDIDO owner]`),
+>        con el **umbral configurable desde el panel** — es un dato de negocio. Hoy todos los chips
+>        son idénticos y el cliente no sabe que las 11:00 están casi llenas.
+>     **5.** Repasar toques y teclado en **carrito e identificación**, que NO se han medido aún.
+>
+>   ▶ **DOS PUNTOS NUEVOS DEL OWNER, apuntados hoy y sin empezar:**
+>     · ⚠️⚠️ **«Crear pedido» del panel, para TABLET** (`specs/panel-navegacion.md` §6·U7). **Esto
+>       CORRIGE la premisa de `#232`**: allí el owner dijo «la puerta tiene tablet propia, el resto del
+>       panel se usa en ORDENADOR» y por eso el calendario y las tablas quedaron fuera. **Ha cambiado:
+>       el GERENTE creará las reservas desde la tablet.** `/admin/crear-pedido` necesita su pasada —y
+>       sobre todo de **presentación**: hoy son 1.362 líneas de formulario pensadas para un ratón—.
+>       Con ella vuelve a la mesa parte de U6 (quien crea un pedido mira el calendario).
+>     · **El selector de menores del embudo hace demasiado ruido** (`specs/menores-a-cargo.md` §12):
+>       «es demasiado llamativo, hay que hacerlo más sutil». No es un fallo —funciona y está probado—:
+>       es peso visual. ⚠️ **Antes de tocarlo, medir** cuánto alto se lleva del paso, como en `#237`;
+>       sin ese número «más sutil» es una opinión. ❗ **Lo que no se puede perder al bajarle el ruido**:
+>       la exención firmada es CONDICIÓN para asignar, la fila no marcable tiene que seguir
+>       **visiblemente** deshabilitada con su motivo, y ese motivo se anuncia a un lector de pantalla.
+>
+>   ▶ **Lo que sigue esperando al OWNER** (no bloquea a nadie): su ojo sobre el **menú plano**, el
+>   **buscador** y la **puerta en tablet** —las tres en `main`, ninguna vista en su navegador—; el
+>   repaso de los **rótulos** de las 19 pantallas de Ajustes; y el ✅ a **JumpPoints**, que además
+>   ahora arrastra una decisión nueva: **`customer_visits` dejó de crecer** al retirar la tarjeta de
+>   visita (`lealtad-jumppoints.md` §9.bis).
+>
+>   ⚠️ **Y una lección de método de la jornada, que costó tres veces**: con dos carriles sobre `main`,
+>   los números de `DECISIONES.md` **chocaron tres veces** (`#225`, `#233`, `#235`). Si se vuelve a
+>   trabajar en paralelo, **repartir un rango por carril** lo quita de raíz. Y la renumeración se hace
+>   SIEMPRE sobre la lista de ficheros del propio diff (`git status`), nunca con un `grep` del árbol:
+>   un `sed` global llegó a corromper cinco referencias del otro carril.
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla

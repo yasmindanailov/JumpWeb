@@ -1424,3 +1424,26 @@ puede ser el sitio por donde entren.
 **Las guardas se re-apuntaron por SUJETO, ninguna se borró**: `GateProfileTest` y
 `ValidarRegistroProfileTest` exigían que el NOMBRE no llegara; ahora declaran al menor con un apellido
 imposible de confundir y exigen que **ese apellido** no aparezca ni en el JSON de la ficha ni en el HTML.
+
+---
+
+## 12. ⬜ El selector de menores hace DEMASIADO ruido en el embudo (pendiente)
+
+`[DECIDIDO owner, 2026-08-28]`, tras verlo en uso: **«la gestión de menores en el flujo de compra
+genera un poco de ruido, es demasiado llamativa; hay que hacerlo algo más sutil.»**
+
+No es un fallo: la pieza funciona y está probada (`#202`, §9.9.8). Es una decisión de PESO VISUAL —
+el bloque «¿Para quién son estas entradas?» compite con la acción principal del paso, que es elegir
+y seguir, y lo hace en todas las compras, incluidas las de quien no lleva menores.
+
+▶ **Sin diseñar todavía.** Antes de tocarlo hay que medir lo mismo que se midió en `#237`: cuánto
+alto ocupa en un móvil, qué porcentaje del paso se lleva y cuántos clientes lo ven de verdad (solo
+los que tienen menores declarados). Sin ese número, «más sutil» es una opinión.
+
+⚠️ **Lo que NO se puede perder al hacerlo sutil**, y por eso conviene leer §9.9 antes: la exención
+firmada es CONDICIÓN para asignar, la fila no marcable tiene que seguir **visiblemente** deshabilitada
+con su motivo aparte, y ese motivo se anuncia a un lector de pantalla (`aria-describedby`, arreglado
+en la revisión de `#217`). Bajar el ruido no puede volverse bajar la claridad de por qué algo no se
+puede marcar.
+
+▶ Va **con la tanda del cajón en móvil** (`#237` y siguientes), que es cuando se toca ese paso.

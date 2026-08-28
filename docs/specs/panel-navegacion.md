@@ -389,6 +389,12 @@ Seis puntos suyos tras verla, más dos que salieron de mirar la captura:
 
 ### 8.5 Lo que NO entra, y por qué
 
+⚠️⚠️ **CORRECCIÓN, y va delante del texto que corrige** (2026-08-28, por la tarde): el owner
+comunicó después que **el gerente creará las reservas desde la tablet** (`/admin/crear-pedido`). La
+premisa de abajo —«el resto del panel se usa en ordenador»— **ya no es cierta para esa pantalla**, y
+por eso «Crear pedido» entra en §6·U7 con su propia tanda. Lo que sigue en pie es que la puerta
+tiene tablet PROPIA y que el resto (tablas, ajustes) no urge.
+
 El **calendario** (8 reservas pintadas a 36 px de alto y 5 botones de 32–36) y las **tablas**
 («Pedidos» se sale 97 px en vertical y 163 en horizontal) siguen sin tocar: `[DECIDIDO owner]` el
 resto del panel se usa en ordenador. Si algún día se usa en tablet, la palanca ya existe y no la
@@ -405,6 +411,7 @@ tarjeta por debajo de un punto de ruptura. Ficha en `DEUDA.md`.
 | **U2** | Repasar los **rótulos y las 19 descripciones** | `[DECIDIDO owner]` D3: las propone el agente, las revisa él | ⬜ pendiente |
 | **U3** | **Las cinco columnas que le faltan a «Hoy»** | ❗ **«Hoy» YA EXISTE**: es el Escritorio renombrado, y ya trae filtro Hoy/Semana/Mes, dos cifras, la tabla **Cuándo · Producto · Cliente · Cantidad · Estado · Formulario**, un clic al pedido y «Imprimir resumen del día». **Medido: cero menciones a exención, menores, visita o ajustes en sus dos widgets.** Lo que falta: **si firmó la exención** (lo primero que se mira en la puerta) · **si trae menores y quiénes** · **si ya entró hoy** (la visita que registra la puerta desde `#208`, que nadie lee) · **si llega debiendo dinero** (`OrderAdjustment` de señal y extras, que se cobran en persona) · **el teléfono**. **No es una pantalla nueva: son cinco columnas.** ⚠️ Y una afirmación del agente que resultó FALSA: dijo que un pedido manual dejado a deber no saldría en «Hoy» — `ManualOrderFulfiller` los crea SIEMPRE pagados y el resto va como ajuste | ⬜ sin empezar |
 | ~~**U4**~~ | ~~Búsqueda global~~ | **HECHA** (`#224`, §7): 14 recursos + una categoría de PANTALLAS que Filament no trae. El empleado busca pedidos, no clientes. De regalo, un defecto vivo: buscar «jump» en el Catálogo no encontraba «Jump · 1 hora» | ✅ |
+| **U7** | ⚠️⚠️ **«Crear pedido» del panel, para TABLET** (`[DECIDIDO owner, 2026-08-28, tarde]`) | ❗ **Esto CORRIGE la premisa de §8**: allí el owner dijo «la puerta tiene tablet propia, el resto del panel se usa en ORDENADOR», y por eso el calendario y las tablas quedaron fuera. **Ha cambiado: el GERENTE va a crear las reservas desde la tablet**, en `/admin/crear-pedido`. Así que esa pantalla necesita su propia pasada de tablet —tamaños táctiles, y sobre todo **presentación**: hoy es un formulario largo de 1.362 líneas pensado para un ratón—. ▶ Y con ella vuelve a la mesa parte de **U6**: quien crea un pedido mira el calendario | ⬜ sin empezar |
 | **U6** | El **calendario** y las **tablas** en tablet | Medido: 8 reservas del calendario a **36 px** y 5 botones a 32–36; «Pedidos» se sale **97 px** en vertical y **163** en horizontal. `[DECIDIDO owner]`: el resto del panel se usa en ORDENADOR, así que no urge. La palanca existe y **no se usa en ninguna tabla**: `Split`/`Stack` de Filament apilan la fila como tarjeta bajo un punto de ruptura | ⬜ sin empezar |
 | **U5** | Los `$navigationSort` de las 19 escondidas ya no ordenan nada | El orden de Ajustes lo manda `areas()`. Son propiedades muertas, inofensivas pero mentirosas | ficha en `DEUDA.md` |
 

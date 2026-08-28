@@ -2161,6 +2161,18 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       completo **cambiando el valor, no el conjunto de campos**, para no romper la cadena de hashes.
       **Cuatro guardas re-apuntadas por sujeto, ninguna borrada** · coste por feature (chunk 253,
       payload 9.100) · suite 3.355 / 22.048 · JS 813 · verificado en navegador.
+- [ ] **«CREAR PEDIDO» DEL PANEL, PARA TABLET** — `[DECIDIDO owner, 2026-08-28 tarde]`, y
+      ⚠️⚠️ **CORRIGE la premisa de `#232`**: allí dijo «la puerta tiene tablet propia, el resto del
+      panel se usa en ORDENADOR» y por eso el calendario y las tablas quedaron fuera. **Ha cambiado:
+      el GERENTE creará las reservas desde la tablet.** `/admin/crear-pedido` necesita su pasada, y
+      sobre todo de PRESENTACIÓN: son 1.362 líneas de formulario pensadas para un ratón. Con ella
+      vuelve parte del calendario en tablet. Ficha: `specs/panel-navegacion.md` §6·U7.
+- [ ] **EL SELECTOR DE MENORES DEL EMBUDO HACE DEMASIADO RUIDO** — `[DECIDIDO owner]`: «es demasiado
+      llamativo, hay que hacerlo más sutil». No es un fallo (funciona y está probado): es peso visual,
+      y lo ve también quien no lleva menores. ⚠️ **Medir antes de tocar**, como en `#237`: sin saber
+      cuánto alto se lleva del paso, «más sutil» es una opinión. ❗ No se puede perder: la exención
+      firmada es CONDICIÓN para asignar, la fila no marcable **visiblemente** deshabilitada con su
+      motivo, y ese motivo anunciado a un lector de pantalla. Ficha: `specs/menores-a-cargo.md` §12.
 - [ ] **EL CAJÓN EN MÓVIL** — encargo del owner («es el 90 %»). ▶ **Arrancado con una MEDICIÓN**
       (2026-08-28, `#237`), no con código. ⚠️⚠️ **Hallazgo: el aviso de cookies tapaba el 45 % del
       cajón** —296 px, incluido el botón que avanza la compra— en `/entradas`, donde nace abierto;
