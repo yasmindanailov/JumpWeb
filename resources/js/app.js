@@ -694,6 +694,103 @@ document.addEventListener('alpine:init', () => {
     //
     //  ⚠️ `prefers-reduced-motion` → NO se monta. `--cierre-p` se queda en 0 y el CSS deja la
     //  tarjeta en su talla de reposo; el recorrido también se anula ahí, así que no queda hueco.
+    // ══ «SALTA LA CIUDAD» — el minijuego del hero del cierre (`#231`) ═════════════════════════
+    //  Aquí vive el ESTADO (qué fase, qué se enseña); el motor vive en `site/salta.js` y no sabe
+    //  nada de Alpine ni de esta página.
+    //
+    //  ⚠️⚠️ **Se carga con `import()` dinámico, y no es una optimización cosmética**: el bundle de
+    //  la landing pesa ~19 KB y el motor otros ~15. Meterlo dentro lo casi duplicaría para TODOS
+    //  los visitantes por algo que solo se alcanza al final del todo de la portada. Vite lo emite
+    //  en su propio trozo y se descarga la primera vez que la tarjeta de cierre se abre.
+    //
+    //  ⚠️ **Y no se carga con `prefers-reduced-motion`… hasta que alguien lo pide.** El motor
+    //  respeta la preferencia (pinta un fotograma quieto en vez de la demo), pero descargarlo
+    //  igualmente costaría 15 KB a quien ha dicho que no quiere movimiento. Se trae al pulsar.
+    window.Alpine.data('saltaJuego', () => ({
+        fase: 'off',            // off · listo · jugando · fin
+        metros: 0, pulseras: 0, record: 0, nuevoRecord: false,
+        _motor: null, _cargando: false, _abierto: false,
+        get reduce() { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches; },
+
+        init() {
+            this._onAbierto = (e) => { this.abierto(!!e.detail); };
+            window.addEventListener('cierre:abierto', this._onAbierto);
+            // ⚠️ La tecla se escucha en `window` y **solo actúa jugando**: si se escuchara siempre,
+            // el espacio dejaría de hacer scroll en toda la portada.
+            this._onTecla = (e) => {
+                if (this.fase !== 'jugando') return;
+                if (e.key !== ' ' && e.code !== 'Space' && e.key !== 'ArrowUp' && e.key !== 'w' && e.key !== 'W') return;
+                e.preventDefault();
+                if (!e.repeat) this._motor?.pulsa();
+            };
+            this._onSuelta = (e) => {
+                if (e.type === 'keyup' && e.key !== ' ' && e.code !== 'Space' && e.key !== 'ArrowUp' && e.key !== 'w' && e.key !== 'W') return;
+                this._motor?.suelta();
+            };
+            window.addEventListener('keydown', this._onTecla);
+            window.addEventListener('keyup', this._onSuelta);
+            window.addEventListener('pointerup', this._onSuelta);
+            // El motor mira si el lienzo se ve en cada scroll: es su propio interruptor de encendido.
+            this._onScroll = () => this._motor?.vigila();
+            window.addEventListener('scroll', this._onScroll, { passive: true });
+        },
+
+        async carga() {
+            if (this._motor || this._cargando) return this._motor;
+            this._cargando = true;
+            try {
+                const { montaSalta } = await import('./site/salta.js');
+                const cv = this.$refs.lienzo;
+                if (!cv) return null;
+                this._motor = montaSalta(cv, {
+                    alto: () => cv.clientHeight || Math.round((this.$el.clientHeight || 300)),
+                    marcador: (m, p, r) => { this.metros = m; this.pulseras = p; this.record = r; },
+                    fin: (m, p, nuevo) => { this.metros = m; this.pulseras = p; this.nuevoRecord = nuevo; this.fase = 'fin'; },
+                    reduce: this.reduce,
+                });
+                this.record = this._motor.record;
+                this._motor.vigila();
+            } finally {
+                this._cargando = false;
+            }
+            return this._motor;
+        },
+
+        async abierto(si) {
+            if (si) {
+                if (this.fase === 'off') this.fase = 'listo';
+                // Con movimiento reducido no se precarga: el fondo no se va a mover de todas formas.
+                if (!this.reduce) await this.carga();
+            } else if (this.fase !== 'off') {
+                this._motor?.para();
+                this.fase = 'off';
+            }
+        },
+
+        async juega() {
+            const m = await this.carga();
+            if (!m) return;
+            this.metros = 0; this.pulseras = 0; this.nuevoRecord = false;
+            this.fase = 'jugando';
+            m.arranca();
+        },
+
+        toca(e) {
+            if (this.fase === 'jugando') { e.preventDefault(); this._motor?.pulsa(); }
+        },
+
+        sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; },
+
+        destroy() {
+            window.removeEventListener('cierre:abierto', this._onAbierto);
+            window.removeEventListener('keydown', this._onTecla);
+            window.removeEventListener('keyup', this._onSuelta);
+            window.removeEventListener('pointerup', this._onSuelta);
+            window.removeEventListener('scroll', this._onScroll);
+            this._motor?.destruye();
+        },
+    }));
+
     window.Alpine.data('cierreChoreo', () => ({
         _raf: null,
         _last: null,
@@ -760,6 +857,15 @@ document.addEventListener('alpine:init', () => {
             // Un hecho binario, igual que `nav--live`: «el armazón ya está tan fuera que pulsarlo
             // sería un accidente». Qué significa «tan fuera» lo decide el CSS.
             document.body.classList.toggle('cierre--live', p >= 0.3);
+            // ⚠️ **Un AVISO, no un segundo observador.** El minijuego necesita saber cuándo la
+            // tarjeta está del todo abierta, y esa señal ya se calcula aquí. Con un observador
+            // propio serían dos fuentes para el mismo hecho, que es como se acaba teniendo un
+            // juego que arranca antes de que se le vea (`#227` aprendió lo mismo con el relevo).
+            const abierto = p >= 0.985;
+            if (abierto !== this._abierto) {
+                this._abierto = abierto;
+                window.dispatchEvent(new CustomEvent('cierre:abierto', { detail: abierto }));
+            }
         },
         destroy() {
             if (this._onScroll) window.removeEventListener('scroll', this._onScroll);

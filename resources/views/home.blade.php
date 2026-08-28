@@ -508,6 +508,62 @@
                         @endif
                     </div>
                 </div>
+
+                {{-- ══ «SALTA LA CIUDAD» — el minijuego del cierre (`#231`, del mockup) ══════════
+                     El lienzo vive pegado al canto inferior de la tarjeta y **hace de escenario**:
+                     mientras nadie juega, un muñeco recorre las almenas en piloto automático. Al
+                     pulsar «Jugar», el mismo lienzo pasa a ser el juego.
+
+                     ⚠️ **El motor se descarga aparte** (`import()` dinámico en `app.js`): son
+                     ~15 KB sobre un bundle de 19, y esto solo se alcanza al final del todo de la
+                     portada. Vite lo emite en su propio trozo.
+
+                     ⚠️ **`aria-hidden` en el lienzo, y el juego es accesible IGUAL**: lo que un
+                     lector de pantalla no puede describir es el DIBUJO, no la acción. El botón de
+                     jugar, el marcador y el resultado son texto de verdad, y se salta con la barra
+                     espaciadora o con las flechas — la tecla solo se captura mientras se juega,
+                     para no robarle el scroll a la página.
+
+                     ⚠️ **Con `prefers-reduced-motion` no se precarga ni corre la demo**: el motor
+                     pinta UN fotograma quieto. Sigue siendo jugable si alguien lo pide —eso es una
+                     acción suya, no una animación que le imponemos— pero nadie ve un muñeco
+                     corriendo sin haberlo pedido. --}}
+                <div class="salta" x-data="saltaJuego" x-cloak>
+                    <canvas class="salta__lienzo" x-ref="lienzo" aria-hidden="true"
+                            :style="fase === 'off' ? 'pointer-events:none' : 'pointer-events:auto;cursor:pointer'"
+                            @pointerdown="toca($event)"></canvas>
+
+                    <button type="button" class="salta__invita" x-show="fase === 'listo'"
+                            @click="juega()"
+                            aria-label="{{ __('landing.game.play') }} — {{ __('landing.game.aria') }}">
+                        <span class="salta__invita-ico" aria-hidden="true"><x-icons.arrow-right :width="16" :height="16" /></span>
+                        <span class="salta__invita-t">{{ __('landing.game.play') }}</span>
+                        <span class="salta__rec" x-show="record > 0" x-text="@js(__('landing.game.rec', ['m' => '§'])).replace('§', record)"></span>
+                    </button>
+
+                    {{-- Marcador. `aria-live` para que quien no ve el lienzo sepa cómo va. --}}
+                    <div class="salta__hud" x-show="fase === 'jugando'" aria-live="polite" aria-atomic="true">
+                        <span class="salta__chip">
+                            <strong x-text="metros">0</strong>
+                            <span class="salta__u">{{ __('landing.game.m') }}</span>
+                        </span>
+                        <span class="salta__chip salta__chip--band">
+                            <span class="salta__aro" aria-hidden="true"></span>
+                            <strong x-text="pulseras">0</strong>
+                            <span class="sr-only">{{ __('landing.game.bands') }}</span>
+                        </span>
+                        <span class="salta__pista">{{ __('landing.game.hint') }}</span>
+                    </div>
+
+                    <div class="salta__fin" x-show="fase === 'fin'" role="status">
+                        <span class="salta__fin-t" x-text="nuevoRecord ? @js(__('landing.game.newrec')) : @js(__('landing.game.over'))"></span>
+                        <span class="salta__fin-m"><strong x-text="metros">0</strong> {{ __('landing.game.m') }}</span>
+                        <span class="salta__fin-acts">
+                            <button type="button" class="salta__btn" @click="juega()">{{ __('landing.game.again') }}</button>
+                            <button type="button" class="salta__btn salta__btn--ghost" @click="sal()">{{ __('landing.game.exit') }}</button>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

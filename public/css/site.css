@@ -1850,6 +1850,121 @@ body.no-scroll { overflow: hidden; }
 }
 
 
+/* ══ «SALTA LA CIUDAD» — el minijuego del cierre (`#231`, del mockup) ════════════════════════
+   El lienzo va pegado al canto inferior de la tarjeta de cierre y hace de ESCENARIO: mientras
+   nadie juega, un muñeco recorre las almenas en piloto automático.
+
+   ⚠️ **La tarjeta reserva su sitio con `padding-bottom`, no con un hueco a ojo.** El lienzo es
+   `absolute`, así que si el texto no le dejara aire acabaría pisándolo — y sólo en las pantallas
+   donde el texto ocupe más, que es la peor forma de que un fallo aparezca.
+
+   ⚠️ **Los rótulos del juego NO usan la escala tipográfica de la web.** Son mono, pequeños y en
+   mayúsculas: es el registro de un marcador, no el de una landing. Es lo que hace el mockup.
+
+   ⚠️ **Ningún color se teclea**: el lienzo lee la paleta del tema con `getComputedStyle` sobre sí
+   mismo, y estas piezas de alrededor leen los tokens de la superficie de tinta en la que viven. */
+.reserve { --salta-h: clamp(122px, 14vw, 156px); }
+.reserve__body { padding-bottom: calc(clamp(24px, 5vw, 80px) + var(--salta-h)); }
+
+.salta { position: absolute; inset: 0; pointer-events: none; }
+.salta__lienzo {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    width: 100%; height: var(--salta-h);
+    z-index: 2; touch-action: manipulation;
+}
+
+/* La invitación va JUSTO encima del lienzo, no centrada en la tarjeta: quien la pulsa está
+   mirando al muñeco. */
+.salta__invita {
+    position: absolute; left: 50%; bottom: calc(var(--salta-h) - 34px);
+    transform: translateX(-50%);
+    z-index: 8; pointer-events: auto;
+    display: inline-flex; align-items: center; gap: 11px;
+    min-height: 46px; padding: 0 18px;
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    color: var(--fg); cursor: pointer;
+    backdrop-filter: blur(3px);
+    transition: background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.salta__invita:hover { background: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--fg); }
+.salta__invita:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+.salta__invita-ico {
+    display: grid; place-items: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--zone-1); color: var(--on-brand);
+}
+.salta__invita-t {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+}
+.salta__rec {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--attn); opacity: 0.85;
+}
+
+/* El marcador. `aria-live` lo lee un lector de pantalla, así que va en texto de verdad. */
+.salta__hud {
+    position: absolute; left: 50%; bottom: calc(var(--salta-h) + 10px);
+    transform: translateX(-50%);
+    z-index: 8; pointer-events: none;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
+.salta__chip {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    padding: 6px 14px;
+    background: color-mix(in srgb, var(--bg) 74%, transparent);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+}
+.salta__chip strong { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1; color: var(--fg); }
+.salta__u { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.5; }
+.salta__chip--band { align-items: center; padding: 7px 14px; }
+.salta__chip--band strong { font-family: var(--font-mono); font-size: 12px; color: var(--attn); }
+.salta__aro { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; border: 2px solid var(--attn); }
+.salta__pista {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fg-mute);
+}
+
+/* El resultado. Va MÁS ARRIBA que la invitación: si saliera en el mismo sitio, el pulgar que
+   acaba de tocar para saltar pulsaría «otra vez» sin querer. */
+.salta__fin {
+    position: absolute; left: 50%; bottom: calc(var(--salta-h) * 0.4 + 40px);
+    transform: translateX(-50%);
+    z-index: 9; pointer-events: auto;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px 22px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    backdrop-filter: blur(4px);
+    text-align: center;
+}
+.salta__fin-t {
+    font-family: var(--font-display); font-weight: 400; font-size: 20px;
+    line-height: 1; text-transform: uppercase; color: var(--fg);
+}
+.salta__fin-m { font-family: var(--font-mono); font-size: 13px; color: var(--fg-mute); }
+.salta__fin-m strong { color: var(--attn); font-size: 17px; }
+.salta__fin-acts { display: inline-flex; gap: 8px; margin-top: 4px; }
+.salta__btn {
+    min-height: var(--tap-min); padding: 0 16px;
+    border-radius: var(--r-btn); border: 0; cursor: pointer;
+    background: var(--zone-1); color: var(--on-brand);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    transition: background var(--dur-sale) var(--ease-sale);
+}
+.salta__btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
+.salta__btn:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+
+/* ⚠️ El lienzo NO se esconde con movimiento reducido: enseña un fotograma quieto, que es un
+   dibujo, no una animación. Lo que se apaga es el bucle, y eso lo decide el motor. */
+
 /* ══ EL CTA DE LA PRIMERA PANTALLA — Y ES UN RELEVO (`#227`, 2026-08-28) ═════════════════════
    `[DECIDIDO owner]`: «añadiremos el mismo CTA en la parte inferior derecha y, al deslizar, en el
    momento que aparece el CTA en el menú lo quitamos del hero».

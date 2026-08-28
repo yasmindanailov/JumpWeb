@@ -12496,3 +12496,68 @@ cuenta, uno de SEO y uno de horarios. ▶ *Cuando el cambio es de ARMAZÓN —al
 doce vistas—, el radio de las guardas afectadas no se puede adivinar por el nombre del fichero.*
 ▶ Y por eso se empujó a mitad de sesión en vez de al final: con tres commits más encima, el defecto
 del estado habría sido mucho más caro de encontrar.
+
+---
+
+## #231 · 2026-08-28 · «Salta la ciudad» — el minijuego del cierre, y por qué se carga APARTE
+
+**Contexto.** `[DECIDIDO owner]`: «después tenemos que preparar el hero del footer, con su minijuego
+y su lógica, con su animación y todo idéntico».
+
+Un corredor infinito sobre las almenas: el muñeco corre solo y tú decides **cuándo** salta y
+**cuánto**. Portado del mockup: física, generación procedural, muñeco de píxeles, camas elásticas,
+pulseras, partículas, sacudida de cámara y piloto automático de fondo.
+
+### Se carga aparte, y no es cosmético
+
+El bundle de la portada pesaba **19,4 kB**; el motor son **12**. Meterlo dentro lo habría casi
+duplicado **para todo el que entre en la web**, por algo que solo se alcanza al final del todo de la
+portada. Con `import()` dinámico, Vite lo emite en su propio trozo: medido tras construir, el motor
+sale en `salta-*.js` (12,08 kB) y la portada sube solo a **21,7** — los 2,3 del componente de estado.
+
+⚠️ **Y con `prefers-reduced-motion` ni siquiera se descarga.** Respetar la preferencia y aun así
+bajar 12 kB de una animación que esa persona ha pedido no ver sería cumplirla a medias. Se trae solo
+si la pide pulsando; y si la pide, el motor pinta **un fotograma quieto** en vez de la demo. *El
+juego es una acción del usuario; la demo es una animación que le imponemos.*
+
+### El motor no conoce Alpine, y eso es a propósito
+
+Recibe el lienzo y cuatro devoluciones de llamada, y devuelve un mando. La capa de estado —qué fase,
+qué se enseña— vive donde vive el resto del estado de la landing. Así la física se puede probar sin
+montar media web.
+
+### Lo que se conserva del mockup, y lo que se traduce
+
+**Se conserva la aritmética**, porque es lo bueno del juego: el alcance de un salto es
+`v · 2·imp/grav` y su altura `imp²/(2·grav)`, y **los huecos y los desniveles se derivan de ahí**.
+Por eso nunca sale un salto imposible, y por eso las constantes no se pueden tocar de una en una:
+mueven el terreno con ellas. También el *coyote time*, el buffer de salto y la altura variable —los
+tres detalles que separan un juego de un botón de uno injusto.
+
+**Se traduce la paleta**: el mockup teclea hex. Aquí el lienzo lee los tokens del tema con
+`getComputedStyle` sobre sí mismo —una vez; hacerlo por fotograma costaría más que todo el pintado—
+con los valores del cliente como respaldo. Una instalación con otra marca obtiene su propio juego.
+
+⚠️ **La visibilidad se mide con el rect propio, no con `IntersectionObserver`.** El lienzo vive
+dentro de una tarjeta que se pega y **crece** con el scroll (`#229`); un observador sobre un elemento
+que cambia de tamaño y de posición da entradas y salidas espurias.
+
+### Accesible sin ver el lienzo
+
+`aria-hidden` en el `<canvas>` —lo que un lector no puede describir es el DIBUJO, no la acción— y el
+botón de jugar, el marcador (`aria-live`) y el resultado en texto de verdad. Se salta con barra
+espaciadora, flechas o `W`, y **la tecla solo se captura mientras se juega**: si se escuchara
+siempre, el espacio dejaría de hacer scroll en toda la portada.
+
+### Cuatro guardas, y ninguna comprueba que «funcione»
+
+Que funciona lo dice el navegador, y se recorrió: **42 m jugados con la barra espaciadora, cero
+errores de JavaScript**. Lo que se guarda son las decisiones **que se pueden deshacer sin que nada
+falle**: que siga cargándose aparte, que siga siendo alcanzable sin ver el lienzo, que la tarjeta de
+cierre siga ofreciendo comprar aunque el trozo no llegue nunca —es un extra: red mala, bloqueador,
+error de chunk— y que el récord conserve su clave.
+⚠️ Y una que solo se ve pensando en el peor navegador: **en modo privado `localStorage` LANZA, no
+devuelve `null`**. Sin los dos `try`, el juego reventaría al arrancar en una ventana privada — y se
+llevaría por delante el bucle entero, no solo el récord.
+▶ Dos mutaciones muertas: quitar el `import()` dinámico y dejar correr la demo con movimiento
+reducido.

@@ -203,6 +203,20 @@ return [
     ],
     'rules' => ['eyebrow' => 'Normas', 'title' => 'Saltar seguro,', 'title_em' => 'saltar feliz.'],
     'faq' => ['eyebrow' => 'FAQ', 'title' => 'Preguntas', 'title_em' => 'frecuentes'],
+    // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
+    // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
+    'game' => [
+        'play' => 'Jugar',
+        'rec' => 'réc :m m',
+        'm' => 'm',
+        'again' => 'Otra vez',
+        'exit' => 'Salir',
+        'over' => '¡Se acabó!',
+        'newrec' => '¡Récord nuevo!',
+        'bands' => 'pulseras',
+        'aria' => 'Salta la ciudad: minijuego. Pulsa para saltar.',
+        'hint' => 'Espacio o toca para saltar',
+    ],
     'reserve' => [
         'title' => 'VAMOS', 'stroke' => 'A', 'fill' => 'SALTAR',
         'copy' => 'Reserva tu cumpleaños online en un minuto, con confirmación al instante. ¿Solo vienes a saltar? Ven directo o llámanos.',

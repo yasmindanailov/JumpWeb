@@ -186,6 +186,20 @@ return [
     ],
     'rules' => ['eyebrow' => 'Règles', 'title' => 'Sauter en sécurité,', 'title_em' => 'sauter heureux.'],
     'faq' => ['eyebrow' => 'FAQ', 'title' => 'Questions', 'title_em' => 'fréquentes'],
+    // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
+    // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
+    'game' => [
+        'play' => 'Jouer',
+        'rec' => 'rec :m m',
+        'm' => 'm',
+        'again' => 'Encore',
+        'exit' => 'Quitter',
+        'over' => 'Terminé !',
+        'newrec' => 'Nouveau record !',
+        'bands' => 'bracelets',
+        'aria' => 'Saute la ville : mini-jeu. Appuie pour sauter.',
+        'hint' => 'Espace ou touche pour sauter',
+    ],
     'reserve' => [
         'title' => 'ON VA', 'stroke' => 'Y', 'fill' => 'ALLER',
         'copy' => 'Réserve ton anniversaire en ligne en une minute, avec confirmation immédiate. Tu viens juste sauter ? Viens directement ou appelle-nous.',

@@ -186,6 +186,20 @@ return [
     ],
     'rules' => ['eyebrow' => 'Rules', 'title' => 'Jump safe,', 'title_em' => 'jump happy.'],
     'faq' => ['eyebrow' => 'FAQ', 'title' => 'Frequent', 'title_em' => 'questions'],
+    // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
+    // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
+    'game' => [
+        'play' => 'Play',
+        'rec' => 'best :m m',
+        'm' => 'm',
+        'again' => 'Again',
+        'exit' => 'Exit',
+        'over' => 'Game over',
+        'newrec' => 'New record!',
+        'bands' => 'wristbands',
+        'aria' => 'Jump the city: mini-game. Press to jump.',
+        'hint' => 'Space or tap to jump',
+    ],
     'reserve' => [
         'title' => "LET'S", 'stroke' => 'GO', 'fill' => 'JUMP',
         'copy' => 'Book your birthday online in a minute, with instant confirmation. Just coming to jump? Come straight in or call us.',
