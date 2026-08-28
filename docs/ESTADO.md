@@ -37,6 +37,14 @@
 > las entradas del otro carril. **Mirar el remoto al elegir número no basta: hay que volver a
 > mirarlo al publicar.**
 >
+> ⚠️⚠️ **El OJO del owner corrigió TRES cosas del cierre que ningún test veía** (`#233`): el zoom
+> del juego iba **2,3× más lejos** (la altura del lienzo ES el zoom, y el mockup la cambia con la
+> fase), la transición usaba un **pegajoso** cuando el mockup fija la tarjeta y la hace crecer
+> **mientras el pie pasa por detrás** —`#229` eligió el mecanismo por limpieza y cambió el gesto—,
+> y el pie había perdido el selector de idioma. ▶ **La limpieza arquitectónica es un criterio para
+> elegir entre implementaciones que dan el MISMO resultado; cuando cambia el resultado, deja de
+> serlo.**
+>
 > ✅ **El minijuego está HECHO** (`#231`): «Salta la ciudad», corredor infinito sobre las almenas,
 > con su física, su generación procedural y su récord. **Se carga en un trozo aparte** (12 kB) para
 > no cobrárselo a quien entra en la portada; el techo de peso de la landing sube de 20 a 22 kB, y el
@@ -790,7 +798,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3351 en verde** (22.016 aserciones, 1 skipped a propósito), medida el
+- Suite **3351 en verde** (22.034 aserciones, 1 skipped a propósito), medida el
   2026-08-28 a las 19:00 (hora de Madrid) **sobre el árbol CONJUNTO**: el carril A (`#223` menú plano +
   «Ajustes», `#224` el buscador y `#232` la puerta en tablet, que suman **27 casos** —`AdminNavigationTest`,
   `AdminGlobalSearchTest` y `GateKioskTest`, ninguno de los tres existía—) rebasado sobre el carril C
