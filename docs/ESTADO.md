@@ -589,6 +589,25 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3241 en verde** (21.227 aserciones), medida el 2026-08-28 a mediodía por el carril C
+  **sobre el árbol CONJUNTO** —tras rebasar encima del `#215` del carril A— con `--parallel` en
+  **1 min 43 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
+  CTA doble se alinea en sus ocho medidas y entra el paquete de MARCA del 2.º cliente**).
+  ▶ **+6 casos en `ArmazonContractTest`** y **SEIS tests re-apuntados, ninguno retirado**: el del
+  menú abierto (ahora mira el racimo ENTERO, porque con el armazón oculto también se juega la X de
+  cerrar), el de `navCtaReveal` (ahora asevera **el hecho de producto** —el hero ofrece la compra—
+  en vez del nombre de un componente de JavaScript), el del rótulo alterno (ahora exige que NO
+  vuelva), `ActionFillTest` (declara `.hero__act--buy`) y **dos que aseveraban por SUBCADENA y por
+  eso salían rojos con el código correcto**: `SeoTest` prohibía `alt=""` en TODO el HTML —y WAI-ARIA
+  lo **exige** en una imagen decorativa— y `PublicPagesTest` buscaba `data-has-hero` en todo el
+  documento en vez de en el atributo del `<body>`, así que un `<style>` que nombra el selector lo
+  ponía en rojo. **Las dos quedan ACOTADAS a su sujeto, no aflojadas.** Cuarta vez que esta casa
+  paga la misma lección.
+  ▶ **14 mutaciones, las 14 muerden** · sonda de navegador con la coreografía **contrastada contra
+  la aritmética del mockup** (0,5617 calculado / **0,561 medido**) y los anchos 224/56 exactos.
+  ⚠️ **Y 32 fallos que NO eran de la tanda**: `SidebarDomContractTest` con el bundle SSR **rancio**
+  tras traer el `machine.js` del carril A. Lo dice el propio test; se arregla con `npm run build:ssr`
+  (el `pre-push` lo hace solo). **Un test que compara un bundle viejo da verde con el código roto.**
 - Suite **3235 en verde** (21.140 aserciones), medida el 2026-08-28 por el carril C tras `#214`
   (**el CTA es un PAR**: uno ancho, el otro reducido a su icono, y una invitación que se apaga
   cuando le hacen caso). ▶ **+3 casos en `ArmazonContractTest`** y **CUATRO tests re-apuntados, ninguno
@@ -1061,7 +1080,39 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-28, cierre del carril C): el TEMA tiene sus CINCO mecanismos y el ARMAZÓN pasó por el OJO del owner
+# ❗ SI ENTRAS NUEVO (2026-08-28 mediodía, carril C): el ARMAZÓN NACE BAJO EL HERO y el paquete de MARCA del 2.º cliente ESTÁ INSTALADO
+
+**`git fetch` antes de nada.** ⚠️ El carril A empujó `#215` mientras esta sesión trabajaba; el
+número se eligió **mirando el remoto** y esta tanda es **`#216`**.
+
+## ▶ Lo que hizo la sesión del 2026-08-28 (09:00 → 12:00), en una línea cada cosa
+
+| | |
+|---|---|
+| `#216` · marca | **El paquete de MARCA del 2.º cliente está entregado e instalado.** El owner subió `marca/` al canvas; los huecos del producto pasan de **2 a 9** (logotipo sobre tinta, respaldo raster, `.ico`, apple-touch y los PNG de Android) |
+| `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
+| `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
+| `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+
+## ❗❗ Lo que MÁS importa que sepas antes de tocar nada
+
+1. ⚠️⚠️ **`#195` está REABIERTO por decisión del owner.** Hasta la mañana del 28 la postura era «el
+   mockup ha devuelto el CTA al hero y nosotros no lo copiamos». Por la tarde cambia, y el motivo
+   es que **las dos mitades no se pueden separar**: ocultar el armazón sin devolver los botones
+   deja la primera pantalla sin comprar y sin navegación.
+2. ❗ **Ya NO hace falta pedirle el logotipo al owner**: está entregado. Lo que sigue esperando de
+   él es **su OJO en navegador** — ahora son **nueve** tandas visuales sin mirar.
+3. ⚠️⚠️ **`DesignSync · get_file` TRUNCA los binarios a 192 KiB y no falla**, y **transcribir base64
+   desde el contexto corrompe el fichero en silencio** (medido: 4.632 B de 6.900, con cabecera y
+   dimensiones válidas). Los rasters se **generan del vector**. Detalle en
+   `mockup_playjumppark/README.md`, que es donde se mantiene.
+4. ⚠️ **El logotipo se pinta a 26 px de alto y el mockup lo pinta a 54.** Medido, no cambiado: no
+   estaba en el encargo y ampliar el alcance en silencio es lo que esta casa prohíbe. Es una línea
+   (`.nav__brand-logo { height }`) cuando el owner lo diga.
+
+---
+
+# ❗ SI ENTRAS NUEVO (2026-08-28, cierre anterior del carril C): el TEMA tiene sus CINCO mecanismos y el ARMAZÓN pasó por el OJO del owner
 
 **`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
 
@@ -1093,6 +1144,9 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ POR DÓNDE SIGUE ESTE CARRIL
 
+0. ❗ **Lo primero, el OJO del owner**, que ya son NUEVE tandas visuales sin mirar y la última
+   —`#216`— **cambia cómo se ve la primera pantalla de la portada**: sin logo, sin CTA y sin
+   hamburguesa mientras el hero llena la pantalla, con los dos botones dentro del hero.
 1. **La tanda 2d, el MOVIMIENTO** — no depende de nadie. Medido: **237 declaraciones de transición,
    48 duraciones y 20 curvas** frente a las **7 y 4** que declara el sistema del cliente. No mueve
    píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa interactuando**.
@@ -1158,7 +1212,7 @@ retención.
 |---|---|
 | **A · menores + puerta** | **SESIÓN del 2026-08-27 noche → 28 madrugada**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ✅ **El SUBSISTEMA A (`specs/identidad-qr-puerta.md` §9.4) EN EL ÁRBOL**: carné QR de 20 caracteres, visita acreditada, ficha compuesta, pantalla con caducidad en servidor, correo con PNG, `GET|POST /me/card`; 5/5 mutaciones, headless 15/15. **Ambos 🟦 por el OJO del owner** (§9.10.4 y §9.4 «lo que queda»: el panel, la puerta, el correo en Gmail/Outlook y **el lector real del recinto**), más los guiones §5.decies/§5.undecies y los DOS valores de retención en meses. ▶ Lo siguiente de agente, cuando el owner lo pida: la zona «Mi carné» del cajón y la rotación desde el panel (`DEUDA.md`), y **D · JumpPoints**, que ya tiene su hecho observable (`customer_visits`) |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗ **LO QUE ESPERA DE TI, por orden de bloqueo:** **(1)** el **LOGOTIPO** y el **ICONO** exportados desde Claude Design — la lista exacta de formatos y las tres reglas que no son opcionales están en `INSTALACION-CLIENTE.md` **§4.a.quinquies**; ⚠️ falta además el hueco de la variante **sobre TINTA** del logo, que no está hecho. **(2)** La **pasada de NAVEGADOR: son OCHO tandas visuales sin mirar** — `#195` (el hero pierde su CTA), `#196` (19 elementos pierden su sombra), `#201` (menú a pantalla completa), `#203` (la barra disuelta), `#205` (CTA doble de móvil), `#209` (el botón de comprar en naranja), `#211` (el menú ya se cierra y siempre ofrece comprar) y `#213`+`#214` (el CTA es un PAR y se vuelve AVISO dentro del menú). Los guiones para recorrerlas: `VERIFICACION-E2E-CAJON.md` **§5.duodecies · §5.quindecies · §5.sexdecies**. **(3)** **La barra inferior de móvil**: el mockup pide **3 iconos + 1 CTA** y la nuestra es el **CTA doble** que validaste el 27 — hay que elegir antes de hacer la 2c·4b. **(4)** **Cuál de las TRES variantes de «El parque»** (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`). ▶ `[PENDIENTE: owner]` menor: avisar en el panel cuando el color de acción no alcance AA (`tema-por-instalacion.md` §15.8). ▶ Ya validó `#193` y `#194` |
+| **C · tema** | ✅ **(1) EL LOGOTIPO Y EL ICONO YA ESTÁN** (`#216`): los subiste a `marca/` en el canvas y están instalados —logotipo con silueta, su variante **sobre TINTA** (el hueco se abrió en esta tanda) y el set de icono **completo**, así que iOS y Android dejan de enseñar la «J» del producto—. ❗ **LO QUE ESPERA DE TI AHORA:** **(1)** La **pasada de NAVEGADOR: son NUEVE tandas visuales sin mirar** — `#195` (el hero pierde su CTA), `#196` (19 elementos pierden su sombra), `#201` (menú a pantalla completa), `#203` (la barra disuelta), `#205` (CTA doble de móvil), `#209` (el botón de comprar en naranja), `#211` (el menú ya se cierra y siempre ofrece comprar) y `#213`+`#214` (el CTA es un PAR y se vuelve AVISO dentro del menú). Los guiones para recorrerlas: `VERIFICACION-E2E-CAJON.md` **§5.duodecies · §5.quindecies · §5.sexdecies**. **(2)** **La barra inferior de móvil**: el mockup pide **3 iconos + 1 CTA** y la nuestra es el **CTA doble** que validaste el 27 — hay que elegir antes de hacer la 2c·4b. **(3)** ⚠️ **El logotipo se pinta a 26 px de alto y tu mockup lo pinta a 54** — medido, NO cambiado: no estaba en el encargo. Es una línea cuando lo digas. **(4)** ⚠️ **La sombra de tu mobiliario: tercera contradicción de tus fuentes** —tu mockup la pinta difusa y tu `M-05` dice que las difusas son solo para modal—; se sigue el sistema y sale dura. Ficha en `DEUDA.md`. **(5)** **Cuál de las TRES variantes de «El parque»** (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`). ▶ `[PENDIENTE: owner]` menor: avisar en el panel cuando el color de acción no alcance AA (`tema-por-instalacion.md` §15.8). ▶ Ya validó `#193` y `#194` |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que

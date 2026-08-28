@@ -66,6 +66,9 @@ return [
         // fallback `cta_buy_no_price` cuando aún no hay productos vendibles.
         'cta_buy' => 'Reservas aquí',
         'cta_buy_from' => 'desde :amount',
+        // Segundo botón del hero: el contorno sobre el vídeo (`#216`). Lleva a la página de
+        // precios; es el «Ver precios» del mockup del 2.º cliente.
+        'cta_prices' => 'Ver precios',
         'cta_buy_no_price' => 'Cumpleaños online',
         // Chip de estado del hero (data-driven, App\Domain\Content\Services\HeroStatus). `:duration` ya viene formateada
         // («2 h» / «45 min»); `:time` = «HH:MM»; `:day` = día de la semana en minúscula.

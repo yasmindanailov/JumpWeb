@@ -2399,11 +2399,20 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       zona hace CINCO cosas y no una, y que dos zonas son dos pozos que no saben que comparten suelo—
       queda en la spec §4.4 para no volver a deducirlo.
 
-### La CAPA DE TEMA 🟦 — **cinco mecanismos, el ARMAZÓN entero y el PRIMER PAQUETE REAL montado**
+### La CAPA DE TEMA 🟦 — **cinco mecanismos, el ARMAZÓN entero, el paquete real y la MARCA del 2.º cliente instalada**
 
 > Spec: `specs/tema-por-instalacion.md` (empieza por **§14**, que es el paquete real y lo que
 > destapó; luego §1.7 y §10) · Decisiones `#192`, `#193`, `#194`, `#195`, `#196` y **`#206`**.
-> El armazón tiene spec propia: `specs/armazon-y-menu.md` (`#200`, `#201`, `#203`, `#204`, `#205`).
+> El armazón tiene spec propia: `specs/armazon-y-menu.md` (`#200`, `#201`, `#203`, `#204`, `#205`,
+> `#211`, `#213`, `#214` y **`#216`**).
+>
+> ✅ **La 2c·8 CIERRA el armazón en escritorio** (`#216`, 2026-08-28): **el armazón nace bajo el
+> hero** —logo, CTA y hamburguesa entran juntos al encoger el hero, con la aritmética del mockup
+> verificada (0,5617 calculado / 0,561 medido)—, **el hero recupera sus dos botones** (lo que
+> REABRE `#195`, porque las dos mitades no se pueden separar), el **CTA doble se alinea en sus ocho
+> medidas** y entra **el paquete de MARCA del 2.º cliente**: los huecos del producto pasan de 2 a 9.
+> ▶ Del armazón solo queda la **2c·4b**, el menú en móvil, que espera una decisión del owner sobre
+> su barra inferior (3 iconos + 1 CTA en el mockup frente al CTA doble que ya validó).
 >
 > ❗❗ **Lo que falta para que la landing sea 1:1 con el mockup, medido**: el **QUINTO mecanismo, el
 > relleno de ACCIÓN** —el CTA del cliente es naranja y el del producto está atado a

@@ -89,12 +89,42 @@ class SeoTest extends TestCase
         }
     }
 
+    /**
+     * **Las imágenes de CONTENIDO llevan `alt` con texto.**
+     *
+     * P2: las polaroids de la galería (home) y la foto editorial de `/servicios` ya no llevan
+     * `alt=""` — son contenido real indexable, no decorativas.
+     *
+     * ⚠️⚠️ **ACOTADO en `#216`, y el caso anterior era INCORRECTO como norma**: prohibía `alt=""`
+     * en TODO el HTML, y WAI-ARIA no solo lo permite en una imagen decorativa sino que **lo
+     * exige** — un `alt` con texto en algo decorativo mete ruido en cada lectura. Lo destapó el
+     * logotipo de instalación, que sirve DOS imágenes (papel y tinta) de las que solo una se ve:
+     * las dos son decorativas por construcción y el nombre accesible lo pone un `sr-only` que
+     * está siempre presente, en las dos superficies.
+     * ▶ Lo que el caso protege sigue intacto: **un `alt=""` sin `aria-hidden` sigue en rojo**. Lo
+     * único que se acepta es la pareja completa, que es la forma canónica de decir «decorativa».
+     */
     public function test_content_images_have_non_empty_alt(): void
     {
-        // P2: las polaroids de la galería (home) y la foto editorial de /servicios ya no llevan
-        // `alt=""` — son contenido real indexable, no decorativas.
-        $this->get('/')->assertOk()->assertDontSee('alt=""', false);
-        $this->get('/servicios')->assertOk()->assertDontSee('alt=""', false);
+        foreach (['/', '/servicios'] as $path) {
+            $html = (string) $this->get($path)->assertOk()->getContent();
+
+            preg_match_all('/<img\b[^>]*>/i', $html, $imgs);
+
+            foreach ($imgs[0] as $img) {
+                if (! str_contains($img, 'alt=""')) {
+                    continue;
+                }
+
+                $this->assertMatchesRegularExpression(
+                    '/aria-hidden="true"/', $img,
+                    "En `{$path}` hay una imagen con `alt=\"\"` que NO se declara decorativa:\n".
+                    "  {$img}\n".
+                    "▶ O es contenido y necesita un `alt` con texto, o es decoración y necesita\n".
+                    '  `aria-hidden="true"` al lado. Un `alt=""` a secas deja a quien no ve sin saber cuál es.',
+                );
+            }
+        }
     }
 
     public function test_rules_page_meta_description_derives_from_rules(): void

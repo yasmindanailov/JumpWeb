@@ -49,14 +49,20 @@
             </video>
             <div class="hero__stage-scrim" aria-hidden="true"></div>
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
-            {{-- ⚠️⚠️ **EL HERO NO LLEVA CTA, y es una decisión de PRODUCTO, no un olvido**
-                 (`[DECIDIDO owner, 2026-08-27]`, `specs/tema-por-instalacion.md` §12). En el
-                 mockup la primera pantalla es solo eslogan, titular, estado y vídeo: el botón de
-                 comprar aparece DESPUÉS, al empezar a bajar, y vive en el mobiliario fijo de la
-                 cabecera. Aquí había un `.cta-prime` que se retiró con esa decisión.
-                 ▶ El acceso a comprar NO se pierde: lo dan el CTA del nav —que aparece al pasar
-                 el hero (`navCtaReveal`)— y la barra flotante en móvil (`mobileBookBar`). Los dos
-                 siguen leyendo `$ctaMinPriceLabel`, así que el anclaje «desde X €» no se va. --}}
+            {{-- ⚠️⚠️ **CORRECCIÓN, y va DELANTE del texto que corrige** (2c·8, `#216`):
+                 `[DECIDIDO owner, 2026-08-28]` **el hero RECUPERA sus dos botones**. Lo de abajo
+                 —«el hero no lleva CTA»— fue `#195` y era fiel al mockup de entonces; el mockup se
+                 los ha devuelto y ahora se copian.
+                 ▶ **Y no es un cambio de gusto: es lo que hace posible la otra mitad de la tanda.**
+                 El armazón pasa a nacer OCULTO bajo el hero, como el mockup, y el mockup puede
+                 permitírselo justamente porque su hero ofrece la compra. Sin estos dos botones, la
+                 primera pantalla de la portada se quedaría sin ningún sitio donde comprar y sin
+                 navegación — el mismo agujero que `#211` cerró por otra puerta.
+                 ▶ Medido en `Landing PJP Modos`: van entre el titular y el estado, son dos, el
+                 primero es el relleno de ACCIÓN y el segundo un contorno sobre el vídeo. --}}
+            {{-- Texto tachado que se conserva porque explica de dónde viene esto:
+                 «EL HERO NO LLEVA CTA, y es una decisión de PRODUCTO, no un olvido»
+                 (`[DECIDIDO owner, 2026-08-27]`, `specs/tema-por-instalacion.md` §12). --}}
             <div class="hero__stage-content">
                 {{-- Eslogan sobre el titular. En el sistema del segundo cliente va en la fuente
                      de rotulador y ligeramente girado; aquí sale de `--font-accent`, que por
@@ -72,6 +78,28 @@
                 {{-- Estado de apertura (data-driven, `App\Domain\Content\Services\HeroStatus`) DEBAJO del título: «{Día} ·
                      Abierto ahora» / «… · Abrimos en Xh», con un icono de ubicación al final. Sin fondo
                      (texto sobre el vídeo). Enlaza a #info (horario + cómo llegar). No se pinta sin horario. --}}
+                {{-- ── LOS DOS BOTONES DEL HERO ──────────────────────────────────────────────
+                     ⚠️ **El primero es el ROL DE ACCIÓN** (`#209`), no «el color de marca»: es el
+                     botón que hace avanzar la compra, y con `theme.action` puesto sale idéntico
+                     dentro y fuera del vídeo. Sin él sigue a la superficie, que es la conducta
+                     histórica del producto.
+                     ⚠️ **El segundo NO declara colores**: está dentro de `data-surface="ink"`, así
+                     que `--fg` ya vale claro y su velo sale de `--paper-fg`, el alias que NO se
+                     invierte. Un `rgba(255,255,255,…)` aquí sería un blanco crudo que ninguna
+                     instalación podría tocar.
+                     ⚠️ **`<a href>` los dos**, y el primero abre el cajón encima: sin JavaScript
+                     `/entradas` y `/precios` llevan a su pantalla de una sola pulsación. --}}
+                <div class="hero__acts">
+                    <a href="{{ route('entradas') }}" class="hero__act hero__act--buy"
+                       @click.prevent="$store.purchase.open()">
+                        <span class="hero__act-t">{{ __('landing.hero.cta_buy') }}</span>
+                        @if (! empty($ctaMinPriceLabel))
+                            <span class="hero__act-s">{{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('precios') }}" class="hero__act hero__act--alt">{{ __('landing.hero.cta_prices') }}</a>
+                </div>
+
                 @if (! empty($heroStatus))
                     <a href="#info"
                        class="hero__chip hero__chip--onvideo"

@@ -198,6 +198,18 @@
     max-width: min(220px, 46vw);
 }
 
+/* ══ LA VARIANTE SOBRE TINTA (`#216`) ═══════════════════════════════════════════════════════════
+   Cuando la instalación entrega las DOS, la superficie elige — y la elige el CSS, porque el
+   servidor no sabe si el menú está abierto.
+   ⚠️ **`display` y no `opacity`**: las dos ocupan el mismo hueco del flex y con `opacity` la
+   oculta seguiría reservando su ancho, así que la esquina quedaría con el doble de logotipo.
+   ⚠️ **Y no es un `@media (prefers-color-scheme)`**: aquí «oscuro» no es la preferencia del
+   sistema sino la SUPERFICIE de este trozo de página. Son cosas distintas y solo coinciden por
+   casualidad. */
+.nav__brand-logo--ink { display: none; }
+[data-surface="ink"] .nav__brand-logo--paper { display: none; }
+[data-surface="ink"] .nav__brand-logo--ink { display: block; }
+
 /* ⚠️ Aquí vivía `.lang-dd--up`, la variante que abría el panel hacia arriba para el pie, y **se
    retiró el 2026-08-27** con el selector de idioma del pie (`[DECIDIDO owner]`, armazón · tanda
    2c·4): el selector vive ahora en las cápsulas del menú, donde se abre hacia abajo como el
@@ -2073,61 +2085,111 @@ body.no-scroll { overflow: hidden; }
    está findable para el ~10% que necesita registro. Hovers en color de marca.
    ==================================================================== */
 
-/* GHOST — Registrarse (outline, peso bajo).
-   `--r-btn` (14px) es el radio común del proyecto. Con un padding compacto la
-   relación radio/altura llevaría al ojo a leerlo como "pill" — subimos el
-   padding vertical a 11px para que la altura quede ~38-40px (radio = ~⅓ de la
-   altura → rounded rect claro, coherente con `.btn`/`.btn--ghost` del mockup). */
-/* ⚠️ **El fantasma deja de ser TRANSPARENTE y pasa a ser «no el relleno principal»**
-   (armazón · tanda 2c·2). Con la barra disuelta, transparente dejaba de ser un estilo
-   y pasaba a ser un accidente: el botón quedaba ilegible en cuanto el scroll traía
-   una tarjeta por debajo. La jerarquía se conserva por PESO DE RELLENO —tinta para el
-   principal, tarjeta para el secundario—, que es como la declara el sistema del
-   cliente, y no por ausencia de fondo. */
+/* ══ EL CTA DOBLE DEL ARMAZÓN — LAS MEDIDAS DEL MOCKUP (2c·8, `#216`) ═════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: **idéntico al mockup**, las ocho diferencias que la medida
+   sacó. `#214` construyó la MECÁNICA —una mitad ancha, la otra a su icono, primer clic expande y
+   segundo actúa, con invitación— y era correcta; lo que no coincidía era la FORMA.
+
+   Medido en `Landing PJP Modos` (`estiloCtaFijo` · `estiloCtaRegistro` · `textoCta`):
+
+   | | Antes | Ahora, como el mockup |
+   |---|---|---|
+   | Orden | cuenta, luego comprar | **comprar, luego cuenta** (en el blade) |
+   | Ancho | natural (167 px) / colapsado por el texto (70) | **224 px fijo / 56 px**, 182 y 138 al estrechar |
+   | Alto | 53 y 42 — desiguales | **54 px las dos** (48 en teléfono) |
+   | Colapso | `max-width` sobre el TEXTO | **`width` sobre el BOTÓN**, `.46s`, con la curva del mockup |
+   | Texto | aparecía y desaparecía sin más | **entra desplazado y con `.14s` de retardo** |
+   | Sombra | ninguna | **`--shadow-float`**: el armazón flota sobre el contenido |
+   | Hover | movía el botón (`translateY` + `scale`) | **no lo mueve**: cambia el color, y ya |
+   | Fantasma en el menú | se teñía de tinta | **se queda claro**, como en el mockup |
+
+   ⚠️⚠️ **`#214` §8.2 razonó lo contrario del `width` fijo** —«el icono se descentraría durante la
+   transición»— y **el razonamiento era correcto para el layout que teníamos**, no para el del
+   mockup: con `justify-content: flex-start` y un `padding` IZQUIERDO fijo, el icono no se mueve ni
+   un píxel al encogerse el botón, porque su posición no depende del ancho. Y la cuenta cuadra
+   exacta: 13 de padding + 30 de chip + 13 de aire = **56**, el ancho colapsado. La corrección va
+   aquí, delante, y no en la spec sola.
+
+   ⚠️ **El radio baja a `--r-md`** (10 px) y el aro se queda en `--r-btn` (14): en el mockup el
+   mobiliario flotante usa 10 y los botones de contenido 14, y con `inset: -4px` los dos cantos
+   quedan CONCÉNTRICOS. Con los dos a 14 el aro se pegaba al botón por las esquinas.
+
+   ⚠️ **La sombra entra por ROL, no por literal.** `--shadow-float` significa «flota sobre el
+   contenido», que es lo que hace un armazón flotante; con el paquete del producto sale difusa y
+   con el del 2.º cliente sale dura (`5px 5px 0`), porque **su hoja la declara así**. ❗ Y ahí hay
+   una contradicción DEL CLIENTE, como la del color del CTA: su mockup pinta una sombra difusa
+   (`0 10px 28px`) y su sistema declara que las difusas son solo para modal (`M-05`). Ficha en
+   `DEUDA.md`; se sigue el sistema, no el mockup, porque es lo que deja al paquete decidir.
+
+   ⚠️ **El fantasma dentro del menú lee los alias `--paper-*`**, que son los que NO se invierten en
+   superficie oscura. Sin ellos el ámbito de tinta lo repintaba y el par perdía su contraste
+   interno: dos botones oscuros, uno al lado del otro. */
+
+.nav__pair {
+    /* Las medidas del par, en un solo sitio y como tokens: una instalación puede estrechar el
+       racimo entero sin tocar ninguna regla. */
+    --cta-pair-w: 224px;      /* la mitad expandida */
+    --cta-pair-mini: 56px;    /* la colapsada: padding + chip + aire */
+    --cta-pair-h: 54px;
+    --cta-pair-pad: 13px;
+    --cta-pair-swap: 0.46s;   /* lo que tarda el intercambio */
+    --cta-pair-in: 0.14s;     /* lo que espera el texto que ENTRA a que le hagan sitio */
+
+    display: flex; align-items: center; gap: inherit;
+}
+@media (max-width: 1099px) { .nav__pair { --cta-pair-w: 182px; } }
+@media (max-width: 619px)  { .nav__pair { --cta-pair-w: 138px; --cta-pair-h: 48px; } }
+
+.nav__alt { position: relative; display: inline-flex; }
+
+/* La forma COMÚN de las dos mitades. Lo único que las distingue es el relleno y el ancho. */
+.cta-ghost,
+.cta-med {
+    display: inline-flex; align-items: center; justify-content: flex-start;
+    gap: var(--cta-pair-pad, 13px);
+    height: var(--cta-pair-h, 54px);
+    padding: 0 0 0 var(--cta-pair-pad, 13px);
+    border-radius: var(--r-md);
+    overflow: hidden; white-space: nowrap;
+    font-family: var(--font-body);
+    cursor: pointer; text-decoration: none;
+    box-shadow: var(--shadow-float);
+    transition: width var(--cta-pair-swap, 0.46s) cubic-bezier(0.2, 0.9, 0.2, 1),
+                background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* GHOST — la CUENTA (registrarse / mi cuenta). Peso bajo: relleno de tarjeta, no de tinta.
+   ⚠️ **No es transparente y no lo ha sido desde la 2c·2**: con la barra disuelta, transparente
+   dejaba de ser un estilo y pasaba a ser un accidente —el botón quedaba ilegible en cuanto el
+   scroll traía una tarjeta por debajo—. La jerarquía la da el PESO DEL RELLENO, que es como la
+   declara el sistema del cliente. */
 .cta-ghost {
-    display: inline-flex; align-items: center; gap: var(--sp-8);
-    padding: var(--sp-11) var(--sp-14) var(--sp-11) var(--sp-12);
-    background: var(--bg-card); color: var(--fg);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-btn);
-    font-family: var(--font-body); font-weight: 500;
-    cursor: pointer; white-space: nowrap;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.5, 1);
+    background: var(--paper-bg-card); color: var(--paper-fg);
+    border: 1px solid var(--paper-line-strong);
+    font-weight: 500;
 }
-.cta-ghost:hover {
-    background: var(--fg); color: var(--bg); border-color: var(--fg);
-    transform: translateY(-1px);
-}
+.cta-ghost:hover { border-color: var(--paper-fg); }
 .cta-ghost:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.cta-ghost:hover .ic-reg { color: var(--bg); }
-.cta-ghost:hover .ic-reg .accent { stroke: var(--zone-2); }
-/* ⚠️ Aquí vivían las tres reglas de `.cta-ghost__arrow`, y se van con la flecha: el par del
-   armazón no la lleva —el mockup tampoco— y su único marcado se retiró en la 2c·7. Una regla sin
-   consumidor es peso muerto en las 12 vistas, y `ArmazonCssHasNoOrphansTest` la caza. */
-.cta-ghost__ico { display: inline-grid; place-items: center; flex-shrink: 0; line-height: 0; }
+.cta-ghost__ico {
+    width: 30px; height: 26px;
+    background: color-mix(in srgb, var(--paper-fg) 8%, transparent);
+    border-radius: var(--r-xs);
+    display: grid; place-items: center;
+    flex-shrink: 0; line-height: 0;
+}
 .cta-ghost__ico .ic-reg { width: 22px; height: 14px; }
 .cta-ghost__ico .ic-reg svg { width: 22px; height: 14px; }
-.cta-ghost__t { font-size: 13px; font-weight: 500; line-height: 1; }
 
-/* MED — "Comprar entradas" (filled del header).
-   Jerarquía "cool" (revertida 2026-05-27): fondo `--fg` negro + texto cream,
-   color de marca SOLO en hover. El CTA tras scroll del hero acompaña sin
-   robar atención al contenido — el usuario está leyendo info del parque,
-   no debería verse "vendido" en cada scroll. El radio `--r-btn` lo iguala
-   con el ghost y con los demás botones del proyecto. */
+/* MED — COMPRAR. Peso alto: relleno de tinta, color de marca al pasar el cursor.
+   ⚠️ **NO es el rol de acción** (`#213`): el CTA fijo del mockup pinta tinta fuera del menú y
+   AVISO dentro, o sea una coreografía, no un rol. Su hermano `.cta-prime` —la barra de móvil— sí
+   está en el rol, y eso es una diferencia real entre las dos piezas. */
 .cta-med {
-    display: inline-flex; align-items: center; gap: 12px;
-    padding: 11px 16px 11px 12px;
     background: var(--fg); color: var(--bg);
-    border: 0; border-radius: var(--r-btn);
-    font-family: var(--font-body); font-weight: 600;
-    cursor: pointer; white-space: nowrap;
-    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.5, 1), background 0.2s ease, color 0.2s ease;
+    border: 0;
+    font-weight: 600;
 }
-.cta-med:hover {
-    background: var(--zone-1); color: var(--on-brand);
-    transform: translateY(-2px) scale(1.02);
-}
+.cta-med:hover { background: var(--zone-1); color: var(--on-brand); }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 .cta-med__ico {
     width: 30px; height: 26px;
@@ -2144,53 +2206,55 @@ body.no-scroll { overflow: hidden; }
 .cta-med__ico .tk svg { width: 28px; height: 18px; }
 .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .cta-med:hover .cta-med__ico .tk { color: var(--fg); }
-.cta-med__body { display: inline-flex; flex-direction: column; line-height: 1.05; gap: 2px; text-align: left; }
-/* El rótulo va en la fuente de ROTULO y en mayúsculas, como el CTA fijo del mockup del 2.º
-   cliente. La fuente sale del TOKEN —no del nombre—, así que una instalación la cambia con
-   `THEME_FONTS` y esto la sigue. */
-.cta-med__t {
+
+/* El rótulo va en la fuente de ROTULO y en mayúsculas, como el CTA fijo del mockup. La fuente sale
+   del TOKEN —no del nombre—, así que una instalación la cambia con `THEME_FONTS` y esto la sigue. */
+.cta-med__t,
+.cta-ghost__t {
     font-family: var(--font-display); font-weight: 400;
     font-size: 17px; line-height: 1;
     text-transform: uppercase; letter-spacing: 0.01em;
 }
-/* ⚠️ HEREDA el color del botón y solo baja la opacidad, en vez de calcularlo con un token: el
+/* ⚠️ HEREDAN el color del botón y solo bajan la opacidad, en vez de calcularlo con un token: el
    botón pinta de TRES colores distintos —tinta, marca al pasar el cursor y aviso dentro del
    menú— y cualquier token elegido aquí fallaría en dos de los tres. Es también lo que hace el
    mockup (`opacity:.62`). */
-.cta-med__s { font-size: 11px; color: inherit; opacity: 0.62; }
-/* ⚠️ Aquí vivían `.cta-med:hover .cta-med__s` —un `rgba(255,255,255,.72)` en crudo— y las dos
-   reglas de `.cta-med__arrow`. Las tres se retiran con la alineación al mockup (`#213`): el
-   subtítulo ya hereda el color y baja la opacidad, y **el CTA fijo del cliente no lleva flecha**.
-   No se «ocultan» con `display:none`: se van, y con ellas su marcado. */
-/* ══ EL CTA DOBLE DEL ARMAZÓN (2c·7) ══════════════════════════════════════════════════════════
-   `[DECIDIDO owner, 2026-08-28]`: el par del mockup. Una mitad ancha y la otra reducida a su
-   icono; el primer clic en la colapsada la expande y colapsa a la otra, el segundo actúa. Y
-   mientras nadie lo ha tocado, la colapsada INVITA.
+.cta-med__s,
+.cta-ghost__s { font-size: 11px; color: inherit; opacity: 0.62; }
 
-   ⚠️ **El reparto lo hace el CSS con DOS clases** que publica el store, no el JS con anchos: es
-   lo único que deja a una instalación retemplar la pieza desde su hoja.
-   ⚠️ **Se colapsa el CUERPO, no el botón.** Poniendo un `width` fijo al botón, el icono se
-   descentraría durante la transición y el objetivo táctil dejaría de ser el mismo elemento; con
-   `max-width` sobre el texto, el botón encoge hasta su icono **por su propio padding** y nunca
-   baja del mínimo táctil.
-   ⚠️ `visibility` NO se toca aquí: un `max-width: 0` con `overflow: hidden` ya saca el texto del
-   flujo visual, y `visibility: hidden` cortaría la transición en seco. Lo que SÍ hace falta es que
-   el texto colapsado no sea alcanzable — de eso se encarga el `aria-label`, que cambia a «cambiar
-   a…»: el nombre accesible dice qué hace AHORA, no a dónde lleva. */
-.nav__pair { display: flex; align-items: center; gap: inherit; }
-.nav__alt { position: relative; display: inline-flex; }
+/* ══ EL INTERCAMBIO ═══════════════════════════════════════════════════════════════════════════
+   Reposo: COMPRAR ancho, la cuenta a su icono. Es la jerarquía, no un default cualquiera —comprar
+   cuesta un gesto y la cuenta dos—. El estado lo publica `$store.ctaPair`; el reparto, esto. */
+.nav__pair .cta-med   { width: var(--cta-pair-w); }
+.nav__pair .cta-ghost { width: var(--cta-pair-mini); }
+.nav__pair--account .cta-med   { width: var(--cta-pair-mini); }
+.nav__pair--account .cta-ghost { width: var(--cta-pair-w); }
 
-/* Reposo: la CUENTA colapsada, COMPRAR expandido. Es la jerarquía, no un default cualquiera. */
+/* El texto de dentro: el que SE VA se va sin esperar, el que ENTRA espera a que le hagan sitio.
+   ⚠️ Ese retardo asimétrico no es un adorno: sin él los dos rótulos se cruzan a mitad de camino y
+   durante 200 ms se leen dos cosas a la vez en un racimo de 300 px. */
 .nav__pair .cta-ghost__body,
 .nav__pair .cta-med__body {
-    overflow: hidden;
-    max-width: 22ch;
-    opacity: 1;
-    transition: max-width 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+    display: inline-flex; flex-direction: column;
+    line-height: 1.16; text-align: left;
+    transition: opacity 0.28s ease, transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
-.nav__pair .cta-ghost__body { max-width: 0; opacity: 0; }
-.nav__pair--account .cta-ghost__body { max-width: 22ch; opacity: 1; }
-.nav__pair--account .cta-med__body { max-width: 0; opacity: 0; }
+.nav__pair .cta-med__body {
+    opacity: 1; transform: translateX(0);
+    transition-delay: var(--cta-pair-in, 0.14s), 0s;
+}
+.nav__pair .cta-ghost__body {
+    opacity: 0; transform: translateX(-6px);
+    transition-delay: 0s, 0s;
+}
+.nav__pair--account .cta-med__body {
+    opacity: 0; transform: translateX(-6px);
+    transition-delay: 0s, 0s;
+}
+.nav__pair--account .cta-ghost__body {
+    opacity: 1; transform: translateX(0);
+    transition-delay: var(--cta-pair-in, 0.14s), 0s;
+}
 
 /* ── LA INVITACIÓN ────────────────────────────────────────────────────────────────────────────
    Mientras nadie ha tocado el par, la mitad colapsada **asoma** y un aro **late** a su alrededor.
@@ -2223,6 +2287,7 @@ body.no-scroll { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .nav__pair--invita .nav__alt > .cta-ghost,
     .nav__pair--invita .nav__alt-ring { animation: none; }
+    .cta-ghost, .cta-med,
     .nav__pair .cta-ghost__body,
     .nav__pair .cta-med__body { transition: none; }
 }
@@ -2230,58 +2295,67 @@ body.no-scroll { overflow: hidden; }
 .cta-med:hover .tk .stub,
 .cta-med:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }
 
-/* "Reveal on scroll" del CTA del nav (desktop):
-   • En páginas SIN hero (sin `body[data-has-hero]`) el `.nav-cta-med` queda
-     visible por defecto (las reglas de abajo no aplican).
-   • En páginas CON hero, el botón COLAPSA su espacio (max-width 0 +
-     padding-inline 0 + overflow hidden) además del fade — así el flex del
-     `.nav__cta` reabsorbe el hueco y el ghost "Registrarse" se desliza
-     automáticamente a la derecha (sin queda vacío). Al revelar, expandimos
-     max-width y padding: el ghost vuelve a la izquierda y el filled emerge.
-     `max-width: 22em` es generoso (el contenido natural ~ 12-14 em) — la
-     transición es uniforme porque el ancho real está capado por el contenido
-     y la propiedad max-width se anima hasta el tope final sin afectar render.
-     El observador está en `app.js` como `Alpine.data('navCtaReveal', ...)`. */
-body[data-has-hero] .nav-cta-med {
-    max-width: 0;
-    padding-inline: 0;
-    /* `margin-left: -14px` cancela el `gap: 14px` del `.nav__cta` (landing.css L201)
-       cuando el filled está colapsado: sin esto el flex deja 14 px entre el ghost
-       (último ítem visible) y el filled de width 0, así que el ghost quedaría a
-       `wrap-gutter + 14 px` del borde derecho — desalineado respecto al logo (que
-       sí está a `wrap-gutter` exacto del borde izquierdo). En reveal vuelve a 0
-       (animado) y los CTAs recuperan su separación natural. */
-    margin-left: -14px;
-    margin-right: 0;
-    opacity: 0;
-    transform: translateX(8px);
-    pointer-events: none;
-    overflow: hidden;
-    transition: max-width 0.36s cubic-bezier(0.4, 0, 0.2, 1),
-                padding-inline 0.36s cubic-bezier(0.4, 0, 0.2, 1),
-                margin-left 0.36s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.24s ease,
-                transform 0.32s cubic-bezier(0.34, 1.56, 0.5, 1);
+/* ══ EL ARMAZÓN NACE BAJO EL HERO (armazón · tanda 2c·8, `#216`) ══════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: **como el mockup**. Con el hero llenando la pantalla no hay
+   logotipo, ni CTA, ni hamburguesa: la primera pantalla es el hero y nada más. Los tres entran
+   juntos cuando el hero empieza a encoger, y se van juntos si se vuelve arriba.
+
+   ⚠️⚠️ **Esto CORRIGE lo que `armazon-y-menu.md` §4.4 dio por imposible.** Aquella nota decía que
+   la regla del mockup no se sostenía «porque nuestro hero dejó de ser a pantalla completa en
+   `#195`», y que aplicarla dejaría la portada sin ninguna navegación visible. Era cierto **con el
+   hero sin CTA**. Lo que la desbloquea no es el CSS: es que el hero **recupera sus dos botones**,
+   como en el mockup — y por eso las dos cosas van en la misma tanda y no se pueden separar.
+
+   ⚠️ **El JS publica `--nav-p` y una clase, y nada más.** Cuánto sube, cuánto tarda y con qué
+   curva lo decide este bloque; el retardo y la ventana de entrada son tokens, así que un paquete
+   de instalación puede hacer que el armazón entre antes, después o de golpe sin tocar JavaScript.
+   Misma regla que el hero (`#195`), el recorte del menú (`#201`) y el CTA doble (`#214`).
+
+   ⚠️ **`opacity: 0` NO deja de recibir clics**, así que la interactividad va aparte: los dos
+   racimos nacen `pointer-events: none` y los devuelve `.nav--live`, la clase que el JS pone
+   cuando el armazón ya está bastante a la vista como para que pulsarlo no sea un accidente.
+
+   ⚠️ **Sin JavaScript el armazón sale ENTERO** (`<noscript>` en el componente): un sitio sin
+   navegación no es una degradación aceptable. Con `prefers-reduced-motion` igual, y aquí lo cubre
+   la media query de abajo: `heroChoreo` ni se monta, así que `--nav-p` no se publicaría nunca. */
+body[data-has-hero] {
+    --nav-p: 0;                  /* progreso de entrada, 0 → fuera · 1 → en su sitio. Lo publica el JS */
+    --nav-reveal-start: 0.18;    /* cuánto del recorrido del hero pasa antes de empezar a entrar */
+    --nav-reveal-span: 0.44;     /* cuánto dura la entrada, en fracción de ese mismo recorrido */
+    --nav-reveal-live: 0.85;     /* a partir de aquí se puede pulsar */
+    --nav-reveal-lift: 16px;     /* de cuánto más arriba baja al entrar */
 }
-body[data-has-hero] .nav-cta-med.is-revealed,
-/* ⚠️⚠️ **Y con el MENÚ ABIERTO, siempre** — esto no es un adorno, cierra un agujero medido: en la
-   portada el CTA nace oculto (lo destapa `navCtaReveal` al pasar el hero), así que **abrir el menú
-   desde arriba del todo dejaba la pantalla ENTERA sin un solo botón de comprar**. El menú es
-   `inset: 0` y tapa la página: si él no ofrece la compra, nadie la ofrece.
-   ▶ Medido en el mockup del 2.º cliente: **su menú tampoco lleva CTA propio** — usa el de la
-   cabecera, que en el suyo está SIEMPRE visible. Aquí no lo estaba, y ésa era la diferencia.
-   ▶ Va con `.nav--over`, la clase que el armazón ya pone al abrir, así que no hace falta estado
-   nuevo ni JS: el CTA es el mismo botón, con el mismo destino y el mismo rol de acción. */
-body[data-has-hero] .nav--over .nav-cta-med {
-    max-width: 22em;
-    padding-inline: 12px 16px;
-    margin-left: 0;
+
+body[data-has-hero] .nav__left,
+body[data-has-hero] .nav__cta {
+    opacity: var(--nav-p);
+    transform: translateY(calc(var(--nav-reveal-lift) * (var(--nav-p) - 1)));
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+body[data-has-hero].nav--live .nav__left,
+body[data-has-hero].nav--live .nav__cta { pointer-events: auto; }
+
+/* ❗ **Con el menú abierto el racimo de la derecha se fuerza, y no es un adorno**: la hamburguesa
+   vive dentro y **es la forma de cerrar el menú**. Sin esta regla, abrir el menú desde arriba del
+   todo lo dejaría sin salida con el ratón — el mismo agujero que `#211` cerró, por otra puerta.
+   ▶ El de la IZQUIERDA no se fuerza, y es lo que hace el mockup: el menú a pantalla completa trae
+   su propio contenido y no necesita que el logotipo se le monte encima. */
+body[data-has-hero] .nav--over .nav__cta {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
     pointer-events: auto;
 }
+
 @media (prefers-reduced-motion: reduce) {
-    body[data-has-hero] .nav-cta-med { transition: none; }
+    body[data-has-hero] .nav__left,
+    body[data-has-hero] .nav__cta {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        transition: none;
+    }
 }
 
 /* Cuando el filled abre el sidebar, el bloque de "Comprar entradas" siempre debe quedar
@@ -2387,52 +2461,30 @@ body[data-has-hero] .nav--over .nav-cta-med {
 [data-surface="ink"] .cta-med__ico .ic-e2 svg .occ,
 [data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--attn); }
 
-/* ====================================================================
-   Jerarquía de CTAs — Capa D: adaptación móvil del header.
-   --------------------------------------------------------------------
-   Móvil (<= 720px): aplicamos el mismo reveal-on-scroll del desktop —
-   ghost siempre, filled emerge cuando el hero sale del viewport. El
-   espacio es justo (~108 px para los CTAs en viewport 360 px), así que:
-     • Filled compacto: solo icono + 1 palabra ("Reservar"), sin subtítulo
-       ni flecha, icono y padding más pequeños.
-     • Ghost colapsa a SOLO ICONO cuando el filled emerge (`body.nav-cta-
-       revealed`) — su texto "Registrarse" se reduce con transición de
-       max-width + opacity (mismo principio que el filled, suave y
-       coordinado). El icono clipboard queda como afordancia del registro.
-   ==================================================================== */
+/* ══ EL RACIMO EN MÓVIL — Capa D (reescrita en la 2c·8, `#216`) ═══════════════════════════════
+   Medido en el mockup: por debajo de 620 px su racimo derecho es **solo la hamburguesa**
+   (`verRegistroCta = !telefono`, y `verCtaReserva = !conBarra`). Los dos botones salen: comprar
+   se ofrece en la barra inferior y el alta, dentro del menú.
 
-/* Visibilidad mutua de los dos labels del filled: desktop por defecto;
-   móvil solo activa el corto en el media query de abajo. */
-.cta-med__t--mobile { display: none; }
+   ⚠️ **El corte se queda en 720 px, que es el nuestro, y no en los 620 del mockup**: es donde
+   entra `.book-bar`. Alinearlo al mockup dejaría una franja de 100 px sin CTA de comprar en
+   ningún sitio — el nav ya lo habría soltado y la barra aún no habría entrado. Los breakpoints
+   son del sistema, no de un artboard.
 
-/* Animación del texto del ghost (compatibilidad con el colapso móvil).
-   Aunque solo se anima en móvil, la propiedad `transition` aquí no estorba
-   en desktop (no hay cambio en su estado base). */
-.cta-ghost.nav-cta-ghost .cta-ghost__t {
-    max-width: 200px;
-    opacity: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    transition: max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.24s ease;
-}
+   ⚠️⚠️ **Aquí vivían tres reglas del mecanismo retirado y se van**: el colapso del fantasma «para
+   ceder espacio al filled emergente» (que ya no emerge), su `max-width` sobre el rótulo (ahora lo
+   recorta el propio botón, que tiene ancho fijo y `overflow: hidden`) y el padding compacto (que
+   peleaba con la altura fija del par). Con ellas se va `.cta-med__t--mobile`, un rótulo alterno
+   que **ninguna regla llegaba a mostrar nunca**: su única declaración era `display: none`. */
 
 @media (max-width: 720px) {
     .nav__cta { gap: 6px; }
 
-    /* Jerarquía de CTAs §03: en MÓVIL el CTA primario «Reservas aquí» NO vive en el
-       header (espacio escaso + riesgo de saturación). Se OCULTA aquí y reaparece como
-       barra flotante inferior (`.book-bar`, Capa E + `app.js` → `mobileBookBar`). El
-       header móvil queda con el ghost «Registro» + el burger, sin competencia visual. */
-    .nav-cta-med { display: none; }
-
-    /* Ghost compact en móvil. Ya NO colapsa a solo-icono: antes cedía espacio al filled
-       emergente del header, que ahora vive en la barra inferior → se mantiene estable
-       con su texto «Registro» visible en todo el scroll. */
-    .cta-ghost.nav-cta-ghost {
-        padding: 9px 12px 9px 10px; gap: 6px;
-    }
-    .cta-ghost.nav-cta-ghost .cta-ghost__t { font-size: 12px; }
-    }
+    /* Comprar sale del racimo y reaparece abajo como `.book-bar`; el alta sale del racimo y vive
+       en el menú (`mob-menu__foot`). En el pulgar quedan la hamburguesa y la barra. */
+    .nav-cta-med,
+    .nav__pair .nav__alt { display: none; }
+}
 
 /* ====================================================================
    Jerarquía de CTAs — Capa E: barra flotante de reserva en MÓVIL.
@@ -2585,6 +2637,78 @@ body[data-has-hero] .nav--over .nav-cta-med {
     padding-block: clamp(20px, 2.5vw, 36px);
     padding-inline: var(--wrap-gutter);
     justify-content: flex-start;
+}
+
+/* ══ LOS DOS BOTONES DEL HERO (armazón · tanda 2c·8, `#216`) ══════════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: el hero recupera los dos botones del mockup, y con ellos el
+   armazón puede nacer oculto (ver el bloque de la coreografía). **Van juntos**: sin estos, la
+   primera pantalla se queda sin ningún sitio donde comprar.
+
+   Medido en `Landing PJP Modos`: fila con `wrap`, hueco de 12, ancho máximo de 640, y los dos con
+   60 px de alto mínimo — o sea, objetivo táctil de sobra.
+
+   ⚠️ **El de comprar es el ROL DE ACCIÓN** (`#209`), no `--fg`: con `theme.action` puesto sale
+   idéntico dentro del vídeo y fuera; sin él, sigue a la superficie. Es la conducta que el quinto
+   mecanismo del tema definió, y aquí no se repite ninguna de sus decisiones.
+   ⚠️ **El otro NO declara ni un color**: vive dentro de `data-surface="ink"`, así que `--fg` ya
+   vale claro; su velo sale de `--paper-fg`, el alias que NO se invierte —una sombra o un velo
+   oscuro lo son en las dos superficies—. Un `rgba(255,255,255,…)` aquí sería blanco crudo, que es
+   exactamente lo que `#143` sacó de esta hoja.
+   ⚠️ **Sin sombra en reposo, y es a propósito.** El mockup le pone una difusa; `#196` retiró 19
+   sombras del producto con la regla «una pieza quieta no está elevada», y el propio hallazgo
+   `M-05` del cliente pide no usar difusas fuera de modal. Se eleva al pasar el ratón
+   (`--shadow-lift`), que es el rol que significa eso. */
+.hero__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 640px;
+    margin-top: clamp(20px, 2.6vw, 30px);
+}
+
+.hero__act {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 2px;
+    flex: 1 1 200px;
+    min-height: 60px;
+    padding: 10px 26px;
+    border-radius: var(--r-btn);
+    font-family: var(--font-body); font-weight: 800; font-size: 17px;
+    letter-spacing: 0.01em; text-align: center;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear,
+                transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+}
+.hero__act:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+
+.hero__act--buy {
+    flex-basis: 240px;
+    background: var(--action); color: var(--on-action);
+    border: 0;
+    font-size: 18px;
+}
+.hero__act--buy:hover {
+    background: var(--action-hover); color: var(--on-action-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+}
+/* ⚠️ HEREDA y baja la opacidad, como el subtítulo del CTA del armazón (`#213`): el botón pinta de
+   dos colores —acción y acción-hover— y un token fijo fallaría en uno de los dos. */
+.hero__act-s { font-size: 12px; font-weight: 600; opacity: 0.72; }
+
+.hero__act--alt {
+    color: var(--fg);
+    border: 1.5px solid color-mix(in srgb, var(--fg) 50%, transparent);
+    background: color-mix(in srgb, var(--paper-fg) 30%, transparent);
+}
+.hero__act--alt:hover {
+    border-color: var(--fg);
+    background: color-mix(in srgb, var(--paper-fg) 52%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero__act { transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear; }
+    .hero__act--buy:hover { transform: none; }
 }@media (max-width: 720px) {
     .hero__title.hero__title--onvideo {
         font-size: clamp(63px, 13vw, 96px);

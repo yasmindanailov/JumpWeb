@@ -376,17 +376,27 @@ class HomePageTest extends TestCase
         $response->assertSeeText('Cumpleaños online');
     }
 
-    public function test_mobile_filled_renders_mobile_book_label(): void
+    /**
+     * **El CTA del armazón lleva UN rótulo, y es el del mockup.**
+     *
+     * ⚠️ **RE-APUNTADO en la 2c·8** (`#216`). Este caso aseveraba DOS rótulos —`__t--desktop` y
+     * `__t--mobile`— «controlados por @media». Al medirlo salió que **ninguna media query mostraba
+     * el segundo**: su única declaración de CSS era `display: none` y nadie la levantaba nunca. O
+     * sea que el caso aseveraba la presencia en el HTML de un elemento que no se veía jamás.
+     * ▶ El sujeto —«el CTA del armazón dice qué hace»— sigue vivo, así que el caso se queda; lo
+     * que cambia es que ahora hay un rótulo y se comprueba SU TEXTO, que es el del mockup.
+     */
+    public function test_the_frame_cta_carries_one_label(): void
     {
-        // El CTA filled del nav lleva dos spans con clases `__t--desktop`/`__t--mobile`
-        // controladas por @media (CSS decide cuál se ve). #231 p7: en móvil ahora también
-        // es «Reservas aquí» (hay espacio tras ocultar «Hola, nombre»); ambas labels están
-        // en el HTML.
-        $response = $this->get('/')->assertOk();
+        $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $response->assertSee('cta-med__t--desktop', false);
-        $response->assertSee('cta-med__t--mobile', false);
-        $response->assertSee('Reservas aquí'); // copy ES de `nav.cta_book` (#231 p7)
+        $this->assertStringContainsString('cta-med__t', $html);
+        $this->assertStringNotContainsString(
+            'cta-med__t--mobile', $html,
+            'vuelve el rótulo alterno que ninguna regla enseñaba.',
+        );
+        // El copy ES de `landing.nav.cta_buy`, que es literalmente el del mockup.
+        $this->assertStringContainsString('>Reservar<', $html);
     }
 
     /* ====================================================================
@@ -417,20 +427,39 @@ class HomePageTest extends TestCase
 
     public function test_home_marks_body_with_data_has_hero(): void
     {
-        // El marker `data-has-hero` indica al CSS que el `.nav-cta-med` debe
-        // empezar oculto y al JS (`navCtaReveal`) que monte el IntersectionObserver
-        // sobre el `.hero__stage-bottom`. Sin él, el CTA del nav queda visible
-        // por defecto (otras páginas mantienen el atajo siempre accesible).
+        // El marker `data-has-hero` es lo que engancha la COREOGRAFÍA del armazón (2c·8, `#216`):
+        // le dice al CSS que en esta vista —y solo en ésta— el logotipo, el CTA y la hamburguesa
+        // nacen ocultos y entran con el scroll. Sin él, el armazón sale desde el primer píxel,
+        // que es lo correcto en las otras once.
         $this->get('/')->assertOk()->assertSee('data-has-hero="1"', false);
     }
 
-    public function test_nav_cta_med_carries_reveal_on_scroll_directive(): void
+    /**
+     * **El armazón nace bajo el hero, y la portada sigue ofreciendo la compra.**
+     *
+     * ⚠️ **RE-APUNTADO, no retirado** (2c·8, `#216`): este caso aseveraba `x-data="navCtaReveal"`,
+     * el componente que ocultaba SOLO el botón de comprar del armazón. Ese componente se retira —su
+     * trabajo lo hace ahora la coreografía entera, con una sola señal— pero **el hecho que el caso
+     * protegía sigue vivo y es más importante que antes**: con el armazón oculto en la primera
+     * pantalla, si el hero no ofreciera la compra la portada se quedaría sin ella.
+     * ▶ Por eso ahora se asevera el hecho de PRODUCTO —hay un botón de comprar dentro del hero— y
+     * no el nombre de un componente de JavaScript.
+     */
+    public function test_the_hero_offers_the_purchase_because_the_frame_is_hidden_under_it(): void
     {
-        // El botón `.cta-med` del nav lleva `x-data="navCtaReveal"` — combinado
-        // con el marker del body, dispara el observador del hero. Sin la
-        // directiva no habría binding y el CSS dejaría el CTA oculto para
-        // siempre en home (peor escenario evitado).
-        $this->get('/')->assertOk()->assertSee('x-data="navCtaReveal"', false);
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]+class="hero__act hero__act--buy"/', (string) $html,
+            "El hero no lleva su botón de comprar.\n".
+            "▶ Y el armazón nace OCULTO bajo él (`--nav-p`), así que sin este botón la primera\n".
+            '  pantalla de la portada se queda sin ningún sitio donde comprar.',
+        );
+
+        $this->assertStringNotContainsString(
+            'navCtaReveal', (string) $html,
+            'sigue montándose `navCtaReveal`: son dos mecanismos ocultando el mismo botón.',
+        );
     }
 
     /* ====================================================================

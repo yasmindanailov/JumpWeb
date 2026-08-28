@@ -19,13 +19,21 @@ export const MOVEMENT_THRESHOLD = 8;
 export const TOP_ZONE = 120;
 
 /**
+ * ⚠️ **`floor` NO es lo mismo que `TOP_ZONE`, y la diferencia se ve solo en la portada**
+ * (armazón · tanda 2c·8, `#216`). Ahí el armazón **nace bajo el hero** y entra con el scroll:
+ * mientras dura esa entrada, retirarlo por dirección lo haría aparecer y desaparecer a la vez,
+ * con dos mecanismos peleándose por el mismo elemento. El mockup lo resuelve con una línea
+ * —`if (y <= finHero) ocultoDir = false`— y esto es esa línea: por debajo del suelo, la
+ * dirección **no manda**. En las once páginas sin hero el suelo sigue siendo `TOP_ZONE`.
+ *
  * ¿Debe retirarse el armazón?
  *
- * @param {{y: number, previous: number, locked: boolean}} state
- *   `y` posición actual · `previous` la de la última decisión · `locked` hay un overlay abierto.
+ * @param {{y: number, previous: number, locked: boolean, floor: number}} state
+ *   `y` posición actual · `previous` la de la última decisión · `locked` hay un overlay abierto ·
+ *   `floor` altura por debajo de la cual la dirección no manda (por defecto, la primera pantalla).
  * @returns {boolean|null} `true` retirar · `false` mostrar · `null` no hay intención, no tocar nada.
  */
-export function shouldHideNav({ y, previous, locked = false }) {
+export function shouldHideNav({ y, previous, locked = false, floor = TOP_ZONE }) {
     if (Math.abs(y - previous) < MOVEMENT_THRESHOLD) {
         return null;
     }
@@ -38,5 +46,5 @@ export function shouldHideNav({ y, previous, locked = false }) {
         return false;
     }
 
-    return y - previous > 0 && y > TOP_ZONE;
+    return y - previous > 0 && y > floor;
 }

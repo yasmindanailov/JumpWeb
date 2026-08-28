@@ -1181,3 +1181,154 @@ una instalación tendría que reescribir dos `@keyframes` para invitar más o me
   ⚠️ Y una trampa del propio guion: se aseveró el intercambio con un umbral de «60 px más», y la
   mitad de la cuenta expandida mide MENOS que la de comprar (su rótulo es una palabra). **Se
   asevera el hecho —cada una cruza a la posición de la otra—, no un número inventado.**
+
+---
+
+## 9. La 2c·8 — el armazón NACE BAJO EL HERO y el CTA es el del mockup (`#216`, 2026-08-28)
+
+> `[DECIDIDO owner, 2026-08-28]`, cuatro respuestas a pregunta simple:
+> **(1)** se copia el mockup ENTERO —el hero recupera sus dos botones y el armazón se oculta—;
+> **(2)** el logotipo es el de la **silueta**; **(3)** el set de icono entra **completo**;
+> **(4)** del CTA doble se alinean **las ocho** diferencias medidas.
+
+### 9.1 ❗❗ Lo primero: esto REABRE `#195`, y no es un capricho
+
+`#195` retiró el CTA del hero **y el mockup se lo ha devuelto**. Hasta esta tanda la postura era
+«no lo copiamos» (`[DECIDIDO owner, 2026-08-28]`, mañana). La tarde del mismo día cambia, y el
+motivo es que **las dos mitades no se pueden separar**:
+
+| Si haces… | …pasa esto |
+|---|---|
+| solo ocultar el armazón bajo el hero | la primera pantalla se queda **sin logo, sin menú y sin comprar**. Es el agujero de `#211`, por otra puerta |
+| solo devolver los botones al hero | el armazón sigue visible desde el primer píxel y **no se parece al mockup** |
+| las dos | el mockup, y sin agujero: el hero ofrece la compra mientras el armazón no está |
+
+▶ **El mockup puede ocultar su cabecera porque su hero ofrece la acción.** Ésa es la relación de
+causa que faltaba en `§4.4`, donde este documento declaró la coreografía «no sostenible».
+
+### 9.2 La coreografía, medida en `aplicaFlotantes`
+
+Aritmética del mockup, tal cual:
+
+```
+bruto  = clamp(scrollY / RUNWAY, 0, 1)          RUNWAY = 420  (el nuestro también, ya)
+nb     = clamp((bruto − 0,18) / 0,44, 0, 1)
+ne     = 1 − (1 − nb)³                          ← la misma curva de salida del hero
+v      = ne · (1 − salida)³ · dir
+```
+
+- `opacity: v` · `transform: translateY(−16 + 16·v)` · `pointer-events: v > 0,85`
+- `transition: opacity .25s ease, transform .35s cubic-bezier(.2,.9,.2,1)`
+- **`salida`** sale de su *hero de cierre* (el pie a pantalla completa). **Nosotros no lo tenemos**,
+  así que ese factor no se implementa: sería un mecanismo entero por copiar un término.
+- **`dir`** es la retirada al bajar, que ya teníamos (`navHidden`, 2c·2). Lo único que faltaba es
+  su línea `if (y <= finHero) ocultoDir = false`.
+
+✅ **Verificado con la aritmética, no de vista**: a `scrollY = 120` la fórmula da
+`1 − (1 − (120/420 − 0,18)/0,44)³ = 0,5617`; el navegador midió **`--nav-p: 0.561`**.
+
+### 9.3 Dónde vive cada cosa, y por qué
+
+| Pieza | Dónde | Por qué ahí |
+|---|---|---|
+| el progreso (`--nav-p`) | `heroChoreo`, en `app.js` | **sale del MISMO recorrido que el hero**. Con dos señales —un observador y el scroll— el armazón podía entrar antes o después que el hero según el navegador |
+| el retardo y la ventana | tokens de CSS (`--nav-reveal-start`, `--nav-reveal-span`) | son TIEMPO, y el tiempo es tema. Un paquete puede hacer que entre antes, después o de golpe |
+| «ya se puede pulsar» | clase `.nav--live` | `opacity: 0` **no** deja de recibir clics. El JS publica el hecho binario; qué significa lo decide el CSS |
+| el suelo sin JS | `<noscript><style>` en el componente | si Alpine no arranca, nadie publica `--nav-p` y la portada se queda **sin navegación**. No es una degradación: es un sitio roto |
+
+⚠️ **`navCtaReveal` se RETIRA.** Ocultaba solo el botón de comprar con un `IntersectionObserver`
+sobre `.hero__sentinel`; su trabajo lo hace ahora la coreografía entera. Mantener los dos era tener
+**dos mecanismos ocultando el mismo botón con señales distintas**.
+▶ Con él se va `body.nav-cta-revealed`, que **ninguna regla de CSS leía**: se ponía y se quitaba
+«para que otros elementos pudieran reaccionar» y nadie reaccionó nunca.
+▶ El `.hero__sentinel` **no** se retira: lo sigue observando `mobileBookBar`.
+
+### 9.4 Las ocho del CTA doble, medidas una a una
+
+| | Antes (medido en navegador) | Mockup | Ahora |
+|---|---|---|---|
+| Orden | cuenta, luego comprar | **comprar, luego cuenta** | alineado |
+| Ancho | 167 / 70 px, por contenido | **224 / 56** (182 · 138) | fijo, por token |
+| Alto | 53 y **42** — desiguales | **54 las dos** (48 en teléfono) | igual |
+| Colapso | `max-width` sobre el TEXTO, .34s | **`width` sobre el BOTÓN, .46s** | como el mockup |
+| Texto | aparece y desaparece | **entra desplazado, con .14s de retardo** | como el mockup |
+| Sombra | ninguna | difusa | **`--shadow-float`**, por ROL |
+| Hover | `translateY(-2px) scale(1.02)` | solo la sombra | ya no salta |
+| Fantasma en el menú | se teñía de tinta | **se queda blanco** | lee los alias `--paper-*` |
+
+⚠️⚠️ **`§8.2` razonó lo CONTRARIO del `width` fijo y hay que decirlo**: «con un `width` fijo el
+icono se descentraría durante la transición». Era correcto **para nuestro layout**, no para el del
+mockup: con `justify-content: flex-start` y un `padding` IZQUIERDO fijo, la posición del icono no
+depende del ancho. Y la cuenta cuadra exacta: **13 + 30 + 13 = 56**, que es el ancho colapsado.
+
+⚠️ **El radio baja a `--r-md` (10 px) y el aro se queda en `--r-btn` (14)**: en el mockup el
+mobiliario flotante usa 10 y los botones de contenido 14, y con `inset: -4px` los dos cantos quedan
+**concéntricos**. Con los dos a 14 el aro se pegaba al botón por las esquinas.
+
+⚠️ **La sombra entra por ROL y ahí hay OTRA contradicción del cliente**: su mockup pinta una difusa
+(`0 10px 28px`) y su propio hallazgo `M-05` dice que las difusas son solo para modal — que es lo
+que `#196` implementó y lo que su `client.css` declara (`5px 5px 0`). Se sigue **el sistema**, que
+es lo que deja al paquete decidir. Ficha en `DEUDA.md`.
+
+### 9.5 Dos huérfanos que la medición destapó
+
+1. **`cta-med__t--mobile`**: un rótulo alterno «controlado por @media». Medido: su única regla era
+   `display: none` y **ninguna media query la levantaba**. Nunca se vio. Se va, y con él el caso que
+   aseveraba su presencia en el HTML.
+2. **El bloque móvil de la Capa D**: tres reglas del mecanismo retirado —el colapso del fantasma
+   «para ceder espacio al filled emergente», su `max-width` y un padding compacto que peleaba con la
+   altura fija—. Por debajo de 720 px el racimo pasa a ser **solo la hamburguesa**, como el mockup
+   (que lo hace a 620; el corte se queda en el nuestro porque es donde entra `.book-bar`, y moverlo
+   dejaría 100 px de ancho sin CTA en ningún sitio).
+
+### 9.6 La MARCA: el paquete del 2.º cliente, entregado
+
+El owner entregó `marca/` en el canvas (28 ficheros). Lo que el producto tenía era hueco para
+**dos** cosas; ahora son **nueve**:
+
+| Hueco | Fichero del canvas | Estado |
+|---|---|---|
+| `client-logo.svg` | `logo-pjp.svg` (con silueta) | ya existía |
+| `client-favicon.svg` | `favicon.svg` | ya existía |
+| `client-logo-ink.svg` | `logo-pjp-blanco.svg` | **hueco NUEVO** |
+| `client-logo@4x.png` | rasterizado del vector | **hueco NUEVO** |
+| `client-favicon.ico` | 16/32/48 en un contenedor | **hueco NUEVO** |
+| `client-apple-touch-icon.png` | 180 | **hueco NUEVO** |
+| `client-icon-192.png` · `-512.png` | del vector maestro | **huecos NUEVOS** |
+| `client-icon-512-maskable.png` | del vector maskable | **hueco NUEVO**, sin declarar: hace falta un manifiesto |
+
+⚠️⚠️ **El logotipo sobre TINTA no es un adorno**: desde `#201` el menú es una superficie oscura a
+pantalla completa y el armazón entra dentro. Un logotipo de TEXTO se adapta solo (hereda `--fg`);
+**una imagen no**. Se sirven las dos y elige el CSS por `[data-surface]`.
+▶ **Y con dos imágenes el nombre accesible se duplica o se pierde**: `display: none` saca el `alt`
+del árbol de accesibilidad, así que la que quedara visible en tinta estaría muda. Con las dos, las
+dos van `aria-hidden` y el nombre lo pone un `sr-only` que **está siempre**. Con una sola se
+conserva el `alt` de siempre.
+
+### 9.7 ⚠️⚠️ Tres trampas que costaron tiempo, y las tres son del INSTRUMENTO
+
+1. **`DesignSync · get_file` TRUNCA los binarios a 192 KiB y no falla**: devuelve `truncated: true`
+   y un PNG con cabecera válida, dimensiones correctas y sin `IEND`. Así están **tres** ficheros de
+   `mockup_playjumppark/assets/` bajados en otra sesión (`logo.png`, `fachada-mural.jpg`,
+   `fachada-rotulo.jpg`); los otros cinco están enteros. ▶ **Los rasters grandes se generan del
+   VECTOR**, que sí baja entero.
+2. ❗ **Transcribir base64 desde el contexto CORROMPE el fichero sin avisar.** Medido: un PNG de
+   6.900 B salió de 4.632 B, sin `IEND`… **y con cabecera PNG válida y dimensiones correctas**. Un
+   verificador que mire solo la cabecera lo da por bueno. ▶ Los ficheros que no se puedan extraer
+   del disco se **generan**, no se copian a mano.
+3. **Mi propio verificador de PNG dio «ROTO» en once ficheros recién generados por Chromium.** El
+   fallo era la comprobación (`raw[-8:]` en vez de `raw[-12:]`, y escapes comidos por las comillas
+   de bash). ▶ **Cuando un instrumento dice que NADA funciona, la primera hipótesis es el
+   instrumento** — y esa misma medida mala me hizo escribir antes que «los 8 rasters locales están
+   rotos» cuando son **3**.
+
+### 9.8 Verificación
+
+- **`ArmazonContractTest` +6 casos** · **4 tests RE-APUNTADOS, no retirados** (su sujeto sigue
+  vivo): el del menú abierto pasa a mirar el racimo entero —ahora se juega también la X de cerrar—,
+  el de `navCtaReveal` pasa a aseverar **el hecho de producto** (el hero ofrece la compra) en vez
+  del nombre de un componente, el del rótulo alterno pasa a exigir que NO vuelva, y `ActionFillTest`
+  declara `.hero__act--buy` como acción nueva.
+- **Sonda de navegador**: la coreografía verificada contra la aritmética del mockup, los anchos
+  224/56 exactos, el intercambio, el aviso dentro del menú y **el fantasma blanco**.
+- **Arnés de mutación**: doce mutaciones con el fallo REAL de cada guarda.

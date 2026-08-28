@@ -154,14 +154,36 @@ class PublicPagesTest extends TestCase
             ->assertSee('<span class="blink">open jump</span>', false); // highlight del título (EN)
     }
 
+    /**
+     * **El marker `data-has-hero` solo lo lleva la portada.**
+     *
+     * Es lo que engancha la coreografía del armazón (`#216`): en la home el logotipo, el CTA y la
+     * hamburguesa nacen ocultos y entran con el scroll; en las otras once salen desde el primer
+     * píxel, que es lo correcto porque **no tienen hero que ofrezca la compra en su lugar**.
+     *
+     * ⚠️⚠️ **ACOTADO al ATRIBUTO DEL `<body>` en `#216`, y el caso anterior aseveraba por
+     * SUBCADENA**: buscaba `data-has-hero` en TODO el HTML, así que cualquier mención de la
+     * cadena —un comentario, una regla dentro de un `<style>`— lo ponía en rojo sin que el body
+     * llevara nada. Lo destapó el `<noscript><style>` del suelo sin JavaScript, que **nombra el
+     * selector** y sale en las doce vistas. Es la cuarta vez que esta casa paga la misma lección.
+     */
     public function test_pages_without_hero_do_not_carry_has_hero_marker(): void
     {
-        // El marker `data-has-hero` SOLO está presente en páginas con hero (home).
-        // En `/precios`, `/cumpleanos`, `/servicios`, etc. el `.nav-cta-med` queda
-        // visible siempre (sin observer ni reveal-on-scroll) — coherente con que
-        // no hay un CTA "prime" alternativo en pantalla al cargar.
         foreach (['/precios', '/cumpleanos', '/servicios', '/contacto', '/normas'] as $path) {
-            $this->get($path)->assertOk()->assertDontSee('data-has-hero', false);
+            $html = (string) $this->get($path)->assertOk()->getContent();
+
+            preg_match('/<body\b[^>]*>/i', $html, $body);
+
+            $this->assertNotEmpty($body, "no hay `<body>` en {$path}");
+            $this->assertStringNotContainsString(
+                'data-has-hero', (string) $body[0],
+                "`{$path}` marca `data-has-hero` en el `<body>` y NO tiene hero:\n".
+                '▶ su armazón nacería oculto y nada lo destaparía, porque no hay hero que dé el progreso.',
+            );
         }
+
+        // Y el contrapunto, sin el cual el caso pasaría con el marker retirado de TODAS partes.
+        preg_match('/<body\b[^>]*>/i', (string) $this->get('/')->assertOk()->getContent(), $home);
+        $this->assertStringContainsString('data-has-hero', (string) $home[0], 'la portada perdió su marker');
     }
 }

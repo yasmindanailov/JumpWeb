@@ -115,12 +115,29 @@ tiene, y un logotipo sin `alt` lo deja sin nombre accesible.
 composición de capas. Se pierde poder retocarlo desde la herramienta de diseño; es el precio de que
 entre por el mismo sitio que el resto del paquete.
 
-**a.quater) El ICONO DE PESTAÑA → `public/img/client-favicon.svg`** (`DECISIONES #211`).
-Tercera pieza del mismo patrón, con las **mismas tres**: no se versiona, se carga si existe, y
+**a.quater) El ICONO → `public/img/client-favicon.*` y compañía** (`DECISIONES #211` + **`#216`**).
+Mismo patrón, con las **mismas tres** por cada fichero: no se versiona, se carga si existe, y
 `deploy.sh` lo excluye del `--delete`. El suelo es `public/favicon.svg`, el icono del PRODUCTO.
-⚠️ **Solo se sustituye el SVG** (`[DECIDIDO owner]`): los navegadores modernos lo usan, pero **iOS y
-el «añadir a pantalla de inicio» de Android usan los PNG**, que siguen siendo los del producto.
-Ampliarlo es añadir dos ficheros más al mismo patrón.
+
+⚠️⚠️ **CORRECCIÓN (2026-08-28, `#216`) — el párrafo de abajo decía «solo se sustituye el SVG» y
+eso ya NO es cierto.** Aquel alcance dejaba **iOS y el «añadir a pantalla de inicio» de Android con
+la «J» del producto**, porque los dos ignoran el SVG. Con el paquete del 2.º cliente entregado,
+`[DECIDIDO owner, 2026-08-28]`: **entra el set completo**. El aviso de entonces —«ampliarlo es
+añadir dos ficheros más al mismo patrón»— queda cumplido, y son cinco:
+
+| Fichero | Quién lo lee |
+|---|---|
+| `client-favicon.svg` | los navegadores modernos |
+| `client-favicon.ico` | los antiguos, y quien pide `/favicon.ico` a pelo |
+| `client-apple-touch-icon.png` | **iOS**, que no tiene alternativa vectorial |
+| `client-icon-192.png` · `client-icon-512.png` | **Android sin manifiesto**: Chrome elige el declarado más grande |
+| `client-icon-512-maskable.png` | nadie, **todavía**: un maskable solo lo lee un manifiesto de aplicación web y este producto no sirve ninguno. Se acepta en el paquete para el día que exista. Ficha en `DEUDA.md` |
+
+❗ **Cada pieza se comprueba POR SEPARADO, no en bloque.** Una instalación puede traer el SVG y no
+el `.ico`: con una sola condición, faltar uno dejaría fuera a los demás.
+▶ Cuando la instalación trae su SVG, **el PNG de 64 px sale del `<head>`**: un navegador que
+entienda los dos preferiría el PNG por ser más específico en tamaño y volvería a enseñar la «J»
+del producto teniendo el del cliente al lado.
 ▶ Cuando la instalación trae su SVG, **el PNG de 64 px sale del `<head>`**: un navegador que
 entienda los dos lo preferiría por ser más específico en tamaño y volvería a enseñar la «J» del
 producto teniendo el del cliente al lado.
@@ -135,7 +152,7 @@ silueta plana. **Lo exporta la herramienta de diseño; el producto solo abre el 
 | Pieza | Fichero | Cómo tiene que venir |
 |---|---|---|
 | **Logotipo, sobre fondo claro** | `public/img/client-logo.svg` | **SVG con el texto convertido a CONTORNOS** · `viewBox` presente · fondo transparente |
-| **Logotipo, sobre fondo oscuro** | `public/img/client-logo-ink.svg` | Igual, pero legible sobre tinta. ❗ **Hace falta**: al abrir el menú a pantalla completa el logo cae sobre superficie oscura. Hoy es texto y se adapta solo; **una imagen no**. ⚠️ El hueco para esta variante **todavía no existe**: es media hora de trabajo, no está hecho |
+| **Logotipo, sobre fondo oscuro** | `public/img/client-logo-ink.svg` | Igual, pero legible sobre tinta. ❗ **Hace falta**: al abrir el menú a pantalla completa el logo cae sobre superficie oscura. Un texto se adapta solo; **una imagen no**. ✅ **El hueco EXISTE desde `#216`**: se sirven las dos y elige el CSS por `[data-surface]`. ⚠️ Y con dos imágenes el nombre accesible se duplica o se pierde —`display: none` saca el `alt` del árbol—, así que con las dos van `aria-hidden` y el nombre lo pone un `sr-only` que está siempre |
 | **Logotipo, respaldo raster** | `public/img/client-logo@4x.png` | PNG con transparencia, **≥ 216 px de alto** (4× de los 54 px a los que lo pinta la barra). Sirve para correos y para Open Graph, donde un SVG no vale |
 | **Icono de pestaña** | `public/img/client-favicon.svg` | **SVG cuadrado** (`viewBox` cuadrado, p. ej. `0 0 64 64`) · **con su propio fondo**, no transparente · **legible a 16 px** |
 

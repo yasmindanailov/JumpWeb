@@ -53,6 +53,17 @@
      que va antes que el racimo. --}}
 <a href="#main" class="skip-link">{{ __('landing.nav.skip') }}</a>
 
+{{-- ❗ **EL SUELO SIN JAVASCRIPT DEL ARMAZÓN** (2c·8, `#216`). En la portada el armazón nace
+     oculto y lo destapa `--nav-p`, que publica `heroChoreo`. **Sin JavaScript nadie lo publica**, y
+     un sitio cuya primera pantalla no tiene ni logotipo ni menú ni botón de comprar no es una
+     degradación aceptable: es un sitio roto.
+     ▶ `<noscript>` es la única forma de decir «esto solo si NO hay JS» sin un script que lo diga,
+     y su `<style>` gana por especificidad y orden. Mismo recurso que el selector de idioma del
+     menú (`#205`).
+     ⚠️ Va aquí y no en el layout: quien tiene el problema es este componente, y el que lo lea
+     tiene que ver el remedio al lado del mecanismo que lo causa. --}}
+<noscript><style>body[data-has-hero] .nav__left,body[data-has-hero] .nav__cta{opacity:1;transform:none;pointer-events:auto}</style></noscript>
+
 {{-- Con el menú abierto el armazón sube POR ENCIMA de él (la hamburguesa es la forma de cerrarlo)
      y declara superficie de TINTA, que es lo que hace legible su contenido sobre el menú sin
      escribir un solo color a mano: los siete tokens de superficie se re-escopan solos. --}}
@@ -96,6 +107,42 @@
         <div class="nav__pair"
              :class="[$store.ctaPair.mode === 'account' && 'nav__pair--account',
                       ! $store.ctaPair.touched && 'nav__pair--invita']">
+        {{-- ── MITAD A · COMPRAR. Va PRIMERA, y eso es del mockup ───────────────────────────────
+             Medido en `Landing PJP Modos`: su racimo es `[Reservar] [Registrarse] [Menú]`, con el
+             botón de tinta a la izquierda del blanco. El nuestro los tenía al revés desde que el
+             par existe (`#214`); se alinea en la 2c·8.
+             ⚠️ **No es simetría: es el orden de lectura.** El de más peso primero, y la
+             hamburguesa al final, pegada al borde — que es donde la busca la mano.
+
+             ⚠️⚠️ **Aquí vivía `x-data="navCtaReveal"` y se RETIRA** (`#216`): ese componente
+             ocultaba SOLO este botón mientras duraba el hero, y ahora el armazón entero nace bajo
+             el hero con una sola señal (`--nav-p`). Dos mecanismos ocultando el mismo botón con
+             señales distintas es un solape que se ve bien en una máquina y mal en otra.
+
+             ⚠️ Sigue siendo `<a href>` por el mismo motivo que la otra mitad: `/entradas` es una
+             PUERTA, así que sin JavaScript esto lleva a comprar de una sola pulsación en vez de no
+             hacer nada. Y su nombre accesible dice qué hace AHORA: colapsada se llama «cambiar a
+             reservar entradas». --}}
+        <a href="{{ route('entradas') }}" class="cta-med nav-cta-med"
+           aria-label="{{ __('landing.nav.reserve_tickets_aria') }}"
+           :aria-label="$store.ctaPair.mode === 'buy' ? @js(__('landing.nav.reserve_tickets_aria')) : @js(__('landing.nav.cta_switch_buy'))"
+           @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')">
+            <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
+            <span class="cta-med__body">
+                {{-- ⚠️ **Aquí había DOS rótulos, uno «de escritorio» y otro «de móvil», y el
+                     segundo no lo enseñaba nadie** (2c·8, `#216`): su única regla de CSS era
+                     `display: none` y ninguna media query la levantaba. Además por debajo de
+                     720 px este botón entero sale del racimo. Queda uno. --}}
+                <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
+                @if (! empty($ctaMinPriceLabel))
+                    <span class="cta-med__s">{{ __('landing.nav.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
+                @endif
+            </span>
+            {{-- ⚠️ Aquí había una flecha `→`. **El CTA fijo del mockup no la lleva** y se retira con
+                 la alineación de `#213`: el botón ya dice a dónde va con su rótulo y su icono, y una
+                 flecha de más en el elemento más repetido de la web es ruido en las 12 vistas. --}}
+        </a>
+
         @guest
             {{-- #216: «Registro» del parque. Si hay URL externa configurada (Ajustes → Registro), el
                  botón lleva a ese sistema en una pestaña nueva, con etiqueta + subtítulo por idioma.
@@ -191,36 +238,6 @@
             </span>
         @endguest
 
-        {{-- `x-data="navCtaReveal"` (ver app.js): si la página marca `data-has-hero`
-             en el body, este botón empieza oculto y aparece (animado) cuando el
-             CTA "prime" del hero sale del viewport. En páginas sin hero queda
-             visible por defecto (sin observer ni CSS oculto).
-             Estructura idéntica al `.cta-med` del mockup `design_mockup/jerarquia-ctas.html`:
-             icono tear-off + body (título + descripción con anclaje "desde X €") + flecha.
-             El subtítulo solo se renderiza cuando hay catálogo (data-driven). --}}
-        {{-- ⚠️ Mitad A del par. Pasa de `<button>` a `<a href>` por el mismo motivo que la otra
-             mitad: `/entradas` es una PUERTA, así que sin JavaScript esto lleva a comprar de una
-             sola pulsación en vez de no hacer nada. Y su nombre accesible también dice qué hace
-             AHORA: colapsada se llama «cambiar a reservar entradas». --}}
-        <a href="{{ route('entradas') }}" class="cta-med nav-cta-med" x-data="navCtaReveal"
-           aria-label="{{ __('landing.nav.reserve_tickets_aria') }}"
-           :aria-label="$store.ctaPair.mode === 'buy' ? @js(__('landing.nav.reserve_tickets_aria')) : @js(__('landing.nav.cta_switch_buy'))"
-           @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')">
-            <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
-            <span class="cta-med__body">
-                {{-- Dos labels: el desktop muestra el copy completo + subtítulo de precio,
-                     el móvil cae a "Reservar" (1 palabra) porque el espacio del nav no
-                     permite el largo. CSS @media controla cuál se ve. --}}
-                <span class="cta-med__t cta-med__t--desktop">{{ __('landing.nav.cta_buy') }}</span>
-                <span class="cta-med__t cta-med__t--mobile">{{ __('landing.nav.cta_book') }}</span>
-                @if (! empty($ctaMinPriceLabel))
-                    <span class="cta-med__s">{{ __('landing.nav.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
-                @endif
-            </span>
-            {{-- ⚠️ Aquí había una flecha `→`. **El CTA fijo del mockup no la lleva** y se retira con
-                 la alineación de `#213`: el botón ya dice a dónde va con su rótulo y su icono, y una
-                 flecha de más en el elemento más repetido de la web es ruido en las 12 vistas. --}}
-        </a>
         </div>{{-- /.nav__pair --}}
 
         {{-- **La hamburguesa ABRE Y CIERRA, y enseña una X cuando está abierta.**

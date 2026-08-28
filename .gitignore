@@ -29,11 +29,27 @@
 # versiona, se carga si existe, y `deploy.sh` lo excluye del `--delete`—. Sin él, el armazón
 # pinta el nombre en la fuente de rótulo, que es el suelo del producto.
 /public/img/client-logo.svg
+# Y su variante sobre TINTA (`#216`). Hace falta porque el menú a pantalla completa cae sobre
+# superficie oscura y **una imagen no se adapta**: el suelo de texto sí lo hacía, un `<img>` no.
+# Sin este fichero el logotipo de la instalación se sigue viendo, pero contra su propio fondo.
+/public/img/client-logo-ink.svg
+# Y su respaldo RASTER (`#216`): correos y Open Graph no renderizan SVG. `@4x` de los 54 px a los
+# que la barra pinta el logotipo.
+/public/img/client-logo@4x.png
 # Y el tercero: el ICONO DE PESTAÑA de la instalación. Mismas tres piezas. El suelo es
 # `public/favicon.svg`, que es el icono DEL PRODUCTO — ⚠️ y lleva `#FF5B22` quemado, o sea el
 # naranja del PRIMER cliente: es la misma fuga que `#139` cerró en el CSS, sobrevivida en un
 # fichero. Ficha en `DEUDA.md`.
 /public/img/client-favicon.svg
+# Y el RESTO DEL SET DE ICONO (`#216`, `[DECIDIDO owner]`). Hasta aquí solo se sustituía el SVG y
+# eso dejaba **iOS y «añadir a pantalla de inicio» de Android con el icono del PRODUCTO**: los dos
+# ignoran el SVG. Mismas tres piezas cada uno, y **cada uno se carga por separado**: una
+# instalación puede traer solo el que tenga.
+/public/img/client-favicon.ico
+/public/img/client-apple-touch-icon.png
+/public/img/client-icon-192.png
+/public/img/client-icon-512.png
+/public/img/client-icon-512-maskable.png
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

@@ -660,13 +660,19 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **Con el menú abierto SIEMPRE hay un botón de comprar.**
+     * **Con el menú abierto SIEMPRE hay un botón de comprar — y una salida.**
      *
-     * ⚠️⚠️ Otro agujero que solo se ve mirando: en la portada el CTA del armazón **nace oculto** y
-     * lo destapa `navCtaReveal` al pasar el hero. Abrir el menú desde arriba del todo dejaba la
-     * pantalla entera —el menú tapa la página— **sin un solo sitio donde comprar**.
+     * ⚠️⚠️ Otro agujero que solo se ve mirando: en la portada el armazón **nace oculto** y lo
+     * destapa el scroll. Abrir el menú desde arriba del todo dejaba la pantalla entera —el menú
+     * tapa la página— **sin un solo sitio donde comprar**.
      * ▶ Medido en el mockup del 2.º cliente: su menú tampoco lleva CTA propio; usa el de la
      * cabecera, que en el suyo está SIEMPRE visible. La diferencia era ésa, no el botón.
+     *
+     * ⚠️ **RE-APUNTADO en la 2c·8** (`#216`), no retirado: el sujeto sigue vivo y ahora hay MÁS en
+     * juego. Antes se forzaba un botón (`.nav-cta-med`); ahora se fuerza el RACIMO ENTERO
+     * (`.nav__cta`), porque desde esta tanda la hamburguesa nace oculta con él — o sea que sin
+     * esta regla el menú no solo se quedaría sin compra: se quedaría **sin la X para cerrarlo**,
+     * que es justo el defecto que `#211` cerró por otra puerta.
      */
     public function test_the_open_menu_always_offers_the_purchase(): void
     {
@@ -684,7 +690,7 @@ class ArmazonContractTest extends TestCase
             }
 
             foreach (explode(',', $m[1]) as $selector) {
-                if (preg_replace('/\s+/', ' ', trim($selector)) === 'body[data-has-hero] .nav--over .nav-cta-med') {
+                if (preg_replace('/\s+/', ' ', trim($selector)) === 'body[data-has-hero] .nav--over .nav__cta') {
                     $encontrada = $m[2];
                 }
             }
@@ -692,15 +698,15 @@ class ArmazonContractTest extends TestCase
 
         $this->assertNotNull(
             $encontrada,
-            "Nada revela el CTA de compra cuando el menú está abierto.\n".
-            "▶ En la portada nace oculto (`navCtaReveal`), y el menú es `inset: 0`: sin esta regla,\n".
-            '  abrir el menú desde arriba deja la pantalla sin ninguna forma de comprar.',
+            "Nada revela el racimo del armazón cuando el menú está abierto.\n".
+            "▶ En la portada nace oculto bajo el hero, y el menú es `inset: 0`: sin esta regla,\n".
+            '  abrir el menú desde arriba deja la pantalla sin comprar Y SIN LA X DE CERRAR.',
         );
 
         foreach (['opacity: 1', 'pointer-events: auto'] as $declaracion) {
             $this->assertStringContainsString(
                 $declaracion, (string) $encontrada,
-                "la regla existe pero no declara `{$declaracion}`: el CTA seguiría oculto o sin ".
+                "la regla existe pero no declara `{$declaracion}`: el racimo seguiría oculto o sin ".
                 'poder pulsarse con el menú abierto.',
             );
         }
@@ -1496,6 +1502,170 @@ class ArmazonContractTest extends TestCase
         }
 
         return $out;
+    }
+
+    /* ══ LA 2c·8 — EL ARMAZÓN NACE BAJO EL HERO Y EL CTA ES EL DEL MOCKUP (`#216`) ═══════════ */
+
+    /**
+     * **En la portada el armazón nace OCULTO, y los TRES racimos con él.**
+     *
+     * ⚠️ **Se asevera el SELECTOR COMPLETO, no una subcadena.** Esta suite ha pagado cuatro veces
+     * la misma lección: `.nav-cta-med-NO` contiene `.nav-cta-med`, `client-favicon.svg` contiene
+     * `favicon.svg`. Aquí se parte el CSS en reglas y se compara el selector normalizado.
+     * ⚠️ **Y se exige que la regla cubra los DOS racimos.** Con uno solo, la portada se quedaría a
+     * medias: logotipo fuera y hamburguesa dentro, o al revés. La mutación que lo demuestra es
+     * quitar `.nav__left` de la lista.
+     */
+    public function test_the_frame_is_born_hidden_under_the_hero(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        foreach (['body[data-has-hero] .nav__left', 'body[data-has-hero] .nav__cta'] as $racimo) {
+            $cuerpo = (string) ($reglas[$racimo] ?? '');
+
+            $this->assertStringContainsString(
+                'opacity: var(--nav-p)', $cuerpo,
+                "`{$racimo}` no sigue a `--nav-p`.\n".
+                "▶ `[DECIDIDO owner, 2026-08-28]`: en la portada el armazón nace oculto bajo el hero,\n".
+                '  como el mockup. Si un racimo se queda fuera, la primera pantalla sale a medias.',
+            );
+            $this->assertStringContainsString(
+                'pointer-events: none', $cuerpo,
+                "`{$racimo}` es invisible pero SIGUE recibiendo clics: `opacity: 0` no los bloquea.",
+            );
+        }
+    }
+
+    /**
+     * **Y el suelo SIN JavaScript lo devuelve entero.**
+     *
+     * ❗ Sin esto, un visitante sin JavaScript —o con el bundle caído— se encuentra una portada sin
+     * logotipo, sin menú y sin botón de comprar: no es una degradación, es un sitio roto. `--nav-p`
+     * lo publica `heroChoreo`, y si Alpine no arranca no lo publica nadie.
+     */
+    public function test_without_javascript_the_frame_comes_back(): void
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<noscript><style>[^<]*body\[data-has-hero\][^<]*opacity:1[^<]*<\/style><\/noscript>/', $html,
+            "No hay suelo sin JavaScript para el armazón.\n".
+            '▶ En la portada nace oculto y lo destapa el JS: sin `<noscript>`, sin JS no hay nada.',
+        );
+
+        foreach (['.nav__left', '.nav__cta'] as $racimo) {
+            $this->assertMatchesRegularExpression(
+                '/<noscript><style>[^<]*'.preg_quote($racimo, '/').'[^<]*<\/style><\/noscript>/', $html,
+                "el suelo sin JavaScript no cubre `{$racimo}`.",
+            );
+        }
+    }
+
+    /**
+     * **El par intercambia ANCHOS FIJOS, y las dos mitades miden lo mismo.**
+     *
+     * Medido en `Landing PJP Modos`: 224 px la expandida y 56 la colapsada, y las dos con la misma
+     * altura. Antes eran 167 y 70, con 53 y 42 de alto — o sea dos botones hermanos de tamaños
+     * distintos.
+     * ⚠️ **Se exige el CRUCE, no un número suelto**: que en reposo comprar valga `--cta-pair-w` y
+     * la cuenta `--cta-pair-mini`, y que con `--account` sea al revés. Aseverar solo dos de las
+     * cuatro reglas deja pasar un par que se expande sin colapsar al otro.
+     */
+    public function test_the_pair_swaps_fixed_widths(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        $esperado = [
+            '.nav__pair .cta-med' => 'var(--cta-pair-w)',
+            '.nav__pair .cta-ghost' => 'var(--cta-pair-mini)',
+            '.nav__pair--account .cta-med' => 'var(--cta-pair-mini)',
+            '.nav__pair--account .cta-ghost' => 'var(--cta-pair-w)',
+        ];
+
+        foreach ($esperado as $selector => $ancho) {
+            $this->assertArrayHasKey(
+                $selector, $reglas,
+                "falta la regla `{$selector}`: el par no reparte anchos y las dos mitades quedan al ".
+                'tamaño de su contenido, que es de donde venía la asimetría.',
+            );
+            $this->assertStringContainsString(
+                'width: '.$ancho, (string) $reglas[$selector],
+                "`{$selector}` no declara `width: {$ancho}`.",
+            );
+        }
+    }
+
+    /**
+     * **El fantasma NO se tiñe dentro del menú.**
+     *
+     * Medido en el mockup: su botón de registro se queda **blanco** con el menú abierto, mientras
+     * el de comprar pasa a aviso. Aquí eso se consigue leyendo los alias `--paper-*`, que son los
+     * que NO se invierten en superficie oscura: si leyera `--bg-card`, el ámbito de tinta lo
+     * repintaría y el par quedaría con dos botones oscuros pegados.
+     */
+    public function test_the_ghost_half_keeps_its_paper_colours_inside_the_menu(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        $this->assertArrayHasKey('.cta-ghost', $reglas);
+        $cuerpo = (string) $reglas['.cta-ghost'];
+
+        foreach (['background: var(--paper-bg-card)', 'color: var(--paper-fg)'] as $declaracion) {
+            $this->assertStringContainsString(
+                $declaracion, $cuerpo,
+                "`.cta-ghost` no declara `{$declaracion}`.\n".
+                "▶ Con los tokens que SÍ se invierten, el menú de tinta lo repinta y el par pierde su\n".
+                '  contraste interno: dos botones oscuros, uno al lado del otro.',
+            );
+        }
+    }
+
+    /**
+     * **El texto que ENTRA espera; el que se va, no.**
+     *
+     * Medido en `textoCta` del mockup: `transition: opacity .28s ease <.14s si entra, 0s si sale>`.
+     * Sin el retardo asimétrico los dos rótulos se cruzan a mitad de camino y durante unos 200 ms
+     * se leen dos cosas a la vez en un racimo de 300 px.
+     */
+    public function test_the_incoming_label_waits_for_its_room(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        foreach (['.nav__pair .cta-med__body', '.nav__pair--account .cta-ghost__body'] as $entra) {
+            $this->assertArrayHasKey($entra, $reglas, "falta `{$entra}`");
+            $this->assertStringContainsString(
+                'transition-delay: var(--cta-pair-in', (string) $reglas[$entra],
+                "`{$entra}` es el rótulo que ENTRA y no espera a que le hagan sitio.",
+            );
+        }
+
+        foreach (['.nav__pair .cta-ghost__body', '.nav__pair--account .cta-med__body'] as $sale) {
+            $this->assertArrayHasKey($sale, $reglas, "falta `{$sale}`");
+            $this->assertStringContainsString(
+                'transition-delay: 0s, 0s', (string) $reglas[$sale],
+                "`{$sale}` es el rótulo que SE VA y está esperando: el cruce se solapa.",
+            );
+        }
+    }
+
+    /**
+     * **El hover del par NO mueve el botón.**
+     *
+     * Medido: el mockup solo cambia la sombra (`style-hover="box-shadow:…"`). Nuestro par hacía
+     * `translateY(-2px) scale(1.02)` en comprar y `translateY(-1px)` en el fantasma. Un botón de
+     * DOS PASOS que además salta bajo el cursor se pulsa por error más a menudo.
+     */
+    public function test_the_pair_does_not_jump_under_the_cursor(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        foreach (['.cta-med:hover', '.cta-ghost:hover'] as $selector) {
+            $cuerpo = (string) ($reglas[$selector] ?? '');
+            $this->assertStringNotContainsString(
+                'transform:', $cuerpo,
+                "`{$selector}` mueve el botón al pasar el cursor, y el CTA fijo del mockup no lo hace.",
+            );
+        }
     }
 
     /** Literal XPath seguro aunque el texto lleve comillas. */

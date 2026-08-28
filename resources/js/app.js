@@ -685,6 +685,7 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.data('heroChoreo', () => ({
         _raf: null,
         _last: null,
+        _lastNav: null,
         _onScroll: null,
         init() {
             if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
@@ -699,14 +700,44 @@ document.addEventListener('alpine:init', () => {
         apply() {
             // El recorrido lo declara el CSS (`--hero-runway`), no este fichero: así el
             // cliente puede alargarlo o acortarlo desde su paquete.
-            const runway = parseFloat(getComputedStyle(this.$el).getPropertyValue('--hero-runway')) || 0;
+            const cs = getComputedStyle(this.$el);
+            const runway = parseFloat(cs.getPropertyValue('--hero-runway')) || 0;
             if (runway <= 0) return;                       // movimiento reducido, o sin recorrido
             const raw = Math.min(1, Math.max(0, window.scrollY / runway));
             // Curva de salida cúbica: rápida al principio, se posa al final. Es la del mockup.
             const p = Math.round((1 - Math.pow(1 - raw, 3)) * 1000) / 1000;
-            if (p === this._last) return;
+
+            // ══ EL ARMAZÓN ENTRA CON EL HERO (armazón · tanda 2c·8, `#216`) ═══════════════════
+            // `[DECIDIDO owner, 2026-08-28]`: como el mockup. Logo, CTA y hamburguesa **no están**
+            // mientras el hero llena la pantalla; entran cuando el hero empieza a encoger.
+            //
+            // ⚠️ **Sale del MISMO recorrido, no de un segundo observador.** El mockup lo calcula
+            // así (`aplicaFlotantes`): `nb = (bruto − 0,18) / 0,44`, sobre el progreso LINEAL del
+            // hero, y encima la misma curva cúbica. Con dos señales distintas —un
+            // `IntersectionObserver` por un lado y el scroll por otro— el armazón podía entrar
+            // antes o después que el hero según el navegador; con una sola, van pegados.
+            //
+            // ⚠️ **El retardo y la ventana los declara el CSS**, igual que el recorrido: son
+            // TIEMPO, y el tiempo es tema. Aquí solo se aplica la aritmética.
+            const start = parseFloat(cs.getPropertyValue('--nav-reveal-start'));
+            const span = parseFloat(cs.getPropertyValue('--nav-reveal-span'));
+            const live = parseFloat(cs.getPropertyValue('--nav-reveal-live'));
+            let navP = 1;
+            if (span > 0) {
+                const nb = Math.min(1, Math.max(0, (raw - (start || 0)) / span));
+                navP = Math.round((1 - Math.pow(1 - nb, 3)) * 1000) / 1000;
+            }
+
+            if (p === this._last && navP === this._lastNav) return;
             this._last = p;
+            this._lastNav = navP;
             this.$el.style.setProperty('--hero-p', String(p));
+            // ⚠️ Va en el `<body>`, no en el hero: quien lo lee —los dos racimos— es hermano del
+            // hero, no descendiente suyo, y una custom property solo baja por el árbol.
+            document.body.style.setProperty('--nav-p', String(navP));
+            // ⚠️ **Un hecho binario, y hace falta**: `opacity: 0` NO deja de recibir clics. La
+            // clase dice «ya se puede tocar»; qué significa eso lo decide el CSS.
+            document.body.classList.toggle('nav--live', navP >= (live || 1));
         },
         destroy() {
             if (this._onScroll) {
@@ -714,35 +745,24 @@ document.addEventListener('alpine:init', () => {
                 window.removeEventListener('resize', this._onScroll);
             }
             if (this._raf !== null) cancelAnimationFrame(this._raf);
+            // ⚠️ Se DEVUELVE el armazón al desmontar. Con `wire:navigate` el hero desaparece y
+            // este componente con él; si se quedara el último valor publicado, la página
+            // siguiente heredaría un armazón invisible y sin hero que lo devolviera.
+            document.body.style.removeProperty('--nav-p');
+            document.body.classList.remove('nav--live');
         },
     }));
 
-    window.Alpine.data('navCtaReveal', () => ({
-        _io: null,
-        init() {
-            if (!document.body.dataset.hasHero) return;
-            const trigger = document.querySelector('.hero__sentinel');
-            if (!trigger || !('IntersectionObserver' in window)) return;
-            this._io = new IntersectionObserver(
-                ([entry]) => {
-                    const revealed = !entry.isIntersecting;
-                    // Clase en el propio botón (CSS controla animación de aparición).
-                    this.$el.classList.toggle('is-revealed', revealed);
-                    // Clase en body: permite a OTROS elementos del nav reaccionar al
-                    // estado (p. ej. el ghost en móvil colapsa a "solo icono" para
-                    // ceder espacio al filled emergente — selector hermano no
-                    // funciona aquí porque ghost va ANTES que filled en el DOM).
-                    document.body.classList.toggle('nav-cta-revealed', revealed);
-                },
-                { threshold: 0 }
-            );
-            this._io.observe(trigger);
-        },
-        destroy() {
-            this._io?.disconnect();
-            document.body.classList.remove('nav-cta-revealed');
-        },
-    }));
+    // ⚠️⚠️ **Aquí vivía `navCtaReveal`, y se RETIRA con la tanda 2c·8** (`#216`). Su trabajo
+    // —ocultar el CTA de comprar mientras dura el hero y destaparlo al pasarlo— lo hace ahora la
+    // coreografía del armazón, que oculta **los tres** (logo, CTA y hamburguesa) como el mockup.
+    // ▶ Mantener los dos era tener **dos mecanismos ocultando el mismo botón con señales
+    // distintas** —un `IntersectionObserver` sobre el sentinel y el progreso del scroll—, que es
+    // exactamente la clase de solape que se ve bien en una máquina y mal en otra.
+    // ⚠️ Con él se va `body.nav-cta-revealed`, que **ninguna regla de CSS leía**: se ponía y se
+    // quitaba para que otros elementos «pudieran reaccionar» y nadie llegó a reaccionar nunca.
+    // ▶ El `.hero__sentinel` NO se retira: lo sigue observando `mobileBookBar`, que es de quien
+    // era la otra mitad del trabajo.
 
     // Barra flotante de reserva en MÓVIL (mockup `design_mockup/jerarquia-ctas.html` §03). En móvil
     // el CTA «Reservas aquí» sale del header y reaparece como barra fija inferior:
@@ -889,6 +909,11 @@ document.addEventListener('alpine:init', () => {
                     y,
                     previous: anterior,
                     locked: this.menuOpen || !! this.$store.purchase?.isOpen,
+                    // ⚠️ **En la portada el suelo es el final del hero, no la primera pantalla**
+                    // (2c·8, `#216`): mientras el armazón está ENTRANDO con el scroll, la
+                    // dirección no puede sacarlo — serían dos mecanismos moviendo lo mismo. Se
+                    // mide en cada evento porque el hero cambia de alto al redimensionar.
+                    floor: this.navFloor(),
                 });
 
                 // `null` es «no me consta»: sin intención, ni se mueve el armazón ni se mueve la
@@ -901,6 +926,19 @@ document.addEventListener('alpine:init', () => {
             };
 
             window.addEventListener('scroll', this._onNavScroll, { passive: true });
+        },
+
+        /**
+         * El suelo por debajo del cual la dirección del scroll NO retira el armazón.
+         *
+         * En la portada es el final del hero —donde termina de entrar—; en las once páginas sin
+         * hero, `undefined` deja el valor por defecto del módulo (la primera pantalla).
+         */
+        navFloor() {
+            if (! document.body.dataset.hasHero) return undefined;
+            const hero = document.querySelector('.hero');
+            if (! hero) return undefined;
+            return hero.offsetTop + hero.offsetHeight;
         },
 
         /**

@@ -333,6 +333,18 @@ RSYNC_EXCLUDES=(
     --exclude='/public/img/client-favicon.svg'  # el ICONO DE PESTAÑA de la instalación: idem. Es la
                                                 # tercera pieza del mismo patrón; sin ella el
                                                 # despliegue devuelve el icono del producto
+    # ⚠️ **UN PATRÓN, UNA LÍNEA POR FICHERO** (#216). El resto del paquete de marca: la variante
+    # del logotipo sobre TINTA, su respaldo raster, y el set de icono que iOS y Android SÍ leen
+    # (el SVG no lo miran). Cada uno con su exclusión, porque cada uno se carga por separado y una
+    # instalación puede traer solo algunos. Sin estas líneas el --delete se los lleva EN SILENCIO
+    # y la instalación vuelve a enseñar el icono del producto en el móvil.
+    --exclude='/public/img/client-logo-ink.svg'
+    --exclude='/public/img/client-logo@4x.png'
+    --exclude='/public/img/client-favicon.ico'
+    --exclude='/public/img/client-apple-touch-icon.png'
+    --exclude='/public/img/client-icon-192.png'
+    --exclude='/public/img/client-icon-512.png'
+    --exclude='/public/img/client-icon-512-maskable.png'
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'

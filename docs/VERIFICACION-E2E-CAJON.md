@@ -1489,3 +1489,55 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
 - **Que la invitación no moleste**: 4,6 s es el valor del mockup, pero si en pantalla resulta
   insistente, el token `--dur-invite` está para eso.
 - **El par por debajo de 1080 px**: ahí es la barra flotante (`#205`), que ya tenías validada.
+
+---
+
+## §5.septdecies · EL ARMAZÓN NACE BAJO EL HERO y el CTA doble es el del mockup — ✅ medido en headless el 2026-08-28, pendiente del OJO del owner (`DECISIONES #216`)
+
+> **Esto cambia cómo se ve la PRIMERA PANTALLA de la portada**, así que es lo primero que hay que
+> mirar. Y ojo: **la primera visita trae el banner de cookies**, que en escritorio cae sobre la
+> esquina inferior izquierda y tapa parte del hero. Acéptalo o recházalo antes de juzgar el hero.
+
+### A · La portada, de arriba abajo (escritorio, ≥ 1100 px)
+
+| | Qué hacer | Qué tiene que pasar |
+|---|---|---|
+| A1 | Cargar `/` y **no tocar nada** | **No hay logotipo, ni CTA, ni hamburguesa.** El hero llena la pantalla y dentro lleva eslogan → titular → **«Reservas aquí» (naranja) + «Ver precios»** → estado de apertura |
+| A2 | Bajar **muy despacio** | Los tres entran **a la vez**, bajando 16 px y apareciendo. No antes del ~18 % del recorrido del hero |
+| A3 | Intentar pulsar el CTA **mientras entra** | No se puede hasta que está casi entero. Es a propósito: pulsar algo medio invisible es un accidente |
+| A4 | Volver arriba del todo | Se van los tres, con la misma curva |
+| A5 | Seguir bajando y **subir de golpe** | El armazón vuelve al subir (2c·2), y **dentro del hero no se retira nunca**: si no, entraría y saldría a la vez |
+
+### B · El CTA doble, que es un PAR
+
+| | Qué hacer | Qué tiene que pasar |
+|---|---|---|
+| B1 | Mirarlo sin tocarlo | «RESERVAR / desde X €» **ancho** (224 px) y la cuenta reducida a **su icono** (56 px). Las dos miden **lo mismo de alto** |
+| B2 | Esperar unos segundos | La mitad colapsada **asoma** y un **aro late** a su alrededor, cada 4,6 s |
+| B3 | Pulsar **una vez** la colapsada | **Intercambian**: la de la cuenta se abre y comprar se reduce a su icono. El rótulo que entra **espera un instante** a que le hagan sitio — no se cruzan |
+| B4 | Volver a pulsarla | Ahora **actúa**: abre el cajón en la cuenta |
+| B5 | Pasar el ratón por encima | **El botón NO se mueve.** Cambia de color; el salto se retiró |
+| B6 | Abrir el menú (☰) | Comprar pasa a **amarillo aviso** y **la cuenta se queda BLANCA** — no se tiñe. La ☰ se convierte en X |
+| B7 | Abrir el menú **desde arriba del todo** | El racimo de la derecha **aparece igual**: si no, el menú tapa la página y te deja sin comprar **y sin la X** |
+
+### C · La marca del cliente
+
+| | Qué hacer | Qué tiene que pasar |
+|---|---|---|
+| C1 | Mirar la pestaña del navegador | El icono del parque, no la «J» del producto |
+| C2 | Mirar el logotipo tras el scroll | El lockup a color, sobre fondo claro |
+| C3 | **Abrir el menú y mirar el logotipo** | Cambia a su **variante BLANCA**. Es la pieza nueva: una imagen no se adapta al fondo como lo hacía el texto |
+| C4 | **En un móvil real**, «añadir a pantalla de inicio» | El icono del parque. Es lo que el alcance anterior (solo SVG) no daba |
+
+### D · Sin JavaScript (una vez, y basta)
+
+Desactiva JavaScript y carga `/`: **el armazón sale entero desde el primer píxel**. Si no sale,
+falta el `<noscript>` y la portada se queda sin navegación para quien no ejecuta scripts.
+
+### Lo que el guion NO cubre y hay que mirar con el ojo
+- **La curva de entrada**: el guion mide dos puntos, no el camino. Si «salta» en vez de posarse, se
+  toca `--nav-reveal-span`, que es un token.
+- **Si el hero encoge bien con los dos botones dentro**: el contenido creció y el hero es la misma
+  caja de antes.
+- ⚠️ **El logotipo se pinta a 26 px de alto y tu mockup lo pinta a 54.** Medido, **no cambiado**: no
+  estaba en el encargo. Si a tu ojo se ve pequeño, es una línea.

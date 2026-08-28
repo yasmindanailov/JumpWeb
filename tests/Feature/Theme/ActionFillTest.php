@@ -61,6 +61,10 @@ class ActionFillTest extends TestCase
         '.bd-btn--solid' => 'el primario del par del editor de invitaciones',
         // site.css
         '.cta-prime' => 'el CTA grande de compra',
+        // ⚠️ **Entra en la 2c·8** (`#216`): el hero recupera sus dos botones y el primero es el que
+        // hace avanzar la compra, o sea acción de manual. El segundo (`.hero__act--alt`) NO entra:
+        // es un contorno sobre el vídeo, y su relleno es un velo de tinta, no un color de acción.
+        '.hero__act--buy' => 'el CTA del hero, que vuelve con la 2c·8',
         // ⚠️⚠️ **`.cta-med` NO está aquí, y no es un olvido** (`DECISIONES #213`). Es el botón de
         // comprar más visible de la web, pero su color no lo manda el rol: lo manda una
         // COREOGRAFÍA — tinta con el menú cerrado, AVISO mientras el menú lo tapa—, que es lo que

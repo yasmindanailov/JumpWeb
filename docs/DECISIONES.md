@@ -11428,3 +11428,87 @@ reserva», cero errores de consola. Chunk 246,29 KiB (sin cambio). Desplegado a 
 ▶ **La lección**: *un rechazo silencioso por diseño necesita una guarda que lo cruce con quien lo
 invoca*. `go()` hace bien en no lanzar; lo que no puede pasar es que nadie compruebe que cada botón
 que la interfaz ofrece existe en el grafo.
+---
+
+## #216 · 2026-08-28 · [DECIDIDO owner] El armazón NACE BAJO EL HERO como el mockup —y eso obliga a devolverle sus dos botones, reabriendo `#195`—, el CTA doble se alinea en sus ocho medidas, y entra el paquete de MARCA del 2.º cliente
+
+**Contexto.** El owner mira la landing contra su mockup y señala dos cosas: **(1)** «el CTA en el
+hero se oculta, y el logo también, cuando el hero está a pantalla completa; se muestran cuando se
+minimiza»; **(2)** «el CTA doble no tiene nada que ver con el del mockup, lo quiero idéntico». Y
+entrega en el canvas la carpeta `marca/` que `#211` llevaba pidiendo.
+
+**❗❗ Lo que la medición destapó, y es lo que hace de esto UNA tanda y no dos.**
+El mockup oculta su racimo derecho **entero** —reservar, registro **y la hamburguesa**— mientras el
+hero llena la pantalla. Puede permitírselo porque **su hero lleva dos botones propios**. Nosotros
+retiramos el CTA del hero en `#195`, así que copiar solo la ocultación dejaría la primera pantalla
+**sin logotipo, sin menú y sin ningún sitio donde comprar** — el agujero que `#211` cerró hace dos
+días, por otra puerta. `[DECIDIDO owner]` con las tres salidas delante: **se copia el mockup
+entero**, y `#195` queda reabierto.
+▶ Eso también **corrige a `armazon-y-menu.md` §4.4**, que declaró esta coreografía «no sostenible».
+Lo era **con el hero sin CTA**. La relación de causa —el mockup puede ocultar su cabecera porque su
+hero ofrece la acción— es lo que faltaba en aquel razonamiento.
+
+**La coreografía sale del MISMO recorrido que el hero, no de un segundo observador.** Aritmética del
+mockup (`aplicaFlotantes`), tal cual: `nb = clamp((bruto − 0,18)/0,44)` sobre el progreso LINEAL del
+hero, y encima la misma curva cúbica. Con dos señales —un `IntersectionObserver` por un lado y el
+scroll por otro— el armazón podía entrar antes o después que el hero según el navegador.
+✅ **Verificado por aritmética**: a `scrollY = 120` la fórmula da **0,5617** y el navegador midió
+**`--nav-p: 0.561`**.
+
+**El JS publica `--nav-p` y una clase; el CSS decide todo lo demás** —cuánto sube, cuánto tarda, con
+qué curva—, y el retardo y la ventana son **tokens**, así que un paquete puede hacer que el armazón
+entre antes, después o de golpe. Misma regla que el hero (`#195`), el menú (`#201`) y el par
+(`#214`). ⚠️ La clase hace falta porque **`opacity: 0` no deja de recibir clics**.
+⚠️ **Y el suelo sin JavaScript va en `<noscript>`**: si Alpine no arranca nadie publica `--nav-p` y
+la portada se queda sin navegación. Eso no es una degradación, es un sitio roto.
+
+**`navCtaReveal` se RETIRA.** Hacía media coreografía —ocultaba solo el botón de comprar— y
+mantener los dos era tener **dos mecanismos ocultando el mismo botón con señales distintas**. Con
+él se va `body.nav-cta-revealed`, que **ninguna regla de CSS leía**: se ponía y se quitaba «para que
+otros elementos pudieran reaccionar» y nadie reaccionó nunca en tres meses.
+
+**Las OCHO del CTA doble** (`[DECIDIDO owner]`): orden invertido · anchos 224/56 fijos en vez de
+167/70 por contenido · **alturas iguales** (eran 53 y 42) · el colapso pasa del TEXTO al BOTÓN, a
+.46s · el rótulo que entra se desplaza y **espera .14s** a que le hagan sitio · sombra por ROL ·
+el hover deja de mover el botón · y el fantasma **se queda blanco dentro del menú**.
+⚠️⚠️ **Esto CORRIGE el razonamiento de `#214` §8.2**, que descartó el `width` fijo porque «el icono
+se descentraría». Era correcto para nuestro layout, no para el del mockup: con
+`justify-content: flex-start` y un padding izquierdo fijo, la posición del icono no depende del
+ancho — y la cuenta cuadra exacta, **13 + 30 + 13 = 56**.
+
+**Dos huérfanos que la medición destapó**: `cta-med__t--mobile`, un rótulo «controlado por @media»
+cuya única regla era `display: none` **sin ninguna media query que la levantara** (nunca se vio), y
+tres reglas del bloque móvil que servían al mecanismo retirado.
+
+**LA MARCA (`marca/` en el canvas, `Marca PJP entrega.dc.html`).** Los huecos del producto pasan de
+**dos a nueve**. `[DECIDIDO owner]`: logotipo **con silueta**, y el set de icono **completo** —el
+alcance «solo el SVG» de `#211` dejaba iOS y Android con la «J» del producto—.
+⚠️⚠️ **El logotipo sobre TINTA no es un adorno**: desde `#201` el menú es superficie oscura y el
+armazón entra dentro. Un logotipo de TEXTO se adapta solo; **una imagen no**. Se sirven las dos y
+elige el CSS por `[data-surface]`. ▶ **Y con dos imágenes el nombre accesible se duplica o se
+pierde** —`display: none` saca el `alt` del árbol de accesibilidad—: con las dos, las dos van
+`aria-hidden` y el nombre lo pone un `sr-only` que **está siempre presente**.
+
+⚠️⚠️ **TRES TRAMPAS DEL INSTRUMENTO, y las tres se ven bien hasta que las mides:**
+1. **`DesignSync · get_file` trunca los binarios a 192 KiB y no falla**: `truncated: true` y un PNG
+   con **cabecera válida, dimensiones correctas y sin `IEND`**. Tres ficheros de
+   `mockup_playjumppark/assets/` estaban así desde otra sesión.
+2. ❗ **Transcribir base64 desde el contexto CORROMPE el fichero en silencio**: un PNG de 6.900 B
+   salió de **4.632 B**… con cabecera válida y dimensiones correctas. ▶ Lo que no se pueda extraer
+   del disco **se genera del vector**, no se copia a mano.
+3. **Mi verificador de PNG dio «ROTO» en once ficheros recién generados por Chromium** — el fallo
+   era el verificador. Y esa misma medida mala me hizo afirmar que «los 8 rasters locales están
+   rotos» cuando son **3**. ▶ **Cuando un instrumento dice que NADA funciona, la primera hipótesis
+   es el instrumento.**
+
+⚠️ **Una contradicción más del cliente, la tercera** (van con la del color del CTA y la del anillo
+de foco): su mockup pinta el racimo con **sombra difusa** y su propio hallazgo `M-05` dice que las
+difusas son solo para modal — que es lo que `#196` implementó y lo que su `client.css` declara
+(`5px 5px 0`). Se sigue **el sistema**, porque es lo que deja al paquete decidir. Ficha en `DEUDA.md`.
+
+**Verificación**: `ArmazonContractTest` **+6 casos** · **4 tests RE-APUNTADOS, ninguno retirado** —
+el del menú abierto pasa a mirar el racimo entero (ahora se juega también la X de cerrar), el de
+`navCtaReveal` pasa a aseverar **el hecho de producto** (el hero ofrece la compra) en vez del nombre
+de un componente de JavaScript, el del rótulo alterno exige que NO vuelva, y `ActionFillTest`
+declara `.hero__act--buy` — · sonda de navegador con la coreografía contrastada contra la
+aritmética del mockup · arnés de **12 mutaciones**, cada una con el fallo REAL de su guarda.

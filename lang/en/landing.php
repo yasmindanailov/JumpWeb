@@ -49,6 +49,9 @@ return [
         'cta' => 'Book here', 'cta2' => 'See the rides', 'reel' => 'Park reel',
         'cta_buy' => 'Book here',
         'cta_buy_from' => 'from :amount',
+        // Segundo botón del hero: el contorno sobre el vídeo (`#216`). Lleva a la página de
+        // precios; es el «Ver precios» del mockup del 2.º cliente.
+        'cta_prices' => 'See prices',
         'cta_buy_no_price' => 'Birthdays online',
         // Hero status chip (data-driven, App\Domain\Content\Services\HeroStatus). `:duration` already formatted
         // («2 h» / «45 min»); `:time` = «HH:MM»; `:day` = lowercased weekday.

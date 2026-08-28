@@ -49,6 +49,9 @@ return [
         'cta' => 'Réserver ici', 'cta2' => 'Voir les attractions', 'reel' => 'Vidéo du parc',
         'cta_buy' => 'Réserver ici',
         'cta_buy_from' => 'dès :amount',
+        // Segundo botón del hero: el contorno sobre el vídeo (`#216`). Lleva a la página de
+        // precios; es el «Ver precios» del mockup del 2.º cliente.
+        'cta_prices' => 'Voir les tarifs',
         'cta_buy_no_price' => 'Anniversaires en ligne',
         // Chip d'état du hero (data-driven, App\Domain\Content\Services\HeroStatus). `:duration` déjà formatée
         // («2 h» / «45 min»); `:time` = «HH:MM»; `:day` = jour de la semaine en minuscules.
