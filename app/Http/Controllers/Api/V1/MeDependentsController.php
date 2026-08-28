@@ -21,6 +21,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\DependentResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * `/api/v1/me/dependents` — **mis menores a cargo** (`specs/menores-a-cargo.md` §4.2, §4.4, §4.5,
@@ -61,13 +62,25 @@ class MeDependentsController extends Controller
 
         // «Hoy» es el del parque (`DisplayTime`, doctrina `AFORO-09`): a las 00:30 de Madrid en
         // verano el UTC todavía va por ayer, y una fecha de nacimiento «de hoy» sería futura.
+        // ⚠️ `surname` y `relationship` son OBLIGATORIOS en el alta nueva (`#236`) aunque en la
+        // tabla sean nulables: las fichas anteriores a esa tanda no los tienen y no se inventan,
+        // pero a partir de ahora no se declara a nadie sin ellos. La relación se cierra contra el
+        // catálogo —es lo que sostiene que este adulto pueda firmar por el menor—.
         $data = $request->validate([
             'name' => ['required', 'string', 'max:'.Dependent::NAME_MAX],
+            'surname' => ['required', 'string', 'max:'.Dependent::SURNAME_MAX],
+            'relationship' => ['required', 'string', Rule::in(Dependent::RELATIONSHIPS)],
             'born_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.DisplayTime::today()->toDateString()],
         ]);
 
         try {
-            $dependent = $registry->add($user, (string) $data['name'], (string) $data['born_on']);
+            $dependent = $registry->add(
+                $user,
+                (string) $data['name'],
+                (string) $data['born_on'],
+                (string) $data['surname'],
+                (string) $data['relationship'],
+            );
         } catch (DependentNotMinorException) {
             return ApiErrorResponse::make(ApiErrorCode::DependentNotMinor, 422);
         } catch (DependentsLimitReachedException $e) {

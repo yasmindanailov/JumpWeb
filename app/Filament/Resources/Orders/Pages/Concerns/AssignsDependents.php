@@ -164,7 +164,8 @@ trait AssignsDependents
             /** @var Dependent $dependent */
             $dependent = $candidate['dependent'];
             $id = (int) $dependent->getKey();
-            $options[$id] = __('admin.orders.dependents.option', ['name' => $dependent->name, 'age' => $dependent->ageOn($day)]);
+            // `#236`: nombre COMPLETO — hay que poder distinguir a dos hermanos al asignar.
+            $options[$id] = __('admin.orders.dependents.option', ['name' => $dependent->fullName(), 'age' => $dependent->ageOn($day)]);
             if ($candidate['reason'] !== null) {
                 $descriptions[$id] = __('admin.orders.dependents.reasons.'.$candidate['reason']);
                 if (! in_array($id, $current, true)) {

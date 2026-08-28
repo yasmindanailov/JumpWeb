@@ -299,8 +299,14 @@ borran `PurgeCustomerData` (go-live) y el verificador, por `DB::table`.
 ### `dependents` (Dependent, **Prunable**) — Fase 6 · menores a cargo
 Las PERSONAS A CARGO que un titular declara (`specs/menores-a-cargo.md` §4.1–§4.5, `DECISIONES #191`):
 `user_id` FK **RESTRICT** (la fila sobrevive a la cuenta mientras haya una firma detrás; la limpieza de
-go-live la borra explícitamente antes que `users`) · `name` (120; la etiqueta del titular, la puerta no
-la enseña) · `born_on` (date) · `removed_at` nullable · timestamps. **Y nada más**: la EDAD no existe
+go-live la borra explícitamente antes que `users`) · `name` (120; el nombre de pila, que **sí** enseña
+la puerta desde `#236`) · **`surname` (120, NULLABLE)** y **`relationship` (32, NULLABLE)** desde `#236`
+· `born_on` (date) · `removed_at` nullable · timestamps. ⚠️ **Los dos nuevos son nulables a propósito**:
+las fichas anteriores a `#236` no los tienen y no hay de dónde sacarlos — inventar un valor por defecto
+sería meter un dato falso en una tabla que alimenta una FIRMA legal. Se exigen en el ALTA NUEVA (la
+validación de `POST /me/dependents`), no en el esquema. ⚠️ `relationship` es una cadena corta y **no un
+enum de BD**: el catálogo vive en `Dependent::RELATIONSHIPS` y añadir una opción no puede pedir una
+migración. **Y nada más**: la EDAD no existe
 como columna, se deriva (`ageOn()`/`isMinor()`/`adultFrom()`, fecha contra fecha en el «hoy» del
 parque) y la fila sobrevive a la mayoría de edad. Único escritor `Identity\Services\DependentRegistry`
 (solo menores; tope `dependents.max_per_account` —vacío = 20— bajo el `lockForUpdate()` de la fila del
@@ -308,7 +314,9 @@ titular). **Quitar es desvincular si hay un waiver firmado detrás** (`removed_a
 borrar de verdad si no. `anonymize()`: con firma → desvincula; sin ella → borra. Poda (`model:prune`,
 detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. Desde la tanda 2
 (`#198`) `waiver_signatures.subject_id` es FK **RESTRICT** a esta tabla, y la firma en nombre de un menor
-lleva copiados su `name` y `born_on` (esquema canónico v3). Desde la tanda 4 (`#202`) «referencia» =
+lleva copiados su `name` y `born_on` (esquema canónico v3) — desde `#236` en `subject_name` va el
+**nombre COMPLETO**; ⚠️ se cambió el VALOR y no el conjunto de campos a propósito, porque `computeHash()`
+los cubre y las firmas anteriores tienen que conservar su hash. Desde la tanda 4 (`#202`) «referencia» =
 firma O entrada asignada, y el predicado se escribe UNA vez (`Dependent::referenced()`/`unreferenced()`),
 compartido por `hasReferences()` y `prunable()`.
 

@@ -216,13 +216,25 @@ class GateProfileTest extends TestCase
         $this->assertSame('10:00–11:00', $row['time_window']);
     }
 
-    // ─── Menores: edad y exención, JAMÁS el nombre (§4.6, A·7) ────────────────
+    // ─── Menores: NOMBRE de pila, edad y exención — JAMÁS los apellidos (§4.6, A·7 · `#236`) ──
 
-    public function test_minors_travel_as_age_and_waiver_state_never_as_a_name(): void
+    /**
+     * ⚠️⚠️ **Este caso cambió de regla en `#236`, y la de antes está aquí escrita a propósito.**
+     *
+     * Nació exigiendo que el nombre de un menor **no** llegara a la ficha de puerta (minimización,
+     * `#142`). El owner lo revirtió por un motivo operativo que esa versión no resolvía: con tres
+     * niños y una firma que falta, «7 años ✗» **no dice a cuál**.
+     *
+     * ▶ Lo que ahora vigila es el recorte que SÍ sigue en pie: **los apellidos no llegan nunca**.
+     * Por eso el menor se declara con un apellido imposible de confundir y se exige que ese
+     * apellido no aparezca en ninguna parte del JSON de la ficha. Si alguien añade `surname` al
+     * DTO «ya que estamos», este caso cae.
+     */
+    public function test_minors_travel_with_their_first_name_but_never_their_surname(): void
     {
         $holder = $this->holder();
-        $lucas = app(DependentRegistry::class)->add($holder, 'Zorrocotroco Único', '2017-03-12'); // 9 hoy
-        $vera = app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02');                   // 6, sin firma
+        $lucas = app(DependentRegistry::class)->add($holder, 'Lucas', '2017-03-12', 'Zorrocotroco Único', 'mother'); // 9 hoy
+        $vera = app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02', 'Retamocho Raro', 'father');       // 6, sin firma
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY], [$this->pack, 4, self::TODAY]]);
         $this->mode('externo');
@@ -235,17 +247,25 @@ class GateProfileTest extends TestCase
 
         $profile = $this->profile($holder);
 
-        $this->assertSame([['age' => 9, 'waiver' => 'current'], ['age' => 6, 'waiver' => 'missing']], $profile->dependents);
-        $this->assertSame([['age' => 9, 'waiver' => 'current'], ['age' => 6, 'waiver' => 'missing']], $profile->today_reservations[0]['minors']);
+        $esperado = [
+            ['name' => 'Lucas', 'age' => 9, 'waiver' => 'current'],
+            ['name' => 'Vilma', 'age' => 6, 'waiver' => 'missing'],
+        ];
+        $this->assertSame($esperado, $profile->dependents);
+        $this->assertSame($esperado, $profile->today_reservations[0]['minors']);
         $this->assertSame([], $profile->today_reservations[1]['minors'], 'un pack no lleva menores');
+
         $json = json_encode($profile->toArray(), JSON_UNESCAPED_UNICODE);
-        $this->assertStringNotContainsString('Zorrocotroco', $json, 'el nombre de un menor no está en la ficha: no hay campo para él');
-        $this->assertStringNotContainsString('Vilma', $json);
+        $this->assertStringNotContainsString('Zorrocotroco', $json, 'los APELLIDOS de un menor no están en la ficha: no hay campo para ellos');
+        $this->assertStringNotContainsString('Retamocho', $json);
         $this->assertStringNotContainsString($holder->email, $json, 'ni el email completo del titular (§4.6)');
 
-        // Fuera del modo interno no hay exención que enseñar.
+        // Fuera del modo interno no hay exención que enseñar — el nombre sí sigue.
         $this->mode('externo');
-        $this->assertSame([['age' => 9, 'waiver' => null], ['age' => 6, 'waiver' => null]], $this->profile($holder)->dependents);
+        $this->assertSame(
+            [['name' => 'Lucas', 'age' => 9, 'waiver' => null], ['name' => 'Vilma', 'age' => 6, 'waiver' => null]],
+            $this->profile($holder)->dependents,
+        );
     }
 
     public function test_waiver_card_and_visit_states(): void

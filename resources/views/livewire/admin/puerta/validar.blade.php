@@ -256,12 +256,17 @@
                             </x-filament::section>
 
 
-                            {{-- 3 · Menores a cargo: SOLO edad y estado de la exención (§4.6 fila 3).
-                                 ⚠️⚠️ NUNCA el nombre ni el correo. Es estructural —`GateProfileData` no
-                                 tiene campo para el nombre de un menor— y esta plantilla no puede ser
-                                 el sitio por donde vuelva: se imprimen `age` y `waiver`, nada más.
-                                 `ValidarRegistroProfileTest` lo muta metiendo un `name` en el estado y
-                                 exige que la vista siga sin pintarlo. --}}
+                            {{-- 3 · Menores a cargo: NOMBRE de pila, edad y estado de la exención
+                                 (§4.6 fila 3, revisado en `#236`).
+                                 ⚠️⚠️ **CORRECCIÓN**: hasta `#236` aquí NO iba el nombre, por
+                                 minimización. Lo cambió el owner por un motivo que la versión
+                                 anterior no resolvía: con tres niños y una firma que falta,
+                                 «7 años ✗» no dice a CUÁL, y el empleado no puede trabajar.
+                                 ▶ Lo que sigue fuera, y es estructural: **los apellidos y el
+                                 correo**. `GateProfileData` no tiene campo de apellidos, así que
+                                 esta plantilla no puede ser el sitio por donde entren —igual que
+                                 antes no podía serlo para el nombre—, y `ValidarRegistroProfileTest`
+                                 lo vigila metiendo apellidos en el estado. --}}
                             <x-filament::section
                                 :heading="__('admin.puerta.validar.profile.minors')"
                                 :icon="Heroicon::OutlinedUserGroup"
@@ -273,7 +278,10 @@
                                 @else
                                     <ul class="gate-minors" data-gate-minors>
                                         @foreach ($profile['dependents'] as $m)
-                                            <li class="gate-minor" data-gate-minor data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
+                                            <li class="gate-minor" data-gate-minor data-gate-minor-name="{{ $m['name'] ?? '' }}" data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
+                                                {{-- `#236`: NOMBRE de pila y edad. Los apellidos no llegan hasta aquí —el DTO no los
+                                                     trae—, así que esta plantilla no puede ser el sitio por donde entren. --}}
+                                                <span class="gate-minor__name">{{ $m['name'] ?? '' }}</span>
                                                 <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $m['age']]) }}</span>
                                                 @if ($m['waiver'] !== null)
                                                     <x-filament::badge size="xs" :color="$m['waiver'] === 'current' ? 'success' : ($m['waiver'] === 'outdated' ? 'warning' : 'danger')">

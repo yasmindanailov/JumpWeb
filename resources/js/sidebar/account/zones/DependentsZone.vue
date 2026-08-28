@@ -5,7 +5,7 @@ import { useWaiverStore } from '../../stores/waiver.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import DependentCard from './DependentCard.vue';
 import { fieldError } from '../form-outcome.js';
-import { dependentsPager, dependentsView } from '../dependents.js';
+import { RELATIONSHIPS, dependentsPager, dependentsView } from '../dependents.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
 /**
@@ -148,6 +148,30 @@ async function sign(dependent) {
                         <input id="acct-dep-name" ref="nameInput" v-model="view.form.name" type="text" autocomplete="off" required maxlength="120">
                         <span class="purchase__note">{{ a('account.dependents.name_hint') }}</span>
                         <span v-if="fieldError(store.fields, 'name')" class="form__error">{{ fieldError(store.fields, 'name') }}</span>
+                    </div>
+
+                    <!-- Apellidos y relación (`#236`). Van entre el nombre y la fecha porque es el
+                         orden en que se dicen: quién es, cómo se apellida, qué eres tú suyo. -->
+                    <div class="form__field">
+                        <label class="form__label" for="acct-dep-surname">{{ a('account.dependents.surname') }}</label>
+                        <input id="acct-dep-surname" v-model="view.form.surname" type="text" autocomplete="off" required maxlength="120">
+                        <span v-if="fieldError(store.fields, 'surname')" class="form__error">{{ fieldError(store.fields, 'surname') }}</span>
+                    </div>
+
+                    <!-- ⚠️ Lista cerrada, no texto libre: es lo que sostiene que este adulto pueda
+                         firmar la exención por el menor, y «madre» escrito de veinte formas no
+                         sostiene nada. Las opciones y su orden salen del servidor a través de los
+                         rótulos, así que añadir una no toca este fichero. -->
+                    <div class="form__field">
+                        <label class="form__label" for="acct-dep-rel">{{ a('account.dependents.relationship') }}</label>
+                        <select id="acct-dep-rel" v-model="view.form.relationship" required>
+                            <option value="" disabled>{{ a('account.dependents.relationship_choose') }}</option>
+                            <option v-for="key in RELATIONSHIPS" :key="key" :value="key">
+                                {{ a('account.dependents.relationship_' + key) }}
+                            </option>
+                        </select>
+                        <span class="purchase__note">{{ a('account.dependents.relationship_hint') }}</span>
+                        <span v-if="fieldError(store.fields, 'relationship')" class="form__error">{{ fieldError(store.fields, 'relationship') }}</span>
                     </div>
 
                     <div class="form__field">

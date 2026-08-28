@@ -36,6 +36,11 @@
             <thead>
                 <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     <th class="py-1 pr-3 font-medium">{{ __('admin.users.dependents.col_name') }}</th>
+                    {{-- `#236`: la relación del titular con el menor. En el panel sí se enseña —el
+                         operador atiende una incidencia y necesita saber quién es quién—; la
+                         pantalla de puerta no la lleva. Las fichas de antes de `#236` la tienen
+                         vacía y se pinta «—»: no se inventa. --}}
+                    <th class="py-1 pr-3 font-medium">{{ __('admin.users.dependents.col_relationship') }}</th>
                     <th class="py-1 pr-3 font-medium">{{ __('admin.users.dependents.col_age') }}</th>
                     @if ($showWaiver)
                         <th class="py-1 pr-3 font-medium">{{ __('admin.users.dependents.col_waiver') }}</th>
@@ -52,6 +57,7 @@
                         @if ($row['is_removed']) data-dependent-removed="{{ $row['id'] }}" @endif
                         @class(['opacity-60' => $row['is_removed']])>
                         <td class="py-1.5 pr-3 font-medium text-gray-800 dark:text-gray-200">{{ $row['name'] }}</td>
+                        <td class="py-1.5 pr-3 text-gray-600 dark:text-gray-300" data-dependent-relationship="{{ $row['relationship'] !== null ? 'yes' : 'none' }}">{{ $row['relationship'] ?? '—' }}</td>
                         <td class="py-1.5 pr-3 text-gray-600 dark:text-gray-300" data-dependent-age="{{ $row['years'] }}">{{ $row['age'] }}</td>
                         @if ($showWaiver)
                             <td class="py-1.5 pr-3 text-gray-600 dark:text-gray-300" data-dependent-waiver="{{ $row['waiver'] }}">{{ $row['waiver_label'] ?? '—' }}</td>

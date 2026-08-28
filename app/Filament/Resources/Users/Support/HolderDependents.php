@@ -56,7 +56,7 @@ final class HolderDependents
     }
 
     /**
-     * @return list<array{id:int, name:string, years:int, age:string, waiver:?string, waiver_label:?string, since:string, removed:?string, is_removed:bool}>
+     * @return list<array{id:int, name:string, relationship:?string, years:int, age:string, waiver:?string, waiver_label:?string, since:string, removed:?string, is_removed:bool}>
      */
     public static function forHolder(User $holder): array
     {
@@ -79,7 +79,13 @@ final class HolderDependents
 
             return [
                 'id' => (int) $dependent->getKey(),
-                'name' => (string) $dependent->name,
+                // `#236`: en el PANEL sí va el nombre completo —el operador atiende una incidencia
+                // y necesita identificar sin ambigüedad—, y la relación del titular con el menor.
+                // La pantalla de PUERTA es la que se queda solo con el nombre de pila.
+                'name' => $dependent->fullName(),
+                'relationship' => $dependent->relationship !== null
+                    ? (string) __('admin.users.dependents.relationship_'.$dependent->relationship)
+                    : null,
                 // El número en crudo NO es para pintarlo: es lo que afirman los tests y lo que lleva
                 // el `data-` de la celda, porque el rótulo depende de una traducción y la edad no.
                 'years' => $years,

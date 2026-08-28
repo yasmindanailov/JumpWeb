@@ -110,16 +110,25 @@ describe('la lista', () => {
 describe('declarar un menor', () => {
     beforeEach(() => setActivePinia(createPinia()));
 
-    test('manda SOLO nombre y fecha, y añade la respuesta al final', async () => {
+    // ⚠️ Lo que mide es que se manden EXACTAMENTE los campos del contrato y ninguno más: el `extra`
+    // del formulario no puede colarse en el cuerpo. Eran dos campos; desde `#236` son cuatro.
+    test('manda SOLO los cuatro campos del contrato, y añade la respuesta al final', async () => {
         const store = useDependentsStore();
         store.list = [lucas()];
         const vera = { ...lucas(), id: 2, name: 'Vera' };
         const api = fakeApi({ 'POST /me/dependents': ok(vera, 201) });
 
-        const done = await store.add({ name: 'Vera', born_on: '2019-11-02', extra: 'no' }, ctx(api));
+        const done = await store.add(
+            { name: 'Vera', surname: 'Gil', relationship: 'mother', born_on: '2019-11-02', extra: 'no' },
+            ctx(api),
+        );
 
         assert.equal(done, true);
-        assert.deepEqual(api.calls[0], { method: 'POST', url: '/me/dependents', body: { name: 'Vera', born_on: '2019-11-02' } });
+        assert.deepEqual(api.calls[0], {
+            method: 'POST',
+            url: '/me/dependents',
+            body: { name: 'Vera', surname: 'Gil', relationship: 'mother', born_on: '2019-11-02' },
+        });
         assert.deepEqual(store.items.map((d) => d.name), ['Lucas', 'Vera']);
         assert.equal(store.done, true);
     });

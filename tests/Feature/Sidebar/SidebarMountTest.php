@@ -485,7 +485,17 @@ class SidebarMountTest extends TestCase
         // «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*`.
         $this->assertSame(
             [
-                'title', 'intro', 'empty', 'add_title', 'name', 'name_hint', 'born_on', 'add', 'adding',
+                'title', 'intro', 'empty', 'add_title', 'name', 'name_hint',
+                // `#236` (`[DECIDIDO owner]`): APELLIDOS y RELACIÓN con el titular en el alta. El
+                // desplegable de relación son cinco opciones traducidas más su rótulo, su «elige» y
+                // su ayuda — ocho claves, y son las que hacen que el chunk suba de 252 a 253 KiB.
+                // Se pagan a propósito: la lista cerrada es lo que impide que «madre» acabe escrito
+                // de veinte formas, y la relación es lo que sostiene que este adulto pueda firmar la
+                // exención en nombre del menor.
+                'surname', 'relationship', 'relationship_choose', 'relationship_hint',
+                'relationship_father', 'relationship_mother', 'relationship_legal_guardian',
+                'relationship_grandparent', 'relationship_other',
+                'born_on', 'add', 'adding',
                 // El alta se DESPLIEGA desde un botón (2026-08-28): el disparador se rotula con
                 // `add_title` —el mismo texto que titula lo que abre— y `add_cancel` lo pliega.
                 'add_cancel',
@@ -672,8 +682,21 @@ class SidebarMountTest extends TestCase
         // una barra que la cuenta normal —dos o tres menores— no llega a ver. Se pagan igual: el
         // arranque no sabe cuántos menores tiene quien abre la página.
         // **8.700 deja 85 B**: la holgura estrecha de siempre, a propósito.
+        //
+        // ⚠️ **8.700 → 9.100 el 2026-08-28, por FEATURE** (`#236`, `[DECIDIDO owner]`). Medido:
+        // **8.615 → 9.017 B** (+402). Son las nueve claves del alta de un menor: `surname`, y el
+        // desplegable de RELACIÓN entero —su rótulo, su «elige una opción», su ayuda y las cinco
+        // opciones traducidas—.
+        // ▶ **No hay poda que lo pague**, y se miró: las cinco opciones son la lista cerrada, que es
+        // justo lo que impide que «madre» acabe escrito de veinte formas y lo que sostiene que este
+        // adulto pueda firmar la exención en nombre del menor. Reutilizar rótulos de otro grupo
+        // tampoco vale aquí: no hay ningún «Padre/Madre/Tutor» ya en el payload.
+        // ⚠️ Y viajan **en cada apertura de cualquier página con sesión**, aunque el titular no vaya
+        // a declarar a nadie — el arranque no sabe si tiene menores. Es el mismo peaje que ya pagan
+        // los 122 B del paginador, y por la misma razón.
+        // **9.100 deja 83 B**: la holgura estrecha de siempre.
         $this->assertLessThan(
-            8700, $bytes,
+            9100, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

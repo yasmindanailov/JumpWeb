@@ -15,9 +15,22 @@
 
 import { t, tp } from '../i18n.js';
 
-/** Los campos del formulario de alta, vacíos. `born_on` viaja en `Y-m-d`, que es lo que da `<input type="date">`. */
+/**
+ * Las opciones de RELACIÓN del titular con el menor (`#236`), en el orden en que se ofrecen.
+ *
+ * ⚠️ Es la MISMA lista que `Dependent::RELATIONSHIPS` en el servidor, y el servidor es quien manda:
+ * aquí solo se pintan. Si alguna vez dejan de coincidir, el alta falla con un 422 por campo —que es
+ * la conducta correcta— en vez de guardar una relación que el dominio no reconoce.
+ */
+export const RELATIONSHIPS = ['father', 'mother', 'legal_guardian', 'grandparent', 'other'];
+
+/**
+ * Los campos del formulario de alta, vacíos. `born_on` viaja en `Y-m-d`, que es lo que da
+ * `<input type="date">`; `relationship` nace vacío para que el desplegable obligue a elegir en vez
+ * de colar un valor por defecto que nadie ha mirado.
+ */
 export function dependentForm() {
-    return { name: '', born_on: '' };
+    return { name: '', surname: '', relationship: '', born_on: '' };
 }
 
 /**

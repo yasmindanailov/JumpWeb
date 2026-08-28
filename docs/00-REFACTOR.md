@@ -2150,6 +2150,17 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       Pro y vertical caben, iPad h. se pasa 64 px, y en las cuatro se ve la acción sin desplazar;
       cero controles bajo 44 px.** 4 casos · 4 mutaciones, las 4 muerden · headless en 5 anchos.
       ▶ Fuera a propósito: calendario y tablas (ficha en `DEUDA`).
+- [x] ✅ **MENORES: apellidos, relación con el titular, y el NOMBRE en la puerta** (2026-08-28,
+      `#236`, spec §10 y §11). `[DECIDIDO owner]`: apellidos en **campo aparte**, relación como **lista
+      fija traducida** (es lo que sostiene que ese adulto pueda firmar por el menor), y la **pantalla
+      de puerta enseña el NOMBRE** del menor con su edad. ⚠️⚠️ **Esto último REVIERTE una decisión de
+      privacidad escrita en cinco sitios**; el motivo es operativo —con tres niños y una firma que
+      falta, «7 años ✗» no dice a cuál— y **no era una invariante**. ▶ **Los APELLIDOS siguen fuera y
+      es estructural**: `GateProfileData` no tiene campo. ⚠️ Las dos columnas nacen **nulables**: las
+      fichas anteriores no las tienen y no se inventan. ⚠️ La firma del waiver guarda el nombre
+      completo **cambiando el valor, no el conjunto de campos**, para no romper la cadena de hashes.
+      **Cuatro guardas re-apuntadas por sujeto, ninguna borrada** · coste por feature (chunk 253,
+      payload 9.100) · suite 3.355 / 22.048 · JS 813 · verificado en navegador.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

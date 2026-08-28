@@ -47,7 +47,8 @@
         <p class="gate-res__minors-label">{{ __('admin.puerta.validar.profile.minors_on_line_label') }}</p>
         <ul class="gate-res__minors" data-gate-line-minors>
             @foreach ($r['minors'] as $m)
-                <li class="gate-minor" data-gate-minor data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
+                <li class="gate-minor" data-gate-minor data-gate-minor-name="{{ $m['name'] ?? '' }}" data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
+                    <span class="gate-minor__name">{{ $m['name'] ?? '' }}</span>
                     <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $m['age']]) }}</span>
                     @if ($m['waiver'] !== null)
                         <x-filament::badge size="xs" :color="$m['waiver'] === 'current' ? 'success' : ($m['waiver'] === 'outdated' ? 'warning' : 'danger')">

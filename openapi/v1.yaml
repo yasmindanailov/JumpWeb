@@ -5176,14 +5176,31 @@ components:
       description: |
         Una persona a cargo, vista por su titular (`specs/menores-a-cargo.md` §4.1, §4.2). La edad
         no se guarda: se deriva de `born_on` con el «hoy» del parque en cada petición.
-      required: [id, name, born_on, age, is_minor, adult_from, waiver]
+      required: [id, name, surname, full_name, relationship, born_on, age, is_minor, adult_from, waiver]
       additionalProperties: false
       properties:
         id:
           type: integer
         name:
           type: string
-          description: La etiqueta del titular («el nombre que use en casa»). La puerta no la enseña.
+          description: El nombre de pila. Es lo ÚNICO que enseña la pantalla de puerta, junto con la edad.
+        surname:
+          type: string
+          nullable: true
+          description: |
+            Los apellidos (`#236`). **`null` en las fichas declaradas antes de esa tanda**: no había
+            de dónde sacarlos y no se inventan. La pantalla de puerta NO los enseña — distinguir a
+            un niño de otro en el mostrador no los necesita.
+        full_name:
+          type: string
+          description: Nombre y apellidos ya compuestos, sin espacio sobrante si no hay apellidos.
+        relationship:
+          type: string
+          nullable: true
+          enum: [father, mother, legal_guardian, grandparent, other, null]
+          description: |
+            Qué es el titular del menor (`#236`). Es lo que sostiene que ese adulto pueda firmar por
+            él. **`null` en las fichas anteriores a esa tanda.**
         born_on:
           type: string
           format: date
@@ -5241,14 +5258,29 @@ components:
 
     DependentCreateRequest:
       type: object
-      description: Nombre y fecha de nacimiento, nada más. Cada campo de más sería dato personal de un menor.
-      required: [name, born_on]
+      description: |
+        Nombre, apellidos, relación con el titular y fecha de nacimiento (`#236`). Nació como
+        «nombre y fecha, nada más» —cada campo de más es dato personal de un menor— y el owner
+        añadió los otros dos: los apellidos para identificar sin ambigüedad a quien no conoce a la
+        familia, y la **relación**, que es lo que sostiene que ese adulto pueda firmar por él.
+
+        ⚠️ Los tres son **obligatorios al declarar**, aunque en la tabla los dos nuevos sean
+        nulables: las fichas de antes de `#236` no los tienen y no se inventan.
+      required: [name, surname, relationship, born_on]
       additionalProperties: false
       properties:
         name:
           type: string
           minLength: 1
           maxLength: 120
+        surname:
+          type: string
+          minLength: 1
+          maxLength: 120
+        relationship:
+          type: string
+          enum: [father, mother, legal_guardian, grandparent, other]
+          description: Lista cerrada. Con texto libre acabarían conviviendo veinte formas de escribir «madre».
         born_on:
           type: string
           format: date

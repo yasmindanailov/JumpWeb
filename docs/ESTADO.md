@@ -301,6 +301,29 @@
 >   causa · y un script dejó un `</div>` huérfano al final del fichero, que cazó contar aperturas y
 >   cierres, no la vista. **`GateKioskTest` sube a 7 casos · 83 de puerta en verde · sondeos con
 >   capturas.** Alto por caso: **810** (cabe) · **816** · **1.018**.
+>   ▶ ✅ **Y LOS DOS ENCARGOS DE MENORES (`#236`, `specs/menores-a-cargo.md` §10 y §11)**.
+>   **(1)** al declarar un menor se piden también **APELLIDOS** (campo aparte) y **RELACIÓN** con el
+>   titular —lista fija traducida: padre · madre · tutor/a legal · abuelo/a · otra—, que es lo que
+>   sostiene que ese adulto pueda firmar la exención en su nombre. ⚠️ **Las dos columnas son NULABLES
+>   y no se rellenan a la fuerza**: las fichas anteriores no las tienen y **inventar un valor sería
+>   meter un dato falso en una tabla que alimenta una FIRMA legal**; la obligatoriedad vive en la
+>   validación del ALTA. **(2)** ⚠️⚠️ **la PUERTA enseña ahora el NOMBRE del menor, y eso REVIERTE una
+>   decisión de privacidad escrita en CINCO sitios** (DTO, servicio, componente, vista y un test hecho
+>   para bloquearla). El motivo es operativo y la versión anterior no lo resolvía: con tres niños y
+>   una firma que falta, **«7 años ✗» no dice a cuál**. ▶ **No era una invariante**, así que era
+>   reversible con el ✅ del owner —se le avisó antes de tocar nada—, y **no es «abrir la mano»: los
+>   APELLIDOS siguen fuera y es estructural** (`GateProfileData` no tiene campo). En el PANEL sí va el
+>   nombre completo. ⚠️ **La firma del waiver guarda el nombre COMPLETO cambiando el VALOR y no el
+>   conjunto de campos**: `computeHash()` los cubre, así que tocar la forma obligaría a subir
+>   `CANONICAL_VERSION` y las firmas antiguas conservan su hash. **Cuatro guardas re-apuntadas por
+>   SUJETO, ninguna borrada** (las dos de la puerta ahora exigen que no lleguen los APELLIDOS; la de
+>   columnas incluye las dos nuevas y asevera que `age` sigue sin existir; la del payload, clave a
+>   clave). **Coste por FEATURE**: chunk 251,02 → **252,27** (techo 253) y payload 8.615 → **9.017**
+>   (techo 9.100) — casi todo el desplegable de relación, y **no hay poda que lo pague**. Verificado en
+>   navegador: la puerta pinta «Lior · 9 años · sin exención» y **el apellido no está en el HTML**; el
+>   alta del cajón enseña los cuatro campos y las cinco opciones. ⚠️ **Tercera colisión de numeración
+>   del día**: nació como `#235`, que el carril C ya había usado; renumerada con la lista sacada del
+>   PROPIO diff (`git status`), no de un grep del árbol.
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
@@ -832,13 +855,16 @@ que sirva staging de verdad.
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
 - Suite **3355 en verde** (22.088 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
   20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
-  panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet y `#234` su
-  pulido, que suman **30 casos** —`AdminNavigationTest`, `AdminGlobalSearchTest` y `GateKioskTest`,
-  ninguno de los tres existía—) y el C con el mockup 1:1 (`#225`→`#233`).
-  ⚠️⚠️ **Los dos carriles han chocado DOS VECES en el número de decisión en una tarde**: `#225` (el
-  del panel pasó a `#232`) y `#233` (pasó a `#234`). Con dos carriles apendando al mismo registro
-  numerado esto se repetirá; la renumeración se hace **siempre sobre una lista EXPLÍCITA de
-  ficheros**, porque un `sed` sobre el árbol llegó a corromper cinco referencias del otro carril.
+  panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet, `#234` su
+  pulido y **`#236` los menores**, que suman **30 casos nuevos** —`AdminNavigationTest`,
+  `AdminGlobalSearchTest` y `GateKioskTest`, ninguno de los tres existía— más cuatro guardas
+  re-apuntadas por sujeto en `#236`) y el C con el mockup 1:1 (`#225`→`#235`). JS **813**.
+  ⚠️⚠️ **Los dos carriles han chocado TRES VECES en el número de decisión en una tarde**: `#225` (el
+  del panel pasó a `#232`), `#233` (pasó a `#234`) y `#235` (pasó a `#236`). Con dos carriles
+  apendando al mismo registro numerado esto **se va a repetir**: si se vuelve a trabajar en paralelo,
+  conviene repartir un rango por carril. La renumeración se hace **siempre sobre la lista de ficheros
+  del PROPIO diff** (`git status`), nunca con un `grep` del árbol — que es lo que llegó a corromper
+  cinco referencias del otro carril en `#232`.
   2026-08-28 a las 19:00 (hora de Madrid) **sobre el árbol CONJUNTO**: el carril A (`#223` menú plano +
   «Ajustes», `#224` el buscador y `#232` la puerta en tablet, que suman **27 casos** —`AdminNavigationTest`,
   `AdminGlobalSearchTest` y `GateKioskTest`, ninguno de los tres existía—) rebasado sobre el carril C
@@ -993,7 +1019,7 @@ que sirva staging de verdad.
   — el carné (`CustomerCardTest`: forma y control con 500 emisiones, emisión única, rotación que mata
   el viejo, `revokeAllAccess()`/`anonymize()` revocan —2/2 mutaciones muerden—, `plainToken()` con
   `APP_KEY` rotada) y la visita (`GateVisitsTest`: idempotente por día, auditada solo al escribir).
-  `docs-check` pasa a **36 modelos · 85 migraciones**. Antes:
+  `docs-check` pasaba entonces a **36 modelos y 85 migraciones** (cifra de aquel día). Antes:
 - Suite **3177 en verde** (18.680 aserciones), tras **P4** de la tanda 5 de menores: **+5 tests y +33 aserciones**
   — el alta manual (`CreateManualOrderDependentsTest`: el selector por línea de entrada con motivos, la
   línea guarda solo ids asignables y rechaza más menores que unidades, `check()` ANTES de cobrar —un

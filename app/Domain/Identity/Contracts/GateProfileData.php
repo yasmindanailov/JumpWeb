@@ -6,9 +6,15 @@ namespace App\Domain\Identity\Contracts;
  * Fase 6 · subsistema A — LA FICHA de puerta de un cliente (`docs/specs/identidad-qr-puerta.md` §4.6,
  * §9.2 A·3/A·7), compuesta UNA vez por `Identity\Services\GateProfile`.
  *
- * ⚠️ **«Nunca el nombre de un menor» es ESTRUCTURAL**: este objeto no tiene campo para él. Los menores
- * viajan como `{age, waiver}` y nada más, tanto en la lista de a cargo como dentro de cada reserva. Lo
- * que NUNCA lleva (§4.6): email o teléfono completos, dirección, historial de importes, alergias.
+ * ⚠️⚠️ **CORRECCIÓN, y va delante del texto que corregía** (`#236`, `[DECIDIDO owner]`). Este objeto
+ * nació SIN el nombre de un menor por minimización, y desde `#236` lo lleva: cuando un adulto llega
+ * con tres niños y a uno le falta la firma, «7 años ✗» **no dice a cuál** y el empleado no puede
+ * hacer su trabajo. Los menores viajan ahora como `{name, age, waiver}`.
+ *
+ * ▶ **Lo que sigue siendo estructural es lo que NO lleva**: **los apellidos no tienen campo aquí**,
+ * a propósito — distinguir a un niño de otro en un mostrador no los necesita—. Ni tampoco (§4.6)
+ * email o teléfono completos, dirección, historial de importes ni alergias. La regla no era «nada
+ * de menores»: era **solo lo que hace falta para dejar pasar**, y el nombre de pila hace falta.
  *
  * Es lo que la pantalla guarda en su estado (Livewire lo serializa al navegador) y lo que un endpoint
  * de API envolverá el día que exista una app de escaneo (§4.11).
@@ -23,9 +29,9 @@ final readonly class GateProfileData
 
     /**
      * @param  array{enabled: bool, signed: bool, accepted_on: ?string, outdated: bool}  $waiver
-     * @param  list<array{order_code: string, order_item_id: int, date: string, time_window: ?string, product: string, is_entry: bool, quantity: int, addons: list<string>, paid_online_cents: int, pending_gate_cents: int, charge_method: ?string, paid_at: ?string, created_at: string, minors: list<array{age: int, waiver: ?string}>}>  $today
+     * @param  list<array{order_code: string, order_item_id: int, date: string, time_window: ?string, product: string, is_entry: bool, quantity: int, addons: list<string>, paid_online_cents: int, pending_gate_cents: int, charge_method: ?string, paid_at: ?string, created_at: string, minors: list<array{name: string, age: int, waiver: ?string}>}>  $today
      * @param  list<array<string, mixed>>  $window  mismo esquema que `$today`, sin el día de hoy
-     * @param  list<array{age: int, waiver: ?string}>  $dependents  los ACTIVOS a cargo: edad HOY y estado de su exención (`current` · `outdated` · `missing` · `null` fuera de interno)
+     * @param  list<array{name: string, age: int, waiver: ?string}>  $dependents  los ACTIVOS a cargo: NOMBRE de pila (nunca apellidos), edad HOY y estado de su exención (`current` · `outdated` · `missing` · `null` fuera de interno)
      */
     public function __construct(
         public int $userId,

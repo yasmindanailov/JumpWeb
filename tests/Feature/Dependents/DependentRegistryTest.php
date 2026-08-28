@@ -110,10 +110,14 @@ class DependentRegistryTest extends TestCase
         sort($columns);
 
         $this->assertSame(
-            ['born_on', 'created_at', 'id', 'name', 'removed_at', 'updated_at', 'user_id'],
+            ['born_on', 'created_at', 'id', 'name', 'relationship', 'removed_at', 'surname', 'updated_at', 'user_id'],
             $columns,
-            'la tabla tiene exactamente las columnas de la spec §4.2; una edad guardada sería una mentira con caducidad',
+            'la tabla tiene exactamente las columnas de la spec §4.2 más las dos de `#236` (apellidos '
+            .'y relación con el titular); lo que sigue sin existir —y es lo que mide este caso— es una '
+            .'columna de EDAD: guardarla sería una mentira con caducidad',
         );
+
+        $this->assertNotContains('age', $columns, 'la edad se deriva de `born_on`, nunca se persiste');
     }
 
     /** §4.1 — la minoría de edad termina el día del 18.º cumpleaños, en el reloj del PARQUE. */

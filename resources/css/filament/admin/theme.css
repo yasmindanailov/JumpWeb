@@ -1151,6 +1151,18 @@
     color: var(--gray-400);
 }
 
+/* El NOMBRE del menor, que entra en `#236`: es lo primero de la línea y lo que el empleado
+ * contrasta con el niño que tiene delante; la edad va detrás y con menos peso, porque sirve para
+ * confirmar, no para identificar. ⚠️ Los apellidos NO llegan hasta aquí (el DTO no los trae). */
+.gate-minor__name {
+    font-weight: 600;
+    color: var(--gray-950);
+}
+
+.gate-minor__name:where(.dark, .dark *) {
+    color: var(--color-white);
+}
+
 /* ─── La puerta en TABLET: modo KIOSCO (#232) ─────────────────────────────────
  *
  * `[DECIDIDO owner, 2026-08-28]`: la puerta tiene **tablet propia, fija en un soporte y en

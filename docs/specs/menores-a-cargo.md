@@ -1357,3 +1357,70 @@ cuándo · retirado. Reglas, cada una con su porqué:
   `identidad-qr-puerta.md` §9.5): el dato lo declara el titular, el mostrador solo ASIGNA;
 - **presupuesto de consultas con test** (≤4 en interno, 1 fuera): una ficha de cliente no puede crecer en
   consultas con el número de menores.
+
+---
+
+## 10. Apellidos y RELACIÓN con el titular (`#236`)
+
+`[DECIDIDO owner, 2026-08-28]`, a pregunta simple y con tres respuestas suyas:
+
+| Pregunta | Decisión |
+|---|---|
+| ¿Los apellidos, campo aparte o dentro del nombre? | **Campo aparte** (`surname`), para poder exigirlos y para poder enseñar solo el nombre en la puerta |
+| ¿La relación, lista fija o configurable? | **Lista fija traducida**: padre · madre · tutor/a legal · abuelo/a · otra |
+| ¿Y en la puerta? | **Nombre + edad, nunca los apellidos** — §11 |
+
+▶ **Por qué la relación NO es texto libre ni configurable**: con texto libre acaban conviviendo veinte
+formas de escribir «madre» y deja de poder contarse ni filtrarse; y configurable desde el panel exigiría
+una pantalla de mantenimiento para unos rótulos que son **texto de producto en tres idiomas**, no un dato
+del negocio — un parque no tiene una relación de parentesco distinta de otro. `other` existe para no
+obligar a nadie a mentir.
+
+▶ **Para qué sirve la relación, y no es estadística**: es lo que sostiene que ese adulto pueda firmar la
+exención **en nombre** del menor. Por eso se pide al declarar y no después.
+
+⚠️ **Las dos columnas son NULABLES y no se rellenan a la fuerza.** Las fichas anteriores a `#236` no las
+tienen y no hay de dónde sacarlas: **inventar un valor por defecto sería meter un dato falso en una tabla
+que alimenta una firma legal**. La obligatoriedad vive en la validación del ALTA NUEVA
+(`POST /me/dependents`), no en el esquema — y por eso `DependentRegistry::add()` las recibe con valor por
+defecto: sirve también a los seeders y a los casos que prueban la ficha vieja.
+
+**La firma del waiver** guarda ahora el **nombre completo** en `subject_name`. ⚠️ Se cambia el VALOR y
+**no se añade columna**: la fila entra en una cadena de hashes y `computeHash()` cubre esos campos, así
+que cambiar el CONJUNTO obligaría a subir `CANONICAL_VERSION`; cambiar el valor deja intactas las firmas
+anteriores, que conservan el hash de lo que se guardó entonces — que es lo que una prueba debe hacer.
+
+**Dónde se enseña qué**, que es la parte que hay que respetar:
+
+| Superficie | Qué ve |
+|---|---|
+| Cajón (el titular) | Todo: nombre, apellidos, relación, fecha |
+| Panel (operador) | **Nombre completo** + relación — atiende incidencias y necesita desambiguar a dos hermanos |
+| **Puerta** | **Nombre de pila y edad. Los apellidos NO** (§11) |
+
+**Coste medido, subido por FEATURE**: chunk del cajón 251,02 → **252,27 KiB** (techo 253) y payload con
+sesión 8.615 → **9.017 B** (techo 9.100). Casi todo es el desplegable de relación: ocho claves. Se miró
+si había poda que lo pagara y **no la hay** — no existe ningún «Padre/Madre/Tutor» reutilizable.
+
+---
+
+## 11. ⚠️⚠️ La puerta enseña el NOMBRE del menor: una decisión REVERTIDA (`#236`)
+
+`[DECIDIDO owner]`. Hasta `#236` la regla era «**edad y estado de la exención, JAMÁS el nombre**»
+(`#142`, A·7), escrita en **cinco sitios**: el DTO, el servicio, el componente, la vista y un test hecho
+a propósito para bloquearla.
+
+**Por qué nació así**: minimización de datos. **Por qué cambió**: un motivo operativo que esa versión no
+resolvía — cuando un adulto llega con tres niños y a uno le falta la firma, **«7 años ✗» no dice a cuál**,
+y el empleado no puede hacer su trabajo sin preguntar.
+
+▶ **No era una invariante** (`INVARIANTES.md` no la recoge), así que era reversible con el ✅ del owner —
+y se le avisó de que la estaba revirtiendo antes de tocar nada.
+
+▶ **Y no es «abrir la mano»: los apellidos siguen fuera**, y el recorte es **estructural**:
+`GateProfileData` no tiene campo de apellidos, igual que antes no tenía el de nombre. La plantilla no
+puede ser el sitio por donde entren.
+
+**Las guardas se re-apuntaron por SUJETO, ninguna se borró**: `GateProfileTest` y
+`ValidarRegistroProfileTest` exigían que el NOMBRE no llegara; ahora declaran al menor con un apellido
+imposible de confundir y exigen que **ese apellido** no aparezca ni en el JSON de la ficha ni en el HTML.

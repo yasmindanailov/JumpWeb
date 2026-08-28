@@ -29,9 +29,15 @@ class MeDependentsTest extends ApiTestCase
         $this->travelTo(Carbon::parse('2026-08-27 12:00:00', 'Europe/Madrid'));
     }
 
-    private function add(User $holder, string $name, string $bornOn): Dependent
+    /**
+     * ⚠️ Los apellidos y la relación llegan por DEFECTO vacíos (`#236`): el escritor sirve también
+     * a las fichas de antes de esa tanda, que no los tienen. Quien quiera probar el alta COMPLETA
+     * los pasa, y quien pruebe la ficha vieja no. La obligatoriedad vive en la validación de
+     * `POST /me/dependents`, no aquí, y así se puede seguir midiendo las dos formas.
+     */
+    private function add(User $holder, string $name, string $bornOn, string $surname = '', ?string $relationship = null): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        return app(DependentRegistry::class)->add($holder, $name, $bornOn, $surname, $relationship);
     }
 
     private function cap(int $max): void
@@ -47,8 +53,8 @@ class MeDependentsTest extends ApiTestCase
     public function test_it_lists_only_the_holders_active_dependents(): void
     {
         $user = User::factory()->create();
-        $lucas = $this->add($user, 'Lucas', '2017-03-12');
-        $this->add($user, 'Vera', '2019-11-02')->unlink();
+        $lucas = $this->add($user, 'Lucas', '2017-03-12', 'Pérez Gil', 'mother');
+        $this->add($user, 'Lior', '2019-11-02')->unlink();
         $this->add(User::factory()->create(), 'Ajeno', '2018-01-01');
 
         $response = $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200);
@@ -57,6 +63,9 @@ class MeDependentsTest extends ApiTestCase
         $this->assertSame([
             'id' => $lucas->id,
             'name' => 'Lucas',
+            'surname' => 'Pérez Gil',
+            'full_name' => 'Lucas Pérez Gil',
+            'relationship' => 'mother',
             'born_on' => '2017-03-12',
             'age' => 9,
             'is_minor' => true,
@@ -91,16 +100,24 @@ class MeDependentsTest extends ApiTestCase
 
         $response = $this->actingAs($user)
             ->withHeader('Origin', (string) config('app.url'))
-            ->postJson(self::PATH, ['name' => 'Lucas', 'born_on' => '2017-03-12'])
+            ->postJson(self::PATH, [
+                'name' => 'Lucas', 'surname' => 'Pérez Gil',
+                'relationship' => 'mother', 'born_on' => '2017-03-12',
+            ])
             ->assertCreated()
             ->assertValidRequest()
             ->assertValidResponse(201);
 
         $this->assertSame('Lucas', $response->json('name'));
+        $this->assertSame('Pérez Gil', $response->json('surname'));
+        $this->assertSame('Lucas Pérez Gil', $response->json('full_name'));
+        $this->assertSame('mother', $response->json('relationship'));
         $this->assertSame(9, $response->json('age'));
         $this->assertTrue($response->json('is_minor'));
         $stored = Dependent::where('user_id', $user->id)->sole();
         $this->assertSame('Lucas', $stored->name);
+        $this->assertSame('Pérez Gil', $stored->surname);
+        $this->assertSame('mother', $stored->relationship);
         $this->assertSame('2017-03-12', $stored->born_on->toDateString());
         $this->assertNull($stored->removed_at);
     }
@@ -115,7 +132,7 @@ class MeDependentsTest extends ApiTestCase
         $this->assertArrayHasKey('born_on', $response->json('error.fields'));
 
         foreach (['2026-08-28', '12/03/2017', '2026-02-30'] as $bad) {
-            $response = $this->actingAs($user)->postJson(self::PATH, ['name' => 'Ana', 'born_on' => $bad])->assertStatus(422);
+            $response = $this->actingAs($user)->postJson(self::PATH, ['name' => 'Ana', 'surname' => 'Gil', 'relationship' => 'father', 'born_on' => $bad])->assertStatus(422);
             $this->assertSame('validation_failed', $response->json('error.code'), "«{$bad}»");
             $this->assertArrayHasKey('born_on', $response->json('error.fields'), "«{$bad}»");
         }
@@ -128,7 +145,7 @@ class MeDependentsTest extends ApiTestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)
-            ->postJson(self::PATH, ['name' => 'Ana', 'born_on' => '2008-08-27'])
+            ->postJson(self::PATH, ['name' => 'Ana', 'surname' => 'Gil', 'relationship' => 'father', 'born_on' => '2008-08-27'])
             ->assertStatus(422)
             ->assertValidResponse(422);
 
@@ -143,10 +160,10 @@ class MeDependentsTest extends ApiTestCase
         $user = User::factory()->create();
         $this->cap(1);
 
-        $this->actingAs($user)->postJson(self::PATH, ['name' => 'Uno', 'born_on' => '2017-03-12'])->assertCreated();
+        $this->actingAs($user)->postJson(self::PATH, ['name' => 'Uno', 'surname' => 'Gil', 'relationship' => 'father', 'born_on' => '2017-03-12'])->assertCreated();
 
         $response = $this->actingAs($user)
-            ->postJson(self::PATH, ['name' => 'Dos', 'born_on' => '2018-03-12'])
+            ->postJson(self::PATH, ['name' => 'Dos', 'surname' => 'Gil', 'relationship' => 'father', 'born_on' => '2018-03-12'])
             ->assertStatus(422)
             ->assertValidResponse(422);
 
@@ -190,7 +207,7 @@ class MeDependentsTest extends ApiTestCase
     public function test_it_requires_authentication(): void
     {
         $this->getJson(self::PATH)->assertUnauthorized()->assertValidResponse(401);
-        $this->postJson(self::PATH, ['name' => 'Ana', 'born_on' => '2017-03-12'])->assertUnauthorized()->assertValidResponse(401);
+        $this->postJson(self::PATH, ['name' => 'Ana', 'surname' => 'Gil', 'relationship' => 'father', 'born_on' => '2017-03-12'])->assertUnauthorized()->assertValidResponse(401);
         $this->deleteJson(self::PATH.'/1')->assertUnauthorized()->assertValidResponse(401);
         $this->assertSame(0, Dependent::count());
     }

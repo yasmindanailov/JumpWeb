@@ -120,7 +120,15 @@ export const useDependentsStore = defineStore('dependents', {
 
             return runForm(
                 this,
-                () => api.post('/me/dependents', { name: form.name, born_on: form.born_on }),
+                // `#236`: apellidos y relación viajan con el alta. Se mandan TAL CUAL los teclea el
+                // titular; el saneo y la lista cerrada de relaciones los cierra el servidor, que es
+                // quien puede (`CE-4`: el cliente no decide nada sobre un menor).
+                () => api.post('/me/dependents', {
+                    name: form.name,
+                    surname: form.surname,
+                    relationship: form.relationship,
+                    born_on: form.born_on,
+                }),
                 { messages, auth },
                 (response) => { this.list = replaceDependent(this.list, response.data); },
             );

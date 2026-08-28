@@ -591,7 +591,7 @@ commit.
 **Lo medido**
 
 - **Suite: 3177 → 3197 (A1+A2) → ver `ESTADO.md`** (A3: +9 pantalla · A4: +4 API, +3 correo); Pint ✓ ·
-  docs-check ✓ (**36 modelos · 85 migraciones**).
+  docs-check ✓ (**36 modelos y 85 migraciones** en aquel momento).
 - **Mutaciones que muerden: 2/2 en A1** (`revokeAllAccess()` olvida el carné · `plainToken()` sin
   captura), **3/3 en A3** (la ficha no caduca en servidor · se abre sin permiso · el tecleado sin su
   limitador). El control del carné: exhaustivo, no aleatorio (arriba, punto 3).
@@ -913,3 +913,14 @@ cliente»** y no «QR» a secas, porque ahí convive con el QR de la ENTRADA y e
 cuál se le nombra. Las CLAVES de `lang/`, el nombre del adjunto (`carne-qr.png`), las rutas y el
 vocabulario del código (`card`, `CustomerCard`) **no cambian**: renombrarlos rompería la auditoría sin
 ganar nada.
+
+---
+
+## 9.8 La ficha enseña el NOMBRE del menor (`#236`) — corrección a A·7
+
+`[DECIDIDO owner, 2026-08-28]`. **A·7 decía «edad y estado de la exención, JAMÁS el nombre» y ya no es
+cierto**: la ficha lleva el **nombre de pila** del menor junto a su edad.
+
+El porqué es operativo y la versión anterior no lo resolvía: con tres niños y una firma que falta,
+«7 años ✗» **no dice a cuál**. ▶ **Los APELLIDOS siguen fuera y eso es estructural**: `GateProfileData`
+no tiene campo para ellos. Detalle y las guardas re-apuntadas: `specs/menores-a-cargo.md` §11.

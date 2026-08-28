@@ -28,7 +28,7 @@ use LogicException;
  *  · **Quitar es desvincular si hay algo detrás** (§4.4) y borrar si no; lo decide la propia fila
  *    (`Dependent::hasReferences()`), no el llamante.
  *  · **Anti-IDOR** (§4.9): un id ajeno, inexistente o ya retirado «no existe» — la misma excepción.
- *  · `RGPD-02`: la auditoría lleva el id y nunca el nombre ni la fecha de nacimiento.
+ *  · `RGPD-02`: la auditoría lleva el id y nunca el nombre, los apellidos ni la fecha de nacimiento.
  */
 final class DependentRegistry
 {
@@ -38,7 +38,7 @@ final class DependentRegistry
      * @throws DependentNotMinorException si hoy ya tiene 18 o más
      * @throws DependentsLimitReachedException si la cuenta está en su tope
      */
-    public function add(User $holder, string $name, string $bornOn): Dependent
+    public function add(User $holder, string $name, string $bornOn, string $surname = '', ?string $relationship = null): Dependent
     {
         if ($holder->isAnonymized()) {
             throw new LogicException('Una cuenta anonimizada no puede declarar personas a cargo.');
@@ -47,6 +47,21 @@ final class DependentRegistry
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > Dependent::NAME_MAX) {
             throw new InvalidArgumentException('El nombre de la persona a cargo tiene que tener entre 1 y '.Dependent::NAME_MAX.' caracteres.');
+        }
+
+        // Apellidos y relación (`#236`). ⚠️ Llegan con valor por defecto y NO son obligatorios aquí:
+        // las fichas dadas de alta antes de esta tanda no los tienen y no hay de dónde sacarlos, así
+        // que la regla «hacen falta» vive en la validación del ALTA NUEVA y no en el escritor, que
+        // también sirve a los seeders y a los tests de lo viejo. Lo que sí se cierra aquí es que la
+        // relación, si viene, sea una de las del catálogo: es lo que sostiene que ese adulto pueda
+        // firmar por el menor, y una cadena inventada no lo sostiene.
+        $surname = trim($surname);
+        if (mb_strlen($surname) > Dependent::SURNAME_MAX) {
+            throw new InvalidArgumentException('Los apellidos no pueden pasar de '.Dependent::SURNAME_MAX.' caracteres.');
+        }
+
+        if ($relationship !== null && ! in_array($relationship, Dependent::RELATIONSHIPS, true)) {
+            throw new InvalidArgumentException("«{$relationship}» no es una relación conocida.");
         }
 
         // Forma ANTES de parsear: `createFromFormat` lanza con basura (Carbon 3) y DESBORDA con un día
@@ -64,7 +79,7 @@ final class DependentRegistry
             throw new DependentNotMinorException;
         }
 
-        return DB::transaction(function () use ($holder, $name, $bornOn): Dependent {
+        return DB::transaction(function () use ($holder, $name, $bornOn, $surname, $relationship): Dependent {
             // ⚠️ PRIMERA sentencia de la transacción: el lock de la fila del titular es lo que hace
             // que el tope sea un invariante y no una carrera (§4.5). SQLite no reproduce el lock; la
             // propiedad se mide contra MySQL como las demás de `INVARIANTES §6`.
@@ -79,6 +94,8 @@ final class DependentRegistry
             $dependent = Dependent::create([
                 'user_id' => (int) $locked->getKey(),
                 'name' => $name,
+                'surname' => $surname !== '' ? $surname : null,
+                'relationship' => $relationship,
                 'born_on' => $bornOn,
             ]);
 

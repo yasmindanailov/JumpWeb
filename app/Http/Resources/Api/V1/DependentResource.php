@@ -21,8 +21,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * `current_document_id`: es el mismo texto vigente que publican `GET /legal/waiver` y
  * `GET /me/waiver` — dos caminos, un dato.
  *
- * ⚠️ Es la vista del TITULAR. La pantalla de puerta (subsistema A) no reutiliza este recurso: allí
- * el nombre no viaja nunca (§2, «jamás el nombre»).
+ * ⚠️ Es la vista del TITULAR. La pantalla de puerta (subsistema A) no reutiliza este recurso y
+ * enseña MENOS: desde `#236` lleva el nombre y la edad del menor, pero **nunca los apellidos** —
+ * distinguir a un niño de otro en el mostrador no los necesita, y lo que no hace falta no se
+ * enseña—. Ese recorte es estructural, no de plantilla: `GateProfileData` no tiene campo de
+ * apellidos.
  *
  * @property-read Dependent $resource
  */
@@ -40,6 +43,13 @@ class DependentResource extends JsonResource
         return [
             'id' => (int) $dependent->getKey(),
             'name' => (string) $dependent->name,
+            // `#236`: apellidos y relación. Los dos pueden ser `null` en las fichas dadas de alta
+            // antes de esa tanda —no hay de dónde sacarlos y no se inventan—, así que el cliente
+            // tiene que saber pintarlos ausentes. `full_name` viaja ya compuesto para que nadie lo
+            // concatene por su cuenta y le sobre un espacio.
+            'surname' => $dependent->surname !== null ? (string) $dependent->surname : null,
+            'full_name' => $dependent->fullName(),
+            'relationship' => $dependent->relationship !== null ? (string) $dependent->relationship : null,
             'born_on' => $dependent->born_on->toDateString(),
             'age' => $dependent->ageOn($today),
             'is_minor' => $dependent->isMinorOn($today),

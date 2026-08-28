@@ -89,8 +89,19 @@ final class WaiverSigner
                 if (! $dependent->isMinor()) {
                     throw new DependentNotMinorException;
                 }
+                // ▶ NOMBRE Y APELLIDOS desde `#236`, en la misma columna. Una firma es una prueba y
+                // lo que prueba es a QUIÉN cubre: cuanto más identifica, mejor cumple su función.
+                //
+                // ⚠️ **Se guarda en `subject_name` y NO se añade columna**, y eso es deliberado: la
+                // fila entra en una cadena de hashes por (titular, sujeto) y `computeHash()` cubre
+                // estos campos. Cambiar el CONJUNTO de campos obligaría a subir
+                // `CANONICAL_VERSION` y a que el verificador supiera de dos formas; cambiar el
+                // VALOR no toca nada — las firmas anteriores conservan su hash, calculado con lo
+                // que se guardó entonces, que es exactamente lo que una prueba debe hacer.
+                //
+                // El corte a `NAME_MAX` deja de bastar: se corta a lo que admite la columna.
                 $subjectIdentity = [
-                    'subject_name' => mb_substr((string) $dependent->name, 0, Dependent::NAME_MAX),
+                    'subject_name' => mb_substr($dependent->fullName(), 0, 255),
                     'subject_born_on' => $dependent->born_on->toDateString(),
                 ];
             }

@@ -23,8 +23,12 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  * nadie lo borra por un cumpleaños. `isMinor()` se DERIVA; la edad no existe como columna (§4.2).
  *
  * Tres reglas que son la entidad entera:
- *  - **Nombre y fecha de nacimiento, nada más** (`[DECIDIDO owner]`, `DECISIONES #142`). El nombre
- *    es la etiqueta del titular («el que use en casa»); la puerta no lo enseña.
+ *  - **Nombre, apellidos, relación y fecha de nacimiento** (`[DECIDIDO owner]`, `DECISIONES #142`
+ *    y **`#236`**). Nació como «nombre y fecha, nada más» y el owner añadió los apellidos —para
+ *    identificar sin ambigüedad a quien no conoce a la familia— y la **relación** del adulto con
+ *    el menor, que es lo que sostiene que pueda firmar por él.
+ *    ⚠️ **La puerta enseña el NOMBRE y la edad, nunca los apellidos** (`#236`): distinguir a un
+ *    niño de otro en el mostrador no necesita el apellido, y lo que no hace falta no se enseña.
  *  - **Quitar es desvincular, no borrar, si hay algo detrás** (§4.4): con un waiver firmado —o,
  *    desde la tanda 4, una entrada asignada— la fila se queda con `removed_at` y sale de todas las
  *    listas; sin referencias se borra de verdad. `deleting` lo hace cumplir venga de donde venga.
@@ -37,7 +41,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  * (`DependentAssignment`, tanda 4) y referencia el ítem por su id ENTERO (`ModuleBoundariesTest`:
  * Booking no ve a Identity; Identity lee las líneas por `Booking\Contracts\CheckoutLines`).
  */
-#[Fillable(['user_id', 'name', 'born_on'])]
+#[Fillable(['user_id', 'name', 'surname', 'relationship', 'born_on'])]
 class Dependent extends Model
 {
     use Prunable;
@@ -46,6 +50,36 @@ class Dependent extends Model
     public const ADULT_AGE = 18;
 
     public const NAME_MAX = 120;
+
+    public const SURNAME_MAX = 120;
+
+    /**
+     * Relación del TITULAR con la persona a cargo (`#236`, `[DECIDIDO owner]`: lista fija).
+     *
+     * ⚠️ Lista cerrada y no texto libre a propósito: con texto libre acaban conviviendo veinte
+     * formas de escribir «madre» y deja de poder contarse ni filtrarse. Y no configurable desde el
+     * panel porque sus rótulos son texto de producto en tres idiomas (`admin`/`tickets`), no un
+     * dato del negocio: un parque no tiene una relación de parentesco distinta de otro.
+     *
+     * `other` existe para no obligar a mentir: quien no encaje elige eso y sigue adelante.
+     *
+     * @var array<int, string>
+     */
+    public const RELATIONSHIPS = ['father', 'mother', 'legal_guardian', 'grandparent', 'other'];
+
+    /**
+     * Nombre y apellidos, con el espacio SOLO si hay apellidos (`#236`).
+     *
+     * ⚠️ Existe para que nadie concatene a mano: las fichas de antes de `#236` no tienen apellidos,
+     * y un `$name.' '.$surname` suelto deja un espacio final que luego aparece en un PDF probatorio
+     * o en el rótulo de un desplegable.
+     */
+    public function fullName(): string
+    {
+        $surname = trim((string) $this->surname);
+
+        return $surname !== '' ? trim((string) $this->name).' '.$surname : trim((string) $this->name);
+    }
 
     /** @return array<string, string> */
     protected function casts(): array

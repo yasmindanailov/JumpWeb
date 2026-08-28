@@ -1017,7 +1017,9 @@ class CreateManualOrderPage extends Page
             $dependent = $candidate['dependent'];
             $id = (int) $dependent->getKey();
             $names[$id] = (string) $dependent->name;
-            $options[$id] = __('admin.orders.dependents.option', ['name' => $dependent->name, 'age' => $dependent->ageOn($day)]);
+            // `#236`: nombre COMPLETO en el panel — el operador que crea un pedido a mano necesita
+            // distinguir a dos hermanos, y el nombre de pila solo no siempre basta.
+            $options[$id] = __('admin.orders.dependents.option', ['name' => $dependent->fullName(), 'age' => $dependent->ageOn($day)]);
             if ($candidate['reason'] !== null) {
                 $descriptions[$id] = __('admin.orders.dependents.reasons.'.$candidate['reason']);
                 $disabled[] = $id;

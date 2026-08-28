@@ -74,7 +74,8 @@ final class AssignedDependents
                 $status = $statuses[(int) $dependent->getKey()] ?? null;
                 $row = [
                     'id' => (int) $dependent->getKey(),
-                    'name' => (string) $dependent->name,
+                    // `#236`: nombre COMPLETO en el panel; la pantalla de puerta se queda con el de pila.
+                    'name' => $dependent->fullName(),
                     'age' => $dependent->ageOn($day),
                     'waiver' => $status === null ? null : self::waiverState($status),
                     'removed' => $dependent->isRemoved(),

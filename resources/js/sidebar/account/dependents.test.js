@@ -13,8 +13,10 @@ import {
 const minor = (waiver = {}) => ({ id: 1, name: 'Lucas', born_on: '2017-03-12', age: 9, is_minor: true, waiver: { mode: 'interno', signed: false, outdated: false, ...waiver } });
 
 describe('el formulario de alta', () => {
-    test('nace vacío, con los dos únicos campos que el servidor acepta', () => {
-        assert.deepEqual(dependentForm(), { name: '', born_on: '' });
+    // `#236`: eran dos campos y ahora son CUATRO. `relationship` nace vacío a propósito para que
+    // el desplegable obligue a elegir, en vez de colar un valor por defecto que nadie ha mirado.
+    test('nace vacío, con los cuatro campos que el servidor acepta', () => {
+        assert.deepEqual(dependentForm(), { name: '', surname: '', relationship: '', born_on: '' });
     });
 });
 
@@ -175,7 +177,7 @@ describe('el estado de la pantalla', () => {
 
         assert.equal(view.page, 1);
         assert.equal(view.adding, false);
-        assert.deepEqual(view.form, { name: '', born_on: '' });
+        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
     });
 
     test('abrir despliega con el formulario limpio; cancelar pliega y tira lo tecleado', () => {
@@ -184,12 +186,12 @@ describe('el estado de la pantalla', () => {
         view.form.name = 'a medias';
         view.open();
         assert.equal(view.adding, true);
-        assert.deepEqual(view.form, { name: '', born_on: '' });
+        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
 
         view.form.name = 'otra vez';
         view.cancel();
         assert.equal(view.adding, false);
-        assert.deepEqual(view.form, { name: '', born_on: '' });
+        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
     });
 
     test('⚠️ tras AÑADIR salta a la página donde ha caído el nuevo, que es la última', () => {
@@ -199,7 +201,7 @@ describe('el estado de la pantalla', () => {
         view.added(7);
 
         assert.equal(view.adding, false, 'el alta se pliega sola al guardar bien');
-        assert.deepEqual(view.form, { name: '', born_on: '' });
+        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
         assert.equal(view.page, 2, 'con seis por página, el séptimo está en la 2 — si no se salta, no se ve');
     });
 

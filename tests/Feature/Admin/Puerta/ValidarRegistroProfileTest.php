@@ -46,6 +46,14 @@ class ValidarRegistroProfileTest extends TestCase
 
     private const TODAY = '2026-09-05';
 
+    /**
+     * Los APELLIDOS de un menor, que la pantalla no puede enseñar nunca (`#236`).
+     *
+     * ⚠️ Hasta `#236` esta constante era su NOMBRE y lo prohibido era el nombre. El owner revirtió
+     * esa parte —con tres niños y una firma que falta, «7 años ✗» no dice a cuál—, así que el
+     * nombre de pila ahora sí se pinta y la prohibición se mudó a los apellidos. Se elige una
+     * cadena imposible de confundir para que `assertDontSee` no case por casualidad.
+     */
     private const MINOR = 'Zorrocotroco Único';
 
     private Zone $zone;
@@ -117,8 +125,9 @@ class ValidarRegistroProfileTest extends TestCase
         $holder = User::factory()->create(['name' => 'Ana Titular', 'email' => 'ana@example.com', 'phone' => '+34600111222', 'email_verified_at' => now()]);
         $holder->roles()->sync([Role::where('name', 'customer')->value('id')]);
         $this->signFor($holder);
-        $lucas = app(DependentRegistry::class)->add($holder, self::MINOR, '2017-03-12');
-        app(DependentRegistry::class)->add($holder, 'Vera Secreta', '2019-11-02');
+        // `#236`: nombre de pila + apellidos. El nombre SE PINTA en la puerta; los apellidos NO.
+        $lucas = app(DependentRegistry::class)->add($holder, 'Lucas', '2017-03-12', self::MINOR, 'mother');
+        app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02', 'Retamocho Secreto', 'father');
         $this->signFor($holder, $lucas);
 
         $order = Order::create([
@@ -162,17 +171,20 @@ class ValidarRegistroProfileTest extends TestCase
             // §9.7 C·5: los menores se aseveran por `data-*`, NO por la cadena compuesta
             // «9 años · exención ✓». Esa cadena la formaba la plantilla juntando dos rótulos con un
             // separador, así que el test caía al cambiar la puntuación y NO caía si el dato era otro.
-            ->assertSee('data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
-            ->assertSee('data-gate-minor-age="6" data-gate-minor-waiver="missing"', false)
+            ->assertSee('data-gate-minor-name="Lucas" data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
+            ->assertSee('data-gate-minor-name="Vilma" data-gate-minor-age="6" data-gate-minor-waiver="missing"', false)
+            // `#236`: el NOMBRE se ve —es lo que resuelve «¿a cuál le falta la firma?»— y los
+            // APELLIDOS no llegan a la pantalla.
+            ->assertSee('Lucas')
             ->assertDontSee(self::MINOR)
-            ->assertDontSee('Vera Secreta')
+            ->assertDontSee('Retamocho Secreto')
             ->assertDontSee('ana@example.com')
             ->assertDontSee('600111222');
 
         $this->assertSame(1, count($page->get('profile.today_reservations')));
-        $this->assertSame([['age' => 9, 'waiver' => 'current']], $page->get('profile.today_reservations')[0]['minors']);
+        $this->assertSame([['name' => 'Lucas', 'age' => 9, 'waiver' => 'current']], $page->get('profile.today_reservations')[0]['minors']);
         $state = json_encode($page->get('profile'), JSON_UNESCAPED_UNICODE);
-        $this->assertStringNotContainsString('Zorrocotroco', $state, 'el estado que viaja al navegador tampoco lleva el nombre del menor');
+        $this->assertStringNotContainsString('Zorrocotroco', $state, 'el estado que viaja al navegador no lleva los APELLIDOS del menor (`#236`)');
         $this->assertStringNotContainsString('ana@example.com', $state);
 
         $scan = AuditLog::where('action', 'puerta.card_scanned')->sole();
@@ -418,19 +430,31 @@ class ValidarRegistroProfileTest extends TestCase
      * `partials/reservation.blade.php`) para que este test se ponga rojo; el test de arriba, que solo
      * mira el fixture sano, sigue verde.
      */
-    public function test_the_view_prints_only_age_and_waiver_even_if_the_state_carries_a_name(): void
+    /**
+     * ⚠️⚠️ **Esta guarda cambió de regla en `#236` y la anterior queda escrita.**
+     *
+     * Aseveraba que la vista NO pintara el nombre de un menor aunque el estado lo trajera. El owner
+     * revirtió esa decisión: con tres niños y una firma que falta, «7 años ✗» no dice a cuál. Ahora
+     * el nombre SÍ se pinta.
+     *
+     * ▶ Lo que sigue vigilando es el recorte que no se movió: **apellidos y correo no llegan a la
+     * pantalla ni metiéndolos a mano en el estado**. La plantilla imprime `name`, `age` y `waiver`,
+     * y nada más — es el mismo mecanismo de antes, aplicado a lo que hoy sobra.
+     */
+    public function test_the_view_prints_the_first_name_but_never_the_surname_or_the_email(): void
     {
         [, $token] = $this->customer();
 
         $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search');
 
         $page->set('profile.dependents', [
-            ['age' => 9, 'waiver' => 'current', 'name' => self::MINOR, 'email' => 'menor@example.com'],
+            ['age' => 9, 'waiver' => 'current', 'name' => 'Lucas', 'surname' => self::MINOR, 'email' => 'menor@example.com'],
         ])->set('profile.today_reservations.0.minors', [
-            ['age' => 9, 'waiver' => 'current', 'name' => self::MINOR],
+            ['age' => 9, 'waiver' => 'current', 'name' => 'Lucas', 'surname' => self::MINOR],
         ]);
 
-        $page->assertSee('data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
+        $page->assertSee('data-gate-minor-name="Lucas" data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
+            ->assertSee('Lucas')
             ->assertDontSee(self::MINOR)
             ->assertDontSee('Zorrocotroco')
             ->assertDontSee('menor@example.com');

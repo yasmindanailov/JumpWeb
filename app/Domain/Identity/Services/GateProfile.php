@@ -22,8 +22,8 @@ use Carbon\CarbonInterface;
  *
  * Fuentes: las reservas y su dinero por `Booking\Contracts\GateReservations` (Identity no ve a
  * Booking); el waiver por `WaiverStatus`; los menores por `DependentAssigner::forOrderItems()` y
- * `WaiverStatus::forDependents()` —**edad y estado de la exención, JAMÁS el nombre** (A·7)—; el
- * carné por `CustomerCards`; la visita por `GateVisits`.
+ * `WaiverStatus::forDependents()` —**nombre de pila, edad y estado de la exención; los apellidos
+ * NO** (A·7, revisado en `#236`)—; el carné por `CustomerCards`; la visita por `GateVisits`.
  */
 final class GateProfile
 {
@@ -72,7 +72,7 @@ final class GateProfile
     }
 
     /**
-     * @param  list<array{age: int, waiver: ?string}>  $minors
+     * @param  list<array{name: string, age: int, waiver: ?string}>  $minors
      * @return array<string, mixed>
      */
     private function row(GateReservation $r, array $minors): array
@@ -96,11 +96,12 @@ final class GateProfile
     }
 
     /**
-     * Los menores asignados a cada línea, como `{age, waiver}` — la edad en la FECHA DE LA VISITA de
-     * esa línea (D13 de menores) y el estado de su exención por lotes. Sin nombre, por construcción.
+     * Los menores asignados a cada línea, como `{name, age, waiver}` — la edad en la FECHA DE LA
+     * VISITA de esa línea (D13 de menores) y el estado de su exención por lotes. El nombre de pila
+     * entra en `#236`; los apellidos siguen sin tener campo.
      *
      * @param  list<GateReservation>  $reservations
-     * @return array<int, list<array{age: int, waiver: ?string}>>
+     * @return array<int, list<array{name: string, age: int, waiver: ?string}>>
      */
     private function minorsByItem(array $reservations): array
     {
@@ -139,7 +140,7 @@ final class GateProfile
     }
 
     /**
-     * @return list<array{age: int, waiver: ?string}>
+     * @return list<array{name: string, age: int, waiver: ?string}>
      */
     private function dependents(User $holder, CarbonImmutable $today): array
     {
@@ -156,11 +157,25 @@ final class GateProfile
     }
 
     /**
-     * @return array{age: int, waiver: ?string}
+     * ⚠️⚠️ **`name` entra aquí en `#236` y REVIERTE una decisión anterior**, así que conviene saber
+     * por qué las dos veces.
+     *
+     * Nació sin nombre por minimización (`#142`, A·7: «edad y estado de la exención, JAMÁS el
+     * nombre»). El owner lo cambió por un motivo operativo que la versión anterior no resolvía:
+     * cuando un adulto llega con tres niños y a uno le falta la firma, **«7 años ✗» no dice a
+     * cuál**, y el empleado no puede hacer su trabajo sin preguntar.
+     *
+     * ▶ Lo que NO cambia, y por eso esto no es «abrir la mano»: **los apellidos siguen fuera**
+     * (`[DECIDIDO owner]`). Distinguir a un niño de otro en un mostrador no los necesita, y lo que
+     * no hace falta no se enseña. El recorte es estructural: este array no tiene campo de
+     * apellidos, igual que antes no tenía el de nombre.
+     *
+     * @return array{name: string, age: int, waiver: ?string}
      */
     private static function minor(Dependent $dependent, CarbonImmutable $on, ?WaiverStatus $status): array
     {
         return [
+            'name' => (string) $dependent->name,
             'age' => $dependent->ageOn($on),
             'waiver' => $status === null ? null : (! $status->signed ? 'missing' : ($status->isOutdated() ? 'outdated' : 'current')),
         ];

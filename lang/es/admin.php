@@ -1380,6 +1380,12 @@ return [
             // (con permiso propio y cada consulta auditada), no una lista de la ficha.
             'anonymized' => 'Cuenta anonimizada: los menores que conserven una exención firmada siguen en régimen restringido y solo se consultan desde «Registro del waiver».',
             'col_name' => 'Nombre',
+            'col_relationship' => 'Relación',
+            'relationship_father' => 'Padre',
+            'relationship_mother' => 'Madre',
+            'relationship_legal_guardian' => 'Tutor/a legal',
+            'relationship_grandparent' => 'Abuelo/a',
+            'relationship_other' => 'Otra',
             'col_age' => 'Edad',
             'col_waiver' => 'Exención',
             'col_since' => 'Declarado',

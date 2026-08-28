@@ -462,8 +462,17 @@ class SidebarBundleBudgetTest extends TestCase
      * del QR al cambiar de titular. **252 deja 1,0 KiB**, la holgura más ancha que ha tenido este
      * techo en toda la fase — a propósito: lo siguiente que entre vuelve a medirse contra un número
      * que aprieta, no contra el susto de los 0,02 KiB con que este se pasó.
+     *
+     * ⚠️ **252 → 253 el 2026-08-28, y esta vez SÍ lo paga una feature** (`#236`, `[DECIDIDO owner]`).
+     * Medido: 251,02 → **252,27 KiB** (+1,25). Entran dos campos en el alta de un menor —**apellidos**
+     * y **relación con el titular**—, y el segundo es un desplegable con cinco opciones traducidas,
+     * que es de donde sale casi todo el kilobyte. No hay forma barata de tenerlo: la lista cerrada es
+     * justamente lo que impide que «madre» acabe escrito de veinte maneras, y lo que sostiene que
+     * este adulto pueda firmar la exención en nombre del menor.
+     * ▶ **253 deja 0,73 KiB**, otra vez una holgura que aprieta. Es lo correcto: la holgura ancha del
+     * apunte anterior existía para que lo siguiente se midiera de verdad, y se ha medido.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 252;
+    private const SIDEBAR_CHUNK_MAX_KB = 253;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

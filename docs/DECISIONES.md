@@ -12858,3 +12858,73 @@ Headless a 1280: tarjeta 1260×880 anclada en `top: 10`, titular a 108 px, tag a
 del cliente. **Pulsando ESPACIO sin tocar el botón**: fase `jugando`, 10 m, CTA a `opacity: 0` y
 `pointer-events: none`, párrafo a 0. Cero errores de JavaScript. Pie: 14 enlaces en una fila, cero
 encabezados, selector de idioma presente. Suite acotada: **176 verdes**.
+
+---
+
+## #236 · 2026-08-28 · [DECIDIDO owner] Apellidos y RELACIÓN al declarar un menor — y la puerta enseña su NOMBRE, revirtiendo una decisión de privacidad (los apellidos siguen fuera)
+
+Dos encargos del owner, y el segundo revierte una decisión documentada, así que va con su porqué.
+
+**1 · Al declarar un menor se piden también APELLIDOS y RELACIÓN con el titular.** La entidad nació
+como «nombre y fecha de nacimiento, nada más» (`#142`). Ahora lleva los apellidos —para identificar
+sin ambigüedad a quien no conoce a la familia— y **qué es el adulto del menor**, que es lo que
+sostiene que pueda firmar la exención en su nombre. `[DECIDIDO owner]` a pregunta simple: **campo
+aparte** para los apellidos (no «nombre y apellidos» en una casilla) y **lista fija traducida** para
+la relación —padre · madre · tutor/a legal · abuelo/a · otra—, ni configurable ni texto libre: con
+texto libre acaban conviviendo veinte formas de escribir «madre» y deja de poder contarse.
+
+⚠️ **Las dos columnas nacen NULABLES y no se rellenan a la fuerza**: los menores ya declarados no
+las tienen y no hay de dónde sacarlas. **Inventar un valor por defecto sería meter un dato falso en
+una tabla que alimenta una FIRMA legal.** Se exigen en el ALTA NUEVA (la validación de
+`POST /me/dependents`), no en el esquema.
+
+**2 · La pantalla de PUERTA enseña el NOMBRE del menor y su edad.** ⚠️⚠️ **Esto revierte una decisión
+de privacidad que estaba escrita en CINCO sitios** —el DTO, el servicio, el componente, la vista y un
+test hecho a propósito para bloquearla— y conviene saber por qué las dos veces.
+
+Nació sin nombre por minimización (`#142`, A·7: «edad y estado de la exención, JAMÁS el nombre»). El
+owner lo cambió por un motivo operativo que esa versión **no resolvía**: cuando un adulto llega con
+tres niños y a uno le falta la firma, **«7 años ✗» no dice a cuál**, y el empleado no puede hacer su
+trabajo sin preguntar. ▶ **No era una invariante** (`INVARIANTES` no lo recoge), así que es
+reversible con el ✅ del owner — y se le dijo que la estaba revirtiendo antes de tocar nada.
+
+▶ **Y no es «abrir la mano»: los APELLIDOS siguen fuera** (`[DECIDIDO owner]`, opción recomendada de
+tres). Distinguir a un niño de otro en un mostrador no los necesita, y lo que no hace falta no se
+enseña. El recorte es **estructural**: `GateProfileData` no tiene campo de apellidos, igual que antes
+no lo tenía de nombre, así que la plantilla no puede ser el sitio por donde entren. **En el PANEL sí
+va el nombre completo** —el operador atiende una incidencia y necesita desambiguar a dos hermanos—.
+
+**La firma del waiver guarda ahora el nombre COMPLETO** en `subject_name`. ⚠️ Se hace cambiando el
+VALOR y **no añadiendo columna**, y es deliberado: la fila entra en una cadena de hashes por
+(titular, sujeto) y `computeHash()` cubre esos campos. Cambiar el CONJUNTO de campos obligaría a
+subir `CANONICAL_VERSION` y a que el verificador supiera de dos formas; cambiar el valor no toca
+nada — **las firmas anteriores conservan su hash**, calculado con lo que se guardó entonces, que es
+exactamente lo que una prueba debe hacer.
+
+**Lo que costó, medido y subido por FEATURE**: chunk del cajón **251,02 → 252,27 KiB** (techo
+252 → **253**) y payload con sesión **8.615 → 9.017 B** (techo 8.700 → **9.100**). Casi todo es el
+desplegable de relación: ocho claves —rótulo, «elige una opción», ayuda y cinco opciones—. Se miró si
+había poda que lo pagara y **no la hay**: no existe ningún «Padre/Madre/Tutor» en el payload que
+reutilizar, y las cinco opciones SON la lista cerrada.
+
+**Cuatro guardas se re-apuntaron por SUJETO, ninguna se borró:**
+
+1. `GateProfileTest`: exigía que el nombre no llegara a la ficha; ahora exige que **no lleguen los
+   apellidos** — el menor se declara con un apellido imposible de confundir y se comprueba que no
+   aparece en ninguna parte del JSON.
+2. `ValidarRegistroProfileTest`: igual en la vista, metiendo apellidos a mano en el estado.
+3. `DependentRegistryTest`: aseveraba la lista EXACTA de columnas; ahora incluye las dos nuevas y
+   además asevera explícitamente que **`age` sigue sin existir**, que era el punto del caso.
+4. `SidebarMountTest`: la lista clave a clave del payload, que existe para forzar esta decisión.
+
+⚠️ **Y una trampa del propio sondeo, la tercera de la jornada**: al medir el cajón en navegador, una
+sonda dijo que la búsqueda de puerta «había dejado de abrir ninguna ficha». El código estaba bien —
+mis propios sondeos habían agotado el limitador de búsquedas TECLEADAS por hora—. Se anotó en `#234`.
+
+**Verificación**: suite **3.355 / 22.048** · JS **813** · Pint ✓ · docs-check ✓ · build ✓ · sondeo en
+navegador: la puerta pinta «Lior · 9 años · sin exención» y **el apellido no está en el HTML**; el
+alta del cajón enseña los cuatro campos y las cinco opciones traducidas.
+
+⚠️ **Tercera colisión de numeración del día**: esta decisión nació como `#235` y el carril C ya lo
+había usado. Se renumeró a `#236` con la lista de ficheros sacada del PROPIO diff (`git status`), no
+de un grep del árbol — que es lo que corrompió referencias ajenas en `#232`.
