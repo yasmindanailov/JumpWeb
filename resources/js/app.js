@@ -886,6 +886,7 @@ document.addEventListener('alpine:init', () => {
         suelta() {
             if (!this._fija) return;
             this.$el.classList.remove('reserve--fija');
+            document.body.classList.remove('cierre--anclado');
             this._fija = false;
         },
 
@@ -928,6 +929,14 @@ document.addEventListener('alpine:init', () => {
             const tope = parseFloat(getComputedStyle(el).paddingTop) >= 0
                 ? (parseFloat(getComputedStyle(caja).top) || 10) : 10;
 
+            // ⚠️ **El alto del PIE, publicado, y es lo único que el CSS no puede saber** (`#254`).
+            // `[DECIDIDO owner]`: en el punto estático la tarjeta puede ser más alta, porque el
+            // armazón deja de tener que verse ahí. «Más alta» solo significa algo si es *el hueco
+            // que deja el pie*: una talla fija volvería a no caber en la siguiente ventana.
+            // Se mide en cada decisión —no se cachea— porque el pie cambia de alto con el ancho y
+            // con las imágenes que carguen tarde (`DEUDA`).
+            document.body.style.setProperty('--foot-h', Math.round(pie.offsetHeight) + 'px');
+
             // ⚠️ **«En la cola» y «anclada» son DOS condiciones, y hacen falta las dos.** Con solo
             // «la sección ha llegado arriba», la tarjeta se fijaría también al pasar por delante
             // en un scroll rápido hacia arriba. Con solo «estamos al final», se fijaría antes de
@@ -951,6 +960,12 @@ document.addEventListener('alpine:init', () => {
                 el.style.setProperty('--c-w0', Math.round(r0.width) + 'px');
                 el.style.setProperty('--c-h0', Math.round(r0.height) + 'px');
                 el.classList.add('reserve--fija');
+                // ⚠️ **El armazón se retira EN CUANTO la tarjeta se ancla** (`#254`,
+                // `[DECIDIDO owner]`: «no hace falta que el punto estático tenga el logo, el CTA y
+                // el menú a la vista»). Antes empezaba a irse con el progreso (`q > 0,02`), o sea
+                // que en el punto estático estaba entero. Ahora el anclaje es la señal, y por eso
+                // es una CLASE y no un número: no es una interpolación, es un hecho.
+                document.body.classList.add('cierre--anclado');
                 this._fija = true;
             }
 

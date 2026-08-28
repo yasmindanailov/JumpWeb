@@ -345,14 +345,24 @@ class HomePageTest extends TestCase
         // comprar. Vuelven los dos botones propios del hero, que es lo que `#216` razonó.
         // ⚠️ El chip de estado NO vuelve: no se pidió. Se sigue aseverando su ausencia para que
         // este caso no dé por buena una vuelta que nadie decidió.
-        foreach (['hero__kicker', 'hero__acts', 'hero__act--buy'] as $vuelto) {
+        // ⚠️ **Los dos botones propios duraron UNA tanda** (`#254`, `[DECIDIDO owner]`: «esos dos
+        // botones los quitamos y ponemos debajo el CTA que tenemos en el bottom right»). Eran una
+        // TERCERA pieza de compra en la misma pantalla, junto al par de la esquina y a la barra de
+        // móvil. Lo que se asevera sigue siendo lo mismo —**la primera pantalla ofrece comprar**,
+        // que es lo que sostiene que el armazón nazca oculto—; cambia quién lo cumple.
+        foreach (['hero__kicker', 'hero__pair-slot'] as $vuelto) {
             $this->assertStringContainsString(
                 $vuelto, $hero,
                 "el hero ha perdido `{$vuelto}`.\n".
-                '▶ Con el armazón naciendo OCULTO bajo el hero, sin estos la primera pantalla no '.
+                '▶ Con el armazón naciendo OCULTO bajo el hero, sin esto la primera pantalla no '.
                 'ofrece ni comprar ni navegar: es el agujero que `#216` cerró y `#226` reabrió.',
             );
         }
+        $this->assertStringNotContainsString(
+            'hero__acts', $hero,
+            'han vuelto los dos botones propios del hero. `#254` los retiró: con el par del armazón '.
+            'aquí, serían una TERCERA pieza de compra en la misma pantalla.',
+        );
         $this->assertStringNotContainsString(
             'hero__chip', $hero,
             'ha vuelto el chip de estado al hero y nadie lo pidió: `#226` lo retiró y `#253` solo '.

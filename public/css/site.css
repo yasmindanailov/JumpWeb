@@ -2191,6 +2191,18 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
         clamp(40px, min(6vw, 7vh), 80px)
         clamp(24px, 5vw, 80px)
         calc(24px + (clamp(122px, 14vw, 156px) - 24px) * var(--cierre-p));
+    /* ⚠️⚠️ **En reposo la tarjeta ocupa EL HUECO QUE DEJA EL PIE** (`#254`, `[DECIDIDO owner]`:
+       «podemos permitirnos darle más altura, y no hace falta que el punto estático tenga el logo,
+       el CTA y el menú a la vista»). Y «más alta» se expresa así y no con un número: el punto
+       estático existe **solo si la tarjeta y el pie caben juntos en la ventana**, así que la
+       tarjeta puede crecer exactamente hasta ahí y ni un píxel más. Con una talla fija volvería a
+       no caber en la siguiente ventana, que es de donde venimos (`#253`).
+       ▶ `--foot-h` lo publica la coreografía en cada decisión. La reserva de 340 px es para el
+       primer pintado, antes de que el JS haya medido nada.
+       ⚠️ Es `min-height`: si el CONTENIDO pide más —una ventana muy baja, un titular de tres
+       renglones— manda el contenido. Encoger la tarjeta hasta recortar su texto sería cambiar un
+       problema de composición por uno de legibilidad. */
+    min-height: calc(100svh - var(--foot-h, 340px) - var(--cierre-gap) * 3);
 }
 /* ⚠️ **Por encima de la tira** (`z-index: 3` contra el 2 del lienzo). En reposo el relleno inferior
    ya no aparta la tira entera (§ de arriba), así que el lienzo se solapa con los CTA: está en
@@ -2467,10 +2479,26 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    son TRES cosas y no una: la opacidad (lo que se ve), `pointer-events` (el ratón) y `visibility`
    (el teclado y el lector de pantalla). Sin la tercera, quien navega con tabulador se encontraría
    con dos botones «Reservar» invisibles antes de llegar al que sí se ve. */
+/* ⚠️⚠️ **Deja de ser una esquina y pasa a ir DEBAJO DEL TITULAR** (`#254`, `[DECIDIDO owner]`).
+   Con el bloque del hero centrado (`#253`), el par en la esquina inferior derecha quedaba lejos del
+   texto al que pertenece y competía con la barra de móvil. Aquí es la continuación natural del
+   titular, que es lo que el owner pidió.
+   ▶ **Y crece**, porque en el hero no comparte fila con nada: el par del armazón mide 224×54 —las
+   ocho medidas que `#216` alineó con el mockup— y aquí se sube a 300×72 con la talla a juego. Se
+   sobreescriben SUS tokens, acotados a este hueco: el racimo de la cabecera no se entera. */
 .hero__pair-slot {
-    position: absolute; z-index: 6;
-    right: clamp(24px, 3vw, 44px);
-    bottom: clamp(24px, 3vw, 40px);
+    position: relative; z-index: 6;
+    margin-top: clamp(22px, 2.6vw, 34px);
+}
+/* ⚠️ **Los tokens se redefinen sobre `.cta-pair`, no sobre el hueco que la contiene**, y esto
+   costó una medición: `.cta-pair` **declara los suyos en sí misma**, y una declaración propia gana
+   a lo heredado. Puestos en el padre, el par seguía saliendo a 224×54. */
+.hero__pair-slot .cta-pair {
+    --cta-pair-w: clamp(260px, 22vw, 320px);
+    --cta-pair-mini: clamp(64px, 5.4vw, 76px);
+    --cta-pair-h: clamp(64px, 5.2vw, 74px);
+    --cta-pair-fs: clamp(16px, 1.3vw, 19px);
+    --cta-pair-pad: clamp(15px, 1.3vw, 18px);
 }
 body[data-has-hero] .hero__pair-slot {
     opacity: calc((var(--nav-reveal-live) - var(--nav-p)) / var(--nav-reveal-live));
@@ -3068,10 +3096,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
 
 /* El rótulo va en la fuente de ROTULO y en mayúsculas, como el CTA fijo del mockup. La fuente sale
    del TOKEN —no del nombre—, así que una instalación la cambia con `THEME_FONTS` y esto la sigue. */
+/* ⚠️ La talla sale de un token porque el par vive en TRES sitios con tres escalas: el racimo de
+   la cabecera (17), la barra de móvil y **el hueco del hero, donde el owner lo quiso más grande**
+   (`#254`). Con el literal, agrandarlo en uno los agrandaba en los tres. */
 .cta-med__t,
 .cta-ghost__t {
     font-family: var(--font-display); font-weight: 400;
-    font-size: 17px; line-height: 1;
+    font-size: var(--cta-pair-fs, 17px); line-height: 1;
     text-transform: uppercase; letter-spacing: 0.01em;
 }
 /* ⚠️ HEREDAN el color del botón y solo bajan la opacidad, en vez de calcularlo con un token: el
@@ -3079,7 +3110,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    menú— y cualquier token elegido aquí fallaría en dos de los tres. Es también lo que hace el
    mockup (`opacity:.62`). */
 .cta-med__s,
-.cta-ghost__s { font-size: 11px; color: inherit; opacity: 0.62; }
+.cta-ghost__s { font-size: calc(var(--cta-pair-fs, 17px) * 0.647); color: inherit; opacity: 0.62; }
 
 /* ══ EL INTERCAMBIO ═══════════════════════════════════════════════════════════════════════════
    Reposo: COMPRAR ancho, la cuenta a su icono. Es la jerarquía, no un default cualquiera —comprar
@@ -3238,6 +3269,15 @@ body {
     /* Lo que QUEDA del armazón, con la curva del mockup: `(1 − salida)³`. */
     --cierre-queda: calc((1 - var(--cierre-salida)) * (1 - var(--cierre-salida)) * (1 - var(--cierre-salida)));
 }
+
+/* ⚠️⚠️ **Y en cuanto la tarjeta se ANCLA, el armazón ya no está** (`#254`, `[DECIDIDO owner]`: «no
+   hace falta que el punto estático tenga el logo, el CTA y el menú a la vista»). Antes la retirada
+   empezaba con el progreso, así que en el punto estático el armazón estaba entero y le comía sitio
+   a la tarjeta — que es justo lo que había que liberar para poder hacerla más alta.
+   ▶ Es una CLASE y no un número porque no es una interpolación: es un hecho binario —la tarjeta se
+   fijó o no—. La transición la sigue poniendo la regla de abajo, así que la salida se ve igual de
+   suave; lo que cambia es CUÁNDO empieza. */
+body.cierre--anclado { --cierre-salida: 1; }
 
 body[data-has-hero] .nav__left,
 body[data-has-hero] .nav__cta {
@@ -5263,3 +5303,90 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 /* La paginación del sitio nace con `margin-top: 40px`, pensada para una página completa; dentro del
    cajón esa distancia deja el paginador fuera de la vista tras la última tarjeta. */
 .dep-page { margin-top: var(--sp-20); }
+
+/* ══ EL INTERRUPTOR DEL TITULAR DEL HERO (`#254`) ══════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-29]`: «Diversión ON, y ese ON que sea un toggle que esté activado,
+   respetando el diseño».
+
+   ▶ **Es tipografía, no un control.** No hay nada que encender: el dibujo va `aria-hidden` y lo
+   que se lee sigue siendo el texto del `<h1>`. Poner aquí un `role="switch"` anunciaría a un
+   lector de pantalla un interruptor que no hace nada.
+
+   ⚠️⚠️ **El relleno es `--ok`, NO el rol de acción — y lo dijo una guarda.** El primer intento usó
+   `var(--action)` porque el naranja quedaba bien, y `ActionFillTest` lo rechazó con su propio
+   argumento: *acción es el control PRIMARIO que hace avanzar; una pegatina o una pestaña activa
+   también rellenan y no son acción*. Un interruptor decorativo es exactamente eso.
+   ▶ Y la respuesta ya estaba escrita en este mismo fichero: el chip de «Abierto ahora» del hero usa
+   **`--ok`, no el color de acción, porque es un ESTADO y no un botón** (hallazgo `C-04` de la
+   auditoría del cliente). «Encendido» es un estado. Mismo token, mismo motivo.
+   ⚠️ El rótulo y el pomo van en `--paper-fg`, la tinta que NO se invierte con la superficie: sobre
+   el verde se lee en las dos, y un blanco crudo es lo que `#143` sacó de esta hoja.
+
+   ⚠️ **Escala con el titular y no con la ventana**: todo va en `em`, así que el interruptor crece
+   y encoge con la coreografía del hero (`#220`) sin una sola media query. Un tamaño en `px` aquí
+   se quedaría quieto mientras el titular pasa de 124 a 48. */
+.hero__switch {
+    display: inline-flex; align-items: center; gap: 0.26em;
+    padding: 0.1em 0.14em 0.1em 0.34em;
+    border-radius: var(--r-pill);
+    background: var(--ok);
+    color: var(--paper-fg);
+    line-height: 1;
+    vertical-align: baseline;
+    /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; aquí no, porque el
+       contraste ya lo da la cápsula. */
+    -webkit-text-stroke: 0;
+}
+.hero__switch-t { display: block; padding-bottom: 0.06em; }
+/* El pomo: un círculo a la derecha, que es lo que dice «está en ON». Su tamaño sale del propio
+   texto para que no haya dos escalas conviviendo. */
+.hero__switch-knob {
+    display: block; flex: none;
+    width: 0.62em; height: 0.62em;
+    border-radius: 50%;
+    background: var(--paper-fg);
+    box-shadow: var(--shadow-lift);
+}
+
+/* ══ EL LOGOTIPO EN LÍNEA Y SU SALTO (`#254`) ══════════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-29]`: «hacemos la animación del logo». El mockup hace un RELEVO —la
+   silueta entra de un salto y se queda como letra Y— y aquí se hace la mitad que el asset permite:
+   **el saltador entra de un salto y aterriza en su sitio**. La otra mitad, la Y desvaneciéndose,
+   necesitaría una pieza que nuestro logotipo no tiene: en él la silueta YA ES la Y.
+
+   ⚠️ **Se dispara con una CLASE y no en la carga**, porque el encargo era «cada vez que se muestra
+   el logo». En la portada el armazón nace oculto bajo el hero y va y viene con el scroll: la
+   animación arranca cuando `.nav--live` está puesta y `.nav--hidden` no, así que **se repite cada
+   vez que el racimo vuelve**. En las once vistas sin hero el armazón está siempre, así que salta
+   una vez y se queda.
+
+   ⚠️ **Los tiempos salen de la escala** (`#222`): 900 ms de recorrido —el techo de la escala— tras
+   420 de espera, que es exactamente `--dur-cae`. El mockup usa 1000/467; la diferencia es un 10 %
+   y no justifica estrenar dos duraciones fuera del sistema. */
+.nav__brand-logo--inline { display: block; height: var(--nav-logo-h); }
+.nav__brand-logo--inline svg { display: block; height: 100%; width: auto; }
+
+@keyframes brand-hop {
+    0%   { opacity: 0; transform: translateY(90px) scale(0.93, 1.08); }
+    5%   { opacity: 1; transform: translateY(74px) scale(0.93, 1.08); }
+    38%  { transform: translateY(-18px) scale(1.02, 0.99); }
+    62%  { transform: translateY(2px)  scale(0.96, 1.05); }
+    70%  { transform: translateY(5px)  scale(1.14, 0.84); }
+    80%  { transform: translateY(-3px) scale(0.96, 1.06); }
+    91%  { transform: translateY(2px)  scale(1.05, 0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1, 1); }
+}
+/* ⚠️ `transform-box: fill-box` es lo que hace que el `transform-origin` se mida sobre la PIEZA y no
+   sobre el lienzo entero del SVG: sin él, un `scale` sobre la silueta la manda a otro sitio del
+   dibujo. Y el origen es su base —`50% 90%`, el del mockup—, que es lo que hace que el aplastado
+   del aterrizaje se sienta como peso y no como un cambio de tamaño. */
+.nav__brand-logo--inline svg #fig {
+    transform-box: fill-box;
+    transform-origin: 50% 90%;
+}
+body.nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig {
+    animation: brand-hop var(--dur-espera) var(--dur-cae) var(--ease-cae) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig { animation: none; }
+}

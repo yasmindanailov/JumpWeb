@@ -113,14 +113,31 @@ class ClientThemePackageTest extends TestCase
 
             $this->assertStringContainsString('nav__brand-logo', $html, 'el logotipo de la instalación no se pinta');
             $this->assertStringNotContainsString('nav__brand-row', $html, 'se pintan el logotipo Y el texto: son alternativas');
-            $this->assertMatchesRegularExpression(
-                '/client-logo\.svg\?v=\d+/', $html,
-                'el logotipo se sirve sin cache-busting: un cliente que lo cambia no ve el cambio',
+            // ⚠️⚠️ **El cache-busting deja de tener sujeto** (`#254`): el logotipo ya no se PIDE por
+            // URL, se **incrusta** en el documento —es lo que permite animarlo—, así que no hay
+            // caché de navegador que invalidar. La regla que esta aserción protegía —«un cliente
+            // que cambia su logotipo ve el cambio»— se cumple ahora *mejor*: el HTML no se cachea
+            // (`NoStoreWebResponses`), y el dibujo va dentro.
+            // ▶ Lo que se asevera en su lugar es que el DIBUJO llega de verdad, que es lo que la
+            // aserción anterior comprobaba de rebote. Sin esto, «se pinta el logotipo» se cumpliría
+            // con un `<span>` vacío.
+            $this->assertStringContainsString(
+                '<svg', $html,
+                'el logotipo de la instalación no llega al documento: se sirve en línea desde `#254`.',
             );
-            // ❗ El nombre accesible NO se pierde: es el único enlace que TODA página tiene.
+            // ❗ **El nombre accesible NO se pierde**: es el único enlace que TODA página tiene.
+            // ⚠️ Cambia el PORTADOR, no la regla: al incrustar el SVG no hay `alt` que poner —el
+            // contenido de un `<img>` no llegaba al árbol de accesibilidad y el de un `<svg>` sí—,
+            // así que el nombre lo declara el envoltorio. Y al `<svg>` se le QUITA el suyo, o
+            // serían dos nombres anidados para un solo enlace (`InlineSvg::mute`).
             $this->assertMatchesRegularExpression(
-                '/<img[^>]+nav__brand-logo[^>]+alt="[^"]+"/', $html,
-                'el logotipo va sin `alt`: el enlace a la portada se queda sin nombre accesible',
+                '/nav__brand-logo--inline"[^>]*role="img"[^>]*aria-label="[^"]+"/', $html,
+                'el logotipo va sin nombre accesible: el enlace a la portada se queda mudo',
+            );
+            $this->assertMatchesRegularExpression(
+                '/<svg[^>]*aria-hidden="true"/', $html,
+                'el SVG incrustado conserva su propio nombre: son dos nombres para un solo enlace, '.
+                'y quien navega por voz oye el del dibujo en vez del del sitio.',
             );
         } finally {
             @unlink($path);

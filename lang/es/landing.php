@@ -64,7 +64,12 @@ return [
         // Eslogan sobre el titular del hero. CORTO a propósito: el sistema del 2.º cliente
         // limita el rotulador a seis palabras («el eslogan, nada más»), y girado no se lee más.
         'kicker' => 'activa tu modo diversión',
-        'l1' => 'DIVERSIÓN', 'l2' => 'INFINITA',
+        // ⚠️ `l2` es el rótulo del INTERRUPTOR del titular (`#254`, `[DECIDIDO owner]`:
+        //    «Diversión ON, y ese ON que sea un toggle que esté activado»). Es un estado, no
+        //    una palabra traducible: «ON» se lee igual en los tres idiomas y además es lo que
+        //    dice el interruptor. Si algún día una instalación lo quiere en su idioma, se
+        //    cambia aquí y el interruptor no se entera.
+        'l1' => 'DIVERSIÓN', 'l2' => 'ON',
         'tag' => 'Parque de saltos, trampolines, tirolinas y mucho más en plena Murcia. Hecho para reír.',
         'cta' => 'Reservas aquí', 'cta2' => 'Ver atracciones', 'reel' => 'Vídeo del parque',
         // CTA "prime" del hero (mockup). Subtítulo con precio cuando hay catálogo,

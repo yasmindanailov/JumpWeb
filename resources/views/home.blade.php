@@ -95,50 +95,33 @@
                      **encoja con el hero** (`#220`, `--hero-t-ini` → `--hero-t-end`). Sin él cae
                      en la escala base, que es la del titular gigante de la portada antigua: medido,
                      320 px a 1920 y **558 px de ancho en un teléfono de 390**. --}}
-                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }}<br>{{ __('landing.hero.l2') }}</h1>
+                {{-- ⚠️⚠️ **El segundo renglón es un INTERRUPTOR ENCENDIDO** (`#254`,
+                     `[DECIDIDO owner]`: «Diversión ON, y ese ON que sea un toggle que esté
+                     activado, respetando el diseño»).
+                     ▶ **Es decorativo y por eso NO es un control**: nada se enciende ni se apaga
+                     al pulsarlo. Un `<button>` o un `role="switch"` aquí prometería una acción que
+                     no existe —y un lector de pantalla anunciaría «interruptor, activado»— así que
+                     el dibujo va `aria-hidden` y lo que se lee es el texto del titular, tal cual.
+                     ⚠️ El rótulo sale del idioma (`hero.l2`): el dibujo es del producto, la
+                     palabra es de la instalación. --}}
+                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }}<br><span class="hero__switch"><span class="hero__switch-t">{{ __('landing.hero.l2') }}</span><span class="hero__switch-knob" aria-hidden="true"></span></span></h1>
 
-                {{-- ⚠️⚠️ **Y con el titular vuelven LOS DOS BOTONES** (`#253`). No es un extra: el
-                     owner pide «el CTA del hero más grande», y el CTA del hero **no existía** —
-                     `#226` lo retiró al vaciarlo—. ▶ Con esto se cierra la ficha Alta de `DEUDA.md`
-                     que `#226` abrió a sabiendas: el armazón nace oculto bajo el hero, así que sin
-                     estos botones **la primera pantalla no ofrece ni comprar ni navegar**. Es el
-                     mismo razonamiento de `#216`, y sigue siendo el que sostiene que el armazón
-                     pueda esconderse. --}}
-                <div class="hero__acts">
-                    <a href="{{ route('entradas') }}" class="hero__act hero__act--buy"
-                       @click.prevent="$store.purchase.open()">
-                        <span class="hero__act-t">{{ __('landing.hero.cta_buy') }}</span>
-                        @if (! empty($ctaMinPriceLabel))
-                            <span class="hero__act-s">{{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('precios') }}" class="hero__act hero__act--alt">{{ __('landing.hero.cta_prices') }}</a>
+                {{-- ⚠️⚠️ **EL CTA DEL HERO ES EL PAR DEL ARMAZÓN, y baja aquí** (`#254`,
+                     `[DECIDIDO owner]`: «esos dos botones los quitamos y ponemos debajo el CTA que
+                     tenemos en el bottom right, el que se cambia, más grande»).
+                     ▶ Los dos botones propios que `#253` devolvió duraban una tanda: eran **una
+                     tercera pieza de compra** en la misma pantalla, junto al par de la esquina y a
+                     la barra de móvil. Con el par aquí, el relevo con la cabecera sigue siendo *el
+                     mismo botón cambiando de sitio* —que es lo que `#227` construyó— y la primera
+                     pantalla sigue ofreciendo comprar, que es lo que sostiene que el armazón nazca
+                     oculto (`#216`).
+                     ⚠️ **En MÓVIL este par no se pinta** y no es un olvido: ahí el CTA ya vive
+                     abajo, en la barra flotante, y está en el mismo sitio. --}}
+                <div class="hero__pair-slot">
+                    <x-site.cta-pair place="hero" />
                 </div>
             </div>
 
-            {{-- ⚠️⚠️ **EL CTA DE LA PRIMERA PANTALLA, Y ES UN RELEVO** (`#227`,
-                 `[DECIDIDO owner, 2026-08-28]`: «añadiremos el mismo CTA en la parte inferior
-                 derecha y, al deslizar, en el momento que aparece el CTA en el menú lo quitamos
-                 del hero»).
-
-                 ▶ **Cierra el agujero que `#226` abrió a sabiendas**: la primera pantalla vuelve a
-                 ofrecer comprar. La ficha Alta de `DEUDA.md` se puede cerrar con esto.
-
-                 ▶ **Es EL MISMO componente que el racimo de la cabecera**, no uno parecido, y por
-                 eso lleva el mismo copy: al bajar, éste se apaga exactamente cuando el otro se
-                 enciende, y la ilusión es un solo botón que cambia de sitio. Con dos textos
-                 distintos se leerían dos cosas a la vez durante el cruce.
-
-                 ⚠️ **No hay dos estados: comparten `$store.ctaPair`.** Si expandes «Mi cuenta»
-                 aquí abajo y sigues bajando, arriba te lo encuentras expandido. Son la misma
-                 decisión en dos sitios, que es lo que `#205` y `#214` ya establecieron.
-
-                 ⚠️ **En MÓVIL este par NO se pinta**, y no es un olvido: ahí el CTA ya vive abajo
-                 —la barra flotante— y está en el mismo sitio, así que el relevo no hace falta.
-                 Dos botones idénticos a diez píxeles uno de otro serían un error, no una ayuda. --}}
-            <div class="hero__pair-slot">
-                <x-site.cta-pair place="hero" />
-            </div>
         </div>
 
         {{-- ⚠️ **LA TIRA DE MARCA DEL HERO, y VIAJA** (`#226`, del mockup `Landing PJP Modos`).

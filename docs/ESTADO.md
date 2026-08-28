@@ -8,6 +8,25 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗ **`#254` — EL LOGOTIPO SE SIRVE EN LÍNEA, y eso cambia el modelo de amenaza.** Para poder
+> animarlo (`[DECIDIDO owner]`) deja de ir en un `<img>`: **dentro de un `<img>` un SVG es inerte y
+> en línea NO**. El fichero lo pone el operador con el paquete del cliente, pero eso es una
+> suposición, no una defensa. ▶ **`InlineSvg` es lista blanca y todo o nada**: con un `<script>`, un
+> `on*=`, un `javascript:`, un `<foreignObject>` o una referencia externa **no se sirve el logotipo**
+> — la plantilla cae a su suelo de texto. `InlineBrandLogoTest`, 13 casos.
+> ⚠️ Coste aceptado con el número delante: **~64 KB de marcado (~15 comprimidos) en las doce vistas**.
+> ⚠️ Y al incrustarlo aparecieron **dos nombres accesibles anidados** (el SVG trae el suyo): el
+> dibujo pasa a `aria-hidden` y el nombre lo pone el envoltorio.
+> ⚠️ **La tarjeta del cierre ocupa ahora el hueco que le deja el pie** (`min-height` contra
+> `--foot-h`, que publica la coreografía): 757 px a 1920, y la composición cabe con **20 px de
+> margen en 8 de 9 ventanas**. Y **el armazón se retira en cuanto la tarjeta se ancla**.
+> ⚠️ **El hero se queda con UN CTA**: el par del armazón, debajo del titular y más grande. Los dos
+> botones propios de `#253` duraron una tanda — eran una TERCERA pieza de compra en la misma
+> pantalla.
+> ⚠️⚠️ **Y el interruptor «ON» del titular usa `--ok`, no el rol de acción, porque lo dijo una
+> guarda**: `ActionFillTest` rechazó `--action` con su propio argumento. La respuesta ya estaba en
+> la misma hoja —el chip de «Abierto ahora» usa `--ok` porque es un ESTADO, no un botón—.
+>
 > ❗❗ **`#253` — EL CAJÓN SE ABRÍA DETRÁS DEL JUEGO, y con el scroll ya bloqueado.** En un teléfono,
 > al pulsar «Reservar» tras la partida del cierre: el cajón se abría de verdad —y su cerrojo con
 > él— pero la tarjeta estaba en `z-index: 210` y el cajón en 160. Un superpuesto invisible que
@@ -1243,6 +1262,10 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3418 en verde** (22.494 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#254` (el cierre a la altura del hueco, el hero con un solo CTA, el interruptor
+  del titular y el logotipo en línea, carril C). ▶ **+13 casos**: `InlineBrandLogoTest`, ocho de
+  ellos por proveedor con un peligro cada uno más el control positivo.
 - Suite **3405 en verde** (22.434 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 **sobre el árbol CONJUNTO**, tras rebasar `#253` (los ocho puntos de la portada, carril
   C) encima del `#242` del carril A. ▶ **+2 casos en este corte**: la capa de la tarjeta del cierre

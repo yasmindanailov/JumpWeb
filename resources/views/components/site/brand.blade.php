@@ -46,9 +46,26 @@
          alt="" aria-hidden="true" />
     <span class="sr-only">{{ $name }}</span>
 @elseif ($clientLogo)
-    <img class="nav__brand-logo"
-         src="{{ asset('img/client-logo.svg') }}?v={{ $clientLogo }}"
-         alt="{{ $name }}" />
+    {{-- ⚠️⚠️ **EL LOGOTIPO SE SIRVE EN LÍNEA, y es una decisión con coste** (`#254`,
+         `[DECIDIDO owner]`: «sí, hacemos la animación del logo»).
+
+         ▶ **Un `<img>` no se puede animar por dentro.** El relevo que hace el mockup —la silueta
+         entra de un salto y se queda como letra— necesita alcanzar una pieza CONCRETA del dibujo, y
+         eso solo existe si el SVG forma parte del documento. El de este cliente ya trae la pieza
+         (`id="fig"`, la silueta), así que **no hubo que pedir ningún asset nuevo**: lo que cambia
+         es cómo se sirve.
+
+         ⚠️ **Coste medido: ~64 KB de marcado (~15 KB comprimidos) en el armazón de las doce
+         vistas**, y se paga en TODAS aunque solo la portada tenga coreografía. Es el precio de la
+         animación y el owner lo aceptó con el número delante.
+
+         ⚠️ **`|file_get_contents` sobre `public/img/` no es una plantilla**: el fichero lo pone el
+         operador al instalar el paquete, igual que `client.css`. Verificado antes de inlinar que no
+         trae `<script>` ni atributos `on*` — un SVG en línea SÍ los ejecutaría, y por `<img>` no.
+         `InlineBrandLogoTest` lo vuelve a comprobar en cada suite, que es donde tiene que estar. --}}
+    <span class="nav__brand-logo nav__brand-logo--inline" role="img" aria-label="{{ $name }}">
+        {!! \App\Domain\Content\Services\InlineSvg::brand(public_path('img/client-logo.svg')) !!}
+    </span>
 @else
     <span class="nav__brand-row">{{ $name }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></span>
 @endif

@@ -49,7 +49,7 @@ return [
         // Eslogan sobre el titular del hero. CORTO a propósito: el sistema del 2.º cliente
         // limita el rotulador a seis palabras («el eslogan, nada más»), y girado no se lee más.
         'kicker' => 'switch on your fun mode',
-        'l1' => 'FUN', 'l2' => 'JUMPING',
+        'l1' => 'FUN', 'l2' => 'ON',   // el rótulo del interruptor del titular (`#254`)
         'tag' => 'Indoor jump park — trampolines, ziplines and a lot more, in the heart of Murcia. Built for laughter.',
         'cta' => 'Book here', 'cta2' => 'See the rides', 'reel' => 'Park reel',
         'cta_buy' => 'Book here',

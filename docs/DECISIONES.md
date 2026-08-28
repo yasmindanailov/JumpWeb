@@ -13731,3 +13731,94 @@ de 9 ventanas**. Alineación del armazón: **12 px de aire en once ventanas**. M
 medidos antes y después. Barrido de 13 anchos × 6 vistas: **cero desborde de página y cero errores
 de JavaScript** (el recuento de elementos que asoman sube porque la fila del pie es ahora una tira
 deslizante **por diseño** y porque la marquesina retirada tapaba a otros en el top-3 de la sonda).
+
+---
+
+## #254 · 2026-08-29 · [DECIDIDO owner] El cierre ocupa lo que el pie le deja, el hero se queda con UN CTA, y el logotipo salta
+
+Cuatro encargos del owner, y el último cambia **cómo se sirve la marca**.
+
+### 1 · La tarjeta del cierre crece hasta donde cabe
+
+`[DECIDIDO owner]`: «podemos permitirnos darle más altura, y **no hace falta que el punto estático
+tenga el logo, el CTA y el menú a la vista**».
+
+▶ Y «más alta» se expresa como una relación, no como un número: el punto estático existe **solo si
+la tarjeta y el pie caben juntos en la ventana**, así que la tarjeta puede crecer exactamente hasta
+ahí. `min-height: calc(100svh - var(--foot-h) - gaps)`, con el alto del pie publicado por la
+coreografía. Una talla fija volvería a no caber en la siguiente ventana, que es de donde venimos
+(`#253`).
+
+Medido, la tarjeta pasa a **757 px a 1920×1080** (era 434), **578 a 1440×900** y **449 a 390×844**, y
+la composición cabe con **20 px de margen en las 8 ventanas** donde cabía. La novena (390×667) sigue
+sin caber: el contenido de la tarjeta ya mide más que el hueco, y eso es aritmética.
+
+⚠️ **Y el armazón se retira EN CUANTO la tarjeta se ancla**, no con el progreso. Es una clase y no un
+número porque no es una interpolación: es un hecho binario. Antes, en el punto estático el armazón
+estaba entero — que es justo el sitio que había que liberar.
+
+### 2 · El hero se queda con UN CTA, y es el del armazón
+
+`[DECIDIDO owner]`: «esos dos botones los quitamos y ponemos debajo el CTA que tenemos en el bottom
+right, el que se cambia, más grande».
+
+▶ Los dos botones propios que `#253` devolvió duraron una tanda, y con motivo: eran **una tercera
+pieza de compra** en la misma pantalla, junto al par de la esquina y a la barra de móvil. Con el par
+debajo del titular, el relevo con la cabecera vuelve a ser *el mismo botón cambiando de sitio* —lo
+que `#227` construyó— y la primera pantalla sigue ofreciendo comprar, que es lo que sostiene que el
+armazón nazca oculto (`#216`). Crece de **224×54 a ~320×74**.
+
+⚠️ **Los tokens se redefinen sobre `.cta-pair` y no sobre el hueco que la contiene**, y esto costó
+una medición: el componente **declara los suyos en sí mismo**, y una declaración propia gana a lo
+heredado. Puestos en el padre, el par seguía saliendo a 224×54.
+
+### 3 · «Diversión ON», con el ON como interruptor encendido
+
+⚠️ **Es tipografía, no un control**: no hay nada que encender. Un `role="switch"` aquí anunciaría a
+un lector de pantalla un interruptor que no hace nada, así que el dibujo va `aria-hidden` y lo que se
+lee sigue siendo el texto del `<h1>`. Todo va en `em`, así que **escala con el titular** sin una sola
+media query — un tamaño en `px` se quedaría quieto mientras el titular pasa de 124 a 48.
+
+⚠️⚠️ **El relleno es `--ok` y NO el rol de acción, y lo dijo una guarda.** El primer intento usó
+`var(--action)` porque el naranja quedaba bien, y `ActionFillTest` lo rechazó con su propio
+argumento: *acción es el control primario que hace avanzar; una pegatina o una pestaña activa
+también rellenan y no son acción*. ▶ La respuesta ya estaba escrita en la misma hoja: el chip de
+«Abierto ahora» usa **`--ok` porque es un ESTADO y no un botón** (hallazgo `C-04` del cliente).
+«Encendido» es un estado.
+
+### 4 · El logotipo salta — y para eso deja de servirse por `<img>`
+
+`[DECIDIDO owner]`: «sí, hacemos la animación del logo».
+
+**Un `<img>` no se puede animar por dentro.** El relevo del mockup necesita alcanzar una pieza
+concreta del dibujo, y eso solo existe si el SVG forma parte del documento. El del cliente ya trae la
+pieza (`id="fig"`), así que **no hubo que pedir ningún asset**: lo que cambia es cómo se sirve.
+Coste aceptado con el número delante: **~64 KB de marcado (~15 KB comprimidos)** en las doce vistas.
+
+⚠️⚠️ **Ese cambio abre una puerta que el `<img>` tenía cerrada.** Dentro de un `<img>` un SVG es
+inerte: el navegador no ejecuta sus scripts ni carga nada externo. **En línea, sí.** El fichero lo
+pone el operador al instalar el paquete, así que no viene de un desconocido — pero «lo puso alguien
+de confianza» es una suposición, no una defensa, sobre un fichero que llega por `rsync` desde otra
+máquina. ▶ `InlineSvg` es lista blanca y **todo o nada**: si trae `<script>`, un `on*=`, un
+`javascript:`, un `<foreignObject>` o una referencia externa, **no se sirve el logotipo**. Un
+logotipo que falta se ve; un script que se cuela, no — y la plantilla tiene su suelo de texto.
+
+⚠️ **Y al incrustarlo aparecieron DOS nombres accesibles anidados**: el fichero trae su propio
+`role="img" aria-label="Play Jump Park"`, y dentro del envoltorio del armazón —que ya declara el
+nombre del sitio— quien navega por voz oía el del dibujo. Por `<img>` no pasaba, porque su contenido
+no llega al árbol de accesibilidad. El dibujo pasa a `aria-hidden` y el nombre lo pone el envoltorio.
+
+**La animación** es la mitad que el asset permite: el saltador entra de un salto y aterriza. La otra
+mitad —la Y desvaneciéndose— necesitaría una pieza que no tenemos: en nuestro logotipo **la silueta
+YA ES la Y**. Se dispara con una clase, no en la carga, porque el encargo era «cada vez que se
+muestra el logo»: arranca con `.nav--live` sin `.nav--hidden`, así que **se repite cada vez que el
+racimo vuelve**. Verificado en navegador: parada arriba, `running` en el punto estático, fuera al
+bajar y otra vez al subir. Los tiempos salen de la escala (`--dur-espera` tras `--dur-cae`).
+
+### Verificación
+
+Suite **3.418 / 22.494** · JS **862** · Pint ✓ · docs-check ✓ · build ✓. Composición del cierre: **8
+de 9 ventanas con 20 px de margen**. Hero re-medido a 1920 y 390 (par 410×74, interruptor presente,
+cero botones sueltos, SVG en línea con su pieza). Salto del logotipo comprobado en las cuatro
+posiciones de scroll. **`InlineBrandLogoTest` nuevo (13 casos)**, ocho de ellos por proveedor de
+datos con un peligro cada uno, más el control positivo de que un SVG limpio SÍ se sirve entero.
