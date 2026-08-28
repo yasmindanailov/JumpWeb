@@ -12053,3 +12053,79 @@ visible desde `scroll 0`, par del hero en `display: none`, **cero desbordamiento
 aro dentro de márgenes en los dos anchos. Suite acotada: **173 verdes**. Pint limpio.
 **Guarda del relevo probada por mutación**: desatar el fundido del umbral muere; quitar
 `visibility: hidden` muere.
+
+---
+
+## #226 · 2026-08-28 · El menú se parte en dos columnas — y el subtítulo no se esconde: se MUDA a la vista previa
+
+**Contexto.** `[DECIDIDO owner]`: «revisa bien el mockup, lo quiero idéntico 1:1 — hero, menú,
+transiciones, animaciones». El menú ya era casi 1:1 desde `#200`–`#205`: mismo recorte circular
+desde la hamburguesa, misma trama de puntos (11 %, 1,4/1,6 px, rejilla de 20), mismas cápsulas
+secundarias, mismo eslogan a rotulador, mismo escalonado de entrada. **Faltaban dos piezas.**
+
+### La columna lateral
+
+`flex: 0 0 320px`, oculta por debajo de 1100 px. Trae la **vista previa** del destino señalado
+—foto del CMS cuando la hay, y si no el fondo rayado que el mockup usa donde aún no hay foto— más
+el estado de apertura, el teléfono y cómo llegar.
+▶ **No es decoración: es lo que hace legible la lista.** Con el menú a todo el ancho, «Empresas»
+dejaba su subtítulo flotando a 900 px del título y la fila se leía como dos cosas sueltas.
+▶ Se alimenta de los **mismos ítems** que la lista, no de una segunda fuente: con dos, un destino
+nuevo aparecería en una y no en la otra y nadie se enteraría hasta verlo.
+⚠️ `aria-hidden` en la tarjeta, y no en el bloque de datos: la tarjeta REPITE lo que el lector
+acaba de leer en la lista; el teléfono y la ubicación son enlaces de verdad.
+⚠️ El sombrerete es el **número** del destino y no una etiqueta: el mockup pone ahí una por
+sección que nosotros no tenemos en ninguna tabla, y rellenarla con un texto fijo sería fingir un
+dato.
+
+### ⚠️⚠️ Y con la columna, el titular DEJÓ DE CABER — lo que `#221` ya había avisado
+
+«Donde el mockup usa `nowrap` nosotros NO podemos: sus destinos son cortos y fijos, los nuestros
+los manda la BD». Allí salió a 390 px; aquí sale **a 1440**, porque la lista pasó de todo el ancho
+a su columna.
+
+**Medido con el catálogo real:** la columna da **784 px** y «Excursión para mayores» pide **964** a
+la talla del mockup. En la captura se leía «EXCURSIONES DE COL».
+
+▶ **La solución la da el propio mockup: su columna lateral ES donde vive la descripción.** El
+subtítulo sale de la fila y aparece como claim de la tarjeta. No se pierde: se muda.
+▶ Con el subtítulo dentro, el título solo disponía de ~512 px de 784: para caber en una línea
+habría que bajarlo a **36 px**, la mitad de la talla del mockup, y el menú dejaría de ser un menú
+de rótulos grandes. Sin él caben **48**, que sí lo es.
+▶ El mockup ya esconde ese subtítulo por debajo de 1040 px **por el mismo motivo**: no cabe. La
+regla se extiende al tramo donde la columna se lo come.
+▶ Talla re-derivada del ancho REAL: `5.2vw → 3.4vw`, `9vh → 6.4vh`, tope `68 → 48`. Comprobado en
+los tres anchos con columna: **1440 → 681 de 702 · 1280 → 616 de 689 · 1100 → 530 de 556.**
+⚠️ **Y el `nowrap` se levanta, que es la parte que de verdad protege**: los números valen para ESTE
+catálogo. El siguiente cliente puede llamar a algo «Excursiones escolares de media jornada»; sin
+esto ese destino **se saldría**, que es un fallo mudo. Con esto ocupa dos líneas: se ve raro, pero
+se ve.
+
+### Las manchas de fondo, y son HUECOS
+
+Dos siluetas grandes en esquinas opuestas. El producto pone sitio, tamaño, opacidad y color; **la
+forma la trae el paquete de instalación** (`--deco-blob-a/b`), porque este repo no lleva la marca
+de ningún cliente (`#1`). Receta en `INSTALACION-CLIENTE.md` §4.d.
+
+⚠️⚠️ **El default de la forma es una máscara TRANSPARENTE, no `none`.** Con `mask-image: none` el
+elemento se pinta entero y una instalación sin paquete se encontraría **dos rectángulos de color de
+marca** en su menú. *Un valor por defecto que falla hacia «visible» es peor que no tener valor por
+defecto.*
+
+⚠️ **Y el COLOR también es token, porque el default de marca no siempre acierta.** Medido: el
+mockup pinta la mancha de abajo con su acento 2 (Naranja Salto `#F2711C`), que en su sistema **no
+es** `--zone-2` —ése es el Lima Bote—. Derivarlo a la fuerza habría dado una mancha lima donde el
+cliente tiene naranja. El producto acierta para una instalación cualquiera; quien tenga acentos
+propios los afina sin tocar una regla.
+
+### Lo que NO se copia, y por qué
+
+El punto de «abierto ahora» del mockup **late en bucle**. Aquí se queda estático: nuestro contrato
+de movimiento (`#222`) permite bucles solo para ESPERAS y pone techo de dos animaciones a la vez —y
+en esa misma pantalla ya está el aro que invita a descubrir el CTA doble. Un punto latiendo para
+siempre al lado de un aro latiendo para siempre no informa más: compite.
+
+**Verificación.** Navegador headless a 1440 / 1280 / 1100 / 390: cero desbordamientos, las tres
+tallas del titular medidas contra el ancho útil real, el menú de móvil intacto (la columna
+desaparece por debajo de 1100 y ahí la lista recupera todo el ancho). Suite acotada: **141 verdes**.
+Pint limpio, `docs-check` verde.

@@ -328,6 +328,51 @@ fuente no aparece, el slug está mal escrito (minúsculas y guiones, pesos en ce
   el design system base del producto — y desde `#143` son de verdad el único sitio donde vive
   cada color, que es lo que hace que (b) sirva para algo.
 
+### 4.d · Las MANCHAS decorativas del menú (`#226`, 2026-08-28)
+
+El menú a pantalla completa lleva **dos siluetas grandes** en las esquinas opuestas, muy apagadas.
+Son el «ritmo decorativo» que el sistema del 2.º cliente pide en cada pantalla grande.
+
+▶ **El producto pone el hueco; el paquete pone la forma.** Aquí se decide dónde va cada mancha,
+cuánto mide, cuánto se ve y de qué color —de los tokens de marca—; la instalación aporta la
+silueta, y opcionalmente afina el color.
+
+| Token | Qué es | Si falta |
+|---|---|---|
+| `--deco-blob-a` | La forma de arriba a la derecha (520 px, opacidad 0,17) | **No se pinta nada** |
+| `--deco-blob-b` | La forma de abajo a la izquierda (440 px, opacidad 0,13) | **No se pinta nada** |
+| `--deco-blob-a-color` | Su color | `var(--zone-1)` (marca) |
+| `--deco-blob-b-color` | Su color | `var(--zone-2)` (marca secundaria) |
+
+⚠️⚠️ **El default de la FORMA es una máscara transparente, no `none`.** Con `mask-image: none` el
+elemento se pinta entero, así que una instalación sin manchas se encontraría **dos rectángulos de
+color de marca** dentro de su menú. Un valor por defecto que falla hacia «visible» es peor que no
+tener valor por defecto.
+
+⚠️ **El color por defecto es de MARCA y puede no ser el del sistema del cliente.** Medido en Play
+Jump Park: su mockup pinta la mancha de abajo con su **acento 2** (Naranja Salto `#F2711C`), que en
+su sistema **no es** `--zone-2` —ése es el Lima Bote—. Por eso el color es un token aparte y no se
+deriva a la fuerza: el producto acierta para una instalación cualquiera y quien tenga un sistema
+con acentos propios lo afina sin tocar una sola regla.
+
+Receta (en `public/css/client.css`, que no se versiona y no se despliega con el producto):
+
+```css
+:root {
+    --deco-blob-a: url("data:image/svg+xml,…");   /* la silueta, en línea */
+    --deco-blob-b: url("data:image/svg+xml,…");
+    --deco-blob-a-color: #1AA9DE;
+    --deco-blob-b-color: #F2711C;
+}
+```
+
+⚠️ Van **en línea como `data:`** a propósito: un fichero suelto sería una cuarta pieza que
+sincronizar en el despliegue (`.gitignore` + orden de carga + exclusión del `rsync --delete`), y
+estas siluetas pesan poco más de 1 KB cada una. Las mismas tres reglas del logotipo aplican al
+dibujo: sin texto, sin nada externo y con `viewBox` (§4.a.quinquies).
+
+---
+
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de
   operativa). El admin no lleva permisos: `Gate::before` le concede todo.

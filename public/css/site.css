@@ -3983,6 +3983,187 @@ html:not(.js) .gf-fiche__foot { display: none; }
         100% { opacity: 0; }
     }
 }
+/* ══ LAS DOS COLUMNAS DEL MENÚ (`#226`, del mockup `Landing PJP Modos`) ══════════════════════
+   La lista a la izquierda y una columna de 320 px a la derecha con la vista previa del destino
+   señalado, el estado de apertura, el teléfono y cómo llegar.
+
+   ⚠️⚠️ **No es decoración: es lo que hace legible la lista.** Con el menú a todo el ancho, un
+   destino corto como «Empresas» deja su subtítulo flotando a 900 px del título y la fila se lee
+   como dos cosas sueltas en vez de como una. Acotando la lista a su columna, número, título y
+   subtítulo vuelven a ser una unidad — que es exactamente por lo que el mockup parte la pantalla.
+
+   ⚠️ **Desaparece por debajo de 1100 px**, el mismo corte que el racimo de la cabecera, y ahí la
+   lista recupera todo el ancho. Es lo que hace el mockup (`esMovil`), y encaja con nuestra vela:
+   ésa vive en `@media (max-width: 1080px)`, o sea justo donde ya no hay columna que tapar. */
+/* ══ LAS MANCHAS DE FONDO DEL MENÚ (`#226`) ══════════════════════════════════════════════════
+   Dos formas grandes en las esquinas opuestas, muy apagadas, con los dos colores de marca. Son
+   el «ritmo decorativo» que el sistema del cliente pide en cada pantalla grande.
+
+   ⚠️⚠️ **La FORMA no vive aquí, y no puede.** Este repo es el producto y no lleva la marca de
+   ningún cliente (`DECISIONES #1`): la silueta la trae el paquete de instalación en
+   `--deco-blob-a` / `--deco-blob-b`, y aquí sólo se decide dónde va, cuánto mide, cuánto se ve y
+   **de qué color** — que sale de los tokens de marca, no del fichero del cliente.
+   ▶ Es el mismo reparto que el logotipo y el icono (`INSTALACION-CLIENTE.md` §4).
+
+   ⚠️ **El valor por defecto es una máscara TRANSPARENTE, no `none`.** Con `mask-image: none` el
+   elemento se pinta entero y una instalación sin paquete se encontraría **dos rectángulos de
+   color de marca** en el menú. Con un degradado transparente no se ve nada, que es la ausencia
+   correcta. Un default que falla hacia «visible» es peor que no tener default. */
+.menu__blob {
+    position: absolute; pointer-events: none;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-size: contain; mask-size: contain;
+    -webkit-mask-position: center; mask-position: center;
+}
+.menu__blob--a {
+    top: -160px; right: -140px; width: 520px; height: 520px;
+    /* ⚠️ El color es un TOKEN con default de marca: el producto pinta con `--zone-1` —lo correcto
+       para una instalación cualquiera— y quien tenga un sistema con acentos propios lo afina desde
+       su paquete sin tocar esta regla. */
+    opacity: 0.17; background: var(--deco-blob-a-color, var(--zone-1));
+    -webkit-mask-image: var(--deco-blob-a, linear-gradient(transparent, transparent));
+    mask-image: var(--deco-blob-a, linear-gradient(transparent, transparent));
+}
+.menu__blob--b {
+    bottom: -180px; left: -110px; width: 440px; height: 440px;
+    opacity: 0.13; background: var(--deco-blob-b-color, var(--zone-2));
+    -webkit-mask-image: var(--deco-blob-b, linear-gradient(transparent, transparent));
+    mask-image: var(--deco-blob-b, linear-gradient(transparent, transparent));
+}
+/* En pantallas pequeñas estorban más que aportan: la lista ya llena el alto y las manchas
+   quedarían justo detrás del texto. El mockup las dimensiona para pantalla grande. */
+@media (max-width: 719px) {
+    .menu__blob { display: none; }
+}
+
+.menu__cols {
+    display: flex; gap: clamp(24px, 4vw, 56px);
+    flex: 1; min-height: 0;
+}
+
+/* ⚠️⚠️ **CON LA COLUMNA LATERAL, EL TITULAR NO CABE — y esto ya estaba escrito en `#221`:**
+   «donde el mockup usa `nowrap` nosotros NO podemos: sus destinos son cortos y fijos, los
+   nuestros los manda la BD». Allí el problema salió a 390 px; aquí sale a 1440, porque la lista
+   ha pasado de todo el ancho a su columna.
+
+   ▶ **Medido con el catálogo real**, no estimado: la columna da **784 px** a 1440 y el destino más
+   largo («Excursión para mayores») pide **964** a la talla del mockup. Se salía por 180 px, y en
+   la captura se leía «EXCURSIONES DE COL».
+
+   ▶ La talla se re-deriva del ANCHO DE LA COLUMNA, que es lo que cambió: `5.2vw → 4.2vw`,
+   `9vh → 7.3vh`, tope `68 → 56`. Comprobado en los tres anchos donde existe la columna: 1440 →
+   780 de 784 · 1280 → 758 de 789 · 1100 → 656 de 656.
+
+   ⚠️ **Y el `nowrap` se levanta, que es la parte que de verdad protege.** Los números de arriba
+   valen para ESTE catálogo; el siguiente cliente puede llamar a algo «Excursiones escolares de
+   media jornada». Sin esto, ese destino no se ajustaría: **se saldría**, que es un fallo mudo.
+   Con esto ocupa dos líneas — se ve raro, pero se ve, y quien lo mire sabrá que hay que acortarlo. */
+@media (min-width: 1100px) {
+    /* ⚠️⚠️ **Con la columna lateral, el subtítulo SALE DE LA FILA — y no se pierde: se muda.**
+       La tarjeta de vista previa lo enseña como claim del destino señalado, que es exactamente
+       el papel que le da el mockup. Y hacía falta: con el subtítulo dentro, el título solo
+       disponía de ~512 px de los 784 de la columna, así que para caber en una línea habría que
+       bajarlo a **36 px** —la mitad de la talla del mockup— y el menú dejaría de ser un menú de
+       rótulos grandes. Sin él caben 48, que sí lo es.
+       ▶ El mockup ya esconde este subtítulo por debajo de 1040 px por el mismo motivo: no cabe.
+       Aquí la regla se extiende al tramo donde la columna se lo come. */
+    .menu__s { display: none; }
+
+    /* Talla derivada del ancho REAL de la columna menos su mobiliario (número, huecos y flecha):
+       702 px útiles a 1440. El destino más largo del catálogo pide 964 px a la talla del mockup,
+       así que 68 → 48 lo mete en 680. Comprobado también a 1280 (617 de 689) y a 1100 (530 de 556). */
+    .menu__t {
+        font-size: clamp(28px, min(3.4vw, 6.4vh), 48px);
+        white-space: normal;
+    }
+}
+.menu__col-list { position: relative; flex: 1 1 560px; min-width: 0; display: flex; }
+.menu__col-list > .menu__list { flex: 1; }
+
+/* ⚠️ Entra DESPUÉS que la lista, a propósito: la lista escalona sus filas desde los 120 ms y esta
+   columna espera a que el escalonado esté en marcha. Si entraran a la vez, el ojo tendría dos
+   cosas moviéndose en direcciones distintas y ninguna se leería — es el «máximo dos a la vez»
+   del contrato de movimiento (`#222`). */
+.menu__aside {
+    flex: 0 0 320px; min-width: 0;
+    display: flex; flex-direction: column; gap: 20px; justify-content: center;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity var(--dur-cae) var(--ease-sale) var(--dur-estado),
+                transform var(--dur-salto) var(--ease-sale) var(--dur-estado);
+}
+.menu--open .menu__aside { opacity: 1; transform: none; }
+
+@media (max-width: 1099px) {
+    .menu__aside { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .menu__aside { transition: opacity var(--dur-sale) var(--ease-bucle); transform: none; }
+}
+
+/* ── LA TARJETA DE VISTA PREVIA ────────────────────────────────────────────────────────────────
+   ⚠️ **El fondo rayado NO es un placeholder de maquetación: es el estado sin foto.** Solo los
+   servicios del CMS tienen imagen; zonas, atracciones e información no la tienen en ninguna
+   tabla. El mockup usa exactamente este tratamiento donde aún no hay foto, así que la ausencia
+   se lee como una textura y no como un hueco.
+   ▶ Y las dos tintas del rayado SALEN DEL ÁMBITO, no de dos hex: dentro de `[data-surface="ink"]`
+   `--bg-card` ya vale la tinta de tarjeta, y el 8 % de `--fg` encima da el segundo tono. Una
+   instalación con otra tinta obtiene su propio rayado sin tocar nada. */
+.menu__preview {
+    position: relative; flex: 1; min-height: 190px;
+    border-radius: var(--r); overflow: hidden;
+    display: flex; align-items: flex-end; padding: 20px;
+    background: repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--fg) 8%, var(--bg-card)) 0 14px,
+        var(--bg-card) 14px 28px);
+}
+.menu__preview-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+}
+/* Sobre la foto hace falta un velo o el rótulo no se lee. Sin foto NO se pinta: sobre el rayado
+   sobra, y un velo permanente apagaría la textura sin motivo. */
+.menu__preview:has(.menu__preview-img)::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--bg) 82%, transparent) 100%);
+}
+.menu__preview-body {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; gap: 7px; min-width: 0;
+}
+.menu__preview-n {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--zone-1);
+}
+.menu__preview-t {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: 30px; line-height: 1; text-transform: uppercase;
+}
+.menu__preview-s {
+    font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    max-width: 280px;
+}
+
+/* ── LOS DATOS: estado, teléfono y cómo llegar ─────────────────────────────────────────────────
+   ⚠️ **El punto de «abierto» NO late, y el mockup sí lo hace.** Nuestro contrato de movimiento
+   (`#222`) permite bucles solo para ESPERAS, y encima pone techo de dos animaciones a la vez —y
+   en esta misma pantalla ya está el aro que invita a descubrir el CTA doble. Un punto latiendo
+   para siempre al lado de un aro latiendo para siempre no informa más: compite. Queda estático,
+   que es como el producto pinta el resto de sus estados. */
+.menu__facts { display: flex; flex-direction: column; gap: 12px; }
+.menu__fact {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 14px; color: var(--fg-mute);
+    transition: color var(--dur-toque) var(--ease-sale);
+}
+a.menu__fact:hover { color: var(--fg); }
+a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: var(--r-xs); }
+.menu__fact--now { color: var(--fg); margin: 0; }
+.menu__dot {
+    width: 9px; height: 9px; flex: 0 0 auto;
+    border-radius: 50%; background: var(--ok);
+}
+
 .menu__s {
     flex: 0 0 auto;
     font-family: var(--font-body); font-size: 13.5px;

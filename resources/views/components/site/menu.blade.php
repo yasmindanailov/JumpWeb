@@ -35,25 +35,104 @@
          se dibuja con un token de color, no con un literal. --}}
     <div class="menu__grain" aria-hidden="true"></div>
 
-    <div class="menu__inner" role="dialog" aria-modal="true"
-         aria-label="{{ __('landing.nav.menu_label') }}" x-ref="menuPanel">
+    {{-- ⚠️ **Dos manchas de marca al fondo, y son HUECOS, no dibujos** (`#226`, del mockup). El
+         producto pone el sitio, el tamaño, la opacidad y el COLOR —de los tokens de marca—; la
+         FORMA la trae el paquete de instalación en `--deco-blob-a` / `--deco-blob-b`. Sin
+         paquete no se pinta nada: la máscara por defecto es transparente, así que el hueco
+         desaparece en vez de dejar dos rectángulos de color.
+         ▶ Es la misma línea que el logotipo y el icono (`INSTALACION-CLIENTE.md` §4): este repo
+         es el PRODUCTO y no lleva la marca de ningún cliente. --}}
+    <div class="menu__blob menu__blob--a" aria-hidden="true"></div>
+    <div class="menu__blob menu__blob--b" aria-hidden="true"></div>
 
-        <ul class="menu__list">
-            @foreach ($items as $i => $item)
-                <li class="menu__item" style="--i: {{ $i }}">
-                    <a href="{{ $item['url'] }}" @click="menuOpen = false">
-                        <span class="menu__n" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
-                        <span class="menu__t">{{ $item['t'] }}</span>
-                        @if (! empty($item['s']))
-                            <span class="menu__s">{{ $item['s'] }}</span>
-                        @endif
-                        <span class="menu__arrow" aria-hidden="true">
-                            <x-icons.arrow-right :width="20" :height="20" />
-                        </span>
+    {{-- ⚠️ **La VISTA PREVIA de la columna lateral se alimenta de los MISMOS ítems** (`#226`), no
+         de una segunda lista: si fueran dos fuentes, un destino nuevo aparecería en la lista y no
+         en la vista, o al revés, y nadie se enteraría hasta verlo. `mira` es el índice del ítem
+         señalado; arranca en 0 para que la tarjeta no nazca vacía. --}}
+    @php($vistas = collect($items)->map(fn ($it) => [
+        't' => $it['t'],
+        's' => $it['s'] ?? '',
+        'img' => $it['img'] ?? null,
+    ])->values()->all())
+
+    <div class="menu__inner" role="dialog" aria-modal="true"
+         aria-label="{{ __('landing.nav.menu_label') }}" x-ref="menuPanel"
+         x-data="{ mira: 0, vistas: @js($vistas) }">
+
+        {{-- ── LAS DOS COLUMNAS (`#226`, del mockup) ────────────────────────────────────────────
+             La lista a la izquierda y una columna de 320 px a la derecha. **No es decoración: es
+             lo que hace legible la lista.** Con el menú a todo el ancho, un destino corto como
+             «Empresas» deja su subtítulo flotando a 900 px del título y la fila se lee como dos
+             cosas sueltas. Acotando la lista a su columna, número, título y subtítulo vuelven a
+             ser una unidad.
+             ⚠️ La columna **desaparece por debajo de 1100 px** —el mismo corte que el racimo—, y
+             ahí la lista recupera todo el ancho, que es lo que hace el mockup. --}}
+        <div class="menu__cols">
+            <div class="menu__col-list">
+                <ul class="menu__list">
+                    @foreach ($items as $i => $item)
+                        <li class="menu__item" style="--i: {{ $i }}">
+                            {{-- ⚠️ `mouseenter` **y** `focus`: la vista previa tiene que seguir
+                                 también a quien navega con teclado, o la columna se queda
+                                 contando algo que no es lo que el usuario está mirando. --}}
+                            <a href="{{ $item['url'] }}" @click="menuOpen = false"
+                               @mouseenter="mira = {{ $i }}" @focus="mira = {{ $i }}">
+                                <span class="menu__n" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                <span class="menu__t">{{ $item['t'] }}</span>
+                                @if (! empty($item['s']))
+                                    <span class="menu__s">{{ $item['s'] }}</span>
+                                @endif
+                                <span class="menu__arrow" aria-hidden="true">
+                                    <x-icons.arrow-right :width="20" :height="20" />
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <aside class="menu__aside">
+                {{-- ⚠️⚠️ **`aria-hidden` y no es un descuido**: esta tarjeta REPITE el título y el
+                     subtítulo del destino que ya está en la lista, a la que el lector de pantalla
+                     acaba de llegar. Anunciarla otra vez sería leer cada destino dos veces. Es
+                     un eco VISUAL de lo que el ratón está señalando, y para eso no hace falta
+                     texto accesible propio. --}}
+                <div class="menu__preview" aria-hidden="true">
+                    {{-- La foto sale del CMS y **solo la tienen los servicios**; el resto cae al
+                         fondo rayado, que es lo que el mockup usa donde aún no hay foto. --}}
+                    <template x-if="vistas[mira] && vistas[mira].img">
+                        <img class="menu__preview-img" :src="vistas[mira].img" alt="">
+                    </template>
+                    <div class="menu__preview-body">
+                        {{-- ⚠️ El sombrerete es el NÚMERO del destino, no una etiqueta inventada:
+                             el mockup pone ahí una etiqueta por sección que nosotros no tenemos en
+                             ninguna tabla, y rellenarla con un texto fijo sería fingir un dato. --}}
+                        <span class="menu__preview-n" x-text="String(mira + 1).padStart(2, '0')"></span>
+                        <span class="menu__preview-t" x-text="vistas[mira] ? vistas[mira].t : ''"></span>
+                        <span class="menu__preview-s" x-text="vistas[mira] ? vistas[mira].s : ''"></span>
+                    </div>
+                </div>
+
+                {{-- Los DATOS de siempre: si estamos abiertos, el teléfono y cómo llegar. Aquí sí
+                     hay enlaces de verdad, así que este bloque NO va oculto al lector. --}}
+                <div class="menu__facts">
+                    @if (! empty($heroStatus))
+                        <p class="menu__fact menu__fact--now">
+                            <span class="menu__dot" aria-hidden="true"></span>
+                            {{ $heroStatus['day'] }} · {{ $heroStatus['status'] }}
+                        </p>
+                    @endif
+                    @if (! empty($site['has_phone']))
+                        <a class="menu__fact" href="tel:{{ $site['phone_tel'] }}">
+                            <x-icons.devices :width="18" :height="18" />{{ $site['phone'] }}
+                        </a>
+                    @endif
+                    <a class="menu__fact" href="{{ url('/#info') }}" @click="menuOpen = false">
+                        <x-icons.pin :width="18" :height="18" />{{ $site['city'] ?: __('landing.nav.park_items.info.t') }}
                     </a>
-                </li>
-            @endforeach
-        </ul>
+                </div>
+            </aside>
+        </div>
 
         {{-- Fila de cápsulas secundarias (`[DECIDIDO owner]`, spec §5): acceder + idioma + redes.
              ⚠️ El idioma sube aquí ADEMÁS de quedarse en el pie: con la barra retirada, quien

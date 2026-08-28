@@ -17,10 +17,15 @@
     // (show_in_nav) memoizado en el composer (`$navServices`), enlazando a /servicios#slug.
     $servicesItems = array_merge(
         [['t' => __('landing.nav.services_items.birthdays.t'), 's' => __('landing.nav.services_items.birthdays.s'), 'url' => route('cumpleanos')]],
+        // ⚠️ `img` entra en `#226` para la VISTA PREVIA del menú (la columna lateral del mockup).
+        // Solo los servicios del CMS tienen imagen; los ítems fijos —zonas, atracciones, info—
+        // no, y ahí la tarjeta cae a su fondo rayado. Es el mismo trato que el mockup le da a lo
+        // que aún no tiene foto, así que la ausencia no se ve como un hueco.
         collect($navServices ?? [])->map(fn ($s) => [
             't' => $s->tr('title'),
             's' => $s->tr('nav_subtitle'),
             'url' => route('servicios').'#'.$s->slug,
+            'img' => $s->image ? asset($s->image) : null,
         ])->all(),
         [['t' => __('landing.nav.services_items.events.t'), 's' => __('landing.nav.services_items.events.s'), 'url' => route('servicios').'#eventos']],
     );
