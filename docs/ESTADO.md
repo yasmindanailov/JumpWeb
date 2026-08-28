@@ -325,6 +325,26 @@
 >   alta del cajón enseña los cuatro campos y las cinco opciones. ⚠️ **Tercera colisión de numeración
 >   del día**: nació como `#235`, que el carril C ya había usado; renumerada con la lista sacada del
 >   PROPIO diff (`git status`), no de un grep del árbol.
+>   ▶ ✅ **Y ARRANCA EL CAJÓN EN MÓVIL con una MEDICIÓN, no con código (`#237`)**. Encargo del owner:
+>   «el SPA tiene que ser perfecto en móvil, que es el 90 %». Recorrido el embudo en 390×844.
+>   ⚠️⚠️ **El hallazgo que nadie buscaba: el aviso de cookies tapaba 296 px — el 45 % del cajón — y
+>   con ellos el botón que hace avanzar la compra**, en `/entradas`, donde el cajón NACE ABIERTO. O
+>   sea que **todo cliente nuevo en móvil** se encontraba el paso de fecha a medias. **No lo veía
+>   ningún test porque ninguno mide DOS capas a la vez**: no faltaba un caso, faltaba una categoría.
+>   La causa: su `z-index: 1000` **no salía de ninguna escala** (nada más pasa de 210). Ahora ocupa un
+>   sitio por ROL, **140**: encima de la página, debajo de lo que el cliente abre a propósito. ▶ **El
+>   consentimiento no se pierde**: verificado en navegador que con el cajón cerrado vuelve a mandar y
+>   «Aceptar» funciona. ⚠️ **Trampa de mi propia sonda**: decía que el solape seguía igual tras el
+>   arreglo — medía RECTÁNGULOS, y lo que cambia es quién PINTA encima (`elementFromPoint()`).
+>   ▶ **Lo medido y aún sin tocar, que es el trabajo siguiente**: catálogo **bien** (1 de 16 controles
+>   bajo 44 px); **fecha 11 de 12** (celdas 43×43, flechas 32×32, «Volver» 61×17) y pinta **un mes de
+>   42 celdas donde solo 2 eran reservables** —se busca en vez de elegir—; **hora 12 de 13** (chips
+>   68×39) con **~400 px de pantalla vacía** y **ningún chip dice cómo está de lleno**.
+>   `[DECIDIDO owner]`: la hora será **tira deslizable con ajuste** (no un deslizador continuo: con
+>   once horas hay que pasar por todas y el dedo tapa lo que eliges) y la disponibilidad se enseña
+>   **solo cuando quedan pocas**, con umbral configurable. `LayerOrderTest` (2 casos, 2 mutaciones y
+>   las 2 muerden). ⚠️ **El carril C CERRÓ**, así que `resources/js/**` y `public/css/site.css` ya no
+>   se disputan.
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
@@ -854,7 +874,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3355 en verde** (22.096 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
+- Suite **3357 en verde** (22.093 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
   20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
   panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet, `#234` su
   pulido y **`#236` los menores**, que suman **30 casos nuevos** —`AdminNavigationTest`,

@@ -3681,8 +3681,21 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 
 /* Banner de cookies (#222, mockup «Banner Cookies»): UNA tarjeta abajo-izquierda que se expande
    en sitio (compacta → preferencias). Tira de bloques foam + chip + toggles por finalidad. */
+/* ⚠️⚠️ **z-index 1000 → 140** (`#237`). Medido en un iPhone (390×844) sobre `/entradas`, donde el
+ * cajón NACE ABIERTO: el aviso tapaba **296 px, el 45 % del cajón**, y con ellos el botón que hace
+ * avanzar la compra. O sea que **todo cliente nuevo en móvil** se encontraba el paso de fecha a
+ * medias — y no se veía en ningún test porque ninguno mide dos capas a la vez.
+ *
+ * El 1000 no salía de ninguna escala: en toda la hoja no hay nada por encima de 210, así que era
+ * «muy arriba» y no un sitio. Ahora ocupa uno por ROL: **encima de la página** (nav 110, cabeceras
+ * pegajosas 60) y **debajo de cualquier superficie que el cliente haya abierto a propósito** —modal
+ * 150, cajón 160, avisos 200—.
+ *
+ * ▶ El consentimiento NO se pierde ni se esconde: el aviso sigue ahí y vuelve a la vista en cuanto
+ * se cierra el cajón. Lo que deja de hacer es taparlo. `RGPD-05` habla de la ATOMICIDAD del
+ * consentimiento (que `decided` y la inyección de terceros van juntas), no de capas. */
 .cookie {
-    position: fixed; left: 24px; bottom: 24px; z-index: 1000;
+    position: fixed; left: 24px; bottom: 24px; z-index: 140;
     width: 416px; max-width: calc(100vw - 32px);
     background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
     box-shadow: var(--shadow-modal);

@@ -2161,6 +2161,15 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       completo **cambiando el valor, no el conjunto de campos**, para no romper la cadena de hashes.
       **Cuatro guardas re-apuntadas por sujeto, ninguna borrada** · coste por feature (chunk 253,
       payload 9.100) · suite 3.355 / 22.048 · JS 813 · verificado en navegador.
+- [ ] **EL CAJÓN EN MÓVIL** — encargo del owner («es el 90 %»). ▶ **Arrancado con una MEDICIÓN**
+      (2026-08-28, `#237`), no con código. ⚠️⚠️ **Hallazgo: el aviso de cookies tapaba el 45 % del
+      cajón** —296 px, incluido el botón que avanza la compra— en `/entradas`, donde nace abierto;
+      **no lo veía ningún test porque ninguno mide dos capas a la vez**. Arreglado bajando el aviso
+      de un `z-index: 1000` sin escala a un sitio por ROL (140), con `LayerOrderTest` y sus dos
+      mutaciones. ▶ **Lo medido y pendiente**: fecha **11 de 12** controles bajo 44 px y un mes de 42
+      celdas con 2 reservables (se busca en vez de elegir); hora **12 de 13** (chips 68×39), ~400 px
+      vacíos y ningún chip dice cómo está de lleno; catálogo **bien**. `[DECIDIDO owner]`: tira
+      deslizable con ajuste para la hora y «quedan pocas» bajo umbral configurable.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

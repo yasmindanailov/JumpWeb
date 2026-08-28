@@ -12928,3 +12928,56 @@ alta del cajón enseña los cuatro campos y las cinco opciones traducidas.
 ⚠️ **Tercera colisión de numeración del día**: esta decisión nació como `#235` y el carril C ya lo
 había usado. Se renumeró a `#236` con la lista de ficheros sacada del PROPIO diff (`git status`), no
 de un grep del árbol — que es lo que corrompió referencias ajenas en `#232`.
+
+---
+
+## #237 · 2026-08-28 · El aviso de cookies tapaba el 45 % del cajón en móvil — y no lo veía ningún test porque ninguno mide DOS capas a la vez
+
+Primera medición del embudo de compra en un móvil (390×844), antes de rediseñar nada, por encargo
+del owner («el SPA tiene que ser perfecto en móvil, que es el 90 %»).
+
+**El hallazgo que no buscaba nadie**: en `/entradas` —donde el cajón **nace abierto**— el aviso de
+cookies tapaba **296 px, el 45 % del cajón**, y con ellos el botón que hace avanzar la compra. Lo
+descubrí porque mis clics no avanzaban y creí que fallaba la sonda: fallaba la pantalla. **Todo
+cliente nuevo en móvil** se encontraba el paso de fecha a medias.
+
+⚠️⚠️ **Por qué no lo veía nada**: cada componente se comprueba solo, y **una oclusión solo existe
+cuando hay dos capas**. No es que faltara un caso: faltaba una categoría de caso.
+
+**La causa** es que el `z-index: 1000` del aviso **no salía de ninguna escala**: en toda la hoja no
+hay nada por encima de 210. Era «muy arriba», no un sitio. Ahora ocupa uno por ROL —**140**—:
+
+| Capa | Quién |
+|---|---|
+| hasta 110 | la página: cabeceras pegajosas, nav |
+| **140** | **el aviso de cookies** |
+| 150–160 | lo que el cliente ABRE a propósito: modal, cajón |
+| 200+ | avisos efímeros |
+
+▶ **El consentimiento no se pierde ni se esconde**: el aviso sigue ahí y vuelve a mandar en cuanto
+se cierra el cajón. Verificado en navegador las dos mitades: con el cajón abierto
+`elementFromPoint()` en el centro del aviso devuelve **el cajón**; con el cajón cerrado devuelve
+**el aviso**, «Aceptar» es pulsable y funciona. `RGPD-05` habla de la **atomicidad** del
+consentimiento, no de capas.
+
+⚠️ **Una trampa de mi propia sonda**: la primera medición decía que el solape seguía en 296 px
+después del arreglo. Medía **rectángulos**, y lo que cambia con el `z-index` es **quién pinta
+encima**. La oclusión se mide con `elementFromPoint()`, no restando cajas.
+
+**Lo demás que dejó la medición del embudo** (aún sin tocar, es el trabajo siguiente):
+
+| Paso | Controles bajo 44 px | |
+|---|---|---|
+| Catálogo | **1 de 16** | está bien: tarjetas de 350×108 |
+| Fecha | **11 de 12** | celdas de día **43×43**, flechas del mes **32×32**, «Volver» **61×17** |
+| Hora | **12 de 13** | chips de **68×39**, y **~400 px de pantalla vacía** debajo |
+
+Y dos cosas de forma, no de tamaño: el calendario pinta **un mes de 42 celdas donde solo 2 eran
+reservables** —el cliente busca en vez de elegir— y **ningún chip de hora dice cómo está de lleno**.
+
+`[DECIDIDO owner]` para lo siguiente: la hora será **una tira deslizable con ajuste**, no un
+deslizador continuo —con once horas hay que pasar por todas y el dedo tapa el valor que eliges—, y
+la disponibilidad se enseña **solo cuando quedan pocas**, con el umbral configurable.
+
+**Verificación**: `LayerOrderTest` (2 casos, **2 mutaciones y las 2 muerden**: devolver el aviso a
+1000 y hundirlo bajo el nav) · suite **3.357 / 22.093** · verificado en navegador.
